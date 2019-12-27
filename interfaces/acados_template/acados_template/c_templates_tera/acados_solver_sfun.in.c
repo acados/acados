@@ -72,6 +72,7 @@ external_function_param_casadi * impl_dae_fun;
 external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
 external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
 {% endif %}
+
 {%- if constraints.constr_type == "BGP" %}
 // external_function_param_casadi * r_constraint;
 external_function_param_casadi * phi_constraint;
@@ -94,24 +95,42 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetNumContStates(S, 0);
     ssSetNumDiscStates(S, 0);
 
-    // specify the number of input ports
-    {%- if dims.np > 0 %}
-    if ( !ssSetNumInputPorts(S, 4) )
-    {%- else %}
-    if ( !ssSetNumInputPorts(S, 3) )
+    {# compute number of input ports #}
+    {%- set n_inputs = 1 %}  {# x0 #}
+    {%- if dims.np > 0 %}  {# parameters #}
+        {%- set n_inputs = n_inputs + 1 -%}
     {%- endif %}
+    {%- if dims.ny > 0 %}  {# y_ref -#}
+        {%- set n_inputs = n_inputs + 1 -%}
+    {%- endif %}
+    {%- if dims.ny_e > 0 %}  {# y_ref_e #}
+        {%- set n_inputs = n_inputs + 1 %}
+    {%- endif %}
+
+    // specify the number of input ports
+    if ( !ssSetNumInputPorts(S, {{ n_inputs }}) )
         return;
 
     // specify the number of output ports 
     if ( !ssSetNumOutputPorts(S, 5) )
         return;
 
-    // specify dimension information for the input ports 
-    ssSetInputPortVectorDimension(S, 0, {{ dims.nx }});
-    ssSetInputPortVectorDimension(S, 1, {{ dims.ny }});
-    ssSetInputPortVectorDimension(S, 2, {{ dims.ny_e }});
+    // specify dimension information for the input ports
+    {%- set i_input = 0 %}
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nx }});
+    {%- if dims.ny > 0 %}
+    {%- set i_input = i_input + 1 %}
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.ny }});
+    {%- endif %}
+
+    {%- if dims.ny_e > 0 %}
+    {%- set i_input = i_input + 1 %}
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.ny_e }});
+    {%- endif %}
+
     {%- if dims.np > 0 %}
-    ssSetInputPortVectorDimension(S, 3, {{ dims.np }});
+    {%- set i_input = i_input + 1 %}
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.np }});
     {%- endif %}
 
     // specify dimension information for the output ports 
@@ -121,13 +140,11 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetOutputPortVectorDimension(S, 3, {{ dims.nx }} ); // first state
     ssSetOutputPortVectorDimension(S, 4, 1); // computation times
 
-    // specify the direct feedthrough status 
-    ssSetInputPortDirectFeedThrough(S, 0, 1); // current state x0
-    ssSetInputPortDirectFeedThrough(S, 1, 1); // y_ref
-    ssSetInputPortDirectFeedThrough(S, 2, 1); // y_ref_N
-    {%- if dims.np > 0 %}
-    ssSetInputPortDirectFeedThrough(S, 3, 1); // parameter
-    {%- endif %}
+    {# TODO(oj): why is that needed? #}
+    // specify the direct feedthrough status
+    {%- for i in range(end=n_inputs) %}
+    ssSetInputPortDirectFeedThrough(S, {{ i }}, 1);
+    {%- endfor %}
 
     // one sample time 
     ssSetNumSampleTimes(S, 1);
@@ -178,7 +195,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     real_t in_x0[{{ dims.nx }}];
     real_t in_y_ref[{{ dims.ny }}];
     real_t in_y_ref_e[{{ dims.ny_e }}];
-    {%- if dims.np > 0%}
+    {%- if dims.np > 0 %}
     real_t in_p[{{ dims.np }}];
     {%- endif %}
 
