@@ -185,59 +185,66 @@ static void mdlStart(SimStruct *S)
 
 static void mdlOutputs(SimStruct *S, int_T tid)
 {
-    // get input signals
-    InputRealPtrsType in_x0_sign;
-    InputRealPtrsType in_y_ref_sign;
-    InputRealPtrsType in_y_ref_e_sign;
-    InputRealPtrsType in_p_sign;
-    
-    // local buffers
-    real_t in_x0[{{ dims.nx }}];
-    real_t in_y_ref[{{ dims.ny }}];
-    real_t in_y_ref_e[{{ dims.ny_e }}];
-    {%- if dims.np > 0 %}
-    real_t in_p[{{ dims.np }}];
-    {%- endif %}
+    InputRealPtrsType in_sign;
+    {% set input_sizes = [dims.nx, dims.ny, dims.ny_e, dims.np] %}
 
-    in_x0_sign = ssGetInputPortRealSignalPtrs(S, 0);
-    in_y_ref_sign = ssGetInputPortRealSignalPtrs(S, 1);
-    in_y_ref_e_sign = ssGetInputPortRealSignalPtrs(S, 2);
-    {%- if dims.np > 0 %}
-    in_p_sign = ssGetInputPortRealSignalPtrs(S, 3);
-    {%- endif %}
+    // local buffer
+    {%- set buffer_size =  input_sizes | sort | last %}
+    real_t buffer[{{ buffer_size }}];
 
-    // copy signals into local buffers
+
+    /* go through inputs */
+    {%- set i_input = 0 %}
+    // initial condition
+    in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
     for (int i = 0; i < {{ dims.nx }}; i++)
-        in_x0[i] = (double)(*in_x0_sign[i]);
+        buffer[i] = (double)(*in_sign[i]);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", buffer);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", buffer);
+
+    {%- if dims.ny > 0 %}
+    // y_ref
+    {%- set i_input = i_input + 1 %}
+    in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+
     for (int i = 0; i < {{ dims.ny }}; i++)
-        in_y_ref[i] = (double)(*in_y_ref_sign[i]);
-    for (int i = 0; i < {{ dims.ny_e }}; i++)
-        in_y_ref_e[i] = (double)(*in_y_ref_e_sign[i]);
-    {%- if dims.np > 0 %}
-    for (int i = 0; i < {{ dims.np }}; i++)
-        in_p[i] = (double)(*in_p_sign[i]);
+        buffer[i] = (double)(*in_sign[i]);
+
+    for (int ii = 0; ii < {{ dims.N }}; ii++)
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, ii, "yref", (void *) buffer);
     {%- endif %}
 
-    // for (int i = 0; i < {{ dims.nx }}; i++) ssPrintf("x0[%d] = %f\n", i, in_x0[i]);
-    // ssPrintf("\n");
 
-    // set initial condition
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", in_x0);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", in_x0);
+    {%- if dims.ny > 0 %}
+    // y_ref_e
+    {%- set i_input = i_input + 1 %}
+    in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
 
-    // update reference
-    for (int ii = 0; ii < {{ dims.N }}; ii++)
-        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, ii, "yref", (void *) in_y_ref);
+    for (int i = 0; i < {{ dims.ny_e }}; i++)
+        buffer[i] = (double)(*in_sign[i]);
 
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, {{ dims.N }}, "yref", (void *) in_y_ref_e);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, {{ dims.N }}, "yref", (void *) buffer);
+    {%- endif %}
 
     {%- if dims.np > 0 %}
+    // parameters
+    {%- set i_input = i_input + 1 %}
+    in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+
+    for (int i = 0; i < {{ dims.np }}; i++)
+        buffer[i] = (double)(*in_sign[i]);
+
     // update value of parameters
     for (int ii = 0; ii <= {{ dims.N }}; ii++) 
         acados_update_params(ii, in_p, {{ dims.np }});
     {%- endif %}
 
-    // assign pointers to output signals 
+    /* call solver */
+    int acados_status = acados_solve();
+
+
+    /* set outputs */
+    // assign pointers to output signals
     real_t *out_u0, *out_status, *out_KKT_res, *out_x1, *out_cpu_time;
 
     out_u0          = ssGetOutputPortRealSignal(S, 0);
@@ -245,9 +252,6 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     out_KKT_res     = ssGetOutputPortRealSignal(S, 2);
     out_x1          = ssGetOutputPortRealSignal(S, 3);
     out_cpu_time    = ssGetOutputPortRealSignal(S, 4);
-    
-    // call acados_solve()
-    int acados_status = acados_solve();
 
     // extract solver info
     *out_status = (real_t) acados_status;
