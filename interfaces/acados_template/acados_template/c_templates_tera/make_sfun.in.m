@@ -121,6 +121,19 @@ input_note = strcat(input_note, num2str(i_in), ') ubu, size [{{ dims.nbu }}]\n '
 i_in = i_in + 1;
 {%- endif %}
 
+{%- if dims.ng > 0 %}
+input_note = strcat(input_note, num2str(i_in), ') lg, size [{{ dims.ng }}]\n ');
+i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') ug, size [{{ dims.ng }}]\n ');
+i_in = i_in + 1;
+{%- endif %}
+
+{%- if dims.nh > 0 %}
+input_note = strcat(input_note, num2str(i_in), ') lh, size [{{ dims.nh }}]\n ');
+i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') uh, size [{{ dims.nh }}]\n ');
+i_in = i_in + 1;
+{%- endif %}
 
 fprintf(input_note)
 
