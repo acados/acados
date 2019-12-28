@@ -64,7 +64,7 @@ INCS = [ ' -I', fullfile(INC_PATH, 'blasfeo', 'include'), ...
         ' -I', INC_PATH, ' -I', fullfile(INC_PATH, 'acados'), ' '];
 
 {% if  solver_options.qp_solver == "QPOASES" %}
-    INCS = strcat(INCS, '-I', fullfile(INC_PATH, 'qpOASES_e') )
+INCS = strcat(INCS, '-I', fullfile(INC_PATH, 'qpOASES_e') )
 {% endif %}
 
 CFLAGS  = ' -O';
@@ -87,12 +87,24 @@ eval( [ 'mex -v -output  acados_solver_sfunction_{{ model.name }} ', ...
 fprintf( [ '\n\nSuccessfully created sfunction:\nacados_solver_sfunction_{{ model.name }}', '.', ...
     eval('mexext')] );
 
+
 %% print note on usage of s-function
-fprintf('\n\nNote:\n')
-input_note = 'Inputs are:\n 1) x0, initial state, size [{{ dims.nx }}]\n 2) y_ref, size [{{ dims.ny }}]\n 3) y_ref_e, size [{{ dims.ny_e }}]\n ';
+fprintf('\n\nNote: Usage of Sfunction is as follows:\n')
+input_note = 'Inputs are:\n1) x0, initial state, size [{{ dims.nx }}]\n ';
+i_in = 2;
+{%- if dims.ny > 0 %}
+input_note = strcat(input_note, num2str(i_in), ') y_ref, size [{{ dims.ny }}]\n ');
+i_in = i_in + 1;
+{%- endif %}
+
+{%- if dims.ny > 0 %}
+input_note = strcat(input_note, num2str(i_in), ') y_ref_e, size [{{ dims.ny_e }}]\n ');
+i_in = i_in + 1;
+{%- endif %}
 
 {%- if dims.np > 0 %}
-strcat(input_note, ' 4) parameters, size [{{ dims.np }}]\n ')
+strcat(input_note, num2str(i_in), ') parameters, size [{{ dims.np }}]\n ')
+i_in = i_in + 1;
 {%- endif %}
 
 fprintf(input_note)
@@ -100,8 +112,8 @@ fprintf(input_note)
 disp(' ')
 
 output_note = strcat('Outputs are:\n', ...
-                ' 1) u0 - optimal input, size [{{ dims.nu }}]\n',...
-                ' 2) acados solver status (0 = SUCCESS)\n',...
-                ' 3) KKT residual\n 4) first state \n 5) CPU time\n');
+                '1) u0 - optimal input, size [{{ dims.nu }}]\n',...
+                '2) acados solver status (0 = SUCCESS)\n',...
+                '3) KKT residual\n4) first state \n5) CPU time\n');
 
 fprintf(output_note)
