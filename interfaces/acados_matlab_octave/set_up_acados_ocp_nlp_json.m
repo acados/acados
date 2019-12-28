@@ -56,8 +56,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     ocp_json.dims.nx = model.dim_nx;
     ocp_json.dims.nu = model.dim_nu;
     ocp_json.dims.nz = model.dim_nz;
-    % missing in MEX (?!)
-    % ocp_json.dims.np = model.dim_np;
+    ocp_json.dims.np = model.dim_np;
     ocp_json.dims.ny = model.dim_ny;
     ocp_json.dims.nbx = model.dim_nbx;
     ocp_json.dims.nbu = model.dim_nbu;
@@ -111,6 +110,15 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     ocp_json.constraints.constr_type_e = upper(model.constr_type_e);
 
     %% constraints
+
+    % parameters
+    if model.dim_np > 0
+        % TODO: add option to initialize parameters in model.
+        warning(strcat('model parameters not defined. Initializing with', ...
+            ' zeros(np,1). Update them using the solver object.'));
+        ocp_json.constraints.p = zeros(model.dim_np,1);
+    end
+
     % path
     if isfield(model, 'constr_x0')
         ocp_json.constraints.x0 = model.constr_x0;
