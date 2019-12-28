@@ -103,9 +103,24 @@ i_in = i_in + 1;
 {%- endif %}
 
 {%- if dims.np > 0 %}
-strcat(input_note, num2str(i_in), ') parameters, size [{{ dims.np }}]\n ')
+input_note = strcat(input_note, num2str(i_in), ') parameters, size [{{ dims.np }}]\n ')
 i_in = i_in + 1;
 {%- endif %}
+
+{%- if dims.nbx > 0 %}
+input_note = strcat(input_note, num2str(i_in), ') lbx, size [{{ dims.nbx }}]\n ');
+i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') ubx, size [{{ dims.nbx }}]\n ');
+i_in = i_in + 1;
+{%- endif %}
+
+{%- if dims.nbu > 0 %}
+input_note = strcat(input_note, num2str(i_in), ') lbu, size [{{ dims.nbu }}]\n ');
+i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') ubu, size [{{ dims.nbu }}]\n ');
+i_in = i_in + 1;
+{%- endif %}
+
 
 fprintf(input_note)
 
