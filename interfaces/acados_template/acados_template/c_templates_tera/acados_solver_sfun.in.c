@@ -263,7 +263,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 {%- endif %}
 
 
-{%- if dims.ny > 0 %}
+{%- if dims.ny_e > 0 %}
     // y_ref_e
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
@@ -272,9 +272,9 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         buffer[i] = (double)(*in_sign[i]);
 
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, {{ dims.N }}, "yref", (void *) buffer);
-    {%- endif %}
+{%- endif %}
 
-    {%- if dims.np > 0 %}
+{%- if dims.np > 0 %}
     // parameters
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
@@ -284,7 +284,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     // update value of parameters
     for (int ii = 0; ii <= {{ dims.N }}; ii++) 
-        acados_update_params(ii, in_p, {{ dims.np }});
+        acados_update_params(ii, buffer, {{ dims.np }});
 {%- endif %}
 
 
