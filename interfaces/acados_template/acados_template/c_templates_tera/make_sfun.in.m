@@ -103,7 +103,7 @@ i_in = i_in + 1;
 {%- endif %}
 
 {%- if dims.np > 0 %}
-input_note = strcat(input_note, num2str(i_in), ') parameters, size [{{ dims.np }}]\n ')
+input_note = strcat(input_note, num2str(i_in), ') parameters, size [{{ dims.np }}]\n ');
 i_in = i_in + 1;
 {%- endif %}
 

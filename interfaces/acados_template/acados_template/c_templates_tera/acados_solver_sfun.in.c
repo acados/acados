@@ -250,7 +250,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", buffer);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", buffer);
 
-{%- if dims.ny > 0 %}
+{% if dims.ny > 0 %}
     // y_ref
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
@@ -263,7 +263,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 {%- endif %}
 
 
-{%- if dims.ny_e > 0 %}
+{% if dims.ny_e > 0 %}
     // y_ref_e
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
@@ -274,7 +274,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, {{ dims.N }}, "yref", (void *) buffer);
 {%- endif %}
 
-{%- if dims.np > 0 %}
+{% if dims.np > 0 %}
     // parameters
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
@@ -288,7 +288,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 {%- endif %}
 
 
-{%- if dims.nbx > 0 %}
+{% if dims.nbx > 0 %}
     // lbx
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
@@ -297,7 +297,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         buffer[i] = (double)(*in_sign[i]);
 
     for (int ii = 1; ii < {{ dims.N }}; ii++)
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", buffer);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "lbx", buffer);
 
     // ubx
     {%- set i_input = i_input + 1 %}
@@ -307,10 +307,10 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         buffer[i] = (double)(*in_sign[i]);
 
     for (int ii = 1; ii < {{ dims.N }}; ii++)
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", buffer);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "ubx", buffer);
 {%- endif %}
 
-{%- if dims.nbu > 0 %}
+{% if dims.nbu > 0 %}
     // lbu
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
@@ -319,7 +319,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         buffer[i] = (double)(*in_sign[i]);
 
     for (int ii = 0; ii < {{ dims.N }}; ii++)
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbu", buffer);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "lbu", buffer);
 
     // ubu
     {%- set i_input = i_input + 1 %}
@@ -329,10 +329,10 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         buffer[i] = (double)(*in_sign[i]);
 
     for (int ii = 0; ii < {{ dims.N }}; ii++)
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubu", buffer);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "ubu", buffer);
 {%- endif %}
 
-{%- if dims.ng > 0 %}
+{% if dims.ng > 0 %}
     // lg
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
@@ -341,7 +341,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         buffer[i] = (double)(*in_sign[i]);
 
     for (int ii = 0; ii < {{ dims.N }}; ii++)
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lg", buffer);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "lg", buffer);
 
     // ug
     {%- set i_input = i_input + 1 %}
@@ -351,10 +351,10 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         buffer[i] = (double)(*in_sign[i]);
 
     for (int ii = 0; ii < {{ dims.N }}; ii++)
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ug", buffer);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "ug", buffer);
 {%- endif %}
 
-{%- if dims.nh > 0 %}
+{% if dims.nh > 0 %}
     // lh
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
@@ -363,7 +363,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         buffer[i] = (double)(*in_sign[i]);
 
     for (int ii = 0; ii < {{ dims.N }}; ii++)
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lh", buffer);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "lh", buffer);
 
     // uh
     {%- set i_input = i_input + 1 %}
@@ -373,7 +373,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         buffer[i] = (double)(*in_sign[i]);
 
     for (int ii = 0; ii < {{ dims.N }}; ii++)
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "uh", buffer);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "uh", buffer);
 {%- endif %}
 
     /* call solver */
