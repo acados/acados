@@ -121,7 +121,7 @@ function render_acados_templates(acados_ocp_nlp_json_file)
     render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
 
     template_file = 'acados_sim_solver_sfun.in.c';
-    out_file = ['acados_sim_solver_sfun_', model_name, '.c'];
+    out_file = ['acados_sim_solver_sfunction_', model_name, '.c'];
     render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
 
     template_file = 'make_sfun_sim.in.m';
