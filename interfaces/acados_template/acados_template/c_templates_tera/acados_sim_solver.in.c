@@ -164,7 +164,7 @@ int {{ model.name }}_acados_sim_create() {
     sim_dims_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims, "nz", &nz);
 
     // sim opts
-
+{# TODO: use C interface instead of this.. #}
     {{ model.name }}_sim_opts = sim_opts_create({{ model.name }}_sim_config, {{ model.name }}_sim_dims);
 
     {{ model.name }}_sim_opts->ns = {{ solver_options.sim_method_num_stages }}; // number of stages in rk integrator
@@ -197,26 +197,38 @@ int {{ model.name }}_acados_sim_create() {
 
     // sim solver
 
-    {{ model.name }}_sim_solver = sim_solver_create({{ model.name }}_sim_config, {{ model.name }}_sim_dims, {{ model.name }}_sim_opts);
+    {{ model.name }}_sim_solver = sim_solver_create({{ model.name }}_sim_config,
+                                               {{ model.name }}_sim_dims, {{ model.name }}_sim_opts);
 
     // initialize state and input to zero
     // x
+    double x0[NX];
     for (ii = 0; ii < NX; ii++)
-        {{ model.name }}_sim_in->x[ii] = 0.0;
+        x0[ii] = 0.0;
+
+    sim_in_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims,
+               {{ model.name }}_sim_in, "x", x0);
+
 
     // u
+    double u0[NU];
     for (ii = 0; ii < NU; ii++)
-        {{ model.name }}_sim_in->u[ii] = 0.0;
+        u0[ii] = 0.0;
+
+    sim_in_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims,
+               {{ model.name }}_sim_in, "u", u0);
+
     int status = 0;
 
     return status;
 }
 
 
-int {{ model.name }}_acados_sim_solve() {
-
+int {{ model.name }}_acados_sim_solve()
+{
     // integrate dynamics using acados sim_solver
-    int status = sim_solve({{ model.name }}_sim_solver, {{ model.name }}_sim_in, {{ model.name }}_sim_out);
+    int status = sim_solve({{ model.name }}_sim_solver,
+                           {{ model.name }}_sim_in, {{ model.name }}_sim_out);
     if (status != 0)
         printf("error in {{ model.name }}_acados_sim_solve()! Exiting.\n");
 
@@ -224,8 +236,8 @@ int {{ model.name }}_acados_sim_solve() {
 }
 
 
-int {{ model.name }}_acados_sim_free() {
-
+int {{ model.name }}_acados_sim_free()
+{
     // free memory
     sim_solver_destroy({{ model.name }}_sim_solver);
     sim_in_destroy({{ model.name }}_sim_in);
@@ -236,17 +248,35 @@ int {{ model.name }}_acados_sim_free() {
 
     // free external function
     {% if solver_options.integrator_type == "IRK" %}
-        external_function_param_casadi_free(sim_impl_dae_fun);
-        external_function_param_casadi_free(sim_impl_dae_fun_jac_x_xdot_z);
-        external_function_param_casadi_free(sim_impl_dae_jac_x_xdot_u_z);
+    external_function_param_casadi_free(sim_impl_dae_fun);
+    external_function_param_casadi_free(sim_impl_dae_fun_jac_x_xdot_z);
+    external_function_param_casadi_free(sim_impl_dae_jac_x_xdot_u_z);
     {% elif solver_options.integrator_type == "ERK" %}
-        external_function_param_casadi_free(sim_forw_vde_casadi);
-        external_function_param_casadi_free(sim_expl_ode_fun_casadi);
+    external_function_param_casadi_free(sim_forw_vde_casadi);
+    external_function_param_casadi_free(sim_expl_ode_fun_casadi);
     {% endif %}
 
     return 0;
 }
 
+
+int {{ model.name }}_acados_sim_update_params(double *p, int np)
+{
+    int status = 0;
+    int casadi_np = 0;
+
+    {% if solver_options.integrator_type == "ERK" %}
+    // casadi_np = (sim_forw_vde_casadi)->np;
+    sim_forw_vde_casadi[0].set_param(sim_forw_vde_casadi, p);
+    sim_expl_ode_fun_casadi[0].set_param(sim_expl_ode_fun_casadi, p);
+    {% elif solver_options.integrator_type == "IRK" %}
+    sim_impl_dae_fun[0].set_param(sim_impl_dae_fun, p);
+    sim_impl_dae_fun_jac_x_xdot_z[0].set_param(sim_impl_dae_fun_jac_x_xdot_z, p);
+    sim_impl_dae_jac_x_xdot_u_z[0].set_param(sim_impl_dae_jac_x_xdot_u_z, p);
+    {% endif %}
+
+    return status;
+}
 
 /* getters pointers to C objects*/
 sim_config * {{ model.name }}_acados_get_sim_config()

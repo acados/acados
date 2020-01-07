@@ -1286,6 +1286,7 @@ int acados_update_params(int stage, double *p, int np) {
             exit(1);
         }
         impl_dae_fun[stage].set_param(impl_dae_fun+stage, p);
+
         casadi_np = (impl_dae_fun_jac_x_xdot_z+stage)->np;
         if (casadi_np != np) {
             printf("acados_update_params: trying to set %i parameters "
@@ -1293,6 +1294,7 @@ int acados_update_params(int stage, double *p, int np) {
             exit(1);
         }
         impl_dae_fun_jac_x_xdot_z[stage].set_param(impl_dae_fun_jac_x_xdot_z+stage, p);
+
         casadi_np = (impl_dae_jac_x_xdot_u_z+stage)->np;
         if (casadi_np != np) {
             printf("acados_update_params: trying to set %i parameters "
@@ -1300,6 +1302,7 @@ int acados_update_params(int stage, double *p, int np) {
             exit(1);
         }
         impl_dae_jac_x_xdot_u_z[stage].set_param(impl_dae_jac_x_xdot_u_z+stage, p);
+
         {% elif solver_options.integrator_type == "ERK" %}
         casadi_np = (forw_vde_casadi+stage)->np;
         if (casadi_np != np) {
@@ -1308,6 +1311,7 @@ int acados_update_params(int stage, double *p, int np) {
             exit(1);
         }
         forw_vde_casadi[stage].set_param(forw_vde_casadi+stage, p);
+
         {%- endif %}{# integrator_type #}
         {% if constraints.constr_type == "BGP" %}
         // casadi_np = (r_constraint+stage)->np;
@@ -1324,6 +1328,7 @@ int acados_update_params(int stage, double *p, int np) {
             exit(1);
         }
         phi_constraint[stage].set_param(phi_constraint+stage, p);
+
         {% elif constraints.constr_type == "BGH" and dims.nh > 0 %}
         casadi_np = (h_constraint+stage)->np;
         if (casadi_np != np) {
