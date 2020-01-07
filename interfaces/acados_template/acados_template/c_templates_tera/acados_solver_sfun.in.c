@@ -38,12 +38,8 @@
 
 // acados
 #include "acados/utils/print.h"
-#include "acados_c/ocp_nlp_interface.h"
+#include "acados_c/sim_interface.h"
 #include "acados_c/external_function_interface.h"
-
-// blasfeo
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 
 // example specific
 #include "{{ model.name }}_model/{{ model.name }}_model.h"

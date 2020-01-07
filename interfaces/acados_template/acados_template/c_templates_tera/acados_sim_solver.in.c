@@ -58,6 +58,7 @@
 #define NU   NU_
 #define NP   NP_
 
+// ** global data **
 sim_config  * {{model.name}}_sim_config;
 sim_in      * {{model.name}}_sim_in;
 sim_out     * {{model.name}}_sim_out;
