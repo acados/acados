@@ -91,7 +91,7 @@ external_function_param_casadi h_e_constraint;
 
 static void mdlInitializeSizes (SimStruct *S)
 {
-    // specify the number of continuous and discrete states 
+    // specify the number of continuous and discrete states
     ssSetNumContStates(S, 0);
     ssSetNumDiscStates(S, 0);
 
@@ -123,25 +123,29 @@ static void mdlInitializeSizes (SimStruct *S)
     if ( !ssSetNumInputPorts(S, {{ n_inputs }}) )
         return;
 
-    // specify the number of output ports 
+    // specify the number of output ports
     if ( !ssSetNumOutputPorts(S, 5) )
         return;
 
     // specify dimension information for the input ports
     {%- set i_input = 0 %}
+    // x0
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nx }});
     {%- if dims.ny > 0 %}
     {%- set i_input = i_input + 1 %}
+    // y_ref
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.ny }});
     {%- endif %}
 
     {%- if dims.ny_e > 0 %}
     {%- set i_input = i_input + 1 %}
+    // y_ref_e
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.ny_e }});
     {%- endif %}
 
     {%- if dims.np > 0 %}
     {%- set i_input = i_input + 1 %}
+    // parameters
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.np }});
     {%- endif %}
 
@@ -181,20 +185,20 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nh }});
     {%- endif %}
 
-    // specify dimension information for the output ports 
+    // specify dimension information for the output ports
     ssSetOutputPortVectorDimension(S, 0, {{ dims.nu }} ); // optimal input
     ssSetOutputPortVectorDimension(S, 1, 1 ); // solver status
     ssSetOutputPortVectorDimension(S, 2, 1 ); // KKT residuals
     ssSetOutputPortVectorDimension(S, 3, {{ dims.nx }} ); // first state
     ssSetOutputPortVectorDimension(S, 4, 1); // computation times
 
-    {# TODO(oj): why is that needed? #}
     // specify the direct feedthrough status
+    // should be set to 1 for all inputs used in mdlOutputs
     {%- for i in range(end=n_inputs) %}
     ssSetInputPortDirectFeedThrough(S, {{ i }}, 1);
     {%- endfor %}
 
-    // one sample time 
+    // one sample time
     ssSetNumSampleTimes(S, 1);
 }
 
