@@ -31,8 +31,8 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
-SOURCES = [ 'acados_solver_sfunction_{{ model.name }}.c ', ...
-            'acados_solver_{{ model.name }}.c ', ...
+SOURCES = [ 'acados_sim_solver_sfun_{{ model.name }}.c ', ...
+            'acados_sim_solver_{{ model.name }}.c ', ...
             {%- if  solver_options.integrator_type == 'ERK' %}
             '{{ model.name }}_model/{{ model.name }}_expl_ode_fun.c ', ...
             '{{ model.name }}_model/{{ model.name }}_expl_vde_forw.c ',...
@@ -42,18 +42,6 @@ SOURCES = [ 'acados_solver_sfunction_{{ model.name }}.c ', ...
             '{{ model.name }}_model/{{ model.name }}_impl_dae_fun.c ', ...
             '{{ model.name }}_model/{{ model.name }}_impl_dae_fun_jac_x_xdot_z.c ', ...
             '{{ model.name }}_model/{{ model.name }}_impl_dae_jac_x_xdot_u_z.c ', ...
-            {%- endif -%}
-            {%- if constraints.constr_type == "BGP" and dims.nphi > 0 %}
-            '{{ model.name }}_phi_constraint/{{ model.name }}_phi_constraint.c ', ...
-            {%- endif -%}
-            {%- if constraints.constr_type_e == "BGP" and dims.nphi_e > 0 %}
-            '{{ model.name }}_phi_e_constraint/{{ model.name }}_phi_e_constraint.c ', ...
-            {%- endif -%}
-            {%- if constraints.constr_type == "BGH"  and dims.nh > 0 %}
-            '{{ model.name }}_h_constraint/{{ model.name }}_h_constraint.c ', ...
-            {%- endif -%}
-            {%- if constraints.constr_type_e == "BGH"  and dims.nh_e > 0 %}
-            '{{ model.name }}_h_e_constraint/{{ model.name }}_h_e_constraint.c ', ...
             {%- endif %}
           ];
 
@@ -63,28 +51,16 @@ INCS = [ ' -I', fullfile(INC_PATH, 'blasfeo', 'include'), ...
          ' -I', fullfile(INC_PATH, 'hpipm', 'include'), ...
         ' -I', INC_PATH, ' -I', fullfile(INC_PATH, 'acados'), ' '];
 
-{% if  solver_options.qp_solver == "QPOASES" %}
-INCS = strcat(INCS, '-I', fullfile(INC_PATH, 'qpOASES_e') )
-{% endif %}
-
 CFLAGS  = ' -O';
-
-{% if  solver_options.qp_solver == "QPOASES" %}
-CFLAGS = [ CFLAGS, ' -DACADOS_WITH_QPOASES ' ];
-{% endif %}
 
 LIB_PATH = '{{ acados_lib_path }}';
 
-LIBS = '-lacados -lhpipm -lblasfeo';
+LIBS = '-lacados -lblasfeo -lhpipm';
 
-{% if  solver_options.qp_solver == "QPOASES" %}
-LIBS = strcat(LIBS, ' -lqpOASES_e'); 
-{% endif %}
-
-eval( [ 'mex -v -output  acados_solver_sfunction_{{ model.name }} ', ...
+eval( [ 'mex -v -output  acados_sim_solver_sfun_{{ model.name }} ', ...
     CFLAGS, INCS, ' ', SOURCES, ' -L', LIB_PATH, ' ', LIBS ]);
 
-fprintf( [ '\n\nSuccessfully created sfunction:\nacados_solver_sfunction_{{ model.name }}', '.', ...
+fprintf( [ '\n\nSuccessfully created sfunction:\nacados_sim_solver_sfun_{{ model.name }}', '.', ...
     eval('mexext')] );
 
 
@@ -92,13 +68,8 @@ fprintf( [ '\n\nSuccessfully created sfunction:\nacados_solver_sfunction_{{ mode
 fprintf('\n\nNote: Usage of Sfunction is as follows:\n')
 input_note = 'Inputs are:\n1) x0, initial state, size [{{ dims.nx }}]\n ';
 i_in = 2;
-{%- if dims.ny > 0 %}
-input_note = strcat(input_note, num2str(i_in), ') y_ref, size [{{ dims.ny }}]\n ');
-i_in = i_in + 1;
-{%- endif %}
-
-{%- if dims.ny > 0 %}
-input_note = strcat(input_note, num2str(i_in), ') y_ref_e, size [{{ dims.ny_e }}]\n ');
+{%- if dims.nu > 0 %}
+input_note = strcat(input_note, num2str(i_in), ') u, size [{{ dims.nu }}]\n ');
 i_in = i_in + 1;
 {%- endif %}
 
@@ -107,41 +78,12 @@ input_note = strcat(input_note, num2str(i_in), ') parameters, size [{{ dims.np }
 i_in = i_in + 1;
 {%- endif %}
 
-{%- if dims.nbx > 0 %}
-input_note = strcat(input_note, num2str(i_in), ') lbx, size [{{ dims.nbx }}]\n ');
-i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') ubx, size [{{ dims.nbx }}]\n ');
-i_in = i_in + 1;
-{%- endif %}
-
-{%- if dims.nbu > 0 %}
-input_note = strcat(input_note, num2str(i_in), ') lbu, size [{{ dims.nbu }}]\n ');
-i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') ubu, size [{{ dims.nbu }}]\n ');
-i_in = i_in + 1;
-{%- endif %}
-
-{%- if dims.ng > 0 %}
-input_note = strcat(input_note, num2str(i_in), ') lg, size [{{ dims.ng }}]\n ');
-i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') ug, size [{{ dims.ng }}]\n ');
-i_in = i_in + 1;
-{%- endif %}
-
-{%- if dims.nh > 0 %}
-input_note = strcat(input_note, num2str(i_in), ') lh, size [{{ dims.nh }}]\n ');
-i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') uh, size [{{ dims.nh }}]\n ');
-i_in = i_in + 1;
-{%- endif %}
 
 fprintf(input_note)
 
 disp(' ')
 
 output_note = strcat('Outputs are:\n', ...
-                '1) u0 - optimal input, size [{{ dims.nu }}]\n',...
-                '2) acados solver status (0 = SUCCESS)\n',...
-                '3) KKT residual\n4) first state \n5) CPU time\n');
+                '1) x1 - simulated state, size [{{ dims.nx }}]\n');
 
 fprintf(output_note)
