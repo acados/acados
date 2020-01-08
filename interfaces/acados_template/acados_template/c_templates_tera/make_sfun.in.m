@@ -63,13 +63,13 @@ INCS = [ ' -I', fullfile(INC_PATH, 'blasfeo', 'include'), ...
          ' -I', fullfile(INC_PATH, 'hpipm', 'include'), ...
         ' -I', INC_PATH, ' -I', fullfile(INC_PATH, 'acados'), ' '];
 
-{% if  solver_options.qp_solver == "QPOASES" %}
+{% if  solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
 INCS = strcat(INCS, '-I', fullfile(INC_PATH, 'qpOASES_e') )
 {% endif %}
 
 CFLAGS  = ' -O';
 
-{% if  solver_options.qp_solver == "QPOASES" %}
+{% if  solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
 CFLAGS = [ CFLAGS, ' -DACADOS_WITH_QPOASES ' ];
 {% endif %}
 
@@ -77,7 +77,7 @@ LIB_PATH = '{{ acados_lib_path }}';
 
 LIBS = '-lacados -lhpipm -lblasfeo';
 
-{% if  solver_options.qp_solver == "QPOASES" %}
+{% if  solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
 LIBS = strcat(LIBS, ' -lqpOASES_e'); 
 {% endif %}
 
