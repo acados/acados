@@ -1,18 +1,36 @@
 /*
- * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
  * This file is part of acados.
  *
  * The 2-Clause BSD License
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 // TODO(dimitris): revive linear MPC example
 
@@ -313,6 +331,33 @@ void *ocp_qp_qpdunes_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_
 
 
 
+void ocp_qp_qpdunes_memory_get(void *config_, void *mem_, const char *field, void* value)
+{
+    qp_solver_config *config = config_;
+	ocp_qp_qpdunes_memory *mem = mem_;
+
+	if(!strcmp(field, "time_qp_solver_call"))
+	{
+		double *tmp_ptr = value;
+		*tmp_ptr = mem->time_qp_solver_call;
+	}
+	else if(!strcmp(field, "iter"))
+	{
+		int *tmp_ptr = value;
+		*tmp_ptr = mem->iter;
+	}
+	else
+	{
+		printf("\nerror: ocp_qp_qpdunes_memory_get: field %s not available\n", field);
+		exit(1);
+	}
+
+	return;
+
+}
+
+
+
 static void form_H(double *H, int nx, int nu, struct blasfeo_dmat *sRSQrq)
 {
     // make Q full
@@ -447,7 +492,7 @@ static void form_inequalities(double *Ct, double *lc, double *uc, int nx, int nu
 
 
 /************************************************
- * workspcae
+ * workspace
  ************************************************/
 
 int ocp_qp_qpdunes_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
@@ -766,12 +811,12 @@ int ocp_qp_qpdunes(void *config_, ocp_qp_in *in, ocp_qp_out *out, void *opts_, v
         if (ns[ii] > 0)
         {
             printf("\nqpDUNES interface can not handle ns>0 yet: what about implementing it? :)\n");
-            return ACADOS_FAILURE;
+            exit(1);
         }
     }
 
     acados_timer tot_timer, qp_timer, interface_timer;
-    ocp_qp_info *info = (ocp_qp_info *) out->misc;
+    qp_info *info = (qp_info *) out->misc;
     acados_tic(&tot_timer);
 
     // cast data structures
@@ -789,6 +834,9 @@ int ocp_qp_qpdunes(void *config_, ocp_qp_in *in, ocp_qp_out *out, void *opts_, v
     qpdunes_status = qpDUNES_solve(&(mem->qpData));
     info->solve_QP_time = acados_toc(&qp_timer);
 
+	mem->time_qp_solver_call = info->solve_QP_time;
+    mem->iter = mem->qpData.log.numIter;
+
     acados_tic(&interface_timer);
     fill_in_qp_out(in, out, mem);
     ocp_qp_compute_t(in, out);
@@ -802,6 +850,14 @@ int ocp_qp_qpdunes(void *config_, ocp_qp_in *in, ocp_qp_out *out, void *opts_, v
     if (qpdunes_status == QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND) acados_status = ACADOS_SUCCESS;
     if (qpdunes_status == QPDUNES_ERR_ITERATION_LIMIT_REACHED) acados_status = ACADOS_MAXITER;
     return acados_status;
+}
+
+
+
+void ocp_qp_qpdunes_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
+{
+	printf("\nerror: ocp_qp_qpdunes_eval_sens: not implemented yet\n");
+	exit(1);
 }
 
 
@@ -821,9 +877,11 @@ void ocp_qp_qpdunes_config_initialize_default(void *config_)
         (int (*)(void *, void *, void *)) & ocp_qp_qpdunes_memory_calculate_size;
     config->memory_assign =
         (void *(*) (void *, void *, void *, void *) ) & ocp_qp_qpdunes_memory_assign;
+    config->memory_get = &ocp_qp_qpdunes_memory_get;
     config->workspace_calculate_size =
         (int (*)(void *, void *, void *)) & ocp_qp_qpdunes_workspace_calculate_size;
     config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & ocp_qp_qpdunes;
+    config->eval_sens = &ocp_qp_qpdunes_eval_sens;
 
     return;
 }

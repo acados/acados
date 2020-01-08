@@ -1,18 +1,36 @@
 /*
- * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
  * This file is part of acados.
  *
  * The 2-Clause BSD License
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 // external
 // TODO(dimitris): remove memcpy to avoid this dependency?
@@ -31,6 +49,8 @@
 #include "acados/utils/mem.h"
 // #include "utils/types.h"
 // #include "ocp_qp/ocp_qp_hpipm.h"
+
+
 
 int colmaj_ocp_qp_in_calculate_size(ocp_qp_dims *dims)
 {
@@ -73,6 +93,8 @@ int colmaj_ocp_qp_in_calculate_size(ocp_qp_dims *dims)
 
     return size;
 }
+
+
 
 char *assign_colmaj_ocp_qp_in(ocp_qp_dims *dims, colmaj_ocp_qp_in **qp_in, void *ptr)
 {
@@ -225,6 +247,8 @@ char *assign_colmaj_ocp_qp_in(ocp_qp_dims *dims, colmaj_ocp_qp_in **qp_in, void 
     return c_ptr;
 }
 
+
+
 int colmaj_ocp_qp_out_calculate_size(ocp_qp_dims *dims)
 {
     int N = dims->N;
@@ -250,6 +274,8 @@ int colmaj_ocp_qp_out_calculate_size(ocp_qp_dims *dims)
 
     return size;
 }
+
+
 
 char *assign_colmaj_ocp_qp_out(ocp_qp_dims *dims, colmaj_ocp_qp_out **qp_out, void *ptr)
 {
@@ -307,6 +333,8 @@ char *assign_colmaj_ocp_qp_out(ocp_qp_dims *dims, colmaj_ocp_qp_out **qp_out, vo
     return c_ptr;
 }
 
+
+
 int colmaj_ocp_qp_res_calculate_size(ocp_qp_dims *dims)
 {
     int N = dims->N;
@@ -339,6 +367,8 @@ int colmaj_ocp_qp_res_calculate_size(ocp_qp_dims *dims)
 
     return size;
 }
+
+
 
 char *assign_colmaj_ocp_qp_res(ocp_qp_dims *dims, colmaj_ocp_qp_res **qp_res, void *ptr)
 {
@@ -405,6 +435,8 @@ char *assign_colmaj_ocp_qp_res(ocp_qp_dims *dims, colmaj_ocp_qp_res **qp_res, vo
     return c_ptr;
 }
 
+
+
 void convert_colmaj_to_ocp_qp_in(colmaj_ocp_qp_in *cm_qp_in, ocp_qp_in *qp_in)
 {
     int N = cm_qp_in->N;
@@ -443,11 +475,41 @@ void convert_colmaj_to_ocp_qp_in(colmaj_ocp_qp_in *cm_qp_in, ocp_qp_in *qp_in)
     }
 
     // convert to backend qp
-    d_cvt_colmaj_to_ocp_qp(cm_qp_in->A, cm_qp_in->B, cm_qp_in->b, cm_qp_in->Q, cm_qp_in->S,
-                           cm_qp_in->R, cm_qp_in->q, cm_qp_in->r, qp_in->idxb, cm_qp_in->lb,
-                           cm_qp_in->ub, cm_qp_in->Cx, cm_qp_in->Cu, cm_qp_in->lc, cm_qp_in->uc,
-                           NULL, NULL, NULL, NULL, NULL, NULL, NULL, qp_in);
+	int ii;
+	for(ii=0; ii<N; ii++)
+	{
+		d_ocp_qp_set_A(ii, cm_qp_in->A[ii], qp_in);
+		d_ocp_qp_set_B(ii, cm_qp_in->B[ii], qp_in);
+		d_ocp_qp_set_b(ii, cm_qp_in->b[ii], qp_in);
+		d_ocp_qp_set_R(ii, cm_qp_in->R[ii], qp_in);
+		d_ocp_qp_set_S(ii, cm_qp_in->S[ii], qp_in);
+		d_ocp_qp_set_Q(ii, cm_qp_in->Q[ii], qp_in);
+		d_ocp_qp_set_r(ii, cm_qp_in->r[ii], qp_in);
+		d_ocp_qp_set_q(ii, cm_qp_in->q[ii], qp_in);
+		d_ocp_qp_set_idxb(ii, cm_qp_in->idxb[ii], qp_in);
+		d_ocp_qp_set_lb(ii, cm_qp_in->lb[ii], qp_in);
+		d_ocp_qp_set_ub(ii, cm_qp_in->ub[ii], qp_in);
+		d_ocp_qp_set_C(ii, cm_qp_in->Cx[ii], qp_in);
+		d_ocp_qp_set_D(ii, cm_qp_in->Cu[ii], qp_in);
+		d_ocp_qp_set_lg(ii, cm_qp_in->lc[ii], qp_in);
+		d_ocp_qp_set_ug(ii, cm_qp_in->uc[ii], qp_in);
+	}
+	d_ocp_qp_set_R(ii, cm_qp_in->R[ii], qp_in);
+	d_ocp_qp_set_S(ii, cm_qp_in->S[ii], qp_in);
+	d_ocp_qp_set_Q(ii, cm_qp_in->Q[ii], qp_in);
+	d_ocp_qp_set_r(ii, cm_qp_in->r[ii], qp_in);
+	d_ocp_qp_set_q(ii, cm_qp_in->q[ii], qp_in);
+	d_ocp_qp_set_idxb(ii, cm_qp_in->idxb[ii], qp_in);
+	d_ocp_qp_set_lb(ii, cm_qp_in->lb[ii], qp_in);
+	d_ocp_qp_set_ub(ii, cm_qp_in->ub[ii], qp_in);
+	d_ocp_qp_set_C(ii, cm_qp_in->Cx[ii], qp_in);
+	d_ocp_qp_set_D(ii, cm_qp_in->Cu[ii], qp_in);
+	d_ocp_qp_set_lg(ii, cm_qp_in->lc[ii], qp_in);
+	d_ocp_qp_set_ug(ii, cm_qp_in->uc[ii], qp_in);
+
 }
+
+
 
 void convert_ocp_qp_out_to_colmaj(ocp_qp_out *qp_out, colmaj_ocp_qp_out *cm_qp_out)
 {
@@ -481,6 +543,8 @@ void convert_ocp_qp_out_to_colmaj(ocp_qp_out *qp_out, colmaj_ocp_qp_out *cm_qp_o
     //                            lam_lg, lam_ug, lam_ls, lam_us);
 }
 
+
+
 void convert_ocp_qp_res_to_colmaj(ocp_qp_res *qp_res, colmaj_ocp_qp_res *cm_qp_res)
 {
     double **res_r = cm_qp_res->res_r;
@@ -503,7 +567,7 @@ void convert_ocp_qp_res_to_colmaj(ocp_qp_res *qp_res, colmaj_ocp_qp_res *cm_qp_r
 
     ocp_qp_res_compute_nrm_inf(qp_res, cm_qp_res->res_nrm_inf);
 
-    d_cvt_ocp_qp_res_to_colmaj(qp_res, res_r, res_q, res_ls, res_us, res_b, res_d_lb, res_d_ub,
+    d_ocp_qp_res_get_all(qp_res, res_r, res_q, res_ls, res_us, res_b, res_d_lb, res_d_ub,
                                res_d_lg, res_d_ug, res_d_ls, res_d_us, res_m_lb, res_m_ub, res_m_lg,
                                res_m_ug, res_m_ls, res_m_us);
 }

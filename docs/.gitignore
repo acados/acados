@@ -1,4 +1,3 @@
-syscop.bib
 .doctrees
 .buildinfo
 objects.inv
@@ -8,3 +7,4 @@ _build_doxygen_c_api
 _build_doxygen
 doxygen.tag
 old_*
+env/

@@ -1,18 +1,36 @@
 /*
- * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
  * This file is part of acados.
  *
  * The 2-Clause BSD License
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 #ifndef ACADOS_SIM_SIM_COMMON_H_
 #define ACADOS_SIM_SIM_COMMON_H_
@@ -60,9 +78,6 @@ typedef struct
     double *x;  // x[NX] - initial state value for simulation
     double *u;  // u[NU] - control - constant over simulation time
 
-    double *xdot;  // xdot[NX] - initialization for state derivatives k within the integrator
-    double *z;     // z[NZ] - initialization for algebraic variables z
-
     double *S_forw;  // forward seed [Sx, Su]
     double *S_adj;   // backward seed
 
@@ -81,6 +96,7 @@ typedef struct
     double CPUtime;  // in seconds
     double LAtime;   // in seconds
     double ADtime;   // in seconds
+
 } sim_info;
 
 
@@ -99,6 +115,7 @@ typedef struct
     double *grad;  // gradient correction
 
     sim_info *info;
+
 } sim_out;
 
 
@@ -123,6 +140,7 @@ typedef struct
 
     bool output_z;        // 1 -- if zn should be computed
     bool sens_algebraic;  // 1 -- if S_algebraic should be computed
+    bool exact_z_output;  // 1 -- if z, S_algebraic should be computed exactly, extra Newton iterations
 
     // for explicit integrators: newton_iter == 0 && scheme == NULL
     // && jac_reuse=false
@@ -141,19 +159,27 @@ typedef struct
 {
     int (*evaluate)(void *config_, sim_in *in, sim_out *out, void *opts, void *mem, void *work);
     int (*precompute)(void *config_, sim_in *in, sim_out *out, void *opts, void *mem, void *work);
+    // opts
     int (*opts_calculate_size)(void *config_, void *dims);
     void *(*opts_assign)(void *config_, void *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config_, void *dims, void *opts);
     void (*opts_update)(void *config_, void *dims, void *opts);
-    int (*opts_set)(void *config_, void *opts_, const char *field, void *value);
+    void (*opts_set)(void *config_, void *opts_, const char *field, void *value);
+    void (*opts_get)(void *config_, void *opts_, const char *field, void *value);
+    // mem
     int (*memory_calculate_size)(void *config, void *dims, void *opts);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
+    int (*memory_set)(void *config, void *dims, void *mem, const char *field, void *value);
+    int (*memory_set_to_zero)(void *config, void *dims, void *opts, void *mem, const char *field);
+    // work
     int (*workspace_calculate_size)(void *config, void *dims, void *opts);
+    // model
     int (*model_calculate_size)(void *config, void *dims);
     void *(*model_assign)(void *config, void *dims, void *raw_memory);
     int (*model_set)(void *model, const char *field, void *value);
+    // config
     void (*config_initialize_default)(void *config);
-//    int (*dims_calculate_size)(void *config);
+    // dims
     int (*dims_calculate_size)();
     void *(*dims_assign)(void *config, void *raw_memory);
     void (*dims_set)(void *config, void *dims, const char *field, const int *value);
@@ -187,7 +213,8 @@ int sim_out_get_(void *config, void *dims, sim_out *out, const char *field, void
 
 /* opts */
 //
-int sim_opts_set_(sim_opts *opts, const char *field, void *value);
-
+void sim_opts_set_(sim_opts *opts, const char *field, void *value);
+//
+void sim_opts_get_(sim_config *config, sim_opts *opts, const char *field, void *value);
 
 #endif  // ACADOS_SIM_SIM_COMMON_H_

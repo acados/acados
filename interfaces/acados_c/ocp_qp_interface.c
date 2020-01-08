@@ -1,21 +1,36 @@
 /*
- *    This file is part of acados.
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
- *    acados is free software; you can redistribute it and/or
- *    modify it under the terms of the GNU Lesser General Public
- *    License as published by the Free Software Foundation; either
- *    version 3 of the License, or (at your option) any later version.
+ * This file is part of acados.
  *
- *    acados is distributed in the hope that it will be useful,
- *    but WITHOUT ANY WARRANTY; without even the implied warranty of
- *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *    Lesser General Public License for more details.
+ * The 2-Clause BSD License
  *
- *    You should have received a copy of the GNU Lesser General Public
- *    License along with acados; if not, write to the Free Software Foundation,
- *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 #include "acados_c/ocp_qp_interface.h"
 
@@ -28,8 +43,9 @@
 #include "acados/utils/mem.h"
 
 #include "acados/dense_qp/dense_qp_hpipm.h"
-#include "acados/ocp_qp/ocp_qp_full_condensing_solver.h"
-#include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
+#include "acados/ocp_qp/ocp_qp_xcond_solver.h"
+#include "acados/ocp_qp/ocp_qp_partial_condensing.h"
+#include "acados/ocp_qp/ocp_qp_full_condensing.h"
 
 #ifdef ACADOS_WITH_QORE
 #include "acados/dense_qp/dense_qp_qore.h"
@@ -58,61 +74,68 @@
 #endif
 
 
-void ocp_qp_xcond_solver_config_initialize_default(ocp_qp_solver_t solver_name,
-                                                   ocp_qp_xcond_solver_config *solver_config)
+void ocp_qp_xcond_solver_config_initialize_from_plan(ocp_qp_solver_t solver_name, ocp_qp_xcond_solver_config *solver_config)
 {
-// NOTE: this only works if solvers are ordered in the enum!!!
-// First the partial condensing solver then the full condensing solvers.
-if (solver_name < FULL_CONDENSING_HPIPM)
-    {
-        ocp_qp_partial_condensing_solver_config_initialize_default(solver_config);
-    }
-    else
-    {
-        ocp_qp_full_condensing_solver_config_initialize_default(solver_config);
-    }
 
     switch (solver_name)
     {
         case PARTIAL_CONDENSING_HPIPM:
+			ocp_qp_xcond_solver_config_initialize_default(solver_config);
             ocp_qp_hpipm_config_initialize_default(solver_config->qp_solver);
+			ocp_qp_partial_condensing_config_initialize_default(solver_config->xcond);
             break;
 #ifdef ACADOS_WITH_HPMPC
         case PARTIAL_CONDENSING_HPMPC:
+			ocp_qp_xcond_solver_config_initialize_default(solver_config);
             ocp_qp_hpmpc_config_initialize_default(solver_config->qp_solver);
+			ocp_qp_partial_condensing_config_initialize_default(solver_config->xcond);
             break;
 #endif
 #ifdef ACADOS_WITH_OOQP
         case PARTIAL_CONDENSING_OOQP:
+			ocp_qp_xcond_solver_config_initialize_default(solver_config);
             ocp_qp_ooqp_config_initialize_default(solver_config->qp_solver);
+			ocp_qp_partial_condensing_config_initialize_default(solver_config->xcond);
             break;
 #endif
 #ifdef ACADOS_WITH_OSQP
         case PARTIAL_CONDENSING_OSQP:
+			ocp_qp_xcond_solver_config_initialize_default(solver_config);
             ocp_qp_osqp_config_initialize_default(solver_config->qp_solver);
+			ocp_qp_partial_condensing_config_initialize_default(solver_config->xcond);
             break;
 #endif
 #ifdef ACADOS_WITH_QPDUNES
         case PARTIAL_CONDENSING_QPDUNES:
+			ocp_qp_xcond_solver_config_initialize_default(solver_config);
             ocp_qp_qpdunes_config_initialize_default(solver_config->qp_solver);
+			ocp_qp_partial_condensing_config_initialize_default(solver_config->xcond);
             break;
 #endif
         case FULL_CONDENSING_HPIPM:
+			ocp_qp_xcond_solver_config_initialize_default(solver_config);
             dense_qp_hpipm_config_initialize_default(solver_config->qp_solver);
+			ocp_qp_full_condensing_config_initialize_default(solver_config->xcond);
             break;
 #ifdef ACADOS_WITH_QPOASES
         case FULL_CONDENSING_QPOASES:
+			ocp_qp_xcond_solver_config_initialize_default(solver_config);
             dense_qp_qpoases_config_initialize_default(solver_config->qp_solver);
+			ocp_qp_full_condensing_config_initialize_default(solver_config->xcond);
             break;
 #endif
 #ifdef ACADOS_WITH_QORE
         case FULL_CONDENSING_QORE:
+			ocp_qp_xcond_solver_config_initialize_default(solver_config);
             dense_qp_qore_config_initialize_default(solver_config->qp_solver);
+			ocp_qp_full_condensing_config_initialize_default(solver_config->xcond);
             break;
 #endif
 #ifdef ACADOS_WITH_OOQP
         case FULL_CONDENSING_OOQP:
+			ocp_qp_xcond_solver_config_initialize_default(solver_config);
             dense_qp_ooqp_config_initialize_default(solver_config->qp_solver);
+			ocp_qp_full_condensing_config_initialize_default(solver_config->xcond);
             break;
 #endif
         case INVALID_QP_SOLVER:
@@ -129,25 +152,27 @@ if (solver_name < FULL_CONDENSING_HPIPM)
 
 
 
-ocp_qp_xcond_solver_config *ocp_qp_config_create(ocp_qp_solver_plan plan)
+ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_create(ocp_qp_solver_plan plan)
 {
     int bytes = ocp_qp_xcond_solver_config_calculate_size();
     void *ptr = calloc(1, bytes);
     ocp_qp_xcond_solver_config *solver_config = ocp_qp_xcond_solver_config_assign(ptr);
 
-    ocp_qp_xcond_solver_config_initialize_default(plan.qp_solver, solver_config);
+    ocp_qp_xcond_solver_config_initialize_from_plan(plan.qp_solver, solver_config);
 
     return solver_config;
 }
 
 
 
-void ocp_qp_config_free(void *config)
+void ocp_qp_xcond_solver_config_free(ocp_qp_xcond_solver_config *config)
 {
     free(config);
 }
 
 
+
+/* dims */
 
 ocp_qp_dims *ocp_qp_dims_create(int N)
 {
@@ -170,15 +195,35 @@ void ocp_qp_dims_free(void *dims_)
 
 
 
-/* in */
-
-ocp_qp_in *ocp_qp_in_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims)
+ocp_qp_xcond_solver_dims *ocp_qp_xcond_dims_dims_create(ocp_qp_xcond_solver_config *config, int N)
 {
-    int bytes = ocp_qp_in_calculate_size(config, dims);
+    int bytes = ocp_qp_xcond_solver_dims_calculate_size(config, N);
 
     void *ptr = calloc(1, bytes);
 
-    ocp_qp_in *in = ocp_qp_in_assign(config, dims, ptr);
+    ocp_qp_xcond_solver_dims *dims = ocp_qp_xcond_solver_dims_assign(config, N, ptr);
+
+    return dims;
+}
+
+
+
+void ocp_qp_xcond_solver_dims_free(ocp_qp_xcond_solver_dims *dims)
+{
+    free(dims);
+}
+
+
+
+/* in */
+
+ocp_qp_in *ocp_qp_in_create(ocp_qp_dims *dims)
+{
+    int bytes = ocp_qp_in_calculate_size(dims);
+
+    void *ptr = calloc(1, bytes);
+
+    ocp_qp_in *in = ocp_qp_in_assign(dims, ptr);
 
     return in;
 }
@@ -194,13 +239,13 @@ void ocp_qp_in_free(void *in_)
 
 /* out */
 
-ocp_qp_out *ocp_qp_out_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims)
+ocp_qp_out *ocp_qp_out_create(ocp_qp_dims *dims)
 {
-    int bytes = ocp_qp_out_calculate_size(config, dims);
+    int bytes = ocp_qp_out_calculate_size(dims);
 
     void *ptr = calloc(1, bytes);
 
-    ocp_qp_out *out = ocp_qp_out_assign(config, dims, ptr);
+    ocp_qp_out *out = ocp_qp_out_assign(dims, ptr);
 
     return out;
 }
@@ -215,7 +260,7 @@ void ocp_qp_out_free(void *out_)
 
 
 /* opts */
-void *ocp_qp_opts_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims)
+void *ocp_qp_xcond_solver_opts_create(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims)
 {
     int bytes = config->opts_calculate_size(config, dims);
 
@@ -230,16 +275,16 @@ void *ocp_qp_opts_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims)
 
 
 
-void ocp_qp_opts_free(void *opts_)
+void ocp_qp_xcond_solver_opts_free(ocp_qp_xcond_solver_opts *opts)
 {
-    free(opts_);
+    free(opts);
 }
 
 
 
 /* solver */
 
-int ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_)
+int ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims, void *opts_)
 {
     int bytes = sizeof(ocp_qp_solver);
 
@@ -251,7 +296,7 @@ int ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims,
 
 
 
-ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_,
+ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims, void *opts_,
                              void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
@@ -278,8 +323,9 @@ ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_dims *di
 
 
 
-ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_)
+ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims, void *opts_)
 {
+
     config->opts_update(config, dims, opts_);
 
     int bytes = ocp_qp_calculate_size(config, dims, opts_);
@@ -295,7 +341,7 @@ ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *di
 
 int ocp_qp_solve(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
 {
-    return solver->config->evaluate(solver->config, qp_in, qp_out, solver->opts, solver->mem,
+    return solver->config->evaluate(solver->config, solver->dims, qp_in, qp_out, solver->opts, solver->mem,
                                     solver->work);
 }
 

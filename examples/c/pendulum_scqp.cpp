@@ -1,26 +1,43 @@
 /*
- * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
  * This file is part of acados.
  *
  * The 2-Clause BSD License
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 #include <stdio.h>
 #include <cstdlib>
 #include <vector>
 
 #include "acados/utils/print.h"
-#include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
-#include "acados/ocp_nlp/ocp_nlp_constraints_bghp.h"
+#include "acados/ocp_nlp/ocp_nlp_constraints_bgp.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_common.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
@@ -185,7 +202,7 @@ int main() {
 	external_function_casadi_assign(&position_constraint, ptr);
 
 	// bounds
-	ocp_nlp_constraints_bghp_model **constraints = (ocp_nlp_constraints_bghp_model **) nlp_in->constraints;
+	ocp_nlp_constraints_bgp_model **constraints = (ocp_nlp_constraints_bgp_model **) nlp_in->constraints;
 
     constraints[0]->idxb = idxb_0.data();
 	blasfeo_pack_dvec(nb[0], x0.data(), &constraints[0]->d, 0);
@@ -196,7 +213,7 @@ int main() {
 	constraints[N]->nl_constr_h_fun_jac = (external_function_generic *) &nonlinear_constraint;
 	constraints[N]->p = (external_function_generic *) &position_constraint;
 
-	void *nlp_opts = ocp_nlp_opts_create(config, dims);
+	void *nlp_opts = ocp_nlp_solver_opts_create(config, dims);
 
     int max_iter = max_num_sqp_iterations;
     double tol_stat = 1e-9;
@@ -204,14 +221,15 @@ int main() {
     double tol_ineq = 1e-9;
     double tol_comp = 1e-9;
 
-    ocp_nlp_opts_set(config, nlp_opts, "max_iter", &max_iter);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_stat", &tol_stat);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_eq", &tol_eq);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "max_iter", &max_iter);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_stat", &tol_stat);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_eq", &tol_eq);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
 
-	ocp_nlp_sqp_opts *sqp_opts = (ocp_nlp_sqp_opts *) nlp_opts;
-	((ocp_qp_partial_condensing_solver_opts *) sqp_opts->qp_solver_opts)->pcond_opts->N2 = N;
+	int N2 = N;
+    ocp_nlp_solver_opts_set(config, nlp_opts, "qp_cond_N", &N2);
+    ocp_nlp_solver_opts_update(config, dims, nlp_opts);
 
 	ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 	for (int i = 0; i <= N; ++i)

@@ -1,31 +1,50 @@
-#   This file is part of acados.
 #
-#   acados is free software; you can redistribute it and/or
-#   modify it under the terms of the GNU Lesser General Public
-#   License as published by the Free Software Foundation; either
-#   version 3 of the License, or (at your option) any later version.
+# Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+# Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+# Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+# Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
 #
-#   acados is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#   Lesser General Public License for more details.
+# This file is part of acados.
 #
-#   You should have received a copy of the GNU Lesser General Public
-#   License along with acados; if not, write to the Free Software Foundation,
-#   Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+# The 2-Clause BSD License
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from casadi import *
 import os
+from casadi import *
+from .utils import ALLOWED_CASADI_VERSIONS
 
 def generate_c_code_implicit_ode( model, opts ):
 
     casadi_version = CasadiMeta.version()
-    if  casadi_version not in ('3.4.5', '3.4.0'):
-        # old casadi versions
-        raise Exception('Please download and install Casadi 3.4.0 to ensure compatibility with acados. Version ' + casadi_version + ' currently in use.')
-
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
+    if casadi_version not in (ALLOWED_CASADI_VERSIONS):
+        msg =  'Please download and install CasADi {} '.format(" or ".join(ALLOWED_CASADI_VERSIONS))
+        msg += 'to ensure compatibility with acados.\n'
+        msg += 'Version {} currently in use.'.format(casadi_version)
+        raise Exception(msg)
+
     generate_hess = opts["generate_hess"]
 
     ## load model
@@ -44,6 +63,7 @@ def generate_c_code_implicit_ode( model, opts ):
         # check that z is empty
         if len(z) == 0:
             nz = 0
+            z  = SX.sym('z', 0, 0)
         else:
             raise Exception('z is a non-empty list. It should be either an empty list or an SX object.')
     else:
@@ -53,6 +73,7 @@ def generate_c_code_implicit_ode( model, opts ):
         # check that z is empty
         if len(p) == 0:
             np = 0
+            p = SX.sym('p', 0, 0)
         else:
             raise Exception('p is a non-empty list. It should be either an empty list or an SX object.')
     else:
@@ -86,52 +107,36 @@ def generate_c_code_implicit_ode( model, opts ):
     # HESS_multiplied = HESS_multiplied.simplify()
 
     ## Set up functions
-    if np != 0:
-        p = model.p
-        fun_name = model_name + '_impl_dae_fun'
-        impl_dae_fun = Function(fun_name, [x, xdot, u, z, p], [f_impl])
+    p = model.p
+    fun_name = model_name + '_impl_dae_fun'
+    impl_dae_fun = Function(fun_name, [x, xdot, u, z, p], [f_impl])
 
-        fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
-        impl_dae_fun_jac_x_xdot_z = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_z])
+    fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
+    impl_dae_fun_jac_x_xdot_z = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_z])
 
-        # fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
-        # impl_dae_fun_jac_x_xdot = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_z])
+    # fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
+    # impl_dae_fun_jac_x_xdot = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_z])
 
-        # fun_name = model_name + '_impl_dae_jac_x_xdot_u'
-        # impl_dae_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z, p], [jac_x, jac_xdot, jac_u, jac_z])
-        
-        fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u_z'
-        impl_dae_fun_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_u, jac_z])
+    # fun_name = model_name + '_impl_dae_jac_x_xdot_u'
+    # impl_dae_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z, p], [jac_x, jac_xdot, jac_u, jac_z])
 
-        fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u'
-        impl_dae_fun_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_u])
+    fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u_z'
+    impl_dae_fun_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_u, jac_z])
 
-        fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
-        impl_dae_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z, p], [jac_x, jac_xdot, jac_u, jac_z])
+    fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u'
+    impl_dae_fun_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_u])
 
-        
-        fun_name = model_name + '_impl_dae_hess'
-        impl_dae_hess = Function(fun_name, [x, xdot, u, z, multiplier, multiply_mat, p], [HESS_multiplied])
-    else:
-        fun_name = model_name + '_impl_dae_fun'
-        if nz > 0:
-            impl_dae_fun = Function(fun_name, [x, xdot, u, z], [f_impl])
-        else:
-            impl_dae_fun = Function(fun_name, [x, xdot, u], [f_impl])
-        
-        fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
-        impl_dae_fun_jac_x_xdot_z = Function(fun_name, [x, xdot, u, z], [f_impl, jac_x, jac_xdot, jac_z])
-        
-        fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u_z'
-        impl_dae_fun_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z], [f_impl, jac_x, jac_xdot, jac_u, jac_z])
+    fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
+    impl_dae_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z, p], [jac_x, jac_xdot, jac_u, jac_z])
 
-        fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
-        impl_dae_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z], [jac_x, jac_xdot, jac_u, jac_z])
-        
-        fun_name = model_name + '_impl_dae_hess'
-        impl_dae_hess = Function(fun_name, [x, xdot, u, z, multiplier, multiply_mat], [HESS_multiplied])
+
+    fun_name = model_name + '_impl_dae_hess'
+    impl_dae_hess = Function(fun_name, [x, xdot, u, z, multiplier, multiply_mat, p], [HESS_multiplied])
 
     # generate C code
+    if not os.path.exists('c_generated_code'):
+        os.mkdir('c_generated_code')
+
     os.chdir('c_generated_code')
     model_dir = model_name + '_model'
     if not os.path.exists(model_dir):
@@ -144,7 +149,7 @@ def generate_c_code_implicit_ode( model, opts ):
 
     fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
     impl_dae_fun_jac_x_xdot_z.generate(fun_name, casadi_opts)
-    
+
     fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
     impl_dae_jac_x_xdot_u_z.generate(fun_name, casadi_opts)
 

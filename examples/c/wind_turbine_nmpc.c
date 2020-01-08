@@ -1,18 +1,36 @@
 /*
- * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
  * This file is part of acados.
  *
  * The 2-Clause BSD License
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 // std
 #include <assert.h>
@@ -785,7 +803,7 @@ int main()
     ************************************************/
 
     // create opts
-    void *nlp_opts = ocp_nlp_opts_create(config, dims);
+    void *nlp_opts = ocp_nlp_solver_opts_create(config, dims);
 
     // nlp opts
     if (plan->nlp_solver == SQP)
@@ -797,11 +815,11 @@ int main()
 		double tol_ineq = 1e-8;
 		double tol_comp = 1e-8;
 
-		ocp_nlp_opts_set(config, nlp_opts, "max_iter", &max_iter);
-		ocp_nlp_opts_set(config, nlp_opts, "tol_stat", &tol_stat);
-		ocp_nlp_opts_set(config, nlp_opts, "tol_eq", &tol_eq);
-		ocp_nlp_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
-		ocp_nlp_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
+		ocp_nlp_solver_opts_set(config, nlp_opts, "max_iter", &max_iter);
+		ocp_nlp_solver_opts_set(config, nlp_opts, "tol_stat", &tol_stat);
+		ocp_nlp_solver_opts_set(config, nlp_opts, "tol_eq", &tol_eq);
+		ocp_nlp_solver_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
+		ocp_nlp_solver_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
     }
     else if (plan->nlp_solver == SQP_RTI)
     {
@@ -832,8 +850,8 @@ int main()
         {
             int ns = 4;
             int num_steps = 10;
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps);
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_num_steps", &num_steps);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_ns", &ns);
         }
         else if (plan->sim_solver_plan[i].sim_solver == IRK)
         {
@@ -841,17 +859,17 @@ int main()
             int ns = 4;
             bool jac_reuse = true;
 
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps);
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "jac_reuse", &jac_reuse);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_num_steps", &num_steps);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_ns", &ns);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_jac_reuse", &jac_reuse);
         }
         else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
         {
             int num_steps = 1;
             int ns = 4;
 
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps);
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_num_steps", &num_steps);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_ns", &ns);
         }
         else if (plan->sim_solver_plan[i].sim_solver == GNSF)
         {
@@ -860,10 +878,10 @@ int main()
             int newton_iter = 1;
             bool jac_reuse = true;
 
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps);
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "jac_reuse", &jac_reuse);
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "newton_iter", &newton_iter);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_num_steps", &num_steps);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_ns", &ns);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_jac_reuse", &jac_reuse);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_newton_iter", &newton_iter);
         }
     }
 
@@ -871,22 +889,24 @@ int main()
     if (plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
     {
         int cond_N = 5;
-        ocp_nlp_opts_set(config, nlp_opts, "qp_cond_N", &cond_N);
+        ocp_nlp_solver_opts_set(config, nlp_opts, "qp_cond_N", &cond_N);
     }
 
     // update opts after manual changes
-    ocp_nlp_opts_update(config, dims, nlp_opts);
+    ocp_nlp_solver_opts_update(config, dims, nlp_opts);
 
     /************************************************
-    * ocp_nlp out
+    * ocp_nlp_out & solver
     ************************************************/
 
     ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 
+    ocp_nlp_out *sens_nlp_out = ocp_nlp_out_create(config, dims);
+
     ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts);
 
     /************************************************
-    *     precomputation (after all options are set)
+    * precomputation (after all options are set)
     ************************************************/
 
     status = ocp_nlp_precompute(solver, nlp_in, nlp_out);
@@ -959,6 +979,11 @@ int main()
 
             // solve NLP
             status = ocp_nlp_solve(solver, nlp_in, nlp_out);
+
+			// evaluate parametric sensitivity of solution
+//			ocp_nlp_out_print(dims, nlp_out);
+			ocp_nlp_eval_param_sens(solver, "ex", 0, 0, sens_nlp_out);
+//			ocp_nlp_out_print(dims, nlp_out);
 
             // update initial condition
             // TODO(dimitris): maybe simulate system instead of passing x[1] as next state
@@ -1049,9 +1074,10 @@ int main()
     free(phi_jac_y_uhat);
     free(f_lo_jac_x1_x1dot_u_z);
 
-    ocp_nlp_opts_destroy(nlp_opts);
+    ocp_nlp_solver_opts_destroy(nlp_opts);
     ocp_nlp_in_destroy(nlp_in);
     ocp_nlp_out_destroy(nlp_out);
+    ocp_nlp_out_destroy(sens_nlp_out);
     ocp_nlp_solver_destroy(solver);
     ocp_nlp_dims_destroy(dims);
     ocp_nlp_config_destroy(config);

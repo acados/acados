@@ -1,18 +1,36 @@
 /*
- * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
  * This file is part of acados.
  *
  * The 2-Clause BSD License
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -984,6 +1002,37 @@ void *ocp_qp_ooqp_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, v
 
 
 
+void ocp_qp_ooqp_memory_get(void *config_, void *mem_, const char *field, void* value)
+{
+    qp_solver_config *config = config_;
+	ocp_qp_ooqp_memory *mem = mem_;
+
+	if(!strcmp(field, "time_qp_solver_call"))
+	{
+		double *tmp_ptr = value;
+		*tmp_ptr = mem->time_qp_solver_call;
+	}
+	else if(!strcmp(field, "iter"))
+	{
+		int *tmp_ptr = value;
+		*tmp_ptr = mem->iter;
+	}
+	else
+	{
+		printf("\nerror: ocp_qp_ooqp_memory_get: field %s not available\n", field);
+		exit(1);
+	}
+
+	return;
+
+}
+
+
+
+/************************************************
+ * workspace
+ ************************************************/
+
 int ocp_qp_ooqp_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
 {
     UNUSED(opts_);
@@ -1047,12 +1096,12 @@ int ocp_qp_ooqp(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_
         if (ns[ii] > 0)
         {
             printf("\nOOQP interface can not handle ns>0 yet: what about implementing it? :)\n");
-            return ACADOS_FAILURE;
+            exit(1);
         }
     }
 
     acados_timer tot_timer, qp_timer, interface_timer;
-    ocp_qp_info *info = (ocp_qp_info *) qp_out->misc;
+    qp_info *info = (qp_info *) qp_out->misc;
     acados_tic(&tot_timer);
 
     ocp_qp_ooqp_opts *opts = (ocp_qp_ooqp_opts *)opts_;
@@ -1077,6 +1126,9 @@ int ocp_qp_ooqp(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_
               mem->icupp, work->x, work->gamma, work->phi, work->y, work->z, work->lambda, work->pi,
               &work->objectiveValue, opts->printLevel, &ooqp_status);
     info->solve_QP_time = acados_toc(&qp_timer);
+
+	mem->time_qp_solver_call = info->solve_QP_time;
+    mem->iter = -1;
 
     if (0) print_outputs(mem, work, ooqp_status);
     acados_tic(&interface_timer);
@@ -1104,6 +1156,14 @@ void ocp_qp_ooqp_destroy(void *mem_, void *work)
 
 
 
+void ocp_qp_ooqp_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
+{
+	printf("\nerror: ocp_qp_ooqp_eval_sens: not implemented yet\n");
+	exit(1);
+}
+
+
+
 void ocp_qp_ooqp_config_initialize_default(void *config_)
 {
     qp_solver_config *config = config_;
@@ -1119,7 +1179,9 @@ void ocp_qp_ooqp_config_initialize_default(void *config_)
         (int (*)(void *, void *, void *)) & ocp_qp_ooqp_memory_calculate_size;
     config->memory_assign =
         (void *(*) (void *, void *, void *, void *) ) & ocp_qp_ooqp_memory_assign;
+    config->memory_get = &ocp_qp_ooqp_memory_get;
     config->workspace_calculate_size =
         (int (*)(void *, void *, void *)) & ocp_qp_ooqp_workspace_calculate_size;
     config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & ocp_qp_ooqp;
+    config->eval_sens = &ocp_qp_ooqp_eval_sens;
 }

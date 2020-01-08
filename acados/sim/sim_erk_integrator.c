@@ -1,18 +1,36 @@
 /*
- * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
  * This file is part of acados.
  *
  * The 2-Clause BSD License
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 // standard
 #include <assert.h>
@@ -147,7 +165,7 @@ int sim_erk_model_set(void *model_, const char *field, void *value)
 //    printf("\nsim_erk_model_set expl_ode_fun\n");
         model->expl_ode_fun = value;
     }
-    else if (!strcmp(field, "expl_vde_for"))
+    else if (!strcmp(field, "expl_vde_for") || !strcmp(field, "expl_vde_forw"))
     {
         model->expl_vde_for = value;
     }
@@ -155,7 +173,7 @@ int sim_erk_model_set(void *model_, const char *field, void *value)
     {
         model->expl_vde_adj = value;
     }
-    else if (!strcmp(field, "expl_ode_hes"))
+    else if (!strcmp(field, "expl_ode_hes") || !strcmp(field, "expl_ode_hess"))
     {
         model->expl_ode_hes = value;
     }
@@ -163,7 +181,6 @@ int sim_erk_model_set(void *model_, const char *field, void *value)
     {
         printf("\nerror: sim_erk_model_set: wrong field: %s\n", field);
         exit(1);
-//        return ACADOS_FAILURE;
     }
 
     return ACADOS_SUCCESS;
@@ -219,10 +236,18 @@ void *sim_erk_opts_assign(void *config_, void *dims, void *raw_memory)
 
 
 
-int sim_erk_opts_set(void *config_, void *opts_, const char *field, void *value)
+void sim_erk_opts_set(void *config_, void *opts_, const char *field, void *value)
 {
     sim_opts *opts = (sim_opts *) opts_;
-    return sim_opts_set_(opts, field, value);
+    sim_opts_set_(opts, field, value);
+}
+
+
+
+void sim_erk_opts_get(void *config_, void *opts_, const char *field, void *value)
+{
+    sim_opts *opts = (sim_opts *) opts_;
+    sim_opts_get_(config_, opts, field, value);
 }
 
 
@@ -416,11 +441,40 @@ void sim_erk_opts_update(void *config_, void *dims, void *opts_)
  * memory
  ************************************************/
 
-int sim_erk_memory_calculate_size(void *config, void *dims, void *opts_) { return 0; }
+int sim_erk_memory_calculate_size(void *config, void *dims, void *opts_)
+{
+    return 0;
+}
+
+
 void *sim_erk_memory_assign(void *config, void *dims, void *opts_, void *raw_memory)
 {
     return NULL;
 }
+
+int sim_erk_memory_set(void *config_, void *dims_, void *mem_, const char *field, void *value)
+{
+    printf("sim_erk_memory_set field %s is not supported! \n", field);
+    exit(1);
+}
+
+int sim_erk_memory_set_to_zero(void *config_, void * dims_, void *opts_, void *mem_, const char *field)
+{
+    int status = ACADOS_SUCCESS;
+
+    if (!strcmp(field, "guesses"))
+    {
+        // no guesses/initialization in ERK
+    }
+    else
+    {
+        printf("sim_erk_memory_set_to_zero field %s is not supported! \n", field);
+        exit(1);
+    }
+
+    return status;
+}
+
 
 /************************************************
  * workspace
@@ -549,8 +603,8 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     if ( opts->ns != opts->tableau_size )
     {
-        printf("Error in sim_erk: the Butcher tableau size does not match ns");
-        return ACADOS_FAILURE;
+        printf("Error in sim_erk: the Butcher tableau size does not match ns\n");
+        exit(1);
     }
     int ns = opts->ns;
 
@@ -569,18 +623,18 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     // assert - only use supported features
     if (nz != 0)
     {
-        printf("nz should be zero - DAEs are not supported by the ERK integrator");
-        return ACADOS_FAILURE;
+        printf("sim_erk: nz should be zero - DAEs are not supported by the ERK integrator\n");
+        exit(1);
     }
     if (opts->output_z)
     {
-        printf("opts->output_z should be false - DAEs are not supported for the ERK integrator");
-        return ACADOS_FAILURE;
+        printf("sim_erk: opts->output_z should be false - DAEs are not supported for the ERK integrator\n");
+        exit(1);
     }
     if (opts->sens_algebraic)
     {
-        printf("opts->sens_algebraic should be false - DAEs are not supported for the ERK integrator");
-        return ACADOS_FAILURE;
+        printf("sim_erk: opts->sens_algebraic should be false - DAEs are not supported for the ERK integrator\n");
+        exit(1);
     }
 
     int nf = opts->num_forw_sens;
@@ -885,6 +939,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     return 0;  // success
 }
 
+
 void sim_erk_config_initialize_default(void *config_)
 {
     sim_config *config = config_;
@@ -894,8 +949,11 @@ void sim_erk_config_initialize_default(void *config_)
     config->opts_initialize_default = &sim_erk_opts_initialize_default;
     config->opts_update = &sim_erk_opts_update;
     config->opts_set = &sim_erk_opts_set;
+    config->opts_get = &sim_erk_opts_get;
     config->memory_calculate_size = &sim_erk_memory_calculate_size;
     config->memory_assign = &sim_erk_memory_assign;
+    config->memory_set = &sim_erk_memory_set;
+    config->memory_set_to_zero = &sim_erk_memory_set_to_zero;
     config->workspace_calculate_size = &sim_erk_workspace_calculate_size;
     config->model_calculate_size = &sim_erk_model_calculate_size;
     config->model_assign = &sim_erk_model_assign;

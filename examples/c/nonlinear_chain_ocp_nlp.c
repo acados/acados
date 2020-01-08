@@ -1,18 +1,36 @@
 /*
- * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
  * This file is part of acados.
  *
  * The 2-Clause BSD License
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 // standard
 #include <assert.h>
@@ -1179,7 +1197,7 @@ int main()
 
 			case EXTERNALLY_PROVIDED:
 
-				ocp_nlp_cost_model_set(config, dims, nlp_in, i, "ext_cost_jac_hes", &external_cost[i]);
+				ocp_nlp_cost_model_set(config, dims, nlp_in, i, "ext_cost_fun_jac_hes", &external_cost[i]);
 
 				assert(i < NN && "externally provided cost not implemented for last stage!");
 
@@ -1298,7 +1316,7 @@ int main()
     * sqp opts
     ************************************************/
 
-	void *nlp_opts = ocp_nlp_opts_create(config, dims);
+	void *nlp_opts = ocp_nlp_solver_opts_create(config, dims);
 
     for (int i = 0; i < NN; ++i)
 	{
@@ -1308,15 +1326,15 @@ int main()
 			{
 				int ns = 4;
 
-				ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
+				ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_ns", &ns);
 			}
 			else if (plan->sim_solver_plan[i].sim_solver == IRK)
 			{
 				int ns = 2;
 				bool jac_reuse = true;
 
-				ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
-				ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "jac_reuse", &jac_reuse);
+				ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_ns", &ns);
+				ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_jac_reuse", &jac_reuse);
 			}
 		}
     }
@@ -1327,11 +1345,11 @@ int main()
     double tol_ineq = 1e-9;
     double tol_comp = 1e-9;
 
-    ocp_nlp_opts_set(config, nlp_opts, "max_iter", &max_iter);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_stat", &tol_stat);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_eq", &tol_eq);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "max_iter", &max_iter);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_stat", &tol_stat);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_eq", &tol_eq);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
 
     /************************************************
     * ocp_nlp out
@@ -1424,7 +1442,7 @@ int main()
 	free(erk4_casadi);
 
 	// free ocp_nlp module
-	ocp_nlp_opts_destroy(nlp_opts);
+	ocp_nlp_solver_opts_destroy(nlp_opts);
 	ocp_nlp_in_destroy(nlp_in);
 	ocp_nlp_out_destroy(nlp_out);
 	ocp_nlp_solver_destroy(solver);
