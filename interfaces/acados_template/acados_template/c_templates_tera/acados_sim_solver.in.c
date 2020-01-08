@@ -86,7 +86,9 @@ int {{ model.name }}_acados_sim_create() {
     int nu = NU;
     int nz = NZ;
 
-    double Td = {{ solver_options.tf }}/ {{ dims.N }};
+    // double Td = ((double) {{ solver_options.tf }}) / {{ dims.N }};
+    double Td = {{ solver_options.tf / dims.N }};
+
 
     {% if solver_options.integrator_type == "IRK" %}
     sim_impl_dae_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
