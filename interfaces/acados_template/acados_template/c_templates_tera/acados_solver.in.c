@@ -1182,7 +1182,7 @@ int acados_create()
 
     {%- if solver_options.nlp_solver_max_iter %}
     int nlp_solver_max_iter = {{ solver_options.nlp_solver_max_iter }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "nlp_solver_max_iter", &nlp_solver_max_iter);
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "max_iter", &nlp_solver_max_iter);
     {%- endif -%}
 
     {%- endif %}
