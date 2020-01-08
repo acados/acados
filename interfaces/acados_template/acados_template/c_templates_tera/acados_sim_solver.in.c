@@ -150,7 +150,6 @@ int {{ model.name }}_acados_sim_create() {
     {% endif %}
 
     // sim plan & config
-
     // choose plan
     sim_solver_plan plan;
 

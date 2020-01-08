@@ -177,6 +177,11 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     sim_in_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims,
                {{ model.name }}_sim_in, "x", buffer);
 
+
+    // ssPrintf("\nin acados sim:\n");
+    // for (int i = 0; i < {{ dims.nx }}; i++) ssPrintf("x0[%d] = %f\n", i, buffer[i]);
+    //     ssPrintf("\n");
+
 {% if dims.nu > 0 %}
     // control input - u
     {%- set i_input = i_input + 1 %}
@@ -210,10 +215,13 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     /* set outputs */
     real_t *out_x = ssGetOutputPortRealSignal(S, 0);
 
-    // extract solver info
     // get simulated state
     sim_out_get({{ model.name }}_sim_config, {{ model.name }}_sim_dims, {{ model.name }}_sim_out,
                 "xn", (void *) out_x);
+
+    // ssPrintf("\nacados sim solve: returned %d\n", acados_status);
+    // for (int i = 0; i < {{ dims.nx }}; i++) ssPrintf("x_sim[%d] = %f\n", i, out_x[i]);
+    //     ssPrintf("\n");
 
 }
 
