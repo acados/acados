@@ -170,7 +170,7 @@ int {{ model.name }}_acados_sim_create() {
     {{ model.name }}_sim_opts = sim_opts_create({{ model.name }}_sim_config, {{ model.name }}_sim_dims);
 
     {{ model.name }}_sim_opts->ns = {{ solver_options.sim_method_num_stages }}; // number of stages in rk integrator
-    {{ model.name }}_sim_opts->num_steps = {{ solver_options.sim_method_num_steps }}; // number of integration steps
+    {{ model.name }}_sim_opts->num_steps = 2 * {{ solver_options.sim_method_num_steps }}; // number of integration steps
     {{ model.name }}_sim_opts->sens_adj = false;
     {{ model.name }}_sim_opts->sens_forw = true;
     {% if solver_options.integrator_type == "IRK" %}
