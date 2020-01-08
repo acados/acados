@@ -228,7 +228,7 @@ qpoases_shared:
 	mkdir -p include/qpoases/include
 	mkdir -p lib
 	cp -r $(QPOASES_PATH)/include/* include/qpoases/include
-	cp $(QPOASES_PATH)/bin/libqpOASES_e.a lib
+	cp $(QPOASES_PATH)/bin/libqpOASES_e.so lib
 
 # TODO how is BLASFEO path set for QORE ?????
 qore_static: blasfeo_static
