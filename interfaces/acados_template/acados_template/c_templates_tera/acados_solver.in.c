@@ -1230,6 +1230,7 @@ int acados_create()
     {% for i in range(end=dims.np) %} {# TODO(oj): parameters should not be part of constraints imo.#}
     p[{{ i }}] = {{ constraints.p[i] }};
     {%- endfor %}
+
     {% if solver_options.integrator_type == "IRK" %}
     for (int ii = 0; ii < N; ii++)
     {
