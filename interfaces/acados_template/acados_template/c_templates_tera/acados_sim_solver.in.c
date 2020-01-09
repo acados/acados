@@ -34,37 +34,34 @@
 // standard
 #include <stdio.h>
 #include <stdlib.h>
+
 // acados
-#include "acados/utils/print.h"
+#include "acados_c/external_function_interface.h"
 #include "acados_c/sim_interface.h"
 #include "acados_c/external_function_interface.h"
+
 #include "acados/sim/sim_common.h"
 #include "acados/utils/external_function_generic.h"
+#include "acados/utils/print.h"
 
-#include "acados_c/external_function_interface.h"
-#include "acados_c/sim_interface.h"
 
 // example specific
 #include "{{ model.name }}_model/{{ model.name }}_model.h"
 #include "acados_sim_solver_{{ model.name }}.h"
 
-#define NX_    {{ dims.nx }}
-#define NZ_    {{ dims.nz }}
-#define NU_    {{ dims.nu }}
-#define NP_    {{ dims.np }}
+#define NX  {{ dims.nx }}
+#define NZ  {{ dims.nz }}
+#define NU  {{ dims.nu }}
+#define NP  {{ dims.np }}
 
-#define NX   NX_
-#define NZ   NZ_
-#define NU   NU_
-#define NP   NP_
 
 // ** global data **
-sim_config  * {{model.name}}_sim_config;
-sim_in      * {{model.name}}_sim_in;
-sim_out     * {{model.name}}_sim_out;
-void        * {{model.name}}_sim_dims;
-sim_opts    * {{model.name}}_sim_opts;
-sim_solver  * {{model.name}}_sim_solver;
+sim_config  * {{ model.name }}_sim_config;
+sim_in      * {{ model.name }}_sim_in;
+sim_out     * {{ model.name }}_sim_out;
+void        * {{ model.name }}_sim_dims;
+sim_opts    * {{ model.name }}_sim_opts;
+sim_solver  * {{ model.name }}_sim_solver;
 
 {% if solver_options.integrator_type == "ERK" %}
 external_function_param_casadi * sim_forw_vde_casadi;
@@ -73,14 +70,13 @@ external_function_param_casadi * sim_expl_ode_fun_casadi;
 external_function_param_casadi * sim_impl_dae_fun;
 external_function_param_casadi * sim_impl_dae_fun_jac_x_xdot_z;
 external_function_param_casadi * sim_impl_dae_jac_x_xdot_u_z;
-{% endif %}
+{%- endif %}
 
 
-int {{ model.name }}_acados_sim_create() {
-
+int {{ model.name }}_acados_sim_create()
+{
     // initialize
     int ii;
-    int jj;
 
     int nx = NX;
     int nu = NU;
@@ -88,7 +84,6 @@ int {{ model.name }}_acados_sim_create() {
 
     // double Td = ((double) {{ solver_options.tf }}) / {{ dims.N }};
     double Td = {{ solver_options.tf / dims.N }};
-
 
     {% if solver_options.integrator_type == "IRK" %}
     sim_impl_dae_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
@@ -150,59 +145,53 @@ int {{ model.name }}_acados_sim_create() {
     {% endif %}
 
     // sim plan & config
-    // choose plan
     sim_solver_plan plan;
-
     plan.sim_solver = {{ solver_options.integrator_type }};
 
     // create correct config based on plan
     {{ model.name }}_sim_config = sim_config_create(plan);
 
     // sim dims
-
     {{ model.name }}_sim_dims = sim_dims_create({{ model.name }}_sim_config);
     sim_dims_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims, "nx", &nx);
     sim_dims_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims, "nu", &nu);
     sim_dims_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims, "nz", &nz);
 
     // sim opts
-{# TODO: use C interface instead of this.. #}
     {{ model.name }}_sim_opts = sim_opts_create({{ model.name }}_sim_config, {{ model.name }}_sim_dims);
-
+{# TODO: use C interface instead of this.. #}
     {{ model.name }}_sim_opts->ns = {{ solver_options.sim_method_num_stages }}; // number of stages in rk integrator
     {{ model.name }}_sim_opts->num_steps = 2 * {{ solver_options.sim_method_num_steps }}; // number of integration steps
     {{ model.name }}_sim_opts->sens_adj = false;
     {{ model.name }}_sim_opts->sens_forw = true;
-    {% if solver_options.integrator_type == "IRK" %}
+{% if solver_options.integrator_type == "IRK" %}
     {{ model.name }}_sim_opts->sens_algebraic = false;
     {{ model.name }}_sim_opts->output_z = false;
     {{ model.name }}_sim_opts->newton_iter = 5;
     {{ model.name }}_sim_opts->jac_reuse = false;
-    {% endif %}
+{% endif %}
 
     // sim in / out
-
     {{ model.name }}_sim_in  = sim_in_create({{ model.name }}_sim_config, {{ model.name }}_sim_dims);
     {{ model.name }}_sim_out = sim_out_create({{ model.name }}_sim_config, {{ model.name }}_sim_dims);
 
     {{ model.name }}_sim_in->T = Td;
 
-    // external functions
-    {% if solver_options.integrator_type == "IRK" %}
+    // model functions
+    {%- if solver_options.integrator_type == "IRK" %}
     {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model, "impl_ode_fun", sim_impl_dae_fun);
     {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model, "impl_ode_fun_jac_x_xdot", sim_impl_dae_fun_jac_x_xdot_z);
     {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model, "impl_ode_jac_x_xdot_u", sim_impl_dae_jac_x_xdot_u_z);
-    {% elif solver_options.integrator_type == "ERK" %}
+    {%- elif solver_options.integrator_type == "ERK" %}
     {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model, "expl_vde_for", sim_forw_vde_casadi);
     {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model, "expl_ode_fun", sim_expl_ode_fun_casadi);
-    {% endif %}
+    {%- endif %}
 
     // sim solver
-
     {{ model.name }}_sim_solver = sim_solver_create({{ model.name }}_sim_config,
                                                {{ model.name }}_sim_dims, {{ model.name }}_sim_opts);
 
-    // initialize state and input to zero
+    /* initialize input to zero */
     // x
     double x0[NX];
     for (ii = 0; ii < NX; ii++)
