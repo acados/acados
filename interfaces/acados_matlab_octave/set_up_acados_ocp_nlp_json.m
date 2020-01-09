@@ -114,7 +114,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     % parameters
     if model.dim_np > 0
         % TODO: add option to initialize parameters in model.
-        warning(['model parameters value cannot be defined (yet) for ocp json.' newline 'Using zeros(np,1) by default.' newline 'You can update them later using the solver object.']);
+        warning(['model parameters value cannot be defined (yet) for ocp json.' 10 'Using zeros(np,1) by default.' 10 'You can update them later using the solver object.']);
         ocp_json.constraints.p = zeros(model.dim_np,1);
     end
 
@@ -122,7 +122,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     if isfield(model, 'constr_x0')
         ocp_json.constraints.x0 = model.constr_x0;
     else
-        warning(['constr_x0 not defined for ocp json.' newline 'Using zeros(nx,1) by default.']);
+        warning(['constr_x0 not defined for ocp json.' 10 'Using zeros(nx,1) by default.']);
         ocp_json.constraints.x0 = zeros(nx,1);
     end
 
@@ -266,7 +266,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
         if isfield(model, 'cost_y_ref')
             ocp_json.cost.yref = model.cost_y_ref;
         else
-			warning(['cost_y_ref not defined for ocp json.' newline 'Using zeros(ny,1) by default.']);
+			warning(['cost_y_ref not defined for ocp json.' 10 'Using zeros(ny,1) by default.']);
             ocp_json.cost.yref = zeros(model.dim_ny,1);
         end
     end
@@ -280,7 +280,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
         if isfield(model, 'cost_y_ref')
             ocp_json.cost.yref_e = model.cost_y_ref_e;
         else
-			warning(['cost_y_ref_e not defined for ocp json.' newline 'Using zeros(ny_e,1) by default.']);
+			warning(['cost_y_ref_e not defined for ocp json.' 10 'Using zeros(ny_e,1) by default.']);
             ocp_json.cost.yref_e = zeros(model.dim_ny_e,1);
         end
     end
