@@ -204,7 +204,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         buffer[i] = (double)(*in_sign[i]);
 
     // update value of parameters
-    {{ model.name }}_acados_sim_update_params(ii, buffer, {{ dims.np }});
+    {{ model.name }}_acados_sim_update_params(buffer, {{ dims.np }});
 {%- endif %}
 
 

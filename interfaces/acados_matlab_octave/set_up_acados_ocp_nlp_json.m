@@ -114,8 +114,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     % parameters
     if model.dim_np > 0
         % TODO: add option to initialize parameters in model.
-        warning(strcat('model parameters not defined. Initializing with', ...
-            ' zeros(np,1). Update them using the solver object.'));
+        warning(['model parameters value cannot be defined (yet) for ocp json.' 10 'Using zeros(np,1) by default.' 10 'You can update them later using the solver object.']);
         ocp_json.constraints.p = zeros(model.dim_np,1);
     end
 
@@ -123,8 +122,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     if isfield(model, 'constr_x0')
         ocp_json.constraints.x0 = model.constr_x0;
     else
-        warning('constr_x0 not defined for ocp json.');
-        warning('using zeros(nx,1) as initial state value.');
+        warning(['constr_x0 not defined for ocp json.' 10 'Using zeros(nx,1) by default.']);
         ocp_json.constraints.x0 = zeros(nx,1);
     end
 
@@ -193,6 +191,16 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
 
     if ocp_json.dims.nsh > 0
         ocp_json.constraints.idxsh = J_to_idx_slack(model.constr_Jsh);
+        if isfield(model, 'constr_lsh')
+            ocp_json.constraints.lsh = model.constr_lsh;
+        else
+            ocp_json.constraints.lsh = zeros(ocp_json.dims.nsh, 1);
+        end
+        if isfield(model, 'constr_ush')
+            ocp_json.constraints.ush = model.constr_ush;
+        else
+            ocp_json.constraints.ush = zeros(ocp_json.dims.nsh, 1);
+        end
     end
 
     if isfield(model, 'dim_nsg') && model.dim_nsg > 0
@@ -225,13 +233,23 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     end
 
     if isfield(model, 'dim_nsg_e') && model.dim_nsg_e > 0
-        error('dim_nsg_e > 0 not implmented in code-gen backend');
+        error('dim_nsg_e > 0 not implmented in templating backend');
         % TODO set Jsg_e
     end
 
 
     if ocp_json.dims.nsh_e > 0
         ocp_json.constraints.idxsh_e = J_to_idx_slack(model.constr_Jsh_e);
+        if isfield(model, 'constr_lsh_e')
+            ocp_json.constraints.lsh_e = model.constr_lsh_e;
+        else
+            ocp_json.constraints.lsh_e = zeros(ocp_json.dims.nsh_e, 1);
+        end
+        if isfield(model, 'constr_ush_e')
+            ocp_json.constraints.ush_e = model.constr_ush_e;
+        else
+            ocp_json.constraints.ush_e = zeros(ocp_json.dims.nsh_e, 1);
+        end
     end
 
     %% Cost
@@ -248,8 +266,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
         if isfield(model, 'cost_y_ref')
             ocp_json.cost.yref = model.cost_y_ref;
         else
-            warning('cost_y_ref not defined for ocp json.');
-            warning('using zeros(ny,1) as initial state value.');
+			warning(['cost_y_ref not defined for ocp json.' 10 'Using zeros(ny,1) by default.']);
             ocp_json.cost.yref = zeros(model.dim_ny,1);
         end
     end
@@ -263,8 +280,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
         if isfield(model, 'cost_y_ref')
             ocp_json.cost.yref_e = model.cost_y_ref_e;
         else
-            warning('cost_y_ref_e not defined for ocp json.');
-            warning('using zeros(ny_e,1) as initial state value.');
+			warning(['cost_y_ref_e not defined for ocp json.' 10 'Using zeros(ny_e,1) by default.']);
             ocp_json.cost.yref_e = zeros(model.dim_ny_e,1);
         end
     end
@@ -341,8 +357,8 @@ function idx = J_to_idx_slack(J)
     for i = 1:nrows
         this_idx = find(J(i,:));
         if length(this_idx) == 1
-            i_idx = i_idx + 1;
             idx(i_idx) = this_idx - 1; % strore 0-based index
+            i_idx = i_idx + 1;
         elseif length(this_idx) > 1
             error(['J_to_idx: Invalid J matrix. Exiting. Found more than one nonzero in row ' num2str(i)]);
         end
