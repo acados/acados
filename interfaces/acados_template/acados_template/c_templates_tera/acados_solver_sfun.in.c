@@ -274,6 +274,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, {{ dims.N }}, "yref", (void *) buffer);
 {%- endif %}
 
+// TODO this is only for stage-invariant parameters !!!!!!!!!!!!!!!
 {% if dims.np > 0 %}
     // parameters
     {%- set i_input = i_input + 1 %}
