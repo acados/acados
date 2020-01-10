@@ -101,6 +101,17 @@ y_ref = y(1:nsim,:)';
 %size(y_ref)
 
 
+% save to mat file
+tmp_wind0_ref = [Ts*[1:nsim]; wind0_ref];
+save('wind0_ref', 'tmp_wind0_ref');
+
+tmp_y_ref = [Ts*[1:nsim]; y_ref];
+save('y_ref', 'tmp_y_ref');
+
+tmp_y_e_ref = [Ts*[1:nsim]; y_ref(1:2,:)];
+save('y_e_ref', 'tmp_y_e_ref');
+
+
 return;
 
 
