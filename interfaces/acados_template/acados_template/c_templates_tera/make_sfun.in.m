@@ -97,7 +97,7 @@ fprintf('\n\nNote: Usage of Sfunction is as follows:\n')
 input_note = 'Inputs are:\n1) x0, initial state, size [{{ dims.nx }}]\n ';
 i_in = 2;
 {%- if dims.ny > 0 %}
-input_note = strcat(input_note, num2str(i_in), ') y_ref, size [{{ dims.ny }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') y_ref, size [{{ dims.N * dims.ny }}]\n ');
 i_in = i_in + 1;
 {%- endif %}
 
@@ -107,7 +107,7 @@ i_in = i_in + 1;
 {%- endif %}
 
 {%- if dims.np > 0 %}
-input_note = strcat(input_note, num2str(i_in), ') parameters, size [{{ dims.np }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') parameters, size [{{ (dims.N+1)*dims.np }}]\n ');
 i_in = i_in + 1;
 {%- endif %}
 

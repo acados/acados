@@ -78,9 +78,11 @@ external_function_param_casadi * phi_constraint;
 external_function_param_casadi phi_e_constraint;
 {%- endif %}
 {%- if constraints.constr_type == "BGH" %}
+// TODO rename !!!!!!!
 external_function_param_casadi * h_constraint;
 {%- endif %}
 {%- if constraints.constr_type_e == "BGH" %}
+// TODO rename !!!!!!!
 external_function_param_casadi h_e_constraint;
 {%- endif %}
 
@@ -130,7 +132,7 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- if dims.ny > 0 %}
     {%- set i_input = i_input + 1 %}
     // y_ref
-    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.ny }});
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.N }} * {{ dims.ny }});
     {%- endif %}
 
     {%- if dims.ny_e > 0 %}
@@ -142,7 +144,7 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- if dims.np > 0 %}
     {%- set i_input = i_input + 1 %}
     // parameters
-    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.np }});
+    ssSetInputPortVectorDimension(S, {{ i_input }}, ({{ dims.N }}+1) * {{ dims.np }});
     {%- endif %}
 
     {%- if dims.nbx > 0 %}
@@ -250,16 +252,18 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", buffer);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", buffer);
 
+// XXX stage-variant !!!
 {% if dims.ny > 0 %}
     // y_ref
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
 
-    for (int i = 0; i < {{ dims.ny }}; i++)
-        buffer[i] = (double)(*in_sign[i]);
-
     for (int ii = 0; ii < {{ dims.N }}; ii++)
+	{
+		for (int jj = 0; jj < {{ dims.ny }}; jj++)
+			buffer[jj] = (double)(*in_sign[ii*{{dims.ny}}+jj]);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, ii, "yref", (void *) buffer);
+	}
 {%- endif %}
 
 
@@ -274,18 +278,19 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, {{ dims.N }}, "yref", (void *) buffer);
 {%- endif %}
 
-// TODO this is only for stage-invariant parameters !!!!!!!!!!!!!!!
+// XXX stage-variant !!!
 {% if dims.np > 0 %}
     // parameters
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
 
-    for (int i = 0; i < {{ dims.np }}; i++)
-        buffer[i] = (double)(*in_sign[i]);
-
     // update value of parameters
     for (int ii = 0; ii <= {{ dims.N }}; ii++) 
+	{
+		for (int jj = 0; jj < {{ dims.np }}; jj++)
+			buffer[jj] = (double)(*in_sign[ii*{{dims.np}}+jj]);
         acados_update_params(ii, buffer, {{ dims.np }});
+	}
 {%- endif %}
 
 
