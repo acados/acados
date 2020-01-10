@@ -69,8 +69,8 @@ qp_solver_cond_ric_alg = 0;
 qp_solver_ric_alg = 0;
 qp_solver_warm_start = 0;
 qp_solver_max_iter = 50;
-sim_method = 'erk';
-%sim_method = 'irk';
+%sim_method = 'erk';
+sim_method = 'irk';
 sim_method_num_stages = 4;
 if (strcmp(sim_method, 'erk'))
 	sim_method_num_steps = 4;

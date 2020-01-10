@@ -122,7 +122,7 @@ static void mdlInitializeSizes (SimStruct *S)
         return;
 
     // specify the number of output ports
-    if ( !ssSetNumOutputPorts(S, 5) )
+    if ( !ssSetNumOutputPorts(S, 6) )
         return;
 
     // specify dimension information for the input ports
@@ -186,9 +186,10 @@ static void mdlInitializeSizes (SimStruct *S)
     // specify dimension information for the output ports
     ssSetOutputPortVectorDimension(S, 0, {{ dims.nu }} ); // optimal input
     ssSetOutputPortVectorDimension(S, 1, 1 ); // solver status
-    ssSetOutputPortVectorDimension(S, 2, 1 ); // KKT residuals
-    ssSetOutputPortVectorDimension(S, 3, {{ dims.nx }} ); // first state
-    ssSetOutputPortVectorDimension(S, 4, 1); // computation times
+    ssSetOutputPortVectorDimension(S, 2, 1 ); // sqp iter
+    ssSetOutputPortVectorDimension(S, 3, 1 ); // KKT residuals
+    ssSetOutputPortVectorDimension(S, 4, {{ dims.nx }} ); // first state
+    ssSetOutputPortVectorDimension(S, 5, 1); // computation times
 
     // specify the direct feedthrough status
     // should be set to 1 for all inputs used in mdlOutputs
@@ -388,19 +389,29 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     /* set outputs */
     // assign pointers to output signals
-    real_t *out_u0, *out_status, *out_KKT_res, *out_x1, *out_cpu_time;
+    real_t *out_u0, *out_status, *out_sqp_iter, *out_KKT_res, *out_x1, *out_cpu_time;
+//	int tmp_int = 2;
 
     out_u0          = ssGetOutputPortRealSignal(S, 0);
     out_status      = ssGetOutputPortRealSignal(S, 1);
-    out_KKT_res     = ssGetOutputPortRealSignal(S, 2);
-    out_x1          = ssGetOutputPortRealSignal(S, 3);
-    out_cpu_time    = ssGetOutputPortRealSignal(S, 4);
+    out_sqp_iter    = ssGetOutputPortRealSignal(S, 2);
+    out_KKT_res     = ssGetOutputPortRealSignal(S, 3);
+    out_x1          = ssGetOutputPortRealSignal(S, 4);
+    out_cpu_time    = ssGetOutputPortRealSignal(S, 5);
 
     // extract solver info
     *out_status = (real_t) acados_status;
     *out_KKT_res = (real_t) nlp_out->inf_norm_res;
-    *out_cpu_time = (real_t) nlp_out->total_time;
+//    *out_cpu_time = (real_t) nlp_out->total_time;
     
+	// get solution time
+    ocp_nlp_get(nlp_config, nlp_solver, "time_tot", (void *) out_cpu_time);
+
+	// get sqp iter
+//    ocp_nlp_get(nlp_config, nlp_solver, "sqp_iter", (void *) &tmp_int);
+//	*out_sqp_iter = (real_t) tmp_int;
+    *out_sqp_iter = (real_t) nlp_out->sqp_iter;
+
     // get solution
     ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, "u", (void *) out_u0);
 
