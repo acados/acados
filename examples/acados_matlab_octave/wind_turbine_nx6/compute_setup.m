@@ -76,7 +76,7 @@ uCtrlFAST(1,:) = max([uCtrlFAST(1,:);zeros(size(uCtrlFAST(1,:)))]);
 X0 = [statesFAST(1,[9               10                  19                20])                  uCtrlFAST(1,1)      uCtrlFAST(1,2) uCtrlFAST(1,1)       uCtrlFAST(1,2)]; 
 X0([2 4]) = 0;
 U0 = [0 0];   
-X0(1) = 1.0*X0(1);
+X0(1) = X0(1);
 
 %% references
 
