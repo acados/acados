@@ -46,6 +46,7 @@
 import os
 import sys
 import subprocess
+import datetime
 
 import recommonmark
 from recommonmark.transform import AutoStructify
@@ -65,7 +66,8 @@ breathe_default_project = "acados"
 # -- Project information -----------------------------------------------------
 
 project = 'acados'
-copyright = '2019, syscop'
+now = datetime.datetime.now()
+copyright = str(now.year) +', syscop'
 author = 'syscop'
 
 
