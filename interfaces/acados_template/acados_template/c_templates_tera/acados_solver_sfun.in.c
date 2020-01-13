@@ -254,18 +254,17 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", buffer);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", buffer);
 
-// XXX stage-variant !!!
 {% if dims.ny > 0 %}
-    // y_ref
+    // y_ref - stage-variant !!!
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
 
     for (int ii = 0; ii < {{ dims.N }}; ii++)
-	{
-		for (int jj = 0; jj < {{ dims.ny }}; jj++)
-			buffer[jj] = (double)(*in_sign[ii*{{dims.ny}}+jj]);
+    {
+        for (int jj = 0; jj < {{ dims.ny }}; jj++)
+            buffer[jj] = (double)(*in_sign[ii*{{dims.ny}}+jj]);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, ii, "yref", (void *) buffer);
-	}
+    }
 {%- endif %}
 
 
@@ -280,19 +279,18 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, {{ dims.N }}, "yref", (void *) buffer);
 {%- endif %}
 
-// XXX stage-variant !!!
 {% if dims.np > 0 %}
-    // parameters
+    // parameters - stage-variant !!!
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
 
     // update value of parameters
     for (int ii = 0; ii <= {{ dims.N }}; ii++) 
-	{
-		for (int jj = 0; jj < {{ dims.np }}; jj++)
-			buffer[jj] = (double)(*in_sign[ii*{{dims.np}}+jj]);
+    {
+        for (int jj = 0; jj < {{ dims.np }}; jj++)
+            buffer[jj] = (double)(*in_sign[ii*{{dims.np}}+jj]);
         acados_update_params(ii, buffer, {{ dims.np }});
-	}
+    }
 {%- endif %}
 
 
@@ -391,7 +389,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     /* set outputs */
     // assign pointers to output signals
     real_t *out_u0, *out_status, *out_sqp_iter, *out_KKT_res, *out_x1, *out_cpu_time;
-	int tmp_int;
+    int tmp_int;
 
     out_u0          = ssGetOutputPortRealSignal(S, 0);
     out_status      = ssGetOutputPortRealSignal(S, 1);
@@ -405,12 +403,12 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     *out_KKT_res = (real_t) nlp_out->inf_norm_res;
 //    *out_cpu_time = (real_t) nlp_out->total_time;
     
-	// get solution time
+    // get solution time
     ocp_nlp_get(nlp_config, nlp_solver, "time_tot", (void *) out_cpu_time);
 
-	// get sqp iter
+    // get sqp iter
     ocp_nlp_get(nlp_config, nlp_solver, "sqp_iter", (void *) &tmp_int);
-	*out_sqp_iter = (real_t) tmp_int;
+    *out_sqp_iter = (real_t) tmp_int;
 //    *out_sqp_iter = (real_t) nlp_out->sqp_iter;
 
     // get solution
