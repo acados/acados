@@ -97,9 +97,27 @@
         ],
         "idxbx_e": [
             "ndarray",
-                    [
-                        "nbx_e"
-                    ]
+            [
+                "nbx_e"
+            ]
+        ],
+        "lbx_0": [
+            "ndarray",
+            [
+                "nbx_0"
+            ]
+        ],
+        "ubx_0": [
+            "ndarray",
+            [
+                "nbx_0"
+            ]
+        ],
+        "idxbx_0": [
+            "ndarray",
+            [
+                "nbx_0"
+            ]
         ],
         "lg": [
             "ndarray",
@@ -326,10 +344,16 @@
                 "np"
             ]
         ],
-        "x0": [
+        "lbx0": [
             "ndarray",
             [
-                "nx"
+                "nbx_0"
+            ]
+        ],
+        "ubx0": [
+            "ndarray",
+            [
+                "nbx_0"
             ]
         ]
     },
@@ -460,6 +484,9 @@
             "int"
         ],
         "nsbx_e": [
+            "int"
+        ],
+        "nbx_0": [
             "int"
         ],
         "nbx_e": [
