@@ -52,6 +52,15 @@ platform2tera = {
     "win32": "window.exe"
 }
 
+def is_column(x):
+    if x.ndim == 1:
+        return True
+    elif x.ndim == 2 and x.shape[1] == 1:
+        return True
+    else:
+        return False
+
+
 def get_tera():
     tera_path = TERA_EXEC_PATH
 

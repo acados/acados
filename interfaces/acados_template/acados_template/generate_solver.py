@@ -40,15 +40,38 @@ from .generate_c_code_nls_cost_e import *
 from .acados_ocp_nlp import *
 from ctypes import *
 from copy import deepcopy
-from .utils import ACADOS_PATH, get_tera
+from .utils import ACADOS_PATH, get_tera, is_column
+
+def make_ocp_dims_consistent(acados_ocp):
+
+    dims = acados_ocp.dims
+    cost = acados_ocp.cost
+    constraints = acados_ocp.constraints
+
+    # nbx_0
+    this_shape = constraints.lbx_0.shape
+    other_shape = constraints.ubx_0.shape
+    if not this_shape == other_shape:
+        raise Exception("lbx_0, ubx_0 have different shapes!")
+    if not is_column(constraints.lbx_0):
+        raise Exception("lbx_0, ubx_0 must be column vectors!")
+
+    dims.nbx_0 = constraints.lbx_0.size
+
+
 
 def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
+
+    model = acados_ocp.model
+    name = model.name
+
+    # make dims consistent
+    make_ocp_dims_consistent(acados_ocp)
 
     # get tera renderer
     tera_path = get_tera()
 
-    model = acados_ocp.model
-    name = model.name
+    # generate external functions
     if acados_ocp.solver_options.integrator_type == 'ERK':
         # explicit model -- generate C code
         generate_c_code_explicit_ode(model)
