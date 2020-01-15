@@ -60,6 +60,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     % ocp_json.dims.np = model.dim_np;
     ocp_json.dims.ny = model.dim_ny;
     ocp_json.dims.nbx = model.dim_nbx;
+    ocp_json.dims.nbx_0 = model.dim_nbx_0;
     ocp_json.dims.nbu = model.dim_nbu;
     ocp_json.dims.ng = model.dim_ng;
     ocp_json.dims.nh = model.dim_nh;
@@ -111,15 +112,22 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     ocp_json.constraints.constr_type_e = upper(model.constr_type_e);
 
     %% constraints
-    % path
-    if isfield(model, 'constr_x0')
-        ocp_json.constraints.x0 = model.constr_x0;
+    % initial
+    if isfield(model, 'constr_lbx_0')
+        ocp_json.constraints.lbx_0 = model.constr_lbx_0;
     else
-        warning('constr_x0 not defined for ocp json.');
-        warning('using zeros(nx,1) as initial state value.');
-        ocp_json.constraints.x0 = zeros(nx,1);
+        error('missing: constr_lbx_0');
+    end
+    if isfield(model, 'constr_ubx_0')
+        ocp_json.constraints.ubx_0 = model.constr_ubx_0;
+    else
+        error('missing: constr_ubx_0');
+    end
+    if isfield(model, 'constr_Jbx_0')
+        ocp_json.constraints.idxbx_0 = J_to_idx( model.constr_Jbx_0 );
     end
 
+    % path
     if ocp_json.dims.nbx > 0
         ocp_json.constraints.idxbx = J_to_idx( model.constr_Jbx );
         ocp_json.constraints.lbx = model.constr_lbx;

@@ -131,7 +131,9 @@ classdef ocp_nlp_constraints_json < handle
             obj.ug_e            = [];
             obj.lh_e            = [];
             obj.uh_e            = [];
-            obj.x0              = [];
+            obj.lbx_0 = [];
+            obj.ubx_0 = [];
+            obj.idxbx_0 = [];
             obj.lphi            = [];
             obj.uphi            = [];
             obj.lsphi            = [];
