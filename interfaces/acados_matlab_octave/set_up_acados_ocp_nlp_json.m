@@ -349,10 +349,12 @@ function idx = J_to_idx(J)
     end
 end
 
+
 function idx = J_to_idx_slack(J)
     size_J = size(J);
     nrows = size_J(1);
-    idx = zeros(nrows,1);
+    ncol = size_J(2);
+    idx = zeros(ncol,1);
     i_idx = 1;
     for i = 1:nrows
         this_idx = find(J(i,:));
