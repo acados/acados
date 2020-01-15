@@ -286,10 +286,10 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     end
 
     if isfield(model, 'cost_Zl')
-        ocp_json.cost.Zl = model.cost_Zl;
+        ocp_json.cost.Zl = diag(model.cost_Zl);
     end
     if isfield(model, 'cost_Zu')
-        ocp_json.cost.Zu = model.cost_Zu;
+        ocp_json.cost.Zu = diag(model.cost_Zu);
     end
     if isfield(model, 'cost_zl')
         ocp_json.cost.zl = model.cost_zl;
@@ -300,10 +300,10 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
 
 
     if isfield(model, 'cost_Zl_e')
-        ocp_json.cost.Zl_e = model.cost_Zl_e;
+        ocp_json.cost.Zl_e = diag(model.cost_Zl_e);
     end
     if isfield(model, 'cost_Zu_e')
-        ocp_json.cost.Zu_e = model.cost_Zu_e;
+        ocp_json.cost.Zu_e = diag(model.cost_Zu_e);
     end
     if isfield(model, 'cost_zl_e')
         ocp_json.cost.zl_e = model.cost_zl_e;
