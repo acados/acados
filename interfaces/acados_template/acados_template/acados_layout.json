@@ -343,18 +343,6 @@
             [
                 "np"
             ]
-        ],
-        "lbx0": [
-            "ndarray",
-            [
-                "nbx_0"
-            ]
-        ],
-        "ubx0": [
-            "ndarray",
-            [
-                "nbx_0"
-            ]
         ]
     },
     "cost": {
