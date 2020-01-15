@@ -158,8 +158,19 @@ classdef acados_ocp_model < handle
                     obj.model_struct.constr_type = value;
                 elseif (strcmp(field, 'constr_type_e'))
                     obj.model_struct.constr_type_e = value;
+
+                % initial state constraint
                 elseif (strcmp(field, 'constr_x0'))
-                    obj.model_struct.constr_x0 = value;
+                    obj.model_struct.constr_lbx_0 = value;
+                    obj.model_struct.constr_ubx_0 = value;
+                    obj.model_struct.constr_Jbx_0 = eye( length(value) );
+                elseif (strcmp(field, 'constr_lbx_0'))
+                    obj.model_struct.constr_lbx_0 = value;
+                elseif (strcmp(field, 'constr_ubx_0'))
+                    obj.model_struct.constr_ubx_0 = value;
+                elseif (strcmp(field, 'constr_Jbx_0'))
+                    obj.model_struct.constr_Jbx_0 = value;
+
                 elseif (strcmp(field, 'constr_Jbx'))
                     obj.model_struct.constr_Jbx = value;
                 elseif (strcmp(field, 'constr_lbx'))

@@ -81,7 +81,10 @@ classdef ocp_nlp_constraints_json < handle
         lh_e     % lower bound on nonlinear inequalities at t=T
         uh_e     % upper bound on nonlinear inequalities at t=T
         p       % nominal value of the parameter
-        x0      % initial state
+        % initial state bounds
+        lbx_0    % lower bound on initial state
+        ubx_0    % upper bound on initial state
+        idxbx_0  % bound indices of initial state
         % convex over nonlinear constraint (BGP) to work with json
         % TODO: implement in MEX..
         lphi   % lower bound on convex over nonlinear constraint
