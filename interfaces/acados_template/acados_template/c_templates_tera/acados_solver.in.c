@@ -70,6 +70,7 @@
 #define NU_     {{ dims.nu }}
 #define NP_     {{ dims.np }}
 #define NBX_    {{ dims.nbx }}
+#define NBX0_   {{ dims.nbx_0 }}
 #define NBU_    {{ dims.nbu }}
 #define NSBX_   {{ dims.nsbx }}
 #define NSBU_   {{ dims.nsbu }}
@@ -255,6 +256,13 @@
 #define NPHIN   NPHIN_
 #endif
 
+#if NBX0_ < 1
+#define NBX0   1
+#else
+#define NBX0   NBX0_
+#endif
+
+
 int acados_create()
 {
     int status = 0;
@@ -274,16 +282,17 @@ int acados_create()
     ubu0[{{ i }}] = {{ constraints.ubu[i] }};
     {%- endfor %}
     
-    // x
-    int idxbx0[NX];
-    {% for i in range(end=dims.nx) %}
-    idxbx0[{{ i }}] = {{ i }};
+    // x0
+    int idxbx0[{{ dims.nbx_0 }}];
+    {% for i in range(end=dims.nbx_0) %}
+    idxbx0[{{ i }}] = {{ constraints.idxbx_0[i] }};
     {%- endfor %}
-    double lbx0[NX]; 
-    double ubx0[NX];
-    {% for i in range(end=dims.nx) %}
-    lbx0[{{ i }}] = {{ constraints.x0[i] }};
-    ubx0[{{ i }}] = {{ constraints.x0[i] }};
+
+    double lbx0[{{ dims.nbx_0 }}];
+    double ubx0[{{ dims.nbx_0 }}];
+    {% for i in range(end=dims.nbx_0) %}
+    lbx0[{{ i }}] = {{ constraints.lbx_0[i] }};
+    ubx0[{{ i }}] = {{ constraints.ubx_0[i] }};
     {%- endfor %}
 
 
@@ -293,7 +302,7 @@ int acados_create()
     {% for i in range(end=dims.nbu) %}
     idxbu[{{ i }}] = {{ constraints.idxbu[i] }};
     {%- endfor %}
-    double lbu[NBU]; 
+    double lbu[NBU];
     double ubu[NBU];
     {% for i in range(end=dims.nbu) %}
     lbu[{{ i }}] = {{ constraints.lbu[i] }};
@@ -640,7 +649,7 @@ int acados_create()
     }
 
     // for initial state
-    nbx[0]   = NX_;
+    nbx[0]   = NBX0_;
 
     // terminal - common
     nu[N]   = 0;
@@ -1204,9 +1213,17 @@ int acados_create()
 
     // initialize primal solution
     double x0[{{ dims.nx }}];
-    {% for item in constraints.x0 %}
+{% if dims.nbx_0 == dims.nx %}
+    // initialize with x0
+    {% for item in constraints.lbx_0 %}
     x0[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
+{% else %}
+    // initialize with zeros
+    {% for i in range(end=dims.nx) %}
+    x0[{{ i }}] = 0.0;
+    {%- endfor %}
+{%- endif %}
 
     double u0[NU];
     {% for i in range(end=dims.nu) %}

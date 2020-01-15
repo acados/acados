@@ -31,7 +31,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-ACADOS_FLAGS = -fPIC
+ACADOS_FLAGS = -fPIC #-fno-diagnostics-show-line-numbers -g
 {% if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
 ACADOS_FLAGS += -DACADOS_WITH_QPOASES
 {% endif %}
