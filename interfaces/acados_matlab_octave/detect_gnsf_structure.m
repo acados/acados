@@ -60,6 +60,8 @@ function model = detect_gnsf_structure(model, transcribe_opts)
 %       holds. If not, the method will try to reformulate the gnsf model
 %       with a different model, such that the assumption holds.
 
+acados_root_dir = getenv('ACADOS_INSTALL_DIR');
+addpath(fullfile(acados_root_dir, 'interfaces', 'acados_matlab_octave', 'gnsf'));
 
 %% load transcribe_opts
 if ~exist('transcribe_opts', 'var')
