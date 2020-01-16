@@ -35,3 +35,4 @@ dummy:
 
 clean:
 	rm -rf build
+	rm -rf c_generated_code

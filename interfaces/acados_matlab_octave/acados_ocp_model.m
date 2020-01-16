@@ -110,8 +110,12 @@ classdef acados_ocp_model < handle
                     obj.model_struct.cost_y_ref_e = value;
                 elseif (strcmp(field, 'cost_Z'))
                     obj.model_struct.cost_Z = value;
+                    obj.model_struct.cost_Zl = value;
+                    obj.model_struct.cost_Zu = value;
                 elseif (strcmp(field, 'cost_Z_e'))
                     obj.model_struct.cost_Z_e = value;
+                    obj.model_struct.cost_Zl_e = value;
+                    obj.model_struct.cost_Zu_e = value;
                 elseif (strcmp(field, 'cost_Zl'))
                     obj.model_struct.cost_Zl = value;
                 elseif (strcmp(field, 'cost_Zl_e'))
@@ -120,14 +124,18 @@ classdef acados_ocp_model < handle
                     obj.model_struct.cost_Zu = value;
                 elseif (strcmp(field, 'cost_Zu_e'))
                     obj.model_struct.cost_Zu_e = value;
+                elseif (strcmp(field, 'cost_z'))
+                    obj.model_struct.cost_z = value;
+                    obj.model_struct.cost_zl = value;
+                    obj.model_struct.cost_zu = value;
+                elseif (strcmp(field, 'cost_z_e'))
+                    obj.model_struct.cost_z_e = value;
+                    obj.model_struct.cost_zl_e = value;
+                    obj.model_struct.cost_zu_e = value;
                 elseif (strcmp(field, 'cost_zl'))
                     obj.model_struct.cost_zl = value;
                 elseif (strcmp(field, 'cost_zl_e'))
                     obj.model_struct.cost_zl_e = value;
-                elseif (strcmp(field, 'cost_z'))
-                    obj.model_struct.cost_z = value;
-                elseif (strcmp(field, 'cost_z_e'))
-                    obj.model_struct.cost_z_e = value;
                 elseif (strcmp(field, 'cost_zu'))
                     obj.model_struct.cost_zu = value;
                 elseif (strcmp(field, 'cost_zu_e'))

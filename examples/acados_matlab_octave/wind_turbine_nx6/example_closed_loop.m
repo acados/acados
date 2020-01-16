@@ -75,13 +75,13 @@ ocp_qp_solver = 'partial_condensing_hpipm';
 ocp_qp_solver_cond_N = 5;
 ocp_qp_solver_cond_ric_alg = 0;
 ocp_qp_solver_ric_alg = 0;
-ocp_qp_solver_warm_start = 2;
+ocp_qp_solver_warm_start = 0;
 %ocp_sim_method = 'erk';
 ocp_sim_method = 'irk';
 ocp_sim_method_num_stages = 4;
 ocp_sim_method_num_steps = 1;
-%cost_type = 'linear_ls';
-cost_type = 'nonlinear_ls';
+cost_type = 'linear_ls';
+%cost_type = 'nonlinear_ls';
 
 
 
@@ -283,10 +283,10 @@ ocp_opts.set('regularize_method', regularize_method);
 ocp_opts.set('nlp_solver_ext_qp_res', ocp_nlp_solver_ext_qp_res);
 if (strcmp(ocp_nlp_solver, 'sqp'))
     ocp_opts.set('nlp_solver_max_iter', ocp_nlp_solver_max_iter);
-    ocp_opts.set('nlp_solver_tol_stat', ocp_nlp_solver_tol_stat);
-    ocp_opts.set('nlp_solver_tol_eq', ocp_nlp_solver_tol_eq);
-    ocp_opts.set('nlp_solver_tol_ineq', ocp_nlp_solver_tol_ineq);
-    ocp_opts.set('nlp_solver_tol_comp', ocp_nlp_solver_tol_comp);
+%    ocp_opts.set('nlp_solver_tol_stat', ocp_nlp_solver_tol_stat);
+%    ocp_opts.set('nlp_solver_tol_eq', ocp_nlp_solver_tol_eq);
+%    ocp_opts.set('nlp_solver_tol_ineq', ocp_nlp_solver_tol_ineq);
+%    ocp_opts.set('nlp_solver_tol_comp', ocp_nlp_solver_tol_comp);
 end
 ocp_opts.set('qp_solver', ocp_qp_solver);
 if (strcmp(ocp_qp_solver, 'partial_condensing_hpipm'))
