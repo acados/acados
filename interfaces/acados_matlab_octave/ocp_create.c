@@ -1274,7 +1274,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (mxGetField( matlab_model, 0, "cost_Zl" )!=NULL)
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_Zl" ) );
-        int acados_size = ns;
+        int acados_size = ns*ns;
         MEX_DIM_CHECK_VEC(fun_name, "cost_Zl", matlab_size, acados_size);
         double *Zl = mxGetPr( mxGetField( matlab_model, 0, "cost_Zl" ) );
         d_ptr = malloc(ns*sizeof(double));
@@ -1291,13 +1291,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (mxGetField( matlab_model, 0, "cost_Zl_e" )!=NULL)
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_Zl_e" ) );
-        int acados_size = ns;
+        int acados_size = ns_e*ns_e;
         MEX_DIM_CHECK_VEC(fun_name, "cost_Zl_e", matlab_size, acados_size);
         double *Zl_e = mxGetPr( mxGetField( matlab_model, 0, "cost_Zl_e" ) );
-        d_ptr = malloc(ns*sizeof(double));
-        for (int ii=0; ii<ns; ii++)
+        d_ptr = malloc(ns_e*sizeof(double));
+        for (int ii=0; ii<ns_e; ii++)
         {
-            d_ptr[ii] = Zl_e[ii+ns*ii];
+            d_ptr[ii] = Zl_e[ii+ns_e*ii];
         }
         ocp_nlp_cost_model_set(config, dims, in, N, "Zl", d_ptr);
         free(d_ptr);
@@ -1306,7 +1306,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (mxGetField( matlab_model, 0, "cost_Zu" )!=NULL)
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_Zu" ) );
-        int acados_size = ns;
+        int acados_size = ns*ns;
         MEX_DIM_CHECK_VEC(fun_name, "cost_Zu", matlab_size, acados_size);
         double *Zu = mxGetPr( mxGetField( matlab_model, 0, "cost_Zu" ) );
         d_ptr = malloc(ns*sizeof(double));
@@ -1323,13 +1323,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (mxGetField( matlab_model, 0, "cost_Zu_e" )!=NULL)
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_Zu_e" ) );
-        int acados_size = ns;
+        int acados_size = ns_e*ns_e;
         MEX_DIM_CHECK_VEC(fun_name, "cost_Zu_e", matlab_size, acados_size);
         double *Zu_e = mxGetPr( mxGetField( matlab_model, 0, "cost_Zu_e" ) );
-        d_ptr = malloc(ns*sizeof(double));
-        for (int ii=0; ii<ns; ii++)
+        d_ptr = malloc(ns_e*sizeof(double));
+        for (int ii=0; ii<ns_e; ii++)
         {
-            d_ptr[ii] = Zu_e[ii+ns*ii];
+            d_ptr[ii] = Zu_e[ii+ns_e*ii];
         }
         ocp_nlp_cost_model_set(config, dims, in, N, "Zu", d_ptr);
         free(d_ptr);
