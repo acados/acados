@@ -1182,7 +1182,7 @@ int acados_create()
 
     {%- if solver_options.nlp_solver_max_iter %}
     int nlp_solver_max_iter = {{ solver_options.nlp_solver_max_iter }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "nlp_solver_max_iter", &nlp_solver_max_iter);
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "max_iter", &nlp_solver_max_iter);
     {%- endif -%}
 
     {%- endif %}
@@ -1227,9 +1227,10 @@ int acados_create()
     {% if dims.np > 0 %}
     // initialize parameters to nominal value
     double p[{{ dims.np }}];
-    {% for i in range(end=dims.np) %}
+    {% for i in range(end=dims.np) %} {# TODO(oj): parameters should not be part of constraints imo.#}
     p[{{ i }}] = {{ constraints.p[i] }};
     {%- endfor %}
+
     {% if solver_options.integrator_type == "IRK" %}
     for (int ii = 0; ii < N; ii++)
     {
@@ -1286,20 +1287,23 @@ int acados_update_params(int stage, double *p, int np) {
             exit(1);
         }
         impl_dae_fun[stage].set_param(impl_dae_fun+stage, p);
+
         casadi_np = (impl_dae_fun_jac_x_xdot_z+stage)->np;
         if (casadi_np != np) {
-            printf("acados_update_params: trying to set %i parameters " 
+            printf("acados_update_params: trying to set %i parameters "
                 "in impl_dae_fun_jac_x_xdot_z which only has %i. Exiting.\n", np, casadi_np);
             exit(1);
         }
         impl_dae_fun_jac_x_xdot_z[stage].set_param(impl_dae_fun_jac_x_xdot_z+stage, p);
+
         casadi_np = (impl_dae_jac_x_xdot_u_z+stage)->np;
         if (casadi_np != np) {
-            printf("acados_update_params: trying to set %i parameters " 
+            printf("acados_update_params: trying to set %i parameters "
                 "in impl_dae_jac_x_xdot_u_z which only has %i. Exiting.\n", np, casadi_np);
             exit(1);
         }
         impl_dae_jac_x_xdot_u_z[stage].set_param(impl_dae_jac_x_xdot_u_z+stage, p);
+
         {% elif solver_options.integrator_type == "ERK" %}
         casadi_np = (forw_vde_casadi+stage)->np;
         if (casadi_np != np) {
@@ -1308,6 +1312,7 @@ int acados_update_params(int stage, double *p, int np) {
             exit(1);
         }
         forw_vde_casadi[stage].set_param(forw_vde_casadi+stage, p);
+
         {%- endif %}{# integrator_type #}
         {% if constraints.constr_type == "BGP" %}
         // casadi_np = (r_constraint+stage)->np;
@@ -1319,11 +1324,12 @@ int acados_update_params(int stage, double *p, int np) {
         // r_constraint[stage].set_param(r_constraint+stage, p);
         casadi_np = (phi_constraint+stage)->np;
         if (casadi_np != np) {
-            printf("acados_update_params: trying to set %i parameters " 
+            printf("acados_update_params: trying to set %i parameters "
                 "in phi_constraint which only has %i. Exiting.\n", np, casadi_np);
             exit(1);
         }
         phi_constraint[stage].set_param(phi_constraint+stage, p);
+
         {% elif constraints.constr_type == "BGH" and dims.nh > 0 %}
         casadi_np = (h_constraint+stage)->np;
         if (casadi_np != np) {
@@ -1336,30 +1342,30 @@ int acados_update_params(int stage, double *p, int np) {
     }
     else // stage == N
     {
-    {% if constraints.constr_type_e == "BGP" %}
-    // casadi_np = (&r_e_constraint)->np;
-    // if (casadi_np != np) {
-    //     printf("acados_update_params: trying to set %i parameters "
-    //         "in r_e_constraint which only has %i. Exiting.\n", np, casadi_np);
-    //     exit(1);
-    // }
-    // r_e_constraint.set_param(&r_e_constraint, p);
-    casadi_np = (&phi_e_constraint)->np;
-    if (casadi_np != np) {
-        printf("acados_update_params: trying to set %i parameters " 
-            "in phi_e_constraint which only has %i. Exiting.\n", np, casadi_np);
-        exit(1);
-    }
-    phi_e_constraint.set_param(&phi_e_constraint, p);
-    {% elif constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
-    casadi_np = (&h_e_constraint)->np;
-    if (casadi_np != np) {
-        printf("acados_update_params: trying to set %i parameters " 
-            "in h_e_constraint which only has %i. Exiting.\n", np, casadi_np);
-        exit(1);
-    }
-    h_e_constraint.set_param(&h_e_constraint, p);
-    {% endif %}
+        {% if constraints.constr_type_e == "BGP" %}
+        // casadi_np = (&r_e_constraint)->np;
+        // if (casadi_np != np) {
+        //     printf("acados_update_params: trying to set %i parameters "
+        //         "in r_e_constraint which only has %i. Exiting.\n", np, casadi_np);
+        //     exit(1);
+        // }
+        // r_e_constraint.set_param(&r_e_constraint, p);
+        casadi_np = (&phi_e_constraint)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in phi_e_constraint which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        phi_e_constraint.set_param(&phi_e_constraint, p);
+        {% elif constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
+        casadi_np = (&h_e_constraint)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in h_e_constraint which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        h_e_constraint.set_param(&h_e_constraint, p);
+        {% endif %}
     }
     {% endif %}{# if dims.np #}
 
