@@ -32,7 +32,6 @@
 #
 
 from acados_template import *
-import acados_template as at
 from export_ode_model import *
 import numpy as np
 import scipy.linalg
@@ -50,12 +49,12 @@ model = export_ode_model()
 # set model_name 
 ocp.model = model
 
-Tf = 2.0
+Tf = 1.0
 nx = model.x.size()[0]
 nu = model.u.size()[0]
 ny = nx + nu
 ny_e = nx
-N = 50
+N = 20
 
 # set ocp_nlp_dimensions
 nlp_dims     = ocp.dims
@@ -79,14 +78,10 @@ elif FORMULATION == 'NLS':
 else:
     raise Exception('Unknown FORMULATION. Possible values are \'LS\' and \'NLS\'.')
 
-Q = np.eye(4)
-Q[0,0] = 1e0
-Q[1,1] = 1e2
-Q[2,2] = 1e-3
-Q[3,3] = 1e-2
+Q = np.diag([1e3, 1e3, 1e-2, 1e-2])
 
 R = np.eye(1)
-R[0,0] = 1e0
+R[0,0] = 1e-2
 
 if FORMULATION == 'NLS':
     nlp_cost.W = scipy.linalg.block_diag(R, Q) 
@@ -120,7 +115,7 @@ elif FORMULATION == 'NLS':
     x = SX.sym('x', 4, 1)
     u = SX.sym('u', 1, 1)
     ocp.cost_r.expr = vertcat(u, x) 
-    ocp.cost_r.x = x 
+    ocp.cost_r.x = x
     ocp.cost_r.u = u 
     ocp.cost_r.name = 'lin_res' 
     ocp.cost_r.ny = nx + nu 
@@ -137,7 +132,7 @@ nlp_cost.yref  = np.zeros((ny, ))
 nlp_cost.yref_e = np.zeros((ny_e, ))
 
 # setting bounds
-Fmax = 2.0
+Fmax = 80
 nlp_con = ocp.constraints
 nlp_con.lbu = np.array([-Fmax])
 nlp_con.ubu = np.array([+Fmax])
@@ -177,11 +172,9 @@ for i in range(Nsim):
     x0 = acados_solver.get(0, "x")
     u0 = acados_solver.get(0, "u")
     
-    for j in range(nx):
-        simX[i,j] = x0[j]
-
-    for j in range(nu):
-        simU[i,j] = u0[j]
+    # store
+    simX[i,:] = x0
+    simU[i,:] = u0
     
     # update initial condition
     x0 = acados_solver.get(1, "x")
