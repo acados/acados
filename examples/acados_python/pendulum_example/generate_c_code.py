@@ -186,13 +186,13 @@ for i in range(Nsim):
     # update initial condition
     x0 = acados_solver.get(1, "x")
 
-    acados_solver.set(0, "lbx", x0)
-    acados_solver.set(0, "ubx", x0)
+    acados_solver.constraints_set(0, "lbx", x0)
+    acados_solver.constraints_set(0, "ubx", x0)
 
     # update reference
     for j in range(N):
-        acados_solver.set(j, "yref", np.array([0, 0, 0, 0, 0]))
-    acados_solver.set(N, "yref", np.array([0, 0, 0, 0]))
+        acados_solver.cost_set(j, "y_ref", np.array([0, 0, 0, 0, 0]))
+    acados_solver.cost_set(N, "y_ref", np.array([0, 0, 0, 0]))
 
 # plot results
 import matplotlib

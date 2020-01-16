@@ -414,6 +414,8 @@ class acados_solver:
 
         return out
 
+
+    # Note: this function should not be used anymore, better use cost_set, constraints_set
     def set(self, stage_, field_, value_):
 
         cost_fields = ['y_ref', 'yref']

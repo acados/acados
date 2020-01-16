@@ -251,13 +251,13 @@ for i in range(Nsim):
     # update initial condition
     x0 = acados_solver.get(1, "x")
 
-    acados_solver.set(0, "lbx", x0)
-    acados_solver.set(0, "ubx", x0)
+    acados_solver.constraints_set(0, "lbx", x0)
+    acados_solver.constraints_set(0, "ubx", x0)
 
     # update reference
     for j in range(N):
-        acados_solver.set(j, "yref", np.array([0, 0, 0, 0, 0]))
-    acados_solver.set(N, "yref", np.array([0, 0, 0, 0]))
+        acados_solver.cost_set(j, "yref", np.array([0, 0, 0, 0, 0]))
+    acados_solver.cost_set(N, "yref", np.array([0, 0, 0, 0]))
 
 # dump result to JSON file for unit testing
 test_file_name = 'test_data/generate_c_code_out_' + FORMULATION + '_' + QP_SOLVER + '_' + \
