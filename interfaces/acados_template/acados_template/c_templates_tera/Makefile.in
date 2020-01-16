@@ -143,29 +143,48 @@ casadi_fun:
 
 main:
 	gcc $(ACADOS_FLAGS) -c main_{{ model.name }}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
-	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/
+	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ \
+	{%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
+	-I $(INCLUDE_PATH)/qpOASES_e/
+	{% endif %}
 
 solver:
 	gcc $(ACADOS_FLAGS) -c acados_solver_{{ model.name }}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
-	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/
+	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ \
+	{%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
+	-I $(INCLUDE_PATH)/qpOASES_e/
+	{% endif %}
 
 sim_solver:
 	gcc $(ACADOS_FLAGS) -c acados_sim_solver_{{ model.name }}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
-	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/
+	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/  \
+	{%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
+	-I $(INCLUDE_PATH)/qpOASES_e/
+	{% endif %}
 
 example:
 	gcc $(ACADOS_FLAGS) -o main_{{ model.name }} $(OBJ) -L $(LIB_PATH) \
-	-lacados -lhpipm -lblasfeo -lqpOASES_e -lm \
+	-lacados -lhpipm -lblasfeo \
+	{%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
+	-lqpOASES_e \
+	{% endif %}
+	-lm \
 	-I $(INCLUDE_PATH)/blasfeo/include/ \
 	-I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) \
 	-I $(INCLUDE_PATH)/acados/ \
+	{%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
 	-I $(INCLUDE_PATH)/qpOASES_e/
+	{% endif %}
 
 shared_lib: casadi_fun solver sim_solver
 	gcc $(ACADOS_FLAGS) -shared -o libacados_solver_{{ model.name }}.so $(OBJ) $(SIM_OBJ) -L $(LIB_PATH) \
 	-L $(LIB_PATH) \
-	-lacados -lhpipm -lblasfeo -lqpOASES_e -lm \
+	-lacados -lhpipm -lblasfeo \
+	{%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
+	-lqpOASES_e \
+	{% endif %}
+	-lm \
 
 clean:
 	rm -f *.o

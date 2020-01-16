@@ -76,12 +76,13 @@ uCtrlFAST(1,:) = max([uCtrlFAST(1,:);zeros(size(uCtrlFAST(1,:)))]);
 X0 = [statesFAST(1,[9               10                  19                20])                  uCtrlFAST(1,1)      uCtrlFAST(1,2) uCtrlFAST(1,1)       uCtrlFAST(1,2)]; 
 X0([2 4]) = 0;
 U0 = [0 0];   
+X0(1) = X0(1);
 
 %% references
 
 %stage cost
 y = [];
-for i=1:nsim+1
+for i=1:nsim+N+1
     currVwind = VwindSim(i);
     currVwind = min(max(currVwind,0.1),VwindMaxRef);
     y = cat(1,y,[ppval(ppOmegaSS,currVwind) ppval(ppColPitchSS,currVwind) 0 0]);
@@ -99,6 +100,36 @@ y_ref = y(1:nsim,:)';
 %size(u0_ref)
 %size(wind0_ref)
 %size(y_ref)
+
+
+%% save to mat file
+ny = 4;
+
+tmp_windN_ref = [Ts*[0:nsim-1]; zeros(N+1,nsim)];
+for ii=1:nsim
+%	tmp_windN_ref(1+[1:N+1],ii) = VwindSim(ii)*ones(N+1,1);
+	tmp_windN_ref(1+[1:N+1],ii) = VwindSim(ii+[0:N]);
+end
+save('windN_ref', 'tmp_windN_ref');
+
+tmp_wind0_ref = [Ts*[0:nsim-1]; VwindSim(1:nsim)];
+save('wind0_ref', 'tmp_wind0_ref');
+
+%tmp_y_ref = [Ts*[1:nsim]; y_ref];
+%save('y_ref', 'tmp_y_ref');
+yt = y';
+tmp_y_ref = [Ts*[0:nsim-1]; zeros(ny*N,nsim)];
+for ii=1:nsim
+	for jj=1:N
+%		tmp_y_ref(1+(jj-1)*ny+[1:ny],ii) = yt(:,ii);
+		tmp_y_ref(1+(jj-1)*ny+[1:ny],ii) = yt(:,ii+jj-1);
+	end
+end
+save('y_ref', 'tmp_y_ref');
+
+tmp_y_e_ref = [Ts*[0:nsim-1]; y_ref(1:2,:)];
+save('y_e_ref', 'tmp_y_e_ref');
+
 
 
 return;

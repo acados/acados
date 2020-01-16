@@ -803,7 +803,8 @@ int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_
         config->constraints[ii]->dims_get(config->constraints[ii], dims->constraints[ii], "ns", &module_val);
         if (dims->ns[ii] != module_val)
         {
-            printf("ocp_nlp_sqp_precompute: inconsistent dimension ns with constraint module.");
+            printf("ocp_nlp_sqp_precompute: inconsistent dimension ns for stage %d with constraint module, got %d, module: %d.",
+                   ii, dims->ns[ii], module_val);
             exit(1);
         }
     }
@@ -815,7 +816,9 @@ int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_
         config->dynamics[ii]->model_set(config->dynamics[ii], dims->dynamics[ii],
                                         nlp_in->dynamics[ii], "T", nlp_in->Ts+ii);
         // dynamics precompute
-        status = config->dynamics[ii]->precompute(config->dynamics[ii], dims->dynamics[ii], nlp_in->dynamics[ii], opts->nlp_opts->dynamics[ii], nlp_mem->dynamics[ii], nlp_work->dynamics[ii]);
+        status = config->dynamics[ii]->precompute(config->dynamics[ii], dims->dynamics[ii],
+                                                nlp_in->dynamics[ii], opts->nlp_opts->dynamics[ii],
+                                                nlp_mem->dynamics[ii], nlp_work->dynamics[ii]);
         if (status != ACADOS_SUCCESS)
             return status;
     }
