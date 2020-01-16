@@ -144,7 +144,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         )
         status = os.system(os_cmd)
         if (status != 0):
-            raise Exception('Rendering of {} failed! Exiting.\n'.format(template_file))
+            raise Exception('Rendering of {} failed! Exiting.\n'.format(in_file))
 
         os.chdir(cwd)
 

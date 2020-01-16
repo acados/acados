@@ -224,7 +224,7 @@ function set_up_t_renderer( t_renderer_location )
     if strcmpi( In, 'n')
         error('Please set up t_renderer yourself and try again');
     else
-        t_renderer_version = 'v0.0.20';
+        t_renderer_version = 'v0.0.30';
         if isunix()
             suffix = '-linux';
         elseif ismac()
