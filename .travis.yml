@@ -41,7 +41,7 @@ matrix:
       env:
         - DEPLOY_NAME="osx-python"
 
-    - name: Linux Gcc6 - Octave template
+    - name: Linux Gcc6 - Octave NO_template
       env:
         - DEPLOY_NAME="linux octave gcc6"
         - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
