@@ -38,8 +38,8 @@ import scipy.linalg
 from ctypes import *
 import matplotlib.pyplot as plt
 
-FORMULATION = 'NLS' # 'LS'
-# FORMULATION = 'LS' # 'LS'
+# FORMULATION = 'NLS' # 'LS'
+FORMULATION = 'LS' # 'LS'
 
 # create ocp object to formulate the OCP
 ocp = acados_ocp_nlp()
@@ -79,9 +79,8 @@ elif FORMULATION == 'NLS':
 else:
     raise Exception('Unknown FORMULATION. Possible values are \'LS\' and \'NLS\'.')
 
-Q = np.diag([1e3, 1e3, 1e-2, 1e-2])
-
-R = np.diag([1e-2])
+Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
+R = 2*np.diag([1e-2])
 
 if FORMULATION == 'NLS':
     nlp_cost.W = scipy.linalg.block_diag(R, Q) 
@@ -91,13 +90,14 @@ else:
 nlp_cost.W_e = Q 
 
 if FORMULATION == 'LS':
-    nlp_cost.Vx = np.eye((ny, nx))
+    nlp_cost.Vx = np.zeros((ny, nx))
+    nlp_cost.Vx[:nx,:nx] = np.eye(nx)
 
     Vu = np.zeros((ny, nu))
     Vu[4,0] = 1.0
     nlp_cost.Vu = Vu
 
-    nlp_cost.Vx_e = np.eye((ny_e, nx))
+    nlp_cost.Vx_e = np.eye(nx)
 
 elif FORMULATION == 'NLS':
     x = SX.sym('x', 4, 1)
@@ -106,7 +106,7 @@ elif FORMULATION == 'NLS':
     ocp.cost_r.x = x
     ocp.cost_r.u = u 
     ocp.cost_r.name = 'lin_res' 
-    ocp.cost_r.ny = nx + nu 
+    ocp.cost_r.ny = nx + nu
 
     ocp.cost_r_e.expr = x
     ocp.cost_r_e.x = x 
@@ -124,14 +124,16 @@ Fmax = 80
 ocp.constraints.constr_type = 'BGH'
 ocp.constraints.lbu = np.array([-Fmax])
 ocp.constraints.ubu = np.array([+Fmax])
-ocp.constraints.x0 = np.array([0.0, 3.14, 0.0, 0.0])
+ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 # ocp.constraints.x0 = np.array([0.0, 0.5, 0.0, 0.0])
 ocp.constraints.idxbu = np.array([0])
 
-# ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
+ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+# ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
 ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
 ocp.solver_options.integrator_type = 'ERK'
+
+ocp.solver_options.qp_solver_cond_N = 5
 
 # set prediction horizon
 ocp.solver_options.tf = Tf
