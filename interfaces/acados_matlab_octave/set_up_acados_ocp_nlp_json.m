@@ -72,7 +72,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     if isfield(model, 'dim_nsbu')
         ocp_json.dims.nsbu = model.dim_nsbu;
     end
-    
+
     % missing in template
     % ocp_json.dims.nsg = model.nsg;
 
@@ -123,12 +123,15 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     if isfield(model, 'constr_lbx_0')
         ocp_json.constraints.lbx_0 = model.constr_lbx_0;
     else
-        error('missing: constr_lbx_0');
+        warning('missing: constr_lbx_0, using zeros of appropriate dimension.');
+        ocp_json.constraints.lbx_0 = zeros(ocp_json.dims.nbx_0, 1);
     end
+
     if isfield(model, 'constr_ubx_0')
         ocp_json.constraints.ubx_0 = model.constr_ubx_0;
     else
-        error('missing: constr_ubx_0');
+        warning('missing: constr_ubx_0, using zeros of appropriate dimension.');
+        ocp_json.constraints.ubx_0 = zeros(ocp_json.dims.nbx_0, 1);
     end
     if isfield(model, 'constr_Jbx_0')
         ocp_json.constraints.idxbx_0 = J_to_idx( model.constr_Jbx_0 );
@@ -182,7 +185,13 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
         else
             ocp_json.constraints.usbx = zeros(ocp_json.dims.nsbx, 1);
         end
+        % TODO(oj): add nsbx_e properly in Matlab:
+        ocp_json.dims.nsbx_e = model.dim_nsbx;
+        ocp_json.constraints.idxsbx_e = ocp_json.constraints.idxsbx;
+        ocp_json.constraints.lsbx_e = ocp_json.constraints.lsbx;
+        ocp_json.constraints.usbx_e = ocp_json.constraints.usbx;
     end
+
 
     if ocp_json.dims.nsbu > 0
         ocp_json.constraints.idxsbu = J_to_idx_slack(model.Jsbu);
