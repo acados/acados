@@ -47,11 +47,13 @@ def make_ocp_dims_consistent(acados_ocp):
     dims = acados_ocp.dims
     cost = acados_ocp.cost
     constraints = acados_ocp.constraints
+    model = acados_ocp.model
 
+
+    # nbx_0
     if (constraints.lbx_0 == [] and constraints.ubx_0 == []):
         dims.nbx_0 = 0
     elif not (constraints.lbx_0 == [] and constraints.ubx_0 == []):
-        # nbx_0
         this_shape = constraints.lbx_0.shape
         other_shape = constraints.ubx_0.shape
         if not this_shape == other_shape:
@@ -62,6 +64,33 @@ def make_ocp_dims_consistent(acados_ocp):
         dims.nbx_0 = constraints.lbx_0.size
     else:
         raise Exception("lbx_0, ubx_0 have different shapes!")
+
+    # nx
+    if is_column(model.x):
+        dims.nx = model.x.shape[0]
+    else:
+        raise Exception("model.x should be column vector!")
+
+    # # nu
+    # if not model.u == None:
+    #     if is_column(model.u):
+    #         dims.nu = model.u.shape[0]
+    #     else:
+    #         raise Exception("model.u should be column vector!")
+    # else:
+    #     dims.nu = 0
+
+    # # nz
+    # if not model.z == None:
+    #     print(model.z)
+    #     if is_column(model.z):
+    #         dims.nz = model.z.shape[0]
+    #     else:
+    #         raise Exception("model.z should be column vector!")
+    # else:
+    #     dims.nz = 0
+
+
 
 
 def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
