@@ -36,7 +36,7 @@ import urllib.request
 import shutil
 
 ALLOWED_CASADI_VERSIONS = ('3.5.1', '3.4.5', '3.4.0')
-TERA_VERSION = "0.0.20"
+TERA_VERSION = "0.0.30"
 
 ACADOS_PATH = os.environ.get('ACADOS_SOURCE_DIR')
 if not ACADOS_PATH:
@@ -75,7 +75,7 @@ def get_tera():
     manual_install += '1 Download binaries from {}\n'.format(url)
     manual_install += '2 Copy them in {}/bin\n'.format(ACADOS_PATH)
     manual_install += '3 Strip the version and platform from the binaries: '
-    manual_install += 'as t_renderer-v0.0.20-X -> t_renderer)\n'
+    manual_install += 'as t_renderer-v0.0.30-X -> t_renderer)\n'
     manual_install += '4 Enable execution privilege on the file "t_renderer" with:\n'
     manual_install += '"chmod +x {}"\n\n'.format(tera_path)
 
