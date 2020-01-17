@@ -1064,30 +1064,20 @@ int acados_create()
 
 {% if solver_options.nlp_solver_type == "SQP" -%}
     // set SQP specific options
-    {%- if solver_options.nlp_solver_tol_stat %}
     double nlp_solver_tol_stat = {{ solver_options.nlp_solver_tol_stat }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tol_stat", &nlp_solver_tol_stat);
-    {%- endif -%}
 
-    {%- if solver_options.nlp_solver_tol_eq %}
     double nlp_solver_tol_eq = {{ solver_options.nlp_solver_tol_eq }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tol_eq", &nlp_solver_tol_eq);
-    {%- endif -%}
 
-    {%- if solver_options.nlp_solver_tol_ineq %}
     double nlp_solver_tol_ineq = {{ solver_options.nlp_solver_tol_ineq }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tol_ineq", &nlp_solver_tol_ineq);
-    {%- endif -%}
 
-    {%- if solver_options.nlp_solver_tol_comp %}
     double nlp_solver_tol_comp = {{ solver_options.nlp_solver_tol_comp }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tol_comp", &nlp_solver_tol_comp);
-    {%- endif -%}
 
-    {%- if solver_options.nlp_solver_max_iter %}
     int nlp_solver_max_iter = {{ solver_options.nlp_solver_max_iter }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "max_iter", &nlp_solver_max_iter);
-    {%- endif -%}
 {%- endif %}
 
     /* out */

@@ -165,7 +165,7 @@ int main()
   {% endif %}{# if np > 0 #}
 
     // prepare evaluation
-    int NTIMINGS = 10;
+    int NTIMINGS = 1;
     double min_time = 1e12;
     double kkt_norm_inf;
     double elapsed_time;
