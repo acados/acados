@@ -32,7 +32,7 @@
 #
 
 from acados_template import *
-from export_ode_model import *
+from export_pendulum_ode_model import *
 import numpy as np
 import scipy.linalg
 from ctypes import *
@@ -41,11 +41,11 @@ import matplotlib.pyplot as plt
 FORMULATION = 'NLS' # 'LS'
 # FORMULATION = 'LS' # 'LS'
 
-# create render arguments
+# create ocp object to formulate the OCP
 ocp = acados_ocp_nlp()
 
 # export model 
-model = export_ode_model()
+model = export_pendulum_ode_model()
 
 # set model_name 
 ocp.model = model
@@ -64,10 +64,10 @@ nlp_dims.ny  = ny
 nlp_dims.ny_e = ny_e 
 nlp_dims.nbx = 0
 nlp_dims.nbu = nu 
-nlp_dims.nu  = model.u.size()[0]
+nlp_dims.nu  = nu
 nlp_dims.N   = N
 
-# set weighting matrices
+# set cost module
 nlp_cost = ocp.cost
 
 if FORMULATION == 'LS':
@@ -81,8 +81,7 @@ else:
 
 Q = np.diag([1e3, 1e3, 1e-2, 1e-2])
 
-R = np.eye(1)
-R[0,0] = 1e-2
+R = np.diag([1e-2])
 
 if FORMULATION == 'NLS':
     nlp_cost.W = scipy.linalg.block_diag(R, Q) 
@@ -92,26 +91,14 @@ else:
 nlp_cost.W_e = Q 
 
 if FORMULATION == 'LS':
-    Vx = np.eye((ny, nx))
-    # Vx[0,0] = 1.0
-    # Vx[1,1] = 1.0
-    # Vx[2,2] = 1.0
-    # Vx[3,3] = 1.0
-
-    nlp_cost.Vx = Vx
+    nlp_cost.Vx = np.eye((ny, nx))
 
     Vu = np.zeros((ny, nu))
     Vu[4,0] = 1.0
     nlp_cost.Vu = Vu
 
+    nlp_cost.Vx_e = np.eye((ny_e, nx))
 
-    Vx_e = np.zeros((ny_e, nx))
-    Vx_e[0,0] = 1.0
-    Vx_e[1,1] = 1.0
-    Vx_e[2,2] = 1.0
-    Vx_e[3,3] = 1.0
-
-    nlp_cost.Vx_e = Vx_e
 elif FORMULATION == 'NLS':
     x = SX.sym('x', 4, 1)
     u = SX.sym('u', 1, 1)
@@ -132,16 +119,15 @@ else:
 nlp_cost.yref  = np.zeros((ny, ))
 nlp_cost.yref_e = np.zeros((ny_e, ))
 
-# setting bounds
+# set constraints
 Fmax = 80
-nlp_con = ocp.constraints
-nlp_con.lbu = np.array([-Fmax])
-nlp_con.ubu = np.array([+Fmax])
-nlp_con.x0 = np.array([0.0, 3.14, 0.0, 0.0])
-# nlp_con.x0 = np.array([0.0, 0.5, 0.0, 0.0])
-nlp_con.idxbu = np.array([0])
+ocp.constraints.constr_type = 'BGH'
+ocp.constraints.lbu = np.array([-Fmax])
+ocp.constraints.ubu = np.array([+Fmax])
+ocp.constraints.x0 = np.array([0.0, 3.14, 0.0, 0.0])
+# ocp.constraints.x0 = np.array([0.0, 0.5, 0.0, 0.0])
+ocp.constraints.idxbu = np.array([0])
 
-# set QP solver
 # ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
 ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
 ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
@@ -176,9 +162,9 @@ simX[N,:] = acados_solver.get(N, "x")
 
 # plot results
 t = np.linspace(0.0, Tf/N, N)
+
 plt.subplot(5, 1, 1)
 plt.step(t, simU, color='r')
-plt.title('closed-loop simulation')
 plt.ylabel('u')
 plt.xlabel('t')
 plt.ylim([-Fmax, Fmax])
@@ -208,6 +194,7 @@ plt.ylabel('dtheta')
 plt.xlabel('t')
 plt.grid(True)
 
+plt.title('closed-loop simulation')
 plt.subplots_adjust(left=None, bottom=None, right=None, top=None, hspace=0.4)
 
 # avoid plotting when running on Travis

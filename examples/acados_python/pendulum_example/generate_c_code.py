@@ -32,7 +32,7 @@
 #
 
 from acados_template import *
-from export_ode_model import *
+from export_pendulum_ode_model import *
 import numpy as np
 import scipy.linalg
 from ctypes import *
@@ -44,7 +44,7 @@ FORMULATION = 'NLS' # 'LS'
 ocp = acados_ocp_nlp()
 
 # export model 
-model = export_ode_model()
+model = export_pendulum_ode_model()
 
 # set model_name 
 ocp.model = model

@@ -32,7 +32,7 @@
 #
 
 from acados_template import *
-def export_ode_model():
+def export_pendulum_ode_model():
 
     model_name = 'pendulum_ode'
 
