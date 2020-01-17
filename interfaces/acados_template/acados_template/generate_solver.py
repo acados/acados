@@ -173,6 +173,8 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     template_glob = os.path.join(
         ACADOS_PATH,
         'interfaces/acados_template/acados_template/c_templates_tera/*')
+        # TODO(andrea): this breaks when running main_test.py...
+        # 'interfaces/acados_template/acados_template/c_templates_tera/*!(swp.*)')
     acados_template_path = os.path.join(
         ACADOS_PATH,
         'interfaces/acados_template/acados_template/c_templates_tera')
@@ -348,26 +350,32 @@ class acados_solver:
         field = field.encode('utf-8')
 
         stage = c_int(stage_)
-        self.shared_lib.ocp_nlp_cost_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, POINTER(c_int)]
+        self.shared_lib.ocp_nlp_cost_dims_get_from_attr.argtypes = \
+            [c_void_p, c_void_p, c_void_p, c_int, c_char_p, POINTER(c_int)]
         self.shared_lib.ocp_nlp_cost_dims_get_from_attr.restype = c_int
 
         dims = np.ascontiguousarray(np.zeros((2,)), dtype=np.intc)
         dims_data = cast(dims.ctypes.data, POINTER(c_int))
 
-        self.shared_lib.ocp_nlp_cost_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, field, dims_data)
+        self.shared_lib.ocp_nlp_cost_dims_get_from_attr(self.nlp_config, \
+            self.nlp_dims, self.nlp_out, stage_, field, dims_data)
 
         value_shape = value_.shape
         if len(value_shape) == 1:
             value_shape = (value_shape[0], 0)
          
         if value_shape != tuple(dims): 
-            raise Exception('acados_solver.set(): mismatching dimension for field "{}" with dimension {} (you have {})'.format(field_, tuple(dims), value_shape))
+            raise Exception('acados_solver.set(): mismatching dimension', \
+                ' for field "{}" with dimension {} (you have {})'.format( \
+                field_, tuple(dims), value_shape))
 
         value_data = cast(value_.ctypes.data, POINTER(c_double))
         value_data_p = cast((value_data), c_void_p)
 
-        self.shared_lib.ocp_nlp_cost_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
-        self.shared_lib.ocp_nlp_cost_model_set(self.nlp_config, self.nlp_dims, self.nlp_in, stage, field, value_data_p);
+        self.shared_lib.ocp_nlp_cost_model_set.argtypes = \
+            [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+        self.shared_lib.ocp_nlp_cost_model_set(self.nlp_config, \
+            self.nlp_dims, self.nlp_in, stage, field, value_data_p);
 
     def constraints_set(self, stage_, field_, value_):
         # cast value_ to avoid conversion issues
@@ -377,26 +385,31 @@ class acados_solver:
         field = field.encode('utf-8')
 
         stage = c_int(stage_)
-        self.shared_lib.ocp_nlp_constraint_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, POINTER(c_int)]
+        self.shared_lib.ocp_nlp_constraint_dims_get_from_attr.argtypes = \
+            [c_void_p, c_void_p, c_void_p, c_int, c_char_p, POINTER(c_int)]
         self.shared_lib.ocp_nlp_constraint_dims_get_from_attr.restype = c_int
 
         dims = np.ascontiguousarray(np.zeros((2,)), dtype=np.intc)
         dims_data = cast(dims.ctypes.data, POINTER(c_int))
 
-        self.shared_lib.ocp_nlp_constraint_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, field, dims_data)
+        self.shared_lib.ocp_nlp_constraint_dims_get_from_attr(self.nlp_config, \
+            self.nlp_dims, self.nlp_out, stage_, field, dims_data)
          
         value_shape = value_.shape
         if len(value_shape) == 1:
             value_shape = (value_shape[0], 0)
 
         if value_shape != tuple(dims): 
-            raise Exception('acados_solver.set(): mismatching dimension for field "{}" with dimension {} (you have {})'.format(field_, tuple(dims), value_shape))
+            raise Exception('acados_solver.set(): mismatching dimension' \
+                ' for field "{}" with dimension {} (you have {})'.format(field_, tuple(dims), value_shape))
 
         value_data = cast(value_.ctypes.data, POINTER(c_double))
         value_data_p = cast((value_data), c_void_p)
 
-        self.shared_lib.ocp_nlp_constraints_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
-        self.shared_lib.ocp_nlp_constraints_model_set(self.nlp_config, self.nlp_dims, self.nlp_in, stage, field, value_data_p);
+        self.shared_lib.ocp_nlp_constraints_model_set.argtypes = \
+            [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+        self.shared_lib.ocp_nlp_constraints_model_set(self.nlp_config, \
+            self.nlp_dims, self.nlp_in, stage, field, value_data_p);
 
 
     def solve(self):
@@ -428,16 +441,20 @@ class acados_solver:
             raise Exception("acados_solver: {} is not a valid key for method `set(value)`.\
                     \n Possible values are {}. Exiting.".format(out_fields))
 
-        self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
+        self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = \
+            [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
         self.shared_lib.ocp_nlp_dims_get_from_attr.restype = c_int
 
-        dims = self.shared_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, field)
+        dims = self.shared_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, \
+            self.nlp_dims, self.nlp_out, stage_, field)
 
         out = np.ascontiguousarray(np.zeros((dims,)), dtype=np.float64)
         out_data = cast(out.ctypes.data, POINTER(c_double))
 
-        self.shared_lib.ocp_nlp_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
-        self.shared_lib.ocp_nlp_out_get(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, field, out_data)
+        self.shared_lib.ocp_nlp_out_get.argtypes = \
+            [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+        self.shared_lib.ocp_nlp_out_get(self.nlp_config, \
+            self.nlp_dims, self.nlp_out, stage_, field, out_data)
 
         # out = cast((out), POINTER(c_double))
 
@@ -467,14 +484,18 @@ class acados_solver:
             value_data = cast(value_.ctypes.data, POINTER(c_double))
             self.shared_lib.acados_update_params(stage, value_data, value_.shape[0])
         else:
-            if (field_ not in constraints_fields) and (field_ not in cost_fields) and (field_ not in out_fields):
+            if (field_ not in constraints_fields) and \
+                    (field_ not in cost_fields) and (field_ not in out_fields):
                 raise Exception("acados_solver: {} is not a valid key for method `set(value)`.\
-                        \nPossible values are {} and {}. Exiting.".format(field, cost_fields, constraints_fields, out_fields))
+                    \nPossible values are {} and {}. Exiting.".format(field, \
+                    cost_fields, constraints_fields, out_fields))
 
-            self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
+            self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = \
+                [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
             self.shared_lib.ocp_nlp_dims_get_from_attr.restype = c_int
 
-            dims = self.shared_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, field)
+            dims = self.shared_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, \
+                self.nlp_dims, self.nlp_out, stage_, field)
 
             if value_.shape[0] != dims:
                 msg = 'acados_solver.set(): mismatching dimension for field "{}"'.format(field_)
@@ -485,14 +506,20 @@ class acados_solver:
             value_data_p = cast((value_data), c_void_p)
 
             if field_ in constraints_fields:
-                self.shared_lib.ocp_nlp_constraints_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
-                self.shared_lib.ocp_nlp_constraints_model_set(self.nlp_config, self.nlp_dims, self.nlp_in, stage, field, value_data_p)
+                self.shared_lib.ocp_nlp_constraints_model_set.argtypes = \
+                    [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+                self.shared_lib.ocp_nlp_constraints_model_set(self.nlp_config, \
+                    self.nlp_dims, self.nlp_in, stage, field, value_data_p)
             elif field_ in cost_fields:
-                self.shared_lib.ocp_nlp_cost_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
-                self.shared_lib.ocp_nlp_cost_model_set(self.nlp_config, self.nlp_dims, self.nlp_in, stage, field, value_data_p)
+                self.shared_lib.ocp_nlp_cost_model_set.argtypes = \
+                    [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+                self.shared_lib.ocp_nlp_cost_model_set(self.nlp_config, \
+                    self.nlp_dims, self.nlp_in, stage, field, value_data_p)
             elif field_ in out_fields:
-                self.shared_lib.ocp_nlp_out_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
-                self.shared_lib.ocp_nlp_out_set(self.nlp_config, self.nlp_dims, self.nlp_out, stage, field, value_data_p)
+                self.shared_lib.ocp_nlp_out_set.argtypes = \
+                    [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+                self.shared_lib.ocp_nlp_out_set(self.nlp_config, \
+                    self.nlp_dims, self.nlp_out, stage, field, value_data_p)
 
         return
 
