@@ -48,6 +48,7 @@ classdef ocp_nlp_solver_config_json < handle
         nlp_solver_tol_ineq
         nlp_solver_tol_comp
         nlp_solver_step_length
+        qp_solver_iter_max
     end
     methods
         function obj = ocp_nlp_solver_config_json()
@@ -62,6 +63,7 @@ classdef ocp_nlp_solver_config_json < handle
             obj.nlp_solver_max_iter = 50;
             obj.qp_solver_cond_N = [];
             obj.nlp_solver_step_length = 1.0;
+            obj.qp_solver_iter_max = [];
         end
     end
 end

@@ -57,7 +57,8 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     ocp_json.solver_options.nlp_solver_tol_ineq = obj.opts_struct.nlp_solver_tol_ineq;
     ocp_json.solver_options.nlp_solver_tol_comp = obj.opts_struct.nlp_solver_tol_comp;
     ocp_json.solver_options.nlp_solver_step_length = obj.opts_struct.nlp_solver_step_length;
-
+    ocp_json.solver_options.qp_solver_cond_N = obj.opts_struct.qp_solver_cond_N;
+    ocp_json.solver_options.qp_solver_iter_max = obj.opts_struct.qp_solver_iter_max;
 
     %% dims
     nx = model.dim_nx;

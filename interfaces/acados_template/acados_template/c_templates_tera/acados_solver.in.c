@@ -1023,6 +1023,9 @@ int acados_create()
         ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_cond_N", &qp_solver_cond_N);
 {% endif %}
 
+    int qp_solver_iter_max = {{ solver_options.qp_solver_iter_max }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_iter_max", &qp_solver_iter_max);
+
     {%- if solver_options.qp_solver_tol_stat %}
     double qp_solver_tol_stat = {{ solver_options.qp_solver_tol_stat }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_tol_stat", &qp_solver_tol_stat);

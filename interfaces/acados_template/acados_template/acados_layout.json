@@ -584,6 +584,9 @@
         "qp_solver_tol_comp": [
             "float"
         ],
+        "qp_solver_iter_max": [
+            "int"
+        ],
         "nlp_solver_tol_stat": [
             "float"
         ],
