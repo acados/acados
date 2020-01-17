@@ -185,6 +185,7 @@ int acados_create()
     // for initial state
     nbx[0]  = NBX0;
     nsbx[0] = 0;
+    ns[0] = NS - NSBX;
 
     // terminal - common
     nu[N]   = 0;
@@ -642,6 +643,18 @@ int acados_create()
     // ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lsbx", lsbx);
     // ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "usbx", usbx);
 
+    // soft bounds on x
+    int idxsbx[NSBX];
+    {% for i in range(end=dims.nsbx) %}
+    idxsbx[{{ i }}] = {{ constraints.idxsbx[i] }};
+    {%- endfor %}
+    double lsbx[NSBX];
+    double usbx[NSBX];
+    {% for i in range(end=dims.nsbx) %}
+    lsbx[{{ i }}] = {{ constraints.lsbx[i] }};
+    usbx[{{ i }}] = {{ constraints.usbx[i] }};
+    {%- endfor %}
+
     for (int i = 1; i < N; i++)
     {       
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "idxsbx", idxsbx);
@@ -753,20 +766,6 @@ int acados_create()
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lbx", lbx);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "ubx", ubx);
     }
-{% endif %}
-
-{% if dims.nsbx > 0 %}
-    // soft bounds on x
-    int idxsbx[NSBX];
-    {% for i in range(end=dims.nsbx) %}
-    idxsbx[{{ i }}] = {{ constraints.idxsbx[i] }};
-    {%- endfor %}
-    double lsbx[NSBX]; 
-    double usbx[NSBX];
-    {% for i in range(end=dims.nsbx) %}
-    lsbx[{{ i }}] = {{ constraints.lsbx[i] }};
-    usbx[{{ i }}] = {{ constraints.usbx[i] }};
-    {%- endfor %}
 {% endif %}
 
 {% if dims.ng > 0 %}
