@@ -996,15 +996,21 @@ int acados_create()
 {%- endif -%}
 
     {%- if solver_options.sim_method_num_steps %}
-    int num_steps_val = {{ solver_options.sim_method_num_steps }}; 
+    int num_steps_val = {{ solver_options.sim_method_num_steps }};
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_steps", &num_steps_val);
     {%- endif -%}
 
     {%- if solver_options.sim_method_num_stages %}
-    int ns_val = {{ solver_options.sim_method_num_stages }}; 
+    int ns_val = {{ solver_options.sim_method_num_stages }};
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_stages", &ns_val);
+    {%- endif -%}
+
+    {%- if solver_options.sim_method_newton_iter %}
+    int newton_iter_val = {{ solver_options.sim_method_newton_iter }};
+    for (int i = 0; i < N; i++)
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_newton_iter", &newton_iter_val);
     {%- endif -%}
 
     {%- if solver_options.nlp_solver_step_length %}
@@ -1032,6 +1038,16 @@ int acados_create()
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_tol_comp", &qp_solver_tol_comp);
     {%- endif -%}
 
+    {%- if solver_options.hessian_approx == "EXACT" -%}
+    for (int i = 0; i < N; i++)
+    {
+        bool sens_hess = true;
+        bool sens_adj = true;
+
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_hess", &sens_hess);
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_adj", &sens_adj);
+    }
+    {%- endif %}
 
 {% if solver_options.nlp_solver_type == "SQP" -%}
     // set SQP specific options
@@ -1060,19 +1076,6 @@ int acados_create()
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "max_iter", &nlp_solver_max_iter);
     {%- endif -%}
 {%- endif %}
-
-    {%- if solver_options.hessian_approx == "EXACT" -%}
-    for (int i = 0; i < N; i++)
-    {
-        int num_steps = 5;
-        bool sens_hess = true;
-        bool sens_adj = true;
-
-        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_steps", &num_steps);
-        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_hess", &sens_hess);
-        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_adj", &sens_adj);
-    }
-    {%- endif %}
 
     /* out */
     nlp_out = ocp_nlp_out_create(nlp_config, nlp_dims);
