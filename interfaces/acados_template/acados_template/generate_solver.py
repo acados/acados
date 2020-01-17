@@ -116,7 +116,9 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     # setting up loader and environment
     template_glob = os.path.join(
         ACADOS_PATH,
-        'interfaces/acados_template/acados_template/c_templates_tera/*!(swp.*)')
+        'interfaces/acados_template/acados_template/c_templates_tera/*')
+        # TODO(andrea): this breaks when running main_test.py...
+        # 'interfaces/acados_template/acados_template/c_templates_tera/*!(swp.*)')
     acados_template_path = os.path.join(
         ACADOS_PATH,
         'interfaces/acados_template/acados_template/c_templates_tera')
