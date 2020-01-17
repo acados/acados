@@ -38,6 +38,7 @@ import os
 import sys
 from .casadi_functions import *
 
+
 class ocp_nlp_dims:
     """
     class containing the dimensions of the optimal control problem
@@ -412,6 +413,7 @@ class ocp_nlp_dims:
     def set(self, attr, value):
         setattr(self, attr, value)
 
+
 class ocp_nlp_cost:
     """
     class containing the description of the cost
@@ -419,8 +421,8 @@ class ocp_nlp_cost:
     (linear least-squares cost for the time being)
     :math:`l(x,u,z) = || V_x x + V_u u + V_z z - y_{\\text{ref}}||^2_W`,
 ||||||| c45eb599
-    (linear least-squares cost for the time being) 
-    :math:`l(x,u,z) = || V_x x + V_u u + V_z z - y_{\\text{ref}}||^2_W`, 
+    (linear least-squares cost for the time being)
+    :math:`l(x,u,z) = || V_x x + V_u u + V_z z - y_{\\text{ref}}||^2_W`,
 =======
     (linear and nonlinear least-squares cost for the time being)
     :math:`l(x,u,z) = || V_x x + V_u u + V_z z - y_{\\text{ref}}||^2_W`,
@@ -429,27 +431,6 @@ class ocp_nlp_cost:
     """
     def __init__(self):
         # Lagrange term
-<<<<<<< HEAD
-        self.__W     = []  #: :math:`W` - weight matrix
-        self.__Vx    = []  #: :math:`V_x` - x matrix coefficient
-        self.__Vu    = []  #: :math:`V_u` - u matrix coefficient
-        self.__Vz    = []  #: :math:`V_z` - z matrix coefficient
-        self.__yref  = []  #: :math:`y_{\text{ref}}` - reference
-        self.__Zl    = []  #: :math:`Z_l` - Hessian wrt lower slack
-        self.__Zu    = []  #: :math:`Z_u` - Hessian wrt upper slack
-        self.__zl    = []  #: :math:`z_l` - gradient wrt lower slack
-        self.__zu    = []  #: :math:`z_u` - gradient wrt upper slack
-||||||| c45eb599
-        self.__W     = []  #: :math:`W` - weight matrix
-        self.__Vx    = []  #: :math:`V_x` - x matrix coefficient
-        self.__Vu    = []  #: :math:`V_u` - u matrix coefficient
-        self.__Vz    = []  #: :math:`V_z` - z matrix coefficient
-        self.__yref  = []  #: :math:`y_{\text{ref}}` - reference
-        self.__Zl    = []  #: :math:`Z_l` - Hessian wrt lower slack 
-        self.__Zu    = []  #: :math:`Z_u` - Hessian wrt upper slack 
-        self.__zl    = []  #: :math:`z_l` - gradient wrt lower slack 
-        self.__zu    = []  #: :math:`z_u` - gradient wrt upper slack 
-=======
         self.__cost_type   = 'LINEAR_LS'  # cost type
         self.__W           = []           # weight matrix
         self.__Vx          = []           # x matrix coefficient
@@ -460,7 +441,6 @@ class ocp_nlp_cost:
         self.__Zu          = []           # Hessian wrt upper slack
         self.__zl          = []           # gradient wrt lower slack
         self.__zu          = []           # gradient wrt upper slack
->>>>>>> FreyJo/free_x0
         # Mayer term
         self.__cost_type_e = 'LINEAR_LS'  # cost type for Mayer term
         self.__W_e         = []           # weight matrix for Mayer term
@@ -697,30 +677,12 @@ class ocp_nlp_cost:
     def set(self, attr, value):
         setattr(self, attr, value)
 
-
 # TODO(oj): replace \Pi with Jbx or similar
 class ocp_nlp_constraints:
     """
     class containing the description of the constraints
     """
     def __init__(self):
-<<<<<<< HEAD
-        # bounds on x and u
-        self.__lbx     = []  #: :math:`\underline{x}` - lower bounds on x
-        self.__lbu     = []  #: :math:`\underline{u}` - lower bounds on u
-        self.__ubx     = []  #: :math:`\bar{x}` - upper bounds on x
-        self.__ubu     = []  #: :math:`\bar{u}` - upper bounds on u
-        self.__idxbx   = []  #: indexes of bounds on x (defines :math:`\Pi_x`)
-        self.__idxbu   = []  #: indexes of bounds on u (defines :math:`\Pi_u`)
-||||||| c45eb599
-        # bounds on x and u
-        self.__lbx     = []  #: :math:`\underline{x}` - lower bounds on x
-        self.__lbu     = []  #: :math:`\underline{u}` - lower bounds on u
-        self.__ubx     = []  #: :math:`\bar{x}` - upper bounds on x 
-        self.__ubu     = []  #: :math:`\bar{u}` - upper bounds on u 
-        self.__idxbx   = []  #: indexes of bounds on x (defines :math:`\Pi_x`) 
-        self.__idxbu   = []  #: indexes of bounds on u (defines :math:`\Pi_u`)
-=======
         self.__constr_type   = 'BGH'                  # constraint type
         self.__constr_type_e = 'BGH'                  # constraint type
         # initial x
@@ -736,17 +698,7 @@ class ocp_nlp_constraints:
         # self.__Jbx     = []                         # matrix coefficient for bounds on x
         self.__idxbu   = []                           # indexes of bounds on u (defines :math:`\Pi_u`)
         # self.__Jbu     = []                         # matrix coefficient for bounds on u
->>>>>>> FreyJo/free_x0
         # bounds on x at t=T
-<<<<<<< HEAD
-        self.__lbx_e   = []  #: :math:`\underline{x}^e` - lower bounds on x at t=T
-        self.__ubx_e   = []  #: :math:`\bar{x}^e` - upper bounds on x at t=T
-        self.__idxbx_e = []  #: indexes for bounds on x at t=T (defines :math:`\Pi_x^e`)
-||||||| c45eb599
-        self.__lbx_e   = []  #: :math:`\underline{x}^e` - lower bounds on x at t=T 
-        self.__ubx_e   = []  #: :math:`\bar{x}^e` - upper bounds on x at t=T 
-        self.__idxbx_e = []  #: indexes for bounds on x at t=T (defines :math:`\Pi_x^e`) 
-=======
         self.__lbx_e   = []                           # lower bounds on x at t=T
         self.__ubx_e   = []                           # upper bounds on x at t=T
         self.__idxbx_e = []                           # indexes for bounds on x at t=T (defines :math:`\Pi_x^e`)
@@ -775,23 +727,7 @@ class ocp_nlp_constraints:
         # nonlinear constraints at t=T
         self.__uphi_e    = []                         # upper bound on convex-over-nonlinear inequalities at t=T
         self.__lphi_e    = []                         # lower bound on convex-over-nonlinear inequalities at t=T
->>>>>>> FreyJo/free_x0
         # soft bounds on x and u
-<<<<<<< HEAD
-        self.__lsbx   = []  #: soft lower bounds on x
-        self.__lsbu   = []  #: soft lower bounds on u
-        self.__usbx   = []  #: soft upper bounds on x
-        self.__usbu   = []  #: soft upper bounds on u
-        self.__idxsbx = []  #: indexes of soft bounds on x
-        self.__idxsbu = []  #: indexes of soft bounds on u
-||||||| c45eb599
-        self.__lsbx   = []  #: soft lower bounds on x
-        self.__lsbu   = []  #: soft lower bounds on u
-        self.__usbx   = []  #: soft upper bounds on x 
-        self.__usbu   = []  #: soft upper bounds on u 
-        self.__idxsbx = []  #: indexes of soft bounds on x 
-        self.__idxsbu = []  #: indexes of soft bounds on u
-=======
         self.__lsbx   = []                            # lower bounds on slacks corresponding to soft lower bounds on x
         self.__lsbu   = []                            # lower bounds on slacks corresponding to soft lower bounds on u
         self.__usbx   = []                            # lower bounds on slacks corresponding to soft upper bounds on x
@@ -805,74 +741,12 @@ class ocp_nlp_constraints:
         self.__usbx_e  = []                           # lower bounds on slacks corresponding to soft upper bounds on x at t=T
         self.__idxsbx_e= []                           # indexes of soft bounds on x at t=T, within the indices of bounds on x at t=T
         # self.__Jsbx_e    = []                       # matrix coefficient for soft bounds on x at t=T
->>>>>>> FreyJo/free_x0
         # soft bounds on nonlinear constraints
-<<<<<<< HEAD
-        self.__lsh    = []  #: soft lower bounds for nonlinear constraints
-        self.__ush    = []  #: soft upper bounds for nonlinear constraints
-        self.__idxsh  = []  #: indexes of soft nonlinear constraints
-        # soft bounds on x and u at t=T
-        self.__lsbx_e  = []  #: soft lower bounds on x at t=T
-        self.__usbx_e  = []  #: soft upper bounds on x at t=T
-        self.__idxsbx_e= []  #: indexes of soft bounds on x at t=T
-||||||| c45eb599
-        self.__lsh    = []  #: soft lower bounds for nonlinear constraints 
-        self.__ush    = []  #: soft upper bounds for nonlinear constraints 
-        self.__idxsh  = []  #: indexes of soft nonlinear constraints 
-        # soft bounds on x and u at t=T
-        self.__lsbx_e  = []  #: soft lower bounds on x at t=T
-        self.__usbx_e  = []  #: soft upper bounds on x at t=T
-        self.__idxsbx_e= []  #: indexes of soft bounds on x at t=T 
-=======
         self.__lsh    = []                            # lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints
         self.__ush    = []                            # lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints
         self.__idxsh  = []                            # indexes of soft nonlinear constraints within the indices of nonlinear constraints
         # self.__Jsh    = []                          # matrix coefficient for soft bounds on nonlinear constraints
->>>>>>> FreyJo/free_x0
         # soft bounds on nonlinear constraints
-<<<<<<< HEAD
-        self.__lsh_e    = []  #: soft lower bounds for nonlinear constraints
-        self.__ush_e    = []  #: soft upper bounds for nonlinear constraints
-        self.__idxsh_e  = []  #: indexes of soft nonlinear constraints at t=T
-        # polytopic constraints
-        self.__lg      = []  #: :math:`\underline{c}` - lower bound for general polytopic inequalities
-        self.__ug      = []  #: :math:`\bar{c}` - upper bound for general polytopic inequalities
-        self.__D       = []  #: :math:`D` - D matrix in lg <= D * u + C * x <= ug
-        self.__C       = []  #: :math:`C` - C matrix in lg <= D * u + C * x <= ug
-        # polytopic constraints at t=T
-        self.__C_e     = []  #: :math:`C^e` - C matrix at t=T
-        self.__lg_e    = []  #: :math:`\underline{c}^e` - lower bound on general polytopic inequalities at t=T
-        self.__ug_e    = []  #: :math:`\bar{c}^e` - upper bound on general polytopic inequalities at t=T
-        # nonlinear constraints
-        self.__lh      = []  #: :math:`\underline{h}` - lower bound for nonlinear inequalities
-        self.__uh      = []  #: :math:`\bar{h}` - upper bound for nonlinear inequalities
-        # nonlinear constraints at t=T
-        self.__uh_e    = []  #: :math:`\bar{h}^e` - upper bound on nonlinear inequalities at t=T
-        self.__lh_e    = []  #: :math:`\underline{h}^e` - lower bound on nonlinear inequalities at t=T
-        self.__x0      = []  #: :math:`\bar{x}_0` - initial state
-        self.__p       = []  #: :math:`p` - parameters
-||||||| c45eb599
-        self.__lsh_e    = []  #: soft lower bounds for nonlinear constraints 
-        self.__ush_e    = []  #: soft upper bounds for nonlinear constraints 
-        self.__idxsh_e  = []  #: indexes of soft nonlinear constraints at t=T 
-        # polytopic constraints 
-        self.__lg      = []  #: :math:`\underline{c}` - lower bound for general polytopic inequalities 
-        self.__ug      = []  #: :math:`\bar{c}` - upper bound for general polytopic inequalities 
-        self.__D       = []  #: :math:`D` - D matrix in lg <= D * u + C * x <= ug
-        self.__C       = []  #: :math:`C` - C matrix in lg <= D * u + C * x <= ug
-        # polytopic constraints at t=T 
-        self.__C_e     = []  #: :math:`C^e` - C matrix at t=T 
-        self.__lg_e    = []  #: :math:`\underline{c}^e` - lower bound on general polytopic inequalities at t=T 
-        self.__ug_e    = []  #: :math:`\bar{c}^e` - upper bound on general polytopic inequalities at t=T 
-        # nonlinear constraints
-        self.__lh      = []  #: :math:`\underline{h}` - lower bound for nonlinear inequalities 
-        self.__uh      = []  #: :math:`\bar{h}` - upper bound for nonlinear inequalities 
-        # nonlinear constraints at t=T
-        self.__uh_e    = []  #: :math:`\bar{h}^e` - upper bound on nonlinear inequalities at t=T 
-        self.__lh_e    = []  #: :math:`\underline{h}^e` - lower bound on nonlinear inequalities at t=T 
-        self.__x0      = []  #: :math:`\bar{x}_0` - initial state 
-        self.__p       = []  #: :math:`p` - parameters 
-=======
         self.__lsphi  = []                            # lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints
         self.__usphi  = []                            # lower bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints
         self.__idxsphi  = []                          # indexes of soft convex-over-nonlinear constraints within the indices of nonlinear constraints
@@ -890,19 +764,16 @@ class ocp_nlp_constraints:
         # self.__x0      = []                           # initial state
         self.__p       = []                           # parameters
 
-
     @property
     def constr_type(self):
         """Constraints type"""
         return self.__constr_type
->>>>>>> FreyJo/free_x0
 
     @property
     def constr_type_e(self):
         """Constraints type t=T"""
         return self.__constr_type_e
 
-    # bounds on x0
     @property
     def lbx_0(self):
         """:math:`\\underline{x_0}` - lower bounds on x0"""
@@ -918,7 +789,6 @@ class ocp_nlp_constraints:
         """indexes of bounds on x0 """
         return self.__idxbx_0
 
-    # bounds on x and u
     @property
     def lbx(self):
         """:math:`\\underline{x}` - lower bounds on x"""
@@ -1687,25 +1557,11 @@ class ocp_nlp_constraints:
         setattr(self, attr, value)
 
 
-
 class ocp_nlp_solver_options:
     """
     class containing the description of the solver options
     """
     def __init__(self):
-<<<<<<< HEAD
-        self.__qp_solver        = 'PARTIAL_CONDENSING_HPIPM'  #: qp solver to be used in the NLP solver
-        self.__hessian_approx   = 'GAUSS_NEWTON'              #: hessian approximation
-        self.__integrator_type  = 'ERK'                       #: integrator type
-        self.__tf               = None                        #: prediction horizon
-        self.__nlp_solver_type  = 'SQP_RTI'                   #: NLP solver
-||||||| c45eb599
-        self.__qp_solver        = 'PARTIAL_CONDENSING_HPIPM'  #: qp solver to be used in the NLP solver
-        self.__hessian_approx   = 'GAUSS_NEWTON'              #: hessian approximation
-        self.__integrator_type  = 'ERK'                       #: integrator type
-        self.__tf               = None                        #: prediction horizon
-        self.__nlp_solver_type  = 'SQP_RTI'                   #: NLP solver 
-=======
         self.__qp_solver        = 'PARTIAL_CONDENSING_HPIPM'  # qp solver to be used in the NLP solver
         self.__hessian_approx   = 'GAUSS_NEWTON'              # hessian approximation
         self.__integrator_type  = 'ERK'                       # integrator type
@@ -1724,7 +1580,6 @@ class ocp_nlp_solver_options:
         self.__nlp_solver_tol_ineq = None                     # NLP solver inequality
         self.__nlp_solver_tol_comp = None                     # NLP solver complementarity
         self.__nlp_solver_max_iter = None                     # NLP solver maximum number of iterations
->>>>>>> FreyJo/free_x0
 
     @property
     def qp_solver(self):
@@ -1967,6 +1822,7 @@ class ocp_nlp_solver_options:
     def set(self, attr, value):
         setattr(self, attr, value)
 
+
 class acados_ocp_nlp:
     """
     class containing the full description of the optimal control problem
@@ -1976,23 +1832,6 @@ class acados_ocp_nlp:
         self.model = acados_dae()
         self.cost = ocp_nlp_cost()
         self.constraints = ocp_nlp_constraints()
-<<<<<<< HEAD
-        self.solver_config = ocp_nlp_solver_config()
-        self.model_name  = None
-        self.con_p_name  = None
-        self.con_p_e_name = None
-        self.con_h_name  = None
-        self.con_h_e_name = None
-        # self.constants = {}
-||||||| c45eb599
-        self.solver_config = ocp_nlp_solver_config()
-        self.model_name  = None 
-        self.con_p_name  = None 
-        self.con_p_e_name = None 
-        self.con_h_name  = None 
-        self.con_h_e_name = None 
-        # self.constants = {}
-=======
         self.solver_options = ocp_nlp_solver_options()
 
         self.con_h   = acados_constraint()
@@ -2002,7 +1841,6 @@ class acados_ocp_nlp:
         self.cost_r = acados_cost()
         self.cost_r_e = acados_cost()
 
->>>>>>> FreyJo/free_x0
         self.acados_include_path = []
         self.acados_lib_path = []
 
@@ -2015,31 +1853,9 @@ class acados_ocp_nlp:
             setter_to_call = getattr(self, 'set')
 
         setter_to_call(tokens[1], value)
-<<<<<<< HEAD
+
         return
 
-def check_ra(ra):
-    """
-    (DEPRECATED) function that checks the consistency of the optimal control description
-    """
-    # TODO(andrea): dimensions check are already performed
-    # on the JSON data and type checks should be enforced by the
-    # property setters. Add extra checks here?
-    return
-||||||| c45eb599
-        return 
-
-def check_ra(ra):
-    """
-    (DEPRECATED) function that checks the consistency of the optimal control description
-    """
-    # TODO(andrea): dimensions check are already performed 
-    # on the JSON data and type checks should be enforced by the 
-    # property setters. Add extra checks here?
-    return
-=======
-        return
->>>>>>> FreyJo/free_x0
 
 def np_array_to_list(np_array):
     if  isinstance(np_array, (np.ndarray)):
@@ -2070,13 +1886,7 @@ def dict2json(d):
     return out
 
 def acados_ocp2json_layout(acados_ocp):
-<<<<<<< HEAD
-    """ Convert acados ocp nlp object JSON format by stripping the
-||||||| c45eb599
-    """ Convert acados ocp nlp object JSON format by stripping the 
-=======
     """ Convert acados ocp nlp object to JSON format by stripping the
->>>>>>> FreyJo/free_x0
     property mangling and adding array dimension info.
     ALL items of type String will be converted
     to type ndarrray!
@@ -2166,20 +1976,7 @@ def cast_ocp_nlp(ocp_nlp, ocp_nlp_layout):
             if isinstance(v, int) or isinstance(v, float):
                 v = np.array([v])
         out[k] = v
-<<<<<<< HEAD
     return out
-
-def get_ocp_nlp_layout():
-    current_module = sys.modules[__name__]
-    acados_path = os.path.dirname(current_module.__file__)
-    with open(acados_path + '/acados_layout.json', 'r') as f:
-        ocp_nlp_layout = json.load(f)
-    return ocp_nlp_layout
-||||||| c45eb599
-    return out 
-=======
-    return out
->>>>>>> FreyJo/free_x0
 
 def json2dict(ocp_nlp, ocp_nlp_dims):
     # load JSON layout
