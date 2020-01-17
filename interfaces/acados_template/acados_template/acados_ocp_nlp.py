@@ -1570,6 +1570,7 @@ class ocp_nlp_solver_options:
         self.__qp_solver_tol_eq   = None                      # QP solver equality tolerance
         self.__qp_solver_tol_ineq = None                      # QP solver inequality
         self.__qp_solver_tol_comp = None                      # QP solver complementarity
+        self.__qp_solver_cond_N = None                        # New horizon after partial condensing
         self.__nlp_solver_tol_stat = 1e-6                     # NLP solver stationarity tolerance
         self.__nlp_solver_tol_eq   = 1e-6                     # NLP solver equality tolerance
         self.__nlp_solver_tol_ineq = 1e-6                     # NLP solver inequality
@@ -1640,6 +1641,11 @@ class ocp_nlp_solver_options:
     def qp_solver_tol_comp(self):
         """QP solver complementarity"""
         return self.__qp_solver_tol_comp
+
+    @property
+    def qp_solver_cond_N(self):
+        """New horizon after partial condensing"""
+        return self.__qp_solver_cond_N
 
     @property
     def nlp_solver_tol_stat(self):
