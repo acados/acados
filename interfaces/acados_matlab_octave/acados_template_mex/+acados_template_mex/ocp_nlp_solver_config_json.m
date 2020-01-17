@@ -40,7 +40,13 @@ classdef ocp_nlp_solver_config_json < handle
         nlp_solver_type        %  NLP solver
         sim_method_num_steps   %  number of steps in integrator
         sim_method_num_stages  %  size of butcher tableau
+        sim_method_newton_iter
         nlp_solver_max_iter
+        qp_solver_cond_N
+        nlp_solver_tol_stat
+        nlp_solver_tol_eq
+        nlp_solver_tol_ineq
+        nlp_solver_tol_comp
     end
     methods
         function obj = ocp_nlp_solver_config_json()
@@ -51,7 +57,9 @@ classdef ocp_nlp_solver_config_json < handle
             obj.nlp_solver_type = 'SQP_RTI';
             obj.sim_method_num_steps = 1;
             obj.sim_method_num_stages = 2;
+            obj.sim_method_newton_iter = 3;
             obj.nlp_solver_max_iter = 50;
+            obj.qp_solver_cond_N = [];
         end
     end
 end
