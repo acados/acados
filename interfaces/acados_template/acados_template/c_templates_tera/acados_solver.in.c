@@ -100,7 +100,9 @@ int acados_create()
 
     double Tf = {{ solver_options.tf }};
 
-    /* plan */
+    /************************************************
+    *  plan & config
+    ************************************************/
     nlp_solver_plan = ocp_nlp_plan_create(N);
     {%- if solver_options.nlp_solver_type == "SQP" %}
     nlp_solver_plan->nlp_solver = SQP;
@@ -138,7 +140,9 @@ int acados_create()
     nlp_config = ocp_nlp_config_create(*nlp_solver_plan);
 
 
-    /* dimensions */
+    /************************************************
+    *  dimensions
+    ************************************************/
     int nx[N+1];
     int nu[N+1];
     int nbx[N+1];
@@ -234,7 +238,9 @@ int acados_create()
     {%- endif %}
 
 
-    /* external functions */
+    /************************************************
+    *  external functions
+    ************************************************/
     {%- if constraints.constr_type == "BGP" %}
     phi_constraint = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; i++)
@@ -405,7 +411,9 @@ int acados_create()
     {%- endif %}
 
 
-    /* nlp_in */
+    /************************************************
+    *  nlp_in
+    ************************************************/
     nlp_in = ocp_nlp_in_create(nlp_config, nlp_dims);
 
     double Ts = Tf/N;
@@ -415,7 +423,7 @@ int acados_create()
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "scaling", &Ts);
     }
 
-    /* dynamics */
+    /**** Dynamics ****/
     int set_fun_status;
     for (int i = 0; i < N; i++) {
     {%- if solver_options.integrator_type == "ERK" %} 
@@ -436,7 +444,7 @@ int acados_create()
     }
 
 
-    /* Set cost module */
+    /**** Cost ****/
 {%- if cost.cost_type == "NONLINEAR_LS" or cost.cost_type == "LINEAR_LS" %}
 {% if dims.ny > 0 %}
     double W[NY*NY];
@@ -597,8 +605,8 @@ int acados_create()
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "zu", zu_e);
 {%- endif %}
 
+    /**** Constraints ****/
 
-    /* constraints */
     // bounds for initial stage
 {% if dims.nbx_0 > 0 %}
     // x0
@@ -964,11 +972,13 @@ int acados_create()
 {% endif %}
 
 
-    /* opts */
+    /************************************************
+    *  opts
+    ************************************************/
+
     nlp_opts = ocp_nlp_solver_opts_create(nlp_config, nlp_dims);
 
-    // setting nlp_solver options
-    {%- if dims.nz > 0 %}
+{%- if dims.nz > 0 %}
     bool output_z_val = true; 
     bool sens_algebraic_val = true; 
 
@@ -976,7 +986,7 @@ int acados_create()
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_output_z", &output_z_val);
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_algebraic", &sens_algebraic_val);
-    {%- endif -%}
+{%- endif -%}
 
     {%- if solver_options.sim_method_num_steps %}
     int num_steps_val = {{ solver_options.sim_method_num_steps }}; 
@@ -1016,7 +1026,7 @@ int acados_create()
     {%- endif -%}
 
 
-    {% if solver_options.nlp_solver_type == "SQP" -%}
+{% if solver_options.nlp_solver_type == "SQP" -%}
     // set SQP specific options
     {%- if solver_options.nlp_solver_tol_stat %}
     double nlp_solver_tol_stat = {{ solver_options.nlp_solver_tol_stat }};
@@ -1042,8 +1052,8 @@ int acados_create()
     int nlp_solver_max_iter = {{ solver_options.nlp_solver_max_iter }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "max_iter", &nlp_solver_max_iter);
     {%- endif -%}
+{%- endif %}
 
-    {%- endif %}
     {%- if solver_options.hessian_approx == "EXACT" -%}
     for (int i = 0; i < N; i++)
     {
@@ -1240,8 +1250,8 @@ int acados_update_params(int stage, double *p, int np) {
 
 
 
-int acados_solve() {
-
+int acados_solve()
+{
     // solve NLP 
     int solver_status = ocp_nlp_solve(nlp_solver, nlp_in, nlp_out);
 
@@ -1249,8 +1259,8 @@ int acados_solve() {
 }
 
 
-int acados_free() {
-
+int acados_free()
+{
     // free memory
     ocp_nlp_solver_opts_destroy(nlp_opts);
     ocp_nlp_in_destroy(nlp_in);
