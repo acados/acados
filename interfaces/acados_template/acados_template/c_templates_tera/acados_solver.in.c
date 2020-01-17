@@ -221,21 +221,27 @@ int acados_create()
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsbx", &nsbx[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsbu", &nsbu[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "ng", &ng[i]);
+    }
+
+    for (int i = 0; i < N; i++)
+    {
         {%- if constraints.constr_type == "BGH" and dims.nh > 0 %}
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nh", &nh[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsh", &nsh[i]);
-        {%- elif constraints.constr_type == "BGP" %}
+        {%- elif constraints.constr_type == "BGP" and dims.nphi > 0 %}
+        ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nr", &nr[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nphi", &nphi[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsphi", &nsphi[i]);
         {%- endif %}
     }
 
-    {% if constraints.constr_type == "BGP" %}
-    for (int i = 0; i < N; i++) 
-        ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nr", &nr[i]);
-    {%- endif %}
-    {%- if constraints.constr_type_e == "BGP" %}
+    {%- if constraints.constr_type_e == "BGH" %}
+    ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "nh", &nh[N]);
+    ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "nsh", &nsh[N]);
+    {%- elif constraints.constr_type_e == "BGP" %}
     ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "nr", &nr[N]);
+    ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "nphi", &nphi[N]);
+    ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "nsphi", &nsphi[N]);
     {%- endif %}
 
 
@@ -821,7 +827,7 @@ int acados_create()
     }
 {% endif %}
 
-{% if dims.nphi > 0 %}
+{% if dims.nphi > 0 and constraints.constr_type == "BGP" %}
     // set up convex-over-nonlinear constraints for stage 0 to N-1 
     double lphi[NPHI];
     double uphi[NPHI];
@@ -953,7 +959,7 @@ int acados_create()
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "uh", uh_e);
 {% endif %}
 
-{% if dims.nphi_e > 0 %}
+{% if dims.nphi_e > 0 and constraints.constr_type_e == "BGP" %}
     // set up convex-over-nonlinear constraints for last stage 
     double lphi_e[NHN];
     double uphi_e[NHN];
@@ -970,7 +976,6 @@ int acados_create()
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "uphi", uphi_e);
     // ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_r_fun_jac", &r_e_constraint);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_phi_o_r_fun_phi_jac_ux_z_phi_hess_r_jac_ux", &phi_e_constraint);
-
 {% endif %}
 
 
