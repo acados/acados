@@ -45,7 +45,7 @@ end
 
 
 %% arguments
-compile_mex = 'true';
+compile_interface = 'auto';
 codgen_model = 'true';
 % simulation
 sim_method = 'irk';
@@ -75,13 +75,13 @@ ocp_qp_solver = 'partial_condensing_hpipm';
 ocp_qp_solver_cond_N = 5;
 ocp_qp_solver_cond_ric_alg = 0;
 ocp_qp_solver_ric_alg = 0;
-ocp_qp_solver_warm_start = 2;
+ocp_qp_solver_warm_start = 0;
 %ocp_sim_method = 'erk';
 ocp_sim_method = 'irk';
 ocp_sim_method_num_stages = 4;
 ocp_sim_method_num_steps = 1;
-%cost_type = 'linear_ls';
-cost_type = 'nonlinear_ls';
+cost_type = 'linear_ls';
+%cost_type = 'nonlinear_ls';
 
 
 
@@ -273,7 +273,7 @@ ocp_model.model_struct
 
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
-ocp_opts.set('compile_mex', compile_mex);
+ocp_opts.set('compile_interface', compile_interface);
 ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme', ocp_param_scheme);
 ocp_opts.set('param_scheme_N', ocp_N);
@@ -283,10 +283,10 @@ ocp_opts.set('regularize_method', regularize_method);
 ocp_opts.set('nlp_solver_ext_qp_res', ocp_nlp_solver_ext_qp_res);
 if (strcmp(ocp_nlp_solver, 'sqp'))
     ocp_opts.set('nlp_solver_max_iter', ocp_nlp_solver_max_iter);
-    ocp_opts.set('nlp_solver_tol_stat', ocp_nlp_solver_tol_stat);
-    ocp_opts.set('nlp_solver_tol_eq', ocp_nlp_solver_tol_eq);
-    ocp_opts.set('nlp_solver_tol_ineq', ocp_nlp_solver_tol_ineq);
-    ocp_opts.set('nlp_solver_tol_comp', ocp_nlp_solver_tol_comp);
+%    ocp_opts.set('nlp_solver_tol_stat', ocp_nlp_solver_tol_stat);
+%    ocp_opts.set('nlp_solver_tol_eq', ocp_nlp_solver_tol_eq);
+%    ocp_opts.set('nlp_solver_tol_ineq', ocp_nlp_solver_tol_ineq);
+%    ocp_opts.set('nlp_solver_tol_comp', ocp_nlp_solver_tol_comp);
 end
 ocp_opts.set('qp_solver', ocp_qp_solver);
 if (strcmp(ocp_qp_solver, 'partial_condensing_hpipm'))
@@ -343,7 +343,7 @@ end
 
 %% acados sim opts
 sim_opts = acados_sim_opts();
-sim_opts.set('compile_mex', compile_mex);
+sim_opts.set('compile_interface', compile_interface);
 sim_opts.set('codgen_model', codgen_model);
 sim_opts.set('num_stages', sim_num_stages);
 sim_opts.set('num_steps', sim_num_steps);

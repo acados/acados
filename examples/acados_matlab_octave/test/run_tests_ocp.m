@@ -33,6 +33,7 @@
 
 %% check that environment variables are provided
 try
+    check_casadi_availibility();
     require_env_variable('LD_LIBRARY_PATH');
     require_env_variable('ACADOS_INSTALL_DIR');
     if is_octave()
@@ -52,7 +53,6 @@ try
     test_ocp_wtnx6;
     test_ocp_pendulum_dae;
     test_ocp_linear_mass_spring;
-    test_ocp_linear_dae;
 catch exception
     exit_with_error(exception);
 end

@@ -45,6 +45,7 @@
 #
 import os
 import sys
+import datetime
 # sys.path.insert(0, os.path.abspath('.'))
 
 
@@ -56,7 +57,8 @@ breathe_default_project = "acados"
 # -- Project information -----------------------------------------------------
 
 project = 'acados'
-copyright = '2019, syscop'
+now = datetime.datetime.now()
+copyright = str(now.year) +', syscop'
 author = 'syscop'
 
 

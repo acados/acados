@@ -327,6 +327,7 @@ void sim_gnsf_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->sens_adj = false;
     opts->sens_hess = false;
     opts->jac_reuse = true;
+    opts->exact_z_output = false;
 
     // TODO(oj): check if constr h or cost depend on z, turn on in this case only.
     if (dims->nz > 0)
@@ -342,6 +343,7 @@ void sim_gnsf_opts_initialize_default(void *config_, void *dims_, void *opts_)
 
     return;
 }
+
 
 
 void sim_gnsf_opts_update(void *config_, void *dims, void *opts_)
@@ -364,10 +366,20 @@ void sim_gnsf_opts_update(void *config_, void *dims, void *opts_)
     return;
 }
 
-int sim_gnsf_opts_set(void *config_, void *opts_, const char *field, void *value)
+
+
+void sim_gnsf_opts_set(void *config_, void *opts_, const char *field, void *value)
 {
     sim_opts *opts = (sim_opts *) opts_;
-    return sim_opts_set_(opts, field, value);
+    sim_opts_set_(opts, field, value);
+}
+
+
+
+void sim_gnsf_opts_get(void *config_, void *opts_, const char *field, void *value)
+{
+    sim_opts *opts = (sim_opts *) opts_;
+    sim_opts_get_(config_, opts, field, value);
 }
 
 
@@ -1776,7 +1788,12 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
 
     if ( opts->ns != opts->tableau_size )
     {
-        printf("Error in sim_gnsf: the Butcher tableau size does not match ns");
+        printf("Error in sim_gnsf: the Butcher tableau size does not match ns.");
+        exit(1);
+    }
+    if (opts->exact_z_output)
+    {
+        printf("Error in sim_gnsf: option exact_z_output = true not supported.");
         exit(1);
     }
 
@@ -2924,6 +2941,7 @@ void sim_gnsf_config_initialize_default(void *config_)
     config->opts_initialize_default = &sim_gnsf_opts_initialize_default;
     config->opts_update = &sim_gnsf_opts_update;
     config->opts_set = &sim_gnsf_opts_set;
+    config->opts_get = &sim_gnsf_opts_get;
     // memory & workspace
     config->memory_calculate_size = &sim_gnsf_memory_calculate_size;
     config->memory_assign = &sim_gnsf_memory_assign;

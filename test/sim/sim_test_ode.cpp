@@ -333,13 +333,13 @@ TEST_CASE("wt_nx3_example", "[integrators]")
     // d_print_exp_mat(nx, NF, &S_forw_ref_sol[0], 1);
 
 
-    free(config);
-    free(dims);
-    free(opts);
+    sim_config_destroy(config);
+    sim_dims_destroy(dims);
+    sim_opts_destroy(opts);
 
-    free(in);
-    free(out);
-    free(sim_solver);
+    sim_in_destroy(in);
+    sim_out_destroy(out);
+    sim_solver_destroy(sim_solver);
 
     for (std::string solver : solvers)
     {
@@ -559,19 +559,30 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                 REQUIRE(max_error_forw <= tol);
 
                 // TODO(FreyJo): implement adjoint sensitivites for these integrators!!!
-                if ((plan.sim_solver != LIFTED_IRK)){
+                if ((plan.sim_solver != LIFTED_IRK))
+                {
                     std::cout  << "error_adj   = " << max_error_adj  << "\n";
                     REQUIRE(max_error_adj <= tol);
                 }
 
+                // test getters
+                double time_tot, time_ad, time_la;
+                sim_out_get(config, dims, out, "CPUtime", &time_tot);
+                REQUIRE(std::isnan(time_tot) == 0);
+                sim_out_get(config, dims, out, "ADtime", &time_ad);
+                REQUIRE(std::isnan(time_ad) == 0);
+                sim_out_get(config, dims, out, "LAtime", &time_la);
+                REQUIRE(std::isnan(time_la) == 0);
+                // REQUIRE( time_tot >= time_ad + time_la ); // failed on travis..
+                // printf("time_tot %f, time_ad %f, time_la %f", time_tot, time_ad, time_la);
 
-                free(config);
-                free(dims);
-                free(opts);
+                sim_config_destroy(config);
+                sim_dims_destroy(dims);
+                sim_opts_destroy(opts);
 
-                free(in);
-                free(out);
-                free(sim_solver);
+                sim_in_destroy(in);
+                sim_out_destroy(out);
+                sim_solver_destroy(sim_solver);
             }  // end for num_steps
         }  // end section
     }  // END FOR SOLVERS

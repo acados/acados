@@ -59,30 +59,30 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     // XXX hard-code number and size of phases for now !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     int NN[] = {N, 1}; // number of phases, i.e. shooting nodes with same dimensions
-	int Nf = 2; // number of phases
+    int Nf = 2; // number of phases
 
     //
     external_function_param_casadi *ext_fun_param_ptr;
     int struct_size = mxGetNumberOfFields( prhs[2] );
     for (ii=0; ii<struct_size; ii++)
-	{
+    {
 //        printf("\n%s\n", mxGetFieldNameByNumber( prhs[2], ii) );
         mex_field = mxGetFieldByNumber( prhs[2], 0, ii );
         ptr = (long long *) mxGetData( mex_field );
         Nf = mxGetN( mex_field );
         for (jj=0; jj<Nf; jj++)
-		{
+        {
             ext_fun_param_ptr = (external_function_param_casadi *) ptr[jj];
             if (ext_fun_param_ptr!=0)
-			{
+            {
                 for (kk=0; kk<NN[jj]; kk++)
-				{
-					external_function_param_casadi_free(ext_fun_param_ptr+kk);
-				}
+                {
+                    external_function_param_casadi_free(ext_fun_param_ptr+kk);
+                }
                 free(ext_fun_param_ptr);
-			}
-		}
-	}
+            }
+        }
+    }
 
     return;
 

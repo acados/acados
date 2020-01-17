@@ -39,7 +39,7 @@ addpath('../linear_mass_spring_model/');
 
 
 %% arguments
-compile_mex = 'true';
+compile_interface = 'auto';
 codgen_model = 'true';
 % param_scheme = 'multiple_shooting_unif_grid';
 param_scheme = 'multiple_shooting';
@@ -61,11 +61,9 @@ nlp_solver_ext_qp_res = 1;
 qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
 qp_solver_cond_N = 5;
-dyn_type = 'explicit';
-%dyn_type = 'implicit';
 %dyn_type = 'discrete';
 sim_method = 'erk';
-%sim_method = 'irk';
+% sim_method = 'irk';
 %sim_method = 'irk_gnsf';
 sim_method_num_stages = 4;
 sim_method_num_steps = 3;
@@ -73,7 +71,11 @@ sim_method_num_steps = 3;
 %cost_type = 'nonlinear_ls';
 cost_type = 'ext_cost';
 
-
+if strcmp(sim_method, 'erk')
+    dyn_type = 'explicit';
+else % irk, irk_gnsf
+    dyn_type = 'implicit';
+end
 
 %% create model entries
 model = linear_mass_spring_model;
@@ -218,7 +220,7 @@ end
 
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
-ocp_opts.set('compile_mex', compile_mex);
+ocp_opts.set('compile_interface', compile_interface);
 ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', N);
@@ -280,7 +282,7 @@ if status~=0
 elseif sqp_iter > 2
     error('ocp can be solved in 2 iterations!');
 else
-	fprintf('\nsuccess!\n');
+	fprintf('\ntest_ocp_linear_mass_spring: success!\n');
 end
 
 % plot result

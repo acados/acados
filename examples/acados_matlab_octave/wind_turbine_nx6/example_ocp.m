@@ -45,29 +45,32 @@ end
 
 
 %% arguments
-compile_mex = 'true';
+compile_interface = 'auto';
 codgen_model = 'true';
 param_scheme = 'multiple_shooting_unif_grid';
 N = 40;
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
-%nlp_solver_exact_hessian = 'false';
-nlp_solver_exact_hessian = 'true';
-%regularize_method = 'no_regularize';
+nlp_solver_exact_hessian = 'false';
+%nlp_solver_exact_hessian = 'true';
+regularize_method = 'no_regularize';
 %regularize_method = 'project';
-regularize_method = 'project_reduc_hess';
+%regularize_method = 'project_reduc_hess';
 %regularize_method = 'mirror';
 %regularize_method = 'convexify';
 nlp_solver_max_iter = 100;
 nlp_solver_ext_qp_res = 1;
 qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
+%qp_solver = 'full_condensing_qpoases';
+%qp_solver = 'partial_condensing_osqp';
 qp_solver_cond_N = 5;
 qp_solver_cond_ric_alg = 0;
 qp_solver_ric_alg = 0;
 qp_solver_warm_start = 0;
-sim_method = 'erk';
-%sim_method = 'irk';
+qp_solver_max_iter = 50;
+%sim_method = 'erk';
+sim_method = 'irk';
 sim_method_num_stages = 4;
 if (strcmp(sim_method, 'erk'))
 	sim_method_num_steps = 4;
@@ -257,7 +260,7 @@ ocp_model.model_struct
 
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
-ocp_opts.set('compile_mex', compile_mex);
+ocp_opts.set('compile_interface', compile_interface);
 ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', N);
@@ -269,11 +272,14 @@ if (strcmp(nlp_solver, 'sqp'))
 	ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
 end
 ocp_opts.set('qp_solver', qp_solver);
-if (strcmp(qp_solver, 'partial_condensing_hpipm'))
+ocp_opts.set('qp_solver_iter_max', qp_solver_max_iter);
+ocp_opts.set('qp_solver_warm_start', qp_solver_warm_start);
+ocp_opts.set('qp_solver_cond_ric_alg', qp_solver_cond_ric_alg);
+if (~isempty(strfind(qp_solver, 'partial_condensing')))
 	ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
-	ocp_opts.set('qp_solver_cond_ric_alg', qp_solver_cond_ric_alg);
+end
+if (strcmp(qp_solver, 'partial_condensing_hpipm'))
 	ocp_opts.set('qp_solver_ric_alg', qp_solver_ric_alg);
-	ocp_opts.set('qp_solver_warm_start', qp_solver_warm_start);
 end
 ocp_opts.set('sim_method', sim_method);
 ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
@@ -370,6 +376,7 @@ ylim([4.5 6.0]);
 ylabel('electrical power');
 %legend('F');
 
+stat = ocp.get('stat');
 if (strcmp(nlp_solver, 'sqp'))
 	figure;
 	plot([0: size(stat,1)-1], log10(stat(:,2)), 'r-x');

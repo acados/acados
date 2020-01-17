@@ -43,7 +43,7 @@ end
 
 
 %% arguments
-compile_mex = 'true';
+compile_interface = 'auto';
 codgen_model = 'true';
 param_scheme = 'multiple_shooting_unif_grid';
 %param_scheme = 'multiple_shooting';
@@ -74,7 +74,7 @@ sim_method_num_stages = 4;
 sim_method_num_steps = 3;
 %cost_type = 'linear_ls';
 %cost_type = 'nonlinear_ls';
-cost_type = 'ext_cost';
+cost_type = 'auto';
 
 
 
@@ -89,18 +89,23 @@ nx = model.nx;
 nu = model.nu;
 ny = nu+nx; % number of outputs in lagrange term
 ny_e = nx; % number of outputs in mayer term
-if 0
+
+% constraint formulation
+if 1
+    % bounds on x and u
 	nbx = nx/2;
 	nbu = nu;
 	ng = 0;
 	nh = 0;
 elseif 0
+    % general linear constraints on x and u
 	nbx = 0;
 	nbu = 0;
 	ng = nu+nx/2;
 	ng_e = nx;
 	nh = 0;
 else
+    % external function constraint
 	nbx = 0;
 	nbu = 0;
 	ng = 0;
@@ -239,7 +244,7 @@ ocp_model.model_struct
 
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
-ocp_opts.set('compile_mex', compile_mex);
+ocp_opts.set('compile_interface', compile_interface);
 ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', N);

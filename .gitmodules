@@ -27,3 +27,9 @@
 	path = external/osqp
 	url = https://github.com/oxfordcontrol/osqp.git
 	branch = develop
+[submodule "interfaces/acados_template/tera_renderer"]
+	path = interfaces/acados_template/tera_renderer
+	url = https://github.com/acados/tera_renderer.git
+[submodule "external/jsonlab"]
+	path = external/jsonlab
+	url = https://github.com/fangq/jsonlab.git

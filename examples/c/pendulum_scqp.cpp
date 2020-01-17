@@ -37,7 +37,7 @@
 #include <vector>
 
 #include "acados/utils/print.h"
-#include "acados/ocp_nlp/ocp_nlp_constraints_bghp.h"
+#include "acados/ocp_nlp/ocp_nlp_constraints_bgp.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_common.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
@@ -202,7 +202,7 @@ int main() {
 	external_function_casadi_assign(&position_constraint, ptr);
 
 	// bounds
-	ocp_nlp_constraints_bghp_model **constraints = (ocp_nlp_constraints_bghp_model **) nlp_in->constraints;
+	ocp_nlp_constraints_bgp_model **constraints = (ocp_nlp_constraints_bgp_model **) nlp_in->constraints;
 
     constraints[0]->idxb = idxb_0.data();
 	blasfeo_pack_dvec(nb[0], x0.data(), &constraints[0]->d, 0);
@@ -213,7 +213,7 @@ int main() {
 	constraints[N]->nl_constr_h_fun_jac = (external_function_generic *) &nonlinear_constraint;
 	constraints[N]->p = (external_function_generic *) &position_constraint;
 
-	void *nlp_opts = ocp_nlp_opts_create(config, dims);
+	void *nlp_opts = ocp_nlp_solver_opts_create(config, dims);
 
     int max_iter = max_num_sqp_iterations;
     double tol_stat = 1e-9;
@@ -221,14 +221,15 @@ int main() {
     double tol_ineq = 1e-9;
     double tol_comp = 1e-9;
 
-    ocp_nlp_opts_set(config, nlp_opts, "max_iter", &max_iter);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_stat", &tol_stat);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_eq", &tol_eq);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "max_iter", &max_iter);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_stat", &tol_stat);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_eq", &tol_eq);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
 
 	int N2 = N;
-    ocp_nlp_opts_set(config, nlp_opts, "qp_cond_N", &N2);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "qp_cond_N", &N2);
+    ocp_nlp_solver_opts_update(config, dims, nlp_opts);
 
 	ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 	for (int i = 0; i <= N; ++i)

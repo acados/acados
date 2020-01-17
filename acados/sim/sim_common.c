@@ -391,6 +391,21 @@ int sim_out_get_(void *config_, void *dims_, sim_out *out, const char *field, vo
         for (int ii=0; ii < nz*(nu+nx); ii++)
             S_algebraic[ii] = out->S_algebraic[ii];
     }
+    else if (!strcmp(field, "CPUtime") || !strcmp(field, "time_tot"))
+    {
+        double *time = value;
+        *time = out->info->CPUtime;
+    }
+    else if (!strcmp(field, "ADtime") || !strcmp(field, "time_ad"))
+    {
+        double *time = value;
+        *time = out->info->ADtime;
+    }
+    else if (!strcmp(field, "LAtime") || !strcmp(field, "time_la"))
+    {
+        double *time = value;
+        *time = out->info->LAtime;
+    }
     else
     {
         printf("sim_out_get_: field %s not supported \n", field);
@@ -406,9 +421,9 @@ int sim_out_get_(void *config_, void *dims_, sim_out *out, const char *field, vo
 * sim_opts
 ************************************************/
 
-int sim_opts_set_(sim_opts *opts, const char *field, void *value)
+void sim_opts_set_(sim_opts *opts, const char *field, void *value)
 {
-    int status = ACADOS_SUCCESS;
+
     if (!strcmp(field, "ns") ||!strcmp(field, "num_stages"))
     {
         int *ns = (int *) value;
@@ -449,6 +464,11 @@ int sim_opts_set_(sim_opts *opts, const char *field, void *value)
         bool *output_z = (bool *) value;
         opts->output_z = *output_z;
     }
+    else if (!strcmp(field, "exact_z_output"))
+    {
+        bool *exact_z_output = (bool *) value;
+        opts->exact_z_output = *exact_z_output;
+    }
     else if (!strcmp(field, "sens_algebraic"))
     {
         bool *sens_algebraic = (bool *) value;
@@ -459,5 +479,34 @@ int sim_opts_set_(sim_opts *opts, const char *field, void *value)
         printf("\nerror: field %s not available in sim_opts_set\n", field);
         exit(1);
     }
-    return status; // TODO remove
+
+    return;
+}
+
+
+void sim_opts_get_(sim_config *config, sim_opts *opts, const char *field, void *value)
+{
+
+    if (!strcmp(field, "sens_forw"))
+    {
+        bool *sens_forw = value;
+        *sens_forw = opts->sens_forw;
+    }
+    else if (!strcmp(field, "sens_adj"))
+    {
+        bool *sens_adj = value;
+        *sens_adj = opts->sens_adj;
+    }
+    else if (!strcmp(field, "sens_hess"))
+    {
+        bool *sens_hess = value;
+        *sens_hess = opts->sens_hess;
+    }
+    else
+    {
+        printf("sim_opts_get: field %s not supported \n", field);
+        exit(1);
+    }
+
+    return;
 }

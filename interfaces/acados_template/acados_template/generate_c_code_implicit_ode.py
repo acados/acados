@@ -31,18 +31,20 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-
-from casadi import *
 import os
+from casadi import *
+from .utils import ALLOWED_CASADI_VERSIONS
 
 def generate_c_code_implicit_ode( model, opts ):
 
     casadi_version = CasadiMeta.version()
-    if  casadi_version not in ('3.4.5', '3.4.0'):
-        # old casadi versions
-        raise Exception('Please download and install Casadi 3.4.0 to ensure compatibility with acados. Version ' + casadi_version + ' currently in use.')
-
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
+    if casadi_version not in (ALLOWED_CASADI_VERSIONS):
+        msg =  'Please download and install CasADi {} '.format(" or ".join(ALLOWED_CASADI_VERSIONS))
+        msg += 'to ensure compatibility with acados.\n'
+        msg += 'Version {} currently in use.'.format(casadi_version)
+        raise Exception(msg)
+
     generate_hess = opts["generate_hess"]
 
     ## load model
@@ -61,6 +63,7 @@ def generate_c_code_implicit_ode( model, opts ):
         # check that z is empty
         if len(z) == 0:
             nz = 0
+            z  = SX.sym('z', 0, 0)
         else:
             raise Exception('z is a non-empty list. It should be either an empty list or an SX object.')
     else:
@@ -70,6 +73,7 @@ def generate_c_code_implicit_ode( model, opts ):
         # check that z is empty
         if len(p) == 0:
             np = 0
+            p = SX.sym('p', 0, 0)
         else:
             raise Exception('p is a non-empty list. It should be either an empty list or an SX object.')
     else:
@@ -103,50 +107,31 @@ def generate_c_code_implicit_ode( model, opts ):
     # HESS_multiplied = HESS_multiplied.simplify()
 
     ## Set up functions
-    if np != 0:
-        p = model.p
-        fun_name = model_name + '_impl_dae_fun'
-        impl_dae_fun = Function(fun_name, [x, xdot, u, z, p], [f_impl])
+    p = model.p
+    fun_name = model_name + '_impl_dae_fun'
+    impl_dae_fun = Function(fun_name, [x, xdot, u, z, p], [f_impl])
 
-        fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
-        impl_dae_fun_jac_x_xdot_z = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_z])
+    fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
+    impl_dae_fun_jac_x_xdot_z = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_z])
 
-        # fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
-        # impl_dae_fun_jac_x_xdot = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_z])
+    # fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
+    # impl_dae_fun_jac_x_xdot = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_z])
 
-        # fun_name = model_name + '_impl_dae_jac_x_xdot_u'
-        # impl_dae_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z, p], [jac_x, jac_xdot, jac_u, jac_z])
-        
-        fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u_z'
-        impl_dae_fun_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_u, jac_z])
+    # fun_name = model_name + '_impl_dae_jac_x_xdot_u'
+    # impl_dae_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z, p], [jac_x, jac_xdot, jac_u, jac_z])
 
-        fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u'
-        impl_dae_fun_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_u])
+    fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u_z'
+    impl_dae_fun_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_u, jac_z])
 
-        fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
-        impl_dae_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z, p], [jac_x, jac_xdot, jac_u, jac_z])
+    fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u'
+    impl_dae_fun_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_u])
 
-        
-        fun_name = model_name + '_impl_dae_hess'
-        impl_dae_hess = Function(fun_name, [x, xdot, u, z, multiplier, multiply_mat, p], [HESS_multiplied])
-    else:
-        fun_name = model_name + '_impl_dae_fun'
-        if nz > 0:
-            impl_dae_fun = Function(fun_name, [x, xdot, u, z], [f_impl])
-        else:
-            impl_dae_fun = Function(fun_name, [x, xdot, u], [f_impl])
-        
-        fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
-        impl_dae_fun_jac_x_xdot_z = Function(fun_name, [x, xdot, u, z], [f_impl, jac_x, jac_xdot, jac_z])
-        
-        fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u_z'
-        impl_dae_fun_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z], [f_impl, jac_x, jac_xdot, jac_u, jac_z])
+    fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
+    impl_dae_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z, p], [jac_x, jac_xdot, jac_u, jac_z])
 
-        fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
-        impl_dae_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z], [jac_x, jac_xdot, jac_u, jac_z])
-        
-        fun_name = model_name + '_impl_dae_hess'
-        impl_dae_hess = Function(fun_name, [x, xdot, u, z, multiplier, multiply_mat], [HESS_multiplied])
+
+    fun_name = model_name + '_impl_dae_hess'
+    impl_dae_hess = Function(fun_name, [x, xdot, u, z, multiplier, multiply_mat, p], [HESS_multiplied])
 
     # generate C code
     if not os.path.exists('c_generated_code'):
@@ -164,7 +149,7 @@ def generate_c_code_implicit_ode( model, opts ):
 
     fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
     impl_dae_fun_jac_x_xdot_z.generate(fun_name, casadi_opts)
-    
+
     fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
     impl_dae_jac_x_xdot_u_z.generate(fun_name, casadi_opts)
 

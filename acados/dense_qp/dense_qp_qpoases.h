@@ -56,6 +56,7 @@ typedef struct dense_qp_qpoases_opts_
                    // with frozen sensitivities)
     int set_acado_opts;  // use same options as in acado code generation
     int compute_t;       // compute t in qp_out (to have correct residuals in NLP)
+    double tolerance;  // terminationTolerance
 } dense_qp_qpoases_opts;
 
 typedef struct dense_qp_qpoases_memory_
@@ -94,6 +95,9 @@ typedef struct dense_qp_qpoases_memory_
     int nwsr;        // performed number of working set recalculations
     int first_it;    // to be used with hotstart
     dense_qp_in *qp_stacked;
+	double time_qp_solver_call; // equal to cputime
+	int iter;
+
 } dense_qp_qpoases_memory;
 
 int dense_qp_qpoases_opts_calculate_size(void *config, dense_qp_dims *dims);

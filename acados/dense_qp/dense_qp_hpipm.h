@@ -59,6 +59,9 @@ typedef struct dense_qp_hpipm_opts_
 typedef struct dense_qp_hpipm_memory_
 {
     struct d_dense_qp_ipm_ws *hpipm_workspace;
+	double time_qp_solver_call;
+	int iter;
+
 } dense_qp_hpipm_memory;
 
 

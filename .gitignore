@@ -87,6 +87,9 @@ Thumbs.db
 __pycache__/
 *.egg-info
 
+# Examples #
+c_generated_code
+
 # Misc #
 ########
 *.doc

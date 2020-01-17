@@ -99,6 +99,7 @@ typedef struct
     struct blasfeo_dvec d;  // gathers bounds
     struct blasfeo_dmat DCt;  // general linear constraint matrix
             // lg <= [D, C] * [u; x] <= ug
+    external_function_generic *nl_constr_h_fun;  // nonlinear: lh <= h(x,u) <= uh
     external_function_generic *nl_constr_h_fun_jac;  // nonlinear: lh <= h(x,u) <= uh
     external_function_generic *nl_constr_h_fun_jac_hess;  // nonlinear: lh <= h(x,u) <= uh
 } ocp_nlp_constraints_bgh_model;
@@ -145,7 +146,9 @@ typedef struct
     struct blasfeo_dvec fun;
     struct blasfeo_dvec adj;
     struct blasfeo_dvec *ux;     // pointer to ux in nlp_out
+    struct blasfeo_dvec *tmp_ux; // pointer to ux in tmp_nlp_out
     struct blasfeo_dvec *lam;    // pointer to lam in nlp_out
+    struct blasfeo_dvec *tmp_lam;// pointer to lam in tmp_nlp_out
     struct blasfeo_dvec *z_alg;  // pointer to z_alg in ocp_nlp memory
     struct blasfeo_dmat *DCt;    // pointer to DCt in qp_in
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
@@ -165,7 +168,11 @@ struct blasfeo_dvec *ocp_nlp_constraints_bgh_memory_get_adj_ptr(void *memory_);
 //
 void ocp_nlp_constraints_bgh_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_);
 //
+void ocp_nlp_constraints_bgh_memory_set_tmp_ux_ptr(struct blasfeo_dvec *tmp_ux, void *memory_);
+//
 void ocp_nlp_constraints_bgh_memory_set_lam_ptr(struct blasfeo_dvec *lam, void *memory_);
+//
+void ocp_nlp_constraints_bgh_memory_set_tmp_lam_ptr(struct blasfeo_dvec *tmp_lam, void *memory_);
 //
 void ocp_nlp_constraints_bgh_memory_set_DCt_ptr(struct blasfeo_dmat *DCt, void *memory);
 //

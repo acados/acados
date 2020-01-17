@@ -38,7 +38,7 @@ addpath('../wind_turbine_nx6/');
 
 
 %% arguments
-compile_mex = 'true';
+compile_interface = 'auto';
 codgen_model = 'true';
 % simulation
 sim_method = 'irk';
@@ -201,6 +201,7 @@ ocp_model.set('dim_nu', nu);
 ocp_model.set('dim_ny', ny);
 ocp_model.set('dim_ny_e', ny_e);
 ocp_model.set('dim_nbx', nbx);
+ocp_model.set('dim_nbx_e', nbx);
 ocp_model.set('dim_nbu', nbu);
 ocp_model.set('dim_nh', nh);
 ocp_model.set('dim_nh_e', nh_e);
@@ -245,6 +246,9 @@ end
 ocp_model.set('constr_Jbx', Jbx);
 ocp_model.set('constr_lbx', lbx);
 ocp_model.set('constr_ubx', ubx);
+ocp_model.set('constr_Jbx_e', Jbx);
+ocp_model.set('constr_lbx_e', lbx);
+ocp_model.set('constr_ubx_e', ubx);
 % input bounds
 ocp_model.set('constr_Jbu', Jbu);
 ocp_model.set('constr_lbu', lbu);
@@ -261,13 +265,16 @@ ocp_model.set('constr_Jsbx', Jsbx);
 ocp_model.set('constr_Jsh', Jsh);
 ocp_model.set('constr_Jsh_e', Jsh_e);
 
+% initial state dummy
+ocp_model.set('constr_x0', zeros(nx, 1));
+
 ocp_model.model_struct;
 
 
 
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
-ocp_opts.set('compile_mex', compile_mex);
+ocp_opts.set('compile_interface', compile_interface);
 ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme', ocp_param_scheme);
 ocp_opts.set('param_scheme_N', ocp_N);
@@ -293,6 +300,7 @@ ocp_opts.set('sim_method', ocp_sim_method);
 ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', ocp_sim_method_num_steps);
 ocp_opts.set('sim_method_newton_iter', ocp_sim_method_newton_iter);
+ocp_opts.set('regularize_method', 'no_regularize');
 
 ocp_opts.opts_struct;
 
@@ -338,13 +346,12 @@ end
 
 %% acados sim opts
 sim_opts = acados_sim_opts();
-sim_opts.set('compile_mex', compile_mex);
+sim_opts.set('compile_interface', compile_interface);
 sim_opts.set('codgen_model', codgen_model);
 sim_opts.set('num_stages', sim_num_stages);
 sim_opts.set('num_steps', sim_num_steps);
 sim_opts.set('method', sim_method);
 sim_opts.set('sens_forw', sim_sens_forw);
-ocp_opts.set('regularize_method', 'no_regularize');
 
 %sim_opts.opts_struct
 
@@ -484,13 +491,13 @@ x_sim_ref = [   1.263425730522397
 err_vs_ref = x_sim_ref - x_sim(:,end);
 
 if status~=0
-    error('\nnTEST_OCP: solution failed!\n\n');
+    error('test_ocp_wtnx6: solution failed!');
 elseif err_vs_ref > 1e-14
-    error('\nnTEST_OCP: to high deviation from known result!\n\n');
+    error('test_ocp_wtnx6: to high deviation from known result!');
 elseif sqp_iter > 2
-    error('\nnTEST_OCP: sqp_iter > 2, this problem is typically solved within less iterations!\n\n');
+    error('test_ocp_wtnx6: sqp_iter > 2, this problem is typically solved within less iterations!');
 else
-    fprintf('\nsuccess!\n');
+    fprintf('\ntest_ocp_wtnx6: success!\n');
 end
 
 % figures

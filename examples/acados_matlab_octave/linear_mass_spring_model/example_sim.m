@@ -45,7 +45,7 @@ end
 
 
 %% arguments
-compile_mex = 'true';
+compile_interface = 'auto';
 codgen_model = 'true';
 %method = 'erk';
 method = 'irk';
@@ -100,7 +100,7 @@ sim_model.model_struct
 
 %% acados sim opts
 sim_opts = acados_sim_opts();
-sim_opts.set('compile_mex', compile_mex);
+sim_opts.set('compile_interface', compile_interface);
 sim_opts.set('codgen_model', codgen_model);
 sim_opts.set('num_stages', num_stages);
 sim_opts.set('num_steps', num_steps);

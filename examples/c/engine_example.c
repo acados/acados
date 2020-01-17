@@ -275,18 +275,18 @@ int main()
     }
 
     // options
-    void *nlp_opts = ocp_nlp_opts_create(config, dims);
+    void *nlp_opts = ocp_nlp_solver_opts_create(config, dims);
     int max_iter = 20;
-    ocp_nlp_opts_set(config, nlp_opts, "max_iter", &max_iter);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "max_iter", &max_iter);
 	int ext_qp_res = 1;
-    ocp_nlp_opts_set(config, nlp_opts, "ext_qp_res", &ext_qp_res);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "ext_qp_res", &ext_qp_res);
 	int qp_warm_start = 2;
-    ocp_nlp_opts_set(config, nlp_opts, "qp_warm_start", &qp_warm_start);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "qp_warm_start", &qp_warm_start);
 	double tol = 1e-6;
-    ocp_nlp_opts_set(config, nlp_opts, "tol_stat", &tol);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_eq", &tol);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_ineq", &tol);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_comp", &tol);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_stat", &tol);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_eq", &tol);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_ineq", &tol);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_comp", &tol);
 
     // out
     ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
@@ -341,12 +341,12 @@ int main()
 		for(jj=0; jj<N-1; jj++)
 			ocp_nlp_out_set(config, dims, nlp_out, jj, "z", z_sol+(jj+1)*nz_);
 
-		config->get(config, solver->mem, "sqp_iter", &sqp_iter);
-		config->get(config, solver->mem, "time_tot", &time_tot);
+		config->get(config, dims, solver->mem, "sqp_iter", &sqp_iter);
+		config->get(config, dims, solver->mem, "time_tot", &time_tot);
 #if 0
-		config->get(config, solver->mem, "stat_m", &stat_m);
-		config->get(config, solver->mem, "stat_n", &stat_n);
-		config->get(config, solver->mem, "stat", &stat);
+		config->get(config, dims, solver->mem, "stat_m", &stat_m);
+		config->get(config, dims, solver->mem, "stat_n", &stat_n);
+		config->get(config, dims, solver->mem, "stat", &stat);
 		printf("\niter\tres_g\t\tres_b\t\tres_d\t\tres_m\t\tqp_stat\tqp_iter\tqp_res_g\tqp_res_b\tqp_res_d\tqp_res_m\t");
 		for(jj=0; jj<sqp_iter+1; jj++)
 		{
@@ -374,7 +374,7 @@ int main()
 
     ocp_nlp_solver_destroy(solver);
     ocp_nlp_out_destroy(nlp_out);
-    ocp_nlp_opts_destroy(nlp_opts);
+    ocp_nlp_solver_opts_destroy(nlp_opts);
     ocp_nlp_in_destroy(nlp_in);
     ocp_nlp_dims_destroy(dims);
     ocp_nlp_config_destroy(config);
