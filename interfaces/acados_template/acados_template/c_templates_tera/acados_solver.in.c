@@ -183,7 +183,8 @@ int acados_create()
     }
 
     // for initial state
-    nbx[0]   = NBX0;
+    nbx[0]  = NBX0;
+    nsbx[0] = 0;
 
     // terminal - common
     nu[N]   = 0;
@@ -629,10 +630,11 @@ int acados_create()
 
 
     /* constraints that are the same for initial and intermediate */
-{%- if dims.nsbx > 0 %}{# TODO: introduce nsbx0 & REMOVE SETTING lsbx, usbx for stage 0!!! move this block up!! #}
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxsbx", idxsbx);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lsbx", lsbx);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "usbx", usbx);
+{%- if dims.nsbx > 0 %}
+{# TODO: introduce nsbx0 & REMOVE SETTING lsbx, usbx for stage 0!!! move this block down!! #}
+    // ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxsbx", idxsbx);
+    // ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lsbx", lsbx);
+    // ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "usbx", usbx);
 
     for (int i = 1; i < N; i++)
     {       
