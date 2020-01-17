@@ -1563,18 +1563,23 @@ class ocp_nlp_solver_options:
         self.__tf               = None                        # prediction horizon
         self.__nlp_solver_type  = 'SQP_RTI'                   # NLP solver
         self.__nlp_solver_step_length = 1.0                   # fixed Newton step length
-        self.__sim_method_num_stages  = 1                     # number of stages in the integrator
+        self.__sim_method_num_stages  = 4                     # number of stages in the integrator
         self.__sim_method_num_steps   = 1                     # number of steps in the integrator
         self.__sim_method_newton_iter = 3                     # number of Newton iterations in simulation method
         self.__qp_solver_tol_stat = None                      # QP solver stationarity tolerance
         self.__qp_solver_tol_eq   = None                      # QP solver equality tolerance
         self.__qp_solver_tol_ineq = None                      # QP solver inequality
         self.__qp_solver_tol_comp = None                      # QP solver complementarity
-        self.__nlp_solver_tol_stat = None                     # NLP solver stationarity tolerance
-        self.__nlp_solver_tol_eq   = None                     # NLP solver equality tolerance
-        self.__nlp_solver_tol_ineq = None                     # NLP solver inequality
-        self.__nlp_solver_tol_comp = None                     # NLP solver complementarity
-        self.__nlp_solver_max_iter = None                     # NLP solver maximum number of iterations
+        self.__nlp_solver_tol_stat = 1e-6                     # NLP solver stationarity tolerance
+        self.__nlp_solver_tol_eq   = 1e-6                     # NLP solver equality tolerance
+        self.__nlp_solver_tol_ineq = 1e-6                     # NLP solver inequality
+        self.__nlp_solver_tol_comp = 1e-6                     # NLP solver complementarity
+        self.__nlp_solver_max_iter = 100                      # NLP solver maximum number of iterations
+        # TODO(oj): add the following
+        # self.__regularize_method = None
+        # self.__qp_solver_iter_max = None
+
+
 
     @property
     def qp_solver(self):
@@ -1805,6 +1810,14 @@ class ocp_nlp_solver_options:
             self.__nlp_solver_tol_ineq = nlp_solver_tol_ineq
         else:
             raise Exception('Invalid nlp_solver_tol_ineq value. nlp_solver_tol_ineq must be a positive float. Exiting')
+
+    @nlp_solver_tol_comp.setter
+    def nlp_solver_tol_comp(self, nlp_solver_tol_comp):
+
+        if type(nlp_solver_tol_comp) == float and nlp_solver_tol_comp > 0:
+            self.__nlp_solver_tol_comp = nlp_solver_tol_comp
+        else:
+            raise Exception('Invalid nlp_solver_tol_comp value. nlp_solver_tol_comp must be a positive float. Exiting')
 
     @nlp_solver_max_iter.setter
     def nlp_solver_max_iter(self, nlp_solver_max_iter):
