@@ -706,7 +706,7 @@ int acados_create()
     ocp_nlp_dims_set_opt_vars(nlp_config, nlp_dims, "nz", nz);
     ocp_nlp_dims_set_opt_vars(nlp_config, nlp_dims, "ns", ns);
 
-    for (int i = 0; i <= N; i++)
+    for (int i = 0; i < N; i++)
     {
         ocp_nlp_dims_set_cost(nlp_config, nlp_dims, i, "ny", &ny[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nbx", &nbx[i]);
@@ -722,6 +722,20 @@ int acados_create()
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsphi", &nsphi[i]);
         {%- endif %}
     }
+
+    ocp_nlp_dims_set_cost(nlp_config, nlp_dims, N, "ny", &ny[N]);
+    ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "nbx", &nbx[N]);
+    ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "nbu", &nbu[N]);
+    ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "nsbx", &nsbx[N]);
+    ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "nsbu", &nsbu[N]);
+    ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "ng", &ng[N]);
+    {%- if constraints.constr_type_e == "BGH" and dims.nh > 0 %}
+    ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "nh", &nh[N]);
+    ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "nsh", &nsh[N]);
+    {%- elif constraints.constr_type_e == "BGP" %}
+    ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "nphi", &nphi[N]);
+    ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "nsphi", &nsphi[N]);
+    {%- endif %}
 
     {% if constraints.constr_type == "BGP" %}
     for (int i = 0; i < N; i++) 
@@ -1050,12 +1064,12 @@ int acados_create()
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "usbx", usbx_e);
     {%- endif %}
     
-    {% if constraints.constr_type == "BGH" and dims.nh > 0 %}
+    {% if constraints.constr_type_e == "BGH" and dims.nh > 0 %}
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxsh", idxsh_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lsh", lsh_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ush", ush_e);
     {%- endif %}
-    {% if constraints.constr_type == "BGP" %}
+    {% if constraints.constr_type_e == "BGP" %}
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxsphi", idxsphi_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lsphi", lsphi_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "usphi", usphi_e);

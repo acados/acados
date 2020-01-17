@@ -231,9 +231,8 @@ if FORMULATION == 1:
 
 if FORMULATION == 2:
     # constraints name
-    ra.con_h = constraint
+    ra.con_phi = constraint
     ra.constraints.constr_type = 'BGP'
-    # ra.con_p = constraint_nl
 
 # Ts  = 0.0016
 # Ts  = 0.0012
@@ -507,5 +506,3 @@ ax.add_artist(circle)
 # avoid plotting when running on Travis
 if os.environ.get('ACADOS_ON_TRAVIS') is None: 
     plt.show()
-
-
