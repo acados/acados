@@ -209,12 +209,18 @@ nlp_con.ubu = np.array([+Fmax])
 nlp_con.x0 = np.array([0.0, 3.14, 0.0, 0.0])
 nlp_con.idxbu = np.array([0])
 
-# set QP solver
+# set options
 ocp.solver_options.qp_solver = QP_SOLVER
 ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
 ocp.solver_options.integrator_type = INTEGRATOR_TYPE
 ocp.solver_options.sim_method_num_stages = 2
 ocp.solver_options.sim_method_num_steps = 5
+
+ocp.solver_options.nlp_solver_tol_stat = 1E-8
+ocp.solver_options.nlp_solver_tol_eq = 1E-8
+ocp.solver_options.nlp_solver_tol_ineq = 1E-8
+ocp.solver_options.nlp_solver_tol_comp = 1E-8
+
 
 # set prediction horizon
 ocp.solver_options.tf = Tf
@@ -272,6 +278,8 @@ else:
     simX_error = np.linalg.norm(test_data['simX'] - simX)
     simU_error = np.linalg.norm(test_data['simU'] - simU)
     if  simX_error > TEST_TOL or  simU_error > TEST_TOL:
-        raise Exception("Python acados test failure with accuracies {:.2E} and {:.2E} ({:.2E} required) on pendulum example! Exiting.\n".format(simX_error, simU_error, TEST_TOL))
+        raise Exception("Python acados test failure with accuracies" +
+                        " {:.2E} and {:.2E} ({:.2E} required)".format(simX_error, simU_error, TEST_TOL) +
+                        " on pendulum example! Exiting.\n")
     else:
         print('Python test passed with accuracy {:.2E}'.format(max(simU_error, simX_error)))
