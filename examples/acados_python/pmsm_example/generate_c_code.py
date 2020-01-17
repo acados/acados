@@ -10,15 +10,15 @@ import json
 CODE_GEN = 1
 COMPILE = 1
 
-FORMULATION = 4         # Tracking MPC
+FORMULATION = 1         # Tracking MPC
                         # ===================
-                        # 0 for hexagon (no terminalset) | 5 hexagon + currentslack| 6 PDC Voltage + Hexagon + torque equation | 7 PDC Voltage + currentslack
+                        # 0 for hexagon (no terminalset)
 
                         # Economic MPC
                         # ===================
-                        # 1 only with Hexagon | 2  PDC Voltage + Hexagon | 3 only with Hexagon  (but pure nonlinear torque, equal to 1) | 4 PDC Voltage + PDC Terminal Set
+                        # 1 PDC Voltage + PDC Terminal Set
                         
-i_d_ref =  -125         # Setpoints only valid for Formulation 0, 5, 6 and 7
+i_d_ref =  -125         # Setpoints only valid for Formulation 0
 i_q_ref =    10       
 w_val = 2000.0          # do not change in this script, sometimes the values below calculate with a fix w_val = 2000 1/S
 tau_wal = 10.0 
@@ -44,7 +44,7 @@ WARMSTART_ITERS = 200
 
 INPUT_REG = 1e-2
 
-# # setpoint MPC with hexagon (current slack)
+# setpoint MPC with hexagon (current slack)
 if FORMULATION == 0:        # (works)
     Weight_TUNING = 1
     Weight_E_TUNING = 1
@@ -55,19 +55,8 @@ if FORMULATION == 0:        # (works)
     Ts = 0.000125
     SLACK_TUNINGHessian =  0
 
-# # setpoint MPC with hexagon
-# if FORMULATION == 0:
-#     Weight_TUNING = 1e2
-#     Weight_E_TUNING = 1e2
-#     SLACK_TUNING   =  0
-#     SLACK_E_TUNING =  0
-#     wd = 1
-#     wq = 1
-#     Ts = 0.000125
-#     SLACK_TUNINGHessian =  0
-
 # full EMPC
-if FORMULATION == 4:        # (works)
+if FORMULATION == 1:        # (works)
     Weight_TUNING = 1e-1
     Weight_E_TUNING = 1e-1
     SLACK_TUNING   =  1e3
@@ -76,37 +65,6 @@ if FORMULATION == 4:        # (works)
     wq = 1
     Ts = 0.000250
     SLACK_TUNINGHessian =  0
-
-# # setpoint MPC with hexagon (current slack)
-# if FORMULATION == 5:        # (works)
-#     Weight_TUNING = 1e2
-#     Weight_E_TUNING = 1e3
-#     SLACK_TUNING   =  0
-#     SLACK_E_TUNING =  0
-#     wd = 1
-#     wq = 1
-#     Ts = 0.000125
-#     SLACK_TUNINGHessian =  0
-
-# if FORMULATION == 6:
-#     Weight_TUNING = 500
-#     Weight_E_TUNING = 500
-#     SLACK_TUNING   =  5
-#     SLACK_E_TUNING =  500
-#     wd = 1
-#     wq = 1
-#     Ts = 0.000125
-#     SLACK_TUNINGHessian =  0
-
-# if FORMULATION == 7:    # (works)
-#     Weight_TUNING = 1e2
-#     Weight_E_TUNING = 1e2
-#     SLACK_TUNING   =  0
-#     SLACK_E_TUNING =  0
-#     wd = 1
-#     wq = 1
-#     Ts = 0.000125
-#     SLACK_TUNINGHessian =  0
 
 # Model of the PMSM
 #====================================================================
@@ -231,44 +189,6 @@ def get_general_terminal_constraints_DC():
 
     return res
 
-# # Torque Constraints
-# #====================================================================
-# def export_torqueline():
-
-#     con_name = 'torqueline'
-
-#     # set up states 
-#     i_d = SX.sym('i_d')
-#     i_q = SX.sym('i_q')
-#     x = vertcat(i_d, i_q)
-
-#     # set up controls
-#     u_d = SX.sym('u_d')
-#     u_q = SX.sym('u_q')
-#     u = vertcat(u_d, u_q)
-
-#     # set up parameters
-#     omega  = SX.sym('omega')        # speed
-#     dist_d = SX.sym('dist_d')       # d disturbance
-#     dist_q = SX.sym('dist_q')       # q disturbance
-#     tau_des = SX.sym('tau_des')     # Desired tau
-#     p = vertcat(omega, dist_d, dist_q, tau_des)
-
-#     # torque and voltage constraints
-#     constraint = acados_constraint()
-
-#     r = SX.sym('r', 1, 1)
-#     constraint.con_h_expr = r[0]
-#     constraint.con_r_expr = tau_des - 1.5*N_P*((L_d-L_q)*i_d*i_q + K_m*i_q)
-#     constraint.x = x
-#     constraint.u = u 
-#     constraint.r = r
-#     constraint.nr = 1
-#     constraint.nh = 1
-#     constraint.name = con_name
-
-#     return constraint  
-
 # Torque Constraints --> pd
 #====================================================================
 def export_torqueline_pd():
@@ -307,76 +227,6 @@ def export_torqueline_pd():
 
     return constraint 
 
-# # torque Constraints --> nl
-# #====================================================================
-# def export_torqueline_nl():
-
-#     con_name = 'torqueline'
-
-#     # set up states 
-#     i_d = SX.sym('i_d')
-#     i_q = SX.sym('i_q')
-#     x = vertcat(i_d, i_q)
-
-#     # set up controls
-#     u_d = SX.sym('u_d')
-#     u_q = SX.sym('u_q')
-#     u = vertcat(u_d, u_q)
-
-#     # set up parameters
-#     omega  = SX.sym('omega')        # speed
-#     dist_d = SX.sym('dist_d')       # d disturbance
-#     dist_q = SX.sym('dist_q')       # q disturbance
-#     tau_des = SX.sym('tau_des')     # Desired tau
-#     p = vertcat(omega, dist_d, dist_q, tau_des)
-
-#     # torque and voltage constraints
-#     constraint = acados_constraint()
-#     constraint.con_h_expr = tau_des - 1.5*N_P*((L_d-L_q)*i_d*i_q + K_m*i_q)
-#     constraint.x = x
-#     constraint.u = u 
-#     constraint.nh = 1
-#     constraint.name = con_name
-
-#     return constraint  
-
-# torque End-Constraints
-#====================================================================
-# def export_torquelineEnd():
-
-#     con_name = 'torquelineEnd'
-
-#     # set up states 
-#     i_d = SX.sym('i_d')
-#     i_q = SX.sym('i_q')
-#     x = vertcat(i_d, i_q)
-
-#     # set up controls
-#     u_d = SX.sym('u_d')
-#     u_q = SX.sym('u_q') 
-#     u = vertcat(u_d, u_q)
-
-#     # set up parameters
-#     omega  = SX.sym('omega')        # speed
-#     dist_d = SX.sym('dist_d')       # d disturbance
-#     dist_q = SX.sym('dist_q')       # q disturbance
-#     tau_des = SX.sym('tau_des')     # Desired tau
-#     p = vertcat(omega, dist_d, dist_q, tau_des)
-    
-#     # torque and voltage constraints
-#     constraint = acados_constraint()
-#     r = SX.sym('r', 1, 1)
-#     constraint.con_h_expr = r[0]
-#     constraint.con_r_expr = tau_des - 1.5*N_P*((L_d-L_q)*i_d*i_q + K_m*i_q)
-#     constraint.x = x
-#     constraint.u = u 
-#     constraint.r = r
-#     constraint.nr = 1
-#     constraint.nh = 1
-#     constraint.name = con_name
-
-#     return constraint
-
 # torque End-Constraints --> pd
 #====================================================================
 def export_torquelineEnd_pd():
@@ -410,8 +260,10 @@ def export_torquelineEnd_pd():
     # torque and voltage constraints
     constraint = acados_constraint()
     r = SX.sym('r', 3, 1)
-    constraint.con_phi_expr = vertcat(r[0], alpha*r[1]**2 + beta*r[2]**2 + gamma*r[1]*r[2] + delta*r[1] + epsilon*r[2] + rho)
-    constraint.con_r_expr = vertcat(tau_des - 1.5*N_P*((L_d-L_q)*i_d*i_q + K_m*i_q), i_d, i_q)
+    constraint.con_phi_expr = vertcat(r[0], alpha*r[1]**2 + beta*r[2]**2 + \
+        gamma*r[1]*r[2] + delta*r[1] + epsilon*r[2] + rho)
+    constraint.con_r_expr = vertcat(tau_des - \
+        1.5*N_P*((L_d-L_q)*i_d*i_q + K_m*i_q), i_d, i_q)
     constraint.x = x
     constraint.u = u 
     constraint.r = r
@@ -422,146 +274,6 @@ def export_torquelineEnd_pd():
 
     return constraint
 
-# # torque End-Constraints --> nl
-# #====================================================================
-# def export_torquelineEnd_nl():
-
-#     con_name = 'torquelineEnd'
-
-#     # set up states 
-#     i_d = SX.sym('i_d')
-#     i_q = SX.sym('i_q')
-#     x = vertcat(i_d, i_q)
-
-#     # set up controls
-#     u_d = SX.sym('u_d')
-#     u_q = SX.sym('u_q') 
-#     u = vertcat(u_d, u_q)
-
-#     # set up parameters
-#     omega  = SX.sym('omega')        # speed
-#     dist_d = SX.sym('dist_d')       # d disturbance
-#     dist_q = SX.sym('dist_q')       # q disturbance
-#     tau_des = SX.sym('tau_des')     # Desired tau
-#     p = vertcat(omega, dist_d, dist_q, tau_des)
-    
-#     # torque and voltage constraints
-#     constraint = acados_constraint()
-#     constraint.con_h_expr = tau_des - 1.5*N_P*((L_d-L_q)*i_d*i_q + K_m*i_q)
-#     constraint.x = x
-#     constraint.u = u
-#     constraint.nh = 1
-#     constraint.name = con_name
-
-#     return constraint
-
-# # |x - x_soll| Penalty
-# #====================================================================
-# def export_current_Penalty():
-
-#     con_name = 'currentPenalty'
-
-#     # set up states 
-#     i_d = SX.sym('i_d')
-#     i_q = SX.sym('i_q')
-#     x = vertcat(i_d, i_q)
-
-#     # set up controls
-#     u_d = SX.sym('u_d')
-#     u_q = SX.sym('u_q') 
-#     u = vertcat(u_d, u_q)
-
-#     # set up parameters
-#     omega  = SX.sym('omega')        # speed
-#     dist_d = SX.sym('dist_d')       # d disturbance
-#     dist_q = SX.sym('dist_q')       # q disturbance
-#     tau_des = SX.sym('tau_des')     # Desired tau
-#     p = vertcat(omega, dist_d, dist_q, tau_des)
-    
-#     # torque and voltage constraints
-#     constraint = acados_constraint()
-#     constraint.con_h_expr = vertcat(i_d-i_d_ref, i_q-i_q_ref)
-#     constraint.x = x
-#     constraint.u = u
-#     constraint.nh = 2
-#     constraint.name = con_name
-
-#     return constraint
-
-# # |x - x_soll| Penalty -> pd
-# #====================================================================
-# def export_current_Penalty_pd():
-
-#     con_name = 'currentPenalty'
-
-#     # set up states 
-#     i_d = SX.sym('i_d')
-#     i_q = SX.sym('i_q')
-#     x = vertcat(i_d, i_q)
-
-#     # set up controls
-#     u_d = SX.sym('u_d')
-#     u_q = SX.sym('u_q')
-#     u = vertcat(u_d, u_q)
-
-#     # set up parameters
-#     omega  = SX.sym('omega')        # speed
-#     dist_d = SX.sym('dist_d')       # d disturbance
-#     dist_q = SX.sym('dist_q')       # q disturbance
-#     tau_des = SX.sym('tau_des')     # Desired tau
-#     p = vertcat(omega, dist_d, dist_q, tau_des)
-
-#     # torque and voltage constraints
-#     constraint = acados_constraint()
-#     r = SX.sym('r', 4, 1)
-#     constraint.con_h_expr = vertcat(r[0], r[1], r[2]**2 + r[3]**2)
-#     constraint.con_r_expr =  vertcat(i_d-i_d_ref, i_q-i_q_ref, u_d, u_q)
-#     constraint.x = x
-#     constraint.u = u 
-#     constraint.r = r
-#     constraint.nr = 4
-#     constraint.nh = 3
-#     constraint.name = con_name
-
-#     return constraint 
-
-# # |x - x_soll| End Penalty -> pd
-# #====================================================================
-# def export_current_PenaltyEnd_pd():
-
-#     con_name = 'currentPenaltyEnd'
-
-#     # set up states 
-#     i_d = SX.sym('i_d')
-#     i_q = SX.sym('i_q')
-#     x = vertcat(i_d, i_q)
-
-#     # set up controls
-#     u_d = SX.sym('u_d')
-#     u_q = SX.sym('u_q') 
-#     u = vertcat(u_d, u_q)
-
-#     # set up parameters
-#     omega  = SX.sym('omega')        # speed
-#     dist_d = SX.sym('dist_d')       # d disturbance
-#     dist_q = SX.sym('dist_q')       # q disturbance
-#     tau_des = SX.sym('tau_des')     # Desired tau
-#     p = vertcat(omega, dist_d, dist_q, tau_des)
-    
-#     # torque and voltage constraints
-#     constraint = acados_constraint()
-#     r = SX.sym('r', 2, 1)
-#     constraint.con_h_expr = vertcat(r[0], r[1])
-#     constraint.con_r_expr = vertcat(i_d-i_d_ref, i_q-i_q_ref)
-#     constraint.x = x
-#     constraint.u = u 
-#     constraint.r = r
-#     constraint.nr = 2
-#     constraint.nh = 2
-#     constraint.name = con_name
-
-#     return constraint
-
 # create render arguments
 ocp = acados_ocp_nlp()
 
@@ -571,28 +283,9 @@ model = export_ode_model()
 # set model_name
 ocp.model = model
 
-# export constraint description
-# if FORMULATION == 1:
-#     constraint_nltorqueline = export_torqueline()
-#     constraint_nltorquelineEnd = export_torquelineEnd()
-# if FORMULATION == 2:
-#     constraint_nltorqueline = export_torqueline_pd()
-#     constraint_nltorquelineEnd = export_torquelineEnd()
-# if FORMULATION == 3:
-#     constraint_nltorqueline = export_torqueline_nl()
-#     constraint_nltorquelineEnd = export_torquelineEnd_nl()
-if FORMULATION == 4:
+if FORMULATION == 1:
     constraint_nltorqueline = export_torqueline_pd()
     constraint_nltorquelineEnd = export_torquelineEnd_pd()
-# if FORMULATION == 5:
-#     constraint_nltorqueline = export_current_Penalty()
-#     constraint_nltorquelineEnd = export_current_Penalty()
-# if FORMULATION == 6:
-#     constraint_nltorqueline = export_torqueline_pd()
-#     constraint_nltorquelineEnd = export_torquelineEnd_nl()
-# if FORMULATION == 7:
-#     constraint_nltorqueline = export_current_Penalty_pd()
-#     constraint_nltorquelineEnd = export_current_PenaltyEnd_pd()
 
 # set model dims
 nx = model.x.size()[0]
@@ -615,68 +308,18 @@ if FORMULATION == 0:
     nlp_dims.ng = 3
     nlp_dims.ng_e = 0
 
-# if FORMULATION == 1:        
-#     nlp_dims.nbu = 0
-#     nlp_dims.ng = 3
-#     nlp_dims.ng_e = 3
-#     nlp_dims.nh_e = 1                   # 1st torque constraint 
-#     nlp_dims.npd_e = 1                  # 1st torque constraint 
-#     nlp_dims.ns = 1
-#     nlp_dims.ns_e = 1 
-#     nlp_dims.nsh = 1
-#     nlp_dims.nsh_e = 1 
-
-# if FORMULATION == 2:        
-#     nlp_dims.nbu = 0
-#     nlp_dims.ng = 3
-#     nlp_dims.ng_e = 3
-#     nlp_dims.nh  = 2            # 1st torque constraint | 2nd voltage constraint
-#     nlp_dims.npd  = 3           # 1st torque constraint | 2nd voltage constraint
-#     nlp_dims.nh_e = 1           # 1st torque constraint | 2nd terminal set
-#     nlp_dims.npd_e = 0          # current constraint
-#     nlp_dims.ns = 2
-#     nlp_dims.ns_e = 2 
-#     nlp_dims.nsh = 2
-#     nlp_dims.nsh_e = 2 
-
-if FORMULATION == 4:        
+if FORMULATION == 1:        
     nlp_dims.nbu = 0
     nlp_dims.ng = 3
     nlp_dims.ng_e = 3
-    nlp_dims.nphi  = 2            # 1st torque constraint | 2nd voltage constraint
+    nlp_dims.nphi  = 2        # 1st torque constraint | 2nd voltage constraint
     nlp_dims.nr = 3           # 1st torque constraint | 2nd voltage constraint
-    nlp_dims.nphi_e = 2           # 1st torque constraint | 2nd terminal set
-    nlp_dims.nr_e = 3          # 1st torque constraint | 2nd terminal set
+    nlp_dims.nphi_e = 2       # 1st torque constraint | 2nd terminal set
+    nlp_dims.nr_e = 3         # 1st torque constraint | 2nd terminal set
     nlp_dims.ns = 1
     nlp_dims.ns_e = 1 
     nlp_dims.nsphi = 1
     nlp_dims.nsphi_e = 1 
-
-# if FORMULATION == 6:        
-#     nlp_dims.nbu = 0
-#     nlp_dims.ng = 3
-#     nlp_dims.ng_e = 3
-#     nlp_dims.nh  = 2            # 1st torque constraint | voltage constraint
-#     nlp_dims.npd  = 3           # 1st torque constraint | voltage constraint
-#     nlp_dims.nh_e = 1           # 1st torque constraint 
-#     nlp_dims.npd_e = 0          # 1st torque constraint
-#     nlp_dims.ns = 1
-#     nlp_dims.ns_e = 1 
-#     nlp_dims.nsh = 1
-#     nlp_dims.nsh_e = 1 
-
-# if FORMULATION == 7:        
-#     nlp_dims.nbu = 0
-#     nlp_dims.ng = 3
-#     nlp_dims.ng_e = 0
-#     nlp_dims.nh  = 3            # current constraint | voltage constraint
-#     nlp_dims.npd  = 4           # current constraint | voltage constraint
-#     nlp_dims.nh_e = 2           # current constraint
-#     nlp_dims.npd_e = 2          # current constraint
-#     nlp_dims.ns = 2
-#     nlp_dims.ns_e = 2 
-#     nlp_dims.nsh = 2
-#     nlp_dims.nsh_e = 2 
 
 nlp_dims.nbx = 0
 nlp_dims.nbx_e = 0
@@ -715,7 +358,7 @@ Vx_e[0,0] = 1.0
 Vx_e[1,1] = 1.0
 nlp_cost.Vx_e = Vx_e
 
-if FORMULATION == 0 or FORMULATION == 5 or FORMULATION == 6 or FORMULATION == 7:
+if FORMULATION == 0
     nlp_cost.yref  = nmp.zeros((ny, ))
     nlp_cost.yref[0] = i_d_ref
     nlp_cost.yref[1] = i_q_ref
@@ -758,79 +401,7 @@ if FORMULATION == 0:
 
     nlp_con.x0 = x0Start
 
-# if FORMULATION == 1 or FORMULATION == 3: 
-#     # setting general constraints --> lg <= D*u + C*u <= ug
-#     nlp_con.D   = D
-#     nlp_con.C   = C
-#     nlp_con.lg  = lg
-#     nlp_con.ug  = ug
-#     nlp_con.C_e  = Ce
-#     nlp_con.lg_e = lge
-#     nlp_con.ug_e = uge
-
-#     # lower gradient/hessian wrt lower slack
-#     nlp_cost.zl = SLACK_TUNING*nmp.array([1])
-#     nlp_cost.Zl = SLACK_TUNINGHessian*nmp.ones((1,1))                # hessian
-#     nlp_cost.zu = SLACK_TUNING*nmp.array([1])
-#     nlp_cost.Zu = SLACK_TUNINGHessian*nmp.ones((1,1))                # hessian
-#     #_e
-#     nlp_cost.zl_e = SLACK_E_TUNING*nmp.array([1])           
-#     nlp_cost.Zl_e = SLACK_TUNINGHessian*nmp.ones((1,1))              # hessian   
-#     nlp_cost.zu_e = SLACK_E_TUNING*nmp.array([1])     
-#     nlp_cost.Zu_e = SLACK_TUNINGHessian*nmp.ones((1,1))              # hessian   
-
-#     nlp_con.lh = nmp.array([0])                         # 1st torque constraint 
-#     nlp_con.uh = nmp.array([0])
-#     nlp_con.lsh = nmp.array([0])                        # soft lower bounds --> greater than 0
-#     nlp_con.ush = nmp.array([0])                        # soft upper bounds --> greater than 0
-#     #_e
-#     nlp_con.lh_e = nmp.array([0])                       # 1st torque constraint 
-#     nlp_con.uh_e = nmp.array([0])
-#     nlp_con.lsh_e = nmp.array([0])      
-#     nlp_con.ush_e = nmp.array([0])      
-
-#     nlp_con.idxsh = nmp.array([0])
-#     nlp_con.idxsh_e = nmp.array([0])  
-
-#     nlp_con.x0 = x0Start
-
-# if FORMULATION == 2: 
-#     # setting general constraints --> lg <= D*u + C*u <= ug
-#     nlp_con.D   = D
-#     nlp_con.C   = C
-#     nlp_con.lg  = lg
-#     nlp_con.ug  = ug
-#     nlp_con.C_e  = Ce
-#     nlp_con.lg_e = lge
-#     nlp_con.ug_e = uge
-
-#     # lower gradient/hessian wrt lower slack
-#     nlp_cost.zl = SLACK_TUNING*nmp.array([1])
-#     nlp_cost.Zl = SLACK_TUNINGHessian*nmp.ones((1,1))                # hessian
-#     nlp_cost.zu = SLACK_TUNING*nmp.array([1])
-#     nlp_cost.Zu = SLACK_TUNINGHessian*nmp.ones((1,1))                # hessian
-#     #_e
-#     nlp_cost.zl_e = SLACK_E_TUNING*nmp.array([1])           
-#     nlp_cost.Zl_e = SLACK_TUNINGHessian*nmp.ones((1,1))              # hessian   
-#     nlp_cost.zu_e = SLACK_E_TUNING*nmp.array([1])     
-#     nlp_cost.Zu_e = SLACK_TUNINGHessian*nmp.ones((1,1))              # hessian   
-
-#     nlp_con.lh = nmp.array([0, -1e9])                   # 1st torque constraint | 2nd voltage constraint 
-#     nlp_con.uh = nmp.array([0, u_max**2/3])
-#     nlp_con.lsh = nmp.array([0])                        # soft lower bounds --> greater than 0
-#     nlp_con.ush = nmp.array([0])                        # soft upper bounds --> greater than 0
-#     #_e
-#     nlp_con.lh_e = nmp.array([0])                       # 1st torque constraint | 2nd terminal set 
-#     nlp_con.uh_e = nmp.array([0])
-#     nlp_con.lsh_e = nmp.array([0])      
-#     nlp_con.ush_e = nmp.array([0])      
-
-#     nlp_con.idxsh = nmp.array([0])
-#     nlp_con.idxsh_e = nmp.array([0])  
-
-#     nlp_con.x0 = x0Start
-
-if FORMULATION == 4: 
+if FORMULATION == 1: 
     # setting general constraints --> lg <= D*u + C*u <= ug
     nlp_con.D   = D
     nlp_con.C   = C
@@ -866,114 +437,6 @@ if FORMULATION == 4:
 
     nlp_con.x0 = x0Start
 
-# if FORMULATION == 5:
-#     # setting general constraints --> lg <= D*u + C*u <= ug
-#     nlp_con.D   = D
-#     nlp_con.C   = C
-#     nlp_con.lg  = lg
-#     nlp_con.ug  = ug
-#     nlp_con.C_e  = Ce
-#     nlp_con.lg_e = lge
-#     nlp_con.ug_e = uge
-
-#     # lower gradient/hessian wrt lower slack
-#     nlp_cost.zl = SLACK_TUNING*nmp.array([1,1])
-#     nlp_cost.Zl = SLACK_TUNINGHessian*nmp.ones((2,2))                # hessian
-#     nlp_cost.zu = SLACK_TUNING*nmp.array([1,1])
-#     nlp_cost.Zu = SLACK_TUNINGHessian*nmp.ones((2,2))                # hessian
-#     #_e
-#     nlp_cost.zl_e = SLACK_E_TUNING*nmp.array([1,1])           
-#     nlp_cost.Zl_e = SLACK_TUNINGHessian*nmp.ones((2,2))              # hessian   
-#     nlp_cost.zu_e = SLACK_E_TUNING*nmp.array([1,1])     
-#     nlp_cost.Zu_e = SLACK_TUNINGHessian*nmp.ones((2,2))              # hessian   
-
-#     nlp_con.lh = nmp.array([0,0])                     # 1st current constraint  
-#     nlp_con.uh = nmp.array([0,0])
-#     nlp_con.lsh = nmp.array([0,0])                    # soft lower bounds --> greater than 0
-#     nlp_con.ush = nmp.array([0,0])                    # soft upper bounds --> greater than 0
-#     #_e
-#     nlp_con.lh_e = nmp.array([0,0])                   # 1st current constraint  
-#     nlp_con.uh_e = nmp.array([0,0])
-#     nlp_con.lsh_e = nmp.array([0,0])      
-#     nlp_con.ush_e = nmp.array([0,0])      
-
-#     nlp_con.idxsh = nmp.array([0,1])
-#     nlp_con.idxsh_e = nmp.array([0,1])  
-
-#     nlp_con.x0 = x0Start
-
-# if FORMULATION == 6: 
-#     # setting general constraints --> lg <= D*u + C*u <= ug
-#     nlp_con.D   = D
-#     nlp_con.C   = C
-#     nlp_con.lg  = lg
-#     nlp_con.ug  = ug
-#     nlp_con.C_e  = Ce
-#     nlp_con.lg_e = lge
-#     nlp_con.ug_e = uge
-
-#     # lower gradient/hessian wrt lower slack
-#     nlp_cost.zl = SLACK_TUNING*nmp.array([1])
-#     nlp_cost.Zl = SLACK_TUNINGHessian*nmp.ones((1,1))                # hessian
-#     nlp_cost.zu = SLACK_TUNING*nmp.array([1])
-#     nlp_cost.Zu = SLACK_TUNINGHessian*nmp.ones((1,1))                # hessian
-#     #_e
-#     nlp_cost.zl_e = SLACK_E_TUNING*nmp.array([1])           
-#     nlp_cost.Zl_e = SLACK_TUNINGHessian*nmp.ones((1,1))              # hessian   
-#     nlp_cost.zu_e = SLACK_E_TUNING*nmp.array([1])     
-#     nlp_cost.Zu_e = SLACK_TUNINGHessian*nmp.ones((1,1))              # hessian   
-
-#     nlp_con.lh = nmp.array([0, -1e9])                   # 1st torque constraint | 2nd voltage constraint 
-#     nlp_con.uh = nmp.array([0, u_max**2/3])
-#     nlp_con.lsh = nmp.array([0])                        # soft lower bounds --> greater than 0
-#     nlp_con.ush = nmp.array([0])                        # soft upper bounds --> greater than 0
-#     #_e
-#     nlp_con.lh_e = nmp.array([0])                       # 1st torque constraint
-#     nlp_con.uh_e = nmp.array([0])
-#     nlp_con.lsh_e = nmp.array([0])      
-#     nlp_con.ush_e = nmp.array([0])      
-
-#     nlp_con.idxsh = nmp.array([0])
-#     nlp_con.idxsh_e = nmp.array([0])  
-
-#     nlp_con.x0 = x0Start
-
-# if FORMULATION == 7:
-#     # setting general constraints --> lg <= D*u + C*u <= ug
-#     nlp_con.D   = D
-#     nlp_con.C   = C
-#     nlp_con.lg  = lg
-#     nlp_con.ug  = ug
-#     # nlp_con.C_e  = Ce
-#     # nlp_con.lg_e = lge
-#     # nlp_con.ug_e = uge
-
-#     # lower gradient/hessian wrt lower slack
-#     nlp_cost.zl = SLACK_TUNING*nmp.array([1,1])
-#     nlp_cost.Zl = SLACK_TUNINGHessian*nmp.ones((2,2))                # hessian
-#     nlp_cost.zu = SLACK_TUNING*nmp.array([1,1])
-#     nlp_cost.Zu = SLACK_TUNINGHessian*nmp.ones((2,2))                # hessian
-#     #_e
-#     nlp_cost.zl_e = SLACK_E_TUNING*nmp.array([1,1])           
-#     nlp_cost.Zl_e = SLACK_TUNINGHessian*nmp.ones((2,2))              # hessian   
-#     nlp_cost.zu_e = SLACK_E_TUNING*nmp.array([1,1])     
-#     nlp_cost.Zu_e = SLACK_TUNINGHessian*nmp.ones((2,2))              # hessian   
-
-#     nlp_con.lh = nmp.array([0,0,-1e9])                      # 1st current constraint | 2nd voltage constraint  
-#     nlp_con.uh = nmp.array([0,0,u_max**2/3])
-#     nlp_con.lsh = nmp.array([0,0])                          # soft lower bounds --> greater than 0
-#     nlp_con.ush = nmp.array([0,0])                          # soft upper bounds --> greater than 0
-#     #_e
-#     nlp_con.lh_e = nmp.array([0,0])                         # 1st current constraint  
-#     nlp_con.uh_e = nmp.array([0,0])
-#     nlp_con.lsh_e = nmp.array([0,0])      
-#     nlp_con.ush_e = nmp.array([0,0])      
-
-#     nlp_con.idxsh = nmp.array([0,1])
-#     nlp_con.idxsh_e = nmp.array([0,1])  
-
-#     nlp_con.x0 = x0Start
-
 # setting parameters
 nlp_con.p = nmp.array([w_val, 0.0, 0.0, tau_wal])
 
@@ -1007,36 +470,12 @@ file_name = 'acados_ocp.json'
 if CODE_GEN == 1:
     if FORMULATION == 0:
         acados_solver = generate_solver(ocp, json_file = file_name)
-    # if FORMULATION == 1:
-    #     ocp.con_h = constraint_nltorqueline
-    #     ocp.con_h_e = constraint_nltorquelineEnd
-    #     acados_solver = generate_solver(ocp, json_file = file_name)
-    # if FORMULATION == 2:
-    #     ocp.con_h = constraint_nltorqueline
-    #     ocp.con_h_e = constraint_nltorquelineEnd
-    #     acados_solver = generate_solver(ocp, json_file = file_name)
-    # if FORMULATION == 3:
-    #     ocp.con_h = constraint_nltorqueline
-    #     ocp.con_h_e = constraint_nltorquelineEnd
-    #     acados_solver = generate_solver(ocp, json_file = file_name)
-    if FORMULATION == 4:
+    if FORMULATION == 1:
         ocp.con_phi = constraint_nltorqueline
         ocp.con_phi_e = constraint_nltorquelineEnd
         nlp_con.constr_type = 'BGP'
         nlp_con.constr_type_e = 'BGP'
         acados_solver = generate_solver(ocp, json_file = file_name)
-    # if FORMULATION == 5:
-    #     ocp.con_h = constraint_nltorqueline
-    #     ocp.con_h_e = constraint_nltorquelineEnd
-    #     acados_solver = generate_solver(ocp, json_file = file_name)
-    # if FORMULATION == 6:
-    #     ocp.con_h = constraint_nltorqueline
-    #     ocp.con_h_e = constraint_nltorquelineEnd
-    #     acados_solver = generate_solver(ocp, json_file = file_name)
-    # if FORMULATION == 7:
-    #     ocp.con_h = constraint_nltorqueline
-    #     ocp.con_h_e = constraint_nltorquelineEnd
-    #     acados_solver = generate_solver(ocp, json_file = file_name)
 
 if COMPILE == 1:
     # make 
