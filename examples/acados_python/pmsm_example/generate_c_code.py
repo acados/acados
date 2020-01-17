@@ -359,7 +359,7 @@ Vx_e[0,0] = 1.0
 Vx_e[1,1] = 1.0
 nlp_cost.Vx_e = Vx_e
 
-if FORMULATION == 0
+if FORMULATION == 0:
     nlp_cost.yref  = nmp.zeros((ny, ))
     nlp_cost.yref[0] = i_d_ref
     nlp_cost.yref[1] = i_q_ref
