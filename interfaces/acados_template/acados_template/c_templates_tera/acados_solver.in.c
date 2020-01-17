@@ -994,28 +994,20 @@ int acados_create()
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_algebraic", &sens_algebraic_val);
 {%- endif -%}
 
-    {%- if solver_options.sim_method_num_steps %}
     int num_steps_val = {{ solver_options.sim_method_num_steps }};
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_steps", &num_steps_val);
-    {%- endif -%}
 
-    {%- if solver_options.sim_method_num_stages %}
     int ns_val = {{ solver_options.sim_method_num_stages }};
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_stages", &ns_val);
-    {%- endif -%}
 
-    {%- if solver_options.sim_method_newton_iter %}
     int newton_iter_val = {{ solver_options.sim_method_newton_iter }};
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_newton_iter", &newton_iter_val);
-    {%- endif -%}
 
-    {%- if solver_options.nlp_solver_step_length %}
     double nlp_solver_step_length = {{ solver_options.nlp_solver_step_length }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "step_length", &nlp_solver_step_length);
-    {%- endif -%}
 
     /* options QP solver */
 {% if solver_options.qp_solver is starting_with("PARTIAL_CONDENSING") %}
