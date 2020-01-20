@@ -460,23 +460,19 @@ ocp.solver_options.tf = Tf
 ocp.solver_options.nlp_solver_type = 'SQP_RTI'
 # ocp.solver_options.nlp_solver_type = 'SQP'
 
-# set header path
-ocp.acados_include_path = '../../../../include'
-ocp.acados_lib_path = '../../../../lib'
-
 file_name = 'acados_ocp.json'
 
 # import pdb; pdb.set_trace()
 
 if CODE_GEN == 1:
     if FORMULATION == 0:
-        acados_solver = generate_solver(ocp, json_file = file_name)
+        acados_solver = generate_ocp_solver(ocp, json_file = file_name)
     if FORMULATION == 1:
         ocp.con_phi = constraint_nltorqueline
         ocp.con_phi_e = constraint_nltorquelineEnd
         nlp_con.constr_type = 'BGP'
         nlp_con.constr_type_e = 'BGP'
-        acados_solver = generate_solver(ocp, json_file = file_name)
+        acados_solver = generate_ocp_solver(ocp, json_file = file_name)
 
 if COMPILE == 1:
     # make 

@@ -138,11 +138,7 @@ ocp.solver_options.tf = Tf
 ocp.solver_options.nlp_solver_type = 'SQP'
 # ocp.solver_options.nlp_solver_type = 'SQP_RTI'
 
-# set header path
-ocp.acados_include_path  = '../../../../include'
-ocp.acados_lib_path      = '../../../../lib'
-
-acados_solver = generate_solver(ocp, json_file = 'acados_ocp.json')
+acados_solver = generate_ocp_solver(ocp, json_file = 'acados_ocp.json')
 
 
 simX = np.ndarray((N+1, nx))

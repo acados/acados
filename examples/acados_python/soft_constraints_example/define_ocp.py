@@ -39,9 +39,12 @@ import numpy as np
 import scipy.linalg
 from ctypes import *
 
-def define_ocp(model, acados_path='/usr/lib'):
+ACADOS_PATH=os.getenv("ACADOS_SOURCE_DIR","/usr/lib")
+
+def define_ocp(model, acados_path=ACADOS_PATH):
     # create render arguments
-    ocp = acados_ocp_nlp()
+    ocp = acados_ocp_nlp(acados_path=ACADOS_PATH)
+    ocp.model = model
 
     # set model_name
     ocp.model_name = model.name
@@ -55,7 +58,6 @@ def define_ocp(model, acados_path='/usr/lib'):
 
     # set ocp_nlp_dimensions
     nlp_dims     = ocp.dims
-    nlp_dims.nx  = nx
     nlp_dims.ny  = ny
     nlp_dims.ny_e = ny_e
     nlp_dims.nbx = 0

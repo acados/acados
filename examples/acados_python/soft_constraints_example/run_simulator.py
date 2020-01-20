@@ -41,7 +41,7 @@ from ctypes import *
 model_name = "example"
 sim_shared_lib = "libacados_sim_{}".format(model_name)
 
-acados_solver = generate_solver(sim_shared_lib)
+acados_solver = generate_ocp_solver(sim_shared_lib)
 acados_simulator = acados_sim(shared_lib)
 
 Nsim = 100

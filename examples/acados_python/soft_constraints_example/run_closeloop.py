@@ -43,8 +43,8 @@ model = export_pendulum_ode_model()
 ocp = define_ocp(model)
 #  sim = define_sim(model)
 
-#  store_ocp_solver(ocp, "test.json")
-ocp = load_ocp_solver("test.json")
+store_ocp_solver(ocp, "test.json")
+# ocp = load_ocp_solver("test.json")
 
 # generate c code
 # compile the src

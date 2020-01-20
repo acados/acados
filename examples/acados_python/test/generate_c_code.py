@@ -107,6 +107,7 @@ print("Running test with:\n\tformulation:", FORMULATION, "\n\tqp solver: ", QP_S
 
 # create render arguments
 ocp = acados_ocp_nlp()
+# ocp = acados_ocp_nlp(acados_path="whereever_u_like")
 
 # export model
 model = export_ode_model()
@@ -220,11 +221,7 @@ ocp.solver_options.sim_method_num_steps = 5
 ocp.solver_options.tf = Tf
 ocp.solver_options.nlp_solver_type = SOLVER_TYPE
 
-# set header path
-ocp.acados_include_path  = '../../../../include'
-ocp.acados_lib_path      = '../../../../lib'
-
-acados_solver = generate_solver(ocp, json_file = 'acados_ocp.json')
+acados_solver = generate_ocp_solver(ocp, json_file = 'acados_ocp.json')
 
 Nsim = 100
 
