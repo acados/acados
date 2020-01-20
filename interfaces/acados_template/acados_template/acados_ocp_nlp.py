@@ -1838,8 +1838,8 @@ class acados_ocp_nlp:
         self.cost_r = acados_cost()
         self.cost_r_e = acados_cost()
 
-        self.acados_include_path = f'{acados_path}/include'
-        self.acados_lib_path = f'{acados_path}/lib'
+        self.acados_include_path = '{}/include'.format(acados_path)
+        self.acados_lib_path = '{}/lib'.format(acados_path)
 
     def set(self, attr, value):
         # tokenize string
