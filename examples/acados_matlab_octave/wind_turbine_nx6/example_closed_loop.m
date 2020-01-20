@@ -44,6 +44,9 @@ if (~strcmp(env_run, 'true'))
 end
 
 
+% get references
+compute_setup;
+
 %% arguments
 compile_interface = 'auto';
 codgen_model = 'true';
@@ -267,6 +270,9 @@ ocp_model.set('constr_Jsbx', Jsbx);
 ocp_model.set('constr_Jsh', Jsh);
 ocp_model.set('constr_Jsh_e', Jsh_e);
 
+ocp_model.set('constr_x0', x0_ref);
+
+
 ocp_model.model_struct
 
 
@@ -361,9 +367,6 @@ sim = acados_sim(sim_model, sim_opts);
 
 
 %% closed loop simulation
-% get references
-compute_setup;
-
 n_sim = 100;
 n_sim_max = length(wind0_ref) - ocp_N;
 if n_sim>n_sim_max
