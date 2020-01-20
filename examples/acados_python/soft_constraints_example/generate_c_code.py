@@ -108,6 +108,8 @@ model = export_pendulum_ode_model()
 # set model_name 
 ocp.model = model
 
+ocp.solver_options.nlp_solver_max_iter = 300
+
 Tf = 2.0
 nx = model.x.size()[0]
 nu = model.u.size()[0]
@@ -255,6 +257,13 @@ simU = np.ndarray((Nsim, nu))
 for i in range(Nsim):
     status = acados_solver.solve()
 
+    sqp_iter = acados_solver.get_stats('sqp_iter')
+    print('sqp_iter', sqp_iter)
+
+
+    time_tot = acados_solver.get_stats('time_tot')
+    print('time_tot', time_tot)
+
     if status != 0:
         raise Exception('acados returned status {}. Exiting.'.format(status))
 
@@ -294,6 +303,7 @@ plt.plot(t, simX[:,1])
 plt.ylabel('x')
 plt.xlabel('t')
 plt.grid(True)
+
 # avoid plotting when running on Travis
 if os.environ.get('ACADOS_ON_TRAVIS') is None: 
     plt.show()
