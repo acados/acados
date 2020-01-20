@@ -183,6 +183,7 @@ def generate_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json',
     # make dims consistent
     make_ocp_dims_consistent(acados_ocp)
 
+    # generate external functions
     if acados_ocp.solver_options.integrator_type == 'ERK':
         # explicit model -- generate C code
         generate_c_code_explicit_ode(model)
@@ -191,10 +192,13 @@ def generate_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json',
         opts = dict(generate_hess=1)
         generate_c_code_implicit_ode(model, opts)
 
-    if con_p is not None and con_h is None:
-        raise Exception('h constraint is missing!')
+    if acados_ocp.constraints.constr_type == 'BGP' and acados_ocp.dims.nphi > 0:
+        # nonlinear part of nonlinear constraints
+        generate_c_code_constraint(acados_ocp.con_phi, name)
+    elif acados_ocp.constraints.constr_type  == 'BGH' and acados_ocp.dims.nh > 0:
+        generate_c_code_constraint(acados_ocp.con_h, name)
 
-    if con_h is not None:
+    if acados_ocp.constraints.constr_type_e  == 'BGP' and acados_ocp.dims.nphi_e > 0:
         # nonlinear part of nonlinear constraints
         generate_c_code_constraint_e(acados_ocp.con_phi_e, name)
     elif acados_ocp.constraints.constr_type_e  == 'BGH' and acados_ocp.dims.nh_e > 0:
