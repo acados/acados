@@ -32,12 +32,12 @@
 #
 
 from define_ocp import define_ocp
-from define_model import define_model
+from export_pendulum_ode_model import export_pendulum_ode_model
 from plot_utils import plot_ocp
 from acados_template import *
 
 # import the model
-model = define_model()
+model = export_pendulum_ode_model()
 
 # Define the ocp problem
 ocp = define_ocp(model)
@@ -49,13 +49,12 @@ ocp = load_ocp_solver("test.json")
 # generate c code
 # compile the src
 # wrap the solver with ctypes interface
-acados_ocp_solver, acados_sim_solver = generate_solvers(ocp, model)
-# generate_sim_solver(sim, model)
+acados_ocp_solver = generate_ocp_solver(ocp, model)
+acados_sim_solver = generate_sim_solver(sim, model)
 
 nx = ocp.dims.nx
 nu = ocp.dims.nu
 N = ocp.dims.N
-Tf = ocp.solver_config.tf
 x0 = np.array([0.0, 3.14, 0.0, 0.0])
 
 # Close loop simulation

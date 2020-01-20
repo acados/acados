@@ -32,7 +32,7 @@
 #
 
 from acados_template import *
-def define_model():
+def export_pendulum_ode_model():
 
     model_name = 'pendulum_ode'
 
@@ -47,13 +47,13 @@ def define_model():
     theta   = SX.sym('theta')
     v1      = SX.sym('v1')
     dtheta  = SX.sym('dtheta')
-
-    x = vertcat(x1, v1, theta, dtheta)
+    
+    x = vertcat(x1, theta, v1, dtheta)
 
     # controls
     F = SX.sym('F')
     u = vertcat(F)
-
+    
     # xdot
     x1_dot      = SX.sym('x1_dot')
     theta_dot   = SX.sym('theta_dot')
@@ -67,10 +67,14 @@ def define_model():
 
     # parameters
     p = []
-
-    # dynamics
+    
+    # dynamics     
     denominator = M + m - m*cos(theta)*cos(theta)
-    f_expl = vertcat(v1, dtheta, (-m*l*sin(theta)*dtheta*dtheta + m*g*cos(theta)*sin(theta)+F)/denominator, (-m*l*cos(theta)*sin(theta)*dtheta*dtheta + F*cos(theta)+(M+m)*g*sin(theta))/(l*denominator))
+    f_expl = vertcat(v1,
+                     dtheta,
+                     (-m*l*sin(theta)*dtheta*dtheta + m*g*cos(theta)*sin(theta)+F)/denominator,
+                     (-m*l*cos(theta)*sin(theta)*dtheta*dtheta + F*cos(theta)+(M+m)*g*sin(theta))/(l*denominator)
+                     )
 
     f_impl = xdot - f_expl
 
@@ -85,4 +89,5 @@ def define_model():
     model.p = p
     model.name = model_name
 
-    return model
+    return model 
+
