@@ -236,7 +236,7 @@ def generate_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json',
     if not os.path.exists(json_path):
         raise Exception("{} not found!".format(json_path))
 
-    def render_template(in_file, out_file, template_dir):
+    def render_template(in_file, out_file, template_dir, json_path):
         cwd = os.getcwd()
         if not os.path.exists(template_dir):
             os.mkdir(template_dir)
@@ -261,34 +261,43 @@ def generate_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json',
 
     in_file = 'main.in.c'
     out_file = 'main_{}.c'.format(model.name)
-    render_template(in_file, out_file, template_dir)
+    render_template(in_file, out_file, template_dir, json_path)
 
     in_file = 'acados_solver.in.c'
     out_file = 'acados_solver_{}.c'.format(model.name)
-    render_template(in_file, out_file, template_dir)
+    render_template(in_file, out_file, template_dir, json_path)
 
     in_file = 'acados_solver.in.h'
     out_file = 'acados_solver_{}.h'.format(model.name)
-    render_template(in_file, out_file, template_dir)
+    render_template(in_file, out_file, template_dir, json_path)
 
     in_file = 'Makefile.in'
     out_file = 'Makefile'
-    render_template(in_file, out_file, template_dir)
+    render_template(in_file, out_file, template_dir, json_path)
 
     in_file = 'acados_solver_sfun.in.c'
     out_file = 'acados_solver_sfunction_{}.c'.format(model.name)
-    render_template(in_file, out_file, template_dir)
+    render_template(in_file, out_file, template_dir, json_path)
 
     in_file = 'make_sfun.in.m'
     out_file = 'make_sfun.m'
-    render_template(in_file, out_file, template_dir)
+    render_template(in_file, out_file, template_dir, json_path)
+
+    # sim solver stuff: TODO: separate
+    # in_file = 'acados_sim_solver.in.c'
+    # out_file = 'acados_sim_solver_{}.c'.format(model.name)
+    # render_template(in_file, out_file, template_dir, json_path)
+
+    # in_file = 'acados_sim_solver.in.h'
+    # out_file = 'acados_sim_solver_{}.h'.format(model.name)
+    # render_template(in_file, out_file, template_dir, json_path)
 
     ## folder model
     template_dir = 'c_generated_code/{}_model/'.format(model.name)
 
     in_file = 'model.in.h'
     out_file = '{}_model.h'.format(model.name)
-    render_template(in_file, out_file, template_dir)
+    render_template(in_file, out_file, template_dir, json_path)
 
     # constraints on convex over nonlinear fuction
     if acados_ocp.constraints.constr_type == 'BGP' and acados_ocp.dims.nphi > 0:
@@ -296,13 +305,13 @@ def generate_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json',
         template_dir = 'c_generated_code/{}_constraints/'.format(name)
         in_file = 'phi_constraint.in.h'
         out_file =  '{}_phi_constraint.h'.format(name)
-        render_template(in_file, out_file, template_dir)
+        render_template(in_file, out_file, template_dir, json_path)
 
         # constraints on inner fuction
         template_dir = 'c_generated_code/{}_constraints/'.format(name)
         in_file = 'r_constraint.in.h'
         out_file = '{}_r_constraint.h'.format(name)
-        render_template(in_file, out_file, template_dir)
+        render_template(in_file, out_file, template_dir, json_path)
 
     # terminal constraints on convex over nonlinear fuction
     if acados_ocp.constraints.constr_type_e == 'BGP' and acados_ocp.dims.nphi_e > 0:
@@ -310,47 +319,48 @@ def generate_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json',
         template_dir = 'c_generated_code/{}_constraints/'.format(name)
         in_file = 'phi_e_constraint.in.h'
         out_file =  '{}_phi_e_constraint.h'.format(name)
-        render_template(in_file, out_file, template_dir)
+        render_template(in_file, out_file, template_dir, json_path)
 
         # terminal constraints on inner function
         template_dir = 'c_generated_code/{}_constraints/'.format(name)
         in_file = 'r_e_constraint.in.h'
         out_file = '{}_r_e_constraint.h'.format(name)
-        render_template(in_file, out_file, template_dir)
+        render_template(in_file, out_file, template_dir, json_path)
 
     # nonlinear constraints
     if acados_ocp.constraints.constr_type == 'BGH' and acados_ocp.dims.nh > 0:
         template_dir = 'c_generated_code/{}_constraints/'.format(acados_ocp.model.name)
         in_file = 'h_constraint.in.h'
         out_file = '{}_h_constraint.h'.format(acados_ocp.model.name)
-        render_template(in_file, out_file, template_dir)
+        render_template(in_file, out_file, template_dir, json_path)
 
     # terminal nonlinear constraints
     if acados_ocp.constraints.constr_type_e == 'BGH' and acados_ocp.dims.nh_e > 0:
         template_dir = 'c_generated_code/{}_constraints/'.format(acados_ocp.model.name)
         in_file = 'h_e_constraint.in.h'
         out_file = '{}_h_e_constraint.h'.format(acados_ocp.model.name)
-        render_template(in_file, out_file, template_dir)
+        render_template(in_file, out_file, template_dir, json_path)
 
     # nonlinear cost function
     if acados_ocp.cost.cost_type == 'NONLINEAR_LS':
         template_dir = 'c_generated_code/{}_r_cost/'.format(name)
         in_file = 'r_cost.in.h'
         out_file = '{}_r_cost.h'.format(name)
-        render_template(in_file, out_file, template_dir)
+        render_template(in_file, out_file, template_dir, json_path)
 
     # terminal nonlinear cost function
     if acados_ocp.cost.cost_type_e == 'NONLINEAR_LS':
         template_dir = 'c_generated_code/{}_r_e_cost/'.format(name)
         in_file = 'r_e_cost.in.h'
         out_file = '{}_r_e_cost.h'.format(name)
-        render_template(in_file, out_file, template_dir)
+        render_template(in_file, out_file, template_dir, json_path)
 
     ## Compile solver
     os.chdir('c_generated_code')
-    os.system('make')
-    os.system('make shared_lib')
+    os.system('make clean')
+    os.system('make ocp_shared_lib')
     os.chdir('..')
 
+    # get
     ocp_solver = acados_ocp_solver(acados_ocp, 'c_generated_code/libacados_ocp_solver_' + model.name + '.so')
     return ocp_solver
