@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 #
 # Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
 # Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
@@ -1838,8 +1839,9 @@ class acados_ocp_nlp:
         self.cost_r = acados_cost()
         self.cost_r_e = acados_cost()
 
-        self.acados_include_path = '{}/include'.format(acados_path)
-        self.acados_lib_path = '{}/lib'.format(acados_path)
+        self.acados_include_path = f'{acados_path}/include'
+        self.acados_lib_path = f'{acados_path}/lib'
+
 
     def set(self, attr, value):
         # tokenize string

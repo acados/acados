@@ -36,14 +36,8 @@ from setuptools import setup, find_packages
 import sys
 print(sys.version_info)
 
-python35_requires = []
-
 if sys.version_info < (3,5):
     sys.exit('Python version 3.5 or later required. Exiting.')
-
-# support f-strings
-if sys.version_info < (3,6):
-    python35_requires = ['future-fstrings']
 
 setup(name='acados_template',
    version='0.1',
@@ -58,8 +52,9 @@ setup(name='acados_template',
       'numpy',
       'scipy',
       'casadi==3.5.1',
-      'matplotlib'
-   ]+python35_requires,
+      'matplotlib',
+      'future-fstrings'
+   ],
    package_data={'': [
        'c_templates_tera/main.in.c',
        'c_templates_tera/Makefile.in',
