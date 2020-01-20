@@ -95,14 +95,19 @@ class acados_ocp_solver:
         return out
 
     def get_stats(self, field_):
-        fields = ['time_tot']
+        fields = ['time_tot', 'sqp_iter']
         field = field_
         field = field.encode('utf-8')
         if (field_ not in fields):
             raise Exception("acados_solver: {} is not a valid key for method `set(value)`.\
                     \n Possible values are {}. Exiting.".format(fields, fields))
-        out = np.ascontiguousarray(np.zeros((1,)), dtype=np.float64)
-        out_data = cast(out.ctypes.data, POINTER(c_double))
+
+        if field_ == 'sqp_iter':
+            out = np.ascontiguousarray(np.zeros((1,)), dtype=np.int64)
+            out_data = cast(out.ctypes.data, POINTER(c_int64))
+        else:
+            out = np.ascontiguousarray(np.zeros((1,)), dtype=np.float64)
+            out_data = cast(out.ctypes.data, POINTER(c_double))
 
         self.shared_lib.ocp_nlp_get.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
         self.shared_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
