@@ -1902,6 +1902,7 @@ def acados_ocp2json_layout(acados_ocp):
     json_layout = dict2json_layout(ocp_nlp)
     return json_layout
 
+
 def dict2json_layout(d):
     """ Convert dictionary containing the description of
     of the ocp_nlp to JSON format by stripping the
@@ -1940,6 +1941,7 @@ def dict2json_layout(d):
             out[k.replace(k, out_key)] = [v_type]
 
     return out
+
 
 def cast_ocp_nlp(ocp_nlp, ocp_nlp_layout):
     """ MATLAB does not allow distinction between e.g a = [1,1,1] and b = [1,1,1].'

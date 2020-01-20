@@ -91,6 +91,14 @@ def make_ocp_dims_consistent(acados_ocp):
     # else:
     #     dims.nz = 0
 
+def get_ocp_nlp_layout():
+    current_module = sys.modules[__name__]
+    acados_path = os.path.dirname(current_module.__file__)
+    with open(acados_path + '/acados_layout.json', 'r') as f:
+        ocp_nlp_layout = json.load(f)
+    return ocp_nlp_layout
+
+
 def store_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     # Load acados_ocp_nlp structure description
     ocp_layout = get_ocp_nlp_layout()
@@ -99,26 +107,31 @@ def store_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     ocp_nlp = acados_ocp_nlp()
 
     # Copy input ocp object dictionary
-    ocp_nlp_dict = dict(acados_ocp.__dict__)
+    ocp_nlp_dict = dict(deepcopy(acados_ocp).__dict__)
 
-    for acados_struct, v  in ocp_layout.items():
+    for acados_struct, v in ocp_layout.items():
         # skip non dict attributes
         if not isinstance(v, dict): continue
         #  setattr(ocp_nlp, acados_struct, dict(getattr(acados_ocp, acados_struct).__dict__))
         # Copy ocp object attributes dictionaries
         ocp_nlp_dict[acados_struct]=dict(getattr(acados_ocp, acados_struct).__dict__)
 
-    #  ocp_nlp = acados_ocp
-    #  ocp_nlp.cost = acados_ocp.cost.__dict__
-    #  ocp_nlp.constraints = acados_ocp.constraints.__dict__
-    #  ocp_nlp.solver_config = acados_ocp.solver_config.__dict__
-    #  ocp_nlp.dims = acados_ocp.dims.__dict__
-    #  ocp_nlp = ocp_nlp.__dict__
+    # need to strip non-numerical stuff from expressions for now
+    ocp_nlp_dict['con_h'] = acados_constraint_strip_non_num(ocp_nlp_dict['con_h'])
+    ocp_nlp_dict['con_h_e'] = acados_constraint_strip_non_num(ocp_nlp_dict['con_h_e'])
+    ocp_nlp_dict['con_phi'] = acados_constraint_strip_non_num(ocp_nlp_dict['con_phi'])
+    ocp_nlp_dict['con_phi_e'] = acados_constraint_strip_non_num(ocp_nlp_dict['con_phi_e'])
+
+    ocp_nlp_dict['model'] = acados_dae_strip_non_num(ocp_nlp_dict['model'])
+
+    ocp_nlp_dict['cost_r'] = acados_cost_strip_non_num(ocp_nlp_dict['cost_r'])
+    ocp_nlp_dict['cost_r_e'] = acados_cost_strip_non_num(ocp_nlp_dict['cost_r_e'])
 
     ocp_nlp_json = dict2json(ocp_nlp_dict)
 
     with open(json_file, 'w') as f:
-        json.dump(ocp_nlp_json, f, default=np_array_to_list)
+        json.dump(ocp_nlp_json, f, default=np_array_to_list, indent=4, sort_keys=True)
+
 
 def load_ocp_solver(json_file='acados_ocp_nlp.json'):
     # Load acados_ocp_nlp structure description
@@ -141,15 +154,27 @@ def load_ocp_solver(json_file='acados_ocp_nlp.json'):
         if not isinstance(v, dict): continue
         setattr(acados_ocp, acados_struct, ocp_nlp_as_object(ocp_nlp_dict[acados_struct]))
 
-    #  acados_ocp = ocp_nlp_as_object(ocp_nlp_dict)
-    #  acados_ocp.cost = ocp_nlp_as_object(acados_ocp.cost)
-    #  acados_ocp.constraints = ocp_nlp_as_object(acados_ocp.constraints)
-    #  acados_ocp.solver_config = ocp_nlp_as_object(acados_ocp.solver_config)
-    #  acados_ocp.dims = ocp_nlp_as_object(acados_ocp.dims)
-
     return acados_ocp
 
-def generate_solvers(acados_ocp, model, con_h=None, con_hN=None, con_p=None, con_pN=None):
+
+def generate_sim_solver(acados_ocp, model):
+# TODO: something is missing here!
+
+    in_file = 'acados_sim_solver.in.c'
+    out_file = 'acados_sim_solver_{}.c'.format(model.name)
+    render_template(in_file, out_file, template_dir)
+
+    in_file = 'acados_sim_solver.in.h'
+    out_file = 'acados_sim_solver_{}.h'.format(model.name)
+    render_template(in_file, out_file, template_dir)
+
+    sim_solver = acados_sim_solver(acados_ocp, 'c_generated_code/libacados_sim_solver_' + model.name + '.so')
+
+    return sim_solver
+
+
+def generate_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json',
+                        con_h=None, con_hN=None, con_p=None, con_pN=None):
 
     model = acados_ocp.model
     name = model.name
@@ -157,11 +182,8 @@ def generate_solvers(acados_ocp, model, con_h=None, con_hN=None, con_p=None, con
     # make dims consistent
     make_ocp_dims_consistent(acados_ocp)
 
-    acados_ocp = ocp_nlp_as_object(ocp_nlp_dict)
-    acados_ocp.cost = ocp_nlp_as_object(acados_ocp.cost)
-    acados_ocp.constraints = ocp_nlp_as_object(acados_ocp.constraints)
-    acados_ocp.solver_config = ocp_nlp_as_object(acados_ocp.solver_config)
-    acados_ocp.dims = ocp_nlp_as_object(acados_ocp.dims)
+    # get tera renderer
+    tera_path = get_tera()
 
     # setting up loader and environment
     acados_path = os.path.dirname(os.path.abspath(__file__))
@@ -169,7 +191,7 @@ def generate_solvers(acados_ocp, model, con_h=None, con_hN=None, con_p=None, con
     template_glob = acados_path + '/c_templates_tera/*'
     acados_template_path = acados_path + '/c_templates_tera'
 
-    if acados_ocp.solver_config.integrator_type == 'ERK':
+    if acados_ocp.solver_options.integrator_type == 'ERK':
         # explicit model -- generate C code
         generate_c_code_explicit_ode(model)
     else:
@@ -195,40 +217,7 @@ def generate_solvers(acados_ocp, model, con_h=None, con_hN=None, con_p=None, con
         acados_ocp.cost.Vx_e = np.zeros((acados_ocp.dims.ny_e, acados_ocp.dims.nx))
         generate_c_code_nls_cost_e(acados_ocp.cost_r_e, name)
 
-    ocp_nlp = deepcopy(acados_ocp)
-    ocp_nlp.cost = acados_ocp.cost.__dict__
-    ocp_nlp.constraints = acados_ocp.constraints.__dict__
-    ocp_nlp.solver_options = acados_ocp.solver_options.__dict__
-    ocp_nlp.dims = acados_ocp.dims.__dict__
-    ocp_nlp.con_h = acados_ocp.con_h.__dict__
-    ocp_nlp.con_h_e = acados_ocp.con_h_e.__dict__
-    ocp_nlp.con_phi = acados_ocp.con_phi.__dict__
-    ocp_nlp.con_phi_e = acados_ocp.con_phi_e.__dict__
-    ocp_nlp.cost_r = acados_ocp.cost_r.__dict__
-    ocp_nlp.cost_r_e = acados_ocp.cost_r_e.__dict__
-    ocp_nlp.model = acados_ocp.model.__dict__
-    ocp_nlp = ocp_nlp.__dict__
-
-    # need to strip non-numerical stuff from expressions for now
-    ocp_nlp['con_h'] = acados_constraint_strip_non_num(ocp_nlp['con_h'])
-    ocp_nlp['con_h_e'] = acados_constraint_strip_non_num(ocp_nlp['con_h_e'])
-    ocp_nlp['con_phi'] = acados_constraint_strip_non_num(ocp_nlp['con_phi'])
-    ocp_nlp['con_phi_e'] = acados_constraint_strip_non_num(ocp_nlp['con_phi_e'])
-
-    ocp_nlp['model'] = acados_dae_strip_non_num(ocp_nlp['model'])
-
-    ocp_nlp['cost_r'] = acados_cost_strip_non_num(ocp_nlp['cost_r'])
-    ocp_nlp['cost_r_e'] = acados_cost_strip_non_num(ocp_nlp['cost_r_e'])
-
-    ocp_nlp = dict2json(ocp_nlp)
-
-    with open(json_file, 'w') as f:
-        json.dump(ocp_nlp, f, default=np_array_to_list, indent=4, sort_keys=True)
-
-    with open(json_file, 'r') as f:
-        ocp_nlp_json = json.load(f)
-
-    ocp_nlp_dict = json2dict(ocp_nlp_json, ocp_nlp_json['dims'])
+    store_ocp_solver(acados_ocp, json_file)
 
     # setting up loader and environment
     template_glob = os.path.join(
@@ -280,14 +269,6 @@ def generate_solvers(acados_ocp, model, con_h=None, con_hN=None, con_p=None, con
 
     in_file = 'acados_solver.in.h'
     out_file = 'acados_solver_{}.h'.format(model.name)
-    render_template(in_file, out_file, template_dir)
-
-    in_file = 'acados_sim_solver.in.c'
-    out_file = 'acados_sim_solver_{}.c'.format(model.name)
-    render_template(in_file, out_file, template_dir)
-
-    in_file = 'acados_sim_solver.in.h'
-    out_file = 'acados_sim_solver_{}.h'.format(model.name)
     render_template(in_file, out_file, template_dir)
 
     in_file = 'Makefile.in'
@@ -372,5 +353,4 @@ def generate_solvers(acados_ocp, model, con_h=None, con_hN=None, con_p=None, con
     os.chdir('..')
 
     ocp_solver = acados_ocp_solver(acados_ocp, 'c_generated_code/libacados_ocp_solver_' + model.name + '.so')
-    sim_solver = acados_sim_solver(acados_ocp, 'c_generated_code/libacados_sim_solver_' + model.name + '.so')
-    return ocp_solver, sim_solver
+    return ocp_solver
