@@ -417,16 +417,8 @@ class ocp_nlp_dims:
 class ocp_nlp_cost:
     """
     class containing the description of the cost
-<<<<<<< HEAD
-    (linear least-squares cost for the time being)
-    :math:`l(x,u,z) = || V_x x + V_u u + V_z z - y_{\\text{ref}}||^2_W`,
-||||||| c45eb599
-    (linear least-squares cost for the time being)
-    :math:`l(x,u,z) = || V_x x + V_u u + V_z z - y_{\\text{ref}}||^2_W`,
-=======
     (linear and nonlinear least-squares cost for the time being)
     :math:`l(x,u,z) = || V_x x + V_u u + V_z z - y_{\\text{ref}}||^2_W`,
->>>>>>> FreyJo/free_x0
     :math:`m(x) = || V^e_x x - y_{\\text{ref}^e}||^2_{W^e}`
     """
     def __init__(self):
