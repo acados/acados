@@ -43,14 +43,14 @@ from .acados_ocp_solver import acados_ocp_solver
 from .acados_sim_solver import acados_sim_solver
 from ctypes import *
 from copy import deepcopy
-from .utils import ACADOS_PATH, get_tera, is_column
+from .utils import ACADOS_PATH, is_column, render_template
+
 
 def make_ocp_dims_consistent(acados_ocp):
     dims = acados_ocp.dims
     cost = acados_ocp.cost
     constraints = acados_ocp.constraints
     model = acados_ocp.model
-
 
     # nbx_0
     if (constraints.lbx_0 == [] and constraints.ubx_0 == []):
@@ -183,15 +183,6 @@ def generate_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json',
     # make dims consistent
     make_ocp_dims_consistent(acados_ocp)
 
-    # get tera renderer
-    tera_path = get_tera()
-
-    # setting up loader and environment
-    acados_path = os.path.dirname(os.path.abspath(__file__))
-
-    template_glob = acados_path + '/c_templates_tera/*'
-    acados_template_path = acados_path + '/c_templates_tera'
-
     if acados_ocp.solver_options.integrator_type == 'ERK':
         # explicit model -- generate C code
         generate_c_code_explicit_ode(model)
@@ -236,26 +227,6 @@ def generate_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json',
 
     if not os.path.exists(json_path):
         raise Exception("{} not found!".format(json_path))
-
-    def render_template(in_file, out_file, template_dir, json_path):
-        cwd = os.getcwd()
-        if not os.path.exists(template_dir):
-            os.mkdir(template_dir)
-        os.chdir(template_dir)
-
-        # call tera as system cmd
-        os_cmd = "{tera_path} '{template_glob}' '{in_file}' '{json_path}' '{out_file}'".format(
-            tera_path=tera_path,
-            template_glob=template_glob,
-            json_path=json_path,
-            in_file=in_file,
-            out_file=out_file
-        )
-        status = os.system(os_cmd)
-        if (status != 0):
-            raise Exception('Rendering of {} failed! Exiting.\n'.format(in_file))
-
-        os.chdir(cwd)
 
     ## folder: c_generated_code
     template_dir = 'c_generated_code/'

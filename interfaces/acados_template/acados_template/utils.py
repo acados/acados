@@ -71,8 +71,6 @@ def is_column(x):
         raise Exception("is_column expects one of the following types: np.ndarray, MX.sym, SX.sym."
                         + " Got: " + str(type(x)))
 
-
-
 def get_tera():
     tera_path = TERA_EXEC_PATH
 
@@ -114,3 +112,32 @@ def get_tera():
     print(msg_cancel)
 
     sys.exit(1)
+
+
+def render_template(in_file, out_file, template_dir, json_path):
+    cwd = os.getcwd()
+    if not os.path.exists(template_dir):
+        os.mkdir(template_dir)
+    os.chdir(template_dir)
+
+    tera_path = get_tera()
+
+    # setting up loader and environment
+    acados_path = os.path.dirname(os.path.abspath(__file__))
+
+    template_glob = acados_path + '/c_templates_tera/*'
+    acados_template_path = acados_path + '/c_templates_tera'
+
+    # call tera as system cmd
+    os_cmd = "{tera_path} '{template_glob}' '{in_file}' '{json_path}' '{out_file}'".format(
+        tera_path=tera_path,
+        template_glob=template_glob,
+        json_path=json_path,
+        in_file=in_file,
+        out_file=out_file
+    )
+    status = os.system(os_cmd)
+    if (status != 0):
+        raise Exception('Rendering of {} failed! Exiting.\n'.format(in_file))
+
+    os.chdir(cwd)
