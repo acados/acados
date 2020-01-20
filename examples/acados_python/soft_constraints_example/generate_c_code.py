@@ -33,7 +33,7 @@
 
 from acados_template import *
 import acados_template as at
-from export_ode_model import *
+from export_pendulum_ode_model import export_pendulum_ode_model
 import numpy as np
 import scipy.linalg
 from ctypes import *
@@ -103,7 +103,7 @@ def export_terminal_nonlinear_constraint():
 ocp = acados_ocp_nlp()
 
 # export model 
-model = export_ode_model()
+model = export_pendulum_ode_model()
 
 # set model_name 
 ocp.model = model

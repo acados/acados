@@ -385,7 +385,7 @@ if CODE_GEN == 1:
 if COMPILE == 1:
     # make 
     os.chdir('c_generated_code')
-    os.system('make')
+    os.system('make clean')
     os.system('make shared_lib')
     os.chdir('..')
 
