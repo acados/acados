@@ -221,6 +221,9 @@ ocp.solver_options.nlp_solver_tol_eq = 1E-8
 ocp.solver_options.nlp_solver_tol_ineq = 1E-8
 ocp.solver_options.nlp_solver_tol_comp = 1E-8
 
+ocp.solver_options.qp_solver_cond_N = 10
+ocp.solver_options.nlp_solver_max_iter = 80
+ocp.solver_options.qp_solver_iter_max = 50
 
 # set prediction horizon
 ocp.solver_options.tf = Tf
