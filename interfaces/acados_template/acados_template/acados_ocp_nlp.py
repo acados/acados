@@ -38,6 +38,7 @@ import os
 import sys
 from .casadi_functions import *
 
+ACADOS_PATH=os.getenv("ACADOS_SOURCE_DIR","/usr/lib")
 
 class ocp_nlp_dims:
     """
@@ -1819,7 +1820,11 @@ class acados_ocp_nlp:
     """
     class containing the full description of the optimal control problem
     """
-    def __init__(self):
+    def __init__(self, acados_path=ACADOS_PATH):
+        """
+        Keyword arguments:
+        acados_path -- path of your acados installation
+        """
         self.dims = ocp_nlp_dims()
         self.model = acados_dae()
         self.cost = ocp_nlp_cost()
@@ -1833,8 +1838,8 @@ class acados_ocp_nlp:
         self.cost_r = acados_cost()
         self.cost_r_e = acados_cost()
 
-        self.acados_include_path = []
-        self.acados_lib_path = []
+        self.acados_include_path = f'{acados_path}/include'
+        self.acados_lib_path = f'{acados_path}/lib'
 
     def set(self, attr, value):
         # tokenize string
