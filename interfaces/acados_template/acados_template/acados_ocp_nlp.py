@@ -1575,6 +1575,7 @@ class ocp_nlp_solver_options:
         self.__nlp_solver_tol_ineq = 1e-6                     # NLP solver inequality
         self.__nlp_solver_tol_comp = 1e-6                     # NLP solver complementarity
         self.__nlp_solver_max_iter = 100                      # NLP solver maximum number of iterations
+        self.__Tsim = None                                    # automatically calculated as tf/N;
         # TODO(oj): add the following
         # self.__regularize_method = None
 

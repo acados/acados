@@ -190,7 +190,7 @@ def generate_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json',
     make_ocp_dims_consistent(acados_ocp)
 
     # set integrator time automatically
-    acados_ocp.solver_options.Tsim = acados_ocp.solver_options.tf / acados_ocp.dims.N
+    acados_ocp.solver_options.__Tsim = acados_ocp.solver_options.tf / acados_ocp.dims.N
 
     # generate external functions
     if acados_ocp.solver_options.integrator_type == 'ERK':
@@ -292,12 +292,6 @@ def generate_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json',
         out_file =  '{}_phi_constraint.h'.format(name)
         render_template(in_file, out_file, template_dir, json_path)
 
-        # constraints on inner fuction
-        # template_dir = 'c_generated_code/{}_constraints/'.format(name)
-        # in_file = 'r_constraint.in.h'
-        # out_file = '{}_r_constraint.h'.format(name)
-        # render_template(in_file, out_file, template_dir, json_path)
-
     # terminal constraints on convex over nonlinear fuction
     if acados_ocp.constraints.constr_type_e == 'BGP' and acados_ocp.dims.nphi_e > 0:
         # terminal constraints on outer fuction
@@ -305,12 +299,6 @@ def generate_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json',
         in_file = 'phi_e_constraint.in.h'
         out_file =  '{}_phi_e_constraint.h'.format(name)
         render_template(in_file, out_file, template_dir, json_path)
-
-        # terminal constraints on inner function
-        # template_dir = 'c_generated_code/{}_constraints/'.format(name)
-        # in_file = 'r_e_constraint.in.h'
-        # out_file = '{}_r_e_constraint.h'.format(name)
-        # render_template(in_file, out_file, template_dir, json_path)
 
     # nonlinear constraints
     if acados_ocp.constraints.constr_type == 'BGH' and acados_ocp.dims.nh > 0:

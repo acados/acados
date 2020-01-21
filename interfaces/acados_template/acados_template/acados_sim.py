@@ -131,24 +131,24 @@ class sim_solver_options:
         return self.__integrator_type
 
     @property
-    def sim_method_num_stages(self):
+    def num_stages(self):
         """Number of stages in the integrator"""
         return self.__sim_method_num_stages
 
     @property
-    def sim_method_num_steps(self):
+    def num_steps(self):
         """Number of steps in the integrator"""
         return self.__sim_method_num_steps
 
     @property
-    def sim_method_newton_iter(self):
+    def newton_iter(self):
         """Number of Newton iterations in simulation method"""
         return self.__sim_method_newton_iter
 
     @property
-    def tf(self):
+    def T(self):
         """Time horizon"""
-        return self.__tf
+        return self.__Tsim
 
     @integrator_type.setter
     def integrator_type(self, integrator_type):
@@ -160,26 +160,33 @@ class sim_solver_options:
             raise Exception('Invalid integrator_type value. Possible values are:\n\n' \
                     + ',\n'.join(integrator_types) + '.\n\nYou have: ' + integrator_type + '.\n\nExiting.')
 
-    @tf.setter
-    def tf(self, tf):
-        self.__tf = tf
+    @T.setter
+    def T(self, T):
+        self.__Tsim = T
 
-    @sim_method_num_stages.setter
-    def sim_method_num_stages(self, sim_method_num_stages):
+    @num_stages.setter
+    def num_stages(self, num_stages):
 
-        if type(sim_method_num_stages) == int:
-            self.__sim_method_num_stages = sim_method_num_stages
+        if type(num_stages) == int:
+            self.__sim_method_num_stages = num_stages
         else:
-            raise Exception('Invalid sim_method_num_stages value. sim_method_num_stages must be an integer. Exiting.')
+            raise Exception('Invalid num_stages value. num_stages must be an integer. Exiting.')
 
-    @sim_method_num_steps.setter
-    def sim_method_num_steps(self, sim_method_num_steps):
+    @num_steps.setter
+    def num_steps(self, num_steps):
 
-        if type(sim_method_num_steps) == int:
-            self.__sim_method_num_steps = sim_method_num_steps
+        if type(num_steps) == int:
+            self.__sim_method_num_steps = num_steps
         else:
-            raise Exception('Invalid sim_method_num_steps value. sim_method_num_steps must be an integer. Exiting.')
+            raise Exception('Invalid num_steps value. num_steps must be an integer. Exiting.')
 
+    @newton_iter.setter
+    def newton_iter(self, newton_iter):
+
+        if type(newton_iter) == int:
+            self.__sim_method_newton_iter = newton_iter
+        else:
+            raise Exception('Invalid newton_iter value. newton_iter must be an integer. Exiting.')
 
 class acados_sim:
     """

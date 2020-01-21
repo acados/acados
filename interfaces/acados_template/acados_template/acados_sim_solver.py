@@ -40,8 +40,7 @@ class acados_sim_solver:
 
         self.sim_struct = acados_sim
 
-        model_name = self.sim_struct.model_name
-
+        model_name = self.sim_struct.model.name
 
         self.shared_lib = CDLL(shared_lib)
         getattr(self.shared_lib, f"{model_name}_acados_sim_create")()
@@ -83,10 +82,6 @@ class acados_sim_solver:
         field = field_
         field = field.encode('utf-8')
 
-        #  ocp_sim_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
-        #  self.shared_lib.ocp_nlp_dims_get_from_attr.restype = c_int
-        #  dims = self.shared_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, field)
-
         if field_ in self.gettable.keys():
 
             # allocate array
@@ -95,7 +90,7 @@ class acados_sim_solver:
             out_data = cast(out.ctypes.data, POINTER(c_double))
 
             self.shared_lib.sim_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
-            self.shared_lib.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, out_data);
+            self.shared_lib.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, out_data)
 
         else:
             raise Exception(f'acados_solver.set(): Unknown field {field}, available fiels are {",".join(self.gettable.keys())}')
@@ -114,21 +109,12 @@ class acados_sim_solver:
         value_data = cast(value_.ctypes.data, POINTER(c_double))
         value_data_p = cast((value_data), c_void_p)
 
-
         field = field_
         field = field.encode('utf-8')
 
-        #  self.shared_lib.ocp_sim_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
-        #  self.shared_lib.ocp_sim_dims_get_from_attr.restype = c_int
-
-        #  dims = self.shared_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, field)
-
-        #  if value_.shape[0] != dims:
-            #  raise Exception('acados_solver.set(): mismatching dimension for field "{}" with dimension {} (you have {})'.format(field_,dims, value_.shape[0]))
-
         if field_ in self.settable:
             self.shared_lib.sim_in_set.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
-            self.shared_lib.sim_in_set(self.sim_config, self.sim_dims, self.sim_in, field, value_data_p);
+            self.shared_lib.sim_in_set(self.sim_config, self.sim_dims, self.sim_in, field, value_data_p)
         else:
             raise Exception(f'acados_solver.set(): Unknown field {field}, available fiels are {",".join(self.settable)}')
 

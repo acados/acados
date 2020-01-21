@@ -77,8 +77,8 @@ int {{ model.name }}_acados_sim_create()
     int nu = {{ dims.nu }};
     int nz = {{ dims.nz }};
 
-    {#// double Td = {{ solver_options.tf / dims.N }};#}
-    // double Td = {{ solver_options.Tsim }};
+    {#// double Tsim = {{ solver_options.tf / dims.N }};#}
+    double Tsim = {{ solver_options.Tsim }};
 
     {% if solver_options.integrator_type == "IRK" %}
     sim_impl_dae_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
@@ -170,7 +170,7 @@ int {{ model.name }}_acados_sim_create()
     {{ model.name }}_sim_in  = sim_in_create({{ model.name }}_sim_config, {{ model.name }}_sim_dims);
     {{ model.name }}_sim_out = sim_out_create({{ model.name }}_sim_config, {{ model.name }}_sim_dims);
 
-    {{ model.name }}_sim_in->T = Td;
+    {{ model.name }}_sim_in->T = Tsim;
 
     // model functions
     {%- if solver_options.integrator_type == "IRK" %}
