@@ -229,7 +229,7 @@ class ocp_nlp_dims:
 
     @nu.setter
     def nu(self, nu):
-        if type(nu) == int and nu > 0:
+        if type(nu) == int and nu > -1:
             self.__nu = nu
         else:
             raise Exception('Invalid nu value. Exiting.')
