@@ -310,7 +310,7 @@ int sim_out_get_(void *config_, void *dims_, sim_out *out, const char *field, vo
 
     int status = ACADOS_SUCCESS;
 
-    if (!strcmp(field, "xn"))
+    if (!strcmp(field, "xn") || !strcmp(field, "x"))
     {
         int nx;
         config->dims_get(config_, dims_, "nx", &nx);
