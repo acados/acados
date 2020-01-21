@@ -386,7 +386,7 @@ if COMPILE == 1:
     # make 
     os.chdir('c_generated_code')
     os.system('make clean')
-    os.system('make shared_lib')
+    os.system('make ocp_shared_lib')
     os.chdir('..')
 
 # closed loop simulation TODO(add proper simulation)

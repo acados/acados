@@ -249,7 +249,7 @@ elif FORMULATION == 2:
     ocp.con_h_e = con_h_e
     acados_solver = generate_ocp_solver(ocp, json_file = 'acados_ocp.json')
 
-Nsim = 100
+Nsim = 90
 
 simX = np.ndarray((Nsim, nx))
 simU = np.ndarray((Nsim, nu))
@@ -260,9 +260,8 @@ for i in range(Nsim):
     sqp_iter = acados_solver.get_stats('sqp_iter')
     print('sqp_iter', sqp_iter)
 
-
-    time_tot = acados_solver.get_stats('time_tot')
-    print('time_tot', time_tot)
+    # time_tot = acados_solver.get_stats('time_tot')
+    # print('time_tot', time_tot)
 
     if status != 0:
         raise Exception('acados returned status {}. Exiting.'.format(status))

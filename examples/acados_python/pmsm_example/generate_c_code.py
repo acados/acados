@@ -71,7 +71,7 @@ if FORMULATION == 1:        # (works)
 #====================================================================
 def export_ode_model():
 
-    model_name = 'rsm'
+    model_name = 'pmsm'
 
     # set up states 
     i_d = SX.sym('i_d')
@@ -477,8 +477,7 @@ if CODE_GEN == 1:
 if COMPILE == 1:
     # make 
     os.chdir('c_generated_code')
-    os.system('make')
-    os.system('make shared_lib')
+    os.system('make ocp_shared_lib')
     os.chdir('..')
 
 # closed loop simulation
