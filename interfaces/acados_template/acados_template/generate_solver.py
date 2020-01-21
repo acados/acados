@@ -39,11 +39,12 @@ from .generate_c_code_constraint_e import *
 from .generate_c_code_nls_cost import *
 from .generate_c_code_nls_cost_e import *
 from .acados_ocp_nlp import *
+from .acados_sim import *
 from .acados_ocp_solver import acados_ocp_solver
 from .acados_sim_solver import acados_sim_solver
 from ctypes import *
 from copy import deepcopy
-from .utils import ACADOS_PATH, is_column, render_template, dict2json
+from .utils import ACADOS_PATH, is_column, render_template, dict2json, np_array_to_list
 
 
 def make_ocp_dims_consistent(acados_ocp):
@@ -100,12 +101,17 @@ def get_ocp_nlp_layout():
     return ocp_nlp_layout
 
 
+def get_sim_layout():
+    current_module = sys.modules[__name__]
+    acados_path = os.path.dirname(current_module.__file__)
+    with open(acados_path + '/acados_sim_layout.json', 'r') as f:
+        sim_layout = json.load(f)
+    return sim_layout
+
+
 def ocp_formulation_json_dump(acados_ocp, json_file='acados_ocp_nlp.json'):
     # Load acados_ocp_nlp structure description
     ocp_layout = get_ocp_nlp_layout()
-
-    # Instatiate acados_ocp_nlp object
-    ocp_nlp = acados_ocp_nlp()
 
     # Copy input ocp object dictionary
     ocp_nlp_dict = dict(deepcopy(acados_ocp).__dict__)
@@ -213,6 +219,7 @@ def generate_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json',
         acados_ocp.cost.Vx_e = np.zeros((acados_ocp.dims.ny_e, acados_ocp.dims.nx))
         generate_c_code_nls_cost_e(acados_ocp.cost_r_e, name)
 
+    # dump to json
     ocp_formulation_json_dump(acados_ocp, json_file)
 
     # setting up loader and environment

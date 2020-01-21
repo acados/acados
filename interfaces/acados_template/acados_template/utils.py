@@ -35,7 +35,7 @@ import os, sys
 import urllib.request
 import shutil
 import numpy as np
-from casadi import *
+from casadi import SX, MX, DM
 
 ALLOWED_CASADI_VERSIONS = ('3.5.1', '3.4.5', '3.4.0')
 TERA_VERSION = "0.0.30"
@@ -143,7 +143,20 @@ def render_template(in_file, out_file, template_dir, json_path):
     os.chdir(cwd)
 
 
-## Json
+## Conversion functions
+
+def np_array_to_list(np_array):
+    if  isinstance(np_array, (np.ndarray)):
+        return np_array.tolist()
+    elif  isinstance(np_array, (SX)):
+        return DM(np_array).full()
+    elif  isinstance(np_array, (DM)):
+        return np_array.full()
+    else:
+        raise(Exception(
+            "Cannot convert to list type {}".format(type(np_array))
+        ))
+
 def dict2json(d):
     out = {}
     for k, v in d.items():
