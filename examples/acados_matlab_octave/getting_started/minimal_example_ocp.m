@@ -126,11 +126,11 @@ status = ocp.get('status'); % 0 - success
 ocp.print('stat')
 
 %% Plots
-figure; hold on; grid on;
+figure; hold on;
 States = {'p', 'theta', 'v', 'dtheta'};
 for i=1:length(States)
     subplot( length(States), 1, i);
-    plot(xtraj(i,:));
+    plot(xtraj(i,:)); grid on;
     legend(States{i});
 end
 

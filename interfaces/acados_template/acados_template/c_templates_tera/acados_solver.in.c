@@ -227,6 +227,7 @@ int acados_create()
     // for initial state
     nbx[0]  = NBX0;
     nsbx[0] = 0;
+    ns[0] = NS - NSBX;
 
     // terminal - common
     nu[N]   = 0;
@@ -684,6 +685,18 @@ int acados_create()
     // ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lsbx", lsbx);
     // ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "usbx", usbx);
 
+    // soft bounds on x
+    int idxsbx[NSBX];
+    {% for i in range(end=dims.nsbx) %}
+    idxsbx[{{ i }}] = {{ constraints.idxsbx[i] }};
+    {%- endfor %}
+    double lsbx[NSBX];
+    double usbx[NSBX];
+    {% for i in range(end=dims.nsbx) %}
+    lsbx[{{ i }}] = {{ constraints.lsbx[i] }};
+    usbx[{{ i }}] = {{ constraints.usbx[i] }};
+    {%- endfor %}
+
     for (int i = 1; i < N; i++)
     {       
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "idxsbx", idxsbx);
@@ -795,20 +808,6 @@ int acados_create()
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lbx", lbx);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "ubx", ubx);
     }
-{% endif %}
-
-{% if dims.nsbx > 0 %}
-    // soft bounds on x
-    int idxsbx[NSBX];
-    {% for i in range(end=dims.nsbx) %}
-    idxsbx[{{ i }}] = {{ constraints.idxsbx[i] }};
-    {%- endfor %}
-    double lsbx[NSBX]; 
-    double usbx[NSBX];
-    {% for i in range(end=dims.nsbx) %}
-    lsbx[{{ i }}] = {{ constraints.lsbx[i] }};
-    usbx[{{ i }}] = {{ constraints.usbx[i] }};
-    {%- endfor %}
 {% endif %}
 
 {% if dims.ng > 0 %}
@@ -1037,28 +1036,37 @@ int acados_create()
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_algebraic", &sens_algebraic_val);
 {%- endif -%}
 
-    {%- if solver_options.sim_method_num_steps %}
     int num_steps_val = {{ solver_options.sim_method_num_steps }};
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_steps", &num_steps_val);
-    {%- endif -%}
 
-    {%- if solver_options.sim_method_num_stages %}
     int ns_val = {{ solver_options.sim_method_num_stages }};
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_stages", &ns_val);
-    {%- endif -%}
 
-    {%- if solver_options.sim_method_newton_iter %}
     int newton_iter_val = {{ solver_options.sim_method_newton_iter }};
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_newton_iter", &newton_iter_val);
-    {%- endif -%}
 
-    {%- if solver_options.nlp_solver_step_length %}
     double nlp_solver_step_length = {{ solver_options.nlp_solver_step_length }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "step_length", &nlp_solver_step_length);
-    {%- endif -%}
+
+    /* options QP solver */
+{% if solver_options.qp_solver is starting_with("PARTIAL_CONDENSING") %}
+        int qp_solver_cond_N;
+
+        {%- if solver_options.qp_solver_cond_N %}
+        qp_solver_cond_N = {{ solver_options.qp_solver_cond_N }};
+        {% else %}
+        // NOTE: there is no condensing happening here!
+        qp_solver_cond_N = N;
+        {% endif %}
+
+        ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_cond_N", &qp_solver_cond_N);
+{% endif %}
+
+    int qp_solver_iter_max = {{ solver_options.qp_solver_iter_max }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_iter_max", &qp_solver_iter_max);
 
     {%- if solver_options.qp_solver_tol_stat %}
     double qp_solver_tol_stat = {{ solver_options.qp_solver_tol_stat }};
@@ -1093,30 +1101,20 @@ int acados_create()
 
 {% if solver_options.nlp_solver_type == "SQP" -%}
     // set SQP specific options
-    {%- if solver_options.nlp_solver_tol_stat %}
     double nlp_solver_tol_stat = {{ solver_options.nlp_solver_tol_stat }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tol_stat", &nlp_solver_tol_stat);
-    {%- endif -%}
 
-    {%- if solver_options.nlp_solver_tol_eq %}
     double nlp_solver_tol_eq = {{ solver_options.nlp_solver_tol_eq }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tol_eq", &nlp_solver_tol_eq);
-    {%- endif -%}
 
-    {%- if solver_options.nlp_solver_tol_ineq %}
     double nlp_solver_tol_ineq = {{ solver_options.nlp_solver_tol_ineq }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tol_ineq", &nlp_solver_tol_ineq);
-    {%- endif -%}
 
-    {%- if solver_options.nlp_solver_tol_comp %}
     double nlp_solver_tol_comp = {{ solver_options.nlp_solver_tol_comp }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tol_comp", &nlp_solver_tol_comp);
-    {%- endif -%}
 
-    {%- if solver_options.nlp_solver_max_iter %}
     int nlp_solver_max_iter = {{ solver_options.nlp_solver_max_iter }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "max_iter", &nlp_solver_max_iter);
-    {%- endif -%}
 {%- endif %}
 
     /* out */

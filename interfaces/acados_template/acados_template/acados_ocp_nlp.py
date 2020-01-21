@@ -232,7 +232,7 @@ class ocp_nlp_dims:
 
     @nu.setter
     def nu(self, nu):
-        if type(nu) == int and nu > 0:
+        if type(nu) == int and nu > -1:
             self.__nu = nu
         else:
             raise Exception('Invalid nu value. Exiting.')
@@ -1562,18 +1562,24 @@ class ocp_nlp_solver_options:
         self.__tf               = None                        # prediction horizon
         self.__nlp_solver_type  = 'SQP_RTI'                   # NLP solver
         self.__nlp_solver_step_length = 1.0                   # fixed Newton step length
-        self.__sim_method_num_stages  = 1                     # number of stages in the integrator
+        self.__sim_method_num_stages  = 4                     # number of stages in the integrator
         self.__sim_method_num_steps   = 1                     # number of steps in the integrator
         self.__sim_method_newton_iter = 3                     # number of Newton iterations in simulation method
         self.__qp_solver_tol_stat = None                      # QP solver stationarity tolerance
         self.__qp_solver_tol_eq   = None                      # QP solver equality tolerance
         self.__qp_solver_tol_ineq = None                      # QP solver inequality
         self.__qp_solver_tol_comp = None                      # QP solver complementarity
-        self.__nlp_solver_tol_stat = None                     # NLP solver stationarity tolerance
-        self.__nlp_solver_tol_eq   = None                     # NLP solver equality tolerance
-        self.__nlp_solver_tol_ineq = None                     # NLP solver inequality
-        self.__nlp_solver_tol_comp = None                     # NLP solver complementarity
-        self.__nlp_solver_max_iter = None                     # NLP solver maximum number of iterations
+        self.__qp_solver_iter_max = 50                        # QP solver max iter
+        self.__qp_solver_cond_N = None                        # QP solver: new horizon after partial condensing
+        self.__nlp_solver_tol_stat = 1e-6                     # NLP solver stationarity tolerance
+        self.__nlp_solver_tol_eq   = 1e-6                     # NLP solver equality tolerance
+        self.__nlp_solver_tol_ineq = 1e-6                     # NLP solver inequality
+        self.__nlp_solver_tol_comp = 1e-6                     # NLP solver complementarity
+        self.__nlp_solver_max_iter = 100                      # NLP solver maximum number of iterations
+        # TODO(oj): add the following
+        # self.__regularize_method = None
+
+
 
     @property
     def qp_solver(self):
@@ -1634,6 +1640,16 @@ class ocp_nlp_solver_options:
     def qp_solver_tol_comp(self):
         """QP solver complementarity"""
         return self.__qp_solver_tol_comp
+
+    @property
+    def qp_solver_cond_N(self):
+        """QP solver: New horizon after partial condensing"""
+        return self.__qp_solver_cond_N
+
+    @property
+    def qp_solver_iter_max(self):
+        """QP solver: maximum number of iterations"""
+        return self.__qp_solver_iter_max
 
     @property
     def nlp_solver_tol_stat(self):
@@ -1757,6 +1773,22 @@ class ocp_nlp_solver_options:
         else:
             raise Exception('Invalid qp_solver_tol_stat value. qp_solver_tol_stat must be a positive float. Exiting')
 
+    @qp_solver_iter_max.setter
+    def qp_solver_iter_max(self, qp_solver_iter_max):
+
+        if isinstance(qp_solver_iter_max, int) and qp_solver_iter_max > 0:
+            self.__qp_solver_iter_max = qp_solver_iter_max
+        else:
+            raise Exception('Invalid qp_solver_iter_max value. qp_solver_iter_max must be a positive int. Exiting')
+
+    @qp_solver_cond_N.setter
+    def qp_solver_cond_N(self, qp_solver_cond_N):
+
+        if isinstance(qp_solver_cond_N, int) and qp_solver_cond_N > 0:
+            self.__qp_solver_cond_N = qp_solver_cond_N
+        else:
+            raise Exception('Invalid qp_solver_cond_N value. qp_solver_cond_N must be a positive int. Exiting')
+
     @qp_solver_tol_eq.setter
     def qp_solver_tol_eq(self, qp_solver_tol_eq):
 
@@ -1804,6 +1836,14 @@ class ocp_nlp_solver_options:
             self.__nlp_solver_tol_ineq = nlp_solver_tol_ineq
         else:
             raise Exception('Invalid nlp_solver_tol_ineq value. nlp_solver_tol_ineq must be a positive float. Exiting')
+
+    @nlp_solver_tol_comp.setter
+    def nlp_solver_tol_comp(self, nlp_solver_tol_comp):
+
+        if type(nlp_solver_tol_comp) == float and nlp_solver_tol_comp > 0:
+            self.__nlp_solver_tol_comp = nlp_solver_tol_comp
+        else:
+            raise Exception('Invalid nlp_solver_tol_comp value. nlp_solver_tol_comp must be a positive float. Exiting')
 
     @nlp_solver_max_iter.setter
     def nlp_solver_max_iter(self, nlp_solver_max_iter):

@@ -64,7 +64,7 @@ classdef acados_ocp_opts < handle
             obj.opts_struct.nlp_solver_step_length = 1.0; % fixed step length in SQP algorithm
             obj.opts_struct.qp_solver = 'partial_condensing_hpipm';
             obj.opts_struct.qp_solver_iter_max = 50;
-            % obj.opts_struct.qp_solver_cond_N = 5; % for partial condensing_hpipm
+            % obj.opts_struct.qp_solver_cond_N = 5; % New horizon after partial condensing
             obj.opts_struct.qp_solver_cond_ric_alg = 0; % 0: dont factorize hessian in the condensing; 1: factorize
             obj.opts_struct.qp_solver_ric_alg = 0; % HPIPM specific
             obj.opts_struct.qp_solver_warm_start = 0;

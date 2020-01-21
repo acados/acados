@@ -40,15 +40,25 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     % object will separate from the OCP object
 
     % general
+    ocp_json.dims.N = obj.opts_struct.param_scheme_N;
+    ocp_json.solver_options.tf = model.T;
+    ocp_json.model.name = model.name;
+    % modules
     ocp_json.solver_options.qp_solver = upper(obj.opts_struct.qp_solver);
     ocp_json.solver_options.integrator_type = upper(obj.opts_struct.sim_method);
     ocp_json.solver_options.nlp_solver_type = upper(obj.opts_struct.nlp_solver);
+    % options
     ocp_json.solver_options.sim_method_num_steps = obj.opts_struct.sim_method_num_steps;
     ocp_json.solver_options.sim_method_num_stages = obj.opts_struct.sim_method_num_stages;
-    ocp_json.dims.N = upper(obj.opts_struct.param_scheme_N);
-
-    ocp_json.solver_options.tf = model.T;
-    ocp_json.model.name = model.name;
+    ocp_json.solver_options.sim_method_newton_iter = obj.opts_struct.sim_method_newton_iter;
+    ocp_json.solver_options.nlp_solver_max_iter = obj.opts_struct.nlp_solver_max_iter;
+    ocp_json.solver_options.nlp_solver_tol_stat = obj.opts_struct.nlp_solver_tol_stat;
+    ocp_json.solver_options.nlp_solver_tol_eq = obj.opts_struct.nlp_solver_tol_eq;
+    ocp_json.solver_options.nlp_solver_tol_ineq = obj.opts_struct.nlp_solver_tol_ineq;
+    ocp_json.solver_options.nlp_solver_tol_comp = obj.opts_struct.nlp_solver_tol_comp;
+    ocp_json.solver_options.nlp_solver_step_length = obj.opts_struct.nlp_solver_step_length;
+    ocp_json.solver_options.qp_solver_cond_N = obj.opts_struct.qp_solver_cond_N;
+    ocp_json.solver_options.qp_solver_iter_max = obj.opts_struct.qp_solver_iter_max;
 
     %% dims
     nx = model.dim_nx;
@@ -72,7 +82,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     if isfield(model, 'dim_nsbu')
         ocp_json.dims.nsbu = model.dim_nsbu;
     end
-    
+
     % missing in template
     % ocp_json.dims.nsg = model.nsg;
 
@@ -123,12 +133,15 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     if isfield(model, 'constr_lbx_0')
         ocp_json.constraints.lbx_0 = model.constr_lbx_0;
     else
-        error('missing: constr_lbx_0');
+        warning('missing: constr_lbx_0, using zeros of appropriate dimension.');
+        ocp_json.constraints.lbx_0 = zeros(ocp_json.dims.nbx_0, 1);
     end
+
     if isfield(model, 'constr_ubx_0')
         ocp_json.constraints.ubx_0 = model.constr_ubx_0;
     else
-        error('missing: constr_ubx_0');
+        warning('missing: constr_ubx_0, using zeros of appropriate dimension.');
+        ocp_json.constraints.ubx_0 = zeros(ocp_json.dims.nbx_0, 1);
     end
     if isfield(model, 'constr_Jbx_0')
         ocp_json.constraints.idxbx_0 = J_to_idx( model.constr_Jbx_0 );
@@ -182,7 +195,13 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
         else
             ocp_json.constraints.usbx = zeros(ocp_json.dims.nsbx, 1);
         end
+        % TODO(oj): add nsbx_e properly in Matlab:
+        ocp_json.dims.nsbx_e = model.dim_nsbx;
+        ocp_json.constraints.idxsbx_e = ocp_json.constraints.idxsbx;
+        ocp_json.constraints.lsbx_e = ocp_json.constraints.lsbx;
+        ocp_json.constraints.usbx_e = ocp_json.constraints.usbx;
     end
+
 
     if ocp_json.dims.nsbu > 0
         ocp_json.constraints.idxsbu = J_to_idx_slack(model.Jsbu);
