@@ -1748,22 +1748,6 @@ class ocp_nlp_solver_options:
         else:
             raise Exception('Invalid nlp_solver_step_length value. nlp_solver_step_length must be a positive float. Exiting')
 
-    @sim_method_num_stages.setter
-    def sim_method_num_stages(self, sim_method_num_stages):
-
-        if type(sim_method_num_stages) == int:
-            self.__sim_method_num_stages = sim_method_num_stages
-        else:
-            raise Exception('Invalid sim_method_num_stages value. sim_method_num_stages must be an integer. Exiting.')
-
-    @sim_method_num_steps.setter
-    def sim_method_num_steps(self, sim_method_num_steps):
-
-        if type(sim_method_num_steps) == int:
-            self.__sim_method_num_steps = sim_method_num_steps
-        else:
-            raise Exception('Invalid sim_method_num_steps value. sim_method_num_steps must be an integer. Exiting.')
-
     @qp_solver_tol_stat.setter
     def qp_solver_tol_stat(self, qp_solver_tol_stat):
 
