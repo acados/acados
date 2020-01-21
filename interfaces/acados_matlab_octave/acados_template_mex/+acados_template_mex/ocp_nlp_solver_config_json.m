@@ -37,6 +37,7 @@ classdef ocp_nlp_solver_config_json < handle
         hessian_approx         %  hessian approximation
         integrator_type        %  integrator type
         tf                     %  prediction horizon
+        Tsim
         nlp_solver_type        %  NLP solver
         sim_method_num_steps   %  number of steps in integrator
         sim_method_num_stages  %  size of butcher tableau
@@ -56,6 +57,7 @@ classdef ocp_nlp_solver_config_json < handle
             obj.hessian_approx  = 'GAUSS_NEWTON';
             obj.integrator_type = 'ERK';
             obj.tf              = [];
+            obj.Tsim              = [];
             obj.nlp_solver_type = 'SQP_RTI';
             obj.sim_method_num_steps = 1;
             obj.sim_method_num_stages = 2;
