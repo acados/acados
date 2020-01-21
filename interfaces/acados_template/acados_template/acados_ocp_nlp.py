@@ -56,6 +56,7 @@ class ocp_nlp_dims:
         self.__nphi    = 0
         self.__nphi_e  = 0
         self.__nbx     = 0
+        self.__nbx_0   = 0
         self.__nbx_e   = 0
         self.__nbu     = 0
         self.__nsbx    = 0
@@ -136,6 +137,11 @@ class ocp_nlp_dims:
     def nbx(self):
         """:math:`n_{b_x}` - number of state bounds"""
         return self.__nbx
+
+    @property
+    def nbx_0(self):
+        """:math:`n_{b_{x0}}` - number of state bounds for initial state"""
+        return self.__nbx_0
 
     @property
     def nbx_e(self):
@@ -223,7 +229,7 @@ class ocp_nlp_dims:
 
     @nu.setter
     def nu(self, nu):
-        if type(nu) == int and nu > 0:
+        if type(nu) == int and nu > -1:
             self.__nu = nu
         else:
             raise Exception('Invalid nu value. Exiting.')
@@ -297,6 +303,13 @@ class ocp_nlp_dims:
             self.__nbx = nbx
         else:
             raise Exception('Invalid nbx value. Exiting.')
+
+    @nbx_0.setter
+    def nbx_0(self, nbx_0):
+        if type(nbx_0) == int and nbx_0 > -1:
+            self.__nbx_0 = nbx_0
+        else:
+            raise Exception('Invalid nbx_0 value. Exiting.')
 
     @nbx_e.setter
     def nbx_e(self, nbx_e):
@@ -654,6 +667,8 @@ class ocp_nlp_cost:
     def set(self, attr, value):
         setattr(self, attr, value)
 
+
+# TODO(oj): replace \Pi with Jbx or similar
 class ocp_nlp_constraints:
     """
     class containing the description of the constraints
@@ -661,6 +676,11 @@ class ocp_nlp_constraints:
     def __init__(self):
         self.__constr_type   = 'BGH'                  # constraint type
         self.__constr_type_e = 'BGH'                  # constraint type
+        # initial x
+        self.__lbx_0   = []                           # lower bounds on x for initial state
+        self.__ubx_0   = []                           # upper bounds on x for initial state
+        self.__idxbx_0 = []                           # indexes for bounds on x0
+        # intermediate stages
         self.__lbx     = []                           # lower bounds on x
         self.__lbu     = []                           # lower bounds on u
         self.__ubx     = []                           # upper bounds on x
@@ -732,7 +752,7 @@ class ocp_nlp_constraints:
         self.__usphi_e    = []                        # lower bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints at t=T
         self.__idxsphi_e  = []                        # indexes of soft nonlinear constraints at t=T within the indices of nonlinear constraints at t=T
         # self.__Jsphi_e  = []                        # matrix coefficient for soft bounds on convex-over-nonlinear constraints at t=T
-        self.__x0      = []                           # initial state
+        # self.__x0      = []                           # initial state
         self.__p       = []                           # parameters
 
 
@@ -745,6 +765,22 @@ class ocp_nlp_constraints:
     def constr_type_e(self):
         """Constraints type t=T"""
         return self.__constr_type_e
+
+    # bounds on x0
+    @property
+    def lbx_0(self):
+        """:math:`\\underline{x_0}` - lower bounds on x0"""
+        return self.__lbx_0
+
+    @property
+    def ubx_0(self):
+        """:math:`\\bar{x_0}` - upper bounds on x0"""
+        return self.__ubx_0
+
+    @property
+    def idxbx_0(self):
+        """indexes of bounds on x0 """
+        return self.__idxbx_0
 
     # bounds on x and u
     @property
@@ -1077,12 +1113,33 @@ class ocp_nlp_constraints:
             raise Exception('Invalid constr_type_e value. Possible values are:\n\n' \
                     + ',\n'.join(constr_types) + '.\n\nYou have: ' + constr_type_e + '.\n\nExiting.')
 
-    @ubx.setter
-    def ubx(self, ubx):
-        if type(ubx) == np.ndarray:
-            self.__ubx = ubx
+    # @ubx.setter
+    # def ubx(self, ubx):
+    #     if type(ubx) == np.ndarray:
+    #         self.__ubx = ubx
+    #     else:
+    #         raise Exception('Invalid ubx value. Exiting.')
+
+    @lbx_0.setter
+    def lbx_0(self, lbx_0):
+        if type(lbx_0) == np.ndarray:
+            self.__lbx_0 = lbx_0
         else:
-            raise Exception('Invalid ubx value. Exiting.')
+            raise Exception('Invalid lbx_0 value. Exiting.')
+
+    @ubx_0.setter
+    def ubx_0(self, ubx_0):
+        if type(ubx_0) == np.ndarray:
+            self.__ubx_0 = ubx_0
+        else:
+            raise Exception('Invalid ubx_0 value. Exiting.')
+
+    @idxbx_0.setter
+    def idxbx_0(self, idxbx_0):
+        if type(idxbx_0) == np.ndarray:
+            self.__idxbx_0 = idxbx_0
+        else:
+            raise Exception('Invalid idxbx_0 value. Exiting.')
 
     # bounds on x and u
     @lbx.setter
@@ -1476,7 +1533,10 @@ class ocp_nlp_constraints:
     @x0.setter
     def x0(self, x0):
         if type(x0) == np.ndarray:
-            self.__x0 = x0
+            # self.__x0 = x0
+            self.__lbx_0 = x0
+            self.__ubx_0 = x0
+            self.__idxbx_0 = np.arange(x0.size)
         else:
             raise Exception('Invalid x0 value. Exiting.')
 
@@ -1490,6 +1550,8 @@ class ocp_nlp_constraints:
     def set(self, attr, value):
         setattr(self, attr, value)
 
+
+
 class ocp_nlp_solver_options:
     """
     class containing the description of the solver options
@@ -1501,18 +1563,24 @@ class ocp_nlp_solver_options:
         self.__tf               = None                        # prediction horizon
         self.__nlp_solver_type  = 'SQP_RTI'                   # NLP solver
         self.__nlp_solver_step_length = 1.0                   # fixed Newton step length
-        self.__sim_method_num_stages  = 1                     # number of stages in the integrator
+        self.__sim_method_num_stages  = 4                     # number of stages in the integrator
         self.__sim_method_num_steps   = 1                     # number of steps in the integrator
         self.__sim_method_newton_iter = 3                     # number of Newton iterations in simulation method
         self.__qp_solver_tol_stat = None                      # QP solver stationarity tolerance
         self.__qp_solver_tol_eq   = None                      # QP solver equality tolerance
         self.__qp_solver_tol_ineq = None                      # QP solver inequality
         self.__qp_solver_tol_comp = None                      # QP solver complementarity
-        self.__nlp_solver_tol_stat = None                     # NLP solver stationarity tolerance
-        self.__nlp_solver_tol_eq   = None                     # NLP solver equality tolerance
-        self.__nlp_solver_tol_ineq = None                     # NLP solver inequality
-        self.__nlp_solver_tol_comp = None                     # NLP solver complementarity
-        self.__nlp_solver_max_iter = None                     # NLP solver maximum number of iterations
+        self.__qp_solver_iter_max = 50                        # QP solver max iter
+        self.__qp_solver_cond_N = None                        # QP solver: new horizon after partial condensing
+        self.__nlp_solver_tol_stat = 1e-6                     # NLP solver stationarity tolerance
+        self.__nlp_solver_tol_eq   = 1e-6                     # NLP solver equality tolerance
+        self.__nlp_solver_tol_ineq = 1e-6                     # NLP solver inequality
+        self.__nlp_solver_tol_comp = 1e-6                     # NLP solver complementarity
+        self.__nlp_solver_max_iter = 100                      # NLP solver maximum number of iterations
+        # TODO(oj): add the following
+        # self.__regularize_method = None
+
+
 
     @property
     def qp_solver(self):
@@ -1573,6 +1641,16 @@ class ocp_nlp_solver_options:
     def qp_solver_tol_comp(self):
         """QP solver complementarity"""
         return self.__qp_solver_tol_comp
+
+    @property
+    def qp_solver_cond_N(self):
+        """QP solver: New horizon after partial condensing"""
+        return self.__qp_solver_cond_N
+
+    @property
+    def qp_solver_iter_max(self):
+        """QP solver: maximum number of iterations"""
+        return self.__qp_solver_iter_max
 
     @property
     def nlp_solver_tol_stat(self):
@@ -1696,6 +1774,22 @@ class ocp_nlp_solver_options:
         else:
             raise Exception('Invalid qp_solver_tol_stat value. qp_solver_tol_stat must be a positive float. Exiting')
 
+    @qp_solver_iter_max.setter
+    def qp_solver_iter_max(self, qp_solver_iter_max):
+
+        if isinstance(qp_solver_iter_max, int) and qp_solver_iter_max > 0:
+            self.__qp_solver_iter_max = qp_solver_iter_max
+        else:
+            raise Exception('Invalid qp_solver_iter_max value. qp_solver_iter_max must be a positive int. Exiting')
+
+    @qp_solver_cond_N.setter
+    def qp_solver_cond_N(self, qp_solver_cond_N):
+
+        if isinstance(qp_solver_cond_N, int) and qp_solver_cond_N > 0:
+            self.__qp_solver_cond_N = qp_solver_cond_N
+        else:
+            raise Exception('Invalid qp_solver_cond_N value. qp_solver_cond_N must be a positive int. Exiting')
+
     @qp_solver_tol_eq.setter
     def qp_solver_tol_eq(self, qp_solver_tol_eq):
 
@@ -1743,6 +1837,14 @@ class ocp_nlp_solver_options:
             self.__nlp_solver_tol_ineq = nlp_solver_tol_ineq
         else:
             raise Exception('Invalid nlp_solver_tol_ineq value. nlp_solver_tol_ineq must be a positive float. Exiting')
+
+    @nlp_solver_tol_comp.setter
+    def nlp_solver_tol_comp(self, nlp_solver_tol_comp):
+
+        if type(nlp_solver_tol_comp) == float and nlp_solver_tol_comp > 0:
+            self.__nlp_solver_tol_comp = nlp_solver_tol_comp
+        else:
+            raise Exception('Invalid nlp_solver_tol_comp value. nlp_solver_tol_comp must be a positive float. Exiting')
 
     @nlp_solver_max_iter.setter
     def nlp_solver_max_iter(self, nlp_solver_max_iter):

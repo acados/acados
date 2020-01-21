@@ -83,7 +83,8 @@ def generate_c_code_constraint( constraint, con_name ):
                 np = 0
                 p = SX.sym('p', 0, 0)
             else:
-                raise Exception('p is a non-empty list. It should be either an empty list or an SX object.')
+                raise Exception('p is a non-empty list. It should be',
+                    ' either an empty list or an SX object.')
         else:
             np = p.size()[0]
 
@@ -93,7 +94,8 @@ def generate_c_code_constraint( constraint, con_name ):
                 nz = 0
                 z = SX.sym('z', 0, 0)
             else:
-                raise Exception('z is a non-empty list. It should be either an empty list or an SX object.')
+                raise Exception('z is a non-empty list. It should be', 
+                    ' either an empty list or an SX object.')
         else:
             nz = z.size()[0]
 
@@ -115,8 +117,11 @@ def generate_c_code_constraint( constraint, con_name ):
             jac_x = jacobian(con_h_expr, x)
             jac_u = jacobian(con_h_expr, u)
             jac_z = jacobian(con_h_expr, z)
-            constraint_fun_jac_tran = Function(fun_name, [x, u, z, p],
-                                               [con_h_expr, vertcat(transpose(jac_u), transpose(jac_x)), transpose(jac_z)])
+            constraint_fun_jac_tran = \
+                Function(fun_name, [x, u, z, p], \
+                [con_h_expr, vertcat(transpose(jac_u), \
+                transpose(jac_x)), transpose(jac_z)])
+
             constraint_fun_jac_tran.generate(file_name, casadi_opts)
 
         else: # BGP constraint
@@ -135,25 +140,17 @@ def generate_c_code_constraint( constraint, con_name ):
             r_jac_u = jacobian(con_r_expr, u)
             r_jac_x = jacobian(con_r_expr, x)
 
-            constraint_phi = Function(fun_name, [x, u, z, p], \
-                    [con_phi_expr_x_u_z, vertcat(transpose(phi_jac_u), transpose(phi_jac_x)), transpose(phi_jac_z), \
-                    hess, vertcat(transpose(r_jac_u), transpose(r_jac_x))])
+            constraint_phi = \
+                Function(fun_name, [x, u, z, p], \
+                [con_phi_expr_x_u_z, \
+                vertcat(transpose(phi_jac_u), \
+                transpose(phi_jac_x)), \
+                transpose(phi_jac_z), \
+                hess, vertcat(transpose(r_jac_u), \
+                transpose(r_jac_x))])
 
             file_name = con_name + '_phi_constraint'
             constraint_phi.generate(file_name, casadi_opts)
-
-            # fun_name = con_name + '_r_constraint'
-            # constraint_residual_fun_jac_tran = Function(fun_name, [x, u, z, p], [con_r_expr, vertcat(transpose(jac_u), transpose(jac_x))])
-
-            # gen_dir = con_name + '_r_constraint'
-            # if not os.path.exists(gen_dir):
-            #     os.mkdir(gen_dir)
-            # gen_dir_location = './' + gen_dir
-            # os.chdir(gen_dir_location)
-            # file_name = con_name + '_r_constraint'
-            # constraint_residual_fun_jac_tran.generate(file_name, casadi_opts)
-
-            # os.chdir('../..')
 
         # change directory back
         os.chdir('../..')

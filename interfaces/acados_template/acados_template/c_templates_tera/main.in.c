@@ -96,12 +96,21 @@ int main()
     }
 
     // initial condition
-    double x0[{{ dims.nx }}];
-    {%- for item in constraints.x0 %}
-    x0[{{ loop.index0 }}] = {{ item }};
+    int idxbx0[{{ dims.nbx_0 }}];
+    {% for i in range(end=dims.nbx_0) %}
+    idxbx0[{{ i }}] = {{ constraints.idxbx_0[i] }};
     {%- endfor %}
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", x0);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", x0);
+
+    double lbx0[{{ dims.nbx_0 }}];
+    double ubx0[{{ dims.nbx_0 }}];
+    {% for i in range(end=dims.nbx_0) %}
+    lbx0[{{ i }}] = {{ constraints.lbx_0[i] }};
+    ubx0[{{ i }}] = {{ constraints.ubx_0[i] }};
+    {%- endfor %}
+
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxbx", idxbx0);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", lbx0);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", ubx0);
 
     // initialization for state values
     double x_init[{{ dims.nx }}];
@@ -156,7 +165,7 @@ int main()
   {% endif %}{# if np > 0 #}
 
     // prepare evaluation
-    int NTIMINGS = 10;
+    int NTIMINGS = 1;
     double min_time = 1e12;
     double kkt_norm_inf;
     double elapsed_time;

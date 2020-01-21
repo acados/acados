@@ -31,7 +31,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-ACADOS_FLAGS = -fPIC
+ACADOS_FLAGS = -fPIC #-fno-diagnostics-show-line-numbers -g
 {% if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
 ACADOS_FLAGS += -DACADOS_WITH_QPOASES
 {% endif %}
@@ -123,23 +123,23 @@ casadi_fun:
 	{% if constraints.constr_type == "BGP"  and dims.nphi > 0 %}
 	( cd {{ model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_PHI_SOURCE))
 	# ( cd {{ model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_R_SOURCE))
-	{% endif %}
+	{%- endif %}
 	{% if constraints.constr_type_e == "BGP"  and dims.nphi_e > 0 %}
 	( cd {{ model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_PHI_E_SOURCE))
 	# ( cd {{ model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_R_E_SOURCE))
-	{% endif %}
+	{%- endif %}
 	{% if constraints.constr_type == "BGH" and dims.nh > 0 %}
 	( cd {{ model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_H_SOURCE))
-	{% endif %}
+	{%- endif %}
 	{% if constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
 	( cd {{ model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_H_E_SOURCE))
-	{% endif %}
+	{%- endif %}
 	{% if cost.cost_type == "NONLINEAR_LS" %}
 	( cd {{ model.name }}_r_cost; gcc $(ACADOS_FLAGS) -c  $(CASADI_COST_R_SOURCE))
-	{% endif %}
+	{%- endif %}
 	{% if cost.cost_type_e == "NONLINEAR_LS" %}
 	( cd {{ model.name }}_r_e_cost; gcc $(ACADOS_FLAGS) -c  $(CASADI_COST_R_E_SOURCE))
-	{% endif %}
+	{%- endif %}
 
 main:
 	gcc $(ACADOS_FLAGS) -c main_{{ model.name }}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
@@ -153,7 +153,7 @@ solver:
 	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ \
 	{%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
 	-I $(INCLUDE_PATH)/qpOASES_e/
-	{% endif %}
+	{%- endif %}
 
 sim_solver:
 	gcc $(ACADOS_FLAGS) -c acados_sim_solver_{{ model.name }}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
@@ -167,7 +167,7 @@ example:
 	-lacados -lhpipm -lblasfeo \
 	{%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
 	-lqpOASES_e \
-	{% endif %}
+	{%- endif %}
 	-lm \
 	-I $(INCLUDE_PATH)/blasfeo/include/ \
 	-I $(INCLUDE_PATH)/hpipm/include/ \
@@ -175,7 +175,7 @@ example:
 	-I $(INCLUDE_PATH)/acados/ \
 	{%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
 	-I $(INCLUDE_PATH)/qpOASES_e/
-	{% endif %}
+	{%- endif %}
 
 shared_lib: casadi_fun solver sim_solver
 	gcc $(ACADOS_FLAGS) -shared -o libacados_solver_{{ model.name }}.so $(OBJ) $(SIM_OBJ) -L $(LIB_PATH) \
@@ -183,7 +183,7 @@ shared_lib: casadi_fun solver sim_solver
 	-lacados -lhpipm -lblasfeo \
 	{%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
 	-lqpOASES_e \
-	{% endif %}
+	{%- endif %}
 	-lm \
 
 clean:

@@ -265,6 +265,9 @@ ocp_model.set('constr_Jsbx', Jsbx);
 ocp_model.set('constr_Jsh', Jsh);
 ocp_model.set('constr_Jsh_e', Jsh_e);
 
+% initial state dummy
+ocp_model.set('constr_x0', zeros(nx, 1));
+
 ocp_model.model_struct;
 
 
@@ -297,6 +300,7 @@ ocp_opts.set('sim_method', ocp_sim_method);
 ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', ocp_sim_method_num_steps);
 ocp_opts.set('sim_method_newton_iter', ocp_sim_method_newton_iter);
+ocp_opts.set('regularize_method', 'no_regularize');
 
 ocp_opts.opts_struct;
 
@@ -348,7 +352,6 @@ sim_opts.set('num_stages', sim_num_stages);
 sim_opts.set('num_steps', sim_num_steps);
 sim_opts.set('method', sim_method);
 sim_opts.set('sens_forw', sim_sens_forw);
-ocp_opts.set('regularize_method', 'no_regularize');
 
 %sim_opts.opts_struct
 

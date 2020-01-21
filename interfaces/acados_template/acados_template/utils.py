@@ -34,6 +34,8 @@
 import os, sys
 import urllib.request
 import shutil
+import numpy as np
+from casadi import *
 
 ALLOWED_CASADI_VERSIONS = ('3.5.1', '3.4.5', '3.4.0')
 TERA_VERSION = "0.0.30"
@@ -51,6 +53,25 @@ platform2tera = {
     "darwin": "osx",
     "win32": "window.exe"
 }
+
+def is_column(x):
+    if isinstance(x, np.ndarray):
+        if x.ndim == 1:
+            return True
+        elif x.ndim == 2 and x.shape[1] == 1:
+            return True
+        else:
+            return False
+    elif isinstance(x, (MX, SX)):
+        if x.shape[1] == 1:
+            return True
+        else:
+            return False
+    else:
+        raise Exception("is_column expects one of the following types: np.ndarray, MX.sym, SX.sym."
+                        + " Got: " + str(type(x)))
+
+
 
 def get_tera():
     tera_path = TERA_EXEC_PATH

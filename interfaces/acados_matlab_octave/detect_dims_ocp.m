@@ -103,6 +103,20 @@ function model = detect_dims_ocp(model)
 
 
     %% constraints
+    % initial
+    if isfield(model, 'constr_Jbx_0') && isfield(model, 'constr_lbx_0') && isfield(model, 'constr_ubx_0')
+        nbx_0 = length(model.constr_lbx_0);
+        if nbx_0 ~= length(model.constr_ubx_0) || nbx_0 ~= size(model.constr_Jbx_0, 1)
+            error('inconsistent dimension nbx_0, regarding Jbx_0, lbx_0, ubx_0.');
+        end
+    elseif isfield(model, 'constr_Jbx_0') || isfield(model, 'constr_lbx_0') || isfield(model, 'constr_ubx_0')
+        error('setting bounds on x: need Jbx_0, lbx_0, ubx_0, at least one missing.');
+    else
+        nbx_0 = 0;
+    end
+
+    model.dim_nbx_0 = nbx_0;
+
     % path
     if isfield(model, 'constr_Jbx') && isfield(model, 'constr_lbx') && isfield(model, 'constr_ubx')
         nbx = length(model.constr_lbx);
