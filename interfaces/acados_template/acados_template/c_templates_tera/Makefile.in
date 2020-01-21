@@ -31,8 +31,14 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+{% if solver_options.qp_solver %}
+	{%- set qp_solver = solver_options.qp_solver %}
+{% else %}
+	{%- set qp_solver = "FULL_CONDENSING_HPIPM" %}
+{% endif %}
+
 ACADOS_FLAGS = -fPIC #-fno-diagnostics-show-line-numbers -g
-{% if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
+{% if qp_solver == "FULL_CONDENSING_QPOASES" %}
 ACADOS_FLAGS += -DACADOS_WITH_QPOASES
 {% endif %}
 MODEL_OBJ=
@@ -155,21 +161,21 @@ casadi_fun:
 main:
 	gcc $(ACADOS_FLAGS) -c main_{{ model.name }}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ \
-	{%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
+	{%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
 	-I $(INCLUDE_PATH)/qpOASES_e/
 	{% endif %}
 
 ocp_solver:
 	gcc $(ACADOS_FLAGS) -c acados_solver_{{ model.name }}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ \
-	{%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
+	{%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
 	-I $(INCLUDE_PATH)/qpOASES_e/
 	{%- endif %}
 
 sim_solver:
 	gcc $(ACADOS_FLAGS) -c acados_sim_solver_{{ model.name }}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/  \
-	{%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
+	{%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
 	-I $(INCLUDE_PATH)/qpOASES_e/
 	{% endif %}
 
@@ -177,7 +183,7 @@ example:
 	gcc $(ACADOS_FLAGS) -o main_{{ model.name}} $(EX_OBJ) $(OBJ) -L $(LIB_PATH) \
 	-L $(LIB_PATH) \
 	-lacados -lhpipm -lblasfeo \
-	{%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
+	{%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
 	-lqpOASES_e \
 	{%- endif %}
 	-lm \
@@ -185,7 +191,7 @@ example:
 	-I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) \
 	-I $(INCLUDE_PATH)/acados/ \
-	{%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
+	{%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
 	-I $(INCLUDE_PATH)/qpOASES_e/
 	{%- endif %}
 
@@ -193,7 +199,7 @@ bundled_shared_lib: casadi_fun ocp_solver sim_solver
 	gcc $(ACADOS_FLAGS) -shared -o libacados_solver_{{ model.name }}.so $(OBJ) -L $(LIB_PATH)/acados \
 	-L $(LIB_PATH) \
 	-lacados -lhpipm -lblasfeo \
-	{%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
+	{%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
 	-lqpOASES_e \
 	{%- endif %}
 	-lm \
@@ -202,7 +208,7 @@ ocp_shared_lib: casadi_fun ocp_solver
 	gcc $(ACADOS_FLAGS) -shared -o libacados_ocp_solver_{{ model.name }}.so $(OCP_OBJ) $(MODEL_OBJ) -L $(LIB_PATH)/acados \
 	-L $(LIB_PATH) \
 	-lacados -lhpipm -lblasfeo \
-	{%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
+	{%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
 	-lqpOASES_e \
 	{%- endif %}
 	-lm \
@@ -211,7 +217,7 @@ sim_shared_lib: casadi_fun sim_solver
 	gcc $(ACADOS_FLAGS) -shared -o libacados_sim_solver_{{ model.name }}.so $(SIM_OBJ) $(MODEL_OBJ) -L $(LIB_PATH)/acados \
 	-L $(LIB_PATH) \
 	-lacados -lhpipm -lblasfeo \
-	{%- if solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
+	{%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
 	-lqpOASES_e \
 	{%- endif %}
 	-lm \
