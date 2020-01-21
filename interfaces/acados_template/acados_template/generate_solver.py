@@ -93,6 +93,42 @@ def make_ocp_dims_consistent(acados_ocp):
     # else:
     #     dims.nz = 0
 
+
+def make_sim_dims_consistent(acados_sim):
+    dims = acados_sim.dims
+    model = acados_sim.model
+
+    # nx
+    if is_column(model.x):
+        dims.nx = model.x.shape[0]
+    else:
+        raise Exception("model.x should be column vector!")
+
+    # nu
+    if is_column(model.u):
+        dims.nu = model.u.shape[0]
+    elif model.u == None or model.u == []:
+        dims.nu = 0
+    else:
+        raise Exception("model.u should be column vector or None!")
+
+    # nz
+    if is_column(model.z):
+        dims.nz = model.z.shape[0]
+    elif model.z == None or model.z == []:
+        dims.nz = 0
+    else:
+        raise Exception("model.z should be column vector or None!")
+
+    # np
+    if is_column(model.p):
+        dims.np = model.p.shape[0]
+    elif model.p == None or model.p == []:
+        dims.np = 0
+    else:
+        raise Exception("model.p should be column vector or None!")
+
+
 def get_ocp_nlp_layout():
     current_module = sys.modules[__name__]
     acados_path = os.path.dirname(current_module.__file__)
@@ -140,6 +176,37 @@ def ocp_formulation_json_dump(acados_ocp, json_file='acados_ocp_nlp.json'):
         json.dump(ocp_nlp_json, f, default=np_array_to_list, indent=4, sort_keys=True)
 
 
+def sim_formulation_json_dump(acados_sim, json_file='acados_sim.json'):
+    # Load acados_sim structure description
+    sim_layout = get_sim_layout()
+
+    # Copy input sim object dictionary
+    sim_dict = dict(deepcopy(acados_sim).__dict__)
+
+    print(" ")
+    print("sim_dict", sim_dict)
+    print(" ")
+
+    for key, v in sim_layout.items():
+        print("key", key)
+        print("sim_dict[key]", sim_dict[key])
+        # skip non dict attributes
+        if not isinstance(v, dict): continue
+        # Copy sim object attributes dictionaries
+        sim_dict[key]=dict(getattr(acados_sim, key).__dict__)
+
+    sim_dict['model'] = acados_dae_strip_non_num(sim_dict['model'])
+
+    print(" ")
+    print("sim_dict", sim_dict)
+    print(" ")
+
+    sim_json = dict2json(sim_dict)
+
+    with open(json_file, 'w') as f:
+        json.dump(sim_json, f, default=np_array_to_list, indent=4, sort_keys=True)
+
+
 def ocp_formulation_json_load(json_file='acados_ocp_nlp.json'):
     # Load acados_ocp_nlp structure description
     ocp_layout = get_ocp_nlp_layout()
@@ -164,19 +231,71 @@ def ocp_formulation_json_load(json_file='acados_ocp_nlp.json'):
     return acados_ocp
 
 
-def generate_sim_solver(acados_ocp, model):
-# TODO: something is missing here!
+def generate_sim_solver(acados_sim, json_file='acados_sim.json'):
 
+    model = acados_sim.model
+
+    make_sim_dims_consistent(acados_sim)
+
+    # generate external functions
+    if acados_sim.solver_options.integrator_type == 'ERK':
+        # explicit model -- generate C code
+        generate_c_code_explicit_ode(model)
+    elif acados_sim.solver_options.integrator_type == 'IRK':
+        # implicit model -- generate C code
+        opts = dict(generate_hess=1)
+        generate_c_code_implicit_ode(model, opts)
+
+    # dump to json
+    sim_formulation_json_dump(acados_sim, json_file)
+
+    # setting up loader and environment
+    template_glob = os.path.join(
+        ACADOS_PATH,
+        'interfaces/acados_template/acados_template/c_templates_tera/*')
+        # TODO(andrea): this breaks when running main_test.py...
+        # 'interfaces/acados_template/acados_template/c_templates_tera/*!(swp.*)')
+    acados_template_path = os.path.join(
+        ACADOS_PATH,
+        'interfaces/acados_template/acados_template/c_templates_tera')
+
+    json_path = '{cwd}/{json_file}'.format(
+        cwd=os.getcwd(),
+        json_file=json_file)
+
+    if not os.path.exists(json_path):
+        raise Exception("{} not found!".format(json_path))
+
+    template_dir = 'c_generated_code/'
+
+    ## Render templates
     in_file = 'acados_sim_solver.in.c'
     out_file = 'acados_sim_solver_{}.c'.format(model.name)
-    render_template(in_file, out_file, template_dir)
+    render_template(in_file, out_file, template_dir, json_path)
 
     in_file = 'acados_sim_solver.in.h'
     out_file = 'acados_sim_solver_{}.h'.format(model.name)
-    render_template(in_file, out_file, template_dir)
+    render_template(in_file, out_file, template_dir, json_path)
 
-    sim_solver = acados_sim_solver(acados_ocp, 'c_generated_code/libacados_sim_solver_' + model.name + '.so')
+    in_file = 'Makefile.in'
+    out_file = 'Makefile'
+    render_template(in_file, out_file, template_dir, json_path)
 
+    ## folder model
+    template_dir = 'c_generated_code/{}_model/'.format(model.name)
+
+    in_file = 'model.in.h'
+    out_file = '{}_model.h'.format(model.name)
+    render_template(in_file, out_file, template_dir, json_path)
+
+    ## Compile solver
+    os.chdir('c_generated_code')
+    os.system('make clean')
+    os.system('make sim_shared_lib')
+    os.chdir('..')
+
+    # get
+    sim_solver = acados_sim_solver(acados_sim, 'c_generated_code/libacados_sim_solver_' + model.name + '.so')
     return sim_solver
 
 
