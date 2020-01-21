@@ -216,6 +216,7 @@ ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
 ocp.solver_options.integrator_type = INTEGRATOR_TYPE
 ocp.solver_options.sim_method_num_stages = 2
 ocp.solver_options.sim_method_num_steps = 5
+ocp.solver_options.sim_method_newton_iter = 3
 
 ocp.solver_options.nlp_solver_tol_stat = 1E-8
 ocp.solver_options.nlp_solver_tol_eq = 1E-8

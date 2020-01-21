@@ -1730,6 +1730,14 @@ class ocp_nlp_solver_options:
         else:
             raise Exception('Invalid sim_method_num_steps value. sim_method_num_steps must be an integer. Exiting.')
 
+    @sim_method_newton_iter.setter
+    def sim_method_newton_iter(self, sim_method_newton_iter):
+
+        if type(sim_method_newton_iter) == int:
+            self.__sim_method_newton_iter = sim_method_newton_iter
+        else:
+            raise Exception('Invalid sim_method_newton_iter value. sim_method_newton_iter must be an integer. Exiting.')
+
     @nlp_solver_type.setter
     def nlp_solver_type(self, nlp_solver_type):
         nlp_solver_types = ('SQP', 'SQP_RTI')
