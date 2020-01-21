@@ -67,6 +67,8 @@ def is_column(x):
             return True
         else:
             return False
+    elif x == None:
+        return False
     else:
         raise Exception("is_column expects one of the following types: np.ndarray, MX.sym, SX.sym."
                         + " Got: " + str(type(x)))
