@@ -49,11 +49,6 @@
 #include "{{ model.name }}_model/{{ model.name }}_model.h"
 #include "acados_sim_solver_{{ model.name }}.h"
 
-#define NX  {{ dims.nx }}
-#define NZ  {{ dims.nz }}
-#define NU  {{ dims.nu }}
-#define NP  {{ dims.np }}
-
 
 // ** global data **
 sim_config  * {{ model.name }}_sim_config;
@@ -78,12 +73,12 @@ int {{ model.name }}_acados_sim_create()
     // initialize
     int ii;
 
-    int nx = NX;
-    int nu = NU;
-    int nz = NZ;
+    int nx = {{ dims.nx }};
+    int nu = {{ dims.nu }};
+    int nz = {{ dims.nz }};
 
-    // double Td = ((double) {{ solver_options.tf }}) / {{ dims.N }};
-    double Td = {{ solver_options.tf / dims.N }};
+    {#// double Td = {{ solver_options.tf / dims.N }};#}
+    // double Td = {{ solver_options.Tsim }};
 
     {% if solver_options.integrator_type == "IRK" %}
     sim_impl_dae_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
@@ -193,8 +188,8 @@ int {{ model.name }}_acados_sim_create()
 
     /* initialize input to zero */
     // x
-    double x0[NX];
-    for (ii = 0; ii < NX; ii++)
+    double x0[{{ dims.nx }}];
+    for (ii = 0; ii < {{ dims.nx }}; ii++)
         x0[ii] = 0.0;
 
     sim_in_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims,
@@ -202,8 +197,8 @@ int {{ model.name }}_acados_sim_create()
 
 
     // u
-    double u0[NU];
-    for (ii = 0; ii < NU; ii++)
+    double u0[{{ dims.nu }}];
+    for (ii = 0; ii < {{ dims.nu }}; ii++)
         u0[ii] = 0.0;
 
     sim_in_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims,

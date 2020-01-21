@@ -189,6 +189,9 @@ def generate_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json',
     # make dims consistent
     make_ocp_dims_consistent(acados_ocp)
 
+    # set integrator time automatically
+    acados_ocp.solver_options.Tsim = acados_ocp.solver_options.tf / acados_ocp.dims.N
+
     # generate external functions
     if acados_ocp.solver_options.integrator_type == 'ERK':
         # explicit model -- generate C code
@@ -266,14 +269,13 @@ def generate_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json',
     out_file = 'make_sfun.m'
     render_template(in_file, out_file, template_dir, json_path)
 
-    # sim solver stuff: TODO: separate
-    # in_file = 'acados_sim_solver.in.c'
-    # out_file = 'acados_sim_solver_{}.c'.format(model.name)
-    # render_template(in_file, out_file, template_dir, json_path)
+    in_file = 'acados_sim_solver.in.c'
+    out_file = 'acados_sim_solver_{}.c'.format(model.name)
+    render_template(in_file, out_file, template_dir, json_path)
 
-    # in_file = 'acados_sim_solver.in.h'
-    # out_file = 'acados_sim_solver_{}.h'.format(model.name)
-    # render_template(in_file, out_file, template_dir, json_path)
+    in_file = 'acados_sim_solver.in.h'
+    out_file = 'acados_sim_solver_{}.h'.format(model.name)
+    render_template(in_file, out_file, template_dir, json_path)
 
     ## folder model
     template_dir = 'c_generated_code/{}_model/'.format(model.name)
