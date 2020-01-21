@@ -43,7 +43,7 @@ from .acados_ocp_solver import acados_ocp_solver
 from .acados_sim_solver import acados_sim_solver
 from ctypes import *
 from copy import deepcopy
-from .utils import ACADOS_PATH, is_column, render_template
+from .utils import ACADOS_PATH, is_column, render_template, dict2json
 
 
 def make_ocp_dims_consistent(acados_ocp):
@@ -100,7 +100,7 @@ def get_ocp_nlp_layout():
     return ocp_nlp_layout
 
 
-def store_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
+def ocp_formulation_json_dump(acados_ocp, json_file='acados_ocp_nlp.json'):
     # Load acados_ocp_nlp structure description
     ocp_layout = get_ocp_nlp_layout()
 
@@ -134,7 +134,7 @@ def store_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         json.dump(ocp_nlp_json, f, default=np_array_to_list, indent=4, sort_keys=True)
 
 
-def load_ocp_solver(json_file='acados_ocp_nlp.json'):
+def ocp_formulation_json_load(json_file='acados_ocp_nlp.json'):
     # Load acados_ocp_nlp structure description
     ocp_layout = get_ocp_nlp_layout()
 
@@ -149,7 +149,7 @@ def load_ocp_solver(json_file='acados_ocp_nlp.json'):
     # load class dict
     acados_ocp.__dict__ = ocp_nlp_dict
 
-    # laod class attributes dict, dims, constraints, ecc
+    # laod class attributes dict, dims, constraints, etc
     for acados_struct, v  in ocp_layout.items():
         # skip non dict attributes
         if not isinstance(v, dict): continue
@@ -213,7 +213,7 @@ def generate_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json',
         acados_ocp.cost.Vx_e = np.zeros((acados_ocp.dims.ny_e, acados_ocp.dims.nx))
         generate_c_code_nls_cost_e(acados_ocp.cost_r_e, name)
 
-    store_ocp_solver(acados_ocp, json_file)
+    ocp_formulation_json_dump(acados_ocp, json_file)
 
     # setting up loader and environment
     template_glob = os.path.join(
@@ -232,9 +232,9 @@ def generate_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json',
     if not os.path.exists(json_path):
         raise Exception("{} not found!".format(json_path))
 
-    ## folder: c_generated_code
     template_dir = 'c_generated_code/'
 
+    ## Render templates
     in_file = 'main.in.c'
     out_file = 'main_{}.c'.format(model.name)
     render_template(in_file, out_file, template_dir, json_path)

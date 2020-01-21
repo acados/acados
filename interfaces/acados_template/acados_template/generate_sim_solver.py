@@ -41,7 +41,7 @@ from .acados_sim_solver import acados_sim_solver
 from ctypes import *
 
 
-def store_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
+def ocp_formulation_json_dump(acados_ocp, json_file='acados_ocp_nlp.json'):
     # Load acados_ocp_nlp structure description
     ocp_layout = get_ocp_nlp_layout()
 
@@ -70,7 +70,7 @@ def store_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     with open(json_file, 'w') as f:
         json.dump(ocp_nlp_json, f, default=np_array_to_list)
 
-def load_ocp_solver(json_file='acados_ocp_nlp.json'):
+def ocp_formulation_json_load(json_file='acados_ocp_nlp.json'):
     # Load acados_ocp_nlp structure description
     ocp_layout = get_ocp_nlp_layout()
 
