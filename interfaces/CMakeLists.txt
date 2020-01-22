@@ -32,9 +32,6 @@
 #
 
 
-# add_test(NAME matlab_test_sim_pendulum 
-#         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/pendulum_on_cart_model ${MATLAB_EXECUTABLE} -nodisplay -nodesktop -r  "run('./run_tests.m');")
-
 if(ACADOS_OCTAVE_TEMPLATE)
 add_test(NAME octave_test_templates
          COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test

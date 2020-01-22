@@ -1681,6 +1681,11 @@ class ocp_nlp_solver_options:
         """Prediction horizon"""
         return self.__tf
 
+    @property
+    def Tsim(self):
+        """Time horizon for one integrator step"""
+        return self.__Tsim
+
     @qp_solver.setter
     def qp_solver(self, qp_solver):
         qp_solvers = ('PARTIAL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_QPOASES', \
@@ -1714,6 +1719,10 @@ class ocp_nlp_solver_options:
     @tf.setter
     def tf(self, tf):
         self.__tf = tf
+
+    @Tsim.setter
+    def Tsim(self, Tsim):
+        self.__Tsim = Tsim
 
     @sim_method_num_stages.setter
     def sim_method_num_stages(self, sim_method_num_stages):

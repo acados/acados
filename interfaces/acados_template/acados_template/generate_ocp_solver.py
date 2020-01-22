@@ -167,7 +167,7 @@ def generate_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json',
     make_ocp_dims_consistent(acados_ocp)
 
     # set integrator time automatically
-    acados_ocp.solver_options.__Tsim = acados_ocp.solver_options.tf / acados_ocp.dims.N
+    acados_ocp.solver_options.Tsim = acados_ocp.solver_options.tf / acados_ocp.dims.N
 
     # generate external functions
     if acados_ocp.solver_options.integrator_type == 'ERK':

@@ -198,6 +198,7 @@ def generate_sim_solver_from_ocp(acados_ocp, json_file='acados_ocp_nlp.json'):
 
     # render templates
     sim_render_templates(json_file, model_name)
+
     # generate casadi functions
     sim_generate_casadi_functions(acados_sim_)
 
