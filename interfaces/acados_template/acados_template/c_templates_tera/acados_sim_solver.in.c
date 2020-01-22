@@ -156,13 +156,13 @@ int {{ model.name }}_acados_sim_create()
     {{ model.name }}_sim_opts = sim_opts_create({{ model.name }}_sim_config, {{ model.name }}_sim_dims);
 {# TODO: use C interface instead of this.. #}
     {{ model.name }}_sim_opts->ns = {{ solver_options.sim_method_num_stages }}; // number of stages in rk integrator
-    {{ model.name }}_sim_opts->num_steps = 2 * {{ solver_options.sim_method_num_steps }}; // number of integration steps
+    {{ model.name }}_sim_opts->num_steps = {{ solver_options.sim_method_num_steps }}; // number of integration steps
     {{ model.name }}_sim_opts->sens_adj = false;
     {{ model.name }}_sim_opts->sens_forw = true;
+    {{ model.name }}_sim_opts->newton_iter = {{ solver_options.sim_method_newton_iter }};
 {% if solver_options.integrator_type == "IRK" %}
     {{ model.name }}_sim_opts->sens_algebraic = false;
     {{ model.name }}_sim_opts->output_z = false;
-    {{ model.name }}_sim_opts->newton_iter = 5;
     {{ model.name }}_sim_opts->jac_reuse = false;
 {% endif %}
 
