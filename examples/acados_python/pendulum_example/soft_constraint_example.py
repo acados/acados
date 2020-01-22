@@ -32,18 +32,13 @@
 #
 
 from acados_template import *
-import acados_template as at
 from export_pendulum_ode_model import export_pendulum_ode_model
+from utils import plot_pendulum
 import numpy as np
 import scipy.linalg
-from ctypes import *
 
-FORMULATION = 2 # 0 for linear soft bounds, 
-            # 1 for equivalent nonlinear soft constraint
-            # 2 for equivalent nonlinear soft constraint + 
-            # terminal soft state constraint
-
-xmax = 1.0
+nFormulations = 2
+tol = 1E-6
 
 def export_nonlinear_constraint():
 
@@ -64,7 +59,7 @@ def export_nonlinear_constraint():
     # voltage sphere
     constraint = acados_constraint()
 
-    constraint.con_h_expr = u
+    constraint.con_h_expr = v1
     constraint.x = x
     constraint.u = u
     constraint.nh = 1
@@ -72,238 +67,171 @@ def export_nonlinear_constraint():
 
     return constraint
 
-def export_terminal_nonlinear_constraint():
+# FORMULATION = 1 # 0 for soft constraints on x - using bounds on x
+#                 # 1 for soft constraints on x - using nonlinear constraint h
+def run_closed_loop_experiment(FORMULATION):
+    # create ocp object to formulate the OCP
+    ocp = acados_ocp_nlp()
 
-    con_name = 'nl_state_con'
+    # set model
+    model = export_pendulum_ode_model()
+    ocp.model = model
 
-    # set up states & controls
-    x1      = SX.sym('x1')
-    theta   = SX.sym('theta')
-    v1      = SX.sym('v1')
-    dtheta  = SX.sym('dtheta')
-    
-    x = vertcat(x1, v1, theta, dtheta)
+    Tf = 1.0
+    nx = model.x.size()[0]
+    nu = model.u.size()[0]
+    ny = nx + nu
+    ny_e = nx
+    N = 20
 
-    # controls
-    F = SX.sym('F')
-    u = vertcat(F)
+    # set dimensions
+    ocp.dims.nx  = nx 
+    ocp.dims.ny  = ny 
+    ocp.dims.ny_e = ny_e 
+    ocp.dims.nu  = model.u.size()[0]
+    ocp.dims.ns = nu 
+    ocp.dims.N   = N
+    ocp.dims.nbu = 1
 
-    # voltage sphere
-    constraint = acados_constraint()
+    if FORMULATION == 0:
+        ocp.dims.nh   = 0
+        ocp.dims.nsh  = 0
+        ocp.dims.nbx  = 1
+        ocp.dims.nsbx = 1
+    elif FORMULATION == 1:
+        ocp.dims.nh   = 1
+        ocp.dims.nsh  = 1
+        ocp.dims.nbx  = 0
+        ocp.dims.nsbx = 0
 
-    constraint.con_h_expr = x1
-    constraint.x = x
-    constraint.u = u
-    constraint.nh = 1
-    constraint.name = con_name
+    # set cost module
+    ocp.cost.cost_type = 'LINEAR_LS'
+    ocp.cost.cost_type_e = 'LINEAR_LS'
 
-    return constraint
+    Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
+    R = 2*np.diag([1e-2])
 
-# create render arguments
-ocp = acados_ocp_nlp()
+    ocp.cost.W = scipy.linalg.block_diag(Q, R)
 
-# export model 
-model = export_pendulum_ode_model()
+    ocp.cost.Vx = np.zeros((ny, nx))
+    ocp.cost.Vx[:nx,:nx] = np.eye(nx)
 
-# set model_name 
-ocp.model = model
+    Vu = np.zeros((ny, nu))
+    Vu[4,0] = 1.0
+    ocp.cost.Vu = Vu
 
-ocp.solver_options.nlp_solver_max_iter = 300
+    ocp.cost.Vx_e = np.eye(nx)
+    ocp.cost.W_e = Q
 
-Tf = 2.0
-nx = model.x.size()[0]
-nu = model.u.size()[0]
-ny = nx + nu
-ny_e = nx
-N = 50
+    ocp.cost.yref  = np.zeros((ny, ))
+    ocp.cost.yref_e = np.zeros((ny_e, ))
 
-# set ocp_nlp_dimensions
-nlp_dims     = ocp.dims
-nlp_dims.nx  = nx 
-nlp_dims.ny  = ny 
-nlp_dims.ny_e = ny_e 
-nlp_dims.nbx = 0
-nlp_dims.nu  = model.u.size()[0]
-nlp_dims.ns = nu 
-nlp_dims.N   = N
+    ocp.cost.zl = 2000*np.ones((1,))
+    ocp.cost.Zl = 1*np.ones((1,))
+    ocp.cost.zu = 2000*np.ones((1,))
+    ocp.cost.Zu = 1*np.ones((1,))
 
-if FORMULATION == 1:
-    nlp_dims.nh   = model.u.size()[0]
-    nlp_dims.nsh  = model.u.size()[0] 
-    nlp_dims.nbu  = 0 
-    nlp_dims.nsbu = 0 
-elif FORMULATION == 0:
-    nlp_dims.nh   = 0
-    nlp_dims.nsh  = 0
-    nlp_dims.nbu  = model.u.size()[0]
-    nlp_dims.nsbu = model.u.size()[0]
-elif FORMULATION == 2:
-    nlp_dims.ns_e = 1
-    nlp_dims.nh    = model.u.size()[0]
-    nlp_dims.nsh   = model.u.size()[0] 
-    nlp_dims.nh_e  = 1
-    nlp_dims.nsh_e = 1 
-    nlp_dims.nbu   = 0 
-    nlp_dims.nsbu  = 0 
+    # set constraints
+    Fmax = 80
+    vmax = 5
 
-# set weighting matrices
-nlp_cost = ocp.cost
-Q = np.eye(4)
-Q[0,0] = 1e0
-Q[1,1] = 1e2
-Q[2,2] = 1e-3
-Q[3,3] = 1e-2
+    x0 = np.array([0.0, np.pi, 0.0, 0.0])
+    ocp.constraints.x0 = x0
 
-R = np.eye(1)
-R[0,0] = 1e0
+    # bound on u
+    ocp.constraints.lbu = np.array([-Fmax])
+    ocp.constraints.ubu = np.array([+Fmax])
+    ocp.constraints.idxbu = np.array([0])
+    if FORMULATION == 0:
+        # soft bound on x
+        ocp.constraints.lbx = np.array([-vmax])
+        ocp.constraints.ubx = np.array([+vmax])
+        ocp.constraints.idxbx = np.array([2]) # v is x[2]
+        # indices of slacked constraints within bx
+        ocp.constraints.idxsbx = np.array([0])
+        # bounds on slack variables
+        ocp.constraints.lsbx = np.zeros((ocp.dims.nsbx, ))
+        ocp.constraints.usbx = np.zeros((ocp.dims.nsbx, ))
 
-unscale = N/Tf
-Q = Q * unscale
-R = R * unscale
+    elif FORMULATION == 1:
+        # soft bound on x, using constraint h
+        ocp.con_h = export_nonlinear_constraint()
+        ocp.constraints.lh = np.array([-vmax])
+        ocp.constraints.uh = np.array([+vmax])
+        # indices of slacked constraints within h
+        ocp.constraints.idxsh = np.array([0])
+        # bounds on slack variables
+        ocp.constraints.lsh = np.zeros((ocp.dims.nh, ))
+        ocp.constraints.ush = np.zeros((ocp.dims.nh, ))
 
-nlp_cost.W = scipy.linalg.block_diag(Q, R) 
+    # set options
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+    ocp.solver_options.integrator_type = 'ERK'
+    ocp.solver_options.tf = Tf
+    ocp.solver_options.nlp_solver_type = 'SQP'
 
-Vx = np.zeros((ny, nx))
-Vx[0,0] = 1.0
-Vx[1,1] = 1.0
-Vx[2,2] = 1.0
-Vx[3,3] = 1.0
+    json_filename = 'pendulum_soft_constraints.json'
+    acados_ocp_solver = generate_ocp_solver(ocp, json_file = json_filename)
+    acados_integrator = generate_sim_solver_from_ocp(ocp, json_file = json_filename)
 
-nlp_cost.Vx = Vx
+    # closed loop
+    Nsim = 20
+    simX = np.ndarray((Nsim+1, nx))
+    simU = np.ndarray((Nsim, nu))
+    xcurrent = x0
 
-Vu = np.zeros((ny, nu))
-Vu[4,0] = 1.0
-nlp_cost.Vu = Vu
+    for i in range(Nsim):
+        simX[i,:] = xcurrent
 
-nlp_cost.W_e = Q/unscale
+        # solve ocp
+        acados_ocp_solver.set(0, "lbx", xcurrent)
+        acados_ocp_solver.set(0, "ubx", xcurrent)
 
-Vx_e = np.zeros((ny_e, nx))
-Vx_e[0,0] = 1.0
-Vx_e[1,1] = 1.0
-Vx_e[2,2] = 1.0
-Vx_e[3,3] = 1.0
+        status = acados_ocp_solver.solve()
+        if status != 0:
+            raise Exception('acados acados_ocp_solver returned status {}. Exiting.'.format(status))
 
-nlp_cost.Vx_e = Vx_e
+        simU[i,:] = acados_ocp_solver.get(0, "u")
 
-nlp_cost.yref  = np.zeros((ny, ))
-nlp_cost.yref_e = np.zeros((ny_e, ))
+        # simulate system
+        acados_integrator.set("x", xcurrent)
+        acados_integrator.set("u", simU[i,:])
 
-nlp_cost.zl = 500*np.ones((1,)) * unscale
-nlp_cost.Zl = 0*np.ones((1,)) * unscale
-nlp_cost.zu = 500*np.ones((1,)) * unscale
-nlp_cost.Zu = 0*np.ones((1,)) * unscale
+        status = acados_integrator.solve()
+        if status != 0:
+            raise Exception('acados integrator returned status {}. Exiting.'.format(status))
 
-nlp_cost.zl_e = 5000*np.ones((1,))
-nlp_cost.Zl_e = 0*np.ones((1,))
-nlp_cost.zu_e = 5000*np.ones((1,))
-nlp_cost.Zu_e = 0*np.ones((1,))
+        # update state
+        xcurrent = acados_integrator.get("x")
 
-# setting bounds
-Fmax = 2.0
-nlp_con = ocp.constraints
-nlp_con.x0 = np.array([0.0, 3.14, 0.0, 0.0])
+    simX[Nsim,:] = xcurrent
 
-con_h = export_nonlinear_constraint()
-con_h_e = export_terminal_nonlinear_constraint()
-if FORMULATION == 1:
-    nlp_con.lh = np.array([-Fmax])
-    nlp_con.uh = np.array([+Fmax])
-    nlp_con.lsh = 0*np.array([-Fmax])
-    nlp_con.ush = 0*np.array([+Fmax])
-    nlp_con.idxsh = np.array([0])
-elif FORMULATION == 0:
-    nlp_con.lbu = np.array([-Fmax])
-    nlp_con.ubu = np.array([+Fmax])
-    nlp_con.lsbu = 0*np.array([-Fmax])
-    nlp_con.usbu = 0*np.array([+Fmax])
-    nlp_con.idxbu = np.array([0])
-    nlp_con.idxsbu = np.array([0])
-elif FORMULATION == 2:
-    nlp_con.lh = np.array([-Fmax])
-    nlp_con.uh = np.array([+Fmax])
-    nlp_con.lsh = 0*np.array([-Fmax])
-    nlp_con.ush = 0*np.array([+Fmax])
-    nlp_con.idxsh = np.array([0])
-    nlp_con.lh_e = np.array([-xmax])
-    nlp_con.uh_e = np.array([+xmax])
-    nlp_con.lsh_e = 0*np.array([-Fmax])
-    nlp_con.ush_e = 0*np.array([+Fmax])
-    nlp_con.idxsh_e = np.array([0])
+    # plot results
+    plot_pendulum(Tf/N, Fmax, simU, simX)
 
-# set QP solver
-ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
-ocp.solver_options.integrator_type = 'ERK'
+    # store results
+    np.savetxt('test_results/simX_soft_formulation_' + str(FORMULATION), simX)
+    np.savetxt('test_results/simU_soft_formulation_' + str(FORMULATION), simU)
 
-# set prediction horizon
-ocp.solver_options.tf = Tf
-ocp.solver_options.nlp_solver_type = 'SQP'
+    print("soft constraint example: ran formulation", FORMULATION, "successfully.")
 
-if FORMULATION == 1:
-    ocp.con_h = con_h
-    acados_solver = generate_ocp_solver(ocp, json_file = 'acados_ocp.json')
-elif FORMULATION == 0:
-    acados_solver = generate_ocp_solver(ocp, json_file = 'acados_ocp.json')
-elif FORMULATION == 2:
-    ocp.con_h = con_h
-    ocp.con_h_e = con_h_e
-    acados_solver = generate_ocp_solver(ocp, json_file = 'acados_ocp.json')
+if __name__ == "__main__":
 
-Nsim = 90
+    for i in range(nFormulations):
+        run_closed_loop_experiment(i)
 
-simX = np.ndarray((Nsim, nx))
-simU = np.ndarray((Nsim, nu))
+    simX_ref = np.loadtxt('test_results/simX_soft_formulation_' + str(0))
+    simU_ref = np.loadtxt('test_results/simU_soft_formulation_' + str(0))
+    for i in range(1, nFormulations):
+        simX = np.loadtxt('test_results/simX_soft_formulation_' + str(i))
+        simU = np.loadtxt('test_results/simU_soft_formulation_' + str(i))
 
-for i in range(Nsim):
-    status = acados_solver.solve()
+        error_x = np.linalg.norm(simX_ref - simX)
+        error_u = np.linalg.norm(simU_ref - simU)
 
-    sqp_iter = acados_solver.get_stats('sqp_iter')
-    print('sqp_iter', sqp_iter)
+        if error_x > tol or error_u > tol:
+            raise Exception("soft constraint example: formulations should return same solution up to" + str(tol))
 
-    # time_tot = acados_solver.get_stats('time_tot')
-    # print('time_tot', time_tot)
-
-    if status != 0:
-        raise Exception('acados returned status {}. Exiting.'.format(status))
-
-    # get solution
-    x0 = acados_solver.get(0, "x")
-    u0 = acados_solver.get(0, "u")
-    
-    for j in range(nx):
-        simX[i,j] = x0[j]
-
-    for j in range(nu):
-        simU[i,j] = u0[j]
-    
-    # update initial condition
-    x0 = acados_solver.get(1, "x")
-
-    acados_solver.set(0, "lbx", x0)
-    acados_solver.set(0, "ubx", x0)
-
-# plot results
-import matplotlib
-import matplotlib.pyplot as plt
-t = np.linspace(0.0, Tf/N, Nsim)
-plt.subplot(2, 1, 1)
-plt.step(t, simU, color='r')
-plt.title('closed-loop simulation')
-plt.ylabel('u')
-plt.xlabel('t')
-plt.grid(True)
-plt.subplot(2, 1, 2)
-plt.plot(t, simX[:,1])
-plt.ylabel('theta')
-plt.xlabel('t')
-plt.grid(True)
-plt.subplot(3, 1, 3)
-plt.plot(t, simX[:,1])
-plt.ylabel('x')
-plt.xlabel('t')
-plt.grid(True)
-
-# avoid plotting when running on Travis
-if os.environ.get('ACADOS_ON_TRAVIS') is None: 
-    plt.show()
+    print("soft constraint example: SUCCESS, got same solutions for equivalent formulations up to tolerance %1.e." %(tol))
 
