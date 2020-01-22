@@ -66,9 +66,9 @@ add_test(NAME python_pendulum_sim_example
 add_test(NAME python_pendulum_closed_loop_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_example
         python minimal_example_closed_loop.py)
-add_test(NAME python_soft_constraints_example
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/soft_constraints_example
-        python generate_c_code.py)
+add_test(NAME python_pendulum_soft_constraints_example
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_example
+        python soft_constraint_example.py)
 add_test(NAME python_pmsm_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pmsm_example
         python generate_c_code.py)
