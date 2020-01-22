@@ -100,8 +100,6 @@ def get_ocp_nlp_layout():
     return ocp_nlp_layout
 
 
-
-
 def ocp_formulation_json_dump(acados_ocp, json_file='acados_ocp_nlp.json'):
     # Load acados_ocp_nlp structure description
     ocp_layout = get_ocp_nlp_layout()
@@ -133,6 +131,7 @@ def ocp_formulation_json_dump(acados_ocp, json_file='acados_ocp_nlp.json'):
         json.dump(ocp_nlp_json, f, default=np_array_to_list, indent=4, sort_keys=True)
 
 
+
 def ocp_formulation_json_load(json_file='acados_ocp_nlp.json'):
     # Load acados_ocp_nlp structure description
     ocp_layout = get_ocp_nlp_layout()
@@ -155,7 +154,6 @@ def ocp_formulation_json_load(json_file='acados_ocp_nlp.json'):
         setattr(acados_ocp, acados_struct, ocp_nlp_as_object(ocp_nlp_dict[acados_struct]))
 
     return acados_ocp
-
 
 
 

@@ -105,25 +105,7 @@ def sim_formulation_json_dump(acados_sim, json_file='acados_sim.json'):
         json.dump(sim_json, f, default=np_array_to_list, indent=4, sort_keys=True)
 
 
-
-def generate_sim_solver(acados_sim, json_file='acados_sim.json'):
-
-    model = acados_sim.model
-
-    make_sim_dims_consistent(acados_sim)
-
-    # generate external functions
-    if acados_sim.solver_options.integrator_type == 'ERK':
-        # explicit model -- generate C code
-        generate_c_code_explicit_ode(model)
-    elif acados_sim.solver_options.integrator_type == 'IRK':
-        # implicit model -- generate C code
-        opts = dict(generate_hess=1)
-        generate_c_code_implicit_ode(model, opts)
-
-    # dump to json
-    sim_formulation_json_dump(acados_sim, json_file)
-
+def sim_render_templates(json_file, model_name):
     # setting up loader and environment
     template_glob = os.path.join(
         ACADOS_PATH,
@@ -145,11 +127,11 @@ def generate_sim_solver(acados_sim, json_file='acados_sim.json'):
 
     ## Render templates
     in_file = 'acados_sim_solver.in.c'
-    out_file = 'acados_sim_solver_{}.c'.format(model.name)
+    out_file = 'acados_sim_solver_{}.c'.format(model_name)
     render_template(in_file, out_file, template_dir, json_path)
 
     in_file = 'acados_sim_solver.in.h'
-    out_file = 'acados_sim_solver_{}.h'.format(model.name)
+    out_file = 'acados_sim_solver_{}.h'.format(model_name)
     render_template(in_file, out_file, template_dir, json_path)
 
     in_file = 'Makefile.in'
@@ -157,19 +139,73 @@ def generate_sim_solver(acados_sim, json_file='acados_sim.json'):
     render_template(in_file, out_file, template_dir, json_path)
 
     ## folder model
-    template_dir = 'c_generated_code/{}_model/'.format(model.name)
+    template_dir = 'c_generated_code/{}_model/'.format(model_name)
 
     in_file = 'model.in.h'
-    out_file = '{}_model.h'.format(model.name)
+    out_file = '{}_model.h'.format(model_name)
     render_template(in_file, out_file, template_dir, json_path)
+
+
+def sim_generate_casadi_functions(acados_sim):
+    model = acados_sim.model
+    integrator_type = acados_sim.solver_options.integrator_type
+    # generate external functions
+    if integrator_type == 'ERK':
+        # explicit model -- generate C code
+        generate_c_code_explicit_ode(model)
+    elif integrator_type == 'IRK':
+        # implicit model -- generate C code
+        opts = dict(generate_hess=1)
+        generate_c_code_implicit_ode(model, opts)
+
+
+def generate_sim_solver(acados_sim, json_file='acados_sim.json'):
+
+    model_name = acados_sim.model.name
+
+    make_sim_dims_consistent(acados_sim)
+
+    sim_formulation_json_dump(acados_sim, json_file)
+
+    # render templates
+    sim_render_templates(json_file, model_name)
+    # generate casadi functions
+    sim_generate_casadi_functions(acados_sim)
 
     ## Compile solver
     os.chdir('c_generated_code')
-    os.system('make clean')
     os.system('make sim_shared_lib')
     os.chdir('..')
 
     # get
-    sim_solver = acados_sim_solver(acados_sim, 'c_generated_code/libacados_sim_solver_' + model.name + '.so')
+    sim_solver = acados_sim_solver(acados_sim, 'c_generated_code/libacados_sim_solver_' + model_name + '.so')
     return sim_solver
 
+
+def generate_sim_solver_from_ocp(acados_ocp, json_file='acados_ocp_nlp.json'):
+
+    model_name = acados_ocp.model.name
+
+    # set up acados_sim_
+    acados_sim_ = acados_sim()
+    acados_sim_.model = acados_ocp.model
+    acados_sim_.dims.nx = acados_ocp.dims.nx
+    acados_sim_.dims.nu = acados_ocp.dims.nu
+    acados_sim_.dims.nz = acados_ocp.dims.nz
+    acados_sim_.dims.np = acados_ocp.dims.np
+
+    acados_sim_.solver_options.integrator_type = acados_ocp.solver_options.integrator_type
+
+    # render templates
+    sim_render_templates(json_file, model_name)
+    # generate casadi functions
+    sim_generate_casadi_functions(acados_sim_)
+
+    ## Compile solver
+    os.chdir('c_generated_code')
+    os.system('make sim_shared_lib')
+    os.chdir('..')
+
+    # get
+    sim_solver = acados_sim_solver(acados_sim_, 'c_generated_code/libacados_sim_solver_' + model_name + '.so')
+    return sim_solver
