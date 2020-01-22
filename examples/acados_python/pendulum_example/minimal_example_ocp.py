@@ -32,11 +32,10 @@
 #
 
 from acados_template import *
-from export_pendulum_ode_model import *
+from export_pendulum_ode_model import export_pendulum_ode_model
 import numpy as np
 import scipy.linalg
-from ctypes import *
-import matplotlib.pyplot as plt
+from utils import plot_pendulum
 
 # FORMULATION = 'NLS' # 'LS'
 FORMULATION = 'LS' # 'LS'
@@ -151,44 +150,5 @@ for i in range(N):
 simX[N,:] = ocp_solver.get(N, "x")
 
 
-# plot results
-t = np.linspace(0.0, Tf/N, N)
-
-plt.subplot(5, 1, 1)
-plt.step(t, simU, color='r')
-plt.ylabel('u')
-plt.xlabel('t')
-plt.ylim([-Fmax, Fmax])
-plt.grid(True)
-
-plt.subplot(5, 1, 2)
-plt.plot(t, simX[:-1,0])
-plt.ylabel('p')
-plt.xlabel('t')
-plt.grid(True)
-
-plt.subplot(5, 1, 3)
-plt.plot(t, simX[:-1,1])
-plt.ylabel('theta')
-plt.xlabel('t')
-plt.grid(True)
-
-plt.subplot(5, 1, 4)
-plt.plot(t, simX[:-1,2])
-plt.ylabel('v')
-plt.xlabel('t')
-plt.grid(True)
-
-plt.subplot(5, 1, 5)
-plt.plot(t, simX[:-1,3])
-plt.ylabel('dtheta')
-plt.xlabel('t')
-plt.grid(True)
-
-plt.title('closed-loop simulation')
-plt.subplots_adjust(left=None, bottom=None, right=None, top=None, hspace=0.4)
-
-# avoid plotting when running on Travis
-if os.environ.get('ACADOS_ON_TRAVIS') is None:
-    plt.show()
+plot_pendulum(Tf/N, Fmax, simU, simX)
 

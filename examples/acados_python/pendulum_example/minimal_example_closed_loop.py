@@ -32,13 +32,11 @@
 #
 
 from acados_template import *
-from export_pendulum_ode_model import *
+from export_pendulum_ode_model import export_pendulum_ode_model
+from utils import plot_pendulum
 import numpy as np
 import scipy.linalg
-from ctypes import *
-import matplotlib.pyplot as plt
 
-# FORMULATION = 'NLS' # 'LS'
 FORMULATION = 'LS' # 'LS'
 
 # create ocp object to formulate the OCP
@@ -108,7 +106,7 @@ ocp.solver_options.qp_solver_cond_N = N
 ocp.solver_options.tf = Tf
 # ocp.solver_options.nlp_solver_type = 'SQP_RTI'
 
-ocp_solver = generate_ocp_solver(ocp, json_file = 'acados_ocp_' + model.name + '.json')
+acados_ocp_solver = generate_ocp_solver(ocp, json_file = 'acados_ocp_' + model.name + '.json')
 acados_integrator = generate_sim_solver_from_ocp(ocp, json_file = 'acados_ocp_' + model.name + '.json')
 
 simX = np.ndarray((N+1, nx))
@@ -119,14 +117,14 @@ xcurrent = x0
 # closed loop
 for i in range(N):
     # solve ocp
-    ocp_solver.set(0, "lbx", xcurrent)
-    ocp_solver.set(0, "ubx", xcurrent)
+    acados_ocp_solver.set(0, "lbx", xcurrent)
+    acados_ocp_solver.set(0, "ubx", xcurrent)
 
-    status = ocp_solver.solve()
+    status = acados_ocp_solver.solve()
     if status != 0:
-        raise Exception('acados ocp_solver returned status {}. Exiting.'.format(status))
+        raise Exception('acados acados_ocp_solver returned status {}. Exiting.'.format(status))
 
-    simU[i,:] = ocp_solver.get(0, "u")
+    simU[i,:] = acados_ocp_solver.get(0, "u")
 
     # simulate system
     acados_integrator.set("x", xcurrent)
@@ -141,43 +139,4 @@ for i in range(N):
     simX[i,:] = xcurrent
 
 # plot results
-t = np.linspace(0.0, Tf/N, N)
-
-plt.subplot(5, 1, 1)
-plt.step(t, simU, color='r')
-plt.ylabel('u')
-plt.xlabel('t')
-plt.ylim([-Fmax, Fmax])
-plt.grid(True)
-
-plt.subplot(5, 1, 2)
-plt.plot(t, simX[:-1,0])
-plt.ylabel('p')
-plt.xlabel('t')
-plt.grid(True)
-
-plt.subplot(5, 1, 3)
-plt.plot(t, simX[:-1,1])
-plt.ylabel('theta')
-plt.xlabel('t')
-plt.grid(True)
-
-plt.subplot(5, 1, 4)
-plt.plot(t, simX[:-1,2])
-plt.ylabel('v')
-plt.xlabel('t')
-plt.grid(True)
-
-plt.subplot(5, 1, 5)
-plt.plot(t, simX[:-1,3])
-plt.ylabel('dtheta')
-plt.xlabel('t')
-plt.grid(True)
-
-plt.title('closed-loop simulation')
-plt.subplots_adjust(left=None, bottom=None, right=None, top=None, hspace=0.4)
-
-# avoid plotting when running on Travis
-if os.environ.get('ACADOS_ON_TRAVIS') is None:
-    plt.show()
-
+plot_pendulum(Tf/N, Fmax, simU, simX)

@@ -33,6 +33,7 @@
 
 from acados_template import *
 from export_pendulum_ode_model import export_pendulum_ode_model
+from utils import plot_pendulum
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -67,7 +68,7 @@ acados_integrator.set("u", u0)
 
 simX[0,:] = x0
 
-for i in range(N-1):
+for i in range(N):
     # set initial state
     acados_integrator.set("x", simX[i,:])
     # solve
@@ -79,40 +80,4 @@ if status != 0:
     raise Exception('acados returned status {}. Exiting.'.format(status))
 
 # plot results
-t = np.linspace(0.0, Tf/N, N)
-
-
-# plot results
-t = np.linspace(0.0, Tf/N, N)
-
-plt.subplot(4, 1, 1)
-plt.plot(t, simX[:-1,0])
-plt.ylabel('p')
-plt.xlabel('t')
-plt.grid(True)
-
-plt.subplot(4, 1, 2)
-plt.plot(t, simX[:-1,1])
-plt.ylabel('theta')
-plt.xlabel('t')
-plt.grid(True)
-
-plt.subplot(4, 1, 3)
-plt.plot(t, simX[:-1,2])
-plt.ylabel('v')
-plt.xlabel('t')
-plt.grid(True)
-
-plt.subplot(4, 1, 4)
-plt.plot(t, simX[:-1,3])
-plt.ylabel('dtheta')
-plt.xlabel('t')
-plt.grid(True)
-
-plt.title('closed-loop simulation')
-plt.subplots_adjust(left=None, bottom=None, right=None, top=None, hspace=0.4)
-
-# avoid plotting when running on Travis
-if os.environ.get('ACADOS_ON_TRAVIS') is None: 
-    plt.show()
-
+plot_pendulum(Tf/N, 10, np.zeros((N, nu)), simX)
