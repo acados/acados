@@ -44,10 +44,8 @@ FORMULATION = 'LS' # 'LS'
 # create ocp object to formulate the OCP
 ocp = acados_ocp_nlp()
 
-# export model 
+# set model
 model = export_pendulum_ode_model()
-
-# set model_name 
 ocp.model = model
 
 Tf = 1.0
@@ -57,25 +55,22 @@ ny = nx + nu
 ny_e = nx
 N = 20
 
-# set ocp_nlp_dimensions
-nlp_dims     = ocp.dims
-nlp_dims.nx  = nx 
-nlp_dims.ny  = ny 
-nlp_dims.ny_e = ny_e 
-nlp_dims.nbx = 0
-nlp_dims.nbu = nu 
-nlp_dims.nu  = nu
-nlp_dims.N   = N
+# set dimensions
+ocp.dims.nx  = nx
+ocp.dims.ny  = ny
+ocp.dims.ny_e = ny_e
+ocp.dims.nbx = 0
+ocp.dims.nbu = nu 
+ocp.dims.nu  = nu
+ocp.dims.N   = N
 
 # set cost module
-nlp_cost = ocp.cost
-
 if FORMULATION == 'LS':
-    nlp_cost.cost_type = 'LINEAR_LS'
-    nlp_cost.cost_type_e = 'LINEAR_LS'
+    ocp.cost.cost_type = 'LINEAR_LS'
+    ocp.cost.cost_type_e = 'LINEAR_LS'
 elif FORMULATION == 'NLS':
-    nlp_cost.cost_type = 'NONLINEAR_LS'
-    nlp_cost.cost_type_e = 'NONLINEAR_LS'
+    ocp.cost.cost_type = 'NONLINEAR_LS'
+    ocp.cost.cost_type_e = 'NONLINEAR_LS'
 else:
     raise Exception('Unknown FORMULATION. Possible values are \'LS\' and \'NLS\'.')
 
@@ -83,21 +78,21 @@ Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
 R = 2*np.diag([1e-2])
 
 if FORMULATION == 'NLS':
-    nlp_cost.W = scipy.linalg.block_diag(R, Q) 
+    ocp.cost.W = scipy.linalg.block_diag(R, Q)
 else:
-    nlp_cost.W = scipy.linalg.block_diag(Q, R) 
+    ocp.cost.W = scipy.linalg.block_diag(Q, R)
 
-nlp_cost.W_e = Q 
+ocp.cost.W_e = Q
 
 if FORMULATION == 'LS':
-    nlp_cost.Vx = np.zeros((ny, nx))
-    nlp_cost.Vx[:nx,:nx] = np.eye(nx)
+    ocp.cost.Vx = np.zeros((ny, nx))
+    ocp.cost.Vx[:nx,:nx] = np.eye(nx)
 
     Vu = np.zeros((ny, nu))
     Vu[4,0] = 1.0
-    nlp_cost.Vu = Vu
+    ocp.cost.Vu = Vu
 
-    nlp_cost.Vx_e = np.eye(nx)
+    ocp.cost.Vx_e = np.eye(nx)
 
 elif FORMULATION == 'NLS':
     x = SX.sym('x', 4, 1)
@@ -115,9 +110,8 @@ elif FORMULATION == 'NLS':
 else:
     raise Exception("Invalid cost formulation. Exiting.")
 
-
-nlp_cost.yref  = np.zeros((ny, ))
-nlp_cost.yref_e = np.zeros((ny_e, ))
+ocp.cost.yref  = np.zeros((ny, ))
+ocp.cost.yref_e = np.zeros((ny_e, ))
 
 # set constraints
 Fmax = 80
@@ -125,7 +119,6 @@ ocp.constraints.constr_type = 'BGH'
 ocp.constraints.lbu = np.array([-Fmax])
 ocp.constraints.ubu = np.array([+Fmax])
 ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
-# ocp.constraints.x0 = np.array([0.0, 0.5, 0.0, 0.0])
 ocp.constraints.idxbu = np.array([0])
 
 ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
@@ -140,22 +133,22 @@ ocp.solver_options.tf = Tf
 ocp.solver_options.nlp_solver_type = 'SQP'
 # ocp.solver_options.nlp_solver_type = 'SQP_RTI'
 
-acados_solver = generate_ocp_solver(ocp, json_file = 'acados_ocp.json')
+ocp_solver = generate_ocp_solver(ocp, json_file = 'acados_ocp.json')
 
 
 simX = np.ndarray((N+1, nx))
 simU = np.ndarray((N, nu))
 
-status = acados_solver.solve()
+status = ocp_solver.solve()
 
 if status != 0:
     raise Exception('acados returned status {}. Exiting.'.format(status))
 
 # get solution
 for i in range(N):
-    simX[i,:] = acados_solver.get(i, "x")
-    simU[i,:] = acados_solver.get(i, "u")
-simX[N,:] = acados_solver.get(N, "x")
+    simX[i,:] = ocp_solver.get(i, "x")
+    simU[i,:] = ocp_solver.get(i, "u")
+simX[N,:] = ocp_solver.get(N, "x")
 
 
 # plot results
