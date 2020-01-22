@@ -131,7 +131,6 @@ class acados_ocp_solver:
 
         # treat parameters separately
         if field_ is 'p':
-            # not setting parameters
             self.shared_lib.acados_update_params.argtypes = [c_int, POINTER(c_double)]
             self.shared_lib.acados_update_params.restype = c_int
             value_data = cast(value_.ctypes.data, POINTER(c_double))

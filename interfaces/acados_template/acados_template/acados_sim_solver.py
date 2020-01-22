@@ -70,7 +70,7 @@ class acados_sim_solver:
             'Sx': nx*nx
         }
 
-        self.settable = ['S_adj', 'S_forw', 'T', 'x', 'u', 'xdot', 'z', 'Su', 'Sx']
+        self.settable = ['S_adj', 'S_forw', 'T', 'x', 'u', 'xdot', 'z', 'Su', 'Sx', 'p']
         self.model_name = model_name
 
     def solve(self):
@@ -112,7 +112,14 @@ class acados_sim_solver:
         field = field_
         field = field.encode('utf-8')
 
-        if field_ in self.settable:
+        # treat parameters separately
+        if field_ is 'p':
+            model_name = self.sim_struct.model.name
+            getattr(self.shared_lib, f"{model_name}_acados_sim_update_params").argtypes = [POINTER(c_double)]
+            value_data = cast(value_.ctypes.data, POINTER(c_double))
+            getattr(self.shared_lib, f"{model_name}_acados_sim_update_params")(value_data, value_.shape[0])
+
+        elif field_ in self.settable:
             self.shared_lib.sim_in_set.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
             self.shared_lib.sim_in_set(self.sim_config, self.sim_dims, self.sim_in, field, value_data_p)
         else:
