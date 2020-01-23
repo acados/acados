@@ -126,7 +126,7 @@ ocp.dims.nbu = nu
 ocp.dims.nu  = nu
 ocp.dims.N   = N
 
-# set weighting matrices
+# set cost
 if FORMULATION == 'LS':
     ocp.cost.cost_type = 'LINEAR_LS'
     ocp.cost.cost_type_e = 'LINEAR_LS'

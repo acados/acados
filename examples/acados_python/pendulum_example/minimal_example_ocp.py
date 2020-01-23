@@ -37,8 +37,7 @@ import numpy as np
 import scipy.linalg
 from utils import plot_pendulum
 
-# FORMULATION = 'NLS' # 'LS'
-FORMULATION = 'LS' # 'LS'
+FORMULATION = 'NLS' # 'LS'
 
 # create ocp object to formulate the OCP
 ocp = acados_ocp_nlp()
@@ -63,7 +62,7 @@ ocp.dims.nbu = nu
 ocp.dims.nu  = nu
 ocp.dims.N   = N
 
-# set cost module
+# set cost
 if FORMULATION == 'LS':
     ocp.cost.cost_type = 'LINEAR_LS'
     ocp.cost.cost_type_e = 'LINEAR_LS'
@@ -76,12 +75,8 @@ else:
 Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
 R = 2*np.diag([1e-2])
 
-if FORMULATION == 'NLS':
-    ocp.cost.W = scipy.linalg.block_diag(R, Q)
-else:
-    ocp.cost.W = scipy.linalg.block_diag(Q, R)
-
 ocp.cost.W_e = Q
+ocp.cost.W = scipy.linalg.block_diag(Q, R)
 
 if FORMULATION == 'LS':
     ocp.cost.Vx = np.zeros((ny, nx))
@@ -94,18 +89,12 @@ if FORMULATION == 'LS':
     ocp.cost.Vx_e = np.eye(nx)
 
 elif FORMULATION == 'NLS':
-    x = SX.sym('x', 4, 1)
-    u = SX.sym('u', 1, 1)
-    ocp.cost_r.expr = vertcat(u, x) 
-    ocp.cost_r.x = x
-    ocp.cost_r.u = u 
-    ocp.cost_r.name = 'lin_res' 
-    ocp.cost_r.ny = nx + nu
+    x = ocp.model.x
+    u = ocp.model.u
 
-    ocp.cost_r_e.expr = x
-    ocp.cost_r_e.x = x 
-    ocp.cost_r_e.name = 'lin_res' 
-    ocp.cost_r_e.ny = nx 
+    ocp.model.cost_y_expr = vertcat(x, u)
+    ocp.model.cost_y_expr_e = x
+
 else:
     raise Exception("Invalid cost formulation. Exiting.")
 
