@@ -41,7 +41,7 @@ import scipy.linalg
 CODE_GEN = 1
 COMPILE = 1
 
-FORMULATION = 2 # 0 for hexagon 1 for sphere 2 SCQP sphere
+FORMULATION = 2 # 0 for hexagon 2 SCQP sphere
 
 i_d_ref = 1.484
 i_q_ref = 1.429
@@ -127,7 +127,7 @@ def export_rsm_model():
                         psi_d - Psi[0], \
                         psi_q - Psi[1])
 
-    model = acados_dae()
+    model = acados_ocp_model()
 
     model.f_impl_expr = f_impl
     model.f_expl_expr = []
@@ -138,36 +138,13 @@ def export_rsm_model():
     model.p = p
     model.name = model_name
 
-    return model
-
-def export_voltage_sphere_con():
-
-    con_name = 'v_sphere'
-
-    # set up states
-    psi_d = SX.sym('psi_d')
-    psi_q = SX.sym('psi_q')
-    x = vertcat(psi_d, psi_q)
-
-    # set up controls
-    u_d = SX.sym('u_d')
-    u_q = SX.sym('u_q')
-    u = vertcat(u_d, u_q)
-
-    # voltage sphere
-    constraint = acados_constraint()
-
+    # BGP constraint
     r = SX.sym('r', 2, 1)
-    constraint.con_phi_expr = r[0]**2 + r[1]**2
-    constraint.con_r_expr = vertcat(u_d, u_q)
-    constraint.x = x
-    constraint.u = u
-    constraint.r = r
-    constraint.nr = 2
-    constraint.nphi = 1
-    constraint.name = con_name
+    model.con_phi_expr = r[0]**2 + r[1]**2
+    model.con_r_expr = vertcat(u_d, u_q)
+    model.r = r
 
-    return constraint
+    return model
 
 def get_general_constraints_DC(u_max):
 
@@ -216,20 +193,10 @@ ocp = acados_ocp_nlp()
 
 # export model
 model = export_rsm_model()
-
-# export constraint description
-constraint = export_voltage_sphere_con()
-
-# set model_name
 ocp.model = model
-
-if FORMULATION == 1:
-    # constraints name
-    ocp.con_h = constraint
 
 if FORMULATION == 2:
     # constraints name
-    ocp.con_phi = constraint
     ocp.constraints.constr_type = 'BGP'
 
 # Ts  = 0.0016

@@ -78,7 +78,7 @@ def export_pendulum_ode_model():
 
     f_impl = xdot - f_expl
 
-    model = acados_dae()
+    model = acados_ocp_model()
 
     model.f_impl_expr = f_impl
     model.f_expl_expr = f_expl
