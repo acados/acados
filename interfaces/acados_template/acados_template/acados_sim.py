@@ -102,17 +102,6 @@ class sim_dims:
     def set(self, attr, value):
         setattr(self, attr, value)
 
-    # TODO:
-    # @p.setter
-    # def p(self, p):
-    #     if type(p) == np.ndarray:
-    #         self.__p = p
-    #     else:
-    #         raise Exception('Invalid p value. Exiting.')
-
-    # def set(self, attr, value):
-    #     setattr(self, attr, value)
-
 
 class sim_solver_options:
     """
@@ -198,7 +187,7 @@ class acados_sim:
         acados_path -- path of your acados installation
         """
         self.dims = sim_dims()
-        self.model = acados_dae()
+        self.model = acados_sim_model()
         self.solver_options = sim_solver_options()
 
         self.acados_include_path = f'{acados_path}/include'

@@ -31,7 +31,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-class acados_ocp_model():
+class acados_sim_model():
     def __init__(self):
         # common
         self.x = None           #: CasADi variable describing the state of the system
@@ -40,23 +40,24 @@ class acados_ocp_model():
         self.z = []             #: CasADi variable describing the algebraic variables of the DAE
         self.p = []             #: CasADi variable describing parameters of the DAE
         self.name = None        #: name associated with the function
+
+
+class acados_ocp_model( acados_sim_model ):
+    def __init__(self):
         # dynamics
         self.f_impl_expr = None #: CasADi expression for the implicit dynamics :math:`F(\dot{x}, x, u, z) = 0`
         self.f_expl_expr = None #: CasADi expression for the explicit dynamics :math:`\dot{x} = f(x, u)`
         # constraints
         self.con_h_expr   = None #: CasADi expression for the constraint
-        self.con_phi_expr = None   #: CasADi expression for the constraint
+        self.con_phi_expr = None #: CasADi expression for the constraint
         self.con_r_expr   = None #: CasADi expression for the constraint
-        self.con_h_expr   = None #: CasADi expression for the constraint
-        self.con_phi_expr = None   #: CasADi expression for the constraint
-        self.con_r_expr   = None #: CasADi expression for the constraint
+        self.con_phi_expr = None #: CasADi expression for the constraint
+        self.con_r_in_phi = None
         # terminal
         self.con_h_expr_e   = None #: CasADi expression for the constraint
-        self.con_phi_expr_e = None   #: CasADi expression for the constraint
         self.con_r_expr_e   = None #: CasADi expression for the constraint
-        self.con_h_expr_e   = None #: CasADi expression for the constraint
-        self.con_phi_expr_e = None   #: CasADi expression for the constraint
-        self.con_r_expr_e   = None #: CasADi expression for the constraint
+        self.con_phi_expr_e = None #: CasADi expression for the constraint
+        self.con_r_in_phi_e = None
         # cost
 
 class acados_cost():
@@ -67,6 +68,26 @@ class acados_cost():
         self.p = []          #: CasADi variable describing parameters in the cost
         self.ny = None       #: number of residuals
         self.name = None     #: name associated with the function
+
+
+def acados_sim_model_strip_casadi_symbolics(model):
+    out = model
+    if 'f_impl_expr' in out.keys():
+        del out['f_impl_expr']
+    if 'f_expl_expr' in out.keys():
+        del out['f_expl_expr']
+    if 'x' in out.keys():
+        del out['x']
+    if 'xdot' in out.keys():
+        del out['xdot']
+    if 'u' in out.keys():
+        del out['u']
+    if 'z' in out.keys():
+        del out['z']
+    if 'p' in out.keys():
+        del out['p']
+    return out
+
 
 def acados_ocp_model_strip_casadi_symbolics(model):
     out = model
