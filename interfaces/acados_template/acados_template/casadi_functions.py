@@ -31,9 +31,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from casadi import *
-# TODO(andrea): add properties for every class and move into main class
-class acados_dae():
+class acados_ocp_model():
     def __init__(self):
         self.f_impl_expr = None #: CasADi expression for the implicit dynamics :math:`F(\dot{x}, x, u, z) = 0`
         self.f_expl_expr = None #: CasADi expression for the explicit dynamics :math:`\dot{x} = f(x, u)`
@@ -43,21 +41,10 @@ class acados_dae():
         self.z = []             #: CasADi variable describing the algebraic variables of the DAE
         self.p = []             #: CasADi variable describing parameters of the DAE
         self.name = None        #: name associated with the function
-
-class acados_constraint():
-    def __init__(self):
         self.con_h_expr   = None #: CasADi expression for the constraint
         self.con_phi_expr = None   #: CasADi expression for the constraint
         self.con_r_expr   = None #: CasADi expression for the constraint
-        self.x = None            #: CasADi variable describing the state of the system
-        self.u = None            #: CasADi variable describing the input of the system
-        self.r = None            #: CasADi variable describing the output of nonconvex part in convex-over nonconvex constraints
-        self.z = []              #: CasADi variable describing the algebraic variables 
-        self.p = []              #: CasADi variable describing parameters in the constraints
-        self.nh = 0              #: dimension of image of h
-        self.nphi = 0            #: dimension of image of h
-        self.nr = 0              #: dimension of image of nonlinear residuals 
-        self.name = None         #: name associated with the function
+
 
 class acados_cost():
     def __init__(self):
@@ -68,62 +55,42 @@ class acados_cost():
         self.ny = None       #: number of residuals
         self.name = None     #: name associated with the function
 
-def acados_dae_strip_non_num(acados_constraint):
-    out = acados_constraint
-    if 'f_impl_expr' in out.keys(): 
+def acados_ocp_model_strip_casadi_symbolics(model):
+    out = model
+    if 'f_impl_expr' in out.keys():
         del out['f_impl_expr']
-    if 'f_expl_expr' in out.keys(): 
+    if 'f_expl_expr' in out.keys():
         del out['f_expl_expr']
-    if 'x' in out.keys(): 
+    if 'x' in out.keys():
         del out['x']
-    if 'xdot' in out.keys(): 
+    if 'xdot' in out.keys():
         del out['xdot']
-    if 'u' in out.keys(): 
+    if 'u' in out.keys():
         del out['u']
-    if 'z' in out.keys(): 
+    if 'z' in out.keys():
         del out['z']
-    if 'p' in out.keys(): 
+    if 'p' in out.keys():
         del out['p']
-    return out
-
-def acados_constraint_strip_non_num(acados_constraint):
-    out = acados_constraint
-    if 'x' in out.keys(): 
-        del out['x']
-    if 'u' in out.keys(): 
-        del out['u']
-    if 'z' in out.keys(): 
-        del out['z']
-    if 'p' in out.keys(): 
-        del out['p']
-    if 'r' in out.keys(): 
-        del out['r']
-    if 'con_phi_expr' in out.keys(): 
+    if 'con_phi_expr' in out.keys():
         del out['con_phi_expr']
-    if 'con_h_expr' in out.keys(): 
+    if 'con_h_expr' in out.keys():
         del out['con_h_expr']
-    if 'con_r_expr' in out.keys(): 
+    if 'con_r_expr' in out.keys():
         del out['con_r_expr']
-    if 'nh' in out.keys(): 
-        del out['nh']
-    if 'nphi' in out.keys(): 
-        del out['nphi']
-    if 'nh' in out.keys(): 
-        del out['nh']
-    if 'nr' in out.keys(): 
-        del out['nr']
+    if 'r' in out.keys():
+        del out['r']
     return out
 
 def acados_cost_strip_non_num(acados_cost):
     out = acados_cost
-    if 'x' in out.keys(): 
+    if 'x' in out.keys():
         del out['x']
-    if 'u' in out.keys(): 
+    if 'u' in out.keys():
         del out['u']
-    if 'p' in out.keys(): 
+    if 'p' in out.keys():
         del out['p']
-    if 'expr' in out.keys(): 
+    if 'expr' in out.keys():
         del out['expr']
-    if 'ny' in out.keys(): 
+    if 'ny' in out.keys():
         del out['ny']
     return out

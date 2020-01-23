@@ -114,13 +114,7 @@ def ocp_formulation_json_dump(acados_ocp, json_file='acados_ocp_nlp.json'):
         # Copy ocp object attributes dictionaries
         ocp_nlp_dict[acados_struct]=dict(getattr(acados_ocp, acados_struct).__dict__)
 
-    # need to strip non-numerical stuff from expressions for now
-    ocp_nlp_dict['con_h'] = acados_constraint_strip_non_num(ocp_nlp_dict['con_h'])
-    ocp_nlp_dict['con_h_e'] = acados_constraint_strip_non_num(ocp_nlp_dict['con_h_e'])
-    ocp_nlp_dict['con_phi'] = acados_constraint_strip_non_num(ocp_nlp_dict['con_phi'])
-    ocp_nlp_dict['con_phi_e'] = acados_constraint_strip_non_num(ocp_nlp_dict['con_phi_e'])
-
-    ocp_nlp_dict['model'] = acados_dae_strip_non_num(ocp_nlp_dict['model'])
+    ocp_nlp_dict['model'] = acados_ocp_model_strip_casadi_symbolics(ocp_nlp_dict['model'])
 
     ocp_nlp_dict['cost_r'] = acados_cost_strip_non_num(ocp_nlp_dict['cost_r'])
     ocp_nlp_dict['cost_r_e'] = acados_cost_strip_non_num(ocp_nlp_dict['cost_r_e'])
@@ -180,7 +174,7 @@ def generate_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json',
 
     if acados_ocp.constraints.constr_type == 'BGP' and acados_ocp.dims.nphi > 0:
         # nonlinear part of nonlinear constraints
-        generate_c_code_constraint(acados_ocp.con_phi, name)
+        generate_c_code_constraint(acados_ocp.model, name)
     elif acados_ocp.constraints.constr_type  == 'BGH' and acados_ocp.dims.nh > 0:
         generate_c_code_constraint(acados_ocp.con_h, name)
 

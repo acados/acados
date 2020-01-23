@@ -1868,15 +1868,11 @@ class acados_ocp_nlp:
         acados_path -- path of your acados installation
         """
         self.dims = ocp_nlp_dims()
-        self.model = acados_dae()
+        self.model = acados_ocp_model()
         self.cost = ocp_nlp_cost()
         self.constraints = ocp_nlp_constraints()
         self.solver_options = ocp_nlp_solver_options()
 
-        self.con_h   = acados_constraint()
-        self.con_h_e = acados_constraint()
-        self.con_phi   = acados_constraint()
-        self.con_phi_e = acados_constraint()
         self.cost_r = acados_cost()
         self.cost_r_e = acados_cost()
 
