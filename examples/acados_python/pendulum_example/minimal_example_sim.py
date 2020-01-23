@@ -32,58 +32,52 @@
 #
 
 from acados_template import *
-def export_ode_model():
+from export_pendulum_ode_model import export_pendulum_ode_model
+from utils import plot_pendulum
+import numpy as np
+import matplotlib.pyplot as plt
 
-    model_name = 'pendulum_ode'
+sim = acados_sim()
 
-    # constants
-    M = 1.
-    m = 0.1
-    g = 9.81
-    l = 0.8
+# export model 
+model = export_pendulum_ode_model()
 
-    # set up states & controls
-    x1      = SX.sym('x1')
-    theta   = SX.sym('theta')
-    v1      = SX.sym('v1')
-    dtheta  = SX.sym('dtheta')
-    
-    x = vertcat(x1, v1, theta, dtheta)
+# set model_name 
+sim.model = model
 
-    # controls
-    F = SX.sym('F')
-    u = vertcat(F)
-    
-    # xdot
-    x1_dot      = SX.sym('x1_dot')
-    theta_dot   = SX.sym('theta_dot')
-    v1_dot      = SX.sym('v1_dot')
-    dtheta_dot  = SX.sym('dtheta_dot')
+Tf = 0.1
+nx = model.x.size()[0]
+nu = model.u.size()[0]
+N = 200
 
-    xdot = vertcat(x1_dot, theta_dot, v1_dot, dtheta_dot)
-    
-    # algebraic variables
-    z = []
+# set simulation time
+sim.solver_options.T = Tf
+# set options
+sim.solver_options.num_stages = 4
+sim.solver_options.num_steps = 3
+sim.solver_options.newton_iter = 3 # for implicit integrator
 
-    # parameters
-    p = []
-    
-    # dynamics     
-    denominator = M + m - m*cos(theta)*cos(theta)
-    f_expl = vertcat(v1, dtheta, (-m*l*sin(theta)*dtheta*dtheta + m*g*cos(theta)*sin(theta)+F)/denominator, (-m*l*cos(theta)*sin(theta)*dtheta*dtheta + F*cos(theta)+(M+m)*g*sin(theta))/(l*denominator))
-    
-    f_impl = xdot - f_expl
-   
-    model = acados_dae()
 
-    model.f_impl_expr = f_impl
-    model.f_expl_expr = f_expl
-    model.x = x
-    model.xdot = xdot
-    model.u = u
-    model.z = z
-    model.p = p
-    model.name = model_name
+# create
+acados_integrator = generate_sim_solver(sim)
 
-    return model 
+simX = np.ndarray((N+1, nx))
+x0 = np.array([0.0, np.pi+1, 0.0, 0.0])
+u0 = np.array([0.0])
+acados_integrator.set("u", u0)
 
+simX[0,:] = x0
+
+for i in range(N):
+    # set initial state
+    acados_integrator.set("x", simX[i,:])
+    # solve
+    status = acados_integrator.solve()
+    # get solution
+    simX[i+1,:] = acados_integrator.get("x")
+
+if status != 0:
+    raise Exception('acados returned status {}. Exiting.'.format(status))
+
+# plot results
+plot_pendulum(Tf/N, 10, np.zeros((N, nu)), simX)

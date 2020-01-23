@@ -43,77 +43,26 @@
 #include "acados_sim_solver_{{ocp.model.name}}.h"
 
 
-// ** global data **
-ocp_nlp_in * nlp_in;
-ocp_nlp_out * nlp_out;
-ocp_nlp_solver * nlp_solver;
-void * nlp_opts;
-ocp_nlp_plan * nlp_solver_plan;
-ocp_nlp_config * nlp_config;
-ocp_nlp_dims * nlp_dims;
-
-sim_config  * {{ocp.model.name}}_sim_config;
-sim_in      * {{ocp.model.name}}_sim_in;
-sim_out     * {{ocp.model.name}}_sim_out; 
-void        * {{ocp.model.name}}_sim_dims;
-sim_opts    * {{ocp.model.name}}_sim_opts;
-sim_solver  * {{ocp.model.name}}_sim_solver; 
-
-{% if ocp.solver_options.integrator_type == "ERK" %}
-external_function_param_casadi * forw_vde_casadi;
-external_function_param_casadi * sim_forw_vde_casadi;
-external_function_param_casadi * sim_expl_ode_fun_casadi;
-{% if ocp.solver_options.hessian_approx == "EXACT" %} 
-external_function_param_casadi * hess_vde_casadi;
-{% endif %}
-{% else %}
-{% if ocp.solver_options.integrator_type == "IRK" %}
-external_function_param_casadi * impl_dae_fun;
-external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
-external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
-external_function_param_casadi * sim_impl_dae_fun;
-external_function_param_casadi * sim_impl_dae_fun_jac_x_xdot_z;
-external_function_param_casadi * sim_impl_dae_jac_x_xdot_u_z;
-{% endif %}
-{% endif %}
-{% if ocp.dims.npd > 0 %}
-external_function_param_casadi * p_constraint;
-{% endif %}
-{% if ocp.dims.npd_e > 0 %}
-external_function_param_casadi p_e_constraint;
-{% endif %}
-{% if ocp.dims.nh > 0 %}
-external_function_param_casadi * h_constraint;
-{% endif %}
-{% if ocp.dims.nh_e > 0 %}
-external_function_param_casadi h_e_constraint;
-{% endif %}
-{% if ocp.cost.cost_type == "NONLINEAR_LS" %}
-external_function_casadi * r_cost;
-{% endif %}
-{% if ocp.cost.cost_type_e == "NONLINEAR_LS" %}
-external_function_casadi r_e_cost;
-{% endif %}
-
 int main() {
 
     // test integrator first
     int sim_status = 0;
     sim_status = {{ ocp.model.name }}_acados_sim_create();
 
-    // set sim input
+    // Set sim input
     double x_sim[{{ocp.dims.nx}}];
     {% for item in ocp.constraints.x0 %}
     x_sim[{{ loop.index0 }}] = {{ item }};
     {% endfor %}
 
-    // set initial condition
+    // Set initial condition
     double u_sim[{{ocp.dims.nu}}];
     {% for item in range(ocp.dims.nu) %}
     u_sim[{{ loop.index0 }}] = {{ item }};
     {% endfor %}
-    
-    // seeds forw
+
+    // Set forward seeds
+    double S_forw[{{ocp.dims.nx}} * ({{ocp.dims.nx}} + {{ocp.dims.nu}})];
     for (int ii = 0; ii < {{ocp.dims.nx}} * ({{ocp.dims.nx}} + {{ocp.dims.nu}}); ii++)
         {{ ocp.model.name }}_sim_in->S_forw[ii] = 0.0;
     for (int ii = 0; ii < {{ocp.dims.nx}}; ii++)
@@ -123,9 +72,6 @@ int main() {
     sim_in_set({{ ocp.model.name }}_sim_config, {{ ocp.model.name }}_sim_dims, {{ ocp.model.name }}_sim_in, "T", &Td);
     sim_in_set({{ ocp.model.name }}_sim_config, {{ ocp.model.name }}_sim_dims, {{ ocp.model.name }}_sim_in, "x", x_sim);
     sim_in_set({{ ocp.model.name }}_sim_config, {{ ocp.model.name }}_sim_dims, {{ ocp.model.name }}_sim_in, "u", u_sim);
-
-
-    sim_status = {{ ocp.model.name }}_acados_sim_solve();
     // get and print output
     double *xn_out = calloc( {{ ocp.dims.nx }}, sizeof(double));
     sim_out_get({{ ocp.model.name }}_sim_config, {{ ocp.model.name }}_sim_dims, {{ ocp.model.name }}_sim_out, "xn", xn_out);
@@ -136,14 +82,15 @@ int main() {
     if ({{ ocp.model.name }}_sim_opts->sens_forw){
         sim_out_get({{ ocp.model.name }}_sim_config, {{ ocp.model.name }}_sim_dims, {{ ocp.model.name }}_sim_out, "S_forw", S_forw_out);
         printf("\nS_forw_out: \n");
+
         d_print_exp_mat({{ ocp.dims.nx }}, {{ ocp.dims.nx }} + {{ ocp.dims.nu }}, S_forw_out, {{ ocp.dims.nx }});
     }
 
     int status = 0;
     status = acados_create();
 
-    if (status) { 
-        printf("acados_create() returned status %d. Exiting.\n", status); 
+    if (status) {
+        printf("acados_create() returned status %d. Exiting.\n", status);
         exit(1); }
 
     // set initial condition
@@ -151,7 +98,7 @@ int main() {
     {% for item in ocp.constraints.x0 %}
     x0[{{ loop.index0 }}] = {{ item }};
     {% endfor %}
-    
+
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", x0);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", x0);
 
@@ -161,7 +108,7 @@ int main() {
     p[{{ loop.index0 }}] = {{ item }};
     {% endfor %}
     {% endif %}
-    
+
     {% if ocp.dims.np > 0%}
     {% if ocp.solver_options.integrator_type == "IRK" %}
     for (int ii = 0; ii < {{ ocp.dims.N }}; ii++) {
@@ -172,15 +119,6 @@ int main() {
     {% else %}
     for (int ii = 0; ii < {{ ocp.dims.N }}; ii++) {
     forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
-    }
-    {% endif %}
-    for (int ii = 0; ii < {{ ocp.dims.N }}; ++ii) {
-        {%- if ocp.dims.npd > 0 %}
-        p_constraint[ii].set_param(p_constraint+ii, p);
-        {% endif %}
-        {%- if ocp.dims.nh > 0 %}
-        h_constraint[ii].set_param(h_constraint+ii, p);
-        {% endif %}
     }
     {%- if ocp.dims.npd_e > 0 %}
     p_e_constraint.set_param(&p_e_constraint, p);
@@ -213,14 +151,14 @@ int main() {
 
     printf("\n--- solution ---\n");
     ocp_nlp_out_print(nlp_solver->dims, nlp_out);
-    if (status) { 
-        printf("acados_solve() returned status %d.\n", status); 
+    if (status) {
+        printf("acados_solve() returned status %d.\n", status);
     }
 
     status = acados_free();
 
-    if (status) { 
-        printf("acados_free() returned status %d. \n", status); 
+    if (status) {
+        printf("acados_free() returned status %d. \n", status);
     }
 
     return status;

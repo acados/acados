@@ -34,9 +34,11 @@
 import os, sys
 import urllib.request
 import shutil
+import numpy as np
+from casadi import SX, MX, DM
 
 ALLOWED_CASADI_VERSIONS = ('3.5.1', '3.4.5', '3.4.0')
-TERA_VERSION = "0.0.20"
+TERA_VERSION = "0.0.30"
 
 ACADOS_PATH = os.environ.get('ACADOS_SOURCE_DIR')
 if not ACADOS_PATH:
@@ -52,6 +54,25 @@ platform2tera = {
     "win32": "window.exe"
 }
 
+def is_column(x):
+    if isinstance(x, np.ndarray):
+        if x.ndim == 1:
+            return True
+        elif x.ndim == 2 and x.shape[1] == 1:
+            return True
+        else:
+            return False
+    elif isinstance(x, (MX, SX)):
+        if x.shape[1] == 1:
+            return True
+        else:
+            return False
+    elif x == None:
+        return False
+    else:
+        raise Exception("is_column expects one of the following types: np.ndarray, MX.sym, SX.sym."
+                        + " Got: " + str(type(x)))
+
 def get_tera():
     tera_path = TERA_EXEC_PATH
 
@@ -66,7 +87,7 @@ def get_tera():
     manual_install += '1 Download binaries from {}\n'.format(url)
     manual_install += '2 Copy them in {}/bin\n'.format(ACADOS_PATH)
     manual_install += '3 Strip the version and platform from the binaries: '
-    manual_install += 'as t_renderer-v0.0.20-X -> t_renderer)\n'
+    manual_install += 'as t_renderer-v0.0.30-X -> t_renderer)\n'
     manual_install += '4 Enable execution privilege on the file "t_renderer" with:\n'
     manual_install += '"chmod +x {}"\n\n'.format(tera_path)
 
@@ -93,3 +114,218 @@ def get_tera():
     print(msg_cancel)
 
     sys.exit(1)
+
+
+def render_template(in_file, out_file, template_dir, json_path):
+    cwd = os.getcwd()
+    if not os.path.exists(template_dir):
+        os.mkdir(template_dir)
+    os.chdir(template_dir)
+
+    tera_path = get_tera()
+
+    # setting up loader and environment
+    acados_path = os.path.dirname(os.path.abspath(__file__))
+
+    template_glob = acados_path + '/c_templates_tera/*'
+    acados_template_path = acados_path + '/c_templates_tera'
+
+    # call tera as system cmd
+    os_cmd = "{tera_path} '{template_glob}' '{in_file}' '{json_path}' '{out_file}'".format(
+        tera_path=tera_path,
+        template_glob=template_glob,
+        json_path=json_path,
+        in_file=in_file,
+        out_file=out_file
+    )
+    status = os.system(os_cmd)
+    if (status != 0):
+        raise Exception('Rendering of {} failed! Exiting.\n'.format(in_file))
+
+    os.chdir(cwd)
+
+
+## Conversion functions
+
+def np_array_to_list(np_array):
+    if  isinstance(np_array, (np.ndarray)):
+        return np_array.tolist()
+    elif  isinstance(np_array, (SX)):
+        return DM(np_array).full()
+    elif  isinstance(np_array, (DM)):
+        return np_array.full()
+    else:
+        raise(Exception(
+            "Cannot convert to list type {}".format(type(np_array))
+        ))
+
+def dict2json(d):
+    out = {}
+    for k, v in d.items():
+        if isinstance(v, dict):
+            v = dict2json(v)
+
+        v_type = str(type(v).__name__)
+        # out_key = '__' + v_type + '__' + k.split('__', 1)[-1]
+        out_key = k.split('__', 1)[-1]
+        out[k.replace(k, out_key)] = v
+    return out
+
+def acados_ocp2json_layout(acados_ocp):
+    """ Convert acados ocp nlp object to JSON format by stripping the
+    property mangling and adding array dimension info.
+    ALL items of type String will be converted
+    to type ndarrray!
+
+    Parameters
+    ----------
+    acados_ocp : class
+        object of type acados_ocp_nlp.
+
+    Returns
+    ------
+    out: dict
+        acados_layout
+    """
+    ocp_nlp = acados_ocp
+    ocp_nlp.cost = acados_ocp.cost.__dict__
+    ocp_nlp.constraints = acados_ocp.constraints.__dict__
+    ocp_nlp.solver_options = acados_ocp.solver_options.__dict__
+    ocp_nlp.dims = acados_ocp.dims.__dict__
+    ocp_nlp = ocp_nlp.__dict__
+    json_layout = dict2json_layout(ocp_nlp)
+    return json_layout
+
+
+def dict2json_layout(d):
+    """ Convert dictionary containing the description of
+    of the ocp_nlp to JSON format by stripping the
+    property mangling and adding array dimension info.
+    ALL items of type String will be converted
+    to type ndarrray!
+
+    Parameters
+    ----------
+    d : dict
+        dictionary containing the description of
+        the ocp_nlp.
+
+    Returns
+    ------
+    out: dict
+        postprocessed dictionary.
+    """
+    out = {}
+    for k, v in d.items():
+        if isinstance(v, dict):
+            v = dict2json_layout(v)
+
+        v_type = str(type(v).__name__)
+        if v_type == 'list':
+            v_type = 'ndarray'
+
+        # add array number of dimensions?
+        # if v_type == 'ndarray':
+        #     v_type = v_type + '_' + str(len(v.shape))
+        out_key = k.split('__', 1)[-1]
+
+        if isinstance(v, dict):
+            out[k.replace(k, out_key)] = v
+        else:
+            out[k.replace(k, out_key)] = [v_type]
+
+    return out
+
+
+def cast_ocp_nlp(ocp_nlp, ocp_nlp_layout):
+    """ MATLAB does not allow distinction between e.g a = [1,1,1] and b = [1,1,1].'
+    or a = 1 and b = [1]. Hence, we need to do some postprocessing of the JSON
+    file generated from MATLAB.
+
+    Parameters
+    ----------
+    ocp_nlp : dict
+        ocp_nlp dictionary to be postprocessed.
+
+    ocp_nlp_layout : dict
+        acados ocp_nlp target layout
+    Returns
+    ------
+    out : dict
+        postprocessed dictionary
+    """
+
+    out = {}
+    for k, v in ocp_nlp.items():
+        if isinstance(v, dict):
+            v = cast_ocp_nlp(v, ocp_nlp_layout[k])
+
+        if 'ndarray' in ocp_nlp_layout[k]:
+            if isinstance(v, int) or isinstance(v, float):
+                v = np.array([v])
+        out[k] = v
+    return out
+
+def json2dict(ocp_nlp, ocp_nlp_dims):
+    # load JSON layout
+    current_module = sys.modules[__name__]
+    acados_path = os.path.dirname(current_module.__file__)
+    with open(acados_path + '/acados_layout.json', 'r') as f:
+        ocp_nlp_layout = json.load(f)
+
+    out = json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout)
+    return out
+
+def json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout):
+    """ convert ocp_nlp loaded JSON to dictionary. Mainly convert
+    lists to arrays for easier handling.
+    Parameters
+    ---------
+    ocp_nlp : dict
+        dictionary loaded from JSON to be post-processed.
+
+    ocp_nlp_dims : dict
+        dictionary containing the ocp_nlp dimensions.
+
+    ocp_nlp_layout : dict
+        acados ocp_nlp layout.
+
+    Returns
+    -------
+    out : dict
+        post-processed dictionary.
+    """
+    out = {}
+    for k, v in ocp_nlp.items():
+        if isinstance(v, dict):
+            v = json2dict_rec(v, ocp_nlp_dims, ocp_nlp_layout[k])
+
+        v_type__ = str(type(v).__name__)
+        out_key = k.split('__', 1)[-1]
+        v_type = out_key.split('__')[0]
+        out_key = out_key.split('__', 1)[-1]
+        if 'ndarray' in ocp_nlp_layout[k]:
+            if isinstance(v, int) or isinstance(v, float):
+                v = np.array([v])
+        if (v_type == 'ndarray' or v_type__ == 'list') and (ocp_nlp_layout[k][0] != 'str'):
+            dims_l = []
+            dims_names = []
+            dim_keys = ocp_nlp_layout[k][1]
+            for item in dim_keys:
+                dims_l.append(ocp_nlp_dims[item])
+                dims_names.append(item)
+            dims = tuple(dims_l)
+            if v == []:
+                # v = None
+                try:
+                    v = np.reshape(v, dims)
+                except:
+                    raise Exception('acados -- mismatching dimensions for field {0}. Provided data has dimensions {1}, while associated dimensions {2} are {3}'.format(out_key, [], dims_names, dims))
+                # v = []
+            else:
+                v = np.array(v)
+                v_dims = v.shape
+                if dims !=v_dims:
+                    raise Exception('acados -- mismatching dimensions for field {0}. Provided data has dimensions {1}, while associated dimensions {2} are {3}'.format(out_key, v_dims, dims_names, dims))
+        out[k.replace(k, out_key)] = v
+    return out

@@ -125,5 +125,19 @@ xtraj = ocp.get('x');
 status = ocp.get('status'); % 0 - success
 ocp.print('stat')
 
+%% Plots
+figure; hold on;
+States = {'p', 'theta', 'v', 'dtheta'};
+for i=1:length(States)
+    subplot( length(States), 1, i);
+    plot(xtraj(i,:)); grid on;
+    legend(States{i});
+end
+
+figure
+stairs(utraj')
+grid on
+
+%% go embedded
 % to generate templated C code
 % ocp.generate_c_code;

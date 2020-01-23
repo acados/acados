@@ -97,9 +97,27 @@
         ],
         "idxbx_e": [
             "ndarray",
-                    [
-                        "nbx_e"
-                    ]
+            [
+                "nbx_e"
+            ]
+        ],
+        "lbx_0": [
+            "ndarray",
+            [
+                "nbx_0"
+            ]
+        ],
+        "ubx_0": [
+            "ndarray",
+            [
+                "nbx_0"
+            ]
+        ],
+        "idxbx_0": [
+            "ndarray",
+            [
+                "nbx_0"
+            ]
         ],
         "lg": [
             "ndarray",
@@ -325,12 +343,6 @@
             [
                 "np"
             ]
-        ],
-        "x0": [
-            "ndarray",
-            [
-                "nx"
-            ]
         ]
     },
     "cost": {
@@ -462,6 +474,9 @@
         "nsbx_e": [
             "int"
         ],
+        "nbx_0": [
+            "int"
+        ],
         "nbx_e": [
             "int"
         ],
@@ -545,6 +560,9 @@
         "tf": [
             "float"
         ],
+        "Tsim": [
+            "float"
+        ],
         "sim_method_num_stages": [
             "int"
         ],
@@ -552,6 +570,9 @@
             "int"
         ],
         "sim_method_newton_iter": [
+            "int"
+        ],
+        "qp_solver_cond_N": [
             "int"
         ],
         "qp_solver_tol_stat": [
@@ -565,6 +586,9 @@
         ],
         "qp_solver_tol_comp": [
             "float"
+        ],
+        "qp_solver_iter_max": [
+            "int"
         ],
         "nlp_solver_tol_stat": [
             "float"

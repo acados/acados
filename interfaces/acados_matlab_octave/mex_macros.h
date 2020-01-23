@@ -97,6 +97,11 @@
     mexErrMsgTxt(buffer);\
 }
 
+#define MEX_MISSING_ARGUMENT_NOTE(fun_name, field, note) {\
+    sprintf(buffer, "%s: field %s not provided, is mandatory!\nNote: %s", fun_name, field, note);\
+    mexErrMsgTxt(buffer);\
+}
+
 #define MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, field, value, suggestions) {\
     sprintf(buffer, "%s: field %s does not support %s, supported values are:\n%s\n",\
             fun_name, field, value, suggestions);\

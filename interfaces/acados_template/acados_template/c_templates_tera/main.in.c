@@ -42,46 +42,6 @@
 #include "acados_c/external_function_interface.h"
 #include "acados_solver_{{ model.name }}.h"
 
-// ** global data **
-ocp_nlp_in * nlp_in;
-ocp_nlp_out * nlp_out;
-ocp_nlp_solver * nlp_solver;
-void * nlp_opts;
-ocp_nlp_plan * nlp_solver_plan;
-ocp_nlp_config * nlp_config;
-ocp_nlp_dims * nlp_dims;
-{% if solver_options.integrator_type == "ERK" %}
-external_function_param_casadi * forw_vde_casadi;
-{% if solver_options.hessian_approx == "EXACT" %}
-external_function_param_casadi * hess_vde_casadi;
-{%- endif %}
-{% else %}
-{% if solver_options.integrator_type == "IRK" -%}
-external_function_param_casadi * impl_dae_fun;
-external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
-external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
-{%- endif %}
-{%- endif %}
-{% if constraints.constr_type == "BGP" %}
-external_function_param_casadi * phi_constraint;
-// external_function_param_casadi * r_constraint;
-{% endif %}
-{% if constraints.constr_type_e == "BGP" %}
-external_function_param_casadi phi_e_constraint;
-// external_function_param_casadi r_e_constraint;
-{% endif %}
-{% if constraints.constr_type == "BGH" %}
-external_function_param_casadi * h_constraint;
-{%- endif %}
-{% if constraints.constr_type_e == "BGH" %}
-external_function_param_casadi h_e_constraint;
-{% endif %}
-{% if cost.cost_type == "NONLINEAR_LS" %}
-external_function_param_casadi * r_cost;
-{% endif %}
-{% if cost.cost_type_e == "NONLINEAR_LS" %}
-external_function_param_casadi r_e_cost;
-{% endif %}
 
 int main()
 {
@@ -96,12 +56,21 @@ int main()
     }
 
     // initial condition
-    double x0[{{ dims.nx }}];
-    {%- for item in constraints.x0 %}
-    x0[{{ loop.index0 }}] = {{ item }};
+    int idxbx0[{{ dims.nbx_0 }}];
+    {% for i in range(end=dims.nbx_0) %}
+    idxbx0[{{ i }}] = {{ constraints.idxbx_0[i] }};
     {%- endfor %}
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", x0);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", x0);
+
+    double lbx0[{{ dims.nbx_0 }}];
+    double ubx0[{{ dims.nbx_0 }}];
+    {% for i in range(end=dims.nbx_0) %}
+    lbx0[{{ i }}] = {{ constraints.lbx_0[i] }};
+    ubx0[{{ i }}] = {{ constraints.ubx_0[i] }};
+    {%- endfor %}
+
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxbx", idxbx0);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", lbx0);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", ubx0);
 
     // initialization for state values
     double x_init[{{ dims.nx }}];
@@ -156,7 +125,7 @@ int main()
   {% endif %}{# if np > 0 #}
 
     // prepare evaluation
-    int NTIMINGS = 10;
+    int NTIMINGS = 1;
     double min_time = 1e12;
     double kkt_norm_inf;
     double elapsed_time;
