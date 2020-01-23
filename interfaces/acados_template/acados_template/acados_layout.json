@@ -2,17 +2,7 @@
     "acados_include_path": [
         "str"
     ],
-     "cost_r": {
-         "name" : [
-            "str"
-        ]
-    },
-    "cost_r_e": {
-        "name" : [
-            "str"
-        ]
-     },
-     "model": {
+    "model": {
          "name" : [
             "str"
         ]

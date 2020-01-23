@@ -35,35 +35,38 @@ import os
 from casadi import *
 from .utils import ALLOWED_CASADI_VERSIONS
 
-def generate_c_code_nls_cost( cost, cost_name ):
+def generate_c_code_nls_cost( model, cost_name, is_terminal ):
 
-    suffix_name = '_r_cost'
     casadi_version = CasadiMeta.version()
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
-    if  casadi_version not in (ALLOWED_CASADI_VERSIONS):
+    if casadi_version not in (ALLOWED_CASADI_VERSIONS):
         msg =  'Please download and install CasADi {} '.format(" or ".join(ALLOWED_CASADI_VERSIONS))
         msg += 'to ensure compatibility with acados.\n'
         msg += 'Version {} currently in use.'.format(casadi_version)
         raise Exception(msg)
 
-    # load cost variables and expression
-    x = cost.x
-    u = cost.u
-    p = cost.p
-    cost_exp = cost.expr
 
-    # get dimensions
-    nx = x.size()[0]
-    nu = u.size()[0]
+    if is_terminal:
+        suffix_name = '_r_e_cost'
+        u = SX.sym('u', 0, 0)
+        cost_expr = model.cost_y_expr_e
+
+    else:
+        suffix_name = '_r_cost'
+        u = model.u
+        cost_expr = model.cost_y_expr
+
+    x = model.x
+    p = model.p
 
     # set up functions to be exported
     fun_name = cost_name + suffix_name
 
-    cost_jac_exp = transpose(jacobian(cost_exp, vertcat(u, x)))
+    cost_jac_expr = transpose(jacobian(cost_expr, vertcat(u, x)))
 
     nls_cost_fun = Function( fun_name, [x, u, p], \
-            [ cost_exp, cost_jac_exp ])
+            [ cost_expr, cost_jac_expr ])
 
     # generate C code
     if not os.path.exists('c_generated_code'):
