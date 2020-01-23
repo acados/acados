@@ -32,12 +32,10 @@
 #
 
 from acados_template import *
-import acados_template as at
-from export_ode_model import *
+from export_pendulum_ode_model import export_pendulum_ode_model
 import numpy as np
 import scipy.linalg
 from ctypes import *
-import json
 import argparse
 
 # set to 'True' to generate test data
@@ -105,86 +103,60 @@ else:
 print("Running test with:\n\tformulation:", FORMULATION, "\n\tqp solver: ", QP_SOLVER,\
       "\n\tintergrator: ", INTEGRATOR_TYPE, "\n\tsolver: ", SOLVER_TYPE)
 
-# create render arguments
+# create ocp object to formulate the OCP
 ocp = acados_ocp_nlp()
-# ocp = acados_ocp_nlp(acados_path="whereever_u_like")
 
-# export model
-model = export_ode_model()
-
-# set model_name
+# set model
+model = export_pendulum_ode_model()
 ocp.model = model
 
-Tf = 2.0
+Tf = 1.0
 nx = model.x.size()[0]
 nu = model.u.size()[0]
 ny = nx + nu
 ny_e = nx
-N = 50
+N = 20
 
-# set ocp_nlp_dimensions
-nlp_dims     = ocp.dims
-nlp_dims.nx  = nx
-nlp_dims.ny  = ny
-nlp_dims.ny_e = ny_e
-nlp_dims.nbx = 0
-nlp_dims.nbu = nu
-nlp_dims.nu  = model.u.size()[0]
-nlp_dims.N   = N
+# set dimensions
+ocp.dims.nx  = nx
+ocp.dims.ny  = ny
+ocp.dims.ny_e = ny_e
+ocp.dims.nbx = 0
+ocp.dims.nbu = nu 
+ocp.dims.nu  = nu
+ocp.dims.N   = N
 
 # set weighting matrices
-nlp_cost = ocp.cost
-
 if FORMULATION == 'LS':
-    nlp_cost.cost_type = 'LINEAR_LS'
-    nlp_cost.cost_type_e = 'LINEAR_LS'
+    ocp.cost.cost_type = 'LINEAR_LS'
+    ocp.cost.cost_type_e = 'LINEAR_LS'
 elif FORMULATION == 'NLS':
-    nlp_cost.cost_type = 'NONLINEAR_LS'
-    nlp_cost.cost_type_e = 'NONLINEAR_LS'
+    ocp.cost.cost_type = 'NONLINEAR_LS'
+    ocp.cost.cost_type_e = 'NONLINEAR_LS'
 else:
     raise Exception('Unknown FORMULATION. Possible values are \'LS\' and \'NLS\'.')
 
-Q = np.eye(4)
-Q[0,0] = 1e0
-Q[1,1] = 1e2
-Q[2,2] = 1e-3
-Q[3,3] = 1e-2
-
-R = np.eye(1)
-R[0,0] = 1e0
-
-unscale = N/Tf
-Q = Q * unscale
-R = R * unscale
+Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
+R = 2*np.diag([1e-2])
 
 if FORMULATION == 'NLS':
-    nlp_cost.W = scipy.linalg.block_diag(R, Q)
+    ocp.cost.W = scipy.linalg.block_diag(R, Q)
 else:
-    nlp_cost.W = scipy.linalg.block_diag(Q, R)
+    ocp.cost.W = scipy.linalg.block_diag(Q, R)
 
-nlp_cost.W_e = Q/unscale
+ocp.cost.W_e = Q
 
-Vx = np.zeros((ny, nx))
-Vx[0,0] = 1.0
-Vx[1,1] = 1.0
-Vx[2,2] = 1.0
-Vx[3,3] = 1.0
+if FORMULATION == 'LS':
+    ocp.cost.Vx = np.zeros((ny, nx))
+    ocp.cost.Vx[:nx,:nx] = np.eye(nx)
 
-nlp_cost.Vx = Vx
+    Vu = np.zeros((ny, nu))
+    Vu[4,0] = 1.0
+    ocp.cost.Vu = Vu
 
-Vu = np.zeros((ny, nu))
-Vu[4,0] = 1.0
-nlp_cost.Vu = Vu
+    ocp.cost.Vx_e = np.eye(nx)
 
-
-Vx_e = np.zeros((ny_e, nx))
-Vx_e[0,0] = 1.0
-Vx_e[1,1] = 1.0
-Vx_e[2,2] = 1.0
-Vx_e[3,3] = 1.0
-
-nlp_cost.Vx_e = Vx_e
-if FORMULATION == 'NLS':
+elif FORMULATION == 'NLS':
     x = SX.sym('x', 4, 1)
     u = SX.sym('u', 1, 1)
     ocp.cost_r.expr = vertcat(u, x)
@@ -197,18 +169,19 @@ if FORMULATION == 'NLS':
     ocp.cost_r_e.x = x
     ocp.cost_r_e.name = 'lin_res'
     ocp.cost_r_e.ny = nx
+else:
+    raise Exception("Invalid cost formulation. Exiting.")
 
+ocp.cost.yref  = np.zeros((ny, ))
+ocp.cost.yref_e = np.zeros((ny_e, ))
 
-nlp_cost.yref  = np.zeros((ny, ))
-nlp_cost.yref_e = np.zeros((ny_e, ))
-
-# setting bounds
-Fmax = 2.0
-nlp_con = ocp.constraints
-nlp_con.lbu = np.array([-Fmax])
-nlp_con.ubu = np.array([+Fmax])
-nlp_con.x0 = np.array([0.0, 3.14, 0.0, 0.0])
-nlp_con.idxbu = np.array([0])
+# set constraints
+Fmax = 80
+ocp.constraints.constr_type = 'BGH'
+ocp.constraints.lbu = np.array([-Fmax])
+ocp.constraints.ubu = np.array([+Fmax])
+ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
+ocp.constraints.idxbu = np.array([0])
 
 # set options
 ocp.solver_options.qp_solver = QP_SOLVER
@@ -218,10 +191,10 @@ ocp.solver_options.sim_method_num_stages = 2
 ocp.solver_options.sim_method_num_steps = 5
 ocp.solver_options.sim_method_newton_iter = 3
 
-ocp.solver_options.nlp_solver_tol_stat = 1E-8
-ocp.solver_options.nlp_solver_tol_eq = 1E-8
-ocp.solver_options.nlp_solver_tol_ineq = 1E-8
-ocp.solver_options.nlp_solver_tol_comp = 1E-8
+ocp.solver_options.nlp_solver_tol_stat = TEST_TOL
+ocp.solver_options.nlp_solver_tol_eq = TEST_TOL
+ocp.solver_options.nlp_solver_tol_ineq = TEST_TOL
+ocp.solver_options.nlp_solver_tol_comp = TEST_TOL
 
 ocp.solver_options.qp_solver_cond_N = 10
 ocp.solver_options.nlp_solver_max_iter = 80
@@ -231,40 +204,27 @@ ocp.solver_options.qp_solver_iter_max = 50
 ocp.solver_options.tf = Tf
 ocp.solver_options.nlp_solver_type = SOLVER_TYPE
 
-acados_solver = generate_ocp_solver(ocp, json_file = 'acados_ocp.json')
+ocp_solver = generate_ocp_solver(ocp, json_file = 'acados_ocp.json')
 
-Nsim = 100
+simX = np.ndarray((N+1, nx))
+simU = np.ndarray((N, nu))
 
-simX = np.ndarray((Nsim, nx))
-simU = np.ndarray((Nsim, nu))
+status = ocp_solver.solve()
 
-for i in range(Nsim):
-    status = acados_solver.solve()
+if status != 0:
+    raise Exception('acados returned status {}. Exiting.'.format(status))
 
-    if status !=0:
-        print("acados failure! Exiting. \n")
-        sys.exit(status)
+# get solution
+for i in range(N):
+    simX[i,:] = ocp_solver.get(i, "x")
+    simU[i,:] = ocp_solver.get(i, "u")
+simX[N,:] = ocp_solver.get(N, "x")
 
-    # get solution
-    x0 = acados_solver.get(0, "x")
-    u0 = acados_solver.get(0, "u")
 
-    for j in range(nx):
-        simX[i,j] = x0[j]
-
-    for j in range(nu):
-        simU[i,j] = u0[j]
-
-    # update initial condition
-    x0 = acados_solver.get(1, "x")
-
-    acados_solver.constraints_set(0, "lbx", x0)
-    acados_solver.constraints_set(0, "ubx", x0)
-
-    # update reference
-    for j in range(N):
-        acados_solver.cost_set(j, "yref", np.array([0, 0, 0, 0, 0]))
-    acados_solver.cost_set(N, "yref", np.array([0, 0, 0, 0]))
+# update reference
+for j in range(N):
+    ocp_solver.cost_set(j, "yref", np.array([0, 0, 0, 0, 0]))
+ocp_solver.cost_set(N, "yref", np.array([0, 0, 0, 0]))
 
 # dump result to JSON file for unit testing
 test_file_name = 'test_data/generate_c_code_out_' + FORMULATION + '_' + QP_SOLVER + '_' + \

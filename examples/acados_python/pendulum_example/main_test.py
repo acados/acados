@@ -48,7 +48,7 @@ all_test_parameters = sorted(test_parameters)
 combinations = list(it.product(*(test_parameters[Name] for Name in all_test_parameters)))
 
 for parameters in combinations:
-    os_cmd = ("python generate_c_code.py" +
+    os_cmd = ("python test_ocp_setting.py" +
         " --FORMULATION {}".format(parameters[0]) +
         " --INTEGRATOR_TYPE {}".format(parameters[1]) +
         " --QP_SOLVER {}".format(parameters[2]) +
