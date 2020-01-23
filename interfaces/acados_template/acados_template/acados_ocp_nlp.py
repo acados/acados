@@ -40,7 +40,7 @@ from .casadi_functions import *
 
 ACADOS_PATH=os.getenv("ACADOS_SOURCE_DIR","/usr/lib")
 
-class ocp_nlp_dims:
+class AcadosOcpDims:
     """
     class containing the dimensions of the optimal control problem
     """
@@ -415,7 +415,7 @@ class ocp_nlp_dims:
         setattr(self, attr, value)
 
 
-class ocp_nlp_cost:
+class AcadosOcpCost:
     """
     class containing the description of the cost
     (linear and nonlinear least-squares cost for the time being)
@@ -671,7 +671,7 @@ class ocp_nlp_cost:
         setattr(self, attr, value)
 
 # TODO(oj): replace \Pi with Jbx or similar
-class ocp_nlp_constraints:
+class AcadosOcpConstraints:
     """
     class containing the description of the constraints
     """
@@ -1550,7 +1550,7 @@ class ocp_nlp_constraints:
         setattr(self, attr, value)
 
 
-class ocp_nlp_solver_options:
+class AcadosOcpOptions:
     """
     class containing the description of the solver options
     """
@@ -1858,7 +1858,7 @@ class ocp_nlp_solver_options:
         setattr(self, attr, value)
 
 
-class acados_ocp_nlp:
+class AcadosOcp:
     """
     class containing the full description of the optimal control problem
     """
@@ -1867,11 +1867,11 @@ class acados_ocp_nlp:
         Keyword arguments:
         acados_path -- path of your acados installation
         """
-        self.dims = ocp_nlp_dims()
-        self.model = acados_ocp_model()
-        self.cost = ocp_nlp_cost()
-        self.constraints = ocp_nlp_constraints()
-        self.solver_options = ocp_nlp_solver_options()
+        self.dims = AcadosOcpDims()
+        self.model = AcadosOcpModel()
+        self.cost = AcadosOcpCost()
+        self.constraints = AcadosOcpConstraints()
+        self.solver_options = AcadosOcpOptions()
 
         self.acados_include_path = f'{acados_path}/include'
         self.acados_lib_path = f'{acados_path}/lib'

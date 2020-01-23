@@ -189,7 +189,7 @@ def get_general_constraints_DC(u_max):
     return res
 
 # create ocp object to formulate the OCP
-ocp = acados_ocp_nlp()
+ocp = AcadosOcp()
 
 # export model
 model = export_rsm_model()

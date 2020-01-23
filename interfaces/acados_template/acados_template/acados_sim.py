@@ -177,7 +177,7 @@ class sim_solver_options:
         else:
             raise Exception('Invalid newton_iter value. newton_iter must be an integer. Exiting.')
 
-class acados_sim:
+class AcadosSim:
     """
     class containing the full description of the optimal control problem
     """
@@ -187,7 +187,7 @@ class acados_sim:
         acados_path -- path of your acados installation
         """
         self.dims = sim_dims()
-        self.model = acados_sim_model()
+        self.model = AcadosSimModel()
         self.solver_options = sim_solver_options()
 
         self.acados_include_path = f'{acados_path}/include'

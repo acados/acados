@@ -37,7 +37,7 @@ from utils import plot_pendulum
 import numpy as np
 import matplotlib.pyplot as plt
 
-sim = acados_sim()
+sim = AcadosSim()
 
 # export model 
 model = export_pendulum_ode_model()

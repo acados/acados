@@ -41,7 +41,7 @@ import numpy as np
 
 def acados_settings(Tf,N,track_file):
     # create render arguments
-    ocp = acados_ocp_nlp()
+    ocp = AcadosOcp()
 
     # export model
     model,constraint = bycicle_model(track_file)

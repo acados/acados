@@ -44,7 +44,7 @@ tol = 1E-6
 #                 # 1 for soft constraints on x - using nonlinear constraint h
 def run_closed_loop_experiment(FORMULATION):
     # create ocp object to formulate the OCP
-    ocp = acados_ocp_nlp()
+    ocp = AcadosOcp()
 
     # set model
     model = export_pendulum_ode_model()

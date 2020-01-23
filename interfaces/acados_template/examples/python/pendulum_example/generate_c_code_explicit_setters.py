@@ -39,7 +39,7 @@ import scipy.linalg
 from ctypes import *
 
 # create render arguments
-ocp = acados_ocp_nlp()
+ocp = AcadosOcp()
 
 # export model
 model = export_ode_model()

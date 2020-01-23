@@ -40,7 +40,7 @@ from utils import plot_pendulum
 FORMULATION = 'NLS' # 'LS'
 
 # create ocp object to formulate the OCP
-ocp = acados_ocp_nlp()
+ocp = AcadosOcp()
 
 # set model
 model = export_pendulum_ode_model()

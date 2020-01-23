@@ -214,7 +214,7 @@ def get_general_terminal_constraints_DC():
 
 
 # create render arguments
-ocp = acados_ocp_nlp()
+ocp = AcadosOcp()
 
 # export model
 model = export_pmsm_model()

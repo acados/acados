@@ -31,7 +31,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-class acados_sim_model():
+class AcadosSimModel():
     def __init__(self):
         # common
         self.x = None           #: CasADi variable describing the state of the system
@@ -39,10 +39,10 @@ class acados_sim_model():
         self.u = None           #: CasADi variable describing the input of the system
         self.z = []             #: CasADi variable describing the algebraic variables of the DAE
         self.p = []             #: CasADi variable describing parameters of the DAE
-        self.name = None        #: name associated with the function
+        self.name = None        #: model name
 
 
-class acados_ocp_model( acados_sim_model ):
+class AcadosOcpModel( AcadosSimModel ):
     def __init__(self):
         # dynamics
         self.f_impl_expr = None #: CasADi expression for the implicit dynamics :math:`F(\dot{x}, x, u, z) = 0`

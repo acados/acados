@@ -104,7 +104,7 @@ print("Running test with:\n\tformulation:", FORMULATION, "\n\tqp solver: ", QP_S
       "\n\tintergrator: ", INTEGRATOR_TYPE, "\n\tsolver: ", SOLVER_TYPE)
 
 # create ocp object to formulate the OCP
-ocp = acados_ocp_nlp()
+ocp = AcadosOcp()
 
 # set model
 model = export_pendulum_ode_model()

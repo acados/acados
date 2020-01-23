@@ -197,7 +197,7 @@ def acados_ocp2json_layout(acados_ocp):
     Parameters
     ----------
     acados_ocp : class
-        object of type acados_ocp_nlp.
+        object of type AcadosOcp.
 
     Returns
     ------
@@ -283,17 +283,17 @@ def cast_ocp_nlp(ocp_nlp, ocp_nlp_layout):
         out[k] = v
     return out
 
-def json2dict(ocp_nlp, ocp_nlp_dims):
+def json2dict(ocp_nlp, ocp_dims):
     # load JSON layout
     current_module = sys.modules[__name__]
     acados_path = os.path.dirname(current_module.__file__)
     with open(acados_path + '/acados_layout.json', 'r') as f:
         ocp_nlp_layout = json.load(f)
 
-    out = json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout)
+    out = json2dict_rec(ocp_nlp, ocp_dims, ocp_nlp_layout)
     return out
 
-def json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout):
+def json2dict_rec(ocp_nlp, ocp_dims, ocp_nlp_layout):
     """ convert ocp_nlp loaded JSON to dictionary. Mainly convert
     lists to arrays for easier handling.
     Parameters
@@ -301,8 +301,7 @@ def json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout):
     ocp_nlp : dict
         dictionary loaded from JSON to be post-processed.
 
-    ocp_nlp_dims : dict
-        dictionary containing the ocp_nlp dimensions.
+    ocp_dims : instance of AcadosOcpDims
 
     ocp_nlp_layout : dict
         acados ocp_nlp layout.
@@ -315,7 +314,7 @@ def json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout):
     out = {}
     for k, v in ocp_nlp.items():
         if isinstance(v, dict):
-            v = json2dict_rec(v, ocp_nlp_dims, ocp_nlp_layout[k])
+            v = json2dict_rec(v, ocp_dims, ocp_nlp_layout[k])
 
         v_type__ = str(type(v).__name__)
         out_key = k.split('__', 1)[-1]
@@ -329,7 +328,7 @@ def json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout):
             dims_names = []
             dim_keys = ocp_nlp_layout[k][1]
             for item in dim_keys:
-                dims_l.append(ocp_nlp_dims[item])
+                dims_l.append(ocp_dims[item])
                 dims_names.append(item)
             dims = tuple(dims_l)
             if v == []:

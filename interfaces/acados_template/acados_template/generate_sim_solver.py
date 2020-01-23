@@ -187,7 +187,7 @@ def generate_sim_solver_from_ocp(acados_ocp, json_file='acados_ocp_nlp.json'):
     model_name = acados_ocp.model.name
 
     # set up acados_sim_
-    acados_sim_ = acados_sim()
+    acados_sim_ = AcadosSim()
     acados_sim_.model = acados_ocp.model
     acados_sim_.dims.nx = acados_ocp.dims.nx
     acados_sim_.dims.nu = acados_ocp.dims.nu

@@ -32,10 +32,10 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from .generate_c_code_explicit_ode import *
-from .generate_c_code_implicit_ode import *
-from .generate_c_code_constraint import *
-from .generate_c_code_nls_cost import *
+from .generate_c_code_explicit_ode import generate_c_code_explicit_ode
+from .generate_c_code_implicit_ode import generate_c_code_implicit_ode
+from .generate_c_code_constraint import generate_c_code_constraint
+from .generate_c_code_nls_cost import generate_c_code_nls_cost
 from .acados_ocp_nlp import *
 from .acados_ocp_solver import acados_ocp_solver
 from ctypes import *
@@ -130,8 +130,8 @@ def ocp_formulation_json_load(json_file='acados_ocp_nlp.json'):
 
     ocp_nlp_dict = json2dict(ocp_nlp_json, ocp_nlp_json['dims'])
 
-    # Instantiate acados_ocp_nlp object
-    acados_ocp = acados_ocp_nlp()
+    # Instantiate AcadosOcp object
+    acados_ocp = AcadosOcp()
 
     # load class dict
     acados_ocp.__dict__ = ocp_nlp_dict
