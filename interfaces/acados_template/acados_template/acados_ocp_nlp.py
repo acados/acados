@@ -1873,9 +1873,6 @@ class acados_ocp_nlp:
         self.constraints = ocp_nlp_constraints()
         self.solver_options = ocp_nlp_solver_options()
 
-        self.cost_r = acados_cost()
-        self.cost_r_e = acados_cost()
-
         self.acados_include_path = f'{acados_path}/include'
         self.acados_lib_path = f'{acados_path}/lib'
 

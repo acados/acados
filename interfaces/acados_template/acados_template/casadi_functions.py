@@ -59,15 +59,7 @@ class acados_ocp_model( acados_sim_model ):
         self.con_phi_expr_e = None #: CasADi expression for the constraint
         self.con_r_in_phi_e = None
         # cost
-
-class acados_cost():
-    def __init__(self):
-        self.expr = None     #: CasADi expression for the cost
-        self.x = None        #: CasADi variable describing the state of the system
-        self.u = None        #: CasADi variable describing the input of the system
-        self.p = []          #: CasADi variable describing parameters in the cost
-        self.ny = None       #: number of residuals
-        self.name = None     #: name associated with the function
+        self.cost_y_expr = None     #: CasADi expression for the cost
 
 
 def acados_sim_model_strip_casadi_symbolics(model):
@@ -105,6 +97,7 @@ def acados_ocp_model_strip_casadi_symbolics(model):
         del out['z']
     if 'p' in out.keys():
         del out['p']
+    # constraints
     if 'con_phi_expr' in out.keys():
         del out['con_phi_expr']
     if 'con_h_expr' in out.keys():
@@ -122,18 +115,10 @@ def acados_ocp_model_strip_casadi_symbolics(model):
         del out['con_r_expr_e']
     if 'con_r_in_phi_e' in out.keys():
         del out['con_r_in_phi_e']
+    # cost
+    if 'cost_y_expr' in out.keys():
+        del out['cost_y_expr']
+    if 'cost_y_expr_e' in out.keys():
+        del out['cost_y_expr_e']
     return out
 
-def acados_cost_strip_non_num(acados_cost):
-    out = acados_cost
-    if 'x' in out.keys():
-        del out['x']
-    if 'u' in out.keys():
-        del out['u']
-    if 'p' in out.keys():
-        del out['p']
-    if 'expr' in out.keys():
-        del out['expr']
-    if 'ny' in out.keys():
-        del out['ny']
-    return out

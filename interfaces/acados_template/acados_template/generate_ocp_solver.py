@@ -115,9 +115,6 @@ def ocp_formulation_json_dump(acados_ocp, json_file='acados_ocp_nlp.json'):
 
     ocp_nlp_dict['model'] = acados_ocp_model_strip_casadi_symbolics(ocp_nlp_dict['model'])
 
-    ocp_nlp_dict['cost_r'] = acados_cost_strip_non_num(ocp_nlp_dict['cost_r'])
-    ocp_nlp_dict['cost_r_e'] = acados_cost_strip_non_num(ocp_nlp_dict['cost_r_e'])
-
     ocp_nlp_json = dict2json(ocp_nlp_dict)
 
     with open(json_file, 'w') as f:
