@@ -20,7 +20,7 @@ i_d_ref =  -125         # Setpoints only valid for Formulation 0
 i_q_ref =    10       
 w_val = 2000.0          # do not change in this script, some of
                         # the values below are calculate with a fix w_val = 2000 1/S
-tau_wal = 10.0 
+tau_wal = 10.0
 
 
 # constants
@@ -218,8 +218,6 @@ ocp = acados_ocp_nlp()
 
 # export model
 model = export_pmsm_model()
-
-# set model_name
 ocp.model = model
 
 # set model dims

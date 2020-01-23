@@ -40,33 +40,6 @@ import scipy.linalg
 nFormulations = 2
 tol = 1E-6
 
-def export_nonlinear_constraint():
-
-    con_name = 'nl_con'
-
-    # set up states & controls
-    x1      = SX.sym('x1')
-    theta   = SX.sym('theta')
-    v1      = SX.sym('v1')
-    dtheta  = SX.sym('dtheta')
-    
-    x = vertcat(x1, v1, theta, dtheta)
-
-    # controls
-    F = SX.sym('F')
-    u = vertcat(F)
-
-    # voltage sphere
-    constraint = acados_constraint()
-
-    constraint.con_h_expr = v1
-    constraint.x = x
-    constraint.u = u
-    constraint.nh = 1
-    constraint.name = con_name
-
-    return constraint
-
 # FORMULATION = 1 # 0 for soft constraints on x - using bounds on x
 #                 # 1 for soft constraints on x - using nonlinear constraint h
 def run_closed_loop_experiment(FORMULATION):
@@ -155,7 +128,9 @@ def run_closed_loop_experiment(FORMULATION):
 
     elif FORMULATION == 1:
         # soft bound on x, using constraint h
-        ocp.con_h = export_nonlinear_constraint()
+        v1 = ocp.model.x[2]
+        ocp.model.con_h_expr = v1
+
         ocp.constraints.lh = np.array([-vmax])
         ocp.constraints.uh = np.array([+vmax])
         # indices of slacked constraints within h
@@ -230,8 +205,12 @@ if __name__ == "__main__":
         error_x = np.linalg.norm(simX_ref - simX)
         error_u = np.linalg.norm(simU_ref - simU)
 
-        if error_x > tol or error_u > tol:
+        error_xu = max([error_x, error_u])
+
+        if error_xu > tol:
             raise Exception("soft constraint example: formulations should return same solution up to" + str(tol))
+        else:
+            print("soft constraint example: formulation", i, " solution deviates from reference by", error_xu, ".")
 
     print("soft constraint example: SUCCESS, got same solutions for equivalent formulations up to tolerance %1.e." %(tol))
 

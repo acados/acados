@@ -142,7 +142,7 @@ def export_rsm_model():
     r = SX.sym('r', 2, 1)
     model.con_phi_expr = r[0]**2 + r[1]**2
     model.con_r_expr = vertcat(u_d, u_q)
-    model.r = r
+    model.con_r_in_phi = r
 
     return model
 
