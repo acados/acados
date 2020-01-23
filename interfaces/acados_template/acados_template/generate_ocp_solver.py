@@ -36,7 +36,6 @@ from .generate_c_code_explicit_ode import *
 from .generate_c_code_implicit_ode import *
 from .generate_c_code_constraint import *
 from .generate_c_code_nls_cost import *
-from .generate_c_code_nls_cost_e import *
 from .acados_ocp_nlp import *
 from .acados_ocp_solver import acados_ocp_solver
 from ctypes import *
@@ -177,11 +176,11 @@ def generate_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json',
     if acados_ocp.cost.cost_type == 'NONLINEAR_LS':
         acados_ocp.cost.Vx = np.zeros((acados_ocp.dims.ny, acados_ocp.dims.nx))
         acados_ocp.cost.Vu = np.zeros((acados_ocp.dims.ny, acados_ocp.dims.nu))
-        generate_c_code_nls_cost(acados_ocp.cost_r, name)
+        generate_c_code_nls_cost(acados_ocp.model, name, False)
 
     if acados_ocp.cost.cost_type_e == 'NONLINEAR_LS':
         acados_ocp.cost.Vx_e = np.zeros((acados_ocp.dims.ny_e, acados_ocp.dims.nx))
-        generate_c_code_nls_cost_e(acados_ocp.cost_r_e, name)
+        generate_c_code_nls_cost(acados_ocp.model, name, True)
 
     # dump to json
     ocp_formulation_json_dump(acados_ocp, json_file)
