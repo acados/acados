@@ -33,18 +33,31 @@
 
 class acados_ocp_model():
     def __init__(self):
-        self.f_impl_expr = None #: CasADi expression for the implicit dynamics :math:`F(\dot{x}, x, u, z) = 0`
-        self.f_expl_expr = None #: CasADi expression for the explicit dynamics :math:`\dot{x} = f(x, u)`
+        # common
         self.x = None           #: CasADi variable describing the state of the system
         self.xdot = None        #: CasADi variable describing the derivative of the state wrt time
         self.u = None           #: CasADi variable describing the input of the system
         self.z = []             #: CasADi variable describing the algebraic variables of the DAE
         self.p = []             #: CasADi variable describing parameters of the DAE
         self.name = None        #: name associated with the function
+        # dynamics
+        self.f_impl_expr = None #: CasADi expression for the implicit dynamics :math:`F(\dot{x}, x, u, z) = 0`
+        self.f_expl_expr = None #: CasADi expression for the explicit dynamics :math:`\dot{x} = f(x, u)`
+        # constraints
         self.con_h_expr   = None #: CasADi expression for the constraint
         self.con_phi_expr = None   #: CasADi expression for the constraint
         self.con_r_expr   = None #: CasADi expression for the constraint
-
+        self.con_h_expr   = None #: CasADi expression for the constraint
+        self.con_phi_expr = None   #: CasADi expression for the constraint
+        self.con_r_expr   = None #: CasADi expression for the constraint
+        # terminal
+        self.con_h_expr_e   = None #: CasADi expression for the constraint
+        self.con_phi_expr_e = None   #: CasADi expression for the constraint
+        self.con_r_expr_e   = None #: CasADi expression for the constraint
+        self.con_h_expr_e   = None #: CasADi expression for the constraint
+        self.con_phi_expr_e = None   #: CasADi expression for the constraint
+        self.con_r_expr_e   = None #: CasADi expression for the constraint
+        # cost
 
 class acados_cost():
     def __init__(self):
@@ -77,8 +90,17 @@ def acados_ocp_model_strip_casadi_symbolics(model):
         del out['con_h_expr']
     if 'con_r_expr' in out.keys():
         del out['con_r_expr']
-    if 'r' in out.keys():
-        del out['r']
+    if 'con_r_in_phi' in out.keys():
+        del out['con_r_in_phi']
+    # terminal
+    if 'con_phi_expr_e' in out.keys():
+        del out['con_phi_expr_e']
+    if 'con_h_expr_e' in out.keys():
+        del out['con_h_expr_e']
+    if 'con_r_expr_e' in out.keys():
+        del out['con_r_expr_e']
+    if 'con_r_in_phi_e' in out.keys():
+        del out['con_r_in_phi_e']
     return out
 
 def acados_cost_strip_non_num(acados_cost):
