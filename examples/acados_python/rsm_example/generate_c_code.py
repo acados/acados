@@ -32,13 +32,11 @@
 #
 
 from acados_template import *
-import acados_template as at
 import numpy as nmp
 from ctypes import *
 import matplotlib
 import matplotlib.pyplot as plt
 import scipy.linalg
-import json
 
 CODE_GEN = 1
 COMPILE = 1
@@ -84,7 +82,7 @@ Rs      = 0.4
 u_d_ref = Rs*i_d_ref - w_val*psi_q_ref
 u_q_ref = Rs*i_q_ref + w_val*psi_d_ref
 
-def export_dae_model():
+def export_rsm_model():
 
     model_name = 'rsm'
 
@@ -213,26 +211,26 @@ def get_general_constraints_DC(u_max):
 
     return res
 
-# create render arguments
-ra = acados_ocp_nlp()
+# create ocp object to formulate the OCP
+ocp = acados_ocp_nlp()
 
 # export model
-model = export_dae_model()
+model = export_rsm_model()
 
 # export constraint description
 constraint = export_voltage_sphere_con()
 
 # set model_name
-ra.model = model
+ocp.model = model
 
 if FORMULATION == 1:
     # constraints name
-    ra.con_h = constraint
+    ocp.con_h = constraint
 
 if FORMULATION == 2:
     # constraints name
-    ra.con_phi = constraint
-    ra.constraints.constr_type = 'BGP'
+    ocp.con_phi = constraint
+    ocp.constraints.constr_type = 'BGP'
 
 # Ts  = 0.0016
 # Ts  = 0.0012
@@ -248,36 +246,34 @@ ny_e = nx
 N   = 2
 Tf  = N*Ts
 
-# set ocp_nlp_dimensions
-nlp_dims      = ra.dims
-nlp_dims.nx   = nx
-nlp_dims.nz   = nz
-nlp_dims.ny   = ny
-nlp_dims.ny_e  = ny_e
-nlp_dims.nbx  = 0
-nlp_dims.nbu  = 1
+# set dimensions
+ocp.dims.nx   = nx
+ocp.dims.nz   = nz
+ocp.dims.ny   = ny
+ocp.dims.ny_e  = ny_e
+ocp.dims.nbx  = 0
+ocp.dims.nbu  = 1
 
 if FORMULATION == 0:
-    nlp_dims.nbu  = 1
-    nlp_dims.ng   = 2
+    ocp.dims.nbu  = 1
+    ocp.dims.ng   = 2
 
 if FORMULATION == 1:
-    nlp_dims.ng  = 0
-    nlp_dims.nh  = 1
+    ocp.dims.ng  = 0
+    ocp.dims.nh  = 1
 
 if FORMULATION == 2:
-    nlp_dims.ng   = 2
-    nlp_dims.nr   = 2
-    nlp_dims.nphi = 1
+    ocp.dims.ng   = 2
+    ocp.dims.nr   = 2
+    ocp.dims.nphi = 1
 
-nlp_dims.ng_e  = 0
-nlp_dims.nbx_e = 0
-nlp_dims.nu   = nu
-nlp_dims.np   = np
-nlp_dims.N    = N
+ocp.dims.ng_e  = 0
+ocp.dims.nbx_e = 0
+ocp.dims.nu   = nu
+ocp.dims.np   = np
+ocp.dims.N    = N
 
-# set weighting matrices
-nlp_cost = ra.cost
+# set cost module
 Q = nmp.eye(nx)
 Q[0,0] = 5e2
 Q[1,1] = 5e2
@@ -286,44 +282,44 @@ R = nmp.eye(nu)
 R[0,0] = 1e-4
 R[1,1] = 1e-4
 
-nlp_cost.W = scipy.linalg.block_diag(Q, R)
+ocp.cost.W = scipy.linalg.block_diag(Q, R)
 
 Vx = nmp.zeros((ny, nx))
 Vx[0,0] = 1.0
 Vx[1,1] = 1.0
 
-nlp_cost.Vx = Vx
+ocp.cost.Vx = Vx
 
 Vu = nmp.zeros((ny, nu))
 Vu[2,0] = 1.0
 Vu[3,1] = 1.0
-nlp_cost.Vu = Vu
+ocp.cost.Vu = Vu
 
 Vz = nmp.zeros((ny, nz))
 Vz[0,0] = 0.0
 Vz[1,1] = 0.0
 
-nlp_cost.Vz = Vz
+ocp.cost.Vz = Vz
 
 Q_e = nmp.eye(nx)
 Q_e[0,0] = 1e-3
 Q_e[1,1] = 1e-3
-nlp_cost.W_e = Q_e
+ocp.cost.W_e = Q_e
 
 Vx_e = nmp.zeros((ny_e, nx))
 Vx_e[0,0] = 1.0
 Vx_e[1,1] = 1.0
 
-nlp_cost.Vx_e = Vx_e
+ocp.cost.Vx_e = Vx_e
 
-nlp_cost.yref  = nmp.zeros((ny, ))
-nlp_cost.yref[0]  = psi_d_ref
-nlp_cost.yref[1]  = psi_q_ref
-nlp_cost.yref[2]  = u_d_ref
-nlp_cost.yref[3]  = u_q_ref
-nlp_cost.yref_e = nmp.zeros((ny_e, ))
-nlp_cost.yref_e[0]  = psi_d_ref
-nlp_cost.yref_e[1]  = psi_q_ref
+ocp.cost.yref  = nmp.zeros((ny, ))
+ocp.cost.yref[0]  = psi_d_ref
+ocp.cost.yref[1]  = psi_q_ref
+ocp.cost.yref[2]  = u_d_ref
+ocp.cost.yref[3]  = u_q_ref
+ocp.cost.yref_e = nmp.zeros((ny_e, ))
+ocp.cost.yref_e[0]  = psi_d_ref
+ocp.cost.yref_e[1]  = psi_q_ref
 
 # get D and C
 res = get_general_constraints_DC(u_max)
@@ -336,51 +332,50 @@ ubu = res["ubu"]
 
 # setting bounds
 # lbu <= u <= ubu and lbx <= x <= ubx
-nlp_con = ra.constraints
-nlp_con.idxbu = nmp.array([1])
+ocp.constraints.idxbu = nmp.array([1])
 
-nlp_con.lbu = lbu
-nlp_con.ubu = ubu
+ocp.constraints.lbu = lbu
+ocp.constraints.ubu = ubu
 
 if FORMULATION > 0:
-    nlp_con.lphi = nmp.array([-1.0e8])
-    nlp_con.uphi = nmp.array([(u_max*sqrt(3)/2)**2])
+    ocp.constraints.lphi = nmp.array([-1.0e8])
+    ocp.constraints.uphi = nmp.array([(u_max*sqrt(3)/2)**2])
 
-nlp_con.x0 = nmp.array([0.0, -0.0])
+ocp.constraints.x0 = nmp.array([0.0, -0.0])
 
 if FORMULATION == 0 or FORMULATION == 2:
     # setting general constraints
     # lg <= D*u + C*u <= ug
-    nlp_con.D   = D
-    nlp_con.C   = C
-    nlp_con.lg  = lg
-    nlp_con.ug  = ug
+    ocp.constraints.D   = D
+    ocp.constraints.C   = C
+    ocp.constraints.lg  = lg
+    ocp.constraints.ug  = ug
 
 # setting parameters
-nlp_con.p = nmp.array([w_val, 0.0, 0.0])
+ocp.constraints.p = nmp.array([w_val, 0.0, 0.0])
 
 # set QP solver
-ra.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-# ra.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM'
-# ra.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
-ra.solver_options.hessian_approx = 'GAUSS_NEWTON'
-# ra.solver_options.integrator_type = 'ERK'
-ra.solver_options.integrator_type = 'IRK'
+ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+# ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM'
+# ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
+ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+# ocp.solver_options.integrator_type = 'ERK'
+ocp.solver_options.integrator_type = 'IRK'
 
 # set prediction horizon
-ra.solver_options.tf = Tf
-ra.solver_options.nlp_solver_type = 'SQP_RTI'
-# ra.solver_options.nlp_solver_type = 'SQP'
+ocp.solver_options.tf = Tf
+ocp.solver_options.nlp_solver_type = 'SQP_RTI'
+# ocp.solver_options.nlp_solver_type = 'SQP'
 
 file_name = 'acados_ocp.json'
 
 if CODE_GEN == 1:
     if FORMULATION == 0:
-        acados_solver = generate_ocp_solver(ra, json_file = file_name)
+        acados_solver = generate_ocp_solver(ocp, json_file = file_name)
     if FORMULATION == 1:
-        acados_solver = generate_ocp_solver(ra, json_file = file_name)
+        acados_solver = generate_ocp_solver(ocp, json_file = file_name)
     if FORMULATION == 2:
-        acados_solver = generate_ocp_solver(ra, json_file = file_name)
+        acados_solver = generate_ocp_solver(ocp, json_file = file_name)
 
 if COMPILE == 1:
     # make 
@@ -438,26 +433,26 @@ for i in range(Nsim):
 t = nmp.linspace(0.0, Ts*Nsim, Nsim)
 plt.subplot(4, 1, 1)
 plt.step(t, simU[:,0], color='r')
-plt.plot([0, Ts*Nsim], [nlp_cost.yref[2], nlp_cost.yref[2]], '--')
+plt.plot([0, Ts*Nsim], [ocp.cost.yref[2], ocp.cost.yref[2]], '--')
 plt.title('closed-loop simulation')
 plt.ylabel('u_d')
 plt.xlabel('t')
 plt.grid(True)
 plt.subplot(4, 1, 2)
 plt.step(t, simU[:,1], color='r')
-plt.plot([0, Ts*Nsim], [nlp_cost.yref[3], nlp_cost.yref[3]], '--')
+plt.plot([0, Ts*Nsim], [ocp.cost.yref[3], ocp.cost.yref[3]], '--')
 plt.ylabel('u_q')
 plt.xlabel('t')
 plt.grid(True)
 plt.subplot(4, 1, 3)
 plt.plot(t, simX[:,0])
-plt.plot([0, Ts*Nsim], [nlp_cost.yref[0], nlp_cost.yref[0]], '--')
+plt.plot([0, Ts*Nsim], [ocp.cost.yref[0], ocp.cost.yref[0]], '--')
 plt.ylabel('psi_d')
 plt.xlabel('t')
 plt.grid(True)
 plt.subplot(4, 1, 4)
 plt.plot(t, simX[:,1])
-plt.plot([0, Ts*Nsim], [nlp_cost.yref[1], nlp_cost.yref[1]], '--')
+plt.plot([0, Ts*Nsim], [ocp.cost.yref[1], ocp.cost.yref[1]], '--')
 plt.ylabel('psi_q')
 plt.xlabel('t')
 plt.grid(True)
