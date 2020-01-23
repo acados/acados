@@ -172,17 +172,11 @@ def generate_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json',
         opts = dict(generate_hess=1)
         generate_c_code_implicit_ode(model, opts)
 
-    if acados_ocp.constraints.constr_type == 'BGP' and acados_ocp.dims.nphi > 0:
-        # nonlinear part of nonlinear constraints
-        generate_c_code_constraint(acados_ocp.model, name)
-    elif acados_ocp.constraints.constr_type  == 'BGH' and acados_ocp.dims.nh > 0:
-        generate_c_code_constraint(acados_ocp.con_h, name)
+    if acados_ocp.dims.nphi > 0 or acados_ocp.dims.nh > 0:
+        generate_c_code_constraint(acados_ocp.model, name, False)
 
-    if acados_ocp.constraints.constr_type_e  == 'BGP' and acados_ocp.dims.nphi_e > 0:
-        # nonlinear part of nonlinear constraints
-        generate_c_code_constraint_e(acados_ocp.con_phi_e, name)
-    elif acados_ocp.constraints.constr_type_e  == 'BGH' and acados_ocp.dims.nh_e > 0:
-        generate_c_code_constraint_e(acados_ocp.con_h_e, name)
+    if acados_ocp.dims.nphi_e > 0 or acados_ocp.dims.nh_e > 0:
+        generate_c_code_constraint(acados_ocp.model, name, True)
 
     if acados_ocp.cost.cost_type == 'NONLINEAR_LS':
         acados_ocp.cost.Vx = np.zeros((acados_ocp.dims.ny, acados_ocp.dims.nx))

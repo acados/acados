@@ -35,7 +35,7 @@ import os
 from casadi import *
 from .utils import ALLOWED_CASADI_VERSIONS, is_empty, casadi_length
 
-def generate_c_code_constraint( model, con_name ):
+def generate_c_code_constraint( model, con_name, is_terminal ):
 
     casadi_version = CasadiMeta.version()
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
@@ -46,15 +46,23 @@ def generate_c_code_constraint( model, con_name ):
         msg += 'Version {} currently in use.'.format(casadi_version)
         raise Exception(msg)
 
+    if is_terminal:
+        con_h_expr = model.con_h_expr_e
+        con_phi_expr = model.con_phi_expr_e
+        # create dummy u, z
+        u = SX.sym('u', 0, 0)
+        z = SX.sym('z', 0, 0)
+    else:
+        con_h_expr = model.con_h_expr
+        con_phi_expr = model.con_phi_expr
+        u = model.u
+        z = model.z
+
     # load constraint variables and expression
     x = model.x
-    u = model.u
-    r = model.r
-    z = model.z
     p = model.p
 
-    con_h_expr = model.con_h_expr
-    con_phi_expr = model.con_phi_expr
+
 
     if (not is_empty(con_h_expr)) and (not is_empty(con_phi_expr)):
         raise Exception("acados: you can either have constraint_h, or constraint_phi, not both.")
@@ -64,22 +72,6 @@ def generate_c_code_constraint( model, con_name ):
             constr_type = 'BGP'
         else:
             constr_type = 'BGH'
-
-        # get dimensions
-        if x is not None:
-            nx = x.size()[0]
-        else:
-            nx = 0
-
-        if u is not None:
-            nu = u.size()[0]
-        else:
-            nu = 0
-
-        if r is not None:
-            nr = r.size()[0]
-        else:
-            nr = 0
 
         if is_empty(p):
             p = SX.sym('p', 0, 0)
@@ -99,8 +91,11 @@ def generate_c_code_constraint( model, con_name ):
 
         # export casadi functions
         if constr_type == 'BGH':
-            fun_name = con_name + '_constr_h_fun_jac_uxt_zt'
-            file_name = con_name + '_constr_h_fun_jac_uxt_zt'
+            if is_terminal:
+                fun_name = con_name + '_constr_h_e_fun_jac_uxt_zt'
+            else:
+                fun_name = con_name + '_constr_h_fun_jac_uxt_zt'
+
             jac_x = jacobian(con_h_expr, x)
             jac_u = jacobian(con_h_expr, u)
             jac_z = jacobian(con_h_expr, z)
@@ -109,12 +104,19 @@ def generate_c_code_constraint( model, con_name ):
                 [con_h_expr, vertcat(transpose(jac_u), \
                 transpose(jac_x)), transpose(jac_z)])
 
-            constraint_fun_jac_tran.generate(file_name, casadi_opts)
+            constraint_fun_jac_tran.generate(fun_name, casadi_opts)
 
         else: # BGP constraint
+            if is_terminal:
+                fun_name = con_name + '_phi_e_constraint'
+                r = model.con_r_in_phi_e
+                con_r_expr = model.con_r_expr_e
+            else:
+                fun_name = con_name + '_phi_constraint'
+                r = model.con_r_in_phi
+                con_r_expr = model.con_r_expr
+
             nphi = casadi_length(con_phi_expr)
-            con_r_expr = model.con_r_expr
-            fun_name = con_name + '_phi_constraint'
             con_phi_expr_x_u_z = substitute(con_phi_expr, r, con_r_expr)
             phi_jac_u = jacobian(con_phi_expr_x_u_z, u)
             phi_jac_x = jacobian(con_phi_expr_x_u_z, x)
@@ -129,15 +131,14 @@ def generate_c_code_constraint( model, con_name ):
 
             constraint_phi = \
                 Function(fun_name, [x, u, z, p], \
-                [con_phi_expr_x_u_z, \
-                vertcat(transpose(phi_jac_u), \
-                transpose(phi_jac_x)), \
-                transpose(phi_jac_z), \
-                hess, vertcat(transpose(r_jac_u), \
-                transpose(r_jac_x))])
+                    [con_phi_expr_x_u_z, \
+                    vertcat(transpose(phi_jac_u), \
+                    transpose(phi_jac_x)), \
+                    transpose(phi_jac_z), \
+                    hess, vertcat(transpose(r_jac_u), \
+                    transpose(r_jac_x))])
 
-            file_name = con_name + '_phi_constraint'
-            constraint_phi.generate(file_name, casadi_opts)
+            constraint_phi.generate(fun_name, casadi_opts)
 
         # change directory back
         os.chdir('../..')
