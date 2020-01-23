@@ -70,8 +70,25 @@ def is_column(x):
     elif x == None:
         return False
     else:
-        raise Exception("is_column expects one of the following types: np.ndarray, MX.sym, SX.sym."
+        raise Exception("is_column expects one of the following types: np.ndarray, casadi.MX, casadi.SX."
                         + " Got: " + str(type(x)))
+
+def is_empty(x):
+    if isinstance(x, (MX, SX)):
+        return x.is_empty()
+    elif x == None or x == []:
+        return True
+    else:
+        raise Exception("is_empty expects one of the following types: casadi.MX, casadi.SX, None, empty list."
+                        + " Got: " + str(type(x)))
+
+def casadi_length(x):
+    if isinstance(x, (MX, SX)):
+        return np.prod(x.shape)
+    else:
+        raise Exception("casadi_length expects one of the following types: casadi.MX, casadi.SX."
+                        + " Got: " + str(type(x)))
+
 
 def get_tera():
     tera_path = TERA_EXEC_PATH

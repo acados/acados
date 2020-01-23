@@ -33,9 +33,9 @@
 
 import os
 from casadi import *
-from .utils import ALLOWED_CASADI_VERSIONS
+from .utils import ALLOWED_CASADI_VERSIONS, is_empty, casadi_length
 
-def generate_c_code_constraint( constraint, con_name ):
+def generate_c_code_constraint( model, con_name ):
 
     casadi_version = CasadiMeta.version()
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
@@ -47,19 +47,23 @@ def generate_c_code_constraint( constraint, con_name ):
         raise Exception(msg)
 
     # load constraint variables and expression
-    x = constraint.x
-    u = constraint.u
-    r = constraint.r
-    z = constraint.z
-    p = constraint.p
-    # nc = nh or np
-    nh = constraint.nh
-    nphi = constraint.nphi
-    if nh > 0 and nphi > 0:
-        raise Exception("cannot have both nh and nphi > 0.")
-    if nh > 0 or nphi > 0:
+    x = model.x
+    u = model.u
+    r = model.r
+    z = model.z
+    p = model.p
 
-        nr = constraint.nr
+    con_h_expr = model.con_h_expr
+    con_phi_expr = model.con_phi_expr
+
+    if (not is_empty(con_h_expr)) and (not is_empty(con_phi_expr)):
+        raise Exception("acados: you can either have constraint_h, or constraint_phi, not both.")
+
+    if not (is_empty(con_h_expr) and is_empty(con_phi_expr)):
+        if is_empty(con_h_expr):
+            constr_type = 'BGP'
+        else:
+            constr_type = 'BGH'
 
         # get dimensions
         if x is not None:
@@ -77,27 +81,11 @@ def generate_c_code_constraint( constraint, con_name ):
         else:
             nr = 0
 
-        if type(p) is list:
-            # check that z is empty
-            if len(p) == 0:
-                np = 0
-                p = SX.sym('p', 0, 0)
-            else:
-                raise Exception('p is a non-empty list. It should be',
-                    ' either an empty list or an SX object.')
-        else:
-            np = p.size()[0]
+        if is_empty(p):
+            p = SX.sym('p', 0, 0)
 
-        if type(z) is list:
-            # check that z is empty
-            if len(z) == 0:
-                nz = 0
-                z = SX.sym('z', 0, 0)
-            else:
-                raise Exception('z is a non-empty list. It should be', 
-                    ' either an empty list or an SX object.')
-        else:
-            nz = z.size()[0]
+        if is_empty(z):
+            z = SX.sym('z', 0, 0)
 
         # set up & change directory
         if not os.path.exists('c_generated_code'):
@@ -109,9 +97,8 @@ def generate_c_code_constraint( constraint, con_name ):
         gen_dir_location = './' + gen_dir
         os.chdir(gen_dir_location)
 
-        # set up functions to be exported
-        if nr == 0: # BGH constraint
-            con_h_expr = constraint.con_h_expr
+        # export casadi functions
+        if constr_type == 'BGH':
             fun_name = con_name + '_constr_h_fun_jac_uxt_zt'
             file_name = con_name + '_constr_h_fun_jac_uxt_zt'
             jac_x = jacobian(con_h_expr, x)
@@ -125,8 +112,8 @@ def generate_c_code_constraint( constraint, con_name ):
             constraint_fun_jac_tran.generate(file_name, casadi_opts)
 
         else: # BGP constraint
-            con_phi_expr = constraint.con_phi_expr
-            con_r_expr = constraint.con_r_expr
+            nphi = casadi_length(con_phi_expr)
+            con_r_expr = model.con_r_expr
             fun_name = con_name + '_phi_constraint'
             con_phi_expr_x_u_z = substitute(con_phi_expr, r, con_r_expr)
             phi_jac_u = jacobian(con_phi_expr_x_u_z, u)
