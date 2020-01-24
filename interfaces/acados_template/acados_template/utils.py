@@ -62,7 +62,7 @@ def is_column(x):
             return True
         else:
             return False
-    elif isinstance(x, (MX, SX)):
+    elif isinstance(x, (MX, SX, DM)):
         if x.shape[1] == 1:
             return True
         else:
@@ -74,7 +74,7 @@ def is_column(x):
                         + " Got: " + str(type(x)))
 
 def is_empty(x):
-    if isinstance(x, (MX, SX)):
+    if isinstance(x, (MX, SX, DM)):
         return x.is_empty()
     elif x == None or x == []:
         return True
@@ -83,7 +83,7 @@ def is_empty(x):
                         + " Got: " + str(type(x)))
 
 def casadi_length(x):
-    if isinstance(x, (MX, SX)):
+    if isinstance(x, (MX, SX, DM)):
         return np.prod(x.shape)
     else:
         raise Exception("casadi_length expects one of the following types: casadi.MX, casadi.SX."

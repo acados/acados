@@ -63,6 +63,10 @@ def generate_c_code_constraint( model, con_name, is_terminal ):
     p = model.p
 
 
+    if isinstance(x, casadi.SX):
+        is_SX = True
+    else:
+        is_SX = False
 
     if (not is_empty(con_h_expr)) and (not is_empty(con_phi_expr)):
         raise Exception("acados: you can either have constraint_h, or constraint_phi, not both.")
@@ -74,10 +78,16 @@ def generate_c_code_constraint( model, con_name, is_terminal ):
             constr_type = 'BGH'
 
         if is_empty(p):
-            p = SX.sym('p', 0, 0)
+            if is_SX:
+                p = SX.sym('p', 0, 0)
+            else:
+                p = MX.sym('p', 0, 0)
 
         if is_empty(z):
-            z = SX.sym('z', 0, 0)
+            if is_SX:
+                z = SX.sym('z', 0, 0)
+            else:
+                z = MX.sym('z', 0, 0)
 
         # set up & change directory
         if not os.path.exists('c_generated_code'):

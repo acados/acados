@@ -52,12 +52,21 @@ def generate_c_code_explicit_ode( model ):
     f_expl = model.f_expl_expr
     model_name = model.name
 
+    if isinstance(x, casadi.SX):
+        is_SX = True
+    else:
+        is_SX = False
+
     ## get model dimensions
     nx = x.size()[0]
     nu = u.size()[0]
 
     if is_empty(p):
-        p = SX.sym('p', 0, 0)
+        if is_SX:
+            p = SX.sym('p', 0, 0)
+        else:
+            p = MX.sym('p', 0, 0)
+
 
     ## set up functions to be exported
     if isinstance(f_expl, casadi.SX):
