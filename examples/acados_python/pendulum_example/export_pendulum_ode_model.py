@@ -63,10 +63,10 @@ def export_pendulum_ode_model():
     xdot = vertcat(x1_dot, theta_dot, v1_dot, dtheta_dot)
 
     # algebraic variables
-    z = SX.sym('z', 0)
+    z = None
 
     # parameters
-    p = SX.sym('parameters', 0)
+    p = []
     
     # dynamics     
     denominator = M + m - m*cos(theta)*cos(theta)

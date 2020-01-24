@@ -33,7 +33,7 @@
 
 import os
 from casadi import *
-from .utils import ALLOWED_CASADI_VERSIONS
+from .utils import ALLOWED_CASADI_VERSIONS, is_empty
 
 def generate_c_code_explicit_ode( model ):
 
@@ -56,15 +56,8 @@ def generate_c_code_explicit_ode( model ):
     nx = x.size()[0]
     nu = u.size()[0]
 
-    if type(p) is list:
-        # check that z is empty
-        if len(p) == 0:
-            np = 0
-            p = SX.sym('p', 0, 0)
-        else:
-            raise Exception('p is a non-empty list. It should be either an empty list or an SX object.')
-    else:
-        np = p.size()[0]
+    if is_empty(p):
+        p = SX.sym('p', 0, 0)
 
     ## set up functions to be exported
     if isinstance(f_expl, casadi.SX):
