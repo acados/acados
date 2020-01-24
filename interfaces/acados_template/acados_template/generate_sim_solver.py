@@ -36,6 +36,7 @@ from .generate_c_code_explicit_ode import *
 from .generate_c_code_implicit_ode import *
 from .AcadosSim import *
 from .AcadosSimSolver import AcadosSimSolver
+from .AcadosOcpModel import acados_model_strip_casadi_symbolics
 from ctypes import *
 from copy import deepcopy
 from .utils import ACADOS_PATH, is_column, render_template, dict2json, np_array_to_list
@@ -98,7 +99,7 @@ def sim_formulation_json_dump(acados_sim, json_file='acados_sim.json'):
         # Copy sim object attributes dictionaries
         sim_dict[key]=dict(getattr(acados_sim, key).__dict__)
 
-    sim_dict['model'] = acados_sim_model_strip_casadi_symbolics(sim_dict['model'])
+    sim_dict['model'] = acados_model_strip_casadi_symbolics(sim_dict['model'])
     sim_json = dict2json(sim_dict)
 
     with open(json_file, 'w') as f:

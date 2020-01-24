@@ -112,7 +112,7 @@ def ocp_formulation_json_dump(acados_ocp, json_file='acados_ocp_nlp.json'):
         # Copy ocp object attributes dictionaries
         ocp_nlp_dict[acados_struct]=dict(getattr(acados_ocp, acados_struct).__dict__)
 
-    ocp_nlp_dict['model'] = acados_ocp_model_strip_casadi_symbolics(ocp_nlp_dict['model'])
+    ocp_nlp_dict['model'] = acados_model_strip_casadi_symbolics(ocp_nlp_dict['model'])
 
     ocp_nlp_json = dict2json(ocp_nlp_dict)
 

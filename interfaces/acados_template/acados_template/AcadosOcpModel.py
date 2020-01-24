@@ -51,7 +51,7 @@ class AcadosOcpModel( AcadosSimModel ):
 
 
 
-def acados_ocp_model_strip_casadi_symbolics(model):
+def acados_model_strip_casadi_symbolics(model):
     out = model
     if 'f_impl_expr' in out.keys():
         del out['f_impl_expr']

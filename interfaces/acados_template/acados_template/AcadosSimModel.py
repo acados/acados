@@ -43,21 +43,3 @@ class AcadosSimModel():
         # dynamics
         self.f_impl_expr = None #: CasADi expression for the implicit dynamics :math:`F(\dot{x}, x, u, z) = 0`
         self.f_expl_expr = None #: CasADi expression for the explicit dynamics :math:`\dot{x} = f(x, u)`
-
-def acados_sim_model_strip_casadi_symbolics(model):
-    out = model
-    if 'f_impl_expr' in out.keys():
-        del out['f_impl_expr']
-    if 'f_expl_expr' in out.keys():
-        del out['f_expl_expr']
-    if 'x' in out.keys():
-        del out['x']
-    if 'xdot' in out.keys():
-        del out['xdot']
-    if 'u' in out.keys():
-        del out['u']
-    if 'z' in out.keys():
-        del out['z']
-    if 'p' in out.keys():
-        del out['p']
-    return out
