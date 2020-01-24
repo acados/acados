@@ -57,7 +57,6 @@ N = 20
 ocp.dims.nx  = nx
 ocp.dims.ny  = ny
 ocp.dims.ny_e = ny_e
-ocp.dims.nbx = 0
 ocp.dims.nbu = nu 
 ocp.dims.nu  = nu
 ocp.dims.N   = N

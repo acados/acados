@@ -37,8 +37,6 @@ from utils import plot_pendulum
 import numpy as np
 import scipy.linalg
 
-FORMULATION = 'LS' # 'LS'
-
 # create ocp object to formulate the OCP
 ocp = AcadosOcp()
 
@@ -57,7 +55,6 @@ N = 20
 ocp.dims.nx  = nx
 ocp.dims.ny  = ny
 ocp.dims.ny_e = ny_e
-ocp.dims.nbx = 0
 ocp.dims.nbu = nu
 ocp.dims.nu  = nu
 ocp.dims.N   = N
@@ -94,17 +91,15 @@ ocp.constraints.ubu = np.array([+Fmax])
 ocp.constraints.x0 = x0
 ocp.constraints.idxbu = np.array([0])
 
-ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-# ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
+ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
 ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
 ocp.solver_options.integrator_type = 'ERK'
-ocp.solver_options.nlp_solver_type = 'SQP'
+ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
 
 ocp.solver_options.qp_solver_cond_N = N
 
 # set prediction horizon
 ocp.solver_options.tf = Tf
-# ocp.solver_options.nlp_solver_type = 'SQP_RTI'
 
 acados_ocp_solver = generate_ocp_solver(ocp, json_file = 'acados_ocp_' + model.name + '.json')
 acados_integrator = generate_sim_solver_from_ocp(ocp, json_file = 'acados_ocp_' + model.name + '.json')
