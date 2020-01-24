@@ -34,8 +34,8 @@
 
 from .generate_c_code_explicit_ode import *
 from .generate_c_code_implicit_ode import *
-from .acados_sim import *
-from .acados_sim_solver import acados_sim_solver
+from .AcadosSim import *
+from .AcadosSimSolver import AcadosSimSolver
 from ctypes import *
 from copy import deepcopy
 from .utils import ACADOS_PATH, is_column, render_template, dict2json, np_array_to_list
@@ -178,7 +178,7 @@ def generate_sim_solver(acados_sim, json_file='acados_sim.json'):
     os.chdir('..')
 
     # get
-    sim_solver = acados_sim_solver(acados_sim, 'c_generated_code/libacados_sim_solver_' + model_name + '.so')
+    sim_solver = AcadosSimSolver(acados_sim, 'c_generated_code/libacados_sim_solver_' + model_name + '.so')
     return sim_solver
 
 
@@ -208,5 +208,5 @@ def generate_sim_solver_from_ocp(acados_ocp, json_file='acados_ocp_nlp.json'):
     os.chdir('..')
 
     # get
-    sim_solver = acados_sim_solver(acados_sim_, 'c_generated_code/libacados_sim_solver_' + model_name + '.so')
+    sim_solver = AcadosSimSolver(acados_sim_, 'c_generated_code/libacados_sim_solver_' + model_name + '.so')
     return sim_solver

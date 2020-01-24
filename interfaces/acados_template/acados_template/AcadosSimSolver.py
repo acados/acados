@@ -35,7 +35,7 @@
 from ctypes import *
 import numpy as np
 
-class acados_sim_solver:
+class AcadosSimSolver:
     def __init__(self, acados_sim, shared_lib):
 
         self.sim_struct = acados_sim
