@@ -47,7 +47,7 @@ def acados_settings(Tf,N,track_file):
     model,constraint = bycicle_model(track_file)
 
     # define acados ODE
-    model_ac = acados_dae()
+    model_ac = AcadosOcpModel()
     model_ac.f_impl_expr = model.f_impl_expr
     model_ac.f_expl_expr = model.f_expl_expr
     model_ac.x = model.x
@@ -59,16 +59,9 @@ def acados_settings(Tf,N,track_file):
     ocp.model=model_ac
 
     # define constraint
-    constraint_ac=acados_constraint()
-    constraint_ac.con_h_expr=constraint.expr
-    constraint_ac.x=constraint.x
-    constraint_ac.u=constraint.u
-    constraint_ac.p=constraint.p
-    constraint_ac.nh=constraint.nc
-    constraint_ac.z=vertcat([])
-    constraint_ac.name="con_bycicle"
+    model_ac.con_h_expr = constraint.expr
 
-    # set ocp_nlp_dimensions
+    # set dimensions
     nx = model.x.size()[0]
     nu = model.u.size()[0]
     ny = nx + nu
@@ -87,7 +80,7 @@ def acados_settings(Tf,N,track_file):
     nlp_dims.nh=constraint.nc
     nlp_dims.ns=2
 
-    # set weighting matrices
+    # set cost
     Q=np.zeros((nx,nx))
     Q[0, 0] = 1e-1
     Q[1, 1] = 1e-8
@@ -146,8 +139,7 @@ def acados_settings(Tf,N,track_file):
     nlp_cost.yref  = np.array([1,0,0,0,0,0,0,0])
     nlp_cost.yref_e = np.array([0,0,0,0,0,0])
 
-    # setting bounds
-    ocp.con_h=constraint_ac
+    # setting constraints
     nlp_con = ocp.constraints
     nlp_con.lbx=np.array([-12])
     nlp_con.ubx=np.array([12])
