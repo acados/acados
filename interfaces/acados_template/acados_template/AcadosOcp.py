@@ -36,7 +36,7 @@ import numpy as np
 import json
 import os
 import sys
-from .casadi_functions import *
+from .AcadosOcpModel import *
 
 ACADOS_PATH=os.getenv("ACADOS_SOURCE_DIR","/usr/lib")
 

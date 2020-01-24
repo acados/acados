@@ -31,19 +31,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-class AcadosSimModel():
-    def __init__(self):
-        # common
-        self.x = None           #: CasADi variable describing the state of the system
-        self.xdot = None        #: CasADi variable describing the derivative of the state wrt time
-        self.u = None           #: CasADi variable describing the input of the system
-        self.z = []             #: CasADi variable describing the algebraic variables of the DAE
-        self.p = []             #: CasADi variable describing parameters of the DAE
-        self.name = None        #: model name
-        # dynamics
-        self.f_impl_expr = None #: CasADi expression for the implicit dynamics :math:`F(\dot{x}, x, u, z) = 0`
-        self.f_expl_expr = None #: CasADi expression for the explicit dynamics :math:`\dot{x} = f(x, u)`
-
+from .AcadosSimModel import AcadosSimModel
 
 class AcadosOcpModel( AcadosSimModel ):
     def __init__(self):
@@ -61,24 +49,6 @@ class AcadosOcpModel( AcadosSimModel ):
         # cost
         self.cost_y_expr = None     #: CasADi expression for the cost
 
-
-def acados_sim_model_strip_casadi_symbolics(model):
-    out = model
-    if 'f_impl_expr' in out.keys():
-        del out['f_impl_expr']
-    if 'f_expl_expr' in out.keys():
-        del out['f_expl_expr']
-    if 'x' in out.keys():
-        del out['x']
-    if 'xdot' in out.keys():
-        del out['xdot']
-    if 'u' in out.keys():
-        del out['u']
-    if 'z' in out.keys():
-        del out['z']
-    if 'p' in out.keys():
-        del out['p']
-    return out
 
 
 def acados_ocp_model_strip_casadi_symbolics(model):

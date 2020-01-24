@@ -37,11 +37,11 @@ import casadi as ca
 import json
 import os
 import sys
-from .casadi_functions import *
+from .AcadosSimModel import *
 
 ACADOS_PATH=os.getenv("ACADOS_SOURCE_DIR","/usr/lib")
 
-class sim_dims:
+class AcadosSimDims:
     """
     class containing the dimensions of the optimal control problem
     """
@@ -103,7 +103,7 @@ class sim_dims:
         setattr(self, attr, value)
 
 
-class sim_solver_options:
+class AcadosSimOpts:
     """
     class containing the description of the solver options
     """
@@ -186,9 +186,9 @@ class AcadosSim:
         Keyword arguments:
         acados_path -- path of your acados installation
         """
-        self.dims = sim_dims()
+        self.dims = AcadosSimDims()
         self.model = AcadosSimModel()
-        self.solver_options = sim_solver_options()
+        self.solver_options = AcadosSimOpts()
 
         self.acados_include_path = f'{acados_path}/include'
         self.acados_lib_path = f'{acados_path}/lib'
@@ -205,7 +205,3 @@ class AcadosSim:
         setter_to_call(tokens[1], value)
 
         return
-
-class sim_as_object:
-        def __init__(self, d):
-            self.__dict__ = d
