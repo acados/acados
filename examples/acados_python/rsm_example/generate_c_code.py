@@ -127,7 +127,7 @@ def export_rsm_model():
                         psi_d - Psi[0], \
                         psi_q - Psi[1])
 
-    model = acados_ocp_model()
+    model = AcadosOcpModel()
 
     model.f_impl_expr = f_impl
     model.f_expl_expr = []

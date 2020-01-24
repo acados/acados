@@ -100,7 +100,7 @@ def export_pmsm_model():
     fimpl = vertcat(-i_d_dot-(R_m/L_d)*i_d + (L_q/L_d)*omega*i_q + u_d/L_d, \
                     -i_q_dot-(L_d/L_q)*omega*i_d - (R_m/L_q)*i_q + u_q/L_q - (omega*K_m)/L_q)
 
-    model = acados_ocp_model()
+    model = AcadosOcpModel()
 
     if FORMULATION == 1:
         # export_torqueline_pd():
