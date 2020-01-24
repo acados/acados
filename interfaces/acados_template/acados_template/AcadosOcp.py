@@ -1888,7 +1888,3 @@ class AcadosOcp:
         setter_to_call(tokens[1], value)
 
         return
-
-class ocp_nlp_as_object:
-        def __init__(self, d):
-            self.__dict__ = d

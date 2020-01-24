@@ -40,13 +40,13 @@ class AcadosSimModel():
         self.z = []             #: CasADi variable describing the algebraic variables of the DAE
         self.p = []             #: CasADi variable describing parameters of the DAE
         self.name = None        #: model name
+        # dynamics
+        self.f_impl_expr = None #: CasADi expression for the implicit dynamics :math:`F(\dot{x}, x, u, z) = 0`
+        self.f_expl_expr = None #: CasADi expression for the explicit dynamics :math:`\dot{x} = f(x, u)`
 
 
 class AcadosOcpModel( AcadosSimModel ):
     def __init__(self):
-        # dynamics
-        self.f_impl_expr = None #: CasADi expression for the implicit dynamics :math:`F(\dot{x}, x, u, z) = 0`
-        self.f_expl_expr = None #: CasADi expression for the explicit dynamics :math:`\dot{x} = f(x, u)`
         # constraints
         self.con_h_expr   = None #: CasADi expression for the constraint
         self.con_phi_expr = None #: CasADi expression for the constraint

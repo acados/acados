@@ -36,8 +36,8 @@ from .generate_c_code_explicit_ode import generate_c_code_explicit_ode
 from .generate_c_code_implicit_ode import generate_c_code_implicit_ode
 from .generate_c_code_constraint import generate_c_code_constraint
 from .generate_c_code_nls_cost import generate_c_code_nls_cost
-from .acados_ocp_nlp import *
-from .acados_ocp_solver import acados_ocp_solver
+from .AcadosOcp import *
+from .AcadosOcpSolver import AcadosOcpSolver
 from ctypes import *
 from copy import deepcopy
 from .utils import ACADOS_PATH, is_column, render_template, dict2json, np_array_to_list
@@ -140,7 +140,9 @@ def ocp_formulation_json_load(json_file='acados_ocp_nlp.json'):
     for acados_struct, v  in ocp_layout.items():
         # skip non dict attributes
         if not isinstance(v, dict): continue
-        setattr(acados_ocp, acados_struct, ocp_nlp_as_object(ocp_nlp_dict[acados_struct]))
+        acados_attribute = getattr(acados_ocp, acados_struct)
+        acados_attribute.__dict__ = ocp_nlp_dict[acados_struct]
+        setattr(acados_ocp, acados_struct, acados_attribute)
 
     return acados_ocp
 
@@ -295,5 +297,5 @@ def generate_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json',
     os.chdir('..')
 
     # get
-    ocp_solver = acados_ocp_solver(acados_ocp, 'c_generated_code/libacados_ocp_solver_' + model.name + '.so')
+    ocp_solver = AcadosOcpSolver(acados_ocp, 'c_generated_code/libacados_ocp_solver_' + model.name + '.so')
     return ocp_solver

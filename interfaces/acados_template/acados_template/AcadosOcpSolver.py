@@ -35,7 +35,7 @@
 from ctypes import *
 import numpy as np
 
-class acados_ocp_solver:
+class AcadosOcpSolver:
     def __init__(self, acados_ocp, shared_lib):
         self.shared_lib = CDLL(shared_lib)
         self.shared_lib.acados_create()
