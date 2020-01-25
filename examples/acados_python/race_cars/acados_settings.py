@@ -104,8 +104,10 @@ def acados_settings(Tf,N,track_file):
     nlp_cost = ocp.cost
     nlp_cost.cost_type = 'LINEAR_LS'
     nlp_cost.cost_type_e = 'LINEAR_LS'
-    nlp_cost.W = scipy.linalg.block_diag(Q, R)
-    nlp_cost.W_e = Qe
+    unscale = N/Tf
+
+    nlp_cost.W = unscale * scipy.linalg.block_diag(Q, R)
+    nlp_cost.W_e = Qe / unscale
     
     Vx = np.zeros((ny, nx))
     Vx[0,0] = 1.0
