@@ -85,7 +85,11 @@ for i in range(Nsim):
 
     # solve ocp 
     t = time.time()
+
     status=acados_solver.solve()
+    if status != 0:
+        raise Exception('acados returned status {}. Exiting.'.format(status))
+
     elapsed = time.time() - t
     
     # manage timings
@@ -123,7 +127,7 @@ plotalat(simX,simU,constraint,t)
 # Print some stats
 print("Average computation time: {}".format(tcomp_sum / Nsim))
 print("Maximum computation time: {}".format(tcomp_max))
-print("Average speed:{}ms".format(np.average(simX[:,3])))
+print("Average speed:{}m/s".format(np.average(simX[:,3])))
 print("Lap time: {}s".format(Tf*Nsim/N))
 # avoid plotting when running on Travis
 if os.environ.get('ACADOS_ON_TRAVIS') is None: 
