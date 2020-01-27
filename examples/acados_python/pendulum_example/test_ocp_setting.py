@@ -45,15 +45,15 @@ LOCAL_TEST = False
 TEST_TOL = 1e-8
 
 if LOCAL_TEST is True:
-    FORMULATION = 'LS'
+    COST_MODULE = 'LS'
     SOLVER_TYPE = 'SQP_RTI'
     QP_SOLVER = 'FULL_CONDENSING_QPOASES'
     INTEGRATOR_TYPE = 'IRK'
 else:
     parser = argparse.ArgumentParser(description='test Python interface on pendulum example.')
-    parser.add_argument('--FORMULATION', dest='FORMULATION',
+    parser.add_argument('--COST_MODULE', dest='COST_MODULE',
                         default='LS',
-                        help='FORMULATION: linear least-squares (LS) or nonlinear \
+                        help='COST_MODULE: linear least-squares (LS) or nonlinear \
                                 least-squares (NLS) (default: LS)')
 
     parser.add_argument('--QP_SOLVER', dest='QP_SOLVER',
@@ -74,11 +74,11 @@ else:
 
     args = parser.parse_args()
 
-    FORMULATION = args.FORMULATION
-    FORMULATION_values = ['LS', 'NLS']
-    if FORMULATION not in FORMULATION_values:
-        raise Exception('Invalid unit test value {} for parameter FORMULATION. Possible values are' \
-                ' {}. Exiting.'.format(FORMULATION, FORMULATION_values))
+    COST_MODULE = args.COST_MODULE
+    COST_MODULE_values = ['LS', 'NLS', 'EXTERNAL']
+    if COST_MODULE not in COST_MODULE_values:
+        raise Exception('Invalid unit test value {} for parameter COST_MODULE. Possible values are' \
+                ' {}. Exiting.'.format(COST_MODULE, COST_MODULE_values))
 
     QP_SOLVER = args.QP_SOLVER
     QP_SOLVER_values = ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CONDENSING_QPOASES']
@@ -100,7 +100,7 @@ else:
 
 
 # print test setting
-print("Running test with:\n\tformulation:", FORMULATION, "\n\tqp solver: ", QP_SOLVER,\
+print("Running test with:\n\tcost module:", COST_MODULE, "\n\tqp solver: ", QP_SOLVER,\
       "\n\tintergrator: ", INTEGRATOR_TYPE, "\n\tsolver: ", SOLVER_TYPE)
 
 # create ocp object to formulate the OCP
@@ -127,22 +127,19 @@ ocp.dims.nu  = nu
 ocp.dims.N   = N
 
 # set cost
-if FORMULATION == 'LS':
-    ocp.cost.cost_type = 'LINEAR_LS'
-    ocp.cost.cost_type_e = 'LINEAR_LS'
-elif FORMULATION == 'NLS':
-    ocp.cost.cost_type = 'NONLINEAR_LS'
-    ocp.cost.cost_type_e = 'NONLINEAR_LS'
-else:
-    raise Exception('Unknown FORMULATION. Possible values are \'LS\' and \'NLS\'.')
-
 Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
 R = 2*np.diag([1e-2])
 
 ocp.cost.W_e = Q
 ocp.cost.W = scipy.linalg.block_diag(Q, R)
 
-if FORMULATION == 'LS':
+x = ocp.model.x
+u = ocp.model.u
+
+if COST_MODULE == 'LS':
+    ocp.cost.cost_type = 'LINEAR_LS'
+    ocp.cost.cost_type_e = 'LINEAR_LS'
+
     ocp.cost.Vx = np.zeros((ny, nx))
     ocp.cost.Vx[:nx,:nx] = np.eye(nx)
 
@@ -152,15 +149,22 @@ if FORMULATION == 'LS':
 
     ocp.cost.Vx_e = np.eye(nx)
 
-elif FORMULATION == 'NLS':
-    x = ocp.model.x
-    u = ocp.model.u
+elif COST_MODULE == 'NLS':
+    ocp.cost.cost_type = 'NONLINEAR_LS'
+    ocp.cost.cost_type_e = 'NONLINEAR_LS'
 
     ocp.model.cost_y_expr = vertcat(x, u)
     ocp.model.cost_y_expr_e = x
 
+elif COST_MODULE == 'EXTERNAL':
+    ocp.cost.cost_type = 'EXTERNALLY_PROVIDED'
+    ocp.cost.cost_type_e = 'EXTERNALLY_PROVIDED'
+
+    ocp.model.cost_expr_ext_cost = vertcat(x, u).T @ ocp.cost.W @ vertcat(x, u)
+    ocp.model.cost_expr_ext_cost_e = x.T @ Q @ x
+
 else:
-    raise Exception("Invalid cost formulation. Exiting.")
+    raise Exception('Unknown COST_MODULE. Possible values are \'LS\', \'NLS\', \'EXTERNAL\'.')
 
 ocp.cost.yref  = np.zeros((ny, ))
 ocp.cost.yref_e = np.zeros((ny_e, ))
@@ -210,14 +214,14 @@ for i in range(N):
     simU[i,:] = ocp_solver.get(i, "u")
 simX[N,:] = ocp_solver.get(N, "x")
 
-
-# update reference
-for j in range(N):
-    ocp_solver.cost_set(j, "yref", np.array([0, 0, 0, 0, 0]))
-ocp_solver.cost_set(N, "yref", np.array([0, 0, 0, 0]))
+if COST_MODULE in {'LINEAR_LS', 'NONLINEAR_LS'}:
+    # update reference
+    for j in range(N):
+        ocp_solver.cost_set(j, "yref", np.array([0, 0, 0, 0, 0]))
+    ocp_solver.cost_set(N, "yref", np.array([0, 0, 0, 0]))
 
 # dump result to JSON file for unit testing
-test_file_name = 'test_data/generate_c_code_out_' + FORMULATION + '_' + QP_SOLVER + '_' + \
+test_file_name = 'test_data/generate_c_code_out_' + COST_MODULE + '_' + QP_SOLVER + '_' + \
             INTEGRATOR_TYPE + '_' + SOLVER_TYPE + '.json'
 
 if GENERATE_DATA:
