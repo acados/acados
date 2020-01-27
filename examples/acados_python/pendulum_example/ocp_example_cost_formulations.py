@@ -38,7 +38,7 @@ import scipy.linalg
 from utils import plot_pendulum
 from casadi import vertcat
 
-FORMULATION = 'NLS' # 'LS', 'EXTERNAL'
+COST_MODULE = 'EXTERNALLY_PROVIDED' # 'LS', 'EXTERNALLY_PROVIDED'
 
 # create ocp object to formulate the OCP
 ocp = AcadosOcp()
@@ -66,10 +66,13 @@ ocp.dims.N = N
 Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
 R = 2*np.diag([1e-2])
 
+x = ocp.model.x
+u = ocp.model.u
+
 ocp.cost.W_e = Q
 ocp.cost.W = scipy.linalg.block_diag(Q, R)
 
-if FORMULATION == 'LS':
+if COST_MODULE == 'LS':
     ocp.cost.cost_type = 'LINEAR_LS'
     ocp.cost.cost_type_e = 'LINEAR_LS'
 
@@ -82,18 +85,22 @@ if FORMULATION == 'LS':
 
     ocp.cost.Vx_e = np.eye(nx)
 
-elif FORMULATION == 'NLS':
+elif COST_MODULE == 'NLS':
     ocp.cost.cost_type = 'NONLINEAR_LS'
     ocp.cost.cost_type_e = 'NONLINEAR_LS'
-
-    x = ocp.model.x
-    u = ocp.model.u
 
     ocp.model.cost_y_expr = vertcat(x, u)
     ocp.model.cost_y_expr_e = x
 
+elif COST_MODULE == 'EXTERNALLY_PROVIDED':
+    ocp.cost.cost_type = 'EXTERNALLY_PROVIDED'
+    ocp.cost.cost_type_e = 'EXTERNALLY_PROVIDED'
+
+    ocp.model.cost_expr_ext_cost = vertcat(x, u).T @ ocp.cost.W @ vertcat(x, u)
+    ocp.model.cost_expr_ext_cost_e = x.T @ Q @ x
+
 else:
-    raise Exception('Unknown FORMULATION. Possible values are \'LS\' and \'NLS\'.')
+    raise Exception('Unknown COST_MODULE. Possible values are \'LS\' and \'NLS\'.')
 
 ocp.cost.yref  = np.zeros((ny, ))
 ocp.cost.yref_e = np.zeros((ny_e, ))
