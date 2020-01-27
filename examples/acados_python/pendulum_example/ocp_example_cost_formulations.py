@@ -38,7 +38,7 @@ import scipy.linalg
 from utils import plot_pendulum
 from casadi import vertcat
 
-COST_MODULE = 'EXTERNALLY_PROVIDED' # 'LS', 'EXTERNALLY_PROVIDED'
+COST_MODULE = 'EXTERNAL' # 'LS', 'EXTERNAL'
 
 # create ocp object to formulate the OCP
 ocp = AcadosOcp()
@@ -92,9 +92,9 @@ elif COST_MODULE == 'NLS':
     ocp.model.cost_y_expr = vertcat(x, u)
     ocp.model.cost_y_expr_e = x
 
-elif COST_MODULE == 'EXTERNALLY_PROVIDED':
-    ocp.cost.cost_type = 'EXTERNALLY_PROVIDED'
-    ocp.cost.cost_type_e = 'EXTERNALLY_PROVIDED'
+elif COST_MODULE == 'EXTERNAL':
+    ocp.cost.cost_type = 'EXTERNAL'
+    ocp.cost.cost_type_e = 'EXTERNAL'
 
     ocp.model.cost_expr_ext_cost = vertcat(x, u).T @ ocp.cost.W @ vertcat(x, u)
     ocp.model.cost_expr_ext_cost_e = x.T @ Q @ x

@@ -163,7 +163,7 @@ elif COST_MODULE == 'NLS':
     ocp.model.cost_y_expr = vertcat(x, u)
 
 elif COST_MODULE == 'EXTERNAL':
-    ocp.cost.cost_type = 'EXTERNALLY_PROVIDED'
+    ocp.cost.cost_type = 'EXTERNAL'
     ocp.model.cost_expr_ext_cost = vertcat(x, u).T @ ocp.cost.W @ vertcat(x, u)
 
 else:
@@ -179,7 +179,7 @@ elif COST_MODULE_N == 'NLS':
     ocp.model.cost_y_expr_e = x
 
 elif COST_MODULE_N == 'EXTERNAL':
-    ocp.cost.cost_type_e = 'EXTERNALLY_PROVIDED'
+    ocp.cost.cost_type_e = 'EXTERNAL'
     ocp.model.cost_expr_ext_cost_e = x.T @ Q @ x
 
 else:

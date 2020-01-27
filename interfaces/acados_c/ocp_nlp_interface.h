@@ -65,7 +65,7 @@ typedef enum
 {
     LINEAR_LS,
     NONLINEAR_LS,
-    EXTERNALLY_PROVIDED,
+    EXTERNAL,
     INVALID_COST,
 } ocp_nlp_cost_t;
 

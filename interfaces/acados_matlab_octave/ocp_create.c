@@ -141,7 +141,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
         else if (!strcmp(cost_type, "ext_cost"))
         {
-            cost_type_enum = EXTERNALLY_PROVIDED;
+            cost_type_enum = EXTERNAL;
         }
         else
         {
@@ -174,7 +174,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
         else if (!strcmp(cost_type_e, "ext_cost"))
         {
-            cost_type_e_enum = EXTERNALLY_PROVIDED;
+            cost_type_e_enum = EXTERNAL;
         }
         else
         {

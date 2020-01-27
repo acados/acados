@@ -57,12 +57,12 @@
 {% endif %}
 {%- if cost.cost_type == "NONLINEAR_LS" %}
 #include "{{ model.name }}_cost/{{ model.name }}_r_cost.h"
-{%- elif cost.cost_type == "EXTERNALLY_PROVIDED" %}
+{%- elif cost.cost_type == "EXTERNAL" %}
 #include "{{ model.name }}_cost/{{ model.name }}_external_cost.h"
 {% endif %}
 {%- if cost.cost_type_e == "NONLINEAR_LS" %}
 #include "{{ model.name }}_cost/{{ model.name }}_r_e_cost.h"
-{%- elif cost.cost_type_e == "EXTERNALLY_PROVIDED" %}
+{%- elif cost.cost_type_e == "EXTERNAL" %}
 #include "{{ model.name }}_cost/{{ model.name }}_external_cost_e.h"
 {% endif %}
 
@@ -133,13 +133,13 @@ external_function_param_casadi h_e_constraint;
 {% endif %}
 {% if cost.cost_type == "NONLINEAR_LS" %}
 external_function_param_casadi * r_cost;
-{% elif cost.cost_type == "EXTERNALLY_PROVIDED" %}
+{% elif cost.cost_type == "EXTERNAL" %}
 external_function_param_casadi * ext_cost_fun;
 external_function_param_casadi * ext_cost_fun_jac_hess;
 {% endif %}
 {% if cost.cost_type_e == "NONLINEAR_LS" %}
 external_function_param_casadi r_e_cost;
-{% elif cost.cost_type_e == "EXTERNALLY_PROVIDED" %}
+{% elif cost.cost_type_e == "EXTERNAL" %}
 external_function_param_casadi ext_cost_e_fun;
 external_function_param_casadi ext_cost_e_fun_jac_hess;
 {% endif %}
@@ -463,7 +463,7 @@ int acados_create()
 
         external_function_param_casadi_create(&r_cost[i], {{ dims.np }});
     }
-{%- elif cost.cost_type == "EXTERNALLY_PROVIDED" %}
+{%- elif cost.cost_type == "EXTERNAL" %}
     // external cost
     ext_cost_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; i++)
@@ -503,7 +503,7 @@ int acados_create()
     r_e_cost.casadi_work = &{{ model.name }}_r_e_cost_work;
 
     external_function_param_casadi_create(&r_e_cost, {{ dims.np }});
-{%- elif cost.cost_type_e == "EXTERNALLY_PROVIDED" %}
+{%- elif cost.cost_type_e == "EXTERNAL" %}
     // external cost
     ext_cost_e_fun.casadi_fun = &{{ model.name }}_ext_cost_e_fun;
     ext_cost_e_fun.casadi_n_in = &{{ model.name }}_ext_cost_e_fun_n_in;
@@ -627,7 +627,7 @@ int acados_create()
     {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_res_jac", &r_cost[i]);
     }
-{%- elif cost.cost_type == "EXTERNALLY_PROVIDED" %}
+{%- elif cost.cost_type == "EXTERNAL" %}
     for (int i = 0; i < N; i++)
     {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "ext_cost_fun", &ext_cost_fun[i]);
@@ -698,7 +698,7 @@ int acados_create()
     {%- endif %}
 {%- endif %}{# ny_e > 0 #}
 
-{%- elif cost.cost_type_e == "EXTERNALLY_PROVIDED" %}
+{%- elif cost.cost_type_e == "EXTERNAL" %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "ext_cost_fun", &ext_cost_e_fun);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "ext_cost_fun_jac_hess", &ext_cost_e_fun_jac_hess);
 {%- endif %}

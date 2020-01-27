@@ -39,7 +39,7 @@
 extern "C" {
 #endif
 
-{% if cost.cost_type == "EXTERNALLY_PROVIDED" %}
+{% if cost.cost_type == "EXTERNAL" %}
 int {{ model.name }}_ext_cost_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_ext_cost_fun_work(int *, int *, int *, int *);
 const int *{{ model.name }}_ext_cost_fun_sparsity_in(int);

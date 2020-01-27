@@ -946,7 +946,7 @@ int main()
 	for (int i = 0; i <= NN; i++)
 	{
 		if (i < 3)
-			plan->nlp_cost[i] = EXTERNALLY_PROVIDED;  // also implements linear LS for this example
+			plan->nlp_cost[i] = EXTERNAL;  // also implements linear LS for this example
 		else if (i%2 == 0)
 			plan->nlp_cost[i] = LINEAR_LS;
 		else if (i%2 == 1)
@@ -999,7 +999,7 @@ int main()
 
 	for (int i = 0; i <= NN; i++)
     {
-		if (plan->nlp_cost[i] != EXTERNALLY_PROVIDED)
+		if (plan->nlp_cost[i] != EXTERNAL)
 		{
 	        ocp_nlp_dims_set_cost(config, dims, i, "ny", &ny[i]);
 		}
@@ -1105,7 +1105,7 @@ int main()
 				external_function_casadi_create(&ls_cost_jac_casadi[i]);
 				break;
 
-			case EXTERNALLY_PROVIDED:
+			case EXTERNAL:
 				select_external_stage_cost_casadi(i, NN, NMF, &external_cost[i]);
 				external_function_casadi_create(&external_cost[i]);
 				break;
@@ -1195,7 +1195,7 @@ int main()
 				ocp_nlp_cost_model_set(config, dims, nlp_in, i, "yref", y_ref);
 				break;
 
-			case EXTERNALLY_PROVIDED:
+			case EXTERNAL:
 
 				ocp_nlp_cost_model_set(config, dims, nlp_in, i, "ext_cost_fun_jac_hes", &external_cost[i]);
 
@@ -1476,7 +1476,7 @@ int main()
 			case NONLINEAR_LS:
 				external_function_casadi_free(&ls_cost_jac_casadi[i]);
 				break;
-			case EXTERNALLY_PROVIDED:
+			case EXTERNAL:
 				external_function_casadi_free(&external_cost[i]);
 			default:
 				break;
