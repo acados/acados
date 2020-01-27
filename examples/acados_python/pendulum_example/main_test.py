@@ -35,11 +35,13 @@ import itertools as it
 import os
 
 COST_MODULE_values = ['EXTERNAL', 'LS', 'NLS']
+COST_MODULE_N_values = ['EXTERNAL', 'LS', 'NLS']
 QP_SOLVER_values = ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CONDENSING_QPOASES']
 INTEGRATOR_TYPE_values = ['ERK', 'IRK']
 SOLVER_TYPE_values = ['SQP', 'SQP_RTI']
 
 test_parameters = { 'COST_MODULE_values': COST_MODULE_values,
+                    'COST_MODULE_N_values': COST_MODULE_N_values,
                     'QP_SOLVER_values': QP_SOLVER_values,
                     'INTEGRATOR_TYPE_values': INTEGRATOR_TYPE_values,
                     'SOLVER_TYPE_values': SOLVER_TYPE_values}
@@ -50,9 +52,10 @@ combinations = list(it.product(*(test_parameters[Name] for Name in all_test_para
 for parameters in combinations:
     os_cmd = ("python test_ocp_setting.py" +
         " --COST_MODULE {}".format(parameters[0]) +
-        " --INTEGRATOR_TYPE {}".format(parameters[1]) +
-        " --QP_SOLVER {}".format(parameters[2]) +
-        " --SOLVER_TYPE {}".format(parameters[3]))
+        " --COST_MODULE_N {}".format(parameters[1]) +
+        " --INTEGRATOR_TYPE {}".format(parameters[2]) +
+        " --QP_SOLVER {}".format(parameters[3]) +
+        " --SOLVER_TYPE {}".format(parameters[4]))
     status = os.system(os_cmd)
     if status != 0:
         raise Exception("acados status  = {} on test {}. Exiting\n".format(status, parameters))

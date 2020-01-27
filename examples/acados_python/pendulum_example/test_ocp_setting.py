@@ -46,6 +46,7 @@ TEST_TOL = 1e-8
 
 if LOCAL_TEST is True:
     COST_MODULE = 'LS'
+    COST_MODULE_N = 'LS'
     SOLVER_TYPE = 'SQP_RTI'
     QP_SOLVER = 'FULL_CONDENSING_QPOASES'
     INTEGRATOR_TYPE = 'IRK'
@@ -54,7 +55,12 @@ else:
     parser.add_argument('--COST_MODULE', dest='COST_MODULE',
                         default='LS',
                         help='COST_MODULE: linear least-squares (LS) or nonlinear \
-                                least-squares (NLS) (default: LS)')
+                                least-squares (NLS) (default: LS), external (EXTERNAL)')
+
+    parser.add_argument('--COST_MODULE_N', dest='COST_MODULE_N',
+                        default='LS',
+                        help='COST_MODULE_N: linear least-squares (LS) or nonlinear \
+                                least-squares (NLS) (default: LS), external (EXTERNAL)')
 
     parser.add_argument('--QP_SOLVER', dest='QP_SOLVER',
                         default='PARTIAL_CONDENSING_HPIPM',
@@ -79,6 +85,12 @@ else:
     if COST_MODULE not in COST_MODULE_values:
         raise Exception('Invalid unit test value {} for parameter COST_MODULE. Possible values are' \
                 ' {}. Exiting.'.format(COST_MODULE, COST_MODULE_values))
+
+    COST_MODULE_N = args.COST_MODULE_N
+    COST_MODULE_N_values = ['LS', 'NLS', 'EXTERNAL']
+    if COST_MODULE_N not in COST_MODULE_N_values:
+        raise Exception('Invalid unit test value {} for parameter COST_MODULE_N. Possible values are' \
+                ' {}. Exiting.'.format(COST_MODULE_N, COST_MODULE_N_values))
 
     QP_SOLVER = args.QP_SOLVER
     QP_SOLVER_values = ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CONDENSING_QPOASES']
@@ -138,7 +150,6 @@ u = ocp.model.u
 
 if COST_MODULE == 'LS':
     ocp.cost.cost_type = 'LINEAR_LS'
-    ocp.cost.cost_type_e = 'LINEAR_LS'
 
     ocp.cost.Vx = np.zeros((ny, nx))
     ocp.cost.Vx[:nx,:nx] = np.eye(nx)
@@ -147,24 +158,33 @@ if COST_MODULE == 'LS':
     Vu[4,0] = 1.0
     ocp.cost.Vu = Vu
 
-    ocp.cost.Vx_e = np.eye(nx)
-
 elif COST_MODULE == 'NLS':
     ocp.cost.cost_type = 'NONLINEAR_LS'
-    ocp.cost.cost_type_e = 'NONLINEAR_LS'
-
     ocp.model.cost_y_expr = vertcat(x, u)
-    ocp.model.cost_y_expr_e = x
 
 elif COST_MODULE == 'EXTERNAL':
     ocp.cost.cost_type = 'EXTERNALLY_PROVIDED'
-    ocp.cost.cost_type_e = 'EXTERNALLY_PROVIDED'
-
     ocp.model.cost_expr_ext_cost = vertcat(x, u).T @ ocp.cost.W @ vertcat(x, u)
-    ocp.model.cost_expr_ext_cost_e = x.T @ Q @ x
 
 else:
     raise Exception('Unknown COST_MODULE. Possible values are \'LS\', \'NLS\', \'EXTERNAL\'.')
+
+
+if COST_MODULE_N == 'LS':
+    ocp.cost.cost_type_e = 'LINEAR_LS'
+    ocp.cost.Vx_e = np.eye(nx)
+
+elif COST_MODULE_N == 'NLS':
+    ocp.cost.cost_type_e = 'NONLINEAR_LS'
+    ocp.model.cost_y_expr_e = x
+
+elif COST_MODULE_N == 'EXTERNAL':
+    ocp.cost.cost_type_e = 'EXTERNALLY_PROVIDED'
+    ocp.model.cost_expr_ext_cost_e = x.T @ Q @ x
+
+else:
+    raise Exception('Unknown COST_MODULE_N. Possible values are \'LS\', \'NLS\', \'EXTERNAL\'.')
+
 
 ocp.cost.yref  = np.zeros((ny, ))
 ocp.cost.yref_e = np.zeros((ny_e, ))
@@ -221,7 +241,7 @@ if COST_MODULE in {'LINEAR_LS', 'NONLINEAR_LS'}:
     ocp_solver.cost_set(N, "yref", np.array([0, 0, 0, 0]))
 
 # dump result to JSON file for unit testing
-test_file_name = 'test_data/test_ocp_' + COST_MODULE + '_' + QP_SOLVER + '_' + \
+test_file_name = 'test_data/test_ocp_' + COST_MODULE + '_' + COST_MODULE_N + '_' + QP_SOLVER + '_' + \
             INTEGRATOR_TYPE + '_' + SOLVER_TYPE + '.json'
 
 if GENERATE_DATA:
