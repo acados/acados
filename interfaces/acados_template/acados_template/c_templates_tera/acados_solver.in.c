@@ -57,9 +57,13 @@
 {% endif %}
 {%- if cost.cost_type == "NONLINEAR_LS" %}
 #include "{{ model.name }}_r_cost/{{ model.name }}_r_cost.h"
+{%- elif cost.cost_type_e == "EXTERNALLY_PROVIDED" %}
+#include "{{ model.name }}_cost_e_ext_fun/{{ model.name }}_cost_e_ext_fun.h"
 {% endif %}
 {%- if cost.cost_type_e == "NONLINEAR_LS" %}
 #include "{{ model.name }}_r_e_cost/{{ model.name }}_r_e_cost.h"
+{%- elif cost.cost_type_e == "EXTERNALLY_PROVIDED" %}
+#include "{{ model.name }}_cost_ext_fun/{{ model.name }}_cost_ext_fun.h"
 {% endif %}
 
 #include "acados_solver_{{ model.name }}.h"
@@ -91,7 +95,6 @@
 #define NHN    {{ dims.nh_e }}
 #define NPHIN  {{ dims.nphi_e }}
 #define NR     {{ dims.nr }}
-#define NRN    {{ dims.nr_e }}
 
 
 // ** global data **
@@ -241,7 +244,7 @@ int acados_create()
     ng[N]    = NGN;
     nh[N]    = NHN;
     nphi[N]  = NPHIN;
-    nr[N]    = NRN;
+    nr[N]    = {{ dims.nr_e }};
 
     nsbx[N]  = NSBXN;
     nsbu[N]  = 0;
@@ -914,7 +917,7 @@ int acados_create()
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxbx", idxbx_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lbx", lbx_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ubx", ubx_e);
-{% endif %}
+{%- endif %}
 
 {% if dims.nsh_e > 0 %}
     // set up soft bounds for nonlinear constraints
@@ -932,7 +935,7 @@ int acados_create()
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxsh", idxsh_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lsh", lsh_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ush", ush_e);
-{% endif %}
+{%- endif %}
 
 {% if dims.nsphi_e > 0 %}
     // set up soft bounds for convex-over-nonlinear constraints
@@ -950,7 +953,7 @@ int acados_create()
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxsphi", idxsphi_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lsphi", lsphi_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "usphi", usphi_e);
-{% endif %}
+{%- endif %}
 
 {% if dims.nsbx_e > 0 %}
     // soft bounds on x
@@ -986,9 +989,6 @@ int acados_create()
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ug", ug_e);
 {%- endif %}
 
-
-
-
 {% if dims.nh_e > 0 %}
     // set up nonlinear constraints for last stage 
     double lh_e[NHN];
@@ -1005,7 +1005,7 @@ int acados_create()
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_fun_jac", &h_e_constraint);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lh", lh_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "uh", uh_e);
-{% endif %}
+{%- endif %}
 
 {% if dims.nphi_e > 0 and constraints.constr_type_e == "BGP" %}
     // set up convex-over-nonlinear constraints for last stage 

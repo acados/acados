@@ -33,22 +33,24 @@
 
 from .AcadosSimModel import AcadosSimModel
 
-class AcadosOcpModel( AcadosSimModel ):
+
+class AcadosOcpModel(AcadosSimModel):
     def __init__(self):
         # constraints
-        self.con_h_expr   = None #: CasADi expression for the constraint
-        self.con_phi_expr = None #: CasADi expression for the constraint
-        self.con_r_expr   = None #: CasADi expression for the constraint
-        self.con_phi_expr = None #: CasADi expression for the constraint
+        self.con_h_expr = None  #: CasADi expression for the constraint h
+        self.con_phi_expr = None  #: CasADi expression for the constraint phi
+        self.con_r_expr = None  #: CasADi expression for the constraint phi(r)
         self.con_r_in_phi = None
         # terminal
-        self.con_h_expr_e   = None #: CasADi expression for the constraint
-        self.con_r_expr_e   = None #: CasADi expression for the constraint
-        self.con_phi_expr_e = None #: CasADi expression for the constraint
+        self.con_h_expr_e = None  #: CasADi expression for the constraint
+        self.con_r_expr_e = None  #: CasADi expression for the constraint
+        self.con_phi_expr_e = None  #: CasADi expression for the constraint
         self.con_r_in_phi_e = None
         # cost
-        self.cost_y_expr = None     #: CasADi expression for the cost
-
+        self.cost_y_expr = None  #: CasADi expression for nonlinear least squares
+        self.cost_y_expr_e = None  #: CasADi expression for nonlinear least squares, terminal
+        self.cost_expr_ext_cost = None  #: CasADi expression for external cost
+        self.cost_expr_ext_cost_e = None  #: CasADi expression for external cost, terminal
 
 
 def acados_model_strip_casadi_symbolics(model):
@@ -90,5 +92,9 @@ def acados_model_strip_casadi_symbolics(model):
         del out['cost_y_expr']
     if 'cost_y_expr_e' in out.keys():
         del out['cost_y_expr_e']
-    return out
+    if 'cost_expr_ext_cost' in out.keys():
+        del out['cost_expr_ext_cost']
+    if 'cost_expr_ext_cost_e' in out.keys():
+        del out['cost_expr_ext_cost_e']
 
+    return out
