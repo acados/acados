@@ -258,7 +258,6 @@ int acados_create()
 
     for (int i = 0; i <= N; i++)
     {
-        ocp_nlp_dims_set_cost(nlp_config, nlp_dims, i, "ny", &ny[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nbx", &nbx[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nbu", &nbu[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsbx", &nsbx[i]);
@@ -276,6 +275,9 @@ int acados_create()
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nphi", &nphi[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsphi", &nsphi[i]);
         {%- endif %}
+        {%- if cost.cost_type == "NONLINEAR_LS" or cost.cost_type == "LINEAR_LS" %}
+        ocp_nlp_dims_set_cost(nlp_config, nlp_dims, i, "ny", &ny[i]);
+        {%- endif %}
     }
 
     {%- if constraints.constr_type_e == "BGH" %}
@@ -286,7 +288,9 @@ int acados_create()
     ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "nphi", &nphi[N]);
     ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "nsphi", &nsphi[N]);
     {%- endif %}
-
+    {%- if cost.cost_type_e == "NONLINEAR_LS" or cost.cost_type_e == "LINEAR_LS" %}
+    ocp_nlp_dims_set_cost(nlp_config, nlp_dims, N, "ny", &ny[N]);
+    {%- endif %}
 
     /************************************************
     *  external functions
@@ -597,6 +601,7 @@ int acados_create()
 {% endif %}
 
     // terminal cost
+{% if cost.cost_type_e == "LINEAR_LS" or cost.cost_type_e == "NONLINEAR_LS" %}
 {% if dims.ny_e > 0 %}
     double yref_e[NYN];
     {% for j in range(end=dims.ny_e) %}
@@ -612,7 +617,7 @@ int acados_create()
     {%- endfor %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "W", W_e);
 
-    {%- if cost.cost_type == "LINEAR_LS" %}
+    {%- if cost.cost_type_e == "LINEAR_LS" %}
     double Vx_e[NYN*NX];
     {% for j in range(end=dims.ny_e) %}
         {%- for k in range(end=dims.nx) %}
@@ -626,6 +631,8 @@ int acados_create()
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "nls_res_jac", &r_e_cost);
     {%- endif %}
 {%- endif %}
+{%- endif %}
+
 
 {% if dims.ns_e > 0 %}
     double Zl_e[NSN];
