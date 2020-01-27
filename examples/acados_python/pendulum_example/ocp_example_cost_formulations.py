@@ -36,6 +36,9 @@ from export_pendulum_ode_model import export_pendulum_ode_model
 import numpy as np
 import scipy.linalg
 from utils import plot_pendulum
+from casadi import vertcat
+
+FORMULATION = 'NLS' # 'LS', 'EXTERNAL'
 
 # create ocp object to formulate the OCP
 ocp = AcadosOcp()
@@ -66,23 +69,38 @@ R = 2*np.diag([1e-2])
 ocp.cost.W_e = Q
 ocp.cost.W = scipy.linalg.block_diag(Q, R)
 
-ocp.cost.cost_type = 'LINEAR_LS'
-ocp.cost.cost_type_e = 'LINEAR_LS'
+if FORMULATION == 'LS':
+    ocp.cost.cost_type = 'LINEAR_LS'
+    ocp.cost.cost_type_e = 'LINEAR_LS'
 
-ocp.cost.Vx = np.zeros((ny, nx))
-ocp.cost.Vx[:nx,:nx] = np.eye(nx)
+    ocp.cost.Vx = np.zeros((ny, nx))
+    ocp.cost.Vx[:nx,:nx] = np.eye(nx)
 
-Vu = np.zeros((ny, nu))
-Vu[4,0] = 1.0
-ocp.cost.Vu = Vu
+    Vu = np.zeros((ny, nu))
+    Vu[4,0] = 1.0
+    ocp.cost.Vu = Vu
 
-ocp.cost.Vx_e = np.eye(nx)
+    ocp.cost.Vx_e = np.eye(nx)
+
+elif FORMULATION == 'NLS':
+    ocp.cost.cost_type = 'NONLINEAR_LS'
+    ocp.cost.cost_type_e = 'NONLINEAR_LS'
+
+    x = ocp.model.x
+    u = ocp.model.u
+
+    ocp.model.cost_y_expr = vertcat(x, u)
+    ocp.model.cost_y_expr_e = x
+
+else:
+    raise Exception('Unknown FORMULATION. Possible values are \'LS\' and \'NLS\'.')
 
 ocp.cost.yref  = np.zeros((ny, ))
 ocp.cost.yref_e = np.zeros((ny_e, ))
 
 # set constraints
 Fmax = 80
+ocp.constraints.constr_type = 'BGH'
 ocp.constraints.lbu = np.array([-Fmax])
 ocp.constraints.ubu = np.array([+Fmax])
 ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
@@ -92,11 +110,14 @@ ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOA
 ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
 ocp.solver_options.integrator_type = 'ERK'
 
+ocp.solver_options.qp_solver_cond_N = 5
+
 # set prediction horizon
 ocp.solver_options.tf = Tf
 ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
 
 ocp_solver = generate_ocp_solver(ocp, json_file = 'acados_ocp.json')
+
 
 simX = np.ndarray((N+1, nx))
 simU = np.ndarray((N, nu))
@@ -112,4 +133,6 @@ for i in range(N):
     simU[i,:] = ocp_solver.get(i, "u")
 simX[N,:] = ocp_solver.get(N, "x")
 
+
 plot_pendulum(Tf/N, Fmax, simU, simX)
+
