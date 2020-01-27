@@ -164,20 +164,23 @@ def ocp_generate_external_functions(acados_ocp, model):
     if acados_ocp.dims.nphi_e > 0 or acados_ocp.dims.nh_e > 0:
         generate_c_code_constraint(model, model.name, True)
 
+    # dummy matrices
     if not acados_ocp.cost.cost_type == 'LINEAR_LS':
-        # dummy matrices
         acados_ocp.cost.Vx = np.zeros((acados_ocp.dims.ny, acados_ocp.dims.nx))
         acados_ocp.cost.Vu = np.zeros((acados_ocp.dims.ny, acados_ocp.dims.nu))
+    if not acados_ocp.cost.cost_type_e == 'LINEAR_LS':
+        acados_ocp.cost.Vx_e = np.zeros((acados_ocp.dims.ny_e, acados_ocp.dims.nx))
+
 
     if acados_ocp.cost.cost_type == 'NONLINEAR_LS':
         generate_c_code_nls_cost(model, model.name, False)
-    if acados_ocp.cost.cost_type == 'EXTERNALLY_PROVIDED':
+    elif acados_ocp.cost.cost_type == 'EXTERNALLY_PROVIDED':
         generate_c_code_external_cost(model, False)
 
     if acados_ocp.cost.cost_type_e == 'NONLINEAR_LS':
-        acados_ocp.cost.Vx_e = np.zeros((acados_ocp.dims.ny_e, acados_ocp.dims.nx))
         generate_c_code_nls_cost(model, model.name, True)
-
+    elif acados_ocp.cost.cost_type_e == 'EXTERNALLY_PROVIDED':
+        generate_c_code_external_cost(model, True)
 
 def ocp_render_templates(acados_ocp, json_file):
 
@@ -275,6 +278,20 @@ def ocp_render_templates(acados_ocp, json_file):
         template_dir = 'c_generated_code/{}_cost/'.format(name)
         in_file = 'r_e_cost.in.h'
         out_file = '{}_r_e_cost.h'.format(name)
+        render_template(in_file, out_file, template_dir, json_path)
+
+    # external cost
+    if acados_ocp.cost.cost_type == 'EXTERNALLY_PROVIDED':
+        template_dir = 'c_generated_code/{}_cost/'.format(name)
+        in_file = 'external_cost.in.h'
+        out_file = '{}_external_cost.h'.format(name)
+        render_template(in_file, out_file, template_dir, json_path)
+
+    # external cost - terminal
+    if acados_ocp.cost.cost_type_e == 'EXTERNALLY_PROVIDED':
+        template_dir = 'c_generated_code/{}_cost/'.format(name)
+        in_file = 'external_cost_e.in.h'
+        out_file = '{}_external_cost_e.h'.format(name)
         render_template(in_file, out_file, template_dir, json_path)
 
 

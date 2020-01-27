@@ -50,14 +50,14 @@ def generate_c_code_external_cost(model, is_terminal):
         raise Exception(msg)
 
     if is_terminal:
-        suffix_name = "_cost_ext_cost_e_fun"
-        suffix_name_hess = "_cost_ext_cost_e_fun_jac_hess"
+        suffix_name = "_ext_cost_e_fun"
+        suffix_name_hess = "_ext_cost_e_fun_jac_hess"
         u = SX.sym("u", 0, 0)
         ext_cost = model.cost_expr_ext_cost_e
 
     else:
-        suffix_name = "_cost_ext_cost_fun"
-        suffix_name_hess = "_cost_ext_cost_fun_jac_hess"
+        suffix_name = "_ext_cost_fun"
+        suffix_name_hess = "_ext_cost_fun_jac_hess"
         u = model.u
         ext_cost = model.cost_expr_ext_cost
 
@@ -88,7 +88,7 @@ def generate_c_code_external_cost(model, is_terminal):
         os.mkdir("c_generated_code")
 
     os.chdir("c_generated_code")
-    gen_dir = model.name + suffix_name
+    gen_dir = model.name + '_cost'
     if not os.path.exists(gen_dir):
         os.mkdir(gen_dir)
     gen_dir_location = "./" + gen_dir
