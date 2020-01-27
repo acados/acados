@@ -56,14 +56,14 @@
 #include "{{ model.name }}_constraints/{{ model.name }}_h_e_constraint.h"
 {% endif %}
 {%- if cost.cost_type == "NONLINEAR_LS" %}
-#include "{{ model.name }}_r_cost/{{ model.name }}_r_cost.h"
+#include "{{ model.name }}_cost/{{ model.name }}_r_cost.h"
 {%- elif cost.cost_type_e == "EXTERNALLY_PROVIDED" %}
-#include "{{ model.name }}_cost_e_ext_fun/{{ model.name }}_cost_e_ext_fun.h"
+#include "{{ model.name }}_cost/{{ model.name }}_cost_e_ext_fun.h"
 {% endif %}
 {%- if cost.cost_type_e == "NONLINEAR_LS" %}
-#include "{{ model.name }}_r_e_cost/{{ model.name }}_r_e_cost.h"
+#include "{{ model.name }}_cost/{{ model.name }}_r_e_cost.h"
 {%- elif cost.cost_type_e == "EXTERNALLY_PROVIDED" %}
-#include "{{ model.name }}_cost_ext_fun/{{ model.name }}_cost_ext_fun.h"
+#include "{{ model.name }}_cost/{{ model.name }}_cost_ext_fun.h"
 {% endif %}
 
 #include "acados_solver_{{ model.name }}.h"
