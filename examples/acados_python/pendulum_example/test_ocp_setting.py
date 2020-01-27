@@ -221,7 +221,7 @@ if COST_MODULE in {'LINEAR_LS', 'NONLINEAR_LS'}:
     ocp_solver.cost_set(N, "yref", np.array([0, 0, 0, 0]))
 
 # dump result to JSON file for unit testing
-test_file_name = 'test_data/generate_c_code_out_' + COST_MODULE + '_' + QP_SOLVER + '_' + \
+test_file_name = 'test_data/test_ocp_' + COST_MODULE + '_' + QP_SOLVER + '_' + \
             INTEGRATOR_TYPE + '_' + SOLVER_TYPE + '.json'
 
 if GENERATE_DATA:
