@@ -153,8 +153,11 @@ int acados_create()
     {%- endif %}
 
     nlp_solver_plan->ocp_qp_solver_plan.qp_solver = {{ solver_options.qp_solver }};
-    for (int i = 0; i <= N; i++)
+    for (int i = 0; i < N; i++)
         nlp_solver_plan->nlp_cost[i] = {{ cost.cost_type }};
+
+    nlp_solver_plan->nlp_cost[N] = {{ cost.cost_type_e }};
+
     for (int i = 0; i < N; i++)
     {
         nlp_solver_plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
