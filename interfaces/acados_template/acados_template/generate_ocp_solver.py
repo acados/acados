@@ -36,6 +36,7 @@ from .generate_c_code_explicit_ode import generate_c_code_explicit_ode
 from .generate_c_code_implicit_ode import generate_c_code_implicit_ode
 from .generate_c_code_constraint import generate_c_code_constraint
 from .generate_c_code_nls_cost import generate_c_code_nls_cost
+from .generate_c_code_external_cost import generate_c_code_external_cost
 from .AcadosOcp import *
 from .AcadosOcpSolver import AcadosOcpSolver
 from ctypes import *
@@ -147,20 +148,8 @@ def ocp_formulation_json_load(json_file='acados_ocp_nlp.json'):
     return acados_ocp
 
 
+def ocp_generate_external_functions(acados_ocp, model):
 
-def generate_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json',
-                        con_h=None, con_hN=None, con_p=None, con_pN=None):
-
-    model = acados_ocp.model
-    name = model.name
-
-    # make dims consistent
-    make_ocp_dims_consistent(acados_ocp)
-
-    # set integrator time automatically
-    acados_ocp.solver_options.Tsim = acados_ocp.solver_options.tf / acados_ocp.dims.N
-
-    # generate external functions
     if acados_ocp.solver_options.integrator_type == 'ERK':
         # explicit model -- generate C code
         generate_c_code_explicit_ode(model)
@@ -170,19 +159,39 @@ def generate_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json',
         generate_c_code_implicit_ode(model, opts)
 
     if acados_ocp.dims.nphi > 0 or acados_ocp.dims.nh > 0:
-        generate_c_code_constraint(model, name, False)
+        generate_c_code_constraint(model, model.name, False)
 
     if acados_ocp.dims.nphi_e > 0 or acados_ocp.dims.nh_e > 0:
-        generate_c_code_constraint(model, name, True)
+        generate_c_code_constraint(model, model.name, True)
 
-    if acados_ocp.cost.cost_type == 'NONLINEAR_LS':
+    if not acados_ocp.cost.cost_type == 'LINEAR_LS':
+        # dummy matrices
         acados_ocp.cost.Vx = np.zeros((acados_ocp.dims.ny, acados_ocp.dims.nx))
         acados_ocp.cost.Vu = np.zeros((acados_ocp.dims.ny, acados_ocp.dims.nu))
-        generate_c_code_nls_cost(model, name, False)
+
+    if acados_ocp.cost.cost_type == 'NONLINEAR_LS':
+        generate_c_code_nls_cost(model, model.name, False)
+    if acados_ocp.cost.cost_type == 'EXTERNALLY_PROVIDED':
+        generate_c_code_external_cost(model, False)
 
     if acados_ocp.cost.cost_type_e == 'NONLINEAR_LS':
         acados_ocp.cost.Vx_e = np.zeros((acados_ocp.dims.ny_e, acados_ocp.dims.nx))
-        generate_c_code_nls_cost(model, name, True)
+        generate_c_code_nls_cost(model, model.name, True)
+
+
+def generate_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json',
+                        con_h=None, con_hN=None, con_p=None, con_pN=None):
+
+    model = acados_ocp.model
+
+    # make dims consistent
+    make_ocp_dims_consistent(acados_ocp)
+
+    # set integrator time automatically
+    acados_ocp.solver_options.Tsim = acados_ocp.solver_options.tf / acados_ocp.dims.N
+
+    # generate external functions
+    ocp_generate_external_functions(acados_ocp, model)
 
     # dump to json
     ocp_formulation_json_dump(acados_ocp, json_file)
@@ -278,16 +287,16 @@ def generate_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json',
 
     # nonlinear cost function
     if acados_ocp.cost.cost_type == 'NONLINEAR_LS':
-        template_dir = 'c_generated_code/{}_r_cost/'.format(name)
+        template_dir = 'c_generated_code/{}_r_cost/'.format(model.name)
         in_file = 'r_cost.in.h'
-        out_file = '{}_r_cost.h'.format(name)
+        out_file = '{}_r_cost.h'.format(model.name)
         render_template(in_file, out_file, template_dir, json_path)
 
     # terminal nonlinear cost function
     if acados_ocp.cost.cost_type_e == 'NONLINEAR_LS':
-        template_dir = 'c_generated_code/{}_r_e_cost/'.format(name)
+        template_dir = 'c_generated_code/{}_r_e_cost/'.format(model.name)
         in_file = 'r_e_cost.in.h'
-        out_file = '{}_r_e_cost.h'.format(name)
+        out_file = '{}_r_e_cost.h'.format(model.name)
         render_template(in_file, out_file, template_dir, json_path)
 
     ## Compile solver
