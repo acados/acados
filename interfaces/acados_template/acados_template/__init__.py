@@ -39,4 +39,5 @@ from .generate_c_code_constraint_e import *
 from .generate_c_code_nls_cost import *
 from .generate_c_code_nls_cost_e import *
 from .acados_ocp_nlp import *
-from .generate_solver import *
+from .generate_ocp_solver import *
+from .generate_sim_solver import *

@@ -32,9 +32,6 @@
 #
 
 
-# add_test(NAME matlab_test_sim_pendulum 
-#         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/pendulum_on_cart_model ${MATLAB_EXECUTABLE} -nodisplay -nodesktop -r  "run('./run_tests.m');")
-
 if(ACADOS_OCTAVE_TEMPLATE)
 add_test(NAME octave_test_templates
          COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
@@ -57,12 +54,18 @@ if(ACADOS_PYTHON)
 add_test(NAME python_test_ocp
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/test
         python main_test.py)
-add_test(NAME python_pendulum_example
+add_test(NAME python_pendulum_ocp_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_example
-        python minimal_example.py)
-add_test(NAME python_soft_constraints_example
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/soft_constraints_example
-        python generate_c_code.py)
+        python minimal_example_ocp.py)
+add_test(NAME python_pendulum_sim_example
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_example
+        python minimal_example_sim.py)
+add_test(NAME python_pendulum_closed_loop_example
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_example
+        python minimal_example_closed_loop.py)
+add_test(NAME python_pendulum_soft_constraints_example
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_example
+        python soft_constraint_example.py)
 add_test(NAME python_pmsm_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pmsm_example
         python generate_c_code.py)

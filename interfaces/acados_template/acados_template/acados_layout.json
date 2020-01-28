@@ -560,6 +560,9 @@
         "tf": [
             "float"
         ],
+        "Tsim": [
+            "float"
+        ],
         "sim_method_num_stages": [
             "int"
         ],

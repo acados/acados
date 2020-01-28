@@ -83,6 +83,13 @@ Thumbs.db
 # Matlab #
 *.m~
 
+# Python #
+__pycache__/
+*.egg-info
+
+# Examples #
+c_generated_code
+
 # Misc #
 ########
 *.doc
@@ -102,7 +109,6 @@ cmakelint
 *.srctrldb
 *.srctrlprj
 .vs
-__pycache__
 build*
 *rti1401
 *.asv
@@ -111,4 +117,3 @@ build*
 _autogen
 tags
 compile_commands.json
-bin/

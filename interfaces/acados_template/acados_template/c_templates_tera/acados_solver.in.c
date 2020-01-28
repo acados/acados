@@ -94,6 +94,48 @@
 #define NRN    {{ dims.nr_e }}
 
 
+// ** global data **
+ocp_nlp_in * nlp_in;
+ocp_nlp_out * nlp_out;
+ocp_nlp_solver * nlp_solver;
+void * nlp_opts;
+ocp_nlp_plan * nlp_solver_plan;
+ocp_nlp_config * nlp_config;
+ocp_nlp_dims * nlp_dims;
+{% if solver_options.integrator_type == "ERK" %}
+external_function_param_casadi * forw_vde_casadi;
+{% if solver_options.hessian_approx == "EXACT" %}
+external_function_param_casadi * hess_vde_casadi;
+{%- endif %}
+{% else %}
+{% if solver_options.integrator_type == "IRK" -%}
+external_function_param_casadi * impl_dae_fun;
+external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
+external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
+{%- endif %}
+{%- endif %}
+{% if constraints.constr_type == "BGP" %}
+external_function_param_casadi * phi_constraint;
+// external_function_param_casadi * r_constraint;
+{% endif %}
+{% if constraints.constr_type_e == "BGP" %}
+external_function_param_casadi phi_e_constraint;
+// external_function_param_casadi r_e_constraint;
+{% endif %}
+{% if constraints.constr_type == "BGH" %}
+external_function_param_casadi * h_constraint;
+{%- endif %}
+{% if constraints.constr_type_e == "BGH" %}
+external_function_param_casadi h_e_constraint;
+{% endif %}
+{% if cost.cost_type == "NONLINEAR_LS" %}
+external_function_param_casadi * r_cost;
+{% endif %}
+{% if cost.cost_type_e == "NONLINEAR_LS" %}
+external_function_param_casadi r_e_cost;
+{% endif %}
+
+
 int acados_create()
 {
     int status = 0;

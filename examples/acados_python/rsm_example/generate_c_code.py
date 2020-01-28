@@ -372,25 +372,21 @@ ra.solver_options.tf = Tf
 ra.solver_options.nlp_solver_type = 'SQP_RTI'
 # ra.solver_options.nlp_solver_type = 'SQP'
 
-# set header path
-ra.acados_include_path = '../../../../include'
-ra.acados_lib_path = '../../../../lib'
-
 file_name = 'acados_ocp.json'
 
 if CODE_GEN == 1:
     if FORMULATION == 0:
-        acados_solver = generate_solver(ra, json_file = file_name)
+        acados_solver = generate_ocp_solver(ra, json_file = file_name)
     if FORMULATION == 1:
-        acados_solver = generate_solver(ra, json_file = file_name)
+        acados_solver = generate_ocp_solver(ra, json_file = file_name)
     if FORMULATION == 2:
-        acados_solver = generate_solver(ra, json_file = file_name)
+        acados_solver = generate_ocp_solver(ra, json_file = file_name)
 
 if COMPILE == 1:
     # make 
     os.chdir('c_generated_code')
-    os.system('make')
-    os.system('make shared_lib')
+    os.system('make clean')
+    os.system('make ocp_shared_lib')
     os.chdir('..')
 
 # closed loop simulation TODO(add proper simulation)

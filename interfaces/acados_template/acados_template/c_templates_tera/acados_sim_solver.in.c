@@ -49,11 +49,6 @@
 #include "{{ model.name }}_model/{{ model.name }}_model.h"
 #include "acados_sim_solver_{{ model.name }}.h"
 
-#define NX  {{ dims.nx }}
-#define NZ  {{ dims.nz }}
-#define NU  {{ dims.nu }}
-#define NP  {{ dims.np }}
-
 
 // ** global data **
 sim_config  * {{ model.name }}_sim_config;
@@ -78,12 +73,12 @@ int {{ model.name }}_acados_sim_create()
     // initialize
     int ii;
 
-    int nx = NX;
-    int nu = NU;
-    int nz = NZ;
+    int nx = {{ dims.nx }};
+    int nu = {{ dims.nu }};
+    int nz = {{ dims.nz }};
 
-    // double Td = ((double) {{ solver_options.tf }}) / {{ dims.N }};
-    double Td = {{ solver_options.tf / dims.N }};
+    {#// double Tsim = {{ solver_options.tf / dims.N }};#}
+    double Tsim = {{ solver_options.Tsim }};
 
     {% if solver_options.integrator_type == "IRK" %}
     sim_impl_dae_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
@@ -161,13 +156,13 @@ int {{ model.name }}_acados_sim_create()
     {{ model.name }}_sim_opts = sim_opts_create({{ model.name }}_sim_config, {{ model.name }}_sim_dims);
 {# TODO: use C interface instead of this.. #}
     {{ model.name }}_sim_opts->ns = {{ solver_options.sim_method_num_stages }}; // number of stages in rk integrator
-    {{ model.name }}_sim_opts->num_steps = 2 * {{ solver_options.sim_method_num_steps }}; // number of integration steps
+    {{ model.name }}_sim_opts->num_steps = {{ solver_options.sim_method_num_steps }}; // number of integration steps
     {{ model.name }}_sim_opts->sens_adj = false;
     {{ model.name }}_sim_opts->sens_forw = true;
+    {{ model.name }}_sim_opts->newton_iter = {{ solver_options.sim_method_newton_iter }};
 {% if solver_options.integrator_type == "IRK" %}
     {{ model.name }}_sim_opts->sens_algebraic = false;
     {{ model.name }}_sim_opts->output_z = false;
-    {{ model.name }}_sim_opts->newton_iter = 5;
     {{ model.name }}_sim_opts->jac_reuse = false;
 {% endif %}
 
@@ -175,7 +170,7 @@ int {{ model.name }}_acados_sim_create()
     {{ model.name }}_sim_in  = sim_in_create({{ model.name }}_sim_config, {{ model.name }}_sim_dims);
     {{ model.name }}_sim_out = sim_out_create({{ model.name }}_sim_config, {{ model.name }}_sim_dims);
 
-    {{ model.name }}_sim_in->T = Td;
+    {{ model.name }}_sim_in->T = Tsim;
 
     // model functions
     {%- if solver_options.integrator_type == "IRK" %}
@@ -193,8 +188,8 @@ int {{ model.name }}_acados_sim_create()
 
     /* initialize input to zero */
     // x
-    double x0[NX];
-    for (ii = 0; ii < NX; ii++)
+    double x0[{{ dims.nx }}];
+    for (ii = 0; ii < {{ dims.nx }}; ii++)
         x0[ii] = 0.0;
 
     sim_in_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims,
@@ -202,8 +197,8 @@ int {{ model.name }}_acados_sim_create()
 
 
     // u
-    double u0[NU];
-    for (ii = 0; ii < NU; ii++)
+    double u0[{{ dims.nu }}];
+    for (ii = 0; ii < {{ dims.nu }}; ii++)
         u0[ii] = 0.0;
 
     sim_in_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims,

@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 #
 # Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
 # Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
@@ -32,11 +33,12 @@
 #
 
 import numpy as np
-import casadi as ca
 import json
 import os
 import sys
 from .casadi_functions import *
+
+ACADOS_PATH=os.getenv("ACADOS_SOURCE_DIR","/usr/lib")
 
 class ocp_nlp_dims:
     """
@@ -412,6 +414,7 @@ class ocp_nlp_dims:
     def set(self, attr, value):
         setattr(self, attr, value)
 
+
 class ocp_nlp_cost:
     """
     class containing the description of the cost
@@ -667,7 +670,6 @@ class ocp_nlp_cost:
     def set(self, attr, value):
         setattr(self, attr, value)
 
-
 # TODO(oj): replace \Pi with Jbx or similar
 class ocp_nlp_constraints:
     """
@@ -755,7 +757,6 @@ class ocp_nlp_constraints:
         # self.__x0      = []                           # initial state
         self.__p       = []                           # parameters
 
-
     @property
     def constr_type(self):
         """Constraints type"""
@@ -766,7 +767,6 @@ class ocp_nlp_constraints:
         """Constraints type t=T"""
         return self.__constr_type_e
 
-    # bounds on x0
     @property
     def lbx_0(self):
         """:math:`\\underline{x_0}` - lower bounds on x0"""
@@ -782,7 +782,6 @@ class ocp_nlp_constraints:
         """indexes of bounds on x0 """
         return self.__idxbx_0
 
-    # bounds on x and u
     @property
     def lbx(self):
         """:math:`\\underline{x}` - lower bounds on x"""
@@ -1551,7 +1550,6 @@ class ocp_nlp_constraints:
         setattr(self, attr, value)
 
 
-
 class ocp_nlp_solver_options:
     """
     class containing the description of the solver options
@@ -1577,6 +1575,7 @@ class ocp_nlp_solver_options:
         self.__nlp_solver_tol_ineq = 1e-6                     # NLP solver inequality
         self.__nlp_solver_tol_comp = 1e-6                     # NLP solver complementarity
         self.__nlp_solver_max_iter = 100                      # NLP solver maximum number of iterations
+        self.__Tsim = None                                    # automatically calculated as tf/N;
         # TODO(oj): add the following
         # self.__regularize_method = None
 
@@ -1682,6 +1681,11 @@ class ocp_nlp_solver_options:
         """Prediction horizon"""
         return self.__tf
 
+    @property
+    def Tsim(self):
+        """Time horizon for one integrator step"""
+        return self.__Tsim
+
     @qp_solver.setter
     def qp_solver(self, qp_solver):
         qp_solvers = ('PARTIAL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_QPOASES', \
@@ -1716,6 +1720,10 @@ class ocp_nlp_solver_options:
     def tf(self, tf):
         self.__tf = tf
 
+    @Tsim.setter
+    def Tsim(self, Tsim):
+        self.__Tsim = Tsim
+
     @sim_method_num_stages.setter
     def sim_method_num_stages(self, sim_method_num_stages):
 
@@ -1731,6 +1739,14 @@ class ocp_nlp_solver_options:
             self.__sim_method_num_steps = sim_method_num_steps
         else:
             raise Exception('Invalid sim_method_num_steps value. sim_method_num_steps must be an integer. Exiting.')
+
+    @sim_method_newton_iter.setter
+    def sim_method_newton_iter(self, sim_method_newton_iter):
+
+        if type(sim_method_newton_iter) == int:
+            self.__sim_method_newton_iter = sim_method_newton_iter
+        else:
+            raise Exception('Invalid sim_method_newton_iter value. sim_method_newton_iter must be an integer. Exiting.')
 
     @nlp_solver_type.setter
     def nlp_solver_type(self, nlp_solver_type):
@@ -1749,22 +1765,6 @@ class ocp_nlp_solver_options:
             self.__nlp_solver_step_length = nlp_solver_step_length
         else:
             raise Exception('Invalid nlp_solver_step_length value. nlp_solver_step_length must be a positive float. Exiting')
-
-    @sim_method_num_stages.setter
-    def sim_method_num_stages(self, sim_method_num_stages):
-
-        if type(sim_method_num_stages) == int:
-            self.__sim_method_num_stages = sim_method_num_stages
-        else:
-            raise Exception('Invalid sim_method_num_stages value. sim_method_num_stages must be an integer. Exiting.')
-
-    @sim_method_num_steps.setter
-    def sim_method_num_steps(self, sim_method_num_steps):
-
-        if type(sim_method_num_steps) == int:
-            self.__sim_method_num_steps = sim_method_num_steps
-        else:
-            raise Exception('Invalid sim_method_num_steps value. sim_method_num_steps must be an integer. Exiting.')
 
     @qp_solver_tol_stat.setter
     def qp_solver_tol_stat(self, qp_solver_tol_stat):
@@ -1857,11 +1857,16 @@ class ocp_nlp_solver_options:
     def set(self, attr, value):
         setattr(self, attr, value)
 
+
 class acados_ocp_nlp:
     """
     class containing the full description of the optimal control problem
     """
-    def __init__(self):
+    def __init__(self, acados_path=ACADOS_PATH):
+        """
+        Keyword arguments:
+        acados_path -- path of your acados installation
+        """
         self.dims = ocp_nlp_dims()
         self.model = acados_dae()
         self.cost = ocp_nlp_cost()
@@ -1875,8 +1880,9 @@ class acados_ocp_nlp:
         self.cost_r = acados_cost()
         self.cost_r_e = acados_cost()
 
-        self.acados_include_path = []
-        self.acados_lib_path = []
+        self.acados_include_path = f'{acados_path}/include'
+        self.acados_lib_path = f'{acados_path}/lib'
+
 
     def set(self, attr, value):
         # tokenize string
@@ -1887,189 +1893,9 @@ class acados_ocp_nlp:
             setter_to_call = getattr(self, 'set')
 
         setter_to_call(tokens[1], value)
-        return
 
-def np_array_to_list(np_array):
-    if  isinstance(np_array, (np.ndarray)):
-        return np_array.tolist()
-    elif  isinstance(np_array, (ca.SX)):
-        return ca.DM(np_array).full()
-    elif  isinstance(np_array, (ca.DX)):
-        return np_array.full()
-    else:
-        raise(Exception(
-            "Cannot convert to list type {}".format(type(np_array))
-        ))
+        return
 
 class ocp_nlp_as_object:
         def __init__(self, d):
             self.__dict__ = d
-
-def dict2json(d):
-    out = {}
-    for k, v in d.items():
-        if isinstance(v, dict):
-            v = dict2json(v)
-
-        v_type = str(type(v).__name__)
-        # out_key = '__' + v_type + '__' + k.split('__', 1)[-1]
-        out_key = k.split('__', 1)[-1]
-        out[k.replace(k, out_key)] = v
-    return out
-
-def acados_ocp2json_layout(acados_ocp):
-    """ Convert acados ocp nlp object to JSON format by stripping the
-    property mangling and adding array dimension info.
-    ALL items of type String will be converted
-    to type ndarrray!
-
-    Parameters
-    ----------
-    acados_ocp : class
-        object of type acados_ocp_nlp.
-
-    Returns
-    ------
-    out: dict
-        acados_layout
-    """
-    ocp_nlp = acados_ocp
-    ocp_nlp.cost = acados_ocp.cost.__dict__
-    ocp_nlp.constraints = acados_ocp.constraints.__dict__
-    ocp_nlp.solver_options = acados_ocp.solver_options.__dict__
-    ocp_nlp.dims = acados_ocp.dims.__dict__
-    ocp_nlp = ocp_nlp.__dict__
-    json_layout = dict2json_layout(ocp_nlp)
-    return json_layout
-
-def dict2json_layout(d):
-    """ Convert dictionary containing the description of
-    of the ocp_nlp to JSON format by stripping the
-    property mangling and adding array dimension info.
-    ALL items of type String will be converted
-    to type ndarrray!
-
-    Parameters
-    ----------
-    d : dict
-        dictionary containing the description of
-        the ocp_nlp.
-
-    Returns
-    ------
-    out: dict
-        postprocessed dictionary.
-    """
-    out = {}
-    for k, v in d.items():
-        if isinstance(v, dict):
-            v = dict2json_layout(v)
-
-        v_type = str(type(v).__name__)
-        if v_type == 'list':
-            v_type = 'ndarray'
-
-        # add array number of dimensions?
-        # if v_type == 'ndarray':
-        #     v_type = v_type + '_' + str(len(v.shape))
-        out_key = k.split('__', 1)[-1]
-
-        if isinstance(v, dict):
-            out[k.replace(k, out_key)] = v
-        else:
-            out[k.replace(k, out_key)] = [v_type]
-
-    return out
-
-def cast_ocp_nlp(ocp_nlp, ocp_nlp_layout):
-    """ MATLAB does not allow distinction between e.g a = [1,1,1] and b = [1,1,1].'
-    or a = 1 and b = [1]. Hence, we need to do some postprocessing of the JSON
-    file generated from MATLAB.
-
-    Parameters
-    ----------
-    ocp_nlp : dict
-        ocp_nlp dictionary to be postprocessed.
-
-    ocp_nlp_layout : dict
-        acados ocp_nlp target layout
-    Returns
-    ------
-    out : dict
-        postprocessed dictionary
-    """
-
-    out = {}
-    for k, v in ocp_nlp.items():
-        if isinstance(v, dict):
-            v = cast_ocp_nlp(v, ocp_nlp_layout[k])
-
-        if 'ndarray' in ocp_nlp_layout[k]:
-            if isinstance(v, int) or isinstance(v, float):
-                v = np.array([v])
-        out[k] = v
-    return out
-
-def json2dict(ocp_nlp, ocp_nlp_dims):
-    # load JSON layout
-    current_module = sys.modules[__name__]
-    acados_path = os.path.dirname(current_module.__file__)
-    with open(acados_path + '/acados_layout.json', 'r') as f:
-        ocp_nlp_layout = json.load(f)
-
-    out = json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout)
-    return out
-
-def json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout):
-    """ convert ocp_nlp loaded JSON to dictionary. Mainly convert
-    lists to arrays for easier handling.
-    Parameters
-    ---------
-    ocp_nlp : dict
-        dictionary loaded from JSON to be post-processed.
-
-    ocp_nlp_dims : dict
-        dictionary containing the ocp_nlp dimensions.
-
-    ocp_nlp_layout : dict
-        acados ocp_nlp layout.
-
-    Returns
-    -------
-    out : dict
-        post-processed dictionary.
-    """
-    out = {}
-    for k, v in ocp_nlp.items():
-        if isinstance(v, dict):
-            v = json2dict_rec(v, ocp_nlp_dims, ocp_nlp_layout[k])
-
-        v_type__ = str(type(v).__name__)
-        out_key = k.split('__', 1)[-1]
-        v_type = out_key.split('__')[0]
-        out_key = out_key.split('__', 1)[-1]
-        if 'ndarray' in ocp_nlp_layout[k]:
-            if isinstance(v, int) or isinstance(v, float):
-                v = np.array([v])
-        if (v_type == 'ndarray' or v_type__ == 'list') and (ocp_nlp_layout[k][0] != 'str'):
-            dims_l = []
-            dims_names = []
-            dim_keys = ocp_nlp_layout[k][1]
-            for item in dim_keys:
-                dims_l.append(ocp_nlp_dims[item])
-                dims_names.append(item)
-            dims = tuple(dims_l)
-            if v == []:
-                # v = None
-                try:
-                    v = np.reshape(v, dims)
-                except:
-                    raise Exception('acados -- mismatching dimensions for field {0}. Provided data has dimensions {1}, while associated dimensions {2} are {3}'.format(out_key, [], dims_names, dims))
-                # v = []
-            else:
-                v = np.array(v)
-                v_dims = v.shape
-                if dims !=v_dims:
-                    raise Exception('acados -- mismatching dimensions for field {0}. Provided data has dimensions {1}, while associated dimensions {2} are {3}'.format(out_key, v_dims, dims_names, dims))
-        out[k.replace(k, out_key)] = v
-    return out
