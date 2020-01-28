@@ -1272,10 +1272,12 @@ int acados_create()
 }
 
 
-int acados_update_params(int stage, double *p, int np) {
+int acados_update_params(int stage, double *p, int np)
+{
     int solver_status = 0;
     int casadi_np = 0;
-    {% if dims.np > 0 %}
+
+{%- if dims.np > 0 %}
     if (stage < {{ dims.N }})
     {
         {%- if solver_options.integrator_type == "IRK" %}
@@ -1337,10 +1339,61 @@ int acados_update_params(int stage, double *p, int np) {
             exit(1);
         }
         h_constraint[stage].set_param(h_constraint+stage, p);
-        {% endif %}
+        {%- endif %}
+
+    {%- if cost.cost_type == "NONLINEAR_LS" %}
+        casadi_np = (r_cost+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in r_cost which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        r_cost[stage].set_param(r_cost+stage, p);
+
+    {%- elif cost.cost_type == "NONLINEAR_LS" %}
+        casadi_np = (ext_cost_fun+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in ext_cost_fun which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        ext_cost_fun[stage].set_param(ext_cost_fun+stage, p);
+
+        casadi_np = (ext_cost_fun_jac_hess+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in ext_cost_fun_jac_hess which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+    {%- endif %}
     }
     else // stage == N
     {
+    {%- if cost.cost_type_e == "NONLINEAR_LS" %}
+        casadi_np = (&r_e_cost)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in r_e_cost which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        r_e_cost.set_param(&r_e_cost, p);
+    {%- elif cost.cost_type_e == "EXTERNAL" %}
+        casadi_np = (&ext_cost_e_fun)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in ext_cost_e_fun which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        ext_cost_e_fun.set_param(&ext_cost_e_fun, p);
+
+        casadi_np = (&ext_cost_e_fun_jac_hess)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in ext_cost_e_fun_jac_hess which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        ext_cost_e_fun_jac_hess.set_param(&ext_cost_e_fun_jac_hess, p);
+    {% endif %}
         {% if constraints.constr_type_e == "BGP" %}
         // casadi_np = (&r_e_constraint)->np;
         // if (casadi_np != np) {
@@ -1366,7 +1419,7 @@ int acados_update_params(int stage, double *p, int np) {
         h_e_constraint.set_param(&h_e_constraint, p);
         {% endif %}
     }
-    {% endif %}{# if dims.np #}
+{% endif %}{# if dims.np #}
 
     return solver_status;
 }
