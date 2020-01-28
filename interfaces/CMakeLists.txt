@@ -57,6 +57,9 @@ add_test(NAME python_test_ocp
 add_test(NAME python_pendulum_ocp_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_example
         python minimal_example_ocp.py)
+add_test(NAME python_pendulum_mhe_example
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_example
+        python minimal_example_mhe.py)
 add_test(NAME python_pendulum_ocp_cost_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_example
         python ocp_example_cost_formulations.py)
