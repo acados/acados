@@ -95,7 +95,14 @@ class AcadosOcpSolver:
         return out
 
     def get_stats(self, field_):
-        fields = ['time_tot', 'sqp_iter']
+        fields = ['time_tot',  # total cpu time previous call
+                  'time_lin',  # cpu time for linearization
+                  'time_qp',   # cpu time qp solution
+                  'time_qp_solver_call',  # cpu time inside qp solver (without converting the QP)
+                  'time_reg',  # cpu time regularization
+                  'sqp_iter'  # number of SQP iterations
+                ]
+
         field = field_
         field = field.encode('utf-8')
         if (field_ not in fields):
