@@ -34,5 +34,5 @@
 	path = external/jsonlab
 	url = https://github.com/fangq/jsonlab.git
 [submodule "examples/acados_python/pendulum_example/test_data"]
-	path = examples/acados_python/pendulum_example/test_data
+	path = examples/acados_python/getting_started/test_data
 	url = https://github.com/acados/test_data
