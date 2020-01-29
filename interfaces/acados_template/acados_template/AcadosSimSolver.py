@@ -42,6 +42,7 @@ from copy import deepcopy
 from .generate_c_code_explicit_ode import generate_c_code_explicit_ode
 from .generate_c_code_implicit_ode import generate_c_code_implicit_ode
 from .AcadosSim import AcadosSim
+from .AcadosOcp import AcadosOcp
 from .AcadosOcpModel import acados_model_strip_casadi_symbolics
 from .utils import ACADOS_PATH, is_column, render_template, dict2json, np_array_to_list
 
@@ -154,46 +155,31 @@ def sim_generate_casadi_functions(acados_sim):
         opts = dict(generate_hess=1)
         generate_c_code_implicit_ode(model, opts)
 
-
-# def generate_sim_solver_from_ocp(acados_ocp, json_file='acados_ocp_nlp.json'):
-
-#     model_name = acados_ocp.model.name
-
-#     # set up acados_sim_
-#     acados_sim_ = AcadosSim()
-#     acados_sim_.model = acados_ocp.model
-#     acados_sim_.dims.nx = acados_ocp.dims.nx
-#     acados_sim_.dims.nu = acados_ocp.dims.nu
-#     acados_sim_.dims.nz = acados_ocp.dims.nz
-#     acados_sim_.dims.np = acados_ocp.dims.np
-
-#     acados_sim_.solver_options.integrator_type = acados_ocp.solver_options.integrator_type
-
-#     # render templates
-#     sim_render_templates(json_file, model_name)
-
-#     # generate casadi functions
-#     sim_generate_casadi_functions(acados_sim_)
-
-#     ## Compile solver
-#     os.chdir('c_generated_code')
-#     os.system('make sim_shared_lib')
-#     os.chdir('..')
-
-#     # get
-#     sim_solver = AcadosSimSolver(acados_sim_, 'c_generated_code/libacados_sim_solver_' + model_name + '.so')
-#     return sim_solver
-
-
 class AcadosSimSolver:
-    def __init__(self, acados_sim, json_file='acados_sim.json'):
+    def __init__(self, acados_sim_, json_file='acados_sim.json'):
+
+        if isinstance(acados_sim_, AcadosOcp):
+            # set up acados_sim_
+            acados_sim = AcadosSim()
+            acados_sim.model = acados_sim_.model
+            acados_sim.dims.nx = acados_sim_.dims.nx
+            acados_sim.dims.nu = acados_sim_.dims.nu
+            acados_sim.dims.nz = acados_sim_.dims.nz
+            acados_sim.dims.np = acados_sim_.dims.np
+            acados_sim.solver_options.integrator_type = acados_sim_.solver_options.integrator_type
+
+        elif isinstance(acados_sim_, AcadosSim):
+            acados_sim = acados_sim_
 
         model_name = acados_sim.model.name
 
         make_sim_dims_consistent(acados_sim)
 
-        sim_formulation_json_dump(acados_sim, json_file)
+        # use existing json when creating integrator from ocp
+        if isinstance(acados_sim_, AcadosSim):
+            sim_formulation_json_dump(acados_sim, json_file)
 
+        print("\njsonfile", json_file)
         # render templates
         sim_render_templates(json_file, model_name)
         # generate casadi functions
