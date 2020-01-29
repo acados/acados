@@ -31,7 +31,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from acados_template import *
+from acados_template import AcadosSim, AcadosSimSolver
 from export_pendulum_ode_model import export_pendulum_ode_model
 from utils import plot_pendulum
 import numpy as np
@@ -59,7 +59,7 @@ sim.solver_options.newton_iter = 3 # for implicit integrator
 
 
 # create
-acados_integrator = generate_sim_solver(sim)
+acados_integrator = AcadosSimSolver(sim)
 
 simX = np.ndarray((N+1, nx))
 x0 = np.array([0.0, np.pi+1, 0.0, 0.0])

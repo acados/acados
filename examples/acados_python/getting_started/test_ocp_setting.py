@@ -218,7 +218,7 @@ ocp.solver_options.qp_solver_iter_max = 50
 ocp.solver_options.tf = Tf
 ocp.solver_options.nlp_solver_type = SOLVER_TYPE
 
-ocp_solver = generate_ocp_solver(ocp, json_file = 'acados_ocp.json')
+ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
 simX = np.ndarray((N+1, nx))
 simU = np.ndarray((N, nu))

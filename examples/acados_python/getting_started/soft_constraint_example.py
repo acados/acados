@@ -31,7 +31,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from acados_template import *
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver
 from export_pendulum_ode_model import export_pendulum_ode_model
 from utils import plot_pendulum
 import numpy as np
@@ -147,8 +147,8 @@ def run_closed_loop_experiment(FORMULATION):
     ocp.solver_options.nlp_solver_type = 'SQP'
 
     json_filename = 'pendulum_soft_constraints.json'
-    acados_ocp_solver = generate_ocp_solver(ocp, json_file = json_filename)
-    acados_integrator = generate_sim_solver_from_ocp(ocp, json_file = json_filename)
+    acados_ocp_solver = AcadosOcpSolver(ocp, json_file = json_filename)
+    acados_integrator = AcadosSimSolver(ocp, json_file = json_filename)
 
     # closed loop
     Nsim = 20

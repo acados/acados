@@ -93,6 +93,6 @@ def export_ocp_solver(model, N, h, Q, R, Fmax=80):
     # ocp.solver_options.nlp_solver_type = 'SQP_RTI'
     ocp.solver_options.nlp_solver_max_iter = 200
 
-    acados_solver = generate_ocp_solver(ocp, json_file = 'acados_ocp.json')
+    acados_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
     return acados_solver

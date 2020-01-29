@@ -338,11 +338,11 @@ file_name = 'acados_ocp.json'
 
 if CODE_GEN == 1:
     if FORMULATION == 0:
-        acados_solver = generate_ocp_solver(ocp, json_file = file_name)
+        acados_solver = AcadosOcpSolver(ocp, json_file = file_name)
     if FORMULATION == 1:
-        acados_solver = generate_ocp_solver(ocp, json_file = file_name)
+        acados_solver = AcadosOcpSolver(ocp, json_file = file_name)
     if FORMULATION == 2:
-        acados_solver = generate_ocp_solver(ocp, json_file = file_name)
+        acados_solver = AcadosOcpSolver(ocp, json_file = file_name)
 
 if COMPILE == 1:
     # make 

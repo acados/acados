@@ -33,7 +33,7 @@
 
 # author: Daniel Kloeser
 
-from acados_template import AcadosOcpModel, AcadosOcp, generate_ocp_solver
+from acados_template import AcadosOcpModel, AcadosOcp, AcadosOcpSolver
 from bycicle_model import bycicle_model
 import scipy.linalg
 import numpy as np
@@ -183,6 +183,6 @@ def acados_settings(Tf, N, track_file):
     # ocp.solver_options.qp_solver_tol_comp = 1e-2
 
     # create solver
-    acados_solver = generate_ocp_solver(ocp, json_file="acados_ocp.json")
+    acados_solver = AcadosOcpSolver(ocp, json_file="acados_ocp.json")
 
     return constraint, model, acados_solver

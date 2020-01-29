@@ -94,7 +94,7 @@ def export_mhe_solver(model, N, h, Q, Q0, R):
     # ocp_mhe.solver_options.nlp_solver_type = 'SQP_RTI'
     ocp_mhe.solver_options.nlp_solver_max_iter = 200
 
-    acados_solver_mhe = generate_ocp_solver(ocp_mhe, json_file = 'acados_ocp.json')
+    acados_solver_mhe = AcadosOcpSolver(ocp_mhe, json_file = 'acados_ocp.json')
 
     # set arrival cost weighting matrix
     acados_solver_mhe.cost_set(0, "W", block_diag(R, Q, Q0))

@@ -31,7 +31,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from acados_template import *
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver
 from export_pendulum_ode_model import export_pendulum_ode_model
 from utils import plot_pendulum
 import numpy as np
@@ -101,13 +101,14 @@ ocp.solver_options.qp_solver_cond_N = N
 # set prediction horizon
 ocp.solver_options.tf = Tf
 
-acados_ocp_solver = generate_ocp_solver(ocp, json_file = 'acados_ocp_' + model.name + '.json')
-acados_integrator = generate_sim_solver_from_ocp(ocp, json_file = 'acados_ocp_' + model.name + '.json')
+acados_ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp_' + model.name + '.json')
+acados_integrator = AcadosSimSolver(ocp, json_file = 'acados_ocp_' + model.name + '.json')
 
 simX = np.ndarray((N+1, nx))
 simU = np.ndarray((N, nu))
 
 xcurrent = x0
+simX[0,:] = xcurrent
 
 # closed loop
 for i in range(N):
@@ -131,7 +132,7 @@ for i in range(N):
 
     # update state
     xcurrent = acados_integrator.get("x")
-    simX[i,:] = xcurrent
+    simX[i+1,:] = xcurrent
 
 # plot results
 plot_pendulum(Tf/N, Fmax, simU, simX)

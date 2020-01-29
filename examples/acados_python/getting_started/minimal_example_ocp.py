@@ -31,7 +31,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from acados_template import AcadosOcp, generate_ocp_solver
+from acados_template import AcadosOcp, AcadosOcpSolver
 from export_pendulum_ode_model import export_pendulum_ode_model
 import numpy as np
 import scipy.linalg
@@ -96,7 +96,7 @@ ocp.solver_options.integrator_type = 'ERK'
 ocp.solver_options.tf = Tf
 ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
 
-ocp_solver = generate_ocp_solver(ocp, json_file = 'acados_ocp.json')
+ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
 simX = np.ndarray((N+1, nx))
 simU = np.ndarray((N, nu))
