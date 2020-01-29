@@ -33,13 +33,13 @@
 
 class AcadosSimModel():
     def __init__(self):
+        self.name = None        #: model name
         # common
         self.x = None           #: CasADi variable describing the state of the system
         self.xdot = None        #: CasADi variable describing the derivative of the state wrt time
         self.u = None           #: CasADi variable describing the input of the system
         self.z = []             #: CasADi variable describing the algebraic variables of the DAE
         self.p = []             #: CasADi variable describing parameters of the DAE
-        self.name = None        #: model name
         # dynamics
         self.f_impl_expr = None #: CasADi expression for the implicit dynamics :math:`F(\dot{x}, x, u, z) = 0`
         self.f_expl_expr = None #: CasADi expression for the explicit dynamics :math:`\dot{x} = f(x, u)`

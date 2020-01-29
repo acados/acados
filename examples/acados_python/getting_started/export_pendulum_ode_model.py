@@ -31,7 +31,9 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from acados_template import *
+from acados_template import AcadosOcpModel
+from casadi import SX, vertcat, sin, cos
+
 def export_pendulum_ode_model():
 
     model_name = 'pendulum_ode'
@@ -63,7 +65,7 @@ def export_pendulum_ode_model():
     xdot = vertcat(x1_dot, theta_dot, v1_dot, dtheta_dot)
 
     # algebraic variables
-    z = None
+    # z = None
 
     # parameters
     p = []
@@ -85,7 +87,7 @@ def export_pendulum_ode_model():
     model.x = x
     model.xdot = xdot
     model.u = u
-    model.z = z
+    # model.z = z
     model.p = p
     model.name = model_name
 
