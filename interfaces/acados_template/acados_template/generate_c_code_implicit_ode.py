@@ -33,7 +33,7 @@
 
 import os
 from casadi import *
-from .utils import ALLOWED_CASADI_VERSIONS
+from .utils import ALLOWED_CASADI_VERSIONS, is_empty, casadi_length
 
 def generate_c_code_implicit_ode( model, opts ):
 
@@ -56,28 +56,16 @@ def generate_c_code_implicit_ode( model, opts ):
     f_impl = model.f_impl_expr
     model_name = model.name
 
-    ## get model dimensions
-    nx = x.size()[0]
-    nu = u.size()[0]
-    if type(z) is list:
-        # check that z is empty
-        if len(z) == 0:
-            nz = 0
-            z  = SX.sym('z', 0, 0)
-        else:
-            raise Exception('z is a non-empty list. It should be either an empty list or an SX object.')
-    else:
-        nz = z.size()[0]
+    if is_empty(p):
+        p = SX.sym('p', 0, 0)
 
-    if type(p) is list:
-        # check that z is empty
-        if len(p) == 0:
-            np = 0
-            p = SX.sym('p', 0, 0)
-        else:
-            raise Exception('p is a non-empty list. It should be either an empty list or an SX object.')
-    else:
-        np = p.size()[0]
+    if is_empty(z):
+        z = SX.sym('z', 0, 0)
+
+    ## get model dimensions
+    nx = casadi_length(x)
+    nu = casadi_length(u)
+    nz = casadi_length(z)
 
     ## generate jacobians
     jac_x       = jacobian(f_impl, x)
@@ -88,14 +76,14 @@ def generate_c_code_implicit_ode( model, opts ):
     ## generate hessian
     x_xdot_z_u = vertcat(x, xdot, z, u)
 
-    if type(x[0]) == casadi.SX:
+    if isinstance(x,casadi.SX):
         multiplier  = SX.sym('multiplier', nx + nz)
         multiply_mat  = SX.sym('multiply_mat', 2*nx+nz+nu, nx + nu)
         HESS = SX.zeros( x_xdot_z_u.size()[0], x_xdot_z_u.size()[0])
-    elif type(x[0]) == casadi.MX:
+    elif isinstance(x,casadi.MX):
         multiplier  = MX.sym('multiplier', nx + nz)
         multiply_mat  = MX.sym('multiply_mat', 2*nx+nz+nu, nx + nu)
-        HESS = MX.zeros( x_xdot_z_u.size()[0], x_xdot_z_u,size()[0])
+        HESS = MX.zeros( x_xdot_z_u.size()[0], x_xdot_z_u.size()[0])
 
     for ii in range(f_impl.size()[0]):
         jac_x_xdot_z = jacobian(f_impl[ii], x_xdot_z_u)

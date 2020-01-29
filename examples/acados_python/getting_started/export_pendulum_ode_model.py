@@ -31,57 +31,65 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import os
-from casadi import *
-from .utils import ALLOWED_CASADI_VERSIONS
+from acados_template import AcadosModel
+from casadi import SX, vertcat, sin, cos
 
-def generate_c_code_nls_cost( model, cost_name, is_terminal ):
+def export_pendulum_ode_model():
 
-    casadi_version = CasadiMeta.version()
-    casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
+    model_name = 'pendulum_ode'
 
-    if casadi_version not in (ALLOWED_CASADI_VERSIONS):
-        msg =  'Please download and install CasADi {} '.format(" or ".join(ALLOWED_CASADI_VERSIONS))
-        msg += 'to ensure compatibility with acados.\n'
-        msg += 'Version {} currently in use.'.format(casadi_version)
-        raise Exception(msg)
+    # constants
+    M = 1.
+    m = 0.1
+    g = 9.81
+    l = 0.8
 
+    # set up states & controls
+    x1      = SX.sym('x1')
+    theta   = SX.sym('theta')
+    v1      = SX.sym('v1')
+    dtheta  = SX.sym('dtheta')
+    
+    x = vertcat(x1, theta, v1, dtheta)
 
-    if is_terminal:
-        suffix_name = '_r_e_cost'
-        u = SX.sym('u', 0, 0)
-        cost_expr = model.cost_y_expr_e
+    # controls
+    F = SX.sym('F')
+    u = vertcat(F)
+    
+    # xdot
+    x1_dot      = SX.sym('x1_dot')
+    theta_dot   = SX.sym('theta_dot')
+    v1_dot      = SX.sym('v1_dot')
+    dtheta_dot  = SX.sym('dtheta_dot')
 
-    else:
-        suffix_name = '_r_cost'
-        u = model.u
-        cost_expr = model.cost_y_expr
+    xdot = vertcat(x1_dot, theta_dot, v1_dot, dtheta_dot)
 
-    x = model.x
-    p = model.p
+    # algebraic variables
+    # z = None
 
-    # set up functions to be exported
-    fun_name = cost_name + suffix_name
+    # parameters
+    p = []
+    
+    # dynamics     
+    denominator = M + m - m*cos(theta)*cos(theta)
+    f_expl = vertcat(v1,
+                     dtheta,
+                     (-m*l*sin(theta)*dtheta*dtheta + m*g*cos(theta)*sin(theta)+F)/denominator,
+                     (-m*l*cos(theta)*sin(theta)*dtheta*dtheta + F*cos(theta)+(M+m)*g*sin(theta))/(l*denominator)
+                     )
 
-    cost_jac_expr = transpose(jacobian(cost_expr, vertcat(u, x)))
+    f_impl = xdot - f_expl
 
-    nls_cost_fun = Function( fun_name, [x, u, p], \
-            [ cost_expr, cost_jac_expr ])
+    model = AcadosModel()
 
-    # generate C code
-    if not os.path.exists('c_generated_code'):
-        os.mkdir('c_generated_code')
+    model.f_impl_expr = f_impl
+    model.f_expl_expr = f_expl
+    model.x = x
+    model.xdot = xdot
+    model.u = u
+    # model.z = z
+    model.p = p
+    model.name = model_name
 
-    os.chdir('c_generated_code')
-    gen_dir = cost_name + suffix_name
-    if not os.path.exists(gen_dir):
-        os.mkdir(gen_dir)
-    gen_dir_location = './' + gen_dir
-    os.chdir(gen_dir_location)
-    file_name = cost_name + suffix_name
-
-    nls_cost_fun.generate( file_name, casadi_opts )
-
-    os.chdir('../..')
-    return
+    return model 
 

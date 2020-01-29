@@ -31,57 +31,32 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+import itertools as it
 import os
-from casadi import *
-from .utils import ALLOWED_CASADI_VERSIONS
 
-def generate_c_code_nls_cost( model, cost_name, is_terminal ):
+COST_MODULE_values = ['EXTERNAL', 'LS', 'NLS']
+COST_MODULE_N_values = ['EXTERNAL', 'LS', 'NLS']
+QP_SOLVER_values = ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CONDENSING_QPOASES']
+INTEGRATOR_TYPE_values = ['ERK', 'IRK']
+SOLVER_TYPE_values = ['SQP', 'SQP_RTI']
 
-    casadi_version = CasadiMeta.version()
-    casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
+test_parameters = { 'COST_MODULE_values': COST_MODULE_values,
+                    'COST_MODULE_N_values': COST_MODULE_N_values,
+                    'QP_SOLVER_values': QP_SOLVER_values,
+                    'INTEGRATOR_TYPE_values': INTEGRATOR_TYPE_values,
+                    'SOLVER_TYPE_values': SOLVER_TYPE_values}
 
-    if casadi_version not in (ALLOWED_CASADI_VERSIONS):
-        msg =  'Please download and install CasADi {} '.format(" or ".join(ALLOWED_CASADI_VERSIONS))
-        msg += 'to ensure compatibility with acados.\n'
-        msg += 'Version {} currently in use.'.format(casadi_version)
-        raise Exception(msg)
+all_test_parameters = sorted(test_parameters)
+combinations = list(it.product(*(test_parameters[Name] for Name in all_test_parameters)))
 
-
-    if is_terminal:
-        suffix_name = '_r_e_cost'
-        u = SX.sym('u', 0, 0)
-        cost_expr = model.cost_y_expr_e
-
-    else:
-        suffix_name = '_r_cost'
-        u = model.u
-        cost_expr = model.cost_y_expr
-
-    x = model.x
-    p = model.p
-
-    # set up functions to be exported
-    fun_name = cost_name + suffix_name
-
-    cost_jac_expr = transpose(jacobian(cost_expr, vertcat(u, x)))
-
-    nls_cost_fun = Function( fun_name, [x, u, p], \
-            [ cost_expr, cost_jac_expr ])
-
-    # generate C code
-    if not os.path.exists('c_generated_code'):
-        os.mkdir('c_generated_code')
-
-    os.chdir('c_generated_code')
-    gen_dir = cost_name + suffix_name
-    if not os.path.exists(gen_dir):
-        os.mkdir(gen_dir)
-    gen_dir_location = './' + gen_dir
-    os.chdir(gen_dir_location)
-    file_name = cost_name + suffix_name
-
-    nls_cost_fun.generate( file_name, casadi_opts )
-
-    os.chdir('../..')
-    return
+for parameters in combinations:
+    os_cmd = ("python test_ocp_setting.py" +
+        " --COST_MODULE {}".format(parameters[0]) +
+        " --COST_MODULE_N {}".format(parameters[1]) +
+        " --INTEGRATOR_TYPE {}".format(parameters[2]) +
+        " --QP_SOLVER {}".format(parameters[3]) +
+        " --SOLVER_TYPE {}".format(parameters[4]))
+    status = os.system(os_cmd)
+    if status != 0:
+        raise Exception("acados status  = {} on test {}. Exiting\n".format(status, parameters))
 

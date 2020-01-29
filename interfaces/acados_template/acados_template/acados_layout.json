@@ -2,37 +2,7 @@
     "acados_include_path": [
         "str"
     ],
-    "con_h": {
-        "name"   : [
-            "str"
-            ]
-    },
-    "con_h_e": {
-        "name": [
-            "str"
-            ]
-    },
-    "con_phi": {
-        "name"   : [
-            "str"
-            ]
-    },
-    "con_phi_e": {
-        "name" : [
-            "str"
-        ]
-     },
-     "cost_r": {
-         "name" : [
-            "str"
-        ]
-    },
-    "cost_r_e": {
-        "name" : [
-            "str"
-        ]
-     },
-     "model": {
+    "model": {
          "name" : [
             "str"
         ]
