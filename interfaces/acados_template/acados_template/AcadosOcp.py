@@ -755,7 +755,6 @@ class AcadosOcpConstraints:
         self.__idxsphi_e  = []                        # indexes of soft nonlinear constraints at t=T within the indices of nonlinear constraints at t=T
         # self.__Jsphi_e  = []                        # matrix coefficient for soft bounds on convex-over-nonlinear constraints at t=T
         # self.__x0      = []                           # initial state
-        self.__p       = []                           # parameters
 
     @property
     def constr_type(self):
@@ -1075,10 +1074,6 @@ class AcadosOcpConstraints:
         """:math:`\\bar{x}_0` - initial state"""
         return self.__x0
 
-    @property
-    def p(self):
-        """:math:`p` - parameters"""
-        return self.__p
 
     def J_to_idx(self, J):
         nrows = J.shape[0]
@@ -1539,13 +1534,6 @@ class AcadosOcpConstraints:
         else:
             raise Exception('Invalid x0 value. Exiting.')
 
-    @p.setter
-    def p(self, p):
-        if type(p) == np.ndarray:
-            self.__p = p
-        else:
-            raise Exception('Invalid p value. Exiting.')
-
     def set(self, attr, value):
         setattr(self, attr, value)
 
@@ -1876,6 +1864,19 @@ class AcadosOcp:
         self.acados_include_path = f'{acados_path}/include'
         self.acados_lib_path = f'{acados_path}/lib'
 
+        self.__parameter_values = []
+
+    @property
+    def parameter_values(self):
+        """:math:`p` - initial values for parameter"""
+        return self.__parameter_values
+
+    @parameter_values.setter
+    def parameter_values(self, parameter_values):
+        if type(parameter_values) == np.ndarray:
+            self.__parameter_values = parameter_values
+        else:
+            raise Exception('Invalid parameter_values value. Exiting.')
 
     def set(self, attr, value):
         # tokenize string
