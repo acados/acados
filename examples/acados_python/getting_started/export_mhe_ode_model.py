@@ -85,7 +85,7 @@ def export_mhe_ode_model():
     f_expl = f_expl + w
     f_impl = xdot - f_expl
 
-    model = AcadosOcpModel()
+    model = AcadosModel()
 
     model.f_impl_expr = f_impl
     model.f_expl_expr = f_expl

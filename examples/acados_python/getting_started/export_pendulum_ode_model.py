@@ -31,7 +31,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from acados_template import AcadosOcpModel
+from acados_template import AcadosModel
 from casadi import SX, vertcat, sin, cos
 
 def export_pendulum_ode_model():
@@ -80,7 +80,7 @@ def export_pendulum_ode_model():
 
     f_impl = xdot - f_expl
 
-    model = AcadosOcpModel()
+    model = AcadosModel()
 
     model.f_impl_expr = f_impl
     model.f_expl_expr = f_expl

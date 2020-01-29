@@ -31,8 +31,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from .AcadosOcpModel import *
-from .AcadosSimModel import *
+from .AcadosModel import *
 from .generate_c_code_explicit_ode import *
 from .generate_c_code_implicit_ode import *
 from .generate_c_code_constraint import *

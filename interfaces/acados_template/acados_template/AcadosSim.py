@@ -37,7 +37,7 @@ import casadi as ca
 import json
 import os
 import sys
-from .AcadosSimModel import *
+from .AcadosModel import AcadosModel
 
 ACADOS_PATH=os.getenv("ACADOS_SOURCE_DIR","/usr/lib")
 
@@ -187,7 +187,7 @@ class AcadosSim:
         acados_path -- path of your acados installation
         """
         self.dims = AcadosSimDims()
-        self.model = AcadosSimModel()
+        self.model = AcadosModel()
         self.solver_options = AcadosSimOpts()
 
         self.acados_include_path = f'{acados_path}/include'

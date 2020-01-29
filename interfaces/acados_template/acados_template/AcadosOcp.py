@@ -36,7 +36,7 @@ import numpy as np
 import json
 import os
 import sys
-from .AcadosOcpModel import *
+from .AcadosModel import AcadosModel
 
 ACADOS_PATH=os.getenv("ACADOS_SOURCE_DIR","/usr/lib")
 
@@ -1856,7 +1856,7 @@ class AcadosOcp:
         acados_path -- path of your acados installation
         """
         self.dims = AcadosOcpDims()
-        self.model = AcadosOcpModel()
+        self.model = AcadosModel()
         self.cost = AcadosOcpCost()
         self.constraints = AcadosOcpConstraints()
         self.solver_options = AcadosOcpOptions()
