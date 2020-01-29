@@ -31,11 +31,20 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from .AcadosSimModel import AcadosSimModel
 
-
-class AcadosOcpModel(AcadosSimModel):
+class AcadosOcpModel():
     def __init__(self):
+        ## common for OCP and Integrator
+        self.name = None        #: model name
+        self.x = None           #: CasADi variable describing the state of the system
+        self.xdot = None        #: CasADi variable describing the derivative of the state wrt time
+        self.u = None           #: CasADi variable describing the input of the system
+        self.z = []             #: CasADi variable describing the algebraic variables of the DAE
+        self.p = []             #: CasADi variable describing parameters of the DAE
+        # dynamics
+        self.f_impl_expr = None #: CasADi expression for the implicit dynamics :math:`F(\dot{x}, x, u, z) = 0`
+        self.f_expl_expr = None #: CasADi expression for the explicit dynamics :math:`\dot{x} = f(x, u)`
+        ## for OCP
         # constraints
         self.con_h_expr = None  #: CasADi expression for the constraint h
         self.con_phi_expr = None  #: CasADi expression for the constraint phi

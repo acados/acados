@@ -113,7 +113,6 @@ def ocp_formulation_json_dump(acados_ocp, json_file='acados_ocp_nlp.json'):
 
     for acados_struct, v in ocp_layout.items():
         # skip non dict attributes
-        print(v)
         if not isinstance(v, dict): continue
         #  setattr(ocp_nlp, acados_struct, dict(getattr(acados_ocp, acados_struct).__dict__))
         # Copy ocp object attributes dictionaries
