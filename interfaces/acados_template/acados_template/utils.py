@@ -40,13 +40,17 @@ from casadi import SX, MX, DM
 ALLOWED_CASADI_VERSIONS = ('3.5.1', '3.4.5', '3.4.0')
 TERA_VERSION = "0.0.30"
 
-ACADOS_PATH = os.environ.get('ACADOS_SOURCE_DIR')
-if not ACADOS_PATH:
-    acados_template_path = os.path.dirname(os.path.abspath(__file__))
-    acados_path = os.path.join(acados_template_path, '../../../')
-    ACADOS_PATH = os.path.realpath(acados_path)
+def get_acados_path():
+    ACADOS_PATH = os.environ.get('ACADOS_SOURCE_DIR')
+    if not ACADOS_PATH:
+        acados_template_path = os.path.dirname(os.path.abspath(__file__))
+        acados_path = os.path.join(acados_template_path, '../../../')
+        ACADOS_PATH = os.path.realpath(acados_path)
+    return ACADOS_PATH
 
-TERA_EXEC_PATH = os.path.join(ACADOS_PATH, 'bin/t_renderer')
+def get_tera_exec_path():
+    ACADOS_PATH = get_acados_path()
+    return os.path.join(ACADOS_PATH, 'bin/t_renderer')
 
 platform2tera = {
     "linux": "linux",
@@ -91,7 +95,8 @@ def casadi_length(x):
 
 
 def get_tera():
-    tera_path = TERA_EXEC_PATH
+    tera_path = get_tera_exec_path()
+    acados_path = get_acados_path()
 
     if os.path.exists(tera_path) and os.access(tera_path, os.X_OK):
         return tera_path
@@ -102,7 +107,7 @@ def get_tera():
 
     manual_install = 'For manual installation follow these instructions:\n'
     manual_install += '1 Download binaries from {}\n'.format(url)
-    manual_install += '2 Copy them in {}/bin\n'.format(ACADOS_PATH)
+    manual_install += '2 Copy them in {}/bin\n'.format(acados_path)
     manual_install += '3 Strip the version and platform from the binaries: '
     manual_install += 'as t_renderer-v0.0.30-X -> t_renderer)\n'
     manual_install += '4 Enable execution privilege on the file "t_renderer" with:\n'

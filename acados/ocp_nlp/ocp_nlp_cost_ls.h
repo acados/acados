@@ -75,7 +75,7 @@ typedef struct
 
 ///  Calculate the size of the ocp_nlp_cost_ls_dims struct
 ///
-///  \param[in] config_ structure containing configuration of ocp_nlp_cost 
+///  \param[in] config structure containing configuration of ocp_nlp_cost 
 ///  module
 ///  \param[out] []
 ///  \return \c size of ocp_nlp_dims struct 
@@ -84,7 +84,7 @@ int ocp_nlp_cost_ls_dims_calculate_size(void *config);
 
 ///  Assign memory pointed to by raw_memory to ocp_nlp-cost_ls dims struct 
 ///
-///  \param[in] config_ structure containing configuration of ocp_nlp_cost 
+///  \param[in] config structure containing configuration of ocp_nlp_cost 
 ///  module
 ///  \param[in] raw_memory pointer to memory location  
 ///  \param[out] []
@@ -95,13 +95,14 @@ void *ocp_nlp_cost_ls_dims_assign(void *config, void *raw_memory);
 ///  Initialize the dimensions struct of the 
 ///  ocp_nlp-cost_ls component    
 ///
-///  \param[in] config_ structure containing configuration ocp_nlp-cost_ls component 
-///  \param[in] nx_ number of states 
+///  \param[in] config structure containing configuration ocp_nlp-cost_ls component 
+///  \param[in] nx number of states
 ///  \param[in] nu number of inputs
-///  \param[in] ny number of residuals 
+///  \param[in] ny number of residuals
 ///  \param[in] ns number of slacks
+///  \param[in] nz number of algebraic variables
 ///  \param[out] dims
-///  \return size 
+///  \return size
 void ocp_nlp_cost_ls_dims_initialize(void *config, void *dims, int nx,
         int nu, int ny, int ns, int nz);
 
@@ -240,9 +241,11 @@ int ocp_nlp_cost_ls_workspace_calculate_size(void *config, void *dims, void *opt
 //
 void ocp_nlp_cost_ls_config_initialize_default(void *config);
 //
-void ocp_nlp_cost_ls_initialize(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
+void ocp_nlp_cost_ls_initialize(void *config_, void *dims, void *model_, void *opts_,
+                                void *mem_, void *work_);
 //
-void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_);
+void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims, void *model_,
+                                        void *opts_, void *memory_, void *work_);
 //
 void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_);
 
