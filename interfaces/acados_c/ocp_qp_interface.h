@@ -116,7 +116,7 @@ ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_create(ocp_qp_solver_plan
 
 /// Destructor for config struct, frees memory.
 ///
-/// \param config_ The config object to destroy.
+/// \param config The config object to destroy.
 void ocp_qp_xcond_solver_config_free(ocp_qp_xcond_solver_config *config);
 
 
@@ -127,7 +127,7 @@ ocp_qp_dims *ocp_qp_dims_create(int N);
 
 /// Destructor of The dimension struct.
 ///
-/// \param dims_ The dimension struct.
+/// \param dims The dimension struct.
 void ocp_qp_dims_free(void *dims);
 
 
@@ -138,7 +138,6 @@ void ocp_qp_xcond_solver_dims_free(ocp_qp_xcond_solver_dims *dims_);
 
 /// Constructs an input object for the qp.
 ///
-/// \param config The configuration struct.
 /// \param dims The dimension struct.
 ocp_qp_in *ocp_qp_in_create(ocp_qp_dims *dims);
 
@@ -150,7 +149,6 @@ void ocp_qp_in_free(void *in_);
 
 /// Constructs an outputs object for the qp.
 ///
-/// \param config The configuration struct.
 /// \param dims The dimension struct.
 ocp_qp_out *ocp_qp_out_create(ocp_qp_dims *dims);
 
@@ -164,11 +162,12 @@ void ocp_qp_out_free(void *out_);
 ///
 /// \param config The configuration struct.
 /// \param dims The dimension struct.
-void *ocp_qp_xcond_solver_opts_create(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims);
+void *ocp_qp_xcond_solver_opts_create(ocp_qp_xcond_solver_config *config,
+                                      ocp_qp_xcond_solver_dims *dims);
 
 /// Destructor of the options struct.
 ///
-/// \param opts_ The options struct to destroy.
+/// \param opts The options struct to destroy.
 void ocp_qp_xcond_solver_opts_free(ocp_qp_xcond_solver_opts *opts);
 
 
@@ -181,9 +180,9 @@ int ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solve
 /// \param config The configuration struct.
 /// \param dims The dimension struct.
 /// \param opts_ The options struct.
-/// \param raw_memory The TBD.
-ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims, void *opts_,
-                             void *raw_memory);
+/// \param raw_memory Pointer to raw memory to assign to qp solver.
+ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims,
+                             void *opts_, void *raw_memory);
 
 /// Creates a qp solver. Reserves memory.
 ///
@@ -202,7 +201,7 @@ int ocp_qp_solve(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out);
 
 /// Calculates the infinity norm of the residuals.
 ///
-/// \param solver The solver.
+/// \param dims The dimension struct.
 /// \param qp_in The inputs struct.
 /// \param qp_out The output struct.
 /// \param res Output array for the residuals.

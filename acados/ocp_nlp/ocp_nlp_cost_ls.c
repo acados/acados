@@ -90,16 +90,16 @@ void ocp_nlp_cost_ls_dims_initialize(void *config_, void *dims_, int nx,
         int nu, int ny, int ns, int nz)
 {
 
-    ///  Initialize the dimensions struct of the 
-    ///  ocp_nlp_cost_ls module    
+    ///  Initialize the dimensions struct of the
+    ///  ocp_nlp_cost_ls module
     ///
     ///  \param[in] config_ structure containing configuration of ocp_nlp_cost module 
-    ///  \param[in] nx_ number of states 
+    ///  \param[in] nx number of states 
     ///  \param[in] nu number of inputs
     ///  \param[in] ny number of residuals 
     ///  \param[in] ns number of slacks
     ///  \param[out] dims
-    ///  \return [] 
+    ///  \return []
     
     ocp_nlp_cost_ls_dims *dims = dims_;
 
@@ -116,16 +116,13 @@ void ocp_nlp_cost_ls_dims_initialize(void *config_, void *dims_, int nx,
 
 static void ocp_nlp_cost_ls_set_nx(void *config_, void *dims_, int *nx)
 {
-    ///  Initialize the dimensions struct of the 
-    ///  ocp_nlp_cost_ls module    
+    ///  Initialize the dimensions struct of the
+    ///  ocp_nlp_cost_ls module
     ///
     ///  \param[in] config_ structure containing configuration of ocp_nlp_cost module 
-    ///  \param[in] nx_ number of states 
-    ///  \param[in] nu number of inputs
-    ///  \param[in] ny number of residuals 
-    ///  \param[in] ns number of slacks
-    ///  \param[out] dims
-    ///  \return [] 
+    ///  \param[in] nx number of states
+    ///  \param[out] dims_
+    ///  \return []
 
     ocp_nlp_cost_ls_dims *dims = (ocp_nlp_cost_ls_dims *) dims_;
     dims->nx = *nx;
