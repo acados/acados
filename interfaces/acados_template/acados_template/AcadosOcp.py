@@ -415,9 +415,11 @@ class AcadosOcpDims:
 
 class AcadosOcpCost:
     """
-    class containing the description of the cost
-    (linear and nonlinear least-squares cost for the time being)
+    class containing the numerical data of the cost:
+    in case of LINEAR_LS:
+    stage cost is
     :math:`l(x,u,z) = || V_x x + V_u u + V_z z - y_{\\text{ref}}||^2_W`,
+    terminal cost is
     :math:`m(x) = || V^e_x x - y_{\\text{ref}^e}||^2_{W^e}`
     """
     def __init__(self):
@@ -428,8 +430,8 @@ class AcadosOcpCost:
         self.__Vu          = []           # u matrix coefficient
         self.__Vz          = []           # z matrix coefficient
         self.__yref        = []           # reference
-        self.__Zl          = []           # Hessian wrt lower slack
-        self.__Zu          = []           # Hessian wrt upper slack
+        self.__Zl          = []           # diagonal of Hessian wrt lower slack
+        self.__Zu          = []           # diagonal of Hessian wrt upper slack
         self.__zl          = []           # gradient wrt lower slack
         self.__zu          = []           # gradient wrt upper slack
         # Mayer term
@@ -437,8 +439,8 @@ class AcadosOcpCost:
         self.__W_e         = []           # weight matrix for Mayer term
         self.__Vx_e        = []           # x matrix coefficient for Mayer term
         self.__yref_e      = []           # reference for Mayer term
-        self.__Zl_e        = []           # Hessian wrt lower slack for Mayer term
-        self.__Zu_e        = []           # Hessian wrt upper slack for Mayer term
+        self.__Zl_e        = []           # diagonal of Hessian wrt lower slack for Mayer term
+        self.__Zu_e        = []           # diagonal of Hessian wrt upper slack for Mayer term
         self.__zl_e        = []           # gradient wrt lower slack for Mayer term
         self.__zu_e        = []           # gradient wrt upper slack for Mayer term
 
@@ -475,12 +477,12 @@ class AcadosOcpCost:
 
     @property
     def Zl(self):
-        """:math:`Z_l` - Hessian wrt lower slack"""
+        """:math:`Z_l` - diagonal of Hessian wrt lower slack"""
         return self.__Zl
 
     @property
     def Zu(self):
-        """:math:`Z_u` - Hessian wrt upper slack"""
+        """:math:`Z_u` - diagonal of Hessian wrt upper slack"""
         return self.__Zu
 
     @property
@@ -589,12 +591,12 @@ class AcadosOcpCost:
 
     @property
     def Zl_e(self):
-        """:math:`y_{\text{ref}}^e` - reference for Mayer term"""
+        """:math:`Z_l^e` - diagonal of Hessian wrt upper slack for Mayer term"""
         return self.__Zl_e
 
     @property
     def Zu_e(self):
-        """:math:`Z_l^e` - Hessian wrt lower slack for Mayer term"""
+        """:math:`Z_l^e` - diagonal of Hessian wrt upper slack for Mayer term"""
         return self.__Zu_e
 
     @property

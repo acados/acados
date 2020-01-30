@@ -187,6 +187,7 @@ def ocp_generate_external_functions(acados_ocp, model):
     elif acados_ocp.cost.cost_type_e == 'EXTERNAL':
         generate_c_code_external_cost(model, True)
 
+
 def ocp_render_templates(acados_ocp, json_file):
 
     name = acados_ocp.model.name
@@ -303,6 +304,9 @@ def ocp_render_templates(acados_ocp, json_file):
 
 
 class AcadosOcpSolver:
+    """
+    class to interact with the acados ocp solver C object
+    """
     def __init__(self, acados_ocp, json_file='acados_ocp_nlp.json'):
 
         model = acados_ocp.model
@@ -356,11 +360,19 @@ class AcadosOcpSolver:
 
 
     def solve(self):
+        """
+        solve the ocp with current input
+        """
         status = self.shared_lib.acados_solve()
         return status
 
 
     def get(self, stage_, field_):
+        """
+        get the last solution of the solver:
+            :param stage: integer corresponding to shooting node
+            :param field_: string in ['x', 'u', 'z']
+        """
 
         out_fields = ['x', 'u', 'z']
         field = field_
@@ -390,6 +402,11 @@ class AcadosOcpSolver:
         return out
 
     def get_stats(self, field_):
+        """
+        get the information of the last solver call:
+            :param field_: string in ['time_tot', 'time_lin', 'time_qp', 'time_reg', 'sqp_iter']
+        """
+
         fields = ['time_tot',  # total cpu time previous call
                   'time_lin',  # cpu time for linearization
                   'time_qp',   # cpu time qp solution
@@ -479,6 +496,12 @@ class AcadosOcpSolver:
 
 
     def cost_set(self, stage_, field_, value_):
+        """
+        set numerical data in the cost module of the solver:
+            :param stage_: integer corresponding to shooting node
+            :param field_: string, e.g. 'yref', 'W'
+            :param value_: of appropriate size
+        """
         # cast value_ to avoid conversion issues
         value_ = value_.astype(float)
 
@@ -517,6 +540,13 @@ class AcadosOcpSolver:
 
 
     def constraints_set(self, stage_, field_, value_):
+        """
+        set numerical data in the constraint module of the solver:
+        Parameters:
+            :param stage_: integer corresponding to shooting node
+            :param field_: string, e.g. 'lbx'
+            :param value_: of appropriate size
+        """
         # cast value_ to avoid conversion issues
         value_ = value_.astype(float)
 
