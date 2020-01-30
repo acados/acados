@@ -34,9 +34,7 @@
 
 import numpy as np
 import casadi as ca
-import json
 import os
-import sys
 from .AcadosModel import AcadosModel
 
 ACADOS_PATH=os.getenv("ACADOS_SOURCE_DIR","/usr/lib")

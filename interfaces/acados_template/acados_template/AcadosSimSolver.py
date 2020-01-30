@@ -179,7 +179,6 @@ class AcadosSimSolver:
         if isinstance(acados_sim_, AcadosSim):
             sim_formulation_json_dump(acados_sim, json_file)
 
-        print("\njsonfile", json_file)
         # render templates
         sim_render_templates(json_file, model_name)
         # generate casadi functions
@@ -190,7 +189,7 @@ class AcadosSimSolver:
         os.system('make sim_shared_lib')
         os.chdir('..')
 
-        # get
+        # Ctypes
         shared_lib = 'c_generated_code/libacados_sim_solver_' + model_name + '.so'
 
         self.sim_struct = acados_sim
