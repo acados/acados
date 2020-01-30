@@ -116,6 +116,10 @@ ocp.set('init_x', x_traj_init);
 ocp.set('init_u', u_traj_init);
 ocp.set('init_pi', zeros(nx, N))
 
+% change values for specific shooting node using:
+%   ocp.set('field', value, optional: stage_index)
+ocp.set('constr_lbx', x0, 0)
+
 % solve
 ocp.solve();
 % get solution
