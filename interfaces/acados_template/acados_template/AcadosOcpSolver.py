@@ -46,7 +46,7 @@ from .generate_c_code_nls_cost import generate_c_code_nls_cost
 from .generate_c_code_external_cost import generate_c_code_external_cost
 from .AcadosOcp import AcadosOcp
 from .AcadosModel import acados_model_strip_casadi_symbolics
-from .utils import ACADOS_PATH, is_column, render_template, dict2json, json2dict, np_array_to_list
+from .utils import is_column, render_template, dict2json, json2dict, np_array_to_list
 
 
 def make_ocp_dims_consistent(acados_ocp):

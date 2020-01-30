@@ -35,8 +35,7 @@
 import numpy as np
 import os
 from .AcadosModel import AcadosModel
-
-ACADOS_PATH=os.getenv("ACADOS_SOURCE_DIR","/usr/lib")
+from .utils import get_acados_path
 
 class AcadosOcpDims:
     """
@@ -1850,11 +1849,14 @@ class AcadosOcp:
     """
     class containing the full description of the optimal control problem
     """
-    def __init__(self, acados_path=ACADOS_PATH):
+    def __init__(self, acados_path=''):
         """
         Keyword arguments:
         acados_path -- path of your acados installation
         """
+        if acados_path == '':
+            acados_path = get_acados_path()
+
         self.dims = AcadosOcpDims()
         self.model = AcadosModel()
         self.cost = AcadosOcpCost()
