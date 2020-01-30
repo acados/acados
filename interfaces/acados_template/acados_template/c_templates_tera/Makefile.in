@@ -46,25 +46,25 @@
 {% if constraints.constr_type %}
 	{%- set constr_type = constraints.constr_type %}
 {% else %}
-	{%- set constr_type = "BLA" %}
+	{%- set constr_type = "NONE" %}
 {% endif %}
 
 {% if constraints.constr_type_e %}
 	{%- set constr_type_e = constraints.constr_type_e %}
 {% else %}
-	{%- set constr_type_e = "BLA" %}
+	{%- set constr_type_e = "NONE" %}
 {% endif %}
 
 {% if cost.cost_type %}
 	{%- set cost_type = cost.cost_type %}
 {% else %}
-	{%- set cost_type = "BLA" %}
+	{%- set cost_type = "NONE" %}
 {% endif %}
 
 {% if cost.cost_type_e %}
 	{%- set cost_type_e = cost.cost_type_e %}
 {% else %}
-	{%- set cost_type_e = "BLA" %}
+	{%- set cost_type_e = "NONE" %}
 {% endif %}
 
 {% if dims.nh %}
@@ -125,10 +125,16 @@ OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_constr_h_fun_jac_uxt_zt.
 OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_constr_h_e_fun_jac_uxt_zt.o
 {% endif %}
 {% if cost_type == "NONLINEAR_LS" %}
-OCP_OBJ+= {{ model.name }}_r_cost/{{ model.name }}_r_cost.c 
+OCP_OBJ+= {{ model.name }}_r_cost/{{ model.name }}_r_cost.c
+{% elif cost_type == "EXTERNAL" %}
+OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_ext_cost_fun.c
+OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_ext_cost_fun_jac_hess.c
 {% endif %}
 {% if cost_type_e == "NONLINEAR_LS" %}
-OCP_OBJ+= {{ model.name }}_r_e_cost/{{ model.name }}_r_e_cost.c 
+OCP_OBJ+= {{ model.name }}_r_e_cost/{{ model.name }}_r_e_cost.c
+{% elif cost_type_e == "EXTERNAL" %}
+OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_ext_cost_e_fun.c
+OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_ext_cost_e_fun_jac_hess.c
 {% endif %}
 OCP_OBJ+= acados_solver_{{ model.name }}.o
 

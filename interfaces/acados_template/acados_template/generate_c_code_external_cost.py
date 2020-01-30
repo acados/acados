@@ -32,56 +32,70 @@
 #
 
 import os
-from casadi import *
+from casadi import SX, MX, Function, transpose, vertcat, horzcat, jacobian, CasadiMeta
 from .utils import ALLOWED_CASADI_VERSIONS
 
-def generate_c_code_nls_cost( model, cost_name, is_terminal ):
+
+def generate_c_code_external_cost(model, is_terminal):
 
     casadi_version = CasadiMeta.version()
-    casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
+    casadi_opts = dict(mex=False, casadi_int="int", casadi_real="double")
 
     if casadi_version not in (ALLOWED_CASADI_VERSIONS):
-        msg =  'Please download and install CasADi {} '.format(" or ".join(ALLOWED_CASADI_VERSIONS))
-        msg += 'to ensure compatibility with acados.\n'
-        msg += 'Version {} currently in use.'.format(casadi_version)
+        msg = "Please download and install CasADi {} ".format(
+            " or ".join(ALLOWED_CASADI_VERSIONS)
+        )
+        msg += "to ensure compatibility with acados.\n"
+        msg += "Version {} currently in use.".format(casadi_version)
         raise Exception(msg)
 
-
     if is_terminal:
-        suffix_name = '_r_e_cost'
-        u = SX.sym('u', 0, 0)
-        cost_expr = model.cost_y_expr_e
+        suffix_name = "_ext_cost_e_fun"
+        suffix_name_hess = "_ext_cost_e_fun_jac_hess"
+        u = SX.sym("u", 0, 0)
+        ext_cost = model.cost_expr_ext_cost_e
 
     else:
-        suffix_name = '_r_cost'
+        suffix_name = "_ext_cost_fun"
+        suffix_name_hess = "_ext_cost_fun_jac_hess"
         u = model.u
-        cost_expr = model.cost_y_expr
+        ext_cost = model.cost_expr_ext_cost
 
     x = model.x
     p = model.p
 
     # set up functions to be exported
-    fun_name = cost_name + suffix_name
+    fun_name = model.name + suffix_name
+    fun_name_hess = model.name + suffix_name_hess
 
-    cost_jac_expr = transpose(jacobian(cost_expr, vertcat(u, x)))
+    # generate jacobians
+    jac_x = jacobian(ext_cost, x)
+    jac_u = jacobian(ext_cost, u)
+    # generate hessians
+    hess_uu = jacobian(jac_u.T, u)
+    hess_xu = jacobian(jac_u.T, x)
+    hess_ux = jacobian(jac_x.T, u)
+    hess_xx = jacobian(jac_x.T, x)
+    full_hess = vertcat(horzcat(hess_uu, hess_xu), horzcat(hess_ux, hess_xx))
 
-    nls_cost_fun = Function( fun_name, [x, u, p], \
-            [ cost_expr, cost_jac_expr ])
+    ext_cost_fun = Function(fun_name, [x, u, p], [ext_cost])
+    ext_cost_fun_jac_hess = Function(
+        fun_name_hess, [x, u, p], [ext_cost, vertcat(jac_u.T, jac_x.T), full_hess]
+    )
 
     # generate C code
-    if not os.path.exists('c_generated_code'):
-        os.mkdir('c_generated_code')
+    if not os.path.exists("c_generated_code"):
+        os.mkdir("c_generated_code")
 
-    os.chdir('c_generated_code')
-    gen_dir = cost_name + suffix_name
+    os.chdir("c_generated_code")
+    gen_dir = model.name + '_cost'
     if not os.path.exists(gen_dir):
         os.mkdir(gen_dir)
-    gen_dir_location = './' + gen_dir
+    gen_dir_location = "./" + gen_dir
     os.chdir(gen_dir_location)
-    file_name = cost_name + suffix_name
 
-    nls_cost_fun.generate( file_name, casadi_opts )
+    ext_cost_fun.generate(fun_name, casadi_opts)
+    ext_cost_fun_jac_hess.generate(fun_name_hess, casadi_opts)
 
-    os.chdir('../..')
+    os.chdir("../..")
     return
-

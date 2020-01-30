@@ -147,7 +147,7 @@ ocp_nlp_cost_t cost_enum(std::string const& inString)
 {
     if (inString == "LINEAR_LS") return LINEAR_LS;
     if (inString == "NONLINEAR_LS") return NONLINEAR_LS;
-    if (inString == "EXTERNAL") return EXTERNALLY_PROVIDED;
+    if (inString == "EXTERNAL") return EXTERNAL;
 
     return (ocp_nlp_cost_t) -1;
 }
@@ -943,10 +943,10 @@ void setup_and_solve_nlp(int NN,
                 plan->nlp_cost[i] = NONLINEAR_LS;
             }
             break;
-        case EXTERNALLY_PROVIDED:
+        case EXTERNAL:
             for (int i = 0; i < NN; i++)
             {
-                plan->nlp_cost[i] = EXTERNALLY_PROVIDED;
+                plan->nlp_cost[i] = EXTERNAL;
             }
             plan->nlp_cost[NN] = LINEAR_LS;
             break;
@@ -954,7 +954,7 @@ void setup_and_solve_nlp(int NN,
             for (int i = 0; i <= NN; i++)
             {
                 if (i%3 == 0)
-                    plan->nlp_cost[i] = EXTERNALLY_PROVIDED;
+                    plan->nlp_cost[i] = EXTERNAL;
                 else if (i%3 == 1)
                     plan->nlp_cost[i] = LINEAR_LS;
                 else if (i%3 == 2)
@@ -1067,7 +1067,7 @@ void setup_and_solve_nlp(int NN,
 
     for (int i = 0; i <= NN; i++)
     {
-        if (plan->nlp_cost[i] != EXTERNALLY_PROVIDED)
+        if (plan->nlp_cost[i] != EXTERNAL)
         {
             ocp_nlp_dims_set_cost(config, dims, i, "ny", &ny[i]);
         }
@@ -1141,7 +1141,7 @@ void setup_and_solve_nlp(int NN,
                 external_function_casadi_create(&ls_cost_jac_casadi[i]);
                 break;
 
- 			case EXTERNALLY_PROVIDED:
+			case EXTERNAL:
 				select_external_stage_cost_casadi(i, NN, NMF, &external_cost[i]);
 				external_function_casadi_create(&external_cost[i]);
 				break;
@@ -1245,7 +1245,7 @@ void setup_and_solve_nlp(int NN,
                 blasfeo_pack_dvec(nu[i], uref, &stage_cost_nls->y_ref, nx[i]);
                 break;
 
-            case EXTERNALLY_PROVIDED:
+            case EXTERNAL:
 
 				ocp_nlp_cost_model_set(config, dims, nlp_in, i, "ext_cost_fun_jac_hes", &external_cost[i]);
 
@@ -1500,7 +1500,7 @@ void setup_and_solve_nlp(int NN,
 			case NONLINEAR_LS:
 				external_function_casadi_free(&ls_cost_jac_casadi[i]);
 				break;
-			case EXTERNALLY_PROVIDED:
+			case EXTERNAL:
 				external_function_casadi_free(&external_cost[i]);
 			default:
 				break;

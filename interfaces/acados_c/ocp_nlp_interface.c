@@ -236,7 +236,7 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
             case NONLINEAR_LS:
                 ocp_nlp_cost_nls_config_initialize_default(config->cost[i]);
                 break;
-            case EXTERNALLY_PROVIDED:
+            case EXTERNAL:
                 ocp_nlp_cost_external_config_initialize_default(config->cost[i]);
                 break;
             case INVALID_COST:

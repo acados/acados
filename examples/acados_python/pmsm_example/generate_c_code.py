@@ -1,11 +1,9 @@
 from acados_template import *
-import acados_template as at
 import numpy as nmp
 from ctypes import *
 import matplotlib
 import matplotlib.pyplot as plt
 import scipy.linalg
-import json
 
 CODE_GEN = 1
 COMPILE = 1
@@ -22,7 +20,7 @@ i_d_ref =  -125         # Setpoints only valid for Formulation 0
 i_q_ref =    10       
 w_val = 2000.0          # do not change in this script, some of
                         # the values below are calculate with a fix w_val = 2000 1/S
-tau_wal = 10.0 
+tau_wal = 10.0
 
 
 # constants
@@ -69,7 +67,7 @@ if FORMULATION == 1:        # (works)
 
 # Model of the PMSM
 #====================================================================
-def export_ode_model():
+def export_pmsm_model():
 
     model_name = 'pmsm'
 
@@ -102,7 +100,31 @@ def export_ode_model():
     fimpl = vertcat(-i_d_dot-(R_m/L_d)*i_d + (L_q/L_d)*omega*i_q + u_d/L_d, \
                     -i_q_dot-(L_d/L_q)*omega*i_d - (R_m/L_q)*i_q + u_q/L_q - (omega*K_m)/L_q)
 
-    model = acados_dae()
+    model = AcadosModel()
+
+    if FORMULATION == 1:
+        # export_torqueline_pd():
+        # torque and voltage constraints
+        r = SX.sym('r', 3, 1)
+        model.con_r_in_phi = r
+        model.con_phi_expr = vertcat(r[0], r[1]**2 + r[2]**2)
+        model.con_r_expr =  vertcat(tau_des - 1.5*N_P*((L_d-L_q)*i_d*i_q + K_m*i_q), u_d, u_q)
+
+        # export_torquelineEnd_pd():
+        alpha = R_m**2 + omega**2*L_d**2
+        beta  = R_m**2 + omega**2*L_q**2
+        gamma = 2*R_m*omega*(L_d-L_q)
+        delta = 2*omega**2*L_d*K_m
+        epsilon = 2*R_m*omega*K_m
+        rho = omega**2*K_m**2
+
+        # torque and voltage constraints
+        r_e = SX.sym('r_e', 3, 1)
+        model.con_phi_expr_e = vertcat(r_e[0], alpha*r_e[1]**2 + beta*r_e[2]**2 + \
+            gamma*r_e[1]*r_e[2] + delta*r_e[1] + epsilon*r_e[2] + rho)
+        model.con_r_expr_e = vertcat(tau_des - \
+            1.5*N_P*((L_d-L_q)*i_d*i_q + K_m*i_q), i_d, i_q)
+        model.con_r_in_phi_e = r_e
 
     model.f_impl_expr = fimpl
     model.f_expl_expr = fexpl
@@ -190,103 +212,13 @@ def get_general_terminal_constraints_DC():
 
     return res
 
-# Torque Constraints --> pd
-#====================================================================
-def export_torqueline_pd():
-
-    con_name = 'torqueline'
-
-    # set up states 
-    i_d = SX.sym('i_d')
-    i_q = SX.sym('i_q')
-    x = vertcat(i_d, i_q)
-
-    # set up controls
-    u_d = SX.sym('u_d')
-    u_q = SX.sym('u_q')
-    u = vertcat(u_d, u_q)
-
-    # set up parameters
-    omega  = SX.sym('omega')        # speed
-    dist_d = SX.sym('dist_d')       # d disturbance
-    dist_q = SX.sym('dist_q')       # q disturbance
-    tau_des = SX.sym('tau_des')     # Desired tau
-    p = vertcat(omega, dist_d, dist_q, tau_des)
-
-    # torque and voltage constraints
-    constraint = acados_constraint()
-    r = SX.sym('r', 3, 1)
-    constraint.con_phi_expr = vertcat(r[0], r[1]**2 + r[2]**2)
-    constraint.con_r_expr =  vertcat(tau_des - 1.5*N_P*((L_d-L_q)*i_d*i_q + K_m*i_q), u_d, u_q)
-    constraint.x = x
-    constraint.u = u 
-    constraint.r = r
-    constraint.p = p
-    constraint.nr = 3
-    constraint.nphi = 2
-    constraint.name = con_name
-
-    return constraint 
-
-# torque End-Constraints --> pd
-#====================================================================
-def export_torquelineEnd_pd():
-
-    con_name = 'torquelineEnd'
-
-    # set up states 
-    i_d = SX.sym('i_d')
-    i_q = SX.sym('i_q')
-    x = vertcat(i_d, i_q)
-
-    # set up controls
-    u_d = SX.sym('u_d')
-    u_q = SX.sym('u_q') 
-    u = vertcat(u_d, u_q)
-
-    # set up parameters
-    omega  = SX.sym('omega')        # speed
-    dist_d = SX.sym('dist_d')       # d disturbance
-    dist_q = SX.sym('dist_q')       # q disturbance
-    tau_des = SX.sym('tau_des')     # Desired tau
-    p = vertcat(omega, dist_d, dist_q, tau_des)
-    
-    alpha = R_m**2 + omega**2*L_d**2
-    beta  = R_m**2 + omega**2*L_q**2
-    gamma = 2*R_m*omega*(L_d-L_q)
-    delta = 2*omega**2*L_d*K_m
-    epsilon = 2*R_m*omega*K_m
-    rho = omega**2*K_m**2
-
-    # torque and voltage constraints
-    constraint = acados_constraint()
-    r = SX.sym('r', 3, 1)
-    constraint.con_phi_expr = vertcat(r[0], alpha*r[1]**2 + beta*r[2]**2 + \
-        gamma*r[1]*r[2] + delta*r[1] + epsilon*r[2] + rho)
-    constraint.con_r_expr = vertcat(tau_des - \
-        1.5*N_P*((L_d-L_q)*i_d*i_q + K_m*i_q), i_d, i_q)
-    constraint.x = x
-    constraint.u = u 
-    constraint.r = r
-    constraint.p = p
-    constraint.nr = 3
-    constraint.nphi = 2
-    constraint.name = con_name
-
-    return constraint
 
 # create render arguments
-ocp = acados_ocp_nlp()
+ocp = AcadosOcp()
 
 # export model
-model = export_ode_model()
-
-# set model_name
+model = export_pmsm_model()
 ocp.model = model
-
-if FORMULATION == 1:
-    constraint_nltorqueline = export_torqueline_pd()
-    constraint_nltorquelineEnd = export_torquelineEnd_pd()
 
 # set model dims
 nx = model.x.size()[0]
@@ -466,13 +398,11 @@ file_name = 'acados_ocp.json'
 
 if CODE_GEN == 1:
     if FORMULATION == 0:
-        acados_solver = generate_ocp_solver(ocp, json_file = file_name)
+        acados_solver = AcadosOcpSolver(ocp, json_file = file_name)
     if FORMULATION == 1:
-        ocp.con_phi = constraint_nltorqueline
-        ocp.con_phi_e = constraint_nltorquelineEnd
         nlp_con.constr_type = 'BGP'
         nlp_con.constr_type_e = 'BGP'
-        acados_solver = generate_ocp_solver(ocp, json_file = file_name)
+        acados_solver = AcadosOcpSolver(ocp, json_file = file_name)
 
 if COMPILE == 1:
     # make 

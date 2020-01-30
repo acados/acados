@@ -31,57 +31,68 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import os
-from casadi import *
-from .utils import ALLOWED_CASADI_VERSIONS
+import numpy as np
+import scipy
+from acados_template import *
 
-def generate_c_code_nls_cost( model, cost_name, is_terminal ):
+def export_ocp_solver(model, N, h, Q, R, Fmax=80):
 
-    casadi_version = CasadiMeta.version()
-    casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
+    # create render arguments
+    ocp = AcadosOcp()
 
-    if casadi_version not in (ALLOWED_CASADI_VERSIONS):
-        msg =  'Please download and install CasADi {} '.format(" or ".join(ALLOWED_CASADI_VERSIONS))
-        msg += 'to ensure compatibility with acados.\n'
-        msg += 'Version {} currently in use.'.format(casadi_version)
-        raise Exception(msg)
+    # set model
+    ocp.model = model
 
+    Tf = N*h
+    nx = model.x.size()[0]
+    nu = model.u.size()[0]
+    ny = nx + nu
+    ny_e = nx
 
-    if is_terminal:
-        suffix_name = '_r_e_cost'
-        u = SX.sym('u', 0, 0)
-        cost_expr = model.cost_y_expr_e
+    # set dimensions
+    ocp.dims.nx  = nx
+    ocp.dims.ny  = ny
+    ocp.dims.ny_e = ny_e
+    ocp.dims.nbu = nu
+    ocp.dims.nu  = model.u.size()[0]
+    ocp.dims.N   = N
 
-    else:
-        suffix_name = '_r_cost'
-        u = model.u
-        cost_expr = model.cost_y_expr
+    # set cost
+    ocp.cost.cost_type = 'NONLINEAR_LS'
+    ocp.cost.cost_type_e = 'NONLINEAR_LS'
 
-    x = model.x
-    p = model.p
+    ocp.cost.W = scipy.linalg.block_diag(R, Q)
 
-    # set up functions to be exported
-    fun_name = cost_name + suffix_name
+    ocp.cost.W_e = Q
 
-    cost_jac_expr = transpose(jacobian(cost_expr, vertcat(u, x)))
+    x = ocp.model.x
+    u = ocp.model.u
 
-    nls_cost_fun = Function( fun_name, [x, u, p], \
-            [ cost_expr, cost_jac_expr ])
+    ocp.model.cost_y_expr = vertcat(u, x)
 
-    # generate C code
-    if not os.path.exists('c_generated_code'):
-        os.mkdir('c_generated_code')
+    ocp.model.cost_y_expr_e = x
 
-    os.chdir('c_generated_code')
-    gen_dir = cost_name + suffix_name
-    if not os.path.exists(gen_dir):
-        os.mkdir(gen_dir)
-    gen_dir_location = './' + gen_dir
-    os.chdir(gen_dir_location)
-    file_name = cost_name + suffix_name
+    ocp.cost.yref  = np.zeros((ny, ))
+    ocp.cost.yref_e = np.zeros((ny_e, ))
 
-    nls_cost_fun.generate( file_name, casadi_opts )
+    # setting bounds
+    ocp.constraints.lbu = np.array([-Fmax])
+    ocp.constraints.ubu = np.array([+Fmax])
+    ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
+    ocp.constraints.idxbu = np.array([0])
 
-    os.chdir('../..')
-    return
+    # set QP solver
+    # ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+    ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
+    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+    ocp.solver_options.integrator_type = 'ERK'
 
+    # set prediction horizon
+    ocp.solver_options.tf = Tf
+    ocp.solver_options.nlp_solver_type = 'SQP'
+    # ocp.solver_options.nlp_solver_type = 'SQP_RTI'
+    ocp.solver_options.nlp_solver_max_iter = 200
+
+    acados_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
+
+    return acados_solver

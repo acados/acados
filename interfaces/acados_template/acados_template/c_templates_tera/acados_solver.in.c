@@ -56,10 +56,14 @@
 #include "{{ model.name }}_constraints/{{ model.name }}_h_e_constraint.h"
 {% endif %}
 {%- if cost.cost_type == "NONLINEAR_LS" %}
-#include "{{ model.name }}_r_cost/{{ model.name }}_r_cost.h"
+#include "{{ model.name }}_cost/{{ model.name }}_r_cost.h"
+{%- elif cost.cost_type == "EXTERNAL" %}
+#include "{{ model.name }}_cost/{{ model.name }}_external_cost.h"
 {% endif %}
 {%- if cost.cost_type_e == "NONLINEAR_LS" %}
-#include "{{ model.name }}_r_e_cost/{{ model.name }}_r_e_cost.h"
+#include "{{ model.name }}_cost/{{ model.name }}_r_e_cost.h"
+{%- elif cost.cost_type_e == "EXTERNAL" %}
+#include "{{ model.name }}_cost/{{ model.name }}_external_cost_e.h"
 {% endif %}
 
 #include "acados_solver_{{ model.name }}.h"
@@ -91,7 +95,6 @@
 #define NHN    {{ dims.nh_e }}
 #define NPHIN  {{ dims.nphi_e }}
 #define NR     {{ dims.nr }}
-#define NRN    {{ dims.nr_e }}
 
 
 // ** global data **
@@ -130,9 +133,15 @@ external_function_param_casadi h_e_constraint;
 {% endif %}
 {% if cost.cost_type == "NONLINEAR_LS" %}
 external_function_param_casadi * r_cost;
+{% elif cost.cost_type == "EXTERNAL" %}
+external_function_param_casadi * ext_cost_fun;
+external_function_param_casadi * ext_cost_fun_jac_hess;
 {% endif %}
 {% if cost.cost_type_e == "NONLINEAR_LS" %}
 external_function_param_casadi r_e_cost;
+{% elif cost.cost_type_e == "EXTERNAL" %}
+external_function_param_casadi ext_cost_e_fun;
+external_function_param_casadi ext_cost_e_fun_jac_hess;
 {% endif %}
 
 
@@ -153,8 +162,11 @@ int acados_create()
     {%- endif %}
 
     nlp_solver_plan->ocp_qp_solver_plan.qp_solver = {{ solver_options.qp_solver }};
-    for (int i = 0; i <= N; i++)
+    for (int i = 0; i < N; i++)
         nlp_solver_plan->nlp_cost[i] = {{ cost.cost_type }};
+
+    nlp_solver_plan->nlp_cost[N] = {{ cost.cost_type_e }};
+
     for (int i = 0; i < N; i++)
     {
         nlp_solver_plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
@@ -241,7 +253,7 @@ int acados_create()
     ng[N]    = NGN;
     nh[N]    = NHN;
     nphi[N]  = NPHIN;
-    nr[N]    = NRN;
+    nr[N]    = {{ dims.nr_e }};
 
     nsbx[N]  = NSBXN;
     nsbu[N]  = 0;
@@ -249,7 +261,7 @@ int acados_create()
     nsphi[N] = NSPHIN;
 
     /* create and set ocp_nlp_dims */
-	nlp_dims = ocp_nlp_dims_create(nlp_config);
+    nlp_dims = ocp_nlp_dims_create(nlp_config);
 
     ocp_nlp_dims_set_opt_vars(nlp_config, nlp_dims, "nx", nx);
     ocp_nlp_dims_set_opt_vars(nlp_config, nlp_dims, "nu", nu);
@@ -258,7 +270,6 @@ int acados_create()
 
     for (int i = 0; i <= N; i++)
     {
-        ocp_nlp_dims_set_cost(nlp_config, nlp_dims, i, "ny", &ny[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nbx", &nbx[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nbu", &nbu[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsbx", &nsbx[i]);
@@ -276,6 +287,9 @@ int acados_create()
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nphi", &nphi[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsphi", &nsphi[i]);
         {%- endif %}
+        {%- if cost.cost_type == "NONLINEAR_LS" or cost.cost_type == "LINEAR_LS" %}
+        ocp_nlp_dims_set_cost(nlp_config, nlp_dims, i, "ny", &ny[i]);
+        {%- endif %}
     }
 
     {%- if constraints.constr_type_e == "BGH" %}
@@ -286,7 +300,9 @@ int acados_create()
     ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "nphi", &nphi[N]);
     ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "nsphi", &nsphi[N]);
     {%- endif %}
-
+    {%- if cost.cost_type_e == "NONLINEAR_LS" or cost.cost_type_e == "LINEAR_LS" %}
+    ocp_nlp_dims_set_cost(nlp_config, nlp_dims, N, "ny", &ny[N]);
+    {%- endif %}
 
     /************************************************
     *  external functions
@@ -357,13 +373,13 @@ int acados_create()
     {% endif %}
 
     {%- if constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
-	// nonlinear constraint
-	h_e_constraint.casadi_fun = &{{ model.name }}_constr_h_e_fun_jac_uxt_zt;
-	h_e_constraint.casadi_n_in = &{{ model.name }}_constr_h_e_fun_jac_uxt_zt_n_in;
-	h_e_constraint.casadi_n_out = &{{ model.name }}_constr_h_e_fun_jac_uxt_zt_n_out;
-	h_e_constraint.casadi_sparsity_in = &{{ model.name }}_constr_h_e_fun_jac_uxt_zt_sparsity_in;
-	h_e_constraint.casadi_sparsity_out = &{{ model.name }}_constr_h_e_fun_jac_uxt_zt_sparsity_out;
-	h_e_constraint.casadi_work = &{{ model.name }}_constr_h_e_fun_jac_uxt_zt_work;
+    // nonlinear constraint
+    h_e_constraint.casadi_fun = &{{ model.name }}_constr_h_e_fun_jac_uxt_zt;
+    h_e_constraint.casadi_n_in = &{{ model.name }}_constr_h_e_fun_jac_uxt_zt_n_in;
+    h_e_constraint.casadi_n_out = &{{ model.name }}_constr_h_e_fun_jac_uxt_zt_n_out;
+    h_e_constraint.casadi_sparsity_in = &{{ model.name }}_constr_h_e_fun_jac_uxt_zt_sparsity_in;
+    h_e_constraint.casadi_sparsity_out = &{{ model.name }}_constr_h_e_fun_jac_uxt_zt_sparsity_out;
+    h_e_constraint.casadi_work = &{{ model.name }}_constr_h_e_fun_jac_uxt_zt_work;
 
     external_function_param_casadi_create(&h_e_constraint, {{ dims.np }});
     {%- endif %}
@@ -432,10 +448,11 @@ int acados_create()
     }
     {%- endif %}
 
-    // NLP cost linear or nonlinear least squares
-    {%- if cost.cost_type == "NONLINEAR_LS" %}
+{%- if cost.cost_type == "NONLINEAR_LS" %}
+    // nonlinear least squares cost
     r_cost = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < N; i++)
+    {
         // residual function
         r_cost[i].casadi_fun = &{{ model.name }}_r_cost;
         r_cost[i].casadi_n_in = &{{ model.name }}_r_cost_n_in;
@@ -446,20 +463,67 @@ int acados_create()
 
         external_function_param_casadi_create(&r_cost[i], {{ dims.np }});
     }
-    {%- endif %}
+{%- elif cost.cost_type == "EXTERNAL" %}
+    // external cost
+    ext_cost_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
+    for (int i = 0; i < N; i++)
+    {
+        // residual function
+        ext_cost_fun[i].casadi_fun = &{{ model.name }}_ext_cost_fun;
+        ext_cost_fun[i].casadi_n_in = &{{ model.name }}_ext_cost_fun_n_in;
+        ext_cost_fun[i].casadi_n_out = &{{ model.name }}_ext_cost_fun_n_out;
+        ext_cost_fun[i].casadi_sparsity_in = &{{ model.name }}_ext_cost_fun_sparsity_in;
+        ext_cost_fun[i].casadi_sparsity_out = &{{ model.name }}_ext_cost_fun_sparsity_out;
+        ext_cost_fun[i].casadi_work = &{{ model.name }}_ext_cost_fun_work;
 
-    {%- if cost.cost_type_e == "NONLINEAR_LS" %}
+        external_function_param_casadi_create(&ext_cost_fun[i], {{ dims.np }});
+    }
+    ext_cost_fun_jac_hess = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
+    for (int i = 0; i < N; i++)
+    {
+        // residual function
+        ext_cost_fun_jac_hess[i].casadi_fun = &{{ model.name }}_ext_cost_fun_jac_hess;
+        ext_cost_fun_jac_hess[i].casadi_n_in = &{{ model.name }}_ext_cost_fun_jac_hess_n_in;
+        ext_cost_fun_jac_hess[i].casadi_n_out = &{{ model.name }}_ext_cost_fun_jac_hess_n_out;
+        ext_cost_fun_jac_hess[i].casadi_sparsity_in = &{{ model.name }}_ext_cost_fun_jac_hess_sparsity_in;
+        ext_cost_fun_jac_hess[i].casadi_sparsity_out = &{{ model.name }}_ext_cost_fun_jac_hess_sparsity_out;
+        ext_cost_fun_jac_hess[i].casadi_work = &{{ model.name }}_ext_cost_fun_jac_hess_work;
+
+        external_function_param_casadi_create(&ext_cost_fun_jac_hess[i], {{ dims.np }});
+    }
+{%- endif %}
+
+{%- if cost.cost_type_e == "NONLINEAR_LS" %}
     // residual function
-	r_e_cost.casadi_fun = &{{ model.name }}_r_e_cost;
-	r_e_cost.casadi_n_in = &{{ model.name }}_r_e_cost_n_in;
-	r_e_cost.casadi_n_out = &{{ model.name }}_r_e_cost_n_out;
-	r_e_cost.casadi_sparsity_in = &{{ model.name }}_r_e_cost_sparsity_in;
-	r_e_cost.casadi_sparsity_out = &{{ model.name }}_r_e_cost_sparsity_out;
-	r_e_cost.casadi_work = &{{ model.name }}_r_e_cost_work;
+    r_e_cost.casadi_fun = &{{ model.name }}_r_e_cost;
+    r_e_cost.casadi_n_in = &{{ model.name }}_r_e_cost_n_in;
+    r_e_cost.casadi_n_out = &{{ model.name }}_r_e_cost_n_out;
+    r_e_cost.casadi_sparsity_in = &{{ model.name }}_r_e_cost_sparsity_in;
+    r_e_cost.casadi_sparsity_out = &{{ model.name }}_r_e_cost_sparsity_out;
+    r_e_cost.casadi_work = &{{ model.name }}_r_e_cost_work;
 
     external_function_param_casadi_create(&r_e_cost, {{ dims.np }});
-    {%- endif %}
+{%- elif cost.cost_type_e == "EXTERNAL" %}
+    // external cost
+    ext_cost_e_fun.casadi_fun = &{{ model.name }}_ext_cost_e_fun;
+    ext_cost_e_fun.casadi_n_in = &{{ model.name }}_ext_cost_e_fun_n_in;
+    ext_cost_e_fun.casadi_n_out = &{{ model.name }}_ext_cost_e_fun_n_out;
+    ext_cost_e_fun.casadi_sparsity_in = &{{ model.name }}_ext_cost_e_fun_sparsity_in;
+    ext_cost_e_fun.casadi_sparsity_out = &{{ model.name }}_ext_cost_e_fun_sparsity_out;
+    ext_cost_e_fun.casadi_work = &{{ model.name }}_ext_cost_e_fun_work;
 
+    external_function_param_casadi_create(&ext_cost_e_fun, {{ dims.np }});
+
+    // external cost
+    ext_cost_e_fun_jac_hess.casadi_fun = &{{ model.name }}_ext_cost_e_fun_jac_hess;
+    ext_cost_e_fun_jac_hess.casadi_n_in = &{{ model.name }}_ext_cost_e_fun_jac_hess_n_in;
+    ext_cost_e_fun_jac_hess.casadi_n_out = &{{ model.name }}_ext_cost_e_fun_jac_hess_n_out;
+    ext_cost_e_fun_jac_hess.casadi_sparsity_in = &{{ model.name }}_ext_cost_e_fun_jac_hess_sparsity_in;
+    ext_cost_e_fun_jac_hess.casadi_sparsity_out = &{{ model.name }}_ext_cost_e_fun_jac_hess_sparsity_out;
+    ext_cost_e_fun_jac_hess.casadi_work = &{{ model.name }}_ext_cost_e_fun_jac_hess_work;
+
+    external_function_param_casadi_create(&ext_cost_e_fun_jac_hess, {{ dims.np }});
+{%- endif %}
 
     /************************************************
     *  nlp_in
@@ -562,7 +626,13 @@ int acados_create()
     for (int i = 0; i < N; i++)
     {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_res_jac", &r_cost[i]);
-	}
+    }
+{%- elif cost.cost_type == "EXTERNAL" %}
+    for (int i = 0; i < N; i++)
+    {
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "ext_cost_fun", &ext_cost_fun[i]);
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "ext_cost_fun_jac_hess", &ext_cost_fun_jac_hess[i]);
+    }
 {%- endif %}
 
 
@@ -597,6 +667,7 @@ int acados_create()
 {% endif %}
 
     // terminal cost
+{% if cost.cost_type_e == "LINEAR_LS" or cost.cost_type_e == "NONLINEAR_LS" %}
 {% if dims.ny_e > 0 %}
     double yref_e[NYN];
     {% for j in range(end=dims.ny_e) %}
@@ -612,7 +683,7 @@ int acados_create()
     {%- endfor %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "W", W_e);
 
-    {%- if cost.cost_type == "LINEAR_LS" %}
+    {%- if cost.cost_type_e == "LINEAR_LS" %}
     double Vx_e[NYN*NX];
     {% for j in range(end=dims.ny_e) %}
         {%- for k in range(end=dims.nx) %}
@@ -625,6 +696,11 @@ int acados_create()
     {%- if cost.cost_type_e == "NONLINEAR_LS" %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "nls_res_jac", &r_e_cost);
     {%- endif %}
+{%- endif %}{# ny_e > 0 #}
+
+{%- elif cost.cost_type_e == "EXTERNAL" %}
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "ext_cost_fun", &ext_cost_e_fun);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "ext_cost_fun_jac_hess", &ext_cost_e_fun_jac_hess);
 {%- endif %}
 
 {% if dims.ns_e > 0 %}
@@ -907,7 +983,7 @@ int acados_create()
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxbx", idxbx_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lbx", lbx_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ubx", ubx_e);
-{% endif %}
+{%- endif %}
 
 {% if dims.nsh_e > 0 %}
     // set up soft bounds for nonlinear constraints
@@ -925,7 +1001,7 @@ int acados_create()
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxsh", idxsh_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lsh", lsh_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ush", ush_e);
-{% endif %}
+{%- endif %}
 
 {% if dims.nsphi_e > 0 %}
     // set up soft bounds for convex-over-nonlinear constraints
@@ -943,7 +1019,7 @@ int acados_create()
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxsphi", idxsphi_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lsphi", lsphi_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "usphi", usphi_e);
-{% endif %}
+{%- endif %}
 
 {% if dims.nsbx_e > 0 %}
     // soft bounds on x
@@ -979,9 +1055,6 @@ int acados_create()
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ug", ug_e);
 {%- endif %}
 
-
-
-
 {% if dims.nh_e > 0 %}
     // set up nonlinear constraints for last stage 
     double lh_e[NHN];
@@ -998,7 +1071,7 @@ int acados_create()
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_fun_jac", &h_e_constraint);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lh", lh_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "uh", uh_e);
-{% endif %}
+{%- endif %}
 
 {% if dims.nphi_e > 0 and constraints.constr_type_e == "BGP" %}
     // set up convex-over-nonlinear constraints for last stage 
@@ -1199,10 +1272,12 @@ int acados_create()
 }
 
 
-int acados_update_params(int stage, double *p, int np) {
+int acados_update_params(int stage, double *p, int np)
+{
     int solver_status = 0;
     int casadi_np = 0;
-    {% if dims.np > 0 %}
+
+{%- if dims.np > 0 %}
     if (stage < {{ dims.N }})
     {
         {%- if solver_options.integrator_type == "IRK" %}
@@ -1264,10 +1339,61 @@ int acados_update_params(int stage, double *p, int np) {
             exit(1);
         }
         h_constraint[stage].set_param(h_constraint+stage, p);
-        {% endif %}
+        {%- endif %}
+
+    {%- if cost.cost_type == "NONLINEAR_LS" %}
+        casadi_np = (r_cost+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in r_cost which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        r_cost[stage].set_param(r_cost+stage, p);
+
+    {%- elif cost.cost_type == "NONLINEAR_LS" %}
+        casadi_np = (ext_cost_fun+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in ext_cost_fun which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        ext_cost_fun[stage].set_param(ext_cost_fun+stage, p);
+
+        casadi_np = (ext_cost_fun_jac_hess+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in ext_cost_fun_jac_hess which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+    {%- endif %}
     }
     else // stage == N
     {
+    {%- if cost.cost_type_e == "NONLINEAR_LS" %}
+        casadi_np = (&r_e_cost)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in r_e_cost which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        r_e_cost.set_param(&r_e_cost, p);
+    {%- elif cost.cost_type_e == "EXTERNAL" %}
+        casadi_np = (&ext_cost_e_fun)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in ext_cost_e_fun which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        ext_cost_e_fun.set_param(&ext_cost_e_fun, p);
+
+        casadi_np = (&ext_cost_e_fun_jac_hess)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in ext_cost_e_fun_jac_hess which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        ext_cost_e_fun_jac_hess.set_param(&ext_cost_e_fun_jac_hess, p);
+    {% endif %}
         {% if constraints.constr_type_e == "BGP" %}
         // casadi_np = (&r_e_constraint)->np;
         // if (casadi_np != np) {
@@ -1293,7 +1419,7 @@ int acados_update_params(int stage, double *p, int np) {
         h_e_constraint.set_param(&h_e_constraint, p);
         {% endif %}
     }
-    {% endif %}{# if dims.np #}
+{% endif %}{# if dims.np #}
 
     return solver_status;
 }

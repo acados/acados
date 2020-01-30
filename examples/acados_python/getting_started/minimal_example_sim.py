@@ -31,57 +31,53 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import os
-from casadi import *
-from .utils import ALLOWED_CASADI_VERSIONS
+from acados_template import AcadosSim, AcadosSimSolver
+from export_pendulum_ode_model import export_pendulum_ode_model
+from utils import plot_pendulum
+import numpy as np
+import matplotlib.pyplot as plt
 
-def generate_c_code_nls_cost( model, cost_name, is_terminal ):
+sim = AcadosSim()
 
-    casadi_version = CasadiMeta.version()
-    casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
+# export model 
+model = export_pendulum_ode_model()
 
-    if casadi_version not in (ALLOWED_CASADI_VERSIONS):
-        msg =  'Please download and install CasADi {} '.format(" or ".join(ALLOWED_CASADI_VERSIONS))
-        msg += 'to ensure compatibility with acados.\n'
-        msg += 'Version {} currently in use.'.format(casadi_version)
-        raise Exception(msg)
+# set model_name 
+sim.model = model
+
+Tf = 0.1
+nx = model.x.size()[0]
+nu = model.u.size()[0]
+N = 200
+
+# set simulation time
+sim.solver_options.T = Tf
+# set options
+sim.solver_options.num_stages = 4
+sim.solver_options.num_steps = 3
+sim.solver_options.newton_iter = 3 # for implicit integrator
 
 
-    if is_terminal:
-        suffix_name = '_r_e_cost'
-        u = SX.sym('u', 0, 0)
-        cost_expr = model.cost_y_expr_e
+# create
+acados_integrator = AcadosSimSolver(sim)
 
-    else:
-        suffix_name = '_r_cost'
-        u = model.u
-        cost_expr = model.cost_y_expr
+simX = np.ndarray((N+1, nx))
+x0 = np.array([0.0, np.pi+1, 0.0, 0.0])
+u0 = np.array([0.0])
+acados_integrator.set("u", u0)
 
-    x = model.x
-    p = model.p
+simX[0,:] = x0
 
-    # set up functions to be exported
-    fun_name = cost_name + suffix_name
+for i in range(N):
+    # set initial state
+    acados_integrator.set("x", simX[i,:])
+    # solve
+    status = acados_integrator.solve()
+    # get solution
+    simX[i+1,:] = acados_integrator.get("x")
 
-    cost_jac_expr = transpose(jacobian(cost_expr, vertcat(u, x)))
+if status != 0:
+    raise Exception('acados returned status {}. Exiting.'.format(status))
 
-    nls_cost_fun = Function( fun_name, [x, u, p], \
-            [ cost_expr, cost_jac_expr ])
-
-    # generate C code
-    if not os.path.exists('c_generated_code'):
-        os.mkdir('c_generated_code')
-
-    os.chdir('c_generated_code')
-    gen_dir = cost_name + suffix_name
-    if not os.path.exists(gen_dir):
-        os.mkdir(gen_dir)
-    gen_dir_location = './' + gen_dir
-    os.chdir(gen_dir_location)
-    file_name = cost_name + suffix_name
-
-    nls_cost_fun.generate( file_name, casadi_opts )
-
-    os.chdir('../..')
-    return
-
+# plot results
+plot_pendulum(Tf/N, 10, np.zeros((N, nu)), simX)
