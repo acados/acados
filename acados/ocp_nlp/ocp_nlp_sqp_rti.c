@@ -427,8 +427,10 @@ static void ocp_nlp_sqp_rti_cast_workspace(
  * functions
  ************************************************/
 
+
+
 int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
-                void *opts_, void *mem_, void *work_)
+    void *opts_, void *mem_, void *work_)
 {
     ocp_nlp_out *nlp_out = nlp_out_;
     ocp_nlp_sqp_rti_memory *mem = mem_;
@@ -439,7 +441,6 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->time_tot = 0.0;
 
     acados_tic(&timer0);
-
 
     ocp_nlp_sqp_rti_preparation_step(
         config_, dims_, nlp_in_, nlp_out_, opts_, mem_, work_);
@@ -690,7 +691,6 @@ int ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
     ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in,
         nlp_out, nlp_opts, nlp_mem, nlp_work);
 
-
     // printf("\n------- qp_in (sqp iter %d) --------\n", sqp_iter);
     // print_ocp_qp_in(nlp_mem->qp_in);
     // exit(1);
@@ -751,7 +751,6 @@ int ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
     if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
     {
         //   print_ocp_qp_in(mem->qp_in);
-
 
         printf("QP solver returned error status %d\n", qp_status);
 #if defined(ACADOS_WITH_OPENMP)
