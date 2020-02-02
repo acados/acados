@@ -38,7 +38,9 @@ import os
 import sys
 from .AcadosModel import AcadosModel
 
-ACADOS_PATH=os.getenv("ACADOS_SOURCE_DIR","/usr/lib")
+ACADOS_PATH=os.getenv("ACADOS_SOURCE_DIR")
+if ACADOS_PATH is None:
+    raise Exception('Environment variable ACADOS_SOURCE_DIR is undefined.')
 
 class AcadosOcpDims:
     """
