@@ -31,6 +31,9 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+import sys
+sys.path.insert(0, '../common')
+
 from export_pendulum_ode_model import export_pendulum_ode_model
 from export_mhe_ode_model import export_mhe_ode_model
 

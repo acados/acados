@@ -36,3 +36,6 @@
 [submodule "examples/acados_python/examples/tests/test_data"]
 	path = examples/acados_python/examples/tests/test_data
 	url = https://github.com/acados/test_data
+[submodule "examples/acados_python/tests/test_data"]
+	path = examples/acados_python/tests/test_data
+	url = https://github.com/acados/test_data.git
