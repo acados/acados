@@ -85,15 +85,44 @@ For more information contact `@zanellia`.
 
 ### Python API
 ``` eval_rst
-.. automodule:: acados_template.casadi_functions
+.. automodule:: acados_template.
     :members:
     :private-members:
     :undoc-members:
 ```
 ``` eval_rst
-.. automodule:: acados_template.acados_ocp_nlp
+.. automodule:: acados_template.AcadosModel
     :members:
     :private-members:
-    :exclude-members: acados_ocp2json_layout, cast_ocp_nlp, dict2json_layout, dict2json_layout_rec, check_ra, json2dict_rec
+    :exclude-members:
+```
+<!-- OCP -->
 
+``` eval_rst
+.. automodule:: acados_template.AcadosOcp
+    :members:
+    :private-members:
+    :exclude-members:
+```
+
+``` eval_rst
+.. automodule:: acados_template.AcadosOcpSolver
+    :members:
+    :private-members:
+    :exclude-members: make_ocp_dims_consistent, get_ocp_nlp_layout
+```
+
+<!-- SIM -->
+``` eval_rst
+.. automodule:: acados_template.AcadosSim
+    :members:
+    :private-members:
+    :exclude-members:
+```
+
+``` eval_rst
+.. automodule:: acados_template.AcadosSimSolver
+    :members:
+    :private-members:
+    :exclude-members: make_ocp_dims_consistent, get_ocp_nlp_layout
 ```

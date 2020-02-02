@@ -44,7 +44,7 @@ from .generate_c_code_implicit_ode import generate_c_code_implicit_ode
 from .AcadosSim import AcadosSim
 from .AcadosOcp import AcadosOcp
 from .AcadosModel import acados_model_strip_casadi_symbolics
-from .utils import ACADOS_PATH, is_column, render_template, dict2json, np_array_to_list
+from .utils import is_column, render_template, dict2json, np_array_to_list
 
 
 def make_sim_dims_consistent(acados_sim):
@@ -179,7 +179,6 @@ class AcadosSimSolver:
         if isinstance(acados_sim_, AcadosSim):
             sim_formulation_json_dump(acados_sim, json_file)
 
-        print("\njsonfile", json_file)
         # render templates
         sim_render_templates(json_file, model_name)
         # generate casadi functions
@@ -190,7 +189,7 @@ class AcadosSimSolver:
         os.system('make sim_shared_lib')
         os.chdir('..')
 
-        # get
+        # Ctypes
         shared_lib = 'c_generated_code/libacados_sim_solver_' + model_name + '.so'
 
         self.sim_struct = acados_sim

@@ -34,16 +34,13 @@
 
 import numpy as np
 import casadi as ca
-import json
 import os
-import sys
 from .AcadosModel import AcadosModel
-
-ACADOS_PATH=os.getenv("ACADOS_SOURCE_DIR","/usr/lib")
+from .utils import get_acados_path
 
 class AcadosSimDims:
     """
-    class containing the dimensions of the optimal control problem
+    class containing the dimensions of the model to be simulated
     """
     def __init__(self):
         self.__nx      = None
@@ -105,7 +102,7 @@ class AcadosSimDims:
 
 class AcadosSimOpts:
     """
-    class containing the description of the solver options
+    class containing the solver options
     """
     def __init__(self):
         self.__integrator_type  = 'ERK'
@@ -179,13 +176,15 @@ class AcadosSimOpts:
 
 class AcadosSim:
     """
-    class containing the full description of the optimal control problem
+    class containing the full description of the integrator
     """
-    def __init__(self, acados_path=ACADOS_PATH):
+    def __init__(self, acados_path=''):
         """
         Keyword arguments:
         acados_path -- path of your acados installation
         """
+        if acados_path == '':
+            acados_path = get_acados_path()
         self.dims = AcadosSimDims()
         self.model = AcadosModel()
         self.solver_options = AcadosSimOpts()

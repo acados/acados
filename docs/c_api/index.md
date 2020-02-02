@@ -8,7 +8,6 @@
    ocp_qp_interface
    sim_interface
    ocp_nlp_interface
-   options_interface
    condensing_interface
    external_function_interface
 ```
