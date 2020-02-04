@@ -122,8 +122,7 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_, void *dims_, void *o
     //    opts->compute_dual_sol = 1;
     opts->ext_qp_res = 0;
     opts->warm_start_first_qp = false;
-
-    int print_ocp_qp_in = 0;
+    opts->print_level = 0;
 
     // overwrite default submodules opts
 
