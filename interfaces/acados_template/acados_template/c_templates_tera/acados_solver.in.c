@@ -1081,8 +1081,8 @@ int acados_create()
 
 {% if dims.nphi_e > 0 and constraints.constr_type_e == "BGP" %}
     // set up convex-over-nonlinear constraints for last stage 
-    double lphi_e[NHN];
-    double uphi_e[NHN];
+    double lphi_e[NPHIN];
+    double uphi_e[NPHIN];
 
     {% for i in range(end=dims.nphi_e) %}
     lphi_e[{{ i }}] = {{ constraints.lphi_e[i] }};
