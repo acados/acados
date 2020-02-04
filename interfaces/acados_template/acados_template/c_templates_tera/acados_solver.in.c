@@ -894,13 +894,13 @@ int acados_create()
     double ug[NG];
 
     {% for j in range(end=dims.ng) %}
-        {%- for k in range(end=dims.nx) %}
+        {%- for k in range(end=dims.nu) %}
     D[{{ j }}+NG * {{ k }}] = {{ constraints.D[j][k] }}; 
         {%- endfor %}
     {%- endfor %}
 
     {% for j in range(end=dims.ng) %}
-        {%- for k in range(end=dims.nu) %}
+        {%- for k in range(end=dims.nx) %}
     C[{{ j }}+NG * {{ k }}] = {{ constraints.C[j][k] }}; 
         {%- endfor %}
     {%- endfor %}
@@ -1044,6 +1044,12 @@ int acados_create()
     double C_e[NGN*NX];
     double lg_e[NGN];
     double ug_e[NGN];
+
+    {% for j in range(end=dims.ng) %}
+        {%- for k in range(end=dims.nx) %}
+    C_e[{{ j }}+NG * {{ k }}] = {{ constraints.C_e[j][k] }}; 
+        {%- endfor %}
+    {%- endfor %}
 
     {% for i in range(end=dims.ng_e) %}
     lg_e[{{ i }}] = {{ constraints.lg_e[i] }};
