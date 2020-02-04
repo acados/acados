@@ -237,7 +237,11 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
         else if (!strcmp(field, "print_level"))
         {
             int* print_level = (int *) value;
-            opts->print_level = *print_level;
+            if (*print_level < 0 || *print_level > 1) {
+                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for print_level field."); 
+                printf("possible values are: 0, 1\n");
+                exit(1);
+            } else opts->print_level = *print_level;
         }
         else
         {

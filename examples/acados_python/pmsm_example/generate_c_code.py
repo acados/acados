@@ -443,7 +443,7 @@ for i in range(Nsim):
     print("=================")
 
     # set options
-    acados_solver.opts_set('print_level', 1)
+    acados_solver.opts_set('print_level', 0)
     status = acados_solver.solve()
 
     if status != 0:
