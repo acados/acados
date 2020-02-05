@@ -612,7 +612,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             (mem->nlp_res->inf_norm_res_m < opts->tol_comp))
         {
             // printf("%d sqp iterations\n", sqp_iter);
-            // print_ocp_qp_in(mem->qp_in);
+            // print_ocp_qp_in(nlp_mem->qp_in);
 
             // save sqp iterations number
             mem->sqp_iter = sqp_iter;
