@@ -58,6 +58,7 @@ platform2tera = {
     "win32": "window.exe"
 }
 
+
 def is_column(x):
     if isinstance(x, np.ndarray):
         if x.ndim == 1:
@@ -181,17 +182,19 @@ def np_array_to_list(np_array):
             "Cannot convert to list type {}".format(type(np_array))
         ))
 
+
 def dict2json(d):
     out = {}
     for k, v in d.items():
         if isinstance(v, dict):
             v = dict2json(v)
 
-        v_type = str(type(v).__name__)
+        # v_type = str(type(v).__name__)
         # out_key = '__' + v_type + '__' + k.split('__', 1)[-1]
         out_key = k.split('__', 1)[-1]
         out[k.replace(k, out_key)] = v
     return out
+
 
 def acados_ocp2json_layout(acados_ocp):
     """ Convert acados ocp nlp object to JSON format by stripping the
@@ -288,6 +291,7 @@ def cast_ocp_nlp(ocp_nlp, ocp_nlp_layout):
         out[k] = v
     return out
 
+
 def json2dict(ocp_nlp, ocp_dims):
     # load JSON layout
     current_module = sys.modules[__name__]
@@ -297,6 +301,7 @@ def json2dict(ocp_nlp, ocp_dims):
 
     out = json2dict_rec(ocp_nlp, ocp_dims, ocp_nlp_layout)
     return out
+
 
 def json2dict_rec(ocp_nlp, ocp_dims, ocp_nlp_layout):
     """ convert ocp_nlp loaded JSON to dictionary. Mainly convert

@@ -328,7 +328,7 @@ class AcadosOcpSolver:
 
         ## Compile solver
         os.chdir('c_generated_code')
-        os.system('make clean')
+        # os.system('make clean')
         os.system('make ocp_shared_lib')
         os.chdir('..')
 
