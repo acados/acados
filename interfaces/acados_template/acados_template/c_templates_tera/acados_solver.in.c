@@ -105,32 +105,37 @@ void * nlp_opts;
 ocp_nlp_plan * nlp_solver_plan;
 ocp_nlp_config * nlp_config;
 ocp_nlp_dims * nlp_dims;
+
 {% if solver_options.integrator_type == "ERK" %}
 external_function_param_casadi * forw_vde_casadi;
 {% if solver_options.hessian_approx == "EXACT" %}
 external_function_param_casadi * hess_vde_casadi;
 {%- endif %}
-{% else %}
-{% if solver_options.integrator_type == "IRK" -%}
+{% elif solver_options.integrator_type == "IRK" -%}
 external_function_param_casadi * impl_dae_fun;
 external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
 external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
+{% elif solver_options.integrator_type == "GNSF" -%}
+external_function_param_casadi * gnsf_phi_fun;
+external_function_param_casadi * gnsf_phi_fun_jac_y;
+external_function_param_casadi * gnsf_phi_jac_y_uhat;
+external_function_param_casadi * gnsf_f_lo_jac_x1_x1dot_u_z;
 {%- endif %}
-{%- endif %}
-{% if constraints.constr_type == "BGP" %}
+
+{% if constraints.constr_type == "BGH" %}
+external_function_param_casadi * h_constraint;
+{%- elif constraints.constr_type == "BGP" %}
 external_function_param_casadi * phi_constraint;
 // external_function_param_casadi * r_constraint;
 {% endif %}
-{% if constraints.constr_type_e == "BGP" %}
+
+{% if constraints.constr_type_e == "BGH" %}
+external_function_param_casadi h_e_constraint;
+{% elif constraints.constr_type_e == "BGP" %}
 external_function_param_casadi phi_e_constraint;
 // external_function_param_casadi r_e_constraint;
 {% endif %}
-{% if constraints.constr_type == "BGH" %}
-external_function_param_casadi * h_constraint;
-{%- endif %}
-{% if constraints.constr_type_e == "BGH" %}
-external_function_param_casadi h_e_constraint;
-{% endif %}
+
 {% if cost.cost_type == "NONLINEAR_LS" %}
 external_function_param_casadi * r_cost;
 {% elif cost.cost_type == "EXTERNAL" %}
@@ -384,7 +389,7 @@ int acados_create()
     external_function_param_casadi_create(&h_e_constraint, {{ dims.np }});
     {%- endif %}
 
-    {% if solver_options.integrator_type == "ERK" %}
+{% if solver_options.integrator_type == "ERK" %}
     // explicit ode
     forw_vde_casadi = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
 
@@ -412,7 +417,7 @@ int acados_create()
     }
     {%- endif %}
 
-    {% elif solver_options.integrator_type == "IRK" %}
+{% elif solver_options.integrator_type == "IRK" %}
     // implicit dae
     impl_dae_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; i++) {
@@ -446,7 +451,53 @@ int acados_create()
         impl_dae_jac_x_xdot_u_z[i].casadi_n_out = &{{ model.name }}_impl_dae_jac_x_xdot_u_z_n_out;
         external_function_param_casadi_create(&impl_dae_jac_x_xdot_u_z[i], {{ dims.np }});
     }
-    {%- endif %}
+
+{% elif solver_options.integrator_type == "GNSF" %}
+    gnsf_phi_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
+    for (int i = 0; i < N; i++) {
+        gnsf_phi_fun[i].casadi_fun = &{{ model.name }}_gnsf_phi_fun;
+        gnsf_phi_fun[i].casadi_work = &{{ model.name }}_gnsf_phi_fun_work;
+        gnsf_phi_fun[i].casadi_sparsity_in = &{{ model.name }}_gnsf_phi_fun_sparsity_in;
+        gnsf_phi_fun[i].casadi_sparsity_out = &{{ model.name }}_gnsf_phi_fun_sparsity_out;
+        gnsf_phi_fun[i].casadi_n_in = &{{ model.name }}_gnsf_phi_fun_n_in;
+        gnsf_phi_fun[i].casadi_n_out = &{{ model.name }}_gnsf_phi_fun_n_out;
+        external_function_param_casadi_create(&gnsf_phi_fun[i], {{ dims.np }});
+    }
+
+    gnsf_phi_fun_jac_y = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
+    for (int i = 0; i < N; i++) {
+        gnsf_phi_fun_jac_y[i].casadi_fun = &{{ model.name }}_gnsf_phi_fun_jac_y;
+        gnsf_phi_fun_jac_y[i].casadi_work = &{{ model.name }}_gnsf_phi_fun_jac_y_work;
+        gnsf_phi_fun_jac_y[i].casadi_sparsity_in = &{{ model.name }}_gnsf_phi_fun_jac_y_sparsity_in;
+        gnsf_phi_fun_jac_y[i].casadi_sparsity_out = &{{ model.name }}_gnsf_phi_fun_jac_y_sparsity_out;
+        gnsf_phi_fun_jac_y[i].casadi_n_in = &{{ model.name }}_gnsf_phi_fun_jac_y_n_in;
+        gnsf_phi_fun_jac_y[i].casadi_n_out = &{{ model.name }}_gnsf_phi_fun_jac_y_n_out;
+        external_function_param_casadi_create(&gnsf_phi_fun_jac_y[i], {{ dims.np }});
+    }
+
+    gnsf_phi_jac_y_uhat = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
+    for (int i = 0; i < N; i++) {
+        gnsf_phi_jac_y_uhat[i].casadi_fun = &{{ model.name }}_gnsf_phi_jac_y_uhat;
+        gnsf_phi_jac_y_uhat[i].casadi_work = &{{ model.name }}_gnsf_phi_jac_y_uhat_work;
+        gnsf_phi_jac_y_uhat[i].casadi_sparsity_in = &{{ model.name }}_gnsf_phi_jac_y_uhat_sparsity_in;
+        gnsf_phi_jac_y_uhat[i].casadi_sparsity_out = &{{ model.name }}_gnsf_phi_jac_y_uhat_sparsity_out;
+        gnsf_phi_jac_y_uhat[i].casadi_n_in = &{{ model.name }}_gnsf_phi_jac_y_uhat_n_in;
+        gnsf_phi_jac_y_uhat[i].casadi_n_out = &{{ model.name }}_gnsf_phi_jac_y_uhat_n_out;
+        external_function_param_casadi_create(&gnsf_phi_jac_y_uhat[i], {{ dims.np }});
+    }
+
+    gnsf_f_lo_jac_x1_x1dot_u_z = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
+    for (int i = 0; i < N; i++) {
+        gnsf_f_lo_jac_x1_x1dot_u_z[i].casadi_fun = &{{ model.name }}_gnsf_f_lo_jac_x1_x1dot_u_z;
+        gnsf_f_lo_jac_x1_x1dot_u_z[i].casadi_work = &{{ model.name }}_gnsf_f_lo_jac_x1_x1dot_u_z_work;
+        gnsf_f_lo_jac_x1_x1dot_u_z[i].casadi_sparsity_in = &{{ model.name }}_gnsf_f_lo_jac_x1_x1dot_u_z_sparsity_in;
+        gnsf_f_lo_jac_x1_x1dot_u_z[i].casadi_sparsity_out = &{{ model.name }}_gnsf_f_lo_jac_x1_x1dot_u_z_sparsity_out;
+        gnsf_f_lo_jac_x1_x1dot_u_z[i].casadi_n_in = &{{ model.name }}_gnsf_f_lo_jac_x1_x1dot_u_z_n_in;
+        gnsf_f_lo_jac_x1_x1dot_u_z[i].casadi_n_out = &{{ model.name }}_gnsf_f_lo_jac_x1_x1dot_u_z_n_out;
+        external_function_param_casadi_create(&gnsf_f_lo_jac_x1_x1dot_u_z[i], {{ dims.np }});
+    }
+    // TODO(oj): add get_matrices function?
+{%- endif %}
 
 {%- if cost.cost_type == "NONLINEAR_LS" %}
     // nonlinear least squares cost
@@ -1230,19 +1281,28 @@ int acados_create()
     p[{{ i }}] = {{ parameter_values[i] }};
     {%- endfor %}
 
-    {% if solver_options.integrator_type == "IRK" %}
+{% if solver_options.integrator_type == "IRK" %}
     for (int ii = 0; ii < N; ii++)
     {
         impl_dae_fun[ii].set_param(impl_dae_fun+ii, p);
         impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun_jac_x_xdot_z+ii, p);
         impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_jac_x_xdot_u_z+ii, p);
     }
-    {% elif solver_options.integrator_type == "ERK" %}
+{% elif solver_options.integrator_type == "ERK" %}
     for (int ii = 0; ii < N; ii++)
     {
         forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
     }
-    {% endif %}
+{% elif solver_options.integrator_type == "GNSF" %}
+    for (int ii = 0; ii < N; ii++)
+    {
+        gnsf_phi_fun[ii].set_param(gnsf_phi_fun+ii, p);
+        gnsf_phi_fun_jac_y[ii].set_param(gnsf_phi_fun_jac_y+ii, p);
+        gnsf_phi_jac_y_uhat[ii].set_param(gnsf_phi_jac_y_uhat+ii, p);
+        gnsf_f_lo_jac_x1_x1dot_u_z[ii].set_param(gnsf_f_lo_jac_x1_x1dot_u_z+ii, p);
+    }
+{% endif %}
+
     for (int ii = 0; ii < N; ii++) {
         {%- if constraints.constr_type == "BGP" %}
         // r_constraint[ii].set_param(r_constraint+ii, p);
@@ -1280,7 +1340,7 @@ int acados_update_params(int stage, double *p, int np)
 {%- if dims.np > 0 %}
     if (stage < {{ dims.N }})
     {
-        {%- if solver_options.integrator_type == "IRK" %}
+    {%- if solver_options.integrator_type == "IRK" %}
         casadi_np = (impl_dae_fun+stage)->np;
         if (casadi_np != np) {
             printf("acados_update_params: trying to set %i parameters "
@@ -1305,16 +1365,49 @@ int acados_update_params(int stage, double *p, int np)
         }
         impl_dae_jac_x_xdot_u_z[stage].set_param(impl_dae_jac_x_xdot_u_z+stage, p);
 
-        {% elif solver_options.integrator_type == "ERK" %}
+    {% elif solver_options.integrator_type == "ERK" %}
         casadi_np = (forw_vde_casadi+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in forw_vde_casadi which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        forw_vde_casadi[stage].set_param(forw_vde_casadi+stage, p);
+
+    {% elif solver_options.integrator_type == "GNSF" %}
+        casadi_np = (gnsf_phi_fun+stage)->np;
         if (casadi_np != np) {
             printf("acados_update_params: trying to set %i parameters "
                 "in forw_vde_casad which only has %i. Exiting.\n", np, casadi_np);
             exit(1);
         }
-        forw_vde_casadi[stage].set_param(forw_vde_casadi+stage, p);
+        gnsf_phi_fun[stage].set_param(gnsf_phi_fun+stage, p);
 
-        {%- endif %}{# integrator_type #}
+        casadi_np = (gnsf_phi_fun_jac_y+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in gnsf_phi_fun_jac_y which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        gnsf_phi_fun_jac_y[stage].set_param(gnsf_phi_fun_jac_y+stage, p);
+
+        casadi_np = (gnsf_phi_jac_y_uhat+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in gnsf_phi_jac_y_uhat which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        gnsf_phi_jac_y_uhat[stage].set_param(gnsf_phi_jac_y_uhat+stage, p);
+
+        casadi_np = (gnsf_f_lo_jac_x1_x1dot_u_z+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in gnsf_f_lo_jac_x1_x1dot_u_z which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        gnsf_f_lo_jac_x1_x1dot_u_z[stage].set_param(gnsf_f_lo_jac_x1_x1dot_u_z+stage, p);
+
+    {%- endif %}{# integrator_type #}
         {% if constraints.constr_type == "BGP" %}
         // casadi_np = (r_constraint+stage)->np;
         // if (casadi_np != np) {
