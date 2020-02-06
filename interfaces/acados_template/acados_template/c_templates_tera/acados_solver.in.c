@@ -1226,8 +1226,8 @@ int acados_create()
     {% if dims.np > 0 %}
     // initialize parameters to nominal value
     double p[{{ dims.np }}];
-    {% for i in range(end=dims.np) %} {# TODO(oj): parameters should not be part of constraints imo.#}
-    p[{{ i }}] = {{ constraints.p[i] }};
+    {% for i in range(end=dims.np) %}
+    p[{{ i }}] = {{ parameter_values[i] }};
     {%- endfor %}
 
     {% if solver_options.integrator_type == "IRK" %}

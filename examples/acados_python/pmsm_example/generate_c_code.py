@@ -371,7 +371,7 @@ if FORMULATION == 1:
     nlp_con.x0 = x0Start
 
 # setting parameters
-nlp_con.p = nmp.array([w_val, 0.0, 0.0, tau_wal])
+ocp.parameter_values = nmp.array([w_val, 0.0, 0.0, tau_wal])
 
 # set QP solver
 # ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'

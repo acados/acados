@@ -75,7 +75,7 @@ def export_mhe_solver(model, N, h, Q, Q0, R):
 
     ocp_mhe.model.cost_y_expr = vertcat(x, u, x)
 
-    ocp_mhe.constraints.p = np.zeros((nparam, ))
+    ocp_mhe.parameter_values = np.zeros((nparam, ))
 
     # set y_ref for all stages
     ocp_mhe.cost.yref  = np.zeros((3*nx,))

@@ -252,7 +252,8 @@ else:
         test_data = json.load(f)
     simX_error = np.linalg.norm(test_data['simX'] - simX)
     simU_error = np.linalg.norm(test_data['simU'] - simU)
-    if  simX_error > TEST_TOL or  simU_error > TEST_TOL:
+
+    if simX_error > TEST_TOL or simU_error > TEST_TOL:
         raise Exception("Python acados test failure with accuracies" +
                         " {:.2E} and {:.2E} ({:.2E} required)".format(simX_error, simU_error, TEST_TOL) +
                         " on pendulum example! Exiting.\n")
