@@ -443,7 +443,7 @@ for i in range(Nsim):
     print("=================")
 
     # set options
-    acados_solver.opts_set('print_level', 0)
+    acados_solver.options_set('print_level', 0)
     status = acados_solver.solve()
 
     if status != 0:
@@ -496,8 +496,8 @@ for i in range(Nsim):
     print("\n")
 
     # update initial condition xk+1
-    acados_solver.cons_set(0, "lbx",  xvec_arg)
-    acados_solver.cons_set(0, "ubx",  xvec_arg)
+    acados_solver.constraints_set(0, "lbx",  xvec_arg)
+    acados_solver.constraints_set(0, "ubx",  xvec_arg)
 
     for j in range(N):
         acados_solver.cost_set(j, "W",  nlp_cost.W)

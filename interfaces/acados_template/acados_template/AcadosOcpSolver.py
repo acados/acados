@@ -539,7 +539,7 @@ class AcadosOcpSolver:
         return
 
 
-    def cons_set(self, stage_, field_, value_):
+    def constraints_set(self, stage_, field_, value_):
         """
         set numerical data in the constraint module of the solver:
         Parameters:
@@ -583,7 +583,7 @@ class AcadosOcpSolver:
         return
 
 
-    def opts_set(self, field_, value_):
+    def options_set(self, field_, value_):
         """
         set options of the solver:
         Parameters:
