@@ -91,6 +91,7 @@ ocp.constraints.idxbu = np.array([0])
 ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
 ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
 ocp.solver_options.integrator_type = 'ERK'
+ocp.solver_options.print_level = 0
 
 # set prediction horizon
 ocp.solver_options.tf = Tf

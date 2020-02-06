@@ -1190,6 +1190,9 @@ int acados_create()
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "max_iter", &nlp_solver_max_iter);
 {%- endif %}
 
+    int print_level = {{ solver_options.print_level }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "print_level", &print_level);
+
     /* out */
     nlp_out = ocp_nlp_out_create(nlp_config, nlp_dims);
 
