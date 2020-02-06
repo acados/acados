@@ -46,7 +46,7 @@ from .generate_c_code_nls_cost import generate_c_code_nls_cost
 from .generate_c_code_external_cost import generate_c_code_external_cost
 from .AcadosOcp import AcadosOcp
 from .AcadosModel import acados_model_strip_casadi_symbolics
-from .utils import is_column, render_template, dict2json, json2dict, np_array_to_list
+from .utils import is_column, is_empty, casadi_length, render_template, dict2json, json2dict, np_array_to_list
 
 
 def make_ocp_dims_consistent(acados_ocp):
@@ -72,28 +72,27 @@ def make_ocp_dims_consistent(acados_ocp):
 
     # nx
     if is_column(model.x):
-        dims.nx = model.x.shape[0]
+        dims.nx = casadi_length(model.x)
     else:
         raise Exception("model.x should be column vector!")
 
-    # # nu
-    # if not model.u == None:
-    #     if is_column(model.u):
-    #         dims.nu = model.u.shape[0]
-    #     else:
-    #         raise Exception("model.u should be column vector!")
-    # else:
-    #     dims.nu = 0
+    # nu
+    if is_empty(model.u):
+        dims.nu = 0
+    else:
+        dims.nu = casadi_length(model.u)
 
-    # # nz
-    # if not model.z == None:
-    #     print(model.z)
-    #     if is_column(model.z):
-    #         dims.nz = model.z.shape[0]
-    #     else:
-    #         raise Exception("model.z should be column vector!")
-    # else:
-    #     dims.nz = 0
+    # nz
+    if is_empty(model.z):
+        dims.nz = 0
+    else:
+        dims.nz = casadi_length(model.z)
+
+    # np
+    if is_empty(model.p):
+        dims.np = 0
+    else:
+        dims.np = casadi_length(model.p)
 
 
 def get_ocp_nlp_layout():

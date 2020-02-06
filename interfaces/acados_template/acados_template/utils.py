@@ -89,7 +89,7 @@ def is_empty(x):
 
 def casadi_length(x):
     if isinstance(x, (MX, SX, DM)):
-        return np.prod(x.shape)
+        return int(np.prod(x.shape))
     else:
         raise Exception("casadi_length expects one of the following types: casadi.MX, casadi.SX."
                         + " Got: " + str(type(x)))
