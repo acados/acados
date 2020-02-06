@@ -1562,7 +1562,8 @@ class AcadosOcpOptions:
         self.__nlp_solver_tol_ineq = 1e-6                     # NLP solver inequality
         self.__nlp_solver_tol_comp = 1e-6                     # NLP solver complementarity
         self.__nlp_solver_max_iter = 100                      # NLP solver maximum number of iterations
-        self.__Tsim = None                                    # automatically calculated as tf/N;
+        self.__Tsim = None                                    # automatically calculated as tf/N
+        self.__print_level = 0                                # print level (possible values: 0, 1)
         # TODO(oj): add the following
         # self.__regularize_method = None
 
@@ -1672,6 +1673,11 @@ class AcadosOcpOptions:
     def Tsim(self):
         """Time horizon for one integrator step"""
         return self.__Tsim
+
+    @property
+    def print_level(self):
+        """Verbosity of printing"""
+        return self.__print_level
 
     @qp_solver.setter
     def qp_solver(self, qp_solver):
@@ -1840,6 +1846,14 @@ class AcadosOcpOptions:
             self.__nlp_solver_max_iter = nlp_solver_max_iter
         else:
             raise Exception('Invalid nlp_solver_max_iter value. nlp_solver_max_iter must be a positive int. Exiting')
+
+    @print_level.setter
+    def print_level(self, print_level):
+
+        if type(print_level) == int and print_level >= 0 and print_level <= 1:
+            self.__print_level = print_level
+        else:
+            raise Exception('Invalid print_level value. print_level take one of the values in {0,1}. Exiting')
 
     def set(self, attr, value):
         setattr(self, attr, value)

@@ -441,6 +441,9 @@ for i in range(Nsim):
     print("\n")
     print("SimulationStep = ", i)
     print("=================")
+
+    # set options
+    acados_solver.options_set('print_level', 0)
     status = acados_solver.solve()
 
     if status != 0:
