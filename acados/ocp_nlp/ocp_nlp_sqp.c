@@ -125,6 +125,7 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
 
     opts->qp_warm_start = 0;
     opts->warm_start_first_qp = false;
+    opts->print_level = 0;
 
     // overwrite default submodules opts
 
@@ -232,6 +233,15 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
         {
             bool* warm_start_first_qp = (bool *) value;
             opts->warm_start_first_qp = *warm_start_first_qp;
+        }
+        else if (!strcmp(field, "print_level"))
+        {
+            int* print_level = (int *) value;
+            if (*print_level < 0 || *print_level > 1) {
+                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for print_level field."); 
+                printf("possible values are: 0, 1\n");
+                exit(1);
+            } else opts->print_level = *print_level;
         }
         else
         {
@@ -570,7 +580,11 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     for (; sqp_iter < opts->max_iter; sqp_iter++)
     {
 		
-//        printf("\n------- sqp iter %d (max_iter %d) --------\n", sqp_iter, opts->max_iter);
+        if (opts->print_level > 0)
+        {   
+            printf("\n------- sqp iter %d (max_iter %d) --------\n", 
+                sqp_iter, opts->max_iter);
+        }
 //        if (sqp_iter==2)
 //        exit(1);
 
@@ -611,8 +625,11 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             (mem->nlp_res->inf_norm_res_d < opts->tol_ineq) &
             (mem->nlp_res->inf_norm_res_m < opts->tol_comp))
         {
-            // printf("%d sqp iterations\n", sqp_iter);
-            // print_ocp_qp_in(nlp_mem->qp_in);
+            if (opts->print_level > 0)
+            {
+                printf("%d sqp iterations\n", sqp_iter);
+                print_ocp_qp_in(nlp_mem->qp_in);
+            }
 
             // save sqp iterations number
             mem->sqp_iter = sqp_iter;

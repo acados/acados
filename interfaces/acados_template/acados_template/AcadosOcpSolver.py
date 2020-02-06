@@ -582,5 +582,28 @@ class AcadosOcpSolver:
         return
 
 
+    def options_set(self, field_, value_):
+        """
+        set options of the solver:
+        Parameters:
+            :param field_: string, e.g. 'print_level'
+            :param value_: of type int
+        """
+        # cast value_ to avoid conversion issues
+        if isinstance(value_, int) is not True:
+            raise Exception('solver options must be of type int. You have {}'.format())
+
+        field = field_
+        field = field.encode('utf-8')
+
+        value_ctypes = c_int(value_)
+
+        self.shared_lib.ocp_nlp_solver_opts_set.argtypes = \
+            [c_void_p, c_void_p, c_char_p, c_void_p]
+        self.shared_lib.ocp_nlp_solver_opts_set(self.nlp_config, \
+            self.nlp_opts, field, byref(value_ctypes))
+
+        return
+
     def __del__(self):
         self.shared_lib.acados_free()

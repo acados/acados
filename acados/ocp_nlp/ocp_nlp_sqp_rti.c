@@ -119,10 +119,10 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_, void *dims_, void *o
     ocp_nlp_opts_initialize_default(config, dims, nlp_opts);
 
     // SQP RTI opts
-    opts->warm_start_first_qp = false;
-//    opts->compute_dual_sol = 1;
-
+    //    opts->compute_dual_sol = 1;
     opts->ext_qp_res = 0;
+    opts->warm_start_first_qp = false;
+    opts->print_level = 0;
 
     // overwrite default submodules opts
 
@@ -206,6 +206,15 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_, const char *field, voi
         {
             bool* warm_start_first_qp = (bool *) value;
             opts->warm_start_first_qp = *warm_start_first_qp;
+        }
+        else if (!strcmp(field, "print_level"))
+        {
+            int* print_level = (int *) value;
+            if (*print_level < 0 || *print_level > 1) {
+                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for print_level field."); 
+                printf("possible values are: 0, 1\n");
+                exit(1);
+            } else opts->print_level = *print_level;
         }
         else
         {
@@ -557,8 +566,10 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     config->regularize->regularize_hessian(config->regularize, dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
     mem->time_reg += acados_toc(&timer1);
 
-    // printf("\n------- qp_in (sqp iter %d) --------\n", sqp_iter);
-    // print_ocp_qp_in(nlp_mem->qp_in);
+    if (opts->print_level > 0) {
+        printf("\n------- qp_in (sqp iter %d) --------\n", sqp_iter);
+        print_ocp_qp_in(nlp_mem->qp_in);
+    }
     // exit(1);
 
     if (!opts->warm_start_first_qp)
