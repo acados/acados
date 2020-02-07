@@ -113,7 +113,7 @@ OCP_OBJ=
 {% if constr_type == "BGP" and dims_nphi > 0 %}
 OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_phi_constraint.o
 # OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_r_constraint.o
-{% endif %}
+{%- endif %}
 {% if constr_type_e == "BGP" and dims_nphi_e > 0 %}
 OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_phi_e_constraint.o
 # OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_r_e_constraint.o
@@ -287,3 +287,7 @@ clean:
 	rm -f *.o
 	rm -f *.so
 	rm -f main_{{ model.name}}
+
+clean_ocp_shared_lib:
+	rm -f libacados_ocp_solver_{{ model.name }}.so
+	rm -f acados_solver_{{ model.name }}.o

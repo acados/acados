@@ -327,14 +327,15 @@ class AcadosOcpSolver:
 
         ## Compile solver
         os.chdir('c_generated_code')
-        # os.system('make clean')
+        os.system('make clean_ocp_shared_lib')
+        # import pdb; pdb.set_trace()
         os.system('make ocp_shared_lib')
         os.chdir('..')
 
-        shared_lib = 'c_generated_code/libacados_ocp_solver_' + model.name + '.so'
+        self.shared_lib_name = 'c_generated_code/libacados_ocp_solver_' + model.name + '.so'
 
         # get
-        self.shared_lib = CDLL(shared_lib)
+        self.shared_lib = CDLL(self.shared_lib_name)
         self.shared_lib.acados_create()
 
         self.shared_lib.acados_get_nlp_opts.restype = c_void_p
@@ -607,3 +608,9 @@ class AcadosOcpSolver:
 
     def __del__(self):
         self.shared_lib.acados_free()
+        del self.shared_lib
+
+        # NOTE: DLL cannot be easily unloaded!!!
+        # see https://stackoverflow.com/questions/359498/how-can-i-unload-a-dll-using-ctypes-in-python
+        # while isLoaded(self.shared_lib_name):
+        #     dlclose(handle)
