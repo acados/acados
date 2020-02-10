@@ -1640,6 +1640,11 @@ class AcadosOcpOptions:
         return self.__qp_solver_iter_max
 
     @property
+    def tol(self):
+        """NLP solver tolerance"""
+        return max([self.__nlp_solver_tol_eq, self.__nlp_solver_tol_ineq, self.__nlp_solver_tol_comp, self.__nlp_solver_tol_stat])
+
+    @property
     def nlp_solver_tol_stat(self):
         """NLP solver stationarity tolerance"""
         return self.__nlp_solver_tol_stat
@@ -1651,12 +1656,12 @@ class AcadosOcpOptions:
 
     @property
     def nlp_solver_tol_ineq(self):
-        """NLP solver inequality"""
+        """NLP solver inequality tolerance"""
         return self.__nlp_solver_tol_ineq
 
     @property
     def nlp_solver_tol_comp(self):
-        """NLP solver complementarity"""
+        """NLP solver complementarity tolerance"""
         return self.__nlp_solver_tol_comp
 
     @property
@@ -1814,6 +1819,18 @@ class AcadosOcpOptions:
             self.__nlp_solver_tol_stat = nlp_solver_tol_stat
         else:
             raise Exception('Invalid nlp_solver_tol_stat value. nlp_solver_tol_stat must be a positive float. Exiting')
+
+    @tol.setter
+    def tol(self, tol):
+
+        if type(tol) == float and tol > 0:
+            self.__nlp_solver_tol_eq = tol
+            self.__nlp_solver_tol_ineq = tol
+            self.__nlp_solver_tol_stat = tol
+            self.__nlp_solver_tol_comp = tol
+        else:
+            raise Exception('Invalid tol value. tol must be a positive float. Exiting')
+
 
     @nlp_solver_tol_eq.setter
     def nlp_solver_tol_eq(self, nlp_solver_tol_eq):
