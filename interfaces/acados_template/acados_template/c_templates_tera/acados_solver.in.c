@@ -120,6 +120,7 @@ external_function_param_casadi * gnsf_phi_fun;
 external_function_param_casadi * gnsf_phi_fun_jac_y;
 external_function_param_casadi * gnsf_phi_jac_y_uhat;
 external_function_param_casadi * gnsf_f_lo_jac_x1_x1dot_u_z;
+external_function_param_casadi * gnsf_get_matrices_fun;
 {%- endif %}
 
 {% if constraints.constr_type == "BGH" %}
@@ -319,13 +320,13 @@ int acados_create()
 
     for (int i = 0; i < N; i++)
     {
-        if (plan->sim_solver_plan[i].sim_solver == GNSF)
+        if (nlp_solver_plan->sim_solver_plan[i].sim_solver == GNSF)
         {
-            ocp_nlp_dims_set_dynamics(config, dims, i, "gnsf_nx1", &gnsf_nx1);
-            ocp_nlp_dims_set_dynamics(config, dims, i, "gnsf_nz1", &gnsf_nz1);
-            ocp_nlp_dims_set_dynamics(config, dims, i, "gnsf_nout", &gnsf_nout);
-            ocp_nlp_dims_set_dynamics(config, dims, i, "gnsf_ny", &gnsf_ny);
-            ocp_nlp_dims_set_dynamics(config, dims, i, "gnsf_nuhat", &gnsf_nuhat);
+            ocp_nlp_dims_set_dynamics(nlp_config, nlp_dims, i, "gnsf_nx1", &gnsf_nx1);
+            ocp_nlp_dims_set_dynamics(nlp_config, nlp_dims, i, "gnsf_nz1", &gnsf_nz1);
+            ocp_nlp_dims_set_dynamics(nlp_config, nlp_dims, i, "gnsf_nout", &gnsf_nout);
+            ocp_nlp_dims_set_dynamics(nlp_config, nlp_dims, i, "gnsf_ny", &gnsf_ny);
+            ocp_nlp_dims_set_dynamics(nlp_config, nlp_dims, i, "gnsf_nuhat", &gnsf_nuhat);
         }
     }
 {%- endif %}
@@ -509,15 +510,25 @@ int acados_create()
 
     gnsf_f_lo_jac_x1_x1dot_u_z = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; i++) {
-        gnsf_f_lo_jac_x1_x1dot_u_z[i].casadi_fun = &{{ model.name }}_gnsf_f_lo_jac_x1_x1dot_u_z;
-        gnsf_f_lo_jac_x1_x1dot_u_z[i].casadi_work = &{{ model.name }}_gnsf_f_lo_jac_x1_x1dot_u_z_work;
-        gnsf_f_lo_jac_x1_x1dot_u_z[i].casadi_sparsity_in = &{{ model.name }}_gnsf_f_lo_jac_x1_x1dot_u_z_sparsity_in;
-        gnsf_f_lo_jac_x1_x1dot_u_z[i].casadi_sparsity_out = &{{ model.name }}_gnsf_f_lo_jac_x1_x1dot_u_z_sparsity_out;
-        gnsf_f_lo_jac_x1_x1dot_u_z[i].casadi_n_in = &{{ model.name }}_gnsf_f_lo_jac_x1_x1dot_u_z_n_in;
-        gnsf_f_lo_jac_x1_x1dot_u_z[i].casadi_n_out = &{{ model.name }}_gnsf_f_lo_jac_x1_x1dot_u_z_n_out;
+        gnsf_f_lo_jac_x1_x1dot_u_z[i].casadi_fun = &{{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz;
+        gnsf_f_lo_jac_x1_x1dot_u_z[i].casadi_work = &{{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz_work;
+        gnsf_f_lo_jac_x1_x1dot_u_z[i].casadi_sparsity_in = &{{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz_sparsity_in;
+        gnsf_f_lo_jac_x1_x1dot_u_z[i].casadi_sparsity_out = &{{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz_sparsity_out;
+        gnsf_f_lo_jac_x1_x1dot_u_z[i].casadi_n_in = &{{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz_n_in;
+        gnsf_f_lo_jac_x1_x1dot_u_z[i].casadi_n_out = &{{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz_n_out;
         external_function_param_casadi_create(&gnsf_f_lo_jac_x1_x1dot_u_z[i], {{ dims.np }});
     }
-    // TODO(oj): add get_matrices function?
+
+    gnsf_get_matrices_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
+    for (int i = 0; i < N; i++) {
+        gnsf_get_matrices_fun[i].casadi_fun = &{{ model.name }}_gnsf_get_matrices_fun;
+        gnsf_get_matrices_fun[i].casadi_work = &{{ model.name }}_gnsf_get_matrices_fun_work;
+        gnsf_get_matrices_fun[i].casadi_sparsity_in = &{{ model.name }}_gnsf_get_matrices_fun_sparsity_in;
+        gnsf_get_matrices_fun[i].casadi_sparsity_out = &{{ model.name }}_gnsf_get_matrices_fun_sparsity_out;
+        gnsf_get_matrices_fun[i].casadi_n_in = &{{ model.name }}_gnsf_get_matrices_fun_n_in;
+        gnsf_get_matrices_fun[i].casadi_n_out = &{{ model.name }}_gnsf_get_matrices_fun_n_out;
+        external_function_param_casadi_create(&gnsf_get_matrices_fun[i], {{ dims.np }});
+    }
 {%- endif %}
 
 {%- if cost.cost_type == "NONLINEAR_LS" %}
@@ -629,6 +640,8 @@ int acados_create()
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "phi_jac_y_uhat", &gnsf_phi_jac_y_uhat[i]);
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "f_lo_jac_x1_x1dot_u_z",
                                    &gnsf_f_lo_jac_x1_x1dot_u_z[i]);
+        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "gnsf_get_matrices_fun",
+                                   &gnsf_get_matrices_fun[i]);
     {%- endif %}
     }
 
