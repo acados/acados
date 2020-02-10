@@ -36,11 +36,13 @@ import sys, os, json
 import numpy as np
 
 from ctypes import *
+from casadi import Function
 
 from copy import deepcopy
 
 from .generate_c_code_explicit_ode import generate_c_code_explicit_ode
 from .generate_c_code_implicit_ode import generate_c_code_implicit_ode
+from .generate_c_code_gnsf import generate_c_code_gnsf
 from .generate_c_code_constraint import generate_c_code_constraint
 from .generate_c_code_nls_cost import generate_c_code_nls_cost
 from .generate_c_code_external_cost import generate_c_code_external_cost
@@ -93,6 +95,34 @@ def make_ocp_dims_consistent(acados_ocp):
         dims.np = 0
     else:
         dims.np = casadi_length(model.p)
+
+
+def set_up_imported_gnsf_model(acados_ocp):
+
+    gnsf = acados_ocp.gnsf_model
+
+    # load model
+    # TODO: check dumped casadi symbolics are generated with the same casadi version?!
+    phi_fun = Function.deserialize(gnsf['phi_fun'])
+    phi_fun_jac_y = Function.deserialize(gnsf['phi_fun_jac_y'])
+    phi_jac_y_uhat = Function.deserialize(gnsf['phi_jac_y_uhat'])
+    f_lo_fun_jac_x1k1uz = Function.deserialize(gnsf['f_lo_fun_jac_x1k1uz'])
+    get_matrices_fun = Function.deserialize(gnsf['get_matrices_fun'])
+
+    # obtain gnsf dimensions
+    size_gnsf_A = get_matrices_fun.size_out(0)
+    acados_ocp.dims.gnsf_nx1 = size_gnsf_A[1]
+    acados_ocp.dims.gnsf_nz1 = size_gnsf_A[0] - size_gnsf_A[1]
+    acados_ocp.dims.gnsf_nuhat = max(phi_fun.size_in(1))
+    acados_ocp.dims.gnsf_ny = max(phi_fun.size_in(0))
+    acados_ocp.dims.gnsf_nout = max(phi_fun.size_out(0))
+
+    # save gnsf functions in model
+    acados_ocp.model.phi_fun = phi_fun
+    acados_ocp.model.phi_fun_jac_y = phi_fun_jac_y
+    acados_ocp.model.phi_jac_y_uhat = phi_jac_y_uhat
+    acados_ocp.model.f_lo_fun_jac_x1k1uz = f_lo_fun_jac_x1k1uz
+    acados_ocp.model.get_matrices_fun = get_matrices_fun
 
 
 def get_ocp_nlp_layout():
@@ -157,10 +187,15 @@ def ocp_generate_external_functions(acados_ocp, model):
     if acados_ocp.solver_options.integrator_type == 'ERK':
         # explicit model -- generate C code
         generate_c_code_explicit_ode(model)
-    else:
+    elif acados_ocp.solver_options.integrator_type == 'IRK':
         # implicit model -- generate C code
         opts = dict(generate_hess=1)
         generate_c_code_implicit_ode(model, opts)
+    elif acados_ocp.solver_options.integrator_type == 'GNSF':
+        generate_c_code_gnsf(model)
+    else:
+        raise Exception("ocp_generate_external_functions: unknown integrator type.")
+
 
     if acados_ocp.dims.nphi > 0 or acados_ocp.dims.nh > 0:
         generate_c_code_constraint(model, model.name, False)
@@ -312,6 +347,9 @@ class AcadosOcpSolver:
 
         # make dims consistent
         make_ocp_dims_consistent(acados_ocp)
+
+        if acados_ocp.solver_options.integrator_type == 'GNSF':
+            set_up_imported_gnsf_model(acados_ocp)
 
         # set integrator time automatically
         acados_ocp.solver_options.Tsim = acados_ocp.solver_options.tf / acados_ocp.dims.N
