@@ -36,7 +36,7 @@ import sys, os, json
 import numpy as np
 
 from ctypes import *
-from casadi import Function
+from casadi import CasadiMeta, Function
 
 from copy import deepcopy
 
@@ -101,8 +101,16 @@ def set_up_imported_gnsf_model(acados_ocp):
 
     gnsf = acados_ocp.gnsf_model
 
+    # check CasADi version
+    dump_casadi_version = gnsf['casadi_version']
+    casadi_version = CasadiMeta.version()
+
+    if not casadi_version == dump_casadi_version:
+        raise Exception("GNSF model was dumped with another CasADi version.\n"
+                + "Please use the same version for compatibility, serialize version:"
+                + dump_casadi_version + " current Python CasADi verison: " + casadi_version)
+
     # load model
-    # TODO: check dumped casadi symbolics are generated with the same casadi version?!
     phi_fun = Function.deserialize(gnsf['phi_fun'])
     phi_fun_jac_y = Function.deserialize(gnsf['phi_fun_jac_y'])
     phi_jac_y_uhat = Function.deserialize(gnsf['phi_jac_y_uhat'])
