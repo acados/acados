@@ -7,6 +7,12 @@
             "str"
         ]
     },
+    "parameter_values": [
+        "ndarray",
+        [
+            "np"
+        ]
+    ],
     "acados_lib_path": [
         "str"
     ],
@@ -306,12 +312,6 @@
             "ndarray",
             [
                 "nsphi_e"
-            ]
-        ],
-        "p": [
-            "ndarray",
-            [
-                "np"
             ]
         ]
     },
