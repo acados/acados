@@ -237,11 +237,12 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
         else if (!strcmp(field, "print_level"))
         {
             int* print_level = (int *) value;
-            if (*print_level < 0 || *print_level > 1) {
-                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for print_level field."); 
-                printf("possible values are: 0, 1\n");
+            if (*print_level < 0)
+            {
+                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for print_level field, need int >=0, got %d.", *print_level);
                 exit(1);
-            } else opts->print_level = *print_level;
+            }
+            opts->print_level = *print_level;
         }
         else
         {
@@ -581,12 +582,12 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     {
 		
         if (opts->print_level > 0)
-        {   
+        {
             printf("\n------- sqp iter %d (max_iter %d) --------\n", 
                 sqp_iter, opts->max_iter);
+            if (opts->print_level > sqp_iter)
+                print_ocp_qp_in(nlp_mem->qp_in);
         }
-//        if (sqp_iter==2)
-//        exit(1);
 
         // linearizate NLP and update QP matrices
         acados_tic(&timer1);
@@ -625,12 +626,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             (mem->nlp_res->inf_norm_res_d < opts->tol_ineq) &
             (mem->nlp_res->inf_norm_res_m < opts->tol_comp))
         {
-            if (opts->print_level > 0)
-            {
-                printf("%d sqp iterations\n", sqp_iter);
-                print_ocp_qp_in(nlp_mem->qp_in);
-            }
-
             // save sqp iterations number
             mem->sqp_iter = sqp_iter;
             nlp_out->sqp_iter = sqp_iter;
@@ -656,11 +651,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         config->regularize->regularize_hessian(config->regularize, dims->regularize,
                                                opts->nlp_opts->regularize, nlp_mem->regularize_mem);
         mem->time_reg += acados_toc(&timer1);
-
-        // printf("\n------- qp_in (sqp iter %d) --------\n", sqp_iter);
-        // print_ocp_qp_in(nlp_mem->qp_in);
-        // if (sqp_iter==1)
-        // exit(1);
 
         // (typically) no warm start at first iteration
         if (sqp_iter == 0 && !opts->warm_start_first_qp)
@@ -778,9 +768,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // save time
     mem->time_tot = total_time;
     nlp_out->total_time = total_time;
-
-    // printf("%d sqp iterations\n", sqp_iter);
-    // print_ocp_qp_in(mem->qp_in);
 
     // maximum number of iterations reached
 #if defined(ACADOS_WITH_OPENMP)

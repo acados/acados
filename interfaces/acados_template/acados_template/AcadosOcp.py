@@ -1867,10 +1867,10 @@ class AcadosOcpOptions:
     @print_level.setter
     def print_level(self, print_level):
 
-        if type(print_level) == int and print_level >= 0 and print_level <= 1:
+        if type(print_level) == int and print_level >= 0:
             self.__print_level = print_level
         else:
-            raise Exception('Invalid print_level value. print_level take one of the values in {0,1}. Exiting')
+            raise Exception('Invalid print_level value. print_level takes one of the values >=0. Exiting')
 
     def set(self, attr, value):
         setattr(self, attr, value)
