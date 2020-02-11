@@ -1221,17 +1221,16 @@ int acados_create()
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "step_length", &nlp_solver_step_length);
 
     /* options QP solver */
-{% if solver_options.qp_solver is starting_with("PARTIAL_CONDENSING") %}
-        int qp_solver_cond_N;
+{%- if solver_options.qp_solver is starting_with("PARTIAL_CONDENSING") %}
+    int qp_solver_cond_N;
 
-        {%- if solver_options.qp_solver_cond_N %}
-        qp_solver_cond_N = {{ solver_options.qp_solver_cond_N }};
-        {% else %}
-        // NOTE: there is no condensing happening here!
-        qp_solver_cond_N = N;
-        {% endif %}
-
-        ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_cond_N", &qp_solver_cond_N);
+    {%- if solver_options.qp_solver_cond_N %}
+    qp_solver_cond_N = {{ solver_options.qp_solver_cond_N }};
+    {% else %}
+    // NOTE: there is no condensing happening here!
+    qp_solver_cond_N = N;
+    {%- endif %}
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_cond_N", &qp_solver_cond_N);
 {% endif %}
 
     int qp_solver_iter_max = {{ solver_options.qp_solver_iter_max }};
