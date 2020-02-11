@@ -33,12 +33,13 @@
 
 classdef acados_ocp_nlp_json < handle
     properties
-        dims 
-        cost 
+        dims
+        cost
         constraints 
         solver_options
-        model 
-        con_p 
+        model
+        parameter_values % initial value of the parameter
+        con_p
         con_p_e 
         con_h 
         con_h_e 
@@ -58,6 +59,7 @@ classdef acados_ocp_nlp_json < handle
             obj.con_h_e = acados_template_mex.acados_constraint();
             obj.acados_include_path = [];
             obj.acados_lib_path = [];
+            obj.parameter_values = [];
         end
     end
 end

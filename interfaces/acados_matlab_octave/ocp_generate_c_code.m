@@ -175,6 +175,9 @@ function ocp_generate_c_code(obj)
     end
     obj.acados_ocp_nlp_json.cost = cost;
 
+    % parameter values
+    obj.acados_ocp_nlp_json.parameter_values = reshape(num2cell(obj.acados_ocp_nlp_json.parameter_values), [ 1, dims.np]);
+
     %% dump JSON file
     % if is_octave()
         % savejson does not work for classes!
