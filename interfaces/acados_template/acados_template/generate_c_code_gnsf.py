@@ -58,26 +58,51 @@ def generate_c_code_gnsf( model ):
     model_dir_location = './' + model_dir
     os.chdir(model_dir_location)
 
+    # obtain gnsf dimensions
+    get_matrices_fun = model.get_matrices_fun
+    phi_fun = model.phi_fun
+
+    size_gnsf_A = get_matrices_fun.size_out(0)
+    gnsf_nx1 = size_gnsf_A[1]
+    gnsf_nz1 = size_gnsf_A[0] - size_gnsf_A[1]
+    gnsf_nuhat = max(phi_fun.size_in(1))
+    gnsf_ny = max(phi_fun.size_in(0))
+    gnsf_nout = max(phi_fun.size_out(0))
+
+    # set up functions
+    y = SX.sym("y", gnsf_ny, 1)
+    uhat = SX.sym("uhat", gnsf_nuhat, 1)
+    p = model.p
+    u = model.u
+    x1 = SX.sym("gnsf_x1", gnsf_nx1, 1)
+    x1dot = SX.sym("gnsf_x1dot", gnsf_nx1, 1)
+    z1 = SX.sym("gnsf_z1", gnsf_nz1, 1)
+    dummy = SX.sym("gnsf_dummy", 1, 1)
+
     ## generate C code
     fun_name = model_name + '_gnsf_phi_fun'
-    phi_fun = model.phi_fun
-    phi_fun.generate(fun_name, casadi_opts)
+    phi_fun_ = Function(fun_name, [y, uhat, p], [phi_fun(y, uhat, p)])
+    phi_fun_.generate(fun_name, casadi_opts)
 
     fun_name = model_name + '_gnsf_phi_fun_jac_y'
     phi_fun_jac_y = model.phi_fun_jac_y
-    phi_fun_jac_y.generate(fun_name, casadi_opts)
+    phi_fun_jac_y_ = Function(fun_name, [y, uhat, p], phi_fun_jac_y(y, uhat, p))
+    phi_fun_jac_y_.generate(fun_name, casadi_opts)
 
     fun_name = model_name + '_gnsf_phi_jac_y_uhat'
     phi_jac_y_uhat = model.phi_jac_y_uhat
-    phi_jac_y_uhat.generate(fun_name, casadi_opts)
+    phi_jac_y_uhat_ = Function(fun_name, [y, uhat, p], phi_jac_y_uhat(y, uhat, p))
+    phi_jac_y_uhat_.generate(fun_name, casadi_opts)
 
     fun_name = model_name + '_gnsf_f_lo_fun_jac_x1k1uz'
     f_lo_fun_jac_x1k1uz = model.f_lo_fun_jac_x1k1uz
-    f_lo_fun_jac_x1k1uz.generate(fun_name, casadi_opts)
+    f_lo_fun_jac_x1k1uz_ = Function(fun_name, [x1, x1dot, z1, u, p],
+                f_lo_fun_jac_x1k1uz(x1, x1dot, z1, u, p) )
+    f_lo_fun_jac_x1k1uz_.generate(fun_name, casadi_opts)
 
     fun_name = model_name + '_gnsf_get_matrices_fun'
-    get_matrices_fun = model.get_matrices_fun
-    get_matrices_fun.generate(fun_name, casadi_opts)
+    get_matrices_fun_ = Function(fun_name, [dummy], get_matrices_fun(1))
+    get_matrices_fun_.generate(fun_name, casadi_opts)
 
     # remove fields for json dump
     del model.phi_fun
