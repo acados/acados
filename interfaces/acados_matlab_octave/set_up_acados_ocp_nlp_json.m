@@ -366,13 +366,16 @@ function idx = J_to_idx_slack(J)
     for i = 1:nrows
         this_idx = find(J(i,:));
         if length(this_idx) == 1
-            idx(i_idx) = this_idx - 1; % strore 0-based index
+            idx(i_idx) = i - 1; % store 0-based index
             i_idx = i_idx + 1;
         elseif length(this_idx) > 1
-            error(['J_to_idx: Invalid J matrix. Exiting. Found more than one nonzero in row ' num2str(i)]);
+            error(['J_to_idx_slack: Invalid J matrix. Exiting. Found more than one nonzero in row ' num2str(i)]);
         end
         if J(i,this_idx) ~= 1
-            error(['J_to_idx: J matrices can only contain 1s, got J(' num2str(i) ', ' num2str(this_idx) ') = ' num2str(J(i,this_idx)) ]);
+            error(['J_to_idx_slack: J matrices can only contain 1s, got J(' num2str(i) ', ' num2str(this_idx) ') = ' num2str(J(i,this_idx)) ]);
         end
+    end
+    if i_idx ~= ncol + 1
+        error('J_to_idx_slack: J must contain a 1 in every column!')
     end
 end
