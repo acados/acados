@@ -355,3 +355,35 @@ def json2dict_rec(ocp_nlp, ocp_dims, ocp_nlp_layout):
                     raise Exception('acados -- mismatching dimensions for field {0}. Provided data has dimensions {1}, while associated dimensions {2} are {3}'.format(out_key, v_dims, dims_names, dims))
         out[k.replace(k, out_key)] = v
     return out
+
+
+def J_to_idx(J):
+    nrows = J.shape[0]
+    idx = np.zeros((nrows, ))
+    for i in range(nrows):
+        this_idx = np.nonzero(J[i,:])[0]
+        if len(this_idx) != 1:
+            raise Exception('Invalid J matrix structure detected, must contain one nonzero element per row. Exiting.')
+        if J[i,this_idx[0]] != 1:
+            raise Exception('J matrices can only contain 1s. Exiting.')
+        idx[i] = this_idx[0]
+    return idx
+
+
+def J_to_idx_slack(J):
+    nrows = J.shape[0]
+    ncol = J.shape[1]
+    idx = np.zeros((ncol, ))
+    i_idx = 0
+    for i in range(nrows):
+        this_idx = np.nonzero(J[i,:])[0]
+        if len(this_idx) == 1:
+            idx[i_idx] = i
+            i_idx = i_idx + 1
+        elif len(this_idx) > 1:
+            raise Exception('J_to_idx_slack: Invalid J matrix. Exiting. Found more than one nonzero in row ' + str(i))
+        if this_idx != [] and J[i,this_idx[0]] != 1:
+            raise Exception('J_to_idx_slack: J matrices can only contain 1s, got J(' + str(i) + ', ' + str(this_idx[0]) + ') = ' + str(J[i,this_idx[0]]) )
+    if not i_idx == ncol:
+            raise Exception('J_to_idx_slack: J must contain a 1 in every column!')
+    return idx
