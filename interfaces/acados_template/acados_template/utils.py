@@ -364,7 +364,7 @@ def J_to_idx(J):
         this_idx = np.nonzero(J[i,:])[0]
         if len(this_idx) != 1:
             raise Exception('Invalid J matrix structure detected, must contain one nonzero element per row. Exiting.')
-        if J[i,this_idx[0]] != 1:
+        if this_idx.size > 0 and J[i,this_idx[0]] != 1:
             raise Exception('J matrices can only contain 1s. Exiting.')
         idx[i] = this_idx[0]
     return idx
@@ -382,7 +382,7 @@ def J_to_idx_slack(J):
             i_idx = i_idx + 1
         elif len(this_idx) > 1:
             raise Exception('J_to_idx_slack: Invalid J matrix. Exiting. Found more than one nonzero in row ' + str(i))
-        if this_idx != [] and J[i,this_idx[0]] != 1:
+        if this_idx.size > 0 and J[i,this_idx[0]] != 1:
             raise Exception('J_to_idx_slack: J matrices can only contain 1s, got J(' + str(i) + ', ' + str(this_idx[0]) + ') = ' + str(J[i,this_idx[0]]) )
     if not i_idx == ncol:
             raise Exception('J_to_idx_slack: J must contain a 1 in every column!')
