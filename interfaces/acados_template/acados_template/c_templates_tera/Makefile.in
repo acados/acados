@@ -43,6 +43,12 @@
 	{%- set hessian_approx = "GAUSS_NEWTON" %}
 {% endif %}
 
+{% if solver_options.model_external_shared_lib %}
+	{%- set model_external_shared_lib = solver_options.model_external_shared_lib %}
+{% else %}
+	{%- set model_external_shared_lib = "" %}
+{% endif %}
+
 {% if constraints.constr_type %}
 	{%- set constr_type = constraints.constr_type %}
 {% else %}
@@ -209,7 +215,7 @@ CASADI_COST_R_E_SOURCE+= {{ model.name }}_r_e_cost.c
 {% endif %}
 
 casadi_fun:
-	( cd {{ model.name }}_model; gcc $(ACADOS_FLAGS) -c $(CASADI_MODEL_SOURCE))
+	( cd {{ model.name }}_model; gcc $(ACADOS_FLAGS) -c $(CASADI_MODEL_SOURCE) {%- if not model_external_shared_lib == "" %} -L $(LIB_PATH) -l{{ model_external_shared_lib }} {% endif %})
 	{% if constr_type == "BGP" and dims_nphi > 0 %}
 	( cd {{ model.name }}_constraints; gcc $(ACADOS_FLAGS) -c $(CASADI_CON_PHI_SOURCE))
 	# ( cd {{ model.name }}_constraints; gcc $(ACADOS_FLAGS) -c $(CASADI_CON_R_SOURCE))

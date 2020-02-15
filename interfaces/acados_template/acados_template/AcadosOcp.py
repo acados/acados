@@ -1560,7 +1560,8 @@ class AcadosOcpOptions:
         self.__nlp_solver_tol_comp = 1e-6                     # NLP solver complementarity
         self.__nlp_solver_max_iter = 100                      # NLP solver maximum number of iterations
         self.__Tsim = None                                    # automatically calculated as tf/N
-        self.__print_level = 0                                # print level (possible values: 0, 1)
+        self.__print_level = 0                                # print first k QP inputs
+        self.__model_external_shared_lib = ''
         # TODO(oj): add the following
         # self.__regularize_method = None
 
@@ -1680,6 +1681,12 @@ class AcadosOcpOptions:
     def print_level(self):
         """Verbosity of printing"""
         return self.__print_level
+
+    @property
+    def model_external_shared_lib(self):
+        """Name of external shared lib to be linked to CasADi model functions"""
+        return self.__model_external_shared_lib
+
 
     @qp_solver.setter
     def qp_solver(self, qp_solver):
@@ -1868,6 +1875,14 @@ class AcadosOcpOptions:
             self.__print_level = print_level
         else:
             raise Exception('Invalid print_level value. print_level takes one of the values >=0. Exiting')
+
+    @model_external_shared_lib.setter
+    def model_external_shared_lib(self, model_external_shared_lib):
+
+        if type(model_external_shared_lib) == str:
+            self.__model_external_shared_lib = model_external_shared_lib
+        else:
+            raise Exception('Invalid model_external_shared_lib value. model_external_shared_lib takes string values. Exiting')
 
     def set(self, attr, value):
         setattr(self, attr, value)
