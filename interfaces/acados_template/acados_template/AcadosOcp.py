@@ -1859,6 +1859,61 @@ class AcadosOcpOptions:
         setattr(self, attr, value)
 
 
+class AcadosCasadiOptions:
+    """
+    class containing the description of the solver options
+    """
+    def __init__(self):
+        self.__model_external_shared_lib       = False         # dependance of the model ode on external .so lib
+        self.__model_external_shared_lib_dir   = None          # path to the the .so lib
+        self.__model_external_shared_lib_name  = None          # name of the the .so lib
+
+    @property
+    def model_external_shared_lib(self):
+        """Dependance of the model ode on external .so lib"""
+        return self.__model_external_shared_lib
+
+    @property
+    def model_external_shared_lib_dir(self):
+        """Path to the .so lib"""
+        return self.__model_external_shared_lib_dir
+
+    @property
+    def model_external_shared_lib_name(self):
+        """Name of the .so lib"""
+        return self.__model_external_shared_lib_name
+
+    @model_external_shared_lib.setter
+    def model_external_shared_lib(self, model_external_shared_lib):
+        if type(model_external_shared_lib) == bool :
+            self.__model_external_shared_lib = model_external_shared_lib
+        else:
+            raise Exception('Invalid model_external_shared_lib value. Bool expected.' \
+                    + '.\n\nYou have: ' + type(model_external_shared_lib) + '.\n\nExiting.')
+                    
+    @model_external_shared_lib_dir.setter
+    def model_external_shared_lib_dir(self, model_external_shared_lib_dir):
+        if type(model_external_shared_lib_dir) == str :
+            self.__model_external_shared_lib_dir = model_external_shared_lib_dir
+        else:
+            raise Exception('Invalid model_external_shared_lib_dir value. Str expected.' \
+            + '.\n\nYou have: ' + type(model_external_shared_lib_dir) + '.\n\nExiting.')
+
+    @model_external_shared_lib_name.setter
+    def model_external_shared_lib_name(self, model_external_shared_lib_name):
+        if type(model_external_shared_lib_name) == str :
+            if model_external_shared_lib_name[-3:] == '.so' : 
+                raise Exception('Invalid model_external_shared_lib_name value. Remove the .so extension.' \
+            + '.\n\nYou have: ' + type(model_external_shared_lib_name) + '.\n\nExiting.')
+            else :
+                self.__model_external_shared_lib_name = model_external_shared_lib_name
+        else:
+            raise Exception('Invalid model_external_shared_lib_name value. Str expected.' \
+            + '.\n\nYou have: ' + type(model_external_shared_lib_name) + '.\n\nExiting.')
+
+    def set(self, attr, value):
+        setattr(self, attr, value)
+
 class AcadosOcp:
     """
     class containing the full description of the optimal control problem
@@ -1876,7 +1931,8 @@ class AcadosOcp:
         self.cost = AcadosOcpCost()
         self.constraints = AcadosOcpConstraints()
         self.solver_options = AcadosOcpOptions()
-
+        self.casadi_options = AcadosCasadiOptions()
+		
         self.acados_include_path = f'{acados_path}/include'
         self.acados_lib_path = f'{acados_path}/lib'
 

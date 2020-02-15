@@ -90,7 +90,17 @@
 {% else %}
 	{%- set dims_nphi_e = 0 %}
 {% endif %}
-
+{% if casadi_options.model_external_shared_lib %}
+	{%- set model_external_shared_lib = casadi_options.model_external_shared_lib %}
+{% else %}
+	{%- set model_external_shared_lib = 0 %}
+{% endif %}
+{% if casadi_options.model_external_shared_lib_dir %}
+	{%- set model_external_shared_lib_dir = casadi_options.model_external_shared_lib_dir %}
+{% endif %}
+{% if casadi_options.model_external_shared_lib_name %}
+	{%- set model_external_shared_lib_name = casadi_options.model_external_shared_lib_name %}
+{% endif %}
 
 ACADOS_FLAGS = -fPIC #-fno-diagnostics-show-line-numbers -g
 {% if qp_solver == "FULL_CONDENSING_QPOASES" %}
@@ -108,6 +118,7 @@ MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_impl_dae_fun.o
 MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_impl_dae_fun_jac_x_xdot_z.o
 MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_impl_dae_jac_x_xdot_u_z.o
 {% endif %}
+
 
 OCP_OBJ=
 {% if constr_type == "BGP" and dims_nphi > 0 %}
@@ -150,6 +161,13 @@ OBJ+= $(MODEL_OBJ)
 OBJ+= $(SIM_OBJ)
 OBJ+= $(OCP_OBJ)
 
+EXTERNAL_DIR=
+EXTERNAL_LIB=
+{% if model_external_shared_lib %}
+EXTERNAL_DIR+=  {{ model_external_shared_lib_dir  }}
+EXTERNAL_LIB+=  {{ model_external_shared_lib_name }}
+{%- endif %}
+
 INCLUDE_PATH = {{ acados_include_path }}
 LIB_PATH = {{ acados_lib_path }}
 
@@ -191,13 +209,15 @@ CASADI_COST_R_SOURCE=
 CASADI_COST_R_E_SOURCE=
 {% if cost_type == "NONLINEAR_LS" %}
 CASADI_COST_R_SOURCE+= {{ model.name }}_r_cost.c 
-{% endif %}
+{% endif %}casadi_fun:
 {% if cost_type_e == "NONLINEAR_LS" %}
 CASADI_COST_R_E_SOURCE+= {{ model.name }}_r_e_cost.c 
 {% endif %}
 
+
+
 casadi_fun:
-	( cd {{ model.name }}_model; gcc $(ACADOS_FLAGS) -c  $(CASADI_MODEL_SOURCE))
+	( cd {{ model.name }}_model; gcc $(ACADOS_FLAGS) -c  $(CASADI_MODEL_SOURCE)) 
 	{% if constr_type == "BGP"  and dims_nphi > 0 %}
 	( cd {{ model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_PHI_SOURCE))
 	# ( cd {{ model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_R_SOURCE))
@@ -266,7 +286,7 @@ bundled_shared_lib: casadi_fun ocp_solver sim_solver
 	-lm \
 
 ocp_shared_lib: casadi_fun ocp_solver
-	gcc $(ACADOS_FLAGS) -shared -o libacados_ocp_solver_{{ model.name }}.so $(OCP_OBJ) $(MODEL_OBJ) -L $(LIB_PATH)/acados \
+	gcc $(ACADOS_FLAGS) -shared -o libacados_ocp_solver_{{ model.name }}.so $(OCP_OBJ) $(MODEL_OBJ) -L $(LIB_PATH)/acados -L$(EXTERNAL_DIR) -l$(EXTERNAL_LIB) \
 	-L $(LIB_PATH) \
 	-lacados -lhpipm -lblasfeo \
 	{%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
@@ -275,7 +295,7 @@ ocp_shared_lib: casadi_fun ocp_solver
 	-lm \
 
 sim_shared_lib: casadi_fun sim_solver
-	gcc $(ACADOS_FLAGS) -shared -o libacados_sim_solver_{{ model.name }}.so $(SIM_OBJ) $(MODEL_OBJ) -L $(LIB_PATH)/acados \
+	gcc $(ACADOS_FLAGS) -shared -o libacados_sim_solver_{{ model.name }}.so $(SIM_OBJ) $(MODEL_OBJ) -L $(LIB_PATH)/acados  \
 	-L $(LIB_PATH) \
 	-lacados -lhpipm -lblasfeo \
 	{%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
