@@ -62,11 +62,10 @@ typedef struct
 {
 	ocp_nlp_opts *nlp_opts;
     int compute_dual_sol;
-    int ext_qp_res;             // compute external QP residuals (i.e. at SQP level) 
-                                // at each SQP iteration (for debugging)
-    int qp_warm_start;          // NOTE: this is not actually setting the
-                                // warm_start! Just for compatibility with sqp.
-    bool warm_start_first_qp;   // to set qp_warm_start in first iteration
+    int ext_qp_res;           // compute external QP residuals (i.e. at SQP level) at each SQP iteration (for debugging)
+    int qp_warm_start;        // NOTE: this is not actually setting the warm_start! Just for compatibility with sqp.
+    bool warm_start_first_qp; // to set qp_warm_start in first iteration
+    int print_level;          // possible values 0, 1 
 
 } ocp_nlp_sqp_rti_opts;
 

@@ -894,13 +894,13 @@ int acados_create()
     double ug[NG];
 
     {% for j in range(end=dims.ng) %}
-        {%- for k in range(end=dims.nx) %}
+        {%- for k in range(end=dims.nu) %}
     D[{{ j }}+NG * {{ k }}] = {{ constraints.D[j][k] }}; 
         {%- endfor %}
     {%- endfor %}
 
     {% for j in range(end=dims.ng) %}
-        {%- for k in range(end=dims.nu) %}
+        {%- for k in range(end=dims.nx) %}
     C[{{ j }}+NG * {{ k }}] = {{ constraints.C[j][k] }}; 
         {%- endfor %}
     {%- endfor %}
@@ -1045,6 +1045,12 @@ int acados_create()
     double lg_e[NGN];
     double ug_e[NGN];
 
+    {% for j in range(end=dims.ng) %}
+        {%- for k in range(end=dims.nx) %}
+    C_e[{{ j }}+NG * {{ k }}] = {{ constraints.C_e[j][k] }}; 
+        {%- endfor %}
+    {%- endfor %}
+
     {% for i in range(end=dims.ng_e) %}
     lg_e[{{ i }}] = {{ constraints.lg_e[i] }};
     ug_e[{{ i }}] = {{ constraints.ug_e[i] }};
@@ -1075,8 +1081,8 @@ int acados_create()
 
 {% if dims.nphi_e > 0 and constraints.constr_type_e == "BGP" %}
     // set up convex-over-nonlinear constraints for last stage 
-    double lphi_e[NHN];
-    double uphi_e[NHN];
+    double lphi_e[NPHIN];
+    double uphi_e[NPHIN];
 
     {% for i in range(end=dims.nphi_e) %}
     lphi_e[{{ i }}] = {{ constraints.lphi_e[i] }};
@@ -1189,6 +1195,9 @@ int acados_create()
     int nlp_solver_max_iter = {{ solver_options.nlp_solver_max_iter }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "max_iter", &nlp_solver_max_iter);
 {%- endif %}
+
+    int print_level = {{ solver_options.print_level }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "print_level", &print_level);
 
     /* out */
     nlp_out = ocp_nlp_out_create(nlp_config, nlp_dims);

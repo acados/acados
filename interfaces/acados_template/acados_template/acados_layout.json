@@ -574,6 +574,9 @@
         ],
         "nlp_solver_max_iter": [
             "int"
+        ],
+        "print_level": [
+            "int"
         ]
     }
 }
