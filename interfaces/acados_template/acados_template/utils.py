@@ -169,13 +169,12 @@ def render_template(in_file, out_file, template_dir, json_path):
 
 
 ## Conversion functions
-
 def np_array_to_list(np_array):
-    if  isinstance(np_array, (np.ndarray)):
+    if isinstance(np_array, (np.ndarray)):
         return np_array.tolist()
-    elif  isinstance(np_array, (SX)):
+    elif isinstance(np_array, (SX)):
         return DM(np_array).full()
-    elif  isinstance(np_array, (DM)):
+    elif isinstance(np_array, (DM)):
         return np_array.full()
     else:
         raise(Exception(
@@ -194,32 +193,6 @@ def dict2json(d):
         out_key = k.split('__', 1)[-1]
         out[k.replace(k, out_key)] = v
     return out
-
-
-def acados_ocp2json_layout(acados_ocp):
-    """ Convert acados ocp nlp object to JSON format by stripping the
-    property mangling and adding array dimension info.
-    ALL items of type String will be converted
-    to type ndarrray!
-
-    Parameters
-    ----------
-    acados_ocp : class
-        object of type AcadosOcp.
-
-    Returns
-    ------
-    out: dict
-        acados_layout
-    """
-    ocp_nlp = acados_ocp
-    ocp_nlp.cost = acados_ocp.cost.__dict__
-    ocp_nlp.constraints = acados_ocp.constraints.__dict__
-    ocp_nlp.solver_options = acados_ocp.solver_options.__dict__
-    ocp_nlp.dims = acados_ocp.dims.__dict__
-    ocp_nlp = ocp_nlp.__dict__
-    json_layout = dict2json_layout(ocp_nlp)
-    return json_layout
 
 
 def dict2json_layout(d):
@@ -259,36 +232,6 @@ def dict2json_layout(d):
         else:
             out[k.replace(k, out_key)] = [v_type]
 
-    return out
-
-
-def cast_ocp_nlp(ocp_nlp, ocp_nlp_layout):
-    """ MATLAB does not allow distinction between e.g a = [1,1,1] and b = [1,1,1].'
-    or a = 1 and b = [1]. Hence, we need to do some postprocessing of the JSON
-    file generated from MATLAB.
-
-    Parameters
-    ----------
-    ocp_nlp : dict
-        ocp_nlp dictionary to be postprocessed.
-
-    ocp_nlp_layout : dict
-        acados ocp_nlp target layout
-    Returns
-    ------
-    out : dict
-        postprocessed dictionary
-    """
-
-    out = {}
-    for k, v in ocp_nlp.items():
-        if isinstance(v, dict):
-            v = cast_ocp_nlp(v, ocp_nlp_layout[k])
-
-        if 'ndarray' in ocp_nlp_layout[k]:
-            if isinstance(v, int) or isinstance(v, float):
-                v = np.array([v])
-        out[k] = v
     return out
 
 
