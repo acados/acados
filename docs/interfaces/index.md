@@ -77,7 +77,7 @@ In order to be able to successfully render C code templates,
 you need to download the `t_renderer` binaries for your platform
 from <https://github.com/acados/tera_renderer/releases/> and
 place them in `<acados_root>/bin` (please strip the version and platform from the binaries (e.g.
-`t_renderer-v0.0.20 -> t_renderer`). Notice that you might need to make `t_renderer` executable. Run
+`t_renderer-v0.0.34 -> t_renderer`). Notice that you might need to make `t_renderer` executable. Run
 `export ACADOS_SOURCE_DIR=<acados_root>` such that the location of acados will be known to the Python
 package at run time. Additionally, you will have to make sure that the environment variable `LD_LIBRARY_PATH` contains the path to `libacados.so` (default path is `<acados_root/lib>`). Notice that, if you want to run the examples from a location that differs from '<acados_root>/interfaces/acados_template' or you want the generated Makefile to refer to a specific path (e.g. when cross-compiling or compiling from a location different from the one where you generate the C code), you will have to adapt 'ocp.acados_include_path' and 'ocp.acados_lib_path' accordingly in the generating Python code.
 
