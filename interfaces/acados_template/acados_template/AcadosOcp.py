@@ -1864,9 +1864,12 @@ class AcadosCasadiOptions:
     class containing the description of the solver options
     """
     def __init__(self):
-        self.__model_external_shared_lib       = False         # dependance of the model ode on external .so lib
-        self.__model_external_shared_lib_dir   = None          # path to the the .so lib
-        self.__model_external_shared_lib_name  = None          # name of the the .so lib
+        # dependance of the model ode on external .so lib
+        self.__model_external_shared_lib       = False    
+        # path to the the .so lib     
+        self.__model_external_shared_lib_dir   = None  
+        # name of the the .so lib        
+        self.__model_external_shared_lib_name  = None          
 
     @property
     def model_external_shared_lib(self):
@@ -1890,7 +1893,7 @@ class AcadosCasadiOptions:
         else:
             raise Exception('Invalid model_external_shared_lib value. Bool expected.' \
                     + '.\n\nYou have: ' + type(model_external_shared_lib) + '.\n\nExiting.')
-                    
+          
     @model_external_shared_lib_dir.setter
     def model_external_shared_lib_dir(self, model_external_shared_lib_dir):
         if type(model_external_shared_lib_dir) == str :
