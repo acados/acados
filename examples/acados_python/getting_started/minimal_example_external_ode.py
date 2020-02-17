@@ -46,9 +46,8 @@ ocp = AcadosOcp()
 # set model
 model = export_external_ode_model()
 ocp.model = model
-ocp.casadi_options.model_external_shared_lib         = True
-ocp.casadi_options.model_external_shared_lib_dir     = os.getcwd()
-ocp.casadi_options.model_external_shared_lib_name    = "external_ode_casadi"
+ocp.solver_options.model_external_shared_lib_dir     = os.getcwd()
+ocp.solver_options.model_external_shared_lib_name    = "external_ode_casadi"
 
 Tf = 1.0
 nx = model.x.size()[0]
@@ -56,12 +55,13 @@ nu = model.u.size()[0]
 ny = nx + nu
 ny_e = nx
 N = 30
+x0 = np.array([0, 0])
+xT = np.array([1/2, 1])
 
 # set dimensions
 ocp.dims.nx    = nx
 ocp.dims.ny    = ny
 ocp.dims.ny_e  = ny_e
-ocp.dims.nbu   = nu
 ocp.dims.nu    = nu
 ocp.dims.N     = N
 
@@ -70,14 +70,13 @@ ocp.cost.cost_type = 'LINEAR_LS'
 ocp.cost.cost_type_e = 'LINEAR_LS'
 
 Q = 2*np.diag([1e-3, 1e-3])
-R = 2*np.diag([1e-2])
+R = 2*np.diag([1e-4])
 
 ocp.cost.W = scipy.linalg.block_diag(Q, R)
 
 ocp.cost.W_e = Q
 
 ocp.cost.Vx = np.zeros((ny, nx))
-ocp.cost.Vx[:nx,:nx] = np.zeros((nx,nx))
 
 Vu = np.zeros((ny, nu))
 Vu[2,0] = 1.0
@@ -89,18 +88,19 @@ ocp.cost.yref  = np.zeros((ny, ))
 ocp.cost.yref_e = np.zeros((ny_e, ))
 
 # set constraints
-Fmax = 1000
-x0 = np.array([0.0, 0.0])
+Fmax = 10
 ocp.constraints.x0 = x0
+ocp.dims.nbx_0 = nx
 ocp.constraints.constr_type = 'BGH'
-ocp.constraints.lbu = np.array([-Fmax])
-ocp.constraints.ubu = np.array([+Fmax])
-ocp.constraints.idxbu = np.array([0])
+# ocp.constraints.lbu = np.array([-Fmax])
+# ocp.constraints.ubu = np.array([+Fmax])
+# ocp.constraints.idxbu = np.array([0])
+# ocp.dims.nbu   = nu
 
 # terminal constraints
 ocp.constraints.Jbx_e  = np.eye(nx)
-ocp.constraints.ubx_e  = np.array([0, 0])
-ocp.constraints.lbx_e  = np.array([0, 0])
+ocp.constraints.ubx_e  = xT
+ocp.constraints.lbx_e  = xT
 ocp.constraints.idxbx_e = np.array(range(nx))
 ocp.dims.nbx_e = nx
 
@@ -116,6 +116,15 @@ ocp.solver_options.tf = Tf
 ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
 
 ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
+
+# initial guess
+t_traj = np.linspace(0, Tf, N+1)
+x_traj = np.linspace(x0,xT,N+1)
+u_traj = np.ones((N,1))
+for n in range(N+1):
+  ocp_solver.set(n, 'x', x_traj[n,:])
+for n in range(N):
+  ocp_solver.set(n, 'u', u_traj[n])
 
 simX = np.ndarray((N+1, nx))
 simU = np.ndarray((N, nu))
@@ -136,12 +145,19 @@ for i in range(N):
 simX[N,:] = ocp_solver.get(N, "x")
 
 print(simX)
-plt.plot(simX[:,:nu])
+plt.plot(simX[:,:nu],'o',label='opt_sol')
+plt.plot(x_traj[:,0],'x',label='init_sol')
+plt.legend()
 plt.title('position')
 plt.figure()
-plt.plot(simX[:,nu:])
+plt.plot(simX[:,nu:],'o',label='opt_sol')
+plt.plot(x_traj[:,1],'x',label='init_sol')
+plt.legend()
 plt.title('velocity')
 plt.figure()
-plt.plot(simU)
+plt.plot(simU,'o',label='opt_sol')
+plt.plot(u_traj,'x',label='init_traj')
+plt.ylim([0,10])
+plt.legend()
 plt.title('control')
 plt.show(block=True)

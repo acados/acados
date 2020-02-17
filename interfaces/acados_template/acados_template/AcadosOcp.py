@@ -1564,6 +1564,9 @@ class AcadosOcpOptions:
         self.__nlp_solver_max_iter = 100                      # NLP solver maximum number of iterations
         self.__Tsim = None                                    # automatically calculated as tf/N
         self.__print_level = 0                                # print level (possible values: 0, 1)
+        self.__model_external_shared_lib       = False        # dependance of the model ode on external .so lib
+        self.__model_external_shared_lib_dir   = None         # path to the the .so lib 
+        self.__model_external_shared_lib_name  = None         # name of the the .so lib        
         # TODO(oj): add the following
         # self.__regularize_method = None
 
@@ -1678,6 +1681,21 @@ class AcadosOcpOptions:
     def print_level(self):
         """Verbosity of printing"""
         return self.__print_level
+
+    @property
+    def model_external_shared_lib(self):
+        """Dependance of the model ode on external .so lib"""
+        return self.__model_external_shared_lib
+
+    @property
+    def model_external_shared_lib_dir(self):
+        """Path to the .so lib"""
+        return self.__model_external_shared_lib_dir
+
+    @property
+    def model_external_shared_lib_name(self):
+        """Name of the .so lib"""
+        return self.__model_external_shared_lib_name
 
     @qp_solver.setter
     def qp_solver(self, qp_solver):
@@ -1855,37 +1873,6 @@ class AcadosOcpOptions:
         else:
             raise Exception('Invalid print_level value. print_level take one of the values in {0,1}. Exiting')
 
-    def set(self, attr, value):
-        setattr(self, attr, value)
-
-
-class AcadosCasadiOptions:
-    """
-    class containing the description of the solver options
-    """
-    def __init__(self):
-        # dependance of the model ode on external .so lib
-        self.__model_external_shared_lib       = False    
-        # path to the the .so lib     
-        self.__model_external_shared_lib_dir   = None  
-        # name of the the .so lib        
-        self.__model_external_shared_lib_name  = None          
-
-    @property
-    def model_external_shared_lib(self):
-        """Dependance of the model ode on external .so lib"""
-        return self.__model_external_shared_lib
-
-    @property
-    def model_external_shared_lib_dir(self):
-        """Path to the .so lib"""
-        return self.__model_external_shared_lib_dir
-
-    @property
-    def model_external_shared_lib_name(self):
-        """Name of the .so lib"""
-        return self.__model_external_shared_lib_name
-
     @model_external_shared_lib.setter
     def model_external_shared_lib(self, model_external_shared_lib):
         if type(model_external_shared_lib) == bool :
@@ -1917,6 +1904,7 @@ class AcadosCasadiOptions:
     def set(self, attr, value):
         setattr(self, attr, value)
 
+
 class AcadosOcp:
     """
     class containing the full description of the optimal control problem
@@ -1934,7 +1922,6 @@ class AcadosOcp:
         self.cost = AcadosOcpCost()
         self.constraints = AcadosOcpConstraints()
         self.solver_options = AcadosOcpOptions()
-        self.casadi_options = AcadosCasadiOptions()
 		
         self.acados_include_path = f'{acados_path}/include'
         self.acados_lib_path = f'{acados_path}/lib'

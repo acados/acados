@@ -577,11 +577,6 @@
         ],
         "print_level": [
             "int"
-        ]
-    },
-    "casadi_options": {
-        "model_external_shared_lib": [
-            "bool"
         ],
         "model_external_shared_lib_dir": [
             "str"
