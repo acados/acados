@@ -31,7 +31,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import os, sys
+import os, sys, json
 import urllib.request
 import shutil
 import numpy as np
@@ -182,71 +182,21 @@ def np_array_to_list(np_array):
         ))
 
 
-def dict2json(d):
+def format_ocp_dict(d):
+    """
+    removes the __ artifact from class to dict conversion
+    """
     out = {}
     for k, v in d.items():
         if isinstance(v, dict):
-            v = dict2json(v)
+            v = format_ocp_dict(v)
 
-        # v_type = str(type(v).__name__)
-        # out_key = '__' + v_type + '__' + k.split('__', 1)[-1]
         out_key = k.split('__', 1)[-1]
         out[k.replace(k, out_key)] = v
     return out
 
 
-def dict2json_layout(d):
-    """ Convert dictionary containing the description of
-    of the ocp_nlp to JSON format by stripping the
-    property mangling and adding array dimension info.
-    ALL items of type String will be converted
-    to type ndarrray!
-
-    Parameters
-    ----------
-    d : dict
-        dictionary containing the description of
-        the ocp_nlp.
-
-    Returns
-    ------
-    out: dict
-        postprocessed dictionary.
-    """
-    out = {}
-    for k, v in d.items():
-        if isinstance(v, dict):
-            v = dict2json_layout(v)
-
-        v_type = str(type(v).__name__)
-        if v_type == 'list':
-            v_type = 'ndarray'
-
-        # add array number of dimensions?
-        # if v_type == 'ndarray':
-        #     v_type = v_type + '_' + str(len(v.shape))
-        out_key = k.split('__', 1)[-1]
-
-        if isinstance(v, dict):
-            out[k.replace(k, out_key)] = v
-        else:
-            out[k.replace(k, out_key)] = [v_type]
-
-    return out
-
-
-def json2dict(ocp_nlp, ocp_dims):
-    # load JSON layout
-    current_module = sys.modules[__name__]
-    acados_path = os.path.dirname(current_module.__file__)
-    with open(acados_path + '/acados_layout.json', 'r') as f:
-        ocp_nlp_layout = json.load(f)
-
-    out = json2dict_rec(ocp_nlp, ocp_dims, ocp_nlp_layout)
-    return out
-
-
-def json2dict_rec(ocp_nlp, ocp_dims, ocp_nlp_layout):
+def ocp_check_json_against_layout(ocp_nlp, ocp_dims):
     """ convert ocp_nlp loaded JSON to dictionary. Mainly convert
     lists to arrays for easier handling.
     Parameters
@@ -256,47 +206,57 @@ def json2dict_rec(ocp_nlp, ocp_dims, ocp_nlp_layout):
 
     ocp_dims : instance of AcadosOcpDims
 
-    ocp_nlp_layout : dict
-        acados ocp_nlp layout.
-
     Returns
     -------
     out : dict
         post-processed dictionary.
     """
-    out = {}
-    for k, v in ocp_nlp.items():
-        if isinstance(v, dict):
-            v = json2dict_rec(v, ocp_dims, ocp_nlp_layout[k])
 
-        v_type__ = str(type(v).__name__)
-        out_key = k.split('__', 1)[-1]
-        v_type = out_key.split('__')[0]
-        out_key = out_key.split('__', 1)[-1]
-        if 'ndarray' in ocp_nlp_layout[k]:
+    # load JSON layout
+    current_module = sys.modules[__name__]
+    acados_path = os.path.dirname(current_module.__file__)
+    with open(acados_path + '/acados_layout.json', 'r') as f:
+        ocp_nlp_layout = json.load(f)
+
+    out = ocp_check_json_against_layout_recursion(ocp_nlp, ocp_dims, ocp_nlp_layout)
+    return out
+
+
+
+def ocp_check_json_against_layout_recursion(ocp_nlp, ocp_dims, ocp_nlp_layout):
+    out = {}
+
+    for key, v in ocp_nlp.items():
+
+        if isinstance(v, dict):
+            v = ocp_check_json_against_layout_recursion(v, ocp_dims, ocp_nlp_layout[key])
+
+        if 'ndarray' in ocp_nlp_layout[key]:
             if isinstance(v, int) or isinstance(v, float):
                 v = np.array([v])
-        if (v_type == 'ndarray' or v_type__ == 'list') and (ocp_nlp_layout[k][0] != 'str'):
+        if isinstance(v, (list, np.ndarray)) and (ocp_nlp_layout[key][0] != 'str'):
             dims_l = []
             dims_names = []
-            dim_keys = ocp_nlp_layout[k][1]
+            dim_keys = ocp_nlp_layout[key][1]
             for item in dim_keys:
                 dims_l.append(ocp_dims[item])
                 dims_names.append(item)
             dims = tuple(dims_l)
             if v == []:
-                # v = None
                 try:
                     v = np.reshape(v, dims)
                 except:
-                    raise Exception('acados -- mismatching dimensions for field {0}. Provided data has dimensions {1}, while associated dimensions {2} are {3}'.format(out_key, [], dims_names, dims))
-                # v = []
+                    raise Exception('acados -- mismatching dimensions for field {0}.' \
+                         'Provided data has dimensions [], while associated dimensions {1} are {2}' \
+                             .format(key, dims_names, dims))
             else:
                 v = np.array(v)
                 v_dims = v.shape
-                if dims !=v_dims:
-                    raise Exception('acados -- mismatching dimensions for field {0}. Provided data has dimensions {1}, while associated dimensions {2} are {3}'.format(out_key, v_dims, dims_names, dims))
-        out[k.replace(k, out_key)] = v
+                if dims != v_dims:
+                    raise Exception('acados -- mismatching dimensions for field {0}.' \
+                        ' Provided data has dimensions {1}, while associated dimensions {2} are {3}' \
+                            .format(key, v_dims, dims_names, dims))
+        out[key.replace(key, key)] = v
     return out
 
 

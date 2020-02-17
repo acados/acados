@@ -48,7 +48,7 @@ from .generate_c_code_nls_cost import generate_c_code_nls_cost
 from .generate_c_code_external_cost import generate_c_code_external_cost
 from .AcadosOcp import AcadosOcp
 from .AcadosModel import acados_model_strip_casadi_symbolics
-from .utils import is_column, is_empty, casadi_length, render_template, dict2json, json2dict, np_array_to_list
+from .utils import is_column, is_empty, casadi_length, render_template, format_ocp_dict, ocp_check_json_against_layout, np_array_to_list
 
 
 def make_ocp_dims_consistent(acados_ocp):
@@ -147,6 +147,7 @@ def ocp_formulation_json_dump(acados_ocp, json_file='acados_ocp_nlp.json'):
 
     # Copy input ocp object dictionary
     ocp_nlp_dict = dict(deepcopy(acados_ocp).__dict__)
+    # TODO: maybe make one funciton with formatting
 
     for acados_struct, v in ocp_layout.items():
         # skip non dict attributes
@@ -157,10 +158,14 @@ def ocp_formulation_json_dump(acados_ocp, json_file='acados_ocp_nlp.json'):
 
     ocp_nlp_dict['model'] = acados_model_strip_casadi_symbolics(ocp_nlp_dict['model'])
 
-    ocp_nlp_json = dict2json(ocp_nlp_dict)
+    ocp_nlp_dict = format_ocp_dict(ocp_nlp_dict)
+
+    dims_dict = format_ocp_dict( dict( deepcopy(acados_ocp.dims).__dict__ ) )
+
+    ocp_check_json_against_layout(ocp_nlp_dict, dims_dict)
 
     with open(json_file, 'w') as f:
-        json.dump(ocp_nlp_json, f, default=np_array_to_list, indent=4, sort_keys=True)
+        json.dump(ocp_nlp_dict, f, default=np_array_to_list, indent=4, sort_keys=True)
 
 
 
