@@ -98,6 +98,7 @@ ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOA
 ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
 ocp.solver_options.integrator_type = 'ERK'
 ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
+# ocp.solver_options.nlp_solver_type = 'SQP_RTI'
 
 ocp.solver_options.qp_solver_cond_N = N
 
@@ -120,6 +121,7 @@ for i in range(N):
     acados_ocp_solver.set(0, "ubx", xcurrent)
 
     status = acados_ocp_solver.solve()
+
     if status != 0:
         raise Exception('acados acados_ocp_solver returned status {}. Exiting.'.format(status))
 

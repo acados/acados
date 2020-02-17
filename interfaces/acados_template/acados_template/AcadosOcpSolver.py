@@ -62,26 +62,26 @@ def make_ocp_dims_consistent(acados_ocp):
         this_shape = constraints.lbx_0.shape
         other_shape = constraints.ubx_0.shape
         if not this_shape == other_shape:
-            raise Exception("lbx_0, ubx_0 have different shapes!")
+            raise Exception('lbx_0, ubx_0 have different shapes!')
         if not is_column(constraints.lbx_0):
-            raise Exception("lbx_0, ubx_0 must be column vectors!")
+            raise Exception('lbx_0, ubx_0 must be column vectors!')
 
         dims.nbx_0 = constraints.lbx_0.size
     else:
-        raise Exception("lbx_0, ubx_0 have different shapes!")
+        raise Exception('lbx_0, ubx_0 have different shapes!')
 
     # nx
     if is_column(model.x):
         dims.nx = model.x.shape[0]
     else:
-        raise Exception("model.x should be column vector!")
+        raise Exception('model.x should be column vector!')
 
     # # nu
     # if not model.u == None:
     #     if is_column(model.u):
     #         dims.nu = model.u.shape[0]
     #     else:
-    #         raise Exception("model.u should be column vector!")
+    #         raise Exception('model.u should be column vector!')
     # else:
     #     dims.nu = 0
 
@@ -91,7 +91,7 @@ def make_ocp_dims_consistent(acados_ocp):
     #     if is_column(model.z):
     #         dims.nz = model.z.shape[0]
     #     else:
-    #         raise Exception("model.z should be column vector!")
+    #         raise Exception('model.z should be column vector!')
     # else:
     #     dims.nz = 0
 
@@ -198,7 +198,7 @@ def ocp_render_templates(acados_ocp, json_file):
         json_file=json_file)
 
     if not os.path.exists(json_path):
-        raise Exception("{} not found!".format(json_path))
+        raise Exception('{} not found!'.format(json_path))
 
     template_dir = 'c_generated_code/'
 
@@ -359,18 +359,20 @@ class AcadosOcpSolver:
         self.acados_ocp = acados_ocp
 
 
-    def solve(self, phase_=0):
+    def solve(self, phase=0):
         """
         solve the ocp with current input
-        :param phase_: 0 = preparation + feedback, 1 = preparation only,
+        :param phase: 0 = preparation + feedback, 1 = preparation only,
          2 = feedback only (if SQP_RTI is used, otherwise only 0 (default) is allowed)
         """
-        if isinstance(phase_, int) == False or phase < 0 or phase > 2: 
-            raise Exception("AcadosOcpSolver.solve():")
-        if acados_ocp.solver_options.nlp_solver != 'SQP' and phase_ > 0:
-            raise Exception("AcadosOcpSolver.solve(): argument \'phase\' can 
-                take only value 0 SQP-type solvers")
-        status = self.shared_lib.acados_solve(phase_)
+        if isinstance(phase, int) == False or phase < 0 or phase > 2: 
+            raise Exception('AcadosOcpSolver.solve():')
+        if self.acados_ocp.solver_options.nlp_solver_type != 'SQP_RTI' and phase > 0:
+            raise Exception('AcadosOcpSolver.solve(): argument \'phase\' can ' 
+                'take only value 0 for SQP-type solvers')
+        self.shared_lib.acados_solve.argtypes = [c_int]
+
+        status = self.shared_lib.acados_solve(phase)
         return status
 
 
@@ -386,8 +388,8 @@ class AcadosOcpSolver:
         field = field.encode('utf-8')
 
         if (field_ not in out_fields):
-            raise Exception("AcadosOcpSolver.set(): {} is not a valid argument.\
-                    \n Possible values are {}. Exiting.".format(out_fields))
+            raise Exception('AcadosOcpSolver.set(): {} is not a valid argument.\
+                    \n Possible values are {}. Exiting.'.format(out_fields))
 
         self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = \
             [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
@@ -425,8 +427,8 @@ class AcadosOcpSolver:
         field = field_
         field = field.encode('utf-8')
         if (field_ not in fields):
-            raise Exception("AcadosOcpSolver.get_stats(): {} is not a valid argument.\
-                    \n Possible values are {}. Exiting.".format(fields, fields))
+            raise Exception('AcadosOcpSolver.get_stats(): {} is not a valid argument.\
+                    \n Possible values are {}. Exiting.'.format(fields, fields))
 
         if field_ == 'sqp_iter':
             out = np.ascontiguousarray(np.zeros((1,)), dtype=np.int64)

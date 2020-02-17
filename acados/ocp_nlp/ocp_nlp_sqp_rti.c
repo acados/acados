@@ -124,6 +124,7 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_,
     //    opts->compute_dual_sol = 1;
     opts->ext_qp_res = 0;
     opts->warm_start_first_qp = false;
+    opts->phase = 0;
     opts->print_level = 0;
 
     // overwrite default submodules opts
@@ -212,6 +213,15 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_,
         {
             bool* warm_start_first_qp = (bool *) value;
             opts->warm_start_first_qp = *warm_start_first_qp;
+        }
+        else if (!strcmp(field, "phase"))
+        {
+            int* phase = (int *) value;
+            if (*phase < 0 || *phase > 2) {
+                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for phase field."); 
+                printf("possible values are: 0, 1, 2\n");
+                exit(1);
+            } else opts->phase = *phase;
         }
         else if (!strcmp(field, "print_level"))
         {
@@ -441,6 +451,7 @@ static void ocp_nlp_sqp_rti_cast_workspace(
 int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     void *opts_, void *mem_, void *work_)
 {
+
     ocp_nlp_out *nlp_out = nlp_out_;
     ocp_nlp_sqp_rti_memory *mem = mem_;
     
@@ -449,13 +460,38 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     double total_time = 0.0;
     mem->time_tot = 0.0;
 
+
+    ocp_nlp_sqp_rti_opts *nlp_opts = opts_;
+    int phase = nlp_opts->phase; 
+
     acados_tic(&timer0);
+    switch(phase) 
+    {
+        
+        // perform preparation and feedback phase
+        case 0:
+            ocp_nlp_sqp_rti_preparation_step(
+                config_, dims_, nlp_in_, nlp_out_, opts_, mem_, work_);
 
-    ocp_nlp_sqp_rti_preparation_step(
-        config_, dims_, nlp_in_, nlp_out_, opts_, mem_, work_);
+            ocp_nlp_sqp_rti_feedback_step(
+                config_, dims_, nlp_in_, nlp_out_, opts_, mem_, work_);
 
-    ocp_nlp_sqp_rti_feedback_step(
-        config_, dims_, nlp_in_, nlp_out_, opts_, mem_, work_);
+            break;
+
+        // perform preparation phase
+        case 1:
+            ocp_nlp_sqp_rti_preparation_step(
+                config_, dims_, nlp_in_, nlp_out_, opts_, mem_, work_);
+
+            break;
+
+        // perform feedback phase
+        case 2:
+            ocp_nlp_sqp_rti_feedback_step(
+                config_, dims_, nlp_in_, nlp_out_, opts_, mem_, work_);
+
+            break;
+    }
 
     total_time += acados_toc(&timer0);
 
@@ -701,7 +737,7 @@ int ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
         nlp_out, nlp_opts, nlp_mem, nlp_work);
 
     if (opts->print_level > 0) {
-        printf("\n------- qp_in (sqp iter %d) --------\n", sqp_iter);
+        printf("\n------- qp_in --------\n");
         print_ocp_qp_in(nlp_mem->qp_in);
     }
     // exit(1);
