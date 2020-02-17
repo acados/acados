@@ -87,7 +87,7 @@ for i in range(Nsim):
 
     status = acados_solver.solve()
     if status != 0:
-        raise Exception("acados returned status {}. Exiting.".format(status))
+        raise Exception("acados returned status {} in closed loop iteration {}. Exiting.".format(status, i))
 
     elapsed = time.time() - t
 
