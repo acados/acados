@@ -38,7 +38,7 @@ import numpy as np
 from casadi import SX, MX, DM
 
 ALLOWED_CASADI_VERSIONS = ('3.5.1', '3.4.5', '3.4.0')
-TERA_VERSION = "0.0.30"
+TERA_VERSION = "0.0.34"
 
 def get_acados_path():
     ACADOS_PATH = os.environ.get('ACADOS_SOURCE_DIR')
@@ -110,7 +110,7 @@ def get_tera():
     manual_install += '1 Download binaries from {}\n'.format(url)
     manual_install += '2 Copy them in {}/bin\n'.format(acados_path)
     manual_install += '3 Strip the version and platform from the binaries: '
-    manual_install += 'as t_renderer-v0.0.30-X -> t_renderer)\n'
+    manual_install += 'as t_renderer-v0.0.34-X -> t_renderer)\n'
     manual_install += '4 Enable execution privilege on the file "t_renderer" with:\n'
     manual_install += '"chmod +x {}"\n\n'.format(tera_path)
 
@@ -169,13 +169,12 @@ def render_template(in_file, out_file, template_dir, json_path):
 
 
 ## Conversion functions
-
 def np_array_to_list(np_array):
-    if  isinstance(np_array, (np.ndarray)):
+    if isinstance(np_array, (np.ndarray)):
         return np_array.tolist()
-    elif  isinstance(np_array, (SX)):
+    elif isinstance(np_array, (SX)):
         return DM(np_array).full()
-    elif  isinstance(np_array, (DM)):
+    elif isinstance(np_array, (DM)):
         return np_array.full()
     else:
         raise(Exception(
@@ -194,32 +193,6 @@ def dict2json(d):
         out_key = k.split('__', 1)[-1]
         out[k.replace(k, out_key)] = v
     return out
-
-
-def acados_ocp2json_layout(acados_ocp):
-    """ Convert acados ocp nlp object to JSON format by stripping the
-    property mangling and adding array dimension info.
-    ALL items of type String will be converted
-    to type ndarrray!
-
-    Parameters
-    ----------
-    acados_ocp : class
-        object of type AcadosOcp.
-
-    Returns
-    ------
-    out: dict
-        acados_layout
-    """
-    ocp_nlp = acados_ocp
-    ocp_nlp.cost = acados_ocp.cost.__dict__
-    ocp_nlp.constraints = acados_ocp.constraints.__dict__
-    ocp_nlp.solver_options = acados_ocp.solver_options.__dict__
-    ocp_nlp.dims = acados_ocp.dims.__dict__
-    ocp_nlp = ocp_nlp.__dict__
-    json_layout = dict2json_layout(ocp_nlp)
-    return json_layout
 
 
 def dict2json_layout(d):
