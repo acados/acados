@@ -359,11 +359,18 @@ class AcadosOcpSolver:
         self.acados_ocp = acados_ocp
 
 
-    def solve(self):
+    def solve(self, phase_=0):
         """
         solve the ocp with current input
+        :param phase_: 0 = preparation + feedback, 1 = preparation only,
+         2 = feedback only (if SQP_RTI is used, otherwise only 0 (default) is allowed)
         """
-        status = self.shared_lib.acados_solve()
+        if isinstance(phase_, int) == False or phase < 0 or phase > 2: 
+            raise Exception("AcadosOcpSolver.solve():")
+        if acados_ocp.solver_options.nlp_solver != 'SQP' and phase_ > 0:
+            raise Exception("AcadosOcpSolver.solve(): argument \'phase\' can 
+                take only value 0 SQP-type solvers")
+        status = self.shared_lib.acados_solve(phase_)
         return status
 
 
@@ -379,7 +386,7 @@ class AcadosOcpSolver:
         field = field.encode('utf-8')
 
         if (field_ not in out_fields):
-            raise Exception("acados_solver: {} is not a valid key for method `set(value)`.\
+            raise Exception("AcadosOcpSolver.set(): {} is not a valid argument.\
                     \n Possible values are {}. Exiting.".format(out_fields))
 
         self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = \
@@ -418,7 +425,7 @@ class AcadosOcpSolver:
         field = field_
         field = field.encode('utf-8')
         if (field_ not in fields):
-            raise Exception("acados_solver: {} is not a valid key for method `set(value)`.\
+            raise Exception("AcadosOcpSolver.get_stats(): {} is not a valid argument.\
                     \n Possible values are {}. Exiting.".format(fields, fields))
 
         if field_ == 'sqp_iter':
@@ -457,7 +464,7 @@ class AcadosOcpSolver:
         else:
             if (field_ not in constraints_fields) and \
                     (field_ not in cost_fields) and (field_ not in out_fields):
-                raise Exception("acados_solver: {} is not a valid key for method `set(value)`.\
+                raise Exception("AcadosOcpSolver.set(): {} is not a valid argument.\
                     \nPossible values are {} and {}. Exiting.".format(field, \
                     cost_fields, constraints_fields, out_fields))
 
@@ -469,7 +476,7 @@ class AcadosOcpSolver:
                 self.nlp_dims, self.nlp_out, stage_, field)
 
             if value_.shape[0] != dims:
-                msg = 'acados_solver.set(): mismatching dimension for field "{}"'.format(field_)
+                msg = 'AcadosOcpSolver.set(): mismatching dimension for field "{}"'.format(field_)
                 msg += 'with dimension {} (you have {})'.format(dims, value_.shape[0])
                 raise Exception(msg)
 

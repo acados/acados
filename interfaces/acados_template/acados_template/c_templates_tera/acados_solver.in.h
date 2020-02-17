@@ -43,7 +43,7 @@ extern "C" {
 
 int acados_create();
 int acados_update_param(int stage, double *value, int np);
-int acados_solve();
+int acados_solve(int phase);
 int acados_free();
 
 ocp_nlp_in * acados_get_nlp_in();
