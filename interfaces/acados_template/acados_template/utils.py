@@ -182,14 +182,14 @@ def np_array_to_list(np_array):
         ))
 
 
-def format_ocp_dict(d):
+def format_class_dict(d):
     """
     removes the __ artifact from class to dict conversion
     """
     out = {}
     for k, v in d.items():
         if isinstance(v, dict):
-            v = format_ocp_dict(v)
+            v = format_class_dict(v)
 
         out_key = k.split('__', 1)[-1]
         out[k.replace(k, out_key)] = v
@@ -205,7 +205,7 @@ def acados_class2dict(class_instance):
     out = {}
     for k, v in d.items():
         if isinstance(v, dict):
-            v = format_ocp_dict(v)
+            v = format_class_dict(v)
 
         out_key = k.split('__', 1)[-1]
         out[k.replace(k, out_key)] = v

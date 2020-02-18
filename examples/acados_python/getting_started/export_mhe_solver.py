@@ -78,8 +78,8 @@ def export_mhe_solver(model, N, h, Q, Q0, R):
     ocp_mhe.parameter_values = np.zeros((nparam, ))
 
     # set y_ref for all stages
-    ocp_mhe.cost.yref  = np.zeros((3*nx,))
-    ocp_mhe.cost.yref_e = np.zeros((nx, ))
+    ocp_mhe.cost.yref  = np.zeros((ny,))
+    ocp_mhe.cost.yref_e = np.zeros((ny_e, ))
 
     # set QP solver
     # ocp_mhe.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
