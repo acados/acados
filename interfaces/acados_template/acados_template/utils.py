@@ -196,20 +196,31 @@ def format_ocp_dict(d):
     return out
 
 
+def acados_class2dict(class_instance):
+    """
+    removes the __ artifact from class to dict conversion
+    """
+
+    d = dict(class_instance.__dict__)
+    out = {}
+    for k, v in d.items():
+        if isinstance(v, dict):
+            v = format_ocp_dict(v)
+
+        out_key = k.split('__', 1)[-1]
+        out[k.replace(k, out_key)] = v
+    return out
+
+
 def ocp_check_json_against_layout(ocp_nlp, ocp_dims):
-    """ convert ocp_nlp loaded JSON to dictionary. Mainly convert
-    lists to arrays for easier handling.
+    """
+    Check dimensions against layout
     Parameters
     ---------
     ocp_nlp : dict
         dictionary loaded from JSON to be post-processed.
 
     ocp_dims : instance of AcadosOcpDims
-
-    Returns
-    -------
-    out : dict
-        post-processed dictionary.
     """
 
     # load JSON layout
@@ -218,46 +229,46 @@ def ocp_check_json_against_layout(ocp_nlp, ocp_dims):
     with open(acados_path + '/acados_layout.json', 'r') as f:
         ocp_nlp_layout = json.load(f)
 
-    out = ocp_check_json_against_layout_recursion(ocp_nlp, ocp_dims, ocp_nlp_layout)
-    return out
+    ocp_check_json_against_layout_recursion(ocp_nlp, ocp_dims, ocp_nlp_layout)
+    return
 
 
 
 def ocp_check_json_against_layout_recursion(ocp_nlp, ocp_dims, ocp_nlp_layout):
-    out = {}
 
-    for key, v in ocp_nlp.items():
+    for key, item in ocp_nlp.items():
 
-        if isinstance(v, dict):
-            v = ocp_check_json_against_layout_recursion(v, ocp_dims, ocp_nlp_layout[key])
+        if isinstance(item, dict):
+            item = ocp_check_json_against_layout_recursion(item, ocp_dims, ocp_nlp_layout[key])
 
         if 'ndarray' in ocp_nlp_layout[key]:
-            if isinstance(v, int) or isinstance(v, float):
-                v = np.array([v])
-        if isinstance(v, (list, np.ndarray)) and (ocp_nlp_layout[key][0] != 'str'):
-            dims_l = []
-            dims_names = []
-            dim_keys = ocp_nlp_layout[key][1]
-            for item in dim_keys:
-                dims_l.append(ocp_dims[item])
-                dims_names.append(item)
-            dims = tuple(dims_l)
-            if v == []:
+            if isinstance(item, int) or isinstance(item, float):
+                item = np.array([item])
+        if isinstance(item, (list, np.ndarray)) and (ocp_nlp_layout[key][0] != 'str'):
+            dim_layout = []
+            dim_names = ocp_nlp_layout[key][1]
+
+            for dim_name in dim_names:
+                dim_layout.append(ocp_dims[dim_name])
+
+            dims = tuple(dim_layout)
+            if item == []:
                 try:
-                    v = np.reshape(v, dims)
+                    item = np.reshape(item, dims)
                 except:
-                    raise Exception('acados -- mismatching dimensions for field {0}.' \
-                         'Provided data has dimensions [], while associated dimensions {1} are {2}' \
-                             .format(key, dims_names, dims))
+                    raise Exception('acados -- mismatching dimensions for field {0}. ' \
+                         'Provided data has dimensions [], ' \
+                         'while associated dimensions {1} are {2}' \
+                             .format(key, dim_names, dims))
             else:
-                v = np.array(v)
-                v_dims = v.shape
-                if dims != v_dims:
-                    raise Exception('acados -- mismatching dimensions for field {0}.' \
-                        ' Provided data has dimensions {1}, while associated dimensions {2} are {3}' \
-                            .format(key, v_dims, dims_names, dims))
-        out[key.replace(key, key)] = v
-    return out
+                item = np.array(item)
+                item_dims = item.shape
+                if dims != item_dims:
+                    raise Exception('acados -- mismatching dimensions for field {0}. ' \
+                        'Provided data has dimensions {1}, ' \
+                        'while associated dimensions {2} are {3}' \
+                            .format(key, item_dims, dim_names, dims))
+    return
 
 
 def J_to_idx(J):
@@ -266,7 +277,8 @@ def J_to_idx(J):
     for i in range(nrows):
         this_idx = np.nonzero(J[i,:])[0]
         if len(this_idx) != 1:
-            raise Exception('Invalid J matrix structure detected, must contain one nonzero element per row. Exiting.')
+            raise Exception('Invalid J matrix structure detected, ' \
+                'must contain one nonzero element per row. Exiting.')
         if this_idx.size > 0 and J[i,this_idx[0]] != 1:
             raise Exception('J matrices can only contain 1s. Exiting.')
         idx[i] = this_idx[0]
@@ -284,9 +296,11 @@ def J_to_idx_slack(J):
             idx[i_idx] = i
             i_idx = i_idx + 1
         elif len(this_idx) > 1:
-            raise Exception('J_to_idx_slack: Invalid J matrix. Exiting. Found more than one nonzero in row ' + str(i))
+            raise Exception('J_to_idx_slack: Invalid J matrix. Exiting. ' \
+                'Found more than one nonzero in row ' + str(i))
         if this_idx.size > 0 and J[i,this_idx[0]] != 1:
-            raise Exception('J_to_idx_slack: J matrices can only contain 1s, got J(' + str(i) + ', ' + str(this_idx[0]) + ') = ' + str(J[i,this_idx[0]]) )
+            raise Exception('J_to_idx_slack: J matrices can only contain 1s, ' \
+                 'got J(' + str(i) + ', ' + str(this_idx[0]) + ') = ' + str(J[i,this_idx[0]]) )
     if not i_idx == ncol:
             raise Exception('J_to_idx_slack: J must contain a 1 in every column!')
     return idx
