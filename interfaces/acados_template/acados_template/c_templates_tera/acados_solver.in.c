@@ -195,7 +195,7 @@ int acados_create()
     {%- endif %}
 
     {% if solver_options.hessian_approx == "EXACT" %} 
-    nlp_solver_plan->regularization = CONVEXIFICATION;
+    nlp_solver_plan->regularization = CONVEXIFY;
     {%- endif %}
     nlp_config = ocp_nlp_config_create(*nlp_solver_plan);
 
