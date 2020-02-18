@@ -98,7 +98,7 @@ def bycicle_model(track="LMS_Track.txt"):
 
     # dynamics
     Fxd = (Cm1 - Cm2 * v) * D - Cr2 * v * v - Cr0 * tanh(5 * v)
-    sdota = (v * np.cos(alpha + C1 * delta)) / (1 - kapparef_s(s) * n)
+    sdota = (v * cos(alpha + C1 * delta)) / (1 - kapparef_s(s) * n)
     f_expl = vertcat(
         sdota,
         v * sin(alpha + C1 * delta),
