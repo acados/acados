@@ -35,7 +35,7 @@
 
 import time, os
 import numpy as np
-from acados_settings import *
+from acados_settings_dev import *
 from plotFcn import *
 from tracks.readDataFcn import getTrack
 import matplotlib.pyplot as plt
