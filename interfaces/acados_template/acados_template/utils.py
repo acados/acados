@@ -70,6 +70,8 @@ def is_column(x):
     elif isinstance(x, (MX, SX, DM)):
         if x.shape[1] == 1:
             return True
+        elif x.shape[0] == 0 and x.shape[1] == 0:
+            return True
         else:
             return False
     elif x == None or x == []:
