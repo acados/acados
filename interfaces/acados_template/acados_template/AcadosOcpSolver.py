@@ -132,6 +132,8 @@ def set_up_imported_gnsf_model(acados_ocp):
     acados_ocp.model.f_lo_fun_jac_x1k1uz = f_lo_fun_jac_x1k1uz
     acados_ocp.model.get_matrices_fun = get_matrices_fun
 
+    del acados_ocp.gnsf_model
+
 
 def get_ocp_nlp_layout():
     current_module = sys.modules[__name__]
@@ -381,7 +383,6 @@ class AcadosOcpSolver:
         ## Compile solver
         os.chdir('c_generated_code')
         os.system('make clean_ocp_shared_lib')
-        # import pdb; pdb.set_trace()
         os.system('make ocp_shared_lib')
         os.chdir('..')
 
