@@ -94,6 +94,34 @@ def casadi_length(x):
         raise Exception("casadi_length expects one of the following types: casadi.MX, casadi.SX."
                         + " Got: " + str(type(x)))
 
+def make_model_consistent(model):
+    x = model.x
+    xdot = model.xdot
+    u = model.u
+    z = model.z
+    p = model.p
+
+    if isinstance(x, SX):
+        is_SX = True
+    elif isinstance(x, MX):
+        is_SX = False
+    else:
+        raise Exception("model.x must be casadi.SX or casadi.MX, got {}".format(type(x)))
+
+    if is_empty(p):
+        if is_SX:
+            model.p = SX.sym('p', 0, 0)
+        else:
+            model.p = MX.sym('p', 0, 0)
+
+    if is_empty(z):
+        if is_SX:
+            model.z = SX.sym('z', 0, 0)
+        else:
+            model.z = MX.sym('z', 0, 0)
+
+    return model
+
 
 def get_tera():
     tera_path = get_tera_exec_path()

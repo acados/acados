@@ -48,7 +48,8 @@ from .generate_c_code_nls_cost import generate_c_code_nls_cost
 from .generate_c_code_external_cost import generate_c_code_external_cost
 from .AcadosOcp import AcadosOcp
 from .AcadosModel import acados_model_strip_casadi_symbolics
-from .utils import is_column, is_empty, casadi_length, render_template, acados_class2dict, format_class_dict, ocp_check_json_against_layout, np_array_to_list
+from .utils import is_column, is_empty, casadi_length, render_template, acados_class2dict,\
+     format_ocp_dict, ocp_check_json_against_layout, np_array_to_list, make_model_consistent
 
 
 def make_ocp_dims_consistent(acados_ocp):
@@ -200,6 +201,7 @@ def ocp_formulation_json_load(json_file='acados_ocp_nlp.json'):
 
 def ocp_generate_external_functions(acados_ocp, model):
 
+    model = make_model_consistent(model)
     if acados_ocp.solver_options.integrator_type == 'ERK':
         # explicit model -- generate C code
         generate_c_code_explicit_ode(model)
