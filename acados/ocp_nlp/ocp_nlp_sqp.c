@@ -702,13 +702,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             ocp_qp_res_compute(nlp_mem->qp_in, nlp_mem->qp_out, work->qp_res, work->qp_res_ws);
             if (sqp_iter+1 < mem->stat_m)
                 ocp_qp_res_compute_nrm_inf(work->qp_res, mem->stat+(mem->stat_n*(sqp_iter+1)+6));
-//            printf("\nsqp_iter %d, res %e %e %e %e\n", sqp_iter, inf_norm_qp_res[0], inf_norm_qp_res[1], inf_norm_qp_res[2], inf_norm_qp_res[3]);
         }
-
-//        printf("\n------- qp_out (sqp iter %d) ---------\n", sqp_iter);
-//        print_ocp_qp_out(mem->qp_out);
-//        if (sqp_iter==1)
-//        exit(1);
 
 
         if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
@@ -731,6 +725,14 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // restore number of threads
             omp_set_num_threads(num_threads_bkp);
 #endif
+
+            if (opts->print_level > 0)
+            {
+                printf("\n Failed to solve the following QP:\n");
+                if (opts->print_level > sqp_iter)
+                    print_ocp_qp_in(nlp_mem->qp_in);
+            }
+
             mem->status = ACADOS_QP_FAILURE;
             return mem->status;
         }
@@ -754,6 +756,12 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         //                opts->scheme->freeze = true;
         //            }
         //        }
+        if (opts->print_level > 0)
+        {
+            printf("Residuals: stat: %e, eq: %e, ineq: %e, comp: %e.\n", mem->nlp_res->inf_norm_res_g,
+                    mem->nlp_res->inf_norm_res_b, mem->nlp_res->inf_norm_res_d, mem->nlp_res->inf_norm_res_m );
+        }
+
     }
 
     // stop timer
@@ -775,6 +783,18 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     omp_set_num_threads(num_threads_bkp);
 #endif
     mem->status = ACADOS_MAXITER;
+    printf("\n ocp_nlp_sqp: maximum iterations reached\n");
+
+    if (opts->print_level > 0)
+    {
+        // print_ocp_qp_in(nlp_mem->qp_in);
+
+        printf("\n ocp_nlp_sqp: maximum iterations reached, last QP input above.\n");
+
+        printf("Residuals: stat: %e, eq: %e, ineq: %e, comp: %e.\n", mem->nlp_res->inf_norm_res_g,
+            mem->nlp_res->inf_norm_res_b, mem->nlp_res->inf_norm_res_d, mem->nlp_res->inf_norm_res_m );
+    }
+
     return mem->status;
 }
 
