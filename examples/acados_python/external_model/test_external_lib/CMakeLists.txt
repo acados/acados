@@ -20,10 +20,9 @@ link_directories(${filename}
 
 add_library(external_ode_casadi SHARED src/external_ode_casadi.cpp)
 
-#~ target_link_libraries(external_ode_casadi
-    #~ ${Biorbd_LIBRARY}
-    #~ ${RBDL_LIBRARY}
-  #~ )
+target_link_libraries(external_ode_casadi
+    ${CASADI_LIBRARIES}
+  )
     
 set_target_properties(external_ode_casadi PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
 
@@ -45,12 +44,12 @@ foreach(src_file ${source_files})
         ${filename}.cpp
     )
     target_include_directories(${filename} PUBLIC
-        ${Casadi_INCLUDE_DIR}
+        ${CASADI_INCLUDE_DIR}
     )
 
     target_link_libraries(${filename}
         external_ode_casadi
-        ${Casadi_LIBRARY}
+        ${CASADI_LIBRARIES}
       )
 endforeach()
 

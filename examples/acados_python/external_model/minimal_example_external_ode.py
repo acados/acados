@@ -46,7 +46,7 @@ ocp = AcadosOcp()
 # set model
 model = export_external_ode_model()
 ocp.model = model
-ocp.solver_options.model_external_shared_lib_dir     = os.getcwd()
+ocp.solver_options.model_external_shared_lib_dir     = os.getcwd()+"/test_external_lib/build"
 ocp.solver_options.model_external_shared_lib_name    = "external_ode_casadi"
 
 Tf = 1.0
@@ -120,7 +120,7 @@ ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 # initial guess
 t_traj = np.linspace(0, Tf, N+1)
 x_traj = np.linspace(x0,xT,N+1)
-u_traj = np.ones((N,1))
+u_traj = np.ones((N,1))+np.random.rand(N,1)*1e-6
 for n in range(N+1):
   ocp_solver.set(n, 'x', x_traj[n,:])
 for n in range(N):
@@ -157,7 +157,6 @@ plt.title('velocity')
 plt.figure()
 plt.plot(simU,'o',label='opt_sol')
 plt.plot(u_traj,'x',label='init_traj')
-plt.ylim([0,10])
 plt.legend()
 plt.title('control')
 plt.show(block=True)

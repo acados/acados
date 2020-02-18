@@ -45,7 +45,7 @@ def export_external_ode_model():
     x = MX.sym('x', 2)
     u = MX.sym('u', 1)
     xDot = MX.sym('xDot', 2)
-    cdll.LoadLibrary('./libexternal_ode_casadi.so')
+    cdll.LoadLibrary('./test_external_lib/build/libexternal_ode_casadi.so')
     f_ext = external('libexternal_ode_casadi', 'libexternal_ode_casadi.so', {'enable_fd': True})
     f_expl = f_ext(x, u)
 
