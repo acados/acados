@@ -67,83 +67,70 @@ def acados_settings(Tf, N, track_file):
     ny = nx + nu
     ny_e = nx
 
+    ocp.dims.nx = nx
+    ocp.dims.np = 0
+    ocp.dims.ny = ny
+    ocp.dims.ny_e = ny_e
+    ocp.dims.nbx = 1
+    ocp.dims.nsbx = 1
+    ocp.dims.nbu = nu
+    ocp.dims.nu = nu
     ocp.dims.N = N
-    ns = 2
-    # ocp.dims.nx = nx
-    # ocp.dims.np = 0
-    # ocp.dims.ny = ny
-    # ocp.dims.ny_e = ny_e
-    # ocp.dims.nbx = 1
-    # ocp.dims.nsbx = 0
-    # ocp.dims.nbu = nu
-    # ocp.dims.nu = nu
-    # ocp.dims.nsh = 2
-    # ocp.dims.nh = constraint.expr.shape[0]
-    # ocp.dims.ns = 2
+    ocp.dims.nh = constraint.expr.shape[0]
+    ocp.dims.nsh = ocp.dims.nh
+    ocp.dims.ns = ocp.dims.nsh + ocp.dims.nsbx
 
     # set cost
-    Q = np.zeros((nx, nx))
-    Q[0, 0] = 1e-1
-    Q[1, 1] = 1e-8
-    Q[2, 2] = 1e-8
-    Q[3, 3] = 1e-8
-    Q[4, 4] = 1e-3
-    Q[5, 5] = 5e-3
+    Q = np.diag([ 1e-1, 1e-8, 1e-8, 1e-8, 1e-3, 5e-3 ])
 
     R = np.eye(nu)
     R[0, 0] = 1e-3
     R[1, 1] = 5e-3
 
-    Qe = np.zeros((nx, nx))
-    Qe[0, 0] = 5e0
-    Qe[1, 1] = 1e1
-    Qe[2, 2] = 1e-8
-    Qe[3, 3] = 1e-8
-    Qe[4, 4] = 5e-3
-    Qe[5, 5] = 2e-3
+    Qe = np.diag([ 5e0, 1e1, 1e-8, 1e-8, 5e-3, 2e-3 ])
 
-    nlp_cost = ocp.cost
-    nlp_cost.cost_type = "LINEAR_LS"
-    nlp_cost.cost_type_e = "LINEAR_LS"
+    ocp.cost.cost_type = "LINEAR_LS"
+    ocp.cost.cost_type_e = "LINEAR_LS"
     unscale = N / Tf
 
-    nlp_cost.W = unscale * scipy.linalg.block_diag(Q, R)
-    nlp_cost.W_e = Qe / unscale
+    ocp.cost.W = unscale * scipy.linalg.block_diag(Q, R)
+    ocp.cost.W_e = Qe / unscale
 
     Vx = np.zeros((ny, nx))
     Vx[:nx, :nx] = np.eye(nx)
-    nlp_cost.Vx = Vx
+    ocp.cost.Vx = Vx
 
     Vu = np.zeros((ny, nu))
     Vu[6, 0] = 1.0
     Vu[7, 1] = 1.0
-    nlp_cost.Vu = Vu
+    ocp.cost.Vu = Vu
 
     Vx_e = np.zeros((ny_e, nx))
     Vx_e[:nx, :nx] = np.eye(nx)
-    nlp_cost.Vx_e = Vx_e
+    ocp.cost.Vx_e = Vx_e
 
-    nlp_cost.zl = 100 * np.ones((nlp_dims.ns,))
-    nlp_cost.Zl = 0 * np.ones((nlp_dims.ns,))
-    nlp_cost.zu = 100 * np.ones((nlp_dims.ns,))
-    nlp_cost.Zu = 0 * np.ones((nlp_dims.ns,))
+    ocp.cost.zl = 100 * np.ones((ocp.dims.ns,))
+    ocp.cost.zu = 100 * np.ones((ocp.dims.ns,))
+    ocp.cost.Zl = 1 * np.ones((ocp.dims.ns,))
+    ocp.cost.Zu = 1 * np.ones((ocp.dims.ns,))
 
     # set intial references
-    nlp_cost.yref = np.array([1, 0, 0, 0, 0, 0, 0, 0])
-    nlp_cost.yref_e = np.array([0, 0, 0, 0, 0, 0])
+    ocp.cost.yref = np.array([1, 0, 0, 0, 0, 0, 0, 0])
+    ocp.cost.yref_e = np.array([0, 0, 0, 0, 0, 0])
 
     # setting constraints
-    nlp_con = ocp.constraints
-    nlp_con.lbx = np.array([-12])
-    nlp_con.ubx = np.array([12])
-    nlp_con.idxbx = np.array([1])
-    nlp_con.lbu = np.array([model.dthrottle_min, model.ddelta_min])
-    nlp_con.ubu = np.array([model.dthrottle_max, model.ddelta_max])
-    nlp_con.idxbu = np.array([0, 1])
-    # nlp_con.lsbx=np.zero s([1])
-    # nlp_con.usbx=np.zeros([1])
-    # nlp_con.idxsbx=np.array([1])
-    nlp_con.lh = np.array(
+    ocp.constraints.lbx = np.array([-12])
+    ocp.constraints.ubx = np.array([12])
+    ocp.constraints.idxbx = np.array([1])
+    ocp.constraints.lbu = np.array([model.dthrottle_min, model.ddelta_min])
+    ocp.constraints.ubu = np.array([model.dthrottle_max, model.ddelta_max])
+    ocp.constraints.idxbu = np.array([0, 1])
+
+    ocp.constraints.lsbx = np.zeros([ocp.dims.nsbx])
+    ocp.constraints.usbx = np.zeros([ocp.dims.nsbx])
+    ocp.constraints.idxsbx = np.array(range(ocp.dims.nsbx))
+
+    ocp.constraints.lh = np.array(
         [
             constraint.along_min,
             constraint.alat_min,
@@ -152,7 +139,7 @@ def acados_settings(Tf, N, track_file):
             model.delta_min,
         ]
     )
-    nlp_con.uh = np.array(
+    ocp.constraints.uh = np.array(
         [
             constraint.along_max,
             constraint.alat_max,
@@ -161,27 +148,26 @@ def acados_settings(Tf, N, track_file):
             model.delta_max,
         ]
     )
-    nlp_con.lsh = np.zeros(nlp_dims.nsh)
-    nlp_con.ush = np.zeros(nlp_dims.nsh)
-    nlp_con.idxsh = np.array([0, 2])
+    ocp.constraints.lsh = np.zeros(ocp.dims.nsh)
+    ocp.constraints.ush = np.zeros(ocp.dims.nsh)
+    ocp.constraints.idxsh = np.array(range(ocp.dims.nsh))
 
     # set intial condition
-    nlp_con.x0 = model.x0
+    ocp.constraints.x0 = model.x0
 
     # set QP solver and integration
     ocp.solver_options.tf = Tf
     # ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
     ocp.solver_options.qp_solver = "PARTIAL_CONDENSING_HPIPM"
-    ocp.solver_options.nlp_solver_type = "SQP_RTI"
+    ocp.solver_options.nlp_solver_type = "SQP"
     ocp.solver_options.hessian_approx = "GAUSS_NEWTON"
     ocp.solver_options.integrator_type = "ERK"
     ocp.solver_options.sim_method_num_stages = 4
     ocp.solver_options.sim_method_num_steps = 3
-
-    # ocp.solver_options.qp_solver_tol_stat = 1e-2
-    # ocp.solver_options.qp_solver_tol_eq = 1e-2
-    # ocp.solver_options.qp_solver_tol_ineq = 1e-2
-    # ocp.solver_options.qp_solver_tol_comp = 1e-2
+    # ocp.solver_options.nlp_solver_step_length = 0.05
+    ocp.solver_options.nlp_solver_max_iter = 200
+    ocp.solver_options.tol = 1e-4
+    # ocp.solver_options.nlp_solver_tol_comp = 1e-1
 
     # create solver
     acados_solver = AcadosOcpSolver(ocp, json_file="acados_ocp.json")
