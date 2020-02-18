@@ -49,7 +49,7 @@ from .generate_c_code_external_cost import generate_c_code_external_cost
 from .AcadosOcp import AcadosOcp
 from .AcadosModel import acados_model_strip_casadi_symbolics
 from .utils import is_column, is_empty, casadi_length, render_template, acados_class2dict,\
-     format_ocp_dict, ocp_check_json_against_layout, np_array_to_list, make_model_consistent
+     format_class_dict, ocp_check_json_against_layout, np_array_to_list, make_model_consistent
 
 
 def make_ocp_dims_consistent(acados_ocp):

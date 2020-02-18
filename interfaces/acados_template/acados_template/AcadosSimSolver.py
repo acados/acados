@@ -44,7 +44,7 @@ from .generate_c_code_implicit_ode import generate_c_code_implicit_ode
 from .AcadosSim import AcadosSim
 from .AcadosOcp import AcadosOcp
 from .AcadosModel import acados_model_strip_casadi_symbolics
-from .utils import is_column, render_template, format_ocp_dict, np_array_to_list, make_model_consistent
+from .utils import is_column, render_template, format_class_dict, np_array_to_list, make_model_consistent
 
 
 def make_sim_dims_consistent(acados_sim):
