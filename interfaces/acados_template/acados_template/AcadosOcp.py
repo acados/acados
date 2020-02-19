@@ -1693,7 +1693,7 @@ class AcadosOcpOptions:
                     + ',\n'.join(qp_solvers) + '.\n\nYou have: ' + qp_solver + '.\n\nExiting.')
     @hessian_approx.setter
     def hessian_approx(self, hessian_approx):
-        hessian_approxs = ('GAUSS_NEWTON')
+        hessian_approxs = ('GAUSS_NEWTON', 'EXACT')
 
         if type(hessian_approx) == str and hessian_approx in hessian_approxs:
             self.__hessian_approx = hessian_approx
