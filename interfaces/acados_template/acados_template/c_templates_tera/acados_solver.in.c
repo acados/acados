@@ -426,7 +426,6 @@ int acados_create()
     }
 
     {%- if solver_options.hessian_approx == "EXACT" %} 
-    external_function_param_casadi * hess_vde_casadi;
     hess_vde_casadi = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; i++) {
         hess_vde_casadi[i].casadi_fun = &{{ model.name }}_expl_ode_hess;
