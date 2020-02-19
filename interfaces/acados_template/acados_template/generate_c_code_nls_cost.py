@@ -46,30 +46,20 @@ def generate_c_code_nls_cost( model, cost_name, is_terminal ):
         msg += 'Version {} currently in use.'.format(casadi_version)
         raise Exception(msg)
 
-    # TODO: rename to y, see matlab generation file!
     if is_terminal:
-        # suffix_name = '_r_e_cost'
-        suffix_name = '_cost_y_e_fun'
+        middle_name = '_cost_y_e'
         u = SX.sym('u', 0, 0)
         cost_expr = model.cost_y_expr_e
 
     else:
-        suffix_name = '_cost_y_fun'
+        middle_name = '_cost_y'
         u = model.u
         cost_expr = model.cost_y_expr
 
     x = model.x
     p = model.p
 
-    # set up functions to be exported
-    fun_name = cost_name + suffix_name
-
-    cost_jac_expr = transpose(jacobian(cost_expr, vertcat(u, x)))
-
-    nls_cost_fun = Function( fun_name, [x, u, p], \
-            [ cost_expr, cost_jac_expr ])
-
-    # generate C code
+    # set up directory
     if not os.path.exists('c_generated_code'):
         os.mkdir('c_generated_code')
 
@@ -79,10 +69,18 @@ def generate_c_code_nls_cost( model, cost_name, is_terminal ):
         os.mkdir(gen_dir)
     gen_dir_location = './' + gen_dir
     os.chdir(gen_dir_location)
-    file_name = cost_name + suffix_name
 
-    nls_cost_fun.generate( file_name, casadi_opts )
+    # set up expressions
+    cost_jac_expr = transpose(jacobian(cost_expr, vertcat(u, x)))
+
+    ## generate C code
+    suffix_name = '_fun'
+    fun_name = cost_name + middle_name + suffix_name
+    nls_cost_fun = Function( fun_name, [x, u, p], \
+            [ cost_expr, cost_jac_expr ])
+    nls_cost_fun.generate( fun_name, casadi_opts )
 
     os.chdir('../..')
+
     return
 

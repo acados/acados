@@ -56,26 +56,6 @@ def generate_c_code_implicit_ode( model, opts ):
     f_impl = model.f_impl_expr
     model_name = model.name
 
-    if isinstance(x, casadi.SX):
-        is_SX = True
-    elif isinstance(x, casadi.MX):
-        is_SX = False
-    else:
-        raise Exception("model.x must be casadi.SX or casadi.MX, got {}".format(type(x)))
-
-
-    if is_empty(p):
-        if is_SX:
-            p = SX.sym('p', 0, 0)
-        else:
-            p = MX.sym('p', 0, 0)
-
-    if is_empty(z):
-        if is_SX:
-            z = SX.sym('z', 0, 0)
-        else:
-            z = MX.sym('z', 0, 0)
-
     ## get model dimensions
     nx = casadi_length(x)
     nu = casadi_length(u)

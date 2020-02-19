@@ -69,7 +69,7 @@ def generate_c_code_gnsf( model ):
     gnsf_ny = max(phi_fun.size_in(0))
     gnsf_nout = max(phi_fun.size_out(0))
 
-    # set up functions
+    # set up expressions
     y = SX.sym("y", gnsf_ny, 1)
     uhat = SX.sym("uhat", gnsf_nuhat, 1)
     p = model.p
