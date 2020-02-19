@@ -46,9 +46,10 @@ def generate_c_code_nls_cost( model, cost_name, is_terminal ):
         msg += 'Version {} currently in use.'.format(casadi_version)
         raise Exception(msg)
 
-
+    # TODO: rename to y, see matlab generation file!
     if is_terminal:
-        suffix_name = '_r_e_cost'
+        # suffix_name = '_r_e_cost'
+        suffix_name = '_cost_y_e_fun'
         u = SX.sym('u', 0, 0)
         cost_expr = model.cost_y_expr_e
 

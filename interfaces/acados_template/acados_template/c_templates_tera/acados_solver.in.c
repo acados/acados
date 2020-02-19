@@ -61,7 +61,7 @@
 #include "{{ model.name }}_cost/{{ model.name }}_external_cost.h"
 {% endif %}
 {%- if cost.cost_type_e == "NONLINEAR_LS" %}
-#include "{{ model.name }}_cost/{{ model.name }}_r_e_cost.h"
+#include "{{ model.name }}_cost/{{ model.name }}_cost_y_e_fun.h"
 {%- elif cost.cost_type_e == "EXTERNAL" %}
 #include "{{ model.name }}_cost/{{ model.name }}_external_cost_e.h"
 {% endif %}
@@ -144,7 +144,7 @@ external_function_param_casadi * ext_cost_fun;
 external_function_param_casadi * ext_cost_fun_jac_hess;
 {% endif %}
 {% if cost.cost_type_e == "NONLINEAR_LS" %}
-external_function_param_casadi r_e_cost;
+external_function_param_casadi cost_y_e_fun;
 {% elif cost.cost_type_e == "EXTERNAL" %}
 external_function_param_casadi ext_cost_e_fun;
 external_function_param_casadi ext_cost_e_fun_jac_hess;
@@ -587,14 +587,14 @@ int acados_create()
 
 {%- if cost.cost_type_e == "NONLINEAR_LS" %}
     // residual function
-    r_e_cost.casadi_fun = &{{ model.name }}_r_e_cost;
-    r_e_cost.casadi_n_in = &{{ model.name }}_r_e_cost_n_in;
-    r_e_cost.casadi_n_out = &{{ model.name }}_r_e_cost_n_out;
-    r_e_cost.casadi_sparsity_in = &{{ model.name }}_r_e_cost_sparsity_in;
-    r_e_cost.casadi_sparsity_out = &{{ model.name }}_r_e_cost_sparsity_out;
-    r_e_cost.casadi_work = &{{ model.name }}_r_e_cost_work;
+    cost_y_e_fun.casadi_fun = &{{ model.name }}_cost_y_e_fun;
+    cost_y_e_fun.casadi_n_in = &{{ model.name }}_cost_y_e_fun_n_in;
+    cost_y_e_fun.casadi_n_out = &{{ model.name }}_cost_y_e_fun_n_out;
+    cost_y_e_fun.casadi_sparsity_in = &{{ model.name }}_cost_y_e_fun_sparsity_in;
+    cost_y_e_fun.casadi_sparsity_out = &{{ model.name }}_cost_y_e_fun_sparsity_out;
+    cost_y_e_fun.casadi_work = &{{ model.name }}_cost_y_e_fun_work;
 
-    external_function_param_casadi_create(&r_e_cost, {{ dims.np }});
+    external_function_param_casadi_create(&cost_y_e_fun, {{ dims.np }});
 {%- elif cost.cost_type_e == "EXTERNAL" %}
     // external cost
     ext_cost_e_fun.casadi_fun = &{{ model.name }}_ext_cost_e_fun;
@@ -791,7 +791,7 @@ int acados_create()
     {%- endif %}
 
     {%- if cost.cost_type_e == "NONLINEAR_LS" %}
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "nls_res_jac", &r_e_cost);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "nls_res_jac", &cost_y_e_fun);
     {%- endif %}
 {%- endif %}{# ny_e > 0 #}
 
@@ -1528,13 +1528,13 @@ int acados_update_params(int stage, double *p, int np)
     else // stage == N
     {
     {%- if cost.cost_type_e == "NONLINEAR_LS" %}
-        casadi_np = (&r_e_cost)->np;
+        casadi_np = (&cost_y_e_fun)->np;
         if (casadi_np != np) {
             printf("acados_update_params: trying to set %i parameters "
-                "in r_e_cost which only has %i. Exiting.\n", np, casadi_np);
+                "in cost_y_e_fun which only has %i. Exiting.\n", np, casadi_np);
             exit(1);
         }
-        r_e_cost.set_param(&r_e_cost, p);
+        cost_y_e_fun.set_param(&cost_y_e_fun, p);
     {%- elif cost.cost_type_e == "EXTERNAL" %}
         casadi_np = (&ext_cost_e_fun)->np;
         if (casadi_np != np) {
