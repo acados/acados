@@ -38,6 +38,7 @@ matrix:
       os: osx
       osx_image: xcode9.4
       # osx_image: xcode10.1
+      python: 3.7
       env:
         - DEPLOY_NAME="osx-python"
 
@@ -88,6 +89,8 @@ before_install:
   - export SCRIPT_DIR="${TRAVIS_BUILD_DIR}/ci/${TRAVIS_OS_NAME}"
   - export SHARED_SCRIPT_DIR="${TRAVIS_BUILD_DIR}/ci/shared"
   - source "${SCRIPT_DIR}/dispatch.sh"
+  - python --version
+  - python3 --version
 
 install:
   - SECTION='install'

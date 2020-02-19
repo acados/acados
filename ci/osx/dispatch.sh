@@ -44,6 +44,7 @@ if [ "${SECTION}" = 'before_install' ]; then
 elif [ "${SECTION}" = 'install' ]; then
     source "${SCRIPT_DIR}/install_ccache.sh";
     source "${SHARED_SCRIPT_DIR}/install_eigen.sh";
+    source "${SCRIPT_DIR}/install_python.sh";
 
     if  "${ACADOS_OCTAVE_TEMPLATE}" = 'ON' ||
         [[ "${ACADOS_MATLAB}" = 'ON' || "${ACADOS_OCTAVE}" = 'ON' ]] ||
