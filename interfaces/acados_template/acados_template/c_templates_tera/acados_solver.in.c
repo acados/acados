@@ -1194,6 +1194,15 @@ int acados_create()
 
     nlp_opts = ocp_nlp_solver_opts_create(nlp_config, nlp_dims);
 
+{% if solver_options.hessian_approx == "EXACT" %}
+    bool nlp_solver_exact_hessian = true;
+    // TODO: this if should not be needed! however, calling the setter with false leads to weird behavior. Investigate!
+    if (nlp_solver_exact_hessian)
+    {
+        ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "exact_hess", &nlp_solver_exact_hessian);
+    }
+{%- endif -%}
+
 {%- if dims.nz > 0 %}
     bool output_z_val = true; 
     bool sens_algebraic_val = true; 
