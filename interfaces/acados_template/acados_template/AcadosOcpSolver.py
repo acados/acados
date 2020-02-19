@@ -327,8 +327,8 @@ def ocp_render_templates(acados_ocp, json_file):
     # nonlinear cost function
     if acados_ocp.cost.cost_type == 'NONLINEAR_LS':
         template_dir = 'c_generated_code/{}_cost/'.format(name)
-        in_file = 'r_cost.in.h'
-        out_file = '{}_r_cost.h'.format(name)
+        in_file = 'cost_y_fun.in.h'
+        out_file = '{}_cost_y_fun.h'.format(name)
         render_template(in_file, out_file, template_dir, json_path)
 
     # terminal nonlinear cost function

@@ -95,7 +95,7 @@ extern external_function_param_casadi h_e_constraint;
 {%- endif %}
 
 {% if cost.cost_type == "NONLINEAR_LS" %}
-extern external_function_param_casadi * r_cost;
+extern external_function_param_casadi * cost_y_fun;
 {% endif %}
 {% if cost.cost_type_e == "NONLINEAR_LS" %}
 extern external_function_param_casadi cost_y_e_fun;

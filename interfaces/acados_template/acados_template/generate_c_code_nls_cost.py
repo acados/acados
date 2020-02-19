@@ -54,7 +54,7 @@ def generate_c_code_nls_cost( model, cost_name, is_terminal ):
         cost_expr = model.cost_y_expr_e
 
     else:
-        suffix_name = '_r_cost'
+        suffix_name = '_cost_y_fun'
         u = model.u
         cost_expr = model.cost_y_expr
 

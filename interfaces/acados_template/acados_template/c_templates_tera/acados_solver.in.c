@@ -56,7 +56,7 @@
 #include "{{ model.name }}_constraints/{{ model.name }}_h_e_constraint.h"
 {% endif %}
 {%- if cost.cost_type == "NONLINEAR_LS" %}
-#include "{{ model.name }}_cost/{{ model.name }}_r_cost.h"
+#include "{{ model.name }}_cost/{{ model.name }}_cost_y_fun.h"
 {%- elif cost.cost_type == "EXTERNAL" %}
 #include "{{ model.name }}_cost/{{ model.name }}_external_cost.h"
 {% endif %}
@@ -138,7 +138,7 @@ external_function_param_casadi phi_e_constraint;
 {% endif %}
 
 {% if cost.cost_type == "NONLINEAR_LS" %}
-external_function_param_casadi * r_cost;
+external_function_param_casadi * cost_y_fun;
 {% elif cost.cost_type == "EXTERNAL" %}
 external_function_param_casadi * ext_cost_fun;
 external_function_param_casadi * ext_cost_fun_jac_hess;
@@ -542,18 +542,18 @@ int acados_create()
 
 {%- if cost.cost_type == "NONLINEAR_LS" %}
     // nonlinear least squares cost
-    r_cost = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
+    cost_y_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; i++)
     {
         // residual function
-        r_cost[i].casadi_fun = &{{ model.name }}_r_cost;
-        r_cost[i].casadi_n_in = &{{ model.name }}_r_cost_n_in;
-        r_cost[i].casadi_n_out = &{{ model.name }}_r_cost_n_out;
-        r_cost[i].casadi_sparsity_in = &{{ model.name }}_r_cost_sparsity_in;
-        r_cost[i].casadi_sparsity_out = &{{ model.name }}_r_cost_sparsity_out;
-        r_cost[i].casadi_work = &{{ model.name }}_r_cost_work;
+        cost_y_fun[i].casadi_fun = &{{ model.name }}_cost_y_fun;
+        cost_y_fun[i].casadi_n_in = &{{ model.name }}_cost_y_fun_n_in;
+        cost_y_fun[i].casadi_n_out = &{{ model.name }}_cost_y_fun_n_out;
+        cost_y_fun[i].casadi_sparsity_in = &{{ model.name }}_cost_y_fun_sparsity_in;
+        cost_y_fun[i].casadi_sparsity_out = &{{ model.name }}_cost_y_fun_sparsity_out;
+        cost_y_fun[i].casadi_work = &{{ model.name }}_cost_y_fun_work;
 
-        external_function_param_casadi_create(&r_cost[i], {{ dims.np }});
+        external_function_param_casadi_create(&cost_y_fun[i], {{ dims.np }});
     }
 {%- elif cost.cost_type == "EXTERNAL" %}
     // external cost
@@ -722,7 +722,7 @@ int acados_create()
 {%- if cost.cost_type == "NONLINEAR_LS" %}
     for (int i = 0; i < N; i++)
     {
-        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_res_jac", &r_cost[i]);
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_res_jac", &cost_y_fun[i]);
     }
 {%- elif cost.cost_type == "EXTERNAL" %}
     for (int i = 0; i < N; i++)
@@ -1500,13 +1500,13 @@ int acados_update_params(int stage, double *p, int np)
         {%- endif %}
 
     {%- if cost.cost_type == "NONLINEAR_LS" %}
-        casadi_np = (r_cost+stage)->np;
+        casadi_np = (cost_y_fun+stage)->np;
         if (casadi_np != np) {
             printf("acados_update_params: trying to set %i parameters "
-                "in r_cost which only has %i. Exiting.\n", np, casadi_np);
+                "in cost_y_fun which only has %i. Exiting.\n", np, casadi_np);
             exit(1);
         }
-        r_cost[stage].set_param(r_cost+stage, p);
+        cost_y_fun[stage].set_param(cost_y_fun+stage, p);
 
     {%- elif cost.cost_type == "NONLINEAR_LS" %}
         casadi_np = (ext_cost_fun+stage)->np;

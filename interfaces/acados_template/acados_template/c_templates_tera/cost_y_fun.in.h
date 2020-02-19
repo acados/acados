@@ -40,12 +40,12 @@ extern "C" {
 #endif
 
 {% if cost.cost_type == "NONLINEAR_LS" %}
-int {{ model.name }}_r_cost(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
-int {{ model.name }}_r_cost_work(int *, int *, int *, int *);
-const int *{{ model.name }}_r_cost_sparsity_in(int);
-const int *{{ model.name }}_r_cost_sparsity_out(int);
-int {{ model.name }}_r_cost_n_in();
-int {{ model.name }}_r_cost_n_out();
+int {{ model.name }}_cost_y_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ model.name }}_cost_y_fun_work(int *, int *, int *, int *);
+const int *{{ model.name }}_cost_y_fun_sparsity_in(int);
+const int *{{ model.name }}_cost_y_fun_sparsity_out(int);
+int {{ model.name }}_cost_y_fun_n_in();
+int {{ model.name }}_cost_y_fun_n_out();
 {% endif %}
 
 #ifdef __cplusplus
