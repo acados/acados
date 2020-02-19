@@ -39,6 +39,7 @@ from utils import plot_pendulum
 from casadi import vertcat
 
 COST_MODULE = 'EXTERNAL' # 'LS', 'EXTERNAL'
+HESSIAN_APPROXIMATION = 'EXACT' # 'GAUSS_NEWTON
 
 # create ocp object to formulate the OCP
 ocp = AcadosOcp()
@@ -114,7 +115,7 @@ ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 ocp.constraints.idxbu = np.array([0])
 
 ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
-ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+ocp.solver_options.hessian_approx = HESSIAN_APPROXIMATION
 ocp.solver_options.integrator_type = 'ERK'
 
 ocp.solver_options.qp_solver_cond_N = 5
