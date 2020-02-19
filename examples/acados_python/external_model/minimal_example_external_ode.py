@@ -38,7 +38,7 @@ import os
 import scipy.linalg
 import matplotlib.pyplot as plt
 
-os.environ["ACADOS_SOURCE_DIR"] = "/home/fbailly/devel/acados"
+# os.environ["ACADOS_SOURCE_DIR"] =
 
 # create ocp object to formulate the OCP
 ocp = AcadosOcp()

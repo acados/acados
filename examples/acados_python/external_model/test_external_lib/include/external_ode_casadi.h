@@ -36,8 +36,6 @@ int libexternal_ode_casadi_work(casadi_int *sz_arg,
                                                casadi_int* sz_res,
                                                casadi_int *sz_iw,
                                                casadi_int *sz_w);
-// BIORBD_API int jaco_libexternal_ode_casadi(const casadi_real** arg,
-//                                                   double** res);
 
 #ifdef __cplusplus
 } /* extern "C" */
