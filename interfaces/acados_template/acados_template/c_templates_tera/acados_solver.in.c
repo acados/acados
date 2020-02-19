@@ -194,9 +194,19 @@ int acados_create()
     nlp_solver_plan->nlp_constraints[N] = BGH;
     {%- endif %}
 
-    {% if solver_options.hessian_approx == "EXACT" %} 
+{%- if solver_options.hessian_approx == "EXACT" %}
+    {%- if solver_options.regularize_method == "NO_REGULARIZE" %}
+    nlp_solver_plan->regularization = NO_REGULARIZE;
+    {%- elif solver_options.regularize_method == "MIRROR" %}
+    nlp_solver_plan->regularization = MIRROR;
+    {%- elif solver_options.regularize_method == "PROJECT" %}
+    nlp_solver_plan->regularization = PROJECT;
+    {%- elif solver_options.regularize_method == "PROJECT_REDUC_HESS" %}
+    nlp_solver_plan->regularization = PROJECT_REDUC_HESS;
+    {%- elif solver_options.regularize_method == "CONVEXIFY" %}
     nlp_solver_plan->regularization = CONVEXIFY;
     {%- endif %}
+{%- endif %}
     nlp_config = ocp_nlp_config_create(*nlp_solver_plan);
 
 

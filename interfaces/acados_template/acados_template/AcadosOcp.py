@@ -1561,8 +1561,7 @@ class AcadosOcpOptions:
         self.__nlp_solver_max_iter = 100                      # NLP solver maximum number of iterations
         self.__Tsim = None                                    # automatically calculated as tf/N
         self.__print_level = 0
-        # TODO(oj): add the following
-        # self.__regularize_method = None
+        self.__regularize_method = None
 
 
 
@@ -1585,6 +1584,11 @@ class AcadosOcpOptions:
     def nlp_solver_type(self):
         """NLP solver"""
         return self.__nlp_solver_type
+
+    @property
+    def regularize_method(self):
+        """Regularization method for the Hessian"""
+        return self.__regularize_method
 
     @property
     def nlp_solver_step_length(self):
@@ -1686,11 +1690,23 @@ class AcadosOcpOptions:
         qp_solvers = ('PARTIAL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_QPOASES', \
                 'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_HPIPM')
 
-        if type(qp_solver) == str and qp_solver in qp_solvers:
+        if isinstance(qp_solver, str) and qp_solver in qp_solvers:
             self.__qp_solver = qp_solver
         else:
             raise Exception('Invalid qp_solver value. Possible values are:\n\n' \
                     + ',\n'.join(qp_solvers) + '.\n\nYou have: ' + qp_solver + '.\n\nExiting.')
+
+    @regularize_method.setter
+    def regularize_method(self, regularize_method):
+        regularize_methods = ('NO_REGULARIZE', 'MIRROR', 'PROJECT', \
+                                'PROJECT_REDUC_HESS', 'CONVEXIFY')
+
+        if isinstance(regularize_method, str) and regularize_method in regularize_methods:
+            self.__regularize_method = regularize_method
+        else:
+            raise Exception('Invalid regularize_method value. Possible values are:\n\n' \
+                    + ',\n'.join(regularize_methods) + '.\n\nYou have: ' + regularize_method + '.\n\nExiting.')
+
     @hessian_approx.setter
     def hessian_approx(self, hessian_approx):
         hessian_approxs = ('GAUSS_NEWTON', 'EXACT')
