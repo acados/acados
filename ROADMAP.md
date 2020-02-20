@@ -6,15 +6,12 @@
 - [ ] split ocp solve into prepare and feedback
 - [ ] stage transition functions for changing model dimensions
 
+#### Python interface
+- [ ] lifted IRK
+- [ ] exact hessian
+- [ ] regularization
 
-#### documentation
-- [x] provide OCP NLP formulation that is handled by `ocp_nlp` as a formula
-    - [x] closely stick to setter names!
-- [ ] Set up and document binary workflow
-    - [x] Windows Matlab
-    - [ ] MacOS Matlab
-
-#### `matlab interface`
+#### matlab interface
 - [x] detect dimensions
 - [x] structure detections for constraints
 - [x] getting started folder
@@ -28,6 +25,13 @@
 - [x] separate `acados_ocp()` into generating the C object and setting the numerical data
 - [x] support nonuniform grids
 - [x] OCP with DAEs
+
+#### documentation
+- [x] provide OCP NLP formulation that is handled by `ocp_nlp` as a formula
+    - [x] closely stick to setter names!
+- [ ] Set up and document binary workflow
+    - [x] Windows Matlab
+    - [ ] MacOS Matlab
 
 #### build
 - [ ] cmake: add openmp parallelization
