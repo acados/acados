@@ -32,18 +32,20 @@
 %
 
 
-function generate_c_code_gnsf(model, opts)
+function dump_gnsf_functions(model)
+
+acados_folder = getenv('ACADOS_INSTALL_DIR');
+addpath(fullfile(acados_folder, 'external', 'jsonlab'))
+
 
 %% import casadi
 import casadi.*
 
 casadi_version = CasadiMeta.version();
-if ( strcmp(casadi_version(1:3),'3.4') || strcmp(casadi_version(1:3),'3.5')) % require casadi 3.4.x
-    casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
+if ( strcmp(casadi_version(1:3),'3.5')) % require casadi 3.5 +
 else % old casadi versions
-    error('Please provide CasADi version 3.4 or 3.5 to ensure compatibility with acados')
+    error('Please provide CasADi version or 3.5 to ensure compatibility with acados')
 end
-
 
 %% import models
 % model matrices
@@ -130,8 +132,7 @@ nontrivial_f_LO = model.dyn_gnsf_nontrivial_f_LO;
 purely_linear = model.dyn_gnsf_purely_linear;
 
 % name
-model_name = model.name;
-model_name = [model_name, '_dyn'];
+model_name = model.name
 
 %% generate functions
 if ~purely_linear
@@ -142,14 +143,9 @@ if ~purely_linear
     phi_fun_jac_y = Function([model_name,'_gnsf_phi_fun_jac_y'], {y, uhat, p}, {phi, jac_phi_y});
     phi_jac_y_uhat = Function([model_name,'_gnsf_phi_jac_y_uhat'], {y, uhat, p}, {jac_phi_y, jac_phi_uhat});
 
-    phi_fun.generate([model_name,'_gnsf_phi_fun'], casadi_opts);
-    phi_fun_jac_y.generate([model_name,'_gnsf_phi_fun_jac_y'], casadi_opts);
-    phi_jac_y_uhat.generate([model_name,'_gnsf_phi_jac_y_uhat'], casadi_opts);
-    
     if nontrivial_f_LO
         f_lo_fun_jac_x1k1uz = Function([model_name,'_gnsf_f_lo_fun_jac_x1k1uz'], {x1, x1dot, z1, u, p}, ...
             {f_lo, [jacobian(f_lo,x1), jacobian(f_lo,x1dot), jacobian(f_lo,u), jacobian(f_lo,z1)]});
-        f_lo_fun_jac_x1k1uz.generate([model_name,'_gnsf_f_lo_fun_jac_x1k1uz'], casadi_opts);
     end
 end
 
@@ -158,6 +154,24 @@ dummy = x(1);
 get_matrices_fun = Function([model_name,'_gnsf_get_matrices_fun'], {dummy},...
      {A, B, C, E, L_x, L_xdot, L_z, L_u, A_LO, c, E_LO, B_LO,...
       nontrivial_f_LO, purely_linear, ipiv_x, ipiv_z, c_LO});
-get_matrices_fun.generate([model_name,'_gnsf_get_matrices_fun'], casadi_opts);
 
+% dump functions to json
+out = struct();
+out.phi_fun = phi_fun.serialize();
+out.phi_fun_jac_y = phi_fun_jac_y.serialize();
+out.phi_jac_y_uhat = phi_jac_y_uhat.serialize();
+out.f_lo_fun_jac_x1k1uz = f_lo_fun_jac_x1k1uz.serialize();
+out.get_matrices_fun = get_matrices_fun.serialize();
+out.casadi_version = casadi_version;
+
+json_filename = [model.name '_gnsf_functions.json'];
+json_string = savejson('', out, 'ForceRootName', 0);
+
+fid = fopen(json_filename, 'w');
+if fid == -1, error('Cannot create JSON file'); end
+fwrite(fid, json_string, 'char');
+fclose(fid);
+
+disp(['succesfully dumped gnsf model into ', json_filename])
 end
+

@@ -175,6 +175,9 @@ function ocp_generate_c_code(obj)
     end
     obj.acados_ocp_nlp_json.cost = cost;
 
+    % parameter values
+    obj.acados_ocp_nlp_json.parameter_values = reshape(num2cell(obj.acados_ocp_nlp_json.parameter_values), [ 1, dims.np]);
+
     %% dump JSON file
     % if is_octave()
         % savejson does not work for classes!
@@ -185,12 +188,6 @@ function ocp_generate_c_code(obj)
         ocp_json_struct.cost = struct(ocp_json_struct.cost);
         ocp_json_struct.constraints = struct(ocp_json_struct.constraints);
         ocp_json_struct.solver_options = struct(ocp_json_struct.solver_options);
-
-        % remove con* fields, that are not needed in json
-        ocp_json_struct = rmfield(ocp_json_struct, 'con_p_e');
-        ocp_json_struct = rmfield(ocp_json_struct, 'con_h_e');
-        ocp_json_struct = rmfield(ocp_json_struct, 'con_p');
-        ocp_json_struct = rmfield(ocp_json_struct, 'con_h');
 
         json_string = savejson('',ocp_json_struct, 'ForceRootName', 0);
     % else % Matlab

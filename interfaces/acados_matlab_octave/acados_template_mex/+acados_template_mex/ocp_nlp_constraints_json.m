@@ -80,7 +80,6 @@ classdef ocp_nlp_constraints_json < handle
         % nonlinear constraints at t=T
         lh_e     % lower bound on nonlinear inequalities at t=T
         uh_e     % upper bound on nonlinear inequalities at t=T
-        p       % nominal value of the parameter
         % initial state bounds
         lbx_0    % lower bound on initial state
         ubx_0    % upper bound on initial state
@@ -144,7 +143,6 @@ classdef ocp_nlp_constraints_json < handle
             obj.usphi_e            = [];
             obj.idxsphi = [];
             obj.idxsphi_e = [];
-            obj.p               = [];
         end
     end
 end

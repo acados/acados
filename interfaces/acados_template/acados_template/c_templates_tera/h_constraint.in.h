@@ -39,7 +39,6 @@ extern "C" {
 #endif
 
 {% if dims.nh > 0 %}
-// implicit ODE
 int {{ model.name }}_constr_h_fun_jac_uxt_zt(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_constr_h_fun_jac_uxt_zt_work(int *, int *, int *, int *);
 const int *{{ model.name }}_constr_h_fun_jac_uxt_zt_sparsity_in(int);
