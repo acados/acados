@@ -75,8 +75,8 @@ model_name = model.name;
 if isfield(model, 'cost_expr_y')
     fun = model.cost_expr_y;
     % generate jacobians
-    jac_x       = jacobian(fun, x);
-    jac_u       = jacobian(fun, u);
+    jac_x = jacobian(fun, x);
+    jac_u = jacobian(fun, u);
     % output symbolics
     ny = length(fun);
     if isSX
@@ -89,7 +89,8 @@ if isfield(model, 'cost_expr_y')
     y_hess = jacobian(y_adj, [u; x]);
     % Set up functions
     y_fun = Function([model_name,'_cost_y_fun'], {x, u, p}, {fun});
-    y_fun_jac_ut_xt = Function([model_name,'_cost_y_fun_jac_ut_xt'], {x, u, p}, {fun, [jac_u'; jac_x']});
+    y_fun_jac_ut_xt = Function([model_name,'_cost_y_fun_jac_ut_xt'],...
+                              {x, u, p}, {fun, [jac_u'; jac_x']});
     y_hess = Function([model_name,'_cost_y_hess'], {x, u, y, p}, {y_hess});
     % generate C code
     y_fun.generate([model_name,'_cost_y_fun'], casadi_opts);

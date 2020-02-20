@@ -33,7 +33,7 @@
 
 import os
 from casadi import *
-from .utils import ALLOWED_CASADI_VERSIONS
+from .utils import ALLOWED_CASADI_VERSIONS, casadi_length
 
 def generate_c_code_nls_cost( model, cost_name, is_terminal ):
 
@@ -73,12 +73,36 @@ def generate_c_code_nls_cost( model, cost_name, is_terminal ):
     # set up expressions
     cost_jac_expr = transpose(jacobian(cost_expr, vertcat(u, x)))
 
+    jac_x = jacobian(cost_expr, x)
+    jac_u = jacobian(cost_expr, u)
+
+    ny = casadi_length(cost_expr)
+
+    if isinstance(cost_expr, casadi.SX):
+        y = SX.sym('y', ny, 1)
+    else:
+        y = MX.sym('y', ny, 1)
+
+    y_adj = jtimes(cost_expr, vertcat(u, x), y, True)
+    y_hess = jacobian(y_adj, vertcat(u, x))
+
     ## generate C code
     suffix_name = '_fun'
     fun_name = cost_name + middle_name + suffix_name
-    nls_cost_fun = Function( fun_name, [x, u, p], \
+    y_fun = Function( fun_name, [x, u, p], \
+            [ cost_expr ])
+    y_fun.generate( fun_name, casadi_opts )
+
+    suffix_name = '_fun_jac_ut_xt'
+    fun_name = cost_name + middle_name + suffix_name
+    y_fun_jac_ut_xt = Function(fun_name, [x, u, p], \
             [ cost_expr, cost_jac_expr ])
-    nls_cost_fun.generate( fun_name, casadi_opts )
+    y_fun_jac_ut_xt.generate( fun_name, casadi_opts )
+
+    suffix_name = '_hess'
+    fun_name = cost_name + middle_name + suffix_name
+    y_hess = Function(fun_name, [x, u, p], [ y_hess ])
+    y_hess.generate( fun_name, casadi_opts )
 
     os.chdir('../..')
 
