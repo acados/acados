@@ -33,11 +33,15 @@
 
 import itertools as it
 import os
+from random import sample
+
+TEST_SAMPLE = True # only test random sample instaed of all possible combinations
+SAMPLE_SIZE = 20
 
 COST_MODULE_values = ['EXTERNAL', 'LS', 'NLS']
 COST_MODULE_N_values = ['EXTERNAL', 'LS', 'NLS']
 QP_SOLVER_values = ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CONDENSING_QPOASES']
-INTEGRATOR_TYPE_values = ['ERK', 'IRK']
+INTEGRATOR_TYPE_values = ['ERK', 'IRK', 'GNSF']
 SOLVER_TYPE_values = ['SQP', 'SQP_RTI']
 
 test_parameters = { 'COST_MODULE_values': COST_MODULE_values,
@@ -48,6 +52,9 @@ test_parameters = { 'COST_MODULE_values': COST_MODULE_values,
 
 all_test_parameters = sorted(test_parameters)
 combinations = list(it.product(*(test_parameters[Name] for Name in all_test_parameters)))
+
+if TEST_SAMPLE:
+    combinations = sample(combinations, SAMPLE_SIZE)
 
 for parameters in combinations:
     os_cmd = ("python test_ocp_setting.py" +

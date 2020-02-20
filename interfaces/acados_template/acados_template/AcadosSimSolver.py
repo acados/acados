@@ -44,7 +44,7 @@ from .generate_c_code_implicit_ode import generate_c_code_implicit_ode
 from .AcadosSim import AcadosSim
 from .AcadosOcp import AcadosOcp
 from .AcadosModel import acados_model_strip_casadi_symbolics
-from .utils import is_column, render_template, dict2json, np_array_to_list
+from .utils import is_column, render_template, format_class_dict, np_array_to_list, make_model_consistent
 
 
 def make_sim_dims_consistent(acados_sim):
@@ -105,7 +105,7 @@ def sim_formulation_json_dump(acados_sim, json_file='acados_sim.json'):
         sim_dict[key]=dict(getattr(acados_sim, key).__dict__)
 
     sim_dict['model'] = acados_model_strip_casadi_symbolics(sim_dict['model'])
-    sim_json = dict2json(sim_dict)
+    sim_json = format_class_dict(sim_dict)
 
     with open(json_file, 'w') as f:
         json.dump(sim_json, f, default=np_array_to_list, indent=4, sort_keys=True)
@@ -145,6 +145,8 @@ def sim_render_templates(json_file, model_name):
 
 def sim_generate_casadi_functions(acados_sim):
     model = acados_sim.model
+    model = make_model_consistent(model)
+
     integrator_type = acados_sim.solver_options.integrator_type
     # generate external functions
     if integrator_type == 'ERK':

@@ -40,7 +40,7 @@ check_acados_requirements()
 
 %% arguments
 compile_interface = 'auto';
-method = 'erk'; % irk, irk_gnsf
+method = 'irk_gnsf'; % irk, irk_gnsf
 model_name = 'sim_pendulum';
 
 % simulation parameters
@@ -133,3 +133,6 @@ figure;
 plot(1:N_sim+1, x_sim);
 legend('p', 'theta', 'v', 'omega');
 
+%% dump gnsf
+% sim.model_struct.name = 'pendulum_ode';
+% dump_gnsf_functions(sim.model_struct)

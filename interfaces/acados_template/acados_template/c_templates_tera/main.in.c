@@ -88,7 +88,7 @@ int main()
   {%- if dims.np > 0 %}
     // set parameters
     double p[{{ dims.np }}];
-    {% for item in constraints.p %}
+    {% for item in parameter_values %}
     p[{{ loop.index0 }}] = {{ item }};
     {% endfor %}
 

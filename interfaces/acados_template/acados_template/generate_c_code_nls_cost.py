@@ -73,7 +73,7 @@ def generate_c_code_nls_cost( model, cost_name, is_terminal ):
         os.mkdir('c_generated_code')
 
     os.chdir('c_generated_code')
-    gen_dir = cost_name + suffix_name
+    gen_dir = cost_name + '_cost'
     if not os.path.exists(gen_dir):
         os.mkdir(gen_dir)
     gen_dir_location = './' + gen_dir
