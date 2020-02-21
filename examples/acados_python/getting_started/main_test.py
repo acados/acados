@@ -79,14 +79,14 @@ for parameters in combinations:
         )
     status = os.system(os_cmd)
     if status != 0:
-        raise Exception("acados status  = {} on test {}. Exiting\n".format(status, parameters))
+        raise Exception("acados status = {} on test {}. Exiting\n".format(status, parameters))
 
 
 # TEST EXACT HESSIAN
 test_parameters_exact = test_parameters
 test_parameters_exact['HESS_APPROX_values'] = ['EXACT']
 test_parameters_exact['REGULARIZATION_values'] = ['MIRROR', 'PROJECT'] #, 'CONVEXIFY', 'PROJECT_REDUC_HESS']
-test_parameters_exact['INTEGRATOR_TYPE_values'] = ['ERK'] # IRK
+test_parameters_exact['INTEGRATOR_TYPE_values'] = ['ERK', 'IRK']
 test_parameters_exact['COST_MODULE_N_values'] = ['LS', 'NLS'] # EXTERNAL
 test_parameters_exact['COST_MODULE_values'] = ['LS', 'NLS'] # EXTERNAL
 
@@ -109,5 +109,5 @@ for parameters in combinations:
         )
     status = os.system(os_cmd)
     if status != 0:
-        raise Exception("acados status  = {} on test {}. Exiting\n".format(status, parameters))
+        raise Exception("acados status = {} on test {}. Exiting\n".format(status, parameters))
 
