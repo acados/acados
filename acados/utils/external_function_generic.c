@@ -734,6 +734,7 @@ void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void *
                 d_cvt_dvec_to_casadi(in[ii], (double *) fun->args[ii],
                                      (int *) fun->casadi_sparsity_in(ii));
                 break;
+
             case COLMAJ_ARGS:
                 d_cvt_colmaj_args_to_casadi(in[ii], (double *) fun->args[ii],
                                             (int *) fun->casadi_sparsity_in(ii));
@@ -781,6 +782,7 @@ void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void *
                 d_cvt_casadi_to_dvec((double *) fun->res[ii], (int *) fun->casadi_sparsity_out(ii),
                                      out[ii]);
                 break;
+
             case COLMAJ_ARGS:
                 d_cvt_casadi_to_colmaj_args((double *) fun->res[ii],
                                             (int *) fun->casadi_sparsity_out(ii), out[ii]);
