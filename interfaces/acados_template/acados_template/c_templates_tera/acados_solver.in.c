@@ -1519,6 +1519,16 @@ int acados_update_params(int stage, double *p, int np)
         }
         forw_vde_casadi[stage].set_param(forw_vde_casadi+stage, p);
 
+        {%- if solver_options.hessian_approx == "EXACT" %}
+        casadi_np = (hess_vde_casadi+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in hess_vde_casadi which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        hess_vde_casadi[stage].set_param(hess_vde_casadi+stage, p);
+        {%- endif %}
+
     {% elif solver_options.integrator_type == "GNSF" %}
         casadi_np = (gnsf_phi_fun+stage)->np;
         if (casadi_np != np) {
