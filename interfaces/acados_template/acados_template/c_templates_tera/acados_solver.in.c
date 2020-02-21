@@ -115,6 +115,9 @@ external_function_param_casadi * hess_vde_casadi;
 external_function_param_casadi * impl_dae_fun;
 external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
 external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
+{% if solver_options.hessian_approx == "EXACT" %}
+external_function_param_casadi * impl_dae_hess;
+{%- endif %}
 {% elif solver_options.integrator_type == "GNSF" -%}
 external_function_param_casadi * gnsf_phi_fun;
 external_function_param_casadi * gnsf_phi_fun_jac_y;
@@ -439,7 +442,7 @@ int acados_create()
         external_function_param_casadi_create(&forw_vde_casadi[i], {{ dims.np }});
     }
 
-    {%- if solver_options.hessian_approx == "EXACT" %} 
+    {%- if solver_options.hessian_approx == "EXACT" %}
     hess_vde_casadi = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; i++) {
         hess_vde_casadi[i].casadi_fun = &{{ model.name }}_expl_ode_hess;
@@ -486,6 +489,19 @@ int acados_create()
         impl_dae_jac_x_xdot_u_z[i].casadi_n_out = &{{ model.name }}_impl_dae_jac_x_xdot_u_z_n_out;
         external_function_param_casadi_create(&impl_dae_jac_x_xdot_u_z[i], {{ dims.np }});
     }
+
+    {%- if solver_options.hessian_approx == "EXACT" %}
+    impl_dae_hess = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
+    for (int i = 0; i < N; i++) {
+        impl_dae_hess[i].casadi_fun = &{{ model.name }}_impl_dae_hess;
+        impl_dae_hess[i].casadi_work = &{{ model.name }}_impl_dae_hess_work;
+        impl_dae_hess[i].casadi_sparsity_in = &{{ model.name }}_impl_dae_hess_sparsity_in;
+        impl_dae_hess[i].casadi_sparsity_out = &{{ model.name }}_impl_dae_hess_sparsity_out;
+        impl_dae_hess[i].casadi_n_in = &{{ model.name }}_impl_dae_hess_n_in;
+        impl_dae_hess[i].casadi_n_out = &{{ model.name }}_impl_dae_hess_n_out;
+        external_function_param_casadi_create(&impl_dae_hess[i], {{ dims.np }});
+    }
+    {%- endif %}
 
 {% elif solver_options.integrator_type == "GNSF" %}
     gnsf_phi_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
@@ -678,15 +694,18 @@ int acados_create()
     {
     {%- if solver_options.integrator_type == "ERK" %}
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "expl_vde_for", &forw_vde_casadi[i]);
-        {%- if solver_options.hessian_approx == "EXACT" %} 
+        {%- if solver_options.hessian_approx == "EXACT" %}
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "expl_ode_hes", &hess_vde_casadi[i]);
         {%- endif %}
     {% elif solver_options.integrator_type == "IRK" %}
-        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "impl_ode_fun", &impl_dae_fun[i]);
+        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "impl_dae_fun", &impl_dae_fun[i]);
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i,
-                                   "impl_ode_fun_jac_x_xdot", &impl_dae_fun_jac_x_xdot_z[i]);
+                                   "impl_dae_fun_jac_x_xdot_z", &impl_dae_fun_jac_x_xdot_z[i]);
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i,
-                                   "impl_ode_jac_x_xdot_u", &impl_dae_jac_x_xdot_u_z[i]);
+                                   "impl_dae_jac_x_xdot_u", &impl_dae_jac_x_xdot_u_z[i]);
+        {%- if solver_options.hessian_approx == "EXACT" %}
+        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "impl_dae_hess", &impl_dae_hess[i]);
+        {%- endif %}
     {% elif solver_options.integrator_type == "GNSF" %}
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "phi_fun", &gnsf_phi_fun[i]);
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "phi_fun_jac_y", &gnsf_phi_fun_jac_y[i]);
@@ -1400,6 +1419,9 @@ int acados_create()
         impl_dae_fun[ii].set_param(impl_dae_fun+ii, p);
         impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun_jac_x_xdot_z+ii, p);
         impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_jac_x_xdot_u_z+ii, p);
+        {%- if solver_options.hessian_approx == "EXACT" %}
+        impl_dae_hess[ii].set_param(impl_dae_hess+ii, p);
+        {%- endif %}
     }
 {% elif solver_options.integrator_type == "ERK" %}
     for (int ii = 0; ii < N; ii++)
@@ -1477,6 +1499,16 @@ int acados_update_params(int stage, double *p, int np)
             exit(1);
         }
         impl_dae_jac_x_xdot_u_z[stage].set_param(impl_dae_jac_x_xdot_u_z+stage, p);
+
+        {%- if solver_options.hessian_approx == "EXACT" %}
+        casadi_np = (impl_dae_hess+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in impl_dae_hess which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        impl_dae_hess[stage].set_param(impl_dae_hess+stage, p);
+        {%- endif %}
 
     {% elif solver_options.integrator_type == "ERK" %}
         casadi_np = (forw_vde_casadi+stage)->np;
@@ -1653,22 +1685,25 @@ int acados_free()
     ocp_nlp_plan_destroy(nlp_solver_plan);
 
     // free external function 
-    {% if solver_options.integrator_type == "IRK" %}
+{% if solver_options.integrator_type == "IRK" %}
     for (int i = 0; i < {{ dims.N }}; i++)
     {
         external_function_param_casadi_free(&impl_dae_fun[i]);
         external_function_param_casadi_free(&impl_dae_fun_jac_x_xdot_z[i]);
         external_function_param_casadi_free(&impl_dae_jac_x_xdot_u_z[i]);
+    {%- if solver_options.hessian_approx == "EXACT" %}
+        external_function_param_casadi_free(&impl_dae_hess[i]);
+    {%- endif %}
     }
-    {% elif solver_options.integrator_type == "ERK"%}
+{% elif solver_options.integrator_type == "ERK"%}
     for (int i = 0; i < {{ dims.N }}; i++)
     {
         external_function_param_casadi_free(&forw_vde_casadi[i]);
-    {% if solver_options.hessian_approx == "EXACT" %}
+    {%- if solver_options.hessian_approx == "EXACT" %}
         external_function_param_casadi_free(&hess_vde_casadi[i]);
-    {% endif %}
+    {%- endif %}
     }
-    {% endif %}
+{% endif %}
 
     return 0;
 }

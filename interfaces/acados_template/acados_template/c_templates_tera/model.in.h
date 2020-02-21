@@ -71,13 +71,14 @@ int {{ model.name }}_impl_dae_jac_x_xdot_u_z_n_out();
 // int {{ model.name }}_impl_dae_fun_jac_x_xdot_u_n_in();
 // int {{ model.name }}_impl_dae_fun_jac_x_xdot_u_n_out();
 
-// // implicit ODE
-// int {{ model.name }}_impl_dae_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
-// int {{ model.name }}_impl_dae_hess_work(int *, int *, int *, int *);
-// const int *{{ model.name }}_impl_dae_hess_sparsity_in(int);
-// const int *{{ model.name }}_impl_dae_hess_sparsity_out(int);
-// int {{ model.name }}_impl_dae_hess_n_in();
-// int {{ model.name }}_impl_dae_hess_n_out();
+{%- if solver_options.hessian_approx == "EXACT" %}
+int {{ model.name }}_impl_dae_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ model.name }}_impl_dae_hess_work(int *, int *, int *, int *);
+const int *{{ model.name }}_impl_dae_hess_sparsity_in(int);
+const int *{{ model.name }}_impl_dae_hess_sparsity_out(int);
+int {{ model.name }}_impl_dae_hess_n_in();
+int {{ model.name }}_impl_dae_hess_n_out();
+{%- endif %}
 
 {% elif solver_options.integrator_type == "GNSF" %}
 /* GNSF Functions */
@@ -148,13 +149,14 @@ const int *{{ model.name }}_expl_vde_adj_sparsity_out(int);
 int {{ model.name }}_expl_vde_adj_n_in();
 int {{ model.name }}_expl_vde_adj_n_out();
 
-// explicit adjoint ODE jac
+{%- if solver_options.hessian_approx == "EXACT" %}
 int {{ model.name }}_expl_ode_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_expl_ode_hess_work(int *, int *, int *, int *);
 const int *{{ model.name }}_expl_ode_hess_sparsity_in(int);
 const int *{{ model.name }}_expl_ode_hess_sparsity_out(int);
 int {{ model.name }}_expl_ode_hess_n_in();
 int {{ model.name }}_expl_ode_hess_n_out();
+{%- endif %}
 
 {% endif %}
 
