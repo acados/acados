@@ -592,6 +592,12 @@
         ],
         "print_level": [
             "int"
+        ],
+        "model_external_shared_lib_dir": [
+            "str"
+        ],
+        "model_external_shared_lib_name": [
+            "str"
         ]
     }
 }
