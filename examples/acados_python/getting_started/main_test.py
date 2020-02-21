@@ -69,8 +69,8 @@ if TEST_SAMPLE:
 
 for parameters in combinations:
     os_cmd = ("python test_ocp_setting.py" +
-        " --COST_MODULE {}".format(parameters[0]) +
-        " --COST_MODULE_N {}".format(parameters[1]) +
+        " --COST_MODULE_N {}".format(parameters[0]) +
+        " --COST_MODULE {}".format(parameters[1]) +
         " --HESS_APPROX {}".format(parameters[2]) +
         " --INTEGRATOR_TYPE {}".format(parameters[3]) +
         " --QP_SOLVER {}".format(parameters[4]) +
@@ -83,3 +83,31 @@ for parameters in combinations:
 
 
 # TEST EXACT HESSIAN
+test_parameters_exact = test_parameters
+test_parameters_exact['HESS_APPROX_values'] = ['EXACT']
+test_parameters_exact['REGULARIZATION_values'] = ['MIRROR', 'PROJECT'] #, 'CONVEXIFY', 'PROJECT_REDUC_HESS']
+test_parameters_exact['INTEGRATOR_TYPE_values'] = ['ERK'] # IRK
+test_parameters_exact['COST_MODULE_N_values'] = ['LS', 'NLS'] # EXTERNAL
+test_parameters_exact['COST_MODULE_values'] = ['LS', 'NLS'] # EXTERNAL
+
+combinations = list(it.product(*(test_parameters_exact[Name] for Name in all_parameter_names)))
+
+if TEST_SAMPLE:
+    combinations = sample(combinations, SAMPLE_SIZE)
+
+# combinations = [('LS', 'LS', 'EXACT', 'ERK', 'PARTIAL_CONDENSING_HPIPM', 'MIRROR', 'SQP')]
+
+for parameters in combinations:
+    os_cmd = ("python test_ocp_setting.py" +
+        " --COST_MODULE_N {}".format(parameters[0]) +
+        " --COST_MODULE {}".format(parameters[1]) +
+        " --HESS_APPROX {}".format(parameters[2]) +
+        " --INTEGRATOR_TYPE {}".format(parameters[3]) +
+        " --QP_SOLVER {}".format(parameters[4]) +
+        " --REGULARIZATION {}".format(parameters[5]) +
+        " --SOLVER_TYPE {}".format(parameters[6])
+        )
+    status = os.system(os_cmd)
+    if status != 0:
+        raise Exception("acados status  = {} on test {}. Exiting\n".format(status, parameters))
+
