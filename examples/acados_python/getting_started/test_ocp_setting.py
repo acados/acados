@@ -83,6 +83,11 @@ else:
                         help='HESS_APPROX: GAUSS_NEWTON or ' \
                                 ' EXACT (default: GAUSS_NEWTON)')
 
+    parser.add_argument('--REGULARIZATION', dest='REGULARIZATION',
+                        default='NO_REGULARIZE',
+                        help='REGULARIZATION: NO_REGULARIZE or MIRROR or PROJECT or CONVEXIFY' \
+                                ' or PROJECT_REDUC_HESS (default: NO_REGULARIZE)')
+
     args = parser.parse_args()
 
     COST_MODULE = args.COST_MODULE
@@ -121,12 +126,19 @@ else:
         raise Exception('Invalid unit test value {} for parameter HESS_APPROX. Possible values are' \
                 ' {}. Exiting.'.format(HESS_APPROX, HESS_APPROX_values))
 
+    REGULARIZATION = args.REGULARIZATION
+    REGULARIZATION_values = ['NO_REGULARIZE', 'MIRROR', 'PROJECT', 'PROJECT_REDUC_HESS', 'CONVEXIFY']
+    if REGULARIZATION not in REGULARIZATION:
+        raise Exception('Invalid unit test value {} for parameter REGULARIZATION. Possible values are' \
+                ' {}. Exiting.'.format(REGULARIZATION, REGULARIZATION_values))
+
 # print test setting
 print("Running test with:\n\tcost module:", COST_MODULE, \
       "\n\tcost module terminal: ", COST_MODULE_N,\
       "\n\tqp solver: ", QP_SOLVER,\
       "\n\tintergrator: ", INTEGRATOR_TYPE, \
       "\n\thessian approximation: ", HESS_APPROX, \
+      "\n\tregularization: ", REGULARIZATION, \
       "\n\tsolver: ", SOLVER_TYPE)
 
 # create ocp object to formulate the OCP
@@ -214,6 +226,8 @@ ocp.constraints.idxbu = np.array([0])
 # set options
 ocp.solver_options.qp_solver = QP_SOLVER
 ocp.solver_options.hessian_approx = HESS_APPROX
+ocp.solver_options.regularize_method = REGULARIZATION
+
 ocp.solver_options.integrator_type = INTEGRATOR_TYPE
 ocp.solver_options.sim_method_num_stages = 2
 ocp.solver_options.sim_method_num_steps = 5
@@ -260,8 +274,13 @@ if COST_MODULE in {'LINEAR_LS', 'NONLINEAR_LS'}:
     ocp_solver.cost_set(N, "yref", np.array([0, 0, 0, 0]))
 
 # dump result to JSON file for unit testing
-test_file_name = 'test_data/pendulum_ocp_formulations/test_ocp_' + COST_MODULE + '_' + COST_MODULE_N + '_' + QP_SOLVER + '_' + \
-            INTEGRATOR_TYPE + '_' + SOLVER_TYPE + '.json'
+test_file_name = 'test_data/pendulum_ocp_formulations/test_ocp_' + COST_MODULE + \
+                    '_' + COST_MODULE_N + '_' + QP_SOLVER + \
+                    '_' + INTEGRATOR_TYPE + \
+                    '_' + SOLVER_TYPE + \
+                    '_' + HESS_APPROX + \
+                    '_' + REGULARIZATION + \
+                    '.json'
 
 if GENERATE_DATA:
     with open(test_file_name, 'w') as f:

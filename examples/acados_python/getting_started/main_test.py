@@ -44,21 +44,23 @@ QP_SOLVER_values = ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_C
 INTEGRATOR_TYPE_values = ['ERK', 'IRK', 'GNSF']
 SOLVER_TYPE_values = ['SQP', 'SQP_RTI']
 HESS_APPROX_values = ['GAUSS_NEWTON', 'EXACT']
-# HESS_APPROX_values = ['GAUSS_NEWTON', 'EXACT']
+REGULARIZATION_values = ['NO_REGULARIZE', 'MIRROR', 'PROJECT', 'PROJECT_REDUC_HESS', 'CONVEXIFY']
+
 
 test_parameters = { 'COST_MODULE_values': COST_MODULE_values,
                     'COST_MODULE_N_values': COST_MODULE_N_values,
                     'HESS_APPROX_values': HESS_APPROX_values,
                     'INTEGRATOR_TYPE_values': INTEGRATOR_TYPE_values,
                     'QP_SOLVER_values': QP_SOLVER_values,
+                    'REGULARIZATION_values': REGULARIZATION_values,
                     'SOLVER_TYPE_values': SOLVER_TYPE_values}
 
 all_parameter_names = sorted(test_parameters)
 
-
 # TEST GAUSS_NEWTON
 test_parameters_gn = test_parameters
 test_parameters_gn['HESS_APPROX_values'] = ['GAUSS_NEWTON']
+test_parameters_gn['REGULARIZATION_values'] = ['NO_REGULARIZE']
 
 combinations = list(it.product(*(test_parameters_gn[Name] for Name in all_parameter_names)))
 
@@ -72,7 +74,8 @@ for parameters in combinations:
         " --HESS_APPROX {}".format(parameters[2]) +
         " --INTEGRATOR_TYPE {}".format(parameters[3]) +
         " --QP_SOLVER {}".format(parameters[4]) +
-        " --SOLVER_TYPE {}".format(parameters[5])
+        " --REGULARIZATION {}".format(parameters[5]) +
+        " --SOLVER_TYPE {}".format(parameters[6])
         )
     status = os.system(os_cmd)
     if status != 0:
