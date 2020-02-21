@@ -50,6 +50,7 @@ if LOCAL_TEST is True:
     SOLVER_TYPE = 'SQP_RTI'
     QP_SOLVER = 'FULL_CONDENSING_QPOASES'
     INTEGRATOR_TYPE = 'IRK'
+    HESS_APPROX = 'GAUSS_NEWTON'
 else:
     parser = argparse.ArgumentParser(description='test Python interface on pendulum example.')
     parser.add_argument('--COST_MODULE', dest='COST_MODULE',
@@ -77,6 +78,10 @@ else:
                         help='SOLVER_TYPE: (full step) sequential quadratic programming (SQP) or ' \
                                 ' real-time iteration (SQP-RTI) (default: SQP-RTI)')
 
+    parser.add_argument('--HESS_APPROX', dest='HESS_APPROX',
+                        default='GAUSS_NEWTON',
+                        help='HESS_APPROX: GAUSS_NEWTON or ' \
+                                ' EXACT (default: GAUSS_NEWTON)')
 
     args = parser.parse_args()
 
@@ -110,10 +115,19 @@ else:
         raise Exception('Invalid unit test value {} for parameter SOLVER_TYPE. Possible values are' \
                 ' {}. Exiting.'.format(SOLVER_TYPE, SOLVER_TYPE_values))
 
+    HESS_APPROX = args.HESS_APPROX
+    HESS_APPROX_values = ['GAUSS_NEWTON', 'EXACT']
+    if HESS_APPROX not in HESS_APPROX:
+        raise Exception('Invalid unit test value {} for parameter HESS_APPROX. Possible values are' \
+                ' {}. Exiting.'.format(HESS_APPROX, HESS_APPROX_values))
 
 # print test setting
-print("Running test with:\n\tcost module:", COST_MODULE, "\n\tqp solver: ", QP_SOLVER,\
-      "\n\tintergrator: ", INTEGRATOR_TYPE, "\n\tsolver: ", SOLVER_TYPE)
+print("Running test with:\n\tcost module:", COST_MODULE, \
+      "\n\tcost module terminal: ", COST_MODULE_N,\
+      "\n\tqp solver: ", QP_SOLVER,\
+      "\n\tintergrator: ", INTEGRATOR_TYPE, \
+      "\n\thessian approximation: ", HESS_APPROX, \
+      "\n\tsolver: ", SOLVER_TYPE)
 
 # create ocp object to formulate the OCP
 ocp = AcadosOcp()
@@ -199,7 +213,7 @@ ocp.constraints.idxbu = np.array([0])
 
 # set options
 ocp.solver_options.qp_solver = QP_SOLVER
-ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+ocp.solver_options.hessian_approx = HESS_APPROX
 ocp.solver_options.integrator_type = INTEGRATOR_TYPE
 ocp.solver_options.sim_method_num_stages = 2
 ocp.solver_options.sim_method_num_steps = 5

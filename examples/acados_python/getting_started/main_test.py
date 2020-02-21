@@ -43,15 +43,24 @@ COST_MODULE_N_values = ['EXTERNAL', 'LS', 'NLS']
 QP_SOLVER_values = ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CONDENSING_QPOASES']
 INTEGRATOR_TYPE_values = ['ERK', 'IRK', 'GNSF']
 SOLVER_TYPE_values = ['SQP', 'SQP_RTI']
+HESS_APPROX_values = ['GAUSS_NEWTON', 'EXACT']
+# HESS_APPROX_values = ['GAUSS_NEWTON', 'EXACT']
 
 test_parameters = { 'COST_MODULE_values': COST_MODULE_values,
                     'COST_MODULE_N_values': COST_MODULE_N_values,
-                    'QP_SOLVER_values': QP_SOLVER_values,
+                    'HESS_APPROX_values': HESS_APPROX_values,
                     'INTEGRATOR_TYPE_values': INTEGRATOR_TYPE_values,
+                    'QP_SOLVER_values': QP_SOLVER_values,
                     'SOLVER_TYPE_values': SOLVER_TYPE_values}
 
-all_test_parameters = sorted(test_parameters)
-combinations = list(it.product(*(test_parameters[Name] for Name in all_test_parameters)))
+all_parameter_names = sorted(test_parameters)
+
+
+# TEST GAUSS_NEWTON
+test_parameters_gn = test_parameters
+test_parameters_gn['HESS_APPROX_values'] = ['GAUSS_NEWTON']
+
+combinations = list(it.product(*(test_parameters_gn[Name] for Name in all_parameter_names)))
 
 if TEST_SAMPLE:
     combinations = sample(combinations, SAMPLE_SIZE)
@@ -60,10 +69,14 @@ for parameters in combinations:
     os_cmd = ("python test_ocp_setting.py" +
         " --COST_MODULE {}".format(parameters[0]) +
         " --COST_MODULE_N {}".format(parameters[1]) +
-        " --INTEGRATOR_TYPE {}".format(parameters[2]) +
-        " --QP_SOLVER {}".format(parameters[3]) +
-        " --SOLVER_TYPE {}".format(parameters[4]))
+        " --HESS_APPROX {}".format(parameters[2]) +
+        " --INTEGRATOR_TYPE {}".format(parameters[3]) +
+        " --QP_SOLVER {}".format(parameters[4]) +
+        " --SOLVER_TYPE {}".format(parameters[5])
+        )
     status = os.system(os_cmd)
     if status != 0:
         raise Exception("acados status  = {} on test {}. Exiting\n".format(status, parameters))
 
+
+# TEST EXACT HESSIAN
