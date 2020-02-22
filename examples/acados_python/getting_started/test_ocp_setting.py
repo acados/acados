@@ -132,13 +132,14 @@ else:
                 ' {}. Exiting.'.format(REGULARIZATION, REGULARIZATION_values))
 
 # print test setting
-print("Running test with:\n\tcost module:", COST_MODULE, \
-      "\n\tcost module terminal: ", COST_MODULE_N,\
-      "\n\tqp solver: ", QP_SOLVER,\
-      "\n\tintergrator: ", INTEGRATOR_TYPE, \
-      "\n\thessian approximation: ", HESS_APPROX, \
-      "\n\tregularization: ", REGULARIZATION, \
-      "\n\tsolver: ", SOLVER_TYPE)
+print("Running test with:", \
+      "\n\tcost module terminal:", COST_MODULE_N,\
+      "\n\tcost module:", COST_MODULE, \
+      "\n\thessian approximation:", HESS_APPROX, \
+      "\n\tintergrator:", INTEGRATOR_TYPE, \
+      "\n\tqp solver:", QP_SOLVER,\
+      "\n\tregularization:", REGULARIZATION, \
+      "\n\tsolver:", SOLVER_TYPE)
 
 # create ocp object to formulate the OCP
 ocp = AcadosOcp()
