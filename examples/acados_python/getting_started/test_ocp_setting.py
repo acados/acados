@@ -297,9 +297,10 @@ else:
     simX_error = np.linalg.norm(test_data['simX'] - simX)
     simU_error = np.linalg.norm(test_data['simU'] - simU)
 
-    if simX_error > TEST_TOL or simU_error > TEST_TOL:
+    CHECK_TOL = TEST_TOL * 10
+    if simX_error > CHECK_TOL or simU_error > CHECK_TOL:
         raise Exception("Python acados test failure with accuracies" +
-                        " {:.2E} and {:.2E} ({:.2E} required)".format(simX_error, simU_error, TEST_TOL) +
+                        " {:.2E} and {:.2E} ({:.2E} required)".format(simX_error, simU_error, CHECK_TOL) +
                         " on pendulum example! Exiting.\n")
     else:
         print('Python test passed with accuracy {:.2E}'.format(max(simU_error, simX_error)))

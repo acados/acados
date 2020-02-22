@@ -36,7 +36,7 @@ import os
 from random import sample
 
 TEST_SAMPLE = True # only test random sample instaed of all possible combinations
-SAMPLE_SIZE = 20
+SAMPLE_SIZE = 30
 
 COST_MODULE_values = ['EXTERNAL', 'LS', 'NLS']
 COST_MODULE_N_values = ['EXTERNAL', 'LS', 'NLS']
