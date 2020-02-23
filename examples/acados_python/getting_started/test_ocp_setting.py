@@ -239,7 +239,7 @@ ocp.solver_options.nlp_solver_tol_ineq = TEST_TOL
 ocp.solver_options.nlp_solver_tol_comp = TEST_TOL
 
 ocp.solver_options.qp_solver_cond_N = 10
-ocp.solver_options.nlp_solver_max_iter = 80
+ocp.solver_options.nlp_solver_max_iter = 100
 ocp.solver_options.qp_solver_iter_max = 50
 # ocp.solver_options.print_level = 1
 
