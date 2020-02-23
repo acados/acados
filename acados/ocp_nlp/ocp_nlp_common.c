@@ -1834,6 +1834,24 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
                 in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
     }
 
+
+    return;
+}
+
+
+
+// update QP rhs for SQP (step prim var, abs dual var)
+// TODO(all): move in dynamics, cost, constraints modules ???
+void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+{
+    int i;
+
+    int N = dims->N;
+    int *nv = dims->nv;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ni = dims->ni;
+
     /* collect stage-wise evaluations */
 
 #if defined(ACADOS_WITH_OPENMP)
@@ -1902,24 +1920,6 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
         //   }
         //  }
     }
-
-    return;
-}
-
-
-
-// update QP rhs for SQP (step prim var, abs dual var)
-// TODO(all): move in dynamics, cost, constraints modules ???
-void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
-{
-    int i;
-
-    int N = dims->N;
-    int *nv = dims->nv;
-    int *nx = dims->nx;
-    // int *nu = dims->nu;
-    int *ni = dims->ni;
-
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
