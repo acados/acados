@@ -7,6 +7,12 @@
             "str"
         ]
     },
+    "parameter_values": [
+        "ndarray",
+        [
+            "np"
+        ]
+    ],
     "acados_lib_path": [
         "str"
     ],
@@ -307,12 +313,6 @@
             [
                 "nsphi_e"
             ]
-        ],
-        "p": [
-            "ndarray",
-            [
-                "np"
-            ]
         ]
     },
     "cost": {
@@ -509,6 +509,21 @@
         ],
         "nz": [
             "int"
+        ],
+        "gnsf_nx1": [
+            "int"
+        ],
+        "gnsf_nz1": [
+            "int"
+        ],
+        "gnsf_nuhat": [
+            "int"
+        ],
+        "gnsf_ny": [
+            "int"
+        ],
+        "gnsf_nout": [
+            "int"
         ]
     },
     "solver_options": {
@@ -577,6 +592,12 @@
         ],
         "print_level": [
             "int"
+        ],
+        "model_external_shared_lib_dir": [
+            "str"
+        ],
+        "model_external_shared_lib_name": [
+            "str"
         ]
     }
 }

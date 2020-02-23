@@ -31,14 +31,14 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import os, sys
+import os, sys, json
 import urllib.request
 import shutil
 import numpy as np
 from casadi import SX, MX, DM
 
 ALLOWED_CASADI_VERSIONS = ('3.5.1', '3.4.5', '3.4.0')
-TERA_VERSION = "0.0.30"
+TERA_VERSION = "0.0.34"
 
 def get_acados_path():
     ACADOS_PATH = os.environ.get('ACADOS_SOURCE_DIR')
@@ -58,6 +58,7 @@ platform2tera = {
     "win32": "window.exe"
 }
 
+
 def is_column(x):
     if isinstance(x, np.ndarray):
         if x.ndim == 1:
@@ -68,6 +69,8 @@ def is_column(x):
             return False
     elif isinstance(x, (MX, SX, DM)):
         if x.shape[1] == 1:
+            return True
+        elif x.shape[0] == 0 and x.shape[1] == 0:
             return True
         else:
             return False
@@ -88,10 +91,38 @@ def is_empty(x):
 
 def casadi_length(x):
     if isinstance(x, (MX, SX, DM)):
-        return np.prod(x.shape)
+        return int(np.prod(x.shape))
     else:
         raise Exception("casadi_length expects one of the following types: casadi.MX, casadi.SX."
                         + " Got: " + str(type(x)))
+
+def make_model_consistent(model):
+    x = model.x
+    xdot = model.xdot
+    u = model.u
+    z = model.z
+    p = model.p
+
+    if isinstance(x, SX):
+        is_SX = True
+    elif isinstance(x, MX):
+        is_SX = False
+    else:
+        raise Exception("model.x must be casadi.SX or casadi.MX, got {}".format(type(x)))
+
+    if is_empty(p):
+        if is_SX:
+            model.p = SX.sym('p', 0, 0)
+        else:
+            model.p = MX.sym('p', 0, 0)
+
+    if is_empty(z):
+        if is_SX:
+            model.z = SX.sym('z', 0, 0)
+        else:
+            model.z = MX.sym('z', 0, 0)
+
+    return model
 
 
 def get_tera():
@@ -109,7 +140,7 @@ def get_tera():
     manual_install += '1 Download binaries from {}\n'.format(url)
     manual_install += '2 Copy them in {}/bin\n'.format(acados_path)
     manual_install += '3 Strip the version and platform from the binaries: '
-    manual_install += 'as t_renderer-v0.0.30-X -> t_renderer)\n'
+    manual_install += 'as t_renderer-v0.0.34-X -> t_renderer)\n'
     manual_install += '4 Enable execution privilege on the file "t_renderer" with:\n'
     manual_install += '"chmod +x {}"\n\n'.format(tera_path)
 
@@ -168,185 +199,138 @@ def render_template(in_file, out_file, template_dir, json_path):
 
 
 ## Conversion functions
-
 def np_array_to_list(np_array):
-    if  isinstance(np_array, (np.ndarray)):
+    if isinstance(np_array, (np.ndarray)):
         return np_array.tolist()
-    elif  isinstance(np_array, (SX)):
+    elif isinstance(np_array, (SX)):
         return DM(np_array).full()
-    elif  isinstance(np_array, (DM)):
+    elif isinstance(np_array, (DM)):
         return np_array.full()
     else:
         raise(Exception(
             "Cannot convert to list type {}".format(type(np_array))
         ))
 
-def dict2json(d):
+
+def format_class_dict(d):
+    """
+    removes the __ artifact from class to dict conversion
+    """
     out = {}
     for k, v in d.items():
         if isinstance(v, dict):
-            v = dict2json(v)
+            v = format_class_dict(v)
 
-        v_type = str(type(v).__name__)
-        # out_key = '__' + v_type + '__' + k.split('__', 1)[-1]
         out_key = k.split('__', 1)[-1]
         out[k.replace(k, out_key)] = v
     return out
 
-def acados_ocp2json_layout(acados_ocp):
-    """ Convert acados ocp nlp object to JSON format by stripping the
-    property mangling and adding array dimension info.
-    ALL items of type String will be converted
-    to type ndarrray!
 
-    Parameters
-    ----------
-    acados_ocp : class
-        object of type AcadosOcp.
-
-    Returns
-    ------
-    out: dict
-        acados_layout
+def acados_class2dict(class_instance):
     """
-    ocp_nlp = acados_ocp
-    ocp_nlp.cost = acados_ocp.cost.__dict__
-    ocp_nlp.constraints = acados_ocp.constraints.__dict__
-    ocp_nlp.solver_options = acados_ocp.solver_options.__dict__
-    ocp_nlp.dims = acados_ocp.dims.__dict__
-    ocp_nlp = ocp_nlp.__dict__
-    json_layout = dict2json_layout(ocp_nlp)
-    return json_layout
-
-
-def dict2json_layout(d):
-    """ Convert dictionary containing the description of
-    of the ocp_nlp to JSON format by stripping the
-    property mangling and adding array dimension info.
-    ALL items of type String will be converted
-    to type ndarrray!
-
-    Parameters
-    ----------
-    d : dict
-        dictionary containing the description of
-        the ocp_nlp.
-
-    Returns
-    ------
-    out: dict
-        postprocessed dictionary.
+    removes the __ artifact from class to dict conversion
     """
+
+    d = dict(class_instance.__dict__)
     out = {}
     for k, v in d.items():
         if isinstance(v, dict):
-            v = dict2json_layout(v)
+            v = format_class_dict(v)
 
-        v_type = str(type(v).__name__)
-        if v_type == 'list':
-            v_type = 'ndarray'
-
-        # add array number of dimensions?
-        # if v_type == 'ndarray':
-        #     v_type = v_type + '_' + str(len(v.shape))
         out_key = k.split('__', 1)[-1]
-
-        if isinstance(v, dict):
-            out[k.replace(k, out_key)] = v
-        else:
-            out[k.replace(k, out_key)] = [v_type]
-
+        out[k.replace(k, out_key)] = v
     return out
 
 
-def cast_ocp_nlp(ocp_nlp, ocp_nlp_layout):
-    """ MATLAB does not allow distinction between e.g a = [1,1,1] and b = [1,1,1].'
-    or a = 1 and b = [1]. Hence, we need to do some postprocessing of the JSON
-    file generated from MATLAB.
-
-    Parameters
-    ----------
-    ocp_nlp : dict
-        ocp_nlp dictionary to be postprocessed.
-
-    ocp_nlp_layout : dict
-        acados ocp_nlp target layout
-    Returns
-    ------
-    out : dict
-        postprocessed dictionary
+def ocp_check_json_against_layout(ocp_nlp, ocp_dims):
     """
-
-    out = {}
-    for k, v in ocp_nlp.items():
-        if isinstance(v, dict):
-            v = cast_ocp_nlp(v, ocp_nlp_layout[k])
-
-        if 'ndarray' in ocp_nlp_layout[k]:
-            if isinstance(v, int) or isinstance(v, float):
-                v = np.array([v])
-        out[k] = v
-    return out
-
-def json2dict(ocp_nlp, ocp_dims):
-    # load JSON layout
-    current_module = sys.modules[__name__]
-    acados_path = os.path.dirname(current_module.__file__)
-    with open(acados_path + '/acados_layout.json', 'r') as f:
-        ocp_nlp_layout = json.load(f)
-
-    out = json2dict_rec(ocp_nlp, ocp_dims, ocp_nlp_layout)
-    return out
-
-def json2dict_rec(ocp_nlp, ocp_dims, ocp_nlp_layout):
-    """ convert ocp_nlp loaded JSON to dictionary. Mainly convert
-    lists to arrays for easier handling.
+    Check dimensions against layout
     Parameters
     ---------
     ocp_nlp : dict
         dictionary loaded from JSON to be post-processed.
 
     ocp_dims : instance of AcadosOcpDims
-
-    ocp_nlp_layout : dict
-        acados ocp_nlp layout.
-
-    Returns
-    -------
-    out : dict
-        post-processed dictionary.
     """
-    out = {}
-    for k, v in ocp_nlp.items():
-        if isinstance(v, dict):
-            v = json2dict_rec(v, ocp_dims, ocp_nlp_layout[k])
 
-        v_type__ = str(type(v).__name__)
-        out_key = k.split('__', 1)[-1]
-        v_type = out_key.split('__')[0]
-        out_key = out_key.split('__', 1)[-1]
-        if 'ndarray' in ocp_nlp_layout[k]:
-            if isinstance(v, int) or isinstance(v, float):
-                v = np.array([v])
-        if (v_type == 'ndarray' or v_type__ == 'list') and (ocp_nlp_layout[k][0] != 'str'):
-            dims_l = []
-            dims_names = []
-            dim_keys = ocp_nlp_layout[k][1]
-            for item in dim_keys:
-                dims_l.append(ocp_dims[item])
-                dims_names.append(item)
-            dims = tuple(dims_l)
-            if v == []:
-                # v = None
+    # load JSON layout
+    current_module = sys.modules[__name__]
+    acados_path = os.path.dirname(current_module.__file__)
+    with open(acados_path + '/acados_layout.json', 'r') as f:
+        ocp_nlp_layout = json.load(f)
+
+    ocp_check_json_against_layout_recursion(ocp_nlp, ocp_dims, ocp_nlp_layout)
+    return
+
+
+
+def ocp_check_json_against_layout_recursion(ocp_nlp, ocp_dims, ocp_nlp_layout):
+
+    for key, item in ocp_nlp.items():
+
+        if isinstance(item, dict):
+            item = ocp_check_json_against_layout_recursion(item, ocp_dims, ocp_nlp_layout[key])
+
+        if 'ndarray' in ocp_nlp_layout[key]:
+            if isinstance(item, int) or isinstance(item, float):
+                item = np.array([item])
+        if isinstance(item, (list, np.ndarray)) and (ocp_nlp_layout[key][0] != 'str'):
+            dim_layout = []
+            dim_names = ocp_nlp_layout[key][1]
+
+            for dim_name in dim_names:
+                dim_layout.append(ocp_dims[dim_name])
+
+            dims = tuple(dim_layout)
+            if item == []:
                 try:
-                    v = np.reshape(v, dims)
+                    item = np.reshape(item, dims)
                 except:
-                    raise Exception('acados -- mismatching dimensions for field {0}. Provided data has dimensions {1}, while associated dimensions {2} are {3}'.format(out_key, [], dims_names, dims))
-                # v = []
+                    raise Exception('acados -- mismatching dimensions for field {0}. ' \
+                         'Provided data has dimensions [], ' \
+                         'while associated dimensions {1} are {2}' \
+                             .format(key, dim_names, dims))
             else:
-                v = np.array(v)
-                v_dims = v.shape
-                if dims !=v_dims:
-                    raise Exception('acados -- mismatching dimensions for field {0}. Provided data has dimensions {1}, while associated dimensions {2} are {3}'.format(out_key, v_dims, dims_names, dims))
-        out[k.replace(k, out_key)] = v
-    return out
+                item = np.array(item)
+                item_dims = item.shape
+                if dims != item_dims:
+                    raise Exception('acados -- mismatching dimensions for field {0}. ' \
+                        'Provided data has dimensions {1}, ' \
+                        'while associated dimensions {2} are {3}' \
+                            .format(key, item_dims, dim_names, dims))
+    return
+
+
+def J_to_idx(J):
+    nrows = J.shape[0]
+    idx = np.zeros((nrows, ))
+    for i in range(nrows):
+        this_idx = np.nonzero(J[i,:])[0]
+        if len(this_idx) != 1:
+            raise Exception('Invalid J matrix structure detected, ' \
+                'must contain one nonzero element per row. Exiting.')
+        if this_idx.size > 0 and J[i,this_idx[0]] != 1:
+            raise Exception('J matrices can only contain 1s. Exiting.')
+        idx[i] = this_idx[0]
+    return idx
+
+
+def J_to_idx_slack(J):
+    nrows = J.shape[0]
+    ncol = J.shape[1]
+    idx = np.zeros((ncol, ))
+    i_idx = 0
+    for i in range(nrows):
+        this_idx = np.nonzero(J[i,:])[0]
+        if len(this_idx) == 1:
+            idx[i_idx] = i
+            i_idx = i_idx + 1
+        elif len(this_idx) > 1:
+            raise Exception('J_to_idx_slack: Invalid J matrix. Exiting. ' \
+                'Found more than one nonzero in row ' + str(i))
+        if this_idx.size > 0 and J[i,this_idx[0]] != 1:
+            raise Exception('J_to_idx_slack: J matrices can only contain 1s, ' \
+                 'got J(' + str(i) + ', ' + str(this_idx[0]) + ') = ' + str(J[i,this_idx[0]]) )
+    if not i_idx == ncol:
+            raise Exception('J_to_idx_slack: J must contain a 1 in every column!')
+    return idx

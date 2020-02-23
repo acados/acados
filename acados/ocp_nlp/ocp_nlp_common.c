@@ -591,7 +591,8 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
     {
         // update ng_qp_solver in qp_solver
         int ng_qp_solver;
-        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "ng_qp_solver", &ng_qp_solver);
+        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i],
+                                         "ng_qp_solver", &ng_qp_solver);
 
 		// qp solver
         config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "ng", &ng_qp_solver);
@@ -1119,7 +1120,7 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
     char *ptr_module = NULL;
     int module_length = 0;
 
-    // extract module name
+    // extract module name, i.e. substring in field before '_'
     char *char_ = strchr(field, '_');
     if (char_!=NULL)
     {
@@ -1133,13 +1134,8 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
     // pass options to QP module
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "qp")) )
     {
-        config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, field+module_length+1, value);
-
-//        if (!strcmp(field, "qp_warm_start"))
-//        {
-//            int* i_ptr = (int *) value;
-//            opts->qp_warm_start = *i_ptr;
-//        }
+        config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts,
+                                    field+module_length+1, value);
     }
     // pass options to dynamics module
     else // nlp opts
@@ -1378,8 +1374,10 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     c_ptr += qp_solver->memory_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
     // regularization
-    mem->regularize_mem = config->regularize->memory_assign(config->regularize, dims->regularize, opts->regularize, c_ptr);
-    c_ptr += config->regularize->memory_calculate_size(config->regularize, dims->regularize, opts->regularize);
+    mem->regularize_mem = config->regularize->memory_assign(config->regularize, dims->regularize,
+                                                            opts->regularize, c_ptr);
+    c_ptr += config->regularize->memory_calculate_size(config->regularize, dims->regularize,
+                                                       opts->regularize);
 
     // dynamics
     for (int ii = 0; ii < N; ii++)
@@ -1768,7 +1766,8 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
  * functions
  ************************************************/
 
-void ocp_nlp_initialize_qp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+void ocp_nlp_initialize_qp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+         ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
 
     int ii;
@@ -1920,6 +1919,26 @@ void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config, ocp_nlp_dims *di
         //   }
         //  }
     }
+
+    return;
+}
+
+
+
+// update QP rhs for SQP (step prim var, abs dual var)
+// TODO(all): move in dynamics, cost, constraints modules ???
+void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+                ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+{
+    int i;
+
+    int N = dims->N;
+    int *nv = dims->nv;
+    int *nx = dims->nx;
+    // int *nu = dims->nu;
+    int *ni = dims->ni;
+
+>>>>>>> 35288465716ec7abc538909d77e98dd1e0b70374
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
@@ -1941,7 +1960,9 @@ void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config, ocp_nlp_dims *di
 
 
 
-double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
+                                  ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
+                                  ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
 
 	int i, j;
@@ -1975,7 +1996,9 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
     for (i=0; i<=N; i++)
     {
         // constr
-        config->constraints[i]->compute_fun(config->constraints[i], dims->constraints[i], in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
+        config->constraints[i]->compute_fun(config->constraints[i], dims->constraints[i],
+                                            in->constraints[i], opts->constraints[i],
+                                            mem->constraints[i], work->constraints[i]);
     }
 
 	double *tmp_fun;
@@ -2028,7 +2051,8 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
 
 
 
-void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
     int i;
 

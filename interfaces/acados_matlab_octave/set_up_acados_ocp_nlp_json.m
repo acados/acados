@@ -126,7 +126,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
         % TODO: add option to initialize parameters in model.
         warning(['model parameters value cannot be defined (yet) for ocp json.', ...
                     10 'Using zeros(np,1) by default.' 10 'You can update them later using the solver object.']);
-        ocp_json.constraints.p = zeros(model.dim_np,1);
+        ocp_json.parameter_values = zeros(model.dim_np,1);
     end
 
     %% constraints
@@ -169,19 +169,8 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     end
 
     if ocp_json.dims.nh > 0
-        ocp_json.con_h.expr = model.constr_expr_h;
         ocp_json.constraints.lh = model.constr_lh;
         ocp_json.constraints.uh = model.constr_uh;
-        % TODO(oj): can we get rid of the following?
-        if isfield(model, 'sym_x')
-            ocp_json.con_h.x = model.sym_x;
-        end
-        if isfield(model, 'sym_u')
-            ocp_json.con_h.u = model.sym_u;
-        end
-        if isfield(model, 'sym_z')
-            ocp_json.con_h.z = model.sym_z;
-        end
     end
 
     if ocp_json.dims.nsbx > 0
@@ -246,19 +235,8 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     end
 
     if ocp_json.dims.nh_e > 0    
-        ocp_json.con_h_e.expr = model.constr_expr_h_e;
         ocp_json.constraints.lh_e = model.constr_lh_e;
         ocp_json.constraints.uh_e = model.constr_uh_e;
-        % TODO(oj): can we get rid of the following?
-        if isfield(model, 'sym_x')
-            ocp_json.con_h_e.x = model.sym_x;
-        end
-        if isfield(model, 'sym_u')
-            ocp_json.con_h_e.u = model.sym_u;
-        end
-        if isfield(model, 'sym_z')
-            ocp_json.con_h_e.z = model.sym_z;
-        end
     end
 
     if isfield(model, 'dim_nsg_e') && model.dim_nsg_e > 0
@@ -388,13 +366,16 @@ function idx = J_to_idx_slack(J)
     for i = 1:nrows
         this_idx = find(J(i,:));
         if length(this_idx) == 1
-            idx(i_idx) = this_idx - 1; % strore 0-based index
+            idx(i_idx) = i - 1; % store 0-based index
             i_idx = i_idx + 1;
         elseif length(this_idx) > 1
-            error(['J_to_idx: Invalid J matrix. Exiting. Found more than one nonzero in row ' num2str(i)]);
+            error(['J_to_idx_slack: Invalid J matrix. Exiting. Found more than one nonzero in row ' num2str(i)]);
         end
         if J(i,this_idx) ~= 1
-            error(['J_to_idx: J matrices can only contain 1s, got J(' num2str(i) ', ' num2str(this_idx) ') = ' num2str(J(i,this_idx)) ]);
+            error(['J_to_idx_slack: J matrices can only contain 1s, got J(' num2str(i) ', ' num2str(this_idx) ') = ' num2str(J(i,this_idx)) ]);
         end
+    end
+    if i_idx ~= ncol + 1
+        error('J_to_idx_slack: J must contain a 1 in every column!')
     end
 end

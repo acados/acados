@@ -321,7 +321,7 @@ if FORMULATION == 0 or FORMULATION == 2:
     ocp.constraints.ug  = ug
 
 # setting parameters
-ocp.constraints.p = nmp.array([w_val, 0.0, 0.0])
+ocp.parameter_values = nmp.array([w_val, 0.0, 0.0])
 
 # set QP solver
 ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'

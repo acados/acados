@@ -501,13 +501,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         int warm_start_first_qp = (int) value[0];
         ocp_nlp_solver_opts_set(config, opts, "warm_start_first_qp", &warm_start_first_qp);
     }
+    else if (!strcmp(field, "print_level"))
+    {
+        acados_size = 1;
+        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+        int print_level = (int) value[0];
+        ocp_nlp_solver_opts_set(config, opts, "print_level", &print_level);
+    }
     else
     {
         MEX_FIELD_NOT_SUPPORTED_SUGGEST(fun_name, field, "p, constr_x0,\
  constr_lbx, constr_ubx, constr_C, constr_D, constr_lg, constr_ug, cost_y_ref[_e],\
  cost_Vu, cost_Vx, cost_Vz, cost_W, cost_Z, cost_Zl, cost_Zu, cost_z,\
  cost_zl, cost_zu, init_x, init_u, init_z, init_xdot, init_gnsf_phi,\
- init_pi, nlp_solver_max_iter, qp_warm_start, warm_start_first_qp");
+ init_pi, nlp_solver_max_iter, qp_warm_start, warm_start_first_qp, print_level");
     }
 
     return;

@@ -36,17 +36,20 @@ import sys, os, json
 import numpy as np
 
 from ctypes import *
+from casadi import CasadiMeta, Function
 
 from copy import deepcopy
 
 from .generate_c_code_explicit_ode import generate_c_code_explicit_ode
 from .generate_c_code_implicit_ode import generate_c_code_implicit_ode
+from .generate_c_code_gnsf import generate_c_code_gnsf
 from .generate_c_code_constraint import generate_c_code_constraint
 from .generate_c_code_nls_cost import generate_c_code_nls_cost
 from .generate_c_code_external_cost import generate_c_code_external_cost
 from .AcadosOcp import AcadosOcp
 from .AcadosModel import acados_model_strip_casadi_symbolics
-from .utils import is_column, render_template, dict2json, json2dict, np_array_to_list
+from .utils import is_column, is_empty, casadi_length, render_template, acados_class2dict,\
+     format_class_dict, ocp_check_json_against_layout, np_array_to_list, make_model_consistent
 
 
 def make_ocp_dims_consistent(acados_ocp):
@@ -72,28 +75,65 @@ def make_ocp_dims_consistent(acados_ocp):
 
     # nx
     if is_column(model.x):
-        dims.nx = model.x.shape[0]
+        dims.nx = casadi_length(model.x)
     else:
         raise Exception('model.x should be column vector!')
 
-    # # nu
-    # if not model.u == None:
-    #     if is_column(model.u):
-    #         dims.nu = model.u.shape[0]
-    #     else:
-    #         raise Exception('model.u should be column vector!')
-    # else:
-    #     dims.nu = 0
+    # nu
+    if is_empty(model.u):
+        dims.nu = 0
+    else:
+        dims.nu = casadi_length(model.u)
 
-    # # nz
-    # if not model.z == None:
-    #     print(model.z)
-    #     if is_column(model.z):
-    #         dims.nz = model.z.shape[0]
-    #     else:
-    #         raise Exception('model.z should be column vector!')
-    # else:
-    #     dims.nz = 0
+    # nz
+    if is_empty(model.z):
+        dims.nz = 0
+    else:
+        dims.nz = casadi_length(model.z)
+
+    # np
+    if is_empty(model.p):
+        dims.np = 0
+    else:
+        dims.np = casadi_length(model.p)
+
+
+def set_up_imported_gnsf_model(acados_ocp):
+
+    gnsf = acados_ocp.gnsf_model
+
+    # check CasADi version
+    dump_casadi_version = gnsf['casadi_version']
+    casadi_version = CasadiMeta.version()
+
+    if not casadi_version == dump_casadi_version:
+        raise Exception("GNSF model was dumped with another CasADi version.\n"
+                + "Please use the same version for compatibility, serialize version:"
+                + dump_casadi_version + " current Python CasADi verison: " + casadi_version)
+
+    # load model
+    phi_fun = Function.deserialize(gnsf['phi_fun'])
+    phi_fun_jac_y = Function.deserialize(gnsf['phi_fun_jac_y'])
+    phi_jac_y_uhat = Function.deserialize(gnsf['phi_jac_y_uhat'])
+    f_lo_fun_jac_x1k1uz = Function.deserialize(gnsf['f_lo_fun_jac_x1k1uz'])
+    get_matrices_fun = Function.deserialize(gnsf['get_matrices_fun'])
+
+    # obtain gnsf dimensions
+    size_gnsf_A = get_matrices_fun.size_out(0)
+    acados_ocp.dims.gnsf_nx1 = size_gnsf_A[1]
+    acados_ocp.dims.gnsf_nz1 = size_gnsf_A[0] - size_gnsf_A[1]
+    acados_ocp.dims.gnsf_nuhat = max(phi_fun.size_in(1))
+    acados_ocp.dims.gnsf_ny = max(phi_fun.size_in(0))
+    acados_ocp.dims.gnsf_nout = max(phi_fun.size_out(0))
+
+    # save gnsf functions in model
+    acados_ocp.model.phi_fun = phi_fun
+    acados_ocp.model.phi_fun_jac_y = phi_fun_jac_y
+    acados_ocp.model.phi_jac_y_uhat = phi_jac_y_uhat
+    acados_ocp.model.f_lo_fun_jac_x1k1uz = f_lo_fun_jac_x1k1uz
+    acados_ocp.model.get_matrices_fun = get_matrices_fun
+
+    del acados_ocp.gnsf_model
 
 
 def get_ocp_nlp_layout():
@@ -110,6 +150,7 @@ def ocp_formulation_json_dump(acados_ocp, json_file='acados_ocp_nlp.json'):
 
     # Copy input ocp object dictionary
     ocp_nlp_dict = dict(deepcopy(acados_ocp).__dict__)
+    # TODO: maybe make one funciton with formatting
 
     for acados_struct, v in ocp_layout.items():
         # skip non dict attributes
@@ -118,12 +159,17 @@ def ocp_formulation_json_dump(acados_ocp, json_file='acados_ocp_nlp.json'):
         # Copy ocp object attributes dictionaries
         ocp_nlp_dict[acados_struct]=dict(getattr(acados_ocp, acados_struct).__dict__)
 
+    # strip symbolics
     ocp_nlp_dict['model'] = acados_model_strip_casadi_symbolics(ocp_nlp_dict['model'])
 
-    ocp_nlp_json = dict2json(ocp_nlp_dict)
+    ocp_nlp_dict = format_class_dict(ocp_nlp_dict)
+
+    dims_dict = acados_class2dict(acados_ocp.dims)
+
+    ocp_check_json_against_layout(ocp_nlp_dict, dims_dict)
 
     with open(json_file, 'w') as f:
-        json.dump(ocp_nlp_json, f, default=np_array_to_list, indent=4, sort_keys=True)
+        json.dump(ocp_nlp_dict, f, default=np_array_to_list, indent=4, sort_keys=True)
 
 
 
@@ -155,13 +201,19 @@ def ocp_formulation_json_load(json_file='acados_ocp_nlp.json'):
 
 def ocp_generate_external_functions(acados_ocp, model):
 
+    model = make_model_consistent(model)
     if acados_ocp.solver_options.integrator_type == 'ERK':
         # explicit model -- generate C code
         generate_c_code_explicit_ode(model)
-    else:
+    elif acados_ocp.solver_options.integrator_type == 'IRK':
         # implicit model -- generate C code
         opts = dict(generate_hess=1)
         generate_c_code_implicit_ode(model, opts)
+    elif acados_ocp.solver_options.integrator_type == 'GNSF':
+        generate_c_code_gnsf(model)
+    else:
+        raise Exception("ocp_generate_external_functions: unknown integrator type.")
+
 
     if acados_ocp.dims.nphi > 0 or acados_ocp.dims.nh > 0:
         generate_c_code_constraint(model, model.name, False)
@@ -314,6 +366,9 @@ class AcadosOcpSolver:
         # make dims consistent
         make_ocp_dims_consistent(acados_ocp)
 
+        if acados_ocp.solver_options.integrator_type == 'GNSF':
+            set_up_imported_gnsf_model(acados_ocp)
+
         # set integrator time automatically
         acados_ocp.solver_options.Tsim = acados_ocp.solver_options.tf / acados_ocp.dims.N
 
@@ -328,14 +383,14 @@ class AcadosOcpSolver:
 
         ## Compile solver
         os.chdir('c_generated_code')
-        os.system('make clean')
+        os.system('make clean_ocp_shared_lib')
         os.system('make ocp_shared_lib')
         os.chdir('..')
 
-        shared_lib = 'c_generated_code/libacados_ocp_solver_' + model.name + '.so'
+        self.shared_lib_name = 'c_generated_code/libacados_ocp_solver_' + model.name + '.so'
 
         # get
-        self.shared_lib = CDLL(shared_lib)
+        self.shared_lib = CDLL(self.shared_lib_name)
         self.shared_lib.acados_create()
 
         self.shared_lib.acados_get_nlp_opts.restype = c_void_p
@@ -617,3 +672,9 @@ class AcadosOcpSolver:
 
     def __del__(self):
         self.shared_lib.acados_free()
+        del self.shared_lib
+
+        # NOTE: DLL cannot be easily unloaded!!!
+        # see https://stackoverflow.com/questions/359498/how-can-i-unload-a-dll-using-ctypes-in-python
+        # while isLoaded(self.shared_lib_name):
+        #     dlclose(handle)

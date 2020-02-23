@@ -72,7 +72,7 @@ else:
 
     parser.add_argument('--INTEGRATOR_TYPE', dest='INTEGRATOR_TYPE',
                         default='ERK',
-                        help='INTEGRATOR_TYPE: explicit (ERK) or implicit (IRK) ' \
+                        help='INTEGRATOR_TYPE: explicit (ERK) or implicit (IRK) or GNSF-IRK (GNSF) ' \
                                 ' Runge-Kutta (default: ERK)')
 
     parser.add_argument('--SOLVER_TYPE', dest='SOLVER_TYPE',
@@ -102,7 +102,7 @@ else:
                 ' {}. Exiting.'.format(QP_SOLVER, QP_SOLVER_values))
 
     INTEGRATOR_TYPE = args.INTEGRATOR_TYPE
-    INTEGRATOR_TYPE_values = ['ERK', 'IRK']
+    INTEGRATOR_TYPE_values = ['ERK', 'IRK', 'GNSF']
     if INTEGRATOR_TYPE not in INTEGRATOR_TYPE:
         raise Exception('Invalid unit test value {} for parameter INTEGRATOR_TYPE. Possible values are' \
                 ' {}. Exiting.'.format(INTEGRATOR_TYPE, INTEGRATOR_TYPE_values))
@@ -221,6 +221,11 @@ ocp.solver_options.qp_solver_iter_max = 50
 ocp.solver_options.tf = Tf
 ocp.solver_options.nlp_solver_type = SOLVER_TYPE
 
+if ocp.solver_options.integrator_type == 'GNSF':
+    with open(model.name + '_gnsf_functions.json', 'r') as f:
+        gnsf_dict = json.load(f)
+    ocp.gnsf_model = gnsf_dict
+
 ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
 simX = np.ndarray((N+1, nx))
@@ -255,7 +260,8 @@ else:
         test_data = json.load(f)
     simX_error = np.linalg.norm(test_data['simX'] - simX)
     simU_error = np.linalg.norm(test_data['simU'] - simU)
-    if  simX_error > TEST_TOL or  simU_error > TEST_TOL:
+
+    if simX_error > TEST_TOL or simU_error > TEST_TOL:
         raise Exception("Python acados test failure with accuracies" +
                         " {:.2E} and {:.2E} ({:.2E} required)".format(simX_error, simU_error, TEST_TOL) +
                         " on pendulum example! Exiting.\n")

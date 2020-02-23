@@ -170,9 +170,6 @@ function model = detect_dims_ocp(model)
     end
     model.dim_nh = nh;
 
-    % TODO(oj): slack constraints, why is ls* commented in acados_ocp_model?!
-    % if isfield(model, 'constr_Jsbx') && isfield(model, 'constr_lsbx')
-
     % terminal
     if isfield(model, 'constr_Jbx_e') && isfield(model, 'constr_lbx_e') && isfield(model, 'constr_ubx_e')
         nbx_e = length(model.constr_lbx_e);

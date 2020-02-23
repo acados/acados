@@ -35,7 +35,7 @@ import os
 from casadi import *
 from .utils import ALLOWED_CASADI_VERSIONS, is_empty
 
-def generate_c_code_explicit_ode( model ):
+def generate_c_code_gnsf( model ):
 
     casadi_version = CasadiMeta.version()
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
@@ -45,74 +45,9 @@ def generate_c_code_explicit_ode( model ):
         msg += 'Version {} currently in use.'.format(casadi_version)
         raise Exception(msg)
 
-    # load model
-    x = model.x
-    u = model.u
-    p = model.p
-    f_expl = model.f_expl_expr
     model_name = model.name
 
-    ## get model dimensions
-    nx = x.size()[0]
-    nu = u.size()[0]
-
-    ## set up functions to be exported
-    if isinstance(f_expl, casadi.SX):
-        Sx = SX.sym('Sx', nx, nx)
-        Sp = SX.sym('Sp', nx, nu)
-        lambdaX = SX.sym('lambdaX', nx, 1)
-    elif isinstance(f_expl, casadi.MX):
-        Sx = MX.sym('Sx', nx, nx)
-        Sp = MX.sym('Sp', nx, nu)
-        lambdaX = MX.sym('lambdaX', nx, 1)
-    else:
-        raise Exception("Invalid type for f_expl! Possible types are 'SX' and 'MX'. Exiting.")
-
-    fun_name = model_name + '_expl_ode_fun'
-
-    ## Set up functions
-    expl_ode_fun = Function(fun_name, [x, u, p], [f_expl])
-
-    # TODO: Polish: get rid of SX.zeros
-    if isinstance(f_expl, casadi.SX):
-        vdeX = SX.zeros(nx,nx)
-    else:
-        vdeX = MX.zeros(nx,nx)
-
-    vdeX = vdeX + jtimes(f_expl,x,Sx)
-
-    if isinstance(f_expl, casadi.SX):
-        vdeP = SX.zeros(nx,nu) + jacobian(f_expl,u)
-    else:
-        vdeP = MX.zeros(nx,nu) + jacobian(f_expl,u)
-
-    vdeP = vdeP + jtimes(f_expl,x,Sp)
-
-    fun_name = model_name + '_expl_vde_forw'
-
-    expl_vde_forw = Function(fun_name, [x, Sx, Sp, u, p], [f_expl,vdeX,vdeP])
-
-    if isinstance(f_expl, casadi.SX):
-        jacX = SX.zeros(nx,nx) + jacobian(f_expl,x)
-    else:
-        jacX = MX.zeros(nx,nx) + jacobian(f_expl,x)
-
-    adj = jtimes(f_expl, vertcat(x, u), lambdaX, True)
-
-    fun_name = model_name + '_expl_vde_adj'
-    expl_vde_adj = Function(fun_name, [x, lambdaX, u, p], [adj])
-
-    S_forw = vertcat(horzcat(Sx, Sp), horzcat(DM.zeros(nu,nx), DM.eye(nu)))
-    hess = mtimes(transpose(S_forw),jtimes(adj, vertcat(x,u), S_forw))
-    hess2 = []
-    for j in range(nx+nu):
-        for i in range(j,nx+nu):
-            hess2 = vertcat(hess2, hess[i,j])
-
-    fun_name = model_name + '_expl_ode_hess'
-    expl_ode_hess = Function(fun_name, [x, Sx, Sp, lambdaX, u, p], [adj, hess2])
-
-    ## generate C code
+    # set up directory
     if not os.path.exists('c_generated_code'):
         os.mkdir('c_generated_code')
 
@@ -122,17 +57,60 @@ def generate_c_code_explicit_ode( model ):
         os.mkdir(model_dir)
     model_dir_location = './' + model_dir
     os.chdir(model_dir_location)
-    fun_name = model_name + '_expl_ode_fun'
-    expl_ode_fun.generate(fun_name, casadi_opts)
 
-    fun_name = model_name + '_expl_vde_forw'
-    expl_vde_forw.generate(fun_name, casadi_opts)
+    # obtain gnsf dimensions
+    get_matrices_fun = model.get_matrices_fun
+    phi_fun = model.phi_fun
 
-    fun_name = model_name + '_expl_vde_adj'
-    expl_vde_adj.generate(fun_name, casadi_opts)
+    size_gnsf_A = get_matrices_fun.size_out(0)
+    gnsf_nx1 = size_gnsf_A[1]
+    gnsf_nz1 = size_gnsf_A[0] - size_gnsf_A[1]
+    gnsf_nuhat = max(phi_fun.size_in(1))
+    gnsf_ny = max(phi_fun.size_in(0))
+    gnsf_nout = max(phi_fun.size_out(0))
 
-    fun_name = model_name + '_expl_ode_hess'
-    expl_ode_hess.generate(fun_name, casadi_opts)
+    # set up functions
+    y = SX.sym("y", gnsf_ny, 1)
+    uhat = SX.sym("uhat", gnsf_nuhat, 1)
+    p = model.p
+    u = model.u
+    x1 = SX.sym("gnsf_x1", gnsf_nx1, 1)
+    x1dot = SX.sym("gnsf_x1dot", gnsf_nx1, 1)
+    z1 = SX.sym("gnsf_z1", gnsf_nz1, 1)
+    dummy = SX.sym("gnsf_dummy", 1, 1)
+
+    ## generate C code
+    fun_name = model_name + '_gnsf_phi_fun'
+    phi_fun_ = Function(fun_name, [y, uhat, p], [phi_fun(y, uhat, p)])
+    phi_fun_.generate(fun_name, casadi_opts)
+
+    fun_name = model_name + '_gnsf_phi_fun_jac_y'
+    phi_fun_jac_y = model.phi_fun_jac_y
+    phi_fun_jac_y_ = Function(fun_name, [y, uhat, p], phi_fun_jac_y(y, uhat, p))
+    phi_fun_jac_y_.generate(fun_name, casadi_opts)
+
+    fun_name = model_name + '_gnsf_phi_jac_y_uhat'
+    phi_jac_y_uhat = model.phi_jac_y_uhat
+    phi_jac_y_uhat_ = Function(fun_name, [y, uhat, p], phi_jac_y_uhat(y, uhat, p))
+    phi_jac_y_uhat_.generate(fun_name, casadi_opts)
+
+    fun_name = model_name + '_gnsf_f_lo_fun_jac_x1k1uz'
+    f_lo_fun_jac_x1k1uz = model.f_lo_fun_jac_x1k1uz
+    f_lo_fun_jac_x1k1uz_ = Function(fun_name, [x1, x1dot, z1, u, p],
+                f_lo_fun_jac_x1k1uz(x1, x1dot, z1, u, p) )
+    f_lo_fun_jac_x1k1uz_.generate(fun_name, casadi_opts)
+
+    fun_name = model_name + '_gnsf_get_matrices_fun'
+    get_matrices_fun_ = Function(fun_name, [dummy], get_matrices_fun(1))
+    get_matrices_fun_.generate(fun_name, casadi_opts)
+
+    # remove fields for json dump
+    del model.phi_fun
+    del model.phi_fun_jac_y
+    del model.phi_jac_y_uhat
+    del model.f_lo_fun_jac_x1k1uz
+    del model.get_matrices_fun
+
     os.chdir('../..')
 
     return

@@ -35,7 +35,7 @@
 import numpy as np
 import os
 from .AcadosModel import AcadosModel
-from .utils import get_acados_path
+from .utils import get_acados_path, J_to_idx, J_to_idx_slack
 
 class AcadosOcpDims:
     """
@@ -669,7 +669,10 @@ class AcadosOcpCost:
     def set(self, attr, value):
         setattr(self, attr, value)
 
-# TODO(oj): replace \Pi with Jbx or similar
+def print_J_to_idx_note():
+    print("NOTE: J* matrix is converted to zero based vector idx* vector, which is returned here.")
+
+
 class AcadosOcpConstraints:
     """
     class containing the description of the constraints
@@ -681,20 +684,18 @@ class AcadosOcpConstraints:
         self.__lbx_0   = []                           # lower bounds on x for initial state
         self.__ubx_0   = []                           # upper bounds on x for initial state
         self.__idxbx_0 = []                           # indexes for bounds on x0
-        # intermediate stages
+        # state bounds
         self.__lbx     = []                           # lower bounds on x
-        self.__lbu     = []                           # lower bounds on u
         self.__ubx     = []                           # upper bounds on x
-        self.__ubu     = []                           # upper bounds on u
-        self.__idxbx   = []                           # indexes of bounds on x (defines :math:`\Pi_x`)
-        # self.__Jbx     = []                         # matrix coefficient for bounds on x
-        self.__idxbu   = []                           # indexes of bounds on u (defines :math:`\Pi_u`)
-        # self.__Jbu     = []                         # matrix coefficient for bounds on u
+        self.__idxbx   = []
         # bounds on x at t=T
         self.__lbx_e   = []                           # lower bounds on x at t=T
         self.__ubx_e   = []                           # upper bounds on x at t=T
-        self.__idxbx_e = []                           # indexes for bounds on x at t=T (defines :math:`\Pi_x^e`)
-        # self.__Jbx_e   = []                         # indexes of bounds on x (defines :math:`\Pi_x`)
+        self.__idxbx_e = []
+        # bounds on u
+        self.__lbu     = []                           # lower bounds on u
+        self.__ubu     = []                           # upper bounds on u
+        self.__idxbu   = []
         # polytopic constraints
         self.__lg      = []                           # lower bound for general polytopic inequalities
         self.__ug      = []                           # upper bound for general polytopic inequalities
@@ -714,47 +715,40 @@ class AcadosOcpConstraints:
         self.__lphi    = []                           # lower bound for convex-over-nonlinear inequalities
         self.__uphi    = []                           # upper bound for convex-over-nonlinear inequalities
         # nonlinear constraints at t=T
-        self.__uh_e    = []                           # upper bound on nonlinear inequalities at t=T
-        self.__lh_e    = []                           # lower bound on nonlinear inequalities at t=T
-        # nonlinear constraints at t=T
         self.__uphi_e    = []                         # upper bound on convex-over-nonlinear inequalities at t=T
         self.__lphi_e    = []                         # lower bound on convex-over-nonlinear inequalities at t=T
-        # soft bounds on x and u
+        # SLACK BOUNDS
+        # soft bounds on x
         self.__lsbx   = []                            # lower bounds on slacks corresponding to soft lower bounds on x
-        self.__lsbu   = []                            # lower bounds on slacks corresponding to soft lower bounds on u
         self.__usbx   = []                            # lower bounds on slacks corresponding to soft upper bounds on x
-        self.__usbu   = []                            # lower bounds on slacks corresponding to soft upper bounds on u
         self.__idxsbx = []                            # indexes of soft bounds on x within the indices of bounds on x
-        # self.__Jsbx   = []                          # matrix coefficient for soft bounds on x
+        # soft bounds on u
+        self.__lsbu   = []                            # lower bounds on slacks corresponding to soft lower bounds on u
+        self.__usbu   = []                            # lower bounds on slacks corresponding to soft upper bounds on u
         self.__idxsbu = []                            # indexes of soft bounds on u within the indices of bounds on u
-        # self.__Jsbu   = []                          # matrix coefficient for soft bounds on u
         # soft bounds on x at t=T
         self.__lsbx_e  = []                           # lower bounds on slacks corresponding to soft lower bounds on x at t=T
         self.__usbx_e  = []                           # lower bounds on slacks corresponding to soft upper bounds on x at t=T
         self.__idxsbx_e= []                           # indexes of soft bounds on x at t=T, within the indices of bounds on x at t=T
-        # self.__Jsbx_e    = []                       # matrix coefficient for soft bounds on x at t=T
         # soft bounds on nonlinear constraints
         self.__lsh    = []                            # lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints
         self.__ush    = []                            # lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints
         self.__idxsh  = []                            # indexes of soft nonlinear constraints within the indices of nonlinear constraints
-        # self.__Jsh    = []                          # matrix coefficient for soft bounds on nonlinear constraints
         # soft bounds on nonlinear constraints
         self.__lsphi  = []                            # lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints
         self.__usphi  = []                            # lower bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints
         self.__idxsphi  = []                          # indexes of soft convex-over-nonlinear constraints within the indices of nonlinear constraints
-        # self.__Jsphi  = []                          # matrix coefficient for soft bounds on convex-over-nonlinear constraints
         # soft bounds on nonlinear constraints at t=T
         self.__lsh_e    = []                          # lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints at t=T
         self.__ush_e    = []                          # lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints at t=T
         self.__idxsh_e  = []                          # indexes of soft nonlinear constraints at t=T within the indices of nonlinear constraints at t=T
-        # self.__Jsh_e    = []                        # matrix coefficient for soft bounds on nonlinear constraints at t=T
         # soft bounds on nonlinear constraints at t=T
         self.__lsphi_e    = []                        # lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints at t=T
         self.__usphi_e    = []                        # lower bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints at t=T
         self.__idxsphi_e  = []                        # indexes of soft nonlinear constraints at t=T within the indices of nonlinear constraints at t=T
-        # self.__Jsphi_e  = []                        # matrix coefficient for soft bounds on convex-over-nonlinear constraints at t=T
-        # self.__x0      = []                           # initial state
 
+
+    # types
     @property
     def constr_type(self):
         """Constraints type"""
@@ -765,6 +759,7 @@ class AcadosOcpConstraints:
         """Constraints type t=T"""
         return self.__constr_type_e
 
+    # initial bounds on x
     @property
     def lbx_0(self):
         """:math:`\\underline{x_0}` - lower bounds on x0"""
@@ -777,18 +772,14 @@ class AcadosOcpConstraints:
 
     @property
     def idxbx_0(self):
-        """indexes of bounds on x0 """
+        """indexes of bounds on x0"""
         return self.__idxbx_0
 
+    # bounds on x
     @property
     def lbx(self):
         """:math:`\\underline{x}` - lower bounds on x"""
         return self.__lbx
-
-    @property
-    def lbu(self):
-        """:math:`\\underline{u}` - lower bounds on u"""
-        return self.__lbu
 
     @property
     def ubx(self):
@@ -796,29 +787,15 @@ class AcadosOcpConstraints:
         return self.__ubx
 
     @property
-    def ubu(self):
-        """:math:`\\bar{u}` - upper bounds on u"""
-        return self.__ubu
-
-    @property
     def idxbx(self):
-        """indexes of bounds on x (defines :math:`\Pi_x`)"""
+        """indexes of bounds on x (defines :math:`J_{bx}`)"""
         return self.__idxbx
 
     @property
     def Jbx(self):
-        """:math:`J_x` - matrix coefficient for bounds on x"""
-        return self.__Jbx
-
-    @property
-    def idxbu(self):
-        """indexes of bounds on u (defines :math:`\Pi_u`)"""
-        return self.__idxbu
-
-    @property
-    def Jbu(self):
-        """:math:`J_u` - matrix coefficient for bounds on u"""
-        return self.__Jbu
+        """:math:`J_{bx}` - matrix coefficient for bounds on x"""
+        print_J_to_idx_note()
+        return self.__idxbx
 
     # bounds on x at t=T
     @property
@@ -833,13 +810,36 @@ class AcadosOcpConstraints:
 
     @property
     def idxbx_e(self):
-        """indexes for bounds on x at t=T (defines :math:`\Pi_x^e`)"""
+        """indexes for bounds on x at t=T (defines :math:`J_{bx}^e`)"""
         return self.__idxbx_e
 
     @property
     def Jbx_e(self):
-        """:math:`J_{x}^e`indexes of bounds on x (defines :math:`\Pi_x`)"""
-        return self.__Jbx_e
+        """:math:`J_{bx}^e` matrix coefficient for bounds on x at t=T"""
+        print_J_to_idx_note()
+        return self.__idxbx_e
+
+    # bounds on u
+    @property
+    def lbu(self):
+        """:math:`\\underline{u}` - lower bounds on u"""
+        return self.__lbu
+
+    @property
+    def ubu(self):
+        """:math:`\\bar{u}` - upper bounds on u"""
+        return self.__ubu
+
+    @property
+    def idxbu(self):
+        """indexes of bounds on u (defines :math:`J_{bu}`)"""
+        return self.__idxbu
+
+    @property
+    def Jbu(self):
+        """:math:`J_{bu}` - matrix coefficient for bounds on u"""
+        print_J_to_idx_note()
+        return self.__idxbu
 
     # polytopic constraints
     @property
@@ -870,13 +870,14 @@ class AcadosOcpConstraints:
 
     @property
     def lg_e(self):
-        """:math:`\\underline{c}^e` - lower bound on general polytopic inequalities at t=T"""
+        """:math:`\\underline{g}^e` - lower bound on general polytopic inequalities at t=T"""
         return self.__lg_e
 
     @property
     def ug_e(self):
-        """:math:`\\bar{c}^e` - upper bound on general polytopic inequalities at t=T"""
+        """:math:`\\bar{g}^e` - upper bound on general polytopic inequalities at t=T"""
         return self.__ug_e
+
 
     # nonlinear constraints
     @property
@@ -889,17 +890,6 @@ class AcadosOcpConstraints:
         """:math:`\\bar{h}` - upper bound for nonlinear inequalities"""
         return self.__uh
 
-    # convex-over-nonlinear constraints
-    @property
-    def lphi(self):
-        """:math:`\\underline{\phi}` - lower bound for convex-over-nonlinear inequalities"""
-        return self.__lphi
-
-    @property
-    def uphi(self):
-        """:math:`\\bar{\phi}` - upper bound for convex-over-nonlinear inequalities"""
-        return self.__uphi
-
     # nonlinear constraints at t=T
     @property
     def lh_e(self):
@@ -910,6 +900,17 @@ class AcadosOcpConstraints:
     def uh_e(self):
         """:math:`\\underline{h}^e` - lower bound on nonlinear inequalities at t=T"""
         return self.__uh_e
+
+    # convex-over-nonlinear constraints
+    @property
+    def lphi(self):
+        """:math:`\\underline{\phi}` - lower bound for convex-over-nonlinear inequalities"""
+        return self.__lphi
+
+    @property
+    def uphi(self):
+        """:math:`\\bar{\phi}` - upper bound for convex-over-nonlinear inequalities"""
+        return self.__uphi
 
     # convex-over-nonlinear constraints at t=T
     @property
@@ -922,26 +923,18 @@ class AcadosOcpConstraints:
         """:math:`\\bar{\phi}^e` - upper bound on convex-over-nonlinear inequalities at t=T"""
         return self.__uphi_e
 
-    # soft bounds on x and u
+
+    # SLACK bounds
+    # soft bounds on x
     @property
     def lsbx(self):
         """lower bounds on slacks corresponding to soft lower bounds on x"""
         return self.__lsbx
 
     @property
-    def lsbu(self):
-        """lower bounds on slacks corresponding to soft lower bounds on u"""
-        return self.__lsbu
-
-    @property
     def usbx(self):
         """upper bounds on slacks corresponding to soft upper bounds on x"""
         return self.__usbx
-
-    @property
-    def usbu(self):
-        """upper bounds on slacks corresponding to soft upper bounds on u"""
-        return self.__usbu
 
     @property
     def idxsbx(self):
@@ -950,8 +943,20 @@ class AcadosOcpConstraints:
 
     @property
     def Jsbx(self):
-        """:math:`J_{s,x}` - matrix coefficient for soft bounds on x"""
-        return self.__Jsbx
+        """:math:`J_{sbx}` - matrix coefficient for soft bounds on x"""
+        print_J_to_idx_note()
+        return self.__idxsbx
+
+    # soft bounds on u
+    @property
+    def lsbu(self):
+        """lower bounds on slacks corresponding to soft lower bounds on u"""
+        return self.__lsbu
+
+    @property
+    def usbu(self):
+        """upper bounds on slacks corresponding to soft upper bounds on u"""
+        return self.__usbu
 
     @property
     def idxsbu(self):
@@ -960,9 +965,11 @@ class AcadosOcpConstraints:
 
     @property
     def Jsbu(self):
-        """:math:`J_{s,u}` - matrix coefficient for soft bounds on u"""
-        return self.__Jsbu
+        """:math:`J_{sbu}` - matrix coefficient for soft bounds on u"""
+        print_J_to_idx_note()
+        return self.__idxsbu
 
+    # soft bounds on x at t=T
     @property
     def lsbx_e(self):
         """lower bounds on slacks corresponding to soft lower bounds on x at t=T"""
@@ -980,9 +987,11 @@ class AcadosOcpConstraints:
 
     @property
     def Jsbx_e(self):
-        """:math:`J_{s,x}^e` - matrix coefficient for soft bounds on x at t=T"""
-        return self.__Jsbx_e
+        """:math:`J_{sbx}^e` - matrix coefficient for soft bounds on x at t=T"""
+        print_J_to_idx_note()
+        return self.__idxsbx_e
 
+    # soft nonlinear constraints
     @property
     def lsh(self):
         """lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints"""
@@ -1000,8 +1009,9 @@ class AcadosOcpConstraints:
 
     @property
     def Jsh(self):
-        """:math:`J_{s,h}` - matrix coefficient for soft bounds on nonlinear constraints"""
-        return self.__Jsh
+        """:math:`J_{sh}` - matrix coefficient for soft bounds on nonlinear constraints"""
+        print_J_to_idx_note()
+        return self.__idxsh
 
     # soft bounds on convex-over-nonlinear constraints
     @property
@@ -1021,8 +1031,9 @@ class AcadosOcpConstraints:
 
     @property
     def Jsphi(self):
-        """:math:`J_{s,h}` - matrix coefficient for soft bounds on convex-over-nonlinear constraints"""
-        return self.__Jsphi
+        """:math:`J_{s, \phi}` - matrix coefficient for soft bounds on convex-over-nonlinear constraints"""
+        print_J_to_idx_note()
+        return self.__idxsphi
 
     # soft bounds on nonlinear constraints at t=T
     @property
@@ -1040,11 +1051,11 @@ class AcadosOcpConstraints:
         """indexes of soft nonlinear constraints at t=T within the indices of nonlinear constraints at t=T"""
         return self.__idxsh_e
 
-
     @property
     def Jsh_e(self):
         """:math:`J_{s,h}^e` - matrix coefficient for soft bounds on nonlinear constraints at t=T"""
-        return self.__Jsh_e
+        print_J_to_idx_note()
+        return self.__idxsh_e
 
     # soft bounds on convex-over-nonlinear constraints at t=T
     @property
@@ -1062,30 +1073,22 @@ class AcadosOcpConstraints:
         """indexes of soft nonlinear constraints at t=T within the indices of nonlinear constraints at t=T"""
         return self.__idxsphi_e
 
-
     @property
     def Jsphi_e(self):
-        """:math:`J_{s,h}^e` - matrix coefficient for soft bounds on convex-over-nonlinear constraints at t=T"""
-        return self.__Jsphi_e
+        """:math:`J_{sh}^e` - matrix coefficient for soft bounds on convex-over-nonlinear constraints at t=T"""
+        print_J_to_idx_note()
+        return self.__idxsphi_e
 
     @property
     def x0(self):
         """:math:`\\bar{x}_0` - initial state"""
-        return self.__x0
+        print("x0 is converted to lbx_0, ubx_0, idxbx_0")
+        print("idxbx_0: ", self.__idxbx_0)
+        print("lbx_0: ", self.__lbx_0)
+        print("ubx_0: ", self.__ubx_0)
+        return None
 
-
-    def J_to_idx(self, J):
-        nrows = J.shape[0]
-        idx = np.zeros((nrows, ))
-        for i in range(nrows):
-            this_idx = np.nonzero(J[i,:])[0]
-            if len(this_idx) != 1:
-                raise Exception('Invalid J matrix structure detected. Exiting.')
-            if J[i,this_idx[0]] != 1:
-                raise Exception('J matrices can only contain 1s. Exiting.')
-            idx[i] = this_idx[0]
-        return idx
-
+    # SETTERS
     @constr_type.setter
     def constr_type(self, constr_type):
         constr_types = ('BGH', 'BGP')
@@ -1106,13 +1109,7 @@ class AcadosOcpConstraints:
             raise Exception('Invalid constr_type_e value. Possible values are:\n\n' \
                     + ',\n'.join(constr_types) + '.\n\nYou have: ' + constr_type_e + '.\n\nExiting.')
 
-    # @ubx.setter
-    # def ubx(self, ubx):
-    #     if type(ubx) == np.ndarray:
-    #         self.__ubx = ubx
-    #     else:
-    #         raise Exception('Invalid ubx value. Exiting.')
-
+    # initial x
     @lbx_0.setter
     def lbx_0(self, lbx_0):
         if type(lbx_0) == np.ndarray:
@@ -1134,7 +1131,16 @@ class AcadosOcpConstraints:
         else:
             raise Exception('Invalid idxbx_0 value. Exiting.')
 
-    # bounds on x and u
+    @x0.setter
+    def x0(self, x0):
+        if type(x0) == np.ndarray:
+            self.__lbx_0 = x0
+            self.__ubx_0 = x0
+            self.__idxbx_0 = np.arange(x0.size)
+        else:
+            raise Exception('Invalid x0 value. Exiting.')
+
+    # bounds on x
     @lbx.setter
     def lbx(self, lbx):
         if type(lbx) == np.ndarray:
@@ -1159,10 +1165,11 @@ class AcadosOcpConstraints:
     @Jbx.setter
     def Jbx(self, Jbx):
         if type(Jbx) == np.ndarray:
-            self.__idxbx = self.J_to_idx(Jbx)
+            self.__idxbx = J_to_idx(Jbx)
         else:
             raise Exception('Invalid Jbx value. Exiting.')
 
+    # bounds on u
     @lbu.setter
     def lbu(self, lbu):
         if type(lbu) == np.ndarray:
@@ -1187,7 +1194,7 @@ class AcadosOcpConstraints:
     @Jbu.setter
     def Jbu(self, Jbu):
         if type(Jbu) == np.ndarray:
-            self.__idxbu = self.J_to_idx(Jbu)
+            self.__idxbu = J_to_idx(Jbu)
         else:
             raise Exception('Invalid Jbu value. Exiting.')
 
@@ -1216,7 +1223,7 @@ class AcadosOcpConstraints:
     @Jbx_e.setter
     def Jbx_e(self, Jbx_e):
         if type(Jbx_e) == np.ndarray:
-            self.__idxbx_e = self.J_to_idx(Jbx_e)
+            self.__idxbx_e = J_to_idx(Jbx_e)
         else:
             raise Exception('Invalid Jbx_e value. Exiting.')
 
@@ -1331,7 +1338,8 @@ class AcadosOcpConstraints:
         else:
             raise Exception('Invalid uphi_e value. Exiting.')
 
-    # soft bounds on x and u
+    # SLACK bounds
+    # soft bounds on x
     @lsbx.setter
     def lsbx(self, lsbx):
         if type(lsbx) == np.ndarray:
@@ -1356,11 +1364,11 @@ class AcadosOcpConstraints:
     @Jsbx.setter
     def Jsbx(self, Jsbx):
         if type(Jsbx) == np.ndarray:
-            self.__idxsbx = self.J_to_idx(Jbsx)
+            self.__idxsbx = J_to_idx_slack(Jsbx)
         else:
             raise Exception('Invalid Jsbx value. Exiting.')
 
-
+    # soft bounds on u
     @lsbu.setter
     def lsbu(self, lsbu):
         if type(lsbu) == np.ndarray:
@@ -1385,7 +1393,7 @@ class AcadosOcpConstraints:
     @Jsbu.setter
     def Jsbu(self, Jsbu):
         if type(Jsbu) == np.ndarray:
-            self.__idxsbu = self.J_to_idx(Jbsu)
+            self.__idxsbu = J_to_idx_slack(Jsbu)
         else:
             raise Exception('Invalid Jsbu value. Exiting.')
 
@@ -1414,8 +1422,7 @@ class AcadosOcpConstraints:
     @Jsbx_e.setter
     def Jsbx_e(self, Jsbx_e):
         if type(Jsbx_e) == np.ndarray:
-            self.__Jsbx_e = Jsbx_e
-            self.__idxsbx_e = self.J_to_idx(Jbsx_e)
+            self.__idxsbx_e = J_to_idx_slack(Jsbx_e)
         else:
             raise Exception('Invalid Jsbx_e value. Exiting.')
 
@@ -1467,7 +1474,7 @@ class AcadosOcpConstraints:
     def Jsphi(self, Jsphi):
         if type(Jsphi) == np.ndarray:
             self.__Jsphi = Jsphi
-            self.__idxsphi = self.J_to_idx(Jbsx_e)
+            self.__idxsphi = J_to_idx_slack(Jsphi)
         else:
             raise Exception('Invalid Jsphi value. Exiting.')
 
@@ -1519,19 +1526,9 @@ class AcadosOcpConstraints:
     def Jsphi_e(self, Jsphi_e):
         if type(Jsphi_e) == np.ndarray:
             self.__Jsphi_e = Jsphi_e
-            self.__idxsphi_e = self.J_to_idx(Jbsx_e)
+            self.__idxsphi_e = J_to_idx_slack(Jsphi_e)
         else:
             raise Exception('Invalid Jsphi_e value. Exiting.')
-
-    @x0.setter
-    def x0(self, x0):
-        if type(x0) == np.ndarray:
-            # self.__x0 = x0
-            self.__lbx_0 = x0
-            self.__ubx_0 = x0
-            self.__idxbx_0 = np.arange(x0.size)
-        else:
-            raise Exception('Invalid x0 value. Exiting.')
 
     def set(self, attr, value):
         setattr(self, attr, value)
@@ -1564,6 +1561,8 @@ class AcadosOcpOptions:
         self.__nlp_solver_max_iter = 100                      # NLP solver maximum number of iterations
         self.__Tsim = None                                    # automatically calculated as tf/N
         self.__print_level = 0                                # print level (possible values: 0, 1)
+        self.__model_external_shared_lib_dir   = None         # path to the the .so lib
+        self.__model_external_shared_lib_name  = None         # name of the the .so lib
         # TODO(oj): add the following
         # self.__regularize_method = None
 
@@ -1640,6 +1639,11 @@ class AcadosOcpOptions:
         return self.__qp_solver_iter_max
 
     @property
+    def tol(self):
+        """NLP solver tolerance"""
+        return max([self.__nlp_solver_tol_eq, self.__nlp_solver_tol_ineq, self.__nlp_solver_tol_comp, self.__nlp_solver_tol_stat])
+
+    @property
     def nlp_solver_tol_stat(self):
         """NLP solver stationarity tolerance"""
         return self.__nlp_solver_tol_stat
@@ -1651,12 +1655,12 @@ class AcadosOcpOptions:
 
     @property
     def nlp_solver_tol_ineq(self):
-        """NLP solver inequality"""
+        """NLP solver inequality tolerance"""
         return self.__nlp_solver_tol_ineq
 
     @property
     def nlp_solver_tol_comp(self):
-        """NLP solver complementarity"""
+        """NLP solver complementarity tolerance"""
         return self.__nlp_solver_tol_comp
 
     @property
@@ -1679,6 +1683,21 @@ class AcadosOcpOptions:
         """Verbosity of printing"""
         return self.__print_level
 
+    @property
+    def model_external_shared_lib(self):
+        """Dependance of the model ode on external .so lib"""
+        return self.__model_external_shared_lib
+
+    @property
+    def model_external_shared_lib_dir(self):
+        """Path to the .so lib"""
+        return self.__model_external_shared_lib_dir
+
+    @property
+    def model_external_shared_lib_name(self):
+        """Name of the .so lib"""
+        return self.__model_external_shared_lib_name
+
     @qp_solver.setter
     def qp_solver(self, qp_solver):
         qp_solvers = ('PARTIAL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_QPOASES', \
@@ -1691,7 +1710,7 @@ class AcadosOcpOptions:
                     + ',\n'.join(qp_solvers) + '.\n\nYou have: ' + qp_solver + '.\n\nExiting.')
     @hessian_approx.setter
     def hessian_approx(self, hessian_approx):
-        hessian_approxs = ('GAUSS_NEWTON')
+        hessian_approxs = ('GAUSS_NEWTON', 'EXACT')
 
         if type(hessian_approx) == str and hessian_approx in hessian_approxs:
             self.__hessian_approx = hessian_approx
@@ -1701,7 +1720,7 @@ class AcadosOcpOptions:
 
     @integrator_type.setter
     def integrator_type(self, integrator_type):
-        integrator_types = ('ERK', 'IRK')
+        integrator_types = ('ERK', 'IRK', 'GNSF')
 
         if type(integrator_type) == str and integrator_type in integrator_types:
             self.__integrator_type = integrator_type
@@ -1815,6 +1834,18 @@ class AcadosOcpOptions:
         else:
             raise Exception('Invalid nlp_solver_tol_stat value. nlp_solver_tol_stat must be a positive float. Exiting')
 
+    @tol.setter
+    def tol(self, tol):
+
+        if type(tol) == float and tol > 0:
+            self.__nlp_solver_tol_eq = tol
+            self.__nlp_solver_tol_ineq = tol
+            self.__nlp_solver_tol_stat = tol
+            self.__nlp_solver_tol_comp = tol
+        else:
+            raise Exception('Invalid tol value. tol must be a positive float. Exiting')
+
+
     @nlp_solver_tol_eq.setter
     def nlp_solver_tol_eq(self, nlp_solver_tol_eq):
 
@@ -1850,10 +1881,38 @@ class AcadosOcpOptions:
     @print_level.setter
     def print_level(self, print_level):
 
-        if type(print_level) == int and print_level >= 0 and print_level <= 1:
+        if type(print_level) == int and print_level >= 0:
             self.__print_level = print_level
         else:
-            raise Exception('Invalid print_level value. print_level take one of the values in {0,1}. Exiting')
+            raise Exception('Invalid print_level value. print_level takes one of the values >=0. Exiting')
+
+    @model_external_shared_lib.setter
+    def model_external_shared_lib(self, model_external_shared_lib):
+        if type(model_external_shared_lib) == bool :
+            self.__model_external_shared_lib = model_external_shared_lib
+        else:
+            raise Exception('Invalid model_external_shared_lib value. Bool expected.' \
+                    + '.\n\nYou have: ' + type(model_external_shared_lib) + '.\n\nExiting.')
+          
+    @model_external_shared_lib_dir.setter
+    def model_external_shared_lib_dir(self, model_external_shared_lib_dir):
+        if type(model_external_shared_lib_dir) == str :
+            self.__model_external_shared_lib_dir = model_external_shared_lib_dir
+        else:
+            raise Exception('Invalid model_external_shared_lib_dir value. Str expected.' \
+            + '.\n\nYou have: ' + type(model_external_shared_lib_dir) + '.\n\nExiting.')
+
+    @model_external_shared_lib_name.setter
+    def model_external_shared_lib_name(self, model_external_shared_lib_name):
+        if type(model_external_shared_lib_name) == str :
+            if model_external_shared_lib_name[-3:] == '.so' : 
+                raise Exception('Invalid model_external_shared_lib_name value. Remove the .so extension.' \
+            + '.\n\nYou have: ' + type(model_external_shared_lib_name) + '.\n\nExiting.')
+            else :
+                self.__model_external_shared_lib_name = model_external_shared_lib_name
+        else:
+            raise Exception('Invalid model_external_shared_lib_name value. Str expected.' \
+            + '.\n\nYou have: ' + type(model_external_shared_lib_name) + '.\n\nExiting.')
 
     def set(self, attr, value):
         setattr(self, attr, value)
@@ -1876,7 +1935,7 @@ class AcadosOcp:
         self.cost = AcadosOcpCost()
         self.constraints = AcadosOcpConstraints()
         self.solver_options = AcadosOcpOptions()
-
+		
         self.acados_include_path = f'{acados_path}/include'
         self.acados_lib_path = f'{acados_path}/lib'
 

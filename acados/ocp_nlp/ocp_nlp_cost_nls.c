@@ -736,7 +736,6 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
     // printf("res\n");
     // blasfeo_print_dvec(ny, &memory->res, 0);
 
-    // TODO(all): use lower triangular chol of W to save n_y^2 flops
     // tmp_ny = W * res
     blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res, 0, 0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
     // grad = Jt * tmp_ny
@@ -784,7 +783,8 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
         blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &memory->Jt, 0, 0, &work->tmp_nv_ny, 0, 0);
 
         // RSQrq = RSQrq + tmp_nv_ny * tmp_nv_ny^T
-        blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, model->scaling, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
+        blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0,
+                         model->scaling, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
     }
 
     // slacks

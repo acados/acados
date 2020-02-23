@@ -31,39 +31,35 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import itertools as it
-import os
-from random import sample
+from acados_template import AcadosModel
+from casadi import MX, external
+import sys,os
+from ctypes import *
 
-TEST_SAMPLE = True # only test random sample instaed of all possible combinations
-SAMPLE_SIZE = 20
 
-COST_MODULE_values = ['EXTERNAL', 'LS', 'NLS']
-COST_MODULE_N_values = ['EXTERNAL', 'LS', 'NLS']
-QP_SOLVER_values = ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CONDENSING_QPOASES']
-INTEGRATOR_TYPE_values = ['ERK', 'IRK', 'GNSF']
-SOLVER_TYPE_values = ['SQP', 'SQP_RTI']
+def export_external_ode_model():
 
-test_parameters = { 'COST_MODULE_values': COST_MODULE_values,
-                    'COST_MODULE_N_values': COST_MODULE_N_values,
-                    'QP_SOLVER_values': QP_SOLVER_values,
-                    'INTEGRATOR_TYPE_values': INTEGRATOR_TYPE_values,
-                    'SOLVER_TYPE_values': SOLVER_TYPE_values}
+    model_name = 'external_ode'
 
-all_test_parameters = sorted(test_parameters)
-combinations = list(it.product(*(test_parameters[Name] for Name in all_test_parameters)))
+    # Declare model variables
+    x = MX.sym('x', 2)
+    u = MX.sym('u', 1)
+    xDot = MX.sym('xDot', 2)
+    cdll.LoadLibrary('./test_external_lib/build/libexternal_ode_casadi.so')
+    f_ext = external('libexternal_ode_casadi', 'libexternal_ode_casadi.so', {'enable_fd': True})
+    f_expl = f_ext(x, u)
 
-if TEST_SAMPLE:
-    combinations = sample(combinations, SAMPLE_SIZE)
+    f_impl = xDot - f_expl
 
-for parameters in combinations:
-    os_cmd = ("python test_ocp_setting.py" +
-        " --COST_MODULE {}".format(parameters[0]) +
-        " --COST_MODULE_N {}".format(parameters[1]) +
-        " --INTEGRATOR_TYPE {}".format(parameters[2]) +
-        " --QP_SOLVER {}".format(parameters[3]) +
-        " --SOLVER_TYPE {}".format(parameters[4]))
-    status = os.system(os_cmd)
-    if status != 0:
-        raise Exception("acados status  = {} on test {}. Exiting\n".format(status, parameters))
+    model = AcadosModel()
+
+    model.f_impl_expr = f_impl
+    model.f_expl_expr = f_expl
+    model.x = x
+    model.xdot = xDot
+    model.u = u
+    model.p =[]
+    model.name = model_name
+
+    return model 
 
