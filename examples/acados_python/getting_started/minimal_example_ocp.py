@@ -92,10 +92,10 @@ ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOA
 ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
 ocp.solver_options.integrator_type = 'ERK'
 ocp.solver_options.print_level = 0
+ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
 
 # set prediction horizon
 ocp.solver_options.tf = Tf
-ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
 
 ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
@@ -112,5 +112,7 @@ for i in range(N):
     simX[i,:] = ocp_solver.get(i, "x")
     simU[i,:] = ocp_solver.get(i, "u")
 simX[N,:] = ocp_solver.get(N, "x")
+
+ocp_solver.print_statistics()
 
 plot_pendulum(Tf/N, Fmax, simU, simX)
