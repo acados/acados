@@ -255,12 +255,30 @@ if ocp.solver_options.integrator_type == 'GNSF':
 
 ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
+# initialize solver
+x_traj_init = np.transpose( np.vstack( [np.zeros((N+1,)), \
+     np.arange(pi, -pi/N,- pi/N), np.zeros((N+1,)), np.zeros((N+1,))]) )
+for i in range(N+1):
+    ocp_solver.set(i, "x", x_traj_init[i])
+
+pi_init = np.ones((N, nx))
+for i in range(N):
+    ocp_solver.set(i, "pi", pi_init[i])
+
+u_init = np.zeros((N, nu))
+for i in range(N):
+    ocp_solver.set(i, "u", u_init[i])
+
+# solve ocp
 simX = np.ndarray((N+1, nx))
 simU = np.ndarray((N, nu))
 
 status = ocp_solver.solve()
 
+ocp_solver.print_statistics()
+
 if status != 0:
+    # import pdb; pdb.set_trace()
     raise Exception('acados returned status {}. Exiting.'.format(status))
 
 sqp_iter = ocp_solver.get_stats('sqp_iter')
