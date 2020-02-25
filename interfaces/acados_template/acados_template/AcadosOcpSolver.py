@@ -536,7 +536,7 @@ class AcadosOcpSolver:
 
         cost_fields = ['y_ref', 'yref']
         constraints_fields = ['lbx', 'ubx', 'lbu', 'ubu']
-        out_fields = ['x', 'u']
+        out_fields = ['x', 'u', 'pi']
 
         # cast value_ to avoid conversion issues
         value_ = value_.astype(float)
