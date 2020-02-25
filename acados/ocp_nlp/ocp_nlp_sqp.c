@@ -967,6 +967,17 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
         double **value = return_value_;
         *value = mem->stat;
     }
+    else if (!strcmp("statistics", field))
+    {
+        int n_row = mem->stat_m<mem->sqp_iter+1 ? mem->stat_m : mem->sqp_iter+1;
+        double *value = return_value_;
+        for (int ii=0; ii<n_row; ii++)
+        {
+            value[ii+0] = ii;
+            for (int jj=0; jj<mem->stat_n; jj++)
+                value[ii+(jj+1)*n_row] = mem->stat[jj+ii*mem->stat_n];
+        }
+    }
     else if (!strcmp("stat_m", field))
     {
         int *value = return_value_;
