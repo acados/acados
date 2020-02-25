@@ -238,11 +238,11 @@ ocp.solver_options.nlp_solver_tol_eq = TEST_TOL
 ocp.solver_options.nlp_solver_tol_ineq = TEST_TOL
 ocp.solver_options.nlp_solver_tol_comp = TEST_TOL
 
-ocp.solver_options.qp_solver_cond_N = 10
-ocp.solver_options.nlp_solver_max_iter = 100
-ocp.solver_options.qp_solver_iter_max = 50
-# ocp.solver_options.print_level = 1
+ocp.solver_options.qp_solver_cond_N = int(N/2)
 
+ocp.solver_options.nlp_solver_max_iter = 200
+ocp.solver_options.qp_solver_iter_max = 50
+ocp.solver_options.print_level = 0
 
 # set prediction horizon
 ocp.solver_options.tf = Tf
