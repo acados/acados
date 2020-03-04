@@ -143,5 +143,5 @@ for i in range(N):
 simX[N,:] = ocp_solver.get(N, "x")
 
 
-plot_pendulum(Tf/N, Fmax, simU, simX)
+plot_pendulum(Tf/N, Fmax, simU, simX, latexify=False)
 

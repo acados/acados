@@ -80,4 +80,4 @@ if status != 0:
     raise Exception('acados returned status {}. Exiting.'.format(status))
 
 # plot results
-plot_pendulum(Tf/N, 10, np.zeros((N, nu)), simX)
+plot_pendulum(Tf/N, 10, np.zeros((N, nu)), simX, latexify=False)
