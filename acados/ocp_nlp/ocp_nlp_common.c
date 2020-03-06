@@ -1833,6 +1833,21 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
                 in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
     }
 
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (i = 0; i <= N; i++)
+    {
+        // g
+        blasfeo_dveccp(nv[i], mem->cost_grad + i, 0, mem->qp_in->rqz + i, 0);
+
+        // b
+        if (i < N)
+            blasfeo_dveccp(nx[i + 1], mem->dyn_fun + i, 0, mem->qp_in->b + i, 0);
+
+        // d
+        blasfeo_dveccp(2 * ni[i], mem->ineq_fun + i, 0, mem->qp_in->d + i, 0);
+    }
 
     return;
 }
@@ -1923,40 +1938,6 @@ void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config, ocp_nlp_dims *di
     return;
 }
 
-
-
-// update QP rhs for SQP (step prim var, abs dual var)
-// TODO(all): move in dynamics, cost, constraints modules ???
-void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
-                ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
-{
-    int i;
-
-    int N = dims->N;
-    int *nv = dims->nv;
-    int *nx = dims->nx;
-    // int *nu = dims->nu;
-    int *ni = dims->ni;
-
->>>>>>> 35288465716ec7abc538909d77e98dd1e0b70374
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp parallel for
-#endif
-    for (i = 0; i <= N; i++)
-    {
-        // g
-        blasfeo_dveccp(nv[i], mem->cost_grad + i, 0, mem->qp_in->rqz + i, 0);
-
-        // b
-        if (i < N)
-            blasfeo_dveccp(nx[i + 1], mem->dyn_fun + i, 0, mem->qp_in->b + i, 0);
-
-        // d
-        blasfeo_dveccp(2 * ni[i], mem->ineq_fun + i, 0, mem->qp_in->d + i, 0);
-    }
-
-    return;
-}
 
 
 
