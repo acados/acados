@@ -345,7 +345,8 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 {%- endif %}
 
     /* call solver */
-    int acados_status = acados_solve();
+    int phase = 0;
+    int acados_status = acados_solve(phase);
 
 
     /* set outputs */

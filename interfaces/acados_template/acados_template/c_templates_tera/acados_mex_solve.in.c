@@ -45,7 +45,8 @@
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    int status = acados_solve();
+    int phase = 0;
+    int status = acados_solve(phase);
 
     if (status)
     {
