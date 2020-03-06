@@ -1279,6 +1279,40 @@ void ocp_nlp_constraints_bgp_compute_fun(void *config_, void *dims_, void *model
 
 
 
+void ocp_nlp_constraints_bgp_bounds_update(void *config_, void *dims_, void *model_,
+                                            void *opts_, void *memory_, void *work_)
+{
+    
+    ocp_nlp_constraints_bgp_dims *dims = dims_;
+    ocp_nlp_constraints_bgp_model *model = model_;
+    // ocp_nlp_constraints_bgp_opts *opts = opts_;
+    ocp_nlp_constraints_bgp_memory *memory = memory_;
+    ocp_nlp_constraints_bgp_workspace *work = work_;
+
+    ocp_nlp_constraints_bgp_cast_workspace(config_, dims, opts_, work_);
+
+    // extract dims
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int nb = dims->nb;
+    int ng = dims->ng;
+    int nphi = dims->nphi;
+
+    // box
+    blasfeo_dvecex_sp(nb, 1.0, model->idxb, memory->ux, 0, &work->tmp_ni, 0);
+    
+    // general linear
+    blasfeo_dgemv_t(nu + nx, ng, 1.0, memory->DCt, 0, 0, memory->ux, 0, 0.0, &work->tmp_ni, nb,
+                    &work->tmp_ni, nb);
+
+    blasfeo_daxpy(nb, -1.0, &work->tmp_ni, 0, &model->d, 0, &memory->fun, 0);
+    blasfeo_daxpy(nb, -1.0, &model->d, nb+ng+nphi, &work->tmp_ni, 0, &memory->fun, nb+ng+nphi);
+
+    return;
+}
+
+
+
 void ocp_nlp_constraints_bgp_config_initialize_default(void *config_)
 {
     ocp_nlp_constraints_config *config = config_;
@@ -1314,6 +1348,7 @@ void ocp_nlp_constraints_bgp_config_initialize_default(void *config_)
     config->initialize = &ocp_nlp_constraints_bgp_initialize;
     config->update_qp_matrices = &ocp_nlp_constraints_bgp_update_qp_matrices;
     config->compute_fun = &ocp_nlp_constraints_bgp_compute_fun;
+    config->bounds_update = &ocp_nlp_constraints_bgp_bounds_update;
     config->config_initialize_default = &ocp_nlp_constraints_bgp_config_initialize_default;
 
 

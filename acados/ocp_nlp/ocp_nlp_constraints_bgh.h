@@ -215,6 +215,12 @@ void ocp_nlp_constraints_bgh_initialize(void *config, void *dims, void *model, v
 void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims, void *model_,
                                             void *opts_, void *memory_, void *work_);
 
+//
+void ocp_nlp_constraints_bgh_compute_fun(void *config_, void *dims, void *model_,
+                                            void *opts_, void *memory_, void *work_);
+//
+void ocp_nlp_constraints_bgh_bounds_update(void *config_, void *dims, void *model_,
+                                            void *opts_, void *memory_, void *work_);
 
 
 #ifdef __cplusplus

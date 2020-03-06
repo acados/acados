@@ -735,11 +735,9 @@ int ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
 
     // linearizate NLP and update QP matrices
     acados_tic(&timer1);
-
-    // TODO(andrea): this call should be removed (of course), but some vectors 
-    // are still updated in ocp_nlp_approximate_qp_matrices
     
-    ocp_nlp_approximate_qp_matrices(config, dims, nlp_in,
+    // embed initial value (this actually updates all bounds...)
+    ocp_nlp_embed_initial_value(config, dims, nlp_in,
         nlp_out, nlp_opts, nlp_mem, nlp_work);
 
     // update QP rhs for SQP (step prim var, abs dual var)
