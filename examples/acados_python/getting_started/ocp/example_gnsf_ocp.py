@@ -31,6 +31,9 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+import sys
+sys.path.insert(0, '../common')
+
 import json
 from acados_template import AcadosOcp, AcadosOcpSolver
 from export_pendulum_ode_model import export_pendulum_ode_model
@@ -48,7 +51,7 @@ ocp.model = model
 # load gnsf model
 # NOTE: generated from Matlab, using simulation example of pendulum model with irk_gnsf
 # then >> dump_gnsf_functions(sim.model_struct)
-with open(model.name + '_gnsf_functions.json', 'r') as f:
+with open('../common/' + model.name + '_gnsf_functions.json', 'r') as f:
     gnsf_dict = json.load(f)
 ocp.gnsf_model = gnsf_dict
 
