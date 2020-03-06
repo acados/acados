@@ -33,6 +33,3 @@
 [submodule "external/jsonlab"]
 	path = external/jsonlab
 	url = https://github.com/fangq/jsonlab.git
-[submodule "examples/acados_python/tests/test_data"]
-	path = examples/acados_python/tests/test_data
-	url = https://github.com/acados/test_data
