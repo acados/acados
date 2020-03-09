@@ -421,7 +421,8 @@ class AcadosOcpSolver:
          2 = feedback only (if SQP_RTI is used, otherwise only 0 (default) is allowed)
         """
         if isinstance(phase, int) == False or phase < 0 or phase > 2: 
-            raise Exception('AcadosOcpSolver.solve():')
+            raise Exception('AcadosOcpSolver.solve(): argument \'phase\' can ' 
+                'take only values 0, 1, 2 for SQP-RTI-type solvers')
         if self.acados_ocp.solver_options.nlp_solver_type != 'SQP_RTI' and phase > 0:
             raise Exception('AcadosOcpSolver.solve(): argument \'phase\' can ' 
                 'take only value 0 for SQP-type solvers')
