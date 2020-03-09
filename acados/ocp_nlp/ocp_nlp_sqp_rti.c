@@ -124,7 +124,7 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_,
     //    opts->compute_dual_sol = 1;
     opts->ext_qp_res = 0;
     opts->warm_start_first_qp = false;
-    opts->phase = 0;
+    opts->rti_phase = 0;
     opts->print_level = 0;
 
     // overwrite default submodules opts
@@ -214,14 +214,14 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_,
             bool* warm_start_first_qp = (bool *) value;
             opts->warm_start_first_qp = *warm_start_first_qp;
         }
-        else if (!strcmp(field, "phase"))
+        else if (!strcmp(field, "rti_phase"))
         {
-            int* phase = (int *) value;
-            if (*phase < 0 || *phase > 2) {
-                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for phase field."); 
+            int* rti_phase = (int *) value;
+            if (*rti_phase < 0 || *rti_phase > 2) {
+                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for rti_phase field."); 
                 printf("possible values are: 0, 1, 2\n");
                 exit(1);
-            } else opts->phase = *phase;
+            } else opts->rti_phase = *rti_phase;
         }
         else if (!strcmp(field, "print_level"))
         {
@@ -463,13 +463,13 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
 
     ocp_nlp_sqp_rti_opts *nlp_opts = opts_;
-    int phase = nlp_opts->phase; 
+    int rti_phase = nlp_opts->rti_phase; 
 
     acados_tic(&timer0);
-    switch(phase) 
+    switch(rti_phase) 
     {
         
-        // perform preparation and feedback phase
+        // perform preparation and feedback rti_phase
         case 0:
             ocp_nlp_sqp_rti_preparation_step(
                 config_, dims_, nlp_in_, nlp_out_, opts_, mem_, work_);
@@ -479,14 +479,14 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
             break;
 
-        // perform preparation phase
+        // perform preparation rti_phase
         case 1:
             ocp_nlp_sqp_rti_preparation_step(
                 config_, dims_, nlp_in_, nlp_out_, opts_, mem_, work_);
 
             break;
 
-        // perform feedback phase
+        // perform feedback rti_phase
         case 2:
             ocp_nlp_sqp_rti_feedback_step(
                 config_, dims_, nlp_in_, nlp_out_, opts_, mem_, work_);
@@ -735,7 +735,7 @@ int ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
     mem->time_qp_sol = 0.0;
     mem->time_qp_solver_call = 0.0;
 
-    // embed initial value (this actually updates all bounds...)
+    // embed initial value (this actually updates all bounds at stage 0...)
     ocp_nlp_embed_initial_value(config, dims, nlp_in,
         nlp_out, nlp_opts, nlp_mem, nlp_work);
 

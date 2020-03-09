@@ -1565,10 +1565,10 @@ int acados_update_params(int stage, double *p, int np)
 
 
 
-int acados_solve(int phase)
+int acados_solve(int rti_phase)
 {
-    // set phase (preparation, feedback or both)
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "phase", &phase);
+    // set rti_phase (preparation, feedback or both)
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "rti_phase", &rti_phase);
     // solve NLP 
     int solver_status = ocp_nlp_solve(nlp_solver, nlp_in, nlp_out);
 

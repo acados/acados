@@ -137,7 +137,7 @@ int main()
     
     // solve ocp in loop
 
-    int phase = 0; 
+    int rti_phase = 0; 
 
     for (int ii = 0; ii < NTIMINGS; ii++)
     {
@@ -147,7 +147,7 @@ int main()
             ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "x", x_init);
             ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "u", u0);
         }
-        status = acados_solve(phase);
+        status = acados_solve(rti_phase);
         ocp_nlp_get(nlp_config, nlp_solver, "time_tot", &elapsed_time);
         min_time = MIN(elapsed_time, min_time);
     }

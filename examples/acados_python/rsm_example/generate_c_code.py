@@ -361,15 +361,15 @@ simU = nmp.ndarray((Nsim, nu))
 
 for i in range(Nsim):
 
-    # preparation phase
-    status = acados_solver.solve(phase=1)
+    # preparation rti_phase
+    status = acados_solver.solve(rti_phase=1)
 
     # update initial condition
     acados_solver.set(0, "lbx", x0)
     acados_solver.set(0, "ubx", x0)
 
-    # feedback phase
-    status = acados_solver.solve(phase=2)
+    # feedback rti_phase
+    status = acados_solver.solve(rti_phase=2)
 
     if status != 0:
         raise Exception('acados returned status {}. Exiting.'.format(status))
