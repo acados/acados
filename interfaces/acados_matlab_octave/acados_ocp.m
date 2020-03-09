@@ -54,7 +54,7 @@ classdef acados_ocp < handle
             addpath(obj.opts_struct.output_dir);
 
             % check model consistency
-            obj.model_struct = create_consistent_empty_fields(obj.model_struct);
+            obj.model_struct = create_consistent_empty_fields(obj.model_struct, obj.opts_struct);
 
             % detect GNSF structure
             if (strcmp(obj.opts_struct.sim_method, 'irk_gnsf'))
@@ -133,7 +133,7 @@ classdef acados_ocp < handle
             obj.C_ocp = ocp_create(obj.model_struct, obj.opts_struct);
 
             % generate and compile casadi functions
-            if (strcmp(obj.opts_struct.codgen_model, 'true'))
+            if (strcmp(obj.opts_struct.codgen_model, 'true') || strcmp(obj.opts_struct.compile_model, 'true'))
                 ocp_generate_casadi_ext_fun(obj.model_struct, obj.opts_struct);
             end
 
