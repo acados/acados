@@ -40,7 +40,9 @@ c_files = {};
 % dynamics
 if (strcmp(model_struct.dyn_type, 'explicit'))
     % generate c for function and derivatives using casadi
-    generate_c_code_explicit_ode(model_struct, opts_struct);
+    if (strcmp(opts_struct.codgen_model, 'true'))
+        generate_c_code_explicit_ode(model_struct, opts_struct);
+    end
     % sources list
     c_files{end+1} = [model_name, '_dyn_expl_ode_fun.c'];
     c_files{end+1} = [model_name, '_dyn_expl_vde_forw.c'];
@@ -49,7 +51,9 @@ if (strcmp(model_struct.dyn_type, 'explicit'))
 elseif (strcmp(model_struct.dyn_type, 'implicit'))
     if (strcmp(opts_struct.sim_method, 'irk'))
         % generate c for function and derivatives using casadi
-        generate_c_code_implicit_ode(model_struct, opts_struct);
+        if (strcmp(opts_struct.codgen_model, 'true'))
+            generate_c_code_implicit_ode(model_struct, opts_struct);
+        end
         % sources list
         c_files{end+1} = [model_name, '_dyn_impl_dae_fun.c'];
         c_files{end+1} = [model_name, '_dyn_impl_dae_fun_jac_x_xdot_z.c'];
@@ -60,7 +64,9 @@ elseif (strcmp(model_struct.dyn_type, 'implicit'))
         end
     elseif (strcmp(opts_struct.sim_method, 'irk_gnsf'))
         % generate c for function and derivatives using casadi
-        generate_c_code_gnsf(model_struct, opts_struct);
+        if (strcmp(opts_struct.codgen_model, 'true'))
+            generate_c_code_gnsf(model_struct, opts_struct);
+        end
         % sources list
         c_files{end+1} = [model_name, '_dyn_gnsf_get_matrices_fun.c'];
         if ~model_struct.dyn_gnsf_purely_linear
@@ -77,7 +83,9 @@ elseif (strcmp(model_struct.dyn_type, 'implicit'))
     end
 elseif (strcmp(model_struct.dyn_type, 'discrete'))
     % generate c for function and derivatives using casadi
-    generate_c_code_disc_dyn(model_struct, opts_struct);
+    if (strcmp(opts_struct.codgen_model, 'true'))
+        generate_c_code_disc_dyn(model_struct, opts_struct);
+    end
     % sources list
     c_files{end+1} = [model_name, '_dyn_disc_phi_fun.c'];
     c_files{end+1} = [model_name, '_dyn_disc_phi_fun_jac.c'];
@@ -89,7 +97,9 @@ end
 % nonlinear constraints
 if (strcmp(model_struct.constr_type, 'bgh') && (isfield(model_struct, 'constr_expr_h') || isfield(model_struct, 'constr_expr_h_e')))
     % generate c for function and derivatives using casadi
-    generate_c_code_nonlinear_constr(model_struct, opts_struct);
+    if (strcmp(opts_struct.codgen_model, 'true'))
+        generate_c_code_nonlinear_constr(model_struct, opts_struct);
+    end
     % sources list
     if isfield(model_struct, 'constr_expr_h')
         c_files{end+1} = [model_name, '_constr_h_fun.c'];
@@ -105,7 +115,9 @@ end
 % nonlinear least squares
 if (strcmp(model_struct.cost_type, 'nonlinear_ls') || strcmp(model_struct.cost_type_e, 'nonlinear_ls'))
     % generate c for function and derivatives using casadi
-    generate_c_code_nonlinear_least_squares(model_struct, opts_struct);
+    if (strcmp(opts_struct.codgen_model, 'true'))
+        generate_c_code_nonlinear_least_squares(model_struct, opts_struct);
+    end
     % sources list
     if isfield(model_struct, 'cost_expr_y')
         c_files{end+1} = [model_name, '_cost_y_fun.c'];
@@ -121,7 +133,9 @@ end
 % external cost
 if (strcmp(model_struct.cost_type, 'ext_cost') || strcmp(model_struct.cost_type_e, 'ext_cost'))
     % generate c for function and derivatives using casadi
-    generate_c_code_ext_cost(model_struct, opts_struct);
+    if (strcmp(opts_struct.codgen_model, 'true'))
+        generate_c_code_ext_cost(model_struct, opts_struct);
+    end
     % sources list
     if isfield(model_struct, 'cost_expr_ext_cost')
         c_files{end+1} = [model_name, '_cost_ext_cost_fun.c'];
@@ -140,6 +154,12 @@ else
 end
 
 lib_name = ['lib', model_name];
+
+if (~strcmp(opts_struct.codgen_model, 'true'))
+    for k=1:length(c_files)
+        movefile(fullfile(opts_struct.output_dir, c_files{k}), '.');
+    end
+end
 
 if ispc
     mbuild(c_files{:}, '-output', lib_name, 'CFLAGS="$CFLAGS"', 'LDTYPE="-shared"', ['LDEXT=', ldext]);

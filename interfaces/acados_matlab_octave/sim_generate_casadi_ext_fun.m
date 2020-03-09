@@ -38,7 +38,9 @@ model_name = model_struct.name;
 c_files = {};
 if (strcmp(opts_struct.method, 'erk'))
     % generate c for function and derivatives using casadi
-    generate_c_code_explicit_ode(model_struct, opts_struct);
+    if (strcmp(opts_struct.codgen_model, 'true'))
+        generate_c_code_explicit_ode(model_struct, opts_struct);
+    end
     % compile the code in a shared library
     c_files{end+1} = [model_name, '_dyn_expl_ode_fun.c'];
     c_files{end+1} = [model_name, '_dyn_expl_vde_forw.c'];
@@ -46,7 +48,9 @@ if (strcmp(opts_struct.method, 'erk'))
     c_files{end+1} = [model_name, '_dyn_expl_ode_hess.c'];
 elseif (strcmp(opts_struct.method, 'irk'))
     % generate c for function and derivatives using casadi
-    generate_c_code_implicit_ode(model_struct, opts_struct);
+    if (strcmp(opts_struct.codgen_model, 'true'))
+        generate_c_code_implicit_ode(model_struct, opts_struct);
+    end
     % compile the code in a shared library
     c_files{end+1} = [model_name, '_dyn_impl_dae_fun.c'];
     c_files{end+1} = [model_name, '_dyn_impl_dae_fun_jac_x_xdot_z.c'];
@@ -57,7 +61,9 @@ elseif (strcmp(opts_struct.method, 'irk'))
     end
 elseif (strcmp(opts_struct.method, 'irk_gnsf'))
     % generate c for function and derivatives using casadi
-    generate_c_code_gnsf(model_struct); %, opts_struct);
+    if (strcmp(opts_struct.codgen_model, 'true'))
+        generate_c_code_gnsf(model_struct); %, opts_struct);
+    end
     % compile the code in a shared library
     c_files{end+1} = [model_name, '_dyn_gnsf_get_matrices_fun.c'];
     if ~model_struct.dyn_gnsf_purely_linear
@@ -80,6 +86,12 @@ else
 end
 
 lib_name = ['lib', model_name];
+
+if (~strcmp(opts_struct.codgen_model, 'true'))
+    for k=1:length(c_files)
+        movefile(fullfile(opts_struct.output_dir, c_files{k}), '.');
+    end
+end
 
 if ispc
     mbuild(c_files{:}, '-output', lib_name, 'CFLAGS="$CFLAGS"', 'LDTYPE="-shared"', ['LDEXT=', ldext]);
