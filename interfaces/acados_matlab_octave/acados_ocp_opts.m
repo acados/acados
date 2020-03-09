@@ -50,6 +50,7 @@ classdef acados_ocp_opts < handle
             % default values
             obj.opts_struct.compile_interface = 'auto'; % auto, true, false
             obj.opts_struct.codgen_model = 'true';
+            obj.opts_struct.compile_model = 'true';
             obj.opts_struct.param_scheme = 'multiple_shooting_unif_grid';
             obj.opts_struct.param_scheme_N = 10;
             % obj.opts_struct.param_scheme_shooting_nodes % only needed for nonuniform grid
@@ -91,6 +92,8 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.compile_interface = value;
             elseif (strcmp(field, 'codgen_model'))
                 obj.opts_struct.codgen_model = value;
+            elseif (strcmp(field, 'compile_model'))
+                obj.opts_struct.compile_model = value;
             elseif (strcmp(field, 'param_scheme'))
                 obj.opts_struct.param_scheme = value;
             elseif (strcmp(field, 'param_scheme_N'))
