@@ -49,7 +49,7 @@ Note: This part of the MATLAB/Octave interface does not yet support all features
 ## Python (templates)
 
 `acados_template` is a Python package that can be used to specify optimal control problems from Python and to generate self-contained C code that uses the acados solvers to solve them.
-The packaged is based on templated code (C files, Header files and Makefiles), which are rendered from Python using the templating engine `Tera`.
+The pip package is based on templated code (C files, Header files and Makefiles), which are rendered from Python using the templating engine `Tera`.
 The genereated C code can be compiled into a self-contained C library that can be deployed on an embedded system.
 
 ### Optimal Control Problem description
@@ -67,7 +67,7 @@ make install -j4
 ```
 pip3 install <acados_root>/interfaces/acados_template
 ```
-Note: Use `pip` instead of `pip3` if you are installing in a virtual Python environment.
+Note: If you are working with a virtual Python environment, use the `pip` corresponding to this Python environment instead of `pip3`.
 
 3. Add the path to the compiled shared libraries `libacados.so, libblasfeo.so, libhpipm.so` to `LD_LIBRARY_PATH` (default path is `<acados_root/lib>`) by running:
 ```bash

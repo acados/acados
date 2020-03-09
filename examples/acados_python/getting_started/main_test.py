@@ -35,7 +35,7 @@ import itertools as it
 import os
 from random import sample
 
-TEST_SAMPLE = True # only test random sample instaed of all possible combinations
+TEST_SAMPLE = True # only test random sample instead of all possible combinations
 SAMPLE_SIZE = 30
 
 COST_MODULE_values = ['EXTERNAL', 'LS', 'NLS']
