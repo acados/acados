@@ -46,8 +46,8 @@ from .generate_c_code_gnsf import generate_c_code_gnsf
 from .generate_c_code_constraint import generate_c_code_constraint
 from .generate_c_code_nls_cost import generate_c_code_nls_cost
 from .generate_c_code_external_cost import generate_c_code_external_cost
-from .AcadosOcp import AcadosOcp
-from .AcadosModel import acados_model_strip_casadi_symbolics
+from .acados_ocp import AcadosOcp
+from .acados_model import acados_model_strip_casadi_symbolics
 from .utils import is_column, is_empty, casadi_length, render_template, acados_class2dict,\
      format_class_dict, ocp_check_json_against_layout, np_array_to_list, make_model_consistent
 

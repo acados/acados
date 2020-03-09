@@ -41,9 +41,9 @@ from copy import deepcopy
 
 from .generate_c_code_explicit_ode import generate_c_code_explicit_ode
 from .generate_c_code_implicit_ode import generate_c_code_implicit_ode
-from .AcadosSim import AcadosSim
-from .AcadosOcp import AcadosOcp
-from .AcadosModel import acados_model_strip_casadi_symbolics
+from .acados_sim import AcadosSim
+from .acados_ocp import AcadosOcp
+from .acados_model import acados_model_strip_casadi_symbolics
 from .utils import is_column, render_template, format_class_dict, np_array_to_list, make_model_consistent
 
 

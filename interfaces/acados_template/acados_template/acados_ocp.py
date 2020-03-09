@@ -34,7 +34,7 @@
 
 import numpy as np
 import os
-from .AcadosModel import AcadosModel
+from .acados_model import AcadosModel
 from .utils import get_acados_path, J_to_idx, J_to_idx_slack
 
 class AcadosOcpDims:
