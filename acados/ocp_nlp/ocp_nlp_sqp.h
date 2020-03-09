@@ -69,7 +69,7 @@ typedef struct
     int ext_qp_res;      // compute external QP residuals (i.e. at SQP level) at each SQP iteration (for debugging)
     int qp_warm_start;   // qp_warm_start in all but the first sqp iterations
     bool warm_start_first_qp; // to set qp_warm_start in first iteration
-    int phase;           // only phase 0 at the moment 
+    int rti_phase;       // only phase 0 at the moment 
     int print_level;     // possible values 0, 1 
 
 } ocp_nlp_sqp_opts;
