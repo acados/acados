@@ -133,7 +133,7 @@ classdef acados_ocp < handle
             obj.C_ocp = ocp_create(obj.model_struct, obj.opts_struct);
 
             % generate and compile casadi functions
-            if (strcmp(obj.opts_struct.codgen_model, 'true') | strcmp(obj.opts_struct.compile_model, 'true'))
+            if (strcmp(obj.opts_struct.codgen_model, 'true') || strcmp(obj.opts_struct.compile_model, 'true'))
                 ocp_generate_casadi_ext_fun(obj.model_struct, obj.opts_struct);
             end
 
