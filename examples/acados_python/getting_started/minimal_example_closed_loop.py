@@ -120,7 +120,7 @@ for i in range(N):
     acados_ocp_solver.set(0, "lbx", xcurrent)
     acados_ocp_solver.set(0, "ubx", xcurrent)
 
-    status = acados_ocp_solver.solve(phase=0)
+    status = acados_ocp_solver.solve()
 
     if status != 0:
         raise Exception('acados acados_ocp_solver returned status {}. Exiting.'.format(status))
