@@ -32,7 +32,7 @@
 #
 
 import sys
-sys.path.insert(0, '../common')
+sys.path.insert(0, 'common')
 
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver
 from export_pendulum_ode_model import export_pendulum_ode_model

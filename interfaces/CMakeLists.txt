@@ -67,7 +67,7 @@ add_test(NAME python_pendulum_sim_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/sim
         python minimal_example_sim.py)
 add_test(NAME python_pendulum_closed_loop_example
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/ocp
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started
         python minimal_example_closed_loop.py)
 add_test(NAME python_pendulum_GNSF_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/ocp
