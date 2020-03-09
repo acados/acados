@@ -414,21 +414,21 @@ class AcadosOcpSolver:
         self.acados_ocp = acados_ocp
 
 
-    def solve(self, phase=0):
+    def solve(self, rti_phase=0):
         """
         solve the ocp with current input
-        :param phase: 0 = preparation + feedback, 1 = preparation only,
+        :param rti_phase: 0 = preparation + feedback, 1 = preparation only,
          2 = feedback only (if SQP_RTI is used, otherwise only 0 (default) is allowed)
         """
-        if isinstance(phase, int) == False or phase < 0 or phase > 2: 
-            raise Exception('AcadosOcpSolver.solve(): argument \'phase\' can ' 
+        if isinstance(rti_phase, int) == False or rti_phase < 0 or rti_phase > 2: 
+            raise Exception('AcadosOcpSolver.solve(): argument \'rti_phase\' can ' 
                 'take only values 0, 1, 2 for SQP-RTI-type solvers')
-        if self.acados_ocp.solver_options.nlp_solver_type != 'SQP_RTI' and phase > 0:
-            raise Exception('AcadosOcpSolver.solve(): argument \'phase\' can ' 
+        if self.acados_ocp.solver_options.nlp_solver_type != 'SQP_RTI' and rti_phase > 0:
+            raise Exception('AcadosOcpSolver.solve(): argument \'rti_phase\' can ' 
                 'take only value 0 for SQP-type solvers')
         self.shared_lib.acados_solve.argtypes = [c_int]
 
-        status = self.shared_lib.acados_solve(phase)
+        status = self.shared_lib.acados_solve(rti_phase)
         return status
 
 
