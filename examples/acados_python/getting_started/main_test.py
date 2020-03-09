@@ -32,11 +32,12 @@
 #
 
 import itertools as it
-import os
+import os, json
 from random import sample
 
 TEST_SAMPLE = True # only test random sample instead of all possible combinations
 SAMPLE_SIZE = 30
+GENERATE_SAMPLE = False # generate a sample of combinations
 
 COST_MODULE_values = ['EXTERNAL', 'LS', 'NLS']
 COST_MODULE_N_values = ['EXTERNAL', 'LS', 'NLS']
@@ -64,8 +65,16 @@ test_parameters_gn['REGULARIZATION_values'] = ['NO_REGULARIZE']
 
 combinations = list(it.product(*(test_parameters_gn[Name] for Name in all_parameter_names)))
 
-if TEST_SAMPLE:
+json_file='test_data/test_combinations_pendulum_GAUSS_NEWTON.json'
+if GENERATE_SAMPLE:
     combinations = sample(combinations, SAMPLE_SIZE)
+    with open(json_file, 'w') as f:
+        json.dump(combinations, f, indent=4, sort_keys=True)
+
+if TEST_SAMPLE:
+    with open(json_file, 'r') as f:
+        combinations = json.load(f)
+
 
 for parameters in combinations:
     os_cmd = ("python test_ocp_setting.py" +
@@ -92,8 +101,15 @@ test_parameters_exact['INTEGRATOR_TYPE_values'] = ['ERK', 'IRK']
 
 combinations = list(it.product(*(test_parameters_exact[Name] for Name in all_parameter_names)))
 
-if TEST_SAMPLE:
+json_file='test_data/test_combinations_pendulum_EXACT.json'
+if GENERATE_SAMPLE:
     combinations = sample(combinations, SAMPLE_SIZE)
+    with open(json_file, 'w') as f:
+        json.dump(combinations, f, indent=4, sort_keys=True)
+
+if TEST_SAMPLE:
+    with open(json_file, 'r') as f:
+        combinations = json.load(f)
 
 # combinations = [('LS', 'LS', 'EXACT', 'ERK', 'PARTIAL_CONDENSING_HPIPM', 'MIRROR', 'SQP')]
 
