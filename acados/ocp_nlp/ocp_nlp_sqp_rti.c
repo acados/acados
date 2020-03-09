@@ -732,6 +732,8 @@ int ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
     int qp_iter = 0;
     int qp_status = 0;
 	double tmp_time;
+    mem->time_qp_sol = 0.0;
+    mem->time_qp_solver_call = 0.0;
 
     // linearizate NLP and update QP matrices
     acados_tic(&timer1);
