@@ -31,53 +31,92 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from acados_template import AcadosSim, AcadosSimSolver
+import sys
+sys.path.insert(0, '../common')
+
+import json
+from acados_template import AcadosOcp, AcadosOcpSolver
 from export_pendulum_ode_model import export_pendulum_ode_model
-from utils import plot_pendulum
 import numpy as np
-import matplotlib.pyplot as plt
+import scipy.linalg
+from utils import plot_pendulum
 
-sim = AcadosSim()
+# create ocp object to formulate the OCP
+ocp = AcadosOcp()
 
-# export model 
+# set model
 model = export_pendulum_ode_model()
+ocp.model = model
 
-# set model_name 
-sim.model = model
+# load gnsf model
+# NOTE: generated from Matlab, using simulation example of pendulum model with irk_gnsf
+# then >> dump_gnsf_functions(sim.model_struct)
+with open('../common/' + model.name + '_gnsf_functions.json', 'r') as f:
+    gnsf_dict = json.load(f)
+ocp.gnsf_model = gnsf_dict
 
-Tf = 0.1
+Tf = 1.0
 nx = model.x.size()[0]
 nu = model.u.size()[0]
-N = 200
+ny = nx + nu
+ny_e = nx
+N = 20
 
-# set simulation time
-sim.solver_options.T = Tf
-# set options
-sim.solver_options.num_stages = 4
-sim.solver_options.num_steps = 3
-sim.solver_options.newton_iter = 3 # for implicit integrator
+# set dimensions
+ocp.dims.ny = ny
+ocp.dims.ny_e = ny_e
+ocp.dims.nbu = nu
+ocp.dims.N = N
 
+# set cost
+Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
+R = 2*np.diag([1e-2])
 
-# create
-acados_integrator = AcadosSimSolver(sim)
+ocp.cost.W_e = Q
+ocp.cost.W = scipy.linalg.block_diag(Q, R)
+
+ocp.cost.Vx = np.zeros((ny, nx))
+ocp.cost.Vx[:nx,:nx] = np.eye(nx)
+
+Vu = np.zeros((ny, nu))
+Vu[4,0] = 1.0
+ocp.cost.Vu = Vu
+
+ocp.cost.Vx_e = np.eye(nx)
+
+ocp.cost.yref  = np.zeros((ny, ))
+ocp.cost.yref_e = np.zeros((ny_e, ))
+
+# set constraints
+Fmax = 80
+ocp.constraints.lbu = np.array([-Fmax])
+ocp.constraints.ubu = np.array([+Fmax])
+ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
+ocp.constraints.idxbu = np.array([0])
+
+ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
+ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+ocp.solver_options.integrator_type = 'GNSF'
+ocp.solver_options.print_level = 0
+
+# set prediction horizon
+ocp.solver_options.tf = Tf
+ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
+
+ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
 simX = np.ndarray((N+1, nx))
-x0 = np.array([0.0, np.pi+1, 0.0, 0.0])
-u0 = np.array([0.0])
-acados_integrator.set("u", u0)
+simU = np.ndarray((N, nu))
 
-simX[0,:] = x0
-
-for i in range(N):
-    # set initial state
-    acados_integrator.set("x", simX[i,:])
-    # solve
-    status = acados_integrator.solve()
-    # get solution
-    simX[i+1,:] = acados_integrator.get("x")
+status = ocp_solver.solve()
 
 if status != 0:
     raise Exception('acados returned status {}. Exiting.'.format(status))
 
-# plot results
-plot_pendulum(Tf/N, 10, np.zeros((N, nu)), simX)
+# get solution
+for i in range(N):
+    simX[i,:] = ocp_solver.get(i, "x")
+    simU[i,:] = ocp_solver.get(i, "u")
+simX[N,:] = ocp_solver.get(N, "x")
+
+plot_pendulum(Tf/N, Fmax, simU, simX)

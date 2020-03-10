@@ -36,7 +36,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
-def plot_pendulum(h, u_max, U, X_true, X_est=None, Y_measured=None, latexify=True):
+def plot_pendulum(h, u_max, U, X_true, X_est=None, Y_measured=None, latexify=False):
     """
     Params:
         h: time step

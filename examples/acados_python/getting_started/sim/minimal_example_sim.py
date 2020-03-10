@@ -31,86 +31,56 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from acados_template import AcadosOcp, AcadosOcpSolver
+import sys
+sys.path.insert(0, '../common')
+
+from acados_template import AcadosSim, AcadosSimSolver
 from export_pendulum_ode_model import export_pendulum_ode_model
-import numpy as np
-import scipy.linalg
 from utils import plot_pendulum
+import numpy as np
+import matplotlib.pyplot as plt
 
-# create ocp object to formulate the OCP
-ocp = AcadosOcp()
+sim = AcadosSim()
 
-# set model
+# export model 
 model = export_pendulum_ode_model()
-ocp.model = model
 
-Tf = 1.0
+# set model_name 
+sim.model = model
+
+Tf = 0.1
 nx = model.x.size()[0]
 nu = model.u.size()[0]
-ny = nx + nu
-ny_e = nx
-N = 20
+N = 200
 
-# set dimensions
-ocp.dims.nx = nx
-ocp.dims.ny = ny
-ocp.dims.ny_e = ny_e
-ocp.dims.nbu = nu 
-ocp.dims.nu = nu
-ocp.dims.N = N
+# set simulation time
+sim.solver_options.T = Tf
+# set options
+sim.solver_options.num_stages = 4
+sim.solver_options.num_steps = 3
+sim.solver_options.newton_iter = 3 # for implicit integrator
 
-# set cost
-Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
-R = 2*np.diag([1e-2])
 
-ocp.cost.W_e = Q
-ocp.cost.W = scipy.linalg.block_diag(Q, R)
-
-ocp.cost.cost_type = 'LINEAR_LS'
-ocp.cost.cost_type_e = 'LINEAR_LS'
-
-ocp.cost.Vx = np.zeros((ny, nx))
-ocp.cost.Vx[:nx,:nx] = np.eye(nx)
-
-Vu = np.zeros((ny, nu))
-Vu[4,0] = 1.0
-ocp.cost.Vu = Vu
-
-ocp.cost.Vx_e = np.eye(nx)
-
-ocp.cost.yref  = np.zeros((ny, ))
-ocp.cost.yref_e = np.zeros((ny_e, ))
-
-# set constraints
-Fmax = 80
-ocp.constraints.lbu = np.array([-Fmax])
-ocp.constraints.ubu = np.array([+Fmax])
-ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
-ocp.constraints.idxbu = np.array([0])
-
-ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
-ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
-ocp.solver_options.integrator_type = 'ERK'
-ocp.solver_options.print_level = 0
-
-# set prediction horizon
-ocp.solver_options.tf = Tf
-ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
-
-ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
+# create
+acados_integrator = AcadosSimSolver(sim)
 
 simX = np.ndarray((N+1, nx))
-simU = np.ndarray((N, nu))
+x0 = np.array([0.0, np.pi+1, 0.0, 0.0])
+u0 = np.array([0.0])
+acados_integrator.set("u", u0)
 
-status = ocp_solver.solve()
+simX[0,:] = x0
+
+for i in range(N):
+    # set initial state
+    acados_integrator.set("x", simX[i,:])
+    # solve
+    status = acados_integrator.solve()
+    # get solution
+    simX[i+1,:] = acados_integrator.get("x")
 
 if status != 0:
     raise Exception('acados returned status {}. Exiting.'.format(status))
 
-# get solution
-for i in range(N):
-    simX[i,:] = ocp_solver.get(i, "x")
-    simU[i,:] = ocp_solver.get(i, "u")
-simX[N,:] = ocp_solver.get(N, "x")
-
-plot_pendulum(Tf/N, Fmax, simU, simX)
+# plot results
+plot_pendulum(Tf/N, 10, np.zeros((N, nu)), simX)

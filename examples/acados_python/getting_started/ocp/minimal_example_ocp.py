@@ -31,15 +31,14 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+import sys
+sys.path.insert(0, '../common')
+
 from acados_template import AcadosOcp, AcadosOcpSolver
 from export_pendulum_ode_model import export_pendulum_ode_model
 import numpy as np
 import scipy.linalg
 from utils import plot_pendulum
-from casadi import vertcat
-
-COST_MODULE = 'EXTERNAL' # 'LS', 'EXTERNAL'
-HESSIAN_APPROXIMATION = 'EXACT' # 'GAUSS_NEWTON
 
 # create ocp object to formulate the OCP
 ocp = AcadosOcp()
@@ -67,65 +66,41 @@ ocp.dims.N = N
 Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
 R = 2*np.diag([1e-2])
 
-x = ocp.model.x
-u = ocp.model.u
-
 ocp.cost.W_e = Q
 ocp.cost.W = scipy.linalg.block_diag(Q, R)
 
-if COST_MODULE == 'LS':
-    ocp.cost.cost_type = 'LINEAR_LS'
-    ocp.cost.cost_type_e = 'LINEAR_LS'
+ocp.cost.cost_type = 'LINEAR_LS'
+ocp.cost.cost_type_e = 'LINEAR_LS'
 
-    ocp.cost.Vx = np.zeros((ny, nx))
-    ocp.cost.Vx[:nx,:nx] = np.eye(nx)
+ocp.cost.Vx = np.zeros((ny, nx))
+ocp.cost.Vx[:nx,:nx] = np.eye(nx)
 
-    Vu = np.zeros((ny, nu))
-    Vu[4,0] = 1.0
-    ocp.cost.Vu = Vu
+Vu = np.zeros((ny, nu))
+Vu[4,0] = 1.0
+ocp.cost.Vu = Vu
 
-    ocp.cost.Vx_e = np.eye(nx)
-
-elif COST_MODULE == 'NLS':
-    ocp.cost.cost_type = 'NONLINEAR_LS'
-    ocp.cost.cost_type_e = 'NONLINEAR_LS'
-
-    ocp.model.cost_y_expr = vertcat(x, u)
-    ocp.model.cost_y_expr_e = x
-
-elif COST_MODULE == 'EXTERNAL':
-    ocp.cost.cost_type = 'EXTERNAL'
-    ocp.cost.cost_type_e = 'EXTERNAL'
-
-    ocp.model.cost_expr_ext_cost = vertcat(x, u).T @ ocp.cost.W @ vertcat(x, u)
-    ocp.model.cost_expr_ext_cost_e = x.T @ Q @ x
-
-else:
-    raise Exception('Unknown COST_MODULE. Possible values are \'LS\' and \'NLS\'.')
+ocp.cost.Vx_e = np.eye(nx)
 
 ocp.cost.yref  = np.zeros((ny, ))
 ocp.cost.yref_e = np.zeros((ny_e, ))
 
 # set constraints
 Fmax = 80
-ocp.constraints.constr_type = 'BGH'
 ocp.constraints.lbu = np.array([-Fmax])
 ocp.constraints.ubu = np.array([+Fmax])
 ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 ocp.constraints.idxbu = np.array([0])
 
 ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
-ocp.solver_options.hessian_approx = HESSIAN_APPROXIMATION
+ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
 ocp.solver_options.integrator_type = 'ERK'
-
-ocp.solver_options.qp_solver_cond_N = 5
+ocp.solver_options.print_level = 0
 
 # set prediction horizon
 ocp.solver_options.tf = Tf
 ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
 
 ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
-
 
 simX = np.ndarray((N+1, nx))
 simU = np.ndarray((N, nu))
@@ -141,6 +116,4 @@ for i in range(N):
     simU[i,:] = ocp_solver.get(i, "u")
 simX[N,:] = ocp_solver.get(N, "x")
 
-
 plot_pendulum(Tf/N, Fmax, simU, simX)
-

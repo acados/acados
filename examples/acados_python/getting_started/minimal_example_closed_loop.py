@@ -31,6 +31,9 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+import sys
+sys.path.insert(0, 'common')
+
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver
 from export_pendulum_ode_model import export_pendulum_ode_model
 from utils import plot_pendulum
@@ -112,11 +115,13 @@ simX[0,:] = xcurrent
 
 # closed loop
 for i in range(N):
+
     # solve ocp
     acados_ocp_solver.set(0, "lbx", xcurrent)
     acados_ocp_solver.set(0, "ubx", xcurrent)
 
     status = acados_ocp_solver.solve()
+
     if status != 0:
         raise Exception('acados acados_ocp_solver returned status {}. Exiting.'.format(status))
 

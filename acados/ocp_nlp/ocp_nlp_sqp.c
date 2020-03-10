@@ -125,6 +125,7 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
 
     opts->qp_warm_start = 0;
     opts->warm_start_first_qp = false;
+    opts->rti_phase = 0;
     opts->print_level = 0;
 
     // overwrite default submodules opts
@@ -233,6 +234,15 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
         {
             bool* warm_start_first_qp = (bool *) value;
             opts->warm_start_first_qp = *warm_start_first_qp;
+        }
+        else if (!strcmp(field, "rti_phase"))
+        {
+            int* rti_phase = (int *) value;
+            if (*rti_phase < 0 || *rti_phase > 0) {
+                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for rti_phase field."); 
+                printf("possible values are: 0\n");
+                exit(1);
+            } else opts->rti_phase = *rti_phase;
         }
         else if (!strcmp(field, "print_level"))
         {

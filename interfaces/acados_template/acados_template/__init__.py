@@ -31,12 +31,12 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from .AcadosModel import *
+from .acados_model import *
 from .generate_c_code_explicit_ode import *
 from .generate_c_code_implicit_ode import *
 from .generate_c_code_constraint import *
 from .generate_c_code_nls_cost import *
-from .AcadosOcp import *
-from .AcadosSim import *
-from .AcadosOcpSolver import *
-from .AcadosSimSolver import *
+from .acados_ocp import *
+from .acados_sim import *
+from .acados_ocp_solver import *
+from .acados_sim_solver import *
