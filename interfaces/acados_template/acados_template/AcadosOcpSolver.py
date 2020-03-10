@@ -426,15 +426,15 @@ class AcadosOcpSolver:
         """
         get the last solution of the solver:
             :param stage: integer corresponding to shooting node
-            :param field_: string in ['x', 'u', 'z']
+            :param field_: string in ['x', 'u', 'z', 'pi']
         """
 
-        out_fields = ['x', 'u', 'z']
+        out_fields = ['x', 'u', 'z', 'pi']
         field = field_
         field = field.encode('utf-8')
 
         if (field_ not in out_fields):
-            raise Exception("acados_solver: {} is not a valid key for method `set(value)`.\
+            raise Exception("acados_solver: {} is not a valid key for method `get(value)`.\
                     \n Possible values are {}. Exiting.".format(out_fields))
 
         self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = \
@@ -567,7 +567,7 @@ class AcadosOcpSolver:
                 self.nlp_dims, self.nlp_out, stage_, field)
 
             if value_.shape[0] != dims:
-                msg = 'acados_solver.set(): mismatching dimension for field "{}"'.format(field_)
+                msg = 'acados_solver.set(): mismatching dimension for field "{}" '.format(field_)
                 msg += 'with dimension {} (you have {})'.format(dims, value_.shape[0])
                 raise Exception(msg)
 
