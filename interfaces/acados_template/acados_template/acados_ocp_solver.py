@@ -46,8 +46,8 @@ from .generate_c_code_gnsf import generate_c_code_gnsf
 from .generate_c_code_constraint import generate_c_code_constraint
 from .generate_c_code_nls_cost import generate_c_code_nls_cost
 from .generate_c_code_external_cost import generate_c_code_external_cost
-from .AcadosOcp import AcadosOcp
-from .AcadosModel import acados_model_strip_casadi_symbolics
+from .acados_ocp import AcadosOcp
+from .acados_model import acados_model_strip_casadi_symbolics
 from .utils import is_column, is_empty, casadi_length, render_template, acados_class2dict,\
      format_class_dict, ocp_check_json_against_layout, np_array_to_list, make_model_consistent
 
@@ -65,19 +65,19 @@ def make_ocp_dims_consistent(acados_ocp):
         this_shape = constraints.lbx_0.shape
         other_shape = constraints.ubx_0.shape
         if not this_shape == other_shape:
-            raise Exception("lbx_0, ubx_0 have different shapes!")
+            raise Exception('lbx_0, ubx_0 have different shapes!')
         if not is_column(constraints.lbx_0):
-            raise Exception("lbx_0, ubx_0 must be column vectors!")
+            raise Exception('lbx_0, ubx_0 must be column vectors!')
 
         dims.nbx_0 = constraints.lbx_0.size
     else:
-        raise Exception("lbx_0, ubx_0 have different shapes!")
+        raise Exception('lbx_0, ubx_0 have different shapes!')
 
     # nx
     if is_column(model.x):
         dims.nx = casadi_length(model.x)
     else:
-        raise Exception("model.x should be column vector!")
+        raise Exception('model.x should be column vector!')
 
     # nu
     if is_empty(model.u):
@@ -250,7 +250,7 @@ def ocp_render_templates(acados_ocp, json_file):
         json_file=json_file)
 
     if not os.path.exists(json_path):
-        raise Exception("{} not found!".format(json_path))
+        raise Exception('{} not found!'.format(json_path))
 
     template_dir = 'c_generated_code/'
 
@@ -414,11 +414,21 @@ class AcadosOcpSolver:
         self.acados_ocp = acados_ocp
 
 
-    def solve(self):
+    def solve(self, rti_phase=0):
         """
         solve the ocp with current input
+        :param rti_phase: 0 = preparation + feedback, 1 = preparation only,
+         2 = feedback only (if SQP_RTI is used, otherwise only 0 (default) is allowed)
         """
-        status = self.shared_lib.acados_solve()
+        if isinstance(rti_phase, int) == False or rti_phase < 0 or rti_phase > 2: 
+            raise Exception('AcadosOcpSolver.solve(): argument \'rti_phase\' can ' 
+                'take only values 0, 1, 2 for SQP-RTI-type solvers')
+        if self.acados_ocp.solver_options.nlp_solver_type != 'SQP_RTI' and rti_phase > 0:
+            raise Exception('AcadosOcpSolver.solve(): argument \'rti_phase\' can ' 
+                'take only value 0 for SQP-type solvers')
+        self.shared_lib.acados_solve.argtypes = [c_int]
+
+        status = self.shared_lib.acados_solve(rti_phase)
         return status
 
 
@@ -434,8 +444,8 @@ class AcadosOcpSolver:
         field = field.encode('utf-8')
 
         if (field_ not in out_fields):
-            raise Exception("acados_solver: {} is not a valid key for method `get(value)`.\
-                    \n Possible values are {}. Exiting.".format(out_fields))
+            raise Exception('AcadosOcpSolver.get(): {} is an invalid argument.\
+                    \n Possible values are {}. Exiting.'.format(out_fields))
 
         self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = \
             [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
@@ -504,8 +514,8 @@ class AcadosOcpSolver:
         field = field_
         field = field.encode('utf-8')
         if (field_ not in fields):
-            raise Exception("acados_solver: {} is not a valid key for method `set(value)`.\
-                    \n Possible values are {}. Exiting.".format(fields, fields))
+            raise Exception('AcadosOcpSolver.get_stats(): {} is not a valid argument.\
+                    \n Possible values are {}. Exiting.'.format(fields, fields))
 
         if field_ in ['sqp_iter', 'stat_m', 'stat_n']:
             out = np.ascontiguousarray(np.zeros((1,)), dtype=np.int64)
@@ -555,7 +565,7 @@ class AcadosOcpSolver:
         else:
             if (field_ not in constraints_fields) and \
                     (field_ not in cost_fields) and (field_ not in out_fields):
-                raise Exception("acados_solver: {} is not a valid key for method `set(value)`.\
+                raise Exception("AcadosOcpSolver.set(): {} is not a valid argument.\
                     \nPossible values are {} and {}. Exiting.".format(field, \
                     cost_fields, constraints_fields, out_fields))
 
@@ -567,7 +577,7 @@ class AcadosOcpSolver:
                 self.nlp_dims, self.nlp_out, stage_, field)
 
             if value_.shape[0] != dims:
-                msg = 'acados_solver.set(): mismatching dimension for field "{}" '.format(field_)
+                msg = 'AcadosOcpSolver.set(): mismatching dimension for field "{}" '.format(field_)
                 msg += 'with dimension {} (you have {})'.format(dims, value_.shape[0])
                 raise Exception(msg)
 

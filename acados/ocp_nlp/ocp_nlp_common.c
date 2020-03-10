@@ -1796,8 +1796,9 @@ void ocp_nlp_initialize_qp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
 
 
 
-void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
-                 ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
+    ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem,
+    ocp_nlp_workspace *work)
 {
 
     int i;
@@ -1908,8 +1909,9 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
 // update QP rhs for SQP (step prim var, abs dual var)
 // TODO(all): move in dynamics, cost, constraints modules ???
-void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
-                ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config,
+    ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
+    ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
     int i;
 
@@ -1934,6 +1936,30 @@ void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config, ocp_nlp_dims *di
         // d
         blasfeo_dveccp(2 * ni[i], mem->ineq_fun + i, 0, mem->qp_in->d + i, 0);
     }
+
+    return;
+}
+
+
+
+
+void ocp_nlp_embed_initial_value(ocp_nlp_config *config, ocp_nlp_dims *dims,
+    ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
+    ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+{
+    int *ni = dims->ni;
+
+    // constraints
+    config->constraints[0]->bounds_update(config->constraints[0], dims->constraints[0],
+            in->constraints[0], opts->constraints[0], mem->constraints[0], work->constraints[0]);
+
+    // nlp mem: ineq_fun
+    struct blasfeo_dvec *ineq_fun =
+        config->constraints[0]->memory_get_fun_ptr(mem->constraints[0]);
+    blasfeo_dveccp(2 * ni[0], ineq_fun, 0, mem->ineq_fun, 0);
+
+    // d
+    blasfeo_dveccp(2 * ni[0], mem->ineq_fun, 0, mem->qp_in->d, 0);
 
     return;
 }
