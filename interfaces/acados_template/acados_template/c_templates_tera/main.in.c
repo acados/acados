@@ -147,7 +147,8 @@ int main()
             ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "x", x_init);
             ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "u", u0);
         }
-        status = acados_solve(rti_phase);
+        ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "rti_phase", rti_phase);
+        status = acados_solve();
         ocp_nlp_get(nlp_config, nlp_solver, "time_tot", &elapsed_time);
         min_time = MIN(elapsed_time, min_time);
     }
