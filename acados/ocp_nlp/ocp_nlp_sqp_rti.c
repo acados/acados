@@ -503,7 +503,7 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
 }
 
-int ocp_nlp_sqp_rti_preparation_step(void *config_, void *dims_,
+void ocp_nlp_sqp_rti_preparation_step(void *config_, void *dims_,
     void *nlp_in_, void *nlp_out_, void *opts_, void *mem_, void *work_)
 {
     acados_timer timer1;
@@ -516,13 +516,12 @@ int ocp_nlp_sqp_rti_preparation_step(void *config_, void *dims_,
     ocp_nlp_in *nlp_in = nlp_in_;
     ocp_nlp_out *nlp_out = nlp_out_;
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-    ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+    // ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
 
     ocp_nlp_sqp_rti_workspace *work = work_;
     ocp_nlp_sqp_rti_cast_workspace(config, dims, opts, mem, work);
     ocp_nlp_workspace *nlp_work = work->nlp_work;
 
-	double tmp_time;
     mem->time_lin = 0.0;
     mem->time_reg = 0.0;
 
@@ -704,7 +703,7 @@ int ocp_nlp_sqp_rti_preparation_step(void *config_, void *dims_,
 }
 
 
-int ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
+void ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
     void *nlp_in_, void *nlp_out_, void *opts_, void *mem_, void *work_)
 {
     acados_timer timer1;
@@ -811,7 +810,7 @@ int ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
         omp_set_num_threads(num_threads_bkp);
 #endif
         mem->status = ACADOS_QP_FAILURE;
-        return mem->status;
+        return;
     }
 
     ocp_nlp_update_variables_sqp(config, dims, nlp_in,
@@ -828,7 +827,7 @@ int ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
     omp_set_num_threads(num_threads_bkp);
 #endif
     mem->status = ACADOS_SUCCESS;
-    return mem->status;
+
 }
 
 

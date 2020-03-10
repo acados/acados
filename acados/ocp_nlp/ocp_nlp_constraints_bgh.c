@@ -1305,8 +1305,8 @@ void ocp_nlp_constraints_bgh_bounds_update(void *config_, void *dims_, void *mod
     ocp_nlp_constraints_bgh_cast_workspace(config_, dims, opts_, work_);
 
     // extract dims
-    int nx = dims->nx;
-    int nu = dims->nu;
+    // int nx = dims->nx;
+    // int nu = dims->nu;
     int nb = dims->nb;
     int ng = dims->ng;
     int nh = dims->nh;
