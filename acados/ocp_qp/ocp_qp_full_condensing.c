@@ -49,6 +49,7 @@
 #include "acados/ocp_qp/ocp_qp_full_condensing.h"
 #include "acados/utils/mem.h"
 #include "acados/utils/types.h"
+#include "acados/utils/timing.h"
 
 
 
@@ -356,6 +357,11 @@ void ocp_qp_full_condensing_memory_get(void *config_, void *mem_, const char *fi
 		qp_info **ptr = value;
 		*ptr = mem->qp_out_info;
 	}
+	else if (!strcmp(field, "time_qp_xcond"))
+	{
+		double *ptr = value;
+		*ptr = mem->time_qp_xcond;
+	}
 	else
 	{
 		printf("\nerror: ocp_qp_full_condensing_memory_get: field %s not available\n", field);
@@ -392,8 +398,13 @@ int ocp_qp_full_condensing(void *qp_in_, void *fcond_qp_in_, void *opts_, void *
 	ocp_qp_full_condensing_opts *opts = opts_;
 	ocp_qp_full_condensing_memory *mem = mem_;
 
+    acados_timer timer;
+
     // save pointer to ocp_qp_in in memory (needed for expansion)
     mem->ptr_qp_in = qp_in;
+
+	// start timer
+    acados_tic(&timer);
 
     // convert to dense qp structure
     if (opts->cond_hess == 0)
@@ -406,6 +417,9 @@ int ocp_qp_full_condensing(void *qp_in_, void *fcond_qp_in_, void *opts_, void *
         // condense gradient and Hessian
         d_cond_qp_cond(qp_in, fcond_qp_in, opts->hpipm_opts, mem->hpipm_workspace);
     }
+
+	// stop timer
+    mem->time_qp_xcond = acados_toc(&timer);
 
 	return ACADOS_SUCCESS;
 }

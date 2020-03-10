@@ -48,6 +48,7 @@
 #include "hpipm/include/hpipm_d_ocp_qp_dim.h"
 #include "hpipm/include/hpipm_d_ocp_qp_sol.h"
 #include "hpipm/include/hpipm_d_part_cond.h"
+#include "acados/utils/timing.h"
 
 
 
@@ -388,6 +389,11 @@ void ocp_qp_partial_condensing_memory_get(void *config_, void *mem_, const char 
 		qp_info **ptr = value;
 		*ptr = mem->qp_out_info;
 	}
+	else if (!strcmp(field, "time_qp_xcond"))
+	{
+		double *ptr = value;
+		*ptr = mem->time_qp_xcond;
+	}
 	else
 	{
 		printf("\nerror: ocp_qp_partial_condensing_memory_get: field %s not available\n", field);
@@ -422,15 +428,23 @@ int ocp_qp_partial_condensing(void *qp_in_, void *pcond_qp_in_, void *opts_, voi
 	ocp_qp_partial_condensing_opts *opts = opts_;
 	ocp_qp_partial_condensing_memory *mem = mem_;
 
+    acados_timer timer;
+
     assert(opts->N2 == opts->N2_bkp);
 
     // save pointers to ocp_qp_in in memory (needed for expansion)
     mem->ptr_qp_in = qp_in;
     mem->ptr_pcond_qp_in = pcond_qp_in;
 
+	// start timer
+    acados_tic(&timer);
+
     // convert to partially condensed qp structure
 	// TODO only if N2<N
     d_part_cond_qp_cond(qp_in, pcond_qp_in, opts->hpipm_opts, mem->hpipm_workspace);
+
+	// stop timer
+    mem->time_qp_xcond = acados_toc(&timer);
 
 	return ACADOS_SUCCESS;
 }
