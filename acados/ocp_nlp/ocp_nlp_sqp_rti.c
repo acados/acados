@@ -701,14 +701,8 @@ int ocp_nlp_sqp_rti_preparation_step(void *config_, void *dims_,
         nlp_out, nlp_opts, nlp_mem, nlp_work);
 
     mem->time_lin += acados_toc(&timer1);
-
-    // regularize Hessian
-    acados_tic(&timer1);
-    config->regularize->regularize_hessian(config->regularize,
-        dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
-
-    mem->time_reg += acados_toc(&timer1);
 }
+
 
 int ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
     void *nlp_in_, void *nlp_out_, void *opts_, void *mem_, void *work_)
@@ -743,11 +737,16 @@ int ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
     ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in,
         nlp_out, nlp_opts, nlp_mem, nlp_work);
 
+    // regularize Hessian
+    acados_tic(&timer1);
+    config->regularize->regularize_hessian(config->regularize,
+        dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
+    mem->time_reg += acados_toc(&timer1);
+
     if (opts->print_level > 0) {
         printf("\n------- qp_in --------\n");
         print_ocp_qp_in(nlp_mem->qp_in);
     }
-    // exit(1);
 
     if (!opts->warm_start_first_qp)
     {
