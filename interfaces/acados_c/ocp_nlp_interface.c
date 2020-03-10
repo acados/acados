@@ -535,7 +535,7 @@ int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
     }
     else if (!strcmp(field, "pi"))
     {
-        return dims->nx[stage];
+        return dims->nx[stage+1];
     }
     else if (!strcmp(field, "u"))
     {
