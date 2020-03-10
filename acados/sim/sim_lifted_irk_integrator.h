@@ -97,6 +97,10 @@ typedef struct
 
     int update_sens;
 
+	double time_sim;
+	double time_ad;
+	double time_la;
+
 } sim_lifted_irk_memory;
 
 

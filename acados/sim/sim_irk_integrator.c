@@ -399,6 +399,7 @@ void *sim_irk_memory_assign(void *config, void *dims_, void *opts_, void *raw_me
 }
 
 
+
 int sim_irk_memory_set(void *config_, void *dims_, void *mem_, const char *field, void *value)
 {
     sim_config *config = config_;
@@ -442,6 +443,7 @@ int sim_irk_memory_set(void *config_, void *dims_, void *mem_, const char *field
 }
 
 
+
 int sim_irk_memory_set_to_zero(void *config_, void * dims_, void *opts_, void *mem_, const char *field)
 {
     sim_config *config = config_;
@@ -467,6 +469,35 @@ int sim_irk_memory_set_to_zero(void *config_, void * dims_, void *opts_, void *m
 
     return status;
 }
+
+
+
+void sim_irk_memory_get(void *config_, void *dims_, void *mem_, const char *field, void *value)
+{
+    sim_irk_memory *mem = mem_;
+
+    if (!strcmp(field, "time_sim"))
+    {
+		double *ptr = value;
+		*ptr = mem->time_sim;
+	}
+    else if (!strcmp(field, "time_sim_ad"))
+    {
+		double *ptr = value;
+		*ptr = mem->time_ad;
+	}
+    else if (!strcmp(field, "time_sim_la"))
+    {
+		double *ptr = value;
+		*ptr = mem->time_la;
+	}
+	else
+	{
+		printf("sim_irk_memory_get field %s is not supported! \n", field);
+		exit(1);
+	}
+}
+
 
 
 /************************************************
@@ -1497,6 +1528,10 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     out->info->LAtime = timing_la;
     out->info->ADtime = timing_ad;
 
+	mem->time_sim = out->info->CPUtime;
+	mem->time_ad = out->info->ADtime;
+	mem->time_la = out->info->LAtime;
+
     return ACADOS_SUCCESS;
 }
 
@@ -1518,6 +1553,7 @@ void sim_irk_config_initialize_default(void *config_)
     config->memory_assign = &sim_irk_memory_assign;
     config->memory_set = &sim_irk_memory_set;
     config->memory_set_to_zero = &sim_irk_memory_set_to_zero;
+    config->memory_get = &sim_irk_memory_get;
     config->workspace_calculate_size = &sim_irk_workspace_calculate_size;
     config->model_calculate_size = &sim_irk_model_calculate_size;
     config->model_assign = &sim_irk_model_assign;

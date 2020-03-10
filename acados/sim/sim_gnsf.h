@@ -131,6 +131,8 @@ typedef struct
 
 } gnsf_model;
 
+
+
 // pre_workspace - workspace used in the precomputation phase
 typedef struct
 {
@@ -175,6 +177,8 @@ typedef struct
     struct blasfeo_dvec cc2;
 
 } gnsf_pre_workspace;
+
+
 
 // workspace
 typedef struct
@@ -241,6 +245,8 @@ typedef struct
     // int *ipiv_vv0;
 
 } gnsf_workspace;
+
+
 
 // memory
 typedef struct
@@ -311,7 +317,13 @@ typedef struct
     // struct blasfeo_dmat *Lxdot;
     // struct blasfeo_dmat *Lz;
 
+	double time_sim;
+	double time_ad;
+	double time_la;
+
 } sim_gnsf_memory;
+
+
 
 // gnsf dims
 int sim_gnsf_dims_calculate_size();

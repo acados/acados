@@ -1019,6 +1019,18 @@ void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_,
         double *value = return_value_;
         *value = mem->time_reg;
     }
+    else if (!strcmp("time_sim", field) || !strcmp("time_sim_ad", field) || !strcmp("time_sim_la", field))
+    {
+		double tmp = 0.0;
+		double *ptr = return_value_;
+		int N = dims->N;
+		int ii;
+		for (ii=0; ii<N; ii++)
+		{
+			config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], field, &tmp);
+			*ptr += tmp;
+		}
+	}
     else if (!strcmp("stat", field))
     {
         double **value = return_value_;

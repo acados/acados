@@ -430,6 +430,7 @@ void *sim_lifted_irk_memory_assign(void *config, void *dims_, void *opts_, void 
 }
 
 
+
 int sim_lifted_irk_memory_set(void *config_, void *dims_, void *mem_, const char *field, void *value)
 {
     // sim_config *config = config_;
@@ -438,6 +439,7 @@ int sim_lifted_irk_memory_set(void *config_, void *dims_, void *mem_, const char
     printf("sim_lifted_irk_memory_set field %s is not supported! \n", field);
     exit(1);
 }
+
 
 
 int sim_lifted_irk_memory_set_to_zero(void *config_, void * dims_, void *opts_, void *mem_, const char *field)
@@ -465,6 +467,36 @@ int sim_lifted_irk_memory_set_to_zero(void *config_, void * dims_, void *opts_, 
 
     return status;
 }
+
+
+
+void sim_lifted_irk_memory_get(void *config_, void *dims_, void *mem_, const char *field, void *value)
+{
+    sim_lifted_irk_memory *mem = mem_;
+
+    if (!strcmp(field, "time_sim"))
+    {
+		double *ptr = value;
+		*ptr = mem->time_sim;
+	}
+    else if (!strcmp(field, "time_sim_ad"))
+    {
+		double *ptr = value;
+		*ptr = mem->time_ad;
+	}
+    else if (!strcmp(field, "time_sim_la"))
+    {
+		double *ptr = value;
+		*ptr = mem->time_la;
+	}
+	else
+	{
+		printf("sim_lifted_irk_memory_get field %s is not supported! \n", field);
+		exit(1);
+	}
+}
+
+
 
 /************************************************
 * workspace
@@ -569,11 +601,14 @@ static void *sim_lifted_irk_cast_workspace(void *config_, void *dims_, void *opt
 }
 
 
+
 int sim_lifted_irk_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_,
                        void *work_)
 {
     return ACADOS_SUCCESS;
 }
+
+
 
 /************************************************
 * functions
@@ -585,7 +620,7 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
     // typecasting
     sim_config *config = config_;
     sim_opts *opts = opts_;
-    sim_lifted_irk_memory *memory = (sim_lifted_irk_memory *) mem_;
+    sim_lifted_irk_memory *mem = mem_;
 
     void *dims_ = in->dims;
     sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) dims_;
@@ -638,20 +673,20 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
 
     double step = in->T / num_steps;
     // TODO(FreyJo): this should be an option!
-    int update_sens = memory->update_sens;
+    int update_sens = mem->update_sens;
 
     int *ipiv = workspace->ipiv;
-    struct blasfeo_dmat *JGK = memory->JGK;
-    struct blasfeo_dmat *S_forw = memory->S_forw;
+    struct blasfeo_dmat *JGK = mem->JGK;
+    struct blasfeo_dmat *S_forw = mem->S_forw;
 
     struct blasfeo_dmat *J_temp_x = workspace->J_temp_x;
     struct blasfeo_dmat *J_temp_xdot = workspace->J_temp_xdot;
     struct blasfeo_dmat *J_temp_u = workspace->J_temp_u;
 
     struct blasfeo_dvec *rG = workspace->rG;
-    struct blasfeo_dvec *K = memory->K;
-    struct blasfeo_dmat *JGf = memory->JGf;
-    struct blasfeo_dmat *JKf = memory->JKf;
+    struct blasfeo_dvec *K = mem->K;
+    struct blasfeo_dmat *JGf = mem->JGf;
+    struct blasfeo_dmat *JKf = mem->JKf;
     struct blasfeo_dvec *xt = workspace->xt;
     struct blasfeo_dvec *xn = workspace->xn;
     struct blasfeo_dvec *xn_out = workspace->xn_out;
@@ -712,12 +747,12 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
         blasfeo_pack_dvec(nx, in->x, w, 0);
         blasfeo_pack_dvec(nu, in->u, w, nx);
 
-        blasfeo_daxpy(nx, -1.0, memory->x, 0, w, 0, w, 0);
-        blasfeo_daxpy(nu, -1.0, memory->u, 0, w, nx, w, nx);
+        blasfeo_daxpy(nx, -1.0, mem->x, 0, w, 0, w, 0);
+        blasfeo_daxpy(nu, -1.0, mem->u, 0, w, nx, w, nx);
         blasfeo_dgemv_n(nx * ns, nx + nu, 1.0, &JKf[ss], 0, 0, w, 0, 1.0, &K[ss], 0, &K[ss], 0);
 
-        blasfeo_pack_dvec(nx, in->x, memory->x, 0);
-        blasfeo_pack_dvec(nu, in->u, memory->u, 0);
+        blasfeo_pack_dvec(nx, in->x, mem->x, 0);
+        blasfeo_pack_dvec(nu, in->u, mem->u, 0);
 
         // reset value of JKf
         blasfeo_dgese(nx * ns, nx + nu, 0.0, &JKf[ss], 0, 0);
@@ -885,6 +920,10 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
     out->info->CPUtime = acados_toc(&timer);
     out->info->ADtime = timing_ad;
 
+	mem->time_sim = out->info->CPUtime;
+	mem->time_ad = out->info->ADtime;
+	mem->time_la = out->info->LAtime;
+
     return 0;
 }
 
@@ -906,6 +945,7 @@ void sim_lifted_irk_config_initialize_default(void *config_)
     config->memory_assign = &sim_lifted_irk_memory_assign;
     config->memory_set = &sim_lifted_irk_memory_set;
     config->memory_set_to_zero = &sim_lifted_irk_memory_set_to_zero;
+    config->memory_get = &sim_lifted_irk_memory_get;
     config->workspace_calculate_size = &sim_lifted_irk_workspace_calculate_size;
     config->model_calculate_size = &sim_lifted_irk_model_calculate_size;
     config->model_assign = &sim_lifted_irk_model_assign;

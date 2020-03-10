@@ -443,20 +443,32 @@ void sim_erk_opts_update(void *config_, void *dims, void *opts_)
 
 int sim_erk_memory_calculate_size(void *config, void *dims, void *opts_)
 {
-    return 0;
+    int size = sizeof(sim_erk_memory);
+
+    return size;
 }
+
 
 
 void *sim_erk_memory_assign(void *config, void *dims, void *opts_, void *raw_memory)
 {
-    return NULL;
+    char *c_ptr = (char *) raw_memory;
+
+    sim_erk_memory *mem = (sim_erk_memory *) c_ptr;
+    c_ptr += sizeof(sim_erk_memory);
+
+    return mem;
 }
+
+
 
 int sim_erk_memory_set(void *config_, void *dims_, void *mem_, const char *field, void *value)
 {
     printf("sim_erk_memory_set field %s is not supported! \n", field);
     exit(1);
 }
+
+
 
 int sim_erk_memory_set_to_zero(void *config_, void * dims_, void *opts_, void *mem_, const char *field)
 {
@@ -474,6 +486,35 @@ int sim_erk_memory_set_to_zero(void *config_, void * dims_, void *opts_, void *m
 
     return status;
 }
+
+
+
+void sim_erk_memory_get(void *config_, void *dims_, void *mem_, const char *field, void *value)
+{
+    sim_erk_memory *mem = mem_;
+
+    if (!strcmp(field, "time_sim"))
+    {
+		double *ptr = value;
+		*ptr = mem->time_sim;
+	}
+    else if (!strcmp(field, "time_sim_ad"))
+    {
+		double *ptr = value;
+		*ptr = mem->time_ad;
+	}
+    else if (!strcmp(field, "time_sim_la"))
+    {
+		double *ptr = value;
+		*ptr = mem->time_la;
+	}
+	else
+	{
+		printf("sim_erk_memory_get field %s is not supported! \n", field);
+		exit(1);
+	}
+}
+
 
 
 /************************************************
@@ -601,6 +642,8 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     sim_config *config = config_;
     sim_opts *opts = opts_;
 
+    sim_erk_memory *mem = mem_;
+
     if ( opts->ns != opts->tableau_size )
     {
         printf("Error in sim_erk: the Butcher tableau size does not match ns\n");
@@ -678,6 +721,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     acados_timer timer, timer_ad;
     double timing_ad = 0.0;
 
+	// start timer
     acados_tic(&timer);
 
     /************************************************
@@ -935,6 +979,10 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     out->info->LAtime = 0.0;
     out->info->ADtime = timing_ad;
 
+	mem->time_sim = out->info->CPUtime;
+	mem->time_ad = out->info->ADtime;
+	mem->time_la = out->info->LAtime;
+
     // return
     return 0;  // success
 }
@@ -954,6 +1002,7 @@ void sim_erk_config_initialize_default(void *config_)
     config->memory_assign = &sim_erk_memory_assign;
     config->memory_set = &sim_erk_memory_set;
     config->memory_set_to_zero = &sim_erk_memory_set_to_zero;
+    config->memory_get = &sim_erk_memory_get;
     config->workspace_calculate_size = &sim_erk_workspace_calculate_size;
     config->model_calculate_size = &sim_erk_model_calculate_size;
     config->model_assign = &sim_erk_model_assign;

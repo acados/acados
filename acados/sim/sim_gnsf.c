@@ -1426,6 +1426,7 @@ void *sim_gnsf_memory_assign(void *config, void *dims_, void *opts_, void *raw_m
 }
 
 
+
 int sim_gnsf_memory_set(void *config_, void *dims_, void *mem_, const char *field, void *value)
 {
     sim_gnsf_memory *mem = (sim_gnsf_memory *) mem_;
@@ -1453,6 +1454,7 @@ int sim_gnsf_memory_set(void *config_, void *dims_, void *mem_, const char *fiel
 }
 
 
+
 int sim_gnsf_memory_set_to_zero(void *config_, void * dims_, void *opts_, void *mem_, const char *field)
 {
     sim_gnsf_memory *mem = (sim_gnsf_memory *) mem_;
@@ -1473,6 +1475,36 @@ int sim_gnsf_memory_set_to_zero(void *config_, void * dims_, void *opts_, void *
 
     return status;
 }
+
+
+
+void sim_gnsf_memory_get(void *config_, void *dims_, void *mem_, const char *field, void *value)
+{
+    sim_gnsf_memory *mem = mem_;
+
+    if (!strcmp(field, "time_sim"))
+    {
+		double *ptr = value;
+		*ptr = mem->time_sim;
+	}
+    else if (!strcmp(field, "time_sim_ad"))
+    {
+		double *ptr = value;
+		*ptr = mem->time_ad;
+	}
+    else if (!strcmp(field, "time_sim_la"))
+    {
+		double *ptr = value;
+		*ptr = mem->time_la;
+	}
+	else
+	{
+		printf("sim_gnsf_memory_get field %s is not supported! \n", field);
+		exit(1);
+	}
+}
+
+
 
 /************************************************
  * workspace
@@ -2925,6 +2957,11 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     }
 
     out->info->CPUtime = acados_toc(&tot_timer);
+
+	mem->time_sim = out->info->CPUtime;
+	mem->time_ad = out->info->ADtime;
+	mem->time_la = out->info->LAtime;
+
     return ACADOS_SUCCESS;
 }
 
@@ -2947,6 +2984,7 @@ void sim_gnsf_config_initialize_default(void *config_)
     config->memory_assign = &sim_gnsf_memory_assign;
     config->memory_set = &sim_gnsf_memory_set;
     config->memory_set_to_zero = &sim_gnsf_memory_set_to_zero;
+    config->memory_get = &sim_gnsf_memory_get;
     config->workspace_calculate_size = &sim_gnsf_workspace_calculate_size;
     // model
     config->model_calculate_size = &sim_gnsf_model_calculate_size;

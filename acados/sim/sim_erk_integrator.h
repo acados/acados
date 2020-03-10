@@ -71,8 +71,9 @@ typedef struct
 
 typedef struct
 {
-    // no memory
-    void *dummy;
+	double time_sim;
+	double time_ad;
+	double time_la;
 } sim_erk_memory;
 
 
