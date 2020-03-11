@@ -18,7 +18,7 @@ function check_acados_requirements()
             error('Please set up CasADi yourself and try again.');
         else
             % download CasADi
-            CasADi_version = '3.4.5';
+            CasADi_version = '3.5.1';
             url = strcat('https://github.com/casadi/casadi/releases/download/',...
                    CasADi_version, '/');
             external_folder = fullfile(acados_dir, 'external');
@@ -35,7 +35,7 @@ function check_acados_requirements()
             
             if isunix
                 if verLessThan('matlab', '8.4')
-                    CasADi_version = '3.4.4';
+                    CasADi_version = '3.5.1';
                     filename = strcat('casadi-linux-matlabR2014a-v', CasADi_version, '.tar.gz');
                 else % R2014b or later
                     filename = strcat('casadi-linux-matlabR2014b-v', CasADi_version, '.tar.gz');

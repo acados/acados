@@ -596,7 +596,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         {
             printf("\n------- sqp iter %d (max_iter %d) --------\n", 
                 sqp_iter, opts->max_iter);
-            if (opts->print_level > sqp_iter)
+            if (opts->print_level > sqp_iter + 1)
                 print_ocp_qp_in(nlp_mem->qp_in);
         }
 
@@ -739,10 +739,10 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             omp_set_num_threads(num_threads_bkp);
 #endif
 
-            if (opts->print_level > 0)
+            if (opts->print_level > 1)
             {
                 printf("\n Failed to solve the following QP:\n");
-                if (opts->print_level > sqp_iter)
+                if (opts->print_level > sqp_iter + 1)
                     print_ocp_qp_in(nlp_mem->qp_in);
             }
 
@@ -800,10 +800,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     if (opts->print_level > 0)
     {
-        // print_ocp_qp_in(nlp_mem->qp_in);
-
-        printf("\n ocp_nlp_sqp: maximum iterations reached, last QP input above.\n");
-
         printf("Residuals: stat: %e, eq: %e, ineq: %e, comp: %e.\n", mem->nlp_res->inf_norm_res_g,
             mem->nlp_res->inf_norm_res_b, mem->nlp_res->inf_norm_res_d, mem->nlp_res->inf_norm_res_m );
     }
@@ -1000,6 +996,17 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
     {
         double **value = return_value_;
         *value = mem->stat;
+    }
+    else if (!strcmp("statistics", field))
+    {
+        int n_row = mem->stat_m<mem->sqp_iter+1 ? mem->stat_m : mem->sqp_iter+1;
+        double *value = return_value_;
+        for (int ii=0; ii<n_row; ii++)
+        {
+            value[ii+0] = ii;
+            for (int jj=0; jj<mem->stat_n; jj++)
+                value[ii+(jj+1)*n_row] = mem->stat[jj+ii*mem->stat_n];
+        }
     }
     else if (!strcmp("stat_m", field))
     {

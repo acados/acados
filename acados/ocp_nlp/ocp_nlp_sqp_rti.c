@@ -503,7 +503,7 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
 
 
-int ocp_nlp_sqp_rti_preparation_step(void *config_, void *dims_,
+void ocp_nlp_sqp_rti_preparation_step(void *config_, void *dims_,
     void *nlp_in_, void *nlp_out_, void *opts_, void *mem_, void *work_)
 {
     acados_timer timer1;
@@ -516,13 +516,12 @@ int ocp_nlp_sqp_rti_preparation_step(void *config_, void *dims_,
     ocp_nlp_in *nlp_in = nlp_in_;
     ocp_nlp_out *nlp_out = nlp_out_;
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-    ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+    // ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
 
     ocp_nlp_sqp_rti_workspace *work = work_;
     ocp_nlp_sqp_rti_cast_workspace(config, dims, opts, mem, work);
     ocp_nlp_workspace *nlp_work = work->nlp_work;
 
-	double tmp_time;
     mem->time_lin = 0.0;
     mem->time_reg = 0.0;
 
@@ -692,8 +691,8 @@ int ocp_nlp_sqp_rti_preparation_step(void *config_, void *dims_,
         nlp_opts, nlp_mem, nlp_work);
 
     /* SQP body */
-	int sqp_iter = 0;
-	nlp_mem->sqp_iter = &sqp_iter;
+    int sqp_iter = 0;
+    nlp_mem->sqp_iter = &sqp_iter;
 
     // linearizate NLP and update QP matrices
     acados_tic(&timer1);
@@ -701,18 +700,11 @@ int ocp_nlp_sqp_rti_preparation_step(void *config_, void *dims_,
         nlp_out, nlp_opts, nlp_mem, nlp_work);
 
     mem->time_lin += acados_toc(&timer1);
-
-    // regularize Hessian
-    acados_tic(&timer1);
-    config->regularize->regularize_hessian(config->regularize,
-        dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
-
-    mem->time_reg += acados_toc(&timer1);
 }
 
 
 
-int ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
+void ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
     void *nlp_in_, void *nlp_out_, void *opts_, void *mem_, void *work_)
 {
     acados_timer timer1;
@@ -746,11 +738,16 @@ int ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
     ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in,
         nlp_out, nlp_opts, nlp_mem, nlp_work);
 
+    // regularize Hessian
+    acados_tic(&timer1);
+    config->regularize->regularize_hessian(config->regularize,
+        dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
+    mem->time_reg += acados_toc(&timer1);
+
     if (opts->print_level > 0) {
         printf("\n------- qp_in --------\n");
         print_ocp_qp_in(nlp_mem->qp_in);
     }
-    // exit(1);
 
     if (!opts->warm_start_first_qp)
     {
@@ -767,9 +764,9 @@ int ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
 
     mem->time_qp_sol += acados_toc(&timer1);
 
-	qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);
+    qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);
     mem->time_qp_solver_call += tmp_time;
-	qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_xcond", &tmp_time);
+    qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_xcond", &tmp_time);
     mem->time_qp_xcond += tmp_time;
 
     // compute correct dual solution in case of Hessian regularization
@@ -815,7 +812,7 @@ int ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
         omp_set_num_threads(num_threads_bkp);
 #endif
         mem->status = ACADOS_QP_FAILURE;
-        return mem->status;
+        return;
     }
 
     ocp_nlp_update_variables_sqp(config, dims, nlp_in,
@@ -832,7 +829,7 @@ int ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
     omp_set_num_threads(num_threads_bkp);
 #endif
     mem->status = ACADOS_SUCCESS;
-    return mem->status;
+
 }
 
 
@@ -976,7 +973,7 @@ void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_,
     const char *field, void *return_value_)
 {
     ocp_nlp_config *config = config_;
-	ocp_nlp_dims *dims = dims_;
+    ocp_nlp_dims *dims = dims_;
     ocp_nlp_sqp_rti_memory *mem = mem_;
 
     if (!strcmp("sqp_iter", field))
@@ -1021,20 +1018,31 @@ void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_,
     }
     else if (!strcmp("time_sim", field) || !strcmp("time_sim_ad", field) || !strcmp("time_sim_la", field))
     {
-		double tmp = 0.0;
-		double *ptr = return_value_;
-		int N = dims->N;
-		int ii;
-		for (ii=0; ii<N; ii++)
-		{
-			config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], field, &tmp);
-			*ptr += tmp;
-		}
-	}
+        double tmp = 0.0;
+        double *ptr = return_value_;
+        int N = dims->N;
+        int ii;
+        for (ii=0; ii<N; ii++)
+        {
+            config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], field, &tmp);
+            *ptr += tmp;
+        }
+    }
     else if (!strcmp("stat", field))
     {
         double **value = return_value_;
         *value = mem->stat;
+    }
+    else if (!strcmp("statistics", field))
+    {
+        int n_row = 2;
+        double *value = return_value_;
+        for (int ii=0; ii<n_row; ii++)
+        {
+            value[ii+0] = ii;
+            for (int jj=0; jj<mem->stat_n; jj++)
+                value[ii+(jj+1)*n_row] = mem->stat[jj+ii*mem->stat_n];
+        }
     }
     else if (!strcmp("stat_m", field))
     {
@@ -1078,7 +1086,7 @@ void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_,
     }
     else if (!strcmp("qp_iter", field))
     {
-		config->qp_solver->memory_get(config->qp_solver,
+        config->qp_solver->memory_get(config->qp_solver,
             mem->nlp_mem->qp_solver_mem, "iter", return_value_);
     }
     else

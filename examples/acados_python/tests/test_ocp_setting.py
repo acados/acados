@@ -38,7 +38,6 @@ from acados_template import *
 from export_pendulum_ode_model import export_pendulum_ode_model
 import numpy as np
 import scipy.linalg
-from ctypes import *
 import argparse
 
 # set to 'True' to generate test data
@@ -53,6 +52,7 @@ if LOCAL_TEST is True:
     SOLVER_TYPE = 'SQP_RTI'
     QP_SOLVER = 'FULL_CONDENSING_QPOASES'
     INTEGRATOR_TYPE = 'IRK'
+    HESS_APPROX = 'GAUSS_NEWTON'
 else:
     parser = argparse.ArgumentParser(description='test Python interface on pendulum example.')
     parser.add_argument('--COST_MODULE', dest='COST_MODULE',
@@ -80,6 +80,15 @@ else:
                         help='SOLVER_TYPE: (full step) sequential quadratic programming (SQP) or ' \
                                 ' real-time iteration (SQP-RTI) (default: SQP-RTI)')
 
+    parser.add_argument('--HESS_APPROX', dest='HESS_APPROX',
+                        default='GAUSS_NEWTON',
+                        help='HESS_APPROX: GAUSS_NEWTON or ' \
+                                ' EXACT (default: GAUSS_NEWTON)')
+
+    parser.add_argument('--REGULARIZATION', dest='REGULARIZATION',
+                        default='NO_REGULARIZE',
+                        help='REGULARIZATION: NO_REGULARIZE or MIRROR or PROJECT or CONVEXIFY' \
+                                ' or PROJECT_REDUC_HESS (default: NO_REGULARIZE)')
 
     args = parser.parse_args()
 
@@ -113,10 +122,27 @@ else:
         raise Exception('Invalid unit test value {} for parameter SOLVER_TYPE. Possible values are' \
                 ' {}. Exiting.'.format(SOLVER_TYPE, SOLVER_TYPE_values))
 
+    HESS_APPROX = args.HESS_APPROX
+    HESS_APPROX_values = ['GAUSS_NEWTON', 'EXACT']
+    if HESS_APPROX not in HESS_APPROX:
+        raise Exception('Invalid unit test value {} for parameter HESS_APPROX. Possible values are' \
+                ' {}. Exiting.'.format(HESS_APPROX, HESS_APPROX_values))
+
+    REGULARIZATION = args.REGULARIZATION
+    REGULARIZATION_values = ['NO_REGULARIZE', 'MIRROR', 'PROJECT', 'PROJECT_REDUC_HESS', 'CONVEXIFY']
+    if REGULARIZATION not in REGULARIZATION:
+        raise Exception('Invalid unit test value {} for parameter REGULARIZATION. Possible values are' \
+                ' {}. Exiting.'.format(REGULARIZATION, REGULARIZATION_values))
 
 # print test setting
-print("Running test with:\n\tcost module:", COST_MODULE, "\n\tqp solver: ", QP_SOLVER,\
-      "\n\tintergrator: ", INTEGRATOR_TYPE, "\n\tsolver: ", SOLVER_TYPE)
+print("Running test with:", \
+      "\n\tcost module terminal:", COST_MODULE_N,\
+      "\n\tcost module:", COST_MODULE, \
+      "\n\thessian approximation:", HESS_APPROX, \
+      "\n\tintergrator:", INTEGRATOR_TYPE, \
+      "\n\tqp solver:", QP_SOLVER,\
+      "\n\tregularization:", REGULARIZATION, \
+      "\n\tsolver:", SOLVER_TYPE)
 
 # create ocp object to formulate the OCP
 ocp = AcadosOcp()
@@ -202,7 +228,9 @@ ocp.constraints.idxbu = np.array([0])
 
 # set options
 ocp.solver_options.qp_solver = QP_SOLVER
-ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+ocp.solver_options.hessian_approx = HESS_APPROX
+ocp.solver_options.regularize_method = REGULARIZATION
+
 ocp.solver_options.integrator_type = INTEGRATOR_TYPE
 ocp.solver_options.sim_method_num_stages = 2
 ocp.solver_options.sim_method_num_steps = 5
@@ -213,9 +241,11 @@ ocp.solver_options.nlp_solver_tol_eq = TEST_TOL
 ocp.solver_options.nlp_solver_tol_ineq = TEST_TOL
 ocp.solver_options.nlp_solver_tol_comp = TEST_TOL
 
-ocp.solver_options.qp_solver_cond_N = 10
-ocp.solver_options.nlp_solver_max_iter = 80
+ocp.solver_options.qp_solver_cond_N = int(N/2)
+
+ocp.solver_options.nlp_solver_max_iter = 200
 ocp.solver_options.qp_solver_iter_max = 50
+ocp.solver_options.print_level = 0
 
 # set prediction horizon
 ocp.solver_options.tf = Tf
@@ -228,13 +258,35 @@ if ocp.solver_options.integrator_type == 'GNSF':
 
 ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
+# initialize solver
+x_traj_init = np.transpose( np.vstack( [np.zeros((N+1,)), \
+     np.arange(pi, -pi/N,- pi/N), np.zeros((N+1,)), np.zeros((N+1,))]) )
+for i in range(N+1):
+    ocp_solver.set(i, "x", x_traj_init[i])
+
+pi_init = np.ones((N, nx))
+for i in range(N):
+    ocp_solver.set(i, "pi", pi_init[i])
+
+u_init = np.zeros((N, nu))
+for i in range(N):
+    ocp_solver.set(i, "u", u_init[i])
+
+# solve ocp
 simX = np.ndarray((N+1, nx))
 simU = np.ndarray((N, nu))
 
 status = ocp_solver.solve()
 
+ocp_solver.print_statistics()
+
 if status != 0:
+    # import pdb; pdb.set_trace()
     raise Exception('acados returned status {}. Exiting.'.format(status))
+
+sqp_iter = ocp_solver.get_stats('sqp_iter')
+if SOLVER_TYPE in {'SQP'}:
+    print("Problem solved: SQP iterations ", sqp_iter, "\n")
 
 # get solution
 for i in range(N):
@@ -249,8 +301,13 @@ if COST_MODULE in {'LINEAR_LS', 'NONLINEAR_LS'}:
     ocp_solver.cost_set(N, "yref", np.array([0, 0, 0, 0]))
 
 # dump result to JSON file for unit testing
-test_file_name = 'test_data/pendulum_ocp_formulations/test_ocp_' + COST_MODULE + '_' + COST_MODULE_N + '_' + QP_SOLVER + '_' + \
-            INTEGRATOR_TYPE + '_' + SOLVER_TYPE + '.json'
+test_file_name = 'test_data/pendulum_ocp_formulations/test_ocp_' + COST_MODULE + \
+                    '_' + COST_MODULE_N + '_' + QP_SOLVER + \
+                    '_' + INTEGRATOR_TYPE + \
+                    '_' + SOLVER_TYPE + \
+                    '_' + HESS_APPROX + \
+                    '_' + REGULARIZATION + \
+                    '.json'
 
 if GENERATE_DATA:
     with open(test_file_name, 'w') as f:
@@ -261,9 +318,10 @@ else:
     simX_error = np.linalg.norm(test_data['simX'] - simX)
     simU_error = np.linalg.norm(test_data['simU'] - simU)
 
-    if simX_error > TEST_TOL or simU_error > TEST_TOL:
+    CHECK_TOL = 50 * TEST_TOL
+    if simX_error > CHECK_TOL or simU_error > CHECK_TOL:
         raise Exception("Python acados test failure with accuracies" +
-                        " {:.2E} and {:.2E} ({:.2E} required)".format(simX_error, simU_error, TEST_TOL) +
+                        " {:.2E} and {:.2E} ({:.2E} required)".format(simX_error, simU_error, CHECK_TOL) +
                         " on pendulum example! Exiting.\n")
     else:
         print('Python test passed with accuracy {:.2E}'.format(max(simU_error, simX_error)))

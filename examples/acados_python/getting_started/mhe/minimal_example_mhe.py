@@ -131,4 +131,4 @@ simXest[N, :] = acados_solver_mhe.get(N, "x")
 print('difference |x0_est - x0_bar|', np.linalg.norm(x0_bar - simXest[0, :]))
 print('difference |x_est - x_true|', np.linalg.norm(simXest - simX))
 
-plot_pendulum(h, Fmax, simU, simX, simXest, simY)
+plot_pendulum(h, Fmax, simU, simX, simXest, simY, latexify=False)

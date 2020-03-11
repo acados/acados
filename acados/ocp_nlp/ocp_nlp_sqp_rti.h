@@ -60,7 +60,7 @@ extern "C" {
 
 typedef struct
 {
-	ocp_nlp_opts *nlp_opts;
+    ocp_nlp_opts *nlp_opts;
     int compute_dual_sol;
     int ext_qp_res;           // compute external QP residuals (i.e. at SQP level) at each SQP iteration (for debugging)
     int qp_warm_start;        // NOTE: this is not actually setting the warm_start! Just for compatibility with sqp.
@@ -129,7 +129,7 @@ void *ocp_nlp_sqp_rti_memory_assign(void *config_, void *dims_, void *opts_,
 
 typedef struct
 {
-	ocp_nlp_workspace *nlp_work;
+    ocp_nlp_workspace *nlp_work;
 
     // temp QP in & out (to be used as workspace in param sens)
     ocp_qp_in *tmp_qp_in;
@@ -157,10 +157,10 @@ int ocp_nlp_sqp_rti_workspace_calculate_size(void *config_, void *dims_, void *o
 int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     void *opts_, void *mem_, void *work_);
 //
-int ocp_nlp_sqp_rti_preparation_step(void *config_, void *dims_,
+void ocp_nlp_sqp_rti_preparation_step(void *config_, void *dims_,
     void *nlp_in_, void *nlp_out_, void *opts, void *mem_, void *work_);
 //
-int ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
+void ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
     void *nlp_in_, void *nlp_out_, void *opts_, void *mem_, void *work_);
 //
 void ocp_nlp_sqp_rti_config_initialize_default(void *config_);

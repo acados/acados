@@ -533,6 +533,10 @@ int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
     {
         return dims->nx[stage];
     }
+    else if (!strcmp(field, "pi"))
+    {
+        return dims->nx[stage+1];
+    }
     else if (!strcmp(field, "u"))
     {
         return dims->nu[stage];
@@ -582,7 +586,7 @@ int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
     }
     else
     {
-        printf("\nerror: ocp_nlp_dims_get: field %s not available\n", field);
+        printf("\nerror: ocp_nlp_dims_get_from_attr: field %s not available\n", field);
         exit(1);
     }
 }

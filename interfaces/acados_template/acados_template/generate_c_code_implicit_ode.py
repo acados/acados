@@ -56,26 +56,6 @@ def generate_c_code_implicit_ode( model, opts ):
     f_impl = model.f_impl_expr
     model_name = model.name
 
-    if isinstance(x, casadi.SX):
-        is_SX = True
-    elif isinstance(x, casadi.MX):
-        is_SX = False
-    else:
-        raise Exception("model.x must be casadi.SX or casadi.MX, got {}".format(type(x)))
-
-
-    if is_empty(p):
-        if is_SX:
-            p = SX.sym('p', 0, 0)
-        else:
-            p = MX.sym('p', 0, 0)
-
-    if is_empty(z):
-        if is_SX:
-            z = SX.sym('z', 0, 0)
-        else:
-            z = MX.sym('z', 0, 0)
-
     ## get model dimensions
     nx = casadi_length(x)
     nu = casadi_length(u)
@@ -90,23 +70,13 @@ def generate_c_code_implicit_ode( model, opts ):
     ## generate hessian
     x_xdot_z_u = vertcat(x, xdot, z, u)
 
-    if isinstance(x,casadi.SX):
+    if isinstance(x, casadi.SX):
         multiplier  = SX.sym('multiplier', nx + nz)
-        multiply_mat  = SX.sym('multiply_mat', 2*nx+nz+nu, nx + nu)
-        HESS = SX.zeros( x_xdot_z_u.size()[0], x_xdot_z_u.size()[0])
-    elif isinstance(x,casadi.MX):
+    elif isinstance(x, casadi.MX):
         multiplier  = MX.sym('multiplier', nx + nz)
-        multiply_mat  = MX.sym('multiply_mat', 2*nx+nz+nu, nx + nu)
-        HESS = MX.zeros( x_xdot_z_u.size()[0], x_xdot_z_u.size()[0])
 
-    for ii in range(f_impl.size()[0]):
-        jac_x_xdot_z = jacobian(f_impl[ii], x_xdot_z_u)
-        hess_x_xdot_z = jacobian( jac_x_xdot_z, x_xdot_z_u)
-        HESS = HESS + multiplier[ii] * hess_x_xdot_z
-
-    # HESS = HESS.simplify()
-    HESS_multiplied = mtimes(mtimes(transpose(multiply_mat), HESS), multiply_mat)
-    # HESS_multiplied = HESS_multiplied.simplify()
+    ADJ = jtimes(f_impl, x_xdot_z_u, multiplier, True)
+    HESS = jacobian(ADJ, x_xdot_z_u)
 
     ## Set up functions
     p = model.p
@@ -133,7 +103,7 @@ def generate_c_code_implicit_ode( model, opts ):
 
 
     fun_name = model_name + '_impl_dae_hess'
-    impl_dae_hess = Function(fun_name, [x, xdot, u, z, multiplier, multiply_mat, p], [HESS_multiplied])
+    impl_dae_hess = Function(fun_name, [x, xdot, u, z, multiplier, p], [HESS])
 
     # generate C code
     if not os.path.exists('c_generated_code'):

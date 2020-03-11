@@ -1563,9 +1563,7 @@ class AcadosOcpOptions:
         self.__print_level = 0                                # print level (possible values: 0, 1)
         self.__model_external_shared_lib_dir   = None         # path to the the .so lib
         self.__model_external_shared_lib_name  = None         # name of the the .so lib
-        # TODO(oj): add the following
-        # self.__regularize_method = None
-
+        self.__regularize_method = None
 
 
     @property
@@ -1587,6 +1585,11 @@ class AcadosOcpOptions:
     def nlp_solver_type(self):
         """NLP solver"""
         return self.__nlp_solver_type
+
+    @property
+    def regularize_method(self):
+        """Regularization method for the Hessian"""
+        return self.__regularize_method
 
     @property
     def nlp_solver_step_length(self):
@@ -1684,11 +1687,6 @@ class AcadosOcpOptions:
         return self.__print_level
 
     @property
-    def model_external_shared_lib(self):
-        """Dependance of the model ode on external .so lib"""
-        return self.__model_external_shared_lib
-
-    @property
     def model_external_shared_lib_dir(self):
         """Path to the .so lib"""
         return self.__model_external_shared_lib_dir
@@ -1703,11 +1701,23 @@ class AcadosOcpOptions:
         qp_solvers = ('PARTIAL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_QPOASES', \
                 'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_HPIPM')
 
-        if type(qp_solver) == str and qp_solver in qp_solvers:
+        if isinstance(qp_solver, str) and qp_solver in qp_solvers:
             self.__qp_solver = qp_solver
         else:
             raise Exception('Invalid qp_solver value. Possible values are:\n\n' \
                     + ',\n'.join(qp_solvers) + '.\n\nYou have: ' + qp_solver + '.\n\nExiting.')
+
+    @regularize_method.setter
+    def regularize_method(self, regularize_method):
+        regularize_methods = ('NO_REGULARIZE', 'MIRROR', 'PROJECT', \
+                                'PROJECT_REDUC_HESS', 'CONVEXIFY')
+
+        if isinstance(regularize_method, str) and regularize_method in regularize_methods:
+            self.__regularize_method = regularize_method
+        else:
+            raise Exception('Invalid regularize_method value. Possible values are:\n\n' \
+                    + ',\n'.join(regularize_methods) + '.\n\nYou have: ' + regularize_method + '.\n\nExiting.')
+
     @hessian_approx.setter
     def hessian_approx(self, hessian_approx):
         hessian_approxs = ('GAUSS_NEWTON', 'EXACT')
@@ -1886,14 +1896,6 @@ class AcadosOcpOptions:
         else:
             raise Exception('Invalid print_level value. print_level takes one of the values >=0. Exiting')
 
-    @model_external_shared_lib.setter
-    def model_external_shared_lib(self, model_external_shared_lib):
-        if type(model_external_shared_lib) == bool :
-            self.__model_external_shared_lib = model_external_shared_lib
-        else:
-            raise Exception('Invalid model_external_shared_lib value. Bool expected.' \
-                    + '.\n\nYou have: ' + type(model_external_shared_lib) + '.\n\nExiting.')
-          
     @model_external_shared_lib_dir.setter
     def model_external_shared_lib_dir(self, model_external_shared_lib_dir):
         if type(model_external_shared_lib_dir) == str :
