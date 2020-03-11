@@ -71,15 +71,19 @@ typedef struct
 
 typedef struct
 {
+	// memory
 	double time_sim;
 	double time_ad;
 	double time_la;
+
+	// workspace structs
 } sim_erk_memory;
 
 
 
 typedef struct
 {
+	// workspace mem
     double *rhs_forw_in;  // x + S + p
 
     double *K_traj;         // (stages*nX) or (steps*stages*nX) for adj
