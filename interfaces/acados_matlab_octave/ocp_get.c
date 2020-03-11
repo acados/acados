@@ -279,35 +279,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         ocp_nlp_get(config, solver, "sqp_iter", &sqp_iter);
         *mat_ptr = (double) sqp_iter;
     }
-    else if (!strcmp(field, "time_tot"))
+    else if (!strcmp(field, "time_tot") || !strcmp(field, "time_lin") || !strcmp(field, "time_reg") || !strcmp(field, "time_qp_sol") || !strcmp(field, "time_qp_solver_call") || !strcmp(field, "time_qp_solver") || !strcmp(field, "time_qp_xcond") || !strcmp(field, "time_sim") || !strcmp(field, "time_sim_la") || !strcmp(field, "time_sim_ad"))
     {
         plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
         double *mat_ptr = mxGetPr( plhs[0] );
-        ocp_nlp_get(config, solver, "time_tot", mat_ptr);
-    }
-    else if (!strcmp(field, "time_lin"))
-    {
-        plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
-        double *mat_ptr = mxGetPr( plhs[0] );
-        ocp_nlp_get(config, solver, "time_lin", mat_ptr);
-    }
-    else if (!strcmp(field, "time_reg"))
-    {
-        plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
-        double *mat_ptr = mxGetPr( plhs[0] );
-        ocp_nlp_get(config, solver, "time_reg", mat_ptr);
-    }
-    else if (!strcmp(field, "time_qp_sol"))
-    {
-        plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
-        double *mat_ptr = mxGetPr( plhs[0] );
-        ocp_nlp_get(config, solver, "time_qp_sol", mat_ptr);
-    }
-    else if (!strcmp(field, "time_qp_solver_call"))
-    {
-        plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
-        double *mat_ptr = mxGetPr( plhs[0] );
-        ocp_nlp_get(config, solver, "time_qp_solver_call", mat_ptr);
+        ocp_nlp_get(config, solver, field, mat_ptr);
     }
     else if (!strcmp(field, "qp_iter"))
     {

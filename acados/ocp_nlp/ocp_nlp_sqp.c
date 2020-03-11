@@ -483,6 +483,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 	double tmp_time;
     mem->time_qp_sol = 0.0;
     mem->time_qp_solver_call = 0.0;
+    mem->time_qp_xcond = 0.0;
     mem->time_lin = 0.0;
     mem->time_reg = 0.0;
     mem->time_tot = 0.0;
@@ -678,6 +679,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
 		qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);
 		mem->time_qp_solver_call += tmp_time;
+		qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_xcond", &tmp_time);
+		mem->time_qp_xcond += tmp_time;
 
         // compute correct dual solution in case of Hessian regularization
         acados_tic(&timer1);
@@ -952,10 +955,15 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
         double *value = return_value_;
         *value = mem->time_qp_sol;
     }
-    else if (!strcmp("time_qp_solver_call", field))
+    else if (!strcmp("time_qp_solver", field) || !strcmp("time_qp_solver_call", field))
     {
         double *value = return_value_;
         *value = mem->time_qp_solver_call;
+    }
+    else if (!strcmp("time_qp_xcond", field))
+    {
+        double *value = return_value_;
+        *value = mem->time_qp_xcond;
     }
     else if (!strcmp("time_lin", field))
     {
@@ -967,6 +975,18 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
         double *value = return_value_;
         *value = mem->time_reg;
     }
+    else if (!strcmp("time_sim", field) || !strcmp("time_sim_ad", field) || !strcmp("time_sim_la", field))
+    {
+		double tmp = 0.0;
+		double *ptr = return_value_;
+		int N = dims->N;
+		int ii;
+		for (ii=0; ii<N; ii++)
+		{
+			config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], field, &tmp);
+			*ptr += tmp;
+		}
+	}
     else if (!strcmp("nlp_res", field))
     {
         ocp_nlp_res **value = return_value_;

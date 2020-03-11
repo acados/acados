@@ -171,6 +171,7 @@ typedef struct
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
     int (*memory_set)(void *config, void *dims, void *mem, const char *field, void *value);
     int (*memory_set_to_zero)(void *config, void *dims, void *opts, void *mem, const char *field);
+    void (*memory_get)(void *config, void *dims, void *mem, const char *field, void *value);
     // work
     int (*workspace_calculate_size)(void *config, void *dims, void *opts);
     // model

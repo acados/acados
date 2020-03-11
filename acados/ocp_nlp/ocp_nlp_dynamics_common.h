@@ -97,6 +97,7 @@ typedef struct
     void (*memory_set_dzduxt_ptr)(struct blasfeo_dmat *mat, void *memory_);
     void (*memory_set_sim_guess_ptr)(struct blasfeo_dvec *vec, bool *bool_ptr, void *memory_);
     void (*memory_set_z_alg_ptr)(struct blasfeo_dvec *vec, void *memory_);
+    void (*memory_get)(void *config, void *dims, void *mem, const char *field, void* value);
     /* workspace */
     int (*workspace_calculate_size)(void *config, void *dims, void *opts);
     void (*initialize)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);

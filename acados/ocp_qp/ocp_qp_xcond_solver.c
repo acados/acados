@@ -346,7 +346,7 @@ void ocp_qp_xcond_solver_memory_get(void *config_, void *mem_, const char *field
 {
     ocp_qp_xcond_solver_config *config = config_;
     qp_solver_config *qp_solver = config->qp_solver;
-	// ocp_qp_xcond_config *xcond = config->xcond;
+	ocp_qp_xcond_config *xcond = config->xcond;
 
 	ocp_qp_xcond_solver_memory *mem = mem_;
 
@@ -359,6 +359,10 @@ void ocp_qp_xcond_solver_memory_get(void *config_, void *mem_, const char *field
 	else if (!strcmp(field, "iter"))
 	{
 		qp_solver->memory_get(qp_solver, mem->solver_memory, field, value);
+	}
+	else if (!strcmp(field, "time_qp_xcond"))
+	{
+		xcond->memory_get(xcond, mem->xcond_memory, field, value);
 	}
 	else
 	{

@@ -141,6 +141,9 @@ typedef struct
     double *xdot;  // xdot[NX] - initialization for state derivatives k within the integrator
     double *z;     // z[NZ] - initialization for algebraic variables z
 
+	double time_sim;
+	double time_ad;
+	double time_la;
 } sim_irk_memory;
 
 

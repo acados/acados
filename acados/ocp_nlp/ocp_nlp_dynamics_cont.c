@@ -188,6 +188,7 @@ void ocp_nlp_dynamics_cont_dims_set(void *config_, void *dims_, const char *fiel
 }
 
 
+
 void ocp_nlp_dynamics_cont_dims_get(void *config_, void *dims_, const char *field, int* value)
 {
     ocp_nlp_dynamics_cont_dims *dims = dims_;
@@ -211,6 +212,7 @@ void ocp_nlp_dynamics_cont_dims_get(void *config_, void *dims_, const char *fiel
 // printf("\nexiting: ocp_nlp_dynamics_cont_dims_get, %d\n", *value);
 
 }
+
 
 
 /************************************************
@@ -546,6 +548,28 @@ void ocp_nlp_dynamics_cont_memory_set_z_alg_ptr(struct blasfeo_dvec *vec, void *
     memory->z_alg = vec;
 
     return;
+}
+
+
+
+void ocp_nlp_dynamics_cont_memory_get(void *config_, void *dims_, void *mem_, const char *field, void* value)
+{
+    ocp_nlp_dynamics_config *config = config_;
+    ocp_nlp_dynamics_cont_dims *dims = dims_;
+    ocp_nlp_dynamics_cont_memory *mem = mem_;
+
+	sim_config *sim = config->sim_solver;
+
+    if (!strcmp(field, "time_sim") || !strcmp(field, "time_sim_ad") || !strcmp(field, "time_sim_la"))
+    {
+		sim->memory_get(sim, dims->sim, mem->sim_solver, field, value);
+    }
+    else
+    {
+		printf("\nerror: ocp_nlp_dynamics_cont_memory_get: field %s not available\n", field);
+		exit(1);
+    }
+
 }
 
 
@@ -951,6 +975,7 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
     config->memory_set_dzduxt_ptr = &ocp_nlp_dynamics_cont_memory_set_dzduxt_ptr;
     config->memory_set_sim_guess_ptr = &ocp_nlp_dynamics_cont_memory_set_sim_guess_ptr;
     config->memory_set_z_alg_ptr = &ocp_nlp_dynamics_cont_memory_set_z_alg_ptr;
+    config->memory_get = &ocp_nlp_dynamics_cont_memory_get;
     config->workspace_calculate_size = &ocp_nlp_dynamics_cont_workspace_calculate_size;
     config->initialize = &ocp_nlp_dynamics_cont_initialize;
     config->update_qp_matrices = &ocp_nlp_dynamics_cont_update_qp_matrices;

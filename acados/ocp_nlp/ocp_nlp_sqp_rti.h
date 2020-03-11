@@ -60,7 +60,7 @@ extern "C" {
 
 typedef struct
 {
-	ocp_nlp_opts *nlp_opts;
+    ocp_nlp_opts *nlp_opts;
     int compute_dual_sol;
     int ext_qp_res;           // compute external QP residuals (i.e. at SQP level) at each SQP iteration (for debugging)
     int qp_warm_start;        // NOTE: this is not actually setting the warm_start! Just for compatibility with sqp.
@@ -99,6 +99,7 @@ typedef struct
 
     double time_qp_sol;
     double time_qp_solver_call;
+    double time_qp_xcond;
     double time_lin;
     double time_reg;
     double time_tot;
@@ -128,7 +129,7 @@ void *ocp_nlp_sqp_rti_memory_assign(void *config_, void *dims_, void *opts_,
 
 typedef struct
 {
-	ocp_nlp_workspace *nlp_work;
+    ocp_nlp_workspace *nlp_work;
 
     // temp QP in & out (to be used as workspace in param sens)
     ocp_qp_in *tmp_qp_in;
