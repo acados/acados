@@ -53,7 +53,8 @@ model_lib_path = ['-L', opts_struct.output_dir];
 
 %% select files to compile
 %mex_files = {};
-mex_files = {fullfile(acados_mex_folder, 'ocp_set_ext_fun_gen.c')};
+ext_fun_type = 'casadi'; % or generic
+mex_files = {fullfile(acados_mex_folder, ['ocp_set_ext_fun_', ext_fun_type, '.c'])};
 setter = {};
 set_fields = {};
 mex_fields = {};
@@ -514,7 +515,7 @@ if (strcmp(opts_struct.compile_interface, 'true') || strcmp(opts_struct.codgen_m
         end
         
 %        clear(mex_names{ii})
-        movefile(['ocp_set_ext_fun_gen.', mexext], fullfile(opts_struct.output_dir, [mex_names{ii}, '.', mexext]));
+        movefile(['ocp_set_ext_fun_', ext_fun_type, '.', mexext], fullfile(opts_struct.output_dir, [mex_names{ii}, '.', mexext]));
     end
     
     if is_octave()

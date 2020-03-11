@@ -132,7 +132,7 @@ classdef acados_sim < handle
                 sim_destroy(obj.C_sim);
             end
             if ~isempty(obj.C_sim_ext_fun)
-                sim_destroy_ext_fun(obj.model_struct, obj.C_sim_ext_fun);
+                sim_destroy_ext_fun_casadi(obj.model_struct, obj.C_sim_ext_fun);
             end
         end
 
