@@ -316,7 +316,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         int qp_iter;
         ocp_nlp_get(config, solver, "qp_iter", &qp_iter);
         *mat_ptr = (double) qp_iter;
-   }
+    }
     else if (!strcmp(field, "stat"))
     {
         int sqp_iter;

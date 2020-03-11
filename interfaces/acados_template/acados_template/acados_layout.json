@@ -530,6 +530,9 @@
         "hessian_approx": [
             "str"
         ],
+        "regularize_method": [
+            "str"
+        ],
         "integrator_type": [
             "str"
         ],

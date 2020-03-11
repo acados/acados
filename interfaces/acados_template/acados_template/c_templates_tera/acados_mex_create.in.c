@@ -220,16 +220,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
 // {% if cost.cost_type == "NONLINEAR_LS" %}
-//     mxArray *r_cost_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-//     l_ptr = mxGetData(r_cost_mat);
-//     l_ptr[0] = (long long) r_cost;
-//     mxSetField(plhs[1], 0, "r_cost", r_cost_mat);
+//     mxArray *cost_y_fun_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+//     l_ptr = mxGetData(cost_y_fun_mat);
+//     l_ptr[0] = (long long) cost_y_fun;
+//     mxSetField(plhs[1], 0, "cost_y_fun", cost_y_fun_mat);
 // {% endif %}
 // {% if cost.cost_type_e == "NONLINEAR_LS" %}
-//     mxArray *r_e_cost_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-//     l_ptr = mxGetData(r_e_cost_mat);
-//     l_ptr[0] = (long long) r_e_cost;
-//     mxSetField(plhs[1], 0, "r_e_cost", r_e_cost_mat);
+//     mxArray *cost_y_e_fun_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+//     l_ptr = mxGetData(cost_y_e_fun_mat);
+//     l_ptr[0] = (long long) cost_y_e_fun;
+//     mxSetField(plhs[1], 0, "cost_y_e_fun", cost_y_e_fun_mat);
 // {%- endif %}
 
     return;

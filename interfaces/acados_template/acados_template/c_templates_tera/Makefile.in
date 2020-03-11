@@ -31,123 +31,130 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-{% if solver_options.qp_solver %}
+{%- if solver_options.qp_solver %}
 	{%- set qp_solver = solver_options.qp_solver %}
-{% else %}
+{%- else %}
 	{%- set qp_solver = "FULL_CONDENSING_HPIPM" %}
-{% endif %}
+{%- endif %}
 
-{% if solver_options.hessian_approx %}
+{%- if solver_options.hessian_approx %}
 	{%- set hessian_approx = solver_options.hessian_approx %}
-{% else %}
+{%- else %}
 	{%- set hessian_approx = "GAUSS_NEWTON" %}
-{% endif %}
+{%- endif %}
 
-{% if constraints.constr_type %}
+{%- if constraints.constr_type %}
 	{%- set constr_type = constraints.constr_type %}
-{% else %}
+{%- else %}
 	{%- set constr_type = "NONE" %}
-{% endif %}
+{%- endif %}
 
-{% if constraints.constr_type_e %}
+{%- if constraints.constr_type_e %}
 	{%- set constr_type_e = constraints.constr_type_e %}
-{% else %}
+{%- else %}
 	{%- set constr_type_e = "NONE" %}
-{% endif %}
+{%- endif %}
 
-{% if cost.cost_type %}
+{%- if cost.cost_type %}
 	{%- set cost_type = cost.cost_type %}
-{% else %}
+{%- else %}
 	{%- set cost_type = "NONE" %}
-{% endif %}
+{%- endif %}
 
-{% if cost.cost_type_e %}
+{%- if cost.cost_type_e %}
 	{%- set cost_type_e = cost.cost_type_e %}
-{% else %}
+{%- else %}
 	{%- set cost_type_e = "NONE" %}
-{% endif %}
+{%- endif %}
 
-{% if dims.nh %}
+{%- if dims.nh %}
 	{%- set dims_nh = dims.nh %}
-{% else %}
+{%- else %}
 	{%- set dims_nh = 0 %}
-{% endif %}
+{%- endif %}
 
-{% if dims.nphi %}
+{%- if dims.nphi %}
 	{%- set dims_nphi = dims.nphi %}
-{% else %}
+{%- else %}
 	{%- set dims_nphi = 0 %}
-{% endif %}
+{%- endif %}
 
-{% if dims.nh_e %}
+{%- if dims.nh_e %}
 	{%- set dims_nh_e = dims.nh_e %}
-{% else %}
+{%- else %}
 	{%- set dims_nh_e = 0 %}
-{% endif %}
+{%- endif %}
 
-{% if dims.nphi_e %}
+{%- if dims.nphi_e %}
 	{%- set dims_nphi_e = dims.nphi_e %}
-{% else %}
+{%- else %}
 	{%- set dims_nphi_e = 0 %}
-{% endif %}
-{% if solver_options.model_external_shared_lib_dir %}
+{%- endif %}
+{%- if solver_options.model_external_shared_lib_dir %}
 	{%- set model_external_shared_lib_dir = solver_options.model_external_shared_lib_dir %}
-{% endif %}
-{% if solver_options.model_external_shared_lib_name %}
+{%- endif %}
+{%- if solver_options.model_external_shared_lib_name %}
 	{%- set model_external_shared_lib_name = solver_options.model_external_shared_lib_name %}
-{% endif %}
+{%- endif %}
 
 ACADOS_FLAGS = -fPIC #-fno-diagnostics-show-line-numbers -g
-{% if qp_solver == "FULL_CONDENSING_QPOASES" %}
+{%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
 ACADOS_FLAGS += -DACADOS_WITH_QPOASES
-{% endif %}
+{%- endif %}
 MODEL_OBJ=
-{% if  solver_options.integrator_type == "ERK" %}
+{%- if  solver_options.integrator_type == "ERK" %}
 MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_expl_ode_fun.o
 MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_expl_vde_forw.o
-{% if hessian_approx == "EXACT" %}
+{%- if hessian_approx == "EXACT" %}
 MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_expl_ode_hess.o
-{% endif %}
-{% elif solver_options.integrator_type == "IRK" %}
+{%- endif %}
+{%- elif solver_options.integrator_type == "IRK" %}
 MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_impl_dae_fun.o
 MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_impl_dae_fun_jac_x_xdot_z.o
 MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_impl_dae_jac_x_xdot_u_z.o
-{% elif solver_options.integrator_type == "GNSF" %}
+{%- if hessian_approx == "EXACT" %}
+MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_impl_dae_hess.o
+{%- endif %}
+{%- elif solver_options.integrator_type == "GNSF" %}
 MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_gnsf_phi_fun.o
 MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_gnsf_phi_fun_jac_y.o
 MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_gnsf_phi_jac_y_uhat.o
 MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz.o
 MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_gnsf_get_matrices_fun.o
-{% endif %}
+{%- endif %}
 
 
 OCP_OBJ=
-{% if constr_type == "BGP" and dims_nphi > 0 %}
+{%- if constr_type == "BGP" and dims_nphi > 0 %}
 OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_phi_constraint.o
 # OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_r_constraint.o
 {%- endif %}
-{% if constr_type_e == "BGP" and dims_nphi_e > 0 %}
+{%- if constr_type_e == "BGP" and dims_nphi_e > 0 %}
 OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_phi_e_constraint.o
 # OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_r_e_constraint.o
-{% endif %}
-{% if constr_type == "BGH" and dims_nh > 0 %}
+{%- endif %}
+{%- if constr_type == "BGH" and dims_nh > 0 %}
 OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_constr_h_fun_jac_uxt_zt.o
-{% endif %}
-{% if constr_type_e == "BGH" and dims_nh_e > 0 %}
+{%- endif %}
+{%- if constr_type_e == "BGH" and dims_nh_e > 0 %}
 OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_constr_h_e_fun_jac_uxt_zt.o
-{% endif %}
-{% if cost_type == "NONLINEAR_LS" %}
-OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_r_cost.c
-{% elif cost_type == "EXTERNAL" %}
+{%- endif %}
+{%- if cost_type == "NONLINEAR_LS" %}
+OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_cost_y_fun.c
+OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_cost_y_fun_jac_ut_xt.c
+OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_cost_y_hess.c
+{%- elif cost_type == "EXTERNAL" %}
 OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_ext_cost_fun.c
 OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_ext_cost_fun_jac_hess.c
-{% endif %}
-{% if cost_type_e == "NONLINEAR_LS" %}
-OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_r_e_cost.c
-{% elif cost_type_e == "EXTERNAL" %}
+{%- endif %}
+{%- if cost_type_e == "NONLINEAR_LS" %}
+OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_cost_y_e_fun.c
+OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_cost_y_e_fun_jac_ut_xt.c
+OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_cost_y_e_hess.c
+{%- elif cost_type_e == "EXTERNAL" %}
 OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_ext_cost_e_fun.c
 OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_ext_cost_e_fun_jac_hess.c
-{% endif %}
+{%- endif %}
 OCP_OBJ+= acados_solver_{{ model.name }}.o
 
 
@@ -165,9 +172,9 @@ OBJ+= $(OCP_OBJ)
 EXTERNAL_DIR=
 EXTERNAL_LIB=
 
-{% if model_external_shared_lib_dir and model_external_shared_lib_name %}
-EXTERNAL_DIR+=  {{ model_external_shared_lib_dir  }}
-EXTERNAL_LIB+=  {{ model_external_shared_lib_name }}
+{%- if model_external_shared_lib_dir and model_external_shared_lib_name %}
+EXTERNAL_DIR+= {{ model_external_shared_lib_dir  }}
+EXTERNAL_LIB+= {{ model_external_shared_lib_name }}
 {%- endif %}
 
 INCLUDE_PATH = {{ acados_include_path }}
@@ -177,73 +184,80 @@ all: clean casadi_fun main ocp_solver sim_solver example
 shared_lib: bundled_shared_lib ocp_shared_lib sim_shared_lib
 
 CASADI_MODEL_SOURCE= 
-{% if solver_options.integrator_type == "ERK" %}
+{%- if solver_options.integrator_type == "ERK" %}
 CASADI_MODEL_SOURCE+= {{ model.name }}_expl_ode_fun.c
 CASADI_MODEL_SOURCE+= {{ model.name }}_expl_vde_forw.c 
-{% if hessian_approx == "EXACT" %}
+{%- if hessian_approx == "EXACT" %}
 CASADI_MODEL_SOURCE+= {{ model.name }}_expl_ode_hess.c 
-{% endif %}
-{% elif solver_options.integrator_type == "IRK" %}
+{%- endif %}
+{%- elif solver_options.integrator_type == "IRK" %}
 CASADI_MODEL_SOURCE+= {{ model.name }}_impl_dae_fun.c
 CASADI_MODEL_SOURCE+= {{ model.name }}_impl_dae_fun_jac_x_xdot_z.c
 CASADI_MODEL_SOURCE+= {{ model.name }}_impl_dae_jac_x_xdot_u_z.c
-{% elif solver_options.integrator_type == "GNSF" %}
+{%- if hessian_approx == "EXACT" %}
+CASADI_MODEL_SOURCE+= {{ model.name }}_impl_dae_hess.c
+{%- endif %}
+{%- elif solver_options.integrator_type == "GNSF" %}
 CASADI_MODEL_SOURCE+= {{ model.name }}_gnsf_phi_fun.c
 CASADI_MODEL_SOURCE+= {{ model.name }}_gnsf_phi_fun_jac_y.c
 CASADI_MODEL_SOURCE+= {{ model.name }}_gnsf_phi_jac_y_uhat.c
 CASADI_MODEL_SOURCE+= {{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz.c
 CASADI_MODEL_SOURCE+= {{ model.name }}_gnsf_get_matrices_fun.c
-{% endif %}
-{% if constr_type == "BGP" and dims_nphi > 0 %}
+{%- endif %}
+{%- if constr_type == "BGP" and dims_nphi > 0 %}
 CASADI_CON_PHI_SOURCE=
 # CASADI_CON_R_SOURCE=
 CASADI_CON_PHI_SOURCE+= {{ model.name }}_phi_constraint.c
 # CASADI_CON_R_SOURCE+= {{ model.name }}_r_constraint.c
-{% endif %}
-{% if constr_type_e == "BGP" and dims_nphi_e > 0 %}
+{%- endif %}
+{%- if constr_type_e == "BGP" and dims_nphi_e > 0 %}
 CASADI_CON_PHI_E_SOURCE=
 CASADI_CON_R_E_SOURCE=
 CASADI_CON_PHI_E_SOURCE+= {{ model.name }}_phi_e_constraint.c
 # CASADI_CON_R_E_SOURCE+= {{ model.name }}_r_e_constraint.c
-{% endif %}
-{% if constr_type == "BGH" and dims_nh > 0 %}
+{%- endif %}
+{%- if constr_type == "BGH" and dims_nh > 0 %}
 CASADI_CON_H_SOURCE=
 CASADI_CON_H_SOURCE+= {{ model.name }}_constr_h_fun_jac_uxt_zt.c
-{% endif %}
-{% if dims_nh_e > 0 %}
+{%- endif %}
+{%- if dims_nh_e > 0 %}
 CASADI_CON_H_E_SOURCE+= {{ model.name }}_constr_h_e_fun_jac_uxt_zt.c
-{% endif %}
-CASADI_COST_R_SOURCE=
-CASADI_COST_R_E_SOURCE=
-{% if cost_type == "NONLINEAR_LS" %}
-CASADI_COST_R_SOURCE+= {{ model.name }}_r_cost.c
-{% endif %}
-{% if cost_type_e == "NONLINEAR_LS" %}
-CASADI_COST_R_E_SOURCE+= {{ model.name }}_r_e_cost.c
-{% endif %}
+{%- endif %}
+CASADI_COST_Y_SOURCE=
+CASADI_COST_Y_E_SOURCE=
+{%- if cost_type == "NONLINEAR_LS" %}
+CASADI_COST_Y_SOURCE+= {{ model.name }}_cost_y_fun.c
+CASADI_COST_Y_SOURCE+= {{ model.name }}_cost_y_fun_jac_ut_xt.c
+CASADI_COST_Y_SOURCE+= {{ model.name }}_cost_y_hess.c
+{%- endif %}
+{%- if cost_type_e == "NONLINEAR_LS" %}
+CASADI_COST_Y_E_SOURCE+= {{ model.name }}_cost_y_e_fun.c
+CASADI_COST_Y_E_SOURCE+= {{ model.name }}_cost_y_e_fun_jac_ut_xt.c
+CASADI_COST_Y_E_SOURCE+= {{ model.name }}_cost_y_e_hess.c
+{%- endif %}
 
 
 casadi_fun:
 	( cd {{ model.name }}_model; gcc $(ACADOS_FLAGS) -c  $(CASADI_MODEL_SOURCE)) 
-	{% if constr_type == "BGP"  and dims_nphi > 0 %}
+	{%- if constr_type == "BGP"  and dims_nphi > 0 %}
 	( cd {{ model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_PHI_SOURCE))
 	# ( cd {{ model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_R_SOURCE))
 	{%- endif %}
-	{% if constr_type_e == "BGP"  and dims_nphi_e > 0 %}
+	{%- if constr_type_e == "BGP"  and dims_nphi_e > 0 %}
 	( cd {{ model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_PHI_E_SOURCE))
 	# ( cd {{ model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_R_E_SOURCE))
 	{%- endif %}
-	{% if constr_type == "BGH" and dims_nh > 0 %}
+	{%- if constr_type == "BGH" and dims_nh > 0 %}
 	( cd {{ model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_H_SOURCE))
 	{%- endif %}
-	{% if constr_type_e == "BGH" and dims_nh_e > 0 %}
+	{%- if constr_type_e == "BGH" and dims_nh_e > 0 %}
 	( cd {{ model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_H_E_SOURCE))
 	{%- endif %}
-	{% if cost_type == "NONLINEAR_LS" %}
-	( cd {{ model.name }}_cost; gcc $(ACADOS_FLAGS) -c  $(CASADI_COST_R_SOURCE))
+	{%- if cost_type == "NONLINEAR_LS" %}
+	( cd {{ model.name }}_cost; gcc $(ACADOS_FLAGS) -c  $(CASADI_COST_Y_SOURCE))
 	{%- endif %}
-	{% if cost_type_e == "NONLINEAR_LS" %}
-	( cd {{ model.name }}_cost; gcc $(ACADOS_FLAGS) -c  $(CASADI_COST_R_E_SOURCE))
+	{%- if cost_type_e == "NONLINEAR_LS" %}
+	( cd {{ model.name }}_cost; gcc $(ACADOS_FLAGS) -c  $(CASADI_COST_Y_E_SOURCE))
 	{%- endif %}
 
 main:
@@ -251,7 +265,7 @@ main:
 	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ \
 	{%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
 	-I $(INCLUDE_PATH)/qpOASES_e/
-	{% endif %}
+	{%- endif %}
 
 ocp_solver:
 	gcc $(ACADOS_FLAGS) -c acados_solver_{{ model.name }}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
@@ -265,7 +279,7 @@ sim_solver:
 	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/  \
 	{%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
 	-I $(INCLUDE_PATH)/qpOASES_e/
-	{% endif %}
+	{%- endif %}
 
 example:
 	gcc $(ACADOS_FLAGS) -o main_{{ model.name}} $(EX_OBJ) $(OBJ) -L $(LIB_PATH) \

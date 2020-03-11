@@ -119,6 +119,7 @@ ocp.constraints.idxbu = np.array([0])
 
 ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
 ocp.solver_options.hessian_approx = HESSIAN_APPROXIMATION
+ocp.solver_options.regularize_method = 'CONVEXIFY'
 ocp.solver_options.integrator_type = 'ERK'
 
 ocp.solver_options.qp_solver_cond_N = 5
@@ -145,5 +146,5 @@ for i in range(N):
 simX[N,:] = ocp_solver.get(N, "x")
 
 
-plot_pendulum(Tf/N, Fmax, simU, simX)
+plot_pendulum(Tf/N, Fmax, simU, simX, latexify=False)
 
