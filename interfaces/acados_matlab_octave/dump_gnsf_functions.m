@@ -160,7 +160,9 @@ out = struct();
 out.phi_fun = phi_fun.serialize();
 out.phi_fun_jac_y = phi_fun_jac_y.serialize();
 out.phi_jac_y_uhat = phi_jac_y_uhat.serialize();
+if isfield(out, 'f_lo_fun_jac_x1k1uz')
 out.f_lo_fun_jac_x1k1uz = f_lo_fun_jac_x1k1uz.serialize();
+end
 out.get_matrices_fun = get_matrices_fun.serialize();
 out.casadi_version = casadi_version;
 

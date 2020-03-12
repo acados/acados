@@ -36,7 +36,7 @@ import sys, os, json
 import numpy as np
 
 from ctypes import *
-from casadi import CasadiMeta, Function
+from casadi import CasadiMeta, Function, SX
 
 from copy import deepcopy
 
@@ -115,7 +115,6 @@ def set_up_imported_gnsf_model(acados_ocp):
     phi_fun = Function.deserialize(gnsf['phi_fun'])
     phi_fun_jac_y = Function.deserialize(gnsf['phi_fun_jac_y'])
     phi_jac_y_uhat = Function.deserialize(gnsf['phi_jac_y_uhat'])
-    f_lo_fun_jac_x1k1uz = Function.deserialize(gnsf['f_lo_fun_jac_x1k1uz'])
     get_matrices_fun = Function.deserialize(gnsf['get_matrices_fun'])
 
     # obtain gnsf dimensions
@@ -130,8 +129,23 @@ def set_up_imported_gnsf_model(acados_ocp):
     acados_ocp.model.phi_fun = phi_fun
     acados_ocp.model.phi_fun_jac_y = phi_fun_jac_y
     acados_ocp.model.phi_jac_y_uhat = phi_jac_y_uhat
-    acados_ocp.model.f_lo_fun_jac_x1k1uz = f_lo_fun_jac_x1k1uz
     acados_ocp.model.get_matrices_fun = get_matrices_fun
+
+    if "f_lo_fun_jac_x1k1uz" in gnsf:
+        f_lo_fun_jac_x1k1uz = Function.deserialize(gnsf['f_lo_fun_jac_x1k1uz'])
+        acados_ocp.model.f_lo_fun_jac_x1k1uz = f_lo_fun_jac_x1k1uz
+    else:
+        dummy_var_x1 = SX.sym('dummy_var_x1', acados_ocp.dims.gnsf_nx1)
+        dummy_var_x1dot = SX.sym('dummy_var_x1dot', acados_ocp.dims.gnsf_nx1)
+        dummy_var_z1 = SX.sym('dummy_var_z1', acados_ocp.dims.gnsf_nz1)
+        dummy_var_u = SX.sym('dummy_var_z1', acados_ocp.dims.nu)
+        dummy_var_p = SX.sym('dummy_var_z1', acados_ocp.dims.np)
+        empty_var = SX.sym('empty_var', 0, 0)
+
+        empty_fun = Function('empty_fun', \
+            [dummy_var_x1, dummy_var_x1dot, dummy_var_z1, dummy_var_u, dummy_var_p],
+                [empty_var])
+        acados_ocp.model.f_lo_fun_jac_x1k1uz = empty_fun
 
     del acados_ocp.gnsf_model
 
