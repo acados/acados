@@ -97,7 +97,7 @@ def generate_c_code_gnsf( model ):
     fun_name = model_name + '_gnsf_f_lo_fun_jac_x1k1uz'
     f_lo_fun_jac_x1k1uz = model.f_lo_fun_jac_x1k1uz
     f_lo_fun_jac_x1k1uz_ = Function(fun_name, [x1, x1dot, z1, u, p],
-                [f_lo_fun_jac_x1k1uz(x1, x1dot, z1, u, p)] )
+                f_lo_fun_jac_x1k1uz(x1, x1dot, z1, u, p) )
     f_lo_fun_jac_x1k1uz_.generate(fun_name, casadi_opts)
 
     fun_name = model_name + '_gnsf_get_matrices_fun'
