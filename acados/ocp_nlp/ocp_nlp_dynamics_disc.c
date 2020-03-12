@@ -645,10 +645,10 @@ void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims_, void *
     int nx1 = dims->nx1;
     int nu1 = dims->nu1;
 
-    ext_fun_arg_t ext_fun_type_in[3];  // XXX large enough ?
-    void *ext_fun_in[3];               // XXX large enough ?
-    ext_fun_arg_t ext_fun_type_out[3]; // XXX large enough ?
-    void *ext_fun_out[3];              // XXX large enough ?
+    ext_fun_arg_t ext_fun_type_in[3];
+    void *ext_fun_in[3];
+    ext_fun_arg_t ext_fun_type_out[3];
+    void *ext_fun_out[3];
 
     // pass state and control to integrator
     struct blasfeo_dvec_args x_in;  // input x of external fun;
@@ -751,10 +751,10 @@ void ocp_nlp_dynamics_disc_compute_fun(void *config_, void *dims_, void *model_,
     int nx1 = dims->nx1;
     int nu1 = dims->nu1;
 
-    ext_fun_arg_t ext_fun_type_in[3];  // XXX large enough ?
-    void *ext_fun_in[3];               // XXX large enough ?
-    ext_fun_arg_t ext_fun_type_out[3]; // XXX large enough ?
-    void *ext_fun_out[3];              // XXX large enough ?
+    ext_fun_arg_t ext_fun_type_in[3];
+    void *ext_fun_in[3];
+    ext_fun_arg_t ext_fun_type_out[1];
+    void *ext_fun_out[1];
 
     // pass state and control to integrator
     struct blasfeo_dvec_args x_in;  // input x of external fun;
