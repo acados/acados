@@ -497,13 +497,17 @@ class AcadosOcpSolver:
     def get_stats(self, field_):
         """
         get the information of the last solver call:
-            :param field_: string in ['time_tot', 'time_lin', 'time_qp', 'time_reg', 'sqp_iter']
+            :param field_: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg', 'sqp_iter']
         """
 
         fields = ['time_tot',  # total cpu time previous call
                   'time_lin',  # cpu time for linearization
+                  'time_sim',  # cpu time for integrator
+                  'time_sim_ad',  # cpu time for integrator contribution of external function calls
+                  'time_sim_la',  # cpu time for integrator contribution of linear algebra
                   'time_qp',   # cpu time qp solution
                   'time_qp_solver_call',  # cpu time inside qp solver (without converting the QP)
+                  'time_qp_xcond',
                   'time_reg',  # cpu time regularization
                   'sqp_iter',  # number of SQP iterations
                   'statistics',  # table with info about last iteration
