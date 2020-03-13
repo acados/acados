@@ -53,7 +53,7 @@ model_lib_path = ['-L', opts_struct.output_dir];
 
 %% select files to compile
 %mex_files = {};
-ext_fun_type = 'casadi'; % or generic
+ext_fun_type = model_struct.ext_fun_type; % 'casadi' or generic
 mex_files = {fullfile(acados_mex_folder, ['ocp_set_ext_fun_', ext_fun_type, '.c'])};
 setter = {};
 set_fields = {};

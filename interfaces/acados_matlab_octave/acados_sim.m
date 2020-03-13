@@ -128,11 +128,13 @@ classdef acados_sim < handle
 
 
         function delete(obj)
+            if ~isempty(obj.C_sim_ext_fun)
+				if (strcmp(obj.model_struct.ext_fun_type, 'casadi'))
+					sim_destroy_ext_fun_casadi(obj.model_struct, obj.C_sim_ext_fun);
+				end
+            end
             if ~isempty(obj.C_sim)
                 sim_destroy(obj.C_sim);
-            end
-            if ~isempty(obj.C_sim_ext_fun)
-                sim_destroy_ext_fun_casadi(obj.model_struct, obj.C_sim_ext_fun);
             end
         end
 

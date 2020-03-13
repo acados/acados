@@ -256,7 +256,9 @@ classdef acados_ocp < handle
 
         function delete(obj)
             if ~isempty(obj.C_ocp_ext_fun)
-                ocp_destroy_ext_fun_casadi(obj.model_struct, obj.C_ocp, obj.C_ocp_ext_fun);
+				if (strcmp(obj.model_struct.ext_fun_type, 'casadi'))
+					ocp_destroy_ext_fun_casadi(obj.model_struct, obj.C_ocp, obj.C_ocp_ext_fun);
+				end
             end
             if ~isempty(obj.C_ocp) 
                 ocp_destroy(obj.C_ocp);

@@ -880,6 +880,7 @@ int external_function_param_casadi_calculate_size(external_function_param_casadi
     fun->evaluate = &external_function_param_casadi_wrapper;
 
     // set param function
+    fun->get_nparam = &external_function_param_casadi_get_nparam;
     fun->set_param = &external_function_param_casadi_set_param;
 
     // set number of parameters
@@ -1085,6 +1086,18 @@ void external_function_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, 
                 exit(1);
         }
     }
+
+    return;
+}
+
+
+
+void external_function_param_casadi_get_nparam(void *self, int *np)
+{
+    // cast into external casadi function
+    external_function_param_casadi *fun = self;
+
+	*np = fun->np;
 
     return;
 }
