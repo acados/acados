@@ -93,25 +93,25 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     plhs[0] = mxDuplicateArray(prhs[1]);
 
     /* populate new fields */
-    external_function_param_casadi *ext_fun_param_ptr;
+    external_function_param_casadi *ext_fun_ptr;
 
     // expl_ode_fun
-    ext_fun_param_ptr = (external_function_param_casadi *) malloc((N1-N0+1)*sizeof(external_function_param_casadi));
+    ext_fun_ptr = (external_function_param_casadi *) malloc((N1-N0+1)*sizeof(external_function_param_casadi));
     // NOTE: N0, N1, PHASE, SET_FIELD are given as compiler options
     for (ii=0; ii<N1-N0+1; ii++)
     {
-        external_function_param_casadi_set_fun(ext_fun_param_ptr+ii, &FUN_NAME);
-        external_function_param_casadi_set_work(ext_fun_param_ptr+ii, &GLUE2(FUN_NAME,WORK));
-        external_function_param_casadi_set_sparsity_in(ext_fun_param_ptr+ii, &GLUE2(FUN_NAME,SP_IN));
-        external_function_param_casadi_set_sparsity_out(ext_fun_param_ptr+ii, &GLUE2(FUN_NAME,SP_OUT));
-        external_function_param_casadi_set_n_in(ext_fun_param_ptr+ii, &GLUE2(FUN_NAME,N_IN));
-        external_function_param_casadi_set_n_out(ext_fun_param_ptr+ii, &GLUE2(FUN_NAME,N_OUT));
-        external_function_param_casadi_create(ext_fun_param_ptr+ii, np);
-        status = SETTER(config, dims, in, N0+ii, STR(SET_FIELD), ext_fun_param_ptr+ii);
+        external_function_param_casadi_set_fun(ext_fun_ptr+ii, &FUN_NAME);
+        external_function_param_casadi_set_work(ext_fun_ptr+ii, &GLUE2(FUN_NAME,WORK));
+        external_function_param_casadi_set_sparsity_in(ext_fun_ptr+ii, &GLUE2(FUN_NAME,SP_IN));
+        external_function_param_casadi_set_sparsity_out(ext_fun_ptr+ii, &GLUE2(FUN_NAME,SP_OUT));
+        external_function_param_casadi_set_n_in(ext_fun_ptr+ii, &GLUE2(FUN_NAME,N_IN));
+        external_function_param_casadi_set_n_out(ext_fun_ptr+ii, &GLUE2(FUN_NAME,N_OUT));
+        external_function_param_casadi_create(ext_fun_ptr+ii, np);
+        status = SETTER(config, dims, in, N0+ii, STR(SET_FIELD), ext_fun_ptr+ii);
     }
     // populate output struct
     ptr = mxGetData(mxGetField(plhs[0], 0, STR(MEX_FIELD)));
-    ptr[PHASE] = (long long) ext_fun_param_ptr;
+    ptr[PHASE] = (long long) ext_fun_ptr;
     
     return;
 

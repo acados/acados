@@ -95,9 +95,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // NOTE: N0, N1, PHASE, SET_FIELD are given as compiler options
     for (ii=0; ii<N1-N0+1; ii++)
     {
-		ext_fun_ptr[ii].evaluate = &FUN_NAME;
-		ext_fun_ptr[ii].get_nparam = &GLUE2(FUN_NAME,GET_NPARAM);
-		ext_fun_ptr[ii].set_param = &GLUE2(FUN_NAME,SET_PARAM);
+        external_function_param_generic_set_fun(ext_fun_ptr+ii, &FUN_NAME);
+        external_function_param_generic_create(ext_fun_ptr+ii, np);
         status = SETTER(config, dims, in, N0+ii, STR(SET_FIELD), ext_fun_ptr+ii);
     }
     // populate output struct

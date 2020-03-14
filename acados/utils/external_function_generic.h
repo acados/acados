@@ -84,6 +84,8 @@ typedef struct
     // .....
 } external_function_generic;
 
+
+
 /************************************************
  * casadi external parametric function
  ************************************************/
@@ -97,8 +99,28 @@ typedef struct
     void (*get_nparam)(void *, int *);
     void (*set_param)(void *, double *);
     // private members
+    void *ptr_ext_mem;  // pointer to external memory
+    int (*fun)(void **, void **, void *);
+    double *p;  // parameters
+    int np;     // number of parameters
     // .....
 } external_function_param_generic;
+
+//
+int external_function_param_generic_struct_size();
+//
+void external_function_param_generic_set_fun(external_function_param_generic *fun, void *value);
+//
+int external_function_param_generic_calculate_size(external_function_param_generic *fun, int np);
+//
+void external_function_param_generic_assign(external_function_param_generic *fun, void *mem);
+//
+void external_function_param_generic_wrapper(void *self, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out);
+//
+void external_function_param_generic_get_nparam(void *self, int *np);
+//
+void external_function_param_generic_set_param(void *self, double *p);
+
 
 /************************************************
  * casadi external function

@@ -42,6 +42,32 @@
 
 #include "acados/utils/mem.h"
 
+
+
+/************************************************
+ * generic external parametric function
+ ************************************************/
+
+void external_function_param_generic_create(external_function_param_generic *fun, int np)
+{
+    int fun_size = external_function_param_generic_calculate_size(fun, np);
+    void *fun_mem = acados_malloc(1, fun_size);
+    external_function_param_generic_assign(fun, fun_mem);
+
+    return;
+}
+
+
+
+void external_function_param_generic_free(external_function_param_generic *fun)
+{
+    free(fun->ptr_ext_mem);
+
+    return;
+}
+
+
+
 /************************************************
  * casadi external function
  ************************************************/
@@ -128,8 +154,7 @@ void external_function_param_casadi_create(external_function_param_casadi *fun, 
 
 
 
-void external_function_param_casadi_create_array(int size, external_function_param_casadi *funs,
-                                                 int np)
+void external_function_param_casadi_create_array(int size, external_function_param_casadi *funs, int np)
 {
     // loop index
     int ii;

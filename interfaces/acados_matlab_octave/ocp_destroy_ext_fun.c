@@ -100,10 +100,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 				external_function_param_generic *ext_fun_param_ptr = (external_function_param_generic *) ptr[jj];
 				if (ext_fun_param_ptr!=0)
 				{
-//					for (kk=0; kk<NN[jj]; kk++)
-//					{
-//						external_function_param_casadi_free(ext_fun_param_ptr+kk);
-//					}
+					for (kk=0; kk<NN[jj]; kk++)
+					{
+						external_function_param_generic_free(ext_fun_param_ptr+kk);
+					}
 					free(ext_fun_param_ptr);
 				}
 			}
