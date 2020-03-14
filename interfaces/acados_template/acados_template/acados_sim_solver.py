@@ -228,7 +228,7 @@ class AcadosSimSolver:
             'Su': nx*nu,
         }
 
-        self.settable = ['S_adj', 'S_forw', 'T', 'x', 'u', 'xdot', 'z', 'Su', 'Sx', 'p']
+        self.settable = ['S_adj', 'T', 'x', 'u', 'xdot', 'z', 'p'] # S_forw
         self.model_name = model_name
 
 
@@ -251,6 +251,18 @@ class AcadosSimSolver:
 
             self.shared_lib.sim_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
             self.shared_lib.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, out_data)
+
+            if field_ == 'S_forw':
+                nu = self.sim_struct.dims.nu
+                nx = self.sim_struct.dims.nx
+                out = out.reshape(nx, nx+nu, order='F')
+            elif field_ == 'Sx':
+                nx = self.sim_struct.dims.nx
+                out = out.reshape(nx, nx, order='F')
+            elif field_ == 'Sx':
+                nx = self.sim_struct.dims.nx
+                nu = self.sim_struct.dims.nu
+                out = out.reshape(nx, nu, order='F')
 
         else:
             raise Exception(f'acados_solver.set(): Unknown field {field}, available fiels are {",".join(self.gettable.keys())}')
