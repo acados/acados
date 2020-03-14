@@ -260,7 +260,7 @@ int {{ model.name }}_acados_sim_create()
     {{ model.name }}_sim_solver = sim_solver_create({{ model.name }}_sim_config,
                                                {{ model.name }}_sim_dims, {{ model.name }}_sim_opts);
 
-    /* initialize input to zero */
+    /* initialize input to */
     // x
     double x0[{{ dims.nx }}];
     for (int ii = 0; ii < {{ dims.nx }}; ii++)
@@ -277,6 +277,17 @@ int {{ model.name }}_acados_sim_create()
 
     sim_in_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims,
                {{ model.name }}_sim_in, "u", u0);
+
+    // S_forw
+    double S_forw[{{ dims.nx * (dims.nx + dims.nu) }}];
+    for (int ii = 0; ii < {{ dims.nx * (dims.nx + dims.nu) }}; ii++)
+        S_forw[ii] = 0.0;
+    for (int ii = 0; ii < {{ dims.nx }}; ii++)
+        S_forw[ii + ii * {{ dims.nx }} ] = 1.0;
+
+
+    sim_in_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims,
+               {{ model.name }}_sim_in, "S_forw", S_forw);
 
     int status = sim_precompute({{ model.name }}_sim_solver, {{ model.name }}_sim_in, {{ model.name }}_sim_out);
 
