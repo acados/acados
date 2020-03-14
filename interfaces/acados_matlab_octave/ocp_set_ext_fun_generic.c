@@ -48,7 +48,8 @@
 #define SET_PARAM _set_param
 
 // external functions for the model
-void FUN_NAME(void *, void *, void **, void *, void **);
+//void FUN_NAME(void *, void *, void **, void *, void **);
+void FUN_NAME(void *, ext_fun_arg_t *, void **, ext_fun_arg_t *, void **);
 void GLUE2(FUN_NAME,GET_NPARAM)(void *, int *);
 void GLUE2(FUN_NAME,SET_PARAM)(void *, double *);
 
@@ -90,7 +91,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     external_function_param_generic *ext_fun_ptr;
 
     // expl_ode_fun
-    ext_fun_ptr = (external_function_param_generic *) malloc((N1-N0+1)*sizeof(external_function_param_generic)); // TODO free memory
+    ext_fun_ptr = (external_function_param_generic *) malloc((N1-N0+1)*sizeof(external_function_param_generic));
     // NOTE: N0, N1, PHASE, SET_FIELD are given as compiler options
     for (ii=0; ii<N1-N0+1; ii++)
     {
