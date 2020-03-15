@@ -700,6 +700,14 @@ void ocp_nlp_sqp_rti_preparation_step(void *config_, void *dims_,
         nlp_out, nlp_opts, nlp_mem, nlp_work);
 
     mem->time_lin += acados_toc(&timer1);
+
+#if defined(ACADOS_WITH_OPENMP)
+    // restore number of threads
+    omp_set_num_threads(num_threads_bkp);
+#endif
+	
+	return;
+
 }
 
 
@@ -807,10 +815,6 @@ void ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
         //   print_ocp_qp_in(mem->qp_in);
 
         printf("QP solver returned error status %d\n", qp_status);
-#if defined(ACADOS_WITH_OPENMP)
-        // restore number of threads
-        omp_set_num_threads(num_threads_bkp);
-#endif
         mem->status = ACADOS_QP_FAILURE;
         return;
     }
@@ -824,10 +828,6 @@ void ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
 
     // print_ocp_qp_in(mem->qp_in);
 
-#if defined(ACADOS_WITH_OPENMP)
-    // restore number of threads
-    omp_set_num_threads(num_threads_bkp);
-#endif
     mem->status = ACADOS_SUCCESS;
 
 }
