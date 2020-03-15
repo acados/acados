@@ -84,27 +84,27 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			// external function param casadi
 			if (!strcmp(ext_fun_type, "casadi"))
 			{
-				external_function_param_casadi *ext_fun_param_ptr = (external_function_param_casadi *) ptr[jj];
-				if (ext_fun_param_ptr!=0)
+				external_function_param_casadi *ext_fun_ptr = (external_function_param_casadi *) ptr[jj];
+				if (ext_fun_ptr!=0)
 				{
 					for (kk=0; kk<NN[jj]; kk++)
 					{
-						external_function_param_casadi_free(ext_fun_param_ptr+kk);
+						external_function_param_casadi_free(ext_fun_ptr+kk);
 					}
-					free(ext_fun_param_ptr);
+					free(ext_fun_ptr);
 				}
 			}
 			// external function param generic
 			else if (!strcmp(ext_fun_type, "generic"))
 			{
-				external_function_param_generic *ext_fun_param_ptr = (external_function_param_generic *) ptr[jj];
-				if (ext_fun_param_ptr!=0)
+				external_function_param_generic *ext_fun_ptr = (external_function_param_generic *) ptr[jj];
+				if (ext_fun_ptr!=0)
 				{
 					for (kk=0; kk<NN[jj]; kk++)
 					{
-						external_function_param_generic_free(ext_fun_param_ptr+kk);
+						external_function_param_generic_free(ext_fun_ptr+kk);
 					}
-					free(ext_fun_param_ptr);
+					free(ext_fun_ptr);
 				}
 			}
 			else

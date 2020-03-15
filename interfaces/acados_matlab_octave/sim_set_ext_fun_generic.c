@@ -36,7 +36,8 @@
 #include <stdio.h>
 #include <string.h>
 // acados
-#include "acados_c/ocp_nlp_interface.h"
+#include "acados/sim/sim_common.h"
+#include "acados_c/sim_interface.h"
 #include "acados/utils/external_function_generic.h"
 #include "acados_c/external_function_interface.h"
 // mex
@@ -52,24 +53,22 @@ int FUN_NAME(void **, void **, void *);
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-
-    int ii, status;
+    // sizeof(long long) == sizeof(void *) = 64 !!!
     long long *ptr;
-//    mexPrintf("\nin ocp_expl_ext_fun_create\n");
 
     /* RHS */
-    const mxArray *C_ocp = prhs[0];
+    const mxArray *C_sim = prhs[0];
     const mxArray *matlab_model = prhs[2];
 
     // config
-    ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "config" ) );
-    ocp_nlp_config *config = (ocp_nlp_config *) ptr[0];
+    ptr = (long long *) mxGetData( mxGetField( C_sim, 0, "config" ) );
+    sim_config *config = (sim_config *) ptr[0];
     // dims
-    ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "dims" ) );
-    ocp_nlp_dims *dims = (ocp_nlp_dims *) ptr[0];
+    ptr = (long long *) mxGetData( mxGetField( C_sim, 0, "dims" ) );
+    void *dims = (void *) ptr[0];
     // in
-    ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "in" ) );
-    ocp_nlp_in *in = (ocp_nlp_in *) ptr[0];
+    ptr = (long long *) mxGetData( mxGetField( C_sim, 0, "in" ) );
+    sim_in *in = (sim_in *) ptr[0];
 
     // model
     int np = 0;
@@ -85,18 +84,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     /* populate new fields */
     external_function_param_generic *ext_fun_ptr;
 
-    ext_fun_ptr = (external_function_param_generic *) malloc((N1-N0+1)*sizeof(external_function_param_generic));
-    // NOTE: N0, N1, PHASE, SET_FIELD are given as compiler pre-processing macros
-    for (ii=0; ii<N1-N0+1; ii++)
-    {
-        external_function_param_generic_set_fun(ext_fun_ptr+ii, &FUN_NAME);
-        external_function_param_generic_create(ext_fun_ptr+ii, np);
-        status = SETTER(config, dims, in, N0+ii, STR(SET_FIELD), ext_fun_ptr+ii);
-    }
+    ext_fun_ptr = (external_function_param_generic *) malloc(1*sizeof(external_function_param_generic));
+    external_function_param_generic_set_fun(ext_fun_ptr, &FUN_NAME);
+    external_function_param_generic_create(ext_fun_ptr, np);
+    sim_in_set(config, dims, in, STR(SET_FIELD), ext_fun_ptr);
     // populate output struct
     ptr = mxGetData(mxGetField(plhs[0], 0, STR(MEX_FIELD)));
-    ptr[PHASE] = (long long) ext_fun_ptr;
-    
+    ptr[0] = (long long) ext_fun_ptr;
+
     return;
 
 }
