@@ -155,20 +155,21 @@ end
 
 lib_name = ['lib', model_name];
 
-if (~strcmp(opts_struct.codgen_model, 'true'))
-    for k=1:length(c_files)
-        movefile(fullfile(opts_struct.output_dir, c_files{k}), '.');
-    end
+if (strcmp(opts_struct.codgen_model, 'true'))
+	for k=1:length(c_files)
+		movefile(c_files{k}, opts_struct.output_dir);
+	end
+end
+
+c_files_path = {};
+for k=1:length(c_files)
+	c_files_path{k} = fullfile(opts_struct.output_dir, c_files{k});
 end
 
 if ispc
-    mbuild(c_files{:}, '-output', lib_name, 'CFLAGS="$CFLAGS"', 'LDTYPE="-shared"', ['LDEXT=', ldext]);
+    mbuild(c_files_path{:}, '-output', lib_name, 'CFLAGS="$CFLAGS"', 'LDTYPE="-shared"', ['LDEXT=', ldext]);
 else
-    system(['gcc -O2 -fPIC -shared ', strjoin(c_files, ' '), ' -o ', [lib_name, ldext]]);
-end
-
-for k=1:length(c_files)
-    movefile(c_files{k}, opts_struct.output_dir);
+    system(['gcc -O2 -fPIC -shared ', strjoin(c_files_path, ' '), ' -o ', [lib_name, ldext]]);
 end
 
 movefile([lib_name, ldext], fullfile(opts_struct.output_dir, [lib_name, ldext]));

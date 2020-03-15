@@ -52,9 +52,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     char fun_name[20] = "ocp_set";
     char buffer [400]; // for error messages
 
-    int min_nrhs = 4;
     /* RHS */
-    const mxArray *C_ocp = prhs[0];
+    int min_nrhs = 5;
+
+    // model_struct
+    char *ext_fun_type;
+    const mxArray *matlab_model = prhs[0];
+    if (mxGetField( matlab_model, 0, "ext_fun_type" )!=NULL)
+        ext_fun_type = mxArrayToString( mxGetField( matlab_model, 0, "ext_fun_type" ) );
+
+    // C ocp
+    const mxArray *C_ocp = prhs[1];
     // plan
     ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "plan" ) );
     ocp_nlp_plan *plan = (ocp_nlp_plan *) ptr[0];
@@ -77,16 +85,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "solver" ) );
     ocp_nlp_solver *solver = (ocp_nlp_solver *) ptr[0];
 
-    const mxArray *C_ext_fun_pointers = prhs[1];
+    const mxArray *C_ext_fun_pointers = prhs[2];
     // field
-    char *field = mxArrayToString( prhs[2] );
+    char *field = mxArrayToString( prhs[3] );
     // value
-    double *value = mxGetPr( prhs[3] );
+    double *value = mxGetPr( prhs[4] );
 
     // for checks
-    int matlab_size = (int) mxGetNumberOfElements( prhs[3] );
-    int nrow = (int) mxGetM( prhs[3] );
-    int ncol = (int) mxGetN( prhs[3] );
+    int matlab_size = (int) mxGetNumberOfElements( prhs[4] );
+    int nrow = (int) mxGetM( prhs[4] );
+    int ncol = (int) mxGetN( prhs[4] );
 
     // mexPrintf("\nocp_set: %s, matlab_size %d\n", field, matlab_size);
 
@@ -103,7 +111,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (nrhs==min_nrhs+1)
     {
-        s0 = mxGetScalar( prhs[4] );
+        s0 = mxGetScalar( prhs[5] );
         if (s0 > N)
         {
             sprintf(buffer, "ocp_set: N < specified stage = %d\n", s0);
@@ -437,7 +445,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "p"))
     {
-        external_function_param_casadi *ext_fun_param_ptr;
         // mexPrintf("ocp_set p: nrhs %d \n", nrhs);
 
         // loop over number of external functions;
@@ -452,31 +459,66 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             // loop over number of phases
             for (int jj=0; jj<Nf; jj++)
             {
-                ext_fun_param_ptr = (external_function_param_casadi *) ptr[jj];
-                // mexPrintf("ocp_set p: jj %d ext_fun_param_ptr %p \n", jj, ext_fun_param_ptr);
-                if (ext_fun_param_ptr!=0)
+                // external function param casadi
+                if (!strcmp(ext_fun_type, "casadi"))
                 {
-                    if (nrhs==min_nrhs)
+                    external_function_param_casadi *ext_fun_ptr = (external_function_param_casadi *) ptr[jj];
+                    if (ext_fun_ptr!=0)
                     {
-                        for (int kk=0; kk<NN[jj]; kk++)
+                        if (nrhs==min_nrhs)
                         {
-                            acados_size = (ext_fun_param_ptr+kk)->np;
-                            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-                            (ext_fun_param_ptr+kk)->set_param(ext_fun_param_ptr+kk, value);
+                            for (int kk=0; kk<NN[jj]; kk++)
+                            {
+                                (ext_fun_ptr+kk)->get_nparam(ext_fun_ptr+kk, &acados_size);
+                                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+                                (ext_fun_ptr+kk)->set_param(ext_fun_ptr+kk, value);
+                            }
+                        }
+                        else if (nrhs==min_nrhs+1)
+                        {
+                            int stage = mxGetScalar( prhs[5] );
+                            if (stage>=Nf_sum & stage<Nf_sum+NN[jj])
+                            {
+                                (ext_fun_ptr+stage)->get_nparam(ext_fun_ptr+stage, &acados_size);
+                                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+                                (ext_fun_ptr+stage)->set_param(ext_fun_ptr+stage, value);
+                            }
                         }
                     }
-                    else if (nrhs==min_nrhs+1)
-                    {
-                        int stage = mxGetScalar( prhs[4] );
-                        if (stage>=Nf_sum & stage<Nf_sum+NN[jj])
-                        {
-                            acados_size = (ext_fun_param_ptr+stage)->np;
-                            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-                            (ext_fun_param_ptr+stage)->set_param(ext_fun_param_ptr+stage, value);
-                        }
-                    }
+                    Nf_sum += NN[jj];
                 }
-                Nf_sum += NN[jj];
+                // external function param generic
+                else if (!strcmp(ext_fun_type, "generic"))
+                {
+                    external_function_param_generic *ext_fun_ptr = (external_function_param_generic *) ptr[jj];
+                    if (ext_fun_ptr!=0)
+                    {
+                        if (nrhs==min_nrhs)
+                        {
+                            for (int kk=0; kk<NN[jj]; kk++)
+                            {
+                                (ext_fun_ptr+kk)->get_nparam(ext_fun_ptr+kk, &acados_size);
+                                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+                                (ext_fun_ptr+kk)->set_param(ext_fun_ptr+kk, value);
+                            }
+                        }
+                        else if (nrhs==min_nrhs+1)
+                        {
+                            int stage = mxGetScalar( prhs[5] );
+                            if (stage>=Nf_sum & stage<Nf_sum+NN[jj])
+                            {
+                                (ext_fun_ptr+stage)->get_nparam(ext_fun_ptr+stage, &acados_size);
+                                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+                                (ext_fun_ptr+stage)->set_param(ext_fun_ptr+stage, value);
+                            }
+                        }
+                    }
+                    Nf_sum += NN[jj];
+                }
+                else
+                {
+                    MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "ext_fun_type", ext_fun_type, "casadi, generic");
+                }
             }
         }
     }

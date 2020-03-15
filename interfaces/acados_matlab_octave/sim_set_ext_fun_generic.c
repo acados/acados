@@ -31,62 +31,70 @@
  * POSSIBILITY OF SUCH DAMAGE.;
  */
 
-
-#ifndef INTERFACES_ACADOS_C_EXTERNAL_FUNCTION_INTERFACE_H_
-#define INTERFACES_ACADOS_C_EXTERNAL_FUNCTION_INTERFACE_H_
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+// system
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+// acados
+#include "acados/sim/sim_common.h"
+#include "acados_c/sim_interface.h"
 #include "acados/utils/external_function_generic.h"
+#include "acados_c/external_function_interface.h"
+// mex
+#include "mex.h"
+#include "mex_macros.h"
 
 
 
-/************************************************
- * generic external parametric function
- ************************************************/
-
-//
-void external_function_param_generic_create(external_function_param_generic *fun, int np);
-//
-void external_function_param_generic_free(external_function_param_generic *fun);
+// external functions for the model
+int FUN_NAME(void **, void **, void *);
 
 
 
-/************************************************
- * casadi external function
- ************************************************/
+void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+{
+    // sizeof(long long) == sizeof(void *) = 64 !!!
+    long long *ptr;
 
-//
-void external_function_casadi_create(external_function_casadi *fun);
-//
-void external_function_casadi_free(external_function_casadi *fun);
-//
-void external_function_casadi_create_array(int size, external_function_casadi *funs);
-//
-void external_function_casadi_free_array(int size, external_function_casadi *funs);
+    /* RHS */
+    const mxArray *C_sim = prhs[0];
+    const mxArray *matlab_model = prhs[2];
+
+    // config
+    ptr = (long long *) mxGetData( mxGetField( C_sim, 0, "config" ) );
+    sim_config *config = (sim_config *) ptr[0];
+    // dims
+    ptr = (long long *) mxGetData( mxGetField( C_sim, 0, "dims" ) );
+    void *dims = (void *) ptr[0];
+    // in
+    ptr = (long long *) mxGetData( mxGetField( C_sim, 0, "in" ) );
+    sim_in *in = (sim_in *) ptr[0];
+
+    // model
+    int np = 0;
+    if (mxGetField( matlab_model, 0, "dim_np" )!=NULL)
+    {
+        np = mxGetScalar( mxGetField( matlab_model, 0, "dim_np" ) );
+    }
+
+    /* LHS */
+    /* copy existing fields */
+    plhs[0] = mxDuplicateArray(prhs[1]);
+
+    /* populate new fields */
+    external_function_param_generic *ext_fun_ptr;
+
+    ext_fun_ptr = (external_function_param_generic *) malloc(1*sizeof(external_function_param_generic));
+    external_function_param_generic_set_fun(ext_fun_ptr, &FUN_NAME);
+    external_function_param_generic_create(ext_fun_ptr, np);
+    sim_in_set(config, dims, in, STR(SET_FIELD), ext_fun_ptr);
+    // populate output struct
+    ptr = mxGetData(mxGetField(plhs[0], 0, STR(MEX_FIELD)));
+    ptr[0] = (long long) ext_fun_ptr;
+
+    return;
+
+}
 
 
 
-/************************************************
- * casadi external parametric function
- ************************************************/
-
-//
-void external_function_param_casadi_create(external_function_param_casadi *fun, int np);
-//
-void external_function_param_casadi_free(external_function_param_casadi *fun);
-//
-void external_function_param_casadi_create_array(int size, external_function_param_casadi *funs,
-                                                 int np);
-//
-void external_function_param_casadi_free_array(int size, external_function_param_casadi *funs);
-
-
-
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
-
-#endif  // INTERFACES_ACADOS_C_EXTERNAL_FUNCTION_INTERFACE_H_

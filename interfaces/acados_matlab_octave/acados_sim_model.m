@@ -47,6 +47,7 @@ classdef acados_sim_model < handle
         function obj = acados_sim_model()
             obj.model_struct = struct;
             obj.model_struct.name = 'sim_model';
+            obj.model_struct.ext_fun_type = 'casadi'; % generic
         end
 
 
@@ -54,6 +55,8 @@ classdef acados_sim_model < handle
             % misc
             if (strcmp(field, 'name'))
                 obj.model_struct.name = value;
+            elseif (strcmp(field, 'ext_fun_type'))
+                obj.model_struct.ext_fun_type = value;
             % dims
             elseif (strcmp(field, 'dim_nx'))
                 obj.model_struct.dim_nx = value;
@@ -85,6 +88,7 @@ classdef acados_sim_model < handle
                 obj.model_struct.seed_adj = value;
             else
                 disp(['acados_sim_model: set: wrong field: ', field]);
+				keyboard;
             end
         end
 

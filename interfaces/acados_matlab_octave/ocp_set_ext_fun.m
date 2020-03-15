@@ -53,7 +53,8 @@ model_lib_path = ['-L', opts_struct.output_dir];
 
 %% select files to compile
 %mex_files = {};
-mex_files = {fullfile(acados_mex_folder, 'ocp_set_ext_fun_gen.c')};
+ext_fun_type = model_struct.ext_fun_type; % 'casadi' or generic
+mex_files = {fullfile(acados_mex_folder, ['ocp_set_ext_fun_', ext_fun_type, '.c'])};
 setter = {};
 set_fields = {};
 mex_fields = {};
@@ -131,7 +132,7 @@ elseif (strcmp(model_struct.dyn_type, 'implicit'))
             };
         phase = {phase{:}, 0, 0, 0};
         phase_start = {phase_start{:}, 0, 0, 0};
-		phase_end = {phase_end{:}, N-1, N-1, N-1};
+        phase_end = {phase_end{:}, N-1, N-1, N-1};
 
         if strcmp(opts_struct.nlp_solver_exact_hessian, 'true')
             setter = {setter{:} ...
@@ -514,7 +515,7 @@ if (strcmp(opts_struct.compile_interface, 'true') || strcmp(opts_struct.codgen_m
         end
         
 %        clear(mex_names{ii})
-        movefile(['ocp_set_ext_fun_gen.', mexext], fullfile(opts_struct.output_dir, [mex_names{ii}, '.', mexext]));
+        movefile(['ocp_set_ext_fun_', ext_fun_type, '.', mexext], fullfile(opts_struct.output_dir, [mex_names{ii}, '.', mexext]));
     end
     
     if is_octave()
@@ -530,7 +531,7 @@ end
 for ii=1:length(mex_names)
 %     disp(['evaluating: ' mex_names{ii}, '(C_ocp, C_ocp_ext_fun, model_struct, opts_struct)'])
     C_ocp_ext_fun = eval([mex_names{ii}, '(C_ocp, C_ocp_ext_fun, model_struct, opts_struct)']);
-%	disp(['eval ', mex_names{ii}, ' done']);
+%    disp(['eval ', mex_names{ii}, ' done']);
 %    fprintf(fileID, [mex_names{ii}, '(C_ocp, C_ocp_ext_fun, model_struct, opts_struct);\n']);
 end
 %fclose(fileID);

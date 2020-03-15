@@ -40,6 +40,7 @@
 #include "acados_c/external_function_interface.h"
 // mex
 #include "mex.h"
+#include "mex_macros.h"
 
 
 
@@ -50,24 +51,49 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     int ii;
     long long *ptr;
+//    mxArray *mex_field;
+    char fun_name[20] = "sim_destroy_ext_fun";
+    char buffer [400]; // for error messages
 
     /* RHS */
 
-    // model
+    // model_struct
+    char *ext_fun_type;
+    const mxArray *matlab_model = prhs[0];
+    if (mxGetField( matlab_model, 0, "ext_fun_type" )!=NULL)
+        ext_fun_type = mxArrayToString( mxGetField( matlab_model, 0, "ext_fun_type" ) );
 
     // C_sim_ext_fun
 
-    external_function_param_casadi *ext_fun_param_ptr;
     int struct_size = mxGetNumberOfFields( prhs[1] );
     for (ii=0; ii<struct_size; ii++)
     {
 //        printf("\n%s\n", mxGetFieldNameByNumber( prhs[1], ii) );
         ptr = (long long *) mxGetData( mxGetFieldByNumber( prhs[1], 0, ii ) );
-        ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-        if (ext_fun_param_ptr!=0)
+
+        // external function param casadi
+        if (!strcmp(ext_fun_type, "casadi"))
         {
-            external_function_param_casadi_free(ext_fun_param_ptr);
-            free(ext_fun_param_ptr);
+            external_function_param_casadi *ext_fun_ptr = (external_function_param_casadi *) ptr[0];
+            if (ext_fun_ptr!=0)
+            {
+                external_function_param_casadi_free(ext_fun_ptr);
+                free(ext_fun_ptr);
+            }
+        }
+        // external function param generic
+        else if (!strcmp(ext_fun_type, "generic"))
+        {
+            external_function_param_generic *ext_fun_ptr = (external_function_param_generic *) ptr[0];
+            if (ext_fun_ptr!=0)
+            {
+                external_function_param_generic_free(ext_fun_ptr);
+                free(ext_fun_ptr);
+            }
+        }
+        else
+        {
+            MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "ext_fun_type", ext_fun_type, "casadi, generic");
         }
     }
 
