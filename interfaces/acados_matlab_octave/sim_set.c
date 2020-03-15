@@ -57,8 +57,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     /* RHS */
 
-	// model_struct
-	char *ext_fun_type;
+    // model_struct
+    char *ext_fun_type;
     const mxArray *matlab_model = prhs[0];
     if (mxGetField( matlab_model, 0, "ext_fun_type" )!=NULL)
         ext_fun_type = mxArrayToString( mxGetField( matlab_model, 0, "ext_fun_type" ) );
@@ -121,34 +121,34 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         {
 //            printf("\n%s\n", mxGetFieldNameByNumber( C_ext_fun_pointers, ii) );
             ptr = (long long *) mxGetData( mxGetFieldByNumber( C_ext_fun_pointers, 0, ii ) );
-			// external function param casadi
-			if (!strcmp(ext_fun_type, "casadi"))
-			{
-				if (ptr[0]!=0)
-				{
-					external_function_param_casadi *ext_fun_ptr = (external_function_param_casadi *) ptr[0];
-					acados_size = ext_fun_ptr->np;
-					MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+            // external function param casadi
+            if (!strcmp(ext_fun_type, "casadi"))
+            {
+                if (ptr[0]!=0)
+                {
+                    external_function_param_casadi *ext_fun_ptr = (external_function_param_casadi *) ptr[0];
+                    acados_size = ext_fun_ptr->np;
+                    MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
 
-					ext_fun_ptr->set_param(ext_fun_ptr, value);
-				}
-			}
-			// external function param generic
-			else if (!strcmp(ext_fun_type, "generic"))
-			{
-				if (ptr[0]!=0)
-				{
-					external_function_param_generic *ext_fun_ptr = (external_function_param_generic *) ptr[0];
-					acados_size = ext_fun_ptr->np;
-					MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+                    ext_fun_ptr->set_param(ext_fun_ptr, value);
+                }
+            }
+            // external function param generic
+            else if (!strcmp(ext_fun_type, "generic"))
+            {
+                if (ptr[0]!=0)
+                {
+                    external_function_param_generic *ext_fun_ptr = (external_function_param_generic *) ptr[0];
+                    acados_size = ext_fun_ptr->np;
+                    MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
 
-					ext_fun_ptr->set_param(ext_fun_ptr, value);
-				}
-			}
-			else
-			{
-				MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "ext_fun_type", ext_fun_type, "casadi, generic");
-			}
+                    ext_fun_ptr->set_param(ext_fun_ptr, value);
+                }
+            }
+            else
+            {
+                MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "ext_fun_type", ext_fun_type, "casadi, generic");
+            }
         }
     }
     else if (!strcmp(field, "xdot"))

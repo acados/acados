@@ -132,7 +132,7 @@ elseif (strcmp(model_struct.dyn_type, 'implicit'))
             };
         phase = {phase{:}, 0, 0, 0};
         phase_start = {phase_start{:}, 0, 0, 0};
-		phase_end = {phase_end{:}, N-1, N-1, N-1};
+        phase_end = {phase_end{:}, N-1, N-1, N-1};
 
         if strcmp(opts_struct.nlp_solver_exact_hessian, 'true')
             setter = {setter{:} ...
@@ -531,7 +531,7 @@ end
 for ii=1:length(mex_names)
 %     disp(['evaluating: ' mex_names{ii}, '(C_ocp, C_ocp_ext_fun, model_struct, opts_struct)'])
     C_ocp_ext_fun = eval([mex_names{ii}, '(C_ocp, C_ocp_ext_fun, model_struct, opts_struct)']);
-%	disp(['eval ', mex_names{ii}, ' done']);
+%    disp(['eval ', mex_names{ii}, ' done']);
 %    fprintf(fileID, [mex_names{ii}, '(C_ocp, C_ocp_ext_fun, model_struct, opts_struct);\n']);
 end
 %fclose(fileID);

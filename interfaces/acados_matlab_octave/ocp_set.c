@@ -55,13 +55,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     /* RHS */
     int min_nrhs = 5;
 
-	// model_struct
-	char *ext_fun_type;
+    // model_struct
+    char *ext_fun_type;
     const mxArray *matlab_model = prhs[0];
     if (mxGetField( matlab_model, 0, "ext_fun_type" )!=NULL)
         ext_fun_type = mxArrayToString( mxGetField( matlab_model, 0, "ext_fun_type" ) );
 
-	// C ocp
+    // C ocp
     const mxArray *C_ocp = prhs[1];
     // plan
     ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "plan" ) );
@@ -459,66 +459,66 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             // loop over number of phases
             for (int jj=0; jj<Nf; jj++)
             {
-				// external function param casadi
-				if (!strcmp(ext_fun_type, "casadi"))
-				{
-					external_function_param_casadi *ext_fun_ptr = (external_function_param_casadi *) ptr[jj];
-					if (ext_fun_ptr!=0)
-					{
-						if (nrhs==min_nrhs)
-						{
-							for (int kk=0; kk<NN[jj]; kk++)
-							{
-								(ext_fun_ptr+kk)->get_nparam(ext_fun_ptr+kk, &acados_size);
-								MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-								(ext_fun_ptr+kk)->set_param(ext_fun_ptr+kk, value);
-							}
-						}
-						else if (nrhs==min_nrhs+1)
-						{
-							int stage = mxGetScalar( prhs[5] );
-							if (stage>=Nf_sum & stage<Nf_sum+NN[jj])
-							{
-								(ext_fun_ptr+stage)->get_nparam(ext_fun_ptr+stage, &acados_size);
-								MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-								(ext_fun_ptr+stage)->set_param(ext_fun_ptr+stage, value);
-							}
-						}
-					}
-					Nf_sum += NN[jj];
-				}
-				// external function param generic
-				else if (!strcmp(ext_fun_type, "generic"))
-				{
-					external_function_param_generic *ext_fun_ptr = (external_function_param_generic *) ptr[jj];
-					if (ext_fun_ptr!=0)
-					{
-						if (nrhs==min_nrhs)
-						{
-							for (int kk=0; kk<NN[jj]; kk++)
-							{
-								(ext_fun_ptr+kk)->get_nparam(ext_fun_ptr+kk, &acados_size);
-								MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-								(ext_fun_ptr+kk)->set_param(ext_fun_ptr+kk, value);
-							}
-						}
-						else if (nrhs==min_nrhs+1)
-						{
-							int stage = mxGetScalar( prhs[5] );
-							if (stage>=Nf_sum & stage<Nf_sum+NN[jj])
-							{
-								(ext_fun_ptr+stage)->get_nparam(ext_fun_ptr+stage, &acados_size);
-								MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-								(ext_fun_ptr+stage)->set_param(ext_fun_ptr+stage, value);
-							}
-						}
-					}
-					Nf_sum += NN[jj];
-				}
-				else
-				{
-					MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "ext_fun_type", ext_fun_type, "casadi, generic");
-				}
+                // external function param casadi
+                if (!strcmp(ext_fun_type, "casadi"))
+                {
+                    external_function_param_casadi *ext_fun_ptr = (external_function_param_casadi *) ptr[jj];
+                    if (ext_fun_ptr!=0)
+                    {
+                        if (nrhs==min_nrhs)
+                        {
+                            for (int kk=0; kk<NN[jj]; kk++)
+                            {
+                                (ext_fun_ptr+kk)->get_nparam(ext_fun_ptr+kk, &acados_size);
+                                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+                                (ext_fun_ptr+kk)->set_param(ext_fun_ptr+kk, value);
+                            }
+                        }
+                        else if (nrhs==min_nrhs+1)
+                        {
+                            int stage = mxGetScalar( prhs[5] );
+                            if (stage>=Nf_sum & stage<Nf_sum+NN[jj])
+                            {
+                                (ext_fun_ptr+stage)->get_nparam(ext_fun_ptr+stage, &acados_size);
+                                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+                                (ext_fun_ptr+stage)->set_param(ext_fun_ptr+stage, value);
+                            }
+                        }
+                    }
+                    Nf_sum += NN[jj];
+                }
+                // external function param generic
+                else if (!strcmp(ext_fun_type, "generic"))
+                {
+                    external_function_param_generic *ext_fun_ptr = (external_function_param_generic *) ptr[jj];
+                    if (ext_fun_ptr!=0)
+                    {
+                        if (nrhs==min_nrhs)
+                        {
+                            for (int kk=0; kk<NN[jj]; kk++)
+                            {
+                                (ext_fun_ptr+kk)->get_nparam(ext_fun_ptr+kk, &acados_size);
+                                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+                                (ext_fun_ptr+kk)->set_param(ext_fun_ptr+kk, value);
+                            }
+                        }
+                        else if (nrhs==min_nrhs+1)
+                        {
+                            int stage = mxGetScalar( prhs[5] );
+                            if (stage>=Nf_sum & stage<Nf_sum+NN[jj])
+                            {
+                                (ext_fun_ptr+stage)->get_nparam(ext_fun_ptr+stage, &acados_size);
+                                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+                                (ext_fun_ptr+stage)->set_param(ext_fun_ptr+stage, value);
+                            }
+                        }
+                    }
+                    Nf_sum += NN[jj];
+                }
+                else
+                {
+                    MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "ext_fun_type", ext_fun_type, "casadi, generic");
+                }
             }
         }
     }

@@ -87,7 +87,7 @@ typedef struct
 
 
 /************************************************
- * casadi external parametric function
+ * generic external parametric function
  ************************************************/
 
 // prototype of a parametric external function
