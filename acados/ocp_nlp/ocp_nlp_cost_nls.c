@@ -755,13 +755,13 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
 
 
     /* hessian */
+    // gauss-newton component update
+    // tmp_nv_ny = Jt * W_chol, where W_chol is lower triangular
+    blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &memory->Jt, 0, 0,
+                        &work->tmp_nv_ny, 0, 0);
 
     if (opts->gauss_newton_hess)
     {
-        // gauss-newton approximation of hessian of ls cost
-        // tmp_nv_ny = Jt * W_chol,     where W_chol is lower triangular
-        blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &memory->Jt, 0, 0, &work->tmp_nv_ny, 0, 0);
-
         // RSQrq = scaling * tmp_nv_ny * tmp_nv_ny^T
         blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0,
                          1.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
@@ -782,11 +782,6 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
         // evaluate external function
         model->nls_hess->evaluate(model->nls_hess, ext_fun_type_in, ext_fun_in,
                                   ext_fun_type_out, ext_fun_out);
-
-        // gauss-newton component update
-        // tmp_nv_ny = Jt * W_chol, where W_chol is lower triangular
-        blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &memory->Jt, 0, 0,
-                           &work->tmp_nv_ny, 0, 0);
 
         // RSQrq = scaling * (tmp_nv_nv + tmp_nv_ny * tmp_nv_ny^T)
         blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0,
