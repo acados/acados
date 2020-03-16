@@ -629,17 +629,16 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
     // blasfeo_print_tran_dvec(2*ns, memory->Z, 0);
     // blasfeo_print_tran_dvec(nu+nx+2*ns, &memory->grad, 0);
 
-	// TODO compute fun
-
     return;
 }
 
 
 
-void ocp_nlp_cost_external_compute_fun(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_)
+void ocp_nlp_cost_external_compute_fun(void *config_, void *dims_, void *model_,
+                                       void *opts_, void *memory_, void *work_)
 {
-//	printf("\nerror: ocp_external_cost_nls_compute_fun: not implemented yet\n");
-//	exit(1);
+//    printf("\nerror: ocp_external_cost_nls_compute_fun: not implemented yet\n");
+//    exit(1);
 
     ocp_nlp_cost_external_dims *dims = dims_;
     ocp_nlp_cost_external_model *model = model_;
@@ -680,16 +679,17 @@ void ocp_nlp_cost_external_compute_fun(void *config_, void *dims_, void *model_,
     ext_fun_out[0] = &memory->fun;  // function: scalar
 
     // evaluate external function
-    model->ext_cost_fun->evaluate(model->ext_cost_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+    model->ext_cost_fun->evaluate(model->ext_cost_fun, ext_fun_type_in, ext_fun_in,
+                                  ext_fun_type_out, ext_fun_out);
 
     // slacks
     blasfeo_dveccp(2*ns, &model->z, 0, &memory->grad, nu+nx);
     blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
 
     // slacks
-	blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);
-	blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->tmp_ux, nu+nx, &work->tmp_2ns, 0);
-	memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->tmp_ux, nu+nx);
+    blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);
+    blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->tmp_ux, nu+nx, &work->tmp_2ns, 0);
+    memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->tmp_ux, nu+nx);
 
     // scale
     if(model->scaling!=1.0)

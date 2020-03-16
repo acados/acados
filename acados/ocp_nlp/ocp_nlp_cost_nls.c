@@ -724,7 +724,8 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
     ext_fun_out[1] = &memory->Jt;  // jac': (nu+nx) * ny
 
     // evaluate external function
-    model->nls_res_jac->evaluate(model->nls_res_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+    model->nls_res_jac->evaluate(model->nls_res_jac, ext_fun_type_in, ext_fun_in,
+                                 ext_fun_type_out, ext_fun_out);
 
     /* gradient */
     // res = res - y_ref
@@ -737,9 +738,11 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
     // blasfeo_print_dvec(ny, &memory->res, 0);
 
     // tmp_ny = W * res
-    blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res, 0, 0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
+    blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res, 0,
+                    0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
     // grad = Jt * tmp_ny
-    blasfeo_dgemv_n(nu+nx, ny, 1.0, &memory->Jt, 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0, &memory->grad, 0);
+    blasfeo_dgemv_n(nu+nx, ny, 1.0, &memory->Jt, 0, 0, &work->tmp_ny, 0,
+                    0.0, &memory->grad, 0, &memory->grad, 0);
 
     // printf("tmp_ny\n");
     // blasfeo_print_dvec(ny, &work->tmp_ny, 0);
@@ -759,12 +762,14 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
         // tmp_nv_ny = Jt * W_chol,     where W_chol is lower triangular
         blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &memory->Jt, 0, 0, &work->tmp_nv_ny, 0, 0);
 
-        // RSQrq = tmp_nv_ny * tmp_nv_ny^T
-        blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 1.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
+        // RSQrq = scaling * tmp_nv_ny * tmp_nv_ny^T
+        blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0,
+                         1.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
     }
     else
     {
-        // NOTE(oj): this should add the non-Gauss-Newton term to RSQrq, the product < r, d2_d[x,u] r >, where the cost is 0.5 * norm2(r(x,u))^2
+        // NOTE(oj): this should add the non-Gauss-Newton term to RSQrq,
+        // the product < r, d2_d[x,u] r >, where the cost is 0.5 * norm2(r(x,u))^2
         // exact hessian of ls cost
 
         // ext_fun_[type_]in 0,1 are the same as before.
@@ -772,17 +777,18 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
         ext_fun_in[2] = &work->tmp_ny;  // fun: ny
 
         ext_fun_type_out[0] = BLASFEO_DMAT;
-        // ext_fun_out[0] = memory->RSQrq;     // hess*fun: (nu+nx) * (nu+nx)
         ext_fun_out[0] = &work->tmp_nv_nv;   // hess*fun: (nu+nx) * (nu+nx)
 
         // evaluate external function
-        model->nls_hess->evaluate(model->nls_hess, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+        model->nls_hess->evaluate(model->nls_hess, ext_fun_type_in, ext_fun_in,
+                                  ext_fun_type_out, ext_fun_out);
 
         // gauss-newton component update
         // tmp_nv_ny = Jt * W_chol, where W_chol is lower triangular
-        blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &memory->Jt, 0, 0, &work->tmp_nv_ny, 0, 0);
+        blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &memory->Jt, 0, 0,
+                           &work->tmp_nv_ny, 0, 0);
 
-        // RSQrq = RSQrq + tmp_nv_ny * tmp_nv_ny^T
+        // RSQrq = scaling * (tmp_nv_nv + tmp_nv_ny * tmp_nv_ny^T)
         blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0,
                          model->scaling, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
     }
@@ -797,7 +803,7 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
         blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
     }
 
-	// TODO compute fun
+    // TODO compute fun
 
     // blasfeo_print_dmat(nu+nx, nu+nx, memory->RSQrq, 0, 0);
     // blasfeo_print_tran_dvec(2*ns, memory->Z, 0);
@@ -809,10 +815,11 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
 
 
 
-void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_)
+void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims_, void *model_,
+                                  void *opts_, void *memory_, void *work_)
 {
-//	printf("\nerror: ocp_nlp_cost_nls_compute_fun: not implemented yet\n");
-//	exit(1);
+//    printf("\nerror: ocp_nlp_cost_nls_compute_fun: not implemented yet\n");
+//    exit(1);
 
     ocp_nlp_cost_nls_dims *dims = dims_;
     ocp_nlp_cost_nls_model *model = model_;
@@ -851,20 +858,21 @@ void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims_, void *model_, void
     ext_fun_out[0] = &memory->res;  // fun: ny
 
     // evaluate external function
-    model->nls_res->evaluate(model->nls_res, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+    model->nls_res->evaluate(model->nls_res, ext_fun_type_in, ext_fun_in,
+                             ext_fun_type_out, ext_fun_out);
 
     /* gradient */
     // res = res - y_ref
     blasfeo_daxpy(ny, -1.0, &model->y_ref, 0, &memory->res, 0, &memory->res, 0);
 
-	blasfeo_dtrmv_ltn(ny, 1.0, &memory->W_chol, 0, 0, &memory->res, 0, &work->tmp_ny, 0);
+    blasfeo_dtrmv_ltn(ny, 1.0, &memory->W_chol, 0, 0, &memory->res, 0, &work->tmp_ny, 0);
 
-	memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &work->tmp_ny, 0);
+    memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &work->tmp_ny, 0);
 
     // slacks
-	blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);
-	blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->tmp_ux, nu+nx, &work->tmp_2ns, 0);
-	memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->tmp_ux, nu+nx);
+    blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);
+    blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->tmp_ux, nu+nx, &work->tmp_2ns, 0);
+    memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->tmp_ux, nu+nx);
 
     // scale
     if(model->scaling!=1.0)
@@ -872,7 +880,7 @@ void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims_, void *model_, void
         memory->fun *= model->scaling;
     }
 
-	return;
+    return;
 
 }
 

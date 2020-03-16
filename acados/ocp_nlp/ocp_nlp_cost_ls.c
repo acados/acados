@@ -730,11 +730,12 @@ void ocp_nlp_cost_ls_initialize(void *config_, void *dims_, void *model_,
 
     // TODO(all): avoid recomputing the Hessian if both W and Cyt do not change
     blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0, &model->Cyt,
-        0, 0, &work->tmp_nv_ny,
-                       0, 0);
+                        0, 0, &work->tmp_nv_ny, 0, 0);
+    // hess = scaling * tmp_nv_ny * tmp_nv_ny^T
     blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0,
         &work->tmp_nv_ny, 0, 0, 0.0, &memory->hess, 0, 0, &memory->hess, 0, 0);
 
+    // mem->Z = scaling * model->Z
     blasfeo_dveccpsc(2*ns, model->scaling, &model->Z, 0, memory->Z, 0);
 
     return;
@@ -778,11 +779,14 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
         blasfeo_dgemv_n(ny, nz, +1.0, &model->Vz,
                 0, 0, &work->tmp_nz, 0, 1.0, &work->y_ref_tilde, 0, &work->y_ref_tilde, 0);
 
-        blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0, &work->Cyt_tilde, 0, 0, &work->tmp_nv_ny, 0, 0);
+        // tmp_nv_ny = W_chol * Cyt_tilde
+        blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0,
+                           &work->Cyt_tilde, 0, 0, &work->tmp_nv_ny, 0, 0);
 
         // add hessian of the cost contribution
-        blasfeo_dsyrk_ln(nu + nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 1.0,
-                memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
+        // RSQrq += scaling * tmp_nv_ny * tmp_nv_ny^T
+        blasfeo_dsyrk_ln(nu + nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny,
+                         0, 0, 1.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
 
         // compute gradient
         // res = \tilde{V}_x * x + \tilde{V}_u * u - \tilde{y}_ref
@@ -798,30 +802,30 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
         // TODO what about the exact hessian in the case of nz>0 ???
         // TODO compute fun !!!!!!!!!!!!!!
     }
-    else
+    else // nz > 0
     {
         // add hessian of the cost contribution
         blasfeo_dgead(nx + nu, nx + nu, 1.0, &memory->hess, 0, 0, memory->RSQrq, 0, 0);
-        // // initialize hessian of lagrangian with hessian of cost
-        // blasfeo_dgecp(nu + nx, nu + nx, &memory->hess, 0, 0, memory->RSQrq, 0, 0);
 
         // compute gradient
         blasfeo_dgemv_t(nu + nx, ny, 1.0, &model->Cyt, 0, 0, memory->ux, 0, -1.0, &model->y_ref, 0, &memory->res, 0);
 
-        blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res, 0, 0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
+        blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res, 0,
+                        0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
 
-        blasfeo_dgemv_n(nu + nx, ny, 1.0, &model->Cyt, 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0, &memory->grad, 0);
+        blasfeo_dgemv_n(nu + nx, ny, 1.0, &model->Cyt, 0, 0, &work->tmp_ny, 0,
+                        0.0, &memory->grad, 0, &memory->grad, 0);
 
-		memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &memory->res, 0);
+        memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &memory->res, 0);
     }
 
     // slacks
     blasfeo_dveccp(2*ns, &model->z, 0, &memory->grad, nu+nx);
     blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
 
-	blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);
-	blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &work->tmp_2ns, 0);
-	memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->ux, nu+nx);
+    blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);
+    blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &work->tmp_2ns, 0);
+    memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->ux, nu+nx);
 
     // scale
     if(model->scaling!=1.0)
@@ -835,7 +839,8 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
 
 
 
-void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_)
+void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims_, void *model_, void *opts_,
+                                 void *memory_, void *work_)
 {
     ocp_nlp_cost_ls_dims *dims = dims_;
     ocp_nlp_cost_ls_model *model = model_;
@@ -851,27 +856,28 @@ void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims_, void *model_, void 
     int ny = dims->ny;
     int ns = dims->ns;
 
-	// TODO should this overwrite memory->{res,grad,fun,...} (as now) or not ????
+    // TODO should this overwrite memory->{res,grad,fun,...} (as now) or not ????
 
     if (nz > 0)
     {
-		// TODO
-		printf("\nerror: ocp_nlp_cost_ls_compute_fun: not implemented yet for nz>0\n");
-		exit(1);
+        // TODO
+        printf("\nerror: ocp_nlp_cost_ls_compute_fun: not implemented yet for nz>0\n");
+        exit(1);
     }
     else
     {
-        blasfeo_dgemv_t(nu+nx, ny, 1.0, &model->Cyt, 0, 0, memory->tmp_ux, 0, -1.0, &model->y_ref, 0, &memory->res, 0);
+        blasfeo_dgemv_t(nu+nx, ny, 1.0, &model->Cyt, 0, 0, memory->tmp_ux, 0, -1.0,
+                        &model->y_ref, 0, &memory->res, 0);
 
-		blasfeo_dtrmv_ltn(ny, 1.0, &memory->W_chol, 0, 0, &memory->res, 0, &work->tmp_ny, 0);
+        blasfeo_dtrmv_ltn(ny, 1.0, &memory->W_chol, 0, 0, &memory->res, 0, &work->tmp_ny, 0);
 
-		memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &work->tmp_ny, 0);
+        memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &work->tmp_ny, 0);
     }
 
     // slacks
-	blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);
-	blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->tmp_ux, nu+nx, &work->tmp_2ns, 0);
-	memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->tmp_ux, nu+nx);
+    blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);
+    blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->tmp_ux, nu+nx, &work->tmp_2ns, 0);
+    memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->tmp_ux, nu+nx);
 
     // scale
     if(model->scaling!=1.0)
