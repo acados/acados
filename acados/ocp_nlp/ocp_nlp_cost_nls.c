@@ -222,9 +222,9 @@ void *ocp_nlp_cost_nls_model_assign(void *config_, void *dims_, void *raw_memory
     ocp_nlp_cost_nls_model *model = (ocp_nlp_cost_nls_model *) c_ptr;
     c_ptr += sizeof(ocp_nlp_cost_nls_model);
 
-    model->nls_res  = NULL;
-    model->nls_res_jac  = NULL;
-    model->nls_hess = NULL;
+    model->nls_y_fun = NULL;
+    model->nls_y_fun_jac = NULL;
+    model->nls_y_hess = NULL;
 
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
@@ -315,17 +315,17 @@ int ocp_nlp_cost_nls_model_set(void *config_, void *dims_, void *model_,
         double *zu = (double *) value_;
         blasfeo_pack_dvec(ns, zu, &model->z, ns);
     }
-    else if (!strcmp(field, "nls_res"))
+    else if (!strcmp(field, "nls_y_fun") || !strcmp(field, "nls_res"))
     {
-        model->nls_res = (external_function_generic *) value_;
+        model->nls_y_fun = (external_function_generic *) value_;
     }
-    else if (!strcmp(field, "nls_res_jac"))
+    else if (!strcmp(field, "nls_y_fun_jac") || !strcmp(field, "nls_res_jac"))
     {
-        model->nls_res_jac = (external_function_generic *) value_;
+        model->nls_y_fun_jac = (external_function_generic *) value_;
     }
-    else if (!strcmp(field, "nls_hess"))
+    else if (!strcmp(field, "nls_y_hess") || !strcmp(field, "nls_hess"))
     {
-        model->nls_hess = (external_function_generic *) value_;
+        model->nls_y_hess = (external_function_generic *) value_;
     }
     else if (!strcmp(field, "scaling"))
     {
@@ -724,7 +724,7 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
     ext_fun_out[1] = &memory->Jt;  // jac': (nu+nx) * ny
 
     // evaluate external function
-    model->nls_res_jac->evaluate(model->nls_res_jac, ext_fun_type_in, ext_fun_in,
+    model->nls_y_fun_jac->evaluate(model->nls_y_fun_jac, ext_fun_type_in, ext_fun_in,
                                  ext_fun_type_out, ext_fun_out);
 
     /* gradient */
@@ -780,7 +780,7 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
         ext_fun_out[0] = &work->tmp_nv_nv;   // hess*fun: (nu+nx) * (nu+nx)
 
         // evaluate external function
-        model->nls_hess->evaluate(model->nls_hess, ext_fun_type_in, ext_fun_in,
+        model->nls_y_hess->evaluate(model->nls_y_hess, ext_fun_type_in, ext_fun_in,
                                   ext_fun_type_out, ext_fun_out);
 
         // RSQrq += scaling * (tmp_nv_nv + tmp_nv_ny * tmp_nv_ny^T)
@@ -854,7 +854,7 @@ void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims_, void *model_,
     ext_fun_out[0] = &memory->res;  // fun: ny
 
     // evaluate external function
-    model->nls_res->evaluate(model->nls_res, ext_fun_type_in, ext_fun_in,
+    model->nls_y_fun->evaluate(model->nls_y_fun, ext_fun_type_in, ext_fun_in,
                              ext_fun_type_out, ext_fun_out);
 
     /* gradient */
