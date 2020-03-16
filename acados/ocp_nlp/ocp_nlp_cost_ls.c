@@ -808,12 +808,15 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
         blasfeo_dgead(nx + nu, nx + nu, 1.0, &memory->hess, 0, 0, memory->RSQrq, 0, 0);
 
         // compute gradient
+        // res = Cyt * ux - y_ref
         blasfeo_dgemv_t(nu + nx, ny, 1.0, &model->Cyt, 0, 0, memory->ux, 0,
                         -1.0, &model->y_ref, 0, &memory->res, 0);
 
+        // tmp_ny = W * res
         blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res, 0,
                         0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
 
+        // grad = Cyt * tmp_ny
         blasfeo_dgemv_n(nu + nx, ny, 1.0, &model->Cyt, 0, 0, &work->tmp_ny, 0,
                         0.0, &memory->grad, 0, &memory->grad, 0);
 

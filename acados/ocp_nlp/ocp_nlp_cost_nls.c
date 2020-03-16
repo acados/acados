@@ -744,6 +744,8 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
     blasfeo_dgemv_n(nu+nx, ny, 1.0, &memory->Jt, 0, 0, &work->tmp_ny, 0,
                     0.0, &memory->grad, 0, &memory->grad, 0);
 
+    // function
+    memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &memory->res, 0);
     // printf("tmp_ny\n");
     // blasfeo_print_dvec(ny, &work->tmp_ny, 0);
 
@@ -789,9 +791,14 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
         blasfeo_dgead(nu+nx, nu+nx, model->scaling, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
     }
 
-    // slacks
+    // slack update gradient
     blasfeo_dveccp(2*ns, &model->z, 0, &memory->grad, nu+nx);
     blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
+
+    // slack update function value
+    blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);
+    blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->tmp_ux, nu+nx, &work->tmp_2ns, 0);
+    memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->tmp_ux, nu+nx);
 
     // scale
     if(model->scaling!=1.0)
@@ -857,7 +864,6 @@ void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims_, void *model_,
     model->nls_y_fun->evaluate(model->nls_y_fun, ext_fun_type_in, ext_fun_in,
                              ext_fun_type_out, ext_fun_out);
 
-    /* gradient */
     // res = res - y_ref
     blasfeo_daxpy(ny, -1.0, &model->y_ref, 0, &memory->res, 0, &memory->res, 0);
 
@@ -865,7 +871,7 @@ void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims_, void *model_,
 
     memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &work->tmp_ny, 0);
 
-    // slacks
+    // slack update function value
     blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);
     blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->tmp_ux, nu+nx, &work->tmp_2ns, 0);
     memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->tmp_ux, nu+nx);
