@@ -783,9 +783,10 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
         model->nls_hess->evaluate(model->nls_hess, ext_fun_type_in, ext_fun_in,
                                   ext_fun_type_out, ext_fun_out);
 
-        // RSQrq = scaling * (tmp_nv_nv + tmp_nv_ny * tmp_nv_ny^T)
+        // RSQrq += scaling * (tmp_nv_nv + tmp_nv_ny * tmp_nv_ny^T)
         blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0,
-                         model->scaling, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
+                         1.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
+        blasfeo_dgead(nu+nx, nu+nx, model->scaling, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
     }
 
     // slacks
