@@ -85,7 +85,10 @@ typedef struct
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
     int (*workspace_calculate_size)(void *config, void *dims, void *opts);
     void (*initialize)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
+
+    // computes the function value, gradient and hessian (approximation) of the cost function
     void (*update_qp_matrices)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
+    // computes the cost function value (intended for globalization)
     void (*compute_fun)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*config_initialize_default)(void *config);
 } ocp_nlp_cost_config;

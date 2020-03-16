@@ -808,7 +808,8 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
         blasfeo_dgead(nx + nu, nx + nu, 1.0, &memory->hess, 0, 0, memory->RSQrq, 0, 0);
 
         // compute gradient
-        blasfeo_dgemv_t(nu + nx, ny, 1.0, &model->Cyt, 0, 0, memory->ux, 0, -1.0, &model->y_ref, 0, &memory->res, 0);
+        blasfeo_dgemv_t(nu + nx, ny, 1.0, &model->Cyt, 0, 0, memory->ux, 0,
+                        -1.0, &model->y_ref, 0, &memory->res, 0);
 
         blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res, 0,
                         0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
@@ -819,10 +820,11 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
         memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &memory->res, 0);
     }
 
-    // slacks
+    // slack update gradient
     blasfeo_dveccp(2*ns, &model->z, 0, &memory->grad, nu+nx);
     blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
 
+    // slack update function value
     blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);
     blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &work->tmp_2ns, 0);
     memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->ux, nu+nx);
@@ -856,7 +858,7 @@ void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims_, void *model_, void 
     int ny = dims->ny;
     int ns = dims->ns;
 
-    // TODO should this overwrite memory->{res,grad,fun,...} (as now) or not ????
+    // TODO should this overwrite memory->{res,fun,...} (as now) or not ????
 
     if (nz > 0)
     {
@@ -874,7 +876,7 @@ void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims_, void *model_, void 
         memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &work->tmp_ny, 0);
     }
 
-    // slacks
+    // slack update function value
     blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);
     blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->tmp_ux, nu+nx, &work->tmp_2ns, 0);
     memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->tmp_ux, nu+nx);

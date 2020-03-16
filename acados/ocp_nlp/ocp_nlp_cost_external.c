@@ -502,7 +502,7 @@ int ocp_nlp_cost_external_workspace_calculate_size(void *config_, void *dims_, v
 
     size += 1 * blasfeo_memsize_dmat(nu+nx, nu+nx);  // tmp_nv_nv
 
-    size += 1 * blasfeo_memsize_dvec(2*ns);              // tmp_2ns
+    size += 1 * blasfeo_memsize_dvec(2*ns);  // tmp_2ns
 
     size += 64;  // blasfeo_mem align
     
@@ -615,14 +615,20 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
     // TODO(zanellia, giaf): check scaling
     blasfeo_dgead(nx+nu, nx+nu, model->scaling, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
 
-    // slacks
+    // slack update gradient
     blasfeo_dveccp(2*ns, &model->z, 0, &memory->grad, nu+nx);
     blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
 
+    // slack update function value
+    blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);
+    blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &work->tmp_2ns, 0);
+    memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->ux, nu+nx);
+
     // scale
-    if(model->scaling!=1.0)
+    if (model->scaling!=1.0)
     {
         blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
+        memory->fun *= model->scaling;
     }
 
     // blasfeo_print_dmat(nu+nx, nu+nx, memory->RSQrq, 0, 0);
@@ -656,9 +662,8 @@ void ocp_nlp_cost_external_compute_fun(void *config_, void *dims_, void *model_,
     // TODO(oj): add z
     ext_fun_arg_t ext_fun_type_in[2];
     void *ext_fun_in[2];
-    ext_fun_arg_t ext_fun_type_out[2];
-    void *ext_fun_out[2];
-
+    ext_fun_arg_t ext_fun_type_out[1];
+    void *ext_fun_out[1];
 
     // INPUT
     struct blasfeo_dvec_args u_in;  // input u
@@ -682,11 +687,7 @@ void ocp_nlp_cost_external_compute_fun(void *config_, void *dims_, void *model_,
     model->ext_cost_fun->evaluate(model->ext_cost_fun, ext_fun_type_in, ext_fun_in,
                                   ext_fun_type_out, ext_fun_out);
 
-    // slacks
-    blasfeo_dveccp(2*ns, &model->z, 0, &memory->grad, nu+nx);
-    blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
-
-    // slacks
+    // slack update function value
     blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);
     blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->tmp_ux, nu+nx, &work->tmp_2ns, 0);
     memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->tmp_ux, nu+nx);
