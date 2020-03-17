@@ -793,16 +793,18 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
         blasfeo_dgemv_t(nu + nx, ny, 1.0, &work->Cyt_tilde, 0, 0, memory->ux,
                 0, -1.0, &work->y_ref_tilde, 0, &memory->res, 0);
 
+        // tmp_ny = W * res
         blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res,
                 0, 0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
 
+        // grad = Cyt_tilde * tmp_ny
         blasfeo_dgemv_n(nu + nx, ny, 1.0, &work->Cyt_tilde,
                 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0, &memory->grad, 0);
 
+        memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &memory->res, 0);
         // TODO what about the exact hessian in the case of nz>0 ???
-        // TODO compute fun !!!!!!!!!!!!!!
     }
-    else // nz > 0
+    else // nz == 0
     {
         // add hessian of the cost contribution
         blasfeo_dgead(nx + nu, nx + nu, 1.0, &memory->hess, 0, 0, memory->RSQrq, 0, 0);
