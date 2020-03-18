@@ -1698,6 +1698,7 @@ class AcadosOcpOptions:
         self.__tf               = None                        # prediction horizon
         self.__nlp_solver_type  = 'SQP_RTI'                   # NLP solver
         self.__nlp_solver_step_length = 1.0                   # fixed Newton step length
+        self.__levenberg_marquardt = 0.0
         self.__sim_method_num_stages  = 4                     # number of stages in the integrator
         self.__sim_method_num_steps   = 1                     # number of steps in the integrator
         self.__sim_method_newton_iter = 3                     # number of Newton iterations in simulation method
@@ -1751,6 +1752,11 @@ class AcadosOcpOptions:
     def nlp_solver_step_length(self):
         """Fixed Newton step length"""
         return self.__nlp_solver_step_length
+
+    @property
+    def levenberg_marquardt(self):
+        """Factor for LM regularization"""
+        return self.__levenberg_marquardt
 
     @property
     def sim_method_num_stages(self):
@@ -1963,6 +1969,13 @@ class AcadosOcpOptions:
             self.__nlp_solver_step_length = nlp_solver_step_length
         else:
             raise Exception('Invalid nlp_solver_step_length value. nlp_solver_step_length must be a positive float. Exiting')
+
+    @levenberg_marquardt.setter
+    def levenberg_marquardt(self, levenberg_marquardt):
+        if isinstance(levenberg_marquardt, float) and levenberg_marquardt >= 0:
+            self.__levenberg_marquardt = levenberg_marquardt
+        else:
+            raise Exception('Invalid levenberg_marquardt value. levenberg_marquardt must be a positive float. Exiting')
 
     @qp_solver_tol_stat.setter
     def qp_solver_tol_stat(self, qp_solver_tol_stat):

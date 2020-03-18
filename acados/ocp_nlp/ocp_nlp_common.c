@@ -1052,6 +1052,8 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
 #endif
 
     opts->step_length = 1.0;
+    opts->levenberg_marquardt = 0.0;
+
 
     // submodules opts
 
@@ -1169,6 +1171,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         {
             double* step_length = (double *) value;
             opts->step_length = *step_length;
+        }
+        else if (!strcmp(field, "levenberg_marquardt"))
+        {
+            double* levenberg_marquardt = (double *) value;
+            opts->levenberg_marquardt = *levenberg_marquardt;
         }
         else if (!strcmp(field, "exact_hess"))
         {
@@ -1833,6 +1840,10 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
     {
         // init Hessian to 0 
         blasfeo_dgese(nu[i] + nx[i], nu[i] + nx[i], 0.0, mem->qp_in->RSQrq+i, 0, 0);
+
+        // Levenberg Marquardt term
+        if (opts->levenberg_marquardt > 0.0)
+            blasfeo_ddiare(nu[i] + nx[i], opts->levenberg_marquardt, mem->qp_in->RSQrq+i, 0, 0);
 
         // dynamics
         if (i < N)
