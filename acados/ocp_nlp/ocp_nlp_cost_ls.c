@@ -788,7 +788,7 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
         blasfeo_dsyrk_ln(nu + nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny,
                          0, 0, 1.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
 
-        // compute gradient
+        // compute gradient, function
         // res = \tilde{V}_x * x + \tilde{V}_u * u - \tilde{y}_ref
         blasfeo_dgemv_t(nu + nx, ny, 1.0, &work->Cyt_tilde, 0, 0, memory->ux,
                 0, -1.0, &work->y_ref_tilde, 0, &memory->res, 0);
@@ -809,7 +809,7 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
         // add hessian of the cost contribution
         blasfeo_dgead(nx + nu, nx + nu, 1.0, &memory->hess, 0, 0, memory->RSQrq, 0, 0);
 
-        // compute gradient
+        // compute gradient, function
         // res = Cyt * ux - y_ref
         blasfeo_dgemv_t(nu + nx, ny, 1.0, &model->Cyt, 0, 0, memory->ux, 0,
                         -1.0, &model->y_ref, 0, &memory->res, 0);
@@ -864,10 +864,24 @@ void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims_, void *model_, void 
     int ns = dims->ns;
 
     // TODO should this overwrite memory->{res,fun,...} (as now) or not ????
-
     if (nz > 0)
     {
-        // TODO
+        // update y_ref: y_ref_tilde = y_ref + Vz*(dzdx*x + dzdu*u - z)
+        blasfeo_dgemv_t(nx + nu, nz, 1.0, memory->dzdux_tran,
+                0, 0, memory->ux, 0, -1.0, memory->z_alg, 0, &work->tmp_nz, 0);
+
+        blasfeo_dgemv_n(ny, nz, +1.0, &model->Vz,
+                0, 0, &work->tmp_nz, 0, 1.0, &work->y_ref_tilde, 0, &work->y_ref_tilde, 0);
+
+        // res = \tilde{V}_x * x + \tilde{V}_u * u - \tilde{y}_ref
+        blasfeo_dgemv_t(nu + nx, ny, 1.0, &work->Cyt_tilde, 0, 0, memory->ux,
+                0, -1.0, &work->y_ref_tilde, 0, &memory->res, 0);
+
+        // tmp_ny = W * res
+        blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res,
+                0, 0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
+
+        memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &memory->res, 0);
         printf("\nerror: ocp_nlp_cost_ls_compute_fun: not implemented yet for nz>0\n");
         exit(1);
     }
