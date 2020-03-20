@@ -269,7 +269,7 @@ def ocp_check_json_against_layout_recursion(ocp_nlp, ocp_dims, ocp_nlp_layout):
     for key, item in ocp_nlp.items():
 
         if isinstance(item, dict):
-            item = ocp_check_json_against_layout_recursion(item, ocp_dims, ocp_nlp_layout[key])
+            ocp_check_json_against_layout_recursion(item, ocp_dims, ocp_nlp_layout[key])
 
         if 'ndarray' in ocp_nlp_layout[key]:
             if isinstance(item, int) or isinstance(item, float):
@@ -282,17 +282,15 @@ def ocp_check_json_against_layout_recursion(ocp_nlp, ocp_dims, ocp_nlp_layout):
                 dim_layout.append(ocp_dims[dim_name])
 
             dims = tuple(dim_layout)
-            if item == []:
-                try:
-                    item = np.reshape(item, dims)
-                except:
-                    raise Exception('acados -- mismatching dimensions for field {0}. ' \
-                         'Provided data has dimensions [], ' \
-                         'while associated dimensions {1} are {2}' \
-                             .format(key, dim_names, dims))
-            else:
-                item = np.array(item)
-                item_dims = item.shape
+
+            item = np.array(item)
+            item_dims = item.shape
+            if len(item_dims) != len(dims):
+                raise Exception('Mismatching dimensions for field {0}. ' \
+                    'Expected {1} dimensional array, got {2} dimensional array.' \
+                        .format(key, len(dims), len(item_dims)))
+
+            if np.prod(item_dims) != 0 or np.prod(dims) != 0:
                 if dims != item_dims:
                     raise Exception('acados -- mismatching dimensions for field {0}. ' \
                         'Provided data has dimensions {1}, ' \
