@@ -424,10 +424,10 @@ class AcadosOcpCost:
     def __init__(self):
         # Lagrange term
         self.__cost_type   = 'LINEAR_LS'  # cost type
-        self.__W           = np.array([])
-        self.__Vx          = np.array([])
-        self.__Vu          = np.array([])
-        self.__Vz          = np.array([])
+        self.__W           = np.zeros((0,0))
+        self.__Vx          = np.zeros((0,0))
+        self.__Vu          = np.zeros((0,0))
+        self.__Vz          = np.zeros((0,0))
         self.__yref        = np.array([])
         self.__Zl          = np.array([])
         self.__Zu          = np.array([])
@@ -435,8 +435,8 @@ class AcadosOcpCost:
         self.__zu          = np.array([])
         # Mayer term
         self.__cost_type_e = 'LINEAR_LS'  # cost type for Mayer term
-        self.__W_e         = np.array([])
-        self.__Vx_e        = np.array([])
+        self.__W_e         = np.zeros((0,0))
+        self.__Vx_e        = np.zeros((0,0))
         self.__yref_e      = np.array([])
         self.__Zl_e        = np.array([])
         self.__Zu_e        = np.array([])
@@ -506,31 +506,36 @@ class AcadosOcpCost:
 
     @W.setter
     def W(self, W):
-        if type(W) == np.ndarray:
+        if isinstance(W, np.ndarray) and len(W.shape) == 2:
             self.__W = W
         else:
-            raise Exception('Invalid W value. Exiting.')
+            raise Exception('Invalid cost W value. ' \
+                + 'Should be 2 dimensional numpy array. Exiting.')
+
 
     @Vx.setter
     def Vx(self, Vx):
-        if type(Vx) == np.ndarray:
+        if isinstance(Vx, np.ndarray) and len(Vx.shape) == 2:
             self.__Vx = Vx
         else:
-            raise Exception('Invalid Vx value. Exiting.')
+            raise Exception('Invalid cost Vx value. ' \
+                + 'Should be 2 dimensional numpy array. Exiting.')
 
     @Vu.setter
     def Vu(self, Vu):
-        if type(Vu) == np.ndarray:
+        if isinstance(Vu, np.ndarray) and len(Vu.shape) == 2:
             self.__Vu = Vu
         else:
-            raise Exception('Invalid Vu value. Exiting.')
+            raise Exception('Invalid cost Vu value. ' \
+                + 'Should be 2 dimensional numpy array. Exiting.')
 
     @Vz.setter
     def Vz(self, Vz):
-        if type(Vz) == np.ndarray:
+        if isinstance(Vz, np.ndarray) and len(Vz.shape) == 2:
             self.__Vz = Vz
         else:
-            raise Exception('Invalid Vz value. Exiting.')
+            raise Exception('Invalid cost Vz value. ' \
+                + 'Should be 2 dimensional numpy array. Exiting.')
 
     @yref.setter
     def yref(self, yref):
@@ -619,17 +624,19 @@ class AcadosOcpCost:
 
     @W_e.setter
     def W_e(self, W_e):
-        if type(W_e) == np.ndarray:
+        if isinstance(W_e, np.ndarray) and len(W_e.shape) == 2:
             self.__W_e = W_e
         else:
-            raise Exception('Invalid W_e value. Exiting.')
+            raise Exception('Invalid cost W_e value. ' \
+                + 'Should be 2 dimensional numpy array. Exiting.')
 
     @Vx_e.setter
     def Vx_e(self, Vx_e):
-        if type(Vx_e) == np.ndarray:
+        if isinstance(Vx_e, np.ndarray) and len(Vx_e.shape) == 2:
             self.__Vx_e = Vx_e
         else:
-            raise Exception('Invalid Vx_e value. Exiting.')
+            raise Exception('Invalid cost Vx_e value. ' \
+                + 'Should be 2 dimensional numpy array. Exiting.')
 
     @yref_e.setter
     def yref_e(self, yref_e):
@@ -669,6 +676,7 @@ class AcadosOcpCost:
     def set(self, attr, value):
         setattr(self, attr, value)
 
+
 def print_J_to_idx_note():
     print("NOTE: J* matrix is converted to zero based vector idx* vector, which is returned here.")
 
@@ -699,10 +707,10 @@ class AcadosOcpConstraints:
         # polytopic constraints
         self.__lg      = np.array([])
         self.__ug      = np.array([])
-        self.__D       = np.array([])
-        self.__C       = np.array([])
+        self.__D       = np.zeros((0,0))
+        self.__C       = np.zeros((0,0))
         # polytopic constraints at t=T
-        self.__C_e     = np.array([])
+        self.__C_e     = np.zeros((0,0))
         self.__lg_e    = np.array([])
         self.__ug_e    = np.array([])
         # nonlinear constraints
@@ -1230,17 +1238,19 @@ class AcadosOcpConstraints:
     # polytopic constraints
     @D.setter
     def D(self, D):
-        if type(D) == np.ndarray:
+        if isinstance(D, np.ndarray) and len(D.shape) == 2:
             self.__D = D
         else:
-            raise Exception('Invalid D value. Exiting.')
+            raise Exception('Invalid constraint D value.' \
+                + 'Should be 2 dimensional numpy array. Exiting.')
 
     @C.setter
     def C(self, C):
-        if type(C) == np.ndarray:
+        if isinstance(C, np.ndarray) and len(C.shape) == 2:
             self.__C = C
         else:
-            raise Exception('Invalid C value. Exiting.')
+            raise Exception('Invalid constraint C value.' \
+                + 'Should be 2 dimensional numpy array. Exiting.')
 
     @lg.setter
     def lg(self, lg):
@@ -1259,10 +1269,11 @@ class AcadosOcpConstraints:
     # polytopic constraints at t=T
     @C_e.setter
     def C_e(self, C_e):
-        if type(C_e) == np.ndarray:
+        if isinstance(C_e, np.ndarray) and len(C_e.shape) == 2:
             self.__C_e = C_e
         else:
-            raise Exception('Invalid C_e value. Exiting.')
+            raise Exception('Invalid constraint C_e value.' \
+                + 'Should be 2 dimensional numpy array. Exiting.')
 
     @lg_e.setter
     def lg_e(self, lg_e):
