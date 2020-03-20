@@ -424,24 +424,24 @@ class AcadosOcpCost:
     def __init__(self):
         # Lagrange term
         self.__cost_type   = 'LINEAR_LS'  # cost type
-        self.__W           = np.array([])           # weight matrix
-        self.__Vx          = np.array([])           # x matrix coefficient
-        self.__Vu          = np.array([])           # u matrix coefficient
-        self.__Vz          = np.array([])           # z matrix coefficient
-        self.__yref        = np.array([])           # reference
-        self.__Zl          = np.array([])           # diagonal of Hessian wrt lower slack
-        self.__Zu          = np.array([])           # diagonal of Hessian wrt upper slack
-        self.__zl          = np.array([])           # gradient wrt lower slack
-        self.__zu          = np.array([])           # gradient wrt upper slack
+        self.__W           = np.array([])
+        self.__Vx          = np.array([])
+        self.__Vu          = np.array([])
+        self.__Vz          = np.array([])
+        self.__yref        = np.array([])
+        self.__Zl          = np.array([])
+        self.__Zu          = np.array([])
+        self.__zl          = np.array([])
+        self.__zu          = np.array([])
         # Mayer term
         self.__cost_type_e = 'LINEAR_LS'  # cost type for Mayer term
-        self.__W_e         = np.array([])           # weight matrix for Mayer term
-        self.__Vx_e        = np.array([])           # x matrix coefficient for Mayer term
-        self.__yref_e      = np.array([])           # reference for Mayer term
-        self.__Zl_e        = np.array([])           # diagonal of Hessian wrt lower slack for Mayer term
-        self.__Zu_e        = np.array([])           # diagonal of Hessian wrt upper slack for Mayer term
-        self.__zl_e        = np.array([])           # gradient wrt lower slack for Mayer term
-        self.__zu_e        = np.array([])           # gradient wrt upper slack for Mayer term
+        self.__W_e         = np.array([])
+        self.__Vx_e        = np.array([])
+        self.__yref_e      = np.array([])
+        self.__Zl_e        = np.array([])
+        self.__Zu_e        = np.array([])
+        self.__zl_e        = np.array([])
+        self.__zu_e        = np.array([])
 
     # Lagrange term
     @property
@@ -678,74 +678,74 @@ class AcadosOcpConstraints:
     class containing the description of the constraints
     """
     def __init__(self):
-        self.__constr_type   = 'BGH'                  # constraint type
-        self.__constr_type_e = 'BGH'                  # constraint type
+        self.__constr_type   = 'BGH'
+        self.__constr_type_e = 'BGH'
         # initial x
-        self.__lbx_0   = np.array([])                           # lower bounds on x for initial state
-        self.__ubx_0   = np.array([])                           # upper bounds on x for initial state
-        self.__idxbx_0 = np.array([])                           # indexes for bounds on x0
+        self.__lbx_0   = np.array([])
+        self.__ubx_0   = np.array([])
+        self.__idxbx_0 = np.array([])
         # state bounds
-        self.__lbx     = np.array([])                           # lower bounds on x
-        self.__ubx     = np.array([])                           # upper bounds on x
+        self.__lbx     = np.array([])
+        self.__ubx     = np.array([])
         self.__idxbx   = np.array([])
         # bounds on x at t=T
-        self.__lbx_e   = np.array([])                           # lower bounds on x at t=T
-        self.__ubx_e   = np.array([])                           # upper bounds on x at t=T
+        self.__lbx_e   = np.array([])
+        self.__ubx_e   = np.array([])
         self.__idxbx_e = np.array([])
         # bounds on u
-        self.__lbu     = np.array([])                           # lower bounds on u
-        self.__ubu     = np.array([])                           # upper bounds on u
+        self.__lbu     = np.array([])
+        self.__ubu     = np.array([])
         self.__idxbu   = np.array([])
         # polytopic constraints
-        self.__lg      = np.array([])                           # lower bound for general polytopic inequalities
-        self.__ug      = np.array([])                           # upper bound for general polytopic inequalities
-        self.__D       = np.array([])                           # D matrix in lg <= D * u + C * x <= ug
-        self.__C       = np.array([])                           # C matrix in lg <= D * u + C * x <= ug
+        self.__lg      = np.array([])
+        self.__ug      = np.array([])
+        self.__D       = np.array([])
+        self.__C       = np.array([])
         # polytopic constraints at t=T
-        self.__C_e     = np.array([])                           # C matrix at t=T
-        self.__lg_e    = np.array([])                           # lower bound on general polytopic inequalities at t=T
-        self.__ug_e    = np.array([])                           # upper bound on general polytopic inequalities at t=T
+        self.__C_e     = np.array([])
+        self.__lg_e    = np.array([])
+        self.__ug_e    = np.array([])
         # nonlinear constraints
-        self.__lh      = np.array([])                           # lower bound for nonlinear inequalities
-        self.__uh      = np.array([])                           # upper bound for nonlinear inequalities
+        self.__lh      = np.array([])
+        self.__uh      = np.array([])
         # nonlinear constraints at t=T
-        self.__uh_e    = np.array([])                           # upper bound on nonlinear inequalities at t=T
-        self.__lh_e    = np.array([])                           # lower bound on nonlinear inequalities at t=T
+        self.__uh_e    = np.array([])
+        self.__lh_e    = np.array([])
         # convex-over-nonlinear constraints
-        self.__lphi    = np.array([])                           # lower bound for convex-over-nonlinear inequalities
-        self.__uphi    = np.array([])                           # upper bound for convex-over-nonlinear inequalities
+        self.__lphi    = np.array([])
+        self.__uphi    = np.array([])
         # nonlinear constraints at t=T
-        self.__uphi_e    = np.array([])                         # upper bound on convex-over-nonlinear inequalities at t=T
-        self.__lphi_e    = np.array([])                         # lower bound on convex-over-nonlinear inequalities at t=T
+        self.__uphi_e = np.array([])
+        self.__lphi_e = np.array([])
         # SLACK BOUNDS
         # soft bounds on x
-        self.__lsbx   = np.array([])                            # lower bounds on slacks corresponding to soft lower bounds on x
-        self.__usbx   = np.array([])                            # lower bounds on slacks corresponding to soft upper bounds on x
-        self.__idxsbx = np.array([])                            # indexes of soft bounds on x within the indices of bounds on x
+        self.__lsbx   = np.array([])
+        self.__usbx   = np.array([])
+        self.__idxsbx = np.array([])
         # soft bounds on u
-        self.__lsbu   = np.array([])                            # lower bounds on slacks corresponding to soft lower bounds on u
-        self.__usbu   = np.array([])                            # lower bounds on slacks corresponding to soft upper bounds on u
-        self.__idxsbu = np.array([])                            # indexes of soft bounds on u within the indices of bounds on u
+        self.__lsbu   = np.array([])
+        self.__usbu   = np.array([])
+        self.__idxsbu = np.array([])
         # soft bounds on x at t=T
-        self.__lsbx_e  = np.array([])                           # lower bounds on slacks corresponding to soft lower bounds on x at t=T
-        self.__usbx_e  = np.array([])                           # lower bounds on slacks corresponding to soft upper bounds on x at t=T
-        self.__idxsbx_e= np.array([])                           # indexes of soft bounds on x at t=T, within the indices of bounds on x at t=T
+        self.__lsbx_e  = np.array([])
+        self.__usbx_e  = np.array([])
+        self.__idxsbx_e= np.array([])
         # soft bounds on nonlinear constraints
-        self.__lsh    = np.array([])                            # lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints
-        self.__ush    = np.array([])                            # lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints
-        self.__idxsh  = np.array([])                            # indexes of soft nonlinear constraints within the indices of nonlinear constraints
+        self.__lsh    = np.array([])
+        self.__ush    = np.array([])
+        self.__idxsh  = np.array([])
         # soft bounds on nonlinear constraints
-        self.__lsphi  = np.array([])                            # lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints
-        self.__usphi  = np.array([])                            # lower bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints
-        self.__idxsphi  = np.array([])                          # indexes of soft convex-over-nonlinear constraints within the indices of nonlinear constraints
+        self.__lsphi  = np.array([])
+        self.__usphi  = np.array([])
+        self.__idxsphi  = np.array([])
         # soft bounds on nonlinear constraints at t=T
-        self.__lsh_e    = np.array([])                          # lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints at t=T
-        self.__ush_e    = np.array([])                          # lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints at t=T
-        self.__idxsh_e  = np.array([])                          # indexes of soft nonlinear constraints at t=T within the indices of nonlinear constraints at t=T
+        self.__lsh_e    = np.array([])
+        self.__ush_e    = np.array([])
+        self.__idxsh_e  = np.array([])
         # soft bounds on nonlinear constraints at t=T
-        self.__lsphi_e    = np.array([])                        # lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints at t=T
-        self.__usphi_e    = np.array([])                        # lower bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints at t=T
-        self.__idxsphi_e  = np.array([])                        # indexes of soft nonlinear constraints at t=T within the indices of nonlinear constraints at t=T
+        self.__lsphi_e    = np.array([])
+        self.__usphi_e    = np.array([])
+        self.__idxsphi_e  = np.array([])
 
 
     # types
@@ -1644,7 +1644,8 @@ class AcadosOcpOptions:
     @property
     def tol(self):
         """NLP solver tolerance"""
-        return max([self.__nlp_solver_tol_eq, self.__nlp_solver_tol_ineq, self.__nlp_solver_tol_comp, self.__nlp_solver_tol_stat])
+        return max([self.__nlp_solver_tol_eq, self.__nlp_solver_tol_ineq,\
+                    self.__nlp_solver_tol_comp, self.__nlp_solver_tol_stat])
 
     @property
     def nlp_solver_tol_stat(self):
