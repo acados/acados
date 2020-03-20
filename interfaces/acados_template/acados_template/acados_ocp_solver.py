@@ -543,7 +543,7 @@ class AcadosOcpSolver:
 
         if (field_ not in out_fields):
             raise Exception('AcadosOcpSolver.get(): {} is an invalid argument.\
-                    \n Possible values are {}. Exiting.'.format(out_fields))
+                    \n Possible values are {}. Exiting.'.format(field_, out_fields))
 
         self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = \
             [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
@@ -665,11 +665,10 @@ class AcadosOcpSolver:
             value_data = cast(value_.ctypes.data, POINTER(c_double))
             self.shared_lib.acados_update_params(stage, value_data, value_.shape[0])
         else:
-            if (field_ not in constraints_fields) and \
-                    (field_ not in cost_fields) and (field_ not in out_fields):
+            if field_ not in constraints_fields + cost_fields + out_fields:
                 raise Exception("AcadosOcpSolver.set(): {} is not a valid argument.\
-                    \nPossible values are {} and {}. Exiting.".format(field, \
-                    cost_fields, constraints_fields, out_fields))
+                    \nPossible values are {}. Exiting.".format(field, \
+                    constraints_fields + cost_fields + out_fields))
 
             self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = \
                 [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
@@ -802,13 +801,13 @@ class AcadosOcpSolver:
         """
         # cast value_ to avoid conversion issues
         if not isinstance(value_, int):
-            raise Exception('solver options must be of type int. You have {}'.format())
+            raise Exception('solver options must be of type int. You have {}.'.format(type(value_)))
 
         if field_ == 'rti_phase':
             if value_ < 0 or value_ > 2:
                 raise Exception('AcadosOcpSolver.solve(): argument \'rti_phase\' can '
                     'take only values 0, 1, 2 for SQP-RTI-type solvers')
-            if self.acados_ocp.solver_options.nlp_solver_type != 'SQP_RTI' and rti_phase > 0:
+            if self.acados_ocp.solver_options.nlp_solver_type != 'SQP_RTI' and value_ > 0:
                 raise Exception('AcadosOcpSolver.solve(): argument \'rti_phase\' can '
                     'take only value 0 for SQP-type solvers')
 
