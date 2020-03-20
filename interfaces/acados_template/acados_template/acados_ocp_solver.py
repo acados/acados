@@ -82,11 +82,47 @@ def make_ocp_dims_consistent(acados_ocp):
     else:
         dims.np = casadi_length(model.p)
 
-    # cost
-    # TODO
+    ## cost
+    # path
+    if cost.cost_type == 'LINEAR_LS':
+        ny = cost.W.shape[0]
+        if cost.Vx.shape[0] != ny or cost.Vu.shape[0] != ny:
+            raise Exception('inconsistent dimension ny, regarding W, Vx, Vu.')
+        if dims.nz != 0 and cost.Vz.shape[0] != ny:
+            raise Exception('inconsistent dimension ny, regarding W, Vx, Vu, Vz.')
+        if cost.Vx.shape[1] != dims.nx:
+            raise Exception('inconsistent dimension: Vx should have nx columns.')
+        if cost.Vu.shape[1] != dims.nu:
+            raise Exception('inconsistent dimension: Vu should have nu columns.')
+        dims.ny = ny
 
-    # constraints #
+    elif cost.cost_type == 'NONLINEAR_LS':
+        ny = cost.W.shape[0]
+        if is_empty(model.cost_y_expr) and ny != 0:
+            raise Exception('inconsistent dimension ny: regarding W, cost_y_expr.')
+        elif casadi_length(model.cost_y_expr) != ny:
+            raise Exception('inconsistent dimension ny: regarding W, cost_y_expr.')
+        dims.ny = ny
 
+    # terminal
+    if cost.cost_type_e == 'LINEAR_LS':
+        ny_e = cost.W_e.shape[0]
+        if cost.Vx_e.shape[0] != ny_e:
+            raise Exception('inconsistent dimension ny_e, regarding W_e, Vx_e.')
+        if cost.Vx_e.shape[1] != dims.nx and ny_e != 0:
+            raise Exception('inconsistent dimension: Vx_e should have nx columns.')
+        dims.ny_e = ny_e
+
+    elif cost.cost_type_e == 'NONLINEAR_LS':
+        ny_e = cost.W_e.shape[0]
+        if is_empty(model.cost_y_expr_e) and ny_e != 0:
+            raise Exception('inconsistent dimension ny_e: regarding W_e, cost_y_expr_e.')
+        elif casadi_length(model.cost_y_expr_e) != ny_e:
+            raise Exception('inconsistent dimension ny_e: regarding W_e, cost_y_expr_e.')
+        dims.ny_e = ny_e
+
+
+    ## constraints
     # initial
     if (constraints.lbx_0 == [] and constraints.ubx_0 == []):
         dims.nbx_0 = 0
