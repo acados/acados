@@ -58,21 +58,6 @@ def make_ocp_dims_consistent(acados_ocp):
     constraints = acados_ocp.constraints
     model = acados_ocp.model
 
-    # nbx_0
-    if (constraints.lbx_0 == [] and constraints.ubx_0 == []):
-        dims.nbx_0 = 0
-    elif not (constraints.lbx_0 == [] and constraints.ubx_0 == []):
-        this_shape = constraints.lbx_0.shape
-        other_shape = constraints.ubx_0.shape
-        if not this_shape == other_shape:
-            raise Exception('lbx_0, ubx_0 have different shapes!')
-        if not is_column(constraints.lbx_0):
-            raise Exception('lbx_0, ubx_0 must be column vectors!')
-
-        dims.nbx_0 = constraints.lbx_0.size
-    else:
-        raise Exception('lbx_0, ubx_0 have different shapes!')
-
     # nx
     if is_column(model.x):
         dims.nx = casadi_length(model.x)
@@ -96,6 +81,79 @@ def make_ocp_dims_consistent(acados_ocp):
         dims.np = 0
     else:
         dims.np = casadi_length(model.p)
+
+    # cost
+    # TODO
+
+    # constraints #
+
+    # initial
+    if (constraints.lbx_0 == [] and constraints.ubx_0 == []):
+        dims.nbx_0 = 0
+    elif not (constraints.lbx_0 == [] and constraints.ubx_0 == []):
+        this_shape = constraints.lbx_0.shape
+        other_shape = constraints.ubx_0.shape
+        if not this_shape == other_shape:
+            raise Exception('lbx_0, ubx_0 have different shapes!')
+        if not is_column(constraints.lbx_0):
+            raise Exception('lbx_0, ubx_0 must be column vectors!')
+
+        dims.nbx_0 = constraints.lbx_0.size
+    else:
+        raise Exception('lbx_0, ubx_0 have different shapes!')
+
+    # path
+    nbx = constraints.idxbx.shape[0]
+    if constraints.ubx.shape[0] != nbx or constraints.lbx.shape[0] != nbx:
+        raise Exception('inconsistent dimension nbx, regarding idxbx, ubx, lbx.')
+    else:
+        dims.nbx = nbx
+
+    nbu = constraints.idxbu.shape[0]
+    if constraints.ubu.shape[0] != nbu or constraints.lbu.shape[0] != nbu:
+        raise Exception('inconsistent dimension nbu, regarding idxbu, ubu, lbu.')
+    else:
+        dims.nbu = nbu
+
+    ng = constraints.lg.shape[0]
+    if constraints.ug.shape[0] != ng or constraints.C.shape[0] != ng \
+       or constraints.D.shape[0] != ng:
+        raise Exception('inconsistent dimension ng, regarding lg, ug, C, D.')
+    else:
+        dims.ng = ng
+
+    if not is_empty(model.con_h_expr):
+        nh = casadi_length(model.con_h_expr)
+    else:
+        nh = 0
+
+    if constraints.uh.shape[0] != nh or constraints.lh.shape[0] != nh:
+        raise Exception('inconsistent dimension nh, regarding lh, uh, con_h_expr.')
+    else:
+        dims.nh = nh
+
+    # terminal
+    nbx_e = constraints.idxbx_e.shape[0]
+    if constraints.ubx_e.shape[0] != nbx_e or constraints.lbx_e.shape[0] != nbx_e:
+        raise Exception('inconsistent dimension nbx_e, regarding idxbx_e, ubx_e, lbx_e.')
+    else:
+        dims.nbx_e = nbx_e
+
+    ng_e = constraints.lg_e.shape[0]
+    if constraints.ug_e.shape[0] != ng_e or constraints.C_e.shape[0] != ng_e:
+        raise Exception('inconsistent dimension ng_e, regarding_e lg_e, ug_e, C_e.')
+    else:
+        dims.ng_e = ng_e
+
+    if not is_empty(model.con_h_expr_e):
+        nh_e = casadi_length(model.con_h_expr_e)
+    else:
+        nh_e = 0
+
+    if constraints.uh_e.shape[0] != nh_e or constraints.lh_e.shape[0] != nh_e:
+        raise Exception('inconsistent dimension nh_e, regarding lh_e, uh_e, con_h_expr_e.')
+    else:
+        dims.nh_e = nh_e
 
 
 def set_up_imported_gnsf_model(acados_ocp):

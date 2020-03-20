@@ -159,13 +159,10 @@ ny_e = nx
 N = 20
 
 # set dimensions
-ocp.dims.nx  = nx
-ocp.dims.ny  = ny
+ocp.dims.ny = ny
 ocp.dims.ny_e = ny_e
-ocp.dims.nbx = 0
-ocp.dims.nbu = nu 
-ocp.dims.nu  = nu
-ocp.dims.N   = N
+ocp.dims.nu = nu
+ocp.dims.N = N
 
 # set cost
 Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
