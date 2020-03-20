@@ -83,11 +83,17 @@ def is_column(x):
 def is_empty(x):
     if isinstance(x, (MX, SX, DM)):
         return x.is_empty()
+    elif isinstance(x, np.ndarray):
+        if np.prod(x.shape) == 0:
+            return True
+        else:
+            return False
     elif x == None or x == []:
         return True
     else:
-        raise Exception("is_empty expects one of the following types: casadi.MX, casadi.SX, None, empty list."
-                        + " Got: " + str(type(x)))
+        raise Exception("is_empty expects one of the following types: casadi.MX, casadi.SX, "
+                        + "None, numpy array empty list. Got: " + str(type(x)))
+
 
 def casadi_length(x):
     if isinstance(x, (MX, SX, DM)):

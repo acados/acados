@@ -81,6 +81,8 @@ def make_ocp_dims_consistent(acados_ocp):
         dims.np = 0
     else:
         dims.np = casadi_length(model.p)
+    if acados_ocp.parameter_values.shape[0] != dims.np:
+        raise Exception('inconsistent dimension np, regarding model.p and parameter_values.')
 
     ## cost
     # path
@@ -190,6 +192,153 @@ def make_ocp_dims_consistent(acados_ocp):
         raise Exception('inconsistent dimension nh_e, regarding lh_e, uh_e, con_h_expr_e.')
     else:
         dims.nh_e = nh_e
+
+    # Slack dimensions
+    nsbx = constraints.idxsbx.shape[0]
+    if is_empty(constraints.lsbx):
+        constraints.lsbx = np.zeros((nsbx,))
+    elif constraints.lsbx.shape[0] != nsbx:
+        raise Exception('inconsistent dimension nsbx, regarding idxsbx, lsbx.')
+    if is_empty(constraints.usbx):
+        constraints.usbx = np.zeros((nsbx,))
+    elif constraints.usbx.shape[0] != nsbx:
+        raise Exception('inconsistent dimension nsbx, regarding idxsbx, usbx.')
+    dims.nsbx = nsbx
+
+    nsbu = constraints.idxsbu.shape[0]
+    if is_empty(constraints.lsbu):
+        constraints.lsbu = np.zeros((nsbu,))
+    elif constraints.lsbu.shape[0] != nsbu:
+        raise Exception('inconsistent dimension nsbu, regarding idxsbu, lsbu.')
+    if is_empty(constraints.usbu):
+        constraints.usbu = np.zeros((nsbu,))
+    elif constraints.usbu.shape[0] != nsbu:
+        raise Exception('inconsistent dimension nsbu, regarding idxsbu, usbu.')
+    dims.nsbu = nsbu
+
+    nsh = constraints.idxsh.shape[0]
+    if is_empty(constraints.lsh):
+        constraints.lsh = np.zeros((nsh,))
+    elif constraints.lsh.shape[0] != nsh:
+        raise Exception('inconsistent dimension nsh, regarding idxsh, lsh.')
+    if is_empty(constraints.ush):
+        constraints.ush = np.zeros((nsh,))
+    elif constraints.ush.shape[0] != nsh:
+        raise Exception('inconsistent dimension nsh, regarding idxsh, ush.')
+    dims.nsh = nsh
+
+    nsphi = constraints.idxsphi.shape[0]
+    if is_empty(constraints.lsphi):
+        constraints.lsphi = np.zeros((nsphi,))
+    elif constraints.lsphi.shape[0] != nsphi:
+        raise Exception('inconsistent dimension nsphi, regarding idxsphi, lsphi.')
+    if is_empty(constraints.usphi):
+        constraints.usphi = np.zeros((nsphi,))
+    elif constraints.usphi.shape[0] != nsphi:
+        raise Exception('inconsistent dimension nsphi, regarding idxsphi, usphi.')
+    dims.nsphi = nsphi
+
+    # TODO
+    nsg = 0
+    # nsg = constraints.idxsg.shape[0]
+    # if is_empty(constraints.lsg):
+    #     constraints.lsg = np.zeros((nsg,))
+    # elif constraints.lsg.shape[0] != nsg:
+    #     raise Exception('inconsistent dimension nsg, regarding idxsg, lsg.')
+    # if is_empty(constraints.usg):
+    #     constraints.usg = np.zeros((nsg,))
+    # elif constraints.usg.shape[0] != nsg:
+    #     raise Exception('inconsistent dimension nsg, regarding idxsg, usg.')
+    # dims.nsg = nsg
+
+    ns = nsbx + nsbu + nsh + nsg + nsphi
+    wrong_field = ""
+    if cost.Zl.shape[0] != ns:
+        wrong_field = "Zl"
+        dim = cost.Zl.shape[0]
+    elif cost.Zu.shape[0] != ns:
+        wrong_field = "Zu"
+        dim = cost.Zu.shape[0]
+    elif cost.zl.shape[0] != ns:
+        wrong_field = "zl"
+        dim = cost.zl.shape[0]
+    elif cost.zu.shape[0] != ns:
+        wrong_field = "zu"
+        dim = cost.zu.shape[0]
+
+    if wrong_field != "":
+        raise Exception(f'Inconsistent size for field {wrong_field}, with dimension {dim}, \n\t'\
+            + f'Detected ns = {ns} = nsbx + nsbu + nsg + nsh + nsphi.\n\t'\
+            + f'With nsbx = {nsbx}, nsbu = {nsbu}, nsg = {nsg}, nsh = {nsh}, nsphi = {nsphi}')
+
+
+    nsbx_e = constraints.idxsbx_e.shape[0]
+    if is_empty(constraints.lsbx_e):
+        constraints.lsbx_e = np.zeros((nsbx_e,))
+    elif constraints.lsbx_e.shape[0] != nsbx_e:
+        raise Exception('inconsistent dimension nsbx_e, regarding idxsbx_e, lsbx_e.')
+    if is_empty(constraints.usbx_e):
+        constraints.usbx_e = np.zeros((nsbx_e,))
+    elif constraints.usbx_e.shape[0] != nsbx_e:
+        raise Exception('inconsistent dimension nsbx_e, regarding idxsbx_e, usbx_e.')
+    dims.nsbx_e = nsbx_e
+
+    nsh_e = constraints.idxsh_e.shape[0]
+    if is_empty(constraints.lsh_e):
+        constraints.lsh_e = np.zeros((nsh_e,))
+    elif constraints.lsh_e.shape[0] != nsh_e:
+        raise Exception('inconsistent dimension nsh_e, regarding idxsh_e, lsh_e.')
+    if is_empty(constraints.ush_e):
+        constraints.ush_e = np.zeros((nsh_e,))
+    elif constraints.ush_e.shape[0] != nsh_e:
+        raise Exception('inconsistent dimension nsh_e, regarding idxsh_e, ush_e.')
+    dims.nsh_e = nsh_e
+
+    nsg_e = 0
+    # nsg_e = constraints.idxsg_e.shape[0]
+    # if is_empty(constraints.lsg_e):
+    #     constraints.lsg_e = np.zeros((nsg_e,))
+    # elif constraints.lsg_e.shape[0] != nsg_e:
+    #     raise Exception('inconsistent dimension nsg_e, regarding idxsg_e, lsg_e.')
+    # if is_empty(constraints.usg_e):
+    #     constraints.usg_e = np.zeros((nsg_e,))
+    # elif constraints.usg_e.shape[0] != nsg_e:
+    #     raise Exception('inconsistent dimension nsg_e, regarding idxsg_e, usg_e.')
+    # dims.nsg_e = nsg_e
+
+    nsphi_e = constraints.idxsphi_e.shape[0]
+    if is_empty(constraints.lsphi_e):
+        constraints.lsphi_e = np.zeros((nsphi_e,))
+    elif constraints.lsphi_e.shape[0] != nsphi_e:
+        raise Exception('inconsistent dimension nsphi_e, regarding idxsphi_e, lsphi_e.')
+    if is_empty(constraints.usphi_e):
+        constraints.usphi_e = np.zeros((nsphi_e,))
+    elif constraints.usphi_e.shape[0] != nsphi_e:
+        raise Exception('inconsistent dimension nsphi_e, regarding idxsphi_e, usphi_e.')
+    dims.nsphi_e = nsphi_e
+
+    # terminal
+    ns_e = nsbx_e + nsh_e + nsg_e + nsphi_e
+    wrong_field = ""
+    if cost.Zl_e.shape[0] != ns_e:
+        wrong_field = "Zl_e"
+        dim = cost.Zl_e.shape[0]
+    elif cost.Zu_e.shape[0] != ns_e:
+        wrong_field = "Zu_e"
+        dim = cost.Zu_e.shape[0]
+    elif cost.zl_e.shape[0] != ns_e:
+        wrong_field = "zl_e"
+        dim = cost.zl_e.shape[0]
+    elif cost.zu_e.shape[0] != ns_e:
+        wrong_field = "zu_e"
+        dim = cost.zu_e.shape[0]
+
+    if wrong_field != "":
+        raise Exception(f'Inconsistent size for field {wrong_field}, with dimension {dim}, \n\t'\
+            + f'Detected ns_e = {ns_e} = nsbx_e + nsg_e + nsh_e + nsphi_e.\n\t'\
+            + f'With nsbx_e = {nsbx_e}, nsg_e = {nsg_e}, nsh_e = {nsh_e}, nsphi_e = {nsphi_e}')
+
+
 
 
 def set_up_imported_gnsf_model(acados_ocp):
