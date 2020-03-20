@@ -1902,7 +1902,6 @@ class AcadosOcpOptions:
 
     @print_level.setter
     def print_level(self, print_level):
-
         if type(print_level) == int and print_level >= 0:
             self.__print_level = print_level
         else:
