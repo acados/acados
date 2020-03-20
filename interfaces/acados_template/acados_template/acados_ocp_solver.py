@@ -522,21 +522,11 @@ class AcadosOcpSolver:
         self.acados_ocp = acados_ocp
 
 
-    def solve(self, rti_phase=0):
+    def solve(self):
         """
         solve the ocp with current input
-        :param rti_phase: 0 = preparation + feedback, 1 = preparation only,
-         2 = feedback only (if SQP_RTI is used, otherwise only 0 (default) is allowed)
         """
-        if isinstance(rti_phase, int) == False or rti_phase < 0 or rti_phase > 2: 
-            raise Exception('AcadosOcpSolver.solve(): argument \'rti_phase\' can ' 
-                'take only values 0, 1, 2 for SQP-RTI-type solvers')
-        if self.acados_ocp.solver_options.nlp_solver_type != 'SQP_RTI' and rti_phase > 0:
-            raise Exception('AcadosOcpSolver.solve(): argument \'rti_phase\' can ' 
-                'take only value 0 for SQP-type solvers')
-        self.shared_lib.acados_solve.argtypes = [c_int]
-
-        status = self.shared_lib.acados_solve(rti_phase)
+        status = self.shared_lib.acados_solve()
         return status
 
 
@@ -807,12 +797,20 @@ class AcadosOcpSolver:
         """
         set options of the solver:
         Parameters:
-            :param field_: string, e.g. 'print_level'
+            :param field_: string, e.g. 'print_level', 'rti_phase'
             :param value_: of type int
         """
         # cast value_ to avoid conversion issues
-        if isinstance(value_, int) is not True:
+        if not isinstance(value_, int):
             raise Exception('solver options must be of type int. You have {}'.format())
+
+        if field_ == 'rti_phase':
+            if value_ < 0 or value_ > 2:
+                raise Exception('AcadosOcpSolver.solve(): argument \'rti_phase\' can '
+                    'take only values 0, 1, 2 for SQP-RTI-type solvers')
+            if self.acados_ocp.solver_options.nlp_solver_type != 'SQP_RTI' and rti_phase > 0:
+                raise Exception('AcadosOcpSolver.solve(): argument \'rti_phase\' can '
+                    'take only value 0 for SQP-type solvers')
 
         field = field_
         field = field.encode('utf-8')
