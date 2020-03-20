@@ -159,7 +159,6 @@ ny_e = nx
 N = 20
 
 # set dimensions
-ocp.dims.nu = nu
 ocp.dims.N = N
 
 # set cost
