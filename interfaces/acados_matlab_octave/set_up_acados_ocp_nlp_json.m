@@ -36,8 +36,6 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     model = obj.model_struct;
     % create
     ocp_json = acados_template_mex.acados_ocp_nlp_json();
-    % TODO(andrea): this is temporary. later on the solver_options
-    % object will separate from the OCP object
 
     % general
     ocp_json.dims.N = obj.opts_struct.param_scheme_N;
@@ -62,7 +60,6 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     ocp_json.solver_options.qp_solver_iter_max = obj.opts_struct.qp_solver_iter_max;
 
     %% dims
-    nx = model.dim_nx;
     % path
     ocp_json.dims.nx = model.dim_nx;
     ocp_json.dims.nu = model.dim_nu;
@@ -96,6 +93,9 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     end
 
     % terminal
+    if isfield(model, 'dim_nbx_e')
+        ocp_json.dims.nbx_e = model.dim_nbx_e;
+    end
     if isfield(model, 'dim_ng_e')
         ocp_json.dims.ng_e = model.dim_ng_e;
     end
@@ -115,8 +115,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
         ocp_json.dims.nsg_e = model.dim_nsg_e;
     end
     % missing in MEX
-    % ocp_json.dims.nbx_e = model.dim_nbx_e;
-    % ocp_json.dims.ns_e = model.dim_ns_e;
+    % ocp_json.dims.nsbx_e = model.dim_nsbx_e;
 
     %% types
     ocp_json.cost.cost_type = upper(model.cost_type);
@@ -239,6 +238,12 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     end
 
     % terminal
+    if ocp_json.dims.nbx_e > 0
+        ocp_json.constraints.idxbx_e = J_to_idx( model.constr_Jbx_e );
+        ocp_json.constraints.lbx_e = model.constr_lbx_e;
+        ocp_json.constraints.ubx_e = model.constr_ubx_e;
+    end
+
     if ocp_json.dims.ng_e > 0
         ocp_json.constraints.C_e = model.constr_C_e;
         ocp_json.constraints.lg_e = model.constr_lg_e;
