@@ -238,18 +238,16 @@ def make_ocp_dims_consistent(acados_ocp):
         raise Exception('inconsistent dimension nsphi, regarding idxsphi, usphi.')
     dims.nsphi = nsphi
 
-    # TODO
-    nsg = 0
-    # nsg = constraints.idxsg.shape[0]
-    # if is_empty(constraints.lsg):
-    #     constraints.lsg = np.zeros((nsg,))
-    # elif constraints.lsg.shape[0] != nsg:
-    #     raise Exception('inconsistent dimension nsg, regarding idxsg, lsg.')
-    # if is_empty(constraints.usg):
-    #     constraints.usg = np.zeros((nsg,))
-    # elif constraints.usg.shape[0] != nsg:
-    #     raise Exception('inconsistent dimension nsg, regarding idxsg, usg.')
-    # dims.nsg = nsg
+    nsg = constraints.idxsg.shape[0]
+    if is_empty(constraints.lsg):
+        constraints.lsg = np.zeros((nsg,))
+    elif constraints.lsg.shape[0] != nsg:
+        raise Exception('inconsistent dimension nsg, regarding idxsg, lsg.')
+    if is_empty(constraints.usg):
+        constraints.usg = np.zeros((nsg,))
+    elif constraints.usg.shape[0] != nsg:
+        raise Exception('inconsistent dimension nsg, regarding idxsg, usg.')
+    dims.nsg = nsg
 
     ns = nsbx + nsbu + nsh + nsg + nsphi
     wrong_field = ""
@@ -295,17 +293,16 @@ def make_ocp_dims_consistent(acados_ocp):
         raise Exception('inconsistent dimension nsh_e, regarding idxsh_e, ush_e.')
     dims.nsh_e = nsh_e
 
-    nsg_e = 0
-    # nsg_e = constraints.idxsg_e.shape[0]
-    # if is_empty(constraints.lsg_e):
-    #     constraints.lsg_e = np.zeros((nsg_e,))
-    # elif constraints.lsg_e.shape[0] != nsg_e:
-    #     raise Exception('inconsistent dimension nsg_e, regarding idxsg_e, lsg_e.')
-    # if is_empty(constraints.usg_e):
-    #     constraints.usg_e = np.zeros((nsg_e,))
-    # elif constraints.usg_e.shape[0] != nsg_e:
-    #     raise Exception('inconsistent dimension nsg_e, regarding idxsg_e, usg_e.')
-    # dims.nsg_e = nsg_e
+    nsg_e = constraints.idxsg_e.shape[0]
+    if is_empty(constraints.lsg_e):
+        constraints.lsg_e = np.zeros((nsg_e,))
+    elif constraints.lsg_e.shape[0] != nsg_e:
+        raise Exception('inconsistent dimension nsg_e, regarding idxsg_e, lsg_e.')
+    if is_empty(constraints.usg_e):
+        constraints.usg_e = np.zeros((nsg_e,))
+    elif constraints.usg_e.shape[0] != nsg_e:
+        raise Exception('inconsistent dimension nsg_e, regarding idxsg_e, usg_e.')
+    dims.nsg_e = nsg_e
 
     nsphi_e = constraints.idxsphi_e.shape[0]
     if is_empty(constraints.lsphi_e):

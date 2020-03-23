@@ -78,8 +78,10 @@
 #define NSBX   {{ dims.nsbx }}
 #define NSBU   {{ dims.nsbu }}
 #define NSH    {{ dims.nsh }}
+#define NSG    {{ dims.nsg }}
 #define NSPHI  {{ dims.nsphi }}
 #define NSHN   {{ dims.nsh_e }}
+#define NSGN   {{ dims.nsg_e }}
 #define NSPHIN {{ dims.nsphi_e }}
 #define NSBXN  {{ dims.nsbx_e }}
 #define NS     {{ dims.ns }}
@@ -226,6 +228,7 @@ int acados_create()
     int nbu[N+1];
     int nsbx[N+1];
     int nsbu[N+1];
+    int nsg[N+1];
     int nsh[N+1];
     int nsphi[N+1];
     int ns[N+1];
@@ -236,6 +239,7 @@ int acados_create()
     int ny[N+1];
     int nr[N+1];
     int nr_e[N+1];
+
 
     for (int i = 0; i < N+1; i++)
     {
@@ -251,6 +255,7 @@ int acados_create()
         nbu[i]    = NBU;
         nsbx[i]   = NSBX;
         nsbu[i]   = NSBU;
+        nsg[i] = NSG;
         nsh[i]    = NSH;
         nsphi[i]  = NSPHI;
         ng[i]     = NG;
@@ -280,6 +285,7 @@ int acados_create()
 
     nsbx[N]  = NSBXN;
     nsbu[N]  = 0;
+    nsg[N]   = NSGN;
     nsh[N]   = NSHN;
     nsphi[N] = NSPHIN;
 
@@ -298,6 +304,7 @@ int acados_create()
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsbx", &nsbx[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsbu", &nsbu[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "ng", &ng[i]);
+        ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsg", &nsg[i]);
     }
 
     for (int i = 0; i < N; i++)
@@ -973,7 +980,7 @@ int acados_create()
     {% for i in range(end=dims.nsbu) %}
     idxsbu[{{ i }}] = {{ constraints.idxsbu[i] }};
     {%- endfor %}
-    double lsbu[NSBU]; 
+    double lsbu[NSBU];
     double usbu[NSBU];
     {% for i in range(end=dims.nsbu) %}
     lsbu[{{ i }}] = {{ constraints.lsbu[i] }};
@@ -987,13 +994,34 @@ int acados_create()
     }
 {% endif %}
 
+{% if dims.nsg > 0 %}
+    // set up soft bounds for general linear constraints
+    int idxsg[NSG];
+    {% for i in range(end=dims.nsg) %}
+    idxsg[{{ i }}] = {{ constraints.idxsg[i] }};
+    {%- endfor %}
+    double lsg[NSG];
+    double usg[NSG];
+    {% for i in range(end=dims.nsg) %}
+    lsg[{{ i }}] = {{ constraints.lsg[i] }};
+    usg[{{ i }}] = {{ constraints.usg[i] }};
+    {%- endfor %}
+
+    for (int i = 0; i < N; i++)
+    {
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "idxsg", idxsg);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lsg", lsg);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "usg", usg);
+    }
+{% endif %}
+
 {% if dims.nsh > 0 %}
     // set up soft bounds for nonlinear constraints
     int idxsh[NSH];
     {% for i in range(end=dims.nsh) %}
     idxsh[{{ i }}] = {{ constraints.idxsh[i] }};
     {%- endfor %}
-    double lsh[NSH]; 
+    double lsh[NSH];
     double ush[NSH];
     {% for i in range(end=dims.nsh) %}
     lsh[{{ i }}] = {{ constraints.lsh[i] }};
@@ -1014,7 +1042,7 @@ int acados_create()
     {% for i in range(end=dims.nsphi) %}
     idxsphi[{{ i }}] = {{ constraints.idxsphi[i] }};
     {%- endfor %}
-    double lsphi[NSPHI]; 
+    double lsphi[NSPHI];
     double usphi[NSPHI];
     {% for i in range(end=dims.nsphi) %}
     lsphi[{{ i }}] = {{ constraints.lsphi[i] }};
@@ -1035,7 +1063,7 @@ int acados_create()
     {% for i in range(end=dims.nbx) %}
     idxbx[{{ i }}] = {{ constraints.idxbx[i] }};
     {%- endfor %}
-    double lbx[NBX]; 
+    double lbx[NBX];
     double ubx[NBX];
     {% for i in range(end=dims.nbx) %}
     lbx[{{ i }}] = {{ constraints.lbx[i] }};
@@ -1139,7 +1167,7 @@ int acados_create()
     {% for i in range(end=dims.nbx_e) %}
     idxbx_e[{{ i }}] = {{ constraints.idxbx_e[i] }};
     {%- endfor %}
-    double lbx_e[NBXN]; 
+    double lbx_e[NBXN];
     double ubx_e[NBXN];
     {% for i in range(end=dims.nbx_e) %}
     lbx_e[{{ i }}] = {{ constraints.lbx_e[i] }};
@@ -1150,13 +1178,31 @@ int acados_create()
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ubx", ubx_e);
 {%- endif %}
 
+{% if dims.nsg_e > 0 %}
+    // set up soft bounds for general linear constraints
+    int idxsg_e[NSGN];
+    {% for i in range(end=dims.nsg_e) %}
+    idxsg_e[{{ i }}] = {{ constraints.idxsg_e[i] }};
+    {%- endfor %}
+    double lsg_e[NSGN];
+    double usg_e[NSGN];
+    {% for i in range(end=dims.nsg_e) %}
+    lsg_e[{{ i }}] = {{ constraints.lsg_e[i] }};
+    usg_e[{{ i }}] = {{ constraints.usg_e[i] }};
+    {%- endfor %}
+
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxsg", idxsg_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lsg", lsg_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "usg", usg_e);
+{%- endif %}
+
 {% if dims.nsh_e > 0 %}
     // set up soft bounds for nonlinear constraints
     int idxsh_e[NSHN];
     {% for i in range(end=dims.nsh_e) %}
     idxsh_e[{{ i }}] = {{ constraints.idxsh_e[i] }};
     {%- endfor %}
-    double lsh_e[NSHN]; 
+    double lsh_e[NSHN];
     double ush_e[NSHN];
     {% for i in range(end=dims.nsh_e) %}
     lsh_e[{{ i }}] = {{ constraints.lsh_e[i] }};
@@ -1174,7 +1220,7 @@ int acados_create()
     {% for i in range(end=dims.nsphi_e) %}
     idxsphi_e[{{ i }}] = {{ constraints.idxsphi_e[i] }};
     {%- endfor %}
-    double lsphi_e[NSPHIN]; 
+    double lsphi_e[NSPHIN];
     double usphi_e[NSPHIN];
     {% for i in range(end=dims.nsphi_e) %}
     lsphi_e[{{ i }}] = {{ constraints.lsphi_e[i] }};
@@ -1192,7 +1238,7 @@ int acados_create()
     {% for i in range(end=dims.nsbx_e) %}
     idxsbx_e[{{ i }}] = {{ constraints.idxsbx_e[i] }};
     {%- endfor %}
-    double lsbx_e[NSBXN]; 
+    double lsbx_e[NSBXN];
     double usbx_e[NSBXN];
     {% for i in range(end=dims.nsbx_e) %}
     lsbx_e[{{ i }}] = {{ constraints.lsbx_e[i] }};

@@ -69,6 +69,8 @@ class AcadosOcpDims:
         self.__ns_e    = 0
         self.__ng      = 0
         self.__ng_e    = 0
+        self.__nsg     = 0
+        self.__nsg_e   = 0
         self.__N       = None
 
 
@@ -166,6 +168,16 @@ class AcadosOcpDims:
     def nsbu(self):
         """:math:`n_{{sb}_u}` - number of soft input bounds"""
         return self.__nsbu
+
+    @property
+    def nsg(self):
+        """:math:`n_{{sg}}` - number of soft general linear constraints"""
+        return self.__nsg
+
+    @property
+    def nsg_e(self):
+        """:math:`n_{{sg}^e}` - number of soft general linear constraints at t=T"""
+        return self.__nsg_e
 
     @property
     def nsh(self):
@@ -345,16 +357,30 @@ class AcadosOcpDims:
         else:
             raise Exception('Invalid nsbu value. Exiting.')
 
+    @nsg.setter
+    def nsg(self, nsg):
+        if isinstance(nsg, int) and nsg > -1:
+            self.__nsg = nsg
+        else:
+            raise Exception('Invalid nsg value. Exiting.')
+
+    @nsg_e.setter
+    def nsg_e(self, nsg_e):
+        if isinstance(nsg_e, int) and nsg_e > -1:
+            self.__nsg_e = nsg_e
+        else:
+            raise Exception('Invalid nsg_e value. Exiting.')
+
     @nsh.setter
     def nsh(self, nsh):
-        if type(nsh) == int and nsh > -1:
+        if isinstance(nsh, int) and nsh > -1:
             self.__nsh = nsh
         else:
             raise Exception('Invalid nsh value. Exiting.')
 
     @nsh_e.setter
     def nsh_e(self, nsh_e):
-        if type(nsh_e) == int and nsh_e > -1:
+        if isinstance(nsh_e, int) and nsh_e > -1:
             self.__nsh_e = nsh_e
         else:
             raise Exception('Invalid nsh_e value. Exiting.')
@@ -738,6 +764,10 @@ class AcadosOcpConstraints:
         self.__lsbx_e  = np.array([])
         self.__usbx_e  = np.array([])
         self.__idxsbx_e= np.array([])
+        # soft bounds on general linear constraints
+        self.__lsg    = np.array([])
+        self.__usg    = np.array([])
+        self.__idxsg  = np.array([])
         # soft bounds on nonlinear constraints
         self.__lsh    = np.array([])
         self.__ush    = np.array([])
@@ -746,6 +776,10 @@ class AcadosOcpConstraints:
         self.__lsphi  = np.array([])
         self.__usphi  = np.array([])
         self.__idxsphi  = np.array([])
+        # soft bounds on general linear constraints at t=T
+        self.__lsg_e    = np.array([])
+        self.__usg_e    = np.array([])
+        self.__idxsg_e  = np.array([])
         # soft bounds on nonlinear constraints at t=T
         self.__lsh_e    = np.array([])
         self.__ush_e    = np.array([])
@@ -999,6 +1033,28 @@ class AcadosOcpConstraints:
         print_J_to_idx_note()
         return self.__idxsbx_e
 
+    # soft general linear constraints
+    @property
+    def lsg(self):
+        """lower bounds on slacks corresponding to soft lower bounds for general linear constraints"""
+        return self.__lsg
+
+    @property
+    def usg(self):
+        """upper bounds on slacks corresponding to soft upper bounds for general linear constraints"""
+        return self.__usg
+
+    @property
+    def idxsg(self):
+        """indexes of soft general linear constraints within the indices of general linear constraints"""
+        return self.__idxsg
+
+    @property
+    def Jsg(self):
+        """:math:`J_{sg}` - matrix coefficient for soft bounds on general linear constraints"""
+        print_J_to_idx_note()
+        return self.__idxsg
+
     # soft nonlinear constraints
     @property
     def lsh(self):
@@ -1042,6 +1098,30 @@ class AcadosOcpConstraints:
         """:math:`J_{s, \phi}` - matrix coefficient for soft bounds on convex-over-nonlinear constraints"""
         print_J_to_idx_note()
         return self.__idxsphi
+
+
+    # soft bounds on general linear constraints at t=T
+    @property
+    def lsg_e(self):
+        """lower bounds on slacks corresponding to soft lower bounds for general linear constraints at t=T"""
+        return self.__lsg_e
+
+    @property
+    def usg_e(self):
+        """upper bounds on slacks corresponding to soft upper bounds for general linear constraints at t=T"""
+        return self.__usg_e
+
+    @property
+    def idxsg_e(self):
+        """indexes of soft general linear constraints at t=T within the indices of general linear constraints at t=T"""
+        return self.__idxsg_e
+
+    @property
+    def Jsg_e(self):
+        """:math:`J_{s,h}^e` - matrix coefficient for soft bounds on general linear constraints at t=T"""
+        print_J_to_idx_note()
+        return self.__idxsg_e
+
 
     # soft bounds on nonlinear constraints at t=T
     @property
@@ -1437,6 +1517,38 @@ class AcadosOcpConstraints:
         else:
             raise Exception('Invalid Jsbx_e value. Exiting.')
 
+
+    # soft bounds on general linear constraints
+    @lsg.setter
+    def lsg(self, lsg):
+        if isinstance(lsg, np.ndarray):
+            self.__lsg = lsg
+        else:
+            raise Exception('Invalid lsg value. Exiting.')
+
+    @usg.setter
+    def usg(self, usg):
+        if isinstance(usg, np.ndarray):
+            self.__usg = usg
+        else:
+            raise Exception('Invalid usg value. Exiting.')
+
+    @idxsg.setter
+    def idxsg(self, idxsg):
+        if isinstance(idxsg, np.ndarray):
+            self.__idxsg = idxsg
+        else:
+            raise Exception('Invalid idxsg value. Exiting.')
+
+    @Jsg.setter
+    def Jsg(self, Jsg):
+        if isinstance(Jsg, np.ndarray):
+            self.__Jsg = Jsg
+            self.__idxsg = J_to_idx_slack(Jsg)
+        else:
+            raise Exception('Invalid Jsg value. Exiting.')
+
+
     # soft bounds on nonlinear constraints
     @lsh.setter
     def lsh(self, lsh):
@@ -1489,6 +1601,36 @@ class AcadosOcpConstraints:
         else:
             raise Exception('Invalid Jsphi value. Exiting.')
 
+    # soft bounds on general linear constraints at t=T
+    @lsg_e.setter
+    def lsg_e(self, lsg_e):
+        if isinstance(lsg_e, np.ndarray):
+            self.__lsg_e = lsg_e
+        else:
+            raise Exception('Invalid lsg_e value. Exiting.')
+
+    @usg_e.setter
+    def usg_e(self, usg_e):
+        if isinstance(usg_e, np.ndarray):
+            self.__usg_e = usg_e
+        else:
+            raise Exception('Invalid usg_e value. Exiting.')
+
+    @idxsg_e.setter
+    def idxsg_e(self, idxsg_e):
+        if isinstance(idxsg_e, np.ndarray):
+            self.__idxsg_e = idxsg_e
+        else:
+            raise Exception('Invalid idxsg_e value. Exiting.')
+
+    @Jsg_e.setter
+    def Jsg_e(self, Jsg_e):
+        if isinstance(Jsg_e, np.ndarray):
+            self.__Jsg_e = Jsg_e
+            self.__idxsg_e = J_to_idx_slack(Jsg_e)
+        else:
+            raise Exception('Invalid Jsg_e value. Exiting.')
+
     # soft bounds on nonlinear constraints at t=T
     @lsh_e.setter
     def lsh_e(self, lsh_e):
@@ -1535,7 +1677,7 @@ class AcadosOcpConstraints:
 
     @Jsphi_e.setter
     def Jsphi_e(self, Jsphi_e):
-        if type(Jsphi_e) == np.ndarray:
+        if isinstance(Jsphi_e, np.ndarray):
             self.__Jsphi_e = Jsphi_e
             self.__idxsphi_e = J_to_idx_slack(Jsphi_e)
         else:
