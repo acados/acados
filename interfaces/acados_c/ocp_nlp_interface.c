@@ -545,6 +545,10 @@ int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
     {
         return dims->nz[stage];
     }
+    else if (!strcmp(field, "sl") || !strcmp(field, "su"))
+    {
+        return dims->ns[stage];
+    }
     // ocp nlp dynamics
     else if (!strcmp(field, "init_gnsf_phi"))
     {
@@ -872,6 +876,32 @@ void ocp_nlp_get(ocp_nlp_config *config, ocp_nlp_solver *solver,
 {
     solver->config->get(solver->config, solver->dims, solver->mem, field, return_value_);
 }
+
+
+
+void ocp_nlp_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_solver *solver,
+        int stage, const char *field, void *value)
+{
+    ocp_nlp_memory *nlp_mem;
+    config->get(config, dims, solver->mem, "nlp_mem", &nlp_mem);
+
+    if (!strcmp(field, "sl"))
+    {
+        double *double_values = value;
+        d_ocp_qp_sol_get_sl(stage, nlp_mem->qp_out, double_values);
+    }
+    else if (!strcmp(field, "su"))
+    {
+        double *double_values = value;
+        d_ocp_qp_sol_get_su(stage, nlp_mem->qp_out, double_values);
+    }
+    else
+    {
+        printf("\nerror: ocp_nlp_get_at_stage: field %s not available\n", field);
+        exit(1);
+    }
+}
+
 
 
 void ocp_nlp_set(ocp_nlp_config *config, ocp_nlp_solver *solver,

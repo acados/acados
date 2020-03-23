@@ -170,6 +170,11 @@ def run_closed_loop_experiment(FORMULATION):
 
     simX[Nsim,:] = xcurrent
 
+    # get slack values at stage 1
+    sl = acados_ocp_solver.get(1, "sl")
+    su = acados_ocp_solver.get(1, "su")
+    print("sl", sl, "su", su)
+
     # plot results
     plot_pendulum(Tf/N, Fmax, simU, simX, latexify=False)
 

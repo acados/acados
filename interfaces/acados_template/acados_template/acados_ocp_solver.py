@@ -684,12 +684,13 @@ class AcadosOcpSolver:
         """
 
         out_fields = ['x', 'u', 'z', 'pi']
+        mem_fields = ['sl', 'su']
         field = field_
         field = field.encode('utf-8')
 
-        if (field_ not in out_fields):
+        if (field_ not in out_fields + mem_fields):
             raise Exception('AcadosOcpSolver.get(): {} is an invalid argument.\
-                    \n Possible values are {}. Exiting.'.format(field_, out_fields))
+                    \n Possible values are {}. Exiting.'.format(field_, out_fields + mem_fields))
 
         self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = \
             [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
@@ -701,10 +702,16 @@ class AcadosOcpSolver:
         out = np.ascontiguousarray(np.zeros((dims,)), dtype=np.float64)
         out_data = cast(out.ctypes.data, POINTER(c_double))
 
-        self.shared_lib.ocp_nlp_out_get.argtypes = \
-            [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
-        self.shared_lib.ocp_nlp_out_get(self.nlp_config, \
-            self.nlp_dims, self.nlp_out, stage_, field, out_data)
+        if (field_ in out_fields):
+            self.shared_lib.ocp_nlp_out_get.argtypes = \
+                [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+            self.shared_lib.ocp_nlp_out_get(self.nlp_config, \
+                self.nlp_dims, self.nlp_out, stage_, field, out_data)
+        elif field_ in mem_fields:
+            self.shared_lib.ocp_nlp_get_at_stage.argtypes = \
+                [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+            self.shared_lib.ocp_nlp_get_at_stage(self.nlp_config, \
+                self.nlp_dims, self.nlp_solver, stage_, field, out_data)
 
         return out
 
