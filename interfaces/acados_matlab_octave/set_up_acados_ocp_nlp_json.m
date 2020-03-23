@@ -84,9 +84,9 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
         ocp_json.dims.nsbu = model.dim_nsbu;
     end
 
-    % missing in template
-    % ocp_json.dims.nsg = model.nsg;
-
+    if isfield(model, 'dim_nsg')
+        ocp_json.dims.nsg = model.nsg;
+    end
     % missing in MEX
     % ocp_json.dims.npd = model.npd;
     % ocp_json.dims.npd_e = model.npd_e;
@@ -110,6 +110,9 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     end
     if isfield(model, 'dim_nsh_e')
         ocp_json.dims.nsh_e = model.dim_nsh_e;
+    end
+    if isfield(model, 'dim_nsg_e')
+        ocp_json.dims.nsg_e = model.dim_nsg_e;
     end
     % missing in MEX
     % ocp_json.dims.nbx_e = model.dim_nbx_e;
@@ -221,11 +224,19 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
         end
     end
 
-    if isfield(model, 'dim_nsg') && model.dim_nsg > 0
-        error('dim_nsg > 0 not implmented in code-gen backend');
-        % TODO set Jsg
+    if ocp_json.dims.nsg > 0
+        ocp_json.constraints.idxsg = J_to_idx_slack(model.constr_Jsg);
+        if isfield(model, 'constr_lsg')
+            ocp_json.constraints.lsg = model.constr_lsg;
+        else
+            ocp_json.constraints.lsg = zeros(ocp_json.dims.nsg, 1);
+        end
+        if isfield(model, 'constr_usg')
+            ocp_json.constraints.usg = model.constr_usg;
+        else
+            ocp_json.constraints.usg = zeros(ocp_json.dims.nsg, 1);
+        end
     end
-
 
     % terminal
     if ocp_json.dims.ng_e > 0
@@ -239,9 +250,18 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
         ocp_json.constraints.uh_e = model.constr_uh_e;
     end
 
-    if isfield(model, 'dim_nsg_e') && model.dim_nsg_e > 0
-        error('dim_nsg_e > 0 not implmented in templating backend');
-        % TODO set Jsg_e
+    if ocp_json.dims.nsg_e > 0
+        ocp_json.constraints.idxsg_e = J_to_idx_slack(model.constr_Jsg_e);
+        if isfield(model, 'constr_lsg_e')
+            ocp_json.constraints.lsg_e = model.constr_lsg_e;
+        else
+            ocp_json.constraints.lsg_e = zeros(ocp_json.dims.nsg_e, 1);
+        end
+        if isfield(model, 'constr_usg_e')
+            ocp_json.constraints.usg_e = model.constr_usg_e;
+        else
+            ocp_json.constraints.usg_e = zeros(ocp_json.dims.nsg_e, 1);
+        end
     end
 
 
