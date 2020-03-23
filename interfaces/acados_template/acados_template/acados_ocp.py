@@ -229,210 +229,210 @@ class AcadosOcpDims:
         if type(nx) == int and nx > 0:
             self.__nx = nx
         else:
-            raise Exception('Invalid nx value. Exiting.')
+            raise Exception('Invalid nx value, expected integer. Exiting.')
 
     @nz.setter
     def nz(self, nz):
         if type(nz) == int and nz > -1:
             self.__nz = nz
         else:
-            raise Exception('Invalid nz value. Exiting.')
+            raise Exception('Invalid nz value, expected integer. Exiting.')
 
     @nu.setter
     def nu(self, nu):
         if type(nu) == int and nu > -1:
             self.__nu = nu
         else:
-            raise Exception('Invalid nu value. Exiting.')
+            raise Exception('Invalid nu value, expected integer. Exiting.')
 
     @np.setter
     def np(self, np):
         if type(np) == int and np > -1:
             self.__np = np
         else:
-            raise Exception('Invalid np value. Exiting.')
+            raise Exception('Invalid np value, expected integer. Exiting.')
 
     @ny.setter
     def ny(self, ny):
         if type(ny) == int and ny > -1:
             self.__ny = ny
         else:
-            raise Exception('Invalid ny value. Exiting.')
+            raise Exception('Invalid ny value, expected integer. Exiting.')
 
     @ny_e.setter
     def ny_e(self, ny_e):
         if type(ny_e) == int and ny_e > -1:
             self.__ny_e = ny_e
         else:
-            raise Exception('Invalid ny_e value. Exiting.')
+            raise Exception('Invalid ny_e value, expected integer. Exiting.')
 
     @nr.setter
     def nr(self, nr):
         if type(nr) == int and nr > -1:
             self.__nr = nr
         else:
-            raise Exception('Invalid nr value. Exiting.')
+            raise Exception('Invalid nr value, expected integer. Exiting.')
 
     @nr_e.setter
     def nr_e(self, nr_e):
         if type(nr_e) == int and nr_e > -1:
             self.__nr_e = nr_e
         else:
-            raise Exception('Invalid nr_e value. Exiting.')
+            raise Exception('Invalid nr_e value, expected integer. Exiting.')
 
     @nh.setter
     def nh(self, nh):
         if type(nh) == int and nh > -1:
             self.__nh = nh
         else:
-            raise Exception('Invalid nh value. Exiting.')
+            raise Exception('Invalid nh value, expected integer. Exiting.')
 
     @nh_e.setter
     def nh_e(self, nh_e):
         if type(nh_e) == int and nh_e > -1:
             self.__nh_e = nh_e
         else:
-            raise Exception('Invalid nh_e value. Exiting.')
+            raise Exception('Invalid nh_e value, expected integer. Exiting.')
 
     @nphi.setter
     def nphi(self, nphi):
         if type(nphi) == int and nphi > -1:
             self.__nphi = nphi
         else:
-            raise Exception('Invalid nphi value. Exiting.')
+            raise Exception('Invalid nphi value, expected integer. Exiting.')
 
     @nphi_e.setter
     def nphi_e(self, nphi_e):
         if type(nphi_e) == int and nphi_e > -1:
             self.__nphi_e = nphi_e
         else:
-            raise Exception('Invalid nphi_e value. Exiting.')
+            raise Exception('Invalid nphi_e value, expected integer. Exiting.')
 
     @nbx.setter
     def nbx(self, nbx):
         if type(nbx) == int and nbx > -1:
             self.__nbx = nbx
         else:
-            raise Exception('Invalid nbx value. Exiting.')
+            raise Exception('Invalid nbx value, expected integer. Exiting.')
 
     @nbx_0.setter
     def nbx_0(self, nbx_0):
         if type(nbx_0) == int and nbx_0 > -1:
             self.__nbx_0 = nbx_0
         else:
-            raise Exception('Invalid nbx_0 value. Exiting.')
+            raise Exception('Invalid nbx_0 value, expected integer. Exiting.')
 
     @nbx_e.setter
     def nbx_e(self, nbx_e):
         if type(nbx_e) == int and nbx_e > -1:
             self.__nbx_e = nbx_e
         else:
-            raise Exception('Invalid nbx_e value. Exiting.')
+            raise Exception('Invalid nbx_e value, expected integer. Exiting.')
 
     @nbu.setter
     def nbu(self, nbu):
         if type(nbu) == int and nbu > -1:
             self.__nbu = nbu
         else:
-            raise Exception('Invalid nbu value. Exiting.')
+            raise Exception('Invalid nbu value, expected integer. Exiting.')
 
     @nsbx.setter
     def nsbx(self, nsbx):
         if type(nsbx) == int and nsbx > -1:
             self.__nsbx = nsbx
         else:
-            raise Exception('Invalid nsbx value. Exiting.')
+            raise Exception('Invalid nsbx value, expected integer. Exiting.')
 
     @nsbx_e.setter
     def nsbx_e(self, nsbx_e):
         if type(nsbx_e) == int and nsbx_e > -1:
             self.__nsbx_e = nsbx_e
         else:
-            raise Exception('Invalid nsbx_e value. Exiting.')
+            raise Exception('Invalid nsbx_e value, expected integer. Exiting.')
 
     @nsbu.setter
     def nsbu(self, nsbu):
         if type(nsbu) == int and nsbu > -1:
             self.__nsbu = nsbu
         else:
-            raise Exception('Invalid nsbu value. Exiting.')
+            raise Exception('Invalid nsbu value, expected integer. Exiting.')
 
     @nsg.setter
     def nsg(self, nsg):
         if isinstance(nsg, int) and nsg > -1:
             self.__nsg = nsg
         else:
-            raise Exception('Invalid nsg value. Exiting.')
+            raise Exception('Invalid nsg value, expected integer. Exiting.')
 
     @nsg_e.setter
     def nsg_e(self, nsg_e):
         if isinstance(nsg_e, int) and nsg_e > -1:
             self.__nsg_e = nsg_e
         else:
-            raise Exception('Invalid nsg_e value. Exiting.')
+            raise Exception('Invalid nsg_e value, expected integer. Exiting.')
 
     @nsh.setter
     def nsh(self, nsh):
         if isinstance(nsh, int) and nsh > -1:
             self.__nsh = nsh
         else:
-            raise Exception('Invalid nsh value. Exiting.')
+            raise Exception('Invalid nsh value, expected integer. Exiting.')
 
     @nsh_e.setter
     def nsh_e(self, nsh_e):
         if isinstance(nsh_e, int) and nsh_e > -1:
             self.__nsh_e = nsh_e
         else:
-            raise Exception('Invalid nsh_e value. Exiting.')
+            raise Exception('Invalid nsh_e value, expected integer. Exiting.')
 
     @nsphi.setter
     def nsphi(self, nsphi):
-        if type(nsphi) == int and nsphi > -1:
+        if isinstance(nsphi, int) and nsphi > -1:
             self.__nsphi = nsphi
         else:
-            raise Exception('Invalid nsphi value. Exiting.')
+            raise Exception('Invalid nsphi value, expected integer. Exiting.')
 
     @nsphi_e.setter
     def nsphi_e(self, nsphi_e):
-        if type(nsphi_e) == int and nsphi_e > -1:
+        if isinstance(nsphi_e, int) and nsphi_e > -1:
             self.__nsphi_e = nsphi_e
         else:
-            raise Exception('Invalid nsphi_e value. Exiting.')
+            raise Exception('Invalid nsphi_e value, expected integer. Exiting.')
 
     @ns.setter
     def ns(self, ns):
-        if type(ns) == int and ns > -1:
+        if isinstance(ns, int) and ns > -1:
             self.__ns = ns
         else:
-            raise Exception('Invalid ns value. Exiting.')
+            raise Exception('Invalid ns value, expected integer. Exiting.')
 
     @ns_e.setter
     def ns_e(self, ns_e):
-        if type(ns_e) == int and ns_e > -1:
+        if isinstance(ns_e, int) and ns_e > -1:
             self.__ns_e = ns_e
         else:
-            raise Exception('Invalid ns_e value. Exiting.')
+            raise Exception('Invalid ns_e value, expected integer. Exiting.')
 
     @ng.setter
     def ng(self, ng):
-        if type(ng) == int and ng > -1:
+        if isinstance(ng, int) and ng > -1:
             self.__ng = ng
         else:
-            raise Exception('Invalid ng value. Exiting.')
+            raise Exception('Invalid ng value, expected integer. Exiting.')
 
     @ng_e.setter
     def ng_e(self, ng_e):
-        if type(ng_e) == int and ng_e > -1:
+        if isinstance(ng_e, int) and ng_e > -1:
             self.__ng_e = ng_e
         else:
-            raise Exception('Invalid ng_e value. Exiting.')
+            raise Exception('Invalid ng_e value, expected integer. Exiting.')
 
     @N.setter
     def N(self, N):
-        if type(N) == int and N > 0:
+        if isinstance(N, int) and N > 0:
             self.__N = N
         else:
-            raise Exception('Invalid N value. Exiting.')
+            raise Exception('Invalid N value, expected integer. Exiting.')
 
     def set(self, attr, value):
         setattr(self, attr, value)
@@ -565,38 +565,38 @@ class AcadosOcpCost:
 
     @yref.setter
     def yref(self, yref):
-        if type(yref) == np.ndarray:
+        if isinstance(yref, np.ndarray):
             self.__yref = yref
         else:
-            raise Exception('Invalid yref value. Exiting.')
+            raise Exception('Invalid yref value, expected numpy array. Exiting.')
 
     @Zl.setter
     def Zl(self, Zl):
-        if type(Zl) == np.ndarray:
+        if isinstance(Zl, np.ndarray):
             self.__Zl = Zl
         else:
-            raise Exception('Invalid Zl value. Exiting.')
+            raise Exception('Invalid Zl value, expected numpy array. Exiting.')
 
     @Zu.setter
     def Zu(self, Zu):
-        if type(Zu) == np.ndarray:
+        if isinstance(Zu, np.ndarray):
             self.__Zu = Zu
         else:
-            raise Exception('Invalid Zu value. Exiting.')
+            raise Exception('Invalid Zu value, expected numpy array. Exiting.')
 
     @zl.setter
     def zl(self, zl):
-        if type(zl) == np.ndarray:
+        if isinstance(zl, np.ndarray):
             self.__zl = zl
         else:
-            raise Exception('Invalid zl value. Exiting.')
+            raise Exception('Invalid zl value, expected numpy array. Exiting.')
 
     @zu.setter
     def zu(self, zu):
-        if type(zu) == np.ndarray:
+        if isinstance(zu, np.ndarray):
             self.__zu = zu
         else:
-            raise Exception('Invalid zu value. Exiting.')
+            raise Exception('Invalid zu value, expected numpy array. Exiting.')
 
     # Mayer term
     @property
@@ -666,38 +666,38 @@ class AcadosOcpCost:
 
     @yref_e.setter
     def yref_e(self, yref_e):
-        if type(yref_e) == np.ndarray:
+        if isinstance(yref_e, np.ndarray):
             self.__yref_e = yref_e
         else:
-            raise Exception('Invalid yref_e value. Exiting.')
+            raise Exception('Invalid yref_e value, expected numpy array. Exiting.')
 
     @Zl_e.setter
     def Zl_e(self, Zl_e):
-        if type(Zl_e) == np.ndarray:
+        if isinstance(Zl_e, np.ndarray):
             self.__Zl_e = Zl_e
         else:
-            raise Exception('Invalid Zl_e value. Exiting.')
+            raise Exception('Invalid Zl_e value, expected numpy array. Exiting.')
 
     @Zu_e.setter
     def Zu_e(self, Zu_e):
-        if type(Zu_e) == np.ndarray:
+        if isinstance(Zu_e, np.ndarray):
             self.__Zu_e = Zu_e
         else:
-            raise Exception('Invalid Zu_e value. Exiting.')
+            raise Exception('Invalid Zu_e value, expected numpy array. Exiting.')
 
     @zl_e.setter
     def zl_e(self, zl_e):
-        if type(zl_e) == np.ndarray:
+        if isinstance(zl_e, np.ndarray):
             self.__zl_e = zl_e
         else:
-            raise Exception('Invalid zl_e value. Exiting.')
+            raise Exception('Invalid zl_e value, expected numpy array. Exiting.')
 
     @zu_e.setter
     def zu_e(self, zu_e):
-        if type(zu_e) == np.ndarray:
+        if isinstance(zu_e, np.ndarray):
             self.__zu_e = zu_e
         else:
-            raise Exception('Invalid zu_e value. Exiting.')
+            raise Exception('Invalid zu_e value, expected numpy array. Exiting.')
 
     def set(self, attr, value):
         setattr(self, attr, value)
@@ -1634,21 +1634,21 @@ class AcadosOcpConstraints:
     # soft bounds on nonlinear constraints at t=T
     @lsh_e.setter
     def lsh_e(self, lsh_e):
-        if type(lsh_e) == np.ndarray:
+        if isinstance(lsh_e, np.ndarray):
             self.__lsh_e = lsh_e
         else:
             raise Exception('Invalid lsh_e value. Exiting.')
 
     @ush_e.setter
     def ush_e(self, ush_e):
-        if type(ush_e) == np.ndarray:
+        if isinstance(ush_e, np.ndarray):
             self.__ush_e = ush_e
         else:
             raise Exception('Invalid ush_e value. Exiting.')
 
     @idxsh_e.setter
     def idxsh_e(self, idxsh_e):
-        if type(idxsh_e) == np.ndarray:
+        if isinstance(idxsh_e, np.ndarray):
             self.__idxsh_e = idxsh_e
         else:
             raise Exception('Invalid idxsh_e value. Exiting.')
@@ -1656,21 +1656,21 @@ class AcadosOcpConstraints:
     # soft bounds on convex-over-nonlinear constraints at t=T
     @lsphi_e.setter
     def lsphi_e(self, lsphi_e):
-        if type(lsphi_e) == np.ndarray:
+        if isinstance(lsphi_e, np.ndarray):
             self.__lsphi_e = lsphi_e
         else:
             raise Exception('Invalid lsphi_e value. Exiting.')
 
     @usphi_e.setter
     def usphi_e(self, usphi_e):
-        if type(usphi_e) == np.ndarray:
+        if isinstance(usphi_e, np.ndarray):
             self.__usphi_e = usphi_e
         else:
             raise Exception('Invalid usphi_e value. Exiting.')
 
     @idxsphi_e.setter
     def idxsphi_e(self, idxsphi_e):
-        if type(idxsphi_e) == np.ndarray:
+        if isinstance(idxsphi_e, np.ndarray):
             self.__idxsphi_e = idxsphi_e
         else:
             raise Exception('Invalid idxsphi_e value. Exiting.')
@@ -2103,10 +2103,11 @@ class AcadosOcp:
 
     @parameter_values.setter
     def parameter_values(self, parameter_values):
-        if type(parameter_values) == np.ndarray:
+        if isinstance(parameter_values, np.ndarray):
             self.__parameter_values = parameter_values
         else:
-            raise Exception('Invalid parameter_values value. Exiting.')
+            raise Exception('Invalid parameter_values value. ' +
+                            f'Expected numpy array, got {type(parameter_values)}.')
 
     def set(self, attr, value):
         # tokenize string
