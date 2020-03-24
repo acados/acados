@@ -94,6 +94,7 @@ install:
   - source "${SCRIPT_DIR}/dispatch.sh"
 
 script:
+  - git fetch --unshallow || true
   - SECTION='script'
   - source "${SCRIPT_DIR}/dispatch.sh"
 
