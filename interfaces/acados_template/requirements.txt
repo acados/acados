@@ -1,0 +1,5 @@
+numpy
+scipy
+casadi==3.5.1
+matplotlib
+future-fstrings

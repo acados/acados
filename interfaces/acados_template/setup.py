@@ -31,52 +31,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from setuptools import setup, find_packages
+import setuptools
 
-import sys
-print(sys.version_info)
+setuptools.setup(setup_requires=['pbr'], pbr=True)
 
-if sys.version_info < (3,5):
-    sys.exit('Python version 3.5 or later required. Exiting.')
-
-setup(name='acados_template',
-   version='0.1',
-   python_requires='>=3.5, <3.8',
-   description='A templating framework for acados',
-   url='http://github.com/zanellia/acados',
-   author='Andrea Zanelli',
-   license='BSD',
-   packages = find_packages(),
-   include_package_data = True,
-   install_requires=[
-      'numpy',
-      'scipy',
-      'casadi==3.5.1',
-      'matplotlib',
-      'future-fstrings'
-   ],
-   package_data={'': [
-       'c_templates_tera/main.in.c',
-       'c_templates_tera/Makefile.in',
-       'c_templates_tera/model.in.h',
-       'c_templates_tera/main.in.h',
-       'c_templates_tera/acados_solver.in.c',
-       'c_templates_tera/acados_solver.in.h',
-       'c_templates_tera/acados_sim_solver.in.c',
-       'c_templates_tera/acados_sim_solver.in.h',
-       'c_templates_tera/acados_solver_sfun.in.c',
-       'c_templates_tera/p_constraint.in.h',
-       'c_templates_tera/h_constraint.in.h',
-       'c_templates_tera/h_e_constraint.in.h',
-       'c_templates_tera/phi_e_constraint.in.h',
-       'c_templates_tera/phi_constraint.in.h',
-       'c_templates_tera/make_sfun.in.m',
-       'c_templates_tera/cost_y_fun.in.h',
-       'c_templates_tera/cost_y_e_fun.in.h',
-       'c_templates_tera/external_cost.in.h',
-       'c_templates_tera/external_cost_e.in.h',
-        'acados_layout.json',
-       'acados_sim_layout.json',
-       ]},
-   zip_safe=False
-)
