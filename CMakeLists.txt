@@ -199,8 +199,8 @@ configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
     "${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake"
     IMMEDIATE @ONLY)
-add_custom_target(uninstall
-    # NOTE(dimitris): uninstall name clashes with submodules
+add_custom_target(uninstall_acados
+    # NOTE(oj): uninstall name clashes with submodules, thus `uninstall_acados`
     "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake")
 
 # Current config messages
