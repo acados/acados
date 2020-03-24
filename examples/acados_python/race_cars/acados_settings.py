@@ -67,18 +67,19 @@ def acados_settings(Tf, N, track_file):
     ny = nx + nu
     ny_e = nx
 
-    ocp.dims.nx = nx
-    ocp.dims.np = 0
-    ocp.dims.ny = ny
-    ocp.dims.ny_e = ny_e
-    ocp.dims.nbx = 1
-    ocp.dims.nsbx = 0
-    ocp.dims.nbu = nu
-    ocp.dims.nu = nu
     ocp.dims.N = N
-    ocp.dims.nsh = 2
-    ocp.dims.nh = constraint.expr.shape[0]
-    ocp.dims.ns = 2
+    ns = 2
+    # ocp.dims.nx = nx
+    # ocp.dims.np = 0
+    # ocp.dims.ny = ny
+    # ocp.dims.ny_e = ny_e
+    # ocp.dims.nbx = 1
+    # ocp.dims.nsbx = 0
+    # ocp.dims.nbu = nu
+    # ocp.dims.nu = nu
+    # ocp.dims.nsh = 2
+    # ocp.dims.nh = constraint.expr.shape[0]
+    # ocp.dims.ns = 2
 
     # set cost
     Q = np.diag([ 1e-1, 1e-8, 1e-8, 1e-8, 1e-3, 5e-3 ])
@@ -109,10 +110,10 @@ def acados_settings(Tf, N, track_file):
     Vx_e[:nx, :nx] = np.eye(nx)
     ocp.cost.Vx_e = Vx_e
 
-    ocp.cost.zl = 100 * np.ones((ocp.dims.ns,))
-    ocp.cost.zu = 100 * np.ones((ocp.dims.ns,))
-    ocp.cost.Zl = 0 * np.ones((ocp.dims.ns,))
-    ocp.cost.Zu = 0 * np.ones((ocp.dims.ns,))
+    ocp.cost.zl = 100 * np.ones((ns,))
+    ocp.cost.zu = 100 * np.ones((ns,))
+    ocp.cost.Zl = 0 * np.ones((ns,))
+    ocp.cost.Zu = 0 * np.ones((ns,))
 
     # set intial references
     ocp.cost.yref = np.array([1, 0, 0, 0, 0, 0, 0, 0])
@@ -146,9 +147,10 @@ def acados_settings(Tf, N, track_file):
             model.delta_max,
         ]
     )
-    ocp.constraints.lsh = np.zeros(ocp.dims.nsh)
-    ocp.constraints.ush = np.zeros(ocp.dims.nsh)
     ocp.constraints.idxsh = np.array([0, 2])
+    # Upper and lower bounds on slacks, are zero by default.
+    # ocp.constraints.lsh = np.zeros(ocp.dims.nsh)
+    # ocp.constraints.ush = np.zeros(ocp.dims.nsh)
 
     # set intial condition
     ocp.constraints.x0 = model.x0

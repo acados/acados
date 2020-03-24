@@ -220,7 +220,7 @@ ocp = AcadosOcp()
 model = export_pmsm_model()
 ocp.model = model
 
-# set model dims
+# model dims
 nx = model.x.size()[0]
 nu = model.u.size()[0]
 np = model.p.size()[0]
@@ -229,34 +229,30 @@ ny_e = nx
 Tf = N*Ts
 
 # set ocp_nlp_dimensions
-nlp_dims = ocp.dims
-nlp_dims.nx = nx
-nlp_dims.nu = nu
-nlp_dims.np = np
-nlp_dims.ny = ny
-nlp_dims.ny_e = ny_e
+ocp.dims.N = N
 
-if FORMULATION == 0:
-    nlp_dims.nbu = 0
-    nlp_dims.ng = 3
-    nlp_dims.ng_e = 0
+# NOTE: all dimensions but N are now detected by the interface.
+# if FORMULATION == 0:
+#     ocp.dims.nbu = 0
+#     ocp.dims.ng = 3
+#     ocp.dims.ng_e = 0
 
-if FORMULATION == 1:        
-    nlp_dims.nbu = 0
-    nlp_dims.ng = 3
-    nlp_dims.ng_e = 3
-    nlp_dims.nphi  = 2        # 1st torque constraint | 2nd voltage constraint
-    nlp_dims.nr = 3           # 1st torque constraint | 2nd voltage constraint
-    nlp_dims.nphi_e = 2       # 1st torque constraint | 2nd terminal set
-    nlp_dims.nr_e = 3         # 1st torque constraint | 2nd terminal set
-    nlp_dims.ns = 1
-    nlp_dims.ns_e = 1 
-    nlp_dims.nsphi = 1
-    nlp_dims.nsphi_e = 1 
+# if FORMULATION == 1:
+#     ocp.dims.nbu = 0
+#     ocp.dims.ng = 3
+#     ocp.dims.ng_e = 3
+#     ocp.dims.nphi  = 2        # 1st torque constraint | 2nd voltage constraint
+#     ocp.dims.nr = 3           # 1st torque constraint | 2nd voltage constraint
+#     ocp.dims.nphi_e = 2       # 1st torque constraint | 2nd terminal set
+#     ocp.dims.nr_e = 3         # 1st torque constraint | 2nd terminal set
+#     ocp.dims.ns = 1
+#     ocp.dims.ns_e = 1
+#     ocp.dims.nsphi = 1
+#     ocp.dims.nsphi_e = 1
 
-nlp_dims.nbx = 0
-nlp_dims.nbx_e = 0
-nlp_dims.N = N
+# ocp.dims.nbx = 0
+# ocp.dims.nbx_e = 0
+
 
 # set weighting matrices
 nlp_cost = ocp.cost
@@ -357,13 +353,18 @@ if FORMULATION == 1:
 
     nlp_con.lphi = nmp.array([0, -1e9])                       # 1st torque constraint | 2nd voltage constraint 
     nlp_con.uphi = nmp.array([0, u_max**2/3])
-    nlp_con.lsphi = nmp.array([0])                            # soft lower bounds --> greater than 0
-    nlp_con.usphi = nmp.array([0])                            # soft upper bounds --> greater than 0
+
+    # ls*, us* are OPTIONAL fields now, default is zeros of appropriate dimension
+    # nlp_con.lsphi = nmp.array([0])  # soft lower bounds --> greater than 0
+    # nlp_con.usphi = nmp.array([0])  # soft upper bounds --> greater than 0
+
     #_e
     nlp_con.lphi_e = nmp.array([0, -1e9])                     # 1st torque constraint | 2nd terminal set 
     nlp_con.uphi_e = nmp.array([0, u_max**2/3])
-    nlp_con.lsphi_e = nmp.array([0])      
-    nlp_con.usphi_e = nmp.array([0])      
+
+    # ls*, us* are OPTIONAL fields now, default is zeros of appropriate dimension
+    # nlp_con.lsphi_e = nmp.array([0])
+    # nlp_con.usphi_e = nmp.array([0])
 
     nlp_con.idxsphi = nmp.array([0])
     nlp_con.idxsphi_e = nmp.array([0])  
