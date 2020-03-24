@@ -170,6 +170,16 @@ def make_ocp_dims_consistent(acados_ocp):
     else:
         dims.nh = nh
 
+    if is_empty(model.con_phi_expr):
+        dims.nphi = 0
+        dims.nr = 0
+    else:
+        dims.nphi = casadi_length(model.con_phi_expr)
+        if is_empty(model.con_r_expr):
+            raise Exception('convex over nonlinear constraints: con_r_expr but con_phi_expr is nonempty')
+        else:
+            dims.nr = casadi_length(model.con_r_expr)
+
     # terminal
     nbx_e = constraints.idxbx_e.shape[0]
     if constraints.ubx_e.shape[0] != nbx_e or constraints.lbx_e.shape[0] != nbx_e:
@@ -192,6 +202,16 @@ def make_ocp_dims_consistent(acados_ocp):
         raise Exception('inconsistent dimension nh_e, regarding lh_e, uh_e, con_h_expr_e.')
     else:
         dims.nh_e = nh_e
+
+    if is_empty(model.con_phi_expr_e):
+        dims.nphi_e = 0
+        dims.nr_e = 0
+    else:
+        dims.nphi_e = casadi_length(model.con_phi_expr_e)
+        if is_empty(model.con_r_expr_e):
+            raise Exception('convex over nonlinear constraints: con_r_expr_e but con_phi_expr_e is nonempty')
+        else:
+            dims.nr_e = casadi_length(model.con_r_expr_e)
 
     # Slack dimensions
     nsbx = constraints.idxsbx.shape[0]
