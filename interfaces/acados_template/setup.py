@@ -48,6 +48,12 @@ setup(name='acados_template',
    license='BSD',
    packages = find_packages(),
    include_package_data = True,
+   setup_requires=['setuptools_scm'],
+   use_scm_version={
+     "fallback_version": "0.1-local",
+     "root": "../..",
+     "relative_to": __file__
+   },
    install_requires=[
       'numpy',
       'scipy',
