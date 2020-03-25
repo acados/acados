@@ -92,10 +92,12 @@ def make_ocp_dims_consistent(acados_ocp):
             raise Exception('inconsistent dimension ny, regarding W, Vx, Vu.')
         if dims.nz != 0 and cost.Vz.shape[0] != ny:
             raise Exception('inconsistent dimension ny, regarding W, Vx, Vu, Vz.')
-        if cost.Vx.shape[1] != dims.nx:
+        if cost.Vx.shape[1] != dims.nx and ny != 0:
             raise Exception('inconsistent dimension: Vx should have nx columns.')
-        if cost.Vu.shape[1] != dims.nu:
+        if cost.Vu.shape[1] != dims.nu and ny != 0:
             raise Exception('inconsistent dimension: Vu should have nu columns.')
+        if cost.yref.shape[0] != ny:
+            raise Exception('inconsistent dimension: regarding W, yref.')
         dims.ny = ny
 
     elif cost.cost_type == 'NONLINEAR_LS':
@@ -104,6 +106,8 @@ def make_ocp_dims_consistent(acados_ocp):
             raise Exception('inconsistent dimension ny: regarding W, cost_y_expr.')
         elif casadi_length(model.cost_y_expr) != ny:
             raise Exception('inconsistent dimension ny: regarding W, cost_y_expr.')
+        if cost.yref.shape[0] != ny:
+            raise Exception('inconsistent dimension: regarding W, yref.')
         dims.ny = ny
 
     # terminal
@@ -113,6 +117,8 @@ def make_ocp_dims_consistent(acados_ocp):
             raise Exception('inconsistent dimension ny_e, regarding W_e, Vx_e.')
         if cost.Vx_e.shape[1] != dims.nx and ny_e != 0:
             raise Exception('inconsistent dimension: Vx_e should have nx columns.')
+        if cost.yref_e.shape[0] != ny_e:
+            raise Exception('inconsistent dimension: regarding W_e, yref_e.')
         dims.ny_e = ny_e
 
     elif cost.cost_type_e == 'NONLINEAR_LS':
@@ -121,6 +127,8 @@ def make_ocp_dims_consistent(acados_ocp):
             raise Exception('inconsistent dimension ny_e: regarding W_e, cost_y_expr_e.')
         elif casadi_length(model.cost_y_expr_e) != ny_e:
             raise Exception('inconsistent dimension ny_e: regarding W_e, cost_y_expr_e.')
+        if cost.yref_e.shape[0] != ny_e:
+            raise Exception('inconsistent dimension: regarding W_e, yref_e.')
         dims.ny_e = ny_e
 
 
