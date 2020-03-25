@@ -1579,7 +1579,7 @@ int acados_update_params(int stage, double *p, int np)
         casadi_np = (gnsf_phi_fun+stage)->np;
         if (casadi_np != np) {
             printf("acados_update_params: trying to set %i parameters "
-                "in forw_vde_casad which only has %i. Exiting.\n", np, casadi_np);
+                "in gnsf_phi_fun which only has %i. Exiting.\n", np, casadi_np);
             exit(1);
         }
         gnsf_phi_fun[stage].set_param(gnsf_phi_fun+stage, p);
@@ -1609,7 +1609,9 @@ int acados_update_params(int stage, double *p, int np)
         gnsf_f_lo_jac_x1_x1dot_u_z[stage].set_param(gnsf_f_lo_jac_x1_x1dot_u_z+stage, p);
 
     {%- endif %}{# integrator_type #}
-        {% if constraints.constr_type == "BGP" %}
+
+        // constraints
+    {% if constraints.constr_type == "BGP" %}
         // casadi_np = (r_constraint+stage)->np;
         // if (casadi_np != np) {
         //     printf("acados_update_params: trying to set %i parameters " 
@@ -1625,7 +1627,7 @@ int acados_update_params(int stage, double *p, int np)
         }
         phi_constraint[stage].set_param(phi_constraint+stage, p);
 
-        {% elif constraints.constr_type == "BGH" and dims.nh > 0 %}
+    {% elif constraints.constr_type == "BGH" and dims.nh > 0 %}
         casadi_np = (h_constraint+stage)->np;
         if (casadi_np != np) {
             printf("acados_update_params: trying to set %i parameters "
@@ -1633,8 +1635,9 @@ int acados_update_params(int stage, double *p, int np)
             exit(1);
         }
         h_constraint[stage].set_param(h_constraint+stage, p);
-        {%- endif %}
+    {%- endif %}
 
+        // cost
     {%- if cost.cost_type == "NONLINEAR_LS" %}
         casadi_np = (cost_y_fun+stage)->np;
         if (casadi_np != np) {
@@ -1644,7 +1647,7 @@ int acados_update_params(int stage, double *p, int np)
         }
         cost_y_fun[stage].set_param(cost_y_fun+stage, p);
 
-    {%- elif cost.cost_type == "NONLINEAR_LS" %}
+    {%- elif cost.cost_type == "EXTERNAL" %}
         casadi_np = (ext_cost_fun+stage)->np;
         if (casadi_np != np) {
             printf("acados_update_params: trying to set %i parameters "
@@ -1659,10 +1662,15 @@ int acados_update_params(int stage, double *p, int np)
                 "in ext_cost_fun_jac_hess which only has %i. Exiting.\n", np, casadi_np);
             exit(1);
         }
+        ext_cost_fun_jac_hess[stage].set_param(ext_cost_fun_jac_hess+stage, p);
     {%- endif %}
+
     }
     else // stage == N
     {
+
+        // terminal shooting node has no dynamics
+        // cost
     {%- if cost.cost_type_e == "NONLINEAR_LS" %}
         casadi_np = (&cost_y_e_fun)->np;
         if (casadi_np != np) {
@@ -1688,7 +1696,8 @@ int acados_update_params(int stage, double *p, int np)
         }
         ext_cost_e_fun_jac_hess.set_param(&ext_cost_e_fun_jac_hess, p);
     {% endif %}
-        {% if constraints.constr_type_e == "BGP" %}
+        // constraints
+    {% if constraints.constr_type_e == "BGP" %}
         // casadi_np = (&r_e_constraint)->np;
         // if (casadi_np != np) {
         //     printf("acados_update_params: trying to set %i parameters "
@@ -1703,7 +1712,7 @@ int acados_update_params(int stage, double *p, int np)
             exit(1);
         }
         phi_e_constraint.set_param(&phi_e_constraint, p);
-        {% elif constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
+    {% elif constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
         casadi_np = (&h_e_constraint)->np;
         if (casadi_np != np) {
             printf("acados_update_params: trying to set %i parameters "
@@ -1711,7 +1720,7 @@ int acados_update_params(int stage, double *p, int np)
             exit(1);
         }
         h_e_constraint.set_param(&h_e_constraint, p);
-        {% endif %}
+    {% endif %}
     }
 {% endif %}{# if dims.np #}
 
