@@ -48,6 +48,8 @@ acados_matlab_octave_lib_path = ['-L' fullfile(acados_folder, 'interfaces', 'aca
 model_lib_path = ['-L', opts_struct.output_dir];
 
 %% select files to compile
+ext_fun_type = model_struct.ext_fun_type; % 'casadi' or generic
+mex_files = {fullfile(acados_mex_folder, ['sim_set_ext_fun_', ext_fun_type, '.c'])};
 set_fields = {};
 mex_fields = {};
 fun_names = {};
@@ -201,7 +203,7 @@ if (strcmp(opts_struct.compile_interface, 'true') || strcmp(opts_struct.codgen_m
             cflags_tmp = [cflags_tmp, ' -DMEX_FIELD=', mex_fields{ii}];
             cflags_tmp = [cflags_tmp, ' -DFUN_NAME=', fun_names{ii}];
             setenv('CFLAGS', cflags_tmp);
-            mex(acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_octave_lib_path, model_lib_path, '-lacados', '-lhpipm', '-lblasfeo', ['-l', model_name], fullfile(acados_mex_folder, 'sim_set_ext_fun_gen.c'));
+            mex(acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_octave_lib_path, model_lib_path, '-lacados', '-lhpipm', '-lblasfeo', ['-l', model_name], mex_files{1});
         else
             if ~ismac()
                 FLAGS = 'CFLAGS=$CFLAGS -std=c99 -fopenmp';
@@ -212,12 +214,11 @@ if (strcmp(opts_struct.compile_interface, 'true') || strcmp(opts_struct.codgen_m
                  ['-DMEX_FIELD=', mex_fields{ii}], ['-DFUN_NAME=', fun_names{ii}],...
                  acados_include, acados_interfaces_include, acados_lib_path,...
                  acados_matlab_octave_lib_path, model_lib_path, '-lacados',...
-                 '-lhpipm', '-lblasfeo', ['-l', model_name],...
-                 fullfile(acados_mex_folder, 'sim_set_ext_fun_gen.c'));
+                 '-lhpipm', '-lblasfeo', ['-l', model_name], mex_files{1});
         end
         
 %        clear(mex_names{ii})
-        movefile(['sim_set_ext_fun_gen.', mexext], fullfile(opts_struct.output_dir, [mex_names{ii}, '.', mexext]));
+        movefile(['sim_set_ext_fun_', ext_fun_type, '.', mexext], fullfile(opts_struct.output_dir, [mex_names{ii}, '.', mexext]));
     end
 
     if is_octave()

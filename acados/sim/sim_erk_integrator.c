@@ -495,24 +495,24 @@ void sim_erk_memory_get(void *config_, void *dims_, void *mem_, const char *fiel
 
     if (!strcmp(field, "time_sim"))
     {
-		double *ptr = value;
-		*ptr = mem->time_sim;
-	}
+        double *ptr = value;
+        *ptr = mem->time_sim;
+    }
     else if (!strcmp(field, "time_sim_ad"))
     {
-		double *ptr = value;
-		*ptr = mem->time_ad;
-	}
+        double *ptr = value;
+        *ptr = mem->time_ad;
+    }
     else if (!strcmp(field, "time_sim_la"))
     {
-		double *ptr = value;
-		*ptr = mem->time_la;
-	}
-	else
-	{
-		printf("sim_erk_memory_get field %s is not supported! \n", field);
-		exit(1);
-	}
+        double *ptr = value;
+        *ptr = mem->time_la;
+    }
+    else
+    {
+        printf("sim_erk_memory_get field %s is not supported! \n", field);
+        exit(1);
+    }
 }
 
 
@@ -589,40 +589,70 @@ static void *sim_erk_cast_workspace(void *config_, void *dims_, void *opts_, voi
 
     char *c_ptr = (char *) raw_memory;
 
-    sim_erk_workspace *workspace = (sim_erk_workspace *) c_ptr;
+    sim_erk_workspace *work = (sim_erk_workspace *) c_ptr;
     c_ptr += sizeof(sim_erk_workspace);
 
     align_char_to(8, &c_ptr);
 
-    assign_and_advance_double(nX + nu, &workspace->rhs_forw_in, &c_ptr);
+    // switch to d_ptr
+    double *d_ptr = (double *) c_ptr;
+
+    //assign_and_advance_double(nX + nu, &workspace->rhs_forw_in, &c_ptr);
+    work->rhs_forw_in = d_ptr;
+    d_ptr += (nX+nu);
 
     if (opts->sens_adj | opts->sens_hess)
     {
-        assign_and_advance_double(ns * num_steps * nX, &workspace->K_traj, &c_ptr);
-        assign_and_advance_double((num_steps + 1) * nX, &workspace->out_forw_traj, &c_ptr);
+        //
+        //assign_and_advance_double(ns * num_steps * nX, &workspace->K_traj, &c_ptr);
+        work->K_traj = d_ptr;
+        d_ptr += ns*num_steps*nX;
+        //assign_and_advance_double((num_steps + 1) * nX, &workspace->out_forw_traj, &c_ptr);
+        work->out_forw_traj = d_ptr;
+        d_ptr += (num_steps+1)*nX;
+        
     }
     else
     {
-        assign_and_advance_double(ns * nX, &workspace->K_traj, &c_ptr);
-        assign_and_advance_double(nX, &workspace->out_forw_traj, &c_ptr);
+        //assign_and_advance_double(ns * nX, &workspace->K_traj, &c_ptr);
+        work->K_traj = d_ptr;
+        d_ptr += ns*nX;
+        //assign_and_advance_double(nX, &workspace->out_forw_traj, &c_ptr);
+        work->out_forw_traj = d_ptr;
+        d_ptr += nX;
     }
 
     if (opts->sens_hess) // && opts->sens_adj)
     {
-        assign_and_advance_double(nx + nX + nu, &workspace->rhs_adj_in, &c_ptr);
-        assign_and_advance_double(nx + nu + nhess, &workspace->out_adj_tmp, &c_ptr);
-        assign_and_advance_double(ns * (nx + nu + nhess), &workspace->adj_traj, &c_ptr);
+        //assign_and_advance_double(nx + nX + nu, &workspace->rhs_adj_in, &c_ptr);
+        work->rhs_adj_in = d_ptr;
+        d_ptr += nx+nX+nu;
+        //assign_and_advance_double(nx + nu + nhess, &workspace->out_adj_tmp, &c_ptr);
+        work->out_adj_tmp = d_ptr;
+        d_ptr += nx+nu+nhess;
+        //assign_and_advance_double(ns * (nx + nu + nhess), &workspace->adj_traj, &c_ptr);
+        work->adj_traj = d_ptr;
+        d_ptr += ns*(nx+nu+nhess);
     }
     else if (opts->sens_adj)
     {
-        assign_and_advance_double((nx * 2 + nu), &workspace->rhs_adj_in, &c_ptr);
-        assign_and_advance_double(nx + nu, &workspace->out_adj_tmp, &c_ptr);
-        assign_and_advance_double(ns * (nx + nu), &workspace->adj_traj, &c_ptr);
+        //assign_and_advance_double((nx * 2 + nu), &workspace->rhs_adj_in, &c_ptr);
+        work->rhs_adj_in = d_ptr;
+        d_ptr += 2*nx+nu;
+        //assign_and_advance_double(nx + nu, &workspace->out_adj_tmp, &c_ptr);
+        work->out_adj_tmp = d_ptr;
+        d_ptr += nu+nx;
+        //assign_and_advance_double(ns * (nx + nu), &workspace->adj_traj, &c_ptr);
+        work->adj_traj = d_ptr;
+        d_ptr += ns*(nu+nx);
     }
+
+    // update c_ptr
+    c_ptr = (char *) d_ptr;
 
     assert((char *) raw_memory + sim_erk_workspace_calculate_size(config_, dims, opts_) >= c_ptr);
 
-    return (void *) workspace;
+    return (void *) work;
 }
 
 /************************************************
@@ -654,8 +684,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     void *dims_ = in->dims;
     sim_erk_dims *dims = (sim_erk_dims *) dims_;
 
-    sim_erk_workspace *workspace =
-        (sim_erk_workspace *) sim_erk_cast_workspace(config, dims, opts, work_);
+    sim_erk_workspace *work = sim_erk_cast_workspace(config, dims, opts, work_);
 
     int i, j, s, istep;
     double a = 0, b = 0;  // temp values of A_mat and b_vec
@@ -698,13 +727,13 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     double *b_vec = opts->b_vec;
     //    double *c_vec = opts->c_vec;
 
-    double *K_traj = workspace->K_traj;
-    double *forw_traj = workspace->out_forw_traj;
-    double *rhs_forw_in = workspace->rhs_forw_in;
+    double *K_traj = work->K_traj;
+    double *forw_traj = work->out_forw_traj;
+    double *rhs_forw_in = work->rhs_forw_in;
 
-    double *adj_tmp = workspace->out_adj_tmp;
-    double *adj_traj = workspace->adj_traj;
-    double *rhs_adj_in = workspace->rhs_adj_in;
+    double *adj_tmp = work->out_adj_tmp;
+    double *adj_traj = work->adj_traj;
+    double *rhs_adj_in = work->rhs_adj_in;
 
     double *xn = out->xn;
     double *S_forw_out = out->S_forw;
@@ -721,7 +750,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     acados_timer timer, timer_ad;
     double timing_ad = 0.0;
 
-	// start timer
+    // start timer
     acados_tic(&timer);
 
     /************************************************
@@ -740,8 +769,8 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     {
         if (opts->sens_adj | opts->sens_hess)
         {
-            K_traj = workspace->K_traj + istep * ns * nX;
-            forw_traj = workspace->out_forw_traj + (istep + 1) * nX;
+            K_traj = work->K_traj + istep * ns * nX;
+            forw_traj = work->out_forw_traj + (istep + 1) * nX;
             for (i = 0; i < nX; i++)
                 forw_traj[i] = forw_traj[i - nX];
         }
@@ -844,8 +873,8 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         for (istep = num_steps - 1; istep >= 0; istep--)
         {
 
-            K_traj = workspace->K_traj + istep * ns * nX;
-            forw_traj = workspace->out_forw_traj + istep*nX;
+            K_traj = work->K_traj + istep * ns * nX;
+            forw_traj = work->out_forw_traj + istep*nX;
 
             for (s = ns - 1; s >= 0; s--)
             {
@@ -979,9 +1008,9 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     out->info->LAtime = 0.0;
     out->info->ADtime = timing_ad;
 
-	mem->time_sim = out->info->CPUtime;
-	mem->time_ad = out->info->ADtime;
-	mem->time_la = out->info->LAtime;
+    mem->time_sim = out->info->CPUtime;
+    mem->time_ad = out->info->ADtime;
+    mem->time_la = out->info->LAtime;
 
     // return
     return 0;  // success

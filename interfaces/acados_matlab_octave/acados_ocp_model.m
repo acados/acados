@@ -45,6 +45,7 @@ classdef acados_ocp_model < handle
             obj.model_struct = struct;
             % default values
             obj.model_struct.name = 'ocp_model';
+            obj.model_struct.ext_fun_type = 'casadi'; % generic
             obj.model_struct.cost_type = 'auto';
             obj.model_struct.cost_type_e = 'auto';
             obj.model_struct.dyn_type = 'implicit';
@@ -319,6 +320,8 @@ classdef acados_ocp_model < handle
 
                 if (strcmp(field, 'name'))
                     obj.model_struct.name = value;
+                elseif (strcmp(field, 'ext_fun_type'))
+                    obj.model_struct.ext_fun_type = value;
                 elseif (strcmp(field, 'T'))
                     obj.model_struct.T = value;
                 else
