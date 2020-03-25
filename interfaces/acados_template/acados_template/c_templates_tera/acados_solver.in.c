@@ -108,19 +108,19 @@ ocp_nlp_plan * nlp_solver_plan;
 ocp_nlp_config * nlp_config;
 ocp_nlp_dims * nlp_dims;
 
-{% if solver_options.integrator_type == "ERK" %}
+{%- if solver_options.integrator_type == "ERK" %}
 external_function_param_casadi * forw_vde_casadi;
 {% if solver_options.hessian_approx == "EXACT" %}
 external_function_param_casadi * hess_vde_casadi;
 {%- endif %}
-{% elif solver_options.integrator_type == "IRK" -%}
+{%- elif solver_options.integrator_type == "IRK" %}
 external_function_param_casadi * impl_dae_fun;
 external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
 external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
 {% if solver_options.hessian_approx == "EXACT" %}
 external_function_param_casadi * impl_dae_hess;
 {%- endif %}
-{% elif solver_options.integrator_type == "GNSF" -%}
+{%- elif solver_options.integrator_type == "GNSF" %}
 external_function_param_casadi * gnsf_phi_fun;
 external_function_param_casadi * gnsf_phi_fun_jac_y;
 external_function_param_casadi * gnsf_phi_jac_y_uhat;
@@ -128,36 +128,36 @@ external_function_param_casadi * gnsf_f_lo_jac_x1_x1dot_u_z;
 external_function_param_casadi * gnsf_get_matrices_fun;
 {%- endif %}
 
-{% if constraints.constr_type == "BGH" %}
+{%- if constraints.constr_type == "BGH" %}
 external_function_param_casadi * h_constraint;
 {%- elif constraints.constr_type == "BGP" %}
 external_function_param_casadi * phi_constraint;
 // external_function_param_casadi * r_constraint;
-{% endif %}
+{%- endif %}
 
-{% if constraints.constr_type_e == "BGH" %}
+{%- if constraints.constr_type_e == "BGH" %}
 external_function_param_casadi h_e_constraint;
-{% elif constraints.constr_type_e == "BGP" %}
+{%- elif constraints.constr_type_e == "BGP" %}
 external_function_param_casadi phi_e_constraint;
 // external_function_param_casadi r_e_constraint;
-{% endif %}
+{%- endif %}
 
-{% if cost.cost_type == "NONLINEAR_LS" %}
+{%- if cost.cost_type == "NONLINEAR_LS" %}
 external_function_param_casadi * cost_y_fun;
 external_function_param_casadi * cost_y_fun_jac_ut_xt;
 external_function_param_casadi * cost_y_hess;
-{% elif cost.cost_type == "EXTERNAL" %}
+{%- elif cost.cost_type == "EXTERNAL" %}
 external_function_param_casadi * ext_cost_fun;
 external_function_param_casadi * ext_cost_fun_jac_hess;
-{% endif %}
-{% if cost.cost_type_e == "NONLINEAR_LS" %}
+{%- endif %}
+{%- if cost.cost_type_e == "NONLINEAR_LS" %}
 external_function_param_casadi cost_y_e_fun;
 external_function_param_casadi cost_y_e_fun_jac_ut_xt;
 external_function_param_casadi cost_y_e_hess;
-{% elif cost.cost_type_e == "EXTERNAL" %}
+{%- elif cost.cost_type_e == "EXTERNAL" %}
 external_function_param_casadi ext_cost_e_fun;
 external_function_param_casadi ext_cost_e_fun_jac_hess;
-{% endif %}
+{%- endif %}
 
 
 int acados_create()
@@ -1740,8 +1740,9 @@ int acados_free()
     ocp_nlp_config_destroy(nlp_config);
     ocp_nlp_plan_destroy(nlp_solver_plan);
 
-    // free external function 
-{% if solver_options.integrator_type == "IRK" %}
+    /* free external function */
+    // dynamics
+{%- if solver_options.integrator_type == "IRK" %}
     for (int i = 0; i < {{ dims.N }}; i++)
     {
         external_function_param_casadi_free(&impl_dae_fun[i]);
@@ -1751,7 +1752,7 @@ int acados_free()
         external_function_param_casadi_free(&impl_dae_hess[i]);
     {%- endif %}
     }
-{% elif solver_options.integrator_type == "ERK"%}
+{%- elif solver_options.integrator_type == "ERK" %}
     for (int i = 0; i < {{ dims.N }}; i++)
     {
         external_function_param_casadi_free(&forw_vde_casadi[i]);
@@ -1759,7 +1760,58 @@ int acados_free()
         external_function_param_casadi_free(&hess_vde_casadi[i]);
     {%- endif %}
     }
-{% endif %}
+{%- elif solver_options.integrator_type == "GNSF" %}
+    for (int i = 0; i < {{ dims.N }}; i++)
+    {
+        external_function_param_casadi_free(&gnsf_phi_fun[i]);
+        external_function_param_casadi_free(&gnsf_phi_fun_jac_y[i]);
+        external_function_param_casadi_free(&gnsf_phi_jac_y_uhat[i]);
+        external_function_param_casadi_free(&gnsf_f_lo_jac_x1_x1dot_u_z[i]);
+        external_function_param_casadi_free(&gnsf_get_matrices_fun[i]);
+    }
+{%- endif %}
+
+    // cost
+{%- if cost.cost_type == "NONLINEAR_LS" %}
+    for (int i = 0; i < {{ dims.N }}; i++)
+    {
+        external_function_param_casadi_free(&cost_y_fun[i]);
+        external_function_param_casadi_free(&cost_y_fun_jac_ut_xt[i]);
+        external_function_param_casadi_free(&cost_y_hess[i]);
+    }
+{%- elif cost.cost_type == "EXTERNAL" %}
+    for (int i = 0; i < {{ dims.N }}; i++)
+    {
+        external_function_param_casadi_free(&ext_cost_fun[i]);
+        external_function_param_casadi_free(&ext_cost_fun_jac_hess[i]);
+    }
+{%- endif %}
+{%- if cost.cost_type_e == "NONLINEAR_LS" %}
+    external_function_param_casadi_free(&cost_y_e_fun);
+    external_function_param_casadi_free(&cost_y_e_fun_jac_ut_xt);
+    external_function_param_casadi_free(&cost_y_e_hess);
+{%- elif cost.cost_type_e == "EXTERNAL" %}
+    external_function_param_casadi_free(&ext_cost_e_fun);
+    external_function_param_casadi_free(&ext_cost_e_fun_jac_hess);
+{%- endif %}
+
+    // constraints
+{%- if constraints.constr_type == "BGH" and dims.nh > 0 %}
+    for (int i = 0; i < {{ dims.N }}; i++)
+    {
+        external_function_param_casadi_free(&h_constraint[i]);
+    }
+{%- elif constraints.constr_type == "BGP" and dims.nphi > 0 %}
+    for (int i = 0; i < {{ dims.N }}; i++)
+    {
+        external_function_param_casadi_free(&phi_constraint[i]);
+    }
+{%- endif %}
+{%- if constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
+    external_function_param_casadi_free(&h_e_constraint);
+{%- elif constraints.constr_type_e == "BGP" and dims.nphi_e > 0 %}
+    external_function_param_casadi_free(&phi_e_constraint);
+{%- endif %}
 
     return 0;
 }
