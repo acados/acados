@@ -57,6 +57,9 @@ add_test(NAME python_test_ocp
 add_test(NAME python_pendulum_ocp_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/ocp
         python minimal_example_ocp.py)
+add_test(NAME python_nonuniform_discretization_ocp_example
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/ocp
+        python nonuniform_discretization_example.py)
 add_test(NAME python_pendulum_mhe_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/mhe
         python minimal_example_mhe.py)
