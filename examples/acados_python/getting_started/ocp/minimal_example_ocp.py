@@ -55,11 +55,6 @@ ny_e = nx
 N = 20
 
 # set dimensions
-ocp.dims.nx = nx
-ocp.dims.ny = ny
-ocp.dims.ny_e = ny_e
-ocp.dims.nbu = nu 
-ocp.dims.nu = nu
 ocp.dims.N = N
 
 # set cost
@@ -118,4 +113,4 @@ simX[N,:] = ocp_solver.get(N, "x")
 
 ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
 
-plot_pendulum(Tf/N, Fmax, simU, simX, latexify=False)
+plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)

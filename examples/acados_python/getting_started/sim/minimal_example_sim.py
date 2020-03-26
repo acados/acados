@@ -86,4 +86,4 @@ S_forw = acados_integrator.get("S_forw")
 print("S_forw, sensitivities of simulaition result wrt x,u:\n", S_forw)
 
 # plot results
-plot_pendulum(Tf/N, 10, np.zeros((N, nu)), simX, latexify=False)
+plot_pendulum(np.linspace(0, Tf, N+1), 10, np.zeros((N, nu)), simX, latexify=False)

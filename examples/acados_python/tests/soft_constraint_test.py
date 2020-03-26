@@ -176,7 +176,7 @@ def run_closed_loop_experiment(FORMULATION):
     print("sl", sl, "su", su)
 
     # plot results
-    plot_pendulum(Tf/N, Fmax, simU, simX, latexify=False)
+    plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
 
     # store results
     np.savetxt('test_results/simX_soft_formulation_' + str(FORMULATION), simX)

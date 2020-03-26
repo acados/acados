@@ -142,4 +142,4 @@ for i in range(N):
     simX[i+1,:] = xcurrent
 
 # plot results
-plot_pendulum(Tf/N, Fmax, simU, simX)
+plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX)
