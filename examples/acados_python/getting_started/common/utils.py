@@ -68,7 +68,7 @@ def plot_pendulum(h, u_max, U, X_true, X_est=None, Y_measured=None, latexify=Fal
     N_sim = X_true.shape[0]
     nx = X_true.shape[1]
 
-    Tf = N_sim*h
+    Tf = (N_sim - 1) * h
     t = np.linspace(0.0, Tf, N_sim)
 
     if WITH_ESTIMATION:
@@ -76,13 +76,13 @@ def plot_pendulum(h, u_max, U, X_true, X_est=None, Y_measured=None, latexify=Fal
         t_mhe = np.linspace(N_mhe, Tf, N_sim)
 
     plt.subplot(nx+1, 1, 1)
-    plt.step(t[:U.shape[0]], U, color='r')
+    plt.step(t, np.append([U[0]], U), color='r')
     plt.title('closed-loop simulation')
     plt.ylabel('$u$')
     plt.xlabel('$t$')
-    plt.hlines(u_max, t[0], t[-2], linestyles='dashed', alpha=0.7)
-    plt.hlines(-u_max, t[0], t[-2], linestyles='dashed', alpha=0.7 )
-    plt.ylim([1.2*u_max, -1.2*u_max])
+    plt.hlines(u_max, t[0], t[-1], linestyles='dashed', alpha=0.7)
+    plt.hlines(-u_max, t[0], t[-1], linestyles='dashed', alpha=0.7 )
+    plt.ylim([-1.2*u_max, 1.2*u_max])
     plt.grid()
 
     states_lables = ['$x$', r'$\theta$', '$v$', r'$\dot{\theta}$']
