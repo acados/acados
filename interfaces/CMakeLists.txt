@@ -50,7 +50,7 @@ add_test(NAME octave_test_ocp
 endif()
 
 
-if(ACADOS_PYTHON) 
+if(ACADOS_PYTHON)
 add_test(NAME python_test_ocp
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
         python main_test.py)

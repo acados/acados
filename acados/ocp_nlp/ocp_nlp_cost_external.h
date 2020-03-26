@@ -63,7 +63,9 @@ int ocp_nlp_cost_external_dims_calculate_size(void *config);
 //
 void *ocp_nlp_cost_external_dims_assign(void *config, void *raw_memory);
 //
-void ocp_nlp_cost_external_dims_initialize(void *config, void *dims, int nx, int nu, int ny, int ns, int nz);
+void ocp_nlp_cost_external_dims_initialize(void *config, void *dims, int nx,
+                                           int nu, int ny, int ns, int nz);
+//
 void ocp_nlp_cost_external_dims_set(void *config_, void *dims_, const char *field, int* value);
 //
 void ocp_nlp_cost_external_dims_get(void *config_, void *dims_, const char *field, int* value);
@@ -75,7 +77,7 @@ void ocp_nlp_cost_external_dims_get(void *config_, void *dims_, const char *fiel
 typedef struct
 {
     external_function_generic *ext_cost_fun;  // function
-    external_function_generic *ext_cost_fun_jac_hess;  // gradient and hessian
+    external_function_generic *ext_cost_fun_jac_hess;  // function, gradient and hessian
     struct blasfeo_dvec Z;
     struct blasfeo_dvec z;
     double scaling;
@@ -154,7 +156,7 @@ void ocp_nlp_cost_external_memory_set_dzdux_tran_ptr(struct blasfeo_dmat *dzdux_
 typedef struct
 {
     struct blasfeo_dmat tmp_nv_nv;
-    struct blasfeo_dvec tmp_2ns;     // temporary vector of dimension ny
+    struct blasfeo_dvec tmp_2ns;  // temporary vector of dimension 2*ns
 } ocp_nlp_cost_external_workspace;
 
 //
@@ -167,11 +169,14 @@ int ocp_nlp_cost_external_workspace_calculate_size(void *config, void *dims, voi
 //
 void ocp_nlp_cost_external_config_initialize_default(void *config);
 //
-void ocp_nlp_cost_external_initialize(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
+void ocp_nlp_cost_external_initialize(void *config_, void *dims, void *model_,
+                                      void *opts_, void *mem_, void *work_);
 //
-void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_);
+void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims, void *model_,
+                                               void *opts_, void *memory_, void *work_);
 //
-void ocp_nlp_cost_external_compute_fun(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_);
+void ocp_nlp_cost_external_compute_fun(void *config_, void *dims, void *model_,
+                                       void *opts_, void *memory_, void *work_);
 
 #ifdef __cplusplus
 } /* extern "C" */

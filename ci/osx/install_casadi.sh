@@ -32,24 +32,42 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-# TODO: adapt this from the linux file!, DONT use CASADIPATH
 
-# CASADI_VERSION='3.4.0';
-# CASADI_DOWNLOAD_URL="https://github.com/casadi/casadi/archive/${CASADI_VERSION}.zip";
+CASADI_VERSION='3.5.1';
+OCTAVE_VERSION='4.2.2';
+MATLAB_VERSION='R2014b';
+_CASADI_GITHUB_RELEASES="https://github.com/casadi/casadi/releases/download/${CASADI_VERSION}";
 
-# # run only if casadi build was not cached
-# if [ ! -d "${CASADIPATH}" -o -z "$(ls -A "${CASADIPATH}")" ]; then
-# 	pushd "${TRAVIS_BUILD_DIR}/external";
-# 		curl -o casadi.zip -Ls "${CASADI_DOWNLOAD_URL}";
-# 		unzip -qq casadi.zip;
-# 		rm -f casadi.zip;
-# 		pushd "./casadi-${CASADI_VERSION}";
-# 			mkdir build;
-# 			pushd ./build;
-# 				cmake -DWITH_SELFCONTAINED=ON -DWITH_PYTHON=ON -DWITH_PYTHON3=ON -DCMAKE_INSTALL_PREFIX="${CASADIPATH}" ..;
-# 				make -j 4 && make install;
-# 			popd;
-# 		popd;
-# 	popd;
-# fi
-# export PYTHONPATH="${CASADIPATH}:$PYTHONPATH";
+https://github.com/casadi/casadi/releases/download/3.5.1/casadi-osx-py37-v3.5.1.tar.gz
+
+CASADI_PYTHON_URL="${_CASADI_GITHUB_RELEASES}/casadi-osx-py35-v${CASADI_VERSION}.tar.gz";
+# CASADI_MATLAB_URL="${_CASADI_GITHUB_RELEASES}/casadi-osx-matlab${MATLAB_VERSION}-v${CASADI_VERSION}.tar.gz";
+# CASADI_OCTAVE_URL="${_CASADI_GITHUB_RELEASES}/casadi-osx-octave-${OCTAVE_VERSION}-v${CASADI_VERSION}.tar.gz";
+
+echo "installing CasADi"
+
+pushd external;
+	if [[ "${ACADOS_PYTHON}" = 'ON' ]] ;
+	then
+		wget -O casadi-osx-py35.tar.gz "${CASADI_PYTHON_URL}";
+		mkdir -p casadi-osx-py35;
+		tar -xf casadi-osx-py35.tar.gz -C casadi-osx-py35;
+		export PYTHONPATH=$(pwd)/casadi-osx-py35:$PYTHONPATH;
+	fi
+
+	# if [[ "${ACADOS_MATLAB}" = 'ON' ]];
+	# then
+	# 	wget -O casadi-osx-matlabR2014b.tar.gz "${CASADI_MATLAB_URL}";
+	# 	mkdir -p casadi-osx-matlabR2014b;
+	# 	tar -xf casadi-osx-matlabR2014b.tar.gz -C casadi-osx-matlabR2014b;
+	# 	export MATLABPATH=$(pwd)/casadi-osx-matlabR2014b:$MATLABPATH;
+	# fi
+
+	# if [[ "${ACADOS_OCTAVE_TEMPLATE}" = 'ON' || "${ACADOS_OCTAVE}" = 'ON' ]];
+	# then
+	# 	wget -O casadi-osx-octave.tar.gz "${CASADI_OCTAVE_URL}";
+	# 	mkdir -p casadi-octave;
+	# 	tar -xf casadi-osx-octave.tar.gz -C casadi-octave;
+	# 	export OCTAVE_PATH=$(pwd)/casadi-octave:$OCTAVE_PATH;
+	# fi
+popd;

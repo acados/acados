@@ -36,7 +36,7 @@ import sys, os, json
 import numpy as np
 
 from ctypes import *
-from casadi import CasadiMeta, Function
+from casadi import CasadiMeta, Function, SX
 
 from copy import deepcopy
 
@@ -115,7 +115,6 @@ def set_up_imported_gnsf_model(acados_ocp):
     phi_fun = Function.deserialize(gnsf['phi_fun'])
     phi_fun_jac_y = Function.deserialize(gnsf['phi_fun_jac_y'])
     phi_jac_y_uhat = Function.deserialize(gnsf['phi_jac_y_uhat'])
-    f_lo_fun_jac_x1k1uz = Function.deserialize(gnsf['f_lo_fun_jac_x1k1uz'])
     get_matrices_fun = Function.deserialize(gnsf['get_matrices_fun'])
 
     # obtain gnsf dimensions
@@ -130,8 +129,23 @@ def set_up_imported_gnsf_model(acados_ocp):
     acados_ocp.model.phi_fun = phi_fun
     acados_ocp.model.phi_fun_jac_y = phi_fun_jac_y
     acados_ocp.model.phi_jac_y_uhat = phi_jac_y_uhat
-    acados_ocp.model.f_lo_fun_jac_x1k1uz = f_lo_fun_jac_x1k1uz
     acados_ocp.model.get_matrices_fun = get_matrices_fun
+
+    if "f_lo_fun_jac_x1k1uz" in gnsf:
+        f_lo_fun_jac_x1k1uz = Function.deserialize(gnsf['f_lo_fun_jac_x1k1uz'])
+        acados_ocp.model.f_lo_fun_jac_x1k1uz = f_lo_fun_jac_x1k1uz
+    else:
+        dummy_var_x1 = SX.sym('dummy_var_x1', acados_ocp.dims.gnsf_nx1)
+        dummy_var_x1dot = SX.sym('dummy_var_x1dot', acados_ocp.dims.gnsf_nx1)
+        dummy_var_z1 = SX.sym('dummy_var_z1', acados_ocp.dims.gnsf_nz1)
+        dummy_var_u = SX.sym('dummy_var_z1', acados_ocp.dims.nu)
+        dummy_var_p = SX.sym('dummy_var_z1', acados_ocp.dims.np)
+        empty_var = SX.sym('empty_var', 0, 0)
+
+        empty_fun = Function('empty_fun', \
+            [dummy_var_x1, dummy_var_x1dot, dummy_var_z1, dummy_var_u, dummy_var_p],
+                [empty_var])
+        acados_ocp.model.f_lo_fun_jac_x1k1uz = empty_fun
 
     del acados_ocp.gnsf_model
 
@@ -497,13 +511,17 @@ class AcadosOcpSolver:
     def get_stats(self, field_):
         """
         get the information of the last solver call:
-            :param field_: string in ['time_tot', 'time_lin', 'time_qp', 'time_reg', 'sqp_iter']
+            :param field_: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg', 'sqp_iter']
         """
 
         fields = ['time_tot',  # total cpu time previous call
                   'time_lin',  # cpu time for linearization
+                  'time_sim',  # cpu time for integrator
+                  'time_sim_ad',  # cpu time for integrator contribution of external function calls
+                  'time_sim_la',  # cpu time for integrator contribution of linear algebra
                   'time_qp',   # cpu time qp solution
                   'time_qp_solver_call',  # cpu time inside qp solver (without converting the QP)
+                  'time_qp_xcond',
                   'time_reg',  # cpu time regularization
                   'sqp_iter',  # number of SQP iterations
                   'statistics',  # table with info about last iteration

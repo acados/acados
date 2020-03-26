@@ -82,5 +82,8 @@ for i in range(N):
 if status != 0:
     raise Exception('acados returned status {}. Exiting.'.format(status))
 
+S_forw = acados_integrator.get("S_forw")
+print("S_forw, sensitivities of simulaition result wrt x,u:\n", S_forw)
+
 # plot results
 plot_pendulum(Tf/N, 10, np.zeros((N, nu)), simX, latexify=False)

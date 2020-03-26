@@ -193,7 +193,7 @@ elif COST_MODULE == 'NLS':
 
 elif COST_MODULE == 'EXTERNAL':
     ocp.cost.cost_type = 'EXTERNAL'
-    ocp.model.cost_expr_ext_cost = vertcat(x, u).T @ ocp.cost.W @ vertcat(x, u)
+    ocp.model.cost_expr_ext_cost = 0.5 * vertcat(x, u).T @ ocp.cost.W @ vertcat(x, u)
 
 else:
     raise Exception('Unknown COST_MODULE. Possible values are \'LS\', \'NLS\', \'EXTERNAL\'.')
@@ -209,7 +209,7 @@ elif COST_MODULE_N == 'NLS':
 
 elif COST_MODULE_N == 'EXTERNAL':
     ocp.cost.cost_type_e = 'EXTERNAL'
-    ocp.model.cost_expr_ext_cost_e = x.T @ Q @ x
+    ocp.model.cost_expr_ext_cost_e = 0.5 * x.T @ Q @ x
 
 else:
     raise Exception('Unknown COST_MODULE_N. Possible values are \'LS\', \'NLS\', \'EXTERNAL\'.')

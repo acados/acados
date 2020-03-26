@@ -1005,9 +1005,9 @@ static void form_linear_system_matrix(void *config_, int istep, const sim_in *in
     double *K_traj = mem->K_traj;
 
     ext_fun_arg_t ext_fun_type_in[5];
-    void *ext_fun_in[5];  // XXX large enough ?
+    void *ext_fun_in[5];
     ext_fun_arg_t ext_fun_type_out[5];
-    void *ext_fun_out[5];  // XXX large enough ?
+    void *ext_fun_out[5];
 
     lifted_irk_model *model = in->model;
 
@@ -1208,9 +1208,9 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
 #endif  // !TRIPLE_LOOP
 
     ext_fun_arg_t ext_fun_type_in[5];
-    void *ext_fun_in[5];  // XXX large enough ?
+    void *ext_fun_in[5];
     ext_fun_arg_t ext_fun_type_out[5];
-    void *ext_fun_out[5];  // XXX large enough ?
+    void *ext_fun_out[5];
 
     lifted_irk_model *model = in->model;
 
