@@ -645,6 +645,7 @@ class AcadosOcpSolver:
     """
     def __init__(self, acados_ocp, json_file='acados_ocp_nlp.json'):
 
+        self.solver_created = False
         model = acados_ocp.model
 
         # make dims consistent
@@ -676,6 +677,7 @@ class AcadosOcpSolver:
         # get
         self.shared_lib = CDLL(self.shared_lib_name)
         self.shared_lib.acados_create()
+        self.solver_created = True
 
         self.shared_lib.acados_get_nlp_opts.restype = c_void_p
         self.nlp_opts = self.shared_lib.acados_get_nlp_opts()
@@ -1008,8 +1010,9 @@ class AcadosOcpSolver:
 
 
     def __del__(self):
-        self.shared_lib.acados_free()
-        del self.shared_lib
+        if self.solver_created:
+            self.shared_lib.acados_free()
+            del self.shared_lib
 
         # NOTE: DLL cannot be easily unloaded!!!
         # see https://stackoverflow.com/questions/359498/how-can-i-unload-a-dll-using-ctypes-in-python
