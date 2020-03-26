@@ -49,7 +49,7 @@ from .generate_c_code_external_cost import generate_c_code_external_cost
 from .acados_ocp import AcadosOcp
 from .acados_model import acados_model_strip_casadi_symbolics
 from .utils import is_column, is_empty, casadi_length, render_template, acados_class2dict,\
-     format_class_dict, ocp_check_json_against_layout, np_array_to_list, make_model_consistent
+     format_class_dict, ocp_check_against_layout, np_array_to_list, make_model_consistent
 
 
 def make_ocp_dims_consistent(acados_ocp):
@@ -450,7 +450,7 @@ def ocp_formulation_json_dump(acados_ocp, json_file='acados_ocp_nlp.json'):
 
     dims_dict = acados_class2dict(acados_ocp.dims)
 
-    ocp_check_json_against_layout(ocp_nlp_dict, dims_dict)
+    ocp_check_against_layout(ocp_nlp_dict, dims_dict)
 
     with open(json_file, 'w') as f:
         json.dump(ocp_nlp_dict, f, default=np_array_to_list, indent=4, sort_keys=True)
