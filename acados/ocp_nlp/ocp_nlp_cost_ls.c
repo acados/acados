@@ -876,24 +876,19 @@ void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims_, void *model_, void 
         // res = \tilde{V}_x * x + \tilde{V}_u * u - \tilde{y}_ref
         blasfeo_dgemv_t(nu + nx, ny, 1.0, &work->Cyt_tilde, 0, 0, memory->ux,
                 0, -1.0, &work->y_ref_tilde, 0, &memory->res, 0);
-
-        // tmp_ny = W * res
-        blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res,
-                0, 0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
-
-        memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &memory->res, 0);
-        printf("\nerror: ocp_nlp_cost_ls_compute_fun: not implemented yet for nz>0\n");
-        exit(1);
     }
     else
     {
+        // res = Cy * ux - yref
         blasfeo_dgemv_t(nu+nx, ny, 1.0, &model->Cyt, 0, 0, memory->tmp_ux, 0, -1.0,
                         &model->y_ref, 0, &memory->res, 0);
-
-        blasfeo_dtrmv_ltn(ny, 1.0, &memory->W_chol, 0, 0, &memory->res, 0, &work->tmp_ny, 0);
-
-        memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &work->tmp_ny, 0);
     }
+
+    // tmp_ny = W_chol^T * res
+    blasfeo_dtrmv_ltn(ny, 1.0, &memory->W_chol, 0, 0, &memory->res, 0, &work->tmp_ny, 0);
+
+    // fun = .5 * tmp_ny^T * tmp_ny
+    memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &work->tmp_ny, 0);
 
     // slack update function value
     blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);
