@@ -57,6 +57,7 @@ def make_ocp_dims_consistent(acados_ocp):
     cost = acados_ocp.cost
     constraints = acados_ocp.constraints
     model = acados_ocp.model
+    opts = acados_ocp.solver_options
 
     # nx
     if is_column(model.x):
@@ -366,6 +367,16 @@ def make_ocp_dims_consistent(acados_ocp):
 
     dims.ns_e = ns_e
 
+    # discretization
+    if is_empty(opts.time_steps):
+        # uniform discretization
+        opts.time_steps = opts.tf / dims.N * np.ones((dims.N,))
+    else:
+        tf = np.sum(opts.time_steps)
+        if (tf - opts.tf) / tf > 1e-15:
+            raise Exception(f'Inconsistent discretization: {opts.tf}'\
+                f' = tf != sum(opts.time_steps) = {tf}.')
+
 
 
 def set_up_imported_gnsf_model(acados_ocp):
@@ -655,7 +666,7 @@ class AcadosOcpSolver:
             set_up_imported_gnsf_model(acados_ocp)
 
         # set integrator time automatically
-        acados_ocp.solver_options.Tsim = acados_ocp.solver_options.tf / acados_ocp.dims.N
+        acados_ocp.solver_options.Tsim = acados_ocp.solver_options.time_steps[0]
 
         # generate external functions
         ocp_generate_external_functions(acados_ocp, model)

@@ -164,8 +164,6 @@ int acados_create()
 {
     int status = 0;
 
-    double Tf = {{ solver_options.tf }};
-
     /************************************************
     *  plan & config
     ************************************************/
@@ -689,11 +687,15 @@ int acados_create()
     ************************************************/
     nlp_in = ocp_nlp_in_create(nlp_config, nlp_dims);
 
-    double Ts = Tf/N;
+    double time_steps[N];
+    {% for j in range(end=dims.N) %}
+    time_steps[{{ j }}] = {{ solver_options.time_steps[j] }};
+    {%- endfor %}
+
     for (int i = 0; i < N; i++)
     {
-        ocp_nlp_in_set(nlp_config, nlp_dims, nlp_in, i, "Ts", &Ts);
-        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "scaling", &Ts);
+        ocp_nlp_in_set(nlp_config, nlp_dims, nlp_in, i, "Ts", &time_steps[i]);
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "scaling", &time_steps[i]);
     }
 
     /**** Dynamics ****/
@@ -1538,6 +1540,7 @@ int acados_create()
     if (status != ACADOS_SUCCESS)
     {
         printf("\nocp_precompute failed!\n\n");
+        exit(1);
     }
 
     return status;
