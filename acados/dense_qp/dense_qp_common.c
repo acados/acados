@@ -287,12 +287,14 @@ void dense_qp_compute_t(dense_qp_in *qp_in, dense_qp_out *qp_out)
 {
     int nvd = qp_in->dim->nv;
     // int ned = qp_in->dim->ne;
-    int ngd = qp_in->dim->ng;
     int nbd = qp_in->dim->nb;
+    int ngd = qp_in->dim->ng;
     int nsd = qp_in->dim->ns;
 
     int *idxb = qp_in->idxb;
-    int *idxs = qp_in->idxs;
+    int *idxs_rev = qp_in->idxs_rev;
+
+	int ii, idx;
 
     // compute slacks for bounds
     blasfeo_dvecex_sp(nbd, 1.0, idxb, qp_out->v, 0, qp_out->t, nbd+ngd);
@@ -306,8 +308,17 @@ void dense_qp_compute_t(dense_qp_in *qp_in, dense_qp_out *qp_out)
                     qp_out->t, 2 * nbd + ngd);
 
     // soft
-    blasfeo_dvecad_sp(nsd, 1.0, qp_out->v, nvd, idxs, qp_out->t, 0);
-    blasfeo_dvecad_sp(nsd, 1.0, qp_out->v, nvd+nsd, idxs, qp_out->t, nbd+ngd);
+//    blasfeo_dvecad_sp(nsd, 1.0, qp_out->v, nvd, idxs, qp_out->t, 0);
+//    blasfeo_dvecad_sp(nsd, 1.0, qp_out->v, nvd+nsd, idxs, qp_out->t, nbd+ngd);
+	for(ii=0; ii<nbd+ngd; ii++)
+	{
+		idx = idxs_rev[ii];
+		if(idx!=-1)
+		{
+		BLASFEO_DVECEL(qp_out->t, ii)         += BLASFEO_DVECEL(qp_out->v, nvd+idx);
+		BLASFEO_DVECEL(qp_out->t, nbd+ngd+ii) += BLASFEO_DVECEL(qp_out->v, nvd+nsd+idx);
+		}
+	}
     blasfeo_dveccp(2*nsd, qp_out->v, nvd, qp_out->t, 2*nbd+2*ngd);
     blasfeo_daxpy(2*nsd, -1.0, qp_in->d, 2*nbd+2*ngd, qp_out->t, 2*nbd+2*ngd, qp_out->t,
         2*nbd+2*ngd);
@@ -371,7 +382,7 @@ void dense_qp_stack_slacks(dense_qp_in *in, dense_qp_in *out)
     int ns = in->dim->ns;
     int nsb = in->dim->nsb;
     // int nsg = in->dim->nsg;
-    int *idxs = in->idxs;
+    int *idxs_rev = in->idxs_rev;
     int *idxb = in->idxb;
 
     int nv2 = out->dim->nv;
@@ -420,53 +431,59 @@ void dense_qp_stack_slacks(dense_qp_in *in, dense_qp_in *out)
         }
 
         int col_b = ng;
-        for (int ii = 0; ii < ns; ii++)
-        {
-            int js = idxs[ii];
+//        for (int ii = 0; ii < ns; ii++)
+//        {
+//            int js = idxs[ii];
+		for(int js=0; js<nb+ng; js++)
+		{
+			int ii = idxs_rev[js];
+			if(ii!=-1)
+			{
 
-            // int idx_v_ls0 = nv+ii;
-            // int idx_v_us0 = nv+ns+ii;
-            int idx_v_ls1 = nv+ii;
-            int idx_v_us1 = nv+ns+ii;
+				// int idx_v_ls0 = nv+ii;
+				// int idx_v_us0 = nv+ns+ii;
+				int idx_v_ls1 = nv+ii;
+				int idx_v_us1 = nv+ns+ii;
 
-            int idx_d_ls0 = js;
-            int idx_d_us0 = nb+ng+js;
-            int idx_d_ls1;
-            int idx_d_us1;
+				int idx_d_ls0 = js;
+				int idx_d_us0 = nb+ng+js;
+				int idx_d_ls1;
+				int idx_d_us1;
 
-            if (js < nb)  // soft box constraint
-            {
-                // index of a soft box constraint
-                int jv = idxb[js];
+				if (js < nb)  // soft box constraint
+				{
+					// index of a soft box constraint
+					int jv = idxb[js];
 
-                idx_d_ls1 = nb2+col_b;
-                idx_d_us1 = 2*nb2+ng2+col_b;
+					idx_d_ls1 = nb2+col_b;
+					idx_d_us1 = 2*nb2+ng2+col_b;
 
-                // softened box constraint, set its flag to -1
-                BLASFEO_DVECEL(out->m, js) = -1.0;
+					// softened box constraint, set its flag to -1
+					BLASFEO_DVECEL(out->m, js) = -1.0;
 
-                // insert softened box constraint into out->Ct, lb_i <= x_i + sl_i - su_i <= ub_i
-                BLASFEO_DMATEL(out->Ct, jv, col_b) = 1.0;
-                BLASFEO_DMATEL(out->Ct, idx_v_ls1, col_b) = +1.0;
-                BLASFEO_DMATEL(out->Ct, idx_v_us1, col_b) = -1.0;
-                BLASFEO_DVECEL(out->d, idx_d_ls1) = BLASFEO_DVECEL(in->d, idx_d_ls0);
-                BLASFEO_DVECEL(out->d, idx_d_us1) = -BLASFEO_DVECEL(in->d, idx_d_us0);
+					// insert softened box constraint into out->Ct, lb_i <= x_i + sl_i - su_i <= ub_i
+					BLASFEO_DMATEL(out->Ct, jv, col_b) = 1.0;
+					BLASFEO_DMATEL(out->Ct, idx_v_ls1, col_b) = +1.0;
+					BLASFEO_DMATEL(out->Ct, idx_v_us1, col_b) = -1.0;
+					BLASFEO_DVECEL(out->d, idx_d_ls1) = BLASFEO_DVECEL(in->d, idx_d_ls0);
+					BLASFEO_DVECEL(out->d, idx_d_us1) = -BLASFEO_DVECEL(in->d, idx_d_us0);
 
-                col_b++;
-            }
-            else  // soft general constraint
-            {
-                // index of a soft general constraint
-                int col_g = js - nb;
+					col_b++;
+				}
+				else  // soft general constraint
+				{
+					// index of a soft general constraint
+					int col_g = js - nb;
 
-                // soft general constraint, lg_i <= C_i x + sl_i - su_i <= ug_i
-                BLASFEO_DMATEL(out->Ct, idx_v_ls1, col_g) = +1.0;
-                BLASFEO_DMATEL(out->Ct, idx_v_us1, col_g) = -1.0;
-            }
+					// soft general constraint, lg_i <= C_i x + sl_i - su_i <= ug_i
+					BLASFEO_DMATEL(out->Ct, idx_v_ls1, col_g) = +1.0;
+					BLASFEO_DMATEL(out->Ct, idx_v_us1, col_g) = -1.0;
+				}
 
-            // slack variables have box constraints
-            out->idxb[nb-nsb+ii] = ii + nv;
-            out->idxb[nb-nsb+ns+ii] = ii + nv + ns;
+				// slack variables have box constraints
+				out->idxb[nb-nsb+ii] = ii + nv;
+				out->idxb[nb-nsb+ns+ii] = ii + nv + ns;
+			}
         }
 
         int k_nsb = 0;
@@ -522,7 +539,7 @@ void dense_qp_unstack_slacks(dense_qp_out *in, dense_qp_in *qp_out, dense_qp_out
     int nsb = qp_out->dim->nsb;
     // int nsg = qp_out->dim->nsg;
 
-    int *idxs = qp_out->idxs;
+    int *idxs_rev = qp_out->idxs_rev;
 
     int nv2 = in->dim->nv;
     // int ne2 = in->dim->ne;
@@ -552,31 +569,37 @@ void dense_qp_unstack_slacks(dense_qp_out *in, dense_qp_in *qp_out, dense_qp_out
         }
 
         int col_b = 2*ng;
-        for (int ii = 0; ii < ns; ii++)
-        {
-            int js = idxs[ii];
+//        for (int ii = 0; ii < ns; ii++)
+//        {
+//            int js = idxs[ii];
+		for(int js=0; js<nb+ng; js++)
+		{
+			int ii = idxs_rev[js];
+			if(ii!=-1)
+			{
 
-            int idx_d_ls0 = js;
-            int idx_d_us0 = nb+ng+js;
-            int idx_d_ls1;
-            int idx_d_us1;
+				int idx_d_ls0 = js;
+				int idx_d_us0 = nb+ng+js;
+				int idx_d_ls1;
+				int idx_d_us1;
 
-            if (js < nb)
-            {
-                // softened box constraint, set its flag to -1
-                BLASFEO_DVECEL(out->v, js) = -1.0;
+				if (js < nb)
+				{
+					// softened box constraint, set its flag to -1
+					BLASFEO_DVECEL(out->v, js) = -1.0;
 
-                idx_d_ls1 = nb2+col_b;
-                idx_d_us1 = 2*nb2+ng2+col_b;
+					idx_d_ls1 = nb2+col_b;
+					idx_d_us1 = 2*nb2+ng2+col_b;
 
-                BLASFEO_DVECEL(out->lam, idx_d_ls0) = BLASFEO_DVECEL(in->lam, idx_d_ls1);
-                BLASFEO_DVECEL(out->lam, idx_d_us0) = BLASFEO_DVECEL(in->lam, idx_d_us1);
+					BLASFEO_DVECEL(out->lam, idx_d_ls0) = BLASFEO_DVECEL(in->lam, idx_d_ls1);
+					BLASFEO_DVECEL(out->lam, idx_d_us0) = BLASFEO_DVECEL(in->lam, idx_d_us1);
 
-                BLASFEO_DVECEL(out->t, idx_d_ls0) = BLASFEO_DVECEL(in->t, idx_d_ls1);
-                BLASFEO_DVECEL(out->t, idx_d_us0) = BLASFEO_DVECEL(in->t, idx_d_us1);
+					BLASFEO_DVECEL(out->t, idx_d_ls0) = BLASFEO_DVECEL(in->t, idx_d_ls1);
+					BLASFEO_DVECEL(out->t, idx_d_us0) = BLASFEO_DVECEL(in->t, idx_d_us1);
 
-                col_b++;
-            }
+					col_b++;
+				}
+			}
         }
 
         int k_nsb = 0;  // number of non-softed bounds

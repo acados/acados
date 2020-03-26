@@ -637,8 +637,8 @@ void ocp_nlp_sqp_rti_preparation_step(void *config_, void *dims_,
         config->constraints[ii]->memory_set_idxb_ptr(
             nlp_mem->qp_in->idxb[ii], nlp_mem->constraints[ii]);
 
-        config->constraints[ii]->memory_set_idxs_ptr(
-            nlp_mem->qp_in->idxs[ii], nlp_mem->constraints[ii]);
+        config->constraints[ii]->memory_set_idxs_rev_ptr(
+            nlp_mem->qp_in->idxs_rev[ii], nlp_mem->constraints[ii]);
     }
 
     // alias to regularize memory
