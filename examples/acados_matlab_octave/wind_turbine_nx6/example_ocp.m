@@ -253,6 +253,8 @@ ocp_model.set('constr_uh_e', uh_e);
 % soft nonlinear constraints
 ocp_model.set('constr_Jsh', Jsh);
 ocp_model.set('constr_Jsh_e', Jsh_e);
+% (dummy) initial state constr
+ocp_model.set('constr_x0', zeros(nx,1));
 
 ocp_model.model_struct
 
