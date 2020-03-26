@@ -208,6 +208,7 @@ ocp_model.set('dim_nh_e', nh_e);
 ocp_model.set('dim_ns', ns);
 ocp_model.set('dim_ns_e', ns_e);
 ocp_model.set('dim_nsbx', nsbx);
+ocp_model.set('dim_nsbx_e', nsbx);
 ocp_model.set('dim_nsh', nsh);
 ocp_model.set('dim_nsh_e', nsh_e);
 ocp_model.set('dim_np', np);
@@ -262,6 +263,7 @@ ocp_model.set('constr_lh_e', lh_e);
 ocp_model.set('constr_uh_e', uh_e);
 % soft nonlinear constraints
 ocp_model.set('constr_Jsbx', Jsbx);
+ocp_model.set('constr_Jsbx_e', Jsbx);
 ocp_model.set('constr_Jsh', Jsh);
 ocp_model.set('constr_Jsh_e', Jsh_e);
 
