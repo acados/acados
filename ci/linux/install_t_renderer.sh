@@ -32,4 +32,12 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-pip install numpy scipy matplotlib;
+TERA_RENDERER_VERSION='0.0.34';
+_TERA_RENDERER_GITHUB_RELEASES="https://github.com/acados/tera_renderer/releases/download/v${TERA_RENDERER_VERSION}/";
+TERA_RENDERER_URL="${_TERA_RENDERER_GITHUB_RELEASES}/t_renderer-v${TERA_RENDERER_VERSION}-linux";
+
+mkdir -p bin;
+pushd bin;
+	wget -O t_renderer "${TERA_RENDERER_URL}";
+	chmod +x t_renderer
+popd;

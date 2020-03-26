@@ -741,9 +741,9 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     double *S_hess_out = out->S_hess;
 
     ext_fun_arg_t ext_fun_type_in[5];
-    void *ext_fun_in[5];  // XXX large enough ?
-    ext_fun_arg_t ext_fun_type_out[5];
-    void *ext_fun_out[5];  // XXX large enough ?
+    void *ext_fun_in[5];
+    ext_fun_arg_t ext_fun_type_out[3];
+    void *ext_fun_out[3];
 
     erk_model *model = in->model;
 

@@ -785,9 +785,9 @@ int acados_create()
 {%- if cost.cost_type == "NONLINEAR_LS" %}
     for (int i = 0; i < N; i++)
     {
-        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_res", &cost_y_fun[i]);
-        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_res_jac", &cost_y_fun_jac_ut_xt[i]);
-        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_hess", &cost_y_hess[i]);
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_y_fun", &cost_y_fun[i]);
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_y_fun_jac", &cost_y_fun_jac_ut_xt[i]);
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_y_hess", &cost_y_hess[i]);
     }
 {%- elif cost.cost_type == "EXTERNAL" %}
     for (int i = 0; i < N; i++)
@@ -856,9 +856,9 @@ int acados_create()
     {%- endif %}
 
     {%- if cost.cost_type_e == "NONLINEAR_LS" %}
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "nls_res", &cost_y_e_fun);
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "nls_res_jac", &cost_y_e_fun_jac_ut_xt);
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "nls_hess", &cost_y_e_hess);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "nls_y_fun", &cost_y_e_fun);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "nls_y_fun_jac", &cost_y_e_fun_jac_ut_xt);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "nls_y_hess", &cost_y_e_hess);
     {%- endif %}
 {%- endif %}{# ny_e > 0 #}
 

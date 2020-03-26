@@ -32,4 +32,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-pip install numpy scipy matplotlib;
+brew install python3;
+pip3 install virtualenv
+virtualenv --python=python3.7 acadosenv;
+source acadosenv/bin/activate;

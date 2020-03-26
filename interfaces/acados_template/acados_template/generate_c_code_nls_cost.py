@@ -73,9 +73,6 @@ def generate_c_code_nls_cost( model, cost_name, is_terminal ):
     # set up expressions
     cost_jac_expr = transpose(jacobian(cost_expr, vertcat(u, x)))
 
-    jac_x = jacobian(cost_expr, x)
-    jac_u = jacobian(cost_expr, u)
-
     ny = casadi_length(cost_expr)
 
     if isinstance(cost_expr, casadi.SX):

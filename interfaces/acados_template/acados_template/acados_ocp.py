@@ -46,8 +46,8 @@ class AcadosOcpDims:
         self.__nu      = None
         self.__nz      = 0
         self.__np      = 0
-        self.__ny      = None
-        self.__ny_e    = None
+        self.__ny      = 0
+        self.__ny_e    = 0
         self.__nr      = 0
         self.__nr_e    = 0
         self.__nh      = 0

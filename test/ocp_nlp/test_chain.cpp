@@ -1230,8 +1230,8 @@ void setup_and_solve_nlp(int NN,
 
                 stage_cost_nls = (ocp_nlp_cost_nls_model *) nlp_in->cost[i];
 
-                // nls_res_jac
-                stage_cost_nls->nls_res_jac = (external_function_generic *) &ls_cost_jac_casadi[i];
+                // nls_y_fun_jac
+                stage_cost_nls->nls_y_fun_jac = (external_function_generic *) &ls_cost_jac_casadi[i];
 
                 // W
                 blasfeo_dgese(ny[i], ny[i], 0.0, &stage_cost_nls->W, 0, 0);
