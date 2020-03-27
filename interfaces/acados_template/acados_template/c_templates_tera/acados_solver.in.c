@@ -733,13 +733,13 @@ int acados_create()
     double W[NY*NY];
     {% for j in range(end=dims.ny) %}
         {%- for k in range(end=dims.ny) %}
-    W[{{ j }}+(NY) * {{ k }}] = {{ cost.W[j][k] }}; 
+    W[{{ j }}+(NY) * {{ k }}] = {{ cost.W[j][k] }};
         {%- endfor %}
     {%- endfor %}
 
     double yref[NY];
     {% for j in range(end=dims.ny) %}
-    yref[{{ j }}] = {{ cost.yref[j] }}; 
+    yref[{{ j }}] = {{ cost.yref[j] }};
     {%- endfor %}
 
     for (int i = 0; i < N; i++)
@@ -754,7 +754,7 @@ int acados_create()
     double Vx[NY*NX];
     {% for j in range(end=dims.ny) %}
         {%- for k in range(end=dims.nx) %}
-    Vx[{{ j }}+(NY) * {{ k }}] = {{ cost.Vx[j][k] }}; 
+    Vx[{{ j }}+(NY) * {{ k }}] = {{ cost.Vx[j][k] }};
         {%- endfor %}
     {%- endfor %}
     for (int i = 0; i < N; i++)
@@ -766,7 +766,7 @@ int acados_create()
     double Vu[NY*NU];
     {% for j in range(end=dims.ny) %}
         {%- for k in range(end=dims.nu) %}
-    Vu[{{ j }}+(NY) * {{ k }}] = {{ cost.Vu[j][k] }}; 
+    Vu[{{ j }}+(NY) * {{ k }}] = {{ cost.Vu[j][k] }};
         {%- endfor %}
     {%- endfor %}
 
@@ -780,7 +780,7 @@ int acados_create()
     double Vz[NY*NZ];
     {% for j in range(end=dims.ny) %}
         {%- for k in range(end=dims.nz) %}
-    Vz[{{ j }}+(NY) * {{ k }}] = {{ cost.Vz[j][k] }}; 
+    Vz[{{ j }}+(NY) * {{ k }}] = {{ cost.Vz[j][k] }};
         {%- endfor %}
     {%- endfor %}
 
@@ -813,19 +813,19 @@ int acados_create()
     double zl[NS];
     double zu[NS];
     {% for j in range(end=dims.ns) %}
-    Zl[{{ j }}] = {{ cost.Zl[j] }}; 
+    Zl[{{ j }}] = {{ cost.Zl[j] }};
     {%- endfor %}
 
     {% for j in range(end=dims.ns) %}
-    Zu[{{ j }}] = {{ cost.Zu[j] }}; 
+    Zu[{{ j }}] = {{ cost.Zu[j] }};
     {%- endfor %}
 
     {% for j in range(end=dims.ns) %}
-    zl[{{ j }}] = {{ cost.zl[j] }}; 
+    zl[{{ j }}] = {{ cost.zl[j] }};
     {%- endfor %}
 
     {% for j in range(end=dims.ns) %}
-    zu[{{ j }}] = {{ cost.zu[j] }}; 
+    zu[{{ j }}] = {{ cost.zu[j] }};
     {%- endfor %}
 
     for (int i = 0; i < N; i++)
@@ -842,14 +842,14 @@ int acados_create()
 {% if dims.ny_e > 0 %}
     double yref_e[NYN];
     {% for j in range(end=dims.ny_e) %}
-    yref_e[{{ j }}] = {{ cost.yref_e[j] }}; 
+    yref_e[{{ j }}] = {{ cost.yref_e[j] }};
     {%- endfor %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "yref", yref_e);
 
     double W_e[NYN*NYN];
     {% for j in range(end=dims.ny_e) %}
         {%- for k in range(end=dims.ny_e) %}
-    W_e[{{ j }}+(NYN) * {{ k }}] = {{ cost.W_e[j][k] }}; 
+    W_e[{{ j }}+(NYN) * {{ k }}] = {{ cost.W_e[j][k] }};
         {%- endfor %}
     {%- endfor %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "W", W_e);
@@ -858,7 +858,7 @@ int acados_create()
     double Vx_e[NYN*NX];
     {% for j in range(end=dims.ny_e) %}
         {%- for k in range(end=dims.nx) %}
-    Vx_e[{{ j }}+(NYN) * {{ k }}] = {{ cost.Vx_e[j][k] }}; 
+    Vx_e[{{ j }}+(NYN) * {{ k }}] = {{ cost.Vx_e[j][k] }};
         {%- endfor %}
     {%- endfor %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Vx", Vx_e);
@@ -883,19 +883,19 @@ int acados_create()
     double zu_e[NSN];
 
     {% for j in range(end=dims.ns_e) %}
-    Zl_e[{{ j }}] = {{ cost.Zl_e[j] }}; 
+    Zl_e[{{ j }}] = {{ cost.Zl_e[j] }};
     {%- endfor %}
 
     {% for j in range(end=dims.ns_e) %}
-    Zu_e[{{ j }}] = {{ cost.Zu_e[j] }}; 
+    Zu_e[{{ j }}] = {{ cost.Zu_e[j] }};
     {%- endfor %}
 
     {% for j in range(end=dims.ns_e) %}
-    zl_e[{{ j }}] = {{ cost.zl_e[j] }}; 
+    zl_e[{{ j }}] = {{ cost.zl_e[j] }};
     {%- endfor %}
 
     {% for j in range(end=dims.ns_e) %}
-    zu_e[{{ j }}] = {{ cost.zu_e[j] }}; 
+    zu_e[{{ j }}] = {{ cost.zu_e[j] }};
     {%- endfor %}
 
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Zl", Zl_e);
@@ -1089,13 +1089,13 @@ int acados_create()
 
     {% for j in range(end=dims.ng) %}
         {%- for k in range(end=dims.nu) %}
-    D[{{ j }}+NG * {{ k }}] = {{ constraints.D[j][k] }}; 
+    D[{{ j }}+NG * {{ k }}] = {{ constraints.D[j][k] }};
         {%- endfor %}
     {%- endfor %}
 
     {% for j in range(end=dims.ng) %}
         {%- for k in range(end=dims.nx) %}
-    C[{{ j }}+NG * {{ k }}] = {{ constraints.C[j][k] }}; 
+    C[{{ j }}+NG * {{ k }}] = {{ constraints.C[j][k] }};
         {%- endfor %}
     {%- endfor %}
 
@@ -1260,7 +1260,7 @@ int acados_create()
 
     {% for j in range(end=dims.ng) %}
         {%- for k in range(end=dims.nx) %}
-    C_e[{{ j }}+NG * {{ k }}] = {{ constraints.C_e[j][k] }}; 
+    C_e[{{ j }}+NG * {{ k }}] = {{ constraints.C_e[j][k] }};
         {%- endfor %}
     {%- endfor %}
 
@@ -1329,14 +1329,14 @@ int acados_create()
 {%- endif -%}
 
 {%- if dims.nz > 0 %}
-    bool output_z_val = true; 
-    bool sens_algebraic_val = true; 
+    bool output_z_val = true;
+    bool sens_algebraic_val = true;
 
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_output_z", &output_z_val);
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_algebraic", &sens_algebraic_val);
-{%- endif -%}
+{%- endif %}
 
     int num_steps_val = {{ solver_options.sim_method_num_steps }};
     for (int i = 0; i < N; i++)
@@ -1400,7 +1400,7 @@ int acados_create()
     }
     {%- endif %}
 
-{% if solver_options.nlp_solver_type == "SQP" -%}
+{% if solver_options.nlp_solver_type == "SQP" %}
     // set SQP specific options
     double nlp_solver_tol_stat = {{ solver_options.nlp_solver_tol_stat }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tol_stat", &nlp_solver_tol_stat);

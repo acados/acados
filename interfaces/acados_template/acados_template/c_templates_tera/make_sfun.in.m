@@ -82,7 +82,7 @@ LIB_PATH = '{{ acados_lib_path }}';
 LIBS = '-lacados -lhpipm -lblasfeo';
 
 {% if  solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
-LIBS = strcat(LIBS, ' -lqpOASES_e'); 
+LIBS = strcat(LIBS, ' -lqpOASES_e');
 {% endif %}
 
 eval( [ 'mex -v -output  acados_solver_sfunction_{{ model.name }} ', ...

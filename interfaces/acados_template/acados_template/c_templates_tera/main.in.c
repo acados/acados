@@ -136,7 +136,7 @@ int main()
 
     
     // solve ocp in loop
-    int rti_phase = 0; 
+    int rti_phase = 0;
 
     for (int ii = 0; ii < NTIMINGS; ii++)
     {
