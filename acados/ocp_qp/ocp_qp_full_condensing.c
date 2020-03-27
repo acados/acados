@@ -43,6 +43,7 @@
 #include "hpipm/include/hpipm_d_dense_qp_sol.h"
 #include "hpipm/include/hpipm_d_ocp_qp.h"
 #include "hpipm/include/hpipm_d_ocp_qp_sol.h"
+#include "hpipm/include/hpipm_d_ocp_qp_red.h"
 // acados
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
@@ -63,14 +64,14 @@ int ocp_qp_full_condensing_dims_calculate_size(void *config, int N)
 
     size += sizeof(ocp_qp_full_condensing_dims);
 
-	// orig_dims
-    size += sizeof(ocp_qp_dims);
-    size += d_ocp_qp_dim_memsize(N);
+	// orig_dims, red_dims
+    size += 2*sizeof(ocp_qp_dims);
+    size += 2*d_ocp_qp_dim_memsize(N);
 
 	// fcond_dims
     size += sizeof(dense_qp_dims);
 
-    size += 1 * 8;
+    size += 1*8;
 
     make_int_multiple_of(8, &size);
 
@@ -90,6 +91,9 @@ void *ocp_qp_full_condensing_dims_assign(void *config, int N, void *raw_memory)
     // orig_dims
     dims->orig_dims = (ocp_qp_dims *) c_ptr;
     c_ptr += sizeof(ocp_qp_dims);
+    // red_dims
+    dims->red_dims = (ocp_qp_dims *) c_ptr;
+    c_ptr += sizeof(ocp_qp_dims);
     // fcond_dims
     dims->fcond_dims = (dense_qp_dims *) c_ptr;
     c_ptr += sizeof(dense_qp_dims);
@@ -98,6 +102,9 @@ void *ocp_qp_full_condensing_dims_assign(void *config, int N, void *raw_memory)
 
     // orig_dims
     d_ocp_qp_dim_create(N, dims->orig_dims, c_ptr);
+    c_ptr += d_ocp_qp_dim_memsize(N);
+    // red_dims
+    d_ocp_qp_dim_create(N, dims->red_dims, c_ptr);
     c_ptr += d_ocp_qp_dim_memsize(N);
 
     assert((char *) raw_memory + ocp_qp_full_condensing_dims_calculate_size(config, N) >= c_ptr);
@@ -150,22 +157,31 @@ int ocp_qp_full_condensing_opts_calculate_size(void *dims_)
 {
     ocp_qp_full_condensing_dims *dims = dims_;
 
+	// populate dimensions of reduced qp
+	d_ocp_qp_dim_reduce_eq_dof(dims->orig_dims, dims->red_dims);
     // populate dimensions of new dense_qp
-    d_cond_qp_compute_dim(dims->orig_dims, dims->fcond_dims);
+//    d_cond_qp_compute_dim(dims->orig_dims, dims->fcond_dims);
+    d_cond_qp_compute_dim(dims->red_dims, dims->fcond_dims);
+//d_ocp_qp_dim_print(dims->orig_dims);
+//d_ocp_qp_dim_print(dims->red_dims);
+//exit(1);
 
     int size = 0;
 
     size += sizeof(ocp_qp_full_condensing_opts);
 
-    // hpipm opts
+    // hpipm_cond_opts
     size += sizeof(struct d_cond_qp_arg);
     size += d_cond_qp_arg_memsize();
+    // hpipm_red_opts
+    size += sizeof(struct d_ocp_qp_reduce_eq_dof_arg);
+    size += d_ocp_qp_reduce_eq_dof_arg_memsize();
 
 	// fcond_dims
     size += sizeof(dense_qp_dims);
 
     //
-    size += 1 * 8;
+    size += 1*8;
     make_int_multiple_of(8, &size);
 
     return size;
@@ -187,15 +203,21 @@ void *ocp_qp_full_condensing_opts_assign(void *dims_, void *raw_memory)
     opts->fcond_dims = (dense_qp_dims *) c_ptr;
     c_ptr += sizeof(dense_qp_dims);
 
-    // hpipm_opts
-    opts->hpipm_opts = (struct d_cond_qp_arg *) c_ptr;
+    // hpipm_cond_opts
+    opts->hpipm_cond_opts = (struct d_cond_qp_arg *) c_ptr;
     c_ptr += sizeof(struct d_cond_qp_arg);
+    // hpipm_red_opts
+    opts->hpipm_red_opts = (struct d_ocp_qp_reduce_eq_dof_arg *) c_ptr;
+    c_ptr += sizeof(struct d_ocp_qp_reduce_eq_dof_arg);
 
     align_char_to(8, &c_ptr);
 
-    // hpipm_opts
-    d_cond_qp_arg_create(opts->hpipm_opts, c_ptr);
-    c_ptr += opts->hpipm_opts->memsize;
+    // hpipm_cond_opts
+    d_cond_qp_arg_create(opts->hpipm_cond_opts, c_ptr);
+    c_ptr += opts->hpipm_cond_opts->memsize;
+    // hpipm_red_opts
+    d_ocp_qp_reduce_eq_dof_arg_create(opts->hpipm_red_opts, c_ptr);
+    c_ptr += opts->hpipm_red_opts->memsize;
 
     assert((char *) raw_memory + ocp_qp_full_condensing_opts_calculate_size(dims_) >= c_ptr);
 
@@ -212,8 +234,11 @@ void ocp_qp_full_condensing_opts_initialize_default(void *dims_, void *opts_)
     opts->cond_hess = 1;
     // expand only primal solution (linear MPC, Gauss-Newton)
     opts->expand_dual_sol = 1;
-    // hpipm_opts
-    d_cond_qp_arg_set_default(opts->hpipm_opts);
+    // hpipm_cond_opts
+    d_cond_qp_arg_set_default(opts->hpipm_cond_opts);
+    // hpipm_red_opts
+	d_ocp_qp_reduce_eq_dof_arg_set_default(opts->hpipm_red_opts);
+	d_ocp_qp_reduce_eq_dof_arg_set_alias_unchanged(opts->hpipm_red_opts, 1);
 
 	opts->mem_qp_in = 1;
 
@@ -226,8 +251,8 @@ void ocp_qp_full_condensing_opts_update(void *dims_, void *opts_)
 {
     ocp_qp_full_condensing_opts *opts = opts_;
 
-    // hpipm_opts
-	d_cond_qp_arg_set_ric_alg(opts->ric_alg, opts->hpipm_opts);
+    // hpipm_cond_opts
+	d_cond_qp_arg_set_ric_alg(opts->ric_alg, opts->hpipm_cond_opts);
 
 	return;
 }
@@ -253,6 +278,8 @@ void ocp_qp_full_condensing_opts_set(void *opts_, const char *field, void* value
 	{
 		int *tmp_ptr = value;
 		opts->expand_dual_sol = *tmp_ptr;
+		d_ocp_qp_reduce_eq_dof_arg_set_comp_dual_sol_eq(opts->hpipm_red_opts, *tmp_ptr);
+		d_ocp_qp_reduce_eq_dof_arg_set_comp_dual_sol_ineq(opts->hpipm_red_opts, *tmp_ptr);
 	}
 	else
 	{
@@ -275,9 +302,12 @@ int ocp_qp_full_condensing_memory_calculate_size(void *dims_, void *opts_)
     ocp_qp_full_condensing_dims *dims = dims_;
     ocp_qp_full_condensing_opts *opts = opts_;
 
-    // populate dimensions of new dense_qp
 	// TODO needed ???
+	// populate dimensions of reduced qp
+//	d_ocp_qp_dim_reduce_eq_dof(dims->orig_dims, dims->red_dims);
+    // populate dimensions of new dense_qp
 //    d_cond_qp_compute_dim(dims->orig_dims, dims->fcond_dims);
+//    d_cond_qp_compute_dim(dims->red_dims, dims->fcond_dims);
 
     int size = 0;
 
@@ -287,10 +317,17 @@ int ocp_qp_full_condensing_memory_calculate_size(void *dims_, void *opts_)
 
 	size += dense_qp_out_calculate_size(dims->fcond_dims);
 
-    size += sizeof(struct d_cond_qp_ws);
-    size += d_cond_qp_ws_memsize(dims->orig_dims, opts->hpipm_opts);
+	size += ocp_qp_in_calculate_size(dims->red_dims);
 
-    size += 2 * 8;
+	size += ocp_qp_out_calculate_size(dims->red_dims);
+
+    size += sizeof(struct d_cond_qp_ws);
+    size += d_cond_qp_ws_memsize(dims->red_dims, opts->hpipm_cond_opts);
+
+    size += sizeof(struct d_ocp_qp_reduce_eq_dof_work);
+    size += d_ocp_qp_reduce_eq_dof_work_memsize(dims->red_dims);
+
+    size += 2*8;
 
     return size;
 }
@@ -312,22 +349,34 @@ void *ocp_qp_full_condensing_memory_assign(void *dims_, void *opts_, void *raw_m
 
     align_char_to(8, &c_ptr);
 
-    // hpipm_workspace struct
-    mem->hpipm_workspace = (struct d_cond_qp_ws *) c_ptr;
+    // hpipm_cond_work struct
+    mem->hpipm_cond_work = (struct d_cond_qp_ws *) c_ptr;
     c_ptr += sizeof(struct d_cond_qp_ws);
+    // hpipm_red_work struct
+    mem->hpipm_red_work = (struct d_ocp_qp_reduce_eq_dof_work *) c_ptr;
+    c_ptr += sizeof(struct d_ocp_qp_reduce_eq_dof_work);
 
 //    align_char_to(8, &c_ptr);
 //    assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
-    // hpipm workspace
-    d_cond_qp_ws_create(dims->orig_dims, opts->hpipm_opts, mem->hpipm_workspace, c_ptr);
-    c_ptr += mem->hpipm_workspace->memsize;
+    // hpipm_cond_work
+    d_cond_qp_ws_create(dims->red_dims, opts->hpipm_cond_opts, mem->hpipm_cond_work, c_ptr);
+    c_ptr += mem->hpipm_cond_work->memsize;
+    // hpipm_red_work
+    d_ocp_qp_reduce_eq_dof_work_create(dims->red_dims, mem->hpipm_red_work, c_ptr);
+    c_ptr += mem->hpipm_red_work->memsize;
 
 	mem->fcond_qp_in = dense_qp_in_assign(dims->fcond_dims, c_ptr);
 	c_ptr += dense_qp_in_calculate_size(dims->fcond_dims);
 
 	mem->fcond_qp_out = dense_qp_out_assign(dims->fcond_dims, c_ptr);
 	c_ptr += dense_qp_out_calculate_size(dims->fcond_dims);
+
+	mem->red_qp = ocp_qp_in_assign(dims->red_dims, c_ptr);
+	c_ptr += ocp_qp_in_calculate_size(dims->red_dims);
+
+	mem->red_sol = ocp_qp_out_assign(dims->red_dims, c_ptr);
+	c_ptr += ocp_qp_out_calculate_size(dims->red_dims);
 
 	mem->qp_out_info = (qp_info *) mem->fcond_qp_out->misc;
 
@@ -406,16 +455,19 @@ int ocp_qp_full_condensing(void *qp_in_, void *fcond_qp_in_, void *opts_, void *
 	// start timer
     acados_tic(&timer);
 
+	// reduce eq constr DOF
+	d_ocp_qp_reduce_eq_dof(qp_in, mem->red_qp, opts->hpipm_red_opts, mem->hpipm_red_work);
+
     // convert to dense qp structure
     if (opts->cond_hess == 0)
     {
         // condense gradient only
-        d_cond_qp_cond_rhs(qp_in, fcond_qp_in, opts->hpipm_opts, mem->hpipm_workspace);
+        d_cond_qp_cond_rhs(mem->red_qp, fcond_qp_in, opts->hpipm_cond_opts, mem->hpipm_cond_work);
     }
     else
     {
         // condense gradient and Hessian
-        d_cond_qp_cond(qp_in, fcond_qp_in, opts->hpipm_opts, mem->hpipm_workspace);
+        d_cond_qp_cond(mem->red_qp, fcond_qp_in, opts->hpipm_cond_opts, mem->hpipm_cond_work);
     }
 
 	// stop timer
@@ -433,11 +485,22 @@ int ocp_qp_full_condensing_rhs(void *qp_in_, void *fcond_qp_in_, void *opts_, vo
 	ocp_qp_full_condensing_opts *opts = opts_;
 	ocp_qp_full_condensing_memory *mem = mem_;
 
+    acados_timer timer;
+
+	// start timer
+    acados_tic(&timer);
+
     // save pointer to ocp_qp_in in memory (needed for expansion)
     mem->ptr_qp_in = qp_in;
 
+	// reduce eq constr DOF
+	d_ocp_qp_reduce_eq_dof(qp_in, mem->red_qp, opts->hpipm_red_opts, mem->hpipm_red_work);
+
 	// condense gradient only
-	d_cond_qp_cond_rhs(qp_in, fcond_qp_in, opts->hpipm_opts, mem->hpipm_workspace);
+	d_cond_qp_cond_rhs(mem->red_qp, fcond_qp_in, opts->hpipm_cond_opts, mem->hpipm_cond_work);
+
+	// stop timer
+    mem->time_qp_xcond = acados_toc(&timer);
 
 	return ACADOS_SUCCESS;
 }
@@ -451,14 +514,26 @@ int ocp_qp_full_expansion(void *fcond_qp_out_, void *qp_out_, void *opts_, void 
 	ocp_qp_full_condensing_opts *opts = opts_;
 	ocp_qp_full_condensing_memory *mem = mem_;
 
+    acados_timer timer;
+
+	// start timer
+    acados_tic(&timer);
+
+	// expand solution
     if (opts->expand_dual_sol == 0)
     {
-        d_cond_qp_expand_primal_sol(mem->ptr_qp_in, fcond_qp_out, qp_out, opts->hpipm_opts, mem->hpipm_workspace);
+        d_cond_qp_expand_primal_sol(mem->red_qp, fcond_qp_out, mem->red_sol, opts->hpipm_cond_opts, mem->hpipm_cond_work);
     }
     else
     {
-        d_cond_qp_expand_sol(mem->ptr_qp_in, fcond_qp_out, qp_out, opts->hpipm_opts, mem->hpipm_workspace);
+        d_cond_qp_expand_sol(mem->red_qp, fcond_qp_out, mem->red_sol, opts->hpipm_cond_opts, mem->hpipm_cond_work);
     }
+
+	// restore solution
+	d_ocp_qp_restore_eq_dof(mem->ptr_qp_in, mem->red_sol, qp_out, opts->hpipm_red_opts, mem->hpipm_red_work);
+
+	// stop timer
+    mem->time_qp_xcond += acados_toc(&timer);
 
 	return ACADOS_SUCCESS;
 }
