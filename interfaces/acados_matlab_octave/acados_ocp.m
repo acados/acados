@@ -39,6 +39,7 @@ classdef acados_ocp < handle
         model_struct
         opts_struct
         acados_ocp_nlp_json
+        ext_fun_type
     end % properties
 
 
@@ -65,6 +66,9 @@ classdef acados_ocp < handle
                     obj.model_struct = get_gnsf_structure(obj.model_struct);
                 end
             end
+
+            % store ext_fun_type
+            obj.ext_fun_type = obj.model_struct.ext_fun_type;
 
             % detect cost type
             if (strcmp(obj.model_struct.cost_type, 'auto'))
@@ -175,10 +179,10 @@ classdef acados_ocp < handle
                 error('field must be a char vector, use '' ''');
             end
             if nargin==3
-                ocp_set(obj.model_struct, obj.C_ocp, obj.C_ocp_ext_fun, field, value);
+                ocp_set(obj.ext_fun_type, obj.C_ocp, obj.C_ocp_ext_fun, field, value);
             elseif nargin==4
                 stage = varargin{4};
-                ocp_set(obj.model_struct, obj.C_ocp, obj.C_ocp_ext_fun, field, value, stage);
+                ocp_set(obj.ext_fun_type, obj.C_ocp, obj.C_ocp_ext_fun, field, value, stage);
             else
                 disp('acados_ocp.set: wrong number of input arguments (2 or 3 allowed)');
             end

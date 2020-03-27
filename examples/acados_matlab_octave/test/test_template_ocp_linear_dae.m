@@ -236,6 +236,8 @@ cd c_generated_code/
 command = strcat('t_ocp = ', name, '_mex_solver');
 eval( command );
 
+t_ocp.set('constr_x0', x0);
+
 t_ocp.solve();
 t_ocp.print;
 t_x = t_ocp.get('x');
@@ -243,7 +245,7 @@ t_u = t_ocp.get('u');
 t_z = t_ocp.get('z');
 
 % test setting parameters
-% t_ocp.set('p',[]);
+t_ocp.set('p',[]);
 
 %
 err_x = max(max(abs(x_traj - t_x)))
