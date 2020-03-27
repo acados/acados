@@ -35,20 +35,20 @@ classdef acados_ocp_nlp_json < handle
     properties
         dims
         cost
-        constraints 
+        constraints
         solver_options
         model
         parameter_values % initial value of the parameter
-        acados_include_path 
-        acados_lib_path 
+        acados_include_path
+        acados_lib_path
     end
     methods 
         function obj = acados_ocp_nlp_json()
-            obj.dims = acados_template_mex.ocp_nlp_dims_json(); 
+            obj.dims = acados_template_mex.ocp_nlp_dims_json();
             obj.cost = acados_template_mex.ocp_nlp_cost_json();
             obj.constraints = acados_template_mex.ocp_nlp_constraints_json();
-            obj.solver_options = acados_template_mex.ocp_nlp_solver_config_json(); 
-            obj.model = acados_template_mex.acados_dae(); 
+            obj.solver_options = acados_template_mex.ocp_nlp_solver_options_json();
+            obj.model = acados_template_mex.acados_model_json();
             obj.acados_include_path = [];
             obj.acados_lib_path = [];
             obj.parameter_values = [];

@@ -62,7 +62,7 @@ generate_hess = 'true'; % TODO remove when not needed any more !!!
 %% load model
 % x
 is_template = false;
-if isa(model, 'acados_template_mex.acados_dae')
+if isa(model, 'acados_template_mex.acados_model_json')
     is_template = true;
     % names without sym
     x = model.x;

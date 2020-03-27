@@ -243,7 +243,7 @@ t_u = t_ocp.get('u');
 t_z = t_ocp.get('z');
 
 % test setting parameters
-t_ocp.set('p',[]);
+% t_ocp.set('p',[]);
 
 %
 err_x = max(max(abs(x_traj - t_x)))

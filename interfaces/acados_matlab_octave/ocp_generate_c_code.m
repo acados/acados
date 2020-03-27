@@ -175,6 +175,30 @@ function ocp_generate_c_code(obj)
     end
     obj.acados_ocp_nlp_json.cost = cost;
 
+    %% reshape opts
+    opts = obj.acados_ocp_nlp_json.solver_options;
+    opts_layout = acados_layout.solver_options;
+    fields = fieldnames(opts_layout);
+    for i = 1:numel(fields)
+        if strcmp(opts_layout.(fields{i}){1}, 'ndarray')
+            property_dim_names = opts_layout.(fields{i}){2};
+            if length(property_dim_names) == 1 % vector
+                this_dims = [1, dims.(property_dim_names{1})];
+            else % matrix
+                this_dims = [dims.(property_dim_names{1}), dims.(property_dim_names{2})];
+            end
+            try
+                opts.(fields{i}) = reshape(opts.(fields{i}), this_dims);
+            catch e
+                    error(['error while reshaping opts.' fields{i} ...
+                        ' to dimension ' num2str(this_dims), ', got ',...
+                        num2str( size(opts.(fields{i}) )) , 10,...
+                        e.message ]);
+            end
+        end
+    end
+    obj.acados_ocp_nlp_json.solver_options = opts;
+
     % parameter values
     obj.acados_ocp_nlp_json.parameter_values = reshape(num2cell(obj.acados_ocp_nlp_json.parameter_values), [ 1, dims.np]);
 
