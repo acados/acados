@@ -154,7 +154,7 @@ typedef struct
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
     struct blasfeo_dmat *dzduxt; // pointer to dzduxt in ocp_nlp memory
     int *idxb;                   // pointer to idxb[ii] in qp_in
-    int *idxs;                   // pointer to idxs[ii] in qp_in
+    int *idxs_rev;               // pointer to idxs_rev[ii] in qp_in
 } ocp_nlp_constraints_bgh_memory;
 
 //
@@ -184,7 +184,7 @@ void ocp_nlp_constraints_bgh_memory_set_dzduxt_ptr(struct blasfeo_dmat *dzduxt, 
 //
 void ocp_nlp_constraints_bgh_memory_set_idxb_ptr(int *idxb, void *memory_);
 //
-void ocp_nlp_constraints_bgh_memory_set_idxs_ptr(int *idxs, void *memory_);
+void ocp_nlp_constraints_bgh_memory_set_idxs_rev_ptr(int *idxs_rev, void *memory_);
 
 
 

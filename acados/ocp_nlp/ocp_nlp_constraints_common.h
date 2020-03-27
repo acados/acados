@@ -82,7 +82,7 @@ typedef struct
     void (*memory_set_z_alg_ptr)(struct blasfeo_dvec *z_alg, void *memory);
     void (*memory_set_dzdux_tran_ptr)(struct blasfeo_dmat *dzduxt, void *memory);
     void (*memory_set_idxb_ptr)(int *idxb, void *memory);
-    void (*memory_set_idxs_ptr)(int *idxs, void *memory);
+    void (*memory_set_idxs_rev_ptr)(int *idxs_rev, void *memory);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
     int (*workspace_calculate_size)(void *config, void *dims, void *opts);
     void (*initialize)(void *config, void *dims, void *model, void *opts, void *mem, void *work);

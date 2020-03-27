@@ -900,11 +900,11 @@ void ocp_nlp_constraints_bgp_memory_set_idxb_ptr(int *idxb, void *memory_)
 
 
 
-void ocp_nlp_constraints_bgp_memory_set_idxs_ptr(int *idxs, void *memory_)
+void ocp_nlp_constraints_bgp_memory_set_idxs_rev_ptr(int *idxs_rev, void *memory_)
 {
     ocp_nlp_constraints_bgp_memory *memory = memory_;
 
-    memory->idxs = idxs;
+    memory->idxs_rev = idxs_rev;
 }
 
 
@@ -1012,10 +1012,11 @@ void ocp_nlp_constraints_bgp_initialize(void *config_, void *dims_, void *model_
         memory->idxb[j] = model->idxb[j];
     }
 
-    // initialize idxs
+    // initialize idxs_rev
     for (j = 0; j < ns; j++)
     {
-        memory->idxs[j] = model->idxs[j];
+//        memory->idxs[j] = model->idxs[j];
+        memory->idxs_rev[model->idxs[j]] = j;
     }
 
     // initialize general constraints matrix
@@ -1338,7 +1339,7 @@ void ocp_nlp_constraints_bgp_config_initialize_default(void *config_)
     config->memory_set_z_alg_ptr = &ocp_nlp_constraints_bgp_memory_set_z_alg_ptr;
     config->memory_set_dzdux_tran_ptr = &ocp_nlp_constraints_bgp_memory_set_dzduxt_ptr;
     config->memory_set_idxb_ptr = &ocp_nlp_constraints_bgp_memory_set_idxb_ptr;
-    config->memory_set_idxs_ptr = &ocp_nlp_constraints_bgp_memory_set_idxs_ptr;
+    config->memory_set_idxs_rev_ptr = &ocp_nlp_constraints_bgp_memory_set_idxs_rev_ptr;
     config->workspace_calculate_size = &ocp_nlp_constraints_bgp_workspace_calculate_size;
     config->initialize = &ocp_nlp_constraints_bgp_initialize;
     config->update_qp_matrices = &ocp_nlp_constraints_bgp_update_qp_matrices;

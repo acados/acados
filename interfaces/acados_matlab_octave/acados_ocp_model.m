@@ -236,6 +236,12 @@ classdef acados_ocp_model < handle
     %                obj.model_struct.constr_lsbx = value;
     %            elseif (strcmp(field, 'constr_usbx'))
     %                obj.model_struct.constr_usbx = value;
+                elseif (strcmp(field, 'constr_Jsbx_e'))
+                    obj.model_struct.constr_Jsbx_e = value;
+    %            elseif (strcmp(field, 'constr_lsbx_e'))
+    %                obj.model_struct.constr_lsbx_e = value;
+    %            elseif (strcmp(field, 'constr_usbx_e'))
+    %                obj.model_struct.constr_usbx_e = value;
                 elseif (strcmp(field, 'constr_Jsg'))
                     obj.model_struct.constr_Jsg = value;
     %            elseif (strcmp(field, 'constr_lsg'))
@@ -300,6 +306,8 @@ classdef acados_ocp_model < handle
                     obj.model_struct.dim_nsbu = value;
                 elseif (strcmp(field, 'dim_nsbx'))
                     obj.model_struct.dim_nsbx = value;
+                elseif (strcmp(field, 'dim_nsbx_e'))
+                    obj.model_struct.dim_nsbx_e = value;
                 elseif (strcmp(field, 'dim_nsg'))
                     obj.model_struct.dim_nsg = value;
                 elseif (strcmp(field, 'dim_nsg_e'))
