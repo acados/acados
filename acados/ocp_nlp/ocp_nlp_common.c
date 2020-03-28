@@ -609,6 +609,21 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
 		// qp solver
         config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nsg", &nsg_qp_solver);
     }
+    else if ( (!strcmp(field, "nbxe")) || (!strcmp(field, "nbue")) )
+    {
+		// qp solver
+        config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
+    }
+    else if ( (!strcmp(field, "nge")) || (!strcmp(field, "nhe")) || (!strcmp(field, "nphie")))
+    {
+        // update ng_qp_solver in qp_solver
+        int ng_qp_solver;
+        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i],
+                                         "nge_qp_solver", &ng_qp_solver);
+
+		// qp solver
+        config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nge", &ng_qp_solver);
+    }
 
 	return;
 }
