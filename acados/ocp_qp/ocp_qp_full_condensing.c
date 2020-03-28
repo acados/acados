@@ -325,7 +325,7 @@ int ocp_qp_full_condensing_memory_calculate_size(void *dims_, void *opts_)
     size += d_cond_qp_ws_memsize(dims->red_dims, opts->hpipm_cond_opts);
 
     size += sizeof(struct d_ocp_qp_reduce_eq_dof_work);
-    size += d_ocp_qp_reduce_eq_dof_work_memsize(dims->red_dims);
+    size += d_ocp_qp_reduce_eq_dof_work_memsize(dims->orig_dims);
 
     size += 2*8;
 
@@ -363,7 +363,7 @@ void *ocp_qp_full_condensing_memory_assign(void *dims_, void *opts_, void *raw_m
     d_cond_qp_ws_create(dims->red_dims, opts->hpipm_cond_opts, mem->hpipm_cond_work, c_ptr);
     c_ptr += mem->hpipm_cond_work->memsize;
     // hpipm_red_work
-    d_ocp_qp_reduce_eq_dof_work_create(dims->red_dims, mem->hpipm_red_work, c_ptr);
+    d_ocp_qp_reduce_eq_dof_work_create(dims->orig_dims, mem->hpipm_red_work, c_ptr);
     c_ptr += mem->hpipm_red_work->memsize;
 
 	mem->fcond_qp_in = dense_qp_in_assign(dims->fcond_dims, c_ptr);
@@ -537,6 +537,9 @@ int ocp_qp_full_expansion(void *fcond_qp_out_, void *qp_out_, void *opts_, void 
 	// restore solution
 	d_ocp_qp_restore_eq_dof(mem->ptr_qp_in, mem->red_sol, qp_out, opts->hpipm_red_opts, mem->hpipm_red_work);
 
+//d_ocp_qp_sol_print(mem->red_sol->dim, mem->red_sol);
+//d_ocp_qp_sol_print(qp_out->dim, qp_out);
+//exit(1);
 	// stop timer
     mem->time_qp_xcond += acados_toc(&timer);
 
