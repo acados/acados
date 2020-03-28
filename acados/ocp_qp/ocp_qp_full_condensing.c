@@ -178,7 +178,7 @@ int ocp_qp_full_condensing_opts_calculate_size(void *dims_)
     size += d_ocp_qp_reduce_eq_dof_arg_memsize();
 
 	// fcond_dims
-    size += sizeof(dense_qp_dims);
+//    size += sizeof(dense_qp_dims);
 
     //
     size += 1*8;
@@ -200,8 +200,8 @@ void *ocp_qp_full_condensing_opts_assign(void *dims_, void *raw_memory)
     c_ptr += sizeof(ocp_qp_full_condensing_opts);
 
     // fcond_dims
-    opts->fcond_dims = (dense_qp_dims *) c_ptr;
-    c_ptr += sizeof(dense_qp_dims);
+//    opts->fcond_dims = (dense_qp_dims *) c_ptr;
+//    c_ptr += sizeof(dense_qp_dims);
 
     // hpipm_cond_opts
     opts->hpipm_cond_opts = (struct d_cond_qp_arg *) c_ptr;
@@ -455,8 +455,13 @@ int ocp_qp_full_condensing(void *qp_in_, void *fcond_qp_in_, void *opts_, void *
 	// start timer
     acados_tic(&timer);
 
+//d_ocp_qp_dim_print(qp_in->dim);
+//d_ocp_qp_dim_print(mem->red_qp->dim);
 	// reduce eq constr DOF
 	d_ocp_qp_reduce_eq_dof(qp_in, mem->red_qp, opts->hpipm_red_opts, mem->hpipm_red_work);
+//d_ocp_qp_print(qp_in->dim, qp_in);
+//d_ocp_qp_print(mem->red_qp->dim, mem->red_qp);
+//exit(1);
 
     // convert to dense qp structure
     if (opts->cond_hess == 0)
