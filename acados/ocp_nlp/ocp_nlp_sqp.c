@@ -552,6 +552,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         config->constraints[ii]->memory_set_RSQrq_ptr(nlp_mem->qp_in->RSQrq+ii, nlp_mem->constraints[ii]);
         config->constraints[ii]->memory_set_idxb_ptr(nlp_mem->qp_in->idxb[ii], nlp_mem->constraints[ii]);
         config->constraints[ii]->memory_set_idxs_rev_ptr(nlp_mem->qp_in->idxs_rev[ii], nlp_mem->constraints[ii]);
+        config->constraints[ii]->memory_set_idxe_ptr(nlp_mem->qp_in->idxe[ii], nlp_mem->constraints[ii]);
     }
 
     // alias to regularize memory

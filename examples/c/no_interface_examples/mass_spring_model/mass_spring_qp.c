@@ -189,6 +189,17 @@ ocp_qp_xcond_solver_dims *create_ocp_qp_dims_mass_spring(ocp_qp_xcond_solver_con
         ns[ii] = 0;
     }
 
+    int nbxe[N+1];
+#if defined(ELIMINATE_X0)
+    nbxe[0] = 0;
+#else
+    nbxe[0] = nx_;
+#endif
+    for (int ii = 1; ii <= N; ii++)
+    {
+        nbxe[ii] = 0;
+    }
+
 
     // dims
     int dims_size = ocp_qp_xcond_solver_dims_calculate_size(config, N);
@@ -204,6 +215,7 @@ ocp_qp_xcond_solver_dims *create_ocp_qp_dims_mass_spring(ocp_qp_xcond_solver_con
 		config->dims_set(config, dims, ii, "ng", &ng[ii]);
 		config->dims_set(config, dims, ii, "ns", &ns[ii]);
     }
+	config->dims_set(config, dims, 0, "nbxe", &nbxe[0]);
 
 //d_ocp_qp_dim_print(dims->orig_dims);
 
@@ -289,6 +301,8 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(ocp_qp_dims *dims)
     d_zeros(&lb0, nb[0], 1);
     double *ub0;
     d_zeros(&ub0, nb[0], 1);
+    int *idxbxe0;
+    int_zeros(&idxbxe0, nx[0], 1);
 #if defined(ELIMINATE_X0)
     for (int jj = 0; jj < nb[0]; jj++) {
         lb0[jj] = -0.5;  // umin
@@ -308,6 +322,8 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(ocp_qp_dims *dims)
         idxb0[jj] = jj;
     }
 #endif
+	for(int jj=0; jj<nx[0]; jj++)
+		idxbxe0[jj] = jj;
 
     int *idxb1;
     int_zeros(&idxb1, nb[1], 1);
@@ -528,6 +544,8 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(ocp_qp_dims *dims)
 	d_ocp_qp_set_D(ii, hD[ii], qp_in);
 	d_ocp_qp_set_lg(ii, hlg[ii], qp_in);
 	d_ocp_qp_set_ug(ii, hug[ii], qp_in);
+	//
+	d_ocp_qp_set_idxbxe(0, idxbxe0, qp_in);
 
     // free objective
     free(Q);
@@ -572,6 +590,7 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(ocp_qp_dims *dims)
     free(ub0);
     free(ub1);
     free(ubN);
+    free(idxbxe0);
 
     return qp_in;
 }

@@ -417,6 +417,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int nsg_e = 0;
     int nsh = 0;
     int nsh_e = 0;
+    int nbxe_0;
 
     ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
 
@@ -686,6 +687,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     i_ptr[N] = ns_e;
     ocp_nlp_dims_set_opt_vars(config, dims, "ns", i_ptr);
     free(i_ptr);
+
+    // nbxe_0
+    if (mxGetField( matlab_model, 0, "dim_nbxe_0" )!=NULL)
+    {
+        nbxe_0 = mxGetScalar( mxGetField( matlab_model, 0, "dim_nbxe_0" ) );
+        ocp_nlp_dims_set_constraints(config, dims, 0, "nbxe", &nbxe_0);
+    }
 
 
     /* opts */
@@ -2031,6 +2039,25 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         free(i_ptr);
     }
     // mexPrintf("\nocp_create end\n");
+
+    // idxbxe_0
+    tmp_idx = malloc(nbxe_0*sizeof(int));
+
+    double *idxbxe_0;
+    const mxArray *idxbxe_0_matlab = mxGetField( matlab_model, 0, "constr_idxbxe_0" );
+    if (idxbxe_0_matlab!=NULL)
+    {
+        int matlab_size = (int) mxGetNumberOfElements( idxbxe_0_matlab );
+        MEX_DIM_CHECK_VEC(fun_name, "constr_idxbxe_0", matlab_size, nbxe_0);
+        idxbxe_0 = mxGetPr( idxbxe_0_matlab );
+        for (int ii=0; ii<nbxe_0; ii++)
+        {
+			tmp_idx[ii] = (int) idxbxe_0[ii];
+        }
+        ocp_nlp_constraints_model_set(config, dims, in, 0, "idxbxe", tmp_idx);
+    }
+    free(tmp_idx);
+
 
     return;
 

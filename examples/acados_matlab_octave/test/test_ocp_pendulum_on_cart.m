@@ -58,13 +58,14 @@ for itest = 1:3
     %regularize_method = 'mirror';
     %regularize_method = 'convexify';
     nlp_solver_max_iter = 100;
-    tol = 1e-8;
-    nlp_solver_tol_stat = tol;
-    nlp_solver_tol_eq   = tol;
-    nlp_solver_tol_ineq = tol;
-    nlp_solver_tol_comp = tol;
+    test_tol = 2e-8;
+    nlp_solver_tol = 1e-10;
+    nlp_solver_tol_stat = nlp_solver_tol;
+    nlp_solver_tol_eq   = nlp_solver_tol;
+    nlp_solver_tol_ineq = nlp_solver_tol;
+    nlp_solver_tol_comp = nlp_solver_tol;
     nlp_solver_ext_qp_res = 1;
-    % qp_solver = 'partial_condensing_hpipm';
+    %qp_solver = 'partial_condensing_hpipm';
     %qp_solver = 'full_condensing_hpipm';
     qp_solver = 'full_condensing_qpoases';
     qp_solver_cond_N = 5;
@@ -304,17 +305,17 @@ for itest = 1:3
     else
         err_x = max(max(abs(xtraj - xtraj_ref)));
         err_u = max(max(abs(utraj - utraj_ref)));
-        if max(err_x, err_u) > tol
-            error(['\nSolutions differ by more than tol = ' num2str(tol)]);
+        if max(err_x, err_u) > test_tol
+            error(['\nSolutions differ by more than test_tol = ' num2str(test_tol) ' : ' num2str(err_x) ' , ' num2str(err_u)]);
         end
     end
 
     if status~=0
         error('test_ocp_pendulum_on_cart: solution failed!');
-    elseif tol < max(stat(end,2:5))
-        error('test_ocp_pendulum_on_cart: residuals bigger than tol!');
-    elseif sqp_iter > 9
-        error('test_ocp_pendulum_on_cart: sqp_iter > 9, this problem is typically solved within less iterations!');
+    elseif test_tol < max(stat(end,2:5))
+        error('test_ocp_pendulum_on_cart: residuals bigger than test_tol!');
+    elseif sqp_iter > 11
+        error('test_ocp_pendulum_on_cart: sqp_iter > 11, this problem is typically solved within less iterations!');
     end
 % For debugging
 %     figure;

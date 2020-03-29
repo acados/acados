@@ -62,8 +62,8 @@ typedef struct
     int nu;
     int nz;
     int nb;  // nbx + nbu
-    int nbu;
-    int nbx;
+    int nbu; // number of input box constraints
+    int nbx; // number of state box constraints
     int ng;  // number of general linear constraints
     int nh;  // number of nonlinear path constraints
     int ns;  // nsbu + nsbx + nsg + nsh
@@ -71,6 +71,10 @@ typedef struct
     int nsbx;  // number of softened state bounds
     int nsg;  // number of softened general linear constraints
     int nsh;  // number of softened nonlinear constraints
+    int nbue; // number of input box constraints which are equality
+    int nbxe; // number of state box constraints which are equality
+    int nge;  // number of general linear constraints which are equality
+    int nhe;  // number of nonlinear path constraints which are equality
 } ocp_nlp_constraints_bgh_dims;
 
 //
@@ -96,6 +100,7 @@ typedef struct
     //  ocp_nlp_constraints_bgh_dims *dims;
     int *idxb;
     int *idxs;
+    int *idxe;
     struct blasfeo_dvec d;  // gathers bounds
     struct blasfeo_dmat DCt;  // general linear constraint matrix
             // lg <= [D, C] * [u; x] <= ug
@@ -155,6 +160,7 @@ typedef struct
     struct blasfeo_dmat *dzduxt; // pointer to dzduxt in ocp_nlp memory
     int *idxb;                   // pointer to idxb[ii] in qp_in
     int *idxs_rev;               // pointer to idxs_rev[ii] in qp_in
+    int *idxe;                   // pointer to idxe[ii] in qp_in
 } ocp_nlp_constraints_bgh_memory;
 
 //
@@ -185,6 +191,8 @@ void ocp_nlp_constraints_bgh_memory_set_dzduxt_ptr(struct blasfeo_dmat *dzduxt, 
 void ocp_nlp_constraints_bgh_memory_set_idxb_ptr(int *idxb, void *memory_);
 //
 void ocp_nlp_constraints_bgh_memory_set_idxs_rev_ptr(int *idxs_rev, void *memory_);
+//
+void ocp_nlp_constraints_bgh_memory_set_idxe_ptr(int *idxe, void *memory_);
 
 
 
