@@ -234,11 +234,15 @@ void ocp_qp_full_condensing_opts_initialize_default(void *dims_, void *opts_)
     opts->cond_hess = 1;
     // expand only primal solution (linear MPC, Gauss-Newton)
     opts->expand_dual_sol = 1;
+
     // hpipm_cond_opts
     d_cond_qp_arg_set_default(opts->hpipm_cond_opts);
+
     // hpipm_red_opts
 	d_ocp_qp_reduce_eq_dof_arg_set_default(opts->hpipm_red_opts);
 	d_ocp_qp_reduce_eq_dof_arg_set_alias_unchanged(opts->hpipm_red_opts, 1);
+	d_ocp_qp_reduce_eq_dof_arg_set_comp_dual_sol_eq(opts->hpipm_red_opts, 1);
+	d_ocp_qp_reduce_eq_dof_arg_set_comp_dual_sol_ineq(opts->hpipm_red_opts, 1);
 
 	opts->mem_qp_in = 1;
 
