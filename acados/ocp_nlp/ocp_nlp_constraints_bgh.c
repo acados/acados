@@ -83,12 +83,17 @@ void *ocp_nlp_constraints_bgh_dims_assign(void *config_, void *raw_memory)
     dims->nsbx = 0;
     dims->nsg = 0;
     dims->nsh = 0;
+    dims->nbxe = 0;
+    dims->nbue = 0;
+    dims->nge = 0;
+    dims->nhe = 0;
 
     return dims;
 }
 
 
 
+// TODO outdated? to remove?
 void ocp_nlp_constraints_bgh_dims_initialize(void *config_, void *dims_, int nx, int nu, int nz, int nbx,
                                              int nbu, int ng, int nh, int dummy0, int ns)
 {
@@ -203,6 +208,38 @@ static void ocp_nlp_constraints_bgh_set_nsh(void *config_, void *dims_, const in
 
 
 
+static void ocp_nlp_constraints_bgh_set_nbxe(void *config_, void *dims_, const int *nbxe)
+{
+    ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
+    dims->nbxe = *nbxe;
+}
+
+
+
+static void ocp_nlp_constraints_bgh_set_nbue(void *config_, void *dims_, const int *nbue)
+{
+    ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
+    dims->nbue = *nbue;
+}
+
+
+
+static void ocp_nlp_constraints_bgh_set_nge(void *config_, void *dims_, const int *nge)
+{
+    ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
+    dims->nge = *nge;
+}
+
+
+
+static void ocp_nlp_constraints_bgh_set_nhe(void *config_, void *dims_, const int *nhe)
+{
+    ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
+    dims->nhe = *nhe;
+}
+
+
+
 void ocp_nlp_constraints_bgh_dims_set(void *config_, void *dims_, const char *field,
                                              const int* value)
 {
@@ -249,6 +286,22 @@ void ocp_nlp_constraints_bgh_dims_set(void *config_, void *dims_, const char *fi
     else if (!strcmp(field, "nsh"))
     {
         ocp_nlp_constraints_bgh_set_nsh(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nbxe"))
+    {
+        ocp_nlp_constraints_bgh_set_nbxe(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nbue"))
+    {
+        ocp_nlp_constraints_bgh_set_nbue(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nge"))
+    {
+        ocp_nlp_constraints_bgh_set_nge(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nhe"))
+    {
+        ocp_nlp_constraints_bgh_set_nhe(config_, dims_, value);
     }
     else
     {
@@ -348,6 +401,38 @@ static void ocp_nlp_constraints_bgh_get_nsh(void *config_, void *dims_, int* val
 
 
 
+static void ocp_nlp_constraints_bgh_get_nbxe(void *config_, void *dims_, int* value)
+{
+    ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
+    *value = dims->nbxe;
+}
+
+
+
+static void ocp_nlp_constraints_bgh_get_nbue(void *config_, void *dims_, int* value)
+{
+    ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
+    *value = dims->nbue;
+}
+
+
+
+static void ocp_nlp_constraints_bgh_get_nge(void *config_, void *dims_, int* value)
+{
+    ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
+    *value = dims->nge;
+}
+
+
+
+static void ocp_nlp_constraints_bgh_get_nhe(void *config_, void *dims_, int* value)
+{
+    ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
+    *value = dims->nhe;
+}
+
+
+
 void ocp_nlp_constraints_bgh_dims_get(void *config_, void *dims_, const char *field, int* value)
 {
     if (!strcmp(field, "ni"))
@@ -408,6 +493,29 @@ void ocp_nlp_constraints_bgh_dims_get(void *config_, void *dims_, const char *fi
         ocp_nlp_constraints_bgh_get_nsh(config_, dims_, &nsh);
         *value = nsg + nsh;
     }
+    else if (!strcmp(field, "nbxe"))
+    {
+        ocp_nlp_constraints_bgh_get_nbxe(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nbue"))
+    {
+        ocp_nlp_constraints_bgh_get_nbue(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nge"))
+    {
+        ocp_nlp_constraints_bgh_get_nge(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nhe"))
+    {
+        ocp_nlp_constraints_bgh_get_nhe(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nge_qp_solver"))
+    {
+        int nge, nhe;
+        ocp_nlp_constraints_bgh_get_nge(config_, dims_, &nge);
+        ocp_nlp_constraints_bgh_get_nhe(config_, dims_, &nhe);
+        *value = nge + nhe;
+    }
     else
     {
         printf("\nerror: ocp_nlp_constraints_bgh_dims_get: field %s not available in module\n", field);
@@ -432,6 +540,10 @@ int ocp_nlp_constraints_bgh_model_calculate_size(void *config, void *dims_)
     int ng = dims->ng;
     int nh = dims->nh;
     int ns = dims->ns;
+    int nbue = dims->nbue;
+    int nbxe = dims->nbxe;
+    int nge = dims->nge;
+    int nhe = dims->nhe;
 
     int size = 0;
 
@@ -439,6 +551,7 @@ int ocp_nlp_constraints_bgh_model_calculate_size(void *config, void *dims_)
 
     size += sizeof(int) * nb;                                         // idxb
     size += sizeof(int) * ns;                                         // idxs
+    size += sizeof(int)*(nbue+nbxe+nge+nhe);                          // idxe
     size += blasfeo_memsize_dvec(2 * nb + 2 * ng + 2 * nh + 2 * ns);  // d
     size += blasfeo_memsize_dmat(nu + nx, ng);                        // DCt
 
@@ -462,6 +575,12 @@ void *ocp_nlp_constraints_bgh_model_assign(void *config, void *dims_, void *raw_
     int ng = dims->ng;
     int nh = dims->nh;
     int ns = dims->ns;
+    int nbue = dims->nbue;
+    int nbxe = dims->nbxe;
+    int nge = dims->nge;
+    int nhe = dims->nhe;
+
+	int ii;
 
     // struct
     ocp_nlp_constraints_bgh_model *model = (ocp_nlp_constraints_bgh_model *) c_ptr;
@@ -488,6 +607,12 @@ void *ocp_nlp_constraints_bgh_model_assign(void *config, void *dims_, void *raw_
     assign_and_advance_int(nb, &model->idxb, &c_ptr);
     // idxs
     assign_and_advance_int(ns, &model->idxs, &c_ptr);
+    // idxe
+    assign_and_advance_int(nbue+nbxe+nge+nhe, &model->idxe, &c_ptr);
+
+	// default initialization
+	for(ii=0; ii<nbue+nbxe+nge+nhe; ii++)
+		model->idxe[ii] = 0;
 
     // assert
     assert((char *) raw_memory + ocp_nlp_constraints_bgh_model_calculate_size(config, dims) >=
@@ -525,13 +650,17 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
     int nsh = dims->nsh;
     int nbx = dims->nbx;
     int nbu = dims->nbu;
+    int nbue = dims->nbue;
+    int nbxe = dims->nbxe;
+    int nge = dims->nge;
+    int nhe = dims->nhe;
 
     // TODO(oj): document which strings mean what! - adapted from prev implementation..
-    if (!strcmp(field, "lb")) // TODO(fuck_lint) remove !!!
+    if (!strcmp(field, "lb")) // TODO remove !!!
     {
         blasfeo_pack_dvec(nb, value, &model->d, 0);
     }
-    else if (!strcmp(field, "ub")) // TODO(fuck_lint) remove !!!
+    else if (!strcmp(field, "ub")) // TODO remove !!!
     {
         blasfeo_pack_dvec(nb, value, &model->d, nb+ng+nh);
     }
@@ -654,6 +783,30 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
     else if (!strcmp(field, "ush"))
     {
         blasfeo_pack_dvec(nsh, value, &model->d, 2*nb+2*ng+2*nh+ns+nsbu+nsbx+nsg);
+    }
+    else if (!strcmp(field, "idxbue"))
+    {
+        ptr_i = (int *) value;
+        for (ii=0; ii < nbue; ii++)
+            model->idxe[ii] = ptr_i[ii];
+    }
+    else if (!strcmp(field, "idxbxe"))
+    {
+        ptr_i = (int *) value;
+        for (ii=0; ii < nbxe; ii++)
+            model->idxe[nbue+ii] = nbu+ptr_i[ii];
+    }
+    else if (!strcmp(field, "idxge"))
+    {
+        ptr_i = (int *) value;
+        for (ii=0; ii < nge; ii++)
+            model->idxe[nbue+nbxe+ii] = nbu+nbx+ptr_i[ii];
+    }
+    else if (!strcmp(field, "idxhe"))
+    {
+        ptr_i = (int *) value;
+        for (ii=0; ii < nhe; ii++)
+            model->idxe[nbue+nbxe+nge+ii] = nbu+nbx+ng+ptr_i[ii];
     }
     else
     {
@@ -909,11 +1062,20 @@ void ocp_nlp_constraints_bgh_memory_set_idxb_ptr(int *idxb, void *memory_)
 
 
 
-void ocp_nlp_constraints_bgh_memory_set_idxs_ptr(int *idxs, void *memory_)
+void ocp_nlp_constraints_bgh_memory_set_idxs_rev_ptr(int *idxs_rev, void *memory_)
 {
     ocp_nlp_constraints_bgh_memory *memory = memory_;
 
-    memory->idxs = idxs;
+    memory->idxs_rev = idxs_rev;
+}
+
+
+
+void ocp_nlp_constraints_bgh_memory_set_idxe_ptr(int *idxe, void *memory_)
+{
+    ocp_nlp_constraints_bgh_memory *memory = memory_;
+
+    memory->idxe = idxe;
 }
 
 
@@ -1014,6 +1176,10 @@ void ocp_nlp_constraints_bgh_initialize(void *config_, void *dims_, void *model_
     int nb = dims->nb;
     int ng = dims->ng;
     int ns = dims->ns;
+    int nbue = dims->nbue;
+    int nbxe = dims->nbxe;
+    int nge = dims->nge;
+    int nhe = dims->nhe;
 
     // initialize idxb
     for (j = 0; j < nb; j++)
@@ -1021,10 +1187,17 @@ void ocp_nlp_constraints_bgh_initialize(void *config_, void *dims_, void *model_
         memory->idxb[j] = model->idxb[j];
     }
 
-    // initialize idxs
+    // initialize idxs_rev
     for (j = 0; j < ns; j++)
     {
-        memory->idxs[j] = model->idxs[j];
+//        memory->idxs[j] = model->idxs[j];
+        memory->idxs_rev[model->idxs[j]] = j;
+    }
+
+    // initialize idxe
+    for (j = 0; j < nbue+nbxe+nge+nhe; j++)
+    {
+        memory->idxe[j] = model->idxe[j];
     }
 
     // initialize general constraints matrix
@@ -1353,7 +1526,8 @@ void ocp_nlp_constraints_bgh_config_initialize_default(void *config_)
     config->memory_set_z_alg_ptr = &ocp_nlp_constraints_bgh_memory_set_z_alg_ptr;
     config->memory_set_dzdux_tran_ptr = &ocp_nlp_constraints_bgh_memory_set_dzduxt_ptr;
     config->memory_set_idxb_ptr = &ocp_nlp_constraints_bgh_memory_set_idxb_ptr;
-    config->memory_set_idxs_ptr = &ocp_nlp_constraints_bgh_memory_set_idxs_ptr;
+    config->memory_set_idxs_rev_ptr = &ocp_nlp_constraints_bgh_memory_set_idxs_rev_ptr;
+    config->memory_set_idxe_ptr = &ocp_nlp_constraints_bgh_memory_set_idxe_ptr;
     config->workspace_calculate_size = &ocp_nlp_constraints_bgh_workspace_calculate_size;
     config->initialize = &ocp_nlp_constraints_bgh_initialize;
     config->update_qp_matrices = &ocp_nlp_constraints_bgh_update_qp_matrices;

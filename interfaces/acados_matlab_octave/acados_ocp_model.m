@@ -173,6 +173,7 @@ classdef acados_ocp_model < handle
                     obj.model_struct.constr_lbx_0 = value;
                     obj.model_struct.constr_ubx_0 = value;
                     obj.model_struct.constr_Jbx_0 = eye( length(value) );
+                    obj.model_struct.constr_idxbxe_0 = linspace(0,length(value)-1,length(value));
                 elseif (strcmp(field, 'constr_lbx_0'))
                     obj.model_struct.constr_lbx_0 = value;
                 elseif (strcmp(field, 'constr_ubx_0'))
@@ -236,6 +237,12 @@ classdef acados_ocp_model < handle
     %                obj.model_struct.constr_lsbx = value;
     %            elseif (strcmp(field, 'constr_usbx'))
     %                obj.model_struct.constr_usbx = value;
+                elseif (strcmp(field, 'constr_Jsbx_e'))
+                    obj.model_struct.constr_Jsbx_e = value;
+    %            elseif (strcmp(field, 'constr_lsbx_e'))
+    %                obj.model_struct.constr_lsbx_e = value;
+    %            elseif (strcmp(field, 'constr_usbx_e'))
+    %                obj.model_struct.constr_usbx_e = value;
                 elseif (strcmp(field, 'constr_Jsg'))
                     obj.model_struct.constr_Jsg = value;
     %            elseif (strcmp(field, 'constr_lsg'))
@@ -278,6 +285,8 @@ classdef acados_ocp_model < handle
                     obj.model_struct.dim_ny = value;
                 elseif (strcmp(field, 'dim_ny_e'))
                     obj.model_struct.dim_ny_e = value;
+                elseif (strcmp(field, 'dim_nbx_0'))
+                    obj.model_struct.dim_nbx_0 = value;
                 elseif (strcmp(field, 'dim_nbx'))
                     obj.model_struct.dim_nbx = value;
                 elseif (strcmp(field, 'dim_nbx_e'))
@@ -300,6 +309,8 @@ classdef acados_ocp_model < handle
                     obj.model_struct.dim_nsbu = value;
                 elseif (strcmp(field, 'dim_nsbx'))
                     obj.model_struct.dim_nsbx = value;
+                elseif (strcmp(field, 'dim_nsbx_e'))
+                    obj.model_struct.dim_nsbx_e = value;
                 elseif (strcmp(field, 'dim_nsg'))
                     obj.model_struct.dim_nsg = value;
                 elseif (strcmp(field, 'dim_nsg_e'))
@@ -310,6 +321,8 @@ classdef acados_ocp_model < handle
                     obj.model_struct.dim_nsh_e = value;
                 elseif (strcmp(field, 'dim_np'))
                     obj.model_struct.dim_np = value;
+                elseif (strcmp(field, 'dim_nbxe_0'))
+                    obj.model_struct.dim_nbxe_0 = value;
                 else
                     disp(['acados_ocp_model: set: wrong field: ', field]);
                     keyboard;

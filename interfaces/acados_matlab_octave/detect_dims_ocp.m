@@ -116,6 +116,7 @@ function model = detect_dims_ocp(model)
     end
 
     model.dim_nbx_0 = nbx_0;
+    model.dim_nbxe_0 = nbx_0;
 
     % path
     if isfield(model, 'constr_Jbx') && isfield(model, 'constr_lbx') && isfield(model, 'constr_ubx')

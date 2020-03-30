@@ -279,11 +279,10 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
             blasfeo_print_tran_dvec(2 * ns[ii], &qp_in->d[ii], 2 * nb[ii] + 2 * ng[ii]);
     }
 
-    printf("idxs =\n");
+    printf("idxs_rev =\n");
     for (int ii = 0; ii <= N; ii++)
     {
-        if (ns[ii] > 0)
-            int_print_mat(1, ns[ii], qp_in->idxs[ii], 1);
+		int_print_mat(1, nb[ii]+ng[ii], qp_in->idxs_rev[ii], 1);
     }
 
     printf("Z =\n");

@@ -412,10 +412,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int ns_e = 0;
     int nsbu = 0;
     int nsbx = 0;
+    int nsbx_e = 0;
     int nsg = 0;
     int nsg_e = 0;
     int nsh = 0;
     int nsh_e = 0;
+    int nbxe_0;
 
     ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
 
@@ -623,10 +625,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (mxGetField( matlab_model, 0, "dim_nsbx" )!=NULL)
     {
         nsbx = mxGetScalar( mxGetField( matlab_model, 0, "dim_nsbx" ) );
-        for (int ii=1; ii<=N; ii++) // TODO fix stage 0 !!!!!
+        for (int ii=1; ii<N; ii++) // TODO fix stage 0 !!!!!
         {
             ocp_nlp_dims_set_constraints(config, dims, ii, "nsbx", &nsbx);
         }
+    }
+    if (mxGetField( matlab_model, 0, "dim_nsbx_e" )!=NULL)
+    {
+        nsbx_e = mxGetScalar( mxGetField( matlab_model, 0, "dim_nsbx_e" ) );
+        ocp_nlp_dims_set_constraints(config, dims, N, "nsbx", &nsbx);
     }
     // nsg
     if (mxGetField( matlab_model, 0, "dim_nsg" )!=NULL)
@@ -665,10 +672,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             ns, nsbu, nsbx, nsg, nsh);
         mexErrMsgTxt(buffer);
     }
-    if (ns_e!=nsbx+nsg_e+nsh_e)
+    if (ns_e!=nsbx_e+nsg_e+nsh_e)
     {
-        sprintf(buffer,"ocp_create: ns_e!=nsbx+nsg_e+nsh_e, got ns_e=%d, nsbx=%d nsg_e=%d nsh_e=%d\n",
-            ns_e, nsbx, nsg_e, nsh_e);
+        sprintf(buffer,"ocp_create: ns_e!=nsbx_e+nsg_e+nsh_e, got ns_e=%d, nsbx_e=%d nsg_e=%d nsh_e=%d\n",
+            ns_e, nsbx_e, nsg_e, nsh_e);
         mexErrMsgTxt(buffer);
     }
 
@@ -680,6 +687,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     i_ptr[N] = ns_e;
     ocp_nlp_dims_set_opt_vars(config, dims, "ns", i_ptr);
     free(i_ptr);
+
+    // nbxe_0
+    if (mxGetField( matlab_model, 0, "dim_nbxe_0" )!=NULL)
+    {
+        nbxe_0 = mxGetScalar( mxGetField( matlab_model, 0, "dim_nbxe_0" ) );
+        ocp_nlp_dims_set_constraints(config, dims, 0, "nbxe", &nbxe_0);
+    }
 
 
     /* opts */
@@ -1872,10 +1886,37 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 }
             }
         }
-        for (int ii=1; ii<=N; ii++) // TODO stage 0 !!!!!!!!!!
+        for (int ii=1; ii<N; ii++) // TODO stage 0 !!!!!!!!!!
         {
             ocp_nlp_constraints_model_set(config, dims, in, ii, "idxsbx", i_ptr);
         }
+        free(i_ptr);
+    }
+    // Jsbx_e
+    const mxArray *Jsbx_e_matlab = mxGetField( matlab_model, 0, "constr_Jsbx_e" );
+    if (Jsbx_e_matlab!=NULL)
+    {
+        int nrow = (int) mxGetM( Jsbx_matlab );
+        int ncol = (int) mxGetN( Jsbx_matlab );
+        MEX_DIM_CHECK_MAT(fun_name, "constr_Jsbx_e", nrow, ncol, nbx_e, nsbx_e);
+
+        double *Jsbx_e = mxGetPr( mxGetField( matlab_model, 0, "constr_Jsbx_e" ) );
+        i_ptr = malloc(nsbx_e*sizeof(int));
+        for (int ii=0; ii<nsbx_e; ii++)
+        {
+            for (int jj=0; jj<nbx_e; jj++)
+            {
+                if (Jsbx_e[jj+nbx_e*ii]==1.0)
+                {
+                    i_ptr[ii] = jj;
+                }
+                else if (Jsbx_e[jj+nbx_e*ii]!=0.0)
+                {
+                    MEX_NONBINARY_MAT(fun_name, "constr_Jsbx_e");
+                }
+            }
+        }
+        ocp_nlp_constraints_model_set(config, dims, in, N, "idxsbx", i_ptr);
         free(i_ptr);
     }
 
@@ -1998,6 +2039,25 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         free(i_ptr);
     }
     // mexPrintf("\nocp_create end\n");
+
+    // idxbxe_0
+    tmp_idx = malloc(nbxe_0*sizeof(int));
+
+    double *idxbxe_0;
+    const mxArray *idxbxe_0_matlab = mxGetField( matlab_model, 0, "constr_idxbxe_0" );
+    if (idxbxe_0_matlab!=NULL)
+    {
+        int matlab_size = (int) mxGetNumberOfElements( idxbxe_0_matlab );
+        MEX_DIM_CHECK_VEC(fun_name, "constr_idxbxe_0", matlab_size, nbxe_0);
+        idxbxe_0 = mxGetPr( idxbxe_0_matlab );
+        for (int ii=0; ii<nbxe_0; ii++)
+        {
+			tmp_idx[ii] = (int) idxbxe_0[ii];
+        }
+        ocp_nlp_constraints_model_set(config, dims, in, 0, "idxbxe", tmp_idx);
+    }
+    free(tmp_idx);
+
 
     return;
 
