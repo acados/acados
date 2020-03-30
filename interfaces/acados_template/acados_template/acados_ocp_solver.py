@@ -90,15 +90,18 @@ def make_ocp_dims_consistent(acados_ocp):
     if cost.cost_type == 'LINEAR_LS':
         ny = cost.W.shape[0]
         if cost.Vx.shape[0] != ny or cost.Vu.shape[0] != ny:
-            raise Exception('inconsistent dimension ny, regarding W, Vx, Vu.')
+            raise Exception('inconsistent dimension ny, regarding W, Vx, Vu.' + \
+                            f'\nGot W[{cost.W.shape}], Vx[{cost.Vx.shape}], Vu[{cost.Vu.shape}]\n')
         if dims.nz != 0 and cost.Vz.shape[0] != ny:
-            raise Exception('inconsistent dimension ny, regarding W, Vx, Vu, Vz.')
+            raise Exception('inconsistent dimension ny, regarding W, Vx, Vu, Vz.' + \
+                            f'\nGot W[{cost.W.shape}], Vx[{cost.Vx.shape}], Vu[{cost.Vu.shape}], Vz[{cost.Vz.shape}]\n')
         if cost.Vx.shape[1] != dims.nx and ny != 0:
             raise Exception('inconsistent dimension: Vx should have nx columns.')
         if cost.Vu.shape[1] != dims.nu and ny != 0:
             raise Exception('inconsistent dimension: Vu should have nu columns.')
         if cost.yref.shape[0] != ny:
-            raise Exception('inconsistent dimension: regarding W, yref.')
+            raise Exception('inconsistent dimension: regarding W, yref.' + \
+                            f'\nGot W[{cost.W.shape}], yref[{cost.yref.shape}]\n')
         dims.ny = ny
 
     elif cost.cost_type == 'NONLINEAR_LS':
@@ -108,14 +111,16 @@ def make_ocp_dims_consistent(acados_ocp):
         elif casadi_length(model.cost_y_expr) != ny:
             raise Exception('inconsistent dimension ny: regarding W, cost_y_expr.')
         if cost.yref.shape[0] != ny:
-            raise Exception('inconsistent dimension: regarding W, yref.')
+            raise Exception('inconsistent dimension: regarding W, yref.' + \
+                            f'\nGot W[{cost.W.shape}], yref[{cost.yref.shape}]\n')
         dims.ny = ny
 
     # terminal
     if cost.cost_type_e == 'LINEAR_LS':
         ny_e = cost.W_e.shape[0]
         if cost.Vx_e.shape[0] != ny_e:
-            raise Exception('inconsistent dimension ny_e, regarding W_e, Vx_e.')
+            raise Exception('inconsistent dimension ny_e: regarding W_e, cost_y_expr_e.'  + \
+                f'\nGot W_e[{cost.W_e.shape}], Vx_e[{cost.Vx_e.shape}]')
         if cost.Vx_e.shape[1] != dims.nx and ny_e != 0:
             raise Exception('inconsistent dimension: Vx_e should have nx columns.')
         if cost.yref_e.shape[0] != ny_e:
@@ -146,8 +151,6 @@ def make_ocp_dims_consistent(acados_ocp):
             raise Exception('lbx_0, ubx_0 must be column vectors!')
 
         dims.nbx_0 = constraints.lbx_0.size
-    else:
-        raise Exception('lbx_0, ubx_0 have different shapes!')
 
     # path
     nbx = constraints.idxbx.shape[0]
