@@ -57,10 +57,6 @@ function ocp_generate_c_code(obj)
         % TODO: implement
     end
 
-    if ~(strcmp(obj.opts_struct.param_scheme, 'multiple_shooting_unif_grid'))
-        error(['mex templating does only support uniform discretizations for shooting nodes']);
-    end
-
     %% generate C code for CasADi functions
     % dynamics
     if (strcmp(obj.model_struct.dyn_type, 'explicit'))
