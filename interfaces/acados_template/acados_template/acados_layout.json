@@ -242,6 +242,42 @@
                     "nsbx_e"
                 ]
         ],
+        "lsg": [
+            "ndarray",
+            [
+                "nsg"
+            ]
+        ],
+        "usg": [
+            "ndarray",
+            [
+                "nsg"
+            ]
+        ],
+        "idxsg": [
+            "ndarray",
+            [
+                "nsg"
+            ]
+        ],
+        "lsg_e": [
+            "ndarray",
+            [
+                "nsg_e"
+            ]
+        ],
+        "usg_e": [
+            "ndarray",
+            [
+                "nsg_e"
+            ]
+        ],
+        "idxsg_e": [
+            "ndarray",
+            [
+                "nsg_e"
+            ]
+        ],
         "lsh": [
             "ndarray",
             [
@@ -448,6 +484,12 @@
             "int"
         ],
         "nbx_e": [
+            "int"
+        ],
+        "nsg": [
+            "int"
+        ],
+        "nsg_e": [
             "int"
         ],
         "nsh": [

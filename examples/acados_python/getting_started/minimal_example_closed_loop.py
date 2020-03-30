@@ -55,12 +55,14 @@ ny_e = nx
 N = 20
 
 # set dimensions
-ocp.dims.nx  = nx
-ocp.dims.ny  = ny
-ocp.dims.ny_e = ny_e
-ocp.dims.nbu = nu
-ocp.dims.nu  = nu
-ocp.dims.N   = N
+ocp.dims.N = N
+# NOTE: all dimensions but N are now detected automatically in the
+#   Python interface, i.e. the following is redundant:
+# ocp.dims.nx  = nx
+# ocp.dims.ny  = ny
+# ocp.dims.ny_e = ny_e
+# ocp.dims.nbu = nu
+# ocp.dims.nu  = nu
 
 # set cost module
 ocp.cost.cost_type = 'LINEAR_LS'

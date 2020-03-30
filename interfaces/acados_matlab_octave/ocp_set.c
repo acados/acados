@@ -50,7 +50,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int acados_size;
     mxArray *mex_field;
     char fun_name[20] = "ocp_set";
-    char buffer [400]; // for error messages
+    char buffer [500]; // for error messages
 
     /* RHS */
     int min_nrhs = 5;
@@ -165,6 +165,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
 
             ocp_nlp_constraints_model_set(config, dims, in, ii, "ubx", value);
+        }
+    }
+    else if (!strcmp(field, "constr_lbu"))
+    {
+        for (int ii=s0; ii<se; ii++)
+        {
+            acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "lbu");
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+
+            ocp_nlp_constraints_model_set(config, dims, in, ii, "lbu", value);
+        }
+    }
+    else if (!strcmp(field, "constr_ubu"))
+    {
+        for (int ii=s0; ii<se; ii++)
+        {
+            acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "ubu");
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+
+            ocp_nlp_constraints_model_set(config, dims, in, ii, "ubu", value);
         }
     }
     else if (!strcmp(field, "constr_D"))
@@ -553,7 +573,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else
     {
         MEX_FIELD_NOT_SUPPORTED_SUGGEST(fun_name, field, "p, constr_x0,\
- constr_lbx, constr_ubx, constr_C, constr_D, constr_lg, constr_ug, cost_y_ref[_e],\
+ constr_lbx, constr_ubx, constr_C, constr_D, constr_lg, constr_ug,\
+ constr_lbu, constr_ubu, cost_y_ref[_e],\
  cost_Vu, cost_Vx, cost_Vz, cost_W, cost_Z, cost_Zl, cost_Zu, cost_z,\
  cost_zl, cost_zu, init_x, init_u, init_z, init_xdot, init_gnsf_phi,\
  init_pi, nlp_solver_max_iter, qp_warm_start, warm_start_first_qp, print_level");

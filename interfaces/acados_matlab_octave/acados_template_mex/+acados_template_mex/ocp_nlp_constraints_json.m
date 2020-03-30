@@ -57,6 +57,14 @@ classdef ocp_nlp_constraints_json < handle
         idxsbx_e % indexes of soft bounds on x at t=T
         lsbx_e   % lower bounds on slacks corresponding to soft lower bounds on x at t=T
         usbx_e   % lower bounds on slacks corresponding to soft upper bounds on x at t=T
+        % soft bounds on general linear constraints
+        lsg     % lower bounds on slacks corresponding to soft lower bounds for general linear constraints
+        usg     % lower bounds on slacks corresponding to soft upper bounds for general linear constraints
+        idxsg   % indexes of soft general linear constraints
+        % soft bounds on general linear constraints at t=T
+        lsg_e     % lower bounds on slacks corresponding to soft lower bounds for general linear constraints
+        usg_e     % lower bounds on slacks corresponding to soft upper bounds for general linear constraints
+        idxsg_e   % indexes of soft general linear constraints
         % soft bounds on nonlinear constraints
         lsh     % lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints
         ush     % lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints
@@ -135,13 +143,19 @@ classdef ocp_nlp_constraints_json < handle
             obj.idxbx_0 = [];
             obj.lphi            = [];
             obj.uphi            = [];
-            obj.lsphi            = [];
-            obj.usphi            = [];
+            obj.lsg = [];
+            obj.usg = [];
+            obj.idxsg = [];
+            obj.lsg_e = [];
+            obj.usg_e = [];
+            obj.idxsg_e = [];
+            obj.lsphi = [];
+            obj.usphi = [];
+            obj.idxsphi = [];
             obj.lphi_e            = [];
             obj.uphi_e            = [];
             obj.lsphi_e            = [];
             obj.usphi_e            = [];
-            obj.idxsphi = [];
             obj.idxsphi_e = [];
         end
     end

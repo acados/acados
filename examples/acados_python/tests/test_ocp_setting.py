@@ -159,20 +159,11 @@ ny_e = nx
 N = 20
 
 # set dimensions
-ocp.dims.nx  = nx
-ocp.dims.ny  = ny
-ocp.dims.ny_e = ny_e
-ocp.dims.nbx = 0
-ocp.dims.nbu = nu 
-ocp.dims.nu  = nu
-ocp.dims.N   = N
+ocp.dims.N = N
 
 # set cost
 Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
 R = 2*np.diag([1e-2])
-
-ocp.cost.W_e = Q
-ocp.cost.W = scipy.linalg.block_diag(Q, R)
 
 x = ocp.model.x
 u = ocp.model.u
@@ -187,13 +178,19 @@ if COST_MODULE == 'LS':
     Vu[4,0] = 1.0
     ocp.cost.Vu = Vu
 
+    ocp.cost.W = scipy.linalg.block_diag(Q, R)
+    ocp.cost.yref  = np.zeros((ny, ))
+
 elif COST_MODULE == 'NLS':
     ocp.cost.cost_type = 'NONLINEAR_LS'
     ocp.model.cost_y_expr = vertcat(x, u)
 
+    ocp.cost.W = scipy.linalg.block_diag(Q, R)
+    ocp.cost.yref  = np.zeros((ny, ))
+
 elif COST_MODULE == 'EXTERNAL':
     ocp.cost.cost_type = 'EXTERNAL'
-    ocp.model.cost_expr_ext_cost = 0.5 * vertcat(x, u).T @ ocp.cost.W @ vertcat(x, u)
+    ocp.model.cost_expr_ext_cost = 0.5 * vertcat(x, u).T @ scipy.linalg.block_diag(Q, R) @ vertcat(x, u)
 
 else:
     raise Exception('Unknown COST_MODULE. Possible values are \'LS\', \'NLS\', \'EXTERNAL\'.')
@@ -202,10 +199,14 @@ else:
 if COST_MODULE_N == 'LS':
     ocp.cost.cost_type_e = 'LINEAR_LS'
     ocp.cost.Vx_e = np.eye(nx)
+    ocp.cost.W_e = Q
+    ocp.cost.yref_e = np.zeros((ny_e, ))
 
 elif COST_MODULE_N == 'NLS':
     ocp.cost.cost_type_e = 'NONLINEAR_LS'
     ocp.model.cost_y_expr_e = x
+    ocp.cost.W_e = Q
+    ocp.cost.yref_e = np.zeros((ny_e, ))
 
 elif COST_MODULE_N == 'EXTERNAL':
     ocp.cost.cost_type_e = 'EXTERNAL'
@@ -215,8 +216,6 @@ else:
     raise Exception('Unknown COST_MODULE_N. Possible values are \'LS\', \'NLS\', \'EXTERNAL\'.')
 
 
-ocp.cost.yref  = np.zeros((ny, ))
-ocp.cost.yref_e = np.zeros((ny_e, ))
 
 # set constraints
 Fmax = 80

@@ -58,21 +58,6 @@ def make_ocp_dims_consistent(acados_ocp):
     constraints = acados_ocp.constraints
     model = acados_ocp.model
 
-    # nbx_0
-    if (constraints.lbx_0 == [] and constraints.ubx_0 == []):
-        dims.nbx_0 = 0
-    elif not (constraints.lbx_0 == [] and constraints.ubx_0 == []):
-        this_shape = constraints.lbx_0.shape
-        other_shape = constraints.ubx_0.shape
-        if not this_shape == other_shape:
-            raise Exception('lbx_0, ubx_0 have different shapes!')
-        if not is_column(constraints.lbx_0):
-            raise Exception('lbx_0, ubx_0 must be column vectors!')
-
-        dims.nbx_0 = constraints.lbx_0.size
-    else:
-        raise Exception('lbx_0, ubx_0 have different shapes!')
-
     # nx
     if is_column(model.x):
         dims.nx = casadi_length(model.x)
@@ -96,6 +81,294 @@ def make_ocp_dims_consistent(acados_ocp):
         dims.np = 0
     else:
         dims.np = casadi_length(model.p)
+    if acados_ocp.parameter_values.shape[0] != dims.np:
+        raise Exception('inconsistent dimension np, regarding model.p and parameter_values.')
+
+    ## cost
+    # path
+    if cost.cost_type == 'LINEAR_LS':
+        ny = cost.W.shape[0]
+        if cost.Vx.shape[0] != ny or cost.Vu.shape[0] != ny:
+            raise Exception('inconsistent dimension ny, regarding W, Vx, Vu.' + \
+                            f'\nGot W[{cost.W.shape}], Vx[{cost.Vx.shape}], Vu[{cost.Vu.shape}]\n')
+        if dims.nz != 0 and cost.Vz.shape[0] != ny:
+            raise Exception('inconsistent dimension ny, regarding W, Vx, Vu, Vz.' + \
+                            f'\nGot W[{cost.W.shape}], Vx[{cost.Vx.shape}], Vu[{cost.Vu.shape}], Vz[{cost.Vz.shape}]\n')
+        if cost.Vx.shape[1] != dims.nx and ny != 0:
+            raise Exception('inconsistent dimension: Vx should have nx columns.')
+        if cost.Vu.shape[1] != dims.nu and ny != 0:
+            raise Exception('inconsistent dimension: Vu should have nu columns.')
+        if cost.yref.shape[0] != ny:
+            raise Exception('inconsistent dimension: regarding W, yref.' + \
+                            f'\nGot W[{cost.W.shape}], yref[{cost.yref.shape}]\n')
+        dims.ny = ny
+
+    elif cost.cost_type == 'NONLINEAR_LS':
+        ny = cost.W.shape[0]
+        if is_empty(model.cost_y_expr) and ny != 0:
+            raise Exception('inconsistent dimension ny: regarding W, cost_y_expr.')
+        elif casadi_length(model.cost_y_expr) != ny:
+            raise Exception('inconsistent dimension ny: regarding W, cost_y_expr.')
+        if cost.yref.shape[0] != ny:
+            raise Exception('inconsistent dimension: regarding W, yref.' + \
+                            f'\nGot W[{cost.W.shape}], yref[{cost.yref.shape}]\n')
+        dims.ny = ny
+
+    # terminal
+    if cost.cost_type_e == 'LINEAR_LS':
+        ny_e = cost.W_e.shape[0]
+        if cost.Vx_e.shape[0] != ny_e:
+            raise Exception('inconsistent dimension ny_e: regarding W_e, cost_y_expr_e.'  + \
+                f'\nGot W_e[{cost.W_e.shape}], Vx_e[{cost.Vx_e.shape}]')
+        if cost.Vx_e.shape[1] != dims.nx and ny_e != 0:
+            raise Exception('inconsistent dimension: Vx_e should have nx columns.')
+        if cost.yref_e.shape[0] != ny_e:
+            raise Exception('inconsistent dimension: regarding W_e, yref_e.')
+        dims.ny_e = ny_e
+
+    elif cost.cost_type_e == 'NONLINEAR_LS':
+        ny_e = cost.W_e.shape[0]
+        if is_empty(model.cost_y_expr_e) and ny_e != 0:
+            raise Exception('inconsistent dimension ny_e: regarding W_e, cost_y_expr_e.')
+        elif casadi_length(model.cost_y_expr_e) != ny_e:
+            raise Exception('inconsistent dimension ny_e: regarding W_e, cost_y_expr_e.')
+        if cost.yref_e.shape[0] != ny_e:
+            raise Exception('inconsistent dimension: regarding W_e, yref_e.')
+        dims.ny_e = ny_e
+
+
+    ## constraints
+    # initial
+    if (constraints.lbx_0 == [] and constraints.ubx_0 == []):
+        dims.nbx_0 = 0
+    elif not (constraints.lbx_0 == [] and constraints.ubx_0 == []):
+        this_shape = constraints.lbx_0.shape
+        other_shape = constraints.ubx_0.shape
+        if not this_shape == other_shape:
+            raise Exception('lbx_0, ubx_0 have different shapes!')
+        if not is_column(constraints.lbx_0):
+            raise Exception('lbx_0, ubx_0 must be column vectors!')
+
+        dims.nbx_0 = constraints.lbx_0.size
+
+    # path
+    nbx = constraints.idxbx.shape[0]
+    if constraints.ubx.shape[0] != nbx or constraints.lbx.shape[0] != nbx:
+        raise Exception('inconsistent dimension nbx, regarding idxbx, ubx, lbx.')
+    else:
+        dims.nbx = nbx
+
+    nbu = constraints.idxbu.shape[0]
+    if constraints.ubu.shape[0] != nbu or constraints.lbu.shape[0] != nbu:
+        raise Exception('inconsistent dimension nbu, regarding idxbu, ubu, lbu.')
+    else:
+        dims.nbu = nbu
+
+    ng = constraints.lg.shape[0]
+    if constraints.ug.shape[0] != ng or constraints.C.shape[0] != ng \
+       or constraints.D.shape[0] != ng:
+        raise Exception('inconsistent dimension ng, regarding lg, ug, C, D.')
+    else:
+        dims.ng = ng
+
+    if not is_empty(model.con_h_expr):
+        nh = casadi_length(model.con_h_expr)
+    else:
+        nh = 0
+
+    if constraints.uh.shape[0] != nh or constraints.lh.shape[0] != nh:
+        raise Exception('inconsistent dimension nh, regarding lh, uh, con_h_expr.')
+    else:
+        dims.nh = nh
+
+    if is_empty(model.con_phi_expr):
+        dims.nphi = 0
+        dims.nr = 0
+    else:
+        dims.nphi = casadi_length(model.con_phi_expr)
+        if is_empty(model.con_r_expr):
+            raise Exception('convex over nonlinear constraints: con_r_expr but con_phi_expr is nonempty')
+        else:
+            dims.nr = casadi_length(model.con_r_expr)
+
+    # terminal
+    nbx_e = constraints.idxbx_e.shape[0]
+    if constraints.ubx_e.shape[0] != nbx_e or constraints.lbx_e.shape[0] != nbx_e:
+        raise Exception('inconsistent dimension nbx_e, regarding idxbx_e, ubx_e, lbx_e.')
+    else:
+        dims.nbx_e = nbx_e
+
+    ng_e = constraints.lg_e.shape[0]
+    if constraints.ug_e.shape[0] != ng_e or constraints.C_e.shape[0] != ng_e:
+        raise Exception('inconsistent dimension ng_e, regarding_e lg_e, ug_e, C_e.')
+    else:
+        dims.ng_e = ng_e
+
+    if not is_empty(model.con_h_expr_e):
+        nh_e = casadi_length(model.con_h_expr_e)
+    else:
+        nh_e = 0
+
+    if constraints.uh_e.shape[0] != nh_e or constraints.lh_e.shape[0] != nh_e:
+        raise Exception('inconsistent dimension nh_e, regarding lh_e, uh_e, con_h_expr_e.')
+    else:
+        dims.nh_e = nh_e
+
+    if is_empty(model.con_phi_expr_e):
+        dims.nphi_e = 0
+        dims.nr_e = 0
+    else:
+        dims.nphi_e = casadi_length(model.con_phi_expr_e)
+        if is_empty(model.con_r_expr_e):
+            raise Exception('convex over nonlinear constraints: con_r_expr_e but con_phi_expr_e is nonempty')
+        else:
+            dims.nr_e = casadi_length(model.con_r_expr_e)
+
+    # Slack dimensions
+    nsbx = constraints.idxsbx.shape[0]
+    if is_empty(constraints.lsbx):
+        constraints.lsbx = np.zeros((nsbx,))
+    elif constraints.lsbx.shape[0] != nsbx:
+        raise Exception('inconsistent dimension nsbx, regarding idxsbx, lsbx.')
+    if is_empty(constraints.usbx):
+        constraints.usbx = np.zeros((nsbx,))
+    elif constraints.usbx.shape[0] != nsbx:
+        raise Exception('inconsistent dimension nsbx, regarding idxsbx, usbx.')
+    dims.nsbx = nsbx
+
+    nsbu = constraints.idxsbu.shape[0]
+    if is_empty(constraints.lsbu):
+        constraints.lsbu = np.zeros((nsbu,))
+    elif constraints.lsbu.shape[0] != nsbu:
+        raise Exception('inconsistent dimension nsbu, regarding idxsbu, lsbu.')
+    if is_empty(constraints.usbu):
+        constraints.usbu = np.zeros((nsbu,))
+    elif constraints.usbu.shape[0] != nsbu:
+        raise Exception('inconsistent dimension nsbu, regarding idxsbu, usbu.')
+    dims.nsbu = nsbu
+
+    nsh = constraints.idxsh.shape[0]
+    if is_empty(constraints.lsh):
+        constraints.lsh = np.zeros((nsh,))
+    elif constraints.lsh.shape[0] != nsh:
+        raise Exception('inconsistent dimension nsh, regarding idxsh, lsh.')
+    if is_empty(constraints.ush):
+        constraints.ush = np.zeros((nsh,))
+    elif constraints.ush.shape[0] != nsh:
+        raise Exception('inconsistent dimension nsh, regarding idxsh, ush.')
+    dims.nsh = nsh
+
+    nsphi = constraints.idxsphi.shape[0]
+    if is_empty(constraints.lsphi):
+        constraints.lsphi = np.zeros((nsphi,))
+    elif constraints.lsphi.shape[0] != nsphi:
+        raise Exception('inconsistent dimension nsphi, regarding idxsphi, lsphi.')
+    if is_empty(constraints.usphi):
+        constraints.usphi = np.zeros((nsphi,))
+    elif constraints.usphi.shape[0] != nsphi:
+        raise Exception('inconsistent dimension nsphi, regarding idxsphi, usphi.')
+    dims.nsphi = nsphi
+
+    nsg = constraints.idxsg.shape[0]
+    if is_empty(constraints.lsg):
+        constraints.lsg = np.zeros((nsg,))
+    elif constraints.lsg.shape[0] != nsg:
+        raise Exception('inconsistent dimension nsg, regarding idxsg, lsg.')
+    if is_empty(constraints.usg):
+        constraints.usg = np.zeros((nsg,))
+    elif constraints.usg.shape[0] != nsg:
+        raise Exception('inconsistent dimension nsg, regarding idxsg, usg.')
+    dims.nsg = nsg
+
+    ns = nsbx + nsbu + nsh + nsg + nsphi
+    wrong_field = ""
+    if cost.Zl.shape[0] != ns:
+        wrong_field = "Zl"
+        dim = cost.Zl.shape[0]
+    elif cost.Zu.shape[0] != ns:
+        wrong_field = "Zu"
+        dim = cost.Zu.shape[0]
+    elif cost.zl.shape[0] != ns:
+        wrong_field = "zl"
+        dim = cost.zl.shape[0]
+    elif cost.zu.shape[0] != ns:
+        wrong_field = "zu"
+        dim = cost.zu.shape[0]
+
+    if wrong_field != "":
+        raise Exception(f'Inconsistent size for field {wrong_field}, with dimension {dim}, \n\t'\
+            + f'Detected ns = {ns} = nsbx + nsbu + nsg + nsh + nsphi.\n\t'\
+            + f'With nsbx = {nsbx}, nsbu = {nsbu}, nsg = {nsg}, nsh = {nsh}, nsphi = {nsphi}')
+
+    dims.ns = ns
+
+    nsbx_e = constraints.idxsbx_e.shape[0]
+    if is_empty(constraints.lsbx_e):
+        constraints.lsbx_e = np.zeros((nsbx_e,))
+    elif constraints.lsbx_e.shape[0] != nsbx_e:
+        raise Exception('inconsistent dimension nsbx_e, regarding idxsbx_e, lsbx_e.')
+    if is_empty(constraints.usbx_e):
+        constraints.usbx_e = np.zeros((nsbx_e,))
+    elif constraints.usbx_e.shape[0] != nsbx_e:
+        raise Exception('inconsistent dimension nsbx_e, regarding idxsbx_e, usbx_e.')
+    dims.nsbx_e = nsbx_e
+
+    nsh_e = constraints.idxsh_e.shape[0]
+    if is_empty(constraints.lsh_e):
+        constraints.lsh_e = np.zeros((nsh_e,))
+    elif constraints.lsh_e.shape[0] != nsh_e:
+        raise Exception('inconsistent dimension nsh_e, regarding idxsh_e, lsh_e.')
+    if is_empty(constraints.ush_e):
+        constraints.ush_e = np.zeros((nsh_e,))
+    elif constraints.ush_e.shape[0] != nsh_e:
+        raise Exception('inconsistent dimension nsh_e, regarding idxsh_e, ush_e.')
+    dims.nsh_e = nsh_e
+
+    nsg_e = constraints.idxsg_e.shape[0]
+    if is_empty(constraints.lsg_e):
+        constraints.lsg_e = np.zeros((nsg_e,))
+    elif constraints.lsg_e.shape[0] != nsg_e:
+        raise Exception('inconsistent dimension nsg_e, regarding idxsg_e, lsg_e.')
+    if is_empty(constraints.usg_e):
+        constraints.usg_e = np.zeros((nsg_e,))
+    elif constraints.usg_e.shape[0] != nsg_e:
+        raise Exception('inconsistent dimension nsg_e, regarding idxsg_e, usg_e.')
+    dims.nsg_e = nsg_e
+
+    nsphi_e = constraints.idxsphi_e.shape[0]
+    if is_empty(constraints.lsphi_e):
+        constraints.lsphi_e = np.zeros((nsphi_e,))
+    elif constraints.lsphi_e.shape[0] != nsphi_e:
+        raise Exception('inconsistent dimension nsphi_e, regarding idxsphi_e, lsphi_e.')
+    if is_empty(constraints.usphi_e):
+        constraints.usphi_e = np.zeros((nsphi_e,))
+    elif constraints.usphi_e.shape[0] != nsphi_e:
+        raise Exception('inconsistent dimension nsphi_e, regarding idxsphi_e, usphi_e.')
+    dims.nsphi_e = nsphi_e
+
+    # terminal
+    ns_e = nsbx_e + nsh_e + nsg_e + nsphi_e
+    wrong_field = ""
+    if cost.Zl_e.shape[0] != ns_e:
+        wrong_field = "Zl_e"
+        dim = cost.Zl_e.shape[0]
+    elif cost.Zu_e.shape[0] != ns_e:
+        wrong_field = "Zu_e"
+        dim = cost.Zu_e.shape[0]
+    elif cost.zl_e.shape[0] != ns_e:
+        wrong_field = "zl_e"
+        dim = cost.zl_e.shape[0]
+    elif cost.zu_e.shape[0] != ns_e:
+        wrong_field = "zu_e"
+        dim = cost.zu_e.shape[0]
+
+    if wrong_field != "":
+        raise Exception(f'Inconsistent size for field {wrong_field}, with dimension {dim}, \n\t'\
+            + f'Detected ns_e = {ns_e} = nsbx_e + nsg_e + nsh_e + nsphi_e.\n\t'\
+            + f'With nsbx_e = {nsbx_e}, nsg_e = {nsg_e}, nsh_e = {nsh_e}, nsphi_e = {nsphi_e}')
+
+    dims.ns_e = ns_e
+
 
 
 def set_up_imported_gnsf_model(acados_ocp):
@@ -428,21 +701,11 @@ class AcadosOcpSolver:
         self.acados_ocp = acados_ocp
 
 
-    def solve(self, rti_phase=0):
+    def solve(self):
         """
         solve the ocp with current input
-        :param rti_phase: 0 = preparation + feedback, 1 = preparation only,
-         2 = feedback only (if SQP_RTI is used, otherwise only 0 (default) is allowed)
         """
-        if isinstance(rti_phase, int) == False or rti_phase < 0 or rti_phase > 2: 
-            raise Exception('AcadosOcpSolver.solve(): argument \'rti_phase\' can ' 
-                'take only values 0, 1, 2 for SQP-RTI-type solvers')
-        if self.acados_ocp.solver_options.nlp_solver_type != 'SQP_RTI' and rti_phase > 0:
-            raise Exception('AcadosOcpSolver.solve(): argument \'rti_phase\' can ' 
-                'take only value 0 for SQP-type solvers')
-        self.shared_lib.acados_solve.argtypes = [c_int]
-
-        status = self.shared_lib.acados_solve(rti_phase)
+        status = self.shared_lib.acados_solve()
         return status
 
 
@@ -454,12 +717,13 @@ class AcadosOcpSolver:
         """
 
         out_fields = ['x', 'u', 'z', 'pi']
+        mem_fields = ['sl', 'su']
         field = field_
         field = field.encode('utf-8')
 
-        if (field_ not in out_fields):
+        if (field_ not in out_fields + mem_fields):
             raise Exception('AcadosOcpSolver.get(): {} is an invalid argument.\
-                    \n Possible values are {}. Exiting.'.format(out_fields))
+                    \n Possible values are {}. Exiting.'.format(field_, out_fields + mem_fields))
 
         self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = \
             [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
@@ -471,10 +735,16 @@ class AcadosOcpSolver:
         out = np.ascontiguousarray(np.zeros((dims,)), dtype=np.float64)
         out_data = cast(out.ctypes.data, POINTER(c_double))
 
-        self.shared_lib.ocp_nlp_out_get.argtypes = \
-            [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
-        self.shared_lib.ocp_nlp_out_get(self.nlp_config, \
-            self.nlp_dims, self.nlp_out, stage_, field, out_data)
+        if (field_ in out_fields):
+            self.shared_lib.ocp_nlp_out_get.argtypes = \
+                [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+            self.shared_lib.ocp_nlp_out_get(self.nlp_config, \
+                self.nlp_dims, self.nlp_out, stage_, field, out_data)
+        elif field_ in mem_fields:
+            self.shared_lib.ocp_nlp_get_at_stage.argtypes = \
+                [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+            self.shared_lib.ocp_nlp_get_at_stage(self.nlp_config, \
+                self.nlp_dims, self.nlp_solver, stage_, field, out_data)
 
         return out
 
@@ -581,11 +851,10 @@ class AcadosOcpSolver:
             value_data = cast(value_.ctypes.data, POINTER(c_double))
             self.shared_lib.acados_update_params(stage, value_data, value_.shape[0])
         else:
-            if (field_ not in constraints_fields) and \
-                    (field_ not in cost_fields) and (field_ not in out_fields):
+            if field_ not in constraints_fields + cost_fields + out_fields:
                 raise Exception("AcadosOcpSolver.set(): {} is not a valid argument.\
-                    \nPossible values are {} and {}. Exiting.".format(field, \
-                    cost_fields, constraints_fields, out_fields))
+                    \nPossible values are {}. Exiting.".format(field, \
+                    constraints_fields + cost_fields + out_fields))
 
             self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = \
                 [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
@@ -713,12 +982,20 @@ class AcadosOcpSolver:
         """
         set options of the solver:
         Parameters:
-            :param field_: string, e.g. 'print_level'
+            :param field_: string, e.g. 'print_level', 'rti_phase'
             :param value_: of type int
         """
         # cast value_ to avoid conversion issues
-        if isinstance(value_, int) is not True:
-            raise Exception('solver options must be of type int. You have {}'.format())
+        if not isinstance(value_, int):
+            raise Exception('solver options must be of type int. You have {}.'.format(type(value_)))
+
+        if field_ == 'rti_phase':
+            if value_ < 0 or value_ > 2:
+                raise Exception('AcadosOcpSolver.solve(): argument \'rti_phase\' can '
+                    'take only values 0, 1, 2 for SQP-RTI-type solvers')
+            if self.acados_ocp.solver_options.nlp_solver_type != 'SQP_RTI' and value_ > 0:
+                raise Exception('AcadosOcpSolver.solve(): argument \'rti_phase\' can '
+                    'take only value 0 for SQP-type solvers')
 
         field = field_
         field = field.encode('utf-8')

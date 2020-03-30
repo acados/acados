@@ -260,6 +260,30 @@ int {{ model.name }}_acados_sim_create()
     {{ model.name }}_sim_solver = sim_solver_create({{ model.name }}_sim_config,
                                                {{ model.name }}_sim_dims, {{ model.name }}_sim_opts);
 
+    /* initialize parameter values */
+    {% if dims.np > 0 %}
+    // initialize parameters to nominal value
+    double p[{{ dims.np }}];
+    {% for i in range(end=dims.np) %}
+    p[{{ i }}] = {{ parameter_values[i] }};
+    {%- endfor %}
+
+{%- if solver_options.integrator_type == "ERK" %}
+    sim_forw_vde_casadi[0].set_param(sim_forw_vde_casadi, p);
+    sim_expl_ode_fun_casadi[0].set_param(sim_expl_ode_fun_casadi, p);
+{%- elif solver_options.integrator_type == "IRK" %}
+    sim_impl_dae_fun[0].set_param(sim_impl_dae_fun, p);
+    sim_impl_dae_fun_jac_x_xdot_z[0].set_param(sim_impl_dae_fun_jac_x_xdot_z, p);
+    sim_impl_dae_jac_x_xdot_u_z[0].set_param(sim_impl_dae_jac_x_xdot_u_z, p);
+{%- elif solver_options.integrator_type == "GNSF" %}
+    sim_gnsf_phi_fun[0].set_param(sim_gnsf_phi_fun, p);
+    sim_gnsf_phi_fun_jac_y[0].set_param(sim_gnsf_phi_fun_jac_y, p);
+    sim_gnsf_phi_jac_y_uhat[0].set_param(sim_gnsf_phi_jac_y_uhat, p);
+    sim_gnsf_f_lo_jac_x1_x1dot_u_z[0].set_param(sim_gnsf_f_lo_jac_x1_x1dot_u_z, p);
+    sim_gnsf_get_matrices_fun[0].set_param(sim_gnsf_get_matrices_fun, p);
+{% endif %}
+    {% endif %}{# if dims.np #}
+
     /* initialize input to */
     // x
     double x0[{{ dims.nx }}];

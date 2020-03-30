@@ -61,24 +61,8 @@ def run_closed_loop_experiment(FORMULATION):
     N = 20
 
     # set dimensions
-    ocp.dims.nx  = nx 
-    ocp.dims.ny  = ny 
-    ocp.dims.ny_e = ny_e 
-    ocp.dims.nu  = model.u.size()[0]
-    ocp.dims.ns = nu 
-    ocp.dims.N   = N
-    ocp.dims.nbu = 1
-
-    if FORMULATION == 0:
-        ocp.dims.nh   = 0
-        ocp.dims.nsh  = 0
-        ocp.dims.nbx  = 1
-        ocp.dims.nsbx = 1
-    elif FORMULATION == 1:
-        ocp.dims.nh   = 1
-        ocp.dims.nsh  = 1
-        ocp.dims.nbx  = 0
-        ocp.dims.nsbx = 0
+    # NOTE: all dimensions but N ar detected
+    ocp.dims.N = N
 
     # set cost module
     ocp.cost.cost_type = 'LINEAR_LS'
@@ -125,9 +109,6 @@ def run_closed_loop_experiment(FORMULATION):
         ocp.constraints.idxbx = np.array([2]) # v is x[2]
         # indices of slacked constraints within bx
         ocp.constraints.idxsbx = np.array([0])
-        # bounds on slack variables
-        ocp.constraints.lsbx = np.zeros((ocp.dims.nsbx, ))
-        ocp.constraints.usbx = np.zeros((ocp.dims.nsbx, ))
 
     elif FORMULATION == 1:
         # soft bound on x, using constraint h
@@ -138,9 +119,6 @@ def run_closed_loop_experiment(FORMULATION):
         ocp.constraints.uh = np.array([+vmax])
         # indices of slacked constraints within h
         ocp.constraints.idxsh = np.array([0])
-        # bounds on slack variables
-        ocp.constraints.lsh = np.zeros((ocp.dims.nh, ))
-        ocp.constraints.ush = np.zeros((ocp.dims.nh, ))
 
     # set options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
@@ -184,6 +162,11 @@ def run_closed_loop_experiment(FORMULATION):
         xcurrent = acados_integrator.get("x")
 
     simX[Nsim,:] = xcurrent
+
+    # get slack values at stage 1
+    sl = acados_ocp_solver.get(1, "sl")
+    su = acados_ocp_solver.get(1, "su")
+    print("sl", sl, "su", su)
 
     # plot results
     plot_pendulum(Tf/N, Fmax, simU, simX, latexify=False)

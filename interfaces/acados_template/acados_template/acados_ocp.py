@@ -69,6 +69,8 @@ class AcadosOcpDims:
         self.__ns_e    = 0
         self.__ng      = 0
         self.__ng_e    = 0
+        self.__nsg     = 0
+        self.__nsg_e   = 0
         self.__N       = None
 
 
@@ -168,6 +170,16 @@ class AcadosOcpDims:
         return self.__nsbu
 
     @property
+    def nsg(self):
+        """:math:`n_{{sg}}` - number of soft general linear constraints"""
+        return self.__nsg
+
+    @property
+    def nsg_e(self):
+        """:math:`n_{{sg}^e}` - number of soft general linear constraints at t=T"""
+        return self.__nsg_e
+
+    @property
     def nsh(self):
         """:math:`n_{{sh}}` - number of soft nonlinear constraints"""
         return self.__nsh
@@ -217,196 +229,210 @@ class AcadosOcpDims:
         if type(nx) == int and nx > 0:
             self.__nx = nx
         else:
-            raise Exception('Invalid nx value. Exiting.')
+            raise Exception('Invalid nx value, expected positive integer. Exiting.')
 
     @nz.setter
     def nz(self, nz):
         if type(nz) == int and nz > -1:
             self.__nz = nz
         else:
-            raise Exception('Invalid nz value. Exiting.')
+            raise Exception('Invalid nz value, expected nonnegative integer. Exiting.')
 
     @nu.setter
     def nu(self, nu):
         if type(nu) == int and nu > -1:
             self.__nu = nu
         else:
-            raise Exception('Invalid nu value. Exiting.')
+            raise Exception('Invalid nu value, expected nonnegative integer. Exiting.')
 
     @np.setter
     def np(self, np):
         if type(np) == int and np > -1:
             self.__np = np
         else:
-            raise Exception('Invalid np value. Exiting.')
+            raise Exception('Invalid np value, expected nonnegative integer. Exiting.')
 
     @ny.setter
     def ny(self, ny):
         if type(ny) == int and ny > -1:
             self.__ny = ny
         else:
-            raise Exception('Invalid ny value. Exiting.')
+            raise Exception('Invalid ny value, expected nonnegative integer. Exiting.')
 
     @ny_e.setter
     def ny_e(self, ny_e):
         if type(ny_e) == int and ny_e > -1:
             self.__ny_e = ny_e
         else:
-            raise Exception('Invalid ny_e value. Exiting.')
+            raise Exception('Invalid ny_e value, expected nonnegative integer. Exiting.')
 
     @nr.setter
     def nr(self, nr):
         if type(nr) == int and nr > -1:
             self.__nr = nr
         else:
-            raise Exception('Invalid nr value. Exiting.')
+            raise Exception('Invalid nr value, expected nonnegative integer. Exiting.')
 
     @nr_e.setter
     def nr_e(self, nr_e):
         if type(nr_e) == int and nr_e > -1:
             self.__nr_e = nr_e
         else:
-            raise Exception('Invalid nr_e value. Exiting.')
+            raise Exception('Invalid nr_e value, expected nonnegative integer. Exiting.')
 
     @nh.setter
     def nh(self, nh):
         if type(nh) == int and nh > -1:
             self.__nh = nh
         else:
-            raise Exception('Invalid nh value. Exiting.')
+            raise Exception('Invalid nh value, expected nonnegative integer. Exiting.')
 
     @nh_e.setter
     def nh_e(self, nh_e):
         if type(nh_e) == int and nh_e > -1:
             self.__nh_e = nh_e
         else:
-            raise Exception('Invalid nh_e value. Exiting.')
+            raise Exception('Invalid nh_e value, expected nonnegative integer. Exiting.')
 
     @nphi.setter
     def nphi(self, nphi):
         if type(nphi) == int and nphi > -1:
             self.__nphi = nphi
         else:
-            raise Exception('Invalid nphi value. Exiting.')
+            raise Exception('Invalid nphi value, expected nonnegative integer. Exiting.')
 
     @nphi_e.setter
     def nphi_e(self, nphi_e):
         if type(nphi_e) == int and nphi_e > -1:
             self.__nphi_e = nphi_e
         else:
-            raise Exception('Invalid nphi_e value. Exiting.')
+            raise Exception('Invalid nphi_e value, expected nonnegative integer. Exiting.')
 
     @nbx.setter
     def nbx(self, nbx):
         if type(nbx) == int and nbx > -1:
             self.__nbx = nbx
         else:
-            raise Exception('Invalid nbx value. Exiting.')
+            raise Exception('Invalid nbx value, expected nonnegative integer. Exiting.')
 
     @nbx_0.setter
     def nbx_0(self, nbx_0):
         if type(nbx_0) == int and nbx_0 > -1:
             self.__nbx_0 = nbx_0
         else:
-            raise Exception('Invalid nbx_0 value. Exiting.')
+            raise Exception('Invalid nbx_0 value, expected nonnegative integer. Exiting.')
 
     @nbx_e.setter
     def nbx_e(self, nbx_e):
         if type(nbx_e) == int and nbx_e > -1:
             self.__nbx_e = nbx_e
         else:
-            raise Exception('Invalid nbx_e value. Exiting.')
+            raise Exception('Invalid nbx_e value, expected nonnegative integer. Exiting.')
 
     @nbu.setter
     def nbu(self, nbu):
         if type(nbu) == int and nbu > -1:
             self.__nbu = nbu
         else:
-            raise Exception('Invalid nbu value. Exiting.')
+            raise Exception('Invalid nbu value, expected nonnegative integer. Exiting.')
 
     @nsbx.setter
     def nsbx(self, nsbx):
         if type(nsbx) == int and nsbx > -1:
             self.__nsbx = nsbx
         else:
-            raise Exception('Invalid nsbx value. Exiting.')
+            raise Exception('Invalid nsbx value, expected nonnegative integer. Exiting.')
 
     @nsbx_e.setter
     def nsbx_e(self, nsbx_e):
         if type(nsbx_e) == int and nsbx_e > -1:
             self.__nsbx_e = nsbx_e
         else:
-            raise Exception('Invalid nsbx_e value. Exiting.')
+            raise Exception('Invalid nsbx_e value, expected nonnegative integer. Exiting.')
 
     @nsbu.setter
     def nsbu(self, nsbu):
         if type(nsbu) == int and nsbu > -1:
             self.__nsbu = nsbu
         else:
-            raise Exception('Invalid nsbu value. Exiting.')
+            raise Exception('Invalid nsbu value, expected nonnegative integer. Exiting.')
+
+    @nsg.setter
+    def nsg(self, nsg):
+        if isinstance(nsg, int) and nsg > -1:
+            self.__nsg = nsg
+        else:
+            raise Exception('Invalid nsg value, expected nonnegative integer. Exiting.')
+
+    @nsg_e.setter
+    def nsg_e(self, nsg_e):
+        if isinstance(nsg_e, int) and nsg_e > -1:
+            self.__nsg_e = nsg_e
+        else:
+            raise Exception('Invalid nsg_e value, expected nonnegative integer. Exiting.')
 
     @nsh.setter
     def nsh(self, nsh):
-        if type(nsh) == int and nsh > -1:
+        if isinstance(nsh, int) and nsh > -1:
             self.__nsh = nsh
         else:
-            raise Exception('Invalid nsh value. Exiting.')
+            raise Exception('Invalid nsh value, expected nonnegative integer. Exiting.')
 
     @nsh_e.setter
     def nsh_e(self, nsh_e):
-        if type(nsh_e) == int and nsh_e > -1:
+        if isinstance(nsh_e, int) and nsh_e > -1:
             self.__nsh_e = nsh_e
         else:
-            raise Exception('Invalid nsh_e value. Exiting.')
+            raise Exception('Invalid nsh_e value, expected nonnegative integer. Exiting.')
 
     @nsphi.setter
     def nsphi(self, nsphi):
-        if type(nsphi) == int and nsphi > -1:
+        if isinstance(nsphi, int) and nsphi > -1:
             self.__nsphi = nsphi
         else:
-            raise Exception('Invalid nsphi value. Exiting.')
+            raise Exception('Invalid nsphi value, expected nonnegative integer. Exiting.')
 
     @nsphi_e.setter
     def nsphi_e(self, nsphi_e):
-        if type(nsphi_e) == int and nsphi_e > -1:
+        if isinstance(nsphi_e, int) and nsphi_e > -1:
             self.__nsphi_e = nsphi_e
         else:
-            raise Exception('Invalid nsphi_e value. Exiting.')
+            raise Exception('Invalid nsphi_e value, expected nonnegative integer. Exiting.')
 
     @ns.setter
     def ns(self, ns):
-        if type(ns) == int and ns > -1:
+        if isinstance(ns, int) and ns > -1:
             self.__ns = ns
         else:
-            raise Exception('Invalid ns value. Exiting.')
+            raise Exception('Invalid ns value, expected nonnegative integer. Exiting.')
 
     @ns_e.setter
     def ns_e(self, ns_e):
-        if type(ns_e) == int and ns_e > -1:
+        if isinstance(ns_e, int) and ns_e > -1:
             self.__ns_e = ns_e
         else:
-            raise Exception('Invalid ns_e value. Exiting.')
+            raise Exception('Invalid ns_e value, expected nonnegative integer. Exiting.')
 
     @ng.setter
     def ng(self, ng):
-        if type(ng) == int and ng > -1:
+        if isinstance(ng, int) and ng > -1:
             self.__ng = ng
         else:
-            raise Exception('Invalid ng value. Exiting.')
+            raise Exception('Invalid ng value, expected nonnegative integer. Exiting.')
 
     @ng_e.setter
     def ng_e(self, ng_e):
-        if type(ng_e) == int and ng_e > -1:
+        if isinstance(ng_e, int) and ng_e > -1:
             self.__ng_e = ng_e
         else:
-            raise Exception('Invalid ng_e value. Exiting.')
+            raise Exception('Invalid ng_e value, expected nonnegative integer. Exiting.')
 
     @N.setter
     def N(self, N):
-        if type(N) == int and N > 0:
+        if isinstance(N, int) and N > 0:
             self.__N = N
         else:
-            raise Exception('Invalid N value. Exiting.')
+            raise Exception('Invalid N value, expected positive integer. Exiting.')
 
     def set(self, attr, value):
         setattr(self, attr, value)
@@ -424,24 +450,24 @@ class AcadosOcpCost:
     def __init__(self):
         # Lagrange term
         self.__cost_type   = 'LINEAR_LS'  # cost type
-        self.__W           = []           # weight matrix
-        self.__Vx          = []           # x matrix coefficient
-        self.__Vu          = []           # u matrix coefficient
-        self.__Vz          = []           # z matrix coefficient
-        self.__yref        = []           # reference
-        self.__Zl          = []           # diagonal of Hessian wrt lower slack
-        self.__Zu          = []           # diagonal of Hessian wrt upper slack
-        self.__zl          = []           # gradient wrt lower slack
-        self.__zu          = []           # gradient wrt upper slack
+        self.__W           = np.zeros((0,0))
+        self.__Vx          = np.zeros((0,0))
+        self.__Vu          = np.zeros((0,0))
+        self.__Vz          = np.zeros((0,0))
+        self.__yref        = np.array([])
+        self.__Zl          = np.array([])
+        self.__Zu          = np.array([])
+        self.__zl          = np.array([])
+        self.__zu          = np.array([])
         # Mayer term
         self.__cost_type_e = 'LINEAR_LS'  # cost type for Mayer term
-        self.__W_e         = []           # weight matrix for Mayer term
-        self.__Vx_e        = []           # x matrix coefficient for Mayer term
-        self.__yref_e      = []           # reference for Mayer term
-        self.__Zl_e        = []           # diagonal of Hessian wrt lower slack for Mayer term
-        self.__Zu_e        = []           # diagonal of Hessian wrt upper slack for Mayer term
-        self.__zl_e        = []           # gradient wrt lower slack for Mayer term
-        self.__zu_e        = []           # gradient wrt upper slack for Mayer term
+        self.__W_e         = np.zeros((0,0))
+        self.__Vx_e        = np.zeros((0,0))
+        self.__yref_e      = np.array([])
+        self.__Zl_e        = np.array([])
+        self.__Zu_e        = np.array([])
+        self.__zl_e        = np.array([])
+        self.__zu_e        = np.array([])
 
     # Lagrange term
     @property
@@ -506,66 +532,71 @@ class AcadosOcpCost:
 
     @W.setter
     def W(self, W):
-        if type(W) == np.ndarray:
+        if isinstance(W, np.ndarray) and len(W.shape) == 2:
             self.__W = W
         else:
-            raise Exception('Invalid W value. Exiting.')
+            raise Exception('Invalid cost W value. ' \
+                + 'Should be 2 dimensional numpy array. Exiting.')
+
 
     @Vx.setter
     def Vx(self, Vx):
-        if type(Vx) == np.ndarray:
+        if isinstance(Vx, np.ndarray) and len(Vx.shape) == 2:
             self.__Vx = Vx
         else:
-            raise Exception('Invalid Vx value. Exiting.')
+            raise Exception('Invalid cost Vx value. ' \
+                + 'Should be 2 dimensional numpy array. Exiting.')
 
     @Vu.setter
     def Vu(self, Vu):
-        if type(Vu) == np.ndarray:
+        if isinstance(Vu, np.ndarray) and len(Vu.shape) == 2:
             self.__Vu = Vu
         else:
-            raise Exception('Invalid Vu value. Exiting.')
+            raise Exception('Invalid cost Vu value. ' \
+                + 'Should be 2 dimensional numpy array. Exiting.')
 
     @Vz.setter
     def Vz(self, Vz):
-        if type(Vz) == np.ndarray:
+        if isinstance(Vz, np.ndarray) and len(Vz.shape) == 2:
             self.__Vz = Vz
         else:
-            raise Exception('Invalid Vz value. Exiting.')
+            raise Exception('Invalid cost Vz value. ' \
+                + 'Should be 2 dimensional numpy array. Exiting.')
 
     @yref.setter
     def yref(self, yref):
-        if type(yref) == np.ndarray:
+        if isinstance(yref, np.ndarray):
             self.__yref = yref
         else:
-            raise Exception('Invalid yref value. Exiting.')
+            raise Exception('Invalid yref value, expected numpy array. Exiting.')
 
     @Zl.setter
     def Zl(self, Zl):
-        if type(Zl) == np.ndarray:
+        if isinstance(Zl, np.ndarray):
             self.__Zl = Zl
         else:
-            raise Exception('Invalid Zl value. Exiting.')
+            raise Exception('Invalid Zl value, expected numpy array. Exiting.')
 
     @Zu.setter
     def Zu(self, Zu):
-        if type(Zu) == np.ndarray:
+        if isinstance(Zu, np.ndarray):
             self.__Zu = Zu
         else:
-            raise Exception('Invalid Zu value. Exiting.')
+            raise Exception('Invalid Zu value, expected numpy array. Exiting.')
 
     @zl.setter
     def zl(self, zl):
-        if type(zl) == np.ndarray:
+        if isinstance(zl, np.ndarray):
             self.__zl = zl
         else:
-            raise Exception('Invalid zl value. Exiting.')
+            raise Exception('Invalid zl value, expected numpy array. Exiting.')
 
     @zu.setter
     def zu(self, zu):
-        if type(zu) == np.ndarray:
+        if isinstance(zu, np.ndarray):
             self.__zu = zu
         else:
-            raise Exception('Invalid zu value. Exiting.')
+            raise Exception('Invalid zu value, expected numpy array. Exiting.')
 
     # Mayer term
     @property
@@ -619,55 +650,58 @@ class AcadosOcpCost:
 
     @W_e.setter
     def W_e(self, W_e):
-        if type(W_e) == np.ndarray:
+        if isinstance(W_e, np.ndarray) and len(W_e.shape) == 2:
             self.__W_e = W_e
         else:
-            raise Exception('Invalid W_e value. Exiting.')
+            raise Exception('Invalid cost W_e value. ' \
+                + 'Should be 2 dimensional numpy array. Exiting.')
 
     @Vx_e.setter
     def Vx_e(self, Vx_e):
-        if type(Vx_e) == np.ndarray:
+        if isinstance(Vx_e, np.ndarray) and len(Vx_e.shape) == 2:
             self.__Vx_e = Vx_e
         else:
-            raise Exception('Invalid Vx_e value. Exiting.')
+            raise Exception('Invalid cost Vx_e value. ' \
+                + 'Should be 2 dimensional numpy array. Exiting.')
 
     @yref_e.setter
     def yref_e(self, yref_e):
-        if type(yref_e) == np.ndarray:
+        if isinstance(yref_e, np.ndarray):
             self.__yref_e = yref_e
         else:
-            raise Exception('Invalid yref_e value. Exiting.')
+            raise Exception('Invalid yref_e value, expected numpy array. Exiting.')
 
     @Zl_e.setter
     def Zl_e(self, Zl_e):
-        if type(Zl_e) == np.ndarray:
+        if isinstance(Zl_e, np.ndarray):
             self.__Zl_e = Zl_e
         else:
-            raise Exception('Invalid Zl_e value. Exiting.')
+            raise Exception('Invalid Zl_e value, expected numpy array. Exiting.')
 
     @Zu_e.setter
     def Zu_e(self, Zu_e):
-        if type(Zu_e) == np.ndarray:
+        if isinstance(Zu_e, np.ndarray):
             self.__Zu_e = Zu_e
         else:
-            raise Exception('Invalid Zu_e value. Exiting.')
+            raise Exception('Invalid Zu_e value, expected numpy array. Exiting.')
 
     @zl_e.setter
     def zl_e(self, zl_e):
-        if type(zl_e) == np.ndarray:
+        if isinstance(zl_e, np.ndarray):
             self.__zl_e = zl_e
         else:
-            raise Exception('Invalid zl_e value. Exiting.')
+            raise Exception('Invalid zl_e value, expected numpy array. Exiting.')
 
     @zu_e.setter
     def zu_e(self, zu_e):
-        if type(zu_e) == np.ndarray:
+        if isinstance(zu_e, np.ndarray):
             self.__zu_e = zu_e
         else:
-            raise Exception('Invalid zu_e value. Exiting.')
+            raise Exception('Invalid zu_e value, expected numpy array. Exiting.')
 
     def set(self, attr, value):
         setattr(self, attr, value)
+
 
 def print_J_to_idx_note():
     print("NOTE: J* matrix is converted to zero based vector idx* vector, which is returned here.")
@@ -678,74 +712,82 @@ class AcadosOcpConstraints:
     class containing the description of the constraints
     """
     def __init__(self):
-        self.__constr_type   = 'BGH'                  # constraint type
-        self.__constr_type_e = 'BGH'                  # constraint type
+        self.__constr_type   = 'BGH'
+        self.__constr_type_e = 'BGH'
         # initial x
-        self.__lbx_0   = []                           # lower bounds on x for initial state
-        self.__ubx_0   = []                           # upper bounds on x for initial state
-        self.__idxbx_0 = []                           # indexes for bounds on x0
+        self.__lbx_0   = np.array([])
+        self.__ubx_0   = np.array([])
+        self.__idxbx_0 = np.array([])
         # state bounds
-        self.__lbx     = []                           # lower bounds on x
-        self.__ubx     = []                           # upper bounds on x
-        self.__idxbx   = []
+        self.__lbx     = np.array([])
+        self.__ubx     = np.array([])
+        self.__idxbx   = np.array([])
         # bounds on x at t=T
-        self.__lbx_e   = []                           # lower bounds on x at t=T
-        self.__ubx_e   = []                           # upper bounds on x at t=T
-        self.__idxbx_e = []
+        self.__lbx_e   = np.array([])
+        self.__ubx_e   = np.array([])
+        self.__idxbx_e = np.array([])
         # bounds on u
-        self.__lbu     = []                           # lower bounds on u
-        self.__ubu     = []                           # upper bounds on u
-        self.__idxbu   = []
+        self.__lbu     = np.array([])
+        self.__ubu     = np.array([])
+        self.__idxbu   = np.array([])
         # polytopic constraints
-        self.__lg      = []                           # lower bound for general polytopic inequalities
-        self.__ug      = []                           # upper bound for general polytopic inequalities
-        self.__D       = []                           # D matrix in lg <= D * u + C * x <= ug
-        self.__C       = []                           # C matrix in lg <= D * u + C * x <= ug
+        self.__lg      = np.array([])
+        self.__ug      = np.array([])
+        self.__D       = np.zeros((0,0))
+        self.__C       = np.zeros((0,0))
         # polytopic constraints at t=T
-        self.__C_e     = []                           # C matrix at t=T
-        self.__lg_e    = []                           # lower bound on general polytopic inequalities at t=T
-        self.__ug_e    = []                           # upper bound on general polytopic inequalities at t=T
+        self.__C_e     = np.zeros((0,0))
+        self.__lg_e    = np.array([])
+        self.__ug_e    = np.array([])
         # nonlinear constraints
-        self.__lh      = []                           # lower bound for nonlinear inequalities
-        self.__uh      = []                           # upper bound for nonlinear inequalities
+        self.__lh      = np.array([])
+        self.__uh      = np.array([])
         # nonlinear constraints at t=T
-        self.__uh_e    = []                           # upper bound on nonlinear inequalities at t=T
-        self.__lh_e    = []                           # lower bound on nonlinear inequalities at t=T
+        self.__uh_e    = np.array([])
+        self.__lh_e    = np.array([])
         # convex-over-nonlinear constraints
-        self.__lphi    = []                           # lower bound for convex-over-nonlinear inequalities
-        self.__uphi    = []                           # upper bound for convex-over-nonlinear inequalities
+        self.__lphi    = np.array([])
+        self.__uphi    = np.array([])
         # nonlinear constraints at t=T
-        self.__uphi_e    = []                         # upper bound on convex-over-nonlinear inequalities at t=T
-        self.__lphi_e    = []                         # lower bound on convex-over-nonlinear inequalities at t=T
+        self.__uphi_e = np.array([])
+        self.__lphi_e = np.array([])
         # SLACK BOUNDS
         # soft bounds on x
-        self.__lsbx   = []                            # lower bounds on slacks corresponding to soft lower bounds on x
-        self.__usbx   = []                            # lower bounds on slacks corresponding to soft upper bounds on x
-        self.__idxsbx = []                            # indexes of soft bounds on x within the indices of bounds on x
+        self.__lsbx   = np.array([])
+        self.__usbx   = np.array([])
+        self.__idxsbx = np.array([])
         # soft bounds on u
-        self.__lsbu   = []                            # lower bounds on slacks corresponding to soft lower bounds on u
-        self.__usbu   = []                            # lower bounds on slacks corresponding to soft upper bounds on u
-        self.__idxsbu = []                            # indexes of soft bounds on u within the indices of bounds on u
+        self.__lsbu   = np.array([])
+        self.__usbu   = np.array([])
+        self.__idxsbu = np.array([])
         # soft bounds on x at t=T
-        self.__lsbx_e  = []                           # lower bounds on slacks corresponding to soft lower bounds on x at t=T
-        self.__usbx_e  = []                           # lower bounds on slacks corresponding to soft upper bounds on x at t=T
-        self.__idxsbx_e= []                           # indexes of soft bounds on x at t=T, within the indices of bounds on x at t=T
+        self.__lsbx_e  = np.array([])
+        self.__usbx_e  = np.array([])
+        self.__idxsbx_e= np.array([])
+        # soft bounds on general linear constraints
+        self.__lsg    = np.array([])
+        self.__usg    = np.array([])
+        self.__idxsg  = np.array([])
         # soft bounds on nonlinear constraints
-        self.__lsh    = []                            # lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints
-        self.__ush    = []                            # lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints
-        self.__idxsh  = []                            # indexes of soft nonlinear constraints within the indices of nonlinear constraints
+        self.__lsh    = np.array([])
+        self.__ush    = np.array([])
+        self.__idxsh  = np.array([])
         # soft bounds on nonlinear constraints
-        self.__lsphi  = []                            # lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints
-        self.__usphi  = []                            # lower bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints
-        self.__idxsphi  = []                          # indexes of soft convex-over-nonlinear constraints within the indices of nonlinear constraints
+        self.__lsphi  = np.array([])
+        self.__usphi  = np.array([])
+        self.__idxsphi  = np.array([])
+        # soft bounds on general linear constraints at t=T
+        self.__lsg_e    = np.array([])
+        self.__usg_e    = np.array([])
+        self.__idxsg_e  = np.array([])
         # soft bounds on nonlinear constraints at t=T
-        self.__lsh_e    = []                          # lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints at t=T
-        self.__ush_e    = []                          # lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints at t=T
-        self.__idxsh_e  = []                          # indexes of soft nonlinear constraints at t=T within the indices of nonlinear constraints at t=T
+        self.__lsh_e    = np.array([])
+        self.__ush_e    = np.array([])
+        self.__idxsh_e  = np.array([])
         # soft bounds on nonlinear constraints at t=T
-        self.__lsphi_e    = []                        # lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints at t=T
-        self.__usphi_e    = []                        # lower bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints at t=T
-        self.__idxsphi_e  = []                        # indexes of soft nonlinear constraints at t=T within the indices of nonlinear constraints at t=T
+        self.__lsphi_e    = np.array([])
+        self.__usphi_e    = np.array([])
+        self.__idxsphi_e  = np.array([])
 
 
     # types
@@ -991,6 +1033,28 @@ class AcadosOcpConstraints:
         print_J_to_idx_note()
         return self.__idxsbx_e
 
+    # soft general linear constraints
+    @property
+    def lsg(self):
+        """lower bounds on slacks corresponding to soft lower bounds for general linear constraints"""
+        return self.__lsg
+
+    @property
+    def usg(self):
+        """upper bounds on slacks corresponding to soft upper bounds for general linear constraints"""
+        return self.__usg
+
+    @property
+    def idxsg(self):
+        """indexes of soft general linear constraints within the indices of general linear constraints"""
+        return self.__idxsg
+
+    @property
+    def Jsg(self):
+        """:math:`J_{sg}` - matrix coefficient for soft bounds on general linear constraints"""
+        print_J_to_idx_note()
+        return self.__idxsg
+
     # soft nonlinear constraints
     @property
     def lsh(self):
@@ -1034,6 +1098,30 @@ class AcadosOcpConstraints:
         """:math:`J_{s, \phi}` - matrix coefficient for soft bounds on convex-over-nonlinear constraints"""
         print_J_to_idx_note()
         return self.__idxsphi
+
+
+    # soft bounds on general linear constraints at t=T
+    @property
+    def lsg_e(self):
+        """lower bounds on slacks corresponding to soft lower bounds for general linear constraints at t=T"""
+        return self.__lsg_e
+
+    @property
+    def usg_e(self):
+        """upper bounds on slacks corresponding to soft upper bounds for general linear constraints at t=T"""
+        return self.__usg_e
+
+    @property
+    def idxsg_e(self):
+        """indexes of soft general linear constraints at t=T within the indices of general linear constraints at t=T"""
+        return self.__idxsg_e
+
+    @property
+    def Jsg_e(self):
+        """:math:`J_{s,h}^e` - matrix coefficient for soft bounds on general linear constraints at t=T"""
+        print_J_to_idx_note()
+        return self.__idxsg_e
+
 
     # soft bounds on nonlinear constraints at t=T
     @property
@@ -1230,17 +1318,19 @@ class AcadosOcpConstraints:
     # polytopic constraints
     @D.setter
     def D(self, D):
-        if type(D) == np.ndarray:
+        if isinstance(D, np.ndarray) and len(D.shape) == 2:
             self.__D = D
         else:
-            raise Exception('Invalid D value. Exiting.')
+            raise Exception('Invalid constraint D value.' \
+                + 'Should be 2 dimensional numpy array. Exiting.')
 
     @C.setter
     def C(self, C):
-        if type(C) == np.ndarray:
+        if isinstance(C, np.ndarray) and len(C.shape) == 2:
             self.__C = C
         else:
-            raise Exception('Invalid C value. Exiting.')
+            raise Exception('Invalid constraint C value.' \
+                + 'Should be 2 dimensional numpy array. Exiting.')
 
     @lg.setter
     def lg(self, lg):
@@ -1259,10 +1349,11 @@ class AcadosOcpConstraints:
     # polytopic constraints at t=T
     @C_e.setter
     def C_e(self, C_e):
-        if type(C_e) == np.ndarray:
+        if isinstance(C_e, np.ndarray) and len(C_e.shape) == 2:
             self.__C_e = C_e
         else:
-            raise Exception('Invalid C_e value. Exiting.')
+            raise Exception('Invalid constraint C_e value.' \
+                + 'Should be 2 dimensional numpy array. Exiting.')
 
     @lg_e.setter
     def lg_e(self, lg_e):
@@ -1426,6 +1517,38 @@ class AcadosOcpConstraints:
         else:
             raise Exception('Invalid Jsbx_e value. Exiting.')
 
+
+    # soft bounds on general linear constraints
+    @lsg.setter
+    def lsg(self, lsg):
+        if isinstance(lsg, np.ndarray):
+            self.__lsg = lsg
+        else:
+            raise Exception('Invalid lsg value. Exiting.')
+
+    @usg.setter
+    def usg(self, usg):
+        if isinstance(usg, np.ndarray):
+            self.__usg = usg
+        else:
+            raise Exception('Invalid usg value. Exiting.')
+
+    @idxsg.setter
+    def idxsg(self, idxsg):
+        if isinstance(idxsg, np.ndarray):
+            self.__idxsg = idxsg
+        else:
+            raise Exception('Invalid idxsg value. Exiting.')
+
+    @Jsg.setter
+    def Jsg(self, Jsg):
+        if isinstance(Jsg, np.ndarray):
+            self.__Jsg = Jsg
+            self.__idxsg = J_to_idx_slack(Jsg)
+        else:
+            raise Exception('Invalid Jsg value. Exiting.')
+
+
     # soft bounds on nonlinear constraints
     @lsh.setter
     def lsh(self, lsh):
@@ -1478,24 +1601,54 @@ class AcadosOcpConstraints:
         else:
             raise Exception('Invalid Jsphi value. Exiting.')
 
+    # soft bounds on general linear constraints at t=T
+    @lsg_e.setter
+    def lsg_e(self, lsg_e):
+        if isinstance(lsg_e, np.ndarray):
+            self.__lsg_e = lsg_e
+        else:
+            raise Exception('Invalid lsg_e value. Exiting.')
+
+    @usg_e.setter
+    def usg_e(self, usg_e):
+        if isinstance(usg_e, np.ndarray):
+            self.__usg_e = usg_e
+        else:
+            raise Exception('Invalid usg_e value. Exiting.')
+
+    @idxsg_e.setter
+    def idxsg_e(self, idxsg_e):
+        if isinstance(idxsg_e, np.ndarray):
+            self.__idxsg_e = idxsg_e
+        else:
+            raise Exception('Invalid idxsg_e value. Exiting.')
+
+    @Jsg_e.setter
+    def Jsg_e(self, Jsg_e):
+        if isinstance(Jsg_e, np.ndarray):
+            self.__Jsg_e = Jsg_e
+            self.__idxsg_e = J_to_idx_slack(Jsg_e)
+        else:
+            raise Exception('Invalid Jsg_e value. Exiting.')
+
     # soft bounds on nonlinear constraints at t=T
     @lsh_e.setter
     def lsh_e(self, lsh_e):
-        if type(lsh_e) == np.ndarray:
+        if isinstance(lsh_e, np.ndarray):
             self.__lsh_e = lsh_e
         else:
             raise Exception('Invalid lsh_e value. Exiting.')
 
     @ush_e.setter
     def ush_e(self, ush_e):
-        if type(ush_e) == np.ndarray:
+        if isinstance(ush_e, np.ndarray):
             self.__ush_e = ush_e
         else:
             raise Exception('Invalid ush_e value. Exiting.')
 
     @idxsh_e.setter
     def idxsh_e(self, idxsh_e):
-        if type(idxsh_e) == np.ndarray:
+        if isinstance(idxsh_e, np.ndarray):
             self.__idxsh_e = idxsh_e
         else:
             raise Exception('Invalid idxsh_e value. Exiting.')
@@ -1503,28 +1656,28 @@ class AcadosOcpConstraints:
     # soft bounds on convex-over-nonlinear constraints at t=T
     @lsphi_e.setter
     def lsphi_e(self, lsphi_e):
-        if type(lsphi_e) == np.ndarray:
+        if isinstance(lsphi_e, np.ndarray):
             self.__lsphi_e = lsphi_e
         else:
             raise Exception('Invalid lsphi_e value. Exiting.')
 
     @usphi_e.setter
     def usphi_e(self, usphi_e):
-        if type(usphi_e) == np.ndarray:
+        if isinstance(usphi_e, np.ndarray):
             self.__usphi_e = usphi_e
         else:
             raise Exception('Invalid usphi_e value. Exiting.')
 
     @idxsphi_e.setter
     def idxsphi_e(self, idxsphi_e):
-        if type(idxsphi_e) == np.ndarray:
+        if isinstance(idxsphi_e, np.ndarray):
             self.__idxsphi_e = idxsphi_e
         else:
             raise Exception('Invalid idxsphi_e value. Exiting.')
 
     @Jsphi_e.setter
     def Jsphi_e(self, Jsphi_e):
-        if type(Jsphi_e) == np.ndarray:
+        if isinstance(Jsphi_e, np.ndarray):
             self.__Jsphi_e = Jsphi_e
             self.__idxsphi_e = J_to_idx_slack(Jsphi_e)
         else:
@@ -1644,7 +1797,8 @@ class AcadosOcpOptions:
     @property
     def tol(self):
         """NLP solver tolerance"""
-        return max([self.__nlp_solver_tol_eq, self.__nlp_solver_tol_ineq, self.__nlp_solver_tol_comp, self.__nlp_solver_tol_stat])
+        return max([self.__nlp_solver_tol_eq, self.__nlp_solver_tol_ineq,\
+                    self.__nlp_solver_tol_comp, self.__nlp_solver_tol_stat])
 
     @property
     def nlp_solver_tol_stat(self):
@@ -1890,7 +2044,6 @@ class AcadosOcpOptions:
 
     @print_level.setter
     def print_level(self, print_level):
-
         if type(print_level) == int and print_level >= 0:
             self.__print_level = print_level
         else:
@@ -1941,7 +2094,7 @@ class AcadosOcp:
         self.acados_include_path = f'{acados_path}/include'
         self.acados_lib_path = f'{acados_path}/lib'
 
-        self.__parameter_values = []
+        self.__parameter_values = np.array([])
 
     @property
     def parameter_values(self):
@@ -1950,10 +2103,11 @@ class AcadosOcp:
 
     @parameter_values.setter
     def parameter_values(self, parameter_values):
-        if type(parameter_values) == np.ndarray:
+        if isinstance(parameter_values, np.ndarray):
             self.__parameter_values = parameter_values
         else:
-            raise Exception('Invalid parameter_values value. Exiting.')
+            raise Exception('Invalid parameter_values value. ' +
+                            f'Expected numpy array, got {type(parameter_values)}.')
 
     def set(self, attr, value):
         # tokenize string

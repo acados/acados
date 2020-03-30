@@ -54,8 +54,10 @@ classdef ocp_nlp_dims_json < handle
         ns_e   % total number of soft bounds at t=T
         nsh    % number of soft bounds on nonlinear constraints
         nsh_e  % number of soft bounds on nonlinear constraints at t=T
-        ng     % number of general constraints
-        ng_e   % number of general constraints at t=T
+        ng     % number of general linear constraints
+        ng_e   % number of general linear constraints at t=T
+        nsg     % number of soft general linear constraints
+        nsg_e   % number of soft general linear constraints at t=T
         N      % prediction horizon
         % Declare convex over nonlinear stuff that should be implemented in MEX
         % TODO..
@@ -89,6 +91,8 @@ classdef ocp_nlp_dims_json < handle
             obj.ns_e   = 0;
             obj.nsh   = 0;
             obj.nsh_e  = 0;
+            obj.nsg   = 0;
+            obj.nsg_e  = 0;
             obj.ng    = 0;
             obj.ng_e   = 0;
             obj.nphi = 0;
