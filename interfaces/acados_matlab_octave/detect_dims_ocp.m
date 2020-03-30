@@ -31,7 +31,7 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
-function model = detect_dims_ocp(model)
+function [model, opts] = detect_dims_ocp(model, opts)
 
     %% general
     model.dim_nx = length(model.sym_x);
@@ -212,4 +212,36 @@ function model = detect_dims_ocp(model)
     end
     model.dim_nh_e = nh_e;
 
+    % TODO: add slack detection!
+
+    % shooting nodes -> time_steps
+    N = opts.param_scheme_N;
+    if ~isempty(opts.shooting_nodes)
+        if N + 1 ~= length(opts.shooting_nodes)
+            error('inconsistent dimension N regarding shooting nodes.');
+        end
+        for i=1:N
+            opts.time_steps(i) = opts.shooting_nodes(i+1) - opts.shooting_nodes(i);
+        end
+        sum_time_steps = sum(opts.time_steps);
+        if abs((sum_time_steps - model.T) / model.T) > 1e-14
+            warning('shooting nodes are not consistent with time horizon T, rescaling automatically');
+            opts.time_steps = opts.time_steps * model.T / sum_time_steps;
+        end
+    elseif ~isempty(opts.time_steps)
+        if N ~= length(opts.time_steps)
+            error('inconsistent dimension N regarding time steps.');
+        end
+        sum_time_steps = sum(opts.time_steps);
+        if abs((sum_time_steps - model.T) / model.T) > 1e-14
+            error(['time steps are not consistent with time horizon T, ', ...
+                'got T = ' num2str(model.T) ' sum(time_steps) = ' num2str(sum_time_steps)]);
+        end
+    else
+        opts.time_steps = model.T/N * ones(N,1);
+    end
+    if any(opts.time_steps < 0)
+        error(['ocp discretization: time_steps between shooting nodes must all be > 0', ...
+            ' got: ' num2str(opts.time_steps)])
+    end
 end

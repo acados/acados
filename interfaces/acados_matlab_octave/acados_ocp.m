@@ -86,8 +86,8 @@ classdef acados_ocp < handle
                 obj.model_struct = detect_constr(obj.model_struct, 1);
             end
 
-            % detect dimensions
-            obj.model_struct = detect_dims_ocp(obj.model_struct);
+            % detect dimensions & sanity checks
+            [obj.model_struct, obj.opts_struct] = detect_dims_ocp(obj.model_struct, obj.opts_struct);
 
             % compile mex interface (without model dependency)
             if ( strcmp(obj.opts_struct.compile_interface, 'true') )

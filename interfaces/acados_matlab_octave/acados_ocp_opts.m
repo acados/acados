@@ -53,7 +53,10 @@ classdef acados_ocp_opts < handle
             obj.opts_struct.compile_model = 'true';
             obj.opts_struct.param_scheme = 'multiple_shooting_unif_grid';
             obj.opts_struct.param_scheme_N = 10;
-            % obj.opts_struct.param_scheme_shooting_nodes % only needed for nonuniform grid
+            % set one of the following for nonuniform grid
+            obj.opts_struct.shooting_nodes = [];
+            obj.opts_struct.time_steps = [];
+
             obj.opts_struct.nlp_solver = 'sqp';
             obj.opts_struct.nlp_solver_exact_hessian = 'false';
             obj.opts_struct.nlp_solver_max_iter = 100;
@@ -98,8 +101,10 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.param_scheme = value;
             elseif (strcmp(field, 'param_scheme_N'))
                 obj.opts_struct.param_scheme_N = value;
-            elseif (strcmp(field, 'param_scheme_shooting_nodes'))
-                obj.opts_struct.param_scheme_shooting_nodes = value;
+            elseif (any(strcmp(field, {'param_scheme_shooting_nodes','shooting_nodes'})))
+                obj.opts_struct.shooting_nodes = value;
+            elseif (strcmp(field, 'time_steps'))
+                obj.opts_struct.time_steps = value;
             elseif (strcmp(field, 'nlp_solver'))
                 obj.opts_struct.nlp_solver = value;
             elseif (strcmp(field, 'nlp_solver_exact_hessian'))

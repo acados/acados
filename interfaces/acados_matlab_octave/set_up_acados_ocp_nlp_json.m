@@ -59,18 +59,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     ocp_json.solver_options.qp_solver_cond_N = obj.opts_struct.qp_solver_cond_N;
     ocp_json.solver_options.qp_solver_iter_max = obj.opts_struct.qp_solver_iter_max;
 
-    if strcmp(obj.opts_struct.param_scheme, 'multiple_shooting_unif_grid')
-        ocp_json.solver_options.time_steps = model.T / ocp_json.dims.N * ones(ocp_json.dims.N,1)
-    else
-        shooting_nodes = obj.opts_struct.param_scheme_shooting_nodes
-        ocp_json.solver_options.time_steps = zeros(ocp_json.dims.N,1)
-        scale = model.T/(shooting_nodes(N+1)-shooting_nodes(1));
-
-        for i = 1:ocp_json.dims.N
-            ocp_json.solver_options.time_steps(i) = scale * shooting_nodes(i+1)-shooting_nodes(i);
-        end
-        warning("Templated MEX with nonuniform grid not tested yet!")
-    end
+    ocp_json.solver_options.time_steps = obj.opts_struct.time_steps
 
     %% dims
     % path
