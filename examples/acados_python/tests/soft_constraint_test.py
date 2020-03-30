@@ -61,15 +61,8 @@ def run_closed_loop_experiment(FORMULATION):
     N = 20
 
     # set dimensions
-    ocp.dims.ns = nu 
-    ocp.dims.N   = N
-
-    if FORMULATION == 0:
-        ocp.dims.nsh  = 0
-        ocp.dims.nsbx = 1
-    elif FORMULATION == 1:
-        ocp.dims.nsh  = 1
-        ocp.dims.nsbx = 0
+    # NOTE: all dimensions but N ar detected
+    ocp.dims.N = N
 
     # set cost module
     ocp.cost.cost_type = 'LINEAR_LS'

@@ -229,210 +229,210 @@ class AcadosOcpDims:
         if type(nx) == int and nx > 0:
             self.__nx = nx
         else:
-            raise Exception('Invalid nx value, expected integer. Exiting.')
+            raise Exception('Invalid nx value, expected positive integer. Exiting.')
 
     @nz.setter
     def nz(self, nz):
         if type(nz) == int and nz > -1:
             self.__nz = nz
         else:
-            raise Exception('Invalid nz value, expected integer. Exiting.')
+            raise Exception('Invalid nz value, expected nonnegative integer. Exiting.')
 
     @nu.setter
     def nu(self, nu):
         if type(nu) == int and nu > -1:
             self.__nu = nu
         else:
-            raise Exception('Invalid nu value, expected integer. Exiting.')
+            raise Exception('Invalid nu value, expected nonnegative integer. Exiting.')
 
     @np.setter
     def np(self, np):
         if type(np) == int and np > -1:
             self.__np = np
         else:
-            raise Exception('Invalid np value, expected integer. Exiting.')
+            raise Exception('Invalid np value, expected nonnegative integer. Exiting.')
 
     @ny.setter
     def ny(self, ny):
         if type(ny) == int and ny > -1:
             self.__ny = ny
         else:
-            raise Exception('Invalid ny value, expected integer. Exiting.')
+            raise Exception('Invalid ny value, expected nonnegative integer. Exiting.')
 
     @ny_e.setter
     def ny_e(self, ny_e):
         if type(ny_e) == int and ny_e > -1:
             self.__ny_e = ny_e
         else:
-            raise Exception('Invalid ny_e value, expected integer. Exiting.')
+            raise Exception('Invalid ny_e value, expected nonnegative integer. Exiting.')
 
     @nr.setter
     def nr(self, nr):
         if type(nr) == int and nr > -1:
             self.__nr = nr
         else:
-            raise Exception('Invalid nr value, expected integer. Exiting.')
+            raise Exception('Invalid nr value, expected nonnegative integer. Exiting.')
 
     @nr_e.setter
     def nr_e(self, nr_e):
         if type(nr_e) == int and nr_e > -1:
             self.__nr_e = nr_e
         else:
-            raise Exception('Invalid nr_e value, expected integer. Exiting.')
+            raise Exception('Invalid nr_e value, expected nonnegative integer. Exiting.')
 
     @nh.setter
     def nh(self, nh):
         if type(nh) == int and nh > -1:
             self.__nh = nh
         else:
-            raise Exception('Invalid nh value, expected integer. Exiting.')
+            raise Exception('Invalid nh value, expected nonnegative integer. Exiting.')
 
     @nh_e.setter
     def nh_e(self, nh_e):
         if type(nh_e) == int and nh_e > -1:
             self.__nh_e = nh_e
         else:
-            raise Exception('Invalid nh_e value, expected integer. Exiting.')
+            raise Exception('Invalid nh_e value, expected nonnegative integer. Exiting.')
 
     @nphi.setter
     def nphi(self, nphi):
         if type(nphi) == int and nphi > -1:
             self.__nphi = nphi
         else:
-            raise Exception('Invalid nphi value, expected integer. Exiting.')
+            raise Exception('Invalid nphi value, expected nonnegative integer. Exiting.')
 
     @nphi_e.setter
     def nphi_e(self, nphi_e):
         if type(nphi_e) == int and nphi_e > -1:
             self.__nphi_e = nphi_e
         else:
-            raise Exception('Invalid nphi_e value, expected integer. Exiting.')
+            raise Exception('Invalid nphi_e value, expected nonnegative integer. Exiting.')
 
     @nbx.setter
     def nbx(self, nbx):
         if type(nbx) == int and nbx > -1:
             self.__nbx = nbx
         else:
-            raise Exception('Invalid nbx value, expected integer. Exiting.')
+            raise Exception('Invalid nbx value, expected nonnegative integer. Exiting.')
 
     @nbx_0.setter
     def nbx_0(self, nbx_0):
         if type(nbx_0) == int and nbx_0 > -1:
             self.__nbx_0 = nbx_0
         else:
-            raise Exception('Invalid nbx_0 value, expected integer. Exiting.')
+            raise Exception('Invalid nbx_0 value, expected nonnegative integer. Exiting.')
 
     @nbx_e.setter
     def nbx_e(self, nbx_e):
         if type(nbx_e) == int and nbx_e > -1:
             self.__nbx_e = nbx_e
         else:
-            raise Exception('Invalid nbx_e value, expected integer. Exiting.')
+            raise Exception('Invalid nbx_e value, expected nonnegative integer. Exiting.')
 
     @nbu.setter
     def nbu(self, nbu):
         if type(nbu) == int and nbu > -1:
             self.__nbu = nbu
         else:
-            raise Exception('Invalid nbu value, expected integer. Exiting.')
+            raise Exception('Invalid nbu value, expected nonnegative integer. Exiting.')
 
     @nsbx.setter
     def nsbx(self, nsbx):
         if type(nsbx) == int and nsbx > -1:
             self.__nsbx = nsbx
         else:
-            raise Exception('Invalid nsbx value, expected integer. Exiting.')
+            raise Exception('Invalid nsbx value, expected nonnegative integer. Exiting.')
 
     @nsbx_e.setter
     def nsbx_e(self, nsbx_e):
         if type(nsbx_e) == int and nsbx_e > -1:
             self.__nsbx_e = nsbx_e
         else:
-            raise Exception('Invalid nsbx_e value, expected integer. Exiting.')
+            raise Exception('Invalid nsbx_e value, expected nonnegative integer. Exiting.')
 
     @nsbu.setter
     def nsbu(self, nsbu):
         if type(nsbu) == int and nsbu > -1:
             self.__nsbu = nsbu
         else:
-            raise Exception('Invalid nsbu value, expected integer. Exiting.')
+            raise Exception('Invalid nsbu value, expected nonnegative integer. Exiting.')
 
     @nsg.setter
     def nsg(self, nsg):
         if isinstance(nsg, int) and nsg > -1:
             self.__nsg = nsg
         else:
-            raise Exception('Invalid nsg value, expected integer. Exiting.')
+            raise Exception('Invalid nsg value, expected nonnegative integer. Exiting.')
 
     @nsg_e.setter
     def nsg_e(self, nsg_e):
         if isinstance(nsg_e, int) and nsg_e > -1:
             self.__nsg_e = nsg_e
         else:
-            raise Exception('Invalid nsg_e value, expected integer. Exiting.')
+            raise Exception('Invalid nsg_e value, expected nonnegative integer. Exiting.')
 
     @nsh.setter
     def nsh(self, nsh):
         if isinstance(nsh, int) and nsh > -1:
             self.__nsh = nsh
         else:
-            raise Exception('Invalid nsh value, expected integer. Exiting.')
+            raise Exception('Invalid nsh value, expected nonnegative integer. Exiting.')
 
     @nsh_e.setter
     def nsh_e(self, nsh_e):
         if isinstance(nsh_e, int) and nsh_e > -1:
             self.__nsh_e = nsh_e
         else:
-            raise Exception('Invalid nsh_e value, expected integer. Exiting.')
+            raise Exception('Invalid nsh_e value, expected nonnegative integer. Exiting.')
 
     @nsphi.setter
     def nsphi(self, nsphi):
         if isinstance(nsphi, int) and nsphi > -1:
             self.__nsphi = nsphi
         else:
-            raise Exception('Invalid nsphi value, expected integer. Exiting.')
+            raise Exception('Invalid nsphi value, expected nonnegative integer. Exiting.')
 
     @nsphi_e.setter
     def nsphi_e(self, nsphi_e):
         if isinstance(nsphi_e, int) and nsphi_e > -1:
             self.__nsphi_e = nsphi_e
         else:
-            raise Exception('Invalid nsphi_e value, expected integer. Exiting.')
+            raise Exception('Invalid nsphi_e value, expected nonnegative integer. Exiting.')
 
     @ns.setter
     def ns(self, ns):
         if isinstance(ns, int) and ns > -1:
             self.__ns = ns
         else:
-            raise Exception('Invalid ns value, expected integer. Exiting.')
+            raise Exception('Invalid ns value, expected nonnegative integer. Exiting.')
 
     @ns_e.setter
     def ns_e(self, ns_e):
         if isinstance(ns_e, int) and ns_e > -1:
             self.__ns_e = ns_e
         else:
-            raise Exception('Invalid ns_e value, expected integer. Exiting.')
+            raise Exception('Invalid ns_e value, expected nonnegative integer. Exiting.')
 
     @ng.setter
     def ng(self, ng):
         if isinstance(ng, int) and ng > -1:
             self.__ng = ng
         else:
-            raise Exception('Invalid ng value, expected integer. Exiting.')
+            raise Exception('Invalid ng value, expected nonnegative integer. Exiting.')
 
     @ng_e.setter
     def ng_e(self, ng_e):
         if isinstance(ng_e, int) and ng_e > -1:
             self.__ng_e = ng_e
         else:
-            raise Exception('Invalid ng_e value, expected integer. Exiting.')
+            raise Exception('Invalid ng_e value, expected nonnegative integer. Exiting.')
 
     @N.setter
     def N(self, N):
         if isinstance(N, int) and N > 0:
             self.__N = N
         else:
-            raise Exception('Invalid N value, expected integer. Exiting.')
+            raise Exception('Invalid N value, expected positive integer. Exiting.')
 
     def set(self, attr, value):
         setattr(self, attr, value)
