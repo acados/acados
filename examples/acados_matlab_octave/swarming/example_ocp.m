@@ -46,8 +46,6 @@ else
 	gnsf_detect_struct = 'false';
 end
 
-%param_scheme = 'single_shooting';
-param_scheme = 'multiple_shooting_unif_grid';
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
 nlp_solver_exact_hessian = 'false';
@@ -186,10 +184,9 @@ ocp_model.model_struct
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_interface', compile_interface);
 ocp_opts.set('codgen_model', codgen_model);
-ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', nb_steps);
-if (strcmp(param_scheme, 'multiple_shooting'))
-	ocp_opts.set('param_scheme_shooting_nodes', shooting_nodes);
+if (exist('shooting_nodes', 'var'))
+	ocp_opts.set('shooting_nodes', shooting_nodes);
 end
 ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);

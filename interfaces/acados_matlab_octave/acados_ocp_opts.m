@@ -51,7 +51,6 @@ classdef acados_ocp_opts < handle
             obj.opts_struct.compile_interface = 'auto'; % auto, true, false
             obj.opts_struct.codgen_model = 'true';
             obj.opts_struct.compile_model = 'true';
-            obj.opts_struct.param_scheme = 'multiple_shooting_unif_grid';
             obj.opts_struct.param_scheme_N = 10;
             % set one of the following for nonuniform grid
             obj.opts_struct.shooting_nodes = [];
@@ -98,7 +97,8 @@ classdef acados_ocp_opts < handle
             elseif (strcmp(field, 'compile_model'))
                 obj.opts_struct.compile_model = value;
             elseif (strcmp(field, 'param_scheme'))
-                obj.opts_struct.param_scheme = value;
+                warning(['param_scheme: option is outdated! Uniform discretization with T/N is default!\n',...
+                         'Set opts.shooting_nodes or opts.time_steps for nonuniform discretizations.'])
             elseif (strcmp(field, 'param_scheme_N'))
                 obj.opts_struct.param_scheme_N = value;
             elseif (any(strcmp(field, {'param_scheme_shooting_nodes','shooting_nodes'})))

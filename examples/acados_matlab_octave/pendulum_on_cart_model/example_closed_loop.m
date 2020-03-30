@@ -54,7 +54,6 @@ sim_sens_forw = 'false'; % true, false
 sim_num_stages = 4;
 sim_num_steps = 4;
 % ocp
-param_scheme = 'multiple_shooting_unif_grid';
 ocp_N = 100;
 %nlp_solver = 'sqp_rti';
 %nlp_solver_exact_hessian = 'false';
@@ -220,7 +219,6 @@ ocp_model.model_struct
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_interface', compile_interface);
 ocp_opts.set('codgen_model', codgen_model);
-ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', ocp_N);
 ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
