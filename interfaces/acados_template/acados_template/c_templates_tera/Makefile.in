@@ -97,7 +97,7 @@
 	{%- set model_external_shared_lib_name = solver_options.model_external_shared_lib_name %}
 {%- endif %}
 
-ACADOS_FLAGS = -fPIC #-fno-diagnostics-show-line-numbers -g
+ACADOS_FLAGS = -fPIC -std=c99 #-fno-diagnostics-show-line-numbers -g
 {%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
 ACADOS_FLAGS += -DACADOS_WITH_QPOASES
 {%- endif %}
