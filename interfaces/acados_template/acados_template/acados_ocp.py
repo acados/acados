@@ -1718,6 +1718,8 @@ class AcadosOcpOptions:
         self.__model_external_shared_lib_name  = None         # name of the the .so lib
         self.__regularize_method = None
         self.__time_steps = None
+        self.__shooting_nodes = None
+
 
 
     @property
@@ -1832,6 +1834,11 @@ class AcadosOcpOptions:
         return self.__time_steps
 
     @property
+    def shooting_nodes(self):
+        """Vector with the shooting nodes, time_steps will be computed from it automatically"""
+        return self.__shooting_nodes
+
+    @property
     def tf(self):
         """Prediction horizon"""
         return self.__tf
@@ -1905,6 +1912,11 @@ class AcadosOcpOptions:
     @time_steps.setter
     def time_steps(self, time_steps):
         self.__time_steps = time_steps
+
+    @shooting_nodes.setter
+    def shooting_nodes(self, shooting_nodes):
+        self.__shooting_nodes = shooting_nodes
+
 
     @Tsim.setter
     def Tsim(self, Tsim):

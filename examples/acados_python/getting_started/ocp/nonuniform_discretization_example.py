@@ -61,11 +61,15 @@ N1 = 10
 N2 = N - N1
 
 time_steps = .5 * np.concatenate( (( 0.1 * np.ones(N1,)), 0.2 * (np.ones(N2,))))
-ocp.solver_options.time_steps = time_steps
 
 shooting_nodes = np.zeros((N+1,))
 for i in range(len(time_steps)):
     shooting_nodes[i+1] = shooting_nodes[i] + time_steps[i]
+
+# nonuniform discretizations can be defined either by shooting_nodes or time_steps:
+ocp.solver_options.shooting_nodes = shooting_nodes
+# ocp.solver_options.time_steps = time_steps
+
 
 # set cost
 Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
@@ -121,11 +125,9 @@ for i in range(N):
     simU[i,:] = ocp_solver.get(i, "u")
 simX[N,:] = ocp_solver.get(N, "x")
 
-# ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
+ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
 
 # print("simU", simU)
 # print("simX", simX)
 
 plot_pendulum(shooting_nodes, Fmax, simU, simX, latexify=False)
-
-# import pdb; pdb.set_trace()

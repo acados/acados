@@ -368,14 +368,26 @@ def make_ocp_dims_consistent(acados_ocp):
     dims.ns_e = ns_e
 
     # discretization
-    if is_empty(opts.time_steps):
+    if is_empty(opts.time_steps) and is_empty(opts.shooting_nodes):
         # uniform discretization
         opts.time_steps = opts.tf / dims.N * np.ones((dims.N,))
-    else:
-        tf = np.sum(opts.time_steps)
-        if (tf - opts.tf) / tf > 1e-15:
-            raise Exception(f'Inconsistent discretization: {opts.tf}'\
-                f' = tf != sum(opts.time_steps) = {tf}.')
+
+    elif not is_empty(opts.shooting_nodes):
+        if np.shape(opts.shooting_nodes)[0] != dims.N+1:
+            raise Exception('inconsistent dimension N, regarding shooting_nodes.')
+
+        time_steps = np.zeros((dims.N,))
+        for i in range(dims.N):
+            time_steps[i] = opts.shooting_nodes[i+1] - opts.shooting_nodes[i]
+        opts.time_steps = time_steps
+
+    elif (not is_empty(opts.time_steps)) and (not is_empty(opts.shooting_nodes)):
+        Exception('Please provide either time_steps or shooting_nodes for nonuniform discretization')
+
+    tf = np.sum(opts.time_steps)
+    if (tf - opts.tf) / tf > 1e-15:
+        raise Exception(f'Inconsistent discretization: {opts.tf}'\
+            f' = tf != sum(opts.time_steps) = {tf}.')
 
 
 
@@ -454,10 +466,13 @@ def ocp_formulation_json_dump(acados_ocp, json_file='acados_ocp_nlp.json'):
         # Copy ocp object attributes dictionaries
         ocp_nlp_dict[acados_struct]=dict(getattr(acados_ocp, acados_struct).__dict__)
 
+    ocp_nlp_dict = format_class_dict(ocp_nlp_dict)
+
     # strip symbolics
     ocp_nlp_dict['model'] = acados_model_strip_casadi_symbolics(ocp_nlp_dict['model'])
 
-    ocp_nlp_dict = format_class_dict(ocp_nlp_dict)
+    # strip shooting_nodes
+    ocp_nlp_dict['solver_options'].pop('shooting_nodes', None)
 
     dims_dict = acados_class2dict(acados_ocp.dims)
 
