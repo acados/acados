@@ -688,7 +688,7 @@ int acados_create()
     nlp_in = ocp_nlp_in_create(nlp_config, nlp_dims);
 
     double time_steps[N];
-    {% for j in range(end=dims.N) %}
+    {%- for j in range(end=dims.N) %}
     time_steps[{{ j }}] = {{ solver_options.time_steps[j] }};
     {%- endfor %}
 

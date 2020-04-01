@@ -57,13 +57,13 @@ int main()
 
     // initial condition
     int idxbx0[{{ dims.nbx_0 }}];
-    {% for i in range(end=dims.nbx_0) %}
+    {%- for i in range(end=dims.nbx_0) %}
     idxbx0[{{ i }}] = {{ constraints.idxbx_0[i] }};
     {%- endfor %}
 
     double lbx0[{{ dims.nbx_0 }}];
     double ubx0[{{ dims.nbx_0 }}];
-    {% for i in range(end=dims.nbx_0) %}
+    {%- for i in range(end=dims.nbx_0) %}
     lbx0[{{ i }}] = {{ constraints.lbx_0[i] }};
     ubx0[{{ i }}] = {{ constraints.ubx_0[i] }};
     {%- endfor %}
@@ -134,7 +134,7 @@ int main()
     double xtraj[{{ dims.nx }} * ({{ dims.N }}+1)];
     double utraj[{{ dims.nu }} * ({{ dims.N }})];
 
-    
+
     // solve ocp in loop
     int rti_phase = 0;
 

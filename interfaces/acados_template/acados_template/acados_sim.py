@@ -43,10 +43,10 @@ class AcadosSimDims:
     class containing the dimensions of the model to be simulated
     """
     def __init__(self):
-        self.__nx      = None
-        self.__nu      = None
-        self.__nz      = 0
-        self.__np      = 0
+        self.__nx = None
+        self.__nu = None
+        self.__nz = 0
+        self.__np = 0
 
     @property
     def nx(self):
@@ -73,28 +73,28 @@ class AcadosSimDims:
         if type(nx) == int and nx > 0:
             self.__nx = nx
         else:
-            raise Exception('Invalid nx value. Exiting.')
+            raise Exception('Invalid nx value, expected positive integer. Exiting.')
 
     @nz.setter
     def nz(self, nz):
         if type(nz) == int and nz > -1:
             self.__nz = nz
         else:
-            raise Exception('Invalid nz value. Exiting.')
+            raise Exception('Invalid nz value, expected positive integer. Exiting.')
 
     @nu.setter
     def nu(self, nu):
-        if type(nu) == int and nu > 0:
+        if type(nu) == int and nu > -1:
             self.__nu = nu
         else:
-            raise Exception('Invalid nu value. Exiting.')
+            raise Exception('Invalid nu value, expected positive integer. Exiting.')
 
     @np.setter
     def np(self, np):
         if type(np) == int and np > -1:
             self.__np = np
         else:
-            raise Exception('Invalid np value. Exiting.')
+            raise Exception('Invalid np value, expected positive integer. Exiting.')
 
     def set(self, attr, value):
         setattr(self, attr, value)
@@ -139,7 +139,6 @@ class AcadosSimOpts:
     @integrator_type.setter
     def integrator_type(self, integrator_type):
         integrator_types = ('ERK', 'IRK', 'GNSF')
-
         if type(integrator_type) == str and integrator_type in integrator_types:
             self.__integrator_type = integrator_type
         else:
