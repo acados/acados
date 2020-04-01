@@ -179,6 +179,8 @@ int main()
     ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, "kkt_norm_inf", &kkt_norm_inf);
     ocp_nlp_get(nlp_config, nlp_solver, "sqp_iter", &sqp_iter);
 
+    acados_print_stats();
+
     printf("\nSolver info:\n");
     printf(" SQP iterations %2d\n minimum time for 1 solve %f [ms]\n KKT %e\n",
            sqp_iter, min_time*1000, kkt_norm_inf);

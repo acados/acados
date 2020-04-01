@@ -1866,3 +1866,36 @@ ocp_nlp_config * acados_get_nlp_config() { return  nlp_config; }
 void * acados_get_nlp_opts() { return  nlp_opts; }
 ocp_nlp_dims * acados_get_nlp_dims() { return  nlp_dims; }
 ocp_nlp_plan * acados_get_nlp_plan() { return  nlp_solver_plan; }
+
+
+void acados_print_stats()
+{
+    int sqp_iter, stat_m, stat_n, tmp_int;
+    ocp_nlp_get(nlp_config, nlp_solver, "sqp_iter", &sqp_iter);
+    ocp_nlp_get(nlp_config, nlp_solver, "stat_n", &stat_n);
+    ocp_nlp_get(nlp_config, nlp_solver, "stat_m", &stat_m);
+
+    {% set stat_n_max = 10 %}
+    double stat[{{ solver_options.nlp_solver_max_iter * stat_n_max }}];
+    ocp_nlp_get(nlp_config, nlp_solver, "statistics", stat);
+
+    int nrow = sqp_iter+1 < stat_m ? sqp_iter+1 : stat_m;
+
+    printf("iter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp_stat\tqp_iter\n");
+    for (int i = 0; i < nrow; i++)
+    {
+        for (int j = 0; j < stat_n + 1; j++)
+        {
+            if (j == 0 || j > 4)
+            {
+                tmp_int = (int) stat[i + j * nrow];
+                printf("%d\t", tmp_int);
+            }
+            else
+            {
+                printf("%e\t", stat[i + j * nrow]);
+            }
+        }
+        printf("\n");
+    }
+}
