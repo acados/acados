@@ -80,21 +80,21 @@ class AcadosSimDims:
         if type(nz) == int and nz > -1:
             self.__nz = nz
         else:
-            raise Exception('Invalid nz value, expected positive integer. Exiting.')
+            raise Exception('Invalid nz value, expected nonnegative integer. Exiting.')
 
     @nu.setter
     def nu(self, nu):
         if type(nu) == int and nu > -1:
             self.__nu = nu
         else:
-            raise Exception('Invalid nu value, expected positive integer. Exiting.')
+            raise Exception('Invalid nu value, expected nonnegative integer. Exiting.')
 
     @np.setter
     def np(self, np):
         if type(np) == int and np > -1:
             self.__np = np
         else:
-            raise Exception('Invalid np value, expected positive integer. Exiting.')
+            raise Exception('Invalid np value, expected nonnegative integer. Exiting.')
 
     def set(self, attr, value):
         setattr(self, attr, value)
