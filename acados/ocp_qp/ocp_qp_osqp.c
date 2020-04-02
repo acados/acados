@@ -34,6 +34,14 @@
 
 #include <assert.h>
 
+// acados
+#include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/ocp_qp/ocp_qp_osqp.h"
+#include "acados/utils/mem.h"
+#include "acados/utils/print.h"
+#include "acados/utils/timing.h"
+#include "acados/utils/types.h"
+
 // osqp
 #include "osqp/include/auxil.h"
 #include "osqp/include/constants.h"
@@ -43,14 +51,6 @@
 #include "osqp/include/types.h"
 #include "osqp/include/util.h"
 #include "osqp/include/lin_sys.h"
-
-// acados
-#include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/ocp_qp/ocp_qp_osqp.h"
-#include "acados/utils/mem.h"
-#include "acados/utils/print.h"
-#include "acados/utils/timing.h"
-#include "acados/utils/types.h"
 
 
 
