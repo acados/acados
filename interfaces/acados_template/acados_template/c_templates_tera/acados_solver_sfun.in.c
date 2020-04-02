@@ -346,7 +346,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     /* call solver */
     int rti_phase = 0;
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "rti_phase", rti_phase);
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "rti_phase", &rti_phase);
     int acados_status = acados_solve();
 
 
