@@ -69,7 +69,8 @@ extern ocp_nlp_plan * nlp_solver_plan;
 extern ocp_nlp_config * nlp_config;
 extern ocp_nlp_dims * nlp_dims;
 
-// external functions
+/* external functions */
+// dynamics
 {% if solver_options.integrator_type == "ERK" %}
 extern external_function_param_casadi * forw_vde_casadi;
 {% if solver_options.hessian_approx == "EXACT" %}
@@ -79,8 +80,32 @@ extern external_function_param_casadi * hess_vde_casadi;
 extern external_function_param_casadi * impl_dae_fun;
 extern external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
 extern external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
+{%- if solver_options.hessian_approx == "EXACT" %}
+extern external_function_param_casadi * impl_dae_hess;
+{%- endif %}
+{% elif solver_options.integrator_type == "GNSF" %}
+extern external_function_param_casadi * gnsf_phi_fun;
+extern external_function_param_casadi * gnsf_phi_fun_jac_y;
+extern external_function_param_casadi * gnsf_phi_jac_y_uhat;
+extern external_function_param_casadi * gnsf_f_lo_jac_x1_x1dot_u_z;
+extern external_function_param_casadi * gnsf_get_matrices_fun;
 {%- endif %}
 
+// cost
+{% if cost.cost_type == "NONLINEAR_LS" %}
+extern external_function_param_casadi * cost_y_fun;
+{%- elif cost.cost_type == "EXTERNAL" %}
+extern external_function_param_casadi * ext_cost_fun;
+extern external_function_param_casadi * ext_cost_fun_jac_hess;
+{% endif %}
+{% if cost.cost_type_e == "NONLINEAR_LS" %}
+extern external_function_param_casadi cost_y_e_fun;
+{% elif cost.cost_type_e == "EXTERNAL" %}
+extern external_function_param_casadi ext_cost_e_fun;
+extern external_function_param_casadi ext_cost_e_fun_jac_hess;
+{%- endif %}
+
+// constraints
 {%- if constraints.constr_type == "BGP" %}
 extern external_function_param_casadi * phi_constraint;
 // extern external_function_param_casadi * r_constraint;
@@ -93,13 +118,6 @@ extern external_function_param_casadi phi_e_constraint;
 // extern external_function_param_casadi r_e_constraint;
 {% elif constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
 extern external_function_param_casadi h_e_constraint;
-{%- endif %}
-
-{% if cost.cost_type == "NONLINEAR_LS" %}
-extern external_function_param_casadi * cost_y_fun;
-{% endif %}
-{% if cost.cost_type_e == "NONLINEAR_LS" %}
-extern external_function_param_casadi cost_y_e_fun;
 {%- endif %}
 
 
