@@ -49,7 +49,7 @@ from .generate_c_code_external_cost import generate_c_code_external_cost
 from .acados_ocp import AcadosOcp
 from .acados_model import acados_model_strip_casadi_symbolics
 from .utils import is_column, is_empty, casadi_length, render_template, acados_class2dict,\
-     format_class_dict, ocp_check_json_against_layout, np_array_to_list, make_model_consistent
+     format_class_dict, ocp_check_against_layout, np_array_to_list, make_model_consistent
 
 
 def make_ocp_dims_consistent(acados_ocp):
@@ -57,6 +57,7 @@ def make_ocp_dims_consistent(acados_ocp):
     cost = acados_ocp.cost
     constraints = acados_ocp.constraints
     model = acados_ocp.model
+    opts = acados_ocp.solver_options
 
     # nx
     if is_column(model.x):
@@ -369,6 +370,28 @@ def make_ocp_dims_consistent(acados_ocp):
 
     dims.ns_e = ns_e
 
+    # discretization
+    if is_empty(opts.time_steps) and is_empty(opts.shooting_nodes):
+        # uniform discretization
+        opts.time_steps = opts.tf / dims.N * np.ones((dims.N,))
+
+    elif not is_empty(opts.shooting_nodes):
+        if np.shape(opts.shooting_nodes)[0] != dims.N+1:
+            raise Exception('inconsistent dimension N, regarding shooting_nodes.')
+
+        time_steps = np.zeros((dims.N,))
+        for i in range(dims.N):
+            time_steps[i] = opts.shooting_nodes[i+1] - opts.shooting_nodes[i]
+        opts.time_steps = time_steps
+
+    elif (not is_empty(opts.time_steps)) and (not is_empty(opts.shooting_nodes)):
+        Exception('Please provide either time_steps or shooting_nodes for nonuniform discretization')
+
+    tf = np.sum(opts.time_steps)
+    if (tf - opts.tf) / tf > 1e-15:
+        raise Exception(f'Inconsistent discretization: {opts.tf}'\
+            f' = tf != sum(opts.time_steps) = {tf}.')
+
 
 
 def set_up_imported_gnsf_model(acados_ocp):
@@ -446,14 +469,17 @@ def ocp_formulation_json_dump(acados_ocp, json_file='acados_ocp_nlp.json'):
         # Copy ocp object attributes dictionaries
         ocp_nlp_dict[acados_struct]=dict(getattr(acados_ocp, acados_struct).__dict__)
 
+    ocp_nlp_dict = format_class_dict(ocp_nlp_dict)
+
     # strip symbolics
     ocp_nlp_dict['model'] = acados_model_strip_casadi_symbolics(ocp_nlp_dict['model'])
 
-    ocp_nlp_dict = format_class_dict(ocp_nlp_dict)
+    # strip shooting_nodes
+    ocp_nlp_dict['solver_options'].pop('shooting_nodes', None)
 
     dims_dict = acados_class2dict(acados_ocp.dims)
 
-    ocp_check_json_against_layout(ocp_nlp_dict, dims_dict)
+    ocp_check_against_layout(ocp_nlp_dict, dims_dict)
 
     with open(json_file, 'w') as f:
         json.dump(ocp_nlp_dict, f, default=np_array_to_list, indent=4, sort_keys=True)
@@ -648,6 +674,7 @@ class AcadosOcpSolver:
     """
     def __init__(self, acados_ocp, json_file='acados_ocp_nlp.json'):
 
+        self.solver_created = False
         model = acados_ocp.model
 
         # make dims consistent
@@ -657,7 +684,7 @@ class AcadosOcpSolver:
             set_up_imported_gnsf_model(acados_ocp)
 
         # set integrator time automatically
-        acados_ocp.solver_options.Tsim = acados_ocp.solver_options.tf / acados_ocp.dims.N
+        acados_ocp.solver_options.Tsim = acados_ocp.solver_options.time_steps[0]
 
         # generate external functions
         ocp_generate_external_functions(acados_ocp, model)
@@ -679,6 +706,7 @@ class AcadosOcpSolver:
         # get
         self.shared_lib = CDLL(self.shared_lib_name)
         self.shared_lib.acados_create()
+        self.solver_created = True
 
         self.shared_lib.acados_get_nlp_opts.restype = c_void_p
         self.nlp_opts = self.shared_lib.acados_get_nlp_opts()
@@ -1011,8 +1039,9 @@ class AcadosOcpSolver:
 
 
     def __del__(self):
-        self.shared_lib.acados_free()
-        del self.shared_lib
+        if self.solver_created:
+            self.shared_lib.acados_free()
+            del self.shared_lib
 
         # NOTE: DLL cannot be easily unloaded!!!
         # see https://stackoverflow.com/questions/359498/how-can-i-unload-a-dll-using-ctypes-in-python

@@ -45,6 +45,7 @@ int acados_create();
 int acados_update_params(int stage, double *value, int np);
 int acados_solve();
 int acados_free();
+void acados_print_stats();
 
 ocp_nlp_in * acados_get_nlp_in();
 ocp_nlp_out * acados_get_nlp_out();

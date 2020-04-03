@@ -284,7 +284,7 @@ int {{ model.name }}_acados_sim_create()
 {% endif %}
     {% endif %}{# if dims.np #}
 
-    /* initialize input to */
+    /* initialize input */
     // x
     double x0[{{ dims.nx }}];
     for (int ii = 0; ii < {{ dims.nx }}; ii++)

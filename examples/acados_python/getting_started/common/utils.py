@@ -36,10 +36,10 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
-def plot_pendulum(h, u_max, U, X_true, X_est=None, Y_measured=None, latexify=False):
+def plot_pendulum(shooting_nodes, u_max, U, X_true, X_est=None, Y_measured=None, latexify=False):
     """
     Params:
-        h: time step
+        shooting_nodes: time values of the discretization
         u_max: maximum absolute value of u
         U: arrray with shape (N_sim-1, nu) or (N_sim, nu)
         X_true: arrray with shape (N_sim, nx)
@@ -68,21 +68,21 @@ def plot_pendulum(h, u_max, U, X_true, X_est=None, Y_measured=None, latexify=Fal
     N_sim = X_true.shape[0]
     nx = X_true.shape[1]
 
-    Tf = N_sim*h
-    t = np.linspace(0.0, Tf, N_sim)
+    Tf = shooting_nodes[N_sim-1]
+    t = shooting_nodes
 
     if WITH_ESTIMATION:
         N_mhe = N_sim - X_est.shape[0]
         t_mhe = np.linspace(N_mhe, Tf, N_sim)
 
     plt.subplot(nx+1, 1, 1)
-    plt.step(t[:U.shape[0]], U, color='r')
+    plt.step(t, np.append([U[0]], U), color='r')
     plt.title('closed-loop simulation')
     plt.ylabel('$u$')
     plt.xlabel('$t$')
-    plt.hlines(u_max, t[0], t[-2], linestyles='dashed', alpha=0.7)
-    plt.hlines(-u_max, t[0], t[-2], linestyles='dashed', alpha=0.7 )
-    plt.ylim([1.2*u_max, -1.2*u_max])
+    plt.hlines(u_max, t[0], t[-1], linestyles='dashed', alpha=0.7)
+    plt.hlines(-u_max, t[0], t[-1], linestyles='dashed', alpha=0.7)
+    plt.ylim([-1.2*u_max, 1.2*u_max])
     plt.grid()
 
     states_lables = ['$x$', r'$\theta$', '$v$', r'$\dot{\theta}$']

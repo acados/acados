@@ -119,4 +119,4 @@ for i in range(N):
     simU[i,:] = ocp_solver.get(i, "u")
 simX[N,:] = ocp_solver.get(N, "x")
 
-plot_pendulum(Tf/N, Fmax, simU, simX)
+plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX)

@@ -55,11 +55,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     /* RHS */
     int min_nrhs = 5;
 
-    // model_struct
-    char *ext_fun_type;
-    const mxArray *matlab_model = prhs[0];
-    if (mxGetField( matlab_model, 0, "ext_fun_type" )!=NULL)
-        ext_fun_type = mxArrayToString( mxGetField( matlab_model, 0, "ext_fun_type" ) );
+    char *ext_fun_type = mxArrayToString( prhs[0] );
 
     // C ocp
     const mxArray *C_ocp = prhs[1];
@@ -95,8 +91,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int matlab_size = (int) mxGetNumberOfElements( prhs[4] );
     int nrow = (int) mxGetM( prhs[4] );
     int ncol = (int) mxGetN( prhs[4] );
-
-    // mexPrintf("\nocp_set: %s, matlab_size %d\n", field, matlab_size);
 
     int N = dims->N;
     int nu = dims->nu[0];

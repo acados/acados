@@ -49,7 +49,6 @@ codgen_model = 'true'; % true, false
 % codgen_model = 'false'; % true, false
 
 % ocp
-param_scheme = 'multiple_shooting_unif_grid';
 N = 20;
 nlp_solver = 'sqp'; % sqp, sqp_rti
 nlp_solver_exact_hessian = 'false';
@@ -182,7 +181,6 @@ ocp_opts = acados_ocp_opts();
 
 ocp_opts.set('compile_interface', compile_interface);
 ocp_opts.set('codgen_model', codgen_model);
-ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', N);
 ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);

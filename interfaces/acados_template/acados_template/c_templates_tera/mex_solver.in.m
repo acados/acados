@@ -36,6 +36,7 @@ classdef {{ model.name }}_mex_solver < handle
     properties
         C_ocp
         C_ocp_ext_fun
+        ext_fun_type
     end % properties
 
 
@@ -48,6 +49,7 @@ classdef {{ model.name }}_mex_solver < handle
             [obj.C_ocp, obj.C_ocp_ext_fun] = acados_mex_create_{{ model.name }}();
             % to have path to destructor when changing directory
             addpath('.')
+            obj.ext_fun_type = "casadi";
         end
 
         % destructor
@@ -71,10 +73,10 @@ classdef {{ model.name }}_mex_solver < handle
                 error('field must be a char vector, use '' ''');
             end
             if nargin==3
-                ocp_set(obj.C_ocp, obj.C_ocp_ext_fun, field, value);
+                ocp_set(obj.ext_fun_type, obj.C_ocp, obj.C_ocp_ext_fun, field, value);
             elseif nargin==4
                 stage = varargin{4};
-                ocp_set(obj.C_ocp, obj.C_ocp_ext_fun, field, value, stage);
+                ocp_set(obj.ext_fun_type, obj.C_ocp, obj.C_ocp_ext_fun, field, value, stage);
             else
                 disp('acados_ocp.set: wrong number of input arguments (2 or 3 allowed)');
             end

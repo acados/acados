@@ -569,6 +569,12 @@
         ]
     },
     "solver_options": {
+        "time_steps": [
+            "ndarray",
+            [
+                "N"
+            ]
+        ],
         "hessian_approx": [
             "str"
         ],

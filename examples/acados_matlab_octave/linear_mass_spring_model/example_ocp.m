@@ -45,9 +45,7 @@ end
 %% arguments
 compile_interface = 'auto';
 codgen_model = 'true';
-param_scheme = 'multiple_shooting_unif_grid';
-%param_scheme = 'multiple_shooting';
-%shooting_nodes = [0 0.1 0.2 0.3 0.5 1];;
+%shooting_nodes = [0 0.1 0.2 0.3 0.5 1];
 N = 20;
 model_name = 'lin_mass';
 
@@ -246,9 +244,8 @@ ocp_model.model_struct
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_interface', compile_interface);
 ocp_opts.set('codgen_model', codgen_model);
-ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', N);
-if (strcmp(param_scheme, 'multiple_shooting'))
+if (exist('shooting_nodes', 'var'))
 	ocp_opts.set('param_scheme_shooting_nodes', shooting_nodes);
 end
 ocp_opts.set('nlp_solver', nlp_solver);

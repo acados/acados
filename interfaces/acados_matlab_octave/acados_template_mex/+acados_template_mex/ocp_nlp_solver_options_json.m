@@ -31,27 +31,45 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
-classdef acados_dae < handle
+classdef ocp_nlp_solver_options_json < handle
     properties
-        f_impl_expr
-        f_expl_expr
-        x
-        xdot
-        u
-        z
-        name
-        p
+        qp_solver              %  qp solver to be used in the NLP solver
+        hessian_approx         %  hessian approximation
+        integrator_type        %  integrator type
+        tf                     %  prediction horizon
+        Tsim
+        time_steps
+        nlp_solver_type        %  NLP solver
+        sim_method_num_steps   %  number of steps in integrator
+        sim_method_num_stages  %  size of butcher tableau
+        sim_method_newton_iter
+        nlp_solver_max_iter
+        qp_solver_cond_N
+        nlp_solver_tol_stat
+        nlp_solver_tol_eq
+        nlp_solver_tol_ineq
+        nlp_solver_tol_comp
+        nlp_solver_step_length
+        qp_solver_iter_max
+        print_level
     end
     methods
-        function obj = acados_dae()
-            obj.f_impl_expr = [];
-            obj.f_expl_expr = [];
-            obj.x = [];
-            obj.xdot = [];
-            obj.u = [];
-            obj.z = [];
-            obj.name = [];
-            obj.p = [];
+        function obj = ocp_nlp_solver_options_json()
+            obj.qp_solver       = 'PARTIAL_CONDENSING_HPIPM';
+            obj.hessian_approx  = 'GAUSS_NEWTON';
+            obj.integrator_type = 'ERK';
+            obj.tf              = [];
+            obj.Tsim              = [];
+            obj.nlp_solver_type = 'SQP_RTI';
+            obj.sim_method_num_steps = 1;
+            obj.sim_method_num_stages = 2;
+            obj.sim_method_newton_iter = 3;
+            obj.nlp_solver_max_iter = 50;
+            obj.qp_solver_cond_N = [];
+            obj.nlp_solver_step_length = 1.0;
+            obj.qp_solver_iter_max = [];
+            obj.print_level = 0;
+            obj.time_steps = [];
         end
     end
 end

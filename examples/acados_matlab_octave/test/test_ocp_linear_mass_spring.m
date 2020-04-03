@@ -41,8 +41,6 @@ addpath('../linear_mass_spring_model/');
 %% arguments
 compile_interface = 'auto';
 codgen_model = 'true';
-% param_scheme = 'multiple_shooting_unif_grid';
-param_scheme = 'multiple_shooting';
 N = 20;
 shooting_nodes = [ linspace(0,1,N/2) linspace(1.1,5,N/2+1) ];
 
@@ -222,10 +220,9 @@ end
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_interface', compile_interface);
 ocp_opts.set('codgen_model', codgen_model);
-ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', N);
-if (strcmp(param_scheme, 'multiple_shooting'))
-	ocp_opts.set('param_scheme_shooting_nodes', shooting_nodes);
+if (exist('shooting_nodes', 'var'))
+	ocp_opts.set('shooting_nodes', shooting_nodes);
 end
 ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);

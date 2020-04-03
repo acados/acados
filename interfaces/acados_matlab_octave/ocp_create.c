@@ -1014,53 +1014,27 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
 
     /* discretization grid */
-    // param_scheme_shooting_nodes
-    double *param_scheme_shooting_nodes;
+    // time_steps
+    double *time_steps;
 
-    // parametrization scheme
-    char *param_scheme = mxArrayToString( mxGetField( matlab_opts, 0, "param_scheme" ) );
-    if (!strcmp(param_scheme, "multiple_shooting_unif_grid"))
+    if (mxGetField( matlab_opts, 0, "time_steps" )!=NULL)
     {
-        double Ts = T/N;
+        int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_opts, 0, "time_steps" ));
+        int acados_size = N;
+        MEX_DIM_CHECK_VEC(fun_name, "time_steps", matlab_size, acados_size);
+
+        time_steps = mxGetPr( mxGetField( matlab_opts, 0, "time_steps" ) );
         for (int ii=0; ii<N; ii++)
         {
-            ocp_nlp_in_set(config, dims, in, ii, "Ts", &Ts);
-            ocp_nlp_cost_model_set(config, dims, in, ii, "scaling", &Ts);
-        }
-    }
-    else if (!strcmp(param_scheme, "multiple_shooting"))
-    {
-        if (mxGetField( matlab_opts, 0, "param_scheme_shooting_nodes" )!=NULL)
-        {
-            int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_opts, 0,
-                                                            "param_scheme_shooting_nodes" ) );
-            int acados_size = N+1;
-            MEX_DIM_CHECK_VEC(fun_name, "param_scheme_shooting_nodes", matlab_size, acados_size);
-
-            param_scheme_shooting_nodes = mxGetPr( mxGetField( matlab_opts, 0, "param_scheme_shooting_nodes" ) );
-            double scale = T/(param_scheme_shooting_nodes[N]-param_scheme_shooting_nodes[0]);
-            for (int ii=0; ii<N; ii++)
-            {
-                if (param_scheme_shooting_nodes[ii+1]-param_scheme_shooting_nodes[ii] <= 0)
-                {
-                    sprintf(buffer, "%s: param_scheme_shooting_nodes must be in ascending order!", fun_name);
-                    mexErrMsgTxt(buffer);
-                }
-                double Ts = scale*(param_scheme_shooting_nodes[ii+1]-param_scheme_shooting_nodes[ii]);
-                ocp_nlp_in_set(config, dims, in, ii, "Ts", &Ts);
-                ocp_nlp_cost_model_set(config, dims, in, ii, "scaling", &Ts);
-            }
-        }
-        else
-        {
-            MEX_MISSING_ARGUMENT_MODULE(fun_name, "param_scheme_shooting_nodes", "multiple_shooting")
+            ocp_nlp_in_set(config, dims, in, ii, "Ts", &time_steps[ii]);
+            ocp_nlp_cost_model_set(config, dims, in, ii, "scaling", &time_steps[ii]);
         }
     }
     else
     {
-        MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "param_scheme", param_scheme,
-                             "multiple_shooting, multiple_shooting_unif_grid");
+        MEX_MISSING_ARGUMENT(fun_name, "time_steps")
     }
+
 
     /* out */
     ocp_nlp_out *out = ocp_nlp_out_create(config, dims);

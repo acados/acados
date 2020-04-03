@@ -44,7 +44,6 @@ for itest = 1:3
     gnsf_detect_struct = 'true';
 
     % discretization
-    param_scheme = 'multiple_shooting_unif_grid';
     N = 100;
     h = 0.01;
 
@@ -215,7 +214,6 @@ for itest = 1:3
     ocp_opts = acados_ocp_opts();
     ocp_opts.set('compile_interface', compile_interface);
     ocp_opts.set('codgen_model', codgen_model);
-    ocp_opts.set('param_scheme', param_scheme);
     ocp_opts.set('param_scheme_N', N);
     ocp_opts.set('nlp_solver', nlp_solver);
     ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);

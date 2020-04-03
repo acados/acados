@@ -248,7 +248,7 @@ def acados_class2dict(class_instance):
     return out
 
 
-def ocp_check_json_against_layout(ocp_nlp, ocp_dims):
+def ocp_check_against_layout(ocp_nlp, ocp_dims):
     """
     Check dimensions against layout
     Parameters
@@ -265,24 +265,30 @@ def ocp_check_json_against_layout(ocp_nlp, ocp_dims):
     with open(acados_path + '/acados_layout.json', 'r') as f:
         ocp_nlp_layout = json.load(f)
 
-    ocp_check_json_against_layout_recursion(ocp_nlp, ocp_dims, ocp_nlp_layout)
+    ocp_check_against_layout_recursion(ocp_nlp, ocp_dims, ocp_nlp_layout)
     return
 
 
 
-def ocp_check_json_against_layout_recursion(ocp_nlp, ocp_dims, ocp_nlp_layout):
+def ocp_check_against_layout_recursion(ocp_nlp, ocp_dims, layout):
 
     for key, item in ocp_nlp.items():
 
-        if isinstance(item, dict):
-            ocp_check_json_against_layout_recursion(item, ocp_dims, ocp_nlp_layout[key])
+        try:
+            layout_of_key = layout[key]
+        except KeyError:
+            raise Exception("ocp_check_against_layout_recursion: field" \
+                            " '{0}' is not in layout but in OCP description.".format(key))
 
-        if 'ndarray' in ocp_nlp_layout[key]:
+        if isinstance(item, dict):
+            ocp_check_against_layout_recursion(item, ocp_dims, layout_of_key)
+
+        if 'ndarray' in layout_of_key:
             if isinstance(item, int) or isinstance(item, float):
                 item = np.array([item])
-        if isinstance(item, (list, np.ndarray)) and (ocp_nlp_layout[key][0] != 'str'):
+        if isinstance(item, (list, np.ndarray)) and (layout_of_key[0] != 'str'):
             dim_layout = []
-            dim_names = ocp_nlp_layout[key][1]
+            dim_names = layout_of_key[1]
 
             for dim_name in dim_names:
                 dim_layout.append(ocp_dims[dim_name])

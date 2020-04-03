@@ -81,7 +81,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     if (status)
     {
-        mexPrintf("acados_create() returned status %d. Exiting.\n", status); 
+        mexPrintf("acados_create() returned status %d. Exiting.\n", status);
         exit(1);
     }
 

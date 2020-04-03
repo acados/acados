@@ -48,7 +48,6 @@ codgen_model = 'true';
 gnsf_detect_struct = 'true';
 model_name = 'masses_chain';
 
-param_scheme = 'multiple_shooting_unif_grid';
 N = 40;
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
@@ -212,7 +211,6 @@ end
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_interface', compile_interface);
 ocp_opts.set('codgen_model', codgen_model);
-ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', N);
 ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);

@@ -57,13 +57,13 @@ int main()
 
     // initial condition
     int idxbx0[{{ dims.nbx_0 }}];
-    {% for i in range(end=dims.nbx_0) %}
+    {%- for i in range(end=dims.nbx_0) %}
     idxbx0[{{ i }}] = {{ constraints.idxbx_0[i] }};
     {%- endfor %}
 
     double lbx0[{{ dims.nbx_0 }}];
     double ubx0[{{ dims.nbx_0 }}];
-    {% for i in range(end=dims.nbx_0) %}
+    {%- for i in range(end=dims.nbx_0) %}
     lbx0[{{ i }}] = {{ constraints.lbx_0[i] }};
     ubx0[{{ i }}] = {{ constraints.ubx_0[i] }};
     {%- endfor %}
@@ -134,9 +134,9 @@ int main()
     double xtraj[{{ dims.nx }} * ({{ dims.N }}+1)];
     double utraj[{{ dims.nu }} * ({{ dims.N }})];
 
-    
+
     // solve ocp in loop
-    int rti_phase = 0; 
+    int rti_phase = 0;
 
     for (int ii = 0; ii < NTIMINGS; ii++)
     {
@@ -178,6 +178,8 @@ int main()
     // get solution
     ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, "kkt_norm_inf", &kkt_norm_inf);
     ocp_nlp_get(nlp_config, nlp_solver, "sqp_iter", &sqp_iter);
+
+    acados_print_stats();
 
     printf("\nSolver info:\n");
     printf(" SQP iterations %2d\n minimum time for 1 solve %f [ms]\n KKT %e\n",
