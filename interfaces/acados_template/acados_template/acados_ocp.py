@@ -935,12 +935,12 @@ class AcadosOcpConstraints:
     # nonlinear constraints at t=T
     @property
     def lh_e(self):
-        """:math:`\\bar{h}^e` - upper bound on nonlinear inequalities at t=T"""
+        """:math:`\\underline{h}^e` - lower bound on nonlinear inequalities at t=T"""
         return self.__lh_e
 
     @property
     def uh_e(self):
-        """:math:`\\underline{h}^e` - lower bound on nonlinear inequalities at t=T"""
+        """:math:`\\bar{h}^e` - upper bound on nonlinear inequalities at t=T"""
         return self.__uh_e
 
     # convex-over-nonlinear constraints
