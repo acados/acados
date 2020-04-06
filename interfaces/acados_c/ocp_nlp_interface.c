@@ -540,7 +540,9 @@ int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
     {
         return dims->nz[stage];
     }
-    else if (!strcmp(field, "sl") || !strcmp(field, "su"))
+    else if (!strcmp(field, "sl") || !strcmp(field, "su") || !strcmp(field, "s") ||
+             !strcmp(field, "zl") || !strcmp(field, "zu") || !strcmp(field, "cost_z") ||
+             !strcmp(field, "Zl") || !strcmp(field, "Zu") || !strcmp(field, "cost_Z"))
     {
         return dims->ns[stage];
     }
@@ -568,12 +570,6 @@ int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
     {
         config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage],
                                             "ng", &dims_value);
-        return dims_value;
-    }
-    else if (!strcmp(field, "s"))
-    {
-        config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage],
-                                            "ns", &dims_value);
         return dims_value;
     }
     // ocp_nlp_cost_dims
