@@ -2120,7 +2120,7 @@ class AcadosOcp:
 
     @property
     def parameter_values(self):
-        """:math:`p` - initial values for parameter"""
+        """:math:`p` - initial values for parameter - can be updated stagewise"""
         return self.__parameter_values
 
     @parameter_values.setter
