@@ -37,7 +37,6 @@ clear all
 
 addpath('../linear_mass_spring_model/');
 
-
 %% arguments
 compile_interface = 'auto';
 codgen_model = 'true';
@@ -59,10 +58,9 @@ nlp_solver_ext_qp_res = 1;
 qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
 qp_solver_cond_N = 5;
-%dyn_type = 'discrete';
-sim_method = 'erk';
 % sim_method = 'irk';
 %sim_method = 'irk_gnsf';
+sim_method = 'discrete'
 sim_method_num_stages = 4;
 sim_method_num_steps = 3;
 %cost_type = 'linear_ls';
@@ -71,9 +69,12 @@ cost_type = 'ext_cost';
 
 if strcmp(sim_method, 'erk')
     dyn_type = 'explicit';
-else % irk, irk_gnsf
-    dyn_type = 'implicit';
+elseif any(strcmp(sim_method, {'irk','irk_gnsf'}))
+	dyn_type = 'implicit';
+else
+	dyn_type = 'discrete';
 end
+
 
 %% create model entries
 model = linear_mass_spring_model;
@@ -279,7 +280,8 @@ if status~=0
 elseif sqp_iter > 2
     error('ocp can be solved in 2 iterations!');
 else
-	fprintf('\ntest_ocp_linear_mass_spring: success!\n');
+	fprintf(['\ntest_ocp_linear_mass_spring: success with sim method ', ...
+        sim_method, ' !\n']);
 end
 
 % plot result
