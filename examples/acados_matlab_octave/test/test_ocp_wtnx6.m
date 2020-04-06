@@ -477,6 +477,11 @@ for ii=1:n_sim
 
 end
 
+% test setter
+ocp.set('cost_z', ones(2,1), 1)
+ocp.set('cost_Z', ones(2,1), 1)
+ocp.set('cost_zl', ones(2,1), N-1)
+
 electrical_power = 0.944*97/100*x_sim(1,:).*x_sim(6,:);
 
 x_sim_ref = [   1.263425730522397
