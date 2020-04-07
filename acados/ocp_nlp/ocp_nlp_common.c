@@ -559,7 +559,6 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
 void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const char *field,
                                   const void* value_)
 {
-    // to set dimension nbx, nbu, ng, nh, nq (quadratic over nonlinear)
     ocp_nlp_config *config = config_;
     ocp_nlp_dims *dims = dims_;
 

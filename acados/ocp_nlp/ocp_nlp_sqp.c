@@ -753,7 +753,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
-        // ocp_nlp_dims_print(nlp_out->dims);
+        // printf("ocp_nlp dims:\n");
+        // ocp_nlp_dims_print(dims);
         // ocp_nlp_out_print(nlp_out);
         // exit(1);
 
