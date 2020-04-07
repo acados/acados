@@ -2312,7 +2312,7 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
     int *nu = dims->nu;
     int *ni = dims->ni;
 
-    double tmp_res;
+    double tmp_res, tmp;
 
     // res_g
     res->inf_norm_res_g = 0.0;
@@ -2339,9 +2339,24 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
     res->inf_norm_res_d = 0.0;
     for (int ii = 0; ii <= N; ii++)
     {
+        // res_d = ineq_fun + slacks
         blasfeo_daxpy(2 * ni[ii], 1.0, out->t + ii, 0, mem->ineq_fun + ii, 0, res->res_d + ii, 0);
-        blasfeo_dvecnrm_inf(2 * ni[ii], res->res_d + ii, 0, &tmp_res);
+        // tmp_res = inf_norm(res_d[ regarding only violated constraints, i.e. res_d > 0 ])
+        for (int k = 0; k < 2*ni[ii]; k++)
+        {
+            tmp = blasfeo_dvecex1(res->res_d + ii, k);
+            if (tmp > 0)
+            {
+                tmp_res = tmp > tmp_res ? tmp : tmp_res;
+            }
+        }
+        // if (ii < 1)
+        // {
+        //     printf("residual ineq vector at ii %d\n", ii);
+        //     blasfeo_print_dvec(2*ni[ii], res->res_d + ii, 0);
+        // }
         res->inf_norm_res_d = tmp_res > res->inf_norm_res_d ? tmp_res : res->inf_norm_res_d;
+        // printf("residual: tmp_res %e, ii %d\n", tmp_res, ii);
     }
 
     // res_m
