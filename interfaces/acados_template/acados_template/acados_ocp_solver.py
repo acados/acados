@@ -744,7 +744,7 @@ class AcadosOcpSolver:
             :param field_: string in ['x', 'u', 'z', 'pi']
         """
 
-        out_fields = ['x', 'u', 'z', 'pi']
+        out_fields = ['x', 'u', 'z', 'pi', 'lam', 't']
         mem_fields = ['sl', 'su']
         field = field_
         field = field.encode('utf-8')
