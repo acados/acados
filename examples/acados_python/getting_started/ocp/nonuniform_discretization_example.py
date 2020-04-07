@@ -132,6 +132,9 @@ print(ocp_solver.get(1, "t")) # slack values at stage 1
 print("multipliers of dynamic conditions between stage 1 and 2")
 print(ocp_solver.get(1, "pi")) # multipliers of dynamic conditions between stage 1 and 2
 
+# initialize ineq multipliers and slacks at stage 1
+ocp_solver.set(1, "lam", np.zeros(2,))
+ocp_solver.set(1, "t", np.zeros(2,))
 
 ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
 
