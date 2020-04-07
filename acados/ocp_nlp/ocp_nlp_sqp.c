@@ -612,31 +612,31 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // compute nlp residuals
         ocp_nlp_res_compute(dims, nlp_in, nlp_out, mem->nlp_res, nlp_mem);
 
-        nlp_out->inf_norm_res = mem->nlp_res->inf_norm_res_g;
-        nlp_out->inf_norm_res = (mem->nlp_res->inf_norm_res_b > nlp_out->inf_norm_res) ?
-                                    mem->nlp_res->inf_norm_res_b :
+        nlp_out->inf_norm_res = mem->nlp_res->inf_norm_res_stat;
+        nlp_out->inf_norm_res = (mem->nlp_res->inf_norm_res_eq > nlp_out->inf_norm_res) ?
+                                    mem->nlp_res->inf_norm_res_eq :
                                     nlp_out->inf_norm_res;
-        nlp_out->inf_norm_res = (mem->nlp_res->inf_norm_res_d > nlp_out->inf_norm_res) ?
-                                    mem->nlp_res->inf_norm_res_d :
+        nlp_out->inf_norm_res = (mem->nlp_res->inf_norm_res_ineq > nlp_out->inf_norm_res) ?
+                                    mem->nlp_res->inf_norm_res_ineq :
                                     nlp_out->inf_norm_res;
-        nlp_out->inf_norm_res = (mem->nlp_res->inf_norm_res_m > nlp_out->inf_norm_res) ?
-                                    mem->nlp_res->inf_norm_res_m :
+        nlp_out->inf_norm_res = (mem->nlp_res->inf_norm_res_comp > nlp_out->inf_norm_res) ?
+                                    mem->nlp_res->inf_norm_res_comp :
                                     nlp_out->inf_norm_res;
 
         // save statistics
         if (sqp_iter < mem->stat_m)
         {
-            mem->stat[mem->stat_n*sqp_iter+0] = mem->nlp_res->inf_norm_res_g;
-            mem->stat[mem->stat_n*sqp_iter+1] = mem->nlp_res->inf_norm_res_b;
-            mem->stat[mem->stat_n*sqp_iter+2] = mem->nlp_res->inf_norm_res_d;
-            mem->stat[mem->stat_n*sqp_iter+3] = mem->nlp_res->inf_norm_res_m;
+            mem->stat[mem->stat_n*sqp_iter+0] = mem->nlp_res->inf_norm_res_stat;
+            mem->stat[mem->stat_n*sqp_iter+1] = mem->nlp_res->inf_norm_res_eq;
+            mem->stat[mem->stat_n*sqp_iter+2] = mem->nlp_res->inf_norm_res_ineq;
+            mem->stat[mem->stat_n*sqp_iter+3] = mem->nlp_res->inf_norm_res_comp;
         }
 
         // exit conditions on residuals
-        if ((mem->nlp_res->inf_norm_res_g < opts->tol_stat) &
-            (mem->nlp_res->inf_norm_res_b < opts->tol_eq) &
-            (mem->nlp_res->inf_norm_res_d < opts->tol_ineq) &
-            (mem->nlp_res->inf_norm_res_m < opts->tol_comp))
+        if ((mem->nlp_res->inf_norm_res_stat < opts->tol_stat) &
+            (mem->nlp_res->inf_norm_res_eq < opts->tol_eq) &
+            (mem->nlp_res->inf_norm_res_ineq < opts->tol_ineq) &
+            (mem->nlp_res->inf_norm_res_comp < opts->tol_comp))
         {
             // save sqp iterations number
             mem->sqp_iter = sqp_iter;
@@ -773,8 +773,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         //        }
         if (opts->print_level > 0)
         {
-            printf("Residuals: stat: %e, eq: %e, ineq: %e, comp: %e.\n", mem->nlp_res->inf_norm_res_g,
-                    mem->nlp_res->inf_norm_res_b, mem->nlp_res->inf_norm_res_d, mem->nlp_res->inf_norm_res_m );
+            printf("Residuals: stat: %e, eq: %e, ineq: %e, comp: %e.\n", mem->nlp_res->inf_norm_res_stat,
+                    mem->nlp_res->inf_norm_res_eq, mem->nlp_res->inf_norm_res_ineq, mem->nlp_res->inf_norm_res_comp );
         }
 
     }
@@ -802,8 +802,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     if (opts->print_level > 0)
     {
-        printf("Residuals: stat: %e, eq: %e, ineq: %e, comp: %e.\n", mem->nlp_res->inf_norm_res_g,
-            mem->nlp_res->inf_norm_res_b, mem->nlp_res->inf_norm_res_d, mem->nlp_res->inf_norm_res_m );
+        printf("Residuals: stat: %e, eq: %e, ineq: %e, comp: %e.\n", mem->nlp_res->inf_norm_res_stat,
+                mem->nlp_res->inf_norm_res_eq, mem->nlp_res->inf_norm_res_ineq, mem->nlp_res->inf_norm_res_comp );
     }
 
     return mem->status;

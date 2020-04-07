@@ -191,13 +191,13 @@ typedef struct
     /// Length of sampling intervals/timesteps.
     double *Ts;
 
-    /// Pointers to cost functions (TBC).
+    /// Pointers to cost models.
     void **cost;
 
-    /// Pointers to dynamics functions (TBC).
+    /// Pointers to dynamics models.
     void **dynamics;
 
-    /// Pointers to constraints functions (TBC).
+    /// Pointers to constraints models.
     void **constraints;
 
 } ocp_nlp_in;
@@ -370,14 +370,14 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
 
 typedef struct
 {
-    struct blasfeo_dvec *res_g;  // stationarity
-    struct blasfeo_dvec *res_b;  // dynamics
-    struct blasfeo_dvec *res_d;  // inequality constraints
-    struct blasfeo_dvec *res_m;  // complementarity
-    double inf_norm_res_g;
-    double inf_norm_res_b;
-    double inf_norm_res_d;
-    double inf_norm_res_m;
+    struct blasfeo_dvec *res_stat;  // stationarity
+    struct blasfeo_dvec *res_eq;  // dynamics
+    struct blasfeo_dvec *res_ineq;  // inequality constraints
+    struct blasfeo_dvec *res_comp;  // complementarity
+    double inf_norm_res_stat;
+    double inf_norm_res_eq;
+    double inf_norm_res_ineq;
+    double inf_norm_res_comp;
     int memsize;
 } ocp_nlp_res;
 
