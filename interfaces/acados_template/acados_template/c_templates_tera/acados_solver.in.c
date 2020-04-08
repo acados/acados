@@ -236,8 +236,7 @@ int acados_create()
     int nz[N+1];
     int ny[N+1];
     int nr[N+1];
-    int nr_e[N+1];
-
+    int nbxe[N+1];
 
     for (int i = 0; i < N+1; i++)
     {
@@ -260,12 +259,14 @@ int acados_create()
         nh[i]     = NH;
         nphi[i]   = NPHI;
         nr[i]     = NR;
+        nbxe[i]   = 0;
     }
 
     // for initial state
     nbx[0]  = NBX0;
     nsbx[0] = 0;
     ns[0] = NS - NSBX;
+    nbxe[0] = {{ dims.nbxe_0 }};
 
     // terminal - common
     nu[N]   = 0;
@@ -303,6 +304,7 @@ int acados_create()
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsbu", &nsbu[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "ng", &ng[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsg", &nsg[i]);
+        ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nbxe", &nbxe[i]);
     }
 
     for (int i = 0; i < N; i++)
@@ -925,7 +927,14 @@ int acados_create()
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", lbx0);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", ubx0);
 {% endif %}
-
+{% if dims.nbxe_0 > 0 %}
+    // idxbxe_0
+    int idxbxe_0[{{ dims.nbxe_0 }}];
+    {% for i in range(end=dims.nbxe_0) %}
+    idxbxe_0[{{ i }}] = {{ constraints.idxbxe_0[i] }};
+    {%- endfor %}
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxbxe", idxbxe_0);
+{% endif %}
 
     /* constraints that are the same for initial and intermediate */
 {%- if dims.nsbx > 0 %}

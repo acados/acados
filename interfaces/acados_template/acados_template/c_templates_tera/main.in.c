@@ -125,7 +125,7 @@ int main()
   {% endif %}{# if np > 0 #}
 
     // prepare evaluation
-    int NTIMINGS = 1;
+    int NTIMINGS = 20;
     double min_time = 1e12;
     double kkt_norm_inf;
     double elapsed_time;
@@ -182,8 +182,8 @@ int main()
     acados_print_stats();
 
     printf("\nSolver info:\n");
-    printf(" SQP iterations %2d\n minimum time for 1 solve %f [ms]\n KKT %e\n",
-           sqp_iter, min_time*1000, kkt_norm_inf);
+    printf(" SQP iterations %2d\n minimum time for %d solve %f [ms]\n KKT %e\n",
+           sqp_iter, NTIMINGS, min_time*1000, kkt_norm_inf);
 
     // free solver
     status = acados_free();

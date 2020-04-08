@@ -71,6 +71,7 @@ class AcadosOcpDims:
         self.__ng_e    = 0
         self.__nsg     = 0
         self.__nsg_e   = 0
+        self.__nbxe_0  = 0
         self.__N       = None
 
 
@@ -138,6 +139,11 @@ class AcadosOcpDims:
     def nbx(self):
         """:math:`n_{b_x}` - number of state bounds"""
         return self.__nbx
+
+    @property
+    def nbxe_0(self):
+        """:math:`n_{be_{x0}}` - number of state bounds at initial shooting node that are equalities"""
+        return self.__nbxe_0
 
     @property
     def nbx_0(self):
@@ -310,10 +316,17 @@ class AcadosOcpDims:
 
     @nbx.setter
     def nbx(self, nbx):
-        if type(nbx) == int and nbx > -1:
+        if isinstance(nbx, int) and nbx > -1:
             self.__nbx = nbx
         else:
             raise Exception('Invalid nbx value, expected nonnegative integer. Exiting.')
+
+    @nbxe_0.setter
+    def nbxe_0(self, nbxe_0):
+        if isinstance(nbxe_0, int) and nbxe_0 > -1:
+            self.__nbxe_0 = nbxe_0
+        else:
+            raise Exception('Invalid nbxe_0 value, expected nonnegative integer. Exiting.')
 
     @nbx_0.setter
     def nbx_0(self, nbx_0):
@@ -718,6 +731,7 @@ class AcadosOcpConstraints:
         self.__lbx_0   = np.array([])
         self.__ubx_0   = np.array([])
         self.__idxbx_0 = np.array([])
+        self.__idxbxe_0 = np.array([])
         # state bounds
         self.__lbx     = np.array([])
         self.__ubx     = np.array([])
@@ -816,6 +830,11 @@ class AcadosOcpConstraints:
     def idxbx_0(self):
         """indexes of bounds on x0"""
         return self.__idxbx_0
+
+    @property
+    def idxbxe_0(self):
+        """indexes of bounds on x0 that are equalities (set automatically)"""
+        return self.__idxbxe_0
 
     # bounds on x
     @property
@@ -1174,6 +1193,7 @@ class AcadosOcpConstraints:
         print("idxbx_0: ", self.__idxbx_0)
         print("lbx_0: ", self.__lbx_0)
         print("ubx_0: ", self.__ubx_0)
+        print("idxbxe_0: ", self.__idxbxe_0)
         return None
 
     # SETTERS
@@ -1214,10 +1234,18 @@ class AcadosOcpConstraints:
 
     @idxbx_0.setter
     def idxbx_0(self, idxbx_0):
-        if type(idxbx_0) == np.ndarray:
+        if isinstance(idxbx_0, np.ndarray):
             self.__idxbx_0 = idxbx_0
         else:
             raise Exception('Invalid idxbx_0 value. Exiting.')
+
+    @idxbxe_0.setter
+    def idxbxe_0(self, idxbxe_0):
+        if isinstance(idxbxe_0, np.ndarray):
+            self.__idxbxe_0 = idxbxe_0
+        else:
+            raise Exception('Invalid idxbxe_0 value. Exiting.')
+
 
     @x0.setter
     def x0(self, x0):
@@ -1225,6 +1253,7 @@ class AcadosOcpConstraints:
             self.__lbx_0 = x0
             self.__ubx_0 = x0
             self.__idxbx_0 = np.arange(x0.size)
+            self.__idxbxe_0 = np.arange(x0.size)
         else:
             raise Exception('Invalid x0 value. Exiting.')
 

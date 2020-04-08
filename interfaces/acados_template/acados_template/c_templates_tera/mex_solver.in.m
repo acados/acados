@@ -49,7 +49,7 @@ classdef {{ model.name }}_mex_solver < handle
             [obj.C_ocp, obj.C_ocp_ext_fun] = acados_mex_create_{{ model.name }}();
             % to have path to destructor when changing directory
             addpath('.')
-            obj.ext_fun_type = "casadi";
+            obj.ext_fun_type = 'casadi';
         end
 
         % destructor
