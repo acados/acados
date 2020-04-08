@@ -743,7 +743,18 @@ class AcadosOcpSolver:
         """
         get the last solution of the solver:
             :param stage: integer corresponding to shooting node
-            :param field_: string in ['x', 'u', 'z', 'pi']
+            :param field_: string in ['x', 'u', 'z', 'pi', 'lam', 't', 'sl', 'su',]
+
+            .. note:: regarding lam, t: \n
+                    the inequalities are internally organized in the following order: \n
+                    [ lbu lbx lg lh lphi ubu ubx ug uh uphi; \n
+                      lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
+
+            .. note:: pi: multipliers for dynamics equality constraints \n
+                      lam: multipliers for inequalities \n
+                      t: values corresponding to inequality evaluations (at the solution) \n
+                      sl: lower slacks of slacked constraints \n
+                      su: upper slacks of slacked constraints \n
         """
 
         out_fields = ['x', 'u', 'z', 'pi', 'lam', 't']

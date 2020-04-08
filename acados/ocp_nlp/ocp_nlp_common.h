@@ -166,7 +166,7 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage,
 /// \param config_ The configuration struct.
 /// \param dims_ The dimension struct.
 /// \param stage Stage number.
-/// \param field Type of cost term, can be eiter ny (or others TBC).
+/// \param field Type of cost term, can be eiter ny.
 /// \param value_field Number of cost terms/residuals for the given stage.
 void ocp_nlp_dims_set_cost(void *config_, void *dims_, int stage, const char *field,
                            const void* value_field);
@@ -182,10 +182,10 @@ void ocp_nlp_dims_set_dynamics(void *config_, void *dims_, int stage, const char
                                const void* value);
 
 /************************************************
- * Inputs to the non-linear program
+ * Inputs
  ************************************************/
 
-/// Struct for storing the inputs of a non-linear program.
+/// Struct for storing the inputs of an OCP NLP solver
 typedef struct
 {
     /// Length of sampling intervals/timesteps.
@@ -218,11 +218,15 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *
 
 typedef struct
 {
-    struct blasfeo_dvec *ux;
-    struct blasfeo_dvec *z;
-    struct blasfeo_dvec *pi;
-    struct blasfeo_dvec *lam;
-    struct blasfeo_dvec *t;  // slacks of inequalities
+    struct blasfeo_dvec *ux;  // NOTE: this contains [u; x; s_l; s_u]! - rename to uxs?
+    struct blasfeo_dvec *z;  // algebraic vairables
+    struct blasfeo_dvec *pi;  // multipliers for dynamics
+    struct blasfeo_dvec *lam;  // inequality mulitpliers
+    struct blasfeo_dvec *t;  // variables corresponding to
+       // the evalution of the inequalities (at the solution)
+
+    // NOTE: the inequalities are internally organized in the following order:
+    // [ lbu lbx lg lh lphi ubu ubx ug uh uphi; lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
 
     int sqp_iter;
     int qp_iter;
@@ -245,7 +249,6 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
 typedef struct
 {
-//    void *qp_solver_opts; // xcond solver opts instead ???
     ocp_qp_xcond_solver_opts *qp_solver_opts; // xcond solver opts instead ???
     void *regularize;
     void **dynamics;     // dynamics_opts
