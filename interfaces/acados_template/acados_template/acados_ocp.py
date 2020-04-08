@@ -1454,10 +1454,10 @@ class AcadosOcpConstraints:
 
     @Jsbx.setter
     def Jsbx(self, Jsbx):
-        if type(Jsbx) == np.ndarray:
+        if isinstance(Jsbx, np.ndarray):
             self.__idxsbx = J_to_idx_slack(Jsbx)
         else:
-            raise Exception('Invalid Jsbx value. Exiting.')
+            raise Exception('Invalid Jsbx value, expected numpy array. Exiting.')
 
     # soft bounds on u
     @lsbu.setter
@@ -1543,10 +1543,9 @@ class AcadosOcpConstraints:
     @Jsg.setter
     def Jsg(self, Jsg):
         if isinstance(Jsg, np.ndarray):
-            self.__Jsg = Jsg
             self.__idxsg = J_to_idx_slack(Jsg)
         else:
-            raise Exception('Invalid Jsg value. Exiting.')
+            raise Exception('Invalid Jsg value, expected numpy array. Exiting.')
 
 
     # soft bounds on nonlinear constraints
@@ -1595,11 +1594,10 @@ class AcadosOcpConstraints:
 
     @Jsphi.setter
     def Jsphi(self, Jsphi):
-        if type(Jsphi) == np.ndarray:
-            self.__Jsphi = Jsphi
+        if isinstance(Jsphi, np.ndarray):
             self.__idxsphi = J_to_idx_slack(Jsphi)
         else:
-            raise Exception('Invalid Jsphi value. Exiting.')
+            raise Exception('Invalid Jsphi value, expected numpy array. Exiting.')
 
     # soft bounds on general linear constraints at t=T
     @lsg_e.setter
@@ -1626,10 +1624,9 @@ class AcadosOcpConstraints:
     @Jsg_e.setter
     def Jsg_e(self, Jsg_e):
         if isinstance(Jsg_e, np.ndarray):
-            self.__Jsg_e = Jsg_e
             self.__idxsg_e = J_to_idx_slack(Jsg_e)
         else:
-            raise Exception('Invalid Jsg_e value. Exiting.')
+            raise Exception('Invalid Jsg_e value, expected numpy array. Exiting.')
 
     # soft bounds on nonlinear constraints at t=T
     @lsh_e.setter
@@ -1678,7 +1675,6 @@ class AcadosOcpConstraints:
     @Jsphi_e.setter
     def Jsphi_e(self, Jsphi_e):
         if isinstance(Jsphi_e, np.ndarray):
-            self.__Jsphi_e = Jsphi_e
             self.__idxsphi_e = J_to_idx_slack(Jsphi_e)
         else:
             raise Exception('Invalid Jsphi_e value. Exiting.')
