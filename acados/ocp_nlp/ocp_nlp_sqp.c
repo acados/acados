@@ -572,7 +572,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 #endif
 
     // NOTE(oj): this will lead in an error for irk_gnsf, T must be set in precompute;
-    //    -> remove here and make sure precompute is called everywhere (e.g. Python interface).
+    //    -> remove here and make sure precompute is called everywhere.
     for (ii = 0; ii < N; ii++)
     {
         config->dynamics[ii]->model_set(config->dynamics[ii], dims->dynamics[ii],
@@ -582,6 +582,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 #if defined(ACADOS_WITH_OPENMP)
     } // end of parallel region
 #endif
+
+    //
+    ocp_nlp_initialize_t_slacks(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
     // initialize QP
     ocp_nlp_initialize_qp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
