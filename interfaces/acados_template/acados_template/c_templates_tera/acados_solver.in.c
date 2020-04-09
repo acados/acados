@@ -130,6 +130,7 @@ external_function_param_casadi * gnsf_get_matrices_fun;
 
 {%- if constraints.constr_type == "BGH" %}
 external_function_param_casadi * nl_constr_h_fun_jac;
+external_function_param_casadi * nl_constr_h_fun;
 {%- elif constraints.constr_type == "BGP" %}
 external_function_param_casadi * phi_constraint;
 // external_function_param_casadi * r_constraint;
@@ -137,6 +138,7 @@ external_function_param_casadi * phi_constraint;
 
 {%- if constraints.constr_type_e == "BGH" %}
 external_function_param_casadi nl_constr_h_e_fun_jac;
+external_function_param_casadi nl_constr_h_e_fun;
 {%- elif constraints.constr_type_e == "BGP" %}
 external_function_param_casadi phi_e_constraint;
 // external_function_param_casadi r_e_constraint;
@@ -411,28 +413,42 @@ int acados_create()
     {%- if constraints.constr_type == "BGH" and dims.nh > 0  %}
     nl_constr_h_fun_jac = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; i++) {
-        // nonlinear constraint
         nl_constr_h_fun_jac[i].casadi_fun = &{{ model.name }}_constr_h_fun_jac_uxt_zt;
         nl_constr_h_fun_jac[i].casadi_n_in = &{{ model.name }}_constr_h_fun_jac_uxt_zt_n_in;
         nl_constr_h_fun_jac[i].casadi_n_out = &{{ model.name }}_constr_h_fun_jac_uxt_zt_n_out;
         nl_constr_h_fun_jac[i].casadi_sparsity_in = &{{ model.name }}_constr_h_fun_jac_uxt_zt_sparsity_in;
         nl_constr_h_fun_jac[i].casadi_sparsity_out = &{{ model.name }}_constr_h_fun_jac_uxt_zt_sparsity_out;
         nl_constr_h_fun_jac[i].casadi_work = &{{ model.name }}_constr_h_fun_jac_uxt_zt_work;
-
         external_function_param_casadi_create(&nl_constr_h_fun_jac[i], {{ dims.np }});
+    }
+    nl_constr_h_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
+    for (int i = 0; i < N; i++) {
+        nl_constr_h_fun[i].casadi_fun = &{{ model.name }}_constr_h_fun;
+        nl_constr_h_fun[i].casadi_n_in = &{{ model.name }}_constr_h_fun_n_in;
+        nl_constr_h_fun[i].casadi_n_out = &{{ model.name }}_constr_h_fun_n_out;
+        nl_constr_h_fun[i].casadi_sparsity_in = &{{ model.name }}_constr_h_fun_sparsity_in;
+        nl_constr_h_fun[i].casadi_sparsity_out = &{{ model.name }}_constr_h_fun_sparsity_out;
+        nl_constr_h_fun[i].casadi_work = &{{ model.name }}_constr_h_fun_work;
+        external_function_param_casadi_create(&nl_constr_h_fun[i], {{ dims.np }});
     }
     {% endif %}
 
     {%- if constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
-    // nonlinear constraint
     nl_constr_h_e_fun_jac.casadi_fun = &{{ model.name }}_constr_h_e_fun_jac_uxt_zt;
     nl_constr_h_e_fun_jac.casadi_n_in = &{{ model.name }}_constr_h_e_fun_jac_uxt_zt_n_in;
     nl_constr_h_e_fun_jac.casadi_n_out = &{{ model.name }}_constr_h_e_fun_jac_uxt_zt_n_out;
     nl_constr_h_e_fun_jac.casadi_sparsity_in = &{{ model.name }}_constr_h_e_fun_jac_uxt_zt_sparsity_in;
     nl_constr_h_e_fun_jac.casadi_sparsity_out = &{{ model.name }}_constr_h_e_fun_jac_uxt_zt_sparsity_out;
     nl_constr_h_e_fun_jac.casadi_work = &{{ model.name }}_constr_h_e_fun_jac_uxt_zt_work;
-
     external_function_param_casadi_create(&nl_constr_h_e_fun_jac, {{ dims.np }});
+
+    nl_constr_h_e_fun.casadi_fun = &{{ model.name }}_constr_h_e_fun;
+    nl_constr_h_e_fun.casadi_n_in = &{{ model.name }}_constr_h_e_fun_n_in;
+    nl_constr_h_e_fun.casadi_n_out = &{{ model.name }}_constr_h_e_fun_n_out;
+    nl_constr_h_e_fun.casadi_sparsity_in = &{{ model.name }}_constr_h_e_fun_sparsity_in;
+    nl_constr_h_e_fun.casadi_sparsity_out = &{{ model.name }}_constr_h_e_fun_sparsity_out;
+    nl_constr_h_e_fun.casadi_work = &{{ model.name }}_constr_h_e_fun_work;
+    external_function_param_casadi_create(&nl_constr_h_e_fun, {{ dims.np }});
     {%- endif %}
 
 {% if solver_options.integrator_type == "ERK" %}
@@ -1143,6 +1159,8 @@ int acados_create()
         // nonlinear constraints for stages 0 to N-1
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "nl_constr_h_fun_jac",
                                      &nl_constr_h_fun_jac[i]);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "nl_constr_h_fun",
+                                    &nl_constr_h_fun[i]);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lh", lh);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "uh", uh);
     }
@@ -1298,6 +1316,7 @@ int acados_create()
     {%- endfor %}
 
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_fun_jac", &nl_constr_h_e_fun_jac);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_fun", &nl_constr_h_e_fun);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lh", lh_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "uh", uh_e);
 {%- endif %}
@@ -1533,6 +1552,7 @@ int acados_create()
     for (int ii = 0; ii < N; ii++)
     {
         nl_constr_h_fun_jac[ii].set_param(nl_constr_h_fun_jac+ii, p);
+        nl_constr_h_fun[ii].set_param(nl_constr_h_fun+ii, p);
     }
 {%- endif %}
 
@@ -1541,6 +1561,7 @@ int acados_create()
     phi_e_constraint.set_param(&phi_e_constraint, p);
 {%- elif constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
     nl_constr_h_e_fun_jac.set_param(&nl_constr_h_e_fun_jac, p);
+    nl_constr_h_e_fun.set_param(&nl_constr_h_e_fun, p);
 {%- endif %}
 
 {%- endif %}{# if dims.np #}
@@ -1679,6 +1700,14 @@ int acados_update_params(int stage, double *p, int np)
             exit(1);
         }
         nl_constr_h_fun_jac[stage].set_param(nl_constr_h_fun_jac+stage, p);
+
+        casadi_np = (nl_constr_h_fun+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in nl_constr_h_fun which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        nl_constr_h_fun[stage].set_param(nl_constr_h_fun+stage, p);
     {%- endif %}
 
         // cost
@@ -1764,6 +1793,14 @@ int acados_update_params(int stage, double *p, int np)
             exit(1);
         }
         nl_constr_h_e_fun_jac.set_param(&nl_constr_h_e_fun_jac, p);
+
+        casadi_np = (&nl_constr_h_e_fun)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in nl_constr_h_e_fun which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        nl_constr_h_e_fun.set_param(&nl_constr_h_e_fun, p);
     {% endif %}
     }
 {% endif %}{# if dims.np #}
@@ -1853,6 +1890,7 @@ int acados_free()
     for (int i = 0; i < {{ dims.N }}; i++)
     {
         external_function_param_casadi_free(&nl_constr_h_fun_jac[i]);
+        external_function_param_casadi_free(&nl_constr_h_fun[i]);
     }
 {%- elif constraints.constr_type == "BGP" and dims.nphi > 0 %}
     for (int i = 0; i < {{ dims.N }}; i++)
@@ -1862,6 +1900,7 @@ int acados_free()
 {%- endif %}
 {%- if constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
     external_function_param_casadi_free(&nl_constr_h_e_fun_jac);
+    external_function_param_casadi_free(&nl_constr_h_e_fun);
 {%- elif constraints.constr_type_e == "BGP" and dims.nphi_e > 0 %}
     external_function_param_casadi_free(&phi_e_constraint);
 {%- endif %}

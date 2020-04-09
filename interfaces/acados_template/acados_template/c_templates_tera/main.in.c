@@ -113,6 +113,7 @@ int main()
         {%- endif %}
         {%- if dims.nh > 0 %}
         nl_constr_h_fun_jac[ii].set_param(nl_constr_h_fun_jac+ii, p);
+        nl_constr_h_fun[ii].set_param(nl_constr_h_fun+ii, p);
         {% endif %}
     }
     {%- if constraints.constr_type_e == "BGP" %}
@@ -121,6 +122,7 @@ int main()
     {% endif %}
     {%- if dims.nh_e > 0 %}
     nl_constr_h_e_fun_jac.set_param(&nl_constr_h_e_fun_jac, p);
+    nl_constr_h_e_fun.set_param(&nl_constr_h_e_fun, p);
     {% endif %}
   {% endif %}{# if np > 0 #}
 
