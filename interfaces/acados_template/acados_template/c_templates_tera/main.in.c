@@ -112,7 +112,7 @@ int main()
         phi_constraint[ii].set_param(phi_constraint+ii, p);
         {%- endif %}
         {%- if dims.nh > 0 %}
-        h_constraint[ii].set_param(h_constraint+ii, p);
+        nl_constr_h_fun_jac[ii].set_param(nl_constr_h_fun_jac+ii, p);
         {% endif %}
     }
     {%- if constraints.constr_type_e == "BGP" %}

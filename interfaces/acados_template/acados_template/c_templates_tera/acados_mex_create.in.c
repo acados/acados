@@ -152,7 +152,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     memcpy(fieldnames[4],"impl_dae_jac_x_xdot_u_z",sizeof("impl_dae_jac_x_xdot_u_z"));
     // constraints
     memcpy(fieldnames[5],"phi_constraint",sizeof("phi_constraint"));
-    memcpy(fieldnames[6],"h_constraint",sizeof("h_constraint"));
+    memcpy(fieldnames[6],"nl_constr_h_fun_jac",sizeof("nl_constr_h_fun_jac"));
 
     // create output struct - C_ocp_ext_fun
     plhs[1] = mxCreateStructMatrix(1, 1, FIELDS_EXT_FUN, (const char **) fieldnames);
@@ -208,15 +208,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {% endif %}
     mxSetField(plhs[1], 0, "phi_constraint", phi_constraint_mat);
 
-    mxArray *h_constraint_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
-    l_ptr = mxGetData(h_constraint_mat);
+    mxArray *nl_constr_h_fun_jac_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
+    l_ptr = mxGetData(nl_constr_h_fun_jac_mat);
 {% if constraints.constr_type == "BGH" and dims.nh > 0 %}
-    l_ptr[0] = (long long) h_constraint;
+    l_ptr[0] = (long long) nl_constr_h_fun_jac;
 {% endif %}
 {% if constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
     l_ptr[1] = (long long) &h_e_constraint;
 {%- endif %}
-    mxSetField(plhs[1], 0, "h_constraint", h_constraint_mat);
+    mxSetField(plhs[1], 0, "nl_constr_h_fun_jac", nl_constr_h_fun_jac_mat);
 
 
 // {% if cost.cost_type == "NONLINEAR_LS" %}
