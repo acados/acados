@@ -752,9 +752,9 @@ class AcadosOcpSolver:
 
             .. note:: pi: multipliers for dynamics equality constraints \n
                       lam: multipliers for inequalities \n
-                      t: values corresponding to inequality evaluations (at the solution) \n
-                      sl: lower slacks of slacked constraints \n
-                      su: upper slacks of slacked constraints \n
+                      t: slack variables corresponding to evaluation of all inequalities (at the solution) \n
+                      sl: slack variables of soft lower inequality constraints \n
+                      su: slack variables of soft upper inequality constraints \n
         """
 
         out_fields = ['x', 'u', 'z', 'pi', 'lam', 't']

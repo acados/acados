@@ -222,8 +222,7 @@ typedef struct
     struct blasfeo_dvec *z;  // algebraic vairables
     struct blasfeo_dvec *pi;  // multipliers for dynamics
     struct blasfeo_dvec *lam;  // inequality mulitpliers
-    struct blasfeo_dvec *t;  // variables corresponding to
-       // the evalution of the inequalities (at the solution)
+    struct blasfeo_dvec *t;  // slack variables corresponding to evaluation of all inequalities (at the solution)
 
     // NOTE: the inequalities are internally organized in the following order:
     // [ lbu lbx lg lh lphi ubu ubx ug uh uphi; lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
