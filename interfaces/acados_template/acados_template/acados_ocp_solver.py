@@ -142,15 +142,17 @@ def make_ocp_dims_consistent(acados_ocp):
     # initial
     if (constraints.lbx_0 == [] and constraints.ubx_0 == []):
         dims.nbx_0 = 0
-    elif not (constraints.lbx_0 == [] and constraints.ubx_0 == []):
+    else:
         this_shape = constraints.lbx_0.shape
         other_shape = constraints.ubx_0.shape
         if not this_shape == other_shape:
             raise Exception('lbx_0, ubx_0 have different shapes!')
         if not is_column(constraints.lbx_0):
             raise Exception('lbx_0, ubx_0 must be column vectors!')
-
         dims.nbx_0 = constraints.lbx_0.size
+
+    if all(constraints.lbx_0 == constraints.ubx_0):
+        dims.nbxe_0 = dims.nbx_0
 
     # path
     nbx = constraints.idxbx.shape[0]
@@ -741,10 +743,21 @@ class AcadosOcpSolver:
         """
         get the last solution of the solver:
             :param stage: integer corresponding to shooting node
-            :param field_: string in ['x', 'u', 'z', 'pi']
+            :param field_: string in ['x', 'u', 'z', 'pi', 'lam', 't', 'sl', 'su',]
+
+            .. note:: regarding lam, t: \n
+                    the inequalities are internally organized in the following order: \n
+                    [ lbu lbx lg lh lphi ubu ubx ug uh uphi; \n
+                      lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
+
+            .. note:: pi: multipliers for dynamics equality constraints \n
+                      lam: multipliers for inequalities \n
+                      t: slack variables corresponding to evaluation of all inequalities (at the solution) \n
+                      sl: slack variables of soft lower inequality constraints \n
+                      su: slack variables of soft upper inequality constraints \n
         """
 
-        out_fields = ['x', 'u', 'z', 'pi']
+        out_fields = ['x', 'u', 'z', 'pi', 'lam', 't']
         mem_fields = ['sl', 'su']
         field = field_
         field = field.encode('utf-8')
@@ -862,7 +875,7 @@ class AcadosOcpSolver:
 
         cost_fields = ['y_ref', 'yref']
         constraints_fields = ['lbx', 'ubx', 'lbu', 'ubu']
-        out_fields = ['x', 'u', 'pi']
+        out_fields = ['x', 'u', 'pi', 'lam', 't']
 
         # cast value_ to avoid conversion issues
         value_ = value_.astype(float)
