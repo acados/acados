@@ -1738,7 +1738,8 @@ class AcadosOcpOptions:
         self.__nlp_solver_tol_comp = 1e-6                     # NLP solver complementarity
         self.__nlp_solver_max_iter = 100                      # NLP solver maximum number of iterations
         self.__Tsim = None                                    # automatically calculated as tf/N
-        self.__print_level = 0                                # print level (possible values: 0, 1)
+        self.__print_level = 0                                # print level
+        self.__initialize_t_slacks = 0                        # possible values: 0, 1
         self.__model_external_shared_lib_dir   = None         # path to the the .so lib
         self.__model_external_shared_lib_name  = None         # name of the the .so lib
         self.__regularize_method = None
