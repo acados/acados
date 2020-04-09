@@ -117,7 +117,7 @@ extern external_function_param_casadi * nl_constr_h_fun_jac;
 extern external_function_param_casadi phi_e_constraint;
 // extern external_function_param_casadi r_e_constraint;
 {% elif constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
-extern external_function_param_casadi h_e_constraint;
+extern external_function_param_casadi nl_constr_h_e_fun_jac;
 {%- endif %}
 
 

@@ -214,7 +214,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     l_ptr[0] = (long long) nl_constr_h_fun_jac;
 {% endif %}
 {% if constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
-    l_ptr[1] = (long long) &h_e_constraint;
+    l_ptr[1] = (long long) &nl_constr_h_e_fun_jac;
 {%- endif %}
     mxSetField(plhs[1], 0, "nl_constr_h_fun_jac", nl_constr_h_fun_jac_mat);
 

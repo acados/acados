@@ -120,7 +120,7 @@ int main()
     phi_e_constraint.set_param(&phi_e_constraint, p);
     {% endif %}
     {%- if dims.nh_e > 0 %}
-    h_e_constraint.set_param(&h_e_constraint, p);
+    nl_constr_h_e_fun_jac.set_param(&nl_constr_h_e_fun_jac, p);
     {% endif %}
   {% endif %}{# if np > 0 #}
 
