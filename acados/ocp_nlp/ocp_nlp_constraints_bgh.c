@@ -580,7 +580,7 @@ void *ocp_nlp_constraints_bgh_model_assign(void *config, void *dims_, void *raw_
     int nge = dims->nge;
     int nhe = dims->nhe;
 
-	int ii;
+    int ii;
 
     // struct
     ocp_nlp_constraints_bgh_model *model = (ocp_nlp_constraints_bgh_model *) c_ptr;
@@ -610,9 +610,9 @@ void *ocp_nlp_constraints_bgh_model_assign(void *config, void *dims_, void *raw_
     // idxe
     assign_and_advance_int(nbue+nbxe+nge+nhe, &model->idxe, &c_ptr);
 
-	// default initialization
-	for(ii=0; ii<nbue+nbxe+nge+nhe; ii++)
-		model->idxe[ii] = 0;
+    // default initialization
+    for(ii=0; ii<nbue+nbxe+nge+nhe; ii++)
+        model->idxe[ii] = 0;
 
     // assert
     assert((char *) raw_memory + ocp_nlp_constraints_bgh_model_calculate_size(config, dims) >=
@@ -1271,7 +1271,7 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
             jac_z_tran_out.aj = 0;
         }
 
-		// TODO check that it is correct, as it prevents convergence !!!!!
+        // TODO check that it is correct, as it prevents convergence !!!!!
         if (opts->compute_hess)
         {
             if (nz > 0) {
@@ -1307,7 +1307,7 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
             ext_fun_out[2] = &hess_out;  // hess*mult: (nu+nx) * (nu+nx)
 
             model->nl_constr_h_fun_jac_hess->evaluate(model->nl_constr_h_fun_jac_hess,
-					ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+                    ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
             blasfeo_dgead(nu+nx, nu+nx, 1.0, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
 
@@ -1318,36 +1318,36 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
             ext_fun_in[0] = &x_in;
             ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
             ext_fun_in[1] = &u_in;
-			ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
-			ext_fun_in[2] = &z_in;
+            ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
+            ext_fun_in[2] = &z_in;
 
             ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
             ext_fun_out[0] = &fun_out;  // fun: nh
             ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
             ext_fun_out[1] = &jac_tran_out;  // jac': (nu+nx) * nh
-			ext_fun_type_out[2] = BLASFEO_DMAT_ARGS;
-			ext_fun_out[2] = &jac_z_tran_out;  // jac': nz * nh
-			
+            ext_fun_type_out[2] = BLASFEO_DMAT_ARGS;
+            ext_fun_out[2] = &jac_z_tran_out;  // jac': nz * nh
+
             model->nl_constr_h_fun_jac->evaluate(model->nl_constr_h_fun_jac, ext_fun_type_in,
                                                     ext_fun_in, ext_fun_type_out, ext_fun_out);
 
-			// expand h:
-			// h(x, u, z) ~
-			// h(\bar{x}, \bar{u}, \bar{z}) + 
-			// dhdx*(x - \bar{x}) + 
-			// dhdu*(u - \bar{u}) + 
-			// dhdz*(z - \bar{z}) =
-			//
-			// h(\bar{x}, \bar{u}, \bar{z}) - dhdz*dzdx*\bar{x} - dhdz*dzdu*\bar{u} + 
-			// (dhdx + dhdz*dzdx)*(x - \bar{x}) +  
-			// (dhdu + dhdz*dzdu)*(u - \bar{u})  
-			
-			// update DCt
-			blasfeo_dgemm_nn(nu+nx, nh, nz, 1.0, memory->dzduxt, 0, 0, &work->tmp_nz_nh, 0, 0, 0.0,
+            // expand h:
+            // h(x, u, z) ~
+            // h(\bar{x}, \bar{u}, \bar{z}) +
+            // dhdx*(x - \bar{x}) +
+            // dhdu*(u - \bar{u}) +
+            // dhdz*(z - \bar{z}) =
+            //
+            // h(\bar{x}, \bar{u}, \bar{z}) - dhdz*dzdx*\bar{x} - dhdz*dzdu*\bar{u} +
+            // (dhdx + dhdz*dzdx)*(x - \bar{x}) +
+            // (dhdu + dhdz*dzdu)*(u - \bar{u})
+
+            // update DCt
+            blasfeo_dgemm_nn(nu+nx, nh, nz, 1.0, memory->dzduxt, 0, 0, &work->tmp_nz_nh, 0, 0, 0.0,
                              &work->tmp_nv_nh, 0, 0, &work->tmp_nv_nh, 0, 0);
-		    blasfeo_dgead(nu+nx, nh, 1.0, &work->tmp_nv_nh, 0, 0, memory->DCt, ng, 0);	
-			// update memory->fun	
-			blasfeo_dgemv_t(nu+nx, nh, -1.0, &work->tmp_nv_nh, 0, 0, memory->ux, 0, 1.0,
+            blasfeo_dgead(nu+nx, nh, 1.0, &work->tmp_nv_nh, 0, 0, memory->DCt, ng, 0);
+            // update memory->fun
+            blasfeo_dgemv_t(nu+nx, nh, -1.0, &work->tmp_nv_nh, 0, 0, memory->ux, 0, 1.0,
                             &memory->fun, 0, &memory->fun, 0);
         }
     }
@@ -1417,12 +1417,12 @@ void ocp_nlp_constraints_bgh_compute_fun(void *config_, void *dims_, void *model
     if (nh > 0)
     {
 
-		if(nz>0)
-		{
-			// TODO
-			printf("\nerror: ocp_nlp_constraints_bgh_compute_fun: not implemented yet for nz>0\n");
-			exit(1);
-		}
+        if(nz>0)
+        {
+            // TODO
+            printf("\nerror: ocp_nlp_constraints_bgh_compute_fun: not implemented yet for nz>0\n");
+            exit(1);
+        }
 
         struct blasfeo_dvec_args x_in;  // input x of external fun;
         x_in.x = memory->tmp_ux;
@@ -1432,7 +1432,7 @@ void ocp_nlp_constraints_bgh_compute_fun(void *config_, void *dims_, void *model
         u_in.x = memory->tmp_ux;
         u_in.xi = 0;
 
-		// TODO tmp_z_alg !!!
+        // TODO tmp_z_alg !!!
         struct blasfeo_dvec_args z_in;  // input z of external fun;
         z_in.x = memory->z_alg;
         z_in.xi = 0;
@@ -1441,19 +1441,24 @@ void ocp_nlp_constraints_bgh_compute_fun(void *config_, void *dims_, void *model
         fun_out.x = &work->tmp_ni;
         fun_out.xi = nb + ng;
 
-		ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
-		ext_fun_in[0] = &x_in;
-		ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
-		ext_fun_in[1] = &u_in;
-		ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
-		ext_fun_in[2] = &z_in;
+        ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+        ext_fun_in[0] = &x_in;
+        ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
+        ext_fun_in[1] = &u_in;
+        ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
+        ext_fun_in[2] = &z_in;
 
-		ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
-		ext_fun_out[0] = &fun_out;  // fun: nh
+        ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
+        ext_fun_out[0] = &fun_out;  // fun: nh
 
-		model->nl_constr_h_fun->evaluate(model->nl_constr_h_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+        if (model->nl_constr_h_fun == 0)
+        {
+            printf("constraints BGH: nl_constr_h_fun is not provided. Exiting.");
+            exit(1);
+        }
+        model->nl_constr_h_fun->evaluate(model->nl_constr_h_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
-	}
+    }
 
     // lower
     blasfeo_daxpy(nb+ng+nh, -1.0, &work->tmp_ni, 0, &model->d, 0, &memory->fun, 0);
