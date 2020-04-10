@@ -1023,12 +1023,23 @@ class AcadosOcpSolver:
         """
         set options of the solver:
         Parameters:
-            :param field_: string, e.g. 'print_level', 'rti_phase'
-            :param value_: of type int
+            :param field_: string, e.g. 'print_level', 'rti_phase', 'step_length'
+            :param value_: of type int, float
         """
-        # cast value_ to avoid conversion issues
-        if not isinstance(value_, int):
-            raise Exception('solver options must be of type int. You have {}.'.format(type(value_)))
+        int_fields = ['print_level', 'rti_phase', 'initialize_t_slacks']
+        double_fields = ['step_length']
+
+        if field_ in int_fields:
+            if not isinstance(value_, int):
+                raise Exception('solver option {} must be of type int. You have {}.'.format(field_, type(value_)))
+            else:
+                value_ctypes = c_int(value_)
+
+        elif field_ in double_fields:
+            if not isinstance(value_, float):
+                raise Exception('solver option {} must be of type float. You have {}.'.format(field_, type(value_)))
+            else:
+                value_ctypes = c_double(value_)
 
         if field_ == 'rti_phase':
             if value_ < 0 or value_ > 2:
@@ -1040,8 +1051,6 @@ class AcadosOcpSolver:
 
         field = field_
         field = field.encode('utf-8')
-
-        value_ctypes = c_int(value_)
 
         self.shared_lib.ocp_nlp_solver_opts_set.argtypes = \
             [c_void_p, c_void_p, c_char_p, c_void_p]
