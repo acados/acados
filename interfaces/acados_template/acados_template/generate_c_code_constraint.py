@@ -89,12 +89,13 @@ def generate_c_code_constraint( model, con_name, is_terminal, opts ):
             else:
                 z = MX.sym('z', 0, 0)
 
-        # multipliers for hessian
-        nh = casadi_length(con_h_expr)
-        if is_SX:
-            lam_h = SX.sym('lam_h', nh, 1)
-        else:
-            lam_h = MX.sym('lam_h', nh, 1)
+        if not (is_empty(con_h_expr)) and opts['generate_hess']:
+            # multipliers for hessian
+            nh = casadi_length(con_h_expr)
+            if is_SX:
+                lam_h = SX.sym('lam_h', nh, 1)
+            else:
+                lam_h = MX.sym('lam_h', nh, 1)
 
         # set up & change directory
         if not os.path.exists('c_generated_code'):
