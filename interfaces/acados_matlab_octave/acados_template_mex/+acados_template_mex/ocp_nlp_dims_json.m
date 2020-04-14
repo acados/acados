@@ -67,6 +67,7 @@ classdef ocp_nlp_dims_json < handle
         nsphi_e % number of softend convex over nonlinear constraints (BGP) at t=T
         nr %
         nr_e %
+        nbxe_0
 
     end
     methods
@@ -102,6 +103,7 @@ classdef ocp_nlp_dims_json < handle
             obj.nr = 0;
             obj.nr_e = 0;
             obj.N     = [];
+            obj.nbxe_0 = 0;
         end
     end
 end

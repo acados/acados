@@ -167,7 +167,6 @@ void ocp_nlp_cost_ls_dims_set(void *config_, void *dims_, const char *field, int
     }
     else if (!strcmp(field, "nz"))
     {
-        // do nothing
         ocp_nlp_cost_ls_set_nz(config_, dims_, value);
     }
     else if (!strcmp(field, "nu"))

@@ -71,6 +71,7 @@ class AcadosOcpDims:
         self.__ng_e    = 0
         self.__nsg     = 0
         self.__nsg_e   = 0
+        self.__nbxe_0  = 0
         self.__N       = None
 
 
@@ -138,6 +139,11 @@ class AcadosOcpDims:
     def nbx(self):
         """:math:`n_{b_x}` - number of state bounds"""
         return self.__nbx
+
+    @property
+    def nbxe_0(self):
+        """:math:`n_{be_{x0}}` - number of state bounds at initial shooting node that are equalities"""
+        return self.__nbxe_0
 
     @property
     def nbx_0(self):
@@ -310,10 +316,17 @@ class AcadosOcpDims:
 
     @nbx.setter
     def nbx(self, nbx):
-        if type(nbx) == int and nbx > -1:
+        if isinstance(nbx, int) and nbx > -1:
             self.__nbx = nbx
         else:
             raise Exception('Invalid nbx value, expected nonnegative integer. Exiting.')
+
+    @nbxe_0.setter
+    def nbxe_0(self, nbxe_0):
+        if isinstance(nbxe_0, int) and nbxe_0 > -1:
+            self.__nbxe_0 = nbxe_0
+        else:
+            raise Exception('Invalid nbxe_0 value, expected nonnegative integer. Exiting.')
 
     @nbx_0.setter
     def nbx_0(self, nbx_0):
@@ -718,6 +731,7 @@ class AcadosOcpConstraints:
         self.__lbx_0   = np.array([])
         self.__ubx_0   = np.array([])
         self.__idxbx_0 = np.array([])
+        self.__idxbxe_0 = np.array([])
         # state bounds
         self.__lbx     = np.array([])
         self.__ubx     = np.array([])
@@ -816,6 +830,11 @@ class AcadosOcpConstraints:
     def idxbx_0(self):
         """indexes of bounds on x0"""
         return self.__idxbx_0
+
+    @property
+    def idxbxe_0(self):
+        """indexes of bounds on x0 that are equalities (set automatically)"""
+        return self.__idxbxe_0
 
     # bounds on x
     @property
@@ -935,12 +954,12 @@ class AcadosOcpConstraints:
     # nonlinear constraints at t=T
     @property
     def lh_e(self):
-        """:math:`\\bar{h}^e` - upper bound on nonlinear inequalities at t=T"""
+        """:math:`\\underline{h}^e` - lower bound on nonlinear inequalities at t=T"""
         return self.__lh_e
 
     @property
     def uh_e(self):
-        """:math:`\\underline{h}^e` - lower bound on nonlinear inequalities at t=T"""
+        """:math:`\\bar{h}^e` - upper bound on nonlinear inequalities at t=T"""
         return self.__uh_e
 
     # convex-over-nonlinear constraints
@@ -1174,6 +1193,7 @@ class AcadosOcpConstraints:
         print("idxbx_0: ", self.__idxbx_0)
         print("lbx_0: ", self.__lbx_0)
         print("ubx_0: ", self.__ubx_0)
+        print("idxbxe_0: ", self.__idxbxe_0)
         return None
 
     # SETTERS
@@ -1214,10 +1234,18 @@ class AcadosOcpConstraints:
 
     @idxbx_0.setter
     def idxbx_0(self, idxbx_0):
-        if type(idxbx_0) == np.ndarray:
+        if isinstance(idxbx_0, np.ndarray):
             self.__idxbx_0 = idxbx_0
         else:
             raise Exception('Invalid idxbx_0 value. Exiting.')
+
+    @idxbxe_0.setter
+    def idxbxe_0(self, idxbxe_0):
+        if isinstance(idxbxe_0, np.ndarray):
+            self.__idxbxe_0 = idxbxe_0
+        else:
+            raise Exception('Invalid idxbxe_0 value. Exiting.')
+
 
     @x0.setter
     def x0(self, x0):
@@ -1225,6 +1253,7 @@ class AcadosOcpConstraints:
             self.__lbx_0 = x0
             self.__ubx_0 = x0
             self.__idxbx_0 = np.arange(x0.size)
+            self.__idxbxe_0 = np.arange(x0.size)
         else:
             raise Exception('Invalid x0 value. Exiting.')
 
@@ -1454,10 +1483,10 @@ class AcadosOcpConstraints:
 
     @Jsbx.setter
     def Jsbx(self, Jsbx):
-        if type(Jsbx) == np.ndarray:
+        if isinstance(Jsbx, np.ndarray):
             self.__idxsbx = J_to_idx_slack(Jsbx)
         else:
-            raise Exception('Invalid Jsbx value. Exiting.')
+            raise Exception('Invalid Jsbx value, expected numpy array. Exiting.')
 
     # soft bounds on u
     @lsbu.setter
@@ -1543,10 +1572,9 @@ class AcadosOcpConstraints:
     @Jsg.setter
     def Jsg(self, Jsg):
         if isinstance(Jsg, np.ndarray):
-            self.__Jsg = Jsg
             self.__idxsg = J_to_idx_slack(Jsg)
         else:
-            raise Exception('Invalid Jsg value. Exiting.')
+            raise Exception('Invalid Jsg value, expected numpy array. Exiting.')
 
 
     # soft bounds on nonlinear constraints
@@ -1595,11 +1623,10 @@ class AcadosOcpConstraints:
 
     @Jsphi.setter
     def Jsphi(self, Jsphi):
-        if type(Jsphi) == np.ndarray:
-            self.__Jsphi = Jsphi
+        if isinstance(Jsphi, np.ndarray):
             self.__idxsphi = J_to_idx_slack(Jsphi)
         else:
-            raise Exception('Invalid Jsphi value. Exiting.')
+            raise Exception('Invalid Jsphi value, expected numpy array. Exiting.')
 
     # soft bounds on general linear constraints at t=T
     @lsg_e.setter
@@ -1626,10 +1653,9 @@ class AcadosOcpConstraints:
     @Jsg_e.setter
     def Jsg_e(self, Jsg_e):
         if isinstance(Jsg_e, np.ndarray):
-            self.__Jsg_e = Jsg_e
             self.__idxsg_e = J_to_idx_slack(Jsg_e)
         else:
-            raise Exception('Invalid Jsg_e value. Exiting.')
+            raise Exception('Invalid Jsg_e value, expected numpy array. Exiting.')
 
     # soft bounds on nonlinear constraints at t=T
     @lsh_e.setter
@@ -1678,7 +1704,6 @@ class AcadosOcpConstraints:
     @Jsphi_e.setter
     def Jsphi_e(self, Jsphi_e):
         if isinstance(Jsphi_e, np.ndarray):
-            self.__Jsphi_e = Jsphi_e
             self.__idxsphi_e = J_to_idx_slack(Jsphi_e)
         else:
             raise Exception('Invalid Jsphi_e value. Exiting.')
@@ -2133,7 +2158,7 @@ class AcadosOcp:
 
     @property
     def parameter_values(self):
-        """:math:`p` - initial values for parameter"""
+        """:math:`p` - initial values for parameter - can be updated stagewise"""
         return self.__parameter_values
 
     @parameter_values.setter

@@ -114,16 +114,29 @@ ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 simX = np.ndarray((N+1, nx))
 simU = np.ndarray((N, nu))
 
+ocp_solver.options_set("step_length", 0.99999)
+
 status = ocp_solver.solve()
 
 if status != 0:
     raise Exception('acados returned status {}. Exiting.'.format(status))
 
-# get solution
+# get primal solution
 for i in range(N):
     simX[i,:] = ocp_solver.get(i, "x")
     simU[i,:] = ocp_solver.get(i, "u")
 simX[N,:] = ocp_solver.get(N, "x")
+
+print("inequality multipliers at stage 1")
+print(ocp_solver.get(1, "lam")) # inequality multipliers at stage 1
+print("slack values at stage 1")
+print(ocp_solver.get(1, "t")) # slack values at stage 1
+print("multipliers of dynamic conditions between stage 1 and 2")
+print(ocp_solver.get(1, "pi")) # multipliers of dynamic conditions between stage 1 and 2
+
+# initialize ineq multipliers and slacks at stage 1
+ocp_solver.set(1, "lam", np.zeros(2,))
+ocp_solver.set(1, "t", np.zeros(2,))
 
 ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
 

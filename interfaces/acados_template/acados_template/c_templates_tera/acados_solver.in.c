@@ -236,8 +236,7 @@ int acados_create()
     int nz[N+1];
     int ny[N+1];
     int nr[N+1];
-    int nr_e[N+1];
-
+    int nbxe[N+1];
 
     for (int i = 0; i < N+1; i++)
     {
@@ -260,12 +259,14 @@ int acados_create()
         nh[i]     = NH;
         nphi[i]   = NPHI;
         nr[i]     = NR;
+        nbxe[i]   = 0;
     }
 
     // for initial state
     nbx[0]  = NBX0;
     nsbx[0] = 0;
     ns[0] = NS - NSBX;
+    nbxe[0] = {{ dims.nbxe_0 }};
 
     // terminal - common
     nu[N]   = 0;
@@ -303,6 +304,7 @@ int acados_create()
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsbu", &nsbu[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "ng", &ng[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsg", &nsg[i]);
+        ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nbxe", &nbxe[i]);
     }
 
     for (int i = 0; i < N; i++)
@@ -688,7 +690,7 @@ int acados_create()
     nlp_in = ocp_nlp_in_create(nlp_config, nlp_dims);
 
     double time_steps[N];
-    {% for j in range(end=dims.N) %}
+    {%- for j in range(end=dims.N) %}
     time_steps[{{ j }}] = {{ solver_options.time_steps[j] }};
     {%- endfor %}
 
@@ -925,7 +927,14 @@ int acados_create()
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", lbx0);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", ubx0);
 {% endif %}
-
+{% if dims.nbxe_0 > 0 %}
+    // idxbxe_0
+    int idxbxe_0[{{ dims.nbxe_0 }}];
+    {% for i in range(end=dims.nbxe_0) %}
+    idxbxe_0[{{ i }}] = {{ constraints.idxbxe_0[i] }};
+    {%- endfor %}
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxbxe", idxbxe_0);
+{% endif %}
 
     /* constraints that are the same for initial and intermediate */
 {%- if dims.nsbx > 0 %}
@@ -1869,3 +1878,36 @@ ocp_nlp_config * acados_get_nlp_config() { return  nlp_config; }
 void * acados_get_nlp_opts() { return  nlp_opts; }
 ocp_nlp_dims * acados_get_nlp_dims() { return  nlp_dims; }
 ocp_nlp_plan * acados_get_nlp_plan() { return  nlp_solver_plan; }
+
+
+void acados_print_stats()
+{
+    int sqp_iter, stat_m, stat_n, tmp_int;
+    ocp_nlp_get(nlp_config, nlp_solver, "sqp_iter", &sqp_iter);
+    ocp_nlp_get(nlp_config, nlp_solver, "stat_n", &stat_n);
+    ocp_nlp_get(nlp_config, nlp_solver, "stat_m", &stat_m);
+
+    {% set stat_n_max = 10 %}
+    double stat[{{ solver_options.nlp_solver_max_iter * stat_n_max }}];
+    ocp_nlp_get(nlp_config, nlp_solver, "statistics", stat);
+
+    int nrow = sqp_iter+1 < stat_m ? sqp_iter+1 : stat_m;
+
+    printf("iter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp_stat\tqp_iter\n");
+    for (int i = 0; i < nrow; i++)
+    {
+        for (int j = 0; j < stat_n + 1; j++)
+        {
+            if (j == 0 || j > 4)
+            {
+                tmp_int = (int) stat[i + j * nrow];
+                printf("%d\t", tmp_int);
+            }
+            else
+            {
+                printf("%e\t", stat[i + j * nrow]);
+            }
+        }
+        printf("\n");
+    }
+}

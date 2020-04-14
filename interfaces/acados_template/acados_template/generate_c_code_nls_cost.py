@@ -98,7 +98,7 @@ def generate_c_code_nls_cost( model, cost_name, is_terminal ):
 
     suffix_name = '_hess'
     fun_name = cost_name + middle_name + suffix_name
-    y_hess = Function(fun_name, [x, u, p], [ y_hess ])
+    y_hess = Function(fun_name, [x, u, y, p], [ y_hess ])
     y_hess.generate( fun_name, casadi_opts )
 
     os.chdir('../..')

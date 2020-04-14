@@ -71,5 +71,7 @@ clean:
 	@for file in $(GENERATED); do CPATH="$(BUILDDIR)/$${file}"; [ -f "$${CPATH}" -o -d "$${CPATH}" ] && rm -r "$${CPATH}" || true; done
 	@echo Clean doxygen
 	@rm -r $(DOXYBUILDDIR)
+	@rm -r $(BUILDDIR)
+
 
 .PHONY: help Makefile clean html default doxygen
