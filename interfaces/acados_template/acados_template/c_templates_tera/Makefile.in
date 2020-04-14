@@ -136,13 +136,13 @@ OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_phi_e_constraint.o
 {%- if constr_type == "BGH" and dims_nh > 0 %}
 OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_constr_h_fun_jac_uxt_zt.o
 {%- if hessian_approx == "EXACT" %}
-OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_constr_h_fun_jac_uxt_zt_hess.o
+OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_constr_h_fun_jac_uxt_hess.o
 {%- endif %}
 {%- endif %}
 {%- if constr_type_e == "BGH" and dims_nh_e > 0 %}
 OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_constr_h_e_fun_jac_uxt_zt.o
 {%- if hessian_approx == "EXACT" %}
-OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess.o
+OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_constr_h_e_fun_jac_uxt_hess.o
 {%- endif %}
 {%- endif %}
 {%- if cost_type == "NONLINEAR_LS" %}

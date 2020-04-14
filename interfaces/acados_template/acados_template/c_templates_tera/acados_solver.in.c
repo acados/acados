@@ -130,6 +130,9 @@ external_function_param_casadi * gnsf_get_matrices_fun;
 
 {%- if constraints.constr_type == "BGH" %}
 external_function_param_casadi * h_constraint;
+{% if solver_options.hessian_approx == "EXACT" %}
+external_function_param_casadi * h_constraint_hess;
+{%- endif %}
 {%- elif constraints.constr_type == "BGP" %}
 external_function_param_casadi * phi_constraint;
 // external_function_param_casadi * r_constraint;
@@ -137,6 +140,9 @@ external_function_param_casadi * phi_constraint;
 
 {%- if constraints.constr_type_e == "BGH" %}
 external_function_param_casadi h_e_constraint;
+{% if solver_options.hessian_approx == "EXACT" %}
+external_function_param_casadi h_e_constraint_hess;
+{%- endif %}
 {%- elif constraints.constr_type_e == "BGP" %}
 external_function_param_casadi phi_e_constraint;
 // external_function_param_casadi r_e_constraint;
@@ -422,6 +428,7 @@ int acados_create()
         external_function_param_casadi_create(&h_constraint[i], {{ dims.np }});
     }
     {% if solver_options.hessian_approx == "EXACT" %}
+    h_constraint_hess = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; i++) {
         // nonlinear constraint
         h_constraint_hess[i].casadi_fun = &{{ model.name }}_constr_h_fun_jac_uxt_hess;
