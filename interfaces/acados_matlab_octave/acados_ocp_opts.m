@@ -81,6 +81,7 @@ classdef acados_ocp_opts < handle
             obj.opts_struct.gnsf_detect_struct = 'true';
             obj.opts_struct.regularize_method = 'no_regularize';
             obj.opts_struct.print_level = 0;
+            obj.opts_struct.levenberg_marquardt = 0.0;
 
             obj.opts_struct.output_dir = fullfile(pwd, 'build');
             if ismac()
@@ -163,6 +164,8 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.output_dir = value;
             elseif (strcmp(field, 'print_level'))
                 obj.opts_struct.print_level = value;
+            elseif (strcmp(field, 'levenberg_marquardt'))
+                obj.opts_struct.levenberg_marquardt = value;
             elseif (strcmp(field, 'compile_mex'))
                 disp(['Option compile_mex is not supported anymore,'...
                     'please use compile_interface instead or dont set the option.', ...
