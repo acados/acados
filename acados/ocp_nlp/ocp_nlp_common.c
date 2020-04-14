@@ -1531,7 +1531,7 @@ int ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims,
     // tmp_nlp_out
     size += ocp_nlp_out_calculate_size(config, dims);
 
-    // weights_nlp_out
+    // weight_merit_fun
     size += ocp_nlp_out_calculate_size(config, dims);
 
     // array of pointers
@@ -1655,8 +1655,8 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
     work->tmp_nlp_out = ocp_nlp_out_assign(config, dims, c_ptr);
     c_ptr += ocp_nlp_out_calculate_size(config, dims);
 
-    // weights_nlp_out
-    work->weights_nlp_out = ocp_nlp_out_assign(config, dims, c_ptr);
+    // weight_merit_fun
+    work->weight_merit_fun = ocp_nlp_out_assign(config, dims, c_ptr);
     c_ptr += ocp_nlp_out_calculate_size(config, dims);
 
     // array of pointers
@@ -1985,7 +1985,6 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
                                   ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
                                   ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
-
     int i, j;
 
     int N = dims->N;
@@ -2001,7 +2000,8 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
     for (i=0; i<=N; i++)
     {
         // cost
-        config->cost[i]->compute_fun(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i], mem->cost[i], work->cost[i]);
+        config->cost[i]->compute_fun(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i],
+                                    mem->cost[i], work->cost[i]);
     }
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
@@ -2009,7 +2009,8 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
     for (i=0; i<N; i++)
     {
         // cost
-        config->dynamics[i]->compute_fun(config->dynamics[i], dims->dynamics[i], in->dynamics[i], opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
+        config->dynamics[i]->compute_fun(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
+                                         opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
     }
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
@@ -2039,11 +2040,11 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
 //        printf("\ni %d\n", i);
         tmp_fun_vec = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
 //        blasfeo_print_exp_tran_dvec(nx[i+1], tmp_fun_vec, 0);
-//        blasfeo_print_exp_tran_dvec(nx[i+1], work->weights_nlp_out->pi+i, 0);
+//        blasfeo_print_exp_tran_dvec(nx[i+1], work->weight_merit_fun->pi+i, 0);
         for(j=0; j<nx[i+1]; j++)
         {
-//            printf("\n%e %e\n", fabs(BLASFEO_DVECEL(work->weights_nlp_out->pi+i, j)), fabs(BLASFEO_DVECEL(tmp_fun_vec, j)));
-            dyn_fun += fabs(BLASFEO_DVECEL(work->weights_nlp_out->pi+i, j)) * fabs(BLASFEO_DVECEL(tmp_fun_vec, j));
+//            printf("\n%e %e\n", fabs(BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j)), fabs(BLASFEO_DVECEL(tmp_fun_vec, j)));
+            dyn_fun += fabs(BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j)) * fabs(BLASFEO_DVECEL(tmp_fun_vec, j));
         }
     }
 
@@ -2053,26 +2054,26 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
 //        printf("\ni %d\n", i);
         tmp_fun_vec = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
 //        blasfeo_print_exp_tran_dvec(2*ni[i], tmp_fun_vec, 0);
-//        blasfeo_print_exp_tran_dvec(2*ni[i], work->weights_nlp_out->lam+i, 0);
+//        blasfeo_print_exp_tran_dvec(2*ni[i], work->weight_merit_fun->lam+i, 0);
         for(j=0; j<2*ni[i]; j++)
         {
             tmp = BLASFEO_DVECEL(tmp_fun_vec, j);
             tmp = tmp>0.0 ? tmp : 0.0;
-//            printf("\n%e %e\n", fabs(BLASFEO_DVECEL(work->weights_nlp_out->pi+i, j)), fabs(BLASFEO_DVECEL(tmp_fun_vec, j)));
-            constr_fun += fabs(BLASFEO_DVECEL(work->weights_nlp_out->lam+i, j)) * tmp;
+//            printf("\n%e %e\n", fabs(BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j)), fabs(BLASFEO_DVECEL(tmp_fun_vec, j)));
+            constr_fun += fabs(BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j)) * tmp;
         }
     }
 
     merit_fun = cost_fun + dyn_fun + constr_fun;
 
-    printf("\n%e %e %e %e\n", merit_fun, cost_fun, dyn_fun, constr_fun);
+	printf("\nMerit fun: %e cost: %e dyn: %e constr: %e\n", merit_fun, cost_fun, dyn_fun, constr_fun);
 
     return merit_fun;
 }
 
 
 
-void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+static double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
     int i;
@@ -2080,22 +2081,18 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
     int N = dims->N;
     int *nv = dims->nv;
     int *nx = dims->nx;
-    int *nu = dims->nu;
     int *ni = dims->ni;
-    int *nz = dims->nz;
 
-    // ocp_nlp_config *config = (ocp_nlp_config *) config_;
-
-    // (fixed) step length
     double alpha = opts->step_length;
-
-#if 0 // XXX test piece of code
     double tmp0, tmp1;
+    int j;
 
+
+#if 0 // Line Search Gianluca version
     // current point
     for (i = 0; i <= N; i++)
         blasfeo_dveccp(nv[i], out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
-    
+
     for (i = 0; i < N; i++)
         blasfeo_dveccp(nx[i+1], out->pi+i, 0, work->tmp_nlp_out->pi+i, 0);
 
@@ -2105,17 +2102,17 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
         // linear update of algebraic variables using state and input sensitivity
 //        if (i < N)
 //        {
-//            blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0, mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out->z+i, 0); 
+//            blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0, mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out->z+i, 0);
 //        }
 
     // initialize weights
     if(mem->sqp_iter[0]==0)
     {
         for (i = 0; i < N; i++)
-            blasfeo_dveccp(nx[i+1], out->pi+i, 0, work->weights_nlp_out->pi+i, 0);
+            blasfeo_dveccp(nx[i+1], out->pi+i, 0, work->weight_merit_fun->pi+i, 0);
 
         for (i = 0; i <= N; i++)
-            blasfeo_dveccp(2*ni[i], out->lam+i, 0, work->weights_nlp_out->lam+i, 0);
+            blasfeo_dveccp(2*ni[i], out->lam+i, 0, work->weight_merit_fun->lam+i, 0);
     }
 
     // update weigths
@@ -2123,18 +2120,18 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
     {
         for(j=0; j<nx[i+1]; j++)
         {
-            tmp0 = fabs(BLASFEO_DVECEL(work->weights_nlp_out->pi+i, j));
+            tmp0 = fabs(BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j));
             tmp1 = 0.5 * (tmp0 + fabs(BLASFEO_DVECEL(mem->qp_out->pi+i, j)));
-            BLASFEO_DVECEL(work->weights_nlp_out->pi+i, j) = tmp0>tmp1 ? tmp0 : tmp1;
+            BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j) = tmp0>tmp1 ? tmp0 : tmp1;
         }
     }
     for (i = 0; i <= N; i++)
     {
         for(j=0; j<2*ni[i]; j++)
         {
-            tmp0 = fabs(BLASFEO_DVECEL(work->weights_nlp_out->lam+i, j));
+            tmp0 = fabs(BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j));
             tmp1 = 0.5 * (tmp0 + fabs(BLASFEO_DVECEL(mem->qp_out->lam+i, j)));
-            BLASFEO_DVECEL(work->weights_nlp_out->lam+i, j) = tmp0>tmp1 ? tmp0 : tmp1;
+            BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j) = tmp0>tmp1 ? tmp0 : tmp1;
         }
     }
 
@@ -2167,8 +2164,122 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
 #endif
 
 
+#if 1 // Line search version Jonathan
+    // copy out (current iterate) to work->tmp_nlp_out
+    for (i = 0; i <= N; i++)
+        blasfeo_dveccp(nv[i], out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
+
+    for (i = 0; i < N; i++)
+        blasfeo_dveccp(nx[i+1], out->pi+i, 0, work->tmp_nlp_out->pi+i, 0);
+
+    for (i = 0; i <= N; i++)
+        blasfeo_dveccp(2*ni[i], out->lam+i, 0, work->tmp_nlp_out->lam+i, 0);
+
+        // linear update of algebraic variables using state and input sensitivity
+//        if (i < N)
+//        {
+//            blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0, mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out->z+i, 0);
+//        }
+
+    /* initialize (Leineweber1999 M5.1) */
+    if (mem->sqp_iter[0]==0)
+    {
+        // TODO: take abs() as in Leineweber
+        // initialize weights
+        printf("merit fun: initialize weights pi\n");
+        for (i = 0; i < N; i++)
+        {
+            blasfeo_dveccp(nx[i+1], out->pi+i, 0, work->weight_merit_fun->pi+i, 0);
+            blasfeo_print_dvec(nx[i+1], work->weight_merit_fun->pi+i, 0);
+        }
+
+        printf("merit fun: initialize weights lam\n");
+        for (i = 0; i <= N; i++)
+        {
+            blasfeo_dveccp(2*ni[i], out->lam+i, 0, work->weight_merit_fun->lam+i, 0);
+            blasfeo_print_dvec(nx[i+1], work->weight_merit_fun->lam+i, 0);
+        }
+    }
+    else
+    {
+        // update weights
+        printf("merit fun: update weights, sqp_iter = %d\n", mem->sqp_iter[0]);
+        for (i = 0; i < N; i++)
+        {
+            for(j=0; j<nx[i+1]; j++)
+            {
+                // abs(lambda) (LW)
+                tmp0 = fabs(BLASFEO_DVECEL(out->pi+i, j));
+                // .5 * (abs(lambda) + sigma)
+                tmp1 = 0.5 * (tmp0 + BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j));
+                BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j) = tmp0>tmp1 ? tmp0 : tmp1;
+            }
+        }
+        for (i = 0; i <= N; i++)
+        {
+            for(j=0; j<2*ni[i]; j++)
+            {
+                // mu (LW)
+                tmp0 = BLASFEO_DVECEL(out->lam+i, j);
+                // .5 * (mu + tau)
+                tmp1 = 0.5 * (tmp0 + BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j));
+                BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j) = tmp0>tmp1 ? tmp0 : tmp1;
+            }
+        }
+    }
+
+    if (mem->sqp_iter[0]!=0)
+    {
+
+        double merit_fun0 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
+
+        double alpha_min = 0.1;
+
+        /* actual Line Search*/
+        alpha = 1.0;  // TODO: handle fixed step length
+
+        for (j=0; (j<10) & (alpha>alpha_min); j++)
+        {
+
+            for (i = 0; i <= N; i++)
+                blasfeo_daxpy(nv[i], alpha, mem->qp_out->ux+i, 0, out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
+
+            printf("\ntmp merit fun value step search iter: %d", j);
+            double merit_fun1 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
+
+            if(merit_fun1 < merit_fun0)
+            {
+                break;
+            }
+            else
+            {
+                alpha *= 0.7;
+            }
+        }
+    }
+
+    printf("\nalpha %f\n", alpha);
+#endif
+
+    return alpha;
+
+}
 
 
+void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+{
+    int i;
+
+    int N = dims->N;
+    int *nv = dims->nv;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ni = dims->ni;
+    int *nz = dims->nz;
+
+    // step length
+    double alpha = ocp_nlp_line_search(config, dims, in, out, opts, mem, work);
 
 
 #if defined(ACADOS_WITH_OPENMP)
@@ -2176,7 +2287,7 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
 #endif
     for (i = 0; i <= N; i++)
     {
-        // (full) step in primal variables
+        // step in primal variables
         blasfeo_daxpy(nv[i], alpha, mem->qp_out->ux + i, 0, out->ux + i, 0, out->ux + i, 0);
     
         // update dual variables

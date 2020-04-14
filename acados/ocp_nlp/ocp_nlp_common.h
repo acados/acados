@@ -329,7 +329,7 @@ typedef struct
     void **constraints;  // constraints_workspace
 
 	ocp_nlp_out *tmp_nlp_out;
-	ocp_nlp_out *weights_nlp_out;
+	ocp_nlp_out *weight_merit_fun;
 
 } ocp_nlp_workspace;
 
