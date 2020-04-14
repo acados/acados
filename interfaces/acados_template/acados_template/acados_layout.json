@@ -95,6 +95,12 @@
                 "nbx_0"
             ]
         ],
+        "idxbxe_0": [
+            "ndarray",
+            [
+                "nbxe_0"
+            ]
+        ],
         "lg": [
             "ndarray",
             [
@@ -484,6 +490,9 @@
             "int"
         ],
         "nbx_e": [
+            "int"
+        ],
+        "nbxe_0": [
             "int"
         ],
         "nsg": [

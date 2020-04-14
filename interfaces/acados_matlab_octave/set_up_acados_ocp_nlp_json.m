@@ -59,7 +59,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     ocp_json.solver_options.qp_solver_cond_N = obj.opts_struct.qp_solver_cond_N;
     ocp_json.solver_options.qp_solver_iter_max = obj.opts_struct.qp_solver_iter_max;
 
-    ocp_json.solver_options.time_steps = obj.opts_struct.time_steps
+    ocp_json.solver_options.time_steps = obj.opts_struct.time_steps;
 
     %% dims
     % path
@@ -73,6 +73,8 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     ocp_json.dims.nbu = model.dim_nbu;
     ocp_json.dims.ng = model.dim_ng;
     ocp_json.dims.nh = model.dim_nh;
+    ocp_json.dims.nbxe_0 = model.dim_nbxe_0;
+
     if isfield(model, 'dim_ns')
         ocp_json.dims.ns = model.dim_ns;
     end
@@ -87,8 +89,8 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
         ocp_json.dims.nsg = model.nsg;
     end
     % missing in MEX
-    % ocp_json.dims.npd = model.npd;
-    % ocp_json.dims.npd_e = model.npd_e;
+    % ocp_json.dims.nphi;
+    % ocp_json.dims.nphi_e;
 
     if isfield(model, 'dim_nsh')
         ocp_json.dims.nsh = model.dim_nsh;
@@ -151,6 +153,8 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     if isfield(model, 'constr_Jbx_0')
         ocp_json.constraints.idxbx_0 = J_to_idx( model.constr_Jbx_0 );
     end
+    ocp_json.constraints.idxbxe_0 = model.constr_idxbxe_0;
+
 
     % path
     if ocp_json.dims.nbx > 0

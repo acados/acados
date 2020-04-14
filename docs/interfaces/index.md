@@ -96,23 +96,25 @@ For more information contact `@zanellia`.
     :private-members:
     :undoc-members:
 ```
+
 ``` eval_rst
-.. automodule:: acados_template.AcadosModel
+.. automodule:: acados_template.acados_ocp
+    :members:
+    :private-members:
+    :exclude-members:
+```
+
+``` eval_rst
+.. automodule:: acados_template.acados_model
     :members:
     :private-members:
     :exclude-members:
 ```
 <!-- OCP -->
 
-``` eval_rst
-.. automodule:: acados_template.AcadosOcp
-    :members:
-    :private-members:
-    :exclude-members:
-```
 
 ``` eval_rst
-.. automodule:: acados_template.AcadosOcpSolver
+.. automodule:: acados_template.acados_ocp_solver
     :members:
     :private-members:
     :exclude-members: make_ocp_dims_consistent, get_ocp_nlp_layout
@@ -120,14 +122,14 @@ For more information contact `@zanellia`.
 
 <!-- SIM -->
 ``` eval_rst
-.. automodule:: acados_template.AcadosSim
+.. automodule:: acados_template.acados_sim
     :members:
     :private-members:
     :exclude-members:
 ```
 
 ``` eval_rst
-.. automodule:: acados_template.AcadosSimSolver
+.. automodule:: acados_template.acados_sim_solver
     :members:
     :private-members:
     :exclude-members: make_ocp_dims_consistent, get_ocp_nlp_layout
