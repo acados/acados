@@ -103,6 +103,7 @@ int main()
     {% elif solver_options.integrator_type == "ERK" %}
     for (int ii = 0; ii < {{ dims.N }}; ii++)
     {
+        expl_ode_fun[ii].set_param(expl_ode_fun+ii, p);
         forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
     }
     {%- endif %}

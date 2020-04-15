@@ -73,7 +73,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     // field names of output struct
     #define FIELDS_OCP 8
-    #define FIELDS_EXT_FUN 8
+    #define FIELDS_EXT_FUN 9
     #define MAX_FIELDS 8
     char *fieldnames[MAX_FIELDS];
 
@@ -145,15 +145,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxSetField(plhs[0], 0, "sens_out", sens_out_mat);
 
     /* store external function pointers */
-    memcpy(fieldnames[0],"forw_vde",sizeof("forw_vde"));
-    memcpy(fieldnames[1],"hess_vde",sizeof("hess_vde"));
-    memcpy(fieldnames[2],"impl_dae_fun",sizeof("impl_dae_fun"));
-    memcpy(fieldnames[3],"impl_dae_fun_jac_x_xdot_z",sizeof("impl_dae_fun_jac_x_xdot_z"));
-    memcpy(fieldnames[4],"impl_dae_jac_x_xdot_u_z",sizeof("impl_dae_jac_x_xdot_u_z"));
+    memcpy(fieldnames[0],"expl_ode_fun",sizeof("expl_ode_fun"));
+    memcpy(fieldnames[1],"forw_vde",sizeof("forw_vde"));
+    memcpy(fieldnames[2],"hess_vde",sizeof("hess_vde"));
+    memcpy(fieldnames[3],"impl_dae_fun",sizeof("impl_dae_fun"));
+    memcpy(fieldnames[4],"impl_dae_fun_jac_x_xdot_z",sizeof("impl_dae_fun_jac_x_xdot_z"));
+    memcpy(fieldnames[5],"impl_dae_jac_x_xdot_u_z",sizeof("impl_dae_jac_x_xdot_u_z"));
     // constraints
-    memcpy(fieldnames[5],"phi_constraint",sizeof("phi_constraint"));
-    memcpy(fieldnames[6],"nl_constr_h_fun_jac",sizeof("nl_constr_h_fun_jac"));
-    memcpy(fieldnames[7],"nl_constr_h_fun",sizeof("nl_constr_h_fun"));
+    memcpy(fieldnames[6],"phi_constraint",sizeof("phi_constraint"));
+    memcpy(fieldnames[7],"nl_constr_h_fun_jac",sizeof("nl_constr_h_fun_jac"));
+    memcpy(fieldnames[8],"nl_constr_h_fun",sizeof("nl_constr_h_fun"));
 
     // create output struct - C_ocp_ext_fun
     plhs[1] = mxCreateStructMatrix(1, 1, FIELDS_EXT_FUN, (const char **) fieldnames);
@@ -165,6 +166,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
 
 // dynamics
+    mxArray *expl_ode_fun_mat = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
     mxArray *forw_vde_mat = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
     mxArray *hess_vde_mat = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
     mxArray *impl_dae_fun_mat = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
@@ -175,7 +177,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {# TODO: remove _casadi from these names.. #}
     l_ptr = mxGetData(forw_vde_mat);
     l_ptr[0] = (long long) forw_vde_casadi;
-    // mexPrintf("\nforw vde %p\n", forw_vde_casadi);
+    //
+    l_ptr = mxGetData(expl_ode_fun_mat);
+    l_ptr[0] = (long long) expl_ode_fun;
 {% if solver_options.hessian_approx == "EXACT" %}
     l_ptr = mxGetData(hess_vde_mat);
     l_ptr[0] = (long long) hess_vde_casadi;
@@ -191,6 +195,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     l_ptr = mxGetData(impl_dae_jac_x_xdot_u_z_mat);
     l_ptr[0] = (long long) impl_dae_jac_x_xdot_u_z;
 {%- endif %}
+    mxSetField(plhs[1], 0, "expl_ode_fun", expl_ode_fun_mat);
     mxSetField(plhs[1], 0, "forw_vde", forw_vde_mat);
     mxSetField(plhs[1], 0, "hess_vde", hess_vde_mat);
 

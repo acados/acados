@@ -157,12 +157,10 @@ void *sim_erk_model_assign(void *config, void *dims, void *raw_memory)
 
 int sim_erk_model_set(void *model_, const char *field, void *value)
 {
-//    printf("\nsim_erk_model_set\n");
     erk_model *model = model_;
 
     if (!strcmp(field, "expl_ode_fun"))
     {
-//    printf("\nsim_erk_model_set expl_ode_fun\n");
         model->expl_ode_fun = value;
     }
     else if (!strcmp(field, "expl_vde_for") || !strcmp(field, "expl_vde_forw"))

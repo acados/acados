@@ -73,6 +73,7 @@ extern ocp_nlp_dims * nlp_dims;
 // dynamics
 {% if solver_options.integrator_type == "ERK" %}
 extern external_function_param_casadi * forw_vde_casadi;
+extern external_function_param_casadi * expl_ode_fun;
 {% if solver_options.hessian_approx == "EXACT" %}
 extern external_function_param_casadi * hess_vde_casadi;
 {%- endif %}

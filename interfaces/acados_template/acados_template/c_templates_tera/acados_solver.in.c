@@ -110,6 +110,7 @@ ocp_nlp_dims * nlp_dims;
 
 {%- if solver_options.integrator_type == "ERK" %}
 external_function_param_casadi * forw_vde_casadi;
+external_function_param_casadi * expl_ode_fun;
 {% if solver_options.hessian_approx == "EXACT" %}
 external_function_param_casadi * hess_vde_casadi;
 {%- endif %}
@@ -454,7 +455,6 @@ int acados_create()
 {% if solver_options.integrator_type == "ERK" %}
     // explicit ode
     forw_vde_casadi = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
-
     for (int i = 0; i < N; i++) {
         forw_vde_casadi[i].casadi_fun = &{{ model.name }}_expl_vde_forw;
         forw_vde_casadi[i].casadi_n_in = &{{ model.name }}_expl_vde_forw_n_in;
@@ -463,6 +463,17 @@ int acados_create()
         forw_vde_casadi[i].casadi_sparsity_out = &{{ model.name }}_expl_vde_forw_sparsity_out;
         forw_vde_casadi[i].casadi_work = &{{ model.name }}_expl_vde_forw_work;
         external_function_param_casadi_create(&forw_vde_casadi[i], {{ dims.np }});
+    }
+
+    expl_ode_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
+    for (int i = 0; i < N; i++) {
+        expl_ode_fun[i].casadi_fun = &{{ model.name }}_expl_ode_fun;
+        expl_ode_fun[i].casadi_n_in = &{{ model.name }}_expl_ode_fun_n_in;
+        expl_ode_fun[i].casadi_n_out = &{{ model.name }}_expl_ode_fun_n_out;
+        expl_ode_fun[i].casadi_sparsity_in = &{{ model.name }}_expl_ode_fun_sparsity_in;
+        expl_ode_fun[i].casadi_sparsity_out = &{{ model.name }}_expl_ode_fun_sparsity_out;
+        expl_ode_fun[i].casadi_work = &{{ model.name }}_expl_ode_fun_work;
+        external_function_param_casadi_create(&expl_ode_fun[i], {{ dims.np }});
     }
 
     {%- if solver_options.hessian_approx == "EXACT" %}
@@ -720,9 +731,10 @@ int acados_create()
     for (int i = 0; i < N; i++)
     {
     {%- if solver_options.integrator_type == "ERK" %}
-        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "expl_vde_for", &forw_vde_casadi[i]);
+        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "expl_vde_forw", &forw_vde_casadi[i]);
+        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "expl_ode_fun", &expl_ode_fun[i]);
         {%- if solver_options.hessian_approx == "EXACT" %}
-        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "expl_ode_hes", &hess_vde_casadi[i]);
+        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "expl_ode_hess", &hess_vde_casadi[i]);
         {%- endif %}
     {% elif solver_options.integrator_type == "IRK" %}
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "impl_dae_fun", &impl_dae_fun[i]);
@@ -1508,6 +1520,7 @@ int acados_create()
     for (int ii = 0; ii < N; ii++)
     {
         forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
+        expl_ode_fun[ii].set_param(expl_ode_fun+ii, p);
     }
 {% elif solver_options.integrator_type == "GNSF" %}
     for (int ii = 0; ii < N; ii++)
@@ -1632,6 +1645,14 @@ int acados_update_params(int stage, double *p, int np)
             exit(1);
         }
         forw_vde_casadi[stage].set_param(forw_vde_casadi+stage, p);
+
+        casadi_np = (expl_ode_fun+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in expl_ode_fun which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        expl_ode_fun[stage].set_param(expl_ode_fun+stage, p);
 
         {%- if solver_options.hessian_approx == "EXACT" %}
         casadi_np = (hess_vde_casadi+stage)->np;
@@ -1849,6 +1870,7 @@ int acados_free()
     for (int i = 0; i < {{ dims.N }}; i++)
     {
         external_function_param_casadi_free(&forw_vde_casadi[i]);
+        external_function_param_casadi_free(&expl_ode_fun[i]);
     {%- if solver_options.hessian_approx == "EXACT" %}
         external_function_param_casadi_free(&hess_vde_casadi[i]);
     {%- endif %}
