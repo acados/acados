@@ -683,6 +683,11 @@ void ocp_nlp_cost_external_compute_fun(void *config_, void *dims_, void *model_,
     ext_fun_out[0] = &memory->fun;  // function: scalar
 
     // evaluate external function
+    if (model->ext_cost_fun == 0)
+    {
+        printf("ocp_nlp_cost_external_compute_fun: ext_cost_fun is not provided. Exiting.\n");
+        exit(1);
+    }
     model->ext_cost_fun->evaluate(model->ext_cost_fun, ext_fun_type_in, ext_fun_in,
                                   ext_fun_type_out, ext_fun_out);
 

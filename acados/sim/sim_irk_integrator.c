@@ -1030,6 +1030,11 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 }
                 else // only eval function (without jacobian)
                 {
+                    if (model->impl_ode_fun == 0)
+                    {
+                        printf("sim IRK: impl_ode_fun is not provided. Exiting.\n");
+                        exit(1);
+                    }
                     acados_tic(&timer_ad);
                     model->impl_ode_fun->evaluate(model->impl_ode_fun, impl_ode_type_in,
                                                   impl_ode_in, impl_ode_fun_type_out,

@@ -1453,7 +1453,7 @@ void ocp_nlp_constraints_bgh_compute_fun(void *config_, void *dims_, void *model
 
         if (model->nl_constr_h_fun == 0)
         {
-            printf("constraints BGH: nl_constr_h_fun is not provided. Exiting.");
+            printf("ocp_nlp_constraints_bgh_compute_fun: nl_constr_h_fun is not provided. Exiting.\n");
             exit(1);
         }
         model->nl_constr_h_fun->evaluate(model->nl_constr_h_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
