@@ -904,8 +904,6 @@ void ocp_nlp_dynamics_cont_compute_fun(void *config_, void *dims_, void *model_,
     config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_adj", &sens_adj_bkp);
     config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_hess", &sens_hess_bkp);
 
-    // TODO transition functions for changing dimensions not yet implemented!
-
     // function
     blasfeo_pack_dvec(nx1, work->sim_out->xn, &mem->fun, 0);
     blasfeo_daxpy(nx1, -1.0, mem->tmp_ux1, nu1, &mem->fun, 0, &mem->fun, 0);

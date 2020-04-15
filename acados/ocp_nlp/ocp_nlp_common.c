@@ -2008,7 +2008,7 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
 #endif
     for (i=0; i<N; i++)
     {
-        // cost
+        // dynamics
         config->dynamics[i]->compute_fun(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
                                          opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
     }
@@ -2058,8 +2058,8 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
         for(j=0; j<2*ni[i]; j++)
         {
             tmp = BLASFEO_DVECEL(tmp_fun_vec, j);
-            tmp = tmp>0.0 ? tmp : 0.0;
-//            printf("\n%e %e\n", fabs(BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j)), fabs(BLASFEO_DVECEL(tmp_fun_vec, j)));
+            tmp = tmp>0.0 ? fabs(tmp) : 0.0;  // tmp = constraint violation
+            // printf("IN merit fun: ineq i %d, j %d tmp_fun%e, multiplier %e\n", i, j, BLASFEO_DVECEL(tmp_fun_vec, j), BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j));
             constr_fun += fabs(BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j)) * tmp;
         }
     }
@@ -2138,7 +2138,7 @@ static double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
     printf("\n\nmerit fun value\n");
     double merit_fun0 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
 
-    double alpha_min = 0.2;
+    double alpha_min = 0.1;
 
     for (j=0; j<10 & alpha>alpha_min; j++)
     {
@@ -2164,7 +2164,7 @@ static double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
 #endif
 
 
-#if 1 // Line search version Jonathan
+#if 0 // Line search version Jonathan
     // copy out (current iterate) to work->tmp_nlp_out
     for (i = 0; i <= N; i++)
         blasfeo_dveccp(nv[i], out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
@@ -2190,20 +2190,20 @@ static double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
         for (i = 0; i < N; i++)
         {
             blasfeo_dveccp(nx[i+1], out->pi+i, 0, work->weight_merit_fun->pi+i, 0);
-            blasfeo_print_dvec(nx[i+1], work->weight_merit_fun->pi+i, 0);
+            // blasfeo_print_dvec(nx[i+1], work->weight_merit_fun->pi+i, 0);
         }
 
         printf("merit fun: initialize weights lam\n");
         for (i = 0; i <= N; i++)
         {
             blasfeo_dveccp(2*ni[i], out->lam+i, 0, work->weight_merit_fun->lam+i, 0);
-            blasfeo_print_dvec(nx[i+1], work->weight_merit_fun->lam+i, 0);
+            // blasfeo_print_dvec(nx[i+1], work->weight_merit_fun->lam+i, 0);
         }
     }
     else
     {
         // update weights
-        printf("merit fun: update weights, sqp_iter = %d\n", mem->sqp_iter[0]);
+        // printf("merit fun: update weights, sqp_iter = %d\n", mem->sqp_iter[0]);
         for (i = 0; i < N; i++)
         {
             for(j=0; j<nx[i+1]; j++)
@@ -2228,7 +2228,7 @@ static double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
         }
     }
 
-    if (mem->sqp_iter[0]!=0)
+    if (1) // (mem->sqp_iter[0]!=0) // TODO: why does Leineweber do full step in first SQP iter?
     {
 
         double merit_fun0 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
