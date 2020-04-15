@@ -283,7 +283,7 @@ void ocp_qp_partial_condensing_opts_update(void *dims_, void *opts_)
     // hpipm_pcond_opts
 	opts->hpipm_pcond_opts->N2 = opts->N2;
     d_part_cond_qp_arg_set_default(opts->hpipm_pcond_opts);
-	d_part_cond_qp_arg_set_ric_alg(opts->ric_alg, opts->N2, opts->hpipm_pcond_opts);
+	d_part_cond_qp_arg_set_ric_alg(opts->ric_alg, opts->hpipm_pcond_opts);
 
 	return;
 }
