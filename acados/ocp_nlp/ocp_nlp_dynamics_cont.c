@@ -876,14 +876,13 @@ void ocp_nlp_dynamics_cont_compute_fun(void *config_, void *dims_, void *model_,
 
     if (mem->set_sim_guess!=NULL && mem->set_sim_guess[0])
     {
-        config->sim_solver->memory_set(config->sim_solver, work->sim_in->dims, mem->sim_solver, "guesses_blasfeo", mem->sim_guess);
+        config->sim_solver->memory_set(config->sim_solver, work->sim_in->dims, mem->sim_solver,
+                                       "guesses_blasfeo", mem->sim_guess);
         // only use/pass the initial guess once
         mem->set_sim_guess[0] = false;
     }
 
-	// TODO get opts for sens as backup, and set them to false
-
-	// backup sens
+	// backup sens options
 	bool sens_forw_bkp, sens_adj_bkp, sens_hess_bkp;
     config->sim_solver->opts_get(config->sim_solver, opts->sim_solver, "sens_forw", &sens_forw_bkp);
     config->sim_solver->opts_get(config->sim_solver, opts->sim_solver, "sens_adj", &sens_adj_bkp);
@@ -899,13 +898,14 @@ void ocp_nlp_dynamics_cont_compute_fun(void *config_, void *dims_, void *model_,
     config->sim_solver->evaluate(config->sim_solver, work->sim_in, work->sim_out, opts->sim_solver,
             mem->sim_solver, work->sim_solver);
 
-	// restore sens
+	// restore sens options
     config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_forw", &sens_forw_bkp);
     config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_adj", &sens_adj_bkp);
     config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_hess", &sens_hess_bkp);
 
     // function
     blasfeo_pack_dvec(nx1, work->sim_out->xn, &mem->fun, 0);
+    // fun -= x[next_stage]
     blasfeo_daxpy(nx1, -1.0, mem->tmp_ux1, nu1, &mem->fun, 0, &mem->fun, 0);
 //    blasfeo_pack_dvec(nz, work->sim_out->zn, mem->z_alg, 0);
 
