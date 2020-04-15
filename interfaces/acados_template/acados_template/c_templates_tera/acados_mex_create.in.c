@@ -73,7 +73,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     // field names of output struct
     #define FIELDS_OCP 8
-    #define FIELDS_EXT_FUN 7
+    #define FIELDS_EXT_FUN 8
     #define MAX_FIELDS 8
     char *fieldnames[MAX_FIELDS];
 
@@ -152,7 +152,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     memcpy(fieldnames[4],"impl_dae_jac_x_xdot_u_z",sizeof("impl_dae_jac_x_xdot_u_z"));
     // constraints
     memcpy(fieldnames[5],"phi_constraint",sizeof("phi_constraint"));
-    memcpy(fieldnames[6],"h_constraint",sizeof("h_constraint"));
+    memcpy(fieldnames[6],"nl_constr_h_fun_jac",sizeof("nl_constr_h_fun_jac"));
+    memcpy(fieldnames[7],"nl_constr_h_fun",sizeof("nl_constr_h_fun"));
 
     // create output struct - C_ocp_ext_fun
     plhs[1] = mxCreateStructMatrix(1, 1, FIELDS_EXT_FUN, (const char **) fieldnames);
@@ -208,16 +209,25 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {% endif %}
     mxSetField(plhs[1], 0, "phi_constraint", phi_constraint_mat);
 
-    mxArray *h_constraint_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
-    l_ptr = mxGetData(h_constraint_mat);
+    mxArray *nl_constr_h_fun_jac_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
+    l_ptr = mxGetData(nl_constr_h_fun_jac_mat);
 {% if constraints.constr_type == "BGH" and dims.nh > 0 %}
-    l_ptr[0] = (long long) h_constraint;
+    l_ptr[0] = (long long) nl_constr_h_fun_jac;
 {% endif %}
 {% if constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
-    l_ptr[1] = (long long) &h_e_constraint;
+    l_ptr[1] = (long long) &nl_constr_h_e_fun_jac;
 {%- endif %}
-    mxSetField(plhs[1], 0, "h_constraint", h_constraint_mat);
+    mxSetField(plhs[1], 0, "nl_constr_h_fun_jac", nl_constr_h_fun_jac_mat);
 
+    mxArray *nl_constr_h_fun_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
+    l_ptr = mxGetData(nl_constr_h_fun_mat);
+{% if constraints.constr_type == "BGH" and dims.nh > 0 %}
+    l_ptr[0] = (long long) nl_constr_h_fun;
+{% endif %}
+{% if constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
+    l_ptr[1] = (long long) &nl_constr_h_e_fun;
+{%- endif %}
+    mxSetField(plhs[1], 0, "nl_constr_h_fun", nl_constr_h_fun_mat);
 
 // {% if cost.cost_type == "NONLINEAR_LS" %}
 //     mxArray *cost_y_fun_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);

@@ -1023,7 +1023,7 @@ class AcadosOcpSolver:
         """
         set options of the solver:
         Parameters:
-            :param field_: string, e.g. 'print_level', 'rti_phase', 'step_length'
+            :param field_: string, e.g. 'print_level', 'rti_phase', 'initialize_t_slacks', 'step_length'
             :param value_: of type int, float
         """
         int_fields = ['print_level', 'rti_phase', 'initialize_t_slacks']

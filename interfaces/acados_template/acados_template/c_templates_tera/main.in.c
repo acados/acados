@@ -112,7 +112,8 @@ int main()
         phi_constraint[ii].set_param(phi_constraint+ii, p);
         {%- endif %}
         {%- if dims.nh > 0 %}
-        h_constraint[ii].set_param(h_constraint+ii, p);
+        nl_constr_h_fun_jac[ii].set_param(nl_constr_h_fun_jac+ii, p);
+        nl_constr_h_fun[ii].set_param(nl_constr_h_fun+ii, p);
         {% endif %}
     }
     {%- if constraints.constr_type_e == "BGP" %}
@@ -120,7 +121,8 @@ int main()
     phi_e_constraint.set_param(&phi_e_constraint, p);
     {% endif %}
     {%- if dims.nh_e > 0 %}
-    h_e_constraint.set_param(&h_e_constraint, p);
+    nl_constr_h_e_fun_jac.set_param(&nl_constr_h_e_fun_jac, p);
+    nl_constr_h_e_fun.set_param(&nl_constr_h_e_fun, p);
     {% endif %}
   {% endif %}{# if np > 0 #}
 

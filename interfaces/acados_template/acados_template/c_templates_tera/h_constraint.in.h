@@ -45,6 +45,13 @@ const int *{{ model.name }}_constr_h_fun_jac_uxt_zt_sparsity_in(int);
 const int *{{ model.name }}_constr_h_fun_jac_uxt_zt_sparsity_out(int);
 int {{ model.name }}_constr_h_fun_jac_uxt_zt_n_in();
 int {{ model.name }}_constr_h_fun_jac_uxt_zt_n_out();
+
+int {{ model.name }}_constr_h_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ model.name }}_constr_h_fun_work(int *, int *, int *, int *);
+const int *{{ model.name }}_constr_h_fun_sparsity_in(int);
+const int *{{ model.name }}_constr_h_fun_sparsity_out(int);
+int {{ model.name }}_constr_h_fun_n_in();
+int {{ model.name }}_constr_h_fun_n_out();
 {% endif %}
 
 #ifdef __cplusplus

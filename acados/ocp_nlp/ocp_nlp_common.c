@@ -1810,6 +1810,38 @@ void ocp_nlp_initialize_qp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
 }
 
 
+void ocp_nlp_initialize_t_slacks(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+         ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+{
+    int ii;
+    struct blasfeo_dvec *ineq_fun;
+    int N = dims->N;
+    int *ni = dims->ni;
+    int *ns = dims->ns;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (ii = 0; ii <= N; ii++)
+    {
+        // copy out->ux to tmp_nlp_out->ux, since this is used in compute_fun
+        blasfeo_dveccp(nx[ii]+nu[ii]+2*ns[ii], out->ux+ii, 0, work->tmp_nlp_out->ux+ii, 0);
+
+        // evaluate inequalities
+        config->constraints[ii]->compute_fun(config->constraints[ii], dims->constraints[ii],
+                                             in->constraints[ii], opts->constraints[ii],
+                                             mem->constraints[ii], work->constraints[ii]);
+        ineq_fun = config->constraints[ii]->memory_get_fun_ptr(mem->constraints[ii]);
+        // t = -ineq_fun
+        blasfeo_dveccpsc(2 * ni[ii], -1.0, ineq_fun, 0, out->t + ii, 0);
+    }
+
+    return;
+}
+
+
 
 void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
     ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem,
