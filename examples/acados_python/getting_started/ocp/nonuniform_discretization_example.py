@@ -118,13 +118,14 @@ simX = np.ndarray((N+1, nx))
 simU = np.ndarray((N, nu))
 
 ocp_solver.options_set("step_length", 0.99999)
+ocp_solver.options_set("globalization", "fixed_step") # fixed_step, merit_backtracking
 
 # initialize solver
 for i in range(N):
     ocp_solver.set(i, "x", x0)
 status = ocp_solver.solve()
 
-if status != 0:
+if status not in [0, 2]:
     raise Exception('acados returned status {}. Exiting.'.format(status))
 
 # get primal solution
