@@ -2116,7 +2116,7 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
     merit_fun = cost_fun + dyn_fun + constr_fun;
 
-	printf("\nMerit fun: %e cost: %e dyn: %e constr: %e\n", merit_fun, cost_fun, dyn_fun, constr_fun);
+	// printf("\nMerit fun: %e cost: %e dyn: %e constr: %e\n", merit_fun, cost_fun, dyn_fun, constr_fun);
 
     return merit_fun;
 }
@@ -2238,14 +2238,14 @@ static double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
         {
             // TODO: take abs() as in Leineweber
             // initialize weights
-            printf("merit fun: initialize weights pi\n");
+            // printf("merit fun: initialize weights pi\n");
             for (i = 0; i < N; i++)
             {
                 blasfeo_dveccp(nx[i+1], out->pi+i, 0, work->weight_merit_fun->pi+i, 0);
                 // blasfeo_print_dvec(nx[i+1], work->weight_merit_fun->pi+i, 0);
             }
 
-            printf("merit fun: initialize weights lam\n");
+            // printf("merit fun: initialize weights lam\n");
             for (i = 0; i <= N; i++)
             {
                 blasfeo_dveccp(2*ni[i], out->lam+i, 0, work->weight_merit_fun->lam+i, 0);
@@ -2295,7 +2295,7 @@ static double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
                 for (i = 0; i <= N; i++)
                     blasfeo_daxpy(nv[i], alpha, mem->qp_out->ux+i, 0, out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
 
-                printf("\ntmp merit fun value step search iter: %d", j);
+                // printf("\ntmp merit fun value step search iter: %d", j);
                 double merit_fun1 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
 
                 if(merit_fun1 < merit_fun0)
