@@ -46,7 +46,7 @@ matrix:
       env:
         - DEPLOY_NAME="linux octave gcc6"
         - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
-        - ACADOS_OCTAVE="OFF"
+        - ACADOS_OCTAVE="ON"
         - ACADOS_OCTAVE_TEMPLATE="OFF"
         - ACADOS_EXAMPLES="OFF"
         - ACADOS_UNIT_TESTS="OFF"

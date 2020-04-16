@@ -55,7 +55,7 @@ model_name = 'pend_dae';
 param_scheme = 'multiple_shooting_unif_grid';
 ocp_N = 50;
 nlp_solver = 'sqp_rti'; % sqp, sqp_rti
-nlp_solver_exact_hessian = 'true';
+nlp_solver_exact_hessian = 'false';
 regularize_method = 'project_reduc_hess'; % no_regularize, project,...
     % project_reduc_hess, mirror, convexify
 nlp_solver_max_iter = 100;
