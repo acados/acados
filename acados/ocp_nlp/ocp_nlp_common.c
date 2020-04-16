@@ -1154,7 +1154,6 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts,
                                     field+module_length+1, value);
     }
-    // pass options to dynamics module
     else // nlp opts
     {
         if (!strcmp(field, "reuse_workspace"))
@@ -1203,10 +1202,33 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
                 config->cost[ii]->opts_set(config->cost[ii], opts->cost[ii], "exact_hess", value);
             // dynamics
             for (ii=0; ii<N; ii++)
-                config->dynamics[ii]->opts_set(config->dynamics[ii], opts->dynamics[ii], "compute_hess", value);
+                config->dynamics[ii]->opts_set(config->dynamics[ii], opts->dynamics[ii],
+                                               "compute_hess", value);
             // constraints
             for (ii=0; ii<=N; ii++)
-                config->constraints[ii]->opts_set(config->constraints[ii], opts->constraints[ii], "compute_hess", value);
+                config->constraints[ii]->opts_set(config->constraints[ii], opts->constraints[ii],
+                                                  "compute_hess", value);
+        }
+        // selectively turn on exact hessian contributions
+        else if (!strcmp(field, "exact_hess_cost"))
+        {
+            int N = config->N;
+            for (ii=0; ii<=N; ii++)
+                config->cost[ii]->opts_set(config->cost[ii], opts->cost[ii], "exact_hess", value);
+        }
+        else if (!strcmp(field, "exact_hess_dyn"))
+        {
+            int N = config->N;
+            for (ii=0; ii<N; ii++)
+                config->dynamics[ii]->opts_set(config->dynamics[ii], opts->dynamics[ii],
+                                               "compute_hess", value);
+        }
+        else if (!strcmp(field, "exact_hess_constr"))
+        {
+            int N = config->N;
+            for (ii=0; ii<=N; ii++)
+                config->constraints[ii]->opts_set(config->constraints[ii], opts->constraints[ii],
+                                                  "compute_hess", value);
         }
         else
         {
