@@ -1677,12 +1677,14 @@ int ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
     }
 
+    size += 8; // struct align
     return size;
 }
 
 
 
-ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *opts, ocp_nlp_memory *mem, void *raw_memory)
+ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims *dims,
+                             ocp_nlp_opts *opts, ocp_nlp_memory *mem, void *raw_memory)
 {
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
     ocp_nlp_dynamics_config **dynamics = config->dynamics;
@@ -1699,15 +1701,7 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
     ocp_nlp_workspace *work = (ocp_nlp_workspace *) c_ptr;
     c_ptr += sizeof(ocp_nlp_workspace);
 
-    // tmp_nlp_out
-    work->tmp_nlp_out = ocp_nlp_out_assign(config, dims, c_ptr);
-    c_ptr += ocp_nlp_out_calculate_size(config, dims);
-
-    // weight_merit_fun
-    work->weight_merit_fun = ocp_nlp_out_assign(config, dims, c_ptr);
-    c_ptr += ocp_nlp_out_calculate_size(config, dims);
-
-    // array of pointers
+    /* pointers to substructures */
     //
     work->dynamics = (void **) c_ptr;
     c_ptr += N*sizeof(void *);
@@ -1717,6 +1711,17 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
     //
     work->constraints = (void **) c_ptr;
     c_ptr += (N+1)*sizeof(void *);
+
+    align_char_to(8, &c_ptr);
+
+    /* substructures */
+    // tmp_nlp_out
+    work->tmp_nlp_out = ocp_nlp_out_assign(config, dims, c_ptr);
+    c_ptr += ocp_nlp_out_calculate_size(config, dims);
+
+    // weight_merit_fun
+    work->weight_merit_fun = ocp_nlp_out_assign(config, dims, c_ptr);
+    c_ptr += ocp_nlp_out_calculate_size(config, dims);
 
     if (opts->reuse_workspace)
     {
