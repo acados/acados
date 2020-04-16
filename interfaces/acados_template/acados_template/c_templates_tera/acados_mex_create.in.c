@@ -74,7 +74,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // field names of output struct
     #define FIELDS_OCP 8
     #define FIELDS_EXT_FUN 9
-    #define MAX_FIELDS 8
+    #define MAX_FIELDS 9
     char *fieldnames[MAX_FIELDS];
 
     for (int i = 0; i < MAX_FIELDS; i++)
