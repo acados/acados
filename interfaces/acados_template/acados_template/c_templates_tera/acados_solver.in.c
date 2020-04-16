@@ -1405,6 +1405,14 @@ int acados_create()
     {
         ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "exact_hess", &nlp_solver_exact_hessian);
     }
+    int exact_hess_dyn = {{ solver_options.exact_hess_dyn }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "exact_hess_dyn", &exact_hess_dyn);
+
+    int exact_hess_cost = {{ solver_options.exact_hess_cost }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "exact_hess_cost", &exact_hess_cost);
+
+    int exact_hess_constr = {{ solver_options.exact_hess_constr }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "exact_hess_constr", &exact_hess_constr);
 {%- endif -%}
 
 {%- if dims.nz > 0 %}

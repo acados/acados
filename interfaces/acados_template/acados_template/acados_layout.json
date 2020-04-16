@@ -659,6 +659,15 @@
         "initialize_t_slacks": [
             "int"
         ],
+        "exact_hess_cost": [
+            "int"
+        ],
+        "exact_hess_constr": [
+            "int"
+        ],
+        "exact_hess_dyn": [
+            "int"
+        ],
         "model_external_shared_lib_dir": [
             "str"
         ],

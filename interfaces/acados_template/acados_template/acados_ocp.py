@@ -1746,6 +1746,9 @@ class AcadosOcpOptions:
         self.__regularize_method = None
         self.__time_steps = None
         self.__shooting_nodes = None
+        self.__exact_hess_cost = 1
+        self.__exact_hess_dyn = 1
+        self.__exact_hess_constr = 1
 
 
 
@@ -1894,6 +1897,24 @@ class AcadosOcpOptions:
     def model_external_shared_lib_name(self):
         """Name of the .so lib"""
         return self.__model_external_shared_lib_name
+
+    @property
+    def exact_hess_constr(self):
+        """Used in case of hessian_approx == 'EXACT'.\n
+           Can be used to turn off exact hessian contributions from the constraints module"""
+        return self.__exact_hess_constr
+
+    @property
+    def exact_hess_cost(self):
+        """Used in case of hessian_approx == 'EXACT'.\n
+           Can be used to turn off exact hessian contributions from the cost module"""
+        return self.__exact_hess_cost
+
+    @property
+    def exact_hess_dyn(self):
+        """Used in case of hessian_approx == 'EXACT'.\n
+           Can be used to turn off exact hessian contributions from the dynamics module"""
+        return self.__exact_hess_dyn
 
     @qp_solver.setter
     def qp_solver(self, qp_solver):
@@ -2129,6 +2150,27 @@ class AcadosOcpOptions:
         else:
             raise Exception('Invalid model_external_shared_lib_name value. Str expected.' \
             + '.\n\nYou have: ' + type(model_external_shared_lib_name) + '.\n\nExiting.')
+
+    @exact_hess_constr.setter
+    def exact_hess_constr(self, exact_hess_constr):
+        if exact_hess_constr in [0, 1]:
+            self.__exact_hess_constr = exact_hess_constr
+        else:
+            raise Exception('Invalid exact_hess_constr value. exact_hess_constr takes one of the values 0, 1. Exiting')
+
+    @exact_hess_cost.setter
+    def exact_hess_cost(self, exact_hess_cost):
+        if exact_hess_cost in [0, 1]:
+            self.__exact_hess_cost = exact_hess_cost
+        else:
+            raise Exception('Invalid exact_hess_cost value. exact_hess_cost takes one of the values 0, 1. Exiting')
+
+    @exact_hess_dyn.setter
+    def exact_hess_dyn(self, exact_hess_dyn):
+        if exact_hess_dyn in [0, 1]:
+            self.__exact_hess_dyn = exact_hess_dyn
+        else:
+            raise Exception('Invalid exact_hess_dyn value. exact_hess_dyn takes one of the values 0, 1. Exiting')
 
     def set(self, attr, value):
         setattr(self, attr, value)
