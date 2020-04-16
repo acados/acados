@@ -262,6 +262,7 @@ typedef struct
     void **cost;         // cost_opts
     void **constraints;  // constraints_opts
     double step_length;  // step length in case of FIXED_STEP
+    double levenberg_marquardt;  // LM factor to be added to the hessian before regularization
     int reuse_workspace;
     int num_threads;
 

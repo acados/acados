@@ -530,11 +530,16 @@ def ocp_generate_external_functions(acados_ocp, model):
         raise Exception("ocp_generate_external_functions: unknown integrator type.")
 
 
+    if acados_ocp.solver_options.hessian_approx == 'EXACT':
+        opts = dict(generate_hess=1)
+    else:
+        opts = dict(generate_hess=0)
+
     if acados_ocp.dims.nphi > 0 or acados_ocp.dims.nh > 0:
-        generate_c_code_constraint(model, model.name, False)
+        generate_c_code_constraint(model, model.name, False, opts)
 
     if acados_ocp.dims.nphi_e > 0 or acados_ocp.dims.nh_e > 0:
-        generate_c_code_constraint(model, model.name, True)
+        generate_c_code_constraint(model, model.name, True, opts)
 
     # dummy matrices
     if not acados_ocp.cost.cost_type == 'LINEAR_LS':
@@ -609,17 +614,17 @@ def ocp_render_templates(acados_ocp, json_file):
     out_file = '{}_model.h'.format(name)
     render_template(in_file, out_file, template_dir, json_path)
 
-    # constraints on convex over nonlinear fuction
+    # constraints on convex over nonlinear function
     if acados_ocp.constraints.constr_type == 'BGP' and acados_ocp.dims.nphi > 0:
-        # constraints on outer fuction
+        # constraints on outer function
         template_dir = 'c_generated_code/{}_constraints/'.format(name)
         in_file = 'phi_constraint.in.h'
         out_file =  '{}_phi_constraint.h'.format(name)
         render_template(in_file, out_file, template_dir, json_path)
 
-    # terminal constraints on convex over nonlinear fuction
+    # terminal constraints on convex over nonlinear function
     if acados_ocp.constraints.constr_type_e == 'BGP' and acados_ocp.dims.nphi_e > 0:
-        # terminal constraints on outer fuction
+        # terminal constraints on outer function
         template_dir = 'c_generated_code/{}_constraints/'.format(name)
         in_file = 'phi_e_constraint.in.h'
         out_file =  '{}_phi_e_constraint.h'.format(name)

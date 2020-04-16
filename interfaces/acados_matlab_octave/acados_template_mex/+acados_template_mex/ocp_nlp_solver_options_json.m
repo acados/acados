@@ -53,6 +53,7 @@ classdef ocp_nlp_solver_options_json < handle
         qp_solver_iter_max
         print_level
         initialize_t_slacks
+        levenberg_marquardt
     end
     methods
         function obj = ocp_nlp_solver_options_json()
@@ -72,6 +73,7 @@ classdef ocp_nlp_solver_options_json < handle
             obj.print_level = 0;
             obj.time_steps = [];
             obj.initialize_t_slacks = 0;
+            obj.levenberg_marquardt = 0.0;
         end
     end
 end

@@ -607,13 +607,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     for (; sqp_iter < opts->max_iter; sqp_iter++)
     {
-        if (opts->print_level > 0)
-        {
-            printf("\n------- sqp iter %d (max_iter %d) --------\n", 
-                sqp_iter, opts->max_iter);
-            if (opts->print_level > sqp_iter + 1)
-                print_ocp_qp_in(nlp_mem->qp_in);
-        }
+		
+        if (opts->print_level > sqp_iter + 1)
+            print_ocp_qp_in(nlp_mem->qp_in);
 
         // linearizate NLP and update QP matrices
         acados_tic(&timer1);
@@ -668,6 +664,10 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             omp_set_num_threads(num_threads_bkp);
 #endif
             mem->status = ACADOS_SUCCESS;
+
+            if (opts->print_level > 0)
+                printf("\n\n");
+
             return mem->status;
         }
 
@@ -736,6 +736,10 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
         {
             // print_ocp_qp_in(nlp_mem->qp_in);
+            if (opts->print_level > 0)
+            {
+                printf("\n\n");
+            }
 
             // save sqp iterations number
             mem->sqp_iter = sqp_iter;
@@ -784,16 +788,27 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         //                opts->scheme->freeze = true;
         //            }
         //        }
+
         if (opts->print_level > 0)
         {
-            printf("Residuals: stat: %e, eq: %e, ineq: %e, comp: %e.\n", mem->nlp_res->inf_norm_res_g,
-                    mem->nlp_res->inf_norm_res_b, mem->nlp_res->inf_norm_res_d, mem->nlp_res->inf_norm_res_m );
+
+            if (sqp_iter%10 == 0)
+            {
+                printf("# it\tstat\t\teq\t\tineq\t\tcomp\n");
+            }
+
+            printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, mem->nlp_res->inf_norm_res_g,
+                mem->nlp_res->inf_norm_res_b, mem->nlp_res->inf_norm_res_d, mem->nlp_res->inf_norm_res_m );
         }
 
     }
 
+
     // stop timer
     total_time += acados_toc(&timer0);
+
+    if (opts->print_level > 0)
+        printf("\n\n");
 
     // ocp_nlp_out_print(nlp_out);
 
@@ -812,12 +827,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 #endif
     mem->status = ACADOS_MAXITER;
     printf("\n ocp_nlp_sqp: maximum iterations reached\n");
-
-    if (opts->print_level > 0)
-    {
-        printf("Residuals: stat: %e, eq: %e, ineq: %e, comp: %e.\n", mem->nlp_res->inf_norm_res_g,
-            mem->nlp_res->inf_norm_res_b, mem->nlp_res->inf_norm_res_d, mem->nlp_res->inf_norm_res_m );
-    }
 
     return mem->status;
 }

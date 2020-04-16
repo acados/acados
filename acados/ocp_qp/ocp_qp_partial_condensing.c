@@ -259,8 +259,9 @@ void ocp_qp_partial_condensing_opts_initialize_default(void *dims_, void *opts_)
     opts->N2_bkp = opts->N2;
 
     dims->pcond_dims->N = opts->N2;
+	opts->hpipm_pcond_opts->N2 = opts->N2;
     // hpipm_pcond_opts
-    d_part_cond_qp_arg_set_default(opts->N2, opts->hpipm_pcond_opts);
+    d_part_cond_qp_arg_set_default(opts->hpipm_pcond_opts);
     // hpipm_red_opts
 	d_ocp_qp_reduce_eq_dof_arg_set_default(opts->hpipm_red_opts);
 	d_ocp_qp_reduce_eq_dof_arg_set_alias_unchanged(opts->hpipm_red_opts, 1);
@@ -280,8 +281,9 @@ void ocp_qp_partial_condensing_opts_update(void *dims_, void *opts_)
     dims->pcond_dims->N = opts->N2;
     opts->N2_bkp = opts->N2;
     // hpipm_pcond_opts
-    d_part_cond_qp_arg_set_default(opts->N2, opts->hpipm_pcond_opts);
-	d_part_cond_qp_arg_set_ric_alg(opts->ric_alg, opts->N2, opts->hpipm_pcond_opts);
+	opts->hpipm_pcond_opts->N2 = opts->N2;
+    d_part_cond_qp_arg_set_default(opts->hpipm_pcond_opts);
+	d_part_cond_qp_arg_set_ric_alg(opts->ric_alg, opts->hpipm_pcond_opts);
 
 	return;
 }
