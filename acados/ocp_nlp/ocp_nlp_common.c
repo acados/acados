@@ -2440,7 +2440,7 @@ int ocp_nlp_res_calculate_size(ocp_nlp_dims *dims)
     size += 8;   // blasfeo_struct align
     size += 64;  // blasfeo_mem align
 
-    //  make_int_multiple_of(64, &size);
+    make_int_multiple_of(8, &size);
 
     return size;
 }
