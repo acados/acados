@@ -1179,9 +1179,9 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             // dynamics
             for (ii=0; ii<N; ii++)
                 config->dynamics[ii]->opts_set(config->dynamics[ii], opts->dynamics[ii], "compute_hess", value);
-            // constraints TODO disabled for now as prevents convergence !!!
-           for (ii=0; ii<=N; ii++)
-               config->constraints[ii]->opts_set(config->constraints[ii], opts->constraints[ii], "compute_hess", value);
+            // constraints
+            for (ii=0; ii<=N; ii++)
+                config->constraints[ii]->opts_set(config->constraints[ii], opts->constraints[ii], "compute_hess", value);
         }
         else
         {
