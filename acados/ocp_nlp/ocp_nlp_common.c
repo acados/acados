@@ -709,6 +709,7 @@ int ocp_nlp_in_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims)
     }
 
     size += 8;  // initial align
+    size += 8;  // final align
 
     //  make_int_multiple_of(64, &size);
 
@@ -729,8 +730,7 @@ ocp_nlp_in *ocp_nlp_in_assign_self(int N, void *raw_memory)
     c_ptr += sizeof(ocp_nlp_in);
 
     // Ts
-    in->Ts = (double *) c_ptr;
-    c_ptr += N * sizeof(double);
+    assign_and_advance_double(N, &in->Ts, &c_ptr);
 
     // dynamics
     in->dynamics = (void **) c_ptr;
@@ -743,6 +743,8 @@ ocp_nlp_in *ocp_nlp_in_assign_self(int N, void *raw_memory)
     // constraints
     in->constraints = (void **) c_ptr;
     c_ptr += (N + 1) * sizeof(void *);
+
+    align_char_to(8, &c_ptr);
 
     return in;
 }
@@ -967,6 +969,8 @@ int ocp_nlp_opts_calculate_size(void *config_, void *dims_)
         size += constraints[ii]->opts_calculate_size(constraints[ii], dims->constraints[ii]);
     }
 
+    size += 2*8;  // 2 aligns
+
     return size;
 }
 
@@ -985,10 +989,24 @@ void *ocp_nlp_opts_assign(void *config_, void *dims_, void *raw_memory)
     int N = dims->N;
 
     char *c_ptr = (char *) raw_memory;
+    align_char_to(8, &c_ptr);
 
     ocp_nlp_opts *opts = (ocp_nlp_opts *) c_ptr;
     c_ptr += sizeof(ocp_nlp_opts);
 
+    /* pointers to substructures */
+    opts->dynamics = (void **) c_ptr;
+    c_ptr += N * sizeof(void *);
+
+    opts->cost = (void **) c_ptr;
+    c_ptr += (N + 1) * sizeof(void *);
+
+    opts->constraints = (void **) c_ptr;
+    c_ptr += (N + 1) * sizeof(void *);
+
+    align_char_to(8, &c_ptr);
+
+    /* substructures */
     opts->qp_solver_opts = qp_solver->opts_assign(qp_solver, dims->qp_solver, c_ptr);
     c_ptr += qp_solver->opts_calculate_size(qp_solver, dims->qp_solver);
 
@@ -996,8 +1014,6 @@ void *ocp_nlp_opts_assign(void *config_, void *dims_, void *raw_memory)
     c_ptr += config->regularize->opts_calculate_size();
 
     // dynamics
-    opts->dynamics = (void **) c_ptr;
-    c_ptr += N * sizeof(void *);
     for (int ii = 0; ii < N; ii++)
     {
         opts->dynamics[ii] = dynamics[ii]->opts_assign(dynamics[ii], dims->dynamics[ii], c_ptr);
@@ -1005,8 +1021,6 @@ void *ocp_nlp_opts_assign(void *config_, void *dims_, void *raw_memory)
     }
 
     // cost
-    opts->cost = (void **) c_ptr;
-    c_ptr += (N + 1) * sizeof(void *);
     for (int ii = 0; ii <= N; ii++)
     {
         opts->cost[ii] = cost[ii]->opts_assign(cost[ii], dims->cost[ii], c_ptr);
@@ -1014,8 +1028,6 @@ void *ocp_nlp_opts_assign(void *config_, void *dims_, void *raw_memory)
     }
 
     // constraints
-    opts->constraints = (void **) c_ptr;
-    c_ptr += (N + 1) * sizeof(void *);
     for (int ii = 0; ii <= N; ii++)
     {
         opts->constraints[ii] =
