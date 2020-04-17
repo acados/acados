@@ -361,6 +361,7 @@ int ocp_qp_partial_condensing_memory_calculate_size(void *dims_, void *opts_)
     size += d_ocp_qp_reduce_eq_dof_work_memsize(dims->orig_dims);
 
     size += 2*8;
+    make_int_multiple_of(8, &size);
 
     return size;
 }
