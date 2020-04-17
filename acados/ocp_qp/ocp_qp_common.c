@@ -203,7 +203,7 @@ int ocp_qp_out_calculate_size(ocp_qp_dims *dims)
     size += ocp_qp_dims_calculate_size(dims->N);  // TODO(all): remove !!!
     size += sizeof(qp_info); // TODO move to memory !!!
 
-    size += 8; // align
+    size += 2*8; // align
     make_int_multiple_of(8, &size);
 
     return size;
@@ -224,6 +224,7 @@ ocp_qp_out *ocp_qp_out_assign(ocp_qp_dims *dims, void *raw_memory)
 
     qp_out->misc = (void *) c_ptr; // TODO move to memory !!!
     c_ptr += sizeof(qp_info); // TODO move to memory !!!
+    align_char_to(8, &c_ptr);
 
     ocp_qp_dims *dims_copy = ocp_qp_dims_assign(dims->N, c_ptr);  // TODO(all): remove !!!
     c_ptr += ocp_qp_dims_calculate_size(dims->N);                 // TODO(all): remove !!!
