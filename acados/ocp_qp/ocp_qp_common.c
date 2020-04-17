@@ -53,7 +53,7 @@
 // acados
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
-
+#include "acados/utils/mem.h"
 
 
 /************************************************
@@ -115,6 +115,9 @@ int ocp_qp_dims_calculate_size(int N)
     int size = sizeof(ocp_qp_dims);
 
     size += d_ocp_qp_dim_memsize(N);
+    make_int_multiple_of(8, &size);
+
+    size += 8;
 
     return size;
 }
@@ -127,11 +130,12 @@ ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory)
 
     ocp_qp_dims *dims = (ocp_qp_dims *) c_ptr;
     c_ptr += sizeof(ocp_qp_dims);
+    align_char_to(8, &c_ptr);
 
     d_ocp_qp_dim_create(N, dims, c_ptr);
     c_ptr += d_ocp_qp_dim_memsize(N);
 
-    assert((char *) raw_memory + ocp_qp_dims_calculate_size(N) == c_ptr);
+    assert((char *) raw_memory + ocp_qp_dims_calculate_size(N) >= c_ptr);
 
     return dims;
 }
@@ -158,6 +162,10 @@ int ocp_qp_in_calculate_size(ocp_qp_dims *dims)
     int size = sizeof(ocp_qp_in);
     size += d_ocp_qp_memsize(dims);
     size += ocp_qp_dims_calculate_size(dims->N);  // TODO(all): remove !!!
+    size += 2*8; // aligns
+
+    make_int_multiple_of(8, &size);
+
     return size;
 }
 
@@ -167,8 +175,10 @@ ocp_qp_in *ocp_qp_in_assign(ocp_qp_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
+    align_char_to(8, &c_ptr);
     ocp_qp_in *qp_in = (ocp_qp_in *) c_ptr;
     c_ptr += sizeof(ocp_qp_in);
+    align_char_to(8, &c_ptr);
 
     d_ocp_qp_create(dims, qp_in, c_ptr);
     c_ptr += d_ocp_qp_memsize(dims);
@@ -180,7 +190,7 @@ ocp_qp_in *ocp_qp_in_assign(ocp_qp_dims *dims, void *raw_memory)
 
     qp_in->dim = dims_copy;
 
-    assert((char *) raw_memory + ocp_qp_in_calculate_size(dims) == c_ptr);
+    assert((char *) raw_memory + ocp_qp_in_calculate_size(dims) >= c_ptr);
 
     return qp_in;
 }
@@ -197,6 +207,10 @@ int ocp_qp_out_calculate_size(ocp_qp_dims *dims)
     size += d_ocp_qp_sol_memsize(dims);
     size += ocp_qp_dims_calculate_size(dims->N);  // TODO(all): remove !!!
     size += sizeof(qp_info); // TODO move to memory !!!
+
+    size += 2*8; // align
+    make_int_multiple_of(8, &size);
+
     return size;
 }
 
@@ -206,14 +220,17 @@ ocp_qp_out *ocp_qp_out_assign(ocp_qp_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
+    align_char_to(8, &c_ptr);
     ocp_qp_out *qp_out = (ocp_qp_out *) c_ptr;
     c_ptr += sizeof(ocp_qp_out);
+    align_char_to(8, &c_ptr);
 
     d_ocp_qp_sol_create(dims, qp_out, c_ptr);
     c_ptr += d_ocp_qp_sol_memsize(dims);
 
     qp_out->misc = (void *) c_ptr; // TODO move to memory !!!
     c_ptr += sizeof(qp_info); // TODO move to memory !!!
+    align_char_to(8, &c_ptr);
 
     ocp_qp_dims *dims_copy = ocp_qp_dims_assign(dims->N, c_ptr);  // TODO(all): remove !!!
     c_ptr += ocp_qp_dims_calculate_size(dims->N);                 // TODO(all): remove !!!
@@ -222,7 +239,7 @@ ocp_qp_out *ocp_qp_out_assign(ocp_qp_dims *dims, void *raw_memory)
 
     qp_out->dim = dims_copy;
 
-    assert((char *) raw_memory + ocp_qp_out_calculate_size(dims) == c_ptr);
+    assert((char *) raw_memory + ocp_qp_out_calculate_size(dims) >= c_ptr);
 
     return qp_out;
 }
