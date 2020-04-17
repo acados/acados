@@ -158,7 +158,7 @@ int ocp_qp_in_calculate_size(ocp_qp_dims *dims)
     int size = sizeof(ocp_qp_in);
     size += d_ocp_qp_memsize(dims);
     size += ocp_qp_dims_calculate_size(dims->N);  // TODO(all): remove !!!
-    size += 8; // align
+    size += 2*8; // aligns
 
     make_int_multiple_of(8, &size);
 
@@ -171,6 +171,7 @@ ocp_qp_in *ocp_qp_in_assign(ocp_qp_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
+    align_char_to(8, &c_ptr);
     ocp_qp_in *qp_in = (ocp_qp_in *) c_ptr;
     c_ptr += sizeof(ocp_qp_in);
     align_char_to(8, &c_ptr);
@@ -185,7 +186,7 @@ ocp_qp_in *ocp_qp_in_assign(ocp_qp_dims *dims, void *raw_memory)
 
     qp_in->dim = dims_copy;
 
-    assert((char *) raw_memory + ocp_qp_in_calculate_size(dims) == c_ptr);
+    assert((char *) raw_memory + ocp_qp_in_calculate_size(dims) >= c_ptr);
 
     return qp_in;
 }
@@ -215,6 +216,7 @@ ocp_qp_out *ocp_qp_out_assign(ocp_qp_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
+    align_char_to(8, &c_ptr);
     ocp_qp_out *qp_out = (ocp_qp_out *) c_ptr;
     c_ptr += sizeof(ocp_qp_out);
     align_char_to(8, &c_ptr);
@@ -233,7 +235,7 @@ ocp_qp_out *ocp_qp_out_assign(ocp_qp_dims *dims, void *raw_memory)
 
     qp_out->dim = dims_copy;
 
-    assert((char *) raw_memory + ocp_qp_out_calculate_size(dims) == c_ptr);
+    assert((char *) raw_memory + ocp_qp_out_calculate_size(dims) >= c_ptr);
 
     return qp_out;
 }
