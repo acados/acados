@@ -53,7 +53,7 @@
 // acados
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
-
+#include "acados/utils/mem.h"
 
 
 /************************************************
@@ -158,6 +158,10 @@ int ocp_qp_in_calculate_size(ocp_qp_dims *dims)
     int size = sizeof(ocp_qp_in);
     size += d_ocp_qp_memsize(dims);
     size += ocp_qp_dims_calculate_size(dims->N);  // TODO(all): remove !!!
+    size += 8; // align
+
+    make_int_multiple_of(8, &size);
+
     return size;
 }
 
@@ -169,6 +173,7 @@ ocp_qp_in *ocp_qp_in_assign(ocp_qp_dims *dims, void *raw_memory)
 
     ocp_qp_in *qp_in = (ocp_qp_in *) c_ptr;
     c_ptr += sizeof(ocp_qp_in);
+    align_char_to(8, &c_ptr);
 
     d_ocp_qp_create(dims, qp_in, c_ptr);
     c_ptr += d_ocp_qp_memsize(dims);
@@ -197,6 +202,10 @@ int ocp_qp_out_calculate_size(ocp_qp_dims *dims)
     size += d_ocp_qp_sol_memsize(dims);
     size += ocp_qp_dims_calculate_size(dims->N);  // TODO(all): remove !!!
     size += sizeof(qp_info); // TODO move to memory !!!
+
+    size += 8; // align
+    make_int_multiple_of(8, &size);
+
     return size;
 }
 
@@ -208,6 +217,7 @@ ocp_qp_out *ocp_qp_out_assign(ocp_qp_dims *dims, void *raw_memory)
 
     ocp_qp_out *qp_out = (ocp_qp_out *) c_ptr;
     c_ptr += sizeof(ocp_qp_out);
+    align_char_to(8, &c_ptr);
 
     d_ocp_qp_sol_create(dims, qp_out, c_ptr);
     c_ptr += d_ocp_qp_sol_memsize(dims);
