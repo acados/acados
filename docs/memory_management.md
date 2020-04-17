@@ -16,7 +16,13 @@ Should assign its members in the following order:
     astruct *as_instance = (astruct *) c_ptr;
     c_ptr += sizeof(astruct);
 ```
-Note: It should be aligned to 8 here after, since `astruct` might contain an `int`.
+- pointers to substructures, if `astruct` contains an array of `bstruct`s, e.g.
+```
+    mem->bstructs = (void **) c_ptr;
+    c_ptr += N*sizeof(void *);
+```
+- Note: It should be aligned to 8 here after, since `astruct` might contain an `int`, pointers.
+
 
 - Assign "substructures", i.e. structures that `astruct` has pointers to:
 ```
@@ -24,7 +30,10 @@ Note: It should be aligned to 8 here after, since `astruct` might contain an `in
     as_instance->bstruct = bstruct_assign(c_ptr,...);
     c_ptr += bstruct_calculate_size(astruct);
 ```
-Note: since calculate_size returns multiple of 8, c_ptr is still aligned to 8 bytes.
+Note: 
+    - since calculate_size returns multiple of 8, c_ptr is still aligned to 8 bytes.
+    - this includes blasfeo_dmat_structs, blasfeo_dvec_structs
+
 
 - doubles (are 8 bytes anyway)
 ```
