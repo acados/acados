@@ -74,7 +74,7 @@ int ocp_qp_partial_condensing_dims_calculate_size(void *config_, int N)
 	// block size
     size += (N + 1) * sizeof(int);
 
-    size += 1*8;
+    size += 2*8;
 
     make_int_multiple_of(8, &size);
 
@@ -101,9 +101,6 @@ void *ocp_qp_partial_condensing_dims_assign(void *config_, int N, void *raw_memo
     dims->pcond_dims = (ocp_qp_dims *) c_ptr;
     c_ptr += sizeof(ocp_qp_dims);
 
-    // block size
-    assign_and_advance_int(N + 1, &dims->block_size, &c_ptr);
-
     align_char_to(8, &c_ptr);
 
     // orig_dims
@@ -115,6 +112,11 @@ void *ocp_qp_partial_condensing_dims_assign(void *config_, int N, void *raw_memo
     // pcond_dims
     d_ocp_qp_dim_create(N, dims->pcond_dims, c_ptr);
     c_ptr += d_ocp_qp_dim_memsize(N);
+
+    // block size
+    assign_and_advance_int(N + 1, &dims->block_size, &c_ptr);
+
+    align_char_to(8, &c_ptr);
 
     assert((char *) raw_memory + ocp_qp_partial_condensing_dims_calculate_size(config_, N) >= c_ptr);
 
@@ -187,15 +189,8 @@ int ocp_qp_partial_condensing_opts_calculate_size(void *dims_)
     // hpipm_red_opts
     size += sizeof(struct d_ocp_qp_reduce_eq_dof_arg);
     size += d_ocp_qp_reduce_eq_dof_arg_memsize();
-                                               //
-	// pcond_dims
-//    size += sizeof(ocp_qp_dims);
-//    size += d_ocp_qp_dim_memsize(N);  // worst-case size of new QP
 
-	// block size
-//    size += (N + 1) * sizeof(int);
-
-    size += 1*8;
+    size += 2*8;
     make_int_multiple_of(8, &size);
 
     return size;
@@ -215,9 +210,7 @@ void *ocp_qp_partial_condensing_opts_assign(void *dims_, void *raw_memory)
     ocp_qp_partial_condensing_opts *opts = (ocp_qp_partial_condensing_opts *) c_ptr;
     c_ptr += sizeof(ocp_qp_partial_condensing_opts);
 
-    // pcond_dims
-//    opts->pcond_dims = (ocp_qp_dims *) c_ptr;
-//    c_ptr += sizeof(ocp_qp_dims);
+    align_char_to(8, &c_ptr);
 
     // hpipm_pcond_opts
     opts->hpipm_pcond_opts = (struct d_part_cond_qp_arg *) c_ptr;
@@ -226,14 +219,8 @@ void *ocp_qp_partial_condensing_opts_assign(void *dims_, void *raw_memory)
     opts->hpipm_red_opts = (struct d_ocp_qp_reduce_eq_dof_arg *) c_ptr;
     c_ptr += sizeof(struct d_ocp_qp_reduce_eq_dof_arg);
 
-    // block size
-//    assign_and_advance_int(N + 1, &opts->block_size, &c_ptr);
-
     align_char_to(8, &c_ptr);
 
-    // pcond_dims
-//    d_ocp_qp_dim_create(N, opts->pcond_dims, c_ptr);
-//    c_ptr += d_ocp_qp_dim_memsize(dims->N);
     // hpipm_pcond_opts
     d_part_cond_qp_arg_create(N, opts->hpipm_pcond_opts, c_ptr);
     c_ptr += opts->hpipm_pcond_opts->memsize;
@@ -389,9 +376,11 @@ void *ocp_qp_partial_condensing_memory_assign(void *dims_, void *opts_, void *ra
     // hpipm_red_work struct
     mem->hpipm_red_work = (struct d_ocp_qp_reduce_eq_dof_work *) c_ptr;
     c_ptr += sizeof(struct d_ocp_qp_reduce_eq_dof_work);
+    align_char_to(8, &c_ptr);
 
     // hpipm_pcond_work
-    d_part_cond_qp_ws_create(dims->red_dims, dims->block_size, dims->pcond_dims, opts->hpipm_pcond_opts, mem->hpipm_pcond_work, c_ptr);
+    d_part_cond_qp_ws_create(dims->red_dims, dims->block_size, dims->pcond_dims,
+                             opts->hpipm_pcond_opts, mem->hpipm_pcond_work, c_ptr);
     c_ptr += mem->hpipm_pcond_work->memsize;
     // hpipm_red_work
     d_ocp_qp_reduce_eq_dof_work_create(dims->orig_dims, mem->hpipm_red_work, c_ptr);
