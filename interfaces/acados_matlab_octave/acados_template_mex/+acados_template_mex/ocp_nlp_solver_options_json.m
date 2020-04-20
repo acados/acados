@@ -50,6 +50,7 @@ classdef ocp_nlp_solver_options_json < handle
         nlp_solver_tol_ineq
         nlp_solver_tol_comp
         nlp_solver_step_length
+        rti_phase
         qp_solver_iter_max
         print_level
         levenberg_marquardt
@@ -68,6 +69,7 @@ classdef ocp_nlp_solver_options_json < handle
             obj.nlp_solver_max_iter = 50;
             obj.qp_solver_cond_N = [];
             obj.nlp_solver_step_length = 1.0;
+            obj.rti_phase = 0;
             obj.qp_solver_iter_max = [];
             obj.print_level = 0;
             obj.time_steps = [];
