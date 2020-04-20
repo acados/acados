@@ -542,6 +542,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         int nlp_solver_max_iter = (int) value[0];
         ocp_nlp_solver_opts_set(config, opts, "max_iter", &nlp_solver_max_iter);
     }
+    else if (!strcmp(field, "rti_phase"))
+    {
+        acados_size = 1;
+        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+        int rti_phase = (int) value[0];
+        ocp_nlp_solver_opts_set(config, opts, "rti_phase", &rti_phase);
+    }
     else if (!strcmp(field, "qp_warm_start"))
     {
         acados_size = 1;
