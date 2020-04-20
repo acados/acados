@@ -365,6 +365,8 @@ int ocp_nlp_dynamics_cont_memory_calculate_size(void *config_, void *dims_, void
 
     size += 1*64;  // blasfeo_mem align
 
+    make_int_multiple_of(8, &size);
+
     return size;
 }
 
@@ -599,6 +601,7 @@ int ocp_nlp_dynamics_cont_workspace_calculate_size(void *config_, void *dims_, v
     size += 1 * blasfeo_memsize_dmat(nu+nx, nu+nx);   // hess
 
     size += 1*64;  // blasfeo_mem align
+    make_int_multiple_of(8, &size);
 
     return size;
 }
@@ -661,6 +664,8 @@ int ocp_nlp_dynamics_cont_model_calculate_size(void *config_, void *dims_)
     size += sizeof(ocp_nlp_dynamics_cont_model);
 
     size += config->sim_solver->model_calculate_size(config->sim_solver, dims->sim);
+    size += 1*8;
+    make_int_multiple_of(8, &size);
 
     return size;
 }
@@ -681,6 +686,7 @@ void *ocp_nlp_dynamics_cont_model_assign(void *config_, void *dims_, void *raw_m
     // struct
     ocp_nlp_dynamics_cont_model *model = (ocp_nlp_dynamics_cont_model *) c_ptr;
     c_ptr += sizeof(ocp_nlp_dynamics_cont_model);
+    align_char_to(8, &c_ptr);
 
     model->sim_model = config->sim_solver->model_assign(config->sim_solver, dims->sim, c_ptr);
     c_ptr += config->sim_solver->model_calculate_size(config->sim_solver, dims->sim);
