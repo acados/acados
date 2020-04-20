@@ -239,6 +239,7 @@ int ocp_nlp_cost_ls_model_calculate_size(void *config_, void *dims_)
     size += 1 * blasfeo_memsize_dmat(nz, ny);           // Vz
     size += 1 * blasfeo_memsize_dvec(ny);               // y_ref
     size += 2 * blasfeo_memsize_dvec(2 * ns);           // Z, z
+    make_int_multiple_of(8, &size);
 
     return size;
 }
