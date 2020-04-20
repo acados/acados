@@ -1569,10 +1569,17 @@ int acados_create()
         phi_constraint[ii].set_param(phi_constraint+ii, p);
     }
 {%- elif dims.nh > 0 and constraints.constr_type == "BGH" %}
+
     for (int ii = 0; ii < N; ii++)
     {
         h_constraint[ii].set_param(h_constraint+ii, p);
     }
+{%- if solver_options.hessian_approx == "EXACT" %}
+    for (int ii = 0; ii < N; ii++)
+    {
+        h_constraint_hess[ii].set_param(h_constraint_hess+ii, p);
+    }
+{%- endif %}
 {%- endif %}
 
 {%- if constraints.constr_type_e == "BGP" %}
@@ -1580,6 +1587,9 @@ int acados_create()
     phi_e_constraint.set_param(&phi_e_constraint, p);
 {%- elif constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
     h_e_constraint.set_param(&h_e_constraint, p);
+{%- if solver_options.hessian_approx == "EXACT" %}
+    h_e_constrainti_hess.set_param(&h_e_constraint_hess, p);
+{%- endif %}
 {%- endif %}
 
 {%- endif %}{# if dims.np #}
@@ -1718,6 +1728,15 @@ int acados_update_params(int stage, double *p, int np)
             exit(1);
         }
         h_constraint[stage].set_param(h_constraint+stage, p);
+    {%- if solver_options.hessian_approx == "EXACT" %}
+        casadi_np = (h_constraint_hess+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in h_constraint_hess which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        h_constraint_hess[stage].set_param(h_constraint_hess+stage, p);
+    {%- endif %}
     {%- endif %}
 
         // cost
@@ -1803,6 +1822,15 @@ int acados_update_params(int stage, double *p, int np)
             exit(1);
         }
         h_e_constraint.set_param(&h_e_constraint, p);
+    {%- if solver_options.hessian_approx == "EXACT" %}
+        casadi_np = (h_e_constraint_hess+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in h_e_constraint_hess which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        h_e_constraint_hess[stage].set_param(h_e_constraint_hess+stage, p);
+    {%- endif %}
     {% endif %}
     }
 {% endif %}{# if dims.np #}
@@ -1893,6 +1921,12 @@ int acados_free()
     {
         external_function_param_casadi_free(&h_constraint[i]);
     }
+{%- if solver_options.hessian_approx == "EXACT" %}
+    for (int i = 0; i < {{ dims.N }}; i++)
+    {
+        external_function_param_casadi_free(&h_constraint_hess[i]);
+    }
+{%- endif %}
 {%- elif constraints.constr_type == "BGP" and dims.nphi > 0 %}
     for (int i = 0; i < {{ dims.N }}; i++)
     {
@@ -1901,6 +1935,9 @@ int acados_free()
 {%- endif %}
 {%- if constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
     external_function_param_casadi_free(&h_e_constraint);
+{%- if solver_options.hessian_approx == "EXACT" %}
+    external_function_param_casadi_free(&h_e_constraint_hess);
+{%- endif %}
 {%- elif constraints.constr_type_e == "BGP" and dims.nphi_e > 0 %}
     external_function_param_casadi_free(&phi_e_constraint);
 {%- endif %}
