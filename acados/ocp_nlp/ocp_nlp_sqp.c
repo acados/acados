@@ -326,7 +326,7 @@ int ocp_nlp_sqp_memory_calculate_size(void *config_, void *dims_, void *opts_)
         stat_n += 4;
     size += stat_n*stat_m*sizeof(double);
 
-    size += 8;  // initial align
+    size += 3*8;  // align
 
     make_int_multiple_of(8, &size);
 
@@ -360,6 +360,8 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
     ocp_nlp_sqp_memory *mem = (ocp_nlp_sqp_memory *) c_ptr;
     c_ptr += sizeof(ocp_nlp_sqp_memory);
 
+    align_char_to(8, &c_ptr);
+
     // nlp res
     mem->nlp_res = ocp_nlp_res_assign(dims, c_ptr);
     c_ptr += mem->nlp_res->memsize;
@@ -377,6 +379,8 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
     c_ptr += mem->stat_m*mem->stat_n*sizeof(double);
 
     mem->status = ACADOS_READY;
+
+    align_char_to(8, &c_ptr);
 
     assert((char *) raw_memory + ocp_nlp_sqp_memory_calculate_size(config, dims, opts) >= c_ptr);
 
