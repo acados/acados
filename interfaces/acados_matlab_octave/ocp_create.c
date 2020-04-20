@@ -759,8 +759,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // RTI phase
     if (mxGetField( matlab_opts, 0, "rti_phase" )!=NULL)
     {
-        int nlp_solver_step_length = mxGetScalar( mxGetField( matlab_opts, 0, "rti_phase" ) );
-        ocp_nlp_solver_opts_set(config, opts, "rti_phase", &nlp_solver_step_length);
+        int rti_phase = mxGetScalar( mxGetField( matlab_opts, 0, "rti_phase" ) );
+        ocp_nlp_solver_opts_set(config, opts, "rti_phase", &rti_phase);
     }
     // nlp solver: warm start first
     if (mxGetField( matlab_opts, 0, "nlp_solver_warm_start_first_qp" )!=NULL)
