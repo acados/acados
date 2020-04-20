@@ -556,6 +556,9 @@ int ocp_nlp_constraints_bgh_model_calculate_size(void *config, void *dims_)
     size += blasfeo_memsize_dmat(nu + nx, ng);                        // DCt
 
     size += 64;  // blasfeo_mem align
+    size += 8;  // align
+
+    make_int_multiple_of(8, &size);
 
     return size;
 }
@@ -586,8 +589,15 @@ void *ocp_nlp_constraints_bgh_model_assign(void *config, void *dims_, void *raw_
     ocp_nlp_constraints_bgh_model *model = (ocp_nlp_constraints_bgh_model *) c_ptr;
     c_ptr += sizeof(ocp_nlp_constraints_bgh_model);
 
-    // dims
-    //  model->dims = dims;
+    align_char_to(8, &c_ptr);
+
+    // int
+    // idxb
+    assign_and_advance_int(nb, &model->idxb, &c_ptr);
+    // idxs
+    assign_and_advance_int(ns, &model->idxs, &c_ptr);
+    // idxe
+    assign_and_advance_int(nbue+nbxe+nge+nhe, &model->idxe, &c_ptr);
 
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
@@ -599,16 +609,10 @@ void *ocp_nlp_constraints_bgh_model_assign(void *config, void *dims_, void *raw_
     // blasfeo_dvec
     // d
     assign_and_advance_blasfeo_dvec_mem(2 * nb + 2 * ng + 2 * nh + 2 * ns, &model->d, &c_ptr);
+
+    /* initialize */
     // default initialization to zero
     blasfeo_dvecse(2*nb+2*ng+2*nh+2*ns, 0.0, &model->d, 0);
-
-    // int
-    // idxb
-    assign_and_advance_int(nb, &model->idxb, &c_ptr);
-    // idxs
-    assign_and_advance_int(ns, &model->idxs, &c_ptr);
-    // idxe
-    assign_and_advance_int(nbue+nbxe+nge+nhe, &model->idxe, &c_ptr);
 
     // default initialization
     for(ii=0; ii<nbue+nbxe+nge+nhe; ii++)
@@ -920,6 +924,9 @@ int ocp_nlp_constraints_bgh_memory_calculate_size(void *config_, void *dims_, vo
     size += 1 * blasfeo_memsize_dvec(nu + nx + 2 * ns);                   // adj
 
     size += 1 * 64;  // blasfeo_mem align
+    size += 1 * 8;  // initial align
+
+    make_int_multiple_of(8, &size);
 
     return size;
 }
@@ -942,6 +949,8 @@ void *ocp_nlp_constraints_bgh_memory_assign(void *config_, void *dims_, void *op
     int ns = dims->ns;
 
     // struct
+    align_char_to(8, &c_ptr);
+
     ocp_nlp_constraints_bgh_memory *memory = (ocp_nlp_constraints_bgh_memory *) c_ptr;
     c_ptr += sizeof(ocp_nlp_constraints_bgh_memory);
 
