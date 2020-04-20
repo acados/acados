@@ -365,6 +365,8 @@ int ocp_nlp_dynamics_cont_memory_calculate_size(void *config_, void *dims_, void
 
     size += 1*64;  // blasfeo_mem align
 
+    make_int_multiple_of(8, &size);
+
     return size;
 }
 
@@ -599,6 +601,7 @@ int ocp_nlp_dynamics_cont_workspace_calculate_size(void *config_, void *dims_, v
     size += 1 * blasfeo_memsize_dmat(nu+nx, nu+nx);   // hess
 
     size += 1*64;  // blasfeo_mem align
+    make_int_multiple_of(8, &size);
 
     return size;
 }
