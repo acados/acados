@@ -64,6 +64,8 @@ int ocp_qp_hpipm_opts_calculate_size(void *config_, void *dims_)
     size += d_ocp_qp_ipm_arg_memsize(dims);
 
     size += 1 * 8;
+    make_int_multiple_of(8, &size);
+
     return size;
 }
 
@@ -155,6 +157,8 @@ int ocp_qp_hpipm_memory_calculate_size(void *config_, void *dims_, void *opts_)
     size += d_ocp_qp_ipm_ws_memsize(dims, opts->hpipm_opts);
 
     size += 1 * 8;
+    make_int_multiple_of(8, &size);
+
     return size;
 }
 
