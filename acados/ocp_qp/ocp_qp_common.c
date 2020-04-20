@@ -115,6 +115,7 @@ int ocp_qp_dims_calculate_size(int N)
     int size = sizeof(ocp_qp_dims);
 
     size += d_ocp_qp_dim_memsize(N);
+    make_int_multiple_of(8, &size);
 
     return size;
 }
@@ -127,6 +128,7 @@ ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory)
 
     ocp_qp_dims *dims = (ocp_qp_dims *) c_ptr;
     c_ptr += sizeof(ocp_qp_dims);
+    align_char_to(8, &c_ptr);
 
     d_ocp_qp_dim_create(N, dims, c_ptr);
     c_ptr += d_ocp_qp_dim_memsize(N);
