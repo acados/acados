@@ -1588,7 +1588,7 @@ int acados_create()
 {%- elif constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
     h_e_constraint.set_param(&h_e_constraint, p);
 {%- if solver_options.hessian_approx == "EXACT" %}
-    h_e_constrainti_hess.set_param(&h_e_constraint_hess, p);
+    h_e_constraint_hess.set_param(&h_e_constraint_hess, p);
 {%- endif %}
 {%- endif %}
 
