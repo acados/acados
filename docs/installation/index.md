@@ -88,8 +88,7 @@ You should have the following software installed on your machine.
 
 ### Prepare acados build
 - Locate the `cmake.exe` file. The default location is `C:\Program Files\CMake311\bin`.
-- Add this path to your environment variable PATH, using the GUI.
-
+- Add this path to your environment variable PATH, using the Windows GUI. To open the GUI press Windows key and type "env".
 - Install mingw from MATLAB add-ons manager.
 - Locate this mingw installation. The default location is `C:\ProgramData\MATLAB\SupportPackages\R2018a\3P.instrset\mingw_w64.instrset`.
 - Add the subfolders `bin` and `x86_64-w64-mingw32\bin` of the above mentioned mingw installation to your environment variable PATH.
@@ -113,7 +112,7 @@ mingw32-make.exe install
 
 ### Try a Matlab example
 - Open Matlab
-- selet MinGW compiler using `mbuild`/ `mex`
+- select MinGW compiler using `mbuild`/ `mex`
 - go to `<acados_root_folder>/examples/acados_matlab_octave`
 - run `acados_env_variables_windows`
 - go to the `getting_started` subfolder
