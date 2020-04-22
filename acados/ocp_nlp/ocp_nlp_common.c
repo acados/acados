@@ -2280,13 +2280,15 @@ static double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
         /* initialize (Leineweber1999 M5.1) */
         if (mem->sqp_iter[0]==0)
         {
-            // TODO: take abs() as in Leineweber
             // initialize weights
-            // printf("merit fun: initialize weights pi\n");
+            // equality merit weights = abs( eq multipliers )
             for (i = 0; i < N; i++)
             {
-                blasfeo_dveccp(nx[i+1], out->pi+i, 0, work->weight_merit_fun->pi+i, 0);
-                // blasfeo_print_dvec(nx[i+1], work->weight_merit_fun->pi+i, 0);
+                for (j=0; j<nx[i+1]; j++)
+                {
+                    tmp0 = fabs(BLASFEO_DVECEL(out->pi+i, j));
+                    BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j) = tmp0;
+                }
             }
 
             // printf("merit fun: initialize weights lam\n");
