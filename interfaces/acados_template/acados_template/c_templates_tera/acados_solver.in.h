@@ -94,12 +94,16 @@ extern external_function_param_casadi * gnsf_get_matrices_fun;
 // cost
 {% if cost.cost_type == "NONLINEAR_LS" %}
 extern external_function_param_casadi * cost_y_fun;
+extern external_function_param_casadi * cost_y_fun_jac_ut_xt;
+extern external_function_param_casadi * cost_y_hess;
 {%- elif cost.cost_type == "EXTERNAL" %}
 extern external_function_param_casadi * ext_cost_fun;
 extern external_function_param_casadi * ext_cost_fun_jac_hess;
 {% endif %}
 {% if cost.cost_type_e == "NONLINEAR_LS" %}
 extern external_function_param_casadi cost_y_e_fun;
+extern external_function_param_casadi cost_y_e_fun_jac_ut_xt;
+extern external_function_param_casadi cost_y_e_hess;
 {% elif cost.cost_type_e == "EXTERNAL" %}
 extern external_function_param_casadi ext_cost_e_fun;
 extern external_function_param_casadi ext_cost_e_fun_jac_hess;
