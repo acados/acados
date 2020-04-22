@@ -2261,6 +2261,7 @@ static double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
     if (opts->globalization == MERIT_BACKTRACKING)
     {
         // Line search version Jonathan
+        // Following Leineweber1999
         // copy out (current iterate) to work->tmp_nlp_out
         for (i = 0; i <= N; i++)
             blasfeo_dveccp(nv[i], out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
@@ -2331,11 +2332,13 @@ static double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
             double merit_fun0 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
 
             double alpha_min = 0.1;
+            // TODO(oj): add alpha_min and alpha_reduction factor [0.7] to options.
 
             /* actual Line Search*/
             alpha = 1.0;
+            // TODO: check out more advanced step search Leineweber1995
 
-            for (j=0; (j<10) & (alpha>alpha_min); j++)
+            for (j=0; alpha>alpha_min; j++)
             {
 
                 for (i = 0; i <= N; i++)
@@ -2343,8 +2346,9 @@ static double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
 
                 // printf("\ntmp merit fun value step search iter: %d", j);
                 double merit_fun1 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
+                // TODO(oj): also check Armijo-type condition Leinweber1999 (2.35)
 
-                if(merit_fun1 < merit_fun0)
+                if (merit_fun1 < merit_fun0)
                 {
                     break;
                 }
