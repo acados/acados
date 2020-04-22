@@ -44,7 +44,7 @@ h = 0.01;
 T = N*h; % time horizon length
 
 nlp_solver = 'sqp'; % sqp, sqp_rti
-nlp_solver_exact_hessian = 'false';
+nlp_solver_exact_hessian = 'true';
 regularize_method = 'project_reduc_hess';
      % no_regularize, project, project_reduc_hess, mirror, convexify
 nlp_solver_max_iter = 100;
@@ -172,10 +172,11 @@ ocp_model.set('constr_expr_h', model.expr_h);
 ocp_model.set('constr_lh', lbu);
 ocp_model.set('constr_uh', ubu);
 
+x0 = [0; pi; 0; 0];
+ocp_model.set('constr_x0', x0);
 
 %% acados ocp set opts
 ocp_opts = acados_ocp_opts();
-ocp_opts.set('compile_interface', compile_interface);
 ocp_opts.set('param_scheme_N', N);
 ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
@@ -211,7 +212,6 @@ time_lin = zeros(n_executions,1);
 time_reg = zeros(n_executions,1);
 time_qp_sol = zeros(n_executions,1);
 
-x0 = [0; pi; 0; 0];
 
 %% call ocp solver in loop
 for i=1:n_executions

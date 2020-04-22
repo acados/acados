@@ -316,6 +316,9 @@ for ii=1:n_sim
 	ocp.set('init_pi', pi_traj_init);
 
 	% solve OCP
+	ocp.set('rti_phase', 1);
+	ocp.solve();
+	ocp.set('rti_phase', 2);
 	ocp.solve();
 
 	if 1

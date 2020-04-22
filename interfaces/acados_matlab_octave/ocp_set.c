@@ -478,7 +478,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                     external_function_param_casadi *ext_fun_ptr = (external_function_param_casadi *) ptr[jj];
                     if (ext_fun_ptr!=0)
                     {
-                        if (nrhs==min_nrhs)
+                        if (nrhs==min_nrhs) // all stages
                         {
                             for (int kk=0; kk<NN[jj]; kk++)
                             {
@@ -487,14 +487,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                                 (ext_fun_ptr+kk)->set_param(ext_fun_ptr+kk, value);
                             }
                         }
-                        else if (nrhs==min_nrhs+1)
+                        else if (nrhs==min_nrhs+1) // one stage
                         {
                             int stage = mxGetScalar( prhs[5] );
                             if (stage>=Nf_sum & stage<Nf_sum+NN[jj])
                             {
-                                (ext_fun_ptr+stage)->get_nparam(ext_fun_ptr+stage, &acados_size);
+                                int kk = stage - Nf_sum;
+                                (ext_fun_ptr+kk)->get_nparam(ext_fun_ptr+kk, &acados_size);
                                 MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-                                (ext_fun_ptr+stage)->set_param(ext_fun_ptr+stage, value);
+                                (ext_fun_ptr+kk)->set_param(ext_fun_ptr+kk, value);
                             }
                         }
                     }
@@ -506,7 +507,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                     external_function_param_generic *ext_fun_ptr = (external_function_param_generic *) ptr[jj];
                     if (ext_fun_ptr!=0)
                     {
-                        if (nrhs==min_nrhs)
+                        if (nrhs==min_nrhs) // all stages
                         {
                             for (int kk=0; kk<NN[jj]; kk++)
                             {
@@ -515,14 +516,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                                 (ext_fun_ptr+kk)->set_param(ext_fun_ptr+kk, value);
                             }
                         }
-                        else if (nrhs==min_nrhs+1)
+                        else if (nrhs==min_nrhs+1) // one stage
                         {
                             int stage = mxGetScalar( prhs[5] );
                             if (stage>=Nf_sum & stage<Nf_sum+NN[jj])
                             {
-                                (ext_fun_ptr+stage)->get_nparam(ext_fun_ptr+stage, &acados_size);
+                                int kk = stage - Nf_sum;
+                                (ext_fun_ptr+kk)->get_nparam(ext_fun_ptr+kk, &acados_size);
                                 MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-                                (ext_fun_ptr+stage)->set_param(ext_fun_ptr+stage, value);
+                                (ext_fun_ptr+kk)->set_param(ext_fun_ptr+kk, value);
                             }
                         }
                     }
@@ -541,6 +543,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
         int nlp_solver_max_iter = (int) value[0];
         ocp_nlp_solver_opts_set(config, opts, "max_iter", &nlp_solver_max_iter);
+    }
+    else if (!strcmp(field, "rti_phase"))
+    {
+        acados_size = 1;
+        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+        int rti_phase = (int) value[0];
+        ocp_nlp_solver_opts_set(config, opts, "rti_phase", &rti_phase);
     }
     else if (!strcmp(field, "qp_warm_start"))
     {

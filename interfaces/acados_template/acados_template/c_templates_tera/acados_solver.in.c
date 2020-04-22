@@ -1614,11 +1614,18 @@ int acados_create()
         phi_constraint[ii].set_param(phi_constraint+ii, p);
     }
 {%- elif dims.nh > 0 and constraints.constr_type == "BGH" %}
+
     for (int ii = 0; ii < N; ii++)
     {
         nl_constr_h_fun_jac[ii].set_param(nl_constr_h_fun_jac+ii, p);
         nl_constr_h_fun[ii].set_param(nl_constr_h_fun+ii, p);
     }
+{%- if solver_options.hessian_approx == "EXACT" %}
+    for (int ii = 0; ii < N; ii++)
+    {
+        h_constraint_hess[ii].set_param(h_constraint_hess+ii, p);
+    }
+{%- endif %}
 {%- endif %}
 
 {%- if constraints.constr_type_e == "BGP" %}
@@ -1627,6 +1634,9 @@ int acados_create()
 {%- elif constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
     nl_constr_h_e_fun_jac.set_param(&nl_constr_h_e_fun_jac, p);
     nl_constr_h_e_fun.set_param(&nl_constr_h_e_fun, p);
+{%- if solver_options.hessian_approx == "EXACT" %}
+    h_e_constraint_hess.set_param(&h_e_constraint_hess, p);
+{%- endif %}
 {%- endif %}
 
 {%- endif %}{# if dims.np #}
@@ -1652,47 +1662,15 @@ int acados_update_params(int stage, double *p, int np)
     if (stage < {{ dims.N }})
     {
     {%- if solver_options.integrator_type == "IRK" %}
-        casadi_np = (impl_dae_fun+stage)->np;
-        if (casadi_np != np) {
-            printf("acados_update_params: trying to set %i parameters "
-                "in impl_dae_fun which only has %i. Exiting.\n", np, casadi_np);
-            exit(1);
-        }
         impl_dae_fun[stage].set_param(impl_dae_fun+stage, p);
-
-        casadi_np = (impl_dae_fun_jac_x_xdot_z+stage)->np;
-        if (casadi_np != np) {
-            printf("acados_update_params: trying to set %i parameters "
-                "in impl_dae_fun_jac_x_xdot_z which only has %i. Exiting.\n", np, casadi_np);
-            exit(1);
-        }
         impl_dae_fun_jac_x_xdot_z[stage].set_param(impl_dae_fun_jac_x_xdot_z+stage, p);
-
-        casadi_np = (impl_dae_jac_x_xdot_u_z+stage)->np;
-        if (casadi_np != np) {
-            printf("acados_update_params: trying to set %i parameters "
-                "in impl_dae_jac_x_xdot_u_z which only has %i. Exiting.\n", np, casadi_np);
-            exit(1);
-        }
         impl_dae_jac_x_xdot_u_z[stage].set_param(impl_dae_jac_x_xdot_u_z+stage, p);
 
         {%- if solver_options.hessian_approx == "EXACT" %}
-        casadi_np = (impl_dae_hess+stage)->np;
-        if (casadi_np != np) {
-            printf("acados_update_params: trying to set %i parameters "
-                "in impl_dae_hess which only has %i. Exiting.\n", np, casadi_np);
-            exit(1);
-        }
         impl_dae_hess[stage].set_param(impl_dae_hess+stage, p);
         {%- endif %}
 
     {% elif solver_options.integrator_type == "ERK" %}
-        casadi_np = (forw_vde_casadi+stage)->np;
-        if (casadi_np != np) {
-            printf("acados_update_params: trying to set %i parameters "
-                "in forw_vde_casadi which only has %i. Exiting.\n", np, casadi_np);
-            exit(1);
-        }
         forw_vde_casadi[stage].set_param(forw_vde_casadi+stage, p);
 
         casadi_np = (expl_ode_fun+stage)->np;
@@ -1704,176 +1682,66 @@ int acados_update_params(int stage, double *p, int np)
         expl_ode_fun[stage].set_param(expl_ode_fun+stage, p);
 
         {%- if solver_options.hessian_approx == "EXACT" %}
-        casadi_np = (hess_vde_casadi+stage)->np;
-        if (casadi_np != np) {
-            printf("acados_update_params: trying to set %i parameters "
-                "in hess_vde_casadi which only has %i. Exiting.\n", np, casadi_np);
-            exit(1);
-        }
         hess_vde_casadi[stage].set_param(hess_vde_casadi+stage, p);
         {%- endif %}
 
     {% elif solver_options.integrator_type == "GNSF" %}
-        casadi_np = (gnsf_phi_fun+stage)->np;
-        if (casadi_np != np) {
-            printf("acados_update_params: trying to set %i parameters "
-                "in gnsf_phi_fun which only has %i. Exiting.\n", np, casadi_np);
-            exit(1);
-        }
         gnsf_phi_fun[stage].set_param(gnsf_phi_fun+stage, p);
-
-        casadi_np = (gnsf_phi_fun_jac_y+stage)->np;
-        if (casadi_np != np) {
-            printf("acados_update_params: trying to set %i parameters "
-                "in gnsf_phi_fun_jac_y which only has %i. Exiting.\n", np, casadi_np);
-            exit(1);
-        }
         gnsf_phi_fun_jac_y[stage].set_param(gnsf_phi_fun_jac_y+stage, p);
-
-        casadi_np = (gnsf_phi_jac_y_uhat+stage)->np;
-        if (casadi_np != np) {
-            printf("acados_update_params: trying to set %i parameters "
-                "in gnsf_phi_jac_y_uhat which only has %i. Exiting.\n", np, casadi_np);
-            exit(1);
-        }
         gnsf_phi_jac_y_uhat[stage].set_param(gnsf_phi_jac_y_uhat+stage, p);
 
-        casadi_np = (gnsf_f_lo_jac_x1_x1dot_u_z+stage)->np;
-        if (casadi_np != np) {
-            printf("acados_update_params: trying to set %i parameters "
-                "in gnsf_f_lo_jac_x1_x1dot_u_z which only has %i. Exiting.\n", np, casadi_np);
-            exit(1);
-        }
         gnsf_f_lo_jac_x1_x1dot_u_z[stage].set_param(gnsf_f_lo_jac_x1_x1dot_u_z+stage, p);
 
     {%- endif %}{# integrator_type #}
 
         // constraints
     {% if constraints.constr_type == "BGP" %}
-        // casadi_np = (r_constraint+stage)->np;
-        // if (casadi_np != np) {
-        //     printf("acados_update_params: trying to set %i parameters " 
-        //         "in r_constraint which only has %i. Exiting.\n", np, casadi_np);
-        //     exit(1);
-        // }
         // r_constraint[stage].set_param(r_constraint+stage, p);
-        casadi_np = (phi_constraint+stage)->np;
-        if (casadi_np != np) {
-            printf("acados_update_params: trying to set %i parameters "
-                "in phi_constraint which only has %i. Exiting.\n", np, casadi_np);
-            exit(1);
-        }
         phi_constraint[stage].set_param(phi_constraint+stage, p);
 
     {% elif constraints.constr_type == "BGH" and dims.nh > 0 %}
-        casadi_np = (nl_constr_h_fun_jac+stage)->np;
-        if (casadi_np != np) {
-            printf("acados_update_params: trying to set %i parameters "
-                "in nl_constr_h_fun_jac which only has %i. Exiting.\n", np, casadi_np);
-            exit(1);
-        }
         nl_constr_h_fun_jac[stage].set_param(nl_constr_h_fun_jac+stage, p);
-
-        casadi_np = (nl_constr_h_fun+stage)->np;
-        if (casadi_np != np) {
-            printf("acados_update_params: trying to set %i parameters "
-                "in nl_constr_h_fun which only has %i. Exiting.\n", np, casadi_np);
-            exit(1);
-        }
         nl_constr_h_fun[stage].set_param(nl_constr_h_fun+stage, p);
+    {%- if solver_options.hessian_approx == "EXACT" %}
+        h_constraint_hess[stage].set_param(h_constraint_hess+stage, p);
+    {%- endif %}
     {%- endif %}
 
         // cost
     {%- if cost.cost_type == "NONLINEAR_LS" %}
-        casadi_np = (cost_y_fun+stage)->np;
-        if (casadi_np != np) {
-            printf("acados_update_params: trying to set %i parameters "
-                "in cost_y_fun which only has %i. Exiting.\n", np, casadi_np);
-            exit(1);
-        }
         cost_y_fun[stage].set_param(cost_y_fun+stage, p);
+        cost_y_fun_jac_ut_xt[stage].set_param(cost_y_fun_jac_ut_xt+stage, p);
+        cost_y_hess[stage].set_param(cost_y_hess+stage, p);
 
     {%- elif cost.cost_type == "EXTERNAL" %}
-        casadi_np = (ext_cost_fun+stage)->np;
-        if (casadi_np != np) {
-            printf("acados_update_params: trying to set %i parameters "
-                "in ext_cost_fun which only has %i. Exiting.\n", np, casadi_np);
-            exit(1);
-        }
         ext_cost_fun[stage].set_param(ext_cost_fun+stage, p);
-
-        casadi_np = (ext_cost_fun_jac_hess+stage)->np;
-        if (casadi_np != np) {
-            printf("acados_update_params: trying to set %i parameters "
-                "in ext_cost_fun_jac_hess which only has %i. Exiting.\n", np, casadi_np);
-            exit(1);
-        }
         ext_cost_fun_jac_hess[stage].set_param(ext_cost_fun_jac_hess+stage, p);
     {%- endif %}
 
     }
     else // stage == N
     {
-
         // terminal shooting node has no dynamics
         // cost
     {%- if cost.cost_type_e == "NONLINEAR_LS" %}
-        casadi_np = (&cost_y_e_fun)->np;
-        if (casadi_np != np) {
-            printf("acados_update_params: trying to set %i parameters "
-                "in cost_y_e_fun which only has %i. Exiting.\n", np, casadi_np);
-            exit(1);
-        }
         cost_y_e_fun.set_param(&cost_y_e_fun, p);
-    {%- elif cost.cost_type_e == "EXTERNAL" %}
-        casadi_np = (&ext_cost_e_fun)->np;
-        if (casadi_np != np) {
-            printf("acados_update_params: trying to set %i parameters "
-                "in ext_cost_e_fun which only has %i. Exiting.\n", np, casadi_np);
-            exit(1);
-        }
-        ext_cost_e_fun.set_param(&ext_cost_e_fun, p);
+        cost_y_e_fun_jac_ut_xt.set_param(&cost_y_e_fun_jac_ut_xt, p);
+        cost_y_e_hess.set_param(&cost_y_e_hess, p);
 
-        casadi_np = (&ext_cost_e_fun_jac_hess)->np;
-        if (casadi_np != np) {
-            printf("acados_update_params: trying to set %i parameters "
-                "in ext_cost_e_fun_jac_hess which only has %i. Exiting.\n", np, casadi_np);
-            exit(1);
-        }
+    {%- elif cost.cost_type_e == "EXTERNAL" %}
+        ext_cost_e_fun.set_param(&ext_cost_e_fun, p);
         ext_cost_e_fun_jac_hess.set_param(&ext_cost_e_fun_jac_hess, p);
     {% endif %}
         // constraints
     {% if constraints.constr_type_e == "BGP" %}
-        // casadi_np = (&r_e_constraint)->np;
-        // if (casadi_np != np) {
-        //     printf("acados_update_params: trying to set %i parameters "
-        //         "in r_e_constraint which only has %i. Exiting.\n", np, casadi_np);
-        //     exit(1);
-        // }
         // r_e_constraint.set_param(&r_e_constraint, p);
-        casadi_np = (&phi_e_constraint)->np;
-        if (casadi_np != np) {
-            printf("acados_update_params: trying to set %i parameters "
-                "in phi_e_constraint which only has %i. Exiting.\n", np, casadi_np);
-            exit(1);
-        }
         phi_e_constraint.set_param(&phi_e_constraint, p);
     {% elif constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
-        casadi_np = (&nl_constr_h_e_fun_jac)->np;
-        if (casadi_np != np) {
-            printf("acados_update_params: trying to set %i parameters "
-                "in nl_constr_h_e_fun_jac which only has %i. Exiting.\n", np, casadi_np);
-            exit(1);
-        }
         nl_constr_h_e_fun_jac.set_param(&nl_constr_h_e_fun_jac, p);
-
-        casadi_np = (&nl_constr_h_e_fun)->np;
-        if (casadi_np != np) {
-            printf("acados_update_params: trying to set %i parameters "
-                "in nl_constr_h_e_fun which only has %i. Exiting.\n", np, casadi_np);
-            exit(1);
-        }
         nl_constr_h_e_fun.set_param(&nl_constr_h_e_fun, p);
+    {%- if solver_options.hessian_approx == "EXACT" %}
+        h_e_constraint_hess[stage].set_param(h_e_constraint_hess+stage, p);
+    {%- endif %}
     {% endif %}
     }
 {% endif %}{# if dims.np #}
@@ -1966,6 +1834,12 @@ int acados_free()
         external_function_param_casadi_free(&nl_constr_h_fun_jac[i]);
         external_function_param_casadi_free(&nl_constr_h_fun[i]);
     }
+{%- if solver_options.hessian_approx == "EXACT" %}
+    for (int i = 0; i < {{ dims.N }}; i++)
+    {
+        external_function_param_casadi_free(&h_constraint_hess[i]);
+    }
+{%- endif %}
 {%- elif constraints.constr_type == "BGP" and dims.nphi > 0 %}
     for (int i = 0; i < {{ dims.N }}; i++)
     {
@@ -1975,6 +1849,9 @@ int acados_free()
 {%- if constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
     external_function_param_casadi_free(&nl_constr_h_e_fun_jac);
     external_function_param_casadi_free(&nl_constr_h_e_fun);
+{%- if solver_options.hessian_approx == "EXACT" %}
+    external_function_param_casadi_free(&h_e_constraint_hess);
+{%- endif %}
 {%- elif constraints.constr_type_e == "BGP" and dims.nphi_e > 0 %}
     external_function_param_casadi_free(&phi_e_constraint);
 {%- endif %}
