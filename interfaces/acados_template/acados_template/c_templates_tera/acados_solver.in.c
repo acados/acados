@@ -133,7 +133,7 @@ external_function_param_casadi * gnsf_get_matrices_fun;
 external_function_param_casadi * nl_constr_h_fun_jac;
 external_function_param_casadi * nl_constr_h_fun;
 {% if solver_options.hessian_approx == "EXACT" %}
-external_function_param_casadi * h_constraint_hess;
+external_function_param_casadi * nl_constr_h_fun_jac_hess;
 {%- endif %}
 {%- elif constraints.constr_type == "BGP" %}
 external_function_param_casadi * phi_constraint;
@@ -144,7 +144,7 @@ external_function_param_casadi * phi_constraint;
 external_function_param_casadi nl_constr_h_e_fun_jac;
 external_function_param_casadi nl_constr_h_e_fun;
 {% if solver_options.hessian_approx == "EXACT" %}
-external_function_param_casadi h_e_constraint_hess;
+external_function_param_casadi nl_constr_h_e_fun_jac_hess;
 {%- endif %}
 {%- elif constraints.constr_type_e == "BGP" %}
 external_function_param_casadi phi_e_constraint;
@@ -439,17 +439,17 @@ int acados_create()
         external_function_param_casadi_create(&nl_constr_h_fun[i], {{ dims.np }});
     }
     {% if solver_options.hessian_approx == "EXACT" %}
-    h_constraint_hess = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
+    nl_constr_h_fun_jac_hess = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; i++) {
         // nonlinear constraint
-        h_constraint_hess[i].casadi_fun = &{{ model.name }}_constr_h_fun_jac_uxt_hess;
-        h_constraint_hess[i].casadi_n_in = &{{ model.name }}_constr_h_fun_jac_uxt_hess_n_in;
-        h_constraint_hess[i].casadi_n_out = &{{ model.name }}_constr_h_fun_jac_uxt_hess_n_out;
-        h_constraint_hess[i].casadi_sparsity_in = &{{ model.name }}_constr_h_fun_jac_uxt_hess_sparsity_in;
-        h_constraint_hess[i].casadi_sparsity_out = &{{ model.name }}_constr_h_fun_jac_uxt_hess_sparsity_out;
-        h_constraint_hess[i].casadi_work = &{{ model.name }}_constr_h_fun_jac_uxt_hess_work;
+        nl_constr_h_fun_jac_hess[i].casadi_fun = &{{ model.name }}_constr_h_fun_jac_uxt_hess;
+        nl_constr_h_fun_jac_hess[i].casadi_n_in = &{{ model.name }}_constr_h_fun_jac_uxt_hess_n_in;
+        nl_constr_h_fun_jac_hess[i].casadi_n_out = &{{ model.name }}_constr_h_fun_jac_uxt_hess_n_out;
+        nl_constr_h_fun_jac_hess[i].casadi_sparsity_in = &{{ model.name }}_constr_h_fun_jac_uxt_hess_sparsity_in;
+        nl_constr_h_fun_jac_hess[i].casadi_sparsity_out = &{{ model.name }}_constr_h_fun_jac_uxt_hess_sparsity_out;
+        nl_constr_h_fun_jac_hess[i].casadi_work = &{{ model.name }}_constr_h_fun_jac_uxt_hess_work;
 
-        external_function_param_casadi_create(&h_constraint_hess[i], {{ dims.np }});
+        external_function_param_casadi_create(&nl_constr_h_fun_jac_hess[i], {{ dims.np }});
     }
     {% endif %}
     {% endif %}
@@ -473,13 +473,13 @@ int acados_create()
 
     {% if solver_options.hessian_approx == "EXACT" %}
     // nonlinear constraint
-    h_e_constraint_hess.casadi_fun = &{{ model.name }}_constr_h_e_fun_jac_uxt_hess;
-    h_e_constraint_hess.casadi_n_in = &{{ model.name }}_constr_h_e_fun_jac_uxt_hess_n_in;
-    h_e_constraint_hess.casadi_n_out = &{{ model.name }}_constr_h_e_fun_jac_uxt_hess_n_out;
-    h_e_constraint_hess.casadi_sparsity_in = &{{ model.name }}_constr_h_e_fun_jac_uxt_hess_sparsity_in;
-    h_e_constraint_hess.casadi_sparsity_out = &{{ model.name }}_constr_h_e_fun_jac_uxt_hess_sparsity_out;
-    h_e_constraint_hess.casadi_work = &{{ model.name }}_constr_h_e_fun_jac_uxt_hess_work;
-    external_function_param_casadi_create(&h_e_constraint_hess, {{ dims.np }});
+    nl_constr_h_e_fun_jac_hess.casadi_fun = &{{ model.name }}_constr_h_e_fun_jac_uxt_hess;
+    nl_constr_h_e_fun_jac_hess.casadi_n_in = &{{ model.name }}_constr_h_e_fun_jac_uxt_hess_n_in;
+    nl_constr_h_e_fun_jac_hess.casadi_n_out = &{{ model.name }}_constr_h_e_fun_jac_uxt_hess_n_out;
+    nl_constr_h_e_fun_jac_hess.casadi_sparsity_in = &{{ model.name }}_constr_h_e_fun_jac_uxt_hess_sparsity_in;
+    nl_constr_h_e_fun_jac_hess.casadi_sparsity_out = &{{ model.name }}_constr_h_e_fun_jac_uxt_hess_sparsity_out;
+    nl_constr_h_e_fun_jac_hess.casadi_work = &{{ model.name }}_constr_h_e_fun_jac_uxt_hess_work;
+    external_function_param_casadi_create(&nl_constr_h_e_fun_jac_hess, {{ dims.np }});
     {% endif %}
     {%- endif %}
 
@@ -1206,7 +1206,7 @@ int acados_create()
                                     &nl_constr_h_fun[i]);
         {% if solver_options.hessian_approx == "EXACT" %}
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i,
-                                      "nl_constr_h_fun_jac_hess", &h_constraint_hess[i]);
+                                      "nl_constr_h_fun_jac_hess", &nl_constr_h_fun_jac_hess[i]);
         {% endif %}
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lh", lh);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "uh", uh);
@@ -1365,7 +1365,7 @@ int acados_create()
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_fun_jac", &nl_constr_h_e_fun_jac);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_fun", &nl_constr_h_e_fun);
     {% if solver_options.hessian_approx == "EXACT" %}
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_fun_jac_hess", &h_e_constraint_hess);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_fun_jac_hess", &nl_constr_h_e_fun_jac_hess);
     {% endif %}
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lh", lh_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "uh", uh_e);
@@ -1623,7 +1623,7 @@ int acados_create()
 {%- if solver_options.hessian_approx == "EXACT" %}
     for (int ii = 0; ii < N; ii++)
     {
-        h_constraint_hess[ii].set_param(h_constraint_hess+ii, p);
+        nl_constr_h_fun_jac_hess[ii].set_param(nl_constr_h_fun_jac_hess+ii, p);
     }
 {%- endif %}
 {%- endif %}
@@ -1635,7 +1635,7 @@ int acados_create()
     nl_constr_h_e_fun_jac.set_param(&nl_constr_h_e_fun_jac, p);
     nl_constr_h_e_fun.set_param(&nl_constr_h_e_fun, p);
 {%- if solver_options.hessian_approx == "EXACT" %}
-    h_e_constraint_hess.set_param(&h_e_constraint_hess, p);
+    nl_constr_h_e_fun_jac_hess.set_param(&nl_constr_h_e_fun_jac_hess, p);
 {%- endif %}
 {%- endif %}
 
@@ -1703,7 +1703,7 @@ int acados_update_params(int stage, double *p, int np)
         nl_constr_h_fun_jac[stage].set_param(nl_constr_h_fun_jac+stage, p);
         nl_constr_h_fun[stage].set_param(nl_constr_h_fun+stage, p);
     {%- if solver_options.hessian_approx == "EXACT" %}
-        h_constraint_hess[stage].set_param(h_constraint_hess+stage, p);
+        nl_constr_h_fun_jac_hess[stage].set_param(nl_constr_h_fun_jac_hess+stage, p);
     {%- endif %}
     {%- endif %}
 
@@ -1740,7 +1740,7 @@ int acados_update_params(int stage, double *p, int np)
         nl_constr_h_e_fun_jac.set_param(&nl_constr_h_e_fun_jac, p);
         nl_constr_h_e_fun.set_param(&nl_constr_h_e_fun, p);
     {%- if solver_options.hessian_approx == "EXACT" %}
-        h_e_constraint_hess[stage].set_param(h_e_constraint_hess+stage, p);
+        nl_constr_h_e_fun_jac_hess[stage].set_param(nl_constr_h_e_fun_jac_hess+stage, p);
     {%- endif %}
     {% endif %}
     }
@@ -1837,7 +1837,7 @@ int acados_free()
 {%- if solver_options.hessian_approx == "EXACT" %}
     for (int i = 0; i < {{ dims.N }}; i++)
     {
-        external_function_param_casadi_free(&h_constraint_hess[i]);
+        external_function_param_casadi_free(&nl_constr_h_fun_jac_hess[i]);
     }
 {%- endif %}
 {%- elif constraints.constr_type == "BGP" and dims.nphi > 0 %}
@@ -1850,7 +1850,7 @@ int acados_free()
     external_function_param_casadi_free(&nl_constr_h_e_fun_jac);
     external_function_param_casadi_free(&nl_constr_h_e_fun);
 {%- if solver_options.hessian_approx == "EXACT" %}
-    external_function_param_casadi_free(&h_e_constraint_hess);
+    external_function_param_casadi_free(&nl_constr_h_e_fun_jac_hess);
 {%- endif %}
 {%- elif constraints.constr_type_e == "BGP" and dims.nphi_e > 0 %}
     external_function_param_casadi_free(&phi_e_constraint);

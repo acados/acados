@@ -117,6 +117,7 @@ extern external_function_param_casadi * phi_constraint;
 {% elif constraints.constr_type == "BGH" and dims.nh > 0 %}
 extern external_function_param_casadi * nl_constr_h_fun_jac;
 extern external_function_param_casadi * nl_constr_h_fun;
+extern external_function_param_casadi * nl_constr_h_fun_jac_hess;
 {% endif %}
 
 {% if constraints.constr_type_e == "BGP" %}
@@ -125,6 +126,7 @@ extern external_function_param_casadi phi_e_constraint;
 {% elif constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
 extern external_function_param_casadi nl_constr_h_e_fun_jac;
 extern external_function_param_casadi nl_constr_h_e_fun;
+extern external_function_param_casadi nl_constr_h_e_fun_jac_hess;
 {%- endif %}
 
 
