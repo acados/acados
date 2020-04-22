@@ -1749,6 +1749,22 @@ int acados_update_params(int stage, double *p, int np)
         }
         cost_y_fun[stage].set_param(cost_y_fun+stage, p);
 
+        casadi_np = (cost_y_fun_jac_ut_xt+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in cost_y_fun_jac_ut_xt which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        cost_y_fun_jac_ut_xt[stage].set_param(cost_y_fun_jac_ut_xt+stage, p);
+
+        casadi_np = (cost_y_hess+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in cost_y_hess which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        cost_y_hess[stage].set_param(cost_y_hess+stage, p);
+
     {%- elif cost.cost_type == "EXTERNAL" %}
         casadi_np = (ext_cost_fun+stage)->np;
         if (casadi_np != np) {
@@ -1781,6 +1797,23 @@ int acados_update_params(int stage, double *p, int np)
             exit(1);
         }
         cost_y_e_fun.set_param(&cost_y_e_fun, p);
+
+        casadi_np = (&cost_y_e_fun_jac_ut_xt)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in cost_y_e_fun_jac_ut_xt which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        cost_y_e_fun_jac_ut_xt.set_param(&cost_y_e_fun_jac_ut_xt, p);
+
+        casadi_np = (&cost_y_e_hess)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in cost_y_e_hess which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        cost_y_e_hess.set_param(&cost_y_e_hess, p);
+
     {%- elif cost.cost_type_e == "EXTERNAL" %}
         casadi_np = (&ext_cost_e_fun)->np;
         if (casadi_np != np) {
