@@ -246,14 +246,22 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_config *config, ocp_nlp_dims *dims,
  * options
  ************************************************/
 
+/// Globalization types
+typedef enum
+{
+    FIXED_STEP,
+    MERIT_BACKTRACKING,
+} ocp_nlp_globalization_t;
+
 typedef struct
 {
+    ocp_nlp_globalization_t globalization;
     ocp_qp_xcond_solver_opts *qp_solver_opts; // xcond solver opts instead ???
     void *regularize;
     void **dynamics;     // dynamics_opts
     void **cost;         // cost_opts
     void **constraints;  // constraints_opts
-    double step_length;  // (fixed) step length in SQP loop
+    double step_length;  // step length in case of FIXED_STEP
     double levenberg_marquardt;  // LM factor to be added to the hessian before regularization
     int reuse_workspace;
     int num_threads;
@@ -330,7 +338,7 @@ typedef struct
     void **constraints;  // constraints_workspace
 
 	ocp_nlp_out *tmp_nlp_out;
-	ocp_nlp_out *weights_nlp_out;
+	ocp_nlp_out *weight_merit_fun;
 
 } ocp_nlp_workspace;
 
@@ -364,6 +372,9 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
 //
 double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
           ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
+//
+void ocp_nlp_initialize_t_slacks(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
 
 
 

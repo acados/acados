@@ -97,7 +97,6 @@ void ocp_nlp_constraints_bgh_dims_set(void *config_, void *dims_,
 
 typedef struct
 {
-    //  ocp_nlp_constraints_bgh_dims *dims;
     int *idxb;
     int *idxs;
     int *idxe;

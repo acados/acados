@@ -73,6 +73,7 @@ extern ocp_nlp_dims * nlp_dims;
 // dynamics
 {% if solver_options.integrator_type == "ERK" %}
 extern external_function_param_casadi * forw_vde_casadi;
+extern external_function_param_casadi * expl_ode_fun;
 {% if solver_options.hessian_approx == "EXACT" %}
 extern external_function_param_casadi * hess_vde_casadi;
 {%- endif %}
@@ -114,14 +115,18 @@ extern external_function_param_casadi ext_cost_e_fun_jac_hess;
 extern external_function_param_casadi * phi_constraint;
 // extern external_function_param_casadi * r_constraint;
 {% elif constraints.constr_type == "BGH" and dims.nh > 0 %}
-extern external_function_param_casadi * h_constraint;
+extern external_function_param_casadi * nl_constr_h_fun_jac;
+extern external_function_param_casadi * nl_constr_h_fun;
+extern external_function_param_casadi * nl_constr_h_fun_jac_hess;
 {% endif %}
 
 {% if constraints.constr_type_e == "BGP" %}
 extern external_function_param_casadi phi_e_constraint;
 // extern external_function_param_casadi r_e_constraint;
 {% elif constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
-extern external_function_param_casadi h_e_constraint;
+extern external_function_param_casadi nl_constr_h_e_fun_jac;
+extern external_function_param_casadi nl_constr_h_e_fun;
+extern external_function_param_casadi nl_constr_h_e_fun_jac_hess;
 {%- endif %}
 
 

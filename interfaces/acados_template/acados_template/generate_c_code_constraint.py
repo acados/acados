@@ -119,8 +119,8 @@ def generate_c_code_constraint( model, con_name, is_terminal, opts ):
             jac_z = jacobian(con_h_expr, z)
             constraint_fun_jac_tran = \
                 Function(fun_name, [x, u, z, p], \
-                [con_h_expr, vertcat(transpose(jac_u), \
-                transpose(jac_x)), transpose(jac_z)])
+                    [con_h_expr, vertcat(transpose(jac_u), \
+                    transpose(jac_x)), transpose(jac_z)])
 
             constraint_fun_jac_tran.generate(fun_name, casadi_opts)
             if opts['generate_hess']:
@@ -144,6 +144,13 @@ def generate_c_code_constraint( model, con_name, is_terminal, opts ):
 
                 # generate C code
                 constraint_fun_jac_tran_hess.generate(fun_name, casadi_opts)
+
+            if is_terminal:
+                fun_name = con_name + '_constr_h_e_fun'
+            else:
+                fun_name = con_name + '_constr_h_fun'
+            h_fun = Function(fun_name, [x, u, z, p], [con_h_expr])
+            h_fun.generate(fun_name, casadi_opts)
 
         else: # BGP constraint
             if is_terminal:

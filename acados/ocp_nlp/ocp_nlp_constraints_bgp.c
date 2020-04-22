@@ -1436,6 +1436,11 @@ void ocp_nlp_constraints_bgp_compute_fun(void *config_, void *dims_, void *model
 		ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
 		ext_fun_out[0] = &fun_out;  // fun: nphi
 
+        if (model->nl_constr_phi_o_r_fun == 0)
+        {
+            printf("ocp_nlp_constraints_bgp_compute_fun: nl_constr_phi_o_r_fun is not provided. Exiting.\n");
+            exit(1);
+        }
 		model->nl_constr_phi_o_r_fun->evaluate(model->nl_constr_phi_o_r_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 	}
 

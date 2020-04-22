@@ -900,7 +900,7 @@ class AcadosOcpSolver:
             if field_ not in constraints_fields + cost_fields + out_fields:
                 raise Exception("AcadosOcpSolver.set(): {} is not a valid argument.\
                     \nPossible values are {}. Exiting.".format(field, \
-                    constraints_fields + cost_fields + out_fields))
+                    constraints_fields + cost_fields + out_fields + 'p'))
 
             self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = \
                 [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
@@ -1028,11 +1028,12 @@ class AcadosOcpSolver:
         """
         set options of the solver:
         Parameters:
-            :param field_: string, e.g. 'print_level', 'rti_phase', 'step_length'
+            :param field_: string, e.g. 'print_level', 'rti_phase', 'initialize_t_slacks', 'step_length'
             :param value_: of type int, float
         """
         int_fields = ['print_level', 'rti_phase', 'initialize_t_slacks']
         double_fields = ['step_length']
+        string_fields = ['globalization']
 
         if field_ in int_fields:
             if not isinstance(value_, int):
@@ -1046,6 +1047,12 @@ class AcadosOcpSolver:
             else:
                 value_ctypes = c_double(value_)
 
+        elif field_ in string_fields:
+            if not isinstance(value_, str):
+                raise Exception('solver option {} must be of type str. You have {}.'.format(field_, type(value_)))
+            else:
+                value_ctypes = value_.encode('utf-8')
+
         if field_ == 'rti_phase':
             if value_ < 0 or value_ > 2:
                 raise Exception('AcadosOcpSolver.solve(): argument \'rti_phase\' can '
@@ -1057,10 +1064,16 @@ class AcadosOcpSolver:
         field = field_
         field = field.encode('utf-8')
 
-        self.shared_lib.ocp_nlp_solver_opts_set.argtypes = \
-            [c_void_p, c_void_p, c_char_p, c_void_p]
-        self.shared_lib.ocp_nlp_solver_opts_set(self.nlp_config, \
-            self.nlp_opts, field, byref(value_ctypes))
+        if field_ in string_fields:
+            self.shared_lib.ocp_nlp_solver_opts_set.argtypes = \
+                [c_void_p, c_void_p, c_char_p, c_char_p]
+            self.shared_lib.ocp_nlp_solver_opts_set(self.nlp_config, \
+                self.nlp_opts, field, value_ctypes)
+        else:
+            self.shared_lib.ocp_nlp_solver_opts_set.argtypes = \
+                [c_void_p, c_void_p, c_char_p, c_void_p]
+            self.shared_lib.ocp_nlp_solver_opts_set(self.nlp_config, \
+                self.nlp_opts, field, byref(value_ctypes))
 
         return
 

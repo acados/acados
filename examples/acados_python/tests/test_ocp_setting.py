@@ -228,6 +228,9 @@ ocp.constraints.idxbu = np.array([0])
 # set options
 ocp.solver_options.qp_solver = QP_SOLVER
 ocp.solver_options.hessian_approx = HESS_APPROX
+ocp.solver_options.exact_hess_constr = 1
+ocp.solver_options.exact_hess_cost = 1
+ocp.solver_options.exact_hess_dyn = 1
 ocp.solver_options.regularize_method = REGULARIZATION
 
 ocp.solver_options.integrator_type = INTEGRATOR_TYPE

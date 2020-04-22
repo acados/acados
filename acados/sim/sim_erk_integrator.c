@@ -157,12 +157,10 @@ void *sim_erk_model_assign(void *config, void *dims, void *raw_memory)
 
 int sim_erk_model_set(void *model_, const char *field, void *value)
 {
-//    printf("\nsim_erk_model_set\n");
     erk_model *model = model_;
 
     if (!strcmp(field, "expl_ode_fun"))
     {
-//    printf("\nsim_erk_model_set expl_ode_fun\n");
         model->expl_ode_fun = value;
     }
     else if (!strcmp(field, "expl_vde_for") || !strcmp(field, "expl_vde_forw"))
@@ -823,6 +821,11 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 ext_fun_type_out[0] = COLMAJ;
                 ext_fun_out[0] = K_traj + s * nX + 0;  // fun: nx
 
+                if (model->expl_ode_fun == 0)
+                {
+                    printf("sim ERK: expl_ode_fun is not provided. Exiting.\n");
+                    exit(1);
+                }
                 model->expl_ode_fun->evaluate(model->expl_ode_fun, ext_fun_type_in, ext_fun_in,
                                               ext_fun_type_out, ext_fun_out);  // ODE evaluation
             }
@@ -935,6 +938,11 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 //                    ext_fun_type_out[1] = COLMAJ;
 //                    ext_fun_out[1] = adj_traj + s * nAdj + nx + nu;  // hess: (nx+nu)*(nx+nu)
 
+                    if (model->expl_vde_adj == 0)
+                    {
+                        printf("sim ERK: expl_vde_adj is not provided. Exiting.\n");
+                        exit(1);
+                    }
                     // adjoint VDE evaluation
                     model->expl_vde_adj->evaluate(model->expl_vde_adj, ext_fun_type_in, ext_fun_in,
                             ext_fun_type_out, ext_fun_out);

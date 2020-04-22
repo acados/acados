@@ -190,10 +190,8 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
             ocp_nlp_sqp_rti_config_initialize_default(config);
             break;
         case INVALID_NLP_SOLVER:
-            break;
             printf("\nerror: ocp_nlp_config_create: forgot to initialize plan->nlp_solver\n");
             exit(1);
-            break;
         default:
             printf("\nerror: ocp_nlp_config_create: unsupported plan->nlp_solver\n");
             exit(1);
@@ -242,7 +240,6 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
             case INVALID_COST:
                 printf("\nerror: ocp_nlp_config_create: forgot to initialize plan->nlp_cost\n");
                 exit(1);
-                break;
             default:
                 printf("\nerror: ocp_nlp_config_create: unsupported plan->nlp_cost\n");
                 exit(1);
@@ -285,7 +282,6 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
             case INVALID_DYNAMICS:
                 printf("\nerror: ocp_nlp_config_create: forgot to initialize plan->nlp_dynamics\n");
                 exit(1);
-                break;
             default:
                 printf("\nerror: ocp_nlp_config_create: unsupported plan->nlp_dynamics\n");
                 exit(1);
@@ -306,7 +302,6 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
             case INVALID_CONSTRAINT:
                 printf("\nerror: ocp_nlp_config_create: forgot to initialize plan->nlp_constraints\n");
                 exit(1);
-                break;
             default:
                 printf("\nerror: ocp_nlp_config_create: unsupported plan->nlp_constraints\n");
                 exit(1);

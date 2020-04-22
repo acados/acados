@@ -70,6 +70,7 @@ for i in range(len(time_steps)):
 ocp.solver_options.shooting_nodes = shooting_nodes
 # ocp.solver_options.time_steps = time_steps
 
+ocp.solver_options.initialize_t_slacks = 1
 
 # set cost
 Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
@@ -97,7 +98,9 @@ ocp.cost.yref_e = np.zeros((ny_e, ))
 Fmax = 80
 ocp.constraints.lbu = np.array([-Fmax])
 ocp.constraints.ubu = np.array([+Fmax])
-ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
+
+x0 = np.array([0.0, np.pi, 0.0, 0.0])
+ocp.constraints.x0 = x0
 ocp.constraints.idxbu = np.array([0])
 
 ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
@@ -115,10 +118,14 @@ simX = np.ndarray((N+1, nx))
 simU = np.ndarray((N, nu))
 
 ocp_solver.options_set("step_length", 0.99999)
+ocp_solver.options_set("globalization", "fixed_step") # fixed_step, merit_backtracking
 
+# initialize solver
+for i in range(N):
+    ocp_solver.set(i, "x", x0)
 status = ocp_solver.solve()
 
-if status != 0:
+if status not in [0, 2]:
     raise Exception('acados returned status {}. Exiting.'.format(status))
 
 # get primal solution

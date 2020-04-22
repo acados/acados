@@ -133,18 +133,23 @@ OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_phi_constraint.o
 OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_phi_e_constraint.o
 # OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_r_e_constraint.o
 {%- endif %}
+
 {%- if constr_type == "BGH" and dims_nh > 0 %}
 OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_constr_h_fun_jac_uxt_zt.o
+OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_constr_h_fun.o
 {%- if hessian_approx == "EXACT" %}
 OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_constr_h_fun_jac_uxt_hess.o
 {%- endif %}
 {%- endif %}
+
 {%- if constr_type_e == "BGH" and dims_nh_e > 0 %}
 OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_constr_h_e_fun_jac_uxt_zt.o
+OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_constr_h_e_fun.o
 {%- if hessian_approx == "EXACT" %}
 OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_constr_h_e_fun_jac_uxt_hess.o
 {%- endif %}
 {%- endif %}
+
 {%- if cost_type == "NONLINEAR_LS" %}
 OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_cost_y_fun.c
 OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_cost_y_fun_jac_ut_xt.c
@@ -225,16 +230,21 @@ CASADI_CON_PHI_E_SOURCE+= {{ model.name }}_phi_e_constraint.c
 {%- if constr_type == "BGH" and dims_nh > 0 %}
 CASADI_CON_H_SOURCE=
 CASADI_CON_H_SOURCE+= {{ model.name }}_constr_h_fun_jac_uxt_zt.c
+CASADI_CON_H_SOURCE+= {{ model.name }}_constr_h_fun.c
 {%- if hessian_approx == "EXACT" %}
 CASADI_CON_H_SOURCE+= {{ model.name }}_constr_h_fun_jac_uxt_hess.c
 {%- endif %}
 {%- endif %}
+
 {%- if dims_nh_e > 0 %}
+CASADI_CON_H_E_SOURCE=
 CASADI_CON_H_E_SOURCE+= {{ model.name }}_constr_h_e_fun_jac_uxt_zt.c
+CASADI_CON_H_E_SOURCE+= {{ model.name }}_constr_h_e_fun.c
 {%- if hessian_approx == "EXACT" %}
 CASADI_CON_H_E_SOURCE+= {{ model.name }}_constr_h_e_fun_jac_uxt_hess.c
 {%- endif %}
 {%- endif %}
+
 {%- if cost_type == "NONLINEAR_LS" %}
 CASADI_COST_Y_SOURCE=
 CASADI_COST_Y_SOURCE+= {{ model.name }}_cost_y_fun.c

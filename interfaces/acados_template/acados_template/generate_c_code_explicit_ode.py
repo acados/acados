@@ -92,11 +92,6 @@ def generate_c_code_explicit_ode( model ):
 
     expl_vde_forw = Function(fun_name, [x, Sx, Sp, u, p], [f_expl,vdeX,vdeP])
 
-    if isinstance(f_expl, casadi.SX):
-        jacX = SX.zeros(nx,nx) + jacobian(f_expl,x)
-    else:
-        jacX = MX.zeros(nx,nx) + jacobian(f_expl,x)
-
     adj = jtimes(f_expl, vertcat(x, u), lambdaX, True)
 
     fun_name = model_name + '_expl_vde_adj'
