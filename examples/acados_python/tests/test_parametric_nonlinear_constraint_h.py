@@ -32,13 +32,14 @@
 #
 
 import sys
-sys.path.insert(0, '../common')
+sys.path.insert(0, '../getting_started/common')
 
 from acados_template import AcadosOcp, AcadosOcpSolver
 from export_pendulum_ode_model import export_pendulum_ode_model
 import numpy as np
 import scipy.linalg
 from utils import plot_pendulum
+from casadi import SX
 
 # create ocp object to formulate the OCP
 ocp = AcadosOcp()
@@ -76,20 +77,30 @@ ocp.cost.Vu = Vu
 
 ocp.cost.Vx_e = np.eye(nx)
 
-ocp.cost.yref  = np.zeros((ny, ))
+ocp.cost.yref = np.zeros((ny, ))
 ocp.cost.yref_e = np.zeros((ny_e, ))
 
 # set constraints
+
 Fmax = 80
-ocp.constraints.lbu = np.array([-Fmax])
-ocp.constraints.ubu = np.array([+Fmax])
-ocp.constraints.idxbu = np.array([0])
+# use equivalent formulation with h constraint
+# ocp.constraints.lbu = np.array([-Fmax])
+# ocp.constraints.ubu = np.array([+Fmax])
+# ocp.constraints.idxbu = np.array([0])
+p = SX.sym('p')
+ocp.model.p = p
+
+ocp.constraints.lh = np.array([-Fmax])
+ocp.constraints.uh = np.array([+Fmax])
+ocp.model.con_h_expr = model.u / p
+
+ocp.parameter_values = np.array([0])
 
 ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
-# set options
 ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
-ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+ocp.solver_options.hessian_approx = 'EXACT' # GAUSS_NEWTON, EXACT
+ocp.solver_options.regularize_method = 'CONVEXIFY' # GAUSS_NEWTON, EXACT
 ocp.solver_options.integrator_type = 'ERK'
 ocp.solver_options.print_level = 0
 ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
@@ -97,7 +108,12 @@ ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
 # set prediction horizon
 ocp.solver_options.tf = Tf
 
+
 ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
+
+for i in range(N):
+    ocp_solver.set(i, "p", np.array([1.0]))
+
 
 simX = np.ndarray((N+1, nx))
 simU = np.ndarray((N, nu))
