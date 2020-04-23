@@ -54,6 +54,8 @@
 // acados
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/utils/types.h"
+#include "acados/utils/mem.h"
+
 
 
 
@@ -182,6 +184,9 @@ int dense_qp_out_calculate_size(dense_qp_dims *dims)
     int size = sizeof(dense_qp_out);
     size += d_dense_qp_sol_memsize(dims);
     size += sizeof(qp_info);
+    size += 8;
+    make_int_multiple_of(8, &size);
+
     return size;
 }
 
@@ -193,8 +198,7 @@ dense_qp_out *dense_qp_out_assign(dense_qp_dims *dims, void *raw_memory)
 
     dense_qp_out *qp_out = (dense_qp_out *) c_ptr;
     c_ptr += sizeof(dense_qp_out);
-
-    assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+    align_char_to(8, &c_ptr);
 
     d_dense_qp_sol_create(dims, qp_out, c_ptr);
     c_ptr += d_dense_qp_sol_memsize(dims);
@@ -202,7 +206,7 @@ dense_qp_out *dense_qp_out_assign(dense_qp_dims *dims, void *raw_memory)
     qp_out->misc = (void *) c_ptr;
     c_ptr += sizeof(qp_info);
 
-    assert((char *) raw_memory + dense_qp_out_calculate_size(dims) == c_ptr);
+    assert((char *) raw_memory + dense_qp_out_calculate_size(dims) >= c_ptr);
 
     return qp_out;
 }
@@ -235,6 +239,8 @@ int dense_qp_res_calculate_size(dense_qp_dims *dims)
 {
     int size = sizeof(dense_qp_res);
     size += d_dense_qp_res_memsize(dims);
+
+    make_int_multiple_of(8, &size);
     return size;
 }
 
@@ -247,10 +253,10 @@ dense_qp_res *dense_qp_res_assign(dense_qp_dims *dims, void *raw_memory)
     dense_qp_res *qp_res = (dense_qp_res *) c_ptr;
     c_ptr += sizeof(dense_qp_res);
 
+    align_char_to(8, &c_ptr);
     d_dense_qp_res_create(dims, qp_res, c_ptr);
     c_ptr += d_dense_qp_res_memsize(dims);
-
-    assert((char *) raw_memory + dense_qp_res_calculate_size(dims) == c_ptr);
+    assert((char *) raw_memory + dense_qp_res_calculate_size(dims) >= c_ptr);
 
     return qp_res;
 }
@@ -260,7 +266,10 @@ dense_qp_res *dense_qp_res_assign(dense_qp_dims *dims, void *raw_memory)
 int dense_qp_res_workspace_calculate_size(dense_qp_dims *dims)
 {
     int size = sizeof(dense_qp_res_ws);
+
     size += d_dense_qp_res_ws_memsize(dims);
+    make_int_multiple_of(8, &size);
+
     return size;
 }
 
@@ -273,10 +282,12 @@ dense_qp_res_ws *dense_qp_res_workspace_assign(dense_qp_dims *dims, void *raw_me
     dense_qp_res_ws *res_ws = (dense_qp_res_ws *) c_ptr;
     c_ptr += sizeof(dense_qp_res_ws);
 
+    align_char_to(8, &c_ptr);
+
     d_dense_qp_res_ws_create(dims, res_ws, c_ptr);
     c_ptr += d_dense_qp_res_ws_memsize(dims);
 
-    assert((char *) raw_memory + dense_qp_res_workspace_calculate_size(dims) == c_ptr);
+    assert((char *) raw_memory + dense_qp_res_workspace_calculate_size(dims) >= c_ptr);
 
     return res_ws;
 }
