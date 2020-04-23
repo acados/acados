@@ -14,7 +14,10 @@ make_int_multiple_of(8, &size);
 ## `astruct_assign()`
 Should assign its members in the following order:
 
-- Align to 8 bytes
+- Align to 8 bytes, i.e.:
+```
+align_char_to(8, &c_ptr);
+```
 - structure itself, i.e.:
 ```
     astruct *as_instance = (astruct *) c_ptr;
@@ -36,7 +39,7 @@ Should assign its members in the following order:
 ```
 - Note:
     - since calculate_size returns multiple of 8, c_ptr is still aligned to 8 bytes.
-    - blasfeo_dmat_structs, blasfeo_dvec_structs can be seehn as "substructures" here.
+    - blasfeo_dmat_structs, blasfeo_dvec_structs can be seen as "substructures" here.
 
 
 - Assign doubles (are 8 bytes anyway)
