@@ -35,7 +35,7 @@ import os, sys, json
 import urllib.request
 import shutil
 import numpy as np
-from casadi import SX, MX, DM
+from casadi import SX, MX, DM, Function, CasadiMeta
 
 ALLOWED_CASADI_VERSIONS = ('3.5.1', '3.4.5', '3.4.0')
 TERA_VERSION = "0.0.34"
@@ -344,3 +344,31 @@ def J_to_idx_slack(J):
     if not i_idx == ncol:
             raise Exception('J_to_idx_slack: J must contain a 1 in every column!')
     return idx
+
+
+def acados_dae_model_json_dump(model):
+
+    # load model
+    x = model.x
+    xdot = model.xdot
+    u = model.u
+    z = model.z
+    p = model.p
+
+    f_impl = model.f_impl_expr
+    model_name = model.name
+
+    # create struct with impl_dae_fun, casadi_version
+    fun_name = model_name + '_impl_dae_fun'
+    impl_dae_fun = Function(fun_name, [x, xdot, u, z, p], [f_impl])
+
+    casadi_version = CasadiMeta.version()
+    str_impl_dae_fun = impl_dae_fun.serialize()
+
+    dae_dict = {"str_impl_dae_fun": str_impl_dae_fun, "casadi_version": casadi_version}
+
+    # dump
+    json_file = model_name + '_acados_dae.json'
+    with open(json_file, 'w') as f:
+        json.dump(dae_dict, f, default=np_array_to_list, indent=4, sort_keys=True)
+    print("dumped ", model_name, " dae to file:", json_file, "\n")
