@@ -31,10 +31,10 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import sys
+import sys, json, os
 sys.path.insert(0, '../common')
 
-from acados_template import AcadosOcp, AcadosOcpSolver
+from acados_template import AcadosOcp, AcadosOcpSolver, acados_dae_model_json_dump
 from export_pendulum_ode_model import export_pendulum_ode_model
 import numpy as np
 import scipy.linalg
@@ -47,6 +47,17 @@ ocp = AcadosOcp()
 model = export_pendulum_ode_model()
 ocp.model = model
 
+integrator_type = 'IRK' # ERK, IRK, GNSF
+
+if integrator_type == 'GNSF':
+    acados_dae_model_json_dump(model)
+    # structure detection in Matlab/Octave -> produces 'pendulum_ode_gnsf_functions.json'
+    status = os.system('octave detect_gnsf_from_json.m')
+    # load gnsf from json
+    with open(model.name + '_gnsf_functions.json', 'r') as f:
+        gnsf_dict = json.load(f)
+    ocp.gnsf_model = gnsf_dict
+
 Tf = 1.0
 nx = model.x.size()[0]
 nu = model.u.size()[0]
@@ -54,9 +65,10 @@ ny = nx + nu
 ny_e = nx
 N = 15
 
-# set dimensions
+# discretization
 ocp.dims.N = N
-# ocp.solver_options.shooting_nodes = np.linspace(0, Tf, N+1)
+# shooting_nodes = np.linspace(0, Tf, N+1)
+
 N1 = 10
 N2 = N - N1
 
@@ -69,8 +81,6 @@ for i in range(len(time_steps)):
 # nonuniform discretizations can be defined either by shooting_nodes or time_steps:
 ocp.solver_options.shooting_nodes = shooting_nodes
 # ocp.solver_options.time_steps = time_steps
-
-ocp.solver_options.initialize_t_slacks = 1
 
 # set cost
 Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
@@ -105,12 +115,13 @@ ocp.constraints.idxbu = np.array([0])
 
 ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
 ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
-ocp.solver_options.integrator_type = 'ERK'
+ocp.solver_options.integrator_type = integrator_type
 ocp.solver_options.print_level = 0
 ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
 
 # set prediction horizon
 ocp.solver_options.tf = Tf
+ocp.solver_options.initialize_t_slacks = 1
 
 ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
