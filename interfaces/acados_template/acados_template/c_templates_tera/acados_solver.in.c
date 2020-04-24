@@ -1656,7 +1656,13 @@ int acados_create()
 int acados_update_params(int stage, double *p, int np)
 {
     int solver_status = 0;
-    int casadi_np = 0;
+
+    int casadi_np = {{ dims.np }};
+    if (casadi_np != np) {
+        printf("acados_update_params: trying to set %i parameters for external functions."
+            " External function has %i parameters. Exiting.\n", np, casadi_np);
+        exit(1);
+    }
 
 {%- if dims.np > 0 %}
     if (stage < {{ dims.N }})
@@ -1669,36 +1675,25 @@ int acados_update_params(int stage, double *p, int np)
         {%- if solver_options.hessian_approx == "EXACT" %}
         impl_dae_hess[stage].set_param(impl_dae_hess+stage, p);
         {%- endif %}
-
     {% elif solver_options.integrator_type == "ERK" %}
         forw_vde_casadi[stage].set_param(forw_vde_casadi+stage, p);
-
-        casadi_np = (expl_ode_fun+stage)->np;
-        if (casadi_np != np) {
-            printf("acados_update_params: trying to set %i parameters "
-                "in expl_ode_fun which only has %i. Exiting.\n", np, casadi_np);
-            exit(1);
-        }
         expl_ode_fun[stage].set_param(expl_ode_fun+stage, p);
 
         {%- if solver_options.hessian_approx == "EXACT" %}
         hess_vde_casadi[stage].set_param(hess_vde_casadi+stage, p);
         {%- endif %}
-
     {% elif solver_options.integrator_type == "GNSF" %}
         gnsf_phi_fun[stage].set_param(gnsf_phi_fun+stage, p);
         gnsf_phi_fun_jac_y[stage].set_param(gnsf_phi_fun_jac_y+stage, p);
         gnsf_phi_jac_y_uhat[stage].set_param(gnsf_phi_jac_y_uhat+stage, p);
 
         gnsf_f_lo_jac_x1_x1dot_u_z[stage].set_param(gnsf_f_lo_jac_x1_x1dot_u_z+stage, p);
-
     {%- endif %}{# integrator_type #}
 
         // constraints
     {% if constraints.constr_type == "BGP" %}
         // r_constraint[stage].set_param(r_constraint+stage, p);
         phi_constraint[stage].set_param(phi_constraint+stage, p);
-
     {% elif constraints.constr_type == "BGH" and dims.nh > 0 %}
         nl_constr_h_fun_jac[stage].set_param(nl_constr_h_fun_jac+stage, p);
         nl_constr_h_fun[stage].set_param(nl_constr_h_fun+stage, p);
@@ -1712,7 +1707,6 @@ int acados_update_params(int stage, double *p, int np)
         cost_y_fun[stage].set_param(cost_y_fun+stage, p);
         cost_y_fun_jac_ut_xt[stage].set_param(cost_y_fun_jac_ut_xt+stage, p);
         cost_y_hess[stage].set_param(cost_y_hess+stage, p);
-
     {%- elif cost.cost_type == "EXTERNAL" %}
         ext_cost_fun[stage].set_param(ext_cost_fun+stage, p);
         ext_cost_fun_jac_hess[stage].set_param(ext_cost_fun_jac_hess+stage, p);
@@ -1727,7 +1721,6 @@ int acados_update_params(int stage, double *p, int np)
         cost_y_e_fun.set_param(&cost_y_e_fun, p);
         cost_y_e_fun_jac_ut_xt.set_param(&cost_y_e_fun_jac_ut_xt, p);
         cost_y_e_hess.set_param(&cost_y_e_hess, p);
-
     {%- elif cost.cost_type_e == "EXTERNAL" %}
         ext_cost_e_fun.set_param(&ext_cost_e_fun, p);
         ext_cost_e_fun_jac_hess.set_param(&ext_cost_e_fun_jac_hess, p);
