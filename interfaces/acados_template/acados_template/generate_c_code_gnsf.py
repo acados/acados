@@ -70,14 +70,26 @@ def generate_c_code_gnsf( model ):
     gnsf_nout = max(phi_fun.size_out(0))
 
     # set up expressions
-    y = SX.sym("y", gnsf_ny, 1)
-    uhat = SX.sym("uhat", gnsf_nuhat, 1)
-    p = model.p
+    # if the model uses MX because of cost/constraints
+    # the DAE can be exported as SX -> detect GNSF in Matlab
+    # -> evaluated SX GNSF functions with MX.
     u = model.u
-    x1 = SX.sym("gnsf_x1", gnsf_nx1, 1)
-    x1dot = SX.sym("gnsf_x1dot", gnsf_nx1, 1)
-    z1 = SX.sym("gnsf_z1", gnsf_nz1, 1)
-    dummy = SX.sym("gnsf_dummy", 1, 1)
+    if isinstance(u, MX):
+        y = MX.sym("y", gnsf_ny, 1)
+        uhat = MX.sym("uhat", gnsf_nuhat, 1)
+        p = model.p
+        x1 = MX.sym("gnsf_x1", gnsf_nx1, 1)
+        x1dot = MX.sym("gnsf_x1dot", gnsf_nx1, 1)
+        z1 = MX.sym("gnsf_z1", gnsf_nz1, 1)
+        dummy = MX.sym("gnsf_dummy", 1, 1)
+    else:
+        y = SX.sym("y", gnsf_ny, 1)
+        uhat = SX.sym("uhat", gnsf_nuhat, 1)
+        p = model.p
+        x1 = SX.sym("gnsf_x1", gnsf_nx1, 1)
+        x1dot = SX.sym("gnsf_x1dot", gnsf_nx1, 1)
+        z1 = SX.sym("gnsf_z1", gnsf_nz1, 1)
+        dummy = SX.sym("gnsf_dummy", 1, 1)
 
     ## generate C code
     fun_name = model_name + '_gnsf_phi_fun'
@@ -97,7 +109,7 @@ def generate_c_code_gnsf( model ):
     fun_name = model_name + '_gnsf_f_lo_fun_jac_x1k1uz'
     f_lo_fun_jac_x1k1uz = model.f_lo_fun_jac_x1k1uz
     f_lo_fun_jac_x1k1uz_ = Function(fun_name, [x1, x1dot, z1, u, p],
-                f_lo_fun_jac_x1k1uz(x1, x1dot, z1, u, p) )
+                [f_lo_fun_jac_x1k1uz(x1, x1dot, z1, u, p)] )
     f_lo_fun_jac_x1k1uz_.generate(fun_name, casadi_opts)
 
     fun_name = model_name + '_gnsf_get_matrices_fun'
