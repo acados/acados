@@ -61,19 +61,29 @@ void external_function_param_generic_set_fun(external_function_param_generic *fu
     return;
 }
 
+static void external_function_param_generic_set_param_sparse(void *self, int n_update,
+                                                             int *idx, double *p)
+{
+    external_function_param_generic *fun = self;
+
+    for (int ii = 0; ii < n_update; ii++)
+    {
+        fun->p[idx[ii]] = p[ii];
+    }
+
+    return;
+}
 
 
 int external_function_param_generic_calculate_size(external_function_param_generic *fun, int np)
 {
-    // loop index
-    int ii;
-
     // wrapper as evaluate function
     fun->evaluate = &external_function_param_generic_wrapper;
 
     // set param function
     fun->get_nparam = &external_function_param_generic_get_nparam;
     fun->set_param = &external_function_param_generic_set_param;
+    fun->set_param_sparse = &external_function_param_generic_set_param_sparse;
 
     // set number of parameters
     fun->np = np;
@@ -94,9 +104,6 @@ int external_function_param_generic_calculate_size(external_function_param_gener
 
 void external_function_param_generic_assign(external_function_param_generic *fun, void *raw_memory)
 {
-    // loop index
-    int ii;
-
     // save initial pointer to external memory
     fun->ptr_ext_mem = raw_memory;
 
@@ -156,7 +163,6 @@ void external_function_param_generic_set_param(void *self, double *p)
 
     return;
 }
-
 
 
 /************************************************
@@ -986,6 +992,20 @@ void external_function_param_casadi_set_n_out(external_function_param_casadi *fu
 
 
 
+static void external_function_param_casadi_set_param_sparse(void *self, int n_update,
+                                                            int *idx, double *p)
+{
+    external_function_param_casadi *fun = self;
+
+    for (int ii = 0; ii < n_update; ii++)
+    {
+        fun->p[idx[ii]] = p[ii];
+    }
+
+    return;
+}
+
+
 int external_function_param_casadi_calculate_size(external_function_param_casadi *fun, int np)
 {
     // loop index
@@ -997,6 +1017,7 @@ int external_function_param_casadi_calculate_size(external_function_param_casadi
     // set param function
     fun->get_nparam = &external_function_param_casadi_get_nparam;
     fun->set_param = &external_function_param_casadi_set_param;
+    fun->set_param_sparse = &external_function_param_casadi_set_param_sparse;
 
     // set number of parameters
     fun->np = np;
@@ -1216,7 +1237,6 @@ void external_function_param_casadi_get_nparam(void *self, int *np)
 
     return;
 }
-
 
 
 void external_function_param_casadi_set_param(void *self, double *p)
