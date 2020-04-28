@@ -230,7 +230,7 @@ function set_up_t_renderer( t_renderer_location )
         elseif ismac()
             suffix = '-osx';
         elseif ispc()
-            suffix = '-windows.exe';
+            suffix = '-windows';
         end
         acados_root_dir = getenv('ACADOS_INSTALL_DIR');
 
