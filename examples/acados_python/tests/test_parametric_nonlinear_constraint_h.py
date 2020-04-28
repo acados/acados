@@ -112,7 +112,13 @@ ocp.solver_options.tf = Tf
 ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
 for i in range(N):
-    ocp_solver.set(i, "p", np.array([1.0]))
+    ## Two equivalent ways to set parameters
+    if i < N/2:
+        # set all parameters
+        ocp_solver.set(i, "p", np.array([1.0]))
+    else:
+        # set subset of parameters
+        ocp_solver.param_set(i, [0], np.array([1.0]))
 
 
 simX = np.ndarray((N+1, nx))
