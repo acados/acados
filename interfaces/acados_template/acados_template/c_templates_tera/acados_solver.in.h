@@ -43,6 +43,7 @@ extern "C" {
 
 int acados_create();
 int acados_update_params(int stage, double *value, int np);
+int acados_update_params_sparse(int stage, int *idx, double *p, int n_update);
 int acados_solve();
 int acados_free();
 void acados_print_stats();
