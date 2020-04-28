@@ -82,6 +82,8 @@ def generate_c_code_gnsf( model ):
         x1dot = MX.sym("gnsf_x1dot", gnsf_nx1, 1)
         z1 = MX.sym("gnsf_z1", gnsf_nz1, 1)
         dummy = MX.sym("gnsf_dummy", 1, 1)
+        empty_var = MX.sym("gnsf_empty_var", 0, 0)
+
     else:
         y = SX.sym("y", gnsf_ny, 1)
         uhat = SX.sym("uhat", gnsf_nuhat, 1)
@@ -90,6 +92,7 @@ def generate_c_code_gnsf( model ):
         x1dot = SX.sym("gnsf_x1dot", gnsf_nx1, 1)
         z1 = SX.sym("gnsf_z1", gnsf_nz1, 1)
         dummy = SX.sym("gnsf_dummy", 1, 1)
+        empty_var = SX.sym("gnsf_empty_var", 1, 1)
 
     ## generate C code
     fun_name = model_name + '_gnsf_phi_fun'
@@ -108,8 +111,14 @@ def generate_c_code_gnsf( model ):
 
     fun_name = model_name + '_gnsf_f_lo_fun_jac_x1k1uz'
     f_lo_fun_jac_x1k1uz = model.f_lo_fun_jac_x1k1uz
+    f_lo_fun_jac_x1k1uz_eval = f_lo_fun_jac_x1k1uz(x1, x1dot, z1, u, p)
+
+    # avoid codegeneration issue
+    if not isinstance(f_lo_fun_jac_x1k1uz_eval, tuple) and is_empty(f_lo_fun_jac_x1k1uz_eval):
+        f_lo_fun_jac_x1k1uz_eval = [empty_var]
+
     f_lo_fun_jac_x1k1uz_ = Function(fun_name, [x1, x1dot, z1, u, p],
-                [f_lo_fun_jac_x1k1uz(x1, x1dot, z1, u, p)] )
+                 f_lo_fun_jac_x1k1uz_eval)
     f_lo_fun_jac_x1k1uz_.generate(fun_name, casadi_opts)
 
     fun_name = model_name + '_gnsf_get_matrices_fun'
