@@ -965,7 +965,7 @@ class AcadosOcpSolver:
             value_shape = (value_shape[0], 0)
 
         if value_shape != tuple(dims):
-            raise Exception('acados_solver.set(): mismatching dimension', \
+            raise Exception('AcadosOcpSolver.cost_set(): mismatching dimension', \
                 ' for field "{}" with dimension {} (you have {})'.format( \
                 field_, tuple(dims), value_shape))
 
@@ -1010,7 +1010,7 @@ class AcadosOcpSolver:
             value_shape = (value_shape[0], 0)
 
         if value_shape != tuple(dims):
-            raise Exception('acados_solver.set(): mismatching dimension' \
+            raise Exception('AcadosOcpSolver.constraints_set(): mismatching dimension' \
                 ' for field "{}" with dimension {} (you have {})'.format(field_, tuple(dims), value_shape))
 
         value_data = cast(value_.ctypes.data, POINTER(c_double))

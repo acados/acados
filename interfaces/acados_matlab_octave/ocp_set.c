@@ -549,6 +549,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         acados_size = 1;
         MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
         int rti_phase = (int) value[0];
+        if (plan->nlp_solver == SQP && rti_phase != 0)
+        {
+            MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, field, "sqp_rti")
+        }
         ocp_nlp_solver_opts_set(config, opts, "rti_phase", &rti_phase);
     }
     else if (!strcmp(field, "qp_warm_start"))
