@@ -1811,6 +1811,38 @@ class AcadosOcpSolver:
         return
 
 
+    def param_set(self, stage_, idx_values_, param_values_):
+        """
+        set parameters of the solvers external function partially:
+        Pseudo: solver.param[idx_values_] = param_values_;
+        Parameters:
+            :param stage_: integer corresponding to shooting node
+            :param idx_values_: 0 based integer array corresponding to parameter indices to be set
+            :param param_values_: new parameter values as numpy array
+        """
+        stage = c_int(stage_)
+
+        if not isinstance(idx_values_, list) or not isinstance(idx_values_[0], int):
+            raise Exception('idx_values_ must be list of integers.')
+
+        if not isinstance(param_values_, np.ndarray):
+            raise Exception('param_values_ must be np.array.')
+
+        if param_values_.shape[0] != len(idx_values_):
+            raise Exception('param_values_ and idx_values_ must be of the same size.' \
+                + ' Got idx {}, param_values {}.'.format(param_values_.shape[0], len(idx_values_)))
+
+        self.shared_lib.acados_update_params_sparse.argtypes = [c_int, POINTER(c_int), POINTER(c_double), c_int]
+        self.shared_lib.acados_update_params_sparse.restype = c_int
+        param_data = cast(param_values_.ctypes.data, POINTER(c_double))
+        idx_data = cast(param_values_.ctypes.data, POINTER(c_int))
+        # n_update = c_int()
+        # import pdb; pdb.set_trace()
+
+        self.shared_lib.acados_update_params_sparse(stage, idx_data, param_data, len(idx_values_))
+
+
+
     def __del__(self):
         if self.solver_created:
             getattr(self.shared_lib, f"{self.model_name}_acados_free").argtypes = [c_void_p]
