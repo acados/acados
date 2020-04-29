@@ -83,23 +83,23 @@ int main() {
 
     for (int i = 0; i < N; i++)
     {
-        d_ocp_qp_set("A", i, A, qp_in);
-        d_ocp_qp_set("B", i, B, qp_in);
-        d_ocp_qp_set("b", i, b, qp_in);
-        d_ocp_qp_set("Q", i, Q, qp_in);
-        d_ocp_qp_set("S", i, S, qp_in);
-        d_ocp_qp_set("R", i, R, qp_in);
-        d_ocp_qp_set("q", i, q, qp_in);
-        d_ocp_qp_set("r", i, r, qp_in);
+        ocp_qp_in_set(config, qp_in, i, "A", A);
+        ocp_qp_in_set(config, qp_in, i, "B", B);
+        ocp_qp_in_set(config, qp_in, i, "b", b);
+        ocp_qp_in_set(config, qp_in, i, "Q", Q);
+        ocp_qp_in_set(config, qp_in, i, "S", S);
+        ocp_qp_in_set(config, qp_in, i, "R", R);
+        ocp_qp_in_set(config, qp_in, i, "q", q);
+        ocp_qp_in_set(config, qp_in, i, "r", r);
     }
-    d_ocp_qp_set("idxbx", 0, idxb0, qp_in);
-    d_ocp_qp_set("lbx", 0, x0, qp_in);
-    d_ocp_qp_set("ubx", 0, x0, qp_in);
+    ocp_qp_in_set(config, qp_in, 0, "idxbx", idxb0);
+    ocp_qp_in_set(config, qp_in, 0, "lbx", x0);
+    ocp_qp_in_set(config, qp_in, 0, "ubx", x0);
 
-    d_ocp_qp_set("Q", N, Q, qp_in);
-    d_ocp_qp_set("S", N, S, qp_in);
-    d_ocp_qp_set("q", N, q, qp_in);
-    d_ocp_qp_set("r", N, r, qp_in);
+    ocp_qp_in_set(config, qp_in, N, "Q", Q);
+    ocp_qp_in_set(config, qp_in, N, "S", S);
+    ocp_qp_in_set(config, qp_in, N, "q", q);
+    ocp_qp_in_set(config, qp_in, N, "r", r);
 
     print_ocp_qp_in(qp_in);
 

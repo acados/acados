@@ -145,6 +145,10 @@ ocp_qp_in *ocp_qp_in_create_from_xcond_dims(ocp_qp_xcond_solver_dims *dims);
 /// \param dims The dimension struct.
 ocp_qp_in *ocp_qp_in_create(ocp_qp_dims *dims);
 
+
+void ocp_qp_in_set(ocp_qp_xcond_solver_config *config, ocp_qp_in *in,
+                   int stage, char *field, void *value);
+
 /// Destructor of the inputs struct.
 ///
 /// \param in_ The inputs struct.

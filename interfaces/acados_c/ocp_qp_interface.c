@@ -221,8 +221,6 @@ void ocp_qp_xcond_solver_dims_free(ocp_qp_xcond_solver_dims *dims)
 ocp_qp_in *ocp_qp_in_create_from_xcond_dims(ocp_qp_xcond_solver_dims *dims)
 {
     ocp_qp_in *in = ocp_qp_in_create(dims->orig_dims);
-    printf("\nocp_qp_in_create_from_xcond_dims orig dims:\n");
-    print_ocp_qp_dims(dims->orig_dims);
     return in;
 }
 
@@ -236,6 +234,13 @@ ocp_qp_in *ocp_qp_in_create(ocp_qp_dims *dims)
     ocp_qp_in *in = ocp_qp_in_assign(dims, ptr);
 
     return in;
+}
+
+
+void ocp_qp_in_set(ocp_qp_xcond_solver_config *config, ocp_qp_in *in,
+                   int stage, char *field, void *value)
+{
+    d_ocp_qp_set(field, stage, value, in);
 }
 
 
