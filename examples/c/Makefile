@@ -78,7 +78,7 @@ endif
 
 EXAMPLES =
 EXAMPLES += dense_qp
-##EXAMPLES += ocp_qp
+EXAMPLES += ocp_qp
 #EXAMPLES += pendulum_scqp
 EXAMPLES += sim_wt_model_nx3
 EXAMPLES += sim_wt_model_nx6
@@ -105,7 +105,7 @@ examples: $(EXAMPLES)
 # run all
 RUN_EXAMPLES =
 RUN_EXAMPLES += run_dense_qp
-##RUN_EXAMPLES += run_ocp_qp
+RUN_EXAMPLES += run_ocp_qp
 #RUN_EXAMPLES += run_pendulum_scqp
 RUN_EXAMPLES += run_sim_wt_model_nx3
 RUN_EXAMPLES += run_sim_wt_model_nx6
@@ -515,8 +515,8 @@ run_dense_qp:
 
 OCP_QP = 
 
-ocp_qp: $(OCP_QP) no_interface_examples/ocp_qp.o
-	$(CCC) -o ocp_qp.out $(OCP_QP) no_interface_examples/ocp_qp.o $(LDFLAGS) $(LIBS)
+ocp_qp: $(OCP_QP) ocp_qp.o
+	$(CCC) -o ocp_qp.out $(OCP_QP) ocp_qp.o $(LDFLAGS) $(LIBS)
 	@echo
 	@echo " Example ocp_qp build complete."
 	@echo

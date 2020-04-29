@@ -283,9 +283,9 @@ add_executable(sim_wt_model_nx3 sim_wt_model_nx3.c ${WT_MODEL_NX3_SRC})
 target_link_libraries(sim_wt_model_nx3 acados)
 add_test(sim_wt_model_nx3 sim_wt_model_nx3)
 
-#add_executable(ocp_qp ocp_qp.c)
-#target_link_libraries(ocp_qp acados)
-#add_test(ocp_qp ocp_qp)
+add_executable(ocp_qp ocp_qp.c)
+target_link_libraries(ocp_qp acados)
+add_test(ocp_qp ocp_qp)
 
 # -------------------- dense_qp
 add_executable(dense_qp dense_qp.c)
