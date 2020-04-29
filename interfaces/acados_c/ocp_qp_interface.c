@@ -208,6 +208,13 @@ ocp_qp_xcond_solver_dims *ocp_qp_xcond_solver_dims_create(ocp_qp_xcond_solver_co
 }
 
 
+void ocp_qp_xcond_solver_dims_set(void *config_, ocp_qp_xcond_solver_dims *dims,
+                                  int stage, const char *field, int* value)
+{
+    ocp_qp_xcond_solver_dims_set_(config_, dims, stage, field, value);
+}
+
+
 
 void ocp_qp_xcond_solver_dims_free(ocp_qp_xcond_solver_dims *dims)
 {

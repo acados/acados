@@ -127,7 +127,7 @@ ocp_qp_xcond_solver_dims *ocp_qp_xcond_solver_dims_assign(void *config_, int N, 
 
 
 
-void ocp_qp_xcond_solver_dims_set(void *config_, ocp_qp_xcond_solver_dims *dims,
+void ocp_qp_xcond_solver_dims_set_(void *config_, ocp_qp_xcond_solver_dims *dims,
                                   int stage, const char *field, int* value)
 {
 	ocp_qp_xcond_solver_config *config = config_;
@@ -542,7 +542,7 @@ void ocp_qp_xcond_solver_config_initialize_default(void *config_)
 
     config->dims_calculate_size = &ocp_qp_xcond_solver_dims_calculate_size;
     config->dims_assign = &ocp_qp_xcond_solver_dims_assign;
-    config->dims_set = &ocp_qp_xcond_solver_dims_set;
+    config->dims_set = &ocp_qp_xcond_solver_dims_set_;
     config->opts_calculate_size = &ocp_qp_xcond_solver_opts_calculate_size;
     config->opts_assign = &ocp_qp_xcond_solver_opts_assign;
     config->opts_initialize_default = &ocp_qp_xcond_solver_opts_initialize_default;

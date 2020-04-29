@@ -113,7 +113,7 @@ int ocp_qp_xcond_solver_dims_calculate_size(void *config, int N);
 //
 ocp_qp_xcond_solver_dims *ocp_qp_xcond_solver_dims_assign(void *config, int N, void *raw_memory);
 //
-void ocp_qp_xcond_solver_dims_set(void *config, ocp_qp_xcond_solver_dims *dims, int stage, const char *field, int* value);
+void ocp_qp_xcond_solver_dims_set_(void *config, ocp_qp_xcond_solver_dims *dims, int stage, const char *field, int* value);
 
 /* opts */
 //
