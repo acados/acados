@@ -136,6 +136,10 @@ ocp_qp_xcond_solver_dims *ocp_qp_xcond_solver_dims_create(ocp_qp_xcond_solver_co
 //
 void ocp_qp_xcond_solver_dims_free(ocp_qp_xcond_solver_dims *dims_);
 
+
+
+ocp_qp_in *ocp_qp_in_create_from_xcond_dims(ocp_qp_xcond_solver_dims *dims);
+
 /// Constructs an input object for the qp.
 ///
 /// \param dims The dimension struct.
@@ -146,6 +150,9 @@ ocp_qp_in *ocp_qp_in_create(ocp_qp_dims *dims);
 /// \param in_ The inputs struct.
 void ocp_qp_in_free(void *in_);
 
+
+
+ocp_qp_out *ocp_qp_out_create_from_xcond_dims(ocp_qp_xcond_solver_dims *dims);
 
 /// Constructs an outputs object for the qp.
 ///
@@ -171,6 +178,12 @@ void *ocp_qp_xcond_solver_opts_create(ocp_qp_xcond_solver_config *config,
 void ocp_qp_xcond_solver_opts_free(ocp_qp_xcond_solver_opts *opts);
 
 
+/// Setter of the options struct.
+///
+/// \param opts The options struct.
+void ocp_qp_xcond_solver_opts_set(ocp_qp_xcond_solver_config *config,
+           ocp_qp_xcond_solver_opts *opts, const char *field, void* value);
+
 /// TBC Should be private/static?
 int ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
 
@@ -189,7 +202,18 @@ ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_so
 /// \param config The configuration struct.
 /// \param dims The dimension struct.
 /// \param opts_ The options struct.
-ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
+ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config,
+                             ocp_qp_xcond_solver_dims *dims, void *opts_);
+
+
+/// Destroys a qp solver. Frees memory.
+///
+/// \param solver The qp solver
+void ocp_qp_solver_destroy(ocp_qp_solver *solver);
+
+void ocp_qp_x_cond_solver_free(ocp_qp_xcond_solver_config *config,
+                             ocp_qp_xcond_solver_dims *dims, void *opts_);
+
 
 /// Solves the qp.
 ///

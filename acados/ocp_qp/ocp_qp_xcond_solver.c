@@ -127,7 +127,8 @@ ocp_qp_xcond_solver_dims *ocp_qp_xcond_solver_dims_assign(void *config_, int N, 
 
 
 
-void ocp_qp_xcond_solver_dims_set(void *config_, ocp_qp_xcond_solver_dims *dims, int stage, const char *field, int* value)
+void ocp_qp_xcond_solver_dims_set(void *config_, ocp_qp_xcond_solver_dims *dims,
+                                  int stage, const char *field, int* value)
 {
 	ocp_qp_xcond_solver_config *config = config_;
 
@@ -237,7 +238,7 @@ void ocp_qp_xcond_solver_opts_update(void *config_, ocp_qp_xcond_solver_dims *di
 
 
 
-void ocp_qp_xcond_solver_opts_set(void *config_, void *opts_, const char *field, void* value)
+void ocp_qp_xcond_solver_opts_set_(void *config_, void *opts_, const char *field, void* value)
 {
     ocp_qp_xcond_solver_opts *opts = (ocp_qp_xcond_solver_opts *) opts_;
     ocp_qp_xcond_solver_config *config = config_;
@@ -463,7 +464,8 @@ int ocp_qp_xcond_solver(void *config_, ocp_qp_xcond_solver_dims *dims, ocp_qp_in
 	info->condensing_time = acados_toc(&cond_timer);
 
     // solve qp
-	solver_status = qp_solver->evaluate(qp_solver, memory->xcond_qp_in, memory->xcond_qp_out, opts->qp_solver_opts, memory->solver_memory, work->qp_solver_work);
+	solver_status = qp_solver->evaluate(qp_solver, memory->xcond_qp_in, memory->xcond_qp_out,
+                                opts->qp_solver_opts, memory->solver_memory, work->qp_solver_work);
 
 	// expansion
 	acados_tic(&cond_timer);
@@ -545,7 +547,7 @@ void ocp_qp_xcond_solver_config_initialize_default(void *config_)
     config->opts_assign = &ocp_qp_xcond_solver_opts_assign;
     config->opts_initialize_default = &ocp_qp_xcond_solver_opts_initialize_default;
     config->opts_update = &ocp_qp_xcond_solver_opts_update;
-    config->opts_set = &ocp_qp_xcond_solver_opts_set;
+    config->opts_set = &ocp_qp_xcond_solver_opts_set_;
     config->memory_calculate_size = &ocp_qp_xcond_solver_memory_calculate_size;
     config->memory_assign = &ocp_qp_xcond_solver_memory_assign;
     config->memory_get = &ocp_qp_xcond_solver_memory_get;
