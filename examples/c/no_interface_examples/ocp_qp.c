@@ -32,8 +32,6 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <stddef.h>
 
 #include "acados/utils/print.h"
 #include "acados_c/ocp_qp_interface.h"
@@ -57,7 +55,7 @@ int main() {
 
 
     ocp_qp_solver_plan plan;
-    plan.qp_solver = FULL_CONDENSING_HPIPM; // FULL_CONDENSING_QP_OASES
+    plan.qp_solver = FULL_CONDENSING_HPIPM; // FULL_CONDENSING_QPOASES, FULL_CONDENSING_HPIPM
 
     ocp_qp_xcond_solver_config *config = ocp_qp_xcond_solver_config_create(plan);
 
