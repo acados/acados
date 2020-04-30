@@ -256,23 +256,6 @@ ocp_qp_out *ocp_qp_out_assign(ocp_qp_dims *dims, void *raw_memory)
 
 
 
-void ocp_qp_out_get(ocp_qp_out *out, const char *field, void *value)
-{
-	if(!strcmp(field, "qp_info"))
-	{
-		qp_info **ptr = value;
-		*ptr = out->misc;
-	}
-	else
-	{
-		printf("\nerror: ocp_qp_out_get: field %s not available\n", field);
-		exit(1);
-	}
-
-	return;
-}
-
-
 
 /************************************************
  * res

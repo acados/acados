@@ -308,6 +308,22 @@ void ocp_qp_out_free(void *out_)
 }
 
 
+void ocp_qp_out_get(ocp_qp_out *out, const char *field, void *value)
+{
+    if (!strcmp(field, "qp_info"))
+    {
+        qp_info **ptr = value;
+        *ptr = out->misc;
+    }
+    else
+    {
+        printf("\nerror: ocp_qp_out_get: field %s not available\n", field);
+        exit(1);
+    }
+
+    return;
+}
+
 
 /* opts */
 void *ocp_qp_xcond_solver_opts_create(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims)

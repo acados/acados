@@ -151,9 +151,6 @@ ocp_qp_in *ocp_qp_in_assign(ocp_qp_dims *dims, void *raw_memory);
 int ocp_qp_out_calculate_size(ocp_qp_dims *dims);
 //
 ocp_qp_out *ocp_qp_out_assign(ocp_qp_dims *dims, void *raw_memory);
-//
-void ocp_qp_out_get(ocp_qp_out *out, const char *field, void *value);
-
 
 /* res */
 //

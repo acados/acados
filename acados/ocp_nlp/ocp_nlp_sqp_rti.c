@@ -57,6 +57,7 @@
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
+#include "acados_c/ocp_qp_interface.h"
 
 
 
