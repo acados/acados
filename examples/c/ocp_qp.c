@@ -32,6 +32,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "acados/utils/print.h"
 #include "acados_c/ocp_qp_interface.h"
@@ -55,7 +56,9 @@ int main() {
 
 
     ocp_qp_solver_plan plan;
-    plan.qp_solver = FULL_CONDENSING_HPIPM; // FULL_CONDENSING_QPOASES, FULL_CONDENSING_HPIPM
+    plan.qp_solver = FULL_CONDENSING_QPOASES; // FULL_CONDENSING_QPOASES, FULL_CONDENSING_HPIPM
+    // PARTIAL_CONDENSING_HPIPM, PARTIAL_CONDENSING_HPMPC, PARTIAL_CONDENSING_OOQP,
+    //  PARTIAL_CONDENSING_OSQP, PARTIAL_CONDENSING_QPDUNES, FULL_CONDENSING_QORE, FULL_CONDENSING_OOQP,
 
     ocp_qp_xcond_solver_config *config = ocp_qp_xcond_solver_config_create(plan);
 
@@ -72,10 +75,13 @@ int main() {
         ocp_qp_dims_set(config, dims, i, "nx", &nx);
         ocp_qp_dims_set(config, dims, i, "nu", &nu);
     }
-    // last stage has no controls
-    ocp_qp_dims_set(config, dims, N+1, "nu", &nu_e);
-
+    // initial value for x
     ocp_qp_dims_set(config, dims, 0, "nbx", &nx);
+    // last stage has no controls
+    ocp_qp_dims_set(config, dims, N, "nu", &nu_e);
+
+    // printf("\nqp dimensions:\n");
+    // print_ocp_qp_dims(dims);
 
     ocp_qp_in *qp_in = ocp_qp_in_create(dims);
 
@@ -99,11 +105,8 @@ int main() {
     ocp_qp_in_set(config, qp_in, N, "q", q);
     ocp_qp_in_set(config, qp_in, N, "r", r);
 
-    print_ocp_qp_in(qp_in);
-
-    printf("\nqp_in dimensions:\n");
-    print_ocp_qp_dims(qp_in->dim);
-
+    // printf("\nqp input:\n");
+    // print_ocp_qp_in(qp_in);
 
     ocp_qp_xcond_solver_dims *solver_dims =
                 ocp_qp_xcond_solver_dims_create_from_ocp_qp_dims(config, dims);
@@ -111,32 +114,44 @@ int main() {
 
     void *opts = ocp_qp_xcond_solver_opts_create(config, solver_dims);
 
-    ocp_qp_out *qp_out = ocp_qp_out_create(dims);
 
-    // TODO(dimitris): only have N2 in one place!!
-    // printf("N2 in config = %d\n", config->N2);
-    // printf("N2 in opts = %d\n", ((ocp_qp_partial_condensing_opts *)(((ocp_qp_partial_condensing_solver_opts *)opts)->pcond_opts))->N2);
+    // set partial condensing option
+    if (plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
+    // are not defined by default
+        // plan.qp_solver == PARTIAL_CONDENSING_HPMPC ||
+        // plan.qp_solver == PARTIAL_CONDENSING_OOQP ||
+        // plan.qp_solver == PARTIAL_CONDENSING_OSQP ||
+        // plan.qp_solver ==  PARTIAL_CONDENSING_QPDUNES)
+    {
+        int N2 = 2;
+        ocp_qp_xcond_solver_opts_set(config, opts, "cond_N", &N2);
+    }
+
+    ocp_qp_out *qp_out = ocp_qp_out_create(dims);
 
     ocp_qp_solver *qp_solver = ocp_qp_create(config, solver_dims, opts);
 
     int acados_return = ocp_qp_solve(qp_solver, qp_in, qp_out);
 
     if (acados_return != ACADOS_SUCCESS)
-        return -1;
+    {
+        printf("\nqp solver returned status %d. Exiting.\n", acados_return);
+        exit(1);
+    }
 
+    // printf("\nqp output:\n");
     print_ocp_qp_out(qp_out);
 
-    /************************************************
-     * compute inf norm of residuals
-     ************************************************/
-
+    /* compute inf norm of residuals */
     double res[4];
-    // ocp_qp_inf_norm_residuals(dims->orig_dims, qp_in, qp_out, res);
-    // printf("\ninf norm res: %e, %e, %e, %e\n\n", res[0], res[1], res[2], res[3]);
+    ocp_qp_inf_norm_residuals(dims, qp_in, qp_out, res);
+    printf("\ninf norm res: stat %e, dyn %e, ineq %e, comp %e\n\n", res[0], res[1], res[2], res[3]);
 
-    // ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
-    // print_ocp_qp_info(info);
+    void *info = NULL;
+    ocp_qp_out_get(qp_out, "qp_info", &info);
+    print_qp_info(info);
 
+    // free
     ocp_qp_xcond_solver_dims_free(solver_dims);
     ocp_qp_dims_free(dims);
     ocp_qp_xcond_solver_config_free(config);
