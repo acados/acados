@@ -208,12 +208,47 @@ ocp_qp_xcond_solver_dims *ocp_qp_xcond_solver_dims_create(ocp_qp_xcond_solver_co
 }
 
 
-void ocp_qp_xcond_solver_dims_set(void *config_, ocp_qp_xcond_solver_dims *dims,
-                                  int stage, const char *field, int* value)
+ocp_qp_xcond_solver_dims *ocp_qp_xcond_solver_dims_create_from_ocp_qp_dims(
+    ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims)
 {
-    ocp_qp_xcond_solver_dims_set_(config_, dims, stage, field, value);
-}
+    int N = dims->N;
+    int tmp_int;
 
+    ocp_qp_xcond_solver_dims *solver_dims = ocp_qp_xcond_solver_dims_create(config, N);
+
+    /* alternative idea: call ocp_qp_dims_get and ocp_qp_xcond_dims_set for all fields; */
+    for (int i = 0; i < N+1; i++)
+    {
+        ocp_qp_dims_get(config, dims, i, "nx", &tmp_int);
+        ocp_qp_xcond_solver_dims_set_(config, solver_dims, i, "nx", &tmp_int);
+        ocp_qp_dims_get(config, dims, i, "nu", &tmp_int);
+        ocp_qp_xcond_solver_dims_set_(config, solver_dims, i, "nu", &tmp_int);
+        ocp_qp_dims_get(config, dims, i, "nbx", &tmp_int);
+        ocp_qp_xcond_solver_dims_set_(config, solver_dims, i, "nbx", &tmp_int);
+        ocp_qp_dims_get(config, dims, i, "nbu", &tmp_int);
+        ocp_qp_xcond_solver_dims_set_(config, solver_dims, i, "nbu", &tmp_int);
+        ocp_qp_dims_get(config, dims, i, "ng", &tmp_int);
+        ocp_qp_xcond_solver_dims_set_(config, solver_dims, i, "ng", &tmp_int);
+        ocp_qp_dims_get(config, dims, i, "ns", &tmp_int);
+        ocp_qp_xcond_solver_dims_set_(config, solver_dims, i, "ns", &tmp_int);
+
+        ocp_qp_dims_get(config, dims, i, "nsbx", &tmp_int);
+        ocp_qp_xcond_solver_dims_set_(config, solver_dims, i, "nsbx", &tmp_int);
+        ocp_qp_dims_get(config, dims, i, "nsbu", &tmp_int);
+        ocp_qp_xcond_solver_dims_set_(config, solver_dims, i, "nsbu", &tmp_int);
+        ocp_qp_dims_get(config, dims, i, "nsg", &tmp_int);
+        ocp_qp_xcond_solver_dims_set_(config, solver_dims, i, "nsg", &tmp_int);
+
+        ocp_qp_dims_get(config, dims, i, "nbxe", &tmp_int);
+        ocp_qp_xcond_solver_dims_set_(config, solver_dims, i, "nbxe", &tmp_int);
+        ocp_qp_dims_get(config, dims, i, "nbue", &tmp_int);
+        ocp_qp_xcond_solver_dims_set_(config, solver_dims, i, "nbue", &tmp_int);
+        ocp_qp_dims_get(config, dims, i, "nge", &tmp_int);
+        ocp_qp_xcond_solver_dims_set_(config, solver_dims, i, "nge", &tmp_int);
+    }
+
+    return solver_dims;
+}
 
 
 void ocp_qp_xcond_solver_dims_free(ocp_qp_xcond_solver_dims *dims)
@@ -224,13 +259,6 @@ void ocp_qp_xcond_solver_dims_free(ocp_qp_xcond_solver_dims *dims)
 
 
 /* in */
-
-ocp_qp_in *ocp_qp_in_create_from_xcond_dims(ocp_qp_xcond_solver_dims *dims)
-{
-    ocp_qp_in *in = ocp_qp_in_create(dims->orig_dims);
-    return in;
-}
-
 
 ocp_qp_in *ocp_qp_in_create(ocp_qp_dims *dims)
 {
@@ -260,14 +288,6 @@ void ocp_qp_in_free(void *in_)
 
 
 /* out */
-
-ocp_qp_out *ocp_qp_out_create_from_xcond_dims(ocp_qp_xcond_solver_dims *dims)
-{
-    ocp_qp_out *out = ocp_qp_out_create(dims->orig_dims);
-
-    return out;
-}
-
 
 ocp_qp_out *ocp_qp_out_create(ocp_qp_dims *dims)
 {

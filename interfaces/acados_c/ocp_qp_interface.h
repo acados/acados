@@ -106,8 +106,9 @@ typedef struct
 
 
 /// Initializes the qp solver configuration.
-/// TBC should this be private/static?
-void ocp_qp_xcond_solver_config_initialize_from_plan(ocp_qp_solver_t solver_name, ocp_qp_xcond_solver_config *solver_config);
+/// TBC should this be private/static - no, used in ocp_nlp
+void ocp_qp_xcond_solver_config_initialize_from_plan(
+    ocp_qp_solver_t solver_name, ocp_qp_xcond_solver_config *solver_config);
 
 /// Constructs a qp solver config and Initializes with default values.
 ///
@@ -130,17 +131,17 @@ ocp_qp_dims *ocp_qp_dims_create(int N);
 /// \param dims The dimension struct.
 void ocp_qp_dims_free(void *dims);
 
-
 //
 ocp_qp_xcond_solver_dims *ocp_qp_xcond_solver_dims_create(ocp_qp_xcond_solver_config *config, int N);
+//
+ocp_qp_xcond_solver_dims *ocp_qp_xcond_solver_dims_create_from_ocp_qp_dims(
+    ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims);
 //
 void ocp_qp_xcond_solver_dims_free(ocp_qp_xcond_solver_dims *dims_);
 
 void ocp_qp_xcond_solver_dims_set(void *config_, ocp_qp_xcond_solver_dims *dims,
                                   int stage, const char *field, int* value);
 
-
-ocp_qp_in *ocp_qp_in_create_from_xcond_dims(ocp_qp_xcond_solver_dims *dims);
 
 /// Constructs an input object for the qp.
 ///
@@ -156,9 +157,6 @@ void ocp_qp_in_set(ocp_qp_xcond_solver_config *config, ocp_qp_in *in,
 /// \param in_ The inputs struct.
 void ocp_qp_in_free(void *in_);
 
-
-
-ocp_qp_out *ocp_qp_out_create_from_xcond_dims(ocp_qp_xcond_solver_dims *dims);
 
 /// Constructs an outputs object for the qp.
 ///

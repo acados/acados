@@ -135,6 +135,8 @@ int ocp_qp_dims_calculate_size(int N);
 ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory);
 //
 void ocp_qp_dims_set(void *config_, void *dims, int stage, const char *field, int* value);
+//
+void ocp_qp_dims_get(void *config_, void *dims, int stage, const char *field, int* value);
 
 
 /* in */

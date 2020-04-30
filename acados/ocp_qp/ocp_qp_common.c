@@ -152,6 +152,16 @@ void ocp_qp_dims_set(void *config_, void *dims, int stage, const char *field, in
 }
 
 
+void ocp_qp_dims_get(void *config_, void *dims, int stage, const char *field, int* value)
+{
+    char *field_copy = (char *) field;
+
+    d_ocp_qp_dim_get(dims, field_copy, stage, value);
+
+    return;
+}
+
+
 
 /************************************************
  * in
