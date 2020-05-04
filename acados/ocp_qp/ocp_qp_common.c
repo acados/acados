@@ -148,7 +148,17 @@ void ocp_qp_dims_set(void *config_, void *dims, int stage, const char *field, in
 
     d_ocp_qp_dim_set(field_copy, stage, *value, dims);
 
-	return;
+    return;
+}
+
+
+void ocp_qp_dims_get(void *config_, void *dims, int stage, const char *field, int* value)
+{
+    char *field_copy = (char *) field;
+
+    d_ocp_qp_dim_get(dims, field_copy, stage, value);
+
+    return;
 }
 
 
@@ -186,7 +196,7 @@ ocp_qp_in *ocp_qp_in_assign(ocp_qp_dims *dims, void *raw_memory)
     ocp_qp_dims *dims_copy = ocp_qp_dims_assign(dims->N, c_ptr);  // TODO(all): remove !!!
     c_ptr += ocp_qp_dims_calculate_size(dims->N);                 // TODO(all): remove !!!
 
-	d_ocp_qp_dim_copy_all(dims, dims_copy);
+    d_ocp_qp_dim_copy_all(dims, dims_copy);
 
     qp_in->dim = dims_copy;
 
@@ -235,7 +245,7 @@ ocp_qp_out *ocp_qp_out_assign(ocp_qp_dims *dims, void *raw_memory)
     ocp_qp_dims *dims_copy = ocp_qp_dims_assign(dims->N, c_ptr);  // TODO(all): remove !!!
     c_ptr += ocp_qp_dims_calculate_size(dims->N);                 // TODO(all): remove !!!
 
-	d_ocp_qp_dim_copy_all(dims, dims_copy);
+    d_ocp_qp_dim_copy_all(dims, dims_copy);
 
     qp_out->dim = dims_copy;
 
@@ -244,23 +254,6 @@ ocp_qp_out *ocp_qp_out_assign(ocp_qp_dims *dims, void *raw_memory)
     return qp_out;
 }
 
-
-
-void ocp_qp_out_get(ocp_qp_out *out, const char *field, void *value)
-{
-	if(!strcmp(field, "qp_info"))
-	{
-		qp_info **ptr = value;
-		*ptr = out->misc;
-	}
-	else
-	{
-		printf("\nerror: ocp_qp_out_get: field %s not available\n", field);
-		exit(1);
-	}
-
-	return;
-}
 
 
 
@@ -520,54 +513,54 @@ void ocp_qp_stack_slacks(ocp_qp_in *in, ocp_qp_in *out)
 //            for (int jj = 0; jj < ns[ii]; jj++)
 //            {
 //                int js = idxs[ii][jj];
-			for(int js=0; js<nb[ii]+ng[ii]; js++)
-			{
-				int jj = idxs_rev[ii][js];
-				if(jj!=-1)
-				{
+            for(int js=0; js<nb[ii]+ng[ii]; js++)
+            {
+                int jj = idxs_rev[ii][js];
+                if(jj!=-1)
+                {
 
-					int idx_v_ls1 = jj;
-					int idx_v_us1 = ns[ii]+jj;
+                    int idx_v_ls1 = jj;
+                    int idx_v_us1 = ns[ii]+jj;
 
-					int idx_d_ls0 = js;
-					int idx_d_us0 = nb[ii]+ng[ii]+js;
-					int idx_d_ls1;
-					int idx_d_us1;
+                    int idx_d_ls0 = js;
+                    int idx_d_us0 = nb[ii]+ng[ii]+js;
+                    int idx_d_ls1;
+                    int idx_d_us1;
 
-					if (js < nb[ii])  // soft box constraint
-					{
-						// index of a soft box constraint
-						int jv = idxb[ii][js]+2*ns[ii];
+                    if (js < nb[ii])  // soft box constraint
+                    {
+                        // index of a soft box constraint
+                        int jv = idxb[ii][js]+2*ns[ii];
 
-						idx_d_ls1 = nb2[ii]+col_b;
-						idx_d_us1 = 2*nb2[ii]+ng2[ii]+col_b;
+                        idx_d_ls1 = nb2[ii]+col_b;
+                        idx_d_us1 = 2*nb2[ii]+ng2[ii]+col_b;
 
-						// soft box constraint, set its flag to -1
-						BLASFEO_DVECEL(out->m+ii, js) = -1.0;
+                        // soft box constraint, set its flag to -1
+                        BLASFEO_DVECEL(out->m+ii, js) = -1.0;
 
-						// insert soft box constraint into out->DCt, lb <= ux + sl - su <= ub
-						BLASFEO_DMATEL(out->DCt+ii, jv, col_b) = 1.0;
-						BLASFEO_DMATEL(out->DCt+ii, idx_v_ls1, col_b) = +1.0;
-						BLASFEO_DMATEL(out->DCt+ii, idx_v_us1, col_b) = -1.0;
-						BLASFEO_DVECEL(out->d+ii, idx_d_ls1) = BLASFEO_DVECEL(in->d+ii, idx_d_ls0);
-						BLASFEO_DVECEL(out->d+ii, idx_d_us1) = -BLASFEO_DVECEL(in->d+ii, idx_d_us0);
+                        // insert soft box constraint into out->DCt, lb <= ux + sl - su <= ub
+                        BLASFEO_DMATEL(out->DCt+ii, jv, col_b) = 1.0;
+                        BLASFEO_DMATEL(out->DCt+ii, idx_v_ls1, col_b) = +1.0;
+                        BLASFEO_DMATEL(out->DCt+ii, idx_v_us1, col_b) = -1.0;
+                        BLASFEO_DVECEL(out->d+ii, idx_d_ls1) = BLASFEO_DVECEL(in->d+ii, idx_d_ls0);
+                        BLASFEO_DVECEL(out->d+ii, idx_d_us1) = -BLASFEO_DVECEL(in->d+ii, idx_d_us0);
 
-						col_b++;
-					}
-					else  // soft general constraint
-					{
-						// index of a soft general constraint
-						int col_g = js - nb[ii];
+                        col_b++;
+                    }
+                    else  // soft general constraint
+                    {
+                        // index of a soft general constraint
+                        int col_g = js - nb[ii];
 
-						// soft general constraint, lg <= D u + C x + sl - su <= ug
-						BLASFEO_DMATEL(out->DCt+ii, idx_v_ls1, col_g) = +1.0;
-						BLASFEO_DMATEL(out->DCt+ii, idx_v_us1, col_g) = -1.0;
-					}
+                        // soft general constraint, lg <= D u + C x + sl - su <= ug
+                        BLASFEO_DMATEL(out->DCt+ii, idx_v_ls1, col_g) = +1.0;
+                        BLASFEO_DMATEL(out->DCt+ii, idx_v_us1, col_g) = -1.0;
+                    }
 
-					// slacks have box constraints
-					out->idxb[ii][idx_v_ls1] = idx_v_ls1;
-					out->idxb[ii][idx_v_us1] = idx_v_us1;
-				}
+                    // slacks have box constraints
+                    out->idxb[ii][idx_v_ls1] = idx_v_ls1;
+                    out->idxb[ii][idx_v_us1] = idx_v_us1;
+                }
             }
 
             int k_nsb = 0;

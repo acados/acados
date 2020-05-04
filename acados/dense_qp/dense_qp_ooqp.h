@@ -91,8 +91,8 @@ typedef struct dense_qp_ooqp_memory_
     char *iclow;
     double *cupp;
     char *icupp;
-	double time_qp_solver_call;
-	int iter;
+    double time_qp_solver_call;
+    int iter;
 
 } dense_qp_ooqp_memory;
 

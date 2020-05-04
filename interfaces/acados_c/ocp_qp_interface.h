@@ -106,8 +106,9 @@ typedef struct
 
 
 /// Initializes the qp solver configuration.
-/// TBC should this be private/static?
-void ocp_qp_xcond_solver_config_initialize_from_plan(ocp_qp_solver_t solver_name, ocp_qp_xcond_solver_config *solver_config);
+/// TBC should this be private/static - no, used in ocp_nlp
+void ocp_qp_xcond_solver_config_initialize_from_plan(
+    ocp_qp_solver_t solver_name, ocp_qp_xcond_solver_config *solver_config);
 
 /// Constructs a qp solver config and Initializes with default values.
 ///
@@ -130,16 +131,26 @@ ocp_qp_dims *ocp_qp_dims_create(int N);
 /// \param dims The dimension struct.
 void ocp_qp_dims_free(void *dims);
 
-
 //
 ocp_qp_xcond_solver_dims *ocp_qp_xcond_solver_dims_create(ocp_qp_xcond_solver_config *config, int N);
 //
+ocp_qp_xcond_solver_dims *ocp_qp_xcond_solver_dims_create_from_ocp_qp_dims(
+    ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims);
+//
 void ocp_qp_xcond_solver_dims_free(ocp_qp_xcond_solver_dims *dims_);
+
+void ocp_qp_xcond_solver_dims_set(void *config_, ocp_qp_xcond_solver_dims *dims,
+                                  int stage, const char *field, int* value);
+
 
 /// Constructs an input object for the qp.
 ///
 /// \param dims The dimension struct.
 ocp_qp_in *ocp_qp_in_create(ocp_qp_dims *dims);
+
+
+void ocp_qp_in_set(ocp_qp_xcond_solver_config *config, ocp_qp_in *in,
+                   int stage, char *field, void *value);
 
 /// Destructor of the inputs struct.
 ///
@@ -158,6 +169,10 @@ ocp_qp_out *ocp_qp_out_create(ocp_qp_dims *dims);
 void ocp_qp_out_free(void *out_);
 
 
+/// Getter of output struct
+void ocp_qp_out_get(ocp_qp_out *out, const char *field, void *value);
+
+
 /// Constructs an options object for the qp.
 ///
 /// \param config The configuration struct.
@@ -170,6 +185,12 @@ void *ocp_qp_xcond_solver_opts_create(ocp_qp_xcond_solver_config *config,
 /// \param opts The options struct to destroy.
 void ocp_qp_xcond_solver_opts_free(ocp_qp_xcond_solver_opts *opts);
 
+
+/// Setter of the options struct.
+///
+/// \param opts The options struct.
+void ocp_qp_xcond_solver_opts_set(ocp_qp_xcond_solver_config *config,
+           ocp_qp_xcond_solver_opts *opts, const char *field, void* value);
 
 /// TBC Should be private/static?
 int ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
@@ -189,7 +210,18 @@ ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_so
 /// \param config The configuration struct.
 /// \param dims The dimension struct.
 /// \param opts_ The options struct.
-ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
+ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config,
+                             ocp_qp_xcond_solver_dims *dims, void *opts_);
+
+
+/// Destroys a qp solver. Frees memory.
+///
+/// \param solver The qp solver
+void ocp_qp_solver_destroy(ocp_qp_solver *solver);
+
+void ocp_qp_x_cond_solver_free(ocp_qp_xcond_solver_config *config,
+                             ocp_qp_xcond_solver_dims *dims, void *opts_);
+
 
 /// Solves the qp.
 ///

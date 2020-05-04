@@ -47,8 +47,8 @@ extern "C" {
 
 typedef struct
 {
-	ocp_qp_dims *orig_dims;
-	void *xcond_dims;
+    ocp_qp_dims *orig_dims;
+    void *xcond_dims;
 } ocp_qp_xcond_solver_dims;
 
 
@@ -96,7 +96,7 @@ typedef struct
     int (*evaluate)(void *config, ocp_qp_xcond_solver_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts, void *mem, void *work);
     void (*eval_sens)(void *config, ocp_qp_xcond_solver_dims *dims, ocp_qp_in *param_qp_in, ocp_qp_out *sens_qp_out, void *opts, void *mem, void *work);
     qp_solver_config *qp_solver;  // either ocp_qp_solver or dense_solver
-	ocp_qp_xcond_config *xcond;
+    ocp_qp_xcond_config *xcond;
 } ocp_qp_xcond_solver_config;  // pcond - partial condensing or fcond - full condensing
 
 
@@ -113,7 +113,7 @@ int ocp_qp_xcond_solver_dims_calculate_size(void *config, int N);
 //
 ocp_qp_xcond_solver_dims *ocp_qp_xcond_solver_dims_assign(void *config, int N, void *raw_memory);
 //
-void ocp_qp_xcond_solver_dims_set(void *config, ocp_qp_xcond_solver_dims *dims, int stage, const char *field, int* value);
+void ocp_qp_xcond_solver_dims_set_(void *config, ocp_qp_xcond_solver_dims *dims, int stage, const char *field, int* value);
 
 /* opts */
 //
@@ -125,7 +125,7 @@ void ocp_qp_xcond_solver_opts_initialize_default(void *config, ocp_qp_xcond_solv
 //
 void ocp_qp_xcond_solver_opts_update(void *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
 //
-void ocp_qp_xcond_solver_opts_set(void *config_, void *opts_, const char *field, void* value);
+void ocp_qp_xcond_solver_opts_set_(void *config_, void *opts_, const char *field, void* value);
 
 /* memory */
 //

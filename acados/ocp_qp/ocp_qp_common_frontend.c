@@ -475,37 +475,37 @@ void convert_colmaj_to_ocp_qp_in(colmaj_ocp_qp_in *cm_qp_in, ocp_qp_in *qp_in)
     }
 
     // convert to backend qp
-	int ii;
-	for(ii=0; ii<N; ii++)
-	{
-		d_ocp_qp_set_A(ii, cm_qp_in->A[ii], qp_in);
-		d_ocp_qp_set_B(ii, cm_qp_in->B[ii], qp_in);
-		d_ocp_qp_set_b(ii, cm_qp_in->b[ii], qp_in);
-		d_ocp_qp_set_R(ii, cm_qp_in->R[ii], qp_in);
-		d_ocp_qp_set_S(ii, cm_qp_in->S[ii], qp_in);
-		d_ocp_qp_set_Q(ii, cm_qp_in->Q[ii], qp_in);
-		d_ocp_qp_set_r(ii, cm_qp_in->r[ii], qp_in);
-		d_ocp_qp_set_q(ii, cm_qp_in->q[ii], qp_in);
-		d_ocp_qp_set_idxb(ii, cm_qp_in->idxb[ii], qp_in);
-		d_ocp_qp_set_lb(ii, cm_qp_in->lb[ii], qp_in);
-		d_ocp_qp_set_ub(ii, cm_qp_in->ub[ii], qp_in);
-		d_ocp_qp_set_C(ii, cm_qp_in->Cx[ii], qp_in);
-		d_ocp_qp_set_D(ii, cm_qp_in->Cu[ii], qp_in);
-		d_ocp_qp_set_lg(ii, cm_qp_in->lc[ii], qp_in);
-		d_ocp_qp_set_ug(ii, cm_qp_in->uc[ii], qp_in);
-	}
-	d_ocp_qp_set_R(ii, cm_qp_in->R[ii], qp_in);
-	d_ocp_qp_set_S(ii, cm_qp_in->S[ii], qp_in);
-	d_ocp_qp_set_Q(ii, cm_qp_in->Q[ii], qp_in);
-	d_ocp_qp_set_r(ii, cm_qp_in->r[ii], qp_in);
-	d_ocp_qp_set_q(ii, cm_qp_in->q[ii], qp_in);
-	d_ocp_qp_set_idxb(ii, cm_qp_in->idxb[ii], qp_in);
-	d_ocp_qp_set_lb(ii, cm_qp_in->lb[ii], qp_in);
-	d_ocp_qp_set_ub(ii, cm_qp_in->ub[ii], qp_in);
-	d_ocp_qp_set_C(ii, cm_qp_in->Cx[ii], qp_in);
-	d_ocp_qp_set_D(ii, cm_qp_in->Cu[ii], qp_in);
-	d_ocp_qp_set_lg(ii, cm_qp_in->lc[ii], qp_in);
-	d_ocp_qp_set_ug(ii, cm_qp_in->uc[ii], qp_in);
+    int ii;
+    for(ii=0; ii<N; ii++)
+    {
+        d_ocp_qp_set_A(ii, cm_qp_in->A[ii], qp_in);
+        d_ocp_qp_set_B(ii, cm_qp_in->B[ii], qp_in);
+        d_ocp_qp_set_b(ii, cm_qp_in->b[ii], qp_in);
+        d_ocp_qp_set_R(ii, cm_qp_in->R[ii], qp_in);
+        d_ocp_qp_set_S(ii, cm_qp_in->S[ii], qp_in);
+        d_ocp_qp_set_Q(ii, cm_qp_in->Q[ii], qp_in);
+        d_ocp_qp_set_r(ii, cm_qp_in->r[ii], qp_in);
+        d_ocp_qp_set_q(ii, cm_qp_in->q[ii], qp_in);
+        d_ocp_qp_set_idxb(ii, cm_qp_in->idxb[ii], qp_in);
+        d_ocp_qp_set_lb(ii, cm_qp_in->lb[ii], qp_in);
+        d_ocp_qp_set_ub(ii, cm_qp_in->ub[ii], qp_in);
+        d_ocp_qp_set_C(ii, cm_qp_in->Cx[ii], qp_in);
+        d_ocp_qp_set_D(ii, cm_qp_in->Cu[ii], qp_in);
+        d_ocp_qp_set_lg(ii, cm_qp_in->lc[ii], qp_in);
+        d_ocp_qp_set_ug(ii, cm_qp_in->uc[ii], qp_in);
+    }
+    d_ocp_qp_set_R(ii, cm_qp_in->R[ii], qp_in);
+    d_ocp_qp_set_S(ii, cm_qp_in->S[ii], qp_in);
+    d_ocp_qp_set_Q(ii, cm_qp_in->Q[ii], qp_in);
+    d_ocp_qp_set_r(ii, cm_qp_in->r[ii], qp_in);
+    d_ocp_qp_set_q(ii, cm_qp_in->q[ii], qp_in);
+    d_ocp_qp_set_idxb(ii, cm_qp_in->idxb[ii], qp_in);
+    d_ocp_qp_set_lb(ii, cm_qp_in->lb[ii], qp_in);
+    d_ocp_qp_set_ub(ii, cm_qp_in->ub[ii], qp_in);
+    d_ocp_qp_set_C(ii, cm_qp_in->Cx[ii], qp_in);
+    d_ocp_qp_set_D(ii, cm_qp_in->Cu[ii], qp_in);
+    d_ocp_qp_set_lg(ii, cm_qp_in->lc[ii], qp_in);
+    d_ocp_qp_set_ug(ii, cm_qp_in->uc[ii], qp_in);
 
 }
 
