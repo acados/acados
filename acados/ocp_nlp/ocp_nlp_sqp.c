@@ -671,7 +671,12 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->status = ACADOS_SUCCESS;
 
             if (opts->print_level > 0)
+            {
+                printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, mem->nlp_res->inf_norm_res_g,
+                    mem->nlp_res->inf_norm_res_b, mem->nlp_res->inf_norm_res_d,
+                    mem->nlp_res->inf_norm_res_m );
                 printf("\n\n");
+            }
 
             return mem->status;
         }
@@ -743,6 +748,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // print_ocp_qp_in(nlp_mem->qp_in);
             if (opts->print_level > 0)
             {
+                printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, mem->nlp_res->inf_norm_res_g,
+                    mem->nlp_res->inf_norm_res_b, mem->nlp_res->inf_norm_res_d,
+                    mem->nlp_res->inf_norm_res_m );
                 printf("\n\n");
             }
 
