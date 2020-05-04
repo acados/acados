@@ -870,31 +870,31 @@ void ocp_qp_ooqp_opts_set(void *config_, void *opts_, const char *field, void *v
 
     if (!strcmp(field, "tol_stat"))
     {
-		// TODO set solver exit tolerance
+        // TODO set solver exit tolerance
     }
     else if (!strcmp(field, "tol_eq"))
     {
-		// TODO set solver exit tolerance
+        // TODO set solver exit tolerance
     }
     else if (!strcmp(field, "tol_ineq"))
     {
-		// TODO set solver exit tolerance
+        // TODO set solver exit tolerance
     }
     else if (!strcmp(field, "tol_comp"))
     {
-		// TODO set solver exit tolerance
+        // TODO set solver exit tolerance
     }
     else if (!strcmp(field, "warm_start"))
     {
-		// TODO set solver warm start
+        // TODO set solver warm start
     }
-	else
-	{
-		printf("\nerror: ocp_qp_ooqp_opts_set: wrong field: %s\n", field);
-		exit(1);
-	}
+    else
+    {
+        printf("\nerror: ocp_qp_ooqp_opts_set: wrong field: %s\n", field);
+        exit(1);
+    }
 
-	return;
+    return;
 }
 
 
@@ -1005,25 +1005,25 @@ void *ocp_qp_ooqp_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, v
 void ocp_qp_ooqp_memory_get(void *config_, void *mem_, const char *field, void* value)
 {
     qp_solver_config *config = config_;
-	ocp_qp_ooqp_memory *mem = mem_;
+    ocp_qp_ooqp_memory *mem = mem_;
 
-	if(!strcmp(field, "time_qp_solver_call"))
-	{
-		double *tmp_ptr = value;
-		*tmp_ptr = mem->time_qp_solver_call;
-	}
-	else if(!strcmp(field, "iter"))
-	{
-		int *tmp_ptr = value;
-		*tmp_ptr = mem->iter;
-	}
-	else
-	{
-		printf("\nerror: ocp_qp_ooqp_memory_get: field %s not available\n", field);
-		exit(1);
-	}
+    if(!strcmp(field, "time_qp_solver_call"))
+    {
+        double *tmp_ptr = value;
+        *tmp_ptr = mem->time_qp_solver_call;
+    }
+    else if(!strcmp(field, "iter"))
+    {
+        int *tmp_ptr = value;
+        *tmp_ptr = mem->iter;
+    }
+    else
+    {
+        printf("\nerror: ocp_qp_ooqp_memory_get: field %s not available\n", field);
+        exit(1);
+    }
 
-	return;
+    return;
 
 }
 
@@ -1127,7 +1127,7 @@ int ocp_qp_ooqp(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_
               &work->objectiveValue, opts->printLevel, &ooqp_status);
     info->solve_QP_time = acados_toc(&qp_timer);
 
-	mem->time_qp_solver_call = info->solve_QP_time;
+    mem->time_qp_solver_call = info->solve_QP_time;
     mem->iter = -1;
 
     if (0) print_outputs(mem, work, ooqp_status);
@@ -1158,8 +1158,8 @@ void ocp_qp_ooqp_destroy(void *mem_, void *work)
 
 void ocp_qp_ooqp_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
 {
-	printf("\nerror: ocp_qp_ooqp_eval_sens: not implemented yet\n");
-	exit(1);
+    printf("\nerror: ocp_qp_ooqp_eval_sens: not implemented yet\n");
+    exit(1);
 }
 
 

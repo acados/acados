@@ -73,8 +73,8 @@ typedef struct ocp_qp_osqp_memory_
     OSQPData *osqp_data;
     OSQPWorkspace *osqp_work;
 
-	double time_qp_solver_call;
-	int iter;
+    double time_qp_solver_call;
+    int iter;
 
 } ocp_qp_osqp_memory;
 

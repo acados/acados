@@ -84,7 +84,7 @@ typedef struct
     void *(*dims_assign)(void *config, int N, void *raw_memory);
     void (*dims_set)(void *config, void *dims_, int stage, const char *field, int* value);
     void (*dims_get)(void *config, void *dims, const char *field, void* value);
-	// TODO add config everywhere !!!!!
+    // TODO add config everywhere !!!!!
     int (*opts_calculate_size)(void *dims);
     void *(*opts_assign)(void *dims, void *raw_memory);
     void (*opts_initialize_default)(void *dims, void *opts);

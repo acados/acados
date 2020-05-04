@@ -133,9 +133,9 @@ void ocp_qp_hpipm_opts_set(void *config_, void *opts_, const char *field, void *
 {
     ocp_qp_hpipm_opts *opts = opts_;
 
-	d_ocp_qp_ipm_arg_set((char *) field, value, opts->hpipm_opts);
+    d_ocp_qp_ipm_arg_set((char *) field, value, opts->hpipm_opts);
 
-	return;
+    return;
 }
 
 
@@ -198,25 +198,25 @@ void *ocp_qp_hpipm_memory_assign(void *config_, void *dims_, void *opts_, void *
 void ocp_qp_hpipm_memory_get(void *config_, void *mem_, const char *field, void* value)
 {
     // qp_solver_config *config = config_;
-	ocp_qp_hpipm_memory *mem = mem_;
+    ocp_qp_hpipm_memory *mem = mem_;
 
-	if (!strcmp(field, "time_qp_solver_call"))
-	{
-		double *tmp_ptr = value;
-		*tmp_ptr = mem->time_qp_solver_call;
-	}
-	else if (!strcmp(field, "iter"))
-	{
-		int *tmp_ptr = value;
-		*tmp_ptr = mem->iter;
-	}
-	else
-	{
-		printf("\nerror: ocp_qp_hpipm_memory_get: field %s not available\n", field);
-		exit(1);
-	}
+    if (!strcmp(field, "time_qp_solver_call"))
+    {
+        double *tmp_ptr = value;
+        *tmp_ptr = mem->time_qp_solver_call;
+    }
+    else if (!strcmp(field, "iter"))
+    {
+        int *tmp_ptr = value;
+        *tmp_ptr = mem->iter;
+    }
+    else
+    {
+        printf("\nerror: ocp_qp_hpipm_memory_get: field %s not available\n", field);
+        exit(1);
+    }
 
-	return;
+    return;
 
 }
 
@@ -228,7 +228,7 @@ void ocp_qp_hpipm_memory_get(void *config_, void *mem_, const char *field, void*
 
 int ocp_qp_hpipm_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
-	return 0;
+    return 0;
 }
 
 
@@ -250,24 +250,24 @@ int ocp_qp_hpipm(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *
     ocp_qp_hpipm_opts *opts = opts_;
     ocp_qp_hpipm_memory *mem = mem_;
 
-	// zero primal solution
-	// TODO add a check if warm start of first SQP iteration is implemented !!!!!!
-	int ii;
-	int N = qp_in->dim->N;
-	int *nx = qp_in->dim->nx;
-	int *nu = qp_in->dim->nu;
-	int *ns = qp_in->dim->ns;
-	for(ii=0; ii<=N; ii++)
-	{
-		blasfeo_dvecse(nu[ii]+nx[ii]+2*ns[ii], 0.0, qp_out->ux+ii, 0);
-	}
+    // zero primal solution
+    // TODO add a check if warm start of first SQP iteration is implemented !!!!!!
+    int ii;
+    int N = qp_in->dim->N;
+    int *nx = qp_in->dim->nx;
+    int *nu = qp_in->dim->nu;
+    int *ns = qp_in->dim->ns;
+    for(ii=0; ii<=N; ii++)
+    {
+        blasfeo_dvecse(nu[ii]+nx[ii]+2*ns[ii], 0.0, qp_out->ux+ii, 0);
+    }
 
     // solve ipm
     acados_tic(&qp_timer);
     // print_ocp_qp_in(qp_in);
     int hpipm_status;
-	d_ocp_qp_ipm_solve(qp_in, qp_out, opts->hpipm_opts, mem->hpipm_workspace);
-	d_ocp_qp_ipm_get_status(mem->hpipm_workspace, &hpipm_status);
+    d_ocp_qp_ipm_solve(qp_in, qp_out, opts->hpipm_opts, mem->hpipm_workspace);
+    d_ocp_qp_ipm_get_status(mem->hpipm_workspace, &hpipm_status);
 
     info->solve_QP_time = acados_toc(&qp_timer);
     info->interface_time = 0;  // there are no conversions for hpipm
@@ -275,8 +275,8 @@ int ocp_qp_hpipm(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *
     info->num_iter = mem->hpipm_workspace->iter;
     info->t_computed = 1;
 
-	mem->time_qp_solver_call = info->solve_QP_time;
-	mem->iter = mem->hpipm_workspace->iter;
+    mem->time_qp_solver_call = info->solve_QP_time;
+    mem->iter = mem->hpipm_workspace->iter;
 
     // check exit conditions
     int acados_status = hpipm_status;
@@ -305,7 +305,7 @@ void ocp_qp_hpipm_eval_sens(void *config_, void *param_qp_in_, void *sens_qp_out
     // solve ipm
 //    acados_tic(&qp_timer);
     // print_ocp_qp_in(param_qp_in);
-	d_ocp_qp_ipm_sens(param_qp_in, sens_qp_out, opts->hpipm_opts, mem->hpipm_workspace);
+    d_ocp_qp_ipm_sens(param_qp_in, sens_qp_out, opts->hpipm_opts, mem->hpipm_workspace);
 
 //    info->solve_QP_time = acados_toc(&qp_timer);
 //    info->interface_time = 0;  // there are no conversions for hpipm

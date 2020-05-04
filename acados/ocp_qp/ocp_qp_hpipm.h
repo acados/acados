@@ -61,8 +61,8 @@ typedef struct ocp_qp_hpipm_opts_
 typedef struct ocp_qp_hpipm_memory_
 {
     struct d_ocp_qp_ipm_ws *hpipm_workspace;
-	double time_qp_solver_call;
-	int iter;
+    double time_qp_solver_call;
+    int iter;
 
 } ocp_qp_hpipm_memory;
 

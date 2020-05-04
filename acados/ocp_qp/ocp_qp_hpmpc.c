@@ -120,38 +120,38 @@ void ocp_qp_hpmpc_opts_set(void *config_, void *opts_, const char *field, void *
 
     if (!strcmp(field, "iter_max"))
     {
-		int *tmp_ptr = value;
-		opts->max_iter = *tmp_ptr;
+        int *tmp_ptr = value;
+        opts->max_iter = *tmp_ptr;
     }
     else if (!strcmp(field, "tol_stat"))
     {
-		// TODO set solver exit tolerance
+        // TODO set solver exit tolerance
     }
     else if (!strcmp(field, "tol_eq"))
     {
-		// TODO set solver exit tolerance
+        // TODO set solver exit tolerance
     }
     else if (!strcmp(field, "tol_ineq"))
     {
-		// TODO set solver exit tolerance
+        // TODO set solver exit tolerance
     }
     else if (!strcmp(field, "tol_comp"))
     {
-		double *tmp_ptr = value;
-		opts->tol = *tmp_ptr;
+        double *tmp_ptr = value;
+        opts->tol = *tmp_ptr;
     }
     else if (!strcmp(field, "warm_start"))
     {
-		int *tmp_ptr = value;
-		opts->warm_start = *tmp_ptr;
+        int *tmp_ptr = value;
+        opts->warm_start = *tmp_ptr;
     }
-	else
-	{
-		printf("\nerror: ocp_qp_hpmpc_opts_set: wrong field: %s\n", field);
-		exit(1);
-	}
+    else
+    {
+        printf("\nerror: ocp_qp_hpmpc_opts_set: wrong field: %s\n", field);
+        exit(1);
+    }
 
-	return;
+    return;
 }
 
 
@@ -332,25 +332,25 @@ void *ocp_qp_hpmpc_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, 
 void ocp_qp_hpmpc_memory_get(void *config_, void *mem_, const char *field, void* value)
 {
     qp_solver_config *config = config_;
-	ocp_qp_hpmpc_memory *mem = mem_;
+    ocp_qp_hpmpc_memory *mem = mem_;
 
-	if(!strcmp(field, "time_qp_solver_call"))
-	{
-		double *tmp_ptr = value;
-		*tmp_ptr = mem->time_qp_solver_call;
-	}
-	else if(!strcmp(field, "iter"))
-	{
-		int *tmp_ptr = value;
-		*tmp_ptr = mem->iter;
-	}
-	else
-	{
-		printf("\nerror: ocp_qp_hpipm_memory_get: field %s not available\n", field);
-		exit(1);
-	}
+    if(!strcmp(field, "time_qp_solver_call"))
+    {
+        double *tmp_ptr = value;
+        *tmp_ptr = mem->time_qp_solver_call;
+    }
+    else if(!strcmp(field, "iter"))
+    {
+        int *tmp_ptr = value;
+        *tmp_ptr = mem->iter;
+    }
+    else
+    {
+        printf("\nerror: ocp_qp_hpipm_memory_get: field %s not available\n", field);
+        exit(1);
+    }
 
-	return;
+    return;
 
 }
 
@@ -528,7 +528,7 @@ int ocp_qp_hpmpc(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *
 
     mem->out_iter = kk;  // TODO(dimitris): obsolete
 
-	mem->time_qp_solver_call = info->solve_QP_time;
+    mem->time_qp_solver_call = info->solve_QP_time;
     mem->iter = kk;
 
     // copy result to qp_out
@@ -557,8 +557,8 @@ int ocp_qp_hpmpc(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *
 
 void ocp_qp_hpmpc_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
 {
-	printf("\nerror: ocp_qp_hpmpc_eval_sens: not implemented yet\n");
-	exit(1);
+    printf("\nerror: ocp_qp_hpmpc_eval_sens: not implemented yet\n");
+    exit(1);
 }
 
 

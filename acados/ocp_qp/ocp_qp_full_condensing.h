@@ -50,9 +50,9 @@ extern "C" {
 
 typedef struct
 {
-	ocp_qp_dims *orig_dims;
-	ocp_qp_dims *red_dims; // dims of reduced qp
-	dense_qp_dims *fcond_dims;
+    ocp_qp_dims *orig_dims;
+    ocp_qp_dims *red_dims; // dims of reduced qp
+    dense_qp_dims *fcond_dims;
 } ocp_qp_full_condensing_dims;
 
 
@@ -60,12 +60,12 @@ typedef struct
 typedef struct ocp_qp_full_condensing_opts_
 {
     struct d_cond_qp_arg *hpipm_cond_opts;
-	struct d_ocp_qp_reduce_eq_dof_arg *hpipm_red_opts;
+    struct d_ocp_qp_reduce_eq_dof_arg *hpipm_red_opts;
 //    dense_qp_dims *fcond_dims;  // TODO(all): move to dims
     int cond_hess; // 0 cond only rhs, 1 cond hess + rhs
     int expand_dual_sol; // 0 primal sol only, 1 primal + dual sol
-	int ric_alg;
-	int mem_qp_in; // allocate qp_in in memory
+    int ric_alg;
+    int mem_qp_in; // allocate qp_in in memory
 } ocp_qp_full_condensing_opts;
 
 
@@ -73,16 +73,16 @@ typedef struct ocp_qp_full_condensing_opts_
 typedef struct ocp_qp_full_condensing_memory_
 {
     struct d_cond_qp_ws *hpipm_cond_work;
-	struct d_ocp_qp_reduce_eq_dof_ws *hpipm_red_work;
-	// in memory
-	dense_qp_in *fcond_qp_in;
-	dense_qp_out *fcond_qp_out;
+    struct d_ocp_qp_reduce_eq_dof_ws *hpipm_red_work;
+    // in memory
+    dense_qp_in *fcond_qp_in;
+    dense_qp_out *fcond_qp_out;
     ocp_qp_in *red_qp; // reduced qp
     ocp_qp_out *red_sol; // reduced qp sol
-	// only pointer
+    // only pointer
     ocp_qp_in *ptr_qp_in;
-	qp_info *qp_out_info; // info in fcond_qp_in
-	double time_qp_xcond;
+    qp_info *qp_out_info; // info in fcond_qp_in
+    double time_qp_xcond;
 } ocp_qp_full_condensing_memory;
 
 

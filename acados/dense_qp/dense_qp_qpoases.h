@@ -95,8 +95,8 @@ typedef struct dense_qp_qpoases_memory_
     int nwsr;        // performed number of working set recalculations
     int first_it;    // to be used with hotstart
     dense_qp_in *qp_stacked;
-	double time_qp_solver_call; // equal to cputime
-	int iter;
+    double time_qp_solver_call; // equal to cputime
+    int iter;
 
 } dense_qp_qpoases_memory;
 
