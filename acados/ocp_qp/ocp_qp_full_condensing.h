@@ -73,7 +73,7 @@ typedef struct ocp_qp_full_condensing_opts_
 typedef struct ocp_qp_full_condensing_memory_
 {
     struct d_cond_qp_ws *hpipm_cond_work;
-	struct d_ocp_qp_reduce_eq_dof_work *hpipm_red_work;
+	struct d_ocp_qp_reduce_eq_dof_ws *hpipm_red_work;
 	// in memory
 	dense_qp_in *fcond_qp_in;
 	dense_qp_out *fcond_qp_out;

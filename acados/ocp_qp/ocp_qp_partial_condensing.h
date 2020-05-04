@@ -76,7 +76,7 @@ typedef struct ocp_qp_partial_condensing_opts_
 typedef struct ocp_qp_partial_condensing_memory_
 {
     struct d_part_cond_qp_ws *hpipm_pcond_work;
-	struct d_ocp_qp_reduce_eq_dof_work *hpipm_red_work;
+	struct d_ocp_qp_reduce_eq_dof_ws *hpipm_red_work;
 	// in memory
 	ocp_qp_in *pcond_qp_in;
 	ocp_qp_out *pcond_qp_out;
