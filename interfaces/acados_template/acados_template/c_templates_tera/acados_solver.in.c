@@ -118,7 +118,7 @@ external_function_param_casadi * hess_vde_casadi;
 external_function_param_casadi * impl_dae_fun;
 external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
 external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
-{% if solver_options.hessian_approx == "EXACT" %}
+{%- if solver_options.hessian_approx == "EXACT" %}
 external_function_param_casadi * impl_dae_hess;
 {%- endif %}
 {%- elif solver_options.integrator_type == "GNSF" %}
@@ -129,10 +129,10 @@ external_function_param_casadi * gnsf_f_lo_jac_x1_x1dot_u_z;
 external_function_param_casadi * gnsf_get_matrices_fun;
 {%- endif %}
 
-{%- if constraints.constr_type == "BGH" %}
+{% if constraints.constr_type == "BGH" %}
 external_function_param_casadi * nl_constr_h_fun_jac;
 external_function_param_casadi * nl_constr_h_fun;
-{% if solver_options.hessian_approx == "EXACT" %}
+{%- if solver_options.hessian_approx == "EXACT" %}
 external_function_param_casadi * nl_constr_h_fun_jac_hess;
 {%- endif %}
 {%- elif constraints.constr_type == "BGP" %}
@@ -140,10 +140,10 @@ external_function_param_casadi * phi_constraint;
 // external_function_param_casadi * r_constraint;
 {%- endif %}
 
-{%- if constraints.constr_type_e == "BGH" %}
+{% if constraints.constr_type_e == "BGH" %}
 external_function_param_casadi nl_constr_h_e_fun_jac;
 external_function_param_casadi nl_constr_h_e_fun;
-{% if solver_options.hessian_approx == "EXACT" %}
+{%- if solver_options.hessian_approx == "EXACT" %}
 external_function_param_casadi nl_constr_h_e_fun_jac_hess;
 {%- endif %}
 {%- elif constraints.constr_type_e == "BGP" %}
@@ -1479,7 +1479,7 @@ int acados_create()
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_tol_comp", &qp_solver_tol_comp);
     {%- endif -%}
 
-    {%- if solver_options.hessian_approx == "EXACT" -%}
+    {%- if solver_options.hessian_approx == "EXACT" %}
     for (int i = 0; i < N; i++)
     {
         bool sens_hess = true;
