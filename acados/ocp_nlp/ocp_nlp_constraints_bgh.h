@@ -204,6 +204,8 @@ typedef struct
     struct blasfeo_dmat tmp_nv_nv;
     struct blasfeo_dmat tmp_nz_nh;
     struct blasfeo_dmat tmp_nv_nh;
+    struct blasfeo_dmat tmp_nz_nv;
+    struct blasfeo_dmat hess_z;
     struct blasfeo_dvec tmp_ni;
     struct blasfeo_dvec tmp_nh;
 } ocp_nlp_constraints_bgh_workspace;
