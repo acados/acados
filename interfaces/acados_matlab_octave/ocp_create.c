@@ -710,6 +710,27 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         if (sim_method_enum == GNSF)
             MEX_FIELD_NOT_SUPPORTED_GIVEN(fun_name, "nlp_solver_exact_hessian",
                  "true", "irk_gnsf", "false")
+
+        // int exact_hess_dyn = {{ solver_options.exact_hess_dyn }};
+        // ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "exact_hess_dyn", &exact_hess_dyn);
+        // nlp solver max iter
+        if (mxGetField( matlab_opts, 0, "exact_hess_dyn" )!=NULL)
+        {
+            int exact_hess_dyn = mxGetScalar( mxGetField( matlab_opts, 0, "exact_hess_dyn" ) );
+            ocp_nlp_solver_opts_set(config, opts, "exact_hess_dyn", &exact_hess_dyn);
+        }
+
+        if (mxGetField( matlab_opts, 0, "exact_hess_cost" )!=NULL)
+        {
+            int exact_hess_cost = mxGetScalar( mxGetField( matlab_opts, 0, "exact_hess_cost" ) );
+            ocp_nlp_solver_opts_set(config, opts, "exact_hess_cost", &exact_hess_cost);
+        }
+
+        if (mxGetField( matlab_opts, 0, "exact_hess_constr" )!=NULL)
+        {
+            int exact_hess_constr = mxGetScalar( mxGetField( matlab_opts, 0, "exact_hess_constr" ) );
+            ocp_nlp_solver_opts_set(config, opts, "exact_hess_constr", &exact_hess_constr);
+        }
     }
 
     if ( plan->nlp_solver != SQP_RTI )

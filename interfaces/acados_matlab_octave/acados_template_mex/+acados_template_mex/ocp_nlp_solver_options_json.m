@@ -55,14 +55,19 @@ classdef ocp_nlp_solver_options_json < handle
         print_level
         initialize_t_slacks
         levenberg_marquardt
+        regularize_method
+        exact_hess_cost
+        exact_hess_constr
+        exact_hess_dyn
+
     end
     methods
         function obj = ocp_nlp_solver_options_json()
             obj.qp_solver       = 'PARTIAL_CONDENSING_HPIPM';
             obj.hessian_approx  = 'GAUSS_NEWTON';
             obj.integrator_type = 'ERK';
-            obj.tf              = [];
-            obj.Tsim              = [];
+            obj.tf = [];
+            obj.Tsim = [];
             obj.nlp_solver_type = 'SQP_RTI';
             obj.sim_method_num_steps = 1;
             obj.sim_method_num_stages = 2;
@@ -76,6 +81,11 @@ classdef ocp_nlp_solver_options_json < handle
             obj.time_steps = [];
             obj.initialize_t_slacks = 0;
             obj.levenberg_marquardt = 0.0;
+            obj.regularize_method = 'NO_REGULARIZE';
+            obj.exact_hess_cost = 1;
+            obj.exact_hess_constr = 1;
+            obj.exact_hess_dyn = 1;
+
         end
     end
 end

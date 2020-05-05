@@ -83,6 +83,11 @@ classdef acados_ocp_opts < handle
             obj.opts_struct.regularize_method = 'no_regularize';
             obj.opts_struct.print_level = 0;
             obj.opts_struct.levenberg_marquardt = 0.0;
+            % 0 or 1, only used if nlp_solver_exact_hessian
+            obj.opts_struct.exact_hess_dyn = 1;
+            obj.opts_struct.exact_hess_cost = 1;
+            obj.opts_struct.exact_hess_constr = 1;
+
 
             obj.opts_struct.output_dir = fullfile(pwd, 'build');
             if ismac()
@@ -111,6 +116,16 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.nlp_solver = value;
             elseif (strcmp(field, 'nlp_solver_exact_hessian'))
                 obj.opts_struct.nlp_solver_exact_hessian = value;
+            % hessian approx
+            elseif (strcmp(field, 'nlp_solver_exact_hessian'))
+                obj.opts_struct.nlp_solver_exact_hessian = value;
+            elseif (strcmp(field, 'exact_hess_dyn'))
+                obj.opts_struct.exact_hess_dyn = value;
+            elseif (strcmp(field, 'exact_hess_cost'))
+                obj.opts_struct.exact_hess_cost = value;
+            elseif (strcmp(field, 'exact_hess_constr'))
+                obj.opts_struct.exact_hess_constr = value;
+
             elseif (strcmp(field, 'nlp_solver_max_iter'))
                 obj.opts_struct.nlp_solver_max_iter = value;
             elseif (strcmp(field, 'nlp_solver_tol_stat'))

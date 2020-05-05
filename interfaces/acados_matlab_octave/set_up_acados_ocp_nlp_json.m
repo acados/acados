@@ -59,6 +59,17 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     ocp_json.solver_options.qp_solver_cond_N = obj.opts_struct.qp_solver_cond_N;
     ocp_json.solver_options.qp_solver_iter_max = obj.opts_struct.qp_solver_iter_max;
     ocp_json.solver_options.levenberg_marquardt = obj.opts_struct.levenberg_marquardt;
+    %
+    if strcmp(obj.opts_struct.nlp_solver_exact_hessian, 'true')
+        ocp_json.solver_options.hessian_approx = 'EXACT';
+    else
+        ocp_json.solver_options.hessian_approx = 'GAUSS_NEWTON';
+    end
+    ocp_json.solver_options.regularize_method = upper(obj.opts_struct.regularize_method);
+
+    ocp_json.solver_options.exact_hess_dyn = obj.opts_struct.exact_hess_dyn;
+    ocp_json.solver_options.exact_hess_cost = obj.opts_struct.exact_hess_cost;
+    ocp_json.solver_options.exact_hess_constr = obj.opts_struct.exact_hess_constr;
 
     ocp_json.solver_options.time_steps = obj.opts_struct.time_steps;
 
