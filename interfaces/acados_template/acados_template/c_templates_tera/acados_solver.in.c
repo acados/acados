@@ -130,8 +130,8 @@ external_function_param_casadi * gnsf_get_matrices_fun;
 {%- endif %}
 
 {% if constraints.constr_type == "BGH" %}
-external_function_param_casadi * nl_constr_h_fun_jac;
 external_function_param_casadi * nl_constr_h_fun;
+external_function_param_casadi * nl_constr_h_fun_jac;
 {%- if solver_options.hessian_approx == "EXACT" %}
 external_function_param_casadi * nl_constr_h_fun_jac_hess;
 {%- endif %}
