@@ -38,16 +38,17 @@ addpath('../pendulum_on_cart_model')
 
 check_acados_requirements()
 
+print_level = 1;
 %% discretization
-N = 100;
+N = 50;
 h = 0.01;
 T = N*h; % time horizon length
 
 nlp_solver = 'sqp'; % sqp, sqp_rti
 nlp_solver_exact_hessian = 'true';
-regularize_method = 'project_reduc_hess';
+regularize_method = 'convexify';
      % no_regularize, project, project_reduc_hess, mirror, convexify
-nlp_solver_max_iter = 100;
+nlp_solver_max_iter = 30;
 tol = 1e-8;
 qp_solver = 'partial_condensing_hpipm';
     % full_condensing_hpipm, partial_condensing_hpipm, full_condensing_qpoases
@@ -198,6 +199,10 @@ ocp_opts.set('sim_method', sim_method);
 ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
 
+ocp_opts.set('exact_hess_dyn', 1);
+ocp_opts.set('exact_hess_cost', 1);
+ocp_opts.set('exact_hess_constr', 1);
+
 %% create ocp solver
 ocp = acados_ocp(ocp_model, ocp_opts);
 
@@ -206,12 +211,13 @@ x_traj_init = [linspace(0, 0, N+1); linspace(pi, 0, N+1); linspace(0, 0, N+1); l
 u_traj_init = zeros(nu, N);
 
 %% prepare evaluation
-n_executions = 100;
+n_executions = 1;
 time_tot = zeros(n_executions,1);
 time_lin = zeros(n_executions,1);
 time_reg = zeros(n_executions,1);
 time_qp_sol = zeros(n_executions,1);
 
+ocp.set('print_level', print_level)
 
 %% call ocp solver in loop
 for i=1:n_executions
@@ -261,3 +267,33 @@ if ~is_octave()
     title( [ strrep(cost_type, '_',' '), ' , sim: ' strrep(sim_method, '_',' '), ...
        ';  ', strrep(qp_solver, '_', ' ')] )
 end
+
+
+%% test templated solver
+disp('testing templated solver');
+ocp.generate_c_code;
+cd c_generated_code/
+command = strcat('t_ocp = ', model_name, '_mex_solver');
+eval( command );
+
+t_ocp.set('print_level', print_level)
+
+% initial state
+t_ocp.set('constr_x0', x0);
+
+% set trajectory initialization
+t_ocp.set('init_x', x_traj_init);
+t_ocp.set('init_u', u_traj_init);
+t_ocp.set('init_pi', zeros(nx, N))
+
+t_ocp.solve()
+xt_traj = t_ocp.get('x');
+ut_traj = t_ocp.get('u');
+
+error_X_mex_vs_mex_template = max(max(abs(xt_traj - xtraj)))
+error_U_mex_vs_mex_template = max(max(abs(ut_traj - utraj)))
+
+t_ocp.print('stat')
+
+clear t_ocp
+cd ..
