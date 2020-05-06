@@ -151,7 +151,7 @@ typedef struct
     int in_num;         // number of input arrays
     int out_num;        // number of output arrays
     int iw_size;        // number of ints for worksapce
-    int w_size;         // number of dobules for workspace
+    int w_size;         // number of doubles for workspace
 } external_function_casadi;
 
 //
@@ -209,7 +209,7 @@ typedef struct
     int in_num;         // number of input arrays
     int out_num;        // number of output arrays
     int iw_size;        // number of ints for worksapce
-    int w_size;         // number of dobules for workspace
+    int w_size;         // number of doubles for workspace
     int np;             // number of parameters
 } external_function_param_casadi;
 
