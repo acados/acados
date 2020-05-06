@@ -1416,6 +1416,7 @@ int acados_create()
 {%- endif -%}
 
 {%- if dims.nz > 0 %}
+    // TODO: these options are lower level -> should be encapsulated! maybe through hessian approx option.
     bool output_z_val = true;
     bool sens_algebraic_val = true;
 
@@ -1478,17 +1479,6 @@ int acados_create()
     double qp_solver_tol_comp = {{ solver_options.qp_solver_tol_comp }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_tol_comp", &qp_solver_tol_comp);
     {%- endif -%}
-
-    {%- if solver_options.hessian_approx == "EXACT" %}
-    for (int i = 0; i < N; i++)
-    {
-        bool sens_hess = true;
-        bool sens_adj = true;
-
-        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_hess", &sens_hess);
-        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_adj", &sens_adj);
-    }
-    {%- endif %}
 
 {% if solver_options.nlp_solver_type == "SQP" %}
     // set SQP specific options
