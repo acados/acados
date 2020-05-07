@@ -115,7 +115,7 @@ if isfield(model, 'constr_expr_h')
     % Set up functions
     h_fun = Function([model_name,'_constr_h_fun'], {x, u, z, p}, {h});
     h_fun_jac_uxt_zt = Function([model_name,'_constr_h_fun_jac_uxt_zt'], {x, u, z, p}, {h, jac_ux', jac_z'});
-    h_fun_jac_ut_xt_hess = Function([model_name,'_constr_h_fun_jac_ut_xt_hess'],...
+    h_fun_jac_uxt_hess = Function([model_name,'_constr_h_fun_jac_uxt_hess'],...
                                  {x, u, lam_h, z, p}, {h, jac_ux', hess_ux, jac_z', hess_z});
     % generate C code
     h_fun.generate([model_name,'_constr_h_fun'], casadi_opts);
