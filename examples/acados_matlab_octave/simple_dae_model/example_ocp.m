@@ -39,7 +39,7 @@ model_name = 'simple_dae';
 % check that env.sh has been run
 env_run = getenv('ENV_RUN');
 if (~strcmp(env_run, 'true'))
-	error('env.sh has not been sourced! Before executing this example, run: source env.sh');
+    error('env.sh has not been sourced! Before executing this example, run: source env.sh');
 end
 
 %% options
@@ -51,7 +51,7 @@ codgen_model = 'true'; % true, false
 % ocp
 N = 20;
 nlp_solver = 'sqp'; % sqp, sqp_rti
-nlp_solver_exact_hessian = 'false';
+nlp_solver_exact_hessian = 'true';
 %nlp_solver_exact_hessian = 'true';
 regularize_method = 'no_regularize';
 %regularize_method = 'project_reduc_hess';
@@ -68,12 +68,8 @@ qp_solver_cond_N = 5;
 qp_solver_warm_start = 0;
 qp_solver_cond_ric_alg = 1; % 0: dont factorize hessian in the condensing; 1: factorize
 qp_solver_ric_alg = 1; % HPIPM specific
-%qp_solver_tol_stat = 1e-4;
-%qp_solver_tol_eq   = 1e-4;
-%qp_solver_tol_ineq = 1e-4;
-%qp_solver_tol_comp = 1e-4;
 %ocp_sim_method = 'irk'; % irk, irk_gnsf
-ocp_sim_method = 'irk_gnsf'; % irk, irk_gnsf
+ocp_sim_method = 'irk'; % irk, irk_gnsf
 ocp_sim_method_num_stages = 6; % scalar or vector of size ocp_N;
 ocp_sim_method_num_steps = 4; % scalar or vector of size ocp_N;
 ocp_sim_method_newton_iter = 3; % scalar or vector of size ocp_N;
@@ -81,8 +77,6 @@ ocp_sim_method_newton_iter = 3; % scalar or vector of size ocp_N;
 % selectors for example variants
 constr_variant = 1; % 0: x bounds; 1: z bounds
 cost_variant = 1; % 0: ls on u,x; 1: ls on u,z; (not implemented yet: 2: nls on u,z)
-
-
 
 % get model
 model = simple_dae_model;
@@ -109,7 +103,6 @@ ub = [4;  2];
 x0 = [3; -1.8];
 
 
-
 %% acados ocp model
 ocp_model = acados_ocp_model();
 
@@ -123,10 +116,10 @@ ocp_model.set('dim_nz', nz);
 ocp_model.set('dim_ny', ny);
 ocp_model.set('dim_ny_e', ny_e);
 if constr_variant==0
-	ocp_model.set('dim_nbx', nx);
+    ocp_model.set('dim_nbx', nx);
 else
-	ocp_model.set('dim_nh', nx);
-	ocp_model.set('dim_nh_e', nx);
+    ocp_model.set('dim_nh', nx);
+    ocp_model.set('dim_nh_e', nx);
 end
 
 % symbolics
@@ -137,16 +130,17 @@ ocp_model.set('sym_z', model.sym_z);
 
 % cost
 if cost_variant==0
-	ocp_model.set('cost_type', 'linear_ls');
-	ocp_model.set('cost_Vu', Vu);
-	ocp_model.set('cost_Vx', Vx);
+    ocp_model.set('cost_type', 'linear_ls');
+    ocp_model.set('cost_Vu', Vu);
+    ocp_model.set('cost_Vx', Vx);
 elseif cost_variant==1
-	ocp_model.set('cost_type', 'linear_ls');
-	ocp_model.set('cost_Vu', Vu);
-	ocp_model.set('cost_Vz', Vx);
+    ocp_model.set('cost_type', 'linear_ls');
+    ocp_model.set('cost_Vu', Vu);
+    ocp_model.set('cost_Vz', Vx);
+    ocp_model.set('cost_Vx', zeros(ny, nx));
 else
-	ocp_model.set('cost_type', 'nonlinear_ls');
-	ocp_model.set('cost_expr_y', model.expr_y);
+    ocp_model.set('cost_type', 'nonlinear_ls');
+    ocp_model.set('cost_expr_y', model.expr_y);
 end
 ocp_model.set('cost_type_e', 'linear_ls');
 ocp_model.set('cost_Vx_e', Vx_e);
@@ -162,16 +156,16 @@ ocp_model.set('dyn_expr_f', model.expr_f_impl);
 % constraints
 ocp_model.set('constr_x0', x0);
 if constr_variant==0
-	ocp_model.set('constr_Jbx', eye(nx));
-	ocp_model.set('constr_lbx', lb);
-	ocp_model.set('constr_ubx', ub);
+    ocp_model.set('constr_Jbx', eye(nx));
+    ocp_model.set('constr_lbx', lb);
+    ocp_model.set('constr_ubx', ub);
 else
-	ocp_model.set('constr_expr_h', model.expr_h);
-	ocp_model.set('constr_lh', lb);
-	ocp_model.set('constr_uh', ub);
-	ocp_model.set('constr_expr_h_e', model.expr_h_e);
-	ocp_model.set('constr_lh_e', lb);
-	ocp_model.set('constr_uh_e', ub);
+    ocp_model.set('constr_expr_h', model.expr_h);
+    ocp_model.set('constr_lh', lb);
+    ocp_model.set('constr_uh', ub);
+    ocp_model.set('constr_expr_h_e', model.expr_h_e);
+    ocp_model.set('constr_lh_e', lb);
+    ocp_model.set('constr_uh_e', ub);
 end
 
 
@@ -188,11 +182,11 @@ ocp_opts.set('regularize_method', regularize_method);
 ocp_opts.set('nlp_solver_ext_qp_res', nlp_solver_ext_qp_res);
 ocp_opts.set('nlp_solver_step_length', nlp_solver_step_length);
 if (strcmp(nlp_solver, 'sqp'))
-	ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
-	ocp_opts.set('nlp_solver_tol_stat', nlp_solver_tol_stat);
-	ocp_opts.set('nlp_solver_tol_eq', nlp_solver_tol_eq);
-	ocp_opts.set('nlp_solver_tol_ineq', nlp_solver_tol_ineq);
-	ocp_opts.set('nlp_solver_tol_comp', nlp_solver_tol_comp);
+    ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
+    ocp_opts.set('nlp_solver_tol_stat', nlp_solver_tol_stat);
+    ocp_opts.set('nlp_solver_tol_eq', nlp_solver_tol_eq);
+    ocp_opts.set('nlp_solver_tol_ineq', nlp_solver_tol_ineq);
+    ocp_opts.set('nlp_solver_tol_comp', nlp_solver_tol_comp);
 end
 ocp_opts.set('qp_solver', qp_solver);
 % overwrite default qp solver tol which is same as nlp tol
@@ -201,15 +195,19 @@ ocp_opts.set('qp_solver', qp_solver);
 %ocp_opts.set('qp_solver_tol_ineq', qp_solver_tol_ineq);
 %ocp_opts.set('qp_solver_tol_comp', qp_solver_tol_comp);
 if (strcmp(qp_solver, 'partial_condensing_hpipm'))
-	ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
-	ocp_opts.set('qp_solver_cond_ric_alg', qp_solver_cond_ric_alg);
-	ocp_opts.set('qp_solver_ric_alg', qp_solver_ric_alg);
-	ocp_opts.set('qp_solver_warm_start', qp_solver_warm_start);
+    ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
+    ocp_opts.set('qp_solver_cond_ric_alg', qp_solver_cond_ric_alg);
+    ocp_opts.set('qp_solver_ric_alg', qp_solver_ric_alg);
+    ocp_opts.set('qp_solver_warm_start', qp_solver_warm_start);
 end
 ocp_opts.set('sim_method', ocp_sim_method);
 ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', ocp_sim_method_num_steps);
 ocp_opts.set('sim_method_newton_iter', ocp_sim_method_newton_iter);
+
+ocp_opts.set('exact_hess_dyn', 1);
+ocp_opts.set('exact_hess_cost', 1);
+ocp_opts.set('exact_hess_constr', 1);
 
 
 
@@ -226,7 +224,7 @@ status = ocp.get('status');
 sqp_iter = ocp.get('sqp_iter');
 sqp_time = ocp.get('time_tot');
 %if status ~= 0
-%	keyboard
+%    keyboard
 %end
 
 format short e
@@ -238,9 +236,4 @@ z_traj = ocp.get('z');
 
 diff_x_z = x_traj(:,1:N) - z_traj
 
-
-
-% if is_octave()
-%     waitforbuttonpress;
-% end
 
