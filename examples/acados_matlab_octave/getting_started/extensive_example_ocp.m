@@ -249,6 +249,14 @@ for i=1:n_executions
     end
 end
 
+% get slack values
+for i = 0:N-1
+    sl = ocp.get('sl', i);
+    su = ocp.get('su', i);
+    t = ocp.get('t', i);
+end
+sl = ocp.get('sl', N);
+su = ocp.get('su', N);
 
 %% plot average compuation times
 if ~is_octave()
