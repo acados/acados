@@ -60,6 +60,7 @@ classdef ocp_nlp_solver_options_json < handle
         exact_hess_cost
         exact_hess_constr
         exact_hess_dyn
+        ext_cost_custom_hessian
 
     end
     methods
@@ -87,6 +88,7 @@ classdef ocp_nlp_solver_options_json < handle
             obj.exact_hess_cost = 1;
             obj.exact_hess_constr = 1;
             obj.exact_hess_dyn = 1;
+            obj.ext_cost_custom_hessian = 0;
 
         end
     end
