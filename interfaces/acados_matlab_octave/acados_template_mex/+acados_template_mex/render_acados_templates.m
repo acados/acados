@@ -67,6 +67,11 @@ function render_acados_templates(acados_ocp_nlp_json_file)
     out_file = ['main_', model_name, '.c'];
     render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
 
+    % main_sim
+    template_file = 'main_sim.in.c';
+    out_file = ['main_sim_', model_name, '.c'];
+    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+
     % make_main_mex
     template_file = 'make_main_mex.in.m';
     out_file = ['make_main_mex_', model_name, '.m'];
