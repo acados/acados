@@ -135,6 +135,10 @@ def sim_render_templates(json_file, model_name):
     out_file = 'Makefile'
     render_template(in_file, out_file, template_dir, json_path)
 
+    in_file = 'main_sim.in.c'
+    out_file = 'main_sim_{}.c'.format(model_name)
+    render_template(in_file, out_file, template_dir, json_path)
+
     ## folder model
     template_dir = 'c_generated_code/{}_model/'.format(model_name)
 
