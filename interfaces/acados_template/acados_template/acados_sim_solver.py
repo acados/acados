@@ -50,7 +50,6 @@ from .utils import is_column, render_template, format_class_dict, np_array_to_li
 def make_sim_dims_consistent(acados_sim):
     dims = acados_sim.dims
     model = acados_sim.model
-
     # nx
     if is_column(model.x):
         dims.nx = model.x.shape[0]
@@ -230,6 +229,7 @@ class AcadosSimSolver:
             'S_forw': nx*(nx+nu),
             'Sx': nx*nx,
             'Su': nx*nu,
+            'S_adj': nx+nu,
         }
 
         self.settable = ['S_adj', 'T', 'x', 'u', 'xdot', 'z', 'p'] # S_forw
@@ -269,7 +269,8 @@ class AcadosSimSolver:
                 out = out.reshape(nx, nu, order='F')
 
         else:
-            raise Exception(f'acados_solver.set(): Unknown field {field}, available fiels are {",".join(self.gettable.keys())}')
+            raise Exception(f'acados_solver.get(): Unknown field {field_},' \
+                f' available fields are {",".join(self.gettable.keys())}')
 
         return out
 
@@ -298,7 +299,8 @@ class AcadosSimSolver:
             self.shared_lib.sim_in_set.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
             self.shared_lib.sim_in_set(self.sim_config, self.sim_dims, self.sim_in, field, value_data_p)
         else:
-            raise Exception(f'acados_solver.set(): Unknown field {field}, available fiels are {",".join(self.settable)}')
+            raise Exception(f'acados_solver.set(): Unknown field {field_},' \
+                f' available fields are {",".join(self.settable)}')
 
         return
 
