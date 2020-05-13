@@ -1338,6 +1338,15 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
             blasfeo_dgemm_nn(nu+nx, nu+nx, nz, 1.0, memory->dzduxt, 0, 0, &work->tmp_nz_nv, 0, 0,
                              1.0, &work->tmp_nv_nv, 0, 0, &work->tmp_nv_nv, 0, 0);
 
+            // TODO(oj): test and use the following
+            // More efficient to compute as: ( dzduxt * hess_z' ) * dzduxt, exploiting symmetry
+            // blasfeo_dgemm_nt(nx+nu, nz, nz, 1.0, memory->dzduxt, 0, 0, &work->hess_z, 0, 0,
+            //                  0.0, &work->tmp_nv_nz, 0, 0, &work->tmp_nv_nz, 0, 0);
+            // blasfeo_dsyrk_ln(nx+nu, nz, 1.0, &work->tmp_nv_nz, 0, 0, &work->hess_z, 0, 0,
+            //                  0.0, &work->tmp_nv_nv, 0, 0, &work->tmp_nv_nv, 0, 0);
+            // blasfeo_dtrcp_l(nz, &work->tmp_nv_nv, 0, 0, &work->tmp_nv_nv, 0, 0);
+
+
             // tmp_nv_nv: h hessian contribution
             blasfeo_dgead(nu+nx, nu+nx, 1.0, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
 
