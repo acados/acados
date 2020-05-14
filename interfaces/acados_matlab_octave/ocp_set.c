@@ -456,6 +456,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             ocp_nlp_out_set(config, dims, out, ii, "pi", value+ii*nx);
         }
     }
+    else if (!strcmp(field, "init_lam"))
+    {
+        for (int ii=s0; ii<se; ii++)
+        {
+            int nlam = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "lam");
+            MEX_DIM_CHECK_VEC(fun_name, "lam", nrow*ncol, nlam);
+
+            ocp_nlp_out_set(config, dims, out, ii, "lam", value);
+        }
+    }
+    else if (!strcmp(field, "init_t"))
+    {
+        for (int ii=s0; ii<se; ii++)
+        {
+            int nt = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "t");
+            MEX_DIM_CHECK_VEC(fun_name, "t", nrow*ncol, nt);
+
+            ocp_nlp_out_set(config, dims, out, ii, "t", value);
+        }
+    }
     else if (!strcmp(field, "p"))
     {
         // mexPrintf("ocp_set p: nrhs %d \n", nrhs);
