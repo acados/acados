@@ -114,13 +114,10 @@ def generate_c_code_constraint( model, con_name, is_terminal, opts ):
             else:
                 fun_name = con_name + '_constr_h_fun_jac_uxt_zt'
 
-            jac_x = jacobian(con_h_expr, x)
-            jac_u = jacobian(con_h_expr, u)
-            jac_z = jacobian(con_h_expr, z)
-            constraint_fun_jac_tran = \
-                Function(fun_name, [x, u, z, p], \
-                    [con_h_expr, vertcat(transpose(jac_u), \
-                    transpose(jac_x)), transpose(jac_z)])
+            jac_ux_t = transpose(jacobian(con_h_expr, vertcat(u,x)))
+            jac_z_t = jacobian(con_h_expr, z)
+            constraint_fun_jac_tran = Function(fun_name, [x, u, z, p], \
+                    [con_h_expr, jac_ux_t, jac_z_t])
 
             constraint_fun_jac_tran.generate(fun_name, casadi_opts)
             if opts['generate_hess']:
@@ -132,15 +129,16 @@ def generate_c_code_constraint( model, con_name, is_terminal, opts ):
 
                 # adjoint
                 adj_ux = jtimes(con_h_expr, vertcat(u, x), lam_h, True)
-
                 # hessian
                 hess_ux = jacobian(adj_ux, vertcat(u, x))
+
+                adj_z = jtimes(con_h_expr, z, lam_h, True)
+                hess_z = jacobian(adj_z, z)
 
                 # set up functions
                 constraint_fun_jac_tran_hess = \
                     Function(fun_name, [x, u, lam_h, z, p], \
-                    [con_h_expr, vertcat(transpose(jac_u), \
-                    transpose(jac_x)), hess_ux])
+                      [con_h_expr, jac_ux_t, hess_ux, jac_z_t, hess_z])
 
                 # generate C code
                 constraint_fun_jac_tran_hess.generate(fun_name, casadi_opts)

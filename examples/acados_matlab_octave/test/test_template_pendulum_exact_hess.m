@@ -36,11 +36,9 @@ clear all
 
 addpath('../pendulum_on_cart_model')
 
-check_acados_requirements()
-
-print_level = 1;
+print_level = 0; % 3
 %% discretization
-N = 50;
+N = 100;
 h = 0.01;
 T = N*h; % time horizon length
 
@@ -55,7 +53,7 @@ qp_solver = 'partial_condensing_hpipm';
 qp_solver_cond_N = 5; % for partial condensing
 qp_solver_cond_ric_alg = 0;
 qp_solver_ric_alg = 0;
-qp_solver_warm_start = 1; % 0: cold, 1: warm, 2: hot
+qp_solver_warm_start = 0; % 0: cold, 1: warm, 2: hot
 qp_solver_iter_max = 100;
 sim_method_num_stages = 4;
 sim_method_num_steps = 1;
@@ -77,7 +75,7 @@ nh = nu;
 nh_e = 0;
 
 %% cost formulation
-cost_formulation = 3;
+cost_formulation = 1;
 switch cost_formulation
     case 1
         cost_type = 'linear_ls';
@@ -130,10 +128,6 @@ else % external, auto
     ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
 end
 
-% constraints
-%Jbx = zeros(nbx, nx); for ii=1:nbx Jbx(ii,ii)=1.0; end
-%lbx = -4*ones(nbx, 1);
-%ubx =  4*ones(nbx, 1);
 Jbu = zeros(nbu, nu); for ii=1:nbu Jbu(ii,ii)=1.0; end
 lbu = -80*ones(nu, 1);
 ubu =  80*ones(nu, 1);
@@ -210,84 +204,34 @@ ocp = acados_ocp(ocp_model, ocp_opts);
 x_traj_init = [linspace(0, 0, N+1); linspace(pi, 0, N+1); linspace(0, 0, N+1); linspace(0, 0, N+1)];
 u_traj_init = zeros(nu, N);
 
-%% prepare evaluation
-n_executions = 1;
-time_tot = zeros(n_executions,1);
-time_lin = zeros(n_executions,1);
-time_reg = zeros(n_executions,1);
-time_qp_sol = zeros(n_executions,1);
-
+%% test native ocp solver
+% initial state
+ocp.set('constr_x0', x0);
 ocp.set('print_level', print_level)
 
-%% call ocp solver in loop
-for i=1:n_executions
-    
-    % initial state
-    ocp.set('constr_x0', x0);
+% set trajectory initialization
+ocp.set('init_x', x_traj_init);
+ocp.set('init_u', u_traj_init);
+ocp.set('init_pi', zeros(nx, N))
 
-    % set trajectory initialization
-    ocp.set('init_x', x_traj_init);
-    ocp.set('init_u', u_traj_init);
-    ocp.set('init_pi', zeros(nx, N))
+% solve
+ocp.solve();
+% get solution
+utraj = ocp.get('u');
+xtraj = ocp.get('x');
 
-    % solve
-    ocp.solve();
-    % get solution
-    utraj = ocp.get('u');
-    xtraj = ocp.get('x');
+ocp.print('stat')
 
-    %% evaluation
-    status = ocp.get('status');
-    sqp_iter = ocp.get('sqp_iter');
-    time_tot(i) = ocp.get('time_tot');
-    time_lin(i) = ocp.get('time_lin');
-    time_reg(i) = ocp.get('time_reg');
-    time_qp_sol(i) = ocp.get('time_qp_sol');
-
-    if i == 1 || i == n_executions
-        ocp.print('stat')
-    end
-end
-
-% get slack values
-for i = 0:N-1
-    sl = ocp.get('sl', i);
-    su = ocp.get('su', i);
-    t = ocp.get('t', i);
-end
-sl = ocp.get('sl', N);
-su = ocp.get('su', N);
-
-%% plot average compuation times
-if ~is_octave()
-    time_total = sum(time_tot);
-    time_linearize = sum(time_lin);
-    time_regulariz = sum(time_reg);
-    time_qp_solution = sum(time_qp_sol);
-
-    figure;
-
-    bar_vals = 1000 * [time_linearize; time_regulariz; time_qp_solution; ...
-        time_total - time_linearize - time_regulariz - time_qp_solution] / n_executions;
-    bar([1; nan], [bar_vals, nan(size(bar_vals))]' ,'stacked')
-    legend('linearization', 'regularization', 'qp solution', 'remaining')
-    ylabel('time in [ms]')
-    title( [ strrep(cost_type, '_',' '), ' , sim: ' strrep(sim_method, '_',' '), ...
-       ';  ', strrep(qp_solver, '_', ' ')] )
-end
-
-
-%% test templated solver
+%% test templated ocp solver
 disp('testing templated solver');
 ocp.generate_c_code;
 cd c_generated_code/
 command = strcat('t_ocp = ', model_name, '_mex_solver');
 eval( command );
 
-t_ocp.set('print_level', print_level)
-
 % initial state
 t_ocp.set('constr_x0', x0);
+t_ocp.set('print_level', print_level)
 
 % set trajectory initialization
 t_ocp.set('init_x', x_traj_init);
@@ -305,3 +249,9 @@ t_ocp.print('stat')
 
 clear t_ocp
 cd ..
+
+if any([error_X_mex_vs_mex_template, error_U_mex_vs_mex_template] > tol)
+    error(['test_template_pendulum_exact_hess: solution of templated MEX and original MEX',...
+         ' differ too much. Should be < tol = ' num2str(tol)]);
+end
+

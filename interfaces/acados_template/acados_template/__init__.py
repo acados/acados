@@ -40,3 +40,4 @@ from .acados_ocp import *
 from .acados_sim import *
 from .acados_ocp_solver import *
 from .acados_sim_solver import *
+from .utils import *

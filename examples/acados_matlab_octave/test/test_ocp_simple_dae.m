@@ -31,16 +31,11 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
+addpath('../simple_dae_model');
 %% test of native matlab interface
 clear all
 
 model_name = 'simple_dae';
-
-% check that env.sh has been run
-env_run = getenv('ENV_RUN');
-if (~strcmp(env_run, 'true'))
-    error('env.sh has not been sourced! Before executing this example, run: source env.sh');
-end
 
 %% options
 compile_interface = 'auto'; % true, false
@@ -234,6 +229,9 @@ u_traj = ocp.get('u');
 pi_traj = ocp.get('pi');
 z_traj = ocp.get('z');
 
-diff_x_z = x_traj(:,1:N) - z_traj
-
-
+diff_x_z = x_traj(:,1:N) - z_traj;
+max_diff_x_z = max(max(abs(diff_x_z)));
+test_tol = 1e-14;
+if max_diff_x_z > test_tol
+    error(['test_ocp_simple_dae: diff_x_z > ' num2str(test_tol), ' is ' num2str(max_diff_x_z)]);
+end

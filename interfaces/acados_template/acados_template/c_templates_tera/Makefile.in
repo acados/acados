@@ -175,6 +175,9 @@ SIM_OBJ+= acados_sim_solver_{{ model.name }}.o
 EX_OBJ=
 EX_OBJ+= main_{{ model.name}}.o
 
+EX_SIM_OBJ=
+EX_SIM_OBJ+= main_sim_{{ model.name}}.o
+
 OBJ=
 OBJ+= $(MODEL_OBJ)
 OBJ+= $(SIM_OBJ)
@@ -191,7 +194,7 @@ EXTERNAL_LIB+= {{ model_external_shared_lib_name }}
 INCLUDE_PATH = {{ acados_include_path }}
 LIB_PATH = {{ acados_lib_path }}
 
-all: clean casadi_fun main ocp_solver sim_solver example
+all: clean casadi_fun main main_sim ocp_solver sim_solver example example_sim
 shared_lib: bundled_shared_lib ocp_shared_lib sim_shared_lib
 
 CASADI_MODEL_SOURCE= 
@@ -289,6 +292,10 @@ main:
 	-I $(INCLUDE_PATH)/qpOASES_e/
 	{%- endif %}
 
+main_sim:
+	gcc $(ACADOS_FLAGS) -c main_sim_{{ model.name }}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
+	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/
+
 ocp_solver:
 	gcc $(ACADOS_FLAGS) -c acados_solver_{{ model.name }}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ \
@@ -318,6 +325,18 @@ example:
 	{%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
 	-I $(INCLUDE_PATH)/qpOASES_e/
 	{%- endif %}
+
+
+example_sim: sim_solver main_sim
+	gcc $(ACADOS_FLAGS) -o main_sim_{{ model.name}} $(EX_SIM_OBJ) $(OBJ) -L $(LIB_PATH) \
+	-L $(LIB_PATH) \
+	-lacados -lhpipm -lblasfeo \
+	-lm \
+	-I $(INCLUDE_PATH)/blasfeo/include/ \
+	-I $(INCLUDE_PATH)/hpipm/include/ \
+	-I $(INCLUDE_PATH) \
+	-I $(INCLUDE_PATH)/acados/ \
+
 
 bundled_shared_lib: casadi_fun ocp_solver sim_solver
 	gcc $(ACADOS_FLAGS) -shared -o libacados_solver_{{ model.name }}.so $(OBJ) \

@@ -49,7 +49,8 @@ from .generate_c_code_external_cost import generate_c_code_external_cost
 from .acados_ocp import AcadosOcp
 from .acados_model import acados_model_strip_casadi_symbolics
 from .utils import is_column, is_empty, casadi_length, render_template, acados_class2dict,\
-     format_class_dict, ocp_check_against_layout, np_array_to_list, make_model_consistent
+     format_class_dict, ocp_check_against_layout, np_array_to_list, make_model_consistent,\
+     set_up_imported_gnsf_model
 
 
 def make_ocp_dims_consistent(acados_ocp):
@@ -394,58 +395,6 @@ def make_ocp_dims_consistent(acados_ocp):
         raise Exception(f'Inconsistent discretization: {opts.tf}'\
             f' = tf != sum(opts.time_steps) = {tf}.')
 
-
-
-def set_up_imported_gnsf_model(acados_ocp):
-
-    gnsf = acados_ocp.gnsf_model
-
-    # check CasADi version
-    dump_casadi_version = gnsf['casadi_version']
-    casadi_version = CasadiMeta.version()
-
-    if not casadi_version == dump_casadi_version:
-        raise Exception("GNSF model was dumped with another CasADi version.\n"
-                + "Please use the same version for compatibility, serialize version:"
-                + dump_casadi_version + " current Python CasADi verison: " + casadi_version)
-
-    # load model
-    phi_fun = Function.deserialize(gnsf['phi_fun'])
-    phi_fun_jac_y = Function.deserialize(gnsf['phi_fun_jac_y'])
-    phi_jac_y_uhat = Function.deserialize(gnsf['phi_jac_y_uhat'])
-    get_matrices_fun = Function.deserialize(gnsf['get_matrices_fun'])
-
-    # obtain gnsf dimensions
-    size_gnsf_A = get_matrices_fun.size_out(0)
-    acados_ocp.dims.gnsf_nx1 = size_gnsf_A[1]
-    acados_ocp.dims.gnsf_nz1 = size_gnsf_A[0] - size_gnsf_A[1]
-    acados_ocp.dims.gnsf_nuhat = max(phi_fun.size_in(1))
-    acados_ocp.dims.gnsf_ny = max(phi_fun.size_in(0))
-    acados_ocp.dims.gnsf_nout = max(phi_fun.size_out(0))
-
-    # save gnsf functions in model
-    acados_ocp.model.phi_fun = phi_fun
-    acados_ocp.model.phi_fun_jac_y = phi_fun_jac_y
-    acados_ocp.model.phi_jac_y_uhat = phi_jac_y_uhat
-    acados_ocp.model.get_matrices_fun = get_matrices_fun
-
-    if "f_lo_fun_jac_x1k1uz" in gnsf:
-        f_lo_fun_jac_x1k1uz = Function.deserialize(gnsf['f_lo_fun_jac_x1k1uz'])
-        acados_ocp.model.f_lo_fun_jac_x1k1uz = f_lo_fun_jac_x1k1uz
-    else:
-        dummy_var_x1 = SX.sym('dummy_var_x1', acados_ocp.dims.gnsf_nx1)
-        dummy_var_x1dot = SX.sym('dummy_var_x1dot', acados_ocp.dims.gnsf_nx1)
-        dummy_var_z1 = SX.sym('dummy_var_z1', acados_ocp.dims.gnsf_nz1)
-        dummy_var_u = SX.sym('dummy_var_z1', acados_ocp.dims.nu)
-        dummy_var_p = SX.sym('dummy_var_z1', acados_ocp.dims.np)
-        empty_var = SX.sym('empty_var', 0, 0)
-
-        empty_fun = Function('empty_fun', \
-            [dummy_var_x1, dummy_var_x1dot, dummy_var_z1, dummy_var_u, dummy_var_p],
-                [empty_var])
-        acados_ocp.model.f_lo_fun_jac_x1k1uz = empty_fun
-
-    del acados_ocp.gnsf_model
 
 
 def get_ocp_nlp_layout():

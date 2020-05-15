@@ -110,6 +110,19 @@ else
     np = 0;
 end
 
+% avoid SX of size 0x1
+if any(size(u) == 0)
+    u = SX.sym('u', 0, 0);
+    nu = 0;
+end
+if any(size(z) == 0)
+    z = SX.sym('z', 0, 0);
+    nz = 0;
+end
+if any(size(p) == 0)
+    p = SX.sym('p', 0, 0);
+    np = 0;
+end
 
 %% initialize gnsf struct
 % dimensions

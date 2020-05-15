@@ -43,12 +43,6 @@ function ocp_generate_c_code(obj)
         % TODO: add
         % nonlinear least-squares
         % external cost
-    elseif ~strcmp( obj.opts_struct.nlp_solver_exact_hessian, 'false')
-        error(['mex templating does only support nlp_solver_exact_hessian = "false",',...
-            'i.e. Gauss-Newton Hessian approximation for now.\n',...
-            'Got nlp_solver_exact_hessian = "%s"\n. Notice that it might still be possible to solve the OCP from MATLAB.'],...
-            obj.opts_struct.nlp_solver_exact_hessian);
-        % TODO: add exact Hessian
     elseif strcmp( obj.model_struct.dyn_type, 'discrete')
         error('mex templating does only support discrete dynamics for now. Notice that it might still be possible to solve the OCP from MATLAB.');
         % TODO: implement
@@ -57,13 +51,17 @@ function ocp_generate_c_code(obj)
         % TODO: implement
     end
 
+    %% create folder
+    if ~exist('c_generated_code', 'dir')
+        mkdir(fullfile(pwd, 'c_generated_code'))
+    end
     %% generate C code for CasADi functions
     % dynamics
     if (strcmp(obj.model_struct.dyn_type, 'explicit'))
         generate_c_code_explicit_ode(obj.acados_ocp_nlp_json.model);
     elseif (strcmp(obj.model_struct.dyn_type, 'implicit'))
         if (strcmp(obj.opts_struct.sim_method, 'irk'))
-            opts.generate_hess = 1;
+            opts.sens_hess = 'true';
             generate_c_code_implicit_ode(...
                 obj.acados_ocp_nlp_json.model, opts);
         end

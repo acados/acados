@@ -144,9 +144,9 @@ x_t = t_ocp.get('x');
 status = t_ocp.get('status');
 
 if status~=0
-    error('test_ocp_templated_mex: solution of templated MEX failed!');
+    error('test_template_pendulum_ocp: solution of templated MEX failed!');
 else
-    fprintf('\ntest_ocp_templated_mex: templated MEX success!\n');
+    fprintf('\ntest_template_pendulum_ocp: templated MEX success!\n');
 end
 
 
@@ -158,11 +158,11 @@ err_x = max(max(abs(x_ref - x_t)))
 tol_x = 1e-6;
 tol_u = 1e-5;
 if err_x > tol_x
-    error(['test_ocp_templated_mex: solution of templated MEX and original MEX',...
+    error(['test_template_pendulum_ocp: solution of templated MEX and original MEX',...
          ' differ too much. error in states is ', num2str(err_x),...
          '. Should be less then ', num2str(tol_x) ]);
 elseif err_u > tol_u
-    error(['test_ocp_templated_mex: solution of templated MEX and original MEX',...
+    error(['test_template_pendulum_ocp: solution of templated MEX and original MEX',...
          ' differ too much. error in controls is ', num2str(err_x),...
          '. Should be less then ', num2str(tol_x) ]);
 end

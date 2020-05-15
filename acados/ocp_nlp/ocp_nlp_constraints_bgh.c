@@ -1112,7 +1112,9 @@ int ocp_nlp_constraints_bgh_workspace_calculate_size(void *config_, void *dims_,
 
     size += 1 * blasfeo_memsize_dmat(nu+nx, nu+nx); // tmp_nv_nv
     size += 1 * blasfeo_memsize_dmat(nz, nh);       // tmp_nz_nh
+    size += 1 * blasfeo_memsize_dmat(nz, nx+nu);       // tmp_nz_nv
     size += 1 * blasfeo_memsize_dmat(nx+nu, nh);    // tmp_nv_nh
+    size += 1 * blasfeo_memsize_dmat(nz, nz);    // hess_z
     size += 1 * blasfeo_memsize_dvec(nb+ng+nh+ns);  // tmp_ni
     size += 1 * blasfeo_memsize_dvec(nh);           // tmp_nh
 
@@ -1151,6 +1153,12 @@ static void ocp_nlp_constraints_bgh_cast_workspace(void *config_, void *dims_, v
 
     // tmp_nv_nh
     assign_and_advance_blasfeo_dmat_mem(nx + nu, nh, &work->tmp_nv_nh, &c_ptr);
+
+    // hess_z
+    assign_and_advance_blasfeo_dmat_mem(nz, nz, &work->hess_z, &c_ptr);
+
+    // tmp_nz_nv
+    assign_and_advance_blasfeo_dmat_mem(nz, nx+nu, &work->tmp_nz_nv, &c_ptr);
 
     // tmp_ni
     assign_and_advance_blasfeo_dvec_mem(nb+ng+nh+ns, &work->tmp_ni, &c_ptr);
@@ -1237,10 +1245,10 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
     int nh = dims->nh;
     int ns = dims->ns;
 
-    ext_fun_arg_t ext_fun_type_in[3];
-    void *ext_fun_in[3];
-    ext_fun_arg_t ext_fun_type_out[3];
-    void *ext_fun_out[3];
+    ext_fun_arg_t ext_fun_type_in[4];
+    void *ext_fun_in[4];
+    ext_fun_arg_t ext_fun_type_out[5];
+    void *ext_fun_out[5];
 
     // box
     blasfeo_dvecex_sp(nb, 1.0, model->idxb, memory->ux, 0, &work->tmp_ni, 0);
@@ -1283,10 +1291,10 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
         // TODO check that it is correct, as it prevents convergence !!!!!
         if (opts->compute_hess)
         {
-            if (nz > 0) {
-                printf("ocp_nlp_constraints_bgh: opts->compute_hess is set to 1, but exact Hessians are not available (yet) when nz > 0. Exiting.\n");
-                exit(1);
-            }
+            // if (nz > 0) {
+            //     printf("ocp_nlp_constraints_bgh: opts->compute_hess is set to 1, but exact Hessians are not available (yet) when nz > 0. Exiting.\n");
+            //     exit(1);
+            // }
 
             struct blasfeo_dvec_args mult_in;  // multipliers of external fun;
             mult_in.x = &work->tmp_nh;
@@ -1307,19 +1315,46 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
             ext_fun_in[1] = &u_in;
             ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
             ext_fun_in[2] = &mult_in;
+            ext_fun_type_in[3] = BLASFEO_DVEC_ARGS;
+            ext_fun_in[3] = &z_in;
 
             ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
             ext_fun_out[0] = &fun_out;  // fun: nh
             ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
-            ext_fun_out[1] = &jac_tran_out;  // jac': (nu+nx) * nh
+            ext_fun_out[1] = &jac_tran_out;  // jac_ux': (nu+nx) * nh
             ext_fun_type_out[2] = BLASFEO_DMAT_ARGS;
             ext_fun_out[2] = &hess_out;  // hess*mult: (nu+nx) * (nu+nx)
+            ext_fun_type_out[3] = BLASFEO_DMAT_ARGS;
+            ext_fun_out[3] = &jac_z_tran_out;  // jac_z': nz * nh
+            ext_fun_type_out[4] = BLASFEO_DMAT;
+            ext_fun_out[4] = &work->hess_z;  // hess_z*mult: nz * nz
 
             model->nl_constr_h_fun_jac_hess->evaluate(model->nl_constr_h_fun_jac_hess,
                     ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
+            // tmp_nv_nv += dzdxu^T * (hess_z * dzdxu)
+            blasfeo_dgemm_nt(nz, nu+nx, nz, 1.0, &work->hess_z, 0, 0, memory->dzduxt, 0, 0,
+                             0.0, &work->tmp_nz_nv, 0, 0, &work->tmp_nz_nv, 0, 0);
+            blasfeo_dgemm_nn(nu+nx, nu+nx, nz, 1.0, memory->dzduxt, 0, 0, &work->tmp_nz_nv, 0, 0,
+                             1.0, &work->tmp_nv_nv, 0, 0, &work->tmp_nv_nv, 0, 0);
+
+            // TODO(oj): test and use the following
+            // More efficient to compute as: ( dzduxt * hess_z' ) * dzduxt, exploiting symmetry
+            // blasfeo_dgemm_nt(nx+nu, nz, nz, 1.0, memory->dzduxt, 0, 0, &work->hess_z, 0, 0,
+            //                  0.0, &work->tmp_nv_nz, 0, 0, &work->tmp_nv_nz, 0, 0);
+            // blasfeo_dsyrk_ln(nx+nu, nz, 1.0, &work->tmp_nv_nz, 0, 0, &work->hess_z, 0, 0,
+            //                  0.0, &work->tmp_nv_nv, 0, 0, &work->tmp_nv_nv, 0, 0);
+            // blasfeo_dtrcp_l(nz, &work->tmp_nv_nv, 0, 0, &work->tmp_nv_nv, 0, 0);
+
+
+            // tmp_nv_nv: h hessian contribution
             blasfeo_dgead(nu+nx, nu+nx, 1.0, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
 
+            // tmp_nv_nh = dzduxt * jac_z_tran
+            blasfeo_dgemm_nn(nu+nx, nh, nz, 1.0, memory->dzduxt, 0, 0, &work->tmp_nz_nh, 0, 0, 0.0,
+                             &work->tmp_nv_nh, 0, 0, &work->tmp_nv_nh, 0, 0);
+            // update DCt
+            blasfeo_dgead(nu+nx, nh, 1.0, &work->tmp_nv_nh, 0, 0, memory->DCt, ng, 0);
         }
         else
         {
@@ -1333,9 +1368,9 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
             ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
             ext_fun_out[0] = &fun_out;  // fun: nh
             ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
-            ext_fun_out[1] = &jac_tran_out;  // jac': (nu+nx) * nh
+            ext_fun_out[1] = &jac_tran_out;  // jac_ux': (nu+nx) * nh
             ext_fun_type_out[2] = BLASFEO_DMAT_ARGS;
-            ext_fun_out[2] = &jac_z_tran_out;  // jac': nz * nh
+            ext_fun_out[2] = &jac_z_tran_out;  // jac_z': nz * nh
 
             model->nl_constr_h_fun_jac->evaluate(model->nl_constr_h_fun_jac, ext_fun_type_in,
                                                     ext_fun_in, ext_fun_type_out, ext_fun_out);
@@ -1345,20 +1380,25 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
             // h(\bar{x}, \bar{u}, \bar{z}) +
             // dhdx*(x - \bar{x}) +
             // dhdu*(u - \bar{u}) +
-            // dhdz*(z - \bar{z}) =
-            //
+            // dhdz*(z - \bar{z})
+            // =
             // h(\bar{x}, \bar{u}, \bar{z}) - dhdz*dzdx*\bar{x} - dhdz*dzdu*\bar{u} +
             // (dhdx + dhdz*dzdx)*(x - \bar{x}) +
             // (dhdu + dhdz*dzdu)*(u - \bar{u})
 
-            // update DCt
+            // tmp_nv_nh = dzduxt * jac_z_tran
             blasfeo_dgemm_nn(nu+nx, nh, nz, 1.0, memory->dzduxt, 0, 0, &work->tmp_nz_nh, 0, 0, 0.0,
                              &work->tmp_nv_nh, 0, 0, &work->tmp_nv_nh, 0, 0);
+            // update DCt
             blasfeo_dgead(nu+nx, nh, 1.0, &work->tmp_nv_nh, 0, 0, memory->DCt, ng, 0);
-            // update memory->fun
-            blasfeo_dgemv_t(nu+nx, nh, -1.0, &work->tmp_nv_nh, 0, 0, memory->ux, 0, 1.0,
-                            &memory->fun, 0, &memory->fun, 0);
         }
+    }
+
+    if (nz > 0)
+    {
+        // update memory->fun wrt z
+        blasfeo_dgemv_t(nu+nx, nh, -1.0, &work->tmp_nv_nh, 0, 0, memory->ux, 0, 1.0,
+                        &memory->fun, 0, &memory->fun, 0);
     }
 
     blasfeo_daxpy(nb+ng+nh, -1.0, &work->tmp_ni, 0, &model->d, 0, &memory->fun, 0);

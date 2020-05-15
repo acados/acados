@@ -118,7 +118,7 @@ external_function_param_casadi * hess_vde_casadi;
 external_function_param_casadi * impl_dae_fun;
 external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
 external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
-{% if solver_options.hessian_approx == "EXACT" %}
+{%- if solver_options.hessian_approx == "EXACT" %}
 external_function_param_casadi * impl_dae_hess;
 {%- endif %}
 {%- elif solver_options.integrator_type == "GNSF" %}
@@ -129,10 +129,10 @@ external_function_param_casadi * gnsf_f_lo_jac_x1_x1dot_u_z;
 external_function_param_casadi * gnsf_get_matrices_fun;
 {%- endif %}
 
-{%- if constraints.constr_type == "BGH" %}
-external_function_param_casadi * nl_constr_h_fun_jac;
+{% if constraints.constr_type == "BGH" %}
 external_function_param_casadi * nl_constr_h_fun;
-{% if solver_options.hessian_approx == "EXACT" %}
+external_function_param_casadi * nl_constr_h_fun_jac;
+{%- if solver_options.hessian_approx == "EXACT" %}
 external_function_param_casadi * nl_constr_h_fun_jac_hess;
 {%- endif %}
 {%- elif constraints.constr_type == "BGP" %}
@@ -140,10 +140,10 @@ external_function_param_casadi * phi_constraint;
 // external_function_param_casadi * r_constraint;
 {%- endif %}
 
-{%- if constraints.constr_type_e == "BGH" %}
+{% if constraints.constr_type_e == "BGH" %}
 external_function_param_casadi nl_constr_h_e_fun_jac;
 external_function_param_casadi nl_constr_h_e_fun;
-{% if solver_options.hessian_approx == "EXACT" %}
+{%- if solver_options.hessian_approx == "EXACT" %}
 external_function_param_casadi nl_constr_h_e_fun_jac_hess;
 {%- endif %}
 {%- elif constraints.constr_type_e == "BGP" %}
@@ -1416,6 +1416,7 @@ int acados_create()
 {%- endif -%}
 
 {%- if dims.nz > 0 %}
+    // TODO: these options are lower level -> should be encapsulated! maybe through hessian approx option.
     bool output_z_val = true;
     bool sens_algebraic_val = true;
 
@@ -1478,17 +1479,6 @@ int acados_create()
     double qp_solver_tol_comp = {{ solver_options.qp_solver_tol_comp }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_tol_comp", &qp_solver_tol_comp);
     {%- endif -%}
-
-    {%- if solver_options.hessian_approx == "EXACT" -%}
-    for (int i = 0; i < N; i++)
-    {
-        bool sens_hess = true;
-        bool sens_adj = true;
-
-        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_hess", &sens_hess);
-        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_adj", &sens_adj);
-    }
-    {%- endif %}
 
 {% if solver_options.nlp_solver_type == "SQP" %}
     // set SQP specific options
@@ -1776,6 +1766,13 @@ int acados_free()
         external_function_param_casadi_free(&impl_dae_hess[i]);
     {%- endif %}
     }
+    free(impl_dae_fun);
+    free(impl_dae_fun_jac_x_xdot_z);
+    free(impl_dae_jac_x_xdot_u_z);
+    {%- if solver_options.hessian_approx == "EXACT" %}
+    free(impl_dae_hess);
+    {%- endif %}
+
 {%- elif solver_options.integrator_type == "ERK" %}
     for (int i = 0; i < {{ dims.N }}; i++)
     {
@@ -1785,6 +1782,12 @@ int acados_free()
         external_function_param_casadi_free(&hess_vde_casadi[i]);
     {%- endif %}
     }
+    free(forw_vde_casadi);
+    free(expl_ode_fun);
+    {%- if solver_options.hessian_approx == "EXACT" %}
+    free(hess_vde_casadi);
+    {%- endif %}
+
 {%- elif solver_options.integrator_type == "GNSF" %}
     for (int i = 0; i < {{ dims.N }}; i++)
     {
@@ -1794,6 +1797,11 @@ int acados_free()
         external_function_param_casadi_free(&gnsf_f_lo_jac_x1_x1dot_u_z[i]);
         external_function_param_casadi_free(&gnsf_get_matrices_fun[i]);
     }
+    free(gnsf_phi_fun);
+    free(gnsf_phi_fun_jac_y);
+    free(gnsf_phi_jac_y_uhat);
+    free(gnsf_f_lo_jac_x1_x1dot_u_z);
+    free(gnsf_get_matrices_fun);
 {%- endif %}
 
     // cost
@@ -1804,12 +1812,17 @@ int acados_free()
         external_function_param_casadi_free(&cost_y_fun_jac_ut_xt[i]);
         external_function_param_casadi_free(&cost_y_hess[i]);
     }
+    free(cost_y_fun);
+    free(cost_y_fun_jac_ut_xt);
+    free(cost_y_hess);
 {%- elif cost.cost_type == "EXTERNAL" %}
     for (int i = 0; i < {{ dims.N }}; i++)
     {
         external_function_param_casadi_free(&ext_cost_fun[i]);
         external_function_param_casadi_free(&ext_cost_fun_jac_hess[i]);
     }
+    free(ext_cost_fun);
+    free(ext_cost_fun_jac_hess);
 {%- endif %}
 {%- if cost.cost_type_e == "NONLINEAR_LS" %}
     external_function_param_casadi_free(&cost_y_e_fun);
@@ -1827,18 +1840,26 @@ int acados_free()
         external_function_param_casadi_free(&nl_constr_h_fun_jac[i]);
         external_function_param_casadi_free(&nl_constr_h_fun[i]);
     }
-{%- if solver_options.hessian_approx == "EXACT" %}
+  {%- if solver_options.hessian_approx == "EXACT" %}
     for (int i = 0; i < {{ dims.N }}; i++)
     {
         external_function_param_casadi_free(&nl_constr_h_fun_jac_hess[i]);
     }
-{%- endif %}
+  {%- endif %}
+    free(nl_constr_h_fun_jac);
+    free(nl_constr_h_fun);
+  {%- if solver_options.hessian_approx == "EXACT" %}
+    free(nl_constr_h_fun_jac_hess);
+  {%- endif %}
+
 {%- elif constraints.constr_type == "BGP" and dims.nphi > 0 %}
     for (int i = 0; i < {{ dims.N }}; i++)
     {
         external_function_param_casadi_free(&phi_constraint[i]);
     }
+    free(phi_constraint);
 {%- endif %}
+
 {%- if constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
     external_function_param_casadi_free(&nl_constr_h_e_fun_jac);
     external_function_param_casadi_free(&nl_constr_h_e_fun);

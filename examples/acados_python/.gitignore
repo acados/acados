@@ -1,3 +1,4 @@
-/*/acados_ocp_nlp.json
-/*/acados_ocp.json
-/*/acados_sim.json
+# acados_ocp_nlp.json
+# acados_ocp.json
+# acados_sim.json
+*.json

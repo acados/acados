@@ -2153,6 +2153,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
         /************************************************
          * FORWARD LOOP
          ************************************************/
+        // printf("GNSF: nx %d, nz %d, nu %d, nx1 %d, nz1 %d\n", nx, nz, nu, nx1, nz1);
 
         for (int ss = 0; ss < num_steps; ss++)
         {
@@ -2590,7 +2591,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                     // dz2_du
                     for (int jj = 0; jj < nu; jj++)
                     {
-                        for (int ii = 0; ii < nu; ii++)
+                        for (int ii = 0; ii < nz2; ii++)
                         {
                             for (int kk = 0; kk < num_stages; kk++)
                             {
@@ -2925,7 +2926,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
         }
     }
 /* unpack */
-    // printf("before permutation\n");
+    // printf("GNSF: x before permutation\n");
     // blasfeo_print_exp_dvec(nx, x0_traj, nx * num_steps);
 
     blasfeo_dvecpei(nx, ipiv_x, x0_traj, nx * num_steps);

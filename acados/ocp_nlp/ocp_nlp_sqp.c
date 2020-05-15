@@ -612,10 +612,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     for (; sqp_iter < opts->max_iter; sqp_iter++)
     {
-		
-        if (opts->print_level > sqp_iter + 1)
-            print_ocp_qp_in(nlp_mem->qp_in);
-
         // linearizate NLP and update QP matrices
         acados_tic(&timer1);
         ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
@@ -637,6 +633,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         nlp_out->inf_norm_res = (mem->nlp_res->inf_norm_res_m > nlp_out->inf_norm_res) ?
                                     mem->nlp_res->inf_norm_res_m :
                                     nlp_out->inf_norm_res;
+
+        if (opts->print_level > sqp_iter + 1)
+            print_ocp_qp_in(nlp_mem->qp_in);
 
         // save statistics
         if (sqp_iter < mem->stat_m)
@@ -671,7 +670,12 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->status = ACADOS_SUCCESS;
 
             if (opts->print_level > 0)
+            {
+                printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, mem->nlp_res->inf_norm_res_g,
+                    mem->nlp_res->inf_norm_res_b, mem->nlp_res->inf_norm_res_d,
+                    mem->nlp_res->inf_norm_res_m );
                 printf("\n\n");
+            }
 
             return mem->status;
         }
@@ -743,6 +747,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // print_ocp_qp_in(nlp_mem->qp_in);
             if (opts->print_level > 0)
             {
+                printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, mem->nlp_res->inf_norm_res_g,
+                    mem->nlp_res->inf_norm_res_b, mem->nlp_res->inf_norm_res_d,
+                    mem->nlp_res->inf_norm_res_m );
                 printf("\n\n");
             }
 

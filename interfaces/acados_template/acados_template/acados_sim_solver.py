@@ -41,16 +41,17 @@ from copy import deepcopy
 
 from .generate_c_code_explicit_ode import generate_c_code_explicit_ode
 from .generate_c_code_implicit_ode import generate_c_code_implicit_ode
+from .generate_c_code_gnsf import generate_c_code_gnsf
 from .acados_sim import AcadosSim
 from .acados_ocp import AcadosOcp
 from .acados_model import acados_model_strip_casadi_symbolics
-from .utils import is_column, render_template, format_class_dict, np_array_to_list, make_model_consistent
+from .utils import is_column, render_template, format_class_dict, np_array_to_list,\
+     make_model_consistent, set_up_imported_gnsf_model
 
 
 def make_sim_dims_consistent(acados_sim):
     dims = acados_sim.dims
     model = acados_sim.model
-
     # nx
     if is_column(model.x):
         dims.nx = model.x.shape[0]
@@ -135,6 +136,10 @@ def sim_render_templates(json_file, model_name):
     out_file = 'Makefile'
     render_template(in_file, out_file, template_dir, json_path)
 
+    in_file = 'main_sim.in.c'
+    out_file = 'main_sim_{}.c'.format(model_name)
+    render_template(in_file, out_file, template_dir, json_path)
+
     ## folder model
     template_dir = 'c_generated_code/{}_model/'.format(model_name)
 
@@ -156,7 +161,8 @@ def sim_generate_casadi_functions(acados_sim):
         # implicit model -- generate C code
         opts = dict(generate_hess=1)
         generate_c_code_implicit_ode(model, opts)
-
+    elif integrator_type == 'GNSF':
+        generate_c_code_gnsf(model)
 
 class AcadosSimSolver:
     def __init__(self, acados_sim_, json_file='acados_sim.json'):
@@ -173,10 +179,14 @@ class AcadosSimSolver:
 
         elif isinstance(acados_sim_, AcadosSim):
             acados_sim = acados_sim_
-
+            if acados_sim.solver_options.integrator_type == 'GNSF':
+                set_up_imported_gnsf_model(acados_sim)
         model_name = acados_sim.model.name
 
         make_sim_dims_consistent(acados_sim)
+
+        # generate casadi functions
+        sim_generate_casadi_functions(acados_sim)
 
         # use existing json when creating integrator from ocp
         if isinstance(acados_sim_, AcadosSim):
@@ -184,8 +194,6 @@ class AcadosSimSolver:
 
         # render templates
         sim_render_templates(json_file, model_name)
-        # generate casadi functions
-        sim_generate_casadi_functions(acados_sim)
 
         ## Compile solver
         os.chdir('c_generated_code')
@@ -226,6 +234,8 @@ class AcadosSimSolver:
             'S_forw': nx*(nx+nu),
             'Sx': nx*nx,
             'Su': nx*nu,
+            'S_adj': nx+nu,
+            'S_hess': (nx+nu)*(nx+nu),
         }
 
         self.settable = ['S_adj', 'T', 'x', 'u', 'xdot', 'z', 'p'] # S_forw
@@ -263,9 +273,13 @@ class AcadosSimSolver:
                 nx = self.sim_struct.dims.nx
                 nu = self.sim_struct.dims.nu
                 out = out.reshape(nx, nu, order='F')
-
+            elif field_ == 'S_hess':
+                nx = self.sim_struct.dims.nx
+                nu = self.sim_struct.dims.nu
+                out = out.reshape(nx+nu, nx+nu, order='F')
         else:
-            raise Exception(f'acados_solver.set(): Unknown field {field}, available fiels are {",".join(self.gettable.keys())}')
+            raise Exception(f'AcadosSimSolver.get(): Unknown field {field_},' \
+                f' available fields are {", ".join(self.gettable.keys())}')
 
         return out
 
@@ -294,7 +308,8 @@ class AcadosSimSolver:
             self.shared_lib.sim_in_set.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
             self.shared_lib.sim_in_set(self.sim_config, self.sim_dims, self.sim_in, field, value_data_p)
         else:
-            raise Exception(f'acados_solver.set(): Unknown field {field}, available fiels are {",".join(self.settable)}')
+            raise Exception(f'AcadosSimSolver.set(): Unknown field {field_},' \
+                f' available fields are {", ".join(self.settable)}')
 
         return
 

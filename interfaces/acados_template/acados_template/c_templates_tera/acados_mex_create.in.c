@@ -73,8 +73,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     // field names of output struct
     #define FIELDS_OCP 8
-    #define FIELDS_EXT_FUN 9
-    #define MAX_FIELDS 9
+    #define FIELDS_EXT_FUN 21
+    #define MAX_FIELDS 21
     char *fieldnames[MAX_FIELDS];
 
     for (int i = 0; i < MAX_FIELDS; i++)
@@ -145,16 +145,34 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxSetField(plhs[0], 0, "sens_out", sens_out_mat);
 
     /* store external function pointers */
+    // dyn
     memcpy(fieldnames[0],"expl_ode_fun",sizeof("expl_ode_fun"));
     memcpy(fieldnames[1],"forw_vde",sizeof("forw_vde"));
     memcpy(fieldnames[2],"hess_vde",sizeof("hess_vde"));
     memcpy(fieldnames[3],"impl_dae_fun",sizeof("impl_dae_fun"));
     memcpy(fieldnames[4],"impl_dae_fun_jac_x_xdot_z",sizeof("impl_dae_fun_jac_x_xdot_z"));
     memcpy(fieldnames[5],"impl_dae_jac_x_xdot_u_z",sizeof("impl_dae_jac_x_xdot_u_z"));
+    memcpy(fieldnames[6],"impl_dae_hess",sizeof("impl_dae_hess"));
+
+    memcpy(fieldnames[7],"gnsf_phi_fun",sizeof("gnsf_phi_fun"));
+    memcpy(fieldnames[8],"gnsf_phi_fun_jac_y",sizeof("gnsf_phi_fun_jac_y"));
+    memcpy(fieldnames[9],"gnsf_phi_jac_y_uhat",sizeof("gnsf_phi_jac_y_uhat"));
+    memcpy(fieldnames[10],"gnsf_f_lo_jac_x1_x1dot_u_z",sizeof("gnsf_f_lo_jac_x1_x1dot_u_z"));
+    memcpy(fieldnames[11],"gnsf_get_matrices_fun",sizeof("gnsf_get_matrices_fun"));
+
+    // cost
+    memcpy(fieldnames[12],"cost_y_fun",sizeof("cost_y_fun"));
+    memcpy(fieldnames[13],"cost_y_fun_jac_ut_xt",sizeof("cost_y_fun_jac_ut_xt"));
+    memcpy(fieldnames[14],"cost_y_hess",sizeof("cost_y_hess"));
+    memcpy(fieldnames[15],"ext_cost_fun",sizeof("ext_cost_fun"));
+    memcpy(fieldnames[16],"ext_cost_fun_jac_hess",sizeof("ext_cost_fun_jac_hess"));
+
     // constraints
-    memcpy(fieldnames[6],"phi_constraint",sizeof("phi_constraint"));
-    memcpy(fieldnames[7],"nl_constr_h_fun_jac",sizeof("nl_constr_h_fun_jac"));
-    memcpy(fieldnames[8],"nl_constr_h_fun",sizeof("nl_constr_h_fun"));
+    memcpy(fieldnames[17],"phi_constraint",sizeof("phi_constraint"));
+    memcpy(fieldnames[18],"nl_constr_h_fun_jac",sizeof("nl_constr_h_fun_jac"));
+    memcpy(fieldnames[19],"nl_constr_h_fun",sizeof("nl_constr_h_fun"));
+    memcpy(fieldnames[20],"nl_constr_h_fun_jac_hess",sizeof("nl_constr_h_fun_jac_hess"));
+
 
     // create output struct - C_ocp_ext_fun
     plhs[1] = mxCreateStructMatrix(1, 1, FIELDS_EXT_FUN, (const char **) fieldnames);
@@ -172,6 +190,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxArray *impl_dae_fun_mat = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
     mxArray *impl_dae_fun_jac_x_xdot_z_mat = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
     mxArray *impl_dae_jac_x_xdot_u_z_mat = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+    mxArray *impl_dae_hess_mat = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+
+    mxArray *gnsf_phi_fun_mat = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+    mxArray *gnsf_phi_fun_jac_y_mat = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+    mxArray *gnsf_phi_jac_y_uhat_mat = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+    mxArray *gnsf_f_lo_jac_x1_x1dot_u_z_mat = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+    mxArray *gnsf_get_matrices_fun_mat = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+
 
 {% if solver_options.integrator_type == "ERK" %}
     {# TODO: remove _casadi from these names.. #}
@@ -194,16 +220,38 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // extern external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
     l_ptr = mxGetData(impl_dae_jac_x_xdot_u_z_mat);
     l_ptr[0] = (long long) impl_dae_jac_x_xdot_u_z;
+{% if solver_options.hessian_approx == "EXACT" %}
+    l_ptr = mxGetData(impl_dae_hess_mat);
+    l_ptr[0] = (long long) impl_dae_hess;
+{%- endif %}
+{% elif solver_options.integrator_type == "GNSF" %}
+    l_ptr = mxGetData(gnsf_phi_fun_mat);
+    l_ptr[0] = (long long) gnsf_phi_fun;
+    l_ptr = mxGetData(gnsf_phi_fun_jac_y_mat);
+    l_ptr[0] = (long long) gnsf_phi_fun_jac_y;
+    l_ptr = mxGetData(gnsf_phi_jac_y_uhat_mat);
+    l_ptr[0] = (long long) gnsf_phi_jac_y_uhat;
+    l_ptr = mxGetData(gnsf_f_lo_jac_x1_x1dot_u_z_mat);
+    l_ptr[0] = (long long) gnsf_f_lo_jac_x1_x1dot_u_z;
+    l_ptr = mxGetData(gnsf_get_matrices_fun_mat);
+    l_ptr[0] = (long long) gnsf_get_matrices_fun;
 {%- endif %}
     mxSetField(plhs[1], 0, "expl_ode_fun", expl_ode_fun_mat);
     mxSetField(plhs[1], 0, "forw_vde", forw_vde_mat);
     mxSetField(plhs[1], 0, "hess_vde", hess_vde_mat);
 
+    mxSetField(plhs[1], 0, "gnsf_phi_fun", gnsf_phi_fun_mat);
+    mxSetField(plhs[1], 0, "gnsf_phi_fun_jac_y", gnsf_phi_fun_jac_y_mat);
+    mxSetField(plhs[1], 0, "gnsf_phi_jac_y_uhat", gnsf_phi_jac_y_uhat_mat);
+    mxSetField(plhs[1], 0, "gnsf_f_lo_jac_x1_x1dot_u_z", gnsf_f_lo_jac_x1_x1dot_u_z_mat);
+    mxSetField(plhs[1], 0, "gnsf_get_matrices_fun", gnsf_get_matrices_fun_mat);
+
     mxSetField(plhs[1], 0, "impl_dae_fun", impl_dae_fun_mat);
     mxSetField(plhs[1], 0, "impl_dae_fun_jac_x_xdot_z", impl_dae_fun_jac_x_xdot_z_mat);
     mxSetField(plhs[1], 0, "impl_dae_jac_x_xdot_u_z", impl_dae_jac_x_xdot_u_z_mat);
+    mxSetField(plhs[1], 0, "impl_dae_hess", impl_dae_hess_mat);
 
-// constaints
+/* constaints */
     mxArray *phi_constraint_mat = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(phi_constraint_mat);
 {%- if constraints.constr_type == "BGP" %}
@@ -234,18 +282,67 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {%- endif %}
     mxSetField(plhs[1], 0, "nl_constr_h_fun", nl_constr_h_fun_mat);
 
-// {% if cost.cost_type == "NONLINEAR_LS" %}
-//     mxArray *cost_y_fun_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-//     l_ptr = mxGetData(cost_y_fun_mat);
-//     l_ptr[0] = (long long) cost_y_fun;
-//     mxSetField(plhs[1], 0, "cost_y_fun", cost_y_fun_mat);
-// {% endif %}
-// {% if cost.cost_type_e == "NONLINEAR_LS" %}
-//     mxArray *cost_y_e_fun_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-//     l_ptr = mxGetData(cost_y_e_fun_mat);
-//     l_ptr[0] = (long long) cost_y_e_fun;
-//     mxSetField(plhs[1], 0, "cost_y_e_fun", cost_y_e_fun_mat);
-// {%- endif %}
+    mxArray *nl_constr_h_fun_jac_hess_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
+    l_ptr = mxGetData(nl_constr_h_fun_jac_hess_mat);
+{% if constraints.constr_type == "BGH" and dims.nh > 0 and solver_options.hessian_approx == "EXACT" %}
+    l_ptr[0] = (long long) nl_constr_h_fun_jac_hess;
+{% endif %}
+{% if constraints.constr_type_e == "BGH" and dims.nh_e > 0 and solver_options.hessian_approx == "EXACT" %}
+    l_ptr[1] = (long long) &nl_constr_h_e_fun_jac_hess;
+{%- endif %}
+    mxSetField(plhs[1], 0, "nl_constr_h_fun_jac_hess", nl_constr_h_fun_jac_hess_mat);
+
+/* cost */
+    mxArray *cost_y_fun_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
+    l_ptr = mxGetData(cost_y_fun_mat);
+{% if cost.cost_type == "NONLINEAR_LS" and dims.nh > 0 %}
+    l_ptr[0] = (long long) cost_y_fun;
+{% endif %}
+{% if cost.cost_type_e == "NONLINEAR_LS" and dims.nh_e > 0 %}
+    l_ptr[1] = (long long) &cost_y_e_fun;
+{%- endif %}
+    mxSetField(plhs[1], 0, "cost_y_fun", cost_y_fun_mat);
+
+    mxArray *cost_y_fun_jac_ut_xt_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
+    l_ptr = mxGetData(cost_y_fun_jac_ut_xt_mat);
+{% if cost.cost_type == "NONLINEAR_LS" and dims.nh > 0 %}
+    l_ptr[0] = (long long) cost_y_fun_jac_ut_xt;
+{% endif %}
+{% if cost.cost_type_e == "NONLINEAR_LS" and dims.nh_e > 0 %}
+    l_ptr[1] = (long long) &cost_y_e_fun_jac_ut_xt;
+{%- endif %}
+    mxSetField(plhs[1], 0, "cost_y_fun_jac_ut_xt", cost_y_fun_jac_ut_xt_mat);
+
+    mxArray *cost_y_hess_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
+    l_ptr = mxGetData(cost_y_hess_mat);
+{% if cost.cost_type == "NONLINEAR_LS" and dims.nh > 0 %}
+    l_ptr[0] = (long long) cost_y_hess;
+{% endif %}
+{% if cost.cost_type_e == "NONLINEAR_LS" and dims.nh_e > 0 %}
+    l_ptr[1] = (long long) &cost_y_e_hess;
+{%- endif %}
+    mxSetField(plhs[1], 0, "cost_y_hess", cost_y_hess_mat);
+
+    mxArray *ext_cost_fun_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
+    l_ptr = mxGetData(ext_cost_fun_mat);
+{% if cost.cost_type == "EXTERNAL" and dims.nh > 0 %}
+    l_ptr[0] = (long long) ext_cost_fun;
+{% endif %}
+{% if cost.cost_type_e == "EXTERNAL" and dims.nh_e > 0 %}
+    l_ptr[1] = (long long) &ext_cost_e_fun;
+{%- endif %}
+    mxSetField(plhs[1], 0, "ext_cost_fun", ext_cost_fun_mat);
+
+    mxArray *ext_cost_fun_jac_hess_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
+    l_ptr = mxGetData(ext_cost_fun_jac_hess_mat);
+{% if cost.cost_type == "EXTERNAL" and dims.nh > 0 %}
+    l_ptr[0] = (long long) ext_cost_fun_jac_hess;
+{% endif %}
+{% if cost.cost_type_e == "EXTERNAL" and dims.nh_e > 0 %}
+    l_ptr[1] = (long long) &ext_cost_e_fun_jac_hess;
+{%- endif %}
+    mxSetField(plhs[1], 0, "ext_cost_fun_jac_hess", ext_cost_fun_jac_hess_mat);
+
 
     return;
 }

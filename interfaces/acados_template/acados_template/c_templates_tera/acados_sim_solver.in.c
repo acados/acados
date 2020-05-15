@@ -364,7 +364,7 @@ int {{ model.name }}_acados_sim_free()
 int {{ model.name }}_acados_sim_update_params(double *p, int np)
 {
     int status = 0;
-    int casadi_np = 0;
+    int casadi_np = {{ dims.np }};
 
 {%- if solver_options.integrator_type == "ERK" %}
     sim_forw_vde_casadi[0].set_param(sim_forw_vde_casadi, p);

@@ -35,7 +35,7 @@ import os, sys, json
 import urllib.request
 import shutil
 import numpy as np
-from casadi import SX, MX, DM
+from casadi import SX, MX, DM, Function, CasadiMeta
 
 ALLOWED_CASADI_VERSIONS = ('3.5.1', '3.4.5', '3.4.0')
 TERA_VERSION = "0.0.34"
@@ -344,3 +344,83 @@ def J_to_idx_slack(J):
     if not i_idx == ncol:
             raise Exception('J_to_idx_slack: J must contain a 1 in every column!')
     return idx
+
+
+def acados_dae_model_json_dump(model):
+
+    # load model
+    x = model.x
+    xdot = model.xdot
+    u = model.u
+    z = model.z
+    p = model.p
+
+    f_impl = model.f_impl_expr
+    model_name = model.name
+
+    # create struct with impl_dae_fun, casadi_version
+    fun_name = model_name + '_impl_dae_fun'
+    impl_dae_fun = Function(fun_name, [x, xdot, u, z, p], [f_impl])
+
+    casadi_version = CasadiMeta.version()
+    str_impl_dae_fun = impl_dae_fun.serialize()
+
+    dae_dict = {"str_impl_dae_fun": str_impl_dae_fun, "casadi_version": casadi_version}
+
+    # dump
+    json_file = model_name + '_acados_dae.json'
+    with open(json_file, 'w') as f:
+        json.dump(dae_dict, f, default=np_array_to_list, indent=4, sort_keys=True)
+    print("dumped ", model_name, " dae to file:", json_file, "\n")
+
+
+def set_up_imported_gnsf_model(acados_formulation):
+
+    gnsf = acados_formulation.gnsf_model
+
+    # check CasADi version
+    dump_casadi_version = gnsf['casadi_version']
+    casadi_version = CasadiMeta.version()
+
+    if not casadi_version == dump_casadi_version:
+        raise Exception("GNSF model was dumped with another CasADi version.\n"
+                + "Please use the same version for compatibility, serialize version:"
+                + dump_casadi_version + " current Python CasADi verison: " + casadi_version)
+
+    # load model
+    phi_fun = Function.deserialize(gnsf['phi_fun'])
+    phi_fun_jac_y = Function.deserialize(gnsf['phi_fun_jac_y'])
+    phi_jac_y_uhat = Function.deserialize(gnsf['phi_jac_y_uhat'])
+    get_matrices_fun = Function.deserialize(gnsf['get_matrices_fun'])
+
+    # obtain gnsf dimensions
+    size_gnsf_A = get_matrices_fun.size_out(0)
+    acados_formulation.dims.gnsf_nx1 = size_gnsf_A[1]
+    acados_formulation.dims.gnsf_nz1 = size_gnsf_A[0] - size_gnsf_A[1]
+    acados_formulation.dims.gnsf_nuhat = max(phi_fun.size_in(1))
+    acados_formulation.dims.gnsf_ny = max(phi_fun.size_in(0))
+    acados_formulation.dims.gnsf_nout = max(phi_fun.size_out(0))
+
+    # save gnsf functions in model
+    acados_formulation.model.phi_fun = phi_fun
+    acados_formulation.model.phi_fun_jac_y = phi_fun_jac_y
+    acados_formulation.model.phi_jac_y_uhat = phi_jac_y_uhat
+    acados_formulation.model.get_matrices_fun = get_matrices_fun
+
+    if "f_lo_fun_jac_x1k1uz" in gnsf:
+        f_lo_fun_jac_x1k1uz = Function.deserialize(gnsf['f_lo_fun_jac_x1k1uz'])
+        acados_formulation.model.f_lo_fun_jac_x1k1uz = f_lo_fun_jac_x1k1uz
+    else:
+        dummy_var_x1 = SX.sym('dummy_var_x1', acados_formulation.dims.gnsf_nx1)
+        dummy_var_x1dot = SX.sym('dummy_var_x1dot', acados_formulation.dims.gnsf_nx1)
+        dummy_var_z1 = SX.sym('dummy_var_z1', acados_formulation.dims.gnsf_nz1)
+        dummy_var_u = SX.sym('dummy_var_z1', acados_formulation.dims.nu)
+        dummy_var_p = SX.sym('dummy_var_z1', acados_formulation.dims.np)
+        empty_var = SX.sym('empty_var', 0, 0)
+
+        empty_fun = Function('empty_fun', \
+            [dummy_var_x1, dummy_var_x1dot, dummy_var_z1, dummy_var_u, dummy_var_p],
+                [empty_var])
+        acados_formulation.model.f_lo_fun_jac_x1k1uz = empty_fun
+
+    del acados_formulation.gnsf_model

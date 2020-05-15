@@ -482,6 +482,16 @@ ocp.set('cost_z', ones(2,1), 1)
 ocp.set('cost_Z', ones(2,1), 1)
 ocp.set('cost_zl', ones(2,1), N-1)
 
+% get slack values
+for i = 0:N-1
+    sl = ocp.get('sl', i);
+    su = ocp.get('su', i);
+    t = ocp.get('t', i);
+end
+sl = ocp.get('sl', N);
+su = ocp.get('su', N);
+
+
 electrical_power = 0.944*97/100*x_sim(1,:).*x_sim(6,:);
 
 x_sim_ref = [   1.263425730522397
