@@ -212,23 +212,31 @@ int {{ model.name }}_acados_sim_create()
 
     // sim opts
     {{ model.name }}_sim_opts = sim_opts_create({{ model.name }}_sim_config, {{ model.name }}_sim_dims);
-{# TODO: use C interface instead of this.. #}
-    {{ model.name }}_sim_opts->ns = {{ solver_options.sim_method_num_stages }}; // number of stages in rk integrator
-    {{ model.name }}_sim_opts->num_steps = {{ solver_options.sim_method_num_steps }}; // number of integration steps
-    {{ model.name }}_sim_opts->sens_adj = false;
-    {{ model.name }}_sim_opts->sens_forw = true;
-    {{ model.name }}_sim_opts->newton_iter = {{ solver_options.sim_method_newton_iter }};
-{% if solver_options.integrator_type == "IRK" %}
-    {{ model.name }}_sim_opts->sens_algebraic = false;
-    {{ model.name }}_sim_opts->output_z = false;
-    {{ model.name }}_sim_opts->jac_reuse = false;
-{% endif %}
+    int tmp_int = {{ solver_options.sim_method_num_stages }};
+    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "num_stages", &tmp_int);
+    tmp_int = {{ solver_options.sim_method_num_steps }};
+    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "num_steps", &tmp_int);
+    tmp_int = {{ solver_options.sim_method_newton_iter }};
+    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "newton_iter", &tmp_int);
+
+    bool tmp_bool = {{ solver_options.sens_forw }};
+    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "sens_forw", &tmp_bool);
+    tmp_bool = {{ solver_options.sens_adj }};
+    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "sens_adj", &tmp_bool);
+    tmp_bool = {{ solver_options.sens_algebraic }};
+    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "sens_algebraic", &tmp_bool);
+    tmp_bool = {{ solver_options.sens_hess }};
+    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "sens_hess", &tmp_bool);
+    tmp_bool = {{ solver_options.output_z }};
+    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "output_z", &tmp_bool);
+    tmp_bool = {{ solver_options.jac_reuse }};
+    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "jac_reuse", &tmp_bool);
 
     // sim in / out
     {{ model.name }}_sim_in  = sim_in_create({{ model.name }}_sim_config, {{ model.name }}_sim_dims);
     {{ model.name }}_sim_out = sim_out_create({{ model.name }}_sim_config, {{ model.name }}_sim_dims);
-
-    {{ model.name }}_sim_in->T = Tsim;
+    sim_in_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims,
+               {{ model.name }}_sim_in, "T", &Tsim);
 
     // model functions
 {%- if solver_options.integrator_type == "IRK" %}
