@@ -218,8 +218,13 @@ int {{ model.name }}_acados_sim_create()
     sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "num_steps", &tmp_int);
     tmp_int = {{ solver_options.sim_method_newton_iter }};
     sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "newton_iter", &tmp_int);
+    bool tmp_bool = {{ solver_options.sim_method_jac_reuse }};
+    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "jac_reuse", &tmp_bool);
 
-    bool tmp_bool = {{ solver_options.sens_forw }};
+{% if problem_class == "SIM" %}
+    // options that are not available to AcadosOcpSolver
+    //  (in OCP they will be determined by other options, like exact_hessian)
+    tmp_bool = {{ solver_options.sens_forw }};
     sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "sens_forw", &tmp_bool);
     tmp_bool = {{ solver_options.sens_adj }};
     sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "sens_adj", &tmp_bool);
@@ -229,8 +234,7 @@ int {{ model.name }}_acados_sim_create()
     sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "sens_hess", &tmp_bool);
     tmp_bool = {{ solver_options.output_z }};
     sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "output_z", &tmp_bool);
-    tmp_bool = {{ solver_options.jac_reuse }};
-    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "jac_reuse", &tmp_bool);
+{% endif %}
 
     // sim in / out
     {{ model.name }}_sim_in  = sim_in_create({{ model.name }}_sim_config, {{ model.name }}_sim_dims);

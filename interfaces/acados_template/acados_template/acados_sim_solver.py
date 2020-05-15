@@ -181,6 +181,9 @@ class AcadosSimSolver:
             acados_sim = acados_sim_
             if acados_sim.solver_options.integrator_type == 'GNSF':
                 set_up_imported_gnsf_model(acados_sim)
+
+        acados_sim.__problem_class = 'SIM'
+
         model_name = acados_sim.model.name
 
         make_sim_dims_consistent(acados_sim)

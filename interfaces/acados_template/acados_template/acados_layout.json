@@ -16,6 +16,9 @@
     "acados_lib_path": [
         "str"
     ],
+    "problem_class": [
+        "str"
+    ],
     "constraints": {
         "constr_type": [
             "str"
@@ -619,6 +622,9 @@
         ],
         "sim_method_newton_iter": [
             "int"
+        ],
+        "sim_method_jac_reuse": [
+            "bool"
         ],
         "qp_solver_cond_N": [
             "int"
