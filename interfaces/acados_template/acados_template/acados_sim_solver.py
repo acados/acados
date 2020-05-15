@@ -41,10 +41,12 @@ from copy import deepcopy
 
 from .generate_c_code_explicit_ode import generate_c_code_explicit_ode
 from .generate_c_code_implicit_ode import generate_c_code_implicit_ode
+from .generate_c_code_gnsf import generate_c_code_gnsf
 from .acados_sim import AcadosSim
 from .acados_ocp import AcadosOcp
 from .acados_model import acados_model_strip_casadi_symbolics
-from .utils import is_column, render_template, format_class_dict, np_array_to_list, make_model_consistent
+from .utils import is_column, render_template, format_class_dict, np_array_to_list,\
+     make_model_consistent, set_up_imported_gnsf_model
 
 
 def make_sim_dims_consistent(acados_sim):
@@ -159,7 +161,8 @@ def sim_generate_casadi_functions(acados_sim):
         # implicit model -- generate C code
         opts = dict(generate_hess=1)
         generate_c_code_implicit_ode(model, opts)
-
+    elif integrator_type == 'GNSF':
+        generate_c_code_gnsf(model)
 
 class AcadosSimSolver:
     def __init__(self, acados_sim_, json_file='acados_sim.json'):
@@ -176,10 +179,14 @@ class AcadosSimSolver:
 
         elif isinstance(acados_sim_, AcadosSim):
             acados_sim = acados_sim_
-
+            if acados_sim.solver_options.integrator_type == 'GNSF':
+                set_up_imported_gnsf_model(acados_sim)
         model_name = acados_sim.model.name
 
         make_sim_dims_consistent(acados_sim)
+
+        # generate casadi functions
+        sim_generate_casadi_functions(acados_sim)
 
         # use existing json when creating integrator from ocp
         if isinstance(acados_sim_, AcadosSim):
@@ -187,8 +194,6 @@ class AcadosSimSolver:
 
         # render templates
         sim_render_templates(json_file, model_name)
-        # generate casadi functions
-        sim_generate_casadi_functions(acados_sim)
 
         ## Compile solver
         os.chdir('c_generated_code')
