@@ -59,10 +59,10 @@ sim.solver_options.T = Tf
 sim.solver_options.num_stages = 4
 sim.solver_options.num_steps = 3
 sim.solver_options.newton_iter = 3 # for implicit integrator
-sim.solver_options.integrator_type = "GNSF" # ERK, IRK, GNSF
-sim.solver_options.sens_forw = False
-sim.solver_options.sens_adj = False
-sim.solver_options.sens_hess = False
+sim.solver_options.integrator_type = "IRK" # ERK, IRK, GNSF
+sim.solver_options.sens_forw = True
+sim.solver_options.sens_adj = True
+sim.solver_options.sens_hess = True
 sim.solver_options.sens_algebraic = False
 sim.solver_options.output_z = False
 sim.solver_options.jac_reuse = False
@@ -90,6 +90,8 @@ acados_integrator.set("u", u0)
 
 simX[0,:] = x0
 
+acados_integrator.set("S_adj", np.ones((nx+nu, 1)))
+
 for i in range(N):
     # set initial state
     acados_integrator.set("x", simX[i,:])
@@ -109,6 +111,5 @@ print("S_forw, sensitivities of simulaition result wrt x,u:\n", S_forw)
 print("S_adj, adjoint sensitivities:\n", S_adj)
 print("S_hess, second order sensitivities:\n", S_hess)
 
-import pdb; pdb.set_trace()
 # plot results
 plot_pendulum(np.linspace(0, Tf, N+1), 10, np.zeros((N, nu)), simX, latexify=False)
