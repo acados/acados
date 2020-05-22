@@ -190,8 +190,8 @@ class AcadosSimSolver:
             if acados_sim.solver_options.integrator_type == 'GNSF':
                 set_up_imported_gnsf_model(acados_sim)
 
-            sim_formulation_json_dump(acados_sim, json_file)
             sim_generate_casadi_functions(acados_sim)
+            sim_formulation_json_dump(acados_sim, json_file)
 
         # render templates
         sim_render_templates(json_file, model_name)
