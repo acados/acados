@@ -52,7 +52,7 @@ function ocp_generate_c_code(obj)
     end
 
     %% create folder
-    if ~exist('c_generated_code', 'dir')
+    if ~exist(fullfile(pwd,'c_generated_code'), 'dir')
         mkdir(fullfile(pwd, 'c_generated_code'))
     end
     %% generate C code for CasADi functions
