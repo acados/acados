@@ -92,7 +92,7 @@ def generate_c_code_gnsf( model ):
         x1dot = SX.sym("gnsf_x1dot", gnsf_nx1, 1)
         z1 = SX.sym("gnsf_z1", gnsf_nz1, 1)
         dummy = SX.sym("gnsf_dummy", 1, 1)
-        empty_var = SX.sym("gnsf_empty_var", 1, 1)
+        empty_var = SX.sym("gnsf_empty_var", 0, 0)
 
     ## generate C code
     fun_name = model_name + '_gnsf_phi_fun'

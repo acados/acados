@@ -172,7 +172,7 @@ if is_template
     end
     cd 'c_generated_code'
     model_dir = [model_name, '_model'];
-    if ~exist(model_dir, 'dir')
+    if ~exist(fullfile(pwd, model_dir), 'dir')
         mkdir(model_dir);
     end
     cd(model_dir)

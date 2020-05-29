@@ -105,11 +105,19 @@ class AcadosSimOpts:
     class containing the solver options
     """
     def __init__(self):
-        self.__integrator_type  = 'ERK'
-        self.__tf               = None
-        self.__sim_method_num_stages  = 1
-        self.__sim_method_num_steps   = 1
+        self.__integrator_type = 'ERK'
+        self.__tf = None
+        # ints
+        self.__sim_method_num_stages = 1
+        self.__sim_method_num_steps = 1
         self.__sim_method_newton_iter = 3
+        # bools
+        self.__sens_forw = True
+        self.__sens_adj = False
+        self.__sens_algebraic = False
+        self.__sens_hess = False
+        self.__output_z = False
+        self.__sim_method_jac_reuse = False
 
     @property
     def integrator_type(self):
@@ -132,6 +140,36 @@ class AcadosSimOpts:
         return self.__sim_method_newton_iter
 
     @property
+    def sens_forw(self):
+        """Boolean determining if forward sensitivities are computed"""
+        return self.__sens_forw
+
+    @property
+    def sens_adj(self):
+        """Boolean determining if adjoint sensitivities are computed"""
+        return self.__sens_adj
+
+    @property
+    def sens_algebraic(self):
+        """Boolean determining if sensitivities wrt algebraic variables are computed"""
+        return self.__sens_algebraic
+
+    @property
+    def sens_hess(self):
+        """Boolean determining if hessians are computed"""
+        return self.__sens_hess
+
+    @property
+    def output_z(self):
+        """Boolean determining if values for algebraic variables (corresponding to start of simulation interval) are computed"""
+        return self.__output_z
+
+    @property
+    def sim_method_jac_reuse(self):
+        """Boolean determining if jacobians are reused"""
+        return self.__sim_method_jac_reuse
+
+    @property
     def T(self):
         """Time horizon"""
         return self.__Tsim
@@ -139,7 +177,7 @@ class AcadosSimOpts:
     @integrator_type.setter
     def integrator_type(self, integrator_type):
         integrator_types = ('ERK', 'IRK', 'GNSF')
-        if type(integrator_type) == str and integrator_type in integrator_types:
+        if integrator_type in integrator_types:
             self.__integrator_type = integrator_type
         else:
             raise Exception('Invalid integrator_type value. Possible values are:\n\n' \
@@ -151,27 +189,66 @@ class AcadosSimOpts:
 
     @num_stages.setter
     def num_stages(self, num_stages):
-
-        if type(num_stages) == int:
+        if isinstance(num_stages, int):
             self.__sim_method_num_stages = num_stages
         else:
-            raise Exception('Invalid num_stages value. num_stages must be an integer. Exiting.')
+            raise Exception('Invalid num_stages value. num_stages must be an integer.')
 
     @num_steps.setter
     def num_steps(self, num_steps):
-
-        if type(num_steps) == int:
+        if isinstance(num_steps, int):
             self.__sim_method_num_steps = num_steps
         else:
-            raise Exception('Invalid num_steps value. num_steps must be an integer. Exiting.')
+            raise Exception('Invalid num_steps value. num_steps must be an integer.')
 
     @newton_iter.setter
     def newton_iter(self, newton_iter):
-
-        if type(newton_iter) == int:
+        if isinstance(newton_iter, int):
             self.__sim_method_newton_iter = newton_iter
         else:
-            raise Exception('Invalid newton_iter value. newton_iter must be an integer. Exiting.')
+            raise Exception('Invalid newton_iter value. newton_iter must be an integer.')
+
+    @sens_forw.setter
+    def sens_forw(self, sens_forw):
+        if sens_forw in (True, False):
+            self.__sens_forw = sens_forw
+        else:
+            raise Exception('Invalid sens_forw value. sens_forw must be a Boolean.')
+
+    @sens_adj.setter
+    def sens_adj(self, sens_adj):
+        if sens_adj in (True, False):
+            self.__sens_adj = sens_adj
+        else:
+            raise Exception('Invalid sens_adj value. sens_adj must be a Boolean.')
+
+    @sens_hess.setter
+    def sens_hess(self, sens_hess):
+        if sens_hess in (True, False):
+            self.__sens_hess = sens_hess
+        else:
+            raise Exception('Invalid sens_hess value. sens_hess must be a Boolean.')
+
+    @sens_algebraic.setter
+    def sens_algebraic(self, sens_algebraic):
+        if sens_algebraic in (True, False):
+            self.__sens_algebraic = sens_algebraic
+        else:
+            raise Exception('Invalid sens_algebraic value. sens_algebraic must be a Boolean.')
+
+    @output_z.setter
+    def output_z(self, output_z):
+        if output_z in (True, False):
+            self.__output_z = output_z
+        else:
+            raise Exception('Invalid output_z value. output_z must be a Boolean.')
+
+    @sim_method_jac_reuse.setter
+    def sim_method_jac_reuse(self, sim_method_jac_reuse):
+        if sim_method_jac_reuse in (True, False):
+            self.__sim_method_jac_reuse = sim_method_jac_reuse
+        else:
+            raise Exception('Invalid sim_method_jac_reuse value. sim_method_jac_reuse must be a Boolean.')
 
 class AcadosSim:
     """

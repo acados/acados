@@ -40,6 +40,8 @@ extern "C" {
 
 {%- if solver_options.hessian_approx %}
 	{%- set hessian_approx = solver_options.hessian_approx %}
+{%- elif solver_options.sens_hess %}
+	{%- set hessian_approx = "EXACT" %}
 {%- else %}
 	{%- set hessian_approx = "GAUSS_NEWTON" %}
 {%- endif %}

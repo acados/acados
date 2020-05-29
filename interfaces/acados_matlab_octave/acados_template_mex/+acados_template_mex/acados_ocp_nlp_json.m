@@ -41,6 +41,7 @@ classdef acados_ocp_nlp_json < handle
         parameter_values % initial value of the parameter
         acados_include_path
         acados_lib_path
+        problem_class
     end
     methods 
         function obj = acados_ocp_nlp_json()
@@ -52,6 +53,7 @@ classdef acados_ocp_nlp_json < handle
             obj.acados_include_path = [];
             obj.acados_lib_path = [];
             obj.parameter_values = [];
+            obj.problem_class = "OCP"
         end
     end
 end

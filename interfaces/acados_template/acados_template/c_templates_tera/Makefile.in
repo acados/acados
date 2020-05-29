@@ -39,6 +39,8 @@
 
 {%- if solver_options.hessian_approx %}
 	{%- set hessian_approx = solver_options.hessian_approx %}
+{%- elif solver_options.sens_hess %}
+	{%- set hessian_approx = "EXACT" %}
 {%- else %}
 	{%- set hessian_approx = "GAUSS_NEWTON" %}
 {%- endif %}
@@ -328,13 +330,11 @@ example:
 
 
 example_sim: sim_solver main_sim
-	gcc $(ACADOS_FLAGS) -o main_sim_{{ model.name}} $(EX_SIM_OBJ) $(OBJ) -L $(LIB_PATH) \
+	gcc $(ACADOS_FLAGS) -o main_sim_{{ model.name}} $(EX_SIM_OBJ) $(MODEL_OBJ) $(SIM_OBJ) -L $(LIB_PATH) \
 	-L $(LIB_PATH) \
 	-lacados -lhpipm -lblasfeo \
 	-lm \
 	-I $(INCLUDE_PATH)/blasfeo/include/ \
-	-I $(INCLUDE_PATH)/hpipm/include/ \
-	-I $(INCLUDE_PATH) \
 	-I $(INCLUDE_PATH)/acados/ \
 
 

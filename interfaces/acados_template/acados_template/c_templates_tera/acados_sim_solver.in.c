@@ -31,6 +31,13 @@
  * POSSIBILITY OF SUCH DAMAGE.;
  */
 
+{%- if solver_options.hessian_approx %}
+	{%- set hessian_approx = solver_options.hessian_approx %}
+{%- elif solver_options.sens_hess %}
+	{%- set hessian_approx = "EXACT" %}
+{%- else %}
+	{%- set hessian_approx = "GAUSS_NEWTON" %}
+{%- endif %}
 // standard
 #include <stdio.h>
 #include <stdlib.h>
@@ -61,10 +68,16 @@ sim_solver  * {{ model.name }}_sim_solver;
 {% if solver_options.integrator_type == "ERK" %}
 external_function_param_casadi * sim_forw_vde_casadi;
 external_function_param_casadi * sim_expl_ode_fun_casadi;
+{%- if hessian_approx == "EXACT" %}
+external_function_param_casadi * sim_expl_ode_hess;
+{%- endif %}
 {% elif solver_options.integrator_type == "IRK" %}
 external_function_param_casadi * sim_impl_dae_fun;
 external_function_param_casadi * sim_impl_dae_fun_jac_x_xdot_z;
 external_function_param_casadi * sim_impl_dae_jac_x_xdot_u_z;
+{%- if hessian_approx == "EXACT" %}
+external_function_param_casadi * sim_impl_dae_hess;
+{%- endif %}
 {% elif solver_options.integrator_type == "GNSF" -%}
 external_function_param_casadi * sim_gnsf_phi_fun;
 external_function_param_casadi * sim_gnsf_phi_fun_jac_y;
@@ -115,6 +128,18 @@ int {{ model.name }}_acados_sim_create()
     sim_impl_dae_jac_x_xdot_u_z->casadi_n_out = &{{ model.name }}_impl_dae_jac_x_xdot_u_z_n_out;
     external_function_param_casadi_create(sim_impl_dae_jac_x_xdot_u_z, {{ dims.np }});
 
+{%- if hessian_approx == "EXACT" %}
+    sim_impl_dae_hess = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
+    // external_function_param_casadi impl_dae_jac_x_xdot_u_z;
+    sim_impl_dae_hess->casadi_fun = &{{ model.name }}_impl_dae_hess;
+    sim_impl_dae_hess->casadi_work = &{{ model.name }}_impl_dae_hess_work;
+    sim_impl_dae_hess->casadi_sparsity_in = &{{ model.name }}_impl_dae_hess_sparsity_in;
+    sim_impl_dae_hess->casadi_sparsity_out = &{{ model.name }}_impl_dae_hess_sparsity_out;
+    sim_impl_dae_hess->casadi_n_in = &{{ model.name }}_impl_dae_hess_n_in;
+    sim_impl_dae_hess->casadi_n_out = &{{ model.name }}_impl_dae_hess_n_out;
+    external_function_param_casadi_create(sim_impl_dae_hess, {{ dims.np }});
+{%- endif %}
+
     {% elif solver_options.integrator_type == "ERK" %}
     // explicit ode
     sim_forw_vde_casadi = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
@@ -135,6 +160,18 @@ int {{ model.name }}_acados_sim_create()
     sim_expl_ode_fun_casadi->casadi_sparsity_out = &{{ model.name }}_expl_ode_fun_sparsity_out;
     sim_expl_ode_fun_casadi->casadi_work = &{{ model.name }}_expl_ode_fun_work;
     external_function_param_casadi_create(sim_expl_ode_fun_casadi, {{ dims.np }});
+
+{%- if hessian_approx == "EXACT" %}
+    sim_expl_ode_hess = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
+    // external_function_param_casadi impl_dae_jac_x_xdot_u_z;
+    sim_expl_ode_hess->casadi_fun = &{{ model.name }}_expl_ode_hess;
+    sim_expl_ode_hess->casadi_work = &{{ model.name }}_expl_ode_hess_work;
+    sim_expl_ode_hess->casadi_sparsity_in = &{{ model.name }}_expl_ode_hess_sparsity_in;
+    sim_expl_ode_hess->casadi_sparsity_out = &{{ model.name }}_expl_ode_hess_sparsity_out;
+    sim_expl_ode_hess->casadi_n_in = &{{ model.name }}_expl_ode_hess_n_in;
+    sim_expl_ode_hess->casadi_n_out = &{{ model.name }}_expl_ode_hess_n_out;
+    external_function_param_casadi_create(sim_expl_ode_hess, {{ dims.np }});
+{%- endif %}
 
     {% elif solver_options.integrator_type == "GNSF" -%}
     sim_gnsf_phi_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
@@ -212,23 +249,35 @@ int {{ model.name }}_acados_sim_create()
 
     // sim opts
     {{ model.name }}_sim_opts = sim_opts_create({{ model.name }}_sim_config, {{ model.name }}_sim_dims);
-{# TODO: use C interface instead of this.. #}
-    {{ model.name }}_sim_opts->ns = {{ solver_options.sim_method_num_stages }}; // number of stages in rk integrator
-    {{ model.name }}_sim_opts->num_steps = {{ solver_options.sim_method_num_steps }}; // number of integration steps
-    {{ model.name }}_sim_opts->sens_adj = false;
-    {{ model.name }}_sim_opts->sens_forw = true;
-    {{ model.name }}_sim_opts->newton_iter = {{ solver_options.sim_method_newton_iter }};
-{% if solver_options.integrator_type == "IRK" %}
-    {{ model.name }}_sim_opts->sens_algebraic = false;
-    {{ model.name }}_sim_opts->output_z = false;
-    {{ model.name }}_sim_opts->jac_reuse = false;
+    int tmp_int = {{ solver_options.sim_method_num_stages }};
+    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "num_stages", &tmp_int);
+    tmp_int = {{ solver_options.sim_method_num_steps }};
+    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "num_steps", &tmp_int);
+    tmp_int = {{ solver_options.sim_method_newton_iter }};
+    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "newton_iter", &tmp_int);
+    bool tmp_bool = {{ solver_options.sim_method_jac_reuse }};
+    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "jac_reuse", &tmp_bool);
+
+{% if problem_class == "SIM" %}
+    // options that are not available to AcadosOcpSolver
+    //  (in OCP they will be determined by other options, like exact_hessian)
+    tmp_bool = {{ solver_options.sens_forw }};
+    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "sens_forw", &tmp_bool);
+    tmp_bool = {{ solver_options.sens_adj }};
+    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "sens_adj", &tmp_bool);
+    tmp_bool = {{ solver_options.sens_algebraic }};
+    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "sens_algebraic", &tmp_bool);
+    tmp_bool = {{ solver_options.sens_hess }};
+    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "sens_hess", &tmp_bool);
+    tmp_bool = {{ solver_options.output_z }};
+    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "output_z", &tmp_bool);
 {% endif %}
 
     // sim in / out
     {{ model.name }}_sim_in  = sim_in_create({{ model.name }}_sim_config, {{ model.name }}_sim_dims);
     {{ model.name }}_sim_out = sim_out_create({{ model.name }}_sim_config, {{ model.name }}_sim_dims);
-
-    {{ model.name }}_sim_in->T = Tsim;
+    sim_in_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims,
+               {{ model.name }}_sim_in, "T", &Tsim);
 
     // model functions
 {%- if solver_options.integrator_type == "IRK" %}
@@ -238,11 +287,20 @@ int {{ model.name }}_acados_sim_create()
                  "impl_ode_fun_jac_x_xdot", sim_impl_dae_fun_jac_x_xdot_z);
     {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model,
                  "impl_ode_jac_x_xdot_u", sim_impl_dae_jac_x_xdot_u_z);
+{%- if hessian_approx == "EXACT" %}
+    {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model,
+                "impl_dae_hess", sim_impl_dae_hess);
+{%- endif %}
+
 {%- elif solver_options.integrator_type == "ERK" %}
     {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model,
                  "expl_vde_for", sim_forw_vde_casadi);
     {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model,
                  "expl_ode_fun", sim_expl_ode_fun_casadi);
+{%- if hessian_approx == "EXACT" %}
+    {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model,
+                "expl_ode_hess", sim_expl_ode_hess);
+{%- endif %}
 {%- elif solver_options.integrator_type == "GNSF" %}
     {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model,
                  "phi_fun", sim_gnsf_phi_fun);
@@ -271,10 +329,16 @@ int {{ model.name }}_acados_sim_create()
 {%- if solver_options.integrator_type == "ERK" %}
     sim_forw_vde_casadi[0].set_param(sim_forw_vde_casadi, p);
     sim_expl_ode_fun_casadi[0].set_param(sim_expl_ode_fun_casadi, p);
+{%- if hessian_approx == "EXACT" %}
+    sim_expl_ode_hess[0].set_param(sim_expl_ode_hess, p);
+{%- endif %}
 {%- elif solver_options.integrator_type == "IRK" %}
     sim_impl_dae_fun[0].set_param(sim_impl_dae_fun, p);
     sim_impl_dae_fun_jac_x_xdot_z[0].set_param(sim_impl_dae_fun_jac_x_xdot_z, p);
     sim_impl_dae_jac_x_xdot_u_z[0].set_param(sim_impl_dae_jac_x_xdot_u_z, p);
+{%- if hessian_approx == "EXACT" %}
+    sim_impl_dae_hess[0].set_param(sim_impl_dae_hess, p);
+{%- endif %}
 {%- elif solver_options.integrator_type == "GNSF" %}
     sim_gnsf_phi_fun[0].set_param(sim_gnsf_phi_fun, p);
     sim_gnsf_phi_fun_jac_y[0].set_param(sim_gnsf_phi_fun_jac_y, p);
@@ -346,9 +410,15 @@ int {{ model.name }}_acados_sim_free()
     external_function_param_casadi_free(sim_impl_dae_fun);
     external_function_param_casadi_free(sim_impl_dae_fun_jac_x_xdot_z);
     external_function_param_casadi_free(sim_impl_dae_jac_x_xdot_u_z);
+{%- if hessian_approx == "EXACT" %}
+    external_function_param_casadi_free(sim_impl_dae_hess);
+{%- endif %}
 {%- elif solver_options.integrator_type == "ERK" %}
     external_function_param_casadi_free(sim_forw_vde_casadi);
     external_function_param_casadi_free(sim_expl_ode_fun_casadi);
+{%- if hessian_approx == "EXACT" %}
+    external_function_param_casadi_free(sim_expl_ode_hess);
+{%- endif %}
 {%- elif solver_options.integrator_type == "GNSF" %}
     external_function_param_casadi_free(sim_gnsf_phi_fun);
     external_function_param_casadi_free(sim_gnsf_phi_fun_jac_y);
@@ -369,10 +439,16 @@ int {{ model.name }}_acados_sim_update_params(double *p, int np)
 {%- if solver_options.integrator_type == "ERK" %}
     sim_forw_vde_casadi[0].set_param(sim_forw_vde_casadi, p);
     sim_expl_ode_fun_casadi[0].set_param(sim_expl_ode_fun_casadi, p);
+{%- if hessian_approx == "EXACT" %}
+    sim_expl_ode_hess[0].set_param(sim_expl_ode_hess, p);
+{%- endif %}
 {%- elif solver_options.integrator_type == "IRK" %}
     sim_impl_dae_fun[0].set_param(sim_impl_dae_fun, p);
     sim_impl_dae_fun_jac_x_xdot_z[0].set_param(sim_impl_dae_fun_jac_x_xdot_z, p);
     sim_impl_dae_jac_x_xdot_u_z[0].set_param(sim_impl_dae_jac_x_xdot_u_z, p);
+{%- if hessian_approx == "EXACT" %}
+    sim_impl_dae_hess[0].set_param(sim_impl_dae_hess, p);
+{%- endif %}
 {%- elif solver_options.integrator_type == "GNSF" %}
     sim_gnsf_phi_fun[0].set_param(sim_gnsf_phi_fun, p);
     sim_gnsf_phi_fun_jac_y[0].set_param(sim_gnsf_phi_fun_jac_y, p);

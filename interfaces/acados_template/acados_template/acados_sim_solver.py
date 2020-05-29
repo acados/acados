@@ -179,17 +179,18 @@ class AcadosSimSolver:
 
         elif isinstance(acados_sim_, AcadosSim):
             acados_sim = acados_sim_
-            if acados_sim.solver_options.integrator_type == 'GNSF':
-                set_up_imported_gnsf_model(acados_sim)
-        model_name = acados_sim.model.name
 
+        acados_sim.__problem_class = 'SIM'
+
+        model_name = acados_sim.model.name
         make_sim_dims_consistent(acados_sim)
 
-        # generate casadi functions
-        sim_generate_casadi_functions(acados_sim)
-
-        # use existing json when creating integrator from ocp
+        # reuse existing json and casadi functions, when creating integrator from ocp
         if isinstance(acados_sim_, AcadosSim):
+            if acados_sim.solver_options.integrator_type == 'GNSF':
+                set_up_imported_gnsf_model(acados_sim)
+
+            sim_generate_casadi_functions(acados_sim)
             sim_formulation_json_dump(acados_sim, json_file)
 
         # render templates

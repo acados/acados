@@ -1727,6 +1727,7 @@ class AcadosOcpOptions:
         self.__sim_method_num_stages  = 4                     # number of stages in the integrator
         self.__sim_method_num_steps   = 1                     # number of steps in the integrator
         self.__sim_method_newton_iter = 3                     # number of Newton iterations in simulation method
+        self.__sim_method_jac_reuse = False
         self.__qp_solver_tol_stat = None                      # QP solver stationarity tolerance
         self.__qp_solver_tol_eq   = None                      # QP solver equality tolerance
         self.__qp_solver_tol_ineq = None                      # QP solver inequality
@@ -1801,6 +1802,11 @@ class AcadosOcpOptions:
     def sim_method_newton_iter(self):
         """Number of Newton iterations in simulation method"""
         return self.__sim_method_newton_iter
+
+    @property
+    def sim_method_jac_reuse(self):
+        """Boolean determining if jacobians are reused within integrator"""
+        return self.__sim_method_jac_reuse
 
     @property
     def qp_solver_tol_stat(self):
@@ -1998,6 +2004,13 @@ class AcadosOcpOptions:
             self.__sim_method_newton_iter = sim_method_newton_iter
         else:
             raise Exception('Invalid sim_method_newton_iter value. sim_method_newton_iter must be an integer. Exiting.')
+
+    @sim_method_jac_reuse.setter
+    def sim_method_jac_reuse(self, sim_method_jac_reuse):
+        if sim_method_jac_reuse in (True, False):
+            self.__sim_method_jac_reuse = sim_method_jac_reuse
+        else:
+            raise Exception('Invalid sim_method_jac_reuse value. sim_method_jac_reuse must be a Boolean.')
 
     @nlp_solver_type.setter
     def nlp_solver_type(self, nlp_solver_type):
@@ -2198,6 +2211,7 @@ class AcadosOcp:
         self.acados_lib_path = f'{acados_path}/lib'
 
         self.__parameter_values = np.array([])
+        self.__problem_class = 'OCP'
 
     @property
     def parameter_values(self):
