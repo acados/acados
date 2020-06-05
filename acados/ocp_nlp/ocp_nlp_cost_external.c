@@ -172,8 +172,8 @@ void *ocp_nlp_cost_external_model_assign(void *config_, void *dims_, void *raw_m
 
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
-    // custom_hessian
-    assign_and_advance_blasfeo_dmat_mem(nx+nu, nx+nu, &model->custom_hessian, &c_ptr);
+    // numerical_hessian
+    assign_and_advance_blasfeo_dmat_mem(nx+nu, nx+nu, &model->numerical_hessian, &c_ptr);
 
     // blasfeo_dvec
     // Z
@@ -223,10 +223,10 @@ int ocp_nlp_cost_external_model_set(void *config_, void *dims_, void *model_,
     {
         model->ext_cost_fun_jac = (external_function_generic *) value_;
     }
-    else if (!strcmp(field, "cost_custom_hess"))
+    else if (!strcmp(field, "ext_cost_num_hess"))
     {
-        double *custom_hessian = (double *) value_;
-        blasfeo_pack_dmat(nx+nu, nx+nu, custom_hessian, nx+nu, &model->custom_hessian, 0, 0);
+        double *numerical_hessian = (double *) value_;
+        blasfeo_pack_dmat(nx+nu, nx+nu, numerical_hessian, nx+nu, &model->numerical_hessian, 0, 0);
     }
     else if (!strcmp(field, "Z"))
     {
@@ -314,7 +314,7 @@ void ocp_nlp_cost_external_opts_initialize_default(void *config_, void *dims_, v
     // ocp_nlp_cost_config *config = config_;
     ocp_nlp_cost_external_opts *opts = opts_;
 
-    opts->use_custom_hessian = 0;
+    opts->use_numerical_hessian = 0;
 
     return;
 }
@@ -342,10 +342,10 @@ void ocp_nlp_cost_external_opts_set(void *config_, void *opts_, const char *fiel
     {
         // do nothing: the exact hessian is always computed if no custom hessian is provided
     }
-    else if(!strcmp(field, "custom_hessian"))
+    else if(!strcmp(field, "numerical_hessian"))
     {
         int *opt_val = (int *) value;
-        opts->use_custom_hessian = *opt_val;
+        opts->use_numerical_hessian = *opt_val;
     }
     else
     {
@@ -619,13 +619,13 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
     ext_fun_type_out[1] = BLASFEO_DVEC;
     ext_fun_out[1] = &memory->grad;  // grad: nu+nx
 
-    if (opts->use_custom_hessian > 0)
+    if (opts->use_numerical_hessian > 0)
     {
         // evaluate external function
         model->ext_cost_fun_jac->evaluate(model->ext_cost_fun_jac, ext_fun_type_in,
                                             ext_fun_in, ext_fun_type_out, ext_fun_out);
         // custom hessian
-        blasfeo_dgead(nx+nu, nx+nu, model->scaling, &model->custom_hessian, 0, 0, memory->RSQrq, 0, 0);
+        blasfeo_dgead(nx+nu, nx+nu, model->scaling, &model->numerical_hessian, 0, 0, memory->RSQrq, 0, 0);
     }
     else
     {

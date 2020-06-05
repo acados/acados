@@ -1535,15 +1535,15 @@ int acados_create()
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "print_level", &print_level);
 
 
-    int ext_cost_custom_hessian = {{ solver_options.ext_cost_custom_hessian }};
+    int ext_cost_num_hess = {{ solver_options.ext_cost_num_hess }};
 {%- if cost.cost_type == "EXTERNAL" %}
     for (int i = 0; i < N; i++)
     {
-        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "cost_custom_hessian", &ext_cost_custom_hessian);
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "cost_numerical_hessian", &ext_cost_num_hess);
     }
 {%- endif %}
 {%- if cost.cost_type_e == "EXTERNAL" %}
-    ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, N, "cost_custom_hessian", &ext_cost_custom_hessian);
+    ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, N, "cost_numerical_hessian", &ext_cost_num_hess);
 {%- endif %}
 
 

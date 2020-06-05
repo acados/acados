@@ -1750,7 +1750,7 @@ class AcadosOcpOptions:
         self.__exact_hess_cost = 1
         self.__exact_hess_dyn = 1
         self.__exact_hess_constr = 1
-        self.__ext_cost_custom_hessian = 0
+        self.__ext_cost_num_hess = 0
 
 
     @property
@@ -1923,10 +1923,10 @@ class AcadosOcpOptions:
         return self.__exact_hess_dyn
 
     @property
-    def ext_cost_custom_hessian(self):
+    def ext_cost_num_hess(self):
         """Determines if custom hessian approximation for cost contribution is used (> 0).\n
            Or if hessian contribution is evaluated exactly using CasADi external function (=0 - default)."""
-        return self.__ext_cost_custom_hessian
+        return self.__ext_cost_num_hess
 
     @qp_solver.setter
     def qp_solver(self, qp_solver):
@@ -2191,12 +2191,12 @@ class AcadosOcpOptions:
         else:
             raise Exception('Invalid exact_hess_dyn value. exact_hess_dyn takes one of the values 0, 1. Exiting')
 
-    @ext_cost_custom_hessian.setter
-    def ext_cost_custom_hessian(self, ext_cost_custom_hessian):
-        if ext_cost_custom_hessian in [0, 1]:
-            self.__ext_cost_custom_hessian = ext_cost_custom_hessian
+    @ext_cost_num_hess.setter
+    def ext_cost_num_hess(self, ext_cost_num_hess):
+        if ext_cost_num_hess in [0, 1]:
+            self.__ext_cost_num_hess = ext_cost_num_hess
         else:
-            raise Exception('Invalid ext_cost_custom_hessian value. ext_cost_custom_hessian takes one of the values 0, 1. Exiting')
+            raise Exception('Invalid ext_cost_num_hess value. ext_cost_num_hess takes one of the values 0, 1. Exiting')
 
     def set(self, attr, value):
         setattr(self, attr, value)

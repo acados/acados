@@ -43,7 +43,7 @@ from casadi import vertcat
 
 COST_MODULE = 'EXTERNAL' # 'LS', 'EXTERNAL'
 HESSIAN_APPROXIMATION = 'EXACT' # 'GAUSS_NEWTON
-CUSTOM_EXTERNAL_COST_HESS = 1
+EXTERNAL_COST_USE_NUM_HESS = 1
 
 # create ocp object to formulate the OCP
 ocp = AcadosOcp()
@@ -128,7 +128,7 @@ ocp.solver_options.qp_solver_cond_N = 5
 # set prediction horizon
 ocp.solver_options.tf = Tf
 ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
-ocp.solver_options.ext_cost_custom_hessian = CUSTOM_EXTERNAL_COST_HESS
+ocp.solver_options.ext_cost_num_hess = EXTERNAL_COST_USE_NUM_HESS
 
 ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
@@ -143,10 +143,10 @@ ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 #  [00, 00, 00, 00, @1]])
 
 # NOTE: hessian is wrt [u,x]
-if CUSTOM_EXTERNAL_COST_HESS:
+if EXTERNAL_COST_USE_NUM_HESS:
     for i in range(N):
-        ocp_solver.cost_set(i, "cost_custom_hess", np.diag([0.04, 4000, 4000, 0.04, 0.04, ]))
-    ocp_solver.cost_set(N, "cost_custom_hess", np.diag([4000, 4000, 0.04, 0.04, ]))
+        ocp_solver.cost_set(i, "ext_cost_num_hess", np.diag([0.04, 4000, 4000, 0.04, 0.04, ]))
+    ocp_solver.cost_set(N, "ext_cost_num_hess", np.diag([4000, 4000, 0.04, 0.04, ]))
 
 
 simX = np.ndarray((N+1, nx))

@@ -730,7 +730,7 @@ void ocp_nlp_cost_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
         return;
     }
-    else if (!strcmp(field, "cost_custom_hess"))
+    else if (!strcmp(field, "ext_cost_num_hess"))
     {
         dims_out[0] = dims->nx[stage] + dims->nu[stage];
         dims_out[1] = dims->nx[stage] + dims->nu[stage];
