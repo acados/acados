@@ -78,8 +78,10 @@ typedef struct
 {
     external_function_generic *ext_cost_fun;  // function
     external_function_generic *ext_cost_fun_jac_hess;  // function, gradient and hessian
+    external_function_generic *ext_cost_fun_jac;  // function, gradient
     struct blasfeo_dvec Z;
     struct blasfeo_dvec z;
+    struct blasfeo_dmat numerical_hessian;  // custom hessian approximation
     double scaling;
 } ocp_nlp_cost_external_model;
 
@@ -96,7 +98,7 @@ void *ocp_nlp_cost_external_model_assign(void *config, void *dims, void *raw_mem
 
 typedef struct
 {
-    int dummy; // struct can't be void
+    int use_numerical_hessian;  // > 0 indicating custom hessian is used instead of CasADi evaluation
 } ocp_nlp_cost_external_opts;
 
 //

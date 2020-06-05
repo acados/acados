@@ -674,6 +674,9 @@
         "exact_hess_dyn": [
             "int"
         ],
+        "ext_cost_num_hess": [
+            "int"
+        ],
         "model_external_shared_lib_dir": [
             "str"
         ],

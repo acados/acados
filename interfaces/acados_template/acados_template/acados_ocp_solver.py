@@ -849,7 +849,7 @@ class AcadosOcpSolver:
             if field_ not in constraints_fields + cost_fields + out_fields:
                 raise Exception("AcadosOcpSolver.set(): {} is not a valid argument.\
                     \nPossible values are {}. Exiting.".format(field, \
-                    constraints_fields + cost_fields + out_fields + 'p'))
+                    constraints_fields + cost_fields + out_fields + ['p']))
 
             self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = \
                 [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
@@ -889,7 +889,7 @@ class AcadosOcpSolver:
         """
         set numerical data in the cost module of the solver:
             :param stage_: integer corresponding to shooting node
-            :param field_: string, e.g. 'yref', 'W'
+            :param field_: string, e.g. 'yref', 'W', 'ext_cost_num_hess'
             :param value_: of appropriate size
         """
         # cast value_ to avoid conversion issues

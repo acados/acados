@@ -674,28 +674,24 @@ void ocp_nlp_cost_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims,
     }
     else if (!strcmp(field, "Zl"))
     {
-
         dims_out[0] = dims->ns[stage];
 
         return;
     }
     else if (!strcmp(field, "Zu"))
     {
-
         dims_out[0] = dims->ns[stage];
 
         return;
     }
     else if (!strcmp(field, "zl"))
     {
-
         dims_out[0] = dims->ns[stage];
 
         return;
     }
     else if (!strcmp(field, "zu"))
     {
-
         dims_out[0] = dims->ns[stage];
 
         return;
@@ -703,7 +699,6 @@ void ocp_nlp_cost_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims,
     // matrices
     else if (!strcmp(field, "W"))
     {
-
         config->cost[stage]->dims_get(config->cost[stage], dims->cost[stage],
                                             "ny", &dims_out[0]);
 
@@ -713,7 +708,6 @@ void ocp_nlp_cost_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims,
     }
     else if (!strcmp(field, "Vx"))
     {
-
         config->cost[stage]->dims_get(config->cost[stage], dims->cost[stage],
                                             "ny", &dims_out[0]);
         dims_out[1] = dims->nx[stage];
@@ -722,7 +716,6 @@ void ocp_nlp_cost_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims,
     }
     else if (!strcmp(field, "Vu"))
     {
-
         config->cost[stage]->dims_get(config->cost[stage], dims->cost[stage],
                                             "ny", &dims_out[0]);
         dims_out[1] = dims->nu[stage];
@@ -731,10 +724,16 @@ void ocp_nlp_cost_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims,
     }
     else if (!strcmp(field, "Vz"))
     {
-
         config->cost[stage]->dims_get(config->cost[stage], dims->cost[stage],
                                             "ny", &dims_out[0]);
         dims_out[1] = dims->nz[stage];
+
+        return;
+    }
+    else if (!strcmp(field, "ext_cost_num_hess"))
+    {
+        dims_out[0] = dims->nx[stage] + dims->nu[stage];
+        dims_out[1] = dims->nx[stage] + dims->nu[stage];
 
         return;
     }

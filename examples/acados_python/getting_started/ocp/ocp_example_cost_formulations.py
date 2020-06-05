@@ -43,6 +43,7 @@ from casadi import vertcat
 
 COST_MODULE = 'EXTERNAL' # 'LS', 'EXTERNAL'
 HESSIAN_APPROXIMATION = 'EXACT' # 'GAUSS_NEWTON
+EXTERNAL_COST_USE_NUM_HESS = 1
 
 # create ocp object to formulate the OCP
 ocp = AcadosOcp()
@@ -106,7 +107,7 @@ elif COST_MODULE == 'EXTERNAL':
 else:
     raise Exception('Unknown COST_MODULE. Possible values are \'LS\' and \'NLS\'.')
 
-ocp.cost.yref  = np.zeros((ny, ))
+ocp.cost.yref = np.zeros((ny, ))
 ocp.cost.yref_e = np.zeros((ny_e, ))
 
 # set constraints
@@ -127,14 +128,33 @@ ocp.solver_options.qp_solver_cond_N = 5
 # set prediction horizon
 ocp.solver_options.tf = Tf
 ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
+ocp.solver_options.ext_cost_num_hess = EXTERNAL_COST_USE_NUM_HESS
 
 ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
+
+# from casadi import jacobian
+# ux = vertcat(ocp.model.u, ocp.model.x)
+# jacobian(jacobian(ocp.model.cost_expr_ext_cost, ux), ux)
+# SX(@1=0.04, @2=4000,
+# [[@1, 00, 00, 00, 00],
+#  [00, @2, 00, 00, 00],
+#  [00, 00, @2, 00, 00],
+#  [00, 00, 00, @1, 00],
+#  [00, 00, 00, 00, @1]])
+
+# NOTE: hessian is wrt [u,x]
+if EXTERNAL_COST_USE_NUM_HESS:
+    for i in range(N):
+        ocp_solver.cost_set(i, "ext_cost_num_hess", np.diag([0.04, 4000, 4000, 0.04, 0.04, ]))
+    ocp_solver.cost_set(N, "ext_cost_num_hess", np.diag([4000, 4000, 0.04, 0.04, ]))
 
 
 simX = np.ndarray((N+1, nx))
 simU = np.ndarray((N, nu))
 
 status = ocp_solver.solve()
+
+ocp_solver.print_statistics()
 
 if status != 0:
     raise Exception('acados returned status {}. Exiting.'.format(status))
