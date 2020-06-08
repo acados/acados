@@ -631,6 +631,7 @@ class AcadosOcpSolver:
     def __init__(self, acados_ocp, json_file='acados_ocp_nlp.json'):
 
         self.solver_created = False
+        self.N = acados_ocp.dims.N
         model = acados_ocp.model
 
         # make dims consistent
@@ -719,6 +720,16 @@ class AcadosOcpSolver:
         if (field_ not in out_fields + mem_fields):
             raise Exception('AcadosOcpSolver.get(): {} is an invalid argument.\
                     \n Possible values are {}. Exiting.'.format(field_, out_fields + mem_fields))
+
+        if not isinstance(stage_, int):
+            raise Exception('AcadosOcpSolver.get(): stage index must be Integer.')
+
+        if stage_ < 0 or stage_ > self.N:
+            raise Exception('AcadosOcpSolver.get(): stage index must be in [0, N], got: {}.'.format(self.N))
+
+        if stage_ == self.N and field_ == 'pi':
+            raise Exception('AcadosOcpSolver.get(): field {} does not exist at final stage {}.'\
+                .format(field_, stage_))
 
         self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = \
             [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
