@@ -31,9 +31,10 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
-%% test of native matlab interface
-clear all
+function model = test_template_pendulum_ocp(cost_type)
+% supports cost_type = auto, nonlinear_ls
 
+%% test of native matlab interface
 model_path = fullfile(pwd,'..','pendulum_on_cart_model');
 addpath(model_path)
 
@@ -68,8 +69,19 @@ ocp_model.set('sym_u', model.sym_u);
 ocp_model.set('sym_xdot', model.sym_xdot);
 
 % cost
+ocp_model.set('cost_type', cost_type);
+ocp_model.set('cost_type_e', cost_type);
+
+if strcmp(cost_type, 'auto')
 ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
 ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
+else % nonlinear_ls
+ocp_model.set('cost_W', model.W);
+ocp_model.set('cost_expr_y', model.cost_expr_y);
+ocp_model.set('cost_W_e', model.W_e);
+ocp_model.set('cost_expr_y_e', model.cost_expr_y_e);
+end
+
 
 % dynamics
 if (strcmp(sim_method, 'erk'))
@@ -169,3 +181,4 @@ end
 
 cd ..
 clear all
+end

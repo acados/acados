@@ -49,7 +49,8 @@ end
 
 %% ocp tests
 try
-    test_template_pendulum_ocp;
+    test_template_pendulum_ocp('auto');
+    test_template_pendulum_ocp('nonlinear_ls');
     test_template_pendulum_exact_hess;
     test_template_ocp_linear_dae;
 catch exception
