@@ -34,9 +34,9 @@
 function ocp_generate_c_code(obj)
     %% check if formulation is supported
     % add checks for
-    if ~strcmp( obj.model_struct.cost_type, 'linear_ls' ) || ...
-        ~strcmp( obj.model_struct.cost_type_e, 'linear_ls' )
-        error(['mex templating does only support linear_ls cost for now.',...
+    if strcmp( obj.model_struct.cost_type, 'external' ) || ...
+        strcmp( obj.model_struct.cost_type_e, 'external' )
+        error(['mex templating does not support external cost for now.',...
             ' Got cost_type: %s, cost_type_e: %s.\nNotice that it might still',...
             'be possible to solve the OCP from MATLAB.'], obj.model_struct.cost_type,...
             obj.model_struct.cost_type_e);
@@ -66,7 +66,12 @@ function ocp_generate_c_code(obj)
                 obj.acados_ocp_nlp_json.model, opts);
         end
     end
-    
+
+    % cost
+    if strcmp(obj.model_struct.cost_type, 'nonlinear_ls')
+        generate_c_code_nonlinear_least_squares( obj.model_struct, obj.opts_struct,...
+              fullfile(pwd, 'c_generated_code', [obj.model_struct.name '_cost']) );
+    end
     % constraints
     if strcmp(obj.model_struct.constr_type, 'bgh') && obj.model_struct.dim_nh > 0
         generate_c_code_nonlinear_constr( obj.model_struct, obj.opts_struct,...
@@ -83,6 +88,8 @@ function ocp_generate_c_code(obj)
     obj.acados_ocp_nlp_json.model = model;
 
     %% post process numerical data (mostly cast scalars to 1-dimensional cells)
+    dims = obj.acados_ocp_nlp_json.dims;
+
     constr = obj.acados_ocp_nlp_json.constraints;
     props = fieldnames(constr);
     for iprop = 1:length(props)
@@ -109,6 +116,16 @@ function ocp_generate_c_code(obj)
     end
     obj.acados_ocp_nlp_json.cost = cost;
 
+    % for cost type not LINEAR_LS, fill matrices with zeros
+    if ~strcmp(cost.cost_type, 'LINEAR_LS')
+        cost.Vx = zeros(dims.ny, dims.nx);
+        cost.Vu = zeros(dims.ny, dims.nu);
+        cost.Vz = zeros(dims.ny, dims.nz);
+    end
+    if ~strcmp(cost.cost_type_e, 'LINEAR_LS')
+        cost.Vx_e = zeros(dims.ny_e, dims.nx);
+    end
+
     %% load JSON layout
     acados_folder = getenv('ACADOS_INSTALL_DIR');
     json_layout_filename = fullfile(acados_folder, 'interfaces',...
@@ -121,7 +138,6 @@ function ocp_generate_c_code(obj)
     % end
 
     %% reshape constraints
-    dims = obj.acados_ocp_nlp_json.dims;
     constr = obj.acados_ocp_nlp_json.constraints;
     constr_layout = acados_layout.constraints;
     fields = fieldnames(constr_layout);
@@ -160,10 +176,10 @@ function ocp_generate_c_code(obj)
             try
                 cost.(fields{i}) = reshape(cost.(fields{i}), this_dims);
             catch e
-                    error(['error while reshaping cost.' fields{i} ...
-                        ' to dimension ' num2str(this_dims), ', got ',...
-                        num2str( size(cost.(fields{i}) )) , 10,...
-                        e.message ]);
+                error(['error while reshaping cost.' fields{i} ...
+                    ' to dimension ' num2str(this_dims), ', got ',...
+                    num2str( size(cost.(fields{i}) )) , 10,...
+                    e.message ]);
             end
         end
     end
@@ -184,10 +200,10 @@ function ocp_generate_c_code(obj)
             try
                 opts.(fields{i}) = reshape(opts.(fields{i}), this_dims);
             catch e
-                    error(['error while reshaping opts.' fields{i} ...
-                        ' to dimension ' num2str(this_dims), ', got ',...
-                        num2str( size(opts.(fields{i}) )) , 10,...
-                        e.message ]);
+                error(['error while reshaping opts.' fields{i} ...
+                    ' to dimension ' num2str(this_dims), ', got ',...
+                    num2str( size(opts.(fields{i}) )) , 10,...
+                    e.message ]);
             end
         end
     end

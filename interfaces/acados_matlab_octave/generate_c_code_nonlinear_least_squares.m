@@ -32,7 +32,7 @@
 %
 
 
-function generate_c_code_nonlinear_least_squares( model, opts )
+function generate_c_code_nonlinear_least_squares( model, opts, target_dir )
 
 %% import casadi
 import casadi.*
@@ -71,6 +71,15 @@ else
 end
 
 model_name = model.name;
+
+% cd to target folder
+if nargin > 2
+    original_dir = pwd;
+    if ~exist(target_dir, 'dir')
+        mkdir(target_dir);
+    end
+    chdir(target_dir)
+end
 
 if isfield(model, 'cost_expr_y')
     fun = model.cost_expr_y;
@@ -120,5 +129,11 @@ if isfield(model, 'cost_expr_y_e')
     y_e_fun.generate([model_name,'_cost_y_e_fun'], casadi_opts);
     y_e_fun_jac_ut_xt.generate([model_name,'_cost_y_e_fun_jac_ut_xt'], casadi_opts);
     y_e_hess.generate([model_name,'_cost_y_e_hess'], casadi_opts);
+end
+
+if nargin > 2
+    chdir(original_dir)
+end
+
 end
 
