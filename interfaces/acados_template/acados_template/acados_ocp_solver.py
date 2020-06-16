@@ -837,7 +837,22 @@ class AcadosOcpSolver:
 
     # Note: this function should not be used anymore, better use cost_set, constraints_set
     def set(self, stage_, field_, value_):
+        """
+        set numerical data inside the solver:
+            :param stage_: integer corresponding to shooting node
+            :param field_: string in ['x', 'u', 'pi', 'lam', 't']
 
+            .. note:: regarding lam, t: \n
+                    the inequalities are internally organized in the following order: \n
+                    [ lbu lbx lg lh lphi ubu ubx ug uh uphi; \n
+                      lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
+
+            .. note:: pi: multipliers for dynamics equality constraints \n
+                      lam: multipliers for inequalities \n
+                      t: slack variables corresponding to evaluation of all inequalities (at the solution) \n
+                      sl: slack variables of soft lower inequality constraints \n
+                      su: slack variables of soft upper inequality constraints \n
+        """
         cost_fields = ['y_ref', 'yref']
         constraints_fields = ['lbx', 'ubx', 'lbu', 'ubu']
         out_fields = ['x', 'u', 'pi', 'lam', 't']
