@@ -135,11 +135,23 @@ function render_acados_templates(acados_ocp_nlp_json_file)
 
     % header files
     chdir([model_name, '_model']);
-
     template_file = 'model.in.h';
     out_file = [model_name, '_model.h'];
     render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+    cd ..
 
+    cost_dir = [model_name, '_cost'];
+    if ~(exist(cost_dir, 'dir'))
+        mkdir(cost_dir);
+    end
+    chdir(cost_dir);
+    template_file = 'cost_y_fun.in.h';
+    out_file = [model_name, '_cost_y_fun.h'];
+    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+
+    template_file = 'cost_y_e_fun.in.h';
+    out_file = [model_name, '_cost_y_e_fun.h'];
+    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
     cd ..
 
     % constraints
