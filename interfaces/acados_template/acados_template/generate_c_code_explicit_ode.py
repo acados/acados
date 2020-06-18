@@ -59,17 +59,16 @@ def generate_c_code_explicit_ode( model, opts ):
     nx = x.size()[0]
     nu = u.size()[0]
 
-    ## set up functions to be exported
-    if isinstance(f_expl, casadi.SX):
-        Sx = SX.sym('Sx', nx, nx)
-        Sp = SX.sym('Sp', nx, nu)
-        lambdaX = SX.sym('lambdaX', nx, 1)
-    elif isinstance(f_expl, casadi.MX):
-        Sx = MX.sym('Sx', nx, nx)
-        Sp = MX.sym('Sp', nx, nu)
-        lambdaX = MX.sym('lambdaX', nx, 1)
+    if isinstance(f_expl, casadi.MX):
+        symbol = MX.sym
+    elif isinstance(f_expl, casadi.SX):
+        symbol = SX.sym
     else:
         raise Exception("Invalid type for f_expl! Possible types are 'SX' and 'MX'. Exiting.")
+    ## set up functions to be exported
+    Sx = symbol('Sx', nx, nx)
+    Sp = symbol('Sp', nx, nu)
+    lambdaX = symbol('lambdaX', nx, 1)
 
     fun_name = model_name + '_expl_ode_fun'
 
@@ -77,17 +76,11 @@ def generate_c_code_explicit_ode( model, opts ):
     expl_ode_fun = Function(fun_name, [x, u, p], [f_expl])
 
     # TODO: Polish: get rid of SX.zeros
-    if isinstance(f_expl, casadi.SX):
-        vdeX = SX.zeros(nx,nx)
-    else:
-        vdeX = MX.zeros(nx,nx)
+    vdeX = DM.zeros(nx,nx)
 
     vdeX = vdeX + jtimes(f_expl,x,Sx)
 
-    if isinstance(f_expl, casadi.SX):
-        vdeP = SX.zeros(nx,nu) + jacobian(f_expl,u)
-    else:
-        vdeP = MX.zeros(nx,nu) + jacobian(f_expl,u)
+    vdeP = DM.zeros(nx,nu) + jacobian(f_expl,u)
 
     vdeP = vdeP + jtimes(f_expl,x,Sp)
 

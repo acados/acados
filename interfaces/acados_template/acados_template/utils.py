@@ -109,24 +109,18 @@ def make_model_consistent(model):
     z = model.z
     p = model.p
 
-    if isinstance(x, SX):
-        is_SX = True
-    elif isinstance(x, MX):
-        is_SX = False
+    if isinstance(x, MX):
+        symbol = MX.sym
+    elif isinstance(x, SX):
+        symbol = SX.sym
     else:
         raise Exception("model.x must be casadi.SX or casadi.MX, got {}".format(type(x)))
 
     if is_empty(p):
-        if is_SX:
-            model.p = SX.sym('p', 0, 0)
-        else:
-            model.p = MX.sym('p', 0, 0)
+        model.p = symbol('p', 0, 0)
 
     if is_empty(z):
-        if is_SX:
-            model.z = SX.sym('z', 0, 0)
-        else:
-            model.z = MX.sym('z', 0, 0)
+        model.z = symbol('z', 0, 0)
 
     return model
 
