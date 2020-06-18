@@ -49,11 +49,19 @@ def generate_c_code_external_cost(model, is_terminal):
         msg += "Version {} currently in use.".format(casadi_version)
         raise Exception(msg)
 
+    x = model.x
+    p = model.p
+
+    if isinstance(x, MX):
+        symbol = MX.sym
+    else:
+        symbol = SX.sym
+
     if is_terminal:
         suffix_name = "_cost_ext_cost_e_fun"
         suffix_name_hess = "_cost_ext_cost_e_fun_jac_hess"
         suffix_name_jac = "_cost_ext_cost_e_fun_jac"
-        u = SX.sym("u", 0, 0)
+        u = symbol("u", 0, 0)
         ext_cost = model.cost_expr_ext_cost_e
 
     else:
@@ -63,8 +71,6 @@ def generate_c_code_external_cost(model, is_terminal):
         u = model.u
         ext_cost = model.cost_expr_ext_cost
 
-    x = model.x
-    p = model.p
 
     # set up functions to be exported
     fun_name = model.name + suffix_name
