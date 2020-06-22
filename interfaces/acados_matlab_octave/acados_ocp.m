@@ -133,9 +133,13 @@ classdef acados_ocp < handle
                 disp('found compiled acados MEX interface')
             end
 
-            % create C object
-            obj.C_ocp = ocp_create(obj.model_struct, obj.opts_struct);
-
+            try
+                % create C object
+                obj.C_ocp = ocp_create(obj.model_struct, obj.opts_struct);
+            catch ex
+                sprintf('Exception:\n\t%s\n\t%s\n',ex.identifier,ex.message);
+            end
+            
             % generate and compile casadi functions
             if (strcmp(obj.opts_struct.codgen_model, 'true') || strcmp(obj.opts_struct.compile_model, 'true'))
                 ocp_generate_casadi_ext_fun(obj.model_struct, obj.opts_struct);

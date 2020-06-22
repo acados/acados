@@ -1156,8 +1156,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         if (mxGetField( matlab_model, 0, "cost_y_ref" )!=NULL)
         {
             int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_y_ref" ) );
-            int acados_size = ny;
-			MEX_DIM_CHECK_VEC(fun_name, "cost_y_ref", matlab_size, acados_size);
+            int acados_size = ny;	    	MEX_DIM_CHECK_VEC(fun_name, "cost_y_ref", matlab_size, acados_size);
             double *yr = mxGetPr( mxGetField( matlab_model, 0, "cost_y_ref" ) );
             for (int ii=0; ii<N; ii++)
             {

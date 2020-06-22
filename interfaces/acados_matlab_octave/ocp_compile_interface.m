@@ -106,7 +106,7 @@ end
 if ismac()
     FLAGS = 'CFLAGS=$CFLAGS -std=c99';
 else
-    FLAGS = 'CFLAGS=$CFLAGS -std=c99 -fopenmp';
+    FLAGS = 'CFLAGS=$CFLAGS -std=c99 -fopenmp -g'; % TODO debug mode
 end
 
 % is qpOASES?
