@@ -1158,6 +1158,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_y_ref" ) );
             int acados_size = ny;
             double *yr = mxGetPr( mxGetField( matlab_model, 0, "cost_y_ref" ) );
+            MEX_DIM_CHECK_VEC(fun_name, "cost_y_ref", matlab_size, acados_size);
             for (int ii=0; ii<N; ii++)
             {
                 ocp_nlp_cost_model_set(config, dims, in, ii, "y_ref", yr);
