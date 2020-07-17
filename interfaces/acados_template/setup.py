@@ -41,7 +41,7 @@ if sys.version_info < (3,5):
 
 setup(name='acados_template',
    version='0.1',
-   python_requires='>=3.5, <3.8',
+   python_requires='>=3.5, <3.9',
    description='A templating framework for acados',
    url='http://github.com/zanellia/acados',
    author='Andrea Zanelli',
