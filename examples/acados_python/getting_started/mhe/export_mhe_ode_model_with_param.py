@@ -33,19 +33,19 @@
 
 from acados_template import *
 
-def export_mhe_ode_model_with_noisy_param():
+def export_mhe_ode_model_with_param():
     '''
     Export ode model augmented with an additional state corresponding to the 
     parameter l, which is identified online
     '''
 
-    model_name = 'mhe_pendulum_ode_with_noisy_param'
+    model_name = 'mhe_pendulum_ode_with_param'
 
     # constants
-    #M = 1. -> now estimated
-    m = 0.1
-    g = 9.81
-    l = 0.8 
+    M = 1. # mass of the cart [kg]
+    m = 0.1 # mass of the ball [kg]
+    g = 9.81  # gravity constant [m/s^2]
+    # l = 0.8 # length of the rod [m]  -> now estimated
 
     nx = 4
 
@@ -55,27 +55,26 @@ def export_mhe_ode_model_with_noisy_param():
     theta   = SX.sym('theta')
     dtheta  = SX.sym('dtheta')
     # add parameter l as state
-    M       = SX.sym('M')
+    l       = SX.sym('l')
 
-    x = vertcat(x1, theta, v1, dtheta, M)
+    x = vertcat(x1, theta, v1, dtheta, l)
 
     # state noise
     w_x1      = SX.sym('w_x1')
     w_v1      = SX.sym('w_v1')
     w_theta   = SX.sym('w_theta')
     w_dtheta  = SX.sym('w_dtheta')
-    w_M       = SX.sym('w_M')
 
-    w = vertcat(w_x1, w_theta, w_v1, w_dtheta, w_M)
+    w = vertcat(w_x1, w_theta, w_v1, w_dtheta)
 
     # xdot
     x1_dot      = SX.sym('x1_dot')
     theta_dot   = SX.sym('theta_dot')
     v1_dot      = SX.sym('v1_dot')
     dtheta_dot  = SX.sym('dtheta_dot')
-    M_dot       = SX.sym('M_dot')
+    l_dot       = SX.sym('l_dot')
 
-    xdot = vertcat(x1_dot, theta_dot, v1_dot, dtheta_dot, M_dot)
+    xdot = vertcat(x1_dot, theta_dot, v1_dot, dtheta_dot, l_dot)
 
     # algebraic variables
     z = []
@@ -93,7 +92,7 @@ def export_mhe_ode_model_with_noisy_param():
                      0)
 
     # add additive state noise
-    f_expl = f_expl + w
+    f_expl[0:nx] = f_expl[0:nx] + w
     f_impl = xdot - f_expl
 
     model = AcadosModel()

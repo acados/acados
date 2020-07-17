@@ -52,7 +52,8 @@ N = 20
 h = Tf/N
 Fmax = 80
 
-M_true = 1
+# NOTE: hard coded in export_pendulum_ode_model;
+l_true = 0.8
 
 # ocp model and solver
 model = export_pendulum_ode_model()
@@ -72,7 +73,7 @@ nx_augmented = model_mhe.x.size()[0]
 nw = model_mhe.u.size()[0]
 ny = nx
 
-Q0_mhe = np.diag([0.1, 0.1, 0.1, 0.1, 20])
+Q0_mhe = np.diag([0.1, 0.1, 0.1, 0.1, 1])
 Q_mhe  = 10.*np.diag([0.2, 0.2, 2, 2, 0.1])
 R_mhe  = 2*np.diag([0.1, 0.1, 0.1, 0.1])
 
@@ -88,7 +89,7 @@ simY = np.ndarray((N+1, nx))
 
 simXest = np.zeros((N+1, nx))
 simWest = np.zeros((N, nx_augmented))
-simMest = np.zeros((N+1, 1))
+sim_l_est = np.zeros((N+1, 1))
 
 # arrival cost mean (with wrong guess for l)
 # x0_bar = np.array([0.0, np.pi, 0.0, 0.0, 1])
@@ -134,15 +135,13 @@ for i in range(N):
     x_augmented = acados_solver_mhe.get(i, "x")
 
     simXest[i,:] = x_augmented[0:nx]
-    simMest[i,:] = x_augmented[nx]
+    sim_l_est[i,:] = x_augmented[nx]
     simWest[i,:] = acados_solver_mhe.get(i, "u")
     
 
 x_augmented = acados_solver_mhe.get(N, "x")
 simXest[N,:] = x_augmented[0:nx]
-simMest[N,:] = x_augmented[nx]
-
-print(simMest)
+sim_l_est[N,:] = x_augmented[nx]
 
 print('difference |x0_est - x0_bar|', np.linalg.norm(x0_bar[0:nx] - simXest[0, :]))
 print('difference |x_est - x_true|', np.linalg.norm(simXest - simX))
@@ -154,9 +153,9 @@ plot_pendulum(ts, Fmax, simU, simX, simXest, simY, latexify=False)
 import matplotlib.pyplot as plt
 
 plt.figure()
-plt.plot(ts, M_true*np.ones((N+1, 1)), '-')
-plt.plot(ts, simMest, '.-')
+plt.plot(ts, l_true*np.ones((N+1, 1)), '-')
+plt.plot(ts, sim_l_est, '.-')
 plt.grid()
-plt.ylabel('M')
-plt.legend(['true M', 'estimated M'])
+plt.ylabel('l')
+plt.legend(['true l', 'estimated l'])
 plt.show()

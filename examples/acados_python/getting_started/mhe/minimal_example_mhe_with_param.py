@@ -52,7 +52,8 @@ N = 20
 h = Tf/N
 Fmax = 80
 
-M_true = 1
+# NOTE: hard coded in export_pendulum_ode_model;
+l_true = 0.8
 
 # ocp model and solver
 model = export_pendulum_ode_model()
@@ -88,7 +89,7 @@ simY = np.ndarray((N+1, nx))
 
 simXest = np.zeros((N+1, nx))
 simWest = np.zeros((N, nx))
-simMest = np.zeros((N+1, 1))
+sim_l_est = np.zeros((N+1, 1))
 
 # arrival cost mean (with wrong guess for l)
 x0_bar = np.array([0.0, np.pi, 0.0, 0.0, 0.8])
@@ -114,7 +115,6 @@ for j in range(N):
     yref = np.zeros((2*nx+nx_augmented, ))
     yref[:nx] = simY[j, :]
     yref[2*nx:] = x0_bar
-    print(yref)
     acados_solver_mhe.set(j, "yref", yref)
     acados_solver_mhe.set(j, "p", simU[j,:])
 
@@ -133,29 +133,28 @@ if status != 0:
 for i in range(N):
     x_augmented = acados_solver_mhe.get(i, "x")
     simXest[i,:] = x_augmented[0:nx]
-    simMest[i,:] = x_augmented[nx]
+    sim_l_est[i,:] = x_augmented[nx]
     simWest[i,:] = acados_solver_mhe.get(i, "u")
     
-
 x_augmented = acados_solver_mhe.get(N, "x")
 simXest[N,:] = x_augmented[0:nx]
-simMest[N,:] = x_augmented[nx]
-
-
+sim_l_est[N,:] = x_augmented[nx]
 
 print('difference |x0_est - x0_bar|', np.linalg.norm(x0_bar[0:nx] - simXest[0, :]))
 print('difference |x_est - x_true|', np.linalg.norm(simXest - simX))
-print('difference |M_est - M_true|', np.abs(simMest[0] - M_true))
+print('difference |l_est - l_true|', np.abs(sim_l_est[0] - l_true))
 
 ts = np.linspace(0, Tf, N+1)
 plot_pendulum(ts, Fmax, simU, simX, simXest, simY, latexify=False)
 
-# import matplotlib.pyplot as plt
+## plot estimated M over shooting nodes
 
+# import matplotlib.pyplot as plt
 # plt.figure()
-# plt.plot(ts, M_true*np.ones((N+1, 1)), '-')
-# plt.plot(ts, simMest, '.-')
+# plt.plot(ts, l_true*np.ones((N+1, 1)), '-')
+# plt.plot(ts, sim_l_est, '.-')
 # plt.grid()
 # plt.ylabel('M')
+# plt.xlabel('time')
 # plt.legend(['true M', 'estimated M'])
 # plt.show()

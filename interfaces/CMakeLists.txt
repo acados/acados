@@ -63,6 +63,14 @@ add_test(NAME python_nonuniform_discretization_ocp_example
 add_test(NAME python_pendulum_mhe_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/mhe
         python minimal_example_mhe.py)
+
+add_test(NAME python_pendulum_mhe_example
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/mhe
+        python minimal_example_mhe_with_noisy_param.py)
+add_test(NAME python_pendulum_mhe_example
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/mhe
+        python minimal_example_mhe_with_param.py)
+
 add_test(NAME python_pendulum_ocp_cost_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/ocp
         python ocp_example_cost_formulations.py)
