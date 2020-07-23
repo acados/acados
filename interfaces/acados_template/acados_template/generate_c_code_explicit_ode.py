@@ -35,7 +35,7 @@ import os
 from casadi import *
 from .utils import ALLOWED_CASADI_VERSIONS, is_empty
 
-def generate_c_code_explicit_ode( model ):
+def generate_c_code_explicit_ode( model, opts ):
 
     casadi_version = CasadiMeta.version()
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
@@ -44,6 +44,9 @@ def generate_c_code_explicit_ode( model ):
         msg += 'to ensure compatibility with acados.\n'
         msg += 'Version {} currently in use.'.format(casadi_version)
         raise Exception(msg)
+
+
+    generate_hess = opts["generate_hess"]
 
     # load model
     x = model.x
@@ -98,14 +101,16 @@ def generate_c_code_explicit_ode( model ):
     expl_vde_adj = Function(fun_name, [x, lambdaX, u, p], [adj])
 
     S_forw = vertcat(horzcat(Sx, Sp), horzcat(DM.zeros(nu,nx), DM.eye(nu)))
-    hess = mtimes(transpose(S_forw),jtimes(adj, vertcat(x,u), S_forw))
-    hess2 = []
-    for j in range(nx+nu):
-        for i in range(j,nx+nu):
-            hess2 = vertcat(hess2, hess[i,j])
 
-    fun_name = model_name + '_expl_ode_hess'
-    expl_ode_hess = Function(fun_name, [x, Sx, Sp, lambdaX, u, p], [adj, hess2])
+    if generate_hess:
+        hess = mtimes(transpose(S_forw),jtimes(adj, vertcat(x,u), S_forw))
+        hess2 = []
+        for j in range(nx+nu):
+            for i in range(j,nx+nu):
+                hess2 = vertcat(hess2, hess[i,j])
+
+        fun_name = model_name + '_expl_ode_hess'
+        expl_ode_hess = Function(fun_name, [x, Sx, Sp, lambdaX, u, p], [adj, hess2])
 
     ## generate C code
     if not os.path.exists('c_generated_code'):
@@ -126,8 +131,9 @@ def generate_c_code_explicit_ode( model ):
     fun_name = model_name + '_expl_vde_adj'
     expl_vde_adj.generate(fun_name, casadi_opts)
 
-    fun_name = model_name + '_expl_ode_hess'
-    expl_ode_hess.generate(fun_name, casadi_opts)
+    if generate_hess:
+        fun_name = model_name + '_expl_ode_hess'
+        expl_ode_hess.generate(fun_name, casadi_opts)
     os.chdir('../..')
 
     return

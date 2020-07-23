@@ -153,13 +153,14 @@ def sim_generate_casadi_functions(acados_sim):
     model = make_model_consistent(model)
 
     integrator_type = acados_sim.solver_options.integrator_type
+
+    opts = dict(generate_hess=0)
     # generate external functions
     if integrator_type == 'ERK':
         # explicit model -- generate C code
-        generate_c_code_explicit_ode(model)
+        generate_c_code_explicit_ode(model, opts)
     elif integrator_type == 'IRK':
         # implicit model -- generate C code
-        opts = dict(generate_hess=1)
         generate_c_code_implicit_ode(model, opts)
     elif integrator_type == 'GNSF':
         generate_c_code_gnsf(model)
@@ -299,7 +300,7 @@ class AcadosSimSolver:
         field = field.encode('utf-8')
 
         # treat parameters separately
-        if field_ is 'p':
+        if field_ == 'p':
             model_name = self.sim_struct.model.name
             getattr(self.shared_lib, f"{model_name}_acados_sim_update_params").argtypes = [POINTER(c_double)]
             value_data = cast(value_.ctypes.data, POINTER(c_double))
