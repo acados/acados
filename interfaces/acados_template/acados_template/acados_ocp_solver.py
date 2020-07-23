@@ -84,7 +84,8 @@ def make_ocp_dims_consistent(acados_ocp):
     else:
         dims.np = casadi_length(model.p)
     if acados_ocp.parameter_values.shape[0] != dims.np:
-        raise Exception('inconsistent dimension np, regarding model.p and parameter_values.')
+        raise Exception('inconsistent dimension np, regarding model.p and parameter_values.' + \
+            f'\nGot np = {dims.np}, acados_ocp.parameter_values.shape = {acados_ocp.parameter_values.shape[0]}\n')
 
     ## cost
     # path
@@ -466,23 +467,22 @@ def ocp_formulation_json_load(json_file='acados_ocp_nlp.json'):
 def ocp_generate_external_functions(acados_ocp, model):
 
     model = make_model_consistent(model)
-    if acados_ocp.solver_options.integrator_type == 'ERK':
-        # explicit model -- generate C code
-        generate_c_code_explicit_ode(model)
-    elif acados_ocp.solver_options.integrator_type == 'IRK':
-        # implicit model -- generate C code
-        opts = dict(generate_hess=1)
-        generate_c_code_implicit_ode(model, opts)
-    elif acados_ocp.solver_options.integrator_type == 'GNSF':
-        generate_c_code_gnsf(model)
-    else:
-        raise Exception("ocp_generate_external_functions: unknown integrator type.")
-
 
     if acados_ocp.solver_options.hessian_approx == 'EXACT':
         opts = dict(generate_hess=1)
     else:
         opts = dict(generate_hess=0)
+
+    if acados_ocp.solver_options.integrator_type == 'ERK':
+        # explicit model -- generate C code
+        generate_c_code_explicit_ode(model, opts)
+    elif acados_ocp.solver_options.integrator_type == 'IRK':
+        # implicit model -- generate C code
+        generate_c_code_implicit_ode(model, opts)
+    elif acados_ocp.solver_options.integrator_type == 'GNSF':
+        generate_c_code_gnsf(model)
+    else:
+        raise Exception("ocp_generate_external_functions: unknown integrator type.")
 
     if acados_ocp.dims.nphi > 0 or acados_ocp.dims.nh > 0:
         generate_c_code_constraint(model, model.name, False, opts)
@@ -866,7 +866,7 @@ class AcadosOcpSolver:
         stage = c_int(stage_)
 
         # treat parameters separately
-        if field_ is 'p':
+        if field_ == 'p':
             self.shared_lib.acados_update_params.argtypes = [c_int, POINTER(c_double)]
             self.shared_lib.acados_update_params.restype = c_int
             value_data = cast(value_.ctypes.data, POINTER(c_double))
