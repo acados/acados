@@ -1599,6 +1599,14 @@ class AcadosOcpConstraints:
         else:
             raise Exception('Invalid idxsh value. Exiting.')
 
+
+    @Jsh.setter
+    def Jsh(self, Jsh):
+        if isinstance(Jsh, np.ndarray):
+            self.__idxsh = J_to_idx_slack(Jsh)
+        else:
+            raise Exception('Invalid Jsh value, expected numpy array. Exiting.')
+
     # soft bounds on convex-over-nonlinear constraints
     @lsphi.setter
     def lsphi(self, lsphi):
@@ -1678,6 +1686,14 @@ class AcadosOcpConstraints:
             self.__idxsh_e = idxsh_e
         else:
             raise Exception('Invalid idxsh_e value. Exiting.')
+
+    @Jsh_e.setter
+    def Jsh_e(self, Jsh_e):
+        if isinstance(Jsh_e, np.ndarray):
+            self.__idxsh_e = J_to_idx_slack(Jsh_e)
+        else:
+            raise Exception('Invalid Jsh_e value, expected numpy array. Exiting.')
+
 
     # soft bounds on convex-over-nonlinear constraints at t=T
     @lsphi_e.setter
