@@ -32,7 +32,7 @@
 %
 
 
-function generate_c_code_ext_cost( model, opts )
+function generate_c_code_ext_cost( model, opts, target_dir )
 
 %% import casadi
 import casadi.*
@@ -42,6 +42,15 @@ if ( strcmp(casadi_version(1:3),'3.4') || strcmp(casadi_version(1:3),'3.5')) % r
     casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
 else % old casadi versions
     error('Please provide CasADi version 3.4 or 3.5 to ensure compatibility with acados')
+end
+
+% cd to target folder
+if nargin > 2
+    original_dir = pwd;
+    if ~exist(target_dir, 'dir')
+        mkdir(target_dir);
+    end
+    chdir(target_dir)
 end
 
 %% load model
@@ -101,4 +110,9 @@ if isfield(model, 'cost_expr_ext_cost_e')
     ext_cost_e_fun_jac_hess.generate([model_name,'_cost_ext_cost_e_fun_jac_hess'], casadi_opts);
 end
 
+if nargin > 2
+    chdir(original_dir)
+end
+
+end
 

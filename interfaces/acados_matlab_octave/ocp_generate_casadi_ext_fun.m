@@ -130,6 +130,7 @@ if (strcmp(model_struct.cost_type, 'nonlinear_ls') || strcmp(model_struct.cost_t
         c_files{end+1} = [model_name, '_cost_y_e_hess.c'];
     end
 end
+
 % external cost
 if (strcmp(model_struct.cost_type, 'ext_cost') || strcmp(model_struct.cost_type_e, 'ext_cost'))
     % generate c for function and derivatives using casadi

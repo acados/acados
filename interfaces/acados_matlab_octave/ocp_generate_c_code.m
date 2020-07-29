@@ -71,6 +71,9 @@ function ocp_generate_c_code(obj)
     if strcmp(obj.model_struct.cost_type, 'nonlinear_ls')
         generate_c_code_nonlinear_least_squares( obj.model_struct, obj.opts_struct,...
               fullfile(pwd, 'c_generated_code', [obj.model_struct.name '_cost']) );
+    elseif strcmp(obj.model_struct.cost_type, 'ext_cost')
+        generate_c_code_ext_cost( obj.model_struct, obj.opts_struct,...
+              fullfile(pwd, 'c_generated_code', [obj.model_struct.name '_cost']) );
     end
     % constraints
     if strcmp(obj.model_struct.constr_type, 'bgh') && obj.model_struct.dim_nh > 0

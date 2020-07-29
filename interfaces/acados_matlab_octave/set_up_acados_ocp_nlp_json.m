@@ -79,7 +79,12 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     ocp_json.dims.nu = model.dim_nu;
     ocp_json.dims.nz = model.dim_nz;
     ocp_json.dims.np = model.dim_np;
-    ocp_json.dims.ny = model.dim_ny;
+    
+    if strcmp(model.cost_type, 'ext_cost')
+        ocp_json.dims.ny = 0;
+    else
+        ocp_json.dims.ny = model.dim_ny;
+    end
     ocp_json.dims.nbx = model.dim_nbx;
     ocp_json.dims.nbx_0 = model.dim_nbx_0;
     ocp_json.dims.nbu = model.dim_nbu;
@@ -109,6 +114,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     end
 
     % terminal
+    %% TODO: probably all isfields are redundant
     if isfield(model, 'dim_nbx_e')
         ocp_json.dims.nbx_e = model.dim_nbx_e;
     end
@@ -117,6 +123,8 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     end
     if isfield(model, 'dim_ny_e')
         ocp_json.dims.ny_e = model.dim_ny_e;
+    elseif strcmp(model.cost_type_e, 'ext_cost')
+        ocp_json.dims.ny_e = 0;
     end
     if isfield(model, 'dim_nh_e')
         ocp_json.dims.nh_e = model.dim_nh_e;
@@ -134,8 +142,16 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     % ocp_json.dims.nsbx_e = model.dim_nsbx_e;
 
     %% types
-    ocp_json.cost.cost_type = upper(model.cost_type);
-    ocp_json.cost.cost_type_e = upper(model.cost_type_e);
+    if strcmp(model.cost_type, 'ext_cost')
+        ocp_json.cost.cost_type = 'EXTERNAL';
+    else
+        ocp_json.cost.cost_type = upper(model.cost_type);
+    end
+    if strcmp(model.cost_type_e, 'ext_cost')
+        ocp_json.cost.cost_type_e = 'EXTERNAL';
+    else
+        ocp_json.cost.cost_type_e = upper(model.cost_type_e);
+    end
     ocp_json.constraints.constr_type = upper(model.constr_type);
     ocp_json.constraints.constr_type_e = upper(model.constr_type_e);
 
