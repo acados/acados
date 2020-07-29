@@ -72,7 +72,7 @@ ocp_model.set('sym_xdot', model.sym_xdot);
 ocp_model.set('cost_type', cost_type);
 ocp_model.set('cost_type_e', cost_type);
 
-if strcmp(cost_type, 'auto')
+if strcmp(cost_type, 'auto') || strcmp(cost_type, 'ext_cost')
 ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
 ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
 else % nonlinear_ls
