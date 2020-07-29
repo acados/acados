@@ -136,7 +136,7 @@ classdef acados_ocp < handle
             try
                 % create C object
                 obj.C_ocp = ocp_create(obj.model_struct, obj.opts_struct);
-            catch
+            catch ex
                 str = sprintf('Exception:\n\t%s\n\t%s\n',ex.identifier,ex.message);
                 error(str);
             end
