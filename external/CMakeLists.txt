@@ -32,9 +32,10 @@ add_subdirectory(blasfeo)
 # When HPIPM is used as part of acados
 set(HPIPM_BLASFEO_PATH ${BLASFEO_SRC_DIR} CACHE STRING "Set CPU architecture target" FORCE)
 
-set(HPIPM_BLASFEO_LIB OFF CACHE STRING "Turn off BLASFEO from HPIPM" FORCE)
+set(HPIPM_BLASFEO_LIB OFF CACHE BOOL "Turn off BLASFEO from HPIPM" FORCE)
 set(HPIPM_HEADERS_INSTALLATION_DIRECTORY "include/hpipm/include" CACHE STRING "")
 set(TARGET ${HPIPM_TARGET} CACHE STRING "Set CPU architecture target" FORCE)
+set(HPIPM_TESTING OFF CACHE BOOL "Tests disabled" FORCE)
 add_subdirectory(hpipm)
 
 if(ACADOS_WITH_HPMPC)
