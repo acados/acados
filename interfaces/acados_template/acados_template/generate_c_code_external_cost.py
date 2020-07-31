@@ -50,16 +50,16 @@ def generate_c_code_external_cost(model, is_terminal):
         raise Exception(msg)
 
     if is_terminal:
-        suffix_name = "_ext_cost_e_fun"
-        suffix_name_hess = "_ext_cost_e_fun_jac_hess"
-        suffix_name_jac = "_ext_cost_e_fun_jac"
+        suffix_name = "_cost_ext_cost_e_fun"
+        suffix_name_hess = "_cost_ext_cost_e_fun_jac_hess"
+        suffix_name_jac = "_cost_ext_cost_e_fun_jac"
         u = SX.sym("u", 0, 0)
         ext_cost = model.cost_expr_ext_cost_e
 
     else:
-        suffix_name = "_ext_cost_fun"
-        suffix_name_hess = "_ext_cost_fun_jac_hess"
-        suffix_name_jac = "_ext_cost_fun_jac"
+        suffix_name = "_cost_ext_cost_fun"
+        suffix_name_hess = "_cost_ext_cost_fun_jac_hess"
+        suffix_name_jac = "_cost_ext_cost_fun_jac"
         u = model.u
         ext_cost = model.cost_expr_ext_cost
 
