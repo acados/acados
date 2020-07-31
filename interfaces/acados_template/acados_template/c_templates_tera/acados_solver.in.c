@@ -672,12 +672,12 @@ int acados_create()
     ext_cost_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; i++)
     {
-        ext_cost_fun[i].casadi_fun = &{{ model.name }}_ext_cost_fun;
-        ext_cost_fun[i].casadi_n_in = &{{ model.name }}_ext_cost_fun_n_in;
-        ext_cost_fun[i].casadi_n_out = &{{ model.name }}_ext_cost_fun_n_out;
-        ext_cost_fun[i].casadi_sparsity_in = &{{ model.name }}_ext_cost_fun_sparsity_in;
-        ext_cost_fun[i].casadi_sparsity_out = &{{ model.name }}_ext_cost_fun_sparsity_out;
-        ext_cost_fun[i].casadi_work = &{{ model.name }}_ext_cost_fun_work;
+        ext_cost_fun[i].casadi_fun = &{{ model.name }}_cost_ext_cost_fun;
+        ext_cost_fun[i].casadi_n_in = &{{ model.name }}_cost_ext_cost_fun_n_in;
+        ext_cost_fun[i].casadi_n_out = &{{ model.name }}_cost_ext_cost_fun_n_out;
+        ext_cost_fun[i].casadi_sparsity_in = &{{ model.name }}_cost_ext_cost_fun_sparsity_in;
+        ext_cost_fun[i].casadi_sparsity_out = &{{ model.name }}_cost_ext_cost_fun_sparsity_out;
+        ext_cost_fun[i].casadi_work = &{{ model.name }}_cost_ext_cost_fun_work;
 
         external_function_param_casadi_create(&ext_cost_fun[i], {{ dims.np }});
     }
@@ -686,12 +686,12 @@ int acados_create()
     for (int i = 0; i < N; i++)
     {
         // residual function
-        ext_cost_fun_jac[i].casadi_fun = &{{ model.name }}_ext_cost_fun_jac;
-        ext_cost_fun_jac[i].casadi_n_in = &{{ model.name }}_ext_cost_fun_jac_n_in;
-        ext_cost_fun_jac[i].casadi_n_out = &{{ model.name }}_ext_cost_fun_jac_n_out;
-        ext_cost_fun_jac[i].casadi_sparsity_in = &{{ model.name }}_ext_cost_fun_jac_sparsity_in;
-        ext_cost_fun_jac[i].casadi_sparsity_out = &{{ model.name }}_ext_cost_fun_jac_sparsity_out;
-        ext_cost_fun_jac[i].casadi_work = &{{ model.name }}_ext_cost_fun_jac_work;
+        ext_cost_fun_jac[i].casadi_fun = &{{ model.name }}_cost_ext_cost_fun_jac;
+        ext_cost_fun_jac[i].casadi_n_in = &{{ model.name }}_cost_ext_cost_fun_jac_n_in;
+        ext_cost_fun_jac[i].casadi_n_out = &{{ model.name }}_cost_ext_cost_fun_jac_n_out;
+        ext_cost_fun_jac[i].casadi_sparsity_in = &{{ model.name }}_cost_ext_cost_fun_jac_sparsity_in;
+        ext_cost_fun_jac[i].casadi_sparsity_out = &{{ model.name }}_cost_ext_cost_fun_jac_sparsity_out;
+        ext_cost_fun_jac[i].casadi_work = &{{ model.name }}_cost_ext_cost_fun_jac_work;
 
         external_function_param_casadi_create(&ext_cost_fun_jac[i], {{ dims.np }});
     }
@@ -700,12 +700,12 @@ int acados_create()
     for (int i = 0; i < N; i++)
     {
         // residual function
-        ext_cost_fun_jac_hess[i].casadi_fun = &{{ model.name }}_ext_cost_fun_jac_hess;
-        ext_cost_fun_jac_hess[i].casadi_n_in = &{{ model.name }}_ext_cost_fun_jac_hess_n_in;
-        ext_cost_fun_jac_hess[i].casadi_n_out = &{{ model.name }}_ext_cost_fun_jac_hess_n_out;
-        ext_cost_fun_jac_hess[i].casadi_sparsity_in = &{{ model.name }}_ext_cost_fun_jac_hess_sparsity_in;
-        ext_cost_fun_jac_hess[i].casadi_sparsity_out = &{{ model.name }}_ext_cost_fun_jac_hess_sparsity_out;
-        ext_cost_fun_jac_hess[i].casadi_work = &{{ model.name }}_ext_cost_fun_jac_hess_work;
+        ext_cost_fun_jac_hess[i].casadi_fun = &{{ model.name }}_cost_ext_cost_fun_jac_hess;
+        ext_cost_fun_jac_hess[i].casadi_n_in = &{{ model.name }}_cost_ext_cost_fun_jac_hess_n_in;
+        ext_cost_fun_jac_hess[i].casadi_n_out = &{{ model.name }}_cost_ext_cost_fun_jac_hess_n_out;
+        ext_cost_fun_jac_hess[i].casadi_sparsity_in = &{{ model.name }}_cost_ext_cost_fun_jac_hess_sparsity_in;
+        ext_cost_fun_jac_hess[i].casadi_sparsity_out = &{{ model.name }}_cost_ext_cost_fun_jac_hess_sparsity_out;
+        ext_cost_fun_jac_hess[i].casadi_work = &{{ model.name }}_cost_ext_cost_fun_jac_hess_work;
 
         external_function_param_casadi_create(&ext_cost_fun_jac_hess[i], {{ dims.np }});
     }
@@ -739,30 +739,30 @@ int acados_create()
 
 {%- elif cost.cost_type_e == "EXTERNAL" %}
     // external cost
-    ext_cost_e_fun.casadi_fun = &{{ model.name }}_ext_cost_e_fun;
-    ext_cost_e_fun.casadi_n_in = &{{ model.name }}_ext_cost_e_fun_n_in;
-    ext_cost_e_fun.casadi_n_out = &{{ model.name }}_ext_cost_e_fun_n_out;
-    ext_cost_e_fun.casadi_sparsity_in = &{{ model.name }}_ext_cost_e_fun_sparsity_in;
-    ext_cost_e_fun.casadi_sparsity_out = &{{ model.name }}_ext_cost_e_fun_sparsity_out;
-    ext_cost_e_fun.casadi_work = &{{ model.name }}_ext_cost_e_fun_work;
+    ext_cost_e_fun.casadi_fun = &{{ model.name }}_cost_ext_cost_e_fun;
+    ext_cost_e_fun.casadi_n_in = &{{ model.name }}_cost_ext_cost_e_fun_n_in;
+    ext_cost_e_fun.casadi_n_out = &{{ model.name }}_cost_ext_cost_e_fun_n_out;
+    ext_cost_e_fun.casadi_sparsity_in = &{{ model.name }}_cost_ext_cost_e_fun_sparsity_in;
+    ext_cost_e_fun.casadi_sparsity_out = &{{ model.name }}_cost_ext_cost_e_fun_sparsity_out;
+    ext_cost_e_fun.casadi_work = &{{ model.name }}_cost_ext_cost_e_fun_work;
     external_function_param_casadi_create(&ext_cost_e_fun, {{ dims.np }});
 
     // external cost
-    ext_cost_e_fun_jac.casadi_fun = &{{ model.name }}_ext_cost_e_fun_jac;
-    ext_cost_e_fun_jac.casadi_n_in = &{{ model.name }}_ext_cost_e_fun_jac_n_in;
-    ext_cost_e_fun_jac.casadi_n_out = &{{ model.name }}_ext_cost_e_fun_jac_n_out;
-    ext_cost_e_fun_jac.casadi_sparsity_in = &{{ model.name }}_ext_cost_e_fun_jac_sparsity_in;
-    ext_cost_e_fun_jac.casadi_sparsity_out = &{{ model.name }}_ext_cost_e_fun_jac_sparsity_out;
-    ext_cost_e_fun_jac.casadi_work = &{{ model.name }}_ext_cost_e_fun_jac_work;
+    ext_cost_e_fun_jac.casadi_fun = &{{ model.name }}_cost_ext_cost_e_fun_jac;
+    ext_cost_e_fun_jac.casadi_n_in = &{{ model.name }}_cost_ext_cost_e_fun_jac_n_in;
+    ext_cost_e_fun_jac.casadi_n_out = &{{ model.name }}_cost_ext_cost_e_fun_jac_n_out;
+    ext_cost_e_fun_jac.casadi_sparsity_in = &{{ model.name }}_cost_ext_cost_e_fun_jac_sparsity_in;
+    ext_cost_e_fun_jac.casadi_sparsity_out = &{{ model.name }}_cost_ext_cost_e_fun_jac_sparsity_out;
+    ext_cost_e_fun_jac.casadi_work = &{{ model.name }}_cost_ext_cost_e_fun_jac_work;
     external_function_param_casadi_create(&ext_cost_e_fun_jac, {{ dims.np }});
 
     // external cost
-    ext_cost_e_fun_jac_hess.casadi_fun = &{{ model.name }}_ext_cost_e_fun_jac_hess;
-    ext_cost_e_fun_jac_hess.casadi_n_in = &{{ model.name }}_ext_cost_e_fun_jac_hess_n_in;
-    ext_cost_e_fun_jac_hess.casadi_n_out = &{{ model.name }}_ext_cost_e_fun_jac_hess_n_out;
-    ext_cost_e_fun_jac_hess.casadi_sparsity_in = &{{ model.name }}_ext_cost_e_fun_jac_hess_sparsity_in;
-    ext_cost_e_fun_jac_hess.casadi_sparsity_out = &{{ model.name }}_ext_cost_e_fun_jac_hess_sparsity_out;
-    ext_cost_e_fun_jac_hess.casadi_work = &{{ model.name }}_ext_cost_e_fun_jac_hess_work;
+    ext_cost_e_fun_jac_hess.casadi_fun = &{{ model.name }}_cost_ext_cost_e_fun_jac_hess;
+    ext_cost_e_fun_jac_hess.casadi_n_in = &{{ model.name }}_cost_ext_cost_e_fun_jac_hess_n_in;
+    ext_cost_e_fun_jac_hess.casadi_n_out = &{{ model.name }}_cost_ext_cost_e_fun_jac_hess_n_out;
+    ext_cost_e_fun_jac_hess.casadi_sparsity_in = &{{ model.name }}_cost_ext_cost_e_fun_jac_hess_sparsity_in;
+    ext_cost_e_fun_jac_hess.casadi_sparsity_out = &{{ model.name }}_cost_ext_cost_e_fun_jac_hess_sparsity_out;
+    ext_cost_e_fun_jac_hess.casadi_work = &{{ model.name }}_cost_ext_cost_e_fun_jac_hess_work;
     external_function_param_casadi_create(&ext_cost_e_fun_jac_hess, {{ dims.np }});
 {%- endif %}
 
@@ -1877,6 +1877,7 @@ int acados_free()
     external_function_param_casadi_free(&cost_y_e_hess);
 {%- elif cost.cost_type_e == "EXTERNAL" %}
     external_function_param_casadi_free(&ext_cost_e_fun);
+    external_function_param_casadi_free(&ext_cost_e_fun_jac);
     external_function_param_casadi_free(&ext_cost_e_fun_jac_hess);
 {%- endif %}
 
