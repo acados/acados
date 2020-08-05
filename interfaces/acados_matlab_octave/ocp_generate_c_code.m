@@ -53,6 +53,8 @@ function ocp_generate_c_code(obj)
             generate_c_code_implicit_ode(...
                 obj.acados_ocp_nlp_json.model, opts);
         end
+    elseif (strcmp(obj.model_struct.dyn_type, 'discrete'))
+        generate_c_code_disc_dyn(obj.acados_ocp_nlp_json.model);
     end
 
     % cost
