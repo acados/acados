@@ -35,6 +35,7 @@ classdef acados_model_json < handle
     properties
         f_impl_expr
         f_expl_expr
+        f_phi_expr
         x
         xdot
         u
@@ -46,6 +47,7 @@ classdef acados_model_json < handle
         function obj = acados_model_json()
             obj.f_impl_expr = [];
             obj.f_expl_expr = [];
+            obj.f_phi_expr = [];
             obj.x = [];
             obj.xdot = [];
             obj.u = [];
