@@ -34,19 +34,7 @@
 function ocp_generate_c_code(obj)
     %% check if formulation is supported
     % add checks for
-    if strcmp( obj.model_struct.cost_type, 'external' ) || ...
-        strcmp( obj.model_struct.cost_type_e, 'external' )
-        error(['mex templating does not support external cost for now.',...
-            ' Got cost_type: %s, cost_type_e: %s.\nNotice that it might still',...
-            'be possible to solve the OCP from MATLAB.'], obj.model_struct.cost_type,...
-            obj.model_struct.cost_type_e);
-        % TODO: add
-        % nonlinear least-squares
-        % external cost
-    elseif strcmp( obj.model_struct.dyn_type, 'discrete')
-        error('mex templating does only support discrete dynamics for now. Notice that it might still be possible to solve the OCP from MATLAB.');
-        % TODO: implement
-    elseif strcmp( obj.opts_struct.sim_method, 'irk_gnsf')
+    if strcmp( obj.opts_struct.sim_method, 'irk_gnsf')
         error('mex templating does not support irk_gnsf integrator yet. Notice that it might still be possible to solve the OCP from MATLAB.');
         % TODO: implement
     end
