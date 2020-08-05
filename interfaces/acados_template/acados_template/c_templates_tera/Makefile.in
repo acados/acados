@@ -123,6 +123,12 @@ MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_gnsf_phi_fun_jac_y.o
 MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_gnsf_phi_jac_y_uhat.o
 MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz.o
 MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_gnsf_get_matrices_fun.o
+{%- elif solver_options.integrator_type == "DISCRETE" %}
+MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun.o
+MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun_jac.o
+{%- if hessian_approx == "EXACT" %}
+MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun_jac_hess.o
+{%- endif %}
 {%- endif %}
 
 
@@ -221,6 +227,12 @@ CASADI_MODEL_SOURCE+= {{ model.name }}_gnsf_phi_fun_jac_y.c
 CASADI_MODEL_SOURCE+= {{ model.name }}_gnsf_phi_jac_y_uhat.c
 CASADI_MODEL_SOURCE+= {{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz.c
 CASADI_MODEL_SOURCE+= {{ model.name }}_gnsf_get_matrices_fun.c
+{%- elif solver_options.integrator_type == "DISCRETE" %}
+CASADI_MODEL_SOURCE+= {{ model.name }}_dyn_disc_phi_fun.c
+CASADI_MODEL_SOURCE+= {{ model.name }}_dyn_disc_phi_fun_jac.c
+{%- if hessian_approx == "EXACT" %}
+CASADI_MODEL_SOURCE+= {{ model.name }}_dyn_disc_phi_fun_jac_hess.c
+{%- endif %}
 {%- endif %}
 {%- if constr_type == "BGP" and dims_nphi > 0 %}
 CASADI_CON_PHI_SOURCE=
