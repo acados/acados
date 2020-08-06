@@ -48,8 +48,8 @@ model_name = 'lin_mass';
 
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
-nlp_solver_exact_hessian = 'false';
-% nlp_solver_exact_hessian = 'true';
+% nlp_solver_exact_hessian = 'false';
+nlp_solver_exact_hessian = 'true';
 % regularize_method = 'no_regularize';
 %regularize_method = 'project';
 %regularize_method = 'mirror';
