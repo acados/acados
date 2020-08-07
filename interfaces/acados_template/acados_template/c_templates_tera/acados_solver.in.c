@@ -1510,6 +1510,7 @@ int acados_create()
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_algebraic", &sens_algebraic_val);
 {%- endif %}
 
+{%- if solver_options.integrator_type != "DISCRETE" %}
     int num_steps_val = {{ solver_options.sim_method_num_steps }};
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_steps", &num_steps_val);
@@ -1525,6 +1526,8 @@ int acados_create()
     bool tmp_bool = {{ solver_options.sim_method_jac_reuse }};
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_jac_reuse", &tmp_bool);
+
+{%- endif %}
 
     double nlp_solver_step_length = {{ solver_options.nlp_solver_step_length }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "step_length", &nlp_solver_step_length);
