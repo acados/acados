@@ -173,7 +173,10 @@ for ii=1:length(mex_files)
 end
 
 if is_octave()
-    movefile('*.o', opts.output_dir);
+    octave_version = OCTAVE_VERSION();
+    if octave_version < 5
+        movefile('*.o', opts.output_dir);
+    end
 end
 
 %system(['mv -f *.mexa64 ', opts.output_dir])

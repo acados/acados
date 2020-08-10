@@ -519,7 +519,10 @@ if (strcmp(opts_struct.compile_interface, 'true') || strcmp(opts_struct.codgen_m
     end
     
     if is_octave()
-        movefile('*.o', opts_struct.output_dir);
+        octave_version = OCTAVE_VERSION();
+        if octave_version < 5
+            movefile('*.o', opts_struct.output_dir);
+        end
     end
 
 end
