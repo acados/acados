@@ -461,7 +461,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     free(i_ptr);
 
     // gnsf stuff
-    if (!strcmp(sim_method, "irk_gnsf"))
+    if (sim_method_enum == GNSF)
     {
         int gnsf_nx1, gnsf_nz1, gnsf_nuhat, gnsf_ny, gnsf_nout;
         // nx1
