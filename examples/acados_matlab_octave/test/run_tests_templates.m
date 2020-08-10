@@ -54,6 +54,7 @@ try
     test_template_pendulum_ocp('ext_cost');
     test_template_pendulum_exact_hess;
     test_template_ocp_linear_dae;
+    test_template_disc_dyn_ocp_linear;
 catch exception
     exit_with_error(exception);
 end
