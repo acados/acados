@@ -1949,6 +1949,7 @@ int acados_free()
         external_function_param_casadi_free(&ext_cost_fun_jac_hess[i]);
     }
     free(ext_cost_fun);
+    free(ext_cost_fun_jac);
     free(ext_cost_fun_jac_hess);
 {%- endif %}
 {%- if cost.cost_type_e == "NONLINEAR_LS" %}
