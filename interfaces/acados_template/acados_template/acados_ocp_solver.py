@@ -43,6 +43,7 @@ from copy import deepcopy
 from .generate_c_code_explicit_ode import generate_c_code_explicit_ode
 from .generate_c_code_implicit_ode import generate_c_code_implicit_ode
 from .generate_c_code_gnsf import generate_c_code_gnsf
+from .generate_c_code_discrete_dynamics import generate_c_code_discrete_dynamics
 from .generate_c_code_constraint import generate_c_code_constraint
 from .generate_c_code_nls_cost import generate_c_code_nls_cost
 from .generate_c_code_external_cost import generate_c_code_external_cost
@@ -481,6 +482,8 @@ def ocp_generate_external_functions(acados_ocp, model):
         generate_c_code_implicit_ode(model, opts)
     elif acados_ocp.solver_options.integrator_type == 'GNSF':
         generate_c_code_gnsf(model)
+    elif acados_ocp.solver_options.integrator_type == 'DISCRETE':
+        generate_c_code_discrete_dynamics(model, opts)
     else:
         raise Exception("ocp_generate_external_functions: unknown integrator type.")
 

@@ -40,7 +40,7 @@ function make_mex_{{ model.name }}()
 
     % set paths
     acados_include = ['-I' fullfile(acados_folder, 'include')];
-    template_lib_include = ['-l' 'acados_solver_{{ model.name }}'];
+    template_lib_include = ['-l' 'acados_ocp_solver_{{ model.name }}'];
     template_lib_path = ['-L' fullfile(pwd)];
 
     acados_lib_path = ['-L' fullfile(acados_folder, 'lib')];
