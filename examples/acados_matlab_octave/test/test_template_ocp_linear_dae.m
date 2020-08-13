@@ -256,3 +256,4 @@ if any([err_x, err_u, err_z] > 1e-9)
 end
 
 clear all
+cd ..

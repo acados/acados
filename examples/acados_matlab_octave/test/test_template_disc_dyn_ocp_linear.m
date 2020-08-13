@@ -1,4 +1,3 @@
-
 %
 % Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
 % Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
@@ -292,16 +291,16 @@ else
         sim_method, ' !\n']);
 end
 
-% plot result
-figure()
-subplot(2, 1, 1)
-plot(0:N, xtraj);
-title('trajectory')
-ylabel('x')
-subplot(2, 1, 2)
-plot(1:N, utraj);
-ylabel('u')
-xlabel('sample')
+% % plot result
+% figure()
+% subplot(2, 1, 1)
+% plot(0:N, xtraj);
+% title('trajectory')
+% ylabel('x')
+% subplot(2, 1, 2)
+% plot(1:N, utraj);
+% ylabel('u')
+% xlabel('sample')
 
 %% test templated ocp solver
 disp('testing templated solver');
