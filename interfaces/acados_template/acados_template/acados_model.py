@@ -75,6 +75,8 @@ def acados_model_strip_casadi_symbolics(model):
         del out['f_impl_expr']
     if 'f_expl_expr' in out.keys():
         del out['f_expl_expr']
+    if 'disc_dyn_expr' in out.keys():
+        del out['disc_dyn_expr']
     if 'x' in out.keys():
         del out['x']
     if 'xdot' in out.keys():

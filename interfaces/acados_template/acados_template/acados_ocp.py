@@ -1978,9 +1978,9 @@ class AcadosOcpOptions:
 
     @integrator_type.setter
     def integrator_type(self, integrator_type):
-        integrator_types = ('ERK', 'IRK', 'GNSF')
+        integrator_types = ('ERK', 'IRK', 'GNSF', 'DISCRETE')
 
-        if type(integrator_type) == str and integrator_type in integrator_types:
+        if integrator_type in integrator_types:
             self.__integrator_type = integrator_type
         else:
             raise Exception('Invalid integrator_type value. Possible values are:\n\n' \

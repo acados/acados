@@ -381,7 +381,7 @@ ocp_shared_lib: casadi_fun ocp_solver
 {%- else %}
 
 ocp_shared_lib: casadi_fun ocp_solver
-	gcc $(ACADOS_FLAGS) -shared -o libacados_solver_{{ model.name }}.so $(OCP_OBJ) $(MODEL_OBJ) \
+	gcc $(ACADOS_FLAGS) -shared -o libacados_ocp_solver_{{ model.name }}.so $(OCP_OBJ) $(MODEL_OBJ) \
 	-L$(EXTERNAL_DIR) -l$(EXTERNAL_LIB) \
 	-L $(LIB_PATH) -lacados -lhpipm -lblasfeo \
 	{%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
