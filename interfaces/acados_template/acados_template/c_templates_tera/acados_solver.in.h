@@ -91,10 +91,10 @@ extern external_function_param_casadi * gnsf_phi_jac_y_uhat;
 extern external_function_param_casadi * gnsf_f_lo_jac_x1_x1dot_u_z;
 extern external_function_param_casadi * gnsf_get_matrices_fun;
 {% elif solver_options.integrator_type == "DISCRETE" %}
-extern external_function_param_casadi * phi_fun;
-extern external_function_param_casadi * phi_fun_jac_ut_xt;
+extern external_function_param_casadi * discr_dyn_phi_fun;
+extern external_function_param_casadi * discr_dyn_phi_fun_jac_ut_xt;
 {%- if solver_options.hessian_approx == "EXACT" %}
-extern external_function_param_casadi * phi_fun_jac_ut_xt_hess;
+extern external_function_param_casadi * discr_dyn_phi_fun_jac_ut_xt_hess;
 {%- endif %}
 {%- endif %}
 
