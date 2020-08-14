@@ -128,10 +128,10 @@ external_function_param_casadi * gnsf_phi_jac_y_uhat;
 external_function_param_casadi * gnsf_f_lo_jac_x1_x1dot_u_z;
 external_function_param_casadi * gnsf_get_matrices_fun;
 {% elif solver_options.integrator_type == "DISCRETE" %}
-external_function_param_casadi * phi_fun;
-external_function_param_casadi * phi_fun_jac_ut_xt;
+external_function_param_casadi * discr_dyn_phi_fun;
+external_function_param_casadi * discr_dyn_phi_fun_jac_ut_xt;
 {%- if solver_options.hessian_approx == "EXACT" %}
-external_function_param_casadi * phi_fun_jac_ut_xt_hess;
+external_function_param_casadi * discr_dyn_phi_fun_jac_ut_xt_hess;
 {%- endif %}
 {%- endif %}
 
@@ -201,8 +201,8 @@ int acados_create()
     {
         {% if solver_options.integrator_type == "DISCRETE" %}
         nlp_solver_plan->nlp_dynamics[i] = DISCRETE_MODEL;
-        // sim_solver_t has no "discrete" option, is this field ignored ???????
-        nlp_solver_plan->sim_solver_plan[i].sim_solver = ERK;
+        // discrete dynamics does not need sim solver option, this field is ignored
+        nlp_solver_plan->sim_solver_plan[i].sim_solver = INVALID_SIM_SOLVER;
         {% else %}
         nlp_solver_plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
         nlp_solver_plan->sim_solver_plan[i].sim_solver = {{ solver_options.integrator_type }};
@@ -639,42 +639,42 @@ int acados_create()
     }
 {% elif solver_options.integrator_type == "DISCRETE" %}
     // discrete dynamics
-    phi_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
+    discr_dyn_phi_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; i++)
     {
-        phi_fun[i].casadi_fun = &{{ model.name }}_dyn_disc_phi_fun;
-        phi_fun[i].casadi_n_in = &{{ model.name }}_dyn_disc_phi_fun_n_in;
-        phi_fun[i].casadi_n_out = &{{ model.name }}_dyn_disc_phi_fun_n_out;
-        phi_fun[i].casadi_sparsity_in = &{{ model.name }}_dyn_disc_phi_fun_sparsity_in;
-        phi_fun[i].casadi_sparsity_out = &{{ model.name }}_dyn_disc_phi_fun_sparsity_out;
-        phi_fun[i].casadi_work = &{{ model.name }}_dyn_disc_phi_fun_work;
-        external_function_param_casadi_create(&phi_fun[i], {{ dims.np }});
+        discr_dyn_phi_fun[i].casadi_fun = &{{ model.name }}_dyn_disc_phi_fun;
+        discr_dyn_phi_fun[i].casadi_n_in = &{{ model.name }}_dyn_disc_phi_fun_n_in;
+        discr_dyn_phi_fun[i].casadi_n_out = &{{ model.name }}_dyn_disc_phi_fun_n_out;
+        discr_dyn_phi_fun[i].casadi_sparsity_in = &{{ model.name }}_dyn_disc_phi_fun_sparsity_in;
+        discr_dyn_phi_fun[i].casadi_sparsity_out = &{{ model.name }}_dyn_disc_phi_fun_sparsity_out;
+        discr_dyn_phi_fun[i].casadi_work = &{{ model.name }}_dyn_disc_phi_fun_work;
+        external_function_param_casadi_create(&discr_dyn_phi_fun[i], {{ dims.np }});
     }
     
-    phi_fun_jac_ut_xt = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
+    discr_dyn_phi_fun_jac_ut_xt = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; i++)
     {
-        phi_fun_jac_ut_xt[i].casadi_fun = &{{ model.name }}_dyn_disc_phi_fun_jac;
-        phi_fun_jac_ut_xt[i].casadi_n_in = &{{ model.name }}_dyn_disc_phi_fun_jac_n_in;
-        phi_fun_jac_ut_xt[i].casadi_n_out = &{{ model.name }}_dyn_disc_phi_fun_jac_n_out;
-        phi_fun_jac_ut_xt[i].casadi_sparsity_in = &{{ model.name }}_dyn_disc_phi_fun_jac_sparsity_in;
-        phi_fun_jac_ut_xt[i].casadi_sparsity_out = &{{ model.name }}_dyn_disc_phi_fun_jac_sparsity_out;
-        phi_fun_jac_ut_xt[i].casadi_work = &{{ model.name }}_dyn_disc_phi_fun_jac_work;
-        external_function_param_casadi_create(&phi_fun_jac_ut_xt[i], {{ dims.np }});
+        discr_dyn_phi_fun_jac_ut_xt[i].casadi_fun = &{{ model.name }}_dyn_disc_phi_fun_jac;
+        discr_dyn_phi_fun_jac_ut_xt[i].casadi_n_in = &{{ model.name }}_dyn_disc_phi_fun_jac_n_in;
+        discr_dyn_phi_fun_jac_ut_xt[i].casadi_n_out = &{{ model.name }}_dyn_disc_phi_fun_jac_n_out;
+        discr_dyn_phi_fun_jac_ut_xt[i].casadi_sparsity_in = &{{ model.name }}_dyn_disc_phi_fun_jac_sparsity_in;
+        discr_dyn_phi_fun_jac_ut_xt[i].casadi_sparsity_out = &{{ model.name }}_dyn_disc_phi_fun_jac_sparsity_out;
+        discr_dyn_phi_fun_jac_ut_xt[i].casadi_work = &{{ model.name }}_dyn_disc_phi_fun_jac_work;
+        external_function_param_casadi_create(&discr_dyn_phi_fun_jac_ut_xt[i], {{ dims.np }});
     }
     
     {%- if solver_options.hessian_approx == "EXACT" %}
-    phi_fun_jac_ut_xt_hess = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
+    discr_dyn_phi_fun_jac_ut_xt_hess = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     
     for (int i = 0; i < N; i++)
     {
-        phi_fun_jac_ut_xt_hess[i].casadi_fun = &{{ model.name }}_dyn_disc_phi_fun_jac_hess;
-        phi_fun_jac_ut_xt_hess[i].casadi_n_in = &{{ model.name }}_dyn_disc_phi_fun_jac_hess_n_in;
-        phi_fun_jac_ut_xt_hess[i].casadi_n_out = &{{ model.name }}_dyn_disc_phi_fun_jac_hess_n_out;
-        phi_fun_jac_ut_xt_hess[i].casadi_sparsity_in = &{{ model.name }}_dyn_disc_phi_fun_jac_hess_sparsity_in;
-        phi_fun_jac_ut_xt_hess[i].casadi_sparsity_out = &{{ model.name }}_dyn_disc_phi_fun_jac_hess_sparsity_out;
-        phi_fun_jac_ut_xt_hess[i].casadi_work = &{{ model.name }}_dyn_disc_phi_fun_jac_hess_work;
-        external_function_param_casadi_create(&phi_fun_jac_ut_xt_hess[i], {{ dims.np }});
+        discr_dyn_phi_fun_jac_ut_xt_hess[i].casadi_fun = &{{ model.name }}_dyn_disc_phi_fun_jac_hess;
+        discr_dyn_phi_fun_jac_ut_xt_hess[i].casadi_n_in = &{{ model.name }}_dyn_disc_phi_fun_jac_hess_n_in;
+        discr_dyn_phi_fun_jac_ut_xt_hess[i].casadi_n_out = &{{ model.name }}_dyn_disc_phi_fun_jac_hess_n_out;
+        discr_dyn_phi_fun_jac_ut_xt_hess[i].casadi_sparsity_in = &{{ model.name }}_dyn_disc_phi_fun_jac_hess_sparsity_in;
+        discr_dyn_phi_fun_jac_ut_xt_hess[i].casadi_sparsity_out = &{{ model.name }}_dyn_disc_phi_fun_jac_hess_sparsity_out;
+        discr_dyn_phi_fun_jac_ut_xt_hess[i].casadi_work = &{{ model.name }}_dyn_disc_phi_fun_jac_hess_work;
+        external_function_param_casadi_create(&discr_dyn_phi_fun_jac_ut_xt_hess[i], {{ dims.np }});
     }
     {%- endif %}
 {%- endif %}
@@ -861,10 +861,10 @@ int acados_create()
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "gnsf_get_matrices_fun",
                                    &gnsf_get_matrices_fun[i]);
     {% elif solver_options.integrator_type == "DISCRETE" %}
-        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "disc_dyn_fun", &phi_fun[i]);
-        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "disc_dyn_fun_jac", &phi_fun_jac_ut_xt[i]);
+        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "disc_dyn_fun", &discr_dyn_phi_fun[i]);
+        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "disc_dyn_fun_jac", &discr_dyn_phi_fun_jac_ut_xt[i]);
         {%- if solver_options.hessian_approx == "EXACT" %}
-        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "disc_dyn_fun_jac_hess", &phi_fun_jac_ut_xt_hess[i]);
+        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "disc_dyn_fun_jac_hess", &discr_dyn_phi_fun_jac_ut_xt_hess[i]);
         {%- endif %}
     {%- endif %}
     }
@@ -1674,7 +1674,14 @@ int acados_create()
         gnsf_f_lo_jac_x1_x1dot_u_z[ii].set_param(gnsf_f_lo_jac_x1_x1dot_u_z+ii, p);
     }
 {% elif solver_options.integrator_type == "DISCRETE" %}
-    // TODO: add parameter support
+    for (int ii = 0; ii < N; ii++)
+    {
+        discr_dyn_phi_fun[ii].set_param(discr_dyn_phi_fun+ii, p);
+        discr_dyn_phi_fun_jac_ut_xt[ii].set_param(discr_dyn_phi_fun_jac_ut_xt+ii, p);
+    {%- if solver_options.hessian_approx == "EXACT" %}
+        discr_dyn_phi_fun_jac_ut_xt_hess[ii].set_param(discr_dyn_phi_fun_jac_ut_xt_hess+ii, p);
+    {% endif %}
+    }
 {% endif %}
 
     // cost
@@ -1787,7 +1794,11 @@ int acados_update_params(int stage, double *p, int np)
 
         gnsf_f_lo_jac_x1_x1dot_u_z[stage].set_param(gnsf_f_lo_jac_x1_x1dot_u_z+stage, p);
     {% elif solver_options.integrator_type == "DISCRETE" %}
-        // TODO: add parameter support
+        discr_dyn_phi_fun[stage].set_param(discr_dyn_phi_fun+stage, p);
+        discr_dyn_phi_fun_jac_ut_xt[stage].set_param(discr_dyn_phi_fun_jac_ut_xt+stage, p);
+    {%- if solver_options.hessian_approx == "EXACT" %}
+        discr_dyn_phi_fun_jac_ut_xt_hess[stage].set_param(discr_dyn_phi_fun_jac_ut_xt_hess+stage, p);
+    {% endif %}
     {%- endif %}{# integrator_type #}
 
         // constraints
@@ -1916,16 +1927,16 @@ int acados_free()
 {%- elif solver_options.integrator_type == "DISCRETE" %}
     for (int i = 0; i < {{ dims.N }}; i++)
     {
-        external_function_param_casadi_free(&phi_fun[i]);
-        external_function_param_casadi_free(&phi_fun_jac_ut_xt[i]);
+        external_function_param_casadi_free(&discr_dyn_phi_fun[i]);
+        external_function_param_casadi_free(&discr_dyn_phi_fun_jac_ut_xt[i]);
     {%- if solver_options.hessian_approx == "EXACT" %}
-        external_function_param_casadi_free(&phi_fun_jac_ut_xt_hess[i]);
+        external_function_param_casadi_free(&discr_dyn_phi_fun_jac_ut_xt_hess[i]);
     {%- endif %}
     }
-    free(phi_fun);
-    free(phi_fun_jac_ut_xt);
+    free(discr_dyn_phi_fun);
+    free(discr_dyn_phi_fun_jac_ut_xt);
     {%- if solver_options.hessian_approx == "EXACT" %}
-    free(phi_fun_jac_ut_xt_hess);
+    free(discr_dyn_phi_fun_jac_ut_xt_hess);
     {%- endif %}
     
 {%- endif %}
