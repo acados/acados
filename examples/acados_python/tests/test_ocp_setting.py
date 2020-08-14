@@ -112,25 +112,25 @@ else:
 
     INTEGRATOR_TYPE = args.INTEGRATOR_TYPE
     INTEGRATOR_TYPE_values = ['ERK', 'IRK', 'GNSF']
-    if INTEGRATOR_TYPE not in INTEGRATOR_TYPE:
+    if INTEGRATOR_TYPE not in INTEGRATOR_TYPE_values:
         raise Exception('Invalid unit test value {} for parameter INTEGRATOR_TYPE. Possible values are' \
                 ' {}. Exiting.'.format(INTEGRATOR_TYPE, INTEGRATOR_TYPE_values))
 
     SOLVER_TYPE = args.SOLVER_TYPE
     SOLVER_TYPE_values = ['SQP', 'SQP-RTI']
-    if SOLVER_TYPE not in SOLVER_TYPE:
+    if SOLVER_TYPE not in SOLVER_TYPE_values:
         raise Exception('Invalid unit test value {} for parameter SOLVER_TYPE. Possible values are' \
                 ' {}. Exiting.'.format(SOLVER_TYPE, SOLVER_TYPE_values))
 
     HESS_APPROX = args.HESS_APPROX
     HESS_APPROX_values = ['GAUSS_NEWTON', 'EXACT']
-    if HESS_APPROX not in HESS_APPROX:
+    if HESS_APPROX not in HESS_APPROX_values:
         raise Exception('Invalid unit test value {} for parameter HESS_APPROX. Possible values are' \
                 ' {}. Exiting.'.format(HESS_APPROX, HESS_APPROX_values))
 
     REGULARIZATION = args.REGULARIZATION
     REGULARIZATION_values = ['NO_REGULARIZE', 'MIRROR', 'PROJECT', 'PROJECT_REDUC_HESS', 'CONVEXIFY']
-    if REGULARIZATION not in REGULARIZATION:
+    if REGULARIZATION not in REGULARIZATION_values:
         raise Exception('Invalid unit test value {} for parameter REGULARIZATION. Possible values are' \
                 ' {}. Exiting.'.format(REGULARIZATION, REGULARIZATION_values))
 
