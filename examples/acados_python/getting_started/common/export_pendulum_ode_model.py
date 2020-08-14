@@ -32,7 +32,7 @@
 #
 
 from acados_template import AcadosModel
-from casadi import SX, vertcat, sin, cos
+from casadi import SX, vertcat, sin, cos, Function
 
 def export_pendulum_ode_model():
 
@@ -93,3 +93,24 @@ def export_pendulum_ode_model():
 
     return model
 
+
+def export_pendulum_ode_model_with_discrete_rk4(dT):
+
+    model = export_pendulum_ode_model()
+
+    x = model.x
+    u = model.u
+    nx = x.size()[0]
+
+    ode = Function('ode', [x, u], [model.f_expl_expr])
+    # set up RK4
+    k1 = ode(x,       u)
+    k2 = ode(x+dT/2*k1,u)
+    k3 = ode(x+dT/2*k2,u)
+    k4 = ode(x+dT*k3,  u)
+    xf = x + dT/6 * (k1 + 2*k2 + 2*k3 + k4)
+
+    model.disc_dyn_expr = xf
+    print("built RK4 for pendulum model with dT = ", dT)
+    print(xf)
+    return model
