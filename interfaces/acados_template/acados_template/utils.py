@@ -37,7 +37,7 @@ import shutil
 import numpy as np
 from casadi import SX, MX, DM, Function, CasadiMeta
 
-ALLOWED_CASADI_VERSIONS = ('3.5.1', '3.4.5', '3.4.0')
+ALLOWED_CASADI_VERSIONS = ('3.5.3', '3.5.2', '3.5.1', '3.4.5', '3.4.0')
 TERA_VERSION = "0.0.34"
 
 def get_acados_path():
@@ -383,9 +383,10 @@ def set_up_imported_gnsf_model(acados_formulation):
     casadi_version = CasadiMeta.version()
 
     if not casadi_version == dump_casadi_version:
-        raise Exception("GNSF model was dumped with another CasADi version.\n"
-                + "Please use the same version for compatibility, serialize version:"
+        print("WARNING: GNSF model was dumped with another CasADi version.\n"
+                + "This might yield errors. Please use the same version for compatibility, serialize version: "
                 + dump_casadi_version + " current Python CasADi verison: " + casadi_version)
+        input("Press any key to attempt to continue...")
 
     # load model
     phi_fun = Function.deserialize(gnsf['phi_fun'])
