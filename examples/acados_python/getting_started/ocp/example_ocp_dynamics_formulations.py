@@ -112,10 +112,28 @@ if __name__ == "__main__":
     ocp.solver_options.print_level = 1
 
     if ocp.solver_options.integrator_type == 'GNSF':
-        # load gnsf model
-        # NOTE: generated from Matlab, using simulation example of pendulum model with irk_gnsf
-        # then >> dump_gnsf_functions(sim.model_struct)
-        with open('../common/' + model.name + '_gnsf_functions.json', 'r') as f:
+        from acados_template import acados_dae_model_json_dump
+        import os
+        acados_dae_model_json_dump(model)
+        # Set up Octave to be able to run the following:
+        ## if using a virtual python env, the following lines can be added to the env/bin/activate script:
+        # export OCTAVE_PATH=$OCTAVE_PATH:$ACADOS_INSTALL_DIR/external/casadi-octave
+        # export OCTAVE_PATH=$OCTAVE_PATH:$ACADOS_INSTALL_DIR/interfaces/acados_matlab_octave/
+        # export OCTAVE_PATH=$OCTAVE_PATH:$ACADOS_INSTALL_DIR/interfaces/acados_matlab_octave/acados_template_mex/
+        # echo
+        # echo "OCTAVE_PATH=$OCTAVE_PATH"
+
+        # status = os.system(
+        #     "octave --eval \"convert_dae2gnsf({})\"".format("\'"+model.name+"_acados_dae.json\'")
+        # )
+        # if status == 0:
+        #     print("\nsuccessfully detected GNSF structure in Octave\n")
+        # else:
+        #     Exception("Failed to detect GNSF structure in Octave")
+
+        # load gnsf from json
+        with open(model.name + '_gnsf_functions.json', 'r') as f:
+            import json
             gnsf_dict = json.load(f)
         ocp.gnsf_model = gnsf_dict
 
