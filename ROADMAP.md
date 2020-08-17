@@ -3,25 +3,26 @@
 #### core
 - [ ] propagate cost in integrator
 - [ ] restore download and compilation of OOQP
-- [ ] split ocp solve into prepare and feedback
+- [x] split ocp solve into prepare and feedback
 - [ ] stage transition functions for changing model dimensions
 
 #### Python interface
 - [ ] lifted IRK
-- [ ] exact hessian
-- [ ] regularization
+- [x] exact hessian
+- [x] regularization
+- [x] discrete dynamics
 
 #### matlab interface
 - [x] detect dimensions
 - [x] structure detections for constraints
 - [x] getting started folder
-- [ ] add Mex templating support for: ( in prioritized order )
-    - [ ] nonlinear least-squares
+- [x] add Mex templating support for: ( in prioritized order )
+    - [x] nonlinear least-squares
     - [ ] Vz (already implemented?)
     - [ ] exact Hessian
-    - [ ] external cost
+    - [x] external cost
     - [ ] GNSF
-    - [ ] discrete dynamics
+    - [x] discrete dynamics
 - [x] separate `acados_ocp()` into generating the C object and setting the numerical data
 - [x] support nonuniform grids
 - [x] OCP with DAEs

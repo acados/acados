@@ -29,6 +29,7 @@ make install
 
 #### **Make**
 Set the `BLASFEO_TARGET` in `<acados_root_folder>/Makefile.rule`.
+Since some of the `C` examples use `qpOASES`, also set `ACADOS_WITH_QPOASES = 1` in  `<acados_root_folder>/Makefile.rule`.
 For a list of supported targets, we refer to https://github.com/giaf/blasfeo/blob/master/README.md .
 Install acados as follows
 ```
