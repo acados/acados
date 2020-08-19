@@ -65,7 +65,7 @@ matrix:
         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
         - ACADOS_OCTAVE="ON"
         - ACADOS_OCTAVE_TEMPLATE="ON"
-
+        - ACADOS_UNIT_TESTS="OFF"
 
     - name: Linux Clang
       env:
