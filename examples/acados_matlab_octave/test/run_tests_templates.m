@@ -31,6 +31,8 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
+addpath(pwd)
+
 %% check that environment variables are provided
 try
     check_casadi_availibility();

@@ -33,6 +33,7 @@
 
 %% check that environment variables are provided
 
+addpath(pwd)
 
 try
     check_casadi_availibility();
