@@ -244,12 +244,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     l_ptr[0] = (long long) gnsf_get_matrices_fun;
 {% elif solver_options.integrator_type == "DISCRETE" %}
     l_ptr = mxGetData(disc_phi_fun_mat);
-    l_ptr[0] = (long long) phi_fun;
+    l_ptr[0] = (long long) discr_dyn_phi_fun;
     l_ptr = mxGetData(disc_phi_fun_jac_mat);
-    l_ptr[0] = (long long) phi_fun_jac_ut_xt;
+    l_ptr[0] = (long long) discr_dyn_phi_fun_jac_ut_xt;
 {% if solver_options.hessian_approx == "EXACT" %}
     l_ptr = mxGetData(disc_phi_fun_jac_hess_mat);
-    l_ptr[0] = (long long) phi_fun_jac_ut_xt_hess;
+    l_ptr[0] = (long long) discr_dyn_phi_fun_jac_ut_xt_hess;
 {%- endif %}
 {%- endif %}
     mxSetField(plhs[1], 0, "expl_ode_fun", expl_ode_fun_mat);
