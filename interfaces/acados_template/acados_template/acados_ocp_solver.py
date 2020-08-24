@@ -700,7 +700,7 @@ class AcadosOcpSolver:
     def get(self, stage_, field_):
         """
         get the last solution of the solver:
-            :param stage: integer corresponding to shooting node
+            :param stage_: integer corresponding to shooting node
             :param field_: string in ['x', 'u', 'z', 'pi', 'lam', 't', 'sl', 'su',]
 
             .. note:: regarding lam, t: \n
@@ -961,7 +961,6 @@ class AcadosOcpSolver:
     def constraints_set(self, stage_, field_, value_):
         """
         set numerical data in the constraint module of the solver:
-        Parameters:
             :param stage_: integer corresponding to shooting node
             :param field_: string, e.g. 'lbx'
             :param value_: of appropriate size
@@ -1005,7 +1004,6 @@ class AcadosOcpSolver:
     def options_set(self, field_, value_):
         """
         set options of the solver:
-        Parameters:
             :param field_: string, e.g. 'print_level', 'rti_phase', 'initialize_t_slacks', 'step_length'
             :param value_: of type int, float
         """

@@ -412,3 +412,4 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out,
 #endif  // ACADOS_OCP_NLP_OCP_NLP_COMMON_H_
 /// @}
 /// @}
+/// @}
