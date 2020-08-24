@@ -1,4 +1,4 @@
-sphinx==2.0
+sphinx==3.1.0
 recommonmark
-breathe
+breathe==4.19.2
 sphinx_rtd_theme
