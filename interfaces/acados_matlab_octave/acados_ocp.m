@@ -89,6 +89,12 @@ classdef acados_ocp < handle
             % detect dimensions & sanity checks
             [obj.model_struct, obj.opts_struct] = detect_dims_ocp(obj.model_struct, obj.opts_struct);
 
+            % check if path contains spaces
+            if ~isempty(strfind(obj.opts_struct.output_dir, ' '))
+                error(strcat('acados_ocp: Path should not contain spaces, got: ',...
+                    obj.opts_struct.output_dir));
+            end
+
             % compile mex interface (without model dependency)
             if ( strcmp(obj.opts_struct.compile_interface, 'true') )
                 compile_interface = true;
