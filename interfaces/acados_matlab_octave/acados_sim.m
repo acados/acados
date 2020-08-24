@@ -62,6 +62,12 @@ classdef acados_sim < handle
                 end
             end
 
+            % check if path contains spaces
+            if ~isempty(strfind(obj.opts_struct.output_dir, ' '))
+                error(strcat('acados_ocp: Path should not contain spaces, got: ',...
+                    obj.opts_struct.output_dir));
+            end
+
             %% compile mex without model dependency
             % check if mex interface exists already
             if strcmp(obj.opts_struct.compile_interface, 'true')
