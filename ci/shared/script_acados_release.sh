@@ -69,13 +69,18 @@ function build_acados {
 		-D ACADOS_OCTAVE_TEMPLATE="${ACADOS_OCTAVE_TEMPLATE}" \
 		-D ACADOS_PYTHON="${ACADOS_PYTHON}" \
 		..;
+	[ $? -ne 0 ] && exit 110;
+	
 	if [ "${ACADOS_LINT}" = 'ON' ]; then
 		cmake --build build --target lint;
 		[ $? -ne 0 ] && exit 110;
 	fi
 
 	cmake --build build;
+	[ $? -ne 0 ] && exit 110;
+
 	cmake --build build --target install;
+	[ $? -ne 0 ] && exit 110;
 
     if [[ "${ACADOS_PYTHON}" = 'ON' || "${ACADOS_OCTAVE_TEMPLATE}" = 'ON' ]] ;
     then
