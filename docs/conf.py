@@ -90,7 +90,7 @@ exclude_patterns = []
 
 # -- Options for HTML output -------------------------------------------------
 
-exclude_patterns = ['_build', 'README.md', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['_build', 'README.md', 'Thumbs.db', '.DS_Store', 'env', 'requirements.txt', 'memory_management.md']
 pygments_style = 'sphinx'
 todo_include_todos = True
 
