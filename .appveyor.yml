@@ -13,9 +13,9 @@ environment:
 
 install:
   - cmd: if not exist c:\dev\Eigen3\include\eigen3\Eigen\Core (
-            curl -L -o eigen-eigen-dc6cfdf9bcec.tar.gz https://bitbucket.org/eigen/eigen/get/3.2.9.tar.gz &&
-            cmake -E tar zxf eigen-eigen-dc6cfdf9bcec.tar.gz &&
-            cd eigen-eigen-dc6cfdf9bcec &&
+            curl -L -o eigen-3.2.10.tar.gz https://gitlab.com/libeigen/eigen/-/archive/3.2.10/eigen-3.2.10.tar.gz &&
+            cmake -E tar zxf eigen-3.2.10.tar.gz &&
+            cd eigen-3.2.10 &&
             mkdir build &&
             cd build &&
             cmake -G "Visual Studio 12" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX="c:\dev\Eigen3" .. &&
