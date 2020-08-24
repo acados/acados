@@ -32,7 +32,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-EIGEN_URL="http://bitbucket.org/eigen/eigen/get/3.2.10.tar.gz";
+EIGEN_URL="https://gitlab.com/libeigen/eigen/-/archive/3.2.10/eigen-3.2.10.tar.gz";
 
 pushd external;
 	wget -O eigen.tar.gz "${EIGEN_URL}";
