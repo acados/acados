@@ -24,6 +24,7 @@ source <path_to_virtual_env>/bin/activate
 * Install requirements:
 ```
 pip install -r requirements.txt
+pip install -e <acados_root>/interfaces/acados_template
 ```
 
 ## Build the webpage
