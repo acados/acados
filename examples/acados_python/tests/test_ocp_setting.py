@@ -78,7 +78,7 @@ else:
     parser.add_argument('--SOLVER_TYPE', dest='SOLVER_TYPE',
                         default='SQP_RTI',
                         help='SOLVER_TYPE: (full step) sequential quadratic programming (SQP) or ' \
-                                ' real-time iteration (SQP-RTI) (default: SQP-RTI)')
+                                ' real-time iteration (SQP_RTI) (default: SQP_RTI)')
 
     parser.add_argument('--HESS_APPROX', dest='HESS_APPROX',
                         default='GAUSS_NEWTON',
@@ -117,7 +117,7 @@ else:
                 ' {}. Exiting.'.format(INTEGRATOR_TYPE, INTEGRATOR_TYPE_values))
 
     SOLVER_TYPE = args.SOLVER_TYPE
-    SOLVER_TYPE_values = ['SQP', 'SQP-RTI']
+    SOLVER_TYPE_values = ['SQP', 'SQP_RTI']
     if SOLVER_TYPE not in SOLVER_TYPE_values:
         raise Exception('Invalid unit test value {} for parameter SOLVER_TYPE. Possible values are' \
                 ' {}. Exiting.'.format(SOLVER_TYPE, SOLVER_TYPE_values))

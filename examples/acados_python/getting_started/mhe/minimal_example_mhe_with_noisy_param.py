@@ -151,6 +151,7 @@ plot_pendulum(ts, Fmax, simU, simX, simXest, simY, latexify=False)
 
 
 import matplotlib.pyplot as plt
+import os
 
 plt.figure()
 plt.plot(ts, l_true*np.ones((N+1, 1)), '-')
@@ -158,4 +159,6 @@ plt.plot(ts, sim_l_est, '.-')
 plt.grid()
 plt.ylabel('l')
 plt.legend(['true l', 'estimated l'])
-plt.show()
+# avoid plotting when running on Travis
+if os.environ.get('ACADOS_ON_TRAVIS') is None:
+    plt.show()
