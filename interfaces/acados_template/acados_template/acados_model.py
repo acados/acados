@@ -37,8 +37,9 @@ class AcadosModel():
     class containing all the information to code generate the external CasADi functions
     that are needed when creating an acados ocp solver or acados integrator.
     Thus, this class contains:
-            a) the name of the model
-            b) all CasADi variables/expressions needed in the CasADi function generation process.
+    
+    a) the name of the model
+    b) all CasADi variables/expressions needed in the CasADi function generation process.
     """
     def __init__(self):
         ## common for OCP and Integrator
