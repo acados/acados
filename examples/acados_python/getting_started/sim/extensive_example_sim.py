@@ -91,13 +91,13 @@ if sim.solver_options.integrator_type == "GNSF":
     # export OCTAVE_PATH=$OCTAVE_PATH:$ACADOS_INSTALL_DIR/interfaces/acados_matlab_octave/acados_template_mex/
     # echo
     # echo "OCTAVE_PATH=$OCTAVE_PATH"
-    status = os.system(
-        "octave --eval \"convert_dae2gnsf({})\"".format("\'"+model.name+"_acados_dae.json\'")
-    )
-    if status == 0:
-        print("\nsuccessfully detected GNSF structure in Octave\n")
-    else:
-        Exception("Failed to detect GNSF structure in Octave")
+    # status = os.system(
+    #     "octave --eval \"convert_dae2gnsf({})\"".format("\'"+model.name+"_acados_dae.json\'")
+    # )
+    # if status == 0:
+    #     print("\nsuccessfully detected GNSF structure in Octave\n")
+    # else:
+    #     Exception("Failed to detect GNSF structure in Octave")
     # load gnsf from json
     with open(model.name + '_gnsf_functions.json', 'r') as f:
         import json
