@@ -817,8 +817,7 @@ void ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
         return;
     }
 
-    ocp_nlp_update_variables_sqp(config, dims, nlp_in,
-        nlp_out, nlp_opts, nlp_mem, nlp_work);
+    ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
     // ocp_nlp_dims_print(nlp_out->dims);
     // ocp_nlp_out_print(nlp_out);
@@ -863,7 +862,6 @@ int ocp_nlp_sqp_rti_precompute(void *config_, void *dims_, void *nlp_in_,
             printf("ocp_nlp_sqp_rti_precompute: inconsistent dimension ns \
                 for stage %d with constraint module, got %d, module: %d.",
                 ii, dims->ns[ii], module_val);
-
             exit(1);
         }
     }

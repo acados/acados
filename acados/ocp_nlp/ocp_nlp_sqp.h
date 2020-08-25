@@ -48,8 +48,6 @@ extern "C" {
 
 // acados
 #include "acados/ocp_nlp/ocp_nlp_common.h"
-#include "acados/ocp_nlp/ocp_nlp_reg_common.h"
-#include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
 
@@ -60,7 +58,7 @@ extern "C" {
 
 typedef struct
 {
-	ocp_nlp_opts *nlp_opts;
+    ocp_nlp_opts *nlp_opts;
     double tol_stat;     // exit tolerance on stationarity condition
     double tol_eq;       // exit tolerance on equality constraints
     double tol_ineq;     // exit tolerance on inequality constraints
@@ -129,7 +127,7 @@ void *ocp_nlp_sqp_memory_assign(void *config, void *dims, void *opts_, void *raw
 
 typedef struct
 {
-	ocp_nlp_workspace *nlp_work;
+    ocp_nlp_workspace *nlp_work;
 
     // temp QP in & out (to be used as workspace in param sens)
     ocp_qp_in *tmp_qp_in;
