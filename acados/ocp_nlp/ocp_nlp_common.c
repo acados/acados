@@ -2429,7 +2429,8 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
         // linear update of algebraic variables using state and input sensitivity
         if (i < N)
         {
-            blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0, mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out->z+i, 0); 
+            blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0,
+                    mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out->z+i, 0);
         }
     }
 
@@ -2586,6 +2587,8 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
         res->inf_norm_res_m = tmp_res > res->inf_norm_res_m ? tmp_res : res->inf_norm_res_m;
     }
 
+    // printf("computed residuals g: %e, b: %e, d: %e, m: %e\n", res->inf_norm_res_g, res->inf_norm_res_b,
+    //        res->inf_norm_res_d, res->inf_norm_res_m);
     return;
 }
 

@@ -48,7 +48,6 @@ extern "C" {
 
 // acados
 #include "acados/ocp_nlp/ocp_nlp_common.h"
-#include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
 
@@ -56,7 +55,6 @@ extern "C" {
 /************************************************
  * options
  ************************************************/
-
 
 typedef struct
 {
@@ -66,7 +64,7 @@ typedef struct
     int qp_warm_start;        // NOTE: this is not actually setting the warm_start! Just for compatibility with sqp.
     bool warm_start_first_qp; // to set qp_warm_start in first iteration
     int rti_phase;            // phase of RTI. Possible values 1 (preparation), 2 (feedback) 0 (both)
-    int print_level;          // possible values 0, 1 
+    int print_level;     // verbosity
 
 } ocp_nlp_sqp_rti_opts;
 
@@ -89,8 +87,6 @@ void ocp_nlp_sqp_rti_opts_set_at_stage(void *config_, void *opts_, int stage,
 /************************************************
  * memory
  ************************************************/
-
-
 
 typedef struct
 {
@@ -125,8 +121,6 @@ void *ocp_nlp_sqp_rti_memory_assign(void *config_, void *dims_, void *opts_,
  * workspace
  ************************************************/
 
-
-
 typedef struct
 {
     ocp_nlp_workspace *nlp_work;
@@ -151,17 +145,14 @@ int ocp_nlp_sqp_rti_workspace_calculate_size(void *config_, void *dims_, void *o
  * functions
  ************************************************/
 
-
-
-//
-int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
-    void *opts_, void *mem_, void *work_);
-//
 void ocp_nlp_sqp_rti_preparation_step(void *config_, void *dims_,
     void *nlp_in_, void *nlp_out_, void *opts, void *mem_, void *work_);
 //
 void ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
     void *nlp_in_, void *nlp_out_, void *opts_, void *mem_, void *work_);
+//
+int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
+    void *opts_, void *mem_, void *work_);
 //
 void ocp_nlp_sqp_rti_config_initialize_default(void *config_);
 //
