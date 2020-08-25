@@ -122,7 +122,6 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_,
     ocp_nlp_opts_initialize_default(config, dims, nlp_opts);
 
     // SQP RTI opts
-    //    opts->compute_dual_sol = 1;
     opts->ext_qp_res = 0;
     opts->warm_start_first_qp = false;
     opts->rti_phase = 0;
@@ -193,8 +192,6 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_,
     // pass options to QP module
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "qp")) )
     {
-//      config->qp_solver->opts_set(config->qp_solver,
-//          opts->qp_solver_opts, field+module_length+1, value);
         ocp_nlp_opts_set(config, nlp_opts, field, value);
 
         if (!strcmp(field, "qp_warm_start"))
@@ -237,9 +234,6 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_,
         else
         {
             ocp_nlp_opts_set(config, nlp_opts, field, value);
-//          printf("\nerror: ocp_nlp_sqp_rti_opts_set: wrong field: %s\n",
-//          field);
-//          exit(1);
         }
     }
 

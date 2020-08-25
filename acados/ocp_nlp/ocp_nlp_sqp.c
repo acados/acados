@@ -183,7 +183,6 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
     // pass options to QP module
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "qp")) )
     {
-//        config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, field+module_length+1, value);
         ocp_nlp_opts_set(config, nlp_opts, field, value);
 
         if (!strcmp(field, "qp_warm_start"))
@@ -269,8 +268,6 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
         else
         {
             ocp_nlp_opts_set(config, nlp_opts, field, value);
-//            printf("\nerror: ocp_nlp_sqp_opts_set: wrong field: %s\n", field);
-//            exit(1);
         }
     }
 
