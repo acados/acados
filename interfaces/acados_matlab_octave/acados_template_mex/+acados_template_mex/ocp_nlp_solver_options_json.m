@@ -53,6 +53,10 @@ classdef ocp_nlp_solver_options_json < handle
         nlp_solver_step_length
         rti_phase
         qp_solver_iter_max
+        qp_solver_tol_stat
+        qp_solver_tol_eq
+        qp_solver_tol_ineq
+        qp_solver_tol_comp
         print_level
         initialize_t_slacks
         levenberg_marquardt
