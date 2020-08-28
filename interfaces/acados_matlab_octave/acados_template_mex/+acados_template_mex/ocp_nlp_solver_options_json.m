@@ -44,19 +44,21 @@ classdef ocp_nlp_solver_options_json < handle
         sim_method_num_stages  %  size of butcher tableau
         sim_method_newton_iter
         sim_method_jac_reuse
-        nlp_solver_max_iter
-        qp_solver_cond_N
+        nlp_solver_max_iter        
         nlp_solver_tol_stat
         nlp_solver_tol_eq
         nlp_solver_tol_ineq
         nlp_solver_tol_comp
         nlp_solver_step_length
+        nlp_solver_warm_start_first_qp
         rti_phase
+        qp_solver_cond_N
         qp_solver_iter_max
         qp_solver_tol_stat
         qp_solver_tol_eq
         qp_solver_tol_ineq
         qp_solver_tol_comp
+        qp_solver_warm_start
         print_level
         initialize_t_slacks
         levenberg_marquardt
