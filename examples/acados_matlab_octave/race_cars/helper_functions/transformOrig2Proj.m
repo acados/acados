@@ -47,4 +47,4 @@ function [s,n,alpha,v] = transformOrig2Proj(x,y,psi,v,filename)
     s=s0;
     n=cos(psi0).*(y-y0)-sin(psi0).*(x-x0);
     alpha=psi-psi0;
-    v=v;
+end

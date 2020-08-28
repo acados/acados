@@ -43,3 +43,4 @@ function t = findProjection(x,y,xref,yref,sref,idxmindist,idxmindist2)
     u(1)=x-xref(idxmindist);
     u(2)=y-yref(idxmindist);
     t=(vl(1)*u(1)+vl(2)*u(2))/vabs/vabs;
+end

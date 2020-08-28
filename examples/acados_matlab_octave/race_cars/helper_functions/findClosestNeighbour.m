@@ -49,3 +49,4 @@ function idx = findClosestNeighbour(x,y,xref,yref,idxmindist)
     end
     
     idx = idxmindist2;
+end

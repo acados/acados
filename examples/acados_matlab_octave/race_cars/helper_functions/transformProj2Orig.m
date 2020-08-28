@@ -36,7 +36,7 @@
 
 function [x,y,psi,v] = transformProj2Orig(si,ni,alpha,v,filename)
     [sref,xref,yref,psiref,~]=getTrack(filename);
-    tracklength=sref(end);
+%     tracklength=sref(end);
     %si=tracklength;
     idxmindist=findClosestS(si,sref);
     idxmindist2=findSecondClosestS(si,sref,idxmindist);
@@ -48,5 +48,4 @@ function [x,y,psi,v] = transformProj2Orig(si,ni,alpha,v,filename)
     x=x0-ni.*sin(psi0);
     y=y0+ni.*cos(psi0);
     psi=psi0+alpha;
-    v=v;
-
+end

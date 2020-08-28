@@ -40,7 +40,7 @@
 
 clear all
 import casadi.*
-addpath('helper_functions');
+addpath('helper_functions', 'tracks');
 
 track_file = 'LMS_Track.txt';
 [Sref, ~, ~, ~, ~] = getTrack(track_file);
@@ -98,8 +98,8 @@ nbx = 1;
 Jbx = zeros(nbx,nx);
 Jbx(1,2) = 1;
 ocp_model.set('constr_Jbx', Jbx);
-ocp_model.set('constr_lbx', [-12]);
-ocp_model.set('constr_ubx', [12]);
+ocp_model.set('constr_lbx', -12);
+ocp_model.set('constr_ubx', 12);
 
 nbu = 2;
 Jbu = zeros(nbu,nu);
@@ -129,7 +129,7 @@ ocp_model.set('constr_uh', [...
 %ocp_model.set('constr_expr_h_e', constraint.expr);     
 %ocp_model.set('constr_lh_e', 0);
 %ocp_model.set('constr_uh_e', 0);
-   
+
 % Configure constraint slack variables
 nsh = 2;
 Jsh = zeros(nh, nsh);
@@ -334,6 +334,7 @@ legend('dD','ddelta');
 xlabel('t');
 ylabel('u');
 grid;
+xlim([t(1), t(end)]);
 
 subplot(2,1,2);
 plot(t, simX);
@@ -341,6 +342,7 @@ xlabel('t');
 ylabel('x');
 legend('s','n','alpha','v','D','delta');
 grid;
+xlim([t(1), t(end)]);
 
 % Plot track
 figure(2);
@@ -355,6 +357,10 @@ figure(3);
 plot(t, alat);
 line([t(1), t(end)], [constraint.alat_min, constraint.alat_min], 'LineStyle', '--', 'Color', 'k');
 line([t(1), t(end)], [constraint.alat_max, constraint.alat_max], 'LineStyle', '--', 'Color', 'k');
+xlabel('t');
+ylabel('alat');
+xlim([t(1), t(end)]);
+
 
 %% go embedded
 % to generate templated C code
