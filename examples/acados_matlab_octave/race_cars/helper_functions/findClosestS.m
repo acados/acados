@@ -38,7 +38,7 @@ function idx = findClosestS(si,sref)
     idx = zeros(length(si), 1);
     
     for j = 1:length(si)
-        [y,i] = min(abs(sref - si(j)));
+        [~,i] = min(abs(sref - si(j)));
         if (i == length(sref))
             i = 1;
         elseif (i == 1)
@@ -46,3 +46,4 @@ function idx = findClosestS(si,sref)
         end
         idx(j) = i;
     end
+end

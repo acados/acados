@@ -48,3 +48,4 @@ function idxmindist2 = findSecondClosestS(si,sref,idxmindist)
     idx(idx <= 0) = idx(idx <= 0) + length(sref);   
     
     idxmindist2 = idx;
+end

@@ -46,3 +46,4 @@ function idx = findClosestPoint(x,y,xref,yref)
     end
     
     idx = idxmindist;
+end

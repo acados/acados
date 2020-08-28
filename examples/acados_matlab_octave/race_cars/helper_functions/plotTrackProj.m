@@ -94,5 +94,5 @@ function plotTrackProj(simX, filename)
 %         [xi2[i],yi2[i],_,_]=transformProj2Orig(Sref[k],nrefi+0.15,0,0)
 %         plt.plot([xi1[i],xi2[i]],[yi1[i],yi2[i]],color='black')
 %     end
-    
     hold off;
+end
