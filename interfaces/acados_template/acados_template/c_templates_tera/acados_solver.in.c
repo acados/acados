@@ -1532,6 +1532,11 @@ int acados_create()
     double nlp_solver_step_length = {{ solver_options.nlp_solver_step_length }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "step_length", &nlp_solver_step_length);
 
+    {%- if solver_options.nlp_solver_warm_start_first_qp %}
+    int nlp_solver_warm_start_first_qp = {{ solver_options.nlp_solver_warm_start_first_qp }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "warm_start_first_qp", &nlp_solver_warm_start_first_qp);
+    {%- endif %}
+
     double levenberg_marquardt = {{ solver_options.levenberg_marquardt }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "levenberg_marquardt", &levenberg_marquardt);
 
@@ -1571,6 +1576,11 @@ int acados_create()
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_tol_comp", &qp_solver_tol_comp);
     {%- endif -%}
 
+    {%- if solver_options.qp_solver_warm_start %}
+    int qp_solver_warm_start = {{ solver_options.qp_solver_warm_start }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_warm_start", &qp_solver_warm_start);
+    {%- endif -%}
+    
 {% if solver_options.nlp_solver_type == "SQP" %}
     // set SQP specific options
     double nlp_solver_tol_stat = {{ solver_options.nlp_solver_tol_stat }};
