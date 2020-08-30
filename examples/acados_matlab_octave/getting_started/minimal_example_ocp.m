@@ -70,6 +70,8 @@ ocp_model.set('sym_u', model.sym_u);
 ocp_model.set('sym_xdot', model.sym_xdot);
 
 % cost
+ocp_model.set('cost_type', 'ext_cost');
+ocp_model.set('cost_type_e', 'ext_cost');
 ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
 ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
 
@@ -83,11 +85,18 @@ else % irk irk_gnsf
 end
 
 % constraints
-ocp_model.set('constr_type', 'auto');
+ocp_model.set('constr_type', 'auto'); % bgh
 ocp_model.set('constr_expr_h', model.expr_h);
 U_max = 80;
 ocp_model.set('constr_lh', -U_max); % lower bound on h
 ocp_model.set('constr_uh', U_max);  % upper bound on h
+
+nbx = 1;
+Jbx = zeros(nbx,nx);
+Jbx(1,1) = 1;
+ocp_model.set('constr_Jbx', Jbx);
+ocp_model.set('constr_lbx', -1)
+ocp_model.set('constr_ubx', 1)
 
 ocp_model.set('constr_x0', x0);
 % ... see ocp_model.model_struct to see what other fields can be set
@@ -104,6 +113,27 @@ ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
 %% create ocp solver
 ocp = acados_ocp(ocp_model, ocp_opts);
 
+%% Use custom cost
+generic_or_casadi = 1; % 0=generic, 1=casadi
+
+if (generic_or_casadi == 0)
+    ocp.C_ocp_ext_fun = ocp_set_ext_fun_manual_cost(ocp.C_ocp, ocp.C_ocp_ext_fun, ocp.model_struct, ocp.opts_struct, ...
+        'generic', ...
+        'cost/generic_ext_cost.c', 'ext_cost',...
+        'cost/generic_ext_cost.c', 'ext_costN');
+else
+    ocp.C_ocp_ext_fun = ocp_set_ext_fun_manual_cost(ocp.C_ocp, ocp.C_ocp_ext_fun, ocp.model_struct, ocp.opts_struct, ...
+        'casadi', ...
+        'cost/casadi_ext_cost.c', 'pendulum_cost_ext_cost_fun_jac_hess',...
+        'cost/casadi_ext_cost_e.c', 'pendulum_cost_ext_cost_e_fun_jac_hess');
+end
+
+ocp.C_ocp_ext_fun.cost_ext_cost_fun_jac_hess
+
+% precompute
+ocp_precompute(ocp.C_ocp);
+
+%%
 x_traj_init = zeros(nx, N+1);
 u_traj_init = zeros(nu, N);
 
