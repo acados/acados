@@ -148,8 +148,14 @@ if (strcmp(model_struct.cost_type, 'ext_cost') || strcmp(model_struct.cost_type_
     end
 end
 
+useMSVC = strcmp(mex.getCompilerConfigurations('C').ShortName(1:4), 'MSVC');
+
 if ispc
-    ldext = '.lib';
+    if useMSVC
+        ldext = '.dll';
+    else
+        ldext = '.lib';
+    end
 else
     ldext = '.so';
 end
@@ -168,11 +174,20 @@ for k=1:length(c_files)
 end
 
 if ispc
-    mbuild(c_files_path{:}, '-output', lib_name, 'CFLAGS="$CFLAGS"', 'LDTYPE="-shared"', ['LDEXT=', ldext]);
+    if useMSVC
+        mbuild(c_files_path{:}, '-output', lib_name, 'CFLAGS="$CFLAGS"', 'LINKFLAGS=$LINKFLAGS /DLL', ['LDEXT=', ldext]);
+    else
+        mbuild(c_files_path{:}, '-output', lib_name, 'CFLAGS="$CFLAGS"', 'LDTYPE="-shared"', ['LDEXT=', ldext]);
+    end
 else
     system(['gcc -O2 -fPIC -shared ', strjoin(c_files_path, ' '), ' -o ', [lib_name, ldext]]);
 end
 
 movefile([lib_name, ldext], fullfile(opts_struct.output_dir, [lib_name, ldext]));
+
+if (ispc && useMSVC)
+    movefile([lib_name, '.lib'], fullfile(opts_struct.output_dir, [lib_name, '.lib']));
+    movefile([lib_name, '.exp'], fullfile(opts_struct.output_dir, [lib_name, '.exp']));
+end
 
 end
