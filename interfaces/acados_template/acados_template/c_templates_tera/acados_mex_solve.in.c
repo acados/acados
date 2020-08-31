@@ -45,12 +45,5 @@
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    int status = acados_solve();
-
-    if (status)
-    {
-        mexPrintf("acados_solve() returned status %d.\n", status);
-    }
-
-    return;
+    acados_solve();
 }
