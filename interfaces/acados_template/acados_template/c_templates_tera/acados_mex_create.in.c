@@ -314,30 +314,30 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 /* cost */
     mxArray *cost_y_fun_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(cost_y_fun_mat);
-{% if cost.cost_type == "NONLINEAR_LS" and dims.nh > 0 %}
+{% if cost.cost_type == "NONLINEAR_LS" %}
     l_ptr[0] = (long long) cost_y_fun;
 {% endif %}
-{% if cost.cost_type_e == "NONLINEAR_LS" and dims.nh_e > 0 %}
+{% if cost.cost_type_e == "NONLINEAR_LS" %}
     l_ptr[1] = (long long) &cost_y_e_fun;
 {%- endif %}
     mxSetField(plhs[1], 0, "cost_y_fun", cost_y_fun_mat);
 
     mxArray *cost_y_fun_jac_ut_xt_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(cost_y_fun_jac_ut_xt_mat);
-{% if cost.cost_type == "NONLINEAR_LS" and dims.nh > 0 %}
+{% if cost.cost_type == "NONLINEAR_LS" %}
     l_ptr[0] = (long long) cost_y_fun_jac_ut_xt;
 {% endif %}
-{% if cost.cost_type_e == "NONLINEAR_LS" and dims.nh_e > 0 %}
+{% if cost.cost_type_e == "NONLINEAR_LS" %}
     l_ptr[1] = (long long) &cost_y_e_fun_jac_ut_xt;
 {%- endif %}
     mxSetField(plhs[1], 0, "cost_y_fun_jac_ut_xt", cost_y_fun_jac_ut_xt_mat);
 
     mxArray *cost_y_hess_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(cost_y_hess_mat);
-{% if cost.cost_type == "NONLINEAR_LS" and dims.nh > 0 %}
+{% if cost.cost_type == "NONLINEAR_LS" %}
     l_ptr[0] = (long long) cost_y_hess;
 {% endif %}
-{% if cost.cost_type_e == "NONLINEAR_LS" and dims.nh_e > 0 %}
+{% if cost.cost_type_e == "NONLINEAR_LS" %}
     l_ptr[1] = (long long) &cost_y_e_hess;
 {%- endif %}
     mxSetField(plhs[1], 0, "cost_y_hess", cost_y_hess_mat);
