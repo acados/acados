@@ -148,10 +148,14 @@ if (strcmp(model_struct.cost_type, 'ext_cost') || strcmp(model_struct.cost_type_
     end
 end
 
-compSName = mex.getCompilerConfigurations('C').ShortName;
-useMSVC = (length(compSName) > 3) && strcmp(compSName(1 : 4), 'MSVC');
-
 if ispc
+    if ~(exist ("OCTAVE_VERSION", "builtin") > 0) % MATLAB is used
+        compSName = mex.getCompilerConfigurations('C').ShortName;
+        useMSVC = (length(compSName) > 3) && strcmp(compSName(1 : 4), 'MSVC');
+    else % OCTAVE is used
+        useMSVC = false;
+    end
+    
     if useMSVC
         ldext = '.dll';
     else
