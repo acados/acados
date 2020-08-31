@@ -148,7 +148,8 @@ if (strcmp(model_struct.cost_type, 'ext_cost') || strcmp(model_struct.cost_type_
     end
 end
 
-useMSVC = strcmp(mex.getCompilerConfigurations('C').ShortName(1:4), 'MSVC');
+compSName = mex.getCompilerConfigurations('C').ShortName;
+useMSVC = (length(compSName) > 3) && strcmp(compSName(1 : 4), 'MSVC');
 
 if ispc
     if useMSVC
