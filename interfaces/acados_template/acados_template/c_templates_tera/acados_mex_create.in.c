@@ -344,20 +344,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     mxArray *ext_cost_fun_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(ext_cost_fun_mat);
-{% if cost.cost_type == "EXTERNAL" and dims.nh > 0 %}
+{% if cost.cost_type == "EXTERNAL" %}
     l_ptr[0] = (long long) ext_cost_fun;
-{% endif %}
-{% if cost.cost_type_e == "EXTERNAL" and dims.nh_e > 0 %}
+{% endif -%}
+{% if cost.cost_type_e == "EXTERNAL" %}
     l_ptr[1] = (long long) &ext_cost_e_fun;
 {%- endif %}
     mxSetField(plhs[1], 0, "ext_cost_fun", ext_cost_fun_mat);
 
     mxArray *ext_cost_fun_jac_hess_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(ext_cost_fun_jac_hess_mat);
-{% if cost.cost_type == "EXTERNAL" and dims.nh > 0 %}
+{% if cost.cost_type == "EXTERNAL" %}
     l_ptr[0] = (long long) ext_cost_fun_jac_hess;
-{% endif %}
-{% if cost.cost_type_e == "EXTERNAL" and dims.nh_e > 0 %}
+{% endif -%}
+{% if cost.cost_type_e == "EXTERNAL" %}
     l_ptr[1] = (long long) &ext_cost_e_fun_jac_hess;
 {%- endif %}
     mxSetField(plhs[1], 0, "ext_cost_fun_jac_hess", ext_cost_fun_jac_hess_mat);
