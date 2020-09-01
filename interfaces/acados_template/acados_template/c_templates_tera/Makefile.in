@@ -135,11 +135,9 @@ MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun_jac_hess.o
 OCP_OBJ=
 {%- if constr_type == "BGP" and dims_nphi > 0 %}
 OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_phi_constraint.o
-# OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_r_constraint.o
 {%- endif %}
 {%- if constr_type_e == "BGP" and dims_nphi_e > 0 %}
 OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_phi_e_constraint.o
-# OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_r_e_constraint.o
 {%- endif %}
 
 {%- if constr_type == "BGH" and dims_nh > 0 %}
@@ -243,15 +241,11 @@ CASADI_MODEL_SOURCE+= {{ model.name }}_dyn_disc_phi_fun_jac_hess.c
 {%- endif %}
 {%- if constr_type == "BGP" and dims_nphi > 0 %}
 CASADI_CON_PHI_SOURCE=
-# CASADI_CON_R_SOURCE=
 CASADI_CON_PHI_SOURCE+= {{ model.name }}_phi_constraint.c
-# CASADI_CON_R_SOURCE+= {{ model.name }}_r_constraint.c
 {%- endif %}
 {%- if constr_type_e == "BGP" and dims_nphi_e > 0 %}
 CASADI_CON_PHI_E_SOURCE=
-CASADI_CON_R_E_SOURCE=
 CASADI_CON_PHI_E_SOURCE+= {{ model.name }}_phi_e_constraint.c
-# CASADI_CON_R_E_SOURCE+= {{ model.name }}_r_e_constraint.c
 {%- endif %}
 {%- if constr_type == "BGH" and dims_nh > 0 %}
 CASADI_CON_H_SOURCE=
@@ -289,11 +283,9 @@ casadi_fun:
 	( cd {{ model.name }}_model; gcc $(ACADOS_FLAGS) -c  $(CASADI_MODEL_SOURCE)) 
 	{%- if constr_type == "BGP"  and dims_nphi > 0 %}
 	( cd {{ model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_PHI_SOURCE))
-	# ( cd {{ model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_R_SOURCE))
 	{%- endif %}
 	{%- if constr_type_e == "BGP"  and dims_nphi_e > 0 %}
 	( cd {{ model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_PHI_E_SOURCE))
-	# ( cd {{ model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_R_E_SOURCE))
 	{%- endif %}
 	{%- if constr_type == "BGH" and dims_nh > 0 %}
 	( cd {{ model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_H_SOURCE))
