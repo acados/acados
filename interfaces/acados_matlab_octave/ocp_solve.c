@@ -36,7 +36,6 @@
 #include <stdio.h>
 #include <string.h>
 // acados
-//#include "acados/sim/sim_common.h"
 #include "acados_c/ocp_nlp_interface.h"
 // mex
 #include "mex.h"
@@ -44,9 +43,7 @@
 
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
-    {
-
-//    mexPrintf("\nin ocp_solve\n");
+{
 
     long long *ptr;
 
@@ -70,12 +67,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int acados_return = ocp_nlp_solve(solver, in, out);
 
 
-
-    /* return */
-
-    return;
-
-    }
-
+}
 
 

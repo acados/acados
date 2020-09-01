@@ -44,10 +44,7 @@
 
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
-    {
-
-//    mexPrintf("\nin sim_solve\n");
-
+{
     long long *ptr;
 
     /* RHS */
@@ -69,12 +66,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     /* solver */
     int acados_return = sim_solve(solver, in, out);
 
-
-
-    /* return */
-
     return;
 
-    }
+}
 
 
