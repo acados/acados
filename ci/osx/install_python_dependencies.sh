@@ -32,4 +32,5 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-pip install numpy scipy matplotlib;
+pip install numpy scipy matplotlib setuptools;
+pip install "setuptools!=50.0" --force-reinstall;
