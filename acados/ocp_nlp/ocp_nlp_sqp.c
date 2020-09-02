@@ -613,15 +613,15 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // compute nlp residuals
         ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_mem->nlp_res, nlp_mem);
 
-        nlp_out->inf_norm_res = nlp_mem->nlp_res->inf_norm_res_g;
-        nlp_out->inf_norm_res = (nlp_mem->nlp_res->inf_norm_res_b > nlp_out->inf_norm_res) ?
-                                    nlp_mem->nlp_res->inf_norm_res_b :
+        nlp_out->inf_norm_res = nlp_mem->nlp_res->inf_norm_res_stat;
+        nlp_out->inf_norm_res = (nlp_mem->nlp_res->inf_norm_res_eq > nlp_out->inf_norm_res) ?
+                                    nlp_mem->nlp_res->inf_norm_res_eq :
                                     nlp_out->inf_norm_res;
-        nlp_out->inf_norm_res = (nlp_mem->nlp_res->inf_norm_res_d > nlp_out->inf_norm_res) ?
-                                    nlp_mem->nlp_res->inf_norm_res_d :
+        nlp_out->inf_norm_res = (nlp_mem->nlp_res->inf_norm_res_ineq > nlp_out->inf_norm_res) ?
+                                    nlp_mem->nlp_res->inf_norm_res_ineq :
                                     nlp_out->inf_norm_res;
-        nlp_out->inf_norm_res = (nlp_mem->nlp_res->inf_norm_res_m > nlp_out->inf_norm_res) ?
-                                    nlp_mem->nlp_res->inf_norm_res_m :
+        nlp_out->inf_norm_res = (nlp_mem->nlp_res->inf_norm_res_comp > nlp_out->inf_norm_res) ?
+                                    nlp_mem->nlp_res->inf_norm_res_comp :
                                     nlp_out->inf_norm_res;
 
         if (opts->print_level > sqp_iter + 1)
@@ -630,17 +630,17 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // save statistics
         if (sqp_iter < mem->stat_m)
         {
-            mem->stat[mem->stat_n*sqp_iter+0] = nlp_mem->nlp_res->inf_norm_res_g;
-            mem->stat[mem->stat_n*sqp_iter+1] = nlp_mem->nlp_res->inf_norm_res_b;
-            mem->stat[mem->stat_n*sqp_iter+2] = nlp_mem->nlp_res->inf_norm_res_d;
-            mem->stat[mem->stat_n*sqp_iter+3] = nlp_mem->nlp_res->inf_norm_res_m;
+            mem->stat[mem->stat_n*sqp_iter+0] = nlp_mem->nlp_res->inf_norm_res_stat;
+            mem->stat[mem->stat_n*sqp_iter+1] = nlp_mem->nlp_res->inf_norm_res_eq;
+            mem->stat[mem->stat_n*sqp_iter+2] = nlp_mem->nlp_res->inf_norm_res_ineq;
+            mem->stat[mem->stat_n*sqp_iter+3] = nlp_mem->nlp_res->inf_norm_res_comp;
         }
 
         // exit conditions on residuals
-        if ((nlp_mem->nlp_res->inf_norm_res_g < opts->tol_stat) &
-            (nlp_mem->nlp_res->inf_norm_res_b < opts->tol_eq) &
-            (nlp_mem->nlp_res->inf_norm_res_d < opts->tol_ineq) &
-            (nlp_mem->nlp_res->inf_norm_res_m < opts->tol_comp))
+        if ((nlp_mem->nlp_res->inf_norm_res_stat < opts->tol_stat) &
+            (nlp_mem->nlp_res->inf_norm_res_eq < opts->tol_eq) &
+            (nlp_mem->nlp_res->inf_norm_res_ineq < opts->tol_ineq) &
+            (nlp_mem->nlp_res->inf_norm_res_comp < opts->tol_comp))
         {
             // save sqp iterations number
             mem->sqp_iter = sqp_iter;
@@ -661,9 +661,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
             if (opts->print_level > 0)
             {
-                printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, nlp_mem->nlp_res->inf_norm_res_g,
-                    nlp_mem->nlp_res->inf_norm_res_b, nlp_mem->nlp_res->inf_norm_res_d,
-                    nlp_mem->nlp_res->inf_norm_res_m );
+                printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, nlp_mem->nlp_res->inf_norm_res_stat,
+                    nlp_mem->nlp_res->inf_norm_res_eq, nlp_mem->nlp_res->inf_norm_res_ineq,
+                    nlp_mem->nlp_res->inf_norm_res_comp );
                 printf("\n\n");
             }
 
@@ -737,9 +737,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // print_ocp_qp_in(nlp_mem->qp_in);
             if (opts->print_level > 0)
             {
-                printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, nlp_mem->nlp_res->inf_norm_res_g,
-                    nlp_mem->nlp_res->inf_norm_res_b, nlp_mem->nlp_res->inf_norm_res_d,
-                    nlp_mem->nlp_res->inf_norm_res_m );
+                printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, nlp_mem->nlp_res->inf_norm_res_stat,
+                    nlp_mem->nlp_res->inf_norm_res_eq, nlp_mem->nlp_res->inf_norm_res_ineq,
+                    nlp_mem->nlp_res->inf_norm_res_comp );
                 printf("\n\n");
             }
 
@@ -799,8 +799,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 printf("# it\tstat\t\teq\t\tineq\t\tcomp\n");
             }
 
-            printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, nlp_mem->nlp_res->inf_norm_res_g,
-                nlp_mem->nlp_res->inf_norm_res_b, nlp_mem->nlp_res->inf_norm_res_d, nlp_mem->nlp_res->inf_norm_res_m );
+            printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, nlp_mem->nlp_res->inf_norm_res_stat,
+                nlp_mem->nlp_res->inf_norm_res_eq, nlp_mem->nlp_res->inf_norm_res_ineq, nlp_mem->nlp_res->inf_norm_res_comp );
         }
 
     }
@@ -1082,22 +1082,22 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
     else if (!strcmp("res_stat", field))
     {
         double *value = return_value_;
-        *value = mem->nlp_mem->nlp_res->inf_norm_res_g;
+        *value = mem->nlp_mem->nlp_res->inf_norm_res_stat;
     }
     else if (!strcmp("res_eq", field))
     {
         double *value = return_value_;
-        *value = mem->nlp_mem->nlp_res->inf_norm_res_b;
+        *value = mem->nlp_mem->nlp_res->inf_norm_res_eq;
     }
     else if (!strcmp("res_ineq", field))
     {
         double *value = return_value_;
-        *value = mem->nlp_mem->nlp_res->inf_norm_res_d;
+        *value = mem->nlp_mem->nlp_res->inf_norm_res_ineq;
     }
     else if (!strcmp("res_comp", field))
     {
         double *value = return_value_;
-        *value = mem->nlp_mem->nlp_res->inf_norm_res_m;
+        *value = mem->nlp_mem->nlp_res->inf_norm_res_comp;
     }
     else
     {
