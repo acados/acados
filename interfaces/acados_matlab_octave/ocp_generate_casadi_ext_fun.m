@@ -132,7 +132,7 @@ if (strcmp(model_struct.cost_type, 'nonlinear_ls') || strcmp(model_struct.cost_t
 end
 
 % external cost
-if (strcmp(model_struct.cost_type, 'ext_cost') || strcmp(model_struct.cost_type_e, 'ext_cost'))
+if (strcmp(model_struct.ext_fun_type, 'casadi') && (strcmp(model_struct.cost_type, 'ext_cost') || strcmp(model_struct.cost_type_e, 'ext_cost')))
     % generate c for function and derivatives using casadi
     if (strcmp(opts_struct.codgen_model, 'true'))
         generate_c_code_ext_cost(model_struct, opts_struct);
