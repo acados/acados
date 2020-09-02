@@ -5,7 +5,8 @@ extern "C" {
 #include <math.h>
 #include "acados_c/ocp_nlp_interface.h"
 
-void ext_cost(void *ext_fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
+//void ext_cost(void *ext_fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
+void ext_cost(void **in, void **out, void *params)
 {
     int ii, jj;
 
@@ -72,7 +73,8 @@ void ext_cost(void *ext_fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *t
 
 }
 
-void ext_costN(void *ext_fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
+//void ext_costN(void *ext_fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
+void ext_costN(void **in, void **out, void *params)
 {
     int ii, jj;
 
