@@ -282,6 +282,27 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
 void ocp_nlp_opts_set_at_stage(void *config, void *opts, int stage, const char *field, void *value);
 
 
+/************************************************
+ * residuals
+ ************************************************/
+
+typedef struct
+{
+    struct blasfeo_dvec *res_g;  // stationarity
+    struct blasfeo_dvec *res_b;  // dynamics
+    struct blasfeo_dvec *res_d;  // inequality constraints
+    struct blasfeo_dvec *res_m;  // complementarity
+    double inf_norm_res_g;
+    double inf_norm_res_b;
+    double inf_norm_res_d;
+    double inf_norm_res_m;
+    int memsize;
+} ocp_nlp_res;
+
+//
+int ocp_nlp_res_calculate_size(ocp_nlp_dims *dims);
+//
+ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory);
 
 /************************************************
  * memory
@@ -295,6 +316,9 @@ typedef struct
     void **dynamics;     // dynamics memory
     void **cost;         // cost memory
     void **constraints;  // constraints memory
+
+    // residuals
+    ocp_nlp_res *nlp_res;
 
     // qp in & out
     ocp_qp_in *qp_in;
@@ -375,30 +399,6 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
 //
 void ocp_nlp_initialize_t_slacks(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
-
-
-
-/************************************************
- * residuals
- ************************************************/
-
-typedef struct
-{
-    struct blasfeo_dvec *res_g;  // stationarity
-    struct blasfeo_dvec *res_b;  // dynamics
-    struct blasfeo_dvec *res_d;  // inequality constraints
-    struct blasfeo_dvec *res_m;  // complementarity
-    double inf_norm_res_g;
-    double inf_norm_res_b;
-    double inf_norm_res_d;
-    double inf_norm_res_m;
-    int memsize;
-} ocp_nlp_res;
-
-//
-int ocp_nlp_res_calculate_size(ocp_nlp_dims *dims);
-//
-ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory);
 //
 void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out,
                          ocp_nlp_res *res, ocp_nlp_memory *mem);
