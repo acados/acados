@@ -311,9 +311,6 @@ int ocp_nlp_sqp_memory_calculate_size(void *config_, void *dims_, void *opts_)
 
     size += sizeof(ocp_nlp_sqp_memory);
 
-    // nlp res
-    size += ocp_nlp_res_calculate_size(dims);
-
     // nlp mem
     size += ocp_nlp_memory_calculate_size(config, dims, nlp_opts);
 
@@ -359,10 +356,6 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
     c_ptr += sizeof(ocp_nlp_sqp_memory);
 
     align_char_to(8, &c_ptr);
-
-    // nlp res
-    mem->nlp_res = ocp_nlp_res_assign(dims, c_ptr);
-    c_ptr += mem->nlp_res->memsize;
 
     // nlp mem
     mem->nlp_mem = ocp_nlp_memory_assign(config, dims, nlp_opts, c_ptr);
@@ -618,17 +611,17 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
         // compute nlp residuals
-        ocp_nlp_res_compute(dims, nlp_in, nlp_out, mem->nlp_res, nlp_mem);
+        ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_mem->nlp_res, nlp_mem);
 
-        nlp_out->inf_norm_res = mem->nlp_res->inf_norm_res_g;
-        nlp_out->inf_norm_res = (mem->nlp_res->inf_norm_res_b > nlp_out->inf_norm_res) ?
-                                    mem->nlp_res->inf_norm_res_b :
+        nlp_out->inf_norm_res = nlp_mem->nlp_res->inf_norm_res_g;
+        nlp_out->inf_norm_res = (nlp_mem->nlp_res->inf_norm_res_b > nlp_out->inf_norm_res) ?
+                                    nlp_mem->nlp_res->inf_norm_res_b :
                                     nlp_out->inf_norm_res;
-        nlp_out->inf_norm_res = (mem->nlp_res->inf_norm_res_d > nlp_out->inf_norm_res) ?
-                                    mem->nlp_res->inf_norm_res_d :
+        nlp_out->inf_norm_res = (nlp_mem->nlp_res->inf_norm_res_d > nlp_out->inf_norm_res) ?
+                                    nlp_mem->nlp_res->inf_norm_res_d :
                                     nlp_out->inf_norm_res;
-        nlp_out->inf_norm_res = (mem->nlp_res->inf_norm_res_m > nlp_out->inf_norm_res) ?
-                                    mem->nlp_res->inf_norm_res_m :
+        nlp_out->inf_norm_res = (nlp_mem->nlp_res->inf_norm_res_m > nlp_out->inf_norm_res) ?
+                                    nlp_mem->nlp_res->inf_norm_res_m :
                                     nlp_out->inf_norm_res;
 
         if (opts->print_level > sqp_iter + 1)
@@ -637,17 +630,17 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // save statistics
         if (sqp_iter < mem->stat_m)
         {
-            mem->stat[mem->stat_n*sqp_iter+0] = mem->nlp_res->inf_norm_res_g;
-            mem->stat[mem->stat_n*sqp_iter+1] = mem->nlp_res->inf_norm_res_b;
-            mem->stat[mem->stat_n*sqp_iter+2] = mem->nlp_res->inf_norm_res_d;
-            mem->stat[mem->stat_n*sqp_iter+3] = mem->nlp_res->inf_norm_res_m;
+            mem->stat[mem->stat_n*sqp_iter+0] = nlp_mem->nlp_res->inf_norm_res_g;
+            mem->stat[mem->stat_n*sqp_iter+1] = nlp_mem->nlp_res->inf_norm_res_b;
+            mem->stat[mem->stat_n*sqp_iter+2] = nlp_mem->nlp_res->inf_norm_res_d;
+            mem->stat[mem->stat_n*sqp_iter+3] = nlp_mem->nlp_res->inf_norm_res_m;
         }
 
         // exit conditions on residuals
-        if ((mem->nlp_res->inf_norm_res_g < opts->tol_stat) &
-            (mem->nlp_res->inf_norm_res_b < opts->tol_eq) &
-            (mem->nlp_res->inf_norm_res_d < opts->tol_ineq) &
-            (mem->nlp_res->inf_norm_res_m < opts->tol_comp))
+        if ((nlp_mem->nlp_res->inf_norm_res_g < opts->tol_stat) &
+            (nlp_mem->nlp_res->inf_norm_res_b < opts->tol_eq) &
+            (nlp_mem->nlp_res->inf_norm_res_d < opts->tol_ineq) &
+            (nlp_mem->nlp_res->inf_norm_res_m < opts->tol_comp))
         {
             // save sqp iterations number
             mem->sqp_iter = sqp_iter;
@@ -668,9 +661,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
             if (opts->print_level > 0)
             {
-                printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, mem->nlp_res->inf_norm_res_g,
-                    mem->nlp_res->inf_norm_res_b, mem->nlp_res->inf_norm_res_d,
-                    mem->nlp_res->inf_norm_res_m );
+                printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, nlp_mem->nlp_res->inf_norm_res_g,
+                    nlp_mem->nlp_res->inf_norm_res_b, nlp_mem->nlp_res->inf_norm_res_d,
+                    nlp_mem->nlp_res->inf_norm_res_m );
                 printf("\n\n");
             }
 
@@ -744,9 +737,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // print_ocp_qp_in(nlp_mem->qp_in);
             if (opts->print_level > 0)
             {
-                printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, mem->nlp_res->inf_norm_res_g,
-                    mem->nlp_res->inf_norm_res_b, mem->nlp_res->inf_norm_res_d,
-                    mem->nlp_res->inf_norm_res_m );
+                printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, nlp_mem->nlp_res->inf_norm_res_g,
+                    nlp_mem->nlp_res->inf_norm_res_b, nlp_mem->nlp_res->inf_norm_res_d,
+                    nlp_mem->nlp_res->inf_norm_res_m );
                 printf("\n\n");
             }
 
@@ -806,8 +799,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 printf("# it\tstat\t\teq\t\tineq\t\tcomp\n");
             }
 
-            printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, mem->nlp_res->inf_norm_res_g,
-                mem->nlp_res->inf_norm_res_b, mem->nlp_res->inf_norm_res_d, mem->nlp_res->inf_norm_res_m );
+            printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, nlp_mem->nlp_res->inf_norm_res_g,
+                nlp_mem->nlp_res->inf_norm_res_b, nlp_mem->nlp_res->inf_norm_res_d, nlp_mem->nlp_res->inf_norm_res_m );
         }
 
     }
@@ -1023,7 +1016,7 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
     else if (!strcmp("nlp_res", field))
     {
         ocp_nlp_res **value = return_value_;
-        *value = mem->nlp_res;
+        *value = mem->nlp_mem->nlp_res;
     }
     else if (!strcmp("stat", field))
     {

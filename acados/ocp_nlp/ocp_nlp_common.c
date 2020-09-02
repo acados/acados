@@ -1361,6 +1361,9 @@ int ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
         size += constraints[ii]->memory_calculate_size(constraints[ii], dims->constraints[ii], opts->constraints[ii]);
     }
 
+    // nlp res
+    size += ocp_nlp_res_calculate_size(dims);
+
     size += (N+1)*sizeof(bool); // set_sim_guess
 
     size += (N+1)*sizeof(struct blasfeo_dmat); // dzduxt
@@ -1478,7 +1481,9 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
                                                                  opts->constraints[ii]);
     }
 
-
+    // nlp res
+    mem->nlp_res = ocp_nlp_res_assign(dims, c_ptr);
+    c_ptr += mem->nlp_res->memsize;
 
     // blasfeo_struct align
     align_char_to(8, &c_ptr);
