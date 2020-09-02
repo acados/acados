@@ -1093,22 +1093,22 @@ void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_,
     else if (!strcmp("res_stat", field))
     {
         double *value = return_value_;
-        *value = mem->nlp_mem->nlp_res->inf_norm_res_g;
+        *value = mem->nlp_mem->nlp_res->inf_norm_res_stat;
     }
     else if (!strcmp("res_eq", field))
     {
         double *value = return_value_;
-        *value = mem->nlp_mem->nlp_res->inf_norm_res_b;
+        *value = mem->nlp_mem->nlp_res->inf_norm_res_eq;
     }
     else if (!strcmp("res_ineq", field))
     {
         double *value = return_value_;
-        *value = mem->nlp_mem->nlp_res->inf_norm_res_d;
+        *value = mem->nlp_mem->nlp_res->inf_norm_res_ineq;
     }
     else if (!strcmp("res_comp", field))
     {
         double *value = return_value_;
-        *value = mem->nlp_mem->nlp_res->inf_norm_res_m;
+        *value = mem->nlp_mem->nlp_res->inf_norm_res_comp;
     }
     else
     {

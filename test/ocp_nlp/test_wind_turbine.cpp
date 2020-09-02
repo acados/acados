@@ -1054,14 +1054,14 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
         ocp_nlp_get(config, solver, "nlp_res", &residual);
 
         double max_res = 0.0;
-        double inf_norm_res_g = residual->inf_norm_res_g;
-        double inf_norm_res_b = residual->inf_norm_res_b;
-        double inf_norm_res_d = residual->inf_norm_res_d;
-        double inf_norm_res_m = residual->inf_norm_res_m;
-        max_res = (inf_norm_res_g > max_res) ? inf_norm_res_g : max_res;
-        max_res = (inf_norm_res_b > max_res) ? inf_norm_res_b : max_res;
-        max_res = (inf_norm_res_d > max_res) ? inf_norm_res_d : max_res;
-        max_res = (inf_norm_res_m > max_res) ? inf_norm_res_m : max_res;
+        double inf_norm_res_stat = residual->inf_norm_res_stat;
+        double inf_norm_res_eq = residual->inf_norm_res_eq;
+        double inf_norm_res_ineq = residual->inf_norm_res_ineq;
+        double inf_norm_res_comp = residual->inf_norm_res_comp;
+        max_res = (inf_norm_res_stat > max_res) ? inf_norm_res_stat : max_res;
+        max_res = (inf_norm_res_eq > max_res) ? inf_norm_res_eq : max_res;
+        max_res = (inf_norm_res_ineq > max_res) ? inf_norm_res_ineq : max_res;
+        max_res = (inf_norm_res_comp > max_res) ? inf_norm_res_comp : max_res;
 
         // update initial condition
         // TODO(dimitris): maybe simulate system instead of passing x[1] as next state
