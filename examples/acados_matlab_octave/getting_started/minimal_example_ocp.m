@@ -114,7 +114,7 @@ ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
 ocp = acados_ocp(ocp_model, ocp_opts);
 
 %% Use custom cost
-generic_or_casadi = 1; % 0=generic, 1=casadi
+generic_or_casadi = 0; % 0=generic, 1=casadi
 
 if (generic_or_casadi == 0)
     ocp.C_ocp_ext_fun = ocp_set_ext_fun_manual_cost(ocp.C_ocp, ocp.C_ocp_ext_fun, ocp.model_struct, ocp.opts_struct, ...
