@@ -36,7 +36,6 @@ import sys, os, json
 import numpy as np
 
 from ctypes import *
-from casadi import CasadiMeta, Function, SX
 
 from copy import deepcopy
 
@@ -413,7 +412,7 @@ def ocp_formulation_json_dump(acados_ocp, json_file='acados_ocp_nlp.json'):
 
     # Copy input ocp object dictionary
     ocp_nlp_dict = dict(deepcopy(acados_ocp).__dict__)
-    # TODO: maybe make one funciton with formatting
+    # TODO: maybe make one function with formatting
 
     for acados_struct, v in ocp_layout.items():
         # skip non dict attributes
@@ -846,7 +845,7 @@ class AcadosOcpSolver:
         self.shared_lib.ocp_nlp_eval_residuals.argtypes = [c_void_p, c_void_p, c_void_p]
         self.shared_lib.ocp_nlp_eval_residuals(self.nlp_solver, self.nlp_in, self.nlp_out)
 
-        return 1
+        return
 
 
     def get_residuals(self):
@@ -1043,6 +1042,44 @@ class AcadosOcpSolver:
             self.nlp_dims, self.nlp_in, stage, field, value_data_p)
 
         return
+
+
+    def dynamics_get(self, stage_, field_):
+        """
+        get numerical data from the dynamics module of the solver:
+            :param stage_: integer corresponding to shooting node
+            :param field_: string, e.g. 'A'
+        """
+
+        field = field_
+        field = field.encode('utf-8')
+        stage = c_int(stage_)
+
+        # get dims
+        self.shared_lib.ocp_nlp_dynamics_dims_get_from_attr.argtypes = \
+            [c_void_p, c_void_p, c_void_p, c_int, c_char_p, POINTER(c_int)]
+        self.shared_lib.ocp_nlp_dynamics_dims_get_from_attr.restype = c_int
+
+        dims = np.ascontiguousarray(np.zeros((2,)), dtype=np.intc)
+        dims_data = cast(dims.ctypes.data, POINTER(c_int))
+
+        self.shared_lib.ocp_nlp_dynamics_dims_get_from_attr(self.nlp_config, \
+            self.nlp_dims, self.nlp_out, stage_, field, dims_data)
+
+        # create output data
+        out = np.ascontiguousarray(np.zeros((np.prod(dims),)), dtype=np.float64)
+        out = out.reshape(dims[0], dims[1], order='F')
+
+        out_data = cast(out.ctypes.data, POINTER(c_double))
+        out_data_p = cast((out_data), c_void_p)
+
+        # call getter
+        self.shared_lib.ocp_nlp_get_at_stage.argtypes = \
+            [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+        self.shared_lib.ocp_nlp_get_at_stage(self.nlp_config, \
+            self.nlp_dims, self.nlp_solver, stage, field, out_data_p)
+
+        return out
 
 
     def options_set(self, field_, value_):
