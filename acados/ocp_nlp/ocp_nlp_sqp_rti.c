@@ -1060,6 +1060,11 @@ void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_,
         void **value = return_value_;
         *value = dims->qp_solver->xcond_dims;
     }
+    else if (!strcmp("nlp_res", field))
+    {
+        ocp_nlp_res **value = return_value_;
+        *value = mem->nlp_mem->nlp_res;
+    }
     else if (!strcmp("qp_xcond_in", field))
     {
         void **value = return_value_;
@@ -1085,11 +1090,29 @@ void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_,
         config->qp_solver->memory_get(config->qp_solver,
             mem->nlp_mem->qp_solver_mem, "iter", return_value_);
     }
+    else if (!strcmp("res_stat", field))
+    {
+        double *value = return_value_;
+        *value = mem->nlp_mem->nlp_res->inf_norm_res_g;
+    }
+    else if (!strcmp("res_eq", field))
+    {
+        double *value = return_value_;
+        *value = mem->nlp_mem->nlp_res->inf_norm_res_b;
+    }
+    else if (!strcmp("res_ineq", field))
+    {
+        double *value = return_value_;
+        *value = mem->nlp_mem->nlp_res->inf_norm_res_d;
+    }
+    else if (!strcmp("res_comp", field))
+    {
+        double *value = return_value_;
+        *value = mem->nlp_mem->nlp_res->inf_norm_res_m;
+    }
     else
     {
-        printf("\nerror: output type %s not available in \
-            ocp_nlp_sqp_rti module\n", field);
-
+        printf("\nerror: field %s not available in ocp_nlp_sqp_rti_get\n", field);
         exit(1);
     }
 }
