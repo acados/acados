@@ -111,12 +111,12 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_,
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
 
     // ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
-    ocp_nlp_dynamics_config **dynamics = config->dynamics;
-    ocp_nlp_constraints_config **constraints = config->constraints;
+    // ocp_nlp_dynamics_config **dynamics = config->dynamics;
+    // ocp_nlp_constraints_config **constraints = config->constraints;
 
-    int ii;
+    // int ii;
 
-    int N = dims->N;
+    // int N = dims->N;
 
     // this first !!!
     ocp_nlp_opts_initialize_default(config, dims, nlp_opts);
@@ -130,21 +130,21 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_,
     // overwrite default submodules opts
 
     // do not compute adjoint in dynamics and constraints
-    int compute_adj = 0;
+    // int compute_adj = 0;
 
-    // dynamics
-    for (ii = 0; ii < N; ii++)
-    {
-        dynamics[ii]->opts_set(dynamics[ii],
-            opts->nlp_opts->dynamics[ii], "compute_adj", &compute_adj);
-    }
+    // // dynamics
+    // for (ii = 0; ii < N; ii++)
+    // {
+    //     dynamics[ii]->opts_set(dynamics[ii],
+    //         opts->nlp_opts->dynamics[ii], "compute_adj", &compute_adj);
+    // }
 
-    // constraints
-    for (ii = 0; ii <= N; ii++)
-    {
-        constraints[ii]->opts_set(constraints[ii],
-            opts->nlp_opts->constraints[ii], "compute_adj", &compute_adj);
-    }
+    // // constraints
+    // for (ii = 0; ii <= N; ii++)
+    // {
+    //     constraints[ii]->opts_set(constraints[ii],
+    //         opts->nlp_opts->constraints[ii], "compute_adj", &compute_adj);
+    // }
 
     return;
 }
