@@ -838,6 +838,41 @@ class AcadosOcpSolver:
 
         return out
 
+    def compute_residuals(self):
+        """
+        compute residuals internally, needed for SQP_RTI
+        """
+        self.shared_lib.ocp_nlp_eval_residuals.argtypes = [c_void_p, c_void_p, c_void_p]
+        self.shared_lib.ocp_nlp_eval_residuals(self.nlp_solver, self.nlp_in, self.nlp_out)
+
+        return 1
+
+    def get_residuals(self):
+        """
+        Returns an array of the form [res_stat, res_eq, res_ineq, res_comp]
+        """
+        out = np.ascontiguousarray(np.zeros((4, 1)), dtype=np.float64)
+        out_data = cast(out.ctypes.data, POINTER(c_double))
+
+        self.shared_lib.ocp_nlp_get.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
+
+        field = "res_stat".encode('utf-8')
+        self.shared_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
+
+        out_data = cast(out[1].ctypes.data, POINTER(c_double))
+        field = "res_eq".encode('utf-8')
+        self.shared_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
+
+        out_data = cast(out[2].ctypes.data, POINTER(c_double))
+        field = "res_ineq".encode('utf-8')
+        self.shared_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
+
+        out_data = cast(out[3].ctypes.data, POINTER(c_double))
+        field = "res_comp".encode('utf-8')
+        self.shared_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
+
+        return out.flatten()
+
     # Note: this function should not be used anymore, better use cost_set, constraints_set
     def set(self, stage_, field_, value_):
         """
