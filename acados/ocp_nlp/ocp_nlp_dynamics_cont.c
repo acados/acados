@@ -200,6 +200,10 @@ void ocp_nlp_dynamics_cont_dims_get(void *config_, void *dims_, const char *fiel
     {
         *value = dims->nu;
     }
+    else if (!strcmp(field, "nx1"))
+    {
+        *value = dims->nx1;
+    }
     else
     {
         // get GNSF dims from integrator module

@@ -610,7 +610,7 @@ void ocp_nlp_constraint_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims 
         int stage, const char *field, int *dims_out)
 {
     // vectors first
-    dims_out[1] = 0; 
+    dims_out[1] = 0;
     // ocp_nlp_constraints_dims
     if (!strcmp(field, "lbx") || !strcmp(field, "ubx"))
     {
@@ -662,11 +662,32 @@ void ocp_nlp_constraint_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims 
     }
 }
 
+
+void ocp_nlp_dynamics_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
+        int stage, const char *field, int *dims_out)
+{
+    // vectors first
+    dims_out[1] = 0;
+    // only matrices here matrices
+    if (!strcmp(field, "A"))
+    {
+        config->dynamics[stage]->dims_get(config->dynamics[stage], dims->dynamics[stage],
+                                          "nx1", &dims_out[0]);
+        dims_out[1] = dims->nx[stage];
+    }
+    else
+    {
+        printf("\nerror: ocp_nlp_dynamics_dims_get_from_attr: field %s not available\n", field);
+        exit(1);
+    }
+}
+
+
 void ocp_nlp_cost_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
         int stage, const char *field, int *dims_out)
 {
     // vectors first
-    dims_out[1] = 0; 
+    dims_out[1] = 0;
     if (!strcmp(field, "y_ref") || !strcmp(field, "yref"))
     {
         config->cost[stage]->dims_get(config->cost[stage], dims->cost[stage],
@@ -915,6 +936,11 @@ void ocp_nlp_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_so
     {
         double *double_values = value;
         d_ocp_qp_sol_get_su(stage, nlp_mem->qp_out, double_values);
+    }
+    else if (!strcmp(field, "A"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_A(stage, nlp_mem->qp_in, double_values);
     }
     else
     {

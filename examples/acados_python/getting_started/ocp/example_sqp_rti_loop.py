@@ -126,4 +126,7 @@ simX[N,:] = ocp_solver.get(N, "x")
 
 ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
 
+A = ocp_solver.dynamics_get(0, "A")
+print("forward sensitivities A at stage 0:", A)
+
 plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
