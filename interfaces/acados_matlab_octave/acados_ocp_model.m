@@ -91,8 +91,20 @@ classdef acados_ocp_model < handle
                     obj.model_struct.cost_expr_y_e = value;
                 elseif (strcmp(field, 'cost_expr_ext_cost'))
                     obj.model_struct.cost_expr_ext_cost = value;
+                    obj.model_struct.ext_fun_type = 'casadi'
                 elseif (strcmp(field, 'cost_expr_ext_cost_e'))
                     obj.model_struct.cost_expr_ext_cost_e = value;
+                    obj.model_struct.ext_fun_type = 'casadi'
+                elseif (strcmp(field, 'cost_source_ext_cost'))
+                    obj.model_struct.cost_source_ext_cost = value;
+                    obj.model_struct.ext_fun_type = 'generic'
+                elseif (strcmp(field, 'cost_source_ext_cost_e'))
+                    obj.model_struct.cost_source_ext_cost_e = value;
+                    obj.model_struct.ext_fun_type = 'generic'      
+                elseif (strcmp(field, 'cost_function_ext_cost'))
+                    obj.model_struct.cost_function_ext_cost = value;                    
+                elseif (strcmp(field, 'cost_function_ext_cost_e'))
+                    obj.model_struct.cost_function_ext_cost_e = value;                                      
                 elseif (strcmp(field, 'cost_Vu'))
                     obj.model_struct.cost_Vu = value;
                 elseif (strcmp(field, 'cost_Vx'))

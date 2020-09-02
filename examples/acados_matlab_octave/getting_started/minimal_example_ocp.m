@@ -72,8 +72,19 @@ ocp_model.set('sym_xdot', model.sym_xdot);
 % cost
 ocp_model.set('cost_type', 'ext_cost');
 ocp_model.set('cost_type_e', 'ext_cost');
-ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
-ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
+
+generic_or_casadi = 0; % 0=generic, 1=casadi
+if (generic_or_casadi == 0)
+    ocp_model.set('ext_fun_type', 'generic');
+    ocp_model.set('cost_source_ext_cost', 'cost/generic_ext_cost.c');
+    ocp_model.set('cost_function_ext_cost', 'ext_cost');
+    ocp_model.set('cost_source_ext_cost_e', 'cost/generic_ext_cost.c');
+    ocp_model.set('cost_function_ext_cost_e', 'ext_costN');
+else
+    ocp_model.set('ext_fun_type', 'casadi');
+    ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
+    ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
+end
 
 % dynamics
 if (strcmp(sim_method, 'erk'))
@@ -112,26 +123,6 @@ ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
 
 %% create ocp solver
 ocp = acados_ocp(ocp_model, ocp_opts);
-
-%% Use custom cost
-generic_or_casadi = 0; % 0=generic, 1=casadi
-
-if (generic_or_casadi == 0)
-    ocp.C_ocp_ext_fun = ocp_set_ext_fun_manual_cost(ocp.C_ocp, ocp.C_ocp_ext_fun, ocp.model_struct, ocp.opts_struct, ...
-        'generic', ...
-        'cost/generic_ext_cost.c', 'ext_cost',...
-        'cost/generic_ext_cost.c', 'ext_costN');
-else
-    ocp.C_ocp_ext_fun = ocp_set_ext_fun_manual_cost(ocp.C_ocp, ocp.C_ocp_ext_fun, ocp.model_struct, ocp.opts_struct, ...
-        'casadi', ...
-        'cost/casadi_ext_cost.c', 'pendulum_cost_ext_cost_fun_jac_hess',...
-        'cost/casadi_ext_cost_e.c', 'pendulum_cost_ext_cost_e_fun_jac_hess');
-end
-
-ocp.C_ocp_ext_fun.cost_ext_cost_fun_jac_hess
-
-% precompute
-ocp_precompute(ocp.C_ocp);
 
 %%
 x_traj_init = zeros(nx, N+1);
