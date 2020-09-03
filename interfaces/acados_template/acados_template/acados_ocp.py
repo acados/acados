@@ -1861,6 +1861,12 @@ class AcadosOcpOptions:
                     self.__nlp_solver_tol_comp, self.__nlp_solver_tol_stat])
 
     @property
+    def qp_tol(self):
+        """QP solver tolerance"""
+        return max([self.__qp_solver_tol_eq, self.__qp_solver_tol_ineq,\
+                    self.__qp_solver_tol_comp, self.__qp_solver_tol_stat])
+
+    @property
     def nlp_solver_tol_stat(self):
         """NLP solver stationarity tolerance"""
         return self.__nlp_solver_tol_stat
@@ -2059,17 +2065,8 @@ class AcadosOcpOptions:
         else:
             raise Exception('Invalid levenberg_marquardt value. levenberg_marquardt must be a positive float. Exiting')
 
-    @qp_solver_tol_stat.setter
-    def qp_solver_tol_stat(self, qp_solver_tol_stat):
-
-        if type(qp_solver_tol_stat) == float and qp_solver_tol_stat > 0:
-            self.__qp_solver_tol_stat = qp_solver_tol_stat
-        else:
-            raise Exception('Invalid qp_solver_tol_stat value. qp_solver_tol_stat must be a positive float. Exiting')
-
     @qp_solver_iter_max.setter
     def qp_solver_iter_max(self, qp_solver_iter_max):
-
         if isinstance(qp_solver_iter_max, int) and qp_solver_iter_max > 0:
             self.__qp_solver_iter_max = qp_solver_iter_max
         else:
@@ -2077,48 +2074,52 @@ class AcadosOcpOptions:
 
     @qp_solver_cond_N.setter
     def qp_solver_cond_N(self, qp_solver_cond_N):
-
         if isinstance(qp_solver_cond_N, int) and qp_solver_cond_N > 0:
             self.__qp_solver_cond_N = qp_solver_cond_N
         else:
             raise Exception('Invalid qp_solver_cond_N value. qp_solver_cond_N must be a positive int. Exiting')
 
+    @qp_tol.setter
+    def qp_tol(self, qp_tol):
+        if isinstance(qp_tol, float) and qp_tol > 0:
+            self.__qp_solver_tol_eq = qp_tol
+            self.__qp_solver_tol_ineq = qp_tol
+            self.__qp_solver_tol_stat = qp_tol
+            self.__qp_solver_tol_comp = qp_tol
+        else:
+            raise Exception('Invalid qp_tol value. qp_tol must be a positive float. Exiting')
+
+    @qp_solver_tol_stat.setter
+    def qp_solver_tol_stat(self, qp_solver_tol_stat):
+        if isinstance(qp_solver_tol_stat, float) and qp_solver_tol_stat > 0:
+            self.__qp_solver_tol_stat = qp_solver_tol_stat
+        else:
+            raise Exception('Invalid qp_solver_tol_stat value. qp_solver_tol_stat must be a positive float. Exiting')
+
     @qp_solver_tol_eq.setter
     def qp_solver_tol_eq(self, qp_solver_tol_eq):
-
-        if type(qp_solver_tol_eq) == float and qp_solver_tol_eq > 0:
+        if isinstance(qp_solver_tol_eq, float) and qp_solver_tol_eq > 0:
             self.__qp_solver_tol_eq = qp_solver_tol_eq
         else:
             raise Exception('Invalid qp_solver_tol_eq value. qp_solver_tol_eq must be a positive float. Exiting')
 
     @qp_solver_tol_ineq.setter
     def qp_solver_tol_ineq(self, qp_solver_tol_ineq):
-
-        if type(qp_solver_tol_ineq) == float and qp_solver_tol_ineq > 0:
+        if isinstance(qp_solver_tol_ineq, float) and qp_solver_tol_ineq > 0:
             self.__qp_solver_tol_ineq = qp_solver_tol_ineq
         else:
             raise Exception('Invalid qp_solver_tol_ineq value. qp_solver_tol_ineq must be a positive float. Exiting')
 
     @qp_solver_tol_comp.setter
     def qp_solver_tol_comp(self, qp_solver_tol_comp):
-
-        if type(qp_solver_tol_comp) == float and qp_solver_tol_comp > 0:
+        if isinstance(qp_solver_tol_comp, float) and qp_solver_tol_comp > 0:
             self.__qp_solver_tol_comp = qp_solver_tol_comp
         else:
             raise Exception('Invalid qp_solver_tol_comp value. qp_solver_tol_comp must be a positive float. Exiting')
 
-    @nlp_solver_tol_stat.setter
-    def nlp_solver_tol_stat(self, nlp_solver_tol_stat):
-
-        if type(nlp_solver_tol_stat) == float and nlp_solver_tol_stat > 0:
-            self.__nlp_solver_tol_stat = nlp_solver_tol_stat
-        else:
-            raise Exception('Invalid nlp_solver_tol_stat value. nlp_solver_tol_stat must be a positive float. Exiting')
-
     @tol.setter
     def tol(self, tol):
-
-        if type(tol) == float and tol > 0:
+        if isinstance(tol, float) and tol > 0:
             self.__nlp_solver_tol_eq = tol
             self.__nlp_solver_tol_ineq = tol
             self.__nlp_solver_tol_stat = tol
@@ -2126,27 +2127,30 @@ class AcadosOcpOptions:
         else:
             raise Exception('Invalid tol value. tol must be a positive float. Exiting')
 
+    @nlp_solver_tol_stat.setter
+    def nlp_solver_tol_stat(self, nlp_solver_tol_stat):
+        if isinstance(nlp_solver_tol_stat, float) and nlp_solver_tol_stat > 0:
+            self.__nlp_solver_tol_stat = nlp_solver_tol_stat
+        else:
+            raise Exception('Invalid nlp_solver_tol_stat value. nlp_solver_tol_stat must be a positive float. Exiting')
 
     @nlp_solver_tol_eq.setter
     def nlp_solver_tol_eq(self, nlp_solver_tol_eq):
-
-        if type(nlp_solver_tol_eq) == float and nlp_solver_tol_eq > 0:
+        if isinstance(nlp_solver_tol_eq, float) and nlp_solver_tol_eq > 0:
             self.__nlp_solver_tol_eq = nlp_solver_tol_eq
         else:
             raise Exception('Invalid nlp_solver_tol_eq value. nlp_solver_tol_eq must be a positive float. Exiting')
 
     @nlp_solver_tol_ineq.setter
     def nlp_solver_tol_ineq(self, nlp_solver_tol_ineq):
-
-        if type(nlp_solver_tol_ineq) == float and nlp_solver_tol_ineq > 0:
+        if isinstance(nlp_solver_tol_ineq, float) and nlp_solver_tol_ineq > 0:
             self.__nlp_solver_tol_ineq = nlp_solver_tol_ineq
         else:
             raise Exception('Invalid nlp_solver_tol_ineq value. nlp_solver_tol_ineq must be a positive float. Exiting')
 
     @nlp_solver_tol_comp.setter
     def nlp_solver_tol_comp(self, nlp_solver_tol_comp):
-
-        if type(nlp_solver_tol_comp) == float and nlp_solver_tol_comp > 0:
+        if isinstance(nlp_solver_tol_comp, float) and nlp_solver_tol_comp > 0:
             self.__nlp_solver_tol_comp = nlp_solver_tol_comp
         else:
             raise Exception('Invalid nlp_solver_tol_comp value. nlp_solver_tol_comp must be a positive float. Exiting')
