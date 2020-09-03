@@ -838,6 +838,7 @@ class AcadosOcpSolver:
 
         return out
 
+
     def compute_residuals(self):
         """
         compute residuals internally, needed for SQP_RTI
@@ -847,13 +848,20 @@ class AcadosOcpSolver:
 
         return 1
 
+
     def get_residuals(self):
         """
         Returns an array of the form [res_stat, res_eq, res_ineq, res_comp]
         """
+        # compute residuals if RTI
+        if self.acados_ocp.solver_options.nlp_solver_type == 'SQP_RTI':
+            self.compute_residuals()
+
+        # create output array
         out = np.ascontiguousarray(np.zeros((4, 1)), dtype=np.float64)
         out_data = cast(out.ctypes.data, POINTER(c_double))
 
+        # call getters
         self.shared_lib.ocp_nlp_get.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
 
         field = "res_stat".encode('utf-8')
@@ -872,6 +880,7 @@ class AcadosOcpSolver:
         self.shared_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
 
         return out.flatten()
+
 
     # Note: this function should not be used anymore, better use cost_set, constraints_set
     def set(self, stage_, field_, value_):
