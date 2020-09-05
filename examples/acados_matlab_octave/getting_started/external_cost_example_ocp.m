@@ -70,8 +70,21 @@ ocp_model.set('sym_u', model.sym_u);
 ocp_model.set('sym_xdot', model.sym_xdot);
 
 % cost
-ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
-ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
+ocp_model.set('cost_type', 'ext_cost');
+ocp_model.set('cost_type_e', 'ext_cost');
+
+generic_or_casadi = 1; % 0=generic, 1=casadi
+if (generic_or_casadi == 0)
+    ocp_model.set('ext_fun_type', 'generic');
+    ocp_model.set('cost_source_ext_cost', 'generic_ext_cost.c');
+    ocp_model.set('cost_function_ext_cost', 'ext_cost');
+    ocp_model.set('cost_source_ext_cost_e', 'generic_ext_cost.c');
+    ocp_model.set('cost_function_ext_cost_e', 'ext_costN');
+else
+    ocp_model.set('ext_fun_type', 'casadi');
+    ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
+    ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
+end
 
 % dynamics
 if (strcmp(sim_method, 'erk'))
