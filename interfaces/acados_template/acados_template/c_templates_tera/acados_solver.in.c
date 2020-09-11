@@ -1845,7 +1845,10 @@ int acados_update_params(int stage, double *p, int np)
         cost_y_e_hess.set_param(&cost_y_e_hess, p);
     {%- elif cost.cost_type_e == "EXTERNAL" %}
         ext_cost_e_fun.set_param(&ext_cost_e_fun, p);
+        ext_cost_e_fun_jac.set_param(&ext_cost_e_fun_jac, p);
+    {%- if solver_options.hessian_approx == "EXACT" %}
         ext_cost_e_fun_jac_hess.set_param(&ext_cost_e_fun_jac_hess, p);
+    {%- endif %}
     {% endif %}
         // constraints
     {% if constraints.constr_type_e == "BGP" %}
