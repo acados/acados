@@ -44,7 +44,7 @@ classdef ocp_nlp_solver_options_json < handle
         sim_method_num_stages  %  size of butcher tableau
         sim_method_newton_iter
         sim_method_jac_reuse
-        nlp_solver_max_iter        
+        nlp_solver_max_iter
         nlp_solver_tol_stat
         nlp_solver_tol_eq
         nlp_solver_tol_ineq

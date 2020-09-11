@@ -73,8 +73,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     // field names of output struct
     #define FIELDS_OCP 8
-    #define FIELDS_EXT_FUN 24
-    #define MAX_FIELDS 24
+    #define FIELDS_EXT_FUN 25
+    #define MAX_FIELDS 25
     char *fieldnames[MAX_FIELDS];
 
     for (int i = 0; i < MAX_FIELDS; i++)
@@ -169,13 +169,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     memcpy(fieldnames[16],"cost_y_fun_jac_ut_xt",sizeof("cost_y_fun_jac_ut_xt"));
     memcpy(fieldnames[17],"cost_y_hess",sizeof("cost_y_hess"));
     memcpy(fieldnames[18],"ext_cost_fun",sizeof("ext_cost_fun"));
-    memcpy(fieldnames[19],"ext_cost_fun_jac_hess",sizeof("ext_cost_fun_jac_hess"));
+    memcpy(fieldnames[19],"ext_cost_fun_jac",sizeof("ext_cost_fun_jac"));
+    memcpy(fieldnames[20],"ext_cost_fun_jac_hess",sizeof("ext_cost_fun_jac_hess"));
 
     // constraints
-    memcpy(fieldnames[20],"phi_constraint",sizeof("phi_constraint"));
-    memcpy(fieldnames[21],"nl_constr_h_fun_jac",sizeof("nl_constr_h_fun_jac"));
-    memcpy(fieldnames[22],"nl_constr_h_fun",sizeof("nl_constr_h_fun"));
-    memcpy(fieldnames[23],"nl_constr_h_fun_jac_hess",sizeof("nl_constr_h_fun_jac_hess"));
+    memcpy(fieldnames[21],"phi_constraint",sizeof("phi_constraint"));
+    memcpy(fieldnames[22],"nl_constr_h_fun_jac",sizeof("nl_constr_h_fun_jac"));
+    memcpy(fieldnames[23],"nl_constr_h_fun",sizeof("nl_constr_h_fun"));
+    memcpy(fieldnames[24],"nl_constr_h_fun_jac_hess",sizeof("nl_constr_h_fun_jac_hess"));
 
 
     // create output struct - C_ocp_ext_fun
@@ -351,6 +352,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     l_ptr[1] = (long long) &ext_cost_e_fun;
 {%- endif %}
     mxSetField(plhs[1], 0, "ext_cost_fun", ext_cost_fun_mat);
+
+    mxArray *ext_cost_fun_jac_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
+    l_ptr = mxGetData(ext_cost_fun_jac_mat);
+{% if cost.cost_type == "EXTERNAL" %}
+    l_ptr[0] = (long long) ext_cost_fun_jac;
+{% endif -%}
+{% if cost.cost_type_e == "EXTERNAL" %}
+    l_ptr[1] = (long long) &ext_cost_e_fun_jac;
+{%- endif %}
+    mxSetField(plhs[1], 0, "ext_cost_fun_jac", ext_cost_fun_jac_mat);
 
     mxArray *ext_cost_fun_jac_hess_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(ext_cost_fun_jac_hess_mat);
