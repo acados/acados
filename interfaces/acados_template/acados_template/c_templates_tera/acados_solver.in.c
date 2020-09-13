@@ -106,7 +106,10 @@ ocp_nlp_plan * nlp_solver_plan;
 ocp_nlp_config * nlp_config;
 ocp_nlp_dims * nlp_dims;
 
-{%- if solver_options.integrator_type == "ERK" %}
+// number of expected runtime parameters
+const unsigned int nlp_np = NP;
+
+{% if solver_options.integrator_type == "ERK" %}
 external_function_param_casadi * forw_vde_casadi;
 external_function_param_casadi * expl_ode_fun;
 {% if solver_options.hessian_approx == "EXACT" %}
