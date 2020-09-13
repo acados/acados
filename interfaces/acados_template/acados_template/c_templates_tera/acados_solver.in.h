@@ -69,6 +69,9 @@ extern ocp_nlp_plan * nlp_solver_plan;
 extern ocp_nlp_config * nlp_config;
 extern ocp_nlp_dims * nlp_dims;
 
+// number of expected runtime parameters
+extern const unsigned int nlp_np;
+
 /* external functions */
 // dynamics
 {% if solver_options.integrator_type == "ERK" %}
