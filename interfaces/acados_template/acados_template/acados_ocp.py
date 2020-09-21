@@ -71,7 +71,7 @@ class AcadosOcpDims:
         self.__ng_e    = 0
         self.__nsg     = 0
         self.__nsg_e   = 0
-        self.__nbxe_0  = 0
+        self.__nbxe_0  = None
         self.__N       = None
 
 
