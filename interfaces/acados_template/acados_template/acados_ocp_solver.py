@@ -154,7 +154,9 @@ def make_ocp_dims_consistent(acados_ocp):
         dims.nbx_0 = constraints.lbx_0.size
 
     if all(constraints.lbx_0 == constraints.ubx_0) and dims.nbx_0 == dims.nx \
-        and dims.nbxe_0 == None and all(constraints.idxbxe_0 == constraints.idxbx_0):
+        and dims.nbxe_0 == None \
+        and (constraints.idxbxe_0.shape == constraints.idxbx_0.shape)\
+        and all(constraints.idxbxe_0 == constraints.idxbx_0):
         # case: x0 was set: nbx0 are all equlities.
         dims.nbxe_0 = dims.nbx_0
     elif dims.nbxe_0 == None:
