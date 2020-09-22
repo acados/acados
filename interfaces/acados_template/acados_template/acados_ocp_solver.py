@@ -153,9 +153,12 @@ def make_ocp_dims_consistent(acados_ocp):
             raise Exception('lbx_0, ubx_0 must be column vectors!')
         dims.nbx_0 = constraints.lbx_0.size
 
-    if all(constraints.lbx_0 == constraints.ubx_0) and dims.nbx_0 == dims.nx and dims.nbxe_0 == None:
+    if all(constraints.lbx_0 == constraints.ubx_0) and dims.nbx_0 == dims.nx \
+        and dims.nbxe_0 == None and all(constraints.idxbxe_0 == constraints.idxbx_0):
+        # case: x0 was set: nbx0 are all equlities.
         dims.nbxe_0 = dims.nbx_0
     elif dims.nbxe_0 == None:
+        # case: x0 was not set -> dont assume nbx0 to be equality constraints.
         dims.nbxe_0 = 0
 
     # path
