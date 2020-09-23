@@ -280,7 +280,7 @@ class AcadosSimSolver:
             elif field_ == 'Sx':
                 nx = self.sim_struct.dims.nx
                 out = out.reshape(nx, nx, order='F')
-            elif field_ == 'Sx':
+            elif field_ == 'Su':
                 nx = self.sim_struct.dims.nx
                 nu = self.sim_struct.dims.nu
                 out = out.reshape(nx, nu, order='F')

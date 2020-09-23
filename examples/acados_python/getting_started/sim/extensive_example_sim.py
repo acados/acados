@@ -128,10 +128,14 @@ if status != 0:
     raise Exception('acados returned status {}. Exiting.'.format(status))
 
 S_forw = acados_integrator.get("S_forw")
+Sx = acados_integrator.get("Sx")
+Su = acados_integrator.get("Su")
 S_hess = acados_integrator.get("S_hess")
 S_adj = acados_integrator.get("S_adj")
 
 print("S_forw, sensitivities of simulaition result wrt x,u:\n", S_forw)
+print("Sx, sensitivities of simulaition result wrt x:\n", Sx)
+print("Su, sensitivities of simulaition result wrt u:\n", Su)
 print("S_adj, adjoint sensitivities:\n", S_adj)
 print("S_hess, second order sensitivities:\n", S_hess)
 
