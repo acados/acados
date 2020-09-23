@@ -166,6 +166,9 @@ def sim_generate_casadi_functions(acados_sim):
         generate_c_code_gnsf(model)
 
 class AcadosSimSolver:
+    """
+    class to interact with the acados integrator C object
+    """
     def __init__(self, acados_sim_, json_file='acados_sim.json'):
 
         if isinstance(acados_sim_, AcadosOcp):
@@ -245,12 +248,18 @@ class AcadosSimSolver:
 
 
     def solve(self):
+        """
+        solve the simulation problem with current input
+        """
         status = getattr(self.shared_lib, f"{self.model_name}_acados_sim_solve")()
         return status
 
 
     def get(self, field_):
-
+        """
+        get the last solution of the solver:
+            :param field_: string in ['x', 'u', 'S_forw', 'Sx', 'Su', 'S_adj', 'S_hess']
+        """
         field = field_
         field = field.encode('utf-8')
 
@@ -287,9 +296,12 @@ class AcadosSimSolver:
 
 
     def set(self, field_, value_):
-
+        """
+        set numerical data inside the solver:
+            :param field_: string in ['p', 'S_adj', 'T', 'x', 'u', 'xdot', 'z', 'p']
+        """
         # cast value_ to avoid conversion issues
-        if type(value_) == float:
+        if isinstance(value_, float):
             value_ = np.array([value_])
 
         value_ = value_.astype(float)
