@@ -2593,3 +2593,25 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
 }
 
 
+void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+{
+    // extract dims
+    int N = dims->N;
+
+    double* tmp_cost = NULL;
+    double total_cost = 0.0;
+
+    for (int ii = 0; ii <= N; ii++)
+    {
+        config->cost[ii]->compute_fun(config->cost[ii], dims->cost[ii], in->cost[ii],
+                    opts->cost[ii], mem->cost[ii], work->cost[ii]);
+        tmp_cost = config->cost[ii]->memory_get_fun_ptr(mem->cost[ii]);
+        // printf("cost at stage %d = %e\n", ii, *tmp_cost);
+        total_cost += *tmp_cost;
+    }
+    mem->cost_value = total_cost;
+
+    // printf("\ncomputed total cost: %e\n", total_cost);
+}
+
