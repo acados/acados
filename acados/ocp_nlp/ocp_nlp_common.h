@@ -89,7 +89,8 @@ typedef struct
     void (*opts_set_at_stage)(void *config_, void *opts_, int stage, const char *field, void* value);
     // evaluate solver // TODO rename into solve
     int (*evaluate)(void *config, void *dims, void *nlp_in, void *nlp_out, void *opts_, void *mem, void *work);
-    void (*eval_param_sens)(void *config, void *dims, void *opts_, void *mem, void *work, char *field, int stage, int index, void *sens_nlp_out);
+    void (*eval_param_sens)(void *config, void *dims, void *opts_, void *mem, void *work,
+                            char *field, int stage, int index, void *sens_nlp_out);
     // prepare memory
     int (*precompute)(void *config, void *dims, void *nlp_in, void *nlp_out, void *opts_, void *mem, void *work);
     // initalize this struct with default values
@@ -334,7 +335,8 @@ typedef struct
     struct blasfeo_dvec *ineq_adj;
     struct blasfeo_dvec *dyn_fun;
     struct blasfeo_dvec *dyn_adj;
-//	double cost_fun; TODO
+
+    double cost_value;
 
     bool *set_sim_guess; // indicate if there is new explicitly provided guess for integration variables
     struct blasfeo_dvec *sim_guess;
@@ -404,7 +406,9 @@ void ocp_nlp_initialize_t_slacks(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp
 //
 void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out,
                          ocp_nlp_res *res, ocp_nlp_memory *mem);
-
+//
+void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
 
 
 #ifdef __cplusplus
