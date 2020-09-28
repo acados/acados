@@ -96,6 +96,8 @@ typedef struct
     void (*config_initialize_default)(void *config);
     // general getter
     void (*get)(void *config_, void *dims, void *mem_, const char *field, void *return_value_);
+    void (*opts_get)(void *config_, void *dims, void *opts_, const char *field, void *return_value_);
+    void (*work_get)(void *config_, void *dims, void *work_, const char *field, void *return_value_);
     // config structs of submodules
     ocp_qp_xcond_solver_config *qp_solver; // TODO rename xcond_solver
     ocp_nlp_dynamics_config **dynamics;

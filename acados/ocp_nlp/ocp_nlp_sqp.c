@@ -419,7 +419,8 @@ int ocp_nlp_sqp_workspace_calculate_size(void *config_, void *dims_, void *opts_
 
 
 
-static void ocp_nlp_sqp_cast_workspace(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_sqp_opts *opts, ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_workspace *work)
+static void ocp_nlp_sqp_cast_workspace(ocp_nlp_config *config, ocp_nlp_dims *dims,
+         ocp_nlp_sqp_opts *opts, ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_workspace *work)
 {
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
@@ -1108,6 +1109,45 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
 }
 
 
+
+void ocp_nlp_sqp_opts_get(void *config_, void *dims_, void *opts_,
+                          const char *field, void *return_value_)
+{
+    // ocp_nlp_config *config = config_;
+    ocp_nlp_sqp_opts *opts = opts_;
+
+    if (!strcmp("nlp_opts", field))
+    {
+        void **value = return_value_;
+        *value = opts->nlp_opts;
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_sqp_opts_get\n", field);
+        exit(1);
+    }
+}
+
+
+void ocp_nlp_sqp_work_get(void *config_, void *dims_, void *work_,
+                          const char *field, void *return_value_)
+{
+    // ocp_nlp_config *config = config_;
+    ocp_nlp_sqp_workspace *work = work_;
+
+    if (!strcmp("nlp_work", field))
+    {
+        void **value = return_value_;
+        *value = work->nlp_work;
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_sqp_work_get\n", field);
+        exit(1);
+    }
+}
+
+
 void ocp_nlp_sqp_config_initialize_default(void *config_)
 {
     ocp_nlp_config *config = (ocp_nlp_config *) config_;
@@ -1126,6 +1166,8 @@ void ocp_nlp_sqp_config_initialize_default(void *config_)
     config->config_initialize_default = &ocp_nlp_sqp_config_initialize_default;
     config->precompute = &ocp_nlp_sqp_precompute;
     config->get = &ocp_nlp_sqp_get;
+    config->opts_get = &ocp_nlp_sqp_opts_get;
+    config->work_get = &ocp_nlp_sqp_work_get;
 
     return;
 }
