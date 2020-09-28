@@ -1110,6 +1110,11 @@ void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_,
         double *value = return_value_;
         *value = mem->nlp_mem->nlp_res->inf_norm_res_comp;
     }
+    else if (!strcmp("cost_value", field))
+    {
+        double *value = return_value_;
+        *value = mem->nlp_mem->cost_value;
+    }
     else
     {
         printf("\nerror: field %s not available in ocp_nlp_sqp_rti_get\n", field);
