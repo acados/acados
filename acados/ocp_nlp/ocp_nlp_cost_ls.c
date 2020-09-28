@@ -63,7 +63,6 @@
 int ocp_nlp_cost_ls_dims_calculate_size(void *config_)
 {
 
-    
     int size = sizeof(ocp_nlp_cost_ls_dims);
 
     return size;
@@ -211,6 +210,8 @@ void ocp_nlp_cost_ls_dims_get(void *config_, void *dims_, const char *field, int
         exit(1);
     }
 }
+
+
 ////////////////////////////////////////////////////////////////////////////////
 //                                     model                                  //
 ////////////////////////////////////////////////////////////////////////////////

@@ -1118,6 +1118,44 @@ void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_,
 }
 
 
+void ocp_nlp_sqp_rti_opts_get(void *config_, void *dims_, void *opts_,
+                          const char *field, void *return_value_)
+{
+    // ocp_nlp_config *config = config_;
+    ocp_nlp_sqp_rti_opts *opts = opts_;
+
+    if (!strcmp("nlp_opts", field))
+    {
+        void **value = return_value_;
+        *value = opts->nlp_opts;
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_sqp_rti_opts_get\n", field);
+        exit(1);
+    }
+
+}
+
+
+void ocp_nlp_sqp_rti_work_get(void *config_, void *dims_, void *work_,
+                          const char *field, void *return_value_)
+{
+    // ocp_nlp_config *config = config_;
+    ocp_nlp_sqp_rti_workspace *work = work_;
+
+    if (!strcmp("nlp_work", field))
+    {
+        void **value = return_value_;
+        *value = work->nlp_work;
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_sqp_rti_work_get\n", field);
+        exit(1);
+    }
+}
+
 void ocp_nlp_sqp_rti_config_initialize_default(void *config_)
 {
     ocp_nlp_config *config = (ocp_nlp_config *) config_;
@@ -1136,6 +1174,8 @@ void ocp_nlp_sqp_rti_config_initialize_default(void *config_)
     config->config_initialize_default = &ocp_nlp_sqp_rti_config_initialize_default;
     config->precompute = &ocp_nlp_sqp_rti_precompute;
     config->get = &ocp_nlp_sqp_rti_get;
+    config->opts_get = &ocp_nlp_sqp_rti_opts_get;
+    config->work_get = &ocp_nlp_sqp_rti_work_get;
 
     return;
 }
