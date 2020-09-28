@@ -910,7 +910,20 @@ void ocp_nlp_eval_residuals(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_
 }
 
 
+void ocp_nlp_eval_cost(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out)
+{
+    ocp_nlp_config *config = solver->config;
+    ocp_nlp_memory *nlp_mem;
+    ocp_nlp_opts *nlp_opts;
+    ocp_nlp_workspace *nlp_work;
+    ocp_nlp_dims *dims = solver->dims;
 
+    config->get(config, solver->dims, solver->mem, "nlp_mem", &nlp_mem);
+    config->opts_get(config, solver->dims, solver->opts, "nlp_opts", &nlp_opts);
+    config->work_get(config, solver->dims, solver->work, "nlp_work", &nlp_work);
+
+    ocp_nlp_cost_compute(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+}
 
 
 void ocp_nlp_get(ocp_nlp_config *config, ocp_nlp_solver *solver,

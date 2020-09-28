@@ -857,7 +857,6 @@ void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims_, void *model_, void 
     ocp_nlp_cost_ls_workspace *work = work_;
 
     ocp_nlp_cost_ls_cast_workspace(config_, dims, opts_, work_);
-
     int nx = dims->nx;
     int nu = dims->nu;
     int nz = dims->nz;
@@ -897,10 +896,11 @@ void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims_, void *model_, void 
     memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->tmp_ux, nu+nx);
 
     // scale
-    if(model->scaling!=1.0)
+    if (model->scaling!=1.0)
     {
         memory->fun *= model->scaling;
     }
+    // printf("\nin ocp_nlp_cost_ls_compute_fun DONE, result: %e\n", memory->fun);
 
     return;
 }
