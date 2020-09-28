@@ -126,6 +126,10 @@ simX[N,:] = ocp_solver.get(N, "x")
 
 ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
 
+# 
+cost = ocp_solver.get_cost()
+print("cost function value of solution = ", cost)
+
 A = ocp_solver.dynamics_get(0, "A")
 print("forward sensitivities A at stage 0:", A)
 

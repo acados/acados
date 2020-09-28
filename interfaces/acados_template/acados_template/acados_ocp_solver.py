@@ -855,6 +855,27 @@ class AcadosOcpSolver:
         return
 
 
+    def get_cost(self):
+        """
+        Returns the cost value of the current solution
+        """
+        # compute cost internally
+        self.shared_lib.ocp_nlp_eval_cost.argtypes = [c_void_p, c_void_p, c_void_p]
+        self.shared_lib.ocp_nlp_eval_cost(self.nlp_solver, self.nlp_in, self.nlp_out)
+
+        # create output array
+        out = np.ascontiguousarray(np.zeros((1,)), dtype=np.float64)
+        out_data = cast(out.ctypes.data, POINTER(c_double))
+
+        # call getter
+        self.shared_lib.ocp_nlp_get.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
+
+        field = "cost_value".encode('utf-8')
+        self.shared_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
+
+        return out[0]
+
+
     def get_residuals(self):
         """
         Returns an array of the form [res_stat, res_eq, res_ineq, res_comp]
