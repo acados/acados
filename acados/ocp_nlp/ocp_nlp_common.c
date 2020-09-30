@@ -2604,14 +2604,21 @@ void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in
 
     for (int ii = 0; ii <= N; ii++)
     {
+        // set pointers
+        // NOTE(oj): the cost compute function takes the tmp_ux_ptr as input,
+        //  since it is also used for globalization,
+        //  especially with primal variables that are NOT current SQP iterates.
+        config->cost[ii]->memory_set_tmp_ux_ptr(out->ux+ii, mem->cost[ii]);
+
         config->cost[ii]->compute_fun(config->cost[ii], dims->cost[ii], in->cost[ii],
                     opts->cost[ii], mem->cost[ii], work->cost[ii]);
         tmp_cost = config->cost[ii]->memory_get_fun_ptr(mem->cost[ii]);
-        // printf("cost at stage %d = %e\n", ii, *tmp_cost);
+        // printf("cost at stage %d = %e, total = %e\n", ii, *tmp_cost, total_cost);
         total_cost += *tmp_cost;
     }
     mem->cost_value = total_cost;
 
     // printf("\ncomputed total cost: %e\n", total_cost);
+    return;
 }
 
