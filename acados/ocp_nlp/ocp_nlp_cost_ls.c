@@ -885,10 +885,15 @@ void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims_, void *model_, void 
     }
 
     // tmp_ny = W_chol^T * res
-    blasfeo_dtrmv_ltn(ny, 1.0, &memory->W_chol, 0, 0, &memory->res, 0, &work->tmp_ny, 0);
-
+    blasfeo_dtrmv_ltn(ny, ny, &memory->W_chol, 0, 0, &memory->res, 0, &work->tmp_ny, 0);
     // fun = .5 * tmp_ny^T * tmp_ny
     memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &work->tmp_ny, 0);
+
+    // NOTE: The following lines are equivalent to the 2 above, but dont exploit symmetry of W.
+    // tmp_ny = W * res + 0 * yref
+    // blasfeo_dgemv_n(ny, ny, 1.0, &model->W, 0, 0, &memory->res, 0, 0.0, &model->y_ref, 0, &work->tmp_ny, 0);
+    // // fun = .5 * res^T * tmp_ny
+    // memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &memory->res, 0);
 
     // slack update function value
     blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);
@@ -900,7 +905,7 @@ void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims_, void *model_, void 
     {
         memory->fun *= model->scaling;
     }
-    // printf("\nin ocp_nlp_cost_ls_compute_fun DONE, result: %e\n", memory->fun);
+    // printf("in ocp_nlp_cost_ls_compute_fun DONE, result: %e\n", memory->fun);
 
     return;
 }
