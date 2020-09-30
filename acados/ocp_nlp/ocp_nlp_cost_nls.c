@@ -871,7 +871,7 @@ void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims_, void *model_,
     // res = res - y_ref
     blasfeo_daxpy(ny, -1.0, &model->y_ref, 0, &memory->res, 0, &memory->res, 0);
 
-    blasfeo_dtrmv_ltn(ny, 1.0, &memory->W_chol, 0, 0, &memory->res, 0, &work->tmp_ny, 0);
+    blasfeo_dtrmv_ltn(ny, ny, &memory->W_chol, 0, 0, &memory->res, 0, &work->tmp_ny, 0);
 
     memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &work->tmp_ny, 0);
 
@@ -881,7 +881,7 @@ void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims_, void *model_,
     memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->tmp_ux, nu+nx);
 
     // scale
-    if(model->scaling!=1.0)
+    if (model->scaling!=1.0)
     {
         memory->fun *= model->scaling;
     }
