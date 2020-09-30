@@ -168,14 +168,16 @@ R = 2*np.diag([1e-2])
 x = ocp.model.x
 u = ocp.model.u
 
+Vx = np.zeros((ny, nx))
+Vx[:nx,:nx] = np.eye(nx)
+
+Vu = np.zeros((ny, nu))
+Vu[4,0] = 1.0
+
 if COST_MODULE == 'LS':
     ocp.cost.cost_type = 'LINEAR_LS'
 
-    ocp.cost.Vx = np.zeros((ny, nx))
-    ocp.cost.Vx[:nx,:nx] = np.eye(nx)
-
-    Vu = np.zeros((ny, nu))
-    Vu[4,0] = 1.0
+    ocp.cost.Vx = Vx
     ocp.cost.Vu = Vu
 
     ocp.cost.W = scipy.linalg.block_diag(Q, R)
@@ -315,6 +317,8 @@ if GENERATE_DATA:
     with open(test_file_name, 'w') as f:
         json.dump({"simX": simX.tolist(), "simU": simU.tolist()}, f, indent=4, sort_keys=True)
 else:
+    ## Perform checks
+    # check trajectory against known results
     with open(test_file_name, 'r') as f:
         test_data = json.load(f)
     simX_error = np.linalg.norm(test_data['simX'] - simX)
@@ -327,3 +331,33 @@ else:
                         " on pendulum example! Exiting.\n")
     else:
         print('Python test passed with accuracy {:.2E}'.format(max(simU_error, simX_error)))
+
+    # check cost function computation
+    acados_cost = ocp_solver.get_cost()
+
+    total_cost = 0
+    W = scipy.linalg.block_diag(Q, R)
+
+    for i in range(N):
+        x = ocp_solver.get(i, "x")
+        u = ocp_solver.get(i, "u")
+
+        y = Vx @ x + Vu @ u
+        cost =  0.5 * (y.T @ W @ y)
+        # print("stage ", i, " y ", y, " unscaled cost acados style ", cost, "scaled ", cost * Tf/N)
+        total_cost += Tf/N * cost
+
+    i = N
+    x = ocp_solver.get(i, "x")
+    cost = .5 * (x.T @ Q @ x)
+    # print("stage ", i, " x ", x, " unscaled cost acados style ", cost, "scaled ", cost * Tf/N)
+    total_cost += cost
+
+    cost_err = np.abs(acados_cost - total_cost)/ np.max((acados_cost, total_cost))
+
+    if cost_err < 1e-10:
+        print("Passed cost computation test")
+        print("cost acados: ", acados_cost, " manually computed cost ", total_cost, "relative error", cost_err)
+    else:
+        raise Exception("Cost function computation test failed \n" +
+            "cost acados: {:.2E}, manually computed cost {:.2E} relative error {:.2E}.".format(acados_cost, total_cost, cost_err))
