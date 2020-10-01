@@ -45,33 +45,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     long long *ptr;
 
-    /* RHS */
-
-    // C_ocp
-
     // solver
     ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "solver" ) );
     ocp_nlp_solver *solver = (ocp_nlp_solver *) ptr[0];
-    // sens_out
-    ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "sens_out" ) );
-    ocp_nlp_out *sens_out = (ocp_nlp_out *) ptr[0];
+    // in
+    ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "in" ) );
+    ocp_nlp_in *in = (ocp_nlp_in *) ptr[0];
+    // out
+    ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "out" ) );
+    ocp_nlp_out *out = (ocp_nlp_out *) ptr[0];
+    // config
+    ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "config" ) );
+    ocp_nlp_config *config = (ocp_nlp_config *) ptr[0];
 
-    // field
-    char *field = mxArrayToString( prhs[1] );
 
-    // stage
-    int stage = mxGetScalar( prhs[2] );
+    plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
+    double *out_data = mxGetPr( plhs[0] );
 
-    // index
-    int index = mxGetScalar( prhs[3] );
-
-    /* solver */
-    ocp_nlp_eval_param_sens(solver, field, stage, index, sens_out);
-
+    ocp_nlp_eval_cost(solver, in, out);
+    ocp_nlp_get(config, solver, "cost_value", out_data);
 
     return;
 
 }
-
-
-

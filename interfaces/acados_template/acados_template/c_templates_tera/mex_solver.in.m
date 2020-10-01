@@ -82,6 +82,9 @@ classdef {{ model.name }}_mex_solver < handle
             end
         end
 
+        function value = get_cost(obj)
+            value = ocp_get_cost(obj.C_ocp);
+        end
 
         % get -- borrowed from MEX interface
         function value = get(varargin)

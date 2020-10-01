@@ -181,6 +181,9 @@ classdef acados_ocp < handle
             ocp_eval_param_sens(obj.C_ocp, field, stage, index);
         end
 
+        function value = get_cost(obj)
+            value = ocp_get_cost(obj.C_ocp);
+        end
 
         function set(varargin)
             obj = varargin{1};
