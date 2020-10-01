@@ -224,6 +224,7 @@ for itest = 1:2
         error(['test_ocp_wtnx6: difference between x and z bigger than',
             num2str(tol_diff_xz, '%e'), ' should be equal'])
     end
+    cost_val_ocp = ocp.get_cost();
 end % itest
 
 fprintf('\ntest_ocp_linear_dae: success!\n');
@@ -250,10 +251,16 @@ err_x = max(max(abs(x_traj - t_x)))
 err_u = max(max(abs(u_traj - t_u)))
 err_z = max(max(abs(z_traj - t_z)))
 
+cost_val_t_ocp = t_ocp.get_cost();
+
 if any([err_x, err_u, err_z] > 1e-9)
     error(['test_template_ocp_linear_dae: solution of templated MEX and original MEX',...
          ' differ too much. Should be < 1e-9 ']);
 end
 
+if abs(cost_val_ocp - cost_val_t_ocp) > 1e-9
+    error(['test_template_ocp_linear_dae: cost function value of templated MEX and original MEX',...
+         ' differ too much. Should be < 1e-9 ']);
+end
 clear all
 cd ..

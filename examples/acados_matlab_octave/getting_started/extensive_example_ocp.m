@@ -276,6 +276,7 @@ if ~is_octave()
        ';  ', strrep(qp_solver, '_', ' ')] )
 end
 
+cost_val_ocp = ocp.get_cost();
 
 %% test templated solver
 disp('testing templated solver');
@@ -302,6 +303,6 @@ error_X_mex_vs_mex_template = max(max(abs(xt_traj - xtraj)))
 error_U_mex_vs_mex_template = max(max(abs(ut_traj - utraj)))
 
 t_ocp.print('stat')
-
+cost_val_t_ocp = t_ocp.get_cost();
 clear t_ocp
 cd ..
