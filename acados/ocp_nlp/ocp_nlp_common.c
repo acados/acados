@@ -46,7 +46,10 @@
 #include "hpipm/include/hpipm_d_ocp_qp_dim.h"
 // acados
 #include "acados/utils/mem.h"
-
+// openmp
+#if defined(ACADOS_WITH_OPENMP)
+#include <omp.h>
+#endif
 
 
 /************************************************
@@ -1060,8 +1063,15 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
 
     opts->reuse_workspace = 1;
 #if defined(ACADOS_WITH_OPENMP)
+    #if defined(ACADOS_NUM_THREADS)
     opts->num_threads = ACADOS_NUM_THREADS;
+    // printf("\nocp_nlp: openmp threads from macro = %d\n", opts->num_threads);
+    #else
+    opts->num_threads = omp_get_max_threads();
+    // printf("\nocp_nlp: omp_get_max_threads %d", omp_get_max_threads());
+    #endif
 #endif
+    // printf("\nocp_nlp: openmp threads = %d\n", opts->num_threads);
 
     opts->globalization = FIXED_STEP;
     opts->step_length = 1.0;
@@ -1587,8 +1597,6 @@ int ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims,
     // int *nz = dims->nz;
 
     int size = 0;
-    int size_tmp = 0;
-    int tmp;
 
     // nlp
     size += sizeof(ocp_nlp_workspace);
@@ -1636,6 +1644,8 @@ int ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims,
         }
 
 #else
+        int size_tmp = 0;
+        int tmp;
 
         // qp solver
         tmp = qp_solver->workspace_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
