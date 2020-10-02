@@ -84,7 +84,7 @@ target_include_directories(acados
 
 # OPENMP
 # find_package(OpenMP)
-if(OpenMP_CXX_FOUND)
+if(ACADOS_WITH_OPENMP)
     target_link_libraries(acados PUBLIC OpenMP::OpenMP_CXX)
 
     target_compile_definitions(acados PUBLIC ACADOS_WITH_OPENMP)
