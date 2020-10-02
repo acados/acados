@@ -82,6 +82,14 @@ target_include_directories(acados
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/interfaces>
         $<INSTALL_INTERFACE:include>)
 
+# OPENMP
+# find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(acados PUBLIC OpenMP::OpenMP_CXX)
+
+    target_compile_definitions(acados PUBLIC ACADOS_WITH_OPENMP)
+endif()
+
 # HPMPC must come before BLASFEO!
 if(ACADOS_WITH_HPMPC)
     target_link_libraries(acados PUBLIC hpmpc)
