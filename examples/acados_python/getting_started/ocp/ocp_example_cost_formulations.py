@@ -166,5 +166,18 @@ for i in range(N):
 simX[N,:] = ocp_solver.get(N, "x")
 
 
+# plot results
 plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
 
+# timings
+# time_tot = 1e8
+# time_lin = 1e8
+
+# for k in range(1000):
+
+#     status = ocp_solver.solve()
+#     time_tot = min(time_tot, ocp_solver.get_stats("time_tot")[0])
+#     time_lin = min(time_lin, ocp_solver.get_stats("time_lin")[0])
+
+# print("CPU time = ", time_tot * 1e3, "ms")
+# print("CPU time linearization = ", time_lin * 1e3, "ms")
