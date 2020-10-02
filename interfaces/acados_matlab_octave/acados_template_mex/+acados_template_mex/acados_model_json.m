@@ -42,6 +42,7 @@ classdef acados_model_json < handle
         z
         name
         p
+        gnsf
     end
     methods
         function obj = acados_model_json()
@@ -54,6 +55,7 @@ classdef acados_model_json < handle
             obj.z = [];
             obj.name = [];
             obj.p = [];
+            gnsf = [];
         end
     end
 end
