@@ -46,6 +46,9 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     ocp_json.solver_options.qp_solver = upper(obj.opts_struct.qp_solver);
     ocp_json.solver_options.integrator_type = upper(obj.opts_struct.sim_method);
     ocp_json.solver_options.nlp_solver_type = upper(obj.opts_struct.nlp_solver);
+    if strcmp(obj.opts_struct.sim_method, 'irk_gnsf')
+        ocp_json.solver_options.integrator_type = 'GNSF';
+    end
     % options
     ocp_json.solver_options.sim_method_num_steps = obj.opts_struct.sim_method_num_steps;
     ocp_json.solver_options.sim_method_num_stages = obj.opts_struct.sim_method_num_stages;
@@ -158,6 +161,14 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     end
     % missing in MEX
     % ocp_json.dims.nsbx_e = model.dim_nsbx_e;
+
+    if isfield(model, 'dim_gnsf_nx1')
+        ocp_json.dims.gnsf_nx1 = model.dim_gnsf_nx1;
+        ocp_json.dims.gnsf_nz1 = model.dim_gnsf_nz1;
+        ocp_json.dims.gnsf_nout = model.dim_gnsf_nout;
+        ocp_json.dims.gnsf_ny = model.dim_gnsf_ny;
+        ocp_json.dims.gnsf_nuhat = model.dim_gnsf_nuhat;
+    end
 
     %% types
     if strcmp(model.cost_type, 'ext_cost')
@@ -403,10 +414,40 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
         ocp_json.model.f_impl_expr = model.dyn_expr_f;
     elseif strcmp(obj.opts_struct.sim_method, 'discrete')
         ocp_json.model.f_phi_expr = model.dyn_expr_phi;
+    elseif strcmp(obj.opts_struct.sim_method, 'irk_gnsf')
+        ocp_json.model.gnsf.A = model.dyn_gnsf_A;
+        ocp_json.model.gnsf.B = model.dyn_gnsf_B;
+        ocp_json.model.gnsf.C = model.dyn_gnsf_C;
+        ocp_json.model.gnsf.E = model.dyn_gnsf_E;
+        ocp_json.model.gnsf.c = model.dyn_gnsf_c;
+        ocp_json.model.gnsf.A_LO = model.dyn_gnsf_A_LO;
+        ocp_json.model.gnsf.B_LO = model.dyn_gnsf_B_LO;
+        ocp_json.model.gnsf.E_LO = model.dyn_gnsf_E_LO;
+        ocp_json.model.gnsf.c_LO = model.dyn_gnsf_c_LO;
+
+        ocp_json.model.gnsf.L_x = model.dyn_gnsf_L_x;
+        ocp_json.model.gnsf.L_u = model.dyn_gnsf_L_u;
+        ocp_json.model.gnsf.L_xdot = model.dyn_gnsf_L_xdot;
+        ocp_json.model.gnsf.L_z = model.dyn_gnsf_L_z;
+
+        ocp_json.model.gnsf.expr_phi = model.dyn_gnsf_expr_phi;
+        ocp_json.model.gnsf.expr_f_lo = model.dyn_gnsf_expr_f_lo;
+
+        ocp_json.model.gnsf.ipiv_x = model.dyn_gnsf_ipiv_x;
+        ocp_json.model.gnsf.idx_perm_x = model.dyn_gnsf_idx_perm_x;
+        ocp_json.model.gnsf.ipiv_z = model.dyn_gnsf_ipiv_z;
+        ocp_json.model.gnsf.idx_perm_z = model.dyn_gnsf_idx_perm_z;
+        ocp_json.model.gnsf.ipiv_f = model.dyn_gnsf_ipiv_f;
+        ocp_json.model.gnsf.idx_perm_f = model.dyn_gnsf_idx_perm_f;
+
+        ocp_json.model.gnsf.nontrivial_f_LO = model.dyn_gnsf_nontrivial_f_LO;
+        ocp_json.model.gnsf.purely_linear = model.dyn_gnsf_purely_linear;
+
+        ocp_json.model.gnsf.y = model.sym_gnsf_y;
+        ocp_json.model.gnsf.uhat = model.sym_gnsf_uhat;
     else
         error(['integrator ', obj.opts_struct.sim_method, ' not support for templating backend.'])
     end
-    %  TODO(oj): add gnsf support;
 
     ocp_json.model.x = model.sym_x;
     ocp_json.model.u = model.sym_u;

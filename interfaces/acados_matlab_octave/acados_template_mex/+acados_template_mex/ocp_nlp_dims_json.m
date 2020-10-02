@@ -68,7 +68,12 @@ classdef ocp_nlp_dims_json < handle
         nr %
         nr_e %
         nbxe_0
-
+        % gnsf
+        gnsf_nx1
+        gnsf_nz1
+        gnsf_nout
+        gnsf_ny
+        gnsf_nuhat
     end
     methods
         function obj = ocp_nlp_dims_json()
@@ -104,6 +109,12 @@ classdef ocp_nlp_dims_json < handle
             obj.nr_e = 0;
             obj.N     = [];
             obj.nbxe_0 = 0;
+            %
+            obj.gnsf_nx1 = 0;
+            obj.gnsf_nz1 = 0;
+            obj.gnsf_nout = 0;
+            obj.gnsf_ny = 0;
+            obj.gnsf_nuhat = 0;
         end
     end
 end

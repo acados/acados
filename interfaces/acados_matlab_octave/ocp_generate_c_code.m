@@ -32,13 +32,6 @@
 %
 
 function ocp_generate_c_code(obj)
-    %% check if formulation is supported
-    % add checks for
-    if strcmp( obj.opts_struct.sim_method, 'irk_gnsf')
-        error('mex templating does not support irk_gnsf integrator yet. Notice that it might still be possible to solve the OCP from MATLAB.');
-        % TODO: implement
-    end
-
     %% create folder
     if ~exist(fullfile(pwd,'c_generated_code'), 'dir')
         mkdir(fullfile(pwd, 'c_generated_code'))
@@ -52,6 +45,9 @@ function ocp_generate_c_code(obj)
             opts.sens_hess = 'true';
             generate_c_code_implicit_ode(...
                 obj.acados_ocp_nlp_json.model, opts);
+        elseif (strcmp(obj.opts_struct.sim_method, 'irk_gnsf'))
+            generate_c_code_gnsf(...
+                obj.acados_ocp_nlp_json.model);
         end
     elseif (strcmp(obj.model_struct.dyn_type, 'discrete'))
         generate_c_code_disc_dyn(obj.acados_ocp_nlp_json.model);
