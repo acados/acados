@@ -31,64 +31,26 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
-function check = sim_check_dims(model)
+function model = detect_dims_sim(model)
 
-check = 1;
+    %% general
+    model.dim_nx = length(model.sym_x);
 
-if isfield(model, 'sym_x')
-    if all(size(model.sym_x))
-        nx = length(model.sym_x);
+    if isfield(model, 'sym_u')
+        model.dim_nu = length(model.sym_u);
     else
-        nx = 0;
+        model.dim_nu = 0;
     end
-    if nx ~= model.dim_nx
-        check = 0;
-        fail = 'x';
-    end
-end
 
-if isfield(model, 'sym_u')
-    if all(size(model.sym_u))
-        nu = length(model.sym_u);
+    if isfield(model, 'sym_z')
+        model.dim_nz = length(model.sym_z);
     else
-        nu = 0;
+        model.dim_nz = 0;
     end
-    if nu ~= model.dim_nu
-        check = 0;
-        fail = 'u';
-    end
-end
 
-
-if isfield(model, 'sym_p')
-    if all(size(model.sym_p))
-        np = length(model.sym_p);
+    if isfield(model, 'sym_p')
+        model.dim_np = length(model.sym_p);
     else
-        np = 0;
+        model.dim_np = 0;
     end
-    if np ~= model.dim_np
-        check = 0;
-        fail = 'p';
-    end
-end
-
-
-if isfield(model, 'sym_z')
-    if all(size(model.sym_z))
-        nz = length(model.sym_z);
-    else
-        nz = 0;
-    end
-    if nz ~= model.dim_nz
-        check = 0;
-        fail = 'z';
-    end
-end
-
-
-if check == 0
-    message = strcat('\nSIM_DIM_CHECK FAIL: check consistency of dim_',...
-        fail, ' with CasADi symbolic sym_', fail, '!\n\n');
-    fprintf(message);
-    error(message);
 end
