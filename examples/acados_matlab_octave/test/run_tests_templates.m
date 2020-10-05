@@ -55,6 +55,7 @@ try
     test_template_pendulum_ocp('nonlinear_ls');
     test_template_pendulum_ocp('ext_cost');
     test_template_pendulum_exact_hess;
+    test_template_pendulum_gnsf;
     test_template_ocp_linear_dae;
     test_template_disc_dyn_ocp_linear;
 catch exception

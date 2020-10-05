@@ -260,7 +260,8 @@ end
 
 if abs(cost_val_ocp - cost_val_t_ocp) > 1e-9
     error(['test_template_ocp_linear_dae: cost function value of templated MEX and original MEX',...
-         ' differ too much. Should be < 1e-9 ']);
+         ' differ too much. Should be < 1e-9, got ', num2str(cost_val_ocp, '%e'), ' template: ', ...
+         num2str(cost_val_t_ocp, '%e')]);
 end
 clear all
 cd ..
