@@ -52,6 +52,8 @@ classdef acados_sim < handle
             [~,~] = mkdir(obj.opts_struct.output_dir);
             addpath(obj.opts_struct.output_dir);
 
+            % check model consistency
+            obj.model_struct = create_consistent_empty_fields(obj.model_struct, obj.opts_struct);
             % detect GNSF structure
             if (strcmp(obj.opts_struct.method, 'irk_gnsf'))
                 if (strcmp(obj.opts_struct.gnsf_detect_struct, 'true'))
@@ -91,7 +93,7 @@ classdef acados_sim < handle
                 sim_compile_interface(obj.opts_struct);
             end
 
-            sim_check_dims(obj.model_struct);
+            obj.model_struct = detect_dims_sim(obj.model_struct)
 
             % create C object
             obj.C_sim = sim_create(obj.model_struct, obj.opts_struct);
