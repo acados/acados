@@ -74,6 +74,9 @@ add_test(NAME python_pendulum_mhe_example_noisy_param
 add_test(NAME python_pendulum_mhe_example_param
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/mhe
         python minimal_example_mhe_with_param.py)
+add_test(NAME python_pendulum_mhe_ocp_closed_loop_example
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/mhe
+        python closed_loop_mhe_ocp.py)
 
 add_test(NAME python_pendulum_ocp_cost_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/ocp
