@@ -51,7 +51,7 @@ def plot_pendulum(shooting_nodes, u_max, U, X_true, X_est=None, Y_measured=None,
     # latexify plot
     if latexify:
         params = {'backend': 'ps',
-                'text.latex.preamble': [r"\usepackage{gensymb} \usepackage{amsmath}"],
+                'text.latex.preamble': r"\usepackage{gensymb} \usepackage{amsmath}",
                 'axes.labelsize': 10,
                 'axes.titlesize': 10,
                 'legend.fontsize': 10,
@@ -71,9 +71,10 @@ def plot_pendulum(shooting_nodes, u_max, U, X_true, X_est=None, Y_measured=None,
     Tf = shooting_nodes[N_sim-1]
     t = shooting_nodes
 
+    Ts = t[1] - t[0]
     if WITH_ESTIMATION:
         N_mhe = N_sim - X_est.shape[0]
-        t_mhe = np.linspace(N_mhe, Tf, N_sim)
+        t_mhe = np.linspace(N_mhe * Ts, Tf, N_sim-N_mhe)
 
     plt.subplot(nx+1, 1, 1)
     plt.step(t, np.append([U[0]], U), color='r')
@@ -92,7 +93,7 @@ def plot_pendulum(shooting_nodes, u_max, U, X_true, X_est=None, Y_measured=None,
         plt.plot(t, X_true[:,i], label='true')
 
         if WITH_ESTIMATION:
-            plt.plot(t_mhe, X_est[:, i], label='estimated')
+            plt.plot(t_mhe, X_est[:, i], '--', label='estimated')
             plt.plot(t, Y_measured[:, i], 'x', label='measured')
 
         plt.ylabel(states_lables[i])
