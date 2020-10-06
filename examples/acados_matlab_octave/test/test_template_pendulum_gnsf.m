@@ -68,11 +68,7 @@ ocp_model = acados_ocp_model();
 %% dimensions
 nx = model.nx;
 nu = model.nu;
-
-nbx = 0;
 nbu = 0;
-nh = nu;
-nh_e = 0;
 
 %% cost formulation
 cost_formulation = 1;
@@ -121,8 +117,6 @@ if strcmp( cost_type, 'linear_ls' )
     ocp_model.set('cost_W_e', W_e);
     ocp_model.set('cost_y_ref', yr);
     ocp_model.set('cost_y_ref_e', yr_e);
-    ocp_model.set('dim_ny', ny);
-    ocp_model.set('dim_ny_e', ny_e);
 else % external, auto
     ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
     ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
@@ -137,8 +131,6 @@ ubu =  80*ones(nu, 1);
 ocp_model.set('name', model_name);
 % dims
 ocp_model.set('T', T);
-ocp_model.set('dim_nx', nx);
-ocp_model.set('dim_nu', nu);
 % symbolics
 ocp_model.set('sym_x', model.sym_x);
 if isfield(model, 'sym_u')

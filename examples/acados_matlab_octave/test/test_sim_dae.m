@@ -82,9 +82,6 @@ for integrator = {'irk_gnsf', 'irk'}
     if isfield(model, 'sym_p')
         sim_model.set('sym_p', model.sym_p);
     end
-    sim_model.set('dim_nx', nx);
-    sim_model.set('dim_nu', nu);
-    
     
     % Note: DAEs can only be used with implicit integrator
     sim_model.set('dyn_type', 'implicit');
@@ -93,7 +90,6 @@ for integrator = {'irk_gnsf', 'irk'}
     if isfield(model, 'sym_z')
         sim_model.set('sym_z', model.sym_z);
     end
-    sim_model.set('dim_nz', nz);
     
     %% acados sim opts
     sim_opts = acados_sim_opts();

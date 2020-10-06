@@ -125,16 +125,7 @@ for itest = 1:3
     %% acados ocp model
     ocp_model = acados_ocp_model();
     ocp_model.set('name', model_name);
-    % dims
     ocp_model.set('T', T);
-    ocp_model.set('dim_nx', nx);
-    ocp_model.set('dim_nu', nu);
-    if (strcmp(cost_type, 'linear_ls'))
-        ocp_model.set('dim_ny', ny);
-        ocp_model.set('dim_ny_e', ny_e);
-    end
-    ocp_model.set('dim_nbx', nbx);
-    ocp_model.set('dim_nbu', nbu);
 
     % symbolics
     ocp_model.set('sym_x', model.sym_x);
@@ -198,17 +189,7 @@ for itest = 1:3
 %         ocp_model.set('constr_expr_h_e', SX.sym('terminal_constraint',0,0));
 %         ocp_model.set('constr_lh_e', []);
 %         ocp_model.set('constr_uh_e', []);
-
     end
-
-    ng_e = 0;
-    nh_e = 0;
-    ocp_model.set('dim_ng', ng);
-    ocp_model.set('dim_ng_e', ng_e);
-    ocp_model.set('dim_nh', nh);
-    ocp_model.set('dim_nh_e', nh_e);
-    % disp('ocp_model.model_struct')
-    % disp(ocp_model.model_struct)
 
     %% acados ocp opts
     ocp_opts = acados_ocp_opts();
