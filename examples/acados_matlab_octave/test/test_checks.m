@@ -40,14 +40,11 @@ addpath('../linear_mass_spring_model/');
 compile_interface = 'auto';
 codgen_model = 'true';
 method = 'irk';
-% method = 'IRK';
 sens_forw = 'true';
 num_stages = 4;
 num_steps = 4;
-gnsf_detect_struct = 'true';
 
 Ts = 0.1;
-FD_epsilon = 1e-6;
 
 %% model
 model = linear_mass_spring_model;
@@ -55,13 +52,6 @@ model = linear_mass_spring_model;
 model_name = ['lin_mass_' method];
 nx = model.nx;
 nu = model.nu;
-
-% x0 = [1e-1; 1e0; 2e-1; 2e0]; % pendulum
-% u = 0;
-
-% linear_mass_spring_
-x0 = ones(nx,1);
-u = ones(nu,1);
 
 %% acados sim model
 sim_model = acados_sim_model();
@@ -75,8 +65,6 @@ end
 if isfield(model, 'sym_p')
     sim_model.set('sym_p', model.sym_p);
 end
-sim_model.set('dim_nx', model.nx);
-sim_model.set('dim_nu', model.nu);
 
 
 if (strcmp(method, 'erk'))
@@ -97,9 +85,6 @@ sim_opts.set('num_stages', num_stages);
 sim_opts.set('num_steps', num_steps);
 sim_opts.set('method', method);
 sim_opts.set('sens_forw', sens_forw);
-if (strcmp(method, 'irk_gnsf'))
-    sim_opts.set('gnsf_detect_struct', gnsf_detect_struct);
-end
 
 %% acados sim
 % create sim
@@ -109,12 +94,6 @@ sim = acados_sim(sim_model, sim_opts);
 % in the precomputation phase
 % 	sim.set('T', Ts);
 
+%% test check, this should fail!
 % set initial state
 sim.set('x', zeros(nx+1, 1));
-sim.set('u', u);
-
-% solve
-sim.solve();
-
-xn = sim.get('xn');
-S_forw_ind = sim.get('S_forw');

@@ -104,19 +104,6 @@ ocp_model = acados_ocp_model();
 ocp_model.set('T', T);
 ocp_model.set('name', model_name);
 
-% dims
-ocp_model.set('dim_nx', nx);
-ocp_model.set('dim_nu', nu);
-ocp_model.set('dim_nz', nz);
-ocp_model.set('dim_ny', ny);
-ocp_model.set('dim_ny_e', ny_e);
-if constr_variant==0
-    ocp_model.set('dim_nbx', nx);
-else
-    ocp_model.set('dim_nh', nx);
-    ocp_model.set('dim_nh_e', nx);
-end
-
 % symbolics
 ocp_model.set('sym_x', model.sym_x);
 ocp_model.set('sym_u', model.sym_u);
