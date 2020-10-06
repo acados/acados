@@ -122,9 +122,8 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     if isfield(model, 'dim_nsbu')
         ocp_json.dims.nsbu = model.dim_nsbu;
     end
-
     if isfield(model, 'dim_nsg')
-        ocp_json.dims.nsg = model.nsg;
+        ocp_json.dims.nsg = model.dim_nsg;
     end
     % missing in MEX
     % ocp_json.dims.nphi;
