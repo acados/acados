@@ -39,7 +39,6 @@ from acados_template import *
 
 def export_mhe_solver(model, N, h, Q, Q0, R):
 
-    # create render arguments
     ocp_mhe = AcadosOcp()
 
     ocp_mhe.model = model
@@ -51,20 +50,9 @@ def export_mhe_solver(model, N, h, Q, Q0, R):
     ny = 3*nx     # h(x), w and arrival cost
     ny_e = 0
 
-    # set ocp_nlp_dimensions
-    ocp_mhe.dims.nx  = nx
-    ocp_mhe.dims.ny  = ny
-    ocp_mhe.dims.np  = nparam
-    ocp_mhe.dims.ny_e = ny_e
-    ocp_mhe.dims.nbx = 0
-    ocp_mhe.dims.nbu = 0  # nu
-    ocp_mhe.dims.nu  = model.u.size()[0]
-    ocp_mhe.dims.N   = N
+    ocp_mhe.dims.N = N
 
-    ocp_mhe.dims.nbx_0 = 0
-
-    # set weighting matrices
-
+    # set cost
     ocp_mhe.cost.cost_type = 'NONLINEAR_LS'
     ocp_mhe.cost.cost_type_e = 'LINEAR_LS'
 
@@ -77,12 +65,9 @@ def export_mhe_solver(model, N, h, Q, Q0, R):
 
     ocp_mhe.parameter_values = np.zeros((nparam, ))
 
-    # set y_ref for all stages
-    ocp_mhe.cost.yref  = np.zeros((ny,))
-    ocp_mhe.cost.yref_e = np.zeros((ny_e, ))
+    ocp_mhe.cost.yref = np.zeros((3*nx,))
+    ocp_mhe.cost.yref_e = np.zeros((0, ))
 
-    # set QP solver
-    # ocp_mhe.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     ocp_mhe.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
     ocp_mhe.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp_mhe.solver_options.integrator_type = 'ERK'

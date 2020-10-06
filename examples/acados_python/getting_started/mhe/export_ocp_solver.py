@@ -37,7 +37,6 @@ from acados_template import *
 
 def export_ocp_solver(model, N, h, Q, R, Fmax=80):
 
-    # create render arguments
     ocp = AcadosOcp()
 
     # set model
@@ -49,13 +48,7 @@ def export_ocp_solver(model, N, h, Q, R, Fmax=80):
     ny = nx + nu
     ny_e = nx
 
-    # set dimensions
-    ocp.dims.nx  = nx
-    ocp.dims.ny  = ny
-    ocp.dims.ny_e = ny_e
-    ocp.dims.nbu = nu
-    ocp.dims.nu  = model.u.size()[0]
-    ocp.dims.N   = N
+    ocp.dims.N = N
 
     # set cost
     ocp.cost.cost_type = 'NONLINEAR_LS'
