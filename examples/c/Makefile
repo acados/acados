@@ -79,7 +79,6 @@ endif
 EXAMPLES =
 EXAMPLES += dense_qp
 EXAMPLES += ocp_qp
-#EXAMPLES += pendulum_scqp
 EXAMPLES += sim_wt_model_nx3
 EXAMPLES += sim_wt_model_nx6
 EXAMPLES += sim_pendulum_dae
@@ -106,7 +105,6 @@ examples: $(EXAMPLES)
 RUN_EXAMPLES =
 RUN_EXAMPLES += run_dense_qp
 RUN_EXAMPLES += run_ocp_qp
-#RUN_EXAMPLES += run_pendulum_scqp
 RUN_EXAMPLES += run_sim_wt_model_nx3
 RUN_EXAMPLES += run_sim_wt_model_nx6
 RUN_EXAMPLES += run_sim_pendulum_dae
@@ -470,28 +468,6 @@ run_nonlinear_chain_ocp_nlp:
 
 
 #################################################
-# pendulum model
-#################################################
-
-PENDULUM_OBJS = 
-PENDULUM_OBJS += pendulum_model/pendulum_ode_expl_vde_forw.o
-PENDULUM_OBJS += pendulum_model/pendulum_ode_expl_ode_hess.o
-PENDULUM_OBJS += pendulum_model/constraint.o
-PENDULUM_OBJS += pendulum_model/position.o
-
-pendulum_scqp: $(PENDULUM_OBJS) pendulum_scqp.o
-	$(CXX) -o pendulum_scqp.out $(PENDULUM_OBJS) pendulum_scqp.o $(LDFLAGS) $(LIBS)
-	@echo
-	@echo " Example pendulum_scqp build complete."
-	@echo
-
-run_pendulum_scqp:
-	./pendulum_scqp.out
-
-
-
-
-#################################################
 # dense qp
 #################################################
 
@@ -608,4 +584,5 @@ clean_models:
 	rm -f wt_model_nx6/*.o
 	rm -f wt_model_nx6/nx6p2/*.o
 	rm -f pendulum_dae_model/*.o
+	rm -f pendulum_model/*.o
 
