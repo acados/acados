@@ -114,18 +114,6 @@ ocp_model = acados_ocp_model();
 ocp_model.set('name', model_name);
 ocp_model.set('T', T);
 
-% Dimensions
-ocp_model.set('dim_nx', nx);
-ocp_model.set('dim_nu', nu);
-
-if strcmp(cost_type, 'nonlinear_ls')
-	ocp_model.set('dim_ny', ny);
-	ocp_model.set('dim_ny_e', ny_e);
-end
-
-ocp_model.set('dim_nh', nh);
-ocp_model.set('dim_nh_e', nh_e);
-
 % Symbolics
 ocp_model.set('sym_x', model.sym_x);
 ocp_model.set('sym_u', model.sym_u);
@@ -219,10 +207,6 @@ ocp.C_ocp_ext_fun
 %% Acados simulation model
 
 sim_model = acados_sim_model();
-
-% Dimentions
-sim_model.set('dim_nx', nx);
-sim_model.set('dim_nu', nu);
 
 % Symbolics
 sim_model.set('sym_x', model.sym_x);

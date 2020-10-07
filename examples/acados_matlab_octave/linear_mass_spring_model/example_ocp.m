@@ -148,27 +148,8 @@ end
 %% acados ocp model
 ocp_model = acados_ocp_model();
 ocp_model.set('name', model_name);
-
-% dims
 ocp_model.set('T', T);
-ocp_model.set('dim_nx', nx);
-ocp_model.set('dim_nu', nu);
 
-
-if (strcmp(cost_type, 'linear_ls')) | (strcmp(cost_type, 'nonlinear_ls'))
-	ocp_model.set('dim_ny', ny);
-	ocp_model.set('dim_ny_e', ny_e);
-end
-if (ng>0)
-	ocp_model.set('dim_ng', ng);
-	ocp_model.set('dim_ng_e', ng_e);
-elseif (nh>0)
-	ocp_model.set('dim_nh', nh);
-	ocp_model.set('dim_nh_e', nh_e);
-else
-	ocp_model.set('dim_nbx', nbx);
-	ocp_model.set('dim_nbu', nbu);
-end
 % symbolics
 ocp_model.set('sym_x', model.sym_x);
 if isfield(model, 'sym_u')
@@ -263,9 +244,7 @@ if (strcmp(dyn_type, 'explicit') || strcmp(dyn_type, 'implicit'))
 	ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
 end
 
-ocp_opts.opts_struct
-
-
+% ocp_opts.opts_struct
 
 %% acados ocp
 % create ocp
@@ -291,9 +270,6 @@ time_ext = toc
 
 %x0(1) = 1.5;
 %ocp.set('constr_x0', x0);
-
-
-%ocp.set('cost_y_ref', 1);
 
 % if not set, the trajectory is initialized with the previous solution
 

@@ -125,23 +125,8 @@ ubu =  1.0*ones(nbu, 1);
 %% acados ocp model
 ocp_model = acados_ocp_model();
 ocp_model.set('name', model_name);
-% dims
 ocp_model.set('T', T);
-ocp_model.set('dim_nx', nx);
-ocp_model.set('dim_nu', nu);
-ocp_model.set('dim_ny', ny);
-ocp_model.set('dim_ny_e', ny_e);
-if (ng>0)
-	ocp_model.set('dim_ng', ng);
-	ocp_model.set('dim_ng_e', ng_e);
-elseif (nh>0)
-	ocp_model.set('dim_nh', nh);
-	ocp_model.set('dim_nh_e', nh_e);
-else
-	ocp_model.set('dim_nbx', nbx);
-	ocp_model.set('dim_nbu', nbu);
-end
-ocp_model.set('dim_np', np);
+
 % symbolics
 ocp_model.set('sym_x', model.sym_x);
 if isfield(model, 'sym_u')

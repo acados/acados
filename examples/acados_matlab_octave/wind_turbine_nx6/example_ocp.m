@@ -187,21 +187,7 @@ u_end = zeros(nu, 1);
 
 %% acados ocp model
 ocp_model = acados_ocp_model();
-%% dims
-ocp_model.set('T', T);
-ocp_model.set('dim_nx', nx);
-ocp_model.set('dim_nu', nu);
-ocp_model.set('dim_ny', ny);
-ocp_model.set('dim_ny_e', ny_e);
-ocp_model.set('dim_nbx', nbx);
-ocp_model.set('dim_nbu', nbu);
-ocp_model.set('dim_nh', nh);
-ocp_model.set('dim_nh_e', nh_e);
-ocp_model.set('dim_ns', ns);
-ocp_model.set('dim_ns_e', ns_e);
-ocp_model.set('dim_nsh', nsh);
-ocp_model.set('dim_nsh_e', nsh_e);
-ocp_model.set('dim_np', np);
+
 %% symbolics
 ocp_model.set('sym_x', model.sym_x);
 ocp_model.set('sym_u', model.sym_u);

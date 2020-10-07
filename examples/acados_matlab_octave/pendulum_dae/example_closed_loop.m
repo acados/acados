@@ -43,8 +43,6 @@ end
 %% options
 compile_interface = 'auto'; % true, false
 codgen_model = 'true'; % true, false
-% compile_interface = 'auto'; % true, false
-% codgen_model = 'false'; % true, false
 % simulation
 gnsf_detect_struct = 'true'; % true, false
 sim_method = 'irk'; % irk, irk_gnsf, [erk]
@@ -103,11 +101,9 @@ ny = nu+nx; % number of outputs in lagrange term
 ny_e = nx; % number of outputs in mayer term
 
 ng = 0; % number of general linear constraints intermediate stages
-ng_e = 0; % number of general linear constraints final stage
 nbx = 0; % number of bounds on state x
 
 nbu = nu; % number of bounds on controls u
-nh_e = 0;
 
 % cost
 % linear least square cost: y^T * W * y, where y = Vx * x + Vu * u - y_ref
@@ -144,21 +140,6 @@ if constraint_h
 else
     nh = 0;
 end
-
-% dims
-ocp_model.set('dim_nx', nx);
-ocp_model.set('dim_nu', nu);
-ocp_model.set('dim_nz', nz);
-if (strcmp(cost_type, 'linear_ls'))
-	ocp_model.set('dim_ny', ny);
-	ocp_model.set('dim_ny_e', ny_e);
-end
-ocp_model.set('dim_nbx', nbx);
-ocp_model.set('dim_nbu', nbu);
-ocp_model.set('dim_ng', ng);
-ocp_model.set('dim_ng_e', ng_e);
-ocp_model.set('dim_nh', nh);
-ocp_model.set('dim_nh_e', nh_e);
 
 % symbolics
 ocp_model.set('sym_x', model.sym_x);
@@ -261,8 +242,6 @@ end
 if isfield(model, 'sym_p')
     sim_model.set('sym_p', model.sym_p);
 end
-sim_model.set('dim_nx', nx);
-sim_model.set('dim_nu', nu);
 
 % Note: DAEs can only be used with implicit integrator
 sim_model.set('dyn_type', 'implicit');
@@ -271,7 +250,6 @@ sim_model.set('sym_xdot', model.sym_xdot);
 if isfield(model, 'sym_z')
 	sim_model.set('sym_z', model.sym_z);
 end
-sim_model.set('dim_nz', nz);
 
 %% acados sim opts
 sim_opts = acados_sim_opts();

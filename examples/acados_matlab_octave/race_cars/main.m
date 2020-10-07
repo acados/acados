@@ -190,20 +190,6 @@ y_ref(1) = 1; % set reference on 's' to 1 to push the car forward (progress)
 ocp_model.set('cost_y_ref', y_ref);
 ocp_model.set('cost_y_ref_e', y_ref_e);
 
-% Set dimensions
-ocp_model.set('dim_nx', nx);
-ocp_model.set('dim_nu', nu);
-ocp_model.set('dim_ny', ny);
-ocp_model.set('dim_ny_e', ny_e);
-ocp_model.set('dim_nbx', nbx);
-ocp_model.set('dim_nbu', nbu);
-ocp_model.set('dim_nh', nh);
-ocp_model.set('dim_nsh', nsh);
-ocp_model.set('dim_nsbu', 0);
-ocp_model.set('dim_nsbx', 0);
-ocp_model.set('dim_nsg', 0);
-ocp_model.set('dim_ns', nsh); % nsbu+nsbx+nsg+nsh
-
 % ... see ocp_model.model_struct to see what other fields can be set
 
 %% acados ocp set opts

@@ -117,22 +117,9 @@ uh = max_a * ones(nh, 1);
 %uh_e = zeros(nh_e, 1);
 
 %% Acados ocp model
-
 ocp_model = acados_ocp_model();
 ocp_model.set('name', model_name);
 ocp_model.set('T', T);
-
-% Dimensions
-ocp_model.set('dim_nx', nx);
-ocp_model.set('dim_nu', nu);
-
-if strcmp(cost_type, 'nonlinear_ls')
-	ocp_model.set('dim_ny', ny);
-	ocp_model.set('dim_ny_e', ny_e);
-end
-
-ocp_model.set('dim_nh', nh);
-ocp_model.set('dim_nh_e', nh_e);
 
 % Symbolics
 ocp_model.set('sym_x', model.sym_x);
