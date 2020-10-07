@@ -41,7 +41,7 @@ if sys.version_info < (3,5):
 
 setup(name='acados_template',
    version='0.1',
-   python_requires='>=3.5, <3.9',
+   python_requires='>=3.5', # < 3.9
    description='A templating framework for acados',
    url='http://github.com/zanellia/acados',
    author='Andrea Zanelli',
@@ -57,7 +57,7 @@ setup(name='acados_template',
    install_requires=[
       'numpy',
       'scipy',
-      'casadi==3.5.1',
+      'casadi>=3.5.1',
       'matplotlib',
       'future-fstrings'
    ],
