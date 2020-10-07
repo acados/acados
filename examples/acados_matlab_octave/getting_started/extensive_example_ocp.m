@@ -123,8 +123,6 @@ if strcmp( cost_type, 'linear_ls' )
     ocp_model.set('cost_W_e', W_e);
     ocp_model.set('cost_y_ref', yr);
     ocp_model.set('cost_y_ref_e', yr_e);
-    ocp_model.set('dim_ny', ny);
-    ocp_model.set('dim_ny_e', ny_e);
 else % external, auto
     ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
     ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
@@ -141,16 +139,8 @@ ubu =  80*ones(nu, 1);
 
 %% acados ocp model
 ocp_model.set('name', model_name);
-% dims
 ocp_model.set('T', T);
-ocp_model.set('dim_nx', nx);
-ocp_model.set('dim_nu', nu);
-ocp_model.set('dim_nbx', nbx);
-ocp_model.set('dim_nbu', nbu);
-% ocp_model.set('dim_ng', ng); % for general linear constraints
-% ocp_model.set('dim_ng_e', ng_e);
-ocp_model.set('dim_nh', nh);
-ocp_model.set('dim_nh_e', nh_e);
+
 % symbolics
 ocp_model.set('sym_x', model.sym_x);
 if isfield(model, 'sym_u')

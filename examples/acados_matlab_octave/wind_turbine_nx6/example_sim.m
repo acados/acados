@@ -41,8 +41,6 @@ if (~strcmp(env_run, 'true'))
 	error('env.sh has not been sourced! Before executing this example, run: source env.sh');
 end
 
-
-
 % load sim data
 load testSim.mat
 
@@ -56,18 +54,11 @@ sens_forw = 'true';
 num_stages = 4;
 num_steps = 4;
 
-
-
 %% parametric model
 model = sim_model_wind_turbine_nx6;
-
-model
-
 nx = model.nx;
 nu = model.nu;
 np = model.np;
-
-
 
 %% acados sim model
 Ts = 0.2;
@@ -82,10 +73,6 @@ if isfield(model, 'sym_p')
     sim_model.set('sym_p', model.sym_p);
 end
 
-sim_model.set('dim_nx', model.nx);
-sim_model.set('dim_nu', model.nu);
-sim_model.set('dim_np', model.np);
-
 if (strcmp(method, 'erk'))
 	sim_model.set('dyn_type', 'explicit');
 	sim_model.set('dyn_expr_f', model.expr_f_expl);
@@ -97,12 +84,7 @@ else % irk irk_gnsf
 %	if isfield(model, 'sym_z')
 %		sim_model.set('sym_z', model.sym_z);
 %	end
-%	sim_model.set('dim_nz', model.nz);
 end
-
-sim_model.model_struct
-
-
 
 %% acados sim opts
 sim_opts = acados_sim_opts();
@@ -112,8 +94,6 @@ sim_opts.set('num_stages', num_stages);
 sim_opts.set('num_steps', num_steps);
 sim_opts.set('method', method);
 sim_opts.set('sens_forw', sens_forw);
-
-sim_opts.opts_struct
 
 
 %% acados sim

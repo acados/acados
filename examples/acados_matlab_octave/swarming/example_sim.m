@@ -66,8 +66,6 @@ if (strcmp(method, 'erk'))
 	if isfield(model, 'sym_u')
 		sim_model.set('sym_u', model.sym_u);
 	end
-	sim_model.set('dim_nx', model.nx);
-	sim_model.set('dim_nu', model.nu);
 else % irk irk_gnsf
 	sim_model.set('dyn_type', 'implicit');
 	sim_model.set('dyn_expr_f', model.expr_f_impl);
@@ -79,9 +77,6 @@ else % irk irk_gnsf
 %	if isfield(model, 'sym_z')
 %		sim_model.set('sym_z', model.sym_z);
 %	end
-	sim_model.set('dim_nx', model.nx);
-	sim_model.set('dim_nu', model.nu);
-%	sim_model.set('nz', model.nz);
 end
 
 %sim_model.model_struct

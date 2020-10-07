@@ -138,20 +138,6 @@ ocp_model = acados_ocp_model();
 ocp_model.set('name', model_name);
 ocp_model.set('T', T);
 
-% dims
-ocp_model.set('dim_nx', nx);
-ocp_model.set('dim_nu', nu);
-if (strcmp(cost_type, 'linear_ls'))
-	ocp_model.set('dim_ny', ny);
-	ocp_model.set('dim_ny_e', ny_e);
-end
-ocp_model.set('dim_nbx', nbx);
-ocp_model.set('dim_nbu', nbu);
-ocp_model.set('dim_ng', ng);
-ocp_model.set('dim_ng_e', ng_e);
-ocp_model.set('dim_nh', nh);
-ocp_model.set('dim_nh_e', nh_e);
-
 % symbolics
 ocp_model.set('sym_x', model.sym_x);
 if isfield(model, 'sym_u')
@@ -252,9 +238,6 @@ end
 
 %% acados sim model
 sim_model = acados_sim_model();
-% dims
-sim_model.set('dim_nx', nx);
-sim_model.set('dim_nu', nu);
 % symbolics
 sim_model.set('sym_x', model.sym_x);
 if isfield(model, 'sym_u')

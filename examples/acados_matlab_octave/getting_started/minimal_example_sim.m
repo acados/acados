@@ -64,8 +64,6 @@ sim_model.set('sym_x', model.sym_x);
 if isfield(model, 'sym_u')
     sim_model.set('sym_u', model.sym_u);
 end
-sim_model.set('dim_nx', nx);
-sim_model.set('dim_nu', nu);
 
 % explit integrator (erk) take explicit ODE expression
 if (strcmp(method, 'erk'))

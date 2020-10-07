@@ -34,15 +34,11 @@
 %% example of closed loop simulation
 clear all
 
-
-
 % check that env.sh has been run
 env_run = getenv('ENV_RUN');
 if (~strcmp(env_run, 'true'))
 	error('env.sh has not been sourced! Before executing this example, run: source env.sh');
 end
-
-
 
 %% handy arguments
 compile_interface = 'auto';
@@ -83,13 +79,11 @@ ocp_sim_method_num_steps = 2;
 ocp_cost_type = 'linear_ls';
 
 
-
 %% create model entries
 nfm = 4;    % number of free masses
 nm = nfm+1; % number of masses
 model = masses_chain_model(nfm);
 wall = -0.01;
-
 
 
 % dims
@@ -101,7 +95,6 @@ ny_e = nx; % number of outputs in mayer term
 nbx = nfm;
 nbu = nu;
 ng = 0;
-ng_e = 0;
 nh = 0;
 nh_e = 0;
 
@@ -125,25 +118,11 @@ lbu = -1.0*ones(nbu, 1);
 ubu =  1.0*ones(nbu, 1);
 
 
-
 %% acados ocp model
 ocp_model = acados_ocp_model();
 % dims
 ocp_model.set('T', T);
-ocp_model.set('dim_nx', nx);
-ocp_model.set('dim_nu', nu);
-ocp_model.set('dim_ny', ny);
-ocp_model.set('dim_ny_e', ny_e);
-if (ng>0)
-	ocp_model.set('dim_ng', ng);
-	ocp_model.set('dim_ng_e', ng_e);
-elseif (nh>0)
-	ocp_model.set('dim_nh', nh);
-	ocp_model.set('dim_nh_e', nh_e);
-else
-	ocp_model.set('dim_nbx', nbx);
-	ocp_model.set('dim_nbu', nbu);
-end
+
 % symbolics
 ocp_model.set('sym_x', model.sym_x);
 if isfield(model, 'sym_u')
@@ -227,24 +206,14 @@ ocp_opts.set('sim_method', ocp_sim_method);
 ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', ocp_sim_method_num_steps);
 
-%ocp_opts.opts_struct
-
-
 
 %% acados ocp
 % create ocp
 ocp = acados_ocp(ocp_model, ocp_opts);
-%ocp
-%ocp.C_ocp
-%ocp.C_ocp_ext_fun
-
 
 
 %% acados sim model
 sim_model = acados_sim_model();
-% dims
-sim_model.set('dim_nx', nx);
-sim_model.set('dim_nu', nu);
 % symbolics
 sim_model.set('sym_x', model.sym_x);
 if isfield(model, 'sym_u')
@@ -263,8 +232,6 @@ else % irk
 	sim_model.set('dyn_expr_f', model.expr_f_impl);
 end
 
-%sim_model.model_struct
-
 
 
 %% acados sim opts
@@ -275,10 +242,6 @@ sim_opts.set('num_stages', sim_num_stages);
 sim_opts.set('num_steps', sim_num_steps);
 sim_opts.set('method', sim_method);
 sim_opts.set('sens_forw', sim_sens_forw);
-
-%sim_opts.opts_struct
-
-
 
 %% acados sim
 % create sim

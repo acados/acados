@@ -132,13 +132,7 @@ for i = 1:3
     %% acados ocp model
     ocp_model = acados_ocp_model();
     ocp_model.set('name', model_name);
-    % dims
     ocp_model.set('T', T);
-    ocp_model.set('dim_nx', nx);
-    ocp_model.set('dim_nu', nu);
-    ocp_model.set('dim_nz', nz);
-    %constr
-    ocp_model.set('dim_nbu', nbu);
     
     % symbolics
     ocp_model.set('sym_x', model.sym_x);
@@ -171,7 +165,6 @@ for i = 1:3
     ocp_model.set('constr_x0', x0);
     
     nh = length(model.expr_h);
-    ocp_model.set('dim_nh', nh);
     ocp_model.set('constr_expr_h', model.expr_h);
     ocp_model.set('constr_lh', lh);
     ocp_model.set('constr_uh', uh);
