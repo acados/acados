@@ -61,24 +61,19 @@ def acados_settings(Tf, N, track_file):
     # define constraint
     model_ac.con_h_expr = constraint.expr
 
-    # set dimensions
+    # dimensions
     nx = model.x.size()[0]
     nu = model.u.size()[0]
     ny = nx + nu
     ny_e = nx
 
-    ocp.dims.nx = nx
-    ocp.dims.np = 0
-    ocp.dims.ny = ny
-    ocp.dims.ny_e = ny_e
-    ocp.dims.nbx = 1
-    ocp.dims.nsbx = 1
-    ocp.dims.nbu = nu
-    ocp.dims.nu = nu
+    nsbx = 1
+    nh = constraint.expr.shape[0]
+    nsh = nh
+    ns = nsh + nsbx
+
+    # discretization
     ocp.dims.N = N
-    ocp.dims.nh = constraint.expr.shape[0]
-    ocp.dims.nsh = ocp.dims.nh
-    ocp.dims.ns = ocp.dims.nsh + ocp.dims.nsbx
 
     # set cost
     Q = np.diag([ 1e-1, 1e-8, 1e-8, 1e-8, 1e-3, 5e-3 ])
@@ -109,10 +104,10 @@ def acados_settings(Tf, N, track_file):
     Vx_e[:nx, :nx] = np.eye(nx)
     ocp.cost.Vx_e = Vx_e
 
-    ocp.cost.zl = 100 * np.ones((ocp.dims.ns,))
-    ocp.cost.zu = 100 * np.ones((ocp.dims.ns,))
-    ocp.cost.Zl = 1 * np.ones((ocp.dims.ns,))
-    ocp.cost.Zu = 1 * np.ones((ocp.dims.ns,))
+    ocp.cost.zl = 100 * np.ones((ns,))
+    ocp.cost.zu = 100 * np.ones((ns,))
+    ocp.cost.Zl = 1 * np.ones((ns,))
+    ocp.cost.Zu = 1 * np.ones((ns,))
 
     # set intial references
     ocp.cost.yref = np.array([1, 0, 0, 0, 0, 0, 0, 0])
@@ -126,9 +121,9 @@ def acados_settings(Tf, N, track_file):
     ocp.constraints.ubu = np.array([model.dthrottle_max, model.ddelta_max])
     ocp.constraints.idxbu = np.array([0, 1])
 
-    ocp.constraints.lsbx = np.zeros([ocp.dims.nsbx])
-    ocp.constraints.usbx = np.zeros([ocp.dims.nsbx])
-    ocp.constraints.idxsbx = np.array(range(ocp.dims.nsbx))
+    ocp.constraints.lsbx = np.zeros([nsbx])
+    ocp.constraints.usbx = np.zeros([nsbx])
+    ocp.constraints.idxsbx = np.array(range(nsbx))
 
     ocp.constraints.lh = np.array(
         [
@@ -148,9 +143,9 @@ def acados_settings(Tf, N, track_file):
             model.delta_max,
         ]
     )
-    ocp.constraints.lsh = np.zeros(ocp.dims.nsh)
-    ocp.constraints.ush = np.zeros(ocp.dims.nsh)
-    ocp.constraints.idxsh = np.array(range(ocp.dims.nsh))
+    ocp.constraints.lsh = np.zeros(nsh)
+    ocp.constraints.ush = np.zeros(nsh)
+    ocp.constraints.idxsh = np.array(range(nsh))
 
     # set intial condition
     ocp.constraints.x0 = model.x0
