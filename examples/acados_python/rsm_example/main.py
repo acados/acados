@@ -33,7 +33,6 @@
 
 from acados_template import *
 import numpy as nmp
-from ctypes import *
 import matplotlib
 import matplotlib.pyplot as plt
 import scipy.linalg
@@ -84,8 +83,8 @@ Rs      = 0.4
 u_d_ref = Rs*i_d_ref - w_val*psi_q_ref
 u_q_ref = Rs*i_q_ref + w_val*psi_d_ref
 
-def export_rsm_model():
 
+def export_rsm_model():
     model_name = 'rsm'
 
     # constants
@@ -206,41 +205,17 @@ if FORMULATION == 2:
 Ts  = 0.0008
 # Ts  = 0.0004
 
-nx  = model.x.size()[0]
-nu  = model.u.size()[0]
-nz  = model.z.size()[0]
-np  = model.p.size()[0]
-ny  = nu + nx
+nx = model.x.size()[0]
+nu = model.u.size()[0]
+nz = model.z.size()[0]
+np = model.p.size()[0]
+ny = nu + nx
 ny_e = nx
-N   = 2
-Tf  = N*Ts
+N = 2
+Tf = N*Ts
 
-# set dimensions
-ocp.dims.nx   = nx
-ocp.dims.nz   = nz
-ocp.dims.ny   = ny
-ocp.dims.ny_e  = ny_e
-ocp.dims.nbx  = 0
-ocp.dims.nbu  = 1
-
-if FORMULATION == 0:
-    ocp.dims.nbu  = 1
-    ocp.dims.ng   = 2
-
-if FORMULATION == 1:
-    ocp.dims.ng  = 0
-    ocp.dims.nh  = 1
-
-if FORMULATION == 2:
-    ocp.dims.ng   = 2
-    ocp.dims.nr   = 2
-    ocp.dims.nphi = 1
-
-ocp.dims.ng_e  = 0
-ocp.dims.nbx_e = 0
-ocp.dims.nu   = nu
-ocp.dims.np   = np
-ocp.dims.N    = N
+# set number of shooting intervals
+ocp.dims.N = N
 
 # set cost module
 Q = nmp.eye(nx)
@@ -338,20 +313,7 @@ ocp.solver_options.nlp_solver_type = 'SQP_RTI'
 
 file_name = 'acados_ocp.json'
 
-if CODE_GEN == 1:
-    if FORMULATION == 0:
-        acados_solver = AcadosOcpSolver(ocp, json_file = file_name)
-    if FORMULATION == 1:
-        acados_solver = AcadosOcpSolver(ocp, json_file = file_name)
-    if FORMULATION == 2:
-        acados_solver = AcadosOcpSolver(ocp, json_file = file_name)
-
-if COMPILE == 1:
-    # make 
-    os.chdir('c_generated_code')
-    os.system('make clean')
-    os.system('make ocp_shared_lib')
-    os.chdir('..')
+acados_solver = AcadosOcpSolver(ocp, json_file = file_name)
 
 # closed loop simulation TODO(add proper simulation)
 Nsim = 100

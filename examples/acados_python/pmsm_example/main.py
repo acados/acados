@@ -230,28 +230,7 @@ Tf = N*Ts
 
 # set ocp_nlp_dimensions
 ocp.dims.N = N
-
 # NOTE: all dimensions but N are now detected by the interface.
-# if FORMULATION == 0:
-#     ocp.dims.nbu = 0
-#     ocp.dims.ng = 3
-#     ocp.dims.ng_e = 0
-
-# if FORMULATION == 1:
-#     ocp.dims.nbu = 0
-#     ocp.dims.ng = 3
-#     ocp.dims.ng_e = 3
-#     ocp.dims.nphi  = 2        # 1st torque constraint | 2nd voltage constraint
-#     ocp.dims.nr = 3           # 1st torque constraint | 2nd voltage constraint
-#     ocp.dims.nphi_e = 2       # 1st torque constraint | 2nd terminal set
-#     ocp.dims.nr_e = 3         # 1st torque constraint | 2nd terminal set
-#     ocp.dims.ns = 1
-#     ocp.dims.ns_e = 1
-#     ocp.dims.nsphi = 1
-#     ocp.dims.nsphi_e = 1
-
-# ocp.dims.nbx = 0
-# ocp.dims.nbx_e = 0
 
 
 # set weighting matrices
