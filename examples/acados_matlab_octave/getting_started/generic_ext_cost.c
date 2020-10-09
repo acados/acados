@@ -3,7 +3,9 @@ extern "C" {
 #endif
 
 #include <math.h>
-#include "acados_c/ocp_nlp_interface.h"
+#include "acados/utils/external_function_generic.h"
+#include "blasfeo_d_blas.h"
+#include "blasfeo_d_aux.h"
 
 //void ext_cost(void *ext_fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 void ext_cost(void **in, void **out, void *params)
