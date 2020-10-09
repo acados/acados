@@ -73,17 +73,31 @@ ocp_model.set('sym_xdot', model.sym_xdot);
 ocp_model.set('cost_type', 'ext_cost');
 ocp_model.set('cost_type_e', 'ext_cost');
 
-generic_or_casadi = 1; % 0=generic, 1=casadi
+generic_or_casadi = 0; % 0=generic, 1=casadi, 2=mixed
 if (generic_or_casadi == 0)
-    ocp_model.set('ext_fun_type', 'generic');
+    % Generic stage cost
+    ocp_model.set('ext_fun_type', 'generic');    
     ocp_model.set('cost_source_ext_cost', 'generic_ext_cost.c');
     ocp_model.set('cost_function_ext_cost', 'ext_cost');
+    % Generic terminal cost
+    ocp_model.set('ext_fun_type_e', 'generic');
     ocp_model.set('cost_source_ext_cost_e', 'generic_ext_cost.c');
     ocp_model.set('cost_function_ext_cost_e', 'ext_costN');
-else
+elseif (generic_or_casadi == 1)
+    % Casadi stage cost
     ocp_model.set('ext_fun_type', 'casadi');
     ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
+    % Casadi terminal cost
+    ocp_model.set('ext_fun_type_e', 'casadi');
     ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
+elseif (generic_or_casadi == 2)
+    % Generic stage cost
+    ocp_model.set('ext_fun_type', 'generic');    
+    ocp_model.set('cost_source_ext_cost', 'generic_ext_cost.c');
+    ocp_model.set('cost_function_ext_cost', 'ext_cost');
+    % Casadi terminal cost
+    ocp_model.set('ext_fun_type_e', 'casadi');
+    ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);    
 end
 
 % dynamics
