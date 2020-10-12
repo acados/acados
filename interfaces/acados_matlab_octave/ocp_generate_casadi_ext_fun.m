@@ -186,21 +186,26 @@ for k=1:length(c_files)
 end
 
 % generic external cost
-if (strcmp(model_struct.cost_type, 'ext_cost') && strcmp(model_struct.ext_fun_type, 'generic') && isfield(model_struct, 'cost_source_ext_cost') && isfield(model_struct, 'cost_function_ext_cost'))    
+if (strcmp(model_struct.cost_type, 'ext_cost') && strcmp(model_struct.ext_fun_type, 'generic') &&...
+    isfield(model_struct, 'cost_source_ext_cost') && isfield(model_struct, 'cost_function_ext_cost'))
     c_files_path{end+1} = model_struct.cost_source_ext_cost;        
 end
-if (strcmp(model_struct.cost_type_e, 'ext_cost') && strcmp(model_struct.ext_fun_type_e, 'generic') && isfield(model_struct, 'cost_source_ext_cost_e') && isfield(model_struct, 'cost_function_ext_cost_e'))
+if (strcmp(model_struct.cost_type_e, 'ext_cost') && strcmp(model_struct.ext_fun_type_e, 'generic') &&...
+    isfield(model_struct, 'cost_source_ext_cost_e') && isfield(model_struct, 'cost_function_ext_cost_e'))
     c_files_path{end+1} = model_struct.cost_source_ext_cost_e;        
 end
 
 if ispc
     if useMSVC
-        mbuild(unique(c_files_path{:}), '-output', lib_name, ' ', acados_include, ' ', blasfeo_include, ' CFLAGS="$CFLAGS"', 'LINKFLAGS=$LINKFLAGS /DLL', ['LDEXT=', ldext]);
+        mbuild(unique(c_files_path{:}), '-output', lib_name, ' ', acados_include,...
+         ' ', blasfeo_include, ' CFLAGS="$CFLAGS"', 'LINKFLAGS=$LINKFLAGS /DLL', ['LDEXT=', ldext]);
     else
-        mbuild(unique(c_files_path{:}), '-output', lib_name, ' ', acados_include, ' ', blasfeo_include, ' CFLAGS="$CFLAGS"', 'LDTYPE="-shared"', ['LDEXT=', ldext]);
+        mbuild(unique(c_files_path{:}), '-output', lib_name, ' ', acados_include,...
+         ' ', blasfeo_include, ' CFLAGS="$CFLAGS"', 'LDTYPE="-shared"', ['LDEXT=', ldext]);
     end
 else
-    system(['gcc -O2 -fPIC -shared ', acados_include, ' ', blasfeo_include, ' ', strjoin(unique(c_files_path), ' '), ' -o ', [lib_name, ldext]]);
+    system(['gcc -O2 -fPIC -shared ', acados_include, ' ', blasfeo_include,...
+       ' ', strjoin(unique(c_files_path), ' '), ' -o ', [lib_name, ldext]]);
 end
 
 movefile([lib_name, ldext], fullfile(opts_struct.output_dir, [lib_name, ldext]));
