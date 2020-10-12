@@ -480,7 +480,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else if (!strcmp(field, "p"))
     {
         // mexPrintf("ocp_set p: nrhs %d \n", nrhs);
-        
         // loop over number of external functions;
         int struct_size = mxGetNumberOfFields( C_ext_fun_pointers );
         for (int ii=0; ii<struct_size; ii++)
@@ -493,11 +492,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             int Nf_sum = 0;
             // loop over number of phases
             for (int jj=0; jj<Nf; jj++)
-            {               
+            {
                 char * type;
-                if (jj == 0) {
+                // NOTE: assume 2 phases!
+                if (jj == 0)
+                {
                     type = ext_fun_type;
-                } else {
+                }
+                else
+                {
                     type = ext_fun_type_e;
                 }
 
@@ -562,7 +565,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 else
                 {
                     MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "ext_fun_type", type, "casadi, generic");
-                }                
+                }
             }
         }
     }

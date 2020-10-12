@@ -278,7 +278,7 @@ classdef acados_ocp < handle
             if ~isempty(obj.C_ocp_ext_fun)
                 ocp_destroy_ext_fun(obj.model_struct, obj.C_ocp, obj.C_ocp_ext_fun);
             end
-            if ~isempty(obj.C_ocp) 
+            if ~isempty(obj.C_ocp)
                 ocp_destroy(obj.C_ocp);
             end
         end
