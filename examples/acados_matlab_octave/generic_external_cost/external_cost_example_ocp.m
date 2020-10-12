@@ -37,8 +37,6 @@ clear all
 model_path = fullfile(pwd,'..','pendulum_on_cart_model');
 addpath(model_path)
 
-check_acados_requirements()
-
 %% discretization
 N = 20;
 T = 1; % time horizon length
