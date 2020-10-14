@@ -1262,7 +1262,7 @@ class AcadosOcpConstraints:
 
     @x0.setter
     def x0(self, x0):
-        if type(x0) == np.ndarray:
+        if isinstance(x0, np.ndarray):
             self.__lbx_0 = x0
             self.__ubx_0 = x0
             self.__idxbx_0 = np.arange(x0.size)
