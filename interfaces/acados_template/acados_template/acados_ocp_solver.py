@@ -636,6 +636,9 @@ def ocp_render_templates(acados_ocp, json_file):
         render_template(in_file, out_file, template_dir, json_path)
 
 
+def remove_x0_elimination(acados_ocp):
+    acados_ocp.constraints.idxbxe_0 = np.zeros((0,))
+    acados_ocp.dims.nbxe_0 = 0
 
 
 class AcadosOcpSolver:
@@ -651,8 +654,12 @@ class AcadosOcpSolver:
         # make dims consistent
         make_ocp_dims_consistent(acados_ocp)
 
+        # module dependent post processing
         if acados_ocp.solver_options.integrator_type == 'GNSF':
             set_up_imported_gnsf_model(acados_ocp)
+
+        if acados_ocp.solver_options.qp_solver == 'PARTIAL_CONDENSING_QPDUNES':
+            remove_x0_elimination(acados_ocp)
 
         # set integrator time automatically
         acados_ocp.solver_options.Tsim = acados_ocp.solver_options.time_steps[0]
