@@ -544,7 +544,7 @@ int ocp_qp_qpdunes_workspace_calculate_size(void *config_, ocp_qp_dims *dims, vo
 
 
 
-static void cast_workspace(ocp_qp_qpdunes_workspace *work, ocp_qp_qpdunes_memory *mem)
+static void ocp_qp_qpdunes_cast_workspace(ocp_qp_qpdunes_workspace *work, ocp_qp_qpdunes_memory *mem)
 {
     char *c_ptr = (char *) work;
     c_ptr += sizeof(ocp_qp_qpdunes_workspace);
@@ -848,7 +848,7 @@ int ocp_qp_qpdunes(void *config_, ocp_qp_in *in, ocp_qp_out *out, void *opts_, v
     ocp_qp_qpdunes_workspace *work = (ocp_qp_qpdunes_workspace *) work_;
 
     acados_tic(&interface_timer);
-    cast_workspace(work, mem);
+    ocp_qp_qpdunes_cast_workspace(work, mem);
     return_t qpdunes_status = update_memory(in, opts, mem, work);
     if (qpdunes_status != QPDUNES_OK) return qpdunes_status;
     info->interface_time = acados_toc(&interface_timer);
@@ -870,8 +870,34 @@ int ocp_qp_qpdunes(void *config_, ocp_qp_in *in, ocp_qp_out *out, void *opts_, v
     info->t_computed = 1;
 
     int acados_status = qpdunes_status;
-    if (qpdunes_status == QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND) acados_status = ACADOS_SUCCESS;
-    if (qpdunes_status == QPDUNES_ERR_ITERATION_LIMIT_REACHED) acados_status = ACADOS_MAXITER;
+    if ( qpdunes_status == QPDUNES_OK ||
+         qpdunes_status == QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND )
+    {
+        acados_status = ACADOS_SUCCESS;
+    }
+    else if (qpdunes_status == QPDUNES_SUCC_SUBOPTIMAL_TERMINATION)
+    {
+        printf("\nqpDUNES: Success, terminated with suboptimal soluation.\n");
+    }
+    else if (qpdunes_status == QPDUNES_ERR_ITERATION_LIMIT_REACHED)
+    {
+        printf("\nqpDUNES: reached maximum number of iterations.\n");
+        acados_status = ACADOS_MAXITER;
+    }
+    else if (qpdunes_status == QPDUNES_ERR_DIVISION_BY_ZERO)
+    {
+        printf("\nqpDUNES: error, division by zero.\n");
+        // NOTE(oj): qpDUNES seems quite conservative here.
+        printf("NOTE: the reason might be a not well conditioned hessian.\n");
+        printf("qpDUNES seems to have really strong requirements with this regard...\n");
+        acados_status = ACADOS_QP_FAILURE;
+    }
+    else
+    {
+        printf("\nqpDUNES: returned error not handled by acados.\n");
+        acados_status = ACADOS_QP_FAILURE;
+    }
+
     return acados_status;
 }
 
