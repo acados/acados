@@ -58,7 +58,7 @@ else()
     set(BUILD_SHARED_LIBS ON CACHE STRING "Build shared libraries")
 endif()
 
-option(ACADOS_WITH_OPENMP "OpenMP Parallelization" ON)
+option(ACADOS_WITH_OPENMP "OpenMP Parallelization" OFF)
 
 # Additional targets
 option(ACADOS_UNIT_TESTS "Compile Unit tests" OFF)
