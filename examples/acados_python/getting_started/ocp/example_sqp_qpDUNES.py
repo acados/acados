@@ -58,8 +58,9 @@ N = 20
 ocp.dims.N = N
 
 # set cost
-Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
-R = 2*np.diag([1e-2])
+# NOTE: qpDUNES requires very similar values on diag of hessian.
+Q = 2*np.diag([1e3, 1e3, 1e-0, 1e-0])
+R = 2*np.diag([1e-0])
 
 ocp.cost.W_e = Q
 ocp.cost.W = scipy.linalg.block_diag(Q, R)
@@ -88,7 +89,7 @@ ocp.constraints.idxbu = np.array([0])
 ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
 # set options
-ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
+ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_QPDUNES' # FULL_CONDENSING_QPOASES, PARTIAL_CONDENSING_HPIPM, PARTIAL_CONDENSING_OSQP, PARTIAL_CONDENSING_OSQP
 ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
 ocp.solver_options.integrator_type = 'ERK'
 # ocp.solver_options.print_level = 1
