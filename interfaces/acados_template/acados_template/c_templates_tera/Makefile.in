@@ -99,10 +99,20 @@
 	{%- set model_external_shared_lib_name = solver_options.model_external_shared_lib_name %}
 {%- endif %}
 
+{# acados flags #}
 ACADOS_FLAGS = -fPIC -std=c99 #-fno-diagnostics-show-line-numbers -g
 {%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
 ACADOS_FLAGS += -DACADOS_WITH_QPOASES
 {%- endif %}
+{%- if qp_solver == "PARTIAL_CONDENSING_OSQP" %}
+ACADOS_FLAGS += -DACADOS_WITH_OSQP
+{%- endif %}
+{%- if qp_solver == "PARTIAL_CONDENSING_QPDUNES" %}
+ACADOS_FLAGS += -DACADOS_WITH_QPDUNES
+{%- endif %}
+# # Debugging
+# ACADOS_FLAGS += -g3
+
 MODEL_OBJ=
 {%- if  solver_options.integrator_type == "ERK" %}
 MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_expl_ode_fun.o
