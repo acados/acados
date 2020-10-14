@@ -296,13 +296,26 @@ void *ocp_qp_qpdunes_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_
     mem->nz = nx + nu;
     mem->nDmax = get_maximum_number_of_inequality_constraints(dims);
 
-    // Check for constant dimensions
-    // TODO(roversch): Move this up the call stack?
+    // Check on dimensions
     for (int kk = 1; kk < N; kk++)
     {
-        if (dims->nx[kk] != nx || dims->nu[kk] != nu) return NULL;
+        if (dims->nx[kk] != nx || dims->nu[kk] != nu)
+        {
+            printf("\nocp_qp_qpdunes_memory_assign: nx and nu must be constant for intermediate stages!\n");
+            printf("\tGot nx[0] = %d, nu[0] = %d, at stage %d: nx = %d, nu = %d!\n", nx, nu, kk, dims->nx[kk], dims->nu[kk]);
+            exit(1);
+        }
     }
-    if (dims->nx[N] != nx || dims->nu[N] != 0) return NULL;
+    if (dims->nx[N] != nx)
+    {
+        printf("\nocp_qp_qpdunes_memory_assign: nx must be constant for intermediate + terminal stages!\n");
+        exit(1);
+    }
+    if (dims->nu[N] != 0)
+    {
+        printf("\nocp_qp_qpdunes_memory_assign: nu must be zero for terminal stage!\n");
+        exit(1);
+    }
 
     if (opts->stageQpSolver == QPDUNES_WITH_QPOASES)
     {
@@ -333,7 +346,7 @@ void *ocp_qp_qpdunes_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_
 
 void ocp_qp_qpdunes_memory_get(void *config_, void *mem_, const char *field, void* value)
 {
-    qp_solver_config *config = config_;
+    // qp_solver_config *config = config_;
     ocp_qp_qpdunes_memory *mem = mem_;
 
     if(!strcmp(field, "time_qp_solver_call"))
@@ -787,7 +800,6 @@ static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out, ocp_qp_qpdunes_memory
 
 
 
-// TODO(dimitris): free also qp_in, qp_out, etc and write for all solvers?
 void ocp_qp_qpdunes_free_memory(void *mem_)
 {
     ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *) mem_;
