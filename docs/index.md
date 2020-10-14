@@ -24,5 +24,6 @@ Documentation latest build: |today|
    examples/index
    faq/index
    citing
+   list_of_projects/index
 ```
 
