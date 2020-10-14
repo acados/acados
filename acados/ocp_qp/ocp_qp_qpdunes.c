@@ -228,23 +228,34 @@ void ocp_qp_qpdunes_opts_set(void *config_, void *opts_, const char *field, void
 
     if (!strcmp(field, "tol_stat"))
     {
-        // TODO set solver exit tolerance
+        double *tol = value;
+        // opts->options.stationarityTolerance = *tol;
+        // NOTE: there seems to be a mismatch between stationarity tolarance in qpDUNES and acados.
+        // SQP didnt converge without the factor 1e-1 here.
+        opts->options.stationarityTolerance = 1e-1 * *tol;
     }
     else if (!strcmp(field, "tol_eq"))
     {
-        // TODO set solver exit tolerance
+        double *tol = value;
+        opts->options.equalityTolerance = *tol;
     }
     else if (!strcmp(field, "tol_ineq"))
     {
-        // TODO set solver exit tolerance
+        double *tol = value;
+        opts->options.activenessTolerance = *tol;
     }
     else if (!strcmp(field, "tol_comp"))
     {
-        // TODO set solver exit tolerance
+        // NOTE(oj): I think qpDUNES does not have this, not sure about though.
     }
     else if (!strcmp(field, "warm_start"))
     {
         // TODO set solver warm start
+    }
+    else if (!strcmp(field, "iter_max"))
+    {
+        int *iter_max = value;
+        opts->options.maxIter = *iter_max;
     }
     else
     {
