@@ -538,7 +538,7 @@ class AcadosOcpCost:
 
         cost_types = ('LINEAR_LS', 'NONLINEAR_LS', 'EXTERNAL')
 
-        if type(cost_type) == str and cost_type in cost_types:
+        if cost_type in cost_types:
             self.__cost_type = cost_type
         else:
             raise Exception('Invalid cost_type value. Exiting.')
@@ -656,7 +656,7 @@ class AcadosOcpCost:
     def cost_type_e(self, cost_type_e):
         cost_types = ('LINEAR_LS', 'NONLINEAR_LS', 'EXTERNAL')
 
-        if type(cost_type_e) == str and cost_type_e in cost_types:
+        if cost_type_e in cost_types:
             self.__cost_type_e = cost_type_e
         else:
             raise Exception('Invalid cost_type_e value. Exiting.')
@@ -1206,8 +1206,7 @@ class AcadosOcpConstraints:
     @constr_type.setter
     def constr_type(self, constr_type):
         constr_types = ('BGH', 'BGP')
-
-        if type(constr_type) == str and constr_type in constr_types:
+        if constr_type in constr_types:
             self.__constr_type = constr_type
         else:
             raise Exception('Invalid constr_type value. Possible values are:\n\n' \
@@ -1216,8 +1215,7 @@ class AcadosOcpConstraints:
     @constr_type_e.setter
     def constr_type_e(self, constr_type_e):
         constr_types = ('BGH', 'BGP')
-
-        if type(constr_type_e) == str and constr_type_e in constr_types:
+        if constr_type_e in constr_types:
             self.__constr_type_e = constr_type_e
         else:
             raise Exception('Invalid constr_type_e value. Possible values are:\n\n' \
@@ -1978,8 +1976,7 @@ class AcadosOcpOptions:
     def regularize_method(self, regularize_method):
         regularize_methods = ('NO_REGULARIZE', 'MIRROR', 'PROJECT', \
                                 'PROJECT_REDUC_HESS', 'CONVEXIFY')
-
-        if isinstance(regularize_method, str) and regularize_method in regularize_methods:
+        if regularize_method in regularize_methods:
             self.__regularize_method = regularize_method
         else:
             raise Exception('Invalid regularize_method value. Possible values are:\n\n' \
@@ -1988,8 +1985,7 @@ class AcadosOcpOptions:
     @hessian_approx.setter
     def hessian_approx(self, hessian_approx):
         hessian_approxs = ('GAUSS_NEWTON', 'EXACT')
-
-        if type(hessian_approx) == str and hessian_approx in hessian_approxs:
+        if hessian_approx in hessian_approxs:
             self.__hessian_approx = hessian_approx
         else:
             raise Exception('Invalid hessian_approx value. Possible values are:\n\n' \
@@ -1998,7 +1994,6 @@ class AcadosOcpOptions:
     @integrator_type.setter
     def integrator_type(self, integrator_type):
         integrator_types = ('ERK', 'IRK', 'GNSF', 'DISCRETE')
-
         if integrator_type in integrator_types:
             self.__integrator_type = integrator_type
         else:
@@ -2056,8 +2051,7 @@ class AcadosOcpOptions:
     @nlp_solver_type.setter
     def nlp_solver_type(self, nlp_solver_type):
         nlp_solver_types = ('SQP', 'SQP_RTI')
-
-        if type(nlp_solver_type) == str and nlp_solver_type in nlp_solver_types:
+        if nlp_solver_type in nlp_solver_types:
             self.__nlp_solver_type = nlp_solver_type
         else:
             raise Exception('Invalid nlp_solver_type value. Possible values are:\n\n' \
@@ -2065,7 +2059,6 @@ class AcadosOcpOptions:
 
     @nlp_solver_step_length.setter
     def nlp_solver_step_length(self, nlp_solver_step_length):
-
         if type(nlp_solver_step_length) == float and nlp_solver_step_length > 0:
             self.__nlp_solver_step_length = nlp_solver_step_length
         else:
