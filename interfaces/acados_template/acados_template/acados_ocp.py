@@ -1965,10 +1965,10 @@ class AcadosOcpOptions:
 
     @qp_solver.setter
     def qp_solver(self, qp_solver):
-        qp_solvers = ('PARTIAL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_QPOASES', \
-                'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_HPIPM')
-
-        if isinstance(qp_solver, str) and qp_solver in qp_solvers:
+        qp_solvers = ('PARTIAL_CONDENSING_HPIPM', \
+                'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_HPIPM', \
+                'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP')
+        if qp_solver in qp_solvers:
             self.__qp_solver = qp_solver
         else:
             raise Exception('Invalid qp_solver value. Possible values are:\n\n' \
