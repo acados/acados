@@ -64,6 +64,13 @@ add_test(NAME python_rti_loop_ocp_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/ocp
         python example_sqp_rti_loop.py)
 
+# qpDUNES example
+if(ACADOS_WITH_QPDUNES)
+        add_test(NAME python_qpDUNES_test
+                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/ocp
+                python example_sqp_qpDUNES.py)
+endif()
+
 # MHE examples
 add_test(NAME python_pendulum_mhe_example_minimal
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/mhe
