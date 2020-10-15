@@ -827,6 +827,12 @@ class AcadosOcpConstraints:
         return self.__ubx_0
 
     @property
+    def Jbx_0(self):
+        """:math:`J_{bx,0}` - matrix coefficient for bounds on x0"""
+        print_J_to_idx_note()
+        return self.__idxbx_0
+
+    @property
     def idxbx_0(self):
         """indexes of bounds on x0"""
         return self.__idxbx_0
@@ -1238,6 +1244,13 @@ class AcadosOcpConstraints:
             self.__idxbx_0 = idxbx_0
         else:
             raise Exception('Invalid idxbx_0 value. Exiting.')
+
+    @Jbx_0.setter
+    def Jbx_0(self, Jbx_0):
+        if type(Jbx_0) == np.ndarray:
+            self.__idxbx_0 = J_to_idx(Jbx_0)
+        else:
+            raise Exception('Invalid Jbx_0 value. Exiting.')
 
     @idxbxe_0.setter
     def idxbxe_0(self, idxbxe_0):
