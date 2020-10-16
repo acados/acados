@@ -107,7 +107,7 @@ classdef acados_ocp < handle
                         '/ocp_create.mex'), 'file');
                 else
                     mex_exists = exist( fullfile(obj.opts_struct.output_dir,...
-                        '/ocp_create.mexa64'), 'file');
+                        ['ocp_create.', mexext]), 'file');
                 end
                 % check if mex interface is linked against external libs, like qpOASES,...
                 if mex_exists
