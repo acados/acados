@@ -106,8 +106,10 @@ end
 
 if ismac()
     FLAGS = 'CFLAGS=$CFLAGS -std=c99';
+    LDFLAGS = 'LDFLAGS=$LDFLAGS';
 else
     FLAGS = 'CFLAGS=$CFLAGS -std=c99 -fopenmp';
+    LDFLAGS = 'LDFLAGS=$LDFLAGS -fopenmp';
 end
 
 % remove flag file, if present, before creating a new one
@@ -122,6 +124,8 @@ if with_qp_qpoases
     flag_file = fullfile(opts.output_dir, '_compiled_with_qpoases.txt');
     flagID = fopen(flag_file, 'w');
     fclose(flagID);
+    % additional compilation flag
+    FLAGS = [FLAGS, ' -DACADOS_WITH_QPOASES'];
 end
 % is OSQP?
 with_qp_osqp = ~isempty(strfind(opts.qp_solver, 'osqp'));
@@ -130,6 +134,8 @@ if with_qp_osqp
     flag_file = fullfile(opts.output_dir, '_compiled_with_osqp.txt');
     flagID = fopen(flag_file, 'w');
     fclose(flagID);
+    % additional compilation flag
+    FLAGS = [FLAGS, ' -DACADOS_WITH_OSQP'];
 end
 % is qpDUNES?
 with_qp_qpdunes = ~isempty(strfind(opts.qp_solver, 'qpdunes'));
@@ -146,6 +152,8 @@ if with_qp_hpmpc
     flag_file = fullfile(opts.output_dir, '_compiled_with_hpmpc.txt');
     flagID = fopen(flag_file, 'w');
     fclose(flagID);
+    % additional compilation flag
+    FLAGS = [FLAGS, ' -DACADOS_WITH_HPMPC'];
 end
 
 
@@ -168,20 +176,17 @@ for ii=1:length(mex_files)
         end
     else
         if with_qp_qpoases
-            FLAGS = [FLAGS, ' -DACADOS_WITH_QPOASES'];
-            mex(mex_flags, FLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lqpOASES_e', mex_files{ii})
+            mex(mex_flags, FLAGS, LDFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
+                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lqpOASES_e', mex_files{ii}, '-outdir', opts.output_dir)
         elseif with_qp_hpmpc
-            FLAGS = [FLAGS, ' -DACADOS_WITH_OSQP'];
-            mex(mex_flags, FLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lhpmpc', mex_files{ii})
+            mex(mex_flags, FLAGS, LDFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
+                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lhpmpc', mex_files{ii}, '-outdir', opts.output_dir)
         elseif with_qp_osqp
-            FLAGS = [FLAGS, ' -DACADOS_WITH_OSQP'];
-            mex(mex_flags, FLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-losqp', mex_files{ii})
+            mex(mex_flags, FLAGS, LDFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
+                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-losqp', mex_files{ii}, '-outdir', opts.output_dir)
         else
-            mex(mex_flags, FLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
+            mex(mex_flags, FLAGS, LDFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
+                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii}, '-outdir', opts.output_dir)
         end
     end
 end
@@ -191,13 +196,14 @@ if is_octave()
     if octave_version < 5
         movefile('*.o', opts.output_dir);
     end
+
+    %system(['mv -f *.mexa64 ', opts.output_dir])
+    for k=1:length(mex_names)
+        clear(mex_names{k})
+    %    movefile([mex_names{k}, '.', mexext], opts.output_dir);
+        [status, message] = copyfile([mex_names{k}, '.', mexext], opts.output_dir);
+        delete([mex_names{k}, '.', mexext]);
+    end
 end
 
-%system(['mv -f *.mexa64 ', opts.output_dir])
-for k=1:length(mex_names)
-    clear(mex_names{k})
-%    movefile([mex_names{k}, '.', mexext], opts.output_dir);
-    [status, message] = copyfile([mex_names{k}, '.', mexext], opts.output_dir);
-    delete([mex_names{k}, '.', mexext]);
-end
 
