@@ -182,7 +182,8 @@ if ispc
     if useMSVC
         mbuild(c_files_path{:}, '-output', lib_name, 'CFLAGS="$CFLAGS"', 'LINKFLAGS=$LINKFLAGS /DLL', ['LDEXT=', ldext]);
     else
-        mbuild(c_files_path{:}, '-output', lib_name, 'CFLAGS="$CFLAGS"', 'LDTYPE="-shared"', ['LDEXT=', ldext]);
+        % mbuild(c_files_path{:}, '-output', lib_name, 'CFLAGS="$CFLAGS"', 'LDTYPE="-shared"', ['LDEXT=', ldext]);
+        system(['gcc -O2 -fPIC -shared ', strjoin(c_files_path, ' '), ' -o ', [lib_name, ldext]]);
     end
 else
     system(['gcc -O2 -fPIC -shared ', strjoin(c_files_path, ' '), ' -o ', [lib_name, ldext]]);
