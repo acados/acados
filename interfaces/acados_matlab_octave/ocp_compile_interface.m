@@ -110,6 +110,11 @@ else
     FLAGS = 'CFLAGS=$CFLAGS -std=c99 -fopenmp';
 end
 
+% remove flag file, if present, before creating a new one
+flag_files = dir(fullfile(opts.output_dir,'_compiled*'));
+if ~isempty(flag_files)
+    delete(fullfile(opts.output_dir,flag_files(1).name));
+end
 % is qpOASES?
 with_qp_qpoases = ~isempty(strfind(opts.qp_solver, 'qpoases'));
 if with_qp_qpoases
@@ -129,8 +134,16 @@ end
 % is HPMPC?
 with_qp_hpmpc = ~isempty(strfind(opts.qp_solver, 'hpmpc'));
 if with_qp_hpmpc
-    % flag file to remember if compiled with OSQP
+    % flag file to remember if compiled with HPMPC
     flag_file = fullfile(opts.output_dir, '_compiled_with_hpmpc.txt');
+    flagID = fopen(flag_file, 'w');
+    fclose(flagID);
+end
+% is HPIPM?
+with_qp_hpipm = ~isempty(strfind(opts.qp_solver, 'hpipm'));
+if with_qp_hpipm
+    % flag file to remember if compiled with HPIPM
+    flag_file = fullfile(opts.output_dir, '_compiled_with_hpipm.txt');
     flagID = fopen(flag_file, 'w');
     fclose(flagID);
 end
