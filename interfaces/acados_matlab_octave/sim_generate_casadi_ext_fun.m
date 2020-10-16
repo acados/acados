@@ -99,7 +99,8 @@ for k=1:length(c_files)
 end
 
 if ispc
-    mbuild(c_files_path{:}, '-output', lib_name, 'CFLAGS="$CFLAGS"', 'LDTYPE="-shared"', ['LDEXT=', ldext]);
+    % mbuild(c_files_path{:}, '-output', lib_name, 'CFLAGS="$CFLAGS"', 'LDTYPE="-shared"', ['LDEXT=', ldext]);
+    system(['gcc -O2 -fPIC -shared ', strjoin(c_files_path, ' '), ' -o ', [lib_name, ldext]]);
 else
     system(['gcc -O2 -fPIC -shared ', strjoin(c_files_path, ' '), ' -o ', [lib_name, ldext]]);
 end
