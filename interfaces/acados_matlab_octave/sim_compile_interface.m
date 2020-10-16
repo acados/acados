@@ -99,7 +99,7 @@ for ii=1:length(mex_files)
             FLAGS = 'CFLAGS=$CFLAGS -std=c99 -fopenmp';
         end
         mex(mex_flags, FLAGS, acados_include, acados_interfaces_include, acados_lib_path, ...
-             '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
+             '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii}, '-outdir', opts.output_dir)
     end
 end
 
@@ -109,14 +109,14 @@ if is_octave()
     if octave_version < 5
         movefile('*.o', opts.output_dir);
     end
-end
 
-%system(['mv -f *.mexa64 ', opts.output_dir])
-for k=1:length(mex_names)
-    clear(mex_names{k})
-%    [status, message] = movefile([mex_names{k}, '.', mexext], opts.output_dir)
-    [status, message] = copyfile([mex_names{k}, '.', mexext], opts.output_dir);
-    delete([mex_names{k}, '.', mexext]);
+    %system(['mv -f *.mexa64 ', opts.output_dir])
+    for k=1:length(mex_names)
+        clear(mex_names{k})
+    %    [status, message] = movefile([mex_names{k}, '.', mexext], opts.output_dir)
+        [status, message] = copyfile([mex_names{k}, '.', mexext], opts.output_dir);
+        delete([mex_names{k}, '.', mexext]);
+    end
 end
 
 end

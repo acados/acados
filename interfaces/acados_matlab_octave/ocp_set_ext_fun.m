@@ -501,21 +501,26 @@ if (strcmp(opts_struct.compile_interface, 'true') || strcmp(opts_struct.codgen_m
         else
             if ~ismac()
                 FLAGS = 'CFLAGS=$CFLAGS -std=c99 -fopenmp';
+                LDFLAGS = 'LDFLAGS=$LDFLAGS -fopenmp';
             else
                 FLAGS = 'CFLAGS=$CFLAGS -std=c99';
+                LDFLAGS = 'LDFLAGS=$LDFLAGS';
             end
-            mex(mex_flags, FLAGS, ['-DSETTER=', setter{ii}],...
+            mex(mex_flags, FLAGS, LDFLAGS, ['-DSETTER=', setter{ii}],...
                 ['-DSET_FIELD=', set_fields{ii}], ['-DMEX_FIELD=', mex_fields{ii}],...
                 ['-DFUN_NAME=', fun_names{ii}], ['-DPHASE=', num2str(phase{ii})],...
                 ['-DN0=', num2str(phase_start{ii})], ['-DN1=', num2str(phase_end{ii})],...
                 acados_include, acados_interfaces_include, external_include, blasfeo_include,...
                 hpipm_include, acados_lib_path, acados_matlab_octave_lib_path, model_lib_path,...
-                '-lacados', '-lhpipm', '-lblasfeo', ['-l', model_name], mex_files{1});
+                '-lacados', '-lhpipm', '-lblasfeo', ['-l', model_name], mex_files{1},...
+                '-output', fullfile(opts_struct.output_dir, [mex_names{ii}, '.', mexext]));
             disable_last_warning();
         end
         
 %        clear(mex_names{ii})
-        movefile(['ocp_set_ext_fun_', ext_fun_type, '.', mexext], fullfile(opts_struct.output_dir, [mex_names{ii}, '.', mexext]));
+        if is_octave()
+            movefile(['ocp_set_ext_fun_', ext_fun_type, '.', mexext], fullfile(opts_struct.output_dir, [mex_names{ii}, '.', mexext]));
+        end
     end
     
     if is_octave()
