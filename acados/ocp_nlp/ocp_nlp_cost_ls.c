@@ -764,21 +764,16 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
     if (nz > 0)
     { // eliminate algebraic variables and update Cyt and y_ref
 
-        // copy Cyt into Cyt_tilde
-        blasfeo_dgecp(nu + nx, ny, &model->Cyt, 0, 0, &work->Cyt_tilde, 0, 0);
-        // copy y_ref into y_ref_tilde
-        blasfeo_dveccp(ny, &model->y_ref, 0, &work->y_ref_tilde, 0);
-
-        // update Cyt: Cyt_tilde = Cyt + dzdux_tran*Vz^T
+        // Cyt_tilde = Cyt + dzdux_tran*Vz^T
         blasfeo_dgemm_nt(nu + nx, ny, nz, 1.0, memory->dzdux_tran, 0, 0,
-                &model->Vz, 0, 0, 1.0, &work->Cyt_tilde, 0, 0, &work->Cyt_tilde, 0, 0);
+                &model->Vz, 0, 0, 1.0, &model->Cyt, 0, 0, &work->Cyt_tilde, 0, 0);
 
-        // update y_ref: y_ref_tilde = y_ref + Vz*(dzdx*x + dzdu*u - z)
+        // tmp_nz = (dzdx*x + dzdu*u - z)
         blasfeo_dgemv_t(nx + nu, nz, 1.0, memory->dzdux_tran,
                 0, 0, memory->ux, 0, -1.0, memory->z_alg, 0, &work->tmp_nz, 0);
-
+        // y_ref_tilde = y_ref + Vz * tmp_nz
         blasfeo_dgemv_n(ny, nz, +1.0, &model->Vz,
-                0, 0, &work->tmp_nz, 0, 1.0, &work->y_ref_tilde, 0, &work->y_ref_tilde, 0);
+                0, 0, &work->tmp_nz, 0, 1.0, &model->y_ref, 0, &work->y_ref_tilde, 0);
 
         // tmp_nv_ny = W_chol * Cyt_tilde
         blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0,
@@ -866,16 +861,27 @@ void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims_, void *model_, void 
     // TODO should this overwrite memory->{res,fun,...} (as now) or not ????
     if (nz > 0)
     {
-        // update y_ref: y_ref_tilde = y_ref + Vz*(dzdx*x + dzdu*u - z)
+        // update Cyt: Cyt_tilde = Cyt + dzdux_tran*Vz^T
+        blasfeo_dgemm_nt(nu + nx, ny, nz, 1.0, memory->dzdux_tran, 0, 0,
+                &model->Vz, 0, 0, 1.0, &model->Cyt, 0, 0, &work->Cyt_tilde, 0, 0);
+
+        // tmp_nz = (dzdx*x + dzdu*u - z)
         blasfeo_dgemv_t(nx + nu, nz, 1.0, memory->dzdux_tran,
                 0, 0, memory->ux, 0, -1.0, memory->z_alg, 0, &work->tmp_nz, 0);
-
+        // y_ref_tilde = y_ref + Vz * tmp_nz
         blasfeo_dgemv_n(ny, nz, +1.0, &model->Vz,
-                0, 0, &work->tmp_nz, 0, 1.0, &work->y_ref_tilde, 0, &work->y_ref_tilde, 0);
+                0, 0, &work->tmp_nz, 0, 1.0, &model->y_ref, 0, &work->y_ref_tilde, 0);
 
-        // res = \tilde{V}_x * x + \tilde{V}_u * u - \tilde{y}_ref
+        // res = \tilde{V}_x * x + \tilde{V}_u * u - y_ref_tilde
         blasfeo_dgemv_t(nu + nx, ny, 1.0, &work->Cyt_tilde, 0, 0, memory->ux,
                 0, -1.0, &work->y_ref_tilde, 0, &memory->res, 0);
+
+        // printf("ls cost: Cyt_tilde\n");
+        // blasfeo_print_exp_dmat(nu + nx, ny, &work->Cyt_tilde, 0, 0);
+        // printf("ls cost: z\n");
+        // blasfeo_print_exp_dvec(nz, memory->z_alg, 0);
+        // printf("ls cost: dzdux_tran\n");
+        // blasfeo_print_exp_dmat(nx + nu, nz, memory->dzdux_tran, 0, 0);
     }
     else
     {

@@ -55,18 +55,15 @@ def generate_c_code_discrete_dynamics( model, opts ):
     nx = x.size()[0]
 
 
-    if isinstance(phi, casadi.SX):
-        isSX = True
-    elif isinstance(phi, casadi.MX):
-        isSX = False
+    if isinstance(phi, casadi.MX):
+        symbol = MX.sym
+    elif isinstance(phi, casadi.SX):
+        symbol = SX.sym
     else:
         Exception("generate_c_code_disc_dyn: disc_dyn_expr must be a CasADi expression, you have type: {}".format(type(phi)))
 
     # assume nx1 = nx !!!
-    if isSX:
-        lam = SX.sym('lam', nx, 1)
-    else:
-        lam = MX.sym('lam', nx, 1)
+    lam = symbol('lam', nx, 1)
 
     # generate jacobians
     ux = vertcat(u,x)

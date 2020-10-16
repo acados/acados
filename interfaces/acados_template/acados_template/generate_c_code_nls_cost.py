@@ -46,9 +46,17 @@ def generate_c_code_nls_cost( model, cost_name, is_terminal ):
         msg += 'Version {} currently in use.'.format(casadi_version)
         raise Exception(msg)
 
+    x = model.x
+    p = model.p
+
+    if isinstance(x, casadi.MX):
+        symbol = MX.sym
+    else:
+        symbol = SX.sym
+
     if is_terminal:
         middle_name = '_cost_y_e'
-        u = SX.sym('u', 0, 0)
+        u = symbol('u', 0, 0)
         cost_expr = model.cost_y_expr_e
 
     else:
@@ -56,8 +64,6 @@ def generate_c_code_nls_cost( model, cost_name, is_terminal ):
         u = model.u
         cost_expr = model.cost_y_expr
 
-    x = model.x
-    p = model.p
 
     # set up directory
     if not os.path.exists('c_generated_code'):
@@ -75,10 +81,7 @@ def generate_c_code_nls_cost( model, cost_name, is_terminal ):
 
     ny = casadi_length(cost_expr)
 
-    if isinstance(cost_expr, casadi.SX):
-        y = SX.sym('y', ny, 1)
-    else:
-        y = MX.sym('y', ny, 1)
+    y = symbol('y', ny, 1)
 
     y_adj = jtimes(cost_expr, vertcat(u, x), y, True)
     y_hess = jacobian(y_adj, vertcat(u, x))

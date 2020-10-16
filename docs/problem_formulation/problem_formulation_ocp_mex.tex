@@ -4,6 +4,7 @@
 \usepackage[margin=0.7in]{geometry}
 \usepackage[parfill]{parskip}
 \usepackage[utf8]{inputenc}
+\usepackage{hyperref}
 
 % Related to math
 \usepackage{amsmath,amssymb,amsfonts,amsthm}
@@ -68,7 +69,7 @@
 	 \\
 	% constraints
 	&&&\mathComment{Initial value}\\
-	&\,\,\,\quad \text{s.t.}    &&x(0) - \bar{x}_0 = 0, &&\\
+	&\,\,\,\quad \text{s.t.}    &&\underline{x}_0 \leq J_{\textrm{bx},0}  x(0) \leq \bar{x}_0 , &&\\
 	&&& && \\[-1em]
 	&&&\mathComment{Dynamics}\\
 	%% dynamics
@@ -116,6 +117,13 @@ with
 \item slacks for terminal constraints $ s\Lower\terminal(t) = (s\lowerbx\terminal, s\lowerg\terminal, s\lowerh\terminal) \in \R^{\ns\terminal} $ and $ s\upper\terminal(t) = (s\upperbx\terminal, s\upperg\terminal, s\upperh\terminal) \in \R^{\ns\terminal} $
 \end{itemize}
 
+Some of the following restrictions may apply to matrices in the formulation:
+\begin{description}
+  \item[DIAG] \hfill \\ Diagonal
+  \item[SPUM] \hfill \\ Horizontal slice of a permuted unit matrix
+  \item[SPUME] \hfill \\ Like \textbf{SPUM}, but with empty rows intertwined
+\end{description}
+
 
 \section{Dynamics}
 The function $ f\ind{impl}: \mathbb{R}^{\nx}\times\mathbb{R}^{\nx}\times\mathbb{R}^{\nuu}\times\mathbb{R}^{\nz}\times\mathbb{R}^{\np} \rightarrow \mathbb{R}^{\nx+\nz}$ describes the dynamics as a fully implicit DAE.\\
@@ -124,6 +132,8 @@ Additionally, we offer an explicit Runge-Kutta integrator (\code{erk}), which ca
 \begin{align*}
 f\ind{expl}(x,u,p) = \dot{x}
 \end{align*}
+
+
 
 \newcommand{\mandatory}{yes}
 \newcommand{\optional}{no}
@@ -153,12 +163,12 @@ Setting the slack penalties is done in the same way for all cost modules, namely
 	\begin{tabular}{|c|c|c|c|}
 		\toprule
 		Mathematical Expression  & string identifier & data type & required \\ \midrule
-		$ Z\Lower $ & \code{cost\_Zl}    & double  & \optional \\ \midrule
-		$ Z\upper $ & \code{cost\_Zu}    & double  & \optional   \\ \midrule
+		$ Z\Lower $ & \code{cost\_Zl}    & double, \textbf{DIAG}  & \optional \\ \midrule
+		$ Z\upper $ & \code{cost\_Zu}    & double, \textbf{DIAG}  & \optional   \\ \midrule
 		$ z\Lower $ & \code{cost\_zl}    & double  & \optional   \\ \midrule
 		$ z\upper $ & \code{cost\_zu}    & double  & \optional   \\ \midrule
-		$ Z\Lower\terminal $ & \code{cost\_Zl\_e}    & double  & \optional   \\ \midrule
-		$ Z\upper\terminal $ & \code{cost\_Zu\_e}    & double  & \optional   \\ \midrule
+		$ Z\Lower\terminal $ & \code{cost\_Zl\_e}    & double, \textbf{DIAG} & \optional   \\ \midrule
+		$ Z\upper\terminal $ & \code{cost\_Zu\_e}    & double, \textbf{DIAG} & \optional   \\ \midrule
 		$ z\Lower\terminal $ & \code{cost\_zl\_e}    & double  & \optional   \\ \midrule
 		$ z\upper\terminal $ & \code{cost\_zu\_e}    & double  & \optional   \\
 		\bottomrule
@@ -252,6 +262,8 @@ The only difference is that $ y $, respectively $ y\terminal $ are defined as \c
 \subsection{Initial State}
 Note: An initial state is not required.
 For example for MHE problems it should not be set.
+
+Simple syntax for initial constraint $x(0)=\bar{x}_0$:
 \begin{table}[h]
 	\centering
 	\begin{tabular}{|c|c|c|c|}
@@ -260,16 +272,29 @@ For example for MHE problems it should not be set.
 		$ \bar{x}_0 $ & \code{constr\_x0} & double & \optional \\ 		\bottomrule
 	\end{tabular}
 \end{table}
+
+Extended syntax:
+\begin{table}[h]
+	\centering
+	\begin{tabular}{|c|c|c|c|}
+		\toprule
+		Mathematical Expression & string identifier & data type & required \\ \midrule
+		$ \underline{x}_0 $ & \code{constr\_lbx\_0} & double & \optional \\ 		\bottomrule
+		$ \bar{x}_0 $ & \code{constr\_ubx\_0} & double & \optional \\ 		\bottomrule
+		$ J_{\textrm{bx},0} $ & \code{constr\_Jbx\_0} & double & \optional \\ 		\bottomrule
+	\end{tabular}
+\end{table}
+
 \subsection{Path Constraints}
 \begin{table}[h]
 	\centering
 	\begin{tabular}{|c|c|c|c|}
 		\toprule
 		Mathematical Expression & string identifier & data type & required \\ \midrule
-		$J_{\textrm{bx}}$ & \code{constr\_Jbx}    & double  & \optional  \\
+		$J_{\textrm{bx}}$ & \code{constr\_Jbx}    & double, \textbf{SPUM} & \optional  \\
 		$\underline{x} $    & \code{constr\_lbx}     & double  & \optional  \\
 		$\bar{x} $  & \code{constr\_ubx}     & double  & \optional   \\ \midrule
-		$J_{\textrm{bu}}$ & \code{constr\_Jbu}    & double  & \optional    \\
+		$J_{\textrm{bu}}$ & \code{constr\_Jbu}    & double, \textbf{SPUM}   & \optional    \\
 		$\underline{u} $    & \code{constr\_lbu}     & double   & \optional   \\
 		$\bar{u} $         & \code{constr\_ubu}     & double  & \optional   \\ \midrule
 		$C$ & \code{constr\_C}    & double  & \optional \\
@@ -279,10 +304,10 @@ For example for MHE problems it should not be set.
 		$ h $ & \code{constr\_expr\_h}    & \casadi~expression  & \optional   \\
 		$\underline{h} $    & \code{constr\_lh}     & double   & \optional   \\
 		$\bar{h} $         & \code{constr\_uh}     & double  & \optional   \\ \midrule
-		$ J\ind{sbx} $ & \code{constr\_Jsbx} & double & \optional  \\
-		$ J\ind{sbu} $ & \code{constr\_Jsbu} & double  & \optional \\
-		$ J\ind{sg} $ & \code{constr\_Jsg} & double & \optional  \\
-		$ J\ind{sbx} $ & \code{constr\_Jsh} & double  & \optional  \\
+		$ J\ind{sbx} $ & \code{constr\_Jsbx} & double, \textbf{SPUME} & \optional  \\
+		$ J\ind{sbu} $ & \code{constr\_Jsbu} & double, \textbf{SPUME}  & \optional \\
+		$ J\ind{sg} $ & \code{constr\_Jsg} & double, \textbf{SPUME} & \optional  \\
+		$ J\ind{sbx} $ & \code{constr\_Jsh} & double, \textbf{SPUME}  & \optional  \\
 		\bottomrule
 	\end{tabular}
 \end{table}
@@ -295,7 +320,7 @@ For example for MHE problems it should not be set.
 	\begin{tabular}{|c|c|c|c|}
 		\toprule
 		Mathematical Expression & string identifier & data type  & required \\ \midrule
-		$J_{\textrm{bx}}$ & \code{constr\_Jbx\_e}    & double   & \optional   \\
+		$J_{\textrm{bx}}$ & \code{constr\_Jbx\_e}    & double, \textbf{SPUM}   & \optional   \\
 		$\underline{x}\terminal $    & \code{constr\_lbx\_e}     & double  & \optional   \\
 		$\bar{x}\terminal $         & \code{constr\_ubx\_e}     & double   & \optional  \\ \midrule
 		$ C\terminal $ & \code{constr\_C\_e}    & double   & \optional   \\
@@ -304,10 +329,13 @@ For example for MHE problems it should not be set.
 		$ h\terminal $ & \code{constr\_expr\_h\_e}    & \casadi~expression   & \optional  \\
 		$\underline{h}\terminal $    & \code{constr\_lh\_e}     & double   & \optional   \\
 		$\bar{h}\terminal $         & \code{constr\_uh\_e}     & double  & \optional   \\ \midrule
-		$ J\ind{sbx} $ & \code{constr\_Jsbx} & double  & \optional \\
-		$ J\ind{sg}\terminal $ & \code{constr\_Jsg\_e} & double & \optional  \\
-		$ J\ind{sbx}\terminal $ & \code{constr\_Jsh\_e} & double  & \optional  \\
+		$ J\ind{sbx} $ & \code{constr\_Jsbx} & double, \textbf{SPUME}   & \optional \\
+		$ J\ind{sg}\terminal $ & \code{constr\_Jsg\_e} & double, \textbf{SPUME} & \optional  \\
+		$ J\ind{sbx}\terminal $ & \code{constr\_Jsh\_e} & double, \textbf{SPUME}  & \optional  \\
 		\bottomrule
 	\end{tabular}
 \end{table}
+
+\subsection{External links}
+\url{https://docs.google.com/spreadsheets/d/1rVRycLnCyaWJLwnV47u30Vokp7vRu68og3OhlDbSjDU/edit?usp=sharing}
 \end{document}

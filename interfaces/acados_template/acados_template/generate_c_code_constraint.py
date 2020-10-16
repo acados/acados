@@ -46,27 +46,26 @@ def generate_c_code_constraint( model, con_name, is_terminal, opts ):
         msg += 'Version {} currently in use.'.format(casadi_version)
         raise Exception(msg)
 
+    # load constraint variables and expression
+    x = model.x
+    p = model.p
+
+    if isinstance(x, casadi.MX):
+        symbol = MX.sym
+    else:
+        symbol = SX.sym
+
     if is_terminal:
         con_h_expr = model.con_h_expr_e
         con_phi_expr = model.con_phi_expr_e
         # create dummy u, z
-        u = SX.sym('u', 0, 0)
-        z = SX.sym('z', 0, 0)
+        u = symbol('u', 0, 0)
+        z = symbol('z', 0, 0)
     else:
         con_h_expr = model.con_h_expr
         con_phi_expr = model.con_phi_expr
         u = model.u
         z = model.z
-
-    # load constraint variables and expression
-    x = model.x
-    p = model.p
-
-
-    if isinstance(x, casadi.SX):
-        is_SX = True
-    else:
-        is_SX = False
 
     if (not is_empty(con_h_expr)) and (not is_empty(con_phi_expr)):
         raise Exception("acados: you can either have constraint_h, or constraint_phi, not both.")
@@ -78,24 +77,15 @@ def generate_c_code_constraint( model, con_name, is_terminal, opts ):
             constr_type = 'BGH'
 
         if is_empty(p):
-            if is_SX:
-                p = SX.sym('p', 0, 0)
-            else:
-                p = MX.sym('p', 0, 0)
+            p = symbol('p', 0, 0)
 
         if is_empty(z):
-            if is_SX:
-                z = SX.sym('z', 0, 0)
-            else:
-                z = MX.sym('z', 0, 0)
+            z = symbol('z', 0, 0)
 
         if not (is_empty(con_h_expr)) and opts['generate_hess']:
             # multipliers for hessian
             nh = casadi_length(con_h_expr)
-            if is_SX:
-                lam_h = SX.sym('lam_h', nh, 1)
-            else:
-                lam_h = MX.sym('lam_h', nh, 1)
+            lam_h = symbol('lam_h', nh, 1)
 
         # set up & change directory
         if not os.path.exists('c_generated_code'):

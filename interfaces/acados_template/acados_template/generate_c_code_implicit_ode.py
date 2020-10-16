@@ -70,10 +70,12 @@ def generate_c_code_implicit_ode( model, opts ):
     ## generate hessian
     x_xdot_z_u = vertcat(x, xdot, z, u)
 
-    if isinstance(x, casadi.SX):
-        multiplier  = SX.sym('multiplier', nx + nz)
-    elif isinstance(x, casadi.MX):
-        multiplier  = MX.sym('multiplier', nx + nz)
+    if isinstance(x, casadi.MX):
+        symbol = MX.sym
+    else:
+        symbol = SX.sym
+
+    multiplier  = symbol('multiplier', nx + nz)
 
     ADJ = jtimes(f_impl, x_xdot_z_u, multiplier, True)
     HESS = jacobian(ADJ, x_xdot_z_u)
