@@ -92,43 +92,14 @@ int main()
     p[{{ loop.index0 }}] = {{ item }};
     {% endfor %}
 
-
-    {%- if solver_options.integrator_type == "IRK" -%}
-    for (int ii = 0; ii < {{ dims.N }}; ii++)
+    for (int ii = 0; ii <= {{ dims.N }}; ii++)
     {
-        impl_dae_fun[ii].set_param(impl_dae_fun+ii, p);
-        impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun_jac_x_xdot_z+ii, p);
-        impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_jac_x_xdot_u_z+ii, p);
+        acados_update_params(ii, p, {{ dims.np }});
     }
-    {% elif solver_options.integrator_type == "ERK" %}
-    for (int ii = 0; ii < {{ dims.N }}; ii++)
-    {
-        expl_ode_fun[ii].set_param(expl_ode_fun+ii, p);
-        forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
-    }
-    {%- endif %}
-    for (int ii = 0; ii < {{ dims.N }}; ii++) {
-        {%- if constraints.constr_type == "BGP" %}
-        // r_constraint[ii].set_param(r_constraint+ii, p);
-        phi_constraint[ii].set_param(phi_constraint+ii, p);
-        {%- endif %}
-        {%- if dims.nh > 0 %}
-        nl_constr_h_fun_jac[ii].set_param(nl_constr_h_fun_jac+ii, p);
-        nl_constr_h_fun[ii].set_param(nl_constr_h_fun+ii, p);
-        {% endif %}
-    }
-    {%- if constraints.constr_type_e == "BGP" %}
-    // r_e_constraint.set_param(&r_e_constraint, p);
-    phi_e_constraint.set_param(&phi_e_constraint, p);
-    {% endif %}
-    {%- if dims.nh_e > 0 %}
-    nl_constr_h_e_fun_jac.set_param(&nl_constr_h_e_fun_jac, p);
-    nl_constr_h_e_fun.set_param(&nl_constr_h_e_fun, p);
-    {% endif %}
   {% endif %}{# if np > 0 #}
 
     // prepare evaluation
-    int NTIMINGS = 20;
+    int NTIMINGS = 1;
     double min_time = 1e12;
     double kkt_norm_inf;
     double elapsed_time;
