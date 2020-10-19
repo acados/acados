@@ -45,7 +45,6 @@
 
 int main()
 {
-
     int status = 0;
     status = {{ model.name }}_acados_sim_create();
 
@@ -73,7 +72,15 @@ int main()
     u0[{{ i }}] = 0.0;
     {%- endfor %}
 
-{# TODO: set parameters? #}
+  {%- if dims.np > 0 %}
+    // set parameters
+    double p[{{ dims.np }}];
+    {% for item in parameter_values %}
+    p[{{ loop.index0 }}] = {{ item }};
+    {% endfor %}
+
+    {{ model.name }}_acados_sim_update_params(p, {{ dims.np }});
+  {% endif %}{# if np > 0 #}
 
     int n_sim_steps = 3;
     // solve ocp in loop
