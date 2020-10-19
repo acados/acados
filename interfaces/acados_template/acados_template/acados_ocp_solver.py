@@ -557,12 +557,17 @@ def ocp_render_templates(acados_ocp, json_file):
     out_file = 'make_sfun.m'
     render_template(in_file, out_file, template_dir, json_path)
 
+    # sim
     in_file = 'acados_sim_solver.in.c'
     out_file = 'acados_sim_solver_{}.c'.format(name)
     render_template(in_file, out_file, template_dir, json_path)
 
     in_file = 'acados_sim_solver.in.h'
     out_file = 'acados_sim_solver_{}.h'.format(name)
+    render_template(in_file, out_file, template_dir, json_path)
+
+    in_file = 'main_sim.in.c'
+    out_file = 'main_sim_{}.c'.format(name)
     render_template(in_file, out_file, template_dir, json_path)
 
     ## folder model
