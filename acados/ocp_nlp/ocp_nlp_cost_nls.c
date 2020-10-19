@@ -277,6 +277,7 @@ int ocp_nlp_cost_nls_model_set(void *config_, void *dims_, void *model_,
     {
         double *W_col_maj = (double *) value_;
         blasfeo_pack_dmat(ny, ny, W_col_maj, ny, &model->W, 0, 0);
+        // NOTE(oj): W_chol is computed in _initialize(), called in preparation phase.
     }
     else if (!strcmp(field, "y_ref") || !strcmp(field, "yref"))
     {
@@ -656,7 +657,9 @@ static void ocp_nlp_cost_nls_cast_workspace(void *config_, void *dims_, void *op
  * functions
  ************************************************/
 
-// TODO move factorization of W into pre-compute???
+// TODO(giaf) move factorization of W into pre-compute???
+// NOTE(oj): factorization should stay here, precompute is only called at creation, initialize in every SQP call.
+// Thus, updating W would not work properly in precompute.
 void ocp_nlp_cost_nls_initialize(void *config_, void *dims_, void *model_, void *opts_,
                                  void *memory_, void *work_)
 {
@@ -675,6 +678,7 @@ void ocp_nlp_cost_nls_initialize(void *config_, void *dims_, void *model_, void 
     // TODO(all): recompute factorization only if W are re-tuned ???
     blasfeo_dpotrf_l(ny, &model->W, 0, 0, &memory->W_chol, 0, 0);
 
+    // mem->Z = scaling * model->Z
     blasfeo_dveccpsc(2*ns, model->scaling, &model->Z, 0, memory->Z, 0);
 
     return;
@@ -764,7 +768,7 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
 
     if (opts->gauss_newton_hess)
     {
-        // RSQrq = scaling * tmp_nv_ny * tmp_nv_ny^T
+        // RSQrq += scaling * tmp_nv_ny * tmp_nv_ny^T
         blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0,
                          1.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
     }

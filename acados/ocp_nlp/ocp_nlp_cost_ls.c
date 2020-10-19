@@ -320,11 +320,13 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
     int nu = dims->nu;
     int ny = dims->ny;
     int ns = dims->ns;
+    int nz = dims->nz;
 
     if (!strcmp(field, "W"))
     {
         double *W_col_maj = (double *) value_;
         blasfeo_pack_dmat(ny, ny, W_col_maj, ny, &model->W, 0, 0);
+        // NOTE(oj): W_chol is computed in _initialize(), called in preparation phase.
     }
     else if (!strcmp(field, "Cyt"))
     {
@@ -346,8 +348,7 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
     else if (!strcmp(field, "Vz"))
     {
         double *Vz_col_maj = (double *) value_;
-        blasfeo_pack_dmat(dims->ny, dims->nz, Vz_col_maj, dims->ny,
-                &model->Vz, 0, 0);
+        blasfeo_pack_dmat(ny, nz, Vz_col_maj, ny, &model->Vz, 0, 0);
     }
     else if (!strcmp(field, "y_ref") || !strcmp(field, "yref"))
     {
@@ -394,7 +395,6 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
     else
     {
         printf("\nerror: field %s not available in ocp_nlp_cost_ls_model_set\n", field);
-        
         exit(1);
     }
     return status;
@@ -708,6 +708,8 @@ static void ocp_nlp_cost_ls_cast_workspace(void *config_,
 
 
 // TODO move computataion of hess into pre-compute???
+// NOTE(oj): factorization should stay here, precompute is only called at creation, initialize in every SQP call.
+// Thus, updating W would not work properly in precompute.
 void ocp_nlp_cost_ls_initialize(void *config_, void *dims_, void *model_, 
     void *opts_, void *memory_, void *work_)
 {
