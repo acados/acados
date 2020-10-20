@@ -641,6 +641,7 @@ void ocp_qp_osqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->osqp_opts->verbose = 0;
     opts->osqp_opts->polish = 1;
     opts->osqp_opts->check_termination = 5;
+    opts->osqp_opts->warm_start = 1;
 
     return;
 }
