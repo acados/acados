@@ -32,7 +32,7 @@
 #
 
 import sys
-sys.path.insert(0, '../common')
+sys.path.insert(0, '../getting_started/common')
 
 from acados_template import AcadosOcp, AcadosOcpSolver
 from export_pendulum_ode_model import export_pendulum_ode_model
@@ -88,18 +88,26 @@ ocp.constraints.idxbu = np.array([0])
 ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
 # set options
-ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
-# PARTIAL_CONDENSING_HPIPM, FULL_CONDENSING_QPOASES, FULL_CONDENSING_HPIPM,
-# PARTIAL_CONDENSING_QPDUNES, PARTIAL_CONDENSING_OSQP
+ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_OSQP' # FULL_CONDENSING_QPOASES
+# ('PARTIAL_CONDENSING_HPIPM', \
+# 'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_HPIPM', \
+# 'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP')
+
 ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
 ocp.solver_options.integrator_type = 'ERK'
 # ocp.solver_options.print_level = 1
 ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
+ocp.solver_options.nlp_solver_max_iter = 20 # SQP_RTI, SQP
+ocp.solver_options.qp_solver_iter_max = 2000
+# ocp.solver_options.qp_solver_warm_start = 1
+
 
 # set prediction horizon
 ocp.solver_options.tf = Tf
 
 ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
+
+# ocp_solver.options_set("qp_solver_warm_start", 1)
 
 simX = np.ndarray((N+1, nx))
 simU = np.ndarray((N, nu))
@@ -118,4 +126,6 @@ simX[N,:] = ocp_solver.get(N, "x")
 
 ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
 
-plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
+print("cost function value", ocp_solver.get_cost())
+
+# plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
