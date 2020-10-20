@@ -50,6 +50,8 @@ add_test(NAME octave_test_ocp
 endif()
 
 
+
+### PYTHON ###
 if(ACADOS_PYTHON)
 add_test(NAME python_test_ocp
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
@@ -69,6 +71,13 @@ if(ACADOS_WITH_QPDUNES)
         add_test(NAME python_qpDUNES_test
                 COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/ocp
                 python example_sqp_qpDUNES.py)
+endif()
+
+# OSQP test
+if(ACADOS_WITH_OSQP)
+        add_test(NAME python_OSQP_test
+                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
+                python test_osqp.py)
 endif()
 
 # MHE examples

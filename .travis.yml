@@ -54,6 +54,7 @@ matrix:
         - ACADOS_PYTHON="ON"
         - ACADOS_UNIT_TESTS="OFF"
         - ACADOS_WITH_QPDUNES="ON"
+        - ACADOS_WITH_OSQP="ON"
 
     - name: Linux Gcc4.9 - Octave interface + template
       env:
