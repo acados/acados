@@ -132,15 +132,19 @@ function model = detect_cost_type(model, is_e)
         end
         lls_cost_fun = Function('lls_cost_fun', {x, u, z}, {y' * W * y});
 
+        rel_err_tol = 1e-13;
         for jj = 1:5
             x0 = rand(nx,1);
             u0 = rand(nu,1);
             z0 = rand(nz,1);
 
-            val1 = lls_cost_fun(x0, u0, z0);
-            val2 = cost_fun(x0, u0, z0);
-            if norm(full(val1 - val2))> 1e-13
-                disp('something went wrong when reformulating with linear least square cost');
+            val1 = full(lls_cost_fun(x0, u0, z0));
+            val2 = full(cost_fun(x0, u0, z0));
+            diff_eval = abs(val1-val2);
+            rel_error = diff_eval / max(abs(val1), abs(val2));
+            if rel_error > rel_err_tol
+                disp(['something went wrong when reformulating with linear least square cost',...
+                ' got relative error ', num2str(rel_error, '%e'), ' should be < ', num2str(rel_err_tol, '%e')]);
                 keyboard
             end
         end
