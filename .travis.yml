@@ -46,6 +46,8 @@ matrix:
         - ACADOS_OCTAVE="ON"
         - ACADOS_OCTAVE_TEMPLATE="OFF"
         - ACADOS_UNIT_TESTS="OFF"
+        - ACADOS_WITH_QPDUNES="ON"
+        - ACADOS_WITH_OSQP="ON"
 
     - name: Linux Gcc6 - Python interface
       env:

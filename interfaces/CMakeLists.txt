@@ -40,13 +40,27 @@ endif()
 
 
 if(ACADOS_MATLAB OR ACADOS_OCTAVE)
-add_test(NAME octave_test_sim
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
-        octave --no-gui --no-window-system ./run_tests_sim.m)
+        add_test(NAME octave_test_sim
+                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+                octave --no-gui --no-window-system ./run_tests_sim.m)
 
-add_test(NAME octave_test_ocp
-         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
-         octave --no-gui --no-window-system ./run_tests_ocp.m)
+        add_test(NAME octave_test_ocp
+                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+                octave --no-gui --no-window-system ./run_tests_ocp.m)
+
+        # OSQP
+        if(ACADOS_WITH_OSQP)
+                add_test(NAME octave_test_OSQP
+                        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+                        octave --no-gui --no-window-system ./test_ocp_OSQP.m)
+        endif()
+
+        # qpDUNES
+        if(ACADOS_WITH_QPDUNES)
+        add_test(NAME octave_test_qpDUNES
+                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+                octave --no-gui --no-window-system ./test_ocp_qpdunes.m)
+        endif()
 endif()
 
 
