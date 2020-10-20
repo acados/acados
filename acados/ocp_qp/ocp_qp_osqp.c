@@ -658,6 +658,8 @@ void ocp_qp_osqp_opts_set(void *config_, void *opts_, const char *field, void *v
 {
     ocp_qp_osqp_opts *opts = opts_;
 
+    // NOTE/TODO(oj): options are copied into OSQP at first call.
+    // Updating options through this function does not work, only before the first call!
     if (!strcmp(field, "iter_max"))
     {
         int *tmp_ptr = value;
@@ -665,28 +667,42 @@ void ocp_qp_osqp_opts_set(void *config_, void *opts_, const char *field, void *v
     }
     else if (!strcmp(field, "tol_stat"))
     {
-        // TODO set solver exit tolerance
+        double *tol = value;
+        opts->osqp_opts->eps_abs = *tol;
+        opts->osqp_opts->eps_rel = *tol;
+        opts->osqp_opts->eps_dual_inf = *tol;
+
+        // printf("in ocp_qp_osqp_opts_set, tol_stat %e\n", *tol);
+
+        if (*tol < 1e-2)
+        {
+            opts->osqp_opts->polish = 1;
+            opts->osqp_opts->polish_refine_iter = 3;
+        }
     }
     else if (!strcmp(field, "tol_eq"))
     {
-        // TODO set solver exit tolerance
+        double *tol = value;
+        opts->osqp_opts->eps_prim_inf = *tol;
     }
     else if (!strcmp(field, "tol_ineq"))
     {
-        // TODO set solver exit tolerance
+        double *tol = value;
+        opts->osqp_opts->eps_prim_inf = *tol;
     }
     else if (!strcmp(field, "tol_comp"))
     {
-        // TODO set solver exit tolerance
+        // "OSQP always satisfies complementary slackness conditions
+        //  with machine precision by construction." - Strellato2020
     }
     else if (!strcmp(field, "warm_start"))
     {
         // XXX after the first call to the solver, this doesn't work any more, as in osqp the settings are copied in the work !!!!!
         // XXX i.e. as it is, it gets permanently set to zero if warm start is disabled at the fist iteration !!!!!
         int *tmp_ptr = value;
-//        int tmp_ptr[] = {1};
+        // int tmp_ptr[] = {1};
         opts->osqp_opts->warm_start = *tmp_ptr;
-//        printf("\nwarm start %d\n", opts->osqp_opts->warm_start);
+        // printf("\nwarm start %d\n", opts->osqp_opts->warm_start);
     }
     else
     {
@@ -774,6 +790,7 @@ static int osqp_workspace_calculate_size(int n, int m, int P_nnzmax, int A_nnzma
 
     return size;
 }
+
 
 int ocp_qp_osqp_memory_calculate_size(void *config_, void *dims_, void *opts_)
 {
@@ -1297,8 +1314,8 @@ int ocp_qp_osqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *m
 
     qp_info *info = (qp_info *) qp_out->misc;
     acados_timer tot_timer, qp_timer, interface_timer, solver_call_timer;
-
     acados_tic(&tot_timer);
+
     // cast data structures
     ocp_qp_osqp_opts *opts = (ocp_qp_osqp_opts *) opts_;
     ocp_qp_osqp_memory *mem = (ocp_qp_osqp_memory *) mem_;
@@ -1316,6 +1333,7 @@ int ocp_qp_osqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *m
         osqp_update_P_A(mem->osqp_work, mem->P_x, NULL, mem->P_nnzmax, mem->A_x, NULL,
                         mem->A_nnzmax);
         osqp_update_bounds(mem->osqp_work, mem->l, mem->u);
+        // TODO(oj): update OSQP options here if they were updated?
     }
     else
     {
@@ -1324,17 +1342,23 @@ int ocp_qp_osqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *m
         mem->first_run = 0;
     }
 
+    // check settings:
+    // OSQPSettings *settings = mem->osqp_work->settings;
+    // printf("OSQP settings: warm_start %d\n", settings->warm_start);
+    // printf("polish %d, polish_refine_iter %d, delta: %e\n", settings->polish, settings->polish_refine_iter, settings->delta);
+    // printf("eps_abs %e, eps_rel %e, eps_prim_inf: %e, eps_dual_inf: %e\n", settings->eps_abs, settings->eps_rel, settings->eps_prim_inf, settings->eps_dual_inf);
+
     // solve OSQP
     acados_tic(&solver_call_timer);
-
     osqp_solve(mem->osqp_work);
-
     mem->time_qp_solver_call = acados_toc(&solver_call_timer);
     mem->iter = mem->osqp_work->info->iter;
 
+    // fill qp_out
     fill_in_qp_out(qp_in, qp_out, mem);
     ocp_qp_compute_t(qp_in, qp_out);
 
+    // info
     info->solve_QP_time = acados_toc(&qp_timer);
     info->total_time = acados_toc(&tot_timer);
     info->num_iter = mem->osqp_work->info->iter;
