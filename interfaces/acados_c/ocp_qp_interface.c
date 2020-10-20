@@ -135,17 +135,18 @@ void ocp_qp_xcond_solver_config_initialize_from_plan(
 #endif
 #ifdef ACADOS_WITH_OOQP
         case FULL_CONDENSING_OOQP:
+            printf("\nocp_qp_xcond_solver: FULL_CONDENSING_OOQP.\n");
 			ocp_qp_xcond_solver_config_initialize_default(solver_config);
             dense_qp_ooqp_config_initialize_default(solver_config->qp_solver);
 			ocp_qp_full_condensing_config_initialize_default(solver_config->xcond);
             break;
 #endif
         case INVALID_QP_SOLVER:
-            printf("\nerror: ocp_qp_config_create: forgot to initialize plan->qp_solver\n");
+            printf("\nerror: ocp_qp_xcond_solver_config_initialize_from_plan: forgot to initialize plan->qp_solver\n");
             exit(1);
             break;
         default:
-            printf("\nerror: ocp_qp_config_create: unsupported plan->qp_solver\n");
+            printf("\nerror: ocp_qp_xcond_solver_config_initialize_from_plan: unsupported plan->qp_solver\n");
             exit(1);
     }
 
