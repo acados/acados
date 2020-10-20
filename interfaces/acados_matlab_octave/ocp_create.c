@@ -348,10 +348,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_OSQP;
     }
 #endif
+#if defined(ACADOS_WITH_QPDUNES)
+    else if (!strcmp(qp_solver, "partial_condensing_qpdunes"))
+    {
+        plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_QPDUNES;
+    }
+#endif
     else
     {
         MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "qp_solver", qp_solver,
-             "partial_condensing_hpipm, full_condensing_hpipm, full_condensing_qpoases, partial_condensing_osqp, partial_condensing_hpmpc");
+             "partial_condensing_hpipm, full_condensing_hpipm, full_condensing_qpoases, partial_condensing_osqp, partial_condensing_hpmpc, partial_condensing_qpdunes");
     }
 
 
