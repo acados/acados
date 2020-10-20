@@ -355,4 +355,11 @@ function [model, opts] = detect_dims_ocp(model, opts)
         error(['ocp discretization: time_steps between shooting nodes must all be > 0', ...
             ' got: ' num2str(opts.time_steps)])
     end
+
+    % qp_dunes
+    if ~isempty(strfind(opts.qp_solver,'qpdunes'))
+        model.constr_idxbxe_0 = [];
+        model.dim_nbxe_0 = 0
+    end
+
 end

@@ -89,14 +89,14 @@ if is_octave()
     fclose(input_file);
 
     % add temporary additional flag
-    if (strcmp(opts.qp_solver, 'full_condensing_qpoases'))
+    if ~isempty(strfind(opts.qp_solver,'qpoases'))
         cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_QPOASES'];
-    end
-    if (strcmp(opts.qp_solver, 'partial_condensing_osqp'))
+    elseif ~isempty(strfind(opts.qp_solver,'osqp'))
         cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_OSQP'];
-    end
-    if (strcmp(opts.qp_solver, 'partial_condensing_hpmpc'))
+    elseif ~isempty(strfind(opts.qp_solver,'hpmpc'))
         cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_HPMPC'];
+    elseif ~isempty(strfind(opts.qp_solver,'qpdunes'))
+        cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_QPDUNES'];
     end
 
     setenv('CFLAGS', cflags_tmp);
@@ -123,6 +123,14 @@ with_qp_osqp = ~isempty(strfind(opts.qp_solver, 'osqp'));
 if with_qp_osqp
     % flag file to remember if compiled with OSQP
     flag_file = fullfile(opts.output_dir, '_compiled_with_osqp.txt');
+    flagID = fopen(flag_file, 'w');
+    fclose(flagID);
+end
+% is qpDUNES?
+with_qp_qpdunes = ~isempty(strfind(opts.qp_solver, 'qpdunes'));
+if with_qp_qpdunes
+    % flag file to remember if compiled with qpDUNES
+    flag_file = fullfile(opts.output_dir, '_compiled_with_qpdunes.txt');
     flagID = fopen(flag_file, 'w');
     fclose(flagID);
 end
