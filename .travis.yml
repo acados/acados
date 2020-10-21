@@ -15,7 +15,7 @@ env:
 
 os: linux
 sudo: required
-dist: xenial
+dist: bionic
 
 group: travis_latest
 
