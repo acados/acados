@@ -669,17 +669,17 @@ void ocp_qp_osqp_opts_set(void *config_, void *opts_, const char *field, void *v
     else if (!strcmp(field, "tol_stat"))
     {
         double *tol = value;
-        opts->osqp_opts->eps_abs = *tol;
+        // opts->osqp_opts->eps_abs = *tol;
         opts->osqp_opts->eps_rel = *tol;
         opts->osqp_opts->eps_dual_inf = *tol;
 
         // printf("in ocp_qp_osqp_opts_set, tol_stat %e\n", *tol);
 
-        if (*tol < 1e-2)
-        {
-            opts->osqp_opts->polish = 1;
-            opts->osqp_opts->polish_refine_iter = 3;
-        }
+        // if (*tol < 1e-2)
+        // {
+        //     opts->osqp_opts->polish = 1;
+        //     opts->osqp_opts->polish_refine_iter = 3;
+        // }
     }
     else if (!strcmp(field, "tol_eq"))
     {
