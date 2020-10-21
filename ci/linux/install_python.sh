@@ -32,5 +32,5 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-virtualenv --python=python3.5 acadosenv;
+virtualenv --python=python3.8 acadosenv;
 source acadosenv/bin/activate;
