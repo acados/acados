@@ -33,4 +33,6 @@
 #
 
 virtualenv --python=python3.8 acadosenv;
+virtualenv --version;
 source acadosenv/bin/activate;
+which python;
