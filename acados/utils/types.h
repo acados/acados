@@ -71,16 +71,6 @@ enum return_values
 
 
 
-// opts values ( please keep in alphabetical order ! )
-// TODO outdated, proably remove !!!!!!!!!
-enum acados_opts
-{
-    COMPUTE_ADJ,
-//    COMPUTE_DUAL_SOL,
-};
-
-
-
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
