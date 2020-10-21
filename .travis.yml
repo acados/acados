@@ -31,13 +31,13 @@ addons:
 
 matrix:
   include:
-    - name: MacOS Build
-      os: osx
-      osx_image: xcode9.4
-      # osx_image: xcode10.1
-      python: 3.7
-      env:
-        - DEPLOY_NAME="osx-python"
+    # - name: MacOS Build
+    #   os: osx
+    #   osx_image: xcode9.4
+    #   # osx_image: xcode10.1
+    #   python: 3.7
+    #   env:
+    #     - DEPLOY_NAME="osx-python"
 
     - name: Linux Gcc - Octave NO_template
       env:
@@ -66,14 +66,14 @@ matrix:
         - ACADOS_OCTAVE_TEMPLATE="ON"
         - ACADOS_UNIT_TESTS="OFF"
 
-    - name: Linux Clang
-      env:
-        - DEPLOY_NAME="linux-clang"
-        - MATRIX_EVAL="CC=clang && CXX=clang++"
-        # - MATRIX_EVAL="CC=clang-3.7 && CXX=clang++-3.7"
-        - ACADOS_OCTAVE="OFF"
-        - ACADOS_UNIT_TESTS="ON"
-        - ACADOS_EXAMPLES="ON"
+    # - name: Linux Clang
+    #   env:
+    #     - DEPLOY_NAME="linux-clang"
+    #     - MATRIX_EVAL="CC=clang && CXX=clang++"
+    #     # - MATRIX_EVAL="CC=clang-3.7 && CXX=clang++-3.7"
+    #     - ACADOS_OCTAVE="OFF"
+    #     - ACADOS_UNIT_TESTS="ON"
+    #     - ACADOS_EXAMPLES="ON"
 
 cache:
   ccache: true
