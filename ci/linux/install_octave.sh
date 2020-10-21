@@ -32,6 +32,13 @@
 #
 
 
-sudo apt-add-repository ppa:octave/stable -y;
-sudo apt-get update -qq;
-sudo apt-get install octave liboctave-dev -y;
+# sudo apt-add-repository ppa:octave/stable -y;
+# sudo apt-get update -qq;
+# sudo apt-get install octave liboctave-dev -y;
+
+# snap messes up LD_LIBRARY_PATH
+# sudo snap install octave;
+
+sudo apt-get install octave-control octave-image octave-io octave-optim octave-signal octave-statistics liboctave-dev -y;
+
+octave --version;
