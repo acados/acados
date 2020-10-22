@@ -75,27 +75,20 @@ def generate_c_code_explicit_ode( model, opts ):
     ## Set up functions
     expl_ode_fun = Function(fun_name, [x, u, p], [f_expl])
 
-    # TODO: Polish: get rid of SX.zeros
-    vdeX = DM.zeros(nx,nx)
-
-    vdeX = vdeX + jtimes(f_expl,x,Sx)
-
-    vdeP = DM.zeros(nx,nu) + jacobian(f_expl,u)
-
-    vdeP = vdeP + jtimes(f_expl,x,Sp)
+    vdeX = jtimes(f_expl,x,Sx)
+    vdeP = jacobian(f_expl,u) + jtimes(f_expl,x,Sp)
 
     fun_name = model_name + '_expl_vde_forw'
 
-    expl_vde_forw = Function(fun_name, [x, Sx, Sp, u, p], [f_expl,vdeX,vdeP])
+    expl_vde_forw = Function(fun_name, [x, Sx, Sp, u, p], [f_expl, vdeX, vdeP])
 
     adj = jtimes(f_expl, vertcat(x, u), lambdaX, True)
 
     fun_name = model_name + '_expl_vde_adj'
     expl_vde_adj = Function(fun_name, [x, lambdaX, u, p], [adj])
 
-    S_forw = vertcat(horzcat(Sx, Sp), horzcat(DM.zeros(nu,nx), DM.eye(nu)))
-
     if generate_hess:
+        S_forw = vertcat(horzcat(Sx, Sp), horzcat(DM.zeros(nu,nx), DM.eye(nu)))
         hess = mtimes(transpose(S_forw),jtimes(adj, vertcat(x,u), S_forw))
         hess2 = []
         for j in range(nx+nu):
