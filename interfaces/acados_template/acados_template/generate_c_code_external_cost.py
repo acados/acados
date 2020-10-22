@@ -33,7 +33,7 @@
 
 import os
 from casadi import SX, MX, Function, transpose, vertcat, horzcat, jacobian, CasadiMeta
-from .utils import ALLOWED_CASADI_VERSIONS
+from .utils import ALLOWED_CASADI_VERSIONS, casadi_version_warning
 
 
 def generate_c_code_external_cost(model, is_terminal):
@@ -42,12 +42,7 @@ def generate_c_code_external_cost(model, is_terminal):
     casadi_opts = dict(mex=False, casadi_int="int", casadi_real="double")
 
     if casadi_version not in (ALLOWED_CASADI_VERSIONS):
-        msg = "Please download and install CasADi {} ".format(
-            " or ".join(ALLOWED_CASADI_VERSIONS)
-        )
-        msg += "to ensure compatibility with acados.\n"
-        msg += "Version {} currently in use.".format(casadi_version)
-        raise Exception(msg)
+        casadi_version_warning(casadi_version)
 
     x = model.x
     p = model.p
