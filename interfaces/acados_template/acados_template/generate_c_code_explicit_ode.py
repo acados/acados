@@ -33,17 +33,14 @@
 
 import os
 from casadi import *
-from .utils import ALLOWED_CASADI_VERSIONS, is_empty
+from .utils import ALLOWED_CASADI_VERSIONS, is_empty, casadi_version_warning
 
 def generate_c_code_explicit_ode( model, opts ):
 
     casadi_version = CasadiMeta.version()
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
     if casadi_version not in (ALLOWED_CASADI_VERSIONS):
-        msg =  'Please download and install CasADi {} '.format(" or ".join(ALLOWED_CASADI_VERSIONS))
-        msg += 'to ensure compatibility with acados.\n'
-        msg += 'Version {} currently in use.'.format(casadi_version)
-        raise Exception(msg)
+        casadi_version_warning(casadi_version)
 
 
     generate_hess = opts["generate_hess"]

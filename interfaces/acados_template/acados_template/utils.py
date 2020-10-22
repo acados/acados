@@ -37,7 +37,8 @@ import shutil
 import numpy as np
 from casadi import SX, MX, DM, Function, CasadiMeta
 
-ALLOWED_CASADI_VERSIONS = ('3.5.6', '3.5.5', '3.5.4', '3.5.3', '3.5.2', '3.5.1', '3.4.5', '3.4.0')
+ALLOWED_CASADI_VERSIONS = ('3.5.5', '3.5.4', '3.5.3', '3.5.2', '3.5.1', '3.4.5', '3.4.0')
+
 TERA_VERSION = "0.0.34"
 
 def get_acados_path():
@@ -57,6 +58,15 @@ platform2tera = {
     "darwin": "osx",
     "win32": "window.exe"
 }
+
+
+def casadi_version_warning(casadi_version):
+    msg =  'Warning: Please note that the following versions of CasADi  are '
+    msg += 'officially supported: {}.\n '.format(" or ".join(ALLOWED_CASADI_VERSIONS))
+    msg += 'If there is an incompatibility with the CasADi generated code, '
+    msg += 'please consider changing your CasADi version.\n'
+    msg += 'Version {} currently in use.'.format(casadi_version)
+    print(msg)
 
 
 def is_column(x):

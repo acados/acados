@@ -33,7 +33,7 @@
 
 import os
 from casadi import *
-from .utils import ALLOWED_CASADI_VERSIONS, casadi_length
+from .utils import ALLOWED_CASADI_VERSIONS, casadi_length, casadi_version_warning
 
 def generate_c_code_nls_cost( model, cost_name, is_terminal ):
 
@@ -41,10 +41,7 @@ def generate_c_code_nls_cost( model, cost_name, is_terminal ):
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
     if casadi_version not in (ALLOWED_CASADI_VERSIONS):
-        msg =  'Please download and install CasADi {} '.format(" or ".join(ALLOWED_CASADI_VERSIONS))
-        msg += 'to ensure compatibility with acados.\n'
-        msg += 'Version {} currently in use.'.format(casadi_version)
-        raise Exception(msg)
+        casadi_version_warning(casadi_version)
 
     x = model.x
     p = model.p
