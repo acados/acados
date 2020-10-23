@@ -39,10 +39,23 @@ add_test(NAME octave_test_templates
 endif()
 
 
+# MATLAB / OCTAVE
 if(ACADOS_MATLAB OR ACADOS_OCTAVE)
-        add_test(NAME octave_test_sim
+        add_test(NAME octave_test_sim_forw
                 COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
-                octave --no-gui --no-window-system ./run_tests_sim.m)
+                octave --no-gui --no-window-system ./run_test_sim_forw.m)
+
+        add_test(NAME octave_test_sim_adj
+                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+                octave --no-gui --no-window-system ./run_test_sim_adj.m)
+
+        add_test(NAME octave_test_sim_hess
+                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+                octave --no-gui --no-window-system ./run_test_sim_hess.m)
+
+        add_test(NAME octave_test_sim_dae
+                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+                octave --no-gui --no-window-system ./run_test_sim_dae.m)
 
         add_test(NAME octave_test_ocp
                 COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
