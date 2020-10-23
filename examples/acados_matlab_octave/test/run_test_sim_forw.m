@@ -64,11 +64,7 @@ end
 %% sim tests
 try
     test_sens_forw;
-    test_sens_adj;
-    test_sens_hess;
-    test_sim_dae;
 catch exception
     exit_with_error(exception);
 end
 
-fprintf('\nrun_tests_sim: success!\n\n');
