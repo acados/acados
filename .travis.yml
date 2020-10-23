@@ -15,7 +15,7 @@ env:
 
 os: linux
 sudo: required
-dist: bionic
+dist: focal
 
 group: travis_latest
 
