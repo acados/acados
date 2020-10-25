@@ -212,6 +212,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             ocp_nlp_constraints_model_set(config, dims, in, ii, "ug", value);
         }
     }
+    else if (!strcmp(field, "constr_lh"))
+    {
+        for (int ii=s0; ii<se; ii++)
+        {
+            acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "lh");
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+
+            ocp_nlp_constraints_model_set(config, dims, in, ii, "lh", value);
+        }
+    }
+    else if (!strcmp(field, "constr_uh"))
+    {
+        for (int ii=s0; ii<se; ii++)
+        {
+            acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "uh");
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+
+            ocp_nlp_constraints_model_set(config, dims, in, ii, "uh", value);
+        }
+    }
     // cost:
     else if (!strcmp(field, "cost_y_ref"))
     {
@@ -611,7 +631,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else
     {
         MEX_FIELD_NOT_SUPPORTED_SUGGEST(fun_name, field, "p, constr_x0,\
- constr_lbx, constr_ubx, constr_C, constr_D, constr_lg, constr_ug,\
+ constr_lbx, constr_ubx, constr_C, constr_D, constr_lg, constr_ug, constr_lh, constr_uh\
  constr_lbu, constr_ubu, cost_y_ref[_e],\
  cost_Vu, cost_Vx, cost_Vz, cost_W, cost_Z, cost_Zl, cost_Zu, cost_z,\
  cost_zl, cost_zu, init_x, init_u, init_z, init_xdot, init_gnsf_phi,\
