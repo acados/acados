@@ -41,6 +41,11 @@ endif()
 
 # MATLAB / OCTAVE
 if(ACADOS_MATLAB OR ACADOS_OCTAVE)
+        add_test(NAME octave_test_dim_check
+                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+                octave --no-gui --no-window-system ./run_test_dim_check.m)
+
+        # SIM
         add_test(NAME octave_test_sim_forw
                 COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
                 octave --no-gui --no-window-system ./run_test_sim_forw.m)
@@ -57,9 +62,22 @@ if(ACADOS_MATLAB OR ACADOS_OCTAVE)
                 COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
                 octave --no-gui --no-window-system ./run_test_sim_dae.m)
 
-        add_test(NAME octave_test_ocp
+        # OCP
+        add_test(NAME octave_test_ocp_pendulum
                 COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
-                octave --no-gui --no-window-system ./run_tests_ocp.m)
+                octave --no-gui --no-window-system ./run_test_ocp_pendulum.m)
+        add_test(NAME octave_test_ocp_wtnx6
+                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+                octave --no-gui --no-window-system ./run_test_ocp_wtnx6.m)
+        add_test(NAME octave_test_ocp_pendulum_dae
+                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+                octave --no-gui --no-window-system ./run_test_ocp_pendulum_dae.m)
+        add_test(NAME octave_test_ocp_mass_spring
+                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+                octave --no-gui --no-window-system ./run_test_ocp_mass_spring.m)
+        add_test(NAME octave_test_ocp_simple_dae
+                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+                octave --no-gui --no-window-system ./run_test_ocp_simple_dae.m)
 
         # OSQP
         if(ACADOS_WITH_OSQP)
