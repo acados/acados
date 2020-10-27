@@ -65,8 +65,6 @@ qp_solver_config *dense_qp_config_create(dense_qp_solver_plan *plan)
 
     dense_qp_solver_t solver_name = plan->qp_solver;
 
-    // TODO(dimitris): cath error if solver not compiled
-    // printf("\n\nSpecified solver interface not compiled with acados!\n\n");
     switch (solver_name)
     {
         case DENSE_QP_HPIPM:
@@ -88,7 +86,8 @@ qp_solver_config *dense_qp_config_create(dense_qp_solver_plan *plan)
             break;
 #endif
         default:
-            printf("\nerror: dense_qp_config_create: unsupported plan->qp_solver\n");
+            printf("\nerror: dense_qp_config_create: unsupported plan->qp_solver.\n");
+            printf("This might happen, if acados was not compiled with the specified QP solver.\n");
             exit(1);
             break;
     }

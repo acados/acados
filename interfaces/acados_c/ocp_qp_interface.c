@@ -147,6 +147,7 @@ void ocp_qp_xcond_solver_config_initialize_from_plan(
             break;
         default:
             printf("\nerror: ocp_qp_xcond_solver_config_initialize_from_plan: unsupported plan->qp_solver\n");
+            printf("This might happen, if acados was not compiled with the specified QP solver.\n");
             exit(1);
     }
 
