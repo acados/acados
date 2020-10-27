@@ -112,6 +112,8 @@ function [model, opts] = detect_dims_ocp(model, opts)
     elseif isfield(model, 'constr_Jbx_0') || isfield(model, 'constr_lbx_0') || isfield(model, 'constr_ubx_0')
         error('setting bounds on x: need Jbx_0, lbx_0, ubx_0, at least one missing.');
     else
+        % no initial state constraint
+        disp("detect_dims_ocp: OCP without constraints on initial state detected.")
         nbx_0 = 0;
     end
     model.dim_nbx_0 = nbx_0;
