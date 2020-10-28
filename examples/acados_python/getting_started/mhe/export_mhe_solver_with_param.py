@@ -52,20 +52,10 @@ def export_mhe_solver_with_param(model, N, h, Q, Q0, R):
     ny = R.shape[0] + Q.shape[0] + Q0.shape[0]    # h(x), w and arrival cost
     ny_e = 0
 
-    # set ocp_nlp_dimensions
-    ocp_mhe.dims.nx  = nx_augmented
-    ocp_mhe.dims.ny  = ny
-    ocp_mhe.dims.np  = nparam
-    ocp_mhe.dims.ny_e = ny_e
-    ocp_mhe.dims.nbx = 0
-    ocp_mhe.dims.nbu = 0  # nu
-    ocp_mhe.dims.nu  = model.u.size()[0]
-    ocp_mhe.dims.N   = N
+    # set number of shooting nodes
+    ocp_mhe.dims.N = N
 
-    ocp_mhe.dims.nbx_0 = 0
-
-    # set weighting matrices
-
+    # set cost
     ocp_mhe.cost.cost_type = 'NONLINEAR_LS'
     ocp_mhe.cost.cost_type_e = 'LINEAR_LS'
 
