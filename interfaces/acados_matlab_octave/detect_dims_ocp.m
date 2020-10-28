@@ -120,6 +120,10 @@ function [model, opts] = detect_dims_ocp(model, opts)
 
     if isfield(model, 'constr_idxbxe_0')
         model.dim_nbxe_0 = length(model.constr_idxbxe_0);
+    else
+        % no equalities on initial state.
+        model.constr_idxbxe_0 = [];
+        model.dim_nbxe_0 = 0;
     end
 
     % path
