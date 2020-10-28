@@ -8,24 +8,58 @@ negligible computation overhead. In order to learn about the `acados` C API, you
 can look at the examples in
 [`acados/examples/c/`](https://github.com/acados/acados/tree/master/examples/c).
 
-## MATLAB/Octave (rapid prototyping)
+## MATLAB/Octave
+In order to use `acados` from Octave or Matlab, you need to create the `acados` shared libraries  using either the `CMake` or `Make` build system, as described in [here](../installation/index.md).
 
-This interface makes a broad set of `acados` functionalities available from Matlab or Octave.
-As of now, this closely tracks the latest developments in the core of acados, e.g.
-exact Hessians, adjoint corrections, regularization, etc.
+Additionally, the examples require an installation of `CasADi` to generate the model functions.
+Note, that the `getting_started` example offers the option to attempt to automatically download the correct version in the right folder.
+Thus, the next subsection can be skipped, but is recommended if there are problems finding `CasADi`.
+
+### Download CasADi:
+To create external function for your problem, we suggest to use CasADi from the folder `<acados_root_folder>/external`.
+Depending on the environment you want to use to generate CasADi functions from, proceed with the corresponding paragraph (MATLAB, Octave).
+For Python, CasADi is automatically downloaded when installing the interface using `pip`.
+
+#### **Matlab**
+Put CasADi binaries into `<acados_root_folder>/external/casadi-matlab` :
+```
+cd external
+wget -q -nc --show-progress https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-matlabR2014b-v3.4.0.tar.gz
+mkdir -p casadi-matlab
+tar -xf casadi-linux-matlabR2014b-v3.4.0.tar.gz -C casadi-matlab
+cd ..
+```
+
+#### **Octave version 4.4 or later**
+Put CasADi binaries into `<acados_root_folder>/external/casadi-octave` :
+```
+cd external
+wget -q -nc --show-progress https://github.com/casadi/casadi/releases/download/3.4.5/casadi-linux-octave-4.4.1-v3.4.5.tar.gz
+mkdir -p casadi-octave
+tar -xf casadi-linux-octave-4.4.1-v3.4.5.tar.gz -C casadi-octave
+```
+
+#### **Octave version 4.2 or earliear**
+Put CasADi binaries into `<acados_root_folder>/external/casadi-octave` :
+```
+cd external
+wget -q -nc --show-progress https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-octave-v3.4.0.tar.gz
+mkdir -p casadi-octave
+tar -xf casadi-linux-octave-v3.4.0.tar.gz -C casadi-octave
+cd ..
+```
+
+
+### Native MEX interface (Rapid Prototyping)
+This interface makes a broad set of `acados` functionalities available from Matlab and Octave.
+<!-- As of now, this closely tracks the latest developments in the core of acados, e.g.
+exact Hessians, adjoint corrections, regularization, etc. -->
 
 To get started with this interface we recommend the examples in `<acados_root>/examples/acados_matlab_octave/getting_started`.
 
 The problem formulation is stated in [this PDF](https://github.com/acados/acados/tree/master/docs/problem_formulation/problem_formulation_ocp_mex.pdf).
 
-The explanation of the various options can be found also in a spreadsheet style at this [link](https://docs.google.com/spreadsheets/d/1rVRycLnCyaWJLwnV47u30Vokp7vRu68og3OhlDbSjDU/edit?usp=sharing) (thanks to [@EnricaSo](https://github.com/EnricaSo)).
-
-
-This interface uses the shared libraries created using the make command from the main `acados` folder
-
-```bash
-make shared_library
-```
+A table and explanation of the various options of the interface can be found in a spreadsheet [at this link](https://docs.google.com/spreadsheets/d/1rVRycLnCyaWJLwnV47u30Vokp7vRu68og3OhlDbSjDU/edit?usp=sharing) (thanks to [@EnricaSo](https://github.com/EnricaSo)).
 
 To run the examples, navigate into the selected folder, and there run the command
 ```
