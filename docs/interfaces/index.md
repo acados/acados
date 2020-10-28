@@ -73,15 +73,22 @@ Afterwards, launch `Matlab` or Octave from the same shell.
 
 If you want to run the examples in a different folder, please close the current shell and open a new one to repeat the procedure: this ensures the correct setting of the environment variables.
 
-## MATLAB/Octave (templates, Work In Progress)
+### Templates
 There is the option to generate embeddable `C` code from Matlab.
 The workflow uses the same templates as the Python interface (see below) and the `Tera` renderer.
-After creating an acados solver `ocp`, you can use the routine `ocp.generate_c_code` to generate `C` code which can be used for embedded applications.
+After creating an acados solver `ocp`, you can use the routine `ocp.generate_c_code()` to generate `C` code which can be used for embedded applications.
+These templates can be found in [`<acados_root>/interfaces/acados_template/acados_template/c_templates_tera`](https://github.com/acados/acados/tree/master/interfaces/acados_template/acados_template/c_templates_tera)
 
 Note: This part of the MATLAB/Octave interface does not yet support all features of the one mentioned before.
 
-## Python (templates)
+### Simulink
+The templates mentioned above also contain templated Sfunctions and corresponding make functions for Matlab for both the OCP solver and the acados integrator.
+An example can be found in [`<acados_root>/examples/acados_python/getting_started/simulink_example.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/getting_started/simulink_example.m)
+Note that the simulink blocks do not offer the option to change all the numerical values of the OCP description on the fly, as it can be done from Matlab, Octave and Python,
+since each kind value that needs to be updated also needs a separate input for the Simulink block.
+If you want a more advanced interaction with the `acados` solver via Simulink, feel free to edit the corresponding templates in [`<acados_root>/interfaces/acados_template/acados_template/c_templates_tera`](https://github.com/acados/acados/tree/master/interfaces/acados_template/acados_template/c_templates_tera) to add more inputs or outputs.
 
+## Python (templates)
 `acados_template` is a Python package that can be used to specify optimal control problems from Python and to generate self-contained C code that uses the acados solvers to solve them.
 The pip package is based on templated code (C files, Header files and Makefiles), which are rendered from Python using the templating engine `Tera`.
 The genereated C code can be compiled into a self-contained C library that can be deployed on an embedded system.
