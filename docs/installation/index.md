@@ -17,21 +17,23 @@ Both a CMake and a Makefile based build system is supported at the moment.
 Please choose one and proceed with the corresponding paragraph.
 
 #### **CMake**
-Set the `BLASFEO_TARGET` in `<acados_root_folder>/CMakeLists.txt`.
-For a list of supported targets, we refer to https://github.com/giaf/blasfeo/blob/master/README.md .
-Install acados as follows
+Install `acados` as follows:
 ```
 mkdir -p build
 cd build
-cmake .. (with optional arguments e.g. -DACADOS_WITH_OSQP=OFF/ON -DACADOS_INSTALL_DIR=<path_to_acados_installation_folder>)
+cmake -DACADOS_WITH_QPOASES=ON ..
+# add more optional arguments e.g. -DACADOS_WITH_OSQP=OFF/ON -DACADOS_INSTALL_DIR=<path_to_acados_installation_folder> above
 make install
 ```
+NOTE: you can set the `BLASFEO_TARGET` in `<acados_root_folder>/CMakeLists.txt`.
+For a list of supported targets, we refer to https://github.com/giaf/blasfeo/blob/master/README.md .
+The default is `X64_AUTOMATIC`, which attempts to determine the best available target for your machine.
 
 #### **Make**
 Set the `BLASFEO_TARGET` in `<acados_root_folder>/Makefile.rule`.
 Since some of the `C` examples use `qpOASES`, also set `ACADOS_WITH_QPOASES = 1` in  `<acados_root_folder>/Makefile.rule`.
 For a list of supported targets, we refer to https://github.com/giaf/blasfeo/blob/master/README.md .
-Install acados as follows
+Install `acados` as follows:
 ```
 make shared_library
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path_to_acados_folder>/lib
