@@ -136,6 +136,14 @@ add_test(NAME python_rti_loop_ocp_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/ocp
         python example_sqp_rti_loop.py)
 
+add_test(NAME python_chain_ocp
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/chain_mass
+        python main.py)
+
+add_test(NAME python_chain_sim
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/chain_mass
+        python minimal_example_sim.py)
+
 # qpDUNES example
 if(ACADOS_WITH_QPDUNES)
         add_test(NAME python_qpDUNES_test
