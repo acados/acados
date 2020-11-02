@@ -438,8 +438,8 @@ static void form_RSQ(double *R, double *S, double *Q, int nx, int nu, struct bla
 
 static void form_g(double *g, int nx, int nu, struct blasfeo_dvec *srq)
 {
-    blasfeo_unpack_dvec(nx, srq, nu, &g[0]);
-    blasfeo_unpack_dvec(nu, srq, 0, &g[nx]);
+    blasfeo_unpack_dvec(nx, srq, nu, &g[0], 1);
+    blasfeo_unpack_dvec(nu, srq, 0, &g[nx], 1);
 
     // printf("acados rq (nx = %d, nu = %d)\n", nx, nu);
     // blasfeo_print_tran_dvec(srq->m, srq, 0);
@@ -458,7 +458,7 @@ static void form_dynamics(double *ABt, double *b, int nx, int nu, struct blasfeo
     // copy B
     blasfeo_unpack_dmat(nu, nx, sBAbt, 0, 0, &ABt[nx], nx + nu);
     // copy b
-    blasfeo_unpack_dvec(nx, sb, 0, b);
+    blasfeo_unpack_dvec(nx, sb, 0, b, 1);
 
     // printf("acados [B'; A'] (nx = %d, nu = %d)\n", nx, nu);
     // blasfeo_print_dmat(sBAbt->m-1, sBAbt->n, sBAbt, 0, 0);
@@ -506,9 +506,9 @@ static void form_inequalities(double *Ct, double *lc, double *uc, int nx, int nu
     // copy D
     blasfeo_unpack_dmat(nu, ng, sDCt, 0, 0, &Ct[nx], nx + nu);
     // copy lc
-    blasfeo_unpack_dvec(ng, sd, nb, lc);
+    blasfeo_unpack_dvec(ng, sd, nb, lc, 1);
     // copy uc
-    blasfeo_unpack_dvec(ng, sd, 2 * nb + ng, uc);
+    blasfeo_unpack_dvec(ng, sd, 2 * nb + ng, uc, 1);
 
     for (ii = 0; ii < ng; ii++) uc[ii] = -uc[ii];
 }
@@ -776,8 +776,8 @@ static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out, ocp_qp_qpdunes_memory
         for (int ii = 0; ii < 2 * nv + 2 * nc; ii++)
             dual_sol[ii] = (dual_sol[ii] >= 0.0) ? dual_sol[ii] : 0.0;
 
-        blasfeo_pack_dvec(nx[kk], &mem->qpData.intervals[kk]->z.data[0], &out->ux[kk], nu[kk]);
-        blasfeo_pack_dvec(nu[kk], &mem->qpData.intervals[kk]->z.data[nx[kk]], &out->ux[kk], 0);
+        blasfeo_pack_dvec(nx[kk], &mem->qpData.intervals[kk]->z.data[0], 1, &out->ux[kk], nu[kk]);
+        blasfeo_pack_dvec(nu[kk], &mem->qpData.intervals[kk]->z.data[nx[kk]], 1, &out->ux[kk], 0);
 
         for (int ii = 0; ii < 2 * nb[kk] + 2 * ng[kk]; ii++) out->lam[kk].pa[ii] = 0.0;
 
@@ -805,7 +805,7 @@ static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out, ocp_qp_qpdunes_memory
     }
     for (int kk = 0; kk < N; kk++)
     {
-        blasfeo_pack_dvec(nx[kk + 1], &mem->qpData.lambda.data[kk * nx[kk + 1]], &out->pi[kk], 0);
+        blasfeo_pack_dvec(nx[kk + 1], &mem->qpData.lambda.data[kk * nx[kk + 1]], 1, &out->pi[kk], 0);
     }
 }
 

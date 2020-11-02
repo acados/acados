@@ -680,7 +680,7 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
 
     acados_tic(&interface_timer);
     // copy prim_sol and dual_sol to qp_out
-    blasfeo_pack_dvec(nv2, prim_sol, qp_out->v, 0);
+    blasfeo_pack_dvec(nv2, prim_sol, 1, qp_out->v, 0);
     for (int ii = 0; ii < 2 * nb + 2 * ng + 2 * ns; ii++) qp_out->lam->pa[ii] = 0.0;
     for (int ii = 0; ii < nb; ii++)
     {

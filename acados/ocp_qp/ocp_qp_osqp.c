@@ -297,7 +297,7 @@ static void update_gradient(const ocp_qp_in *in, ocp_qp_osqp_memory *mem)
 
     for (kk = 0; kk <= dims->N; kk++)
     {
-        blasfeo_unpack_dvec(dims->nu[kk] + dims->nx[kk], in->rqz + kk, 0, &mem->q[nn]);
+        blasfeo_unpack_dvec(dims->nu[kk] + dims->nx[kk], in->rqz + kk, 0, &mem->q[nn], 1);
         nn += dims->nu[kk] + dims->nx[kk];
     }
 }
@@ -538,7 +538,7 @@ static void update_bounds(const ocp_qp_in *in, ocp_qp_osqp_memory *mem)
     for (kk = 0; kk < dims->N; kk++)
     {
         // unpack b to l
-        blasfeo_unpack_dvec(dims->nx[kk + 1], in->b + kk, 0, &mem->l[nn]);
+        blasfeo_unpack_dvec(dims->nx[kk + 1], in->b + kk, 0, &mem->l[nn], 1);
 
         // change sign of l (to get -b) and copy to u
         for (ii = 0; ii < dims->nx[kk + 1]; ii++)
@@ -554,7 +554,7 @@ static void update_bounds(const ocp_qp_in *in, ocp_qp_osqp_memory *mem)
     for (kk = 0; kk <= dims->N; kk++)
     {
         // unpack lg to l
-        blasfeo_unpack_dvec(dims->ng[kk], in->d + kk, dims->nb[kk], &mem->l[nn]);
+        blasfeo_unpack_dvec(dims->ng[kk], in->d + kk, dims->nb[kk], &mem->l[nn], 1);
 
         // unpack ug to u and flip signs because in HPIPM the signs are flipped for upper bounds
         for (ii = 0; ii < dims->ng[kk]; ii++)
@@ -569,7 +569,7 @@ static void update_bounds(const ocp_qp_in *in, ocp_qp_osqp_memory *mem)
     for (kk = 0; kk <= dims->N; kk++)
     {
         // unpack lb to l
-        blasfeo_unpack_dvec(dims->nb[kk], in->d + kk, 0, &mem->l[nn]);
+        blasfeo_unpack_dvec(dims->nb[kk], in->d + kk, 0, &mem->l[nn], 1);
 
         // unpack ub to u and flip signs because in HPIPM the signs are flipped for upper bounds
         for (ii = 0; ii < dims->nb[kk]; ii++)
@@ -1245,7 +1245,7 @@ static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out, ocp_qp_osqp_mem
 
     for (kk = 0; kk <= dims->N; kk++)
     {
-        blasfeo_pack_dvec(dims->nx[kk] + dims->nu[kk], &sol->x[nn], out->ux + kk, 0);
+        blasfeo_pack_dvec(dims->nx[kk] + dims->nu[kk], &sol->x[nn], 1, out->ux + kk, 0);
         nn += dims->nx[kk] + dims->nu[kk];
 
         con_start += kk < dims->N ? dims->nx[kk + 1] : 0;
@@ -1257,7 +1257,7 @@ static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out, ocp_qp_osqp_mem
     nn = 0;
     for (kk = 0; kk < dims->N; kk++)
     {
-        blasfeo_pack_dvec(dims->nx[kk + 1], &sol->y[nn], out->pi + kk, 0);
+        blasfeo_pack_dvec(dims->nx[kk + 1], &sol->y[nn], 1, out->pi + kk, 0);
         nn += dims->nx[kk + 1];
     }
 
