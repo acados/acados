@@ -658,11 +658,11 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
 
     if (!strcmp(field, "lb")) // TODO(fuck_lint) remove !!!
     {
-        blasfeo_pack_dvec(nb, value, &model->d, 0);
+        blasfeo_pack_dvec(nb, value, 1, &model->d, 0);
     }
     else if (!strcmp(field, "ub")) // TODO(fuck_lint) remove !!!
     {
-        blasfeo_pack_dvec(nb, value, &model->d, nb+ng+nphi);
+        blasfeo_pack_dvec(nb, value, 1, &model->d, nb+ng+nphi);
     }
     else if (!strcmp(field, "idxbx"))
     {
@@ -672,11 +672,11 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lbx"))
     {
-        blasfeo_pack_dvec(nbx, value, &model->d, nbu);
+        blasfeo_pack_dvec(nbx, value, 1, &model->d, nbu);
     }
     else if (!strcmp(field, "ubx"))
     {
-        blasfeo_pack_dvec(nbx, value, &model->d, nb + ng + nphi + nbu);
+        blasfeo_pack_dvec(nbx, value, 1, &model->d, nb + ng + nphi + nbu);
     }
     else if (!strcmp(field, "idxbu"))
     {
@@ -686,11 +686,11 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lbu"))
     {
-        blasfeo_pack_dvec(nbu, value, &model->d, 0);
+        blasfeo_pack_dvec(nbu, value, 1, &model->d, 0);
     }
     else if (!strcmp(field, "ubu"))
     {
-        blasfeo_pack_dvec(nbu, value, &model->d, nb + ng + nphi);
+        blasfeo_pack_dvec(nbu, value, 1, &model->d, nb + ng + nphi);
     }
     else if (!strcmp(field, "C"))
     {
@@ -702,11 +702,11 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lg"))
     {
-        blasfeo_pack_dvec(ng, value, &model->d, nb);
+        blasfeo_pack_dvec(ng, value, 1, &model->d, nb);
     }
     else if (!strcmp(field, "ug"))
     {
-        blasfeo_pack_dvec(ng, value, &model->d, 2*nb+ng+nphi);
+        blasfeo_pack_dvec(ng, value, 1, &model->d, 2*nb+ng+nphi);
     }
     else if (!strcmp(field, "nl_constr_phi_o_r_fun_phi_jac_ux_z_phi_hess_r_jac_ux"))
     {
@@ -718,11 +718,11 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lphi")) // TODO(fuck_lint) remove
     {
-        blasfeo_pack_dvec(nphi, value, &model->d, nb+ng);
+        blasfeo_pack_dvec(nphi, value, 1, &model->d, nb+ng);
     }
     else if (!strcmp(field, "uphi"))
     {
-        blasfeo_pack_dvec(nphi, value, &model->d, 2*nb+2*ng+nphi);
+        blasfeo_pack_dvec(nphi, value, 1, &model->d, 2*nb+2*ng+nphi);
     }
     else if (!strcmp(field, "idxsbu"))
     {
@@ -732,11 +732,11 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lsbu"))
     {
-        blasfeo_pack_dvec(nsbu, value, &model->d, 2*nb+2*ng+2*nphi);
+        blasfeo_pack_dvec(nsbu, value, 1, &model->d, 2*nb+2*ng+2*nphi);
     }
     else if (!strcmp(field, "usbu"))
     {
-        blasfeo_pack_dvec(nsbu, value, &model->d, 2*nb+2*ng+2*nphi+ns);
+        blasfeo_pack_dvec(nsbu, value, 1, &model->d, 2*nb+2*ng+2*nphi+ns);
     }
     else if (!strcmp(field, "idxsbx"))
     {
@@ -746,11 +746,11 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lsbx"))
     {
-        blasfeo_pack_dvec(nsbx, value, &model->d, 2*nb+2*ng+2*nphi+nsbu);
+        blasfeo_pack_dvec(nsbx, value, 1, &model->d, 2*nb+2*ng+2*nphi+nsbu);
     }
     else if (!strcmp(field, "usbx"))
     {
-        blasfeo_pack_dvec(nsbx, value, &model->d, 2*nb+2*ng+2*nphi+ns+nsbu);
+        blasfeo_pack_dvec(nsbx, value, 1, &model->d, 2*nb+2*ng+2*nphi+ns+nsbu);
     }
     else if (!strcmp(field, "idxsg"))
     {
@@ -760,11 +760,11 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lsg"))
     {
-        blasfeo_pack_dvec(nsg, value, &model->d, 2*nb+2*ng+2*nphi+nsbu+nsbx);
+        blasfeo_pack_dvec(nsg, value, 1, &model->d, 2*nb+2*ng+2*nphi+nsbu+nsbx);
     }
     else if (!strcmp(field, "usg"))
     {
-        blasfeo_pack_dvec(nsg, value, &model->d, 2*nb+2*ng+2*nphi+ns+nsbu+nsbx);
+        blasfeo_pack_dvec(nsg, value, 1, &model->d, 2*nb+2*ng+2*nphi+ns+nsbu+nsbx);
     }
     else if (!strcmp(field, "idxsphi"))
     {
@@ -774,11 +774,11 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lsphi"))
     {
-        blasfeo_pack_dvec(nsphi, value, &model->d, 2*nb+2*ng+2*nphi+nsbu+nsbx+nsg);
+        blasfeo_pack_dvec(nsphi, value, 1, &model->d, 2*nb+2*ng+2*nphi+nsbu+nsbx+nsg);
     }
     else if (!strcmp(field, "usphi"))
     {
-        blasfeo_pack_dvec(nsphi, value, &model->d, 2*nb+2*ng+2*nphi+ns+nsbu+nsbx+nsg);
+        blasfeo_pack_dvec(nsphi, value, 1, &model->d, 2*nb+2*ng+2*nphi+ns+nsbu+nsbx+nsg);
     }
     else if (!strcmp(field, "idxbue"))
     {

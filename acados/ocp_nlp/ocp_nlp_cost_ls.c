@@ -353,39 +353,39 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
     else if (!strcmp(field, "y_ref") || !strcmp(field, "yref"))
     {
         double *y_ref = (double *) value_;
-        blasfeo_pack_dvec(ny, y_ref, &model->y_ref, 0);
+        blasfeo_pack_dvec(ny, y_ref, 1, &model->y_ref, 0);
     }
     else if (!strcmp(field, "Z"))
     {
         double *Z = (double *) value_;
-        blasfeo_pack_dvec(ns, Z, &model->Z, 0);
-        blasfeo_pack_dvec(ns, Z, &model->Z, ns);
+        blasfeo_pack_dvec(ns, Z, 1, &model->Z, 0);
+        blasfeo_pack_dvec(ns, Z, 1, &model->Z, ns);
     }
     else if (!strcmp(field, "Zl"))
     {
         double *Zl = (double *) value_;
-        blasfeo_pack_dvec(ns, Zl, &model->Z, 0);
+        blasfeo_pack_dvec(ns, Zl, 1, &model->Z, 0);
     }
     else if (!strcmp(field, "Zu"))
     {
         double *Zu = (double *) value_;
-        blasfeo_pack_dvec(ns, Zu, &model->Z, ns);
+        blasfeo_pack_dvec(ns, Zu, 1, &model->Z, ns);
     }
     else if (!strcmp(field, "z"))
     {
         double *z = (double *) value_;
-        blasfeo_pack_dvec(ns, z, &model->z, 0);
-        blasfeo_pack_dvec(ns, z, &model->z, ns);
+        blasfeo_pack_dvec(ns, z, 1, &model->z, 0);
+        blasfeo_pack_dvec(ns, z, 1, &model->z, ns);
     }
     else if (!strcmp(field, "zl"))
     {
         double *zl = (double *) value_;
-        blasfeo_pack_dvec(ns, zl, &model->z, 0);
+        blasfeo_pack_dvec(ns, zl, 1, &model->z, 0);
     }
     else if (!strcmp(field, "zu"))
     {
         double *zu = (double *) value_;
-        blasfeo_pack_dvec(ns, zu, &model->z, ns);
+        blasfeo_pack_dvec(ns, zu, 1, &model->z, ns);
     }
     else if (!strcmp(field, "scaling"))
     {

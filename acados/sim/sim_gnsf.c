@@ -843,8 +843,8 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
         blasfeo_pack_dmat(nxz2, nx2, A_LO, nxz2, dK2_dx2, ii * nxz2, 0);
           // dK2_dx2 = repmat(s.ALO,opts.n_stages,1); contains now r.h.s. for dK2_dx2
 
-        blasfeo_pack_dvec(nx1, model->c, &cc1, ii * nx1);
-        blasfeo_pack_dvec(nz1 , &model->c[nx1], &cc2, ii * nz1);
+        blasfeo_pack_dvec(nx1, model->c, 1, &cc1, ii * nx1);
+        blasfeo_pack_dvec(nz1 , &model->c[nx1], 1, &cc2, ii * nz1);
     }
 
     for (int ii = 0; ii < num_stages; ii++)
@@ -1442,7 +1442,7 @@ int sim_gnsf_memory_set(void *config_, void *dims_, void *mem_, const char *fiel
     }
     else if (!strcmp(field, "guesses_blasfeo"))
     {
-        blasfeo_unpack_dvec(dims->n_out, value, 0, mem->phi_guess);
+        blasfeo_unpack_dvec(dims->n_out, value, 0, mem->phi_guess, 1);
     }
     else
     {
@@ -1979,11 +1979,11 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     // struct blasfeo_dmat *dr0_dvv0 = &workspace->dr0_dvv0;
 
     // transform inputs to blasfeo and apply permutation ipiv_x
-    blasfeo_pack_dvec(nu, in->u, u0, 0);
-    blasfeo_pack_dvec(nx, &in->x[0], x0_traj, 0);
+    blasfeo_pack_dvec(nu, in->u, 1, u0, 0);
+    blasfeo_pack_dvec(nx, &in->x[0], 1, x0_traj, 0);
     blasfeo_dvecpe(nx, ipiv_x, x0_traj, 0);
-    blasfeo_pack_dvec(nx + nu, &in->S_adj[0], lambda, 0);
-    blasfeo_pack_dvec(nx + nu, &in->S_adj[0], lambda_old, 0);
+    blasfeo_pack_dvec(nx + nu, &in->S_adj[0], 1, lambda, 0);
+    blasfeo_pack_dvec(nx + nu, &in->S_adj[0], 1, lambda_old, 0);
     blasfeo_dvecpe(nx, ipiv_x, lambda, 0);
     blasfeo_dvecpe(nx, ipiv_x, lambda_old, 0);
 
@@ -2039,7 +2039,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
 
         // initialize vv for first step, for further steps initialize with last vv value in step loop
         for (int i = 0; i < num_stages; i++)
-            blasfeo_pack_dvec(n_out, mem->phi_guess, &vv_traj[0], i * n_out);
+            blasfeo_pack_dvec(n_out, mem->phi_guess, 1, &vv_traj[0], i * n_out);
 
         // printf("GNSF_IRK initial guess:\n");
         // blasfeo_print_dvec(num_stages * n_out, &vv_traj[0], 0);
@@ -2147,7 +2147,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
         // uhat = Lu * u0;
         blasfeo_dgemv_n(nuhat, nu, 1.0, Lu, 0, 0, u0, 0, 0.0, uhat, 0, uhat, 0);
         // BLOtimesu0 = BLO * u0 + c_LO
-        blasfeo_pack_dvec(nxz2, model->c_LO, BLOtimesu0, 0);
+        blasfeo_pack_dvec(nxz2, model->c_LO, 1, BLOtimesu0, 0);
         blasfeo_dgemv_n(nxz2, nu, 1.0, BLO, 0, 0, u0, 0, 1.0, BLOtimesu0, 0, BLOtimesu0, 0);
 
         /************************************************
@@ -2510,7 +2510,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                     }
                 }
                 // pack z0
-                blasfeo_pack_dvec(nz, out->zn, z0, 0);
+                blasfeo_pack_dvec(nz, out->zn, 1, z0, 0);
 
                 if (opts->sens_algebraic)
                 {
@@ -2535,7 +2535,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                                         // eval polynomial through (c_kk, k_kk) at 0.
                             out->S_algebraic[ii + (jj+nx)*nz] = interpolated_value;
                             // printf("\ndz[ii=%d]_dxu[jj=%d] = %e\n", ii, jj, interpolated_value);
-                            // blasfeo_pack_dvec(1, &interpolated_value, xtdot, ii);
+                            // blasfeo_pack_dvec(1, &interpolated_value, 1, xtdot, ii);
                         }
                     }
                     // dz1_dx1
@@ -2621,7 +2621,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
             //         }
 
             //         // pack x0dot_1
-            //         blasfeo_pack_dvec(nx1, out->xn, x0dot_1, 0);
+            //         blasfeo_pack_dvec(nx1, out->xn, 1, x0dot_1, 0);
 
             //         // evaluate phi at x0_1, x0_1dot, u, z0;
             //         // build y_0; // use y_one_stage
@@ -2769,7 +2769,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
             if (ss == num_steps-1)
             {
                 // store last vv values for next initialization
-                blasfeo_unpack_dvec(n_out, &vv_traj[ss], (num_stages-1) * n_out, mem->phi_guess);
+                blasfeo_unpack_dvec(n_out, &vv_traj[ss], (num_stages-1) * n_out, mem->phi_guess, 1);
             }
         }  // end step loop: ss
 
@@ -2930,7 +2930,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     // blasfeo_print_exp_dvec(nx, x0_traj, nx * num_steps);
 
     blasfeo_dvecpei(nx, ipiv_x, x0_traj, nx * num_steps);
-    blasfeo_unpack_dvec(nx, x0_traj, nx * num_steps, out->xn);
+    blasfeo_unpack_dvec(nx, x0_traj, nx * num_steps, out->xn, 1);
 
     if (opts->sens_forw)
     {
@@ -2941,7 +2941,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     if (opts->sens_adj)
     {
         blasfeo_dvecpei(nx, ipiv_x, lambda, 0);
-        blasfeo_unpack_dvec(nx + nu, lambda, 0, out->S_adj);
+        blasfeo_unpack_dvec(nx + nu, lambda, 0, out->S_adj, 1);
     }
     if (opts->sens_algebraic)
     {
@@ -2954,7 +2954,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     if (opts->output_z)
     {
         blasfeo_dvecpei(nz, ipiv_z, z0, 0);
-        blasfeo_unpack_dvec(nz, z0, 0, out->zn);
+        blasfeo_unpack_dvec(nz, z0, 0, out->zn, 1);
     }
 
     out->info->CPUtime = acados_toc(&tot_timer);

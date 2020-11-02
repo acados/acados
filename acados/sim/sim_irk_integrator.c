@@ -430,8 +430,8 @@ int sim_irk_memory_set(void *config_, void *dims_, void *mem_, const char *field
         config->dims_get(config_, dims_, "nz", &nz);
 
         struct blasfeo_dvec *sim_guess = (struct blasfeo_dvec *) value;
-        blasfeo_unpack_dvec(nx, sim_guess, 0, mem->xdot);
-        blasfeo_unpack_dvec(nz, sim_guess, nx, mem->z);
+        blasfeo_unpack_dvec(nx, sim_guess, 0, mem->xdot, 1);
+        blasfeo_unpack_dvec(nz, sim_guess, nx, mem->z, 1);
     }
     else
     {
@@ -917,17 +917,17 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     }
 
     // pack
-    blasfeo_pack_dvec(nx, in->x, xn, 0);
+    blasfeo_pack_dvec(nx, in->x, 1, xn, 0);
     blasfeo_pack_dmat(nx, nx + nu, in->S_forw, nx, S_forw, 0, 0);
-    blasfeo_pack_dvec(nx + nu, in->S_adj, lambda, 0); // TODO set to zero u-part ???
+    blasfeo_pack_dvec(nx + nu, in->S_adj, 1, lambda, 0); // TODO set to zero u-part ???
 
     // initialize integration variables
     for (int i = 0; i < ns; ++i)
     {
         // state derivatives
-        blasfeo_pack_dvec(nx, mem->xdot, K, nx*i);
+        blasfeo_pack_dvec(nx, mem->xdot, 1, K, nx*i);
         // algebraic variables
-        blasfeo_pack_dvec(nz, mem->z, K, nx*ns + i*nz);
+        blasfeo_pack_dvec(nz, mem->z, 1, K, nx*ns + i*nz);
     }
     // printf("sim_irk: K initialization\n");
     // blasfeo_print_exp_dvec(nK, K, 0);
@@ -1197,7 +1197,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                                     // eval polynomial through vals in Z_work at 0.
                         S_algebraic[ii+jj*nz] = -interpolated_value;
                         // printf("\ndz[ii=%d]_dxu[jj=%d] = %e\n", ii, jj, interpolated_value);
-                        // blasfeo_pack_dvec(1, &interpolated_value, xtdot, ii);
+                        // blasfeo_pack_dvec(1, &interpolated_value, 1, xtdot, ii);
                     }
                 }
             }  // end if sens_algebraic
@@ -1231,7 +1231,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                         }
                         neville_algorithm(0.0, ns - 1, opts->c_vec, Z_work, &interpolated_value);
                                     // eval polynomial through (c_jj, k_jj) at 0.
-                        blasfeo_pack_dvec(1, &interpolated_value, xtdot, ii);
+                        blasfeo_pack_dvec(1, &interpolated_value, 1, xtdot, ii);
                     }
                     // perform extra newton iterations to get xdot0, z0 more precisely.
                     for (int ii = 0; ii < opts->newton_iter; ii++)
@@ -1262,7 +1262,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
                         blasfeo_daxpy(nx, -1.0, rG, 0, xtdot, 0, xtdot, 0);
                         blasfeo_dveccp(nx, rG, 0, xtdot, 0);
-                        blasfeo_unpack_dvec(nz, rG, nx, mem->z);
+                        blasfeo_unpack_dvec(nz, rG, nx, mem->z, 1);
                         for (int jj = 0; jj < nz; jj++)
                         {
                             out->zn[jj] -= mem->z[jj];
@@ -1318,13 +1318,13 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         if (ss == num_steps-1)
         {
             // store last xdot, z values for next initialization
-            blasfeo_unpack_dvec(nx, K, (ns-1) * nx, mem->xdot);
-            blasfeo_unpack_dvec(nz, K, (ns-1) * nz + ns*nx, mem->z);
+            blasfeo_unpack_dvec(nx, K, (ns-1) * nx, mem->xdot, 1);
+            blasfeo_unpack_dvec(nz, K, (ns-1) * nz + ns*nx, mem->z, 1);
         }
     }  // end step loop (ss)
 
     // extract results from forward sweep to output
-    blasfeo_unpack_dvec(nx, xn, 0, x_out);
+    blasfeo_unpack_dvec(nx, xn, 0, x_out, 1);
 
     if  ( opts->sens_forw || opts->sens_hess )
         blasfeo_unpack_dmat(nx, nx + nu, S_forw_ss, 0, 0, S_forw_out, nx);
@@ -1516,7 +1516,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
 	// extract output
     if  ( opts->sens_adj  || opts->sens_hess )
-        blasfeo_unpack_dvec(nx + nu, lambda, 0, S_adj_out);
+        blasfeo_unpack_dvec(nx + nu, lambda, 0, S_adj_out, 1);
     if  ( opts->sens_hess )
     {
 #if CASADI_HESS_MULT

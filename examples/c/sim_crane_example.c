@@ -334,7 +334,7 @@ int main()
 
             struct blasfeo_dvec sx;
             blasfeo_allocate_dvec(nx, &sx);
-            blasfeo_pack_dvec(nx, in->S_adj, &sx, 0);
+            blasfeo_pack_dvec(nx, in->S_adj, 1, &sx, 0);
 
             struct blasfeo_dvec sz;
             blasfeo_allocate_dvec(nx+nu, &sz);

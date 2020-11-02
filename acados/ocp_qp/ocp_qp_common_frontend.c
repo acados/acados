@@ -517,15 +517,15 @@ void convert_ocp_qp_out_to_colmaj(ocp_qp_out *qp_out, colmaj_ocp_qp_out *cm_qp_o
 
     for (int ii = 0; ii <= dims->N; ii++)
     {
-        blasfeo_unpack_dvec(dims->nu[ii], &qp_out->ux[ii], 0, cm_qp_out->u[ii]);
-        blasfeo_unpack_dvec(dims->nx[ii], &qp_out->ux[ii], dims->nu[ii], cm_qp_out->x[ii]);
+        blasfeo_unpack_dvec(dims->nu[ii], &qp_out->ux[ii], 0, cm_qp_out->u[ii], 1);
+        blasfeo_unpack_dvec(dims->nx[ii], &qp_out->ux[ii], dims->nu[ii], cm_qp_out->x[ii], 1);
 
         if (ii < dims->N)
-            blasfeo_unpack_dvec(dims->nx[ii + 1], &qp_out->pi[ii], 0, cm_qp_out->pi[ii]);
+            blasfeo_unpack_dvec(dims->nx[ii + 1], &qp_out->pi[ii], 0, cm_qp_out->pi[ii], 1);
 
         // TODO(dimitris): change to new convention for the colmaj interface
         blasfeo_unpack_dvec(2 * dims->nb[ii] + 2 * dims->ng[ii], &qp_out->lam[ii], 0,
-                            cm_qp_out->lam[ii]);
+                            cm_qp_out->lam[ii], 1);
     }
 
     // colmaj_ocp_qp_out *sol = cm_qp_out;

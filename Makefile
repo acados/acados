@@ -173,14 +173,14 @@ shared_library: $(SHARED_DEPS)
 	@echo
 
 blasfeo_static:
-	( cd $(BLASFEO_PATH); $(MAKE) static_library CC=$(CC) LA=$(BLASFEO_VERSION) TARGET=$(BLASFEO_TARGET) )
+	( cd $(BLASFEO_PATH); $(MAKE) static_library CC=$(CC) LA=$(BLASFEO_VERSION) TARGET=$(BLASFEO_TARGET) MF=PANELMAJ BLAS_API=0 )
 	mkdir -p include/blasfeo/include
 	mkdir -p lib
 	cp $(BLASFEO_PATH)/include/*.h include/blasfeo/include
 	cp $(BLASFEO_PATH)/lib/libblasfeo.a lib
 
 blasfeo_shared:
-	( cd $(BLASFEO_PATH); $(MAKE) shared_library CC=$(CC) LA=$(BLASFEO_VERSION) TARGET=$(BLASFEO_TARGET) )
+	( cd $(BLASFEO_PATH); $(MAKE) shared_library CC=$(CC) LA=$(BLASFEO_VERSION) TARGET=$(BLASFEO_TARGET) MF=PANELMAJ BLAS_API=0 )
 	mkdir -p include/blasfeo/include
 	mkdir -p lib
 	cp $(BLASFEO_PATH)/include/*.h include/blasfeo/include

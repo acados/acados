@@ -357,7 +357,7 @@ static void d_cvt_casadi_to_dvec(double *in, int *sparsity_in, struct blasfeo_dv
 
     if (dense)
     {
-        blasfeo_pack_dvec(n, in, out, 0);
+        blasfeo_pack_dvec(n, in, 1, out, 0);
     }
     else
     {
@@ -395,7 +395,7 @@ static void d_cvt_dvec_to_casadi(struct blasfeo_dvec *in, double *out, int *spar
 
     if (dense)
     {
-        blasfeo_unpack_dvec(n, in, 0, out);
+        blasfeo_unpack_dvec(n, in, 0, out, 1);
     }
     else
     {
@@ -601,7 +601,7 @@ static void d_cvt_casadi_to_dvec_args(double *in, int *sparsity_in, struct blasf
 
     if (dense)
     {
-        blasfeo_pack_dvec(n, in, x, xi);
+        blasfeo_pack_dvec(n, in, 1, x, xi);
     }
     else
     {
@@ -642,7 +642,7 @@ static void d_cvt_dvec_args_to_casadi(struct blasfeo_dvec_args *in, double *out,
 
     if (dense)
     {
-        blasfeo_unpack_dvec(n, x, xi, out);
+        blasfeo_unpack_dvec(n, x, xi, out, 1);
     }
     else
     {

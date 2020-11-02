@@ -729,8 +729,8 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
     if (update_sens) blasfeo_pack_dmat(nx, nx + nu, S_forw_in, nx, S_forw, 0, 0);
 
     blasfeo_dvecse(nx * ns, 0.0, rG, 0);
-    blasfeo_pack_dvec(nx, x, xn, 0);
-    blasfeo_pack_dvec(nx, x, xn_out, 0);
+    blasfeo_pack_dvec(nx, x, 1, xn, 0);
+    blasfeo_pack_dvec(nx, x, 1, xn_out, 0);
     blasfeo_dvecse(nx, 0.0, dxn, 0);
 
 
@@ -744,15 +744,15 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
 
         // expansion step (K variables)
         // compute x and u step
-        blasfeo_pack_dvec(nx, in->x, w, 0);
-        blasfeo_pack_dvec(nu, in->u, w, nx);
+        blasfeo_pack_dvec(nx, in->x, 1, w, 0);
+        blasfeo_pack_dvec(nu, in->u, 1, w, nx);
 
         blasfeo_daxpy(nx, -1.0, mem->x, 0, w, 0, w, 0);
         blasfeo_daxpy(nu, -1.0, mem->u, 0, w, nx, w, nx);
         blasfeo_dgemv_n(nx * ns, nx + nu, 1.0, &JKf[ss], 0, 0, w, 0, 1.0, &K[ss], 0, &K[ss], 0);
 
-        blasfeo_pack_dvec(nx, in->x, mem->x, 0);
-        blasfeo_pack_dvec(nu, in->u, mem->u, 0);
+        blasfeo_pack_dvec(nx, in->x, 1, mem->x, 0);
+        blasfeo_pack_dvec(nu, in->u, 1, mem->u, 0);
 
         // reset value of JKf
         blasfeo_dgese(nx * ns, nx + nu, 0.0, &JKf[ss], 0, 0);
@@ -913,7 +913,7 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
 
 
     // extract output
-    blasfeo_unpack_dvec(nx, xn_out, 0, x_out);
+    blasfeo_unpack_dvec(nx, xn_out, 0, x_out, 1);
 
     blasfeo_unpack_dmat(nx, nx + nu, S_forw, 0, 0, S_forw_out, nx);
 
