@@ -59,6 +59,7 @@ else()
 endif()
 
 option(ACADOS_WITH_OPENMP "OpenMP Parallelization" OFF)
+option(ACADOS_SILENT "No console status output" OFF)
 
 # Additional targets
 option(ACADOS_UNIT_TESTS "Compile Unit tests" OFF)
@@ -132,6 +133,12 @@ if(ACADOS_WITH_OPENMP)
 else()
     set(ACADOS_WITH_OPENMP OFF)
     message(STATUS "ACADOS_WITH_OPENMP: ${ACADOS_WITH_OPENMP}")
+endif()
+
+if(ACADOS_SILENT)
+    message(STATUS "ACADOS_SILENT is ON")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DACADOS_SILENT")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DACADOS_SILENT")
 endif()
 
 # uninstall
