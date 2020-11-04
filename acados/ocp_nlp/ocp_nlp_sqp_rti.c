@@ -810,8 +810,9 @@ void ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
     if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
     {
         //   print_ocp_qp_in(mem->qp_in);
-
+#ifndef ACADOS_SILENT
         printf("QP solver returned error status %d\n", qp_status);
+#endif
         mem->status = ACADOS_QP_FAILURE;
         return;
     }
