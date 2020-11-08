@@ -56,13 +56,12 @@ int main()
 
     // initial condition
     double x0[{{ dims.nx }}];
-    {% if constraints.lbx_0 %}
-    {%- for i in range(end=dims.nx) %}
-    x0[{{ i }}] = {{ constraints.lbx_0[i] }};
-    {%- endfor %}
-    {%- else %}
     {%- for i in range(end=dims.nx) %}
     x0[{{ i }}] = 0.0;
+    {%- endfor %}
+    {% if constraints.lbx_0 %}
+    {%- for i in range(end=dims.nbx_0) %}
+    x0[{{ constraints.idxbx_0[i] }}] = {{ constraints.lbx_0[i] }};
     {%- endfor %}
     {%- endif %}
 
