@@ -642,6 +642,14 @@ def remove_x0_elimination(acados_ocp):
 
 
 class AcadosOcpSolver:
+    if sys.platform=="win32":
+        from ctypes import wintypes
+        dlclose = WinDLL('kernel32', use_last_error=True).FreeLibrary  
+        dlclose.argtypes = [wintypes.HMODULE]
+    else:
+        dlclose = CDLL(None).dlclose
+        dlclose.argtypes = [c_void_p]
+
     """
     class to interact with the acados ocp solver C object
     """
@@ -1178,9 +1186,8 @@ class AcadosOcpSolver:
     def __del__(self):
         if self.solver_created:
             self.shared_lib.acados_free()
-            del self.shared_lib
 
-        # NOTE: DLL cannot be easily unloaded!!!
-        # see https://stackoverflow.com/questions/359498/how-can-i-unload-a-dll-using-ctypes-in-python
-        # while isLoaded(self.shared_lib_name):
-        #     dlclose(handle)
+            try:
+                self.dlclose(self.shared_lib._handle)
+            except:
+                pass
