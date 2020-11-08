@@ -31,18 +31,41 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+# Enabled external modules
+set(ACADOS_WITH_HPMPC @ACADOS_WITH_HPMPC@)
+set(ACADOS_WITH_QORE @ACADOS_WITH_QORE@)
+set(ACADOS_WITH_QPOASES @ACADOS_WITH_QPOASES@)
+set(ACADOS_WITH_QPDUNES @ACADOS_WITH_QPDUNES@)
+set(ACADOS_WITH_OSQP @ACADOS_WITH_OSQP@)
+set(ACADOS_WITH_OOQP @ACADOS_WITH_OOQP@)
 
+# Add acados CMake folder to CMake prefix and module path
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_LIST_DIR}/../") # for *Config.cmake
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")     # for FindOpenBLAS, FindFortranLibs
 
+# Find the enabled external modules
 find_package(blasfeo)
 find_package(hpipm)
 
-find_package(qpOASES_e)
-find_package(hpmpc)
-find_package(qpdunes)
-find_package(qore)
-find_package(ooqp)
+if(ACADOS_WITH_QPOASES)
+    find_package(qpOASES_e)
+endif()
+
+if(ACADOS_WITH_HPMPC)
+    find_package(hpmpc)
+endif()
+
+if(ACADOS_WITH_QPDUNES)
+    find_package(qpdunes)
+endif()
+
+if(ACADOS_WITH_QORE)
+    find_package(qore)
+endif()
+
+if(ACADOS_WITH_OOQP)
+    find_package(ooqp)
+endif()
 
 find_package(OpenBLAS)
 add_library(openblas UNKNOWN IMPORTED)
