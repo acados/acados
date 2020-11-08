@@ -1073,12 +1073,16 @@ class AcadosOcpSolver:
                 pass
             elif api=='warn':
                 if not np.all(np.ravel(value_, order='F')==np.ravel(value_, order='K')):
-                    raise Exception("You are relying on a now-fixed bug in constraints_set for field '{}'.\n".format(field_) +
-                                    "acados_template now correctly passes on any matrices to acados in column major format.\n" +
-                                    "Two options to fix this error: \n" +
-                                    " * Add api='old' to constraints_set to restore old incorrect behaviour\n" +
-                                    " * Add api='new' to constraints_set and remove any unnatural manipulation of the value argument " +
-                                    " such as non-mathematical transposes, reshaping, casting to fortran order, etc...")
+                    raise Exception("Ambiguity in API detected.\n"
+                                    "Are you making an acados model from scrach? Add api='new' to constraints_set and carry on.\n"
+                                    "Are you seeing this error suddenly in previously running code? Read on.\n"
+                                    "  You are relying on a now-fixed bug in constraints_set for field '{}'.\n".format(field_) +
+                                    "  acados_template now correctly passes on any matrices to acados in column major format.\n" +
+                                    "  Two options to fix this error: \n" +
+                                    "   * Add api='old' to constraints_set to restore old incorrect behaviour\n" +
+                                    "   * Add api='new' to constraints_set and remove any unnatural manipulation of the value argument " +
+                                    "such as non-mathematical transposes, reshaping, casting to fortran order, etc... " +
+                                    "If there is no such manipulation, then you have probably been getting an incorrect solution before.")
                 # Get elements in column major order
                 value_ = np.ravel(value_, order='F')                
             elif api=='new':
