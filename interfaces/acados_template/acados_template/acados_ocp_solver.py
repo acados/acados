@@ -1005,7 +1005,7 @@ class AcadosOcpSolver:
         return
 
 
-    def cost_set(self, stage_, field_, value_):
+    def cost_set(self, stage_, field_, value_, api='warn'):
         """
         set numerical data in the cost module of the solver:
             :param stage_: integer corresponding to shooting node
@@ -1032,6 +1032,29 @@ class AcadosOcpSolver:
         value_shape = value_.shape
         if len(value_shape) == 1:
             value_shape = (value_shape[0], 0)
+
+        elif len(value_shape) == 2:
+            if api=='old':
+                pass
+            elif api=='warn':
+                if not np.all(np.ravel(value_, order='F')==np.ravel(value_, order='K')):
+                    raise Exception("Ambiguity in API detected.\n"
+                                    "Are you making an acados model from scrach? Add api='new' to cost_set and carry on.\n"
+                                    "Are you seeing this error suddenly in previously running code? Read on.\n"
+                                    "  You are relying on a now-fixed bug in cost_set for field '{}'.\n".format(field_) +
+                                    "  acados_template now correctly passes on any matrices to acados in column major format.\n" +
+                                    "  Two options to fix this error: \n" +
+                                    "   * Add api='old' to cost_set to restore old incorrect behaviour\n" +
+                                    "   * Add api='new' to cost_set and remove any unnatural manipulation of the value argument " +
+                                    "such as non-mathematical transposes, reshaping, casting to fortran order, etc... " +
+                                    "If there is no such manipulation, then you have probably been getting an incorrect solution before.")
+                # Get elements in column major order
+                value_ = np.ravel(value_, order='F')
+            elif api=='new':
+                # Get elements in column major order
+                value_ = np.ravel(value_, order='F')
+            else:
+                raise Exception("Unknown api: '{}'".format(api))
 
         if value_shape != tuple(dims):
             raise Exception('AcadosOcpSolver.cost_set(): mismatching dimension', \
@@ -1092,7 +1115,7 @@ class AcadosOcpSolver:
                                     "such as non-mathematical transposes, reshaping, casting to fortran order, etc... " +
                                     "If there is no such manipulation, then you have probably been getting an incorrect solution before.")
                 # Get elements in column major order
-                value_ = np.ravel(value_, order='F')                
+                value_ = np.ravel(value_, order='F')
             elif api=='new':
                 # Get elements in column major order
                 value_ = np.ravel(value_, order='F')
