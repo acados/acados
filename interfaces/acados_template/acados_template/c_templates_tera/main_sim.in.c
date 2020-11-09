@@ -39,7 +39,6 @@
 #include "acados/utils/print.h"
 #include "acados/utils/math.h"
 #include "acados_c/sim_interface.h"
-#include "acados_c/external_function_interface.h"
 #include "acados_sim_solver_{{ model.name }}.h"
 
 
@@ -55,15 +54,22 @@ int main()
     }
 
     // initial condition
-    double x0[{{ dims.nx }}];
+    double x_current[{{ dims.nx }}];
     {%- for i in range(end=dims.nx) %}
-    x0[{{ i }}] = 0.0;
+    x_current[{{ i }}] = 0.0;
     {%- endfor %}
-    {% if constraints.lbx_0 %}
+
+  {% if constraints.lbx_0 %}
     {%- for i in range(end=dims.nbx_0) %}
-    x0[{{ constraints.idxbx_0[i] }}] = {{ constraints.lbx_0[i] }};
+    x_current[{{ constraints.idxbx_0[i] }}] = {{ constraints.lbx_0[i] }};
     {%- endfor %}
+    {% if dims.nbx_0 != dims.nx %}
+    printf("main_sim: NOTE: initial state not fully defined via lbx_0, using 0.0 for indices that are not in idxbx_0.");
     {%- endif %}
+  {% else %}
+    printf("main_sim: initial state not defined, should be in lbx_0, using zero vector.");
+  {%- endif %}
+
 
     // initial value for control input
     double u0[{{ dims.nu }}];
@@ -86,7 +92,7 @@ int main()
     for (int ii = 0; ii < n_sim_steps; ii++)
     {
         sim_in_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims,
-            {{ model.name }}_sim_in, "x", x0);
+            {{ model.name }}_sim_in, "x", x_current);
         status = {{ model.name }}_acados_sim_solve();
 
         if (status != ACADOS_SUCCESS)
@@ -95,12 +101,12 @@ int main()
         }
 
         sim_out_get({{ model.name }}_sim_config, {{ model.name }}_sim_dims,
-               {{ model.name }}_sim_out, "x", x0);
+               {{ model.name }}_sim_out, "x", x_current);
         
-        printf("\nx0, %d\n", ii);
+        printf("\nx_current, %d\n", ii);
         for (int jj = 0; jj < {{ dims.nx }}; jj++)
         {
-            printf("%e\n", x0[jj]);
+            printf("%e\n", x_current[jj]);
         }
     }
 
