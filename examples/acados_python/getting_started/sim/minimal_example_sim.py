@@ -35,7 +35,7 @@ import sys
 sys.path.insert(0, '../common')
 
 from acados_template import AcadosSim, AcadosSimSolver
-from export_pendulum_ode_model import export_pendulum_ode_model
+from pendulum_model import export_pendulum_ode_model
 from utils import plot_pendulum
 import numpy as np
 import matplotlib.pyplot as plt
@@ -56,6 +56,7 @@ N = 200
 # set simulation time
 sim.solver_options.T = Tf
 # set options
+sim.solver_options.integrator_type = 'ERK'
 sim.solver_options.num_stages = 4
 sim.solver_options.num_steps = 3
 sim.solver_options.newton_iter = 3 # for implicit integrator

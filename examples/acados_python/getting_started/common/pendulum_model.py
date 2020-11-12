@@ -70,7 +70,7 @@ def export_pendulum_ode_model():
     # parameters
     p = []
     
-    # dynamics     
+    # dynamics
     denominator = M + m - m*cos(theta)*cos(theta)
     f_expl = vertcat(v1,
                      dtheta,
