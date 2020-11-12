@@ -318,7 +318,7 @@ int sim_out_get_(void *config_, void *dims_, sim_out *out, const char *field, vo
         for (int ii=0; ii < nx; ii++)
             xn[ii] = out->xn[ii];
     }
-    else if (!strcmp(field, "zn"))
+    else if (!strcmp(field, "zn") || !strcmp(field, "z"))
     {
         int nz;
         config->dims_get(config_, dims_, "nz", &nz);
