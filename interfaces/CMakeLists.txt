@@ -172,6 +172,10 @@ add_test(NAME python_pendulum_soft_constraints_example
 add_test(NAME python_pendulum_parametric_nonlinear_constraint_h_test
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
         python test_parametric_nonlinear_constraint_h.py)
+add_test(NAME python_test_sim_dae
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
+        python test_sim_dae.py)
+
 add_test(NAME python_pmsm_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pmsm_example
         python main.py)

@@ -114,3 +114,21 @@ def export_pendulum_ode_model_with_discrete_rk4(dT):
     print("built RK4 for pendulum model with dT = ", dT)
     print(xf)
     return model
+
+
+def export_augmented_pendulum_model():
+    # pendulum model augmented with algebraic variable just for testing
+    model = export_pendulum_ode_model()
+    model_name = 'augmented_pendulum'
+
+    z = SX.sym('z')
+
+    f_impl = vertcat( model.xdot - model.f_expl_expr, \
+        z - model.u*model.u)
+
+    model.f_impl_expr = f_impl
+    model.z = z
+    model.name = model_name
+
+    return model
+
