@@ -232,10 +232,12 @@ class AcadosSimSolver:
 
         nu = self.sim_struct.dims.nu
         nx = self.sim_struct.dims.nx
+        nz = self.sim_struct.dims.nz
         self.gettable = {
             'x': nx,
             'xn': nx,
             'u': nu,
+            'z': nz,
             'S_forw': nx*(nx+nu),
             'Sx': nx*nx,
             'Su': nx*nu,
@@ -258,7 +260,7 @@ class AcadosSimSolver:
     def get(self, field_):
         """
         get the last solution of the solver:
-            :param field_: string in ['x', 'u', 'S_forw', 'Sx', 'Su', 'S_adj', 'S_hess']
+            :param field_: string in ['x', 'u', 'z', 'S_forw', 'Sx', 'Su', 'S_adj', 'S_hess']
         """
         field = field_
         field = field.encode('utf-8')
@@ -319,6 +321,7 @@ class AcadosSimSolver:
             getattr(self.shared_lib, f"{model_name}_acados_sim_update_params")(value_data, value_.shape[0])
 
         elif field_ in self.settable:
+            # TODO(oj): perform dimension check!
             self.shared_lib.sim_in_set.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
             self.shared_lib.sim_in_set(self.sim_config, self.sim_dims, self.sim_in, field, value_data_p)
         else:
