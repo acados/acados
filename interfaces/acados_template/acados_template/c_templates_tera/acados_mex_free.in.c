@@ -48,10 +48,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     // mexPrintf("\nin mex_acados_free\n");
 
-    status = acados_free();
+    status = acados_{{ model.name }}_free();
     if (status)
     {
-        mexPrintf("acados_free() returned status %d.\n", status);
+        mexPrintf("acados_{{ model.name }}_free() returned status %d.\n", status);
     }
 
     return;

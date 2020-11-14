@@ -194,7 +194,7 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 
 static void mdlStart(SimStruct *S)
 {
-    acados_create();
+    acados_{{ model.name }}_create();
 }
 
 static void mdlOutputs(SimStruct *S, int_T tid)
@@ -213,8 +213,8 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
     for (int i = 0; i < {{ dims.nx }}; i++)
         buffer[i] = (double)(*in_sign[i]);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", buffer);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", buffer);
+    ocp_nlp_constraints_model_set({{ model.name }}_ptrs.nlp_config, {{ model.name }}_ptrs.nlp_dims, {{ model.name }}_ptrs.nlp_in, 0, "lbx", buffer);
+    ocp_nlp_constraints_model_set({{ model.name }}_ptrs.nlp_config, {{ model.name }}_ptrs.nlp_dims, {{ model.name }}_ptrs.nlp_in, 0, "ubx", buffer);
 
 {% if dims.ny > 0 %}
     // y_ref - stage-variant !!!
@@ -225,7 +225,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     {
         for (int jj = 0; jj < {{ dims.ny }}; jj++)
             buffer[jj] = (double)(*in_sign[ii*{{dims.ny}}+jj]);
-        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, ii, "yref", (void *) buffer);
+        ocp_nlp_cost_model_set({{ model.name }}_ptrs.nlp_config, {{ model.name }}_ptrs.nlp_dims, {{ model.name }}_ptrs.nlp_in, ii, "yref", (void *) buffer);
     }
 {%- endif %}
 
@@ -238,7 +238,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     for (int i = 0; i < {{ dims.ny_e }}; i++)
         buffer[i] = (double)(*in_sign[i]);
 
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, {{ dims.N }}, "yref", (void *) buffer);
+    ocp_nlp_cost_model_set({{ model.name }}_ptrs.nlp_config, {{ model.name }}_ptrs.nlp_dims, {{ model.name }}_ptrs.nlp_in, {{ dims.N }}, "yref", (void *) buffer);
 {%- endif %}
 
 {% if dims.np > 0 %}
@@ -251,7 +251,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     {
         for (int jj = 0; jj < {{ dims.np }}; jj++)
             buffer[jj] = (double)(*in_sign[ii*{{dims.np}}+jj]);
-        acados_update_params(ii, buffer, {{ dims.np }});
+        acados_{{ model.name }}_update_params(ii, buffer, {{ dims.np }});
     }
 {%- endif %}
 
@@ -265,7 +265,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         buffer[i] = (double)(*in_sign[i]);
 
     for (int ii = 1; ii < {{ dims.N }}; ii++)
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "lbx", buffer);
+        ocp_nlp_constraints_model_set({{ model.name }}_ptrs.nlp_config, {{ model.name }}_ptrs.nlp_dims, {{ model.name }}_ptrs.nlp_in, ii, "lbx", buffer);
 
     // ubx
     {%- set i_input = i_input + 1 %}
@@ -275,7 +275,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         buffer[i] = (double)(*in_sign[i]);
 
     for (int ii = 1; ii < {{ dims.N }}; ii++)
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "ubx", buffer);
+        ocp_nlp_constraints_model_set({{ model.name }}_ptrs.nlp_config, {{ model.name }}_ptrs.nlp_dims, {{ model.name }}_ptrs.nlp_in, ii, "ubx", buffer);
 {%- endif %}
 
 {% if dims.nbu > 0 %}
@@ -287,7 +287,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         buffer[i] = (double)(*in_sign[i]);
 
     for (int ii = 0; ii < {{ dims.N }}; ii++)
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "lbu", buffer);
+        ocp_nlp_constraints_model_set({{ model.name }}_ptrs.nlp_config, {{ model.name }}_ptrs.nlp_dims, {{ model.name }}_ptrs.nlp_in, ii, "lbu", buffer);
 
     // ubu
     {%- set i_input = i_input + 1 %}
@@ -297,7 +297,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         buffer[i] = (double)(*in_sign[i]);
 
     for (int ii = 0; ii < {{ dims.N }}; ii++)
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "ubu", buffer);
+        ocp_nlp_constraints_model_set({{ model.name }}_ptrs.nlp_config, {{ model.name }}_ptrs.nlp_dims, {{ model.name }}_ptrs.nlp_in, ii, "ubu", buffer);
 {%- endif %}
 
 {% if dims.ng > 0 %}
@@ -309,7 +309,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         buffer[i] = (double)(*in_sign[i]);
 
     for (int ii = 0; ii < {{ dims.N }}; ii++)
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "lg", buffer);
+        ocp_nlp_constraints_model_set({{ model.name }}_ptrs.nlp_config, {{ model.name }}_ptrs.nlp_dims, {{ model.name }}_ptrs.nlp_in, ii, "lg", buffer);
 
     // ug
     {%- set i_input = i_input + 1 %}
@@ -319,7 +319,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         buffer[i] = (double)(*in_sign[i]);
 
     for (int ii = 0; ii < {{ dims.N }}; ii++)
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "ug", buffer);
+        ocp_nlp_constraints_model_set({{ model.name }}_ptrs.nlp_config, {{ model.name }}_ptrs.nlp_dims, {{ model.name }}_ptrs.nlp_in, ii, "ug", buffer);
 {%- endif %}
 
 {% if dims.nh > 0 %}
@@ -331,7 +331,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         buffer[i] = (double)(*in_sign[i]);
 
     for (int ii = 0; ii < {{ dims.N }}; ii++)
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "lh", buffer);
+        ocp_nlp_constraints_model_set({{ model.name }}_ptrs.nlp_config, {{ model.name }}_ptrs.nlp_dims, {{ model.name }}_ptrs.nlp_in, ii, "lh", buffer);
 
     // uh
     {%- set i_input = i_input + 1 %}
@@ -341,13 +341,13 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         buffer[i] = (double)(*in_sign[i]);
 
     for (int ii = 0; ii < {{ dims.N }}; ii++)
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "uh", buffer);
+        ocp_nlp_constraints_model_set({{ model.name }}_ptrs.nlp_config, {{ model.name }}_ptrs.nlp_dims, {{ model.name }}_ptrs.nlp_in, ii, "uh", buffer);
 {%- endif %}
 
     /* call solver */
     int rti_phase = 0;
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "rti_phase", &rti_phase);
-    int acados_status = acados_solve();
+    ocp_nlp_solver_opts_set({{ model.name }}_ptrs.nlp_config, {{ model.name }}_ptrs.nlp_opts, "rti_phase", &rti_phase);
+    int acados_status = acados_{{ model.name }}_solve();
 
 
     /* set outputs */
@@ -364,28 +364,28 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     // extract solver info
     *out_status = (real_t) acados_status;
-    *out_KKT_res = (real_t) nlp_out->inf_norm_res;
-//    *out_cpu_time = (real_t) nlp_out->total_time;
+    *out_KKT_res = (real_t) {{ model.name }}_ptrs.nlp_out->inf_norm_res;
+//    *out_cpu_time = (real_t) {{ model.name }}_ptrs.nlp_out->total_time;
     
     // get solution time
-    ocp_nlp_get(nlp_config, nlp_solver, "time_tot", (void *) out_cpu_time);
+    ocp_nlp_get({{ model.name }}_ptrs.nlp_config, {{ model.name }}_ptrs.nlp_solver, "time_tot", (void *) out_cpu_time);
 
     // get sqp iter
-    ocp_nlp_get(nlp_config, nlp_solver, "sqp_iter", (void *) &tmp_int);
+    ocp_nlp_get({{ model.name }}_ptrs.nlp_config, {{ model.name }}_ptrs.nlp_solver, "sqp_iter", (void *) &tmp_int);
     *out_sqp_iter = (real_t) tmp_int;
-//    *out_sqp_iter = (real_t) nlp_out->sqp_iter;
+//    *out_sqp_iter = (real_t) {{ model.name }}_ptrs.nlp_out->sqp_iter;
 
     // get solution
-    ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, "u", (void *) out_u0);
+    ocp_nlp_out_get({{ model.name }}_ptrs.nlp_config, {{ model.name }}_ptrs.nlp_dims, {{ model.name }}_ptrs.nlp_out, 0, "u", (void *) out_u0);
 
     // get next state
-    ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 1, "x", (void *) out_x1);
+    ocp_nlp_out_get({{ model.name }}_ptrs.nlp_config, {{ model.name }}_ptrs.nlp_dims, {{ model.name }}_ptrs.nlp_out, 1, "x", (void *) out_x1);
 
 }
 
 static void mdlTerminate(SimStruct *S)
 {
-    acados_free();
+    acados_{{ model.name }}_free();
 }
 
 
