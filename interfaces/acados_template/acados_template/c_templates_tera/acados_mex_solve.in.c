@@ -45,5 +45,5 @@
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    acados_solve();
+    acados_{{ model.name }}_solve();
 }
