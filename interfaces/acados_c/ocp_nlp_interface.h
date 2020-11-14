@@ -107,7 +107,7 @@ typedef enum
 
 
 /// Structure to store the configuration of a non-linear program
-typedef struct
+typedef struct ocp_nlp_plan
 {
     /// QP solver configuration.
     ocp_qp_solver_plan ocp_qp_solver_plan;
@@ -137,7 +137,7 @@ typedef struct
 
 
 /// Structure to store the state/configuration for the non-linear programming solver
-typedef struct
+typedef struct ocp_nlp_solver
 {
     ocp_nlp_config *config;
     void *dims;
