@@ -77,22 +77,22 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
 
     int status = 0;
-    status = acados_create();
+    status = acados_{{ model.name }}_create();
 
     if (status)
     {
-        mexPrintf("acados_create() returned status %d. Exiting.\n", status);
+        mexPrintf("acados_{{ model.name }}_create() returned status %d. Exiting.\n", status);
         exit(1);
     }
 
 
     // get pointers to nlp solver related objects
-    ocp_nlp_config *nlp_config = acados_get_nlp_config();
-    ocp_nlp_dims *nlp_dims = acados_get_nlp_dims();
-    ocp_nlp_in *nlp_in = acados_get_nlp_in();
-    ocp_nlp_out *nlp_out = acados_get_nlp_out();
-    ocp_nlp_solver *nlp_solver = acados_get_nlp_solver();
-    void *nlp_opts = acados_get_nlp_opts();
+    ocp_nlp_config *nlp_config = acados_{{ model.name }}_get_nlp_config();
+    ocp_nlp_dims *nlp_dims = acados_{{ model.name }}_get_nlp_dims();
+    ocp_nlp_in *nlp_in = acados_{{ model.name }}_get_nlp_in();
+    ocp_nlp_out *nlp_out = acados_{{ model.name }}_get_nlp_out();
+    ocp_nlp_solver *nlp_solver = acados_{{ model.name }}_get_nlp_solver();
+    void *nlp_opts = acados_{{ model.name }}_get_nlp_opts();
 
     // initial condition
     int idxbx0[{{ dims.nbx_0 }}];
@@ -142,7 +142,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "x", x_init);
             ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "u", u0);
         }
-        status = acados_solve();
+        status = acados_{{ model.name }}_solve();
         ocp_nlp_get(nlp_config, nlp_solver, "time_tot", &elapsed_time);
         min_time = MIN(elapsed_time, min_time);
     }
@@ -161,9 +161,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mexPrintf("\nsolved ocp %d times, solution printed above\n\n", NTIMINGS);
 
     if (status == ACADOS_SUCCESS)
-        mexPrintf("acados_solve(): SUCCESS!\n");
+        mexPrintf("acados_{{ model.name }}_solve(): SUCCESS!\n");
     else
-        mexPrintf("acados_solve() failed with status %d.\n", status);
+        mexPrintf("acados_{{ model.name }}_solve() failed with status %d.\n", status);
 
     // get solution
     ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, "kkt_norm_inf", &kkt_norm_inf);
@@ -174,10 +174,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
            sqp_iter, min_time*1000, kkt_norm_inf);
 
     // free solver
-    status = acados_free();
+    status = acados_{{ model.name }}_free();
     if (status)
     {
-        mexPrintf("acados_free() returned status %d.\n", status);
+        mexPrintf("acados_{{ model.name }}_free() returned status %d.\n", status);
     }
 
     return;

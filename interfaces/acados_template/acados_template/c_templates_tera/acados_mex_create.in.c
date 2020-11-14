@@ -52,22 +52,22 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int status = 0;
 
     // create solver
-    status = acados_create();
+    status = acados_{{ model.name }}_create();
 
     if (status)
     {
-        mexPrintf("acados_create() returned status %d.\n", status);
+        mexPrintf("acados_{{ model.name }}_create() returned status %d.\n", status);
     }
     // mexPrintf("acados_create -> success!\n");
 
     // get pointers to nlp solver related objects
-    ocp_nlp_plan *nlp_plan = acados_get_nlp_plan();
-    ocp_nlp_config *nlp_config = acados_get_nlp_config();
-    ocp_nlp_dims *nlp_dims = acados_get_nlp_dims();
-    ocp_nlp_in *nlp_in = acados_get_nlp_in();
-    ocp_nlp_out *nlp_out = acados_get_nlp_out();
-    ocp_nlp_solver *nlp_solver = acados_get_nlp_solver();
-    void *nlp_opts = acados_get_nlp_opts();
+    ocp_nlp_plan *nlp_plan = acados_{{ model.name }}_get_nlp_plan();
+    ocp_nlp_config *nlp_config = acados_{{ model.name }}_get_nlp_config();
+    ocp_nlp_dims *nlp_dims = acados_{{ model.name }}_get_nlp_dims();
+    ocp_nlp_in *nlp_in = acados_{{ model.name }}_get_nlp_in();
+    ocp_nlp_out *nlp_out = acados_{{ model.name }}_get_nlp_out();
+    ocp_nlp_solver *nlp_solver = acados_{{ model.name }}_get_nlp_solver();
+    void *nlp_opts = acados_{{ model.name }}_get_nlp_opts();
 
     // mexPrintf("acados: got pointer to objectes!\n");
 
@@ -210,47 +210,43 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {% if solver_options.integrator_type == "ERK" %}
     {# TODO: remove _casadi from these names.. #}
     l_ptr = mxGetData(forw_vde_mat);
-    l_ptr[0] = (long long) forw_vde_casadi;
-    //
+    l_ptr[0] = (long long) {{ model.name }}_ptrs.forw_vde_casadi;
     l_ptr = mxGetData(expl_ode_fun_mat);
-    l_ptr[0] = (long long) expl_ode_fun;
+    l_ptr[0] = (long long) {{ model.name }}_ptrs.expl_ode_fun;
 {% if solver_options.hessian_approx == "EXACT" %}
     l_ptr = mxGetData(hess_vde_mat);
-    l_ptr[0] = (long long) hess_vde_casadi;
+    l_ptr[0] = (long long) {{ model.name }}_ptrs.hess_vde_casadi;
 {%- endif %}
 {% elif solver_options.integrator_type == "IRK" %}
-    // extern external_function_param_casadi * impl_dae_fun;
     l_ptr = mxGetData(impl_dae_fun_mat);
-    l_ptr[0] = (long long) impl_dae_fun;
-    // extern external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
+    l_ptr[0] = (long long) {{ model.name }}_ptrs.impl_dae_fun;
     l_ptr = mxGetData(impl_dae_fun_jac_x_xdot_z_mat);
-    l_ptr[0] = (long long) impl_dae_fun_jac_x_xdot_z;
-    // extern external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
+    l_ptr[0] = (long long) {{ model.name }}_ptrs.impl_dae_fun_jac_x_xdot_z;
     l_ptr = mxGetData(impl_dae_jac_x_xdot_u_z_mat);
-    l_ptr[0] = (long long) impl_dae_jac_x_xdot_u_z;
+    l_ptr[0] = (long long) {{ model.name }}_ptrs.impl_dae_jac_x_xdot_u_z;
 {% if solver_options.hessian_approx == "EXACT" %}
     l_ptr = mxGetData(impl_dae_hess_mat);
-    l_ptr[0] = (long long) impl_dae_hess;
+    l_ptr[0] = (long long) {{ model.name }}_ptrs.impl_dae_hess;
 {%- endif %}
 {% elif solver_options.integrator_type == "GNSF" %}
     l_ptr = mxGetData(gnsf_phi_fun_mat);
-    l_ptr[0] = (long long) gnsf_phi_fun;
+    l_ptr[0] = (long long) {{ model.name }}_ptrs.gnsf_phi_fun;
     l_ptr = mxGetData(gnsf_phi_fun_jac_y_mat);
-    l_ptr[0] = (long long) gnsf_phi_fun_jac_y;
+    l_ptr[0] = (long long) {{ model.name }}_ptrs.gnsf_phi_fun_jac_y;
     l_ptr = mxGetData(gnsf_phi_jac_y_uhat_mat);
-    l_ptr[0] = (long long) gnsf_phi_jac_y_uhat;
+    l_ptr[0] = (long long) {{ model.name }}_ptrs.gnsf_phi_jac_y_uhat;
     l_ptr = mxGetData(gnsf_f_lo_jac_x1_x1dot_u_z_mat);
-    l_ptr[0] = (long long) gnsf_f_lo_jac_x1_x1dot_u_z;
+    l_ptr[0] = (long long) {{ model.name }}_ptrs.gnsf_f_lo_jac_x1_x1dot_u_z;
     l_ptr = mxGetData(gnsf_get_matrices_fun_mat);
-    l_ptr[0] = (long long) gnsf_get_matrices_fun;
+    l_ptr[0] = (long long) {{ model.name }}_ptrs.gnsf_get_matrices_fun;
 {% elif solver_options.integrator_type == "DISCRETE" %}
     l_ptr = mxGetData(disc_phi_fun_mat);
-    l_ptr[0] = (long long) discr_dyn_phi_fun;
+    l_ptr[0] = (long long) {{ model.name }}_ptrs.discr_dyn_phi_fun;
     l_ptr = mxGetData(disc_phi_fun_jac_mat);
-    l_ptr[0] = (long long) discr_dyn_phi_fun_jac_ut_xt;
+    l_ptr[0] = (long long) {{ model.name }}_ptrs.discr_dyn_phi_fun_jac_ut_xt;
 {% if solver_options.hessian_approx == "EXACT" %}
     l_ptr = mxGetData(disc_phi_fun_jac_hess_mat);
-    l_ptr[0] = (long long) discr_dyn_phi_fun_jac_ut_xt_hess;
+    l_ptr[0] = (long long) {{ model.name }}_ptrs.discr_dyn_phi_fun_jac_ut_xt_hess;
 {%- endif %}
 {%- endif %}
     mxSetField(plhs[1], 0, "expl_ode_fun", expl_ode_fun_mat);
@@ -275,40 +271,40 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxArray *phi_constraint_mat = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(phi_constraint_mat);
 {%- if constraints.constr_type == "BGP" %}
-    l_ptr[0] = (long long) phi_constraint;
+    l_ptr[0] = (long long) {{ model.name }}_ptrs.phi_constraint;
 {% endif %}
 {% if constraints.constr_type_e == "BGP" %}
-    l_ptr[1] = (long long) &phi_e_constraint;
+    l_ptr[1] = (long long) &{{ model.name }}_ptrs.phi_e_constraint;
 {% endif %}
     mxSetField(plhs[1], 0, "phi_constraint", phi_constraint_mat);
 
     mxArray *nl_constr_h_fun_jac_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(nl_constr_h_fun_jac_mat);
 {% if constraints.constr_type == "BGH" and dims.nh > 0 %}
-    l_ptr[0] = (long long) nl_constr_h_fun_jac;
+    l_ptr[0] = (long long) {{ model.name }}_ptrs.nl_constr_h_fun_jac;
 {% endif %}
 {% if constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
-    l_ptr[1] = (long long) &nl_constr_h_e_fun_jac;
+    l_ptr[1] = (long long) &{{ model.name }}_ptrs.nl_constr_h_e_fun_jac;
 {%- endif %}
     mxSetField(plhs[1], 0, "nl_constr_h_fun_jac", nl_constr_h_fun_jac_mat);
 
     mxArray *nl_constr_h_fun_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(nl_constr_h_fun_mat);
 {% if constraints.constr_type == "BGH" and dims.nh > 0 %}
-    l_ptr[0] = (long long) nl_constr_h_fun;
+    l_ptr[0] = (long long) {{ model.name }}_ptrs.nl_constr_h_fun;
 {% endif %}
 {% if constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
-    l_ptr[1] = (long long) &nl_constr_h_e_fun;
+    l_ptr[1] = (long long) &{{ model.name }}_ptrs.nl_constr_h_e_fun;
 {%- endif %}
     mxSetField(plhs[1], 0, "nl_constr_h_fun", nl_constr_h_fun_mat);
 
     mxArray *nl_constr_h_fun_jac_hess_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(nl_constr_h_fun_jac_hess_mat);
 {% if constraints.constr_type == "BGH" and dims.nh > 0 and solver_options.hessian_approx == "EXACT" %}
-    l_ptr[0] = (long long) nl_constr_h_fun_jac_hess;
+    l_ptr[0] = (long long) {{ model.name }}_ptrs.nl_constr_h_fun_jac_hess;
 {% endif %}
 {% if constraints.constr_type_e == "BGH" and dims.nh_e > 0 and solver_options.hessian_approx == "EXACT" %}
-    l_ptr[1] = (long long) &nl_constr_h_e_fun_jac_hess;
+    l_ptr[1] = (long long) &{{ model.name }}_ptrs.nl_constr_h_e_fun_jac_hess;
 {%- endif %}
     mxSetField(plhs[1], 0, "nl_constr_h_fun_jac_hess", nl_constr_h_fun_jac_hess_mat);
 
@@ -316,60 +312,60 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxArray *cost_y_fun_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(cost_y_fun_mat);
 {% if cost.cost_type == "NONLINEAR_LS" %}
-    l_ptr[0] = (long long) cost_y_fun;
+    l_ptr[0] = (long long) {{ model.name }}_ptrs.cost_y_fun;
 {% endif %}
 {% if cost.cost_type_e == "NONLINEAR_LS" %}
-    l_ptr[1] = (long long) &cost_y_e_fun;
+    l_ptr[1] = (long long) &{{ model.name }}_ptrs.cost_y_e_fun;
 {%- endif %}
     mxSetField(plhs[1], 0, "cost_y_fun", cost_y_fun_mat);
 
     mxArray *cost_y_fun_jac_ut_xt_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(cost_y_fun_jac_ut_xt_mat);
 {% if cost.cost_type == "NONLINEAR_LS" %}
-    l_ptr[0] = (long long) cost_y_fun_jac_ut_xt;
+    l_ptr[0] = (long long) {{ model.name }}_ptrs.cost_y_fun_jac_ut_xt;
 {% endif %}
 {% if cost.cost_type_e == "NONLINEAR_LS" %}
-    l_ptr[1] = (long long) &cost_y_e_fun_jac_ut_xt;
+    l_ptr[1] = (long long) &{{ model.name }}_ptrs.cost_y_e_fun_jac_ut_xt;
 {%- endif %}
     mxSetField(plhs[1], 0, "cost_y_fun_jac_ut_xt", cost_y_fun_jac_ut_xt_mat);
 
     mxArray *cost_y_hess_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(cost_y_hess_mat);
 {% if cost.cost_type == "NONLINEAR_LS" %}
-    l_ptr[0] = (long long) cost_y_hess;
+    l_ptr[0] = (long long) {{ model.name }}_ptrs.cost_y_hess;
 {% endif %}
 {% if cost.cost_type_e == "NONLINEAR_LS" %}
-    l_ptr[1] = (long long) &cost_y_e_hess;
+    l_ptr[1] = (long long) &{{ model.name }}_ptrs.cost_y_e_hess;
 {%- endif %}
     mxSetField(plhs[1], 0, "cost_y_hess", cost_y_hess_mat);
 
     mxArray *ext_cost_fun_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(ext_cost_fun_mat);
 {% if cost.cost_type == "EXTERNAL" %}
-    l_ptr[0] = (long long) ext_cost_fun;
+    l_ptr[0] = (long long) {{ model.name }}_ptrs.ext_cost_fun;
 {% endif -%}
 {% if cost.cost_type_e == "EXTERNAL" %}
-    l_ptr[1] = (long long) &ext_cost_e_fun;
+    l_ptr[1] = (long long) &{{ model.name }}_ptrs.ext_cost_e_fun;
 {%- endif %}
     mxSetField(plhs[1], 0, "ext_cost_fun", ext_cost_fun_mat);
 
     mxArray *ext_cost_fun_jac_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(ext_cost_fun_jac_mat);
 {% if cost.cost_type == "EXTERNAL" %}
-    l_ptr[0] = (long long) ext_cost_fun_jac;
+    l_ptr[0] = (long long) {{ model.name }}_ptrs.ext_cost_fun_jac;
 {% endif -%}
 {% if cost.cost_type_e == "EXTERNAL" %}
-    l_ptr[1] = (long long) &ext_cost_e_fun_jac;
+    l_ptr[1] = (long long) &{{ model.name }}_ptrs.ext_cost_e_fun_jac;
 {%- endif %}
     mxSetField(plhs[1], 0, "ext_cost_fun_jac", ext_cost_fun_jac_mat);
 
     mxArray *ext_cost_fun_jac_hess_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(ext_cost_fun_jac_hess_mat);
 {% if cost.cost_type == "EXTERNAL" %}
-    l_ptr[0] = (long long) ext_cost_fun_jac_hess;
+    l_ptr[0] = (long long) {{ model.name }}_ptrs.ext_cost_fun_jac_hess;
 {% endif -%}
 {% if cost.cost_type_e == "EXTERNAL" %}
-    l_ptr[1] = (long long) &ext_cost_e_fun_jac_hess;
+    l_ptr[1] = (long long) &{{ model.name }}_ptrs.ext_cost_e_fun_jac_hess;
 {%- endif %}
     mxSetField(plhs[1], 0, "ext_cost_fun_jac_hess", ext_cost_fun_jac_hess_mat);
 
