@@ -154,13 +154,11 @@ def sim_generate_casadi_functions(acados_sim):
 
     integrator_type = acados_sim.solver_options.integrator_type
 
-    opts = dict(generate_hess=0)
+    opts = dict(generate_hess = acados_sim.solver_options.sens_hess)
     # generate external functions
     if integrator_type == 'ERK':
-        # explicit model -- generate C code
         generate_c_code_explicit_ode(model, opts)
     elif integrator_type == 'IRK':
-        # implicit model -- generate C code
         generate_c_code_implicit_ode(model, opts)
     elif integrator_type == 'GNSF':
         generate_c_code_gnsf(model)
