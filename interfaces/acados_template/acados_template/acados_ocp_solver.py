@@ -1182,9 +1182,10 @@ class AcadosOcpSolver:
             :param value_: of type int, float
         """
         int_fields = ['print_level', 'rti_phase', 'initialize_t_slacks']
-        double_fields = ['step_length']
+        double_fields = ['step_length', 'tol_eq', 'tol_stat', 'tol_ineq', 'tol_comp']
         string_fields = ['globalization']
 
+        # check field availability and type
         if field_ in int_fields:
             if not isinstance(value_, int):
                 raise Exception('solver option {} must be of type int. You have {}.'.format(field_, type(value_)))
@@ -1202,6 +1203,10 @@ class AcadosOcpSolver:
                 raise Exception('solver option {} must be of type str. You have {}.'.format(field_, type(value_)))
             else:
                 value_ctypes = value_.encode('utf-8')
+        else:
+            raise Exception('AcadosOcpSolver.options_set() does not support field {}.'\
+                '\n Possible values are {}.'.format(field_, ', '.join(int_fields + double_fields + string_fields)))
+
 
         if field_ == 'rti_phase':
             if value_ < 0 or value_ > 2:
@@ -1211,9 +1216,11 @@ class AcadosOcpSolver:
                 raise Exception('AcadosOcpSolver.solve(): argument \'rti_phase\' can '
                     'take only value 0 for SQP-type solvers')
 
+        # encode
         field = field_
         field = field.encode('utf-8')
 
+        # call C interface
         if field_ in string_fields:
             self.shared_lib.ocp_nlp_solver_opts_set.argtypes = \
                 [c_void_p, c_void_p, c_char_p, c_char_p]
