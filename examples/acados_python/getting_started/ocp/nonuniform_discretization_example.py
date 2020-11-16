@@ -128,8 +128,13 @@ ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 simX = np.ndarray((N+1, nx))
 simU = np.ndarray((N, nu))
 
+# change options after creating ocp_solver
 ocp_solver.options_set("step_length", 0.99999)
 ocp_solver.options_set("globalization", "fixed_step") # fixed_step, merit_backtracking
+ocp_solver.options_set("tol_eq", 1e-2)
+ocp_solver.options_set("tol_stat", 1e-2)
+ocp_solver.options_set("tol_ineq", 1e-2)
+ocp_solver.options_set("tol_comp", 1e-2)
 
 # initialize solver
 for i in range(N):
