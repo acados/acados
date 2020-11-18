@@ -47,6 +47,12 @@ def get_acados_path():
         acados_template_path = os.path.dirname(os.path.abspath(__file__))
         acados_path = os.path.join(acados_template_path, '../../../')
         ACADOS_PATH = os.path.realpath(acados_path)
+        msg = 'Warning: Did not find environment variable ACADOS_SOURCE_DIR, '
+        msg += 'guessed ACADOS_PATH to be {}.\n'.format(ACADOS_PATH)
+        msg += 'If this is not correct or errors occur, '
+        msg += 'please try again after exporting ACADOS_SOURCE_DIR.'
+        print(msg)
+
     return ACADOS_PATH
 
 def get_tera_exec_path():
