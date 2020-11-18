@@ -337,3 +337,8 @@ class AcadosSimSolver:
 
     def __del__(self):
         getattr(self.shared_lib, f"{self.model_name}_acados_sim_free")()
+
+        try:
+            self.dlclose(self.shared_lib._handle)
+        except:
+            pass
