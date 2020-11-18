@@ -865,16 +865,6 @@ class AcadosOcpSolver:
         return out
 
 
-    def compute_residuals(self):
-        """
-        compute residuals internally, needed for SQP_RTI
-        """
-        self.shared_lib.ocp_nlp_eval_residuals.argtypes = [c_void_p, c_void_p, c_void_p]
-        self.shared_lib.ocp_nlp_eval_residuals(self.nlp_solver, self.nlp_in, self.nlp_out)
-
-        return
-
-
     def get_cost(self):
         """
         Returns the cost value of the current solution
@@ -902,7 +892,8 @@ class AcadosOcpSolver:
         """
         # compute residuals if RTI
         if self.acados_ocp.solver_options.nlp_solver_type == 'SQP_RTI':
-            self.compute_residuals()
+            self.shared_lib.ocp_nlp_eval_residuals.argtypes = [c_void_p, c_void_p, c_void_p]
+            self.shared_lib.ocp_nlp_eval_residuals(self.nlp_solver, self.nlp_in, self.nlp_out)
 
         # create output array
         out = np.ascontiguousarray(np.zeros((4, 1)), dtype=np.float64)
@@ -934,7 +925,7 @@ class AcadosOcpSolver:
         """
         set numerical data inside the solver:
             :param stage_: integer corresponding to shooting node
-            :param field_: string in ['x', 'u', 'pi', 'lam', 't']
+            :param field_: string in ['x', 'u', 'pi', 'lam', 't', 'p']
 
             .. note:: regarding lam, t: \n
                     the inequalities are internally organized in the following order: \n
@@ -1076,7 +1067,7 @@ class AcadosOcpSolver:
         """
         set numerical data in the constraint module of the solver:
             :param stage_: integer corresponding to shooting node
-            :param field_: string, e.g. 'lbx'
+            :param field_: string in ['lbx', 'ubx', 'lbu', 'ubu', 'lg', 'ug', 'lh', 'uh', 'uphi']
             :param value_: of appropriate size
         """
         # cast value_ to avoid conversion issues
