@@ -47,11 +47,17 @@ def get_acados_path():
         acados_template_path = os.path.dirname(os.path.abspath(__file__))
         acados_path = os.path.join(acados_template_path, '../../../')
         ACADOS_PATH = os.path.realpath(acados_path)
+        msg = 'Warning: Did not find environment variable ACADOS_SOURCE_DIR, '
+        msg += 'guessed ACADOS_PATH to be {}.\n'.format(ACADOS_PATH)
+        msg += 'Please export ACADOS_SOURCE_DIR to not avoid this warning.'
+        print(msg)
     return ACADOS_PATH
+
 
 def get_tera_exec_path():
     ACADOS_PATH = get_acados_path()
     return os.path.join(ACADOS_PATH, 'bin/t_renderer')
+
 
 platform2tera = {
     "linux": "linux",
@@ -90,6 +96,7 @@ def is_column(x):
         raise Exception("is_column expects one of the following types: np.ndarray, casadi.MX, casadi.SX."
                         + " Got: " + str(type(x)))
 
+
 def is_empty(x):
     if isinstance(x, (MX, SX, DM)):
         return x.is_empty()
@@ -111,6 +118,7 @@ def casadi_length(x):
     else:
         raise Exception("casadi_length expects one of the following types: casadi.MX, casadi.SX."
                         + " Got: " + str(type(x)))
+
 
 def make_model_consistent(model):
     x = model.x
@@ -271,7 +279,6 @@ def ocp_check_against_layout(ocp_nlp, ocp_dims):
 
     ocp_check_against_layout_recursion(ocp_nlp, ocp_dims, ocp_nlp_layout)
     return
-
 
 
 def ocp_check_against_layout_recursion(ocp_nlp, ocp_dims, layout):
