@@ -1,4 +1,5 @@
 which python3;
+python3 --version;
 # sudo apt-get update -yqq;
 # sudo apt-get --allow-unauthenticated install -yqq $CXX $CC $COVERAGE python3.8 python3.8-tk python3.8-dev;
 
