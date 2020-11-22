@@ -25,7 +25,7 @@ jobs:
       working-directory: ${{runner.workspace}}
       run: cmake -E make_directory ${{runner.workspace}}/build
 
-    - name: Check directory
+    - name: Export Paths
       # Some projects don't allow in-source building, so create a separate build directory
       # We'll use this as our working directory for all subsequent commands
       working-directory: ${{runner.workspace}}/acados
@@ -33,13 +33,7 @@ jobs:
       run: |
         ls -lah
         echo "ACADOS_SOURCE_DIR=$(pwd)" >> $GITHUB_ENV
-
-    # - name: Install APT dependencies
-    #   # Some projects don't allow in-source building, so create a separate build directory
-    #   # We'll use this as our working directory for all subsequent commands
-    #   working-directory: ${{runner.workspace}}/acados
-    #   shell: bash
-    #   run: ./ci/linux/install_apt_dependencies.sh
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/lib" >> $GITHUB_ENV
 
     - name: Install Python interface
       # Some projects don't allow in-source building, so create a separate build directory
@@ -59,7 +53,7 @@ jobs:
       run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_PYTHON=ON -DACADOS_WITH_QPOASES=ON
 
 
-    - name: Build
+    - name: Build & Install
       working-directory: ${{runner.workspace}}/build
       shell: bash
       # Execute the build.  You can specify a specific target with "--target <NAME>"
@@ -72,4 +66,6 @@ jobs:
       shell: bash
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ./../acados/ci/linux/run_tests_github.sh
+      run: |
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+        ./../acados/ci/linux/run_tests_github.sh
