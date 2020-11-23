@@ -37,6 +37,7 @@ jobs:
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/lib" >> $GITHUB_ENV
         echo "OCTAVE_PATH=$OCTAVE_PATH:$(pwd)/interfaces/acados_matlab_octave:$(pwd)/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
 
+
     - name: Prepare Octave
       working-directory: ${{runner.workspace}}/acados/external
       shell: bash
@@ -48,6 +49,13 @@ jobs:
         echo "OCTAVE_PATH=$OCTAVE_PATH:$(pwd)/casadi-octave" >> $GITHUB_ENV
 
       # octave-control octave-image octave-io octave-optim octave-signal octave-statistics 
+
+    - name: Export Paths Octave
+      working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/pendulum_on_cart_model
+      shell: bash
+      run: |
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./build" >> $GITHUB_ENV
+
 
     - name: Install Python interface
       # Some projects don't allow in-source building, so create a separate build directory
