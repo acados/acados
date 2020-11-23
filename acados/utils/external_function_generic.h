@@ -98,6 +98,7 @@ typedef struct
 	// public members for interfaces
     void (*get_nparam)(void *, int *);
     void (*set_param)(void *, double *);
+    void (*set_param_sparse)(void *, int n_update, int *idx, double *);
     // private members
     void *ptr_ext_mem;  // pointer to external memory
     int (*fun)(void **, void **, void *);
@@ -187,6 +188,7 @@ typedef struct
 	// public members for interfaces
     void (*get_nparam)(void *, int *);
     void (*set_param)(void *, double *);
+    void (*set_param_sparse)(void *, int n_update, int *idx, double *);
     // private members
     void *ptr_ext_mem;  // pointer to external memory
     int (*casadi_fun)(const double **, double **, int *, double *, void *);
