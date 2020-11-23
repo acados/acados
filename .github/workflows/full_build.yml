@@ -1,11 +1,18 @@
-name: Test C, Octave & Python
+name: Test Full Build Linux
 
 on: [push]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
+  ACADOS_UNIT_TESTS: ON
+  ACADOS_PYTHON: ON
+  ACADOS_OCTAVE: ON
   ACADOS_OCTAVE_TEMPLATE: ON
+  ACADOS_WITH_OSQP: ON
+  ACADOS_WITH_QPDUNES: ON
+  ACADOS_WITH_QPOASES: ON
+
 
 jobs:
   build:
@@ -18,7 +25,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        submodules: 'true'
+        submodules: 'recursive'
 
     - name: Create Build Environment
       # Some projects don't allow in-source building, so create a separate build directory
@@ -26,49 +33,8 @@ jobs:
       working-directory: ${{runner.workspace}}
       run: cmake -E make_directory ${{runner.workspace}}/build
 
-    - name: Export Paths
-      # Some projects don't allow in-source building, so create a separate build directory
-      # We'll use this as our working directory for all subsequent commands
-      working-directory: ${{runner.workspace}}/acados
-      shell: bash
-      run: |
-        ls -lah
-        echo "ACADOS_SOURCE_DIR=$(pwd)" >> $GITHUB_ENV
-        echo "ACADOS_INSTALL_DIR=$(pwd)" >> $GITHUB_ENV
-        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/lib" >> $GITHUB_ENV
-        echo "OCTAVE_PATH=$OCTAVE_PATH:$(pwd)/interfaces/acados_matlab_octave:$(pwd)/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
-
-
-    - name: Prepare Octave
-      working-directory: ${{runner.workspace}}/acados/external
-      shell: bash
-      run: |
-        ls -lah
-        sudo apt-get install liboctave-dev -y
-        octave --version
-        ./../.github/linux/install_casadi_octave.sh
-        echo "OCTAVE_PATH=$OCTAVE_PATH:$(pwd)/casadi-octave" >> $GITHUB_ENV
-
-      # octave-control octave-image octave-io octave-optim octave-signal octave-statistics 
-
-    - name: Export Paths Octave
-      working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/pendulum_on_cart_model
-      shell: bash
-      run: |
-        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./build" >> $GITHUB_ENV
-
-
-    - name: Install Python interface
-      # Some projects don't allow in-source building, so create a separate build directory
-      # We'll use this as our working directory for all subsequent commands
-      working-directory: ${{runner.workspace}}/acados
-      shell: bash
-      run: ./.github/linux/install_python.sh
-
 
     - name: Install Eigen (C test dependency)
-      # Some projects don't allow in-source building, so create a separate build directory
-      # We'll use this as our working directory for all subsequent commands
       working-directory: ${{runner.workspace}}/acados
       shell: bash
       # TODO: cache
@@ -80,19 +46,51 @@ jobs:
       # access regardless of the host operating system
       shell: bash
       working-directory: ${{runner.workspace}}/build
-      # Note the current convention is to use the -S and -B options here to specify source 
-      # and build directories, but this is only available with CMake 3.13 and higher.  
+      # Note the current convention is to use the -S and -B options here to specify source
+      # and build directories, but this is only available with CMake 3.13 and higher.
       # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_PYTHON=ON -DACADOS_WITH_QPOASES=ON -DACADOS_UNIT_TESTS=ON -DACADOS_OCTAVE=ON -DACADOS_OCTAVE_TEMPLATE=$ACADOS_OCTAVE_TEMPLATE
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=$ACADOS_PYTHON -DACADOS_UNIT_TESTS=$ACADOS_UNIT_TESTS -DACADOS_OCTAVE=$ACADOS_OCTAVE -DACADOS_OCTAVE_TEMPLATE=$ACADOS_OCTAVE_TEMPLATE
 
 
     - name: Build & Install
       working-directory: ${{runner.workspace}}/build
       shell: bash
-      # Execute the build.  You can specify a specific target with "--target <NAME>"
       run: |
         cmake --build . --config $BUILD_TYPE
         make install -j4
+
+
+    - name: Export Paths
+      working-directory: ${{runner.workspace}}/acados
+      shell: bash
+      run: |
+        echo "ACADOS_SOURCE_DIR=$(pwd)" >> $GITHUB_ENV
+        echo "ACADOS_INSTALL_DIR=$(pwd)" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/lib" >> $GITHUB_ENV
+        echo "OCTAVE_PATH=$OCTAVE_PATH:$(pwd)/interfaces/acados_matlab_octave:$(pwd)/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
+
+
+    - name: Prepare Octave
+      working-directory: ${{runner.workspace}}/acados/external
+      shell: bash
+      run: |
+        sudo apt-get install liboctave-dev -y
+        octave --version
+        ./../.github/linux/install_casadi_octave.sh
+        echo "OCTAVE_PATH=$OCTAVE_PATH:$(pwd)/casadi-octave" >> $GITHUB_ENV
+
+
+    - name: Export Paths Octave
+      working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/pendulum_on_cart_model
+      shell: bash
+      run: |
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./build" >> $GITHUB_ENV
+
+
+    - name: Install Python interface
+      working-directory: ${{runner.workspace}}/acados
+      shell: bash
+      run: ./.github/linux/install_python.sh
 
 
     - name: Test
