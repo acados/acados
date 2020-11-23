@@ -33,15 +33,20 @@ jobs:
       run: |
         ls -lah
         echo "ACADOS_SOURCE_DIR=$(pwd)" >> $GITHUB_ENV
+        echo "ACADOS_INSTALL_DIR=$(pwd)" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/lib" >> $GITHUB_ENV
+        echo "OCTAVE_PATH=$OCTAVE_PATH:$(pwd)/interfaces/acados_matlab_octave:$(pwd)/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
 
     - name: Prepare Octave
-      working-directory: ${{runner.workspace}}/acados
+      working-directory: ${{runner.workspace}}/acados/external
       shell: bash
       run: |
         ls -lah
         sudo apt-get install liboctave-dev -y
         octave --version
+        ./../.github/linux/install_casadi_octave.sh
+        echo "OCTAVE_PATH=$OCTAVE_PATH:$(pwd)/casadi-octave" >> $GITHUB_ENV
+
       # octave-control octave-image octave-io octave-optim octave-signal octave-statistics 
 
     - name: Install Python interface
