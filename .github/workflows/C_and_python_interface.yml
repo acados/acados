@@ -5,6 +5,7 @@ on: [push]
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
+  ACADOS_OCTAVE_TEMPLATE: ON
 
 jobs:
   build:
@@ -82,7 +83,7 @@ jobs:
       # Note the current convention is to use the -S and -B options here to specify source 
       # and build directories, but this is only available with CMake 3.13 and higher.  
       # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_PYTHON=ON -DACADOS_WITH_QPOASES=ON -DACADOS_UNIT_TESTS=ON -DACADOS_OCTAVE=ON
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_PYTHON=ON -DACADOS_WITH_QPOASES=ON -DACADOS_UNIT_TESTS=ON -DACADOS_OCTAVE=ON -DACADOS_OCTAVE_TEMPLATE=$ACADOS_OCTAVE_TEMPLATE
 
 
     - name: Build & Install
