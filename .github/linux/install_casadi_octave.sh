@@ -32,8 +32,9 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-CASADI_VERSION='3.5.3'; # Latest version with Octave 4.2.2 binaries
-OCTAVE_VERSION='4.2.2';
+# CASADI_VERSION='3.5.3'; # Latest version with Octave 4.2.2 binaries
+CASADI_VERSION='3.5.5';
+OCTAVE_VERSION='5.2.0';
 
 _CASADI_GITHUB_RELEASES="https://github.com/casadi/casadi/releases/download/${CASADI_VERSION}";
 
