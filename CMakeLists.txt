@@ -115,16 +115,32 @@ endif()
 
 # OPENMP
 if(ACADOS_WITH_OPENMP)
-    cmake_minimum_required(VERSION 3.9)
-    find_package(OpenMP)
+    if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.9.0")
+        find_package(OpenMP)
+    else()
+        if(NOT TARGET OpenMP::OpenMP_CXX)
+            set(OpenMP_CXX_FLAGS "-fopenmp")
+            set(OpenMP_C_FLAGS "-fopenmp")
+            find_package(Threads REQUIRED)
+            add_library(OpenMP::OpenMP_CXX IMPORTED INTERFACE)
+            set_property(TARGET OpenMP::OpenMP_CXX
+                         PROPERTY INTERFACE_COMPILE_OPTIONS ${OpenMP_CXX_FLAGS})
+            # Only works if the same flag is passed to the linker; use CMake 3.9+ otherwise (Intel, AppleClang)
+            set_property(TARGET OpenMP::OpenMP_CXX
+                         PROPERTY INTERFACE_LINK_LIBRARIES ${OpenMP_CXX_FLAGS} Threads::Threads)
+            set(OpenMP_CXX_FOUND TRUE)
+            set(OpenMP_C_FOUND TRUE)
+        endif()
+    endif()
+
     if(OpenMP_CXX_FOUND AND OpenMP_C_FOUND)
-        # message(STATUS "OpenMP_CXX_FLAGS: ${OpenMP_CXX_FLAGS}, OpenMP_C_FLAGS: ${OpenMP_C_FLAGS}")
+        message(STATUS "OpenMP_CXX_FLAGS: ${OpenMP_CXX_FLAGS}, OpenMP_C_FLAGS: ${OpenMP_C_FLAGS}")
         # add openmp compiler flags
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 
         if(ACADOS_NUM_THREADS)
-            add_compile_definitions(ACADOS_NUM_THREADS=${ACADOS_NUM_THREADS})
+            add_definitions(-DACADOS_NUM_THREADS=${ACADOS_NUM_THREADS}) # supported by CMAKE_VERSION < 3.12.0
         endif()
     else()
         message(STATUS "OpenMP NOT found.")
