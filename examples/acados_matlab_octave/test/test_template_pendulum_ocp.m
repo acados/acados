@@ -32,7 +32,7 @@
 %
 
 function model = test_template_pendulum_ocp(cost_type)
-% supports cost_type = auto, nonlinear_ls
+% supports cost_type = auto, nonlinear_ls, ext_cost
 
 %% test of native matlab interface
 model_path = fullfile(pwd,'..','pendulum_on_cart_model');
