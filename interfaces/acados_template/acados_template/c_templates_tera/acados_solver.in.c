@@ -1583,102 +1583,10 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     p[{{ i }}] = {{ parameter_values[i] }};
     {%- endfor %}
 
-{% if solver_options.integrator_type == "IRK" %}
-    for (int ii = 0; ii < N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        capsule->impl_dae_fun[ii].set_param(capsule->impl_dae_fun+ii, p);
-        capsule->impl_dae_fun_jac_x_xdot_z[ii].set_param(capsule->impl_dae_fun_jac_x_xdot_z+ii, p);
-        capsule->impl_dae_jac_x_xdot_u_z[ii].set_param(capsule->impl_dae_jac_x_xdot_u_z+ii, p);
-        {%- if solver_options.hessian_approx == "EXACT" %}
-        capsule->impl_dae_hess[ii].set_param(capsule->impl_dae_hess+ii, p);
-        {%- endif %}
+        {{ model.name }}_acados_update_params(capsule, i, p, NP);
     }
-{% elif solver_options.integrator_type == "ERK" %}
-    for (int ii = 0; ii < N; ii++)
-    {
-        capsule->forw_vde_casadi[ii].set_param(capsule->forw_vde_casadi+ii, p);
-        capsule->expl_ode_fun[ii].set_param(capsule->expl_ode_fun+ii, p);
-        {%- if solver_options.hessian_approx == "EXACT" %}
-        capsule->hess_vde_casadi[ii].set_param(capsule->hess_vde_casadi+ii, p);
-        {%- endif %}
-    }
-{% elif solver_options.integrator_type == "GNSF" %}
-    for (int ii = 0; ii < N; ii++)
-    {
-        capsule->gnsf_phi_fun[ii].set_param(capsule->gnsf_phi_fun+ii, p);
-        capsule->gnsf_phi_fun_jac_y[ii].set_param(capsule->gnsf_phi_fun_jac_y+ii, p);
-        capsule->gnsf_phi_jac_y_uhat[ii].set_param(capsule->gnsf_phi_jac_y_uhat+ii, p);
-        capsule->gnsf_f_lo_jac_x1_x1dot_u_z[ii].set_param(capsule->gnsf_f_lo_jac_x1_x1dot_u_z+ii, p);
-    }
-{% elif solver_options.integrator_type == "DISCRETE" %}
-    for (int ii = 0; ii < N; ii++)
-    {
-        capsule->discr_dyn_phi_fun[ii].set_param(capsule->discr_dyn_phi_fun+ii, p);
-        capsule->discr_dyn_phi_fun_jac_ut_xt[ii].set_param(capsule->discr_dyn_phi_fun_jac_ut_xt+ii, p);
-    {%- if solver_options.hessian_approx == "EXACT" %}
-        capsule->discr_dyn_phi_fun_jac_ut_xt_hess[ii].set_param(capsule->discr_dyn_phi_fun_jac_ut_xt_hess+ii, p);
-    {% endif %}
-    }
-{% endif %}
-
-    // cost
-{%- if cost.cost_type == "NONLINEAR_LS" %}
-    for (int ii = 0; ii < N; ii++)
-    {
-        capsule->cost_y_fun[ii].set_param(capsule->cost_y_fun+ii, p);
-        capsule->cost_y_fun_jac_ut_xt[ii].set_param(capsule->cost_y_fun_jac_ut_xt+ii, p);
-        capsule->cost_y_hess[ii].set_param(capsule->cost_y_hess+ii, p);
-    }
-{%- elif cost.cost_type == "EXTERNAL" %}
-    for (int ii = 0; ii < N; ii++)
-    {
-        capsule->ext_cost_fun[ii].set_param(capsule->ext_cost_fun+ii, p);
-        capsule->ext_cost_fun_jac[ii].set_param(capsule->ext_cost_fun_jac+ii, p);
-        capsule->ext_cost_fun_jac_hess[ii].set_param(capsule->ext_cost_fun_jac_hess+ii, p);
-    }
-{%- endif %}
-
-{%- if cost.cost_type_e == "NONLINEAR_LS" %}
-    capsule->cost_y_e_fun.set_param(&capsule->cost_y_e_fun, p);
-    capsule->cost_y_e_fun_jac_ut_xt.set_param(&capsule->cost_y_e_fun_jac_ut_xt, p);
-    capsule->cost_y_e_hess.set_param(&capsule->cost_y_e_hess, p);
-{%- elif cost.cost_type_e == "EXTERNAL" %}
-    capsule->ext_cost_e_fun.set_param(&capsule->ext_cost_e_fun, p);
-    capsule->ext_cost_e_fun_jac.set_param(&capsule->ext_cost_e_fun_jac, p);
-    capsule->ext_cost_e_fun_jac_hess.set_param(&capsule->ext_cost_e_fun_jac_hess, p);
-{%- endif %}
-
-    // constraints
-{%- if constraints.constr_type == "BGP" %}
-    for (int ii = 0; ii < N; ii++)
-    {
-        capsule->phi_constraint[ii].set_param(capsule->phi_constraint+ii, p);
-    }
-{%- elif dims.nh > 0 and constraints.constr_type == "BGH" %}
-
-    for (int ii = 0; ii < N; ii++)
-    {
-        capsule->nl_constr_h_fun_jac[ii].set_param(capsule->nl_constr_h_fun_jac+ii, p);
-        capsule->nl_constr_h_fun[ii].set_param(capsule->nl_constr_h_fun+ii, p);
-    }
-{%- if solver_options.hessian_approx == "EXACT" %}
-    for (int ii = 0; ii < N; ii++)
-    {
-        capsule->nl_constr_h_fun_jac_hess[ii].set_param(capsule->nl_constr_h_fun_jac_hess+ii, p);
-    }
-{%- endif %}
-{%- endif %}
-
-{%- if constraints.constr_type_e == "BGP" %}
-    capsule->phi_e_constraint.set_param(&capsule->phi_e_constraint, p);
-{%- elif constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
-    capsule->nl_constr_h_e_fun_jac.set_param(&capsule->nl_constr_h_e_fun_jac, p);
-    capsule->nl_constr_h_e_fun.set_param(&capsule->nl_constr_h_e_fun, p);
-{%- if solver_options.hessian_approx == "EXACT" %}
-    capsule->nl_constr_h_e_fun_jac_hess.set_param(&capsule->nl_constr_h_e_fun_jac_hess, p);
-{%- endif %}
-{%- endif %}
-
 {%- endif %}{# if dims.np #}
 
     status = ocp_nlp_precompute(capsule->nlp_solver, nlp_in, nlp_out);
