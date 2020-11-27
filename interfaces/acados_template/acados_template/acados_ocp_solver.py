@@ -689,28 +689,36 @@ class AcadosOcpSolver:
 
         self.shared_lib_name = 'c_generated_code/libacados_ocp_solver_' + model.name + '.so'
 
-        # get
+        # get shared_lib
         self.shared_lib = CDLL(self.shared_lib_name)
-        self.shared_lib.acados_create()
+
+        # create capsule
+        getattr(self.shared_lib, f"{model.name}_acados_create_capsule").restype = c_void_p
+        self.capsule = getattr(self.shared_lib, f"{model.name}_acados_create_capsule")()
+
+        # create solver
+        getattr(self.shared_lib, f"{model.name}_acados_create").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{model.name}_acados_create")(self.capsule)
         self.solver_created = True
 
-        self.shared_lib.acados_get_nlp_opts.restype = c_void_p
-        self.nlp_opts = self.shared_lib.acados_get_nlp_opts()
+        # get pointers solver
+        getattr(self.shared_lib, f"{model.name}_acados_get_nlp_opts").argtypes = [c_void_p]
+        self.nlp_opts = getattr(self.shared_lib, f"{model.name}_acados_get_nlp_opts")(self.capsule)
 
-        self.shared_lib.acados_get_nlp_dims.restype = c_void_p
-        self.nlp_dims = self.shared_lib.acados_get_nlp_dims()
+        getattr(self.shared_lib, f"{model.name}_acados_get_nlp_dims").argtypes = [c_void_p]
+        self.nlp_dims = getattr(self.shared_lib, f"{model.name}_acados_get_nlp_dims")(self.capsule)
 
-        self.shared_lib.acados_get_nlp_config.restype = c_void_p
-        self.nlp_config = self.shared_lib.acados_get_nlp_config()
+        getattr(self.shared_lib, f"{model.name}_acados_get_nlp_config").argtypes = [c_void_p]
+        self.nlp_config = getattr(self.shared_lib, f"{model.name}_acados_get_nlp_config")(self.capsule)
 
-        self.shared_lib.acados_get_nlp_out.restype = c_void_p
-        self.nlp_out = self.shared_lib.acados_get_nlp_out()
+        getattr(self.shared_lib, f"{model.name}_acados_get_nlp_out").argtypes = [c_void_p]
+        self.nlp_out = getattr(self.shared_lib, f"{model.name}_acados_get_nlp_out")(self.capsule)
 
-        self.shared_lib.acados_get_nlp_in.restype = c_void_p
-        self.nlp_in = self.shared_lib.acados_get_nlp_in()
+        getattr(self.shared_lib, f"{model.name}_acados_get_nlp_in").argtypes = [c_void_p]
+        self.nlp_in = getattr(self.shared_lib, f"{model.name}_acados_get_nlp_in")(self.capsule)
 
-        self.shared_lib.acados_get_nlp_solver.restype = c_void_p
-        self.nlp_solver = self.shared_lib.acados_get_nlp_solver()
+        getattr(self.shared_lib, f"{model.name}_acados_get_nlp_solver").argtypes = [c_void_p]
+        self.nlp_solver = getattr(self.shared_lib, f"{model.name}_acados_get_nlp_solver")(self.capsule)
 
         self.acados_ocp = acados_ocp
 
@@ -719,7 +727,10 @@ class AcadosOcpSolver:
         """
         solve the ocp with current input
         """
-        status = self.shared_lib.acados_solve()
+        model = self.acados_ocp.model
+
+        getattr(self.shared_lib, f"{model.name}_acados_solve").argtypes = [c_void_p]
+        status = getattr(self.shared_lib, f"{model.name}_acados_solve")(self.capsule)
         return status
 
 
@@ -944,6 +955,7 @@ class AcadosOcpSolver:
 
         # cast value_ to avoid conversion issues
         value_ = value_.astype(float)
+        model = self.acados_ocp.model
 
         field = field_
         field = field.encode('utf-8')
@@ -952,10 +964,12 @@ class AcadosOcpSolver:
 
         # treat parameters separately
         if field_ == 'p':
-            self.shared_lib.acados_update_params.argtypes = [c_int, POINTER(c_double)]
-            self.shared_lib.acados_update_params.restype = c_int
+            getattr(self.shared_lib, f"{model.name}_acados_update_params").argtypes = [c_void_p, c_int, POINTER(c_double)]
+            getattr(self.shared_lib, f"{model.name}_acados_update_params").restype = c_int
+
             value_data = cast(value_.ctypes.data, POINTER(c_double))
-            self.shared_lib.acados_update_params(stage, value_data, value_.shape[0])
+
+            getattr(self.shared_lib, f"{model.name}_acados_update_params")(self.capsule, stage, value_data, value_.shape[0])
         else:
             if field_ not in constraints_fields + cost_fields + out_fields:
                 raise Exception("AcadosOcpSolver.set(): {} is not a valid argument.\
@@ -1227,8 +1241,14 @@ class AcadosOcpSolver:
 
 
     def __del__(self):
+        model = self.acados_ocp.model
+
         if self.solver_created:
-            self.shared_lib.acados_free()
+            getattr(self.shared_lib, f"{model.name}_acados_free").argtypes = [c_void_p]
+            getattr(self.shared_lib, f"{model.name}_acados_free")(self.capsule)
+
+            getattr(self.shared_lib, f"{model.name}_acados_free_capsule").argtypes = [c_void_p]
+            getattr(self.shared_lib, f"{model.name}_acados_free_capsule")(self.capsule)
 
             try:
                 self.dlclose(self.shared_lib._handle)

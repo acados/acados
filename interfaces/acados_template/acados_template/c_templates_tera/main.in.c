@@ -46,21 +46,21 @@
 int main()
 {
 
-    nlp_solver_capsule acados_ocp_capsule;
-    int status = acados_{{ model.name }}_create(&acados_ocp_capsule);
+    nlp_solver_capsule *acados_ocp_capsule = {{ model.name }}_acados_create_capsule();
+    int status = {{ model.name }}_acados_create(acados_ocp_capsule);
 
     if (status)
     {
-        printf("acados_{{ model.name }}_create() returned status %d. Exiting.\n", status);
+        printf("{{ model.name }}_acados_create() returned status %d. Exiting.\n", status);
         exit(1);
     }
 
-    ocp_nlp_config *nlp_config = acados_{{ model.name }}_get_nlp_config(&acados_ocp_capsule);
-    ocp_nlp_dims *nlp_dims = acados_{{ model.name }}_get_nlp_dims(&acados_ocp_capsule);
-    ocp_nlp_in *nlp_in = acados_{{ model.name }}_get_nlp_in(&acados_ocp_capsule);
-    ocp_nlp_out *nlp_out = acados_{{ model.name }}_get_nlp_out(&acados_ocp_capsule);
-    ocp_nlp_solver *nlp_solver = acados_{{ model.name }}_get_nlp_solver(&acados_ocp_capsule);
-    void *nlp_opts = acados_{{ model.name }}_get_nlp_opts(&acados_ocp_capsule);
+    ocp_nlp_config *nlp_config = {{ model.name }}_acados_get_nlp_config(acados_ocp_capsule);
+    ocp_nlp_dims *nlp_dims = {{ model.name }}_acados_get_nlp_dims(acados_ocp_capsule);
+    ocp_nlp_in *nlp_in = {{ model.name }}_acados_get_nlp_in(acados_ocp_capsule);
+    ocp_nlp_out *nlp_out = {{ model.name }}_acados_get_nlp_out(acados_ocp_capsule);
+    ocp_nlp_solver *nlp_solver = {{ model.name }}_acados_get_nlp_solver(acados_ocp_capsule);
+    void *nlp_opts = {{ model.name }}_acados_get_nlp_opts(acados_ocp_capsule);
 
     // initial condition
     int idxbx0[{{ dims.nbx_0 }}];
@@ -101,7 +101,7 @@ int main()
 
     for (int ii = 0; ii <= {{ dims.N }}; ii++)
     {
-        acados_{{ model.name }}_update_params(&acados_ocp_capsule, ii, p, {{ dims.np }});
+        {{ model.name }}_acados_update_params(acados_ocp_capsule, ii, p, {{ dims.np }});
     }
   {% endif %}{# if np > 0 #}
 
@@ -128,7 +128,7 @@ int main()
             ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "u", u0);
         }
         ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "rti_phase", &rti_phase);
-        status = acados_{{ model.name }}_solve(&acados_ocp_capsule);
+        status = {{ model.name }}_acados_solve(acados_ocp_capsule);
         ocp_nlp_get(nlp_config, nlp_solver, "time_tot", &elapsed_time);
         min_time = MIN(elapsed_time, min_time);
     }
@@ -149,27 +149,32 @@ int main()
 
     if (status == ACADOS_SUCCESS)
     {
-        printf("acados_{{ model.name }}_solve(): SUCCESS!\n");
+        printf("{{ model.name }}_acados_solve(): SUCCESS!\n");
     }
     else
     {
-        printf("acados_{{ model.name }}_solve() failed with status %d.\n", status);
+        printf("{{ model.name }}_acados_solve() failed with status %d.\n", status);
     }
 
     // get solution
     ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, "kkt_norm_inf", &kkt_norm_inf);
     ocp_nlp_get(nlp_config, nlp_solver, "sqp_iter", &sqp_iter);
 
-    acados_{{ model.name }}_print_stats(&acados_ocp_capsule);
+    {{ model.name }}_acados_print_stats(acados_ocp_capsule);
 
     printf("\nSolver info:\n");
     printf(" SQP iterations %2d\n minimum time for %d solve %f [ms]\n KKT %e\n",
            sqp_iter, NTIMINGS, min_time*1000, kkt_norm_inf);
 
     // free solver
-    status = acados_{{ model.name }}_free(&acados_ocp_capsule);
+    status = {{ model.name }}_acados_free(acados_ocp_capsule);
     if (status) {
-        printf("acados_{{ model.name }}_free() returned status %d. \n", status);
+        printf("{{ model.name }}_acados_free() returned status %d. \n", status);
+    }
+    // free solver capsule
+    status = {{ model.name }}_acados_free_capsule(acados_ocp_capsule);
+    if (status) {
+        printf("{{ model.name }}_acados_free_capsule() returned status %d. \n", status);
     }
 
     return status;

@@ -52,24 +52,24 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int status = 0;
 
     // create solver
-    nlp_solver_capsule *acados_ocp_capsule = acados_{{ model.name }}_create_capsule();
+    nlp_solver_capsule *acados_ocp_capsule = {{ model.name }}_acados_create_capsule();
 
-    status = acados_{{ model.name }}_create(acados_ocp_capsule);
+    status = {{ model.name }}_acados_create(acados_ocp_capsule);
 
     if (status)
     {
-        mexPrintf("acados_{{ model.name }}_create() returned status %d.\n", status);
+        mexPrintf("{{ model.name }}_acados_create() returned status %d.\n", status);
     }
-    mexPrintf("acados_{{ model.name }}_create() -> success!\n");
+    mexPrintf("{{ model.name }}_acados_create() -> success!\n");
 
     // get pointers to nlp solver related objects
-    ocp_nlp_plan *nlp_plan = acados_{{ model.name }}_get_nlp_plan(acados_ocp_capsule);
-    ocp_nlp_config *nlp_config = acados_{{ model.name }}_get_nlp_config(acados_ocp_capsule);
-    ocp_nlp_dims *nlp_dims = acados_{{ model.name }}_get_nlp_dims(acados_ocp_capsule);
-    ocp_nlp_in *nlp_in = acados_{{ model.name }}_get_nlp_in(acados_ocp_capsule);
-    ocp_nlp_out *nlp_out = acados_{{ model.name }}_get_nlp_out(acados_ocp_capsule);
-    ocp_nlp_solver *nlp_solver = acados_{{ model.name }}_get_nlp_solver(acados_ocp_capsule);
-    void *nlp_opts = acados_{{ model.name }}_get_nlp_opts(acados_ocp_capsule);
+    ocp_nlp_plan *nlp_plan = {{ model.name }}_acados_get_nlp_plan(acados_ocp_capsule);
+    ocp_nlp_config *nlp_config = {{ model.name }}_acados_get_nlp_config(acados_ocp_capsule);
+    ocp_nlp_dims *nlp_dims = {{ model.name }}_acados_get_nlp_dims(acados_ocp_capsule);
+    ocp_nlp_in *nlp_in = {{ model.name }}_acados_get_nlp_in(acados_ocp_capsule);
+    ocp_nlp_out *nlp_out = {{ model.name }}_acados_get_nlp_out(acados_ocp_capsule);
+    ocp_nlp_solver *nlp_solver = {{ model.name }}_acados_get_nlp_solver(acados_ocp_capsule);
+    void *nlp_opts = {{ model.name }}_acados_get_nlp_opts(acados_ocp_capsule);
 
     mexPrintf("acados: got pointer to objectes!\n");
 
