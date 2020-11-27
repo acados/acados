@@ -54,6 +54,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     nlp_solver_capsule *capsule = (nlp_solver_capsule *) ptr[0];
 
     // solve
-    acados_{{ model.name }}_solve(capsule);
+    {{ model.name }}_acados_solve(capsule);
 
 }

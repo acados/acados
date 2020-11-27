@@ -194,7 +194,7 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 
 static void mdlStart(SimStruct *S)
 {
-    acados_{{ model.name }}_create();
+    {{ model.name }}_acados_create();
 }
 
 static void mdlOutputs(SimStruct *S, int_T tid)
@@ -251,7 +251,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     {
         for (int jj = 0; jj < {{ dims.np }}; jj++)
             buffer[jj] = (double)(*in_sign[ii*{{dims.np}}+jj]);
-        acados_{{ model.name }}_update_params(ii, buffer, {{ dims.np }});
+        {{ model.name }}_acados_update_params(ii, buffer, {{ dims.np }});
     }
 {%- endif %}
 
@@ -347,7 +347,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     /* call solver */
     int rti_phase = 0;
     ocp_nlp_solver_opts_set({{ model.name }}_ptrs.nlp_config, {{ model.name }}_ptrs.nlp_opts, "rti_phase", &rti_phase);
-    int acados_status = acados_{{ model.name }}_solve();
+    int acados_status = {{ model.name }}_acados_solve();
 
 
     /* set outputs */
@@ -385,7 +385,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
 static void mdlTerminate(SimStruct *S)
 {
-    acados_{{ model.name }}_free();
+    {{ model.name }}_acados_free();
 }
 
 
