@@ -41,27 +41,8 @@
 extern "C" {
 #endif
 
-int acados_{{ model.name }}_create();
-int acados_{{ model.name }}_update_params(int stage, double *value, int np);
-int acados_{{ model.name }}_solve();
-int acados_{{ model.name }}_free();
-void acados_{{ model.name }}_print_stats();
-
-ocp_nlp_in *acados_{{ model.name }}_get_nlp_in();
-ocp_nlp_out *acados_{{ model.name }}_get_nlp_out();
-ocp_nlp_solver *acados_{{ model.name }}_get_nlp_solver();
-ocp_nlp_config *acados_{{ model.name }}_get_nlp_config();
-void *acados_{{ model.name }}_get_nlp_opts();
-ocp_nlp_dims *acados_{{ model.name }}_get_nlp_dims();
-ocp_nlp_plan *acados_{{ model.name }}_get_nlp_plan();
-
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
-
-// ** solver data **
-
-typedef struct data_and_functions
+// ** capsule for solver data **
+typedef struct nlp_solver_capsule
 {
     // acados objects
     ocp_nlp_in *nlp_in;
@@ -118,8 +99,27 @@ typedef struct data_and_functions
     external_function_param_casadi nl_constr_h_e_fun_jac;
     external_function_param_casadi nl_constr_h_e_fun;
     external_function_param_casadi nl_constr_h_e_fun_jac_hess;
-} data_and_functions;
+} nlp_solver_capsule;
 
-extern data_and_functions {{ model.name }}_ptrs;
+nlp_solver_capsule * acados_{{ model.name }}_create_capsule();
+int acados_{{ model.name }}_free_capsule(nlp_solver_capsule *capsule);
+
+int acados_{{ model.name }}_create(nlp_solver_capsule * capsule);
+int acados_{{ model.name }}_update_params(nlp_solver_capsule * capsule, int stage, double *value, int np);
+int acados_{{ model.name }}_solve(nlp_solver_capsule * capsule);
+int acados_{{ model.name }}_free(nlp_solver_capsule * capsule);
+void acados_{{ model.name }}_print_stats(nlp_solver_capsule * capsule);
+
+ocp_nlp_in *acados_{{ model.name }}_get_nlp_in(nlp_solver_capsule * capsule);
+ocp_nlp_out *acados_{{ model.name }}_get_nlp_out(nlp_solver_capsule * capsule);
+ocp_nlp_solver *acados_{{ model.name }}_get_nlp_solver(nlp_solver_capsule * capsule);
+ocp_nlp_config *acados_{{ model.name }}_get_nlp_config(nlp_solver_capsule * capsule);
+void *acados_{{ model.name }}_get_nlp_opts(nlp_solver_capsule * capsule);
+ocp_nlp_dims *acados_{{ model.name }}_get_nlp_dims(nlp_solver_capsule * capsule);
+ocp_nlp_plan *acados_{{ model.name }}_get_nlp_plan(nlp_solver_capsule * capsule);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  // ACADOS_SOLVER_{{ model.name }}_H_

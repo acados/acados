@@ -45,13 +45,24 @@
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     int status = 0;
+    long long *ptr;
 
     // mexPrintf("\nin mex_acados_free\n");
+    const mxArray *C_ocp = prhs[0];
+    // capsule
+    ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "capsule" ) );
+    nlp_solver_capsule *capsule = (nlp_solver_capsule *) ptr[0];
 
-    status = acados_{{ model.name }}_free();
+    status = acados_{{ model.name }}_free(capsule);
     if (status)
     {
         mexPrintf("acados_{{ model.name }}_free() returned status %d.\n", status);
+    }
+
+    status = acados_{{ model.name }}_free_capsule(capsule);
+    if (status)
+    {
+        mexPrintf("acados_{{ model.name }}_free_capsule() returned status %d.\n", status);
     }
 
     return;

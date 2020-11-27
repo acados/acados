@@ -57,13 +57,13 @@ classdef {{ model.name }}_mex_solver < handle
         % destructor
         function delete(obj)
             if ~isempty(obj.C_ocp)
-                acados_mex_free_{{ model.name }}();
+                acados_mex_free_{{ model.name }}(obj.C_ocp);
             end
         end
 
         % solve
         function solve(obj)
-            acados_mex_solve_{{ model.name }}();
+            acados_mex_solve_{{ model.name }}(obj.C_ocp);
         end
 
         % set -- borrowed from MEX interface
