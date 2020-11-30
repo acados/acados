@@ -46,6 +46,7 @@ from scipy.linalg import block_diag
 from utils import plot_pendulum
 
 # general
+
 Tf = 1.0
 N = 20
 h = Tf/N
@@ -75,7 +76,6 @@ R_mhe  = 0.1*np.eye(nx)
 # Q_mhe = np.zeros((nx, nx))
 # Q0_mhe = np.diag([0.01, 1, 1, 1])
 # R_mhe  = np.diag([0.1, 10, 10, 10])
-
 acados_solver_mhe = export_mhe_solver(model_mhe, N, h, Q_mhe, Q0_mhe, R_mhe)
 
 # simulation
@@ -108,10 +108,16 @@ simX[N,:] = acados_solver_ocp.get(N, "x")
 simY[N,:] = simX[N,:] + np.transpose(np.diag(v_stds) @ np.random.standard_normal((nx, 1)))
 
 # set measurements and controls
-for j in range(N):
-    yref = np.zeros((3*nx, ))
+j = 0
+yref = np.zeros((3*nx, ))
+yref[2*nx:] = x0_bar
+acados_solver_mhe.set(j, "yref", yref)
+acados_solver_mhe.set(j, "p", simU[j,:])
+
+for j in range(1,N):
+    yref = np.zeros((2*nx, ))
     yref[:nx] = simY[j, :]
-    yref[2*nx:] = x0_bar
+    # yref[2*nx:] = x0_bar
     acados_solver_mhe.set(j, "yref", yref)
     acados_solver_mhe.set(j, "p", simU[j,:])
 
