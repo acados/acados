@@ -908,7 +908,7 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
 
 {%- if cost.cost_type_0 == "LINEAR_LS" %}
     double Vx_0[NY0*NX];
-    {% for j in range(end=dims.ny) %}
+    {% for j in range(end=dims.ny_0) %}
         {%- for k in range(end=dims.nx) %}
     Vx_0[{{ j }}+(NY0) * {{ k }}] = {{ cost.Vx_0[j][k] }};
         {%- endfor %}
