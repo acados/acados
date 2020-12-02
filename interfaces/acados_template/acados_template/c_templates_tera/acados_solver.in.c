@@ -1689,7 +1689,7 @@ int {{ model.name }}_acados_update_params(nlp_solver_capsule * capsule, int stag
         capsule->nl_constr_h_e_fun_jac.set_param(&capsule->nl_constr_h_e_fun_jac, p);
         capsule->nl_constr_h_e_fun.set_param(&capsule->nl_constr_h_e_fun, p);
     {%- if solver_options.hessian_approx == "EXACT" %}
-        capsule->nl_constr_h_e_fun_jac_hess[stage].set_param(capsule->nl_constr_h_e_fun_jac_hess+stage, p);
+        capsule->nl_constr_h_e_fun_jac_hess.set_param(&capsule->nl_constr_h_e_fun_jac_hess, p);
     {%- endif %}
     {% endif %}
     }
