@@ -89,6 +89,45 @@ def make_ocp_dims_consistent(acados_ocp):
             f'\nGot np = {dims.np}, acados_ocp.parameter_values.shape = {acados_ocp.parameter_values.shape[0]}\n')
 
     ## cost
+    # initial stage - if not set, copy fields from path constraints
+    if cost.cost_type_0 == None:
+        cost.cost_type_0 = cost.cost_type
+        cost.W_0 = cost.W
+        cost.Vx_0 = cost.Vx
+        cost.Vu_0 = cost.Vu
+        cost.Vz_0 = cost.Vz
+        cost.yref_0 = cost.yref
+        model.cost_y_expr_0 = model.cost_y_expr
+        model.cost_expr_ext_cost_0 = model.cost_expr_ext_cost
+
+    if cost.cost_type_0 == 'LINEAR_LS':
+        ny_0 = cost.W_0.shape[0]
+        if cost.Vx_0.shape[0] != ny_0 or cost.Vu_0.shape[0] != ny_0:
+            raise Exception('inconsistent dimension ny_0, regarding W_0, Vx_0, Vu_0.' + \
+                            f'\nGot W_0[{cost.W_0.shape}], Vx_0[{cost.Vx_0.shape}], Vu_0[{cost.Vu_0.shape}]\n')
+        if dims.nz != 0 and cost.Vz_0.shape[0] != ny_0:
+            raise Exception('inconsistent dimension ny_0, regarding W_0, Vx_0, Vu_0, Vz_0.' + \
+                            f'\nGot W_0[{cost.W_0.shape}], Vx_0[{cost.Vx_0.shape}], Vu_0[{cost.Vu_0.shape}], Vz_0[{cost.Vz_0.shape}]\n')
+        if cost.Vx_0.shape[1] != dims.nx and ny_0 != 0:
+            raise Exception('inconsistent dimension: Vx_0 should have nx columns.')
+        if cost.Vu_0.shape[1] != dims.nu and ny_0 != 0:
+            raise Exception('inconsistent dimension: Vu_0 should have nu columns.')
+        if cost.yref_0.shape[0] != ny_0:
+            raise Exception('inconsistent dimension: regarding W_0, yref_0.' + \
+                            f'\nGot W_0[{cost.W_0.shape}], yref_0[{cost.yref_0.shape}]\n')
+        dims.ny_0 = ny_0
+
+    elif cost.cost_type_0 == 'NONLINEAR_LS':
+        ny_0 = cost.W_0.shape[0]
+        if is_empty(model.cost_y_expr) and ny_0 != 0:
+            raise Exception('inconsistent dimension ny_0: regarding W_0, cost_y_expr.')
+        elif casadi_length(model.cost_y_expr) != ny_0:
+            raise Exception('inconsistent dimension ny_0: regarding W_0, cost_y_expr.')
+        if cost.yref_0.shape[0] != ny_0:
+            raise Exception('inconsistent dimension: regarding W_0, yref_0.' + \
+                            f'\nGot W_0[{cost.W.shape}], yref_0[{cost.yref_0.shape}]\n')
+        dims.ny_0 = ny_0
+
     # path
     if cost.cost_type == 'LINEAR_LS':
         ny = cost.W.shape[0]
@@ -502,21 +541,28 @@ def ocp_generate_external_functions(acados_ocp, model):
 
     # dummy matrices
     if not acados_ocp.cost.cost_type == 'LINEAR_LS':
+        acados_ocp.cost.Vx_0 = np.zeros((acados_ocp.dims.ny_0, acados_ocp.dims.nx))
+        acados_ocp.cost.Vu_0 = np.zeros((acados_ocp.dims.ny_0, acados_ocp.dims.nu))
+    if not acados_ocp.cost.cost_type == 'LINEAR_LS':
         acados_ocp.cost.Vx = np.zeros((acados_ocp.dims.ny, acados_ocp.dims.nx))
         acados_ocp.cost.Vu = np.zeros((acados_ocp.dims.ny, acados_ocp.dims.nu))
     if not acados_ocp.cost.cost_type_e == 'LINEAR_LS':
         acados_ocp.cost.Vx_e = np.zeros((acados_ocp.dims.ny_e, acados_ocp.dims.nx))
 
+    if acados_ocp.cost.cost_type_0 == 'NONLINEAR_LS':
+        generate_c_code_nls_cost(model, model.name, 'initial')
+    elif acados_ocp.cost.cost_type_0 == 'EXTERNAL':
+        generate_c_code_external_cost(model, 'initial')
 
     if acados_ocp.cost.cost_type == 'NONLINEAR_LS':
-        generate_c_code_nls_cost(model, model.name, False)
+        generate_c_code_nls_cost(model, model.name, 'path')
     elif acados_ocp.cost.cost_type == 'EXTERNAL':
-        generate_c_code_external_cost(model, False)
+        generate_c_code_external_cost(model, 'path')
 
     if acados_ocp.cost.cost_type_e == 'NONLINEAR_LS':
-        generate_c_code_nls_cost(model, model.name, True)
+        generate_c_code_nls_cost(model, model.name, 'terminal')
     elif acados_ocp.cost.cost_type_e == 'EXTERNAL':
-        generate_c_code_external_cost(model, True)
+        generate_c_code_external_cost(model, 'terminal')
 
 
 def ocp_render_templates(acados_ocp, json_file):
@@ -608,14 +654,27 @@ def ocp_render_templates(acados_ocp, json_file):
         out_file = '{}_h_e_constraint.h'.format(name)
         render_template(in_file, out_file, template_dir, json_path)
 
-    # nonlinear cost function
+    # initial stage Nonlinear LS cost function
+    if acados_ocp.cost.cost_type_0 == 'NONLINEAR_LS':
+        template_dir = 'c_generated_code/{}_cost/'.format(name)
+        in_file = 'cost_y_0_fun.in.h'
+        out_file = '{}_cost_y_0_fun.h'.format(name)
+        render_template(in_file, out_file, template_dir, json_path)
+    # external cost - terminal
+    elif acados_ocp.cost.cost_type_0 == 'EXTERNAL':
+        template_dir = 'c_generated_code/{}_cost/'.format(name)
+        in_file = 'external_cost_0.in.h'
+        out_file = '{}_external_cost_0.h'.format(name)
+        render_template(in_file, out_file, template_dir, json_path)
+
+    # path Nonlinear LS cost function
     if acados_ocp.cost.cost_type == 'NONLINEAR_LS':
         template_dir = 'c_generated_code/{}_cost/'.format(name)
         in_file = 'cost_y_fun.in.h'
         out_file = '{}_cost_y_fun.h'.format(name)
         render_template(in_file, out_file, template_dir, json_path)
 
-    # terminal nonlinear cost function
+    # terminal Nonlinear LS cost function
     if acados_ocp.cost.cost_type_e == 'NONLINEAR_LS':
         template_dir = 'c_generated_code/{}_cost/'.format(name)
         in_file = 'cost_y_e_fun.in.h'

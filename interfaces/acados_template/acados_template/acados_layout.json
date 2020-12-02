@@ -361,17 +361,34 @@
         ]
     },
     "cost": {
+        "cost_type_0": [
+            "str"
+        ],
         "cost_type": [
             "str"
         ],
         "cost_type_e": [
             "str"
         ],
+        "Vu_0": [
+            "ndarray",
+            [
+                "ny_0",
+                "nu"
+            ]
+        ],
         "Vu": [
             "ndarray",
             [
                 "ny",
                 "nu"
+            ]
+        ],
+        "Vx_0": [
+            "ndarray",
+            [
+                "ny_0",
+                "nx"
             ]
         ],
         "Vx": [
@@ -388,11 +405,25 @@
                 "nx"
             ]
         ],
+        "Vz_0": [
+            "ndarray",
+            [
+                "ny",
+                "nz"
+            ]
+        ],
         "Vz": [
             "ndarray",
             [
                 "ny",
                 "nz"
+            ]
+        ],
+        "W_0": [
+            "ndarray",
+            [
+                "ny_0",
+                "ny_0"
             ]
         ],
         "W": [
@@ -431,6 +462,12 @@
             [
                 "ny_e",
                 "ny_e"
+            ]
+        ],
+        "yref_0": [
+            "ndarray",
+            [
+                "ny_0"
             ]
         ],
         "yref": [
@@ -556,6 +593,9 @@
             "int"
         ],
         "ny": [
+            "int"
+        ],
+        "ny_0": [
             "int"
         ],
         "ny_e": [

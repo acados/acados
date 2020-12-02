@@ -66,8 +66,10 @@ class AcadosModel():
         # cost
         self.cost_y_expr = None  #: CasADi expression for nonlinear least squares
         self.cost_y_expr_e = None  #: CasADi expression for nonlinear least squares, terminal
+        self.cost_y_expr_0 = None  #: CasADi expression for nonlinear least squares, initial
         self.cost_expr_ext_cost = None  #: CasADi expression for external cost
         self.cost_expr_ext_cost_e = None  #: CasADi expression for external cost, terminal
+        self.cost_expr_ext_cost_0 = None  #: CasADi expression for external cost, initial
 
 
 def acados_model_strip_casadi_symbolics(model):
@@ -111,9 +113,13 @@ def acados_model_strip_casadi_symbolics(model):
         del out['cost_y_expr']
     if 'cost_y_expr_e' in out.keys():
         del out['cost_y_expr_e']
+    if 'cost_y_expr_0' in out.keys():
+        del out['cost_y_expr_0']
     if 'cost_expr_ext_cost' in out.keys():
         del out['cost_expr_ext_cost']
     if 'cost_expr_ext_cost_e' in out.keys():
         del out['cost_expr_ext_cost_e']
+    if 'cost_expr_ext_cost_0' in out.keys():
+        del out['cost_expr_ext_cost_0']
 
     return out
