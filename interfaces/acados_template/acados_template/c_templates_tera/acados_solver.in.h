@@ -82,6 +82,13 @@ typedef struct nlp_solver_capsule
     external_function_param_casadi *ext_cost_fun_jac;
     external_function_param_casadi *ext_cost_fun_jac_hess;
 
+    external_function_param_casadi cost_y_0_fun;
+    external_function_param_casadi cost_y_0_fun_jac_ut_xt;
+    external_function_param_casadi cost_y_0_hess;
+    external_function_param_casadi ext_cost_0_fun;
+    external_function_param_casadi ext_cost_0_fun_jac;
+    external_function_param_casadi ext_cost_0_fun_jac_hess;
+
     external_function_param_casadi cost_y_e_fun;
     external_function_param_casadi cost_y_e_fun_jac_ut_xt;
     external_function_param_casadi cost_y_e_hess;

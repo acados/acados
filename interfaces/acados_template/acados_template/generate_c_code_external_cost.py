@@ -36,7 +36,7 @@ from casadi import SX, MX, Function, transpose, vertcat, horzcat, hessian, Casad
 from .utils import ALLOWED_CASADI_VERSIONS, casadi_version_warning
 
 
-def generate_c_code_external_cost(model, is_terminal):
+def generate_c_code_external_cost(model, stage_type):
 
     casadi_version = CasadiMeta.version()
     casadi_opts = dict(mex=False, casadi_int="int", casadi_real="double")
@@ -52,20 +52,26 @@ def generate_c_code_external_cost(model, is_terminal):
     else:
         symbol = SX.sym
 
-    if is_terminal:
+    if stage_type == 'terminal':
         suffix_name = "_cost_ext_cost_e_fun"
         suffix_name_hess = "_cost_ext_cost_e_fun_jac_hess"
         suffix_name_jac = "_cost_ext_cost_e_fun_jac"
         u = symbol("u", 0, 0)
         ext_cost = model.cost_expr_ext_cost_e
 
-    else:
+    elif stage_type == 'path':
         suffix_name = "_cost_ext_cost_fun"
         suffix_name_hess = "_cost_ext_cost_fun_jac_hess"
         suffix_name_jac = "_cost_ext_cost_fun_jac"
         u = model.u
         ext_cost = model.cost_expr_ext_cost
 
+    elif stage_type == 'initial':
+        suffix_name = "_cost_ext_cost_0_fun"
+        suffix_name_hess = "_cost_ext_cost_0_fun_jac_hess"
+        suffix_name_jac = "_cost_ext_cost_0_fun_jac"
+        u = model.u
+        ext_cost = model.cost_expr_ext_cost_0
 
     # set up functions to be exported
     fun_name = model.name + suffix_name

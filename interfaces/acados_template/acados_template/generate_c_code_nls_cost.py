@@ -35,7 +35,7 @@ import os
 from casadi import *
 from .utils import ALLOWED_CASADI_VERSIONS, casadi_length, casadi_version_warning
 
-def generate_c_code_nls_cost( model, cost_name, is_terminal ):
+def generate_c_code_nls_cost( model, cost_name, stage_type ):
 
     casadi_version = CasadiMeta.version()
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
@@ -51,16 +51,20 @@ def generate_c_code_nls_cost( model, cost_name, is_terminal ):
     else:
         symbol = SX.sym
 
-    if is_terminal:
+    if stage_type == 'terminal':
         middle_name = '_cost_y_e'
         u = symbol('u', 0, 0)
         cost_expr = model.cost_y_expr_e
 
-    else:
+    elif stage_type == 'initial':
+        middle_name = '_cost_y_0'
+        u = model.u
+        cost_expr = model.cost_y_expr_0
+
+    elif stage_type == 'path':
         middle_name = '_cost_y'
         u = model.u
         cost_expr = model.cost_y_expr
-
 
     # set up directory
     if not os.path.exists('c_generated_code'):

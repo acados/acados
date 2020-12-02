@@ -48,6 +48,7 @@ class AcadosOcpDims:
         self.__np      = 0
         self.__ny      = 0
         self.__ny_e    = 0
+        self.__ny_0    = 0
         self.__nr      = 0
         self.__nr_e    = 0
         self.__nh      = 0
@@ -99,6 +100,11 @@ class AcadosOcpDims:
     def ny(self):
         """:math:`n_y` - number of residuals in Lagrange term"""
         return self.__ny
+
+    @property
+    def ny_0(self):
+        """:math:`n_{y}^0` - number of residuals in Mayer term"""
+        return self.__ny_0
 
     @property
     def ny_e(self):
@@ -258,9 +264,16 @@ class AcadosOcpDims:
         else:
             raise Exception('Invalid np value, expected nonnegative integer. Exiting.')
 
+    @ny_0.setter
+    def ny_0(self, ny_0):
+        if isinstance(ny_0, int) and ny_0 > -1:
+            self.__ny_0 = ny_0
+        else:
+            raise Exception('Invalid ny_0 value, expected nonnegative integer. Exiting.')
+
     @ny.setter
     def ny(self, ny):
-        if type(ny) == int and ny > -1:
+        if isinstance(ny, int) and ny > -1:
             self.__ny = ny
         else:
             raise Exception('Invalid ny value, expected nonnegative integer. Exiting.')
@@ -461,6 +474,13 @@ class AcadosOcpCost:
     :math:`m(x) = || V^e_x x - y_{\\text{ref}^e}||^2_{W^e}`
     """
     def __init__(self):
+        # initial stage
+        self.__cost_type_0 = None  # cost type for Mayer term
+        self.__W_0 = None
+        self.__Vx_0 = None
+        self.__Vu_0 = None
+        self.__Vz_0 = None
+        self.__yref_0 = None
         # Lagrange term
         self.__cost_type   = 'LINEAR_LS'  # cost type
         self.__W           = np.zeros((0,0))
@@ -481,6 +501,63 @@ class AcadosOcpCost:
         self.__Zu_e        = np.array([])
         self.__zl_e        = np.array([])
         self.__zu_e        = np.array([])
+
+    # initial stage
+    @property
+    def cost_type_0(self):
+        """cost type at initial stage"""
+        return self.__cost_type_0
+
+    @property
+    def Vx_0(self):
+        """:math:`V_x^0` - x matrix coefficient"""
+        return self.__Vx_0
+
+    @property
+    def Vu_0(self):
+        """:math:`V_u^0` - u matrix coefficient"""
+        return self.__Vu_0
+
+    @property
+    def Vz_0(self):
+        """:math:`V_z^0` - z matrix coefficient"""
+        return self.__Vz_0
+
+    @property
+    def yref_0(self):
+        """:math:`y_{\text{ref}}^0` - reference"""
+        return self.__yref_0
+
+    @yref_0.setter
+    def yref_0(self, yref_0):
+        if isinstance(yref_0, np.ndarray):
+            self.__yref_0 = yref_0
+        else:
+            raise Exception('Invalid yref_0 value, expected numpy array. Exiting.')
+
+    @Vx_0.setter
+    def Vx_0(self, Vx_0):
+        if isinstance(Vx_0, np.ndarray) and len(Vx_0.shape) == 2:
+            self.__Vx_0 = Vx_0
+        else:
+            raise Exception('Invalid cost Vx_0 value. ' \
+                + 'Should be 2 dimensional numpy array. Exiting.')
+
+    @Vu_0.setter
+    def Vu_0(self, Vu_0):
+        if isinstance(Vu_0, np.ndarray) and len(Vu_0.shape) == 2:
+            self.__Vu_0 = Vu_0
+        else:
+            raise Exception('Invalid cost Vu_0 value. ' \
+                + 'Should be 2 dimensional numpy array. Exiting.')
+
+    @Vz_0.setter
+    def Vz_0(self, Vz_0):
+        if isinstance(Vz_0, np.ndarray) and len(Vz_0.shape) == 2:
+            self.__Vz_0 = Vz_0
+        else:
+            raise Exception('Invalid cost Vz_0 value. ' \
+                + 'Should be 2 dimensional numpy array. Exiting.')
 
     # Lagrange term
     @property
@@ -535,13 +612,19 @@ class AcadosOcpCost:
 
     @cost_type.setter
     def cost_type(self, cost_type):
-
         cost_types = ('LINEAR_LS', 'NONLINEAR_LS', 'EXTERNAL')
-
         if cost_type in cost_types:
             self.__cost_type = cost_type
         else:
             raise Exception('Invalid cost_type value. Exiting.')
+
+    @cost_type_0.setter
+    def cost_type_0(self, cost_type_0):
+        cost_types = ('LINEAR_LS', 'NONLINEAR_LS', 'EXTERNAL')
+        if cost_type_0 in cost_types:
+            self.__cost_type_0 = cost_type_0
+        else:
+            raise Exception('Invalid cost_type_0 value. Exiting.')
 
     @W.setter
     def W(self, W):
