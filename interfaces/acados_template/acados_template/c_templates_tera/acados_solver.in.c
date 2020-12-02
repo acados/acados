@@ -866,6 +866,24 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
 
 
     /**** Cost ****/
+{%- if cost.cost_type_0 == "NONLINEAR_LS" or cost.cost_type_0 == "LINEAR_LS" %}
+{% if dims.ny_0 > 0 %}
+    double W_0[NY0*NY0];
+    {% for j in range(end=dims.ny_0) %}
+        {%- for k in range(end=dims.ny_0) %}
+    W_0[{{ j }}+(NY0) * {{ k }}] = {{ cost.W_0[j][k] }};
+        {%- endfor %}
+    {%- endfor %}
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "W", W_0);
+
+    double yref_0[NY0];
+    {% for j in range(end=dims.ny_0) %}
+    yref_0[{{ j }}] = {{ cost.yref_0[j] }};
+    {%- endfor %}
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "yref", yref_0);
+{% endif %}
+{% endif %}
+
 {%- if cost.cost_type == "NONLINEAR_LS" or cost.cost_type == "LINEAR_LS" %}
 {% if dims.ny > 0 %}
     double W[NY*NY];
@@ -880,7 +898,7 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     yref[{{ j }}] = {{ cost.yref[j] }};
     {%- endfor %}
 
-    for (int i = 0; i < N; i++)
+    for (int i = 1; i < N; i++)
     {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "W", W);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "yref", yref);
@@ -926,7 +944,7 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     Vx[{{ j }}+(NY) * {{ k }}] = {{ cost.Vx[j][k] }};
         {%- endfor %}
     {%- endfor %}
-    for (int i = 0; i < N; i++)
+    for (int i = 1; i < N; i++)
     {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Vx", Vx);
     }
@@ -939,7 +957,7 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
         {%- endfor %}
     {%- endfor %}
 
-    for (int i = 0; i < N; i++)
+    for (int i = 1; i < N; i++)
     {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Vu", Vu);
     }
@@ -953,7 +971,7 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
         {%- endfor %}
     {%- endfor %}
 
-    for (int i = 0; i < N; i++)
+    for (int i = 1; i < N; i++)
     {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Vz", Vz);
     }

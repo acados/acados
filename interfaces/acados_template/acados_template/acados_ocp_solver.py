@@ -540,7 +540,7 @@ def ocp_generate_external_functions(acados_ocp, model):
         generate_c_code_constraint(model, model.name, True, opts)
 
     # dummy matrices
-    if not acados_ocp.cost.cost_type == 'LINEAR_LS':
+    if not acados_ocp.cost.cost_type_0 == 'LINEAR_LS':
         acados_ocp.cost.Vx_0 = np.zeros((acados_ocp.dims.ny_0, acados_ocp.dims.nx))
         acados_ocp.cost.Vu_0 = np.zeros((acados_ocp.dims.ny_0, acados_ocp.dims.nu))
     if not acados_ocp.cost.cost_type == 'LINEAR_LS':
