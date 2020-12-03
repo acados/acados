@@ -119,9 +119,9 @@ def make_ocp_dims_consistent(acados_ocp):
 
     elif cost.cost_type_0 == 'NONLINEAR_LS':
         ny_0 = cost.W_0.shape[0]
-        if is_empty(model.cost_y_expr) and ny_0 != 0:
+        if is_empty(model.cost_y_expr_0) and ny_0 != 0:
             raise Exception('inconsistent dimension ny_0: regarding W_0, cost_y_expr.')
-        elif casadi_length(model.cost_y_expr) != ny_0:
+        elif casadi_length(model.cost_y_expr_0) != ny_0:
             raise Exception('inconsistent dimension ny_0: regarding W_0, cost_y_expr.')
         if cost.yref_0.shape[0] != ny_0:
             raise Exception('inconsistent dimension: regarding W_0, yref_0.' + \
