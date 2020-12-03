@@ -62,26 +62,12 @@ def export_mhe_solver_with_param(model, N, h, Q, Q0, R):
     # set cost type
     ocp_mhe.cost.cost_type = 'NONLINEAR_LS'
     ocp_mhe.cost.cost_type_e = 'LINEAR_LS'
-    ocp_mhe.cost.cost_type_0 = 'LINEAR_LS' # 'NONLINEAR_LS' # 
+    ocp_mhe.cost.cost_type_0 = 'NONLINEAR_LS' 
 
-    # cost stage 0
-    if ocp_mhe.cost.cost_type_0 == 'LINEAR_LS':
-        ocp_mhe.cost.W_0 = block_diag(R, Q, Q0)
-        ocp_mhe.cost.Vx_0 = np.zeros((ny_0, nx_augmented))
-        ocp_mhe.cost.Vx_0[:nx, :nx] = np.eye(nx)
-        ocp_mhe.cost.Vx_0[2*nx:3*nx_augmented, :] = np.eye(nx_augmented)
+    ocp_mhe.cost.W_0 = block_diag(R, Q, Q0)
+    ocp_mhe.model.cost_y_expr_0 = vertcat(x[:nx], u, x)
+    ocp_mhe.cost.yref_0 = np.zeros((ny_0,))
 
-        ocp_mhe.cost.Vu_0 = np.zeros((ny_0, nu))
-        ocp_mhe.cost.Vu_0[1*nx:2*nx, :] = np.eye(nx)
-
-        ocp_mhe.cost.yref_0 = np.zeros((ny_0,))
-
-    elif ocp_mhe.cost.cost_type_0 == "NONLINEAR_LS":
-        ocp_mhe.cost.W_0 = block_diag(R, Q, Q0)
-        ocp_mhe.model.cost_y_expr_0 = vertcat(x[:nx], u, x)
-        ocp_mhe.cost.yref_0 = np.zeros((ny_0,))
-    else:
-        Exception('Unknown cost type')
 
     # cost intermediate stages
     ocp_mhe.cost.W = block_diag(R, Q)
