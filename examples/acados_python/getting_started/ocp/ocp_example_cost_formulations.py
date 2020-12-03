@@ -59,12 +59,6 @@ ny = nx + nu
 ny_e = nx
 N = 20
 
-# set dimensions
-ocp.dims.nx = nx
-ocp.dims.ny = ny
-ocp.dims.ny_e = ny_e
-ocp.dims.nbu = nu 
-ocp.dims.nu = nu
 ocp.dims.N = N
 
 # set cost
@@ -74,8 +68,7 @@ R = 2*np.diag([1e-2])
 x = ocp.model.x
 u = ocp.model.u
 
-ocp.cost.W_e = Q
-ocp.cost.W = scipy.linalg.block_diag(Q, R)
+cost_W = scipy.linalg.block_diag(Q, R)
 
 if COST_MODULE == 'LS':
     ocp.cost.cost_type = 'LINEAR_LS'
@@ -101,14 +94,17 @@ elif COST_MODULE == 'EXTERNAL':
     ocp.cost.cost_type = 'EXTERNAL'
     ocp.cost.cost_type_e = 'EXTERNAL'
 
-    ocp.model.cost_expr_ext_cost = vertcat(x, u).T @ ocp.cost.W @ vertcat(x, u)
+    ocp.model.cost_expr_ext_cost = vertcat(x, u).T @ cost_W @ vertcat(x, u)
     ocp.model.cost_expr_ext_cost_e = x.T @ Q @ x
 
 else:
     raise Exception('Unknown COST_MODULE. Possible values are \'LS\' and \'NLS\'.')
 
-ocp.cost.yref = np.zeros((ny, ))
-ocp.cost.yref_e = np.zeros((ny_e, ))
+if COST_MODULE in ['LS', 'NLS']:
+    ocp.cost.yref = np.zeros((ny, ))
+    ocp.cost.yref_e = np.zeros((ny_e, ))
+    ocp.cost.W_e = Q
+    ocp.cost.W = cost_W
 
 # set constraints
 Fmax = 80
