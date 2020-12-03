@@ -110,11 +110,20 @@ for i in range(N):
 simX[N,:] = acados_solver_ocp.get(N, "x")
 simY[N,:] = simX[N,:] + np.transpose(np.diag(v_stds) @ np.random.standard_normal((nx, 1)))
 
-for j in range(N):
+# set measurements and controls
+yref_0 = np.zeros((2*nx + nx_augmented, ))
+yref_0[:nx] = simY[0, :]
+yref_0[2*nx:] = x0_bar
+acados_solver_mhe.set(0, "yref", yref_0)
+acados_solver_mhe.set(0, "p", simU[0,:])
+
+# set initial guess to x0_bar
+acados_solver_mhe.set(0, "x", x0_bar)
+
+yref = np.zeros((2*nx, ))
+for j in range(1, N):
     # set measurements and controls
-    yref = np.zeros((2*nx+nx_augmented, ))
     yref[:nx] = simY[j, :]
-    yref[2*nx:] = x0_bar
     acados_solver_mhe.set(j, "yref", yref)
     acados_solver_mhe.set(j, "p", simU[j,:])
 

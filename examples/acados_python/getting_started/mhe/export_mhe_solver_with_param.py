@@ -49,27 +49,51 @@ def export_mhe_solver_with_param(model, N, h, Q, Q0, R):
     nparam = model.p.size()[0]
     nx = nx_augmented-1
 
-    ny = R.shape[0] + Q.shape[0] + Q0.shape[0]    # h(x), w and arrival cost
+    ny = R.shape[0] + Q.shape[0]                    # h(x), w 
     ny_e = 0
+    ny_0 = R.shape[0] + Q.shape[0] + Q0.shape[0]    # h(x), w and arrival cost
 
     # set number of shooting nodes
     ocp_mhe.dims.N = N
 
-    # set cost
-    ocp_mhe.cost.cost_type = 'NONLINEAR_LS'
-    ocp_mhe.cost.cost_type_e = 'LINEAR_LS'
-
-    ocp_mhe.cost.W = block_diag(R, Q, np.zeros((nx_augmented, nx_augmented)))
     x = ocp_mhe.model.x
     u = ocp_mhe.model.u
 
-    ocp_mhe.model.cost_y_expr = vertcat(x[0:nx], u, x)
+    # set cost type
+    ocp_mhe.cost.cost_type = 'NONLINEAR_LS'
+    ocp_mhe.cost.cost_type_e = 'LINEAR_LS'
+    ocp_mhe.cost.cost_type_0 = 'LINEAR_LS' # 'NONLINEAR_LS' # 
+
+    # cost stage 0
+    if ocp_mhe.cost.cost_type_0 == 'LINEAR_LS':
+        ocp_mhe.cost.W_0 = block_diag(R, Q, Q0)
+        ocp_mhe.cost.Vx_0 = np.zeros((ny_0, nx_augmented))
+        ocp_mhe.cost.Vx_0[:nx, :nx] = np.eye(nx)
+        ocp_mhe.cost.Vx_0[2*nx:3*nx_augmented, :] = np.eye(nx_augmented)
+
+        ocp_mhe.cost.Vu_0 = np.zeros((ny_0, nu))
+        ocp_mhe.cost.Vu_0[1*nx:2*nx, :] = np.eye(nx)
+
+        ocp_mhe.cost.yref_0 = np.zeros((ny_0,))
+
+    elif ocp_mhe.cost.cost_type_0 == "NONLINEAR_LS":
+        ocp_mhe.cost.W_0 = block_diag(R, Q, Q0)
+        ocp_mhe.model.cost_y_expr_0 = vertcat(x[:nx], u, x)
+        ocp_mhe.cost.yref_0 = np.zeros((ny_0,))
+    else:
+        Exception('Unknown cost type')
+
+    # cost intermediate stages
+    ocp_mhe.cost.W = block_diag(R, Q)
+
+    ocp_mhe.model.cost_y_expr = vertcat(x[0:nx], u)
 
     ocp_mhe.parameter_values = np.zeros((nparam, ))
 
     # set y_ref for all stages
     ocp_mhe.cost.yref  = np.zeros((ny,))
     ocp_mhe.cost.yref_e = np.zeros((ny_e, ))
+    ocp_mhe.cost.yref_0  = np.zeros((ny_0,))
 
     # set QP solver
     # ocp_mhe.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
