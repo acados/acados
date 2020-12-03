@@ -57,20 +57,25 @@ def export_mhe_solver(model, N, h, Q, Q0, R):
     ocp_mhe.dims.N = N
 
     ## set cost
-    # TODO: try also NONLINEAR_LS
-    ocp_mhe.cost.cost_type_0 = 'LINEAR_LS'
-    ocp_mhe.cost.W_0 = block_diag(R, Q, Q0)
-    ocp_mhe.cost.Vx_0 = np.zeros((ny_0, nx))
-    ocp_mhe.cost.Vx_0[:nx, :] = np.eye(nx)
-    ocp_mhe.cost.Vx_0[2*nx:3*nx, :] = np.eye(nx)
+    ocp_mhe.cost.cost_type_0 = 'NONLINEAR_LS' # 'LINEAR_LS'
 
-    ocp_mhe.cost.Vu_0 = np.zeros((ny_0, nu))
-    ocp_mhe.cost.Vu_0[1*nx:2*nx, :] = np.eye(nx)
+    if ocp_mhe.cost.cost_type_0 == 'LINEAR_LS':
+        ocp_mhe.cost.W_0 = block_diag(R, Q, Q0)
+        ocp_mhe.cost.Vx_0 = np.zeros((ny_0, nx))
+        ocp_mhe.cost.Vx_0[:nx, :] = np.eye(nx)
+        ocp_mhe.cost.Vx_0[2*nx:3*nx, :] = np.eye(nx)
 
-    ocp_mhe.cost.yref_0 = np.zeros((ny_0,))
+        ocp_mhe.cost.Vu_0 = np.zeros((ny_0, nu))
+        ocp_mhe.cost.Vu_0[1*nx:2*nx, :] = np.eye(nx)
 
-    import pdb; pdb.set_trace()
+        ocp_mhe.cost.yref_0 = np.zeros((ny_0,))
 
+    elif ocp_mhe.cost.cost_type_0 == "NONLINEAR_LS":
+        ocp_mhe.cost.W_0 = block_diag(R, Q, Q0)
+        ocp_mhe.model.cost_y_expr_0 = vertcat(x, u, x)
+        ocp_mhe.cost.yref_0 = np.zeros((ny_0,))
+    else:
+        Exception('Unknown cost type')
 
     # intermediate
     ocp_mhe.cost.cost_type = 'NONLINEAR_LS'
