@@ -10,6 +10,10 @@ The software is currently focused on direct methods and relies heavily on `CasAD
 
 - [TuneMPC - a Python package for economic tuning of nonlinear model predictive control (NMPC) problems.](https://github.com/jdeschut/tunempc/)
 
+- [OpenOCL](https://github.com/OpenOCL/OpenOCL)
+is an open-source Matlab toolbox for modeling and solving optimal control problems.
+It can use `CasADi` with IPOPT as a solver.
+It also provides a higher level interface to `acados`, which is based on the Matlab interface of `acados`.
 
 ## Papers featuring `acados`
 - [Contraction Properties of the Advanced Step Real-Time Iteration for NMPC at the IFAC World Congress 2020](https://cdn.syscop.de/publications/Nurkanovic2020b.pdf)
