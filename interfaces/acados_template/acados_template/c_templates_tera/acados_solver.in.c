@@ -289,7 +289,7 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     {%- endif %}
 
     {%- if cost.cost_type == "NONLINEAR_LS" or cost.cost_type == "LINEAR_LS" %}
-    for (int i = 0; i < N; i++)
+    for (int i = 1; i < N; i++)
         ocp_nlp_dims_set_cost(nlp_config, nlp_dims, i, "ny", &ny[i]);
     {%- endif %}
 
