@@ -121,7 +121,7 @@ void ocp_nlp_cost_ls_dims_get(void *config_, void *dims_, const char *field, int
 typedef struct
 {
     // slack penalty has the form z^T * s + .5 * s^T * Z * s
-    struct blasfeo_dmat Cyt;            ///< output matrix: Cy * [x, u] = y; in transposed form
+    struct blasfeo_dmat Cyt;            ///< output matrix: Cy * [u,x] = y; in transposed form
     struct blasfeo_dmat Vz;             ///< Vz in ls cost Vx*x + Vu*u + Vz*z
     struct blasfeo_dmat W;              ///< ls norm corresponding to this matrix
     struct blasfeo_dvec y_ref;          ///< yref
