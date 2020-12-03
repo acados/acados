@@ -113,7 +113,7 @@ void ocp_nlp_cost_external_dims_set(void *config_, void *dims_, const char *fiel
     }
     else
     {
-        printf("\nerror: dimension type %s not available in module ocp_nlp_cost_external\n", field);
+        printf("\nerror: ocp_nlp_cost_external_dims_set: dimension type %s not available.\n", field);
         exit(1);
     }
 
