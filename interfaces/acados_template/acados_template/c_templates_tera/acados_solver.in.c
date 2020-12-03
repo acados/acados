@@ -1756,7 +1756,7 @@ int {{ model.name }}_acados_update_params(nlp_solver_capsule * capsule, int stag
     }
 
 {%- if dims.np > 0 %}
-    if (stage < {{ dims.N }} && stage > 0)
+    if (stage < {{ dims.N }} && stage >= 0)
     {
     {%- if solver_options.integrator_type == "IRK" %}
         capsule->impl_dae_fun[stage].set_param(capsule->impl_dae_fun+stage, p);
