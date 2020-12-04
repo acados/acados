@@ -258,7 +258,6 @@ typedef enum
 
 typedef struct ocp_nlp_opts
 {
-    ocp_nlp_globalization_t globalization;
     ocp_qp_xcond_solver_opts *qp_solver_opts; // xcond solver opts instead ???
     void *regularize;
     void **dynamics;     // dynamics_opts
@@ -269,6 +268,10 @@ typedef struct ocp_nlp_opts
     int reuse_workspace;
     int num_threads;
 
+    // TODO: move to separate struct?
+    ocp_nlp_globalization_t globalization;
+    double alpha_min;
+    double alpha_reduction;
 } ocp_nlp_opts;
 
 //
