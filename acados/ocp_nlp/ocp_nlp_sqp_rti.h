@@ -99,6 +99,7 @@ typedef struct
     double time_lin;
     double time_reg;
     double time_tot;
+    double time_glob;
 
     // statistics
     double *stat;

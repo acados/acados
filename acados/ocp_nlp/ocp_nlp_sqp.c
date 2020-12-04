@@ -494,6 +494,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->time_lin = 0.0;
     mem->time_reg = 0.0;
     mem->time_tot = 0.0;
+    mem->time_glob = 0.0;
 
     int N = dims->N;
 
@@ -773,8 +774,13 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             return mem->status;
         }
 
-        ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+        // globalization
+        acados_tic(&timer1);
+        double alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+        mem->time_glob += acados_toc(&timer1);
 
+        // update variables
+        ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, alpha);
         // ocp_nlp_dims_print(nlp_out->dims);
         // ocp_nlp_out_print(nlp_out);
         // exit(1);
@@ -1004,6 +1010,11 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
     {
         double *value = return_value_;
         *value = mem->time_reg;
+    }
+    else if (!strcmp("time_glob", field))
+    {
+        double *value = return_value_;
+        *value = mem->time_glob;
     }
     else if (!strcmp("time_sim", field) || !strcmp("time_sim_ad", field) || !strcmp("time_sim_la", field))
     {
