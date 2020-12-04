@@ -2200,7 +2200,7 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
 
 
-static double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
     int i;
@@ -2399,7 +2399,7 @@ static double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
 
 
 void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
-            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work, double alpha)
 {
     int i;
 
@@ -2409,9 +2409,6 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
     int *nu = dims->nu;
     int *ni = dims->ni;
     int *nz = dims->nz;
-
-    // step length
-    double alpha = ocp_nlp_line_search(config, dims, in, out, opts, mem, work);
 
 
 #if defined(ACADOS_WITH_OPENMP)
