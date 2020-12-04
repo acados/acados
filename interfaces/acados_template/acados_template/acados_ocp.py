@@ -1749,6 +1749,7 @@ class AcadosOcpOptions:
         self.__integrator_type  = 'ERK'                       # integrator type
         self.__tf               = None                        # prediction horizon
         self.__nlp_solver_type  = 'SQP_RTI'                   # NLP solver
+        self.__globalization = 'FIXED_STEP'
         self.__nlp_solver_step_length = 1.0                   # fixed Newton step length
         self.__levenberg_marquardt = 0.0
         self.__sim_method_num_stages  = 4                     # number of stages in the integrator
@@ -1799,6 +1800,11 @@ class AcadosOcpOptions:
     def nlp_solver_type(self):
         """NLP solver"""
         return self.__nlp_solver_type
+
+    @property
+    def globalization(self):
+        """Globalization type"""
+        return self.__globalization
 
     @property
     def regularize_method(self):
@@ -1886,6 +1892,16 @@ class AcadosOcpOptions:
     def nlp_solver_tol_eq(self):
         """NLP solver equality tolerance"""
         return self.__nlp_solver_tol_eq
+
+    @property
+    def alpha_min(self):
+        """Minimal step size for globalization"""
+        return self.__alpha_min
+
+    @property
+    def alpha_reduction(self):
+        """Step size reduction factor for globalization"""
+        return self.__alpha_reduction
 
     @property
     def nlp_solver_tol_ineq(self):
@@ -2016,6 +2032,18 @@ class AcadosOcpOptions:
     @Tsim.setter
     def Tsim(self, Tsim):
         self.__Tsim = Tsim
+
+    @globalization.setter
+    def globalization(self, globalization):
+        self.__globalization = globalization
+
+    @alpha_min.setter
+    def alpha_min(self, alpha_min):
+        self.__alpha_min = alpha_min
+
+    @alpha_reduction.setter
+    def alpha_reduction(self, alpha_reduction):
+        self.__alpha_reduction = alpha_reduction
 
     @sim_method_num_stages.setter
     def sim_method_num_stages(self, sim_method_num_stages):
