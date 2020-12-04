@@ -893,6 +893,28 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         ocp_nlp_solver_opts_set(config, opts, "print_level", &print_level);
     }
 
+
+    // globalization
+    char *globalization;
+    if (mxGetField( matlab_opts, 0, "globalization" )!=NULL)
+    {
+        globalization = mxArrayToString( mxGetField( matlab_opts, 0, "globalization" ) );
+        ocp_nlp_solver_opts_set(config, opts, "globalization", globalization);
+
+        if (strcmp(globalization, "fixed_step"))
+        {
+            double alpha_min = mxGetScalar( mxGetField( matlab_opts, 0, "alpha_min" ) );
+            ocp_nlp_solver_opts_set(config, opts, "alpha_min", &alpha_min);
+            double alpha_reduction = mxGetScalar( mxGetField( matlab_opts, 0, "alpha_reduction" ) );
+            ocp_nlp_solver_opts_set(config, opts, "alpha_reduction", &alpha_reduction);
+        }
+    }
+    else
+    {
+        MEX_MISSING_ARGUMENT(fun_name, "globalization");
+    }
+
+
     if (strcmp(dyn_type, "discrete"))
     {
         // sim_method_num_stages

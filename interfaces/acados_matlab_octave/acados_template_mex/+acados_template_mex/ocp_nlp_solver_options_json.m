@@ -67,6 +67,9 @@ classdef ocp_nlp_solver_options_json < handle
         exact_hess_constr
         exact_hess_dyn
         ext_cost_num_hess
+        alpha_min
+        alpha_reduction
+        globalization
 
     end
     methods
@@ -95,6 +98,9 @@ classdef ocp_nlp_solver_options_json < handle
             obj.exact_hess_constr = 1;
             obj.exact_hess_dyn = 1;
             obj.ext_cost_num_hess = 0;
+            obj.alpha_min = 0.05;
+            obj.alpha_reduction = 0.7;
+            obj.globalization = 'FIXED_STEP';
 
         end
     end
