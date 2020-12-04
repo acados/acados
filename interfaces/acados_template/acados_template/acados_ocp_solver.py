@@ -1192,11 +1192,11 @@ class AcadosOcpSolver:
     def options_set(self, field_, value_):
         """
         set options of the solver:
-            :param field_: string, e.g. 'print_level', 'rti_phase', 'initialize_t_slacks', 'step_length'
+            :param field_: string, e.g. 'print_level', 'rti_phase', 'initialize_t_slacks', 'step_length', 'alpha_min', 'alpha_reduction'
             :param value_: of type int, float
         """
         int_fields = ['print_level', 'rti_phase', 'initialize_t_slacks']
-        double_fields = ['step_length', 'tol_eq', 'tol_stat', 'tol_ineq', 'tol_comp']
+        double_fields = ['step_length', 'tol_eq', 'tol_stat', 'tol_ineq', 'tol_comp', 'alpha_min', 'alpha_reduction']
         string_fields = ['globalization']
 
         # check field availability and type

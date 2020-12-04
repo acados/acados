@@ -1422,6 +1422,18 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "exact_hess_constr", &exact_hess_constr);
 {%- endif -%}
 
+{%- if solver_options.globalization == "FIXED_STEP" %}
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "globalization", "fixed_step");
+{%- elif solver_options.globalization == "MERIT_BACKTRACKING" %}
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "globalization", "merit_backtracking");
+
+    double alpha_min = {{ solver_options.alpha_min }};
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "alpha_min", &alpha_min);
+
+    double alpha_reduction = {{ solver_options.alpha_reduction }};
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "alpha_reduction", &alpha_reduction);
+{%- endif -%}
+
 {%- if dims.nz > 0 %}
     // TODO: these options are lower level -> should be encapsulated! maybe through hessian approx option.
     bool output_z_val = true;
