@@ -991,6 +991,18 @@ void external_function_param_casadi_set_n_out(external_function_param_casadi *fu
 }
 
 
+static void external_function_param_casadi_set_param(void *self, double *p)
+{
+    external_function_param_casadi *fun = self;
+
+    // set value for all parameters
+    for (int ii = 0; ii < fun->np; ii++)
+    {
+        fun->args[fun->in_num-1][ii] = p[ii];
+    }
+    return;
+}
+
 
 static void external_function_param_casadi_set_param_sparse(void *self, int n_update,
                                                             int *idx, double *p)
@@ -999,7 +1011,7 @@ static void external_function_param_casadi_set_param_sparse(void *self, int n_up
 
     for (int ii = 0; ii < n_update; ii++)
     {
-        fun->p[idx[ii]] = p[ii];
+        fun->args[fun->in_num-1][idx[ii]] = p[ii];
     }
 
     return;
@@ -1107,8 +1119,6 @@ void external_function_param_casadi_assign(external_function_param_casadi *fun, 
         assign_and_advance_double(fun->res_size[ii], &fun->res[ii], &c_ptr);
     // w
     assign_and_advance_double(fun->w_size, &fun->w, &c_ptr);
-    // p
-    assign_and_advance_double(fun->np, &fun->p, &c_ptr);
 
     assert((char *) raw_memory + external_function_param_casadi_calculate_size(fun, fun->np) >=
            c_ptr);
@@ -1172,9 +1182,7 @@ void external_function_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, 
                 exit(1);
         }
     }
-    // copy parametrs vector as last arg
-    ii = fun->in_num - 1;
-    for (jj = 0; jj < fun->np; jj++) fun->args[ii][jj] = fun->p[jj];
+    // parameters are last argument and set via external_function_param_casadi_set_param
 
     // call casadi function
     fun->casadi_fun((const double **) fun->args, fun->res, fun->iw, fun->w, NULL);
@@ -1239,16 +1247,3 @@ void external_function_param_casadi_get_nparam(void *self, int *np)
 }
 
 
-void external_function_param_casadi_set_param(void *self, double *p)
-{
-    // cast into external casadi function
-    external_function_param_casadi *fun = self;
-
-    // set value for all parameters
-    for (int ii = 0; ii < fun->np; ii++)
-    {
-        fun->p[ii] = p[ii];
-    }
-
-    return;
-}
