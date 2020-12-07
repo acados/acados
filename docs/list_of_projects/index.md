@@ -15,6 +15,8 @@ is an open-source Matlab toolbox for modeling and solving optimal control proble
 It can use `CasADi` with IPOPT as a solver.
 It also provides a higher level interface to `acados`, which is based on the Matlab interface of `acados`.
 
+- [bioptim - a Python library for optimal control in biomechanics.](https://github.com/pyomeca/bioptim)
+
 ## Papers featuring `acados`
 - [Contraction Properties of the Advanced Step Real-Time Iteration for NMPC at the IFAC World Congress 2020](https://cdn.syscop.de/publications/Nurkanovic2020b.pdf)
 
