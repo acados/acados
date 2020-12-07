@@ -24,9 +24,9 @@ It also provides a higher level interface to `acados`, which is based on the Mat
 
 - [Optimization-based Primary and Secondary Control of Microgrids](https://www.researchgate.net/profile/Armin_Nurkanovic/publication/341622767_Optimization-based_Primary_and_Secondary_Control_of_Microgrids/links/5f10519a299bf1e548ba5e77/Optimization-based-Primary-and-Secondary-Control-of-Microgrids.pdf)
 
-
 - [NMPC for Racing Using a Singularity-Free Path-Parametric Model with Obstacle Avoidance](https://cdn.syscop.de/publications/Kloeser2020.pdf)
 
+- [TuneMPC—A Tool for Economic Tuning ofTracking (N)MPC Problems](https://cdn.syscop.de/publications/DeSchutter2020.pdf)
 
 <!-- ## Projects using `acados` -->
 
