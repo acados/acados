@@ -107,6 +107,11 @@ function ocp_generate_c_code(obj)
 
     % for cost type not LINEAR_LS, fill matrices with zeros
     if ~strcmp(cost.cost_type, 'LINEAR_LS')
+        cost.Vx_0 = zeros(dims.ny_0, dims.nx);
+        cost.Vu_0 = zeros(dims.ny_0, dims.nu);
+        cost.Vz_0 = zeros(dims.ny_0, dims.nz);
+    end
+    if ~strcmp(cost.cost_type, 'LINEAR_LS')
         cost.Vx = zeros(dims.ny, dims.nx);
         cost.Vu = zeros(dims.ny, dims.nu);
         cost.Vz = zeros(dims.ny, dims.nz);

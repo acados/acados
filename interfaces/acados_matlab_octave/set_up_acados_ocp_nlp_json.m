@@ -125,6 +125,12 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     if isfield(model, 'dim_nsg')
         ocp_json.dims.nsg = model.dim_nsg;
     end
+
+    if isfield(model, 'dim_ny_0')
+        ocp_json.dims.ny_0 = model.dim_ny_0;
+    elseif strcmp(model.cost_type_0, 'ext_cost')
+        ocp_json.dims.ny_0 = 0;
+    end
     % missing in MEX
     % ocp_json.dims.nphi;
     % ocp_json.dims.nphi_e;
@@ -174,6 +180,11 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
         ocp_json.cost.cost_type = 'EXTERNAL';
     else
         ocp_json.cost.cost_type = upper(model.cost_type);
+    end
+    if strcmp(model.cost_type_0, 'ext_cost')
+        ocp_json.cost.cost_type_0 = 'EXTERNAL';
+    else
+        ocp_json.cost.cost_type_0 = upper(model.cost_type_0);
     end
     if strcmp(model.cost_type_e, 'ext_cost')
         ocp_json.cost.cost_type_e = 'EXTERNAL';
@@ -365,13 +376,30 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
         end
     end
 
+    if strcmp(model.cost_type_0, 'linear_ls')
+        ocp_json.cost.Vu_0 = model.cost_Vu_0;
+        ocp_json.cost.Vx_0 = model.cost_Vx_0;
+        if isfield(model, 'cost_Vz_0')
+            ocp_json.cost.Vz_0 = model.cost_Vz_0;
+        end
+    end
+    if strcmp(model.cost_type_0, 'nonlinear_ls') || strcmp(model.cost_type_0, 'linear_ls')
+        ocp_json.cost.W_0 = model.cost_W_0;
+        if isfield(model, 'cost_y_ref_0')
+            ocp_json.cost.yref_0 = model.cost_y_ref_0;
+        else
+			warning(['cost_y_ref_0 not defined for ocp json.' 10 'Using zeros(ny_0,1) by default.']);
+            ocp_json.cost.yref_0 = zeros(model.dim_ny_0,1);
+        end
+    end
+
     if strcmp(model.cost_type_e, 'linear_ls')
         ocp_json.cost.Vx_e = model.cost_Vx_e;
     end
 
-    if strcmp(model.cost_type, 'nonlinear_ls') || strcmp(model.cost_type, 'linear_ls')
+    if strcmp(model.cost_type_e, 'nonlinear_ls') || strcmp(model.cost_type_e, 'linear_ls')
         ocp_json.cost.W_e = model.cost_W_e;
-        if isfield(model, 'cost_y_ref')
+        if isfield(model, 'cost_y_ref_e')
             ocp_json.cost.yref_e = model.cost_y_ref_e;
         else
 			warning(['cost_y_ref_e not defined for ocp json.' 10 'Using zeros(ny_e,1) by default.']);

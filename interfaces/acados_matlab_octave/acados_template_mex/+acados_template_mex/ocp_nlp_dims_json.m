@@ -37,6 +37,7 @@ classdef ocp_nlp_dims_json < handle
         nz     % number of algebraic variables
         nu     % number of inputs
         np     % number of parameters
+        ny_0
         ny     % number of residuals in Lagrange term
         ny_e   % number of residuals in Mayer term
         nbx_0   % number of state bounds on x0
@@ -83,6 +84,7 @@ classdef ocp_nlp_dims_json < handle
             obj.np    = 0;
             obj.ny    = [];
             obj.ny_e   = [];
+            obj.ny_0 = [];
             obj.npd   = 0;
             obj.npd_e  = 0;
             obj.nh    = 0;

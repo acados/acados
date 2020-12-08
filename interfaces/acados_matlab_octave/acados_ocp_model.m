@@ -47,6 +47,7 @@ classdef acados_ocp_model < handle
             obj.model_struct.name = 'ocp_model';
             obj.model_struct.ext_fun_type = 'casadi'; % generic
             obj.model_struct.ext_fun_type_e = 'casadi'; % generic
+            obj.model_struct.cost_type_0 = [];
             obj.model_struct.cost_type = 'auto';
             obj.model_struct.cost_type_e = 'auto';
             obj.model_struct.dyn_type = 'implicit';
@@ -298,6 +299,8 @@ classdef acados_ocp_model < handle
                     obj.model_struct.dim_ny = value;
                 elseif (strcmp(field, 'dim_ny_e'))
                     obj.model_struct.dim_ny_e = value;
+                elseif (strcmp(field, 'dim_ny_0'))
+                    obj.model_struct.dim_ny_0 = value;
                 elseif (strcmp(field, 'dim_nbx_0'))
                     obj.model_struct.dim_nbx_0 = value;
                 elseif (strcmp(field, 'dim_nbx'))

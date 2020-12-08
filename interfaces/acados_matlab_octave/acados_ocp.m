@@ -74,10 +74,33 @@ classdef acados_ocp < handle
 
             % detect cost type
             if (strcmp(obj.model_struct.cost_type, 'auto'))
-                obj.model_struct = detect_cost_type(obj.model_struct, 0);
+                obj.model_struct = detect_cost_type(obj.model_struct, 'path');
+            end
+            if (strcmp(obj.model_struct.cost_type_0, 'auto'))
+                obj.model_struct = detect_cost_type(obj.model_struct, 'initial');
+            elseif isempty(obj.model_struct.cost_type_0)
+                % copy entries from path cost
+                obj.model_struct.cost_type_0 = obj.model_struct.cost_type;
+                if (strcmp(obj.model_struct.cost_type, 'linear_ls'))
+                    obj.model_struct.cost_Vx_0 = obj.model_struct.cost_Vx;
+                    obj.model_struct.cost_Vu_0 = obj.model_struct.cost_Vu;
+                    if isfield(obj.model_struct, 'cost_Vz')
+                        obj.model_struct.cost_Vz_0 = obj.model_struct.cost_Vz;
+                    end
+                elseif (strcmp(obj.model_struct.cost_type, 'nonlinear_ls'))
+                    obj.model_struct.cost_expr_y_0 = obj.model_struct.cost_expr_y;
+                elseif (strcmp(obj.model_struct.cost_type, 'ext_cost'))
+                    obj.model_struct.cost_expr_ext_cost_0 = obj.model_struct.cost_expr_ext_cost;
+                end
+                if (strcmp(obj.model_struct.cost_type, 'linear_ls')) || (strcmp(obj.model_struct.cost_type, 'nonlinear_ls'))
+                    obj.model_struct.cost_W_0 = obj.model_struct.cost_W;
+                    if isfield(obj.model_struct,'cost_y_ref')
+                        obj.model_struct.cost_y_ref_0 = obj.model_struct.cost_y_ref;
+                    end
+                end
             end
             if (strcmp(obj.model_struct.cost_type_e, 'auto'))
-                obj.model_struct = detect_cost_type(obj.model_struct, 1);
+                obj.model_struct = detect_cost_type(obj.model_struct, 'terminal');
             end
 
             % detect constraint structure
