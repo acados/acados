@@ -155,6 +155,15 @@ function render_acados_templates(acados_ocp_nlp_json_file)
         out_file = [model_name, '_external_cost.h'];
         render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
     end
+    if strcmp(acados_ocp.cost.cost_type_0, 'NONLINEAR_LS')
+        template_file = 'cost_y_0_fun.in.h';
+        out_file = [model_name, '_cost_y_0_fun.h'];
+        render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+    elseif strcmp(acados_ocp.cost.cost_type_0, 'EXTERNAL')
+        template_file = 'external_cost_0.in.h';
+        out_file = [model_name, '_external_cost_0.h'];
+        render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+    end
     if strcmp(acados_ocp.cost.cost_type_e, 'NONLINEAR_LS')
         template_file = 'cost_y_e_fun.in.h';
         out_file = [model_name, '_cost_y_e_fun.h'];

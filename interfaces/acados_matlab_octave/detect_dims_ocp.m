@@ -55,6 +55,29 @@ function [model, opts] = detect_dims_ocp(model, opts)
     end
 
     %% cost
+    % initial
+    if strcmp( model.cost_type_0, 'linear_ls')
+        if isfield(model, 'cost_W_0') && isfield(model, 'cost_Vx_0') && isfield(model, 'cost_Vu_0')
+            ny = length(model.cost_W_0);
+            if ny ~= size(model.cost_Vx_0, 1) || ny ~= size(model.cost_Vu_0, 1)
+                error('inconsistent dimension ny, regarding W, Vx, Vu.');
+            end
+        else
+            error('setting linear least square cost: need W, Vx, Vu, at least one missing.')
+        end
+        model.dim_ny_0 = ny;
+    elseif strcmp( model.cost_type_0, 'nonlinear_ls')
+        if isfield(model, 'cost_W_0') && isfield(model, 'cost_expr_y_0')
+            ny = length(model.cost_W_0);
+            if ny ~= length(model.cost_expr_y_0)
+                error('inconsistent dimension ny, regarding W, expr_y.');
+            end
+        else
+            error('setting nonlinear least square cost: need W_0, cost_expr_y_0, at least one missing.')
+        end
+        model.dim_ny_0 = ny;
+    end
+
     % path
     if strcmp( model.cost_type, 'linear_ls')
         if isfield(model, 'cost_W') && isfield(model, 'cost_Vx') && isfield(model, 'cost_Vu')

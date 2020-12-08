@@ -32,7 +32,7 @@
 %
 %   Author: Jonathan Frey: jonathanpaulfrey(at)gmail.com
 
-function model = detect_cost_type(model, is_e)
+function model = detect_cost_type(model, stage_type)
 
     import casadi.*
 
@@ -66,10 +66,10 @@ function model = detect_cost_type(model, is_e)
 
     % z = model.sym_z;
     disp('--------------------------------------------------------------');
-    if is_e
+    if strcmp(stage_type, 'terminal')
         expr_cost = model.cost_expr_ext_cost_e;
         disp('Structure detection for terminal cost term');
-    else
+    elseif strcmp(stage_type, 'path')
         expr_cost = model.cost_expr_ext_cost;
         disp('Structure detection for path cost');
     end
@@ -153,7 +153,7 @@ function model = detect_cost_type(model, is_e)
         W = 2 * W;
 
         %% extract output
-        if is_e
+        if strcmp(stage_type, 'terminal')
             model.cost_type_e = 'linear_ls';
             model.dim_ny_e = ny;
             model.cost_Vx_e = Vx;
@@ -163,7 +163,7 @@ function model = detect_cost_type(model, is_e)
             end
             model.cost_W_e = W;
             model.cost_y_ref_e = y_ref;
-        else
+        elseif strcmp(stage_type, 'path')
             model.cost_type = 'linear_ls';
             model.dim_ny = ny;
             model.cost_Vx = Vx;
@@ -171,6 +171,14 @@ function model = detect_cost_type(model, is_e)
             model.cost_Vz = Vz;
             model.cost_W = W;
             model.cost_y_ref = y_ref;
+        elseif strcmp(stage_type, 'initial')
+            model.cost_type_0 = 'linear_ls';
+            model.dim_ny_0 = ny;
+            model.cost_Vx_0 = Vx;
+            model.cost_Vu_0 = Vu;
+            model.cost_Vz_0 = Vz;
+            model.cost_W_0 = W;
+            model.cost_y_ref_0 = y_ref;
         end
         fprintf('\n\nreformulated cost term in linear least squares form with:')
         fprintf('\ncost = 0.5 * || Vx * x + Vu * u + Vz * z - y_ref ||_W\n');
@@ -191,10 +199,12 @@ function model = detect_cost_type(model, is_e)
     %  TODO: can nonlinear_ls be detected?!
     else
         fprintf('\n\nCost function is not quadratic -> Using external cost\n\n');
-        if is_e
+        if strcmp(stage_type, 'terminal')
             model.cost_type_e = 'ext_cost';
-        else
+        elseif strcmp(stage_type, 'path')
             model.cost_type = 'ext_cost';
+        elseif strcmp(stage_type, 'initial')
+            model.cost_type_0 = 'ext_cost';
         end
     end
     disp('--------------------------------------------------------------');
