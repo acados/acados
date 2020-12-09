@@ -87,42 +87,64 @@ classdef acados_ocp_model < handle
                     obj.model_struct.cost_type = value;
                 elseif (strcmp(field, 'cost_type_e'))
                     obj.model_struct.cost_type_e = value;
+                elseif (strcmp(field, 'cost_type_0'))
+                    obj.model_struct.cost_type_0 = value;
                 elseif (strcmp(field, 'cost_expr_y'))
                     obj.model_struct.cost_expr_y = value;
                 elseif (strcmp(field, 'cost_expr_y_e'))
                     obj.model_struct.cost_expr_y_e = value;
+                elseif (strcmp(field, 'cost_expr_y_0'))
+                    obj.model_struct.cost_expr_y_0 = value;
                 elseif (strcmp(field, 'cost_expr_ext_cost'))
                     obj.model_struct.cost_expr_ext_cost = value;
                     obj.model_struct.ext_fun_type = 'casadi';
                 elseif (strcmp(field, 'cost_expr_ext_cost_e'))
                     obj.model_struct.cost_expr_ext_cost_e = value;
                     obj.model_struct.ext_fun_type_e = 'casadi';
+                elseif (strcmp(field, 'cost_expr_ext_cost_0'))
+                    obj.model_struct.cost_expr_ext_cost_0 = value;
+                    obj.model_struct.ext_fun_type_e = 'casadi';
                 elseif (strcmp(field, 'cost_source_ext_cost'))
                     obj.model_struct.cost_source_ext_cost = value;
                     obj.model_struct.ext_fun_type = 'generic';
                 elseif (strcmp(field, 'cost_source_ext_cost_e'))
                     obj.model_struct.cost_source_ext_cost_e = value;
-                    obj.model_struct.ext_fun_type_e = 'generic';  
+                    obj.model_struct.ext_fun_type_e = 'generic';
+                elseif (strcmp(field, 'cost_source_ext_cost_0'))
+                    obj.model_struct.cost_source_ext_cost_0 = value;
+                    obj.model_struct.ext_fun_type_0 = 'generic';
                 elseif (strcmp(field, 'cost_function_ext_cost'))
-                    obj.model_struct.cost_function_ext_cost = value;                    
+                    obj.model_struct.cost_function_ext_cost = value;
                 elseif (strcmp(field, 'cost_function_ext_cost_e'))
-                    obj.model_struct.cost_function_ext_cost_e = value;                                      
+                    obj.model_struct.cost_function_ext_cost_e = value;
+                elseif (strcmp(field, 'cost_function_ext_cost_0'))
+                    obj.model_struct.cost_function_ext_cost_0 = value;
                 elseif (strcmp(field, 'cost_Vu'))
                     obj.model_struct.cost_Vu = value;
                 elseif (strcmp(field, 'cost_Vx'))
                     obj.model_struct.cost_Vx = value;
                 elseif (strcmp(field, 'cost_Vx_e'))
                     obj.model_struct.cost_Vx_e = value;
+                elseif (strcmp(field, 'cost_Vx_0'))
+                    obj.model_struct.cost_Vx_0 = value;
+                elseif (strcmp(field, 'cost_Vu_0'))
+                    obj.model_struct.cost_Vu_0 = value;
                 elseif (strcmp(field, 'cost_Vz'))
                     obj.model_struct.cost_Vz = value;
+                elseif (strcmp(field, 'cost_Vz_0'))
+                    obj.model_struct.cost_Vz_0 = value;
                 elseif (strcmp(field, 'cost_W'))
                     obj.model_struct.cost_W = value;
                 elseif (strcmp(field, 'cost_W_e'))
                     obj.model_struct.cost_W_e = value;
+                elseif (strcmp(field, 'cost_W_0'))
+                    obj.model_struct.cost_W_0 = value;
                 elseif (strcmp(field, 'cost_y_ref'))
                     obj.model_struct.cost_y_ref = value;
                 elseif (strcmp(field, 'cost_y_ref_e'))
                     obj.model_struct.cost_y_ref_e = value;
+                elseif (strcmp(field, 'cost_y_ref_0'))
+                    obj.model_struct.cost_y_ref_0 = value;
                 elseif (strcmp(field, 'cost_Z'))
                     obj.model_struct.cost_Z = value;
                     obj.model_struct.cost_Zl = value;
