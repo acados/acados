@@ -108,6 +108,9 @@ function [model, opts] = detect_dims_ocp(model, opts)
             if ny_e ~= size(model.cost_Vx_e, 1)
                 error('inconsistent dimension ny_e, regarding W_e, Vx_e.');
             end
+        elseif ~isfield(model, 'cost_W_e') && ~isfield(model, 'cost_Vx_e')
+            ny_e = 0;
+            warning('Fields cost_W_e and cost_Vx_e not provided. Using empty ls terminal cost.')
         else
             error('setting linear least square cost: need W_e, Vx_e, at least one missing.')
         end

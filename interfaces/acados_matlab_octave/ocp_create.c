@@ -1337,8 +1337,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
     }
 
+
     // mayer term
-    if ((cost_type_e_enum == LINEAR_LS) || (cost_type_e_enum == NONLINEAR_LS))
+    if ((cost_type_e_enum == LINEAR_LS || cost_type_e_enum == NONLINEAR_LS) && ny_e > 0)
     {
         const mxArray *W_e_matlab = mxGetField( matlab_model, 0, "cost_W_e" );
         if (W_e_matlab!=NULL)
@@ -1362,7 +1363,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             ocp_nlp_cost_model_set(config, dims, in, N, "y_ref", yr_e);
         }
     }
-    if (cost_type_e_enum == LINEAR_LS)
+    if (cost_type_e_enum == LINEAR_LS && ny_e > 0)
     {
         const mxArray *Vx_e_matlab = mxGetField( matlab_model, 0, "cost_Vx_e" );
         if (Vx_e_matlab!=NULL)
