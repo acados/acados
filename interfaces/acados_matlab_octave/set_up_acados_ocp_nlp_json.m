@@ -393,12 +393,14 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
         end
     end
 
-    if strcmp(model.cost_type_e, 'linear_ls')
+    if isfield(model, 'cost_Vx_e')
         ocp_json.cost.Vx_e = model.cost_Vx_e;
     end
 
     if strcmp(model.cost_type_e, 'nonlinear_ls') || strcmp(model.cost_type_e, 'linear_ls')
-        ocp_json.cost.W_e = model.cost_W_e;
+        if isfield(model, 'cost_W_e')
+            ocp_json.cost.W_e = model.cost_W_e;
+        end
         if isfield(model, 'cost_y_ref_e')
             ocp_json.cost.yref_e = model.cost_y_ref_e;
         else
