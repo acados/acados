@@ -71,7 +71,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     ocp_nlp_solver *nlp_solver = {{ model.name }}_acados_get_nlp_solver(acados_ocp_capsule);
     void *nlp_opts = {{ model.name }}_acados_get_nlp_opts(acados_ocp_capsule);
 
-    mexPrintf("acados: got pointer to objectes!\n");
+    // mexPrintf("acados: got pointer to objectes!\n");
 
     // field names of output struct
     #define FIELDS_OCP 9
