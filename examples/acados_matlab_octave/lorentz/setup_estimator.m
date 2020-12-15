@@ -75,11 +75,11 @@ Vu = zeros(nout, nu);
 Vu(ny+1:ny+nu, :) = eye(nu);
 
 Vx_0 = zeros(nout_0, nx);
-Vx_0(1, 1) = 1;
+Vx_0(1:ny, :) = eye(ny, nx);
 Vx_0(ny+nu+1:end, :) = eye(nx);
 
 Vu_0 = zeros(nout_0, nu);
-Vu_0(nx+1:nx+nu, :) = eye(nu);
+Vu_0(ny+1:ny+nu, :) = eye(nu);
 
 yref = zeros(nout, 1);
 yref_0 = zeros(nout_0, 1);
