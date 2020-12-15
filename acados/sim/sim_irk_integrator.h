@@ -66,6 +66,9 @@ typedef struct
     external_function_generic *impl_ode_jac_x_xdot_u_z;
     // hessian of implicit ode:
     external_function_generic *impl_ode_hess;
+
+    // for cost_propagation
+    external_function_generic *ext_cost_fun_jac_hess;
 } irk_model;
 
 
@@ -132,6 +135,13 @@ typedef struct
     struct blasfeo_dmat f_hess;  // size: (nx + nu, nx + nu)
     struct blasfeo_dmat dxkzu_dw0;  // size (2*nx + nu + nz) x (nx + nu)
     struct blasfeo_dmat tmp_dxkzu_dw0;  // size (2*nx + nu + nz) x (nx + nu)
+
+    /* the following variables are only available if (opts->cost_propagation) */
+    struct blasfeo_dvec *grad_tmp;  //
+    struct blasfeo_dvec *cost_grad;  //
+    struct blasfeo_dmat *hess_tmp;  //
+    struct blasfeo_dmat *cost_hess;  //
+    struct blasfeo_dmat *tmp_nx_nu;  //
 
 } sim_irk_workspace;
 
