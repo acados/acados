@@ -70,6 +70,7 @@ classdef ocp_nlp_solver_options_json < handle
         alpha_min
         alpha_reduction
         globalization
+        cost_discretization
 
     end
     methods
@@ -101,7 +102,7 @@ classdef ocp_nlp_solver_options_json < handle
             obj.alpha_min = 0.05;
             obj.alpha_reduction = 0.7;
             obj.globalization = 'FIXED_STEP';
-
+            obj.cost_discretization = 'EULER';
         end
     end
 end
