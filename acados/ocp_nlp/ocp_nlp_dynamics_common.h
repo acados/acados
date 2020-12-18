@@ -80,6 +80,7 @@ typedef struct
     void *(*opts_assign)(void *config, void *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config, void *dims, void *opts);
     void (*opts_set)(void *config_, void *opts_, const char *field, void *value);
+    void (*opts_get)(void *config_, void *opts_, const char *field, void *value);
     void (*opts_update)(void *config, void *dims, void *opts);
     /* memory */
     int (*memory_calculate_size)(void *config, void *dims, void *opts);
@@ -97,6 +98,7 @@ typedef struct
     void (*memory_set_dzduxt_ptr)(struct blasfeo_dmat *mat, void *memory_);
     void (*memory_set_sim_guess_ptr)(struct blasfeo_dvec *vec, bool *bool_ptr, void *memory_);
     void (*memory_set_z_alg_ptr)(struct blasfeo_dvec *vec, void *memory_);
+    void (*memory_set)(void *config, void *dims, void *mem, const char *field, void* value);
     void (*memory_get)(void *config, void *dims, void *mem, const char *field, void* value);
     /* workspace */
     int (*workspace_calculate_size)(void *config, void *dims, void *opts);

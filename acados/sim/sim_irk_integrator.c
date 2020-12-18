@@ -895,7 +895,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 	// declare
     acados_timer timer, timer_ad, timer_la;
 
-    double a, b_step;
+    double a, b;
     struct blasfeo_dmat *dG_dK_ss;
     struct blasfeo_dmat *dG_dxu_ss;
     struct blasfeo_dmat *dK_dxu_ss;
@@ -1592,7 +1592,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
                     if (opts->cost_computation)
                     {
-                        b_step = b_vec[ii] * step;
+                        b = b_vec[ii];
 
                         ext_fun_type_in[0] = BLASFEO_DVEC;
                         ext_fun_in[0] = xt;
@@ -1641,8 +1641,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                         // df_dx = d2c_dx2 * Sx
                         blasfeo_dgemm_nn(nx, nx, nx, 1.0, hess_tmp, nu, nu, dxkzu_dw0, 0, 0,
                                          0.0, hess_tmp, 0, 0, df_dx, 0, 0);
-                        // cost_hess[nu:nu+nx, nu:nu+nx] += b_step * Sx * df_dx
-                        blasfeo_dgemm_tn(nx, nx, nx, b_step, dxkzu_dw0, 0, 0, df_dx, 0, 0, 1.0,
+                        // cost_hess[nu:nu+nx, nu:nu+nx] += b * Sx * df_dx
+                        blasfeo_dgemm_tn(nx, nx, nx, b, dxkzu_dw0, 0, 0, df_dx, 0, 0, 1.0,
                                         cost_hess, 0, 0, cost_hess, nu, nu);
 
                         // printf("IRK: cost_hess, after d2c_dx2 contribution, b = %e:\n", b);
@@ -1650,12 +1650,12 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
                         // upper left d2c_du2
                         // += b * (Su^T * (df_du) + d2c_du2)
-                        blasfeo_dgemm_tn(nu, nu, nx, b_step, dxkzu_dw0, 0, nx, df_du, 0, 0,
-                                         b_step, hess_tmp, 0, 0, cost_hess, 0, 0);
+                        blasfeo_dgemm_tn(nu, nu, nx, b, dxkzu_dw0, 0, nx, df_du, 0, 0,
+                                         b, hess_tmp, 0, 0, cost_hess, 0, 0);
                         // printf("IRK: cost_hess, first term, b = %e:\n", b);
                         // blasfeo_print_exp_dmat(nx+nu, nx+nu, cost_hess, 0, 0);
                         // += b * d2c_dxu * Su
-                        blasfeo_dgemm_tn(nu, nu, nx, b_step, hess_tmp, nu, 0, dxkzu_dw0, 0, nx,
+                        blasfeo_dgemm_tn(nu, nu, nx, b, hess_tmp, nu, 0, dxkzu_dw0, 0, nx,
                                          1.0, cost_hess, 0, 0, cost_hess, 0, 0);
 
                         // offdiag block: Sx^T * df_du
@@ -1666,7 +1666,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                         // printf("IRK: cost_hess:\n");
                         // blasfeo_print_exp_dmat(nx+nu, nx+nu, cost_hess, 0, 0);
                         // contribution offdiag blocks:
-                        blasfeo_dgead(nx, nu, b_step, tmp_nx_nu, 0, 0, cost_hess, nu, 0);
+                        blasfeo_dgead(nx, nu, b, tmp_nx_nu, 0, 0, cost_hess, nu, 0);
                     }
 #if CASADI_HESS_MULT
 

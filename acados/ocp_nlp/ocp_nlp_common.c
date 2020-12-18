@@ -1941,7 +1941,6 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
     ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem,
     ocp_nlp_workspace *work)
 {
-
     int i;
 
     int N = dims->N;
@@ -1949,6 +1948,23 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
     int *nx = dims->nx;
     int *nu = dims->nu;
     int *ni = dims->ni;
+
+    /* prepare memory */
+    int cost_computation;
+    for (i = 0; i < N; i++)
+    {
+        config->dynamics[i]->opts_get(config->dynamics[i], opts->dynamics[i], "cost_computation", &cost_computation);
+        if (cost_computation)
+        {
+            // set pointers to cost function & gradient in integrator
+            double *cost_fun = config->cost[i]->memory_get_fun_ptr(mem->cost[i]);
+            struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get_grad_ptr(mem->cost[i]);
+
+            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], mem->dynamics[i], "cost_grad", cost_grad);
+            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], mem->dynamics[i], "cost_fun", cost_fun);
+        }
+    }
+
 
     /* stage-wise multiple shooting lagrangian evaluation */
 
@@ -1959,7 +1975,6 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
     {
         // init Hessian to 0 
         blasfeo_dgese(nu[i] + nx[i], nu[i] + nx[i], 0.0, mem->qp_in->RSQrq+i, 0, 0);
-
 
         if (i < N)
         {

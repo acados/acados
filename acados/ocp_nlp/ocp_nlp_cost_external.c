@@ -227,6 +227,7 @@ int ocp_nlp_cost_external_model_set(void *config_, void *dims_, void *model_,
     {
         double *numerical_hessian = (double *) value_;
         blasfeo_pack_dmat(nx+nu, nx+nu, numerical_hessian, nx+nu, &model->numerical_hessian, 0, 0);
+        // blasfeo_print_exp_dmat(nx+nu, nx+nu, &model->numerical_hessian, 0, 0);
     }
     else if (!strcmp(field, "Z"))
     {
@@ -315,6 +316,7 @@ void ocp_nlp_cost_external_opts_initialize_default(void *config_, void *dims_, v
     ocp_nlp_cost_external_opts *opts = opts_;
 
     opts->use_numerical_hessian = 0;
+    opts->integrator_cost = 0;
 
     return;
 }
@@ -346,6 +348,11 @@ void ocp_nlp_cost_external_opts_set(void *config_, void *opts_, const char *fiel
     {
         int *opt_val = (int *) value;
         opts->use_numerical_hessian = *opt_val;
+    }
+    else if(!strcmp(field, "integrator_cost"))
+    {
+        int *opt_val = (int *) value;
+        opts->integrator_cost = *opt_val;
     }
     else
     {
@@ -619,24 +626,33 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
     ext_fun_type_out[1] = BLASFEO_DVEC;
     ext_fun_out[1] = &memory->grad;  // grad: nu+nx
 
-    if (opts->use_numerical_hessian > 0)
+    if (opts->integrator_cost == 0)
     {
-        // evaluate external function
-        model->ext_cost_fun_jac->evaluate(model->ext_cost_fun_jac, ext_fun_type_in,
-                                            ext_fun_in, ext_fun_type_out, ext_fun_out);
-        // custom hessian
-        blasfeo_dgead(nx+nu, nx+nu, model->scaling, &model->numerical_hessian, 0, 0, memory->RSQrq, 0, 0);
+        if (opts->use_numerical_hessian > 0)
+        {
+            // evaluate external function
+            model->ext_cost_fun_jac->evaluate(model->ext_cost_fun_jac, ext_fun_type_in,
+                                                ext_fun_in, ext_fun_type_out, ext_fun_out);
+            // custom hessian
+            blasfeo_dgead(nx+nu, nx+nu, model->scaling, &model->numerical_hessian, 0, 0, memory->RSQrq, 0, 0);
+        }
+        else
+        {
+            // additional output
+            ext_fun_type_out[2] = BLASFEO_DMAT;
+            ext_fun_out[2] = &work->tmp_nv_nv;   // hess: (nu+nx) * (nu+nx)
+            // evaluate external function
+            model->ext_cost_fun_jac_hess->evaluate(model->ext_cost_fun_jac_hess, ext_fun_type_in,
+                                                ext_fun_in, ext_fun_type_out, ext_fun_out);
+            // hessian contribution
+            blasfeo_dgead(nx+nu, nx+nu, model->scaling, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
+        }
     }
     else
     {
-        // additional output
-        ext_fun_type_out[2] = BLASFEO_DMAT;
-        ext_fun_out[2] = &work->tmp_nv_nv;   // hess: (nu+nx) * (nu+nx)
-        // evaluate external function
-        model->ext_cost_fun_jac_hess->evaluate(model->ext_cost_fun_jac_hess, ext_fun_type_in,
-                                            ext_fun_in, ext_fun_type_out, ext_fun_out);
-        // hessian contribution
-        blasfeo_dgead(nx+nu, nx+nu, model->scaling, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
+        // equivalent things computed in integrator already;
+        // NOTE: gradient and fun get scaled here; hessian gets scaled in IRK/ above.
+        // printf("external cost: skipping cost propagation: %d\n", opts->integrator_cost);
     }
 
     // slack update gradient

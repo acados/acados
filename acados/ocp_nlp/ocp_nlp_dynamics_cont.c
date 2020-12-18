@@ -304,6 +304,27 @@ void ocp_nlp_dynamics_cont_opts_update(void *config_, void *dims_, void *opts_)
 }
 
 
+void ocp_nlp_dynamics_cont_opts_get(void *config_, void *opts_, const char *field, void* value)
+{
+    ocp_nlp_dynamics_config *config = config_;
+    ocp_nlp_dynamics_cont_opts *opts = opts_;
+    sim_config *sim_config_ = config->sim_solver;
+
+    if (!strcmp(field, "compute_adj"))
+    {
+        int *int_ptr = value;
+        *int_ptr = opts->compute_adj;
+    }
+    else if (!strcmp(field, "compute_hess"))
+    {
+        int *int_ptr = value;
+        *int_ptr = opts->compute_hess;
+    }
+    else
+    {
+        sim_config_->opts_get(sim_config_, opts->sim_solver, field, value);
+    }
+}
 
 
 void ocp_nlp_dynamics_cont_opts_set(void *config_, void *opts_, const char *field, void* value)
@@ -554,6 +575,26 @@ void ocp_nlp_dynamics_cont_memory_set_z_alg_ptr(struct blasfeo_dvec *vec, void *
     memory->z_alg = vec;
 
     return;
+}
+
+
+void ocp_nlp_dynamics_cont_memory_set(void *config_, void *dims_, void *mem_, const char *field, void* value)
+{
+    ocp_nlp_dynamics_config *config = config_;
+    ocp_nlp_dynamics_cont_dims *dims = dims_;
+    ocp_nlp_dynamics_cont_memory *mem = mem_;
+
+    sim_config *sim = config->sim_solver;
+
+    if (!strcmp(field, "cost_grad") || !strcmp(field, "cost_fun") || !strcmp(field, "cost_hess"))
+    {
+        sim->memory_set(sim, dims->sim, mem->sim_solver, field, value);
+    }
+    else
+    {
+        printf("\nerror: ocp_nlp_dynamics_cont_memory_set: field %s not available\n", field);
+        exit(1);
+    }
 }
 
 
@@ -850,6 +891,24 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
         blasfeo_dgead(nx+nu, nx+nu, 1.0, &work->hess, 0, 0, mem->RSQrq, 0, 0);
     }
 
+    int cost_computation;
+    sim_opts_get(config->sim_solver, opts->sim_solver, "cost_computation", &cost_computation);
+    if (cost_computation > 0)
+    {
+        // NOTE: add cost hessian here; fun and gradient need slack component added in cost module
+        struct blasfeo_dmat *cost_hess;
+        config->sim_solver->memory_get(config->sim_solver, work->sim_in->dims,
+                            mem->sim_solver, "cost_hess", &cost_hess);
+        // printf("dynamics: RSQrq before cost contribution\n");
+        // blasfeo_print_exp_dmat(nx+nu, nx+nu, mem->RSQrq, 0, 0);
+        blasfeo_dgead(nx+nu, nx+nu, model->T, cost_hess, 0, 0, mem->RSQrq, 0, 0);
+
+        // printf("dynamics: cost contribution\n");
+        // blasfeo_print_exp_dmat(nx+nu, nx+nu, cost_hess, 0, 0);
+        // printf("dynamics: RSQrq after cost contribution\n");
+        // blasfeo_print_exp_dmat(nx+nu, nx+nu, mem->RSQrq, 0, 0);
+    }
+
     return;
 
 }
@@ -968,6 +1027,7 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
     config->opts_initialize_default = &ocp_nlp_dynamics_cont_opts_initialize_default;
     config->opts_update = &ocp_nlp_dynamics_cont_opts_update;
     config->opts_set = &ocp_nlp_dynamics_cont_opts_set;
+    config->opts_get = &ocp_nlp_dynamics_cont_opts_get;
     config->memory_calculate_size = &ocp_nlp_dynamics_cont_memory_calculate_size;
     config->memory_assign = &ocp_nlp_dynamics_cont_memory_assign;
     config->memory_get_fun_ptr = &ocp_nlp_dynamics_cont_memory_get_fun_ptr;
@@ -982,6 +1042,7 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
     config->memory_set_RSQrq_ptr = &ocp_nlp_dynamics_cont_memory_set_RSQrq_ptr;
     config->memory_set_dzduxt_ptr = &ocp_nlp_dynamics_cont_memory_set_dzduxt_ptr;
     config->memory_set_sim_guess_ptr = &ocp_nlp_dynamics_cont_memory_set_sim_guess_ptr;
+    config->memory_set = &ocp_nlp_dynamics_cont_memory_set;
     config->memory_set_z_alg_ptr = &ocp_nlp_dynamics_cont_memory_set_z_alg_ptr;
     config->memory_get = &ocp_nlp_dynamics_cont_memory_get;
     config->workspace_calculate_size = &ocp_nlp_dynamics_cont_workspace_calculate_size;
