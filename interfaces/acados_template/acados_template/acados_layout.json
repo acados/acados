@@ -630,6 +630,9 @@
         "hessian_approx": [
             "str"
         ],
+        "cost_discretization": [
+            "str"
+        ],
         "regularize_method": [
             "str"
         ],

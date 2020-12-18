@@ -865,6 +865,14 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     }
 
 
+{%- if solver_options.cost_discretization == "INTEGRATOR" %}
+    ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, 0, "ext_cost_fun_jac_hess", &capsule->ext_cost_0_fun_jac_hess);
+    for (int i = 1; i < N; i++)
+    {
+        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "ext_cost_fun_jac_hess", &capsule->ext_cost_fun_jac_hess[i-1]);
+    }
+{%- endif %}
+
     /**** Cost ****/
 {%- if cost.cost_type_0 == "NONLINEAR_LS" or cost.cost_type_0 == "LINEAR_LS" %}
 {% if dims.ny_0 > 0 %}
@@ -1592,7 +1600,15 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     bool tmp_bool = {{ solver_options.sim_method_jac_reuse }};
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, capsule->nlp_opts, i, "dynamics_jac_reuse", &tmp_bool);
+{%- endif %}
 
+{%- if solver_options.cost_discretization == "INTEGRATOR" %}
+    bool cost_in_integrator = true;
+    for (int i = 0; i < N; i++)
+    {
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, capsule->nlp_opts, i, "dynamics_cost_computation", &cost_in_integrator);
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, capsule->nlp_opts, i, "cost_integrator_cost", &cost_in_integrator);
+    }
 {%- endif %}
 
     double nlp_solver_step_length = {{ solver_options.nlp_solver_step_length }};
