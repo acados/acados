@@ -148,6 +148,10 @@ add_test(NAME python_chain_sim
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/chain_mass
         python minimal_example_sim.py)
 
+add_test(NAME python_ocp_with_irk_cost_discretization
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
+        python test_ocp_with_irk_cost_discretization.py)
+
 # qpDUNES example
 if(ACADOS_WITH_QPDUNES)
         add_test(NAME python_qpDUNES_test
