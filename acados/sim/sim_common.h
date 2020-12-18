@@ -137,7 +137,7 @@ typedef struct
     bool sens_forw;
     bool sens_adj;
     bool sens_hess;
-    bool cost_propagation;
+    bool cost_computation;
 
     bool output_z;        // 1 -- if zn should be computed
     bool sens_algebraic;  // 1 -- if S_algebraic should be computed
