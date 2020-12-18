@@ -84,7 +84,8 @@ jobs:
       working-directory: ${{runner.workspace}}/acados/external
       shell: bash
       run: |
-        sudo apt-get install liboctave-dev -y
+        sudo apt-get update
+        sudo apt-get install liboctave-dev -y --fix-missing
         octave --version
         ./../.github/linux/install_casadi_octave.sh
         echo "OCTAVE_PATH=$OCTAVE_PATH:$(pwd)/casadi-octave" >> $GITHUB_ENV
