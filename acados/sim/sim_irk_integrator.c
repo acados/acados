@@ -1012,6 +1012,10 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             printf("sim_irk: cost_computation only supported with sens_hess. Exiting.\n");
             exit(1);
         }
+        if (!model->ext_cost_fun_jac_hess){
+            printf("sim_irk: cost_computation only supported with external cost, ext_cost_fun_jac_hess not set. Exiting.\n");
+            exit(1);
+        }
         blasfeo_dvecse(nx+nu, 0.0, cost_grad, 0);
         blasfeo_dgese(nx+nu, nx+nu, 0.0, cost_hess, 0, 0);
         *cost_fun = 0.0;
