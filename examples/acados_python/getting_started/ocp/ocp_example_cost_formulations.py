@@ -169,6 +169,9 @@ simX[N,:] = ocp_solver.get(N, "x")
 # plot results
 plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
 
+ocp_solver.store_iterate(filename='solution.json', overwrite=True)
+ocp_solver.load_iterate(filename='solution.json')
+
 # timings
 # time_tot = 1e8
 # time_lin = 1e8
