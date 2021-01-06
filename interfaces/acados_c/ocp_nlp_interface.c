@@ -477,6 +477,11 @@ void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
         double *double_values = value;
         blasfeo_pack_dvec(2*dims->ni[stage], double_values, 1, &out->t[stage], 0);
     }
+    else if (!strcmp(field, "z"))
+    {
+        double *double_values = value;
+        blasfeo_pack_dvec(dims->nz[stage], double_values, 0, &out->z[stage], 0);
+    }
     else
     {
         printf("\nerror: ocp_nlp_out_set: field %s not available\n", field);
@@ -988,6 +993,16 @@ void ocp_nlp_set(ocp_nlp_config *config, ocp_nlp_solver *solver,
         mem->set_sim_guess[stage] = true;
         // printf("set z_guess\n");
         // blasfeo_print_exp_dvec(nz, mem->sim_guess+stage, nx);
+    }
+    else if (!strcmp(field, "sl"))
+    {
+        double *double_values = value;
+        d_ocp_qp_sol_set_sl(stage, double_values, mem->qp_out);
+    }
+    else if (!strcmp(field, "su"))
+    {
+        double *double_values = value;
+        d_ocp_qp_sol_set_su(stage, double_values, mem->qp_out);
     }
     else if (!strcmp(field, "xdot_guess"))
     {
