@@ -34,6 +34,7 @@
 
 import sys, os, json
 import numpy as np
+from datetime import datetime
 
 from ctypes import *
 
@@ -830,6 +831,56 @@ class AcadosOcpSolver:
             print('\n')
 
         return
+
+
+    def store_iterate(self, filename='', overwrite=False):
+        """
+        stores the current iterate of the ocp solver in a json file
+            :param filename: if not set, use model_name + timestamp + '.json'
+            :param overwrite: if false and filename exists add timestamp to filename
+        """
+        if filename == '':
+            filename += self.acados_ocp.model.name + '_' + 'iterate' + '.json'
+
+        if not overwrite:
+            # append timestamp
+            if os.path.isfile(filename):
+                filename = filename[:-5]
+                filename += datetime.utcnow().strftime('%Y-%m-%d-%H:%M:%S.%f') + '.json'
+
+        # get iterate:
+        solution = dict()
+
+        for i in range(self.N+1):
+            solution['x_'+str(i)] = self.get(i,'x')
+            solution['u_'+str(i)] = self.get(i,'u')
+            solution['z_'+str(i)] = self.get(i,'z')
+            solution['lam_'+str(i)] = self.get(i,'lam')
+            solution['t_'+str(i)] = self.get(i, 't')
+            solution['sl_'+str(i)] = self.get(i, 'sl')
+            solution['su_'+str(i)] = self.get(i, 'su')
+        for i in range(self.N):
+            solution['pi_'+str(i)] = self.get(i,'pi')
+
+        # save
+        with open(filename, 'w') as f:
+            json.dump(solution, f, default=np_array_to_list, indent=4, sort_keys=True)
+        print("stored current iterate in ", os.path.join(os.getcwd(), filename))
+
+
+    def load_iterate(self, filename):
+        """
+        loads the iterate stored in json file with filename into the ocp solver
+        """
+        if not os.path.isfile(filename):
+            raise Exception('load_iterate: failed, file does not exist: ' + os.path.join(os.getcwd(), filename))
+
+        with open(filename, 'r') as f:
+            solution = json.load(f)
+
+        for key in solution.keys():
+            (field, stage) = key.split('_')
+            self.set(int(stage), field, np.array(solution[key]))
 
 
     def get_stats(self, field_):
