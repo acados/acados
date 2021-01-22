@@ -28,5 +28,9 @@ It also provides a higher level interface to `acados`, which is based on the Mat
 
 - [TuneMPC—A Tool for Economic Tuning ofTracking (N)MPC Problems](https://cdn.syscop.de/publications/DeSchutter2020.pdf)
 
+- [Least Conservative Linearized Constraint Formulation for Real-Time Motion Generation](https://cdn.syscop.de/publications/Carlos2020.pdf)
+
+- [An Efficient Real-Time NMPC for Quadrotor Position Control under Communication Time-Delay](https://cdn.syscop.de/publications/Carlos2020a.pdf)
+
 <!-- ## Projects using `acados` -->
 
