@@ -52,7 +52,7 @@
  * opts
  ************************************************/
 
-int ocp_nlp_reg_project_reduc_hess_opts_calculate_size(void)
+acados_size_t ocp_nlp_reg_project_reduc_hess_opts_calculate_size(void)
 {
     return sizeof(ocp_nlp_reg_project_reduc_hess_opts);
 }
@@ -120,7 +120,7 @@ void ocp_nlp_reg_project_reduc_hess_opts_set(void *config_, ocp_nlp_reg_dims *di
  * memory
  ************************************************/
 
-int ocp_nlp_reg_project_reduc_hess_memory_calculate_size(void *config_, ocp_nlp_reg_dims *dims, void *opts_)
+acados_size_t ocp_nlp_reg_project_reduc_hess_memory_calculate_size(void *config_, ocp_nlp_reg_dims *dims, void *opts_)
 {
     int *nx = dims->nx;
     int *nu = dims->nu;
@@ -138,7 +138,7 @@ int ocp_nlp_reg_project_reduc_hess_memory_calculate_size(void *config_, ocp_nlp_
         nxM = nx[ii]>nxM ? nx[ii] : nxM;
     }
 
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_reg_project_reduc_hess_memory);
 

@@ -65,7 +65,7 @@ typedef struct
 } ocp_nlp_dynamics_disc_dims;
 
 //
-int ocp_nlp_dynamics_disc_dims_calculate_size(void *config);
+acados_size_t ocp_nlp_dynamics_disc_dims_calculate_size(void *config);
 //
 void *ocp_nlp_dynamics_disc_dims_assign(void *config, void *raw_memory);
 //
@@ -87,7 +87,7 @@ typedef struct
 } ocp_nlp_dynamics_disc_opts;
 
 //
-int ocp_nlp_dynamics_disc_opts_calculate_size(void *config, void *dims);
+acados_size_t ocp_nlp_dynamics_disc_opts_calculate_size(void *config, void *dims);
 //
 void *ocp_nlp_dynamics_disc_opts_assign(void *config, void *dims, void *raw_memory);
 //
@@ -118,7 +118,7 @@ typedef struct
 } ocp_nlp_dynamics_disc_memory;
 
 //
-int ocp_nlp_dynamics_disc_memory_calculate_size(void *config, void *dims, void *opts);
+acados_size_t ocp_nlp_dynamics_disc_memory_calculate_size(void *config, void *dims, void *opts);
 //
 void *ocp_nlp_dynamics_disc_memory_assign(void *config, void *dims, void *opts, void *raw_memory);
 //
@@ -151,7 +151,7 @@ typedef struct
     struct blasfeo_dmat tmp_nv_nv;
 } ocp_nlp_dynamics_disc_workspace;
 
-int ocp_nlp_dynamics_disc_workspace_calculate_size(void *config, void *dims, void *opts);
+acados_size_t ocp_nlp_dynamics_disc_workspace_calculate_size(void *config, void *dims, void *opts);
 
 
 
@@ -167,7 +167,7 @@ typedef struct
 } ocp_nlp_dynamics_disc_model;
 
 //
-int ocp_nlp_dynamics_disc_model_calculate_size(void *config, void *dims);
+acados_size_t ocp_nlp_dynamics_disc_model_calculate_size(void *config, void *dims);
 //
 void *ocp_nlp_dynamics_disc_model_assign(void *config, void *dims, void *raw_memory);
 //

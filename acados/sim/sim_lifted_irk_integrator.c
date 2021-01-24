@@ -57,9 +57,9 @@
 * dims
 ************************************************/
 
-int sim_lifted_irk_dims_calculate_size()
+acados_size_t sim_lifted_irk_dims_calculate_size()
 {
-    int size = sizeof(sim_lifted_irk_dims);
+    acados_size_t size = sizeof(sim_lifted_irk_dims);
 
     return size;
 }
@@ -136,9 +136,9 @@ void sim_lifted_irk_dims_get(void *config_, void *dims_, const char *field, int 
 * model
 ************************************************/
 
-int sim_lifted_irk_model_calculate_size(void *config, void *dims)
+acados_size_t sim_lifted_irk_model_calculate_size(void *config, void *dims)
 {
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(lifted_irk_model);
 
@@ -188,11 +188,11 @@ int sim_lifted_irk_model_set(void *model_, const char *field, void *value)
 * opts
 ************************************************/
 
-int sim_lifted_irk_opts_calculate_size(void *config_, void *dims)
+acados_size_t sim_lifted_irk_opts_calculate_size(void *config_, void *dims)
 {
     int ns_max = NS_MAX;
 
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(sim_opts);
 
@@ -200,9 +200,9 @@ int sim_lifted_irk_opts_calculate_size(void *config_, void *dims)
     size += ns_max * sizeof(double);           // b_vec
     size += ns_max * sizeof(double);           // c_vec
 
-    int tmp0 = gauss_nodes_work_calculate_size(ns_max);
-    int tmp1 = butcher_table_work_calculate_size(ns_max);
-    int work_size = tmp0 > tmp1 ? tmp0 : tmp1;
+    acados_size_t tmp0 = gauss_nodes_work_calculate_size(ns_max);
+    acados_size_t tmp1 = butcher_table_work_calculate_size(ns_max);
+    acados_size_t work_size = tmp0 > tmp1 ? tmp0 : tmp1;
     size += work_size;  // work
 
     make_int_multiple_of(8, &size);
@@ -229,9 +229,9 @@ void *sim_lifted_irk_opts_assign(void *config_, void *dims, void *raw_memory)
     assign_and_advance_double(ns_max, &opts->c_vec, &c_ptr);
 
     // work
-    int tmp0 = gauss_nodes_work_calculate_size(ns_max);
-    int tmp1 = butcher_table_work_calculate_size(ns_max);
-    int work_size = tmp0 > tmp1 ? tmp0 : tmp1;
+    acados_size_t tmp0 = gauss_nodes_work_calculate_size(ns_max);
+    acados_size_t tmp1 = butcher_table_work_calculate_size(ns_max);
+    acados_size_t work_size = tmp0 > tmp1 ? tmp0 : tmp1;
     opts->work = c_ptr;
     c_ptr += work_size;
 
@@ -322,7 +322,7 @@ void sim_lifted_irk_opts_get(void *config_, void *opts_, const char *field, void
 * memory
 ************************************************/
 
-int sim_lifted_irk_memory_calculate_size(void *config, void *dims_, void *opts_)
+acados_size_t sim_lifted_irk_memory_calculate_size(void *config, void *dims_, void *opts_)
 {
     sim_opts *opts = opts_;
     sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) dims_;
@@ -334,7 +334,7 @@ int sim_lifted_irk_memory_calculate_size(void *config, void *dims_, void *opts_)
 
     int num_steps = opts->num_steps;
 
-    int size = sizeof(sim_lifted_irk_memory);
+    acados_size_t size = sizeof(sim_lifted_irk_memory);
 
     size += 1 * sizeof(struct blasfeo_dmat);            // S_forw
     size += 2 * sizeof(struct blasfeo_dmat);            // JGK, JGf
@@ -502,7 +502,7 @@ void sim_lifted_irk_memory_get(void *config_, void *dims_, void *mem_, const cha
 * workspace
 ************************************************/
 
-int sim_lifted_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
+acados_size_t sim_lifted_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
     sim_opts *opts = opts_;
     sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) dims_;
@@ -512,7 +512,7 @@ int sim_lifted_irk_workspace_calculate_size(void *config_, void *dims_, void *op
     int nx = dims->nx;
     int nu = dims->nu;
 
-    int size = sizeof(sim_lifted_irk_workspace);
+    acados_size_t size = sizeof(sim_lifted_irk_workspace);
 
     size += 3 * sizeof(struct blasfeo_dmat);  // J_temp_x, J_temp_xdot, J_temp_u
 

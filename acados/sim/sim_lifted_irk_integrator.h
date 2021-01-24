@@ -109,13 +109,13 @@ typedef struct
 void sim_lifted_irk_dims_set(void *config_, void *dims_, const char *field, const int *value);
 void sim_lifted_irk_dims_get(void *config_, void *dims_, const char *field, int* value);
 
-int sim_lifted_irk_dims_calculate_size();
+acados_size_t sim_lifted_irk_dims_calculate_size();
 //
 void *sim_lifted_irk_dims_assign(void* config_, void *raw_memory);
 
 /* model */
 //
-int sim_lifted_irk_model_calculate_size(void *config, void *dims);
+acados_size_t sim_lifted_irk_model_calculate_size(void *config, void *dims);
 //
 void *sim_lifted_irk_model_assign(void *config, void *dims, void *raw_memory);
 //
@@ -123,7 +123,7 @@ int sim_lifted_irk_model_set(void *model_, const char *field, void *value);
 
 /* opts */
 //
-int sim_lifted_irk_opts_calculate_size(void *config, void *dims);
+acados_size_t sim_lifted_irk_opts_calculate_size(void *config, void *dims);
 //
 void *sim_lifted_irk_opts_assign(void *config, void *dims, void *raw_memory);
 //
@@ -135,13 +135,13 @@ void sim_lifted_irk_opts_set(void *config_, void *opts_, const char *field, void
 
 /* memory */
 //
-int sim_lifted_irk_memory_calculate_size(void *config, void *dims, void *opts_);
+acados_size_t sim_lifted_irk_memory_calculate_size(void *config, void *dims, void *opts_);
 //
 void *sim_lifted_irk_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
 
 /* workspace */
 //
-int sim_lifted_irk_workspace_calculate_size(void *config, void *dims, void *opts_);
+acados_size_t sim_lifted_irk_workspace_calculate_size(void *config, void *dims, void *opts_);
 //
 void sim_lifted_irk_config_initialize_default(void *config);
 

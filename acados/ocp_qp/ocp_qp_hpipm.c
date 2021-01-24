@@ -54,11 +54,11 @@
  * opts
  ************************************************/
 
-int ocp_qp_hpipm_opts_calculate_size(void *config_, void *dims_)
+acados_size_t ocp_qp_hpipm_opts_calculate_size(void *config_, void *dims_)
 {
     ocp_qp_dims *dims = dims_;
 
-    int size = 0;
+    acados_size_t size = 0;
     size += sizeof(ocp_qp_hpipm_opts);
     size += sizeof(struct d_ocp_qp_ipm_arg);
     size += d_ocp_qp_ipm_arg_memsize(dims);
@@ -144,12 +144,12 @@ void ocp_qp_hpipm_opts_set(void *config_, void *opts_, const char *field, void *
  * memory
  ************************************************/
 
-int ocp_qp_hpipm_memory_calculate_size(void *config_, void *dims_, void *opts_)
+acados_size_t ocp_qp_hpipm_memory_calculate_size(void *config_, void *dims_, void *opts_)
 {
     ocp_qp_dims *dims = dims_;
     ocp_qp_hpipm_opts *opts = opts_;
 
-    int size = 0;
+    acados_size_t size = 0;
     size += sizeof(ocp_qp_hpipm_memory);
 
     size += sizeof(struct d_ocp_qp_ipm_ws);
@@ -226,7 +226,7 @@ void ocp_qp_hpipm_memory_get(void *config_, void *mem_, const char *field, void*
  * workspace
  ************************************************/
 
-int ocp_qp_hpipm_workspace_calculate_size(void *config_, void *dims_, void *opts_)
+acados_size_t ocp_qp_hpipm_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
     return 0;
 }

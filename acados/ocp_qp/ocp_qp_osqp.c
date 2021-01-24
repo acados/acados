@@ -603,9 +603,9 @@ static void ocp_qp_osqp_update_memory(const ocp_qp_in *in, const ocp_qp_osqp_opt
  * opts
  ************************************************/
 
-int ocp_qp_osqp_opts_calculate_size(void *config_, void *dims_)
+acados_size_t ocp_qp_osqp_opts_calculate_size(void *config_, void *dims_)
 {
-    int size = 0;
+    acados_size_t size = 0;
     size += sizeof(ocp_qp_osqp_opts);
     size += sizeof(OSQPSettings);
 
@@ -722,9 +722,9 @@ void ocp_qp_osqp_opts_set(void *config_, void *opts_, const char *field, void *v
  * memory
  ************************************************/
 
-static int osqp_workspace_calculate_size(int n, int m, int P_nnzmax, int A_nnzmax)
+static acados_size_t osqp_workspace_calculate_size(int n, int m, int P_nnzmax, int A_nnzmax)
 {
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(OSQPWorkspace);
     size += sizeof(OSQPData);
@@ -795,17 +795,17 @@ static int osqp_workspace_calculate_size(int n, int m, int P_nnzmax, int A_nnzma
 }
 
 
-int ocp_qp_osqp_memory_calculate_size(void *config_, void *dims_, void *opts_)
+acados_size_t ocp_qp_osqp_memory_calculate_size(void *config_, void *dims_, void *opts_)
 {
     ocp_qp_dims *dims = dims_;
 
-    int n = acados_osqp_num_vars(dims);
-    int m = acados_osqp_num_constr(dims);
+    size_t n = acados_osqp_num_vars(dims);
+    size_t m = acados_osqp_num_constr(dims);
 
-    int P_nnzmax = acados_osqp_nnzmax_P(dims);
-    int A_nnzmax = acados_osqp_nnzmax_A(dims);
+    size_t P_nnzmax = acados_osqp_nnzmax_P(dims);
+    size_t A_nnzmax = acados_osqp_nnzmax_A(dims);
 
-    int size = 0;
+    acados_size_t size = 0;
     size += sizeof(ocp_qp_osqp_memory);
 
     size += 1 * n * sizeof(c_float);  // q
@@ -1226,7 +1226,7 @@ void ocp_qp_osqp_memory_get(void *config_, void *mem_, const char *field, void* 
  * workspace
  ************************************************/
 
-int ocp_qp_osqp_workspace_calculate_size(void *config_, void *dims_, void *opts_)
+acados_size_t ocp_qp_osqp_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
     return 0;
 }

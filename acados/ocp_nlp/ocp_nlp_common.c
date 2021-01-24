@@ -56,11 +56,11 @@
  * config
  ************************************************/
 
-int ocp_nlp_config_calculate_size(int N)
+acados_size_t ocp_nlp_config_calculate_size(int N)
 {
     int ii;
 
-    int size = 0;
+    acados_size_t size = 0;
 
     // self
     size += sizeof(ocp_nlp_config);
@@ -150,9 +150,9 @@ ocp_nlp_config *ocp_nlp_config_assign(int N, void *raw_memory)
  * dims
  ************************************************/
 
-static int ocp_nlp_dims_calculate_size_self(int N)
+static acados_size_t ocp_nlp_dims_calculate_size_self(int N)
 {
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_dims);
 
@@ -180,7 +180,7 @@ static int ocp_nlp_dims_calculate_size_self(int N)
 
 
 
-int ocp_nlp_dims_calculate_size(void *config_)
+acados_size_t ocp_nlp_dims_calculate_size(void *config_)
 {
     ocp_nlp_config *config = config_;
 
@@ -188,7 +188,7 @@ int ocp_nlp_dims_calculate_size(void *config_)
 
     int ii;
 
-    int size = 0;
+    acados_size_t size = 0;
 
     // self
     size += ocp_nlp_dims_calculate_size_self(N);
@@ -552,9 +552,6 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
         }
     }
 #endif
-
-    return;
-
 }
 
 
@@ -627,8 +624,6 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
         // qp solver
         config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nge", &ng_qp_solver);
     }
-
-    return;
 }
 
 
@@ -666,9 +661,9 @@ void ocp_nlp_dims_set_dynamics(void *config_, void *dims_, int stage,
  * in
  ************************************************/
 
-int ocp_nlp_in_calculate_size_self(int N)
+acados_size_t ocp_nlp_in_calculate_size_self(int N)
 {
-    int size = sizeof(ocp_nlp_in);
+    acados_size_t size = sizeof(ocp_nlp_in);
 
     size += N * sizeof(double);  // Ts
 
@@ -683,13 +678,13 @@ int ocp_nlp_in_calculate_size_self(int N)
 
 
 
-int ocp_nlp_in_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims)
+acados_size_t ocp_nlp_in_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims)
 {
     int ii;
 
     int N = dims->N;
 
-    int size = ocp_nlp_in_calculate_size_self(N);
+    acados_size_t size = ocp_nlp_in_calculate_size_self(N);
 
     // dynamics
     for (ii = 0; ii < N; ii++)
@@ -802,7 +797,7 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *
  * out
  ************************************************/
 
-int ocp_nlp_out_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims)
+acados_size_t ocp_nlp_out_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims)
 {
     // extract dims
     int N = dims->N;
@@ -812,7 +807,7 @@ int ocp_nlp_out_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims)
     int *ni = dims->ni;
     int *nz = dims->nz;
 
-    int size = sizeof(ocp_nlp_out);
+    acados_size_t size = sizeof(ocp_nlp_out);
 
     size += 4 * (N + 1) * sizeof(struct blasfeo_dvec);  // ux, lam, t, z
     size += 1 * N * sizeof(struct blasfeo_dvec);        // pi
@@ -931,7 +926,7 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void
  * options
  ************************************************/
 
-int ocp_nlp_opts_calculate_size(void *config_, void *dims_)
+acados_size_t ocp_nlp_opts_calculate_size(void *config_, void *dims_)
 {
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_config *config = config_;
@@ -943,7 +938,7 @@ int ocp_nlp_opts_calculate_size(void *config_, void *dims_)
 
     int N = dims->N;
 
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_opts);
 
@@ -1335,7 +1330,7 @@ void ocp_nlp_opts_set_at_stage(void *config_, void *opts_, int stage, const char
  * memory
  ************************************************/
 
-int ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *opts)
+acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *opts)
 {
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
     ocp_nlp_dynamics_config **dynamics = config->dynamics;
@@ -1350,7 +1345,7 @@ int ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
     int *nu = dims->nu;
     int *ni = dims->ni;
 
-    int size = sizeof(ocp_nlp_memory);
+    acados_size_t size = sizeof(ocp_nlp_memory);
 
     // qp in
     size += ocp_qp_in_calculate_size(dims->qp_solver->orig_dims);
@@ -1596,7 +1591,7 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
  * workspace
  ************************************************/
 
-int ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *opts)
+acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *opts)
 {
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
     ocp_nlp_dynamics_config **dynamics = config->dynamics;
@@ -1610,7 +1605,7 @@ int ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims,
     // int *nu = dims->nu;
     // int *nz = dims->nz;
 
-    int size = 0;
+    acados_size_t size = 0;
 
     // nlp
     size += sizeof(ocp_nlp_workspace);
@@ -1658,7 +1653,7 @@ int ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims,
         }
 
 #else
-        int size_tmp = 0;
+        acados_size_t size_tmp = 0;
         int tmp;
 
         // qp solver
@@ -1796,7 +1791,7 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
 
 #else
 
-        int size_tmp = 0;
+        acados_size_t size_tmp = 0;
         int tmp;
 
         // qp solver
@@ -2057,8 +2052,6 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
         //   }
         //  }
     }
-
-    return;
 }
 
 
@@ -2092,8 +2085,6 @@ void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config,
         // d
         blasfeo_dveccp(2 * ni[i], mem->ineq_fun + i, 0, mem->qp_in->d + i, 0);
     }
-
-    return;
 }
 
 
@@ -2116,8 +2107,6 @@ void ocp_nlp_embed_initial_value(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
     // d
     blasfeo_dveccp(2 * ni[0], mem->ineq_fun, 0, mem->qp_in->d, 0);
-
-    return;
 }
 
 
@@ -2454,8 +2443,6 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
                     mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out->z+i, 0);
         }
     }
-
-    return;
 }
 
 
@@ -2464,7 +2451,7 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
  * residuals
  ************************************************/
 
-int ocp_nlp_res_calculate_size(ocp_nlp_dims *dims)
+acados_size_t ocp_nlp_res_calculate_size(ocp_nlp_dims *dims)
 {
     // extract dims
     int N = dims->N;
@@ -2473,7 +2460,7 @@ int ocp_nlp_res_calculate_size(ocp_nlp_dims *dims)
     // int *nu = dims->nu;
     int *ni = dims->ni;
 
-    int size = sizeof(ocp_nlp_res);
+    acados_size_t size = sizeof(ocp_nlp_res);
 
     size += 3 * (N + 1) * sizeof(struct blasfeo_dvec);  // res_stat res_ineq res_comp
     size += 1 * N * sizeof(struct blasfeo_dvec);        // res_eq
@@ -2610,7 +2597,6 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
 
     // printf("computed residuals g: %e, b: %e, d: %e, m: %e\n", res->inf_norm_res_stat, res->inf_norm_res_eq,
     //        res->inf_norm_res_ineq, res->inf_norm_res_comp);
-    return;
 }
 
 
@@ -2640,6 +2626,5 @@ void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in
     mem->cost_value = total_cost;
 
     // printf("\ncomputed total cost: %e\n", total_cost);
-    return;
 }
 

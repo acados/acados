@@ -81,18 +81,18 @@ typedef struct ocp_qp_xcond_solver_workspace_
 
 typedef struct
 {
-    int (*dims_calculate_size)(void *config, int N);
+    acados_size_t (*dims_calculate_size)(void *config, int N);
     ocp_qp_xcond_solver_dims *(*dims_assign)(void *config, int N, void *raw_memory);
     void (*dims_set)(void *config_, ocp_qp_xcond_solver_dims *dims, int stage, const char *field, int* value);
-    int (*opts_calculate_size)(void *config, ocp_qp_xcond_solver_dims *dims);
+    acados_size_t (*opts_calculate_size)(void *config, ocp_qp_xcond_solver_dims *dims);
     void *(*opts_assign)(void *config, ocp_qp_xcond_solver_dims *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config, ocp_qp_xcond_solver_dims *dims, void *opts);
     void (*opts_update)(void *config, ocp_qp_xcond_solver_dims *dims, void *opts);
     void (*opts_set)(void *config_, void *opts_, const char *field, void* value);
-    int (*memory_calculate_size)(void *config, ocp_qp_xcond_solver_dims *dims, void *opts);
+    acados_size_t (*memory_calculate_size)(void *config, ocp_qp_xcond_solver_dims *dims, void *opts);
     void *(*memory_assign)(void *config, ocp_qp_xcond_solver_dims *dims, void *opts, void *raw_memory);
     void (*memory_get)(void *config_, void *mem_, const char *field, void* value);
-    int (*workspace_calculate_size)(void *config, ocp_qp_xcond_solver_dims *dims, void *opts);
+    acados_size_t (*workspace_calculate_size)(void *config, ocp_qp_xcond_solver_dims *dims, void *opts);
     int (*evaluate)(void *config, ocp_qp_xcond_solver_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts, void *mem, void *work);
     void (*eval_sens)(void *config, ocp_qp_xcond_solver_dims *dims, ocp_qp_in *param_qp_in, ocp_qp_out *sens_qp_out, void *opts, void *mem, void *work);
     qp_solver_config *qp_solver;  // either ocp_qp_solver or dense_solver
@@ -103,13 +103,13 @@ typedef struct
 
 /* config */
 //
-int ocp_qp_xcond_solver_config_calculate_size();
+acados_size_t ocp_qp_xcond_solver_config_calculate_size();
 //
 ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_assign(void *raw_memory);
 
 /* dims */
 //
-int ocp_qp_xcond_solver_dims_calculate_size(void *config, int N);
+acados_size_t ocp_qp_xcond_solver_dims_calculate_size(void *config, int N);
 //
 ocp_qp_xcond_solver_dims *ocp_qp_xcond_solver_dims_assign(void *config, int N, void *raw_memory);
 //
@@ -117,7 +117,7 @@ void ocp_qp_xcond_solver_dims_set_(void *config, ocp_qp_xcond_solver_dims *dims,
 
 /* opts */
 //
-int ocp_qp_xcond_solver_opts_calculate_size(void *config, ocp_qp_xcond_solver_dims *dims);
+acados_size_t ocp_qp_xcond_solver_opts_calculate_size(void *config, ocp_qp_xcond_solver_dims *dims);
 //
 void *ocp_qp_xcond_solver_opts_assign(void *config, ocp_qp_xcond_solver_dims *dims, void *raw_memory);
 //
@@ -129,13 +129,13 @@ void ocp_qp_xcond_solver_opts_set_(void *config_, void *opts_, const char *field
 
 /* memory */
 //
-int ocp_qp_xcond_solver_memory_calculate_size(void *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
+acados_size_t ocp_qp_xcond_solver_memory_calculate_size(void *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
 //
 void *ocp_qp_xcond_solver_memory_assign(void *config, ocp_qp_xcond_solver_dims *dims, void *opts_, void *raw_memory);
 
 /* workspace */
 //
-int ocp_qp_xcond_solver_workspace_calculate_size(void *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
+acados_size_t ocp_qp_xcond_solver_workspace_calculate_size(void *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
 
 /* config */
 //

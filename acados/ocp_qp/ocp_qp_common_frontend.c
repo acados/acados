@@ -52,15 +52,15 @@
 
 
 
-int colmaj_ocp_qp_in_calculate_size(ocp_qp_dims *dims)
+acados_size_t colmaj_ocp_qp_in_calculate_size(ocp_qp_dims *dims)
 {
-    int N = dims->N;
+    size_t N = dims->N;
     int *nx = dims->nx;
     int *nu = dims->nu;
     int *nb = dims->nb;
     int *nc = dims->ng;
 
-    int size = sizeof(colmaj_ocp_qp_in);
+    acados_size_t size = sizeof(colmaj_ocp_qp_in);
 
     size += 4 * (N + 1) * sizeof(int);        // nx, nu, nb, nc
     size += 3 * N * sizeof(double *);         // A, B, b
@@ -249,20 +249,20 @@ char *assign_colmaj_ocp_qp_in(ocp_qp_dims *dims, colmaj_ocp_qp_in **qp_in, void 
 
 
 
-int colmaj_ocp_qp_out_calculate_size(ocp_qp_dims *dims)
+acados_size_t colmaj_ocp_qp_out_calculate_size(ocp_qp_dims *dims)
 {
-    int N = dims->N;
+    size_t N = dims->N;
     int *nx = dims->nx;
     int *nu = dims->nu;
     int *nb = dims->nb;
     int *nc = dims->ng;
 
-    int size = sizeof(colmaj_ocp_qp_out);
+    acados_size_t size = sizeof(colmaj_ocp_qp_out);
 
     size += 3 * (N + 1) * sizeof(double *);  // u, x, lam
     size += N * sizeof(double *);            // pi
 
-    for (int k = 0; k < N + 1; k++)
+    for (size_t k = 0; k < N + 1; k++)
     {
         size += (nx[k] + nu[k]) * sizeof(double);         // u, x
         if (k < N) size += (nx[k + 1]) * sizeof(double);  // pi
@@ -335,21 +335,21 @@ char *assign_colmaj_ocp_qp_out(ocp_qp_dims *dims, colmaj_ocp_qp_out **qp_out, vo
 
 
 
-int colmaj_ocp_qp_res_calculate_size(ocp_qp_dims *dims)
+acados_size_t colmaj_ocp_qp_res_calculate_size(ocp_qp_dims *dims)
 {
-    int N = dims->N;
+    size_t N = dims->N;
     int *nx = dims->nx;
     int *nu = dims->nu;
     int *nb = dims->nb;
     int *ng = dims->ng;
     int *ns = dims->ns;
 
-    int size = sizeof(colmaj_ocp_qp_res);
+    acados_size_t size = sizeof(colmaj_ocp_qp_res);
 
     size += 1 * N * sizeof(double *);         // res_b
     size += 16 * (N + 1) * sizeof(double *);  // everything else
 
-    for (int k = 0; k <= N; k++)
+    for (size_t k = 0; k <= N; k++)
     {
         size += nu[k] * sizeof(double);      // res_r
         size += nx[k] * sizeof(double);      // res_q

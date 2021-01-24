@@ -52,7 +52,7 @@
  * opts
  ************************************************/
 
-int ocp_nlp_reg_convexify_opts_calculate_size(void)
+acados_size_t ocp_nlp_reg_convexify_opts_calculate_size(void)
 {
     return sizeof(ocp_nlp_reg_convexify_opts);
 }
@@ -108,7 +108,7 @@ void ocp_nlp_reg_convexify_opts_set(void *config_, ocp_nlp_reg_dims *dims, void 
  * memory
  ************************************************/
 
-int ocp_nlp_reg_convexify_calculate_memory_size(void *config_, ocp_nlp_reg_dims *dims, void *opts_)
+acados_size_t ocp_nlp_reg_convexify_calculate_memory_size(void *config_, ocp_nlp_reg_dims *dims, void *opts_)
 {
 
     int N = dims->N;
@@ -144,7 +144,7 @@ int ocp_nlp_reg_convexify_calculate_memory_size(void *config_, ocp_nlp_reg_dims 
         nbgM = nbu[ii]+nbx[ii]+ng[ii]>nbgM ? nbu[ii]+nbx[ii]+ng[ii] : nbgM;
     }
 
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_reg_convexify_memory);
 

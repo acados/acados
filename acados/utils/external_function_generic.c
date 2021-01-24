@@ -48,7 +48,7 @@
  * generic external parametric function
  ************************************************/
 
-int external_function_param_generic_struct_size()
+acados_size_t external_function_param_generic_struct_size()
 {
     return sizeof(external_function_param_generic);
 }
@@ -75,7 +75,7 @@ static void external_function_param_generic_set_param_sparse(void *self, int n_u
 }
 
 
-int external_function_param_generic_calculate_size(external_function_param_generic *fun, int np)
+acados_size_t external_function_param_generic_calculate_size(external_function_param_generic *fun, int np)
 {
     // wrapper as evaluate function
     fun->evaluate = &external_function_param_generic_wrapper;
@@ -88,7 +88,7 @@ int external_function_param_generic_calculate_size(external_function_param_gener
     // set number of parameters
     fun->np = np;
 
-    int size = 0;
+    acados_size_t size = 0;
 
     // doubles
     size += fun->np * sizeof(double); // p
@@ -672,7 +672,7 @@ static void d_cvt_dvec_args_to_casadi(struct blasfeo_dvec_args *in, double *out,
  * casadi external function
  ************************************************/
 
-int external_function_casadi_struct_size()
+acados_size_t external_function_casadi_struct_size()
 {
     return sizeof(external_function_casadi);
 }
@@ -727,7 +727,7 @@ void external_function_casadi_set_n_out(external_function_casadi *fun, void *val
 
 
 
-int external_function_casadi_calculate_size(external_function_casadi *fun)
+acados_size_t external_function_casadi_calculate_size(external_function_casadi *fun)
 {
     // casadi wrapper as evaluate
     fun->evaluate = &external_function_casadi_wrapper;
@@ -750,7 +750,7 @@ int external_function_casadi_calculate_size(external_function_casadi *fun)
     for (ii = 0; ii < fun->res_num; ii++)
         fun->res_size_tot += casadi_nnz(fun->casadi_sparsity_out(ii));
 
-    int size = 0;
+    acados_size_t size = 0;
 
     // double pointers
     size += fun->args_num * sizeof(double *);  // args
@@ -937,7 +937,7 @@ void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void *
  * casadi external parametric function
  ************************************************/
 
-int external_function_param_casadi_struct_size()
+acados_size_t external_function_param_casadi_struct_size()
 {
     return sizeof(external_function_param_casadi);
 }
@@ -1018,7 +1018,7 @@ static void external_function_param_casadi_set_param_sparse(void *self, int n_up
 }
 
 
-int external_function_param_casadi_calculate_size(external_function_param_casadi *fun, int np)
+acados_size_t external_function_param_casadi_calculate_size(external_function_param_casadi *fun, int np)
 {
     // loop index
     int ii;
@@ -1049,7 +1049,7 @@ int external_function_param_casadi_calculate_size(external_function_param_casadi
     for (ii = 0; ii < fun->res_num; ii++)
         fun->res_size_tot += casadi_nnz(fun->casadi_sparsity_out(ii));
 
-    int size = 0;
+    acados_size_t size = 0;
 
     // double pointers
     size += fun->args_num * sizeof(double *);  // args
