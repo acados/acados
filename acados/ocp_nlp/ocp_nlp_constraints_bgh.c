@@ -51,9 +51,9 @@
  * dims
  ************************************************/
 
-int ocp_nlp_constraints_bgh_dims_calculate_size(void *config_)
+acados_size_t ocp_nlp_constraints_bgh_dims_calculate_size(void *config_)
 {
-    int size = sizeof(ocp_nlp_constraints_bgh_dims);
+    acados_size_t size = sizeof(ocp_nlp_constraints_bgh_dims);
 
     return size;
 }
@@ -529,7 +529,7 @@ void ocp_nlp_constraints_bgh_dims_get(void *config_, void *dims_, const char *fi
  * model
  ************************************************/
 
-int ocp_nlp_constraints_bgh_model_calculate_size(void *config, void *dims_)
+acados_size_t ocp_nlp_constraints_bgh_model_calculate_size(void *config, void *dims_)
 {
     ocp_nlp_constraints_bgh_dims *dims = dims_;
 
@@ -545,7 +545,7 @@ int ocp_nlp_constraints_bgh_model_calculate_size(void *config, void *dims_)
     int nge = dims->nge;
     int nhe = dims->nhe;
 
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_constraints_bgh_model);
 
@@ -826,9 +826,9 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
  * options
  ************************************************/
 
-int ocp_nlp_constraints_bgh_opts_calculate_size(void *config_, void *dims_)
+acados_size_t ocp_nlp_constraints_bgh_opts_calculate_size(void *config_, void *dims_)
 {
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_constraints_bgh_opts);
 
@@ -904,7 +904,7 @@ void ocp_nlp_constraints_bgh_opts_set(void *config_, void *opts_, char *field, v
  * memory
  ************************************************/
 
-int ocp_nlp_constraints_bgh_memory_calculate_size(void *config_, void *dims_, void *opts_)
+acados_size_t ocp_nlp_constraints_bgh_memory_calculate_size(void *config_, void *dims_, void *opts_)
 {
     ocp_nlp_constraints_bgh_dims *dims = dims_;
 
@@ -916,7 +916,7 @@ int ocp_nlp_constraints_bgh_memory_calculate_size(void *config_, void *dims_, vo
     int nh = dims->nh;
     int ns = dims->ns;
 
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_constraints_bgh_memory);
 
@@ -1093,7 +1093,7 @@ void ocp_nlp_constraints_bgh_memory_set_idxe_ptr(int *idxe, void *memory_)
  * workspace
  ************************************************/
 
-int ocp_nlp_constraints_bgh_workspace_calculate_size(void *config_, void *dims_, void *opts_)
+acados_size_t ocp_nlp_constraints_bgh_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
     ocp_nlp_constraints_bgh_dims *dims = dims_;
 
@@ -1106,7 +1106,7 @@ int ocp_nlp_constraints_bgh_workspace_calculate_size(void *config_, void *dims_,
     int nh = dims->nh;
     int ns = dims->ns;
 
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_constraints_bgh_workspace);
 

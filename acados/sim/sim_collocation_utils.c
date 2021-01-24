@@ -155,13 +155,13 @@ static double lu_system_solve(double *A, double *b, int *perm, int dim, int dim_
 
 
 
-int gauss_nodes_work_calculate_size(int ns)
+acados_size_t gauss_nodes_work_calculate_size(int ns)
 {
     int N = ns - 1;
     int N1 = N + 1;
     int N2 = N + 2;
 
-    int size = 0;
+    acados_size_t size = 0;
 
     size += 4 * N1 * sizeof(double);       // x_init, y, y_prev, der_lgvm
     size += 1 * N1 * N2 * sizeof(double);  // lgvm
@@ -248,9 +248,9 @@ void gauss_nodes(int ns, double *nodes, void *work)
 
 
 
-int gauss_simplified_work_calculate_size(int ns)
+acados_size_t gauss_simplified_work_calculate_size(int ns)
 {
-    int size = 0;
+    acados_size_t size = 0;
 
     size += 1 * 2 * ns * sizeof(double);   // D
     size += 3 * ns * ns * sizeof(double);  // T, T_inv, lu_work
@@ -377,9 +377,9 @@ void gauss_simplified(int ns, Newton_scheme *scheme, void *work)
 
 
 
-int butcher_table_work_calculate_size(int ns)
+acados_size_t butcher_table_work_calculate_size(int ns)
 {
-    int size = 0;
+    acados_size_t size = 0;
 
     size += 3 * ns * ns * sizeof(double);  // can_vm, rhs, lu_work
 

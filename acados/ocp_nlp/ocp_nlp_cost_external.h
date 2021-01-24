@@ -59,7 +59,7 @@ typedef struct
 } ocp_nlp_cost_external_dims;
 
 //
-int ocp_nlp_cost_external_dims_calculate_size(void *config);
+acados_size_t ocp_nlp_cost_external_dims_calculate_size(void *config);
 //
 void *ocp_nlp_cost_external_dims_assign(void *config, void *raw_memory);
 //
@@ -86,7 +86,7 @@ typedef struct
 } ocp_nlp_cost_external_model;
 
 //
-int ocp_nlp_cost_external_model_calculate_size(void *config, void *dims);
+acados_size_t ocp_nlp_cost_external_model_calculate_size(void *config, void *dims);
 //
 void *ocp_nlp_cost_external_model_assign(void *config, void *dims, void *raw_memory);
 
@@ -102,7 +102,7 @@ typedef struct
 } ocp_nlp_cost_external_opts;
 
 //
-int ocp_nlp_cost_external_opts_calculate_size(void *config, void *dims);
+acados_size_t ocp_nlp_cost_external_opts_calculate_size(void *config, void *dims);
 //
 void *ocp_nlp_cost_external_opts_assign(void *config, void *dims, void *raw_memory);
 //
@@ -131,7 +131,7 @@ typedef struct
 } ocp_nlp_cost_external_memory;
 
 //
-int ocp_nlp_cost_external_memory_calculate_size(void *config, void *dims, void *opts);
+acados_size_t ocp_nlp_cost_external_memory_calculate_size(void *config, void *dims, void *opts);
 //
 void *ocp_nlp_cost_external_memory_assign(void *config, void *dims, void *opts, void *raw_memory);
 //
@@ -162,7 +162,7 @@ typedef struct
 } ocp_nlp_cost_external_workspace;
 
 //
-int ocp_nlp_cost_external_workspace_calculate_size(void *config, void *dims, void *opts);
+acados_size_t ocp_nlp_cost_external_workspace_calculate_size(void *config, void *dims, void *opts);
 
 /************************************************
  * functions

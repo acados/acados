@@ -77,7 +77,7 @@ typedef struct
 } ocp_nlp_constraints_bgp_dims;
 
 //
-int ocp_nlp_constraints_bgp_dims_calculate_size(void *config);
+acados_size_t ocp_nlp_constraints_bgp_dims_calculate_size(void *config);
 //
 void *ocp_nlp_constraints_bgp_dims_assign(void *config, void *raw_memory);
 //
@@ -103,7 +103,7 @@ typedef struct
 } ocp_nlp_constraints_bgp_model;
 
 //
-int ocp_nlp_constraints_bgp_calculate_size(void *config, void *dims);
+acados_size_t ocp_nlp_constraints_bgp_calculate_size(void *config, void *dims);
 //
 void *ocp_nlp_constraints_bgp_assign(void *config, void *dims, void *raw_memory);
 //
@@ -119,7 +119,7 @@ typedef struct
 } ocp_nlp_constraints_bgp_opts;
 
 //
-int ocp_nlp_constraints_bgp_opts_calculate_size(void *config, void *dims);
+acados_size_t ocp_nlp_constraints_bgp_opts_calculate_size(void *config, void *dims);
 //
 void *ocp_nlp_constraints_bgp_opts_assign(void *config, void *dims, void *raw_memory);
 //
@@ -149,7 +149,7 @@ typedef struct
 } ocp_nlp_constraints_bgp_memory;
 
 //
-int ocp_nlp_constraints_bgp_memory_calculate_size(void *config, void *dims, void *opts);
+acados_size_t ocp_nlp_constraints_bgp_memory_calculate_size(void *config, void *dims, void *opts);
 //
 void *ocp_nlp_constraints_bgp_memory_assign(void *config, void *dims, void *opts,
     void *raw_memory);
@@ -191,7 +191,7 @@ typedef struct
 } ocp_nlp_constraints_bgp_workspace;
 
 //
-int ocp_nlp_constraints_bgp_workspace_calculate_size(void *config, void *dims, void *opts);
+acados_size_t ocp_nlp_constraints_bgp_workspace_calculate_size(void *config, void *dims, void *opts);
 
 /* functions */
 

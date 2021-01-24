@@ -70,15 +70,15 @@ typedef struct
 
 
 //
-int gauss_nodes_work_calculate_size(int ns);
+acados_size_t gauss_nodes_work_calculate_size(int ns);
 //
 void gauss_nodes(int ns, double *nodes, void *raw_memory);
 //
-int gauss_simplified_work_calculate_size(int ns);
+acados_size_t gauss_simplified_work_calculate_size(int ns);
 //
 void gauss_simplified(int ns, Newton_scheme *scheme, void *work);
 //
-int butcher_table_work_calculate_size(int ns);
+acados_size_t butcher_table_work_calculate_size(int ns);
 //
 void butcher_table(int ns, double *nodes, double *b, double *A, void *work);
 

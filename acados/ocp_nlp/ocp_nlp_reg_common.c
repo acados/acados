@@ -47,7 +47,7 @@
  * config
  ************************************************/
 
-int ocp_nlp_reg_config_calculate_size(void)
+acados_size_t ocp_nlp_reg_config_calculate_size(void)
 {
     return sizeof(ocp_nlp_reg_config);
 }
@@ -65,9 +65,9 @@ void *ocp_nlp_reg_config_assign(void *raw_memory)
  * dims
  ************************************************/
 
-int ocp_nlp_reg_dims_calculate_size(int N)
+acados_size_t ocp_nlp_reg_dims_calculate_size(int N)
 {
-    int size = sizeof(ocp_nlp_reg_dims);
+    acados_size_t size = sizeof(ocp_nlp_reg_dims);
 
     size += 5*(N+1)*sizeof(int); // nx nu nbu nbx ng
 

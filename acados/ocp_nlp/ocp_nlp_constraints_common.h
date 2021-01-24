@@ -58,19 +58,19 @@ extern "C" {
 
 typedef struct
 {
-    int (*dims_calculate_size)(void *config);
+    acados_size_t (*dims_calculate_size)(void *config);
     void *(*dims_assign)(void *config, void *raw_memory);
     void (*dims_initialize)(void *config, void *dims, int nx, int nu, int nz, int nbx, int nbu, int ng,
                             int nh, int nq, int ns);
-    int (*model_calculate_size)(void *config, void *dims);
+    acados_size_t (*model_calculate_size)(void *config, void *dims);
     void *(*model_assign)(void *config, void *dims, void *raw_memory);
     int (*model_set)(void *config_, void *dims_, void *model_, const char *field, void *value);
-    int (*opts_calculate_size)(void *config, void *dims);
+    acados_size_t (*opts_calculate_size)(void *config, void *dims);
     void *(*opts_assign)(void *config, void *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config, void *dims, void *opts);
     void (*opts_update)(void *config, void *dims, void *opts);
     void (*opts_set)(void *config, void *opts, char *field, void *value);
-    int (*memory_calculate_size)(void *config, void *dims, void *opts);
+    acados_size_t (*memory_calculate_size)(void *config, void *dims, void *opts);
     struct blasfeo_dvec *(*memory_get_fun_ptr)(void *memory);
     struct blasfeo_dvec *(*memory_get_adj_ptr)(void *memory);
     void (*memory_set_ux_ptr)(struct blasfeo_dvec *ux, void *memory);
@@ -85,7 +85,7 @@ typedef struct
     void (*memory_set_idxs_rev_ptr)(int *idxs_rev, void *memory);
     void (*memory_set_idxe_ptr)(int *idxe, void *memory);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
-    int (*workspace_calculate_size)(void *config, void *dims, void *opts);
+    acados_size_t (*workspace_calculate_size)(void *config, void *dims, void *opts);
     void (*initialize)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
     void (*update_qp_matrices)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
     void (*compute_fun)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
@@ -97,7 +97,7 @@ typedef struct
 } ocp_nlp_constraints_config;
 
 //
-int ocp_nlp_constraints_config_calculate_size();
+acados_size_t ocp_nlp_constraints_config_calculate_size();
 //
 ocp_nlp_constraints_config *ocp_nlp_constraints_config_assign(void *raw_memory);
 

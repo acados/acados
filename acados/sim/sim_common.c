@@ -48,9 +48,9 @@
  * config
  ************************************************/
 
-int sim_config_calculate_size()
+acados_size_t sim_config_calculate_size()
 {
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(sim_config);
 
@@ -77,11 +77,11 @@ sim_config *sim_config_assign(void *raw_memory)
  * in
  ************************************************/
 
-int sim_in_calculate_size(void *config_, void *dims)
+acados_size_t sim_in_calculate_size(void *config_, void *dims)
 {
     sim_config *config = config_;
 
-    int size = sizeof(sim_in);
+    acados_size_t size = sizeof(sim_in);
 
     int nx, nu, nz;
 
@@ -235,11 +235,11 @@ int sim_in_set_(void *config_, void *dims_, sim_in *in, const char *field, void 
  * out
  ************************************************/
 
-int sim_out_calculate_size(void *config_, void *dims)
+acados_size_t sim_out_calculate_size(void *config_, void *dims)
 {
     sim_config *config = config_;
 
-    int size = sizeof(sim_out);
+    acados_size_t size = sizeof(sim_out);
 
     int nx, nu, nz;
     config->dims_get(config_, dims, "nx", &nx);

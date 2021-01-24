@@ -58,9 +58,9 @@
  * dims
  ************************************************/
 
-int ocp_qp_full_condensing_dims_calculate_size(void *config, int N)
+acados_size_t ocp_qp_full_condensing_dims_calculate_size(void *config, int N)
 {
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_qp_full_condensing_dims);
 
@@ -153,7 +153,7 @@ void ocp_qp_full_condensing_dims_get(void *config_, void *dims_, const char *fie
  * opts
  ************************************************/
 
-int ocp_qp_full_condensing_opts_calculate_size(void *dims_)
+acados_size_t ocp_qp_full_condensing_opts_calculate_size(void *dims_)
 {
     ocp_qp_full_condensing_dims *dims = dims_;
 
@@ -166,7 +166,7 @@ int ocp_qp_full_condensing_opts_calculate_size(void *dims_)
 //d_ocp_qp_dim_print(dims->red_dims);
 //exit(1);
 
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_qp_full_condensing_opts);
 
@@ -301,7 +301,7 @@ void ocp_qp_full_condensing_opts_set(void *opts_, const char *field, void* value
  * memory
  ************************************************/
 
-int ocp_qp_full_condensing_memory_calculate_size(void *dims_, void *opts_)
+acados_size_t ocp_qp_full_condensing_memory_calculate_size(void *dims_, void *opts_)
 {
     ocp_qp_full_condensing_dims *dims = dims_;
     ocp_qp_full_condensing_opts *opts = opts_;
@@ -313,7 +313,7 @@ int ocp_qp_full_condensing_memory_calculate_size(void *dims_, void *opts_)
 //    d_cond_qp_compute_dim(dims->orig_dims, dims->fcond_dims);
 //    d_cond_qp_compute_dim(dims->red_dims, dims->fcond_dims);
 
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_qp_full_condensing_memory);
 
@@ -431,7 +431,7 @@ void ocp_qp_full_condensing_memory_get(void *config_, void *mem_, const char *fi
  * workspace
  ************************************************/
 
-int ocp_qp_full_condensing_workspace_calculate_size(void *dims_, void *opts_)
+acados_size_t ocp_qp_full_condensing_workspace_calculate_size(void *dims_, void *opts_)
 {
 
     return 0;

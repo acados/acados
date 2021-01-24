@@ -62,9 +62,9 @@
  * dims
  ************************************************/
 
-int sim_gnsf_dims_calculate_size()
+acados_size_t sim_gnsf_dims_calculate_size()
 {
-    int size = sizeof(sim_gnsf_dims);
+    acados_size_t size = sizeof(sim_gnsf_dims);
     return size;
 }
 
@@ -249,11 +249,11 @@ static void sim_gnsf_import_matrices(void *dims_, gnsf_model *model)
  * opts
  ************************************************/
 
-int sim_gnsf_opts_calculate_size(void *config_, void *dims)
+acados_size_t sim_gnsf_opts_calculate_size(void *config_, void *dims)
 {
     int ns_max = NS_MAX;
 
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(sim_opts);
 
@@ -261,9 +261,9 @@ int sim_gnsf_opts_calculate_size(void *config_, void *dims)
     size += ns_max * sizeof(double);           // b_vec
     size += ns_max * sizeof(double);           // c_vec
 
-    int tmp0 = gauss_nodes_work_calculate_size(ns_max);
-    int tmp1 = butcher_table_work_calculate_size(ns_max);
-    int work_size = tmp0 > tmp1 ? tmp0 : tmp1;
+    size_t tmp0 = gauss_nodes_work_calculate_size(ns_max);
+    size_t tmp1 = butcher_table_work_calculate_size(ns_max);
+    acados_size_t work_size = tmp0 > tmp1 ? tmp0 : tmp1;
     size += work_size;  // work
 
     make_int_multiple_of(8, &size);
@@ -288,9 +288,9 @@ void *sim_gnsf_opts_assign(void *config_, void *dims, void *raw_memory)
     assign_and_advance_double(ns_max, &opts->c_vec, &c_ptr);
 
     // work
-    int tmp0 = gauss_nodes_work_calculate_size(ns_max);
-    int tmp1 = butcher_table_work_calculate_size(ns_max);
-    int work_size = tmp0 > tmp1 ? tmp0 : tmp1;
+    acados_size_t tmp0 = gauss_nodes_work_calculate_size(ns_max);
+    acados_size_t tmp1 = butcher_table_work_calculate_size(ns_max);
+    acados_size_t work_size = tmp0 > tmp1 ? tmp0 : tmp1;
     opts->work = c_ptr;
     c_ptr += work_size;
 
@@ -388,7 +388,7 @@ void sim_gnsf_opts_get(void *config_, void *opts_, const char *field, void *valu
  * model
  ************************************************/
 
-int sim_gnsf_model_calculate_size(void *config, void *dims_)
+acados_size_t sim_gnsf_model_calculate_size(void *config, void *dims_)
 {
     // typecast
     sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
@@ -405,7 +405,7 @@ int sim_gnsf_model_calculate_size(void *config, void *dims_)
     int nx2     = nx - nx1;
     int nz2     = nz - nz1;
 
-    int size = 0;
+    acados_size_t size = 0;
     size += sizeof(gnsf_model);
 
     // model defining matrices
@@ -1185,7 +1185,7 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
  * memory
  ************************************************/
 
-int sim_gnsf_memory_calculate_size(void *config, void *dims_, void *opts_)
+acados_size_t sim_gnsf_memory_calculate_size(void *config, void *dims_, void *opts_)
 {
     // typecast
     sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
@@ -1212,7 +1212,7 @@ int sim_gnsf_memory_calculate_size(void *config, void *dims_, void *opts_)
     int nK2 = num_stages * nxz2;
     int nZ1 = num_stages * nz1;
 
-    int size = sizeof(sim_gnsf_memory);
+    acados_size_t size = sizeof(sim_gnsf_memory);
 
     // scaled butcher table
     size += num_stages * num_stages * sizeof(double);  // A_dt
@@ -1510,7 +1510,7 @@ void sim_gnsf_memory_get(void *config_, void *dims_, void *mem_, const char *fie
  * workspace
  ************************************************/
 
-int sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *opts_)
+acados_size_t sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *opts_)
 {
     // typecast
     sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
@@ -1539,7 +1539,7 @@ int sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *opts_)
     int nxz2 = nx2 + nz2;
 
     /* Calculate workspace size for precompute function */
-    int pre_size = sizeof(gnsf_pre_workspace);
+    acados_size_t pre_size = sizeof(gnsf_pre_workspace);
 
     make_int_multiple_of(8, &pre_size);
     pre_size += 1 * 8;
@@ -1591,7 +1591,7 @@ int sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *opts_)
     pre_size += 1 * 8;
 
     /* Calculate workspace size for simulation function */
-    int size = sizeof(gnsf_workspace);
+    acados_size_t size = sizeof(gnsf_workspace);
     make_int_multiple_of(8, &size);
     size += 1 * 8;
 

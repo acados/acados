@@ -42,6 +42,8 @@ extern "C" {
 #include <stdio.h>
 #include <stdbool.h>
 
+#include "types.h"
+
 // blasfeo
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
@@ -59,17 +61,17 @@ typedef struct
 } module_solver;
 
 // make int counter of memory multiple of a number (typically 8 or 64)
-void make_int_multiple_of(int num, int *size);
+void make_int_multiple_of(acados_size_t num, acados_size_t *size);
 
 // align char pointer to number (typically 8 for pointers and doubles,
 // 64 for blasfeo structs) and return offset
 int align_char_to(int num, char **c_ptr);
 
 // switch between malloc and calloc (for valgrinding)
-void *acados_malloc(size_t nitems, size_t size);
+void *acados_malloc(size_t nitems, acados_size_t size);
 
 // uses always calloc
-void *acados_calloc(size_t nitems, size_t size);
+void *acados_calloc(size_t nitems, acados_size_t size);
 
 // allocate vector of pointers to vectors of doubles and advance pointer
 void assign_and_advance_double_ptrs(int n, double ***v, char **ptr);

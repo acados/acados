@@ -49,9 +49,9 @@
  * config
  ************************************************/
 
-int ocp_nlp_constraints_config_calculate_size()
+acados_size_t ocp_nlp_constraints_config_calculate_size()
 {
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_constraints_config);
 
