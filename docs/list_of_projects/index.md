@@ -18,6 +18,7 @@ It also provides a higher level interface to `acados`, which is based on the Mat
 - [bioptim - a Python library for optimal control in biomechanics.](https://github.com/pyomeca/bioptim)
 
 ## Papers featuring `acados`
+<!-- in collaboration with syscop -->
 - [Contraction Properties of the Advanced Step Real-Time Iteration for NMPC at the IFAC World Congress 2020](https://cdn.syscop.de/publications/Nurkanovic2020b.pdf)
 
 - [Real-Time Nonlinear Model Predictive Control for Microgrid Operation at the American Control Conference 2020](https://cdn.syscop.de/publications/Nurkanovic2020a.pdf)
@@ -31,6 +32,9 @@ It also provides a higher level interface to `acados`, which is based on the Mat
 - [Least Conservative Linearized Constraint Formulation for Real-Time Motion Generation](https://cdn.syscop.de/publications/Carlos2020.pdf)
 
 - [An Efficient Real-Time NMPC for Quadrotor Position Control under Communication Time-Delay](https://cdn.syscop.de/publications/Carlos2020a.pdf)
+
+<!-- external -->
+- [Model predictive control of wind turbine fatigue via online rainflow-counting on stress history and prediction](https://iopscience.iop.org/article/10.1088/1742-6596/1618/2/022041/pdf)
 
 <!-- ## Projects using `acados` -->
 
