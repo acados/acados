@@ -153,16 +153,16 @@ i_in = i_in + 1;
 {%- endif %}
 
 {%- if dims.nbx > 0 %}
-input_note = strcat(input_note, num2str(i_in), ') lbx, size [{{ dims.nbx }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') lbx for shooting nodes 1 to N-1, size [{{ (dims.N-1) * dims.nbx }}]\n ');
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') ubx, size [{{ dims.nbx }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') ubx for shooting nodes 1 to N-1, size [{{ (dims.N-1) * dims.nbx }}]\n ');
 i_in = i_in + 1;
 {%- endif %}
 
 {%- if dims.nbu > 0 %}
-input_note = strcat(input_note, num2str(i_in), ') lbu, size [{{ dims.nbu }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') lbu for shooting nodes 0 to N-1, size [{{ dims.N*dims.nbu }}]\n ');
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') ubu, size [{{ dims.nbu }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') ubu for shooting nodes 0 to N-1, size [{{ dims.N*dims.nbu }}]\n ');
 i_in = i_in + 1;
 {%- endif %}
 
