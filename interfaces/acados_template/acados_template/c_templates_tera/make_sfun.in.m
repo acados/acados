@@ -159,6 +159,14 @@ input_note = strcat(input_note, num2str(i_in), ') ubx for shooting nodes 1 to N-
 i_in = i_in + 1;
 {%- endif %}
 
+
+{%- if dims.nbx_e > 0 %}
+input_note = strcat(input_note, num2str(i_in), ') lbx_e (lbx at shooting node N), size [{{ dims.nbx_e }}]\n ');
+i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') ubx_e (ubx at shooting node N), size [{{ dims.nbx_e }}]\n ');
+i_in = i_in + 1;
+{%- endif %}
+
 {%- if dims.nbu > 0 %}
 input_note = strcat(input_note, num2str(i_in), ') lbu for shooting nodes 0 to N-1, size [{{ dims.N*dims.nbu }}]\n ');
 i_in = i_in + 1;
