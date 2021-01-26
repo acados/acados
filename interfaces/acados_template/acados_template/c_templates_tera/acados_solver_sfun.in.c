@@ -120,22 +120,22 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetInputPortVectorDimension(S, {{ i_input }}, ({{ dims.N }}+1) * {{ dims.np }});
     {%- endif %}
 
-    {%- if dims.nbx > 0 %}
+    {%- if dims.nbx > 0 and dims.N > 1 %}
     {%- set i_input = i_input + 1 %}
     // lbx
-    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nbx }});
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ (dims.N-1) * dims.nbx }});
     {%- set i_input = i_input + 1 %}
     // ubx
-    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nbx }});
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ (dims.N-1) * dims.nbx }});
     {%- endif %}
 
     {%- if dims.nbu > 0 %}
     {%- set i_input = i_input + 1 %}
     // lbu
-    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nbu }});
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.N*dims.nbu }});
     {%- set i_input = i_input + 1 %}
     // ubu
-    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nbu }});
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.N*dims.nbu }});
     {%- endif %}
 
     {%- if dims.ng > 0 %}
@@ -216,7 +216,8 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     nlp_solver_capsule *capsule = ssGetUserData(S);
 
     InputRealPtrsType in_sign;
-    {% set input_sizes = [dims.nbx_0, dims.ny, dims.ny_e, dims.np, dims.nbx, dims.nbu, dims.ng, dims.nh] %}
+    {% set input_sizes = [dims.nbx_0, dims.ny, dims.ny_e, dims.np, (dims.N-1)*dims.nbx,
+          (dims.N)*dims.nbu, dims.ng, dims.nh] %}
 
     // local buffer
     {%- set buffer_size =  input_sizes | sort | last %}
@@ -287,21 +288,21 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
 
-    for (int i = 0; i < {{ dims.nbx }}; i++)
+    for (int i = 0; i < {{ (dims.N-1) * dims.nbx }}; i++)
         buffer[i] = (double)(*in_sign[i]);
 
     for (int ii = 1; ii < {{ dims.N }}; ii++)
-        ocp_nlp_constraints_model_set(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_in, ii, "lbx", buffer);
+        ocp_nlp_constraints_model_set(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_in, ii, "lbx", buffer + (ii-1)*{{ dims.nbx }});
 
     // ubx
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
 
-    for (int i = 0; i < {{ dims.nbx }}; i++)
+    for (int i = 0; i < {{ (dims.N-1) * dims.nbx }}; i++)
         buffer[i] = (double)(*in_sign[i]);
 
     for (int ii = 1; ii < {{ dims.N }}; ii++)
-        ocp_nlp_constraints_model_set(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_in, ii, "ubx", buffer);
+        ocp_nlp_constraints_model_set(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_in, ii, "ubx", buffer + (ii-1)*{{ dims.nbx }});
 {%- endif %}
 
 {% if dims.nbu > 0 %}
@@ -309,21 +310,21 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
 
-    for (int i = 0; i < {{ dims.nbu }}; i++)
+    for (int i = 0; i < {{ dims.N*dims.nbu }}; i++)
         buffer[i] = (double)(*in_sign[i]);
 
     for (int ii = 0; ii < {{ dims.N }}; ii++)
-        ocp_nlp_constraints_model_set(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_in, ii, "lbu", buffer);
+        ocp_nlp_constraints_model_set(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_in, ii, "lbu", buffer + ii*{{ dims.nbu }});
 
     // ubu
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
 
-    for (int i = 0; i < {{ dims.nbu }}; i++)
+    for (int i = 0; i < {{ dims.N*dims.nbu }}; i++)
         buffer[i] = (double)(*in_sign[i]);
 
     for (int ii = 0; ii < {{ dims.N }}; ii++)
-        ocp_nlp_constraints_model_set(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_in, ii, "ubu", buffer);
+        ocp_nlp_constraints_model_set(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_in, ii, "ubu", buffer + ii*{{ dims.nbu }});
 {%- endif %}
 
 {% if dims.ng > 0 %}
