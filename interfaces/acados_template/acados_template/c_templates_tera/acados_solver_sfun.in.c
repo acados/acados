@@ -57,7 +57,11 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetNumDiscStates(S, 0);
 
     {# compute number of input ports #}
-    {%- set n_inputs = 1 %}  {# x0 #}
+    {%- set n_inputs = 0 %}
+    {%- if dims.nbx_0 > 0 %}  {# lbx_0, ubx_0 #}
+        {%- set n_inputs = n_inputs + 2 -%}
+    {%- endif %}
+
     {%- if dims.np > 0 %}  {# parameters #}
         {%- set n_inputs = n_inputs + 1 -%}
     {%- endif %}
@@ -89,9 +93,15 @@ static void mdlInitializeSizes (SimStruct *S)
         return;
 
     // specify dimension information for the input ports
-    {%- set i_input = 0 %}
-    // x0
-    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nx }});
+    {%- set i_input = 0 %}{# note here i_input is 0-based #}
+{%- if dims.nbx_0 > 0 %}
+    // lbx_0
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nbx_0 }});
+    {%- set i_input = i_input + 1 %}
+    // ubx_0
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nbx_0 }});
+{%- endif %}
+
     {%- if dims.ny > 0 %}
     {%- set i_input = i_input + 1 %}
     // y_ref
@@ -206,7 +216,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     nlp_solver_capsule *capsule = ssGetUserData(S);
 
     InputRealPtrsType in_sign;
-    {% set input_sizes = [dims.nx, dims.ny, dims.ny_e, dims.np, dims.nbx, dims.nbu, dims.ng, dims.nh] %}
+    {% set input_sizes = [dims.nbx_0, dims.ny, dims.ny_e, dims.np, dims.nbx, dims.nbu, dims.ng, dims.nh] %}
 
     // local buffer
     {%- set buffer_size =  input_sizes | sort | last %}
@@ -215,12 +225,22 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     /* go through inputs */
     {%- set i_input = 0 %}
-    // initial condition
+    // lbx_0, ubx_0
+{%- if dims.nbx_0 > 0 %}
+    // lbx_0
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
-    for (int i = 0; i < {{ dims.nx }}; i++)
+    for (int i = 0; i < {{ dims.nbx_0 }}; i++)
         buffer[i] = (double)(*in_sign[i]);
+
     ocp_nlp_constraints_model_set(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_in, 0, "lbx", buffer);
+
+    // ubx_0
+    {%- set i_input = i_input + 1 %}
+    in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+    for (int i = 0; i < {{ dims.nbx_0 }}; i++)
+        buffer[i] = (double)(*in_sign[i]);
     ocp_nlp_constraints_model_set(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_in, 0, "ubx", buffer);
+{%- endif %}
 
 {% if dims.ny > 0 %}
     // y_ref - stage-variant !!!

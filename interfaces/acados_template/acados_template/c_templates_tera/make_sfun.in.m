@@ -121,8 +121,20 @@ fprintf( [ '\n\nSuccessfully created sfunction:\nacados_solver_sfunction_{{ mode
 
 %% print note on usage of s-function
 fprintf('\n\nNote: Usage of Sfunction is as follows:\n')
-input_note = 'Inputs are:\n1) x0, initial state, size [{{ dims.nx }}]\n ';
-i_in = 2;
+input_note = 'Inputs are:\n';
+i_in = 1;
+
+
+{%- if dims.nbx_0 > 0 %}
+input_note = strcat(input_note, num2str(i_in), ') lbx_0 - lower bound on x for stage 0,',...
+                    ' size [{{ dims.nbx_0 }}]\n ');
+i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') ubx_0 - lower bound on x for stage 0,',...
+                    ' size [{{ dims.nbx_0 }}]\n ');
+i_in = i_in + 1;
+{%- endif %}
+
+
 {%- if dims.ny > 0 %}
 input_note = strcat(input_note, num2str(i_in), ') y_ref - concatenated for intermediate stages,',...
                     ' size [{{ dims.N * dims.ny }}]\n ');
