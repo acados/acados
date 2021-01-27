@@ -92,7 +92,15 @@ static void mdlInitializeSizes (SimStruct *S)
         return;
 
     // specify the number of output ports
-    if ( !ssSetNumOutputPorts(S, 6) )
+    {%- set_global n_outputs = 0 %}
+    {% for key, val in simulink_opts.outputs %}
+        {%- if val == 1 %}
+            {%- set_global n_outputs = n_outputs + val %}
+        {%- elif val != 0 %}
+            {{ throw(message = "simulink_opts.outputs must be 0 or 1, got val") }}
+        {%- endif %}
+    {% endfor %}
+    if ( !ssSetNumOutputPorts(S, {{ n_outputs }}) )
         return;
 
     // specify dimension information for the input ports
@@ -169,12 +177,35 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- endif %}
 
     // specify dimension information for the output ports
-    ssSetOutputPortVectorDimension(S, 0, {{ dims.nu }} ); // optimal input
-    ssSetOutputPortVectorDimension(S, 1, 1 ); // solver status
-    ssSetOutputPortVectorDimension(S, 2, 1 ); // KKT residuals
-    ssSetOutputPortVectorDimension(S, 3, {{ dims.nx }} ); // first state
-    ssSetOutputPortVectorDimension(S, 4, 1); // computation times
-    ssSetOutputPortVectorDimension(S, 5, 1 ); // sqp iter
+    {%- set i_output = 0 %}{# note here i_output is 0-based #}
+    {%- if simulink_opts.outputs.u0 == 1 %}
+    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.nu }} );
+    {%- endif %}
+
+    {%- if simulink_opts.outputs.solver_status == 1 %}
+    {%- set i_output = i_output + 1 %}
+    ssSetOutputPortVectorDimension(S, {{ i_output }}, 1 );
+    {%- endif %}
+
+    {%- if simulink_opts.outputs.KKT_residual == 1 %}
+    {%- set i_output = i_output + 1 %}
+    ssSetOutputPortVectorDimension(S, {{ i_output }}, 1 );
+    {%- endif %}
+
+    {%- if simulink_opts.outputs.x1 == 1 %}
+    {%- set i_output = i_output + 1 %}
+    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.nx }} ); // state at shooting node 1
+    {%- endif %}
+
+    {%- if simulink_opts.outputs.CPU_time == 1 %}
+    {%- set i_output = i_output + 1 %}
+    ssSetOutputPortVectorDimension(S, {{ i_output }}, 1);
+    {%- endif %}
+
+    {%- if simulink_opts.outputs.sqp_iter == 1 %}
+    {%- set i_output = i_output + 1 %}
+    ssSetOutputPortVectorDimension(S, {{ i_output }}, 1 );
+    {%- endif %}
 
     // specify the direct feedthrough status
     // should be set to 1 for all inputs used in mdlOutputs
@@ -414,31 +445,43 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     real_t *out_u0, *out_status, *out_sqp_iter, *out_KKT_res, *out_x1, *out_cpu_time;
     int tmp_int;
 
-    out_u0          = ssGetOutputPortRealSignal(S, 0);
-    out_status      = ssGetOutputPortRealSignal(S, 1);
-    out_KKT_res     = ssGetOutputPortRealSignal(S, 2);
-    out_x1          = ssGetOutputPortRealSignal(S, 3);
-    out_cpu_time    = ssGetOutputPortRealSignal(S, 4);
-    out_sqp_iter    = ssGetOutputPortRealSignal(S, 5);
+    {%- set i_output = 0 %}{# note here i_output is 0-based #}
+    {%- if simulink_opts.outputs.u0 == 1 %}
+    out_u0 = ssGetOutputPortRealSignal(S, {{ i_output }});
+    ocp_nlp_out_get(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_out, 0, "u", (void *) out_u0);
+    {%- endif %}
 
-    // extract solver info
+    {%- if simulink_opts.outputs.solver_status == 1 %}
+    {%- set i_output = i_output + 1 %}
+    out_status = ssGetOutputPortRealSignal(S, {{ i_output }});
     *out_status = (real_t) acados_status;
-    *out_KKT_res = (real_t) capsule->nlp_out->inf_norm_res;
-//    *out_cpu_time = (real_t) capsule->nlp_out->total_time;
-    
-    // get solution time
-    ocp_nlp_get(capsule->nlp_config, capsule->nlp_solver, "time_tot", (void *) out_cpu_time);
+    {%- endif %}
 
+    {%- if simulink_opts.outputs.KKT_residual == 1 %}
+    {%- set i_output = i_output + 1 %}
+    out_KKT_res = ssGetOutputPortRealSignal(S, {{ i_output }});
+    *out_KKT_res = (real_t) capsule->nlp_out->inf_norm_res;
+    {%- endif %}
+
+    {%- if simulink_opts.outputs.x1 == 1 %}
+    {%- set i_output = i_output + 1 %}
+    out_x1 = ssGetOutputPortRealSignal(S, {{ i_output }});
+    ocp_nlp_out_get(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_out, 1, "x", (void *) out_x1);
+    {%- endif %}
+
+    {%- if simulink_opts.outputs.CPU_time == 1 %}
+    {%- set i_output = i_output + 1 %}
+    out_cpu_time = ssGetOutputPortRealSignal(S, {{ i_output }});
+    // get solution time
+    ocp_nlp_get(capsule->nlp_config, capsule->nlp_solver, "time_tot", (void *) out_cpu_time);    {%- endif %}
+
+    {%- if simulink_opts.outputs.sqp_iter == 1 %}
+    {%- set i_output = i_output + 1 %}
+    out_sqp_iter = ssGetOutputPortRealSignal(S, {{ i_output }});
     // get sqp iter
     ocp_nlp_get(capsule->nlp_config, capsule->nlp_solver, "sqp_iter", (void *) &tmp_int);
     *out_sqp_iter = (real_t) tmp_int;
-//    *out_sqp_iter = (real_t) capsule->nlp_out->sqp_iter;
-
-    // get solution
-    ocp_nlp_out_get(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_out, 0, "u", (void *) out_u0);
-
-    // get next state
-    ocp_nlp_out_get(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_out, 1, "x", (void *) out_x1);
+    {%- endif %}
 
 }
 

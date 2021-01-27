@@ -129,7 +129,7 @@ i_in = 1;
 input_note = strcat(input_note, num2str(i_in), ') lbx_0 - lower bound on x for stage 0,',...
                     ' size [{{ dims.nbx_0 }}]\n ');
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') ubx_0 - lower bound on x for stage 0,',...
+input_note = strcat(input_note, num2str(i_in), ') ubx_0 - upper bound on x for stage 0,',...
                     ' size [{{ dims.nbx_0 }}]\n ');
 i_in = i_in + 1;
 {%- endif %}
@@ -192,9 +192,36 @@ fprintf(input_note)
 
 disp(' ')
 
-output_note = strcat('Outputs are:\n', ...
-                '1) u0 - optimal input, size [{{ dims.nu }}]\n',...
-                '2) acados solver status (0 = SUCCESS)\n3) KKT residual\n',...
-                '4) first state \n5) CPU time\n6) sqp iter\n');
+output_note = 'Outputs are:\n';
+i_out = 1;
+
+{%- if simulink_opts.outputs.u0 == 1 %}
+output_note = strcat(output_note, num2str(i_out), ') u0, control input at node 0, size [{{ dims.nu }}]\n ');
+{%- endif %}
+
+{%- if simulink_opts.outputs.solver_status == 1 %}
+i_out = i_out + 1;
+output_note = strcat(output_note, num2str(i_out), ') acados solver status (0 = SUCCESS)\n ');
+{%- endif %}
+
+{%- if simulink_opts.outputs.KKT_residual == 1 %}
+i_out = i_out + 1;
+output_note = strcat(output_note, num2str(i_out), ') KKT residual\n ');
+{%- endif %}
+
+{%- if simulink_opts.outputs.x1 == 1 %}
+i_out = i_out + 1;
+output_note = strcat(output_note, num2str(i_out), ') x1, state at node 1\n ');
+{%- endif %}
+
+{%- if simulink_opts.outputs.CPU_time == 1 %}
+i_out = i_out + 1;
+output_note = strcat(output_note, num2str(i_out), ') CPU time\n ');
+{%- endif %}
+
+{%- if simulink_opts.outputs.sqp_iter == 1 %}
+i_out = i_out + 1;
+output_note = strcat(output_note, num2str(i_out), ') SQP iterations\n ');
+{%- endif %}
 
 fprintf(output_note)

@@ -1,0 +1,10 @@
+{
+    "outputs": {
+        "u0": 1,
+        "solver_status": 1,
+        "KKT_residual": 1,
+        "x1": 1,
+        "CPU_time": 1,
+        "sqp_iter": 1
+    }
+}
