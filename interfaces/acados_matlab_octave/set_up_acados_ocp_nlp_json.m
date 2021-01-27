@@ -31,11 +31,11 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
-function ocp_json = set_up_acados_ocp_nlp_json(obj)
+function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
 
     model = obj.model_struct;
     % create
-    ocp_json = acados_template_mex.acados_ocp_nlp_json();
+    ocp_json = acados_template_mex.acados_ocp_nlp_json(simulink_opts);
 
     % general
     ocp_json.dims.N = obj.opts_struct.param_scheme_N;
