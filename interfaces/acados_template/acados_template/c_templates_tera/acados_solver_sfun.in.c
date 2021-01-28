@@ -47,8 +47,13 @@
 
 #include "simstruc.h"
 
-//#define SAMPLINGTIME -1
-#define SAMPLINGTIME {{ solver_options.tf / dims.N }}
+{% if simulink_opts.samplingtime == "t0" -%}
+#define SAMPLINGTIME {{ solver_options.time_steps[0] }}
+{%- elif simulink_opts.samplingtime == "-1" -%}
+#define SAMPLINGTIME -1
+{%- else -%}
+  {{ throw(message = "simulink_opts.samplingtime must be '-1' or 't0', got val") }}
+{%- endif %}
 
 static void mdlInitializeSizes (SimStruct *S)
 {
