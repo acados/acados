@@ -10,6 +10,11 @@
         "sqp_iter": 1
     },
     "inputs": {
+        "lbx_0": 1,
+        "ubx_0": 1,
+        "parameter_traj": 1,
+        "y_ref": 1,
+        "y_ref_e": 1,
         "cost_W_0": 0,
         "cost_W": 0,
         "cost_W_e": 0
