@@ -8,5 +8,10 @@
         "x1": 1,
         "CPU_time": 1,
         "sqp_iter": 1
+    },
+    "inputs": {
+        "cost_W_0": 0,
+        "cost_W": 0,
+        "cost_W_e": 0
     }
 }
