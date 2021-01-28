@@ -198,6 +198,11 @@ input_note = strcat(input_note, num2str(i_in), ') cost_W, cost matrix W, that is
 i_in = i_in + 1;
 {%- endif %}
 
+{%- if dims.ny_e > 0 and simulink_opts.inputs.cost_W_e %}  {#- cost_W_e #}
+input_note = strcat(input_note, num2str(i_in), ') cost_W_e, size [{{ dims.ny_e * dims.ny_e }}]\n ');
+i_in = i_in + 1;
+{%- endif %}
+
 fprintf(input_note)
 
 disp(' ')
