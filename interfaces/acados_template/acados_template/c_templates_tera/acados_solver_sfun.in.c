@@ -95,6 +95,9 @@ static void mdlInitializeSizes (SimStruct *S)
   {%- if dims.ny_0 > 0 and simulink_opts.inputs.cost_W_0 %}  {#- cost_W_0 #}
     {%- set n_inputs = n_inputs + 1 %}
   {%- endif -%}
+  {%- if dims.ny > 0 and simulink_opts.inputs.cost_W %}  {#- cost_W #}
+    {%- set n_inputs = n_inputs + 1 %}
+  {%- endif -%}
 
     // specify the number of input ports
     if ( !ssSetNumInputPorts(S, {{ n_inputs }}) )
@@ -189,6 +192,12 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- set i_input = i_input + 1 %}
     // cost_W_0
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.ny_0 * dims.ny_0 }});
+  {%- endif %}
+
+  {%- if dims.ny_0 > 0 and simulink_opts.inputs.cost_W %}  {# cost_W #}
+    {%- set i_input = i_input + 1 %}
+    // cost_W
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.ny * dims.ny }});
   {%- endif %}
 
     // specify dimension information for the output ports
@@ -289,6 +298,9 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
   {%- if dims.ny_0 > 0 and simulink_opts.inputs.cost_W_0 %}  {# cost_W_0 #}
     {%- set input_sizes = input_sizes | concat(with=(dims.ny_0 * dims.ny_0)) %}
+  {%- endif %}
+  {%- if dims.ny > 0 and simulink_opts.inputs.cost_W %}  {# cost_W #}
+    {%- set input_sizes = input_sizes | concat(with=(dims.ny * dims.ny)) %}
   {%- endif %}
 
     // local buffer
@@ -468,6 +480,17 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         buffer[i] = (double)(*in_sign[i]);
 
     ocp_nlp_cost_model_set(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_in, 0, "W", buffer);
+  {%- endif %}
+
+  {%- if dims.ny > 0 and simulink_opts.inputs.cost_W %}  {# cost_W #}
+    // cost_W
+    {%- set i_input = i_input + 1 %}
+    in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+    for (int i = 0; i < {{ dims.ny * dims.ny }}; i++)
+        buffer[i] = (double)(*in_sign[i]);
+
+    for (int ii = 1; ii < {{ dims.N }}; ii++)
+        ocp_nlp_cost_model_set(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_in, ii, "W", buffer);
   {%- endif %}
 
     /* call solver */
