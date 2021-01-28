@@ -199,6 +199,11 @@ i_out = 1;
 output_note = strcat(output_note, num2str(i_out), ') u0, control input at node 0, size [{{ dims.nu }}]\n ');
 {%- endif %}
 
+{%- if simulink_opts.outputs.utraj == 1 %}
+i_out = i_out + 1;
+output_note = strcat(output_note, num2str(i_out), ') utraj, control input concatenated for nodes 0 to N-1, size [{{ dims.nu * dims.N }}]\n ');
+{%- endif %}
+
 {%- if simulink_opts.outputs.solver_status == 1 %}
 i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') acados solver status (0 = SUCCESS)\n ');
