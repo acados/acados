@@ -13,6 +13,7 @@ simulink_opts = get_acados_simulink_opts;
 % manipulate simulink_opts to [de]activate in- & outputs (preliminary)
 % simulink_opts.outputs.sqp_iter = 0;
 simulink_opts.outputs.utraj = 1;
+simulink_opts.outputs.xtraj = 1;
 ocp.generate_c_code(simulink_opts);
 
 %% Compile Sfunctions
