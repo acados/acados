@@ -188,8 +188,13 @@ input_note = strcat(input_note, num2str(i_in), ') uh, size [{{ dims.nh }}]\n ');
 i_in = i_in + 1;
 {%- endif %}
 
-{%- if dims.ny_0 > 0 and simulink_opts.inputs.cost_W_0 %}  {# cost_W_0 #}
+{%- if dims.ny_0 > 0 and simulink_opts.inputs.cost_W_0 %}  {#- cost_W_0 #}
 input_note = strcat(input_note, num2str(i_in), ') cost_W_0, size [{{ dims.ny_0 * dims.ny_0 }}]\n ');
+i_in = i_in + 1;
+{%- endif %}
+
+{%- if dims.ny > 0 and simulink_opts.inputs.cost_W %}  {#- cost_W #}
+input_note = strcat(input_note, num2str(i_in), ') cost_W, cost matrix W, that is set for all intermediate shooting nodes: 1 to N-1 size [{{ dims.ny * dims.ny }}]\n ');
 i_in = i_in + 1;
 {%- endif %}
 
