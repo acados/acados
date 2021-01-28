@@ -192,17 +192,17 @@ i_in = i_in + 1;
 {%- endif %}
 
 {%- if dims.ny_0 > 0 and simulink_opts.inputs.cost_W_0 %}  {#- cost_W_0 #}
-input_note = strcat(input_note, num2str(i_in), ') cost_W_0, size [{{ dims.ny_0 * dims.ny_0 }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') cost_W_0 in column-major format, size [{{ dims.ny_0 * dims.ny_0 }}]\n ');
 i_in = i_in + 1;
 {%- endif %}
 
 {%- if dims.ny > 0 and simulink_opts.inputs.cost_W %}  {#- cost_W #}
-input_note = strcat(input_note, num2str(i_in), ') cost_W, cost matrix W, that is set for all intermediate shooting nodes: 1 to N-1 size [{{ dims.ny * dims.ny }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') cost_W in column-major format, that is set for all intermediate shooting nodes: 1 to N-1 size [{{ dims.ny * dims.ny }}]\n ');
 i_in = i_in + 1;
 {%- endif %}
 
 {%- if dims.ny_e > 0 and simulink_opts.inputs.cost_W_e %}  {#- cost_W_e #}
-input_note = strcat(input_note, num2str(i_in), ') cost_W_e, size [{{ dims.ny_e * dims.ny_e }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') cost_W_e in column-major format, size [{{ dims.ny_e * dims.ny_e }}]\n ');
 i_in = i_in + 1;
 {%- endif %}
 
