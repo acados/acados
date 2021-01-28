@@ -57,44 +57,44 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetNumDiscStates(S, 0);
 
   {#- compute number of input ports #}
-  {%- set n_inputs = 0 %}
-  {%- if dims.nbx_0 > 0 %}  {#- lbx_0, ubx_0 #}
+  {%- set n_inputs = 0 -%}
+  {%- if dims.nbx_0 > 0 -%}  {#- lbx_0, ubx_0 #}
     {%- set n_inputs = n_inputs + 2 -%}
-  {%- endif %}
-  {%- if dims.np > 0 %}  {#- parameters #}
+  {%- endif -%}
+  {%- if dims.np > 0 -%}  {#- parameters #}
     {%- set n_inputs = n_inputs + 1 -%}
-  {%- endif %}
-  {%- if dims.ny > 0 %}  {#- y_ref -#}
+  {%- endif -%}
+  {%- if dims.ny > 0 -%}  {#- y_ref -#}
     {%- set n_inputs = n_inputs + 1 -%}
-  {%- endif %}
-  {%- if dims.ny_e > 0 %}  {#- y_ref_e #}
-    {%- set n_inputs = n_inputs + 1 %}
-  {%- endif %}
-  {%- if dims.nbx > 0 %}  {#- lbx, ubx #}
-    {%- set n_inputs = n_inputs + 2 %}
-  {%- endif %}
-  {%- if dims.nbx_e > 0 %}  {#- lbx_e, ubx_e #}
-    {%- set n_inputs = n_inputs + 2 %}
-  {%- endif %}
-  {%- if dims.nbu > 0 %}  {#- lbu, ubu #}
-    {%- set n_inputs = n_inputs + 2 %}
-  {%- endif %}
-  {%- if dims.ng > 0 %}  {#- lg, ug #}
-    {%- set n_inputs = n_inputs + 2 %}
-  {%- endif %}
-  {%- if dims.nh > 0 %}  {#- lh, uh #}
-    {%- set n_inputs = n_inputs + 2 %}
-  {%- endif %}
+  {%- endif -%}
+  {%- if dims.ny_e > 0 -%}  {#- y_ref_e #}
+    {%- set n_inputs = n_inputs + 1 -%}
+  {%- endif -%}
+  {%- if dims.nbx > 0 -%}  {#- lbx, ubx #}
+    {%- set n_inputs = n_inputs + 2 -%}
+  {%- endif -%}
+  {%- if dims.nbx_e > 0 -%}  {#- lbx_e, ubx_e #}
+    {%- set n_inputs = n_inputs + 2 -%}
+  {%- endif -%}
+  {%- if dims.nbu > 0 -%}  {#- lbu, ubu #}
+    {%- set n_inputs = n_inputs + 2 -%}
+  {%- endif -%}
+  {%- if dims.ng > 0 -%}  {#- lg, ug #}
+    {%- set n_inputs = n_inputs + 2 -%}
+  {%- endif -%}
+  {%- if dims.nh > 0 -%}  {#- lh, uh #}
+    {%- set n_inputs = n_inputs + 2 -%}
+  {%- endif -%}
 
   {#- optional inputs #}
-  {% for key, val in simulink_opts.inputs %}
-    {%- if val != 0 and val != 1 %}
+  {%- for key, val in simulink_opts.inputs -%}
+    {%- if val != 0 and val != 1 -%}
       {{ throw(message = "simulink_opts.inputs must be 0 or 1, got val") }}
-    {%- endif %}
-  {%- endfor %}
-  {%- if dims.ny_0 > 0 and simulink_opts.inputs.cost_W_0 %}  {# cost_W_0 #}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- if dims.ny_0 > 0 and simulink_opts.inputs.cost_W_0 %}  {#- cost_W_0 #}
     {%- set n_inputs = n_inputs + 1 %}
-  {%- endif %}
+  {%- endif -%}
 
     // specify the number of input ports
     if ( !ssSetNumInputPorts(S, {{ n_inputs }}) )
@@ -481,14 +481,14 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     real_t *out_u0, *out_utraj, *out_xtraj, *out_status, *out_sqp_iter, *out_KKT_res, *out_x1, *out_cpu_time;
     int tmp_int;
 
-    {%- set i_output = 0 %}{# note here i_output is 0-based #}
+    {%- set i_output = 0 -%}{# note here i_output is 0-based #}
   {%- if simulink_opts.outputs.u0 == 1 %}
     out_u0 = ssGetOutputPortRealSignal(S, {{ i_output }});
     ocp_nlp_out_get(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_out, 0, "u", (void *) out_u0);
   {%- endif %}
 
   {%- if simulink_opts.outputs.utraj == 1 %}
-    {%- set i_output = i_output + 1 %}
+    {%- set i_output = i_output + 1 -%}
     out_utraj = ssGetOutputPortRealSignal(S, {{ i_output }});
     for (int ii = 0; ii < {{ dims.N }}; ii++)
         ocp_nlp_out_get(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_out, ii,
