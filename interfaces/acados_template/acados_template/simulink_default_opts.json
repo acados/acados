@@ -1,6 +1,7 @@
 {
     "outputs": {
         "u0": 1,
+        "utraj": 0,
         "solver_status": 1,
         "KKT_residual": 1,
         "x1": 1,

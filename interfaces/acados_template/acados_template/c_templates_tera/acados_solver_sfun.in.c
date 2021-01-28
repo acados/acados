@@ -140,14 +140,14 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ (dims.N-1) * dims.nbx }});
     {%- endif %}
 
-{%- if dims.nbx_e > 0 and dims.N > 0 %}
+    {%- if dims.nbx_e > 0 and dims.N > 0 %}
     {%- set i_input = i_input + 1 %}
     // lbx_e
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nbx_e }});
     {%- set i_input = i_input + 1 %}
     // ubx_e
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nbx_e }});
- {%- endif %}
+    {%- endif %}
 
     {%- if dims.nbu > 0 %}
     {%- set i_input = i_input + 1 %}
@@ -180,6 +180,11 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- set i_output = 0 %}{# note here i_output is 0-based #}
     {%- if simulink_opts.outputs.u0 == 1 %}
     ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.nu }} );
+    {%- endif %}
+
+    {%- if simulink_opts.outputs.utraj == 1 %}
+    {%- set i_output = i_output + 1 %}
+    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.nu * dims.N}} );
     {%- endif %}
 
     {%- if simulink_opts.outputs.solver_status == 1 %}
@@ -442,13 +447,21 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     /* set outputs */
     // assign pointers to output signals
-    real_t *out_u0, *out_status, *out_sqp_iter, *out_KKT_res, *out_x1, *out_cpu_time;
+    real_t *out_u0, *out_utraj, *out_status, *out_sqp_iter, *out_KKT_res, *out_x1, *out_cpu_time;
     int tmp_int;
 
     {%- set i_output = 0 %}{# note here i_output is 0-based #}
     {%- if simulink_opts.outputs.u0 == 1 %}
     out_u0 = ssGetOutputPortRealSignal(S, {{ i_output }});
     ocp_nlp_out_get(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_out, 0, "u", (void *) out_u0);
+    {%- endif %}
+
+    {%- if simulink_opts.outputs.utraj == 1 %}
+    {%- set i_output = i_output + 1 %}
+    out_utraj = ssGetOutputPortRealSignal(S, {{ i_output }});
+    for (int ii = 0; ii < {{ dims.N }}; ii++)
+        ocp_nlp_out_get(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_out, ii,
+                        "u", (void *) out_utraj + ii * {{ dims.nu }});
     {%- endif %}
 
     {%- if simulink_opts.outputs.solver_status == 1 %}
@@ -491,7 +504,6 @@ static void mdlTerminate(SimStruct *S)
 
     {{ model.name }}_acados_free(capsule);
     {{ model.name }}_acados_free_capsule(capsule);
-
 }
 
 
