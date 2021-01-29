@@ -155,38 +155,48 @@ i_in = i_in + 1;
 {%- endif %}
 
 
-{%- if dims.nbx > 0 %}
+{%- if dims.nbx > 0 and dims.N > 1 and simulink_opts.inputs.lbx -%}  {#- lbx #}
 input_note = strcat(input_note, num2str(i_in), ') lbx for shooting nodes 1 to N-1, size [{{ (dims.N-1) * dims.nbx }}]\n ');
 i_in = i_in + 1;
+{%- endif %}
+{%- if dims.nbx > 0 and dims.N > 1 and simulink_opts.inputs.ubx -%}  {#- ubx #}
 input_note = strcat(input_note, num2str(i_in), ') ubx for shooting nodes 1 to N-1, size [{{ (dims.N-1) * dims.nbx }}]\n ');
 i_in = i_in + 1;
 {%- endif %}
 
 
-{%- if dims.nbx_e > 0 %}
+{%- if dims.nbx_e > 0 and dims.N > 0 and simulink_opts.inputs.lbx_e -%}  {#- lbx_e #}
 input_note = strcat(input_note, num2str(i_in), ') lbx_e (lbx at shooting node N), size [{{ dims.nbx_e }}]\n ');
 i_in = i_in + 1;
+{%- endif %}
+{%- if dims.nbx_e > 0 and dims.N > 0 and simulink_opts.inputs.ubx_e -%}  {#- ubx_e #}
 input_note = strcat(input_note, num2str(i_in), ') ubx_e (ubx at shooting node N), size [{{ dims.nbx_e }}]\n ');
 i_in = i_in + 1;
 {%- endif %}
 
-{%- if dims.nbu > 0 %}
+{%- if dims.nbu > 0 and simulink_opts.inputs.lbu -%}  {#- lbu #}
 input_note = strcat(input_note, num2str(i_in), ') lbu for shooting nodes 0 to N-1, size [{{ dims.N*dims.nbu }}]\n ');
 i_in = i_in + 1;
+{%- endif -%}
+{%- if dims.nbu > 0 and simulink_opts.inputs.ubu -%}  {#- ubu #}
 input_note = strcat(input_note, num2str(i_in), ') ubu for shooting nodes 0 to N-1, size [{{ dims.N*dims.nbu }}]\n ');
 i_in = i_in + 1;
-{%- endif %}
+{%- endif -%}
 
-{%- if dims.ng > 0 %}
+{%- if dims.ng > 0 and simulink_opts.inputs.lg -%}  {#- lg #}
 input_note = strcat(input_note, num2str(i_in), ') lg, size [{{ dims.ng }}]\n ');
 i_in = i_in + 1;
+{%- endif %}
+{%- if dims.ng > 0 and simulink_opts.inputs.ug -%}  {#- ug #}
 input_note = strcat(input_note, num2str(i_in), ') ug, size [{{ dims.ng }}]\n ');
 i_in = i_in + 1;
 {%- endif %}
 
-{%- if dims.nh > 0 %}
+{%- if dims.nh > 0 and simulink_opts.inputs.lh -%}  {#- lh #}
 input_note = strcat(input_note, num2str(i_in), ') lh, size [{{ dims.nh }}]\n ');
 i_in = i_in + 1;
+{%- endif %}
+{%- if dims.nh > 0 and simulink_opts.inputs.uh -%}  {#- uh #}
 input_note = strcat(input_note, num2str(i_in), ') uh, size [{{ dims.nh }}]\n ');
 i_in = i_in + 1;
 {%- endif %}
