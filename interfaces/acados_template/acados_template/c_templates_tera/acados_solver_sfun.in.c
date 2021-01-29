@@ -613,19 +613,21 @@ static void mdlOutputs(SimStruct *S, int_T tid)
   {%- endif %}
 
   {%- if simulink_opts.outputs.utraj == 1 %}
-    {%- set i_output = i_output + 1 -%}
+    {%- set i_output = i_output + 1 %}
+
     out_utraj = ssGetOutputPortRealSignal(S, {{ i_output }});
     for (int ii = 0; ii < {{ dims.N }}; ii++)
         ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, ii,
-                        "u", (void *) out_utraj + ii * {{ dims.nu }});
+                        "u", (void *) (out_utraj + ii * {{ dims.nu }}));
   {%- endif %}
 
-  {%- if simulink_opts.outputs.xtraj == 1 %}
+  {% if simulink_opts.outputs.xtraj == 1 %}
     {%- set i_output = i_output + 1 %}
+
     out_xtraj = ssGetOutputPortRealSignal(S, {{ i_output }});
     for (int ii = 0; ii < {{ dims.N + 1 }}; ii++)
         ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, ii,
-                        "x", (void *) out_xtraj + ii * {{ dims.nx }});
+                        "x", (void *) (out_xtraj + ii * {{ dims.nx }}));
   {%- endif %}
 
   {%- if simulink_opts.outputs.solver_status == 1 %}
@@ -651,7 +653,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     out_cpu_time = ssGetOutputPortRealSignal(S, {{ i_output }});
     // get solution time
     ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_tot", (void *) out_cpu_time);
-  {%- endif %}
+  {%- endif -%}
 
   {%- if simulink_opts.outputs.sqp_iter == 1 %}
     {%- set i_output = i_output + 1 %}
