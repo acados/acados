@@ -143,9 +143,14 @@ input_note = strcat(input_note, num2str(i_in), ') parameters - concatenated for 
 i_in = i_in + 1;
 {%- endif %}
 
+{%- if dims.ny_0 > 0 and simulink_opts.inputs.y_ref_0 %}
+input_note = strcat(input_note, num2str(i_in), ') y_ref_0, size [{{ dims.ny_0 }}]\n ');
+i_in = i_in + 1;
+{%- endif %}
+
 {%- if dims.ny > 0 and simulink_opts.inputs.y_ref %}
-input_note = strcat(input_note, num2str(i_in), ') y_ref - concatenated for intermediate stages,',...
-                    ' size [{{ dims.N * dims.ny }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') y_ref - concatenated for shooting nodes 1 to N-1,',...
+                    ' size [{{ (dims.N-1) * dims.ny }}]\n ');
 i_in = i_in + 1;
 {%- endif %}
 
@@ -153,7 +158,6 @@ i_in = i_in + 1;
 input_note = strcat(input_note, num2str(i_in), ') y_ref_e, size [{{ dims.ny_e }}]\n ');
 i_in = i_in + 1;
 {%- endif %}
-
 
 {%- if dims.nbx > 0 and dims.N > 1 and simulink_opts.inputs.lbx -%}  {#- lbx #}
 input_note = strcat(input_note, num2str(i_in), ') lbx for shooting nodes 1 to N-1, size [{{ (dims.N-1) * dims.nbx }}]\n ');
