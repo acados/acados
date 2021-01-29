@@ -40,7 +40,13 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     % general
     ocp_json.dims.N = obj.opts_struct.param_scheme_N;
     ocp_json.solver_options.tf = model.T;
-    ocp_json.solver_options.Tsim = model.T / obj.opts_struct.param_scheme_N; % for templated integrator
+
+    if isfield(obj.opts_struct, 'Tsim')
+        ocp_json.solver_options.Tsim = obj.opts_struct.Tsim;
+    else
+        ocp_json.solver_options.Tsim = model.T / obj.opts_struct.param_scheme_N; % for templated integrator
+    end
+
     ocp_json.model.name = model.name;
     % modules
     ocp_json.solver_options.qp_solver = upper(obj.opts_struct.qp_solver);
