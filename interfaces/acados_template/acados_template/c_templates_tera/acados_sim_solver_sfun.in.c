@@ -47,8 +47,7 @@
 
 #include "simstruc.h"
 
-//#define SAMPLINGTIME -1
-#define SAMPLINGTIME {{ solver_options.tf / dims.N }}
+#define SAMPLINGTIME {{ solver_options.Tsim }}
 
 // ** global data **
 sim_config  *{{ model.name }}_sim_config;
