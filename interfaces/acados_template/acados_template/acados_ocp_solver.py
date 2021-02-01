@@ -51,7 +51,7 @@ from .acados_ocp import AcadosOcp
 from .acados_model import acados_model_strip_casadi_symbolics
 from .utils import is_column, is_empty, casadi_length, render_template, acados_class2dict,\
      format_class_dict, ocp_check_against_layout, np_array_to_list, make_model_consistent,\
-     set_up_imported_gnsf_model
+     set_up_imported_gnsf_model, get_acados_path
 
 
 def make_ocp_dims_consistent(acados_ocp):
@@ -453,7 +453,7 @@ def get_ocp_nlp_layout():
     return ocp_nlp_layout
 
 
-def ocp_formulation_json_dump(acados_ocp, json_file='acados_ocp_nlp.json'):
+def ocp_formulation_json_dump(acados_ocp, simulink_opts, json_file='acados_ocp_nlp.json'):
     # Load acados_ocp_nlp structure description
     ocp_layout = get_ocp_nlp_layout()
 
@@ -479,6 +479,9 @@ def ocp_formulation_json_dump(acados_ocp, json_file='acados_ocp_nlp.json'):
     dims_dict = acados_class2dict(acados_ocp.dims)
 
     ocp_check_against_layout(ocp_nlp_dict, dims_dict)
+
+    # add simulink options
+    ocp_nlp_dict['simulink_opts'] = simulink_opts
 
     with open(json_file, 'w') as f:
         json.dump(ocp_nlp_dict, f, default=np_array_to_list, indent=4, sort_keys=True)
@@ -713,11 +716,17 @@ class AcadosOcpSolver:
     """
     class to interact with the acados ocp solver C object
     """
-    def __init__(self, acados_ocp, json_file='acados_ocp_nlp.json'):
+    def __init__(self, acados_ocp, json_file='acados_ocp_nlp.json', simulink_opts=None):
 
         self.solver_created = False
         self.N = acados_ocp.dims.N
         model = acados_ocp.model
+
+        if simulink_opts == None:
+            acados_path = get_acados_path()
+            json_path = os.path.join(acados_path, 'interfaces/acados_template/acados_template')
+            with open(json_path + '/simulink_default_opts.json', 'r') as f:
+                simulink_opts = json.load(f)
 
         # make dims consistent
         make_ocp_dims_consistent(acados_ocp)
@@ -736,7 +745,7 @@ class AcadosOcpSolver:
         ocp_generate_external_functions(acados_ocp, model)
 
         # dump to json
-        ocp_formulation_json_dump(acados_ocp, json_file)
+        ocp_formulation_json_dump(acados_ocp, simulink_opts, json_file)
 
         # render templates
         ocp_render_templates(acados_ocp, json_file)
