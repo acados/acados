@@ -148,13 +148,13 @@ input_note = strcat(input_note, num2str(i_in), ') y_ref_0, size [{{ dims.ny_0 }}
 i_in = i_in + 1;
 {%- endif %}
 
-{%- if dims.ny > 0 and simulink_opts.inputs.y_ref %}
+{%- if dims.ny > 0 and dims.N > 1 and simulink_opts.inputs.y_ref %}
 input_note = strcat(input_note, num2str(i_in), ') y_ref - concatenated for shooting nodes 1 to N-1,',...
                     ' size [{{ (dims.N-1) * dims.ny }}]\n ');
 i_in = i_in + 1;
 {%- endif %}
 
-{%- if dims.ny_e > 0 and simulink_opts.inputs.y_ref_e %}
+{%- if dims.ny_e > 0 and dims.N > 0 and simulink_opts.inputs.y_ref_e %}
 input_note = strcat(input_note, num2str(i_in), ') y_ref_e, size [{{ dims.ny_e }}]\n ');
 i_in = i_in + 1;
 {%- endif %}
@@ -178,11 +178,11 @@ input_note = strcat(input_note, num2str(i_in), ') ubx_e (ubx at shooting node N)
 i_in = i_in + 1;
 {%- endif %}
 
-{%- if dims.nbu > 0 and simulink_opts.inputs.lbu -%}  {#- lbu #}
+{%- if dims.nbu > 0 and dims.N > 0 and simulink_opts.inputs.lbu -%}  {#- lbu #}
 input_note = strcat(input_note, num2str(i_in), ') lbu for shooting nodes 0 to N-1, size [{{ dims.N*dims.nbu }}]\n ');
 i_in = i_in + 1;
 {%- endif -%}
-{%- if dims.nbu > 0 and simulink_opts.inputs.ubu -%}  {#- ubu #}
+{%- if dims.nbu > 0 and dims.N > 0 and simulink_opts.inputs.ubu -%}  {#- ubu #}
 input_note = strcat(input_note, num2str(i_in), ') ubu for shooting nodes 0 to N-1, size [{{ dims.N*dims.nbu }}]\n ');
 i_in = i_in + 1;
 {%- endif -%}
@@ -251,7 +251,7 @@ i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') KKT residual\n ');
 {%- endif %}
 
-{%- if simulink_opts.outputs.x1 == 1 %}
+{%- if dims.N > 0 and simulink_opts.outputs.x1 == 1 %}
 i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') x1, state at node 1\n ');
 {%- endif %}
