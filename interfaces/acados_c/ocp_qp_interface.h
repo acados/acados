@@ -207,7 +207,7 @@ void ocp_qp_xcond_solver_opts_set(ocp_qp_xcond_solver_config *config,
            ocp_qp_xcond_solver_opts *opts, const char *field, void* value);
 
 /// TBC Should be private/static?
-int ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
+acados_size_t ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
 
 
 /// TBC Reserves memory? TBC Should this be private?

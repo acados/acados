@@ -67,7 +67,7 @@ dense_qp_out *dense_qp_out_create(qp_solver_config *config, dense_qp_dims *dims)
 //
 void *dense_qp_opts_create(qp_solver_config *config, dense_qp_dims *dims);
 //
-int dense_qp_calculate_size(qp_solver_config *config, dense_qp_dims *dims, void *opts_);
+acados_size_t dense_qp_calculate_size(qp_solver_config *config, dense_qp_dims *dims, void *opts_);
 //
 dense_qp_solver *dense_qp_assign(qp_solver_config *config, dense_qp_dims *dims, void *opts_,
                                  void *raw_memory);

@@ -57,7 +57,7 @@ sim_config *sim_config_create(sim_solver_plan plan)
 {
     /* calculate_size & malloc & assign */
 
-    int bytes = sim_config_calculate_size();
+    acados_size_t bytes = sim_config_calculate_size();
     void *ptr = calloc(1, bytes);
     sim_config *solver_config = sim_config_assign(ptr);
 
@@ -106,8 +106,8 @@ void sim_config_destroy(void *config)
 void *sim_dims_create(void *config_)
 {
     sim_config *config = (sim_config *) config_;
-//    int bytes = config->dims_calculate_size(config_);
-    int bytes = config->dims_calculate_size();
+//    acados_size_t bytes = config->dims_calculate_size(config_);
+    acados_size_t bytes = config->dims_calculate_size();
 
     void *ptr = calloc(1, bytes);
 
@@ -145,7 +145,7 @@ void sim_dims_get(sim_config *config, void *dims, const char *field, int* value)
 
 sim_in *sim_in_create(sim_config *config, void *dims)
 {
-    int bytes = sim_in_calculate_size(config, dims);
+    acados_size_t bytes = sim_in_calculate_size(config, dims);
 
     void *ptr = calloc(1, bytes);
 
@@ -177,7 +177,7 @@ int sim_in_set(void *config_, void *dims_, sim_in *in, const char *field, void *
 
 sim_out *sim_out_create(sim_config *config, void *dims)
 {
-    int bytes = sim_out_calculate_size(config, dims);
+    acados_size_t bytes = sim_out_calculate_size(config, dims);
 
     void *ptr = calloc(1, bytes);
 
@@ -207,7 +207,7 @@ int sim_out_get(void *config, void *dims, sim_out *out, const char *field, void 
 
 void *sim_opts_create(sim_config *config, void *dims)
 {
-    int bytes = config->opts_calculate_size(config, dims);
+    acados_size_t bytes = config->opts_calculate_size(config, dims);
 
     void *ptr = calloc(1, bytes);
 
@@ -242,9 +242,9 @@ void sim_opts_get(sim_config *config, void *opts, const char *field, void *value
 * solver
 ************************************************/
 
-int sim_calculate_size(sim_config *config, void *dims, void *opts_)
+acados_size_t sim_calculate_size(sim_config *config, void *dims, void *opts_)
 {
-    int bytes = sizeof(sim_solver);
+    acados_size_t bytes = sizeof(sim_solver);
 
     bytes += config->memory_calculate_size(config, dims, opts_);
     bytes += config->workspace_calculate_size(config, dims, opts_);
@@ -284,7 +284,7 @@ sim_solver *sim_solver_create(sim_config *config, void *dims, void *opts_)
 {
     // update Butcher tableau (needed if the user changed ns)
     config->opts_update(config, dims, opts_);
-    int bytes = sim_calculate_size(config, dims, opts_);
+    acados_size_t bytes = sim_calculate_size(config, dims, opts_);
 
     void *ptr = calloc(1, bytes);
 

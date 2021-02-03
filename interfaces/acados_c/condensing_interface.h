@@ -65,7 +65,7 @@ ocp_qp_xcond_config *ocp_qp_condensing_config_create(condensing_plan *plan);
 //
 void *ocp_qp_condensing_opts_create(ocp_qp_xcond_config *config, void *dims_);
 //
-int ocp_qp_condensing_calculate_size(ocp_qp_xcond_config *config, void *dims_, void *opts_);
+acados_size_t ocp_qp_condensing_calculate_size(ocp_qp_xcond_config *config, void *dims_, void *opts_);
 //
 condensing_module *ocp_qp_condensing_assign(ocp_qp_xcond_config *config, void *dims_,
                                             void *opts_, void *raw_memory);
