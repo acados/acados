@@ -158,7 +158,7 @@ void ocp_qp_xcond_solver_config_initialize_from_plan(
 
 ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_create(ocp_qp_solver_plan plan)
 {
-    int bytes = ocp_qp_xcond_solver_config_calculate_size();
+    acados_size_t bytes = ocp_qp_xcond_solver_config_calculate_size();
     void *ptr = calloc(1, bytes);
     ocp_qp_xcond_solver_config *solver_config = ocp_qp_xcond_solver_config_assign(ptr);
 
@@ -180,7 +180,7 @@ void ocp_qp_xcond_solver_config_free(ocp_qp_xcond_solver_config *config)
 
 ocp_qp_dims *ocp_qp_dims_create(int N)
 {
-    int bytes = ocp_qp_dims_calculate_size(N);
+    acados_size_t bytes = ocp_qp_dims_calculate_size(N);
 
     void *ptr = calloc(1, bytes);
 
@@ -200,7 +200,7 @@ void ocp_qp_dims_free(void *dims_)
 
 ocp_qp_xcond_solver_dims *ocp_qp_xcond_solver_dims_create(ocp_qp_xcond_solver_config *config, int N)
 {
-    int bytes = ocp_qp_xcond_solver_dims_calculate_size(config, N);
+    acados_size_t bytes = ocp_qp_xcond_solver_dims_calculate_size(config, N);
 
     void *ptr = calloc(1, bytes);
 
@@ -264,7 +264,7 @@ void ocp_qp_xcond_solver_dims_free(ocp_qp_xcond_solver_dims *dims)
 
 ocp_qp_in *ocp_qp_in_create(ocp_qp_dims *dims)
 {
-    int bytes = ocp_qp_in_calculate_size(dims);
+    acados_size_t bytes = ocp_qp_in_calculate_size(dims);
 
     void *ptr = calloc(1, bytes);
 
@@ -293,7 +293,7 @@ void ocp_qp_in_free(void *in_)
 
 ocp_qp_out *ocp_qp_out_create(ocp_qp_dims *dims)
 {
-    int bytes = ocp_qp_out_calculate_size(dims);
+    acados_size_t bytes = ocp_qp_out_calculate_size(dims);
 
     void *ptr = calloc(1, bytes);
 
@@ -330,7 +330,7 @@ void ocp_qp_out_get(ocp_qp_out *out, const char *field, void *value)
 /* opts */
 void *ocp_qp_xcond_solver_opts_create(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims)
 {
-    int bytes = config->opts_calculate_size(config, dims);
+    acados_size_t bytes = config->opts_calculate_size(config, dims);
 
     void *ptr = calloc(1, bytes);
 
@@ -357,9 +357,9 @@ void ocp_qp_xcond_solver_opts_set(ocp_qp_xcond_solver_config *config,
 
 /* solver */
 
-int ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims, void *opts_)
+acados_size_t ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims, void *opts_)
 {
-    int bytes = sizeof(ocp_qp_solver);
+    acados_size_t bytes = sizeof(ocp_qp_solver);
 
     bytes += config->memory_calculate_size(config, dims, opts_);
     bytes += config->workspace_calculate_size(config, dims, opts_);
@@ -402,7 +402,7 @@ ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config,
 
     config->opts_update(config, dims, opts_);
 
-    int bytes = ocp_qp_calculate_size(config, dims, opts_);
+    acados_size_t bytes = ocp_qp_calculate_size(config, dims, opts_);
 
     void *ptr = calloc(1, bytes);
 
@@ -429,7 +429,7 @@ void ocp_qp_solver_destroy(ocp_qp_solver *solver)
 // qp residual
 static ocp_qp_res *ocp_qp_res_create(ocp_qp_dims *dims)
 {
-    int size = ocp_qp_res_calculate_size(dims);
+    acados_size_t size = ocp_qp_res_calculate_size(dims);
     void *ptr = acados_malloc(size, 1);
     ocp_qp_res *qp_res = ocp_qp_res_assign(dims, ptr);
     return qp_res;
@@ -439,7 +439,7 @@ static ocp_qp_res *ocp_qp_res_create(ocp_qp_dims *dims)
 
 static ocp_qp_res_ws *ocp_qp_res_workspace_create(ocp_qp_dims *dims)
 {
-    int size = ocp_qp_res_workspace_calculate_size(dims);
+    acados_size_t size = ocp_qp_res_workspace_calculate_size(dims);
     void *ptr = acados_malloc(size, 1);
     ocp_qp_res_ws *res_ws = ocp_qp_res_workspace_assign(dims, ptr);
     return res_ws;

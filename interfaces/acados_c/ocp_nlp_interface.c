@@ -63,10 +63,10 @@
 * plan
 ************************************************/
 
-static int ocp_nlp_plan_calculate_size(int N)
+static acados_size_t ocp_nlp_plan_calculate_size(int N)
 {
     // N - number of shooting nodes
-    int bytes = sizeof(ocp_nlp_plan);
+    acados_size_t bytes = sizeof(ocp_nlp_plan);
     bytes += N * sizeof(sim_solver_plan);
     bytes += (N + 1) * sizeof(ocp_nlp_cost_t);
     bytes += N * sizeof(ocp_nlp_dynamics_t);
@@ -145,7 +145,7 @@ static void ocp_nlp_plan_initialize_default(ocp_nlp_plan *plan)
 
 ocp_nlp_plan *ocp_nlp_plan_create(int N)
 {
-    int bytes = ocp_nlp_plan_calculate_size(N);
+    acados_size_t bytes = ocp_nlp_plan_calculate_size(N);
     void *ptr = acados_malloc(bytes, 1);
 
     ocp_nlp_plan *plan = ocp_nlp_plan_assign(N, ptr);
@@ -174,7 +174,7 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
 
     /* calculate_size & malloc & assign */
 
-    int bytes = ocp_nlp_config_calculate_size(N);
+    acados_size_t bytes = ocp_nlp_config_calculate_size(N);
     void *config_mem = acados_calloc(1, bytes);
     ocp_nlp_config *config = ocp_nlp_config_assign(N, config_mem);
 
@@ -327,7 +327,7 @@ ocp_nlp_dims *ocp_nlp_dims_create(void *config_)
 {
     ocp_nlp_config *config = config_;
 
-    int bytes = ocp_nlp_dims_calculate_size(config);
+    acados_size_t bytes = ocp_nlp_dims_calculate_size(config);
 
     void *ptr = acados_calloc(1, bytes);
 
@@ -351,7 +351,7 @@ void ocp_nlp_dims_destroy(void *dims_)
 
 ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_config *config, ocp_nlp_dims *dims)
 {
-    int bytes = ocp_nlp_in_calculate_size(config, dims);
+    acados_size_t bytes = ocp_nlp_in_calculate_size(config, dims);
 
     void *ptr = acados_calloc(1, bytes);
 
@@ -427,7 +427,7 @@ int ocp_nlp_constraints_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
 ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_config *config, ocp_nlp_dims *dims)
 {
-    int bytes = ocp_nlp_out_calculate_size(config, dims);
+    acados_size_t bytes = ocp_nlp_out_calculate_size(config, dims);
 
     void *ptr = acados_calloc(1, bytes);
 
@@ -782,7 +782,7 @@ void ocp_nlp_cost_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
 void *ocp_nlp_solver_opts_create(ocp_nlp_config *config, ocp_nlp_dims *dims)
 {
-    int bytes = config->opts_calculate_size(config, dims);
+    acados_size_t bytes = config->opts_calculate_size(config, dims);
 
     void *ptr = acados_calloc(1, bytes);
 
@@ -827,9 +827,9 @@ void ocp_nlp_solver_opts_destroy(void *opts)
 * solver
 ************************************************/
 
-static int ocp_nlp_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_)
+static acados_size_t ocp_nlp_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_)
 {
-    int bytes = sizeof(ocp_nlp_solver);
+    acados_size_t bytes = sizeof(ocp_nlp_solver);
 
     bytes += config->memory_calculate_size(config, dims, opts_);
     bytes += config->workspace_calculate_size(config, dims, opts_);
@@ -869,7 +869,7 @@ ocp_nlp_solver *ocp_nlp_solver_create(ocp_nlp_config *config, ocp_nlp_dims *dims
 {
     config->opts_update(config, dims, opts_);
 
-    int bytes = ocp_nlp_calculate_size(config, dims, opts_);
+    acados_size_t bytes = ocp_nlp_calculate_size(config, dims, opts_);
 
     void *ptr = acados_calloc(1, bytes);
 

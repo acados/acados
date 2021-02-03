@@ -46,7 +46,7 @@
 
 ocp_qp_xcond_config *ocp_qp_condensing_config_create(condensing_plan *plan)
 {
-    int bytes = ocp_qp_condensing_config_calculate_size();
+    acados_size_t bytes = ocp_qp_condensing_config_calculate_size();
     void *ptr = calloc(1, bytes);
     ocp_qp_xcond_config *config = ocp_qp_condensing_config_assign(ptr);
 
@@ -64,7 +64,7 @@ ocp_qp_xcond_config *ocp_qp_condensing_config_create(condensing_plan *plan)
 
 void *ocp_qp_condensing_opts_create(ocp_qp_xcond_config *config, void *dims_)
 {
-    int bytes = config->opts_calculate_size(dims_);
+    acados_size_t bytes = config->opts_calculate_size(dims_);
 
     void *ptr = calloc(1, bytes);
 
@@ -75,9 +75,9 @@ void *ocp_qp_condensing_opts_create(ocp_qp_xcond_config *config, void *dims_)
     return opts;
 }
 
-int ocp_qp_condensing_calculate_size(ocp_qp_xcond_config *config, void *dims_, void *opts_)
+acados_size_t ocp_qp_condensing_calculate_size(ocp_qp_xcond_config *config, void *dims_, void *opts_)
 {
-    int bytes = sizeof(condensing_module);
+    acados_size_t bytes = sizeof(condensing_module);
 
     bytes += config->memory_calculate_size(dims_, opts_);
     bytes += config->workspace_calculate_size(dims_, opts_);
@@ -112,7 +112,7 @@ condensing_module *ocp_qp_condensing_create(ocp_qp_xcond_config *config, void *d
                                             void *opts_)
 {
     config->opts_update(dims_, opts_);
-    int bytes = ocp_qp_condensing_calculate_size(config, dims_, opts_);
+    acados_size_t bytes = ocp_qp_condensing_calculate_size(config, dims_, opts_);
 
     void *ptr = calloc(1, bytes);
 
