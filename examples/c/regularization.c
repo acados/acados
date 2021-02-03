@@ -58,7 +58,7 @@ int main()
      * config
      ************************************************/
 
-	int config_size = ocp_nlp_reg_config_calculate_size();
+	acados_size_t config_size = ocp_nlp_reg_config_calculate_size();
 	void * config_mem = malloc(config_size);
 	ocp_nlp_reg_config *config = ocp_nlp_reg_config_assign(config_mem);
 
@@ -85,7 +85,7 @@ int main()
 		nu[ii] = nu_;
 	nu[N] = 0;
 
-	int dims_size = config->dims_calculate_size(N);
+	acados_size_t dims_size = config->dims_calculate_size(N);
 	void * dims_mem = malloc(dims_size);
 	ocp_nlp_reg_dims *dims = config->dims_assign(N, dims_mem);
 
@@ -99,7 +99,7 @@ int main()
      * opts
      ************************************************/
 
-	int opts_size = config->opts_calculate_size();
+	acados_size_t opts_size = config->opts_calculate_size();
 	void * opts_mem = malloc(opts_size);
 	void *opts = config->opts_assign(opts_mem);
 
@@ -114,7 +114,7 @@ int main()
      * memory
      ************************************************/
 
-	int memory_size = config->memory_calculate_size(config, dims, opts);
+	acados_size_t memory_size = config->memory_calculate_size(config, dims, opts);
 	void * memory_mem = malloc(memory_size);
 	void *memory = config->memory_assign(config, dims, opts, memory_mem);
 

@@ -202,7 +202,7 @@ ocp_qp_xcond_solver_dims *create_ocp_qp_dims_mass_spring(ocp_qp_xcond_solver_con
 
 
     // dims
-    int dims_size = ocp_qp_xcond_solver_dims_calculate_size(config, N);
+    acados_size_t dims_size = ocp_qp_xcond_solver_dims_calculate_size(config, N);
     void *dims_mem = malloc(dims_size);
     ocp_qp_xcond_solver_dims *dims = ocp_qp_xcond_solver_dims_assign(config, N, dims_mem);
 
@@ -656,7 +656,7 @@ ocp_qp_dims *create_ocp_qp_dims_mass_spring_soft_constr(int N, int nx_, int nu_,
 
 
     // dims
-    int dims_size = ocp_qp_dims_calculate_size(N);
+    acados_size_t dims_size = ocp_qp_dims_calculate_size(N);
     void *dims_mem = malloc(dims_size);
     ocp_qp_dims *dims = ocp_qp_dims_assign(N, dims_mem);
 

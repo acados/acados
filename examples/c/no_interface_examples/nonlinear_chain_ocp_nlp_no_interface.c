@@ -1211,7 +1211,7 @@ int main() {
     * config
     ************************************************/
 
-	int config_size = ocp_nlp_config_calculate_size(NN);
+	acados_size_t config_size = ocp_nlp_config_calculate_size(NN);
 	void *config_mem = malloc(config_size);
 	ocp_nlp_config *config = ocp_nlp_config_assign(NN, config_mem);
 
@@ -1296,7 +1296,7 @@ int main() {
     * ocp_nlp_dims
     ************************************************/
 
-	int dims_size = ocp_nlp_dims_calculate_size(config);
+	acados_size_t dims_size = ocp_nlp_dims_calculate_size(config);
 	void *dims_mem = malloc(dims_size);
 	ocp_nlp_dims *dims = ocp_nlp_dims_assign(config, dims_mem);
 //	ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, nq, ns, nz, dims);
@@ -1332,7 +1332,7 @@ int main() {
 
 	select_dynamics_casadi(NN, NMF, expl_vde_for, expl_ode_jac, impl_ode_fun, impl_ode_fun_jac_x_xdot, impl_ode_fun_jac_x_xdot_u, impl_ode_jac_x_xdot_u, erk4_casadi);
 
-	int tmp_size;
+	acados_size_t tmp_size;
 	char *c_ptr;
 #if DYNAMICS==0 | DYNAMICS==1
 
@@ -1944,7 +1944,7 @@ int main() {
     * sqp workspace
     ************************************************/
 
-    int workspace_size = ocp_nlp_sqp_workspace_calculate_size(config, dims, nlp_opts);
+    acados_size_t workspace_size = ocp_nlp_sqp_workspace_calculate_size(config, dims, nlp_opts);
     void *nlp_work = acados_malloc(workspace_size, 1);
 
     /************************************************

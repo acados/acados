@@ -247,9 +247,9 @@ void *sim_irk_opts_assign(void *config_, void *dims, void *raw_memory)
     assign_and_advance_double(ns_max, &opts->c_vec, &c_ptr);
 
     // work
-    int tmp0 = gauss_nodes_work_calculate_size(ns_max);
-    int tmp1 = butcher_table_work_calculate_size(ns_max);
-    int work_size = tmp0 > tmp1 ? tmp0 : tmp1;
+    acados_size_t tmp0 = gauss_nodes_work_calculate_size(ns_max);
+    acados_size_t tmp1 = butcher_table_work_calculate_size(ns_max);
+    acados_size_t work_size = tmp0 > tmp1 ? tmp0 : tmp1;
     opts->work = c_ptr;
     c_ptr += work_size;
 
