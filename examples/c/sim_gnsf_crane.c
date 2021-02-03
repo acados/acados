@@ -142,7 +142,7 @@ int main() {
     // sim_dims *dims = (sim_dims *) gnsf_dim; // typecasting works as gnsf_dims has entries of sim_dims at the beginning
 
     // set up gnsf_opts
-    int opts_size = config->opts_calculate_size(config, dims);
+    acados_size_t opts_size = config->opts_calculate_size(config, dims);
 	void *opts_mem = malloc(opts_size);
     sim_opts *opts = config->opts_assign(config, dims, opts_mem);
     config->opts_initialize_default(config, dims, opts);

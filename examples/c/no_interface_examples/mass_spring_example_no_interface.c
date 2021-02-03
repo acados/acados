@@ -118,20 +118,20 @@ int main() {
         {
             int N2 = N2_values[jj];
 
-			int config_size = ocp_qp_xcond_solver_config_calculate_size();
+			acados_size_t config_size = ocp_qp_xcond_solver_config_calculate_size();
 			void *config_mem = malloc(config_size);
 			ocp_qp_xcond_solver_config *solver_config = ocp_qp_xcond_solver_config_assign(config_mem);
 
-			int solver_opts_size;
+			acados_size_t solver_opts_size;
 			void *solver_opts_mem;
 			void *solver_opts = NULL;
 			ocp_qp_xcond_solver_opts *xcond_solver_opts;
 			ocp_qp_hpipm_opts *hpipm_opts;
 			ocp_qp_partial_condensing_opts *part_cond_opts;
-			int solver_mem_size;
+			acados_size_t solver_mem_size;
 			void *solver_mem_mem;
 			void *solver_mem;
-			int solver_work_size;
+			acados_size_t solver_work_size;
 			void *solver_work;
 			dense_qp_hpipm_opts *dense_hpipm_opts;
 
@@ -328,7 +328,7 @@ int main() {
 			 * ocp qp out
 			 ************************************************/
 
-			int qp_out_size = ocp_qp_out_calculate_size(solver_config, qp_dims);
+			acados_size_t qp_out_size = ocp_qp_out_calculate_size(solver_config, qp_dims);
 			void *qp_out_mem = malloc(qp_out_size);
 			ocp_qp_out *qp_out = ocp_qp_out_assign(solver_config, qp_dims, qp_out_mem);
 
@@ -382,12 +382,12 @@ int main() {
             * compute residuals
             ************************************************/
 
-			int res_size = ocp_qp_res_calculate_size(qp_dims);
+			acados_size_t res_size = ocp_qp_res_calculate_size(qp_dims);
 // 		printf("\nres size = %d\n", res_size);
 			void *res_mem = malloc(res_size);
 			ocp_qp_res *qp_res = ocp_qp_res_assign(qp_dims, res_mem);
 
-			int res_work_size = ocp_qp_res_workspace_calculate_size(qp_dims);
+			acados_size_t res_work_size = ocp_qp_res_workspace_calculate_size(qp_dims);
 // 		printf("\nres work size = %d\n", res_work_size);
 			void *res_work_mem = malloc(res_work_size);
 			ocp_qp_res_ws *res_ws = ocp_qp_res_workspace_assign(qp_dims, res_work_mem);
