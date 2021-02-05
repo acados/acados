@@ -302,7 +302,7 @@ typedef struct ocp_nlp_res
     double inf_norm_res_eq;
     double inf_norm_res_ineq;
     double inf_norm_res_comp;
-    int memsize;
+    acados_size_t memsize;
 } ocp_nlp_res;
 
 //
