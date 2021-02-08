@@ -426,7 +426,7 @@ int main() {
     * config
     ************************************************/
 
-    acados_size_t config_size = ocp_nlp_config_calculate_size(N);
+    int config_size = ocp_nlp_config_calculate_size(N);
     void *config_mem = malloc(config_size);
     ocp_nlp_config *config = ocp_nlp_config_assign(N, config_mem);
 
@@ -470,7 +470,7 @@ int main() {
     * ocp_nlp_dims
     ************************************************/
 
-    acados_size_t dims_size = ocp_nlp_dims_calculate_size(config);
+    int dims_size = ocp_nlp_dims_calculate_size(config);
     void *dims_mem = malloc(dims_size);
     ocp_nlp_dims *dims = ocp_nlp_dims_assign(config, dims_mem);
 
@@ -805,7 +805,7 @@ int main() {
     * sqp workspace
     ************************************************/
 
-    acados_size_t workspace_size = ocp_nlp_sqp_workspace_calculate_size(config, dims, nlp_opts);
+    int workspace_size = ocp_nlp_sqp_workspace_calculate_size(config, dims, nlp_opts);
     void *nlp_work = acados_malloc(workspace_size, 1);
 
     /************************************************
