@@ -97,7 +97,7 @@ int main()
 	exfun_forw_vde.casadi_n_in = &vde_energy_balanced_model_n_in;
 	exfun_forw_vde.casadi_n_out = &vde_energy_balanced_model_n_out;
 
-	acados_size_t forw_vde_size = external_function_casadi_calculate_size(&exfun_forw_vde);
+	int forw_vde_size = external_function_casadi_calculate_size(&exfun_forw_vde);
 	void *forw_vde_mem = malloc(forw_vde_size);
 	external_function_casadi_assign(&exfun_forw_vde, forw_vde_mem);
 
@@ -111,7 +111,7 @@ int main()
 	exfun_adj_vde.casadi_n_in = &vde_adj_energy_balanced_model_n_in;
 	exfun_adj_vde.casadi_n_out = &vde_adj_energy_balanced_model_n_out;
 
-	acados_size_t adj_vde_size = external_function_casadi_calculate_size(&exfun_adj_vde);
+	int adj_vde_size = external_function_casadi_calculate_size(&exfun_adj_vde);
 	void *adj_vde_mem = malloc(adj_vde_size);
 	external_function_casadi_assign(&exfun_adj_vde, adj_vde_mem);
 
@@ -125,7 +125,7 @@ int main()
 	exfun_jac.casadi_n_in = &jac_energy_balanced_model_n_in;
 	exfun_jac.casadi_n_out = &jac_energy_balanced_model_n_out;
 
-	acados_size_t jac_size = external_function_casadi_calculate_size(&exfun_jac);
+	int jac_size = external_function_casadi_calculate_size(&exfun_jac);
 	void *jac_mem = malloc(jac_size);
 	external_function_casadi_assign(&exfun_jac, jac_mem);
 
@@ -139,7 +139,7 @@ int main()
 	exfun_hess_ode.casadi_n_in = &vde_hess_energy_balanced_model_n_in;
 	exfun_hess_ode.casadi_n_out = &vde_hess_energy_balanced_model_n_out;
 
-	acados_size_t hess_ode_size = external_function_casadi_calculate_size(&exfun_hess_ode);
+	int hess_ode_size = external_function_casadi_calculate_size(&exfun_hess_ode);
 	void *hess_ode_mem = malloc(hess_ode_size);
 	external_function_casadi_assign(&exfun_hess_ode, hess_ode_mem);
 
@@ -157,7 +157,7 @@ int main()
 	exfun_ode.casadi_n_in = &impl_odeFun_energy_balanced_model_n_in;
 	exfun_ode.casadi_n_out = &impl_odeFun_energy_balanced_model_n_out;
 
-	acados_size_t ode_size = external_function_casadi_calculate_size(&exfun_ode);
+	int ode_size = external_function_casadi_calculate_size(&exfun_ode);
 	void *ode_mem = malloc(ode_size);
 	external_function_casadi_assign(&exfun_ode, ode_mem);
 
@@ -171,7 +171,7 @@ int main()
 	exfun_jac_x_ode.casadi_n_in = &impl_jacFun_x_energy_balanced_model_n_in;
 	exfun_jac_x_ode.casadi_n_out = &impl_jacFun_x_energy_balanced_model_n_out;
 
-	acados_size_t jac_x_ode_size = external_function_casadi_calculate_size(&exfun_jac_x_ode);
+	int jac_x_ode_size = external_function_casadi_calculate_size(&exfun_jac_x_ode);
 	void *jac_x_ode_mem = malloc(jac_x_ode_size);
 	external_function_casadi_assign(&exfun_jac_x_ode, jac_x_ode_mem);
 
@@ -185,7 +185,7 @@ int main()
 	exfun_jac_xdot_ode.casadi_n_in = &impl_jacFun_xdot_energy_balanced_model_n_in;
 	exfun_jac_xdot_ode.casadi_n_out = &impl_jacFun_xdot_energy_balanced_model_n_out;
 
-	acados_size_t jac_xdot_ode_size = external_function_casadi_calculate_size(&exfun_jac_xdot_ode);
+	int jac_xdot_ode_size = external_function_casadi_calculate_size(&exfun_jac_xdot_ode);
 	void *jac_xdot_ode_mem = malloc(jac_xdot_ode_size);
 	external_function_casadi_assign(&exfun_jac_xdot_ode, jac_xdot_ode_mem);
 
@@ -199,7 +199,7 @@ int main()
 	exfun_jac_u_ode.casadi_n_in = &impl_jacFun_u_energy_balanced_model_n_in;
 	exfun_jac_u_ode.casadi_n_out = &impl_jacFun_u_energy_balanced_model_n_out;
 
-	acados_size_t jac_u_ode_size = external_function_casadi_calculate_size(&exfun_jac_u_ode);
+	int jac_u_ode_size = external_function_casadi_calculate_size(&exfun_jac_u_ode);
 	void *jac_u_ode_mem = malloc(jac_u_ode_size);
 	external_function_casadi_assign(&exfun_jac_u_ode, jac_u_ode_mem);
 
@@ -215,7 +215,7 @@ int main()
 * sim config
 ************************************************/
 
-		acados_size_t config_size = sim_config_calculate_size();
+		int config_size = sim_config_calculate_size();
 		void *config_mem = malloc(config_size);
 		sim_config *config = sim_config_assign(config_mem);
 
@@ -250,7 +250,7 @@ int main()
 * sim dims
 ************************************************/
 
-		acados_size_t dims_size = sim_dims_calculate_size();
+		int dims_size = sim_dims_calculate_size();
 		void *dims_mem = malloc(dims_size);
 		sim_dims *dims = sim_dims_assign(dims_mem);
 
@@ -261,7 +261,7 @@ int main()
 * sim opts
 ************************************************/
 
-		acados_size_t opts_size = config->opts_calculate_size(config, dims);
+		int opts_size = config->opts_calculate_size(config, dims);
 		void *opts_mem = malloc(opts_size);
 		sim_opts *opts = config->opts_assign(config, dims, opts_mem);
 		config->opts_initialize_default(config, dims, opts);
@@ -273,7 +273,7 @@ int main()
 * sim memory
 ************************************************/
 
-		acados_size_t mem_size = config->memory_calculate_size(config, dims, opts);
+		int mem_size = config->memory_calculate_size(config, dims, opts);
 		void *mem_mem = malloc(mem_size);
 		void *mem = config->memory_assign(config, dims, opts, mem_mem);
 
@@ -281,14 +281,14 @@ int main()
 * sim workspace
 ************************************************/
 
-		acados_size_t work_size = config->workspace_calculate_size(config, dims, opts);
+		int work_size = config->workspace_calculate_size(config, dims, opts);
 		void *work = malloc(work_size);
 
 /************************************************
 * sim in
 ************************************************/
 
-		acados_size_t in_size = sim_in_calculate_size(config, dims);
+		int in_size = sim_in_calculate_size(config, dims);
 		void *in_mem = malloc(in_size);
 		sim_in *in = sim_in_assign(config, dims, in_mem);
 
@@ -352,7 +352,7 @@ int main()
 * sim out
 ************************************************/
 
-		acados_size_t out_size = sim_out_calculate_size(config, dims);
+		int out_size = sim_out_calculate_size(config, dims);
 		void *out_mem = malloc(out_size);
 		sim_out *out = sim_out_assign(config, dims, out_mem);
 
