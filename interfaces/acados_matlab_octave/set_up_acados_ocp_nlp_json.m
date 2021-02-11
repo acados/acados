@@ -68,7 +68,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     if isfield(obj.opts_struct, 'qp_solver_cond_N')
         ocp_json.solver_options.qp_solver_cond_N = obj.opts_struct.qp_solver_cond_N;
     else
-        ocp_json.solver_options.qp_solver_cond_N = model.param_scheme_N;
+        ocp_json.solver_options.qp_solver_cond_N = obj.opts_struct.param_scheme_N;
     end
     ocp_json.solver_options.qp_solver_iter_max = obj.opts_struct.qp_solver_iter_max;
     if isfield(obj.opts_struct, 'qp_solver_tol_stat')
