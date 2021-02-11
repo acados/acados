@@ -204,6 +204,7 @@ function ocp_generate_c_code(obj)
             end
         end
     end
+    opts.time_steps = reshape(num2cell(opts.time_steps), [1, dims.N]);
     obj.acados_ocp_nlp_json.solver_options = opts;
 
     % parameter values
