@@ -287,6 +287,7 @@ void sim_irk_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->sens_hess = false;
     opts->jac_reuse = true;
     opts->exact_z_output = false;
+    opts->cost_propagation = false;
 
     // TODO(oj): check if constr h or cost depend on z, turn on in this case only.
     if (dims->nz > 0)
@@ -812,10 +813,17 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     double *S_adj_out = out->S_adj;
     double *S_algebraic = out->S_algebraic;
 
+    // // for cost propagation only
+    // struct blasfeo_dvec *grad_tmp = workspace->grad_tmp;
+    // struct blasfeo_dvec *cost_grad = workspace->cost_grad;
+    // struct blasfeo_dmat *hess_tmp = workspace->hess_tmp;
+    // struct blasfeo_dmat *cost_hess = workspace->cost_hess;
+    // struct blasfeo_dmat *tmp_nx_nu = workspace->tmp_nx_nu;
+
 	// declare
     acados_timer timer, timer_ad, timer_la;
 
-    double a;
+    double a, b;
     struct blasfeo_dmat *dG_dK_ss;
     struct blasfeo_dmat *dG_dxu_ss;
     struct blasfeo_dmat *dK_dxu_ss;
@@ -916,6 +924,12 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         blasfeo_dgese(nx + nu, nx + nu, 0.0, Hess, 0, 0);
     }
 
+    // if (opts->cost_propagation){
+    //     // cost_grad = zeros
+    //     blasfeo_dvecse(nx+nu, 0.0, cost_grad, 0);
+    //     blasfeo_dgese(nx+nu, nx+nu, 0.0, cost_hess, 0, 0);
+    // }
+
     // pack
     blasfeo_pack_dvec(nx, in->x, 1, xn, 0);
     blasfeo_pack_dmat(nx, nx + nu, in->S_forw, nx, S_forw, 0, 0);
@@ -999,8 +1013,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     blasfeo_daxpy(nx, a, K, jj * nx, xt, 0, xt, 0);
                 }
                 impl_ode_xdot_in.xi = ii * nx;  // use k_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
-                impl_ode_z_in.xi    = ns * nx + ii * nz;
-                                              // use z_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
+                impl_ode_z_in.xi = ns * nx + ii * nz;
+                                // use z_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
                 impl_ode_res_out.xi = ii * (nx + nz);  // store output in this position of rG
 
                 // compute the residual of implicit ode at time t_ii
