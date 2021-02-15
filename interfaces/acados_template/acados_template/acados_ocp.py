@@ -2046,7 +2046,8 @@ class AcadosOcpOptions:
 
     @property
     def qp_solver_cond_N(self):
-        """QP solver: New horizon after partial condensing"""
+        """QP solver: New horizon after partial condensing.
+        Set to N by default -> no condensing."""
         return self.__qp_solver_cond_N
 
     @property
@@ -2078,12 +2079,12 @@ class AcadosOcpOptions:
 
     @property
     def alpha_min(self):
-        """Minimal step size for globalization MERIT_BACKTRACKING"""
+        """Minimal step size for globalization MERIT_BACKTRACKING, default: 0.05."""
         return self.__alpha_min
 
     @property
     def alpha_reduction(self):
-        """Step size reduction factor for globalization MERIT_BACKTRACKING"""
+        """Step size reduction factor for globalization MERIT_BACKTRACKING, default: 0.7."""
         return self.__alpha_reduction
 
     @property
@@ -2441,7 +2442,20 @@ class AcadosOcpOptions:
 
 class AcadosOcp:
     """
-    class containing the full description of the optimal control problem
+    class containing the full description of the optimal control problem.
+    This object can be used to create an AcadosOcpSolver.
+
+    The class has the following properties that can be modified to formulate a specific OCP, see below:
+
+        - dims of type AcadosOcpDims
+        - model of type AcadosModel
+        - cost of type AcadosOcpCost
+        - constraints of type AcadosOcpConstraints
+        - solver_options of type AcadosOcpOptions
+
+        - acados_include_path (set automatically)
+        - acados_lib_path (set automatically)
+        - parameter_values - used to initialize the parameters (can be changed)
     """
     def __init__(self, acados_path=''):
         """
