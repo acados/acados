@@ -50,8 +50,9 @@ class AcadosModel():
         self.z = []             #: CasADi variable describing the algebraic variables of the DAE
         self.p = []             #: CasADi variable describing parameters of the DAE
         # dynamics
-        self.f_impl_expr = None #: CasADi expression for the implicit dynamics :math:`F(\dot{x}, x, u, z) = 0`
-        self.f_expl_expr = None #: CasADi expression for the explicit dynamics :math:`\dot{x} = f(x, u)`
+        self.f_impl_expr = None #: CasADi expression for the implicit dynamics :math:`f_{impl}(\dot{x}, x, u, z, p) = 0`
+        self.f_expl_expr = None #: CasADi expression for the explicit dynamics :math:`\dot{x} = f_{expl}(x, u, p)`
+        self.disc_dyn_expr = None #: CasADi expression for the discrete dynamics :math:`x_{+} = f_{disc}(x, u, p)`
         ## for OCP
         # constraints
         self.con_h_expr = None  #: CasADi expression for the constraint h
