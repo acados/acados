@@ -126,13 +126,26 @@ Some of the following restrictions may apply to matrices in the formulation:
 
 
 \section{Dynamics}
-The function $ f\ind{impl}: \mathbb{R}^{\nx}\times\mathbb{R}^{\nx}\times\mathbb{R}^{\nuu}\times\mathbb{R}^{\nz}\times\mathbb{R}^{\np} \rightarrow \mathbb{R}^{\nx+\nz}$ describes the dynamics as a fully implicit DAE.\\
-We offer to discretize $ F $ with a classic implicit Runge-Kutta (\code{irk}) or a structure exploiting implicit Runge-Kutta method (\code{irk\_gnsf}).\\
-Additionally, we offer an explicit Runge-Kutta integrator (\code{erk}), which can be used with explicit ODE models, i.e. models of the form
+The system dynamics can be formulated in different ways in \acados.
+
+\subsection*{Implicit Dynamics}
+The most general way to provide a continuous time ODE in \acados is to define the function $ f\ind{impl}: \mathbb{R}^{\nx}\times\mathbb{R}^{\nx}\times\mathbb{R}^{\nuu}\times\mathbb{R}^{\nz}\times\mathbb{R}^{\np} \rightarrow \mathbb{R}^{\nx+\nz}$ which is fully implicit DAE formulation describing the system as:
+\begin{align*}
+	f\ind{impl}(x, \dot{x}, u, z, p) = 0.
+\end{align*}
+We offer to discretize $ f\ind{impl} $ with a classic implicit Runge-Kutta (\code{irk}) or a structure exploiting implicit Runge-Kutta method (\code{irk\_gnsf}).
+
+\subsection*{Explicit Dynamics}
+Alternatively, we offer an explicit Runge-Kutta integrator (\code{erk}), which can be used with explicit ODE models, i.e. models of the form
 \begin{align*}
 f\ind{expl}(x,u,p) = \dot{x}
 \end{align*}
 
+\subsection*{Discrete Dynamics}
+Another option is to provide a discrete function that maps the state from shooting node $ i $ to the next shooting node, i.e. a function
+\begin{align*}
+x_{i+1} = f\ind{disc}(x_i,u_i,p_i)
+\end{align*}
 
 
 \newcommand{\mandatory}{yes}
@@ -143,12 +156,13 @@ f\ind{expl}(x,u,p) = \dot{x}
 		\toprule
 		Mathematical Expression & string identifier & data type & required \\ \midrule
 		$ f\ind{impl} $ respectively $ f\ind{expl} $ & \code{dyn\_expr\_f}    & \casadi~expression & \mandatory \\ \midrule
+		$f\ind{disc}$ & \code{dyn\_exp\_phi} & \casadi~expression & \mandatory \\ \midrule
 		- & \code{dyn\_type}    & string (\code{explicit} or \code{implicit}) & \mandatory \\
 		\bottomrule
 	\end{tabular}
 \end{table}
 
-
+\newpage
 \section{Cost}
 There are different \acados~modules to model the cost functions.
 \begin{itemize}
@@ -238,7 +252,6 @@ with matrices $ V\terminal_x, W\terminal $ of appropriate dimensions.
 	\end{tabular}
 \end{table}
 
-\newpage
 \subsection*{Cost module: \code{nonlinear least squares}}
 Set \code{cost\_type} to \code{nonlinear\_ls}.\\
 The cost function has the same form as in the linear least squares module.\\
