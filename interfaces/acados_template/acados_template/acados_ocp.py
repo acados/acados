@@ -505,27 +505,33 @@ class AcadosOcpCost:
     # initial stage
     @property
     def cost_type_0(self):
-        """cost type at initial stage"""
+        """cost type at initial shooting node (0)
+        -- string in {EXTERNAL, LINEAR_LS, NONLINEAR_LS}.
+        NOTE: cost at initial stage is the same as for intermediate shooting nodes if not set differently explicitly."""
         return self.__cost_type_0
 
     @property
     def Vx_0(self):
-        """:math:`V_x^0` - x matrix coefficient"""
+        """:math:`V_x^0` - x matrix coefficient
+        at initial shooting node (0)"""
         return self.__Vx_0
 
     @property
     def Vu_0(self):
-        """:math:`V_u^0` - u matrix coefficient"""
+        """:math:`V_u^0` - u matrix coefficient
+        at initial shooting node (0)"""
         return self.__Vu_0
 
     @property
     def Vz_0(self):
-        """:math:`V_z^0` - z matrix coefficient"""
+        """:math:`V_z^0` - z matrix coefficient
+        at initial shooting node (0)"""
         return self.__Vz_0
 
     @property
     def yref_0(self):
-        """:math:`y_{\text{ref}}^0` - reference"""
+        """:math:`y_{\text{ref}}^0` - reference
+        at initial shooting node (0)"""
         return self.__yref_0
 
     @yref_0.setter
@@ -562,52 +568,53 @@ class AcadosOcpCost:
     # Lagrange term
     @property
     def cost_type(self):
-        """cost type"""
+        """cost type at intermediate shooting nodes (1 to N-1)
+        -- string in {EXTERNAL, LINEAR_LS, NONLINEAR_LS}"""
         return self.__cost_type
 
     @property
     def W(self):
-        """:math:`W` - weight matrix"""
+        """:math:`W` - weight matrix at intermediate shooting nodes (1 to N-1)"""
         return self.__W
 
     @property
     def Vx(self):
-        """:math:`V_x` - x matrix coefficient"""
+        """:math:`V_x` - x matrix coefficient at intermediate shooting nodes (1 to N-1)"""
         return self.__Vx
 
     @property
     def Vu(self):
-        """:math:`V_u` - u matrix coefficient"""
+        """:math:`V_u` - u matrix coefficient at intermediate shooting nodes (1 to N-1)"""
         return self.__Vu
 
     @property
     def Vz(self):
-        """:math:`V_z` - z matrix coefficient"""
+        """:math:`V_z` - z matrix coefficient at intermediate shooting nodes (1 to N-1)"""
         return self.__Vz
 
     @property
     def yref(self):
-        """:math:`y_{\text{ref}}` - reference"""
+        """:math:`y_{\text{ref}}` - reference at intermediate shooting nodes (1 to N-1)"""
         return self.__yref
 
     @property
     def Zl(self):
-        """:math:`Z_l` - diagonal of Hessian wrt lower slack"""
+        """:math:`Z_l` - diagonal of Hessian wrt lower slack at intermediate shooting nodes (1 to N-1)"""
         return self.__Zl
 
     @property
     def Zu(self):
-        """:math:`Z_u` - diagonal of Hessian wrt upper slack"""
+        """:math:`Z_u` - diagonal of Hessian wrt upper slack at intermediate shooting nodes (1 to N-1)"""
         return self.__Zu
 
     @property
     def zl(self):
-        """:math:`z_l` - gradient wrt lower slack"""
+        """:math:`z_l` - gradient wrt lower slack at intermediate shooting nodes (1 to N-1)"""
         return self.__zl
 
     @property
     def zu(self):
-        """:math:`z_u` - gradient wrt upper slack"""
+        """:math:`z_u` - gradient wrt upper slack at intermediate shooting nodes (1 to N-1)"""
         return self.__zu
 
     @cost_type.setter
@@ -697,22 +704,24 @@ class AcadosOcpCost:
     # Mayer term
     @property
     def cost_type_e(self):
-        """cost type for Mayer term, either LINEAR_LS, NONLINEAR_LS, AUTO"""
+        """cost type at terminal shooting node (N)
+        -- string in {EXTERNAL, LINEAR_LS, NONLINEAR_LS}"""
         return self.__cost_type_e
 
     @property
     def W_e(self):
-        """:math:`W` - weight matrix"""
+        """:math:`W` - weight matrix at terminal shooting node (N)"""
         return self.__W_e
 
     @property
     def Vx_e(self):
-        """:math:`W^e` - weight matrix for Mayer term"""
+        """:math:`V_x^e` - x matrix coefficient for cost at terminal shooting node (N)"""
         return self.__Vx_e
 
     @property
     def yref_e(self):
-        """:math:`V_x^e` - x matrix coefficient for Mayer term"""
+        """:math:`y_{\text{ref}}^e` - cost reference
+        at terminal shooting node (N)"""
         return self.__yref_e
 
     @property
