@@ -705,6 +705,13 @@ def remove_x0_elimination(acados_ocp):
 
 
 class AcadosOcpSolver:
+    """
+    class to interact with the acados ocp solver C object:
+
+        :param acados_ocp: type AcadosOcp - description of the OCP for acados
+        :param json_file: name for the json file used to render the templated code - default: acados_ocp_nlp.json
+        :param simulink_opts: Options to configure Simulink S-function blocks, mainly to activate possible Inputs and Outputs
+    """
     if sys.platform=="win32":
         from ctypes import wintypes
         dlclose = WinDLL('kernel32', use_last_error=True).FreeLibrary  
@@ -713,9 +720,6 @@ class AcadosOcpSolver:
         dlclose = CDLL(None).dlclose
         dlclose.argtypes = [c_void_p]
 
-    """
-    class to interact with the acados ocp solver C object
-    """
     def __init__(self, acados_ocp, json_file='acados_ocp_nlp.json', simulink_opts=None):
 
         self.solver_created = False

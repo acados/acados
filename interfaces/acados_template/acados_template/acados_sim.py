@@ -252,13 +252,16 @@ class AcadosSimOpts:
 
 class AcadosSim:
     """
-    class containing the full description of the integrator
+    The class has the following properties that can be modified to formulate a specific simulation problem, see below:
+
+    - dims of type AcadosSimDims - are automatically detected from model
+    - model of type AcadosModel
+    - solver_options of type AcadosSimOpts
+
+    - acados_include_path (set automatically)
+    - acados_lib_path (set automatically)
     """
     def __init__(self, acados_path=''):
-        """
-        Keyword arguments:
-        acados_path -- path of your acados installation
-        """
         if acados_path == '':
             acados_path = get_acados_path()
         self.dims = AcadosSimDims()
