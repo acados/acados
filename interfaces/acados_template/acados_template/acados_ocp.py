@@ -128,7 +128,7 @@ class AcadosOcpDims:
 
     @property
     def nh_e(self):
-        """:math:`n_{h}^e` - number of nonlinear constraints at t=T"""
+        """:math:`n_{h}^e` - number of nonlinear constraints at shooting node N"""
         return self.__nh_e
 
     @property
@@ -138,7 +138,7 @@ class AcadosOcpDims:
 
     @property
     def nphi_e(self):
-        """:math:`n_{\phi}^e` - number of convex-over-nonlinear constraints at t=T"""
+        """:math:`n_{\phi}^e` - number of convex-over-nonlinear constraints at shooting node N"""
         return self.__nphi_e
 
     @property
@@ -158,7 +158,7 @@ class AcadosOcpDims:
 
     @property
     def nbx_e(self):
-        """:math:`n_{b_x}` - number of state bounds at t=T"""
+        """:math:`n_{b_x}` - number of state bounds at shooting node N"""
         return self.__nbx_e
 
     @property
@@ -173,7 +173,7 @@ class AcadosOcpDims:
 
     @property
     def nsbx_e(self):
-        """:math:`n_{{sb}^e_{x}}` - number of soft state bounds at t=T"""
+        """:math:`n_{{sb}^e_{x}}` - number of soft state bounds at shooting node N"""
         return self.__nsbx_e
 
     @property
@@ -188,7 +188,7 @@ class AcadosOcpDims:
 
     @property
     def nsg_e(self):
-        """:math:`n_{{sg}^e}` - number of soft general linear constraints at t=T"""
+        """:math:`n_{{sg}^e}` - number of soft general linear constraints at shooting node N"""
         return self.__nsg_e
 
     @property
@@ -198,7 +198,7 @@ class AcadosOcpDims:
 
     @property
     def nsh_e(self):
-        """:math:`n_{{sh}}^e` - number of soft nonlinear constraints at t=T"""
+        """:math:`n_{{sh}}^e` - number of soft nonlinear constraints at shooting node N"""
         return self.__nsh_e
 
     @property
@@ -208,7 +208,7 @@ class AcadosOcpDims:
 
     @property
     def nsphi_e(self):
-        """:math:`n_{{s\phi}^e}` - number of soft convex-over-nonlinear constraints at t=T"""
+        """:math:`n_{{s\phi}^e}` - number of soft convex-over-nonlinear constraints at shooting node N"""
         return self.__nsphi_e
 
     @property
@@ -218,7 +218,7 @@ class AcadosOcpDims:
 
     @property
     def ns_e(self):
-        """:math:`n_{s}^e` - total number of slacks at t=T"""
+        """:math:`n_{s}^e` - total number of slacks at shooting node N"""
         return self.__ns_e
 
     @property
@@ -228,7 +228,7 @@ class AcadosOcpDims:
 
     @property
     def ng_e(self):
-        """:math:`n_{g}^e` - number of general polytopic constraints at t=T"""
+        """:math:`n_{g}^e` - number of general polytopic constraints at shooting node N"""
         return self.__ng_e
 
     @property
@@ -828,7 +828,7 @@ class AcadosOcpConstraints:
         self.__lbx     = np.array([])
         self.__ubx     = np.array([])
         self.__idxbx   = np.array([])
-        # bounds on x at t=T
+        # bounds on x at shooting node N
         self.__lbx_e   = np.array([])
         self.__ubx_e   = np.array([])
         self.__idxbx_e = np.array([])
@@ -841,20 +841,20 @@ class AcadosOcpConstraints:
         self.__ug      = np.array([])
         self.__D       = np.zeros((0,0))
         self.__C       = np.zeros((0,0))
-        # polytopic constraints at t=T
+        # polytopic constraints at shooting node N
         self.__C_e     = np.zeros((0,0))
         self.__lg_e    = np.array([])
         self.__ug_e    = np.array([])
         # nonlinear constraints
         self.__lh      = np.array([])
         self.__uh      = np.array([])
-        # nonlinear constraints at t=T
+        # nonlinear constraints at shooting node N
         self.__uh_e    = np.array([])
         self.__lh_e    = np.array([])
         # convex-over-nonlinear constraints
         self.__lphi    = np.array([])
         self.__uphi    = np.array([])
-        # nonlinear constraints at t=T
+        # nonlinear constraints at shooting node N
         self.__uphi_e = np.array([])
         self.__lphi_e = np.array([])
         # SLACK BOUNDS
@@ -866,7 +866,7 @@ class AcadosOcpConstraints:
         self.__lsbu   = np.array([])
         self.__usbu   = np.array([])
         self.__idxsbu = np.array([])
-        # soft bounds on x at t=T
+        # soft bounds on x at shooting node N
         self.__lsbx_e  = np.array([])
         self.__usbx_e  = np.array([])
         self.__idxsbx_e= np.array([])
@@ -882,15 +882,15 @@ class AcadosOcpConstraints:
         self.__lsphi  = np.array([])
         self.__usphi  = np.array([])
         self.__idxsphi  = np.array([])
-        # soft bounds on general linear constraints at t=T
+        # soft bounds on general linear constraints at shooting node N
         self.__lsg_e    = np.array([])
         self.__usg_e    = np.array([])
         self.__idxsg_e  = np.array([])
-        # soft bounds on nonlinear constraints at t=T
+        # soft bounds on nonlinear constraints at shooting node N
         self.__lsh_e    = np.array([])
         self.__ush_e    = np.array([])
         self.__idxsh_e  = np.array([])
-        # soft bounds on nonlinear constraints at t=T
+        # soft bounds on nonlinear constraints at shooting node N
         self.__lsphi_e    = np.array([])
         self.__usphi_e    = np.array([])
         self.__idxsphi_e  = np.array([])
@@ -899,187 +899,239 @@ class AcadosOcpConstraints:
     # types
     @property
     def constr_type(self):
-        """Constraints type"""
+        """Constraints type for shooting nodes 0 to N-1. string in {BGH, BGP}.
+        default: BGH; BGP is for convex over nonlinear"""
         return self.__constr_type
 
     @property
     def constr_type_e(self):
-        """Constraints type t=T"""
+        """Constraints type for shooting nodes 0 to N. string in {BGH, BGP}.
+        default: BGH; BGP is for convex over nonlinear"""
         return self.__constr_type_e
 
     # initial bounds on x
     @property
     def lbx_0(self):
-        """:math:`\\underline{x_0}` - lower bounds on x0"""
+        """:math:`\\underline{x_0}` - lower bounds on x at initial stage 0"""
         return self.__lbx_0
 
     @property
     def ubx_0(self):
-        """:math:`\\bar{x_0}` - upper bounds on x0"""
+        """:math:`\\bar{x_0}` - upper bounds on x at initial stage 0"""
         return self.__ubx_0
 
     @property
     def Jbx_0(self):
-        """:math:`J_{bx,0}` - matrix coefficient for bounds on x0"""
+        """:math:`J_{bx,0}` - matrix coefficient for bounds on x at initial stage 0 -
+        internally translated into idxbx_0"""
         print_J_to_idx_note()
         return self.__idxbx_0
 
     @property
     def idxbx_0(self):
-        """indexes of bounds on x0"""
+        """indices of bounds on x at initial stage 0
+        -- can be set automatically via x0"""
         return self.__idxbx_0
 
     @property
     def idxbxe_0(self):
-        """indexes of bounds on x0 that are equalities (set automatically)"""
+        """indices of bounds on x0 that are equalities -- can be set automatically via x0"""
         return self.__idxbxe_0
 
     # bounds on x
     @property
     def lbx(self):
-        """:math:`\\underline{x}` - lower bounds on x"""
+        """:math:`\\underline{x}` - lower bounds on x
+        at intermediate shooting nodes 1 to N-1"""
         return self.__lbx
 
     @property
     def ubx(self):
-        """:math:`\\bar{x}` - upper bounds on x"""
+        """:math:`\\bar{x}` - upper bounds on x
+        at intermediate shooting nodes 1 to N-1"""
         return self.__ubx
 
     @property
     def idxbx(self):
-        """indexes of bounds on x (defines :math:`J_{bx}`)"""
+        """indices of bounds on x (defines :math:`J_{bx}`)
+        at intermediate shooting nodes 1 to N-1"""
         return self.__idxbx
 
     @property
     def Jbx(self):
-        """:math:`J_{bx}` - matrix coefficient for bounds on x"""
+        """:math:`J_{bx}` - matrix coefficient for bounds on x
+        at intermediate shooting nodes 1 to N-1;
+        translated internally into idxbx"""
         print_J_to_idx_note()
         return self.__idxbx
 
-    # bounds on x at t=T
+    # bounds on x at shooting node N
     @property
     def lbx_e(self):
-        """:math:`\\underline{x}^e` - lower bounds on x at t=T"""
+        """:math:`\\underline{x}^e` - lower bounds on x
+        at terminal shooting node N"""
         return self.__lbx_e
 
     @property
     def ubx_e(self):
-        """:math:`\\bar{x}^e` - upper bounds on x at t=T"""
+        """:math:`\\bar{x}^e` - upper bounds on x
+        at terminal shooting node N"""
         return self.__ubx_e
 
     @property
     def idxbx_e(self):
-        """indexes for bounds on x at t=T (defines :math:`J_{bx}^e`)"""
+        """indices for bounds on x
+        at terminal shooting node N (defines :math:`J_{bx}^e`)"""
         return self.__idxbx_e
 
     @property
     def Jbx_e(self):
-        """:math:`J_{bx}^e` matrix coefficient for bounds on x at t=T"""
+        """:math:`J_{bx}^e` matrix coefficient for bounds on x
+        at terminal shooting node N"""
         print_J_to_idx_note()
         return self.__idxbx_e
 
     # bounds on u
     @property
     def lbu(self):
-        """:math:`\\underline{u}` - lower bounds on u"""
+        """:math:`\\underline{u}` - lower bounds on u
+        at shooting nodes 0 to N-1;
+        """
         return self.__lbu
 
     @property
     def ubu(self):
-        """:math:`\\bar{u}` - upper bounds on u"""
+        """:math:`\\bar{u}` - upper bounds on u
+        at shooting nodes 0 to N-1;
+        """
         return self.__ubu
 
     @property
     def idxbu(self):
-        """indexes of bounds on u (defines :math:`J_{bu}`)"""
+        """indices of bounds on u (defines :math:`J_{bu}`)
+        at shooting nodes 0 to N-1;
+        """
         return self.__idxbu
 
     @property
     def Jbu(self):
-        """:math:`J_{bu}` - matrix coefficient for bounds on u"""
+        """:math:`J_{bu}` - matrix coefficient for bounds on u
+        at shooting nodes 0 to N-1;
+        translated internally to idxbu
+        """
         print_J_to_idx_note()
         return self.__idxbu
 
     # polytopic constraints
     @property
     def C(self):
-        """:math:`C` - C matrix in lg <= D * u + C * x <= ug"""
+        """:math:`C` - C matrix in lg <= D * u + C * x <= ug
+        at shooting nodes 0 to N-1;
+        """
         return self.__C
 
     @property
     def D(self):
-        """:math:`D` - D matrix in lg <= D * u + C * x <= ug"""
+        """:math:`D` - D matrix in lg <= D * u + C * x <= ug
+        at shooting nodes 0 to N-1;
+        """
         return self.__D
 
     @property
     def lg(self):
-        """:math:`\\underline{g}` - lower bound for general polytopic inequalities"""
+        """:math:`\\underline{g}` - lower bound for general polytopic inequalities.
+        at shooting nodes 0 to N-1;
+        """
         return self.__lg
 
     @property
     def ug(self):
-        """:math:`\\bar{g}` - upper bound for general polytopic inequalities"""
+        """:math:`\\bar{g}` - upper bound for general polytopic inequalities.
+        at shooting nodes 0 to N-1;
+        """
         return self.__ug
 
-    # polytopic constraints at t=T
+    # polytopic constraints at shooting node N
     @property
     def C_e(self):
-        """:math:`C^e` - C matrix at t=T"""
+        """:math:`C^e` - C matrix at shooting node N.
+        at shooting node N;
+        """
         return self.__C_e
 
     @property
     def lg_e(self):
-        """:math:`\\underline{g}^e` - lower bound on general polytopic inequalities at t=T"""
+        """:math:`\\underline{g}^e` - lower bound on general polytopic inequalities
+        at shooting node N;
+        """
         return self.__lg_e
 
     @property
     def ug_e(self):
-        """:math:`\\bar{g}^e` - upper bound on general polytopic inequalities at t=T"""
+        """:math:`\\bar{g}^e` - upper bound on general polytopic inequalities
+        at shooting node N;
+        """
         return self.__ug_e
 
 
     # nonlinear constraints
     @property
     def lh(self):
-        """:math:`\\underline{h}` - lower bound for nonlinear inequalities"""
+        """:math:`\\underline{h}` - lower bound for nonlinear inequalities
+        at shooting nodes 0 to N-1;
+        """
         return self.__lh
 
     @property
     def uh(self):
-        """:math:`\\bar{h}` - upper bound for nonlinear inequalities"""
+        """:math:`\\bar{h}` - upper bound for nonlinear inequalities
+        at shooting nodes 0 to N-1;
+        """
         return self.__uh
 
-    # nonlinear constraints at t=T
+    # nonlinear constraints at shooting node N
     @property
     def lh_e(self):
-        """:math:`\\underline{h}^e` - lower bound on nonlinear inequalities at t=T"""
+        """:math:`\\underline{h}^e` - lower bound on nonlinear inequalities
+        at shooting node N;
+        """
         return self.__lh_e
 
     @property
     def uh_e(self):
-        """:math:`\\bar{h}^e` - upper bound on nonlinear inequalities at t=T"""
+        """:math:`\\bar{h}^e` - upper bound on nonlinear inequalities
+        at shooting node N;
+        """
         return self.__uh_e
 
     # convex-over-nonlinear constraints
     @property
     def lphi(self):
-        """:math:`\\underline{\phi}` - lower bound for convex-over-nonlinear inequalities"""
+        """:math:`\\underline{\phi}` - lower bound for convex-over-nonlinear inequalities
+        at shooting nodes 0 to N-1;
+        """
         return self.__lphi
 
     @property
     def uphi(self):
-        """:math:`\\bar{\phi}` - upper bound for convex-over-nonlinear inequalities"""
+        """:math:`\\bar{\phi}` - upper bound for convex-over-nonlinear inequalities
+        at shooting nodes 0 to N-1;
+        """
         return self.__uphi
 
-    # convex-over-nonlinear constraints at t=T
+    # convex-over-nonlinear constraints at shooting node N
     @property
     def lphi_e(self):
-        """:math:`\\underline{\phi}^e` - lower bound on convex-over-nonlinear inequalities at t=T"""
+        """:math:`\\underline{\phi}^e` - lower bound on convex-over-nonlinear inequalities
+        at shooting node N;
+        """
         return self.__lphi_e
 
     @property
     def uphi_e(self):
-        """:math:`\\bar{\phi}^e` - upper bound on convex-over-nonlinear inequalities at t=T"""
+        """:math:`\\bar{\phi}^e` - upper bound on convex-over-nonlinear inequalities
+        at shooting node N;
+        """
         return self.__uphi_e
 
 
@@ -1087,83 +1139,103 @@ class AcadosOcpConstraints:
     # soft bounds on x
     @property
     def lsbx(self):
-        """lower bounds on slacks corresponding to soft lower bounds on x"""
+        """lower bounds on slacks corresponding to soft lower bounds on x
+        at stages 1 to N-1;
+        not required - zeros by default"""
         return self.__lsbx
 
     @property
     def usbx(self):
-        """upper bounds on slacks corresponding to soft upper bounds on x"""
+        """upper bounds on slacks corresponding to soft upper bounds on x
+        at stages 1 to N-1;
+        not required - zeros by default"""
         return self.__usbx
 
     @property
     def idxsbx(self):
-        """indexes of soft bounds on x within the indices of bounds on x"""
+        """indices of soft bounds on x within the indices of bounds on x
+        at stages 1 to N-1"""
         return self.__idxsbx
 
     @property
     def Jsbx(self):
-        """:math:`J_{sbx}` - matrix coefficient for soft bounds on x"""
+        """:math:`J_{sbx}` - matrix coefficient for soft bounds on x
+        at stages 1 to N-1;
+        internally translated into idxsbx"""
         print_J_to_idx_note()
         return self.__idxsbx
 
     # soft bounds on u
     @property
     def lsbu(self):
-        """lower bounds on slacks corresponding to soft lower bounds on u"""
+        """lower bounds on slacks corresponding to soft lower bounds on u
+        at stages 0 to N-1;
+        not required - zeros by default"""
         return self.__lsbu
 
     @property
     def usbu(self):
-        """upper bounds on slacks corresponding to soft upper bounds on u"""
+        """upper bounds on slacks corresponding to soft upper bounds on u
+        at stages 0 to N-1;
+        not required - zeros by default"""
         return self.__usbu
 
     @property
     def idxsbu(self):
-        """indexes of soft bounds on u within the indices of bounds on u"""
+        """indices of soft bounds on u within the indices of bounds on u
+        at stages 0 to N-1;"""
         return self.__idxsbu
 
     @property
     def Jsbu(self):
-        """:math:`J_{sbu}` - matrix coefficient for soft bounds on u"""
+        """:math:`J_{sbu}` - matrix coefficient for soft bounds on u
+        at stages 0 to N-1;
+        internally translated into idxsbu"""
         print_J_to_idx_note()
         return self.__idxsbu
 
-    # soft bounds on x at t=T
+    # soft bounds on x at shooting node N
     @property
     def lsbx_e(self):
-        """lower bounds on slacks corresponding to soft lower bounds on x at t=T"""
+        """lower bounds on slacks corresponding to soft lower bounds on x at shooting node N.
+        not required - zeros by default"""
         return self.__lsbx_e
 
     @property
     def usbx_e(self):
-        """upper bounds on slacks corresponding to soft upper bounds on x at t=T"""
+        """lower bounds on slacks corresponding to soft upper bounds on x at shooting node N.
+        not required - zeros by default"""
         return self.__usbx_e
 
     @property
     def idxsbx_e(self):
-        """indexes of soft bounds on x at t=T, within the indices of bounds on x at t=T"""
+        """indices of soft bounds on x at shooting node N, within the indices of bounds on x at shooting node N"""
         return self.__idxsbx_e
 
     @property
     def Jsbx_e(self):
-        """:math:`J_{sbx}^e` - matrix coefficient for soft bounds on x at t=T"""
+        """:math:`J_{sbx}^e` - matrix coefficient for soft bounds on x at shooting node N
+        internally translated into idxsbx_e"""
         print_J_to_idx_note()
         return self.__idxsbx_e
 
     # soft general linear constraints
     @property
     def lsg(self):
-        """lower bounds on slacks corresponding to soft lower bounds for general linear constraints"""
+        """lower bounds on slacks corresponding to soft lower bounds for general linear constraints
+        at stages 0 to N-1;
+        """
         return self.__lsg
 
     @property
     def usg(self):
-        """upper bounds on slacks corresponding to soft upper bounds for general linear constraints"""
+        """lower bounds on slacks corresponding to soft upper bounds for general linear constraints.
+        not required - zeros by default"""
         return self.__usg
 
     @property
     def idxsg(self):
-        """indexes of soft general linear constraints within the indices of general linear constraints"""
+        """indices of soft general linear constraints within the indices of general linear constraints"""
         return self.__idxsg
 
     @property
@@ -1175,17 +1247,19 @@ class AcadosOcpConstraints:
     # soft nonlinear constraints
     @property
     def lsh(self):
-        """lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints"""
+        """lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints
+        not required - zeros by default"""
         return self.__lsh
 
     @property
     def ush(self):
-        """upper bounds on slacks corresponding to soft upper bounds for nonlinear constraints"""
+        """lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints
+        not required - zeros by default"""
         return self.__ush
 
     @property
     def idxsh(self):
-        """indexes of soft nonlinear constraints within the indices of nonlinear constraints"""
+        """indices of soft nonlinear constraints within the indices of nonlinear constraints"""
         return self.__idxsh
 
     @property
@@ -1197,96 +1271,107 @@ class AcadosOcpConstraints:
     # soft bounds on convex-over-nonlinear constraints
     @property
     def lsphi(self):
-        """lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints"""
+        """lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints.
+        not required - zeros by default"""
         return self.__lsphi
 
     @property
     def usphi(self):
-        """upper bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints"""
+        """lower bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints.
+        not required - zeros by default"""
         return self.__usphi
 
     @property
     def idxsphi(self):
-        """indexes of soft convex-over-nonlinear constraints within the indices of nonlinear constraints"""
+        """indices of soft convex-over-nonlinear constraints within the indices of nonlinear constraints"""
         return self.__idxsphi
 
     @property
     def Jsphi(self):
-        """:math:`J_{s, \phi}` - matrix coefficient for soft bounds on convex-over-nonlinear constraints"""
+        """:math:`J_{s, \phi}` - matrix coefficient for soft bounds on convex-over-nonlinear constraints.
+        Internally translated into idxsphi"""
         print_J_to_idx_note()
         return self.__idxsphi
 
 
-    # soft bounds on general linear constraints at t=T
+    # soft bounds on general linear constraints at shooting node N
     @property
     def lsg_e(self):
-        """lower bounds on slacks corresponding to soft lower bounds for general linear constraints at t=T"""
+        """lower bounds on slacks corresponding to soft lower bounds for general linear constraints at shooting node N.
+        not required - zeros by default"""
         return self.__lsg_e
 
     @property
     def usg_e(self):
-        """upper bounds on slacks corresponding to soft upper bounds for general linear constraints at t=T"""
+        """lower bounds on slacks corresponding to soft upper bounds for general linear constraints at shooting node N.
+        not required - zeros by default"""
         return self.__usg_e
 
     @property
     def idxsg_e(self):
-        """indexes of soft general linear constraints at t=T within the indices of general linear constraints at t=T"""
+        """indices of soft general linear constraints at shooting node N within the indices of general linear constraints at shooting node N."""
         return self.__idxsg_e
 
     @property
     def Jsg_e(self):
-        """:math:`J_{s,h}^e` - matrix coefficient for soft bounds on general linear constraints at t=T"""
+        """:math:`J_{s,h}^e` - matrix coefficient for soft bounds on general linear constraints at shooting node N"""
         print_J_to_idx_note()
         return self.__idxsg_e
 
 
-    # soft bounds on nonlinear constraints at t=T
+    # soft bounds on nonlinear constraints at shooting node N
     @property
     def lsh_e(self):
-        """lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints at t=T"""
+        """lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints at shooting node N.
+        not required - zeros by default"""
         return self.__lsh_e
 
     @property
     def ush_e(self):
-        """upper bounds on slacks corresponding to soft upper bounds for nonlinear constraints at t=T"""
+        """upper bounds on slacks corresponding to soft upper bounds for nonlinear constraints at shooting node N
+        not required - zeros by default"""
         return self.__ush_e
 
     @property
     def idxsh_e(self):
-        """indexes of soft nonlinear constraints at t=T within the indices of nonlinear constraints at t=T"""
+        """indices of soft nonlinear constraints at shooting node N within the indices of nonlinear constraints at shooting node N"""
         return self.__idxsh_e
 
     @property
     def Jsh_e(self):
-        """:math:`J_{s,h}^e` - matrix coefficient for soft bounds on nonlinear constraints at t=T"""
+        """:math:`J_{s,h}^e` - matrix coefficient for soft bounds on nonlinear constraints at shooting node N"""
         print_J_to_idx_note()
         return self.__idxsh_e
 
-    # soft bounds on convex-over-nonlinear constraints at t=T
+    # soft bounds on convex-over-nonlinear constraints at shooting node N
     @property
     def lsphi_e(self):
-        """lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints at t=T"""
+        """lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints at shooting node N.
+        not required - zeros by default"""
         return self.__lsphi_e
 
     @property
     def usphi_e(self):
-        """upper bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints at t=T"""
+        """upper bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints at shooting node N.
+        not required - zeros by default"""
         return self.__usphi_e
 
     @property
     def idxsphi_e(self):
-        """indexes of soft nonlinear constraints at t=T within the indices of nonlinear constraints at t=T"""
+        """indices of soft nonlinear constraints at shooting node N within the indices of nonlinear constraints at shooting node N"""
         return self.__idxsphi_e
 
     @property
     def Jsphi_e(self):
-        """:math:`J_{sh}^e` - matrix coefficient for soft bounds on convex-over-nonlinear constraints at t=T"""
+        """:math:`J_{sh}^e` - matrix coefficient for soft bounds on convex-over-nonlinear constraints at shooting node N.
+        Internally translated to idxsphi_e"""
         print_J_to_idx_note()
         return self.__idxsphi_e
 
     @property
     def x0(self):
-        """:math:`\\bar{x}_0` - initial state"""
+        """:math:`\\bar{x}_0` - initial state --
+        internally translated into idxbx_0, lbx_0, ubx_0, idxbxe_0 """
         print("x0 is converted to lbx_0, ubx_0, idxbx_0")
         print("idxbx_0: ", self.__idxbx_0)
         print("lbx_0: ", self.__lbx_0)
@@ -1418,7 +1503,7 @@ class AcadosOcpConstraints:
         else:
             raise Exception('Invalid Jbu value. Exiting.')
 
-    # bounds on x at t=T
+    # bounds on x at shooting node N
     @lbx_e.setter
     def lbx_e(self, lbx_e):
         if type(lbx_e) == np.ndarray:
@@ -1478,7 +1563,7 @@ class AcadosOcpConstraints:
         else:
             raise Exception('Invalid ug value. Exiting.')
 
-    # polytopic constraints at t=T
+    # polytopic constraints at shooting node N
     @C_e.setter
     def C_e(self, C_e):
         if isinstance(C_e, np.ndarray) and len(C_e.shape) == 2:
@@ -1531,7 +1616,7 @@ class AcadosOcpConstraints:
         else:
             raise Exception('Invalid uphi value. Exiting.')
 
-    # nonlinear constraints at t=T
+    # nonlinear constraints at shooting node N
     @lh_e.setter
     def lh_e(self, lh_e):
         if type(lh_e) == np.ndarray:
@@ -1546,7 +1631,7 @@ class AcadosOcpConstraints:
         else:
             raise Exception('Invalid uh_e value. Exiting.')
 
-    # convex-over-nonlinear constraints at t=T
+    # convex-over-nonlinear constraints at shooting node N
     @lphi_e.setter
     def lphi_e(self, lphi_e):
         if type(lphi_e) == np.ndarray:
@@ -1620,7 +1705,7 @@ class AcadosOcpConstraints:
         else:
             raise Exception('Invalid Jsbu value. Exiting.')
 
-    # soft bounds on x at t=T
+    # soft bounds on x at shooting node N
     @lsbx_e.setter
     def lsbx_e(self, lsbx_e):
         if type(lsbx_e) == np.ndarray:
@@ -1739,7 +1824,7 @@ class AcadosOcpConstraints:
         else:
             raise Exception('Invalid Jsphi value, expected numpy array. Exiting.')
 
-    # soft bounds on general linear constraints at t=T
+    # soft bounds on general linear constraints at shooting node N
     @lsg_e.setter
     def lsg_e(self, lsg_e):
         if isinstance(lsg_e, np.ndarray):
@@ -1768,7 +1853,7 @@ class AcadosOcpConstraints:
         else:
             raise Exception('Invalid Jsg_e value, expected numpy array. Exiting.')
 
-    # soft bounds on nonlinear constraints at t=T
+    # soft bounds on nonlinear constraints at shooting node N
     @lsh_e.setter
     def lsh_e(self, lsh_e):
         if isinstance(lsh_e, np.ndarray):
@@ -1798,7 +1883,7 @@ class AcadosOcpConstraints:
             raise Exception('Invalid Jsh_e value, expected numpy array. Exiting.')
 
 
-    # soft bounds on convex-over-nonlinear constraints at t=T
+    # soft bounds on convex-over-nonlinear constraints at shooting node N
     @lsphi_e.setter
     def lsphi_e(self, lsphi_e):
         if isinstance(lsphi_e, np.ndarray):
@@ -1875,42 +1960,48 @@ class AcadosOcpOptions:
 
     @property
     def qp_solver(self):
-        """QP solver to be used in the NLP solver"""
+        """QP solver to be used in the NLP solver.
+        string in ('PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP')"""
         return self.__qp_solver
 
     @property
     def hessian_approx(self):
-        """Hessian approximation"""
+        """Hessian approximation.
+        string in ('GAUSS_NEWTON', 'EXACT')"""
         return self.__hessian_approx
 
     @property
     def integrator_type(self):
-        """Integrator type"""
+        """Integrator type.
+        string in ('ERK', 'IRK', 'GNSF', 'DISCRETE')"""
         return self.__integrator_type
 
     @property
     def nlp_solver_type(self):
-        """NLP solver"""
+        """NLP solver.
+        string in ('SQP', 'SQP_RTI')"""
         return self.__nlp_solver_type
 
     @property
     def globalization(self):
-        """Globalization type"""
+        """Globalization type in ('FIXED_STEP', 'MERIT_BACKTRACKING');
+        Note: preliminary implementation."""
         return self.__globalization
 
     @property
     def regularize_method(self):
-        """Regularization method for the Hessian"""
+        """Regularization method for the Hessian.
+        string in ('NO_REGULARIZE', 'MIRROR', 'PROJECT', 'PROJECT_REDUC_HESS', 'CONVEXIFY')"""
         return self.__regularize_method
 
     @property
     def nlp_solver_step_length(self):
-        """Fixed Newton step length"""
+        """Fixed Newton step length. Float > 0, default 1.0."""
         return self.__nlp_solver_step_length
 
     @property
     def levenberg_marquardt(self):
-        """Factor for LM regularization"""
+        """Factor for LM regularization - float > 0"""
         return self.__levenberg_marquardt
 
     @property
@@ -1925,12 +2016,12 @@ class AcadosOcpOptions:
 
     @property
     def sim_method_newton_iter(self):
-        """Number of Newton iterations in simulation method"""
+        """Number of Newton iterations in simulation method - integer, default: 3"""
         return self.__sim_method_newton_iter
 
     @property
     def sim_method_jac_reuse(self):
-        """Boolean determining if jacobians are reused within integrator"""
+        """Boolean determining if jacobians are reused within integrator, default: False"""
         return self.__sim_method_jac_reuse
 
     @property
@@ -1987,12 +2078,12 @@ class AcadosOcpOptions:
 
     @property
     def alpha_min(self):
-        """Minimal step size for globalization"""
+        """Minimal step size for globalization MERIT_BACKTRACKING"""
         return self.__alpha_min
 
     @property
     def alpha_reduction(self):
-        """Step size reduction factor for globalization"""
+        """Step size reduction factor for globalization MERIT_BACKTRACKING"""
         return self.__alpha_reduction
 
     @property
