@@ -228,6 +228,9 @@ class AcadosSimSolver:
         getattr(self.shared_lib, f"{model_name}_acados_get_sim_in").restype = c_void_p
         self.sim_in = getattr(self.shared_lib, f"{model_name}_acados_get_sim_in")()
 
+        getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver").restype = c_void_p
+        self.sim_solver = getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver")()
+
         nu = self.sim_struct.dims.nu
         nx = self.sim_struct.dims.nx
         nz = self.sim_struct.dims.nz
@@ -323,7 +326,10 @@ class AcadosSimSolver:
             getattr(self.shared_lib, f"{model_name}_acados_sim_update_params").argtypes = [POINTER(c_double)]
             value_data = cast(value_.ctypes.data, POINTER(c_double))
             getattr(self.shared_lib, f"{model_name}_acados_sim_update_params")(value_data, value_.shape[0])
-
+        elif field_ in ['xdot', 'z']:
+            # TODO(katrin): perform dimension check!
+            self.shared_lib.sim_solver_set.argtypes = [c_void_p, c_char_p, c_void_p]
+            self.shared_lib.sim_solver_set(self.sim_solver, field, value_data_p)
         elif field_ in self.settable:
             # TODO(oj): perform dimension check!
             self.shared_lib.sim_in_set.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
