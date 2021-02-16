@@ -56,7 +56,7 @@ N = 200
 # set simulation time
 sim.solver_options.T = Tf
 # set options
-sim.solver_options.integrator_type = 'ERK'
+sim.solver_options.integrator_type = 'IRK'
 sim.solver_options.num_stages = 4
 sim.solver_options.num_steps = 3
 sim.solver_options.newton_iter = 3 # for implicit integrator
@@ -75,6 +75,7 @@ simX[0,:] = x0
 for i in range(N):
     # set initial state
     acados_integrator.set("x", simX[i,:])
+    acados_integrator.set("xdot", np.zeros((nx,)))
     # solve
     status = acados_integrator.solve()
     # get solution
