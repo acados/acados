@@ -1808,9 +1808,7 @@ int {{ model.name }}_acados_update_params(nlp_solver_capsule * capsule, int stag
         {%- elif cost.cost_type_0 == "EXTERNAL" %}
             capsule->ext_cost_0_fun.set_param(&capsule->ext_cost_0_fun, p);
             capsule->ext_cost_0_fun_jac.set_param(&capsule->ext_cost_0_fun_jac, p);
-        //{%- if solver_options.hessian_approx == "EXACT" %}
             capsule->ext_cost_0_fun_jac_hess.set_param(&capsule->ext_cost_0_fun_jac_hess, p);
-        //{%- endif %}
         {% endif %}
         }
         else // 0 < stage < N
@@ -1838,9 +1836,7 @@ int {{ model.name }}_acados_update_params(nlp_solver_capsule * capsule, int stag
     {%- elif cost.cost_type_e == "EXTERNAL" %}
         capsule->ext_cost_e_fun.set_param(&capsule->ext_cost_e_fun, p);
         capsule->ext_cost_e_fun_jac.set_param(&capsule->ext_cost_e_fun_jac, p);
-    //{%- if solver_options.hessian_approx == "EXACT" %}
         capsule->ext_cost_e_fun_jac_hess.set_param(&capsule->ext_cost_e_fun_jac_hess, p);
-    //{%- endif %}
     {% endif %}
         // constraints
     {% if constraints.constr_type_e == "BGP" %}
