@@ -343,6 +343,13 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     }
 {%- endif %}
 
+{%- if solver_options.cost_discretization == "INTEGRATOR" %}
+    for (int i = 0; i < N; i++)
+        ocp_nlp_dims_set_dynamics(nlp_config, nlp_dims, i, "ny", &ny[i]);
+{%- endif %}
+
+
+
     /************************************************
     *  external functions
     ************************************************/
@@ -935,10 +942,11 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
 
 
 {%- if solver_options.cost_discretization == "INTEGRATOR" %}
-    ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, 0, "nls_y_fun_jac", &capsule->ext_cost_0_fun_jac_hess);
+    ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, 0, "nls_y_fun_jac", &capsule->cost_y_0_fun_jac_ut_xt);
     for (int i = 1; i < N; i++)
     {
-        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_y_fun_jac", &capsule->nls_y_fun_jac[i-1]);
+        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_y_fun_jac", &capsule->cost_y_fun_jac_ut_xt[i-1]);
+        // ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_y_fun_jac", &capsule->cost_y_fun_jac_ut_xt[i-1]);
     }
 {%- endif %}
 
