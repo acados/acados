@@ -50,6 +50,8 @@ typedef struct
     int nu;
     int nz;
 
+    int ny;  // for NLS cost propagation
+
 } sim_irk_dims;
 
 
@@ -66,6 +68,13 @@ typedef struct
     external_function_generic *impl_ode_jac_x_xdot_u_z;
     // hessian of implicit ode:
     external_function_generic *impl_ode_hess;
+
+    // for cost propagation
+    external_function_generic *nls_y_fun_jac;  // evaluation nls function and jacobian
+    struct blasfeo_dmat *W_chol;  // cholesky factor of weight matrix
+    struct blasfeo_dvec *y_ref;  // y_ref for NLS cost
+
+
 } irk_model;
 
 
@@ -133,6 +142,15 @@ typedef struct
     struct blasfeo_dmat dxkzu_dw0;  // size (2*nx + nu + nz) x (nx + nu)
     struct blasfeo_dmat tmp_dxkzu_dw0;  // size (2*nx + nu + nz) x (nx + nu)
 
+    /* the following variables are only available if (opts->cost_propagation) */
+    struct blasfeo_dmat *J_y_tilde;
+    struct blasfeo_dmat *tmp_ny_nux;
+    struct blasfeo_dmat *cost_hess;
+    struct blasfeo_dmat *S_forw_stage;
+    struct blasfeo_dvec *tmp_ny;
+    struct blasfeo_dvec *nls_res;
+    struct blasfeo_dvec *cost_grad;
+
 } sim_irk_workspace;
 
 
@@ -141,9 +159,12 @@ typedef struct
     double *xdot;  // xdot[NX] - initialization for state derivatives k within the integrator
     double *z;     // z[NZ] - initialization for algebraic variables z
 
-	double time_sim;
-	double time_ad;
-	double time_la;
+    double time_sim;
+    double time_ad;
+    double time_la;
+
+    double *cost_fun;
+
 } sim_irk_memory;
 
 
