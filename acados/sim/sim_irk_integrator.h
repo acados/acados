@@ -71,8 +71,6 @@ typedef struct
 
     // for cost propagation
     external_function_generic *nls_y_fun_jac;  // evaluation nls function and jacobian
-    struct blasfeo_dmat *W_chol;  // cholesky factor of weight matrix
-    struct blasfeo_dvec *y_ref;  // y_ref for NLS cost
 
 
 } irk_model;
@@ -145,11 +143,10 @@ typedef struct
     /* the following variables are only available if (opts->cost_propagation) */
     struct blasfeo_dmat *J_y_tilde;
     struct blasfeo_dmat *tmp_ny_nux;
-    struct blasfeo_dmat *cost_hess;
+    struct blasfeo_dmat *tmp_nux_ny;
     struct blasfeo_dmat *S_forw_stage;
     struct blasfeo_dvec *tmp_ny;
     struct blasfeo_dvec *nls_res;
-    struct blasfeo_dvec *cost_grad;
 
 } sim_irk_workspace;
 
@@ -164,6 +161,10 @@ typedef struct
     double time_la;
 
     double *cost_fun;
+    struct blasfeo_dmat *W_chol;  // cholesky factor of weight matrix
+    struct blasfeo_dvec *y_ref;  // y_ref for NLS cost
+    struct blasfeo_dvec *cost_grad;
+    struct blasfeo_dmat *cost_hess;
 
 } sim_irk_memory;
 
