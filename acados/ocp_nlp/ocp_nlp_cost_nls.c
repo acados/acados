@@ -420,6 +420,11 @@ void ocp_nlp_cost_nls_opts_set(void *config_, void *opts_, const char *field, vo
             opts->gauss_newton_hess = 0;
         }
     }
+    else if(!strcmp(field, "integrator_cost"))
+    {
+        int *opt_val = (int *) value;
+        opts->integrator_cost = *opt_val;
+    }
     else
     {
         printf("\nerror: field %s not available in ocp_nlp_cost_nls_opts_set\n", field);
@@ -510,6 +515,20 @@ double *ocp_nlp_cost_nls_memory_get_fun_ptr(void *memory_)
 }
 
 
+struct blasfeo_dmat *ocp_nlp_cost_nls_memory_get_W_chol_ptr(void *memory_)
+{
+    ocp_nlp_cost_nls_memory *memory = memory_;
+
+    return &memory->W_chol;
+}
+
+
+struct blasfeo_dvec *ocp_nlp_cost_nls_model_get_y_ref_ptr(void *in_)
+{
+    ocp_nlp_cost_nls_model *model = in_;
+
+    return &model->y_ref;
+}
 
 struct blasfeo_dvec *ocp_nlp_cost_nls_memory_get_grad_ptr(void *memory_)
 {
@@ -805,7 +824,7 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
     memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->tmp_ux, nu+nx);
 
     // scale
-    if(model->scaling!=1.0)
+    if (model->scaling!=1.0)
     {
         blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
         memory->fun *= model->scaling;
@@ -917,6 +936,8 @@ void ocp_nlp_cost_nls_config_initialize_default(void *config_)
     config->memory_assign = &ocp_nlp_cost_nls_memory_assign;
     config->memory_get_fun_ptr = &ocp_nlp_cost_nls_memory_get_fun_ptr;
     config->memory_get_grad_ptr = &ocp_nlp_cost_nls_memory_get_grad_ptr;
+    config->memory_get_W_chol_ptr = &ocp_nlp_cost_nls_memory_get_W_chol_ptr;
+    config->model_get_y_ref_ptr = &ocp_nlp_cost_nls_model_get_y_ref_ptr;
     config->memory_set_ux_ptr = &ocp_nlp_cost_nls_memory_set_ux_ptr;
     config->memory_set_tmp_ux_ptr = &ocp_nlp_cost_nls_memory_set_tmp_ux_ptr;
     config->memory_set_z_alg_ptr = &ocp_nlp_cost_nls_memory_set_z_alg_ptr;
