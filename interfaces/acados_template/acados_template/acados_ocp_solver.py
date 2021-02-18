@@ -877,6 +877,20 @@ class AcadosOcpSolver:
 
 
     def print_statistics(self):
+        """
+        prints statistics of previous solver run as a table:
+            - iter: iteration number
+            - res_stat: stationarity residual
+            - res_eq: residual wrt equality constraints (dynamics)
+            - res_ineq: residual wrt inequality constraints (constraints)
+            - res_comp: residual wrt complementarity conditions
+            - qp_stat: status of QP solver
+            - qp_iter: number of QP iterations
+            - qp_res_stat: stationarity residual of the last QP solution
+            - qp_res_eq: residual wrt equality constraints (dynamics) of the last QP solution
+            - qp_res_ineq: residual wrt inequality constraints (constraints)  of the last QP solution
+            - qp_res_comp: residual wrt complementarity conditions of the last QP solution
+        """
         stat = self.get_stats("statistics")
 
         if self.acados_ocp.solver_options.nlp_solver_type == 'SQP':
