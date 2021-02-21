@@ -706,7 +706,7 @@ def remove_x0_elimination(acados_ocp):
 
 class AcadosOcpSolver:
     """
-    class to interact with the acados ocp solver C object:
+    Class to interact with the acados ocp solver C object.
 
         :param acados_ocp: type AcadosOcp - description of the OCP for acados
         :param json_file: name for the json file used to render the templated code - default: acados_ocp_nlp.json
@@ -805,7 +805,7 @@ class AcadosOcpSolver:
 
     def solve(self):
         """
-        solve the ocp with current input
+        Solve the ocp with current input.
         """
         model = self.acados_ocp.model
 
@@ -817,9 +817,10 @@ class AcadosOcpSolver:
 
     def get(self, stage_, field_):
         """
-        get the last solution of the solver:
-            :param stage_: integer corresponding to shooting node
-            :param field_: string in ['x', 'u', 'z', 'pi', 'lam', 't', 'sl', 'su',]
+        Get the last solution of the solver:
+
+            :param stage: integer corresponding to shooting node
+            :param field: string in ['x', 'u', 'z', 'pi', 'lam', 't', 'sl', 'su',]
 
             .. note:: regarding lam, t: \n
                     the inequalities are internally organized in the following order: \n
@@ -921,7 +922,8 @@ class AcadosOcpSolver:
 
     def store_iterate(self, filename='', overwrite=False):
         """
-        stores the current iterate of the ocp solver in a json file
+        Stores the current iterate of the ocp solver in a json file.
+
             :param filename: if not set, use model_name + timestamp + '.json'
             :param overwrite: if false and filename exists add timestamp to filename
         """
@@ -956,7 +958,7 @@ class AcadosOcpSolver:
 
     def load_iterate(self, filename):
         """
-        loads the iterate stored in json file with filename into the ocp solver
+        Loads the iterate stored in json file with filename into the ocp solver.
         """
         if not os.path.isfile(filename):
             raise Exception('load_iterate: failed, file does not exist: ' + os.path.join(os.getcwd(), filename))
@@ -971,8 +973,9 @@ class AcadosOcpSolver:
 
     def get_stats(self, field_):
         """
-        get the information of the last solver call:
-            :param field_: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg', 'sqp_iter']
+        Get the information of the last solver call.
+
+            :param field: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg', 'sqp_iter']
         """
 
         fields = ['time_tot',  # total cpu time previous call
@@ -1024,7 +1027,7 @@ class AcadosOcpSolver:
 
     def get_cost(self):
         """
-        Returns the cost value of the current solution
+        Returns the cost value of the current solution.
         """
         # compute cost internally
         self.shared_lib.ocp_nlp_eval_cost.argtypes = [c_void_p, c_void_p, c_void_p]
@@ -1045,7 +1048,7 @@ class AcadosOcpSolver:
 
     def get_residuals(self):
         """
-        Returns an array of the form [res_stat, res_eq, res_ineq, res_comp]
+        Returns an array of the form [res_stat, res_eq, res_ineq, res_comp].
         """
         # compute residuals if RTI
         if self.acados_ocp.solver_options.nlp_solver_type == 'SQP_RTI':
@@ -1080,9 +1083,10 @@ class AcadosOcpSolver:
     # Note: this function should not be used anymore, better use cost_set, constraints_set
     def set(self, stage_, field_, value_):
         """
-        set numerical data inside the solver:
-            :param stage_: integer corresponding to shooting node
-            :param field_: string in ['x', 'u', 'pi', 'lam', 't', 'p']
+        Set numerical data inside the solver.
+
+            :param stage: integer corresponding to shooting node
+            :param field: string in ['x', 'u', 'pi', 'lam', 't', 'p']
 
             .. note:: regarding lam, t: \n
                     the inequalities are internally organized in the following order: \n
@@ -1163,10 +1167,11 @@ class AcadosOcpSolver:
 
     def cost_set(self, stage_, field_, value_, api='warn'):
         """
-        set numerical data in the cost module of the solver:
-            :param stage_: integer corresponding to shooting node
-            :param field_: string, e.g. 'yref', 'W', 'ext_cost_num_hess'
-            :param value_: of appropriate size
+        Set numerical data in the cost module of the solver.
+
+            :param stage: integer corresponding to shooting node
+            :param field: string, e.g. 'yref', 'W', 'ext_cost_num_hess'
+            :param value: of appropriate size
         """
         # cast value_ to avoid conversion issues
         value_ = value_.astype(float)
@@ -1230,10 +1235,11 @@ class AcadosOcpSolver:
 
     def constraints_set(self, stage_, field_, value_, api='warn'):
         """
-        set numerical data in the constraint module of the solver:
-            :param stage_: integer corresponding to shooting node
-            :param field_: string in ['lbx', 'ubx', 'lbu', 'ubu', 'lg', 'ug', 'lh', 'uh', 'uphi']
-            :param value_: of appropriate size
+        Set numerical data in the constraint module of the solver.
+
+            :param stage: integer corresponding to shooting node
+            :param field: string in ['lbx', 'ubx', 'lbu', 'ubu', 'lg', 'ug', 'lh', 'uh', 'uphi']
+            :param value: of appropriate size
         """
         # cast value_ to avoid conversion issues
         value_ = value_.astype(float)
@@ -1295,9 +1301,10 @@ class AcadosOcpSolver:
 
     def dynamics_get(self, stage_, field_):
         """
-        get numerical data from the dynamics module of the solver:
-            :param stage_: integer corresponding to shooting node
-            :param field_: string, e.g. 'A'
+        Get numerical data from the dynamics module of the solver:
+
+            :param stage: integer corresponding to shooting node
+            :param field: string, e.g. 'A'
         """
 
         field = field_
@@ -1333,9 +1340,10 @@ class AcadosOcpSolver:
 
     def options_set(self, field_, value_):
         """
-        set options of the solver:
-            :param field_: string, e.g. 'print_level', 'rti_phase', 'initialize_t_slacks', 'step_length', 'alpha_min', 'alpha_reduction'
-            :param value_: of type int, float
+        Set options of the solver.
+
+            :param field: string, e.g. 'print_level', 'rti_phase', 'initialize_t_slacks', 'step_length', 'alpha_min', 'alpha_reduction'
+            :param value: of type int, float
         """
         int_fields = ['print_level', 'rti_phase', 'initialize_t_slacks']
         double_fields = ['step_length', 'tol_eq', 'tol_stat', 'tol_ineq', 'tol_comp', 'alpha_min', 'alpha_reduction']
