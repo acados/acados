@@ -1,0 +1,47 @@
+// This file is used to draw the dependency graph of acados classes in the Python API documentation
+
+// the graph
+digraph ocp {
+        // some graph-specific definitions
+        graph [
+               rankdir = "LR"
+               ];
+
+        // define solver nodes
+        solver  [label="AcadosOcpSolver"
+                 href="https://docs.acados.org/python_api/index.html#acados_template.acados_ocp_solver.AcadosOcpSolver"];
+        ocp [label="<class> AcadosOcp | <dims> dims | <cost> cost | <constr> constr | <opts> opts | <model> model"
+             shape = "record"
+             href="https://docs.acados.org/python_api/index.html#acados_template.acados_ocp.AcadosOcp"];
+        model [label="AcadosModel"
+               href="https://docs.acados.org/python_api/index.html#acados_template.acados_model.AcadosModel"];
+        ocpdims [label="AcadosOcpDims"
+                 href="https://docs.acados.org/python_api/index.html#acados_template.acados_ocp.AcadosOcpDims"];
+        ocpcost [label="AcadosOcpCost"
+                 href="https://docs.acados.org/python_api/index.html#acados_template.acados_ocp.AcadosOcpCost"];
+        ocpconstr [label="AcadosOcpConstraints"
+                   href="https://docs.acados.org/python_api/index.html#acados_template.acados_ocp.AcadosOcpConstraints"];
+        ocpopts [label="AcadosOcpOptions"
+                 href="https://docs.acados.org/python_api/index.html#acados_template.acados_ocp.AcadosOcpOptions"];
+        // solver graph
+        ocp -> solver
+        model -> ocp:model;
+        ocpdims -> ocp:dims;
+        ocpcost -> ocp:cost;
+        ocpconstr -> ocp:constr;
+        ocpopts -> ocp:opts;
+
+        // define sim nodes
+        sim [label="<class> AcadosSim | <model> model| <dims> dims | <opts> opts"
+             shape = "record"
+             href="https://docs.acados.org/python_api/index.html#acados_template.acados_sim.AcadosSim"];
+        simdims [label="AcadosSimDims"
+                 href="https://docs.acados.org/python_api/index.html#acados_template.acados_sim.AcadosSimDims"];
+        simopts [label="AcadosSimOpts"
+                 href="https://docs.acados.org/python_api/index.html#acados_template.acados_sim.AcadosSimOpts"];
+
+        // sim graph
+        model -> sim:model;
+        simdims  -> sim:dims;
+        simopts  -> sim:opts;
+}
