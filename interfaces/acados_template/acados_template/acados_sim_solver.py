@@ -165,7 +165,10 @@ def sim_generate_casadi_functions(acados_sim):
 
 class AcadosSimSolver:
     """
-    class to interact with the acados integrator C object
+    Class to interact with the acados integrator C object.
+
+    :param acados_sim: type :py:class:`acados_template.acados_ocp.AcadosOcp` (takes values to generate an instance :py:class:`acados_template.acados_sim.AcadosSim`) or :py:class:`acados_template.acados_sim.AcadosSim`
+    :param json_file: Default: 'acados_sim.json'
     """
     def __init__(self, acados_sim_, json_file='acados_sim.json'):
 
@@ -253,7 +256,7 @@ class AcadosSimSolver:
 
     def solve(self):
         """
-        solve the simulation problem with current input
+        Solve the simulation problem with current input.
         """
         status = getattr(self.shared_lib, f"{self.model_name}_acados_sim_solve")()
         return status
@@ -261,8 +264,9 @@ class AcadosSimSolver:
 
     def get(self, field_):
         """
-        get the last solution of the solver:
-            :param field_: string in ['x', 'u', 'z', 'S_forw', 'Sx', 'Su', 'S_adj', 'S_hess', 'S_algebraic']
+        Get the last solution of the solver.
+
+            :param str field: string in ['x', 'u', 'z', 'S_forw', 'Sx', 'Su', 'S_adj', 'S_hess', 'S_algebraic']
         """
         field = field_
         field = field.encode('utf-8')
@@ -306,8 +310,10 @@ class AcadosSimSolver:
 
     def set(self, field_, value_):
         """
-        set numerical data inside the solver:
-            :param field_: string in ['p', 'S_adj', 'T', 'x', 'u', 'xdot', 'z', 'p']
+        Set numerical data inside the solver.
+
+            :param field: string in ['p', 'S_adj', 'T', 'x', 'u', 'xdot', 'z', 'p']
+            :param value: the value with appropriate size.
         """
         # cast value_ to avoid conversion issues
         if isinstance(value_, float):
