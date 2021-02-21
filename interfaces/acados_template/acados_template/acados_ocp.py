@@ -556,7 +556,9 @@ class AcadosOcpCost:
 
     @property
     def W_0(self):
-        """:math:`W_0` - weight matrix at initial shooting node (0)."""
+        """:math:`W_0` - weight matrix at initial shooting node (0).
+        Default: :code:`None`.
+        """
         return self.__W_0
 
     @property
@@ -568,19 +570,23 @@ class AcadosOcpCost:
 
     @property
     def Vu_0(self):
-        """:math:`V_u^0` - u matrix coefficient at initial shooting node (0)."""
+        """:math:`V_u^0` - u matrix coefficient at initial shooting node (0).
+        Default: :code:`None`.
+        """
         return self.__Vu_0
 
     @property
     def Vz_0(self):
-        """:math:`V_z^0` - z matrix coefficient
-        at initial shooting node (0)."""
+        """:math:`V_z^0` - z matrix coefficient at initial shooting node (0).
+        Default: :code:`None`.
+        """
         return self.__Vz_0
 
     @property
     def yref_0(self):
-        """:math:`y_\\text{ref}^0` - reference
-        at initial shooting node (0)."""
+        """:math:`y_\\text{ref}^0` - reference at initial shooting node (0).
+        Default: :code:`None`.
+        """
         return self.__yref_0
 
     @yref_0.setter
@@ -589,6 +595,14 @@ class AcadosOcpCost:
             self.__yref_0 = yref_0
         else:
             raise Exception('Invalid yref_0 value, expected numpy array. Exiting.')
+
+    @W_0.setter
+    def W_0(self, W_0):
+        if isinstance(W_0, np.ndarray) and len(W_0.shape) == 2:
+            self.__W_0 = W_0
+        else:
+            raise Exception('Invalid cost W_0 value. ' \
+                + 'Should be 2 dimensional numpy array. Exiting.')
 
     @Vx_0.setter
     def Vx_0(self, Vx_0):
@@ -626,47 +640,65 @@ class AcadosOcpCost:
 
     @property
     def W(self):
-        """:math:`W` - weight matrix at intermediate shooting nodes (1 to N-1)."""
+        """:math:`W` - weight matrix at intermediate shooting nodes (1 to N-1).
+        Default: :code:`np.zeros((0,0))`.
+        """
         return self.__W
 
     @property
     def Vx(self):
-        """:math:`V_x` - x matrix coefficient at intermediate shooting nodes (1 to N-1)."""
+        """:math:`V_x` - x matrix coefficient at intermediate shooting nodes (1 to N-1).
+        Default: :code:`np.zeros((0,0))`.
+        """
         return self.__Vx
 
     @property
     def Vu(self):
-        """:math:`V_u` - u matrix coefficient at intermediate shooting nodes (1 to N-1)."""
+        """:math:`V_u` - u matrix coefficient at intermediate shooting nodes (1 to N-1).
+        Default: :code:`np.zeros((0,0))`.
+        """
         return self.__Vu
 
     @property
     def Vz(self):
-        """:math:`V_z` - z matrix coefficient at intermediate shooting nodes (1 to N-1)."""
+        """:math:`V_z` - z matrix coefficient at intermediate shooting nodes (1 to N-1).
+        Default: :code:`np.zeros((0,0))`.
+        """
         return self.__Vz
 
     @property
     def yref(self):
-        """:math:`y_\\text{ref}` - reference at intermediate shooting nodes (1 to N-1)."""
+        """:math:`y_\\text{ref}` - reference at intermediate shooting nodes (1 to N-1).
+        Default: :code:`np.array([])`.
+        """
         return self.__yref
 
     @property
     def Zl(self):
-        """:math:`Z_l` - diagonal of Hessian wrt. lower slack at intermediate shooting nodes (1 to N-1)."""
+        """:math:`Z_l` - diagonal of Hessian wrt. lower slack at intermediate shooting nodes (1 to N-1).
+        Default: :code:`np.array([])`.
+        """
         return self.__Zl
 
     @property
     def Zu(self):
-        """:math:`Z_u` - diagonal of Hessian wrt. upper slack at intermediate shooting nodes (1 to N-1)."""
+        """:math:`Z_u` - diagonal of Hessian wrt. upper slack at intermediate shooting nodes (1 to N-1).
+        Default: :code:`np.array([])`.
+        """
         return self.__Zu
 
     @property
     def zl(self):
-        """:math:`z_l` - gradient wrt. lower slack at intermediate shooting nodes (1 to N-1)."""
+        """:math:`z_l` - gradient wrt. lower slack at intermediate shooting nodes (1 to N-1).
+        Default: :code:`np.array([])`.
+        """
         return self.__zl
 
     @property
     def zu(self):
-        """:math:`z_u` - gradient wrt. upper slack at intermediate shooting nodes (1 to N-1)."""
+        """:math:`z_u` - gradient wrt. upper slack at intermediate shooting nodes (1 to N-1).
+        Default: :code:`np.array([])`.
+        """
         return self.__zu
 
     @cost_type.setter
@@ -765,38 +797,51 @@ class AcadosOcpCost:
 
     @property
     def W_e(self):
-        """:math:`W_e` - weight matrix at terminal shooting node (N)."""
+        """:math:`W_e` - weight matrix at terminal shooting node (N).
+        Default: :code:`np.zeros((0,0))`.
+        """
         return self.__W_e
 
     @property
     def Vx_e(self):
-        """:math:`V_x^e` - x matrix coefficient for cost at terminal shooting node (N)."""
+        """:math:`V_x^e` - x matrix coefficient for cost at terminal shooting node (N).
+        Default: :code:`np.zeros((0,0))`.
+        """
         return self.__Vx_e
 
     @property
     def yref_e(self):
-        """:math:`y_\\text{ref}^e` - cost reference
-        at terminal shooting node (N)."""
+        """:math:`y_\\text{ref}^e` - cost reference at terminal shooting node (N).
+        Default: :code:`np.array([])`.
+        """
         return self.__yref_e
 
     @property
     def Zl_e(self):
-        """:math:`Z_l^e` - diagonal of Hessian wrt. lower slack for Mayer term."""
+        """:math:`Z_l^e` - diagonal of Hessian wrt. lower slack for Mayer term.
+        Default: :code:`np.array([])`.
+        """
         return self.__Zl_e
 
     @property
     def Zu_e(self):
-        """:math:`Z_u^e` - diagonal of Hessian wrt. upper slack for Mayer term."""
+        """:math:`Z_u^e` - diagonal of Hessian wrt. upper slack for Mayer term.
+        Default: :code:`np.array([])`.
+        """
         return self.__Zu_e
 
     @property
     def zl_e(self):
-        """:math:`z_l^e` - gradient wrt. lower slack for Mayer term."""
+        """:math:`z_l^e` - gradient wrt. lower slack for Mayer term.
+        Default: :code:`np.array([])`.
+        """
         return self.__zl_e
 
     @property
     def zu_e(self):
-        """:math:`z_u^e` - gradient wrt. upper slack for Mayer term."""
+        """:math:`z_u^e` - gradient wrt. upper slack for Mayer term.
+        Default: :code:`np.array([])`.
+        """
         return self.__zu_e
 
     @cost_type_e.setter
@@ -955,13 +1000,13 @@ class AcadosOcpConstraints:
     @property
     def constr_type(self):
         """Constraints type for shooting nodes (0 to N-1). string in {BGH, BGP}.
-        default: BGH; BGP is for convex over nonlinear."""
+        Default: BGH; BGP is for convex over nonlinear."""
         return self.__constr_type
 
     @property
     def constr_type_e(self):
         """Constraints type for terminal shooting node N. string in {BGH, BGP}.
-        default: BGH; BGP is for convex over nonlinear."""
+        Default: BGH; BGP is for convex over nonlinear."""
         return self.__constr_type_e
 
     # initial bounds on x
@@ -1041,7 +1086,7 @@ class AcadosOcpConstraints:
 
     @property
     def idxbx_e(self):
-        """indices for bounds on x at terminal shooting node N (defines :math:`J_{bx}^e`).
+        """Indices for bounds on x at terminal shooting node N (defines :math:`J_{bx}^e`).
         Can be set by using :py:attr:`Jbx_e`.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxbx_e
@@ -1070,7 +1115,7 @@ class AcadosOcpConstraints:
 
     @property
     def idxbu(self):
-        """indices of bounds on u (defines :math:`J_{bu}`) at shooting nodes (0 to N-1).
+        """Indices of bounds on u (defines :math:`J_{bu}`) at shooting nodes (0 to N-1).
         Can be set by using :py:attr:`Jbu`.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`
         """
@@ -1215,21 +1260,21 @@ class AcadosOcpConstraints:
     # soft bounds on x
     @property
     def lsbx(self):
-        """lower bounds on slacks corresponding to soft lower bounds on x
+        """Lower bounds on slacks corresponding to soft lower bounds on x
         at stages (1 to N-1);
         not required - zeros by default"""
         return self.__lsbx
 
     @property
     def usbx(self):
-        """upper bounds on slacks corresponding to soft upper bounds on x
+        """Upper bounds on slacks corresponding to soft upper bounds on x
         at stages (1 to N-1);
         not required - zeros by default"""
         return self.__usbx
 
     @property
     def idxsbx(self):
-        """indices of soft bounds on x within the indices of bounds on x
+        """Indices of soft bounds on x within the indices of bounds on x
         at stages (1 to N-1).
         Can be set by using :py:attr:`Jsbx`.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
@@ -1246,21 +1291,21 @@ class AcadosOcpConstraints:
     # soft bounds on u
     @property
     def lsbu(self):
-        """lower bounds on slacks corresponding to soft lower bounds on u
+        """Lower bounds on slacks corresponding to soft lower bounds on u
         at stages (0 to N-1).
         Not required - zeros by default."""
         return self.__lsbu
 
     @property
     def usbu(self):
-        """upper bounds on slacks corresponding to soft upper bounds on u
+        """Upper bounds on slacks corresponding to soft upper bounds on u
         at stages (0 to N-1);
         not required - zeros by default"""
         return self.__usbu
 
     @property
     def idxsbu(self):
-        """indices of soft bounds on u within the indices of bounds on u
+        """Indices of soft bounds on u within the indices of bounds on u
         at stages (0 to N-1).
         Can be set by using :py:attr:`Jsbu`.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
@@ -1283,13 +1328,13 @@ class AcadosOcpConstraints:
 
     @property
     def usbx_e(self):
-        """Lower bounds on slacks corresponding to soft upper bounds on x at shooting node N.
+        """Upper bounds on slacks corresponding to soft upper bounds on x at shooting node N.
         Not required - zeros by default"""
         return self.__usbx_e
 
     @property
     def idxsbx_e(self):
-        """indices of soft bounds on x at shooting node N, within the indices of bounds on x at terminal shooting node N.
+        """Indices of soft bounds on x at shooting node N, within the indices of bounds on x at terminal shooting node N.
         Can be set by using :py:attr:`Jsbx_e`.
         Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxsbx_e
@@ -1304,7 +1349,7 @@ class AcadosOcpConstraints:
     # soft general linear constraints
     @property
     def lsg(self):
-        """lower bounds on slacks corresponding to soft lower bounds for general linear constraints
+        """Lower bounds on slacks corresponding to soft lower bounds for general linear constraints
         at stages (0 to N-1).
         Type: :code:`np.ndarray`; default: :code:`np.array([])`
         """
@@ -1312,7 +1357,7 @@ class AcadosOcpConstraints:
 
     @property
     def usg(self):
-        """Lower bounds on slacks corresponding to soft upper bounds for general linear constraints.
+        """Upper bounds on slacks corresponding to soft upper bounds for general linear constraints.
         Not required - zeros by default"""
         return self.__usg
 
@@ -1339,7 +1384,7 @@ class AcadosOcpConstraints:
 
     @property
     def ush(self):
-        """Lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints.
+        """Upper bounds on slacks corresponding to soft upper bounds for nonlinear constraints.
         Not required - zeros by default"""
         return self.__ush
 
@@ -1366,7 +1411,7 @@ class AcadosOcpConstraints:
 
     @property
     def usphi(self):
-        """Lower bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints.
+        """Upper bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints.
         Not required - zeros by default"""
         return self.__usphi
 
@@ -1394,13 +1439,13 @@ class AcadosOcpConstraints:
 
     @property
     def usg_e(self):
-        """Lower bounds on slacks corresponding to soft upper bounds for general linear constraints at shooting node N.
+        """Upper bounds on slacks corresponding to soft upper bounds for general linear constraints at shooting node N.
         Not required - zeros by default"""
         return self.__usg_e
 
     @property
     def idxsg_e(self):
-        """indices of soft general linear constraints at shooting node N within the indices of general linear constraints at shooting node N.
+        """Indices of soft general linear constraints at shooting node N within the indices of general linear constraints at shooting node N.
         Can be set by using :py:attr:`Jsg_e`."""
         return self.__idxsg_e
 
@@ -2092,7 +2137,7 @@ class AcadosOcpOptions:
         """Globalization type.
         String in ('FIXED_STEP', 'MERIT_BACKTRACKING').
         Default: 'FIXED_STEP'.
-        
+
         .. note:: preliminary implementation.
         """
         return self.__globalization
@@ -2219,7 +2264,8 @@ class AcadosOcpOptions:
     @property
     def qp_tol(self):
         """
-        QP solver tolerance. Sets or gets the max of
+        QP solver tolerance.
+        Sets all of the following at once or gets the max of
         :py:attr:`qp_solver_tol_eq`, :py:attr:`qp_solver_tol_ineq`,
         :py:attr:`qp_solver_tol_comp` and
         :py:attr:`qp_solver_tol_stat`.
@@ -2272,7 +2318,8 @@ class AcadosOcpOptions:
 
     @property
     def time_steps(self):
-        """Vector with time steps between the shooting nodes. Set automatically to uniform discretization if :py:attr:`N` and :py:attr:`tf` are provided.
+        """
+        Vector with time steps between the shooting nodes. Set automatically to uniform discretization if :py:attr:`N` and :py:attr:`tf` are provided.
         Default: :code:`None`
         """
         return self.__time_steps
@@ -2287,7 +2334,8 @@ class AcadosOcpOptions:
 
     @property
     def tf(self):
-        """Prediction horizon
+        """
+        Prediction horizon
         Type: float > 0
         Default: :code:`None`
         """
@@ -2322,26 +2370,34 @@ class AcadosOcpOptions:
 
     @property
     def exact_hess_constr(self):
-        """Used in case of hessian_approx == 'EXACT'.\n
-           Can be used to turn off exact hessian contributions from the constraints module."""
+        """
+        Used in case of hessian_approx == 'EXACT'.\n
+        Can be used to turn off exact hessian contributions from the constraints module.
+        """
         return self.__exact_hess_constr
 
     @property
     def exact_hess_cost(self):
-        """Used in case of hessian_approx == 'EXACT'.\n
-           Can be used to turn off exact hessian contributions from the cost module."""
+        """
+        Used in case of hessian_approx == 'EXACT'.\n
+        Can be used to turn off exact hessian contributions from the cost module.
+        """
         return self.__exact_hess_cost
 
     @property
     def exact_hess_dyn(self):
-        """Used in case of hessian_approx == 'EXACT'.\n
-           Can be used to turn off exact hessian contributions from the dynamics module."""
+        """
+        Used in case of hessian_approx == 'EXACT'.\n
+        Can be used to turn off exact hessian contributions from the dynamics module.
+        """
         return self.__exact_hess_dyn
 
     @property
     def ext_cost_num_hess(self):
-        """Determines if custom hessian approximation for cost contribution is used (> 0).\n
-           Or if hessian contribution is evaluated exactly using CasADi external function (=0 - default)."""
+        """
+        Determines if custom hessian approximation for cost contribution is used (> 0).\n
+        Or if hessian contribution is evaluated exactly using CasADi external function (=0 - default).
+        """
         return self.__ext_cost_num_hess
 
     @qp_solver.setter
