@@ -34,43 +34,61 @@
 
 class AcadosModel():
     """
-    class containing all the information to code generate the external CasADi functions
+    Class containing all the information to code generate the external CasADi functions
     that are needed when creating an acados ocp solver or acados integrator.
     Thus, this class contains:
     
-    a) the name of the model
+    a) the :py:attr:`name` of the model,
     b) all CasADi variables/expressions needed in the CasADi function generation process.
     """
     def __init__(self):
         ## common for OCP and Integrator
-        self.name = None        #: model name
-        self.x = None           #: CasADi variable describing the state of the system
-        self.xdot = None        #: CasADi variable describing the derivative of the state wrt time
-        self.u = None           #: CasADi variable describing the input of the system
-        self.z = []             #: CasADi variable describing the algebraic variables of the DAE
-        self.p = []             #: CasADi variable describing parameters of the DAE
+        self.name = None
+        """
+        The model name is used for code generation. Type: string. Default: :code:`None`
+        """
+        self.x = None           #: CasADi variable describing the state of the system; Default: :code:`None`
+        self.xdot = None        #: CasADi variable describing the derivative of the state wrt time; Default: :code:`None`
+        self.u = None           #: CasADi variable describing the input of the system; Default: :code:`None`
+        self.z = []             #: CasADi variable describing the algebraic variables of the DAE; Default: :code:`empty`
+        self.p = []             #: CasADi variable describing parameters of the DAE; Default: :code:`empty`
         # dynamics
-        self.f_impl_expr = None #: CasADi expression for the implicit dynamics :math:`f_{impl}(\dot{x}, x, u, z, p) = 0`
-        self.f_expl_expr = None #: CasADi expression for the explicit dynamics :math:`\dot{x} = f_{expl}(x, u, p)`
-        self.disc_dyn_expr = None #: CasADi expression for the discrete dynamics :math:`x_{+} = f_{disc}(x, u, p)`
+        self.f_impl_expr = None
+        """
+        CasADi expression for the implicit dynamics :math:`f_\\text{impl}(\dot{x}, x, u, z, p) = 0`.
+        Used if :py:attr:`acados_template.acados_ocp.AcadosOcpOptions.integrator_type` == 'IRK'.
+        Default: :code:`None`
+        """
+        self.f_expl_expr = None
+        """
+        CasADi expression for the explicit dynamics :math:`\dot{x} = f_\\text{expl}(x, u, p)`.
+        Used if :py:attr:`acados_template.acados_ocp.AcadosOcpOptions.integrator_type` == 'ERK'.
+        Default: :code:`None`
+        """
+        self.disc_dyn_expr = None
+        """
+        CasADi expression for the discrete dynamics :math:`x_{+} = f_\\text{disc}(x, u, p)`.
+        Used if :py:attr:`acados_template.acados_ocp.AcadosOcpOptions.integrator_type` == 'DISCRETE'.
+        Default: :code:`None`
+        """
         ## for OCP
         # constraints
-        self.con_h_expr = None  #: CasADi expression for the constraint h
-        self.con_phi_expr = None  #: CasADi expression for the constraint phi
-        self.con_r_expr = None  #: CasADi expression for the constraint phi(r)
+        self.con_h_expr = None  #: CasADi expression for the constraint :math:`h`; Default: :code:`None`
+        self.con_phi_expr = None  #: CasADi expression for the constraint phi; Default: :code:`None`
+        self.con_r_expr = None  #: CasADi expression for the constraint phi(r); Default: :code:`None`
         self.con_r_in_phi = None
         # terminal
-        self.con_h_expr_e = None  #: CasADi expression for the constraint
-        self.con_r_expr_e = None  #: CasADi expression for the constraint
-        self.con_phi_expr_e = None  #: CasADi expression for the constraint
+        self.con_h_expr_e = None  #: CasADi expression for the terminal constraint :math:`h^e`; Default: :code:`None`
+        self.con_r_expr_e = None  #: CasADi expression for the terminal constraint; Default: :code:`None`
+        self.con_phi_expr_e = None  #: CasADi expression for the terminal constraint; Default: :code:`None`
         self.con_r_in_phi_e = None
         # cost
-        self.cost_y_expr = None  #: CasADi expression for nonlinear least squares
-        self.cost_y_expr_e = None  #: CasADi expression for nonlinear least squares, terminal
-        self.cost_y_expr_0 = None  #: CasADi expression for nonlinear least squares, initial
-        self.cost_expr_ext_cost = None  #: CasADi expression for external cost
-        self.cost_expr_ext_cost_e = None  #: CasADi expression for external cost, terminal
-        self.cost_expr_ext_cost_0 = None  #: CasADi expression for external cost, initial
+        self.cost_y_expr = None  #: CasADi expression for nonlinear least squares; Default: :code:`None`
+        self.cost_y_expr_e = None  #: CasADi expression for nonlinear least squares, terminal; Default: :code:`None`
+        self.cost_y_expr_0 = None  #: CasADi expression for nonlinear least squares, initial; Default: :code:`None`
+        self.cost_expr_ext_cost = None  #: CasADi expression for external cost; Default: :code:`None`
+        self.cost_expr_ext_cost_e = None  #: CasADi expression for external cost, terminal; Default: :code:`None`
+        self.cost_expr_ext_cost_0 = None  #: CasADi expression for external cost, initial; Default: :code:`None`
 
 
 def acados_model_strip_casadi_symbolics(model):
