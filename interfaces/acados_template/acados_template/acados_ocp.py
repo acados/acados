@@ -39,7 +39,7 @@ from .utils import get_acados_path, J_to_idx, J_to_idx_slack
 
 class AcadosOcpDims:
     """
-    class containing the dimensions of the optimal control problem
+    Class containing the dimensions of the optimal control problem.
     """
     def __init__(self):
         self.__nx      = None
@@ -78,162 +78,194 @@ class AcadosOcpDims:
 
     @property
     def nx(self):
-        """:math:`n_x` - number of states"""
+        """:math:`n_x` - number of states.
+        Type: int; default: None"""
         return self.__nx
 
     @property
     def nz(self):
-        """:math:`n_z` - number of algebraic variables"""
+        """:math:`n_z` - number of algebraic variables.
+        Type: int; default: 0"""
         return self.__nz
 
     @property
     def nu(self):
-        """:math:`n_u` - number of inputs"""
+        """:math:`n_u` - number of inputs.
+        Type: int; default: None"""
         return self.__nu
 
     @property
     def np(self):
-        """:math:`n_p` - number of parameters"""
+        """:math:`n_p` - number of parameters.
+        Type: int; default: 0"""
         return self.__np
 
     @property
     def ny(self):
-        """:math:`n_y` - number of residuals in Lagrange term"""
+        """:math:`n_y` - number of residuals in Lagrange term.
+        Type: int; default: 0"""
         return self.__ny
 
     @property
     def ny_0(self):
-        """:math:`n_{y}^0` - number of residuals in Mayer term"""
+        """:math:`n_{y}^0` - number of residuals in Mayer term.
+        Type: int; default: 0"""
         return self.__ny_0
 
     @property
     def ny_e(self):
-        """:math:`n_{y}^e` - number of residuals in Mayer term"""
+        """:math:`n_{y}^e` - number of residuals in Mayer term.
+        Type: int; default: 0"""
         return self.__ny_e
 
     @property
     def nr(self):
-        """:math:`n_{\pi}` - dimension of the image of the inner nonlinear function in positive definite constraints"""
+        """:math:`n_{\pi}` - dimension of the image of the inner nonlinear function in positive definite constraints.
+        Type: int; default: 0"""
         return self.__nr
 
     @property
     def nr_e(self):
-        """:math:`n_{\pi}^e` - dimension of the image of the inner nonlinear function in positive definite constraints"""
+        """:math:`n_{\pi}^e` - dimension of the image of the inner nonlinear function in positive definite constraints.
+        Type: int; default: 0"""
         return self.__nr_e
 
     @property
     def nh(self):
-        """:math:`n_h` - number of nonlinear constraints"""
+        """:math:`n_h` - number of nonlinear constraints.
+        Type: int; default: 0"""
         return self.__nh
 
     @property
     def nh_e(self):
-        """:math:`n_{h}^e` - number of nonlinear constraints at shooting node N"""
+        """:math:`n_{h}^e` - number of nonlinear constraints at terminal shooting node N.
+        Type: int; default: 0"""
         return self.__nh_e
 
     @property
     def nphi(self):
-        """:math:`n_{\phi}` - number of convex-over-nonlinear constraints"""
+        """:math:`n_{\phi}` - number of convex-over-nonlinear constraints.
+        Type: int; default: 0"""
         return self.__nphi
 
     @property
     def nphi_e(self):
-        """:math:`n_{\phi}^e` - number of convex-over-nonlinear constraints at shooting node N"""
+        """:math:`n_{\phi}^e` - number of convex-over-nonlinear constraints at terminal shooting node N.
+        Type: int; default: 0"""
         return self.__nphi_e
 
     @property
     def nbx(self):
-        """:math:`n_{b_x}` - number of state bounds"""
+        """:math:`n_{b_x}` - number of state bounds.
+        Type: int; default: 0"""
         return self.__nbx
 
     @property
     def nbxe_0(self):
-        """:math:`n_{be_{x0}}` - number of state bounds at initial shooting node that are equalities"""
+        """:math:`n_{be_{x0}}` - number of state bounds at initial shooting node that are equalities.
+        Type: int; default: None"""
         return self.__nbxe_0
 
     @property
     def nbx_0(self):
-        """:math:`n_{b_{x0}}` - number of state bounds for initial state"""
+        """:math:`n_{b_{x0}}` - number of state bounds for initial state.
+        Type: int; default: 0"""
         return self.__nbx_0
 
     @property
     def nbx_e(self):
-        """:math:`n_{b_x}` - number of state bounds at shooting node N"""
+        """:math:`n_{b_x}` - number of state bounds at terminal shooting node N.
+        Type: int; default: 0"""
         return self.__nbx_e
 
     @property
     def nbu(self):
-        """:math:`n_{b_u}` - number of input bounds"""
+        """:math:`n_{b_u}` - number of input bounds.
+        Type: int; default: 0"""
         return self.__nbu
 
     @property
     def nsbx(self):
-        """:math:`n_{{sb}_x}` - number of soft state bounds"""
+        """:math:`n_{{sb}_x}` - number of soft state bounds.
+        Type: int; default: 0"""
         return self.__nsbx
 
     @property
     def nsbx_e(self):
-        """:math:`n_{{sb}^e_{x}}` - number of soft state bounds at shooting node N"""
+        """:math:`n_{{sb}^e_{x}}` - number of soft state bounds at terminal shooting node N.
+        Type: int; default: 0"""
         return self.__nsbx_e
 
     @property
     def nsbu(self):
-        """:math:`n_{{sb}_u}` - number of soft input bounds"""
+        """:math:`n_{{sb}_u}` - number of soft input bounds.
+        Type: int; default: 0"""
         return self.__nsbu
 
     @property
     def nsg(self):
-        """:math:`n_{{sg}}` - number of soft general linear constraints"""
+        """:math:`n_{{sg}}` - number of soft general linear constraints.
+        Type: int; default: 0"""
         return self.__nsg
 
     @property
     def nsg_e(self):
-        """:math:`n_{{sg}^e}` - number of soft general linear constraints at shooting node N"""
+        """:math:`n_{{sg}^e}` - number of soft general linear constraints at terminal shooting node N.
+        Type: int; default: 0"""
         return self.__nsg_e
 
     @property
     def nsh(self):
-        """:math:`n_{{sh}}` - number of soft nonlinear constraints"""
+        """:math:`n_{{sh}}` - number of soft nonlinear constraints.
+        Type: int; default: 0"""
         return self.__nsh
 
     @property
     def nsh_e(self):
-        """:math:`n_{{sh}}^e` - number of soft nonlinear constraints at shooting node N"""
+        """:math:`n_{{sh}}^e` - number of soft nonlinear constraints at terminal shooting node N.
+        Type: int; default: 0"""
         return self.__nsh_e
 
     @property
     def nsphi(self):
-        """:math:`n_{{s\phi}}` - number of soft convex-over-nonlinear constraints"""
+        """:math:`n_{{s\phi}}` - number of soft convex-over-nonlinear constraints.
+        Type: int; default: 0"""
         return self.__nsphi
 
     @property
     def nsphi_e(self):
-        """:math:`n_{{s\phi}^e}` - number of soft convex-over-nonlinear constraints at shooting node N"""
+        """:math:`n_{{s\phi}^e}` - number of soft convex-over-nonlinear constraints at terminal shooting node N.
+        Type: int; default: 0"""
         return self.__nsphi_e
 
     @property
     def ns(self):
-        """:math:`n_{s}` - total number of slacks"""
+        """:math:`n_{s}` - total number of slacks.
+        Type: int; default: 0"""
         return self.__ns
 
     @property
     def ns_e(self):
-        """:math:`n_{s}^e` - total number of slacks at shooting node N"""
+        """:math:`n_{s}^e` - total number of slacks at terminal shooting node N.
+        Type: int; default: 0"""
         return self.__ns_e
 
     @property
     def ng(self):
-        """:math:`n_{g}` - number of general polytopic constraints"""
+        """:math:`n_{g}` - number of general polytopic constraints.
+        Type: int; default: 0"""
         return self.__ng
 
     @property
     def ng_e(self):
-        """:math:`n_{g}^e` - number of general polytopic constraints at shooting node N"""
+        """:math:`n_{g}^e` - number of general polytopic constraints at terminal shooting node N.
+        Type: int; default: 0"""
         return self.__ng_e
 
     @property
     def N(self):
-        """:math:`N` - prediction horizon"""
+        """:math:`N` - prediction horizon.
+        Type: int; default: None"""
         return self.__N
 
     @nx.setter
@@ -466,12 +498,19 @@ class AcadosOcpDims:
 
 class AcadosOcpCost:
     """
-    class containing the numerical data of the cost:
-    in case of LINEAR_LS:
+    Class containing the numerical data of the cost:
+
+    In case of LINEAR_LS:
     stage cost is
-    :math:`l(x,u,z) = || V_x x + V_u u + V_z z - y_{\\text{ref}}||^2_W`,
+    :math:`l(x,u,z) = || V_x \, x + V_u \, u + V_z \, z - y_\\text{ref}||^2_W`,
     terminal cost is
-    :math:`m(x) = || V^e_x x - y_{\\text{ref}^e}||^2_{W^e}`
+    :math:`m(x) = || V^e_x \, x - y_\\text{ref}^e||^2_{W^e}`
+
+    In case of NONLINEAR_LS:
+    stage cost is
+    :math:`l(x,u,z) = || y(x,u,z) - y_\\text{ref}||^2_W`,
+    terminal cost is
+    :math:`m(x) = || y^e(x) - y_\\text{ref}^e||^2_{W^e}`
     """
     def __init__(self):
         # initial stage
@@ -505,33 +544,43 @@ class AcadosOcpCost:
     # initial stage
     @property
     def cost_type_0(self):
-        """cost type at initial shooting node (0)
-        -- string in {EXTERNAL, LINEAR_LS, NONLINEAR_LS}.
-        NOTE: cost at initial stage is the same as for intermediate shooting nodes if not set differently explicitly."""
+        """Cost type at initial shooting node (0)
+        -- string in {EXTERNAL, LINEAR_LS, NONLINEAR_LS} or :code:`None`.
+        Default: :code:`None`.
+
+            .. note:: Cost at initial stage is the same as for intermediate shooting nodes if not set differently explicitly.
+
+            .. note:: If :py:attr:`cost_type_0` is set to :code:`None` values in :py:attr:`W_0`, :py:attr:`Vx_0`, :py:attr:`Vu_0`, :py:attr:`Vz_0` and :py:attr:`yref_0` are ignored (set to :code:`None`).
+        """
         return self.__cost_type_0
 
     @property
+    def W_0(self):
+        """:math:`W_0` - weight matrix at initial shooting node (0)."""
+        return self.__W_0
+
+    @property
     def Vx_0(self):
-        """:math:`V_x^0` - x matrix coefficient
-        at initial shooting node (0)"""
+        """:math:`V_x^0` - x matrix coefficient at initial shooting node (0).
+        Default: :code:`None`.
+        """
         return self.__Vx_0
 
     @property
     def Vu_0(self):
-        """:math:`V_u^0` - u matrix coefficient
-        at initial shooting node (0)"""
+        """:math:`V_u^0` - u matrix coefficient at initial shooting node (0)."""
         return self.__Vu_0
 
     @property
     def Vz_0(self):
         """:math:`V_z^0` - z matrix coefficient
-        at initial shooting node (0)"""
+        at initial shooting node (0)."""
         return self.__Vz_0
 
     @property
     def yref_0(self):
-        """:math:`y_{\text{ref}}^0` - reference
-        at initial shooting node (0)"""
+        """:math:`y_\\text{ref}^0` - reference
+        at initial shooting node (0)."""
         return self.__yref_0
 
     @yref_0.setter
@@ -568,53 +617,56 @@ class AcadosOcpCost:
     # Lagrange term
     @property
     def cost_type(self):
-        """cost type at intermediate shooting nodes (1 to N-1)
-        -- string in {EXTERNAL, LINEAR_LS, NONLINEAR_LS}"""
+        """
+        Cost type at intermediate shooting nodes (1 to N-1)
+        -- string in {EXTERNAL, LINEAR_LS, NONLINEAR_LS}.
+        Default: 'LINEAR_LS'.
+        """
         return self.__cost_type
 
     @property
     def W(self):
-        """:math:`W` - weight matrix at intermediate shooting nodes (1 to N-1)"""
+        """:math:`W` - weight matrix at intermediate shooting nodes (1 to N-1)."""
         return self.__W
 
     @property
     def Vx(self):
-        """:math:`V_x` - x matrix coefficient at intermediate shooting nodes (1 to N-1)"""
+        """:math:`V_x` - x matrix coefficient at intermediate shooting nodes (1 to N-1)."""
         return self.__Vx
 
     @property
     def Vu(self):
-        """:math:`V_u` - u matrix coefficient at intermediate shooting nodes (1 to N-1)"""
+        """:math:`V_u` - u matrix coefficient at intermediate shooting nodes (1 to N-1)."""
         return self.__Vu
 
     @property
     def Vz(self):
-        """:math:`V_z` - z matrix coefficient at intermediate shooting nodes (1 to N-1)"""
+        """:math:`V_z` - z matrix coefficient at intermediate shooting nodes (1 to N-1)."""
         return self.__Vz
 
     @property
     def yref(self):
-        """:math:`y_{\text{ref}}` - reference at intermediate shooting nodes (1 to N-1)"""
+        """:math:`y_\\text{ref}` - reference at intermediate shooting nodes (1 to N-1)."""
         return self.__yref
 
     @property
     def Zl(self):
-        """:math:`Z_l` - diagonal of Hessian wrt lower slack at intermediate shooting nodes (1 to N-1)"""
+        """:math:`Z_l` - diagonal of Hessian wrt. lower slack at intermediate shooting nodes (1 to N-1)."""
         return self.__Zl
 
     @property
     def Zu(self):
-        """:math:`Z_u` - diagonal of Hessian wrt upper slack at intermediate shooting nodes (1 to N-1)"""
+        """:math:`Z_u` - diagonal of Hessian wrt. upper slack at intermediate shooting nodes (1 to N-1)."""
         return self.__Zu
 
     @property
     def zl(self):
-        """:math:`z_l` - gradient wrt lower slack at intermediate shooting nodes (1 to N-1)"""
+        """:math:`z_l` - gradient wrt. lower slack at intermediate shooting nodes (1 to N-1)."""
         return self.__zl
 
     @property
     def zu(self):
-        """:math:`z_u` - gradient wrt upper slack at intermediate shooting nodes (1 to N-1)"""
+        """:math:`z_u` - gradient wrt. upper slack at intermediate shooting nodes (1 to N-1)."""
         return self.__zu
 
     @cost_type.setter
@@ -704,44 +756,47 @@ class AcadosOcpCost:
     # Mayer term
     @property
     def cost_type_e(self):
-        """cost type at terminal shooting node (N)
-        -- string in {EXTERNAL, LINEAR_LS, NONLINEAR_LS}"""
+        """
+        Cost type at terminal shooting node (N)
+        -- string in {EXTERNAL, LINEAR_LS, NONLINEAR_LS}.
+        Default: 'LINEAR_LS'.
+        """
         return self.__cost_type_e
 
     @property
     def W_e(self):
-        """:math:`W` - weight matrix at terminal shooting node (N)"""
+        """:math:`W_e` - weight matrix at terminal shooting node (N)."""
         return self.__W_e
 
     @property
     def Vx_e(self):
-        """:math:`V_x^e` - x matrix coefficient for cost at terminal shooting node (N)"""
+        """:math:`V_x^e` - x matrix coefficient for cost at terminal shooting node (N)."""
         return self.__Vx_e
 
     @property
     def yref_e(self):
-        """:math:`y_{\text{ref}}^e` - cost reference
-        at terminal shooting node (N)"""
+        """:math:`y_\\text{ref}^e` - cost reference
+        at terminal shooting node (N)."""
         return self.__yref_e
 
     @property
     def Zl_e(self):
-        """:math:`Z_l^e` - diagonal of Hessian wrt upper slack for Mayer term"""
+        """:math:`Z_l^e` - diagonal of Hessian wrt. lower slack for Mayer term."""
         return self.__Zl_e
 
     @property
     def Zu_e(self):
-        """:math:`Z_l^e` - diagonal of Hessian wrt upper slack for Mayer term"""
+        """:math:`Z_u^e` - diagonal of Hessian wrt. upper slack for Mayer term."""
         return self.__Zu_e
 
     @property
     def zl_e(self):
-        """:math:`z_l^e` - gradient wrt lower slack for Mayer term"""
+        """:math:`z_l^e` - gradient wrt. lower slack for Mayer term."""
         return self.__zl_e
 
     @property
     def zu_e(self):
-        """:math:`z_u^e` - gradient wrt upper slack for Mayer term"""
+        """:math:`z_u^e` - gradient wrt. upper slack for Mayer term."""
         return self.__zu_e
 
     @cost_type_e.setter
@@ -899,125 +954,132 @@ class AcadosOcpConstraints:
     # types
     @property
     def constr_type(self):
-        """Constraints type for shooting nodes 0 to N-1. string in {BGH, BGP}.
-        default: BGH; BGP is for convex over nonlinear"""
+        """Constraints type for shooting nodes (0 to N-1). string in {BGH, BGP}.
+        default: BGH; BGP is for convex over nonlinear."""
         return self.__constr_type
 
     @property
     def constr_type_e(self):
-        """Constraints type for shooting nodes 0 to N. string in {BGH, BGP}.
-        default: BGH; BGP is for convex over nonlinear"""
+        """Constraints type for terminal shooting node N. string in {BGH, BGP}.
+        default: BGH; BGP is for convex over nonlinear."""
         return self.__constr_type_e
 
     # initial bounds on x
     @property
     def lbx_0(self):
-        """:math:`\\underline{x_0}` - lower bounds on x at initial stage 0"""
+        """:math:`\\underline{x_0}` - lower bounds on x at initial stage 0.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`."""
         return self.__lbx_0
 
     @property
     def ubx_0(self):
-        """:math:`\\bar{x_0}` - upper bounds on x at initial stage 0"""
+        """:math:`\\bar{x_0}` - upper bounds on x at initial stage 0.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__ubx_0
 
     @property
     def Jbx_0(self):
-        """:math:`J_{bx,0}` - matrix coefficient for bounds on x at initial stage 0 -
-        internally translated into idxbx_0"""
+        """:math:`J_{bx,0}` - matrix coefficient for bounds on x at initial stage 0.
+        Translated internally to :py:attr:`idxbx_0`"""
         print_J_to_idx_note()
         return self.__idxbx_0
 
     @property
     def idxbx_0(self):
-        """indices of bounds on x at initial stage 0
-        -- can be set automatically via x0"""
+        """Indices of bounds on x at initial stage 0
+        -- can be set automatically via x0.
+        Can be set by using :py:attr:`Jbx_0`.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxbx_0
 
     @property
     def idxbxe_0(self):
-        """indices of bounds on x0 that are equalities -- can be set automatically via x0"""
+        """Indices of bounds on x0 that are equalities -- can be set automatically via :py:attr:`x0`.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxbxe_0
 
     # bounds on x
     @property
     def lbx(self):
-        """:math:`\\underline{x}` - lower bounds on x
-        at intermediate shooting nodes 1 to N-1"""
+        """:math:`\\underline{x}` - lower bounds on x at intermediate shooting nodes (1 to N-1).
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__lbx
 
     @property
     def ubx(self):
-        """:math:`\\bar{x}` - upper bounds on x
-        at intermediate shooting nodes 1 to N-1"""
+        """:math:`\\bar{x}` - upper bounds on x at intermediate shooting nodes (1 to N-1).
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__ubx
 
     @property
     def idxbx(self):
-        """indices of bounds on x (defines :math:`J_{bx}`)
-        at intermediate shooting nodes 1 to N-1"""
+        """indices of bounds on x (defines :math:`J_{bx}`) at intermediate shooting nodes (1 to N-1).
+        Can be set by using :py:attr:`Jbx`.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxbx
 
     @property
     def Jbx(self):
         """:math:`J_{bx}` - matrix coefficient for bounds on x
-        at intermediate shooting nodes 1 to N-1;
-        translated internally into idxbx"""
+        at intermediate shooting nodes (1 to N-1).
+        Translated internally into :py:attr:`idxbx`."""
         print_J_to_idx_note()
         return self.__idxbx
 
     # bounds on x at shooting node N
     @property
     def lbx_e(self):
-        """:math:`\\underline{x}^e` - lower bounds on x
-        at terminal shooting node N"""
+        """:math:`\\underline{x}^e` - lower bounds on x at terminal shooting node N.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__lbx_e
 
     @property
     def ubx_e(self):
-        """:math:`\\bar{x}^e` - upper bounds on x
-        at terminal shooting node N"""
+        """:math:`\\bar{x}^e` - upper bounds on x at terminal shooting node N.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__ubx_e
 
     @property
     def idxbx_e(self):
-        """indices for bounds on x
-        at terminal shooting node N (defines :math:`J_{bx}^e`)"""
+        """indices for bounds on x at terminal shooting node N (defines :math:`J_{bx}^e`).
+        Can be set by using :py:attr:`Jbx_e`.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxbx_e
 
     @property
     def Jbx_e(self):
-        """:math:`J_{bx}^e` matrix coefficient for bounds on x
-        at terminal shooting node N"""
+        """:math:`J_{bx}^e` matrix coefficient for bounds on x at terminal shooting node N.
+        Translated internally into :py:attr:`idxbx_e`."""
         print_J_to_idx_note()
         return self.__idxbx_e
 
     # bounds on u
     @property
     def lbu(self):
-        """:math:`\\underline{u}` - lower bounds on u
-        at shooting nodes 0 to N-1;
+        """:math:`\\underline{u}` - lower bounds on u at shooting nodes (0 to N-1).
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`
         """
         return self.__lbu
 
     @property
     def ubu(self):
-        """:math:`\\bar{u}` - upper bounds on u
-        at shooting nodes 0 to N-1;
+        """:math:`\\bar{u}` - upper bounds on u at shooting nodes (0 to N-1).
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`
         """
         return self.__ubu
 
     @property
     def idxbu(self):
-        """indices of bounds on u (defines :math:`J_{bu}`)
-        at shooting nodes 0 to N-1;
+        """indices of bounds on u (defines :math:`J_{bu}`) at shooting nodes (0 to N-1).
+        Can be set by using :py:attr:`Jbu`.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`
         """
         return self.__idxbu
 
     @property
     def Jbu(self):
-        """:math:`J_{bu}` - matrix coefficient for bounds on u
-        at shooting nodes 0 to N-1;
-        translated internally to idxbu
+        """:math:`J_{bu}` - matrix coefficient for bounds on u at shooting nodes (0 to N-1).
+        Translated internally to :py:attr:`idxbu`.
         """
         print_J_to_idx_note()
         return self.__idxbu
@@ -1025,51 +1087,57 @@ class AcadosOcpConstraints:
     # polytopic constraints
     @property
     def C(self):
-        """:math:`C` - C matrix in lg <= D * u + C * x <= ug
-        at shooting nodes 0 to N-1;
+        """:math:`C` - C matrix in :math:`\\underline{g} \\leq D \, u + C \, x \\leq \\bar{g}`
+        at shooting nodes (0 to N-1).
+        Type: :code:`np.ndarray`; default: :code:`np.array((0,0))`.
         """
         return self.__C
 
     @property
     def D(self):
-        """:math:`D` - D matrix in lg <= D * u + C * x <= ug
-        at shooting nodes 0 to N-1;
+        """:math:`D` - D matrix in :math:`\\underline{g} \\leq D \, u + C \, x \\leq \\bar{g}`
+        at shooting nodes (0 to N-1).
+        Type: :code:`np.ndarray`; default: :code:`np.array((0,0))`
         """
         return self.__D
 
     @property
     def lg(self):
-        """:math:`\\underline{g}` - lower bound for general polytopic inequalities.
-        at shooting nodes 0 to N-1;
+        """:math:`\\underline{g}` - lower bound for general polytopic inequalities
+        at shooting nodes (0 to N-1).
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`
         """
         return self.__lg
 
     @property
     def ug(self):
-        """:math:`\\bar{g}` - upper bound for general polytopic inequalities.
-        at shooting nodes 0 to N-1;
+        """:math:`\\bar{g}` - upper bound for general polytopic inequalities
+        at shooting nodes (0 to N-1).
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__ug
 
     # polytopic constraints at shooting node N
     @property
     def C_e(self):
-        """:math:`C^e` - C matrix at shooting node N.
-        at shooting node N;
+        """:math:`C^e` - C matrix at terminal shooting node N.
+        Type: :code:`np.ndarray`; default: :code:`np.array((0,0))`.
         """
         return self.__C_e
 
     @property
     def lg_e(self):
         """:math:`\\underline{g}^e` - lower bound on general polytopic inequalities
-        at shooting node N;
+        at terminal shooting node N.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__lg_e
 
     @property
     def ug_e(self):
         """:math:`\\bar{g}^e` - upper bound on general polytopic inequalities
-        at shooting node N;
+        at terminal shooting node N.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__ug_e
 
@@ -1078,14 +1146,16 @@ class AcadosOcpConstraints:
     @property
     def lh(self):
         """:math:`\\underline{h}` - lower bound for nonlinear inequalities
-        at shooting nodes 0 to N-1;
+        at shooting nodes (0 to N-1).
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__lh
 
     @property
     def uh(self):
         """:math:`\\bar{h}` - upper bound for nonlinear inequalities
-        at shooting nodes 0 to N-1;
+        at shooting nodes (0 to N-1).
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__uh
 
@@ -1093,14 +1163,16 @@ class AcadosOcpConstraints:
     @property
     def lh_e(self):
         """:math:`\\underline{h}^e` - lower bound on nonlinear inequalities
-        at shooting node N;
+        at terminal shooting node N.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__lh_e
 
     @property
     def uh_e(self):
         """:math:`\\bar{h}^e` - upper bound on nonlinear inequalities
-        at shooting node N;
+        at terminal shooting node N.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__uh_e
 
@@ -1108,14 +1180,16 @@ class AcadosOcpConstraints:
     @property
     def lphi(self):
         """:math:`\\underline{\phi}` - lower bound for convex-over-nonlinear inequalities
-        at shooting nodes 0 to N-1;
+        at shooting nodes (0 to N-1).
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__lphi
 
     @property
     def uphi(self):
         """:math:`\\bar{\phi}` - upper bound for convex-over-nonlinear inequalities
-        at shooting nodes 0 to N-1;
+        at shooting nodes (0 to N-1).
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__uphi
 
@@ -1123,14 +1197,16 @@ class AcadosOcpConstraints:
     @property
     def lphi_e(self):
         """:math:`\\underline{\phi}^e` - lower bound on convex-over-nonlinear inequalities
-        at shooting node N;
+        at terminal shooting node N.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__lphi_e
 
     @property
     def uphi_e(self):
         """:math:`\\bar{\phi}^e` - upper bound on convex-over-nonlinear inequalities
-        at shooting node N;
+        at terminal shooting node N.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__uphi_e
 
@@ -1140,28 +1216,30 @@ class AcadosOcpConstraints:
     @property
     def lsbx(self):
         """lower bounds on slacks corresponding to soft lower bounds on x
-        at stages 1 to N-1;
+        at stages (1 to N-1);
         not required - zeros by default"""
         return self.__lsbx
 
     @property
     def usbx(self):
         """upper bounds on slacks corresponding to soft upper bounds on x
-        at stages 1 to N-1;
+        at stages (1 to N-1);
         not required - zeros by default"""
         return self.__usbx
 
     @property
     def idxsbx(self):
         """indices of soft bounds on x within the indices of bounds on x
-        at stages 1 to N-1"""
+        at stages (1 to N-1).
+        Can be set by using :py:attr:`Jsbx`.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxsbx
 
     @property
     def Jsbx(self):
         """:math:`J_{sbx}` - matrix coefficient for soft bounds on x
-        at stages 1 to N-1;
-        internally translated into idxsbx"""
+        at stages (1 to N-1);
+        Translated internally into :py:attr:`idxsbx`."""
         print_J_to_idx_note()
         return self.__idxsbx
 
@@ -1169,53 +1247,57 @@ class AcadosOcpConstraints:
     @property
     def lsbu(self):
         """lower bounds on slacks corresponding to soft lower bounds on u
-        at stages 0 to N-1;
-        not required - zeros by default"""
+        at stages (0 to N-1).
+        Not required - zeros by default."""
         return self.__lsbu
 
     @property
     def usbu(self):
         """upper bounds on slacks corresponding to soft upper bounds on u
-        at stages 0 to N-1;
+        at stages (0 to N-1);
         not required - zeros by default"""
         return self.__usbu
 
     @property
     def idxsbu(self):
         """indices of soft bounds on u within the indices of bounds on u
-        at stages 0 to N-1;"""
+        at stages (0 to N-1).
+        Can be set by using :py:attr:`Jsbu`.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxsbu
 
     @property
     def Jsbu(self):
         """:math:`J_{sbu}` - matrix coefficient for soft bounds on u
-        at stages 0 to N-1;
-        internally translated into idxsbu"""
+        at stages (0 to N-1);
+        internally translated into :py:attr:`idxsbu`"""
         print_J_to_idx_note()
         return self.__idxsbu
 
     # soft bounds on x at shooting node N
     @property
     def lsbx_e(self):
-        """lower bounds on slacks corresponding to soft lower bounds on x at shooting node N.
-        not required - zeros by default"""
+        """Lower bounds on slacks corresponding to soft lower bounds on x at shooting node N.
+        Not required - zeros by default"""
         return self.__lsbx_e
 
     @property
     def usbx_e(self):
-        """lower bounds on slacks corresponding to soft upper bounds on x at shooting node N.
-        not required - zeros by default"""
+        """Lower bounds on slacks corresponding to soft upper bounds on x at shooting node N.
+        Not required - zeros by default"""
         return self.__usbx_e
 
     @property
     def idxsbx_e(self):
-        """indices of soft bounds on x at shooting node N, within the indices of bounds on x at shooting node N"""
+        """indices of soft bounds on x at shooting node N, within the indices of bounds on x at terminal shooting node N.
+        Can be set by using :py:attr:`Jsbx_e`.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxsbx_e
 
     @property
     def Jsbx_e(self):
-        """:math:`J_{sbx}^e` - matrix coefficient for soft bounds on x at shooting node N
-        internally translated into idxsbx_e"""
+        """:math:`J_{sbx}^e` - matrix coefficient for soft bounds on x at terminal shooting node N.
+        Translated internally to :py:attr:`idxsbx_e`"""
         print_J_to_idx_note()
         return self.__idxsbx_e
 
@@ -1223,73 +1305,82 @@ class AcadosOcpConstraints:
     @property
     def lsg(self):
         """lower bounds on slacks corresponding to soft lower bounds for general linear constraints
-        at stages 0 to N-1;
+        at stages (0 to N-1).
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`
         """
         return self.__lsg
 
     @property
     def usg(self):
-        """lower bounds on slacks corresponding to soft upper bounds for general linear constraints.
-        not required - zeros by default"""
+        """Lower bounds on slacks corresponding to soft upper bounds for general linear constraints.
+        Not required - zeros by default"""
         return self.__usg
 
     @property
     def idxsg(self):
-        """indices of soft general linear constraints within the indices of general linear constraints"""
+        """Indices of soft general linear constraints within the indices of general linear constraints.
+        Can be set by using :py:attr:`Jsg`.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxsg
 
     @property
     def Jsg(self):
-        """:math:`J_{sg}` - matrix coefficient for soft bounds on general linear constraints"""
+        """:math:`J_{sg}` - matrix coefficient for soft bounds on general linear constraints.
+        Translated internally to :py:attr:`idxsg`"""
         print_J_to_idx_note()
         return self.__idxsg
 
     # soft nonlinear constraints
     @property
     def lsh(self):
-        """lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints
-        not required - zeros by default"""
+        """Lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints.
+        Not required - zeros by default"""
         return self.__lsh
 
     @property
     def ush(self):
-        """lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints
-        not required - zeros by default"""
+        """Lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints.
+        Not required - zeros by default"""
         return self.__ush
 
     @property
     def idxsh(self):
-        """indices of soft nonlinear constraints within the indices of nonlinear constraints"""
+        """Indices of soft nonlinear constraints within the indices of nonlinear constraints.
+        Can be set by using :py:attr:`Jbx`.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxsh
 
     @property
     def Jsh(self):
-        """:math:`J_{sh}` - matrix coefficient for soft bounds on nonlinear constraints"""
+        """:math:`J_{sh}` - matrix coefficient for soft bounds on nonlinear constraints.
+        Translated internally to :py:attr:`idxsh`"""
         print_J_to_idx_note()
         return self.__idxsh
 
     # soft bounds on convex-over-nonlinear constraints
     @property
     def lsphi(self):
-        """lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints.
-        not required - zeros by default"""
+        """Lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints.
+        Not required - zeros by default"""
         return self.__lsphi
 
     @property
     def usphi(self):
-        """lower bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints.
-        not required - zeros by default"""
+        """Lower bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints.
+        Not required - zeros by default"""
         return self.__usphi
 
     @property
     def idxsphi(self):
-        """indices of soft convex-over-nonlinear constraints within the indices of nonlinear constraints"""
+        """Indices of soft convex-over-nonlinear constraints within the indices of nonlinear constraints.
+        Can be set by using :py:attr:`Jsphi`.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxsphi
 
     @property
     def Jsphi(self):
         """:math:`J_{s, \phi}` - matrix coefficient for soft bounds on convex-over-nonlinear constraints.
-        Internally translated into idxsphi"""
+        Translated internally into :py:attr:`idxsphi`."""
         print_J_to_idx_note()
         return self.__idxsphi
 
@@ -1297,24 +1388,26 @@ class AcadosOcpConstraints:
     # soft bounds on general linear constraints at shooting node N
     @property
     def lsg_e(self):
-        """lower bounds on slacks corresponding to soft lower bounds for general linear constraints at shooting node N.
-        not required - zeros by default"""
+        """Lower bounds on slacks corresponding to soft lower bounds for general linear constraints at shooting node N.
+        Not required - zeros by default"""
         return self.__lsg_e
 
     @property
     def usg_e(self):
-        """lower bounds on slacks corresponding to soft upper bounds for general linear constraints at shooting node N.
-        not required - zeros by default"""
+        """Lower bounds on slacks corresponding to soft upper bounds for general linear constraints at shooting node N.
+        Not required - zeros by default"""
         return self.__usg_e
 
     @property
     def idxsg_e(self):
-        """indices of soft general linear constraints at shooting node N within the indices of general linear constraints at shooting node N."""
+        """indices of soft general linear constraints at shooting node N within the indices of general linear constraints at shooting node N.
+        Can be set by using :py:attr:`Jsg_e`."""
         return self.__idxsg_e
 
     @property
     def Jsg_e(self):
-        """:math:`J_{s,h}^e` - matrix coefficient for soft bounds on general linear constraints at shooting node N"""
+        """:math:`J_{s,h}^e` - matrix coefficient for soft bounds on general linear constraints at terminal shooting node N.
+        Translated internally to :py:attr:`idxsg_e`"""
         print_J_to_idx_note()
         return self.__idxsg_e
 
@@ -1322,56 +1415,59 @@ class AcadosOcpConstraints:
     # soft bounds on nonlinear constraints at shooting node N
     @property
     def lsh_e(self):
-        """lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints at shooting node N.
-        not required - zeros by default"""
+        """Lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints at terminal shooting node N.
+        Not required - zeros by default"""
         return self.__lsh_e
 
     @property
     def ush_e(self):
-        """upper bounds on slacks corresponding to soft upper bounds for nonlinear constraints at shooting node N
-        not required - zeros by default"""
+        """Upper bounds on slacks corresponding to soft upper bounds for nonlinear constraints at terminal shooting node N.
+        Not required - zeros by default"""
         return self.__ush_e
 
     @property
     def idxsh_e(self):
-        """indices of soft nonlinear constraints at shooting node N within the indices of nonlinear constraints at shooting node N"""
+        """Indices of soft nonlinear constraints at shooting node N within the indices of nonlinear constraints at terminal shooting node N.
+        Can be set by using :py:attr:`Jsh_e`."""
         return self.__idxsh_e
 
     @property
     def Jsh_e(self):
-        """:math:`J_{s,h}^e` - matrix coefficient for soft bounds on nonlinear constraints at shooting node N"""
+        """:math:`J_{s,h}^e` - matrix coefficient for soft bounds on nonlinear constraints at terminal shooting node N; fills :py:attr:`idxsh_e`"""
         print_J_to_idx_note()
         return self.__idxsh_e
 
     # soft bounds on convex-over-nonlinear constraints at shooting node N
     @property
     def lsphi_e(self):
-        """lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints at shooting node N.
-        not required - zeros by default"""
+        """Lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints at terminal shooting node N.
+        Not required - zeros by default"""
         return self.__lsphi_e
 
     @property
     def usphi_e(self):
-        """upper bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints at shooting node N.
-        not required - zeros by default"""
+        """Upper bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints at terminal shooting node N.
+        Not required - zeros by default"""
         return self.__usphi_e
 
     @property
     def idxsphi_e(self):
-        """indices of soft nonlinear constraints at shooting node N within the indices of nonlinear constraints at shooting node N"""
+        """Indices of soft nonlinear constraints at shooting node N within the indices of nonlinear constraints at terminal shooting node N.
+        Can be set by using :py:attr:`Jsphi_e`.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
         return self.__idxsphi_e
 
     @property
     def Jsphi_e(self):
         """:math:`J_{sh}^e` - matrix coefficient for soft bounds on convex-over-nonlinear constraints at shooting node N.
-        Internally translated to idxsphi_e"""
+        Translated internally to :py:attr:`idxsphi_e`"""
         print_J_to_idx_note()
         return self.__idxsphi_e
 
     @property
     def x0(self):
-        """:math:`\\bar{x}_0` - initial state --
-        internally translated into idxbx_0, lbx_0, ubx_0, idxbxe_0 """
+        """:math:`x_0 \\in \mathbb{R}^{n_x}` - initial state --
+        Translated internally to :py:attr:`idxbx_0`, :py:attr:`lbx_0`, :py:attr:`ubx_0`, :py:attr:`idxbxe_0` """
         print("x0 is converted to lbx_0, ubx_0, idxbx_0")
         print("idxbx_0: ", self.__idxbx_0)
         print("lbx_0: ", self.__lbx_0)
@@ -1961,87 +2057,138 @@ class AcadosOcpOptions:
     @property
     def qp_solver(self):
         """QP solver to be used in the NLP solver.
-        string in ('PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP')"""
+        String in ('PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP').
+        Default: 'PARTIAL_CONDENSING_HPIPM'.
+        """
         return self.__qp_solver
 
     @property
     def hessian_approx(self):
         """Hessian approximation.
-        string in ('GAUSS_NEWTON', 'EXACT')"""
+        String in ('GAUSS_NEWTON', 'EXACT').
+        Default: 'GAUSS_NEWTON'.
+        """
         return self.__hessian_approx
 
     @property
     def integrator_type(self):
-        """Integrator type.
-        string in ('ERK', 'IRK', 'GNSF', 'DISCRETE')"""
+        """
+        Integrator type.
+        String in ('ERK', 'IRK', 'GNSF', 'DISCRETE').
+        Default: 'ERK'.
+        """
         return self.__integrator_type
 
     @property
     def nlp_solver_type(self):
         """NLP solver.
-        string in ('SQP', 'SQP_RTI')"""
+        String in ('SQP', 'SQP_RTI').
+        Default: 'SQP_RTI'.
+        """
         return self.__nlp_solver_type
 
     @property
     def globalization(self):
-        """Globalization type in ('FIXED_STEP', 'MERIT_BACKTRACKING');
-        Note: preliminary implementation."""
+        """Globalization type.
+        String in ('FIXED_STEP', 'MERIT_BACKTRACKING').
+        Default: 'FIXED_STEP'.
+        
+        .. note:: preliminary implementation.
+        """
         return self.__globalization
 
     @property
     def regularize_method(self):
         """Regularization method for the Hessian.
-        string in ('NO_REGULARIZE', 'MIRROR', 'PROJECT', 'PROJECT_REDUC_HESS', 'CONVEXIFY')"""
+        String in ('NO_REGULARIZE', 'MIRROR', 'PROJECT', 'PROJECT_REDUC_HESS', 'CONVEXIFY') or :code:`None`.
+
+        Default: :code:`None`.
+        """
         return self.__regularize_method
 
     @property
     def nlp_solver_step_length(self):
-        """Fixed Newton step length. Float > 0, default 1.0."""
+        """
+        Fixed Newton step length.
+        Type: float > 0.
+        Default: 1.0.
+        """
         return self.__nlp_solver_step_length
 
     @property
     def levenberg_marquardt(self):
-        """Factor for LM regularization - float > 0"""
+        """
+        Factor for LM regularization.
+        Type: float >= 0
+        Default: 0.0.
+        """
         return self.__levenberg_marquardt
 
     @property
     def sim_method_num_stages(self):
-        """Number of stages in the integrator"""
+        """
+        Number of stages in the integrator.
+        Type: int > 0
+        Default: 4
+        """
         return self.__sim_method_num_stages
 
     @property
     def sim_method_num_steps(self):
-        """Number of steps in the integrator"""
+        """
+        Number of steps in the integrator.
+        Type: int > 0
+        Default: 1
+        """
         return self.__sim_method_num_steps
 
     @property
     def sim_method_newton_iter(self):
-        """Number of Newton iterations in simulation method - integer, default: 3"""
+        """
+        Number of Newton iterations in simulation method.
+        Type: int > 0
+        Default: 3
+        """
         return self.__sim_method_newton_iter
 
     @property
     def sim_method_jac_reuse(self):
-        """Boolean determining if jacobians are reused within integrator, default: False"""
+        """
+        Boolean determining if jacobians are reused within integrator.
+        Default: False
+        """
         return self.__sim_method_jac_reuse
 
     @property
     def qp_solver_tol_stat(self):
-        """QP solver stationarity tolerance"""
+        """
+        QP solver stationarity tolerance.
+        Default: :code:`None`
+        """
         return self.__qp_solver_tol_stat
 
     @property
     def qp_solver_tol_eq(self):
-        """QP solver equality tolerance"""
+        """
+        QP solver equality tolerance.
+        Default: :code:`None`
+        """
         return self.__qp_solver_tol_eq
 
     @property
     def qp_solver_tol_ineq(self):
-        """QP solver inequality"""
+        """
+        QP solver inequality.
+        Default: :code:`None`
+        """
         return self.__qp_solver_tol_ineq
 
     @property
     def qp_solver_tol_comp(self):
-        """QP solver complementarity"""
+        """
+        QP solver complementarity.
+        Default: :code:`None`
+        """
         return self.__qp_solver_tol_comp
 
     @property
@@ -2052,24 +2199,41 @@ class AcadosOcpOptions:
 
     @property
     def qp_solver_iter_max(self):
-        """QP solver: maximum number of iterations"""
+        """
+        QP solver: maximum number of iterations.
+        Type: int > 0
+        Default: 50
+        """
         return self.__qp_solver_iter_max
 
     @property
     def tol(self):
-        """NLP solver tolerance"""
+        """
+        NLP solver tolerance. Sets or gets the max of :py:attr:`nlp_solver_tol_eq`,
+        :py:attr:`nlp_solver_tol_ineq`, :py:attr:`nlp_solver_tol_comp`
+        and :py:attr:`nlp_solver_tol_stat`.
+        """
         return max([self.__nlp_solver_tol_eq, self.__nlp_solver_tol_ineq,\
                     self.__nlp_solver_tol_comp, self.__nlp_solver_tol_stat])
 
     @property
     def qp_tol(self):
-        """QP solver tolerance"""
+        """
+        QP solver tolerance. Sets or gets the max of
+        :py:attr:`qp_solver_tol_eq`, :py:attr:`qp_solver_tol_ineq`,
+        :py:attr:`qp_solver_tol_comp` and
+        :py:attr:`qp_solver_tol_stat`.
+        """
         return max([self.__qp_solver_tol_eq, self.__qp_solver_tol_ineq,\
                     self.__qp_solver_tol_comp, self.__qp_solver_tol_stat])
 
     @property
     def nlp_solver_tol_stat(self):
-        """NLP solver stationarity tolerance"""
+        """
+        NLP solver stationarity tolerance.
+        Type: float > 0
+        Default: 1e-6
+        """
         return self.__nlp_solver_tol_stat
 
     @property
@@ -2099,32 +2263,51 @@ class AcadosOcpOptions:
 
     @property
     def nlp_solver_max_iter(self):
-        """NLP solver maximum number of iterations"""
+        """
+        NLP solver maximum number of iterations.
+        Type: int > 0
+        Default: 100
+        """
         return self.__nlp_solver_max_iter
 
     @property
     def time_steps(self):
-        """Vector with time steps between the shooting nodes. Set automatically to uniform discretization if N, tf are provided"""
+        """Vector with time steps between the shooting nodes. Set automatically to uniform discretization if :py:attr:`N` and :py:attr:`tf` are provided.
+        Default: :code:`None`
+        """
         return self.__time_steps
 
     @property
     def shooting_nodes(self):
-        """Vector with the shooting nodes, time_steps will be computed from it automatically"""
+        """
+        Vector with the shooting nodes, time_steps will be computed from it automatically.
+        Default: :code:`None`
+        """
         return self.__shooting_nodes
 
     @property
     def tf(self):
-        """Prediction horizon"""
+        """Prediction horizon
+        Type: float > 0
+        Default: :code:`None`
+        """
         return self.__tf
 
     @property
     def Tsim(self):
-        """Time horizon for one integrator step"""
+        """
+        Time horizon for one integrator step. Automatically calculated as :py:attr:`tf`/:py:attr:`N`.
+        Default: :code:`None`
+        """
         return self.__Tsim
 
     @property
     def print_level(self):
-        """Verbosity of printing"""
+        """
+        Verbosity of printing.
+        Type: int >= 0
+        Default: 0
+        """
         return self.__print_level
 
     @property
@@ -2140,19 +2323,19 @@ class AcadosOcpOptions:
     @property
     def exact_hess_constr(self):
         """Used in case of hessian_approx == 'EXACT'.\n
-           Can be used to turn off exact hessian contributions from the constraints module"""
+           Can be used to turn off exact hessian contributions from the constraints module."""
         return self.__exact_hess_constr
 
     @property
     def exact_hess_cost(self):
         """Used in case of hessian_approx == 'EXACT'.\n
-           Can be used to turn off exact hessian contributions from the cost module"""
+           Can be used to turn off exact hessian contributions from the cost module."""
         return self.__exact_hess_cost
 
     @property
     def exact_hess_dyn(self):
         """Used in case of hessian_approx == 'EXACT'.\n
-           Can be used to turn off exact hessian contributions from the dynamics module"""
+           Can be used to turn off exact hessian contributions from the dynamics module."""
         return self.__exact_hess_dyn
 
     @property
@@ -2442,20 +2625,20 @@ class AcadosOcpOptions:
 
 class AcadosOcp:
     """
-    class containing the full description of the optimal control problem.
-    This object can be used to create an AcadosOcpSolver.
+    Class containing the full description of the optimal control problem.
+    This object can be used to create an :py:class:`acados_template.acados_ocp_solver.AcadosOcpSolver`.
 
     The class has the following properties that can be modified to formulate a specific OCP, see below:
 
-        - dims of type AcadosOcpDims
-        - model of type AcadosModel
-        - cost of type AcadosOcpCost
-        - constraints of type AcadosOcpConstraints
-        - solver_options of type AcadosOcpOptions
+        - :py:attr:`dims` of type :py:class:`acados_template.acados_ocp.AcadosOcpDims`
+        - :py:attr:`model` of type :py:class:`acados_template.acados_model.AcadosModel`
+        - :py:attr:`cost` of type :py:class:`acados_template.acados_ocp.AcadosOcpCost`
+        - :py:attr:`constraints` of type :py:class:`acados_template.acados_ocp.AcadosOcpConstraints`
+        - :py:attr:`solver_options` of type :py:class:`acados_template.acados_ocp.AcadosOcpOptions`
 
-        - acados_include_path (set automatically)
-        - acados_lib_path (set automatically)
-        - parameter_values - used to initialize the parameters (can be changed)
+        - :py:attr:`acados_include_path` (set automatically)
+        - :py:attr:`acados_lib_path` (set automatically)
+        - :py:attr:`parameter_values` - used to initialize the parameters (can be changed)
     """
     def __init__(self, acados_path=''):
         """
@@ -2466,13 +2649,20 @@ class AcadosOcp:
             acados_path = get_acados_path()
 
         self.dims = AcadosOcpDims()
+        """Dimension definitions, type :py:class:`acados_template.acados_ocp.AcadosOcpDims`"""
         self.model = AcadosModel()
+        """Model definitions, type :py:class:`acados_template.acados_model.AcadosModel`"""
         self.cost = AcadosOcpCost()
+        """Cost definitions, type :py:class:`acados_template.acados_ocp.AcadosOcpCost`"""
         self.constraints = AcadosOcpConstraints()
+        """Constraints definitions, type :py:class:`acados_template.acados_ocp.AcadosOcpConstraints`"""
         self.solver_options = AcadosOcpOptions()
+        """Solver Options, type :py:class:`acados_template.acados_ocp.AcadosOcpOptions`"""
 		
         self.acados_include_path = f'{acados_path}/include'
+        """Path to acados include directors, type: string"""
         self.acados_lib_path = f'{acados_path}/lib'
+        """Path to where acados library is located, type: string"""
 
         self.__parameter_values = np.array([])
         self.__problem_class = 'OCP'
