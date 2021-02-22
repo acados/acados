@@ -82,6 +82,14 @@ for i in range(len(time_steps)):
 ocp.solver_options.shooting_nodes = shooting_nodes
 # ocp.solver_options.time_steps = time_steps
 
+# set num_steps
+ocp.solver_options.sim_method_num_steps = 2*np.ones((N,))
+ocp.solver_options.sim_method_num_steps[0] = 3
+
+# set num_stages
+ocp.solver_options.sim_method_num_stages = 2*np.ones((N,))
+ocp.solver_options.sim_method_num_stages[0] = 4
+
 # set cost
 Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
 R = 2*np.diag([1e-2])

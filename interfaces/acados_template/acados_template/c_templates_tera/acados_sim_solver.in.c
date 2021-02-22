@@ -240,16 +240,17 @@ int {{ model.name }}_acados_sim_create(sim_solver_capsule * capsule)
     // sim opts
     sim_opts *{{ model.name }}_sim_opts = sim_opts_create({{ model.name }}_sim_config, {{ model.name }}_sim_dims);
     capsule->acados_sim_opts = {{ model.name }}_sim_opts;
-    int tmp_int = {{ solver_options.sim_method_num_stages }};
-    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "num_stages", &tmp_int);
-    tmp_int = {{ solver_options.sim_method_num_steps }};
-    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "num_steps", &tmp_int);
-    tmp_int = {{ solver_options.sim_method_newton_iter }};
+    int tmp_int = {{ solver_options.sim_method_newton_iter }};
     sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "newton_iter", &tmp_int);
     bool tmp_bool = {{ solver_options.sim_method_jac_reuse }};
     sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "jac_reuse", &tmp_bool);
 
 {% if problem_class == "SIM" %}
+    tmp_int = {{ solver_options.sim_method_num_stages }};
+    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "num_stages", &tmp_int);
+    tmp_int = {{ solver_options.sim_method_num_steps }};
+    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "num_steps", &tmp_int);
+
     // options that are not available to AcadosOcpSolver
     //  (in OCP they will be determined by other options, like exact_hessian)
     tmp_bool = {{ solver_options.sens_forw }};
@@ -262,6 +263,12 @@ int {{ model.name }}_acados_sim_create(sim_solver_capsule * capsule)
     sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "sens_hess", &tmp_bool);
     tmp_bool = {{ solver_options.output_z }};
     sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "output_z", &tmp_bool);
+
+{% else %} {# num_stages and num_steps of first shooting interval are used #}
+    tmp_int = {{ solver_options.sim_method_num_stages[0] }};
+    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "num_stages", &tmp_int);
+    tmp_int = {{ solver_options.sim_method_num_steps[0] }};
+    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "num_steps", &tmp_int);
 {% endif %}
 
     // sim in / out

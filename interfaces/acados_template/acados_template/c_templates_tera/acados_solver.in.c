@@ -1620,13 +1620,22 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
 {%- endif %}
 
 {%- if solver_options.integrator_type != "DISCRETE" %}
-    int num_steps_val = {{ solver_options.sim_method_num_steps }};
-    for (int i = 0; i < N; i++)
-        ocp_nlp_solver_opts_set_at_stage(nlp_config, capsule->nlp_opts, i, "dynamics_num_steps", &num_steps_val);
 
-    int ns_val = {{ solver_options.sim_method_num_stages }};
+    int sim_method_num_steps[N];
+    {%- for j in range(end=dims.N) %}
+    sim_method_num_steps[{{ j }}] = {{ solver_options.sim_method_num_steps[j] }};
+    {%- endfor %}
+
     for (int i = 0; i < N; i++)
-        ocp_nlp_solver_opts_set_at_stage(nlp_config, capsule->nlp_opts, i, "dynamics_num_stages", &ns_val);
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, capsule->nlp_opts, i, "dynamics_num_steps", &sim_method_num_steps[i]);
+
+    int sim_method_num_stages[N];
+    {%- for j in range(end=dims.N) %}
+    sim_method_num_stages[{{ j }}] = {{ solver_options.sim_method_num_stages[j] }};
+    {%- endfor %}
+
+    for (int i = 0; i < N; i++)
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, capsule->nlp_opts, i, "dynamics_num_stages", &sim_method_num_stages[i]);
 
     int newton_iter_val = {{ solver_options.sim_method_newton_iter }};
     for (int i = 0; i < N; i++)

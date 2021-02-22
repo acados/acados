@@ -2225,7 +2225,7 @@ class AcadosOcpOptions:
     def sim_method_num_stages(self):
         """
         Number of stages in the integrator.
-        Type: int > 0
+        Type: int > 0 or ndarray of ints > 0 of shape (N,).
         Default: 4
         """
         return self.__sim_method_num_stages
@@ -2234,7 +2234,7 @@ class AcadosOcpOptions:
     def sim_method_num_steps(self):
         """
         Number of steps in the integrator.
-        Type: int > 0
+        Type: int > 0 or ndarray of ints > 0 of shape (N,).
         Default: 1
         """
         return self.__sim_method_num_steps
@@ -2523,18 +2523,22 @@ class AcadosOcpOptions:
     @sim_method_num_stages.setter
     def sim_method_num_stages(self, sim_method_num_stages):
 
-        if type(sim_method_num_stages) == int:
-            self.__sim_method_num_stages = sim_method_num_stages
-        else:
-            raise Exception('Invalid sim_method_num_stages value. sim_method_num_stages must be an integer. Exiting.')
+        # if type(sim_method_num_stages) == int:
+        #     self.__sim_method_num_stages = sim_method_num_stages
+        # else:
+        #     raise Exception('Invalid sim_method_num_stages value. sim_method_num_stages must be an integer. Exiting.')
+
+        self.__sim_method_num_stages = sim_method_num_stages
 
     @sim_method_num_steps.setter
     def sim_method_num_steps(self, sim_method_num_steps):
 
-        if type(sim_method_num_steps) == int:
-            self.__sim_method_num_steps = sim_method_num_steps
-        else:
-            raise Exception('Invalid sim_method_num_steps value. sim_method_num_steps must be an integer. Exiting.')
+        # if type(sim_method_num_steps) == int:
+        #     self.__sim_method_num_steps = sim_method_num_steps
+        # else:
+        #     raise Exception('Invalid sim_method_num_steps value. sim_method_num_steps must be an integer. Exiting.')
+        self.__sim_method_num_steps = sim_method_num_steps
+
 
     @sim_method_newton_iter.setter
     def sim_method_newton_iter(self, sim_method_newton_iter):
