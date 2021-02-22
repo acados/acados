@@ -153,17 +153,20 @@ Some of the following restrictions may apply to matrices in the formulation:
 \paragraph{Document Purpose}
 This document is only associated to the \matlab{} interface of \acados.
 Here, the focus is to give a mathematical overview of the problem formulation and possible options to model it within \acados.
-The problem formulation and the possibilities of \acados{} are also found in the \python{} interface (the string identifiers are different).
+The problem formulation and the possibilities of \acados{} are similar in the \python{} interface, however, some of the string identifiers are different.
 The documentation is not exhaustive and does not contain a full description for the \matlab{} interface.
 
-You can find examples under the \code{<ACADOS>/examples/acados\_matlab\_octave} directory.
-The \matlab{} source code of \casadi{} is found here: \code{<ACADOS>/interfaces/acados\_matlab\_octave} and should serve as a more extensive documentation about the possibilities.
+You can find examples int the directory \code{<acados>/examples/acados\_matlab\_octave}.
+The source code of the \acados{} \matlab{} interface is found in: \code{<acados>/interfaces/acados\_matlab\_octave} and should serve as a more extensive, complete and up-to-date documentation about the possibilities.
 %
 \section{Dynamics}\label{sec:dynamics}
 %
 The system dynamics term is used to connect state trajectories from adjacent shooting nodes by means of equality constraints.
 %
-The system dynamics equation~\eqref{eq:dynamics} is a placeholder for equations~\eqref{eq:dynamics:implicit}, \eqref{eq:dynamics:explicit} or \eqref{eq:dynamics:discrete}. Therefore, the dynamics can be formulated in different ways in \acados. This section and table~\ref{tab:dynamics} summarizes the options.
+The system dynamics equation~\eqref{eq:dynamics} is replaced with a discrete-time dynamic system.
+The dynamics can be formulated in different ways in \acados:
+As implicit equations in continuous time~\eqref{eq:dynamics:implicit}, or as explicit equations in continuous time~\eqref{eq:dynamics:explicit} or directly as discrete-time dynamics \eqref{eq:dynamics:discrete}.
+This section and table~\ref{tab:dynamics} summarizes the options.
 %
 \subsection{Implicit Dynamics}\label{sec:dynamics:implicit}
 %
@@ -172,6 +175,7 @@ The most general way to provide a continuous time ODE in \acados\ is to define t
     f\ind{impl}(x, \dot{x}, u, z, p) &= 0.\label{eq:dynamics:implicit}
 \end{align}
 \acados{} can discretize $ f\ind{impl} $ with a classical implicit Runge-Kutta (\code{irk}) or a structure exploiting implicit Runge-Kutta method (\code{irk\_gnsf}). Both discretization methods are set using the \code{'sim\_method'} identifier in a \code{acados\_ocp\_opts} class instance.
+
 %
 \subsection{Explicit Dynamics}\label{sec:dynamics:explicit}
 %
@@ -232,14 +236,14 @@ Setting the slack penalties in equation~\eqref{eq:cost} is done in the same way 
 Moreover, you can specify \code{cost\_Z}, to set $ Z\Lower$, $Z\upper$ to the same values, i.e., use a symmetric L2 slack penalty.
 Similarly, \code{cost\_z}, \code{cost\_Z\_e}, \code{cost\_z\_e} can be used to set symmetric slack L1 penalties, respectively penalties for the terminal slack variables.
 
-Note, that you don't have to set slack variables $s\Lower(t)$, $s\Lower\terminal(t)$, $s\upper(t)$ and $s\upper\terminal(t)$ manually. They are part of the solution and its dimensions are determined by \acados{} from the associated matrices ($Z\Lower$, $Z\upper$,  $J\ind{sh}$, $J\ind{sbx}$, $J\ind{sbu}$, etc.).
+Note, that the dimensions of the slack variables $s\Lower(t)$, $s\Lower\terminal(t)$, $s\upper(t)$ and $s\upper\terminal(t)$ are determined by \acados{} from the associated matrices ($Z\Lower$, $Z\upper$,  $J\ind{sh}$, $J\ind{sg}$, $J\ind{sbu}$, $J\ind{sbx}$ etc.).
 %
 \subsection{Cost module: \code{auto}}\label{sec:cost:auto}
 %
 Set \code{cost\_type} to \code{auto} (default).
-In this case \acados{} detects if the cost function specified is a linear least squares term and transcribe it in the corresponding form.
+In this case \acados{} detects if the cost function specified is a linear least squares term and transcribes it in the corresponding form.
 Otherwise, it is formulated using the external cost module.
-Note: slack penalties are optional and we plan to detected them form the expressions in future versions.
+Note: slack penalties are optional and we plan to detected them from the expressions in future versions.
 Table~\ref{tab:cost:auto} shows the available options.
 %
 \begin{table}[h!]
@@ -305,11 +309,11 @@ See table~\ref{tab:cost:linear_ls} for the available options of this cost module
     \end{tabular}
 \end{table}
 %
-\subsection{Cost module: \code{non-linear least squares}}\label{sec:cost:nonlinear_ls}
+\subsection{Cost module: \code{nonlinear least squares}}\label{sec:cost:nonlinear_ls}
 %
-In order to activate the \code{non-linear least squares} cost module, set \code{cost\_type} to \code{nonlinear\_ls}.
+In order to activate the \code{nonlinear least squares} cost module, set \code{cost\_type} to \code{nonlinear\_ls}.
 
-The \code{non-linear least squares} cost function has the same basic form as eqns.~(\ref{eq:cost:linear_ls:l}~-~\ref{eq:cost:linear_ls:m}) of the \code{linear least squares} cost module.
+The \code{nonlinear least squares} cost function has the same basic form as eqns.~(\ref{eq:cost:linear_ls:l}~-~\ref{eq:cost:linear_ls:m}) of the \code{linear least squares} cost module.
 The only difference is that $ y $ and $ y\terminal $ are defined by means of \casadi{} expressions, instead of via matrices $ V_x $, $ V_u $, $ V_z $ and $ V_x\terminal $.
 %
 See table~\ref{tab:cost:nonlinear_ls} for the available options of this cost module.
@@ -333,21 +337,25 @@ See table~\ref{tab:cost:nonlinear_ls} for the available options of this cost mod
 %\newpage
 \section{Constraints}\label{sec:constraints}
 %
-This section is about how to define the constraints equations \eqref{eq:constraints:initial} and (\ref{eq:constraints:path:lower_bounds:start} - \ref{eq:constraints:terminal:upper_bounds:end}). The constraint type can be set using the identifier \str{constr\_type} and \str{constr\_type\_e} for the path constraints and terminal constraints, respectively. The string identifier options are found in table~\ref{tab:constr_type}. The default setting is \str{bgh}.
-\begin{table}[h!]
-\centering
-\caption{Constraint type string identifier}\label{tab:constr_type}
-%
-\begin{tabular}{ccccc}
-    \toprule
-    & \multicolumn{4}{c}{Supported constraints} \\ \cmidrule{2-5}
-    String     & simple & polytopic & general non-   & positive \\
-    identifier & bounds & constr.   & linear constr. & definite constr.\\ \midrule
-    \code{bgh} & yes & yes & yes & no \\
-    \code{bgp} & yes & yes & yes & yes \\
-    \bottomrule
-\end{tabular}
-\end{table}
+This section is about how to define the constraints equations \eqref{eq:constraints:initial} and (\ref{eq:constraints:path:lower_bounds:start} - \ref{eq:constraints:terminal:upper_bounds:end}).
+
+The \matlab{} interface supports the constraint module \code{bgh}, which is able to handle simple \textbf{b}ounds (on $ x $ and $ u $), \textbf{g}eneral linear constraints and general nonlinear constraints.
+Meanwhile, the \python{} interface also supports the \acados{} constraint module \code{bgp}, which can handle convex-over-nonlinear constraints in a dedicated fashion.
+%The constraint type can be set using the identifier \str{constr\_type} and \str{constr\_type\_e} for the path constraints and terminal constraints, respectively. The string identifier options are found in table~\ref{tab:constr_type}. The default setting is \str{bgh}.
+%\begin{table}[h!]
+%\centering
+%\caption{Constraint type string identifier}\label{tab:constr_type}
+%%
+%\begin{tabular}{ccccc}
+%    \toprule
+%    & \multicolumn{4}{c}{Supported constraints} \\ \cmidrule{2-5}
+%    String     & simple & polytopic & general non-   & positive \\
+%    identifier & bounds & constr.   & linear constr. & definite constr.\\ \midrule
+%    \code{bgh} & yes & yes & yes & no \\
+%    \code{bgp} & yes & yes & yes & yes \\
+%    \bottomrule
+%\end{tabular}
+%\end{table}
 %
 \subsection{Initial State}\label{sec:constraints:initial}
 %
@@ -467,7 +475,7 @@ A table sheet with additional info is found here:\newline
 %
 \section{Model}\label{sec:model}
 %
-A model instance is created using \code{ocp\_model = acados\_ocp\_model()}. It contains all model definitions for simulation and for usage in the solver.
+A model instance is created using \code{ocp\_model = acados\_ocp\_model()}. It contains all model definitions for simulation and for usage in the OCP solver.
 See table~\ref{tab:model:options} for the available options.
 Furthermore, see \code{ocp\_model.model\_struct} to see what other fields can be set via direct access.
 %
@@ -487,26 +495,31 @@ Furthermore, see \code{ocp\_model.model\_struct} to see what other fields can be
         \code{sym\_z} & \casadi{} expr. & algebraic state $z$ in implicit dynamics eq.~\eqref{eq:dynamics} & \optional, only with IRK \\
         \code{sym\_p} & \casadi{} expr. & parameters $p$ of the problem formulation in sec.~\ref{sec:problem} & \optional \\
         \multicolumn{4}{c}{$\vdots$}\\
-        \multicolumn{4}{c}{Additionally, options from tables \ref{tab:dynamics}, \ref{tab:cost:slack}, \ref{tab:cost:auto}, \ref{tab:cost:external}, \ref{tab:cost:linear_ls}, \ref{tab:cost:nonlinear_ls}, \ref{tab:constr_type}, \ref{tab:constraints:simplesyntax}, \ref{tab:constraints:extendedsyntax}, \ref{tab:constraints:path} and \ref{tab:constraints:terminal}, apply here.}\\
+        \multicolumn{4}{c}{Additionally, options from tables \ref{tab:dynamics}, \ref{tab:cost:slack}, \ref{tab:cost:auto}, \ref{tab:cost:external}, \ref{tab:cost:linear_ls}, \ref{tab:cost:nonlinear_ls}, %\ref{tab:constr_type},
+        \ref{tab:constraints:simplesyntax}, \ref{tab:constraints:extendedsyntax}, \ref{tab:constraints:path} and \ref{tab:constraints:terminal}, apply here.}\\
         \multicolumn{4}{c}{$\vdots$}\\
         \bottomrule
     \end{tabular}%
 \end{table}%
 %
-\section{Solver}\label{sec:solver}
+\section{Solver \& Options}\label{sec:solver}
 %
 An instance of the solver options class is created by using: \code{ocp\_opts = acados\_ocp\_opts()}.
-Together with the model these options are used when instancing the solver interface class: \code{ocp = acados\_ocp(ocp\_model, ocp\_opts)}.
-Tables \ref{tab:solver_options}, \ref{tab:solver_options:qp_solver_option} and \ref{tab:solver_options:regularize_method} show (almost) all available options. These options are set in \matlab{} via \code{ocp\_opts.set(<stringid>, <value>)}.
+Together with the model these options are used when instancing the solver interface class: \code{ocp = acados\_ocp(ocp\_model, ocp\_opts)}.\\
+Tables \ref{tab:solver_options}, \ref{tab:solver_options:qp_solver_option} and \ref{tab:solver_options:regularize_method} show (almost) all available options.
+These options are set in \matlab{} via \code{ocp\_opts.set(<stringid>, <value>)}.
 % Some options are not (yet) implemented in the \code{.set(*)}-interface and can be accessed via a struct by using \code{ocp\_opts.opts\_struct.(<stringid>) = <value>}.
-Furthermore, see \code{ocp\_opts.opts\_struct} to see what other fields can be set via direct access.
+Furthermore, the struct \code{ocp\_opts.opts\_struct} can be used as a reference for what other fields are available.
+\\
+Note that some options of the solver can be modified after creation using the routine: \code{set(<stringid>, <value>)}.
+Some options can only be set before the solver is created, especially options that influence the memory requirements of OCP solver, such as the modules used in the formulation, the QP solver, etc.
 
 %
 %\begin{landscape}
 \begin{table}
     \centering
     \small
-    \caption{Solver \code{set(<stringid>, <value>)} options}\label{tab:solver_options}
+    \caption{Solver options}\label{tab:solver_options}
     \begin{tabulary}{\textwidth}{p{4cm}@{}C@{}C@{}p{10cm}}
         \toprule
         {String identifier} & Type & Default & {Description} \\ \midrule
@@ -517,16 +530,23 @@ Furthermore, see \code{ocp\_opts.opts\_struct} to see what other fields can be s
         \code{output\_dir} & string & \str{build} & codegen output directory\\
         \midrule
 
-        \multicolumn{4}{l}{\emph{Shooting nodes}} \\
+		\multicolumn{4}{l}{\emph{Shooting nodes}} \\
         \code{param\_scheme\_N} & int $>1$ & $10$ & uniform grid: number of shooting nodes; acts together with end time \code{T} from model. \\
         % set one of the following for nonuniform grid
         {\code{shooting\_nodes} or \code{param\_\-scheme\_shooting\_nodes}} & doubles & \code{[]} & nonuniform grid option 1: direct definition of the shooting node times \\
         \code{time\_steps} & doubles & \code{[]} & {nonuniform grid option 2: definition of deltas between shooting nodes}\\
         \midrule
 
+        \multicolumn{4}{l}{\emph{Integrator}} \\
+        \code{sim\_method} & string & \str{irk} & \str{erk}, \str{irk}, \str{irk\_gnsf} \\
+        \code{sim\_method\_num\_stages} & int & $4$ & Runge-Kutta int.\ stages: ($1$)~RK1, ($2$)~RK2, ($4$)~RK4\\
+        \code{sim\_method\_num\_steps} & int & $1$\\
+        \code{sim\_method\_newton\_iter} & int & $3$\\
+        \code{gnsf\_detect\_struct} & string & \str{true}\\
+        \midrule
+
         \multicolumn{4}{l}{\emph{NLP solver}} \\
         \code{nlp\_solver} & string & \str{sqp} & in (\str{sqp}, \str{sqp\_rti})\\
-        {\code{nlp\_solver\_\-exact\_hessian}} & string & \str{false} & use exact hessian calculation: (\str{})in (\str{true}, \str{false}), use exact \\
         \code{nlp\_solver\_max\_iter} & int $>1$ & $100$ & maximum number of NLP iterations\\
         \code{nlp\_solver\_tol\_stat} & double & $10^{-6}$ & stopping criterion \\
         \code{nlp\_solver\_tol\_eq}   & double & $10^{-6}$ & stopping criterion \\
@@ -539,28 +559,30 @@ Furthermore, see \code{ocp\_opts.opts\_struct} to see what other fields can be s
         
         \multicolumn{4}{l}{\emph{QP solver}} \\
         \code{qp\_solver} & string & $\longrightarrow$ & Defines the quadratic programming solver and condensing strategy. See table~\ref{tab:solver_options:qp_solver_option}\\
-        % globalization
-        \code{globalization} & string & \scriptsize\str{fixed\_step} & globalization stepping strategy \\
-        \code{alpha\_min} & double & $0.05$ & minimum step-size? \\
-        \code{alpha\_reduction} & double & $0.7$ & ? \\
 
-        \code{qp\_solver\_iter\_max} & int & $50$\\
+        \code{qp\_solver\_iter\_max} & int & $50$ & maximum number of iterations per QP solver call\\
         % \code{qp\_solver\_cond\_N} & 5\\ % New horizon after partial condensing
         \code{qp\_solver\_cond\_ric\_alg} & int & $0$ & factorize hessian in the condensing: ($0$) no, ($1$) yes \\
         \code{qp\_solver\_ric\_alg} & int & $0$ & HPIPM specific \\
         \code{qp\_solver\_warm\_start} & int & $0$ & ($0$)~cold start, ($1$)~warm start primal variables, ($2$)~warm start and dual variables \\
         \code{warm\_start\_first\_qp} & int & $0$ & warm start even in first SQP iteration: ($0$)~no, ($1$)~yes \\
-        \code{sim\_method} & string & \str{irk} & \str{erk}, \str{irk}, \str{irk\_gnsf} \\
-        \code{sim\_method\_num\_stages} & int & $4$ & Runge-Kutta int.\ stages: ($1$)~RK1, ($2$)~RK2, ($4$)~RK4\\
-        \code{sim\_method\_num\_steps} & int & $1$\\
-        \code{sim\_method\_newton\_iter} & int & $3$\\
-        \code{gnsf\_detect\_struct} & string & \str{true}\\
+        \midrule
+                % globalization
+        \multicolumn{4}{l}{\emph{globalization}} \\
+        \code{globalization} & string & \scriptsize\str{fixed\_step} & globalization strategy in (\str{fixed\_step}, \str{merit\_backtracking}), note \code{merit\_backtracking} is a preliminary implementation.\\
+        \code{alpha\_min} & double & $0.05$ & minimum step-size, relevant for globalization  \\
+        \code{alpha\_reduction} & double & $0.7$ &  step-size reduction factor, relevant for globalization  \\
+        \midrule
+        \multicolumn{4}{l}{\emph{Hessian approximation}} \\
+        {\code{nlp\_solver\_\-exact\_hessian}} & string & \str{false} & use exact hessian calculation: (\str{})in (\str{true}, \str{false}), use exact \\
         \code{regularize\_method} & string & $\longrightarrow$ & Defines the hessian regularization method. See table~\ref{tab:solver_options:regularize_method}\\
-        \code{print\_level} & int $\geq 0$ & $0$ & verbosity of the solver: ($0$) silent, ($>0$) print solver output during solution finding \\
         \code{levenberg\_marquardt} & double & $0.0$ & in case of a singular hessian, setting this $>0$ can help convergence \\
         \code{exact\_hess\_dyn} & int & $1$ & in ($0$, $1$), compute and use hessian in dynamics, only if \str{nlp\_\-solver\_\-exact\_\-hessian} = \str{true} \\
         \code{exact\_hess\_cost} & int & $1$ & in ($0$, $1$), only if \str{nlp\_solver\_exact\_hessian} = \str{true} \\
         \code{exact\_hess\_constr} & int & $1$ & in ($0$, $1$), only if \str{nlp\_solver\_exact\_hessian} = \str{true} \\
+        \midrule
+        \multicolumn{4}{l}{\emph{Other}} \\
+        \code{print\_level} & int $\geq 0$ & $0$ & verbosity of the solver: ($0$) silent, ($>0$) print first QP problems and solution during SQP\\
         \bottomrule
     \end{tabulary}
 \end{table}
@@ -593,10 +615,10 @@ Furthermore, see \code{ocp\_opts.opts\_struct} to see what other fields can be s
         \toprule
         String identifier & Description \\\midrule
         \code{no\_regularize}* & don‘t regularize \\
-        \code{mirror} & ? \\
-        \code{project} & ? \\
-        \code{project\_reduc\_hess} & ? \\
-        \code{convexify} & ? \\
+        \code{mirror} & \href{https://cdn.syscop.de/publications/Verschueren2017.pdf}{see Verschueren2017} \\
+        \code{project} & \href{https://cdn.syscop.de/publications/Verschueren2017.pdf}{see Verschueren2017} \\
+        \code{project\_reduc\_hess} & preliminary \\
+        \code{convexify} & \href{https://cdn.syscop.de/publications/Verschueren2017.pdf}{see Verschueren2017} \\
         \bottomrule
         \multicolumn{2}{r}{\footnotesize * default}
     \end{tabular}
