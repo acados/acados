@@ -675,28 +675,28 @@ class AcadosOcpCost:
 
     @property
     def Zl(self):
-        """:math:`Z_l` - diagonal of Hessian wrt. lower slack at intermediate shooting nodes (1 to N-1).
+        """:math:`Z_l` - diagonal of Hessian wrt lower slack at intermediate shooting nodes (1 to N-1).
         Default: :code:`np.array([])`.
         """
         return self.__Zl
 
     @property
     def Zu(self):
-        """:math:`Z_u` - diagonal of Hessian wrt. upper slack at intermediate shooting nodes (1 to N-1).
+        """:math:`Z_u` - diagonal of Hessian wrt upper slack at intermediate shooting nodes (1 to N-1).
         Default: :code:`np.array([])`.
         """
         return self.__Zu
 
     @property
     def zl(self):
-        """:math:`z_l` - gradient wrt. lower slack at intermediate shooting nodes (1 to N-1).
+        """:math:`z_l` - gradient wrt lower slack at intermediate shooting nodes (1 to N-1).
         Default: :code:`np.array([])`.
         """
         return self.__zl
 
     @property
     def zu(self):
-        """:math:`z_u` - gradient wrt. upper slack at intermediate shooting nodes (1 to N-1).
+        """:math:`z_u` - gradient wrt upper slack at intermediate shooting nodes (1 to N-1).
         Default: :code:`np.array([])`.
         """
         return self.__zu
@@ -818,28 +818,28 @@ class AcadosOcpCost:
 
     @property
     def Zl_e(self):
-        """:math:`Z_l^e` - diagonal of Hessian wrt. lower slack for Mayer term.
+        """:math:`Z_l^e` - diagonal of Hessian wrt lower slack for Mayer term.
         Default: :code:`np.array([])`.
         """
         return self.__Zl_e
 
     @property
     def Zu_e(self):
-        """:math:`Z_u^e` - diagonal of Hessian wrt. upper slack for Mayer term.
+        """:math:`Z_u^e` - diagonal of Hessian wrt upper slack for Mayer term.
         Default: :code:`np.array([])`.
         """
         return self.__Zu_e
 
     @property
     def zl_e(self):
-        """:math:`z_l^e` - gradient wrt. lower slack for Mayer term.
+        """:math:`z_l^e` - gradient wrt lower slack for Mayer term.
         Default: :code:`np.array([])`.
         """
         return self.__zl_e
 
     @property
     def zu_e(self):
-        """:math:`z_u^e` - gradient wrt. upper slack for Mayer term.
+        """:math:`z_u^e` - gradient wrt upper slack for Mayer term.
         Default: :code:`np.array([])`.
         """
         return self.__zu_e
@@ -2716,7 +2716,7 @@ class AcadosOcp:
         """Solver Options, type :py:class:`acados_template.acados_ocp.AcadosOcpOptions`"""
 		
         self.acados_include_path = f'{acados_path}/include'
-        """Path to acados include directors, type: string"""
+        """Path to acados include directory, type: string"""
         self.acados_lib_path = f'{acados_path}/lib'
         """Path to where acados library is located, type: string"""
 
