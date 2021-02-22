@@ -667,10 +667,16 @@
             "float"
         ],
         "sim_method_num_stages": [
-            "int"
+            "ndarray",
+            [
+                "N"
+            ]
         ],
         "sim_method_num_steps": [
-            "int"
+            "ndarray",
+            [
+                "N"
+            ]
         ],
         "sim_method_newton_iter": [
             "int"
