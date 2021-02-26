@@ -216,14 +216,14 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     % initial
     if isfield(model, 'constr_lbx_0')
         ocp_json.constraints.lbx_0 = model.constr_lbx_0;
-    else
+    elseif ocp_json.dims.nbx_0 > 0
         warning('missing: constr_lbx_0, using zeros of appropriate dimension.');
         ocp_json.constraints.lbx_0 = zeros(ocp_json.dims.nbx_0, 1);
     end
 
     if isfield(model, 'constr_ubx_0')
         ocp_json.constraints.ubx_0 = model.constr_ubx_0;
-    else
+    elseif ocp_json.dims.nbx_0 > 0
         warning('missing: constr_ubx_0, using zeros of appropriate dimension.');
         ocp_json.constraints.ubx_0 = zeros(ocp_json.dims.nbx_0, 1);
     end
