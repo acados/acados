@@ -393,12 +393,12 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     {% if solver_options.hessian_approx == "EXACT" %}
     capsule->nl_constr_h_fun_jac_hess = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; i++) {
-        capsule->nl_constr_h_fun_jac_hess[i].casadi_fun = &{{ model.name }}_constr_h_fun_jac_uxt_hess;
-        capsule->nl_constr_h_fun_jac_hess[i].casadi_n_in = &{{ model.name }}_constr_h_fun_jac_uxt_hess_n_in;
-        capsule->nl_constr_h_fun_jac_hess[i].casadi_n_out = &{{ model.name }}_constr_h_fun_jac_uxt_hess_n_out;
-        capsule->nl_constr_h_fun_jac_hess[i].casadi_sparsity_in = &{{ model.name }}_constr_h_fun_jac_uxt_hess_sparsity_in;
-        capsule->nl_constr_h_fun_jac_hess[i].casadi_sparsity_out = &{{ model.name }}_constr_h_fun_jac_uxt_hess_sparsity_out;
-        capsule->nl_constr_h_fun_jac_hess[i].casadi_work = &{{ model.name }}_constr_h_fun_jac_uxt_hess_work;
+        capsule->nl_constr_h_fun_jac_hess[i].casadi_fun = &{{ model.name }}_constr_h_fun_jac_uxt_zt_hess;
+        capsule->nl_constr_h_fun_jac_hess[i].casadi_n_in = &{{ model.name }}_constr_h_fun_jac_uxt_zt_hess_n_in;
+        capsule->nl_constr_h_fun_jac_hess[i].casadi_n_out = &{{ model.name }}_constr_h_fun_jac_uxt_zt_hess_n_out;
+        capsule->nl_constr_h_fun_jac_hess[i].casadi_sparsity_in = &{{ model.name }}_constr_h_fun_jac_uxt_zt_hess_sparsity_in;
+        capsule->nl_constr_h_fun_jac_hess[i].casadi_sparsity_out = &{{ model.name }}_constr_h_fun_jac_uxt_zt_hess_sparsity_out;
+        capsule->nl_constr_h_fun_jac_hess[i].casadi_work = &{{ model.name }}_constr_h_fun_jac_uxt_zt_hess_work;
 
         external_function_param_casadi_create(&capsule->nl_constr_h_fun_jac_hess[i], {{ dims.np }});
     }
@@ -423,12 +423,12 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     external_function_param_casadi_create(&capsule->nl_constr_h_e_fun, {{ dims.np }});
 
     {% if solver_options.hessian_approx == "EXACT" %}
-    capsule->nl_constr_h_e_fun_jac_hess.casadi_fun = &{{ model.name }}_constr_h_e_fun_jac_uxt_hess;
-    capsule->nl_constr_h_e_fun_jac_hess.casadi_n_in = &{{ model.name }}_constr_h_e_fun_jac_uxt_hess_n_in;
-    capsule->nl_constr_h_e_fun_jac_hess.casadi_n_out = &{{ model.name }}_constr_h_e_fun_jac_uxt_hess_n_out;
-    capsule->nl_constr_h_e_fun_jac_hess.casadi_sparsity_in = &{{ model.name }}_constr_h_e_fun_jac_uxt_hess_sparsity_in;
-    capsule->nl_constr_h_e_fun_jac_hess.casadi_sparsity_out = &{{ model.name }}_constr_h_e_fun_jac_uxt_hess_sparsity_out;
-    capsule->nl_constr_h_e_fun_jac_hess.casadi_work = &{{ model.name }}_constr_h_e_fun_jac_uxt_hess_work;
+    capsule->nl_constr_h_e_fun_jac_hess.casadi_fun = &{{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess;
+    capsule->nl_constr_h_e_fun_jac_hess.casadi_n_in = &{{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess_n_in;
+    capsule->nl_constr_h_e_fun_jac_hess.casadi_n_out = &{{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess_n_out;
+    capsule->nl_constr_h_e_fun_jac_hess.casadi_sparsity_in = &{{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess_sparsity_in;
+    capsule->nl_constr_h_e_fun_jac_hess.casadi_sparsity_out = &{{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess_sparsity_out;
+    capsule->nl_constr_h_e_fun_jac_hess.casadi_work = &{{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess_work;
     external_function_param_casadi_create(&capsule->nl_constr_h_e_fun_jac_hess, {{ dims.np }});
     {% endif %}
     {%- endif %}

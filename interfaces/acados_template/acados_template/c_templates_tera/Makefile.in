@@ -160,7 +160,7 @@ OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_phi_e_constraint.o
 OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_constr_h_fun_jac_uxt_zt.o
 OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_constr_h_fun.o
 {%- if hessian_approx == "EXACT" %}
-OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_constr_h_fun_jac_uxt_hess.o
+OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_constr_h_fun_jac_uxt_zt_hess.o
 {%- endif %}
 {%- endif %}
 
@@ -168,7 +168,7 @@ OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_constr_h_fun_jac_uxt_hes
 OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_constr_h_e_fun_jac_uxt_zt.o
 OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_constr_h_e_fun.o
 {%- if hessian_approx == "EXACT" %}
-OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_constr_h_e_fun_jac_uxt_hess.o
+OCP_OBJ+= {{ model.name }}_constraints/{{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess.o
 {%- endif %}
 {%- endif %}
 
@@ -277,7 +277,7 @@ CASADI_CON_H_SOURCE=
 CASADI_CON_H_SOURCE+= {{ model.name }}_constr_h_fun_jac_uxt_zt.c
 CASADI_CON_H_SOURCE+= {{ model.name }}_constr_h_fun.c
 {%- if hessian_approx == "EXACT" %}
-CASADI_CON_H_SOURCE+= {{ model.name }}_constr_h_fun_jac_uxt_hess.c
+CASADI_CON_H_SOURCE+= {{ model.name }}_constr_h_fun_jac_uxt_zt_hess.c
 {%- endif %}
 {%- endif %}
 
@@ -286,7 +286,7 @@ CASADI_CON_H_E_SOURCE=
 CASADI_CON_H_E_SOURCE+= {{ model.name }}_constr_h_e_fun_jac_uxt_zt.c
 CASADI_CON_H_E_SOURCE+= {{ model.name }}_constr_h_e_fun.c
 {%- if hessian_approx == "EXACT" %}
-CASADI_CON_H_E_SOURCE+= {{ model.name }}_constr_h_e_fun_jac_uxt_hess.c
+CASADI_CON_H_E_SOURCE+= {{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess.c
 {%- endif %}
 {%- endif %}
 

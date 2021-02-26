@@ -113,9 +113,9 @@ def generate_c_code_constraint( model, con_name, is_terminal, opts ):
             if opts['generate_hess']:
 
                 if is_terminal:
-                    fun_name = con_name + '_constr_h_e_fun_jac_uxt_hess'
+                    fun_name = con_name + '_constr_h_e_fun_jac_uxt_zt_hess'
                 else:
-                    fun_name = con_name + '_constr_h_fun_jac_uxt_hess'
+                    fun_name = con_name + '_constr_h_fun_jac_uxt_zt_hess'
 
                 # adjoint
                 adj_ux = jtimes(con_h_expr, vertcat(u, x), lam_h, True)
