@@ -2097,6 +2097,8 @@ class AcadosOcpOptions:
         self.__exact_hess_dyn = 1
         self.__exact_hess_constr = 1
         self.__ext_cost_num_hess = 0
+        self.__alpha_min = 0.05
+        self.__alpha_reduction = 0.7
 
 
     @property
