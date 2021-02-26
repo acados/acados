@@ -142,11 +142,11 @@ if isfield(model, 'constr_expr_h_e')
     % Set up functions
     h_e_fun = Function([model_name,'_constr_h_e_fun'], {x, p}, {h_e});
     h_e_fun_jac_uxt_zt = Function([model_name,'_constr_h_e_fun_jac_uxt_zt'], {x, p}, {h_e, jac_x_e'});
-    h_e_fun_jac_uxt_hess = Function([model_name,'_constr_h_e_fun_jac_uxt_hess'], {x, lam_h_e, p}, {h_e, jac_x_e', hess_ux_e});
+    h_e_fun_jac_uxt_hess = Function([model_name,'_constr_h_e_fun_jac_uxt_zt_hess'], {x, lam_h_e, p}, {h_e, jac_x_e', hess_ux_e});
     % generate C code
     h_e_fun.generate([model_name,'_constr_h_e_fun'], casadi_opts);
     h_e_fun_jac_uxt_zt.generate([model_name,'_constr_h_e_fun_jac_uxt_zt'], casadi_opts);
-    h_e_fun_jac_uxt_hess.generate([model_name,'_constr_h_e_fun_jac_uxt_hess'], casadi_opts);
+    h_e_fun_jac_uxt_hess.generate([model_name,'_constr_h_e_fun_jac_uxt_zt_hess'], casadi_opts);
 end
 
 if nargin > 2
