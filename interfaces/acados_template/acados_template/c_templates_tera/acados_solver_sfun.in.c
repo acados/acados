@@ -133,6 +133,10 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
 
+  {%- if simulink_opts.inputs.x_init -%}  {#- x_init #}
+    {%- set n_inputs = n_inputs + 1 -%}
+  {%- endif -%}
+
     // specify the number of input ports
     if ( !ssSetNumInputPorts(S, {{ n_inputs }}) )
         return;
@@ -259,6 +263,12 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.ny_e * dims.ny_e }});
   {%- endif %}
 
+  {%- if simulink_opts.inputs.x_init -%}  {#- x_init #}
+    {%- set i_input = i_input + 1 %}
+    // x_init
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nx * (dims.N+1) }});
+  {%- endif -%}
+
     /* specify dimension information for the OUTPUT ports */
     {%- set i_output = 0 %}{# note here i_output is 0-based #}
   {%- if simulink_opts.outputs.u0 == 1 %}
@@ -357,7 +367,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     InputRealPtrsType in_sign;
 
-    {%- set buffer_sizes = [dims.nbx_0, dims.np, dims.nbx, dims.nbu, dims.ng, dims.nh] -%}
+    {%- set buffer_sizes = [dims.nbx_0, dims.np, dims.nbx, dims.nbu, dims.ng, dims.nh, dims.nx] -%}
 
   {%- if dims.ny_0 > 0 and simulink_opts.inputs.y_ref_0 %}  {# y_ref_0 #}
     {%- set buffer_sizes = buffer_sizes | concat(with=(dims.ny_0)) %}
@@ -593,6 +603,18 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         buffer[i] = (double)(*in_sign[i]);
 
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, {{ dims.N }}, "W", buffer);
+  {%- endif %}
+
+  {%- if simulink_opts.inputs.x_init %}  {#- x_init #}
+    // x_init
+    {%- set i_input = i_input + 1 %}
+    in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+    for (int ii = 0; ii < {{ dims.N }}; ii++)
+    {
+        for (int jj = 0; jj < {{ dims.nx }}; jj++)
+            buffer[jj] = (double)(*in_sign[(ii)*{{ dims.nx }}+jj]);
+        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, ii, "x", (void *) buffer);
+    }
   {%- endif %}
 
     /* call solver */
