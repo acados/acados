@@ -236,6 +236,11 @@ input_note = strcat(input_note, num2str(i_in), ') cost_W_e in column-major forma
 i_in = i_in + 1;
 {%- endif %}
 
+{%- if simulink_opts.inputs.x_init %}  {#- x_init #}
+input_note = strcat(input_note, num2str(i_in), ') initialization of x for all shooting nodes [{{ dims.nx * (dims.N+1) }}]\n ');
+i_in = i_in + 1;
+{%- endif %}
+
 fprintf(input_note)
 
 disp(' ')
