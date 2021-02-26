@@ -15,6 +15,7 @@ simulink_opts = get_acados_simulink_opts;
 simulink_opts.inputs.cost_W_0 = 1;
 simulink_opts.inputs.cost_W = 1;
 simulink_opts.inputs.cost_W_e = 1;
+simulink_opts.inputs.x_init = 1;
 
 % outputs
 simulink_opts.outputs.utraj = 1;
