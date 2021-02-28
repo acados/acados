@@ -43,6 +43,7 @@ def generate_c_code_implicit_ode( model, opts ):
         casadi_version_warning(casadi_version)
 
     generate_hess = opts["generate_hess"]
+    code_export_dir = opts["code_export_directory"]
 
     ## load model
     x = model.x
@@ -105,10 +106,11 @@ def generate_c_code_implicit_ode( model, opts ):
     impl_dae_hess = Function(fun_name, [x, xdot, u, z, multiplier, p], [HESS])
 
     # generate C code
-    if not os.path.exists('c_generated_code'):
-        os.mkdir('c_generated_code')
+    if not os.path.exists(code_export_dir):
+        os.makedirs(code_export_dir)
 
-    os.chdir('c_generated_code')
+    cwd = os.getcwd()
+    os.chdir(code_export_dir)
     model_dir = model_name + '_model'
     if not os.path.exists(model_dir):
         os.mkdir(model_dir)
@@ -131,4 +133,4 @@ def generate_c_code_implicit_ode( model, opts ):
         fun_name = model_name + '_impl_dae_hess'
         impl_dae_hess.generate(fun_name, casadi_opts)
 
-    os.chdir('../..')
+    os.chdir(cwd)

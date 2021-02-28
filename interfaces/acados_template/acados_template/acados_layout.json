@@ -1,4 +1,7 @@
 {
+    "code_export_directory": [
+        "str"
+    ],
     "acados_include_path": [
         "str"
     ],

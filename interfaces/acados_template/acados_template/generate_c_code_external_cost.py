@@ -36,7 +36,7 @@ from casadi import SX, MX, Function, transpose, vertcat, horzcat, hessian, Casad
 from .utils import ALLOWED_CASADI_VERSIONS, casadi_version_warning
 
 
-def generate_c_code_external_cost(model, stage_type):
+def generate_c_code_external_cost(model, stage_type, opts):
 
     casadi_version = CasadiMeta.version()
     casadi_opts = dict(mex=False, casadi_int="int", casadi_real="double")
@@ -90,10 +90,12 @@ def generate_c_code_external_cost(model, stage_type):
     )
 
     # generate C code
-    if not os.path.exists("c_generated_code"):
-        os.mkdir("c_generated_code")
+    code_export_dir = opts["code_export_directory"]
+    if not os.path.exists(code_export_dir):
+        os.makedirs(code_export_dir)
 
-    os.chdir("c_generated_code")
+    cwd = os.getcwd()
+    os.chdir(code_export_dir)
     gen_dir = model.name + '_cost'
     if not os.path.exists(gen_dir):
         os.mkdir(gen_dir)
@@ -104,5 +106,5 @@ def generate_c_code_external_cost(model, stage_type):
     ext_cost_fun_jac_hess.generate(fun_name_hess, casadi_opts)
     ext_cost_fun_jac.generate(fun_name_jac, casadi_opts)
 
-    os.chdir("../..")
+    os.chdir(cwd)
     return

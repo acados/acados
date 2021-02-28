@@ -112,39 +112,39 @@ def sim_formulation_json_dump(acados_sim, json_file='acados_sim.json'):
         json.dump(sim_json, f, default=np_array_to_list, indent=4, sort_keys=True)
 
 
-def sim_render_templates(json_file, model_name):
+def sim_render_templates(json_file, model_name, code_export_dir):
     # setting up loader and environment
     json_path = '{cwd}/{json_file}'.format(
         cwd=os.getcwd(),
         json_file=json_file)
 
     if not os.path.exists(json_path):
-        raise Exception("{} not found!".format(json_path))
+        raise Exception(f"{json_path} not found!")
 
-    template_dir = 'c_generated_code/'
+    template_dir = code_export_dir
 
     ## Render templates
     in_file = 'acados_sim_solver.in.c'
-    out_file = 'acados_sim_solver_{}.c'.format(model_name)
+    out_file = f'acados_sim_solver_{model_name}.c'
     render_template(in_file, out_file, template_dir, json_path)
 
     in_file = 'acados_sim_solver.in.h'
-    out_file = 'acados_sim_solver_{}.h'.format(model_name)
+    out_file = f'acados_sim_solver_{model_name}.h'
     render_template(in_file, out_file, template_dir, json_path)
 
     in_file = 'Makefile.in'
-    out_file = 'Makefile'
+    out_file = f'Makefile'
     render_template(in_file, out_file, template_dir, json_path)
 
     in_file = 'main_sim.in.c'
-    out_file = 'main_sim_{}.c'.format(model_name)
+    out_file = f'main_sim_{model_name}.c'
     render_template(in_file, out_file, template_dir, json_path)
 
     ## folder model
-    template_dir = 'c_generated_code/{}_model/'.format(model_name)
+    template_dir = f'{code_export_dir}/{model_name}_model/'
 
     in_file = 'model.in.h'
-    out_file = '{}_model.h'.format(model_name)
+    out_file = f'{model_name}_model.h'
     render_template(in_file, out_file, template_dir, json_path)
 
 
@@ -154,14 +154,15 @@ def sim_generate_casadi_functions(acados_sim):
 
     integrator_type = acados_sim.solver_options.integrator_type
 
-    opts = dict(generate_hess = acados_sim.solver_options.sens_hess)
+    opts = dict(generate_hess = acados_sim.solver_options.sens_hess,
+                code_export_directory = acados_ocp.code_export_directory)
     # generate external functions
     if integrator_type == 'ERK':
         generate_c_code_explicit_ode(model, opts)
     elif integrator_type == 'IRK':
         generate_c_code_implicit_ode(model, opts)
     elif integrator_type == 'GNSF':
-        generate_c_code_gnsf(model)
+        generate_c_code_gnsf(model, opts)
 
 class AcadosSimSolver:
     """
@@ -181,6 +182,7 @@ class AcadosSimSolver:
             acados_sim.dims.nz = acados_sim_.dims.nz
             acados_sim.dims.np = acados_sim_.dims.np
             acados_sim.solver_options.integrator_type = acados_sim_.solver_options.integrator_type
+            acados_sim.code_export_directory = acados_sim_.code_export_directory
 
         elif isinstance(acados_sim_, AcadosSim):
             acados_sim = acados_sim_
@@ -199,15 +201,17 @@ class AcadosSimSolver:
             sim_formulation_json_dump(acados_sim, json_file)
 
         # render templates
-        sim_render_templates(json_file, model_name)
+        code_export_dir = acados_sim.code_export_directory
+        sim_render_templates(json_file, model_name, code_export_dir)
 
         ## Compile solver
-        os.chdir('c_generated_code')
+        cwd = os.getcwd()
+        os.chdir(code_export_dir)
         os.system('make sim_shared_lib')
-        os.chdir('..')
+        os.chdir(cwd)
 
         # Ctypes
-        shared_lib = 'c_generated_code/libacados_sim_solver_' + model_name + '.so'
+        shared_lib = f'{code_export_dir}/libacados_sim_solver_{model_name}.so'
 
         self.sim_struct = acados_sim
 
