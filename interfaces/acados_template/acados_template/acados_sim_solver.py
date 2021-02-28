@@ -155,7 +155,7 @@ def sim_generate_casadi_functions(acados_sim):
     integrator_type = acados_sim.solver_options.integrator_type
 
     opts = dict(generate_hess = acados_sim.solver_options.sens_hess,
-                code_export_directory = acados_ocp.code_export_directory)
+                code_export_directory = acados_sim.code_export_directory)
     # generate external functions
     if integrator_type == 'ERK':
         generate_c_code_explicit_ode(model, opts)
