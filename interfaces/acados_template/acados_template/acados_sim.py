@@ -278,6 +278,8 @@ class AcadosSim:
         self.acados_lib_path = f'{acados_path}/lib'
         """Path to where acados library is located (set automatically), type: `string`"""
 
+        self.code_export_directory = 'c_generated_code'
+        """Path to where code will be exported. Default: `c_generated_code`."""
 
     def set(self, attr, value):
         # tokenize string

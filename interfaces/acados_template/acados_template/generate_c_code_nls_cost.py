@@ -35,7 +35,7 @@ import os
 from casadi import *
 from .utils import ALLOWED_CASADI_VERSIONS, casadi_length, casadi_version_warning
 
-def generate_c_code_nls_cost( model, cost_name, stage_type ):
+def generate_c_code_nls_cost( model, cost_name, stage_type, opts ):
 
     casadi_version = CasadiMeta.version()
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
@@ -67,10 +67,12 @@ def generate_c_code_nls_cost( model, cost_name, stage_type ):
         cost_expr = model.cost_y_expr
 
     # set up directory
-    if not os.path.exists('c_generated_code'):
-        os.mkdir('c_generated_code')
+    code_export_dir = opts["code_export_directory"]
+    if not os.path.exists(code_export_dir):
+        os.makedirs(code_export_dir)
 
-    os.chdir('c_generated_code')
+    cwd = os.getcwd()
+    os.chdir(code_export_dir)
     gen_dir = cost_name + '_cost'
     if not os.path.exists(gen_dir):
         os.mkdir(gen_dir)
@@ -105,7 +107,7 @@ def generate_c_code_nls_cost( model, cost_name, stage_type ):
     y_hess = Function(fun_name, [x, u, y, p], [ y_hess ])
     y_hess.generate( fun_name, casadi_opts )
 
-    os.chdir('../..')
+    os.chdir(cwd)
 
     return
 
