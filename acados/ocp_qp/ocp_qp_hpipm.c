@@ -85,7 +85,9 @@ void *ocp_qp_hpipm_opts_assign(void *config_, void *dims_, void *raw_memory)
     c_ptr += sizeof(struct d_ocp_qp_ipm_arg);
 
     align_char_to(8, &c_ptr);
+#ifndef WINDOWS_SKIP_PTR_ALIGNMENT_CHECK
     assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+#endif
 
     d_ocp_qp_ipm_arg_create(dims, opts->hpipm_opts, c_ptr);
     c_ptr += d_ocp_qp_ipm_arg_memsize(dims);
@@ -182,8 +184,9 @@ void *ocp_qp_hpipm_memory_assign(void *config_, void *dims_, void *opts_, void *
     struct d_ocp_qp_ipm_ws *ipm_workspace = mem->hpipm_workspace;
 
     align_char_to(8, &c_ptr);
+#ifndef WINDOWS_SKIP_PTR_ALIGNMENT_CHECK
     assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
-
+#endif
     // ipm workspace structure
     d_ocp_qp_ipm_ws_create(dims, opts->hpipm_opts, ipm_workspace, c_ptr);
     c_ptr += ipm_workspace->memsize;

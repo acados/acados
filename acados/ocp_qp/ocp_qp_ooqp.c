@@ -951,7 +951,9 @@ void *ocp_qp_ooqp_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, v
     mem = (ocp_qp_ooqp_memory *) c_ptr;
     c_ptr += sizeof(ocp_qp_ooqp_memory);
 
+#ifndef WINDOWS_SKIP_PTR_ALIGNMENT_CHECK
     assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+#endif
 
     assign_and_advance_double(nx, &mem->c, &c_ptr);
     assign_and_advance_double(nnzQ, &mem->dQ, &c_ptr);
@@ -963,7 +965,9 @@ void *ocp_qp_ooqp_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, v
     assign_and_advance_double(mz, &mem->clow, &c_ptr);
     assign_and_advance_double(mz, &mem->cupp, &c_ptr);
 
+#ifndef WINDOWS_SKIP_PTR_ALIGNMENT_CHECK
     assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
+#endif
 
     assign_and_advance_int(nnzQ, &mem->irowQ, &c_ptr);
     assign_and_advance_int(nnzQ, &mem->jcolQ, &c_ptr);

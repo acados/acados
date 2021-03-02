@@ -220,7 +220,9 @@ void *dense_qp_qore_memory_assign(void *config_, dense_qp_dims *dims, void *opts
     mem = (dense_qp_qore_memory *) c_ptr;
     c_ptr += sizeof(dense_qp_qore_memory);
 
+#ifndef WINDOWS_SKIP_PTR_ALIGNMENT_CHECK
     assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+#endif
 
     if (ns > 0)
     {

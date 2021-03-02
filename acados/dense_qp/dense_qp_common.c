@@ -152,7 +152,9 @@ dense_qp_in *dense_qp_in_assign(dense_qp_dims *dims, void *raw_memory)
     dense_qp_in *qp_in = (dense_qp_in *) c_ptr;
     c_ptr += sizeof(dense_qp_in);
 
+#ifndef WINDOWS_SKIP_PTR_ALIGNMENT_CHECK
     assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+#endif
 
     d_dense_qp_create(dims, qp_in, c_ptr);
     c_ptr += d_dense_qp_memsize(dims);

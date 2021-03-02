@@ -286,7 +286,9 @@ void *dense_qp_qpoases_memory_assign(void *config_, dense_qp_dims *dims, void *o
     mem = (dense_qp_qpoases_memory *) c_ptr;
     c_ptr += sizeof(dense_qp_qpoases_memory);
 
+#ifndef WINDOWS_SKIP_PTR_ALIGNMENT_CHECK
     assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+#endif
 
     if (ns > 0)
     {
@@ -299,7 +301,9 @@ void *dense_qp_qpoases_memory_assign(void *config_, dense_qp_dims *dims, void *o
         mem->qp_stacked = NULL;
     }
 
+#ifndef WINDOWS_SKIP_PTR_ALIGNMENT_CHECK
     assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+#endif
 
     assign_and_advance_double(nv * nv, &mem->H, &c_ptr);
     assign_and_advance_double(nv2 * nv2, &mem->HH, &c_ptr);
@@ -328,7 +332,9 @@ void *dense_qp_qpoases_memory_assign(void *config_, dense_qp_dims *dims, void *o
     assign_and_advance_double(nv2 + ng2, &mem->dual_sol, &c_ptr);
 
     // TODO(dimitris): update assign syntax in qpOASES
+#ifndef WINDOWS_SKIP_PTR_ALIGNMENT_CHECK
     assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
+#endif
 
     if (ng > 0 || ns > 0)
     {  // QProblem
