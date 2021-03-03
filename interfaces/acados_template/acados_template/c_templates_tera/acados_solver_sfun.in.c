@@ -154,8 +154,9 @@ static void mdlInitializeSizes (SimStruct *S)
         return;
 
     // specify dimension information for the input ports
-    {%- set i_input = 0 %}{# note here i_input is 0-based #}
+    {%- set i_input = -1 %}{# note here i_input is 0-based #}
   {%- if dims.nbx_0 > 0 and simulink_opts.inputs.lbx_0 -%}  {#- lbx_0 #}
+    {%- set i_input = i_input + 1 %}
     // lbx_0
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nbx_0 }});
   {%- endif %}
@@ -270,8 +271,9 @@ static void mdlInitializeSizes (SimStruct *S)
   {%- endif -%}
 
     /* specify dimension information for the OUTPUT ports */
-    {%- set i_output = 0 %}{# note here i_output is 0-based #}
+    {%- set i_output = -1 %}{# note here i_output is 0-based #}
   {%- if simulink_opts.outputs.u0 == 1 %}
+    {%- set i_output = i_output + 1 %}
     ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.nu }} );
   {%- endif %}
 
@@ -394,9 +396,10 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     real_t buffer[{{ buffer_size }}];
 
     /* go through inputs */
-    {%- set i_input = 0 %}
+    {%- set i_input = -1 %}
   {%- if dims.nbx_0 > 0 and simulink_opts.inputs.lbx_0 -%}  {#- lbx_0 #}
     // lbx_0
+    {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
     for (int i = 0; i < {{ dims.nbx_0 }}; i++)
         buffer[i] = (double)(*in_sign[i]);

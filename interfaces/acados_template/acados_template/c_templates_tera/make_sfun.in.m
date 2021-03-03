@@ -246,9 +246,10 @@ fprintf(input_note)
 disp(' ')
 
 output_note = 'Outputs are:\n';
-i_out = 1;
+i_out = 0;
 
 {%- if simulink_opts.outputs.u0 == 1 %}
+i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') u0, control input at node 0, size [{{ dims.nu }}]\n ');
 {%- endif %}
 
