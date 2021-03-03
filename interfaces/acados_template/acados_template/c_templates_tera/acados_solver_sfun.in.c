@@ -612,7 +612,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // x_init
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
-    for (int ii = 0; ii < {{ dims.N }}; ii++)
+    for (int ii = 0; ii < {{ dims.N + 1 }}; ii++)
     {
         for (int jj = 0; jj < {{ dims.nx }}; jj++)
             buffer[jj] = (double)(*in_sign[(ii)*{{ dims.nx }}+jj]);
