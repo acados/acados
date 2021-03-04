@@ -272,7 +272,7 @@ static void mdlInitializeSizes (SimStruct *S)
 
     /* specify dimension information for the OUTPUT ports */
     {%- set i_output = -1 %}{# note here i_output is 0-based #}
-  {%- if simulink_opts.outputs.u0 == 1 %}
+  {%- if dims.nu > 0 and simulink_opts.outputs.u0 == 1 %}
     {%- set i_output = i_output + 1 %}
     ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.nu }} );
   {%- endif %}
@@ -631,15 +631,15 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     real_t *out_u0, *out_utraj, *out_xtraj, *out_status, *out_sqp_iter, *out_KKT_res, *out_x1, *out_cpu_time;
     int tmp_int;
 
-    {%- set i_output = 0 -%}{# note here i_output is 0-based #}
-  {%- if simulink_opts.outputs.u0 == 1 %}
+    {%- set i_output = -1 -%}{# note here i_output is 0-based #}
+  {%- if dims.nu > 0 and simulink_opts.outputs.u0 == 1 %}
+    {%- set i_output = i_output + 1 %}
     out_u0 = ssGetOutputPortRealSignal(S, {{ i_output }});
     ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, "u", (void *) out_u0);
   {%- endif %}
 
   {%- if simulink_opts.outputs.utraj == 1 %}
     {%- set i_output = i_output + 1 %}
-
     out_utraj = ssGetOutputPortRealSignal(S, {{ i_output }});
     for (int ii = 0; ii < {{ dims.N }}; ii++)
         ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, ii,
