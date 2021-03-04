@@ -221,6 +221,7 @@ void print_ocp_qp_dims(ocp_qp_dims *dims)
 
 void print_ocp_qp_in(ocp_qp_in *qp_in)
 {
+#ifndef BLASFEO_EXT_DEP_OFF
     int N = qp_in->dim->N;
     int *nx = qp_in->dim->nx;
     int *nu = qp_in->dim->nu;
@@ -343,11 +344,14 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
     }
 
 #endif
+#endif
     return;
 }
 
 void print_ocp_qp_out(ocp_qp_out *qp_out)
 {
+#ifndef BLASFEO_EXT_DEP_OFF
+
     int ii;
 
     int N = qp_out->dim->N;
@@ -394,11 +398,13 @@ void print_ocp_qp_out(ocp_qp_out *qp_out)
     }
 
 #endif
+#endif
     return;
 }
 
 void ocp_nlp_out_print(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out)
 {
+#ifndef BLASFEO_EXT_DEP_OFF
     int ii;
 
     int N = dims->N;
@@ -452,11 +458,13 @@ void ocp_nlp_out_print(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out)
     }
 
 #endif
+#endif
     return;
 }
 
 void ocp_nlp_res_print(ocp_nlp_dims *dims, ocp_nlp_res *nlp_res)
 {
+#ifndef BLASFEO_EXT_DEP_OFF
     int ii;
 
     int N = dims->N;
@@ -492,12 +500,13 @@ void ocp_nlp_res_print(ocp_nlp_dims *dims, ocp_nlp_res *nlp_res)
     printf("inf norm res=\t%e\t%e\t%e\t%e\n", nlp_res->inf_norm_res_stat, nlp_res->inf_norm_res_eq,
         nlp_res->inf_norm_res_ineq, nlp_res->inf_norm_res_comp);
 
-
+#endif
     return;
 }
 
 void print_ocp_qp_res(ocp_qp_res *qp_res)
 {
+#ifndef BLASFEO_EXT_DEP_OFF
     int ii;
 
     int N = qp_res->dim->N;
@@ -519,6 +528,7 @@ void print_ocp_qp_res(ocp_qp_res *qp_res)
     printf("res_m =\n");
     for (ii = 0; ii <= N; ii++)
         blasfeo_print_exp_tran_dvec(2 * nb[ii] + 2 * ng[ii], &qp_res->res_m[ii], 0);
+#endif
 
     return;
 }
@@ -695,6 +705,7 @@ void print_ocp_qp_res(ocp_qp_res *qp_res)
 
 void print_dense_qp_in(dense_qp_in *qp_in)
 {
+#ifndef BLASFEO_EXT_DEP_OFF
     int nv = qp_in->dim->nv;
     int ne = qp_in->dim->ne;
     int nb = qp_in->dim->nb;
@@ -713,6 +724,7 @@ void print_dense_qp_in(dense_qp_in *qp_in)
     blasfeo_print_dmat(nv, ng, qp_in->Ct, 0, 0);
     printf("d =\n");
     blasfeo_print_dvec(2*nb+2*ng+2*ns, qp_in->d, 0);
+#endif
 }
 
 void print_qp_info(qp_info *info)
