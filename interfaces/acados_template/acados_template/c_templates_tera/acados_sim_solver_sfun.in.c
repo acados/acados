@@ -49,7 +49,6 @@
 
 #define SAMPLINGTIME {{ solver_options.Tsim }}
 
-
 static void mdlInitializeSizes (SimStruct *S)
 {
     // specify the number of continuous and discrete states
