@@ -92,7 +92,7 @@ if isfield(model, 'cost_expr_ext_cost') && strcmp(model.ext_fun_type, 'casadi')
     ext_cost_fun_jac.generate([model_name,'_cost_ext_cost_fun_jac'], casadi_opts);
 end
 
-if isfield(model, 'cost_expr_ext_cost_0')% && strcmp(model.ext_fun_type_e, 'casadi')
+if isfield(model, 'cost_expr_ext_cost_0') && strcmp(model.ext_fun_type_0, 'casadi')
     ext_cost_0 = model.cost_expr_ext_cost_0;
     % generate jacobian, hessian
     [full_hess, grad] = hessian(ext_cost_0, vertcat(u, x));

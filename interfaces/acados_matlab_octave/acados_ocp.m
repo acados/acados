@@ -90,7 +90,10 @@ classdef acados_ocp < handle
                 elseif (strcmp(obj.model_struct.cost_type, 'nonlinear_ls'))
                     obj.model_struct.cost_expr_y_0 = obj.model_struct.cost_expr_y;
                 elseif (strcmp(obj.model_struct.cost_type, 'ext_cost'))
-                    obj.model_struct.cost_expr_ext_cost_0 = obj.model_struct.cost_expr_ext_cost;
+                    obj.model_struct.ext_fun_type_0 = obj.model_struct.ext_fun_type;
+                    if strcmp(obj.model_struct.ext_fun_type_0, 'casadi')
+                        obj.model_struct.cost_expr_ext_cost_0 = obj.model_struct.cost_expr_ext_cost;
+                    end
                 end
                 if (strcmp(obj.model_struct.cost_type, 'linear_ls')) || (strcmp(obj.model_struct.cost_type, 'nonlinear_ls'))
                     obj.model_struct.cost_W_0 = obj.model_struct.cost_W;
