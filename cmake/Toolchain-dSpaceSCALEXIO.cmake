@@ -61,3 +61,14 @@ SET(CMAKE_FIND_ROOT_PATH ${QNX_TARGET})
 SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+
+# acados flags
+set(BLASFEO_TARGET "GENERIC" CACHE STRING "BLASFEO Target architecture")
+set(HPIPM_TARGET "GENERIC" CACHE STRING "HPIPM Target architecture")
+set(BUILD_SHARED_LIBS OFF CACHE STRING "Build shared libraries")
+set(BLASFEO_EXAMPLES OFF CACHE BOOL "Examples disabled")
+set(EXT_DEP OFF CACHE BOOL "Compile external dependencies in BLASFEO")
+set(ACADOS_INSTALL_DIR "install" CACHE PATH  "Installation path to PROJECT_SOURCE_DIR")
+
+# add definition to comment out certain uses of the "assert" command
+add_definitions(-DWINDOWS_SKIP_PTR_ALIGNMENT_CHECK)
