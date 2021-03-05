@@ -49,28 +49,6 @@
 
 #define SAMPLINGTIME {{ solver_options.Tsim }}
 
-// ** global data **
-sim_config  *{{ model.name }}_sim_config;
-sim_in      *{{ model.name }}_sim_in;
-sim_out     *{{ model.name }}_sim_out;
-void        *{{ model.name }}_sim_dims;
-sim_opts    *{{ model.name }}_sim_opts;
-sim_solver  *{{ model.name }}_sim_solver;
-
-
-{% if solver_options.integrator_type == "ERK" %}
-external_function_param_casadi * sim_forw_vde_casadi;
-external_function_param_casadi * sim_expl_ode_fun_casadi;
-{% if solver_options.hessian_approx == "EXACT" %}
-// note: not used for simulation.
-external_function_param_casadi * sim_hess_vde_casadi;
-{% endif %}
-{% elif solver_options.integrator_type == "IRK" %}
-external_function_param_casadi * sim_impl_dae_fun;
-external_function_param_casadi * sim_impl_dae_fun_jac_x_xdot_z;
-external_function_param_casadi * sim_impl_dae_jac_x_xdot_u_z;
-{% endif %}
-
 static void mdlInitializeSizes (SimStruct *S)
 {
     // specify the number of continuous and discrete states
