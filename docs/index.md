@@ -25,6 +25,7 @@ Documentation latest build: |today|
    examples/index
    faq/index
    citing
+   embedded_workflow
    list_of_projects/index
 ```
 
