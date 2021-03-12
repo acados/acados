@@ -102,6 +102,11 @@ function render_acados_templates(acados_ocp_nlp_json_file)
     out_file = ['acados_mex_solve_', model_name, '.c'];
     render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
 
+    % MEX set
+    template_file = 'acados_mex_set.in.c';
+    out_file = ['acados_mex_set_', model_name, '.c'];
+    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+
     % MEX class
     template_file = 'mex_solver.in.m';
     out_file = [ model_name, '_mex_solver.m'];

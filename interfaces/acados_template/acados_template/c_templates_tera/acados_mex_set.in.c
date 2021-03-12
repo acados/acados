@@ -31,13 +31,17 @@
  * POSSIBILITY OF SUCH DAMAGE.;
  */
 
-// system
-#include <stdlib.h>
+
+// standard
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+
 // acados
+#include "acados/utils/print.h"
 #include "acados_c/ocp_nlp_interface.h"
-#include "acados_c/sim_interface.h"
+#include "acados_solver_{{ model.name }}.h"
+
 // mex
 #include "mex.h"
 #include "mex_macros.h"
@@ -60,6 +64,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     // C ocp
     const mxArray *C_ocp = prhs[2];
+    // capsule
+    ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "capsule" ) );
+    nlp_solver_capsule *capsule = (nlp_solver_capsule *) ptr[0];
     // plan
     ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "plan" ) );
     ocp_nlp_plan *plan = (ocp_nlp_plan *) ptr[0];
@@ -119,9 +126,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         sprintf(buffer, "ocp_set: wrong nrhs: %d\n", nrhs);
         mexErrMsgTxt(buffer);
     }
-
-    // XXX hard-code size of phases for now !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    int NN[] = {N, 1}; // size of phases, i.e. shooting nodes with same dimensions
 
     /* Set value */
     // constraints
@@ -499,94 +503,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "p"))
     {
-        // mexPrintf("ocp_set p: nrhs %d \n", nrhs);
-        // loop over number of external functions;
-        int struct_size = mxGetNumberOfFields( C_ext_fun_pointers );
-        for (int ii=0; ii<struct_size; ii++)
+        if (nrhs==min_nrhs) // all stages
         {
-            mex_field = mxGetFieldByNumber( C_ext_fun_pointers, 0, ii );
-            const char * fieldname = mxGetFieldNameByNumber(C_ext_fun_pointers, ii);
-            ptr = (long long *) mxGetData( mex_field );
-            int Nf = (int) mxGetNumberOfElements(mex_field);
-            // mexPrintf("\n%s, Nf = %d\n", fieldname, Nf );
-            int Nf_sum = 0;
-            // loop over number of phases
-            for (int jj=0; jj<Nf; jj++)
+            for (int ii=0; ii<=N; ii++)
             {
-                char * type;
-                // NOTE: assume 2 phases!
-                if (jj == 0)
-                {
-                    type = ext_fun_type;
-                }
-                else
-                {
-                    type = ext_fun_type_e;
-                }
-
-                // external function param casadi
-                if (!strcmp(type, "casadi") || strstr(fieldname, "dyn_"))
-                {
-                    external_function_param_casadi *ext_fun_ptr = (external_function_param_casadi *) ptr[jj];
-                    if (ext_fun_ptr!=0)
-                    {
-                        if (nrhs==min_nrhs) // all stages
-                        {
-                            for (int kk=0; kk<NN[jj]; kk++)
-                            {
-                                (ext_fun_ptr+kk)->get_nparam(ext_fun_ptr+kk, &acados_size);
-                                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-                                (ext_fun_ptr+kk)->set_param(ext_fun_ptr+kk, value);
-                            }
-                        }
-                        else if (nrhs==min_nrhs+1) // one stage
-                        {
-                            int stage = mxGetScalar( prhs[6] );
-                            if (stage>=Nf_sum & stage<Nf_sum+NN[jj])
-                            {
-                                int kk = stage - Nf_sum;
-                                (ext_fun_ptr+kk)->get_nparam(ext_fun_ptr+kk, &acados_size);
-                                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-                                (ext_fun_ptr+kk)->set_param(ext_fun_ptr+kk, value);
-                            }
-                        }
-                    }
-                    Nf_sum += NN[jj];
-                }
-                // external function param generic
-                else if (!strcmp(type, "generic"))
-                {
-                    external_function_param_generic *ext_fun_ptr = (external_function_param_generic *) ptr[jj];
-                    if (ext_fun_ptr!=0)
-                    {
-                        if (nrhs==min_nrhs) // all stages
-                        {
-                            for (int kk=0; kk<NN[jj]; kk++)
-                            {
-                                (ext_fun_ptr+kk)->get_nparam(ext_fun_ptr+kk, &acados_size);
-                                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-                                (ext_fun_ptr+kk)->set_param(ext_fun_ptr+kk, value);
-                            }
-                        }
-                        else if (nrhs==min_nrhs+1) // one stage
-                        {
-                            int stage = mxGetScalar( prhs[6] );
-                            if (stage>=Nf_sum & stage<Nf_sum+NN[jj])
-                            {
-                                int kk = stage - Nf_sum;
-                                (ext_fun_ptr+kk)->get_nparam(ext_fun_ptr+kk, &acados_size);
-                                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-                                (ext_fun_ptr+kk)->set_param(ext_fun_ptr+kk, value);
-                            }
-                        }
-                    }
-                    Nf_sum += NN[jj];
-                }
-                else
-                {
-                    MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "ext_fun_type", type, "casadi, generic");
-                }
+                {{ model.name }}_acados_update_params(capsule, ii, value, matlab_size);
             }
+        }
+        else if (nrhs==min_nrhs+1) // one stage
+        {
+            int stage = mxGetScalar( prhs[6] );
+            {{ model.name }}_acados_update_params(capsule, stage, value, matlab_size);
         }
     }
     else if (!strcmp(field, "nlp_solver_max_iter"))
