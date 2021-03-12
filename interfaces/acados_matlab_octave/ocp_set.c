@@ -524,7 +524,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                     type = ext_fun_type_e;
                 }
 
-                // external function param casadi                
+                // external function param casadi
                 if (!strcmp(type, "casadi") || strstr(fieldname, "dyn_"))
                 {
                     external_function_param_casadi *ext_fun_ptr = (external_function_param_casadi *) ptr[jj];

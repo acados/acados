@@ -287,7 +287,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {% endif %}
     mxSetField(plhs[1], 0, "phi_constraint", phi_constraint_mat);
 
-    mxArray *nl_constr_h_fun_jac_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
+    mxArray *nl_constr_h_fun_jac_mat = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(nl_constr_h_fun_jac_mat);
 {% if constraints.constr_type == "BGH" and dims.nh > 0 %}
     l_ptr[0] = (long long) acados_ocp_capsule->nl_constr_h_fun_jac;
@@ -297,7 +297,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {%- endif %}
     mxSetField(plhs[1], 0, "nl_constr_h_fun_jac", nl_constr_h_fun_jac_mat);
 
-    mxArray *nl_constr_h_fun_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
+    mxArray *nl_constr_h_fun_mat = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(nl_constr_h_fun_mat);
 {% if constraints.constr_type == "BGH" and dims.nh > 0 %}
     l_ptr[0] = (long long) acados_ocp_capsule->nl_constr_h_fun;
@@ -307,7 +307,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {%- endif %}
     mxSetField(plhs[1], 0, "nl_constr_h_fun", nl_constr_h_fun_mat);
 
-    mxArray *nl_constr_h_fun_jac_hess_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
+    mxArray *nl_constr_h_fun_jac_hess_mat = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(nl_constr_h_fun_jac_hess_mat);
 {% if constraints.constr_type == "BGH" and dims.nh > 0 and solver_options.hessian_approx == "EXACT" %}
     l_ptr[0] = (long long) acados_ocp_capsule->nl_constr_h_fun_jac_hess;
@@ -318,7 +318,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxSetField(plhs[1], 0, "nl_constr_h_fun_jac_hess", nl_constr_h_fun_jac_hess_mat);
 
 /* cost */
-    mxArray *cost_y_fun_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
+    mxArray *cost_y_fun_mat = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(cost_y_fun_mat);
 {% if cost.cost_type == "NONLINEAR_LS" %}
     l_ptr[0] = (long long) acados_ocp_capsule->cost_y_fun;
@@ -328,7 +328,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {%- endif %}
     mxSetField(plhs[1], 0, "cost_y_fun", cost_y_fun_mat);
 
-    mxArray *cost_y_fun_jac_ut_xt_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
+    mxArray *cost_y_fun_jac_ut_xt_mat = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(cost_y_fun_jac_ut_xt_mat);
 {% if cost.cost_type == "NONLINEAR_LS" %}
     l_ptr[0] = (long long) acados_ocp_capsule->cost_y_fun_jac_ut_xt;
@@ -338,7 +338,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {%- endif %}
     mxSetField(plhs[1], 0, "cost_y_fun_jac_ut_xt", cost_y_fun_jac_ut_xt_mat);
 
-    mxArray *cost_y_hess_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
+    mxArray *cost_y_hess_mat = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(cost_y_hess_mat);
 {% if cost.cost_type == "NONLINEAR_LS" %}
     l_ptr[0] = (long long) acados_ocp_capsule->cost_y_hess;
@@ -348,7 +348,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {%- endif %}
     mxSetField(plhs[1], 0, "cost_y_hess", cost_y_hess_mat);
 
-    mxArray *ext_cost_fun_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
+    mxArray *ext_cost_fun_mat = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(ext_cost_fun_mat);
 {% if cost.cost_type == "EXTERNAL" %}
     l_ptr[0] = (long long) acados_ocp_capsule->ext_cost_fun;
@@ -358,7 +358,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {%- endif %}
     mxSetField(plhs[1], 0, "ext_cost_fun", ext_cost_fun_mat);
 
-    mxArray *ext_cost_fun_jac_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
+    mxArray *ext_cost_fun_jac_mat = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(ext_cost_fun_jac_mat);
 {% if cost.cost_type == "EXTERNAL" %}
     l_ptr[0] = (long long) acados_ocp_capsule->ext_cost_fun_jac;
@@ -368,7 +368,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {%- endif %}
     mxSetField(plhs[1], 0, "ext_cost_fun_jac", ext_cost_fun_jac_mat);
 
-    mxArray *ext_cost_fun_jac_hess_mat  = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
+    mxArray *ext_cost_fun_jac_hess_mat = mxCreateNumericMatrix(1, 2, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(ext_cost_fun_jac_hess_mat);
 {% if cost.cost_type == "EXTERNAL" %}
     l_ptr[0] = (long long) acados_ocp_capsule->ext_cost_fun_jac_hess;
