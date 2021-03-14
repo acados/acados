@@ -55,8 +55,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     /* RHS */
     int min_nrhs = 6;
 
-    char *ext_fun_type = mxArrayToString( prhs[0] );
-    char *ext_fun_type_e = mxArrayToString( prhs[1] );
+    char *cost_ext_fun_type = mxArrayToString( prhs[0] );
+    char *cost_ext_fun_type_e = mxArrayToString( prhs[1] );
 
     // C ocp
     const mxArray *C_ocp = prhs[2];
@@ -517,11 +517,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 // NOTE: assume 2 phases!
                 if (jj == 0)
                 {
-                    type = ext_fun_type;
+                    type = cost_ext_fun_type;
                 }
                 else
                 {
-                    type = ext_fun_type_e;
+                    type = cost_ext_fun_type_e;
                 }
 
                 // external function param casadi
@@ -584,7 +584,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 }
                 else
                 {
-                    MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "ext_fun_type", type, "casadi, generic");
+                    MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "cost_ext_fun_type", type, "casadi, generic");
                 }
             }
         }
