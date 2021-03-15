@@ -85,4 +85,5 @@ set(EXT_DEP OFF CACHE BOOL "Compile external dependencies in BLASFEO")
 set(ACADOS_INSTALL_DIR "install" CACHE PATH  "Installation path to PROJECT_SOURCE_DIR")
 
 # add definition to comment out certain uses of the "assert" command
-add_definitions(-DWINDOWS_SKIP_PTR_ALIGNMENT_CHECK)
+# add_definitions(-DWINDOWS_SKIP_PTR_ALIGNMENT_CHECK)
+# add_definitions(-DSPACE_INCLUDES)
