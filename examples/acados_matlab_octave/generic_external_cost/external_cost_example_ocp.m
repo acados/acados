@@ -139,11 +139,11 @@ ocp.set('constr_x0', x0);
 % set trajectory initialization
 ocp.set('init_x', x_traj_init);
 ocp.set('init_u', u_traj_init);
-ocp.set('init_pi', zeros(nx, N))
+ocp.set('init_pi', zeros(nx, N));
 
 % change values for specific shooting node using:
 %   ocp.set('field', value, optional: stage_index)
-ocp.set('constr_lbx', x0, 0)
+ocp.set('constr_lbx', x0, 0);
 
 % solve
 ocp.solve();
@@ -168,5 +168,41 @@ stairs(utraj')
 grid on
 
 %% go embedded
-% to generate templated C code
-% ocp.generate_c_code;
+disp('testing templated solver');
+ocp.generate_c_code;
+cd c_generated_code/
+
+t_ocp = pendulum_mex_solver;
+
+% initial state
+t_ocp.set('constr_x0', x0);
+
+% set trajectory initialization
+t_ocp.set('init_x', x_traj_init);
+t_ocp.set('init_u', u_traj_init);
+t_ocp.set('init_pi', zeros(nx, N));
+
+% change values for specific shooting node using:
+%   ocp.set('field', value, optional: stage_index)
+t_ocp.set('constr_lbx', x0, 0);
+
+% solve
+t_ocp.solve();
+% get solution
+t_utraj = t_ocp.get('u');
+t_xtraj = t_ocp.get('x');
+t_status = t_ocp.get('status');
+
+error_X_mex_vs_mex_template = max(max(abs(t_xtraj - xtraj)))
+error_U_mex_vs_mex_template = max(max(abs(t_utraj - utraj)))
+
+t_ocp.print('stat')
+
+tol_check = 1e-6;
+
+if any([error_X_mex_vs_mex_template, error_U_mex_vs_mex_template] > tol_check)
+    error(['test_template_pendulum_exact_hess: solution of templated MEX and original MEX',...
+         ' differ too much. Should be < tol = ' num2str(tol_check)]);
+end
+
+cd ..

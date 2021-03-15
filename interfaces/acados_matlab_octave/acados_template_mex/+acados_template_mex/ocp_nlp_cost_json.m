@@ -36,6 +36,9 @@ classdef ocp_nlp_cost_json < handle
     properties
         % Lagrange term
         cost_type   % cost type
+        cost_ext_fun_type % casadi or generic
+        cost_source_ext_cost % C-source file of cost function
+        cost_function_ext_cost % C-function name
         W           % weight matrix
         Vx          % x matrix coefficient
         Vu          % u matrix coefficient
@@ -47,6 +50,9 @@ classdef ocp_nlp_cost_json < handle
         zu          % gradient wrt upper slack
         % initial cost term
         cost_type_0   % cost type
+        cost_ext_fun_type_0 % casadi or generic
+        cost_source_ext_cost_0 % C-source file of cost function
+        cost_function_ext_cost_0 % C-function name
         W_0           % weight matrix
         Vx_0          % x matrix coefficient
         Vu_0          % u matrix coefficient
@@ -54,6 +60,9 @@ classdef ocp_nlp_cost_json < handle
         yref_0        % reference
         % Mayer term
         cost_type_e % cost type
+        cost_ext_fun_type_e % casadi or generic
+        cost_source_ext_cost_e % C-source file of cost function
+        cost_function_ext_cost_e % C-function name
         W_e         % weight matrix
         Vx_e        % x matrix coefficient
         yref_e      % reference
@@ -63,8 +72,11 @@ classdef ocp_nlp_cost_json < handle
         zu_e        % gradient wrt upper slack 
     end
     methods
-        function obj = ocp_nlp_cost()
-            obj.cost_type   = 'LINEAR_LS';  
+        function obj = ocp_nlp_cost_json()
+            obj.cost_type   = 'LINEAR_LS';
+            obj.cost_ext_fun_type = 'casadi';
+            obj.cost_source_ext_cost = [];
+            obj.cost_function_ext_cost = [];
             obj.W           = [];  
             obj.Vx          = [];
             obj.Vu          = [];
@@ -76,13 +88,19 @@ classdef ocp_nlp_cost_json < handle
             obj.zu          = [];
             %
             obj.cost_type_0   = 'LINEAR_LS';
+            obj.cost_ext_fun_type_0 = 'casadi';
+            obj.cost_source_ext_cost_0 = [];
+            obj.cost_function_ext_cost_0 = [];
             obj.W_0           = [];
             obj.Vx_0         = [];
             obj.Vu_0        = [];
             obj.Vz_0        = [];
             obj.yref_0     = [];
             %
-            obj.cost_type_e = 'LINEAR_LS';  
+            obj.cost_type_e = 'LINEAR_LS';
+            obj.cost_ext_fun_type_e = 'casadi';
+            obj.cost_source_ext_cost_e = [];
+            obj.cost_function_ext_cost_e = [];
             obj.W_e         = [];
             obj.Vx_e        = [];
             obj.yref_e      = [];
