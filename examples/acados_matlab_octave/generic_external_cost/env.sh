@@ -74,5 +74,6 @@ echo "OCTAVE_PATH=$OCTAVE_PATH"
 MODEL_FOLDER=${MODEL_FOLDER:-"./build"}
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ACADOS_INSTALL_DIR/lib:$MODEL_FOLDER
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ACADOS_INSTALL_DIR/interfaces/acados_template/tera_renderer/t_renderer/target/release
+export LD_RUN_PATH="$(pwd)"/c_generated_code
 echo
 echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"

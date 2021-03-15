@@ -156,27 +156,39 @@ function render_acados_templates(acados_ocp_nlp_json_file)
         out_file = [model_name, '_cost_y_fun.h'];
         render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
     elseif strcmp(acados_ocp.cost.cost_type, 'EXTERNAL')
-        template_file = 'external_cost.in.h';
-        out_file = [model_name, '_external_cost.h'];
-        render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+        if (strcmp(acados_ocp.cost.cost_ext_fun_type, 'casadi'))
+            template_file = 'external_cost.in.h';
+            out_file = [model_name, '_external_cost.h'];
+            render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+        else
+            copyfile(fullfile(pwd, '..', '..', acados_ocp.cost.cost_source_ext_cost), pwd);
+        end
     end
     if strcmp(acados_ocp.cost.cost_type_0, 'NONLINEAR_LS')
         template_file = 'cost_y_0_fun.in.h';
         out_file = [model_name, '_cost_y_0_fun.h'];
         render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
     elseif strcmp(acados_ocp.cost.cost_type_0, 'EXTERNAL')
-        template_file = 'external_cost_0.in.h';
-        out_file = [model_name, '_external_cost_0.h'];
-        render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+        if (strcmp(acados_ocp.cost.cost_ext_fun_type_0, 'casadi'))
+            template_file = 'external_cost_0.in.h';
+            out_file = [model_name, '_external_cost_0.h'];
+            render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+        else
+            copyfile(fullfile(pwd, '..', '..', acados_ocp.cost.cost_source_ext_cost_0), pwd);
+        end
     end
     if strcmp(acados_ocp.cost.cost_type_e, 'NONLINEAR_LS')
         template_file = 'cost_y_e_fun.in.h';
         out_file = [model_name, '_cost_y_e_fun.h'];
         render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
     elseif strcmp(acados_ocp.cost.cost_type_e, 'EXTERNAL')
-        template_file = 'external_cost_e.in.h';
-        out_file = [model_name, '_external_cost_e.h'];
-        render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+        if (strcmp(acados_ocp.cost.cost_ext_fun_type_e, 'casadi'))
+            template_file = 'external_cost_e.in.h';
+            out_file = [model_name, '_external_cost_e.h'];
+            render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+        else
+            copyfile(fullfile(pwd, '..', '..', acados_ocp.cost.cost_source_ext_cost_e), pwd);
+        end
     end
     cd ..
 

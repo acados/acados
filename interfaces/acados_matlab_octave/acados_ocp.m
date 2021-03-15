@@ -95,6 +95,9 @@ classdef acados_ocp < handle
                     obj.model_struct.cost_ext_fun_type_0 = obj.model_struct.cost_ext_fun_type;
                     if strcmp(obj.model_struct.cost_ext_fun_type_0, 'casadi')
                         obj.model_struct.cost_expr_ext_cost_0 = obj.model_struct.cost_expr_ext_cost;
+                    else % generic
+                        obj.model_struct.cost_source_ext_cost_0 = obj.model_struct.cost_source_ext_cost;
+                        obj.model_struct.cost_function_ext_cost_0 = obj.model_struct.cost_function_ext_cost;
                     end
                 end
                 if (strcmp(obj.model_struct.cost_type, 'linear_ls')) || (strcmp(obj.model_struct.cost_type, 'nonlinear_ls'))
