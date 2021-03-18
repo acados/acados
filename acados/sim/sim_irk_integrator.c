@@ -1335,11 +1335,11 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
                     // // cost_grad += b * tmp_ny^T * tmp_ny_nux = b * tmp_ny_nux^T * tmp_ny
                     // blasfeo_dgemv_t(nx+nu, ny, b_vec[ii], tmp_ny_nux, 0, 0, tmp_ny, 0, 1.0, cost_grad, 0, cost_grad, 0);
-                    blasfeo_dgemv_n(nx+nu, ny, b_vec[ii], tmp_nux_ny2, 0, 0, tmp_ny, 0,
+                    blasfeo_dgemv_n(nx+nu, ny, b_vec[ii]/num_steps, tmp_nux_ny2, 0, 0, tmp_ny, 0,
                                     1.0, cost_grad, 0, cost_grad, 0);
 
                     // cost_hess += b * tmp_nux_ny_2 * tmp_nux_ny_2
-                    blasfeo_dgemm_nt(nx+nu, nx+nu, ny, b_vec[ii], tmp_nux_ny2, 0, 0, tmp_nux_ny2, 0, 0,
+                    blasfeo_dgemm_nt(nx+nu, nx+nu, ny, b_vec[ii]/num_steps, tmp_nux_ny2, 0, 0, tmp_nux_ny2, 0, 0,
                                     1.0, cost_hess, 0, 0, cost_hess, 0, 0);
 
                     // cost function value
