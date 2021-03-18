@@ -423,6 +423,9 @@ ocp_shared_lib: casadi_fun ocp_solver
 
 ocp_shared_lib: casadi_fun ocp_solver
 	gcc $(ACADOS_FLAGS) -shared -o libacados_ocp_solver_{{ model.name }}.so $(OCP_OBJ) $(MODEL_OBJ) \
+	-I $(INCLUDE_PATH)/blasfeo/include/ \
+	-I $(INCLUDE_PATH)/hpipm/include/ \
+	-I $(INCLUDE_PATH) \
 	-L$(EXTERNAL_DIR) -l$(EXTERNAL_LIB) \
 	-L $(LIB_PATH) -lacados -lhpipm -lblasfeo \
 	{%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
