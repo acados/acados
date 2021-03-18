@@ -1290,12 +1290,17 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     nls_y_fun_jac_out[1] = tmp_nux_ny;  // jac': (nu+nx) * ny
                     // dy_dux^T
 
+                    // compute x at stage (xt) and sensitivity (S_forw_stage)
                     blasfeo_dveccp(nx, xn, 0, xt, 0);
+                    blasfeo_dgecp(nx, nx+nu, S_forw_ss, 0, 0, S_forw_stage, 0, 0);
+
                     for (int jj = 0; jj < ns; jj++)
                     {
                         a = A_mat[ii + ns * jj] * step;
                         // xt = xt + T_int * a[i,j]*K_j
                         blasfeo_daxpy(nx, a, K, jj * nx, xt, 0, xt, 0);
+                        // NOTE(oj): dK_dxu_ss is actually -dK_dxu_ss, because alpha = -1.0 was not supported by blasfeo initially
+                        blasfeo_dgead(nx, nx+nu, -a, dK_dxu_ss, jj*nx, 0, S_forw_stage, 0, 0);
                     }
 
                     model->nls_y_fun_jac->evaluate(model->nls_y_fun_jac, nls_y_fun_jac_type_in, nls_y_fun_jac_in,
@@ -1304,20 +1309,11 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     blasfeo_dgetr(ny, nx+nu, tmp_nux_ny, 0, 0, tmp_ny_nux, 0, 0);
 
                     /* J_y_tilde = tmp_ny_nux * current_forward_sens( in [u,x] form) */
-                    blasfeo_dgecp(nx, nx+nu, S_forw_ss, 0, 0, S_forw_stage, 0, 0);
-                    for (int jj = 0; jj < ns; jj++)
-                    {
-                        // NOTE(oj): dK_dxu_ss is actually -dK_dxu_ss, because alpha = -1.0
-                        a = -step * A_mat[ii + ns * jj];
-                        blasfeo_dgead(nx, nx+nu, a, dK_dxu_ss, jj*nx, 0, S_forw_stage, 0, 0);
-                    }
-
-                    blasfeo_dgese(ny, nu, 0.0, J_y_tilde, 0, 0);
                     // nls_res = nls_res - y_ref
                     blasfeo_daxpy(ny, -1.0, mem->y_ref, 0, nls_res, 0, nls_res, 0);
 
                     // J_y_tilde (u part)
-                    blasfeo_dgead(ny, nu, 1.0, tmp_ny_nux, 0, 0, J_y_tilde, 0, 0);
+                    blasfeo_dgecp(ny, nu, tmp_ny_nux, 0, 0, J_y_tilde, 0, 0);
                     blasfeo_dgemm_nn(ny, nu, nx, 1.0, tmp_ny_nux, 0, nu, S_forw_stage, 0, nx, 1.0, J_y_tilde, 0, 0,
                                     J_y_tilde, 0, 0);
                     // J_y_tilde (x part)
