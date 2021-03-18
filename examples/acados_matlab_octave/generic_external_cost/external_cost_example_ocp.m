@@ -30,6 +30,7 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 %
+import casadi.*
 
 %% test of native matlab interface
 clear all
@@ -54,6 +55,9 @@ model = pendulum_on_cart_model;
 nx = model.nx;
 nu = model.nu;
 
+%% runtime parameters
+params = SX.sym('Qdiag', 4, 1);
+
 %% model to create the solver
 ocp_model = acados_ocp_model();
 model_name = 'pendulum';
@@ -66,6 +70,7 @@ ocp_model.set('T', T);
 ocp_model.set('sym_x', model.sym_x);
 ocp_model.set('sym_u', model.sym_u);
 ocp_model.set('sym_xdot', model.sym_xdot);
+ocp_model.set('sym_p', params);
 
 % cost
 ocp_model.set('cost_type', 'ext_cost');
@@ -131,6 +136,8 @@ ocp = acados_ocp(ocp_model, ocp_opts);
 
 x_traj_init = zeros(nx, N+1);
 u_traj_init = zeros(nu, N);
+% diagonal matrix Q as runtime param
+p = [1e3; 1e3; 1e-2; 1e-2];
 
 %% call ocp solver
 % update initial state
@@ -144,6 +151,8 @@ ocp.set('init_pi', zeros(nx, N));
 % change values for specific shooting node using:
 %   ocp.set('field', value, optional: stage_index)
 ocp.set('constr_lbx', x0, 0);
+
+ocp.set('p', p);
 
 % solve
 ocp.solve();
@@ -185,6 +194,8 @@ t_ocp.set('init_pi', zeros(nx, N));
 % change values for specific shooting node using:
 %   ocp.set('field', value, optional: stage_index)
 t_ocp.set('constr_lbx', x0, 0);
+
+t_ocp.set('p', p);
 
 % solve
 t_ocp.solve();
