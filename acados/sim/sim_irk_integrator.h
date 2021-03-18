@@ -142,7 +142,6 @@ typedef struct
 
     /* the following variables are only available if (opts->cost_propagation) */
     struct blasfeo_dmat *J_y_tilde;
-    struct blasfeo_dmat *tmp_ny_nux;
     struct blasfeo_dmat *tmp_nux_ny;
     struct blasfeo_dmat *tmp_nux_ny2;
     struct blasfeo_dmat *S_forw_stage;
