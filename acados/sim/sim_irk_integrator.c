@@ -1290,6 +1290,14 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     nls_y_fun_jac_out[1] = tmp_nux_ny;  // jac': (nu+nx) * ny
                     // dy_dux^T
 
+                    blasfeo_dveccp(nx, xn, 0, xt, 0);
+                    for (int jj = 0; jj < ns; jj++)
+                    {
+                        a = A_mat[ii + ns * jj] * step;
+                        // xt = xt + T_int * a[i,j]*K_j
+                        blasfeo_daxpy(nx, a, K, jj * nx, xt, 0, xt, 0);
+                    }
+
                     model->nls_y_fun_jac->evaluate(model->nls_y_fun_jac, nls_y_fun_jac_type_in, nls_y_fun_jac_in,
                                         nls_y_fun_jac_type_out, nls_y_fun_jac_out);
                     // tmp_ny_nux = dy_dux
