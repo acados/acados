@@ -1267,7 +1267,7 @@ class AcadosOcpConstraints:
 
     @property
     def usbx(self):
-        """Upper bounds on slacks corresponding to soft upper bounds on x
+        """Lower bounds on slacks corresponding to soft upper bounds on x
         at stages (1 to N-1);
         not required - zeros by default"""
         return self.__usbx
@@ -1298,7 +1298,7 @@ class AcadosOcpConstraints:
 
     @property
     def usbu(self):
-        """Upper bounds on slacks corresponding to soft upper bounds on u
+        """Lower bounds on slacks corresponding to soft upper bounds on u
         at stages (0 to N-1);
         not required - zeros by default"""
         return self.__usbu
@@ -1328,7 +1328,7 @@ class AcadosOcpConstraints:
 
     @property
     def usbx_e(self):
-        """Upper bounds on slacks corresponding to soft upper bounds on x at shooting node N.
+        """Lower bounds on slacks corresponding to soft upper bounds on x at shooting node N.
         Not required - zeros by default"""
         return self.__usbx_e
 
@@ -1357,7 +1357,7 @@ class AcadosOcpConstraints:
 
     @property
     def usg(self):
-        """Upper bounds on slacks corresponding to soft upper bounds for general linear constraints.
+        """Lower bounds on slacks corresponding to soft upper bounds for general linear constraints.
         Not required - zeros by default"""
         return self.__usg
 
@@ -1384,7 +1384,7 @@ class AcadosOcpConstraints:
 
     @property
     def ush(self):
-        """Upper bounds on slacks corresponding to soft upper bounds for nonlinear constraints.
+        """Lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints.
         Not required - zeros by default"""
         return self.__ush
 
@@ -1411,7 +1411,7 @@ class AcadosOcpConstraints:
 
     @property
     def usphi(self):
-        """Upper bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints.
+        """Lower bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints.
         Not required - zeros by default"""
         return self.__usphi
 
@@ -1439,7 +1439,7 @@ class AcadosOcpConstraints:
 
     @property
     def usg_e(self):
-        """Upper bounds on slacks corresponding to soft upper bounds for general linear constraints at shooting node N.
+        """Lower bounds on slacks corresponding to soft upper bounds for general linear constraints at shooting node N.
         Not required - zeros by default"""
         return self.__usg_e
 
@@ -1466,7 +1466,7 @@ class AcadosOcpConstraints:
 
     @property
     def ush_e(self):
-        """Upper bounds on slacks corresponding to soft upper bounds for nonlinear constraints at terminal shooting node N.
+        """Lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints at terminal shooting node N.
         Not required - zeros by default"""
         return self.__ush_e
 
@@ -1491,7 +1491,7 @@ class AcadosOcpConstraints:
 
     @property
     def usphi_e(self):
-        """Upper bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints at terminal shooting node N.
+        """Lower bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints at terminal shooting node N.
         Not required - zeros by default"""
         return self.__usphi_e
 

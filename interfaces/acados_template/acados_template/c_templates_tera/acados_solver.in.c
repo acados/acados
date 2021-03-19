@@ -1136,7 +1136,7 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
 
     /* constraints that are the same for initial and intermediate */
 {%- if dims.nsbx > 0 %}
-{# TODO: introduce nsbx0 & REMOVE SETTING lsbx, usbx for stage 0!!! move this block down!! #}
+{# TODO: introduce nsbx0 & move this block down!! #}
     // ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxsbx", idxsbx);
     // ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lsbx", lsbx);
     // ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "usbx", usbx);
