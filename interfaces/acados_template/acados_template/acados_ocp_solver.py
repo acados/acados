@@ -1146,7 +1146,7 @@ class AcadosOcpSolver:
         cost_fields = ['y_ref', 'yref']
         constraints_fields = ['lbx', 'ubx', 'lbu', 'ubu']
         out_fields = ['x', 'u', 'pi', 'lam', 't', 'z']
-        mem_fields = ['sl', 'su']
+        mem_fields = ['sl', 'su', 'xdot_guess']
 
         # cast value_ to avoid conversion issues
         if isinstance(value_, (float, int)):
