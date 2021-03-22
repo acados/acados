@@ -1264,6 +1264,7 @@ class AcadosOcpSolver:
         cost_fields = ['y_ref', 'yref']
         constraints_fields = ['lbx', 'ubx', 'lbu', 'ubu']
         out_fields = ['x', 'u', 'pi', 'lam', 't', 'z', 'sl', 'su']
+        mem_fields = ['xdot_guess']
 
         # cast value_ to avoid conversion issues
         if isinstance(value_, (float, int)):
@@ -1321,11 +1322,11 @@ class AcadosOcpSolver:
                     [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
                 self.shared_lib.ocp_nlp_out_set(self.nlp_config, \
                     self.nlp_dims, self.nlp_out, stage, field, value_data_p)
-            # elif field_ in mem_fields:
-            #     self.shared_lib.ocp_nlp_set.argtypes = \
-            #         [c_void_p, c_void_p, c_int, c_char_p, c_void_p]
-            #     self.shared_lib.ocp_nlp_set(self.nlp_config, \
-            #         self.nlp_solver, stage, field, value_data_p)
+            elif field_ in mem_fields:
+                self.shared_lib.ocp_nlp_set.argtypes = \
+                    [c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+                self.shared_lib.ocp_nlp_set(self.nlp_config, \
+                    self.nlp_solver, stage, field, value_data_p)
         return
 
 
