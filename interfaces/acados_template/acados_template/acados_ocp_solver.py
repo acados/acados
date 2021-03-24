@@ -958,6 +958,7 @@ class AcadosOcpSolver:
     def store_iterate(self, filename='', overwrite=False):
         """
         Stores the current iterate of the ocp solver in a json file.
+        Note: This does not contain the iterate of the integrators, and the parameters.
 
             :param filename: if not set, use model_name + timestamp + '.json'
             :param overwrite: if false and filename exists add timestamp to filename
@@ -982,6 +983,7 @@ class AcadosOcpSolver:
             solution['t_'+str(i)] = self.get(i, 't')
             solution['sl_'+str(i)] = self.get(i, 'sl')
             solution['su_'+str(i)] = self.get(i, 'su')
+            # if self.acados_ocp.integrator == "IRK":...
         for i in range(self.N):
             solution['pi_'+str(i)] = self.get(i,'pi')
 
@@ -994,6 +996,7 @@ class AcadosOcpSolver:
     def load_iterate(self, filename):
         """
         Loads the iterate stored in json file with filename into the ocp solver.
+        Note: This does not contain the iterate of the integrators, and the parameters.
         """
         if not os.path.isfile(filename):
             raise Exception('load_iterate: failed, file does not exist: ' + os.path.join(os.getcwd(), filename))
