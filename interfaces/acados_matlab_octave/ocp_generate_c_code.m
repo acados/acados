@@ -154,6 +154,9 @@ function ocp_generate_c_code(obj)
                     num2str( size(constr.(fields{i}) )) , 10,...
                     e.message ]);
             end
+            if this_dims(1) == 1 && length(property_dim_names) ~= 1 % matrix with 1 row
+                constr.(fields{i}) = {constr.(fields{i})};
+            end
         end
     end
     obj.acados_ocp_nlp_json.constraints = constr;
@@ -178,6 +181,9 @@ function ocp_generate_c_code(obj)
                     num2str( size(cost.(fields{i}) )) , 10,...
                     e.message ]);
             end
+            if this_dims(1) == 1 && length(property_dim_names) ~= 1 % matrix with 1 row
+                cost.(fields{i}) = {cost.(fields{i})};
+            end
         end
     end
     obj.acados_ocp_nlp_json.cost = cost;
@@ -201,6 +207,9 @@ function ocp_generate_c_code(obj)
                     ' to dimension ' num2str(this_dims), ', got ',...
                     num2str( size(opts.(fields{i}) )) , 10,...
                     e.message ]);
+            end
+            if this_dims(1) == 1 && length(property_dim_names) ~= 1 % matrix with 1 row
+                opts.(fields{i}) = {opts.(fields{i})};
             end
         end
     end
