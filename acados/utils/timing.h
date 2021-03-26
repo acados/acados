@@ -81,7 +81,7 @@ typedef struct acados_timer_
 /* Use POSIX clock_gettime() for timing on non-Windows machines. */
 #include <time.h>
 
-#if __STDC_VERSION__ >= 199901L  // C99 Mode
+#if (__STDC_VERSION__ >= 199901L) && !(defined __MINGW32__ || defined __MINGW64__)  // C99 Mode
 
 #include <sys/stat.h>
 #include <sys/time.h>
