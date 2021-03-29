@@ -46,14 +46,21 @@
 int main()
 {
 
-    int status = 0;
-    status = acados_create();
+    nlp_solver_capsule *acados_ocp_capsule = {{ model.name }}_acados_create_capsule();
+    int status = {{ model.name }}_acados_create(acados_ocp_capsule);
 
     if (status)
     {
-        printf("acados_create() returned status %d. Exiting.\n", status);
+        printf("{{ model.name }}_acados_create() returned status %d. Exiting.\n", status);
         exit(1);
     }
+
+    ocp_nlp_config *nlp_config = {{ model.name }}_acados_get_nlp_config(acados_ocp_capsule);
+    ocp_nlp_dims *nlp_dims = {{ model.name }}_acados_get_nlp_dims(acados_ocp_capsule);
+    ocp_nlp_in *nlp_in = {{ model.name }}_acados_get_nlp_in(acados_ocp_capsule);
+    ocp_nlp_out *nlp_out = {{ model.name }}_acados_get_nlp_out(acados_ocp_capsule);
+    ocp_nlp_solver *nlp_solver = {{ model.name }}_acados_get_nlp_solver(acados_ocp_capsule);
+    void *nlp_opts = {{ model.name }}_acados_get_nlp_opts(acados_ocp_capsule);
 
     // initial condition
     int idxbx0[{{ dims.nbx_0 }}];
@@ -92,43 +99,14 @@ int main()
     p[{{ loop.index0 }}] = {{ item }};
     {% endfor %}
 
-
-    {%- if solver_options.integrator_type == "IRK" -%}
-    for (int ii = 0; ii < {{ dims.N }}; ii++)
+    for (int ii = 0; ii <= {{ dims.N }}; ii++)
     {
-        impl_dae_fun[ii].set_param(impl_dae_fun+ii, p);
-        impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun_jac_x_xdot_z+ii, p);
-        impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_jac_x_xdot_u_z+ii, p);
+        {{ model.name }}_acados_update_params(acados_ocp_capsule, ii, p, {{ dims.np }});
     }
-    {% elif solver_options.integrator_type == "ERK" %}
-    for (int ii = 0; ii < {{ dims.N }}; ii++)
-    {
-        expl_ode_fun[ii].set_param(expl_ode_fun+ii, p);
-        forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
-    }
-    {%- endif %}
-    for (int ii = 0; ii < {{ dims.N }}; ii++) {
-        {%- if constraints.constr_type == "BGP" %}
-        // r_constraint[ii].set_param(r_constraint+ii, p);
-        phi_constraint[ii].set_param(phi_constraint+ii, p);
-        {%- endif %}
-        {%- if dims.nh > 0 %}
-        nl_constr_h_fun_jac[ii].set_param(nl_constr_h_fun_jac+ii, p);
-        nl_constr_h_fun[ii].set_param(nl_constr_h_fun+ii, p);
-        {% endif %}
-    }
-    {%- if constraints.constr_type_e == "BGP" %}
-    // r_e_constraint.set_param(&r_e_constraint, p);
-    phi_e_constraint.set_param(&phi_e_constraint, p);
-    {% endif %}
-    {%- if dims.nh_e > 0 %}
-    nl_constr_h_e_fun_jac.set_param(&nl_constr_h_e_fun_jac, p);
-    nl_constr_h_e_fun.set_param(&nl_constr_h_e_fun, p);
-    {% endif %}
   {% endif %}{# if np > 0 #}
 
     // prepare evaluation
-    int NTIMINGS = 20;
+    int NTIMINGS = 1;
     double min_time = 1e12;
     double kkt_norm_inf;
     double elapsed_time;
@@ -150,7 +128,7 @@ int main()
             ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "u", u0);
         }
         ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "rti_phase", &rti_phase);
-        status = acados_solve();
+        status = {{ model.name }}_acados_solve(acados_ocp_capsule);
         ocp_nlp_get(nlp_config, nlp_solver, "time_tot", &elapsed_time);
         min_time = MIN(elapsed_time, min_time);
     }
@@ -171,27 +149,32 @@ int main()
 
     if (status == ACADOS_SUCCESS)
     {
-        printf("acados_solve(): SUCCESS!\n");
+        printf("{{ model.name }}_acados_solve(): SUCCESS!\n");
     }
     else
     {
-        printf("acados_solve() failed with status %d.\n", status);
+        printf("{{ model.name }}_acados_solve() failed with status %d.\n", status);
     }
 
     // get solution
     ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, "kkt_norm_inf", &kkt_norm_inf);
     ocp_nlp_get(nlp_config, nlp_solver, "sqp_iter", &sqp_iter);
 
-    acados_print_stats();
+    {{ model.name }}_acados_print_stats(acados_ocp_capsule);
 
     printf("\nSolver info:\n");
     printf(" SQP iterations %2d\n minimum time for %d solve %f [ms]\n KKT %e\n",
            sqp_iter, NTIMINGS, min_time*1000, kkt_norm_inf);
 
     // free solver
-    status = acados_free();
+    status = {{ model.name }}_acados_free(acados_ocp_capsule);
     if (status) {
-        printf("acados_free() returned status %d. \n", status);
+        printf("{{ model.name }}_acados_free() returned status %d. \n", status);
+    }
+    // free solver capsule
+    status = {{ model.name }}_acados_free_capsule(acados_ocp_capsule);
+    if (status) {
+        printf("{{ model.name }}_acados_free_capsule() returned status %d. \n", status);
     }
 
     return status;

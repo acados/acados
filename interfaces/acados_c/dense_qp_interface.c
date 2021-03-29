@@ -59,14 +59,12 @@
 
 qp_solver_config *dense_qp_config_create(dense_qp_solver_plan *plan)
 {
-    int bytes = dense_qp_solver_config_calculate_size();
+    acados_size_t bytes = dense_qp_solver_config_calculate_size();
     void *ptr = calloc(1, bytes);
     qp_solver_config *solver_config = dense_qp_solver_config_assign(ptr);
 
     dense_qp_solver_t solver_name = plan->qp_solver;
 
-    // TODO(dimitris): cath error if solver not compiled
-    // printf("\n\nSpecified solver interface not compiled with acados!\n\n");
     switch (solver_name)
     {
         case DENSE_QP_HPIPM:
@@ -88,7 +86,8 @@ qp_solver_config *dense_qp_config_create(dense_qp_solver_plan *plan)
             break;
 #endif
         default:
-            printf("\nerror: dense_qp_config_create: unsupported plan->qp_solver\n");
+            printf("\nerror: dense_qp_config_create: unsupported plan->qp_solver.\n");
+            printf("This might happen, if acados was not compiled with the specified QP solver.\n");
             exit(1);
             break;
     }
@@ -97,7 +96,7 @@ qp_solver_config *dense_qp_config_create(dense_qp_solver_plan *plan)
 
 dense_qp_dims *dense_qp_dims_create()
 {
-    int bytes = dense_qp_dims_calculate_size();
+    acados_size_t bytes = dense_qp_dims_calculate_size();
 
     void *ptr = calloc(1, bytes);
 
@@ -108,7 +107,7 @@ dense_qp_dims *dense_qp_dims_create()
 
 dense_qp_in *dense_qp_in_create(qp_solver_config *config, dense_qp_dims *dims)
 {
-    int bytes = dense_qp_in_calculate_size(dims);
+    acados_size_t bytes = dense_qp_in_calculate_size(dims);
 
     void *ptr = calloc(1, bytes);
 
@@ -119,7 +118,7 @@ dense_qp_in *dense_qp_in_create(qp_solver_config *config, dense_qp_dims *dims)
 
 dense_qp_out *dense_qp_out_create(qp_solver_config *config, dense_qp_dims *dims)
 {
-    int bytes = dense_qp_out_calculate_size(dims);
+    acados_size_t bytes = dense_qp_out_calculate_size(dims);
 
     void *ptr = calloc(1, bytes);
 
@@ -130,7 +129,7 @@ dense_qp_out *dense_qp_out_create(qp_solver_config *config, dense_qp_dims *dims)
 
 void *dense_qp_opts_create(qp_solver_config *config, dense_qp_dims *dims)
 {
-    int bytes = config->opts_calculate_size(config, dims);
+    acados_size_t bytes = config->opts_calculate_size(config, dims);
 
     void *ptr = calloc(1, bytes);
 
@@ -141,9 +140,9 @@ void *dense_qp_opts_create(qp_solver_config *config, dense_qp_dims *dims)
     return opts;
 }
 
-int dense_qp_calculate_size(qp_solver_config *config, dense_qp_dims *dims, void *opts_)
+acados_size_t dense_qp_calculate_size(qp_solver_config *config, dense_qp_dims *dims, void *opts_)
 {
-    int bytes = sizeof(dense_qp_solver);
+    acados_size_t bytes = sizeof(dense_qp_solver);
 
     bytes += config->memory_calculate_size(config, dims, opts_);
     bytes += config->workspace_calculate_size(config, dims, opts_);
@@ -178,7 +177,7 @@ dense_qp_solver *dense_qp_assign(qp_solver_config *config, dense_qp_dims *dims, 
 
 dense_qp_solver *dense_qp_create(qp_solver_config *config, dense_qp_dims *dims, void *opts_)
 {
-    int bytes = dense_qp_calculate_size(config, dims, opts_);
+    acados_size_t bytes = dense_qp_calculate_size(config, dims, opts_);
 
     void *ptr = calloc(1, bytes);
 
@@ -195,7 +194,7 @@ int dense_qp_solve(dense_qp_solver *solver, dense_qp_in *qp_in, dense_qp_out *qp
 
 static dense_qp_res *dense_qp_res_create(dense_qp_dims *dims)
 {
-    int size = dense_qp_res_calculate_size(dims);
+    acados_size_t size = dense_qp_res_calculate_size(dims);
     void *ptr = acados_malloc(size, 1);
     dense_qp_res *qp_res = dense_qp_res_assign(dims, ptr);
     return qp_res;
@@ -203,7 +202,7 @@ static dense_qp_res *dense_qp_res_create(dense_qp_dims *dims)
 
 static dense_qp_res_ws *dense_qp_res_workspace_create(dense_qp_dims *dims)
 {
-    int size = dense_qp_res_workspace_calculate_size(dims);
+    acados_size_t size = dense_qp_res_workspace_calculate_size(dims);
     void *ptr = acados_malloc(size, 1);
     dense_qp_res_ws *res_ws = dense_qp_res_workspace_assign(dims, ptr);
     return res_ws;

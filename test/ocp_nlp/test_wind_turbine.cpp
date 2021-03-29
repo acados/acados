@@ -115,7 +115,7 @@ static void shift_states(ocp_nlp_dims *dims, ocp_nlp_out *out, double *x_end)
 
     for (int i = 0; i < N; i++)
          blasfeo_dveccp(dims->nx[i], &out->ux[i], dims->nu[i], &out->ux[i+1], dims->nu[i+1]);
-     blasfeo_pack_dvec(dims->nx[N], x_end, &out->ux[N], dims->nu[N]);
+     blasfeo_pack_dvec(dims->nx[N], x_end, 1, &out->ux[N], dims->nu[N]);
 }
 
 
@@ -126,7 +126,7 @@ static void shift_controls(ocp_nlp_dims *dims, ocp_nlp_out *out, double *u_end)
 
     for (int i = 0; i < N-1; i++)
          blasfeo_dveccp(dims->nu[i], &out->ux[i], 0, &out->ux[i+1], 0);
-     blasfeo_pack_dvec(dims->nu[N-1], u_end, &out->ux[N-1], 0);
+     blasfeo_pack_dvec(dims->nu[N-1], u_end, 1, &out->ux[N-1], 0);
 }
 
 
@@ -998,9 +998,9 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     // warm start output initial guess of solution
     for (int i = 0; i <= NN; i++)
     {
-        blasfeo_pack_dvec(2, u0_ref, nlp_out->ux+i, 0);
-        blasfeo_pack_dvec(1, wind0_ref+i, nlp_out->ux+i, 2);
-        blasfeo_pack_dvec(nx[i], x0_ref, nlp_out->ux+i, nu[i]);
+        blasfeo_pack_dvec(2, u0_ref, 1, nlp_out->ux+i, 0);
+        blasfeo_pack_dvec(1, wind0_ref+i, 1, nlp_out->ux+i, 2);
+        blasfeo_pack_dvec(nx[i], x0_ref, 1, nlp_out->ux+i, nu[i]);
     }
 
     // set x0 as box constraint
@@ -1094,8 +1094,8 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
         REQUIRE(max_res <= TOL);
 
         // shift trajectories
-        blasfeo_unpack_dvec(dims->nx[NN], &nlp_out->ux[NN-1], dims->nu[NN-1], x_end);
-        blasfeo_unpack_dvec(dims->nu[NN-1], &nlp_out->ux[NN-2], dims->nu[NN-2], u_end);
+        blasfeo_unpack_dvec(dims->nx[NN], &nlp_out->ux[NN-1], dims->nu[NN-1], x_end, 1);
+        blasfeo_unpack_dvec(dims->nu[NN-1], &nlp_out->ux[NN-2], dims->nu[NN-2], u_end, 1);
 
         shift_states(dims, nlp_out, x_end);
         shift_controls(dims, nlp_out, u_end);

@@ -134,9 +134,9 @@ static qpdunes_stage_qp_solver_t check_stage_qp_solver(ocp_qp_qpdunes_opts *opts
  * opts
  ************************************************/
 
-int ocp_qp_qpdunes_opts_calculate_size(void *config_, ocp_qp_dims *dims)
+acados_size_t ocp_qp_qpdunes_opts_calculate_size(void *config_, ocp_qp_dims *dims)
 {
-    int size = 0;
+    acados_size_t size = 0;
     size += sizeof(ocp_qp_qpdunes_opts);
     return size;
 }
@@ -228,23 +228,34 @@ void ocp_qp_qpdunes_opts_set(void *config_, void *opts_, const char *field, void
 
     if (!strcmp(field, "tol_stat"))
     {
-        // TODO set solver exit tolerance
+        double *tol = value;
+        // opts->options.stationarityTolerance = *tol;
+        // NOTE: there seems to be a mismatch between stationarity tolarance in qpDUNES and acados.
+        // SQP didnt converge without the factor 1e-1 here.
+        opts->options.stationarityTolerance = 1e-1 * *tol;
     }
     else if (!strcmp(field, "tol_eq"))
     {
-        // TODO set solver exit tolerance
+        double *tol = value;
+        opts->options.equalityTolerance = *tol;
     }
     else if (!strcmp(field, "tol_ineq"))
     {
-        // TODO set solver exit tolerance
+        double *tol = value;
+        opts->options.activenessTolerance = *tol;
     }
     else if (!strcmp(field, "tol_comp"))
     {
-        // TODO set solver exit tolerance
+        // NOTE(oj): I think qpDUNES does not have this, not sure about though.
     }
     else if (!strcmp(field, "warm_start"))
     {
         // TODO set solver warm start
+    }
+    else if (!strcmp(field, "iter_max"))
+    {
+        int *iter_max = value;
+        opts->options.maxIter = *iter_max;
     }
     else
     {
@@ -261,10 +272,10 @@ void ocp_qp_qpdunes_opts_set(void *config_, void *opts_, const char *field, void
  * memory
  ************************************************/
 
-int ocp_qp_qpdunes_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
+acados_size_t ocp_qp_qpdunes_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
 {
     // NOTE(dimitris): calculate size does NOT include the memory required by qpDUNES
-    int size = 0;
+    acados_size_t size = 0;
     size += sizeof(ocp_qp_qpdunes_memory);
     return size;
 }
@@ -296,13 +307,26 @@ void *ocp_qp_qpdunes_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_
     mem->nz = nx + nu;
     mem->nDmax = get_maximum_number_of_inequality_constraints(dims);
 
-    // Check for constant dimensions
-    // TODO(roversch): Move this up the call stack?
+    // Check on dimensions
     for (int kk = 1; kk < N; kk++)
     {
-        if (dims->nx[kk] != nx || dims->nu[kk] != nu) return NULL;
+        if (dims->nx[kk] != nx || dims->nu[kk] != nu)
+        {
+            printf("\nocp_qp_qpdunes_memory_assign: nx and nu must be constant for intermediate stages!\n");
+            printf("\tGot nx[0] = %d, nu[0] = %d, at stage %d: nx = %d, nu = %d!\n", nx, nu, kk, dims->nx[kk], dims->nu[kk]);
+            exit(1);
+        }
     }
-    if (dims->nx[N] != nx || dims->nu[N] != 0) return NULL;
+    if (dims->nx[N] != nx)
+    {
+        printf("\nocp_qp_qpdunes_memory_assign: nx must be constant for intermediate + terminal stages!\n");
+        exit(1);
+    }
+    if (dims->nu[N] != 0)
+    {
+        printf("\nocp_qp_qpdunes_memory_assign: nu must be zero for terminal stage!\n");
+        exit(1);
+    }
 
     if (opts->stageQpSolver == QPDUNES_WITH_QPOASES)
     {
@@ -333,7 +357,7 @@ void *ocp_qp_qpdunes_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_
 
 void ocp_qp_qpdunes_memory_get(void *config_, void *mem_, const char *field, void* value)
 {
-    qp_solver_config *config = config_;
+    // qp_solver_config *config = config_;
     ocp_qp_qpdunes_memory *mem = mem_;
 
     if(!strcmp(field, "time_qp_solver_call"))
@@ -414,8 +438,8 @@ static void form_RSQ(double *R, double *S, double *Q, int nx, int nu, struct bla
 
 static void form_g(double *g, int nx, int nu, struct blasfeo_dvec *srq)
 {
-    blasfeo_unpack_dvec(nx, srq, nu, &g[0]);
-    blasfeo_unpack_dvec(nu, srq, 0, &g[nx]);
+    blasfeo_unpack_dvec(nx, srq, nu, &g[0], 1);
+    blasfeo_unpack_dvec(nu, srq, 0, &g[nx], 1);
 
     // printf("acados rq (nx = %d, nu = %d)\n", nx, nu);
     // blasfeo_print_tran_dvec(srq->m, srq, 0);
@@ -434,7 +458,7 @@ static void form_dynamics(double *ABt, double *b, int nx, int nu, struct blasfeo
     // copy B
     blasfeo_unpack_dmat(nu, nx, sBAbt, 0, 0, &ABt[nx], nx + nu);
     // copy b
-    blasfeo_unpack_dvec(nx, sb, 0, b);
+    blasfeo_unpack_dvec(nx, sb, 0, b, 1);
 
     // printf("acados [B'; A'] (nx = %d, nu = %d)\n", nx, nu);
     // blasfeo_print_dmat(sBAbt->m-1, sBAbt->n, sBAbt, 0, 0);
@@ -482,9 +506,9 @@ static void form_inequalities(double *Ct, double *lc, double *uc, int nx, int nu
     // copy D
     blasfeo_unpack_dmat(nu, ng, sDCt, 0, 0, &Ct[nx], nx + nu);
     // copy lc
-    blasfeo_unpack_dvec(ng, sd, nb, lc);
+    blasfeo_unpack_dvec(ng, sd, nb, lc, 1);
     // copy uc
-    blasfeo_unpack_dvec(ng, sd, 2 * nb + ng, uc);
+    blasfeo_unpack_dvec(ng, sd, 2 * nb + ng, uc, 1);
 
     for (ii = 0; ii < ng; ii++) uc[ii] = -uc[ii];
 }
@@ -495,14 +519,14 @@ static void form_inequalities(double *Ct, double *lc, double *uc, int nx, int nu
  * workspace
  ************************************************/
 
-int ocp_qp_qpdunes_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
+acados_size_t ocp_qp_qpdunes_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
 {
     int nx = dims->nx[0];
     int nu = dims->nu[0];
     int nDmax = get_maximum_number_of_inequality_constraints(dims);
-    int nz = nx + nu;
+    size_t nz = nx + nu;
 
-    int size = sizeof(ocp_qp_qpdunes_workspace);
+    acados_size_t size = sizeof(ocp_qp_qpdunes_workspace);
 
     size += nz * nz * sizeof(double);     // H
     size += nx * nx * sizeof(double);     // Q
@@ -520,7 +544,7 @@ int ocp_qp_qpdunes_workspace_calculate_size(void *config_, ocp_qp_dims *dims, vo
 
 
 
-static void cast_workspace(ocp_qp_qpdunes_workspace *work, ocp_qp_qpdunes_memory *mem)
+static void ocp_qp_qpdunes_cast_workspace(ocp_qp_qpdunes_workspace *work, ocp_qp_qpdunes_memory *mem)
 {
     char *c_ptr = (char *) work;
     c_ptr += sizeof(ocp_qp_qpdunes_workspace);
@@ -752,8 +776,8 @@ static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out, ocp_qp_qpdunes_memory
         for (int ii = 0; ii < 2 * nv + 2 * nc; ii++)
             dual_sol[ii] = (dual_sol[ii] >= 0.0) ? dual_sol[ii] : 0.0;
 
-        blasfeo_pack_dvec(nx[kk], &mem->qpData.intervals[kk]->z.data[0], &out->ux[kk], nu[kk]);
-        blasfeo_pack_dvec(nu[kk], &mem->qpData.intervals[kk]->z.data[nx[kk]], &out->ux[kk], 0);
+        blasfeo_pack_dvec(nx[kk], &mem->qpData.intervals[kk]->z.data[0], 1, &out->ux[kk], nu[kk]);
+        blasfeo_pack_dvec(nu[kk], &mem->qpData.intervals[kk]->z.data[nx[kk]], 1, &out->ux[kk], 0);
 
         for (int ii = 0; ii < 2 * nb[kk] + 2 * ng[kk]; ii++) out->lam[kk].pa[ii] = 0.0;
 
@@ -781,13 +805,12 @@ static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out, ocp_qp_qpdunes_memory
     }
     for (int kk = 0; kk < N; kk++)
     {
-        blasfeo_pack_dvec(nx[kk + 1], &mem->qpData.lambda.data[kk * nx[kk + 1]], &out->pi[kk], 0);
+        blasfeo_pack_dvec(nx[kk + 1], &mem->qpData.lambda.data[kk * nx[kk + 1]], 1, &out->pi[kk], 0);
     }
 }
 
 
 
-// TODO(dimitris): free also qp_in, qp_out, etc and write for all solvers?
 void ocp_qp_qpdunes_free_memory(void *mem_)
 {
     ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *) mem_;
@@ -825,7 +848,7 @@ int ocp_qp_qpdunes(void *config_, ocp_qp_in *in, ocp_qp_out *out, void *opts_, v
     ocp_qp_qpdunes_workspace *work = (ocp_qp_qpdunes_workspace *) work_;
 
     acados_tic(&interface_timer);
-    cast_workspace(work, mem);
+    ocp_qp_qpdunes_cast_workspace(work, mem);
     return_t qpdunes_status = update_memory(in, opts, mem, work);
     if (qpdunes_status != QPDUNES_OK) return qpdunes_status;
     info->interface_time = acados_toc(&interface_timer);
@@ -847,8 +870,34 @@ int ocp_qp_qpdunes(void *config_, ocp_qp_in *in, ocp_qp_out *out, void *opts_, v
     info->t_computed = 1;
 
     int acados_status = qpdunes_status;
-    if (qpdunes_status == QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND) acados_status = ACADOS_SUCCESS;
-    if (qpdunes_status == QPDUNES_ERR_ITERATION_LIMIT_REACHED) acados_status = ACADOS_MAXITER;
+    if ( qpdunes_status == QPDUNES_OK ||
+         qpdunes_status == QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND )
+    {
+        acados_status = ACADOS_SUCCESS;
+    }
+    else if (qpdunes_status == QPDUNES_SUCC_SUBOPTIMAL_TERMINATION)
+    {
+        printf("\nqpDUNES: Success, terminated with suboptimal soluation.\n");
+    }
+    else if (qpdunes_status == QPDUNES_ERR_ITERATION_LIMIT_REACHED)
+    {
+        printf("\nqpDUNES: reached maximum number of iterations.\n");
+        acados_status = ACADOS_MAXITER;
+    }
+    else if (qpdunes_status == QPDUNES_ERR_DIVISION_BY_ZERO)
+    {
+        printf("\nqpDUNES: error, division by zero.\n");
+        // NOTE(oj): qpDUNES seems quite conservative here.
+        printf("NOTE: the reason might be a not well conditioned hessian.\n");
+        printf("qpDUNES seems to have really strong requirements with this regard...\n");
+        acados_status = ACADOS_QP_FAILURE;
+    }
+    else
+    {
+        printf("\nqpDUNES: returned error not handled by acados.\n");
+        acados_status = ACADOS_QP_FAILURE;
+    }
+
     return acados_status;
 }
 
@@ -867,19 +916,19 @@ void ocp_qp_qpdunes_config_initialize_default(void *config_)
     qp_solver_config *config = config_;
 
     config->dims_set = &ocp_qp_dims_set;
-    config->opts_calculate_size = (int (*)(void *, void *)) & ocp_qp_qpdunes_opts_calculate_size;
+    config->opts_calculate_size = (acados_size_t (*)(void *, void *)) & ocp_qp_qpdunes_opts_calculate_size;
     config->opts_assign = (void *(*) (void *, void *, void *) ) & ocp_qp_qpdunes_opts_assign;
     config->opts_initialize_default =
         (void (*)(void *, void *, void *)) & ocp_qp_qpdunes_opts_initialize_default;
     config->opts_update = (void (*)(void *, void *, void *)) & ocp_qp_qpdunes_opts_update;
     config->opts_set = &ocp_qp_qpdunes_opts_set;
     config->memory_calculate_size =
-        (int (*)(void *, void *, void *)) & ocp_qp_qpdunes_memory_calculate_size;
+        (acados_size_t (*)(void *, void *, void *)) & ocp_qp_qpdunes_memory_calculate_size;
     config->memory_assign =
         (void *(*) (void *, void *, void *, void *) ) & ocp_qp_qpdunes_memory_assign;
     config->memory_get = &ocp_qp_qpdunes_memory_get;
     config->workspace_calculate_size =
-        (int (*)(void *, void *, void *)) & ocp_qp_qpdunes_workspace_calculate_size;
+        (acados_size_t (*)(void *, void *, void *)) & ocp_qp_qpdunes_workspace_calculate_size;
     config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & ocp_qp_qpdunes;
     config->eval_sens = &ocp_qp_qpdunes_eval_sens;
 

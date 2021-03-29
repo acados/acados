@@ -67,6 +67,11 @@ classdef acados_ocp_opts < handle
             obj.opts_struct.nlp_solver_step_length = 1.0; % fixed step length in SQP algorithm
             obj.opts_struct.rti_phase = 0; % RTI phase: (1) preparation, (2) feedback, (0) both
             obj.opts_struct.qp_solver = 'partial_condensing_hpipm';
+            % globalization
+            obj.opts_struct.globalization = 'fixed_step';
+            obj.opts_struct.alpha_min = 0.05;
+            obj.opts_struct.alpha_reduction = 0.7;
+
             obj.opts_struct.qp_solver_iter_max = 50;
             % obj.opts_struct.qp_solver_cond_N = 5; % New horizon after partial condensing
             obj.opts_struct.qp_solver_cond_ric_alg = 0; % 0: dont factorize hessian in the condensing; 1: factorize
@@ -184,6 +189,12 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.print_level = value;
             elseif (strcmp(field, 'levenberg_marquardt'))
                 obj.opts_struct.levenberg_marquardt = value;
+            elseif (strcmp(field, 'alpha_min'))
+                obj.opts_struct.alpha_min = value;
+            elseif (strcmp(field, 'alpha_reduction'))
+                obj.opts_struct.alpha_reduction = value;
+            elseif (strcmp(field, 'globalization'))
+                obj.opts_struct.globalization = value;
             elseif (strcmp(field, 'compile_mex'))
                 disp(['Option compile_mex is not supported anymore,'...
                     'please use compile_interface instead or dont set the option.', ...

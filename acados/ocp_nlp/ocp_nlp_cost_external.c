@@ -52,9 +52,9 @@
  * dims
  ************************************************/
 
-int ocp_nlp_cost_external_dims_calculate_size(void *config_)
+acados_size_t ocp_nlp_cost_external_dims_calculate_size(void *config_)
 {
-    int size = sizeof(ocp_nlp_cost_external_dims);
+    acados_size_t size = sizeof(ocp_nlp_cost_external_dims);
 
     return size;
 }
@@ -113,7 +113,7 @@ void ocp_nlp_cost_external_dims_set(void *config_, void *dims_, const char *fiel
     }
     else
     {
-        printf("\nerror: dimension type %s not available in module ocp_nlp_cost_external\n", field);
+        printf("\nerror: ocp_nlp_cost_external_dims_set: dimension type %s not available.\n", field);
         exit(1);
     }
 
@@ -134,7 +134,7 @@ void ocp_nlp_cost_external_dims_get(void *config_, void *dims_, const char *fiel
  * model
  ************************************************/
 
-int ocp_nlp_cost_external_model_calculate_size(void *config_, void *dims_)
+acados_size_t ocp_nlp_cost_external_model_calculate_size(void *config_, void *dims_)
 {
     ocp_nlp_cost_external_dims *dims = dims_;
 
@@ -142,7 +142,7 @@ int ocp_nlp_cost_external_model_calculate_size(void *config_, void *dims_)
     int nu = dims->nu;
     int ns = dims->ns;
 
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_cost_external_model);
 
@@ -231,34 +231,34 @@ int ocp_nlp_cost_external_model_set(void *config_, void *dims_, void *model_,
     else if (!strcmp(field, "Z"))
     {
         double *Z = (double *) value_;
-        blasfeo_pack_dvec(ns, Z, &model->Z, 0);
-        blasfeo_pack_dvec(ns, Z, &model->Z, ns);
+        blasfeo_pack_dvec(ns, Z, 1, &model->Z, 0);
+        blasfeo_pack_dvec(ns, Z, 1, &model->Z, ns);
     }
     else if (!strcmp(field, "Zl"))
     {
         double *Zl = (double *) value_;
-        blasfeo_pack_dvec(ns, Zl, &model->Z, 0);
+        blasfeo_pack_dvec(ns, Zl, 1, &model->Z, 0);
     }
     else if (!strcmp(field, "Zu"))
     {
         double *Zu = (double *) value_;
-        blasfeo_pack_dvec(ns, Zu, &model->Z, ns);
+        blasfeo_pack_dvec(ns, Zu, 1, &model->Z, ns);
     }
     else if (!strcmp(field, "z"))
     {
         double *z = (double *) value_;
-        blasfeo_pack_dvec(ns, z, &model->z, 0);
-        blasfeo_pack_dvec(ns, z, &model->z, ns);
+        blasfeo_pack_dvec(ns, z, 1, &model->z, 0);
+        blasfeo_pack_dvec(ns, z, 1, &model->z, ns);
     }
     else if (!strcmp(field, "zl"))
     {
         double *zl = (double *) value_;
-        blasfeo_pack_dvec(ns, zl, &model->z, 0);
+        blasfeo_pack_dvec(ns, zl, 1, &model->z, 0);
     }
     else if (!strcmp(field, "zu"))
     {
         double *zu = (double *) value_;
-        blasfeo_pack_dvec(ns, zu, &model->z, ns);
+        blasfeo_pack_dvec(ns, zu, 1, &model->z, ns);
     }
     else if (!strcmp(field, "scaling"))
     {
@@ -279,11 +279,11 @@ int ocp_nlp_cost_external_model_set(void *config_, void *dims_, void *model_,
  * options
  ************************************************/
 
-int ocp_nlp_cost_external_opts_calculate_size(void *config_, void *dims_)
+acados_size_t ocp_nlp_cost_external_opts_calculate_size(void *config_, void *dims_)
 {
     // ocp_nlp_cost_config *config = config_;
 
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_cost_external_opts);
 
@@ -363,7 +363,7 @@ void ocp_nlp_cost_external_opts_set(void *config_, void *opts_, const char *fiel
  * memory
  ************************************************/
 
-int ocp_nlp_cost_external_memory_calculate_size(void *config_, void *dims_, void *opts_)
+acados_size_t ocp_nlp_cost_external_memory_calculate_size(void *config_, void *dims_, void *opts_)
 {
     // ocp_nlp_cost_config *config = config_;
     ocp_nlp_cost_external_dims *dims = dims_;
@@ -373,7 +373,7 @@ int ocp_nlp_cost_external_memory_calculate_size(void *config_, void *dims_, void
     int nu = dims->nu;
     int ns = dims->ns;
 
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_cost_external_memory);
 
@@ -500,7 +500,7 @@ void ocp_nlp_cost_external_memory_set_dzdux_tran_ptr(struct blasfeo_dmat *dzdux_
  * workspace
  ************************************************/
 
-int ocp_nlp_cost_external_workspace_calculate_size(void *config_, void *dims_, void *opts_)
+acados_size_t ocp_nlp_cost_external_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
     ocp_nlp_cost_external_dims *dims = dims_;
 
@@ -509,7 +509,7 @@ int ocp_nlp_cost_external_workspace_calculate_size(void *config_, void *dims_, v
     int nu = dims->nu;
     int ns = dims->ns;
 
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_cost_external_workspace);
 

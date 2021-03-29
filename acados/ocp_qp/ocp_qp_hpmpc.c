@@ -59,9 +59,9 @@
  * opts
  ************************************************/
 
-int ocp_qp_hpmpc_opts_calculate_size(void *config_, ocp_qp_dims *dims)
+acados_size_t ocp_qp_hpmpc_opts_calculate_size(void *config_, ocp_qp_dims *dims)
 {
-    int size = sizeof(ocp_qp_hpmpc_opts);
+    acados_size_t size = sizeof(ocp_qp_hpmpc_opts);
     size = (size + 63) / 64 * 64;  // make multiple of typical cache line size
     size += 1 * 64;                // align once to typical cache line size
     return size;
@@ -160,20 +160,20 @@ void ocp_qp_hpmpc_opts_set(void *config_, void *opts_, const char *field, void *
  * memory
  ************************************************/
 
-int ocp_qp_hpmpc_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
+acados_size_t ocp_qp_hpmpc_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
 {
     ocp_qp_hpmpc_opts *args = (ocp_qp_hpmpc_opts *) opts_;
 
-    int N = dims->N;
-    int N2 = args->N2;
-    int M = args->M;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
-    int *nb = dims->nb;
-    int *ng = dims->ng;
+    size_t N = dims->N;
+    size_t N2 = args->N2;
+    size_t M = args->M;
+    size_t *nx = dims->nx;
+    size_t *nu = dims->nu;
+    size_t *nb = dims->nb;
+    size_t *ng = dims->ng;
 
-    int ii;
-    int ws_size = sizeof(ocp_qp_hpmpc_memory);
+    size_t ii;
+    acados_size_t ws_size = sizeof(ocp_qp_hpmpc_memory);
 
     ws_size += 6 * args->max_iter * sizeof(double);  // stats
 
@@ -360,7 +360,7 @@ void ocp_qp_hpmpc_memory_get(void *config_, void *mem_, const char *field, void*
  * workspace
  ************************************************/
 
-int ocp_qp_hpmpc_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
+acados_size_t ocp_qp_hpmpc_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
 {
     return 0;
 }
@@ -568,19 +568,19 @@ void ocp_qp_hpmpc_config_initialize_default(void *config_)
     qp_solver_config *config = config_;
 
     config->dims_set = &ocp_qp_dims_set;
-    config->opts_calculate_size = (int (*)(void *, void *)) & ocp_qp_hpmpc_opts_calculate_size;
+    config->opts_calculate_size = (size_t (*)(void *, void *)) & ocp_qp_hpmpc_opts_calculate_size;
     config->opts_assign = (void *(*) (void *, void *, void *) ) & ocp_qp_hpmpc_opts_assign;
     config->opts_initialize_default =
         (void (*)(void *, void *, void *)) & ocp_qp_hpmpc_opts_initialize_default;
     config->opts_update = (void (*)(void *, void *, void *)) & ocp_qp_hpmpc_opts_update;
     config->opts_set = &ocp_qp_hpmpc_opts_set;
     config->memory_calculate_size =
-        (int (*)(void *, void *, void *)) & ocp_qp_hpmpc_memory_calculate_size;
+        (size_t (*)(void *, void *, void *)) & ocp_qp_hpmpc_memory_calculate_size;
     config->memory_assign =
         (void *(*) (void *, void *, void *, void *) ) & ocp_qp_hpmpc_memory_assign;
     config->memory_get = &ocp_qp_hpmpc_memory_get;
     config->workspace_calculate_size =
-        (int (*)(void *, void *, void *)) & ocp_qp_hpmpc_workspace_calculate_size;
+        (size_t (*)(void *, void *, void *)) & ocp_qp_hpmpc_workspace_calculate_size;
     config->evaluate = &ocp_qp_hpmpc;
     config->eval_sens = &ocp_qp_hpmpc_eval_sens;
 

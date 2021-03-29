@@ -55,12 +55,12 @@ int {{ model.name }}_constr_h_e_fun_n_in();
 int {{ model.name }}_constr_h_e_fun_n_out();
 
 {% if solver_options.hessian_approx == "EXACT" -%}
-int {{ model.name }}_constr_h_e_fun_jac_uxt_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
-int {{ model.name }}_constr_h_e_fun_jac_uxt_hess_work(int *, int *, int *, int *);
-const int *{{ model.name }}_constr_h_e_fun_jac_uxt_hess_sparsity_in(int);
-const int *{{ model.name }}_constr_h_e_fun_jac_uxt_hess_sparsity_out(int);
-int {{ model.name }}_constr_h_e_fun_jac_uxt_hess_n_in();
-int {{ model.name }}_constr_h_e_fun_jac_uxt_hess_n_out();
+int {{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess_work(int *, int *, int *, int *);
+const int *{{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess_sparsity_in(int);
+const int *{{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess_sparsity_out(int);
+int {{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess_n_in();
+int {{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess_n_out();
 {% endif %}
 {% endif %}
 

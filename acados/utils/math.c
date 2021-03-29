@@ -973,6 +973,7 @@ static void tql2(int dim, double *V, double *d, double *e)
     Bowdler, Martin, Reinsch, and Wilkinson, Handbook for
     Auto. Comp., Vol.ii-Linear Algebra, and the corresponding
     Fortran subroutine in EISPACK. */
+    // http://www.netlib.org/eispack/tql2.f
 
     int i, m, l, k;
     double g, p, r, dl1, h, f, tst1, eps;
@@ -993,7 +994,7 @@ static void tql2(int dim, double *V, double *d, double *e)
 
         tst1 = fmax(tst1, fabs(d[l]) + fabs(e[l]));
         m = l;
-        while (m < dim)
+        while (m < dim-1)
         {
             if (fabs(e[m]) <= eps * tst1)
             {

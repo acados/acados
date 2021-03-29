@@ -75,11 +75,11 @@ typedef struct
 
 ///  Calculate the size of the ocp_nlp_cost_ls_dims struct
 ///
-///  \param[in] config structure containing configuration of ocp_nlp_cost 
+///  \param[in] config_ structure containing configuration of ocp_nlp_cost
 ///  module
 ///  \param[out] []
-///  \return \c size of ocp_nlp_dims struct 
-int ocp_nlp_cost_ls_dims_calculate_size(void *config);
+///  \return \c size of ocp_nlp_dims struct
+acados_size_t ocp_nlp_cost_ls_dims_calculate_size(void *config);
 
 
 ///  Assign memory pointed to by raw_memory to ocp_nlp-cost_ls dims struct 
@@ -121,7 +121,7 @@ void ocp_nlp_cost_ls_dims_get(void *config_, void *dims_, const char *field, int
 typedef struct
 {
     // slack penalty has the form z^T * s + .5 * s^T * Z * s
-    struct blasfeo_dmat Cyt;            ///< output matrix: Cy * [x, u] = y; in transposed form
+    struct blasfeo_dmat Cyt;            ///< output matrix: Cy * [u,x] = y; in transposed form
     struct blasfeo_dmat Vz;             ///< Vz in ls cost Vx*x + Vu*u + Vz*z
     struct blasfeo_dmat W;              ///< ls norm corresponding to this matrix
     struct blasfeo_dvec y_ref;          ///< yref
@@ -131,7 +131,7 @@ typedef struct
 } ocp_nlp_cost_ls_model;
 
 //
-int ocp_nlp_cost_ls_model_calculate_size(void *config, void *dims);
+acados_size_t ocp_nlp_cost_ls_model_calculate_size(void *config, void *dims);
 //
 void *ocp_nlp_cost_ls_model_assign(void *config, void *dims, void *raw_memory);
 //
@@ -152,7 +152,7 @@ typedef struct
 } ocp_nlp_cost_ls_opts;
 
 //
-int ocp_nlp_cost_ls_opts_calculate_size(void *config, void *dims);
+acados_size_t ocp_nlp_cost_ls_opts_calculate_size(void *config, void *dims);
 //
 void *ocp_nlp_cost_ls_opts_assign(void *config, void *dims, void *raw_memory);
 //
@@ -188,7 +188,7 @@ typedef struct
 } ocp_nlp_cost_ls_memory;
 
 //
-int ocp_nlp_cost_ls_memory_calculate_size(void *config, void *dims, void *opts);
+acados_size_t ocp_nlp_cost_ls_memory_calculate_size(void *config, void *dims, void *opts);
 //
 void *ocp_nlp_cost_ls_memory_assign(void *config, void *dims, void *opts, void *raw_memory);
 //
@@ -228,7 +228,7 @@ typedef struct
 } ocp_nlp_cost_ls_workspace;
 
 //
-int ocp_nlp_cost_ls_workspace_calculate_size(void *config, void *dims, void *opts);
+acados_size_t ocp_nlp_cost_ls_workspace_calculate_size(void *config, void *dims, void *opts);
 
 
 

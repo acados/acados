@@ -36,7 +36,7 @@
 import sys
 sys.path.insert(0, '../common')
 
-from export_pendulum_ode_model import export_pendulum_ode_model
+from pendulum_model import export_pendulum_ode_model
 from export_mhe_ode_model import export_mhe_ode_model
 
 from export_ocp_solver import export_ocp_solver
@@ -107,9 +107,6 @@ simY = np.zeros((Nsim+1, nx))
 simXest = np.zeros((Nsim+1, nx))
 simWest = np.zeros((Nsim+1, nx))
 
-# reference for mhe
-yref = np.zeros((3*nx, ))
-
 # arrival cost mean & initial state
 x0_plant = np.array([0.1, np.pi + 0.5, -0.05, 0.05])
 x0_bar = np.array([0.0, np.pi, 0.0, 0.0])
@@ -145,16 +142,27 @@ for i in range(N_mhe):
     simX[i+1,:] = plant.get("x")
    
 
+# reference for mhe
+yref = np.zeros((2*nx, ))
+yref_0 = np.zeros((3*nx, ))
+
 # closed loop
 for i in range(N_mhe, Nsim):
 
     ### estimation ###
     k = i - N_mhe
     
-    for j in range(N_mhe):
+    # set measurements
+    yref_0[:nx] = simY[k, :]
+    yref_0[2*nx:] = x0_bar
+
+    acados_solver_mhe.set(0, "yref", yref_0)
+    # set controls
+    acados_solver_mhe.set(0, "p", simU[k,:])
+
+    for j in range(1, N_mhe):
         # set measurements
         yref[:nx] = simY[k+j, :]
-        yref[2*nx:] = x0_bar
         acados_solver_mhe.set(j, "yref", yref)
         # set controls
         acados_solver_mhe.set(j, "p", simU[k+j,:])

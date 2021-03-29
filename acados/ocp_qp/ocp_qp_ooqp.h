@@ -116,7 +116,7 @@ typedef struct ocp_qp_ooqp_memory_
 } ocp_qp_ooqp_memory;
 
 //
-int ocp_qp_ooqp_opts_calculate_size(void *config_, ocp_qp_dims *dims);
+acados_size_t ocp_qp_ooqp_opts_calculate_size(void *config_, ocp_qp_dims *dims);
 //
 void *ocp_qp_ooqp_opts_assign(void *config_, ocp_qp_dims *dims, void *raw_memory);
 //
@@ -124,11 +124,11 @@ void ocp_qp_ooqp_opts_initialize_default(void *config_, ocp_qp_dims *dims, void 
 //
 void ocp_qp_ooqp_opts_update(void *config_, ocp_qp_dims *dims, void *opts_);
 //
-int ocp_qp_ooqp_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_);
+acados_size_t ocp_qp_ooqp_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_);
 //
 void *ocp_qp_ooqp_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, void *raw_memory);
 //
-int ocp_qp_ooqp_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_);
+acados_size_t ocp_qp_ooqp_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_);
 //
 int ocp_qp_ooqp(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_, void *memory_,
                 void *work_);

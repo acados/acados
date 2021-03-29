@@ -34,8 +34,8 @@
 import sys, json, os
 sys.path.insert(0, '../common')
 
-from acados_template import AcadosOcp, AcadosOcpSolver, acados_dae_model_json_dump
-from export_pendulum_ode_model import export_pendulum_ode_model
+from acados_template import AcadosOcp, AcadosOcpSolver, acados_dae_model_json_dump, get_acados_path
+from pendulum_model import export_pendulum_ode_model
 import numpy as np
 import scipy.linalg
 from utils import plot_pendulum
@@ -123,13 +123,26 @@ ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
 ocp.solver_options.tf = Tf
 ocp.solver_options.initialize_t_slacks = 1
 
-ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
+# Set additional options for Simulink interface:
+acados_path = get_acados_path()
+json_path = os.path.join(acados_path, 'interfaces/acados_template/acados_template')
+with open(json_path + '/simulink_default_opts.json', 'r') as f:
+    simulink_opts = json.load(f)
+ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json', simulink_opts = simulink_opts)
+
+# ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
+
 
 simX = np.ndarray((N+1, nx))
 simU = np.ndarray((N, nu))
 
+# change options after creating ocp_solver
 ocp_solver.options_set("step_length", 0.99999)
 ocp_solver.options_set("globalization", "fixed_step") # fixed_step, merit_backtracking
+ocp_solver.options_set("tol_eq", 1e-2)
+ocp_solver.options_set("tol_stat", 1e-2)
+ocp_solver.options_set("tol_ineq", 1e-2)
+ocp_solver.options_set("tol_comp", 1e-2)
 
 # initialize solver
 for i in range(N):

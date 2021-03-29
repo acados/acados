@@ -1,0 +1,114 @@
+name: Test Full Build Linux
+
+on: [push, pull_request]
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
+  ACADOS_UNIT_TESTS: ON
+  ACADOS_PYTHON: ON
+  ACADOS_OCTAVE: ON
+  ACADOS_OCTAVE_TEMPLATE: ON
+  ACADOS_WITH_OSQP: ON
+  ACADOS_WITH_QPOASES: ON
+  ACADOS_WITH_QPDUNES: ON
+
+
+jobs:
+  full_build:
+    # The CMake configure and build commands are platform agnostic and should work equally
+    # well on Windows or Mac.  You can convert this to a matrix build if you need
+    # cross-platform coverage.
+    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+
+    # To get checks on Pull requests, see https://github.com/LouisBrunner/checks-action
+    # - uses: LouisBrunner/checks-action@v1.1.1
+    #   if: always()
+    #   with:
+    #     token: ${{ secrets.GITHUB_TOKEN }}
+    #     name: Test Full Build
+    #     conclusion: ${{ job.status }}
+    #     # output: |
+    #     #   {"summary":${{ steps.test.outputs.summary }}}
+
+    - name: Create Build Environment
+      # Some projects don't allow in-source building, so create a separate build directory
+      # We'll use this as our working directory for all subsequent commands
+      working-directory: ${{runner.workspace}}
+      run: cmake -E make_directory ${{runner.workspace}}/build
+
+
+    - name: Install Eigen (C test dependency)
+      working-directory: ${{runner.workspace}}/acados
+      shell: bash
+      # TODO: cache
+      run: ./ci/shared/install_eigen.sh
+
+
+    - name: Configure CMake
+      # Use a bash shell so we can use the same syntax for environment variable
+      # access regardless of the host operating system
+      shell: bash
+      working-directory: ${{runner.workspace}}/build
+      # Note the current convention is to use the -S and -B options here to specify source
+      # and build directories, but this is only available with CMake 3.13 and higher.
+      # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=$ACADOS_PYTHON -DACADOS_UNIT_TESTS=$ACADOS_UNIT_TESTS -DACADOS_OCTAVE=$ACADOS_OCTAVE -DACADOS_OCTAVE_TEMPLATE=$ACADOS_OCTAVE_TEMPLATE
+
+
+    - name: Build & Install
+      working-directory: ${{runner.workspace}}/build
+      shell: bash
+      run: |
+        cmake --build . --config $BUILD_TYPE
+        make install -j4
+
+
+    - name: Export Paths
+      working-directory: ${{runner.workspace}}/acados
+      shell: bash
+      run: |
+        echo "ACADOS_SOURCE_DIR=$(pwd)" >> $GITHUB_ENV
+        echo "ACADOS_INSTALL_DIR=$(pwd)" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/lib" >> $GITHUB_ENV
+        echo "OCTAVE_PATH=$OCTAVE_PATH:$(pwd)/interfaces/acados_matlab_octave:$(pwd)/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
+
+
+    - name: Prepare Octave
+      working-directory: ${{runner.workspace}}/acados/external
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install liboctave-dev -y --fix-missing
+        octave --version
+        ./../.github/linux/install_casadi_octave.sh
+        echo "OCTAVE_PATH=$OCTAVE_PATH:$(pwd)/casadi-octave" >> $GITHUB_ENV
+
+
+    - name: Export Paths Octave
+      working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/pendulum_on_cart_model
+      shell: bash
+      run: |
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./build" >> $GITHUB_ENV
+
+
+    - name: Install Python interface
+      working-directory: ${{runner.workspace}}/acados
+      shell: bash
+      run: ./.github/linux/install_python.sh
+
+
+    - name: Test
+      working-directory: ${{runner.workspace}}/build
+      shell: bash
+      # Execute tests defined by the CMake configuration.
+      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+      run: |
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+        ./../acados/.github/linux/run_tests.sh

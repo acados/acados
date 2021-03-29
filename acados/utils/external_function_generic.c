@@ -48,7 +48,7 @@
  * generic external parametric function
  ************************************************/
 
-int external_function_param_generic_struct_size()
+acados_size_t external_function_param_generic_struct_size()
 {
     return sizeof(external_function_param_generic);
 }
@@ -61,24 +61,34 @@ void external_function_param_generic_set_fun(external_function_param_generic *fu
     return;
 }
 
-
-
-int external_function_param_generic_calculate_size(external_function_param_generic *fun, int np)
+static void external_function_param_generic_set_param_sparse(void *self, int n_update,
+                                                             int *idx, double *p)
 {
-    // loop index
-    int ii;
+    external_function_param_generic *fun = self;
 
+    for (int ii = 0; ii < n_update; ii++)
+    {
+        fun->p[idx[ii]] = p[ii];
+    }
+
+    return;
+}
+
+
+acados_size_t external_function_param_generic_calculate_size(external_function_param_generic *fun, int np)
+{
     // wrapper as evaluate function
     fun->evaluate = &external_function_param_generic_wrapper;
 
     // set param function
     fun->get_nparam = &external_function_param_generic_get_nparam;
     fun->set_param = &external_function_param_generic_set_param;
+    fun->set_param_sparse = &external_function_param_generic_set_param_sparse;
 
     // set number of parameters
     fun->np = np;
 
-    int size = 0;
+    acados_size_t size = 0;
 
     // doubles
     size += fun->np * sizeof(double); // p
@@ -94,9 +104,6 @@ int external_function_param_generic_calculate_size(external_function_param_gener
 
 void external_function_param_generic_assign(external_function_param_generic *fun, void *raw_memory)
 {
-    // loop index
-    int ii;
-
     // save initial pointer to external memory
     fun->ptr_ext_mem = raw_memory;
 
@@ -156,7 +163,6 @@ void external_function_param_generic_set_param(void *self, double *p)
 
     return;
 }
-
 
 
 /************************************************
@@ -357,7 +363,7 @@ static void d_cvt_casadi_to_dvec(double *in, int *sparsity_in, struct blasfeo_dv
 
     if (dense)
     {
-        blasfeo_pack_dvec(n, in, out, 0);
+        blasfeo_pack_dvec(n, in, 1, out, 0);
     }
     else
     {
@@ -395,7 +401,7 @@ static void d_cvt_dvec_to_casadi(struct blasfeo_dvec *in, double *out, int *spar
 
     if (dense)
     {
-        blasfeo_unpack_dvec(n, in, 0, out);
+        blasfeo_unpack_dvec(n, in, 0, out, 1);
     }
     else
     {
@@ -601,7 +607,7 @@ static void d_cvt_casadi_to_dvec_args(double *in, int *sparsity_in, struct blasf
 
     if (dense)
     {
-        blasfeo_pack_dvec(n, in, x, xi);
+        blasfeo_pack_dvec(n, in, 1, x, xi);
     }
     else
     {
@@ -642,7 +648,7 @@ static void d_cvt_dvec_args_to_casadi(struct blasfeo_dvec_args *in, double *out,
 
     if (dense)
     {
-        blasfeo_unpack_dvec(n, x, xi, out);
+        blasfeo_unpack_dvec(n, x, xi, out, 1);
     }
     else
     {
@@ -666,7 +672,7 @@ static void d_cvt_dvec_args_to_casadi(struct blasfeo_dvec_args *in, double *out,
  * casadi external function
  ************************************************/
 
-int external_function_casadi_struct_size()
+acados_size_t external_function_casadi_struct_size()
 {
     return sizeof(external_function_casadi);
 }
@@ -721,7 +727,7 @@ void external_function_casadi_set_n_out(external_function_casadi *fun, void *val
 
 
 
-int external_function_casadi_calculate_size(external_function_casadi *fun)
+acados_size_t external_function_casadi_calculate_size(external_function_casadi *fun)
 {
     // casadi wrapper as evaluate
     fun->evaluate = &external_function_casadi_wrapper;
@@ -744,7 +750,7 @@ int external_function_casadi_calculate_size(external_function_casadi *fun)
     for (ii = 0; ii < fun->res_num; ii++)
         fun->res_size_tot += casadi_nnz(fun->casadi_sparsity_out(ii));
 
-    int size = 0;
+    acados_size_t size = 0;
 
     // double pointers
     size += fun->args_num * sizeof(double *);  // args
@@ -931,7 +937,7 @@ void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void *
  * casadi external parametric function
  ************************************************/
 
-int external_function_param_casadi_struct_size()
+acados_size_t external_function_param_casadi_struct_size()
 {
     return sizeof(external_function_param_casadi);
 }
@@ -985,8 +991,34 @@ void external_function_param_casadi_set_n_out(external_function_param_casadi *fu
 }
 
 
+static void external_function_param_casadi_set_param(void *self, double *p)
+{
+    external_function_param_casadi *fun = self;
 
-int external_function_param_casadi_calculate_size(external_function_param_casadi *fun, int np)
+    // set value for all parameters
+    for (int ii = 0; ii < fun->np; ii++)
+    {
+        fun->args[fun->in_num-1][ii] = p[ii];
+    }
+    return;
+}
+
+
+static void external_function_param_casadi_set_param_sparse(void *self, int n_update,
+                                                            int *idx, double *p)
+{
+    external_function_param_casadi *fun = self;
+
+    for (int ii = 0; ii < n_update; ii++)
+    {
+        fun->args[fun->in_num-1][idx[ii]] = p[ii];
+    }
+
+    return;
+}
+
+
+acados_size_t external_function_param_casadi_calculate_size(external_function_param_casadi *fun, int np)
 {
     // loop index
     int ii;
@@ -997,6 +1029,7 @@ int external_function_param_casadi_calculate_size(external_function_param_casadi
     // set param function
     fun->get_nparam = &external_function_param_casadi_get_nparam;
     fun->set_param = &external_function_param_casadi_set_param;
+    fun->set_param_sparse = &external_function_param_casadi_set_param_sparse;
 
     // set number of parameters
     fun->np = np;
@@ -1016,7 +1049,7 @@ int external_function_param_casadi_calculate_size(external_function_param_casadi
     for (ii = 0; ii < fun->res_num; ii++)
         fun->res_size_tot += casadi_nnz(fun->casadi_sparsity_out(ii));
 
-    int size = 0;
+    acados_size_t size = 0;
 
     // double pointers
     size += fun->args_num * sizeof(double *);  // args
@@ -1086,8 +1119,6 @@ void external_function_param_casadi_assign(external_function_param_casadi *fun, 
         assign_and_advance_double(fun->res_size[ii], &fun->res[ii], &c_ptr);
     // w
     assign_and_advance_double(fun->w_size, &fun->w, &c_ptr);
-    // p
-    assign_and_advance_double(fun->np, &fun->p, &c_ptr);
 
     assert((char *) raw_memory + external_function_param_casadi_calculate_size(fun, fun->np) >=
            c_ptr);
@@ -1151,9 +1182,7 @@ void external_function_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, 
                 exit(1);
         }
     }
-    // copy parametrs vector as last arg
-    ii = fun->in_num - 1;
-    for (jj = 0; jj < fun->np; jj++) fun->args[ii][jj] = fun->p[jj];
+    // parameters are last argument and set via external_function_param_casadi_set_param
 
     // call casadi function
     fun->casadi_fun((const double **) fun->args, fun->res, fun->iw, fun->w, NULL);
@@ -1218,17 +1247,3 @@ void external_function_param_casadi_get_nparam(void *self, int *np)
 }
 
 
-
-void external_function_param_casadi_set_param(void *self, double *p)
-{
-    // cast into external casadi function
-    external_function_param_casadi *fun = self;
-
-    // set value for all parameters
-    for (int ii = 0; ii < fun->np; ii++)
-    {
-        fun->p[ii] = p[ii];
-    }
-
-    return;
-}

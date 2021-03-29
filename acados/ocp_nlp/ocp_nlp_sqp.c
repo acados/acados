@@ -65,12 +65,12 @@
  * options
  ************************************************/
 
-int ocp_nlp_sqp_opts_calculate_size(void *config_, void *dims_)
+acados_size_t ocp_nlp_sqp_opts_calculate_size(void *config_, void *dims_)
 {
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_config *config = config_;
 
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_sqp_opts);
 
@@ -277,7 +277,7 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
 
 
 
-void ocp_nlp_sqp_opts_set_at_stage(void *config_, void *opts_, int stage, const char *field, void* value)
+void ocp_nlp_sqp_opts_set_at_stage(void *config_, void *opts_, size_t stage, const char *field, void* value)
 {
     ocp_nlp_config *config = config_;
     ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *) opts_;
@@ -295,7 +295,7 @@ void ocp_nlp_sqp_opts_set_at_stage(void *config_, void *opts_, int stage, const 
  * memory
  ************************************************/
 
-int ocp_nlp_sqp_memory_calculate_size(void *config_, void *dims_, void *opts_)
+acados_size_t ocp_nlp_sqp_memory_calculate_size(void *config_, void *dims_, void *opts_)
 {
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_config *config = config_;
@@ -307,7 +307,7 @@ int ocp_nlp_sqp_memory_calculate_size(void *config_, void *dims_, void *opts_)
     // int *nu = dims->nu;
     // int *nz = dims->nz;
 
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_sqp_memory);
 
@@ -384,14 +384,14 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
  * workspace
  ************************************************/
 
-int ocp_nlp_sqp_workspace_calculate_size(void *config_, void *dims_, void *opts_)
+acados_size_t ocp_nlp_sqp_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_config *config = config_;
     ocp_nlp_sqp_opts *opts = opts_;
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
 
-    int size = 0;
+    acados_size_t size = 0;
 
     // sqp
     size += sizeof(ocp_nlp_sqp_workspace);
@@ -494,6 +494,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->time_lin = 0.0;
     mem->time_reg = 0.0;
     mem->time_tot = 0.0;
+    mem->time_glob = 0.0;
 
     int N = dims->N;
 
@@ -754,8 +755,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // save time
             mem->time_tot = total_time;
             nlp_out->total_time = total_time;
-
+#ifndef ACADOS_SILENT
             printf("QP solver returned error status %d in iteration %d\n", qp_status, sqp_iter);
+#endif
 #if defined(ACADOS_WITH_OPENMP)
             // restore number of threads
             omp_set_num_threads(num_threads_bkp);
@@ -772,8 +774,13 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             return mem->status;
         }
 
-        ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+        // globalization
+        acados_tic(&timer1);
+        double alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+        mem->time_glob += acados_toc(&timer1);
 
+        // update variables
+        ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, alpha);
         // ocp_nlp_dims_print(nlp_out->dims);
         // ocp_nlp_out_print(nlp_out);
         // exit(1);
@@ -829,7 +836,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     omp_set_num_threads(num_threads_bkp);
 #endif
     mem->status = ACADOS_MAXITER;
+#ifndef ACADOS_SILENT
     printf("\n ocp_nlp_sqp: maximum iterations reached\n");
+#endif
 
     return mem->status;
 }
@@ -1001,6 +1010,11 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
     {
         double *value = return_value_;
         *value = mem->time_reg;
+    }
+    else if (!strcmp("time_glob", field))
+    {
+        double *value = return_value_;
+        *value = mem->time_glob;
     }
     else if (!strcmp("time_sim", field) || !strcmp("time_sim_ad", field) || !strcmp("time_sim_la", field))
     {

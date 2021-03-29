@@ -81,6 +81,31 @@ if nargin > 2
     chdir(target_dir)
 end
 
+if isfield(model, 'cost_expr_y_0')
+    fun = model.cost_expr_y_0;
+    % generate jacobians
+    jac_x = jacobian(fun, x);
+    jac_u = jacobian(fun, u);
+    % output symbolics
+    ny_0 = length(fun);
+    if isSX
+        y_0 = SX.sym('y', ny_0, 1);
+    else
+        y_0 = MX.sym('y', ny_0, 1);
+    end
+    % generate hessian
+    y_0_adj = jtimes(fun, x, y_0, true);
+    y_0_hess = jacobian(y_0_adj, [u; x]);
+    % Set up functions
+    y_0_fun = Function([model_name,'_cost_y_0_fun'], {x, u, p}, {fun});
+    y_0_fun_jac_ut_xt = Function([model_name,'_cost_y_0_fun_jac_ut_xt'], {x, u, p}, {fun, [jac_u'; jac_x']});
+    y_0_hess = Function([model_name,'_cost_y_0_hess'], {x, u, y_0, p}, {y_0_hess});
+    % generate C code
+    y_0_fun.generate([model_name,'_cost_y_0_fun'], casadi_opts);
+    y_0_fun_jac_ut_xt.generate([model_name,'_cost_y_0_fun_jac_ut_xt'], casadi_opts);
+    y_0_hess.generate([model_name,'_cost_y_0_hess'], casadi_opts);
+end
+
 if isfield(model, 'cost_expr_y')
     fun = model.cost_expr_y;
     % generate jacobians
@@ -108,9 +133,9 @@ if isfield(model, 'cost_expr_y')
 end
 
 if isfield(model, 'cost_expr_y_e')
-    fun_e = model.cost_expr_y_e;
+    fun = model.cost_expr_y_e;
     % generate jacobians
-    jac_x_e     = jacobian(fun_e, x);
+    jac_x = jacobian(fun, x);
     % output symbolics
     ny_e = length(fun);
     if isSX
@@ -122,8 +147,8 @@ if isfield(model, 'cost_expr_y_e')
     y_e_adj = jtimes(fun, x, y_e, true);
     y_e_hess = jacobian(y_e_adj, x);
     % Set up functions
-    y_e_fun = Function([model_name,'_cost_y_e_fun'], {x, p}, {fun_e});
-    y_e_fun_jac_ut_xt = Function([model_name,'_cost_y_e_fun_jac_ut_xt'], {x, p}, {fun_e, jac_x_e'});
+    y_e_fun = Function([model_name,'_cost_y_e_fun'], {x, p}, {fun});
+    y_e_fun_jac_ut_xt = Function([model_name,'_cost_y_e_fun_jac_ut_xt'], {x, p}, {fun, jac_x'});
     y_e_hess = Function([model_name,'_cost_y_e_hess'], {x, y_e, p}, {y_e_hess});
     % generate C code
     y_e_fun.generate([model_name,'_cost_y_e_fun'], casadi_opts);

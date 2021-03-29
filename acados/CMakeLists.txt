@@ -165,7 +165,13 @@ install(EXPORT acadosTargets DESTINATION cmake)
 
 configure_package_config_file(${PROJECT_SOURCE_DIR}/cmake/acadosConfig.cmake.in
                               ${CMAKE_CURRENT_BINARY_DIR}/cmake/acadosConfig.cmake
-                              INSTALL_DESTINATION cmake)
+                              INSTALL_DESTINATION cmake
+                              PATH_VARS ACADOS_WITH_HPMPC 
+                                        ACADOS_WITH_QORE
+                                        ACADOS_WITH_QPOASES
+                                        ACADOS_WITH_QPDUNES
+                                        ACADOS_WITH_OSQP
+                                        ACADOS_WITH_OOQP)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/acadosConfig.cmake
         DESTINATION cmake)

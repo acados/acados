@@ -44,6 +44,7 @@ extern "C" {
 int {{ model.name }}_acados_sim_create();
 int {{ model.name }}_acados_sim_solve();
 int {{ model.name }}_acados_sim_free();
+int {{ model.name }}_acados_sim_update_params(double *value, int np);
 
 sim_config  * {{ model.name }}_acados_get_sim_config();
 sim_in      * {{ model.name }}_acados_get_sim_in();

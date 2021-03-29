@@ -31,10 +31,9 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
-%% check that environment variables are provided
-
 addpath(pwd)
 
+%% check that environment variables are provided
 try
     check_casadi_availibility();
     require_env_variable('LD_LIBRARY_PATH');
@@ -49,26 +48,10 @@ catch exception
 end
 
 
-%% test that checks work
-try
-    test_checks;
-catch exception
-    if ~isempty(strfind(exception.message, 'sim_set: error setting x, wrong dimension'))
-        disp('Success: setter checks work in general')
-    else
-        exit_with_error(exception);
-    end
-end
 
-
-%% sim tests
+%% ocp tests
 try
-    test_sens_forw;
-    test_sens_adj;
-    test_sens_hess;
-    test_sim_dae;
+    test_template_pendulum_ocp('nonlinear_ls');
 catch exception
     exit_with_error(exception);
 end
-
-fprintf('\nrun_tests_sim: success!\n\n');

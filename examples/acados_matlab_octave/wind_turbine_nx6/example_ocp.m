@@ -179,14 +179,10 @@ Jsh(1, 1) = 1.0;
 Jsh_e = zeros(nh_e, nsh_e);
 Jsh_e(1, 1) = 1.0;
 
-% shift
-x_end = zeros(nx, 1);
-u_end = zeros(nu, 1);
-
-
 
 %% acados ocp model
 ocp_model = acados_ocp_model();
+ocp_model.set('T', T);
 
 %% symbolics
 ocp_model.set('sym_x', model.sym_x);

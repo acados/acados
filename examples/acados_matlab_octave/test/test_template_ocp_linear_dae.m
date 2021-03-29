@@ -207,7 +207,7 @@ for itest = 1:2
     if status ~= 0
         error('test_ocp_linear_dae: ocp_nlp solver exit with nonzero status');
     elseif max(abs(diff_x_z)) > tol_diff_xz
-        error(['test_ocp_wtnx6: difference between x and z bigger than',
+        error(['test_ocp_linear_dae: difference between x and z bigger than',
             num2str(tol_diff_xz, '%e'), ' should be equal'])
     end
     cost_val_ocp = ocp.get_cost();
@@ -248,6 +248,8 @@ if abs(cost_val_ocp - cost_val_t_ocp) > 1e-9
     error(['test_template_ocp_linear_dae: cost function value of templated MEX and original MEX',...
          ' differ too much. Should be < 1e-9, got ', num2str(cost_val_ocp, '%e'), ' template: ', ...
          num2str(cost_val_t_ocp, '%e')]);
+else
+    disp(['Cost value: ', num2str(cost_val_ocp, '%e'), ' template: ', num2str(cost_val_t_ocp, '%e')]);
 end
 clear all
 cd ..

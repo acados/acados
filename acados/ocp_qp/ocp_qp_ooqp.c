@@ -815,9 +815,9 @@ static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out, ocp_qp_ooqp_wor
 
 
 
-int ocp_qp_ooqp_opts_calculate_size(void *config_, ocp_qp_dims *dims)
+acados_size_t ocp_qp_ooqp_opts_calculate_size(void *config_, ocp_qp_dims *dims)
 {
-    int size = 0;
+    acados_size_t size = 0;
     size += sizeof(ocp_qp_ooqp_opts);
     return size;
 }
@@ -899,17 +899,17 @@ void ocp_qp_ooqp_opts_set(void *config_, void *opts_, const char *field, void *v
 
 
 
-int ocp_qp_ooqp_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
+acados_size_t ocp_qp_ooqp_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
 {
-    int nx = get_number_of_primal_vars(dims);
-    int my = get_number_of_equalities(dims);
-    int mz = get_number_of_inequalities(dims);
-    int nnzQ = get_nnzQ(dims);
-    int nnzA = get_nnzA(dims);
-    int nnzC = get_nnzC(dims);
+    size_t nx = get_number_of_primal_vars(dims);
+    size_t my = get_number_of_equalities(dims);
+    size_t mz = get_number_of_inequalities(dims);
+    size_t nnzQ = get_nnzQ(dims);
+    size_t nnzA = get_nnzA(dims);
+    size_t nnzC = get_nnzC(dims);
     // int nnz = max_of_three(nnzQ, nnzA, nnzC);
 
-    int size = 0;
+    acados_size_t size = 0;
     size += sizeof(ocp_qp_ooqp_memory);
 
     size += 1 *   nx * sizeof(double);  // c
@@ -1033,11 +1033,11 @@ void ocp_qp_ooqp_memory_get(void *config_, void *mem_, const char *field, void* 
  * workspace
  ************************************************/
 
-int ocp_qp_ooqp_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
+acados_size_t ocp_qp_ooqp_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
 {
     UNUSED(opts_);
 
-    int size = 0;
+    acados_size_t size = 0;
     int nx, my, mz, nnzQ, nnzA, nnzC, nnz;
 
     nx = get_number_of_primal_vars(dims);
@@ -1169,19 +1169,19 @@ void ocp_qp_ooqp_config_initialize_default(void *config_)
     qp_solver_config *config = config_;
 
     config->dims_set = &ocp_qp_dims_set;
-    config->opts_calculate_size = (int (*)(void *, void *)) & ocp_qp_ooqp_opts_calculate_size;
+    config->opts_calculate_size = (size_t (*)(void *, void *)) & ocp_qp_ooqp_opts_calculate_size;
     config->opts_assign = (void *(*) (void *, void *, void *) ) & ocp_qp_ooqp_opts_assign;
     config->opts_initialize_default =
         (void (*)(void *, void *, void *)) & ocp_qp_ooqp_opts_initialize_default;
     config->opts_update = (void (*)(void *, void *, void *)) & ocp_qp_ooqp_opts_update;
     config->opts_set = &ocp_qp_ooqp_opts_set;
     config->memory_calculate_size =
-        (int (*)(void *, void *, void *)) & ocp_qp_ooqp_memory_calculate_size;
+        (size_t (*)(void *, void *, void *)) & ocp_qp_ooqp_memory_calculate_size;
     config->memory_assign =
         (void *(*) (void *, void *, void *, void *) ) & ocp_qp_ooqp_memory_assign;
     config->memory_get = &ocp_qp_ooqp_memory_get;
     config->workspace_calculate_size =
-        (int (*)(void *, void *, void *)) & ocp_qp_ooqp_workspace_calculate_size;
+        (size_t (*)(void *, void *, void *)) & ocp_qp_ooqp_workspace_calculate_size;
     config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & ocp_qp_ooqp;
     config->eval_sens = &ocp_qp_ooqp_eval_sens;
 }

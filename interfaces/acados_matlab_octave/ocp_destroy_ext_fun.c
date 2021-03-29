@@ -61,6 +61,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (mxGetField( matlab_model, 0, "ext_fun_type" )!=NULL)
         ext_fun_type = mxArrayToString( mxGetField( matlab_model, 0, "ext_fun_type" ) );
 
+    char *ext_fun_type_e;    
+    if (mxGetField( matlab_model, 0, "ext_fun_type_e" )!=NULL)
+        ext_fun_type_e = mxArrayToString( mxGetField( matlab_model, 0, "ext_fun_type_e" ) );
+
     // dims
     ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "dims" ) );
     ocp_nlp_dims *dims = (ocp_nlp_dims *) ptr[0];
@@ -69,20 +73,57 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     // XXX hard-code number and size of phases for now !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     int NN[] = {N, 1}; // number of phases, i.e. shooting nodes with same dimensions
-    int Nf = 2; // number of phases
+    int Nf;
 
     //
     int struct_size = mxGetNumberOfFields( prhs[2] );
     for (ii=0; ii<struct_size; ii++)
     {
-//        printf("\n%s\n", mxGetFieldNameByNumber( prhs[2], ii) );
+        //printf("\n%s\n", mxGetFieldNameByNumber( prhs[2], ii) );
         mex_field = mxGetFieldByNumber( prhs[2], 0, ii );
         ptr = (long long *) mxGetData( mex_field );
         Nf = mxGetN( mex_field );
-        for (jj=0; jj<Nf; jj++)
-        {
-            // external function param casadi
-            if (!strcmp(ext_fun_type, "casadi"))
+        
+        if (!strcmp(mxGetFieldNameByNumber(prhs[2], ii), "cost_ext_cost_fun") || 
+            !strcmp(mxGetFieldNameByNumber(prhs[2], ii), "cost_ext_cost_fun_jac_hess")) {
+
+            for (jj=0; jj<Nf; jj++)
+            {
+                    // external function param casadi
+                    if ((jj == 0 && !strcmp(ext_fun_type, "casadi")) || 
+                        (jj == 1 && !strcmp(ext_fun_type_e, "casadi")))
+                    {
+                        external_function_param_casadi *ext_fun_ptr = (external_function_param_casadi *) ptr[jj];
+                        if (ext_fun_ptr!=0)
+                        {
+                            for (kk=0; kk<NN[jj]; kk++)
+                            {
+                                external_function_param_casadi_free(ext_fun_ptr+kk);
+                            }
+                            free(ext_fun_ptr);
+                        }
+                    }
+                    // external function param generic
+                    else if ((jj == 0 && !strcmp(ext_fun_type, "generic")) || 
+                             (jj == 1 && !strcmp(ext_fun_type_e, "generic")))
+                    {
+                        external_function_param_generic *ext_fun_ptr = (external_function_param_generic *) ptr[jj];
+                        if (ext_fun_ptr!=0)
+                        {
+                            for (kk=0; kk<NN[jj]; kk++)
+                            {
+                                external_function_param_generic_free(ext_fun_ptr+kk);
+                            }
+                            free(ext_fun_ptr);
+                        }
+                    }
+                    else
+                    {
+                        MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "ext_fun_type", ext_fun_type, "casadi, generic");
+                    }
+            }
+        } else {
+            for (jj=0; jj<Nf; jj++)
             {
                 external_function_param_casadi *ext_fun_ptr = (external_function_param_casadi *) ptr[jj];
                 if (ext_fun_ptr!=0)
@@ -93,23 +134,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                     }
                     free(ext_fun_ptr);
                 }
-            }
-            // external function param generic
-            else if (!strcmp(ext_fun_type, "generic"))
-            {
-                external_function_param_generic *ext_fun_ptr = (external_function_param_generic *) ptr[jj];
-                if (ext_fun_ptr!=0)
-                {
-                    for (kk=0; kk<NN[jj]; kk++)
-                    {
-                        external_function_param_generic_free(ext_fun_ptr+kk);
-                    }
-                    free(ext_fun_ptr);
-                }
-            }
-            else
-            {
-                MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "ext_fun_type", ext_fun_type, "casadi, generic");
             }
         }
     }

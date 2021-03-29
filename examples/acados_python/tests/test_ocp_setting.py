@@ -35,7 +35,7 @@ import sys
 sys.path.insert(0, '../getting_started/common')
 
 from acados_template import *
-from export_pendulum_ode_model import export_pendulum_ode_model
+from pendulum_model import export_pendulum_ode_model
 import numpy as np
 import scipy.linalg
 import argparse

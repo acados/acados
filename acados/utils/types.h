@@ -40,6 +40,7 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
+#include <stddef.h>
 
 #define MAX_STR_LEN 256
 #define ACADOS_EPS 1e-12
@@ -51,7 +52,7 @@ extern "C" {
 
 typedef double real_t;
 typedef int int_t;
-
+typedef size_t acados_size_t;
 
 
 typedef int (*casadi_function_t)(const double** arg, double** res, int* iw, double* w, void* mem);
@@ -67,16 +68,6 @@ enum return_values
     ACADOS_MINSTEP,
     ACADOS_QP_FAILURE,
     ACADOS_READY,
-};
-
-
-
-// opts values ( please keep in alphabetical order ! )
-// TODO outdated, proably remove !!!!!!!!!
-enum acados_opts
-{
-    COMPUTE_ADJ,
-//    COMPUTE_DUAL_SOL,
 };
 
 

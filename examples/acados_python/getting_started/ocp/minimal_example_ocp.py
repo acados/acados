@@ -35,7 +35,7 @@ import sys
 sys.path.insert(0, '../common')
 
 from acados_template import AcadosOcp, AcadosOcpSolver
-from export_pendulum_ode_model import export_pendulum_ode_model
+from pendulum_model import export_pendulum_ode_model
 import numpy as np
 import scipy.linalg
 from utils import plot_pendulum
@@ -89,9 +89,11 @@ ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
 # set options
 ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
+# PARTIAL_CONDENSING_HPIPM, FULL_CONDENSING_QPOASES, FULL_CONDENSING_HPIPM,
+# PARTIAL_CONDENSING_QPDUNES, PARTIAL_CONDENSING_OSQP
 ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
 ocp.solver_options.integrator_type = 'ERK'
-ocp.solver_options.print_level = 0
+# ocp.solver_options.print_level = 1
 ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
 
 # set prediction horizon
@@ -105,6 +107,7 @@ simU = np.ndarray((N, nu))
 status = ocp_solver.solve()
 
 if status != 0:
+    ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
     raise Exception('acados returned status {}. Exiting.'.format(status))
 
 # get solution

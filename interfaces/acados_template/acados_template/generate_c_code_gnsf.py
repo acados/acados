@@ -33,25 +33,24 @@
 
 import os
 from casadi import *
-from .utils import ALLOWED_CASADI_VERSIONS, is_empty
+from .utils import ALLOWED_CASADI_VERSIONS, is_empty, casadi_version_warning
 
-def generate_c_code_gnsf( model ):
+def generate_c_code_gnsf( model, opts ):
 
     casadi_version = CasadiMeta.version()
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
     if casadi_version not in (ALLOWED_CASADI_VERSIONS):
-        msg =  'Please download and install CasADi {} '.format(" or ".join(ALLOWED_CASADI_VERSIONS))
-        msg += 'to ensure compatibility with acados.\n'
-        msg += 'Version {} currently in use.'.format(casadi_version)
-        raise Exception(msg)
+        casadi_version_warning(casadi_version)
 
     model_name = model.name
+    code_export_dir = opts["code_export_directory"]
 
     # set up directory
-    if not os.path.exists('c_generated_code'):
-        os.mkdir('c_generated_code')
+    if not os.path.exists(code_export_dir):
+        os.makedirs(code_export_dir)
 
-    os.chdir('c_generated_code')
+    cwd = os.getcwd()
+    os.chdir(code_export_dir)
     model_dir = model_name + '_model'
     if not os.path.exists(model_dir):
         os.mkdir(model_dir)
@@ -127,6 +126,6 @@ def generate_c_code_gnsf( model ):
     del model.f_lo_fun_jac_x1k1uz
     del model.get_matrices_fun
 
-    os.chdir('../..')
+    os.chdir(cwd)
 
     return

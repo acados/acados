@@ -98,6 +98,7 @@ typedef struct
 	// public members for interfaces
     void (*get_nparam)(void *, int *);
     void (*set_param)(void *, double *);
+    void (*set_param_sparse)(void *, int n_update, int *idx, double *);
     // private members
     void *ptr_ext_mem;  // pointer to external memory
     int (*fun)(void **, void **, void *);
@@ -107,11 +108,11 @@ typedef struct
 } external_function_param_generic;
 
 //
-int external_function_param_generic_struct_size();
+acados_size_t external_function_param_generic_struct_size();
 //
 void external_function_param_generic_set_fun(external_function_param_generic *fun, void *value);
 //
-int external_function_param_generic_calculate_size(external_function_param_generic *fun, int np);
+acados_size_t external_function_param_generic_calculate_size(external_function_param_generic *fun, int np);
 //
 void external_function_param_generic_assign(external_function_param_generic *fun, void *mem);
 //
@@ -155,7 +156,7 @@ typedef struct
 } external_function_casadi;
 
 //
-int external_function_casadi_struct_size();
+acados_size_t external_function_casadi_struct_size();
 //
 void external_function_casadi_set_fun(external_function_casadi *fun, void *value);
 //
@@ -169,7 +170,7 @@ void external_function_casadi_set_n_in(external_function_casadi *fun, void *valu
 //
 void external_function_casadi_set_n_out(external_function_casadi *fun, void *value);
 //
-int external_function_casadi_calculate_size(external_function_casadi *fun);
+acados_size_t external_function_casadi_calculate_size(external_function_casadi *fun);
 //
 void external_function_casadi_assign(external_function_casadi *fun, void *mem);
 //
@@ -187,6 +188,7 @@ typedef struct
 	// public members for interfaces
     void (*get_nparam)(void *, int *);
     void (*set_param)(void *, double *);
+    void (*set_param_sparse)(void *, int n_update, int *idx, double *);
     // private members
     void *ptr_ext_mem;  // pointer to external memory
     int (*casadi_fun)(const double **, double **, int *, double *, void *);
@@ -198,7 +200,6 @@ typedef struct
     double **args;
     double **res;
     double *w;
-    double *p;  // parameters
     int *iw;
     int *args_size;     // size of args[i]
     int *res_size;      // size of res[i]
@@ -214,7 +215,7 @@ typedef struct
 } external_function_param_casadi;
 
 //
-int external_function_param_casadi_struct_size();
+acados_size_t external_function_param_casadi_struct_size();
 //
 void external_function_param_casadi_set_fun(external_function_param_casadi *fun, void *value);
 //
@@ -228,7 +229,7 @@ void external_function_param_casadi_set_n_in(external_function_param_casadi *fun
 //
 void external_function_param_casadi_set_n_out(external_function_param_casadi *fun, void *value);
 //
-int external_function_param_casadi_calculate_size(external_function_param_casadi *fun, int np);
+acados_size_t external_function_param_casadi_calculate_size(external_function_param_casadi *fun, int np);
 //
 void external_function_param_casadi_assign(external_function_param_casadi *fun, void *mem);
 //
@@ -236,8 +237,6 @@ void external_function_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, 
                                             ext_fun_arg_t *type_out, void **out);
 //
 void external_function_param_casadi_get_nparam(void *self, int *np);
-//
-void external_function_param_casadi_set_param(void *self, double *p);
 
 #ifdef __cplusplus
 } /* extern "C" */

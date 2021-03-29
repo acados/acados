@@ -31,16 +31,22 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
-function ocp_json = set_up_acados_ocp_nlp_json(obj)
+function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
 
     model = obj.model_struct;
     % create
-    ocp_json = acados_template_mex.acados_ocp_nlp_json();
+    ocp_json = acados_template_mex.acados_ocp_nlp_json(simulink_opts);
 
     % general
     ocp_json.dims.N = obj.opts_struct.param_scheme_N;
     ocp_json.solver_options.tf = model.T;
-    ocp_json.solver_options.Tsim = model.T / obj.opts_struct.param_scheme_N; % for templated integrator
+
+    if isfield(obj.opts_struct, 'Tsim')
+        ocp_json.solver_options.Tsim = obj.opts_struct.Tsim;
+    else
+        ocp_json.solver_options.Tsim = model.T / obj.opts_struct.param_scheme_N; % for templated integrator
+    end
+
     ocp_json.model.name = model.name;
     % modules
     ocp_json.solver_options.qp_solver = upper(obj.opts_struct.qp_solver);
@@ -59,7 +65,11 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     ocp_json.solver_options.nlp_solver_tol_ineq = obj.opts_struct.nlp_solver_tol_ineq;
     ocp_json.solver_options.nlp_solver_tol_comp = obj.opts_struct.nlp_solver_tol_comp;
     ocp_json.solver_options.nlp_solver_step_length = obj.opts_struct.nlp_solver_step_length;
-    ocp_json.solver_options.qp_solver_cond_N = obj.opts_struct.qp_solver_cond_N;
+    if isfield(obj.opts_struct, 'qp_solver_cond_N')
+        ocp_json.solver_options.qp_solver_cond_N = obj.opts_struct.qp_solver_cond_N;
+    else
+        ocp_json.solver_options.qp_solver_cond_N = obj.opts_struct.param_scheme_N;
+    end
     ocp_json.solver_options.qp_solver_iter_max = obj.opts_struct.qp_solver_iter_max;
     if isfield(obj.opts_struct, 'qp_solver_tol_stat')
         ocp_json.solver_options.qp_solver_tol_stat = obj.opts_struct.qp_solver_tol_stat;
@@ -125,6 +135,12 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     if isfield(model, 'dim_nsg')
         ocp_json.dims.nsg = model.dim_nsg;
     end
+
+    if isfield(model, 'dim_ny_0')
+        ocp_json.dims.ny_0 = model.dim_ny_0;
+    elseif strcmp(model.cost_type_0, 'ext_cost')
+        ocp_json.dims.ny_0 = 0;
+    end
     % missing in MEX
     % ocp_json.dims.nphi;
     % ocp_json.dims.nphi_e;
@@ -175,6 +191,11 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     else
         ocp_json.cost.cost_type = upper(model.cost_type);
     end
+    if strcmp(model.cost_type_0, 'ext_cost')
+        ocp_json.cost.cost_type_0 = 'EXTERNAL';
+    else
+        ocp_json.cost.cost_type_0 = upper(model.cost_type_0);
+    end
     if strcmp(model.cost_type_e, 'ext_cost')
         ocp_json.cost.cost_type_e = 'EXTERNAL';
     else
@@ -195,14 +216,14 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     % initial
     if isfield(model, 'constr_lbx_0')
         ocp_json.constraints.lbx_0 = model.constr_lbx_0;
-    else
+    elseif ocp_json.dims.nbx_0 > 0
         warning('missing: constr_lbx_0, using zeros of appropriate dimension.');
         ocp_json.constraints.lbx_0 = zeros(ocp_json.dims.nbx_0, 1);
     end
 
     if isfield(model, 'constr_ubx_0')
         ocp_json.constraints.ubx_0 = model.constr_ubx_0;
-    else
+    elseif ocp_json.dims.nbx_0 > 0
         warning('missing: constr_ubx_0, using zeros of appropriate dimension.');
         ocp_json.constraints.ubx_0 = zeros(ocp_json.dims.nbx_0, 1);
     end
@@ -365,13 +386,32 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
         end
     end
 
-    if strcmp(model.cost_type_e, 'linear_ls')
+    if strcmp(model.cost_type_0, 'linear_ls')
+        ocp_json.cost.Vu_0 = model.cost_Vu_0;
+        ocp_json.cost.Vx_0 = model.cost_Vx_0;
+        if isfield(model, 'cost_Vz_0')
+            ocp_json.cost.Vz_0 = model.cost_Vz_0;
+        end
+    end
+    if strcmp(model.cost_type_0, 'nonlinear_ls') || strcmp(model.cost_type_0, 'linear_ls')
+        ocp_json.cost.W_0 = model.cost_W_0;
+        if isfield(model, 'cost_y_ref_0')
+            ocp_json.cost.yref_0 = model.cost_y_ref_0;
+        else
+			warning(['cost_y_ref_0 not defined for ocp json.' 10 'Using zeros(ny_0,1) by default.']);
+            ocp_json.cost.yref_0 = zeros(model.dim_ny_0,1);
+        end
+    end
+
+    if isfield(model, 'cost_Vx_e')
         ocp_json.cost.Vx_e = model.cost_Vx_e;
     end
 
-    if strcmp(model.cost_type, 'nonlinear_ls') || strcmp(model.cost_type, 'linear_ls')
-        ocp_json.cost.W_e = model.cost_W_e;
-        if isfield(model, 'cost_y_ref')
+    if strcmp(model.cost_type_e, 'nonlinear_ls') || strcmp(model.cost_type_e, 'linear_ls')
+        if isfield(model, 'cost_W_e')
+            ocp_json.cost.W_e = model.cost_W_e;
+        end
+        if isfield(model, 'cost_y_ref_e')
             ocp_json.cost.yref_e = model.cost_y_ref_e;
         else
 			warning(['cost_y_ref_e not defined for ocp json.' 10 'Using zeros(ny_e,1) by default.']);

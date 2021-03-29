@@ -52,11 +52,11 @@
  * opts
  ************************************************/
 
-int dense_qp_hpipm_opts_calculate_size(void *config_, void *dims_)
+acados_size_t dense_qp_hpipm_opts_calculate_size(void *config_, void *dims_)
 {
     dense_qp_dims *dims = dims_;
 
-    int size = 0;
+    acados_size_t size = 0;
     size += sizeof(dense_qp_hpipm_opts);
     size += sizeof(struct d_dense_qp_ipm_arg);
     size += d_dense_qp_ipm_arg_memsize(dims);
@@ -137,12 +137,12 @@ void dense_qp_hpipm_opts_set(void *config_, void *opts_, const char *field, void
  * memory
  ************************************************/
 
-int dense_qp_hpipm_memory_calculate_size(void *config_, void *dims_, void *opts_)
+acados_size_t dense_qp_hpipm_memory_calculate_size(void *config_, void *dims_, void *opts_)
 {
     dense_qp_dims *dims = dims_;
     dense_qp_hpipm_opts *opts = opts_;
 
-    int size = 0;
+    acados_size_t size = 0;
     size += sizeof(dense_qp_hpipm_memory);
     size += sizeof(struct d_dense_qp_ipm_ws);
 
@@ -213,7 +213,7 @@ void dense_qp_hpipm_memory_get(void *config_, void *mem_, const char *field, voi
  * workspace
  ************************************************/
 
-int dense_qp_hpipm_workspace_calculate_size(void *config_, void *dims_, void *opts_)
+acados_size_t dense_qp_hpipm_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
     return 0;
 }

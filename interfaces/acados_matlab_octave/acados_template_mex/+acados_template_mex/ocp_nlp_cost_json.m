@@ -44,7 +44,14 @@ classdef ocp_nlp_cost_json < handle
         Zl          % Hessian wrt lower slack 
         Zu          % Hessian wrt upper slack 
         zl          % gradient wrt lower slack 
-        zu          % gradient wrt upper slack 
+        zu          % gradient wrt upper slack
+        % initial cost term
+        cost_type_0   % cost type
+        W_0           % weight matrix
+        Vx_0          % x matrix coefficient
+        Vu_0          % u matrix coefficient
+        Vz_0          % z matrix coefficient
+        yref_0        % reference
         % Mayer term
         cost_type_e % cost type
         W_e         % weight matrix
@@ -67,6 +74,14 @@ classdef ocp_nlp_cost_json < handle
             obj.Zu          = [];
             obj.zl          = [];
             obj.zu          = [];
+            %
+            obj.cost_type_0   = 'LINEAR_LS';
+            obj.W_0           = [];
+            obj.Vx_0         = [];
+            obj.Vu_0        = [];
+            obj.Vz_0        = [];
+            obj.yref_0     = [];
+            %
             obj.cost_type_e = 'LINEAR_LS';  
             obj.W_e         = [];
             obj.Vx_e        = [];

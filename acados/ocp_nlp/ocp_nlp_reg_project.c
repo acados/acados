@@ -51,7 +51,7 @@
  * opts
  ************************************************/
 
-int ocp_nlp_reg_project_opts_calculate_size(void)
+acados_size_t ocp_nlp_reg_project_opts_calculate_size(void)
 {
     return sizeof(ocp_nlp_reg_project_opts);
 }
@@ -101,7 +101,7 @@ void ocp_nlp_reg_project_opts_set(void *config_, ocp_nlp_reg_dims *dims, void *o
  * memory
  ************************************************/
 
-int ocp_nlp_reg_project_memory_calculate_size(void *config_, ocp_nlp_reg_dims *dims, void *opts_)
+acados_size_t ocp_nlp_reg_project_memory_calculate_size(void *config_, ocp_nlp_reg_dims *dims, void *opts_)
 {
     int *nx = dims->nx;
     int *nu = dims->nu;
@@ -115,7 +115,7 @@ int ocp_nlp_reg_project_memory_calculate_size(void *config_, ocp_nlp_reg_dims *d
         nuxM = nu[ii]+nx[ii]>nuxM ? nu[ii]+nx[ii] : nuxM;
     }
 
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_reg_project_memory);
 

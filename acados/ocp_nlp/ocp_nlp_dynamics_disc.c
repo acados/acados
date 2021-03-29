@@ -50,9 +50,9 @@
  * dims
  ************************************************/
 
-int ocp_nlp_dynamics_disc_dims_calculate_size(void *config_)
+acados_size_t ocp_nlp_dynamics_disc_dims_calculate_size(void *config_)
 {
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_dynamics_disc_dims);
 
@@ -187,11 +187,11 @@ void ocp_nlp_dynamics_disc_dims_get(void *config_, void *dims_, const char *dim,
  * options
  ************************************************/
 
-int ocp_nlp_dynamics_disc_opts_calculate_size(void *config_, void *dims_)
+acados_size_t ocp_nlp_dynamics_disc_opts_calculate_size(void *config_, void *dims_)
 {
     // ocp_nlp_dynamics_config *config = config_;
 
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_dynamics_disc_opts);
 
@@ -271,7 +271,7 @@ void ocp_nlp_dynamics_disc_opts_set(void *config_, void *opts_, const char *fiel
  * memory
  ************************************************/
 
-int ocp_nlp_dynamics_disc_memory_calculate_size(void *config_, void *dims_, void *opts_)
+acados_size_t ocp_nlp_dynamics_disc_memory_calculate_size(void *config_, void *dims_, void *opts_)
 {
     // ocp_nlp_dynamics_config *config = config_;
     ocp_nlp_dynamics_disc_dims *dims = dims_;
@@ -282,7 +282,7 @@ int ocp_nlp_dynamics_disc_memory_calculate_size(void *config_, void *dims_, void
     int nu = dims->nu;
     int nx1 = dims->nx1;
 
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_dynamics_disc_memory);
 
@@ -481,7 +481,7 @@ void ocp_nlp_dynamics_disc_memory_get(void *config_, void *dims_, void *mem_, co
  * workspace
  ************************************************/
 
-int ocp_nlp_dynamics_disc_workspace_calculate_size(void *config_, void *dims_, void *opts_)
+acados_size_t ocp_nlp_dynamics_disc_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
     // ocp_nlp_dynamics_config *config = config_;
     ocp_nlp_dynamics_disc_dims *dims = dims_;
@@ -491,7 +491,7 @@ int ocp_nlp_dynamics_disc_workspace_calculate_size(void *config_, void *dims_, v
     int nu = dims->nu;
     // int nx1 = dims->nx1;
 
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_dynamics_disc_workspace);
 
@@ -544,7 +544,7 @@ static void ocp_nlp_dynamics_disc_cast_workspace(void *config_, void *dims_, voi
  * model
  ************************************************/
 
-int ocp_nlp_dynamics_disc_model_calculate_size(void *config_, void *dims_)
+acados_size_t ocp_nlp_dynamics_disc_model_calculate_size(void *config_, void *dims_)
 {
     // ocp_nlp_dynamics_config *config = config_;
 
@@ -552,7 +552,7 @@ int ocp_nlp_dynamics_disc_model_calculate_size(void *config_, void *dims_)
     // int nx = dims->nx;
     // int nu = dims->nu;
 
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_dynamics_disc_model);
 

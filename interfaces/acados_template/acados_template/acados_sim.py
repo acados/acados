@@ -40,7 +40,7 @@ from .utils import get_acados_path
 
 class AcadosSimDims:
     """
-    class containing the dimensions of the model to be simulated
+    Class containing the dimensions of the model to be simulated.
     """
     def __init__(self):
         self.__nx = None
@@ -50,22 +50,22 @@ class AcadosSimDims:
 
     @property
     def nx(self):
-        """:math:`n_x` - number of states"""
+        """:math:`n_x` - number of states. Type: int > 0"""
         return self.__nx
 
     @property
     def nz(self):
-        """:math:`n_z` - number of algebraic variables"""
+        """:math:`n_z` - number of algebraic variables. Type: int >= 0"""
         return self.__nz
 
     @property
     def nu(self):
-        """:math:`n_u` - number of inputs"""
+        """:math:`n_u` - number of inputs. Type: int >= 0"""
         return self.__nu
 
     @property
     def np(self):
-        """:math:`n_p` - number of parameters"""
+        """:math:`n_p` - number of parameters. Type: int >= 0"""
         return self.__np
 
     @nx.setter
@@ -121,52 +121,52 @@ class AcadosSimOpts:
 
     @property
     def integrator_type(self):
-        """Integrator type"""
+        """Integrator type. Default: 'ERK'."""
         return self.__integrator_type
 
     @property
     def num_stages(self):
-        """Number of stages in the integrator"""
+        """Number of stages in the integrator. Default: 1"""
         return self.__sim_method_num_stages
 
     @property
     def num_steps(self):
-        """Number of steps in the integrator"""
+        """Number of steps in the integrator. Default: 1"""
         return self.__sim_method_num_steps
 
     @property
     def newton_iter(self):
-        """Number of Newton iterations in simulation method"""
+        """Number of Newton iterations in simulation method. Default: 3"""
         return self.__sim_method_newton_iter
 
     @property
     def sens_forw(self):
-        """Boolean determining if forward sensitivities are computed"""
+        """Boolean determining if forward sensitivities are computed. Default: True"""
         return self.__sens_forw
 
     @property
     def sens_adj(self):
-        """Boolean determining if adjoint sensitivities are computed"""
+        """Boolean determining if adjoint sensitivities are computed. Default: False"""
         return self.__sens_adj
 
     @property
     def sens_algebraic(self):
-        """Boolean determining if sensitivities wrt algebraic variables are computed"""
+        """Boolean determining if sensitivities wrt algebraic variables are computed. Default: False"""
         return self.__sens_algebraic
 
     @property
     def sens_hess(self):
-        """Boolean determining if hessians are computed"""
+        """Boolean determining if hessians are computed. Default: False"""
         return self.__sens_hess
 
     @property
     def output_z(self):
-        """Boolean determining if values for algebraic variables (corresponding to start of simulation interval) are computed"""
+        """Boolean determining if values for algebraic variables (corresponding to start of simulation interval) are computed. Default: False"""
         return self.__output_z
 
     @property
     def sim_method_jac_reuse(self):
-        """Boolean determining if jacobians are reused"""
+        """Boolean determining if jacobians are reused. Default: False"""
         return self.__sim_method_jac_reuse
 
     @property
@@ -252,22 +252,34 @@ class AcadosSimOpts:
 
 class AcadosSim:
     """
-    class containing the full description of the integrator
+    The class has the following properties that can be modified to formulate a specific simulation problem, see below:
+
+    :param acados_path: string with the path to acados. It is used to generate the include and lib paths.
+
+    - :py:attr:`dims` of type :py:class:`acados_template.acados_ocp.AcadosSimDims` - are automatically detected from model
+    - :py:attr:`model` of type :py:class:`acados_template.acados_model.AcadosModel`
+    - :py:attr:`solver_options` of type :py:class:`acados_template.acados_sim.AcadosSimOpts`
+
+    - :py:attr:`acados_include_path` (set automatically)
+    - :py:attr:`acados_lib_path` (set automatically)
     """
     def __init__(self, acados_path=''):
-        """
-        Keyword arguments:
-        acados_path -- path of your acados installation
-        """
         if acados_path == '':
             acados_path = get_acados_path()
         self.dims = AcadosSimDims()
+        """Dimension definitions, automatically detected from :py:attr:`model`. Type :py:class:`acados_template.acados_sim.AcadosSimDims`"""
         self.model = AcadosModel()
+        """Model definitions, type :py:class:`acados_template.acados_model.AcadosModel`"""
         self.solver_options = AcadosSimOpts()
+        """Solver Options, type :py:class:`acados_template.acados_sim.AcadosSimOpts`"""
 
         self.acados_include_path = f'{acados_path}/include'
+        """Path to acados include directors (set automatically), type: `string`"""
         self.acados_lib_path = f'{acados_path}/lib'
+        """Path to where acados library is located (set automatically), type: `string`"""
 
+        self.code_export_directory = 'c_generated_code'
+        """Path to where code will be exported. Default: `c_generated_code`."""
 
     def set(self, attr, value):
         # tokenize string

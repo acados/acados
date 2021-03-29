@@ -62,15 +62,15 @@ typedef struct d_ocp_qp_res_ws ocp_qp_res_ws;
 typedef struct
 {
     void (*dims_set)(void *config_, void *dims_, int stage, const char *field, int* value);
-    int (*opts_calculate_size)(void *config, void *dims);
+    acados_size_t (*opts_calculate_size)(void *config, void *dims);
     void *(*opts_assign)(void *config, void *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config, void *dims, void *opts);
     void (*opts_update)(void *config, void *dims, void *opts);
     void (*opts_set)(void *config_, void *opts_, const char *field, void* value);
-    int (*memory_calculate_size)(void *config, void *dims, void *opts);
+    acados_size_t (*memory_calculate_size)(void *config, void *dims, void *opts);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
     void (*memory_get)(void *config_, void *mem_, const char *field, void* value);
-    int (*workspace_calculate_size)(void *config, void *dims, void *opts);
+    acados_size_t (*workspace_calculate_size)(void *config, void *dims, void *opts);
     int (*evaluate)(void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);
     void (*eval_sens)(void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);
 } qp_solver_config;
@@ -80,20 +80,20 @@ typedef struct
 
 typedef struct
 {
-    int (*dims_calculate_size)(void *config, int N);
+    acados_size_t (*dims_calculate_size)(void *config, int N);
     void *(*dims_assign)(void *config, int N, void *raw_memory);
     void (*dims_set)(void *config, void *dims_, int stage, const char *field, int* value);
     void (*dims_get)(void *config, void *dims, const char *field, void* value);
     // TODO add config everywhere !!!!!
-    int (*opts_calculate_size)(void *dims);
+    acados_size_t (*opts_calculate_size)(void *dims);
     void *(*opts_assign)(void *dims, void *raw_memory);
     void (*opts_initialize_default)(void *dims, void *opts);
     void (*opts_update)(void *dims, void *opts);
     void (*opts_set)(void *opts_, const char *field, void* value);
-    int (*memory_calculate_size)(void *dims, void *opts);
+    acados_size_t (*memory_calculate_size)(void *dims, void *opts);
     void *(*memory_assign)(void *dims, void *opts, void *raw_memory);
     void (*memory_get)(void *config, void *mem, const char *field, void* value);
-    int (*workspace_calculate_size)(void *dims, void *opts);
+    acados_size_t (*workspace_calculate_size)(void *dims, void *opts);
     int (*condensing)(void *qp_in, void *qp_out, void *opts, void *mem, void *work);
     int (*condensing_rhs)(void *qp_in, void *qp_out, void *opts, void *mem, void *work);
     int (*expansion)(void *qp_in, void *qp_out, void *opts, void *mem, void *work);
@@ -119,18 +119,18 @@ typedef struct
 
 /* config */
 //
-int ocp_qp_solver_config_calculate_size();
+acados_size_t ocp_qp_solver_config_calculate_size();
 //
 qp_solver_config *ocp_qp_solver_config_assign(void *raw_memory);
 //
-int ocp_qp_condensing_config_calculate_size();
+acados_size_t ocp_qp_condensing_config_calculate_size();
 //
 ocp_qp_xcond_config *ocp_qp_condensing_config_assign(void *raw_memory);
 
 
 /* dims */
 //
-int ocp_qp_dims_calculate_size(int N);
+acados_size_t ocp_qp_dims_calculate_size(int N);
 //
 ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory);
 //
@@ -141,24 +141,24 @@ void ocp_qp_dims_get(void *config_, void *dims, int stage, const char *field, in
 
 /* in */
 //
-int ocp_qp_in_calculate_size(ocp_qp_dims *dims);
+acados_size_t ocp_qp_in_calculate_size(ocp_qp_dims *dims);
 //
 ocp_qp_in *ocp_qp_in_assign(ocp_qp_dims *dims, void *raw_memory);
 
 
 /* out */
 //
-int ocp_qp_out_calculate_size(ocp_qp_dims *dims);
+acados_size_t ocp_qp_out_calculate_size(ocp_qp_dims *dims);
 //
 ocp_qp_out *ocp_qp_out_assign(ocp_qp_dims *dims, void *raw_memory);
 
 /* res */
 //
-int ocp_qp_res_calculate_size(ocp_qp_dims *dims);
+acados_size_t ocp_qp_res_calculate_size(ocp_qp_dims *dims);
 //
 ocp_qp_res *ocp_qp_res_assign(ocp_qp_dims *dims, void *raw_memory);
 //
-int ocp_qp_res_workspace_calculate_size(ocp_qp_dims *dims);
+acados_size_t ocp_qp_res_workspace_calculate_size(ocp_qp_dims *dims);
 //
 ocp_qp_res_ws *ocp_qp_res_workspace_assign(ocp_qp_dims *dims, void *raw_memory);
 //

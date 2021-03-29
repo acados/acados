@@ -35,7 +35,7 @@ import sys
 sys.path.insert(0, '../getting_started/common')
 
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver
-from export_pendulum_ode_model import export_pendulum_ode_model
+from pendulum_model import export_pendulum_ode_model
 from utils import plot_pendulum
 import numpy as np
 import scipy.linalg
@@ -126,6 +126,7 @@ def run_closed_loop_experiment(FORMULATION):
     ocp.solver_options.integrator_type = 'ERK'
     ocp.solver_options.tf = Tf
     ocp.solver_options.nlp_solver_type = 'SQP'
+    ocp.solver_options.tol = 1e-1 * tol
 
     json_filename = 'pendulum_soft_constraints.json'
     acados_ocp_solver = AcadosOcpSolver(ocp, json_file = json_filename)
@@ -169,13 +170,14 @@ def run_closed_loop_experiment(FORMULATION):
     print("sl", sl, "su", su)
 
     # plot results
-    plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
+    # plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
 
     # store results
     np.savetxt('test_results/simX_soft_formulation_' + str(FORMULATION), simX)
     np.savetxt('test_results/simU_soft_formulation_' + str(FORMULATION), simU)
 
     print("soft constraint example: ran formulation", FORMULATION, "successfully.")
+
 
 if __name__ == "__main__":
 
@@ -193,10 +195,10 @@ if __name__ == "__main__":
 
         error_xu = max([error_x, error_u])
 
+        print("soft constraint example: formulation", i, " solution deviates from reference by", error_xu, ".")
+
         if error_xu > tol:
             raise Exception("soft constraint example: formulations should return same solution up to" + str(tol))
-        else:
-            print("soft constraint example: formulation", i, " solution deviates from reference by", error_xu, ".")
 
     print("soft constraint example: SUCCESS, got same solutions for equivalent formulations up to tolerance %1.e." %(tol))
 

@@ -33,20 +33,18 @@
 
 import os
 from casadi import *
-from .utils import ALLOWED_CASADI_VERSIONS, is_empty
+from .utils import ALLOWED_CASADI_VERSIONS, is_empty, casadi_version_warning
 
 def generate_c_code_explicit_ode( model, opts ):
 
     casadi_version = CasadiMeta.version()
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
     if casadi_version not in (ALLOWED_CASADI_VERSIONS):
-        msg =  'Please download and install CasADi {} '.format(" or ".join(ALLOWED_CASADI_VERSIONS))
-        msg += 'to ensure compatibility with acados.\n'
-        msg += 'Version {} currently in use.'.format(casadi_version)
-        raise Exception(msg)
+        casadi_version_warning(casadi_version)
 
 
     generate_hess = opts["generate_hess"]
+    code_export_dir = opts["code_export_directory"]
 
     # load model
     x = model.x
@@ -75,27 +73,20 @@ def generate_c_code_explicit_ode( model, opts ):
     ## Set up functions
     expl_ode_fun = Function(fun_name, [x, u, p], [f_expl])
 
-    # TODO: Polish: get rid of SX.zeros
-    vdeX = DM.zeros(nx,nx)
-
-    vdeX = vdeX + jtimes(f_expl,x,Sx)
-
-    vdeP = DM.zeros(nx,nu) + jacobian(f_expl,u)
-
-    vdeP = vdeP + jtimes(f_expl,x,Sp)
+    vdeX = jtimes(f_expl,x,Sx)
+    vdeP = jacobian(f_expl,u) + jtimes(f_expl,x,Sp)
 
     fun_name = model_name + '_expl_vde_forw'
 
-    expl_vde_forw = Function(fun_name, [x, Sx, Sp, u, p], [f_expl,vdeX,vdeP])
+    expl_vde_forw = Function(fun_name, [x, Sx, Sp, u, p], [f_expl, vdeX, vdeP])
 
     adj = jtimes(f_expl, vertcat(x, u), lambdaX, True)
 
     fun_name = model_name + '_expl_vde_adj'
     expl_vde_adj = Function(fun_name, [x, lambdaX, u, p], [adj])
 
-    S_forw = vertcat(horzcat(Sx, Sp), horzcat(DM.zeros(nu,nx), DM.eye(nu)))
-
     if generate_hess:
+        S_forw = vertcat(horzcat(Sx, Sp), horzcat(DM.zeros(nu,nx), DM.eye(nu)))
         hess = mtimes(transpose(S_forw),jtimes(adj, vertcat(x,u), S_forw))
         hess2 = []
         for j in range(nx+nu):
@@ -106,10 +97,11 @@ def generate_c_code_explicit_ode( model, opts ):
         expl_ode_hess = Function(fun_name, [x, Sx, Sp, lambdaX, u, p], [adj, hess2])
 
     ## generate C code
-    if not os.path.exists('c_generated_code'):
-        os.mkdir('c_generated_code')
+    if not os.path.exists(code_export_dir):
+        os.makedirs(code_export_dir)
 
-    os.chdir('c_generated_code')
+    cwd = os.getcwd()
+    os.chdir(code_export_dir)
     model_dir = model_name + '_model'
     if not os.path.exists(model_dir):
         os.mkdir(model_dir)
@@ -127,6 +119,6 @@ def generate_c_code_explicit_ode( model, opts ):
     if generate_hess:
         fun_name = model_name + '_expl_ode_hess'
         expl_ode_hess.generate(fun_name, casadi_opts)
-    os.chdir('../..')
+    os.chdir(cwd)
 
     return

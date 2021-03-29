@@ -53,12 +53,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     char buffer [500]; // for error messages
 
     /* RHS */
-    int min_nrhs = 5;
+    int min_nrhs = 6;
 
     char *ext_fun_type = mxArrayToString( prhs[0] );
+    char *ext_fun_type_e = mxArrayToString( prhs[1] );
 
     // C ocp
-    const mxArray *C_ocp = prhs[1];
+    const mxArray *C_ocp = prhs[2];
     // plan
     ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "plan" ) );
     ocp_nlp_plan *plan = (ocp_nlp_plan *) ptr[0];
@@ -81,16 +82,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "solver" ) );
     ocp_nlp_solver *solver = (ocp_nlp_solver *) ptr[0];
 
-    const mxArray *C_ext_fun_pointers = prhs[2];
+    const mxArray *C_ext_fun_pointers = prhs[3];
     // field
-    char *field = mxArrayToString( prhs[3] );
+    char *field = mxArrayToString( prhs[4] );
     // value
-    double *value = mxGetPr( prhs[4] );
+    double *value = mxGetPr( prhs[5] );
 
     // for checks
-    int matlab_size = (int) mxGetNumberOfElements( prhs[4] );
-    int nrow = (int) mxGetM( prhs[4] );
-    int ncol = (int) mxGetN( prhs[4] );
+    int matlab_size = (int) mxGetNumberOfElements( prhs[5] );
+    int nrow = (int) mxGetM( prhs[5] );
+    int ncol = (int) mxGetN( prhs[5] );
 
     int N = dims->N;
     int nu = dims->nu[0];
@@ -105,7 +106,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (nrhs==min_nrhs+1)
     {
-        s0 = mxGetScalar( prhs[5] );
+        s0 = mxGetScalar( prhs[6] );
         if (s0 > N)
         {
             sprintf(buffer, "ocp_set: N < specified stage = %d\n", s0);
@@ -209,6 +210,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
 
             ocp_nlp_constraints_model_set(config, dims, in, ii, "ug", value);
+        }
+    }
+    else if (!strcmp(field, "constr_lh"))
+    {
+        for (int ii=s0; ii<se; ii++)
+        {
+            acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "lh");
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+
+            ocp_nlp_constraints_model_set(config, dims, in, ii, "lh", value);
+        }
+    }
+    else if (!strcmp(field, "constr_uh"))
+    {
+        for (int ii=s0; ii<se; ii++)
+        {
+            acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "uh");
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+
+            ocp_nlp_constraints_model_set(config, dims, in, ii, "uh", value);
         }
     }
     // cost:
@@ -479,21 +500,32 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else if (!strcmp(field, "p"))
     {
         // mexPrintf("ocp_set p: nrhs %d \n", nrhs);
-
         // loop over number of external functions;
         int struct_size = mxGetNumberOfFields( C_ext_fun_pointers );
         for (int ii=0; ii<struct_size; ii++)
         {
             mex_field = mxGetFieldByNumber( C_ext_fun_pointers, 0, ii );
+            const char * fieldname = mxGetFieldNameByNumber(C_ext_fun_pointers, ii);
             ptr = (long long *) mxGetData( mex_field );
             int Nf = (int) mxGetNumberOfElements(mex_field);
-            // mexPrintf("\n%s, Nf = %d\n", mxGetFieldNameByNumber( C_ext_fun_pointers, ii), Nf );
+            // mexPrintf("\n%s, Nf = %d\n", fieldname, Nf );
             int Nf_sum = 0;
             // loop over number of phases
             for (int jj=0; jj<Nf; jj++)
             {
+                char * type;
+                // NOTE: assume 2 phases!
+                if (jj == 0)
+                {
+                    type = ext_fun_type;
+                }
+                else
+                {
+                    type = ext_fun_type_e;
+                }
+
                 // external function param casadi
-                if (!strcmp(ext_fun_type, "casadi"))
+                if (!strcmp(type, "casadi") || strstr(fieldname, "dyn_"))
                 {
                     external_function_param_casadi *ext_fun_ptr = (external_function_param_casadi *) ptr[jj];
                     if (ext_fun_ptr!=0)
@@ -509,7 +541,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                         }
                         else if (nrhs==min_nrhs+1) // one stage
                         {
-                            int stage = mxGetScalar( prhs[5] );
+                            int stage = mxGetScalar( prhs[6] );
                             if (stage>=Nf_sum & stage<Nf_sum+NN[jj])
                             {
                                 int kk = stage - Nf_sum;
@@ -522,7 +554,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                     Nf_sum += NN[jj];
                 }
                 // external function param generic
-                else if (!strcmp(ext_fun_type, "generic"))
+                else if (!strcmp(type, "generic"))
                 {
                     external_function_param_generic *ext_fun_ptr = (external_function_param_generic *) ptr[jj];
                     if (ext_fun_ptr!=0)
@@ -538,7 +570,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                         }
                         else if (nrhs==min_nrhs+1) // one stage
                         {
-                            int stage = mxGetScalar( prhs[5] );
+                            int stage = mxGetScalar( prhs[6] );
                             if (stage>=Nf_sum & stage<Nf_sum+NN[jj])
                             {
                                 int kk = stage - Nf_sum;
@@ -552,7 +584,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 }
                 else
                 {
-                    MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "ext_fun_type", ext_fun_type, "casadi, generic");
+                    MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "ext_fun_type", type, "casadi, generic");
                 }
             }
         }
@@ -599,7 +631,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else
     {
         MEX_FIELD_NOT_SUPPORTED_SUGGEST(fun_name, field, "p, constr_x0,\
- constr_lbx, constr_ubx, constr_C, constr_D, constr_lg, constr_ug,\
+ constr_lbx, constr_ubx, constr_C, constr_D, constr_lg, constr_ug, constr_lh, constr_uh\
  constr_lbu, constr_ubu, cost_y_ref[_e],\
  cost_Vu, cost_Vx, cost_Vz, cost_W, cost_Z, cost_Zl, cost_Zu, cost_z,\
  cost_zl, cost_zu, init_x, init_u, init_z, init_xdot, init_gnsf_phi,\
