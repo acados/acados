@@ -49,27 +49,6 @@
 
 #define SAMPLINGTIME {{ solver_options.Tsim }}
 
-// ** global data **
-sim_config  *{{ model.name }}_sim_config;
-sim_in      *{{ model.name }}_sim_in;
-sim_out     *{{ model.name }}_sim_out;
-void        *{{ model.name }}_sim_dims;
-sim_opts    *{{ model.name }}_sim_opts;
-sim_solver  *{{ model.name }}_sim_solver;
-
-
-{% if solver_options.integrator_type == "ERK" %}
-external_function_param_casadi * sim_forw_vde_casadi;
-external_function_param_casadi * sim_expl_ode_fun_casadi;
-{% if solver_options.hessian_approx == "EXACT" %}
-// note: not used for simulation.
-external_function_param_casadi * sim_hess_vde_casadi;
-{% endif %}
-{% elif solver_options.integrator_type == "IRK" %}
-external_function_param_casadi * sim_impl_dae_fun;
-external_function_param_casadi * sim_impl_dae_fun_jac_x_xdot_z;
-external_function_param_casadi * sim_impl_dae_jac_x_xdot_u_z;
-{% endif %}
 
 static void mdlInitializeSizes (SimStruct *S)
 {
@@ -154,11 +133,23 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 
 static void mdlStart(SimStruct *S)
 {
-    {{ model.name }}_acados_sim_create();
+    sim_solver_capsule *capsule = {{ model.name }}_acados_sim_solver_create_capsule();
+    {{ model.name }}_acados_sim_create(capsule);
+
+    ssSetUserData(S, (void*)capsule);
 }
 
 static void mdlOutputs(SimStruct *S, int_T tid)
 {
+    sim_solver_capsule *capsule = ssGetUserData(S);
+
+    sim_config *acados_sim_config = {{ model.name }}_acados_get_sim_config(capsule);
+    sim_in *acados_sim_in = {{ model.name }}_acados_get_sim_in(capsule);
+    sim_out *acados_sim_out = {{ model.name }}_acados_get_sim_out(capsule);
+    void *acados_sim_dims = {{ model.name }}_acados_get_sim_dims(capsule);
+    // sim_opts * {{ model.name }}_acados_get_sim_opts(capsule);
+    // sim_solver * {{ model.name }}_acados_get_sim_solver(capsule);
+
     InputRealPtrsType in_sign;
     {% set input_sizes = [dims.nx, dims.nu, dims.np] %}
 
@@ -174,8 +165,8 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     for (int i = 0; i < {{ dims.nx }}; i++)
         buffer[i] = (double)(*in_sign[i]);
 
-    sim_in_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims,
-               {{ model.name }}_sim_in, "x", buffer);
+    sim_in_set(acados_sim_config, acados_sim_dims,
+               acados_sim_in, "x", buffer);
 
 
     // ssPrintf("\nin acados sim:\n");
@@ -190,8 +181,8 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     for (int i = 0; i < {{ dims.nu }}; i++)
         buffer[i] = (double)(*in_sign[i]);
 
-    sim_in_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims,
-               {{ model.name }}_sim_in, "u", buffer);
+    sim_in_set(acados_sim_config, acados_sim_dims,
+               acados_sim_in, "u", buffer);
 {%- endif %}
 
 
@@ -204,19 +195,19 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         buffer[i] = (double)(*in_sign[i]);
 
     // update value of parameters
-    {{ model.name }}_acados_sim_update_params(buffer, {{ dims.np }});
+    {{ model.name }}_acados_sim_update_params(capsule, buffer, {{ dims.np }});
 {%- endif %}
 
 
     /* call solver */
-    int acados_status = {{ model.name }}_acados_sim_solve();
+    int acados_status = {{ model.name }}_acados_sim_solve(capsule);
 
 
     /* set outputs */
     real_t *out_x = ssGetOutputPortRealSignal(S, 0);
 
     // get simulated state
-    sim_out_get({{ model.name }}_sim_config, {{ model.name }}_sim_dims, {{ model.name }}_sim_out,
+    sim_out_get(acados_sim_config, acados_sim_dims, acados_sim_out,
                 "xn", (void *) out_x);
 
     // ssPrintf("\nacados sim solve: returned %d\n", acados_status);
@@ -228,7 +219,10 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
 static void mdlTerminate(SimStruct *S)
 {
-    {{ model.name }}_acados_sim_free();
+    sim_solver_capsule *capsule = ssGetUserData(S);
+
+    {{ model.name }}_acados_sim_free(capsule);
+    {{ model.name }}_acados_sim_solver_free_capsule(capsule);
 }
 
 
