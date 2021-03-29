@@ -177,16 +177,16 @@ for ii=1:length(mex_files)
     else
         if with_qp_qpoases
             mex(mex_flags, FLAGS, LDFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lqpOASES_e', mex_files{ii}, '-outdir', opts.output_dir)
+                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lqpOASES_e', '-losqp', mex_files{ii}, '-outdir', opts.output_dir)
         elseif with_qp_hpmpc
             mex(mex_flags, FLAGS, LDFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
                 acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lhpmpc', mex_files{ii}, '-outdir', opts.output_dir)
         elseif with_qp_osqp
             mex(mex_flags, FLAGS, LDFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-losqp', mex_files{ii}, '-outdir', opts.output_dir)
+                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-losqp', '-lqpOASES_e', mex_files{ii}, '-outdir', opts.output_dir)
         else
             mex(mex_flags, FLAGS, LDFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii}, '-outdir', opts.output_dir)
+                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-losqp', '-lqpOASES_e',  mex_files{ii}, '-outdir', opts.output_dir)
         end
     end
 end

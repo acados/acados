@@ -58,19 +58,19 @@ else()
     set(BUILD_SHARED_LIBS ON CACHE STRING "Build shared libraries")
 endif()
 
-option(ACADOS_WITH_OPENMP "OpenMP Parallelization" OFF)
+option(ACADOS_WITH_OPENMP "OpenMP Parallelization" ON)
 
 # Additional targets
 option(ACADOS_UNIT_TESTS "Compile Unit tests" OFF)
 option(ACADOS_EXAMPLES "Compile Examples" OFF)
 option(ACADOS_LINT "Compile Lint" OFF)
 # Extarnal libs
-option(ACADOS_WITH_QPOASES  "qpOASES solver" OFF)
+option(ACADOS_WITH_QPOASES  "qpOASES solver" ON)
 option(ACADOS_WITH_HPMPC "HPMPC solver" OFF)
 option(ACADOS_WITH_QORE "QORE solver" OFF)
 option(ACADOS_WITH_OOQP "OOQP solver" OFF)
 option(ACADOS_WITH_QPDUNES "qpDUNES solver" OFF)
-option(ACADOS_WITH_OSQP "OSQP solver" OFF)
+option(ACADOS_WITH_OSQP "OSQP solver" ON)
 # Interfaces
 option(ACADOS_MATLAB "The Matlab Interface" OFF)
 option(ACADOS_OCTAVE "The Octave Interface" OFF)

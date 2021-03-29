@@ -46,7 +46,7 @@ classdef acados_sim_opts < handle
 
         function obj = acados_sim_opts()
             obj.opts_struct = struct;
-            obj.opts_struct.compile_interface = 'auto'; % auto, true, false
+            obj.opts_struct.compile_interface = 'auto'; % true, false (TODO: auto)
             obj.opts_struct.codgen_model = 'true';
             obj.opts_struct.compile_model = 'true';
             obj.opts_struct.method = 'irk';
