@@ -352,9 +352,9 @@ class AcadosSimSolver:
         # treat parameters separately
         if field_ == 'p':
             model_name = self.sim_struct.model.name
-            getattr(self.shared_lib, f"{model_name}_acados_sim_update_params").argtypes = [POINTER(c_double)]
+            getattr(self.shared_lib, f"{model_name}_acados_sim_update_params").argtypes = [c_void_p, POINTER(c_double), c_int]
             value_data = cast(value_.ctypes.data, POINTER(c_double))
-            getattr(self.shared_lib, f"{model_name}_acados_sim_update_params")(value_data, value_.shape[0])
+            getattr(self.shared_lib, f"{model_name}_acados_sim_update_params")(self.capsule, value_data, value_.shape[0])
         elif field_ in ['xdot', 'z']:
             # TODO(katrin): perform dimension check!
             self.shared_lib.sim_solver_set.argtypes = [c_void_p, c_char_p, c_void_p]
