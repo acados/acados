@@ -41,37 +41,58 @@
 extern "C" {
 #endif
 
-int {{ model.name }}_acados_sim_create();
-int {{ model.name }}_acados_sim_solve();
-int {{ model.name }}_acados_sim_free();
-int {{ model.name }}_acados_sim_update_params(double *value, int np);
 
-sim_config  * {{ model.name }}_acados_get_sim_config();
-sim_in      * {{ model.name }}_acados_get_sim_in();
-sim_out     * {{ model.name }}_acados_get_sim_out();
-void        * {{ model.name }}_acados_get_sim_dims();
-sim_opts    * {{ model.name }}_acados_get_sim_opts();
-sim_solver  * {{ model.name }}_acados_get_sim_solver();
+// ** capsule for solver data **
+typedef struct sim_solver_capsule
+{
+    // acados objects
+    sim_in *acados_sim_in;
+    sim_out *acados_sim_out;
+    sim_solver *acados_sim_solver;
+    sim_opts *acados_sim_opts;
+    sim_config *acados_sim_config;
+    void *acados_sim_dims;
 
-// ** global data **
-extern sim_config  * {{ model.name }}_sim_config;
-extern sim_in      * {{ model.name }}_sim_in;
-extern sim_out     * {{ model.name }}_sim_out;
-extern void        * {{ model.name }}_sim_dims;
-extern sim_opts    * {{ model.name }}_sim_opts;
-extern sim_solver  * {{ model.name }}_sim_solver;
+    /* external functions */
+    // ERK
+    external_function_param_casadi * sim_forw_vde_casadi;
+    external_function_param_casadi * sim_expl_ode_fun_casadi;
+    external_function_param_casadi * sim_expl_ode_hess;
+
+    // IRK
+    external_function_param_casadi * sim_impl_dae_fun;
+    external_function_param_casadi * sim_impl_dae_fun_jac_x_xdot_z;
+    external_function_param_casadi * sim_impl_dae_jac_x_xdot_u_z;
+    external_function_param_casadi * sim_impl_dae_hess;
+
+    // GNSF
+    external_function_param_casadi * sim_gnsf_phi_fun;
+    external_function_param_casadi * sim_gnsf_phi_fun_jac_y;
+    external_function_param_casadi * sim_gnsf_phi_jac_y_uhat;
+    external_function_param_casadi * sim_gnsf_f_lo_jac_x1_x1dot_u_z;
+    external_function_param_casadi * sim_gnsf_get_matrices_fun;
+
+} sim_solver_capsule;
+
+
+int {{ model.name }}_acados_sim_create(sim_solver_capsule *capsule);
+int {{ model.name }}_acados_sim_solve(sim_solver_capsule *capsule);
+int {{ model.name }}_acados_sim_free(sim_solver_capsule *capsule);
+int {{ model.name }}_acados_sim_update_params(sim_solver_capsule *capsule, double *value, int np);
+
+sim_config * {{ model.name }}_acados_get_sim_config(sim_solver_capsule *capsule);
+sim_in * {{ model.name }}_acados_get_sim_in(sim_solver_capsule *capsule);
+sim_out * {{ model.name }}_acados_get_sim_out(sim_solver_capsule *capsule);
+void * {{ model.name }}_acados_get_sim_dims(sim_solver_capsule *capsule);
+sim_opts * {{ model.name }}_acados_get_sim_opts(sim_solver_capsule *capsule);
+sim_solver * {{ model.name }}_acados_get_sim_solver(sim_solver_capsule *capsule);
+
+
+sim_solver_capsule * {{ model.name }}_acados_sim_solver_create_capsule();
+int {{ model.name }}_acados_sim_solver_free_capsule(sim_solver_capsule *capsule);
 
 #ifdef __cplusplus
 }
 #endif
-
-{% if solver_options.integrator_type == "ERK" %}
-extern external_function_param_casadi * sim_forw_vde_casadi;
-extern external_function_param_casadi * sim_expl_ode_fun_casadi;
-{% elif solver_options.integrator_type == "IRK" %}
-extern external_function_param_casadi * sim_impl_dae_fun;
-extern external_function_param_casadi * sim_impl_dae_fun_jac_x_xdot_z;
-extern external_function_param_casadi * sim_impl_dae_jac_x_xdot_u_z;
-{% endif %}
 
 #endif  // ACADOS_SIM_{{ model.name }}_H_
