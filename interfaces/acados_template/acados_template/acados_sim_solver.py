@@ -173,6 +173,8 @@ class AcadosSimSolver:
     """
     def __init__(self, acados_sim_, json_file='acados_sim.json'):
 
+        self.solver_created = False
+
         if isinstance(acados_sim_, AcadosOcp):
             # set up acados_sim_
             acados_sim = AcadosSim()
@@ -210,33 +212,48 @@ class AcadosSimSolver:
         os.system('make sim_shared_lib')
         os.chdir(cwd)
 
+        self.sim_struct = acados_sim
+        model_name = self.sim_struct.model.name
+        self.model_name = model_name
+
         # Ctypes
         shared_lib = f'{code_export_dir}/libacados_sim_solver_{model_name}.so'
-
-        self.sim_struct = acados_sim
-
-        model_name = self.sim_struct.model.name
-
         self.shared_lib = CDLL(shared_lib)
-        getattr(self.shared_lib, f"{model_name}_acados_sim_create")()
 
+
+        # create capsule
+        getattr(self.shared_lib, f"{model_name}_acados_sim_solver_create_capsule").restype = c_void_p
+        self.capsule = getattr(self.shared_lib, f"{model_name}_acados_sim_solver_create_capsule")()
+
+        # create solver
+        getattr(self.shared_lib, f"{model_name}_acados_sim_create").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{model_name}_acados_sim_create").restype = c_int
+        assert getattr(self.shared_lib, f"{model_name}_acados_sim_create")(self.capsule)==0
+        self.solver_created = True
+
+        getattr(self.shared_lib, f"{model_name}_acados_get_sim_opts").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{model_name}_acados_get_sim_opts").restype = c_void_p
-        self.sim_opts = getattr(self.shared_lib, f"{model_name}_acados_get_sim_opts")()
+        self.sim_opts = getattr(self.shared_lib, f"{model_name}_acados_get_sim_opts")(self.capsule)
 
+        getattr(self.shared_lib, f"{model_name}_acados_get_sim_dims").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{model_name}_acados_get_sim_dims").restype = c_void_p
-        self.sim_dims = getattr(self.shared_lib, f"{model_name}_acados_get_sim_dims")()
+        self.sim_dims = getattr(self.shared_lib, f"{model_name}_acados_get_sim_dims")(self.capsule)
 
+        getattr(self.shared_lib, f"{model_name}_acados_get_sim_config").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{model_name}_acados_get_sim_config").restype = c_void_p
-        self.sim_config = getattr(self.shared_lib, f"{model_name}_acados_get_sim_config")()
+        self.sim_config = getattr(self.shared_lib, f"{model_name}_acados_get_sim_config")(self.capsule)
 
+        getattr(self.shared_lib, f"{model_name}_acados_get_sim_out").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{model_name}_acados_get_sim_out").restype = c_void_p
-        self.sim_out = getattr(self.shared_lib, f"{model_name}_acados_get_sim_out")()
+        self.sim_out = getattr(self.shared_lib, f"{model_name}_acados_get_sim_out")(self.capsule)
 
+        getattr(self.shared_lib, f"{model_name}_acados_get_sim_in").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{model_name}_acados_get_sim_in").restype = c_void_p
-        self.sim_in = getattr(self.shared_lib, f"{model_name}_acados_get_sim_in")()
+        self.sim_in = getattr(self.shared_lib, f"{model_name}_acados_get_sim_in")(self.capsule)
 
+        getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver").restype = c_void_p
-        self.sim_solver = getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver")()
+        self.sim_solver = getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver")(self.capsule)
 
         nu = self.sim_struct.dims.nu
         nx = self.sim_struct.dims.nx
@@ -255,14 +272,16 @@ class AcadosSimSolver:
         }
 
         self.settable = ['S_adj', 'T', 'x', 'u', 'xdot', 'z', 'p'] # S_forw
-        self.model_name = model_name
 
 
     def solve(self):
         """
         Solve the simulation problem with current input.
         """
-        status = getattr(self.shared_lib, f"{self.model_name}_acados_sim_solve")()
+        getattr(self.shared_lib, f"{self.model_name}_acados_sim_solve").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{self.model_name}_acados_sim_solve").restype = c_int
+
+        status = getattr(self.shared_lib, f"{self.model_name}_acados_sim_solve")(self.capsule)
         return status
 
 
@@ -352,9 +371,17 @@ class AcadosSimSolver:
 
 
     def __del__(self):
-        getattr(self.shared_lib, f"{self.model_name}_acados_sim_free")()
 
-        try:
-            self.dlclose(self.shared_lib._handle)
-        except:
-            pass
+        if self.solver_created:
+            getattr(self.shared_lib, f"{self.model_name}_acados_sim_free").argtypes = [c_void_p]
+            getattr(self.shared_lib, f"{self.model_name}_acados_sim_free").restype = c_int
+            getattr(self.shared_lib, f"{self.model_name}_acados_sim_free")(self.capsule)
+
+            getattr(self.shared_lib, f"{self.model_name}_acados_sim_solver_free_capsule").argtypes = [c_void_p]
+            getattr(self.shared_lib, f"{self.model_name}_acados_sim_solver_free_capsule").restype = c_int
+            getattr(self.shared_lib, f"{self.model_name}_acados_sim_solver_free_capsule")(self.capsule)
+
+            try:
+                self.dlclose(self.shared_lib._handle)
+            except:
+                pass
