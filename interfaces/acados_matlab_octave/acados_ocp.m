@@ -40,6 +40,7 @@ classdef acados_ocp < handle
         opts_struct
         acados_ocp_nlp_json
         ext_fun_type
+        ext_fun_type_e
     end % properties
 
 
@@ -69,13 +70,40 @@ classdef acados_ocp < handle
 
             % store ext_fun_type
             obj.ext_fun_type = obj.model_struct.ext_fun_type;
+            obj.ext_fun_type_e = obj.model_struct.ext_fun_type_e;
 
             % detect cost type
             if (strcmp(obj.model_struct.cost_type, 'auto'))
-                obj.model_struct = detect_cost_type(obj.model_struct, 0);
+                obj.model_struct = detect_cost_type(obj.model_struct, 'path');
+            end
+            if (strcmp(obj.model_struct.cost_type_0, 'auto'))
+                obj.model_struct = detect_cost_type(obj.model_struct, 'initial');
+            elseif isempty(obj.model_struct.cost_type_0)
+                % copy entries from path cost
+                obj.model_struct.cost_type_0 = obj.model_struct.cost_type;
+                if (strcmp(obj.model_struct.cost_type, 'linear_ls'))
+                    obj.model_struct.cost_Vx_0 = obj.model_struct.cost_Vx;
+                    obj.model_struct.cost_Vu_0 = obj.model_struct.cost_Vu;
+                    if isfield(obj.model_struct, 'cost_Vz')
+                        obj.model_struct.cost_Vz_0 = obj.model_struct.cost_Vz;
+                    end
+                elseif (strcmp(obj.model_struct.cost_type, 'nonlinear_ls'))
+                    obj.model_struct.cost_expr_y_0 = obj.model_struct.cost_expr_y;
+                elseif (strcmp(obj.model_struct.cost_type, 'ext_cost'))
+                    obj.model_struct.ext_fun_type_0 = obj.model_struct.ext_fun_type;
+                    if strcmp(obj.model_struct.ext_fun_type_0, 'casadi')
+                        obj.model_struct.cost_expr_ext_cost_0 = obj.model_struct.cost_expr_ext_cost;
+                    end
+                end
+                if (strcmp(obj.model_struct.cost_type, 'linear_ls')) || (strcmp(obj.model_struct.cost_type, 'nonlinear_ls'))
+                    obj.model_struct.cost_W_0 = obj.model_struct.cost_W;
+                    if isfield(obj.model_struct,'cost_y_ref')
+                        obj.model_struct.cost_y_ref_0 = obj.model_struct.cost_y_ref;
+                    end
+                end
             end
             if (strcmp(obj.model_struct.cost_type_e, 'auto'))
-                obj.model_struct = detect_cost_type(obj.model_struct, 1);
+                obj.model_struct = detect_cost_type(obj.model_struct, 'terminal');
             end
 
             % detect constraint structure
@@ -120,11 +148,11 @@ classdef acados_ocp < handle
                     elseif ~isempty(strfind(obj.opts_struct.qp_solver,'osqp'))
                         flag_file = fullfile(obj.opts_struct.output_dir, '_compiled_with_osqp.txt');
                         compile_interface = ~exist(flag_file, 'file');
-                    elseif ~isempty(strfind(obj.opts_struct.qp_solver,'hpipm'))
-                        flag_file = fullfile(obj.opts_struct.output_dir, '_compiled_with_hpipm.txt');
+                    elseif ~isempty(strfind(obj.opts_struct.qp_solver,'qpdunes'))
+                        flag_file = fullfile(obj.opts_struct.output_dir, '_compiled_with_qpdunes.txt');
                         compile_interface = ~exist(flag_file, 'file');
                     else
-                        compile_interface = true;
+                        compile_interface = false;
                     end
                 else
                     compile_interface = true;
@@ -172,9 +200,12 @@ classdef acados_ocp < handle
         end
 
 
-        function generate_c_code(obj)
+        function generate_c_code(obj, simulink_opts)
+            if nargin < 2
+                simulink_opts = get_acados_simulink_opts;
+            end
             % set up acados_ocp_nlp_json
-            obj.acados_ocp_nlp_json = set_up_acados_ocp_nlp_json(obj);
+            obj.acados_ocp_nlp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts);
             % render templated code
             ocp_generate_c_code(obj)
         end
@@ -196,10 +227,10 @@ classdef acados_ocp < handle
                 error('field must be a char vector, use '' ''');
             end
             if nargin==3
-                ocp_set(obj.ext_fun_type, obj.C_ocp, obj.C_ocp_ext_fun, field, value);
+                ocp_set(obj.ext_fun_type, obj.ext_fun_type_e, obj.C_ocp, obj.C_ocp_ext_fun, field, value);
             elseif nargin==4
                 stage = varargin{4};
-                ocp_set(obj.ext_fun_type, obj.C_ocp, obj.C_ocp_ext_fun, field, value, stage);
+                ocp_set(obj.ext_fun_type, obj.ext_fun_type_e, obj.C_ocp, obj.C_ocp_ext_fun, field, value, stage);
             else
                 disp('acados_ocp.set: wrong number of input arguments (2 or 3 allowed)');
             end
@@ -279,7 +310,7 @@ classdef acados_ocp < handle
             if ~isempty(obj.C_ocp_ext_fun)
                 ocp_destroy_ext_fun(obj.model_struct, obj.C_ocp, obj.C_ocp_ext_fun);
             end
-            if ~isempty(obj.C_ocp) 
+            if ~isempty(obj.C_ocp)
                 ocp_destroy(obj.C_ocp);
             end
         end

@@ -15,3 +15,9 @@ typical of embedded optimization applications.
 MATLAB/Octave and Python interfaces
 can be used to conveniently describe optimal control problems and generate self-contained 
 C code that can be readily deployed on embedded platforms.
+
+## Further Reading
+For more information see
+- the paper [acados – a modular open-source framework for fast embedded optimal control, Verschueren 2019](https://arxiv.org/abs/1910.13753)
+- or other papers stated under [Citing](https://docs.acados.org/citing.html) and
+- [Papers featuring `acados`](https://docs.acados.org/list_of_projects/index.html#papers-featuring-acados).

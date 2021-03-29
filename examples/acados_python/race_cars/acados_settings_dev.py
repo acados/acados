@@ -34,7 +34,7 @@
 # author: Daniel Kloeser
 
 from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver
-from bycicle_model import bycicle_model
+from bicycle_model import bicycle_model
 import scipy.linalg
 import numpy as np
 
@@ -44,7 +44,7 @@ def acados_settings(Tf, N, track_file):
     ocp = AcadosOcp()
 
     # export model
-    model, constraint = bycicle_model(track_file)
+    model, constraint = bicycle_model(track_file)
 
     # define acados ODE
     model_ac = AcadosModel()

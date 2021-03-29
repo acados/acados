@@ -54,15 +54,18 @@ function ocp_generate_c_code(obj)
     end
 
     % cost
-    if strcmp(obj.model_struct.cost_type, 'nonlinear_ls')
+    if (strcmp(obj.model_struct.cost_type, 'nonlinear_ls') || ...
+        strcmp(obj.model_struct.cost_type_0, 'nonlinear_ls') || strcmp(obj.model_struct.cost_type_e, 'nonlinear_ls'))
         generate_c_code_nonlinear_least_squares( obj.model_struct, obj.opts_struct,...
               fullfile(pwd, 'c_generated_code', [obj.model_struct.name '_cost']) );
-    elseif strcmp(obj.model_struct.cost_type, 'ext_cost')
-        generate_c_code_ext_cost( obj.model_struct, obj.opts_struct,...
+    elseif (strcmp(obj.model_struct.cost_type, 'ext_cost') || ...
+            strcmp(obj.model_struct.cost_type_0, 'ext_cost') || strcmp(obj.model_struct.cost_type_e, 'ext_cost'))
+            generate_c_code_ext_cost( obj.model_struct, obj.opts_struct,...
               fullfile(pwd, 'c_generated_code', [obj.model_struct.name '_cost']) );
     end
     % constraints
-    if strcmp(obj.model_struct.constr_type, 'bgh') && obj.model_struct.dim_nh > 0
+    if ((strcmp(obj.model_struct.constr_type, 'bgh') && obj.model_struct.dim_nh > 0) || ...
+        (strcmp(obj.model_struct.constr_type_e, 'bgh') && obj.model_struct.dim_nh_e > 0))
         generate_c_code_nonlinear_constr( obj.model_struct, obj.opts_struct,...
               fullfile(pwd, 'c_generated_code', [obj.model_struct.name '_constraints']) );
     end
@@ -107,6 +110,11 @@ function ocp_generate_c_code(obj)
 
     % for cost type not LINEAR_LS, fill matrices with zeros
     if ~strcmp(cost.cost_type, 'LINEAR_LS')
+        cost.Vx_0 = zeros(dims.ny_0, dims.nx);
+        cost.Vu_0 = zeros(dims.ny_0, dims.nu);
+        cost.Vz_0 = zeros(dims.ny_0, dims.nz);
+    end
+    if ~strcmp(cost.cost_type, 'LINEAR_LS')
         cost.Vx = zeros(dims.ny, dims.nx);
         cost.Vu = zeros(dims.ny, dims.nu);
         cost.Vz = zeros(dims.ny, dims.nz);
@@ -146,6 +154,9 @@ function ocp_generate_c_code(obj)
                     num2str( size(constr.(fields{i}) )) , 10,...
                     e.message ]);
             end
+            if this_dims(1) == 1 && length(property_dim_names) ~= 1 % matrix with 1 row
+                constr.(fields{i}) = {constr.(fields{i})};
+            end
         end
     end
     obj.acados_ocp_nlp_json.constraints = constr;
@@ -169,6 +180,9 @@ function ocp_generate_c_code(obj)
                     ' to dimension ' num2str(this_dims), ', got ',...
                     num2str( size(cost.(fields{i}) )) , 10,...
                     e.message ]);
+            end
+            if this_dims(1) == 1 && length(property_dim_names) ~= 1 % matrix with 1 row
+                cost.(fields{i}) = {cost.(fields{i})};
             end
         end
     end
@@ -194,8 +208,12 @@ function ocp_generate_c_code(obj)
                     num2str( size(opts.(fields{i}) )) , 10,...
                     e.message ]);
             end
+            if this_dims(1) == 1 && length(property_dim_names) ~= 1 % matrix with 1 row
+                opts.(fields{i}) = {opts.(fields{i})};
+            end
         end
     end
+    opts.time_steps = reshape(num2cell(opts.time_steps), [1, dims.N]);
     obj.acados_ocp_nlp_json.solver_options = opts;
 
     % parameter values

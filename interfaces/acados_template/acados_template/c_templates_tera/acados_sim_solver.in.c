@@ -436,6 +436,12 @@ int {{ model.name }}_acados_sim_update_params(double *p, int np)
     int status = 0;
     int casadi_np = {{ dims.np }};
 
+    if (casadi_np != np) {
+        printf("{{ model.name }}_acados_sim_update_params: trying to set %i parameters for external functions."
+            " External function has %i parameters. Exiting.\n", np, casadi_np);
+        exit(1);
+    }
+
 {%- if solver_options.integrator_type == "ERK" %}
     sim_forw_vde_casadi[0].set_param(sim_forw_vde_casadi, p);
     sim_expl_ode_fun_casadi[0].set_param(sim_expl_ode_fun_casadi, p);

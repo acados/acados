@@ -326,7 +326,7 @@ typedef struct
 
 
 // gnsf dims
-int sim_gnsf_dims_calculate_size();
+acados_size_t sim_gnsf_dims_calculate_size();
 void *sim_gnsf_dims_assign(void *config_, void *raw_memory);
 
 // get & set functions
@@ -334,14 +334,14 @@ void sim_gnsf_dims_set(void *config_, void *dims_, const char *field, const int 
 void sim_gnsf_dims_get(void *config_, void *dims_, const char *field, int* value);
 
 // opts
-int sim_gnsf_opts_calculate_size(void *config, void *dims);
+acados_size_t sim_gnsf_opts_calculate_size(void *config, void *dims);
 void *sim_gnsf_opts_assign(void *config, void *dims, void *raw_memory);
 void sim_gnsf_opts_initialize_default(void *config, void *dims, void *opts_);
 void sim_gnsf_opts_update(void *config_, void *dims, void *opts_);
 void sim_gnsf_opts_set(void *config_, void *opts_, const char *field, void *value);
 
 // model
-int sim_gnsf_model_calculate_size(void *config, void *dims_);
+acados_size_t sim_gnsf_model_calculate_size(void *config, void *dims_);
 void *sim_gnsf_model_assign(void *config, void *dims_, void *raw_memory);
 int sim_gnsf_model_set(void *model_, const char *field, void *value);
 
@@ -350,8 +350,8 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
                        void *work_);
 
 // workspace & memory
-int sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *args);
-int sim_gnsf_memory_calculate_size(void *config, void *dims_, void *opts_);
+acados_size_t sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *args);
+acados_size_t sim_gnsf_memory_calculate_size(void *config, void *dims_, void *opts_);
 void *sim_gnsf_memory_assign(void *config, void *dims_, void *opts_, void *raw_memory);
 
 // interface

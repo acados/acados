@@ -96,15 +96,15 @@ typedef struct
 } colmaj_ocp_qp_res;
 
 //
-int colmaj_ocp_qp_in_calculate_size(ocp_qp_dims *dims);
+acados_size_t colmaj_ocp_qp_in_calculate_size(ocp_qp_dims *dims);
 //
 char *assign_colmaj_ocp_qp_in(ocp_qp_dims *dims, colmaj_ocp_qp_in **qp_in, void *ptr);
 //
-int colmaj_ocp_qp_out_calculate_size(ocp_qp_dims *dims);
+acados_size_t colmaj_ocp_qp_out_calculate_size(ocp_qp_dims *dims);
 //
 char *assign_colmaj_ocp_qp_out(ocp_qp_dims *dims, colmaj_ocp_qp_out **qp_out, void *ptr);
 //
-int colmaj_ocp_qp_res_calculate_size(ocp_qp_dims *dims);
+acados_size_t colmaj_ocp_qp_res_calculate_size(ocp_qp_dims *dims);
 //
 char *assign_colmaj_ocp_qp_res(ocp_qp_dims *dims, colmaj_ocp_qp_res **qp_res, void *ptr);
 //

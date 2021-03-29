@@ -32,22 +32,17 @@
 #
 
 import os
-from casadi import SX, MX, Function, transpose, vertcat, horzcat, jacobian, CasadiMeta
-from .utils import ALLOWED_CASADI_VERSIONS
+from casadi import SX, MX, Function, transpose, vertcat, horzcat, hessian, CasadiMeta
+from .utils import ALLOWED_CASADI_VERSIONS, casadi_version_warning
 
 
-def generate_c_code_external_cost(model, is_terminal):
+def generate_c_code_external_cost(model, stage_type, opts):
 
     casadi_version = CasadiMeta.version()
     casadi_opts = dict(mex=False, casadi_int="int", casadi_real="double")
 
     if casadi_version not in (ALLOWED_CASADI_VERSIONS):
-        msg = "Please download and install CasADi {} ".format(
-            " or ".join(ALLOWED_CASADI_VERSIONS)
-        )
-        msg += "to ensure compatibility with acados.\n"
-        msg += "Version {} currently in use.".format(casadi_version)
-        raise Exception(msg)
+        casadi_version_warning(casadi_version)
 
     x = model.x
     p = model.p
@@ -57,50 +52,50 @@ def generate_c_code_external_cost(model, is_terminal):
     else:
         symbol = SX.sym
 
-    if is_terminal:
+    if stage_type == 'terminal':
         suffix_name = "_cost_ext_cost_e_fun"
         suffix_name_hess = "_cost_ext_cost_e_fun_jac_hess"
         suffix_name_jac = "_cost_ext_cost_e_fun_jac"
         u = symbol("u", 0, 0)
         ext_cost = model.cost_expr_ext_cost_e
 
-    else:
+    elif stage_type == 'path':
         suffix_name = "_cost_ext_cost_fun"
         suffix_name_hess = "_cost_ext_cost_fun_jac_hess"
         suffix_name_jac = "_cost_ext_cost_fun_jac"
         u = model.u
         ext_cost = model.cost_expr_ext_cost
 
+    elif stage_type == 'initial':
+        suffix_name = "_cost_ext_cost_0_fun"
+        suffix_name_hess = "_cost_ext_cost_0_fun_jac_hess"
+        suffix_name_jac = "_cost_ext_cost_0_fun_jac"
+        u = model.u
+        ext_cost = model.cost_expr_ext_cost_0
 
     # set up functions to be exported
     fun_name = model.name + suffix_name
     fun_name_hess = model.name + suffix_name_hess
     fun_name_jac = model.name + suffix_name_jac
 
-
-    # generate jacobians
-    jac_x = jacobian(ext_cost, x)
-    jac_u = jacobian(ext_cost, u)
-    # generate hessians
-    hess_uu = jacobian(jac_u.T, u)
-    hess_xu = jacobian(jac_u.T, x)
-    hess_ux = jacobian(jac_x.T, u)
-    hess_xx = jacobian(jac_x.T, x)
-    full_hess = vertcat(horzcat(hess_uu, hess_xu), horzcat(hess_ux, hess_xx))
+    # generate expression for full gradient and Hessian
+    full_hess, grad = hessian(ext_cost, vertcat(u, x))
 
     ext_cost_fun = Function(fun_name, [x, u, p], [ext_cost])
     ext_cost_fun_jac_hess = Function(
-        fun_name_hess, [x, u, p], [ext_cost, vertcat(jac_u.T, jac_x.T), full_hess]
+        fun_name_hess, [x, u, p], [ext_cost, grad, full_hess]
     )
     ext_cost_fun_jac = Function(
-        fun_name_jac, [x, u, p], [ext_cost, vertcat(jac_u.T, jac_x.T)]
+        fun_name_jac, [x, u, p], [ext_cost, grad]
     )
 
     # generate C code
-    if not os.path.exists("c_generated_code"):
-        os.mkdir("c_generated_code")
+    code_export_dir = opts["code_export_directory"]
+    if not os.path.exists(code_export_dir):
+        os.makedirs(code_export_dir)
 
-    os.chdir("c_generated_code")
+    cwd = os.getcwd()
+    os.chdir(code_export_dir)
     gen_dir = model.name + '_cost'
     if not os.path.exists(gen_dir):
         os.mkdir(gen_dir)
@@ -111,5 +106,5 @@ def generate_c_code_external_cost(model, is_terminal):
     ext_cost_fun_jac_hess.generate(fun_name_hess, casadi_opts)
     ext_cost_fun_jac.generate(fun_name_jac, casadi_opts)
 
-    os.chdir("../..")
+    os.chdir(cwd)
     return

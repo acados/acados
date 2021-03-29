@@ -73,20 +73,20 @@ extern "C" {
  * config
  ************************************************/
 
-typedef struct
+typedef struct ocp_nlp_config
 {
     int N;  // number of stages
 
     // solver-specific implementations of memory management functions
-    int (*opts_calculate_size)(void *config, void *dims);
+    acados_size_t (*opts_calculate_size)(void *config, void *dims);
     void *(*opts_assign)(void *config, void *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config, void *dims, void *opts_);
     void (*opts_update)(void *config, void *dims, void *opts_);
-    int (*memory_calculate_size)(void *config, void *dims, void *opts_);
+    acados_size_t (*memory_calculate_size)(void *config, void *dims, void *opts_);
     void *(*memory_assign)(void *config, void *dims, void *opts_, void *raw_memory);
-    int (*workspace_calculate_size)(void *config, void *dims, void *opts_);
+    acados_size_t (*workspace_calculate_size)(void *config, void *dims, void *opts_);
     void (*opts_set)(void *config_, void *opts_, const char *field, void* value);
-    void (*opts_set_at_stage)(void *config_, void *opts_, int stage, const char *field, void* value);
+    void (*opts_set_at_stage)(void *config_, void *opts_, size_t stage, const char *field, void* value);
     // evaluate solver // TODO rename into solve
     int (*evaluate)(void *config, void *dims, void *nlp_in, void *nlp_out, void *opts_, void *mem, void *work);
     void (*eval_param_sens)(void *config, void *dims, void *opts_, void *mem, void *work,
@@ -109,7 +109,7 @@ typedef struct
 } ocp_nlp_config;
 
 //
-int ocp_nlp_config_calculate_size(int N);
+acados_size_t ocp_nlp_config_calculate_size(int N);
 //
 ocp_nlp_config *ocp_nlp_config_assign(int N, void *raw_memory);
 
@@ -120,7 +120,7 @@ ocp_nlp_config *ocp_nlp_config_assign(int N, void *raw_memory);
  ************************************************/
 
 /// Structure to store dimensions/number of variables.
-typedef struct
+typedef struct ocp_nlp_dims
 {
     void **cost;
     void **dynamics;
@@ -138,7 +138,7 @@ typedef struct
 } ocp_nlp_dims;
 
 //
-int ocp_nlp_dims_calculate_size(void *config);
+acados_size_t ocp_nlp_dims_calculate_size(void *config);
 //
 ocp_nlp_dims *ocp_nlp_dims_assign(void *config, void *raw_memory);
 
@@ -189,7 +189,7 @@ void ocp_nlp_dims_set_dynamics(void *config_, void *dims_, int stage, const char
  ************************************************/
 
 /// Struct for storing the inputs of an OCP NLP solver
-typedef struct
+typedef struct ocp_nlp_in
 {
     /// Length of sampling intervals/timesteps.
     double *Ts;
@@ -206,9 +206,9 @@ typedef struct
 } ocp_nlp_in;
 
 //
-int ocp_nlp_in_calculate_size_self(int N);
+acados_size_t ocp_nlp_in_calculate_size_self(int N);
 //
-int ocp_nlp_in_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims);
+acados_size_t ocp_nlp_in_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims);
 //
 ocp_nlp_in *ocp_nlp_in_assign_self(int N, void *raw_memory);
 //
@@ -219,7 +219,7 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *
  * out
  ************************************************/
 
-typedef struct
+typedef struct ocp_nlp_out
 {
     struct blasfeo_dvec *ux;  // NOTE: this contains [u; x; s_l; s_u]! - rename to uxs?
     struct blasfeo_dvec *z;  // algebraic vairables
@@ -238,7 +238,7 @@ typedef struct
 } ocp_nlp_out;
 
 //
-int ocp_nlp_out_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims);
+acados_size_t ocp_nlp_out_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims);
 //
 ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_config *config, ocp_nlp_dims *dims,
                                 void *raw_memory);
@@ -256,9 +256,8 @@ typedef enum
     MERIT_BACKTRACKING,
 } ocp_nlp_globalization_t;
 
-typedef struct
+typedef struct ocp_nlp_opts
 {
-    ocp_nlp_globalization_t globalization;
     ocp_qp_xcond_solver_opts *qp_solver_opts; // xcond solver opts instead ???
     void *regularize;
     void **dynamics;     // dynamics_opts
@@ -269,10 +268,14 @@ typedef struct
     int reuse_workspace;
     int num_threads;
 
+    // TODO: move to separate struct?
+    ocp_nlp_globalization_t globalization;
+    double alpha_min;
+    double alpha_reduction;
 } ocp_nlp_opts;
 
 //
-int ocp_nlp_opts_calculate_size(void *config, void *dims);
+acados_size_t ocp_nlp_opts_calculate_size(void *config, void *dims);
 //
 void *ocp_nlp_opts_assign(void *config, void *dims, void *raw_memory);
 //
@@ -289,7 +292,7 @@ void ocp_nlp_opts_set_at_stage(void *config, void *opts, int stage, const char *
  * residuals
  ************************************************/
 
-typedef struct
+typedef struct ocp_nlp_res
 {
     struct blasfeo_dvec *res_stat;  // stationarity
     struct blasfeo_dvec *res_eq;  // dynamics
@@ -299,11 +302,11 @@ typedef struct
     double inf_norm_res_eq;
     double inf_norm_res_ineq;
     double inf_norm_res_comp;
-    int memsize;
+    acados_size_t memsize;
 } ocp_nlp_res;
 
 //
-int ocp_nlp_res_calculate_size(ocp_nlp_dims *dims);
+acados_size_t ocp_nlp_res_calculate_size(ocp_nlp_dims *dims);
 //
 ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory);
 
@@ -311,7 +314,7 @@ ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory);
  * memory
  ************************************************/
 
-typedef struct
+typedef struct ocp_nlp_memory
 {
 //    void *qp_solver_mem; // xcond solver mem instead ???
     ocp_qp_xcond_solver_memory *qp_solver_mem; // xcond solver mem instead ???
@@ -346,7 +349,7 @@ typedef struct
 } ocp_nlp_memory;
 
 //
-int ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *opts);
+acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *opts);
 //
 ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims,
                                       ocp_nlp_opts *opts, void *raw_memory);
@@ -357,7 +360,7 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
  * workspace
  ************************************************/
 
-typedef struct
+typedef struct ocp_nlp_workspace
 {
 
     void *qp_work;
@@ -371,7 +374,7 @@ typedef struct
 } ocp_nlp_workspace;
 
 //
-int ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *opts);
+acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *opts);
 //
 ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims *dims,
                                 ocp_nlp_opts *opts, ocp_nlp_memory *mem, void *raw_memory);
@@ -396,7 +399,10 @@ void ocp_nlp_embed_initial_value(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp
                  ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
 //
 void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
-           ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
+           ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work, double alpha);
+//
+double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
 //
 double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
           ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);

@@ -60,9 +60,9 @@
  * config
  ************************************************/
 
-int ocp_qp_solver_config_calculate_size()
+acados_size_t ocp_qp_solver_config_calculate_size()
 {
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(qp_solver_config);
 
@@ -83,9 +83,9 @@ qp_solver_config *ocp_qp_solver_config_assign(void *raw_memory)
 
 
 
-int ocp_qp_condensing_config_calculate_size()
+acados_size_t ocp_qp_condensing_config_calculate_size()
 {
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_qp_xcond_config);
 
@@ -110,9 +110,9 @@ ocp_qp_xcond_config *ocp_qp_condensing_config_assign(void *raw_memory)
  * dims
  ************************************************/
 
-int ocp_qp_dims_calculate_size(int N)
+acados_size_t ocp_qp_dims_calculate_size(int N)
 {
-    int size = sizeof(ocp_qp_dims);
+    acados_size_t size = sizeof(ocp_qp_dims);
 
     size += d_ocp_qp_dim_memsize(N);
     make_int_multiple_of(8, &size);
@@ -167,9 +167,9 @@ void ocp_qp_dims_get(void *config_, void *dims, int stage, const char *field, in
  * in
  ************************************************/
 
-int ocp_qp_in_calculate_size(ocp_qp_dims *dims)
+acados_size_t ocp_qp_in_calculate_size(ocp_qp_dims *dims)
 {
-    int size = sizeof(ocp_qp_in);
+    acados_size_t size = sizeof(ocp_qp_in);
     size += d_ocp_qp_memsize(dims);
     size += ocp_qp_dims_calculate_size(dims->N);  // TODO(all): remove !!!
     size += 2*8; // aligns
@@ -211,9 +211,9 @@ ocp_qp_in *ocp_qp_in_assign(ocp_qp_dims *dims, void *raw_memory)
  * out
  ************************************************/
 
-int ocp_qp_out_calculate_size(ocp_qp_dims *dims)
+acados_size_t ocp_qp_out_calculate_size(ocp_qp_dims *dims)
 {
-    int size = sizeof(ocp_qp_out);
+    acados_size_t size = sizeof(ocp_qp_out);
     size += d_ocp_qp_sol_memsize(dims);
     size += ocp_qp_dims_calculate_size(dims->N);  // TODO(all): remove !!!
     size += sizeof(qp_info); // TODO move to memory !!!
@@ -261,9 +261,9 @@ ocp_qp_out *ocp_qp_out_assign(ocp_qp_dims *dims, void *raw_memory)
  * res
  ************************************************/
 
-int ocp_qp_res_calculate_size(ocp_qp_dims *dims)
+acados_size_t ocp_qp_res_calculate_size(ocp_qp_dims *dims)
 {
-    int size = sizeof(ocp_qp_res);
+    acados_size_t size = sizeof(ocp_qp_res);
     size += d_ocp_qp_res_memsize(dims);
     return size;
 }
@@ -287,9 +287,9 @@ ocp_qp_res *ocp_qp_res_assign(ocp_qp_dims *dims, void *raw_memory)
 
 
 
-int ocp_qp_res_workspace_calculate_size(ocp_qp_dims *dims)
+acados_size_t ocp_qp_res_workspace_calculate_size(ocp_qp_dims *dims)
 {
-    int size = sizeof(ocp_qp_res_ws);
+    acados_size_t size = sizeof(ocp_qp_res_ws);
     size += d_ocp_qp_res_ws_memsize(dims);
     return size;
 }

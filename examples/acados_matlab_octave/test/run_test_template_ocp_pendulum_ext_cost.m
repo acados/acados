@@ -51,13 +51,7 @@ end
 
 %% ocp tests
 try
-    test_ocp_pendulum_on_cart;
-    test_ocp_wtnx6;
-    test_ocp_pendulum_dae;
-    test_ocp_linear_mass_spring;
-    test_ocp_simple_dae;
+    test_template_pendulum_ocp('ext_cost');
 catch exception
     exit_with_error(exception);
 end
-
-fprintf('\nrun_tests_ocp: success!\n\n');

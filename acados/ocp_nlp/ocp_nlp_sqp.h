@@ -74,7 +74,7 @@ typedef struct
 } ocp_nlp_sqp_opts;
 
 //
-int ocp_nlp_sqp_opts_calculate_size(void *config, void *dims);
+acados_size_t ocp_nlp_sqp_opts_calculate_size(void *config, void *dims);
 //
 void *ocp_nlp_sqp_opts_assign(void *config, void *dims, void *raw_memory);
 //
@@ -84,7 +84,7 @@ void ocp_nlp_sqp_opts_update(void *config, void *dims, void *opts);
 //
 void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* value);
 //
-void ocp_nlp_sqp_opts_set_at_stage(void *config_, void *opts_, int stage, const char *field, void* value);
+void ocp_nlp_sqp_opts_set_at_stage(void *config_, void *opts_, size_t stage, const char *field, void* value);
 
 
 
@@ -103,6 +103,7 @@ typedef struct
     double time_lin;
     double time_reg;
     double time_tot;
+    double time_glob;
 
     // statistics
     double *stat;
@@ -115,7 +116,7 @@ typedef struct
 } ocp_nlp_sqp_memory;
 
 //
-int ocp_nlp_sqp_memory_calculate_size(void *config, void *dims, void *opts_);
+acados_size_t ocp_nlp_sqp_memory_calculate_size(void *config, void *dims, void *opts_);
 //
 void *ocp_nlp_sqp_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
 
@@ -140,7 +141,7 @@ typedef struct
 } ocp_nlp_sqp_workspace;
 
 //
-int ocp_nlp_sqp_workspace_calculate_size(void *config, void *dims, void *opts_);
+acados_size_t ocp_nlp_sqp_workspace_calculate_size(void *config, void *dims, void *opts_);
 
 
 

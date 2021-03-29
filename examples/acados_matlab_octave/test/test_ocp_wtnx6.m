@@ -92,12 +92,9 @@ ny = 4; % number of outputs in lagrange term
 ny_e = 2; % number of outputs in mayer term
 nbx = 3;
 nbu = nu;
-ng = 0;
-ng_e = 0;
 nh = 1;
 nh_e = 1;
 ns = 2;
-%ns = 1;
 ns_e = 2;
 %ns_e = 1;
 nsbx = 1;
@@ -184,11 +181,6 @@ Jsh = zeros(nh, nsh);
 Jsh(1, 1) = 1.0;
 Jsh_e = zeros(nh_e, nsh_e);
 Jsh_e(1, 1) = 1.0;
-
-% shift
-x_end = zeros(nx, 1);
-u_end = zeros(nu, 1);
-
 
 
 %% acados ocp model

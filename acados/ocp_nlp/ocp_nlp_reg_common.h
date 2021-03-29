@@ -63,7 +63,7 @@ typedef struct
 } ocp_nlp_reg_dims;
 
 //
-int ocp_nlp_reg_dims_calculate_size(int N);
+acados_size_t ocp_nlp_reg_dims_calculate_size(int N);
 //
 ocp_nlp_reg_dims *ocp_nlp_reg_dims_assign(int N, void *raw_memory);
 //
@@ -76,16 +76,16 @@ void ocp_nlp_reg_dims_set(void *config_, ocp_nlp_reg_dims *dims, int stage, char
 typedef struct
 {
     /* dims */
-    int (*dims_calculate_size)(int N);
+    acados_size_t (*dims_calculate_size)(int N);
     ocp_nlp_reg_dims *(*dims_assign)(int N, void *raw_memory);
     void (*dims_set)(void *config, ocp_nlp_reg_dims *dims, int stage, char *field, int *value);
     /* opts */
-    int (*opts_calculate_size)(void);
+    acados_size_t (*opts_calculate_size)(void);
     void *(*opts_assign)(void *raw_memory);
     void (*opts_initialize_default)(void *config, ocp_nlp_reg_dims *dims, void *opts);
     void (*opts_set)(void *config, ocp_nlp_reg_dims *dims, void *opts, char *field, void* value);
     /* memory */
-    int (*memory_calculate_size)(void *config, ocp_nlp_reg_dims *dims, void *opts);
+    acados_size_t (*memory_calculate_size)(void *config, ocp_nlp_reg_dims *dims, void *opts);
     void *(*memory_assign)(void *config, ocp_nlp_reg_dims *dims, void *opts, void *raw_memory);
     void (*memory_set)(void *config, ocp_nlp_reg_dims *dims, void *memory, char *field, void* value);
     void (*memory_set_RSQrq_ptr)(ocp_nlp_reg_dims *dims, struct blasfeo_dmat *mat, void *memory);
@@ -103,7 +103,7 @@ typedef struct
 } ocp_nlp_reg_config;
 
 //
-int ocp_nlp_reg_config_calculate_size(void);
+acados_size_t ocp_nlp_reg_config_calculate_size(void);
 //
 void *ocp_nlp_reg_config_assign(void *raw_memory);
 

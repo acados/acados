@@ -41,102 +41,92 @@
 extern "C" {
 #endif
 
-int acados_create();
-int acados_update_params(int stage, double *value, int np);
-int acados_solve();
-int acados_free();
-void acados_print_stats();
+// ** capsule for solver data **
+typedef struct nlp_solver_capsule
+{
+    // acados objects
+    ocp_nlp_in *nlp_in;
+    ocp_nlp_out *nlp_out;
+    ocp_nlp_solver *nlp_solver;
+    void *nlp_opts;
+    ocp_nlp_plan *nlp_solver_plan;
+    ocp_nlp_config *nlp_config;
+    ocp_nlp_dims *nlp_dims;
 
-ocp_nlp_in * acados_get_nlp_in();
-ocp_nlp_out * acados_get_nlp_out();
-ocp_nlp_solver * acados_get_nlp_solver();
-ocp_nlp_config * acados_get_nlp_config();
-void * acados_get_nlp_opts();
-ocp_nlp_dims * acados_get_nlp_dims();
-ocp_nlp_plan * acados_get_nlp_plan();
+    // number of expected runtime parameters
+    unsigned int nlp_np;
+
+    /* external functions */
+    // dynamics
+    external_function_param_casadi *forw_vde_casadi;
+    external_function_param_casadi *expl_ode_fun;
+    external_function_param_casadi *hess_vde_casadi;
+    external_function_param_casadi *impl_dae_fun;
+    external_function_param_casadi *impl_dae_fun_jac_x_xdot_z;
+    external_function_param_casadi *impl_dae_jac_x_xdot_u_z;
+    external_function_param_casadi *impl_dae_hess;
+    external_function_param_casadi *gnsf_phi_fun;
+    external_function_param_casadi *gnsf_phi_fun_jac_y;
+    external_function_param_casadi *gnsf_phi_jac_y_uhat;
+    external_function_param_casadi *gnsf_f_lo_jac_x1_x1dot_u_z;
+    external_function_param_casadi *gnsf_get_matrices_fun;
+    external_function_param_casadi *discr_dyn_phi_fun;
+    external_function_param_casadi *discr_dyn_phi_fun_jac_ut_xt;
+    external_function_param_casadi *discr_dyn_phi_fun_jac_ut_xt_hess;
+
+    // cost
+    external_function_param_casadi *cost_y_fun;
+    external_function_param_casadi *cost_y_fun_jac_ut_xt;
+    external_function_param_casadi *cost_y_hess;
+    external_function_param_casadi *ext_cost_fun;
+    external_function_param_casadi *ext_cost_fun_jac;
+    external_function_param_casadi *ext_cost_fun_jac_hess;
+
+    external_function_param_casadi cost_y_0_fun;
+    external_function_param_casadi cost_y_0_fun_jac_ut_xt;
+    external_function_param_casadi cost_y_0_hess;
+    external_function_param_casadi ext_cost_0_fun;
+    external_function_param_casadi ext_cost_0_fun_jac;
+    external_function_param_casadi ext_cost_0_fun_jac_hess;
+
+    external_function_param_casadi cost_y_e_fun;
+    external_function_param_casadi cost_y_e_fun_jac_ut_xt;
+    external_function_param_casadi cost_y_e_hess;
+    external_function_param_casadi ext_cost_e_fun;
+    external_function_param_casadi ext_cost_e_fun_jac;
+    external_function_param_casadi ext_cost_e_fun_jac_hess;
+
+    // constraints
+    external_function_param_casadi *phi_constraint;
+    external_function_param_casadi *nl_constr_h_fun_jac;
+    external_function_param_casadi *nl_constr_h_fun;
+    external_function_param_casadi *nl_constr_h_fun_jac_hess;
+
+    external_function_param_casadi phi_e_constraint;
+    external_function_param_casadi nl_constr_h_e_fun_jac;
+    external_function_param_casadi nl_constr_h_e_fun;
+    external_function_param_casadi nl_constr_h_e_fun_jac_hess;
+} nlp_solver_capsule;
+
+nlp_solver_capsule * {{ model.name }}_acados_create_capsule();
+int {{ model.name }}_acados_free_capsule(nlp_solver_capsule *capsule);
+
+int {{ model.name }}_acados_create(nlp_solver_capsule * capsule);
+int {{ model.name }}_acados_update_params(nlp_solver_capsule * capsule, int stage, double *value, int np);
+int {{ model.name }}_acados_solve(nlp_solver_capsule * capsule);
+int {{ model.name }}_acados_free(nlp_solver_capsule * capsule);
+void {{ model.name }}_acados_print_stats(nlp_solver_capsule * capsule);
+
+ocp_nlp_in *{{ model.name }}_acados_get_nlp_in(nlp_solver_capsule * capsule);
+ocp_nlp_out *{{ model.name }}_acados_get_nlp_out(nlp_solver_capsule * capsule);
+ocp_nlp_solver *{{ model.name }}_acados_get_nlp_solver(nlp_solver_capsule * capsule);
+ocp_nlp_config *{{ model.name }}_acados_get_nlp_config(nlp_solver_capsule * capsule);
+void *{{ model.name }}_acados_get_nlp_opts(nlp_solver_capsule * capsule);
+ocp_nlp_dims *{{ model.name }}_acados_get_nlp_dims(nlp_solver_capsule * capsule);
+ocp_nlp_plan *{{ model.name }}_acados_get_nlp_plan(nlp_solver_capsule * capsule);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
-
-// ** global data **
-// acados objects
-extern ocp_nlp_in * nlp_in;
-extern ocp_nlp_out * nlp_out;
-extern ocp_nlp_solver * nlp_solver;
-extern void * nlp_opts;
-extern ocp_nlp_plan * nlp_solver_plan;
-extern ocp_nlp_config * nlp_config;
-extern ocp_nlp_dims * nlp_dims;
-
-// number of expected runtime parameters
-extern const unsigned int nlp_np;
-
-/* external functions */
-// dynamics
-{% if solver_options.integrator_type == "ERK" %}
-extern external_function_param_casadi * forw_vde_casadi;
-extern external_function_param_casadi * expl_ode_fun;
-{% if solver_options.hessian_approx == "EXACT" %}
-extern external_function_param_casadi * hess_vde_casadi;
-{%- endif %}
-{% elif solver_options.integrator_type == "IRK" %}
-extern external_function_param_casadi * impl_dae_fun;
-extern external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
-extern external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
-{%- if solver_options.hessian_approx == "EXACT" %}
-extern external_function_param_casadi * impl_dae_hess;
-{%- endif %}
-{% elif solver_options.integrator_type == "GNSF" %}
-extern external_function_param_casadi * gnsf_phi_fun;
-extern external_function_param_casadi * gnsf_phi_fun_jac_y;
-extern external_function_param_casadi * gnsf_phi_jac_y_uhat;
-extern external_function_param_casadi * gnsf_f_lo_jac_x1_x1dot_u_z;
-extern external_function_param_casadi * gnsf_get_matrices_fun;
-{% elif solver_options.integrator_type == "DISCRETE" %}
-extern external_function_param_casadi * discr_dyn_phi_fun;
-extern external_function_param_casadi * discr_dyn_phi_fun_jac_ut_xt;
-{%- if solver_options.hessian_approx == "EXACT" %}
-extern external_function_param_casadi * discr_dyn_phi_fun_jac_ut_xt_hess;
-{%- endif %}
-{%- endif %}
-
-// cost
-{% if cost.cost_type == "NONLINEAR_LS" %}
-extern external_function_param_casadi * cost_y_fun;
-extern external_function_param_casadi * cost_y_fun_jac_ut_xt;
-extern external_function_param_casadi * cost_y_hess;
-{%- elif cost.cost_type == "EXTERNAL" %}
-extern external_function_param_casadi * ext_cost_fun;
-extern external_function_param_casadi * ext_cost_fun_jac;
-extern external_function_param_casadi * ext_cost_fun_jac_hess;
-{% endif %}
-{% if cost.cost_type_e == "NONLINEAR_LS" %}
-extern external_function_param_casadi cost_y_e_fun;
-extern external_function_param_casadi cost_y_e_fun_jac_ut_xt;
-extern external_function_param_casadi cost_y_e_hess;
-{% elif cost.cost_type_e == "EXTERNAL" %}
-extern external_function_param_casadi ext_cost_e_fun;
-extern external_function_param_casadi ext_cost_e_fun_jac;
-extern external_function_param_casadi ext_cost_e_fun_jac_hess;
-{%- endif %}
-
-// constraints
-{%- if constraints.constr_type == "BGP" %}
-extern external_function_param_casadi * phi_constraint;
-{% elif constraints.constr_type == "BGH" and dims.nh > 0 %}
-extern external_function_param_casadi * nl_constr_h_fun_jac;
-extern external_function_param_casadi * nl_constr_h_fun;
-extern external_function_param_casadi * nl_constr_h_fun_jac_hess;
-{% endif %}
-
-{% if constraints.constr_type_e == "BGP" %}
-extern external_function_param_casadi phi_e_constraint;
-{% elif constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
-extern external_function_param_casadi nl_constr_h_e_fun_jac;
-extern external_function_param_casadi nl_constr_h_e_fun;
-extern external_function_param_casadi nl_constr_h_e_fun_jac_hess;
-{%- endif %}
-
 
 #endif  // ACADOS_SOLVER_{{ model.name }}_H_

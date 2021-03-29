@@ -57,9 +57,9 @@
  * dims
  ************************************************/
 
-int ocp_qp_partial_condensing_dims_calculate_size(void *config_, int N)
+acados_size_t ocp_qp_partial_condensing_dims_calculate_size(void *config_, int N)
 {
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_qp_partial_condensing_dims);
 
@@ -163,23 +163,23 @@ void ocp_qp_partial_condensing_dims_get(void *config_, void *dims_, const char *
  * opts
  ************************************************/
 
-int ocp_qp_partial_condensing_opts_calculate_size(void *dims_)
+acados_size_t ocp_qp_partial_condensing_opts_calculate_size(void *dims_)
 {
     ocp_qp_partial_condensing_dims *dims = dims_;
 
-    int N = dims->orig_dims->N;
+    size_t N = dims->orig_dims->N;
 
     // populate dimensions of reduced qp
     d_ocp_qp_dim_reduce_eq_dof(dims->orig_dims, dims->red_dims);
 
     // (temporarely) populate dimensions of new ocp_qp based on N2==N
-    int N2 = N;
+    size_t N2 = N;
     dims->pcond_dims->N = N2;
     // TODO(all): user-defined block size
     d_part_cond_qp_compute_block_size(dims->red_dims->N, N2, dims->block_size);
     d_part_cond_qp_compute_dim(dims->red_dims, dims->block_size, dims->pcond_dims);
 
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_qp_partial_condensing_opts);
 
@@ -314,7 +314,7 @@ void ocp_qp_partial_condensing_opts_set(void *opts_, const char *field, void* va
  * memory
  ************************************************/
 
-int ocp_qp_partial_condensing_memory_calculate_size(void *dims_, void *opts_)
+acados_size_t ocp_qp_partial_condensing_memory_calculate_size(void *dims_, void *opts_)
 {
     ocp_qp_partial_condensing_opts *opts = opts_;
     ocp_qp_partial_condensing_dims *dims = dims_;
@@ -328,7 +328,7 @@ int ocp_qp_partial_condensing_memory_calculate_size(void *dims_, void *opts_)
     d_part_cond_qp_compute_block_size(dims->red_dims->N, opts->N2, dims->block_size);
     d_part_cond_qp_compute_dim(dims->red_dims, dims->block_size, dims->pcond_dims);
 
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_qp_partial_condensing_memory);
 
@@ -447,7 +447,7 @@ void ocp_qp_partial_condensing_memory_get(void *config_, void *mem_, const char 
  * workspace
  ************************************************/
 
-int ocp_qp_partial_condensing_workspace_calculate_size(void *dims_, void *opts_)
+acados_size_t ocp_qp_partial_condensing_workspace_calculate_size(void *dims_, void *opts_)
 {
     return 0;
 }

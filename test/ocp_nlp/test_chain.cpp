@@ -1222,8 +1222,8 @@ void setup_and_solve_nlp(int NN,
                     BLASFEO_DMATEL(&stage_cost_ls->W, nx[i]+j, nx[i]+j) = diag_cost_u[j];
 
                 // y_ref
-                blasfeo_pack_dvec(nx[i], xref, &stage_cost_ls->y_ref, 0);
-                blasfeo_pack_dvec(nu[i], uref, &stage_cost_ls->y_ref, nx[i]);
+                blasfeo_pack_dvec(nx[i], xref, 1, &stage_cost_ls->y_ref, 0);
+                blasfeo_pack_dvec(nu[i], uref, 1, &stage_cost_ls->y_ref, nx[i]);
                 break;
 
             case NONLINEAR_LS:
@@ -1241,8 +1241,8 @@ void setup_and_solve_nlp(int NN,
                     BLASFEO_DMATEL(&stage_cost_nls->W, nx[i]+j, nx[i]+j) = diag_cost_u[j];
 
                 // y_ref
-                blasfeo_pack_dvec(nx[i], xref, &stage_cost_nls->y_ref, 0);
-                blasfeo_pack_dvec(nu[i], uref, &stage_cost_nls->y_ref, nx[i]);
+                blasfeo_pack_dvec(nx[i], xref, 1, &stage_cost_nls->y_ref, 0);
+                blasfeo_pack_dvec(nu[i], uref, 1, &stage_cost_nls->y_ref, nx[i]);
                 break;
 
             case EXTERNAL:
@@ -1326,8 +1326,8 @@ void setup_and_solve_nlp(int NN,
     switch (con_type)
     {
         case BOX:
-            blasfeo_pack_dvec(nb[0], lb0, &constraints[0]->d, 0);
-            blasfeo_pack_dvec(nb[0], ub0, &constraints[0]->d, nb[0]+ng[0]);
+            blasfeo_pack_dvec(nb[0], lb0, 1, &constraints[0]->d, 0);
+            blasfeo_pack_dvec(nb[0], ub0, 1, &constraints[0]->d, nb[0]+ng[0]);
             constraints[0]->idxb = idxb0;
             break;
         case GENERAL:
@@ -1341,8 +1341,8 @@ void setup_and_solve_nlp(int NN,
 
             blasfeo_pack_tran_dmat(ng[0], nu[0], Cu0, ng[0], &constraints[0]->DCt, 0, 0);
             blasfeo_pack_tran_dmat(ng[0], nx[0], Cx0, ng[0], &constraints[0]->DCt, nu[0], 0);
-            blasfeo_pack_dvec(ng[0], lb0, &constraints[0]->d, nb[0]);
-            blasfeo_pack_dvec(ng[0], ub0, &constraints[0]->d, 2*nb[0]+ng[0]);
+            blasfeo_pack_dvec(ng[0], lb0, 1, &constraints[0]->d, nb[0]);
+            blasfeo_pack_dvec(ng[0], ub0, 1, &constraints[0]->d, 2*nb[0]+ng[0]);
 
             d_free(Cu0);
             d_free(Cx0);
@@ -1357,20 +1357,20 @@ void setup_and_solve_nlp(int NN,
                                                     nlp_in->constraints;
             nl_constr[0]->nl_constr_h_fun_jac = &nonlin_constr_generic;
 
-            blasfeo_pack_dvec(ng[0]+nh[0], lb0, &constraints[0]->d, nb[0]);
-            blasfeo_pack_dvec(ng[0]+nh[0], ub0, &constraints[0]->d, 2*nb[0]+ng[0]+nh[0]);
+            blasfeo_pack_dvec(ng[0]+nh[0], lb0, 1, &constraints[0]->d, nb[0]);
+            blasfeo_pack_dvec(ng[0]+nh[0], ub0, 1, &constraints[0]->d, 2*nb[0]+ng[0]+nh[0]);
             break;
     }
 
     // other stages
     for (int i = 1; i < NN; i++)
     {
-        blasfeo_pack_dvec(nb[i], lb1, &constraints[i]->d, 0);
-        blasfeo_pack_dvec(nb[i], ub1, &constraints[i]->d, nb[i]+ng[i]);
+        blasfeo_pack_dvec(nb[i], lb1, 1, &constraints[i]->d, 0);
+        blasfeo_pack_dvec(nb[i], ub1, 1, &constraints[i]->d, nb[i]+ng[i]);
         constraints[i]->idxb = idxb1;
     }
-    blasfeo_pack_dvec(nb[NN], lbN, &constraints[NN]->d, 0);
-    blasfeo_pack_dvec(nb[NN], ubN, &constraints[NN]->d, nb[NN]+ng[NN]);
+    blasfeo_pack_dvec(nb[NN], lbN, 1, &constraints[NN]->d, 0);
+    blasfeo_pack_dvec(nb[NN], ubN, 1, &constraints[NN]->d, nb[NN]+ng[NN]);
     constraints[NN]->idxb = idxbN;
 
     /************************************************
@@ -1429,8 +1429,8 @@ void setup_and_solve_nlp(int NN,
     // solution
     for (int i=0; i <= NN; i++)
     {
-        blasfeo_pack_dvec(nu[i], uref, nlp_out->ux+i, 0);
-        blasfeo_pack_dvec(nx[i], xref, nlp_out->ux+i, nu[i]);
+        blasfeo_pack_dvec(nu[i], uref, 1, nlp_out->ux+i, 0);
+        blasfeo_pack_dvec(nx[i], xref, 1, nlp_out->ux+i, nu[i]);
     }
 
     // call nlp solver

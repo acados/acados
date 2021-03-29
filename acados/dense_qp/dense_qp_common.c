@@ -63,9 +63,9 @@
  * config
  ************************************************/
 
-int dense_qp_solver_config_calculate_size()
+acados_size_t dense_qp_solver_config_calculate_size()
 {
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(qp_solver_config);
 
@@ -90,9 +90,9 @@ qp_solver_config *dense_qp_solver_config_assign(void *raw_memory)
  * dims
  ************************************************/
 
-int dense_qp_dims_calculate_size()
+acados_size_t dense_qp_dims_calculate_size()
 {
-    int size = sizeof(dense_qp_dims);
+    acados_size_t size = sizeof(dense_qp_dims);
 
     size += d_dense_qp_dim_memsize();
 
@@ -135,9 +135,9 @@ void dense_qp_dims_set(void *config_, void *dims_, const char *field, const int*
  * in
  ************************************************/
 
-int dense_qp_in_calculate_size(dense_qp_dims *dims)
+acados_size_t dense_qp_in_calculate_size(dense_qp_dims *dims)
 {
-    int size = sizeof(dense_qp_in);
+    acados_size_t size = sizeof(dense_qp_in);
     size += sizeof(dense_qp_dims);
     size += d_dense_qp_memsize(dims);
     return size;
@@ -179,9 +179,9 @@ dense_qp_in *dense_qp_in_assign(dense_qp_dims *dims, void *raw_memory)
  * out
  ************************************************/
 
-int dense_qp_out_calculate_size(dense_qp_dims *dims)
+acados_size_t dense_qp_out_calculate_size(dense_qp_dims *dims)
 {
-    int size = sizeof(dense_qp_out);
+    acados_size_t size = sizeof(dense_qp_out);
     size += d_dense_qp_sol_memsize(dims);
     size += sizeof(qp_info);
     size += 8;
@@ -235,9 +235,9 @@ void dense_qp_out_get(dense_qp_out *out, const char *field, void *value)
  * res
  ************************************************/
 
-int dense_qp_res_calculate_size(dense_qp_dims *dims)
+acados_size_t dense_qp_res_calculate_size(dense_qp_dims *dims)
 {
-    int size = sizeof(dense_qp_res);
+    acados_size_t size = sizeof(dense_qp_res);
     size += d_dense_qp_res_memsize(dims);
 
     make_int_multiple_of(8, &size);
@@ -263,9 +263,9 @@ dense_qp_res *dense_qp_res_assign(dense_qp_dims *dims, void *raw_memory)
 
 
 
-int dense_qp_res_workspace_calculate_size(dense_qp_dims *dims)
+acados_size_t dense_qp_res_workspace_calculate_size(dense_qp_dims *dims)
 {
-    int size = sizeof(dense_qp_res_ws);
+    acados_size_t size = sizeof(dense_qp_res_ws);
 
     size += d_dense_qp_res_ws_memsize(dims);
     make_int_multiple_of(8, &size);

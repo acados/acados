@@ -118,3 +118,6 @@ build*
 _autogen
 tags
 compile_commands.json
+
+private*
+sandbox

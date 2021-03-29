@@ -152,28 +152,28 @@ void sim_irk_dims_set(void *config_, void *dims_, const char *field, const int *
 void sim_irk_dims_get(void *config_, void *dims_, const char *field, int* value);
 
 // dims
-int sim_irk_dims_calculate_size();
+acados_size_t sim_irk_dims_calculate_size();
 void *sim_irk_dims_assign(void *config_, void *raw_memory);
 
 // model
-int sim_irk_model_calculate_size(void *config, void *dims);
+acados_size_t sim_irk_model_calculate_size(void *config, void *dims);
 void *sim_irk_model_assign(void *config, void *dims, void *raw_memory);
 int sim_irk_model_set(void *model, const char *field, void *value);
 
 // opts
-int sim_irk_opts_calculate_size(void *config, void *dims);
+acados_size_t sim_irk_opts_calculate_size(void *config, void *dims);
 void *sim_irk_opts_assign(void *config, void *dims, void *raw_memory);
 void sim_irk_opts_initialize_default(void *config, void *dims, void *opts_);
 void sim_irk_opts_update(void *config_, void *dims, void *opts_);
 void sim_irk_opts_set(void *config_, void *opts_, const char *field, void *value);
 
 // memory
-int sim_irk_memory_calculate_size(void *config, void *dims, void *opts_);
+acados_size_t sim_irk_memory_calculate_size(void *config, void *dims, void *opts_);
 void *sim_irk_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
 int sim_irk_memory_set(void *config_, void *dims_, void *mem_, const char *field, void *value);
 
 // workspace
-int sim_irk_workspace_calculate_size(void *config, void *dims, void *opts_);
+acados_size_t sim_irk_workspace_calculate_size(void *config, void *dims, void *opts_);
 void sim_irk_config_initialize_default(void *config);
 
 // main

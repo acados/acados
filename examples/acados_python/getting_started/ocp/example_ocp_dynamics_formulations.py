@@ -36,7 +36,7 @@ sys.path.insert(0, '../common')
 
 import json
 from acados_template import AcadosOcp, AcadosOcpSolver
-from export_pendulum_ode_model import export_pendulum_ode_model, export_pendulum_ode_model_with_discrete_rk4
+from pendulum_model import export_pendulum_ode_model, export_pendulum_ode_model_with_discrete_rk4
 import numpy as np
 import scipy.linalg
 from utils import plot_pendulum

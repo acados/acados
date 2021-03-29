@@ -160,28 +160,28 @@ typedef struct
     int (*evaluate)(void *config_, sim_in *in, sim_out *out, void *opts, void *mem, void *work);
     int (*precompute)(void *config_, sim_in *in, sim_out *out, void *opts, void *mem, void *work);
     // opts
-    int (*opts_calculate_size)(void *config_, void *dims);
+    acados_size_t (*opts_calculate_size)(void *config_, void *dims);
     void *(*opts_assign)(void *config_, void *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config_, void *dims, void *opts);
     void (*opts_update)(void *config_, void *dims, void *opts);
     void (*opts_set)(void *config_, void *opts_, const char *field, void *value);
     void (*opts_get)(void *config_, void *opts_, const char *field, void *value);
     // mem
-    int (*memory_calculate_size)(void *config, void *dims, void *opts);
+    acados_size_t (*memory_calculate_size)(void *config, void *dims, void *opts);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
     int (*memory_set)(void *config, void *dims, void *mem, const char *field, void *value);
     int (*memory_set_to_zero)(void *config, void *dims, void *opts, void *mem, const char *field);
     void (*memory_get)(void *config, void *dims, void *mem, const char *field, void *value);
     // work
-    int (*workspace_calculate_size)(void *config, void *dims, void *opts);
+    acados_size_t (*workspace_calculate_size)(void *config, void *dims, void *opts);
     // model
-    int (*model_calculate_size)(void *config, void *dims);
+    acados_size_t (*model_calculate_size)(void *config, void *dims);
     void *(*model_assign)(void *config, void *dims, void *raw_memory);
     int (*model_set)(void *model, const char *field, void *value);
     // config
     void (*config_initialize_default)(void *config);
     // dims
-    int (*dims_calculate_size)();
+    acados_size_t (*dims_calculate_size)();
     void *(*dims_assign)(void *config, void *raw_memory);
     void (*dims_set)(void *config, void *dims, const char *field, const int *value);
     void (*dims_get)(void *config, void *dims, const char *field, int *value);
@@ -192,13 +192,13 @@ typedef struct
 
 /* config */
 //
-int sim_config_calculate_size();
+acados_size_t sim_config_calculate_size();
 //
 sim_config *sim_config_assign(void *raw_memory);
 
 /* in */
 //
-int sim_in_calculate_size(void *config, void *dims);
+acados_size_t sim_in_calculate_size(void *config, void *dims);
 //
 sim_in *sim_in_assign(void *config, void *dims, void *raw_memory);
 //
@@ -206,7 +206,7 @@ int sim_in_set_(void *config_, void *dims_, sim_in *in, const char *field, void 
 
 /* out */
 //
-int sim_out_calculate_size(void *config, void *dims);
+acados_size_t sim_out_calculate_size(void *config, void *dims);
 //
 sim_out *sim_out_assign(void *config, void *dims, void *raw_memory);
 //

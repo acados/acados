@@ -48,10 +48,13 @@ function make_mex_{{ model.name }}()
     blasfeo_include = ['-I', fullfile(acados_folder, 'external', 'blasfeo', 'include')];
     hpipm_include = ['-I', fullfile(acados_folder, 'external', 'hpipm', 'include')];
 
+    mex_include = ['-I', fullfile(acados_folder, 'interfaces', 'acados_matlab_octave')];
+
     mex_names = { ...
-        'acados_mex_create_{{ model.name }}',...
+        'acados_mex_create_{{ model.name }}' ...
         'acados_mex_free_{{ model.name }}' ...
         'acados_mex_solve_{{ model.name }}' ...
+        'acados_mex_set_{{ model.name }}' ...
     };
 
     mex_files = cell(length(mex_names), 1);
@@ -91,7 +94,7 @@ function make_mex_{{ model.name }}()
         if is_octave()
     %        mkoctfile -p CFLAGS
             mex(acados_include, template_lib_include, external_include, blasfeo_include, hpipm_include,...
-            acados_lib_path, template_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
+            acados_lib_path, template_lib_path, mex_include, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
         else
             if ismac()
                 FLAGS = 'CFLAGS=$CFLAGS -std=c99';
@@ -99,7 +102,7 @@ function make_mex_{{ model.name }}()
                 FLAGS = 'CFLAGS=$CFLAGS -std=c99 -fopenmp';
             end
             mex(FLAGS, acados_include, template_lib_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, template_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
+                acados_lib_path, template_lib_path, mex_include, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
         end
     end
 

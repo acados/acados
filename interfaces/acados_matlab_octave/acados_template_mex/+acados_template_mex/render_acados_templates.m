@@ -102,6 +102,11 @@ function render_acados_templates(acados_ocp_nlp_json_file)
     out_file = ['acados_mex_solve_', model_name, '.c'];
     render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
 
+    % MEX set
+    template_file = 'acados_mex_set.in.c';
+    out_file = ['acados_mex_set_', model_name, '.c'];
+    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+
     % MEX class
     template_file = 'mex_solver.in.m';
     out_file = [ model_name, '_mex_solver.m'];
@@ -153,6 +158,15 @@ function render_acados_templates(acados_ocp_nlp_json_file)
     elseif strcmp(acados_ocp.cost.cost_type, 'EXTERNAL')
         template_file = 'external_cost.in.h';
         out_file = [model_name, '_external_cost.h'];
+        render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+    end
+    if strcmp(acados_ocp.cost.cost_type_0, 'NONLINEAR_LS')
+        template_file = 'cost_y_0_fun.in.h';
+        out_file = [model_name, '_cost_y_0_fun.h'];
+        render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+    elseif strcmp(acados_ocp.cost.cost_type_0, 'EXTERNAL')
+        template_file = 'external_cost_0.in.h';
+        out_file = [model_name, '_external_cost_0.h'];
         render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
     end
     if strcmp(acados_ocp.cost.cost_type_e, 'NONLINEAR_LS')

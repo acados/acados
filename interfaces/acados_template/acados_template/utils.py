@@ -37,7 +37,8 @@ import shutil
 import numpy as np
 from casadi import SX, MX, DM, Function, CasadiMeta
 
-ALLOWED_CASADI_VERSIONS = ('3.5.3', '3.5.2', '3.5.1', '3.4.5', '3.4.0')
+ALLOWED_CASADI_VERSIONS = ('3.5.5', '3.5.4', '3.5.3', '3.5.2', '3.5.1', '3.4.5', '3.4.0')
+
 TERA_VERSION = "0.0.34"
 
 def get_acados_path():
@@ -46,17 +47,32 @@ def get_acados_path():
         acados_template_path = os.path.dirname(os.path.abspath(__file__))
         acados_path = os.path.join(acados_template_path, '../../../')
         ACADOS_PATH = os.path.realpath(acados_path)
+        msg = 'Warning: Did not find environment variable ACADOS_SOURCE_DIR, '
+        msg += 'guessed ACADOS_PATH to be {}.\n'.format(ACADOS_PATH)
+        msg += 'Please export ACADOS_SOURCE_DIR to not avoid this warning.'
+        print(msg)
     return ACADOS_PATH
+
 
 def get_tera_exec_path():
     ACADOS_PATH = get_acados_path()
     return os.path.join(ACADOS_PATH, 'bin/t_renderer')
+
 
 platform2tera = {
     "linux": "linux",
     "darwin": "osx",
     "win32": "window.exe"
 }
+
+
+def casadi_version_warning(casadi_version):
+    msg =  'Warning: Please note that the following versions of CasADi  are '
+    msg += 'officially supported: {}.\n '.format(" or ".join(ALLOWED_CASADI_VERSIONS))
+    msg += 'If there is an incompatibility with the CasADi generated code, '
+    msg += 'please consider changing your CasADi version.\n'
+    msg += 'Version {} currently in use.'.format(casadi_version)
+    print(msg)
 
 
 def is_column(x):
@@ -80,6 +96,7 @@ def is_column(x):
         raise Exception("is_column expects one of the following types: np.ndarray, casadi.MX, casadi.SX."
                         + " Got: " + str(type(x)))
 
+
 def is_empty(x):
     if isinstance(x, (MX, SX, DM)):
         return x.is_empty()
@@ -101,6 +118,7 @@ def casadi_length(x):
     else:
         raise Exception("casadi_length expects one of the following types: casadi.MX, casadi.SX."
                         + " Got: " + str(type(x)))
+
 
 def make_model_consistent(model):
     x = model.x
@@ -263,7 +281,6 @@ def ocp_check_against_layout(ocp_nlp, ocp_dims):
     return
 
 
-
 def ocp_check_against_layout_recursion(ocp_nlp, ocp_dims, layout):
 
     for key, item in ocp_nlp.items():
@@ -373,14 +390,14 @@ def set_up_imported_gnsf_model(acados_formulation):
     gnsf = acados_formulation.gnsf_model
 
     # check CasADi version
-    dump_casadi_version = gnsf['casadi_version']
-    casadi_version = CasadiMeta.version()
+    # dump_casadi_version = gnsf['casadi_version']
+    # casadi_version = CasadiMeta.version()
 
-    if not casadi_version == dump_casadi_version:
-        print("WARNING: GNSF model was dumped with another CasADi version.\n"
-                + "This might yield errors. Please use the same version for compatibility, serialize version: "
-                + dump_casadi_version + " current Python CasADi verison: " + casadi_version)
-        input("Press any key to attempt to continue...")
+    # if not casadi_version == dump_casadi_version:
+    #     print("WARNING: GNSF model was dumped with another CasADi version.\n"
+    #             + "This might yield errors. Please use the same version for compatibility, serialize version: "
+    #             + dump_casadi_version + " current Python CasADi verison: " + casadi_version)
+    #     input("Press any key to attempt to continue...")
 
     # load model
     phi_fun = Function.deserialize(gnsf['phi_fun'])

@@ -70,7 +70,7 @@ typedef struct
 } ocp_nlp_reg_project_opts;
 
 //
-int ocp_nlp_reg_project_opts_calculate_size(void);
+acados_size_t ocp_nlp_reg_project_opts_calculate_size(void);
 //
 void *ocp_nlp_reg_project_opts_assign(void *raw_memory);
 //
@@ -96,7 +96,7 @@ typedef struct
 } ocp_nlp_reg_project_memory;
 
 //
-int ocp_nlp_reg_project_memory_calculate_size(void *config, ocp_nlp_reg_dims *dims, void *opts);
+acados_size_t ocp_nlp_reg_project_memory_calculate_size(void *config, ocp_nlp_reg_dims *dims, void *opts);
 //
 void *ocp_nlp_reg_project_memory_assign(void *config, ocp_nlp_reg_dims *dims, void *opts, void *raw_memory);
 

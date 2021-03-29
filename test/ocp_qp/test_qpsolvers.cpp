@@ -82,7 +82,7 @@ double solver_tolerance(std::string const &inString)
 {
     if (inString == "SPARSE_HPIPM") return 1e-8;
     if (inString == "SPARSE_HPMPC") return 1e-5;
-    if (inString == "SPARSE_QPDUNES") return 1e-8;
+    // if (inString == "SPARSE_QPDUNES") return 1e-8;
     if (inString == "DENSE_HPIPM") return 1e-8;
     if (inString == "DENSE_QPOASES") return 1e-10;
     if (inString == "DENSE_QORE") return 1e-10;
@@ -107,12 +107,6 @@ void set_N2(std::string const &inString, ocp_qp_xcond_solver_config *config, voi
     if (inString == "SPARSE_QPDUNES")
     {
 		config->opts_set(config, opts, "cond_N", &N2);
-		int clipping = 0;
-        if (N2 == N)
-        {
-			clipping = 1;
-        }
-		config->opts_set(config, opts, "clipping", &clipping);
     }
 
 }
@@ -130,9 +124,9 @@ TEST_CASE("mass spring example", "[QP solvers]")
 #ifdef ACADOS_WITH_QPOASES
                                    ,"DENSE_QPOASES"
 #endif
-#ifdef ACADOS_WITH_QPDUNES
-                                   ,"SPARSE_QPDUNES"
-#endif
+// #ifdef ACADOS_WITH_QPDUNES
+//                                    ,"SPARSE_QPDUNES"
+// #endif
 #ifdef ACADOS_WITH_OOQP
                                    ,"DENSE_OOQP"
                                    ,"SPARSE_OOQP"
@@ -231,16 +225,6 @@ TEST_CASE("mass spring example", "[QP solvers]")
                     qp_solver = ocp_qp_create(config, qp_dims, opts);
 
                     acados_return = ocp_qp_solve(qp_solver, qp_in, qp_out);
-
-                    #ifdef ACADOS_WITH_QPDUNES
-                    // TODO(dimitris): fix this hack for qpDUNES
-                    // (it terminates one iteration before optimal solution,
-                    // fixed with warm-start and calling solve twice)
-                    if (plan.qp_solver == PARTIAL_CONDENSING_QPDUNES)
-                    {
-                        acados_return = ocp_qp_solve(qp_solver, qp_in, qp_out);
-                    }
-                    #endif
 
                     REQUIRE(acados_return == 0);
 

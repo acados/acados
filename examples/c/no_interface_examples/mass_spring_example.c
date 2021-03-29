@@ -56,9 +56,9 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(ocp_qp_dims *dims);
 ocp_qp_dims *create_ocp_qp_dims_mass_spring_soft_constr(int N, int nx_, int nu_, int nb_, int ng_, int ngN);
 ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(ocp_qp_dims *dims);
 
-#ifndef ACADOS_WITH_QPDUNES
+// #ifndef ACADOS_WITH_QPDUNES
 #define ELIMINATE_X0
-#endif
+// #endif
 
 #define GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
 
@@ -103,7 +103,7 @@ int main() {
     int num_N2_values = 3;
     int N2_values[3] = {15,10,5};
 
-    int ii_max = 9;
+    int ii_max = 8;
 
     #ifndef ACADOS_WITH_HPMPC
     ii_max--;
@@ -136,9 +136,9 @@ int main() {
         PARTIAL_CONDENSING_HPMPC,
         #endif
 
-        #ifdef ACADOS_WITH_QPDUNES
-        PARTIAL_CONDENSING_QPDUNES,
-        #endif
+        // #ifdef ACADOS_WITH_QPDUNES
+        // PARTIAL_CONDENSING_QPDUNES,
+        // #endif
 
         #ifdef ACADOS_WITH_QORE
         FULL_CONDENSING_QORE,
@@ -242,34 +242,34 @@ int main() {
                     config->opts_set(config, opts, "iter_max", &max_iter);
                     break;
 #endif
-#ifdef ACADOS_WITH_QPDUNES
-                case PARTIAL_CONDENSING_QPDUNES:
-                    printf("\nPartial condensing + qpDUNES (N2 = %d):\n\n", N2);
-                #ifdef ELIMINATE_X0
-                    assert(1==0 && "qpDUNES does not support ELIMINATE_X0 flag!");
-                #endif
+// #ifdef ACADOS_WITH_QPDUNES
+//                 case PARTIAL_CONDENSING_QPDUNES:
+//                     printf("\nPartial condensing + qpDUNES (N2 = %d):\n\n", N2);
+//                 #ifdef ELIMINATE_X0
+//                     assert(1==0 && "qpDUNES does not support ELIMINATE_X0 flag!");
+//                 #endif
 
-                #ifdef GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
-                    clipping = 0;
-                    config->opts_set(config, opts, "clipping", &clipping);
-                #else
-                    if (N2 == N)
-                    {
-                        clipping = 1;
-                        config->opts_set(config, opts, "clipping", &clipping);
-                    } else
-                    {
-                        clipping = 0;
-                        config->opts_set(config, opts, "clipping", &clipping);
-                    }
-                #endif
-                    warm_start = 0;
-                    config->opts_set(config, opts, "warm_start", &warm_start);
+//                 #ifdef GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
+//                     clipping = 0;
+//                     config->opts_set(config, opts, "clipping", &clipping);
+//                 #else
+//                     if (N2 == N)
+//                     {
+//                         clipping = 1;
+//                         config->opts_set(config, opts, "clipping", &clipping);
+//                     } else
+//                     {
+//                         clipping = 0;
+//                         config->opts_set(config, opts, "clipping", &clipping);
+//                     }
+//                 #endif
+//                     warm_start = 0;
+//                     config->opts_set(config, opts, "warm_start", &warm_start);
 
-                    N2 = N2_values[jj];
-                    config->opts_set(config, opts, "cond_N", &N2);
-                    break;
-#endif
+//                     N2 = N2_values[jj];
+//                     config->opts_set(config, opts, "cond_N", &N2);
+//                     break;
+// #endif
                 case FULL_CONDENSING_HPIPM:
                     printf("\nFull condensing + HPIPM:\n\n");
                     // default options

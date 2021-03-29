@@ -46,9 +46,9 @@
  * dims
  ************************************************/
 
-int sim_erk_dims_calculate_size()
+acados_size_t sim_erk_dims_calculate_size()
 {
-    int size = sizeof(sim_erk_dims);
+    acados_size_t size = sizeof(sim_erk_dims);
 
     return size;
 }
@@ -132,9 +132,9 @@ void sim_erk_dims_get(void *config_, void *dims_, const char *field, int *value)
  * model
  ************************************************/
 
-int sim_erk_model_calculate_size(void *config, void *dims)
+acados_size_t sim_erk_model_calculate_size(void *config, void *dims)
 {
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(erk_model);
 
@@ -190,11 +190,11 @@ int sim_erk_model_set(void *model_, const char *field, void *value)
  * opts
  ************************************************/
 
-int sim_erk_opts_calculate_size(void *config_, void *dims)
+acados_size_t sim_erk_opts_calculate_size(void *config_, void *dims)
 {
     int ns_max = NS_MAX;
 
-    int size = sizeof(sim_opts);
+    acados_size_t size = sizeof(sim_opts);
 
     size += ns_max * ns_max * sizeof(double);  // A_mat
     size += ns_max * sizeof(double);           // b_vec
@@ -439,9 +439,9 @@ void sim_erk_opts_update(void *config_, void *dims, void *opts_)
  * memory
  ************************************************/
 
-int sim_erk_memory_calculate_size(void *config, void *dims, void *opts_)
+acados_size_t sim_erk_memory_calculate_size(void *config, void *dims, void *opts_)
 {
-    int size = sizeof(sim_erk_memory);
+    acados_size_t size = sizeof(sim_erk_memory);
 
     return size;
 }
@@ -519,7 +519,7 @@ void sim_erk_memory_get(void *config_, void *dims_, void *mem_, const char *fiel
  * workspace
  ************************************************/
 
-int sim_erk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
+acados_size_t sim_erk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
     sim_opts *opts = opts_;
     sim_erk_dims *dims = (sim_erk_dims *) dims_;
@@ -534,7 +534,7 @@ int sim_erk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
     int nhess = (nf + 1) * nf / 2;
     int num_steps = opts->num_steps;  // number of steps
 
-    int size = sizeof(sim_erk_workspace);
+    acados_size_t size = sizeof(sim_erk_workspace);
 
     size += (nX + nu) * sizeof(double);  // rhs_forw_in
 

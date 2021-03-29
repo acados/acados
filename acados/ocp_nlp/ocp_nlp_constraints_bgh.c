@@ -51,9 +51,9 @@
  * dims
  ************************************************/
 
-int ocp_nlp_constraints_bgh_dims_calculate_size(void *config_)
+acados_size_t ocp_nlp_constraints_bgh_dims_calculate_size(void *config_)
 {
-    int size = sizeof(ocp_nlp_constraints_bgh_dims);
+    acados_size_t size = sizeof(ocp_nlp_constraints_bgh_dims);
 
     return size;
 }
@@ -529,7 +529,7 @@ void ocp_nlp_constraints_bgh_dims_get(void *config_, void *dims_, const char *fi
  * model
  ************************************************/
 
-int ocp_nlp_constraints_bgh_model_calculate_size(void *config, void *dims_)
+acados_size_t ocp_nlp_constraints_bgh_model_calculate_size(void *config, void *dims_)
 {
     ocp_nlp_constraints_bgh_dims *dims = dims_;
 
@@ -545,7 +545,7 @@ int ocp_nlp_constraints_bgh_model_calculate_size(void *config, void *dims_)
     int nge = dims->nge;
     int nhe = dims->nhe;
 
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_constraints_bgh_model);
 
@@ -662,11 +662,11 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
     // TODO(oj): document which strings mean what! - adapted from prev implementation..
     if (!strcmp(field, "lb")) // TODO remove !!!
     {
-        blasfeo_pack_dvec(nb, value, &model->d, 0);
+        blasfeo_pack_dvec(nb, value, 1, &model->d, 0);
     }
     else if (!strcmp(field, "ub")) // TODO remove !!!
     {
-        blasfeo_pack_dvec(nb, value, &model->d, nb+ng+nh);
+        blasfeo_pack_dvec(nb, value, 1, &model->d, nb+ng+nh);
     }
     else if (!strcmp(field, "idxbx"))
     {
@@ -676,11 +676,11 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lbx"))
     {
-        blasfeo_pack_dvec(nbx, value, &model->d, nbu);
+        blasfeo_pack_dvec(nbx, value, 1, &model->d, nbu);
     }
     else if (!strcmp(field, "ubx"))
     {
-        blasfeo_pack_dvec(nbx, value, &model->d, nb + ng + nh + nbu);
+        blasfeo_pack_dvec(nbx, value, 1, &model->d, nb + ng + nh + nbu);
     }
     else if (!strcmp(field, "idxbu"))
     {
@@ -690,11 +690,11 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lbu"))
     {
-        blasfeo_pack_dvec(nbu, value, &model->d, 0);
+        blasfeo_pack_dvec(nbu, value, 1, &model->d, 0);
     }
     else if (!strcmp(field, "ubu"))
     {
-        blasfeo_pack_dvec(nbu, value, &model->d, nb + ng + nh);
+        blasfeo_pack_dvec(nbu, value, 1, &model->d, nb + ng + nh);
     }
     else if (!strcmp(field, "C"))
     {
@@ -706,11 +706,11 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lg"))
     {
-        blasfeo_pack_dvec(ng, value, &model->d, nb);
+        blasfeo_pack_dvec(ng, value, 1, &model->d, nb);
     }
     else if (!strcmp(field, "ug"))
     {
-        blasfeo_pack_dvec(ng, value, &model->d, 2*nb+ng+nh);
+        blasfeo_pack_dvec(ng, value, 1, &model->d, 2*nb+ng+nh);
     }
     else if (!strcmp(field, "nl_constr_h_fun"))
     {
@@ -726,11 +726,11 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lh"))
     {
-        blasfeo_pack_dvec(nh, value, &model->d, nb+ng);
+        blasfeo_pack_dvec(nh, value, 1, &model->d, nb+ng);
     }
     else if (!strcmp(field, "uh"))
     {
-        blasfeo_pack_dvec(nh, value, &model->d, 2*nb+2*ng+nh);
+        blasfeo_pack_dvec(nh, value, 1, &model->d, 2*nb+2*ng+nh);
     }
     else if (!strcmp(field, "idxsbu"))
     {
@@ -740,11 +740,11 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lsbu"))
     {
-        blasfeo_pack_dvec(nsbu, value, &model->d, 2*nb+2*ng+2*nh);
+        blasfeo_pack_dvec(nsbu, value, 1, &model->d, 2*nb+2*ng+2*nh);
     }
     else if (!strcmp(field, "usbu"))
     {
-        blasfeo_pack_dvec(nsbu, value, &model->d, 2*nb+2*ng+2*nh+ns);
+        blasfeo_pack_dvec(nsbu, value, 1, &model->d, 2*nb+2*ng+2*nh+ns);
     }
     else if (!strcmp(field, "idxsbx"))
     {
@@ -754,11 +754,11 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lsbx"))
     {
-        blasfeo_pack_dvec(nsbx, value, &model->d, 2*nb+2*ng+2*nh+nsbu);
+        blasfeo_pack_dvec(nsbx, value, 1, &model->d, 2*nb+2*ng+2*nh+nsbu);
     }
     else if (!strcmp(field, "usbx"))
     {
-        blasfeo_pack_dvec(nsbx, value, &model->d, 2*nb+2*ng+2*nh+ns+nsbu);
+        blasfeo_pack_dvec(nsbx, value, 1, &model->d, 2*nb+2*ng+2*nh+ns+nsbu);
     }
     else if (!strcmp(field, "idxsg"))
     {
@@ -768,11 +768,11 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lsg"))
     {
-        blasfeo_pack_dvec(nsg, value, &model->d, 2*nb+2*ng+2*nh+nsbu+nsbx);
+        blasfeo_pack_dvec(nsg, value, 1, &model->d, 2*nb+2*ng+2*nh+nsbu+nsbx);
     }
     else if (!strcmp(field, "usg"))
     {
-        blasfeo_pack_dvec(nsg, value, &model->d, 2*nb+2*ng+2*nh+ns+nsbu+nsbx);
+        blasfeo_pack_dvec(nsg, value, 1, &model->d, 2*nb+2*ng+2*nh+ns+nsbu+nsbx);
     }
     else if (!strcmp(field, "idxsh"))
     {
@@ -782,11 +782,11 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lsh"))
     {
-        blasfeo_pack_dvec(nsh, value, &model->d, 2*nb+2*ng+2*nh+nsbu+nsbx+nsg);
+        blasfeo_pack_dvec(nsh, value, 1, &model->d, 2*nb+2*ng+2*nh+nsbu+nsbx+nsg);
     }
     else if (!strcmp(field, "ush"))
     {
-        blasfeo_pack_dvec(nsh, value, &model->d, 2*nb+2*ng+2*nh+ns+nsbu+nsbx+nsg);
+        blasfeo_pack_dvec(nsh, value, 1, &model->d, 2*nb+2*ng+2*nh+ns+nsbu+nsbx+nsg);
     }
     else if (!strcmp(field, "idxbue"))
     {
@@ -826,9 +826,9 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
  * options
  ************************************************/
 
-int ocp_nlp_constraints_bgh_opts_calculate_size(void *config_, void *dims_)
+acados_size_t ocp_nlp_constraints_bgh_opts_calculate_size(void *config_, void *dims_)
 {
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_constraints_bgh_opts);
 
@@ -904,7 +904,7 @@ void ocp_nlp_constraints_bgh_opts_set(void *config_, void *opts_, char *field, v
  * memory
  ************************************************/
 
-int ocp_nlp_constraints_bgh_memory_calculate_size(void *config_, void *dims_, void *opts_)
+acados_size_t ocp_nlp_constraints_bgh_memory_calculate_size(void *config_, void *dims_, void *opts_)
 {
     ocp_nlp_constraints_bgh_dims *dims = dims_;
 
@@ -916,7 +916,7 @@ int ocp_nlp_constraints_bgh_memory_calculate_size(void *config_, void *dims_, vo
     int nh = dims->nh;
     int ns = dims->ns;
 
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_constraints_bgh_memory);
 
@@ -1093,7 +1093,7 @@ void ocp_nlp_constraints_bgh_memory_set_idxe_ptr(int *idxe, void *memory_)
  * workspace
  ************************************************/
 
-int ocp_nlp_constraints_bgh_workspace_calculate_size(void *config_, void *dims_, void *opts_)
+acados_size_t ocp_nlp_constraints_bgh_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
     ocp_nlp_constraints_bgh_dims *dims = dims_;
 
@@ -1106,7 +1106,7 @@ int ocp_nlp_constraints_bgh_workspace_calculate_size(void *config_, void *dims_,
     int nh = dims->nh;
     int ns = dims->ns;
 
-    int size = 0;
+    acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_constraints_bgh_workspace);
 

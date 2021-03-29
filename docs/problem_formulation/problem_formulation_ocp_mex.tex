@@ -1,24 +1,51 @@
-
-\documentclass{article}
+\documentclass[english]{article}
+\usepackage[plainpages=false, hypertexnames=true, breaklinks=true]{hyperref}
 % General document formatting
 \usepackage[margin=0.7in]{geometry}
 \usepackage[parfill]{parskip}
+\usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
-\usepackage{hyperref}
 
 % Related to math
-\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{amsmath}
+%\usepackage{amssymb}
+%\usepackage{amsfonts}
+\usepackage{amsthm}
 \usepackage{booktabs}
+% setup font
+\usepackage{lmodern}
+\usepackage{inconsolata}
+%% this gives nicer fonts, comment \usepackage{amssymb} above
+\usepackage[bitstream-charter,cal=cmcal]{mathdesign}
+\usepackage[rmdefault]{mathcomp}
+\usepackage{babel}
+
+%% if required this can be used to make landscape pages, e.g., for wide tables
+% \usepackage{afterpage}
+% \usepackage{ifpdf}
+% \ifpdf
+% % landscape mode, only pdf:
+% \usepackage{pdflscape}
+% % otherwise use:
+% \else
+% \usepackage{lscape}
+% \fi
+
+\usepackage{tabulary}
+\usepackage{multirow}
+
 \newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\str}[1]{\texttt{'#1'}}
 \newcommand{\casadi}{\texttt{CasADi}}
 \newcommand{\acados}{\texttt{acados}}
 \newcommand{\matlab}{\textsc{Matlab}}
+\newcommand{\python}{\textsc{Python}}
 \newcommand{\tran}{^\top}
 \newcommand{\norm}[1]{\left\lVert#1\right\rVert}
 \newcommand{\abs}[1]{\left\lvert#1\right\rvert}
 \newcommand{\ind}[1]{_{\textrm{#1}}}
 \newcommand{\terminal}{^{\textrm{e}}}
-\newcommand{\matr}[2]{\left[\begin{array}{#1}#2\end{array}\right]}
+\newcommand{\matr}[1]{\begin{bmatrix}#1\end{bmatrix}}
 \newcommand{\upind}[1]{\ensuremath{{^{\textrm{#1}}}}}
 % slack indices
 \newcommand{\Lower}{\ind{l}}
@@ -42,71 +69,68 @@
 \newcommand{\np}{n\ind{p}}
 \newcommand{\ns}{n\ind{s}}
 
+\newcommand{\mandatory}{yes}
+\newcommand{\optional}{no}
+
 \begin{document}
-	
-
-	
-\section*{Problem Formulation}
-	
-\begin{align*}
+%
+\section{Problem Formulation}\label{sec:problem}
+%
+\acados{} can handle the following optimization problem
+%
+\begin{align}
 % cost
-	&&&\mathComment{Cost Function}\\
-	&\underset{\begin{subarray}{c}
-		x(\cdot),\,u(\cdot), \, z(\cdot), \, s(\cdot), \, s\terminal
-		\end{subarray}}{\min}
-	&&\int_0^T l(x(\tau), u(\tau), z(\tau), p)
-	 + \frac{1}{2} \matr{c}{s\Lower(\tau) \\ s\upper(\tau) \\ 1} \tran
-	  \matr{ccc} { Z\Lower & 0 & z\Lower \\
-	  0 & Z\upper & z\upper \\
-		{z\Lower}\tran & {z\upper}\tran & 0}
-	\matr{c}{s\Lower(\tau) \\ s\upper(\tau) \\ 1} \mathrm{d}\tau \; + \\
-	 &&& \quad \quad m(x(T), z(T), p) +
-	  \frac{1}{2} \matr{c}{s\Lower\terminal \\ s\upper\terminal \\ 1} \tran
-	 \matr{ccc} { Z\Lower\terminal & 0 & z\Lower\terminal \\
-	 	0 & Z\upper\terminal & z\upper\terminal \\
-	 	{z\Lower\terminal}\tran & {z\upper\terminal}\tran & 0}
-	 \matr{c}{s\Lower\terminal \\ s\upper\terminal \\ 1}
-	 \\
-	% constraints
-	&&&\mathComment{Initial value}\\
-	&\,\,\,\quad \text{s.t.}    &&\underline{x}_0 \leq J_{\textrm{bx},0}  x(0) \leq \bar{x}_0 , &&\\
-	&&& && \\[-1em]
-	&&&\mathComment{Dynamics}\\
-	%% dynamics
-	&&& f\ind{impl}(x(t), \dot{x}(t), u(t), z(t), p) = 0, &&\quad t \in [0,\,T),\\
-	&&& && \\[-1em]
-	&&&\mathComment{Path Constraints with lower bound}\\
-	%% path constraints with lower slack
-	&&&\underline{h} \leq h(x(t), u(t), p) + J_{\textrm{sh}} s\lowerh(t), &&\quad t \in [0,\,T),\\
-	&&&\underline{x} \leq J_{\textrm{bx}} x(t) + J_{\textrm{sbx}} s\lowerbx(t), &&\quad t \in (0,\,T),\\
-	&&&\underline{u} \leq J_{\textrm{bu}} u(t) + J_{\textrm{sbu}} s\lowerbu(t), &&\quad t \in [0,\,T),\\
-	&&&\underline{g} \leq Cx(t) + Du(t) + J_{\textrm{sg}} s\lowerg(t), &&\quad t \in [0,\,T), \\
-	&&& s\lowerh (t), s\lowerbx(t), s\lowerbu(t), s\lowerg(t) \geq 0, &&\quad t \in [0,\,T), \\
-	&&& && \\[-1em]
-	&&&\mathComment{Path Constraints with upper bound}\\
-	%% path constraints with upper slack
-	&&& h(x(t), u(t), p) - J_{\textrm{sh}} s\upperh(t) \leq \bar{h}, &&\quad t \in [0,\,T),\\
-	&&& J_{\textrm{bx}} x(t) - J_{\textrm{sbx}} s\upperbx(t) \leq \bar{x}, &&\quad t \in (0,\,T),\\
-	&&& J_{\textrm{bu}} u(t) - J_{\textrm{sbu}} s\upperbu(t)\leq \bar{u}, &&\quad t \in [0,\,T),\\
-	&&&Cx(t) + Du(t) - J_{\textrm{sg}} s\upperg \leq \bar{g}, &&\quad t \in [0,\,T), \\
-	&&& s\upperh(t), s\upperbx(t), s\upperbu(t), s\upperg(t) \geq 0, &&\quad t \in [0,\,T), \\
-	&&& && \\[-1em]
-	%% lower terminal constraints
-	&&&\mathComment{Terminal Constraints with lower bound}\\
-	&&&\underline{h}\terminal \leq h\terminal(x(T), p) + J\ind{sh}\terminal s\lowerh\terminal, &&\\
-	&&&\underline{x}\terminal \leq J_{\textrm{bx}}\terminal x(T) + J\ind{sbx} s\lowerbx\terminal, &&\\ % TODO: add Jsbx_e?!
-	&&&\underline{g}\terminal \leq C\terminal x(T) + J\ind{sg}\terminal s\lowerg\terminal \leq \bar{g}\terminal, && \\
-	&&& s\lowerh\terminal, s\lowerbx\terminal, s\lowerbu\terminal, s\lowerg\terminal \geq 0, \\
-	&&& && \\[-1em]
-	%% upper terminal constraints
-	&&&\mathComment{Terminal Constraints with upper bound}\\
-	&&& h\terminal(x(T), p) - J\ind{sh}\terminal s\ind{h}\terminal \leq \bar{h}\terminal, &&\\
-	&&& J_{\textrm{bx}}\terminal x(T) - J\ind{sbx} s\ind{bx}\terminal \leq \bar{x}^{e}, &&\\ % TODO: add Jsbx_e?!
-	&&& C\terminal x(T) - J\ind{sg}\terminal s\ind{g}\terminal \leq \bar{g}\terminal \\
-	&&& s\upperh\terminal, s\upperbx\terminal, s\upperbu\terminal, s\upperg\terminal \geq 0,
-\end{align*}
-
-
+    &&&\mathComment{Cost function, see section \ref{sec:cost}}\nonumber\\
+    &\underset{\begin{subarray}{c}
+        x(\cdot),\,u(\cdot), \, z(\cdot), \, s(\cdot), \, s\terminal
+        \end{subarray}}{\min}
+    &&\int_0^T l(x(\tau), u(\tau), z(\tau), p)
+     + \frac{1}{2} \matr{s\Lower(\tau) \\ s\upper(\tau) \\ 1} \tran
+      \matr{ Z\Lower & 0 & z\Lower \\
+      0 & Z\upper & z\upper \\
+        {z\Lower}\tran & {z\upper}\tran & 0}
+    \matr{s\Lower(\tau) \\ s\upper(\tau) \\ 1} \mathrm{d}\tau \; + \nonumber\\
+     &&& \quad \quad m(x(T), z(T), p) +
+      \frac{1}{2} \matr{s\Lower\terminal \\ s\upper\terminal \\ 1} \tran
+     \matr{ Z\Lower\terminal & 0 & z\Lower\terminal \\
+         0 & Z\upper\terminal & z\upper\terminal \\
+         {z\Lower\terminal}\tran & {z\upper\terminal}\tran & 0}
+     \matr{s\Lower\terminal \\ s\upper\terminal \\ 1}
+     \label{eq:cost}\\
+    % constraints
+    &&&\mathComment{Initial values, see section \ref{sec:constraints:initial}}\nonumber\\
+    &\,\,\,\quad \text{s.t.}    &&\underline{x}_0 \leq J_{\textrm{bx},0} \, x(0) \leq \bar{x}_0 , && \label{eq:constraints:initial}\\[1ex]
+    &&&\mathComment{Dynamics, see section \ref{sec:dynamics}}\nonumber\\
+    %% dynamics
+    &&& f\ind{impl}(x(t), \dot{x}(t), u(t), z(t),p ) = 0, &&\quad t \in [0,\,T), \label{eq:dynamics}\\[1ex]
+    &&&\mathComment{Path constraints with lower bounds, see section \ref{sec:constraints:path}}\nonumber\\
+    %% path constraints with lower slack
+    &&&\underline{h} \leq h(x(t), u(t), p) + J_{\textrm{sh}} \, s\lowerh(t), &&\quad t \in [0,\,T),\label{eq:constraints:path:lower_bounds:start}\\
+    &&&\underline{x} \leq J_{\textrm{bx}} \, x(t) + J_{\textrm{sbx}} \,s\lowerbx(t), &&\quad t \in (0,\,T),\\
+    &&&\underline{u} \leq J_{\textrm{bu}} \,u(t) + J_{\textrm{sbu}} \,s\lowerbu(t), &&\quad t \in [0,\,T),\\
+    &&&\underline{g} \leq C\,x(t) + D\,u(t) + J_{\textrm{sg}} \,s\lowerg(t), &&\quad t \in [0,\,T), \\
+    &&& s\lowerh (t), s\lowerbx(t), s\lowerbu(t), s\lowerg(t) \geq 0, &&\quad t \in [0,\,T), \label{eq:constraints:path:lower_bounds:end}\\[1ex]
+    &&&\mathComment{Path constraints with upper bounds, see section \ref{sec:constraints:path}}\nonumber\\
+    %% path constraints with upper slack
+    &&& h(x(t), u(t), p) - J_{\textrm{sh}} \, s\upperh(t) \leq \bar{h}, &&\quad t \in [0,\,T),\label{eq:constraints:path:upper_bounds:start}\\
+    &&& J_{\textrm{bx}} x(t) - J_{\textrm{sbx}}\, s\upperbx(t) \leq \bar{x}, &&\quad t \in (0,\,T),\\
+    &&& J_{\textrm{bu}} u(t) - J_{\textrm{sbu}}\, s\upperbu(t)\leq \bar{u}, &&\quad t \in [0,\,T),\\
+    &&&Cx(t) + Du(t) - J_{\textrm{sg}}\, s\upperg \leq \bar{g}, &&\quad t \in [0,\,T), \\
+    &&& s\upperh(t), s\upperbx(t), s\upperbu(t), s\upperg(t) \geq 0, &&\quad t \in [0,\,T), \label{eq:constraints:path:upper_bounds:end}\\[1ex]
+    %% lower terminal constraints
+    &&&\mathComment{Terminal constraints with lower bounds, see section \ref{sec:constraints:terminal}}\nonumber\\
+    &&&\underline{h}\terminal \leq h\terminal(x(T), p) + J\ind{sh}\terminal\, s\lowerh\terminal, &&\label{eq:constraints:terminal:lower_bounds:start}\\
+    &&&\underline{x}\terminal \leq J_{\textrm{bx}}\terminal\, x(T) + J\ind{sbx}\, s\lowerbx\terminal, &&\\ % TODO: add Jsbx_e?!
+    &&&\underline{g}\terminal \leq C\terminal\, x(T) + J\ind{sg}\terminal\, s\lowerg\terminal \leq \bar{g}\terminal, && \\
+    &&& s\lowerh\terminal, s\lowerbx\terminal, s\lowerbu\terminal, s\lowerg\terminal \geq 0, \label{eq:constraints:terminal:lower_bounds:end}\\[1ex]
+    %% upper terminal constraints
+    &&&\mathComment{Terminal constraints with upper bound, see section \ref{sec:constraints:terminal}}\nonumber\\
+    &&& h\terminal(x(T), p) - J\ind{sh}\terminal\, s\ind{u,h}\terminal \leq \bar{h}\terminal, &&\label{eq:constraints:terminal:upper_bounds:start}\\
+    &&& J_{\textrm{bx}}\terminal\, x(T) - J\ind{sbx}\, s\ind{u,bx}\terminal \leq \bar{x}^{e}, &&\\ % TODO: add Jsbx_e?!
+    &&& C\terminal\, x(T) - J\ind{sg}\terminal\, s\ind{u,g}\terminal \leq \bar{g}\terminal \\
+    &&& s\upperh\terminal, s\upperbx\terminal, s\upperbu\terminal, s\upperg\terminal \geq 0,\label{eq:constraints:terminal:upper_bounds:end}
+\end{align}
+%
 with
 \begin{itemize}
 \item state vector $ x: \R \rightarrow \R^{\nx} $
@@ -116,226 +140,489 @@ with
 \item slacks for path constraints $ s\Lower(t) = (s\lowerbu, s\lowerbx, s\lowerg, s\lowerh) \in \R^{\ns} $ and $ s\upper(t) = (s\upperbu, s\upperbx, s\upperg, s\upperh) \in \R^{\ns} $
 \item slacks for terminal constraints $ s\Lower\terminal(t) = (s\lowerbx\terminal, s\lowerg\terminal, s\lowerh\terminal) \in \R^{\ns\terminal} $ and $ s\upper\terminal(t) = (s\upperbx\terminal, s\upperg\terminal, s\upperh\terminal) \in \R^{\ns\terminal} $
 \end{itemize}
-
+%
 Some of the following restrictions may apply to matrices in the formulation:
-\begin{description}
-  \item[DIAG] \hfill \\ Diagonal
-  \item[SPUM] \hfill \\ Horizontal slice of a permuted unit matrix
-  \item[SPUME] \hfill \\ Like \textbf{SPUM}, but with empty rows intertwined
-\end{description}
+\begin{center}
+    \begin{tabular}{ll}
+        \textbf{DIAG} & diagonal\\
+        \textbf{SPUM} & horizontal slice of a permuted unit matrix\\
+        \textbf{SPUME} & like \textbf{SPUM}, but with empty rows intertwined
+    \end{tabular}
+\end{center}
+%
+\paragraph{Document Purpose}
+This document is only associated to the \matlab{} interface of \acados.
+Here, the focus is to give a mathematical overview of the problem formulation and possible options to model it within \acados.
+The problem formulation and the possibilities of \acados{} are similar in the \python{} interface, however, some of the string identifiers are different.
+The documentation is not exhaustive and does not contain a full description for the \matlab{} interface.
 
+You can find examples int the directory \code{<acados>/examples/acados\_matlab\_octave}.
+The source code of the \acados{} \matlab{} interface is found in: \code{<acados>/interfaces/acados\_matlab\_octave} and should serve as a more extensive, complete and up-to-date documentation about the possibilities.
+%
+\section{Dynamics}\label{sec:dynamics}
+%
+The system dynamics term is used to connect state trajectories from adjacent shooting nodes by means of equality constraints.
+%
+The system dynamics equation~\eqref{eq:dynamics} is replaced with a discrete-time dynamic system.
+The dynamics can be formulated in different ways in \acados:
+As implicit equations in continuous time~\eqref{eq:dynamics:implicit}, or as explicit equations in continuous time~\eqref{eq:dynamics:explicit} or directly as discrete-time dynamics \eqref{eq:dynamics:discrete}.
+This section and table~\ref{tab:dynamics} summarizes the options.
+%
+\subsection{Implicit Dynamics}\label{sec:dynamics:implicit}
+%
+The most general way to provide a continuous time ODE in \acados\ is to define the function $ f\ind{impl}: \mathbb{R}^{\nx}\times\mathbb{R}^{\nx}\times\mathbb{R}^{\nuu}\times\mathbb{R}^{\nz}\times\mathbb{R}^{\np} \rightarrow \mathbb{R}^{\nx+\nz}$ which is fully implicit DAE formulation describing the system as:
+\begin{align}
+    f\ind{impl}(x, \dot{x}, u, z, p) &= 0.\label{eq:dynamics:implicit}
+\end{align}
+\acados{} can discretize $ f\ind{impl} $ with a classical implicit Runge-Kutta (\code{irk}) or a structure exploiting implicit Runge-Kutta method (\code{irk\_gnsf}). Both discretization methods are set using the \code{'sim\_method'} identifier in a \code{acados\_ocp\_opts} class instance.
 
-\section{Dynamics}
-The function $ f\ind{impl}: \mathbb{R}^{\nx}\times\mathbb{R}^{\nx}\times\mathbb{R}^{\nuu}\times\mathbb{R}^{\nz}\times\mathbb{R}^{\np} \rightarrow \mathbb{R}^{\nx+\nz}$ describes the dynamics as a fully implicit DAE.\\
-We offer to discretize $ F $ with a classic implicit Runge-Kutta (\code{irk}) or a structure exploiting implicit Runge-Kutta method (\code{irk\_gnsf}).\\
-Additionally, we offer an explicit Runge-Kutta integrator (\code{erk}), which can be used with explicit ODE models, i.e. models of the form
-\begin{align*}
-f\ind{expl}(x,u,p) = \dot{x}
-\end{align*}
-
-
-
-\newcommand{\mandatory}{yes}
-\newcommand{\optional}{no}
+%
+\subsection{Explicit Dynamics}\label{sec:dynamics:explicit}
+%
+Alternatively, \acados{} offers an explicit Runge-Kutta integrator (\code{erk}), which can be used with explicit ODE models, i.e., models of the form
+\begin{align}
+f\ind{expl}(x,u,p) &= \dot{x}.\label{eq:dynamics:explicit}
+\end{align}
+%
+\subsection{Discrete Dynamics}\label{sec:dynamics:discrete}
+%
+Another option is to provide a discrete function that maps state $x_i$, control $u_i$ and parameters $p_i$ from shooting node~$i$ to the state $x_{i+1}$ of the next shooting node $i+1$, i.e., a function
+\begin{align}
+x_{i+1} &= f\ind{disc}(x_i,u_i,p_i).\label{eq:dynamics:discrete}
+\end{align}
+%
 \begin{table}[h!]
-	\centering
-	\begin{tabular}{|c|c|c|c|}
-		\toprule
-		Mathematical Expression & string identifier & data type & required \\ \midrule
-		$ f\ind{impl} $ respectively $ f\ind{expl} $ & \code{dyn\_expr\_f}    & \casadi~expression & \mandatory \\ \midrule
-		- & \code{dyn\_type}    & string (\code{explicit} or \code{implicit}) & \mandatory \\
-		\bottomrule
-	\end{tabular}
+    \centering
+    \caption{Dynamics definitions} \label{tab:dynamics}
+    \begin{tabular}{cccc}
+        \toprule
+        Term & String identifier & Data type & Required \\ \midrule
+        $ f\ind{impl} $ respectively $ f\ind{expl} $ & \code{dyn\_expr\_f}    & \casadi~expression & \mandatory \\
+        $f\ind{disc}$ & \code{dyn\_exp\_phi} & \casadi~expression & \mandatory \\
+        - & \code{dyn\_type}    & string (\str{explicit}, \str{implicit} or \str{discrete}) & \mandatory \\
+        \bottomrule
+    \end{tabular}
 \end{table}
-
-
-\section{Cost}
-There are different \acados~modules to model the cost functions.
+%
+\section{Cost}\label{sec:cost}
+%
+There are different \acados~modules to model the cost functions in equation~\eqref{eq:cost}.
 \begin{itemize}
 \item $ l: \mathbb{R}^{\nx}\times\mathbb{R}^{\nuu}\times\mathbb{R}^{\nz} \rightarrow \mathbb{R}$ is the Lagrange objective term.
 \item $ m: \mathbb{R}^{\nx}\times\mathbb{R}^{\nz} \rightarrow \mathbb{R} $ is the Mayer objective term.
 \end{itemize}
-to decide which one is used set \code{cost\_type} for $ l $, \code{cost\_type\_e} for $ m $.
+to define which one is used set \code{cost\_type} for $l$, \code{cost\_type\_e} for $m$.
 
-Setting the slack penalties is done in the same way for all cost modules, namely:
+Setting the slack penalties in equation~\eqref{eq:cost} is done in the same way for all cost modules, see table~\ref{tab:cost:slack} for an overview.
+%
 \begin{table}[h!]
-	\centering
-	\begin{tabular}{|c|c|c|c|}
-		\toprule
-		Mathematical Expression  & string identifier & data type & required \\ \midrule
-		$ Z\Lower $ & \code{cost\_Zl}    & double, \textbf{DIAG}  & \optional \\ \midrule
-		$ Z\upper $ & \code{cost\_Zu}    & double, \textbf{DIAG}  & \optional   \\ \midrule
-		$ z\Lower $ & \code{cost\_zl}    & double  & \optional   \\ \midrule
-		$ z\upper $ & \code{cost\_zu}    & double  & \optional   \\ \midrule
-		$ Z\Lower\terminal $ & \code{cost\_Zl\_e}    & double, \textbf{DIAG} & \optional   \\ \midrule
-		$ Z\upper\terminal $ & \code{cost\_Zu\_e}    & double, \textbf{DIAG} & \optional   \\ \midrule
-		$ z\Lower\terminal $ & \code{cost\_zl\_e}    & double  & \optional   \\ \midrule
-		$ z\upper\terminal $ & \code{cost\_zu\_e}    & double  & \optional   \\
-		\bottomrule
-	\end{tabular}
+    \centering
+    \caption{Cost module slack variable options} \label{tab:cost:slack}
+    \begin{tabular}{cccc}
+        \toprule
+        Term  & String id & Data type & Required \\ \midrule
+        $ Z\Lower $          & \code{cost\_Zl}    & double, \textbf{DIAG}  & \optional \\
+        $ Z\upper $          & \code{cost\_Zu}    & double, \textbf{DIAG}  & \optional   \\
+        $ z\Lower $          & \code{cost\_zl}    & double  & \optional   \\
+        $ z\upper $          & \code{cost\_zu}    & double  & \optional   \\ [1em]
+        $ Z\Lower\terminal $ & \code{cost\_Zl\_e} & double, \textbf{DIAG} & \optional   \\
+        $ Z\upper\terminal $ & \code{cost\_Zu\_e} & double, \textbf{DIAG} & \optional   \\
+        $ z\Lower\terminal $ & \code{cost\_zl\_e} & double  & \optional   \\
+        $ z\upper\terminal $ & \code{cost\_zu\_e} & double  & \optional   \\
+        \bottomrule
+    \end{tabular}
 \end{table}
+%
+Moreover, you can specify \code{cost\_Z}, to set $ Z\Lower$, $Z\upper$ to the same values, i.e., use a symmetric L2 slack penalty.
+Similarly, \code{cost\_z}, \code{cost\_Z\_e}, \code{cost\_z\_e} can be used to set symmetric slack L1 penalties, respectively penalties for the terminal slack variables.
 
-Moreover, you can specify \texttt{cost\_Z}, to set $ Z\Lower, Z\upper $ to the same values, i.e. use a symmetric L2 slack penalty.
-Similarly, \texttt{cost\_z}, \texttt{cost\_Z\_e}, \texttt{cost\_z\_e} can be used to set symmetric slack L1 penalties, respectively penalties for the terminal slack variables.
-
-
-\subsection*{Cost module: \code{auto}}
+Note, that the dimensions of the slack variables $s\Lower(t)$, $s\Lower\terminal(t)$, $s\upper(t)$ and $s\upper\terminal(t)$ are determined by \acados{} from the associated matrices ($Z\Lower$, $Z\upper$,  $J\ind{sh}$, $J\ind{sg}$, $J\ind{sbu}$, $J\ind{sbx}$ etc.).
+%
+\subsection{Cost module: \code{auto}}\label{sec:cost:auto}
+%
 Set \code{cost\_type} to \code{auto} (default).
-In this case we detect if the cost function specified is a linear least squares term and transcribe it in the corresponding form.
+In this case \acados{} detects if the cost function specified is a linear least squares term and transcribes it in the corresponding form.
 Otherwise, it is formulated using the external cost module.
-Note: slack penalties are optional and we plan to detected them form the expressions in future versions.
+Note: slack penalties are optional and we plan to detected them from the expressions in future versions.
+Table~\ref{tab:cost:auto} shows the available options.
+%
 \begin{table}[h!]
-	\centering
-	\begin{tabular}{|c|c|c|c|}
-		\toprule
-		Mathematical Expression & string identifier & data type & required \\ \midrule
-		$ l $ & \code{cost\_expr\_ext\_cost}    & \casadi~expression   & \mandatory  \\ \midrule
-		$ m $ & \code{cost\_expr\_ext\_cost\_e}    & \casadi~expression  & \mandatory \\
-		\bottomrule
-	\end{tabular}
+    \centering
+    \caption{Cost module \code{auto} options} \label{tab:cost:auto}
+    \begin{tabular}{cccc}
+        \toprule
+        Term & String identifier & Data type & Required \\ \midrule
+        $ l $ & \code{cost\_expr\_ext\_cost}    & \casadi~expression   & \mandatory  \\ 
+%        $ m $ & \code{cost\_expr\_ext\_cost\_e}    & \casadi~expression  & \mandatory \\
+        \bottomrule
+    \end{tabular}
 \end{table}
-
-%%
-\subsection*{Cost module: \code{external}}
+%
+\subsection{Cost module: \code{external}}\label{sec:cost:external}
+%
 Set \code{cost\_type} to \code{ext\_cost}. % TODO: rename to 'external'?!
+See table~\ref{tab:cost:external} for the available options.
 \begin{table}[h!]
-	\centering
-	\begin{tabular}{|c|c|c|c|}
-		\toprule
-		Mathematical Expression & string identifier & data type & required \\ \midrule
-		$ l $ & \code{cost\_expr\_ext\_cost}    & \casadi~expression   & \mandatory  \\ \midrule
-		$ m $ & \code{cost\_expr\_ext\_cost\_e}    & \casadi~expression  & \mandatory \\
-		\bottomrule
-	\end{tabular}
+    \centering
+    \caption{Cost module \code{external} options} \label{tab:cost:external}
+    \begin{tabular}{cccc}
+        \toprule
+        Term & String identifier & Data type & Required \\ \midrule
+        $ l $ & \code{cost\_expr\_ext\_cost}    & \casadi~expression   & \mandatory  \\
+        $ m $ & \code{cost\_expr\_ext\_cost\_e}    & \casadi~expression  & \mandatory \\
+        \bottomrule
+    \end{tabular}
 \end{table}
-
-\subsection*{Cost module: \code{linear least squares}}
-Set \code{cost\_type} to \code{linear\_ls}.\\
+%
+\subsection{Cost module: \code{linear least squares}}\label{sec:cost:linear_ls}
+%
+In order to activate the \code{linear least squares} cost module, set \code{cost\_type} to \code{linear\_ls}.\\
 The Lagrange cost term has the form
-\begin{align*}
-l(x, u, z) = \frac{1}{2} \norm{ \underbrace{V_x x + V_u u + V_z z}_y - y_{\textrm{ref}}}_W^2
-\end{align*}
-with matrices $ V_x, V_u, V_z, W $ of appropriate dimensions.\\
+\begin{align}
+l(x, u, z) &= \frac{1}{2} \norm{ \underbrace{V_x\, x + V_u\, u + V_z\, z}_{\displaystyle y} - y\ind{ref}}_W^2 \label{eq:cost:linear_ls:l}
+\end{align}
+where matrices $ V_x \in \mathbb{R}^{n_y \times n_x}$, $V_u \in \mathbb{R}^{n_y \times n_u}$ are $V_z \in \mathbb{R}^{n_y \times n_z}$ map $x$, $u$ and $z$ onto $y$, respectively and $W \in \mathbb{R}^{n_y \times n_y}$ is the weighing matrix. The vector $y\ind{ref} \in \mathbb{R}^{n_y}$ is the reference.
+
 Similarly, the Mayer cost term has the form
-\begin{align*}
-m(x, u, z) = \frac{1}{2} \norm{ \underbrace{V_x\terminal x}_{y\terminal} - y\terminal_{\textrm{ref}}}_{W\terminal}^2
-\end{align*}
-with matrices $ V\terminal_x, W\terminal $ of appropriate dimensions.
-\begin{table}[h!]
-	\centering
-	\begin{tabular}{|c|c|c|c|}
-		\toprule
-		Mathematical Expression & string identifier & data type & required \\ \midrule
-		$ V_x $ & \code{cost\_Vx}    & double & \mandatory   \\ \midrule
-		$ V_u $ & \code{cost\_Vu}    & double & \mandatory   \\ \midrule
-		$ V_z $ & \code{cost\_Vz}    & double & \mandatory  \\ \midrule
-		$ W $ & \code{cost\_W}    & double & \mandatory  \\ \midrule
-		$ y_{\textrm{ref}} $ & \code{cost\_y\_ref}    & double & \mandatory   \\ \midrule
-		$ V_x\terminal $ & \code{cost\_Vx\_e}    & double  & \mandatory  \\ \midrule
-		$ W\terminal $ & \code{cost\_W\_e}    & double & \mandatory   \\ \midrule
-		$ y_{\textrm{ref}}\terminal $ & \code{cost\_y\_ref\_e}   & double & \mandatory   \\
-		\bottomrule
-	\end{tabular}
-\end{table}
+\begin{align}
+m(x, u, z) &= \frac{1}{2} \norm{ \underbrace{V_x\terminal x}_{\displaystyle y\terminal} - y\ind{ref}\terminal}_{W\terminal}^2 \label{eq:cost:linear_ls:m}
+\end{align}
+where matrix $ V\terminal_x \in \mathbb{R}^{n_{y\terminal} \times n_x}$ maps $x$ onto $y\terminal$ and $W\terminal \in \mathbb{R}^{n_{y\terminal} \times n_{y\terminal}}$ is the weighing matrix. The vector $y\terminal_\textrm{ref} \in \mathbb{R}^{n_{y\terminal}}$ is the reference.
 
-\newpage
-\subsection*{Cost module: \code{nonlinear least squares}}
-Set \code{cost\_type} to \code{nonlinear\_ls}.\\
-The cost function has the same form as in the linear least squares module.\\
-The only difference is that $ y $, respectively $ y\terminal $ are defined as \casadi~expressions, instead of the matrices $ V_x, V_u, V_z $, respectively $ V_x\terminal $
-
+See table~\ref{tab:cost:linear_ls} for the available options of this cost module.
+%
 \begin{table}[h!]
-	\centering
-	\begin{tabular}{|c|c|c|c|}
-		\toprule
-		Mathematical Expression & string identifier & data type & required \\ \midrule
-		$ y $ & \code{cost\_expr\_y}    & \casadi~expression  & \mandatory   \\ \midrule
-		$ W $ & \code{cost\_W}    & double  & \mandatory   \\ \midrule
-		$ y_{\textrm{ref}} $ & \code{cost\_y\_ref}    & double & \mandatory    \\ \midrule
-		$ y\terminal $ & \code{cost\_expr\_y\_e}    & \casadi~expression  & \mandatory   \\ \midrule
-		$ y_{\textrm{ref}}\terminal $ & \code{cost\_y\_ref\_e}    & double  & \mandatory   \\
-		\bottomrule
-	\end{tabular}
+    \centering
+    \caption{Cost module \code{linear\_ls} options} \label{tab:cost:linear_ls}
+    \begin{tabular}{cccc}
+        \toprule
+        Term & String identifier & Data type & Required \\ \midrule
+        $ V_x $ & \code{cost\_Vx}    & double & \mandatory   \\
+        $ V_u $ & \code{cost\_Vu}    & double & \mandatory   \\
+        $ V_z $ & \code{cost\_Vz}    & double & \mandatory  \\
+        $ W $ & \code{cost\_W}    & double & \mandatory  \\
+        $ y\ind{ref} $ & \code{cost\_y\_ref}    & double & \mandatory   \\ [1em]
+        $ V_x\terminal $ & \code{cost\_Vx\_e}    & double  & \mandatory  \\
+        $ W\terminal $ & \code{cost\_W\_e}    & double & \mandatory   \\
+        $ y\ind{ref}\terminal $ & \code{cost\_y\_ref\_e}   & double & \mandatory   \\
+        \bottomrule
+    \end{tabular}
 \end{table}
+%
+\subsection{Cost module: \code{nonlinear least squares}}\label{sec:cost:nonlinear_ls}
+%
+In order to activate the \code{nonlinear least squares} cost module, set \code{cost\_type} to \code{nonlinear\_ls}.
+
+The \code{nonlinear least squares} cost function has the same basic form as eqns.~(\ref{eq:cost:linear_ls:l}~-~\ref{eq:cost:linear_ls:m}) of the \code{linear least squares} cost module.
+The only difference is that $ y $ and $ y\terminal $ are defined by means of \casadi{} expressions, instead of via matrices $ V_x $, $ V_u $, $ V_z $ and $ V_x\terminal $.
+%
+See table~\ref{tab:cost:nonlinear_ls} for the available options of this cost module.
+%
+\begin{table}[h!]
+    \centering
+    \caption{Cost module \code{nonlinear\_ls} options} \label{tab:cost:nonlinear_ls}
+    \begin{tabular}{cccc}
+        \toprule
+        Term & String identifier & Data type & Required \\ \midrule
+        $ y $ & \code{cost\_expr\_y}    & \casadi~expression  & \mandatory   \\
+        $ W $ & \code{cost\_W}    & double  & \mandatory   \\
+        $ y\ind{ref} $ & \code{cost\_y\_ref}    & double & \mandatory    \\ [1em]
+        $ y\terminal $ & \code{cost\_expr\_y\_e}    & \casadi~expression  & \mandatory   \\
+        $ W\terminal $ & \code{cost\_W\_e}    & double & \mandatory   \\
+        $ y\ind{ref}\terminal $ & \code{cost\_y\_ref\_e}    & double  & \mandatory   \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+%
 %\newpage
-\section{Constraints}
-\subsection{Initial State}
+\section{Constraints}\label{sec:constraints}
+%
+This section is about how to define the constraints equations \eqref{eq:constraints:initial} and (\ref{eq:constraints:path:lower_bounds:start} - \ref{eq:constraints:terminal:upper_bounds:end}).
+
+The \matlab{} interface supports the constraint module \code{bgh}, which is able to handle simple \textbf{b}ounds (on $ x $ and $ u $), \textbf{g}eneral linear constraints and general nonlinear constraints.
+Meanwhile, the \python{} interface also supports the \acados{} constraint module \code{bgp}, which can handle convex-over-nonlinear constraints in a dedicated fashion.
+%The constraint type can be set using the identifier \str{constr\_type} and \str{constr\_type\_e} for the path constraints and terminal constraints, respectively. The string identifier options are found in table~\ref{tab:constr_type}. The default setting is \str{bgh}.
+%\begin{table}[h!]
+%\centering
+%\caption{Constraint type string identifier}\label{tab:constr_type}
+%%
+%\begin{tabular}{ccccc}
+%    \toprule
+%    & \multicolumn{4}{c}{Supported constraints} \\ \cmidrule{2-5}
+%    String     & simple & polytopic & general non-   & positive \\
+%    identifier & bounds & constr.   & linear constr. & definite constr.\\ \midrule
+%    \code{bgh} & yes & yes & yes & no \\
+%    \code{bgp} & yes & yes & yes & yes \\
+%    \bottomrule
+%\end{tabular}
+%\end{table}
+%
+\subsection{Initial State}\label{sec:constraints:initial}
+%
 Note: An initial state is not required.
-For example for MHE problems it should not be set.
+For example for moving horizon estimation (MHE) problems it should not be set.
 
-Simple syntax for initial constraint $x(0)=\bar{x}_0$:
-\begin{table}[h]
-	\centering
-	\begin{tabular}{|c|c|c|c|}
-		\toprule
-		Mathematical Expression & string identifier & data type & required \\ \midrule
-		$ \bar{x}_0 $ & \code{constr\_x0} & double & \optional \\ 		\bottomrule
-	\end{tabular}
+Two possibilities exist to define the initial states equation~\eqref{eq:constraints:initial}: a simple syntax and an extended syntax.
+
+\paragraph{Simple syntax}
+defines the full initial state $x(0)=\bar{x}_0$. The options are found in table~\ref{tab:constraints:simplesyntax}.
+\begin{table}[h!]
+    \centering
+    \caption{Simple syntax for setting the initial state} \label{tab:constraints:simplesyntax}
+    \begin{tabular}{cccc}
+        \toprule
+        Term & String identifier & Data type & Required \\ \midrule
+        $ \bar{x}_0 $ & \code{constr\_x0} & double & \optional \\
+        \bottomrule
+    \end{tabular}
 \end{table}
-
-Extended syntax:
-\begin{table}[h]
-	\centering
-	\begin{tabular}{|c|c|c|c|}
-		\toprule
-		Mathematical Expression & string identifier & data type & required \\ \midrule
-		$ \underline{x}_0 $ & \code{constr\_lbx\_0} & double & \optional \\ 		\bottomrule
-		$ \bar{x}_0 $ & \code{constr\_ubx\_0} & double & \optional \\ 		\bottomrule
-		$ J_{\textrm{bx},0} $ & \code{constr\_Jbx\_0} & double & \optional \\ 		\bottomrule
-	\end{tabular}
+%
+\paragraph{Extended syntax}
+allows to define upper and lower bounds on a subset of states.
+The options for the extended syntax are found in table~\ref{tab:constraints:extendedsyntax}.
+\begin{table}[h!]
+    \centering
+    \caption{Extended syntax for setting the initial state} \label{tab:constraints:extendedsyntax}
+    \begin{tabular}{cccc}
+        \toprule
+        Term & String identifier & Data type & Required \\ \midrule
+        $ \underline{x}_0 $ & \code{constr\_lbx\_0} & double & \optional \\
+        $ \bar{x}_0 $ & \code{constr\_ubx\_0} & double & \optional \\
+        $ J_{\textrm{bx},0} $ & \code{constr\_Jbx\_0} & double & \optional \\
+        \bottomrule
+    \end{tabular}
 \end{table}
-
-\subsection{Path Constraints}
-\begin{table}[h]
-	\centering
-	\begin{tabular}{|c|c|c|c|}
-		\toprule
-		Mathematical Expression & string identifier & data type & required \\ \midrule
-		$J_{\textrm{bx}}$ & \code{constr\_Jbx}    & double, \textbf{SPUM} & \optional  \\
-		$\underline{x} $    & \code{constr\_lbx}     & double  & \optional  \\
-		$\bar{x} $  & \code{constr\_ubx}     & double  & \optional   \\ \midrule
-		$J_{\textrm{bu}}$ & \code{constr\_Jbu}    & double, \textbf{SPUM}   & \optional    \\
-		$\underline{u} $    & \code{constr\_lbu}     & double   & \optional   \\
-		$\bar{u} $         & \code{constr\_ubu}     & double  & \optional   \\ \midrule
-		$C$ & \code{constr\_C}    & double  & \optional \\
-		$D $    & \code{constr\_D}     & double  & \optional \\
-		$\underline{g} $    & \code{constr\_lg}     & double  & \optional    \\
-		$\bar{g} $         & \code{constr\_ug}     & double  & \optional   \\ \midrule
-		$ h $ & \code{constr\_expr\_h}    & \casadi~expression  & \optional   \\
-		$\underline{h} $    & \code{constr\_lh}     & double   & \optional   \\
-		$\bar{h} $         & \code{constr\_uh}     & double  & \optional   \\ \midrule
-		$ J\ind{sbx} $ & \code{constr\_Jsbx} & double, \textbf{SPUME} & \optional  \\
-		$ J\ind{sbu} $ & \code{constr\_Jsbu} & double, \textbf{SPUME}  & \optional \\
-		$ J\ind{sg} $ & \code{constr\_Jsg} & double, \textbf{SPUME} & \optional  \\
-		$ J\ind{sbx} $ & \code{constr\_Jsh} & double, \textbf{SPUME}  & \optional  \\
-		\bottomrule
-	\end{tabular}
+%
+\subsection{Path Constraints}\label{sec:constraints:path}
+%
+Table~\ref{tab:constraints:path} shows the options for defining the path constraints equations~(\ref{eq:constraints:path:lower_bounds:start} ~-~\ref{eq:constraints:path:upper_bounds:end}).
+Here, matrices
+\begin{itemize}
+    \item $J\ind{sh}$, maps lower slack vectors $s\ind{l,h}(t)$ and upper slack vectors $s\ind{u,h}(t)$ onto the non-linear constraint expressions $h(x,u,p)$.
+    \item $J\ind{bx}$, $J\ind{bu}$ map $x(t)$ and $u(t)$ onto its bounds vectors $\underline{x}$, $\bar{x}$ and $\underline{u}$, $\bar{u}$, respectively.
+    \item $J\ind{sx}$, $J\ind{su}$ map lower slack vectors $s\ind{l,bx}(t)$, $s\ind{l,bu}(t)$ and upper slack vectors $s\ind{u,bx}(t)$, $s\ind{u,bu}(t)$ onto $x(t)$ and $u(t)$, respectively.
+    \item $J\ind{sg}$ map lower slack vectors $s\ind{l,g}(t)$ and upper slack vectors $s\ind{u,g}(t)$ onto lower and upper equality bounds $\underline{g}$, $\bar{g}$, respectively.
+    \item $C$, $D$ map $x(t)$ and $u(t)$ onto lower and upper inequality bounds $\underline{g}$, $\bar{g}$ (polytopic constraints)
+\end{itemize}
+%
+\begin{table}[h!]
+    \centering
+    \caption{Path constraints options} \label{tab:constraints:path}
+    \begin{tabular}{cccc}
+        \toprule
+        Term & String identifier & Data type & Required \\ \midrule
+        $J\ind{bx}$ & \code{constr\_Jbx}    & double, \textbf{SPUM} & \optional  \\
+        $\underline{x} $    & \code{constr\_lbx}     & double  & \optional  \\
+        $\bar{x} $  & \code{constr\_ubx}     & double  & \optional   \\ [1em]
+        $J\ind{bu}$ & \code{constr\_Jbu}    & double, \textbf{SPUM}   & \optional    \\
+        $\underline{u} $    & \code{constr\_lbu}     & double   & \optional   \\
+        $\bar{u} $         & \code{constr\_ubu}     & double  & \optional   \\ [1em]
+        $C$ & \code{constr\_C}    & double  & \optional \\
+        $D $    & \code{constr\_D}     & double  & \optional \\
+        $\underline{g} $    & \code{constr\_lg}     & double  & \optional    \\
+        $\bar{g} $         & \code{constr\_ug}     & double  & \optional   \\ [1em]
+        $ h $ & \code{constr\_expr\_h}    & \casadi~expression  & \optional   \\
+        $\underline{h} $    & \code{constr\_lh}     & double   & \optional   \\
+        $\bar{h} $         & \code{constr\_uh}     & double  & \optional   \\ [1em]
+        $ J\ind{sbx} $ & \code{constr\_Jsbx} & double, \textbf{SPUME} & \optional  \\
+        $ J\ind{sbu} $ & \code{constr\_Jsbu} & double, \textbf{SPUME}  & \optional \\
+        $ J\ind{sg} $ & \code{constr\_Jsg} & double, \textbf{SPUME} & \optional  \\
+        $ J\ind{sbx} $ & \code{constr\_Jsh} & double, \textbf{SPUME}  & \optional  \\
+        \bottomrule
+    \end{tabular}
 \end{table}
-
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newpage
-\subsection{Terminal Constraints}
-\begin{table}[h]
-	\centering
-	\begin{tabular}{|c|c|c|c|}
-		\toprule
-		Mathematical Expression & string identifier & data type  & required \\ \midrule
-		$J_{\textrm{bx}}$ & \code{constr\_Jbx\_e}    & double, \textbf{SPUM}   & \optional   \\
-		$\underline{x}\terminal $    & \code{constr\_lbx\_e}     & double  & \optional   \\
-		$\bar{x}\terminal $         & \code{constr\_ubx\_e}     & double   & \optional  \\ \midrule
-		$ C\terminal $ & \code{constr\_C\_e}    & double   & \optional   \\
-		$\underline{g}\terminal $    & \code{constr\_lg}     & double   & \optional   \\
-		$\bar{g}\terminal $         & \code{constr\_ug}     & double   & \optional  \\ \midrule
-		$ h\terminal $ & \code{constr\_expr\_h\_e}    & \casadi~expression   & \optional  \\
-		$\underline{h}\terminal $    & \code{constr\_lh\_e}     & double   & \optional   \\
-		$\bar{h}\terminal $         & \code{constr\_uh\_e}     & double  & \optional   \\ \midrule
-		$ J\ind{sbx} $ & \code{constr\_Jsbx} & double, \textbf{SPUME}   & \optional \\
-		$ J\ind{sg}\terminal $ & \code{constr\_Jsg\_e} & double, \textbf{SPUME} & \optional  \\
-		$ J\ind{sbx}\terminal $ & \code{constr\_Jsh\_e} & double, \textbf{SPUME}  & \optional  \\
-		\bottomrule
-	\end{tabular}
+%\newpage
+\subsection{Terminal Constraints}\label{sec:constraints:terminal}
+%
+Table~\ref{tab:constraints:terminal} shows the options for defining the terminal constraints equations~(\ref{eq:constraints:terminal:lower_bounds:start} ~-~\ref{eq:constraints:terminal:upper_bounds:end}).
+Here, matrices
+\begin{itemize}
+    \item $J\ind{sh}\terminal$, maps lower slack vectors $s\ind{l,h}\terminal(t)$ and upper slack vectors $s\ind{u,h}\terminal(t)$ onto non-linear terminal constraint expressions $h\terminal(x(T), p)$.
+    \item $J\ind{bx}\terminal$ maps $x(T)$ onto its bounds vectors $\underline{x}\terminal$ and $\bar{x}\terminal$.
+    \item $J\ind{sbx}\terminal$ maps lower slack vectors $s\ind{l,bx}\terminal$ and upper slack vectors $s\ind{u,bx}\terminal$ onto $x(T)$.
+    \item $J\ind{sg}\terminal$ map lower slack vectors $s\ind{l,g}\terminal(t)$ and upper slack vectors $s\ind{u,g}\terminal(t)$ onto lower and upper equality bounds $\underline{g}\terminal$, $\bar{g}\terminal$, respectively.
+    \item $C\terminal$ maps $x(T)$ onto lower and upper inequality bounds $\underline{g}\terminal$, $\bar{g}\terminal$ (polytopic constraints)
+\end{itemize}
+%
+\begin{table}[h!]
+    \centering
+    \caption{Terminal constraints options} \label{tab:constraints:terminal}
+    \begin{tabular}{cccc}
+        \toprule
+        Term & String identifier & Data type & Required \\ \midrule
+        $J\ind{bx}\terminal$ & \code{constr\_Jbx\_e}    & double, \textbf{SPUM}   & \optional   \\
+        $\underline{x}\terminal $    & \code{constr\_lbx\_e}     & double  & \optional   \\
+        $\bar{x}\terminal $         & \code{constr\_ubx\_e}     & double   & \optional  \\ [1em]
+        $ C\terminal $ & \code{constr\_C\_e}    & double   & \optional   \\
+        $\underline{g}\terminal $    & \code{constr\_lg}     & double   & \optional   \\
+        $\bar{g}\terminal $         & \code{constr\_ug}     & double   & \optional  \\ [1em]
+        $ h\terminal $ & \code{constr\_expr\_h\_e}    & \casadi~expression   & \optional  \\
+        $\underline{h}\terminal $    & \code{constr\_lh\_e}     & double   & \optional   \\
+        $\bar{h}\terminal $         & \code{constr\_uh\_e}     & double  & \optional   \\ [1em]
+        $ J\ind{sbx}\terminal $ & \code{constr\_Jsbx} & double, \textbf{SPUME}   & \optional \\
+        $ J\ind{sg}\terminal $ & \code{constr\_Jsg\_e} & double, \textbf{SPUME} & \optional  \\
+        $ J\ind{sbx}\terminal $ & \code{constr\_Jsh\_e} & double, \textbf{SPUME}  & \optional  \\
+        \bottomrule
+    \end{tabular}
 \end{table}
-
-\subsection{External links}
+%
+\section{External links}\label{sec:external_links}
+%
+A table sheet with additional info is found here:\newline
 \url{https://docs.google.com/spreadsheets/d/1rVRycLnCyaWJLwnV47u30Vokp7vRu68og3OhlDbSjDU/edit?usp=sharing}
+%
+\section{Model}\label{sec:model}
+%
+A model instance is created using \code{ocp\_model = acados\_ocp\_model()}. It contains all model definitions for simulation and for usage in the OCP solver.
+See table~\ref{tab:model:options} for the available options.
+Furthermore, see \code{ocp\_model.model\_struct} to see what other fields can be set via direct access.
+%
+\begin{table}
+    \centering
+    \caption{Model \code{set(id, data)} options}
+    \label{tab:model:options}
+    \begin{tabular}{cccc}
+        \toprule
+        String id & Data type & Description & Required\\
+        \midrule
+        \code{name} & string & model name, used for code generation, default: \str{ocp\_model} & \optional \\
+        \code{T} & double & end time & \mandatory \\
+        \code{sym\_x} & \casadi{} expr. & state vector $x$ in problem formulation in sec.~\ref{sec:problem} & \mandatory \\
+        \code{sym\_u} & \casadi{} expr. & control vector $u$ in problem formulation in sec.~\ref{sec:problem} & only in OCP \\
+        \code{sym\_xdot} & \casadi{} expr. & derivative of the state $\dot{x}$ in implicit dynamics eq.~\eqref{eq:dynamics} & if IRK is used \\
+        \code{sym\_z} & \casadi{} expr. & algebraic state $z$ in implicit dynamics eq.~\eqref{eq:dynamics} & \optional, only with IRK \\
+        \code{sym\_p} & \casadi{} expr. & parameters $p$ of the problem formulation in sec.~\ref{sec:problem} & \optional \\
+        \multicolumn{4}{c}{$\vdots$}\\
+        \multicolumn{4}{c}{Additionally, options from tables \ref{tab:dynamics}, \ref{tab:cost:slack}, \ref{tab:cost:auto}, \ref{tab:cost:external}, \ref{tab:cost:linear_ls}, \ref{tab:cost:nonlinear_ls}, %\ref{tab:constr_type},
+        \ref{tab:constraints:simplesyntax}, \ref{tab:constraints:extendedsyntax}, \ref{tab:constraints:path} and \ref{tab:constraints:terminal}, apply here.}\\
+        \multicolumn{4}{c}{$\vdots$}\\
+        \bottomrule
+    \end{tabular}%
+\end{table}%
+%
+\section{Solver \& Options}\label{sec:solver}
+%
+An instance of the solver options class is created by using: \code{ocp\_opts = acados\_ocp\_opts()}.
+Together with the model these options are used when instancing the solver interface class: \code{ocp = acados\_ocp(ocp\_model, ocp\_opts)}.\\
+Tables \ref{tab:solver_options}, \ref{tab:solver_options:qp_solver_option} and \ref{tab:solver_options:regularize_method} show (almost) all available options.
+These options are set in \matlab{} via \code{ocp\_opts.set(<stringid>, <value>)}.
+% Some options are not (yet) implemented in the \code{.set(*)}-interface and can be accessed via a struct by using \code{ocp\_opts.opts\_struct.(<stringid>) = <value>}.
+Furthermore, the struct \code{ocp\_opts.opts\_struct} can be used as a reference for what other fields are available.
+\\
+Note that some options of the solver can be modified after creation using the routine: \code{set(<stringid>, <value>)}.
+Some options can only be set before the solver is created, especially options that influence the memory requirements of OCP solver, such as the modules used in the formulation, the QP solver, etc.
+
+%
+%\begin{landscape}
+\begin{table}
+    \centering
+    \small
+    \caption{Solver options}\label{tab:solver_options}
+    \begin{tabulary}{\textwidth}{p{4cm}@{}C@{}C@{}p{10cm}}
+        \toprule
+        {String identifier} & Type & Default & {Description} \\ \midrule
+        \multicolumn{4}{l}{\emph{Code generation}} \\
+        \code{compile\_interface} & string & \str{auto} & in (\str{auto}, \str{true}, \str{false}) \\
+        \code{codgen\_model} & string & \str{true} & in (\str{true}, \str{false}) \\
+        \code{compile\_model} & string & \str{true} & in (\str{true}, \str{false}) \\
+        \code{output\_dir} & string & \str{build} & codegen output directory\\
+        \midrule
+
+		\multicolumn{4}{l}{\emph{Shooting nodes}} \\
+        \code{param\_scheme\_N} & int $>1$ & $10$ & uniform grid: number of shooting nodes; acts together with end time \code{T} from model. \\
+        % set one of the following for nonuniform grid
+        {\code{shooting\_nodes} or \code{param\_\-scheme\_shooting\_nodes}} & doubles & \code{[]} & nonuniform grid option 1: direct definition of the shooting node times \\
+        \code{time\_steps} & doubles & \code{[]} & {nonuniform grid option 2: definition of deltas between shooting nodes}\\
+        \midrule
+
+        \multicolumn{4}{l}{\emph{Integrator}} \\
+        \code{sim\_method} & string & \str{irk} & \str{erk}, \str{irk}, \str{irk\_gnsf} \\
+        \code{sim\_method\_num\_stages} & int & $4$ & Runge-Kutta int.\ stages: ($1$)~RK1, ($2$)~RK2, ($4$)~RK4\\
+        \code{sim\_method\_num\_steps} & int & $1$\\
+        \code{sim\_method\_newton\_iter} & int & $3$\\
+        \code{gnsf\_detect\_struct} & string & \str{true}\\
+        \midrule
+
+        \multicolumn{4}{l}{\emph{NLP solver}} \\
+        \code{nlp\_solver} & string & \str{sqp} & in (\str{sqp}, \str{sqp\_rti})\\
+        \code{nlp\_solver\_max\_iter} & int $>1$ & $100$ & maximum number of NLP iterations\\
+        \code{nlp\_solver\_tol\_stat} & double & $10^{-6}$ & stopping criterion \\
+        \code{nlp\_solver\_tol\_eq}   & double & $10^{-6}$ & stopping criterion \\
+        \code{nlp\_solver\_tol\_ineq} & double & $10^{-6}$ & stopping criterion \\
+        \code{nlp\_solver\_tol\_comp} & double & $10^{-6}$ & stopping criterion \\
+        \code{nlp\_solver\_ext\_qp\_res} & int & $0$ & compute QP residuals at each NLP iteration \\
+        \code{nlp\_solver\_step\_length} & double & $1.0$ & fixed step length in SQP algorithm \\
+        \code{rti\_phase} & int & $0$ & RTI phase: ($1$) preparation, ($2$) feedback, ($0$) both \\
+        \midrule
+        
+        \multicolumn{4}{l}{\emph{QP solver}} \\
+        \code{qp\_solver} & string & $\longrightarrow$ & Defines the quadratic programming solver and condensing strategy. See table~\ref{tab:solver_options:qp_solver_option}\\
+
+        \code{qp\_solver\_iter\_max} & int & $50$ & maximum number of iterations per QP solver call\\
+        % \code{qp\_solver\_cond\_N} & 5\\ % New horizon after partial condensing
+        \code{qp\_solver\_cond\_ric\_alg} & int & $0$ & factorize hessian in the condensing: ($0$) no, ($1$) yes \\
+        \code{qp\_solver\_ric\_alg} & int & $0$ & HPIPM specific \\
+        \code{qp\_solver\_warm\_start} & int & $0$ & ($0$)~cold start, ($1$)~warm start primal variables, ($2$)~warm start and dual variables \\
+        \code{warm\_start\_first\_qp} & int & $0$ & warm start even in first SQP iteration: ($0$)~no, ($1$)~yes \\
+        \midrule
+                % globalization
+        \multicolumn{4}{l}{\emph{globalization}} \\
+        \code{globalization} & string & \scriptsize\str{fixed\_step} & globalization strategy in (\str{fixed\_step}, \str{merit\_backtracking}), note \code{merit\_backtracking} is a preliminary implementation.\\
+        \code{alpha\_min} & double & $0.05$ & minimum step-size, relevant for globalization  \\
+        \code{alpha\_reduction} & double & $0.7$ &  step-size reduction factor, relevant for globalization  \\
+        \midrule
+        \multicolumn{4}{l}{\emph{Hessian approximation}} \\
+        {\code{nlp\_solver\_\-exact\_hessian}} & string & \str{false} & use exact hessian calculation: (\str{})in (\str{true}, \str{false}), use exact \\
+        \code{regularize\_method} & string & $\longrightarrow$ & Defines the hessian regularization method. See table~\ref{tab:solver_options:regularize_method}\\
+        \code{levenberg\_marquardt} & double & $0.0$ & in case of a singular hessian, setting this $>0$ can help convergence \\
+        \code{exact\_hess\_dyn} & int & $1$ & in ($0$, $1$), compute and use hessian in dynamics, only if \str{nlp\_\-solver\_\-exact\_\-hessian} = \str{true} \\
+        \code{exact\_hess\_cost} & int & $1$ & in ($0$, $1$), only if \str{nlp\_solver\_exact\_hessian} = \str{true} \\
+        \code{exact\_hess\_constr} & int & $1$ & in ($0$, $1$), only if \str{nlp\_solver\_exact\_hessian} = \str{true} \\
+        \midrule
+        \multicolumn{4}{l}{\emph{Other}} \\
+        \code{print\_level} & int $\geq 0$ & $0$ & verbosity of the solver: ($0$) silent, ($>0$) print first QP problems and solution during SQP\\
+        \bottomrule
+    \end{tabulary}
+\end{table}
+%
+\begin{table}
+    \centering
+    \caption{Solver \code{set(\str{qp\_solver}, <stringid>)} options. The availability depends on for which solver interfaces \acados{} was linked to.}\label{tab:solver_options:qp_solver_option}
+    \begin{tabular}{c@{ }c@{}c}
+        \toprule
+        Solver lib & Condensing & {String identifier} \\ \midrule
+        \multirow{2}{1.2cm}{\centering HPIPM} & partial & \code{partial\_condensing\_hpipm}*\\
+         & full & \code{full\_condensing\_hpipm} \\[1ex]
+        HPMPC & partial & \code{partial\_condensing\_hpmpc} \\[1ex]
+        \multirow{2}{2cm}{\centering OOQP} & partial & \code{partial\_condensing\_ooqp} \\
+         & full & \code{full\_condensing\_ooqp} \\[1ex]
+        OSQP & partial & \code{partial\_condensing\_osqp} \\
+        QORE & full & \code{full\_condensing\_qore} \\
+        qpDUNES & partial & \code{partial\_condensing\_qpdunes} \\
+        qpOASES & full & \code{full\_condensing\_qpoases} \\
+        \bottomrule
+        \multicolumn{3}{r}{\footnotesize * default}
+    \end{tabular}
+\end{table}
+%
+\begin{table}
+    \centering
+    \caption{Solver \code{set(\str{regularize\_method}, <stringid>)} options}
+    \label{tab:solver_options:regularize_method}
+    \begin{tabular}{cc}
+        \toprule
+        String identifier & Description \\\midrule
+        \code{no\_regularize}* & don‘t regularize \\
+        \code{mirror} & \href{https://cdn.syscop.de/publications/Verschueren2017.pdf}{see Verschueren2017} \\
+        \code{project} & \href{https://cdn.syscop.de/publications/Verschueren2017.pdf}{see Verschueren2017} \\
+        \code{project\_reduc\_hess} & preliminary \\
+        \code{convexify} & \href{https://cdn.syscop.de/publications/Verschueren2017.pdf}{see Verschueren2017} \\
+        \bottomrule
+        \multicolumn{2}{r}{\footnotesize * default}
+    \end{tabular}
+\end{table}
+%\end{landscape}
+
 \end{document}

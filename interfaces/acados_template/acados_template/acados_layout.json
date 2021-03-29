@@ -1,4 +1,7 @@
 {
+    "code_export_directory": [
+        "str"
+    ],
     "acados_include_path": [
         "str"
     ],
@@ -361,17 +364,34 @@
         ]
     },
     "cost": {
+        "cost_type_0": [
+            "str"
+        ],
         "cost_type": [
             "str"
         ],
         "cost_type_e": [
             "str"
         ],
+        "Vu_0": [
+            "ndarray",
+            [
+                "ny_0",
+                "nu"
+            ]
+        ],
         "Vu": [
             "ndarray",
             [
                 "ny",
                 "nu"
+            ]
+        ],
+        "Vx_0": [
+            "ndarray",
+            [
+                "ny_0",
+                "nx"
             ]
         ],
         "Vx": [
@@ -388,11 +408,25 @@
                 "nx"
             ]
         ],
+        "Vz_0": [
+            "ndarray",
+            [
+                "ny_0",
+                "nz"
+            ]
+        ],
         "Vz": [
             "ndarray",
             [
                 "ny",
                 "nz"
+            ]
+        ],
+        "W_0": [
+            "ndarray",
+            [
+                "ny_0",
+                "ny_0"
             ]
         ],
         "W": [
@@ -431,6 +465,12 @@
             [
                 "ny_e",
                 "ny_e"
+            ]
+        ],
+        "yref_0": [
+            "ndarray",
+            [
+                "ny_0"
             ]
         ],
         "yref": [
@@ -558,6 +598,9 @@
         "ny": [
             "int"
         ],
+        "ny_0": [
+            "int"
+        ],
         "ny_e": [
             "int"
         ],
@@ -599,6 +642,9 @@
         "nlp_solver_type": [
             "str"
         ],
+        "globalization": [
+            "str"
+        ],
         "nlp_solver_step_length": [
             "float"
         ],
@@ -612,6 +658,12 @@
             "float"
         ],
         "Tsim": [
+            "float"
+        ],
+        "alpha_min": [
+            "float"
+        ],
+        "alpha_reduction": [
             "float"
         ],
         "sim_method_num_stages": [

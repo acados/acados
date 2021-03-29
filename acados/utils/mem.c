@@ -49,8 +49,10 @@
 
 // #define _USE_MALLOC_  // acados_malloc = malloc / acados_malloc = calloc
 
-void make_int_multiple_of(int num, int *size)
+void make_int_multiple_of(acados_size_t num, acados_size_t *size)
 {
+    // avoid changes for num < 2
+    if(num>1)
     // round integer size up to next multiple of num;
 	*size = (*size + num - 1) / num * num;
 }
@@ -71,7 +73,7 @@ int align_char_to(int num, char **c_ptr)
 static void print_warning() { printf(" -- using dynamically allocated memory for debugging --\n"); }
 #endif
 
-void *acados_malloc(size_t nitems, size_t size)
+void *acados_malloc(size_t nitems, acados_size_t size)
 {
 #if defined(_USE_MALLOC_)
     void *ptr = malloc(nitems * size);
@@ -81,7 +83,7 @@ void *acados_malloc(size_t nitems, size_t size)
     return ptr;
 }
 
-void *acados_calloc(size_t nitems, size_t size)
+void *acados_calloc(size_t nitems, acados_size_t size)
 {
     void *ptr = calloc(nitems, size);
     return ptr;

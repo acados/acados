@@ -424,7 +424,7 @@ int main()
 			blasfeo_allocate_dvec(nx+nu, &forw_times_seed);
 
 			blasfeo_pack_dmat(nx, nx+nu, S_forw_out, nx, &S_forw_result, 0, 0);
-			blasfeo_pack_dvec(nx, in->S_adj, &adjoint_seed, 0);
+			blasfeo_pack_dvec(nx, in->S_adj, 1, &adjoint_seed, 0);
 
 			blasfeo_dgemv_t(nx, nx+nu, 1.0, &S_forw_result, 0, 0, &adjoint_seed, 0, 0.0, &forw_times_seed, 0, &forw_times_seed, 0);
 			printf("S_forw^T * adj_seed = \n");

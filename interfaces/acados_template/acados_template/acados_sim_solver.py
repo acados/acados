@@ -112,39 +112,39 @@ def sim_formulation_json_dump(acados_sim, json_file='acados_sim.json'):
         json.dump(sim_json, f, default=np_array_to_list, indent=4, sort_keys=True)
 
 
-def sim_render_templates(json_file, model_name):
+def sim_render_templates(json_file, model_name, code_export_dir):
     # setting up loader and environment
     json_path = '{cwd}/{json_file}'.format(
         cwd=os.getcwd(),
         json_file=json_file)
 
     if not os.path.exists(json_path):
-        raise Exception("{} not found!".format(json_path))
+        raise Exception(f"{json_path} not found!")
 
-    template_dir = 'c_generated_code/'
+    template_dir = code_export_dir
 
     ## Render templates
     in_file = 'acados_sim_solver.in.c'
-    out_file = 'acados_sim_solver_{}.c'.format(model_name)
+    out_file = f'acados_sim_solver_{model_name}.c'
     render_template(in_file, out_file, template_dir, json_path)
 
     in_file = 'acados_sim_solver.in.h'
-    out_file = 'acados_sim_solver_{}.h'.format(model_name)
+    out_file = f'acados_sim_solver_{model_name}.h'
     render_template(in_file, out_file, template_dir, json_path)
 
     in_file = 'Makefile.in'
-    out_file = 'Makefile'
+    out_file = f'Makefile'
     render_template(in_file, out_file, template_dir, json_path)
 
     in_file = 'main_sim.in.c'
-    out_file = 'main_sim_{}.c'.format(model_name)
+    out_file = f'main_sim_{model_name}.c'
     render_template(in_file, out_file, template_dir, json_path)
 
     ## folder model
-    template_dir = 'c_generated_code/{}_model/'.format(model_name)
+    template_dir = f'{code_export_dir}/{model_name}_model/'
 
     in_file = 'model.in.h'
-    out_file = '{}_model.h'.format(model_name)
+    out_file = f'{model_name}_model.h'
     render_template(in_file, out_file, template_dir, json_path)
 
 
@@ -154,20 +154,22 @@ def sim_generate_casadi_functions(acados_sim):
 
     integrator_type = acados_sim.solver_options.integrator_type
 
-    opts = dict(generate_hess=0)
+    opts = dict(generate_hess = acados_sim.solver_options.sens_hess,
+                code_export_directory = acados_sim.code_export_directory)
     # generate external functions
     if integrator_type == 'ERK':
-        # explicit model -- generate C code
         generate_c_code_explicit_ode(model, opts)
     elif integrator_type == 'IRK':
-        # implicit model -- generate C code
         generate_c_code_implicit_ode(model, opts)
     elif integrator_type == 'GNSF':
-        generate_c_code_gnsf(model)
+        generate_c_code_gnsf(model, opts)
 
 class AcadosSimSolver:
     """
-    class to interact with the acados integrator C object
+    Class to interact with the acados integrator C object.
+
+    :param acados_sim: type :py:class:`acados_template.acados_ocp.AcadosOcp` (takes values to generate an instance :py:class:`acados_template.acados_sim.AcadosSim`) or :py:class:`acados_template.acados_sim.AcadosSim`
+    :param json_file: Default: 'acados_sim.json'
     """
     def __init__(self, acados_sim_, json_file='acados_sim.json'):
 
@@ -180,6 +182,7 @@ class AcadosSimSolver:
             acados_sim.dims.nz = acados_sim_.dims.nz
             acados_sim.dims.np = acados_sim_.dims.np
             acados_sim.solver_options.integrator_type = acados_sim_.solver_options.integrator_type
+            acados_sim.code_export_directory = acados_sim_.code_export_directory
 
         elif isinstance(acados_sim_, AcadosSim):
             acados_sim = acados_sim_
@@ -198,15 +201,17 @@ class AcadosSimSolver:
             sim_formulation_json_dump(acados_sim, json_file)
 
         # render templates
-        sim_render_templates(json_file, model_name)
+        code_export_dir = acados_sim.code_export_directory
+        sim_render_templates(json_file, model_name, code_export_dir)
 
         ## Compile solver
-        os.chdir('c_generated_code')
+        cwd = os.getcwd()
+        os.chdir(code_export_dir)
         os.system('make sim_shared_lib')
-        os.chdir('..')
+        os.chdir(cwd)
 
         # Ctypes
-        shared_lib = 'c_generated_code/libacados_sim_solver_' + model_name + '.so'
+        shared_lib = f'{code_export_dir}/libacados_sim_solver_{model_name}.so'
 
         self.sim_struct = acados_sim
 
@@ -230,17 +235,23 @@ class AcadosSimSolver:
         getattr(self.shared_lib, f"{model_name}_acados_get_sim_in").restype = c_void_p
         self.sim_in = getattr(self.shared_lib, f"{model_name}_acados_get_sim_in")()
 
+        getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver").restype = c_void_p
+        self.sim_solver = getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver")()
+
         nu = self.sim_struct.dims.nu
         nx = self.sim_struct.dims.nx
+        nz = self.sim_struct.dims.nz
         self.gettable = {
             'x': nx,
             'xn': nx,
             'u': nu,
+            'z': nz,
             'S_forw': nx*(nx+nu),
             'Sx': nx*nx,
             'Su': nx*nu,
             'S_adj': nx+nu,
             'S_hess': (nx+nu)*(nx+nu),
+            'S_algebraic': (nz)*(nx+nu),
         }
 
         self.settable = ['S_adj', 'T', 'x', 'u', 'xdot', 'z', 'p'] # S_forw
@@ -249,7 +260,7 @@ class AcadosSimSolver:
 
     def solve(self):
         """
-        solve the simulation problem with current input
+        Solve the simulation problem with current input.
         """
         status = getattr(self.shared_lib, f"{self.model_name}_acados_sim_solve")()
         return status
@@ -257,8 +268,9 @@ class AcadosSimSolver:
 
     def get(self, field_):
         """
-        get the last solution of the solver:
-            :param field_: string in ['x', 'u', 'S_forw', 'Sx', 'Su', 'S_adj', 'S_hess']
+        Get the last solution of the solver.
+
+            :param str field: string in ['x', 'u', 'z', 'S_forw', 'Sx', 'Su', 'S_adj', 'S_hess', 'S_algebraic']
         """
         field = field_
         field = field.encode('utf-8')
@@ -288,6 +300,11 @@ class AcadosSimSolver:
                 nx = self.sim_struct.dims.nx
                 nu = self.sim_struct.dims.nu
                 out = out.reshape(nx+nu, nx+nu, order='F')
+            elif field_ == 'S_algebraic':
+                nx = self.sim_struct.dims.nx
+                nu = self.sim_struct.dims.nu
+                nz = self.sim_struct.dims.nz
+                out = out.reshape(nz, nx+nu, order='F')
         else:
             raise Exception(f'AcadosSimSolver.get(): Unknown field {field_},' \
                 f' available fields are {", ".join(self.gettable.keys())}')
@@ -297,8 +314,10 @@ class AcadosSimSolver:
 
     def set(self, field_, value_):
         """
-        set numerical data inside the solver:
-            :param field_: string in ['p', 'S_adj', 'T', 'x', 'u', 'xdot', 'z', 'p']
+        Set numerical data inside the solver.
+
+            :param field: string in ['p', 'S_adj', 'T', 'x', 'u', 'xdot', 'z', 'p']
+            :param value: the value with appropriate size.
         """
         # cast value_ to avoid conversion issues
         if isinstance(value_, float):
@@ -317,8 +336,12 @@ class AcadosSimSolver:
             getattr(self.shared_lib, f"{model_name}_acados_sim_update_params").argtypes = [POINTER(c_double)]
             value_data = cast(value_.ctypes.data, POINTER(c_double))
             getattr(self.shared_lib, f"{model_name}_acados_sim_update_params")(value_data, value_.shape[0])
-
+        elif field_ in ['xdot', 'z']:
+            # TODO(katrin): perform dimension check!
+            self.shared_lib.sim_solver_set.argtypes = [c_void_p, c_char_p, c_void_p]
+            self.shared_lib.sim_solver_set(self.sim_solver, field, value_data_p)
         elif field_ in self.settable:
+            # TODO(oj): perform dimension check!
             self.shared_lib.sim_in_set.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
             self.shared_lib.sim_in_set(self.sim_config, self.sim_dims, self.sim_in, field, value_data_p)
         else:
@@ -330,3 +353,8 @@ class AcadosSimSolver:
 
     def __del__(self):
         getattr(self.shared_lib, f"{self.model_name}_acados_sim_free")()
+
+        try:
+            self.dlclose(self.shared_lib._handle)
+        except:
+            pass

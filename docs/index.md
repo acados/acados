@@ -21,8 +21,10 @@ Documentation latest build: |today|
    installation/index
    interfaces/index
    c_api/index
+   python_api/index
    examples/index
    faq/index
    citing
+   list_of_projects/index
 ```
 

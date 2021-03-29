@@ -674,21 +674,21 @@ int main() {
     }
     cost[N]->ext_cost_fun_jac_hess = &ext_costN_generic;
 
-    blasfeo_pack_dvec(ns[0], Zl0, &cost[0]->Z, 0);
-    blasfeo_pack_dvec(ns[0], Zu0, &cost[0]->Z, ns[0]);
-    blasfeo_pack_dvec(ns[0], zl0, &cost[0]->z, 0);
-    blasfeo_pack_dvec(ns[0], zu0, &cost[0]->z, ns[0]);
+    blasfeo_pack_dvec(ns[0], Zl0, 1, &cost[0]->Z, 0);
+    blasfeo_pack_dvec(ns[0], Zu0, 1, &cost[0]->Z, ns[0]);
+    blasfeo_pack_dvec(ns[0], zl0, 1, &cost[0]->z, 0);
+    blasfeo_pack_dvec(ns[0], zu0, 1, &cost[0]->z, ns[0]);
     for (ii=1; ii<N; ii++)
     {
-        blasfeo_pack_dvec(ns[ii], Zl1, &cost[ii]->Z, 0);
-        blasfeo_pack_dvec(ns[ii], Zu1, &cost[ii]->Z, ns[ii]);
-        blasfeo_pack_dvec(ns[ii], zl1, &cost[ii]->z, 0);
-        blasfeo_pack_dvec(ns[ii], zu1, &cost[ii]->z, ns[ii]);
+        blasfeo_pack_dvec(ns[ii], Zl1, 1, &cost[ii]->Z, 0);
+        blasfeo_pack_dvec(ns[ii], Zu1, 1, &cost[ii]->Z, ns[ii]);
+        blasfeo_pack_dvec(ns[ii], zl1, 1, &cost[ii]->z, 0);
+        blasfeo_pack_dvec(ns[ii], zu1, 1, &cost[ii]->z, ns[ii]);
     }
-    blasfeo_pack_dvec(ns[N], ZlN, &cost[N]->Z, 0);
-    blasfeo_pack_dvec(ns[N], ZuN, &cost[N]->Z, ns[N]);
-    blasfeo_pack_dvec(ns[N], zlN, &cost[N]->z, 0);
-    blasfeo_pack_dvec(ns[N], zuN, &cost[N]->z, ns[N]);
+    blasfeo_pack_dvec(ns[N], ZlN, 1, &cost[N]->Z, 0);
+    blasfeo_pack_dvec(ns[N], ZuN, 1, &cost[N]->Z, ns[N]);
+    blasfeo_pack_dvec(ns[N], zlN, 1, &cost[N]->z, 0);
+    blasfeo_pack_dvec(ns[N], zuN, 1, &cost[N]->z, ns[N]);
 
 
     /* dynamics */
@@ -706,11 +706,11 @@ int main() {
 
     // fist stage
 #if CONSTRAINTS==0 // box constraints
-    blasfeo_pack_dvec(nb[0], lb0, &constraints[0]->d, 0);
-    blasfeo_pack_dvec(nb[0], ub0, &constraints[0]->d, nb[0]+ng[0]+nh[0]);
+    blasfeo_pack_dvec(nb[0], lb0, 1, &constraints[0]->d, 0);
+    blasfeo_pack_dvec(nb[0], ub0, 1, &constraints[0]->d, nb[0]+ng[0]+nh[0]);
     constraints[0]->idxb = idxb0;
-    blasfeo_pack_dvec(ns[0], ls0, &constraints[0]->d, 2*nb[0]+2*ng[0]+2*nh[0]);
-    blasfeo_pack_dvec(ns[0], us0, &constraints[0]->d, 2*nb[0]+2*ng[0]+2*nh[0]+ns[0]);
+    blasfeo_pack_dvec(ns[0], ls0, 1, &constraints[0]->d, 2*nb[0]+2*ng[0]+2*nh[0]);
+    blasfeo_pack_dvec(ns[0], us0, 1, &constraints[0]->d, 2*nb[0]+2*ng[0]+2*nh[0]+ns[0]);
     constraints[0]->idxs = idxs0;
 #elif CONSTRAINTS==1 // general constraints
     // TODO
@@ -721,18 +721,18 @@ int main() {
     // other stages
     for (int i = 1; i < N; i++)
     {
-        blasfeo_pack_dvec(nb[i], lb1, &constraints[i]->d, 0);
-        blasfeo_pack_dvec(nb[i], ub1, &constraints[i]->d, nb[i]+ng[i]+nh[i]);
+        blasfeo_pack_dvec(nb[i], lb1, 1, &constraints[i]->d, 0);
+        blasfeo_pack_dvec(nb[i], ub1, 1, &constraints[i]->d, nb[i]+ng[i]+nh[i]);
         constraints[i]->idxb = idxb1;
-        blasfeo_pack_dvec(ns[i], ls1, &constraints[i]->d, 2*nb[i]+2*ng[i]+2*nh[i]);
-        blasfeo_pack_dvec(ns[i], us1, &constraints[i]->d, 2*nb[i]+2*ng[i]+2*nh[i]+ns[i]);
+        blasfeo_pack_dvec(ns[i], ls1, 1, &constraints[i]->d, 2*nb[i]+2*ng[i]+2*nh[i]);
+        blasfeo_pack_dvec(ns[i], us1, 1, &constraints[i]->d, 2*nb[i]+2*ng[i]+2*nh[i]+ns[i]);
         constraints[i]->idxs = idxs1;
     }
-    blasfeo_pack_dvec(nb[N], lbN, &constraints[N]->d, 0);
-    blasfeo_pack_dvec(nb[N], ubN, &constraints[N]->d, nb[N]+ng[N]+nh[N]);
+    blasfeo_pack_dvec(nb[N], lbN, 1, &constraints[N]->d, 0);
+    blasfeo_pack_dvec(nb[N], ubN, 1, &constraints[N]->d, nb[N]+ng[N]+nh[N]);
     constraints[N]->idxb = idxbN;
-    blasfeo_pack_dvec(ns[N], lsN, &constraints[N]->d, 2*nb[N]+2*ng[N]+2*nh[N]);
-    blasfeo_pack_dvec(ns[N], usN, &constraints[N]->d, 2*nb[N]+2*ng[N]+2*nh[N]+ns[N]);
+    blasfeo_pack_dvec(ns[N], lsN, 1, &constraints[N]->d, 2*nb[N]+2*ng[N]+2*nh[N]);
+    blasfeo_pack_dvec(ns[N], usN, 1, &constraints[N]->d, 2*nb[N]+2*ng[N]+2*nh[N]+ns[N]);
     constraints[N]->idxs = idxsN;
 
 
@@ -835,8 +835,8 @@ int main() {
             {
                 blasfeo_dvecse(nu[i], 0.0, nlp_out->ux+i, 0);
                 blasfeo_dvecse(nx[i], 0.0, nlp_out->ux+i, nu[i]);
-//             blasfeo_pack_dvec(nu[i], uref, nlp_out->ux+i, 0);
-//             blasfeo_pack_dvec(nx[i], xref, nlp_out->ux+i, nu[i]);
+//             blasfeo_pack_dvec(nu[i], uref, 1, nlp_out->ux+i, 0);
+//             blasfeo_pack_dvec(nx[i], xref, 1, nlp_out->ux+i, nu[i]);
             }
 //     }
 

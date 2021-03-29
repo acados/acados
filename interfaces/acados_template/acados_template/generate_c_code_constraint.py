@@ -33,7 +33,7 @@
 
 import os
 from casadi import *
-from .utils import ALLOWED_CASADI_VERSIONS, is_empty, casadi_length
+from .utils import ALLOWED_CASADI_VERSIONS, is_empty, casadi_length, casadi_version_warning
 
 def generate_c_code_constraint( model, con_name, is_terminal, opts ):
 
@@ -41,10 +41,7 @@ def generate_c_code_constraint( model, con_name, is_terminal, opts ):
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
     if casadi_version not in (ALLOWED_CASADI_VERSIONS):
-        msg =  'Please download and install CasADi {} '.format(" or ".join(ALLOWED_CASADI_VERSIONS))
-        msg += 'to ensure compatibility with acados.\n'
-        msg += 'Version {} currently in use.'.format(casadi_version)
-        raise Exception(msg)
+        casadi_version_warning(casadi_version)
 
     # load constraint variables and expression
     x = model.x
@@ -88,9 +85,12 @@ def generate_c_code_constraint( model, con_name, is_terminal, opts ):
             lam_h = symbol('lam_h', nh, 1)
 
         # set up & change directory
-        if not os.path.exists('c_generated_code'):
-            os.mkdir('c_generated_code')
-        os.chdir('c_generated_code')
+        code_export_dir = opts["code_export_directory"]
+        if not os.path.exists(code_export_dir):
+            os.makedirs(code_export_dir)
+
+        cwd = os.getcwd()
+        os.chdir(code_export_dir)
         gen_dir = con_name + '_constraints'
         if not os.path.exists(gen_dir):
             os.mkdir(gen_dir)
@@ -113,9 +113,9 @@ def generate_c_code_constraint( model, con_name, is_terminal, opts ):
             if opts['generate_hess']:
 
                 if is_terminal:
-                    fun_name = con_name + '_constr_h_e_fun_jac_uxt_hess'
+                    fun_name = con_name + '_constr_h_e_fun_jac_uxt_zt_hess'
                 else:
-                    fun_name = con_name + '_constr_h_fun_jac_uxt_hess'
+                    fun_name = con_name + '_constr_h_fun_jac_uxt_zt_hess'
 
                 # adjoint
                 adj_ux = jtimes(con_h_expr, vertcat(u, x), lam_h, True)
@@ -175,6 +175,6 @@ def generate_c_code_constraint( model, con_name, is_terminal, opts ):
             constraint_phi.generate(fun_name, casadi_opts)
 
         # change directory back
-        os.chdir('../..')
+        os.chdir(cwd)
 
     return

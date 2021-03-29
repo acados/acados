@@ -72,7 +72,7 @@ typedef struct
 } ocp_nlp_reg_convexify_opts;
 
 //
-int ocp_nlp_reg_convexify_opts_calculate_size(void);
+acados_size_t ocp_nlp_reg_convexify_opts_calculate_size(void);
 //
 void *ocp_nlp_reg_convexify_opts_assign(void *raw_memory);
 //
@@ -123,7 +123,7 @@ typedef struct {
 } ocp_nlp_reg_convexify_memory;
 
 //
-int ocp_nlp_reg_convexify_calculate_memory_size(void *config, ocp_nlp_reg_dims *dims, void *opts);
+acados_size_t ocp_nlp_reg_convexify_calculate_memory_size(void *config, ocp_nlp_reg_dims *dims, void *opts);
 //
 void *ocp_nlp_reg_convexify_assign_memory(void *config, ocp_nlp_reg_dims *dims, void *opts, void *raw_memory);
 

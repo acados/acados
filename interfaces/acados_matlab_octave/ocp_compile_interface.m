@@ -89,14 +89,14 @@ if is_octave()
     fclose(input_file);
 
     % add temporary additional flag
-    if (strcmp(opts.qp_solver, 'full_condensing_qpoases'))
+    if ~isempty(strfind(opts.qp_solver,'qpoases'))
         cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_QPOASES'];
-    end
-    if (strcmp(opts.qp_solver, 'partial_condensing_osqp'))
+    elseif ~isempty(strfind(opts.qp_solver,'osqp'))
         cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_OSQP'];
-    end
-    if (strcmp(opts.qp_solver, 'partial_condensing_hpmpc'))
+    elseif ~isempty(strfind(opts.qp_solver,'hpmpc'))
         cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_HPMPC'];
+    elseif ~isempty(strfind(opts.qp_solver,'qpdunes'))
+        cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_QPDUNES'];
     end
 
     setenv('CFLAGS', cflags_tmp);
@@ -137,6 +137,14 @@ if with_qp_osqp
     % additional compilation flag
     FLAGS = [FLAGS, ' -DACADOS_WITH_OSQP'];
 end
+% is qpDUNES?
+with_qp_qpdunes = ~isempty(strfind(opts.qp_solver, 'qpdunes'));
+if with_qp_qpdunes
+    % flag file to remember if compiled with qpDUNES
+    flag_file = fullfile(opts.output_dir, '_compiled_with_qpdunes.txt');
+    flagID = fopen(flag_file, 'w');
+    fclose(flagID);
+end
 % is HPMPC?
 with_qp_hpmpc = ~isempty(strfind(opts.qp_solver, 'hpmpc'));
 if with_qp_hpmpc
@@ -146,14 +154,6 @@ if with_qp_hpmpc
     fclose(flagID);
     % additional compilation flag
     FLAGS = [FLAGS, ' -DACADOS_WITH_HPMPC'];
-end
-% is HPIPM?
-with_qp_hpipm = ~isempty(strfind(opts.qp_solver, 'hpipm'));
-if with_qp_hpipm
-    % flag file to remember if compiled with HPIPM
-    flag_file = fullfile(opts.output_dir, '_compiled_with_hpipm.txt');
-    flagID = fopen(flag_file, 'w');
-    fclose(flagID);
 end
 
 
@@ -196,7 +196,7 @@ if is_octave()
     if octave_version < 5
         movefile('*.o', opts.output_dir);
     end
-    
+
     %system(['mv -f *.mexa64 ', opts.output_dir])
     for k=1:length(mex_names)
         clear(mex_names{k})

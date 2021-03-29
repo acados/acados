@@ -117,7 +117,7 @@ void sim_opts_get(sim_config *config, void *opts, const char *field, void *value
 
 /* solver */
 //
-int sim_calculate_size(sim_config *config, void *dims, void *opts_);
+acados_size_t sim_calculate_size(sim_config *config, void *dims, void *opts_);
 //
 sim_solver *sim_assign(sim_config *config, void *dims, void *opts_, void *raw_memory);
 //

@@ -63,25 +63,39 @@ typedef enum {
     PARTIAL_CONDENSING_HPIPM,
 #ifdef ACADOS_WITH_HPMPC
     PARTIAL_CONDENSING_HPMPC,
+#else
+    PARTIAL_CONDENSING_HPMPC_NOT_AVAILABLE,
 #endif
 #ifdef ACADOS_WITH_OOQP
     PARTIAL_CONDENSING_OOQP,
+#else
+    PARTIAL_CONDENSING_OOQP_NOT_AVAILABLE,
 #endif
 #ifdef ACADOS_WITH_OSQP
     PARTIAL_CONDENSING_OSQP,
+#else
+    PARTIAL_CONDENSING_OSQP_NOT_AVAILABLE,
 #endif
 #ifdef ACADOS_WITH_QPDUNES
     PARTIAL_CONDENSING_QPDUNES,
+#else
+    PARTIAL_CONDENSING_QPDUNES_NOT_AVAILABLE,
 #endif
     FULL_CONDENSING_HPIPM,
 #ifdef ACADOS_WITH_QPOASES
     FULL_CONDENSING_QPOASES,
+#else
+    FULL_CONDENSING_QPOASES_NOT_AVAILABLE,
 #endif
 #ifdef ACADOS_WITH_QORE
     FULL_CONDENSING_QORE,
+#else
+    FULL_CONDENSING_QORE_NOT_AVAILABLE,
 #endif
 #ifdef ACADOS_WITH_OOQP
     FULL_CONDENSING_OOQP,
+#else
+    FULL_CONDENSING_OOQP_NOT_AVAILABLE,
 #endif
     INVALID_QP_SOLVER,
 } ocp_qp_solver_t;
@@ -193,7 +207,7 @@ void ocp_qp_xcond_solver_opts_set(ocp_qp_xcond_solver_config *config,
            ocp_qp_xcond_solver_opts *opts, const char *field, void* value);
 
 /// TBC Should be private/static?
-int ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
+acados_size_t ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
 
 
 /// TBC Reserves memory? TBC Should this be private?

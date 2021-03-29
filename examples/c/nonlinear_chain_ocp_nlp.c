@@ -1372,8 +1372,8 @@ int main()
 		// warm start output initial guess of solution
 		for (int i=0; i<=NN; i++)
 		{
-			blasfeo_pack_dvec(nu[i], uref, nlp_out->ux+i, 0);
-			blasfeo_pack_dvec(nx[i], xref, nlp_out->ux+i, nu[i]);
+			blasfeo_pack_dvec(nu[i], uref, 1, nlp_out->ux+i, 0);
+			blasfeo_pack_dvec(nx[i], xref, 1, nlp_out->ux+i, nu[i]);
 		}
 
 		// call nlp solver

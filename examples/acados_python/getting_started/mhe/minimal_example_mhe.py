@@ -34,7 +34,7 @@
 import sys
 sys.path.insert(0, '../common')
 
-from export_pendulum_ode_model import export_pendulum_ode_model
+from pendulum_model import export_pendulum_ode_model
 from export_mhe_ode_model import export_mhe_ode_model
 
 from export_ocp_solver import export_ocp_solver
@@ -46,6 +46,7 @@ from scipy.linalg import block_diag
 from utils import plot_pendulum
 
 # general
+
 Tf = 1.0
 N = 20
 h = Tf/N
@@ -75,7 +76,6 @@ R_mhe  = 0.1*np.eye(nx)
 # Q_mhe = np.zeros((nx, nx))
 # Q0_mhe = np.diag([0.01, 1, 1, 1])
 # R_mhe  = np.diag([0.1, 10, 10, 10])
-
 acados_solver_mhe = export_mhe_solver(model_mhe, N, h, Q_mhe, Q0_mhe, R_mhe)
 
 # simulation
@@ -108,17 +108,25 @@ simX[N,:] = acados_solver_ocp.get(N, "x")
 simY[N,:] = simX[N,:] + np.transpose(np.diag(v_stds) @ np.random.standard_normal((nx, 1)))
 
 # set measurements and controls
-for j in range(N):
-    yref = np.zeros((3*nx, ))
+yref_0 = np.zeros((3*nx, ))
+yref_0[:nx] = simY[0, :]
+yref_0[2*nx:] = x0_bar
+acados_solver_mhe.set(0, "yref", yref_0)
+acados_solver_mhe.set(0, "p", simU[0,:])
+#acados_solver_mhe.set(0, "x", simX[0,:])
+
+yref = np.zeros((2*nx, ))
+for j in range(1,N):
     yref[:nx] = simY[j, :]
-    yref[2*nx:] = x0_bar
     acados_solver_mhe.set(j, "yref", yref)
     acados_solver_mhe.set(j, "p", simU[j,:])
+    # acados_solver_mhe.set(j, "x", simX[j,:])
+
 
 # solve mhe problem
 status = acados_solver_mhe.solve()
 
-if status != 0:
+if status != 0 and status != 2:
     raise Exception('acados returned status {}. Exiting.'.format(status))
 
 # get solution
