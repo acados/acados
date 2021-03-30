@@ -335,13 +335,10 @@ class AcadosSimSolver:
         """
         Set numerical data inside the solver.
 
-            :param field: string in ['p', 'S_adj', 'T', 'x', 'u', 'xdot', 'z', 'p']
+            :param field: string in ['p', 'S_adj', 'T', 'x', 'u', 'xdot', 'z']
             :param value: the value with appropriate size.
         """
         # cast value_ to avoid conversion issues
-        if isinstance(value_, float):
-            value_ = np.array([value_])
-
         value_ = value_.astype(float)
         value_data = cast(value_.ctypes.data, POINTER(c_double))
         value_data_p = cast((value_data), c_void_p)
@@ -355,12 +352,30 @@ class AcadosSimSolver:
             getattr(self.shared_lib, f"{model_name}_acados_sim_update_params").argtypes = [c_void_p, POINTER(c_double), c_int]
             value_data = cast(value_.ctypes.data, POINTER(c_double))
             getattr(self.shared_lib, f"{model_name}_acados_sim_update_params")(self.capsule, value_data, value_.shape[0])
-        elif field_ in ['xdot', 'z']:
-            # TODO(katrin): perform dimension check!
+            return
+        else:
+            # dimension check
+            dims = np.ascontiguousarray(np.zeros((2,)), dtype=np.intc)
+            dims_data = cast(dims.ctypes.data, POINTER(c_int))
+
+            self.shared_lib.sim_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_int)]
+            self.shared_lib.sim_dims_get_from_attr(self.sim_config, self.sim_dims, field, dims_data)
+
+            value_ = np.ravel(value_, order='F')
+
+            value_shape = value_.shape
+            if len(value_shape) == 1:
+                value_shape = (value_shape[0], 0)
+
+            if value_shape != tuple(dims):
+                raise Exception('AcadosSimSolver.set(): mismatching dimension' \
+                    ' for field "{}" with dimension {} (you have {})'.format(field_, tuple(dims), value_shape))
+
+        # set
+        if field_ in ['xdot', 'z']:
             self.shared_lib.sim_solver_set.argtypes = [c_void_p, c_char_p, c_void_p]
             self.shared_lib.sim_solver_set(self.sim_solver, field, value_data_p)
         elif field_ in self.settable:
-            # TODO(oj): perform dimension check!
             self.shared_lib.sim_in_set.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
             self.shared_lib.sim_in_set(self.sim_config, self.sim_dims, self.sim_in, field, value_data_p)
         else:
