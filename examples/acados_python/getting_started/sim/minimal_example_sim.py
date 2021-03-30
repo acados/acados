@@ -75,7 +75,10 @@ simX[0,:] = x0
 for i in range(N):
     # set initial state
     acados_integrator.set("x", simX[i,:])
-    acados_integrator.set("xdot", np.zeros((nx,)))
+    # initialize IRK
+    if sim.solver_options.integrator_type == 'IRK':
+        acados_integrator.set("xdot", np.zeros((nx,)))
+
     # solve
     status = acados_integrator.solve()
     # get solution
