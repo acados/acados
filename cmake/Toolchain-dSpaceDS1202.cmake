@@ -84,6 +84,24 @@ set(BLASFEO_EXAMPLES OFF CACHE BOOL "Examples disabled")
 set(EXT_DEP OFF CACHE BOOL "Compile external dependencies in BLASFEO")
 set(ACADOS_INSTALL_DIR "install" CACHE PATH  "Installation path to PROJECT_SOURCE_DIR")
 
-# add definition to comment out certain uses of the "assert" command
+# try to integrate dSpace Libraries
+set(CMAKE_C_FLAGS "\"-I${DSPACE_RTLIB}\"")
+set(CMAKE_INCLUDE_FLAG_C "-I")
+set(CMAKE_INCLUDE_FLAG_CXX "-I")
+# file(TO_CMAKE_PATH "C:\\Program Files\\dSPACE RCPHIL 2017-B" DSPACE_TOOLS)
+set(DSPACE_RTLIB "C:/DualFuel/MLB/IdentificationOptimizationToolbox/acadosCrossCompile/acados/cmake/Platform/DS1202_RTLib")
+# set(CMAKE_FIND_LIBRARY_PREFIXES "lib")
+# set(CMAKE_FIND_LIBRARY_SUFFIXES ".so" ".a")
+
 # add_definitions(-DWINDOWS_SKIP_PTR_ALIGNMENT_CHECK)
-# add_definitions(-DSPACE_INCLUDES)
+# add_definitions(-DDSPACE_INCLUDES)
+add_definitions(-D_DSHOST)
+add_definitions(-D_DS1201)
+add_definitions(-D_DS1202)
+add_definitions(-DDS_PLATFORM_PPC)
+add_definitions(-DDS_PLATFORM_SMARTRTK)
+add_definitions(-DDS_PLATFORM_SMART)
+
+
+# add_definitions(-D_INLINE)
+
