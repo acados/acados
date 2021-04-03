@@ -35,6 +35,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "acados_c/external_function_interface.h"
 
@@ -52,6 +53,7 @@ void external_function_param_generic_create(external_function_param_generic *fun
 {
     acados_size_t fun_size = external_function_param_generic_calculate_size(fun, np);
     void *fun_mem = acados_malloc(1, fun_size);
+    assert(fun_mem != 0);
     external_function_param_generic_assign(fun, fun_mem);
 
     return;
@@ -76,6 +78,7 @@ void external_function_casadi_create(external_function_casadi *fun)
 {
     acados_size_t fun_size = external_function_casadi_calculate_size(fun);
     void *fun_mem = acados_malloc(1, fun_size);
+    assert(fun_mem != 0);
     external_function_casadi_assign(fun, fun_mem);
 
     return;
@@ -92,6 +95,7 @@ void external_function_casadi_create_array(int size, external_function_casadi *f
 
     // create size array
     acados_size_t *funs_size = (acados_size_t *) acados_malloc(1, size * sizeof(acados_size_t));
+    assert(funs_size != 0);
     // acados_size_t *funs_size = malloc(size * sizeof(acados_size_t));
     acados_size_t funs_size_tot = 0;
 
@@ -104,6 +108,7 @@ void external_function_casadi_create_array(int size, external_function_casadi *f
 
     // allocate memory
     void *funs_mem = acados_malloc(1, funs_size_tot);
+    assert(funs_mem != 0);
 
     // assign
     c_ptr = funs_mem;
@@ -147,6 +152,7 @@ void external_function_param_casadi_create(external_function_param_casadi *fun, 
 {
     acados_size_t fun_size = external_function_param_casadi_calculate_size(fun, np);
     void *fun_mem = acados_malloc(1, fun_size);
+    assert(fun_mem != 0);
     external_function_param_casadi_assign(fun, fun_mem);
 
     return;
@@ -163,6 +169,7 @@ void external_function_param_casadi_create_array(int size, external_function_par
 
     // create size array
     acados_size_t *funs_size = (acados_size_t *) acados_malloc(1, size * sizeof(acados_size_t));
+    assert(funs_size != 0);
     // acados_size_t *funs_size = malloc(size * sizeof(acados_size_t));
     acados_size_t funs_size_tot = 0;
 
@@ -175,6 +182,7 @@ void external_function_param_casadi_create_array(int size, external_function_par
 
     // allocate memory
     void *funs_mem = acados_malloc(1, funs_size_tot);
+    assert(funs_mem != 0);
 
     // assign
     c_ptr = funs_mem;
