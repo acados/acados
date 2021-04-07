@@ -373,6 +373,15 @@
         "cost_type_e": [
             "str"
         ],
+        "cost_ext_fun_type_0": [
+            "str"
+        ],
+        "cost_ext_fun_type": [
+            "str"
+        ],
+        "cost_ext_fun_type_e": [
+            "str"
+        ],
         "Vu_0": [
             "ndarray",
             [
