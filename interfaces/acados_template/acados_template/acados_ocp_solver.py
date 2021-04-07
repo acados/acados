@@ -97,6 +97,7 @@ def make_ocp_dims_consistent(acados_ocp):
         cost.Vu_0 = cost.Vu
         cost.Vz_0 = cost.Vz
         cost.yref_0 = cost.yref
+        cost.cost_ext_fun_type_0 = cost.cost_ext_fun_type
         model.cost_y_expr_0 = model.cost_y_expr
         model.cost_expr_ext_cost_0 = model.cost_expr_ext_cost
 
