@@ -49,6 +49,18 @@
 
 // #define _USE_MALLOC_  // acados_malloc = malloc / acados_malloc = calloc
 
+int acados_get_pointer_size()
+{
+    // returns pointer size in bytes
+    int pointer_size = sizeof(void *);
+    if (pointer_size != 4 && pointer_size != 8)
+    {
+        printf("\nerror: acados expected pointers to be 4 or 8 bytes.\n");
+        exit(1);
+    }
+    return pointer_size;
+}
+
 void make_int_multiple_of(acados_size_t num, acados_size_t *size)
 {
     // avoid changes for num < 2
@@ -92,7 +104,7 @@ void *acados_calloc(size_t nitems, acados_size_t size)
 void assign_and_advance_double_ptrs(int n, double ***v, char **ptr)
 {
 #ifndef WINDOWS_SKIP_PTR_ALIGNMENT_CHECK
-    assert((size_t) *ptr % 8 == 0 && "pointer not 8-byte aligned!");
+    assert((size_t) *ptr % acados_get_pointer_size() == 0 && "pointer not aligned properly!");
 #endif
 #ifdef _USE_VALGRIND_
     *v = (double **) acados_malloc(n, sizeof(double *));
@@ -105,7 +117,7 @@ void assign_and_advance_double_ptrs(int n, double ***v, char **ptr)
 void assign_and_advance_int_ptrs(int n, int ***v, char **ptr)
 {
 #ifndef WINDOWS_SKIP_PTR_ALIGNMENT_CHECK
-    assert((size_t) *ptr % 8 == 0 && "pointer not 8-byte aligned!");
+    assert((size_t) *ptr % acados_get_pointer_size() == 0 && "pointer not aligned properly!");
 #endif
 #ifdef _USE_VALGRIND_
     *v = (int **) acados_malloc(n, sizeof(int *));
@@ -118,7 +130,7 @@ void assign_and_advance_int_ptrs(int n, int ***v, char **ptr)
 void assign_and_advance_blasfeo_dvec_structs(int n, struct blasfeo_dvec **sv, char **ptr)
 {
 #ifndef WINDOWS_SKIP_PTR_ALIGNMENT_CHECK
-    assert((size_t) *ptr % 8 == 0 && "pointer not 8-byte aligned!");
+    assert(((size_t) *ptr % acados_get_pointer_size()) == 0 && "pointer not aligned properly!");
 #endif
 #ifdef _USE_VALGRIND_
     *sv = (struct blasfeo_dvec *) acados_malloc(n, sizeof(struct blasfeo_dvec));
@@ -131,7 +143,7 @@ void assign_and_advance_blasfeo_dvec_structs(int n, struct blasfeo_dvec **sv, ch
 void assign_and_advance_blasfeo_dmat_structs(int n, struct blasfeo_dmat **sm, char **ptr)
 {
 #ifndef WINDOWS_SKIP_PTR_ALIGNMENT_CHECK
-    assert((size_t) *ptr % 8 == 0 && "pointer not 8-byte aligned!");
+    assert((size_t) *ptr % acados_get_pointer_size() == 0 && "pointer not aligned properly!");
 #endif
 #ifdef _USE_VALGRIND_
     *sm = (struct blasfeo_dmat *) acados_malloc(n, sizeof(struct blasfeo_dmat));
@@ -144,7 +156,7 @@ void assign_and_advance_blasfeo_dmat_structs(int n, struct blasfeo_dmat **sm, ch
 void assign_and_advance_blasfeo_dmat_ptrs(int n, struct blasfeo_dmat ***sm, char **ptr)
 {
 #ifndef WINDOWS_SKIP_PTR_ALIGNMENT_CHECK
-    assert((size_t) *ptr % 8 == 0 && "pointer not 8-byte aligned!");
+    assert((size_t) *ptr % acados_get_pointer_size() == 0 && "pointer not aligned properly!");
 #endif
 #ifdef _USE_VALGRIND_
     *sm = (struct blasfeo_dmat **) acados_malloc(n, sizeof(struct blasfeo_dmat *));

@@ -794,19 +794,15 @@ void external_function_casadi_assign(external_function_casadi *fun, void *raw_me
 
     // args
     assign_and_advance_double_ptrs(fun->args_num, &fun->args, &c_ptr);
-    align_char_to(8, &c_ptr);
     // res
     assign_and_advance_double_ptrs(fun->res_num, &fun->res, &c_ptr);
-    align_char_to(8, &c_ptr);
 
     // args_size
     assign_and_advance_int(fun->args_num, &fun->args_size, &c_ptr);
-    align_char_to(8, &c_ptr);
     for (ii = 0; ii < fun->args_num; ii++)
         fun->args_size[ii] = casadi_nnz(fun->casadi_sparsity_in(ii));
     // res_size
     assign_and_advance_int(fun->res_num, &fun->res_size, &c_ptr);
-    align_char_to(8, &c_ptr);
     for (ii = 0; ii < fun->res_num; ii++)
         fun->res_size[ii] = casadi_nnz(fun->casadi_sparsity_out(ii));
     // iw
@@ -1098,19 +1094,15 @@ void external_function_param_casadi_assign(external_function_param_casadi *fun, 
 
     // args
     assign_and_advance_double_ptrs(fun->args_num, &fun->args, &c_ptr);
-    align_char_to(8, &c_ptr);
     // res
     assign_and_advance_double_ptrs(fun->res_num, &fun->res, &c_ptr);
-    align_char_to(8, &c_ptr);
 
     // args_size
     assign_and_advance_int(fun->args_num, &fun->args_size, &c_ptr);
-    align_char_to(8, &c_ptr);
     for (ii = 0; ii < fun->args_num; ii++)
         fun->args_size[ii] = casadi_nnz(fun->casadi_sparsity_in(ii));
     // res_size
     assign_and_advance_int(fun->res_num, &fun->res_size, &c_ptr);
-    align_char_to(8, &c_ptr);
     for (ii = 0; ii < fun->res_num; ii++)
         fun->res_size[ii] = casadi_nnz(fun->casadi_sparsity_out(ii));
     // iw
