@@ -83,25 +83,29 @@ set(BUILD_SHARED_LIBS OFF CACHE STRING "Build shared libraries")
 set(BLASFEO_EXAMPLES OFF CACHE BOOL "Examples disabled")
 set(EXT_DEP OFF CACHE BOOL "Compile external dependencies in BLASFEO")
 set(ACADOS_INSTALL_DIR "install" CACHE PATH  "Installation path to PROJECT_SOURCE_DIR")
+set(USE_C99_MATH OFF CACHE BOOL "Use C99 extension to math library")
 
-# try to integrate dSpace Libraries
-set(CMAKE_C_FLAGS "\"-I${DSPACE_RTLIB}\"")
-set(CMAKE_INCLUDE_FLAG_C "-I")
-set(CMAKE_INCLUDE_FLAG_CXX "-I")
-# file(TO_CMAKE_PATH "C:\\Program Files\\dSPACE RCPHIL 2017-B" DSPACE_TOOLS)
-set(DSPACE_RTLIB "C:/DualFuel/MLB/IdentificationOptimizationToolbox/acadosCrossCompile/acados/cmake/Platform/DS1202_RTLib")
-# set(CMAKE_FIND_LIBRARY_PREFIXES "lib")
-# set(CMAKE_FIND_LIBRARY_SUFFIXES ".so" ".a")
-
-# add_definitions(-DWINDOWS_SKIP_PTR_ALIGNMENT_CHECK)
+# # experimental: inclusion of platform-specific dSpace C libraries
+# # The dSpace libraries contain various functions, which can be used for
+# # example for debugging purposes (writing into the dSpace platform log,...).
+# # The corresponding libraries and headers can normally be found in the folders:
+# # "C:\Program Files\dSPACE RCPHIL <Version>\DS1202\Include", and
+# # "C:\Program Files\dSPACE RCPHIL <Version>\DS1202\Lib".
+# # In a first step, copy all the files from both folders into a new folder.
+# # Here, the the folder "<C:/...>/acados/cmake/Platform/DS1202_RTLib" is chosen.
+# # Once this is done, the following flags and definitions have to be set
+# # in order to be able to include the dSpace libraries:
+# set(CMAKE_C_FLAGS "\"-I${DSPACE_RTLIB}\"")
+# set(CMAKE_INCLUDE_FLAG_C "-I")
+# set(CMAKE_INCLUDE_FLAG_CXX "-I")
+# set(DSPACE_RTLIB "<C:/...>/acados/cmake/Platform/DS1202_RTLib")
+# add_definitions(-D_DSHOST)
+# add_definitions(-D_DS1201)
+# add_definitions(-D_DS1202)
+# add_definitions(-DDS_PLATFORM_PPC)
+# add_definitions(-DDS_PLATFORM_SMARTRTK)
+# add_definitions(-DDS_PLATFORM_SMART)
+# # In the acados c files, dSpace-specific code can be activated by setting the
+# # definition:
 # add_definitions(-DDSPACE_INCLUDES)
-add_definitions(-D_DSHOST)
-add_definitions(-D_DS1201)
-add_definitions(-D_DS1202)
-add_definitions(-DDS_PLATFORM_PPC)
-add_definitions(-DDS_PLATFORM_SMARTRTK)
-add_definitions(-DDS_PLATFORM_SMART)
-
-
-# add_definitions(-D_INLINE)
 
