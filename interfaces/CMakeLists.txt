@@ -65,6 +65,10 @@ if(ACADOS_OCTAVE_TEMPLATE)
         add_test(NAME octave_test_template_mhe_lorentz
                 COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
                 octave --no-gui --no-window-system ./test_template_mhe_lorentz.m)
+
+        add_test(NAME octave_test_target_selector
+                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+                octave --no-gui --no-window-system ./test_target_selector.m)
 endif()
 
 
