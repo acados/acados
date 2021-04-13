@@ -62,6 +62,8 @@ acados_size_t dense_qp_hpipm_opts_calculate_size(void *config_, void *dims_)
     size += 8;  // align for d_dense_qp_ipm_arg
     size += d_dense_qp_ipm_arg_memsize(dims);
 
+    make_int_multiple_of(8, &size);
+
     return size;
 }
 
@@ -148,6 +150,8 @@ acados_size_t dense_qp_hpipm_memory_calculate_size(void *config_, void *dims_, v
     size += sizeof(struct d_dense_qp_ipm_ws);
 
     size += d_dense_qp_ipm_ws_memsize(dims, opts->hpipm_opts);
+    size += 8;  // align d_dense_qp_ipm_ws
+    make_int_multiple_of(8, &size);
 
     return size;
 }
@@ -170,13 +174,13 @@ void *dense_qp_hpipm_memory_assign(void *config_, void *dims_, void *opts_, void
 
     struct d_dense_qp_ipm_ws *ipm_workspace = mem->hpipm_workspace;
 
-    assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+    align_char_to(8, &c_ptr);
 
     // ipm workspace structure
     d_dense_qp_ipm_ws_create(dims, opts->hpipm_opts, ipm_workspace, c_ptr);
     c_ptr += ipm_workspace->memsize;
 
-    assert((char *) raw_memory + dense_qp_hpipm_memory_calculate_size(config_, dims, opts) == c_ptr);
+    assert((char *) raw_memory + dense_qp_hpipm_memory_calculate_size(config_, dims, opts) >= c_ptr);
 
     return mem;
 }

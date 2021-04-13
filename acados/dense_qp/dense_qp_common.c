@@ -140,6 +140,9 @@ acados_size_t dense_qp_in_calculate_size(dense_qp_dims *dims)
     acados_size_t size = sizeof(dense_qp_in);
     size += sizeof(dense_qp_dims);
     size += d_dense_qp_memsize(dims);
+    size += 8;  // align for d_dense_qp
+    make_int_multiple_of(8, &size);
+
     return size;
 }
 
@@ -152,8 +155,7 @@ dense_qp_in *dense_qp_in_assign(dense_qp_dims *dims, void *raw_memory)
     dense_qp_in *qp_in = (dense_qp_in *) c_ptr;
     c_ptr += sizeof(dense_qp_in);
 
-    assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
-
+    align_char_to(8, &c_ptr);
     d_dense_qp_create(dims, qp_in, c_ptr);
     c_ptr += d_dense_qp_memsize(dims);
 
@@ -168,7 +170,7 @@ dense_qp_in *dense_qp_in_assign(dense_qp_dims *dims, void *raw_memory)
     qp_in->dim->nsb = dims->nsb;
     qp_in->dim->nsg = dims->nsg;
 
-    assert((char *) raw_memory + dense_qp_in_calculate_size(dims) == c_ptr);
+    assert((char *) raw_memory + dense_qp_in_calculate_size(dims) >= c_ptr);
 
     return qp_in;
 }
