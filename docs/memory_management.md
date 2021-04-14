@@ -7,7 +7,7 @@ There are two functions: `astruct_calculate_size()`, `astruct_assign()`.
 Must return a multiple of 8 to keep the pointer aligned to 8 bytes when allocating substructures.
 Thus, it should end with:
 ```
-make_int_multiple_of(8, &size);
+    make_int_multiple_of(8, &size);
 ```
 
 
@@ -16,7 +16,7 @@ Should assign its members in the following order:
 
 - Align to 8 bytes, i.e.:
 ```
-align_char_to(8, &c_ptr);
+    align_char_to(8, &c_ptr);
 ```
 
 - Assign structure itself, i.e.:
@@ -31,7 +31,7 @@ align_char_to(8, &c_ptr);
     c_ptr += N*sizeof(void *);
 ```
 
-- Align to 8 bytes, since `astruct` might contain an `int`, and the pointers were assigned.
+- Align to 8 bytes, since `astruct` might contain `int`s and the pointers were assigned.
 
 
 - Assign "substructures", i.e. structures that `astruct` has pointers to:
@@ -66,7 +66,7 @@ align_char_to(8, &c_ptr);
 
 - Align to 64 bytes, i.e.:
 ```
-align_char_to(64, &c_ptr);
+    align_char_to(64, &c_ptr);
 ```
 
 - Assign `blasfeo_dmat_mem` (are multiple of 64 Bytes)
