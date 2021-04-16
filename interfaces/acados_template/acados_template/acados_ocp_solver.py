@@ -1136,7 +1136,10 @@ class AcadosOcpSolver:
         mem_fields = ['sl', 'su']
 
         # cast value_ to avoid conversion issues
+        if isinstance(value_, (float, int)):
+            value_ = np.array([value_])
         value_ = value_.astype(float)
+
         model = self.acados_ocp.model
 
         field = field_
@@ -1205,6 +1208,8 @@ class AcadosOcpSolver:
             :param value: of appropriate size
         """
         # cast value_ to avoid conversion issues
+        if isinstance(value_, (float, int)):
+            value_ = np.array([value_])
         value_ = value_.astype(float)
 
         field = field_
@@ -1273,6 +1278,8 @@ class AcadosOcpSolver:
             :param value: of appropriate size
         """
         # cast value_ to avoid conversion issues
+        if isinstance(value_, (float, int)):
+            value_ = np.array([value_])
         value_ = value_.astype(float)
 
         field = field_

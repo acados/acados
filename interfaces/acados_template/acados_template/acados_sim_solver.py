@@ -339,6 +339,9 @@ class AcadosSimSolver:
             :param value: the value with appropriate size.
         """
         # cast value_ to avoid conversion issues
+        if isinstance(value_, (float, int)):
+            value_ = np.array([value_])
+
         value_ = value_.astype(float)
         value_data = cast(value_.ctypes.data, POINTER(c_double))
         value_data_p = cast((value_data), c_void_p)
