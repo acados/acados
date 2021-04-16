@@ -223,12 +223,24 @@ function ocp_generate_c_code(obj)
     % if is_octave()
         % savejson does not work for classes!
         % -> consider making the acados_ocp_nlp_json properties structs directly.
+
         ocp_json_struct = struct(obj.acados_ocp_nlp_json);
         disable_last_warning();
         ocp_json_struct.dims = struct(ocp_json_struct.dims);
         ocp_json_struct.cost = struct(ocp_json_struct.cost);
         ocp_json_struct.constraints = struct(ocp_json_struct.constraints);
         ocp_json_struct.solver_options = struct(ocp_json_struct.solver_options);
+
+        % add compilation information to json
+        libs = jsondecode(fileread(fullfile(acados_folder, 'lib', 'link_libs.json')));
+        ocp_json_struct.acados_link_libs = libs;
+        if ismac
+            ocp_json_struct.os = 'mac';
+        elseif isunix
+            ocp_json_struct.os = 'unix';
+        else
+            ocp_json_struct.os = 'pc';
+        end
 
         json_string = savejson('',ocp_json_struct, 'ForceRootName', 0);
     % else % Matlab

@@ -175,19 +175,10 @@ for ii=1:length(mex_files)
                 acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
         end
     else
-        if with_qp_qpoases
-            mex(mex_flags, FLAGS, LDFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lqpOASES_e', '-losqp', mex_files{ii}, '-outdir', opts.output_dir)
-        elseif with_qp_hpmpc
-            mex(mex_flags, FLAGS, LDFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lhpmpc', mex_files{ii}, '-outdir', opts.output_dir)
-        elseif with_qp_osqp
-            mex(mex_flags, FLAGS, LDFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-losqp', '-lqpOASES_e', mex_files{ii}, '-outdir', opts.output_dir)
-        else
-            mex(mex_flags, FLAGS, LDFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-losqp', '-lqpOASES_e',  mex_files{ii}, '-outdir', opts.output_dir)
-        end
+        % load linking information
+        libs = jsondecode(fileread(fullfile(acados_folder, 'lib', 'link_libs.json')));
+        mex(mex_flags, FLAGS, LDFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
+            acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', libs.osqp, libs.qpoases, libs.hpmpc, mex_files{ii}, '-outdir', opts.output_dir)
     end
 end
 

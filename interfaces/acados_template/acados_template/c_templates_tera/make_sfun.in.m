@@ -31,7 +31,7 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
-SOURCES = [ ...
+SOURCES = { ...
         {%- if solver_options.integrator_type == 'ERK' %}
             '{{ model.name }}_model/{{ model.name }}_expl_ode_fun.c ', ...
             '{{ model.name }}_model/{{ model.name }}_expl_vde_forw.c ',...
@@ -102,34 +102,46 @@ SOURCES = [ ...
         {%- endif %}
             'acados_solver_sfunction_{{ model.name }}.c ', ...
             'acados_solver_{{ model.name }}.c '
-          ];
+          };
 
 INC_PATH = '{{ acados_include_path }}';
 
-INCS = [ ' -I', fullfile(INC_PATH, 'blasfeo', 'include'), ...
-         ' -I', fullfile(INC_PATH, 'hpipm', 'include'), ...
-        ' -I', INC_PATH, ' -I', fullfile(INC_PATH, 'acados'), ' '];
+INCS = {['-I', fullfile(INC_PATH, 'blasfeo', 'include')], ...
+        ['-I', fullfile(INC_PATH, 'hpipm', 'include')], ...
+        ['-I', fullfile(INC_PATH, 'acados')], ...
+        ['-I', fullfile(INC_PATH)]};
 
 {% if  solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
-INCS = strcat(INCS, '-I', fullfile(INC_PATH, 'qpOASES_e') )
+INCS{end+1} = ['-I', fullfile(INC_PATH, 'qpOASES_e')];
 {% endif %}
 
-CFLAGS  = ' -O';
+CFLAGS  = 'CFLAGS=$CFLAGS';
+LDFLAGS  = 'LDFLAGS=$LDFLAGS';
 
 {% if  solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
 CFLAGS = [ CFLAGS, ' -DACADOS_WITH_QPOASES ' ];
 {% endif %}
 
-LIB_PATH = '{{ acados_lib_path }}';
+LIB_PATH = ['-L', fullfile('{{ acados_lib_path }}')];
 
-LIBS = '-lacados -lhpipm -lblasfeo';
+LIBS = {'-lacados', '-lhpipm', '-lblasfeo'};
 
-{% if  solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
-LIBS = strcat(LIBS, ' -lqpOASES_e');
-{% endif %}
+% acados linking libraries and flags
+{%- if acados_link_libs and os and os == "pc" %}
+CFLAGS = [CFLAGS ' {{ acados_link_libs.openmp }}'];
+LDFLAGS = [LDFLAGS ' {{ acados_link_libs.openmp }}'];
+LIBS{end+1} = '{{ acados_link_libs.qpoases }}';
+LIBS{end+1} = '{{ acados_link_libs.hpmpc }}';
+LIBS{end+1} = '{{ acados_link_libs.osqp }}';
+{%- else %}
+    {% if  solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
+LIBS{end+1} = '-lqpOASES_e';
+    {% endif %}
+{%- endif %}
 
-eval( [ 'mex -v -output  acados_solver_sfunction_{{ model.name }} ', ...
-    CFLAGS, INCS, ' ', SOURCES, ' -L', LIB_PATH, ' ', LIBS ]);
+mex('-v', '-O', CFLAGS, LDFLAGS, INCS{:}, ...
+    LIB_PATH, LIBS{:}, SOURCES{:}, ...
+    '-output', 'acados_solver_sfunction_{{ model.name }}' );
 
 fprintf( [ '\n\nSuccessfully created sfunction:\nacados_solver_sfunction_{{ model.name }}', '.', ...
     eval('mexext')] );
