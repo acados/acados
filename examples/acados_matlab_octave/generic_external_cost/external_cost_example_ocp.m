@@ -30,6 +30,7 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 %
+import casadi.*
 
 %% test of native matlab interface
 clear all
@@ -54,6 +55,9 @@ model = pendulum_on_cart_model;
 nx = model.nx;
 nu = model.nu;
 
+%% runtime parameters
+params = SX.sym('Qdiag', 4, 1);
+
 %% model to create the solver
 ocp_model = acados_ocp_model();
 model_name = 'pendulum';
@@ -66,6 +70,7 @@ ocp_model.set('T', T);
 ocp_model.set('sym_x', model.sym_x);
 ocp_model.set('sym_u', model.sym_u);
 ocp_model.set('sym_xdot', model.sym_xdot);
+ocp_model.set('sym_p', params);
 
 % cost
 ocp_model.set('cost_type', 'ext_cost');
@@ -74,27 +79,27 @@ ocp_model.set('cost_type_e', 'ext_cost');
 generic_or_casadi = 0; % 0=generic, 1=casadi, 2=mixed
 if (generic_or_casadi == 0)
     % Generic stage cost
-    ocp_model.set('ext_fun_type', 'generic');    
+    ocp_model.set('cost_ext_fun_type', 'generic');    
     ocp_model.set('cost_source_ext_cost', 'generic_ext_cost.c');
     ocp_model.set('cost_function_ext_cost', 'ext_cost');
     % Generic terminal cost
-    ocp_model.set('ext_fun_type_e', 'generic');
+    ocp_model.set('cost_ext_fun_type_e', 'generic');
     ocp_model.set('cost_source_ext_cost_e', 'generic_ext_cost.c');
     ocp_model.set('cost_function_ext_cost_e', 'ext_costN');
 elseif (generic_or_casadi == 1)
     % Casadi stage cost
-    ocp_model.set('ext_fun_type', 'casadi');
+    ocp_model.set('cost_ext_fun_type', 'casadi');
     ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
     % Casadi terminal cost
-    ocp_model.set('ext_fun_type_e', 'casadi');
+    ocp_model.set('cost_ext_fun_type_e', 'casadi');
     ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
 elseif (generic_or_casadi == 2)
     % Generic stage cost
-    ocp_model.set('ext_fun_type', 'generic');    
+    ocp_model.set('cost_ext_fun_type', 'generic');    
     ocp_model.set('cost_source_ext_cost', 'generic_ext_cost.c');
     ocp_model.set('cost_function_ext_cost', 'ext_cost');
     % Casadi terminal cost
-    ocp_model.set('ext_fun_type_e', 'casadi');
+    ocp_model.set('cost_ext_fun_type_e', 'casadi');
     ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);    
 end
 
@@ -131,6 +136,8 @@ ocp = acados_ocp(ocp_model, ocp_opts);
 
 x_traj_init = zeros(nx, N+1);
 u_traj_init = zeros(nu, N);
+% diagonal matrix Q as runtime param
+p = [1e3; 1e3; 1e-2; 1e-2];
 
 %% call ocp solver
 % update initial state
@@ -139,11 +146,13 @@ ocp.set('constr_x0', x0);
 % set trajectory initialization
 ocp.set('init_x', x_traj_init);
 ocp.set('init_u', u_traj_init);
-ocp.set('init_pi', zeros(nx, N))
+ocp.set('init_pi', zeros(nx, N));
 
 % change values for specific shooting node using:
 %   ocp.set('field', value, optional: stage_index)
-ocp.set('constr_lbx', x0, 0)
+ocp.set('constr_lbx', x0, 0);
+
+ocp.set('p', p);
 
 % solve
 ocp.solve();
@@ -168,5 +177,43 @@ stairs(utraj')
 grid on
 
 %% go embedded
-% to generate templated C code
-% ocp.generate_c_code;
+disp('testing templated solver');
+ocp.generate_c_code;
+cd c_generated_code/
+
+t_ocp = pendulum_mex_solver;
+
+% initial state
+t_ocp.set('constr_x0', x0);
+
+% set trajectory initialization
+t_ocp.set('init_x', x_traj_init);
+t_ocp.set('init_u', u_traj_init);
+t_ocp.set('init_pi', zeros(nx, N));
+
+% change values for specific shooting node using:
+%   ocp.set('field', value, optional: stage_index)
+t_ocp.set('constr_lbx', x0, 0);
+
+t_ocp.set('p', p);
+
+% solve
+t_ocp.solve();
+% get solution
+t_utraj = t_ocp.get('u');
+t_xtraj = t_ocp.get('x');
+t_status = t_ocp.get('status');
+
+error_X_mex_vs_mex_template = max(max(abs(t_xtraj - xtraj)))
+error_U_mex_vs_mex_template = max(max(abs(t_utraj - utraj)))
+
+t_ocp.print('stat')
+
+tol_check = 1e-6;
+
+if any([error_X_mex_vs_mex_template, error_U_mex_vs_mex_template] > tol_check)
+    error(['test_template_pendulum_exact_hess: solution of templated MEX and original MEX',...
+         ' differ too much. Should be < tol = ' num2str(tol_check)]);
+end
+
+cd ..

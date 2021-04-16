@@ -140,6 +140,10 @@ if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
     target_compile_definitions(acados PUBLIC MEASURE_TIMINGS)
 endif()
 
+if(EXT_DEP MATCHES OFF)
+    target_compile_definitions(acados PUBLIC BLASFEO_EXT_DEP_OFF)
+endif()
+
 # Only test acados library for coverage
 if(COVERAGE MATCHES "lcov")
     include(CodeCoverage)

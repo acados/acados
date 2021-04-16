@@ -55,9 +55,19 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     if strcmp(obj.opts_struct.sim_method, 'irk_gnsf')
         ocp_json.solver_options.integrator_type = 'GNSF';
     end
+
+    N = obj.opts_struct.param_scheme_N;
     % options
-    ocp_json.solver_options.sim_method_num_steps = obj.opts_struct.sim_method_num_steps;
-    ocp_json.solver_options.sim_method_num_stages = obj.opts_struct.sim_method_num_stages;
+    if length(obj.opts_struct.sim_method_num_steps) == N
+        ocp_json.solver_options.sim_method_num_steps = obj.opts_struct.sim_method_num_steps;
+    else
+        ocp_json.solver_options.sim_method_num_steps = obj.opts_struct.sim_method_num_steps * ones(1, N);
+    end
+    if length(obj.opts_struct.sim_method_num_stages) == N
+        ocp_json.solver_options.sim_method_num_stages = obj.opts_struct.sim_method_num_stages;
+    else
+        ocp_json.solver_options.sim_method_num_stages = obj.opts_struct.sim_method_num_stages * ones(1, N);
+    end
     ocp_json.solver_options.sim_method_newton_iter = obj.opts_struct.sim_method_newton_iter;
     ocp_json.solver_options.nlp_solver_max_iter = obj.opts_struct.nlp_solver_max_iter;
     ocp_json.solver_options.nlp_solver_tol_stat = obj.opts_struct.nlp_solver_tol_stat;
@@ -201,6 +211,23 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     else
         ocp_json.cost.cost_type_e = upper(model.cost_type_e);
     end
+    
+    ocp_json.cost.cost_ext_fun_type = model.cost_ext_fun_type;
+    if strcmp(model.cost_ext_fun_type, 'generic')
+        ocp_json.cost.cost_source_ext_cost = model.cost_source_ext_cost;
+        ocp_json.cost.cost_function_ext_cost = model.cost_function_ext_cost;
+    end
+    ocp_json.cost.cost_ext_fun_type_0 = model.cost_ext_fun_type_0;
+    if strcmp(model.cost_ext_fun_type_0, 'generic')
+        ocp_json.cost.cost_source_ext_cost_0 = model.cost_source_ext_cost_0;
+        ocp_json.cost.cost_function_ext_cost_0 = model.cost_function_ext_cost_0;
+    end
+    ocp_json.cost.cost_ext_fun_type_e = model.cost_ext_fun_type_e;
+    if strcmp(model.cost_ext_fun_type_e, 'generic')
+        ocp_json.cost.cost_source_ext_cost_e = model.cost_source_ext_cost_e;
+        ocp_json.cost.cost_function_ext_cost_e = model.cost_function_ext_cost_e;
+    end
+    
     ocp_json.constraints.constr_type = upper(model.constr_type);
     ocp_json.constraints.constr_type_e = upper(model.constr_type_e);
 

@@ -84,7 +84,7 @@ real_t acados_toc(acados_timer* t) { return ds1401_tic_read() - t->time; }
 
 #else
 
-#if __STDC_VERSION__ >= 199901L  // C99 Mode
+#if (__STDC_VERSION__ >= 199901L) && !(defined __MINGW32__ || defined __MINGW64__) // C99 Mode
 
 /* read current time */
 void acados_tic(acados_timer* t) { gettimeofday(&t->tic, 0); }

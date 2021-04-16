@@ -76,6 +76,11 @@ acados_integrator = AcadosSimSolver(sim)
 simX = np.ndarray((N+1, nx))
 x0 = np.array([0.0, np.pi+1, 0.0, 0.0])
 u0 = np.array([2.0])
+
+# test setter
+acados_integrator.set("u", np.array([2.0]))
+acados_integrator.set("u", 2)
+acados_integrator.set("u", 2.0)
 acados_integrator.set("u", u0)
 
 simX[0,:] = x0

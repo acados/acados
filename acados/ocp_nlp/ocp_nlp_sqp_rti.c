@@ -808,8 +808,14 @@ void ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
     {
         //   print_ocp_qp_in(mem->qp_in);
 #ifndef ACADOS_SILENT
-        printf("QP solver returned error status %d\n", qp_status);
+        printf("\nSQP_RTI: QP solver returned error status %d QP iteration %d.\n",
+                qp_status, qp_iter);
 #endif
+        if (opts->print_level > 0)
+        {
+            printf("\n Failed to solve the following QP:\n");
+            print_ocp_qp_in(nlp_mem->qp_in);
+        }
         mem->status = ACADOS_QP_FAILURE;
         return;
     }
