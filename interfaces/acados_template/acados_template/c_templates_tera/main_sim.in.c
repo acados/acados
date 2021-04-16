@@ -45,13 +45,19 @@
 int main()
 {
     int status = 0;
-    status = {{ model.name }}_acados_sim_create();
+    sim_solver_capsule *capsule = {{ model.name }}_acados_sim_solver_create_capsule();
+    status = {{ model.name }}_acados_sim_create(capsule);
 
     if (status)
     {
         printf("acados_create() returned status %d. Exiting.\n", status);
         exit(1);
     }
+
+    sim_config *acados_sim_config = {{ model.name }}_acados_get_sim_config(capsule);
+    sim_in *acados_sim_in = {{ model.name }}_acados_get_sim_in(capsule);
+    sim_out *acados_sim_out = {{ model.name }}_acados_get_sim_out(capsule);
+    void *acados_sim_dims = {{ model.name }}_acados_get_sim_dims(capsule);
 
     // initial condition
     double x_current[{{ dims.nx }}];
@@ -84,24 +90,24 @@ int main()
     p[{{ loop.index0 }}] = {{ item }};
     {% endfor %}
 
-    {{ model.name }}_acados_sim_update_params(p, {{ dims.np }});
+    {{ model.name }}_acados_sim_update_params(capsule, p, {{ dims.np }});
   {% endif %}{# if np > 0 #}
 
     int n_sim_steps = 3;
     // solve ocp in loop
     for (int ii = 0; ii < n_sim_steps; ii++)
     {
-        sim_in_set({{ model.name }}_sim_config, {{ model.name }}_sim_dims,
-            {{ model.name }}_sim_in, "x", x_current);
-        status = {{ model.name }}_acados_sim_solve();
+        sim_in_set(acados_sim_config, acados_sim_dims,
+            acados_sim_in, "x", x_current);
+        status = {{ model.name }}_acados_sim_solve(capsule);
 
         if (status != ACADOS_SUCCESS)
         {
             printf("acados_solve() failed with status %d.\n", status);
         }
 
-        sim_out_get({{ model.name }}_sim_config, {{ model.name }}_sim_dims,
-               {{ model.name }}_sim_out, "x", x_current);
+        sim_out_get(acados_sim_config, acados_sim_dims,
+               acados_sim_out, "x", x_current);
         
         printf("\nx_current, %d\n", ii);
         for (int jj = 0; jj < {{ dims.nx }}; jj++)
@@ -113,10 +119,12 @@ int main()
     printf("\nPerformed %d simulation steps with acados integrator successfully.\n\n", n_sim_steps);
 
     // free solver
-    status = {{ model.name }}_acados_sim_free();
+    status = {{ model.name }}_acados_sim_free(capsule);
     if (status) {
         printf("{{ model.name }}_acados_sim_free() returned status %d. \n", status);
     }
+
+    {{ model.name }}_acados_sim_solver_free_capsule(capsule);
 
     return status;
 }

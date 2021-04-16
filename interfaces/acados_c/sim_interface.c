@@ -138,6 +138,38 @@ void sim_dims_get(sim_config *config, void *dims, const char *field, int* value)
 }
 
 
+void sim_dims_get_from_attr(sim_config *config, void *dims, const char *field, int *dims_out)
+{
+    // vectors first
+    dims_out[1] = 0;
+
+    if (!strcmp(field, "x") || !strcmp(field, "xdot"))
+    {
+        sim_dims_get(config, dims, "nx", &dims_out[0]);
+    }
+    else if (!strcmp(field, "z"))
+    {
+        sim_dims_get(config, dims, "nz", &dims_out[0]);
+    }
+    else if (!strcmp(field, "u"))
+    {
+        sim_dims_get(config, dims, "nu", &dims_out[0]);
+    }
+    else if (!strcmp(field, "S_adj"))
+    {
+        int tmp;
+        sim_dims_get(config, dims, "nu", &tmp);
+        sim_dims_get(config, dims, "nx", &dims_out[0]);
+        dims_out[0] += tmp;
+    }
+    else
+    {
+        printf("\nerror: sim_dims_get_from_attr: field %s not available\n", field);
+        exit(1);
+    }
+
+    return;
+}
 
 /************************************************
 * in

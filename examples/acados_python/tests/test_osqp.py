@@ -112,6 +112,11 @@ ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 simX = np.ndarray((N+1, nx))
 simU = np.ndarray((N, nu))
 
+# test setter
+ocp_solver.set(0, "u", 0.0)
+ocp_solver.set(0, "u", 0)
+ocp_solver.set(0, "u", np.array([0]))
+
 status = ocp_solver.solve()
 
 if status != 0:

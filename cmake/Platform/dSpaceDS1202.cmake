@@ -31,64 +31,16 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import sys
-sys.path.insert(0, '../common')
-
-from acados_template import AcadosSim, AcadosSimSolver
-from pendulum_model import export_pendulum_ode_model
-from utils import plot_pendulum
-import numpy as np
-import matplotlib.pyplot as plt
-
-sim = AcadosSim()
-
-# export model 
-model = export_pendulum_ode_model()
-
-# set model_name 
-sim.model = model
-
-Tf = 0.1
-nx = model.x.size()[0]
-nu = model.u.size()[0]
-N = 200
-
-# set simulation time
-sim.solver_options.T = Tf
-# set options
-sim.solver_options.integrator_type = 'IRK'
-sim.solver_options.num_stages = 4
-sim.solver_options.num_steps = 3
-sim.solver_options.newton_iter = 3 # for implicit integrator
 
 
-# create
-acados_integrator = AcadosSimSolver(sim)
+# The dSpace compiler only works with the prefixes/suffixes below!
 
-simX = np.ndarray((N+1, nx))
-x0 = np.array([0.0, np.pi+1, 0.0, 0.0])
-u0 = np.array([0.0])
-acados_integrator.set("u", u0)
+SET(CMAKE_SHARED_LIBRARY_PREFIX "lib")
+SET(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
+SET(CMAKE_STATIC_LIBRARY_PREFIX "lib")
+SET(CMAKE_STATIC_LIBRARY_SUFFIX ".a")
+SET(BUILD_SHARED_LIBS "OFF")
 
-simX[0,:] = x0
-
-for i in range(N):
-    # set initial state
-    acados_integrator.set("x", simX[i,:])
-    # initialize IRK
-    if sim.solver_options.integrator_type == 'IRK':
-        acados_integrator.set("xdot", np.zeros((nx,)))
-
-    # solve
-    status = acados_integrator.solve()
-    # get solution
-    simX[i+1,:] = acados_integrator.get("x")
-
-if status != 0:
-    raise Exception('acados returned status {}. Exiting.'.format(status))
-
-S_forw = acados_integrator.get("S_forw")
-print("S_forw, sensitivities of simulaition result wrt x,u:\n", S_forw)
-
-# plot results
-plot_pendulum(np.linspace(0, Tf, N+1), 10, np.zeros((N, nu)), simX, latexify=False)
+add_definitions(-DWINDOWS_SKIP_PTR_ALIGNMENT_CHECK)
+remove_definitions(-DLINUX)
+remove_definitions(-D__LINUX__)

@@ -78,23 +78,23 @@ typedef struct nlp_solver_capsule
     external_function_param_casadi *cost_y_fun;
     external_function_param_casadi *cost_y_fun_jac_ut_xt;
     external_function_param_casadi *cost_y_hess;
-    external_function_param_casadi *ext_cost_fun;
-    external_function_param_casadi *ext_cost_fun_jac;
-    external_function_param_casadi *ext_cost_fun_jac_hess;
+    external_function_param_{{ cost.cost_ext_fun_type }} *ext_cost_fun;
+    external_function_param_{{ cost.cost_ext_fun_type }} *ext_cost_fun_jac;
+    external_function_param_{{ cost.cost_ext_fun_type }} *ext_cost_fun_jac_hess;
 
     external_function_param_casadi cost_y_0_fun;
     external_function_param_casadi cost_y_0_fun_jac_ut_xt;
     external_function_param_casadi cost_y_0_hess;
-    external_function_param_casadi ext_cost_0_fun;
-    external_function_param_casadi ext_cost_0_fun_jac;
-    external_function_param_casadi ext_cost_0_fun_jac_hess;
+    external_function_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_fun;
+    external_function_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_fun_jac;
+    external_function_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_fun_jac_hess;
 
     external_function_param_casadi cost_y_e_fun;
     external_function_param_casadi cost_y_e_fun_jac_ut_xt;
     external_function_param_casadi cost_y_e_hess;
-    external_function_param_casadi ext_cost_e_fun;
-    external_function_param_casadi ext_cost_e_fun_jac;
-    external_function_param_casadi ext_cost_e_fun_jac_hess;
+    external_function_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_fun;
+    external_function_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_fun_jac;
+    external_function_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_fun_jac_hess;
 
     // constraints
     external_function_param_casadi *phi_constraint;

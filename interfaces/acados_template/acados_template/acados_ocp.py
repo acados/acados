@@ -514,12 +514,13 @@ class AcadosOcpCost:
     """
     def __init__(self):
         # initial stage
-        self.__cost_type_0 = None  # cost type for Mayer term
+        self.__cost_type_0 = None
         self.__W_0 = None
         self.__Vx_0 = None
         self.__Vu_0 = None
         self.__Vz_0 = None
         self.__yref_0 = None
+        self.__cost_ext_fun_type_0 = 'casadi'
         # Lagrange term
         self.__cost_type   = 'LINEAR_LS'  # cost type
         self.__W           = np.zeros((0,0))
@@ -531,8 +532,9 @@ class AcadosOcpCost:
         self.__Zu          = np.array([])
         self.__zl          = np.array([])
         self.__zu          = np.array([])
+        self.__cost_ext_fun_type = 'casadi'
         # Mayer term
-        self.__cost_type_e = 'LINEAR_LS'  # cost type for Mayer term
+        self.__cost_type_e = 'LINEAR_LS'
         self.__W_e         = np.zeros((0,0))
         self.__Vx_e        = np.zeros((0,0))
         self.__yref_e      = np.array([])
@@ -540,6 +542,7 @@ class AcadosOcpCost:
         self.__Zu_e        = np.array([])
         self.__zl_e        = np.array([])
         self.__zu_e        = np.array([])
+        self.__cost_ext_fun_type_e = 'casadi'
 
     # initial stage
     @property
@@ -589,6 +592,16 @@ class AcadosOcpCost:
         """
         return self.__yref_0
 
+    @property
+    def cost_ext_fun_type_0(self):
+        """Type of external function for cost at initial shooting node (0)
+        -- string in {casadi, generic} or :code:`None`
+        Default: :code:'casadi'.
+
+            .. note:: Cost at initial stage is the same as for intermediate shooting nodes if not set differently explicitly.
+        """
+        return self.__cost_ext_fun_type_0
+
     @yref_0.setter
     def yref_0(self, yref_0):
         if isinstance(yref_0, np.ndarray):
@@ -627,6 +640,13 @@ class AcadosOcpCost:
         else:
             raise Exception('Invalid cost Vz_0 value. ' \
                 + 'Should be 2 dimensional numpy array. Exiting.')
+
+    @cost_ext_fun_type_0.setter
+    def cost_ext_fun_type_0(self, cost_ext_fun_type_0):
+        if cost_ext_fun_type_0 in ['casadi', 'generic']:
+            self.__cost_ext_fun_type_0 = cost_ext_fun_type_0
+        else:
+            raise Exception('Invalid cost_ext_fun_type_0 value, expected numpy array. Exiting.')
 
     # Lagrange term
     @property
@@ -700,6 +720,14 @@ class AcadosOcpCost:
         Default: :code:`np.array([])`.
         """
         return self.__zu
+
+    @property
+    def cost_ext_fun_type(self):
+        """Type of external function for cost at intermediate shooting nodes (1 to N-1).
+        -- string in {casadi, generic}
+        Default: :code:'casadi'.
+        """
+        return self.__cost_ext_fun_type
 
     @cost_type.setter
     def cost_type(self, cost_type):
@@ -785,6 +813,13 @@ class AcadosOcpCost:
         else:
             raise Exception('Invalid zu value, expected numpy array. Exiting.')
 
+    @cost_ext_fun_type.setter
+    def cost_ext_fun_type(self, cost_ext_fun_type):
+        if cost_ext_fun_type in ['casadi', 'generic']:
+            self.__cost_ext_fun_type = cost_ext_fun_type
+        else:
+            raise Exception('Invalid cost_ext_fun_type value, expected numpy array. Exiting.')
+
     # Mayer term
     @property
     def cost_type_e(self):
@@ -818,31 +853,39 @@ class AcadosOcpCost:
 
     @property
     def Zl_e(self):
-        """:math:`Z_l^e` - diagonal of Hessian wrt lower slack for Mayer term.
+        """:math:`Z_l^e` - diagonal of Hessian wrt lower slack at terminal shooting node (N).
         Default: :code:`np.array([])`.
         """
         return self.__Zl_e
 
     @property
     def Zu_e(self):
-        """:math:`Z_u^e` - diagonal of Hessian wrt upper slack for Mayer term.
+        """:math:`Z_u^e` - diagonal of Hessian wrt upper slack at terminal shooting node (N).
         Default: :code:`np.array([])`.
         """
         return self.__Zu_e
 
     @property
     def zl_e(self):
-        """:math:`z_l^e` - gradient wrt lower slack for Mayer term.
+        """:math:`z_l^e` - gradient wrt lower slack at terminal shooting node (N).
         Default: :code:`np.array([])`.
         """
         return self.__zl_e
 
     @property
     def zu_e(self):
-        """:math:`z_u^e` - gradient wrt upper slack for Mayer term.
+        """:math:`z_u^e` - gradient wrt upper slack at terminal shooting node (N).
         Default: :code:`np.array([])`.
         """
         return self.__zu_e
+
+    @property
+    def cost_ext_fun_type_e(self):
+        """Type of external function for cost at intermediate shooting nodes (1 to N-1).
+        -- string in {casadi, generic}
+        Default: :code:'casadi'.
+        """
+        return self.__cost_ext_fun_type_e
 
     @cost_type_e.setter
     def cost_type_e(self, cost_type_e):
@@ -903,6 +946,13 @@ class AcadosOcpCost:
             self.__zu_e = zu_e
         else:
             raise Exception('Invalid zu_e value, expected numpy array. Exiting.')
+
+    @cost_ext_fun_type_e.setter
+    def cost_ext_fun_type_e(self, cost_ext_fun_type_e):
+        if cost_ext_fun_type_e in ['casadi', 'generic']:
+            self.__cost_ext_fun_type_e = cost_ext_fun_type_e
+        else:
+            raise Exception('Invalid cost_ext_fun_type_e value, expected numpy array. Exiting.')
 
     def set(self, attr, value):
         setattr(self, attr, value)
@@ -2175,7 +2225,7 @@ class AcadosOcpOptions:
     def sim_method_num_stages(self):
         """
         Number of stages in the integrator.
-        Type: int > 0
+        Type: int > 0 or ndarray of ints > 0 of shape (N,).
         Default: 4
         """
         return self.__sim_method_num_stages
@@ -2184,7 +2234,7 @@ class AcadosOcpOptions:
     def sim_method_num_steps(self):
         """
         Number of steps in the integrator.
-        Type: int > 0
+        Type: int > 0 or ndarray of ints > 0 of shape (N,).
         Default: 1
         """
         return self.__sim_method_num_steps
@@ -2473,18 +2523,22 @@ class AcadosOcpOptions:
     @sim_method_num_stages.setter
     def sim_method_num_stages(self, sim_method_num_stages):
 
-        if type(sim_method_num_stages) == int:
-            self.__sim_method_num_stages = sim_method_num_stages
-        else:
-            raise Exception('Invalid sim_method_num_stages value. sim_method_num_stages must be an integer. Exiting.')
+        # if type(sim_method_num_stages) == int:
+        #     self.__sim_method_num_stages = sim_method_num_stages
+        # else:
+        #     raise Exception('Invalid sim_method_num_stages value. sim_method_num_stages must be an integer. Exiting.')
+
+        self.__sim_method_num_stages = sim_method_num_stages
 
     @sim_method_num_steps.setter
     def sim_method_num_steps(self, sim_method_num_steps):
 
-        if type(sim_method_num_steps) == int:
-            self.__sim_method_num_steps = sim_method_num_steps
-        else:
-            raise Exception('Invalid sim_method_num_steps value. sim_method_num_steps must be an integer. Exiting.')
+        # if type(sim_method_num_steps) == int:
+        #     self.__sim_method_num_steps = sim_method_num_steps
+        # else:
+        #     raise Exception('Invalid sim_method_num_steps value. sim_method_num_steps must be an integer. Exiting.')
+        self.__sim_method_num_steps = sim_method_num_steps
+
 
     @sim_method_newton_iter.setter
     def sim_method_newton_iter(self, sim_method_newton_iter):

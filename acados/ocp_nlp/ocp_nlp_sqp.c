@@ -756,7 +756,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->time_tot = total_time;
             nlp_out->total_time = total_time;
 #ifndef ACADOS_SILENT
-            printf("QP solver returned error status %d in iteration %d\n", qp_status, sqp_iter);
+            printf("\nQP solver returned error status %d in SQP iteration %d, QP iteration %d.\n",
+                   qp_status, sqp_iter, qp_iter);
 #endif
 #if defined(ACADOS_WITH_OPENMP)
             // restore number of threads

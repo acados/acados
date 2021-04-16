@@ -196,27 +196,39 @@ OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_cost_y_0_fun.c
 OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_cost_y_0_fun_jac_ut_xt.c
 OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_cost_y_0_hess.c
 {%- elif cost_type_0 == "EXTERNAL" %}
+{% if cost.cost_ext_fun_type_0 == "casadi" %}
 OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_0_fun.c
 OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_0_fun_jac.c
 OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_0_fun_jac_hess.c
+{% else %}
+OCP_OBJ+= {{ model.name }}_cost/{{ cost.cost_source_ext_cost_0 }}
+{% endif %}
 {%- endif %}
 {%- if cost_type == "NONLINEAR_LS" %}
 OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_cost_y_fun.c
 OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_cost_y_fun_jac_ut_xt.c
 OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_cost_y_hess.c
 {%- elif cost_type == "EXTERNAL" %}
+{% if cost.cost_ext_fun_type == "casadi" %}
 OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_fun.c
 OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_fun_jac.c
 OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_fun_jac_hess.c
+{% elif cost.cost_source_ext_cost != cost.cost_source_ext_cost_0 %}
+OCP_OBJ+= {{ model.name }}_cost/{{ cost.cost_source_ext_cost }}
+{% endif %}
 {%- endif %}
 {%- if cost_type_e == "NONLINEAR_LS" %}
 OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_cost_y_e_fun.c
 OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_cost_y_e_fun_jac_ut_xt.c
 OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_cost_y_e_hess.c
 {%- elif cost_type_e == "EXTERNAL" %}
+{% if cost.cost_ext_fun_type_e == "casadi" %}
 OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_fun.c
 OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_fun_jac.c
 OCP_OBJ+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_fun_jac_hess.c
+{% elif cost.cost_source_ext_cost_e != cost.cost_source_ext_cost_0 %}
+OCP_OBJ+= {{ model.name }}_cost/{{ cost.cost_source_ext_cost_e }}
+{% endif %}
 {%- endif %}
 OCP_OBJ+= acados_solver_{{ model.name }}.o
 

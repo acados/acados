@@ -57,8 +57,11 @@ qp_solver_cond_ric_alg = 0;
 qp_solver_ric_alg = 0;
 qp_solver_warm_start = 1; % 0: cold, 1: warm, 2: hot
 qp_solver_iter_max = 100;
-sim_method_num_stages = 4;
-sim_method_num_steps = 1;
+
+% can vary for integrators
+sim_method_num_stages = 4 * ones(N,1);
+sim_method_num_steps = ones(N,1);
+sim_method_num_steps(1:10) = 2;
 
 
 %% model dynamics

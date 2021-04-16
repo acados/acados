@@ -147,6 +147,7 @@ ocp_nlp_plan *ocp_nlp_plan_create(int N)
 {
     acados_size_t bytes = ocp_nlp_plan_calculate_size(N);
     void *ptr = acados_malloc(bytes, 1);
+    assert(ptr != 0);
 
     ocp_nlp_plan *plan = ocp_nlp_plan_assign(N, ptr);
 
@@ -176,6 +177,7 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
 
     acados_size_t bytes = ocp_nlp_config_calculate_size(N);
     void *config_mem = acados_calloc(1, bytes);
+    assert(config_mem != 0);
     ocp_nlp_config *config = ocp_nlp_config_assign(N, config_mem);
 
     /* initialize config according plan */
@@ -330,6 +332,7 @@ ocp_nlp_dims *ocp_nlp_dims_create(void *config_)
     acados_size_t bytes = ocp_nlp_dims_calculate_size(config);
 
     void *ptr = acados_calloc(1, bytes);
+    assert(ptr != 0);
 
     ocp_nlp_dims *dims = ocp_nlp_dims_assign(config, ptr);
 
@@ -354,6 +357,7 @@ ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_config *config, ocp_nlp_dims *dims)
     acados_size_t bytes = ocp_nlp_in_calculate_size(config, dims);
 
     void *ptr = acados_calloc(1, bytes);
+    assert(ptr != 0);
 
     ocp_nlp_in *nlp_in = ocp_nlp_in_assign(config, dims, ptr);
 
@@ -430,6 +434,7 @@ ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_config *config, ocp_nlp_dims *dims)
     acados_size_t bytes = ocp_nlp_out_calculate_size(config, dims);
 
     void *ptr = acados_calloc(1, bytes);
+    assert(ptr != 0);
 
     ocp_nlp_out *nlp_out = ocp_nlp_out_assign(config, dims, ptr);
 
@@ -785,6 +790,7 @@ void *ocp_nlp_solver_opts_create(ocp_nlp_config *config, ocp_nlp_dims *dims)
     acados_size_t bytes = config->opts_calculate_size(config, dims);
 
     void *ptr = acados_calloc(1, bytes);
+    assert(ptr != 0);
 
     void *opts = config->opts_assign(config, dims, ptr);
 
@@ -872,6 +878,7 @@ ocp_nlp_solver *ocp_nlp_solver_create(ocp_nlp_config *config, ocp_nlp_dims *dims
     acados_size_t bytes = ocp_nlp_calculate_size(config, dims, opts_);
 
     void *ptr = acados_calloc(1, bytes);
+    assert(ptr != 0);
 
     ocp_nlp_solver *solver = ocp_nlp_assign(config, dims, opts_, ptr);
 

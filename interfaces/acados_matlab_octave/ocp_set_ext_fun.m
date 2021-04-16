@@ -53,8 +53,10 @@ model_lib_path = ['-L', opts_struct.output_dir];
 
 %% select files to compile
 ocp_set_ext_fun_casadi_mex = fullfile(acados_mex_folder, ['ocp_set_ext_fun_casadi.c']);
-ocp_set_ext_fun_mex = fullfile(acados_mex_folder, ['ocp_set_ext_fun_', model_struct.ext_fun_type, '.c']);
-ocp_set_ext_fun_mex_e = fullfile(acados_mex_folder, ['ocp_set_ext_fun_', model_struct.ext_fun_type_e, '.c']);
+ocp_set_ext_fun_mex = fullfile(acados_mex_folder, ['ocp_set_ext_fun_', model_struct.cost_ext_fun_type, '.c']);
+ocp_set_ext_fun_mex_e = fullfile(acados_mex_folder, ['ocp_set_ext_fun_', model_struct.cost_ext_fun_type_e, '.c']);
+% TODO: complete separate stage 0 handling
+%ocp_set_ext_fun_mex_0 = fullfile(acados_mex_folder, ['ocp_set_ext_fun_', model_struct.cost_ext_fun_type_0, '.c']);
 mex_files = {};
 setter = {};
 set_fields = {};
@@ -437,7 +439,7 @@ end
 % external cost
 if (strcmp(model_struct.cost_type, 'ext_cost'))
     
-    if (strcmp(model_struct.ext_fun_type, 'casadi'))
+    if (strcmp(model_struct.cost_ext_fun_type, 'casadi'))
         mex_files = {mex_files{:} ...
             ocp_set_ext_fun_mex ...
             ocp_set_ext_fun_mex ...
@@ -465,7 +467,7 @@ if (strcmp(model_struct.cost_type, 'ext_cost'))
         phase = {phase{:}, 0, 0};
         phase_start = {phase_start{:}, 0, 0};
         phase_end = {phase_end{:}, N-1, N-1};
-    elseif (strcmp(model_struct.ext_fun_type, 'generic'))
+    elseif (strcmp(model_struct.cost_ext_fun_type, 'generic'))
         if (isfield(model_struct, 'cost_source_ext_cost') && isfield(model_struct, 'cost_function_ext_cost'))
             mex_files = {mex_files{:} ...
                 ocp_set_ext_fun_mex ...
@@ -496,7 +498,7 @@ if (strcmp(model_struct.cost_type, 'ext_cost'))
 end
 if (strcmp(model_struct.cost_type_e, 'ext_cost'))
 
-    if (strcmp(model_struct.ext_fun_type_e, 'casadi'))
+    if (strcmp(model_struct.cost_ext_fun_type_e, 'casadi'))
         mex_files = {mex_files{:} ...
             ocp_set_ext_fun_mex_e ...
             ocp_set_ext_fun_mex_e ...
@@ -524,7 +526,7 @@ if (strcmp(model_struct.cost_type_e, 'ext_cost'))
         phase = {phase{:}, 1, 1};
         phase_start = {phase_start{:}, N, N};
         phase_end = {phase_end{:}, N, N};     
-    elseif (strcmp(model_struct.ext_fun_type_e, 'generic'))
+    elseif (strcmp(model_struct.cost_ext_fun_type_e, 'generic'))
         if (isfield(model_struct, 'cost_source_ext_cost_e') && isfield(model_struct, 'cost_function_ext_cost_e'))
             mex_files = {mex_files{:} ...
                 ocp_set_ext_fun_mex_e ...
