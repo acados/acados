@@ -49,22 +49,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // #if defined(_WIN32) || defined(__WIN32__) || defined(WIN32) || defined(_WIN64)
     // /// Redirects stdout of libacados to console/file on Windows,
     // /// as stdout is otherwise suppressed
-
-
-    // https://nl.mathworks.com/matlabcentral/answers/102200-how-can-i-capture-stdout-of-a-generic-shared-library-method-called-from-matlab
     // AllocConsole(); // attach process to console
     // freopen("CONOUT$", "w", stdout);
     // freopen("CONOUT$", "w", stderr);
-    
-    // // freopen("CONIN$", "r", stdin);
-    // // https://docs.microsoft.com/en-us/windows/console/console-functions
-    // // https://gist.github.com/kingseva/a918ec66079a9475f19642ec31276a21
-    
-    // // maybe redirect again to file with GetStdHandle?
-    // //https://docs.microsoft.com/en-us/windows/console/getstdhandle
-
-    // // freopen("C:/Users/gruijthuijsenc/log/output.log", "w", stdout);
-    // // freopen("C:/Users/gruijthuijsenc/log/output.log", "w", stderr);
     // #endif
 
     long long *ptr;
