@@ -103,6 +103,7 @@ endif()
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_SYSTEM_NAME MATCHES "Windows")
     # MinGW, change to .lib such that mex recognizes it
     set(CMAKE_STATIC_LIBRARY_SUFFIX ".lib")
+    set(CMAKE_STATIC_LIBRARY_PREFIX "")
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
