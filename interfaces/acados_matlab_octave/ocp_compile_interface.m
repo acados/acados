@@ -112,49 +112,10 @@ else
     LDFLAGS = 'LDFLAGS=$LDFLAGS -fopenmp';
 end
 
-% remove flag file, if present, before creating a new one
-flag_files = dir(fullfile(opts.output_dir,'_compiled*'));
-if ~isempty(flag_files)
-    delete(fullfile(opts.output_dir,flag_files(1).name));
-end
-% is qpOASES?
-with_qp_qpoases = ~isempty(strfind(opts.qp_solver, 'qpoases'));
-if with_qp_qpoases
-    % flag file to remember if compiled with qpOASES
-    flag_file = fullfile(opts.output_dir, '_compiled_with_qpoases.txt');
-    flagID = fopen(flag_file, 'w');
-    fclose(flagID);
-    % additional compilation flag
-    FLAGS = [FLAGS, ' -DACADOS_WITH_QPOASES'];
-end
-% is OSQP?
-with_qp_osqp = ~isempty(strfind(opts.qp_solver, 'osqp'));
-if with_qp_osqp
-    % flag file to remember if compiled with OSQP
-    flag_file = fullfile(opts.output_dir, '_compiled_with_osqp.txt');
-    flagID = fopen(flag_file, 'w');
-    fclose(flagID);
-    % additional compilation flag
-    FLAGS = [FLAGS, ' -DACADOS_WITH_OSQP'];
-end
-% is qpDUNES?
-with_qp_qpdunes = ~isempty(strfind(opts.qp_solver, 'qpdunes'));
-if with_qp_qpdunes
-    % flag file to remember if compiled with qpDUNES
-    flag_file = fullfile(opts.output_dir, '_compiled_with_qpdunes.txt');
-    flagID = fopen(flag_file, 'w');
-    fclose(flagID);
-end
-% is HPMPC?
-with_qp_hpmpc = ~isempty(strfind(opts.qp_solver, 'hpmpc'));
-if with_qp_hpmpc
-    % flag file to remember if compiled with HPMPC
-    flag_file = fullfile(opts.output_dir, '_compiled_with_hpmpc.txt');
-    flagID = fopen(flag_file, 'w');
-    fclose(flagID);
-    % additional compilation flag
-    FLAGS = [FLAGS, ' -DACADOS_WITH_HPMPC'];
-end
+% copy link_libs.json to build to check for consistency
+link_libs_core_filename = fullfile(acados_folder, 'lib', 'link_libs.json');
+link_libs_interface_filename = fullfile(opts.output_dir, 'link_libs.json');
+copyfile(link_libs_core_filename, link_libs_interface_filename);
 
 
 for ii=1:length(mex_files)
@@ -175,19 +136,10 @@ for ii=1:length(mex_files)
                 acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
         end
     else
-        if with_qp_qpoases
-            mex(mex_flags, FLAGS, LDFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lqpOASES_e', mex_files{ii}, '-outdir', opts.output_dir)
-        elseif with_qp_hpmpc
-            mex(mex_flags, FLAGS, LDFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lhpmpc', mex_files{ii}, '-outdir', opts.output_dir)
-        elseif with_qp_osqp
-            mex(mex_flags, FLAGS, LDFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-losqp', mex_files{ii}, '-outdir', opts.output_dir)
-        else
-            mex(mex_flags, FLAGS, LDFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii}, '-outdir', opts.output_dir)
-        end
+        % load linking information
+        libs = jsondecode(fileread(fullfile(acados_folder, 'lib', 'link_libs.json')));
+        mex(mex_flags, FLAGS, LDFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
+            acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', libs.osqp, libs.qpoases, libs.hpmpc, mex_files{ii}, '-outdir', opts.output_dir)
     end
 end
 

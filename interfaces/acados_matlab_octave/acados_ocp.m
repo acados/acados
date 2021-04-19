@@ -142,28 +142,32 @@ classdef acados_ocp < handle
                     mex_exists = exist( fullfile(obj.opts_struct.output_dir,...
                         ['ocp_create.', mexext]), 'file');
                 end
-                % check if mex interface is linked against external libs, like qpOASES,...
+                % check if mex interface is linked against the same external libs as the core
                 if mex_exists
-                    if ~isempty(strfind(obj.opts_struct.qp_solver,'qpoases'))
-                        flag_file = fullfile(obj.opts_struct.output_dir, '_compiled_with_qpoases.txt');
-                        compile_interface = ~exist(flag_file, 'file');
-                    elseif ~isempty(strfind(obj.opts_struct.qp_solver,'hpmpc'))
-                        flag_file = fullfile(obj.opts_struct.output_dir, '_compiled_with_hpmpc.txt');
-                        compile_interface = ~exist(flag_file, 'file');
-                    elseif ~isempty(strfind(obj.opts_struct.qp_solver,'osqp'))
-                        flag_file = fullfile(obj.opts_struct.output_dir, '_compiled_with_osqp.txt');
-                        compile_interface = ~exist(flag_file, 'file');
-                    elseif ~isempty(strfind(obj.opts_struct.qp_solver,'qpdunes'))
-                        flag_file = fullfile(obj.opts_struct.output_dir, '_compiled_with_qpdunes.txt');
-                        compile_interface = ~exist(flag_file, 'file');
+                    acados_folder = getenv('ACADOS_INSTALL_DIR');
+                    addpath(fullfile(acados_folder, 'external', 'jsonlab'));
+
+                    json_filename = fullfile(acados_folder, 'lib', 'link_libs.json');
+                    if ~exist(json_filename, 'file')
+                        error('File %s not found.\nPlease compile acados with the latest version, using cmake.', json_filename)
+                    end
+                    core_links = loadjson(fileread(json_filename));
+
+                    json_filename = fullfile(obj.opts_struct.output_dir, 'link_libs.json');
+                    if ~exist(json_filename, 'file')
+                        compile_interface = true;
                     else
-                        compile_interface = false;
+                        interface_links = loadjson(fileread(json_filename));
+                        if isequal(core_links, interface_links)
+                            compile_interface = false;
+                        else
+                            compile_interface = true;
+                        end
                     end
                 else
                     compile_interface = true;
                 end
             else
-                obj.model_struct.cost_type
                 error('acados_ocp: field compile_interface is %, supported values are: true, false, auto', ...
                         obj.opts_struct.compile_interface);
             end
