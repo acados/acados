@@ -202,6 +202,7 @@ u_end = zeros(nu, 1);
 
 %% acados ocp model
 ocp_model = acados_ocp_model();
+ocp_model.set('T', T);
 
 %% symbolics
 ocp_model.set('sym_x', model.sym_x);
