@@ -116,30 +116,30 @@ end
 link_libs_core_filename = fullfile(acados_folder, 'lib', 'link_libs.json');
 link_libs_interface_filename = fullfile(opts.output_dir, 'link_libs.json');
 copyfile(link_libs_core_filename, link_libs_interface_filename);
-
+% load linking information
+addpath(fullfile(acados_folder, 'external', 'jsonlab'));
+libs = loadjson(link_libs_core_filename);
 
 for ii=1:length(mex_files)
     disp(['compiling ', mex_files{ii}])
     if is_octave()
-%        mkoctfile -p CFLAGS
-        if with_qp_qpoases
-            mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lqpOASES_e', mex_files{ii})
-        elseif with_qp_hpmpc
-            mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lhpmpc', mex_files{ii})
-        elseif with_qp_osqp
-            mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-losqp', mex_files{ii})
-        else
-            mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
+        fn = fieldnames(libs);
+        linker_flags = '-lacados -lhpipm -lblasfeo';
+        for k = 1:numel(fn)
+            if ~isempty(libs.(fn{k}))
+                linker_flags = [linker_flags, ' ', libs.(fn{k})];
+            end
         end
+        % NOTE: multiple linker flags in 1 argument do not work in Matlab
+        mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
+            acados_lib_path, linker_flags, mex_files{ii})
     else
-        % load linking information
-        libs = jsondecode(fileread(fullfile(acados_folder, 'lib', 'link_libs.json')));
+        % NOTE: empty linker flags do not work in Octave
         mex(mex_flags, FLAGS, LDFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-            acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', libs.osqp, libs.qpoases, libs.hpmpc, mex_files{ii}, '-outdir', opts.output_dir)
+            acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', libs.qpoases,...
+            libs.qpdunes, libs.osqp, libs.hpmpc, libs.ooqp, mex_files{ii}, '-outdir', opts.output_dir)
+%         mex(mex_flags, FLAGS, LDFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
+%             acados_lib_path, linker_flags, mex_files{ii}, '-outdir', opts.output_dir)
     end
 end
 
