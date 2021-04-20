@@ -61,9 +61,10 @@ You should have the following software installed on your machine.
 - Add the subfolders `bin` and `x86_64-w64-mingw32\bin` of the above mentioned mingw installation to your environment variable PATH.
 
 ### Clone acados
-Clone acados and its submodules by running the following from your Git shell:
+Clone `acados` and its submodules by running the following from your Git shell:
 ```
 git clone https://github.com/acados/acados.git
+cd acados
 git submodule update --recursive --init
 ```
 
@@ -72,7 +73,18 @@ Run the following from your terminal in the `<acados_root_folder>`:
 ```
 mkdir -p build
 cd build
-cmake.exe -G "MinGW Makefiles" -D BLASFEO_TARGET=GENERIC -D HPIPM_TARGET=GENERIC -D ACADOS_INSTALL_DIR=.. -DBUILD_SHARED_LIBS=OFF -DACADOS_EXAMPLES=OFF -DACADOS_UNIT_TESTS=OFF ..
+```
+
+Configure the `cmake` command if you want to use other external QP solvers or change the `HPIPM` and `BLASFEO` targets.
+```
+cmake.exe -G "MinGW Makefiles" -DACADOS_INSTALL_DIR=.. -DBUILD_SHARED_LIBS=OFF -DACADOS_WITH_QPOASES=ON -DACADOS_WITH_OSQP=ON ..
+# useful options to add above:
+# -DACADOS_WITH_QPOASES=ON/OFF -DACADOS_WITH_OSQP=ON/OFF -DACADOS_WITH_QPDUNES=ON/OFF ..
+# -DBLASFEO_TARGET=GENERIC -DHPIPM_TARGET=GENERIC
+```
+
+In a powershell, navigate to the folder `<acados_root_folder>/build` and execute
+```
 mingw32-make.exe -j4
 mingw32-make.exe install
 ```
