@@ -63,6 +63,13 @@ for k=1:length(mex_names)
     mex_files{k} = fullfile(acados_mex_folder, [mex_names{k}, '.c']);
 end
 
+%% check linking information of compiled acados
+% copy link_libs.json to build to check for consistency later
+link_libs_core_filename = fullfile(acados_folder, 'lib', 'link_libs.json');
+link_libs_interface_filename = fullfile(opts.output_dir, 'link_libs.json');
+copyfile(link_libs_core_filename, link_libs_interface_filename);
+addpath(fullfile(acados_folder, 'external', 'jsonlab'));
+libs = loadjson(link_libs_core_filename);
 
 %% compile mex
 if is_octave()
@@ -89,18 +96,20 @@ if is_octave()
     fclose(input_file);
 
     % add temporary additional flag
-    if ~isempty(strfind(opts.qp_solver,'qpoases'))
+    if ~isempty(libs.qpoases)
         cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_QPOASES'];
-    elseif ~isempty(strfind(opts.qp_solver,'osqp'))
+    end
+    if ~isempty(libs.osqp)
         cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_OSQP'];
-    elseif ~isempty(strfind(opts.qp_solver,'hpmpc'))
+    end
+    if ~isempty(libs.hpmpc)
         cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_HPMPC'];
-    elseif ~isempty(strfind(opts.qp_solver,'qpdunes'))
+    end
+    if ~isempty(libs.qpdunes)
         cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_QPDUNES'];
     end
 
     setenv('CFLAGS', cflags_tmp);
-
 end
 
 
@@ -112,13 +121,20 @@ else
     LDFLAGS = 'LDFLAGS=$LDFLAGS -fopenmp';
 end
 
-% copy link_libs.json to build to check for consistency
-link_libs_core_filename = fullfile(acados_folder, 'lib', 'link_libs.json');
-link_libs_interface_filename = fullfile(opts.output_dir, 'link_libs.json');
-copyfile(link_libs_core_filename, link_libs_interface_filename);
-% load linking information
-addpath(fullfile(acados_folder, 'external', 'jsonlab'));
-libs = loadjson(link_libs_core_filename);
+if ~is_octave()
+    if ~isempty(libs.qpoases)
+        FLAGS = [FLAGS, ' -DACADOS_WITH_QPOASES'];
+    end
+    if ~isempty(libs.osqp)
+        FLAGS = [FLAGS, ' -DACADOS_WITH_OSQP'];
+    end
+    if ~isempty(libs.hpmpc)
+        FLAGS = [FLAGS, ' -DACADOS_WITH_HPMPC'];
+    end
+    if ~isempty(libs.qpdunes)
+        FLAGS = [FLAGS, ' -DACADOS_WITH_QPDUNES'];
+    end
+end
 
 for ii=1:length(mex_files)
     disp(['compiling ', mex_files{ii}])
