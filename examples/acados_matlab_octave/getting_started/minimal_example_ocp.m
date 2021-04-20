@@ -55,6 +55,8 @@ sim_method = 'erk'; % erk, irk, irk_gnsf
 model = pendulum_on_cart_model;
 nx = model.nx;
 nu = model.nu;
+ny = size(model.cost_expr_y, 1);      % used in simulink example
+ny_e = size(model.cost_expr_y_e, 1);
 
 %% model to create the solver
 ocp_model = acados_ocp_model();
@@ -130,16 +132,20 @@ status = ocp.get('status'); % 0 - success
 ocp.print('stat')
 
 %% Plots
+ts = linspace(0, T, N+1);
 figure; hold on;
 States = {'p', 'theta', 'v', 'dtheta'};
 for i=1:length(States)
-    subplot( length(States), 1, i);
-    plot(xtraj(i,:)); grid on;
-    legend(States{i});
+    subplot(length(States), 1, i);
+    plot(ts, xtraj(i,:)); grid on;
+    ylabel(States{i});
+    xlabel('t [s]')
 end
 
 figure
-stairs(utraj')
+stairs(ts(1:end-1), utraj')
+ylabel('F [N]')
+xlabel('t [s]')
 grid on
 
 %% go embedded
