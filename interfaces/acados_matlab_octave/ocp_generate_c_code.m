@@ -232,6 +232,17 @@ function ocp_generate_c_code(obj)
         ocp_json_struct.constraints = struct(ocp_json_struct.constraints);
         ocp_json_struct.solver_options = struct(ocp_json_struct.solver_options);
 
+        % add compilation information to json
+        libs = loadjson(fileread(fullfile(acados_folder, 'lib', 'link_libs.json')));
+        ocp_json_struct.acados_link_libs = libs;
+        if ismac
+            ocp_json_struct.os = 'mac';
+        elseif isunix
+            ocp_json_struct.os = 'unix';
+        else
+            ocp_json_struct.os = 'pc';
+        end
+
         json_string = savejson('',ocp_json_struct, 'ForceRootName', 0);
     % else % Matlab
     %     json_string = jsonencode(obj.acados_ocp_nlp_json);
