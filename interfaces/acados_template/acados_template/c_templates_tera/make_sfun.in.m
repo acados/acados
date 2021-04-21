@@ -111,15 +111,21 @@ INCS = {['-I', fullfile(INC_PATH, 'blasfeo', 'include')], ...
         ['-I', fullfile(INC_PATH, 'acados')], ...
         ['-I', fullfile(INC_PATH)]};
 
-{% if  solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
+{% if solver_options.qp_solver is containing("QPOASES") %}
 INCS{end+1} = ['-I', fullfile(INC_PATH, 'qpOASES_e')];
 {% endif %}
 
 CFLAGS = 'CFLAGS=$CFLAGS';
 LDFLAGS = 'LDFLAGS=$LDFLAGS';
 
-{% if  solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
+{% if solver_options.qp_solver is containing("QPOASES") %}
 CFLAGS = [ CFLAGS, ' -DACADOS_WITH_QPOASES ' ];
+{%- elif solver_options.qp_solver is containing("OSQP") %}
+CFLAGS = [ CFLAGS, ' -DACADOS_WITH_OSQP ' ];
+{%- elif solver_options.qp_solver is containing("QPDUNES") %}
+CFLAGS = [ CFLAGS, ' -DACADOS_WITH_QPDUNES ' ];
+{%- elif solver_options.qp_solver is containing("HPMPC") %}
+CFLAGS = [ CFLAGS, ' -DACADOS_WITH_HPMPC ' ];
 {% endif %}
 
 LIB_PATH = ['-L', fullfile('{{ acados_lib_path }}')];
@@ -134,7 +140,7 @@ LIBS{end+1} = '{{ acados_link_libs.qpoases }}';
 LIBS{end+1} = '{{ acados_link_libs.hpmpc }}';
 LIBS{end+1} = '{{ acados_link_libs.osqp }}';
 {%- else %}
-    {% if  solver_options.qp_solver == "FULL_CONDENSING_QPOASES" %}
+    {% if solver_options.qp_solver is containing("QPOASES") %}
 LIBS{end+1} = '-lqpOASES_e';
     {% endif %}
 {%- endif %}
