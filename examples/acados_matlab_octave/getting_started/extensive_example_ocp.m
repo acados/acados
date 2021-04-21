@@ -40,7 +40,7 @@ check_acados_requirements()
 
 print_level = 1;
 %% discretization
-N = 50;
+N = 20;
 h = 0.01;
 T = N*h; % time horizon length
 
@@ -51,12 +51,13 @@ regularize_method = 'convexify';
 nlp_solver_max_iter = 30;
 tol = 1e-8;
 qp_solver = 'partial_condensing_hpipm';
-    % full_condensing_hpipm, partial_condensing_hpipm, full_condensing_qpoases
+    % full_condensing_hpipm, partial_condensing_hpipm
+    % full_condensing_qpoases, partial_condensing_osqp
 qp_solver_cond_N = 5; % for partial condensing
 qp_solver_cond_ric_alg = 0;
 qp_solver_ric_alg = 0;
 qp_solver_warm_start = 1; % 0: cold, 1: warm, 2: hot
-qp_solver_iter_max = 100;
+qp_solver_iter_max = 1000; % default is 50; OSQP needs a lot sometimes.
 
 % can vary for integrators
 sim_method_num_stages = 4 * ones(N,1);
@@ -77,7 +78,6 @@ nu = model.nu;
 nbx = 0;
 nbu = 0;
 nh = nu;
-nh_e = 0;
 
 %% cost formulation
 cost_formulation = 3;
@@ -251,51 +251,56 @@ end
 sl = ocp.get('sl', N);
 su = ocp.get('su', N);
 
-%% plot average compuation times
-if ~is_octave()
-    time_total = sum(time_tot);
-    time_linearize = sum(time_lin);
-    time_regulariz = sum(time_reg);
-    time_qp_solution = sum(time_qp_sol);
-
-    figure;
-
-    bar_vals = 1000 * [time_linearize; time_regulariz; time_qp_solution; ...
-        time_total - time_linearize - time_regulariz - time_qp_solution] / n_executions;
-    bar([1; nan], [bar_vals, nan(size(bar_vals))]' ,'stacked')
-    legend('linearization', 'regularization', 'qp solution', 'remaining')
-    ylabel('time in [ms]')
-    title( [ strrep(cost_type, '_',' '), ' , sim: ' strrep(sim_method, '_',' '), ...
-       ';  ', strrep(qp_solver, '_', ' ')] )
-end
-
+% get cost value
 cost_val_ocp = ocp.get_cost();
 
+%% plot average compuation times
+% if ~is_octave()
+%     time_total = sum(time_tot);
+%     time_linearize = sum(time_lin);
+%     time_regulariz = sum(time_reg);
+%     time_qp_solution = sum(time_qp_sol);
+% 
+%     figure;
+% 
+%     bar_vals = 1000 * [time_linearize; time_regulariz; time_qp_solution; ...
+%         time_total - time_linearize - time_regulariz - time_qp_solution] / n_executions;
+%     bar([1; nan], [bar_vals, nan(size(bar_vals))]' ,'stacked')
+%     legend('linearization', 'regularization', 'qp solution', 'remaining')
+%     ylabel('time in [ms]')
+%     title( [ strrep(cost_type, '_',' '), ' , sim: ' strrep(sim_method, '_',' '), ...
+%        ';  ', strrep(qp_solver, '_', ' ')] )
+% end
+
 %% test templated solver
-disp('testing templated solver');
-ocp.generate_c_code;
-cd c_generated_code/
-command = strcat('t_ocp = ', model_name, '_mex_solver');
-eval( command );
+if ~ispc()
+    % MEX wrapper around templated solver not supported for Windows yet
+    % it can be used and tested via Simulink though.
+    disp('testing templated solver');
+    ocp.generate_c_code;
+    cd c_generated_code/
+    command = strcat('t_ocp = ', model_name, '_mex_solver');
+    eval( command );
 
-t_ocp.set('print_level', print_level)
+    t_ocp.set('print_level', print_level)
 
-% initial state
-t_ocp.set('constr_x0', x0);
+    % initial state
+    t_ocp.set('constr_x0', x0);
 
-% set trajectory initialization
-t_ocp.set('init_x', x_traj_init);
-t_ocp.set('init_u', u_traj_init);
-t_ocp.set('init_pi', zeros(nx, N))
+    % set trajectory initialization
+    t_ocp.set('init_x', x_traj_init);
+    t_ocp.set('init_u', u_traj_init);
+    t_ocp.set('init_pi', zeros(nx, N))
 
-t_ocp.solve()
-xt_traj = t_ocp.get('x');
-ut_traj = t_ocp.get('u');
+    t_ocp.solve()
+    xt_traj = t_ocp.get('x');
+    ut_traj = t_ocp.get('u');
 
-error_X_mex_vs_mex_template = max(max(abs(xt_traj - xtraj)))
-error_U_mex_vs_mex_template = max(max(abs(ut_traj - utraj)))
+    error_X_mex_vs_mex_template = max(max(abs(xt_traj - xtraj)))
+    error_U_mex_vs_mex_template = max(max(abs(ut_traj - utraj)))
 
-t_ocp.print('stat')
-cost_val_t_ocp = t_ocp.get_cost();
-clear t_ocp
-cd ..
+    t_ocp.print('stat')
+    cost_val_t_ocp = t_ocp.get_cost();
+    clear t_ocp
+    cd ..
+end

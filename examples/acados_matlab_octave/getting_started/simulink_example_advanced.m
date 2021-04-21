@@ -4,6 +4,7 @@
 %% Run minimal example
 %
 minimal_example_ocp;
+% extensive_example_ocp;
 
 
 %% get available simulink_opts with default options
