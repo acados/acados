@@ -137,6 +137,10 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
 
+  {%- if simulink_opts.inputs.u_init -%}  {#- u_init #}
+    {%- set n_inputs = n_inputs + 1 -%}
+  {%- endif -%}
+
     // specify the number of input ports
     if ( !ssSetNumInputPorts(S, {{ n_inputs }}) )
         return;
@@ -268,6 +272,12 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- set i_input = i_input + 1 %}
     // x_init
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nx * (dims.N+1) }});
+  {%- endif -%}
+
+  {%- if simulink_opts.inputs.u_init -%}  {#- u_init #}
+    {%- set i_input = i_input + 1 %}
+    // u_init
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nx * (dims.N) }});
   {%- endif -%}
 
     /* specify dimension information for the OUTPUT ports */
@@ -617,6 +627,18 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         for (int jj = 0; jj < {{ dims.nx }}; jj++)
             buffer[jj] = (double)(*in_sign[(ii)*{{ dims.nx }}+jj]);
         ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, ii, "x", (void *) buffer);
+    }
+  {%- endif %}
+
+  {%- if simulink_opts.inputs.u_init %}  {#- u_init #}
+    // u_init
+    {%- set i_input = i_input + 1 %}
+    in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+    for (int ii = 0; ii < {{ dims.N }}; ii++)
+    {
+        for (int jj = 0; jj < {{ dims.nu }}; jj++)
+            buffer[jj] = (double)(*in_sign[(ii)*{{ dims.nu }}+jj]);
+        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, ii, "u", (void *) buffer);
     }
   {%- endif %}
 

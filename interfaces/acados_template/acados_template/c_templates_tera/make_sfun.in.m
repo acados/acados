@@ -245,7 +245,7 @@ i_in = i_in + 1;
 {%- endif %}
 
 {%- if dims.ny > 0 and simulink_opts.inputs.cost_W %}  {#- cost_W #}
-input_note = strcat(input_note, num2str(i_in), ') cost_W in column-major format, that is set for all intermediate shooting nodes: 1 to N-1 size [{{ dims.ny * dims.ny }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') cost_W in column-major format, that is set for all intermediate shooting nodes: 1 to N-1, size [{{ dims.ny * dims.ny }}]\n ');
 i_in = i_in + 1;
 {%- endif %}
 
@@ -255,7 +255,12 @@ i_in = i_in + 1;
 {%- endif %}
 
 {%- if simulink_opts.inputs.x_init %}  {#- x_init #}
-input_note = strcat(input_note, num2str(i_in), ') initialization of x for all shooting nodes [{{ dims.nx * (dims.N+1) }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') initialization of x for all shooting nodes, size [{{ dims.nx * (dims.N+1) }}]\n ');
+i_in = i_in + 1;
+{%- endif %}
+
+{%- if simulink_opts.inputs.u_init %}  {#- u_init #}
+input_note = strcat(input_note, num2str(i_in), ') initialization of u for shooting nodes 0 to N-1, size [{{ dims.nu * (dims.N) }}]\n ');
 i_in = i_in + 1;
 {%- endif %}
 
