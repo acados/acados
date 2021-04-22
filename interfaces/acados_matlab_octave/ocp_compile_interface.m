@@ -108,6 +108,9 @@ if is_octave()
     if ~isempty(libs.qpdunes)
         cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_QPDUNES'];
     end
+    if ~isempty(libs.ooqp)
+        cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_OOQP'];
+    end
 
     setenv('CFLAGS', cflags_tmp);
 end
@@ -134,6 +137,9 @@ if ~is_octave()
     if ~isempty(libs.qpdunes)
         FLAGS = [FLAGS, ' -DACADOS_WITH_QPDUNES'];
     end
+    if ~isempty(libs.ooqp)
+        cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_OOQP'];
+    end
 end
 
 for ii=1:length(mex_files)
@@ -154,8 +160,6 @@ for ii=1:length(mex_files)
         mex(mex_flags, FLAGS, LDFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
             acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', libs.qpoases,...
             libs.qpdunes, libs.osqp, libs.hpmpc, libs.ooqp, mex_files{ii}, '-outdir', opts.output_dir)
-%         mex(mex_flags, FLAGS, LDFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-%             acados_lib_path, linker_flags, mex_files{ii}, '-outdir', opts.output_dir)
     end
 end
 
