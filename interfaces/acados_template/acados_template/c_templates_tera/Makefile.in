@@ -140,10 +140,14 @@ MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_gnsf_phi_jac_y_uhat.o
 MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz.o
 MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_gnsf_get_matrices_fun.o
 {%- elif solver_options.integrator_type == "DISCRETE" %}
+{%- if model.dyn_ext_fun_type == "casadi" %}
 MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun.o
 MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun_jac.o
 {%- if hessian_approx == "EXACT" %}
 MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun_jac_hess.o
+{%- endif %}
+{%- else %}
+MODEL_OBJ+= {{ model.name }}_model/{{ model.dyn_source_discrete }}
 {%- endif %}
 {%- endif %}
 
@@ -269,7 +273,7 @@ CASADI_MODEL_SOURCE+= {{ model.name }}_gnsf_phi_fun_jac_y.c
 CASADI_MODEL_SOURCE+= {{ model.name }}_gnsf_phi_jac_y_uhat.c
 CASADI_MODEL_SOURCE+= {{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz.c
 CASADI_MODEL_SOURCE+= {{ model.name }}_gnsf_get_matrices_fun.c
-{%- elif solver_options.integrator_type == "DISCRETE" %}
+{%- elif solver_options.integrator_type == "DISCRETE" and model.dyn_ext_fun_type == "casadi" %}
 CASADI_MODEL_SOURCE+= {{ model.name }}_dyn_disc_phi_fun.c
 CASADI_MODEL_SOURCE+= {{ model.name }}_dyn_disc_phi_fun_jac.c
 {%- if hessian_approx == "EXACT" %}
@@ -322,7 +326,9 @@ CASADI_COST_Y_0_SOURCE+= {{ model.name }}_cost_y_0_hess.c
 {%- endif %}
 
 casadi_fun:
-	( cd {{ model.name }}_model; gcc $(ACADOS_FLAGS) -c  $(CASADI_MODEL_SOURCE)) 
+	{%- if model.dyn_ext_fun_type == "casadi" %}
+	( cd {{ model.name }}_model; gcc $(ACADOS_FLAGS) -c  $(CASADI_MODEL_SOURCE))
+	{%- endif %}
 	{%- if constr_type == "BGP"  and dims_nphi > 0 %}
 	( cd {{ model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_PHI_SOURCE))
 	{%- endif %}

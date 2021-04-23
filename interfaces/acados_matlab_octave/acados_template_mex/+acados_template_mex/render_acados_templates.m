@@ -138,11 +138,15 @@ function render_acados_templates(acados_ocp_nlp_json_file)
     out_file = 'make_sfun_sim.m';
     render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
 
-    % header files
+    % headers and custom C-code files
     chdir([model_name, '_model']);
-    template_file = 'model.in.h';
-    out_file = [model_name, '_model.h'];
-    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+    if (strcmp(acados_ocp.solver_options.integrator_type, 'DISCRETE') && strcmp(acados_ocp.model.dyn_ext_fun_type, 'casadi'))
+        template_file = 'model.in.h';
+        out_file = [model_name, '_model.h'];
+        render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+    else
+        copyfile(fullfile(pwd, '..', '..', acados_ocp.model.dyn_source_discrete), pwd);
+    end
     cd ..
 
     cost_dir = [model_name, '_cost'];

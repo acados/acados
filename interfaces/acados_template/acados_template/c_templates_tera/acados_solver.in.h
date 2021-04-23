@@ -70,9 +70,9 @@ typedef struct nlp_solver_capsule
     external_function_param_casadi *gnsf_phi_jac_y_uhat;
     external_function_param_casadi *gnsf_f_lo_jac_x1_x1dot_u_z;
     external_function_param_casadi *gnsf_get_matrices_fun;
-    external_function_param_casadi *discr_dyn_phi_fun;
-    external_function_param_casadi *discr_dyn_phi_fun_jac_ut_xt;
-    external_function_param_casadi *discr_dyn_phi_fun_jac_ut_xt_hess;
+    external_function_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_fun;
+    external_function_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_fun_jac_ut_xt;
+    external_function_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_fun_jac_ut_xt_hess;
 
     // cost
     external_function_param_casadi *cost_y_fun;
