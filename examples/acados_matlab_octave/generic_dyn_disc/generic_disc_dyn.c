@@ -117,6 +117,16 @@ void disc_dyn(void **in, void **out, void *params)
     // 1: [jac_u'; jac_x'], size: (nu+nx)*nx1, type: BLASFEO_DMAT_ARGS
     struct blasfeo_dmat_args *j_args = out[1];
     struct blasfeo_dmat *jac = j_args->A;
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // Only write to hess if exact_hessian == 'true' 
+    // (otherwise memory is corrupted or even seg-fault is caused)
+    // 2: [hess_ux], size: (nu+nx)*(nu+nx)
+    struct blasfeo_dmat_args *h_args = out[2];
+    struct blasfeo_dmat *hess = h_args->A;
+
+    // hess
+    blasfeo_dgese(nu+nx, nu+nx, 0.0, hess, 0, 0);
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     // jac
     blasfeo_pack_tran_dmat(nx, nu, B, nx, jac, 0, 0);
