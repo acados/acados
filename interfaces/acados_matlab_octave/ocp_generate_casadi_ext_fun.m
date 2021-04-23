@@ -89,14 +89,16 @@ elseif (strcmp(model_struct.dyn_type, 'implicit'))
         return;
     end
 elseif (strcmp(model_struct.dyn_type, 'discrete'))
-    % generate c for function and derivatives using casadi
-    if (strcmp(opts_struct.codgen_model, 'true'))
-        generate_c_code_disc_dyn(model_struct, opts_struct);
+    if (strcmp(model_struct.dyn_ext_fun_type, 'casadi'))
+        % generate c for function and derivatives using casadi
+        if (strcmp(opts_struct.codgen_model, 'true'))
+            generate_c_code_disc_dyn(model_struct, opts_struct);
+        end
+        % sources list
+        c_files{end+1} = [model_name, '_dyn_disc_phi_fun.c'];
+        c_files{end+1} = [model_name, '_dyn_disc_phi_fun_jac.c'];
+        c_files{end+1} = [model_name, '_dyn_disc_phi_fun_jac_hess.c'];
     end
-    % sources list
-    c_files{end+1} = [model_name, '_dyn_disc_phi_fun.c'];
-    c_files{end+1} = [model_name, '_dyn_disc_phi_fun_jac.c'];
-    c_files{end+1} = [model_name, '_dyn_disc_phi_fun_jac_hess.c'];
 else
     fprintf('\ncodegen_model: dyn_type not supported: %s\n', model_struct.dyn_type);
     return;
@@ -202,6 +204,12 @@ end
 if (strcmp(model_struct.cost_type_0, 'ext_cost') && strcmp(model_struct.cost_ext_fun_type_0, 'generic') &&...
     isfield(model_struct, 'cost_source_ext_cost_0') && isfield(model_struct, 'cost_function_ext_cost_0'))
     c_files_path{end+1} = model_struct.cost_source_ext_cost_0;        
+end
+
+% generic discrete dynamics
+if (strcmp(model_struct.dyn_type, 'discrete') && strcmp(model_struct.dyn_ext_fun_type, 'generic') && ...
+    isfield(model_struct, 'dyn_source_discrete') && isfield(model_struct, 'dyn_function_discrete'))
+    c_files_path{end+1} = model_struct.dyn_source_discrete;
 end
 
 if ispc

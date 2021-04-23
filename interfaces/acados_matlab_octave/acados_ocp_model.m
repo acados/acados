@@ -48,6 +48,7 @@ classdef acados_ocp_model < handle
             obj.model_struct.cost_ext_fun_type = 'casadi'; % generic
             obj.model_struct.cost_ext_fun_type_e = 'casadi'; % generic
             obj.model_struct.cost_ext_fun_type_0 = 'casadi'; % generic
+            obj.model_struct.dyn_ext_fun_type = 'casadi'; % generic
             obj.model_struct.cost_type_0 = [];
             obj.model_struct.cost_type = 'auto';
             obj.model_struct.cost_type_e = 'auto';
@@ -198,6 +199,13 @@ classdef acados_ocp_model < handle
                     obj.model_struct.dyn_expr_f = value;
                 elseif (strcmp(field, 'dyn_expr_phi'))
                     obj.model_struct.dyn_expr_phi = value;
+                elseif (strcmp(field, 'dyn_ext_fun_type'))
+                    obj.model_struct.dyn_ext_fun_type = value;
+                elseif (strcmp(field, 'dyn_source_discrete'))
+                    obj.model_struct.dyn_source_discrete = value;
+                    obj.model_struct.dyn_ext_fun_type = 'generic';
+                elseif (strcmp(field, 'dyn_function_discrete'))
+                    obj.model_struct.dyn_function_discrete = value;
                 else
                     disp(['acados_ocp_model: set: wrong field: ', field]);
                     keyboard;
