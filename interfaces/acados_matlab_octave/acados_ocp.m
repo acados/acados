@@ -42,6 +42,7 @@ classdef acados_ocp < handle
         cost_ext_fun_type
         cost_ext_fun_type_e
         cost_ext_fun_type_0
+        dyn_ext_fun_type
     end % properties
 
 
@@ -73,6 +74,7 @@ classdef acados_ocp < handle
             obj.cost_ext_fun_type = obj.model_struct.cost_ext_fun_type;
             obj.cost_ext_fun_type_e = obj.model_struct.cost_ext_fun_type_e;
             obj.cost_ext_fun_type_0 = obj.model_struct.cost_ext_fun_type_0;
+            obj.dyn_ext_fun_type = obj.model_struct.dyn_ext_fun_type;
 
             % detect cost type
             if (strcmp(obj.model_struct.cost_type, 'auto'))

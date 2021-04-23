@@ -69,6 +69,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (mxGetField( matlab_model, 0, "cost_ext_fun_type_0" )!=NULL)
         cost_ext_fun_type_0 = mxArrayToString( mxGetField( matlab_model, 0, "cost_ext_fun_type_0" ) );
 
+    char *dyn_ext_fun_type;
+    if (mxGetField( matlab_model, 0, "dyn_ext_fun_type" )!=NULL)
+        dyn_ext_fun_type = mxArrayToString( mxGetField( matlab_model, 0, "dyn_ext_fun_type" ) );
+
     // dims
     ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "dims" ) );
     ocp_nlp_dims *dims = (ocp_nlp_dims *) ptr[0];
@@ -89,14 +93,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         Nf = mxGetN( mex_field );
         
         if (!strcmp(mxGetFieldNameByNumber(prhs[2], ii), "cost_ext_cost_fun") || 
-            !strcmp(mxGetFieldNameByNumber(prhs[2], ii), "cost_ext_cost_fun_jac_hess")) {
+            !strcmp(mxGetFieldNameByNumber(prhs[2], ii), "cost_ext_cost_fun_jac_hess") ||
+            !strcmp(mxGetFieldNameByNumber(prhs[2], ii), "dyn_disc_phi_fun_jac") || 
+            !strcmp(mxGetFieldNameByNumber(prhs[2], ii), "dyn_disc_phi_fun_jac_hess"))
+        {
 
             // TODO: what is Nf?? How should stage 0 be considered here???
             for (jj=0; jj<Nf; jj++)
             {
                     // external function param casadi
                     if ((jj == 0 && !strcmp(cost_ext_fun_type, "casadi")) || 
-                        (jj == 1 && !strcmp(cost_ext_fun_type_e, "casadi")))
+                        (jj == 1 && !strcmp(cost_ext_fun_type_e, "casadi")) ||
+                        (jj == 0 && !strcmp(dyn_ext_fun_type, "casadi")))
                     {
                         external_function_param_casadi *ext_fun_ptr = (external_function_param_casadi *) ptr[jj];
                         if (ext_fun_ptr!=0)
@@ -110,7 +118,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                     }
                     // external function param generic
                     else if ((jj == 0 && !strcmp(cost_ext_fun_type, "generic")) || 
-                             (jj == 1 && !strcmp(cost_ext_fun_type_e, "generic")))
+                             (jj == 1 && !strcmp(cost_ext_fun_type_e, "generic")) ||
+                             (jj == 0 && !strcmp(dyn_ext_fun_type, "generic")))
                     {
                         external_function_param_generic *ext_fun_ptr = (external_function_param_generic *) ptr[jj];
                         if (ext_fun_ptr!=0)
@@ -127,7 +136,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                         MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "cost_ext_fun_type", cost_ext_fun_type, "casadi, generic");
                     }
             }
-        } else {
+        }
+        else
+        {
             for (jj=0; jj<Nf; jj++)
             {
                 external_function_param_casadi *ext_fun_ptr = (external_function_param_casadi *) ptr[jj];
