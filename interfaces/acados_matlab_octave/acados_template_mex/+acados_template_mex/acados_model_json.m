@@ -33,6 +33,9 @@
 
 classdef acados_model_json < handle
     properties
+        dyn_ext_fun_type
+        dyn_source_discrete
+        dyn_function_discrete
         f_impl_expr
         f_expl_expr
         f_phi_expr
@@ -46,6 +49,9 @@ classdef acados_model_json < handle
     end
     methods
         function obj = acados_model_json()
+            obj.dyn_ext_fun_type = 'casadi';
+            obj.dyn_source_discrete = [];
+            obj.dyn_function_discrete = [];
             obj.f_impl_expr = [];
             obj.f_expl_expr = [];
             obj.f_phi_expr = [];

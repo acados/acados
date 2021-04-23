@@ -40,7 +40,11 @@
 #include "acados_c/external_function_interface.h"
 
 // example specific
+{% if model.dyn_ext_fun_type == "casadi" %}
 #include "{{ model.name }}_model/{{ model.name }}_model.h"
+{% else %}
+void {{ model.dyn_function_discrete }}(void **, void **, void *);
+{% endif %}
 {% if constraints.constr_type == "BGP" and dims.nphi %}
 #include "{{ model.name }}_constraints/{{ model.name }}_phi_constraint.h"
 {% endif %}
@@ -59,7 +63,7 @@
 {% if cost.cost_ext_fun_type == "casadi" %}
 #include "{{ model.name }}_cost/{{ model.name }}_external_cost.h"
 {% else %}
-int {{ cost.cost_function_ext_cost }}(void **, void **, void *);
+void {{ cost.cost_function_ext_cost }}(void **, void **, void *);
 {% endif %}
 {%- endif %}
 {%- if cost.cost_type_0 == "NONLINEAR_LS" %}
@@ -68,7 +72,7 @@ int {{ cost.cost_function_ext_cost }}(void **, void **, void *);
 {% if cost.cost_ext_fun_type_0 == "casadi" %}
 #include "{{ model.name }}_cost/{{ model.name }}_external_cost_0.h"
 {% else %}
-int {{ cost.cost_function_ext_cost_0 }}(void **, void **, void *);
+void {{ cost.cost_function_ext_cost_0 }}(void **, void **, void *);
 {% endif %}
 {%- endif %}
 {%- if cost.cost_type_e == "NONLINEAR_LS" %}
@@ -77,7 +81,7 @@ int {{ cost.cost_function_ext_cost_0 }}(void **, void **, void *);
 {% if cost.cost_ext_fun_type_e == "casadi" %}
 #include "{{ model.name }}_cost/{{ model.name }}_external_cost_e.h"
 {% else %}
-int {{ cost.cost_function_ext_cost_e }}(void **, void **, void *);
+void {{ cost.cost_function_ext_cost_e }}(void **, void **, void *);
 {% endif %}
 {%- endif %}
 
@@ -587,42 +591,54 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     }
 {% elif solver_options.integrator_type == "DISCRETE" %}
     // discrete dynamics
-    capsule->discr_dyn_phi_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
+    capsule->discr_dyn_phi_fun = (external_function_param_{{ model.dyn_ext_fun_type }} *) malloc(sizeof(external_function_param_{{ model.dyn_ext_fun_type }})*N);
     for (int i = 0; i < N; i++)
     {
+        {%- if model.dyn_ext_fun_type == "casadi" %}
         capsule->discr_dyn_phi_fun[i].casadi_fun = &{{ model.name }}_dyn_disc_phi_fun;
         capsule->discr_dyn_phi_fun[i].casadi_n_in = &{{ model.name }}_dyn_disc_phi_fun_n_in;
         capsule->discr_dyn_phi_fun[i].casadi_n_out = &{{ model.name }}_dyn_disc_phi_fun_n_out;
         capsule->discr_dyn_phi_fun[i].casadi_sparsity_in = &{{ model.name }}_dyn_disc_phi_fun_sparsity_in;
         capsule->discr_dyn_phi_fun[i].casadi_sparsity_out = &{{ model.name }}_dyn_disc_phi_fun_sparsity_out;
         capsule->discr_dyn_phi_fun[i].casadi_work = &{{ model.name }}_dyn_disc_phi_fun_work;
-        external_function_param_casadi_create(&capsule->discr_dyn_phi_fun[i], {{ dims.np }});
+        {%- else %}
+        capsule->discr_dyn_phi_fun[i].fun = &{{ model.dyn_function_discrete }};
+        {%- endif %}
+        external_function_param_{{ model.dyn_ext_fun_type }}_create(&capsule->discr_dyn_phi_fun[i], {{ dims.np }});
     }
     
-    capsule->discr_dyn_phi_fun_jac_ut_xt = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
+    capsule->discr_dyn_phi_fun_jac_ut_xt = (external_function_param_{{ model.dyn_ext_fun_type }} *) malloc(sizeof(external_function_param_{{ model.dyn_ext_fun_type }})*N);
     for (int i = 0; i < N; i++)
     {
+        {%- if model.dyn_ext_fun_type == "casadi" %}
         capsule->discr_dyn_phi_fun_jac_ut_xt[i].casadi_fun = &{{ model.name }}_dyn_disc_phi_fun_jac;
         capsule->discr_dyn_phi_fun_jac_ut_xt[i].casadi_n_in = &{{ model.name }}_dyn_disc_phi_fun_jac_n_in;
         capsule->discr_dyn_phi_fun_jac_ut_xt[i].casadi_n_out = &{{ model.name }}_dyn_disc_phi_fun_jac_n_out;
         capsule->discr_dyn_phi_fun_jac_ut_xt[i].casadi_sparsity_in = &{{ model.name }}_dyn_disc_phi_fun_jac_sparsity_in;
         capsule->discr_dyn_phi_fun_jac_ut_xt[i].casadi_sparsity_out = &{{ model.name }}_dyn_disc_phi_fun_jac_sparsity_out;
         capsule->discr_dyn_phi_fun_jac_ut_xt[i].casadi_work = &{{ model.name }}_dyn_disc_phi_fun_jac_work;
-        external_function_param_casadi_create(&capsule->discr_dyn_phi_fun_jac_ut_xt[i], {{ dims.np }});
+        {%- else %}
+        capsule->discr_dyn_phi_fun_jac_ut_xt[i].fun = &{{ model.dyn_function_discrete }};
+        {%- endif %}
+        external_function_param_{{ model.dyn_ext_fun_type }}_create(&capsule->discr_dyn_phi_fun_jac_ut_xt[i], {{ dims.np }});
     }
     
     {%- if solver_options.hessian_approx == "EXACT" %}
-    capsule->discr_dyn_phi_fun_jac_ut_xt_hess = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
+    capsule->discr_dyn_phi_fun_jac_ut_xt_hess = (external_function_param_{{ model.dyn_ext_fun_type }} *) malloc(sizeof(external_function_param_{{ model.dyn_ext_fun_type }})*N);
     
     for (int i = 0; i < N; i++)
     {
+        {%- if model.dyn_ext_fun_type == "casadi" %}
         capsule->discr_dyn_phi_fun_jac_ut_xt_hess[i].casadi_fun = &{{ model.name }}_dyn_disc_phi_fun_jac_hess;
         capsule->discr_dyn_phi_fun_jac_ut_xt_hess[i].casadi_n_in = &{{ model.name }}_dyn_disc_phi_fun_jac_hess_n_in;
         capsule->discr_dyn_phi_fun_jac_ut_xt_hess[i].casadi_n_out = &{{ model.name }}_dyn_disc_phi_fun_jac_hess_n_out;
         capsule->discr_dyn_phi_fun_jac_ut_xt_hess[i].casadi_sparsity_in = &{{ model.name }}_dyn_disc_phi_fun_jac_hess_sparsity_in;
         capsule->discr_dyn_phi_fun_jac_ut_xt_hess[i].casadi_sparsity_out = &{{ model.name }}_dyn_disc_phi_fun_jac_hess_sparsity_out;
         capsule->discr_dyn_phi_fun_jac_ut_xt_hess[i].casadi_work = &{{ model.name }}_dyn_disc_phi_fun_jac_hess_work;
-        external_function_param_casadi_create(&capsule->discr_dyn_phi_fun_jac_ut_xt_hess[i], {{ dims.np }});
+        {%- else %}
+        capsule->discr_dyn_phi_fun_jac_ut_xt_hess[i].fun = &{{ model.dyn_function_discrete }};
+        {%- endif %}
+        external_function_param_{{ model.dyn_ext_fun_type }}_create(&capsule->discr_dyn_phi_fun_jac_ut_xt_hess[i], {{ dims.np }});
     }
     {%- endif %}
 {%- endif %}
@@ -1979,10 +1995,10 @@ int {{ model.name }}_acados_free(nlp_solver_capsule * capsule)
 {%- elif solver_options.integrator_type == "DISCRETE" %}
     for (int i = 0; i < {{ dims.N }}; i++)
     {
-        external_function_param_casadi_free(&capsule->discr_dyn_phi_fun[i]);
-        external_function_param_casadi_free(&capsule->discr_dyn_phi_fun_jac_ut_xt[i]);
+        external_function_param_{{ model.dyn_ext_fun_type }}_free(&capsule->discr_dyn_phi_fun[i]);
+        external_function_param_{{ model.dyn_ext_fun_type }}_free(&capsule->discr_dyn_phi_fun_jac_ut_xt[i]);
     {%- if solver_options.hessian_approx == "EXACT" %}
-        external_function_param_casadi_free(&capsule->discr_dyn_phi_fun_jac_ut_xt_hess[i]);
+        external_function_param_{{ model.dyn_ext_fun_type }}_free(&capsule->discr_dyn_phi_fun_jac_ut_xt_hess[i]);
     {%- endif %}
     }
     free(capsule->discr_dyn_phi_fun);

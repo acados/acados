@@ -107,30 +107,6 @@ end
 
 model_name = model.name;
 
-if isfield(model, 'dyn_expr_phi')
-    phi = model.dyn_expr_phi;
-else
-    phi = model.f_phi_expr;
-end
-
-% assume nx1 = nx !!!
-% multipliers for hessian
-if isSX
-    lam = SX.sym('lam', nx, 1);
-else
-    lam = MX.sym('lam', nx, 1);
-end
-% generate jacobians
-jac_ux = jacobian(phi, [u; x]);
-% generate adjoint
-adj_ux = jtimes(phi, [u; x], lam, true);
-% generate hessian
-hess_ux = jacobian(adj_ux, [u; x]);
-% Set up functions
-phi_fun = Function([model_name,'_dyn_disc_phi_fun'], {x, u, p}, {phi});
-phi_fun_jac_ut_xt = Function([model_name,'_dyn_disc_phi_fun_jac'], {x, u, p}, {phi, jac_ux'});
-phi_fun_jac_ut_xt_hess = Function([model_name,'_dyn_disc_phi_fun_jac_hess'], {x, u, lam, p}, {phi, jac_ux', hess_ux});
-
 if is_template
     if ~exist( fullfile(pwd,'c_generated_code'), 'dir')
         mkdir('c_generated_code');
@@ -143,10 +119,36 @@ if is_template
     cd(model_dir)
 end
 
-% generate C code
-phi_fun.generate([model_name,'_dyn_disc_phi_fun'], casadi_opts);
-phi_fun_jac_ut_xt.generate([model_name,'_dyn_disc_phi_fun_jac'], casadi_opts);
-phi_fun_jac_ut_xt_hess.generate([model_name,'_dyn_disc_phi_fun_jac_hess'], casadi_opts);
+if strcmp(model.dyn_ext_fun_type, 'casadi')
+    if isfield(model, 'dyn_expr_phi')
+        phi = model.dyn_expr_phi;
+    else
+        phi = model.f_phi_expr;
+    end
+
+    % assume nx1 = nx !!!
+    % multipliers for hessian
+    if isSX
+        lam = SX.sym('lam', nx, 1);
+    else
+        lam = MX.sym('lam', nx, 1);
+    end
+    % generate jacobians
+    jac_ux = jacobian(phi, [u; x]);
+    % generate adjoint
+    adj_ux = jtimes(phi, [u; x], lam, true);
+    % generate hessian
+    hess_ux = jacobian(adj_ux, [u; x]);
+    % Set up functions
+    phi_fun = Function([model_name,'_dyn_disc_phi_fun'], {x, u, p}, {phi});
+    phi_fun_jac_ut_xt = Function([model_name,'_dyn_disc_phi_fun_jac'], {x, u, p}, {phi, jac_ux'});
+    phi_fun_jac_ut_xt_hess = Function([model_name,'_dyn_disc_phi_fun_jac_hess'], {x, u, lam, p}, {phi, jac_ux', hess_ux});
+
+    % generate C code
+    phi_fun.generate([model_name,'_dyn_disc_phi_fun'], casadi_opts);
+    phi_fun_jac_ut_xt.generate([model_name,'_dyn_disc_phi_fun_jac'], casadi_opts);
+    phi_fun_jac_ut_xt_hess.generate([model_name,'_dyn_disc_phi_fun_jac_hess'], casadi_opts);
+end
 
 if is_template
     cd '../..'
