@@ -142,7 +142,7 @@ function render_acados_templates(acados_ocp_nlp_json_file)
     % headers and custom C-code files
     c_dir = pwd;
     chdir([model_name, '_model']);
-    if (strcmp(acados_ocp.solver_options.integrator_type, 'DISCRETE') && strcmp(acados_ocp.model.dyn_ext_fun_type, 'casadi'))
+    if strcmp(acados_ocp.model.dyn_ext_fun_type, 'casadi')
         template_file = 'model.in.h';
         out_file = [model_name, '_model.h'];
         render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
