@@ -1,6 +1,8 @@
 # acados
 
-![](https://secure.travis-ci.org/acados/acados.png?branch=master)
+<!-- ![](https://secure.travis-ci.org/acados/acados.png?branch=master) -->
+![Github actions full build workflow](https://github.com/acados/acados/actions/workflows/full_build.yml/badge.svg)
+<!-- ![Github actions full build workflow](https://github.com/acados/acados/actions/workflows/full_build.yml/badge.svg?branch=master) -->
 ![](https://ci.appveyor.com/api/projects/status/q0b2nohk476u5clg?svg=true)
 
 Fast and embedded solvers for nonlinear optimal control.
