@@ -76,6 +76,11 @@
     mexErrMsgTxt(buffer);\
 }
 
+#define MEX_SETTER_NO_ALL_STAGES_SUPPORT(fun_name, field) {\
+    sprintf(buffer, "%s setting %s for all stages is not supported", fun_name, field);\
+    mexErrMsgTxt(buffer);\
+}
+
 #define MEX_FIELD_NOT_SUPPORTED(fun_name, field) {\
     sprintf(buffer, "%s: field %s not supported", fun_name, field);\
     mexErrMsgTxt(buffer);\
