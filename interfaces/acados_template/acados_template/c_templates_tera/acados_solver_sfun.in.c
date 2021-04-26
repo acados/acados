@@ -277,7 +277,7 @@ static void mdlInitializeSizes (SimStruct *S)
   {%- if simulink_opts.inputs.u_init -%}  {#- u_init #}
     {%- set i_input = i_input + 1 %}
     // u_init
-    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nx * (dims.N) }});
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nu * (dims.N) }});
   {%- endif -%}
 
     /* specify dimension information for the OUTPUT ports */
