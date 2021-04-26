@@ -1,6 +1,14 @@
 name: Test Full Build Linux
 
-on: [push, pull_request]
+on:
+  push:
+    branches-ignore:
+      - 'doc*'
+      - 'wip*'
+  pull_request:
+    branches:
+      - '*'
+
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
