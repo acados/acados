@@ -36,10 +36,10 @@ The interface consists of two parts:
 2. the [template based interface for code generation, use in Simulink and embedded deployment](#templates)
 
 The structure is visualized below:
-<!-- ```eval_rst
+```eval_rst
 .. image:: ./mex_interface_overview.png
 .. This is a comment.
-``` -->
+```
 
 ### Native MEX (rapid prototyping)
 This interface makes a broad set of `acados` functionalities available from `Matlab` and `Octave`.
