@@ -24,8 +24,8 @@ Documentation latest build: |today|
    python_api/index
    examples/index
    faq/index
-   citing
-   embedded_workflow
+   citing/index
+   embedded_workflow/index
    list_of_projects/index
 ```
 
