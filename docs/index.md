@@ -22,8 +22,9 @@ Documentation latest build: |today|
    problem_formulation/index
    installation/index
    interfaces/index
-   c_interface/index
    python_interface/index
+   matlab_octave_interface/index
+   c_interface/index
    examples/index
    faq/index
    citing/index
