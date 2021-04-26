@@ -22,8 +22,8 @@ Documentation latest build: |today|
    problem_formulation/index
    installation/index
    interfaces/index
-   c_api/index
-   python_api/index
+   c_interface/index
+   python_interface/index
    examples/index
    faq/index
    citing/index

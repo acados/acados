@@ -42,16 +42,11 @@
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#
-import os
-import sys
+
 import datetime
 # sys.path.insert(0, os.path.abspath('.'))
 
 
-sys.path.append(os.path.abspath('/home/andrea/acados/docs/.acados_doc/lib/python3.5/site-packages/breathe/'))
-# extensions = ['sphinx.ext.pngmath', 'sphinx.ext.todo', 'breathe' ]
-breathe_projects = { "acados": "/home/andrea/acados/docs/c_api_only/doxygen_docs/xml/" }
 breathe_default_project = "acados"
 
 # -- Project information -----------------------------------------------------

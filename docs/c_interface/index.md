@@ -7,7 +7,7 @@ Disclaimer: the `C` interface is NOT thoroughly documented using docstrings.
 It is recommended to instead look at the header files in [`interfaces/acados_c/`](https://github.com/acados/acados/tree/master/interfaces/acados_c) and the code itself.
 
 Another very important ressource are the templated `C` files used by the template based interfaces (`Python` and code generation for `Matlab` and `Octave`), which show how to use the `C` interface properly.
-These templates are very actively maintained and tested using CI.
+These templates are actively maintained and tested using CI.
 The templates can be found in [`interfaces/acados_template/acados_template/c_templates_tera`](https://github.com/acados/acados/tree/master/interfaces/acados_template/acados_template/c_templates_tera).
 
 

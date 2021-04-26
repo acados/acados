@@ -50,7 +50,7 @@ Please choose one and proceed with the corresponding paragraph.
 
 ### `C` interface
 - This includes all functionality in `<acados_root>/interfaces/acados_c`.
-- Documentation can be found here: [C API](https://docs.acados.org/c_api/index.html)
+- Documentation can be found here: [C API](https://docs.acados.org/c_interface/index.html)
 
 ### `MATLAB` and `Octave` interface
 - The interface is written in `MEX`
