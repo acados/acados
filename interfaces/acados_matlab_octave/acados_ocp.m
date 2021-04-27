@@ -345,7 +345,7 @@ classdef acados_ocp < handle
 
             for k = 1:numel(keys)
                 key = keys{k};
-                key_parts = split(key, '_');
+                key_parts = strsplit(key, '_');
                 field = key_parts{1};
                 stage = key_parts{2};
 
