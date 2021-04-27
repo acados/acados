@@ -17,8 +17,8 @@ To run the examples, navigate into the folder of the example you want to run and
 source env.sh # Which can be found in the folder of one of the examples
 ```
 
-If you want to run an `acados` example from another folder, you need to export the envirionment variable `ACADOS_INSTALL_DIR` properly.
-In the `env.sh` file it is assumed that `ACADOS_INSTALL_DIR` is folders up from the directory, in which the example is located.
+If you want to run an `acados` example from another folder, you need to export the environment variable `ACADOS_INSTALL_DIR` properly.
+In the `env.sh` file it is assumed that `ACADOS_INSTALL_DIR` is two folders above the directory, in which the example is located.
 
 Afterwards, launch `Matlab` or `Octave` from the same shell.
 
@@ -58,7 +58,7 @@ A table and explanation of various options of the native `MEX` interface can be 
 For the template based part of the `Matlab` interface, we refer to [the docstring based documentation of the Python interface](../python_interface/index.md).
 
 ## Simulink
-The templates mentioned [above](#templates) also contain templated Sfunctions and corresponding make functions for Matlab for both the OCP solver and the acados integrator.
+The templates mentioned [above](#templates) also contain templated S-functions and corresponding make functions for Matlab for both the OCP solver and the acados integrator.
 
 A basic Simulink example can be found in [`<acados_root>/examples/acados_python/getting_started/simulink_example.m`](https://github.com/acados/acados/blob/master/examples/acados_matlab_octave/getting_started/simulink_example.m)
 
@@ -72,7 +72,7 @@ To create external function for your problem, we suggest to use `CasADi` from th
 Depending on the environment you want to use to generate `CasADi` functions from, proceed with the corresponding paragraph (Matlab, Octave).
 
 ### **Matlab**
-Put `CasADi` binaries into `<acados_root_folder>/external/casadi-matlab` :
+Download and extract the `CasADi` binaries into `<acados_root_folder>/external/casadi-matlab`:
 ```
 cd external
 wget -q -nc --show-progress https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-matlabR2014b-v3.4.0.tar.gz
@@ -82,7 +82,7 @@ cd ..
 ```
 
 ### **Octave version 4.4 or later**
-Put `CasADi` binaries into `<acados_root_folder>/external/casadi-octave` :
+Download and extract the `CasADi` binaries into `<acados_root_folder>/external/casadi-octave`:
 ```
 cd external
 wget -q -nc --show-progress https://github.com/casadi/casadi/releases/download/3.4.5/casadi-linux-octave-4.4.1-v3.4.5.tar.gz
@@ -91,7 +91,7 @@ tar -xf casadi-linux-octave-4.4.1-v3.4.5.tar.gz -C casadi-octave
 ```
 
 ### **Octave version 4.2 or earliear**
-Put `CasADi` binaries into `<acados_root_folder>/external/casadi-octave` :
+Download and extract the `CasADi` binaries into `<acados_root_folder>/external/casadi-octave`:
 ```
 cd external
 wget -q -nc --show-progress https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-octave-v3.4.0.tar.gz

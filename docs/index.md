@@ -27,8 +27,8 @@ Documentation latest build: |today|
    c_interface/index
    examples/index
    faq/index
-   citing/index
    embedded_workflow/index
    list_of_projects/index
+   citing/index
 ```
 

@@ -40,7 +40,7 @@ The Python interface relies on the same problem formulation as the MATLAB interf
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"<acados_root>/lib"
     export ACADOS_SOURCE_DIR="<acados_root>"
     ```
-    Tipp: you can add these lines to your `.bashrc`/`.zshrc`.
+    Hint: you can add these lines to your `.bashrc`/`.zshrc`.
 
 4. Run a Python example to check that everything works.
     We suggest to get started with the example
