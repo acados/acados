@@ -700,7 +700,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         MEX_FIELD_NOT_SUPPORTED_SUGGEST(fun_name, field, "p, constr_x0,\
  constr_lbx, constr_ubx, constr_C, constr_D, constr_lg, constr_ug, constr_lh, constr_uh,\
- constr_lbu, constr_ubu, cost_y_ref[_e], sl,\
+ constr_lbu, constr_ubu, cost_y_ref[_e], sl, su, x, xdot, u, pi, lam, z, \
  cost_Vu, cost_Vx, cost_Vz, cost_W, cost_Z, cost_Zl, cost_Zu, cost_z,\
  cost_zl, cost_zu, init_x, init_u, init_z, init_xdot, init_gnsf_phi,\
  init_pi, nlp_solver_max_iter, qp_warm_start, warm_start_first_qp, print_level");
