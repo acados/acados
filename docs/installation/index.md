@@ -69,7 +69,7 @@ git submodule update --recursive --init
 ```
 
 ### Build acados
-Run the following from your terminal in the `<acados_root_folder>`:
+Run the following from a powershell in the `<acados_root_folder>`:
 ```
 mkdir -p build
 cd build
@@ -81,6 +81,8 @@ cmake.exe -G "MinGW Makefiles" -DACADOS_INSTALL_DIR=.. -DBUILD_SHARED_LIBS=OFF -
 # useful options to add above:
 # -DACADOS_WITH_QPOASES=ON/OFF -DACADOS_WITH_OSQP=ON/OFF -DACADOS_WITH_QPDUNES=ON/OFF ..
 # -DBLASFEO_TARGET=GENERIC -DHPIPM_TARGET=GENERIC
+# NOTE: check the output of cmake: -- Installation directory: should be <acados_root_folder>,
+#     if this is not the case, set -DACADOS_INSTALL_DIR=<acados_root_folder> explicitly above.
 ```
 
 In a powershell, navigate to the folder `<acados_root_folder>/build` and execute
