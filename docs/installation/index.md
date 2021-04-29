@@ -71,13 +71,14 @@ git submodule update --recursive --init
 ### Build acados
 Run the following from a powershell in the `<acados_root_folder>`:
 ```
+$ACADOS_INSTALL_DIR=$(pwd)
 mkdir -p build
 cd build
 ```
 
 Configure the `cmake` command if you want to use other external QP solvers or change the `HPIPM` and `BLASFEO` targets.
 ```
-cmake.exe -G "MinGW Makefiles" -DACADOS_INSTALL_DIR=.. -DBUILD_SHARED_LIBS=OFF -DACADOS_WITH_QPOASES=ON -DACADOS_WITH_OSQP=ON ..
+cmake.exe -G "MinGW Makefiles" -DACADOS_INSTALL_DIR="$ACADOS_INSTALL_DIR" -DBUILD_SHARED_LIBS=OFF -DACADOS_WITH_QPOASES=ON -DACADOS_WITH_OSQP=ON ..
 # useful options to add above:
 # -DACADOS_WITH_QPOASES=ON/OFF -DACADOS_WITH_OSQP=ON/OFF -DACADOS_WITH_QPDUNES=ON/OFF ..
 # -DBLASFEO_TARGET=GENERIC -DHPIPM_TARGET=GENERIC
