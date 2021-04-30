@@ -158,9 +158,6 @@ elseif (strcmp(dyn_type, 'implicit'))
 else
 	ocp_model.set('dyn_type', 'discrete');
 	ocp_model.set('dyn_expr_phi', model.expr_phi);
-	if (np>0)
-		ocp_model.set('dyn_param_phi', 'true');
-	end
 end
 % constraints
 ocp_model.set('constr_x0', x0);

@@ -95,9 +95,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             sprintf(buffer, "\nocp_get: invalid stage index, got %d\n", stage);
             mexErrMsgTxt(buffer);
         }
-        else if (stage == N && strcmp(field, "x") && strcmp(field, "sens_x") && strcmp(field, "sl") && strcmp(field, "su") )
+        else if (stage == N && strcmp(field, "x") && strcmp(field, "lam") && strcmp(field, "t") && strcmp(field, "sens_x") && strcmp(field, "sl") && strcmp(field, "su") )
         {
-            sprintf(buffer, "\nocp_get: invalid stage index, got stage = %d = N, only x, slacks available at this stage\n", stage);
+            sprintf(buffer, "\nocp_get: invalid stage index, got stage = %d = N, field = %s, only x, lam, t, slacks available at this stage\n", stage, field);
             mexErrMsgTxt(buffer);
         }
     }
@@ -227,6 +227,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             plhs[0] = mxCreateNumericMatrix(nx, 1, mxDOUBLE_CLASS, mxREAL);
             double *pi = mxGetPr( plhs[0] );
             ocp_nlp_out_get(config, dims, out, stage, "pi", pi);
+        }
+        else
+        {
+            sprintf(buffer, "\nocp_get: wrong nrhs: %d\n", nrhs);
+            mexErrMsgTxt(buffer);
+        }
+    }
+        else if (!strcmp(field, "lam"))
+    {
+        if (nrhs==2)
+        {
+            sprintf(buffer, "\nocp_get: field lam: only supported for a single shooting node.\n");
+            mexErrMsgTxt(buffer);
+        }
+        else if (nrhs==3)
+        {
+            int nlam = ocp_nlp_dims_get_from_attr(config, dims, out, stage, "lam");
+            plhs[0] = mxCreateNumericMatrix(nlam, 1, mxDOUBLE_CLASS, mxREAL);
+            double *lam = mxGetPr( plhs[0] );
+            ocp_nlp_out_get(config, dims, out, stage, "lam", lam);
         }
         else
         {
@@ -428,7 +448,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else
     {
         MEX_FIELD_NOT_SUPPORTED_SUGGEST(fun_name, field,
-             "x, u, z, pi, sl, su, t, sens_x, sens_u, sens_pi, status, sqp_iter, time_tot, time_lin, time_reg, time_qp_sol, stat, qp_solver_cond_H, qp_solver_A");
+             "x, u, z, pi, lam, sl, su, t, sens_x, sens_u, sens_pi, status, sqp_iter, time_tot, time_lin, time_reg, time_qp_sol, stat, qp_solver_cond_H, qp_solver_A");
     }
 
     return;

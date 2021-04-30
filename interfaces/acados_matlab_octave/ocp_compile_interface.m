@@ -63,6 +63,13 @@ for k=1:length(mex_names)
     mex_files{k} = fullfile(acados_mex_folder, [mex_names{k}, '.c']);
 end
 
+%% check linking information of compiled acados
+% copy link_libs.json to build to check for consistency later
+link_libs_core_filename = fullfile(acados_folder, 'lib', 'link_libs.json');
+link_libs_interface_filename = fullfile(opts.output_dir, 'link_libs.json');
+copyfile(link_libs_core_filename, link_libs_interface_filename);
+addpath(fullfile(acados_folder, 'external', 'jsonlab'));
+libs = loadjson(link_libs_core_filename);
 
 %% compile mex
 if is_octave()
@@ -89,18 +96,23 @@ if is_octave()
     fclose(input_file);
 
     % add temporary additional flag
-    if ~isempty(strfind(opts.qp_solver,'qpoases'))
+    if ~isempty(libs.qpoases)
         cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_QPOASES'];
-    elseif ~isempty(strfind(opts.qp_solver,'osqp'))
+    end
+    if ~isempty(libs.osqp)
         cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_OSQP'];
-    elseif ~isempty(strfind(opts.qp_solver,'hpmpc'))
+    end
+    if ~isempty(libs.hpmpc)
         cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_HPMPC'];
-    elseif ~isempty(strfind(opts.qp_solver,'qpdunes'))
+    end
+    if ~isempty(libs.qpdunes)
         cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_QPDUNES'];
+    end
+    if ~isempty(libs.ooqp)
+        cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_OOQP'];
     end
 
     setenv('CFLAGS', cflags_tmp);
-
 end
 
 
@@ -112,82 +124,42 @@ else
     LDFLAGS = 'LDFLAGS=$LDFLAGS -fopenmp';
 end
 
-% remove flag file, if present, before creating a new one
-flag_files = dir(fullfile(opts.output_dir,'_compiled*'));
-if ~isempty(flag_files)
-    delete(fullfile(opts.output_dir,flag_files(1).name));
+if ~is_octave()
+    if ~isempty(libs.qpoases)
+        FLAGS = [FLAGS, ' -DACADOS_WITH_QPOASES'];
+    end
+    if ~isempty(libs.osqp)
+        FLAGS = [FLAGS, ' -DACADOS_WITH_OSQP'];
+    end
+    if ~isempty(libs.hpmpc)
+        FLAGS = [FLAGS, ' -DACADOS_WITH_HPMPC'];
+    end
+    if ~isempty(libs.qpdunes)
+        FLAGS = [FLAGS, ' -DACADOS_WITH_QPDUNES'];
+    end
+    if ~isempty(libs.ooqp)
+        cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_OOQP'];
+    end
 end
-% is qpOASES?
-with_qp_qpoases = ~isempty(strfind(opts.qp_solver, 'qpoases'));
-if with_qp_qpoases
-    % flag file to remember if compiled with qpOASES
-    flag_file = fullfile(opts.output_dir, '_compiled_with_qpoases.txt');
-    flagID = fopen(flag_file, 'w');
-    fclose(flagID);
-    % additional compilation flag
-    FLAGS = [FLAGS, ' -DACADOS_WITH_QPOASES'];
-end
-% is OSQP?
-with_qp_osqp = ~isempty(strfind(opts.qp_solver, 'osqp'));
-if with_qp_osqp
-    % flag file to remember if compiled with OSQP
-    flag_file = fullfile(opts.output_dir, '_compiled_with_osqp.txt');
-    flagID = fopen(flag_file, 'w');
-    fclose(flagID);
-    % additional compilation flag
-    FLAGS = [FLAGS, ' -DACADOS_WITH_OSQP'];
-end
-% is qpDUNES?
-with_qp_qpdunes = ~isempty(strfind(opts.qp_solver, 'qpdunes'));
-if with_qp_qpdunes
-    % flag file to remember if compiled with qpDUNES
-    flag_file = fullfile(opts.output_dir, '_compiled_with_qpdunes.txt');
-    flagID = fopen(flag_file, 'w');
-    fclose(flagID);
-end
-% is HPMPC?
-with_qp_hpmpc = ~isempty(strfind(opts.qp_solver, 'hpmpc'));
-if with_qp_hpmpc
-    % flag file to remember if compiled with HPMPC
-    flag_file = fullfile(opts.output_dir, '_compiled_with_hpmpc.txt');
-    flagID = fopen(flag_file, 'w');
-    fclose(flagID);
-    % additional compilation flag
-    FLAGS = [FLAGS, ' -DACADOS_WITH_HPMPC'];
-end
-
 
 for ii=1:length(mex_files)
     disp(['compiling ', mex_files{ii}])
     if is_octave()
-%        mkoctfile -p CFLAGS
-        if with_qp_qpoases
-            mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lqpOASES_e', mex_files{ii})
-        elseif with_qp_hpmpc
-            mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lhpmpc', mex_files{ii})
-        elseif with_qp_osqp
-            mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-losqp', mex_files{ii})
-        else
-            mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
+        fn = fieldnames(libs);
+        linker_flags = '-lacados -lhpipm -lblasfeo';
+        for k = 1:numel(fn)
+            if ~isempty(libs.(fn{k}))
+                linker_flags = [linker_flags, ' ', libs.(fn{k})];
+            end
         end
+        % NOTE: multiple linker flags in 1 argument do not work in Matlab
+        mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
+            acados_lib_path, linker_flags, mex_files{ii})
     else
-        if with_qp_qpoases
-            mex(mex_flags, FLAGS, LDFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lqpOASES_e', mex_files{ii}, '-outdir', opts.output_dir)
-        elseif with_qp_hpmpc
-            mex(mex_flags, FLAGS, LDFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lhpmpc', mex_files{ii}, '-outdir', opts.output_dir)
-        elseif with_qp_osqp
-            mex(mex_flags, FLAGS, LDFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-losqp', mex_files{ii}, '-outdir', opts.output_dir)
-        else
-            mex(mex_flags, FLAGS, LDFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii}, '-outdir', opts.output_dir)
-        end
+        % NOTE: empty linker flags do not work in Octave
+        mex(mex_flags, FLAGS, LDFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
+            acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', libs.qpoases,...
+            libs.qpdunes, libs.osqp, libs.hpmpc, libs.ooqp, mex_files{ii}, '-outdir', opts.output_dir)
     end
 end
 

@@ -124,23 +124,32 @@ ifeq ($(ACADOS_WITH_QPOASES), 1)
 STATIC_DEPS += qpoases_static
 SHARED_DEPS += qpoases_shared
 CLEAN_DEPS += qpoases_clean
+LINK_FLAG_QPOASES = -lqpOASES_e
 endif
 ifeq ($(ACADOS_WITH_HPMPC), 1)
 STATIC_DEPS += hpmpc_static
 CLEAN_DEPS += hpmpc_clean
+LINK_FLAG_HPMPC = -lhpmpc
 endif
 ifeq ($(ACADOS_WITH_QPDUNES), 1)
 STATIC_DEPS += qpdunes_static
 CLEAN_DEPS += qpdunes_clean
+LINK_FLAG_QPDUNES = -lqpdunes
 endif
 ifeq ($(ACADOS_WITH_QORE), 1)
 STATIC_DEPS += qore_static
 CLEAN_DEPS += qore_clean
+LINK_FLAG_QPDUNES = -lqore
 endif
 ifeq ($(ACADOS_WITH_OSQP), 1)
 STATIC_DEPS += osqp_static
 SHARED_DEPS += osqp_shared
 CLEAN_DEPS += osqp_clean
+LINK_FLAG_QPDUNES = -losqp
+endif
+
+ifeq ($(ACADOS_WITH_OPENMP), 1)
+LINK_FLAG_OPENMP = -fopenmp
 endif
 
 
@@ -158,7 +167,7 @@ static_library: $(STATIC_DEPS)
 	@echo " libacados.a static library build complete."
 	@echo
 
-shared_library: $(SHARED_DEPS)
+shared_library: link_libs_json $(SHARED_DEPS)
 	( cd acados; $(MAKE) obj TOP=$(TOP) )
 	( cd interfaces/acados_c; $(MAKE) obj  CC=$(CC) TOP=$(TOP) )
 	$(CC) -L./lib -shared -o libacados.so $(OBJS) -lblasfeo -lhpipm -lm -fopenmp
@@ -171,6 +180,17 @@ shared_library: $(SHARED_DEPS)
 	@echo
 	@echo " libacados.so shared library build complete."
 	@echo
+
+# write linker flags to external libraries into lib/links.json, used in MEX interface
+link_libs_json:
+	echo "{" > ./lib/link_libs.json
+	echo "\t\"openmp\": \"$(LINK_FLAG_OPENMP)\"," >> ./lib/link_libs.json
+	echo "\t\"qpoases\": \"$(LINK_FLAG_QPOASES)\"," >> ./lib/link_libs.json
+	echo "\t\"qpdunes\": \"$(LINK_FLAG_QPDUNES)\"," >> ./lib/link_libs.json
+	echo "\t\"osqp\": \"$(LINK_FLAG_OSQP)\"," >> ./lib/link_libs.json
+	echo "\t\"hpmpc\": \"$(LINK_FLAG_HPMPC)\"," >> ./lib/link_libs.json
+	echo "\t\"ooqp\": \"$(LINK_FLAG_OOQP)\"" >> ./lib/link_libs.json
+	echo "}" >> ./lib/link_libs.json
 
 blasfeo_static:
 	( cd $(BLASFEO_PATH); $(MAKE) static_library CC=$(CC) LA=$(BLASFEO_VERSION) TARGET=$(BLASFEO_TARGET) MF=PANELMAJ BLAS_API=0 )

@@ -374,45 +374,63 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     //     }
     // }
     // initializations
-    else if (!strcmp(field, "init_x"))
+    else if (!strcmp(field, "init_x") || !strcmp(field, "x"))
     {
-        if (nrhs!=min_nrhs)
-            MEX_SETTER_NO_STAGE_SUPPORT(fun_name, field)
-
-        acados_size = (N+1) * nx;
-        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-        for (int ii=0; ii<=N; ii++)
+        if (nrhs == min_nrhs)
         {
-            ocp_nlp_out_set(config, dims, out, ii, "x", value+ii*nx);
+            acados_size = (N+1) * nx;
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+            for (int ii=0; ii<=N; ii++)
+            {
+                ocp_nlp_out_set(config, dims, out, ii, "x", value+ii*nx);
+            }
+        }
+        else // (nrhs == min_nrhs + 1)
+        {
+            acados_size = nx;
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+            ocp_nlp_out_set(config, dims, out, s0, "x", value);
         }
     }
-    else if (!strcmp(field, "init_u"))
+    else if (!strcmp(field, "init_u") || !strcmp(field, "u"))
     {
-        if (nrhs!=min_nrhs)
-            MEX_SETTER_NO_STAGE_SUPPORT(fun_name, field)
-
-        acados_size = N*nu;
-        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-        for (int ii=0; ii<N; ii++)
+        if (nrhs==min_nrhs)
         {
-            ocp_nlp_out_set(config, dims, out, ii, "u", value+ii*nu);
+            acados_size = N*nu;
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+            for (int ii=0; ii<N; ii++)
+            {
+                ocp_nlp_out_set(config, dims, out, ii, "u", value+ii*nu);
+            }
+        }
+        else // (nrhs == min_nrhs + 1)
+        {
+            acados_size = nu;
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+            ocp_nlp_out_set(config, dims, out, s0, "u", value);
         }
     }
-    else if (!strcmp(field, "init_z"))
+    else if (!strcmp(field, "init_z")||!strcmp(field, "z"))
     {
         sim_solver_plan sim_plan = plan->sim_solver_plan[0];
         sim_solver_t type = sim_plan.sim_solver;
         if (type == IRK)
         {
             int nz = ocp_nlp_dims_get_from_attr(config, dims, out, 0, "z");
-            if (nrhs!=min_nrhs)
-                MEX_SETTER_NO_STAGE_SUPPORT(fun_name, field)
-
-            acados_size = N*nz;
-            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-            for (int ii=0; ii<N; ii++)
+            if (nrhs==min_nrhs)
             {
-                ocp_nlp_set(config, solver, ii, "z_guess", value+ii*nz);
+                acados_size = N*nz;
+                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+                for (int ii=0; ii<N; ii++)
+                {
+                    ocp_nlp_set(config, solver, ii, "z_guess", value+ii*nz);
+                }
+            }
+            else // (nrhs==min_nrhs+1)
+            {
+                acados_size = nz;
+                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+                ocp_nlp_set(config, solver, s0, "z_guess", value);
             }
         }
         else
@@ -420,21 +438,27 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, "init_z", "irk")
         }
     }
-    else if (!strcmp(field, "init_xdot"))
+    else if (!strcmp(field, "init_xdot")||!strcmp(field, "xdot"))
     {
         sim_solver_plan sim_plan = plan->sim_solver_plan[0];
         sim_solver_t type = sim_plan.sim_solver;
         if (type == IRK)
         {
             int nx = ocp_nlp_dims_get_from_attr(config, dims, out, 0, "x");
-            if (nrhs!=min_nrhs)
-                MEX_SETTER_NO_STAGE_SUPPORT(fun_name, field)
-
-            acados_size = N*nx;
-            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-            for (int ii=0; ii<N; ii++)
+            if (nrhs==min_nrhs)
             {
-                ocp_nlp_set(config, solver, ii, "xdot_guess", value+ii*nx);
+                acados_size = N*nx;
+                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+                for (int ii=0; ii<N; ii++)
+                {
+                    ocp_nlp_set(config, solver, ii, "xdot_guess", value+ii*nx);
+                }
+            }
+            else // nrhs==min_nrhs+1)
+            {
+                acados_size = nx;
+                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+                ocp_nlp_set(config, solver, s0, "xdot_guess", value);
             }
         }
         else
@@ -442,7 +466,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, "init_z", "irk")
         }
     }
-    else if (!strcmp(field, "init_gnsf_phi"))
+    else if (!strcmp(field, "init_gnsf_phi")||!strcmp(field, "gnsf_phi"))
     {
         sim_solver_plan sim_plan = plan->sim_solver_plan[0];
         sim_solver_t type = sim_plan.sim_solver;
@@ -450,14 +474,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         {
             int nout = ocp_nlp_dims_get_from_attr(config, dims, out, 0, "init_gnsf_phi");
 
-            if (nrhs!=min_nrhs)
-                MEX_SETTER_NO_STAGE_SUPPORT(fun_name, field)
-
-            acados_size = N*nout;
-            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-            for (int ii=0; ii<N; ii++)
+            if (nrhs==min_nrhs)
             {
-                ocp_nlp_set(config, solver, ii, "gnsf_phi_guess", value+ii*nx);
+                acados_size = N*nout;
+                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+                for (int ii=0; ii<N; ii++)
+                {
+                    ocp_nlp_set(config, solver, ii, "gnsf_phi_guess", value+ii*nx);
+                }
+            }
+            else // (nrhs==min_nrhs+1)
+            {
+                acados_size = nout;
+                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+                ocp_nlp_set(config, solver, s0, "gnsf_phi_guess", value);
             }
         }
         else
@@ -465,36 +495,74 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, "init_gnsf_phi", "irk_gnsf")
         }
     }
-    else if (!strcmp(field, "init_pi"))
+    else if (!strcmp(field, "init_pi")||!strcmp(field, "pi"))
     {
-        if (nrhs!=min_nrhs)
-            MEX_SETTER_NO_STAGE_SUPPORT(fun_name, field)
-
-        acados_size = N*nx;
-        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-        for (int ii=0; ii<N; ii++)
+        if (nrhs==min_nrhs)
         {
-            ocp_nlp_out_set(config, dims, out, ii, "pi", value+ii*nx);
+            acados_size = N*nx;
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+            for (int ii=0; ii<N; ii++)
+            {
+                ocp_nlp_out_set(config, dims, out, ii, "pi", value+ii*nx);
+            }
+        }
+        else // (nrhs==min_nrhs+1)
+        {
+            acados_size = nx;
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+            ocp_nlp_out_set(config, dims, out, s0, "pi", value);
         }
     }
-    else if (!strcmp(field, "init_lam"))
+    else if (!strcmp(field, "init_lam")||!strcmp(field, "lam"))
     {
-        for (int ii=s0; ii<se; ii++)
+        if (nrhs==min_nrhs)
         {
-            int nlam = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "lam");
-            MEX_DIM_CHECK_VEC(fun_name, "lam", nrow*ncol, nlam);
-
-            ocp_nlp_out_set(config, dims, out, ii, "lam", value);
+            MEX_SETTER_NO_ALL_STAGES_SUPPORT(fun_name, field)
+        }
+        else //(nrhs==min_nrhs+1)
+        {
+            acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, s0, "lam");
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+            ocp_nlp_out_set(config, dims, out, s0, "lam", value);
         }
     }
-    else if (!strcmp(field, "init_t"))
+    else if (!strcmp(field, "init_t")||!strcmp(field, "t"))
     {
-        for (int ii=s0; ii<se; ii++)
+        if (nrhs==min_nrhs)
         {
-            int nt = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "t");
-            MEX_DIM_CHECK_VEC(fun_name, "t", nrow*ncol, nt);
-
-            ocp_nlp_out_set(config, dims, out, ii, "t", value);
+            MEX_SETTER_NO_ALL_STAGES_SUPPORT(fun_name, field)
+        }
+        else //(nrhs==min_nrhs+1)
+        {
+            acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, s0, "t");
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+            ocp_nlp_out_set(config, dims, out, s0, "t", value);
+        }
+    }
+    else if (!strcmp(field, "init_sl")||!strcmp(field, "sl"))
+    {
+        if (nrhs==min_nrhs)
+        {
+            MEX_SETTER_NO_ALL_STAGES_SUPPORT(fun_name, field)
+        }
+        else //(nrhs==min_nrhs+1)
+        {
+            acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, s0, "sl");
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+            ocp_nlp_set(config, solver, s0, field, value);
+        }
+    }
+    else if (!strcmp(field, "init_su")||!strcmp(field, "su"))
+    {
+        if (nrhs==min_nrhs)
+        {
+            MEX_SETTER_NO_ALL_STAGES_SUPPORT(fun_name, field)
+        }
+        else //(nrhs==min_nrhs+1)
+        {
+            acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, s0, "su");
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+            ocp_nlp_set(config, solver, s0, field, value);
         }
     }
     else if (!strcmp(field, "p"))
@@ -631,8 +699,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else
     {
         MEX_FIELD_NOT_SUPPORTED_SUGGEST(fun_name, field, "p, constr_x0,\
- constr_lbx, constr_ubx, constr_C, constr_D, constr_lg, constr_ug, constr_lh, constr_uh\
- constr_lbu, constr_ubu, cost_y_ref[_e],\
+ constr_lbx, constr_ubx, constr_C, constr_D, constr_lg, constr_ug, constr_lh, constr_uh,\
+ constr_lbu, constr_ubu, cost_y_ref[_e], sl, su, x, xdot, u, pi, lam, z, \
  cost_Vu, cost_Vx, cost_Vz, cost_W, cost_Z, cost_Zl, cost_Zu, cost_z,\
  cost_zl, cost_zu, init_x, init_u, init_z, init_xdot, init_gnsf_phi,\
  init_pi, nlp_solver_max_iter, qp_warm_start, warm_start_first_qp, print_level");

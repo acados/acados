@@ -40,10 +40,19 @@
 // mex
 #include "mex.h"
 
-
+// #if defined(_WIN32) || defined(__WIN32__) || defined(WIN32) || defined(_WIN64)
+// #include <windows.h>
+// #endif
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
+    // #if defined(_WIN32) || defined(__WIN32__) || defined(WIN32) || defined(_WIN64)
+    /// Redirects stdout of libacados to console/file on Windows,
+    /// as stdout is otherwise suppressed
+    // AllocConsole(); // attach process to console
+    // freopen("CONOUT$", "w", stdout);
+    // freopen("CONOUT$", "w", stderr);
+    // #endif
 
     long long *ptr;
 
@@ -66,6 +75,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     /* solver */
     int acados_return = ocp_nlp_solve(solver, in, out);
 
+    // #if defined(_WIN32) || defined(__WIN32__) || defined(WIN32) || defined(_WIN64)
+    // FreeConsole(); // disconnect process from console
+    // #endif
 
 }
 

@@ -39,6 +39,7 @@ N = opts_struct.param_scheme_N;
 % get acados folder
 acados_folder = getenv('ACADOS_INSTALL_DIR');
 mex_flags = getenv('ACADOS_MEX_FLAGS');
+addpath(fullfile(acados_folder, 'external', 'jsonlab'));
 
 % set paths
 acados_mex_folder = fullfile(acados_folder, 'interfaces', 'acados_matlab_octave');
@@ -615,13 +616,16 @@ if (strcmp(opts_struct.compile_interface, 'true') || strcmp(opts_struct.codgen_m
                 FLAGS = 'CFLAGS=$CFLAGS -std=c99';
                 LDFLAGS = 'LDFLAGS=$LDFLAGS';
             end
+            % load linking information
+            libs = loadjson(fileread(fullfile(acados_folder, 'lib', 'link_libs.json')));
             mex(mex_flags, FLAGS, LDFLAGS, ['-DSETTER=', setter{ii}],...
                 ['-DSET_FIELD=', set_fields{ii}], ['-DMEX_FIELD=', mex_fields{ii}],...
                 ['-DFUN_NAME=', fun_names{ii}], ['-DPHASE=', num2str(phase{ii})],...
                 ['-DN0=', num2str(phase_start{ii})], ['-DN1=', num2str(phase_end{ii})],...
                 acados_include, acados_interfaces_include, external_include, blasfeo_include,...
                 hpipm_include, acados_lib_path, acados_matlab_octave_lib_path, model_lib_path,...
-                '-lacados', '-lhpipm', '-lblasfeo', ['-l', model_name], mex_files{ii});
+                '-lacados', '-lhpipm', '-lblasfeo', libs.osqp, libs.qpoases, libs.hpmpc,...
+                 libs.qpdunes, libs.ooqp, ['-l', model_name], mex_files{ii});
             disable_last_warning();
         end
         

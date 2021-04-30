@@ -142,28 +142,32 @@ classdef acados_ocp < handle
                     mex_exists = exist( fullfile(obj.opts_struct.output_dir,...
                         ['ocp_create.', mexext]), 'file');
                 end
-                % check if mex interface is linked against external libs, like qpOASES,...
+                % check if mex interface is linked against the same external libs as the core
                 if mex_exists
-                    if ~isempty(strfind(obj.opts_struct.qp_solver,'qpoases'))
-                        flag_file = fullfile(obj.opts_struct.output_dir, '_compiled_with_qpoases.txt');
-                        compile_interface = ~exist(flag_file, 'file');
-                    elseif ~isempty(strfind(obj.opts_struct.qp_solver,'hpmpc'))
-                        flag_file = fullfile(obj.opts_struct.output_dir, '_compiled_with_hpmpc.txt');
-                        compile_interface = ~exist(flag_file, 'file');
-                    elseif ~isempty(strfind(obj.opts_struct.qp_solver,'osqp'))
-                        flag_file = fullfile(obj.opts_struct.output_dir, '_compiled_with_osqp.txt');
-                        compile_interface = ~exist(flag_file, 'file');
-                    elseif ~isempty(strfind(obj.opts_struct.qp_solver,'qpdunes'))
-                        flag_file = fullfile(obj.opts_struct.output_dir, '_compiled_with_qpdunes.txt');
-                        compile_interface = ~exist(flag_file, 'file');
+                    acados_folder = getenv('ACADOS_INSTALL_DIR');
+                    addpath(fullfile(acados_folder, 'external', 'jsonlab'));
+
+                    json_filename = fullfile(acados_folder, 'lib', 'link_libs.json');
+                    if ~exist(json_filename, 'file')
+                        error('File %s not found.\nPlease compile acados with the latest version, using cmake.', json_filename)
+                    end
+                    core_links = loadjson(fileread(json_filename));
+
+                    json_filename = fullfile(obj.opts_struct.output_dir, 'link_libs.json');
+                    if ~exist(json_filename, 'file')
+                        compile_interface = true;
                     else
-                        compile_interface = false;
+                        interface_links = loadjson(fileread(json_filename));
+                        if isequal(core_links, interface_links)
+                            compile_interface = false;
+                        else
+                            compile_interface = true;
+                        end
                     end
                 else
                     compile_interface = true;
                 end
             else
-                obj.model_struct.cost_type
                 error('acados_ocp: field compile_interface is %, supported values are: true, false, auto', ...
                         obj.opts_struct.compile_interface);
             end
@@ -260,6 +264,99 @@ classdef acados_ocp < handle
             end
         end
 
+        function [] = store_iterate(varargin)
+            %%%  Stores the current iterate of the ocp solver in a json file.
+            %%% param1: filename: if not set, use model_name + timestamp + '.json'
+            %%% param2: overwrite: if false and filename exists add timestamp to filename
+
+            obj = varargin{1};
+            filename = '';
+            overwrite = false;
+
+            if nargin>=2
+                filename = varargin{2};
+                if ~isa(filename, 'char')
+                    error('filename must be a char vector, use '' ''');
+                end
+            end
+
+            if nargin==3
+                overwrite = varargin{3};
+            end
+
+            if nargin > 3
+                disp('acados_ocp.get: wrong number of input arguments (1 or 2 allowed)');
+            end
+
+            if strcmp(filename,'')
+                filename = [obj.model_struct.name '_iterate.json'];
+            end
+            if ~overwrite
+                % append timestamp
+                if exist(filename, 'file')
+                    filename = filename(1:end-5);
+                    filename = [filename '_' datestr(now,'yyyy-mm-dd-HH:MM:SS') '.json'];
+                end
+            end
+            filename = fullfile(pwd, filename);
+
+            % get iterate:
+            solution = struct();
+            for i=0:obj.opts_struct.param_scheme_N
+                solution.(['x_' num2str(i)]) = obj.get('x', i);
+                solution.(['lam_' num2str(i)]) = obj.get('lam', i);
+                solution.(['t_' num2str(i)]) = obj.get('t', i);
+                solution.(['sl_' num2str(i)]) = obj.get('sl', i);
+                solution.(['su_' num2str(i)]) = obj.get('su', i);
+            end
+            for i=0:obj.opts_struct.param_scheme_N-1
+                solution.(['z_' num2str(i)]) = obj.get('z', i);
+                solution.(['u_' num2str(i)]) = obj.get('u', i);
+                solution.(['pi_' num2str(i)]) = obj.get('pi', i);
+            end
+
+            acados_folder = getenv('ACADOS_INSTALL_DIR');
+            addpath(fullfile(acados_folder, 'external', 'jsonlab'));
+            savejson('', solution, filename);
+
+            json_string = savejson('', solution, 'ForceRootName', 0);
+
+            fid = fopen(filename, 'w');
+            if fid == -1, error('store_iterate: Cannot create JSON file'); end
+            fwrite(fid, json_string, 'char');
+            fclose(fid);
+
+            disp(['stored current iterate in ' filename]);
+        end
+
+
+        function [] = load_iterate(obj, filename)
+            %%%  Loads the iterate stored in json file with filename into the ocp solver.
+            acados_folder = getenv('ACADOS_INSTALL_DIR');
+            addpath(fullfile(acados_folder, 'external', 'jsonlab'));
+            filename = fullfile(pwd, filename);
+
+            if ~exist(filename, 'file')
+                error(['load_iterate: failed, file does not exist: ' filename])
+            end
+
+            solution = loadjson(filename);
+            keys = fieldnames(solution);
+
+            for k = 1:numel(keys)
+                key = keys{k};
+                key_parts = strsplit(key, '_');
+                field = key_parts{1};
+                stage = key_parts{2};
+
+                val = solution.(key);
+
+                % check if array is empty (can happen for z)
+                if numel(val) > 0
+                    obj.set(field, val, str2num(stage))
+                end
+            end
+        end
 
 
         function print(varargin)

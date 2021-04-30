@@ -2,9 +2,7 @@
 .buildinfo
 objects.inv
 genindex.html
-_build
-_build_doxygen_c_api
-_build_doxygen
+_build*
 doxygen.tag
 old_*
 env/

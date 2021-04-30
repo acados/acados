@@ -1,6 +1,8 @@
 # acados
 
-![](https://secure.travis-ci.org/acados/acados.png?branch=master)
+<!-- ![](https://secure.travis-ci.org/acados/acados.png?branch=master) -->
+![Github actions full build workflow](https://github.com/acados/acados/actions/workflows/full_build.yml/badge.svg)
+<!-- ![Github actions full build workflow](https://github.com/acados/acados/actions/workflows/full_build.yml/badge.svg?branch=master) -->
 ![](https://ci.appveyor.com/api/projects/status/q0b2nohk476u5clg?svg=true)
 
 Fast and embedded solvers for nonlinear optimal control.
@@ -20,12 +22,13 @@ Documentation latest build: |today|
    problem_formulation/index
    installation/index
    interfaces/index
-   c_api/index
-   python_api/index
+   python_interface/index
+   matlab_octave_interface/index
+   c_interface/index
    examples/index
    faq/index
-   citing
-   embedded_workflow
+   embedded_workflow/index
    list_of_projects/index
+   citing/index
 ```
 

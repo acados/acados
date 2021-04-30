@@ -1,6 +1,7 @@
 # acados
 <!-- [![Travis Status](https://secure.travis-ci.org/acados/acados.png?branch=master)](http://travis-ci.org/acados/acados) -->
 [![Appveyor status](https://ci.appveyor.com/api/projects/status/q0b2nohk476u5clg?svg=true)](https://ci.appveyor.com/project/roversch/acados)
+![Github actions full build workflow](https://github.com/acados/acados/actions/workflows/full_build.yml/badge.svg)
 <!-- [![codecov](https://codecov.io/gh/acados/acados/branch/master/graph/badge.svg)](https://codecov.io/gh/acados/acados) -->
 
 Fast and embedded solvers for nonlinear optimal control.
@@ -49,7 +50,7 @@ Please choose one and proceed with the corresponding paragraph.
 
 ### `C` interface
 - This includes all functionality in `<acados_root>/interfaces/acados_c`.
-- Documentation can be found here: [C API](https://docs.acados.org/c_api/index.html)
+- Documentation can be found here: [C API](https://docs.acados.org/c_interface/index.html)
 
 ### `MATLAB` and `Octave` interface
 - The interface is written in `MEX`

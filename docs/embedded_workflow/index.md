@@ -1,6 +1,8 @@
 # Embedded Workflow
 On this page, we provide documentation of workflows to deploy `acados` on different embedded systems.
 
+We want to encourage you to contribute a description of the workflow to deploy `acados` on an embedded system that is not yet mentioned on this page by creating a pull request.
+
 ## dSPACE
 Here, the workflow for the deployment of `acados` on a dSPACE RCP Platform is described.
 This has been successfully tested for the DS1202 MicroLabBox.

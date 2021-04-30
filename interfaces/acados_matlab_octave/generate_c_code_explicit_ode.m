@@ -167,6 +167,7 @@ for j = 1:nx+nu
 end
 
 if is_template
+    return_dir = pwd;
     if ~exist( fullfile(pwd,'c_generated_code'), 'dir')
         mkdir('c_generated_code');
     end
@@ -189,7 +190,7 @@ if strcmp(generate_hess, 'true')
 end
 
 if is_template
-    cd '../..'
+    cd(return_dir);
 end
 
 end

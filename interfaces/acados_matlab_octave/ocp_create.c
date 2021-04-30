@@ -385,8 +385,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 #endif
     else
     {
-        MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "qp_solver", qp_solver,
-             "partial_condensing_hpipm, full_condensing_hpipm, full_condensing_qpoases, partial_condensing_osqp, partial_condensing_hpmpc, partial_condensing_qpdunes");
+        sprintf(buffer, "%s: field %s does not support %s, supported values are:\n%s%s\n\n%s\n%s",\
+            fun_name, "qp_solver", qp_solver,
+            "partial_condensing_hpipm, full_condensing_hpipm, full_condensing_qpoases, ",
+            "partial_condensing_osqp, partial_condensing_hpmpc, partial_condensing_qpdunes",
+            "NOTE: acados needs to be compiled explicitly with external QP solvers!",
+            "If the qp_solver value is listed as supported, please recompile acados with the desired QP solver.");
+        mexErrMsgTxt(buffer);
     }
 
 

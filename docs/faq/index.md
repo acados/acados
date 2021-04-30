@@ -1,5 +1,8 @@
 # FAQ
 
+A few frequently asked questions are answered here.
+
+For further questions, we refer to the [`acados` forum](https://discourse.acados.org/)
 
 ## What is the difference between `acados` and `ACADO`?
 

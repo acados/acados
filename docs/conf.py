@@ -60,7 +60,7 @@ source_suffix = {
 templates_path = ['_templates']
 master_doc = 'index'
 
-breathe_projects = { "acados": "_build_doxygen_c_api/xml/" }
+breathe_projects = { "acados": "_build_doxygen_c_interface/xml/" }
 breathe_default_project = "acados"
 
 # -- Project information -----------------------------------------------------
