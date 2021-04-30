@@ -79,14 +79,6 @@ else
     return;
 end
 
-if ispc
-    ldext = '.lib';
-else
-    ldext = '.so';
-end
-
-lib_name = ['lib', model_name];
-
 if (strcmp(opts_struct.codgen_model, 'true'))
 	for k=1:length(c_files)
 		movefile(c_files{k}, opts_struct.output_dir);
@@ -98,11 +90,26 @@ for k=1:length(c_files)
 	c_files_path{k} = fullfile(opts_struct.output_dir, c_files{k});
 end
 
-if ispc
-    % mbuild(c_files_path{:}, '-output', lib_name, 'CFLAGS="$CFLAGS"', 'LDTYPE="-shared"', ['LDEXT=', ldext]);
-    system(['gcc -O2 -fPIC -shared ', strjoin(c_files_path, ' '), ' -o ', [lib_name, ldext]]);
+mexOpts = mex.getCompilerConfigurations('C', 'Selected');
+if contains(mexOpts.ShortName,  'MSVC')
+    % get env vars for MSVC
+    msvc_env = fullfile(mexOpts.Location, 'VC\Auxiliary\Build\vcvars64.bat');
+    assert(isfile(msvc_env), 'Cannot find definition of MSVC env vars.');
+
+    % assemble build command for MSVC
+    lib = [model_name, '.dll'];
+    build_cmd = sprintf('cl /O2 /EHsc /LD %s /Fe%s', strjoin(c_files_path, ' '), lib);
+
+    % build
+    system(sprintf('"%s" & %s', msvc_env, build_cmd));
 else
-    system(['gcc -O2 -fPIC -shared ', strjoin(c_files_path, ' '), ' -o ', [lib_name, ldext]]);
+    if ispc
+        lib = ['lib', model_name, '.lib'];
+        system(['gcc -O2 -fPIC -shared ', strjoin(c_files_path, ' '), ' -o ', lib]);
+    else
+        lib = ['lib', model_name, '.so'];
+        system(['gcc -O2 -fPIC -shared ', strjoin(c_files_path, ' '), ' -o ', lib]);
+    end
 end
 
-movefile([lib_name, ldext], fullfile(opts_struct.output_dir, [lib_name, ldext]));
+movefile(lib, fullfile(opts_struct.output_dir, lib));
