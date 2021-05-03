@@ -121,8 +121,9 @@ void ext_costN(void **in, void **out, void *params)
 
     // Hessian
 	blasfeo_dgese(nx, nx, 0.0, hess, 0, 0);
-	for(jj=0; ii<nx; ii++, jj++)
-		BLASFEO_DMATEL(hess, ii, ii) = Qdiag[jj]; // Q
+    for(ii=0; ii<nx; ii++)
+		BLASFEO_DMATEL(hess, ii, ii) = Qdiag[ii]; // Q
+
 
     // gradient
     for(ii=0; ii<nx; ii++)
