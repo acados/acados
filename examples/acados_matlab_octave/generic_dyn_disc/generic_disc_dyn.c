@@ -79,7 +79,7 @@ static void mass_spring_system(double Ts, int nx, int nu, double *A, double *B, 
     free(bb);
 }
 
-void disc_dyn(void **in, void **out, void *params)
+int disc_dyn(void **in, void **out, void *params)
 {
     int ii;
 
@@ -140,6 +140,8 @@ void disc_dyn(void **in, void **out, void *params)
     free(A);
     free(B);
     free(b);
+
+    return 0;
 }
 
 #ifdef __cplusplus

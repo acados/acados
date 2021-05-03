@@ -8,7 +8,7 @@ extern "C" {
 #include "blasfeo_d_aux.h"
 
 //void ext_cost(void *ext_fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
-void ext_cost(void **in, void **out, void *params)
+int ext_cost(void **in, void **out, void *params)
 {
     int ii, jj;
 
@@ -74,12 +74,12 @@ void ext_cost(void **in, void **out, void *params)
 
     *fun *= 0.5;
 
-    return;
+    return 0;
 
 }
 
 //void ext_costN(void *ext_fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
-void ext_costN(void **in, void **out, void *params)
+int ext_costN(void **in, void **out, void *params)
 {
     int ii, jj;
 
@@ -136,7 +136,7 @@ void ext_costN(void **in, void **out, void *params)
 
     *fun *= 0.5;
 
-    return;
+    return 0;
 
 }
 
