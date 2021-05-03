@@ -168,6 +168,7 @@ int {{ model.name }}_expl_ode_hess_n_out();
 
 {% elif solver_options.integrator_type == "DISCRETE" %}
 
+{% if model.dyn_ext_fun_type == "casadi" %}
 int {{ model.name }}_dyn_disc_phi_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_dyn_disc_phi_fun_work(int *, int *, int *, int *);
 const int *{{ model.name }}_dyn_disc_phi_fun_sparsity_in(int);
@@ -190,6 +191,10 @@ const int *{{ model.name }}_dyn_disc_phi_fun_jac_hess_sparsity_out(int);
 int {{ model.name }}_dyn_disc_phi_fun_jac_hess_n_in();
 int {{ model.name }}_dyn_disc_phi_fun_jac_hess_n_out();
 {%- endif %}
+{% else %}
+int {{ model.dyn_function_discrete }}(void **, void **, void *);
+{% endif %}
+
 
 {% endif %}
 
