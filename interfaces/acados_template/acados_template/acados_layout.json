@@ -8,6 +8,15 @@
     "model": {
          "name" : [
             "str"
+        ],
+        "dyn_ext_fun_type" : [
+            "str"
+        ],
+        "dyn_source_discrete" : [
+            "str"
+        ],
+        "dyn_function_discrete" : [
+            "str"
         ]
     },
     "parameter_values": [

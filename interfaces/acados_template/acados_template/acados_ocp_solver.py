@@ -551,6 +551,10 @@ def ocp_generate_external_functions(acados_ocp, model):
     code_export_dir = acados_ocp.code_export_directory
     opts['code_export_directory'] = code_export_dir
 
+    if acados_ocp.model.dyn_ext_fun_type != 'casadi':
+        raise Exception("ocp_generate_external_functions: dyn_ext_fun_type only supports 'casadi' for now.\
+            Extending the Python interface with generic function support is welcome.")
+
     if acados_ocp.solver_options.integrator_type == 'ERK':
         # explicit model -- generate C code
         generate_c_code_explicit_ode(model, opts)
