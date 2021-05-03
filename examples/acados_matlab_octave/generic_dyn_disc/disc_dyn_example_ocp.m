@@ -39,7 +39,7 @@ addpath('../linear_mass_spring_model/');
 %% arguments
 N = 20;
 tol = 1e-8;
-shooting_nodes = [ linspace(0,1,N/2) linspace(1.1,5,N/2+1) ];
+shooting_nodes = [ linspace(0,10,N+1) ];
 
 model_name = 'lin_mass';
 
@@ -64,42 +64,18 @@ cost_type = 'ext_cost';
 %% create model entries
 model = linear_mass_spring_model;
 
-
 % dims
 T = 10.0; % horizon length time
 nx = model.nx;
 nu = model.nu;
-ny = nu+nx; % number of outputs in lagrange term
-ny_e = nx; % number of outputs in mayer term
-nbx = 0;
-nbu = 0;
-ng = 0;
-nh = nu+nx;
-nh_e = nx;
 
 % constraints
 x0 = zeros(nx, 1); x0(1)=2.5; x0(2)=2.5;
-if (ng>0)
-	D = zeros(ng, nu); for ii=1:nu D(ii,ii)=1.0; end
-	C = zeros(ng, nx); for ii=1:ng-nu C(nu+ii,ii)=1.0; end
-	lg = zeros(ng, 1); for ii=1:nu lg(ii)=-0.5; end; for ii=1:ng-nu lg(nu+ii)=-4.0; end
-	ug = zeros(ng, 1); for ii=1:nu ug(ii)= 0.5; end; for ii=1:ng-nu ug(nu+ii)= 4.0; end
-	C_e = zeros(ng_e, nx); for ii=1:ng_e C_e(ii,ii)=1.0; end
-	lg_e = zeros(ng_e, 1); for ii=1:ng_e lg_e(ii)=-4.0; end
-	ug_e = zeros(ng_e, 1); for ii=1:ng_e ug_e(ii)= 4.0; end
-elseif (nh>0)
-	lh = zeros(nh, 1); for ii=1:nu lh(ii)=-0.5; end; for ii=1:nx lh(nu+ii)=-4.0; end
-	uh = zeros(nh, 1); for ii=1:nu uh(ii)= 0.5; end; for ii=1:nx uh(nu+ii)= 4.0; end
-	lh_e = zeros(nh_e, 1); for ii=1:nh_e lh_e(ii)=-4.0; end
-	uh_e = zeros(nh_e, 1); for ii=1:nh_e uh_e(ii)= 4.0; end
-else
-	Jbx = zeros(nbx, nx); for ii=1:nbx Jbx(ii,ii)=1.0; end
-	lbx = -4*ones(nbx, 1);
-	ubx =  4*ones(nbx, 1);
-	Jbu = zeros(nbu, nu); for ii=1:nbu Jbu(ii,ii)=1.0; end
-	lbu = -0.5*ones(nbu, 1);
-	ubu =  0.5*ones(nbu, 1);
-end
+
+lh = - [ 0.5 * ones(nu, 1); 4.0 * ones(nx, 1)];
+uh = + [ 0.5 * ones(nu, 1); 4.0 * ones(nx, 1)];
+lh_e = -4.0 * ones(nx, 1);
+uh_e = 4.0 * ones(nx, 1);
 
 
 %% acados ocp model
@@ -146,29 +122,12 @@ end
 
 % constraints
 ocp_model.set('constr_x0', x0);
-if (ng>0)
-	ocp_model.set('constr_C', C);
-	ocp_model.set('constr_D', D);
-	ocp_model.set('constr_lg', lg);
-	ocp_model.set('constr_ug', ug);
-	ocp_model.set('constr_C_e', C_e);
-	ocp_model.set('constr_lg_e', lg_e);
-	ocp_model.set('constr_ug_e', ug_e);
-elseif (nh>0)
-	ocp_model.set('constr_expr_h', model.expr_h);
-	ocp_model.set('constr_lh', lh);
-	ocp_model.set('constr_uh', uh);
-	ocp_model.set('constr_expr_h_e', model.expr_h_e);
-	ocp_model.set('constr_lh_e', lh_e);
-	ocp_model.set('constr_uh_e', uh_e);
-else
-	ocp_model.set('constr_Jbx', Jbx);
-	ocp_model.set('constr_lbx', lbx);
-	ocp_model.set('constr_ubx', ubx);
-	ocp_model.set('constr_Jbu', Jbu);
-	ocp_model.set('constr_lbu', lbu);
-	ocp_model.set('constr_ubu', ubu);
-end
+ocp_model.set('constr_expr_h', model.expr_h);
+ocp_model.set('constr_lh', lh);
+ocp_model.set('constr_uh', uh);
+ocp_model.set('constr_expr_h_e', model.expr_h_e);
+ocp_model.set('constr_lh_e', lh_e);
+ocp_model.set('constr_uh_e', uh_e);
 
 
 %% acados ocp opts
