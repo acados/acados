@@ -40,11 +40,7 @@
 #include "acados_c/external_function_interface.h"
 
 // example specific
-{% if model.dyn_ext_fun_type == "casadi" %}
 #include "{{ model.name }}_model/{{ model.name }}_model.h"
-{% else %}
-void {{ model.dyn_function_discrete }}(void **, void **, void *);
-{% endif %}
 {% if constraints.constr_type == "BGP" and dims.nphi %}
 #include "{{ model.name }}_constraints/{{ model.name }}_phi_constraint.h"
 {% endif %}
@@ -60,29 +56,17 @@ void {{ model.dyn_function_discrete }}(void **, void **, void *);
 {%- if cost.cost_type == "NONLINEAR_LS" %}
 #include "{{ model.name }}_cost/{{ model.name }}_cost_y_fun.h"
 {%- elif cost.cost_type == "EXTERNAL" %}
-{% if cost.cost_ext_fun_type == "casadi" %}
 #include "{{ model.name }}_cost/{{ model.name }}_external_cost.h"
-{% else %}
-void {{ cost.cost_function_ext_cost }}(void **, void **, void *);
-{% endif %}
 {%- endif %}
 {%- if cost.cost_type_0 == "NONLINEAR_LS" %}
 #include "{{ model.name }}_cost/{{ model.name }}_cost_y_0_fun.h"
 {%- elif cost.cost_type_0 == "EXTERNAL" %}
-{% if cost.cost_ext_fun_type_0 == "casadi" %}
 #include "{{ model.name }}_cost/{{ model.name }}_external_cost_0.h"
-{% else %}
-void {{ cost.cost_function_ext_cost_0 }}(void **, void **, void *);
-{% endif %}
 {%- endif %}
 {%- if cost.cost_type_e == "NONLINEAR_LS" %}
 #include "{{ model.name }}_cost/{{ model.name }}_cost_y_e_fun.h"
 {%- elif cost.cost_type_e == "EXTERNAL" %}
-{% if cost.cost_ext_fun_type_e == "casadi" %}
 #include "{{ model.name }}_cost/{{ model.name }}_external_cost_e.h"
-{% else %}
-void {{ cost.cost_function_ext_cost_e }}(void **, void **, void *);
-{% endif %}
 {%- endif %}
 
 #include "acados_solver_{{ model.name }}.h"

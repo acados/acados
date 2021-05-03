@@ -36,7 +36,7 @@ function ocp_generate_c_code(obj)
     if ~exist(fullfile(pwd,'c_generated_code'), 'dir')
         mkdir(fullfile(pwd, 'c_generated_code'))
     end
-    %% generate C code for CasADi functions
+    %% generate C code for CasADi functions / copy external functions
     % dynamics
     if (strcmp(obj.model_struct.dyn_type, 'explicit'))
         generate_c_code_explicit_ode(obj.acados_ocp_nlp_json.model);
@@ -52,6 +52,10 @@ function ocp_generate_c_code(obj)
     elseif (strcmp(obj.model_struct.dyn_type, 'discrete'))
         generate_c_code_disc_dyn(obj.acados_ocp_nlp_json.model);
     end
+    if strcmp(obj.acados_ocp_nlp_json.model.dyn_ext_fun_type, 'generic')
+        copyfile( fullfile(pwd, obj.acados_ocp_nlp_json.model.dyn_source_discrete),...
+            fullfile(pwd, 'c_generated_code', [obj.model_struct.name '_model']));
+    end
 
     % cost
     if (strcmp(obj.model_struct.cost_type, 'nonlinear_ls') || ...
@@ -62,6 +66,18 @@ function ocp_generate_c_code(obj)
             strcmp(obj.model_struct.cost_type_0, 'ext_cost') || strcmp(obj.model_struct.cost_type_e, 'ext_cost'))
             generate_c_code_ext_cost( obj.model_struct, obj.opts_struct,...
               fullfile(pwd, 'c_generated_code', [obj.model_struct.name '_cost']) );
+    end
+    if (strcmp(obj.acados_ocp_nlp_json.cost.cost_ext_fun_type_0, 'generic'))
+        copyfile(fullfile(pwd, obj.acados_ocp_nlp_json.cost.cost_source_ext_cost_0), ...
+            fullfile(pwd, 'c_generated_code', [obj.model_struct.name '_cost']));
+    end
+    if (strcmp(obj.acados_ocp_nlp_json.cost.cost_ext_fun_type, 'generic'))
+        copyfile(fullfile(pwd, obj.acados_ocp_nlp_json.cost.cost_source_ext_cost), ...
+            fullfile(pwd, 'c_generated_code', [obj.model_struct.name '_cost']));
+    end
+    if (strcmp(obj.acados_ocp_nlp_json.cost.cost_ext_fun_type_e, 'generic'))
+        copyfile(fullfile(pwd, obj.acados_ocp_nlp_json.cost.cost_source_ext_cost_e), ...
+            fullfile(pwd, 'c_generated_code', [obj.model_struct.name '_cost']));
     end
     % constraints
     if ((strcmp(obj.model_struct.constr_type, 'bgh') && obj.model_struct.dim_nh > 0) || ...
