@@ -91,25 +91,29 @@ for k=1:length(c_files)
 end
 
 mexOpts = mex.getCompilerConfigurations('C', 'Selected');
-if contains(mexOpts.ShortName,  'MSVC')
+if contains(mexOpts.ShortName,  'MSVC') ... % MSVC compiler used
+        && ~(exist("OCTAVE_VERSION", "builtin") > 0) % Matlab used
+
     % get env vars for MSVC
     msvc_env = fullfile(mexOpts.Location, 'VC\Auxiliary\Build\vcvars64.bat');
     assert(isfile(msvc_env), 'Cannot find definition of MSVC env vars.');
 
     % assemble build command for MSVC
-    lib = [model_name, '.dll'];
-    build_cmd = sprintf('cl /O2 /EHsc /LD %s /Fe%s', strjoin(c_files_path, ' '), lib);
+    out = fullfile(opts_struct.output_dir, [model_name, '.dll']);
+    build_cmd = sprintf('cl /O2 /EHsc /LD %s /Fe%s', ...
+        strjoin(unique(c_files_path), ' '), out);
 
     % build
     system(sprintf('"%s" & %s', msvc_env, build_cmd));
 else
     if ispc
-        lib = ['lib', model_name, '.lib'];
-        system(['gcc -O2 -fPIC -shared ', strjoin(c_files_path, ' '), ' -o ', lib]);
+        out = fullfile(opts_struct.output_dir, ['lib', model_name, '.lib']);
+        system(['gcc -O2 -fPIC -shared ', strjoin(unique(c_files_path), ' '), ' -o ', out]);
     else
-        lib = ['lib', model_name, '.so'];
-        system(['gcc -O2 -fPIC -shared ', strjoin(c_files_path, ' '), ' -o ', lib]);
+        out = fullfile(opts_struct.output_dir, ['lib', model_name, '.so']);
+        system(['gcc -O2 -fPIC -shared ', strjoin(unique(c_files_path), ' '), ' -o ', out]);
     end
 end
 
-movefile(lib, fullfile(opts_struct.output_dir, lib));
+end
+
