@@ -38,10 +38,6 @@ model_name = model_struct.name;
 % get acados folder
 acados_folder = getenv('ACADOS_INSTALL_DIR');
 
-% set paths
-acados_include = ['-I' acados_folder];
-blasfeo_include = ['-I' fullfile(acados_folder, 'external' , 'blasfeo', 'include')];
-
 % select files to compile
 c_files = {};
 % dynamics
@@ -160,25 +156,6 @@ if (strcmp(model_struct.cost_type_0, 'ext_cost') && strcmp(model_struct.cost_ext
     c_files{end+1} = [model_name, '_cost_ext_cost_0_fun_jac_hess.c'];    
 end
 
-if ispc
-    if ~(exist ("OCTAVE_VERSION", "builtin") > 0) % MATLAB is used
-        compSName = mex.getCompilerConfigurations('C').ShortName;
-        useMSVC = (length(compSName) > 3) && strcmp(compSName(1 : 4), 'MSVC');
-    else % OCTAVE is used
-        useMSVC = false;
-    end
-    
-    if useMSVC
-        ldext = '.dll';
-    else
-        ldext = '.lib';
-    end
-else
-    ldext = '.so';
-end
-
-lib_name = ['lib', model_name];
-
 if (strcmp(opts_struct.codgen_model, 'true'))
 	for k=1:length(c_files)
 		movefile(c_files{k}, opts_struct.output_dir);
@@ -204,26 +181,36 @@ if (strcmp(model_struct.cost_type_0, 'ext_cost') && strcmp(model_struct.cost_ext
     c_files_path{end+1} = model_struct.cost_source_ext_cost_0;        
 end
 
-if ispc
-    if useMSVC
-        mbuild(c_files_path{:}, '-output', lib_name, ' ', acados_include,...
-         ' ', blasfeo_include, ' CFLAGS="$CFLAGS"', 'LINKFLAGS=$LINKFLAGS /DLL', ['LDEXT=', ldext]);
-    else
-        % mbuild(unique(c_files_path{:}), '-output', lib_name, ' ', acados_include,...
-        %  ' ', blasfeo_include, ' CFLAGS="$CFLAGS"', 'LDTYPE="-shared"', ['LDEXT=', ldext]);
-        system(['gcc -O2 -fPIC -shared ', acados_include, ' ', blasfeo_include,...
-        ' ', strjoin(unique(c_files_path), ' '), ' -o ', [lib_name, ldext]]);
-    end
+mexOpts = mex.getCompilerConfigurations('C', 'Selected');
+if contains(mexOpts.ShortName,  'MSVC') ... % MSVC compiler used
+        && ~(exist("OCTAVE_VERSION", "builtin") > 0) % Matlab used
+
+    % get env vars for MSVC
+    msvc_env = fullfile(mexOpts.Location, 'VC\Auxiliary\Build\vcvars64.bat');
+    assert(isfile(msvc_env), 'Cannot find definition of MSVC env vars.');
+
+    % assemble build command for MSVC
+    out = fullfile(opts_struct.output_dir, [model_name, '.dll']);
+    build_cmd = sprintf('cl /O2 /EHsc /I %s /I %s /LD %s /Fe%s', ...
+        acados_folder, fullfile(acados_folder, 'external' , 'blasfeo', 'include'), ...
+        strjoin(unique(c_files_path), ' '), out);
+
+    % build
+    system(sprintf('"%s" & %s', msvc_env, build_cmd));
 else
-    system(['gcc -O2 -fPIC -shared ', acados_include, ' ', blasfeo_include,...
-       ' ', strjoin(unique(c_files_path), ' '), ' -o ', [lib_name, ldext]]);
-end
+    % set includes
+    acados_include = ['-I' acados_folder];
+    blasfeo_include = ['-I' fullfile(acados_folder, 'external' , 'blasfeo', 'include')];
 
-movefile([lib_name, ldext], fullfile(opts_struct.output_dir, [lib_name, ldext]));
-
-if (ispc && useMSVC)
-    movefile([lib_name, '.lib'], fullfile(opts_struct.output_dir, [lib_name, '.lib']));
-    movefile([lib_name, '.exp'], fullfile(opts_struct.output_dir, [lib_name, '.exp']));
+    if ispc
+        out = fullfile(opts_struct.output_dir, ['lib', model_name, '.lib']);
+        system(['gcc -O2 -fPIC -shared ', acados_include, ' ', blasfeo_include,...
+            ' ', strjoin(unique(c_files_path), ' '), ' -o ', out]);
+    else
+        out = fullfile(opts_struct.output_dir, ['lib', model_name, '.so']);
+        system(['gcc -O2 -fPIC -shared ', acados_include, ' ', blasfeo_include,...
+           ' ', strjoin(unique(c_files_path), ' '), ' -o ', out]);
+    end
 end
 
 end
