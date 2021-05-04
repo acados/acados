@@ -378,7 +378,12 @@ function [model, opts] = detect_dims_ocp(model, opts)
         sum_time_steps = sum(opts.time_steps);
         if abs((sum_time_steps - model.T) / model.T) > 1e-14
             error(['time steps are not consistent with time horizon T, ', ...
-                'got T = ' num2str(model.T) ' sum(time_steps) = ' num2str(sum_time_steps)]);
+                'got T = ' num2str(model.T) '; sum(time_steps) = ' num2str(sum_time_steps) '.']);
+        end
+        % just to have them available, e.g. for plotting;
+        opts.shooting_nodes = zeros(N+1, 1);
+        for i = 1:N
+            opts.shooting_nodes(i+1) = sum(opts.time_steps(1:i));
         end
     else
         opts.time_steps = model.T/N * ones(N,1);
