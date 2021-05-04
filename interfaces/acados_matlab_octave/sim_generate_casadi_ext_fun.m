@@ -98,7 +98,7 @@ if contains(mexOpts.ShortName,  'MSVC')
 
     % assemble build command for MSVC
     lib = [model_name, '.dll'];
-    build_cmd = sprintf('cl /O2 /EHsc /LD %s /o%s', strjoin(c_files_path, ' '), lib);
+    build_cmd = sprintf('cl /O2 /EHsc /LD %s /Fe%s', strjoin(c_files_path, ' '), lib);
 
     % build
     system(sprintf('"%s" & %s', msvc_env, build_cmd));
