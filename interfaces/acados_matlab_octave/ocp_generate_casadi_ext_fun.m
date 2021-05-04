@@ -190,10 +190,11 @@ if contains(mexOpts.ShortName,  'MSVC') ... % MSVC compiler used
     assert(isfile(msvc_env), 'Cannot find definition of MSVC env vars.');
 
     % assemble build command for MSVC
-    out = fullfile(opts_struct.output_dir, [model_name, '.dll']);
-    build_cmd = sprintf('cl /O2 /EHsc /I %s /I %s /LD %s /Fe%s', ...
+    out_obj_dir = [fullfile(opts_struct.output_dir), '\\'];
+    out_lib = fullfile(opts_struct.output_dir, [model_name, '.dll']);
+    build_cmd = sprintf('cl /O2 /EHsc /I %s /I %s /LD %s /Fo%s /Fe%s', ...
         acados_folder, fullfile(acados_folder, 'external' , 'blasfeo', 'include'), ...
-        strjoin(unique(c_files_path), ' '), out);
+        strjoin(unique(c_files_path), ' '), out_obj_dir, out_lib);
 
     % build
     system(sprintf('"%s" & %s', msvc_env, build_cmd));
@@ -203,13 +204,13 @@ else
     blasfeo_include = ['-I' fullfile(acados_folder, 'external' , 'blasfeo', 'include')];
 
     if ispc
-        out = fullfile(opts_struct.output_dir, ['lib', model_name, '.lib']);
+        out_lib = fullfile(opts_struct.output_dir, ['lib', model_name, '.lib']);
         system(['gcc -O2 -fPIC -shared ', acados_include, ' ', blasfeo_include,...
-            ' ', strjoin(unique(c_files_path), ' '), ' -o ', out]);
+            ' ', strjoin(unique(c_files_path), ' '), ' -o ', out_lib]);
     else
-        out = fullfile(opts_struct.output_dir, ['lib', model_name, '.so']);
+        out_lib = fullfile(opts_struct.output_dir, ['lib', model_name, '.so']);
         system(['gcc -O2 -fPIC -shared ', acados_include, ' ', blasfeo_include,...
-           ' ', strjoin(unique(c_files_path), ' '), ' -o ', out]);
+           ' ', strjoin(unique(c_files_path), ' '), ' -o ', out_lib]);
     end
 end
 
