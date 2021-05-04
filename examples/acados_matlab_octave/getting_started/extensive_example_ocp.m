@@ -39,16 +39,31 @@ addpath('../pendulum_on_cart_model')
 check_acados_requirements()
 
 print_level = 1;
+
 %% discretization
-N = 20;
-h = 0.01;
-T = N*h; % time horizon length
+N = 40;
+T = 2.0; % time horizon length
+h = T/N;
+
+% nonuniform time grid
+% N1 = 5;
+% N2 = N - N1;
+% time_steps = [( 1 * ones(N1,1)); 3 * ones(N2,1)];
+% time_steps = T/sum(time_steps) * time_steps;
+
+% uniform time grid
+time_steps = T/N * ones(N,1);
+
+shooting_nodes = zeros(N+1, 1);
+for i = 1:N
+    shooting_nodes(i+1) = sum(time_steps(1:i));
+end
 
 nlp_solver = 'sqp'; % sqp, sqp_rti
-nlp_solver_exact_hessian = 'true';
+nlp_solver_exact_hessian = 'false';
 regularize_method = 'convexify';
      % no_regularize, project, project_reduc_hess, mirror, convexify
-nlp_solver_max_iter = 30;
+nlp_solver_max_iter = 50;
 tol = 1e-8;
 qp_solver = 'partial_condensing_hpipm';
     % full_condensing_hpipm, partial_condensing_hpipm
@@ -60,10 +75,9 @@ qp_solver_warm_start = 1; % 0: cold, 1: warm, 2: hot
 qp_solver_iter_max = 1000; % default is 50; OSQP needs a lot sometimes.
 
 % can vary for integrators
-sim_method_num_stages = 4 * ones(N,1);
+sim_method_num_stages = 1 * ones(N,1);
 sim_method_num_steps = ones(N,1);
-sim_method_num_steps(1:10) = 2;
-
+% sim_method_num_steps(1:10) = 2;
 
 %% model dynamics
 model = pendulum_on_cart_model;
@@ -75,12 +89,10 @@ ocp_model = acados_ocp_model();
 nx = model.nx;
 nu = model.nu;
 
-nbx = 0;
-nbu = 0;
-nh = nu;
+model_name = 'pendulum';
 
 %% cost formulation
-cost_formulation = 3;
+cost_formulation = 1;
 switch cost_formulation
     case 1
         cost_type = 'linear_ls';
@@ -91,54 +103,64 @@ switch cost_formulation
 end
 
 %% integrator type
-integrator = 2;
+integrator = 1;
 switch integrator
     case 1
         sim_method = 'erk';
     case 2
         sim_method = 'irk';
+    case 3
+        sim_method = 'discrete';
     otherwise
         sim_method = 'irk_gnsf';
 end
-model_name = ['pendulum_' num2str(cost_formulation) num2str(integrator)];
 
 %% cost
 ocp_model.set('cost_type', cost_type);
 ocp_model.set('cost_type_e', cost_type);
 if strcmp( cost_type, 'linear_ls' )
     ny = nu+nx; % number of outputs in lagrange term
-    ny_e = nx; % number of outputs in mayer term
-    Vu = zeros(ny, nu); for ii=1:nu Vu(ii,ii)=1.0; end % input-to-output matrix in lagrange term
-    Vx = zeros(ny, nx); for ii=1:nx Vx(nu+ii,ii)=1.0; end % state-to-output matrix in lagrange term
-    Vx_e = zeros(ny_e, nx); for ii=1:nx Vx_e(ii,ii)=1.0; end % state-to-output matrix in mayer term
-    W = eye(ny); % weight matrix in lagrange term
-    for ii=1:nu W(ii,ii)=1e-2; end
-    for ii=nu+1:nu+nx/2 W(ii,ii)=1e3; end
-    for ii=nu+nx/2+1:nu+nx W(ii,ii)=1e-2; end
+    % input-to-output matrix in lagrange term
+    Vu = zeros(ny, nu);
+    Vu(1:nu,:) = eye(nu);
+    % state-to-output matrix in lagrange term
+    Vx = zeros(ny, nx);
+    Vx(nu+1:end, :) = eye(nx);
+    W = diag([1e-2, 1e3, 1e3, 1e-2, 1e-2]);
+
+    % terminal cost term
+    ny_e = nx; % number of outputs in terminal cost term
+    Vx_e = eye(ny_e, nx);
     W_e = W(nu+1:nu+nx, nu+1:nu+nx); % weight matrix in mayer term
-    yr = zeros(ny, 1); % output reference in lagrange term
-    yr_e = zeros(ny_e, 1); % output reference in mayer term
+    y_ref = zeros(ny, 1); % output reference in lagrange term
+    y_ref_e = zeros(ny_e, 1); % output reference in mayer term
 
     ocp_model.set('cost_Vu', Vu);
     ocp_model.set('cost_Vx', Vx);
     ocp_model.set('cost_Vx_e', Vx_e);
     ocp_model.set('cost_W', W);
     ocp_model.set('cost_W_e', W_e);
-    ocp_model.set('cost_y_ref', yr);
-    ocp_model.set('cost_y_ref_e', yr_e);
+    ocp_model.set('cost_y_ref', y_ref);
+    ocp_model.set('cost_y_ref_e', y_ref_e);
 else % external, auto
     ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
     ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
 end
 
-% constraints
-%Jbx = zeros(nbx, nx); for ii=1:nbx Jbx(ii,ii)=1.0; end
-%lbx = -4*ones(nbx, 1);
-%ubx =  4*ones(nbx, 1);
-Jbu = zeros(nbu, nu); for ii=1:nbu Jbu(ii,ii)=1.0; end
+%% constraints
+constraint_formulation_nonlinear = 0;
 lbu = -80*ones(nu, 1);
 ubu =  80*ones(nu, 1);
-
+if constraint_formulation_nonlinear % formulate constraint via h
+    ocp_model.set('constr_expr_h', model.expr_h);
+    ocp_model.set('constr_lh', lbu);
+    ocp_model.set('constr_uh', ubu);
+else % formulate constraint as bound on u
+    Jbu = eye(nu);
+    ocp_model.set('constr_Jbu', Jbu);
+    ocp_model.set('constr_lbu', lbu);
+    ocp_model.set('constr_ubu', ubu);
+end
 
 %% acados ocp model
 ocp_model.set('name', model_name);
@@ -152,19 +174,33 @@ end
 if isfield(model, 'sym_xdot')
     ocp_model.set('sym_xdot', model.sym_xdot);
 end
+if isfield(model, 'sym_z') % algebraic variables
+    ocp_model.set('sym_z', model.sym_z);
+end
+if isfield(model, 'sym_p') % parameters
+    ocp_model.set('sym_p', model.sym_p);
+end
 
 % dynamics
 if (strcmp(sim_method, 'erk'))
     ocp_model.set('dyn_type', 'explicit');
     ocp_model.set('dyn_expr_f', model.expr_f_expl);
-else % irk irk_gnsf
+elseif (strcmp(sim_method, 'irk') || strcmp(sim_method, 'irk_gnsf'))
     ocp_model.set('dyn_type', 'implicit');
     ocp_model.set('dyn_expr_f', model.expr_f_impl);
+elseif strcmp(sim_method, 'discrete')
+    ocp_model.set('dyn_type', 'discrete');
+    % build explicit euler discrete integrator
+    import casadi.*
+    expl_ode_fun = Function([model_name,'_expl_ode_fun'], ...
+            {model.sym_x, model.sym_u}, {model.expr_f_expl});
+    dyn_expr_phi = model.sym_x + T/N * expl_ode_fun(model.sym_x, model.sym_u);
+    ocp_model.set('dyn_expr_phi', dyn_expr_phi)
+    if ~all(time_steps == T/N)
+        disp('nonuniform time discretization with discrete dynamics should not be used');
+        keyboard
+    end
 end
-% constraints
-ocp_model.set('constr_expr_h', model.expr_h);
-ocp_model.set('constr_lh', lbu);
-ocp_model.set('constr_uh', ubu);
 
 x0 = [0; pi; 0; 0];
 ocp_model.set('constr_x0', x0);
@@ -172,6 +208,10 @@ ocp_model.set('constr_x0', x0);
 %% acados ocp set opts
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('param_scheme_N', N);
+if (exist('time_steps', 'var'))
+	ocp_opts.set('time_steps', time_steps);
+end
+
 ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
 ocp_opts.set('regularize_method', regularize_method);
@@ -199,8 +239,9 @@ ocp_opts.set('exact_hess_constr', 1);
 %% create ocp solver
 ocp = acados_ocp(ocp_model, ocp_opts);
 
-% x_traj_init = zeros(nx, N+1);
-x_traj_init = [linspace(0, 0, N+1); linspace(pi, 0, N+1); linspace(0, 0, N+1); linspace(0, 0, N+1)];
+x_traj_init = zeros(nx, N+1);
+x_traj_init(2, :) = linspace(pi, 0, N+1); % initialize theta
+
 u_traj_init = zeros(nu, N);
 
 %% prepare evaluation
@@ -254,6 +295,22 @@ su = ocp.get('su', N);
 % get cost value
 cost_val_ocp = ocp.get_cost();
 
+%% Plot trajectories
+figure; hold on;
+States = {'p', 'theta', 'v', 'dtheta'};
+for i=1:length(States)
+    subplot(length(States), 1, i);
+    plot(shooting_nodes, xtraj(i,:)); grid on;
+    ylabel(States{i});
+    xlabel('t [s]')
+end
+
+figure
+stairs(shooting_nodes(1:end-1), utraj')
+ylabel('F [N]')
+xlabel('t [s]')
+grid on
+
 %% plot average compuation times
 % if ~is_octave()
 %     time_total = sum(time_tot);
@@ -273,34 +330,34 @@ cost_val_ocp = ocp.get_cost();
 % end
 
 %% test templated solver
-if ~ispc()
-    % MEX wrapper around templated solver not supported for Windows yet
-    % it can be used and tested via Simulink though.
-    disp('testing templated solver');
-    ocp.generate_c_code;
-    cd c_generated_code/
-    command = strcat('t_ocp = ', model_name, '_mex_solver');
-    eval( command );
-
-    t_ocp.set('print_level', print_level)
-
-    % initial state
-    t_ocp.set('constr_x0', x0);
-
-    % set trajectory initialization
-    t_ocp.set('init_x', x_traj_init);
-    t_ocp.set('init_u', u_traj_init);
-    t_ocp.set('init_pi', zeros(nx, N))
-
-    t_ocp.solve()
-    xt_traj = t_ocp.get('x');
-    ut_traj = t_ocp.get('u');
-
-    error_X_mex_vs_mex_template = max(max(abs(xt_traj - xtraj)))
-    error_U_mex_vs_mex_template = max(max(abs(ut_traj - utraj)))
-
-    t_ocp.print('stat')
-    cost_val_t_ocp = t_ocp.get_cost();
-    clear t_ocp
-    cd ..
-end
+% if ~ispc()
+%     % MEX wrapper around templated solver not supported for Windows yet
+%     % it can be used and tested via Simulink though.
+%     disp('testing templated solver');
+%     ocp.generate_c_code;
+%     cd c_generated_code/
+%     command = strcat('t_ocp = ', model_name, '_mex_solver');
+%     eval( command );
+%
+%     t_ocp.set('print_level', print_level)
+%
+%     % initial state
+%     t_ocp.set('constr_x0', x0);
+%
+%     % set trajectory initialization
+%     t_ocp.set('init_x', x_traj_init);
+%     t_ocp.set('init_u', u_traj_init);
+%     t_ocp.set('init_pi', zeros(nx, N))
+%
+%     t_ocp.solve()
+%     xt_traj = t_ocp.get('x');
+%     ut_traj = t_ocp.get('u');
+%
+%     error_X_mex_vs_mex_template = max(max(abs(xt_traj - xtraj)))
+%     error_U_mex_vs_mex_template = max(max(abs(ut_traj - utraj)))
+%
+%     t_ocp.print('stat')
+%     cost_val_t_ocp = t_ocp.get_cost();
+%     clear t_ocp
+%     cd ..
+% end
