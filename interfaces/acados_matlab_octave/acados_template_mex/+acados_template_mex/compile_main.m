@@ -50,18 +50,40 @@ function compile_main()
         end
         fprintf('Successfully built main file!\n');
     else
-        disp(['Compilation of generated C code main file not thoroughly tested under Windows. Attempting to continue.'])
         % compile if on Windows platform
-        [ status, result ] = system('mingw32-make.exe');
+        disp(['Compilation of generated C code main file not thoroughly tested under Windows. Attempting to continue.'])
+
+        % get compiler
+        mexOpts = mex.getCompilerConfigurations('C', 'Selected');
+        if contains(mexOpts.ShortName,  'MSVC') ... % MSVC compiler used
+                && ~(exist("OCTAVE_VERSION", "builtin") > 0) % Matlab used
+            % using MSVC
+            % get env vars for MSVC
+            msvc_env = fullfile(mexOpts.Location, 'VC\Auxiliary\Build\vcvars64.bat');
+            assert(isfile(msvc_env), 'Cannot find definition of MSVC env vars.');
+
+            make_cmd = sprintf('"%s" & nmake', msvc_env);
+
+            % TODO
+            warning('Templated Makefile not (yet) implemented for MSVC compiler.')
+            cd(return_dir);
+            return;
+        else
+            % using MinGW
+            make_cmd = 'mingw32-make.exe';
+        end
+
+        % compile
+        [ status, result ] = system(make_cmd);
         if status
             cd(return_dir);
-            error('building templated code failed.\nGot status %d, result: %s',...
+            error('Building templated code failed.\nGot status %d, result: %s',...
                   status, result);
         end
-        [ status, result ] = system('mingw32-make.exe shared_lib');
+        [ status, result ] = system(sprintf('%s shared_lib', make_cmd));
         if status
             cd(return_dir);
-            error('building templated code as shared library failed.\nGot status %d, result: %s',...
+            error('Building templated code as shared library failed.\nGot status %d, result: %s',...
                   status, result);
         end
         fprintf('Successfully built main file!\n');
