@@ -81,11 +81,7 @@ if is_octave()
         input_file = fopen(fullfile(opts.output_dir, 'cflags_octave.txt'), 'r');
         cflags_tmp = fscanf(input_file, '%[^\n]s');
         fclose(input_file);
-        if ~ismac()
-            cflags_tmp = [cflags_tmp, ' -std=c99 -fopenmp'];
-        else
-            cflags_tmp = [cflags_tmp, ' -std=c99'];
-        end
+        cflags_tmp = [cflags_tmp, ' -std=c99'];
         input_file = fopen(fullfile(opts.output_dir, 'cflags_octave.txt'), 'w');
         fprintf(input_file, '%s', cflags_tmp);
         fclose(input_file);
@@ -95,51 +91,62 @@ if is_octave()
     cflags_tmp = fscanf(input_file, '%[^\n]s');
     fclose(input_file);
 
-    % add temporary additional flag
+    % add flags
+    defines_tmp = '';
     if ~isempty(libs.qpoases)
-        cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_QPOASES'];
+        defines_tmp = [defines_tmp, ' -DACADOS_WITH_QPOASES'];
     end
     if ~isempty(libs.osqp)
-        cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_OSQP'];
+        defines_tmp = [defines_tmp, ' -DACADOS_WITH_OSQP'];
     end
     if ~isempty(libs.hpmpc)
-        cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_HPMPC'];
+        defines_tmp = [defines_tmp, ' -DACADOS_WITH_HPMPC'];
     end
     if ~isempty(libs.qpdunes)
-        cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_QPDUNES'];
+        defines_tmp = [defines_tmp, ' -DACADOS_WITH_QPDUNES'];
     end
     if ~isempty(libs.ooqp)
-        cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_OOQP'];
+        defines_tmp = [defines_tmp, ' -DACADOS_WITH_OOQP'];
+    end
+    setenv('CFLAGS', [cflags_tmp, defines_tmp]);
+    setenv('COMPDEFINES', defines_tmp);
+
+    if ~ismac() && ~isempty(libs.openmp)
+        setenv('LDFLAGS', libs.openmp);
+        setenv('COMPFLAGS', libs.openmp);
     end
 
-    setenv('CFLAGS', cflags_tmp);
 end
 
 
-if ismac()
-    FLAGS = 'CFLAGS=$CFLAGS -std=c99';
-    LDFLAGS = 'LDFLAGS=$LDFLAGS';
-else
-    FLAGS = 'CFLAGS=$CFLAGS -std=c99 -fopenmp';
-    LDFLAGS = 'LDFLAGS=$LDFLAGS -fopenmp';
+FLAGS = 'CFLAGS=$CFLAGS -std=c99';
+LDFLAGS = 'LDFLAGS=$LDFLAGS';
+COMPFLAGS = 'COMPFLAGS=$COMPFLAGS';
+COMPDEFINES = 'COMPDEFINES=$COMPDEFINES';
+if ~ismac() && ~isempty(libs.openmp)
+    LDFLAGS = [LDFLAGS, ' ', libs.openmp];
+    COMPFLAGS = [COMPFLAGS, ' ', libs.openmp]; % seems unnecessary
 end
 
 if ~is_octave()
+    defines_tmp = '';
     if ~isempty(libs.qpoases)
-        FLAGS = [FLAGS, ' -DACADOS_WITH_QPOASES'];
+        defines_tmp = [defines_tmp, ' -DACADOS_WITH_QPOASES'];
     end
     if ~isempty(libs.osqp)
-        FLAGS = [FLAGS, ' -DACADOS_WITH_OSQP'];
+        defines_tmp = [defines_tmp, ' -DACADOS_WITH_OSQP'];
     end
     if ~isempty(libs.hpmpc)
-        FLAGS = [FLAGS, ' -DACADOS_WITH_HPMPC'];
+        defines_tmp = [defines_tmp, ' -DACADOS_WITH_HPMPC'];
     end
     if ~isempty(libs.qpdunes)
-        FLAGS = [FLAGS, ' -DACADOS_WITH_QPDUNES'];
+        defines_tmp = [defines_tmp, ' -DACADOS_WITH_QPDUNES'];
     end
     if ~isempty(libs.ooqp)
-        cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_OOQP'];
+        defines_tmp = [defines_tmp, ' -DACADOS_WITH_OOQP'];
     end
+    FLAGS = [FLAGS, defines_tmp];
+    COMPDEFINES = [COMPDEFINES, defines_tmp];
 end
 
 for ii=1:length(mex_files)
@@ -154,10 +161,12 @@ for ii=1:length(mex_files)
         end
         % NOTE: multiple linker flags in 1 argument do not work in Matlab
         mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-            acados_lib_path, linker_flags, mex_files{ii})
+            acdaos_lib_path, linker_flags, mex_files{ii})
     else
+        % gcc uses FLAGS, LDFLAGS
+        % MSVC uses COMPFLAGS, COMPDEFINES
         % NOTE: empty linker flags do not work in Octave
-        mex(mex_flags, FLAGS, LDFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
+        mex(mex_flags, FLAGS, LDFLAGS, COMPDEFINES, COMPFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
             acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', libs.qpoases,...
             libs.qpdunes, libs.osqp, libs.hpmpc, libs.ooqp, mex_files{ii}, '-outdir', opts.output_dir)
     end
