@@ -637,6 +637,9 @@ end
 %phase_end
 if (strcmp(opts_struct.compile_interface, 'true') || strcmp(opts_struct.codgen_model, 'true'))
 
+    % load linking information
+    libs = loadjson(fileread(fullfile(acados_folder, 'lib', 'link_libs.json')));
+
     if is_octave()
         if ~exist(fullfile(opts_struct.output_dir, 'cflags_octave.txt'), 'file')
             diary(fullfile(opts_struct.output_dir, 'cflags_octave.txt'))
@@ -646,11 +649,7 @@ if (strcmp(opts_struct.compile_interface, 'true') || strcmp(opts_struct.codgen_m
             input_file = fopen(fullfile(opts_struct.output_dir, 'cflags_octave.txt'), 'r');
             cflags_tmp = fscanf(input_file, '%[^\n]s');
             fclose(input_file);
-            if ~ismac()
-                cflags_tmp = [cflags_tmp, ' -std=c99 -fopenmp'];
-            else
-                cflags_tmp = [cflags_tmp, ' -std=c99'];
-            end
+            cflags_tmp = [cflags_tmp, ' -std=c99'];
             input_file = fopen(fullfile(opts_struct.output_dir, 'cflags_octave.txt'), 'w');
             fprintf(input_file, '%s', cflags_tmp);
             fclose(input_file);
@@ -674,20 +673,24 @@ if (strcmp(opts_struct.compile_interface, 'true') || strcmp(opts_struct.codgen_m
             cflags_tmp = [cflags_tmp, ' -DN0=', num2str(phase_start{ii})];
             cflags_tmp = [cflags_tmp, ' -DN1=', num2str(phase_end{ii})];
             setenv('CFLAGS', cflags_tmp);
+            if ~ismac() && ~isempty(libs.openmp)
+                setenv('LDFLAGS', libs.openmp);
+                setenv('COMPFLAGS', libs.openmp); % seems unnecessary
+            end
             mex(acados_include, acados_interfaces_include, external_include, blasfeo_include,...
                 hpipm_include, acados_lib_path, acados_matlab_octave_lib_path, model_lib_path, '-lacados',...
                  '-lhpipm', '-lblasfeo', ['-l', model_name], mex_files{ii});
         else
-            if ~ismac()
-                FLAGS = 'CFLAGS=$CFLAGS -std=c99 -fopenmp';
-                LDFLAGS = 'LDFLAGS=$LDFLAGS -fopenmp';
-            else
-                FLAGS = 'CFLAGS=$CFLAGS -std=c99';
-                LDFLAGS = 'LDFLAGS=$LDFLAGS';
+            FLAGS = 'CFLAGS=$CFLAGS -std=c99';
+            LDFLAGS = 'LDFLAGS=$LDFLAGS';
+            COMPFLAGS = 'COMPFLAGS=$COMPFLAGS';
+            if ~ismac() && ~isempty(libs.openmp)
+                LDFLAGS = [LDFLAGS, ' ', libs.openmp];
+                COMPFLAGS = [COMPFLAGS, ' ', libs.openmp]; % seems unnecessary
             end
-            % load linking information
-            libs = loadjson(fileread(fullfile(acados_folder, 'lib', 'link_libs.json')));
-            mex(mex_flags, FLAGS, LDFLAGS, ['-DSETTER=', setter{ii}],...
+            % gcc uses FLAGS, LDFLAGS
+            % MSVC uses COMPFLAGS
+            mex(mex_flags, FLAGS, LDFLAGS, COMPFLAGS, ['-DSETTER=', setter{ii}],...
                 ['-DSET_FIELD=', set_fields{ii}], ['-DMEX_FIELD=', mex_fields{ii}],...
                 ['-DFUN_NAME=', fun_names{ii}], ['-DPHASE=', num2str(phase{ii})],...
                 ['-DN0=', num2str(phase_start{ii})], ['-DN1=', num2str(phase_end{ii})],...

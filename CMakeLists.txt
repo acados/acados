@@ -281,7 +281,7 @@ message(STATUS " ")
 
 # Write libraries to be linked into a json file
 if(${ACADOS_WITH_OPENMP})
-    set(LINK_FLAG_OPENMP -fopenmp)
+    set(LINK_FLAG_OPENMP ${OpenMP_C_FLAGS})
 endif()
 if(${ACADOS_WITH_QPOASES})
     set(LINK_FLAG_QPOASES -lqpOASES_e)
