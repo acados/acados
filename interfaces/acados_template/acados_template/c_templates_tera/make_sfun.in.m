@@ -117,15 +117,21 @@ INCS{end+1} = ['-I', fullfile(INC_PATH, 'qpOASES_e')];
 
 CFLAGS = 'CFLAGS=$CFLAGS';
 LDFLAGS = 'LDFLAGS=$LDFLAGS';
+COMPFLAGS = 'COMPFLAGS=$COMPFLAGS';
+COMPDEFINES = 'COMPDEFINES=$COMPDEFINES';
 
 {% if solver_options.qp_solver is containing("QPOASES") %}
 CFLAGS = [ CFLAGS, ' -DACADOS_WITH_QPOASES ' ];
+COMPDEFINES = [ COMPDEFINES, ' -DACADOS_WITH_QPOASES ' ];
 {%- elif solver_options.qp_solver is containing("OSQP") %}
 CFLAGS = [ CFLAGS, ' -DACADOS_WITH_OSQP ' ];
+COMPDEFINES = [ COMPDEFINES, ' -DACADOS_WITH_OSQP ' ];
 {%- elif solver_options.qp_solver is containing("QPDUNES") %}
 CFLAGS = [ CFLAGS, ' -DACADOS_WITH_QPDUNES ' ];
+COMPDEFINES = [ COMPDEFINES, ' -DACADOS_WITH_QPDUNES ' ];
 {%- elif solver_options.qp_solver is containing("HPMPC") %}
 CFLAGS = [ CFLAGS, ' -DACADOS_WITH_HPMPC ' ];
+COMPDEFINES = [ COMPDEFINES, ' -DACADOS_WITH_HPMPC ' ];
 {% endif %}
 
 LIB_PATH = ['-L', fullfile('{{ acados_lib_path }}')];
@@ -134,8 +140,8 @@ LIBS = {'-lacados', '-lhpipm', '-lblasfeo'};
 
 % acados linking libraries and flags
 {%- if acados_link_libs and os and os == "pc" %}
-CFLAGS = [CFLAGS ' {{ acados_link_libs.openmp }}'];
 LDFLAGS = [LDFLAGS ' {{ acados_link_libs.openmp }}'];
+COMPFLAGS = [COMPFLAGS ' {{ acados_link_libs.openmp }}'];
 LIBS{end+1} = '{{ acados_link_libs.qpoases }}';
 LIBS{end+1} = '{{ acados_link_libs.hpmpc }}';
 LIBS{end+1} = '{{ acados_link_libs.osqp }}';
@@ -145,7 +151,7 @@ LIBS{end+1} = '-lqpOASES_e';
     {% endif %}
 {%- endif %}
 
-mex('-v', '-O', CFLAGS, LDFLAGS, INCS{:}, ...
+mex('-v', '-O', CFLAGS, LDFLAGS, COMPFLAGS, COMPDEFINES, INCS{:}, ...
     LIB_PATH, LIBS{:}, SOURCES{:}, ...
     '-output', 'acados_solver_sfunction_{{ model.name }}' );
 
