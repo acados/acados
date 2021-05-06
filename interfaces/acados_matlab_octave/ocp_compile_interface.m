@@ -153,15 +153,15 @@ for ii=1:length(mex_files)
     disp(['compiling ', mex_files{ii}])
     if is_octave()
         fn = fieldnames(libs);
-        linker_flags = '-lacados -lhpipm -lblasfeo';
+        linker_flags = {'-lacados', '-lhpipm', '-lblasfeo'};
         for k = 1:numel(fn)
             if ~isempty(libs.(fn{k}))
-                linker_flags = [linker_flags, ' ', libs.(fn{k})];
+                linker_flags{end+1} = libs.(fn{k});
             end
         end
         % NOTE: multiple linker flags in 1 argument do not work in Matlab
         mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-            acados_lib_path, linker_flags, mex_files{ii})
+            acados_lib_path, linker_flags{:}, mex_files{ii})
     else
         % gcc uses FLAGS, LDFLAGS
         % MSVC uses COMPFLAGS, COMPDEFINES
