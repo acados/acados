@@ -53,11 +53,18 @@ function compile_main()
         % compile if on Windows platform
         disp(['Compilation of generated C code main file not thoroughly tested under Windows. Attempting to continue.'])
 
+        % check compiler
+        if is_octave()
+            use_msvc = false;
+        else
+            mexOpts = mex.getCompilerConfigurations('C', 'Selected');
+            if contains(mexOpts.ShortName,  'MSVC')
+                use_msvc = true;
+            end
+        end
+
         % get compiler
-        mexOpts = mex.getCompilerConfigurations('C', 'Selected');
-        if contains(mexOpts.ShortName,  'MSVC') ... % MSVC compiler used
-                && ~(exist("OCTAVE_VERSION", "builtin") > 0) % Matlab used
-            % using MSVC
+        if use_msvc
             % get env vars for MSVC
             msvc_env = fullfile(mexOpts.Location, 'VC\Auxiliary\Build\vcvars64.bat');
             assert(isfile(msvc_env), 'Cannot find definition of MSVC env vars.');
