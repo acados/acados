@@ -161,7 +161,7 @@ for ii=1:length(mex_files)
         end
         % NOTE: multiple linker flags in 1 argument do not work in Matlab
         mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-            acdaos_lib_path, linker_flags, mex_files{ii})
+            acados_lib_path, linker_flags, mex_files{ii})
     else
         % gcc uses FLAGS, LDFLAGS
         % MSVC uses COMPFLAGS, COMPDEFINES
