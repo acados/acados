@@ -197,10 +197,17 @@ if (strcmp(model_struct.dyn_type, 'discrete') && strcmp(model_struct.dyn_ext_fun
     c_files_path{end+1} = model_struct.dyn_source_discrete;
 end
 
-mexOpts = mex.getCompilerConfigurations('C', 'Selected');
-if contains(mexOpts.ShortName,  'MSVC') ... % MSVC compiler used
-        && ~(exist("OCTAVE_VERSION", "builtin") > 0) % Matlab used
+% check compiler
+if is_octave()
+    use_msvc = false;
+else
+    mexOpts = mex.getCompilerConfigurations('C', 'Selected');
+    if contains(mexOpts.ShortName,  'MSVC')
+        use_msvc = true;
+    end
+end
 
+if use_msvc
     % get env vars for MSVC
     msvc_env = fullfile(mexOpts.Location, 'VC\Auxiliary\Build\vcvars64.bat');
     assert(isfile(msvc_env), 'Cannot find definition of MSVC env vars.');
