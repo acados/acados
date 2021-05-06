@@ -606,11 +606,17 @@ if (strcmp(opts_struct.compile_interface, 'true') || strcmp(opts_struct.codgen_m
             setenv('CFLAGS', cflags_tmp);
             if ~ismac() && ~isempty(libs.openmp)
                 setenv('LDFLAGS', libs.openmp);
-                setenv('COMPFLAGS', libs.openmp); % seems unnecessary
+            end
+            fn = fieldnames(libs);
+            linker_flags = {'-lacados', '-lhpipm', '-lblasfeo'};
+            for k = 1:numel(fn)
+                if ~isempty(libs.(fn{k}))
+                    linker_flags{end+1} = libs.(fn{k});
+                end
             end
             mex(acados_include, acados_interfaces_include, external_include, blasfeo_include,...
-                hpipm_include, acados_lib_path, acados_matlab_octave_lib_path, model_lib_path, '-lacados',...
-                 '-lhpipm', '-lblasfeo', ['-l', model_name], mex_files{ii});
+                hpipm_include, acados_lib_path, acados_matlab_octave_lib_path, model_lib_path, ...
+                linker_flags{:}, ['-l', model_name], mex_files{ii});
         else
             FLAGS = 'CFLAGS=$CFLAGS -std=c99';
             LDFLAGS = 'LDFLAGS=$LDFLAGS';
