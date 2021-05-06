@@ -1020,6 +1020,7 @@ class AcadosOcpSolver:
                   'time_glob',  # cpu time globalization
                   'time_reg',  # cpu time regularization
                   'sqp_iter',  # number of SQP iterations
+                  'qp_iter',  # vector of QP iterations for last SQP call
                   'statistics',  # table with info about last iteration
                   'stat_m',
                   'stat_n',
@@ -1046,12 +1047,20 @@ class AcadosOcpSolver:
                         np.zeros( (stat_n[0]+1, min_size[0]) ), dtype=np.float64)
             out_data = cast(out.ctypes.data, POINTER(c_double))
 
+        elif field_ == 'qp_iter':
+            full_stats = self.get_stats('statistics')
+            if self.acados_ocp.solver_options.nlp_solver_type == 'SQP':
+                out = full_stats[6, :]
+            elif self.acados_ocp.solver_options.nlp_solver_type == 'SQP_RTI':
+                out = full_stats[2, :]
+
         else:
             out = np.ascontiguousarray(np.zeros((1,)), dtype=np.float64)
             out_data = cast(out.ctypes.data, POINTER(c_double))
 
-        self.shared_lib.ocp_nlp_get.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
-        self.shared_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
+        if not field_ == 'qp_iter':
+            self.shared_lib.ocp_nlp_get.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
+            self.shared_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
 
         return out
 
