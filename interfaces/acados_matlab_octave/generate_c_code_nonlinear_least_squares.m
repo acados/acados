@@ -83,6 +83,10 @@ end
 
 if isfield(model, 'cost_expr_y_0')
     fun = model.cost_expr_y_0;
+    if all(size(fun) == 0)
+        error('empty cost_expr_y_0 is not allowed.\nPlease use SX.zeros(1) or %s',...
+              'linear least squares formulation for a zero cost term.');
+    end
     % generate jacobians
     jac_x = jacobian(fun, x);
     jac_u = jacobian(fun, u);
@@ -108,6 +112,10 @@ end
 
 if isfield(model, 'cost_expr_y')
     fun = model.cost_expr_y;
+    if all(size(fun) == 0)
+        error('empty cost_expr_y is not allowed.\nPlease use SX.zeros(1) or %s',...
+              'linear least squares formulation for a zero cost term.');
+    end
     % generate jacobians
     jac_x = jacobian(fun, x);
     jac_u = jacobian(fun, u);
@@ -134,6 +142,10 @@ end
 
 if isfield(model, 'cost_expr_y_e')
     fun = model.cost_expr_y_e;
+    if all(size(fun) == 0)
+        error('empty cost_expr_y_e is not allowed.\nPlease use SX.zeros(1) or %s',...
+              'linear least squares formulation for a zero cost term.');
+    end
     % generate jacobians
     jac_x = jacobian(fun, x);
     % output symbolics
