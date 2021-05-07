@@ -711,6 +711,9 @@
         "qp_solver_cond_N": [
             "int"
         ],
+        "qp_solver_warm_start": [
+            "int"
+        ],
         "qp_solver_tol_stat": [
             "float"
         ],
