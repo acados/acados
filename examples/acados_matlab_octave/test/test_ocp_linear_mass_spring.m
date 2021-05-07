@@ -244,6 +244,7 @@ time_ext = toc;
 filename = 'iterate.json';
 ocp.store_iterate(filename, true);
 ocp.load_iterate(filename);
+delete(filename)
 
 % get solution
 u = ocp.get('u');
