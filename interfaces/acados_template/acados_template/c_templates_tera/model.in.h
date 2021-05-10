@@ -192,7 +192,9 @@ int {{ model.name }}_dyn_disc_phi_fun_jac_hess_n_in();
 int {{ model.name }}_dyn_disc_phi_fun_jac_hess_n_out();
 {%- endif %}
 {% else %}
+  {%- if hessian_approx == "EXACT" %}
 int {{ model.dyn_disc_fun_jac_hess }}(void **, void **, void *);
+  {% endif %}
 int {{ model.dyn_disc_fun_jac }}(void **, void **, void *);
 int {{ model.dyn_disc_fun }}(void **, void **, void *);
 {% endif %}
