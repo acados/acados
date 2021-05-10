@@ -198,11 +198,10 @@ if (strcmp(model_struct.dyn_type, 'discrete') && strcmp(model_struct.dyn_ext_fun
 end
 
 % check compiler
-if is_octave()
-    use_msvc = false;
-else
+use_msvc = false;
+if ~is_octave()
     mexOpts = mex.getCompilerConfigurations('C', 'Selected');
-    if contains(mexOpts.ShortName,  'MSVC')
+    if contains(mexOpts.ShortName, 'MSVC')
         use_msvc = true;
     end
 end
