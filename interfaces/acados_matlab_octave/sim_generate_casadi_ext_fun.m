@@ -91,11 +91,10 @@ for k=1:length(c_files)
 end
 
 % check compiler
-if is_octave()
-    use_msvc = false;
-else
+use_msvc = false;
+if ~is_octave()
     mexOpts = mex.getCompilerConfigurations('C', 'Selected');
-    if contains(mexOpts.ShortName,  'MSVC')
+    if contains(mexOpts.ShortName, 'MSVC')
         use_msvc = true;
     end
 end

@@ -54,11 +54,10 @@ function compile_main()
         disp(['Compilation of generated C code main file not thoroughly tested under Windows. Attempting to continue.'])
 
         % check compiler
-        if is_octave()
-            use_msvc = false;
-        else
+        use_msvc = false;
+        if ~is_octave()
             mexOpts = mex.getCompilerConfigurations('C', 'Selected');
-            if contains(mexOpts.ShortName,  'MSVC')
+            if contains(mexOpts.ShortName, 'MSVC')
                 use_msvc = true;
             end
         end
