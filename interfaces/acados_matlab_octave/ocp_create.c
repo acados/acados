@@ -2033,8 +2033,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     const mxArray *Jsbx_e_matlab = mxGetField( matlab_model, 0, "constr_Jsbx_e" );
     if (Jsbx_e_matlab!=NULL)
     {
-        int nrow = (int) mxGetM( Jsbx_matlab );
-        int ncol = (int) mxGetN( Jsbx_matlab );
+        int nrow = (int) mxGetM( Jsbx_e_matlab );
+        int ncol = (int) mxGetN( Jsbx_e_matlab );
         MEX_DIM_CHECK_MAT(fun_name, "constr_Jsbx_e", nrow, ncol, nbx_e, nsbx_e);
 
         double *Jsbx_e = mxGetPr( mxGetField( matlab_model, 0, "constr_Jsbx_e" ) );
