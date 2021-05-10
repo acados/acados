@@ -586,7 +586,7 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
         capsule->discr_dyn_phi_fun[i].casadi_sparsity_out = &{{ model.name }}_dyn_disc_phi_fun_sparsity_out;
         capsule->discr_dyn_phi_fun[i].casadi_work = &{{ model.name }}_dyn_disc_phi_fun_work;
         {%- else %}
-        capsule->discr_dyn_phi_fun[i].fun = &{{ model.dyn_function_discrete }};
+        capsule->discr_dyn_phi_fun[i].fun = &{{ model.dyn_disc_fun }};
         {%- endif %}
         external_function_param_{{ model.dyn_ext_fun_type }}_create(&capsule->discr_dyn_phi_fun[i], {{ dims.np }});
     }
@@ -602,7 +602,7 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
         capsule->discr_dyn_phi_fun_jac_ut_xt[i].casadi_sparsity_out = &{{ model.name }}_dyn_disc_phi_fun_jac_sparsity_out;
         capsule->discr_dyn_phi_fun_jac_ut_xt[i].casadi_work = &{{ model.name }}_dyn_disc_phi_fun_jac_work;
         {%- else %}
-        capsule->discr_dyn_phi_fun_jac_ut_xt[i].fun = &{{ model.dyn_function_discrete }};
+        capsule->discr_dyn_phi_fun_jac_ut_xt[i].fun = &{{ model.dyn_disc_fun_jac }};
         {%- endif %}
         external_function_param_{{ model.dyn_ext_fun_type }}_create(&capsule->discr_dyn_phi_fun_jac_ut_xt[i], {{ dims.np }});
     }
@@ -620,7 +620,7 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
         capsule->discr_dyn_phi_fun_jac_ut_xt_hess[i].casadi_sparsity_out = &{{ model.name }}_dyn_disc_phi_fun_jac_hess_sparsity_out;
         capsule->discr_dyn_phi_fun_jac_ut_xt_hess[i].casadi_work = &{{ model.name }}_dyn_disc_phi_fun_jac_hess_work;
         {%- else %}
-        capsule->discr_dyn_phi_fun_jac_ut_xt_hess[i].fun = &{{ model.dyn_function_discrete }};
+        capsule->discr_dyn_phi_fun_jac_ut_xt_hess[i].fun = &{{ model.dyn_disc_fun_jac_hess }};
         {%- endif %}
         external_function_param_{{ model.dyn_ext_fun_type }}_create(&capsule->discr_dyn_phi_fun_jac_ut_xt_hess[i], {{ dims.np }});
     }

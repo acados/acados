@@ -15,7 +15,13 @@
         "dyn_source_discrete" : [
             "str"
         ],
-        "dyn_function_discrete" : [
+        "dyn_disc_fun_jac_hess" : [
+            "str"
+        ],
+        "dyn_disc_fun_jac" : [
+            "str"
+        ],
+        "dyn_disc_fun" : [
             "str"
         ]
     },

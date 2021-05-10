@@ -485,7 +485,9 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
             ocp_json.model.f_phi_expr = model.dyn_expr_phi;
         elseif strcmp(model.dyn_ext_fun_type, 'generic')
             ocp_json.model.dyn_source_discrete = model.dyn_source_discrete;
-            ocp_json.model.dyn_function_discrete = model.dyn_function_discrete;
+            ocp_json.model.dyn_disc_fun_jac_hess = model.dyn_disc_fun_jac_hess;
+            ocp_json.model.dyn_disc_fun_jac = model.dyn_disc_fun_jac;
+            ocp_json.model.dyn_disc_fun = model.dyn_disc_fun;
         end
     elseif strcmp(obj.opts_struct.sim_method, 'irk_gnsf')
         ocp_json.model.gnsf.A = model.dyn_gnsf_A;

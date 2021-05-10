@@ -95,7 +95,9 @@ function ocp_generate_c_code(obj)
     model.name = obj.acados_ocp_nlp_json.model.name;
     model.dyn_ext_fun_type = obj.acados_ocp_nlp_json.model.dyn_ext_fun_type;
     model.dyn_source_discrete = obj.acados_ocp_nlp_json.model.dyn_source_discrete;
-    model.dyn_function_discrete = obj.acados_ocp_nlp_json.model.dyn_function_discrete;
+    model.dyn_disc_fun_jac_hess = obj.acados_ocp_nlp_json.model.dyn_disc_fun_jac_hess;
+    model.dyn_disc_fun_jac = obj.acados_ocp_nlp_json.model.dyn_disc_fun_jac;
+    model.dyn_disc_fun = obj.acados_ocp_nlp_json.model.dyn_disc_fun;
     obj.acados_ocp_nlp_json.model = model;
     %% post process numerical data (mostly cast scalars to 1-dimensional cells)
     dims = obj.acados_ocp_nlp_json.dims;
