@@ -7,7 +7,8 @@ extern "C" {
 #include "blasfeo_d_blas.h"
 #include "blasfeo_d_aux.h"    
 #include "blasfeo_d_aux_ext_dep.h"
-    
+
+// auxilary function to compute discrete dynamics, see below
 static void mass_spring_system(double Ts, int nx, int nu, double *A, double *B, double *b)
 {
     int nx2 = nx * nx;
@@ -79,7 +80,8 @@ static void mass_spring_system(double Ts, int nx, int nu, double *A, double *B, 
     free(bb);
 }
 
-int disc_dyn(void **in, void **out, void *params)
+
+int disc_dyn_fun_jac_hess(void **in, void **out, void *params)
 {
     int ii;
 
@@ -117,16 +119,11 @@ int disc_dyn(void **in, void **out, void *params)
     // 1: [jac_u'; jac_x'], size: (nu+nx)*nx1, type: BLASFEO_DMAT_ARGS
     struct blasfeo_dmat_args *j_args = out[1];
     struct blasfeo_dmat *jac = j_args->A;
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    // Only write to hess if exact_hessian == 'true' 
-    // (otherwise memory is corrupted or even seg-fault is caused)
     // 2: [hess_ux], size: (nu+nx)*(nu+nx)
     struct blasfeo_dmat_args *h_args = out[2];
     struct blasfeo_dmat *hess = h_args->A;
-
     // hess
     blasfeo_dgese(nu+nx, nu+nx, 0.0, hess, 0, 0);
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     // jac
     blasfeo_pack_tran_dmat(nx, nu, B, nx, jac, 0, 0);
@@ -137,6 +134,119 @@ int disc_dyn(void **in, void **out, void *params)
     blasfeo_dgemv_t(nx, nx, 1.0, jac, nu, 0, x, xi, 1.0, fun, 0, fun, 0);
 
     // free memory
+    free(A);
+    free(B);
+    free(b);
+
+    return 0;
+}
+
+
+
+int disc_dyn_fun_jac(void **in, void **out, void *params)
+{
+    int ii;
+
+    int nu = 3;
+    int nx = 8;
+
+    // compute mass sping dynamics
+    double *A;
+    d_zeros(&A, nx, nx);  // states update matrix
+    double *B;
+    d_zeros(&B, nx, nu);  // inputs matrix
+    double *b;
+    d_zeros(&b, nx, 1);  // states offset
+    double Ts = 0.5;
+
+    mass_spring_system(Ts, nx, nu, A, B, b);
+
+    for (ii=0; ii<nx; ii++)
+        b[ii] = 0.0;
+
+    // extract inputs
+    // 0: [x], size: nx, type: BLASFEO_DVEC_ARGS
+    struct blasfeo_dvec_args *x_args = in[0];
+    struct blasfeo_dvec *x = x_args->x;
+    int xi = x_args->xi; // offset in vector
+    // 1: [u], size: nu, type: BLASFEO_DVEC_ARGS
+    struct blasfeo_dvec_args *u_args = in[1];
+    struct blasfeo_dvec *u = u_args->x;
+    int ui = u_args->xi; // offset in vector
+
+    // extract outputs
+    // 0: [fun], size: nx1, type: BLASFEO_DVEC_ARGS
+    struct blasfeo_dvec_args *f_args = out[0];
+    struct blasfeo_dvec *fun = f_args->x;
+    // 1: [jac_u'; jac_x'], size: (nu+nx)*nx1, type: BLASFEO_DMAT_ARGS
+    struct blasfeo_dmat_args *j_args = out[1];
+    struct blasfeo_dmat *jac = j_args->A;
+
+    // jac
+    blasfeo_pack_tran_dmat(nx, nu, B, nx, jac, 0, 0);
+    blasfeo_pack_tran_dmat(nx, nx, A, nx, jac, nu, 0);
+
+    // fun
+    blasfeo_dgemv_t(nu, nx, 1.0, jac, 0, 0, u, ui, 0.0, fun, 0, fun, 0);
+    blasfeo_dgemv_t(nx, nx, 1.0, jac, nu, 0, x, xi, 1.0, fun, 0, fun, 0);
+
+    // free memory
+    free(A);
+    free(B);
+    free(b);
+
+    return 0;
+}
+
+
+int disc_dyn_fun(void **in, void **out, void *params)
+{
+    int ii;
+
+    int nu = 3;
+    int nx = 8;
+
+    // compute mass sping dynamics
+    double *A;
+    d_zeros(&A, nx, nx);  // states update matrix
+    double *B;
+    d_zeros(&B, nx, nu);  // inputs matrix
+    double *b;
+    d_zeros(&b, nx, 1);  // states offset
+    double Ts = 0.5;
+
+    mass_spring_system(Ts, nx, nu, A, B, b);
+
+    for (ii=0; ii<nx; ii++)
+        b[ii] = 0.0;
+
+    // extract inputs
+    // 0: [x], size: nx, type: BLASFEO_DVEC_ARGS
+    struct blasfeo_dvec_args *x_args = in[0];
+    struct blasfeo_dvec *x = x_args->x;
+    int xi = x_args->xi; // offset in vector
+    // 1: [u], size: nu, type: BLASFEO_DVEC_ARGS
+    struct blasfeo_dvec_args *u_args = in[1];
+    struct blasfeo_dvec *u = u_args->x;
+    int ui = u_args->xi; // offset in vector
+
+    // extract outputs
+    // 0: [fun], size: nx1, type: BLASFEO_DVEC_ARGS
+    struct blasfeo_dvec_args *f_args = out[0];
+    struct blasfeo_dvec *fun = f_args->x;
+
+    // tmp_jac
+    struct blasfeo_dmat tmp_jac;            // matrix structure
+    blasfeo_allocate_dmat(nx, nx+nu, &tmp_jac);  // allocate and assign memory
+    blasfeo_pack_tran_dmat(nx, nu, B, nx, &tmp_jac, 0, 0);
+    blasfeo_pack_tran_dmat(nx, nx, A, nx, &tmp_jac, nu, 0);
+
+    // fun
+    blasfeo_dgemv_t(nu, nx, 1.0, &tmp_jac, 0, 0, u, ui, 0.0, fun, 0, fun, 0);
+    blasfeo_dgemv_t(nx, nx, 1.0, &tmp_jac, nu, 0, x, xi, 1.0, fun, 0, fun, 0);
+
+    // free memory
+    blasfeo_free_dmat(&tmp_jac);
     free(A);
     free(B);
     free(b);
