@@ -112,14 +112,13 @@ if use_msvc
 
     % build
     system(sprintf('"%s" & %s', msvc_env, build_cmd));
-else
+else % gcc
     if ispc
         out_lib = fullfile(opts_struct.output_dir, ['lib', model_name, '.lib']);
-        system(['gcc -O2 -fPIC -shared ', strjoin(unique(c_files_path), ' '), ' -o ', out_lib]);
     else
         out_lib = fullfile(opts_struct.output_dir, ['lib', model_name, '.so']);
-        system(['gcc -O2 -fPIC -shared ', strjoin(unique(c_files_path), ' '), ' -o ', out_lib]);
     end
+    system(['gcc -O2 -fPIC -shared ', strjoin(unique(c_files_path), ' '), ' -o ', out_lib]);
 end
 
 end
