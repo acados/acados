@@ -79,7 +79,9 @@ uh_e = 4.0 * ones(nx, 1);
 
 
 %% acados ocp model
-generic_or_casadi = 0; % 0=generic, 1=casadi
+casadi_dynamics = 0; % 0=generic, 1=casadi
+casadi_cost = 1; % 0=generic, 1=casadi
+
 ocp_model = acados_ocp_model();
 ocp_model.set('name', model_name);
 ocp_model.set('T', T);
@@ -99,7 +101,19 @@ ocp_model.set('cost_type_e', cost_type);
 % dynamics
 ocp_model.set('dyn_type', 'discrete');
 
-if (generic_or_casadi == 0)
+if (casadi_dynamics == 0)
+    % Generic dynamics
+    ocp_model.set('dyn_ext_fun_type', 'generic');
+    ocp_model.set('dyn_source_discrete', 'generic_disc_dyn.c');
+    ocp_model.set('dyn_disc_fun_jac_hess', 'disc_dyn_fun_jac_hess');
+    ocp_model.set('dyn_disc_fun_jac', 'disc_dyn_fun_jac');
+    ocp_model.set('dyn_disc_fun', 'disc_dyn_fun');
+else
+    % dynamics expression
+    ocp_model.set('dyn_expr_phi', model.expr_phi);
+end
+
+if (casadi_cost == 0)
     % Generic stage cost
     ocp_model.set('cost_ext_fun_type', 'generic');    
     ocp_model.set('cost_source_ext_cost', 'generic_ext_cost.c');
@@ -108,16 +122,10 @@ if (generic_or_casadi == 0)
     ocp_model.set('cost_ext_fun_type_e', 'generic');
     ocp_model.set('cost_source_ext_cost_e', 'generic_ext_cost.c');
     ocp_model.set('cost_function_ext_cost_e', 'ext_costN');
-    % Generic dynamics
-    ocp_model.set('dyn_ext_fun_type', 'generic');
-    ocp_model.set('dyn_source_discrete', 'generic_disc_dyn.c');
-    ocp_model.set('dyn_function_discrete', 'disc_dyn');
 else
     % cost expression
     ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
     ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
-    % dynamics expression
-    ocp_model.set('dyn_expr_phi', model.expr_phi);
 end
 
 % constraints
@@ -246,6 +254,14 @@ tol_check = 1e-6;
 
 if any([error_X_mex_vs_mex_template, error_U_mex_vs_mex_template] > tol_check)
     error(['test_template_pendulum_exact_hess: solution of templated MEX and original MEX',...
+         ' differ too much. Should be < tol = ' num2str(tol_check)]);
+end
+
+cost_native_mex = ocp.get_cost()
+cost_template_mex = t_ocp.get_cost()
+
+if any(abs(cost_native_mex - cost_template_mex) > tol_check)
+    error(['test_template_pendulum_exact_hess: cost value of templated MEX and original MEX',...
          ' differ too much. Should be < tol = ' num2str(tol_check)]);
 end
 
