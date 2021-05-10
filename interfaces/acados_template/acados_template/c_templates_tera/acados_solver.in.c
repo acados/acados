@@ -590,7 +590,7 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
         {%- endif %}
         external_function_param_{{ model.dyn_ext_fun_type }}_create(&capsule->discr_dyn_phi_fun[i], {{ dims.np }});
     }
-    
+
     capsule->discr_dyn_phi_fun_jac_ut_xt = (external_function_param_{{ model.dyn_ext_fun_type }} *) malloc(sizeof(external_function_param_{{ model.dyn_ext_fun_type }})*N);
     for (int i = 0; i < N; i++)
     {
@@ -606,10 +606,9 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
         {%- endif %}
         external_function_param_{{ model.dyn_ext_fun_type }}_create(&capsule->discr_dyn_phi_fun_jac_ut_xt[i], {{ dims.np }});
     }
-    
-    {%- if solver_options.hessian_approx == "EXACT" %}
+
+  {%- if solver_options.hessian_approx == "EXACT" %}
     capsule->discr_dyn_phi_fun_jac_ut_xt_hess = (external_function_param_{{ model.dyn_ext_fun_type }} *) malloc(sizeof(external_function_param_{{ model.dyn_ext_fun_type }})*N);
-    
     for (int i = 0; i < N; i++)
     {
         {%- if model.dyn_ext_fun_type == "casadi" %}
@@ -624,7 +623,7 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
         {%- endif %}
         external_function_param_{{ model.dyn_ext_fun_type }}_create(&capsule->discr_dyn_phi_fun_jac_ut_xt_hess[i], {{ dims.np }});
     }
-    {%- endif %}
+  {%- endif %}
 {%- endif %}
 
 
