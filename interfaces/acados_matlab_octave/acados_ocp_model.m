@@ -204,8 +204,12 @@ classdef acados_ocp_model < handle
                 elseif (strcmp(field, 'dyn_source_discrete'))
                     obj.model_struct.dyn_source_discrete = value;
                     obj.model_struct.dyn_ext_fun_type = 'generic';
-                elseif (strcmp(field, 'dyn_function_discrete'))
-                    obj.model_struct.dyn_function_discrete = value;
+                elseif (strcmp(field, 'dyn_disc_fun_jac_hess'))
+                    obj.model_struct.dyn_disc_fun_jac_hess = value;
+                elseif (strcmp(field, 'dyn_disc_fun_jac'))
+                    obj.model_struct.dyn_disc_fun_jac = value;
+                elseif (strcmp(field, 'dyn_disc_fun'))
+                    obj.model_struct.dyn_disc_fun = value;
                 else
                     disp(['acados_ocp_model: set: wrong field: ', field]);
                     keyboard;

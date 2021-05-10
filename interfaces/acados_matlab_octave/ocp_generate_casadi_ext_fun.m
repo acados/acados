@@ -216,7 +216,7 @@ end
 
 % generic discrete dynamics
 if (strcmp(model_struct.dyn_type, 'discrete') && strcmp(model_struct.dyn_ext_fun_type, 'generic') && ...
-    isfield(model_struct, 'dyn_source_discrete') && isfield(model_struct, 'dyn_function_discrete'))
+    isfield(model_struct, 'dyn_source_discrete'))
     c_files_path{end+1} = model_struct.dyn_source_discrete;
 end
 

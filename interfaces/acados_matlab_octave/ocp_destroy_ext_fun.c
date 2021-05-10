@@ -132,7 +132,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                     }
             }
         }
-        else if (!strcmp(mxGetFieldNameByNumber(prhs[2], ii), "dyn_disc_phi_fun_jac") || 
+        else if (!strcmp(mxGetFieldNameByNumber(prhs[2], ii), "dyn_disc_phi_fun") ||
+                 !strcmp(mxGetFieldNameByNumber(prhs[2], ii), "dyn_disc_phi_fun_jac") ||
                  !strcmp(mxGetFieldNameByNumber(prhs[2], ii), "dyn_disc_phi_fun_jac_hess"))
         {
             for (jj=0; jj<Nf; jj++)
