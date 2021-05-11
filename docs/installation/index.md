@@ -46,19 +46,13 @@ For the installation of Python/MATLAB/Octave interfaces, please refer to the [In
 
 
 ## Windows (for use with Matlab)
+Disclaimer: The high-level interfaces on Windows are not tested on Github Actions.
 
 ### Prerequisites
 You should have the following software installed on your machine.
 - Recent Matlab version, with 
 - CMake for Windows
 - [Windows Git Client](https://git-scm.com/download/win)
-
-### Prepare acados build
-- Locate the `cmake.exe` file. The default location is `C:\Program Files\CMake311\bin`.
-- Add this path to your environment variable PATH, using the Windows GUI. To open the GUI press Windows key and type "env".
-- Install mingw from MATLAB add-ons manager.
-- Locate this mingw installation. The default location is `C:\ProgramData\MATLAB\SupportPackages\R2018a\3P.instrset\mingw_w64.instrset`.
-- Add the subfolders `bin` and `x86_64-w64-mingw32\bin` of the above mentioned mingw installation to your environment variable PATH.
 
 ### Clone acados
 Clone `acados` and its submodules by running the following from your Git shell:
@@ -68,7 +62,15 @@ cd acados
 git submodule update --recursive --init
 ```
 
-### Build acados
+### Prepare acados build (minGW)
+- Locate the `cmake.exe` file. The default location is `C:\Program Files\CMake311\bin`.
+- Add this path to your environment variable PATH, using the Windows GUI. To open the GUI press Windows key and type "env".
+- Install mingw from MATLAB add-ons manager.
+- Locate this mingw installation. The default location is `C:\ProgramData\MATLAB\SupportPackages\R2018a\3P.instrset\mingw_w64.instrset`.
+- Add the subfolders `bin` and `x86_64-w64-mingw32\bin` of the above mentioned mingw installation to your environment variable PATH.
+
+
+### Build acados (minGW)
 Run the following from a powershell in the `<acados_root_folder>`:
 ```
 $ACADOS_INSTALL_DIR=$(pwd)
@@ -94,8 +96,23 @@ mingw32-make.exe install
 
 ### Try a Matlab example
 - Open Matlab
-- select MinGW compiler using `mbuild`/ `mex`
+- select MinGW compiler using `mex`
 - go to `<acados_root_folder>/examples/acados_matlab_octave`
 - run `acados_env_variables_windows`
 - go to the `getting_started` subfolder
 - run `minimal_example_ocp`
+
+### Workflow with Microsoft Visual C Compiler (MSVC)
+Note: this workflow is preliminary and not thoroughly tested.
+(Tested once with MSVC 2017 and MSVC 2019 on May 2021)
+
+- clone acados (see above)
+- use the `Developer Command Prompt for VS`, navigate to `<acados_root_folder>/build` and run
+```
+cmake -G "Visual Studio 15 2017 Win64" -DBLASFEO_TARGET=GENERIC -DACADOS_INSTALL_DIR=.. -DBUILD_SHARED_LIBS=OFF ..
+# respectively for MVSC 2019
+# cmake -G "Visual Studio 16 2019 Win64" -DBLASFEO_TARGET=GENERIC -DACADOS_INSTALL_DIR=.. -DBUILD_SHARED_LIBS=OFF ..
+cmake --build . -j10 --target INSTALL --config Release
+```
+- In Matlab, run `mex -setup C` and select the same `MSVC` version.
+- Try a Matlab example (see above).
