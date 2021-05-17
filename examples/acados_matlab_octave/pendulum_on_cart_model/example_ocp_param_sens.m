@@ -114,7 +114,9 @@ Vu(1:nu,:) = eye(nu);
 % state-to-output matrix in lagrange term
 Vx = zeros(ny, nx);
 Vx(nu+1:end, :) = eye(nx);
-W = diag([1e-2, 1e3, 1e3, 1e-2, 1e-2]);
+% W = diag([1e-2, 1e3, 1e3, 1e-2, 1e-2]);
+% high penalty on u -> no active constraints
+W = diag([1e0, 1e3, 1e3, 1e-2, 1e-2]);
 
 % terminal cost term
 ny_e = nx; % number of outputs in terminal cost term
