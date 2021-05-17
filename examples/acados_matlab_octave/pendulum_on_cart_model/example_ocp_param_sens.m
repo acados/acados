@@ -46,7 +46,7 @@ codgen_model = 'true';
 gnsf_detect_struct = 'true';
 
 % discretization
-N = 100;
+N = 20;
 T = 1; % horizon length time
 h = T/N;
 
@@ -163,6 +163,7 @@ ocp_model.set('cost_type_e', cost_type);
 %    ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
 %    ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
 %end
+
 % dynamics
 if (strcmp(sim_method, 'erk'))
     ocp_model.set('dyn_type', 'explicit');
@@ -173,15 +174,7 @@ else % irk irk_gnsf
 end
 % constraints
 ocp_model.set('constr_x0', x0);
-if (ng>0)
-    ocp_model.set('constr_C', C);
-    ocp_model.set('constr_D', D);
-    ocp_model.set('constr_lg', lg);
-    ocp_model.set('constr_ug', ug);
-    ocp_model.set('constr_C_e', C_e);
-    ocp_model.set('constr_lg_e', lg_e);
-    ocp_model.set('constr_ug_e', ug_e);
-elseif (nh>0)
+if (nh>0)
     ocp_model.set('constr_expr_h', model.expr_h);
     ocp_model.set('constr_lh', lbu);
     ocp_model.set('constr_uh', ubu);
@@ -260,7 +253,6 @@ ocp.set('init_u', u_traj_init);
 tic;
 ocp.solve();
 time_ext = toc;
-fprintf(['time for ocp.solve (matlab tic-toc): ', num2str(time_ext), ' s\n'])
 
 % get solution
 u = ocp.get('u');
@@ -274,7 +266,8 @@ time_lin = ocp.get('time_lin');
 time_reg = ocp.get('time_reg');
 time_qp_sol = ocp.get('time_qp_sol');
 
-fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms], time_reg = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, time_reg*1e3);
+fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms], time_reg = %f [ms])\n',...
+    status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, time_reg*1e3);
 
 ocp.print('stat');
 
@@ -288,9 +281,9 @@ if 1
     end
 
     figure;
-    title('trajectories')
     subplot(2,1,1);
     plot(0:N, x);
+    title('trajectories')
     xlim([0 N]);
     legend('p', 'theta', 'v', 'omega');
     subplot(2,1,2);
@@ -331,7 +324,7 @@ end
 if 1
     field = 'ex'; % equality constraint on states
     stage = 0;
-    index = 0;
+    index = 1;
     ocp.eval_param_sens(field, stage, index);
 
     sens_u = ocp.get('sens_u');
@@ -339,9 +332,9 @@ if 1
 
     % plot sensitivity
     figure
-    title('sensitivities')
     subplot(2,1,1);
     plot(0:N, sens_x);
+    title('sensitivities')
     xlim([0 N]);
     legend('p', 'theta', 'v', 'omega');
     subplot(2,1,2);
@@ -351,9 +344,9 @@ if 1
 
     % plot predicted solution
     figure
-    title('predicted trajectories')
     subplot(2,1,1);
     plot(0:N, x+sens_x);
+    title('predicted trajectories')
     xlim([0 N]);
     legend('p', 'theta', 'v', 'omega');
     subplot(2,1,2);
@@ -367,6 +360,15 @@ if 1
     end
 
 end
+
+sens_u = zeros(nx, N);
+% get sensitivities w.r.t. initial state value with index
+for index = 0:nx-1
+    ocp.eval_param_sens(field, stage, index);
+    sens_u(index+1,:) = ocp.get('sens_u');
+end
+disp('solution sensitivity dU_dx0')
+disp(sens_u)
 
 
 % qp_hess = ocp.get('qp_solver_cond_H');
