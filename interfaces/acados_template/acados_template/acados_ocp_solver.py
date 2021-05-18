@@ -853,6 +853,10 @@ class AcadosOcpSolver:
         getattr(self.shared_lib, f"{model.name}_acados_get_nlp_out").restype = c_void_p
         self.nlp_out = getattr(self.shared_lib, f"{model.name}_acados_get_nlp_out")(self.capsule)
 
+        getattr(self.shared_lib, f"{model.name}_acados_get_sens_out").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{model.name}_acados_get_sens_out").restype = c_void_p
+        self.sens_out = getattr(self.shared_lib, f"{model.name}_acados_get_sens_out")(self.capsule)
+
         getattr(self.shared_lib, f"{model.name}_acados_get_nlp_in").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{model.name}_acados_get_nlp_in").restype = c_void_p
         self.nlp_in = getattr(self.shared_lib, f"{model.name}_acados_get_nlp_in")(self.capsule)
@@ -926,6 +930,31 @@ class AcadosOcpSolver:
             self.__get_pointers_solver()
 
 
+    def eval_param_sens(self, index, stage=0, field="ex"):
+        """
+        Calculate the sensitivity of the curent solution with respect to the initial state component of index
+
+            :param index: integer corresponding to initial state index in range(nx)
+        """
+
+        field_ = field
+        field = field_.encode('utf-8')
+
+        if not isinstance(index, int):
+            raise Exception('AcadosOcpSolver.get(): index must be Integer.')
+
+        if index < 0 or index > self.acados_ocp.dims.nx:
+            raise Exception('AcadosOcpSolver.get(): index must be in [0, nx-1], got: {}.'.format(index))
+
+        self.shared_lib.ocp_nlp_eval_param_sens.argtypes = \
+            [c_void_p, c_char_p, c_int, c_int, c_void_p]
+        self.shared_lib.ocp_nlp_eval_param_sens.restype = None
+        self.shared_lib.ocp_nlp_eval_param_sens( \
+            self.nlp_solver, field, stage, index, self.sens_out)
+
+        return
+
+
     def get(self, stage_, field_):
         """
         Get the last solution of the solver:
@@ -947,22 +976,29 @@ class AcadosOcpSolver:
 
         out_fields = ['x', 'u', 'z', 'pi', 'lam', 't', 'sl', 'su']
         # mem_fields = ['sl', 'su']
-        field = field_
-        field = field.encode('utf-8')
+        sens_fields = ['sens_u', "sens_x"]
+        all_fields = out_fields + sens_fields
 
-        if (field_ not in out_fields):
+        field = field_
+
+        if (field_ not in all_fields):
             raise Exception('AcadosOcpSolver.get(): {} is an invalid argument.\
-                    \n Possible values are {}. Exiting.'.format(field_, out_fields))
+                    \n Possible values are {}. Exiting.'.format(field_, all_fields))
 
         if not isinstance(stage_, int):
             raise Exception('AcadosOcpSolver.get(): stage index must be Integer.')
 
         if stage_ < 0 or stage_ > self.N:
-            raise Exception('AcadosOcpSolver.get(): stage index must be in [0, N], got: {}.'.format(self.N))
+            raise Exception('AcadosOcpSolver.get(): stage index must be in [0, N], got: {}.'.format(stage_))
 
         if stage_ == self.N and field_ == 'pi':
             raise Exception('AcadosOcpSolver.get(): field {} does not exist at final stage {}.'\
                 .format(field_, stage_))
+
+        if field_ in sens_fields:
+            field = field_.replace('sens_', '')
+
+        field = field.encode('utf-8')
 
         self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = \
             [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
@@ -984,6 +1020,11 @@ class AcadosOcpSolver:
         #         [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
         #     self.shared_lib.ocp_nlp_get_at_stage(self.nlp_config, \
         #         self.nlp_dims, self.nlp_solver, stage_, field, out_data)
+        elif field_ in sens_fields:
+            self.shared_lib.ocp_nlp_out_get.argtypes = \
+                [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+            self.shared_lib.ocp_nlp_out_get(self.nlp_config, \
+                self.nlp_dims, self.sens_out, stage_, field, out_data)
 
         return out
 
