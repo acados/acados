@@ -104,14 +104,15 @@ ocp.solver_options.tf = Tf
 acados_ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp_' + model.name + '.json')
 acados_integrator = AcadosSimSolver(ocp, json_file = 'acados_ocp_' + model.name + '.json')
 
-simX = np.ndarray((N+1, nx))
-simU = np.ndarray((N, nu))
+Nsim = 100
+simX = np.ndarray((Nsim+1, nx))
+simU = np.ndarray((Nsim, nu))
 
 xcurrent = x0
 simX[0,:] = xcurrent
 
 # closed loop
-for i in range(N):
+for i in range(Nsim):
 
     # solve ocp
     acados_ocp_solver.set(0, "lbx", xcurrent)
@@ -137,4 +138,4 @@ for i in range(N):
     simX[i+1,:] = xcurrent
 
 # plot results
-plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX)
+plot_pendulum(np.linspace(0, Tf/N*Nsim, Nsim+1), Fmax, simU, simX)
