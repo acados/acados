@@ -78,6 +78,7 @@ typedef struct {{ model.name }}_solver_capsule
     // acados objects
     ocp_nlp_in *nlp_in;
     ocp_nlp_out *nlp_out;
+    ocp_nlp_out *sens_out;
     ocp_nlp_solver *nlp_solver;
     void *nlp_opts;
     ocp_nlp_plan *nlp_solver_plan;
