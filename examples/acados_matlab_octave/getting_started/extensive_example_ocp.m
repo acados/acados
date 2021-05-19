@@ -311,6 +311,9 @@ stairs(shooting_nodes, [utraj'; utraj(end)])
 ylabel('F [N]')
 xlabel('t [s]')
 grid on
+if is_octave()
+    waitforbuttonpress;
+end
 
 %% plot average compuation times
 % if ~is_octave()

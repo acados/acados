@@ -38,7 +38,7 @@ model_path = fullfile(pwd,'..','pendulum_on_cart_model');
 addpath(model_path)
 
 % initial state
-x0 = [0.2; 0; 0; 0];
+xcurrent = [0.2; 0; 0; 0];
 
 %% discretization
 N = 20; % number of shooting intervals
@@ -111,7 +111,7 @@ ocp_model.set('constr_expr_h', model.expr_h);
 U_max = 80;
 ocp_model.set('constr_lh', -U_max); % lower bound on h
 ocp_model.set('constr_uh', U_max);  % upper bound on h
-ocp_model.set('constr_x0', x0);
+ocp_model.set('constr_x0', xcurrent);
 
 %% acados ocp set opts
 ocp_opts = acados_ocp_opts();
@@ -160,12 +160,12 @@ N_sim = 100;
 x_sim = zeros(nx, N_sim+1);
 u_sim = zeros(nu, N_sim);
 
-x_sim(:,1) = x0;
+x_sim(:,1) = xcurrent;
 
 for i=1:N_sim
     % update initial state
-    x0 = x_sim(:,i);
-    ocp.set('constr_x0', x0);
+    xcurrent = x_sim(:,i);
+    ocp.set('constr_x0', xcurrent);
 
     if i == 1 || i == floor(N_sim/2)
         % solve
@@ -173,7 +173,7 @@ for i=1:N_sim
         % get solution
         u0 = ocp.get('u', 0);
         status = ocp.get('status'); % 0 - success
-        x_lin = x0;
+        x_lin = xcurrent;
         u_lin = u0;
         
         sens_u = zeros(nx, N);
@@ -186,12 +186,12 @@ for i=1:N_sim
         end
     else
         % use feedback policy
-        delta_x = x0-x_lin;
+        delta_x = xcurrent-x_lin;
         u0 = u_lin + sens_u(:, 1)' * delta_x;
     end
 
     % set initial state
-    sim.set('x', x0);
+    sim.set('x', xcurrent);
     sim.set('u', u0);
 
     % solve
@@ -202,6 +202,13 @@ for i=1:N_sim
     u_sim(:,i) = u0;
 end
 
+disp('final state')
+format long e
+disp(x_sim(:,N_sim+1))
+%      1.392073955008204e-03
+%      4.247720422461933e-05
+%     -7.518679517751918e-05
+%     -1.671811407900214e-04
 
 %% Plots
 ts = linspace(0, N_sim*h, N_sim+1);
