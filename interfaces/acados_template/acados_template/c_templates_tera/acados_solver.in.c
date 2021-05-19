@@ -957,9 +957,9 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     {%- endfor %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "Vx", Vx_0);
 
-{% if dims.ny > 0 and dims.nu > 0 %}
+{% if dims.ny_0 > 0 and dims.nu > 0 %}
     double Vu_0[NY0*NU];
-    {% for j in range(end=dims.ny) %}
+    {% for j in range(end=dims.ny_0) %}
         {%- for k in range(end=dims.nu) %}
     Vu_0[{{ j }}+(NY0) * {{ k }}] = {{ cost.Vu_0[j][k] }};
         {%- endfor %}
@@ -967,13 +967,12 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "Vu", Vu_0);
 {% endif %}
 {% if dims.ny_0 > 0 and dims.nz > 0 %}
-    double Vz_0[NY*NZ];
+    double Vz_0[NY0*NZ];
     {% for j in range(end=dims.ny_0) %}
         {%- for k in range(end=dims.nz) %}
-    Vz_0[{{ j }}+(NY) * {{ k }}] = {{ cost.Vz_0[j][k] }};
+    Vz_0[{{ j }}+(NY0) * {{ k }}] = {{ cost.Vz_0[j][k] }};
         {%- endfor %}
     {%- endfor %}
-
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "Vz", Vz_0);
 {%- endif %}
 {%- endif %}{# LINEAR LS #}
