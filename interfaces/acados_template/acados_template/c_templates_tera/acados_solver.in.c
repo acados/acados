@@ -1769,18 +1769,16 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     capsule->nlp_solver = ocp_nlp_solver_create(nlp_config, nlp_dims, capsule->nlp_opts);
 
 
-{% if dims.np > 0 %}
+    {% if dims.np > 0 %}
     // initialize parameters to nominal value
-    double p[{{ dims.np }}];
-    {% for i in range(end=dims.np) %}
-    p[{{ i }}] = {{ parameter_values[i] }};
-    {%- endfor %}
+    
+    double p[{{ dims.N*dims.np }}] = { {% for item in parameter_values %} {{ item }}, {% endfor %} };
 
     for (int i = 0; i <= N; i++)
     {
-        {{ model.name }}_acados_update_params(capsule, i, p, NP);
+        {{ model.name }}_acados_update_params(capsule, i, p+i*NP, NP);
     }
-{%- endif %}{# if dims.np #}
+    {%- endif %}{# if dims.np #}
 
     status = ocp_nlp_precompute(capsule->nlp_solver, nlp_in, nlp_out);
 
