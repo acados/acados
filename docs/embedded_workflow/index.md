@@ -6,21 +6,25 @@ We want to encourage you to contribute a description of the workflow to deploy `
 ## dSPACE
 Here, the workflow for the deployment of `acados` on a dSPACE RCP Platform is described.
 This has been successfully tested for the DS1202 MicroLabBox.
+
+NOTE: It has also been tested for the DS1401 MicroAutoBox-II (MABX2).
+In the following `DS1202` should always be replaced with `DS1401` for the MABX2 workflow.
+
 Other dSPACE platforms will probably require some adaptions of the workflow stated here.
 
 ### Prerequisites
 - you were able to install `acados` and dSPACE on your system
 - you were able to generate S-Functions with acados, which also work in your Simulink simulation `'Simulation_Model_Name'.slx`.
 Thus, you have a folder `c_generated_code` with your S-Functions, a `make_sfun.m` Matlab script (and a `make_sfun_sim.m` script, if needed) and the corresponding C files.
-- you have prepared a Simulink model with the name `'dSPACE_Model_Name'.slx`, which does not contain the S-Functions yet and you were able to compile it for your dSPACE DS1202 (MicroLabBox) Platform.
+- you have prepared a Simulink model with the name `'dSPACE_Model_Name'.slx`, which does not contain the S-Functions yet and you were able to compile it for your dSPACE Platform.
 During the compilation process, the dSPACE Makefile `'dSPACE_Model_Name'_usr.mk` was created, which can be found in the same directory as the dSpace Simulink model.
 
 ### Step 1: Adapt the existing CMake toolchain file for your system
-The CMake toolchain file, needed to cross-compile `acados` for the dSPACE DS1202 Platform contains paths to compilers, provided in the dSPACE installation.
+The CMake toolchain file, needed to cross-compile `acados` for the dSPACE Platform contains paths to compilers, provided in the dSPACE installation.
 As the dSPACE installation varies from system to system, this toolchain file first has to be adapted.
 
 1. The Toolchain files are located in `'acados_root_folder'/cmake`.
-The toolchain file for the MicroLabBox is called `Toolchain-dSpaceDS1202.cmake` and can be edited with any editor.
+The toolchain file for the MicroLabBox is called `Toolchain-dSpaceDS1202.cmake` and can be edited with any editor (respectively `Toolchain-dSpaceDS1401.cmake` for the MicroAutoBox-II).
 2. The lines that contain the path to the host and target compiler have to be adapted to fit your system.
 Specifically, the folder name which consists of a long number (here: 1184D92C-D928-4591-A1E9-B54339797C20) varies.
 On your system in `C:/ProgramData/dSPACE/`, find the folder which contains the directories `/Compiler/QNX650_520/host/win32/x86/` and `/Compiler/QNX650_520/target/qnx6/`, and update the two paths in the toolchain file.
@@ -33,7 +37,7 @@ In order to compile `acados` for your dSPACE platform, you need the `acados` lib
 These files can be created by cross-compiling the `acados` source code for the correponding dSPACE platform.
 Using a toolchain CMake file, the following steps are needed in order to create the necessary files:
 1. Similar to the `acados` installation process, create a new folder `buildDS1202` in the `acados` root folder.
-2. In your terminal, navigate to this folder and then run:
+2. In your powershell, navigate to this folder and then run:
  ```cmake -D CMAKE_TOOLCHAIN_FILE=../cmake/Toolchain-dSPACEDS1202.cmake -G "Unix Makefiles" -S ../ -B ./```
 3. In order to cross-compile acados, run:
  ```cmake --build ./```
