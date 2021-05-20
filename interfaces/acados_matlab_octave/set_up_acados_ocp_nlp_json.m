@@ -230,13 +230,14 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     
     ocp_json.constraints.constr_type = upper(model.constr_type);
     ocp_json.constraints.constr_type_e = upper(model.constr_type_e);
-
+    
     % parameters
     if model.dim_np > 0
-        % TODO: add option to initialize parameters in model.
-        warning(['model parameters value cannot be defined (yet) for ocp json.', ...
-                    10 'Using zeros(np,1) by default.' 10 'You can update them later using the solver object.']);
-        ocp_json.parameter_values = zeros(model.dim_np,1);
+        if isempty(obj.opts_struct.parameter_values)
+          ocp_json.parameter_values = zeros(model.dim_np,1);
+        else
+          ocp_json.parameter_values = obj.opts_struct.parameter_values(:);
+        end
     end
 
     %% constraints
