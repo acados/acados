@@ -237,10 +237,10 @@ function ocp_generate_c_code(obj)
     opts.sim_method_num_stages = reshape(num2cell(opts.sim_method_num_stages), [1, dims.N]);
     opts.sim_method_num_steps = reshape(num2cell(opts.sim_method_num_steps), [1, dims.N]);
     obj.acados_ocp_nlp_json.solver_options = opts;
-
+    
     % parameter values
-    obj.acados_ocp_nlp_json.parameter_values = reshape(num2cell(obj.acados_ocp_nlp_json.parameter_values), [ 1, dims.np]);
-
+    parameter_values = reshape(obj.acados_ocp_nlp_json.parameter_values,1,[]);
+    obj.acados_ocp_nlp_json.parameter_values = reshape(num2cell(parameter_values ), size(parameter_values));
     %% dump JSON file
     % if is_octave()
         % savejson does not work for classes!
