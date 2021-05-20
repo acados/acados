@@ -1772,7 +1772,7 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     {% if dims.np > 0 %}
     // initialize parameters to nominal value
     
-    double p[{{ dims.N*dims.np }}] = { {% for item in parameter_values %} {{ item }}, {% endfor %} };
+    double p[{{ (dims.N+1)*dims.np }}] = { {% for item in parameter_values %} {{ item }}, {% endfor %} };
 
     for (int i = 0; i <= N; i++)
     {

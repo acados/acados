@@ -85,7 +85,7 @@ int main()
 
   {%- if dims.np > 0 %}
     // set parameters
-    double p[{{ dims.N*dims.np }}] = { {% for item in parameter_values %} {{ item }}, {% endfor %} };
+    double p[{{ (dims.N+1)*dims.np }}] = { {% for item in parameter_values %} {{ item }}, {% endfor %} };
 
     {{ model.name }}_acados_sim_update_params(capsule, p, {{ dims.np }});
   {% endif %}{# if np > 0 #}

@@ -94,7 +94,7 @@ int main()
 
     {%- if dims.np > 0 %}
     // set parameters
-    double p[{{ dims.N*dims.np }}] = { {% for item in parameter_values %} {{ item }}, {% endfor %} };
+    double p[{{ (dims.N+1)*dims.np }}] = { {% for item in parameter_values %} {{ item }}, {% endfor %} };
 
     for (int ii = 0; ii <= {{ dims.N }}; ii++)
     {

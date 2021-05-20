@@ -323,7 +323,7 @@ int {{ model.name }}_acados_sim_create(sim_solver_capsule * capsule)
     /* initialize parameter values */
     {% if dims.np > 0 %}
     // initialize parameters to nominal value
-    double p[{{ dims.N*dims.np }}] = { {% for item in parameter_values %} {{ item }}, {% endfor %} };
+    double p[{{ (dims.N+1)*dims.np }}] = { {% for item in parameter_values %} {{ item }}, {% endfor %} };
 
 {%- if solver_options.integrator_type == "ERK" %}
     capsule->sim_forw_vde_casadi[0].set_param(capsule->sim_forw_vde_casadi, p);
