@@ -92,18 +92,15 @@ int main()
     {%- endfor %}
 
 
-  {%- if dims.np > 0 %}
+    {%- if dims.np > 0 %}
     // set parameters
-    double p[{{ dims.np }}];
-    {% for item in parameter_values %}
-    p[{{ loop.index0 }}] = {{ item }};
-    {% endfor %}
+    double p[{{ dims.N*dims.np }}] = { {% for item in parameter_values %} {{ item }}, {% endfor %} };
 
     for (int ii = 0; ii <= {{ dims.N }}; ii++)
     {
-        {{ model.name }}_acados_update_params(acados_ocp_capsule, ii, p, {{ dims.np }});
+        {{ model.name }}_acados_update_params(acados_ocp_capsule, ii, p+ii*{{ dims.np }}, {{ dims.np }});
     }
-  {% endif %}{# if np > 0 #}
+    {% endif %}{# if np > 0 #}
 
     // prepare evaluation
     int NTIMINGS = 1;
