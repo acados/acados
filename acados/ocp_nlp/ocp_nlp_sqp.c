@@ -736,8 +736,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
         {
-            // increment sqp_iter to return full statistics and improve output below.
-            sqp_iter++;
             // print_ocp_qp_in(nlp_mem->qp_in);
             if (opts->print_level > 0)
             {
@@ -746,6 +744,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                     nlp_mem->nlp_res->inf_norm_res_comp );
                 printf("\n\n");
             }
+            // increment sqp_iter to return full statistics and improve output below.
+            sqp_iter++;
 
             // save sqp iterations number
             mem->sqp_iter = sqp_iter;
