@@ -191,6 +191,10 @@ ocp_opts.set('exact_hess_dyn', 1);
 ocp_opts.set('exact_hess_cost', 1);
 ocp_opts.set('exact_hess_constr', 1);
 
+% set default parameter values
+ocp_opts.set('parameter_values', 1);
+
+
 %% create ocp solver
 ocp = acados_ocp(ocp_model, ocp_opts);
 % x_traj_init = zeros(nx, N+1);
@@ -201,9 +205,11 @@ u_traj_init = zeros(nu, N);
 % initial state
 ocp.set('constr_x0', x0);
 ocp.set('print_level', print_level)
-for ii = 0 : N
-    ocp.set('p', 1, ii);
+% change parameters for some stages interacting with solver object
+for ii = 0 : 2 : N
+    ocp.set('p', 1.1, ii);
 end
+
 % set trajectory initialization
 ocp.set('init_x', x_traj_init);
 ocp.set('init_u', u_traj_init);
@@ -233,8 +239,9 @@ t_ocp.set('init_x', x_traj_init);
 t_ocp.set('init_u', u_traj_init);
 t_ocp.set('init_pi', zeros(nx, N))
 
-for ii = 0 : N
-    t_ocp.set('p', 1, ii);
+% change parameters for some stages interacting with solver object
+for ii = 0 : 2 : N
+    t_ocp.set('p', 1.1, ii);
 end
 
 t_ocp.solve()
