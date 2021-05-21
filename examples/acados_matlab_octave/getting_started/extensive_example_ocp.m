@@ -306,7 +306,8 @@ for i=1:length(States)
 end
 
 figure
-stairs(shooting_nodes(1:end-1), utraj')
+stairs(shooting_nodes, [utraj'; utraj(end)])
+
 ylabel('F [N]')
 xlabel('t [s]')
 grid on

@@ -224,7 +224,8 @@ for i=1:length(States)
 end
 
 figure
-stairs(ts(1:end-1), u_sim')
+stairs(ts, [u_sim'; u_sim(end)])
+
 ylabel('F [N]')
 xlabel('t [s]')
 grid on

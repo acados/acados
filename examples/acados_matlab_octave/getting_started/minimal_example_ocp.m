@@ -143,7 +143,7 @@ for i=1:length(States)
 end
 
 figure
-stairs(ts(1:end-1), utraj')
+stairs(ts, [utraj'; utraj(end)])
 ylabel('F [N]')
 xlabel('t [s]')
 grid on
