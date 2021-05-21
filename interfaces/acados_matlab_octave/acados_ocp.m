@@ -203,6 +203,11 @@ classdef acados_ocp < handle
             % precompute
             ocp_precompute(obj.C_ocp);
 
+            % set parameters to nominal value
+            if obj.model_struct.dim_np > 0 && ~isempty(obj.opts_struct.parameter_values)
+                obj.set('p', obj.opts_struct.parameter_values)
+            end
+
         end
 
 
