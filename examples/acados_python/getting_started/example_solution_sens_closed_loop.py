@@ -64,8 +64,8 @@ ocp.cost.cost_type = 'LINEAR_LS'
 ocp.cost.cost_type_e = 'LINEAR_LS'
 
 Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
-# R = 2*np.diag([1e-2])
-R = 2*np.diag([1e0])
+R = 2*np.diag([1e-1])
+# R = 2*np.diag([1e0])
 
 ocp.cost.W = scipy.linalg.block_diag(Q, R)
 
@@ -85,8 +85,7 @@ ocp.cost.yref_e = np.zeros((ny_e, ))
 
 # set constraints
 Fmax = 80
-x0 = np.array([0.2, 0.0, 0.0, 0.0])
-ocp.constraints.constr_type = 'BGH'
+x0 = np.array([0.5, 0.0, 0.0, 0.0])
 ocp.constraints.lbu = np.array([-Fmax])
 ocp.constraints.ubu = np.array([+Fmax])
 ocp.constraints.x0 = x0
@@ -99,6 +98,8 @@ ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
 ocp.solver_options.sim_method_num_steps = 2
 
 ocp.solver_options.qp_solver_cond_N = N
+
+ocp.solver_options.qp_solver_iter_max = 200
 
 # set prediction horizon
 ocp.solver_options.tf = Tf
@@ -113,9 +114,10 @@ simU = np.ndarray((Nsim, nu))
 xcurrent = x0
 simX[0,:] = xcurrent
 
+k_lin_feedback = 20 # use lin feedback k_lin_feedback -1 times
 # closed loop
 for i in range(Nsim):
-    if i in [0, np.floor(N/2)]:
+    if i % k_lin_feedback == 0:
         # solve ocp
         acados_ocp_solver.set(0, "lbx", xcurrent)
         acados_ocp_solver.set(0, "ubx", xcurrent)
@@ -123,7 +125,9 @@ for i in range(Nsim):
         status = acados_ocp_solver.solve()
 
         if status != 0:
-            raise Exception('acados acados_ocp_solver returned status {}. Exiting.'.format(status))
+            print(xcurrent)
+            acados_ocp_solver.print_statistics()
+            raise Exception('acados acados_ocp_solver returned status {} in closed loop {}. Exiting.'.format(status, i))
 
         simU[i,:] = acados_ocp_solver.get(0, "u")
 
@@ -141,6 +145,12 @@ for i in range(Nsim):
         # use linear feedback
         # print("using solution sensitivities as feedback")
         simU[i,:] = u_lin + sens_u @ (xcurrent - x_lin)
+        # clip
+        if simU[i,:] > Fmax:
+            simU[i,:] = Fmax
+        elif simU[i,:] < -Fmax:
+            simU[i,:] = -Fmax
+
 
     # simulate system
     acados_integrator.set("x", xcurrent)
