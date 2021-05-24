@@ -1519,7 +1519,7 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
 
     {% for j in range(end=dims.ng) -%}
         {% for k in range(end=dims.nu) %}
-            {%- if constraints.D[i] != 0 %}
+            {%- if constraints.D[j][k] != 0 %}
     D[{{ j }}+NG * {{ k }}] = {{ constraints.D[j][k] }};
             {%- endif %}
         {%- endfor %}
@@ -1527,7 +1527,7 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
 
     {% for j in range(end=dims.ng) -%}
         {% for k in range(end=dims.nx) %}
-            {%- if constraints.C[i] != 0 %}
+            {%- if constraints.C[j][k] != 0 %}
     C[{{ j }}+NG * {{ k }}] = {{ constraints.C[j][k] }};
             {%- endif %}
         {%- endfor %}
