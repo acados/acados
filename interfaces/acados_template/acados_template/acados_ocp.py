@@ -2130,6 +2130,7 @@ class AcadosOcpOptions:
         self.__qp_solver_tol_comp = None                      # QP solver complementarity
         self.__qp_solver_iter_max = 50                        # QP solver max iter
         self.__qp_solver_cond_N = None                        # QP solver: new horizon after partial condensing
+        self.__qp_solver_warm_start = 0
         self.__nlp_solver_tol_stat = 1e-6                     # NLP solver stationarity tolerance
         self.__nlp_solver_tol_eq   = 1e-6                     # NLP solver equality tolerance
         self.__nlp_solver_tol_ineq = 1e-6                     # NLP solver inequality
@@ -2293,6 +2294,12 @@ class AcadosOcpOptions:
         """QP solver: New horizon after partial condensing.
         Set to N by default -> no condensing."""
         return self.__qp_solver_cond_N
+
+    @property
+    def qp_solver_warm_start(self):
+        """QP solver: Warm starting.
+        0: no warm start; 1: warm start; 2: hot start."""
+        return self.__qp_solver_warm_start
 
     @property
     def qp_solver_iter_max(self):
@@ -2591,6 +2598,13 @@ class AcadosOcpOptions:
             self.__qp_solver_cond_N = qp_solver_cond_N
         else:
             raise Exception('Invalid qp_solver_cond_N value. qp_solver_cond_N must be a positive int. Exiting')
+
+    @qp_solver_warm_start.setter
+    def qp_solver_warm_start(self, qp_solver_warm_start):
+        if qp_solver_warm_start in [0, 1, 2]:
+            self.__qp_solver_warm_start = qp_solver_warm_start
+        else:
+            raise Exception('Invalid qp_solver_warm_start value. qp_solver_warm_start must be 0 or 1 or 2. Exiting')
 
     @qp_tol.setter
     def qp_tol(self, qp_tol):
