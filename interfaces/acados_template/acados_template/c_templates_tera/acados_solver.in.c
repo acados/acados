@@ -1767,7 +1767,7 @@ ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ubx_e", ubx_e);
 
     {% for j in range(end=dims.ng) %}
         {%- for k in range(end=dims.nx) %}
-            {%- if constraints.C_e[i] != 0 %}
+            {%- if constraints.C_e[j][k] != 0 %}
     C_e[{{ j }}+NG * {{ k }}] = {{ constraints.C_e[j][k] }};
             {%- endif %}
         {%- endfor %}
