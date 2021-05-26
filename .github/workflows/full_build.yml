@@ -77,20 +77,23 @@ jobs:
         cmake --build . --config $BUILD_TYPE
         make install -j4
 
-    - name: Export Paths
+    - name: Export Paths Lib
       working-directory: ${{runner.workspace}}/acados
       shell: bash
       run: |
         echo "ACADOS_SOURCE_DIR=$(pwd)" >> $GITHUB_ENV
         echo "ACADOS_INSTALL_DIR=$(pwd)" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/lib" >> $GITHUB_ENV
+        echo "OCTAVE_PATH=$OCTAVE_PATH:$(pwd)/interfaces/acados_matlab_octave:$(pwd)/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
+        echo "MATLABPATH=$MATLABPATH:$(pwd)/interfaces/acados_matlab_octave:$(pwd)/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
 
-    - name: Install Casadi Matlab
+    - name: Install Casadi MATLAB
       working-directory: ${{runner.workspace}}/acados/external
       shell: bash
       run: |
         sudo chmod +x ./../.github/linux/install_casadi_matlab.sh
         ./../.github/linux/install_casadi_matlab.sh
+        echo "MATLABPATH=$MATLABPATH:$(pwd)/casadi-matlab" >> $GITHUB_ENV
 
     - name: Prepare Octave
       working-directory: ${{runner.workspace}}/acados/external
@@ -103,11 +106,12 @@ jobs:
         echo "OCTAVE_PATH=$OCTAVE_PATH:$(pwd)/casadi-octave" >> $GITHUB_ENV
 
 
-    - name: Export Paths Octave
+    - name: Export Paths MEX tests
       working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/pendulum_on_cart_model
       shell: bash
       run: |
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./build" >> $GITHUB_ENV
+        echo "ENV_RUN=true" >> $GITHUB_ENV
 
 
     - name: Install Python interface
