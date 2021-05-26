@@ -228,7 +228,7 @@ function render_acados_templates(acados_ocp_nlp_json_file)
     out_file = 'make_sfun.m';
     render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
 
-    fprintf('Successfully generated acados solver!\n');
+    fprintf('Successfully rendered acados templates!\n');
     cd(main_dir)
 
 end
