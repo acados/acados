@@ -130,4 +130,4 @@ jobs:
     - name: Run Matlab tests
       uses: matlab-actions/run-command@v0
       with:
-         command: cd examples/acados_matlab_octave/getting_started; test
+         command: cd examples/acados_matlab_octave/test; matlab_test
