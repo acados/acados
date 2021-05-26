@@ -32,6 +32,9 @@
 %
 
 function exit_with_error(error)
+    disp('in exit_with_error')
+    disp(error)
+    disp(error.message)
     fprintf(error.message);
     fprintf('\nRUN_TEST: FAIL -> exit\n');
     quit(1);
