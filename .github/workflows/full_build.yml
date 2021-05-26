@@ -126,8 +126,34 @@ jobs:
         ./../acados/.github/linux/run_tests.sh
     - name: Install MATLAB
       uses: matlab-actions/setup-matlab@v0
-
-    - name: Run Matlab tests
+ 
+    - name: Run Matlab test 1
       uses: matlab-actions/run-command@v0
+      if: always()
       with:
          command: cd examples/acados_matlab_octave/test; matlab_test
+
+    - name: Run Matlab test Sim 1
+      uses: matlab-actions/run-command@v0
+      if: always()
+      with:
+         command: cd examples/acados_matlab_octave/test; run_test_dim_check
+
+    - name: Run Matlab test Sim 2
+      uses: matlab-actions/run-command@v0
+      if: always()
+      with:
+         command: cd examples/acados_matlab_octave/test; run_test_sim_forw
+
+    - name: Run Matlab test OCP
+      uses: matlab-actions/run-command@v0
+      if: always()
+      with:
+         command: cd examples/acados_matlab_octave/test; run_test_ocp_mass_spring
+
+
+    - name: Run Matlab test OCP template
+      uses: matlab-actions/run-command@v0
+      if: always()
+      with:
+         command: cd examples/acados_matlab_octave/test; run_test_template_ocp_disc_dyn
