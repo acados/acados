@@ -120,14 +120,6 @@ jobs:
       run: ./.github/linux/install_python.sh
 
 
-    - name: Test
-      working-directory: ${{runner.workspace}}/build
-      shell: bash
-      # Execute tests defined by the CMake configuration.
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: |
-        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-        ./../acados/.github/linux/run_tests.sh
     - name: Install MATLAB
       uses: matlab-actions/setup-matlab@v0
  
@@ -161,3 +153,12 @@ jobs:
       if: always()
       with:
          command: cd examples/acados_matlab_octave/test; run_test_template_ocp_disc_dyn
+
+    - name: Run CMake tests (ctest)
+      working-directory: ${{runner.workspace}}/build
+      shell: bash
+      # Execute tests defined by the CMake configuration.
+      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+      run: |
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+        ./../acados/.github/linux/run_tests.sh
