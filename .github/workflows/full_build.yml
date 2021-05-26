@@ -107,12 +107,12 @@ jobs:
 
 
     - name: Export Paths MEX tests
-      working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/pendulum_on_cart_model
+      working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
       shell: bash
       run: |
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./build" >> $GITHUB_ENV
         echo "ENV_RUN=true" >> $GITHUB_ENV
-
+        echo "LD_RUN_PATH=$LD_RUN_PATH:$(pwd)/c_generated_code" >> $GITHUB_ENV
 
     - name: Install Python interface
       working-directory: ${{runner.workspace}}/acados
