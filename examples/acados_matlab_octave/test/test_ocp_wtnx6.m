@@ -32,7 +32,6 @@
 %
 
 %% test of native matlab interface
-clear all
 
 addpath('../wind_turbine_nx6/');
 

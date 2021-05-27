@@ -35,8 +35,6 @@
 % model of a motor air path
 % author: Severin Hänggi (& Jonathan Frey)
 
-clear all
-
 import casadi.*
 
 % load model
@@ -193,5 +191,5 @@ if any([diff_acadosmex_acadostemplate, diff_acados_ipopt] > tol)
          ' differ too much. Should be < tol = ' num2str(tol)]);
 end
 
-clear all
+
 cd ..

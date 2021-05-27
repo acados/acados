@@ -180,5 +180,5 @@ elseif err_u > tol_u
 end
 
 cd ..
-clear all
+
 end

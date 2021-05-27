@@ -32,7 +32,6 @@
 %
 
 %% test of native matlab interface
-clear all
 
 addpath('../simple_dae_model/');
 
@@ -251,5 +250,5 @@ if abs(cost_val_ocp - cost_val_t_ocp) > 1e-9
 else
     disp(['Cost value: ', num2str(cost_val_ocp, '%e'), ' template: ', num2str(cost_val_t_ocp, '%e')]);
 end
-clear all
+
 cd ..

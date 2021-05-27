@@ -32,8 +32,6 @@
 %
 % author: Katrin Baumgaertner
 
-clear all
-
 
 addpath('../lorentz')
 

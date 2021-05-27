@@ -32,7 +32,6 @@
 %
 
 %% test of native matlab interface
-clear all
 
 addpath('../linear_mass_spring_model/');
 
@@ -325,5 +324,4 @@ if any([error_X_mex_vs_mex_template, error_U_mex_vs_mex_template] > tol_check)
          ' differ too much. Should be < tol = ' num2str(tol_check)]);
 end
 
-clear all
 cd ..

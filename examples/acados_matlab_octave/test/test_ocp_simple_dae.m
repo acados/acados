@@ -33,7 +33,6 @@
 
 addpath('../simple_dae_model');
 %% test of native matlab interface
-clear all
 
 model_name = 'simple_dae';
 

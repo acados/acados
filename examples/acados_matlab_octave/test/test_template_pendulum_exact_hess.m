@@ -32,7 +32,6 @@
 %
 
 %% test of native matlab interface
-clear all
 
 addpath('../pendulum_on_cart_model')
 
