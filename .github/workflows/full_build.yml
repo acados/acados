@@ -119,22 +119,6 @@ jobs:
       shell: bash
       run: ./.github/linux/install_python.sh
 
-
-    - name: Install MATLAB
-      uses: matlab-actions/setup-matlab@v1
-      with:
-      # MATLAB release to set up (R2020a or later)
-        release: R2020a
- 
-    - name: Run Matlab tests
-      uses: matlab-actions/run-command@v1
-      if: always()
-      with:
-        command: cd examples/acados_matlab_octave/test; matlab_test
-        # command: cd examples/acados_matlab_octave/test; run_test_dim_check
-        # command: cd examples/acados_matlab_octave/test; run_test_ocp_mass_spring
-        # command: cd examples/acados_matlab_octave/test; run_test_template_ocp_disc_dyn
-
     - name: Run CMake tests (ctest)
       working-directory: ${{runner.workspace}}/build
       shell: bash
@@ -143,3 +127,22 @@ jobs:
       run: |
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
         ./../acados/.github/linux/run_tests.sh
+
+    - name: Install MATLAB
+      uses: matlab-actions/setup-matlab@v1
+      with:
+      # MATLAB release to set up (R2020a or later)
+        release: R2020a
+ 
+    - name: Matlab test native MEX
+      uses: matlab-actions/run-command@v1
+      if: always()
+      with:
+        command: cd examples/acados_matlab_octave/test; matlab_test_native_mex
+
+    - name: Matlab test templates
+      uses: matlab-actions/run-command@v1
+      if:
+      with:
+        command: cd examples/acados_matlab_octave/test; matlab_test_templates
+
