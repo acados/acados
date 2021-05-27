@@ -142,7 +142,11 @@ jobs:
 
     - name: Matlab test templates
       uses: matlab-actions/run-command@v1
-      if:
       with:
         command: cd examples/acados_matlab_octave/test; matlab_test_templates
 
+    - name: Run Simulink test
+      uses: matlab-actions/run-command@v1
+      if: always()
+      with:
+        command: cd examples/acados_matlab_octave/test; simulink_test
