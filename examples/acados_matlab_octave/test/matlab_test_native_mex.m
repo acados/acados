@@ -35,6 +35,6 @@ test_names = ["run_test_dim_check",
 "run_test_sim_hess"];
 
 for k = 1:length(test_names)
-    disp(["running test ", test_names(k)]);
+    disp(strcat("running test ", test_names(k)));
     run(test_names(k))
 end
