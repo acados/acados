@@ -5,7 +5,8 @@ test_names = ["run_test_template_ocp_disc_dyn",
 "run_test_template_ocp_pendulum_exact_hess",
 "run_test_template_ocp_pendulum_ext_cost",
 "run_test_template_ocp_pendulum_gnsf",
-"run_test_template_ocp_pendulum_nls"];
+% "run_test_template_ocp_pendulum_nls"
+];
 
 for k = 1:length(test_names)
     disp(strcat("running test ", test_names(k)));
