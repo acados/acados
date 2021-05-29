@@ -195,23 +195,26 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     /************************************************
     *  dimensions
     ************************************************/
-    int nx[N+1];
-    int nu[N+1];
-    int nbx[N+1];
-    int nbu[N+1];
-    int nsbx[N+1];
-    int nsbu[N+1];
-    int nsg[N+1];
-    int nsh[N+1];
-    int nsphi[N+1];
-    int ns[N+1];
-    int ng[N+1];
-    int nh[N+1];
-    int nphi[N+1];
-    int nz[N+1];
-    int ny[N+1];
-    int nr[N+1];
-    int nbxe[N+1];
+    #define NINTNP1MEMS 17
+    int* intNp1mem = (int*)malloc( (N+1)*sizeof(int)*NINTNP1MEMS );
+
+    int* nx    = intNp1mem + (N+1)*0;
+    int* nu    = intNp1mem + (N+1)*1;
+    int* nbx   = intNp1mem + (N+1)*2;
+    int* nbu   = intNp1mem + (N+1)*3;
+    int* nsbx  = intNp1mem + (N+1)*4;
+    int* nsbu  = intNp1mem + (N+1)*5;
+    int* nsg   = intNp1mem + (N+1)*6;
+    int* nsh   = intNp1mem + (N+1)*7;
+    int* nsphi = intNp1mem + (N+1)*8;
+    int* ns    = intNp1mem + (N+1)*9;
+    int* ng    = intNp1mem + (N+1)*10;
+    int* nh    = intNp1mem + (N+1)*11;
+    int* nphi  = intNp1mem + (N+1)*12;
+    int* nz    = intNp1mem + (N+1)*13;
+    int* ny    = intNp1mem + (N+1)*14;
+    int* nr    = intNp1mem + (N+1)*15;
+    int* nbxe  = intNp1mem + (N+1)*16;
 
     for (int i = 0; i < N+1; i++)
     {
@@ -227,7 +230,7 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
         nbu[i]    = NBU;
         nsbx[i]   = NSBX;
         nsbu[i]   = NSBU;
-        nsg[i] = NSG;
+        nsg[i]    = NSG;
         nsh[i]    = NSH;
         nsphi[i]  = NSPHI;
         ng[i]     = NG;
@@ -316,6 +319,8 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     {%- if cost.cost_type_e == "NONLINEAR_LS" or cost.cost_type_e == "LINEAR_LS" %}
     ocp_nlp_dims_set_cost(nlp_config, nlp_dims, N, "ny", &ny[N]);
     {%- endif %}
+
+    free(intNp1mem);
 
 {% if solver_options.integrator_type == "GNSF" -%}
     // GNSF specific dimensions
