@@ -915,13 +915,17 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     /**** Cost ****/
 {%- if cost.cost_type_0 == "NONLINEAR_LS" or cost.cost_type_0 == "LINEAR_LS" %}
 {% if dims.ny_0 > 0 %}
-    double W_0[NY0*NY0];
-    {% for j in range(end=dims.ny_0) %}
+    double* W_0 = calloc(NY0*NY0, sizeof(double));
+    // change only the non-zero elements:
+    {%- for j in range(end=dims.ny_0) %}
         {%- for k in range(end=dims.ny_0) %}
+            {%- if cost.W_0[j][k] != 0 %}
     W_0[{{ j }}+(NY0) * {{ k }}] = {{ cost.W_0[j][k] }};
+            {%- endif %}
         {%- endfor %}
     {%- endfor %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "W", W_0);
+    free(W_0);
 
     double yref_0[NY0];
     {% for j in range(end=dims.ny_0) %}
@@ -933,10 +937,13 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
 
 {%- if cost.cost_type == "NONLINEAR_LS" or cost.cost_type == "LINEAR_LS" %}
 {% if dims.ny > 0 %}
-    double W[NY*NY];
+    double* W = calloc(NY*NY, sizeof(double));
+    // change only the non-zero elements:
     {% for j in range(end=dims.ny) %}
         {%- for k in range(end=dims.ny) %}
+            {%- if cost.W[j][k] != 0 %}
     W[{{ j }}+(NY) * {{ k }}] = {{ cost.W[j][k] }};
+            {%- endif %}
         {%- endfor %}
     {%- endfor %}
 
@@ -950,56 +957,76 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "W", W);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "yref", yref);
     }
+    free(W);
 {% endif %}
 {% endif %}
 
 {%- if cost.cost_type_0 == "LINEAR_LS" %}
-    double Vx_0[NY0*NX];
+    double* Vx_0 = calloc(NY0*NX, sizeof(double));
+    // change only the non-zero elements:
     {% for j in range(end=dims.ny_0) %}
         {%- for k in range(end=dims.nx) %}
+            {%- if cost.Vx_0[j][k] != 0 %}
     Vx_0[{{ j }}+(NY0) * {{ k }}] = {{ cost.Vx_0[j][k] }};
+            {%- endif %}
         {%- endfor %}
     {%- endfor %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "Vx", Vx_0);
+    free(Vx_0);
 
 {% if dims.ny_0 > 0 and dims.nu > 0 %}
-    double Vu_0[NY0*NU];
+    double* Vu_0 = calloc(NY0*NU, sizeof(double));
+    // change only the non-zero elements:
     {% for j in range(end=dims.ny_0) %}
         {%- for k in range(end=dims.nu) %}
+            {%- if cost.Vu_0[j][k] != 0 %}
     Vu_0[{{ j }}+(NY0) * {{ k }}] = {{ cost.Vu_0[j][k] }};
+            {%- endif %}
         {%- endfor %}
     {%- endfor %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "Vu", Vu_0);
+    free(Vu_0);
 {% endif %}
 {% if dims.ny_0 > 0 and dims.nz > 0 %}
-    double Vz_0[NY0*NZ];
+    double* Vz_0 = calloc(NY0*NZ, sizeof(double));
+    // change only the non-zero elements:
     {% for j in range(end=dims.ny_0) %}
         {%- for k in range(end=dims.nz) %}
+            {%- if cost.Vz_0[j][k] != 0 %}
     Vz_0[{{ j }}+(NY0) * {{ k }}] = {{ cost.Vz_0[j][k] }};
+            {%- endif %}
         {%- endfor %}
     {%- endfor %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "Vz", Vz_0);
+    free(Vz_0);
 {%- endif %}
 {%- endif %}{# LINEAR LS #}
 
 
 {%- if cost.cost_type == "LINEAR_LS" %}
-    double Vx[NY*NX];
+    double* Vx = calloc(NY*NX, sizeof(double));
+    // change only the non-zero elements:
     {% for j in range(end=dims.ny) %}
         {%- for k in range(end=dims.nx) %}
+            {%- if cost.Vx[j][k] != 0 %}
     Vx[{{ j }}+(NY) * {{ k }}] = {{ cost.Vx[j][k] }};
+            {%- endif %}
         {%- endfor %}
     {%- endfor %}
     for (int i = 1; i < N; i++)
     {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Vx", Vx);
     }
+    free(Vx);
 
 {% if dims.ny > 0 and dims.nu > 0 %}
-    double Vu[NY*NU];
+    double* Vu = calloc(NY*NU, sizeof(double));
+    // change only the non-zero elements:
     {% for j in range(end=dims.ny) %}
         {%- for k in range(end=dims.nu) %}
+            {%- if cost.Vu[j][k] != 0 %}
     Vu[{{ j }}+(NY) * {{ k }}] = {{ cost.Vu[j][k] }};
+            {%- endif %}
         {%- endfor %}
     {%- endfor %}
 
@@ -1007,13 +1034,17 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Vu", Vu);
     }
+    free(Vu);
 {% endif %}
 
 {% if dims.ny > 0 and dims.nz > 0 %}
-    double Vz[NY*NZ];
+    double* Vz = calloc(NY*NZ, sizeof(double));
+    // change only the non-zero elements:
     {% for j in range(end=dims.ny) %}
         {%- for k in range(end=dims.nz) %}
+            {%- if cost.Vz[j][k] != 0 %}
     Vz[{{ j }}+(NY) * {{ k }}] = {{ cost.Vz[j][k] }};
+            {%- endif %}
         {%- endfor %}
     {%- endfor %}
 
@@ -1021,6 +1052,7 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Vz", Vz);
     }
+    free(Vz);
 {%- endif %}
 {%- endif %}{# LINEAR LS #}
 
@@ -1091,22 +1123,30 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     {%- endfor %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "yref", yref_e);
 
-    double W_e[NYN*NYN];
+    double* W_e = calloc(NYN*NYN, sizeof(double));
+    // change only the non-zero elements:
     {% for j in range(end=dims.ny_e) %}
         {%- for k in range(end=dims.ny_e) %}
+            {%- if cost.W_e[j][k] != 0 %}
     W_e[{{ j }}+(NYN) * {{ k }}] = {{ cost.W_e[j][k] }};
+            {%- endif %}
         {%- endfor %}
     {%- endfor %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "W", W_e);
+    free(W_e);
 
     {%- if cost.cost_type_e == "LINEAR_LS" %}
-    double Vx_e[NYN*NX];
+    double* Vx_e = calloc(NYN*NX, sizeof(double));
+    // change only the non-zero elements:
     {% for j in range(end=dims.ny_e) %}
         {%- for k in range(end=dims.nx) %}
+            {%- if cost.Vx_e[j][k] != 0 %}
     Vx_e[{{ j }}+(NYN) * {{ k }}] = {{ cost.Vx_e[j][k] }};
+            {%- endif %}
         {%- endfor %}
     {%- endfor %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Vx", Vx_e);
+    free(Vx_e);
     {%- endif %}
 
     {%- if cost.cost_type_e == "NONLINEAR_LS" %}
