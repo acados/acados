@@ -1541,16 +1541,21 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
 {% endif %}
 
 {% if dims.nh > 0 %}
-    // set up nonlinear constraints for stage 0 to N-1 
-    double lh[NH];
-    double uh[NH];
+    // set up nonlinear constraints for stage 0 to N-1
+    double* luh = calloc(2*NH, sizeof(double));
+    double* lh = luh;
+    double* uh = luh + NH;
 
     {% for i in range(end=dims.nh) %}
+        {%- if constraints.lh[i] != 0 %}
     lh[{{ i }}] = {{ constraints.lh[i] }};
+        {%- endif %}
     {%- endfor %}
 
     {% for i in range(end=dims.nh) %}
+        {%- if constraints.uh[i] != 0 %}
     uh[{{ i }}] = {{ constraints.uh[i] }};
+        {%- endif %}
     {%- endfor %}
     
     for (int i = 0; i < N; i++)
@@ -1567,19 +1572,24 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lh", lh);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "uh", uh);
     }
+    free(luh);
 {% endif %}
 
 {% if dims.nphi > 0 and constraints.constr_type == "BGP" %}
-    // set up convex-over-nonlinear constraints for stage 0 to N-1 
-    double lphi[NPHI];
-    double uphi[NPHI];
-
+    // set up convex-over-nonlinear constraints for stage 0 to N-1
+    double* luphi = calloc(2*NPHI, sizeof(double));
+    double* lphi = luphi;
+    double* uphi = luphi + NPHI;
     {% for i in range(end=dims.nphi) %}
+        {%- if constraints.lphi[i] != 0 %}
     lphi[{{ i }}] = {{ constraints.lphi[i] }};
+        {%- endif %}
     {%- endfor %}
 
     {% for i in range(end=dims.nphi) %}
+        {%- if constraints.uphi[i] != 0 %}
     uphi[{{ i }}] = {{ constraints.uphi[i] }};
+        {%- endif %}
     {%- endfor %}
 
     for (int i = 0; i < N; i++)
@@ -1589,6 +1599,7 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lphi", lphi);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "uphi", uphi);
     }
+    free(luphi);
 {% endif %}
 
     /* terminal constraints */
@@ -1749,16 +1760,20 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
 {%- endif %}
 
 {% if dims.nh_e > 0 %}
-    // set up nonlinear constraints for last stage 
-    double lh_e[NHN];
-    double uh_e[NHN];
-
+    // set up nonlinear constraints for last stage
+    double* luh_e = calloc(2*NHN, sizeof(double));
+    double* lh_e = luh_e;
+    double* uh_e = luh_e + NHN;
     {% for i in range(end=dims.nh_e) %}
+        {%- if constraints.lh_e[i] != 0 %}
     lh_e[{{ i }}] = {{ constraints.lh_e[i] }};
+        {%- endif %}
     {%- endfor %}
 
     {% for i in range(end=dims.nh_e) %}
+        {%- if constraints.uh_e[i] != 0 %}
     uh_e[{{ i }}] = {{ constraints.uh_e[i] }};
+        {%- endif %}
     {%- endfor %}
 
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_fun_jac", &capsule->nl_constr_h_e_fun_jac);
@@ -1769,25 +1784,28 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     {% endif %}
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lh", lh_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "uh", uh_e);
+    free(luh_e);
 {%- endif %}
 
 {% if dims.nphi_e > 0 and constraints.constr_type_e == "BGP" %}
     // set up convex-over-nonlinear constraints for last stage 
-    double lphi_e[NPHIN];
-    double uphi_e[NPHIN];
-
+    double* luphi_e = calloc(2*NPHIN, sizeof(double));
+    double* lphi_e = luphi_e;
+    double* uphi_e = luphi_e + NPHIN;
     {% for i in range(end=dims.nphi_e) %}
+        {%- if constraints.lphi_e[i] != 0 %}
     lphi_e[{{ i }}] = {{ constraints.lphi_e[i] }};
-    {%- endfor %}
-
-    {% for i in range(end=dims.nphi_e) %}
+        {%- endif %}
+        {%- if constraints.uphi_e[i] != 0 %}
     uphi_e[{{ i }}] = {{ constraints.uphi_e[i] }};
+        {%- endif %}
     {%- endfor %}
 
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lphi", lphi_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "uphi", uphi_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N,
                                   "nl_constr_phi_o_r_fun_phi_jac_ux_z_phi_hess_r_jac_ux", &capsule->phi_e_constraint);
+    free(luphi_e);
 {% endif %}
 
 
@@ -1996,23 +2014,20 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     capsule->nlp_out = nlp_out;
 
     // initialize primal solution
-    double x0[{{ dims.nx }}];
+    double* xu0 = calloc(NX+NU, sizeof(double));
+    double* x0 = xu0;
 {% if dims.nbx_0 == dims.nx %}
     // initialize with x0
     {% for item in constraints.lbx_0 %}
+        {%- if item != 0 %}
     x0[{{ loop.index0 }}] = {{ item }};
+        {%- endif %}
     {%- endfor %}
 {% else %}
     // initialize with zeros
-    {% for i in range(end=dims.nx) %}
-    x0[{{ i }}] = 0.0;
-    {%- endfor %}
 {%- endif %}
 
-    double u0[NU];
-    {% for i in range(end=dims.nu) %}
-    u0[{{ i }}] = 0.0;
-    {%- endfor %}
+    double* u0 = xu0 + NX;
 
     for (int i = 0; i < N; i++)
     {
@@ -2022,21 +2037,25 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
         ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "u", u0);
     }
     ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, N, "x", x0);
+    free(xu0);
     
     capsule->nlp_solver = ocp_nlp_solver_create(nlp_config, nlp_dims, capsule->nlp_opts);
 
 
 {% if dims.np > 0 %}
     // initialize parameters to nominal value
-    double p[{{ dims.np }}];
-    {% for i in range(end=dims.np) %}
-    p[{{ i }}] = {{ parameter_values[i] }};
+    double* p = calloc(NP, sizeof(double));
+    {% for item in parameter_values %}
+        {%- if item != 0 %}
+    p[{{ loop.index0 }}] = {{ item }};
+        {%- endif %}
     {%- endfor %}
 
     for (int i = 0; i <= N; i++)
     {
         {{ model.name }}_acados_update_params(capsule, i, p, NP);
     }
+    free(p);
 {%- endif %}{# if dims.np #}
 
     status = ocp_nlp_precompute(capsule->nlp_solver, nlp_in, nlp_out);
