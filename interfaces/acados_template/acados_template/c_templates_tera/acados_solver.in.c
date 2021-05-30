@@ -1494,29 +1494,38 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
 
 {% if dims.ng > 0 %}
     // set up general constraints for stage 0 to N-1 
-    double D[NG*NU];
-    double C[NG*NX];
-    double lg[NG];
-    double ug[NG];
+    double* D = calloc(NG*NU, sizeof(double));
+    double* C = calloc(NG*NX, sizeof(double));
+    double* lug = calloc(2*NG, sizeof(double));
+    double* lg = lug;
+    double* ug = lug + NG;
 
-    {% for j in range(end=dims.ng) %}
-        {%- for k in range(end=dims.nu) %}
+    {% for j in range(end=dims.ng) -%}
+        {% for k in range(end=dims.nu) %}
+            {%- if constraints.D[j][k] != 0 %}
     D[{{ j }}+NG * {{ k }}] = {{ constraints.D[j][k] }};
+            {%- endif %}
         {%- endfor %}
     {%- endfor %}
 
-    {% for j in range(end=dims.ng) %}
-        {%- for k in range(end=dims.nx) %}
+    {% for j in range(end=dims.ng) -%}
+        {% for k in range(end=dims.nx) %}
+            {%- if constraints.C[j][k] != 0 %}
     C[{{ j }}+NG * {{ k }}] = {{ constraints.C[j][k] }};
+            {%- endif %}
         {%- endfor %}
     {%- endfor %}
 
     {% for i in range(end=dims.ng) %}
+        {%- if constraints.lg[i] != 0 %}
     lg[{{ i }}] = {{ constraints.lg[i] }};
+        {%- endif %}
     {%- endfor %}
 
     {% for i in range(end=dims.ng) %}
+        {%- if constraints.ug[i] != 0 %}
     ug[{{ i }}] = {{ constraints.ug[i] }};
+        {%- endif %}
     {%- endfor %}
 
     for (int i = 0; i < N; i++)
@@ -1526,6 +1535,9 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lg", lg);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "ug", ug);
     }
+    free(D);
+    free(C);
+    free(lug);
 {% endif %}
 
 {% if dims.nh > 0 %}
@@ -1707,24 +1719,33 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
 
 {% if dims.ng_e > 0 %}
     // set up general constraints for last stage 
-    double C_e[NGN*NX];
-    double lg_e[NGN];
-    double ug_e[NGN];
+    double* C_e = calloc(NGN*NX, sizeof(double));
+    double* lug_e = calloc(2*NGN, sizeof(double));
+    double* lg_e = lug_e;
+    double* ug_e = lug_e + NGN;
 
     {% for j in range(end=dims.ng) %}
         {%- for k in range(end=dims.nx) %}
+            {%- if constraints.C_e[j][k] != 0 %}
     C_e[{{ j }}+NG * {{ k }}] = {{ constraints.C_e[j][k] }};
+            {%- endif %}
         {%- endfor %}
     {%- endfor %}
 
     {% for i in range(end=dims.ng_e) %}
+        {%- if constraints.lg_e[i] != 0 %}
     lg_e[{{ i }}] = {{ constraints.lg_e[i] }};
+        {%- endif %}
+        {%- if constraints.ug_e[i] != 0 %}
     ug_e[{{ i }}] = {{ constraints.ug_e[i] }};
+        {%- endif %}
     {%- endfor %}
 
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "C", C_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lg", lg_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ug", ug_e);
+    free(C_e);
+    free(lug_e);
 {%- endif %}
 
 {% if dims.nh_e > 0 %}
