@@ -1115,24 +1115,34 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
 
 
 {% if dims.ns > 0 %}
-    double Zl[NS];
-    double Zu[NS];
-    double zl[NS];
-    double zu[NS];
-    {% for j in range(end=dims.ns) %}
+    double* zlumem = calloc(4*NS, sizeof(double));
+    double* Zl = zlumem+NS*0;
+    double* Zu = zlumem+NS*1;
+    double* zl = zlumem+NS*2;
+    double* zu = zlumem+NS*3;
+    // change only the non-zero elements:
+    {%- for j in range(end=dims.ns) %}
+        {%- if cost.Zl[j] != 0 %}
     Zl[{{ j }}] = {{ cost.Zl[j] }};
+        {%- endif %}
     {%- endfor %}
 
-    {% for j in range(end=dims.ns) %}
+    {%- for j in range(end=dims.ns) %}
+        {%- if cost.Zu[j] != 0 %}
     Zu[{{ j }}] = {{ cost.Zu[j] }};
+        {%- endif %}
     {%- endfor %}
 
-    {% for j in range(end=dims.ns) %}
+    {%- for j in range(end=dims.ns) %}
+        {%- if cost.zl[j] != 0 %}
     zl[{{ j }}] = {{ cost.zl[j] }};
+        {%- endif %}
     {%- endfor %}
 
-    {% for j in range(end=dims.ns) %}
+    {%- for j in range(end=dims.ns) %}
+        {%- if cost.zu[j] != 0 %}
     zu[{{ j }}] = {{ cost.zu[j] }};
+        {%- endif %}
     {%- endfor %}
 
     for (int i = 0; i < N; i++)
@@ -1142,6 +1152,11 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "zl", zl);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "zu", zu);
     }
+    free(zlumem);
+    Zl = NULL;
+    Zu = NULL;
+    zl = NULL;
+    zu = NULL;
 {% endif %}
 
     // terminal cost
@@ -1197,31 +1212,42 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
 {%- endif %}
 
 {% if dims.ns_e > 0 %}
-    double Zl_e[NSN];
-    double Zu_e[NSN];
-    double zl_e[NSN];
-    double zu_e[NSN];
+    double* zluemem = calloc(4*NSN, sizeof(double));
+    double* Zl_e = zluemem+NSN*0;
+    double* Zu_e = zluemem+NSN*1;
+    double* zl_e = zluemem+NSN*2;
+    double* zu_e = zluemem+NSN*3;
 
+    // change only the non-zero elements:
     {% for j in range(end=dims.ns_e) %}
+        {%- if cost.Zl_e[j] != 0 %}
     Zl_e[{{ j }}] = {{ cost.Zl_e[j] }};
+        {%- endif %}
     {%- endfor %}
 
     {% for j in range(end=dims.ns_e) %}
+        {%- if cost.Zu_e[j] != 0 %}
     Zu_e[{{ j }}] = {{ cost.Zu_e[j] }};
+        {%- endif %}
     {%- endfor %}
 
     {% for j in range(end=dims.ns_e) %}
+        {%- if cost.zl_e[j] != 0 %}
     zl_e[{{ j }}] = {{ cost.zl_e[j] }};
+        {%- endif %}
     {%- endfor %}
 
     {% for j in range(end=dims.ns_e) %}
+        {%- if cost.zu_e[j] != 0 %}
     zu_e[{{ j }}] = {{ cost.zu_e[j] }};
+        {%- endif %}
     {%- endfor %}
 
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Zl", Zl_e);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Zu", Zu_e);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "zl", zl_e);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "zu", zu_e);
+    free(zluemem);
 {%- endif %}
 
     /**** Constraints ****/
