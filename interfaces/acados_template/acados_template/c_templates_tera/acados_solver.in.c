@@ -863,7 +863,27 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     ocp_nlp_in * nlp_in = ocp_nlp_in_create(nlp_config, nlp_dims);
     capsule->nlp_in = nlp_in;
 
-    double time_steps[N];
+    // set up time_steps
+    {% set all_equal = true -%}
+    {%- set val = solver_options.time_steps[0] %}
+    {%- for j in range(start=1, end=dims.N) %}
+        {%- if val != solver_options.time_steps[j] %}
+            {%- set_global all_equal = false %}
+            {%- break %}
+        {%- endif %}
+    {%- endfor %}
+
+    {%- if all_equal == true -%}
+    // all time_steps are identical
+    double time_step = {{ solver_options.time_steps[0] }};
+    for (int i = 0; i < N; i++)
+    {
+        ocp_nlp_in_set(nlp_config, nlp_dims, nlp_in, i, "Ts", &time_step);
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "scaling", &time_step);
+    }
+    {%- else -%}
+    // time_steps are different
+    double* time_steps = malloc(N*sizeof(double));
     {%- for j in range(end=dims.N) %}
     time_steps[{{ j }}] = {{ solver_options.time_steps[j] }};
     {%- endfor %}
@@ -873,6 +893,8 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
         ocp_nlp_in_set(nlp_config, nlp_dims, nlp_in, i, "Ts", &time_steps[i]);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "scaling", &time_steps[i]);
     }
+    free(time_steps);
+    {%- endif %}
 
     /**** Dynamics ****/
     for (int i = 0; i < N; i++)
@@ -927,11 +949,15 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "W", W_0);
     free(W_0);
 
-    double yref_0[NY0];
-    {% for j in range(end=dims.ny_0) %}
+    double* yref_0 = calloc(NY0, sizeof(double));
+    // change only the non-zero elements:
+    {%- for j in range(end=dims.ny_0) %}
+        {%- if cost.yref_0[j] != 0 %}
     yref_0[{{ j }}] = {{ cost.yref_0[j] }};
+        {%- endif %}
     {%- endfor %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "yref", yref_0);
+    free(yref_0);
 {% endif %}
 {% endif %}
 
@@ -947,9 +973,12 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
         {%- endfor %}
     {%- endfor %}
 
-    double yref[NY];
-    {% for j in range(end=dims.ny) %}
+    double* yref = calloc(NY, sizeof(double));
+    // change only the non-zero elements:
+    {%- for j in range(end=dims.ny) %}
+        {%- if cost.yref[j] != 0 %}
     yref[{{ j }}] = {{ cost.yref[j] }};
+        {%- endif %}
     {%- endfor %}
 
     for (int i = 1; i < N; i++)
@@ -958,6 +987,7 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "yref", yref);
     }
     free(W);
+    free(yref);
 {% endif %}
 {% endif %}
 
@@ -1117,11 +1147,15 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     // terminal cost
 {% if cost.cost_type_e == "LINEAR_LS" or cost.cost_type_e == "NONLINEAR_LS" %}
 {% if dims.ny_e > 0 %}
-    double yref_e[NYN];
+    double* yref_e = calloc(NYN, sizeof(double));
+    // change only the non-zero elements:
     {% for j in range(end=dims.ny_e) %}
+        {%- if cost.yref_e[j] != 0 %}
     yref_e[{{ j }}] = {{ cost.yref_e[j] }};
+        {%- endif %}
     {%- endfor %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "yref", yref_e);
+    free(yref_e);
 
     double* W_e = calloc(NYN*NYN, sizeof(double));
     // change only the non-zero elements:
@@ -1664,21 +1698,58 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
 
 {%- if solver_options.integrator_type != "DISCRETE" %}
 
-    int sim_method_num_steps[N];
+    // set up sim_method_num_steps
+    {%- set all_equal = true %}
+    {%- set val = solver_options.sim_method_num_steps[0] %}
+    {%- for j in range(start=1, end=dims.N) %}
+        {%- if val != solver_options.sim_method_num_steps[j] %}
+            {%- set_global all_equal = false %}
+            {%- break %}
+        {%- endif %}
+    {%- endfor %}
+
+    {%- if all_equal == true %}
+    // all sim_method_num_steps are identical
+    int sim_method_num_steps = {{ solver_options.sim_method_num_steps[0] }};
+    for (int i = 0; i < N; i++)
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, capsule->nlp_opts, i, "dynamics_num_steps", &sim_method_num_steps);
+    {%- else %}
+    // sim_method_num_steps are different
+    int* sim_method_num_steps = malloc(N*sizeof(int));
     {%- for j in range(end=dims.N) %}
     sim_method_num_steps[{{ j }}] = {{ solver_options.sim_method_num_steps[j] }};
     {%- endfor %}
 
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, capsule->nlp_opts, i, "dynamics_num_steps", &sim_method_num_steps[i]);
+    free(sim_method_num_steps);
+    {%- endif %}
 
-    int sim_method_num_stages[N];
+    // set up sim_method_num_stages
+    {%- set all_equal = true %}
+    {%- set val = solver_options.sim_method_num_stages[0] %}
+    {%- for j in range(start=1, end=dims.N) %}
+        {%- if val != solver_options.sim_method_num_stages[j] %}
+            {%- set_global all_equal = false %}
+            {%- break %}
+        {%- endif %}
+    {%- endfor %}
+
+    {%- if all_equal == true %}
+    // all sim_method_num_stages are identical
+    int sim_method_num_stages = {{ solver_options.sim_method_num_stages[0] }};
+    for (int i = 0; i < N; i++)
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, capsule->nlp_opts, i, "dynamics_num_stages", &sim_method_num_stages);
+    {%- else %}
+    int* sim_method_num_stages = malloc(N*sizeof(int));
     {%- for j in range(end=dims.N) %}
     sim_method_num_stages[{{ j }}] = {{ solver_options.sim_method_num_stages[j] }};
     {%- endfor %}
 
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, capsule->nlp_opts, i, "dynamics_num_stages", &sim_method_num_stages[i]);
+    free(sim_method_num_stages);
+    {%- endif %}
 
     int newton_iter_val = {{ solver_options.sim_method_newton_iter }};
     for (int i = 0; i < N; i++)
