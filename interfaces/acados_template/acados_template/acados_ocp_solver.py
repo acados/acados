@@ -1139,6 +1139,7 @@ class AcadosOcpSolver:
                   'time_qp_solver_call',  # cpu time inside qp solver (without converting the QP)
                   'time_qp_xcond',
                   'time_glob',  # cpu time globalization
+                  'time_solution_sensitivities',  # cpu time for previous call to eval_param_sens
                   'time_reg',  # cpu time regularization
                   'sqp_iter',  # number of SQP iterations
                   'qp_iter',  # vector of QP iterations for last SQP call
