@@ -903,6 +903,9 @@ void ocp_nlp_sqp_rti_eval_param_sens(void *config_, void *dims_, void *opts_,
     void *mem_, void *work_, char *field, int stage, int index,
     void *sens_nlp_out_)
 {
+    acados_timer timer0;
+    acados_tic(&timer0);
+
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_config *config = config_;
     ocp_nlp_sqp_rti_opts *opts = opts_;
@@ -968,6 +971,7 @@ void ocp_nlp_sqp_rti_eval_param_sens(void *config_, void *dims_, void *opts_,
 
         exit(1);
     }
+    mem->time_solution_sensitivities = acados_toc(&timer0);
 
     return;
 }
@@ -1039,6 +1043,11 @@ void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_,
             config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], field, &tmp);
             *ptr += tmp;
         }
+    }
+    else if (!strcmp("time_solution_sensitivities", field))
+    {
+        double *value = return_value_;
+        *value = mem->time_solution_sensitivities;
     }
     else if (!strcmp("stat", field))
     {
