@@ -2415,8 +2415,9 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
                 }
             }
         }
-        printf("\nalpha %f\n", alpha);
     }
+    if (opts->globalization != FIXED_STEP)
+        printf("alpha %f\n", alpha);
 
     return alpha;
 }
