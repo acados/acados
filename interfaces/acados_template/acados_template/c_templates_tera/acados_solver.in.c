@@ -1964,6 +1964,11 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "qp_cond_N", &qp_solver_cond_N);
 {% endif %}
 
+    {%- if solver_options.ext_qp_res %}
+    int ext_qp_res = {{ solver_options.ext_qp_res }};
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "ext_qp_res", &ext_qp_res);
+    {%- endif -%}
+
     int qp_solver_iter_max = {{ solver_options.qp_solver_iter_max }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "qp_iter_max", &qp_solver_iter_max);
 

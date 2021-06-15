@@ -2151,6 +2151,7 @@ class AcadosOcpOptions:
         self.__ext_cost_num_hess = 0
         self.__alpha_min = 0.05
         self.__alpha_reduction = 0.7
+        self.__ext_qp_res = 0
 
 
     @property
@@ -2222,6 +2223,16 @@ class AcadosOcpOptions:
         Default: 0.0.
         """
         return self.__levenberg_marquardt
+
+    @property
+    def ext_qp_res(self):
+        """
+        Option determining if residual of QP solution is evaluated externally.
+        Mainly for debugging.
+        Type: int [0, 1]
+        Default: 0.
+        """
+        return self.__ext_qp_res
 
     @property
     def sim_method_num_stages(self):
@@ -2532,6 +2543,14 @@ class AcadosOcpOptions:
     @alpha_reduction.setter
     def alpha_reduction(self, alpha_reduction):
         self.__alpha_reduction = alpha_reduction
+
+    @ext_qp_res.setter
+    def ext_qp_res(self, ext_qp_res):
+        if ext_qp_res in [0, 1]:
+            self.__ext_qp_res = ext_qp_res
+        else:
+            raise Exception('Invalid ext_qp_res value. ext_qp_res must be 0 or 1.')
+        self.__ext_qp_res = ext_qp_res
 
     @sim_method_num_stages.setter
     def sim_method_num_stages(self, sim_method_num_stages):
