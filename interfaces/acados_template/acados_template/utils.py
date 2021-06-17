@@ -57,7 +57,7 @@ def get_acados_path():
 def get_tera_exec_path():
     TERA_PATH = os.environ.get('TERA_PATH')
     if not TERA_PATH:
-      TERA_PATH = os.path.join(get_acados_path(), 'bin/t_renderer')
+        TERA_PATH = os.path.join(get_acados_path(), 'bin/t_renderer')
     return TERA_PATH
 
 
