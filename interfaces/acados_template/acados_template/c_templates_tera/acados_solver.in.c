@@ -1153,10 +1153,6 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "zu", zu);
     }
     free(zlumem);
-    Zl = NULL;
-    Zu = NULL;
-    zl = NULL;
-    zu = NULL;
 {% endif %}
 
     // terminal cost
