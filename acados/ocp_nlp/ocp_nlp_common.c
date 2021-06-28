@@ -2035,8 +2035,8 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
     }
 
-    for (i = 0; i <= N; i++)
-    {
+    //for (i = 0; i <= N; i++)
+    //{
         // TODO(rien) where should the update happen??? move to qp update ???
         // TODO(all): fix and move where appropriate
         //  if (i<N)
@@ -2051,7 +2051,7 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
         //     BLASFEO_DVECEL(nlp_mem->cost_grad+i, j) += work->sim_out[i]->grad[nx+j];
         //   }
         //  }
-    }
+    //}
 }
 
 
@@ -2555,9 +2555,19 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
     int *ni = dims->ni;
 
     double tmp_res;
+    double inf_norm_res_stat = 0.0;
+    double inf_norm_res_eq = 0.0;
+    double inf_norm_res_ineq = 0.0;
+    double inf_norm_res_comp = 0.0;
 
     // res_stat
-    res->inf_norm_res_stat = 0.0;
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp declare reduction(dmax : double : \
+                                  omp_out = (omp_in > omp_out) ? omp_in : omp_out)
+    #pragma omp parallel
+    { // beginning of parallel region
+    #pragma omp for private(tmp_res) reduction(dmax:inf_norm_res_stat) nowait
+#endif
     for (int ii = 0; ii <= N; ii++)
     {
         blasfeo_daxpy(nv[ii], -1.0, mem->ineq_adj + ii, 0, mem->cost_grad + ii, 0, res->res_stat + ii,
@@ -2565,36 +2575,48 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
         blasfeo_daxpy(nu[ii] + nx[ii], -1.0, mem->dyn_adj + ii, 0, res->res_stat + ii, 0,
                       res->res_stat + ii, 0);
         blasfeo_dvecnrm_inf(nv[ii], res->res_stat + ii, 0, &tmp_res);
-        res->inf_norm_res_stat = tmp_res > res->inf_norm_res_stat ? tmp_res : res->inf_norm_res_stat;
+        inf_norm_res_stat = tmp_res > inf_norm_res_stat ? tmp_res : inf_norm_res_stat;
     }
 
     // res_eq
-    res->inf_norm_res_eq = 0.0;
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp for private(tmp_res) reduction(dmax:inf_norm_res_eq) nowait
+#endif
     for (int ii = 0; ii < N; ii++)
     {
         blasfeo_dveccp(nx[ii + 1], mem->dyn_fun + ii, 0, res->res_eq + ii, 0);
         blasfeo_dvecnrm_inf(nx[ii + 1], res->res_eq + ii, 0, &tmp_res);
-        res->inf_norm_res_eq = tmp_res > res->inf_norm_res_eq ? tmp_res : res->inf_norm_res_eq;
+        inf_norm_res_eq = tmp_res > inf_norm_res_eq ? tmp_res : inf_norm_res_eq;
     }
 
     // res_ineq
-    res->inf_norm_res_ineq = 0.0;
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp for private(tmp_res) reduction(dmax:inf_norm_res_ineq) nowait
+#endif
     for (int ii = 0; ii <= N; ii++)
     {
         blasfeo_daxpy(2 * ni[ii], 1.0, out->t + ii, 0, mem->ineq_fun + ii, 0, res->res_ineq + ii, 0);
         blasfeo_dvecnrm_inf(2 * ni[ii], res->res_ineq + ii, 0, &tmp_res);
-        res->inf_norm_res_ineq = tmp_res > res->inf_norm_res_ineq ? tmp_res : res->inf_norm_res_ineq;
+        inf_norm_res_ineq = tmp_res > inf_norm_res_ineq ? tmp_res : inf_norm_res_ineq;
     }
 
     // res_comp
-    res->inf_norm_res_comp = 0.0;
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp for private(tmp_res) reduction(dmax:inf_norm_res_comp) nowait
+#endif
     for (int ii = 0; ii <= N; ii++)
     {
         blasfeo_dvecmul(2 * ni[ii], out->lam + ii, 0, out->t + ii, 0, res->res_comp + ii, 0);
         blasfeo_dvecnrm_inf(2 * ni[ii], res->res_comp + ii, 0, &tmp_res);
-        res->inf_norm_res_comp = tmp_res > res->inf_norm_res_comp ? tmp_res : res->inf_norm_res_comp;
+        inf_norm_res_comp = tmp_res > inf_norm_res_comp ? tmp_res : inf_norm_res_comp;
     }
-
+#if defined(ACADOS_WITH_OPENMP)
+    } // end of parallel region
+#endif
+    res->inf_norm_res_stat = inf_norm_res_stat;
+    res->inf_norm_res_eq = inf_norm_res_eq;
+    res->inf_norm_res_ineq = inf_norm_res_ineq;
+    res->inf_norm_res_comp = inf_norm_res_comp;
     // printf("computed residuals g: %e, b: %e, d: %e, m: %e\n", res->inf_norm_res_stat, res->inf_norm_res_eq,
     //        res->inf_norm_res_ineq, res->inf_norm_res_comp);
 }
@@ -2609,6 +2631,9 @@ void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in
     double* tmp_cost = NULL;
     double total_cost = 0.0;
 
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for private(tmp_cost) reduction(+:total_cost)
+#endif
     for (int ii = 0; ii <= N; ii++)
     {
         // set pointers

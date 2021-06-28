@@ -514,7 +514,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     // alias to dynamics_memory
 #if defined(ACADOS_WITH_OPENMP)
-    #pragma omp for
+    #pragma omp for nowait
 #endif
     for (ii = 0; ii < N; ii++)
     {
@@ -533,7 +533,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     // alias to cost_memory
 #if defined(ACADOS_WITH_OPENMP)
-    #pragma omp for
+    #pragma omp for nowait
 #endif
     for (ii = 0; ii <= N; ii++)
     {
@@ -546,7 +546,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     }
     // alias to constraints_memory
 #if defined(ACADOS_WITH_OPENMP)
-    #pragma omp for
+    #pragma omp for nowait
 #endif
     for (ii = 0; ii <= N; ii++)
     {
@@ -576,7 +576,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     // copy sampling times into dynamics model
 #if defined(ACADOS_WITH_OPENMP)
-    #pragma omp for
+    #pragma omp for nowait
 #endif
 
     // NOTE(oj): this will lead in an error for irk_gnsf, T must be set in precompute;
