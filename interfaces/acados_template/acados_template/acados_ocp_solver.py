@@ -945,7 +945,7 @@ class AcadosOcpSolver:
         if start_stage_ >= end_stage_:
             raise Exception('AcadosOcpSolver.get_slice(): end stage index must be larger than start stage index')
 
-        if start_stage_ < 0 or end_stage_ > self.N:
+        if start_stage_ < 0 or end_stage_ > self.N + 1:
             raise Exception('AcadosOcpSolver.get_slice(): stage index must be in [0, N], got: {}.'.format(self.N))
         print('JUST HANGING OUT2')
         self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = \
