@@ -933,9 +933,12 @@ class AcadosOcpSolver:
 
         if (field_ not in out_fields):
             raise Exception('AcadosOcpSolver.get_slice(): {} is an invalid argument.\
-                    \n Possible values are {}. Exiting.'.format(field_, out_fields + mem_fields))
+                    \n Possible values are {}. Exiting.'.format(field_, out_fields))
 
-        if not isinstance(stage_, int):
+        if not isinstance(start_stage_, int):
+            raise Exception('AcadosOcpSolver.get_slice(): stage index must be Integer.')
+
+        if not isinstance(end_stage_, int):
             raise Exception('AcadosOcpSolver.get_slice(): stage index must be Integer.')
 
         if start_stage_ >= end_stage_:
@@ -949,7 +952,7 @@ class AcadosOcpSolver:
         self.shared_lib.ocp_nlp_dims_get_from_attr.restype = c_int
 
         dims = self.shared_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, \
-            self.nlp_dims, self.nlp_out, stage_, field)
+            self.nlp_dims, self.nlp_out, start_stage_, field)
 
         out = np.ascontiguousarray(np.zeros((end_stage_ - start_stage_, dims)), dtype=np.float64)
         out_data = cast(out.ctypes.data, POINTER(c_double))
