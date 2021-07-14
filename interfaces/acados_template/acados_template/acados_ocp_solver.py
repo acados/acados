@@ -798,17 +798,17 @@ class AcadosOcpSolver:
         # dump to json
         ocp_formulation_json_dump(acados_ocp, simulink_opts, json_file)
 
+        code_export_dir = acados_ocp.code_export_directory
         if build:
-          # render templates
-          ocp_render_templates(acados_ocp, json_file)
+            # render templates
+            ocp_render_templates(acados_ocp, json_file)
 
-          ## Compile solver
-          code_export_dir = acados_ocp.code_export_directory
-          cwd=os.getcwd()
-          os.chdir(code_export_dir)
-          os.system('make clean_ocp_shared_lib')
-          os.system('make ocp_shared_lib')
-          os.chdir(cwd)
+            ## Compile solver
+            cwd=os.getcwd()
+            os.chdir(code_export_dir)
+            os.system('make clean_ocp_shared_lib')
+            os.system('make ocp_shared_lib')
+            os.chdir(cwd)
 
         self.shared_lib_name = f'{code_export_dir}/libacados_ocp_solver_{model.name}.so'
 
