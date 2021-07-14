@@ -170,8 +170,9 @@ class AcadosSimSolver:
 
     :param acados_sim: type :py:class:`acados_template.acados_ocp.AcadosOcp` (takes values to generate an instance :py:class:`acados_template.acados_sim.AcadosSim`) or :py:class:`acados_template.acados_sim.AcadosSim`
     :param json_file: Default: 'acados_sim.json'
+    :param build: Default: True
     """
-    def __init__(self, acados_sim_, json_file='acados_sim.json'):
+    def __init__(self, acados_sim_, json_file='acados_sim.json', build=True):
 
         self.solver_created = False
 
@@ -202,15 +203,16 @@ class AcadosSimSolver:
             sim_generate_casadi_functions(acados_sim)
             sim_formulation_json_dump(acados_sim, json_file)
 
-        # render templates
-        code_export_dir = acados_sim.code_export_directory
-        sim_render_templates(json_file, model_name, code_export_dir)
+        if build:
+          # render templates
+          code_export_dir = acados_sim.code_export_directory
+          sim_render_templates(json_file, model_name, code_export_dir)
 
-        ## Compile solver
-        cwd = os.getcwd()
-        os.chdir(code_export_dir)
-        os.system('make sim_shared_lib')
-        os.chdir(cwd)
+          ## Compile solver
+          cwd = os.getcwd()
+          os.chdir(code_export_dir)
+          os.system('make sim_shared_lib')
+          os.chdir(cwd)
 
         self.sim_struct = acados_sim
         model_name = self.sim_struct.model.name

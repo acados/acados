@@ -757,6 +757,7 @@ class AcadosOcpSolver:
         :param acados_ocp: type AcadosOcp - description of the OCP for acados
         :param json_file: name for the json file used to render the templated code - default: acados_ocp_nlp.json
         :param simulink_opts: Options to configure Simulink S-function blocks, mainly to activate possible Inputs and Outputs
+        :param build: Option to disable rendering templates and compiling if previously built - default: True
     """
     if sys.platform=="win32":
         from ctypes import wintypes
@@ -766,7 +767,7 @@ class AcadosOcpSolver:
         dlclose = CDLL(None).dlclose
         dlclose.argtypes = [c_void_p]
 
-    def __init__(self, acados_ocp, json_file='acados_ocp_nlp.json', simulink_opts=None):
+    def __init__(self, acados_ocp, json_file='acados_ocp_nlp.json', simulink_opts=None, build=True):
 
         self.solver_created = False
         self.N = acados_ocp.dims.N
@@ -797,16 +798,17 @@ class AcadosOcpSolver:
         # dump to json
         ocp_formulation_json_dump(acados_ocp, simulink_opts, json_file)
 
-        # render templates
-        ocp_render_templates(acados_ocp, json_file)
+        if build:
+          # render templates
+          ocp_render_templates(acados_ocp, json_file)
 
-        ## Compile solver
-        code_export_dir = acados_ocp.code_export_directory
-        cwd=os.getcwd()
-        os.chdir(code_export_dir)
-        os.system('make clean_ocp_shared_lib')
-        os.system('make ocp_shared_lib')
-        os.chdir(cwd)
+          ## Compile solver
+          code_export_dir = acados_ocp.code_export_directory
+          cwd=os.getcwd()
+          os.chdir(code_export_dir)
+          os.system('make clean_ocp_shared_lib')
+          os.system('make ocp_shared_lib')
+          os.chdir(cwd)
 
         self.shared_lib_name = f'{code_export_dir}/libacados_ocp_solver_{model.name}.so'
 
