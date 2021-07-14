@@ -51,6 +51,6 @@ set(CMAKE_C_FLAGS "\"-J${DSPACE_RTLIB}\"")
 set(CMAKE_INCLUDE_FLAG_C "-J")
 set(CMAKE_INCLUDE_FLAG_CXX "-J")
 
-add_definitions(-D__DSPACE__)
+add_definitions(-D__MABX2__)
 remove_definitions(-DLINUX)
 remove_definitions(-D__LINUX__)

@@ -72,7 +72,7 @@ real_t acados_toc(acados_timer* t)
     return (real_t) duration / 1e9;
 }
 
-#elif defined(__DSPACE__)
+#elif defined(__MABX2__)
 
 void acados_tic(acados_timer* t)
 {
