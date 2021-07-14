@@ -25,12 +25,15 @@ As the dSPACE installation varies from system to system, this toolchain file fir
 
 1. The Toolchain files are located in `'acados_root_folder'/cmake`.
 The toolchain file for the MicroLabBox is called `Toolchain-dSpaceDS1202.cmake` and can be edited with any editor (respectively `Toolchain-dSpaceDS1401.cmake` for the MicroAutoBox-II).
-2. The lines that contain the path to the host and target compiler have to be adapted to fit your system.
+2. The lines that contain the paths to the compilers have to be adapted to fit your system.
 Specifically, the folder name which consists of a long number (here: 1184D92C-D928-4591-A1E9-B54339797C20) varies.
+For example for `DS1202`:
 On your system in `C:/ProgramData/dSPACE/`, find the folder which contains the directories `/Compiler/QNX650_520/host/win32/x86/` and `/Compiler/QNX650_520/target/qnx6/`, and update the two paths in the toolchain file.
-3. Define an environment variable (type `env` in the windows search bar and open `Edit the windows environment variables`.
+
+Define environment variables used within the toolchain file, currently only required for `DS1202`:
+1. Define an environment variable (type `env` in the windows search bar and open `Edit the windows environment variables`.
 There, click `Environment Variables...` and create a new entry for your user) with the name `QNX_HOST` and as the value, enter the path you set before in the toolchain file.
-4. Define an environment variable with the name `QNX_TARGET` and as the value, enter the path you set before in the toolchain file.
+2. Define an environment variable with the name `QNX_TARGET` and as the value, enter the path you set before in the toolchain file.
 
 ### Step 2: Cross-compile `acados` for your dSPACE platform
 In order to compile `acados` for your dSPACE platform, you need the `acados` libraries and header files in the correct format.
@@ -107,6 +110,7 @@ For the example in the previous step the entry in the dSPACE Makefile would look
 4. Define the libraries needed to compile the S-Functions. With hpipm as a solver, this looks as follows:
     ```
     # Additional user libraries to be linked.
+    # NOTE: these might be *.lib for other systems
     USER_LIBS = \
     lib\libblasfeo.a \
     lib\libhpipm.a \
