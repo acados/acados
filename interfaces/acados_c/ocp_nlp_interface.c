@@ -545,19 +545,22 @@ void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
 void ocp_nlp_out_get_slice(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
         int start_stage, int end_stage, const char *field, void *value)
 {
-    if (!strcmp(field, "x"))
-    {
+  if (!strcmp(field, "x"))
+  {
       double *double_values = value;
-      for (int stage = start_stage; stage < end_stage; stage++) {
-        double *double_values = value + 4 * sizeof(double) * (end_stage - start_stage);
-        blasfeo_unpack_dvec(dims->nx[stage], &out->ux[stage], dims->nu[stage], double_values, 1);
+      for (int stage = start_stage; stage < end_stage; stage++)
+      {
+        blasfeo_unpack_dvec(dims->nx[stage],
+                            &out->ux[stage],
+                            dims->nu[stage],
+                            &double_values[dims->nx[stage]*(stage - start_stage)], 1);
       }
     }
-    else
-    {
-        printf("\nerror: ocp_nlp_out_get_slice: field %s not available\n", field);
-        exit(1);
-    }
+  else
+  {
+      printf("\nerror: ocp_nlp_out_get_slice: field %s not available\n", field);
+      exit(1);
+  }
 }
 
 

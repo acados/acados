@@ -927,6 +927,7 @@ class AcadosOcpSolver:
         return out
 
     def get_slice(self, start_stage_, end_stage_, field_):
+        print('JUST HANGING OUT1')
         out_fields = ['x']
         field = field_
         field = field.encode('utf-8')
@@ -946,7 +947,7 @@ class AcadosOcpSolver:
 
         if start_stage_ < 0 or end_stage_ > self.N:
             raise Exception('AcadosOcpSolver.get_slice(): stage index must be in [0, N], got: {}.'.format(self.N))
-
+        print('JUST HANGING OUT2')
         self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = \
             [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
         self.shared_lib.ocp_nlp_dims_get_from_attr.restype = c_int
@@ -958,7 +959,7 @@ class AcadosOcpSolver:
         out_data = cast(out.ctypes.data, POINTER(c_double))
 
         if (field_ in out_fields):
-            self.shared_lib.ocp_nlp_out_get.argtypes = \
+            self.shared_lib.ocp_nlp_out_get_slice.argtypes = \
                 [c_void_p, c_void_p, c_void_p, c_int, c_int, c_char_p, c_void_p]
             self.shared_lib.ocp_nlp_out_get_slice(self.nlp_config, \
                 self.nlp_dims, self.nlp_out, start_stage_, end_stage_, field, out_data)
