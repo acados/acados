@@ -2172,7 +2172,7 @@ class AcadosOcpOptions:
     def integrator_type(self):
         """
         Integrator type.
-        String in ('ERK', 'IRK', 'GNSF', 'DISCRETE').
+        String in ('ERK', 'IRK', 'GNSF', 'DISCRETE', 'LIFTED_IRK').
         Default: 'ERK'.
         """
         return self.__integrator_type
@@ -2491,7 +2491,7 @@ class AcadosOcpOptions:
 
     @integrator_type.setter
     def integrator_type(self, integrator_type):
-        integrator_types = ('ERK', 'IRK', 'GNSF', 'DISCRETE')
+        integrator_types = ('ERK', 'IRK', 'GNSF', 'DISCRETE', 'LIFTED_IRK')
         if integrator_type in integrator_types:
             self.__integrator_type = integrator_type
         else:

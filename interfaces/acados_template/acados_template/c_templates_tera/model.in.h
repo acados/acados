@@ -46,7 +46,7 @@ extern "C" {
 	{%- set hessian_approx = "GAUSS_NEWTON" %}
 {%- endif %}
 
-{% if solver_options.integrator_type == "IRK" %}
+{% if solver_options.integrator_type == "IRK" or solver_options.integrator_type == "LIFTED_IRK" %}
 // implicit ODE
 int {{ model.name }}_impl_dae_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_impl_dae_fun_work(int *, int *, int *, int *);
@@ -71,13 +71,13 @@ const int *{{ model.name }}_impl_dae_jac_x_xdot_u_z_sparsity_out(int);
 int {{ model.name }}_impl_dae_jac_x_xdot_u_z_n_in();
 int {{ model.name }}_impl_dae_jac_x_xdot_u_z_n_out();
 
-// // implicit ODE - for lifted_irk
-// int {{ model.name }}_impl_dae_fun_jac_x_xdot_u(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
-// int {{ model.name }}_impl_dae_fun_jac_x_xdot_u_work(int *, int *, int *, int *);
-// const int *{{ model.name }}_impl_dae_fun_jac_x_xdot_u_sparsity_in(int);
-// const int *{{ model.name }}_impl_dae_fun_jac_x_xdot_u_sparsity_out(int);
-// int {{ model.name }}_impl_dae_fun_jac_x_xdot_u_n_in();
-// int {{ model.name }}_impl_dae_fun_jac_x_xdot_u_n_out();
+// implicit ODE - for lifted_irk
+int {{ model.name }}_impl_dae_fun_jac_x_xdot_u(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ model.name }}_impl_dae_fun_jac_x_xdot_u_work(int *, int *, int *, int *);
+const int *{{ model.name }}_impl_dae_fun_jac_x_xdot_u_sparsity_in(int);
+const int *{{ model.name }}_impl_dae_fun_jac_x_xdot_u_sparsity_out(int);
+int {{ model.name }}_impl_dae_fun_jac_x_xdot_u_n_in();
+int {{ model.name }}_impl_dae_fun_jac_x_xdot_u_n_out();
 
 {%- if hessian_approx == "EXACT" %}
 int {{ model.name }}_impl_dae_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);

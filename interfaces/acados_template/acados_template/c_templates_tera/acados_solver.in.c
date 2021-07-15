@@ -522,6 +522,28 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
         external_function_param_casadi_create(&capsule->impl_dae_hess[i], {{ dims.np }});
     }
     {%- endif %}
+{% elif solver_options.integrator_type == "LIFTED_IRK" %}
+    // external functions (implicit model)
+    capsule->impl_dae_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
+    for (int i = 0; i < N; i++) {
+        capsule->impl_dae_fun[i].casadi_fun = &{{ model.name }}_impl_dae_fun;
+        capsule->impl_dae_fun[i].casadi_work = &{{ model.name }}_impl_dae_fun_work;
+        capsule->impl_dae_fun[i].casadi_sparsity_in = &{{ model.name }}_impl_dae_fun_sparsity_in;
+        capsule->impl_dae_fun[i].casadi_sparsity_out = &{{ model.name }}_impl_dae_fun_sparsity_out;
+        capsule->impl_dae_fun[i].casadi_n_in = &{{ model.name }}_impl_dae_fun_n_in;
+        capsule->impl_dae_fun[i].casadi_n_out = &{{ model.name }}_impl_dae_fun_n_out;
+        external_function_param_casadi_create(&capsule->impl_dae_fun[i], {{ dims.np }});
+    }
+
+    capsule->impl_dae_fun_jac_x_xdot_u = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);    for (int i = 0; i < N; i++) {
+        capsule->impl_dae_fun_jac_x_xdot_u[i].casadi_fun = &{{ model.name }}_impl_dae_fun_jac_x_xdot_u;
+        capsule->impl_dae_fun_jac_x_xdot_u[i].casadi_work = &{{ model.name }}_impl_dae_fun_jac_x_xdot_u_work;
+        capsule->impl_dae_fun_jac_x_xdot_u[i].casadi_sparsity_in = &{{ model.name }}_impl_dae_fun_jac_x_xdot_u_sparsity_in;
+        capsule->impl_dae_fun_jac_x_xdot_u[i].casadi_sparsity_out = &{{ model.name }}_impl_dae_fun_jac_x_xdot_u_sparsity_out;
+        capsule->impl_dae_fun_jac_x_xdot_u[i].casadi_n_in = &{{ model.name }}_impl_dae_fun_jac_x_xdot_u_n_in;
+        capsule->impl_dae_fun_jac_x_xdot_u[i].casadi_n_out = &{{ model.name }}_impl_dae_fun_jac_x_xdot_u_n_out;
+        external_function_param_casadi_create(&capsule->impl_dae_fun_jac_x_xdot_u[i], {{ dims.np }});
+    }
 
 {% elif solver_options.integrator_type == "GNSF" %}
     capsule->gnsf_phi_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
@@ -914,6 +936,10 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
         {%- if solver_options.hessian_approx == "EXACT" %}
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "impl_dae_hess", &capsule->impl_dae_hess[i]);
         {%- endif %}
+    {% elif solver_options.integrator_type == "LIFTED_IRK" %}
+        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "impl_dae_fun", &capsule->impl_dae_fun[i]);
+        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i,
+                                   "impl_dae_fun_jac_x_xdot_u", &capsule->impl_dae_fun_jac_x_xdot_u[i]);
     {% elif solver_options.integrator_type == "GNSF" %}
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "phi_fun", &capsule->gnsf_phi_fun[i]);
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "phi_fun_jac_y", &capsule->gnsf_phi_fun_jac_y[i]);
@@ -2088,6 +2114,9 @@ int {{ model.name }}_acados_update_params(nlp_solver_capsule * capsule, int stag
         {%- if solver_options.hessian_approx == "EXACT" %}
         capsule->impl_dae_hess[stage].set_param(capsule->impl_dae_hess+stage, p);
         {%- endif %}
+    {% elif solver_options.integrator_type == "LIFTED_IRK" %}
+        capsule->impl_dae_fun[stage].set_param(capsule->impl_dae_fun+stage, p);
+        capsule->impl_dae_fun_jac_x_xdot_z[stage].set_param(capsule->impl_dae_fun_jac_x_xdot_z+stage, p);
     {% elif solver_options.integrator_type == "ERK" %}
         capsule->forw_vde_casadi[stage].set_param(capsule->forw_vde_casadi+stage, p);
         capsule->expl_ode_fun[stage].set_param(capsule->expl_ode_fun+stage, p);
@@ -2216,6 +2245,15 @@ int {{ model.name }}_acados_free(nlp_solver_capsule * capsule)
     {%- if solver_options.hessian_approx == "EXACT" %}
     free(capsule->impl_dae_hess);
     {%- endif %}
+
+{%- elif solver_options.integrator_type == "LIFTED_IRK" %}
+    for (int i = 0; i < {{ dims.N }}; i++)
+    {
+        external_function_param_casadi_free(&capsule->impl_dae_fun[i]);
+        external_function_param_casadi_free(&capsule->impl_dae_fun_jac_x_xdot_u[i]);
+    }
+    free(capsule->impl_dae_fun);
+    free(capsule->impl_dae_fun_jac_x_xdot_u);
 
 {%- elif solver_options.integrator_type == "ERK" %}
     for (int i = 0; i < {{ dims.N }}; i++)

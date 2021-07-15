@@ -561,6 +561,8 @@ def ocp_generate_external_functions(acados_ocp, model):
     elif acados_ocp.solver_options.integrator_type == 'IRK':
         # implicit model -- generate C code
         generate_c_code_implicit_ode(model, opts)
+    elif acados_ocp.solver_options.integrator_type == 'LIFTED_IRK':
+        generate_c_code_implicit_ode(model, opts)
     elif acados_ocp.solver_options.integrator_type == 'GNSF':
         generate_c_code_gnsf(model, opts)
     elif acados_ocp.solver_options.integrator_type == 'DISCRETE':
