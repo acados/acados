@@ -47,7 +47,7 @@ ocp = AcadosOcp()
 model = export_pendulum_ode_model()
 ocp.model = model
 
-integrator_type = 'IRK' # ERK, IRK, GNSF
+integrator_type = 'LIFTED_IRK' # ERK, IRK, GNSF, LIFTED_IRK
 
 if integrator_type == 'GNSF':
     acados_dae_model_json_dump(model)
@@ -179,6 +179,13 @@ ocp_solver.set(1, "t", np.zeros(2,))
 
 ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
 
+# timings
+time_tot = ocp_solver.get_stats("time_tot")
+time_lin = ocp_solver.get_stats("time_lin")
+time_sim = ocp_solver.get_stats("time_sim")
+time_qp = ocp_solver.get_stats("time_qp")
+
+print(f"timings OCP solver: total: {1e3*time_tot}ms, lin: {1e3*time_lin}ms, sim: {1e3*time_sim}ms, qp: {1e3*time_qp}ms")
 # print("simU", simU)
 # print("simX", simX)
 
