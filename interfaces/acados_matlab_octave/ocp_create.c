@@ -680,7 +680,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (mxGetField( matlab_model, 0, "dim_nsbx_e" )!=NULL)
     {
         nsbx_e = mxGetScalar( mxGetField( matlab_model, 0, "dim_nsbx_e" ) );
-        ocp_nlp_dims_set_constraints(config, dims, N, "nsbx", &nsbx);
+        ocp_nlp_dims_set_constraints(config, dims, N, "nsbx", &nsbx_e);
     }
     // nsg
     if (mxGetField( matlab_model, 0, "dim_nsg" )!=NULL)
