@@ -305,7 +305,7 @@ void ocp_nlp_constraints_bgh_dims_set(void *config_, void *dims_, const char *fi
     }
     else
     {
-        printf("\nerror: ocp_nlp_constraints_bgh_dims_get: field %s not available in module\n", field);
+        printf("\nerror: ocp_nlp_constraints_bgh_dims_set: field %s not available in module\n", field);
         exit(1);
     }
 }
