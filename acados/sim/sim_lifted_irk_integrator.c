@@ -165,11 +165,11 @@ int sim_lifted_irk_model_set(void *model_, const char *field, void *value)
 {
     lifted_irk_model *model = model_;
 
-    if (!strcmp(field, "impl_ode_fun"))
+    if (!strcmp(field, "impl_ode_fun") || !strcmp(field, "impl_dae_fun"))
     {
         model->impl_ode_fun = value;
     }
-    else if (!strcmp(field, "impl_ode_fun_jac_x_xdot_u"))
+    else if (!strcmp(field, "impl_ode_fun_jac_x_xdot_u") || !strcmp(field, "impl_dae_fun_jac_x_xdot_u"))
     {
         model->impl_ode_fun_jac_x_xdot_u = value;
     }
