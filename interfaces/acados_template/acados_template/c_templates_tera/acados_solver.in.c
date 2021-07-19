@@ -1916,12 +1916,12 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
         {%- endif %}
     {%- endfor %}
 
-    {%- if all_equal == true %}
+  {%- if all_equal == true %}
     // all sim_method_num_stages are identical
     int sim_method_num_stages = {{ solver_options.sim_method_num_stages[0] }};
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, capsule->nlp_opts, i, "dynamics_num_stages", &sim_method_num_stages);
-    {%- else %}
+  {%- else %}
     int* sim_method_num_stages = malloc(N*sizeof(int));
     {%- for j in range(end=dims.N) %}
     sim_method_num_stages[{{ j }}] = {{ solver_options.sim_method_num_stages[j] }};
@@ -1930,15 +1930,36 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, capsule->nlp_opts, i, "dynamics_num_stages", &sim_method_num_stages[i]);
     free(sim_method_num_stages);
-    {%- endif %}
+  {%- endif %}
 
     int newton_iter_val = {{ solver_options.sim_method_newton_iter }};
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, capsule->nlp_opts, i, "dynamics_newton_iter", &newton_iter_val);
 
-    bool tmp_bool = {{ solver_options.sim_method_jac_reuse }};
+
+    // set up sim_method_jac_reuse
+    {%- set all_equal = true %}
+    {%- set val = solver_options.sim_method_jac_reuse[0] %}
+    {%- for j in range(start=1, end=dims.N) %}
+        {%- if val != solver_options.sim_method_jac_reuse[j] %}
+            {%- set_global all_equal = false %}
+            {%- break %}
+        {%- endif %}
+    {%- endfor %}
+  {%- if all_equal == true %}
+    bool tmp_bool = (bool) {{ solver_options.sim_method_jac_reuse[0] }};
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, capsule->nlp_opts, i, "dynamics_jac_reuse", &tmp_bool);
+  {%- else %}
+    bool* sim_method_jac_reuse = malloc(N*sizeof(bool));
+    {%- for j in range(end=dims.N) %}
+    sim_method_jac_reuse[{{ j }}] = (bool){{ solver_options.sim_method_jac_reuse[j] }};
+    {%- endfor %}
+
+    for (int i = 0; i < N; i++)
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, capsule->nlp_opts, i, "dynamics_jac_reuse", &sim_method_jac_reuse[i]);
+    free(sim_method_jac_reuse);
+  {%- endif %}
 
 {%- endif %}
 
