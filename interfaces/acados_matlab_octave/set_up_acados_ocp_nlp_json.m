@@ -68,6 +68,12 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     else
         ocp_json.solver_options.sim_method_num_stages = obj.opts_struct.sim_method_num_stages * ones(1, N);
     end
+    if length(obj.opts_struct.sim_method_jac_reuse) == N
+        ocp_json.solver_options.sim_method_jac_reuse = obj.opts_struct.sim_method_jac_reuse;
+    else
+        ocp_json.solver_options.sim_method_jac_reuse = obj.opts_struct.sim_method_jac_reuse * ones(1, N);
+    end
+
     ocp_json.solver_options.sim_method_newton_iter = obj.opts_struct.sim_method_newton_iter;
     ocp_json.solver_options.nlp_solver_max_iter = obj.opts_struct.nlp_solver_max_iter;
     ocp_json.solver_options.nlp_solver_tol_stat = obj.opts_struct.nlp_solver_tol_stat;

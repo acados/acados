@@ -180,6 +180,7 @@ for itest = 1:2
     ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
     ocp_opts.set('sim_method_num_steps', ocp_sim_method_num_steps);
     ocp_opts.set('sim_method_newton_iter', ocp_sim_method_newton_iter);
+    ocp_opts.set('sim_method_jac_reuse', [0; ones(N-1, 1)]);
 
 
     %% acados ocp
