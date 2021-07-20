@@ -515,52 +515,53 @@ void ocp_nlp_out_get_slice(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_o
     int row_size;
     int offset;
     struct blasfeo_dvec *ptr;
-    if (!strcmp(field, "x"))
-    {
-        row_size = dims->nx[start_stage];
-        offset = dims->nu[start_stage];
-        ptr = &out->ux[start_stage];
-    }
-    else if (!strcmp(field, "u"))
-    {
-        row_size = dims->nu[start_stage];
-        offset = 0;
-        ptr = &out->ux[start_stage];
-    }
-    else if (!strcmp(field, "z"))
-    {
-        row_size = dims->nz[start_stage];
-        offset = 0;
-        ptr = &out->z[start_stage];
-    }
-    else if (!strcmp(field, "pi"))
-    {
-        row_size = dims->nx[start_stage+1];
-        offset = 0;
-        ptr = &out->pi[start_stage];
-    }
-    else if (!strcmp(field, "lam"))
-    {
-        row_size = 2*dims->ni[start_stage];
-        offset = 0;
-        ptr = &out->lam[start_stage];
-    }
-    else if (!strcmp(field, "t"))
-    {
-        row_size = 2*dims->ni[start_stage];
-        offset = 0;
-        ptr = &out->t[start_stage];
-    }
-    else
-    {
-        printf("\nerror: ocp_nlp_out_get_slice: field %s not available\n", field);
-        exit(1);
-    }
-    double *double_values = value;
     for (int stage = start_stage; stage < end_stage; stage++)
     {   
+      if (!strcmp(field, "x"))
+      {
+        row_size = dims->nx[stage];
+        offset = dims->nu[stage];
+        ptr = &out->ux[stage];
+      }
+      else if (!strcmp(field, "u"))
+      {
+        row_size = dims->nu[stage];
+        offset = 0;
+        ptr = &out->ux[stage];
+      }
+      else if (!strcmp(field, "z"))
+      {
+        row_size = dims->nz[stage];
+        offset = 0;
+        ptr = &out->z[stage];
+      }
+      else if (!strcmp(field, "pi"))
+      {
+        row_size = dims->nx[stage+1];
+        offset = 0;
+        ptr = &out->pi[stage];
+      }
+      else if (!strcmp(field, "lam"))
+      {
+        row_size = 2*dims->ni[stage];
+        offset = 0;
+        ptr = &out->lam[stage];
+      }
+      else if (!strcmp(field, "t"))
+      {
+        row_size = 2*dims->ni[stage];
+        offset = 0;
+        ptr = &out->t[stage];
+      }
+      else
+      {
+        printf("\nerror: ocp_nlp_out_get_slice: field %s not available\n", field);
+        exit(1);
+      }
+      double *double_values = value;
         blasfeo_unpack_dvec(row_size, ptr, offset,
             &double_values[row_size*(stage - start_stage)], 1);                
+        ptr = (char *) ptr + sizeof(double)*row_size;
     }
 }
 
