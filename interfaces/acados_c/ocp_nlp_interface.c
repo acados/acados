@@ -495,72 +495,75 @@ void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
 }
 
 
+void ocp_nlp_out_get_slice(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
+        int start_stage, int end_stage, const char *field, void *value)
+{
+    int row_size;
+    int offset;
+    struct blasfeo_dvec *ptr;
+    if (!strcmp(field, "x"))
+    {
+        row_size = dims->nx[start_stage];
+        offset = dims->nu[start_stage];
+        ptr = &out->ux[start_stage];
+    }
+    else if (!strcmp(field, "u"))
+    {
+        row_size = dims->nx[start_stage];
+        offset = 0;
+        ptr = &out->ux[start_stage];
+    }
+    else if (!strcmp(field, "z"))
+    {
+        row_size = dims->nz[start_stage];
+        offset = 0;
+        ptr = &out->z[start_stage];
+    }
+    else if (!strcmp(field, "pi"))
+    {
+        row_size = dims->nx[start_stage+1];
+        offset = 0;
+        ptr = &out->pi[start_stage];
+    }
+    else if (!strcmp(field, "lam"))
+    {
+        row_size = 2*dims->ni[start_stage];
+        offset = 0;
+        ptr = &out->lam[start_stage];
+    }
+    else if (!strcmp(field, "t"))
+    {
+        row_size = 2*dims->ni[start_stage];
+        offset = 0;
+        ptr = &out->t[start_stage];
+    }
+    else
+    {
+        printf("\nerror: ocp_nlp_out_get_slice: field %s not available\n", field);
+        exit(1);
+    }
+    double *double_values = value;
+    for (int stage = start_stage; stage < end_stage; stage++)
+    {
+        blasfeo_unpack_dvec(row_size, ptr, offset,
+                            &double_values[row_size*(stage - start_stage)], 1);
+    }
+}
+
 
 void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
         int stage, const char *field, void *value)
 {
-    if (!strcmp(field, "x"))
-    {
-        double *double_values = value;
-        blasfeo_unpack_dvec(dims->nx[stage], &out->ux[stage], dims->nu[stage], double_values, 1);
-    }
-    else if (!strcmp(field, "u"))
-    {
-        double *double_values = value;
-        blasfeo_unpack_dvec(dims->nu[stage], &out->ux[stage], 0, double_values, 1);
-    }
-    else if (!strcmp(field, "z"))
-    {
-        double *double_values = value;
-        blasfeo_unpack_dvec(dims->nz[stage], &out->z[stage], 0, double_values, 1);
-    }
-    else if (!strcmp(field, "pi"))
-    {
-        double *double_values = value;
-        blasfeo_unpack_dvec(dims->nx[stage+1], &out->pi[stage], 0, double_values, 1);
-    }
-    else if (!strcmp(field, "lam"))
-    {
-        double *double_values = value;
-        blasfeo_unpack_dvec(2*dims->ni[stage], &out->lam[stage], 0, double_values, 1);
-    }
-    else if (!strcmp(field, "t"))
-    {
-        double *double_values = value;
-        blasfeo_unpack_dvec(2*dims->ni[stage], &out->t[stage], 0, double_values, 1);
-    }
-    else if ((!strcmp(field, "kkt_norm_inf")) || (!strcmp(field, "kkt_norm")))
+    
+    if ((!strcmp(field, "kkt_norm_inf")) || (!strcmp(field, "kkt_norm")))
     {
         double *double_values = value;
         double_values[0] = out->inf_norm_res;
     }
     else
     {
-        printf("\nerror: ocp_nlp_out_get: field %s not available\n", field);
-        exit(1);
+        ocp_nlp_out_get_slice(config, dims, out, stage, stage+1, field, value);
     }
-}
-
-
-void ocp_nlp_out_get_slice(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
-        int start_stage, int end_stage, const char *field, void *value)
-{
-  if (!strcmp(field, "x"))
-  {
-      double *double_values = value;
-      for (int stage = start_stage; stage < end_stage; stage++)
-      {
-        blasfeo_unpack_dvec(dims->nx[stage],
-                            &out->ux[stage],
-                            dims->nu[stage],
-                            &double_values[dims->nx[stage]*(stage - start_stage)], 1);
-      }
-    }
-  else
-  {
-      printf("\nerror: ocp_nlp_out_get_slice: field %s not available\n", field);
-      exit(1);
-  }
 }
 
 
