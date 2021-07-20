@@ -402,13 +402,27 @@ int ocp_nlp_dynamics_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
 }
 
 
-
 int ocp_nlp_cost_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
         ocp_nlp_in *in, int stage, const char *field, void *value)
 {
     ocp_nlp_cost_config *cost_config = config->cost[stage];
+    return cost_config->model_set(cost_config, dims->cost[stage], in->cost[stage], field,
+                                    value);
 
-    return cost_config->model_set(cost_config, dims->cost[stage], in->cost[stage], field, value);
+}
+
+int ocp_nlp_cost_model_set_slice(ocp_nlp_config *config, ocp_nlp_dims *dims,
+        ocp_nlp_in *in, int start_stage, int end_stage, const char *field, void *value, int dim)
+{
+    int result = 0;
+    for (int stage = start_stage; stage < end_stage; stage++)
+    {
+      value = (char *)value + sizeof(double) * dim * (stage - start_stage);
+      ocp_nlp_cost_config *cost_config = config->cost[stage];
+      result = cost_config->model_set(cost_config, dims->cost[stage], in->cost[stage], field,
+                                    value);
+    }
+    return result;
 
 }
 
@@ -544,9 +558,9 @@ void ocp_nlp_out_get_slice(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_o
     }
     double *double_values = value;
     for (int stage = start_stage; stage < end_stage; stage++)
-    {
+    {   
         blasfeo_unpack_dvec(row_size, ptr, offset,
-                            &double_values[row_size*(stage - start_stage)], 1);
+            &double_values[row_size*(stage - start_stage)], 1);                
     }
 }
 
