@@ -509,7 +509,6 @@ void ocp_nlp_out_get_slice(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_o
     }
     else if (!strcmp(field, "u"))
     {
-        printf("\n Hey this is getting u for stage %i  and %i \n", start_stage, end_stage);
         row_size = dims->nu[start_stage];
         offset = 0;
         ptr = &out->ux[start_stage];
