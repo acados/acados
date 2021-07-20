@@ -46,7 +46,7 @@
 int main()
 {
 
-    nlp_solver_capsule *acados_ocp_capsule = {{ model.name }}_acados_create_capsule();
+    {{ model.name }}_solver_capsule *acados_ocp_capsule = {{ model.name }}_acados_create_capsule();
     int status = {{ model.name }}_acados_create(acados_ocp_capsule);
 
     if (status)
