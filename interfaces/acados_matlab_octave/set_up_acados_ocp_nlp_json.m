@@ -316,7 +316,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
 
 
     if ocp_json.dims.nsbu > 0
-        ocp_json.constraints.idxsbu = J_to_idx_slack(model.Jsbu);
+        ocp_json.constraints.idxsbu = J_to_idx_slack(model.constr_Jsbu);
         if isfield(model, 'constr_lsbu')
             ocp_json.constraints.lsbu = model.constr_lsbu;
         else
