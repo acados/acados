@@ -417,10 +417,10 @@ int ocp_nlp_cost_model_set_slice(ocp_nlp_config *config, ocp_nlp_dims *dims,
     int result = 0;
     for (int stage = start_stage; stage < end_stage; stage++)
     {
-      value = (char *)value + sizeof(double) * dim * (stage - start_stage);
       ocp_nlp_cost_config *cost_config = config->cost[stage];
-      result = cost_config->model_set(cost_config, dims->cost[stage], in->cost[stage], field,
-                                    value);
+      result = cost_config->model_set(cost_config, dims->cost[stage],
+                                      in->cost[stage], field, value);
+      value = (char *)value + sizeof(double) * dim;
     }
     return result;
 

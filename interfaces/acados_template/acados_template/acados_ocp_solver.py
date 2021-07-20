@@ -1203,7 +1203,7 @@ class AcadosOcpSolver:
 
             if value_.shape[0] != dims:
                 msg = 'AcadosOcpSolver.set(): mismatching dimension for field "{}" '.format(field_)
-                msg += 'with dimension {} (you have {})'.format(dims, value_.shape[0])
+                msg += 'with dimension {} (you have {})'.format(dims, value_.shape)
                 raise Exception(msg)
 
             value_data = cast(value_.ctypes.data, POINTER(c_double))
@@ -1248,8 +1248,7 @@ class AcadosOcpSolver:
         # cast value_ to avoid conversion issues
         if isinstance(value_, (float, int)):
             value_ = np.array([value_])
-        value_ = value_.astype(float)
-
+        value_ = np.ascontiguousarray(np.copy(value_), dtype=np.float64)
         field = field_
         field = field.encode('utf-8')
         dim = np.product(value_.shape[1:])
@@ -1267,6 +1266,7 @@ class AcadosOcpSolver:
             self.nlp_dims, self.nlp_out, start_stage_, field, dims_data)
 
         value_shape = value_.shape
+        expected_shape = tuple(np.concatenate([np.array([end_stage_ - start_stage_]), dims]))
         if len(value_shape) == 1:
             value_shape = (value_shape[0], 0)
 
@@ -1293,10 +1293,10 @@ class AcadosOcpSolver:
             else:
                 raise Exception("Unknown api: '{}'".format(api))
 
-        if value_shape[1:] != tuple(dims):
+        if value_shape != expected_shape:
             raise Exception('AcadosOcpSolver.cost_set(): mismatching dimension', \
                 ' for field "{}" with dimension {} (you have {})'.format( \
-                field_, tuple(dims), value_shape))
+                field_, expected_shape, value_shape))
 
         value_data = cast(value_.ctypes.data, POINTER(c_double))
         value_data_p = cast((value_data), c_void_p)
