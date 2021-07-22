@@ -321,35 +321,18 @@ int {{ model.name }}_acados_sim_create(sim_solver_capsule * capsule)
                                                {{ model.name }}_sim_dims, {{ model.name }}_sim_opts);
     capsule->acados_sim_solver = {{ model.name }}_sim_solver;
 
+{% if dims.np > 0 %}
     /* initialize parameter values */
-    {% if dims.np > 0 %}
-    // initialize parameters to nominal value
-    double p[{{ dims.np }}];
-    {% for i in range(end=dims.np) %}
-    p[{{ i }}] = {{ parameter_values[i] }};
+    double* p = calloc({{ dims.np }}, sizeof(double));
+    {% for item in parameter_values %}
+        {%- if item != 0 %}
+    p[{{ loop.index0 }}] = {{ item }};
+        {%- endif %}
     {%- endfor %}
 
-{%- if solver_options.integrator_type == "ERK" %}
-    capsule->sim_forw_vde_casadi[0].set_param(capsule->sim_forw_vde_casadi, p);
-    capsule->sim_expl_ode_fun_casadi[0].set_param(capsule->sim_expl_ode_fun_casadi, p);
-{%- if hessian_approx == "EXACT" %}
-    capsule->sim_expl_ode_hess[0].set_param(capsule->sim_expl_ode_hess, p);
-{%- endif %}
-{%- elif solver_options.integrator_type == "IRK" %}
-    capsule->sim_impl_dae_fun[0].set_param(capsule->sim_impl_dae_fun, p);
-    capsule->sim_impl_dae_fun_jac_x_xdot_z[0].set_param(capsule->sim_impl_dae_fun_jac_x_xdot_z, p);
-    capsule->sim_impl_dae_jac_x_xdot_u_z[0].set_param(capsule->sim_impl_dae_jac_x_xdot_u_z, p);
-{%- if hessian_approx == "EXACT" %}
-    capsule->sim_impl_dae_hess[0].set_param(capsule->sim_impl_dae_hess, p);
-{%- endif %}
-{%- elif solver_options.integrator_type == "GNSF" %}
-    capsule->sim_gnsf_phi_fun[0].set_param(capsule->sim_gnsf_phi_fun, p);
-    capsule->sim_gnsf_phi_fun_jac_y[0].set_param(capsule->sim_gnsf_phi_fun_jac_y, p);
-    capsule->sim_gnsf_phi_jac_y_uhat[0].set_param(capsule->sim_gnsf_phi_jac_y_uhat, p);
-    capsule->sim_gnsf_f_lo_jac_x1_x1dot_u_z[0].set_param(capsule->sim_gnsf_f_lo_jac_x1_x1dot_u_z, p);
-    capsule->sim_gnsf_get_matrices_fun[0].set_param(capsule->sim_gnsf_get_matrices_fun, p);
-{% endif %}
-    {% endif %}{# if dims.np #}
+    {{ model.name }}_acados_sim_update_params(capsule, p, {{ dims.np }});
+    free(p);
+{% endif %}{# if dims.np #}
 
     /* initialize input */
     // x
