@@ -432,9 +432,24 @@ int ocp_nlp_constraints_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
         ocp_nlp_in *in, int stage, const char *field, void *value)
 {
     ocp_nlp_constraints_config *constr_config = config->constraints[stage];
-
     return constr_config->model_set(constr_config, dims->constraints[stage],
             in->constraints[stage], field, value);
+}
+
+
+int ocp_nlp_constraints_model_set_slice(ocp_nlp_config *config, ocp_nlp_dims *dims,
+        ocp_nlp_in *in, int start_stage, int end_stage, const char *field, void *value, int dim)
+{ 
+    int result = 0;
+    for (int stage = start_stage; stage < end_stage; stage++)
+    {
+      ocp_nlp_constraints_config *constr_config = config->constraints[stage];
+      result = constr_config->model_set(constr_config, dims->constraints[stage],
+                                      in->constraints[stage], field, value);
+      value = (char *)value + sizeof(double) * dim;
+    }
+    return result;
+
 }
 
 
