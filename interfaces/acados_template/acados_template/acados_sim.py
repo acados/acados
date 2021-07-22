@@ -106,7 +106,7 @@ class AcadosSimOpts:
     """
     def __init__(self):
         self.__integrator_type = 'ERK'
-        self.__tf = None
+        self.__Tsim = None
         # ints
         self.__sim_method_num_stages = 1
         self.__sim_method_num_steps = 1
@@ -262,6 +262,8 @@ class AcadosSim:
 
     - :py:attr:`acados_include_path` (set automatically)
     - :py:attr:`acados_lib_path` (set automatically)
+    - :py:attr:`parameter_values` - used to initialize the parameters (can be changed)
+
     """
     def __init__(self, acados_path=''):
         if acados_path == '':
@@ -280,6 +282,21 @@ class AcadosSim:
 
         self.code_export_directory = 'c_generated_code'
         """Path to where code will be exported. Default: `c_generated_code`."""
+
+        self.__parameter_values = np.array([])
+
+    @property
+    def parameter_values(self):
+        """:math:`p` - initial values for parameter - can be updated"""
+        return self.__parameter_values
+
+    @parameter_values.setter
+    def parameter_values(self, parameter_values):
+        if isinstance(parameter_values, np.ndarray):
+            self.__parameter_values = parameter_values
+        else:
+            raise Exception('Invalid parameter_values value. ' +
+                            f'Expected numpy array, got {type(parameter_values)}.')
 
     def set(self, attr, value):
         # tokenize string
