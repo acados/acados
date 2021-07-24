@@ -771,13 +771,12 @@ class AcadosOcpSolver:
         dlclose.argtypes = [c_void_p]
 
     @classmethod
-    def generate(cls, acados_ocp, json_file='acados_ocp_nlp.json', simulink_opts=None, build=True, json_path=None):
+    def generate(cls, acados_ocp, json_file='acados_ocp_nlp.json', simulink_opts=None, build=True):
         model = acados_ocp.model
 
         if simulink_opts is None:
-            if json_path is None:
-              acados_path = get_acados_path()
-              json_path = os.path.join(acados_path, 'interfaces/acados_template/acados_template')
+            acados_path = get_acados_path()
+            json_path = os.path.join(acados_path, 'interfaces/acados_template/acados_template')
             with open(json_path + '/simulink_default_opts.json', 'r') as f:
                 simulink_opts = json.load(f)
 
