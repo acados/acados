@@ -1231,26 +1231,6 @@ class AcadosOcpSolver:
                     self.nlp_solver, stage, field, value_data_p)
         return
 
-    def params_set_slice(self, start_stage_, field_, value_):
-        # cast value_ to avoid conversion issues
-        if isinstance(value_, (float, int)):
-            value_ = np.array([value_])
-        value_ = value_.astype(float)
-
-        field = field_
-        field = field.encode('utf-8')
-
-        start_stage = c_int(start_stage_)
-        end_stage = c_int(end_stage_)
-
-        # treat parameters separately
-        if field_ == 'p':
-            getattr(self.shared_lib, f"{self.model_name}_acados_update_params").argtypes = [c_void_p, c_int, POINTER(c_double)]
-            getattr(self.shared_lib, f"{self.model_name}_acados_update_params").restype = c_int
-
-            value_data = cast(value_.ctypes.data, POINTER(c_double))
-
-            assert getattr(self.shared_lib, f"{self.model_name}_acados_update_params")(self.capsule, stage, value_data, value_.shape[0])==0
 
     def cost_set(self, start_stage_, field_, value_, api='warn'):
       self.cost_set_slice(start_stage_, start_stage_+1, field_, value_[None], api='warn')
@@ -1320,7 +1300,6 @@ class AcadosOcpSolver:
 
         value_data = cast(value_.ctypes.data, POINTER(c_double))
         value_data_p = cast((value_data), c_void_p)
-
         self.shared_lib.ocp_nlp_cost_model_set_slice.argtypes = \
             [c_void_p, c_void_p, c_void_p, c_int, c_int, c_char_p, c_void_p, c_int]
         self.shared_lib.ocp_nlp_cost_model_set_slice(self.nlp_config, \
