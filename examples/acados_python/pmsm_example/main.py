@@ -390,6 +390,12 @@ if COMPILE == 1:
     os.system('make ocp_shared_lib')
     os.chdir('..')
 
+# test constraints set with polytopic constraints
+acados_solver.constraints_set(1, 'lg', lg)
+acados_solver.constraints_set(1, 'ug', ug)
+acados_solver.constraints_set(1, 'D', D, api='new')
+acados_solver.constraints_set(1, 'C', C, api='new')
+
 # closed loop simulation
 Nsim = 20
 
