@@ -1302,7 +1302,7 @@ class AcadosOcpSolver:
         Set numerical data in the constraint module of the solver.
 
             :param stage: integer corresponding to shooting node
-            :param field: string in ['lbx', 'ubx', 'lbu', 'ubu', 'lg', 'ug', 'lh', 'uh', 'uphi']
+            :param field: string in ['lbx', 'ubx', 'lbu', 'ubu', 'lg', 'ug', 'lh', 'uh', 'uphi', 'C', 'D']
             :param value: of appropriate size
         """
         # cast value_ to avoid conversion issues
