@@ -32,7 +32,6 @@
 %
 
 classdef acados_ocp_opts < handle
-    
 
 
     properties
@@ -42,7 +41,6 @@ classdef acados_ocp_opts < handle
 
 
     methods
-        
 
         function obj = acados_ocp_opts()
             % model stuct
@@ -104,6 +102,11 @@ classdef acados_ocp_opts < handle
 
 
         function obj = set(obj, field, value)
+            % convert Matlab strings to char arrays
+            if isstring(value)
+                value = char(value);
+            end
+
             if (strcmp(field, 'compile_interface'))
                 obj.opts_struct.compile_interface = value;
             elseif (strcmp(field, 'codgen_model'))
@@ -212,9 +215,7 @@ classdef acados_ocp_opts < handle
             end
         end
 
-
     end % methods
-
 
 
 end % class

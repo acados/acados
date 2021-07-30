@@ -65,6 +65,11 @@ classdef acados_sim_opts < handle
 
 
         function obj = set(obj, field, value)
+            % convert Matlab strings to char arrays
+            if isstring(value)
+                value = char(value);
+            end
+
             if (strcmp(field, 'compile_interface'))
                 obj.opts_struct.compile_interface = value;
             elseif (strcmp(field, 'codgen_model'))
