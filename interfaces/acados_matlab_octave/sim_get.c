@@ -74,13 +74,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int nz; sim_dims_get(config, dims, "nz", &nz);
 
 
-    if (!strcmp(field, "xn"))
+    if (!strcmp(field, "xn") || !strcmp(field, "x"))
     {
         plhs[0] = mxCreateNumericMatrix(nx, 1, mxDOUBLE_CLASS, mxREAL);
         double *xn = mxGetPr( plhs[0] );
         sim_out_get(config, dims, out, "xn", xn);
     }
-    else if (!strcmp(field, "zn"))
+    else if (!strcmp(field, "zn") || !strcmp(field, "z"))
     {
         plhs[0] = mxCreateNumericMatrix(nz, 1, mxDOUBLE_CLASS, mxREAL);
         double *zn = mxGetPr( plhs[0] );
@@ -143,7 +143,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else
     {
         MEX_FIELD_NOT_SUPPORTED_SUGGEST(fun_name, field,
-             "xn, zn, S_forw, Sx, Su, S_hess, S_algebraic, time_tot, time_la, time_ad");
+             "xn, x, zn, z, S_forw, Sx, Su, S_hess, S_algebraic, time_tot, time_la, time_ad");
     }
 
     return;
