@@ -195,7 +195,10 @@ for i=1:N_sim
     sim.set('u', u0);
 
     % solve
-    sim.solve();
+    sim_status = sim.solve();
+    if sim_status ~= 0
+        disp(['acados integrator returned error status ', num2str(sim_status)])
+    end
 
     % get simulated state
     x_sim(:,i+1) = sim.get('xn');

@@ -122,8 +122,8 @@ classdef acados_sim < handle
         end
 
 
-        function solve(obj)
-            sim_solve(obj.C_sim);
+        function status = solve(obj)
+            status = sim_solve(obj.C_sim);
         end
 
 

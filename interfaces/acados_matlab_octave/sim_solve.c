@@ -66,6 +66,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     /* solver */
     int acados_return = sim_solve(solver, in, out);
 
+    // output status
+    plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
+    double *mat_ptr = mxGetPr( plhs[0] );
+    *mat_ptr = (double) acados_return;
+
     return;
 
 }
