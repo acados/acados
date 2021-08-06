@@ -78,12 +78,11 @@ classdef acados_sim < handle
                 compile_interface = false;
             elseif strcmp(obj.opts_struct.compile_interface, 'auto')
                 if is_octave()
-                    compile_interface = ~exist( fullfile(obj.opts_struct.output_dir,...
-                        '/sim_create.mex'), 'file');
+                    extension = '.mex';
                 else
-                    compile_interface = ~exist( fullfile(obj.opts_struct.output_dir,...
-                        '/sim_create.mexa64'), 'file');
+                    extension = ['.' mexext];
                 end
+                compile_interface = ~exist(fullfile(obj.opts_struct.output_dir, ['/sim_create', extension]), 'file');
             else
                 obj.model_struct.cost_type
                 error('acados_sim: field compile_interface is , supported values are: true, false, auto');
