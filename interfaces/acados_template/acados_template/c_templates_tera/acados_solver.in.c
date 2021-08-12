@@ -71,36 +71,36 @@
 
 #include "acados_solver_{{ model.name }}.h"
 
-#define NX     {{ dims.nx }}
-#define NZ     {{ dims.nz }}
-#define NU     {{ dims.nu }}
-#define NP     {{ dims.np }}
-#define NBX    {{ dims.nbx }}
-#define NBX0   {{ dims.nbx_0 }}
-#define NBU    {{ dims.nbu }}
-#define NSBX   {{ dims.nsbx }}
-#define NSBU   {{ dims.nsbu }}
-#define NSH    {{ dims.nsh }}
-#define NSG    {{ dims.nsg }}
-#define NSPHI  {{ dims.nsphi }}
-#define NSHN   {{ dims.nsh_e }}
-#define NSGN   {{ dims.nsg_e }}
-#define NSPHIN {{ dims.nsphi_e }}
-#define NSBXN  {{ dims.nsbx_e }}
-#define NS     {{ dims.ns }}
-#define NSN    {{ dims.ns_e }}
-#define NG     {{ dims.ng }}
-#define NBXN   {{ dims.nbx_e }}
-#define NGN    {{ dims.ng_e }}
-#define NY0    {{ dims.ny_0 }}
-#define NY     {{ dims.ny }}
-#define NYN    {{ dims.ny_e }}
-#define N      {{ dims.N }}
-#define NH     {{ dims.nh }}
-#define NPHI   {{ dims.nphi }}
-#define NHN    {{ dims.nh_e }}
-#define NPHIN  {{ dims.nphi_e }}
-#define NR     {{ dims.nr }}
+#define NX     ACADOS_NX
+#define NZ     ACADOS_NZ
+#define NU     ACADOS_NU
+#define NP     ACADOS_NP
+#define NBX    ACADOS_NBX
+#define NBX0   ACADOS_NBX0
+#define NBU    ACADOS_NBU
+#define NSBX   ACADOS_NSBX
+#define NSBU   ACADOS_NSBU
+#define NSH    ACADOS_NSH
+#define NSG    ACADOS_NSG
+#define NSPHI  ACADOS_NSPHI
+#define NSHN   ACADOS_NSHN
+#define NSGN   ACADOS_NSGN
+#define NSPHIN ACADOS_NSPHIN
+#define NSBXN  ACADOS_NSBXN
+#define NS     ACADOS_NS
+#define NSN    ACADOS_NSN
+#define NG     ACADOS_NG
+#define NBXN   ACADOS_NBXN
+#define NGN    ACADOS_NGN
+#define NY0    ACADOS_NY0
+#define NY     ACADOS_NY
+#define NYN    ACADOS_NYN
+#define N      ACADOS_N
+#define NH     ACADOS_NH
+#define NPHI   ACADOS_NPHI
+#define NHN    ACADOS_NHN
+#define NPHIN  ACADOS_NPHIN
+#define NR     ACADOS_NR
 
 
 // ** solver data **

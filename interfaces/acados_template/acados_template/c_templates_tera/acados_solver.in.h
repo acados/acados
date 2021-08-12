@@ -37,6 +37,37 @@
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
 
+#define ACADOS_NX     {{ dims.nx }}
+#define ACADOS_NZ     {{ dims.nz }}
+#define ACADOS_NU     {{ dims.nu }}
+#define ACADOS_NP     {{ dims.np }}
+#define ACADOS_NBX    {{ dims.nbx }}
+#define ACADOS_NBX0   {{ dims.nbx_0 }}
+#define ACADOS_NBU    {{ dims.nbu }}
+#define ACADOS_NSBX   {{ dims.nsbx }}
+#define ACADOS_NSBU   {{ dims.nsbu }}
+#define ACADOS_NSH    {{ dims.nsh }}
+#define ACADOS_NSG    {{ dims.nsg }}
+#define ACADOS_NSPHI  {{ dims.nsphi }}
+#define ACADOS_NSHN   {{ dims.nsh_e }}
+#define ACADOS_NSGN   {{ dims.nsg_e }}
+#define ACADOS_NSPHIN {{ dims.nsphi_e }}
+#define ACADOS_NSBXN  {{ dims.nsbx_e }}
+#define ACADOS_NS     {{ dims.ns }}
+#define ACADOS_NSN    {{ dims.ns_e }}
+#define ACADOS_NG     {{ dims.ng }}
+#define ACADOS_NBXN   {{ dims.nbx_e }}
+#define ACADOS_NGN    {{ dims.ng_e }}
+#define ACADOS_NY0    {{ dims.ny_0 }}
+#define ACADOS_NY     {{ dims.ny }}
+#define ACADOS_NYN    {{ dims.ny_e }}
+#define ACADOS_N      {{ dims.N }}
+#define ACADOS_NH     {{ dims.nh }}
+#define ACADOS_NPHI   {{ dims.nphi }}
+#define ACADOS_NHN    {{ dims.nh_e }}
+#define ACADOS_NPHIN  {{ dims.nphi_e }}
+#define ACADOS_NR     {{ dims.nr }}
+
 #ifdef __cplusplus
 extern "C" {
 #endif
