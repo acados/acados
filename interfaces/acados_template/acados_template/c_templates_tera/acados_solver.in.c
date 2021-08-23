@@ -71,36 +71,36 @@
 
 #include "acados_solver_{{ model.name }}.h"
 
-#define NX     {{ dims.nx }}
-#define NZ     {{ dims.nz }}
-#define NU     {{ dims.nu }}
-#define NP     {{ dims.np }}
-#define NBX    {{ dims.nbx }}
-#define NBX0   {{ dims.nbx_0 }}
-#define NBU    {{ dims.nbu }}
-#define NSBX   {{ dims.nsbx }}
-#define NSBU   {{ dims.nsbu }}
-#define NSH    {{ dims.nsh }}
-#define NSG    {{ dims.nsg }}
-#define NSPHI  {{ dims.nsphi }}
-#define NSHN   {{ dims.nsh_e }}
-#define NSGN   {{ dims.nsg_e }}
-#define NSPHIN {{ dims.nsphi_e }}
-#define NSBXN  {{ dims.nsbx_e }}
-#define NS     {{ dims.ns }}
-#define NSN    {{ dims.ns_e }}
-#define NG     {{ dims.ng }}
-#define NBXN   {{ dims.nbx_e }}
-#define NGN    {{ dims.ng_e }}
-#define NY0    {{ dims.ny_0 }}
-#define NY     {{ dims.ny }}
-#define NYN    {{ dims.ny_e }}
-#define N      {{ dims.N }}
-#define NH     {{ dims.nh }}
-#define NPHI   {{ dims.nphi }}
-#define NHN    {{ dims.nh_e }}
-#define NPHIN  {{ dims.nphi_e }}
-#define NR     {{ dims.nr }}
+#define NX     {{ model.name | upper }}_NX
+#define NZ     {{ model.name | upper }}_NZ
+#define NU     {{ model.name | upper }}_NU
+#define NP     {{ model.name | upper }}_NP
+#define NBX    {{ model.name | upper }}_NBX
+#define NBX0   {{ model.name | upper }}_NBX0
+#define NBU    {{ model.name | upper }}_NBU
+#define NSBX   {{ model.name | upper }}_NSBX
+#define NSBU   {{ model.name | upper }}_NSBU
+#define NSH    {{ model.name | upper }}_NSH
+#define NSG    {{ model.name | upper }}_NSG
+#define NSPHI  {{ model.name | upper }}_NSPHI
+#define NSHN   {{ model.name | upper }}_NSHN
+#define NSGN   {{ model.name | upper }}_NSGN
+#define NSPHIN {{ model.name | upper }}_NSPHIN
+#define NSBXN  {{ model.name | upper }}_NSBXN
+#define NS     {{ model.name | upper }}_NS
+#define NSN    {{ model.name | upper }}_NSN
+#define NG     {{ model.name | upper }}_NG
+#define NBXN   {{ model.name | upper }}_NBXN
+#define NGN    {{ model.name | upper }}_NGN
+#define NY0    {{ model.name | upper }}_NY0
+#define NY     {{ model.name | upper }}_NY
+#define NYN    {{ model.name | upper }}_NYN
+#define N      {{ model.name | upper }}_N
+#define NH     {{ model.name | upper }}_NH
+#define NPHI   {{ model.name | upper }}_NPHI
+#define NHN    {{ model.name | upper }}_NHN
+#define NPHIN  {{ model.name | upper }}_NPHIN
+#define NR     {{ model.name | upper }}_NR
 
 
 // ** solver data **
