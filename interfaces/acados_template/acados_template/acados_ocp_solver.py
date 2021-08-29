@@ -831,6 +831,10 @@ class AcadosOcpSolver:
         assert getattr(self.shared_lib, f"{model.name}_acados_create")(self.capsule)==0
         self.solver_created = True
 
+        # create solver with another number of stages
+        getattr(self.shared_lib, f"{model.name}_acados_create_w_stages").argtypes = [c_void_p, c_int, c_void_p]
+        getattr(self.shared_lib, f"{model.name}_acados_create_w_stages").restype = c_int
+
         # get pointers solver
         getattr(self.shared_lib, f"{model.name}_acados_get_nlp_opts").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{model.name}_acados_get_nlp_opts").restype = c_void_p

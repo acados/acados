@@ -95,7 +95,7 @@
 #define NY0    {{ model.name | upper }}_NY0
 #define NY     {{ model.name | upper }}_NY
 #define NYN    {{ model.name | upper }}_NYN
-#define N      {{ model.name | upper }}_N
+// #define N      {{ model.name | upper }}_N
 #define NH     {{ model.name | upper }}_NH
 #define NPHI   {{ model.name | upper }}_NPHI
 #define NHN    {{ model.name | upper }}_NHN
@@ -123,7 +123,22 @@ int {{ model.name }}_acados_free_capsule(nlp_solver_capsule *capsule)
 
 int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
 {
+    int n_stages = {{ model.name | upper }}_N;
+    double* const_time_step = NULL; // NULL -> don't alter the exported value
+    return {{ model.name }}_acados_create_w_stages(capsule, n_stages, const_time_step);
+}
+
+
+int {{ model.name }}_acados_create_w_stages(nlp_solver_capsule * capsule, int N, double* const_time_step)
+{
     int status = 0;
+    // if N does not match the default number of stages, a constant step_time must be given
+    if(N != {{ model.name | upper }}_N) {
+        if(!const_time_step) {
+            fprintf(stderr, "No constant delta time given but given number of stages (= %d) differs from exported number of stages (= %d)!\n", N, {{ model.name | upper }}_N);
+            return 1;
+        }
+    }
 
     // number of expected runtime parameters
     capsule->nlp_np = NP;
@@ -898,6 +913,8 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     {%- if all_equal == true -%}
     // all time_steps are identical
     double time_step = {{ solver_options.time_steps[0] }};
+    if(const_time_step != NULL)
+        time_step = *const_time_step;
     for (int i = 0; i < N; i++)
     {
         ocp_nlp_in_set(nlp_config, nlp_dims, nlp_in, i, "Ts", &time_step);
@@ -906,9 +923,15 @@ int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
     {%- else -%}
     // time_steps are different
     double* time_steps = malloc(N*sizeof(double));
+    if(const_time_step != NULL)
+    {
+        for(int i=0; i<N; i++)
+            time_steps[i] = const_dt;
+    } else {
     {%- for j in range(end=dims.N) %}
-    time_steps[{{ j }}] = {{ solver_options.time_steps[j] }};
+        time_steps[{{ j }}] = {{ solver_options.time_steps[j] }};
     {%- endfor %}
+    }
 
     for (int i = 0; i < N; i++)
     {
