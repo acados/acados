@@ -926,7 +926,7 @@ int {{ model.name }}_acados_create_w_stages(nlp_solver_capsule * capsule, int N,
     if(const_time_step != NULL)
     {
         for(int i=0; i<N; i++)
-            time_steps[i] = const_dt;
+            time_steps[i] = *const_time_step;
     } else {
     {%- for j in range(end=dims.N) %}
         time_steps[{{ j }}] = {{ solver_options.time_steps[j] }};

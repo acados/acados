@@ -41,32 +41,6 @@
 #define {{ model.name | upper }}_NZ     {{ dims.nz }}
 #define {{ model.name | upper }}_NU     {{ dims.nu }}
 #define {{ model.name | upper }}_NP     {{ dims.np }}
-#define {{ model.name | upper }}_NBX    {{ dims.nbx }}
-#define {{ model.name | upper }}_NBX0   {{ dims.nbx_0 }}
-#define {{ model.name | upper }}_NBU    {{ dims.nbu }}
-#define {{ model.name | upper }}_NSBX   {{ dims.nsbx }}
-#define {{ model.name | upper }}_NSBU   {{ dims.nsbu }}
-#define {{ model.name | upper }}_NSH    {{ dims.nsh }}
-#define {{ model.name | upper }}_NSG    {{ dims.nsg }}
-#define {{ model.name | upper }}_NSPHI  {{ dims.nsphi }}
-#define {{ model.name | upper }}_NSHN   {{ dims.nsh_e }}
-#define {{ model.name | upper }}_NSGN   {{ dims.nsg_e }}
-#define {{ model.name | upper }}_NSPHIN {{ dims.nsphi_e }}
-#define {{ model.name | upper }}_NSBXN  {{ dims.nsbx_e }}
-#define {{ model.name | upper }}_NS     {{ dims.ns }}
-#define {{ model.name | upper }}_NSN    {{ dims.ns_e }}
-#define {{ model.name | upper }}_NG     {{ dims.ng }}
-#define {{ model.name | upper }}_NBXN   {{ dims.nbx_e }}
-#define {{ model.name | upper }}_NGN    {{ dims.ng_e }}
-#define {{ model.name | upper }}_NY0    {{ dims.ny_0 }}
-#define {{ model.name | upper }}_NY     {{ dims.ny }}
-#define {{ model.name | upper }}_NYN    {{ dims.ny_e }}
-#define {{ model.name | upper }}_N      {{ dims.N }}
-#define {{ model.name | upper }}_NH     {{ dims.nh }}
-#define {{ model.name | upper }}_NPHI   {{ dims.nphi }}
-#define {{ model.name | upper }}_NHN    {{ dims.nh_e }}
-#define {{ model.name | upper }}_NPHIN  {{ dims.nphi_e }}
-#define {{ model.name | upper }}_NR     {{ dims.nr }}
 
 #ifdef __cplusplus
 extern "C" {
