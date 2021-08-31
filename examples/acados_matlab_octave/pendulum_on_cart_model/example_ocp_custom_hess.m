@@ -40,9 +40,10 @@ import casadi.*
 % check_acados_requirements()
 
 %% discretization
-N = 20;
-T = 1; % time horizon length
+N = 40;
+T = 2; % time horizon length
 x0 = [0; pi; 0; 0];
+xf = [0; 0; 0; 0];
 
 nlp_solver = 'sqp'; % sqp, sqp_rti
 qp_solver = 'partial_condensing_hpipm';
@@ -55,8 +56,6 @@ sim_method = 'erk'; % erk, irk, irk_gnsf
 model = pendulum_on_cart_model;
 nx = model.nx;
 nu = model.nu;
-ny = size(model.cost_expr_y, 1);      % used in simulink example
-ny_e = size(model.cost_expr_y_e, 1);
 
 %% model to create the solver
 ocp_model = acados_ocp_model();
@@ -83,7 +82,7 @@ model.expr_ext_cost_e = tanh(theta)^2 + .5 * model.sym_x(1)^2;
 custom_hess_u = W_u;
 % J is jacobian of inner (linear function);
 
-J = eye(2,4);
+J = horzcat(SX.eye(2), SX(2,2));
 % diagonal matrix with second order terms of outer loss function.
 D = SX.sym('D', Sparsity.diag(2));
 D(1, 1) = 1;
@@ -93,7 +92,8 @@ D(2, 2) = if_else(theta == 0, hess_tan, grad_tan / theta);
 custom_hess_x = J' * D * J;
 
 cost_expr_ext_cost_custom_hess = blkdiag(custom_hess_u, custom_hess_x);
-cost_expr_ext_cost_custom_hess_e = blkdiag(custom_hess_x);
+cost_expr_ext_cost_custom_hess_e = custom_hess_x;
+
 
 ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
 ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
@@ -112,7 +112,7 @@ end
 % constraints
 ocp_model.set('constr_type', 'auto');
 ocp_model.set('constr_expr_h', model.expr_h);
-U_max = 80;
+U_max = 35;
 ocp_model.set('constr_lh', -U_max); % lower bound on h
 ocp_model.set('constr_uh', U_max);  % upper bound on h
 
@@ -126,12 +126,19 @@ ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('sim_method', sim_method);
 ocp_opts.set('qp_solver', qp_solver);
 ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
+ocp_opts.set('globalization', 'merit_backtracking');
+ocp_opts.set('nlp_solver_max_iter', 500);
 % ... see ocp_opts.opts_struct to see what other fields can be set
 
 %% create ocp solver
 ocp = acados_ocp(ocp_model, ocp_opts);
 
 x_traj_init = zeros(nx, N+1);
+
+taus = linspace(0,1, N+1);
+for i=1:N+1
+    x_traj_init(:, 1) = x0*(1-taus(i)) + xf*taus(i);
+end
 u_traj_init = zeros(nu, N);
 
 %% call ocp solver
@@ -141,11 +148,11 @@ ocp.set('constr_x0', x0);
 % set trajectory initialization
 ocp.set('init_x', x_traj_init);
 ocp.set('init_u', u_traj_init);
-ocp.set('init_pi', zeros(nx, N))
+% ocp.set('init_pi', zeros(nx, N))
 
 % change values for specific shooting node using:
 %   ocp.set('field', value, optional: stage_index)
-ocp.set('constr_lbx', x0, 0)
+% ocp.set('constr_lbx', x0, 0)
 
 % solve
 ocp.solve();
@@ -176,3 +183,8 @@ grid on
 %% go embedded
 % to generate templated C code
 % ocp.generate_c_code;
+
+% test MEX template based solver
+% cd c_generated_code
+% command = strcat('t_ocp = ', model_name, '_mex_solver');
+% eval( command );
