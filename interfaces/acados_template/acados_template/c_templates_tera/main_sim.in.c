@@ -72,7 +72,7 @@
 #define NR     {{ model.name | upper }}_NR
 
 
-int main(int argc, char** argv)
+int main()
 {
     int status = 0;
     sim_solver_capsule *capsule = {{ model.name }}_acados_sim_solver_create_capsule();

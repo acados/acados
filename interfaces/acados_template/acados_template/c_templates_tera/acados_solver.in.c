@@ -123,21 +123,21 @@ int {{ model.name }}_acados_free_capsule(nlp_solver_capsule *capsule)
 
 int {{ model.name }}_acados_create(nlp_solver_capsule * capsule)
 {
-    int n_stages = {{ model.name | upper }}_N;
-    double* const_time_step = NULL; // NULL -> don't alter the exported value
-    return {{ model.name }}_acados_create_w_stages(capsule, n_stages, const_time_step);
+    int N_shooting_intervals = {{ model.name | upper }}_N;
+    double* new_time_steps = NULL; // NULL -> don't alter the code generated time-steps
+    return {{ model.name }}_acados_create_with_discretization(capsule, N_shooting_intervals, new_time_steps);
 }
 
 
-int {{ model.name }}_acados_create_w_stages(nlp_solver_capsule * capsule, int N, double* const_time_step)
+int {{ model.name }}_acados_create_with_discretization(nlp_solver_capsule * capsule, int N, double* new_time_steps)
 {
     int status = 0;
-    // if N does not match the default number of stages, a constant step_time must be given
-    if(N != {{ model.name | upper }}_N) {
-        if(!const_time_step) {
-            fprintf(stderr, "No constant delta time given but given number of stages (= %d) differs from exported number of stages (= %d)!\n", N, {{ model.name | upper }}_N);
-            return 1;
-        }
+    // If N does not match the number of shooting intervals used for code generation, new_time_steps must be given.
+    if(N != {{ model.name | upper }}_N && !new_time_steps) {
+        fprintf(stderr, "new_time_steps is NULL but the number of shooting intervals (= %d) differs from the number of " \
+            "shooting intervals (= %d) during code generation! Please provide a new vector of time_stamps!\n", \
+             N, {{ model.name | upper }}_N);
+        return 1;
     }
 
     // number of expected runtime parameters
@@ -910,36 +910,36 @@ int {{ model.name }}_acados_create_w_stages(nlp_solver_capsule * capsule, int N,
         {%- endif %}
     {%- endfor %}
 
-    {%- if all_equal == true -%}
-    // all time_steps are identical
-    double time_step = {{ solver_options.time_steps[0] }};
-    if(const_time_step != NULL)
-        time_step = *const_time_step;
-    for (int i = 0; i < N; i++)
+    if(new_time_steps)
     {
-        ocp_nlp_in_set(nlp_config, nlp_dims, nlp_in, i, "Ts", &time_step);
-        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "scaling", &time_step);
-    }
-    {%- else -%}
-    // time_steps are different
-    double* time_steps = malloc(N*sizeof(double));
-    if(const_time_step != NULL)
-    {
-        for(int i=0; i<N; i++)
-            time_steps[i] = *const_time_step;
+        for (int i = 0; i < N; i++)
+        {
+            ocp_nlp_in_set(nlp_config, nlp_dims, nlp_in, i, "Ts", &new_time_steps[i]);
+            ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "scaling", &new_time_steps[i]);
+        }
     } else {
-    {%- for j in range(end=dims.N) %}
+    {%- if all_equal == true -%}
+        // all time_steps are identical
+        double time_step = {{ solver_options.time_steps[0] }};
+        for (int i = 0; i < N; i++)
+        {
+            ocp_nlp_in_set(nlp_config, nlp_dims, nlp_in, i, "Ts", &time_step);
+            ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "scaling", &time_step);
+        }
+    {%- else -%}
+        // time_steps are different
+        double* time_steps = malloc(N*sizeof(double));
+        {%- for j in range(end=dims.N) %}
         time_steps[{{ j }}] = {{ solver_options.time_steps[j] }};
-    {%- endfor %}
-    }
-
-    for (int i = 0; i < N; i++)
-    {
-        ocp_nlp_in_set(nlp_config, nlp_dims, nlp_in, i, "Ts", &time_steps[i]);
-        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "scaling", &time_steps[i]);
-    }
-    free(time_steps);
+        {%- endfor %}
+        for (int i = 0; i < N; i++)
+        {
+            ocp_nlp_in_set(nlp_config, nlp_dims, nlp_in, i, "Ts", &time_steps[i]);
+            ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "scaling", &time_steps[i]);
+        }
+        free(time_steps);
     {%- endif %}
+    }
 
     /**** Dynamics ****/
     for (int i = 0; i < N; i++)

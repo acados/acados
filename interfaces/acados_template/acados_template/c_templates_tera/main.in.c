@@ -73,14 +73,15 @@
 #define NR     {{ model.name | upper }}_NR
 
 
-int main(int argc, char** argv)
+int main()
 {
     nlp_solver_capsule *acados_ocp_capsule = {{ model.name }}_acados_create_capsule();
 
-    // there is an opportunity to change the number of stages in C without new code-export
+    // there is an opportunity to change the number of shooting intervals in C without new code generation
     int N = {{ model.name | upper }}_N;
-    double const_time_steps = {{ solver_options.time_steps[0] }};
-    int status = {{ model.name }}_acados_create_w_stages(acados_ocp_capsule, N, &const_time_steps);
+    // allocate the array and fill it accordingly
+    double* new_time_steps = NULL;
+    int status = {{ model.name }}_acados_create_with_discretization(acados_ocp_capsule, N, new_time_steps);
 
     if (status)
     {
@@ -145,7 +146,7 @@ int main(int argc, char** argv)
     double elapsed_time;
     int sqp_iter;
 
-    double xtraj[NX * N+1];
+    double xtraj[NX * (N+1)];
     double utraj[NU * N];
 
 

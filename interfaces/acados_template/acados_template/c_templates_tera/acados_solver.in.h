@@ -145,11 +145,11 @@ int {{ model.name }}_acados_free_capsule(nlp_solver_capsule *capsule);
 
 int {{ model.name }}_acados_create(nlp_solver_capsule * capsule);
 /**
- * More generic acados_create function, since the number of stages usually is independent of the model and its
- * constraints. If the number of stages does not match the one from code-export at least a constant step_time must be
- * given to be filled in. If const_step_time=NULL, the code-exported version is used internally.
+ * Generic version of {{ model.name }}_acados_create which allows to use a different number of shooting intervals than
+ * the number used for code generation. If new_time_steps=NULL and n_time_steps matches the number used for code
+ * generation, the time-steps from code generation is used.
  */
-int {{ model.name }}_acados_create_w_stages(nlp_solver_capsule * capsule, int n_stages, double* const_step_time);
+int {{ model.name }}_acados_create_with_discretization(nlp_solver_capsule * capsule, int n_time_steps, double* new_time_steps);
 int {{ model.name }}_acados_update_params(nlp_solver_capsule * capsule, int stage, double *value, int np);
 int {{ model.name }}_acados_solve(nlp_solver_capsule * capsule);
 int {{ model.name }}_acados_free(nlp_solver_capsule * capsule);
