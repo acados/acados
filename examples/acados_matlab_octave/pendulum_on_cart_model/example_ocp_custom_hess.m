@@ -40,9 +40,10 @@ import casadi.*
 % check_acados_requirements()
 
 %% discretization
-N = 20;
-T = 1; % time horizon length
+N = 40;
+T = 2; % time horizon length
 x0 = [0; pi; 0; 0];
+xf = [0; 0; 0; 0];
 
 nlp_solver = 'sqp'; % sqp, sqp_rti
 qp_solver = 'partial_condensing_hpipm';
@@ -83,7 +84,7 @@ model.expr_ext_cost_e = tanh(theta)^2 + .5 * model.sym_x(1)^2;
 custom_hess_u = W_u;
 % J is jacobian of inner (linear function);
 
-J = eye(2,4);
+J = horzcat(SX.eye(2), SX(2,2));
 % diagonal matrix with second order terms of outer loss function.
 D = SX.sym('D', Sparsity.diag(2));
 D(1, 1) = 1;
@@ -93,7 +94,8 @@ D(2, 2) = if_else(theta == 0, hess_tan, grad_tan / theta);
 custom_hess_x = J' * D * J;
 
 cost_expr_ext_cost_custom_hess = blkdiag(custom_hess_u, custom_hess_x);
-cost_expr_ext_cost_custom_hess_e = blkdiag(custom_hess_x);
+cost_expr_ext_cost_custom_hess_e = custom_hess_x;
+
 
 ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
 ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
@@ -112,7 +114,7 @@ end
 % constraints
 ocp_model.set('constr_type', 'auto');
 ocp_model.set('constr_expr_h', model.expr_h);
-U_max = 80;
+U_max = 35;
 ocp_model.set('constr_lh', -U_max); % lower bound on h
 ocp_model.set('constr_uh', U_max);  % upper bound on h
 
@@ -126,12 +128,19 @@ ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('sim_method', sim_method);
 ocp_opts.set('qp_solver', qp_solver);
 ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
+ocp_opts.set('globalization', 'merit_backtracking');
+ocp_opts.set('nlp_solver_max_iter', 500);
 % ... see ocp_opts.opts_struct to see what other fields can be set
 
 %% create ocp solver
 ocp = acados_ocp(ocp_model, ocp_opts);
 
 x_traj_init = zeros(nx, N+1);
+
+taus = linspace(0,1, N+1);
+for i=1:N+1
+    x_traj_init(:, 1) = x0*(1-taus(i)) + xf*taus(i);
+end
 u_traj_init = zeros(nu, N);
 
 %% call ocp solver
