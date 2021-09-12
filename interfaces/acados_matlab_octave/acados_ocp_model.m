@@ -100,6 +100,10 @@ classdef acados_ocp_model < handle
                 elseif (strcmp(field, 'cost_expr_ext_cost'))
                     obj.model_struct.cost_expr_ext_cost = value;
                     obj.model_struct.cost_ext_fun_type = 'casadi';
+                elseif (strcmp(field, 'cost_expr_ext_cost_custom_hess'))
+                    obj.model_struct.cost_expr_ext_cost_custom_hess = value;
+                elseif (strcmp(field, 'cost_expr_ext_cost_custom_hess_e'))
+                    obj.model_struct.cost_expr_ext_cost_custom_hess_e = value;
                 elseif (strcmp(field, 'cost_expr_ext_cost_e'))
                     obj.model_struct.cost_expr_ext_cost_e = value;
                     obj.model_struct.cost_ext_fun_type_e = 'casadi';

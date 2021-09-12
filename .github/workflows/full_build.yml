@@ -130,6 +130,7 @@ jobs:
 
     - name: Install MATLAB
       uses: matlab-actions/setup-matlab@v1
+      if: always()
       with:
       # MATLAB release to set up (R2020a or later)
         release: R2020a

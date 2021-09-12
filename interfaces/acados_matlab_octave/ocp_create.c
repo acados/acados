@@ -1099,7 +1099,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // levenberg_marquardt regularization
     if (mxGetField( matlab_opts, 0, "levenberg_marquardt" )!=NULL)
     {
-        double levenberg_marquardt = mxGetScalar( mxGetField( matlab_opts, 0, "levenberg_marquardt" ) );
+        const mxArray *matlab_array;
+        sprintf(matlab_field_name, "levenberg_marquardt");
+        matlab_array = mxGetField( matlab_opts, 0, matlab_field_name );
+        int matlab_size = (int) mxGetNumberOfElements( matlab_array );
+        MEX_DIM_CHECK_VEC(fun_name, matlab_field_name, matlab_size, 1);
+        double levenberg_marquardt = mxGetScalar( matlab_array );
         ocp_nlp_solver_opts_set(config, opts, "levenberg_marquardt", &levenberg_marquardt);
     }
 

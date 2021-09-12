@@ -1,35 +1,43 @@
 ## Roadmap
-- [ ] Templates: avoid global memory!
+- [ ] Test 32 bit
+- [ ] Test OOQP
 
 #### core
 - [ ] propagate cost in integrator
-- [ ] restore download and compilation of OOQP
+    - or: add support for quadrature state, separate dimension in integrator and OCP solver
 - [ ] stage transition functions for changing model dimensions
 
-#### interfaces
-- [ ] Lifted integrators
-- [ ] add support for manual model functions
 
 #### documentation
 - [x] provide OCP NLP formulation that is handled by `ocp_nlp` as a formula
     - [x] closely stick to setter names!
-- [ ] Set up and document binary workflow
-    - [ ] Windows Matlab, reiterate, look into Visual C
-    - [ ] MacOS Matlab
+- [x] Windows Matlab, reiterate, look into Visual C
+- [ ] Windows Python
+- [ ] 
+- [ ] MacOS Matlab
 
 #### `ocp_nlp`
 - [ ] partial tightening <!-- - [ ] HPNMPC (what?!) -->
 - [ ] blockSQP (https://github.com/djanka2/blockSQP)
-- [ ] RTI implementation similar to ACADO
+- [x] RTI implementation similar to ACADO
+- [ ] support cost on z for external, NLS
 
 #### `sim`
 - [ ] collocation integrators Radau
+    - NOTE: currently always Gauss(-Legendre) Butcher tables
+        - A-stable, but not L-stable
+        - order is 2 * num_stages
+    - implement also Radau IIA collocation methods
+        - L-stable
+        - order is 2 * num_stages - 1
 - [ ] GNSF Hessians
 
 
 
 ## DONE
 - [x] closed loop example MPC + MHE
+- [x] Templates: avoid global memory
+- [x] add support for manual model functions -- partly done: external cost and discrete dynamics
 
 #### C
 - [x] split ocp solve into prepare and feedback

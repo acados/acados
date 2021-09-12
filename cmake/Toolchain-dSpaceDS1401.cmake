@@ -1,59 +1,41 @@
-#
-# Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
-# Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
-# Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
-# Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
-#
-# This file is part of acados.
-#
-# The 2-Clause BSD License
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-#
-# 1. Redistributions of source code must retain the above copyright notice,
-# this list of conditions and the following disclaimer.
-#
-# 2. Redistributions in binary form must reproduce the above copyright notice,
-# this list of conditions and the following disclaimer in the documentation
-# and/or other materials provided with the distribution.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.;
-#
-
-
-set(CMAKE_SYSTEM_NAME dSpaceDS1401)
+SET(CMAKE_SYSTEM_NAME "dSpaceDS1401")
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR})
+SET(CMAKE_SYSTEM_PROCESSOR "ppc")
 
-file(TO_CMAKE_PATH "C:\\Program Files\\dSPACE RCPHIL 2017-B" DSPACE_TOOLS)
-set(DSPACE_RTLIB "${DSPACE_TOOLS}/DS1401/RTLib")
-set(DSPACE_PPCTOOLS ${DSPACE_TOOLS}/Compiler/PPCTools)
+# TODO: cmake_path instead?
+# cmake_path(CONVERT "C:\\ProgramData\\dSPACE\\AD52223F-E7EC-4A16-97FB-8ADC3C426EE0\\Compiler\\PPCTools" TO_CMAKE_PATH_LIST DSPACE_DS1401_COMPILER_DIR NORMALIZE)
+# 
+file(TO_CMAKE_PATH "C:/ProgramData/dSPACE/071346EA-BFFA-4465-9551-2E48EDF35320" DSPACE_TOOLS)
+set(DSPACE_RTLIB "C:/dSPACE RCPHIL 2017-B/DS1401/RTLib")
+set(DSPACE_PPCTOOLS "${DSPACE_TOOLS}/Compiler/PPCTools")
+
+# C Compiler
 find_program(CMAKE_C_COMPILER NAMES ${DSPACE_PPCTOOLS}/bin/mccppc.exe)
-find_program(CMAKE_CXX_COMPILER NAMES ${DSPACE_PPCTOOLS}/bin/cccppc.exe)
-find_program(CMAKE_ASM_COMPILER NAMES ${DSPACE_PPCTOOLS}/bin/asmppc.exe)
-find_program(CMAKE_AR NAMES ${DSPACE_PPCTOOLS}/bin/cccppc.exe)
+# C++ Compiler
+find_program(CMAKE_CXX_COMPILER NAMES ${DSPACE_PPCTOOLS}/bin/mccppc.exe)
+# Assembler
+find_program(CMAKE_ASM_COMPILER NAMES ${DSPACE_PPCTOOLS}/bin/asmppc.exe
 set(CMAKE_RANLIB ":")
 
-set(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> <OBJECTS> -o <TARGET>")
-set(CMAKE_CXX_ARCHIVE_CREATE "<CMAKE_AR> <OBJECTS> -o <TARGET>")
+find_program(CMAKE_MAKE_PROGRAM NAMES "C:/dSPACE RCPHIL 2017-B/Exe/DSMAKE.exe")
 
-find_program(CMAKE_MAKE_PROGRAM NAMES ${DSPACE_TOOLS}/Exe/DSMAKE.EXE)
+SET(CMAKE_FIND_ROOT_PATH ${DSPACE_PPCTOOLS}) 
+SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
-set(CMAKE_FIND_ROOT_PATH ${DSPACE_PPCTOOLS})
+add_definitions(-D__MABX2__ -D__DSPACE__)
 
-# adjust the default behaviour of the FIND_XXX() commands:
-# search headers and libraries in the target environment, search
-# programs in the host environment
-set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+# Compiler flags
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -H -J{DSPACE_RTLIB}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -H -J{DSPACE_RTLIB}")
+set(CMAKE_C_FLAGS "-Ot -Oi -Or -Ox -D_INLINE" CACHE STRING "" FORCE)
+
+# acados flags
+set(BLASFEO_TARGET "GENERIC" CACHE STRING "BLASFEO Target architecture")
+set(HPIPM_TARGET "GENERIC" CACHE STRING "HPIPM Target architecture")
+set(BUILD_SHARED_LIBS OFF CACHE STRING "Build shared libraries")
+set(BLASFEO_EXAMPLES OFF CACHE BOOL "Examples disabled")
+set(EXT_DEP OFF CACHE BOOL "Compile external dependencies in BLASFEO")
+set(ACADOS_INSTALL_DIR "install" CACHE PATH  "Installation path to ACADOS_INSTALL_DIR")
+

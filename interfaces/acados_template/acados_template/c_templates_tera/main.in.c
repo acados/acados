@@ -75,8 +75,8 @@
 
 int main()
 {
-    nlp_solver_capsule *acados_ocp_capsule = {{ model.name }}_acados_create_capsule();
 
+    {{ model.name }}_solver_capsule *acados_ocp_capsule = {{ model.name }}_acados_create_capsule();
     // there is an opportunity to change the number of shooting intervals in C without new code generation
     int N = {{ model.name | upper }}_N;
     // allocate the array and fill it accordingly

@@ -34,7 +34,7 @@
 
 // external
 #include <assert.h>
-#if defined(__DSPACE__)
+#if defined(__MABX2__)
 #include <brtenv.h>
 #define printf(...)                               \
     msg_info_printf(MSG_SM_USER, 0, __VA_ARGS__); \

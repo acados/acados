@@ -1033,6 +1033,7 @@ void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_,
         double *ptr = return_value_;
         int N = dims->N;
         int ii;
+        *ptr = 0.0;
         for (ii=0; ii<N; ii++)
         {
             config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], field, &tmp);
