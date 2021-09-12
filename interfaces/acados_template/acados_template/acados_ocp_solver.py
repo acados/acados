@@ -1274,7 +1274,7 @@ class AcadosOcpSolver:
 
         self.shared_lib.ocp_nlp_cost_model_set_slice(self.nlp_config, \
             self.nlp_dims, self.nlp_in, start_stage_, end_stage_, field,
-            value_.ctypes.data_as(POINTER(c_void_p)), dim)
+            cast(value_.ctypes.data, c_void_p), dim)
 
 
     def constraints_set(self, start_stage_, field_, value_, api='warn'):
