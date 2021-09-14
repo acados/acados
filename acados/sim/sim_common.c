@@ -474,6 +474,11 @@ void sim_opts_set_(sim_opts *opts, const char *field, void *value)
         bool *sens_algebraic = (bool *) value;
         opts->sens_algebraic = *sens_algebraic;
     }
+    else if (!strcmp(field, "collocation_type"))
+    {
+        sim_collocation_type *collocation_type = (sim_collocation_type *) value;
+        opts->collocation_type = *collocation_type;
+    }
     else
     {
         printf("\nerror: field %s not available in sim_opts_set\n", field);

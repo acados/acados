@@ -155,7 +155,7 @@ static double lu_system_solve(double *A, double *b, int *perm, int dim, int dim_
 
 
 
-acados_size_t gauss_nodes_work_calculate_size(int ns)
+acados_size_t gauss_legendre_nodes_work_calculate_size(int ns)
 {
     int N = ns - 1;
     int N1 = N + 1;
@@ -170,8 +170,8 @@ acados_size_t gauss_nodes_work_calculate_size(int ns)
 }
 
 
-// TODO(all): understand how this works and leave a comment!
-void gauss_nodes(int ns, double *nodes, void *work)
+// calculates Gauss-Legendre nodes (c) for Butcher tableau of size ns
+void gauss_legendre_nodes(int ns, double *nodes, void *work)
 {
     int N = ns - 1;
     int N1 = N + 1;
@@ -197,7 +197,7 @@ void gauss_nodes(int ns, double *nodes, void *work)
     double *der_lgvm = (double *) c_ptr;
     c_ptr += N1 * sizeof(double);
 
-    assert((char *) work + gauss_nodes_work_calculate_size(ns) >= c_ptr);
+    assert((char *) work + gauss_legendre_nodes_work_calculate_size(ns) >= c_ptr);
 
     double a = 0.0;
     double b = 1.0;  // code for collocation interval [a,b]
@@ -377,7 +377,7 @@ void gauss_simplified(int ns, Newton_scheme *scheme, void *work)
 
 
 
-acados_size_t butcher_table_work_calculate_size(int ns)
+acados_size_t butcher_tableau_work_calculate_size(int ns)
 {
     acados_size_t size = 0;
 
@@ -390,7 +390,7 @@ acados_size_t butcher_table_work_calculate_size(int ns)
 
 
 
-void butcher_table(int ns, double *nodes, double *b, double *A, void *work)
+void calculate_butcher_tableau_from_nodes(int ns, double *nodes, double *b, double *A, void *work)
 {
     int i, j, k;
 
@@ -409,7 +409,7 @@ void butcher_table(int ns, double *nodes, double *b, double *A, void *work)
     int *perm = (int *) c_ptr;
     c_ptr += ns * sizeof(int);
 
-    assert((char *) work + butcher_table_work_calculate_size(ns) >= c_ptr);
+    assert((char *) work + butcher_tableau_work_calculate_size(ns) >= c_ptr);
 
     for (j = 0; j < ns; j++)
     {
@@ -443,4 +443,27 @@ void butcher_table(int ns, double *nodes, double *b, double *A, void *work)
     }
 
     return;
+}
+
+
+void calculate_butcher_tableau(int ns, sim_collocation_type collocation_type, double *c_vec, double *b_vec, double *A_mat, void *work)
+{
+    // compute collocation nodes
+    switch (collocation_type)
+    {
+        case GAUSS_LEGENDRE:
+            // gauss legendre
+            gauss_legendre_nodes(ns, c_vec, work);
+            break;
+        case GAUSS_RADAU_IIA:
+            // TODO
+            gauss_legendre_nodes(ns, c_vec, work);
+            break;
+        default:
+            printf("\nerror: calculate_butcher_tableau: unsupported collocation_typre\n");
+            exit(1);
+    }
+
+    // butcher tableau
+    calculate_butcher_tableau_from_nodes(ns, c_vec, b_vec, A_mat, work);
 }
