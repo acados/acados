@@ -70,6 +70,7 @@ classdef ocp_nlp_solver_options_json < handle
         alpha_min
         alpha_reduction
         globalization
+        collocation_type
 
     end
     methods
@@ -77,6 +78,7 @@ classdef ocp_nlp_solver_options_json < handle
             obj.qp_solver       = 'PARTIAL_CONDENSING_HPIPM';
             obj.hessian_approx  = 'GAUSS_NEWTON';
             obj.integrator_type = 'ERK';
+            obj.collocation_type = 'GAUSS_LEGENDRE';
             obj.tf = [];
             obj.Tsim = [];
             obj.nlp_solver_type = 'SQP_RTI';

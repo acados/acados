@@ -80,6 +80,7 @@ classdef acados_ocp_opts < handle
             obj.opts_struct.warm_start_first_qp = 0;
                     % 0 no warm start in first sqp iter - 1 warm start even in first sqp iter
             obj.opts_struct.sim_method = 'irk'; % erk; irk; irk_gnsf
+            obj.opts_struct.collocation_type = 'gauss_legendre';
             obj.opts_struct.sim_method_num_stages = 4;
             obj.opts_struct.sim_method_num_steps = 1;
             obj.opts_struct.sim_method_newton_iter = 3;
@@ -176,6 +177,8 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.qp_solver_warm_start = value;
             elseif (strcmp(field, 'sim_method'))
                 obj.opts_struct.sim_method = value;
+            elseif (strcmp(field, 'collocation_type'))
+                obj.opts_struct.collocation_type = value;
             elseif (strcmp(field, 'sim_method_num_stages'))
                 obj.opts_struct.sim_method_num_stages = value;
             elseif (strcmp(field, 'sim_method_num_steps'))

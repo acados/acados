@@ -52,6 +52,8 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     ocp_json.solver_options.qp_solver = upper(obj.opts_struct.qp_solver);
     ocp_json.solver_options.integrator_type = upper(obj.opts_struct.sim_method);
     ocp_json.solver_options.nlp_solver_type = upper(obj.opts_struct.nlp_solver);
+    ocp_json.solver_options.collocation_type = upper(obj.opts_struct.collocation_type);
+
     if strcmp(obj.opts_struct.sim_method, 'irk_gnsf')
         ocp_json.solver_options.integrator_type = 'GNSF';
     end
