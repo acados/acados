@@ -312,6 +312,21 @@ void sim_irk_opts_update(void *config_, void *dims, void *opts_)
 
     opts->tableau_size = opts->ns;
 
+    // for debugging: print butcher tableau
+    // printf("Butcher tableau\n");
+    // printf("\nc_vec:\n");
+    // for (int i = 0; i < opts->ns; i++)
+    // {
+    //     printf("%f\t", opts->c_vec[i]);
+    // }
+    // printf("\nb_vec:\n");
+    // for (int i = 0; i < opts->ns; i++)
+    // {
+    //     printf("%f\t", opts->b_vec[i]);
+    // }
+    // printf("\nA_mat:\n");
+    // d_print_mat(opts->ns, opts->ns, opts->A_mat, opts->ns);
+
     return;
 }
 

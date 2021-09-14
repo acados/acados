@@ -246,7 +246,75 @@ void gauss_legendre_nodes(int ns, double *nodes, void *work)
     return;
 }
 
+// looks up Gauss-Radau IIA nodes (c) for Butcher tableau of size ns
+void gauss_radau_iia_nodes(int ns, double *nodes, void *work)
+{
+    // Radau nodes can be calculated as zeros of polynomial, see:
+    // Encyclopedia of Applied and Computational Mathematics
+    // Full entry, version of August 2, 2011
+    // Radau methods
+    // Ernst Hairer 1 , Gerhard Wanner 1
+    // case 1:
+    //     nodes[0] = 1.0;
+    //     break;
+    // case 2:
+    //     nodes[0] = 1.0 / 3;
+    //     nodes[1] = 1.0;
+    //     break;
+    // case 3:
+    //     nodes[0] = (4 - sqrt(6.0)) / 10;
+    //     nodes[1] = (4 + sqrt(6.0)) / 10;
+    //     nodes[2] = 1.0;
+    //     break;
 
+    /* hard code: Radau nodes, as done in CasADi */
+    https://github.com/casadi/casadi/issues/673
+
+    if (ns < 1 || ns > 9)
+    {
+        printf("\n\nerror: gauss_radau_iia_nodes only available for num_stages = 1,...,9; got %d.\n", ns);
+        exit(1);
+    }
+    // Radau collocation points
+    const long double radau_points1[] =
+        { 1.00000000000000000000 };
+    const long double radau_points2[] =
+        { 0.33333333333333337034, 1.00000000000000000000 };
+    const long double radau_points3[] =
+        { 0.15505102572168222297, 0.64494897427831787695,
+        1.00000000000000000000 };
+    const long double radau_points4[] =
+        { 0.08858795951270420632, 0.40946686444073465694,
+        0.78765946176084700170, 1.00000000000000000000 };
+    const long double radau_points5[] =
+        { 0.05710419611451822419, 0.27684301363812369168,
+        0.58359043236891683382, 0.86024013565621926247, 1.00000000000000000000 };
+    const long double radau_points6[] =
+        { 0.03980985705146905529, 0.19801341787360787761,
+        0.43797481024738621480, 0.69546427335363603106, 0.90146491420117347282,
+        1.00000000000000000000 };
+    const long double radau_points7[] =
+        { 0.02931642715978521885, 0.14807859966848435640,
+        0.33698469028115418666, 0.55867151877155019069, 0.76923386203005450490,
+        0.92694567131974103802, 1.00000000000000000000 };
+    const long double radau_points8[] =
+        { 0.02247938643871305597, 0.11467905316090415413,
+        0.26578982278458951338, 0.45284637366944457959, 0.64737528288683043876,
+        0.81975930826310761113, 0.94373743946307731001, 1.00000000000000000000 };
+    const long double radau_points9[] =
+        { 0.01777991514736393386, 0.09132360789979432347,
+        0.21430847939563035798, 0.37193216458327238438, 0.54518668480342658000,
+        0.71317524285556954666, 0.85563374295785443735, 0.95536604471003006012,
+        1.00000000000000000000 };
+    const long double* radau_points[] =
+        { radau_points1, radau_points2, radau_points3, radau_points4, radau_points5,
+            radau_points6, radau_points7, radau_points8, radau_points9};
+
+    for (int i = 0; i < ns; i++)
+    {
+        nodes[i] = radau_points[ns-1][i];
+    }
+}
 
 acados_size_t gauss_simplified_work_calculate_size(int ns)
 {
@@ -456,8 +524,7 @@ void calculate_butcher_tableau(int ns, sim_collocation_type collocation_type, do
             gauss_legendre_nodes(ns, c_vec, work);
             break;
         case GAUSS_RADAU_IIA:
-            // TODO
-            gauss_legendre_nodes(ns, c_vec, work);
+            gauss_radau_iia_nodes(ns, c_vec, work);
             break;
         default:
             printf("\nerror: calculate_butcher_tableau: unsupported collocation_typre\n");
