@@ -835,8 +835,6 @@ class AcadosOcpSolver:
         assert getattr(self.shared_lib, f"{self.model_name}_acados_create")(self.capsule)==0
         self.solver_created = True
 
-        self.acados_ocp = acados_ocp
-
         # get pointers solver
         self.__get_pointers_solver()
 
@@ -869,6 +867,32 @@ class AcadosOcpSolver:
         getattr(self.shared_lib, f"{self.model_name}_acados_get_nlp_solver").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{self.model_name}_acados_get_nlp_solver").restype = c_void_p
         self.nlp_solver = getattr(self.shared_lib, f"{self.model_name}_acados_get_nlp_solver")(self.capsule)
+
+        # treat parameters separately
+        getattr(self.shared_lib, f"{self.model_name}_acados_update_params").argtypes = [c_void_p, c_int, POINTER(c_double)]
+        getattr(self.shared_lib, f"{self.model_name}_acados_update_params").restype = c_int
+        self._set_param = getattr(self.shared_lib, f"{self.model_name}_acados_update_params")
+
+        self.shared_lib.ocp_nlp_constraint_dims_get_from_attr.argtypes = \
+            [c_void_p, c_void_p, c_void_p, c_int, c_char_p, POINTER(c_int)]
+        self.shared_lib.ocp_nlp_constraint_dims_get_from_attr.restype = c_int
+        self.shared_lib.ocp_nlp_constraints_model_set_slice.argtypes = \
+            [c_void_p, c_void_p, c_void_p, c_int, c_int, c_char_p, c_void_p, c_int]
+
+        self.shared_lib.ocp_nlp_cost_dims_get_from_attr.argtypes = \
+            [c_void_p, c_void_p, c_void_p, c_int, c_char_p, POINTER(c_int)]
+        self.shared_lib.ocp_nlp_cost_dims_get_from_attr.restype = c_int
+        self.shared_lib.ocp_nlp_cost_model_set_slice.argtypes = \
+            [c_void_p, c_void_p, c_void_p, c_int, c_int, c_char_p, c_void_p, c_int]
+
+        self.shared_lib.ocp_nlp_constraints_model_set.argtypes = \
+            [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+        self.shared_lib.ocp_nlp_cost_model_set.argtypes = \
+            [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+        self.shared_lib.ocp_nlp_out_set.argtypes = \
+            [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+        self.shared_lib.ocp_nlp_set.argtypes = \
+            [c_void_p, c_void_p, c_int, c_char_p, c_void_p]
 
     def solve(self):
         """
@@ -1270,23 +1294,15 @@ class AcadosOcpSolver:
             value_data_p = cast((value_data), c_void_p)
 
             if field_ in constraints_fields:
-                self.shared_lib.ocp_nlp_constraints_model_set.argtypes = \
-                    [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
                 self.shared_lib.ocp_nlp_constraints_model_set(self.nlp_config, \
                     self.nlp_dims, self.nlp_in, stage, field, value_data_p)
             elif field_ in cost_fields:
-                self.shared_lib.ocp_nlp_cost_model_set.argtypes = \
-                    [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
                 self.shared_lib.ocp_nlp_cost_model_set(self.nlp_config, \
                     self.nlp_dims, self.nlp_in, stage, field, value_data_p)
             elif field_ in out_fields:
-                self.shared_lib.ocp_nlp_out_set.argtypes = \
-                    [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
                 self.shared_lib.ocp_nlp_out_set(self.nlp_config, \
                     self.nlp_dims, self.nlp_out, stage, field, value_data_p)
             # elif field_ in mem_fields:
-            #     self.shared_lib.ocp_nlp_set.argtypes = \
-            #         [c_void_p, c_void_p, c_int, c_char_p, c_void_p]
             #     self.shared_lib.ocp_nlp_set(self.nlp_config, \
             #         self.nlp_solver, stage, field, value_data_p)
 
