@@ -57,10 +57,10 @@ N = 200
 sim.solver_options.T = Tf
 # set options
 sim.solver_options.integrator_type = 'IRK'
-sim.solver_options.num_stages = 4
+sim.solver_options.num_stages = 3
 sim.solver_options.num_steps = 3
 sim.solver_options.newton_iter = 3 # for implicit integrator
-
+sim.solver_options.collocation_type = "GAUSS_RADAU_IIA"
 
 # create
 acados_integrator = AcadosSimSolver(sim)

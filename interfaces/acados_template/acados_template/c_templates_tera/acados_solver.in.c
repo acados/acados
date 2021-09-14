@@ -1879,6 +1879,11 @@ int {{ model.name }}_acados_create({{ model.name }}_solver_capsule * capsule)
 
 {%- if solver_options.integrator_type != "DISCRETE" %}
 
+    // set collocation type (relevant for implicit integrators)
+    sim_collocation_type collocation_type = {{ solver_options.collocation_type }};
+    for (int i = 0; i < N; i++)
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, capsule->nlp_opts, i, "dynamics_collocation_type", &collocation_type);
+
     // set up sim_method_num_steps
     {%- set all_equal = true %}
     {%- set val = solver_options.sim_method_num_steps[0] %}

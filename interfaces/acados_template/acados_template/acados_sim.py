@@ -106,6 +106,7 @@ class AcadosSimOpts:
     """
     def __init__(self):
         self.__integrator_type = 'ERK'
+        self.__collocation_type = 'GAUSS_LEGENDRE'
         self.__Tsim = None
         # ints
         self.__sim_method_num_stages = 1
@@ -174,6 +175,15 @@ class AcadosSimOpts:
         """Time horizon"""
         return self.__Tsim
 
+    @property
+    def collocation_type(self):
+        """Collocation type: relevant for implicit integrators
+        -- string in {GAUSS_RADAU_IIA, GAUSS_LEGENDRE}
+
+        Default: GAUSS_LEGENDRE
+        """
+        return self.__collocation_type
+
     @integrator_type.setter
     def integrator_type(self, integrator_type):
         integrator_types = ('ERK', 'IRK', 'GNSF')
@@ -182,6 +192,15 @@ class AcadosSimOpts:
         else:
             raise Exception('Invalid integrator_type value. Possible values are:\n\n' \
                     + ',\n'.join(integrator_types) + '.\n\nYou have: ' + integrator_type + '.\n\nExiting.')
+
+    @collocation_type.setter
+    def collocation_type(self, collocation_type):
+        collocation_types = ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE')
+        if collocation_type in collocation_types:
+            self.__collocation_type = collocation_type
+        else:
+            raise Exception('Invalid collocation_type value. Possible values are:\n\n' \
+                    + ',\n'.join(collocation_types) + '.\n\nYou have: ' + collocation_type + '.\n\nExiting.')
 
     @T.setter
     def T(self, T):
