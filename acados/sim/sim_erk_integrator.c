@@ -226,7 +226,7 @@ void *sim_erk_opts_assign(void *config_, void *dims, void *raw_memory)
     assert((char *) raw_memory + sim_erk_opts_calculate_size(config_, dims) >= c_ptr);
 
     opts->newton_iter = 0;
-    opts->scheme = NULL;
+    // opts->scheme = NULL;
     opts->jac_reuse = false;
 
     return (void *) opts;

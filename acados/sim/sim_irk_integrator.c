@@ -267,7 +267,7 @@ void sim_irk_opts_initialize_default(void *config_, void *dims_, void *opts_)
 
     // default options
     opts->newton_iter = 3;
-    opts->scheme = NULL;
+    // opts->scheme = NULL;
     opts->num_steps = 2;
     opts->num_forw_sens = dims->nx + dims->nu;
     opts->sens_forw = true;

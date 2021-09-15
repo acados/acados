@@ -147,7 +147,7 @@ typedef struct
     // && jac_reuse=false
     int newton_iter;
     bool jac_reuse;
-    Newton_scheme *scheme;
+    // Newton_scheme *scheme;
 
     // workspace
     void *work;

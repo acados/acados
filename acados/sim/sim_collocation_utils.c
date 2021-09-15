@@ -268,7 +268,7 @@ void gauss_radau_iia_nodes(int ns, double *nodes, void *work)
     //     break;
 
     /* hard code: Radau nodes, as done in CasADi */
-    https://github.com/casadi/casadi/issues/673
+    // https://github.com/casadi/casadi/issues/673
 
     if (ns < 1 || ns > 9)
     {
@@ -316,132 +316,132 @@ void gauss_radau_iia_nodes(int ns, double *nodes, void *work)
     }
 }
 
-acados_size_t gauss_simplified_work_calculate_size(int ns)
-{
-    acados_size_t size = 0;
+// acados_size_t gauss_simplified_work_calculate_size(int ns)
+// {
+//     acados_size_t size = 0;
 
-    size += 1 * 2 * ns * sizeof(double);   // D
-    size += 3 * ns * ns * sizeof(double);  // T, T_inv, lu_work
+//     size += 1 * 2 * ns * sizeof(double);   // D
+//     size += 3 * ns * ns * sizeof(double);  // T, T_inv, lu_work
 
-    size += 1 * ns * sizeof(int);  // perm
+//     size += 1 * ns * sizeof(int);  // perm
 
-    return size;
-}
+//     return size;
+// }
 
 
-// TODO(all): understand how this works and leave a comment!
-void gauss_simplified(int ns, Newton_scheme *scheme, void *work)
-{
-    char *c_ptr = work;
+// // TODO(all): understand how this works and leave a comment!
+// void gauss_simplified(int ns, Newton_scheme *scheme, void *work)
+// {
+//     char *c_ptr = work;
 
-    // D
-    double *D = (double *) c_ptr;
-    c_ptr += 2 * ns * sizeof(double);
-    // T
-    double *T = (double *) c_ptr;
-    c_ptr += ns * ns * sizeof(double);
-    // T_inv
-    double *T_inv = (double *) c_ptr;
-    c_ptr += ns * ns * sizeof(double);
-    // lu_work
-    double *lu_work = (double *) c_ptr;
-    c_ptr += ns * ns * sizeof(double);
-    // perm
-    int *perm = (int *) c_ptr;
-    c_ptr += ns * sizeof(int);
+//     // D
+//     double *D = (double *) c_ptr;
+//     c_ptr += 2 * ns * sizeof(double);
+//     // T
+//     double *T = (double *) c_ptr;
+//     c_ptr += ns * ns * sizeof(double);
+//     // T_inv
+//     double *T_inv = (double *) c_ptr;
+//     c_ptr += ns * ns * sizeof(double);
+//     // lu_work
+//     double *lu_work = (double *) c_ptr;
+//     c_ptr += ns * ns * sizeof(double);
+//     // perm
+//     int *perm = (int *) c_ptr;
+//     c_ptr += ns * sizeof(int);
 
-    assert((char *) work + gauss_simplified_work_calculate_size(ns) >= c_ptr);
+//     assert((char *) work + gauss_simplified_work_calculate_size(ns) >= c_ptr);
 
-    char simplified[MAX_STR_LEN];
+//     char simplified[MAX_STR_LEN];
 
-    snprintf(simplified, sizeof(simplified), "simplified/GL%d_simpl_%s.txt", 2 * ns, "D");
-    read_matrix(simplified, D, ns, 2);
+//     snprintf(simplified, sizeof(simplified), "simplified/GL%d_simpl_%s.txt", 2 * ns, "D");
+//     read_matrix(simplified, D, ns, 2);
 
-    snprintf(simplified, sizeof(simplified), "simplified/GL%d_simpl_%s.txt", 2 * ns, "T");
-    read_matrix(simplified, T, ns, ns);
+//     snprintf(simplified, sizeof(simplified), "simplified/GL%d_simpl_%s.txt", 2 * ns, "T");
+//     read_matrix(simplified, T, ns, ns);
 
-    scheme->single = false;
-    scheme->low_tria = 0;
-    for (int i = 0; i < ns; i++)
-    {
-        scheme->eig[i] = D[i];
-    }
-    for (int i = 0; i < ns * ns; i++)
-    {
-        scheme->transf2[i] = T[i];
-    }
-    // transf1_T:
-    for (int i = 0; i < ns; i++)
-    {
-        if ((i + 1) < ns)
-        {  // complex conjugate pair of eigenvalues
-            for (int i1 = i; i1 < i + 2; i1++)
-            {
-                for (int i2 = 0; i2 < ns; i2++)
-                {
-                    scheme->transf1_T[i2 * ns + i1] = 0.0;
-                    for (int i3 = 0; i3 < 2; i3++)
-                    {
-                        scheme->transf1_T[i2 * ns + i1] +=
-                            D[(i1 - i) * ns + (i + i3)] * T[(i + i3) * ns + i2];
-                    }
-                }
-            }
-            i++;
-        }
-        else
-        {  // real eigenvalue
-            for (int i2 = 0; i2 < ns; i2++)
-            {
-                scheme->transf1_T[i2 * ns + i] = D[i] * T[i * ns + i2];
-            }
-        }
-    }
+//     scheme->single = false;
+//     scheme->low_tria = 0;
+//     for (int i = 0; i < ns; i++)
+//     {
+//         scheme->eig[i] = D[i];
+//     }
+//     for (int i = 0; i < ns * ns; i++)
+//     {
+//         scheme->transf2[i] = T[i];
+//     }
+//     // transf1_T:
+//     for (int i = 0; i < ns; i++)
+//     {
+//         if ((i + 1) < ns)
+//         {  // complex conjugate pair of eigenvalues
+//             for (int i1 = i; i1 < i + 2; i1++)
+//             {
+//                 for (int i2 = 0; i2 < ns; i2++)
+//                 {
+//                     scheme->transf1_T[i2 * ns + i1] = 0.0;
+//                     for (int i3 = 0; i3 < 2; i3++)
+//                     {
+//                         scheme->transf1_T[i2 * ns + i1] +=
+//                             D[(i1 - i) * ns + (i + i3)] * T[(i + i3) * ns + i2];
+//                     }
+//                 }
+//             }
+//             i++;
+//         }
+//         else
+//         {  // real eigenvalue
+//             for (int i2 = 0; i2 < ns; i2++)
+//             {
+//                 scheme->transf1_T[i2 * ns + i] = D[i] * T[i * ns + i2];
+//             }
+//         }
+//     }
 
-    for (int i = 0; i < ns; i++)
-    {
-        T_inv[i * (ns + 1)] = 1.0;
-    }
+//     for (int i = 0; i < ns; i++)
+//     {
+//         T_inv[i * (ns + 1)] = 1.0;
+//     }
 
-    lu_system_solve(T, T_inv, perm, ns, ns, lu_work);
+//     lu_system_solve(T, T_inv, perm, ns, ns, lu_work);
 
-    // transf1:
-    for (int i = 0; i < ns; i++)
-    {
-        if ((i + 1) < ns)
-        {  // complex conjugate pair of eigenvalues
-            for (int i1 = i; i1 < i + 2; i1++)
-            {
-                for (int i2 = 0; i2 < ns; i2++)
-                {
-                    scheme->transf1[i2 * ns + i1] = 0.0;
-                    for (int i3 = 0; i3 < 2; i3++)
-                    {
-                        scheme->transf1[i2 * ns + i1] += D[i3 * ns + i1] * T_inv[i2 * ns + i + i3];
-                    }
-                }
-            }
-            i++;
-        }
-        else
-        {  // real eigenvalue
-            for (int i2 = 0; i2 < ns; i2++)
-            {
-                scheme->transf1[i2 * ns + i] = D[i] * T_inv[i2 * ns + i];
-            }
-        }
-    }
-    // transf2_T:
-    for (int i = 0; i < ns; i++)
-    {
-        for (int i2 = 0; i2 < ns; i2++)
-        {
-            scheme->transf2_T[i2 * ns + i] = T_inv[i * ns + i2];
-        }
-    }
+//     // transf1:
+//     for (int i = 0; i < ns; i++)
+//     {
+//         if ((i + 1) < ns)
+//         {  // complex conjugate pair of eigenvalues
+//             for (int i1 = i; i1 < i + 2; i1++)
+//             {
+//                 for (int i2 = 0; i2 < ns; i2++)
+//                 {
+//                     scheme->transf1[i2 * ns + i1] = 0.0;
+//                     for (int i3 = 0; i3 < 2; i3++)
+//                     {
+//                         scheme->transf1[i2 * ns + i1] += D[i3 * ns + i1] * T_inv[i2 * ns + i + i3];
+//                     }
+//                 }
+//             }
+//             i++;
+//         }
+//         else
+//         {  // real eigenvalue
+//             for (int i2 = 0; i2 < ns; i2++)
+//             {
+//                 scheme->transf1[i2 * ns + i] = D[i] * T_inv[i2 * ns + i];
+//             }
+//         }
+//     }
+//     // transf2_T:
+//     for (int i = 0; i < ns; i++)
+//     {
+//         for (int i2 = 0; i2 < ns; i2++)
+//         {
+//             scheme->transf2_T[i2 * ns + i] = T_inv[i * ns + i2];
+//         }
+//     }
 
-    return;
-}
+//     return;
+// }
 
 
 
