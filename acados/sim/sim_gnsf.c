@@ -261,16 +261,14 @@ acados_size_t sim_gnsf_opts_calculate_size(void *config_, void *dims)
     size += ns_max * sizeof(double);           // b_vec
     size += ns_max * sizeof(double);           // c_vec
 
-    size_t tmp0 = gauss_legendre_nodes_work_calculate_size(ns_max);
-    size_t tmp1 = butcher_tableau_work_calculate_size(ns_max);
-    acados_size_t work_size = tmp0 > tmp1 ? tmp0 : tmp1;
-    size += work_size;  // work
+    size += butcher_tableau_work_calculate_size(ns_max);
 
     make_int_multiple_of(8, &size);
     size += 1 * 8;
 
     return size;
 }
+
 
 void *sim_gnsf_opts_assign(void *config_, void *dims, void *raw_memory)
 {
@@ -288,11 +286,8 @@ void *sim_gnsf_opts_assign(void *config_, void *dims, void *raw_memory)
     assign_and_advance_double(ns_max, &opts->c_vec, &c_ptr);
 
     // work
-    acados_size_t tmp0 = gauss_legendre_nodes_work_calculate_size(ns_max);
-    acados_size_t tmp1 = butcher_tableau_work_calculate_size(ns_max);
-    acados_size_t work_size = tmp0 > tmp1 ? tmp0 : tmp1;
     opts->work = c_ptr;
-    c_ptr += work_size;
+    c_ptr += butcher_tableau_work_calculate_size(ns_max);;
 
     assert((char *) raw_memory + sim_gnsf_opts_calculate_size(config_, dims) >= c_ptr);
 

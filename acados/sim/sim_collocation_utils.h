@@ -76,9 +76,9 @@ typedef enum
 
 
 //
-acados_size_t gauss_legendre_nodes_work_calculate_size(int ns);
+// acados_size_t gauss_legendre_nodes_work_calculate_size(int ns);
 //
-void gauss_legendre_nodes(int ns, double *nodes, void *raw_memory);
+// void gauss_legendre_nodes(int ns, double *nodes, void *raw_memory);
 //
 // acados_size_t gauss_simplified_work_calculate_size(int ns);
 // //
@@ -86,7 +86,7 @@ void gauss_legendre_nodes(int ns, double *nodes, void *raw_memory);
 //
 acados_size_t butcher_tableau_work_calculate_size(int ns);
 //
-void calculate_butcher_tableau_from_nodes(int ns, double *nodes, double *b, double *A, void *work);
+// void calculate_butcher_tableau_from_nodes(int ns, double *nodes, double *b, double *A, void *work);
 //
 void calculate_butcher_tableau(int ns, sim_collocation_type collocation_type, double *c_vec,
                                double *b_vec, double *A_mat, void *work);

@@ -155,7 +155,7 @@ static double lu_system_solve(double *A, double *b, int *perm, int dim, int dim_
 
 
 
-acados_size_t gauss_legendre_nodes_work_calculate_size(int ns)
+static acados_size_t gauss_legendre_nodes_work_calculate_size(int ns)
 {
     int N = ns - 1;
     int N1 = N + 1;
@@ -171,7 +171,7 @@ acados_size_t gauss_legendre_nodes_work_calculate_size(int ns)
 
 
 // calculates Gauss-Legendre nodes (c) for Butcher tableau of size ns
-void gauss_legendre_nodes(int ns, double *nodes, void *work)
+static void gauss_legendre_nodes(int ns, double *nodes, void *work)
 {
     int N = ns - 1;
     int N1 = N + 1;
@@ -247,7 +247,7 @@ void gauss_legendre_nodes(int ns, double *nodes, void *work)
 }
 
 // looks up Gauss-Radau IIA nodes (c) for Butcher tableau of size ns
-void gauss_radau_iia_nodes(int ns, double *nodes, void *work)
+static void gauss_radau_iia_nodes(int ns, double *nodes, void *work)
 {
     // Radau nodes can be calculated as zeros of polynomial, see:
     // Encyclopedia of Applied and Computational Mathematics
@@ -450,10 +450,11 @@ acados_size_t butcher_tableau_work_calculate_size(int ns)
     acados_size_t size = 0;
 
     size += 3 * ns * ns * sizeof(double);  // can_vm, rhs, lu_work
-
     size += 1 * ns * sizeof(int);  // perm
 
-    return size;
+    acados_size_t size_legendre = gauss_legendre_nodes_work_calculate_size(ns);
+
+    return size > size_legendre ? size : size_legendre;
 }
 
 
