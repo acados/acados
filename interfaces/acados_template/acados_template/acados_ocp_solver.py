@@ -51,7 +51,7 @@ from .acados_ocp import AcadosOcp
 from .acados_model import acados_model_strip_casadi_symbolics
 from .utils import is_column, is_empty, casadi_length, render_template, acados_class2dict,\
      format_class_dict, ocp_check_against_layout, np_array_to_list, make_model_consistent,\
-     set_up_imported_gnsf_model, get_acados_path
+     set_up_imported_gnsf_model, get_acados_path, get_ocp_nlp_layout, get_python_interface_path
 
 
 def make_ocp_dims_consistent(acados_ocp):
@@ -482,13 +482,12 @@ def make_ocp_dims_consistent(acados_ocp):
         raise Exception("Wrong value for sim_method_jac_reuse. Should be either int or array of ints of shape (N,).")
 
 
-
-def get_ocp_nlp_layout():
-    current_module = sys.modules[__name__]
-    acados_path = os.path.dirname(current_module.__file__)
-    with open(acados_path + '/acados_layout.json', 'r') as f:
-        ocp_nlp_layout = json.load(f)
-    return ocp_nlp_layout
+def get_simulink_default_opts():
+    python_interface_path = get_python_interface_path()
+    abs_path = os.path.join(python_interface_path, 'simulink_default_opts.json')
+    with open(abs_path , 'r') as f:
+        simulink_default_opts = json.load(f)
+    return simulink_default_opts
 
 
 def ocp_formulation_json_dump(acados_ocp, simulink_opts, json_file='acados_ocp_nlp.json'):
@@ -668,8 +667,7 @@ def ocp_render_templates(acados_ocp, json_file):
     render_template(in_file, out_file, template_dir, json_path)
 
     ## folder model
-    template_dir = f'{code_export_dir}/{name}_model/'
-
+    template_dir = os.path.join(code_export_dir, name + '_model')
     in_file = 'model.in.h'
     out_file = f'{name}_model.h'
     render_template(in_file, out_file, template_dir, json_path)
@@ -677,7 +675,7 @@ def ocp_render_templates(acados_ocp, json_file):
     # constraints on convex over nonlinear function
     if acados_ocp.constraints.constr_type == 'BGP' and acados_ocp.dims.nphi > 0:
         # constraints on outer function
-        template_dir = f'{code_export_dir}/{name}_constraints/'
+        template_dir = os.path.join(code_export_dir, name + '_constraints')
         in_file = 'phi_constraint.in.h'
         out_file =  f'{name}_phi_constraint.h'
         render_template(in_file, out_file, template_dir, json_path)
@@ -685,62 +683,62 @@ def ocp_render_templates(acados_ocp, json_file):
     # terminal constraints on convex over nonlinear function
     if acados_ocp.constraints.constr_type_e == 'BGP' and acados_ocp.dims.nphi_e > 0:
         # terminal constraints on outer function
-        template_dir = f'{code_export_dir}/{name}_constraints/'
+        template_dir = os.path.join(code_export_dir, name + '_constraints')
         in_file = 'phi_e_constraint.in.h'
         out_file =  f'{name}_phi_e_constraint.h'
         render_template(in_file, out_file, template_dir, json_path)
 
     # nonlinear constraints
     if acados_ocp.constraints.constr_type == 'BGH' and acados_ocp.dims.nh > 0:
-        template_dir = f'{code_export_dir}/{name}_constraints/'
+        template_dir = os.path.join(code_export_dir, name + '_constraints')
         in_file = 'h_constraint.in.h'
         out_file = f'{name}_h_constraint.h'
         render_template(in_file, out_file, template_dir, json_path)
 
     # terminal nonlinear constraints
     if acados_ocp.constraints.constr_type_e == 'BGH' and acados_ocp.dims.nh_e > 0:
-        template_dir = f'{code_export_dir}/{name}_constraints/'
+        template_dir = os.path.join(code_export_dir, name + '_constraints')
         in_file = 'h_e_constraint.in.h'
         out_file = f'{name}_h_e_constraint.h'
         render_template(in_file, out_file, template_dir, json_path)
 
     # initial stage Nonlinear LS cost function
     if acados_ocp.cost.cost_type_0 == 'NONLINEAR_LS':
-        template_dir = f'{code_export_dir}/{name}_cost/'
+        template_dir = os.path.join(code_export_dir, name + '_cost')
         in_file = 'cost_y_0_fun.in.h'
         out_file = f'{name}_cost_y_0_fun.h'
         render_template(in_file, out_file, template_dir, json_path)
     # external cost - terminal
     elif acados_ocp.cost.cost_type_0 == 'EXTERNAL':
-        template_dir = f'{code_export_dir}/{name}_cost/'
+        template_dir = os.path.join(code_export_dir, name + '_cost')
         in_file = 'external_cost_0.in.h'
         out_file = f'{name}_external_cost_0.h'
         render_template(in_file, out_file, template_dir, json_path)
 
     # path Nonlinear LS cost function
     if acados_ocp.cost.cost_type == 'NONLINEAR_LS':
-        template_dir = f'{code_export_dir}/{name}_cost/'
+        template_dir = os.path.join(code_export_dir, name + '_cost')
         in_file = 'cost_y_fun.in.h'
         out_file = f'{name}_cost_y_fun.h'
         render_template(in_file, out_file, template_dir, json_path)
 
     # terminal Nonlinear LS cost function
     if acados_ocp.cost.cost_type_e == 'NONLINEAR_LS':
-        template_dir = f'{code_export_dir}/{name}_cost/'
+        template_dir = os.path.join(code_export_dir, name + '_cost')
         in_file = 'cost_y_e_fun.in.h'
         out_file = f'{name}_cost_y_e_fun.h'
         render_template(in_file, out_file, template_dir, json_path)
 
     # external cost
     if acados_ocp.cost.cost_type == 'EXTERNAL':
-        template_dir = f'{code_export_dir}/{name}_cost/'
+        template_dir = os.path.join(code_export_dir, name + '_cost')
         in_file = 'external_cost.in.h'
         out_file = f'{name}_external_cost.h'
         render_template(in_file, out_file, template_dir, json_path)
 
     # external cost - terminal
     if acados_ocp.cost.cost_type_e == 'EXTERNAL':
-        template_dir = f'{code_export_dir}/{name}_cost/'
+        template_dir = os.path.join(code_export_dir, name + '_cost')
         in_file = 'external_cost_e.in.h'
         out_file = f'{name}_external_cost_e.h'
         render_template(in_file, out_file, template_dir, json_path)
@@ -775,10 +773,7 @@ class AcadosOcpSolver:
         model = acados_ocp.model
 
         if simulink_opts == None:
-            acados_path = get_acados_path()
-            json_path = os.path.join(acados_path, 'interfaces/acados_template/acados_template')
-            with open(json_path + '/simulink_default_opts.json', 'r') as f:
-                simulink_opts = json.load(f)
+            simulink_opts = get_simulink_default_opts()
 
         # make dims consistent
         make_ocp_dims_consistent(acados_ocp)

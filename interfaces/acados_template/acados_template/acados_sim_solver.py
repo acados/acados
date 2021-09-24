@@ -46,7 +46,7 @@ from .acados_sim import AcadosSim
 from .acados_ocp import AcadosOcp
 from .acados_model import acados_model_strip_casadi_symbolics
 from .utils import is_column, render_template, format_class_dict, np_array_to_list,\
-     make_model_consistent, set_up_imported_gnsf_model
+     make_model_consistent, set_up_imported_gnsf_model, get_python_interface_path
 
 
 def make_sim_dims_consistent(acados_sim):
@@ -84,9 +84,9 @@ def make_sim_dims_consistent(acados_sim):
 
 
 def get_sim_layout():
-    current_module = sys.modules[__name__]
-    acados_path = os.path.dirname(current_module.__file__)
-    with open(acados_path + '/acados_sim_layout.json', 'r') as f:
+    python_interface_path = get_python_interface_path()
+    abs_path = os.path.join(python_interface_path, 'acados_sim_layout.json')
+    with open(abs_path, 'r') as f:
         sim_layout = json.load(f)
     return sim_layout
 
