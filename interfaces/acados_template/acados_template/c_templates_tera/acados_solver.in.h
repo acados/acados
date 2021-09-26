@@ -181,6 +181,11 @@ int {{ model.name }}_acados_create({{ model.name }}_solver_capsule * capsule);
  * generation, the time-steps from code generation is used.
  */
 int {{ model.name }}_acados_create_with_discretization({{ model.name }}_solver_capsule * capsule, int n_time_steps, double* new_time_steps);
+/**
+ * Update the time step vector. Number N must be identical to the currently set number of shooting nodes in the
+ * nlp_solver_plan. Returns 0 if no error occurred and a otherwise a value other than 0.
+ */
+int {{ model.name }}_acados_update_time_steps({{ model.name }}_solver_capsule * capsule, int N, double* new_time_steps);
 int {{ model.name }}_acados_update_params({{ model.name }}_solver_capsule * capsule, int stage, double *value, int np);
 int {{ model.name }}_acados_solve({{ model.name }}_solver_capsule * capsule);
 int {{ model.name }}_acados_free({{ model.name }}_solver_capsule * capsule);

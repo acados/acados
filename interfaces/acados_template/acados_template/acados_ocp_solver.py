@@ -783,7 +783,9 @@ class AcadosOcpSolver:
         if simulink_opts == None:
             acados_path = get_acados_path()
             json_path = os.path.join(acados_path, 'interfaces/acados_template/acados_template')
-            with open(json_path + '/simulink_default_opts.json', 'r') as f:
+            json_filename = json_path + '/simulink_default_opts.json'
+            print(f'using simulink json-file: "{json_filename}"')
+            with open(json_filename, 'r') as f:
                 simulink_opts = json.load(f)
 
         # make dims consistent
@@ -832,7 +834,17 @@ class AcadosOcpSolver:
         assert getattr(self.shared_lib, f"{model.name}_acados_create")(self.capsule)==0
         self.solver_created = True
 
+        self.acados_ocp = acados_ocp
+
         # get pointers solver
+        self.__get_pointers_solver()
+
+    def __get_pointers_solver(self):
+        """
+        Private function to get the pointers for solver
+        """
+        # get pointers solver
+        model = self.acados_ocp.model
         getattr(self.shared_lib, f"{model.name}_acados_get_nlp_opts").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{model.name}_acados_get_nlp_opts").restype = c_void_p
         self.nlp_opts = getattr(self.shared_lib, f"{model.name}_acados_get_nlp_opts")(self.capsule)
@@ -857,9 +869,6 @@ class AcadosOcpSolver:
         getattr(self.shared_lib, f"{model.name}_acados_get_nlp_solver").restype = c_void_p
         self.nlp_solver = getattr(self.shared_lib, f"{model.name}_acados_get_nlp_solver")(self.capsule)
 
-        self.acados_ocp = acados_ocp
-
-
     def solve(self):
         """
         Solve the ocp with current input.
@@ -871,6 +880,56 @@ class AcadosOcpSolver:
         status = getattr(self.shared_lib, f"{model.name}_acados_solve")(self.capsule)
         return status
 
+    def set_new_time_steps(self, new_time_steps):
+        """
+        Set new time steps before solving. Only reload library without code generation but with new time steps.
+
+            :param new_time_steps: vector of new time steps for the solver
+
+            .. note:: This allows for different use-cases: either set a new size of time-steps or a new distribution of
+                      the shooting nodes without changing the number, e.g., to reach a different final time. Both cases
+                      do not require a new code export and compilation.
+        """
+
+        # unlikely but still possible
+        if not self.solver_created:
+            raise Exception('Solver was not yet created!')
+
+        # check if time steps really changed in value
+        if np.array_equal(self.acados_ocp.solver_options.time_steps, new_time_steps):
+            return
+
+        N = new_time_steps.size
+        model = self.acados_ocp.model
+        new_time_steps_data = cast(new_time_steps.ctypes.data, POINTER(c_double))
+
+        # check if recreation of acados is necessary (no need to recreate acados if sizes are identical)
+        if self.acados_ocp.solver_options.time_steps.size == N:
+            getattr(self.shared_lib, f"{model.name}_acados_update_time_steps").argtypes = [c_void_p, c_int, c_void_p]
+            getattr(self.shared_lib, f"{model.name}_acados_update_time_steps").restype = c_int
+            assert getattr(self.shared_lib, f"{model.name}_acados_update_time_steps")(self.capsule, N, new_time_steps_data) == 0
+        else:  # recreate the solver with the new time steps
+            self.solver_created = False
+
+            # 1) delete old memory (analog to __del__)
+            getattr(self.shared_lib, f"{model.name}_acados_free").argtypes = [c_void_p]
+            getattr(self.shared_lib, f"{model.name}_acados_free").restype = c_int
+            getattr(self.shared_lib, f"{model.name}_acados_free")(self.capsule)
+
+            # 3) rebuild memory with new time steps
+            self.N = self.acados_ocp.dims.N = N
+            self.acados_ocp.solver_options.time_steps = new_time_steps
+            self.acados_ocp.solver_options.Tsim = self.acados_ocp.solver_options.time_steps[0]
+
+            # create solver with new time steps
+            getattr(self.shared_lib, f"{model.name}_acados_create_with_discretization").argtypes = [c_void_p, c_int, c_void_p]
+            getattr(self.shared_lib, f"{model.name}_acados_create_with_discretization").restype = c_int
+            assert getattr(self.shared_lib, f"{model.name}_acados_create_with_discretization")(self.capsule, N, new_time_steps_data) == 0
+
+            self.solver_created = True
+
+            # get pointers solver
+            self.__get_pointers_solver()
 
     def get(self, stage_, field_):
         """
