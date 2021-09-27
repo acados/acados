@@ -218,7 +218,7 @@ def render_template(in_file, out_file, template_dir, json_path):
     )
     status = os.system(os_cmd)
     if (status != 0):
-        raise Exception('Rendering of {} failed! Exiting.\n'.format(in_file))
+        raise Exception('Rendering of {} failed!\n\nAttempted to execute OS command:\n{}\n\nExiting.\n'.format(in_file, os_cmd))
 
     os.chdir(cwd)
 
