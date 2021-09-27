@@ -131,9 +131,11 @@ int {{ model.name }}_acados_create({{ model.name }}_solver_capsule * capsule)
 int {{ model.name }}_acados_update_time_steps({{ model.name }}_solver_capsule * capsule, int N, double* new_time_steps)
 {
     if (N != capsule->nlp_solver_plan->N) {
-        fprintf(stderr, "%s: given number of time steps (= %d) differs from the currently allocated number of " \
-            "time steps (= %d)! Please recreate with new discretization and provide a new vector of time_stamps!\n", \
-            __FUNCTION__, N, capsule->nlp_solver_plan->N);
+        fprintf(stderr, "{{ model.name }}_acados_update_time_steps: given number of time steps (= %d) " \
+            "differs from the currently allocated number of " \
+            "time steps (= %d)!\n" \
+            "Please recreate with new discretization and provide a new vector of time_stamps!\n", \
+            N, capsule->nlp_solver_plan->N);
         return 1;
     }
 
@@ -153,10 +155,11 @@ int {{ model.name }}_acados_create_with_discretization({{ model.name }}_solver_c
 {
     int status = 0;
     // If N does not match the number of shooting intervals used for code generation, new_time_steps must be given.
-    if(N != {{ model.name | upper }}_N && !new_time_steps) {
-        fprintf(stderr, "%s: new_time_steps is NULL but the number of shooting intervals (= %d) differs from the number of " \
+    if (N != {{ model.name | upper }}_N && !new_time_steps) {
+        fprintf(stderr, "{{ model.name }}_acados_create_with_discretization: new_time_steps is NULL ", \
+            "but the number of shooting intervals (= %d) differs from the number of " \
             "shooting intervals (= %d) during code generation! Please provide a new vector of time_stamps!\n", \
-             __FUNCTION__, N, {{ model.name | upper }}_N);
+             N, {{ model.name | upper }}_N);
         return 1;
     }
 

@@ -839,6 +839,7 @@ class AcadosOcpSolver:
         # get pointers solver
         self.__get_pointers_solver()
 
+
     def __get_pointers_solver(self):
         """
         Private function to get the pointers for solver
@@ -869,6 +870,7 @@ class AcadosOcpSolver:
         getattr(self.shared_lib, f"{model.name}_acados_get_nlp_solver").restype = c_void_p
         self.nlp_solver = getattr(self.shared_lib, f"{model.name}_acados_get_nlp_solver")(self.capsule)
 
+
     def solve(self):
         """
         Solve the ocp with current input.
@@ -879,6 +881,7 @@ class AcadosOcpSolver:
         getattr(self.shared_lib, f"{model.name}_acados_solve").restype = c_int
         status = getattr(self.shared_lib, f"{model.name}_acados_solve")(self.capsule)
         return status
+
 
     def set_new_time_steps(self, new_time_steps):
         """
@@ -911,12 +914,12 @@ class AcadosOcpSolver:
         else:  # recreate the solver with the new time steps
             self.solver_created = False
 
-            # 1) delete old memory (analog to __del__)
+            # delete old memory (analog to __del__)
             getattr(self.shared_lib, f"{model.name}_acados_free").argtypes = [c_void_p]
             getattr(self.shared_lib, f"{model.name}_acados_free").restype = c_int
             getattr(self.shared_lib, f"{model.name}_acados_free")(self.capsule)
 
-            # 3) rebuild memory with new time steps
+            # store N and new time steps
             self.N = self.acados_ocp.dims.N = N
             self.acados_ocp.solver_options.time_steps = new_time_steps
             self.acados_ocp.solver_options.Tsim = self.acados_ocp.solver_options.time_steps[0]
@@ -930,6 +933,7 @@ class AcadosOcpSolver:
 
             # get pointers solver
             self.__get_pointers_solver()
+
 
     def get(self, stage_, field_):
         """
