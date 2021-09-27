@@ -63,6 +63,8 @@ def get_tera_exec_path():
     TERA_PATH = os.environ.get('TERA_PATH')
     if not TERA_PATH:
         TERA_PATH = os.path.join(get_acados_path(), 'bin', 't_renderer')
+        if os.name == 'nt':
+            TERA_PATH += '.exe'
     return TERA_PATH
 
 
