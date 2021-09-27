@@ -175,6 +175,17 @@ typedef struct {{ model.name }}_solver_capsule
 int {{ model.name }}_acados_free_capsule({{ model.name }}_solver_capsule *capsule);
 
 int {{ model.name }}_acados_create({{ model.name }}_solver_capsule * capsule);
+/**
+ * Generic version of {{ model.name }}_acados_create which allows to use a different number of shooting intervals than
+ * the number used for code generation. If new_time_steps=NULL and n_time_steps matches the number used for code
+ * generation, the time-steps from code generation is used.
+ */
+int {{ model.name }}_acados_create_with_discretization({{ model.name }}_solver_capsule * capsule, int n_time_steps, double* new_time_steps);
+/**
+ * Update the time step vector. Number N must be identical to the currently set number of shooting nodes in the
+ * nlp_solver_plan. Returns 0 if no error occurred and a otherwise a value other than 0.
+ */
+int {{ model.name }}_acados_update_time_steps({{ model.name }}_solver_capsule * capsule, int N, double* new_time_steps);
 int {{ model.name }}_acados_update_params({{ model.name }}_solver_capsule * capsule, int stage, double *value, int np);
 int {{ model.name }}_acados_solve({{ model.name }}_solver_capsule * capsule);
 int {{ model.name }}_acados_free({{ model.name }}_solver_capsule * capsule);
