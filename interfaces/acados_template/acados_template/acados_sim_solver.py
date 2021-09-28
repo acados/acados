@@ -114,9 +114,8 @@ def sim_formulation_json_dump(acados_sim, json_file='acados_sim.json'):
 
 def sim_render_templates(json_file, model_name, code_export_dir):
     # setting up loader and environment
-    json_path = '{cwd}/{json_file}'.format(
-        cwd=os.getcwd(),
-        json_file=json_file)
+    json_path = os.path.join(os.getcwd(), json_file)
+
 
     if not os.path.exists(json_path):
         raise Exception(f"{json_path} not found!")
@@ -141,7 +140,7 @@ def sim_render_templates(json_file, model_name, code_export_dir):
     render_template(in_file, out_file, template_dir, json_path)
 
     ## folder model
-    template_dir = f'{code_export_dir}/{model_name}_model/'
+    template_dir = os.path.join(code_export_dir, model_name + '_model')
 
     in_file = 'model.in.h'
     out_file = f'{model_name}_model.h'

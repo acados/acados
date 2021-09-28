@@ -618,9 +618,7 @@ def ocp_render_templates(acados_ocp, json_file):
     name = acados_ocp.model.name
 
     # setting up loader and environment
-    json_path = '{cwd}/{json_file}'.format(
-        cwd=os.getcwd(),
-        json_file=json_file)
+    json_path = os.path.join(os.getcwd(), json_file)
 
     if not os.path.exists(json_path):
         raise Exception('{} not found!'.format(json_path))

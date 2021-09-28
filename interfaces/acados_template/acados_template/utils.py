@@ -45,7 +45,7 @@ def get_acados_path():
     ACADOS_PATH = os.environ.get('ACADOS_SOURCE_DIR')
     if not ACADOS_PATH:
         acados_template_path = os.path.dirname(os.path.abspath(__file__))
-        acados_path = os.path.join(acados_template_path, '../../../')
+        acados_path = os.path.join(acados_template_path, '..','..','..')
         ACADOS_PATH = os.path.realpath(acados_path)
         msg = 'Warning: Did not find environment variable ACADOS_SOURCE_DIR, '
         msg += 'guessed ACADOS_PATH to be {}.\n'.format(ACADOS_PATH)
