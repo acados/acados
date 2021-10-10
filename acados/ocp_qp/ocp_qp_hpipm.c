@@ -102,8 +102,8 @@ void ocp_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *opts
     // ocp_qp_dims *dims = dims_;
     ocp_qp_hpipm_opts *opts = opts_;
 
-    d_ocp_qp_ipm_arg_set_default(SPEED_ABS, opts->hpipm_opts);
-//    d_ocp_qp_ipm_arg_set_default(BALANCE, opts->hpipm_opts);
+//    d_ocp_qp_ipm_arg_set_default(SPEED, opts->hpipm_opts);
+    d_ocp_qp_ipm_arg_set_default(BALANCE, opts->hpipm_opts);
     // overwrite some default options
     opts->hpipm_opts->res_g_max = 1e-6;
     opts->hpipm_opts->res_b_max = 1e-8;
