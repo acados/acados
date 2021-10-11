@@ -945,14 +945,14 @@ class AcadosOcpSolver:
                       su: slack variables of soft upper inequality constraints \n
         """
 
-        out_fields = ['x', 'u', 'z', 'pi', 'lam', 't']
-        mem_fields = ['sl', 'su']
+        out_fields = ['x', 'u', 'z', 'pi', 'lam', 't', 'sl', 'su']
+        # mem_fields = ['sl', 'su']
         field = field_
         field = field.encode('utf-8')
 
-        if (field_ not in out_fields + mem_fields):
+        if (field_ not in out_fields):
             raise Exception('AcadosOcpSolver.get(): {} is an invalid argument.\
-                    \n Possible values are {}. Exiting.'.format(field_, out_fields + mem_fields))
+                    \n Possible values are {}. Exiting.'.format(field_, out_fields))
 
         if not isinstance(stage_, int):
             raise Exception('AcadosOcpSolver.get(): stage index must be Integer.')
@@ -979,11 +979,11 @@ class AcadosOcpSolver:
                 [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
             self.shared_lib.ocp_nlp_out_get(self.nlp_config, \
                 self.nlp_dims, self.nlp_out, stage_, field, out_data)
-        elif field_ in mem_fields:
-            self.shared_lib.ocp_nlp_get_at_stage.argtypes = \
-                [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
-            self.shared_lib.ocp_nlp_get_at_stage(self.nlp_config, \
-                self.nlp_dims, self.nlp_solver, stage_, field, out_data)
+        # elif field_ in mem_fields:
+        #     self.shared_lib.ocp_nlp_get_at_stage.argtypes = \
+        #         [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+        #     self.shared_lib.ocp_nlp_get_at_stage(self.nlp_config, \
+        #         self.nlp_dims, self.nlp_solver, stage_, field, out_data)
 
         return out
 
@@ -1221,8 +1221,7 @@ class AcadosOcpSolver:
         """
         cost_fields = ['y_ref', 'yref']
         constraints_fields = ['lbx', 'ubx', 'lbu', 'ubu']
-        out_fields = ['x', 'u', 'pi', 'lam', 't', 'z']
-        mem_fields = ['sl', 'su']
+        out_fields = ['x', 'u', 'pi', 'lam', 't', 'z', 'sl', 'su']
 
         # cast value_ to avoid conversion issues
         if isinstance(value_, (float, int)):
@@ -1245,7 +1244,7 @@ class AcadosOcpSolver:
 
             assert getattr(self.shared_lib, f"{model.name}_acados_update_params")(self.capsule, stage, value_data, value_.shape[0])==0
         else:
-            if field_ not in constraints_fields + cost_fields + out_fields + mem_fields:
+            if field_ not in constraints_fields + cost_fields + out_fields:
                 raise Exception("AcadosOcpSolver.set(): {} is not a valid argument.\
                     \nPossible values are {}. Exiting.".format(field, \
                     constraints_fields + cost_fields + out_fields + ['p']))
@@ -1280,11 +1279,11 @@ class AcadosOcpSolver:
                     [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
                 self.shared_lib.ocp_nlp_out_set(self.nlp_config, \
                     self.nlp_dims, self.nlp_out, stage, field, value_data_p)
-            elif field_ in mem_fields:
-                self.shared_lib.ocp_nlp_set.argtypes = \
-                    [c_void_p, c_void_p, c_int, c_char_p, c_void_p]
-                self.shared_lib.ocp_nlp_set(self.nlp_config, \
-                    self.nlp_solver, stage, field, value_data_p)
+            # elif field_ in mem_fields:
+            #     self.shared_lib.ocp_nlp_set.argtypes = \
+            #         [c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+            #     self.shared_lib.ocp_nlp_set(self.nlp_config, \
+            #         self.nlp_solver, stage, field, value_data_p)
         return
 
 

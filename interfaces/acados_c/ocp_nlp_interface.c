@@ -467,6 +467,18 @@ void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
         double *double_values = value;
         blasfeo_pack_dvec(dims->nu[stage], double_values, 1, &out->ux[stage], 0);
     }
+    else if (!strcmp(field, "sl"))
+    {
+        double *double_values = value;
+        blasfeo_pack_dvec(dims->ns[stage], double_values, 1, &out->ux[stage],
+                            dims->nu[stage] + dims->nx[stage]);
+    }
+    else if (!strcmp(field, "su"))
+    {
+        double *double_values = value;
+        blasfeo_pack_dvec(dims->ns[stage], double_values, 1, &out->ux[stage],
+                            dims->nu[stage] + dims->nx[stage] + dims->ns[stage]);
+    }
     else if (!strcmp(field, "pi"))
     {
         double *double_values = value;
@@ -508,6 +520,18 @@ void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
     {
         double *double_values = value;
         blasfeo_unpack_dvec(dims->nu[stage], &out->ux[stage], 0, double_values, 1);
+    }
+    else if (!strcmp(field, "sl"))
+    {
+        double *double_values = value;
+        blasfeo_unpack_dvec(dims->ns[stage], &out->ux[stage],
+             dims->nu[stage] + dims->nx[stage], double_values, 1);
+    }
+    else if (!strcmp(field, "su"))
+    {
+        double *double_values = value;
+        blasfeo_unpack_dvec(dims->ns[stage], &out->ux[stage],
+             dims->nu[stage] + dims->nx[stage] + dims->ns[stage], double_values, 1);
     }
     else if (!strcmp(field, "z"))
     {
@@ -958,17 +982,7 @@ void ocp_nlp_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_so
     ocp_nlp_memory *nlp_mem;
     config->get(config, dims, solver->mem, "nlp_mem", &nlp_mem);
 
-    if (!strcmp(field, "sl"))
-    {
-        double *double_values = value;
-        d_ocp_qp_sol_get_sl(stage, nlp_mem->qp_out, double_values);
-    }
-    else if (!strcmp(field, "su"))
-    {
-        double *double_values = value;
-        d_ocp_qp_sol_get_su(stage, nlp_mem->qp_out, double_values);
-    }
-    else if (!strcmp(field, "A"))
+    if (!strcmp(field, "A"))
     {
         double *double_values = value;
         d_ocp_qp_get_A(stage, nlp_mem->qp_in, double_values);
@@ -1000,16 +1014,6 @@ void ocp_nlp_set(ocp_nlp_config *config, ocp_nlp_solver *solver,
         mem->set_sim_guess[stage] = true;
         // printf("set z_guess\n");
         // blasfeo_print_exp_dvec(nz, mem->sim_guess+stage, nx);
-    }
-    else if (!strcmp(field, "sl"))
-    {
-        double *double_values = value;
-        d_ocp_qp_sol_set_sl(stage, double_values, mem->qp_out);
-    }
-    else if (!strcmp(field, "su"))
-    {
-        double *double_values = value;
-        d_ocp_qp_sol_set_su(stage, double_values, mem->qp_out);
     }
     else if (!strcmp(field, "xdot_guess"))
     {
