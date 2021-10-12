@@ -41,8 +41,8 @@ def export_pendulum_ode_model():
     # constants
     M = 1. # mass of the cart [kg] -> now estimated
     m = 0.1 # mass of the ball [kg]
-    g = 9.81 # length of the rod [m]
-    l = 0.8 # gravity constant [m/s^2]
+    g = 9.81 # gravity constant [m/s^2]
+    l = 0.8 # length of the rod [m]
 
     # set up states & controls
     x1      = SX.sym('x1')
