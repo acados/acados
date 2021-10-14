@@ -91,7 +91,6 @@ def get_sim_layout():
     return sim_layout
 
 
-
 def sim_formulation_json_dump(acados_sim, json_file='acados_sim.json'):
     # Load acados_sim structure description
     sim_layout = get_sim_layout()
@@ -115,7 +114,6 @@ def sim_formulation_json_dump(acados_sim, json_file='acados_sim.json'):
 def sim_render_templates(json_file, model_name, code_export_dir):
     # setting up loader and environment
     json_path = os.path.join(os.getcwd(), json_file)
-
 
     if not os.path.exists(json_path):
         raise Exception(f"{json_path} not found!")
