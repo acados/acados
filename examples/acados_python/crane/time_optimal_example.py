@@ -75,6 +75,7 @@ xf = np.array([0.0, 0.0, 0.0, 0.0])
 ocp = AcadosOcp()
 ocp.model = model
 
+# N - maximum number of bangs
 N = 7
 Tf = N
 nx = model.x.size()[0]
@@ -89,7 +90,7 @@ ocp.dims.N = N
 ocp.cost.cost_type = 'EXTERNAL'
 ocp.cost.cost_type_e = 'EXTERNAL'
 
-ocp.model.cost_expr_ext_cost =  dt
+ocp.model.cost_expr_ext_cost = dt
 ocp.model.cost_expr_ext_cost_e = 0
 
 ocp.constraints.lbu = np.array([-a_max, 0.0])
@@ -149,38 +150,35 @@ sim.model = model
 sim.solver_options.integrator_type = 'ERK'
 sim.solver_options.num_stages = 4
 sim.solver_options.num_steps = 3
+sim.solver_options.T = 1.0 # dummy value
 
 dt_approx = 0.0005
 
 dts_fine = np.zeros((N,))
 Ns_fine = np.zeros((N,), dtype='int16')
 
+# compute number of simulation steps for bang interval + dt_fine
 for i in range(N):
-    Tf = dts[i]
+    N_approx = max(int(dts[i]/dt_approx), 1)
+    dts_fine[i] = dts[i]/N_approx
+    Ns_fine[i] = int(round(dts[i]/dts_fine[i]))
 
-    N_approx = max(int(Tf/dt_approx), 1)
-
-    dts_fine[i] = Tf/N_approx
-    Ns_fine[i] = int(round(Tf/dts_fine[i]))
-
-N_fine = np.sum(Ns_fine)
-
-N_fine = int(N_fine)
+N_fine = int(np.sum(Ns_fine))
 
 simU_fine = np.zeros((N_fine, nu))
-ts_fine   = np.zeros((N_fine+1, ))
+ts_fine = np.zeros((N_fine+1, ))
 simX_fine = np.zeros((N_fine+1, nx))
 simX_fine[0, :] = x0
 
+acados_integrator = AcadosSimSolver(sim)
+
 k = 0
 for i in range(N):
+    u = simU[i, 0]
+    acados_integrator.set("u", np.hstack((u, np.ones(1, ))))
 
     # set simulation time
-    sim.solver_options.T = dts_fine[i]
-    acados_integrator = AcadosSimSolver(sim)
-
-    u =  simU[i, 0]
-    acados_integrator.set("u", np.hstack((u, np.ones(1, ))))
+    acados_integrator.set("T", dts_fine[i])
 
     for j in range(Ns_fine[i]):
         acados_integrator.set("x", simX_fine[k,:])
@@ -193,20 +191,16 @@ for i in range(N):
         ts_fine[k+1] = ts_fine[k] + dts_fine[i]
 
         k += 1
-    
-    acados_integrator = None
 
-
+# visualize
 plt.figure()
 
 ts = np.hstack((np.zeros((1, )), np.cumsum(dts)))
 state_labels = ['p1', 'v1', 'p2', 'v2']
 
 for i,l in enumerate(state_labels):
-
     plt.subplot(5, 1, i+1)
 
-    # plt.plot(ts, np.ravel(simX[:, i]), label='coarse grid')
     plt.plot(ts_fine, simX_fine[:, i], label='time optimal solution')
     plt.grid(True)
     plt.ylabel(l)
@@ -218,7 +212,6 @@ plt.step(ts_fine, np.hstack((simU_fine[:, 0], simU_fine[-1, 0])), '-', where='po
 plt.grid(True)
 plt.ylabel('a')
 plt.xlabel('t')
-
 
 plt.show()
 
