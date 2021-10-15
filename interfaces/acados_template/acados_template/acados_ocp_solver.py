@@ -1337,6 +1337,7 @@ class AcadosOcpSolver:
     def store_iterate(self, filename: str = '', overwrite=False):
         """
         Stores the current iterate of the ocp solver in a json file.
+        Note: This does not contain the iterate of the integrators, and the parameters.
 
             :param filename: if not set, use f'{self.model_name}_iterate.json'
             :param overwrite: if false and filename exists add timestamp to filename
@@ -1420,6 +1421,7 @@ class AcadosOcpSolver:
     def load_iterate(self, filename):
         """
         Loads the iterate stored in json file with filename into the ocp solver.
+        Note: This does not contain the iterate of the integrators, and the parameters.
         """
         if not os.path.isfile(filename):
             raise Exception('load_iterate: failed, file does not exist: ' + os.path.join(os.getcwd(), filename))
@@ -1526,6 +1528,17 @@ class AcadosOcpSolver:
 
         elif field_ == 'residuals':
             return self.get_residuals()
+
+        elif field_ == 'residuals':
+            if self.acados_ocp.solver_options.nlp_solver_type == 'SQP':
+                full_stats = self.get_stats('statistics')
+                if self.status != 2:
+                    out = (full_stats.T)[-1][1:5]
+                else: # when exiting with max_iter, residuals are computed for second last iterate only
+                    out = (full_stats.T)[-2][1:5]
+            else:
+                Exception("residuals are not computed for SQP_RTI")
+
 
         else:
             raise Exception(f'AcadosOcpSolver.get_stats(): \'{field}\' is not a valid argument.'

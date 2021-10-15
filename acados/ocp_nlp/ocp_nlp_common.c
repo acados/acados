@@ -2083,6 +2083,27 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
     int *nu = dims->nu;
     int *ni = dims->ni;
 
+    /* prepare memory */
+    int cost_computation;
+    for (int i = 0; i < N; i++)
+    {
+        config->dynamics[i]->opts_get(config->dynamics[i], opts->dynamics[i], "cost_computation", &cost_computation);
+
+        if (cost_computation)
+        {
+            // set pointers to cost function & gradient in integrator
+            double *cost_fun = config->cost[i]->memory_get_fun_ptr(mem->cost[i]);
+            struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get_grad_ptr(mem->cost[i]);
+            struct blasfeo_dmat *W_chol = config->cost[i]->memory_get_W_chol_ptr(mem->cost[i]);
+            struct blasfeo_dvec *y_ref = config->cost[i]->model_get_y_ref_ptr(in->cost[i]);
+
+            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], mem->dynamics[i], "cost_grad", cost_grad);
+            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], mem->dynamics[i], "cost_fun", cost_fun);
+            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], mem->dynamics[i], "W_chol", W_chol);
+            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], mem->dynamics[i], "y_ref", y_ref);
+        }
+    }
+
     /* stage-wise multiple shooting lagrangian evaluation */
 
 #if defined(ACADOS_WITH_OPENMP)
@@ -2243,7 +2264,6 @@ void ocp_nlp_embed_initial_value(ocp_nlp_config *config, ocp_nlp_dims *dims,
     // d
     blasfeo_dveccp(2 * ni[0], mem->ineq_fun, 0, mem->qp_in->d, 0);
 }
-
 
 
 double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims,
@@ -2711,6 +2731,8 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
             }
         }
     }
+    if (opts->globalization != FIXED_STEP)
+        printf("alpha %f\n", alpha);
 
     return alpha;
 }

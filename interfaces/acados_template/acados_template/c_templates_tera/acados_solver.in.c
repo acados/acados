@@ -377,6 +377,13 @@ void {{ model.name }}_acados_create_3_create_and_set_functions({{ model.name }}_
 {
     const int N = capsule->nlp_solver_plan->N;
 
+{%- if solver_options.cost_discretization == "INTEGRATOR" %}
+    for (int i = 0; i < N; i++)
+        ocp_nlp_dims_set_dynamics(nlp_config, nlp_dims, i, "ny", &ny[i]);
+{%- endif %}
+
+
+
     /************************************************
     *  external functions
     ************************************************/
@@ -833,6 +840,16 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
         {%- endif %}
     {%- endif %}
     }
+
+
+{%- if solver_options.cost_discretization == "INTEGRATOR" %}
+    ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, 0, "nls_y_fun_jac", &capsule->cost_y_0_fun_jac_ut_xt);
+    for (int i = 1; i < N; i++)
+    {
+        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_y_fun_jac", &capsule->cost_y_fun_jac_ut_xt[i-1]);
+        // ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_y_fun_jac", &capsule->cost_y_fun_jac_ut_xt[i-1]);
+    }
+{%- endif %}
 
     /**** Cost ****/
 
@@ -1887,7 +1904,15 @@ void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* 
     free(sim_method_jac_reuse);
   {%- endif %}
 
+{%- if solver_options.cost_discretization == "INTEGRATOR" %}
+    bool cost_in_integrator = true;
+    for (int i = 0; i < N; i++)
+    {
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, capsule->nlp_opts, i, "dynamics_cost_computation", &cost_in_integrator);
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, capsule->nlp_opts, i, "cost_integrator_cost", &cost_in_integrator);
+    }
 {%- endif %}
+{%- endif %}{# solver_options.integrator_type != "DISCRETE" #}
 
     double nlp_solver_step_length = {{ solver_options.nlp_solver_step_length }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "step_length", &nlp_solver_step_length);

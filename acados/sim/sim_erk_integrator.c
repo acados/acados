@@ -365,6 +365,7 @@ void sim_erk_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->sens_forw = true;
     opts->sens_adj = false;
     opts->sens_hess = false;
+    opts->cost_computation = false;
 
     opts->output_z = false;
     opts->sens_algebraic = false;

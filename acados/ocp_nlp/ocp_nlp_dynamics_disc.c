@@ -205,6 +205,7 @@ void ocp_nlp_dynamics_disc_opts_initialize_default(void *config_, void *dims_, v
 
     opts->compute_adj = 1;
     opts->compute_hess = 0;
+    opts->cost_computation = 0;
 
     return;
 }
@@ -246,6 +247,31 @@ void ocp_nlp_dynamics_disc_opts_set(void *config_, void *opts_, const char *fiel
 
 }
 
+
+void ocp_nlp_dynamics_disc_opts_get(void *config_, void *opts_, const char *field, void* value)
+{
+
+    ocp_nlp_dynamics_disc_opts *opts = opts_;
+
+    if (!strcmp(field, "compute_adj"))
+    {
+        int *int_ptr = value;
+        *int_ptr = opts->compute_adj;
+    }
+    else if (!strcmp(field, "cost_computation"))
+    {
+        int *int_ptr = value;
+        *int_ptr = opts->cost_computation;
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_dynamics_disc_opts_get\n", field);
+        exit(1);
+    }
+
+    return;
+
+}
 
 
 /************************************************
@@ -792,6 +818,7 @@ void ocp_nlp_dynamics_disc_config_initialize_default(void *config_)
     config->opts_initialize_default = &ocp_nlp_dynamics_disc_opts_initialize_default;
     config->opts_update = &ocp_nlp_dynamics_disc_opts_update;
     config->opts_set = &ocp_nlp_dynamics_disc_opts_set;
+    config->opts_get = &ocp_nlp_dynamics_disc_opts_get;
     config->memory_calculate_size = &ocp_nlp_dynamics_disc_memory_calculate_size;
     config->memory_assign = &ocp_nlp_dynamics_disc_memory_assign;
     config->memory_get_fun_ptr = &ocp_nlp_dynamics_disc_memory_get_fun_ptr;

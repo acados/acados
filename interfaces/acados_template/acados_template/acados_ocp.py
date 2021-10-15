@@ -2153,6 +2153,7 @@ class AcadosOcpOptions:
         self.__Tsim = None                                    # automatically calculated as tf/N
         self.__print_level = 0                                # print level
         self.__initialize_t_slacks = 0                        # possible values: 0, 1
+        self.__cost_discretization = 'EULER'
         self.__regularize_method = None
         self.__time_steps = None
         self.__shooting_nodes = None
@@ -2346,6 +2347,16 @@ class AcadosOcpOptions:
         Default: 0.0.
         """
         return self.__levenberg_marquardt
+
+    @property
+    def ext_qp_res(self):
+        """
+        Option determining if residual of QP solution is evaluated externally.
+        Mainly for debugging.
+        Type: int [0, 1]
+        Default: 0.
+        """
+        return self.__ext_qp_res
 
     @property
     def sim_method_num_stages(self):
@@ -2672,6 +2683,11 @@ class AcadosOcpOptions:
         """
         return self.__ext_cost_num_hess
 
+    @property
+    def cost_discretization(self):
+        """Cost discretization"""
+        return self.__cost_discretization
+
     @qp_solver.setter
     def qp_solver(self, qp_solver):
         qp_solvers = ('PARTIAL_CONDENSING_HPIPM', \
@@ -2887,6 +2903,15 @@ class AcadosOcpOptions:
         else:
             raise Exception('Invalid nlp_solver_type value. Possible values are:\n\n' \
                     + ',\n'.join(nlp_solver_types) + '.\n\nYou have: ' + nlp_solver_type + '.\n\n')
+
+    @cost_discretization.setter
+    def cost_discretization(self, cost_discretization):
+        cost_discretizations = ('EULER', 'INTEGRATOR')
+        if cost_discretization in cost_discretizations:
+            self.__cost_discretization = cost_discretization
+        else:
+            raise Exception('Invalid cost_discretization value. Possible values are:\n\n' \
+                    + ',\n'.join(cost_discretizations) + '.\n\nYou have: ' + cost_discretization + '.\n\nExiting.')
 
     @nlp_solver_step_length.setter
     def nlp_solver_step_length(self, nlp_solver_step_length):
