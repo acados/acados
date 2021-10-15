@@ -23,7 +23,7 @@ mkdir -p build
 cd build
 cmake -DACADOS_WITH_QPOASES=ON ..
 # add more optional arguments e.g. -DACADOS_WITH_OSQP=OFF/ON -DACADOS_INSTALL_DIR=<path_to_acados_installation_folder> above
-make install
+make install -j4
 ```
 NOTE: you can set the `BLASFEO_TARGET` in `<acados_root_folder>/CMakeLists.txt`.
 For a list of supported targets, we refer to https://github.com/giaf/blasfeo/blob/master/README.md .
