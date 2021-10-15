@@ -1511,10 +1511,10 @@ class AcadosOcpSolver:
         """
         Set options of the solver.
 
-            :param field: string, e.g. 'print_level', 'rti_phase', 'initialize_t_slacks', 'step_length', 'alpha_min', 'alpha_reduction'
+            :param field: string, e.g. 'print_level', 'rti_phase', 'initialize_t_slacks', 'step_length', 'alpha_min', 'alpha_reduction', 'qp_warm_start'
             :param value: of type int, float
         """
-        int_fields = ['print_level', 'rti_phase', 'initialize_t_slacks']
+        int_fields = ['print_level', 'rti_phase', 'initialize_t_slacks', 'qp_warm_start']
         double_fields = ['step_length', 'tol_eq', 'tol_stat', 'tol_ineq', 'tol_comp', 'alpha_min', 'alpha_reduction']
         string_fields = ['globalization']
 
