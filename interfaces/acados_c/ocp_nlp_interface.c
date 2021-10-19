@@ -335,6 +335,7 @@ ocp_nlp_dims *ocp_nlp_dims_create(void *config_)
     assert(ptr != 0);
 
     ocp_nlp_dims *dims = ocp_nlp_dims_assign(config, ptr);
+    dims->raw_memory = ptr;
 
     return dims;
 }
@@ -343,7 +344,8 @@ ocp_nlp_dims *ocp_nlp_dims_create(void *config_)
 
 void ocp_nlp_dims_destroy(void *dims_)
 {
-    free(dims_);
+    ocp_nlp_dims *dims = dims_;
+    free(dims->raw_memory);
 }
 
 
@@ -360,15 +362,17 @@ ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_config *config, ocp_nlp_dims *dims)
     assert(ptr != 0);
 
     ocp_nlp_in *nlp_in = ocp_nlp_in_assign(config, dims, ptr);
+    nlp_in->raw_memory = ptr;
 
     return nlp_in;
 }
 
 
 
-void ocp_nlp_in_destroy(void *in)
+void ocp_nlp_in_destroy(void *in_)
 {
-    free(in);
+    ocp_nlp_in *in = in_;
+    free(in->raw_memory);
 }
 
 
@@ -437,6 +441,7 @@ ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_config *config, ocp_nlp_dims *dims)
     assert(ptr != 0);
 
     ocp_nlp_out *nlp_out = ocp_nlp_out_assign(config, dims, ptr);
+    nlp_out->raw_memory = ptr;
 
     // initialize to zeros
 //    for (int ii = 0; ii <= dims->N; ++ii)
@@ -447,9 +452,10 @@ ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_config *config, ocp_nlp_dims *dims)
 
 
 
-void ocp_nlp_out_destroy(void *out)
+void ocp_nlp_out_destroy(void *out_)
 {
-    free(out);
+    ocp_nlp_out *out = out_;
+    free(out->raw_memory);
 }
 
 
