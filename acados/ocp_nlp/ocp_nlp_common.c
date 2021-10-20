@@ -2211,7 +2211,7 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
 double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
-    int i;
+    int i, j;
 
     int N = dims->N;
     int *nv = dims->nv;
@@ -2220,83 +2220,6 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
 
     double alpha = opts->step_length;
     double tmp0, tmp1;
-    int j;
-
-
-#if 0 // Line Search Gianluca version
-    // current point
-    for (i = 0; i <= N; i++)
-        blasfeo_dveccp(nv[i], out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
-
-    for (i = 0; i < N; i++)
-        blasfeo_dveccp(nx[i+1], out->pi+i, 0, work->tmp_nlp_out->pi+i, 0);
-
-    for (i = 0; i <= N; i++)
-        blasfeo_dveccp(2*ni[i], out->lam+i, 0, work->tmp_nlp_out->lam+i, 0);
-
-        // linear update of algebraic variables using state and input sensitivity
-//        if (i < N)
-//        {
-//            blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0, mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out->z+i, 0);
-//        }
-
-    // initialize weights
-    if(mem->sqp_iter[0]==0)
-    {
-        for (i = 0; i < N; i++)
-            blasfeo_dveccp(nx[i+1], out->pi+i, 0, work->weight_merit_fun->pi+i, 0);
-
-        for (i = 0; i <= N; i++)
-            blasfeo_dveccp(2*ni[i], out->lam+i, 0, work->weight_merit_fun->lam+i, 0);
-    }
-
-    // update weigths
-    for (i = 0; i < N; i++)
-    {
-        for(j=0; j<nx[i+1]; j++)
-        {
-            tmp0 = fabs(BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j));
-            tmp1 = 0.5 * (tmp0 + fabs(BLASFEO_DVECEL(mem->qp_out->pi+i, j)));
-            BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j) = tmp0>tmp1 ? tmp0 : tmp1;
-        }
-    }
-    for (i = 0; i <= N; i++)
-    {
-        for(j=0; j<2*ni[i]; j++)
-        {
-            tmp0 = fabs(BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j));
-            tmp1 = 0.5 * (tmp0 + fabs(BLASFEO_DVECEL(mem->qp_out->lam+i, j)));
-            BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j) = tmp0>tmp1 ? tmp0 : tmp1;
-        }
-    }
-
-    printf("\n\nmerit fun value\n");
-    double merit_fun0 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
-
-    double alpha_min = 0.1;
-
-    for (j=0; j<10 & alpha>alpha_min; j++)
-    {
-
-        for (i = 0; i <= N; i++)
-            blasfeo_daxpy(nv[i], alpha, mem->qp_out->ux+i, 0, out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
-
-        printf("\n%d tmp merit fun value\n", j);
-        double merit_fun1 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
-
-        if(merit_fun1 < merit_fun0)
-        {
-            break;
-        }
-        else
-        {
-            alpha *= 0.7;
-        }
-    }
-
-    printf("\nalpha %f\n", alpha);
-
-#endif
 
 
     if (opts->globalization == MERIT_BACKTRACKING)
