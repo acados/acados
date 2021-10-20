@@ -352,7 +352,7 @@ typedef struct ocp_nlp_memory
     bool *set_sim_guess; // indicate if there is new explicitly provided guess for integration variables
     struct blasfeo_dvec *sim_guess;
 
-	int *sqp_iter; // pointer to iteration number
+    int *sqp_iter; // pointer to iteration number
 
 } ocp_nlp_memory;
 
@@ -376,8 +376,11 @@ typedef struct ocp_nlp_workspace
     void **cost;         // cost_workspace
     void **constraints;  // constraints_workspace
 
-	ocp_nlp_out *tmp_nlp_out;
-	ocp_nlp_out *weight_merit_fun;
+    // for globalization: -> move to module?!
+    ocp_nlp_out *tmp_nlp_out;
+    ocp_nlp_out *weight_merit_fun;
+    struct blasfeo_dvec tmp_nxu;
+    struct blasfeo_dvec dxnext_dy;
 
 } ocp_nlp_workspace;
 
