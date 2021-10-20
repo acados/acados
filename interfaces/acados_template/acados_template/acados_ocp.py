@@ -2524,12 +2524,23 @@ class AcadosOcpOptions:
 
     @time_steps.setter
     def time_steps(self, time_steps):
-        self.__time_steps = time_steps
+        if isinstance(time_steps, np.ndarray):
+            if len(time_steps.shape) == 1:
+                    self.__time_steps = time_steps
+            else:
+                raise Exception('Invalid time_steps, expected np.ndarray of shape (N,).')
+        else:
+            raise Exception('Invalid time_steps, expected np.ndarray.')
 
     @shooting_nodes.setter
     def shooting_nodes(self, shooting_nodes):
-        self.__shooting_nodes = shooting_nodes
-
+        if isinstance(shooting_nodes, np.ndarray):
+            if len(shooting_nodes.shape) == 1:
+                self.__shooting_nodes = shooting_nodes
+            else:
+                raise Exception('Invalid shooting_nodes, expected np.ndarray of shape (N+1,).')
+        else:
+            raise Exception('Invalid shooting_nodes, expected np.ndarray.')
 
     @Tsim.setter
     def Tsim(self, Tsim):
@@ -2537,7 +2548,12 @@ class AcadosOcpOptions:
 
     @globalization.setter
     def globalization(self, globalization):
-        self.__globalization = globalization
+        globalization_types = ('MERIT_BACKTRACKING', 'FIXED_STEP')
+        if globalization in globalization_types:
+            self.__globalization = globalization
+        else:
+            raise Exception('Invalid globalization value. Possible values are:\n\n' \
+                    + ',\n'.join(globalization_types) + '.\n\nYou have: ' + globalization + '.\n\nExiting.')
 
     @alpha_min.setter
     def alpha_min(self, alpha_min):
