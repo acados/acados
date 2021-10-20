@@ -1427,6 +1427,12 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
         blasfeo_daxpy(2*ns, 1.0, memory->lam, 2*nb+2*ng+2*nh, &memory->adj, nu+nx, &memory->adj, nu+nx);
     }
 
+    // if (nb + ns + ng + nh > 0)
+    // {
+    //     printf("constraints fun in module = \n");
+    //     blasfeo_print_exp_dvec(2 * nb + 2 * ng + 2 * nh + 2 * ns, &memory->fun, 0);
+    // }
+
     return;
 }
 
