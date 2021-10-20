@@ -277,6 +277,7 @@ typedef struct ocp_nlp_opts
 
     // TODO: move to separate struct?
     ocp_nlp_globalization_t globalization;
+    int full_step_dual;
     double alpha_min;
     double alpha_reduction;
 } ocp_nlp_opts;
