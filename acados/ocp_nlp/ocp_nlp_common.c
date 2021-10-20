@@ -1106,6 +1106,7 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     // globalization
     opts->alpha_min = 0.05;
     opts->alpha_reduction = 0.7;
+    opts->full_step_dual = 0;
 
     return;
 }
@@ -1206,6 +1207,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         {
             double* alpha_min = (double *) value;
             opts->alpha_min = *alpha_min;
+        }
+        else if (!strcmp(field, "full_step_dual"))
+        {
+            int* full_step_dual = (int *) value;
+            opts->full_step_dual = *full_step_dual;
         }
         else if (!strcmp(field, "globalization"))
         {
@@ -2354,16 +2360,27 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
     {
         // step in primal variables
         blasfeo_daxpy(nv[i], alpha, mem->qp_out->ux + i, 0, out->ux + i, 0, out->ux + i, 0);
-    
-        // update dual variables
-        if (i < N)
-        {
-            blasfeo_dvecsc(nx[i+1], 1.0-alpha, out->pi+i, 0);
-            blasfeo_daxpy(nx[i+1], alpha, mem->qp_out->pi+i, 0, out->pi+i, 0, out->pi+i, 0);
-        }
 
-        blasfeo_dvecsc(2*ni[i], 1.0-alpha, out->lam+i, 0);
-        blasfeo_daxpy(2*ni[i], alpha, mem->qp_out->lam+i, 0, out->lam+i, 0, out->lam+i, 0);
+        // update dual variables
+        if (opts->full_step_dual)
+        {
+            blasfeo_dveccp(2*ni[i], mem->qp_out->lam+i, 0, out->lam+i, 0);
+            if (i < N)
+            {
+                blasfeo_dveccp(nx[i+1], mem->qp_out->pi+i, 0, out->pi+i, 0);
+            }
+        }
+        else
+        {
+            // update duals with alpha step
+            blasfeo_dvecsc(2*ni[i], 1.0-alpha, out->lam+i, 0);
+            blasfeo_daxpy(2*ni[i], alpha, mem->qp_out->lam+i, 0, out->lam+i, 0, out->lam+i, 0);
+            if (i < N)
+            {
+                blasfeo_dvecsc(nx[i+1], 1.0-alpha, out->pi+i, 0);
+                blasfeo_daxpy(nx[i+1], alpha, mem->qp_out->pi+i, 0, out->pi+i, 0, out->pi+i, 0);
+            }
+        }
 
         // update slack values
         blasfeo_dvecsc(2*ni[i], 1.0-alpha, out->t+i, 0);
