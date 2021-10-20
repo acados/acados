@@ -46,6 +46,7 @@
 #include "hpipm/include/hpipm_d_ocp_qp_dim.h"
 // acados
 #include "acados/utils/mem.h"
+#include "acados/utils/print.h"
 // openmp
 #if defined(ACADOS_WITH_OPENMP)
 #include <omp.h>
@@ -2377,11 +2378,12 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
     double min_initial_weight = 1.0; // minimum initial weight of constraints in merit function
     double tmp0, tmp1;
 
+    // Line search version Jonathan
+    // Following Leineweber1999, Section "3.5.1 Line Search Globalization"
+    // TODO: check out more advanced step search Leineweber1995
 
     if (opts->globalization == MERIT_BACKTRACKING)
     {
-        // Line search version Jonathan
-        // Following Leineweber1999, Section "3.5.1 Line Search Globalization"
         // copy out (current iterate) to work->tmp_nlp_out
         for (i = 0; i <= N; i++)
             blasfeo_dveccp(nv[i], out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
@@ -2460,7 +2462,9 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
 
             /* actual Line Search*/
             alpha = 1.0;
-            // TODO: check out more advanced step search Leineweber1995
+            // check Armijo-type sufficient descent condition Leinweber1999 (2.35)
+            double dmerit_dy = ocp_nlp_compute_merit_gradient(config, dims, in, out, opts, mem, work);
+            double eps_merit = 0.1;
 
             for (j=0; alpha*reduction_factor > alpha_min; j++)
             {
@@ -2471,8 +2475,12 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
                 // printf("\ntmp merit fun value step search iter: %d", j);
                 double merit_fun1 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
 
-                // TODO(oj): also check Armijo-type condition Leinweber1999 (2.35)
-                if (merit_fun1 < merit_fun0)
+                // if (merit_fun1 < merit_fun0)
+                // {
+                //     printf("\nalpha %f would be accepted without Armijo", alpha);
+                // }
+
+                if (merit_fun1 < merit_fun0 + eps_merit * dmerit_dy * alpha)
                 {
                     break;
                 }
