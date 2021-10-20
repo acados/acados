@@ -2219,13 +2219,14 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
     int *ni = dims->ni;
 
     double alpha = opts->step_length;
+    double min_initial_weight = 1.0; // minimum initial weight of constraints in merit function
     double tmp0, tmp1;
 
 
     if (opts->globalization == MERIT_BACKTRACKING)
     {
         // Line search version Jonathan
-        // Following Leineweber1999
+        // Following Leineweber1999, Section "3.5.1 Line Search Globalization"
         // copy out (current iterate) to work->tmp_nlp_out
         for (i = 0; i <= N; i++)
             blasfeo_dveccp(nv[i], out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
@@ -2252,7 +2253,7 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
                 for (j=0; j<nx[i+1]; j++)
                 {
                     tmp0 = fabs(BLASFEO_DVECEL(out->pi+i, j));
-                    BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j) = tmp0;
+                    BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j) = tmp0 > min_initial_weight ? tmp0 : min_initial_weight;
                 }
             }
 
@@ -2260,7 +2261,11 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
             for (i = 0; i <= N; i++)
             {
                 blasfeo_dveccp(2*ni[i], out->lam+i, 0, work->weight_merit_fun->lam+i, 0);
-                // blasfeo_print_dvec(nx[i+1], work->weight_merit_fun->lam+i, 0);
+                for (j=0; j<2*ni[i]; j++)
+                {
+                    tmp0 = BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j);
+                    BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j) = tmp0 > min_initial_weight ? tmp0 : min_initial_weight;
+                }
             }
         }
         else
