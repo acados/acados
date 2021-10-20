@@ -1612,8 +1612,8 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
     int ii;
 
     int N = dims->N;
-    // int *nx = dims->nx;
-    // int *nu = dims->nu;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
     // int *nz = dims->nz;
 
     acados_size_t size = 0;
@@ -1626,6 +1626,17 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
 
     // weight_merit_fun
     size += ocp_nlp_out_calculate_size(config, dims);
+
+    // blasfeo_dvec
+    int nxu_max = 0;
+    int nx_max = 0;
+    for (int ii = 0; ii <= N; ii++)
+    {
+        nx_max = nx_max > nx[ii] ? nx_max : nx[ii];
+        nxu_max = nxu_max > (nx[ii]+nu[ii]) ? nxu_max : (nx[ii]+nu[ii]);
+    }
+    size += 1 * blasfeo_memsize_dvec(nx_max);
+    size += 1 * blasfeo_memsize_dvec(nxu_max);
 
     // array of pointers
     // cost
@@ -1739,8 +1750,9 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
     ocp_nlp_constraints_config **constraints = config->constraints;
 
     int N = dims->N;
-    // int *nx = dims->nx;
-    // int *nu = dims->nu;
+    int *nx = dims->nx;
+    // int *nv = dims->nv;
+    int *nu = dims->nu;
     // int *nz = dims->nz;
 
     char *c_ptr = (char *) raw_memory;
@@ -1769,6 +1781,17 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
     // weight_merit_fun
     work->weight_merit_fun = ocp_nlp_out_assign(config, dims, c_ptr);
     c_ptr += ocp_nlp_out_calculate_size(config, dims);
+
+    // blasfeo_dvec
+    int nxu_max = 0;
+    int nx_max = 0;
+    for (int ii = 0; ii <= N; ii++)
+    {
+        nx_max = nx_max > nx[ii] ? nx_max : nx[ii];
+        nxu_max = nxu_max > (nx[ii]+nu[ii]) ? nxu_max : (nx[ii]+nu[ii]);
+    }
+    assign_and_advance_blasfeo_dvec_mem(nxu_max, &work->tmp_nxu, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(nx_max, &work->dxnext_dy, &c_ptr);
 
     if (opts->reuse_workspace)
     {
@@ -2121,6 +2144,132 @@ void ocp_nlp_embed_initial_value(ocp_nlp_config *config, ocp_nlp_dims *dims,
 }
 
 
+double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims,
+                                  ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
+                                  ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+{
+
+    int i, j;
+
+    int N = dims->N;
+    int *nv = dims->nv;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ni = dims->ni;
+
+    double merit_grad = 0.0;
+
+    // NOTE: step is in: mem->qp_out->ux
+    struct blasfeo_dvec *tmp_vec; // size nv
+    struct blasfeo_dvec tmp_vec_nxu = work->tmp_nxu;  // size nx
+    struct blasfeo_dvec dxnext_dy = work->dxnext_dy;  // size nx
+
+    // cost
+    for (i=0; i<=N; i++)
+    {
+        tmp_vec = config->cost[i]->memory_get_grad_ptr(mem->cost[i]);
+        merit_grad += blasfeo_ddot(nv[i], tmp_vec, 0, mem->qp_out->ux + i, 0);
+    }
+    double merit_grad_cost = merit_grad;
+
+    /* dynamics */
+    double merit_grad_dyn = 0.0;
+    for (i=0; i<N; i++)
+    {
+        // get shooting node gap
+        tmp_vec = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
+
+        /* compute directional derivative of xnext with direction y -> tmp_vec_nxu */
+        blasfeo_dvecse(nx[i], 0.0, &dxnext_dy, 0);
+        for (j = 0; j < nu[i]; j++)
+        {
+            double alpha = BLASFEO_DVECEL(mem->qp_out->ux+i, j);
+            // Su
+            blasfeo_drowex(nx[i], 1.0, mem->qp_in->BAbt, j, 0, &tmp_vec_nxu, 0);
+            blasfeo_daxpy(nx[i], alpha, &tmp_vec_nxu, 0, &dxnext_dy, 0, &dxnext_dy, 0);
+        }
+        for (j = nu[i]; j < nu[i] + nx[i]; j++)
+        {
+            double alpha = BLASFEO_DVECEL(mem->qp_out->ux+i, j);
+            // Sx
+            blasfeo_drowex(nx[i], 1.0, mem->qp_in->BAbt, j, 0, &tmp_vec_nxu, 0);
+            blasfeo_daxpy(nx[i], alpha, &tmp_vec_nxu, 0, &dxnext_dy, 0, &dxnext_dy, 0);
+        }
+        /* add merit gradient contributions depending on sign of shooting gap */
+        for (j = 0; j < nx[i]; j++)
+        {
+            weight = BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j);
+            double deqj_dy = BLASFEO_DVECEL(&dxnext_dy, j) - BLASFEO_DVECEL(mem->qp_out->ux+(i+1), nu[i+1]+j);
+            {
+                if (BLASFEO_DVECEL(tmp_vec, j) > 0)
+                {
+                    merit_grad_dyn += weight * deqj_dy;
+                    // printf("\ndyn_contribution +%e, weight %e, deqj_dy %e, i %d, j %d", weight * deqj_dy, weight, deqj_dy, i, j);
+                }
+                else
+                {
+                    merit_grad_dyn -= weight * deqj_dy;
+                    // printf("\ndyn_contribution %e, weight %e, deqj_dy %e, i %d, j %d", -weight * deqj_dy, weight, deqj_dy, i, j);
+                }
+            }
+        }
+    }
+
+    ocp_qp_dims* qp_dims = mem->qp_in->dim;
+    int *nb = qp_dims->nb;
+    int *ng = qp_dims->ng;
+    /* inequality contributions */
+    double merit_grad_ineq = 0.0;
+    for (i=0; i<=N; i++)
+    {
+        tmp_vec = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
+        int *idxb = mem->qp_in->idxb[i];
+        if (ni[i] > 0)
+        {
+            // printf("constraints fun = \n");
+            // blasfeo_print_exp_dvec(2*ni[i], tmp_vec, 0);
+            // print_ocp_qp_in(mem->qp_in);
+            for (j = 0; j < 2 * ni[i]; j++) // 2 * ni
+            {
+                double constraint_val = BLASFEO_DVECEL(tmp_vec, j);
+                if (constraint_val > 0)
+                {
+                    // printf("constraint %d %d is active with value %e", i, j, constraint_val);
+                    if (j < nb[i])
+                    {
+                        printf("idxb %d dir %f, constraint_val %f\n", idxb[j], BLASFEO_DVECEL(mem->qp_out->ux, idxb[j]), constraint_val);
+                        merit_grad_ineq += BLASFEO_DVECEL(mem->qp_out->ux, idxb[j]);
+                    }
+                    else if (j < nb[i] + ng[i])
+                    {
+                        // merit_grad_ineq += mem->qp_in->DCt_j * dux
+                        blasfeo_dcolex(nx[i] + nu[i], mem->qp_in->DCt, j - nb[i], 0, &tmp_vec_nxu, 0);
+                        merit_grad_ineq += blasfeo_ddot(nx[i] + nu[i], &tmp_vec_nxu, 0, mem->qp_out->ux+i, 0);
+                        // printf("general linear constraint lower contribution = %e, val = %e\n", blasfeo_ddot(nx[i] + nu[i], &tmp_vec_nxu, 0, mem->qp_out->ux+i, 0), constraint_val);
+                    }
+                    else if (j < 2*nb[i] + ng[i])
+                    {
+                        merit_grad_ineq += BLASFEO_DVECEL(mem->qp_out->ux, idxb[j]);
+                    }
+                    else if (j < 2*nb[i] + 2*ng[i])
+                    {
+                        blasfeo_dcolex(nx[i] + nu[i], mem->qp_in->DCt, j - 2*nb[i] - ng[i], 0, &tmp_vec_nxu, 0);
+                        merit_grad_ineq += blasfeo_ddot(nx[i] + nu[i], &tmp_vec_nxu, 0, mem->qp_out->ux+i, 0);
+                        // printf("general linear constraint upper contribution = %e, val = %e\n", blasfeo_ddot(nx[i] + nu[i], &tmp_vec_nxu, 0, mem->qp_out->ux+i, 0), constraint_val);
+                    }
+                }
+            }
+        }
+    }
+    // print_ocp_qp_dims(qp_dims);
+    // print_ocp_qp_in(mem->qp_in);
+
+    merit_grad = merit_grad_cost + merit_grad_dyn;
+    printf("merit_grad = %e, merit_grad_cost = %e, merit_grad_dyn = %e\n", merit_grad, merit_grad_cost, merit_grad_dyn);
+
+    return merit_grad;
+}
+
 
 double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
                                   ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
@@ -2432,6 +2581,7 @@ acados_size_t ocp_nlp_res_calculate_size(ocp_nlp_dims *dims)
 
     return size;
 }
+
 
 ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory)
 {
