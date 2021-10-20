@@ -70,28 +70,28 @@ class AcadosSimDims:
 
     @nx.setter
     def nx(self, nx):
-        if type(nx) == int and nx > 0:
+        if isinstance(nx, int) and nx > 0:
             self.__nx = nx
         else:
             raise Exception('Invalid nx value, expected positive integer. Exiting.')
 
     @nz.setter
     def nz(self, nz):
-        if type(nz) == int and nz > -1:
+        if isinstance(nz, int) and nz > -1:
             self.__nz = nz
         else:
             raise Exception('Invalid nz value, expected nonnegative integer. Exiting.')
 
     @nu.setter
     def nu(self, nu):
-        if type(nu) == int and nu > -1:
+        if isinstance(nu, int) and nu > -1:
             self.__nu = nu
         else:
             raise Exception('Invalid nu value, expected nonnegative integer. Exiting.')
 
     @np.setter
     def np(self, np):
-        if type(np) == int and np > -1:
+        if isinstance(np, int) and np > -1:
             self.__np = np
         else:
             raise Exception('Invalid np value, expected nonnegative integer. Exiting.')
