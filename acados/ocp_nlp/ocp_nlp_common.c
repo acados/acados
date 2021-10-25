@@ -2149,7 +2149,6 @@ double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims
                                   ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
                                   ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
-
     int i, j;
 
     int N = dims->N;
@@ -2159,6 +2158,7 @@ double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims
     int *ni = dims->ni;
 
     double merit_grad = 0.0;
+    double weight;
 
     // NOTE: step is in: mem->qp_out->ux
     struct blasfeo_dvec *tmp_vec; // size nv
@@ -2177,7 +2177,7 @@ double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims
     double merit_grad_dyn = 0.0;
     for (i=0; i<N; i++)
     {
-        // get shooting node gap
+        // get shooting node gap x_next(x_n, u_n) - x_{n+1};
         tmp_vec = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
 
         /* compute directional derivative of xnext with direction y -> tmp_vec_nxu */
@@ -2232,13 +2232,14 @@ double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims
             // print_ocp_qp_in(mem->qp_in);
             for (j = 0; j < 2 * ni[i]; j++) // 2 * ni
             {
+                weight = BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j);
                 double constraint_val = BLASFEO_DVECEL(tmp_vec, j);
                 if (constraint_val > 0)
                 {
                     // printf("constraint %d %d is active with value %e", i, j, constraint_val);
                     if (j < nb[i])
                     {
-                        printf("idxb %d dir %f, constraint_val %f\n", idxb[j], BLASFEO_DVECEL(mem->qp_out->ux, idxb[j]), constraint_val);
+                        // printf("idxb %d dir %f, constraint_val %f\n", idxb[j], BLASFEO_DVECEL(mem->qp_out->ux, idxb[j]), constraint_val);
                         merit_grad_ineq += BLASFEO_DVECEL(mem->qp_out->ux, idxb[j]);
                     }
                     else if (j < nb[i] + ng[i])
@@ -2265,8 +2266,8 @@ double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims
     // print_ocp_qp_dims(qp_dims);
     // print_ocp_qp_in(mem->qp_in);
 
-    merit_grad = merit_grad_cost + merit_grad_dyn;
-    printf("merit_grad = %e, merit_grad_cost = %e, merit_grad_dyn = %e\n", merit_grad, merit_grad_cost, merit_grad_dyn);
+    merit_grad = merit_grad_cost + merit_grad_dyn + merit_grad_ineq;
+    printf("merit_grad = %e, merit_grad_cost = %e, merit_grad_dyn = %e, merit_grad_ineq = %e\n", merit_grad, merit_grad_cost, merit_grad_dyn, merit_grad_ineq);
 
     return merit_grad;
 }
@@ -2400,7 +2401,7 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
     //            blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0, mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out->z+i, 0);
     //        }
 
-        /* initialize (Leineweber1999 M5.1) */
+        /* initialize (Leineweber1999 M5.1, p.89) */
         if (mem->sqp_iter[0]==0)
         {
             // initialize weights
@@ -2462,9 +2463,30 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
 
             /* actual Line Search*/
             alpha = 1.0;
-            // check Armijo-type sufficient descent condition Leinweber1999 (2.35)
+            // check Armijo-type sufficient descent condition Leinweber1999 (2.35);
             double dmerit_dy = ocp_nlp_compute_merit_gradient(config, dims, in, out, opts, mem, work);
-            double eps_merit = 0.1;
+            if (dmerit_dy > 0.0)
+            {
+                if (dmerit_dy > 1e-6)
+                    printf("\nacados line search: found dmerit_dy = %e > 0. Setting it to 0.0 instead", dmerit_dy);
+                dmerit_dy = 0.0;
+            }
+            double eps_merit = 1e-4; // Leineweber1999: MUSCOD-II eps_T = 1e-4 (p.89); Note: eps_T = 0.1 originally proposed by Powell 1978 (Leineweber 1999, p. 53)
+
+            // From Leineweber1999: eq (3.64) -> only relevant for adaptive integrators looking at Remark 3.2.
+            // "It is noteworthy that our practical implementation takes into account the potential nonsmoothness introduced by the fact that certain components of the penalty function - namely the continuity condition residuals - are evaluated only within integration tolerance."
+            // double sum_pi = 0.0;
+            // for (i = 0; i < N; i++)
+            // {
+            //     for (j = 0; j < dims->nx[i+1]; j++)
+            //         sum_pi += BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j);
+            // }
+            // double relaxed_val = 2.0 * 1e-6 * sum_pi;
+            // if (abs(merit_fun0 - merit_fun1) < relaxed_val)
+            // {
+            //     printf("\nexiting because of relaxed_val.");
+            //     break;
+            // }
 
             for (j=0; alpha*reduction_factor > alpha_min; j++)
             {
