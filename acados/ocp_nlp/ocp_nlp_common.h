@@ -234,11 +234,7 @@ typedef struct ocp_nlp_out
 
     // NOTE: the inequalities are internally organized in the following order:
     // [ lbu lbx lg lh lphi ubu ubx ug uh uphi; lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
-
-    int sqp_iter;
-    int qp_iter;
     double inf_norm_res;
-    double total_time;
 
     void *raw_memory; // Pointer to allocated memory, to be used for freeing
 
