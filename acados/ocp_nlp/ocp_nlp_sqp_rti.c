@@ -441,15 +441,12 @@ static void ocp_nlp_sqp_rti_cast_workspace(
 int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     void *opts_, void *mem_, void *work_)
 {
-
-    ocp_nlp_out *nlp_out = nlp_out_;
     ocp_nlp_sqp_rti_memory *mem = mem_;
     
     // zero timers
     acados_timer timer0;
     double total_time = 0.0;
     mem->time_tot = 0.0;
-
 
     ocp_nlp_sqp_rti_opts *nlp_opts = opts_;
     int rti_phase = nlp_opts->rti_phase; 
@@ -484,9 +481,7 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     }
 
     total_time += acados_toc(&timer0);
-
     mem->time_tot = total_time;
-    nlp_out->total_time = total_time;
 
     return mem->status;
 
@@ -781,7 +776,6 @@ void ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
     // TODO move into QP solver memory ???
     qp_info *qp_info_;
     ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
-    nlp_out->qp_iter = qp_info_->num_iter;
     qp_iter = qp_info_->num_iter;
 
     // compute external QP residuals (for debugging)
