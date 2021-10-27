@@ -830,6 +830,8 @@ class AcadosOcpSolver:
         # get pointers solver
         self.__get_pointers_solver()
 
+        self.status = 0
+
 
     def __get_pointers_solver(self):
         """
@@ -874,8 +876,8 @@ class AcadosOcpSolver:
 
         getattr(self.shared_lib, f"{model.name}_acados_solve").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{model.name}_acados_solve").restype = c_int
-        status = getattr(self.shared_lib, f"{model.name}_acados_solve")(self.capsule)
-        return status
+        self.status = getattr(self.shared_lib, f"{model.name}_acados_solve")(self.capsule)
+        return self.status
 
 
     def set_new_time_steps(self, new_time_steps):
@@ -1118,6 +1120,7 @@ class AcadosOcpSolver:
         with open(filename, 'r') as f:
             solution = json.load(f)
 
+        print(f"loading iterate {filename}")
         for key in solution.keys():
             (field, stage) = key.split('_')
             self.set(int(stage), field, np.array(solution[key]))
@@ -1127,7 +1130,7 @@ class AcadosOcpSolver:
         """
         Get the information of the last solver call.
 
-            :param field: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg', 'sqp_iter']
+            :param field: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg', 'sqp_iter', 'residuals']
         """
 
         fields = ['time_tot',  # total cpu time previous call
@@ -1146,6 +1149,7 @@ class AcadosOcpSolver:
                   'statistics',  # table with info about last iteration
                   'stat_m',
                   'stat_n',
+                  'residuals',
                 ]
 
         field = field_
@@ -1176,11 +1180,22 @@ class AcadosOcpSolver:
             elif self.acados_ocp.solver_options.nlp_solver_type == 'SQP_RTI':
                 out = full_stats[2, :]
 
+        elif field_ == 'residuals':
+            if self.acados_ocp.solver_options.nlp_solver_type == 'SQP':
+                full_stats = self.get_stats('statistics')
+                if self.status != 2:
+                    out = (full_stats.T)[-1][1:5]
+                else: # when exiting with max_iter, residuals are computed for second last iterate only
+                    out = (full_stats.T)[-2][1:5]
+            else:
+                Exception("residuals are not computed for SQP_RTI")
+
+
         else:
             out = np.ascontiguousarray(np.zeros((1,)), dtype=np.float64)
             out_data = cast(out.ctypes.data, POINTER(c_double))
 
-        if not field_ == 'qp_iter':
+        if not field_ in ['qp_iter', 'residuals']:
             self.shared_lib.ocp_nlp_get.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
             self.shared_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
 
@@ -1543,10 +1558,10 @@ class AcadosOcpSolver:
 
         if field_ == 'rti_phase':
             if value_ < 0 or value_ > 2:
-                raise Exception('AcadosOcpSolver.solve(): argument \'rti_phase\' can '
+                raise Exception('AcadosOcpSolver.options_set(): argument \'rti_phase\' can '
                     'take only values 0, 1, 2 for SQP-RTI-type solvers')
             if self.acados_ocp.solver_options.nlp_solver_type != 'SQP_RTI' and value_ > 0:
-                raise Exception('AcadosOcpSolver.solve(): argument \'rti_phase\' can '
+                raise Exception('AcadosOcpSolver.options_set(): argument \'rti_phase\' can '
                     'take only value 0 for SQP-type solvers')
 
         # encode
