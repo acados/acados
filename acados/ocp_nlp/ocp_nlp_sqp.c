@@ -651,13 +651,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         {
             // save sqp iterations number
             mem->sqp_iter = sqp_iter;
-            nlp_out->sqp_iter = sqp_iter;
 
             // stop timer
             total_time += acados_toc(&timer0);
-
-            // save time
-            nlp_out->total_time = total_time;
             mem->time_tot = total_time;
 
 #if defined(ACADOS_WITH_OPENMP)
@@ -718,8 +714,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // TODO move into QP solver memory ???
         qp_info *qp_info_;
         ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
-        nlp_out->qp_iter = qp_info_->num_iter;
-        // printf("\nqp_iter = %d, sqp_iter = %d, max_sqp_iter = %d\n", nlp_out->qp_iter, sqp_iter, opts->max_iter);
         qp_iter = qp_info_->num_iter;
 
         // save statistics of last qp solver call
@@ -752,14 +746,10 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
             // save sqp iterations number
             mem->sqp_iter = sqp_iter;
-            nlp_out->sqp_iter = sqp_iter;
 
             // stop timer
             total_time += acados_toc(&timer0);
-
-            // save time
             mem->time_tot = total_time;
-            nlp_out->total_time = total_time;
 #ifndef ACADOS_SILENT
             printf("\nQP solver returned error status %d in SQP iteration %d, QP iteration %d.\n",
                    qp_status, sqp_iter, qp_iter);
@@ -799,22 +789,15 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
     }  // end SQP loop
 
-
-    // stop timer
+    // stop timer & save statistics
     total_time += acados_toc(&timer0);
+    mem->time_tot = total_time;
+    mem->sqp_iter = sqp_iter;
 
     if (opts->print_level > 0)
         printf("\n\n");
 
-    // ocp_nlp_out_print(nlp_out);
-
-    // save sqp iterations number
-    mem->sqp_iter = sqp_iter;
-    nlp_out->sqp_iter = sqp_iter;
-
-    // save time
-    mem->time_tot = total_time;
-    nlp_out->total_time = total_time;
+    // ocp_nlp_out_print(dims, nlp_out);
 
     // maximum number of iterations reached
 #if defined(ACADOS_WITH_OPENMP)
