@@ -466,9 +466,7 @@ static void ocp_nlp_sqp_cast_workspace(ocp_nlp_config *config, ocp_nlp_dims *dim
 int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_)
 {
-
     acados_timer timer0, timer1;
-
     acados_tic(&timer0);
 
     ocp_nlp_dims *dims = dims_;
@@ -480,6 +478,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     ocp_nlp_out *nlp_out = nlp_out_;
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+    ocp_nlp_res *nlp_res = nlp_mem->nlp_res;
 
     ocp_nlp_sqp_workspace *work = work_;
     ocp_nlp_sqp_cast_workspace(config, dims, opts, mem, work);
@@ -629,18 +628,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
         // compute nlp residuals
-        ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_mem->nlp_res, nlp_mem);
-
-        nlp_out->inf_norm_res = nlp_mem->nlp_res->inf_norm_res_stat;
-        nlp_out->inf_norm_res = (nlp_mem->nlp_res->inf_norm_res_eq > nlp_out->inf_norm_res) ?
-                                    nlp_mem->nlp_res->inf_norm_res_eq :
-                                    nlp_out->inf_norm_res;
-        nlp_out->inf_norm_res = (nlp_mem->nlp_res->inf_norm_res_ineq > nlp_out->inf_norm_res) ?
-                                    nlp_mem->nlp_res->inf_norm_res_ineq :
-                                    nlp_out->inf_norm_res;
-        nlp_out->inf_norm_res = (nlp_mem->nlp_res->inf_norm_res_comp > nlp_out->inf_norm_res) ?
-                                    nlp_mem->nlp_res->inf_norm_res_comp :
-                                    nlp_out->inf_norm_res;
+        ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);
+        ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
 
         if (opts->print_level > sqp_iter + 1)
             print_ocp_qp_in(nlp_mem->qp_in);
@@ -648,17 +637,17 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // save statistics
         if (sqp_iter < mem->stat_m)
         {
-            mem->stat[mem->stat_n*sqp_iter+0] = nlp_mem->nlp_res->inf_norm_res_stat;
-            mem->stat[mem->stat_n*sqp_iter+1] = nlp_mem->nlp_res->inf_norm_res_eq;
-            mem->stat[mem->stat_n*sqp_iter+2] = nlp_mem->nlp_res->inf_norm_res_ineq;
-            mem->stat[mem->stat_n*sqp_iter+3] = nlp_mem->nlp_res->inf_norm_res_comp;
+            mem->stat[mem->stat_n*sqp_iter+0] = nlp_res->inf_norm_res_stat;
+            mem->stat[mem->stat_n*sqp_iter+1] = nlp_res->inf_norm_res_eq;
+            mem->stat[mem->stat_n*sqp_iter+2] = nlp_res->inf_norm_res_ineq;
+            mem->stat[mem->stat_n*sqp_iter+3] = nlp_res->inf_norm_res_comp;
         }
 
         // exit conditions on residuals
-        if ((nlp_mem->nlp_res->inf_norm_res_stat < opts->tol_stat) &
-            (nlp_mem->nlp_res->inf_norm_res_eq < opts->tol_eq) &
-            (nlp_mem->nlp_res->inf_norm_res_ineq < opts->tol_ineq) &
-            (nlp_mem->nlp_res->inf_norm_res_comp < opts->tol_comp))
+        if ((nlp_res->inf_norm_res_stat < opts->tol_stat) &
+            (nlp_res->inf_norm_res_eq < opts->tol_eq) &
+            (nlp_res->inf_norm_res_ineq < opts->tol_ineq) &
+            (nlp_res->inf_norm_res_comp < opts->tol_comp))
         {
             // save sqp iterations number
             mem->sqp_iter = sqp_iter;
@@ -679,15 +668,14 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
             if (opts->print_level > 0)
             {
-                printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, nlp_mem->nlp_res->inf_norm_res_stat,
-                    nlp_mem->nlp_res->inf_norm_res_eq, nlp_mem->nlp_res->inf_norm_res_ineq,
-                    nlp_mem->nlp_res->inf_norm_res_comp );
+                printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, nlp_res->inf_norm_res_stat,
+                    nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_ineq,
+                    nlp_res->inf_norm_res_comp );
                 printf("\n\n");
             }
 
             return mem->status;
         }
-
 
         // regularize Hessian
         acados_tic(&timer1);
@@ -752,12 +740,11 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
         {
-            // print_ocp_qp_in(nlp_mem->qp_in);
             if (opts->print_level > 0)
             {
-                printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, nlp_mem->nlp_res->inf_norm_res_stat,
-                    nlp_mem->nlp_res->inf_norm_res_eq, nlp_mem->nlp_res->inf_norm_res_ineq,
-                    nlp_mem->nlp_res->inf_norm_res_comp );
+                printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, nlp_res->inf_norm_res_stat,
+                    nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_ineq,
+                    nlp_res->inf_norm_res_comp );
                 printf("\n\n");
             }
             // increment sqp_iter to return full statistics and improve output below.
@@ -800,37 +787,17 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         // update variables
         ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, alpha);
-        // ocp_nlp_dims_print(nlp_out->dims);
-        // ocp_nlp_out_print(nlp_out);
-        // exit(1);
-
-        // ??? @rien
-        //        for (int_t i = 0; i < N; i++)
-        //        {
-        //   ocp_nlp_dynamics_opts *dynamics_opts = opts->dynamics[i];
-        //            sim_opts *opts = dynamics_opts->sim_solver;
-        //            if (opts->scheme == NULL)
-        //                continue;
-        //            opts->sens_adj = (opts->scheme->type != exact);
-        //            if (nlp_in->freezeSens) {
-        //                // freeze inexact sensitivities after first SQP iteration !!
-        //                opts->scheme->freeze = true;
-        //            }
-        //        }
 
         if (opts->print_level > 0)
         {
-
             if (sqp_iter%10 == 0)
             {
                 printf("# it\tstat\t\teq\t\tineq\t\tcomp\n");
             }
-
-            printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, nlp_mem->nlp_res->inf_norm_res_stat,
-                nlp_mem->nlp_res->inf_norm_res_eq, nlp_mem->nlp_res->inf_norm_res_ineq, nlp_mem->nlp_res->inf_norm_res_comp );
+            printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, nlp_res->inf_norm_res_stat,
+                nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_ineq, nlp_res->inf_norm_res_comp );
         }
-
-    }
+    }  // end SQP loop
 
 
     // stop timer
@@ -1220,3 +1187,18 @@ void ocp_nlp_sqp_config_initialize_default(void *config_)
 
     return;
 }
+
+
+// ??? @rien
+//        for (int_t i = 0; i < N; i++)
+//        {
+//   ocp_nlp_dynamics_opts *dynamics_opts = opts->dynamics[i];
+//            sim_opts *opts = dynamics_opts->sim_solver;
+//            if (opts->scheme == NULL)
+//                continue;
+//            opts->sens_adj = (opts->scheme->type != exact);
+//            if (nlp_in->freezeSens) {
+//                // freeze inexact sensitivities after first SQP iteration !!
+//                opts->scheme->freeze = true;
+//            }
+//        }

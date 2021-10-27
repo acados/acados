@@ -317,6 +317,8 @@ typedef struct ocp_nlp_res
 acados_size_t ocp_nlp_res_calculate_size(ocp_nlp_dims *dims);
 //
 ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory);
+//
+void ocp_nlp_res_get_inf_norm(ocp_nlp_res *res, double *out);
 
 /************************************************
  * memory
