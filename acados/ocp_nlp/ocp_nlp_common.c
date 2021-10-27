@@ -2730,6 +2730,17 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
 }
 
 
+void ocp_nlp_res_get_inf_norm(ocp_nlp_res *res, double *out)
+{
+    double norm = res->inf_norm_res_stat;
+    norm = (res->inf_norm_res_eq > norm) ? res->inf_norm_res_eq : norm;
+    norm = (res->inf_norm_res_ineq > norm) ? res->inf_norm_res_ineq : norm;
+    norm = (res->inf_norm_res_comp > norm) ? res->inf_norm_res_comp : norm;
+    *out = norm;
+    return;
+}
+
+
 void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
