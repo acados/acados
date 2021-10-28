@@ -1108,6 +1108,7 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->alpha_min = 0.05;
     opts->alpha_reduction = 0.7;
     opts->full_step_dual = 0;
+    opts->line_search_use_sufficient_descent = 0;
 
     return;
 }
@@ -1213,6 +1214,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         {
             int* full_step_dual = (int *) value;
             opts->full_step_dual = *full_step_dual;
+        }
+        else if (!strcmp(field, "line_search_use_sufficient_descent"))
+        {
+            int* line_search_use_sufficient_descent = (int *) value;
+            opts->line_search_use_sufficient_descent = *line_search_use_sufficient_descent;
         }
         else if (!strcmp(field, "globalization"))
         {
@@ -2234,6 +2240,8 @@ double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims
                                   ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
                                   ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
+    /* computes merit function gradient at iterate: out -- using already evaluated gradients of submodules
+       with weights: work->weight_merit_fun */
     int i, j;
 
     int N = dims->N;
@@ -2362,7 +2370,7 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
                                   ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
                                   ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
-    /* computes merit function value at iterate: out, with weights: work->weight_merit_fun */
+    /* computes merit function value at iterate: tmp_nlp_out, with weights: work->weight_merit_fun */
     int i, j;
 
     int N = dims->N;
@@ -2546,18 +2554,23 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
 
             double alpha_min = opts->alpha_min;
             double reduction_factor = opts->alpha_reduction;
+            double max_next_merit_fun_val = merit_fun0;
+            double eps_merit = 1e-4; // Leineweber1999: MUSCOD-II eps_T = 1e-4 (p.89); Note: eps_T = 0.1 originally proposed by Powell 1978 (Leineweber 1999, p. 53)
+            double dmerit_dy = 0.0;
 
             /* actual Line Search*/
             alpha = 1.0;
-            // check Armijo-type sufficient descent condition Leinweber1999 (2.35);
-            double dmerit_dy = ocp_nlp_compute_merit_gradient(config, dims, in, out, opts, mem, work);
-            if (dmerit_dy > 0.0)
+            if (opts->line_search_use_sufficient_descent)
             {
-                if (dmerit_dy > 1e-6)
-                    printf("\nacados line search: found dmerit_dy = %e > 0. Setting it to 0.0 instead", dmerit_dy);
-                dmerit_dy = 0.0;
+                // check Armijo-type sufficient descent condition Leinweber1999 (2.35);
+                double dmerit_dy = ocp_nlp_compute_merit_gradient(config, dims, in, out, opts, mem, work);
+                if (dmerit_dy > 0.0)
+                {
+                    if (dmerit_dy > 1e-6)
+                        printf("\nacados line search: found dmerit_dy = %e > 0. Setting it to 0.0 instead", dmerit_dy);
+                    dmerit_dy = 0.0;
+                }
             }
-            double eps_merit = 1e-4; // Leineweber1999: MUSCOD-II eps_T = 1e-4 (p.89); Note: eps_T = 0.1 originally proposed by Powell 1978 (Leineweber 1999, p. 53)
 
             // From Leineweber1999: eq (3.64) -> only relevant for adaptive integrators looking at Remark 3.2.
             // "It is noteworthy that our practical implementation takes into account the potential nonsmoothness introduced by the fact that certain components of the penalty function - namely the continuity condition residuals - are evaluated only within integration tolerance."
@@ -2576,7 +2589,7 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
 
             for (j=0; alpha*reduction_factor > alpha_min; j++)
             {
-
+                // tmp_nlp_out = out + alpha * qp_out
                 for (i = 0; i <= N; i++)
                     blasfeo_daxpy(nv[i], alpha, mem->qp_out->ux+i, 0, out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
 
@@ -2588,7 +2601,8 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
                 //     printf("\nalpha %f would be accepted without Armijo", alpha);
                 // }
 
-                if (merit_fun1 < merit_fun0 + eps_merit * dmerit_dy * alpha)
+                max_next_merit_fun_val = merit_fun0 + eps_merit * dmerit_dy * alpha;
+                if (merit_fun1 < max_next_merit_fun_val)
                 {
                     break;
                 }
