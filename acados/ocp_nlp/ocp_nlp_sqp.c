@@ -485,25 +485,19 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     ocp_nlp_workspace *nlp_work = work->nlp_work;
 
     // zero timers
-    double total_time = 0.0;
     double tmp_time;
     mem->time_qp_sol = 0.0;
     mem->time_qp_solver_call = 0.0;
     mem->time_qp_xcond = 0.0;
     mem->time_lin = 0.0;
     mem->time_reg = 0.0;
-    mem->time_tot = 0.0;
     mem->time_glob = 0.0;
     mem->time_sim = 0.0;
     mem->time_sim_la = 0.0;
     mem->time_sim_ad = 0.0;
 
     int N = dims->N;
-
-    int ii;
-
-    int qp_iter = 0;
-    int qp_status = 0;
+    int ii, qp_iter, qp_status;
 
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
@@ -575,18 +569,13 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             (nlp_res->inf_norm_res_ineq < opts->tol_ineq) &
             (nlp_res->inf_norm_res_comp < opts->tol_comp))
         {
-            // save sqp iterations number
-            mem->sqp_iter = sqp_iter;
-
-            // stop timer
-            total_time += acados_toc(&timer0);
-            mem->time_tot = total_time;
-
 #if defined(ACADOS_WITH_OPENMP)
             // restore number of threads
             omp_set_num_threads(num_threads_bkp);
 #endif
             mem->status = ACADOS_SUCCESS;
+            mem->sqp_iter = sqp_iter;
+            mem->time_tot = acados_toc(&timer0);
 
             if (opts->print_level > 0)
             {
@@ -657,7 +646,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 ocp_qp_res_compute_nrm_inf(work->qp_res, mem->stat+(mem->stat_n*(sqp_iter+1)+6));
         }
 
-
+        // exit conditions on QP status
         if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
         {
             if (opts->print_level > 0)
@@ -670,12 +659,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // increment sqp_iter to return full statistics and improve output below.
             sqp_iter++;
 
-            // save sqp iterations number
-            mem->sqp_iter = sqp_iter;
-
-            // stop timer
-            total_time += acados_toc(&timer0);
-            mem->time_tot = total_time;
 #ifndef ACADOS_SILENT
             printf("\nQP solver returned error status %d in SQP iteration %d, QP iteration %d.\n",
                    qp_status, sqp_iter, qp_iter);
@@ -693,6 +676,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             }
 
             mem->status = ACADOS_QP_FAILURE;
+            mem->sqp_iter = sqp_iter;
+            mem->time_tot = acados_toc(&timer0);
+
             return mem->status;
         }
 
@@ -715,11 +701,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
     }  // end SQP loop
 
-    // stop timer & save statistics
-    total_time += acados_toc(&timer0);
-    mem->time_tot = total_time;
-    mem->sqp_iter = sqp_iter;
-
     if (opts->print_level > 0)
         printf("\n\n");
 
@@ -730,7 +711,11 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // restore number of threads
     omp_set_num_threads(num_threads_bkp);
 #endif
+
     mem->status = ACADOS_MAXITER;
+    mem->sqp_iter = sqp_iter;
+    mem->time_tot = acados_toc(&timer0);
+
 #ifndef ACADOS_SILENT
     printf("\n ocp_nlp_sqp: maximum iterations reached\n");
 #endif
