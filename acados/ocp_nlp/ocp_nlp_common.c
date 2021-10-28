@@ -1905,6 +1905,91 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
  * functions
  ************************************************/
 
+void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
+         ocp_nlp_out *nlp_out, ocp_nlp_opts *opts, ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work)
+{
+    int ii;
+    int N = dims->N;
+
+    // alias to dynamics_memory
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp for nowait
+#endif
+    for (ii = 0; ii < N; ii++)
+    {
+        config->dynamics[ii]->memory_set_ux_ptr(nlp_out->ux+ii, nlp_mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_tmp_ux_ptr(nlp_work->tmp_nlp_out->ux+ii, nlp_mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_ux1_ptr(nlp_out->ux+ii+1, nlp_mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_tmp_ux1_ptr(nlp_work->tmp_nlp_out->ux+ii+1, nlp_mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_pi_ptr(nlp_out->pi+ii, nlp_mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_tmp_pi_ptr(nlp_work->tmp_nlp_out->pi+ii, nlp_mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_BAbt_ptr(nlp_mem->qp_in->BAbt+ii, nlp_mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_RSQrq_ptr(nlp_mem->qp_in->RSQrq+ii, nlp_mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_dzduxt_ptr(nlp_mem->dzduxt+ii, nlp_mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_sim_guess_ptr(nlp_mem->sim_guess+ii, nlp_mem->set_sim_guess+ii, nlp_mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_z_alg_ptr(nlp_mem->z_alg+ii, nlp_mem->dynamics[ii]);
+    }
+
+    // alias to cost_memory
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp for nowait
+#endif
+    for (ii = 0; ii <= N; ii++)
+    {
+        config->cost[ii]->memory_set_ux_ptr(nlp_out->ux+ii, nlp_mem->cost[ii]);
+        config->cost[ii]->memory_set_tmp_ux_ptr(nlp_work->tmp_nlp_out->ux+ii, nlp_mem->cost[ii]);
+        config->cost[ii]->memory_set_z_alg_ptr(nlp_mem->z_alg+ii, nlp_mem->cost[ii]);
+        config->cost[ii]->memory_set_dzdux_tran_ptr(nlp_mem->dzduxt+ii, nlp_mem->cost[ii]);
+        config->cost[ii]->memory_set_RSQrq_ptr(nlp_mem->qp_in->RSQrq+ii, nlp_mem->cost[ii]);
+        config->cost[ii]->memory_set_Z_ptr(nlp_mem->qp_in->Z+ii, nlp_mem->cost[ii]);
+    }
+
+    // alias to constraints_memory
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp for nowait
+#endif
+    for (ii = 0; ii <= N; ii++)
+    {
+        config->constraints[ii]->memory_set_ux_ptr(nlp_out->ux+ii, nlp_mem->constraints[ii]);
+        config->constraints[ii]->memory_set_tmp_ux_ptr(nlp_work->tmp_nlp_out->ux+ii, nlp_mem->constraints[ii]);
+        config->constraints[ii]->memory_set_lam_ptr(nlp_out->lam+ii, nlp_mem->constraints[ii]);
+        config->constraints[ii]->memory_set_tmp_lam_ptr(nlp_work->tmp_nlp_out->lam+ii, nlp_mem->constraints[ii]);
+        config->constraints[ii]->memory_set_z_alg_ptr(nlp_mem->z_alg+ii, nlp_mem->constraints[ii]);
+        config->constraints[ii]->memory_set_dzdux_tran_ptr(nlp_mem->dzduxt+ii, nlp_mem->constraints[ii]);
+        config->constraints[ii]->memory_set_DCt_ptr(nlp_mem->qp_in->DCt+ii, nlp_mem->constraints[ii]);
+        config->constraints[ii]->memory_set_RSQrq_ptr(nlp_mem->qp_in->RSQrq+ii, nlp_mem->constraints[ii]);
+        config->constraints[ii]->memory_set_idxb_ptr(nlp_mem->qp_in->idxb[ii], nlp_mem->constraints[ii]);
+        config->constraints[ii]->memory_set_idxs_rev_ptr(nlp_mem->qp_in->idxs_rev[ii], nlp_mem->constraints[ii]);
+        config->constraints[ii]->memory_set_idxe_ptr(nlp_mem->qp_in->idxe[ii], nlp_mem->constraints[ii]);
+    }
+
+    // alias to regularize memory
+    config->regularize->memory_set_RSQrq_ptr(dims->regularize, nlp_mem->qp_in->RSQrq, nlp_mem->regularize_mem);
+    config->regularize->memory_set_rq_ptr(dims->regularize, nlp_mem->qp_in->rqz, nlp_mem->regularize_mem);
+    config->regularize->memory_set_BAbt_ptr(dims->regularize, nlp_mem->qp_in->BAbt, nlp_mem->regularize_mem);
+    config->regularize->memory_set_b_ptr(dims->regularize, nlp_mem->qp_in->b, nlp_mem->regularize_mem);
+    config->regularize->memory_set_idxb_ptr(dims->regularize, nlp_mem->qp_in->idxb, nlp_mem->regularize_mem);
+    config->regularize->memory_set_DCt_ptr(dims->regularize, nlp_mem->qp_in->DCt, nlp_mem->regularize_mem);
+    config->regularize->memory_set_ux_ptr(dims->regularize, nlp_mem->qp_out->ux, nlp_mem->regularize_mem);
+    config->regularize->memory_set_pi_ptr(dims->regularize, nlp_mem->qp_out->pi, nlp_mem->regularize_mem);
+    config->regularize->memory_set_lam_ptr(dims->regularize, nlp_mem->qp_out->lam, nlp_mem->regularize_mem);
+
+    // copy sampling times into dynamics model
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp for nowait
+#endif
+    // NOTE(oj): this will lead in an error for irk_gnsf, T must be set in precompute;
+    //    -> remove here and make sure precompute is called everywhere (e.g. Python interface).
+    for (ii = 0; ii < N; ii++)
+    {
+        config->dynamics[ii]->model_set(config->dynamics[ii], dims->dynamics[ii],
+                                         nlp_in->dynamics[ii], "T", nlp_in->Ts+ii);
+    }
+
+    return;
+}
+
+
 void ocp_nlp_initialize_qp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
          ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
@@ -2277,6 +2362,7 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
                                   ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
                                   ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
+    /* computes merit function value at iterate: out, with weights: work->weight_merit_fun */
     int i, j;
 
     int N = dims->N;
@@ -2401,7 +2487,7 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
     //            blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0, mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out->z+i, 0);
     //        }
 
-        /* initialize (Leineweber1999 M5.1, p.89) */
+        /* modify/initialize merit function weights (Leineweber1999 M5.1, p.89) */
         if (mem->sqp_iter[0]==0)
         {
             // initialize weights
