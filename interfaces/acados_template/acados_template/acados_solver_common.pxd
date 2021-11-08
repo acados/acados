@@ -1,7 +1,3 @@
-# cython: language_level=3
-# cython: profile=True
-# distutils: language = c
-
 # -*- coding: future_fstrings -*-
 #
 # Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,

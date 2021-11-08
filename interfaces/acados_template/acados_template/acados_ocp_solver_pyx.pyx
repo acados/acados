@@ -1,7 +1,3 @@
-# cython: language_level=3
-# cython: profile=False
-# distutils: language = c
-
 # -*- coding: future_fstrings -*-
 #
 # Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
@@ -35,6 +31,9 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.;
 #
+# cython: language_level=3
+# cython: profile=False
+# distutils: language=c
 
 cimport cython
 from libc cimport string
