@@ -434,15 +434,19 @@ def make_ocp_dims_consistent(acados_ocp):
         if np.shape(opts.shooting_nodes)[0] != dims.N+1:
             raise Exception('inconsistent dimension N, regarding shooting_nodes.')
 
-        time_steps = opts.shooting_nodes[1:] - opts.shooting_nodes[0:-1]
-        # identify constant time-steps: due to numerical reasons the content of time_steps might vary a bit
-        delta_time_steps = time_steps[1:] - time_steps[0:-1]
-        avg_time_steps = np.average(time_steps)
-        # criterion for constant time-step detection: the min/max difference in values normalized by the average
-        check_const_time_step = np.max(delta_time_steps)-np.min(delta_time_steps) / avg_time_steps
-        # if the criterion is small, we have a constant time-step
-        if check_const_time_step < 1e-9:
-            time_steps[:] = avg_time_steps  # if we have a constant time-step: apply the average time-step
+        # time_steps = opts.shooting_nodes[1:] - opts.shooting_nodes[0:-1]
+        # # identify constant time-steps: due to numerical reasons the content of time_steps might vary a bit
+        # delta_time_steps = time_steps[1:] - time_steps[0:-1]
+        # avg_time_steps = np.average(time_steps)
+        # # criterion for constant time-step detection: the min/max difference in values normalized by the average
+        # check_const_time_step = np.max(delta_time_steps)-np.min(delta_time_steps) / avg_time_steps
+        # # if the criterion is small, we have a constant time-step
+        # if check_const_time_step < 1e-9:
+        #     time_steps[:] = avg_time_steps  # if we have a constant time-step: apply the average time-step
+        time_steps = np.zeros((dims.N,))
+        for i in range(dims.N):
+            time_steps[i] = opts.shooting_nodes[i+1] - opts.shooting_nodes[i] # TODO use commented code above
+
         opts.time_steps = time_steps
 
     elif (not is_empty(opts.time_steps)) and (not is_empty(opts.shooting_nodes)):
