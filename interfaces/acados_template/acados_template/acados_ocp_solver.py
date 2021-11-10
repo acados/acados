@@ -821,8 +821,6 @@ class AcadosOcpSolver:
           os.system('make ocp_shared_lib')
           os.chdir(cwd)
 
-        return cls(model.name, acados_ocp.dims.N, code_export_dir)
-
     def __init__(self, model_name, N, code_export_dir):
         self.model_name = model_name
         self.N = N
@@ -884,14 +882,10 @@ class AcadosOcpSolver:
         self.shared_lib.ocp_nlp_constraint_dims_get_from_attr.argtypes = \
             [c_void_p, c_void_p, c_void_p, c_int, c_char_p, POINTER(c_int)]
         self.shared_lib.ocp_nlp_constraint_dims_get_from_attr.restype = c_int
-        self.shared_lib.ocp_nlp_constraints_model_set_slice.argtypes = \
-            [c_void_p, c_void_p, c_void_p, c_int, c_int, c_char_p, c_void_p, c_int]
 
         self.shared_lib.ocp_nlp_cost_dims_get_from_attr.argtypes = \
             [c_void_p, c_void_p, c_void_p, c_int, c_char_p, POINTER(c_int)]
         self.shared_lib.ocp_nlp_cost_dims_get_from_attr.restype = c_int
-        self.shared_lib.ocp_nlp_cost_model_set_slice.argtypes = \
-            [c_void_p, c_void_p, c_void_p, c_int, c_int, c_char_p, c_void_p, c_int]
 
         self.shared_lib.ocp_nlp_constraints_model_set.argtypes = \
             [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
