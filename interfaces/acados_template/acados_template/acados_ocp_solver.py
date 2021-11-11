@@ -49,7 +49,7 @@ from .generate_c_code_nls_cost import generate_c_code_nls_cost
 from .generate_c_code_external_cost import generate_c_code_external_cost
 from .acados_ocp import AcadosOcp
 from .acados_model import acados_model_strip_casadi_symbolics
-from .utils import is_column, is_empty, casadi_length, render_template, acados_class2dict,\
+from .utils import is_column, is_empty, casadi_length, render_template,\
      format_class_dict, ocp_check_against_layout, np_array_to_list, make_model_consistent,\
      set_up_imported_gnsf_model, get_acados_path, get_ocp_nlp_layout, get_python_interface_path
 
@@ -518,8 +518,7 @@ def ocp_formulation_json_dump(acados_ocp, simulink_opts, json_file='acados_ocp_n
 
     # strip shooting_nodes
     ocp_nlp_dict['solver_options'].pop('shooting_nodes', None)
-
-    dims_dict = acados_class2dict(acados_ocp.dims)
+    dims_dict = format_class_dict(acados_ocp.dims.__dict__)
 
     ocp_check_against_layout(ocp_nlp_dict, dims_dict)
 
