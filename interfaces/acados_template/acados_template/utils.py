@@ -251,22 +251,6 @@ def format_class_dict(d):
     return out
 
 
-def acados_class2dict(class_instance):
-    """
-    removes the __ artifact from class to dict conversion
-    """
-
-    d = dict(class_instance.__dict__)
-    out = {}
-    for k, v in d.items():
-        if isinstance(v, dict):
-            v = format_class_dict(v)
-
-        out_key = k.split('__', 1)[-1]
-        out[k.replace(k, out_key)] = v
-    return out
-
-
 def get_ocp_nlp_layout():
     python_interface_path = get_python_interface_path()
     abs_path = os.path.join(python_interface_path, 'acados_layout.json')
