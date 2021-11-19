@@ -61,6 +61,8 @@ acados_size_t ocp_nlp_dynamics_cont_dims_calculate_size(void *config_)
 
     size += sim_sol_config->dims_calculate_size();
 
+    size += 2*8; // align
+
     return size;
 }
 
@@ -72,9 +74,11 @@ void *ocp_nlp_dynamics_cont_dims_assign(void *config_, void *raw_memory)
 
     char *c_ptr = (char *) raw_memory;
 
+    align_char_to(8, &c_ptr);
     ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) c_ptr;
     c_ptr += sizeof(ocp_nlp_dynamics_cont_dims);
 
+    align_char_to(8, &c_ptr);
     dims->sim = sim_sol_config->dims_assign(sim_sol_config, c_ptr);
 
     c_ptr += sim_sol_config->dims_calculate_size(sim_sol_config);
@@ -233,6 +237,7 @@ acados_size_t ocp_nlp_dynamics_cont_opts_calculate_size(void *config_, void *dim
     size += sizeof(ocp_nlp_dynamics_cont_opts);
 
     size += config->sim_solver->opts_calculate_size(config->sim_solver, dims->sim);
+    size += 8;
 
     return size;
 }
@@ -249,6 +254,7 @@ void *ocp_nlp_dynamics_cont_opts_assign(void *config_, void *dims_, void *raw_me
     ocp_nlp_dynamics_cont_opts *opts = (ocp_nlp_dynamics_cont_opts *) c_ptr;
     c_ptr += sizeof(ocp_nlp_dynamics_cont_opts);
 
+    align_char_to(8, &c_ptr);
     opts->sim_solver = config->sim_solver->opts_assign(config->sim_solver, dims->sim, c_ptr);
     c_ptr += config->sim_solver->opts_calculate_size(config->sim_solver, dims->sim);
 

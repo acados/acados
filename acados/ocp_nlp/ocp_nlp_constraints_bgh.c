@@ -54,6 +54,7 @@
 acados_size_t ocp_nlp_constraints_bgh_dims_calculate_size(void *config_)
 {
     acados_size_t size = sizeof(ocp_nlp_constraints_bgh_dims);
+    make_int_multiple_of(8, &size);
 
     return size;
 }
