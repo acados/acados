@@ -412,7 +412,8 @@ acados_size_t ocp_nlp_cost_ls_opts_calculate_size(void *config_, void *dims_)
 {
     acados_size_t size = 0;
 
-    size += sizeof(ocp_nlp_cost_ls_opts);
+    // size += sizeof(ocp_nlp_cost_ls_opts);
+    // make_int_multiple_of(8, &size);
 
     return size;
 }
@@ -421,14 +422,13 @@ acados_size_t ocp_nlp_cost_ls_opts_calculate_size(void *config_, void *dims_)
 
 void *ocp_nlp_cost_ls_opts_assign(void *config_, void *dims_, void *raw_memory)
 {
-    char *c_ptr = (char *) raw_memory;
+    // char *c_ptr = (char *) raw_memory;
+    // ocp_nlp_cost_ls_opts *opts = (ocp_nlp_cost_ls_opts *) c_ptr;
+    // c_ptr += sizeof(ocp_nlp_cost_ls_opts);
+    // assert((char *) raw_memory + 
+    //     ocp_nlp_cost_ls_opts_calculate_size(config_, dims_) >= c_ptr);
 
-    ocp_nlp_cost_ls_opts *opts = (ocp_nlp_cost_ls_opts *) c_ptr;
-    c_ptr += sizeof(ocp_nlp_cost_ls_opts);
-
-    assert((char *) raw_memory + 
-        ocp_nlp_cost_ls_opts_calculate_size(config_, dims_) >= c_ptr);
-
+    void *opts = raw_memory;
     return opts;
 }
 

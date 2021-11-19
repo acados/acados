@@ -174,6 +174,8 @@ static acados_size_t ocp_nlp_dims_calculate_size_self(int N)
     size += sizeof(ocp_nlp_reg_dims);
 
     size += 8;  // initial align
+    size += 8;  // intermediate align
+    make_int_multiple_of(8, &size);
 
     return size;
 }
@@ -225,6 +227,18 @@ static ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
     ocp_nlp_dims *dims = (ocp_nlp_dims *) c_ptr;
     c_ptr += sizeof(ocp_nlp_dims);
 
+    // dynamics
+    dims->dynamics = (void **) c_ptr;
+    c_ptr += N * sizeof(void *);
+
+    // cost
+    dims->cost = (void **) c_ptr;
+    c_ptr += (N + 1) * sizeof(void *);
+
+    // constraints
+    dims->constraints = (void **) c_ptr;
+    c_ptr += (N + 1) * sizeof(void *);
+
     // nv
     assign_and_advance_int(N + 1, &dims->nv, &c_ptr);
     // nx
@@ -238,17 +252,8 @@ static ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
     // ns
     assign_and_advance_int(N + 1, &dims->ns, &c_ptr);
 
-    // dynamics
-    dims->dynamics = (void **) c_ptr;
-    c_ptr += N * sizeof(void *);
-
-    // cost
-    dims->cost = (void **) c_ptr;
-    c_ptr += (N + 1) * sizeof(void *);
-
-    // constraints
-    dims->constraints = (void **) c_ptr;
-    c_ptr += (N + 1) * sizeof(void *);
+    // intermediate align
+    align_char_to(8, &c_ptr);
 
     // regularization
     dims->regularize = ocp_nlp_reg_dims_assign(N, c_ptr);
