@@ -37,6 +37,7 @@ import os
 import json
 import numpy as np
 from datetime import datetime
+import importlib
 import ctypes
 from ctypes import POINTER, cast, CDLL, c_void_p, c_char_p, c_double, c_int, c_int64, byref
 
@@ -812,12 +813,17 @@ class AcadosOcpSolver:
         ocp_render_templates(acados_ocp, json_file)
 
         if build:
-          ## Compile solver
-          cwd=os.getcwd()
-          os.chdir(code_export_dir)
-          os.system('make clean_ocp_shared_lib')
-          os.system('make ocp_shared_lib')
-          os.chdir(cwd)
+            ## Compile solver
+            cwd=os.getcwd()
+            os.chdir(code_export_dir)
+            os.system('make clean_ocp_cython')
+            os.system('make ocp_cython')
+            os.chdir(cwd)
+
+            importlib.invalidate_caches()
+            acados_ocp_solver_pyx = importlib.import_module(f'{code_export_dir}.acados_ocp_solver_pyx')
+            AcadosOcpSolverFast = getattr(acados_ocp_solver_pyx, 'AcadosOcpSolverFast')
+            return AcadosOcpSolverFast(acados_ocp.model.name, acados_ocp.dims.N, code_export_dir)
 
     def __init__(self, model_name, N, code_export_dir):
         self.model_name = model_name

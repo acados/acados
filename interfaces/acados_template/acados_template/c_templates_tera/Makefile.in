@@ -510,6 +510,10 @@ clean_ocp_shared_lib:
 	del \Q libacados_ocp_solver_{{ model.name }}.so 2>nul
 	del \Q acados_solver_{{ model.name }}.o 2>nul
 
+clean_ocp_cython:
+	del \Q libacados_ocp_solver_{{ model.name }}.so 2>nul
+	del \Q acados_solver_{{ model.name }}.o 2>nul
+
 {%- else %}
 
 clean:
@@ -518,6 +522,10 @@ clean:
 	rm -f main_{{ model.name }}
 
 clean_ocp_shared_lib:
+	rm -f libacados_ocp_solver_{{ model.name }}.so
+	rm -f acados_solver_{{ model.name }}.o
+
+clean_ocp_cython:
 	rm -f libacados_ocp_solver_{{ model.name }}.so
 	rm -f acados_solver_{{ model.name }}.o
 
