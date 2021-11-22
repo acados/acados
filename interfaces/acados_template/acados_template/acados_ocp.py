@@ -2810,6 +2810,9 @@ class AcadosOcp:
         self.acados_lib_path = f'{acados_path}/lib'
         """Path to where acados library is located, type: string"""
 
+        import numpy
+        self.cython_include_dirs = numpy.get_include()
+
         self.__parameter_values = np.array([])
         self.__problem_class = 'OCP'
 

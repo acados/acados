@@ -482,6 +482,7 @@ ocp_cython_o: ocp_cython_c
 	-I $(INCLUDE_PATH)/blasfeo/include/ \
 	-I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) \
+	-I {{ cython_include_dirs }} \
 	acados_ocp_solver_pyx.c \
 
 ocp_cython: ocp_cython_o
