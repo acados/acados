@@ -160,10 +160,14 @@ MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_impl_dae_fun_jac_x_xdot_u.o
 MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_impl_dae_hess.o
 {%- endif %}
 {%- elif solver_options.integrator_type == "GNSF" %}
+	{% if model.gnsf.purely_linear != 1 %}
 MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_gnsf_phi_fun.o
 MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_gnsf_phi_fun_jac_y.o
 MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_gnsf_phi_jac_y_uhat.o
+		{% if model.gnsf.nontrivial_f_LO == 1 %}
 MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz.o
+		{%- endif %}
+	{%- endif %}
 MODEL_OBJ+= {{ model.name }}_model/{{ model.name }}_gnsf_get_matrices_fun.o
 {%- elif solver_options.integrator_type == "DISCRETE" %}
 {%- if model.dyn_ext_fun_type == "casadi" %}
@@ -302,10 +306,14 @@ CASADI_MODEL_SOURCE+= {{ model.name }}_impl_dae_fun_jac_x_xdot_u.c
 CASADI_MODEL_SOURCE+= {{ model.name }}_impl_dae_hess.c
 {%- endif %}
 {%- elif solver_options.integrator_type == "GNSF" %}
+	{% if model.gnsf.purely_linear != 1 %}
 CASADI_MODEL_SOURCE+= {{ model.name }}_gnsf_phi_fun.c
 CASADI_MODEL_SOURCE+= {{ model.name }}_gnsf_phi_fun_jac_y.c
 CASADI_MODEL_SOURCE+= {{ model.name }}_gnsf_phi_jac_y_uhat.c
+		{% if model.gnsf.nontrivial_f_LO == 1 %}
 CASADI_MODEL_SOURCE+= {{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz.c
+		{%- endif %}
+	{%- endif %}
 CASADI_MODEL_SOURCE+= {{ model.name }}_gnsf_get_matrices_fun.c
 {%- elif solver_options.integrator_type == "DISCRETE" and model.dyn_ext_fun_type == "casadi" %}
 CASADI_MODEL_SOURCE+= {{ model.name }}_dyn_disc_phi_fun.c

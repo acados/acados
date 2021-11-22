@@ -584,6 +584,7 @@ int {{ model.name }}_acados_create_with_discretization({{ model.name }}_solver_c
     }
 
 {% elif solver_options.integrator_type == "GNSF" %}
+    {% if model.gnsf.purely_linear != 1 %}
     capsule->gnsf_phi_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; i++) {
         capsule->gnsf_phi_fun[i].casadi_fun = &{{ model.name }}_gnsf_phi_fun;
@@ -617,6 +618,7 @@ int {{ model.name }}_acados_create_with_discretization({{ model.name }}_solver_c
         external_function_param_casadi_create(&capsule->gnsf_phi_jac_y_uhat[i], {{ dims.np }});
     }
 
+    {% if model.gnsf.nontrivial_f_LO == 1 %}
     capsule->gnsf_f_lo_jac_x1_x1dot_u_z = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; i++) {
         capsule->gnsf_f_lo_jac_x1_x1dot_u_z[i].casadi_fun = &{{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz;
@@ -627,7 +629,8 @@ int {{ model.name }}_acados_create_with_discretization({{ model.name }}_solver_c
         capsule->gnsf_f_lo_jac_x1_x1dot_u_z[i].casadi_n_out = &{{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz_n_out;
         external_function_param_casadi_create(&capsule->gnsf_f_lo_jac_x1_x1dot_u_z[i], {{ dims.np }});
     }
-
+    {%- endif %}
+    {%- endif %}
     capsule->gnsf_get_matrices_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; i++) {
         capsule->gnsf_get_matrices_fun[i].casadi_fun = &{{ model.name }}_gnsf_get_matrices_fun;
@@ -978,11 +981,15 @@ int {{ model.name }}_acados_create_with_discretization({{ model.name }}_solver_c
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i,
                                    "impl_dae_fun_jac_x_xdot_u", &capsule->impl_dae_fun_jac_x_xdot_u[i]);
     {% elif solver_options.integrator_type == "GNSF" %}
+  {% if model.gnsf.purely_linear != 1 %}
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "phi_fun", &capsule->gnsf_phi_fun[i]);
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "phi_fun_jac_y", &capsule->gnsf_phi_fun_jac_y[i]);
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "phi_jac_y_uhat", &capsule->gnsf_phi_jac_y_uhat[i]);
+  {% if model.gnsf.nontrivial_f_LO == 1 %}
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "f_lo_jac_x1_x1dot_u_z",
                                    &capsule->gnsf_f_lo_jac_x1_x1dot_u_z[i]);
+  {%- endif %}
+  {%- endif %}
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "gnsf_get_matrices_fun",
                                    &capsule->gnsf_get_matrices_fun[i]);
     {% elif solver_options.integrator_type == "DISCRETE" %}
@@ -2189,11 +2196,14 @@ int {{ model.name }}_acados_update_params({{ model.name }}_solver_capsule * caps
         capsule->hess_vde_casadi[stage].set_param(capsule->hess_vde_casadi+stage, p);
         {%- endif %}
     {% elif solver_options.integrator_type == "GNSF" %}
+    {% if model.gnsf.purely_linear != 1 %}
         capsule->gnsf_phi_fun[stage].set_param(capsule->gnsf_phi_fun+stage, p);
         capsule->gnsf_phi_fun_jac_y[stage].set_param(capsule->gnsf_phi_fun_jac_y+stage, p);
         capsule->gnsf_phi_jac_y_uhat[stage].set_param(capsule->gnsf_phi_jac_y_uhat+stage, p);
-
-        capsule->gnsf_f_lo_jac_x1_x1dot_u_z[stage].set_param(capsule->gnsf_f_lo_jac_x1_x1dot_u_z+stage, p);
+        {% if model.gnsf.nontrivial_f_LO == 1 %}
+            capsule->gnsf_f_lo_jac_x1_x1dot_u_z[stage].set_param(capsule->gnsf_f_lo_jac_x1_x1dot_u_z+stage, p);
+        {%- endif %}
+    {%- endif %}
     {% elif solver_options.integrator_type == "DISCRETE" %}
         capsule->discr_dyn_phi_fun[stage].set_param(capsule->discr_dyn_phi_fun+stage, p);
         capsule->discr_dyn_phi_fun_jac_ut_xt[stage].set_param(capsule->discr_dyn_phi_fun_jac_ut_xt+stage, p);
@@ -2339,16 +2349,24 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule * capsule)
 {%- elif solver_options.integrator_type == "GNSF" %}
     for (int i = 0; i < N; i++)
     {
+        {% if model.gnsf.purely_linear != 1 %}
         external_function_param_casadi_free(&capsule->gnsf_phi_fun[i]);
         external_function_param_casadi_free(&capsule->gnsf_phi_fun_jac_y[i]);
         external_function_param_casadi_free(&capsule->gnsf_phi_jac_y_uhat[i]);
+        {% if model.gnsf.nontrivial_f_LO == 1 %}
         external_function_param_casadi_free(&capsule->gnsf_f_lo_jac_x1_x1dot_u_z[i]);
+        {%- endif %}
+        {%- endif %}
         external_function_param_casadi_free(&capsule->gnsf_get_matrices_fun[i]);
     }
+  {% if model.gnsf.purely_linear != 1 %}
     free(capsule->gnsf_phi_fun);
     free(capsule->gnsf_phi_fun_jac_y);
     free(capsule->gnsf_phi_jac_y_uhat);
+  {% if model.gnsf.nontrivial_f_LO == 1 %}
     free(capsule->gnsf_f_lo_jac_x1_x1dot_u_z);
+  {%- endif %}
+  {%- endif %}
     free(capsule->gnsf_get_matrices_fun);
 {%- elif solver_options.integrator_type == "DISCRETE" %}
     for (int i = 0; i < N; i++)
