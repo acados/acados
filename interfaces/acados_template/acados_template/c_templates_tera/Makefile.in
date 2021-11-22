@@ -475,7 +475,7 @@ ocp_cython_c: ocp_shared_lib
 	$(INCLUDE_PATH)/../interfaces/acados_template/acados_template/acados_ocp_solver_pyx.pyx \
 
 ocp_cython_o: ocp_cython_c
-	clang $(ACADOS_FLAGS) -c -O2 \
+	gcc $(ACADOS_FLAGS) -c -O2 \
 	-o acados_ocp_solver_pyx.o \
 	-I /usr/include/python3.8 \
 	-I $(INCLUDE_PATH)/blasfeo/include/ \
@@ -484,7 +484,7 @@ ocp_cython_o: ocp_cython_c
 	acados_ocp_solver_pyx.c \
 
 ocp_cython: ocp_cython_o
-	clang $(ACADOS_FLAGS) -shared \
+	gcc $(ACADOS_FLAGS) -shared \
 	-o acados_ocp_solver_pyx.so \
 	-Wl,-rpath=$(LIB_PATH) \
 	acados_ocp_solver_pyx.o \
@@ -513,6 +513,8 @@ clean_ocp_shared_lib:
 clean_ocp_cython:
 	del \Q libacados_ocp_solver_{{ model.name }}.so 2>nul
 	del \Q acados_solver_{{ model.name }}.o 2>nul
+	del \Q acados_ocp_solver_pyx.so 2>nul
+	del \Q acados_ocp_solver_pyx.o 2>nul
 
 {%- else %}
 
@@ -528,5 +530,7 @@ clean_ocp_shared_lib:
 clean_ocp_cython:
 	rm -f libacados_ocp_solver_{{ model.name }}.so
 	rm -f acados_solver_{{ model.name }}.o
+	rm -f acados_ocp_solver_pyx.so
+	rm -f acados_ocp_solver_pyx.o
 
 {%- endif %}
