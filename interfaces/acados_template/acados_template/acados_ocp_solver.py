@@ -784,6 +784,14 @@ class AcadosOcpSolver:
 
     @classmethod
     def generate(cls, acados_ocp, json_file='acados_ocp_nlp.json', simulink_opts=None, build=True):
+        """
+        Generate
+
+            :param acados_ocp: type AcadosOcp - description of the OCP for acados
+            :param json_file: name for the json file used to render the templated code - default: acados_ocp_nlp.json
+            :param simulink_opts: Options to configure Simulink S-function blocks, mainly to activate possible Inputs and Outputs
+            :param build: whether to build the generated C code, return initialized AcadosOcpSolver instance - default: True
+        """
         model = acados_ocp.model
 
         if simulink_opts is None:
@@ -823,7 +831,7 @@ class AcadosOcpSolver:
             importlib.invalidate_caches()
             acados_ocp_solver_pyx = importlib.import_module(f'{code_export_dir}.acados_ocp_solver_pyx')
             AcadosOcpSolverFast = getattr(acados_ocp_solver_pyx, 'AcadosOcpSolverFast')
-            return AcadosOcpSolverFast(acados_ocp.model.name, acados_ocp.dims.N, code_export_dir)
+            return AcadosOcpSolverFast(acados_ocp.model.name, acados_ocp.dims.N)
 
     def __init__(self, model_name, N, code_export_dir):
         self.model_name = model_name
