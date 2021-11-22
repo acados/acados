@@ -430,6 +430,13 @@ def set_up_imported_gnsf_model(acados_formulation):
     acados_formulation.model.phi_jac_y_uhat = phi_jac_y_uhat
     acados_formulation.model.get_matrices_fun = get_matrices_fun
 
+    # get_matrices_fun = Function([model_name,'_gnsf_get_matrices_fun'], {dummy},...
+    #  {A, B, C, E, L_x, L_xdot, L_z, L_u, A_LO, c, E_LO, B_LO,...
+    #   nontrivial_f_LO, purely_linear, ipiv_x, ipiv_z, c_LO});
+    get_matrices_out = get_matrices_fun(0)
+    acados_formulation.model.gnsf['nontrivial_f_LO'] = int(get_matrices_out[12])
+    acados_formulation.model.gnsf['purely_linear'] = int(get_matrices_out[13])
+
     if "f_lo_fun_jac_x1k1uz" in gnsf:
         f_lo_fun_jac_x1k1uz = Function.deserialize(gnsf['f_lo_fun_jac_x1k1uz'])
         acados_formulation.model.f_lo_fun_jac_x1k1uz = f_lo_fun_jac_x1k1uz

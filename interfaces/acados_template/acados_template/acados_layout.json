@@ -23,7 +23,15 @@
         ],
         "dyn_disc_fun" : [
             "str"
-        ]
+        ],
+        "gnsf" : {
+            "nontrivial_f_LO": [
+                "int"
+            ],
+            "purely_linear": [
+                "int"
+            ]
+        }
     },
     "parameter_values": [
         "ndarray",

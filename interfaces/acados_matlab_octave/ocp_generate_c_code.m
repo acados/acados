@@ -98,6 +98,8 @@ function ocp_generate_c_code(obj)
     model.dyn_disc_fun_jac_hess = obj.acados_ocp_nlp_json.model.dyn_disc_fun_jac_hess;
     model.dyn_disc_fun_jac = obj.acados_ocp_nlp_json.model.dyn_disc_fun_jac;
     model.dyn_disc_fun = obj.acados_ocp_nlp_json.model.dyn_disc_fun;
+    model.gnsf.nontrivial_f_LO = obj.acados_ocp_nlp_json.model.gnsf.nontrivial_f_LO;
+    model.gnsf.purely_linear = obj.acados_ocp_nlp_json.model.gnsf.purely_linear;
     obj.acados_ocp_nlp_json.model = model;
     %% post process numerical data (mostly cast scalars to 1-dimensional cells)
     dims = obj.acados_ocp_nlp_json.dims;

@@ -65,7 +65,7 @@ classdef acados_model_json < handle
             obj.z = [];
             obj.name = [];
             obj.p = [];
-            gnsf = [];
+            obj.gnsf = struct('nontrivial_f_LO', 1, 'purely_linear', 0);
         end
     end
 end
