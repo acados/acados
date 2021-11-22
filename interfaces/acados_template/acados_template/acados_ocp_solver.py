@@ -793,6 +793,7 @@ class AcadosOcpSolver:
             :param build: whether to build the generated C code, return initialized AcadosOcpSolver instance - default: True
         """
         model = acados_ocp.model
+        acados_ocp.code_export_directory = os.path.abspath(acados_ocp.code_export_directory)
 
         if simulink_opts is None:
             simulink_opts = get_simulink_default_opts()
