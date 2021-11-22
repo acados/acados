@@ -817,7 +817,8 @@ class AcadosOcpSolver:
         # dump to json
         ocp_formulation_json_dump(acados_ocp, simulink_opts, json_file)
 
-        code_export_dir = acados_ocp.code_export_directory
+        code_export_dir = os.path.relpath(acados_ocp.code_export_directory)
+
         # render templates
         ocp_render_templates(acados_ocp, json_file)
 
