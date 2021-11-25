@@ -2465,12 +2465,15 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
         tmp_fun_vec = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
 //        blasfeo_print_exp_tran_dvec(2*ni[i], tmp_fun_vec, 0);
 //        blasfeo_print_exp_tran_dvec(2*ni[i], work->weight_merit_fun->lam+i, 0);
-        for(j=0; j<2*ni[i]; j++)
+        for (j=0; j<2*ni[i]; j++)
         {
             tmp = BLASFEO_DVECEL(tmp_fun_vec, j);
-            tmp = tmp>0.0 ? fabs(tmp) : 0.0;  // tmp = constraint violation
-            // printf("IN merit fun: ineq i %d, j %d tmp_fun%e, multiplier %e\n", i, j, BLASFEO_DVECEL(tmp_fun_vec, j), BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j));
-            constr_fun += fabs(BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j)) * tmp;
+            if (tmp > 0.0)
+            {
+                // tmp = constraint violation
+                // printf("IN merit fun: ineq i %d, j %d tmp_fun %e, multiplier %e\n", i, j, tmp, BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j));
+                constr_fun += fabs(BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j)) * tmp;
+            }
         }
     }
 
