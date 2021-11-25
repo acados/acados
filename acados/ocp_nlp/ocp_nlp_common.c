@@ -2309,11 +2309,14 @@ double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims
         }
     }
 
+    int constr_index, slack_index_in_ux, slack_index;
     ocp_qp_dims* qp_dims = mem->qp_in->dim;
     int *nb = qp_dims->nb;
     int *ng = qp_dims->ng;
+    int *ns = qp_dims->ns;
     /* inequality contributions */
     double merit_grad_ineq = 0.0;
+    double slack_step;
     for (i=0; i<=N; i++)
     {
         tmp_vec = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
@@ -2326,10 +2329,29 @@ double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims
             // for (j = 0; j < 2 * ni[i]; j++) // 2 * ni
             for (j = 0; j < 2 * (nb[i] + ng[i]); j++) // 2 * ni
             {
-                weight = BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j);
                 double constraint_val = BLASFEO_DVECEL(tmp_vec, j);
                 if (constraint_val > 0)
                 {
+                    weight = BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j);
+
+                    // find corresponding slack value
+                    constr_index = j < nb[i]+ng[i] ? j : j-(nb[i]+ng[i]);
+                    slack_index = mem->qp_in->idxs_rev[i][constr_index];
+                    // if softened: add slack contribution
+                    if (slack_index >= 0)
+                    {
+                        slack_index_in_ux = j < (nb[i]+ng[i]) ? nx[i] + nu[i] + slack_index
+                                                              : nx[i] + nu[i] + slack_index + ns[i];
+                        slack_step = BLASFEO_DVECEL(mem->qp_out->ux, slack_index_in_ux);
+                        merit_grad_ineq -= weight * slack_step;
+                        // printf("at node %d, ineq %d, idxs_rev[%d] = %d\n", i, j, constr_index, slack_index);
+                        // printf("slack contribution: uxs[%d] = %e\n", slack_index_in_ux, slack_step);
+                    }
+
+
+                    // NOTE: the inequalities are internally organized in the following order:
+                    //     [ lbu lbx lg lh lphi ubu ubx ug uh uphi;
+                    //     lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
                     // printf("constraint %d %d is active with value %e", i, j, constraint_val);
                     if (j < nb[i])
                     {
