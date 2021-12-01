@@ -122,3 +122,6 @@ compile_commands.json
 private*
 sandbox
 _out*
+
+qp_in*.txt
+qp_out*.txt

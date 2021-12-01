@@ -283,7 +283,7 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
     printf("idxs_rev =\n");
     for (int ii = 0; ii <= N; ii++)
     {
-		int_print_mat(1, nb[ii]+ng[ii], qp_in->idxs_rev[ii], 1);
+        int_print_mat(1, nb[ii]+ng[ii], qp_in->idxs_rev[ii], 1);
     }
 
     printf("Z =\n");
@@ -398,6 +398,39 @@ void print_ocp_qp_out(ocp_qp_out *qp_out)
     }
 
 #endif
+#endif
+    return;
+}
+
+
+void print_ocp_qp_out_to_file(FILE *file, ocp_qp_out *qp_out)
+{
+#ifndef BLASFEO_EXT_DEP_OFF
+
+    int ii;
+
+    int N = qp_out->dim->N;
+    int *nx = qp_out->dim->nx;
+    int *nu = qp_out->dim->nu;
+    int *nb = qp_out->dim->nb;
+    int *ng = qp_out->dim->ng;
+    int *ns = qp_out->dim->ns;
+
+    fprintf(file, "ux =\n");
+    for (ii = 0; ii <= N; ii++)
+        blasfeo_print_to_file_tran_dvec(file, nu[ii] + nx[ii] + 2 * ns[ii], &qp_out->ux[ii], 0);
+
+    fprintf(file, "pi =\n");
+    for (ii = 0; ii < N; ii++) blasfeo_print_to_file_tran_dvec(file, nx[ii + 1], &qp_out->pi[ii], 0);
+
+    fprintf(file, "lam =\n");
+    for (ii = 0; ii <= N; ii++)
+        blasfeo_print_to_file_tran_dvec(file, 2 * nb[ii] + 2 * ng[ii] + 2 * ns[ii], &qp_out->lam[ii], 0);
+
+    fprintf(file, "t =\n");
+    for (ii = 0; ii <= N; ii++)
+        blasfeo_print_to_file_tran_dvec(file, 2 * nb[ii] + 2 * ng[ii] + 2 * ns[ii], &qp_out->t[ii], 0);
+
 #endif
     return;
 }
@@ -532,6 +565,108 @@ void print_ocp_qp_res(ocp_qp_res *qp_res)
 
     return;
 }
+
+
+static void int_print_mat_to_file(FILE *file, int row, int col, int *A, int lda)
+{
+    int i, j;
+    for(i=0; i<row; i++)
+    {
+        for(j=0; j<col; j++)
+        {
+            fprintf(file, "%d ", *(A+i+j*lda));
+        }
+        fprintf(file, "\n");
+    }
+    fprintf(file, "\n");
+}
+
+
+
+void print_ocp_qp_in_to_file(FILE *file, ocp_qp_in *qp_in)
+{
+#ifndef BLASFEO_EXT_DEP_OFF
+    int N = qp_in->dim->N;
+    int *nx = qp_in->dim->nx;
+    int *nu = qp_in->dim->nu;
+    int *nb = qp_in->dim->nb;
+    int *ng = qp_in->dim->ng;
+    int *ns = qp_in->dim->ns;
+
+    fprintf(file, "BAbt =\n");
+    for (int ii = 0; ii < N; ii++)
+    {
+        blasfeo_print_to_file_dmat(file, nu[ii] + nx[ii] + 1, nx[ii + 1], &qp_in->BAbt[ii], 0, 0);
+    }
+
+    fprintf(file, "b =\n");
+    for (int ii = 0; ii < N; ii++)
+    {
+        blasfeo_print_to_file_tran_dvec(file, nx[ii + 1], &qp_in->b[ii], 0);
+    }
+
+    fprintf(file, "RSQrq =\n");
+    for (int ii = 0; ii < N + 1; ii++)
+    {
+        blasfeo_print_to_file_dmat(file, nu[ii] + nx[ii] + 1, nu[ii] + nx[ii], &qp_in->RSQrq[ii], 0, 0);
+    }
+
+    fprintf(file, "rq =\n");
+    for (int ii = 0; ii < N + 1; ii++)
+    {
+        blasfeo_print_to_file_tran_dvec(file, nu[ii] + nx[ii], &qp_in->rqz[ii], 0);
+    }
+
+    fprintf(file, "d =\n");
+    for (int ii = 0; ii < N + 1; ii++)
+    {
+        blasfeo_print_to_file_tran_dvec(file, 2 * nb[ii] + 2 * ng[ii], &qp_in->d[ii], 0);
+    }
+
+    fprintf(file, "idxb =\n");
+    for (int ii = 0; ii < N + 1; ii++)
+    {
+        int_print_mat_to_file(file, 1, nb[ii], qp_in->idxb[ii], 1);
+    }
+
+    fprintf(file, "DCt =\n");
+    for (int ii = 0; ii < N + 1; ii++)
+    {
+        if (ng[ii] > 0)
+            blasfeo_print_to_file_dmat(file, nu[ii] + nx[ii], ng[ii], &qp_in->DCt[ii], 0, 0);
+    }
+
+    fprintf(file, "d_s =\n");
+    for (int ii = 0; ii <= N; ii++)
+    {
+        if (ns[ii] > 0)
+            blasfeo_print_to_file_tran_dvec(file, 2 * ns[ii], &qp_in->d[ii], 2 * nb[ii] + 2 * ng[ii]);
+    }
+
+    fprintf(file, "idxs_rev =\n");
+    for (int ii = 0; ii <= N; ii++)
+    {
+        int_print_mat_to_file(file, 1, nb[ii]+ng[ii], qp_in->idxs_rev[ii], 1);
+    }
+
+    fprintf(file, "Z =\n");
+    for (int ii = 0; ii <= N; ii++)
+    {
+        if (ns[ii] > 0)
+            blasfeo_print_to_file_tran_dvec(file, 2 * ns[ii], &qp_in->Z[ii], 0);
+    }
+    fprintf(file, "z =\n");
+    for (int ii = 0; ii <= N; ii++)
+    {
+        if (ns[ii] > 0)
+            blasfeo_print_to_file_tran_dvec(file, 2 * ns[ii], &qp_in->rqz[ii], nu[ii] + nx[ii]);
+    }
+
+#endif
+    return;
+}
+
+
 
 // void print_ocp_qp_in_to_string(char *string_out, ocp_qp_in *qp_in)
 // {
