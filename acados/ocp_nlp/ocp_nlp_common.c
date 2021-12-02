@@ -2852,7 +2852,7 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
         res->inf_norm_res_comp = tmp_res > res->inf_norm_res_comp ? tmp_res : res->inf_norm_res_comp;
     }
 
-    // printf("computed residuals g: %e, b: %e, d: %e, m: %e\n", res->inf_norm_res_stat, res->inf_norm_res_eq,
+    // printf("computed residuals stat: %e, eq: %e, ineq: %e, comp: %e\n", res->inf_norm_res_stat, res->inf_norm_res_eq,
     //        res->inf_norm_res_ineq, res->inf_norm_res_comp);
 }
 

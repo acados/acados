@@ -316,7 +316,7 @@ acados_size_t ocp_nlp_sqp_memory_calculate_size(void *config_, void *dims_, void
 
     // stat
     int stat_m = opts->max_iter+1;
-    int stat_n = 6;
+    int stat_n = 7;
     if (opts->ext_qp_res)
         stat_n += 4;
     size += stat_n*stat_m*sizeof(double);
@@ -364,7 +364,7 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
     // stat
     mem->stat = (double *) c_ptr;
     mem->stat_m = opts->max_iter+1;
-    mem->stat_n = 6;
+    mem->stat_n = 7;
     if (opts->ext_qp_res)
         mem->stat_n += 4;
     c_ptr += mem->stat_m*mem->stat_n*sizeof(double);
@@ -643,7 +643,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         {
             ocp_qp_res_compute(nlp_mem->qp_in, nlp_mem->qp_out, work->qp_res, work->qp_res_ws);
             if (sqp_iter+1 < mem->stat_m)
-                ocp_qp_res_compute_nrm_inf(work->qp_res, mem->stat+(mem->stat_n*(sqp_iter+1)+6));
+                ocp_qp_res_compute_nrm_inf(work->qp_res, mem->stat+(mem->stat_n*(sqp_iter+1)+7));
         }
 
         // exit conditions on QP status
@@ -685,6 +685,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // globalization
         acados_tic(&timer1);
         double alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+        mem->stat[mem->stat_n*(sqp_iter+1)+6] = alpha;
         mem->time_glob += acados_toc(&timer1);
 
         // update variables
