@@ -1040,6 +1040,7 @@ class AcadosOcpSolver:
             - res_comp: residual wrt complementarity conditions
             - qp_stat: status of QP solver
             - qp_iter: number of QP iterations
+            - alpha: SQP step size
             - qp_res_stat: stationarity residual of the last QP solution
             - qp_res_eq: residual wrt equality constraints (dynamics) of the last QP solution
             - qp_res_ineq: residual wrt inequality constraints (constraints)  of the last QP solution
@@ -1048,16 +1049,16 @@ class AcadosOcpSolver:
         stat = self.get_stats("statistics")
 
         if self.acados_ocp.solver_options.nlp_solver_type == 'SQP':
-            print('\niter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp_stat\tqp_iter')
-            if stat.shape[0]>7:
+            print('\niter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp_stat\tqp_iter\talpha')
+            if stat.shape[0]>8:
                 print('\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp')
             for jj in range(stat.shape[1]):
-                print('{:d}\t{:e}\t{:e}\t{:e}\t{:e}\t{:d}\t{:d}'.format( \
+                print('{:d}\t{:e}\t{:e}\t{:e}\t{:e}\t{:d}\t{:d}\t{:e}'.format( \
                      int(stat[0][jj]), stat[1][jj], stat[2][jj], \
-                     stat[3][jj], stat[4][jj], int(stat[5][jj]), int(stat[6][jj])))
-                if stat.shape[0]>7:
+                     stat[3][jj], stat[4][jj], int(stat[5][jj]), int(stat[6][jj]), stat[7][jj]))
+                if stat.shape[0]>8:
                     print('\t{:e}\t{:e}\t{:e}\t{:e}'.format( \
-                        stat[7][jj], stat[8][jj], stat[9][jj], stat[10][jj]))
+                        stat[8][jj], stat[9][jj], stat[10][jj], stat[11][jj]))
             print('\n')
         elif self.acados_ocp.solver_options.nlp_solver_type == 'SQP_RTI':
             print('\niter\tqp_stat\tqp_iter')

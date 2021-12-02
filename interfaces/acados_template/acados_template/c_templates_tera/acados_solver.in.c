@@ -2494,12 +2494,12 @@ void {{ model.name }}_acados_print_stats({{ model.name }}_solver_capsule * capsu
 
     int nrow = sqp_iter+1 < stat_m ? sqp_iter+1 : stat_m;
 
-    printf("iter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp_stat\tqp_iter\n");
+    printf("iter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp_stat\tqp_iter\talpha\n");
     for (int i = 0; i < nrow; i++)
     {
         for (int j = 0; j < stat_n + 1; j++)
         {
-            if (j == 0 || j > 4)
+            if (j == 0 || j == 5 || j == 6)
             {
                 tmp_int = (int) stat[i + j * nrow];
                 printf("%d\t", tmp_int);
