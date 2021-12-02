@@ -1109,6 +1109,7 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->alpha_reduction = 0.7;
     opts->full_step_dual = 0;
     opts->line_search_use_sufficient_descent = 0;
+    opts->glob_SOC = 0;
 
     return;
 }
@@ -1219,6 +1220,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         {
             int* line_search_use_sufficient_descent = (int *) value;
             opts->line_search_use_sufficient_descent = *line_search_use_sufficient_descent;
+        }
+        else if (!strcmp(field, "glob_SOC"))
+        {
+            int* glob_SOC = (int *) value;
+            opts->glob_SOC = *glob_SOC;
         }
         else if (!strcmp(field, "globalization"))
         {
