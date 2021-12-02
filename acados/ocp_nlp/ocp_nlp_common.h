@@ -275,6 +275,7 @@ typedef struct ocp_nlp_opts
     ocp_nlp_globalization_t globalization;
     int full_step_dual;
     int line_search_use_sufficient_descent;
+    int glob_SOC;
     double alpha_min;
     double alpha_reduction;
 } ocp_nlp_opts;
