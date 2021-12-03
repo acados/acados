@@ -2503,8 +2503,8 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
     int *ni = dims->ni;
 
     double alpha = opts->step_length;
-    double min_initial_weight = 1.0; // minimum initial weight of constraints in merit function
     double tmp0, tmp1;
+    ocp_qp_out *qp_out = mem->qp_out;
 
     // Line search version Jonathan
     // Following Leineweber1999, Section "3.5.1 Line Search Globalization"
@@ -2532,25 +2532,19 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
         if (mem->sqp_iter[0]==0)
         {
             // initialize weights
-            // equality merit weights = abs( eq multipliers )
+            // equality merit weights = abs( eq multipliers of qp_sol )
             for (i = 0; i < N; i++)
             {
                 for (j=0; j<nx[i+1]; j++)
                 {
-                    tmp0 = fabs(BLASFEO_DVECEL(out->pi+i, j));
-                    BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j) = tmp0 > min_initial_weight ? tmp0 : min_initial_weight;
+                    // tmp0 = fabs(BLASFEO_DVECEL(out->pi+i, j));
+                    tmp0 = fabs(BLASFEO_DVECEL(qp_out->pi+i, j));
                 }
             }
 
-            // printf("merit fun: initialize weights lam\n");
             for (i = 0; i <= N; i++)
             {
-                blasfeo_dveccp(2*ni[i], out->lam+i, 0, work->weight_merit_fun->lam+i, 0);
-                for (j=0; j<2*ni[i]; j++)
-                {
-                    tmp0 = BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j);
-                    BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j) = tmp0 > min_initial_weight ? tmp0 : min_initial_weight;
-                }
+                blasfeo_dveccp(2*ni[i], qp_out->lam+i, 0, work->weight_merit_fun->lam+i, 0);
             }
         }
         else
@@ -2565,7 +2559,7 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
                     tmp0 = fabs(BLASFEO_DVECEL(out->pi+i, j));
                     // .5 * (abs(lambda) + sigma)
                     tmp1 = 0.5 * (tmp0 + BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j));
-                    BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j) = tmp0>tmp1 ? tmp0 : tmp1;
+                    BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j) = tmp0 > tmp1 ? tmp0 : tmp1;
                 }
             }
             for (i = 0; i <= N; i++)
@@ -2624,10 +2618,10 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
             {
                 // tmp_nlp_out = out + alpha * qp_out
                 for (i = 0; i <= N; i++)
-                    blasfeo_daxpy(nv[i], alpha, mem->qp_out->ux+i, 0, out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
+                    blasfeo_daxpy(nv[i], alpha, qp_out->ux+i, 0, out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
 
-                // printf("\ntmp merit fun value step search iter: %d", j);
                 double merit_fun1 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
+                // printf("\nbacktracking %d, merit_fun1 = %e, merit_fun0 %e", j, merit_fun1, merit_fun0);
 
                 // if (merit_fun1 < merit_fun0)
                 // {
