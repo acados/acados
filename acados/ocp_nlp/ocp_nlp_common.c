@@ -2556,7 +2556,7 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
                 for(j=0; j<nx[i+1]; j++)
                 {
                     // abs(lambda) (LW)
-                    tmp0 = fabs(BLASFEO_DVECEL(out->pi+i, j));
+                    tmp0 = fabs(BLASFEO_DVECEL(qp_out->pi+i, j));
                     // .5 * (abs(lambda) + sigma)
                     tmp1 = 0.5 * (tmp0 + BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j));
                     BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j) = tmp0 > tmp1 ? tmp0 : tmp1;
@@ -2567,7 +2567,7 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
                 for(j=0; j<2*ni[i]; j++)
                 {
                     // mu (LW)
-                    tmp0 = BLASFEO_DVECEL(out->lam+i, j);
+                    tmp0 = BLASFEO_DVECEL(qp_out->lam+i, j);
                     // .5 * (mu + tau)
                     tmp1 = 0.5 * (tmp0 + BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j));
                     BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j) = tmp0>tmp1 ? tmp0 : tmp1;
