@@ -47,9 +47,9 @@
 
 #include "simstruc.h"
 
-{% if simulink_opts.samplingtime == "t0" -%}
+{% if simulink_opts.samplingtime == "t0" and dims.N > 0 -%}
 #define SAMPLINGTIME {{ solver_options.time_steps[0] }}
-{%- elif simulink_opts.samplingtime == "-1" -%}
+{%- elif simulink_opts.samplingtime == "-1" or dims.N == 0 -%}
 #define SAMPLINGTIME -1
 {%- else -%}
   {{ throw(message = "simulink_opts.samplingtime must be '-1' or 't0', got val") }}

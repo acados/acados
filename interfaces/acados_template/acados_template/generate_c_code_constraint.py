@@ -35,7 +35,7 @@ import os
 from casadi import *
 from .utils import ALLOWED_CASADI_VERSIONS, is_empty, casadi_length, casadi_version_warning
 
-def generate_c_code_constraint( model, con_name, is_terminal, opts ):
+def generate_c_code_constraint( model, con_name, is_terminal, opts, zero_N=False ):
 
     casadi_version = CasadiMeta.version()
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
@@ -55,12 +55,15 @@ def generate_c_code_constraint( model, con_name, is_terminal, opts ):
     if is_terminal:
         con_h_expr = model.con_h_expr_e
         con_phi_expr = model.con_phi_expr_e
+    else:
+        con_h_expr = model.con_h_expr
+        con_phi_expr = model.con_phi_expr
+
+    if not zero_N and is_terminal:
         # create dummy u, z
         u = symbol('u', 0, 0)
         z = symbol('z', 0, 0)
     else:
-        con_h_expr = model.con_h_expr
-        con_phi_expr = model.con_phi_expr
         u = model.u
         z = model.z
 
@@ -166,11 +169,8 @@ def generate_c_code_constraint( model, con_name, is_terminal, opts ):
             constraint_phi = \
                 Function(fun_name, [x, u, z, p], \
                     [con_phi_expr_x_u_z, \
-                    vertcat(transpose(phi_jac_u), \
-                    transpose(phi_jac_x)), \
-                    transpose(phi_jac_z), \
-                    hess, vertcat(transpose(r_jac_u), \
-                    transpose(r_jac_x))])
+                    vertcat(transpose(phi_jac_u), transpose(phi_jac_x)), transpose(phi_jac_z), \
+                            hess, vertcat(transpose(r_jac_u), transpose(r_jac_x))])
 
             constraint_phi.generate(fun_name, casadi_opts)
 

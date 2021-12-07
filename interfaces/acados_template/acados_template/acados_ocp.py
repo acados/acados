@@ -270,7 +270,7 @@ class AcadosOcpDims:
 
     @nx.setter
     def nx(self, nx):
-        if isinstance(nx, int) and nx > 0:
+        if isinstance(nx, int) and nx >= 0:
             self.__nx = nx
         else:
             raise Exception('Invalid nx value, expected positive integer. Exiting.')
@@ -487,7 +487,7 @@ class AcadosOcpDims:
 
     @N.setter
     def N(self, N):
-        if isinstance(N, int) and N > 0:
+        if isinstance(N, int) and N >= 0:
             self.__N = N
         else:
             raise Exception('Invalid N value, expected positive integer. Exiting.')

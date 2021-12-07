@@ -181,6 +181,13 @@ def make_ocp_dims_consistent(acados_ocp):
             raise Exception('inconsistent dimension: regarding W_e, yref_e.')
         dims.ny_e = ny_e
 
+    if dims.N == 0:
+        cost.cost_type_e = cost.cost_type
+        cost.cost_type_0 = cost.cost_type
+        constraints.constr_type_e = constraints.constr_type
+        model.con_h_expr_e = model.con_h_expr
+        constraints.lh_e = constraints.lh
+        constraints.uh_e = constraints.uh
 
     ## constraints
     # initial
@@ -424,32 +431,35 @@ def make_ocp_dims_consistent(acados_ocp):
     dims.ns_e = ns_e
 
     # discretization
-    if is_empty(opts.time_steps) and is_empty(opts.shooting_nodes):
-        # uniform discretization
-        opts.time_steps = opts.tf / dims.N * np.ones((dims.N,))
+    if dims.N != 0:
+        if is_empty(opts.time_steps) and is_empty(opts.shooting_nodes):
+            # uniform discretization
+            opts.time_steps = opts.tf / dims.N * np.ones((dims.N,))
 
-    elif not is_empty(opts.shooting_nodes):
-        if np.shape(opts.shooting_nodes)[0] != dims.N+1:
-            raise Exception('inconsistent dimension N, regarding shooting_nodes.')
+        elif not is_empty(opts.shooting_nodes):
+            if np.shape(opts.shooting_nodes)[0] != dims.N+1:
+                raise Exception('inconsistent dimension N, regarding shooting_nodes.')
 
-        time_steps = opts.shooting_nodes[1:] - opts.shooting_nodes[0:-1]
-        # identify constant time-steps: due to numerical reasons the content of time_steps might vary a bit
-        delta_time_steps = time_steps[1:] - time_steps[0:-1]
-        avg_time_steps = np.average(time_steps)
-        # criterion for constant time-step detection: the min/max difference in values normalized by the average
-        check_const_time_step = np.max(delta_time_steps)-np.min(delta_time_steps) / avg_time_steps
-        # if the criterion is small, we have a constant time-step
-        if check_const_time_step < 1e-9:
-            time_steps[:] = avg_time_steps  # if we have a constant time-step: apply the average time-step
-        opts.time_steps = time_steps
+            time_steps = opts.shooting_nodes[1:] - opts.shooting_nodes[0:-1]
+            # identify constant time-steps: due to numerical reasons the content of time_steps might vary a bit
+            delta_time_steps = time_steps[1:] - time_steps[0:-1]
+            avg_time_steps = np.average(time_steps)
+            # criterion for constant time-step detection: the min/max difference in values normalized by the average
+            check_const_time_step = np.max(delta_time_steps)-np.min(delta_time_steps) / avg_time_steps
+            # if the criterion is small, we have a constant time-step
+            if check_const_time_step < 1e-9:
+                time_steps[:] = avg_time_steps  # if we have a constant time-step: apply the average time-step
+            opts.time_steps = time_steps
 
-    elif (not is_empty(opts.time_steps)) and (not is_empty(opts.shooting_nodes)):
-        Exception('Please provide either time_steps or shooting_nodes for nonuniform discretization')
+        elif (not is_empty(opts.time_steps)) and (not is_empty(opts.shooting_nodes)):
+            Exception('Please provide either time_steps or shooting_nodes for nonuniform discretization')
 
-    tf = np.sum(opts.time_steps)
-    if (tf - opts.tf) / tf > 1e-15:
-        raise Exception(f'Inconsistent discretization: {opts.tf}'\
-            f' = tf != sum(opts.time_steps) = {tf}.')
+        tf = np.sum(opts.time_steps)
+        if (tf - opts.tf) / tf > 1e-15:
+            raise Exception(f'Inconsistent discretization: {opts.tf}'\
+                f' = tf != sum(opts.time_steps) = {tf}.')
+    else:
+        opts.time_steps = np.array([])
 
     # num_steps
     if isinstance(opts.sim_method_num_steps, np.ndarray) and opts.sim_method_num_steps.size == 1:
@@ -571,26 +581,31 @@ def ocp_generate_external_functions(acados_ocp, model):
         raise Exception("ocp_generate_external_functions: dyn_ext_fun_type only supports 'casadi' for now.\
             Extending the Python interface with generic function support is welcome.")
 
-    if acados_ocp.solver_options.integrator_type == 'ERK':
-        # explicit model -- generate C code
-        generate_c_code_explicit_ode(model, opts)
-    elif acados_ocp.solver_options.integrator_type == 'IRK':
-        # implicit model -- generate C code
-        generate_c_code_implicit_ode(model, opts)
-    elif acados_ocp.solver_options.integrator_type == 'LIFTED_IRK':
-        generate_c_code_implicit_ode(model, opts)
-    elif acados_ocp.solver_options.integrator_type == 'GNSF':
-        generate_c_code_gnsf(model, opts)
-    elif acados_ocp.solver_options.integrator_type == 'DISCRETE':
-        generate_c_code_discrete_dynamics(model, opts)
+    if acados_ocp.dims.N > 0:
+        if acados_ocp.solver_options.integrator_type == 'ERK':
+            # explicit model -- generate C code
+            generate_c_code_explicit_ode(model, opts)
+        elif acados_ocp.solver_options.integrator_type == 'IRK':
+            # implicit model -- generate C code
+            generate_c_code_implicit_ode(model, opts)
+        elif acados_ocp.solver_options.integrator_type == 'LIFTED_IRK':
+            generate_c_code_implicit_ode(model, opts)
+        elif acados_ocp.solver_options.integrator_type == 'GNSF':
+            generate_c_code_gnsf(model, opts)
+        elif acados_ocp.solver_options.integrator_type == 'DISCRETE':
+            generate_c_code_discrete_dynamics(model, opts)
+        else:
+            raise Exception("ocp_generate_external_functions: unknown integrator type.")
+
+    if acados_ocp.dims.N > 0:
+        if acados_ocp.dims.nphi > 0 or acados_ocp.dims.nh > 0:
+            generate_c_code_constraint(model, model.name, False, opts)
+
+        if acados_ocp.dims.nphi_e > 0 or acados_ocp.dims.nh_e > 0:
+            generate_c_code_constraint(model, model.name, True, opts)
     else:
-        raise Exception("ocp_generate_external_functions: unknown integrator type.")
-
-    if acados_ocp.dims.nphi > 0 or acados_ocp.dims.nh > 0:
-        generate_c_code_constraint(model, model.name, False, opts)
-
-    if acados_ocp.dims.nphi_e > 0 or acados_ocp.dims.nh_e > 0:
-        generate_c_code_constraint(model, model.name, True, opts)
+        if acados_ocp.dims.nphi > 0 or acados_ocp.dims.nh > 0:
+            generate_c_code_constraint(model, model.name, True, opts, zero_N=True)
 
     # dummy matrices
     if not acados_ocp.cost.cost_type_0 == 'LINEAR_LS':
@@ -612,10 +627,11 @@ def ocp_generate_external_functions(acados_ocp, model):
     elif acados_ocp.cost.cost_type == 'EXTERNAL':
         generate_c_code_external_cost(model, 'path', opts)
 
-    if acados_ocp.cost.cost_type_e == 'NONLINEAR_LS':
-        generate_c_code_nls_cost(model, model.name, 'terminal', opts)
-    elif acados_ocp.cost.cost_type_e == 'EXTERNAL':
-        generate_c_code_external_cost(model, 'terminal', opts)
+    if acados_ocp.dims.N > 0:
+        if acados_ocp.cost.cost_type_e == 'NONLINEAR_LS':
+            generate_c_code_nls_cost(model, model.name, 'terminal', opts)
+        elif acados_ocp.cost.cost_type_e == 'EXTERNAL':
+            generate_c_code_external_cost(model, 'terminal', opts)
 
 
 def ocp_render_templates(acados_ocp, json_file):
@@ -789,7 +805,10 @@ class AcadosOcpSolver:
             remove_x0_elimination(acados_ocp)
 
         # set integrator time automatically
-        acados_ocp.solver_options.Tsim = acados_ocp.solver_options.time_steps[0]
+        if len(acados_ocp.solver_options.time_steps) > 0:
+            acados_ocp.solver_options.Tsim = acados_ocp.solver_options.time_steps[0]
+        else:
+            acados_ocp.solver_options.Tsim = 1.0
 
         # generate external functions
         ocp_generate_external_functions(acados_ocp, model)

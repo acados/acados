@@ -274,7 +274,7 @@ int {{ model.name }}_acados_sim_create(sim_solver_capsule * capsule)
     tmp_bool = {{ solver_options.output_z }};
     sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "output_z", &tmp_bool);
 
-{% else %} {# num_stages and num_steps of first shooting interval are used #}
+{% elif dims.N > 0 %} {# num_stages and num_steps of first shooting interval are used #}
     tmp_int = {{ solver_options.sim_method_num_stages[0] }};
     sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "num_stages", &tmp_int);
     tmp_int = {{ solver_options.sim_method_num_steps[0] }};
