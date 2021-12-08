@@ -1130,7 +1130,7 @@ class AcadosOcpSolver:
         """
         Get the information of the last solver call.
 
-            :param field: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg', 'sqp_iter', 'residuals']
+            :param field: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg', 'sqp_iter', 'residuals', 'qp_iter', 'alpha']
         """
 
         fields = ['time_tot',  # total cpu time previous call
@@ -1150,6 +1150,7 @@ class AcadosOcpSolver:
                   'stat_m',
                   'stat_n',
                   'residuals',
+                  'alpha',
                 ]
 
         field = field_
@@ -1180,6 +1181,13 @@ class AcadosOcpSolver:
             elif self.acados_ocp.solver_options.nlp_solver_type == 'SQP_RTI':
                 out = full_stats[2, :]
 
+        elif field_ == 'alpha':
+            full_stats = self.get_stats('statistics')
+            if self.acados_ocp.solver_options.nlp_solver_type == 'SQP':
+                out = full_stats[7, :]
+            else: # self.acados_ocp.solver_options.nlp_solver_type == 'SQP_RTI':
+                raise Exception("alpha values are not available for SQP_RTI")
+
         elif field_ == 'residuals':
             if self.acados_ocp.solver_options.nlp_solver_type == 'SQP':
                 full_stats = self.get_stats('statistics')
@@ -1188,14 +1196,13 @@ class AcadosOcpSolver:
                 else: # when exiting with max_iter, residuals are computed for second last iterate only
                     out = (full_stats.T)[-2][1:5]
             else:
-                Exception("residuals are not computed for SQP_RTI")
-
+                raise Exception("residuals are not computed for SQP_RTI")
 
         else:
             out = np.ascontiguousarray(np.zeros((1,)), dtype=np.float64)
             out_data = cast(out.ctypes.data, POINTER(c_double))
 
-        if not field_ in ['qp_iter', 'residuals']:
+        if not field_ in ['qp_iter', 'residuals', 'alpha']:
             self.shared_lib.ocp_nlp_get.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
             self.shared_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
 
