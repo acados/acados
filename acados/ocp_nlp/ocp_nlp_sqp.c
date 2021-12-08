@@ -498,6 +498,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     int N = dims->N;
     int ii, qp_iter, qp_status;
+    double alpha;
 
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
@@ -697,7 +698,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             if (opts->print_level > 1)
             {
                 printf("\n Failed to solve the following QP:\n");
-                if (opts->print_level > sqp_iter + 1)
+                if (opts->print_level)
                     print_ocp_qp_in(nlp_mem->qp_in);
             }
 
@@ -708,9 +709,17 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             return mem->status;
         }
 
-        if (opts->nlp_opts->glob_SOC && opts->nlp_opts->globalization == MERIT_BACKTRACKING)
+        alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_opts->alpha_reduction - 1e-6, 0);
+
+        if (opts->nlp_opts->glob_SOC && opts->nlp_opts->globalization == MERIT_BACKTRACKING && alpha != 1.0)
         {
-            printf("ocp_nlp_sqp: performing SOC\n\n");
+            // NOTE: following Waechter2006:
+            // Do SOC
+            // 1.if "the first trial step size alpha_k,0 has been rejected and
+            // 2. if the infeasibility would have increased when accepting the previous step
+            // TODO: implement 2.
+
+            printf("ocp_nlp_sqp: performing SOC, since alpha %e in prelim. line search\n\n", alpha);
             ocp_qp_in *qp_in = nlp_mem->qp_in;
             int *nb = qp_in->dim->nb;
             int *ng = qp_in->dim->ng;
@@ -796,6 +805,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 // d[nb:nb+ng] += slack[idx?]
                 // qp_in->idxs_rev
 
+                // printf("SOC: qp_in->d final value\n");
+                // blasfeo_print_exp_dvec(2*nb[ii]+2*ng[ii], qp_in->d+ii, 0);
                 // // slack inequalities!
                 // blasfeo_daxpy(2*ns[ii], -1.0, nlp_mem->qp_out->ux+ii, nx[ii]+nu[ii], qp_in->d+ii, 2*nb[ii]+2*ng[ii], qp_in->d+ii, 2*nb[ii]+2*ng[ii]);
             }
@@ -889,12 +900,13 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
                 return mem->status;
             }
-
         }
 
         // globalization
         acados_tic(&timer1);
-        double alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+        // alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+        alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_opts->alpha_min, nlp_opts->line_search_use_sufficient_descent);
+
         mem->stat[mem->stat_n*(sqp_iter+1)+6] = alpha;
         mem->time_glob += acados_toc(&timer1);
 

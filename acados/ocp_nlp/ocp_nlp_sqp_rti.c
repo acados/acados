@@ -667,7 +667,7 @@ void ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
 
     // globalization
     acados_tic(&timer1);
-    double alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+    double alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_opts->alpha_min, nlp_opts->line_search_use_sufficient_descent);
     mem->time_glob += acados_toc(&timer1);
 
     // update variables

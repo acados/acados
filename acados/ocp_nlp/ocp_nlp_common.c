@@ -2485,7 +2485,7 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
     merit_fun = cost_fun + dyn_fun + constr_fun;
 
-	// printf("\nMerit fun: %e cost: %e dyn: %e constr: %e\n", merit_fun, cost_fun, dyn_fun, constr_fun);
+	// printf("Merit fun: %e cost: %e dyn: %e constr: %e\n", merit_fun, cost_fun, dyn_fun, constr_fun);
 
     return merit_fun;
 }
@@ -2493,7 +2493,8 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
 
 double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
-            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
+            double alpha_min, int use_sufficient_descent)
 {
     int i, j;
 
@@ -2579,7 +2580,6 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
         {
             double merit_fun0 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
 
-            double alpha_min = opts->alpha_min;
             double reduction_factor = opts->alpha_reduction;
             double max_next_merit_fun_val = merit_fun0;
             double eps_merit = 1e-4; // Leineweber1999: MUSCOD-II eps_T = 1e-4 (p.89); Note: eps_T = 0.1 originally proposed by Powell 1978 (Leineweber 1999, p. 53)
@@ -2587,7 +2587,7 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
 
             /* actual Line Search*/
             alpha = 1.0;
-            if (opts->line_search_use_sufficient_descent)
+            if (use_sufficient_descent)
             {
                 // check Armijo-type sufficient descent condition Leinweber1999 (2.35);
                 double dmerit_dy = ocp_nlp_compute_merit_gradient(config, dims, in, out, opts, mem, work);
