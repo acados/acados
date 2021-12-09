@@ -1130,22 +1130,41 @@ class AcadosOcpSolver:
         Get the information of the last solver call.
 
             :param field: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg', 'sqp_iter', 'residuals', 'qp_iter', 'alpha']
+
+        Available fileds:
+            - time_tot: total CPU time previous call
+            - time_lin: CPU time for linearization
+            - time_sim: CPU time for integrator
+            - time_sim_ad: CPU time for integrator contribution of external function calls
+            - time_sim_la: CPU time for integrator contribution of linear algebra
+            - time_qp: CPU time qp solution
+            - time_qp_solver_call: CPU time inside qp solver (without converting the QP)
+            - time_qp_xcond: time_glob: CPU time globalization
+            - time_solution_sensitivities: CPU time for previous call to eval_param_sens
+            - time_reg: CPU time regularization
+            - sqp_iter: number of SQP iterations
+            - qp_iter: vector of QP iterations for last SQP call
+            - statistics: table with info about last iteration
+            - stat_m: number of rows in statistics matrix
+            - stat_n: number of columns in statistics matrix
+            - residuals: residuals of last iterate
+            - alpha: step sizes of SQP iterations
         """
 
-        fields = ['time_tot',  # total cpu time previous call
-                  'time_lin',  # cpu time for linearization
-                  'time_sim',  # cpu time for integrator
-                  'time_sim_ad',  # cpu time for integrator contribution of external function calls
-                  'time_sim_la',  # cpu time for integrator contribution of linear algebra
-                  'time_qp',   # cpu time qp solution
-                  'time_qp_solver_call',  # cpu time inside qp solver (without converting the QP)
+        fields = ['time_tot',
+                  'time_lin',
+                  'time_sim',
+                  'time_sim_ad',
+                  'time_sim_la',
+                  'time_qp',
+                  'time_qp_solver_call',
                   'time_qp_xcond',
-                  'time_glob',  # cpu time globalization
-                  'time_solution_sensitivities',  # cpu time for previous call to eval_param_sens
-                  'time_reg',  # cpu time regularization
-                  'sqp_iter',  # number of SQP iterations
-                  'qp_iter',  # vector of QP iterations for last SQP call
-                  'statistics',  # table with info about last iteration
+                  'time_glob',
+                  'time_solution_sensitivities',
+                  'time_reg',
+                  'sqp_iter',
+                  'qp_iter',
+                  'statistics',
                   'stat_m',
                   'stat_n',
                   'residuals',
