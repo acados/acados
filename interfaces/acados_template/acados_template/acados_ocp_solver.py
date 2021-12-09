@@ -1053,9 +1053,8 @@ class AcadosOcpSolver:
             if stat.shape[0]>8:
                 print('\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp')
             for jj in range(stat.shape[1]):
-                print('{:d}\t{:e}\t{:e}\t{:e}\t{:e}\t{:d}\t{:d}\t{:e}'.format( \
-                     int(stat[0][jj]), stat[1][jj], stat[2][jj], \
-                     stat[3][jj], stat[4][jj], int(stat[5][jj]), int(stat[6][jj]), stat[7][jj]))
+                print(f'{int(stat[0][jj]):d}\t{stat[1][jj]:e}\t{stat[2][jj]:e}\t{stat[3][jj]:e}\t' +
+                      f'{stat[4][jj]:e}\t{int(stat[5][jj]):d}\t{int(stat[6][jj]):d}\t{stat[7][jj]:e}\t')
                 if stat.shape[0]>8:
                     print('\t{:e}\t{:e}\t{:e}\t{:e}'.format( \
                         stat[8][jj], stat[9][jj], stat[10][jj], stat[11][jj]))
