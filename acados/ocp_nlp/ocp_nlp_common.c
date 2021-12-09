@@ -2396,6 +2396,46 @@ double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims
 }
 
 
+
+static double ocp_nlp_get_violation(ocp_nlp_config *config, ocp_nlp_dims *dims,
+                                  ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
+                                  ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+{
+    // computes constraint violation infinity norm
+    // assumes constraint functions are evaluated before, e.g. done in ocp_nlp_evaluate_merit_fun
+    int i, j;
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *ni = dims->ni;
+    struct blasfeo_dvec *tmp_fun_vec;
+    double violation = 0.0;
+    double tmp;
+    for (i=0; i<N; i++)
+    {
+        tmp_fun_vec = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
+        for (j=0; j<nx[i+1]; j++)
+        {
+            tmp = fabs(BLASFEO_DVECEL(tmp_fun_vec, j));
+            violation = tmp > violation ? tmp : violation;
+        }
+    }
+
+    for (i=0; i<=N; i++)
+    {
+        tmp_fun_vec = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
+        for (j=0; j<2*ni[i]; j++)
+        {
+            // Note constraint violation corresponds to > 0
+            tmp = BLASFEO_DVECEL(tmp_fun_vec, j);
+            violation = tmp > violation ? tmp : violation;
+        }
+    }
+
+    return violation;
+}
+
+
+
 double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
                                   ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
                                   ocp_nlp_memory *mem, ocp_nlp_workspace *work)
@@ -2494,7 +2534,7 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
 double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
-            double alpha_min, int use_sufficient_descent)
+            int check_early_termination)
 {
     int i, j;
 
@@ -2504,7 +2544,7 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
     int *ni = dims->ni;
 
     double alpha = opts->step_length;
-    double tmp0, tmp1;
+    double tmp0, tmp1, merit_fun1;
     ocp_qp_out *qp_out = mem->qp_out;
 
     // Line search version Jonathan
@@ -2584,10 +2624,35 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
             double max_next_merit_fun_val = merit_fun0;
             double eps_merit = 1e-4; // Leineweber1999: MUSCOD-II eps_T = 1e-4 (p.89); Note: eps_T = 0.1 originally proposed by Powell 1978 (Leineweber 1999, p. 53)
             double dmerit_dy = 0.0;
+            alpha = 1.0;
+
+            // to avoid armijo evaluation and loop when checking if SOC should be done
+            if (check_early_termination)
+            {
+                // TODO(oj): should the merit weight update be undone in case of early termination?
+                double violation_current = ocp_nlp_get_violation(config, dims, in, out, opts, mem, work);
+
+                // tmp_nlp_out = out + alpha * qp_out
+                for (i = 0; i <= N; i++)
+                    blasfeo_daxpy(nv[i], alpha, qp_out->ux+i, 0, out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
+                merit_fun1 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
+
+                double violation_step = ocp_nlp_get_violation(config, dims, in, out, opts, mem, work);
+                printf("preliminary line_search: merit0 %e, merit1 %e; viol_current %e, viol_step %e\n", merit_fun0, merit_fun1, violation_current, violation_step);
+
+                if (merit_fun1 > merit_fun0 || violation_step > violation_current)
+                {
+                    return reduction_factor * reduction_factor;
+                }
+                else
+                {
+                    // TODO: check armijo in this case?
+                    return alpha;
+                }
+            }
 
             /* actual Line Search*/
-            alpha = 1.0;
-            if (use_sufficient_descent)
+            if (opts->line_search_use_sufficient_descent)
             {
                 // check Armijo-type sufficient descent condition Leinweber1999 (2.35);
                 double dmerit_dy = ocp_nlp_compute_merit_gradient(config, dims, in, out, opts, mem, work);
@@ -2614,13 +2679,13 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
             //     break;
             // }
 
-            for (j=0; alpha*reduction_factor > alpha_min; j++)
+            for (j=0; alpha*reduction_factor > opts->alpha_min; j++)
             {
                 // tmp_nlp_out = out + alpha * qp_out
                 for (i = 0; i <= N; i++)
                     blasfeo_daxpy(nv[i], alpha, qp_out->ux+i, 0, out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
 
-                double merit_fun1 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
+                merit_fun1 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
                 // printf("\nbacktracking %d, merit_fun1 = %e, merit_fun0 %e", j, merit_fun1, merit_fun0);
 
                 // if (merit_fun1 < merit_fun0)
@@ -2639,7 +2704,6 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
                 }
             }
         }
-        printf("\nalpha %f\n", alpha);
     }
 
     return alpha;
