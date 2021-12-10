@@ -79,7 +79,7 @@ def solve_marathos_problem_with_setting(setting):
     model.x = x
     model.u = SX.sym('u', 0, 0) # [] / None doesnt work
     model.p = []
-    model.name = f'marthos_problem'
+    model.name = f'marathos_problem'
     ocp.model = model
 
     # discretization
