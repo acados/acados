@@ -712,6 +712,10 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             return mem->status;
         }
 
+        /* globalization */
+        // NOTE on timings: currently all within globalization is accounted for within time_glob.
+        //   QP solver times could be also attributed there alternatively. Cleanest would be to save them seperately.
+        acados_tic(&timer1);
         bool do_line_search = true;
         if (opts->nlp_opts->glob_SOC && opts->nlp_opts->globalization == MERIT_BACKTRACKING)
         {
@@ -844,21 +848,21 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 }
 
                 // solve QP
-                acados_tic(&timer1);
+                // acados_tic(&timer1);
                 qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver, qp_in, qp_out,
                                                 opts->nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
-                mem->time_qp_sol += acados_toc(&timer1);
-
-                qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);
-                mem->time_qp_solver_call += tmp_time;
-                qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_xcond", &tmp_time);
-                mem->time_qp_xcond += tmp_time;
+                // tmp_time = acados_toc(&timer1);
+                // mem->time_qp_sol += tmp_time;
+                // qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);
+                // mem->time_qp_solver_call += tmp_time;
+                // qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_xcond", &tmp_time);
+                // mem->time_qp_xcond += tmp_time;
 
                 // compute correct dual solution in case of Hessian regularization
-                acados_tic(&timer1);
+                // acados_tic(&timer1);
                 config->regularize->correct_dual_sol(config->regularize, dims->regularize,
                                                     opts->nlp_opts->regularize, nlp_mem->regularize_mem);
-                mem->time_reg += acados_toc(&timer1);
+                // mem->time_reg += acados_toc(&timer1);
 
                 ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
                 qp_iter = qp_info_->num_iter;
@@ -868,7 +872,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 if (sqp_iter+1 < mem->stat_m)
                 {
                     // mem->stat[mem->stat_n*(sqp_iter+1)+4] = qp_status;
-                    // add qp_iter
+                    // add qp_iter; should maybe be in a seperate statistic
                     mem->stat[mem->stat_n*(sqp_iter+1)+5] += qp_iter;
                 }
 
@@ -928,11 +932,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         if (do_line_search)
         {
-            // globalization
-            acados_tic(&timer1);
             alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0);
-            mem->time_glob += acados_toc(&timer1);
         }
+        mem->time_glob += acados_toc(&timer1);
         mem->stat[mem->stat_n*(sqp_iter+1)+6] = alpha;
 
         // update variables
