@@ -729,11 +729,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 ocp_qp_in *qp_in = nlp_mem->qp_in;
                 int *nb = qp_in->dim->nb;
                 int *ng = qp_in->dim->ng;
-                int *nv = dims->nv;
                 int *nx = dims->nx;
                 int *nu = dims->nu;
-                int *ni = dims->ni;
-                int *ns = dims->ns;
+
                 /* evaluate constraints & dynamics at new step */
                 // The following (setting up ux + p in tmp_nlp_out and evaluation of constraints + dynamics)
                 // is not needed anymore because done in prelim. line search with early termination)
@@ -900,12 +898,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
                     return mem->status;
                 }
-
-                // line search with SOC step
-                acados_tic(&timer1);
-                alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0);
-                mem->stat[mem->stat_n*(sqp_iter+1)+6] = alpha;
-                mem->time_glob += acados_toc(&timer1);
             } // if alpha prelim. line search < 1.0
             else
             {
@@ -918,9 +910,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // globalization
             acados_tic(&timer1);
             alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0);
-            mem->stat[mem->stat_n*(sqp_iter+1)+6] = alpha;
             mem->time_glob += acados_toc(&timer1);
         }
+        mem->stat[mem->stat_n*(sqp_iter+1)+6] = alpha;
 
         // update variables
         ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, alpha);
