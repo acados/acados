@@ -203,7 +203,7 @@ def solve_marathos_problem_with_setting(setting):
                 raise Exception(f"Expected max_infeasibility > 5.0 when using full step SQP on Marathos problem")
             if iter != 10:
                 raise Exception(f"Expected 10 SQP iterations when using full step SQP on Marathos problem, got {iter}")
-            if any(alphas != 1.0):
+            if any(alphas[:iter] != 1.0):
                 raise Exception(f"Expected all alphas = 1.0 when using full step SQP on Marathos problem")
         elif globalization == 'MERIT_BACKTRACKING':
             if max_infeasibility > 0.5:
@@ -212,8 +212,8 @@ def solve_marathos_problem_with_setting(setting):
                 if FOR_LOOPING and iter != 57:
                     raise Exception(f"Expected 57 SQP iterations when using globalized SQP without SOC on Marathos problem, got {iter}")
             else:
-                if iter != 13:
-                    raise Exception(f"Expected 13 SQP iterations when using globalized SQP with SOC on Marathos problem, got {iter}")
+                if iter != 12:
+                    raise Exception(f"Expected 12 SQP iterations when using globalized SQP with SOC on Marathos problem, got {iter}")
     except Exception as inst:
         if FOR_LOOPING and globalization == "MERIT_BACKTRACKING":
             print("\nAcados globalized OCP solver behaves different when for looping due to different merit function weights.",
