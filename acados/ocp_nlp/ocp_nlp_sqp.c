@@ -484,6 +484,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     ocp_nlp_sqp_cast_workspace(config, dims, opts, mem, work);
     ocp_nlp_workspace *nlp_work = work->nlp_work;
 
+    ocp_qp_in *qp_in = nlp_mem->qp_in;
+    ocp_qp_out *qp_out = nlp_mem->qp_out;
+
     // zero timers
     double tmp_time;
     mem->time_qp_sol = 0.0;
@@ -555,7 +558,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         if (opts->print_level > sqp_iter + 1)
         {
             printf("\n\nSQP: ocp_qp_in at iteration %d\n", sqp_iter);
-            print_ocp_qp_in(nlp_mem->qp_in);
+            print_ocp_qp_in(qp_in);
         }
 
         // save statistics
@@ -611,12 +614,12 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             char filename[100];
             sprintf(filename, "qp_prints/qp_in_%d.txt", sqp_iter);
             FILE *out_file = fopen(filename, "w");
-            print_ocp_qp_in_to_file(out_file, nlp_mem->qp_in);
+            print_ocp_qp_in_to_file(out_file, qp_in);
             fclose(out_file);
         }
         // solve qp
         acados_tic(&timer1);
-        qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver, nlp_mem->qp_in, nlp_mem->qp_out,
+        qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver, qp_in, qp_out,
                                         opts->nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
         mem->time_qp_sol += acados_toc(&timer1);
 
@@ -641,7 +644,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         if (opts->print_level > sqp_iter + 1)
         {
             printf("\n\nSQP: ocp_qp_out at iteration %d\n", sqp_iter);
-            print_ocp_qp_out(nlp_mem->qp_out);
+            print_ocp_qp_out(qp_out);
         }
 
         if (0) // DEBUG printing
@@ -649,13 +652,13 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             char filename[100];
             sprintf(filename, "qp_prints/qp_out_%d.txt", sqp_iter);
             FILE *out_file = fopen(filename, "w");
-            print_ocp_qp_out_to_file(out_file, nlp_mem->qp_out);
+            print_ocp_qp_out_to_file(out_file, qp_out);
             fclose(out_file);
         }
 
         // TODO move into QP solver memory ???
         qp_info *qp_info_;
-        ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
+        ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
         qp_iter = qp_info_->num_iter;
 
         // save statistics of last qp solver call
@@ -668,7 +671,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // compute external QP residuals (for debugging)
         if (opts->ext_qp_res)
         {
-            ocp_qp_res_compute(nlp_mem->qp_in, nlp_mem->qp_out, work->qp_res, work->qp_res_ws);
+            ocp_qp_res_compute(qp_in, qp_out, work->qp_res, work->qp_res_ws);
             if (sqp_iter+1 < mem->stat_m)
                 ocp_qp_res_compute_nrm_inf(work->qp_res, mem->stat+(mem->stat_n*(sqp_iter+1)+7));
         }
@@ -699,7 +702,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             {
                 printf("\n Failed to solve the following QP:\n");
                 if (opts->print_level)
-                    print_ocp_qp_in(nlp_mem->qp_in);
+                    print_ocp_qp_in(qp_in);
             }
 
             mem->status = ACADOS_QP_FAILURE;
@@ -726,7 +729,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 //   - just no trust region radius here.
                 if (opts->print_level > 0)
                     printf("ocp_nlp_sqp: performing SOC, since alpha %e in prelim. line search\n\n", alpha);
-                ocp_qp_in *qp_in = nlp_mem->qp_in;
                 int *nb = qp_in->dim->nb;
                 int *ng = qp_in->dim->ng;
                 int *nx = dims->nx;
@@ -746,7 +748,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
                 // // tmp_nlp_out = iterate + step
                 // for (ii = 0; ii <= N; ii++)
-                //     blasfeo_daxpy(nv[ii], 1.0, nlp_mem->qp_out->ux+ii, 0, nlp_out->ux+ii, 0, work->nlp_work->tmp_nlp_out->ux+ii, 0);
+                //     blasfeo_daxpy(nv[ii], 1.0, qp_out->ux+ii, 0, nlp_out->ux+ii, 0, work->nlp_work->tmp_nlp_out->ux+ii, 0);
 
     //             // evaluate
     // #if defined(ACADOS_WITH_OPENMP)
@@ -780,8 +782,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                         // b -- dynamics
                         tmp_fun_vec = config->dynamics[ii]->memory_get_fun_ptr(nlp_mem->dynamics[ii]);
                         // add - \nabla c_i(x_k)^T * p_k
-                        blasfeo_dgemv_t(nx[ii]+nu[ii], nx[ii], -1.0, qp_in->BAbt+ii, 0, 0, nlp_mem->qp_out->ux+ii, 0, 1.0, tmp_fun_vec, 0, qp_in->b+ii, 0);
-                        blasfeo_dvecad(nx[ii+1], 1.0, nlp_mem->qp_out->ux+ii+1, nu[ii+1], qp_in->b+ii, 0);
+                        blasfeo_dgemv_t(nx[ii]+nu[ii], nx[ii], -1.0, qp_in->BAbt+ii, 0, 0,
+                                        qp_out->ux+ii, 0, 1.0, tmp_fun_vec, 0, qp_in->b+ii, 0);
+                        blasfeo_dvecad(nx[ii+1], 1.0, qp_out->ux+ii+1, nu[ii+1], qp_in->b+ii, 0);
                     }
 
                     /* INEQUALITIES */
@@ -795,9 +798,11 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                     blasfeo_dveccp(ng[ii], tmp_fun_vec, 2*nb[ii]+ng[ii], qp_in->d+ii, 2*nb[ii]+ng[ii]); // ug
                     // general linear / linearized!
                     // d[nb:nb+ng] += D * u + C * x (lower)
-                    blasfeo_dgemv_t(nu[ii]+nx[ii], ng[ii], 1.0, qp_in->DCt+ii, 0, 0, nlp_mem->qp_out->ux+ii, 0, 1.0, qp_in->d+ii, nb[ii], qp_in->d+ii, nb[ii]);
+                    blasfeo_dgemv_t(nu[ii]+nx[ii], ng[ii], 1.0, qp_in->DCt+ii, 0, 0, qp_out->ux+ii, 0,
+                                    1.0, qp_in->d+ii, nb[ii], qp_in->d+ii, nb[ii]);
                     // d[nb:nb+ng] += D * u + C * x // TODO: check sign here!!
-                    blasfeo_dgemv_t(nu[ii]+nx[ii], ng[ii], -1.0, qp_in->DCt+ii, 0, 0, nlp_mem->qp_out->ux+ii, 0, 1.0, qp_in->d+ii, 2*nb[ii]+ng[ii], qp_in->d+ii, 2*nb[ii]+ng[ii]);
+                    blasfeo_dgemv_t(nu[ii]+nx[ii], ng[ii], -1.0, qp_in->DCt+ii, 0, 0, qp_out->ux+ii, 0,
+                                    1.0, qp_in->d+ii, 2*nb[ii]+ng[ii], qp_in->d+ii, 2*nb[ii]+ng[ii]);
 
                     // add slack contributions
                     // d[nb:nb+ng] += slack[idx?]
@@ -810,15 +815,15 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                             // add slack contribution for lower and upper constraint
                             // lower
                             BLASFEO_DVECEL(qp_in->d+ii, j) -=
-                                    BLASFEO_DVECEL(nlp_mem->qp_out->ux+ii, slack_index+nx[ii]+nu[ii]);
+                                    BLASFEO_DVECEL(qp_out->ux+ii, slack_index+nx[ii]+nu[ii]);
                             // upper
                             BLASFEO_DVECEL(qp_in->d+ii, j+nb[ii]+ng[ii]) -=
-                                    BLASFEO_DVECEL(nlp_mem->qp_out->ux+ii, slack_index+nx[ii]+nu[ii]+ns[ii]);
+                                    BLASFEO_DVECEL(qp_out->ux+ii, slack_index+nx[ii]+nu[ii]+ns[ii]);
                         }
                     }
 
                     // NOTE: bounds on slacks can be skipped, since they are linear.
-                    // blasfeo_daxpy(2*ns[ii], -1.0, nlp_mem->qp_out->ux+ii, nx[ii]+nu[ii], qp_in->d+ii, 2*nb[ii]+2*ng[ii], qp_in->d+ii, 2*nb[ii]+2*ng[ii]);
+                    // blasfeo_daxpy(2*ns[ii], -1.0, qp_out->ux+ii, nx[ii]+nu[ii], qp_in->d+ii, 2*nb[ii]+2*ng[ii], qp_in->d+ii, 2*nb[ii]+2*ng[ii]);
 
                     // printf("SOC: qp_in->d final value\n");
                     // blasfeo_print_exp_dvec(2*nb[ii]+2*ng[ii], qp_in->d+ii, 0);
@@ -840,7 +845,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
                 // solve QP
                 acados_tic(&timer1);
-                qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver, qp_in, nlp_mem->qp_out,
+                qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver, qp_in, qp_out,
                                                 opts->nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
                 mem->time_qp_sol += acados_toc(&timer1);
 
@@ -855,7 +860,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                                                     opts->nlp_opts->regularize, nlp_mem->regularize_mem);
                 mem->time_reg += acados_toc(&timer1);
 
-                ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
+                ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
                 qp_iter = qp_info_->num_iter;
 
                 // save statistics of last qp solver call
@@ -870,7 +875,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 // compute external QP residuals (for debugging)
                 if (opts->ext_qp_res)
                 {
-                    ocp_qp_res_compute(qp_in, nlp_mem->qp_out, work->qp_res, work->qp_res_ws);
+                    ocp_qp_res_compute(qp_in, qp_out, work->qp_res, work->qp_res_ws);
                     if (sqp_iter+1 < mem->stat_m)
                         ocp_qp_res_compute_nrm_inf(work->qp_res, mem->stat+(mem->stat_n*(sqp_iter+1)+7));
                 }
@@ -878,14 +883,14 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 if (opts->print_level > sqp_iter + 1)
                 {
                     printf("\n\nSQP: SOC ocp_qp_out at iteration %d\n", sqp_iter);
-                    print_ocp_qp_out(nlp_mem->qp_out);
+                    print_ocp_qp_out(qp_out);
                 }
                 if (0) // DEBUG printing
                 {
                     char filename[100];
                     sprintf(filename, "qp_prints/qp_out_%d_SOC.txt", sqp_iter);
                     FILE *out_file = fopen(filename, "w");
-                    print_ocp_qp_out_to_file(out_file, nlp_mem->qp_out);
+                    print_ocp_qp_out_to_file(out_file, qp_out);
                     fclose(out_file);
                 }
 
@@ -905,7 +910,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                     {
                         printf("\n Failed to solve the following QP:\n");
                         if (opts->print_level > sqp_iter + 1)
-                            print_ocp_qp_in(nlp_mem->qp_in);
+                            print_ocp_qp_in(qp_in);
                     }
 
                     mem->status = ACADOS_QP_FAILURE;
