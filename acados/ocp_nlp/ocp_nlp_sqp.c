@@ -722,6 +722,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
             if (alpha < 1.0)
             {
+                // Second Order Correction (SOC): following Nocedal2006: p.557, eq. (18.51) -- (18.56)
+                //   - just no trust region radius here.
                 if (opts->print_level > 0)
                     printf("ocp_nlp_sqp: performing SOC, since alpha %e in prelim. line search\n\n", alpha);
                 ocp_qp_in *qp_in = nlp_mem->qp_in;
@@ -733,44 +735,41 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 int *ni = dims->ni;
                 int *ns = dims->ns;
                 /* evaluate constraints & dynamics at new step */
-                // TODO: this (setting up ux + p in tmp_nlp_out might not be needed anymore because of preliminary line search) + evaluation of constraints!
+                // The following (setting up ux + p in tmp_nlp_out and evaluation of constraints + dynamics)
+                // is not needed anymore because done in prelim. line search with early termination)
                 // NOTE: similar to ocp_nlp_evaluate_merit_fun
                 // set up new linearization point in work->tmp_nlp_out
-                // copy out (current iterate) to work->tmp_nlp_out
-                for (ii = 0; ii <= N; ii++)
-                    blasfeo_dveccp(nv[ii], nlp_out->ux+ii, 0, work->nlp_work->tmp_nlp_out->ux+ii, 0);
+                // for (ii = 0; ii < N; ii++)
+                //     blasfeo_dveccp(nx[ii+1], nlp_out->pi+ii, 0, work->nlp_work->tmp_nlp_out->pi+ii, 0);
 
-                for (ii = 0; ii < N; ii++)
-                    blasfeo_dveccp(nx[ii+1], nlp_out->pi+ii, 0, work->nlp_work->tmp_nlp_out->pi+ii, 0);
+                // for (ii = 0; ii <= N; ii++)
+                //     blasfeo_dveccp(2*ni[ii], nlp_out->lam+ii, 0, work->nlp_work->tmp_nlp_out->lam+ii, 0);
 
-                for (ii = 0; ii <= N; ii++)
-                    blasfeo_dveccp(2*ni[ii], nlp_out->lam+ii, 0, work->nlp_work->tmp_nlp_out->lam+ii, 0);
+                // // tmp_nlp_out = iterate + step
+                // for (ii = 0; ii <= N; ii++)
+                //     blasfeo_daxpy(nv[ii], 1.0, nlp_mem->qp_out->ux+ii, 0, nlp_out->ux+ii, 0, work->nlp_work->tmp_nlp_out->ux+ii, 0);
 
-                // tmp_nlp_out = iterate + step
-                for (ii = 0; ii <= N; ii++)
-                    blasfeo_daxpy(nv[ii], 1.0, nlp_mem->qp_out->ux+ii, 0, nlp_out->ux+ii, 0, work->nlp_work->tmp_nlp_out->ux+ii, 0);
-
-                // evaluate
-    #if defined(ACADOS_WITH_OPENMP)
-        #pragma omp parallel for
-    #endif
-                for (ii=0; ii<N; ii++)
-                {
-                    config->dynamics[ii]->compute_fun(config->dynamics[ii], dims->dynamics[ii], nlp_in->dynamics[ii],
-                                                    nlp_opts->dynamics[ii], nlp_mem->dynamics[ii], work->nlp_work->dynamics[ii]);
-                }
-    #if defined(ACADOS_WITH_OPENMP)
-        #pragma omp parallel for
-    #endif
-                for (ii=0; ii<=N; ii++)
-                {
-                    config->constraints[ii]->compute_fun(config->constraints[ii], dims->constraints[ii],
-                                                        nlp_in->constraints[ii], nlp_opts->constraints[ii],
-                                                        nlp_mem->constraints[ii], work->nlp_work->constraints[ii]);
-                }
-    #if defined(ACADOS_WITH_OPENMP)
-        #pragma omp parallel for
-    #endif
+    //             // evaluate
+    // #if defined(ACADOS_WITH_OPENMP)
+    //     #pragma omp parallel for
+    // #endif
+    //             for (ii=0; ii<N; ii++)
+    //             {
+    //                 config->dynamics[ii]->compute_fun(config->dynamics[ii], dims->dynamics[ii], nlp_in->dynamics[ii],
+    //                                                 nlp_opts->dynamics[ii], nlp_mem->dynamics[ii], work->nlp_work->dynamics[ii]);
+    //             }
+    // #if defined(ACADOS_WITH_OPENMP)
+    //     #pragma omp parallel for
+    // #endif
+    //             for (ii=0; ii<=N; ii++)
+    //             {
+    //                 config->constraints[ii]->compute_fun(config->constraints[ii], dims->constraints[ii],
+    //                                                     nlp_in->constraints[ii], nlp_opts->constraints[ii],
+    //                                                     nlp_mem->constraints[ii], work->nlp_work->constraints[ii]);
+    //             }
+    // #if defined(ACADOS_WITH_OPENMP)
+    //     #pragma omp parallel for
+    // #endif
                 // update QP rhs
                 // d_i = c_i(x_k + p_k) - \nabla c_i(x_k)^T * p_k
                 struct blasfeo_dvec *tmp_fun_vec;
@@ -800,13 +799,15 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                     blasfeo_dgemv_t(nu[ii]+nx[ii], ng[ii], 1.0, qp_in->DCt+ii, 0, 0, nlp_mem->qp_out->ux+ii, 0, 1.0, qp_in->d+ii, nb[ii], qp_in->d+ii, nb[ii]);
                     // d[nb:nb+ng] += D * u + C * x // TODO: check sign here!!
                     blasfeo_dgemv_t(nu[ii]+nx[ii], ng[ii], -1.0, qp_in->DCt+ii, 0, 0, nlp_mem->qp_out->ux+ii, 0, 1.0, qp_in->d+ii, 2*nb[ii]+ng[ii], qp_in->d+ii, 2*nb[ii]+ng[ii]);
+                    // TODO: add slack contributions!!!
                     // d[nb:nb+ng] += slack[idx?]
                     // qp_in->idxs_rev
 
+                    // TODO: slack inequalities?
+                    // blasfeo_daxpy(2*ns[ii], -1.0, nlp_mem->qp_out->ux+ii, nx[ii]+nu[ii], qp_in->d+ii, 2*nb[ii]+2*ng[ii], qp_in->d+ii, 2*nb[ii]+2*ng[ii]);
+
                     // printf("SOC: qp_in->d final value\n");
                     // blasfeo_print_exp_dvec(2*nb[ii]+2*ng[ii], qp_in->d+ii, 0);
-                    // TODO: slack inequalities!
-                    // blasfeo_daxpy(2*ns[ii], -1.0, nlp_mem->qp_out->ux+ii, nx[ii]+nu[ii], qp_in->d+ii, 2*nb[ii]+2*ng[ii], qp_in->d+ii, 2*nb[ii]+2*ng[ii]);
                 }
 
                 if (opts->print_level > sqp_iter + 1)
