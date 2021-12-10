@@ -731,6 +731,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 int *ng = qp_in->dim->ng;
                 int *nx = dims->nx;
                 int *nu = dims->nu;
+                int *ns = dims->ns;
 
                 /* evaluate constraints & dynamics at new step */
                 // The following (setting up ux + p in tmp_nlp_out and evaluation of constraints + dynamics)
@@ -797,11 +798,26 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                     blasfeo_dgemv_t(nu[ii]+nx[ii], ng[ii], 1.0, qp_in->DCt+ii, 0, 0, nlp_mem->qp_out->ux+ii, 0, 1.0, qp_in->d+ii, nb[ii], qp_in->d+ii, nb[ii]);
                     // d[nb:nb+ng] += D * u + C * x // TODO: check sign here!!
                     blasfeo_dgemv_t(nu[ii]+nx[ii], ng[ii], -1.0, qp_in->DCt+ii, 0, 0, nlp_mem->qp_out->ux+ii, 0, 1.0, qp_in->d+ii, 2*nb[ii]+ng[ii], qp_in->d+ii, 2*nb[ii]+ng[ii]);
-                    // TODO: add slack contributions!!!
+
+                    // add slack contributions
                     // d[nb:nb+ng] += slack[idx?]
                     // qp_in->idxs_rev
+                    for (int j = 0; j < nb[ii]+ng[ii]; j++)
+                    {
+                        int slack_index = qp_in->idxs_rev[ii][j];
+                        if (slack_index >= 0)
+                        {
+                            // add slack contribution for lower and upper constraint
+                            // lower
+                            BLASFEO_DVECEL(qp_in->d+ii, j) -=
+                                    BLASFEO_DVECEL(nlp_mem->qp_out->ux+ii, slack_index+nx[ii]+nu[ii]);
+                            // upper
+                            BLASFEO_DVECEL(qp_in->d+ii, j+nb[ii]+ng[ii]) -=
+                                    BLASFEO_DVECEL(nlp_mem->qp_out->ux+ii, slack_index+nx[ii]+nu[ii]+ns[ii]);
+                        }
+                    }
 
-                    // TODO: slack inequalities?
+                    // NOTE: bounds on slacks can be skipped, since they are linear.
                     // blasfeo_daxpy(2*ns[ii], -1.0, nlp_mem->qp_out->ux+ii, nx[ii]+nu[ii], qp_in->d+ii, 2*nb[ii]+2*ng[ii], qp_in->d+ii, 2*nb[ii]+2*ng[ii]);
 
                     // printf("SOC: qp_in->d final value\n");
