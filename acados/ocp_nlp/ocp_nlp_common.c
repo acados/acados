@@ -2315,14 +2315,17 @@ double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims
         }
     }
 
+    /* inequality contributions */
+    // NOTE: slack bound inequalities are not considered here.
+    // They should never be infeasible. Only if explicitly initialized infeasible from outside.
     int constr_index, slack_index_in_ux, slack_index;
     ocp_qp_dims* qp_dims = mem->qp_in->dim;
     int *nb = qp_dims->nb;
     int *ng = qp_dims->ng;
     int *ns = qp_dims->ns;
-    /* inequality contributions */
     double merit_grad_ineq = 0.0;
     double slack_step;
+
     for (i=0; i<=N; i++)
     {
         tmp_vec = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
