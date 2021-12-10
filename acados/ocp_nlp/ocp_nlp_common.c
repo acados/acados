@@ -2560,11 +2560,11 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
         for (i = 0; i <= N; i++)
             blasfeo_dveccp(nv[i], out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
 
-        for (i = 0; i < N; i++)
-            blasfeo_dveccp(nx[i+1], out->pi+i, 0, work->tmp_nlp_out->pi+i, 0);
+        // for (i = 0; i < N; i++)
+        //     blasfeo_dveccp(nx[i+1], out->pi+i, 0, work->tmp_nlp_out->pi+i, 0);
 
-        for (i = 0; i <= N; i++)
-            blasfeo_dveccp(2*ni[i], out->lam+i, 0, work->tmp_nlp_out->lam+i, 0);
+        // for (i = 0; i <= N; i++)
+        //     blasfeo_dveccp(2*ni[i], out->lam+i, 0, work->tmp_nlp_out->lam+i, 0);
 
             // linear update of algebraic variables using state and input sensitivity
     //        if (i < N)
