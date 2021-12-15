@@ -51,7 +51,7 @@ def main():
     # run test cases
     params = {'globalization': ['MERIT_BACKTRACKING'], # MERIT_BACKTRACKING, FIXED_STEP
               'line_search_use_sufficient_descent' : [0],
-              'glob_SOC' : [1] }
+              'glob_SOC' : [0,1] }
 
     keys, values = zip(*params.items())
     for combination in product(*values):
@@ -159,11 +159,12 @@ def solve_marathos_ocp(setting):
     # ocp.solver_options.print_level = 1
     ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
     ocp.solver_options.globalization = globalization
-    # ocp.solver_options.alpha_min = 0.01
+    ocp.solver_options.alpha_min = 0.01
     # ocp.solver_options.__initialize_t_slacks = 0
     # ocp.solver_options.levenberg_marquardt = 1e-2
+    ocp.solver_options.qp_solver_cond_N = 1
     ocp.solver_options.print_level = 1
-    ocp.solver_options.nlp_solver_max_iter = 50
+    ocp.solver_options.nlp_solver_max_iter = 200
     ocp.solver_options.qp_solver_iter_max = 400
 
     # set prediction horizon
