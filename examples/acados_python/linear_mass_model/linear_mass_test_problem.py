@@ -49,14 +49,18 @@ OBSTACLE_POWER = 2
 
 def main():
     # run test cases
-    params = {'globalization': ['MERIT_BACKTRACKING'], # MERIT_BACKTRACKING, FIXED_STEP
+    params = {'globalization': ['FIXED_STEP', 'MERIT_BACKTRACKING'], # MERIT_BACKTRACKING, FIXED_STEP
               'line_search_use_sufficient_descent' : [0],
               'glob_SOC' : [0,1] }
 
     keys, values = zip(*params.items())
     for combination in product(*values):
         setting = dict(zip(keys, combination))
-        if not (setting['globalization'] == 'FIXED_STEP' and setting['glob_SOC']):
+        if setting['globalization'] == 'FIXED_STEP' and \
+          (setting['glob_SOC'] or setting['line_search_use_sufficient_descent']):
+            # skip some equivalent settings
+            pass
+        else:
             solve_marathos_ocp(setting)
 
 
@@ -205,16 +209,16 @@ def solve_marathos_ocp(setting):
     # print(f"max infeasibility: {max_infeasibility}")
 
     # checks
-    # if status != 0:
-    #     raise Exception(f"acados solver returned status {status} != 0.")
-    # if globalization == "FIXED_STEP":
-    #     if sqp_iter != 18:
-    #         raise Exception(f"acados solver took {sqp_iter} iterations, expected 18.")
-    # elif globalization == "MERIT_BACKTRACKING":
-    #     if glob_SOC == 1 and sqp_iter != 18:
-    #         raise Exception(f"acados solver took {sqp_iter} iterations, expected 18.")
-    #     elif glob_SOC == 0 and sqp_iter != 108:
-    #         raise Exception(f"acados solver took {sqp_iter} iterations, expected 108.")
+    if status != 0:
+        raise Exception(f"acados solver returned status {status} != 0.")
+    if globalization == "FIXED_STEP":
+        if sqp_iter != 18:
+            raise Exception(f"acados solver took {sqp_iter} iterations, expected 18.")
+    elif globalization == "MERIT_BACKTRACKING":
+        if glob_SOC == 1 and sqp_iter != 22:
+            raise Exception(f"acados solver took {sqp_iter} iterations, expected 22.")
+        elif glob_SOC == 0 and sqp_iter != 161:
+            raise Exception(f"acados solver took {sqp_iter} iterations, expected 161.")
 
     if PLOT:
         plot_linear_mass_system_X_state_space(simX, circle=circle, x_goal=x_goal)
