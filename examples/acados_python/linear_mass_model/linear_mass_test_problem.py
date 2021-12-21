@@ -42,7 +42,7 @@ OBSTACLE = True
 SOFTEN_OBSTACLE = False
 SOFTEN_TERMINAL = True
 INITIALIZE = True
-PLOT = True
+PLOT = False
 OBSTACLE_POWER = 2
 
 # an OCP to test Marathos effect an second order correction
