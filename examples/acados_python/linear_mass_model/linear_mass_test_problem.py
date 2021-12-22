@@ -51,6 +51,7 @@ def main():
     # run test cases
     params = {'globalization': ['FIXED_STEP', 'MERIT_BACKTRACKING'], # MERIT_BACKTRACKING, FIXED_STEP
               'line_search_use_sufficient_descent' : [0],
+              'qp_solver' : ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_QPOASES'],
               'glob_SOC' : [0,1] }
 
     keys, values = zip(*params.items())
@@ -69,6 +70,7 @@ def solve_marathos_ocp(setting):
     globalization = setting['globalization']
     line_search_use_sufficient_descent = setting['line_search_use_sufficient_descent']
     glob_SOC = setting['glob_SOC']
+    qp_solver = setting['qp_solver']
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -155,7 +157,7 @@ def solve_marathos_ocp(setting):
         ocp.cost.Zu_e = np.concatenate((ocp.cost.Zu_e, Zh))
 
     # set options
-    ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
+    ocp.solver_options.qp_solver = qp_solver # FULL_CONDENSING_QPOASES
     # PARTIAL_CONDENSING_HPIPM, FULL_CONDENSING_QPOASES, FULL_CONDENSING_HPIPM,
     # PARTIAL_CONDENSING_QPDUNES, PARTIAL_CONDENSING_OSQP
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
@@ -170,6 +172,12 @@ def solve_marathos_ocp(setting):
     ocp.solver_options.print_level = 1
     ocp.solver_options.nlp_solver_max_iter = 200
     ocp.solver_options.qp_solver_iter_max = 400
+    # NOTE: this is needed for PARTIAL_CONDENSING_HPIPM to get expected behavior
+    qp_tol = 5e-7
+    ocp.solver_options.qp_solver_tol_stat = qp_tol
+    ocp.solver_options.qp_solver_tol_eq = qp_tol
+    ocp.solver_options.qp_solver_tol_ineq = qp_tol
+    ocp.solver_options.qp_solver_tol_comp = qp_tol
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
@@ -215,10 +223,10 @@ def solve_marathos_ocp(setting):
         if sqp_iter != 18:
             raise Exception(f"acados solver took {sqp_iter} iterations, expected 18.")
     elif globalization == "MERIT_BACKTRACKING":
-        if glob_SOC == 1 and sqp_iter != 22:
-            raise Exception(f"acados solver took {sqp_iter} iterations, expected 22.")
-        elif glob_SOC == 0 and sqp_iter != 161:
-            raise Exception(f"acados solver took {sqp_iter} iterations, expected 161.")
+        if glob_SOC == 1 and sqp_iter not in range(21, 23):
+            raise Exception(f"acados solver took {sqp_iter} iterations, expected range(21,23).")
+        elif glob_SOC == 0 and sqp_iter not in range(155, 165):
+            raise Exception(f"acados solver took {sqp_iter} iterations, expected range(155, 165).")
 
     if PLOT:
         plot_linear_mass_system_X_state_space(simX, circle=circle, x_goal=x_goal)
