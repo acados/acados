@@ -9,6 +9,7 @@ We assume you have: git, make, cmake installed on your system.
 Clone acados and its submodules by running:
 ```
 git clone https://github.com/acados/acados.git
+cd acados
 git submodule update --recursive --init
 ```
 
