@@ -730,6 +730,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             if (alpha < 1.0)
             {
                 // Second Order Correction (SOC): following Nocedal2006: p.557, eq. (18.51) -- (18.56)
+                // Paragraph: APPROACH III: S l1 QP (SEQUENTIAL l1 QUADRATIC PROGRAMMING),
+                // Section 18.8 TRUST-REGION SQP METHODS
                 //   - just no trust region radius here.
                 if (opts->print_level > 0)
                     printf("ocp_nlp_sqp: performing SOC, since alpha %e in prelim. line search\n\n", alpha);
