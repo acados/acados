@@ -2646,7 +2646,7 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
             if (opts->line_search_use_sufficient_descent)
             {
                 // check Armijo-type sufficient descent condition Leinweber1999 (2.35);
-                double dmerit_dy = ocp_nlp_compute_merit_gradient(config, dims, in, out, opts, mem, work);
+                dmerit_dy = ocp_nlp_compute_merit_gradient(config, dims, in, out, opts, mem, work);
                 if (dmerit_dy > 0.0)
                 {
                     if (dmerit_dy > 1e-6)
