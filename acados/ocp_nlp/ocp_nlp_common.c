@@ -2326,10 +2326,7 @@ double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims
         int *idxb = mem->qp_in->idxb[i];
         if (ni[i] > 0)
         {
-            // printf("constraints fun = \n");
-            // blasfeo_print_exp_dvec(2*ni[i], tmp_vec, 0);
-            // print_ocp_qp_in(mem->qp_in);
-            // for (j = 0; j < 2 * ni[i]; j++) // 2 * ni
+            // NOTE: loop could be simplified handling lower and upper constraints together.
             for (j = 0; j < 2 * (nb[i] + ng[i]); j++) // 2 * ni
             {
                 double constraint_val = BLASFEO_DVECEL(tmp_vec, j);
