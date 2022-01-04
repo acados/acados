@@ -381,6 +381,7 @@ typedef struct ocp_nlp_workspace
     ocp_nlp_out *tmp_nlp_out;
     ocp_nlp_out *weight_merit_fun;
     struct blasfeo_dvec tmp_nxu;
+    struct blasfeo_dvec tmp_ni;
     struct blasfeo_dvec dxnext_dy;
 
 } ocp_nlp_workspace;

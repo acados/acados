@@ -1633,6 +1633,7 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
     int N = dims->N;
     int *nx = dims->nx;
     int *nu = dims->nu;
+    int *ni = dims->ni;
     // int *nz = dims->nz;
 
     acados_size_t size = 0;
@@ -1649,13 +1650,16 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
     // blasfeo_dvec
     int nxu_max = 0;
     int nx_max = 0;
+    int ni_max = 0;
     for (int ii = 0; ii <= N; ii++)
     {
         nx_max = nx_max > nx[ii] ? nx_max : nx[ii];
         nxu_max = nxu_max > (nx[ii]+nu[ii]) ? nxu_max : (nx[ii]+nu[ii]);
+        ni_max = ni_max > ni[ii] ? ni_max : ni[ii];
     }
     size += 1 * blasfeo_memsize_dvec(nx_max);
     size += 1 * blasfeo_memsize_dvec(nxu_max);
+    size += 1 * blasfeo_memsize_dvec(ni_max);
 
     // array of pointers
     // cost
@@ -1772,6 +1776,7 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
     int *nx = dims->nx;
     // int *nv = dims->nv;
     int *nu = dims->nu;
+    int *ni = dims->ni;
     // int *nz = dims->nz;
 
     char *c_ptr = (char *) raw_memory;
@@ -1804,12 +1809,15 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
     // blasfeo_dvec
     int nxu_max = 0;
     int nx_max = 0;
+    int ni_max = 0;
     for (int ii = 0; ii <= N; ii++)
     {
         nx_max = nx_max > nx[ii] ? nx_max : nx[ii];
         nxu_max = nxu_max > (nx[ii]+nu[ii]) ? nxu_max : (nx[ii]+nu[ii]);
+        ni_max = ni_max > ni[ii] ? ni_max : ni[ii];
     }
     assign_and_advance_blasfeo_dvec_mem(nxu_max, &work->tmp_nxu, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(ni_max, &work->tmp_ni, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx_max, &work->dxnext_dy, &c_ptr);
 
     if (opts->reuse_workspace)
