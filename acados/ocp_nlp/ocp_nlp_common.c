@@ -2261,7 +2261,7 @@ double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims
 
     // NOTE: step is in: mem->qp_out->ux
     struct blasfeo_dvec *tmp_vec; // size nv
-    struct blasfeo_dvec tmp_vec_nxu = work->tmp_nxu;  // size nx
+    struct blasfeo_dvec tmp_vec_nxu = work->tmp_nxu;  // size nxu
     struct blasfeo_dvec dxnext_dy = work->dxnext_dy;  // size nx
 
     // cost
@@ -2679,9 +2679,9 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
                 merit_fun1 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
                 // printf("\nbacktracking %d, merit_fun1 = %e, merit_fun0 %e", j, merit_fun1, merit_fun0);
 
-                // if (merit_fun1 < merit_fun0)
+                // if (merit_fun1 < merit_fun0 && merit_fun1 > max_next_merit_fun_val)
                 // {
-                //     printf("\nalpha %f would be accepted without Armijo", alpha);
+                //     printf("\nalpha %f would be accepted without sufficient descent condition", alpha);
                 // }
 
                 max_next_merit_fun_val = merit_fun0 + eps_merit * dmerit_dy * alpha;
