@@ -917,14 +917,53 @@ class AcadosOcpSolver:
 
             # store N and new time steps
             self.N = self.acados_ocp.dims.N = N
-            self.acados_ocp.solver_options.time_steps = new_time_steps
-            self.acados_ocp.solver_options.Tsim = self.acados_ocp.solver_options.time_steps[0]
 
             # create solver with new time steps
             getattr(self.shared_lib, f"{model.name}_acados_create_with_discretization").argtypes = [c_void_p, c_int, c_void_p]
             getattr(self.shared_lib, f"{model.name}_acados_create_with_discretization").restype = c_int
             assert getattr(self.shared_lib, f"{model.name}_acados_create_with_discretization")(self.capsule, N, new_time_steps_data) == 0
 
+            self.solver_created = True
+
+            # get pointers solver
+            self.__get_pointers_solver()
+
+        # store time_steps internally
+        self.acados_ocp.solver_options.time_steps = new_time_steps
+        # set integrator time automatically
+        self.acados_ocp.solver_options.Tsim = self.acados_ocp.solver_options.time_steps[0]
+
+
+    def update_qp_solver_cond_N(self, qp_solver_cond_N: int):
+        """
+        Set new `qp_solver_cond_N` before solving with a partial condensing QP solver. This function is relevant for
+        code reuse, i.e., if either `set_new_time_steps(...)` is used or the influence of a different `qp_solver_cond_N`
+        is studied without code export and compilation.
+            :param qp_solver_cond_N: new number of condensing stages for the solver
+
+            .. note:: This function can only be used in combination with a partial condensing QP solver.
+
+            .. note:: After `set_new_time_steps(...)` is used and depending on the new number of time steps it might be
+                      necessary to change `qp_solver_cond_N` as well (using this function), i.e., typically
+                      `qp_solver_cond_N < N`.
+        """
+        # unlikely but still possible
+        if not self.solver_created:
+            raise Exception('Solver was not yet created!')
+        if self.N < qp_solver_cond_N:
+            raise Exception('Setting qp_solver_cond_N to be larger than N does not work!')
+        if self.acados_ocp.solver_options.qp_solver_cond_N != qp_solver_cond_N:
+            # reinitialize the solver
+            self.solver_created = False
+
+            # create solver with new time steps
+            fun_name = f'{self.acados_ocp.model.name}_acados_update_qp_solver_cond_N'
+            getattr(self.shared_lib, fun_name).argtypes = [c_void_p, c_int]
+            getattr(self.shared_lib, fun_name).restype = c_int
+            assert getattr(self.shared_lib, fun_name)(self.capsule, qp_solver_cond_N) == 0
+
+            # store the new value
+            self.acados_ocp.solver_options.qp_solver_cond_N = qp_solver_cond_N
             self.solver_created = True
 
             # get pointers solver
