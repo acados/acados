@@ -1110,6 +1110,7 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->full_step_dual = 0;
     opts->line_search_use_sufficient_descent = 0;
     opts->glob_SOC = 0;
+    opts->eps_sufficient_descent = 1e-4; // Leineweber1999: MUSCOD-II eps_T = 1e-4 (p.89); Note: eps_T = 0.1 originally proposed by Powell 1978 (Leineweber 1999, p. 53)
 
     return;
 }
@@ -1210,6 +1211,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         {
             double* alpha_min = (double *) value;
             opts->alpha_min = *alpha_min;
+        }
+        else if (!strcmp(field, "eps_sufficient_descent"))
+        {
+            double* eps_sufficient_descent = (double *) value;
+            opts->eps_sufficient_descent = *eps_sufficient_descent;
         }
         else if (!strcmp(field, "full_step_dual"))
         {
@@ -2613,7 +2619,7 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
 
             double reduction_factor = opts->alpha_reduction;
             double max_next_merit_fun_val = merit_fun0;
-            double eps_merit = 1e-4; // Leineweber1999: MUSCOD-II eps_T = 1e-4 (p.89); Note: eps_T = 0.1 originally proposed by Powell 1978 (Leineweber 1999, p. 53)
+            double eps_sufficient_descent = opts->eps_sufficient_descent;
             double dmerit_dy = 0.0;
             alpha = 1.0;
 
@@ -2684,7 +2690,7 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
                 //     printf("\nalpha %f would be accepted without sufficient descent condition", alpha);
                 // }
 
-                max_next_merit_fun_val = merit_fun0 + eps_merit * dmerit_dy * alpha;
+                max_next_merit_fun_val = merit_fun0 + eps_sufficient_descent * dmerit_dy * alpha;
                 if (merit_fun1 < max_next_merit_fun_val)
                 {
                     break;
