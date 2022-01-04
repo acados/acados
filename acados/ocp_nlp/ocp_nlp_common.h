@@ -278,6 +278,7 @@ typedef struct ocp_nlp_opts
     int glob_SOC;
     double alpha_min;
     double alpha_reduction;
+    double eps_sufficient_descent;
 } ocp_nlp_opts;
 
 //
