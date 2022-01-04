@@ -142,6 +142,7 @@ def solve_marathos_problem_with_setting(setting):
         ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
     ocp_solver.options_set('line_search_use_sufficient_descent', line_search_use_sufficient_descent)
     ocp_solver.options_set('glob_SOC', glob_SOC)
+    ocp_solver.options_set('eps_sufficient_descent', 1e-1)
 
     # initialize solver
     rad_init = 0.1 #0.1 #np.pi / 4
