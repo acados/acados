@@ -49,10 +49,12 @@ OBSTACLE_POWER = 2
 
 def main():
     # run test cases
+
+    # all setting
     params = {'globalization': ['FIXED_STEP', 'MERIT_BACKTRACKING'], # MERIT_BACKTRACKING, FIXED_STEP
-              'line_search_use_sufficient_descent' : [0],
+              'line_search_use_sufficient_descent' : [0, 1],
               'qp_solver' : ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_QPOASES'],
-              'glob_SOC' : [0,1] }
+              'glob_SOC' : [0, 1] }
 
     keys, values = zip(*params.items())
     for combination in product(*values):
@@ -208,7 +210,6 @@ def solve_marathos_ocp(setting):
 
 
     # print summary
-    print(f"\n\n----------------------\n")
     print(f"solved Marathos test problem with settings {setting}")
     print(f"cost function value = {ocp_solver.get_cost()} after {sqp_iter} SQP iterations")
     # print(f"alphas: {alphas[:iter]}")
@@ -223,10 +224,14 @@ def solve_marathos_ocp(setting):
         if sqp_iter != 18:
             raise Exception(f"acados solver took {sqp_iter} iterations, expected 18.")
     elif globalization == "MERIT_BACKTRACKING":
-        if glob_SOC == 1 and sqp_iter not in range(21, 23):
-            raise Exception(f"acados solver took {sqp_iter} iterations, expected range(21,23).")
-        elif glob_SOC == 0 and sqp_iter not in range(155, 165):
+        if glob_SOC == 1 and line_search_use_sufficient_descent == 0 and sqp_iter not in range(21, 23):
+            raise Exception(f"acados solver took {sqp_iter} iterations, expected range(21, 23).")
+        elif glob_SOC == 1 and line_search_use_sufficient_descent == 1 and sqp_iter not in range(21, 24):
+            raise Exception(f"acados solver took {sqp_iter} iterations, expected range(21, 24).")
+        elif glob_SOC == 0 and line_search_use_sufficient_descent == 0 and sqp_iter not in range(155, 165):
             raise Exception(f"acados solver took {sqp_iter} iterations, expected range(155, 165).")
+        elif glob_SOC == 0 and line_search_use_sufficient_descent == 1 and sqp_iter not in range(160, 175):
+            raise Exception(f"acados solver took {sqp_iter} iterations, expected range(160, 175).")
 
     if PLOT:
         plot_linear_mass_system_X_state_space(simX, circle=circle, x_goal=x_goal)
@@ -234,6 +239,7 @@ def solve_marathos_ocp(setting):
         # plot_linear_mass_system_X(shooting_nodes, simX)
 
     # import pdb; pdb.set_trace()
+    print(f"\n\n----------------------\n")
 
 if __name__ == '__main__':
     main()
