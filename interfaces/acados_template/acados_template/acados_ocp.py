@@ -2630,7 +2630,7 @@ class AcadosOcpOptions:
 
     @qp_solver_cond_N.setter
     def qp_solver_cond_N(self, qp_solver_cond_N):
-        if isinstance(qp_solver_cond_N, int) and qp_solver_cond_N > 0:
+        if isinstance(qp_solver_cond_N, int) and qp_solver_cond_N >= 0:
             self.__qp_solver_cond_N = qp_solver_cond_N
         else:
             raise Exception('Invalid qp_solver_cond_N value. qp_solver_cond_N must be a positive int. Exiting')
