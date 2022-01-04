@@ -56,7 +56,12 @@ def main():
     keys, values = zip(*params.items())
     for combination in product(*values):
         setting = dict(zip(keys, combination))
-        solve_marathos_problem_with_setting(setting)
+        if setting['globalization'] == 'FIXED_STEP' and \
+          (setting['glob_SOC'] or setting['line_search_use_sufficient_descent']):
+            # skip some equivalent settings
+            pass
+        else:
+            solve_marathos_problem_with_setting(setting)
 
 
 def solve_marathos_problem_with_setting(setting):
@@ -178,7 +183,6 @@ def solve_marathos_problem_with_setting(setting):
     solution = ocp_solver.get(0, "x")
 
     # print summary
-    print(f"\n\n----------------------\n")
     print(f"solved Marathos test problem with settings {setting}")
     print(f"cost function value = {ocp_solver.get_cost()} after {iter} SQP iterations")
     print(f"alphas: {alphas[:iter]}")
@@ -211,6 +215,9 @@ def solve_marathos_problem_with_setting(setting):
             if glob_SOC == 0:
                 if FOR_LOOPING and iter != 57:
                     raise Exception(f"Expected 57 SQP iterations when using globalized SQP without SOC on Marathos problem, got {iter}")
+            elif line_search_use_sufficient_descent == 1:
+                if iter != 29:
+                    raise Exception(f"Expected 29 SQP iterations when using globalized SQP with SOC on Marathos problem, got {iter}")
             else:
                 if iter != 12:
                     raise Exception(f"Expected 12 SQP iterations when using globalized SQP with SOC on Marathos problem, got {iter}")
@@ -238,6 +245,7 @@ def solve_marathos_problem_with_setting(setting):
         plt.title(f"Marathos problem with N = {N}, x formulation, SOC {glob_SOC}")
         plt.show()
 
+    print(f"\n\n----------------------\n")
 
 if __name__ == '__main__':
     main()
