@@ -2279,22 +2279,10 @@ double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims
         // get shooting node gap x_next(x_n, u_n) - x_{n+1};
         tmp_vec = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
 
-        /* compute directional derivative of xnext with direction y -> tmp_vec_nxu */
-        blasfeo_dvecse(nx[i], 0.0, &dxnext_dy, 0);
-        for (j = 0; j < nu[i]; j++)
-        {
-            double alpha = BLASFEO_DVECEL(mem->qp_out->ux+i, j);
-            // Su
-            blasfeo_drowex(nx[i], 1.0, mem->qp_in->BAbt+i, j, 0, &tmp_vec_nxu, 0);
-            blasfeo_daxpy(nx[i], alpha, &tmp_vec_nxu, 0, &dxnext_dy, 0, &dxnext_dy, 0);
-        }
-        for (j = nu[i]; j < nu[i] + nx[i]; j++)
-        {
-            double alpha = BLASFEO_DVECEL(mem->qp_out->ux+i, j);
-            // Sx
-            blasfeo_drowex(nx[i], 1.0, mem->qp_in->BAbt+i, j, 0, &tmp_vec_nxu, 0);
-            blasfeo_daxpy(nx[i], alpha, &tmp_vec_nxu, 0, &dxnext_dy, 0, &dxnext_dy, 0);
-        }
+        /* compute directional derivative of xnext with direction y -> dxnext_dy */
+        blasfeo_dgemv_t(nx[i]+nu[i], nx[i+1], 1.0, mem->qp_in->BAbt+i, 0, 0, mem->qp_out->ux+i, 0,
+                        0.0, &dxnext_dy, 0, &dxnext_dy, 0);
+
         /* add merit gradient contributions depending on sign of shooting gap */
         for (j = 0; j < nx[i+1]; j++)
         {
