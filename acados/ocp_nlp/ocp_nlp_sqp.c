@@ -497,14 +497,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     int num_threads_bkp = omp_get_num_threads();
     // set number of threads
     omp_set_num_threads(opts->nlp_opts->num_threads);
-    #pragma omp parallel
-    { // beginning of parallel region
 #endif
     ocp_nlp_alias_memory_to_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-
-#if defined(ACADOS_WITH_OPENMP)
-    } // end of parallel region
-#endif
 
     //
     if (opts->initialize_t_slacks > 0)
