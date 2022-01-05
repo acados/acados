@@ -1945,6 +1945,11 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
 void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
          ocp_nlp_out *nlp_out, ocp_nlp_opts *opts, ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work)
 {
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel
+    { // beginning of parallel region
+#endif
+
     int ii;
     int N = dims->N;
 
@@ -2022,6 +2027,10 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
         config->dynamics[ii]->model_set(config->dynamics[ii], dims->dynamics[ii],
                                          nlp_in->dynamics[ii], "T", nlp_in->Ts+ii);
     }
+
+#if defined(ACADOS_WITH_OPENMP)
+    } // end of parallel region
+#endif
 
     return;
 }
