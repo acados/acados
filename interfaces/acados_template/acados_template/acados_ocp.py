@@ -2152,7 +2152,7 @@ class AcadosOcpOptions:
         self.__alpha_min = 0.05
         self.__alpha_reduction = 0.7
         self.__line_search_use_sufficient_descent = 0
-        self.__glob_SOC = 0
+        self.__globalization_use_SOC = 0
         self.__full_step_dual = 0
         self.__eps_sufficient_descent = 1e-4
 
@@ -2390,14 +2390,14 @@ class AcadosOcpOptions:
         return self.__eps_sufficient_descent
 
     @property
-    def glob_SOC(self):
+    def globalization_use_SOC(self):
         """
         Determines if second order correction (SOC) is done when using MERIT_BACKTRACKING.
         SOC is done if preliminary line search does not return full step.
         Type: int; 0 or 1;
         default: 0.
         """
-        return self.__glob_SOC
+        return self.__globalization_use_SOC
 
     @property
     def full_step_dual(self):
@@ -2611,12 +2611,12 @@ class AcadosOcpOptions:
         else:
             raise Exception(f'Invalid value for line_search_use_sufficient_descent. Possible values are 0, 1, got {line_search_use_sufficient_descent}')
 
-    @glob_SOC.setter
-    def glob_SOC(self, glob_SOC):
-        if glob_SOC in [0, 1]:
-            self.__glob_SOC = glob_SOC
+    @globalization_use_SOC.setter
+    def globalization_use_SOC(self, globalization_use_SOC):
+        if globalization_use_SOC in [0, 1]:
+            self.__globalization_use_SOC = globalization_use_SOC
         else:
-            raise Exception(f'Invalid value for glob_SOC. Possible values are 0, 1, got {glob_SOC}')
+            raise Exception(f'Invalid value for globalization_use_SOC. Possible values are 0, 1, got {globalization_use_SOC}')
 
     @full_step_dual.setter
     def full_step_dual(self, full_step_dual):

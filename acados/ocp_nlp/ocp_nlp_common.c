@@ -1109,7 +1109,7 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->alpha_reduction = 0.7;
     opts->full_step_dual = 0;
     opts->line_search_use_sufficient_descent = 0;
-    opts->glob_SOC = 0;
+    opts->globalization_use_SOC = 0;
     opts->eps_sufficient_descent = 1e-4; // Leineweber1999: MUSCOD-II eps_T = 1e-4 (p.89); Note: eps_T = 0.1 originally proposed by Powell 1978 (Leineweber 1999, p. 53)
 
     return;
@@ -1227,10 +1227,10 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             int* line_search_use_sufficient_descent = (int *) value;
             opts->line_search_use_sufficient_descent = *line_search_use_sufficient_descent;
         }
-        else if (!strcmp(field, "glob_SOC"))
+        else if (!strcmp(field, "globalization_use_SOC"))
         {
-            int* glob_SOC = (int *) value;
-            opts->glob_SOC = *glob_SOC;
+            int* globalization_use_SOC = (int *) value;
+            opts->globalization_use_SOC = *globalization_use_SOC;
         }
         else if (!strcmp(field, "globalization"))
         {

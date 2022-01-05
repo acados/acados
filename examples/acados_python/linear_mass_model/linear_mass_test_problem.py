@@ -54,13 +54,13 @@ def main():
     params = {'globalization': ['FIXED_STEP', 'MERIT_BACKTRACKING'], # MERIT_BACKTRACKING, FIXED_STEP
               'line_search_use_sufficient_descent' : [0, 1],
               'qp_solver' : ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_QPOASES'],
-              'glob_SOC' : [0, 1] }
+              'globalization_use_SOC' : [0, 1] }
 
     keys, values = zip(*params.items())
     for combination in product(*values):
         setting = dict(zip(keys, combination))
         if setting['globalization'] == 'FIXED_STEP' and \
-          (setting['glob_SOC'] or setting['line_search_use_sufficient_descent']):
+          (setting['globalization_use_SOC'] or setting['line_search_use_sufficient_descent']):
             # skip some equivalent settings
             pass
         else:
@@ -71,7 +71,7 @@ def solve_marathos_ocp(setting):
 
     globalization = setting['globalization']
     line_search_use_sufficient_descent = setting['line_search_use_sufficient_descent']
-    glob_SOC = setting['glob_SOC']
+    globalization_use_SOC = setting['globalization_use_SOC']
     qp_solver = setting['qp_solver']
 
     # create ocp object to formulate the OCP
@@ -186,7 +186,7 @@ def solve_marathos_ocp(setting):
 
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}_ocp.json')
     ocp_solver.options_set('line_search_use_sufficient_descent', line_search_use_sufficient_descent)
-    ocp_solver.options_set('glob_SOC', glob_SOC)
+    ocp_solver.options_set('globalization_use_SOC', globalization_use_SOC)
     ocp_solver.options_set('full_step_dual', 1)
 
     if INITIALIZE:# initialize solver
@@ -224,13 +224,13 @@ def solve_marathos_ocp(setting):
         if sqp_iter != 18:
             raise Exception(f"acados solver took {sqp_iter} iterations, expected 18.")
     elif globalization == "MERIT_BACKTRACKING":
-        if glob_SOC == 1 and line_search_use_sufficient_descent == 0 and sqp_iter not in range(21, 23):
+        if globalization_use_SOC == 1 and line_search_use_sufficient_descent == 0 and sqp_iter not in range(21, 23):
             raise Exception(f"acados solver took {sqp_iter} iterations, expected range(21, 23).")
-        elif glob_SOC == 1 and line_search_use_sufficient_descent == 1 and sqp_iter not in range(21, 24):
+        elif globalization_use_SOC == 1 and line_search_use_sufficient_descent == 1 and sqp_iter not in range(21, 24):
             raise Exception(f"acados solver took {sqp_iter} iterations, expected range(21, 24).")
-        elif glob_SOC == 0 and line_search_use_sufficient_descent == 0 and sqp_iter not in range(155, 165):
+        elif globalization_use_SOC == 0 and line_search_use_sufficient_descent == 0 and sqp_iter not in range(155, 165):
             raise Exception(f"acados solver took {sqp_iter} iterations, expected range(155, 165).")
-        elif glob_SOC == 0 and line_search_use_sufficient_descent == 1 and sqp_iter not in range(160, 175):
+        elif globalization_use_SOC == 0 and line_search_use_sufficient_descent == 1 and sqp_iter not in range(160, 175):
             raise Exception(f"acados solver took {sqp_iter} iterations, expected range(160, 175).")
 
     if PLOT:

@@ -717,7 +717,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         //   QP solver times could be also attributed there alternatively. Cleanest would be to save them seperately.
         acados_tic(&timer1);
         bool do_line_search = true;
-        if (opts->nlp_opts->glob_SOC && opts->nlp_opts->globalization == MERIT_BACKTRACKING)
+        if (opts->nlp_opts->globalization_use_SOC && opts->nlp_opts->globalization == MERIT_BACKTRACKING)
         {
             // NOTE: following Waechter2006:
             // Do SOC

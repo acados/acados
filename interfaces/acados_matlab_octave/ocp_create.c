@@ -950,8 +950,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             ocp_nlp_solver_opts_set(config, opts, "alpha_reduction", &alpha_reduction);
             double eps_sufficient_descent = mxGetScalar( mxGetField( matlab_opts, 0, "eps_sufficient_descent" ) );
             ocp_nlp_solver_opts_set(config, opts, "eps_sufficient_descent", &eps_sufficient_descent);
-            int glob_SOC = mxGetScalar( mxGetField( matlab_opts, 0, "glob_SOC" ) );
-            ocp_nlp_solver_opts_set(config, opts, "glob_SOC", &glob_SOC);
+            int globalization_use_SOC = mxGetScalar( mxGetField( matlab_opts, 0, "globalization_use_SOC" ) );
+            ocp_nlp_solver_opts_set(config, opts, "globalization_use_SOC", &globalization_use_SOC);
             int line_search_use_sufficient_descent = mxGetScalar( mxGetField( matlab_opts, 0, "line_search_use_sufficient_descent" ) );
             ocp_nlp_solver_opts_set(config, opts, "line_search_use_sufficient_descent", &line_search_use_sufficient_descent);
         }

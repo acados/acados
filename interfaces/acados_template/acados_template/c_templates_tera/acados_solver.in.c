@@ -1912,8 +1912,8 @@ int {{ model.name }}_acados_create_with_discretization({{ model.name }}_solver_c
     int line_search_use_sufficient_descent = {{ solver_options.line_search_use_sufficient_descent }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "line_search_use_sufficient_descent", &line_search_use_sufficient_descent);
 
-    int glob_SOC = {{ solver_options.glob_SOC }};
-    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "glob_SOC", &glob_SOC);
+    int globalization_use_SOC = {{ solver_options.globalization_use_SOC }};
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "globalization_use_SOC", &globalization_use_SOC);
 
     double eps_sufficient_descent = {{ solver_options.eps_sufficient_descent }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "eps_sufficient_descent", &eps_sufficient_descent);
