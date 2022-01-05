@@ -71,7 +71,7 @@ classdef acados_ocp_opts < handle
             obj.opts_struct.alpha_min = 0.05;
             obj.opts_struct.alpha_reduction = 0.7;
             obj.opts_struct.line_search_use_sufficient_descent = 0;
-            obj.opts_struct.glob_SOC = 0;
+            obj.opts_struct.globalization_use_SOC = 0;
             obj.opts_struct.full_step_dual = 0;
             obj.opts_struct.eps_sufficient_descent = 1e-4;
 
@@ -209,8 +209,8 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.alpha_reduction = value;
             elseif (strcmp(field, 'line_search_use_sufficient_descent'))
                 obj.opts_struct.line_search_use_sufficient_descent = value;
-            elseif (strcmp(field, 'glob_SOC'))
-                obj.opts_struct.glob_SOC = value;
+            elseif (strcmp(field, 'globalization_use_SOC'))
+                obj.opts_struct.globalization_use_SOC = value;
             elseif (strcmp(field, 'full_step_dual'))
                 obj.opts_struct.full_step_dual = value;
             elseif (strcmp(field, 'eps_sufficient_descent'))

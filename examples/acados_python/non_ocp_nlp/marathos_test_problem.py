@@ -51,13 +51,13 @@ def main():
     # run test cases
     params = {'globalization': ['MERIT_BACKTRACKING', 'FIXED_STEP'],
               'line_search_use_sufficient_descent' : [0, 1],
-              'glob_SOC' : [0, 1] }
+              'globalization_use_SOC' : [0, 1] }
 
     keys, values = zip(*params.items())
     for combination in product(*values):
         setting = dict(zip(keys, combination))
         if setting['globalization'] == 'FIXED_STEP' and \
-          (setting['glob_SOC'] or setting['line_search_use_sufficient_descent']):
+          (setting['globalization_use_SOC'] or setting['line_search_use_sufficient_descent']):
             # skip some equivalent settings
             pass
         else:
@@ -68,7 +68,7 @@ def solve_marathos_problem_with_setting(setting):
 
     globalization = setting['globalization']
     line_search_use_sufficient_descent = setting['line_search_use_sufficient_descent']
-    glob_SOC = setting['glob_SOC']
+    globalization_use_SOC = setting['globalization_use_SOC']
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -134,7 +134,7 @@ def solve_marathos_problem_with_setting(setting):
     ocp.solver_options.regularize_method = 'MIRROR'
     # ocp.solver_options.exact_hess_constr = 0
     ocp.solver_options.line_search_use_sufficient_descent = line_search_use_sufficient_descent
-    ocp.solver_options.glob_SOC = glob_SOC
+    ocp.solver_options.globalization_use_SOC = globalization_use_SOC
     ocp.solver_options.eps_sufficient_descent = 1e-1
 
     if FOR_LOOPING: # call solver in for loop to get all iterates
@@ -213,7 +213,7 @@ def solve_marathos_problem_with_setting(setting):
         elif globalization == 'MERIT_BACKTRACKING':
             if max_infeasibility > 0.5:
                 raise Exception(f"Expected max_infeasibility < 0.5 when using globalized SQP on Marathos problem")
-            if glob_SOC == 0:
+            if globalization_use_SOC == 0:
                 if FOR_LOOPING and iter != 57:
                     raise Exception(f"Expected 57 SQP iterations when using globalized SQP without SOC on Marathos problem, got {iter}")
             elif line_search_use_sufficient_descent == 1:
@@ -243,7 +243,7 @@ def solve_marathos_problem_with_setting(setting):
         plt.plot(1 * np.cos(ts)+0,1 * np.sin(ts)-0, 'r')
         plt.axis('square')
         plt.legend()
-        plt.title(f"Marathos problem with N = {N}, x formulation, SOC {glob_SOC}")
+        plt.title(f"Marathos problem with N = {N}, x formulation, SOC {globalization_use_SOC}")
         plt.show()
 
     print(f"\n\n----------------------\n")
