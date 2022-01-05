@@ -1075,6 +1075,7 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     // printf("\nocp_nlp: openmp threads = %d\n", opts->num_threads);
 
     opts->globalization = FIXED_STEP;
+    opts->print_level = 0;
     opts->step_length = 1.0;
     opts->levenberg_marquardt = 0.0;
 
@@ -1290,6 +1291,16 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             for (ii=0; ii<=N; ii++)
                 config->constraints[ii]->opts_set(config->constraints[ii], opts->constraints[ii],
                                                   "compute_hess", value);
+        }
+        else if (!strcmp(field, "print_level"))
+        {
+            int* print_level = (int *) value;
+            if (*print_level < 0)
+            {
+                printf("\nerror: ocp_nlp_opts_set: invalid value for print_level field, need int >=0, got %d.", *print_level);
+                exit(1);
+            }
+            opts->print_level = *print_level;
         }
         else
         {
@@ -2392,7 +2403,8 @@ double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims
     // print_ocp_qp_in(mem->qp_in);
 
     merit_grad = merit_grad_cost + merit_grad_dyn + merit_grad_ineq;
-    printf("merit_grad = %e, merit_grad_cost = %e, merit_grad_dyn = %e, merit_grad_ineq = %e\n", merit_grad, merit_grad_cost, merit_grad_dyn, merit_grad_ineq);
+    if (opts->print_level > 1)
+        printf("merit_grad = %e, merit_grad_cost = %e, merit_grad_dyn = %e, merit_grad_ineq = %e\n", merit_grad, merit_grad_cost, merit_grad_dyn, merit_grad_ineq);
 
     return merit_grad;
 }
@@ -2640,7 +2652,10 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
                 merit_fun1 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
 
                 double violation_step = ocp_nlp_get_violation(config, dims, in, out, opts, mem, work);
-                printf("preliminary line_search: merit0 %e, merit1 %e; viol_current %e, viol_step %e\n", merit_fun0, merit_fun1, violation_current, violation_step);
+                if (opts->print_level > 0)
+                {
+                    printf("\npreliminary line_search: merit0 %e, merit1 %e; viol_current %e, viol_step %e\n", merit_fun0, merit_fun1, violation_current, violation_step);
+                }
 
                 if (merit_fun1 > merit_fun0 || violation_step > violation_current)
                 {
@@ -2660,8 +2675,10 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
                 dmerit_dy = ocp_nlp_compute_merit_gradient(config, dims, in, out, opts, mem, work);
                 if (dmerit_dy > 0.0)
                 {
-                    if (dmerit_dy > 1e-6)
+                    if (dmerit_dy > 1e-6 && opts->print_level > 0)
+                    {
                         printf("\nacados line search: found dmerit_dy = %e > 0. Setting it to 0.0 instead", dmerit_dy);
+                    }
                     dmerit_dy = 0.0;
                 }
             }
@@ -2688,7 +2705,10 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
                     blasfeo_daxpy(nv[i], alpha, qp_out->ux+i, 0, out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
 
                 merit_fun1 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
-                // printf("\nbacktracking %d, merit_fun1 = %e, merit_fun0 %e", j, merit_fun1, merit_fun0);
+                if (opts->print_level > 1)
+                {
+                    printf("\nbacktracking %d, merit_fun1 = %e, merit_fun0 %e", j, merit_fun1, merit_fun0);
+                }
 
                 // if (merit_fun1 < merit_fun0 && merit_fun1 > max_next_merit_fun_val)
                 // {

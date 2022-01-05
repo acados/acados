@@ -125,7 +125,6 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_,
     opts->ext_qp_res = 0;
     opts->warm_start_first_qp = false;
     opts->rti_phase = 0;
-    opts->print_level = 0;
 
     // overwrite default submodules opts
 
@@ -591,7 +590,7 @@ void ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
         dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
     mem->time_reg += acados_toc(&timer1);
 
-    if (opts->print_level > 0) {
+    if (nlp_opts->print_level > 0) {
         printf("\n------- qp_in --------\n");
         print_ocp_qp_in(nlp_mem->qp_in);
     }
@@ -655,7 +654,7 @@ void ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
         printf("\nSQP_RTI: QP solver returned error status %d QP iteration %d.\n",
                 qp_status, qp_iter);
 #endif
-        if (opts->print_level > 0)
+        if (nlp_opts->print_level > 0)
         {
             printf("\n Failed to solve the following QP:\n");
             print_ocp_qp_in(nlp_mem->qp_in);
