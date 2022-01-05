@@ -127,7 +127,6 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->qp_warm_start = 0;
     opts->warm_start_first_qp = false;
     opts->rti_phase = 0;
-    opts->print_level = 0;
     opts->initialize_t_slacks = 0;
 
     // overwrite default submodules opts
@@ -244,16 +243,6 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
                 printf("possible values are: 0\n");
                 exit(1);
             } else opts->rti_phase = *rti_phase;
-        }
-        else if (!strcmp(field, "print_level"))
-        {
-            int* print_level = (int *) value;
-            if (*print_level < 0)
-            {
-                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for print_level field, need int >=0, got %d.", *print_level);
-                exit(1);
-            }
-            opts->print_level = *print_level;
         }
         else if (!strcmp(field, "initialize_t_slacks"))
         {
@@ -555,7 +544,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);
         ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
 
-        if (opts->print_level > sqp_iter + 1)
+        if (nlp_opts->print_level > sqp_iter + 1)
         {
             printf("\n\nSQP: ocp_qp_in at iteration %d\n", sqp_iter);
             print_ocp_qp_in(qp_in);
@@ -584,7 +573,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->sqp_iter = sqp_iter;
             mem->time_tot = acados_toc(&timer0);
 
-            if (opts->print_level > 0)
+            if (nlp_opts->print_level > 0)
             {
                 printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, nlp_res->inf_norm_res_stat,
                     nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_ineq,
@@ -641,7 +630,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                                         "warm_start", &opts->qp_warm_start);
         }
 
-        if (opts->print_level > sqp_iter + 1)
+        if (nlp_opts->print_level > sqp_iter + 1)
         {
             printf("\n\nSQP: ocp_qp_out at iteration %d\n", sqp_iter);
             print_ocp_qp_out(qp_out);
@@ -679,7 +668,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // exit conditions on QP status
         if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
         {
-            if (opts->print_level > 0)
+            if (nlp_opts->print_level > 0)
             {
                 printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, nlp_res->inf_norm_res_stat,
                     nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_ineq,
@@ -698,10 +687,10 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             omp_set_num_threads(num_threads_bkp);
 #endif
 
-            if (opts->print_level > 1)
+            if (nlp_opts->print_level > 1)
             {
                 printf("\n Failed to solve the following QP:\n");
-                if (opts->print_level)
+                if (nlp_opts->print_level)
                     print_ocp_qp_in(qp_in);
             }
 
@@ -733,7 +722,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 // Paragraph: APPROACH III: S l1 QP (SEQUENTIAL l1 QUADRATIC PROGRAMMING),
                 // Section 18.8 TRUST-REGION SQP METHODS
                 //   - just no trust region radius here.
-                if (opts->print_level > 0)
+                if (nlp_opts->print_level > 0)
                     printf("ocp_nlp_sqp: performing SOC, since alpha %e in prelim. line search\n\n", alpha);
                 int *nb = qp_in->dim->nb;
                 int *ng = qp_in->dim->ng;
@@ -836,7 +825,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                     // blasfeo_print_exp_dvec(2*nb[ii]+2*ng[ii], qp_in->d+ii, 0);
                 }
 
-                if (opts->print_level > sqp_iter + 1)
+                if (nlp_opts->print_level > sqp_iter + 1)
                 {
                     printf("\n\nSQP: SOC ocp_qp_in at iteration %d\n", sqp_iter);
                     print_ocp_qp_in(qp_in);
@@ -887,7 +876,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                         ocp_qp_res_compute_nrm_inf(work->qp_res, mem->stat+(mem->stat_n*(sqp_iter+1)+7));
                 }
 
-                if (opts->print_level > sqp_iter + 1)
+                if (nlp_opts->print_level > sqp_iter + 1)
                 {
                     printf("\n\nSQP: SOC ocp_qp_out at iteration %d\n", sqp_iter);
                     print_ocp_qp_out(qp_out);
@@ -913,10 +902,10 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                     omp_set_num_threads(num_threads_bkp);
         #endif
 
-                    if (opts->print_level > 1)
+                    if (nlp_opts->print_level > 1)
                     {
                         printf("\n Failed to solve the following QP:\n");
-                        if (opts->print_level > sqp_iter + 1)
+                        if (nlp_opts->print_level > sqp_iter + 1)
                             print_ocp_qp_in(qp_in);
                     }
 
@@ -943,7 +932,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // update variables
         ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, alpha);
 
-        if (opts->print_level > 0)
+        if (nlp_opts->print_level > 0)
         {
             if (sqp_iter%10 == 0)
             {
@@ -954,7 +943,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
     }  // end SQP loop
 
-    if (opts->print_level > 0)
+    if (nlp_opts->print_level > 0)
         printf("\n\n");
 
     // ocp_nlp_out_print(dims, nlp_out);

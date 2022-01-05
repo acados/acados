@@ -270,6 +270,7 @@ typedef struct ocp_nlp_opts
     double levenberg_marquardt;  // LM factor to be added to the hessian before regularization
     int reuse_workspace;
     int num_threads;
+    int print_level;
 
     // TODO: move to separate struct?
     ocp_nlp_globalization_t globalization;
