@@ -133,6 +133,9 @@ def solve_marathos_problem_with_setting(setting):
     ocp.solver_options.qp_solver_iter_max = 400
     ocp.solver_options.regularize_method = 'MIRROR'
     # ocp.solver_options.exact_hess_constr = 0
+    ocp.solver_options.line_search_use_sufficient_descent = line_search_use_sufficient_descent
+    ocp.solver_options.glob_SOC = glob_SOC
+    ocp.solver_options.eps_sufficient_descent = 1e-1
 
     if FOR_LOOPING: # call solver in for loop to get all iterates
         ocp.solver_options.nlp_solver_max_iter = 1
@@ -140,9 +143,6 @@ def solve_marathos_problem_with_setting(setting):
     else:
         ocp.solver_options.nlp_solver_max_iter = SQP_max_iter
         ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
-    ocp_solver.options_set('line_search_use_sufficient_descent', line_search_use_sufficient_descent)
-    ocp_solver.options_set('glob_SOC', glob_SOC)
-    ocp_solver.options_set('eps_sufficient_descent', 1e-1)
 
     # initialize solver
     rad_init = 0.1 #0.1 #np.pi / 4

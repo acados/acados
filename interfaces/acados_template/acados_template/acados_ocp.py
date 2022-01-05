@@ -2151,6 +2151,10 @@ class AcadosOcpOptions:
         self.__ext_cost_num_hess = 0
         self.__alpha_min = 0.05
         self.__alpha_reduction = 0.7
+        self.__line_search_use_sufficient_descent = 0
+        self.__glob_SOC = 0
+        self.__full_step_dual = 0
+        self.__eps_sufficient_descent = 1e-4
 
 
     @property
@@ -2368,6 +2372,43 @@ class AcadosOcpOptions:
         return self.__alpha_reduction
 
     @property
+    def line_search_use_sufficient_descent(self):
+        """
+        Determines if sufficient descent (Armijo) condition is used in line search.
+        Type: int; 0 or 1;
+        default: 0.
+        """
+        return self.__line_search_use_sufficient_descent
+
+    @property
+    def eps_sufficient_descent(self):
+        """
+        Factor for sufficient descent (Armijo) conditon, see line_search_use_sufficient_descent.
+        Type: float,
+        default: 1e-4.
+        """
+        return self.__eps_sufficient_descent
+
+    @property
+    def glob_SOC(self):
+        """
+        Determines if second order correction (SOC) is done when using MERIT_BACKTRACKING.
+        SOC is done if preliminary line search does not return full step.
+        Type: int; 0 or 1;
+        default: 0.
+        """
+        return self.__glob_SOC
+
+    @property
+    def full_step_dual(self):
+        """
+        Determines if dual variables are updated with full steps (alpha=1.0) when primal variables are updated with smaller step.
+        Type: int; 0 or 1;
+        default: 0.
+        """
+        return self.__full_step_dual
+
+    @property
     def nlp_solver_tol_ineq(self):
         """NLP solver inequality tolerance"""
         return self.__nlp_solver_tol_ineq
@@ -2562,6 +2603,34 @@ class AcadosOcpOptions:
     @alpha_reduction.setter
     def alpha_reduction(self, alpha_reduction):
         self.__alpha_reduction = alpha_reduction
+
+    @line_search_use_sufficient_descent.setter
+    def line_search_use_sufficient_descent(self, line_search_use_sufficient_descent):
+        if line_search_use_sufficient_descent in [0, 1]:
+            self.__line_search_use_sufficient_descent = line_search_use_sufficient_descent
+        else:
+            raise Exception(f'Invalid value for line_search_use_sufficient_descent. Possible values are 0, 1, got {line_search_use_sufficient_descent}')
+
+    @glob_SOC.setter
+    def glob_SOC(self, glob_SOC):
+        if glob_SOC in [0, 1]:
+            self.__glob_SOC = glob_SOC
+        else:
+            raise Exception(f'Invalid value for glob_SOC. Possible values are 0, 1, got {glob_SOC}')
+
+    @full_step_dual.setter
+    def full_step_dual(self, full_step_dual):
+        if full_step_dual in [0, 1]:
+            self.__full_step_dual = full_step_dual
+        else:
+            raise Exception(f'Invalid value for full_step_dual. Possible values are 0, 1, got {full_step_dual}')
+
+    @eps_sufficient_descent.setter
+    def eps_sufficient_descent(self, eps_sufficient_descent):
+        if isinstance(eps_sufficient_descent, float) and eps_sufficient_descent > 0:
+            self.__eps_sufficient_descent = eps_sufficient_descent
+        else:
+            raise Exception('Invalid eps_sufficient_descent value. eps_sufficient_descent must be a positive float. Exiting')
 
     @sim_method_num_stages.setter
     def sim_method_num_stages(self, sim_method_num_stages):

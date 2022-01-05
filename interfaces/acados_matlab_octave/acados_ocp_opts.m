@@ -70,6 +70,10 @@ classdef acados_ocp_opts < handle
             obj.opts_struct.globalization = 'fixed_step';
             obj.opts_struct.alpha_min = 0.05;
             obj.opts_struct.alpha_reduction = 0.7;
+            obj.opts_struct.line_search_use_sufficient_descent = 0;
+            obj.opts_struct.glob_SOC = 0;
+            obj.opts_struct.full_step_dual = 0;
+            obj.opts_struct.eps_sufficient_descent = 1e-4;
 
             obj.opts_struct.qp_solver_iter_max = 50;
             % obj.opts_struct.qp_solver_cond_N = 5; % New horizon after partial condensing
@@ -203,6 +207,14 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.alpha_min = value;
             elseif (strcmp(field, 'alpha_reduction'))
                 obj.opts_struct.alpha_reduction = value;
+            elseif (strcmp(field, 'line_search_use_sufficient_descent'))
+                obj.opts_struct.line_search_use_sufficient_descent = value;
+            elseif (strcmp(field, 'glob_SOC'))
+                obj.opts_struct.glob_SOC = value;
+            elseif (strcmp(field, 'full_step_dual'))
+                obj.opts_struct.full_step_dual = value;
+            elseif (strcmp(field, 'eps_sufficient_descent'))
+                obj.opts_struct.eps_sufficient_descent = value;
             elseif (strcmp(field, 'globalization'))
                 obj.opts_struct.globalization = value;
             elseif (strcmp(field, 'parameter_values'))
