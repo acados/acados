@@ -1908,7 +1908,18 @@ int {{ model.name }}_acados_create_with_discretization({{ model.name }}_solver_c
 
     double alpha_reduction = {{ solver_options.alpha_reduction }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "alpha_reduction", &alpha_reduction);
+
+    int line_search_use_sufficient_descent = {{ solver_options.line_search_use_sufficient_descent }};
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "line_search_use_sufficient_descent", &line_search_use_sufficient_descent);
+
+    int glob_SOC = {{ solver_options.glob_SOC }};
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "glob_SOC", &glob_SOC);
+
+    double eps_sufficient_descent = {{ solver_options.eps_sufficient_descent }};
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "eps_sufficient_descent", &eps_sufficient_descent);
 {%- endif -%}
+    int full_step_dual = {{ solver_options.full_step_dual }};
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "full_step_dual", &full_step_dual);
 
 {%- if dims.nz > 0 %}
     // TODO: these options are lower level -> should be encapsulated! maybe through hessian approx option.
