@@ -136,6 +136,7 @@ def solve_marathos_problem_with_setting(setting):
     ocp.solver_options.line_search_use_sufficient_descent = line_search_use_sufficient_descent
     ocp.solver_options.globalization_use_SOC = globalization_use_SOC
     ocp.solver_options.eps_sufficient_descent = 1e-1
+    ocp.solver_options.qp_tol = 5e-7
 
     if FOR_LOOPING: # call solver in for loop to get all iterates
         ocp.solver_options.nlp_solver_max_iter = 1
@@ -217,8 +218,13 @@ def solve_marathos_problem_with_setting(setting):
                 if FOR_LOOPING and iter != 57:
                     raise Exception(f"Expected 57 SQP iterations when using globalized SQP without SOC on Marathos problem, got {iter}")
             elif line_search_use_sufficient_descent == 1:
-                if iter != 29:
-                    raise Exception(f"Expected 29 SQP iterations when using globalized SQP with SOC on Marathos problem, got {iter}")
+                if iter not in range(29, 37):
+                    # NOTE: got 29 locally and 36 on Github actions.
+                    # On Github actions the inequality constraint was numerically violated in the beginning.
+                    # This leads to very different behavior, since the merit gradient is so different.
+                    # Github actions:  merit_grad = -1.669330e+00, merit_grad_cost = -1.737950e-01, merit_grad_dyn = 0.000000e+00, merit_grad_ineq = -1.495535e+00
+                    # Jonathan Laptop: merit_grad = -1.737950e-01, merit_grad_cost = -1.737950e-01, merit_grad_dyn = 0.000000e+00, merit_grad_ineq = 0.000000e+00
+                    raise Exception(f"Expected SQP iterations in range(29, 37) when using globalized SQP with SOC on Marathos problem, got {iter}")
             else:
                 if iter != 12:
                     raise Exception(f"Expected 12 SQP iterations when using globalized SQP with SOC on Marathos problem, got {iter}")
