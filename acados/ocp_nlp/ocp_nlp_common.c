@@ -1297,7 +1297,7 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             int* print_level = (int *) value;
             if (*print_level < 0)
             {
-                printf("\nerror: ocp_nlp_opts_set: invalid value for print_level field, need int >=0, got %d.", *print_level);
+                printf("\nerror: ocp_nlp_opts_set: invalid value for print_level field, need int >=0, got %d.\n", *print_level);
                 exit(1);
             }
             opts->print_level = *print_level;
@@ -2413,7 +2413,7 @@ double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims
 
     merit_grad = merit_grad_cost + merit_grad_dyn + merit_grad_ineq;
     if (opts->print_level > 1)
-        printf("merit_grad = %e, merit_grad_cost = %e, merit_grad_dyn = %e, merit_grad_ineq = %e\n", merit_grad, merit_grad_cost, merit_grad_dyn, merit_grad_ineq);
+        printf("computed merit_grad = %e, merit_grad_cost = %e, merit_grad_dyn = %e, merit_grad_ineq = %e\n", merit_grad, merit_grad_cost, merit_grad_dyn, merit_grad_ineq);
 
     return merit_grad;
 }
@@ -2517,7 +2517,7 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
     for(i=0; i<N; i++)
     {
         tmp_fun_vec = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
-        // printf("\nMerit: dyn will multiply tmp_fun, weights\n");
+        // printf("\nMerit: dyn will multiply tmp_fun, weights %d\n", i);
         // blasfeo_print_exp_tran_dvec(nx[i+1], tmp_fun_vec, 0);
         // blasfeo_print_exp_tran_dvec(nx[i+1], work->weight_merit_fun->pi+i, 0);
         for(j=0; j<nx[i+1]; j++)
@@ -2652,6 +2652,10 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
             // to avoid armijo evaluation and loop when checking if SOC should be done
             if (check_early_termination)
             {
+                // TMP:
+                // printf("tmp: merit_grad eval in early termination\n");
+                // dmerit_dy = ocp_nlp_compute_merit_gradient(config, dims, in, out, opts, mem, work);
+
                 // TODO(oj): should the merit weight update be undone in case of early termination?
                 double violation_current = ocp_nlp_get_violation(config, dims, in, out, opts, mem, work);
 
@@ -2686,7 +2690,7 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
                 {
                     if (dmerit_dy > 1e-6 && opts->print_level > 0)
                     {
-                        printf("\nacados line search: found dmerit_dy = %e > 0. Setting it to 0.0 instead", dmerit_dy);
+                        printf("\nacados line search: found dmerit_dy = %e > 0. Setting it to 0.0 instead\n", dmerit_dy);
                     }
                     dmerit_dy = 0.0;
                 }
@@ -2716,7 +2720,7 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
                 merit_fun1 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
                 if (opts->print_level > 1)
                 {
-                    printf("\nbacktracking %d, merit_fun1 = %e, merit_fun0 %e", j, merit_fun1, merit_fun0);
+                    printf("backtracking %d, merit_fun1 = %e, merit_fun0 %e\n", j, merit_fun1, merit_fun0);
                 }
 
                 // if (merit_fun1 < merit_fun0 && merit_fun1 > max_next_merit_fun_val)

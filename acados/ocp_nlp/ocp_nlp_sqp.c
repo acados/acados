@@ -723,6 +723,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 int *nx = dims->nx;
                 int *nu = dims->nu;
                 int *ns = dims->ns;
+                // int *nv = dims->nv;
+                // int *ni = dims->ni;
 
                 /* evaluate constraints & dynamics at new step */
                 // The following (setting up ux + p in tmp_nlp_out and evaluation of constraints + dynamics)
@@ -795,7 +797,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                     blasfeo_dvecad(ng[ii], -1.0, &work->nlp_work->tmp_ni, 0, qp_in->d+ii, 2*nb[ii]+ng[ii]);
 
                     // add slack contributions
-                    // d[nb:nb+ng] += slack[idx?]
+                    // d[nb:nb+ng] += slack[idx]
                     // qp_in->idxs_rev
                     for (int j = 0; j < nb[ii]+ng[ii]; j++)
                     {
@@ -898,7 +900,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
                     if (nlp_opts->print_level > 1)
                     {
-                        printf("\n Failed to solve the following QP:\n");
+                        printf("\nFailed to solve the following QP:\n");
                         if (nlp_opts->print_level > sqp_iter + 1)
                             print_ocp_qp_in(qp_in);
                     }
