@@ -775,7 +775,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                         // add - \nabla c_i(x_k)^T * p_k
                         // c_i = f(x_k, u_k) - x_{k+1} (see dynamics module)
                         blasfeo_dgemv_t(nx[ii]+nu[ii], nx[ii+1], -1.0, qp_in->BAbt+ii, 0, 0,
-                                        qp_out->ux+ii, 0, 1.0, tmp_fun_vec, 0, qp_in->b+ii, 0);
+                                        qp_out->ux+ii, 0, -1.0, tmp_fun_vec, 0, qp_in->b+ii, 0);
+                        // NOTE: not sure why it is - tmp_fun_vec here!
                         blasfeo_dvecad(nx[ii+1], 1.0, qp_out->ux+ii+1, nu[ii+1], qp_in->b+ii, 0);
                     }
 
