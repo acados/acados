@@ -924,6 +924,8 @@ void ocp_nlp_dynamics_cont_compute_fun(void *config_, void *dims_, void *model_,
     // fun -= x[next_stage]
     blasfeo_daxpy(nx1, -1.0, mem->tmp_ux1, nu1, &mem->fun, 0, &mem->fun, 0);
 //    blasfeo_pack_dvec(nz, work->sim_out->zn, 1, mem->z_alg, 0);
+    // printf("\ndyn_cont: compute f:\n");
+    // blasfeo_print_exp_tran_dvec(nx1, &mem->fun, 0);
 
     return;
 
