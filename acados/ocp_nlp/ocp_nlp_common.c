@@ -2670,14 +2670,14 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
                     printf("\npreliminary line_search: merit0 %e, merit1 %e; viol_current %e, viol_step %e\n", merit_fun0, merit_fun1, violation_current, violation_step);
                 }
 
-                if (merit_fun1 > merit_fun0 || violation_step > violation_current)
-                {
-                    return reduction_factor * reduction_factor;
-                }
-                else
+                if (merit_fun1 < merit_fun0 && violation_step < violation_current)
                 {
                     // TODO: check armijo in this case?
                     return alpha;
+                }
+                else
+                {
+                    return reduction_factor * reduction_factor;
                 }
             }
 
