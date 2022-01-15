@@ -151,6 +151,14 @@ add_test(NAME python_pendulum_ocp_example
 add_test(NAME python_pendulum_ocp_example_reuse_code
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/ocp
         python minimal_example_ocp_reuse_code.py)
+# CMake test
+add_test(NAME python_pendulum_ocp_example_cmake
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/ocp
+        python minimal_example_ocp_cmake.py)
+# CMake and solver=DISCRETE test
+add_test(NAME python_example_ocp_dynamics_formulations_cmake
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/ocp
+        python example_ocp_dynamics_formulations_cmake.py --INTEGRATOR_TYPE DISCRETE)
 add_test(NAME python_nonuniform_discretization_ocp_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/ocp
         python nonuniform_discretization_example.py)
@@ -215,6 +223,10 @@ add_test(NAME python_pendulum_ocp_cost_example
 add_test(NAME python_pendulum_sim_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/sim
         python minimal_example_sim.py)
+# CMake test
+add_test(NAME python_pendulum_sim_example_cmake
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/sim
+        python minimal_example_sim_cmake.py)
 add_test(NAME python_pendulum_ext_sim_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/sim
         python extensive_example_sim.py)
