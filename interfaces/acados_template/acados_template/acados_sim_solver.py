@@ -228,6 +228,7 @@ class AcadosSimSolver:
 
             # Compile solver
             cwd = os.getcwd()
+            code_export_dir = os.path.abspath(code_export_dir)
             os.chdir(code_export_dir)
             if cmake_builder is not None:
                 cmake_builder.exec(code_export_dir)
@@ -258,8 +259,15 @@ class AcadosSimSolver:
             print('acados was compiled without OpenMP.')
 
         # Ctypes
-        shared_lib = f'{code_export_dir}/libacados_sim_solver_{model_name}.so'
-        self.shared_lib = CDLL(shared_lib)
+        lib_prefix = 'lib'
+        lib_ext = '.so'
+        if os.name == 'nt':
+            lib_prefix = ''
+            lib_ext = ''
+        self.shared_lib_name = os.path.join(code_export_dir, f'{lib_prefix}acados_sim_solver_{model_name}{lib_ext}')
+        print(f'self.shared_lib_name = "{self.shared_lib_name}"')
+        
+        self.shared_lib = CDLL(self.shared_lib_name)
 
 
         # create capsule

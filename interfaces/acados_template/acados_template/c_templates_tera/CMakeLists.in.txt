@@ -316,7 +316,11 @@ include_directories(
 link_directories(${ACADOS_LIB_PATH})
 
 # link to libraries
-link_libraries(acados hpipm blasfeo m {{ link_libs }})
+if(UNIX)
+    link_libraries(acados hpipm blasfeo m {{ link_libs }})
+else()
+    link_libraries(acados hpipm blasfeo {{ link_libs }})
+endif()
 
 # the targets
 

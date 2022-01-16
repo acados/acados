@@ -51,10 +51,9 @@ if __name__ == "__main__":
 
     integrator_type = args.INTEGRATOR_TYPE
     INTEGRATOR_TYPE_values = ['ERK', 'IRK', 'GNSF', 'DISCRETE']
-    msg = f'Invalid unit test value {integrator_type} for parameter INTEGRATOR_TYPE. Possible values are' \
-          f' {INTEGRATOR_TYPE_values}. Exiting.'
-    print(msg)
     if integrator_type not in INTEGRATOR_TYPE_values:
+        msg = f'Invalid unit test value {integrator_type} for parameter INTEGRATOR_TYPE. Possible values are' \
+              f' {INTEGRATOR_TYPE_values}. Exiting.'
         raise Exception(msg)
 
     # create ocp object to formulate the OCP
