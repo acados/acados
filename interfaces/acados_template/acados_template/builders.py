@@ -10,17 +10,16 @@ class CMakeBuilder:
     def __init__(self):
         self._source_dir = None  # private source directory, this is set to code_export_dir
         self.build_dir = 'build'
-        """The CMake build directory; default: :py:code:`build`."""
         self._build_dir = None  # private build directory, usually rendered to abspath(build_dir)
         self.generator = None
-        """Defines the generator, options can be found via `cmake --help` under 'Generator'. Linux default 'Unix Makefiles'; default value: `None`."""
+        """Defines the generator, options can be found via `cmake --help` under 'Generator'. Type: string. Linux default 'Unix Makefiles', Windows 'Visual Studio 15 2017 Win64'; default value: `None`."""
         # set something for Windows
         if os.name == 'nt':
             self.generator = 'Visual Studio 15 2017 Win64'
         self.build_targets = None
         """A comma-separated list of the build targets, if `None` then all targets will be build; type: List of strings; default: `None`."""
         self.options_on = None
-        """List of strings as CMake options which are translated to '-D Opt[0] -D Opt[1] ...'; default: `None`."""
+        """List of strings as CMake options which are translated to '-D Opt[0]=ON -D Opt[1]=ON ...'; default: `None`."""
 
     # Generate the command string for handling the cmake command.
     def get_cmd1_cmake(self):

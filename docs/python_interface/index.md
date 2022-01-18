@@ -54,6 +54,11 @@ The Python interface relies on the same problem formulation as the MATLAB interf
 6. Optional: Set `acados_lib_path`, `acados_include_path`.
     If you want the generated Makefile to refer to a specific path (e.g. when cross-compiling or compiling from a location different from the one where you generate the C code), you will have to set these paths accordingly in the generating Python code.
 
+### Windows
+The Python interface of acados can run under Windows using the CMake process.
+Take a look at the [CMake installation instructions for Workflow with Microsoft Visual C Compiler (MSVC)](../installation/index.html#workflow-with-microsoft-visual-c-compiler-msvc).
+We suggest to get started with the example
+`<acados_root>/examples/acados_python/getting_started/minimal_example_ocp_cmake.py`. It uses CMake instead of Make by providing an instance of the [CMakeBuilder class](#acados_template.builders.CMakeBuilder) to the constructor of [`AcadosOcpSolver`](#acados_template.acados_ocp_solver.AcadosOcpSolver) or [`AcadosSimSolver`](#acados_template.acados_sim_solver.AcadosSimSolver). Depending on your Visual Studio Version the CMake generator might have to be adapted (see [`CMakeBuilder.generator`](#acados_template.builders.CMakeBuilder.generator)).
 
 ## Overview
 The following image shows an overview of the available classes in the `acados` Python interface and their dependencies.
@@ -66,13 +71,13 @@ The following image shows an overview of the available classes in the `acados` P
 ```
 
 ## acados OCP solver interface
-The class `AcadosOcp` can be used to formulate optimal control problems (OCP), for which an acados solver (`AcadosOcpSolver`) can be created.
+The class [`AcadosOcp`](#acados_template.acados_ocp.AcadosOcp) can be used to formulate optimal control problems (OCP), for which an acados solver ([`AcadosOcpSolver`](#acados_template.acados_ocp_solver.AcadosOcpSolver)) can be created.
 
 The interface to interact with the acados OCP solver in C is based on [ctypes](https://cython.org/).
 
 Additionally, there is the option to use a Cython based wrapper around the C part.
 This offers faster interaction with the solver, because getter and setter calls, which include shape checking are done in compiled C code.
-The cython based wrapper is called `AcadosOcpSolverCython` and was added in [PR #791](https://github.com/acados/acados/pull/791).
+The cython based wrapper is called [`AcadosOcpSolverCython`](#acados_template.acados_ocp.AcadosOcpSolverCython) and was added in [PR #791](https://github.com/acados/acados/pull/791).
 `AcadosOcpSolverCython` and `AcadosOcpSolver` offer the same functionality and equivalent behavior is ensured in CI tests.
 
 ``` eval_rst

@@ -2,50 +2,58 @@
 
 // the graph
 digraph ocp {
-        // some graph-specific definitions
-        graph [
-               rankdir = "LR"
-               ];
+    bgcolor="transparent"
+    // some graph-specific definitions
+    graph [
+           rankdir = "LR"
+           ];
 
-        // define solver nodes
-        solver [label="AcadosOcpSolver"
-                 href="https://docs.acados.org/python_api/index.html#acados_template.acados_ocp_solver.AcadosOcpSolver", target="_top"];
-        ocp [label="<class> AcadosOcp | <dims> dims | <cost> cost | <constr> constr | <opts> opts | <model> model"
-             shape = "record"
-             href="https://docs.acados.org/python_api/index.html#acados_template.acados_ocp.AcadosOcp", target="_top"];
-        model [label="AcadosModel"
-               href="https://docs.acados.org/python_api/index.html#acados_template.acados_model.AcadosModel", target="_top"];
-        ocpdims [label="AcadosOcpDims"
-                 href="https://docs.acados.org/python_api/index.html#acados_template.acados_ocp.AcadosOcpDims", target="_top"];
-        ocpcost [label="AcadosOcpCost"
-                 href="https://docs.acados.org/python_api/index.html#acados_template.acados_ocp.AcadosOcpCost", target="_top"];
-        ocpconstr [label="AcadosOcpConstraints"
-                   href="https://docs.acados.org/python_api/index.html#acados_template.acados_ocp.AcadosOcpConstraints", target="_top"];
-        ocpopts [label="AcadosOcpOptions"
-                 href="https://docs.acados.org/python_api/index.html#acados_template.acados_ocp.AcadosOcpOptions", target="_top"];
-        // solver graph
-        ocp -> solver
-        model -> ocp:model;
-        ocpdims -> ocp:dims;
-        ocpcost -> ocp:cost;
-        ocpconstr -> ocp:constr;
-        ocpopts -> ocp:opts;
+    node [style=filled fillcolor=white];
+    // define the CMakeBuilder
+    cmakebuilder [label="optional:\nCMakeBuilder"
+                  href="../python_interface/index.html#acados_template.builders.CMakeBuilder", target="_top"];
 
-        // define sim nodes
-        sim [label="<class> AcadosSim | <model> model| <dims> dims | <opts> opts"
-             shape = "record"
-             href="https://docs.acados.org/python_api/index.html#acados_template.acados_sim.AcadosSim", target="_top"];
-        simdims [label="AcadosSimDims"
-                 href="https://docs.acados.org/python_api/index.html#acados_template.acados_sim.AcadosSimDims", target="_top"];
-        simopts [label="AcadosSimOpts"
-                 href="https://docs.acados.org/python_api/index.html#acados_template.acados_sim.AcadosSimOpts", target="_top"];
-        simsolver [label="AcadosSimSolver"
-                 href="https://docs.acados.org/python_api/index.html#acados_template.acados_sim_solver.AcadosSimSolver", target="_top"];
+    // define solver nodes
+    solver [label="AcadosOcpSolver"
+             href="../python_interface/index.html#acados_template.acados_ocp_solver.AcadosOcpSolver", target="_top"];
+    ocp [label="<class> AcadosOcp | <dims> dims | <cost> cost | <constr> constr | <opts> opts | <model> model"
+         shape = "record"
+         href="../python_interface/index.html#acados_template.acados_ocp.AcadosOcp", target="_top"];
+    model [label="AcadosModel"
+           href="../python_interface/index.html#acados_template.acados_model.AcadosModel", target="_top"];
+    ocpdims [label="AcadosOcpDims"
+             href="../python_interface/index.html#acados_template.acados_ocp.AcadosOcpDims", target="_top"];
+    ocpcost [label="AcadosOcpCost"
+             href="../python_interface/index.html#acados_template.acados_ocp.AcadosOcpCost", target="_top"];
+    ocpconstr [label="AcadosOcpConstraints"
+               href="../python_interface/index.html#acados_template.acados_ocp.AcadosOcpConstraints", target="_top"];
+    ocpopts [label="AcadosOcpOptions"
+             href="../python_interface/index.html#acados_template.acados_ocp.AcadosOcpOptions", target="_top"];
 
+    // solver graph
+    cmakebuilder -> solver;
+    ocp -> solver;
+    model -> ocp:model;
+    ocpdims -> ocp:dims;
+    ocpcost -> ocp:cost;
+    ocpconstr -> ocp:constr;
+    ocpopts -> ocp:opts;
 
-        // sim graph
-        model -> sim:model;
-        simdims -> sim:dims;
-        simopts -> sim:opts;
-        sim -> simsolver;
+    // define sim nodes
+    sim [label="<class> AcadosSim | <model> model| <dims> dims | <opts> opts"
+         shape = "record"
+         href="../python_interface/index.html#acados_template.acados_sim.AcadosSim", target="_top"];
+    simdims [label="AcadosSimDims"
+             href="../python_interface/index.html#acados_template.acados_sim.AcadosSimDims", target="_top"];
+    simopts [label="AcadosSimOpts"
+             href="../python_interface/index.html#acados_template.acados_sim.AcadosSimOpts", target="_top"];
+    simsolver [label="AcadosSimSolver"
+             href="../python_interface/index.html#acados_template.acados_sim_solver.AcadosSimSolver", target="_top"];
+
+    // sim graph
+    model -> sim:model;
+    simdims -> sim:dims;
+    simopts -> sim:opts;
+    sim -> simsolver;
+    cmakebuilder -> simsolver;
 }
