@@ -119,8 +119,10 @@ ocp.solver_options.qp_solver_iter_max = 100
 
 ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
-for i, tau in enumerate(np.linspace(0, 1, N)):
+for i, tau in enumerate(np.linspace(0, 1, N+1)):
     ocp_solver.set(i, 'x', (1-tau)*x0 + tau*xf)
+
+for i, tau in enumerate(np.linspace(0, 1, N)):
     ocp_solver.set(i, 'u', np.array([0.1, 0.5]))
 
 simX = np.zeros((N+1, nx))
