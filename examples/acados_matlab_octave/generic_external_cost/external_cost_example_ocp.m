@@ -173,7 +173,7 @@ for i=1:length(States)
 end
 
 figure
-stairs([utraj', utraj(end)])
+stairs([utraj'; utraj(end)])
 grid on
 
 %% go embedded
