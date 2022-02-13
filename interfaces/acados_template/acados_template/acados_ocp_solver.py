@@ -809,6 +809,24 @@ class AcadosOcpSolver:
           os.system('make ocp_shared_lib')
           os.chdir(cwd)
 
+        # Load acados library to avoid unloading the library.
+        # This is necessary if acados was compiled with OpenMP, since the OpenMP threads can't be destroyed.
+        # Unloading a library which uses OpenMP results in a segfault (on any platform?).
+        # see [https://stackoverflow.com/questions/34439956/vc-crash-when-freeing-a-dll-built-with-openmp]
+        # or [https://python.hotexamples.com/examples/_ctypes/-/dlclose/python-dlclose-function-examples.html]
+        libacados_name = 'libacados.so'
+        libacados_filepath = os.path.join(acados_ocp.acados_lib_path, libacados_name)
+        self.__acados_lib = CDLL(libacados_filepath)
+        # find out if acados was compiled with OpenMP
+        try:
+            self.__acados_lib_uses_omp = getattr(self.__acados_lib, 'omp_get_thread_num') is not None
+        except AttributeError as e:
+            self.__acados_lib_uses_omp = False
+        if self.__acados_lib_uses_omp:
+            print('acados was compiled with OpenMP.')
+        else:
+            print('acados was compiled without OpenMP.')
+
         self.shared_lib_name = f'{code_export_dir}/libacados_ocp_solver_{model.name}.so'
 
         # get shared_lib
