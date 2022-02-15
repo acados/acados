@@ -670,6 +670,12 @@ void ocp_nlp_constraint_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims 
                                             "nbx", &dims_out[0]);
         return;
     }
+    else if (!strcmp(field, "uphi"))
+    {
+        config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage],
+                                            "nphi", &dims_out[0]);
+        return;
+    }
     else if (!strcmp(field, "lbu") || !strcmp(field, "ubu"))
     {
         config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage],
