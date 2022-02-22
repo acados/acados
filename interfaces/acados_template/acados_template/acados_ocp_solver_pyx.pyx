@@ -420,7 +420,7 @@ cdef class AcadosOcpSolverFast:
         acados_solver_common.ocp_nlp_dynamics_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage, field, &dims[0])
 
         # create output data
-        out = np.zeros((dims[0], dims[1]), order='F', dtype=np.float64)
+        cdef cnp.ndarray[cnp.float64_t, ndim=2] out = np.zeros((dims[0], dims[1]), order='F')
 
         # call getter
         acados_solver_common.ocp_nlp_get_at_stage(self.nlp_config, self.nlp_dims, self.nlp_solver, stage, field, <void *> out.data)
