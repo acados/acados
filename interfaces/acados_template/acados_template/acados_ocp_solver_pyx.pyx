@@ -44,6 +44,8 @@ cimport acados_solver
 cimport numpy as cnp
 
 import os
+import json
+from datetime import datetime
 import numpy as np
 
 
@@ -177,7 +179,33 @@ cdef class AcadosOcpSolverFast:
             :param filename: if not set, use model_name + timestamp + '.json'
             :param overwrite: if false and filename exists add timestamp to filename
         """
-        raise NotImplementedError()
+        if filename == '':
+            filename += self.model_name + '_' + 'iterate' + '.json'
+
+        if not overwrite:
+            # append timestamp
+            if os.path.isfile(filename):
+                filename = filename[:-5]
+                filename += datetime.utcnow().strftime('%Y-%m-%d-%H:%M:%S.%f') + '.json'
+
+        # get iterate:
+        solution = dict()
+
+        for i in range(self.N+1):
+            solution['x_'+str(i)] = self.get(i,'x')
+            solution['u_'+str(i)] = self.get(i,'u')
+            solution['z_'+str(i)] = self.get(i,'z')
+            solution['lam_'+str(i)] = self.get(i,'lam')
+            solution['t_'+str(i)] = self.get(i, 't')
+            solution['sl_'+str(i)] = self.get(i, 'sl')
+            solution['su_'+str(i)] = self.get(i, 'su')
+        for i in range(self.N):
+            solution['pi_'+str(i)] = self.get(i,'pi')
+
+        # save
+        with open(filename, 'w') as f:
+            json.dump(solution, f, default=lambda x: x.tolist(), indent=4, sort_keys=True)
+        print("stored current iterate in ", os.path.join(os.getcwd(), filename))
 
 
     def load_iterate(self, filename):
@@ -276,7 +304,32 @@ cdef class AcadosOcpSolverFast:
         """
         Returns an array of the form [res_stat, res_eq, res_ineq, res_comp].
         """
-        raise NotImplementedError()
+        # TODO: check if RTI, only eval then
+        # if self.acados_ocp.solver_options.nlp_solver_type == 'SQP_RTI':
+        # compute residuals if RTI
+        acados_solver_common.ocp_nlp_eval_residuals(self.nlp_solver, self.nlp_in, self.nlp_out)
+
+        # create output array
+        cdef cnp.ndarray[cnp.float64_t, ndim=1] out = np.ascontiguousarray(np.zeros((4,), dtype=np.float64))
+        cdef double double_value
+
+        field = "res_stat".encode('utf-8')
+        acados_solver_common.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, <void *> &double_value)
+        out[0] = double_value
+
+        field = "res_eq".encode('utf-8')
+        acados_solver_common.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, <void *> &double_value)
+        out[1] = double_value
+
+        field = "res_ineq".encode('utf-8')
+        acados_solver_common.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, <void *> &double_value)
+        out[2] = double_value
+
+        field = "res_comp".encode('utf-8')
+        acados_solver_common.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, <void *> &double_value)
+        out[3] = double_value
+
+        return out
 
 
     # Note: this function should not be used anymore, better use cost_set, constraints_set
