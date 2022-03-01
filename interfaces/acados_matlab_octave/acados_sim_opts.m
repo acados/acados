@@ -50,6 +50,7 @@ classdef acados_sim_opts < handle
             obj.opts_struct.codgen_model = 'true';
             obj.opts_struct.compile_model = 'true';
             obj.opts_struct.method = 'irk';
+            obj.opts_struct.collocation_type = 'gauss_legendre'
             obj.opts_struct.num_stages = 4;
             obj.opts_struct.num_steps = 1;
             obj.opts_struct.newton_iter = 3;
@@ -100,6 +101,8 @@ classdef acados_sim_opts < handle
                 obj.opts_struct.gnsf_detect_struct = value;
             elseif (strcmp(field, 'output_dir'))
                 obj.opts_struct.output_dir = value;
+            elseif (strcmp(field, 'collocation_type'))
+                obj.opts_struct.collocation_type = value;
             elseif (strcmp(field, 'compile_mex'))
                 disp(['Option compile_mex is not supported anymore,'...
                     'please use compile_interface instead or dont set the option.', ...

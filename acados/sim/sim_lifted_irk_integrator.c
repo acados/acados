@@ -200,10 +200,7 @@ acados_size_t sim_lifted_irk_opts_calculate_size(void *config_, void *dims)
     size += ns_max * sizeof(double);           // b_vec
     size += ns_max * sizeof(double);           // c_vec
 
-    acados_size_t tmp0 = gauss_nodes_work_calculate_size(ns_max);
-    acados_size_t tmp1 = butcher_table_work_calculate_size(ns_max);
-    acados_size_t work_size = tmp0 > tmp1 ? tmp0 : tmp1;
-    size += work_size;  // work
+    size += butcher_tableau_work_calculate_size(ns_max);
 
     make_int_multiple_of(8, &size);
     size += 1 * 8;
@@ -229,11 +226,8 @@ void *sim_lifted_irk_opts_assign(void *config_, void *dims, void *raw_memory)
     assign_and_advance_double(ns_max, &opts->c_vec, &c_ptr);
 
     // work
-    acados_size_t tmp0 = gauss_nodes_work_calculate_size(ns_max);
-    acados_size_t tmp1 = butcher_table_work_calculate_size(ns_max);
-    acados_size_t work_size = tmp0 > tmp1 ? tmp0 : tmp1;
     opts->work = c_ptr;
-    c_ptr += work_size;
+    c_ptr += butcher_tableau_work_calculate_size(ns_max);
 
     assert((char *) raw_memory + sim_lifted_irk_opts_calculate_size(config_, dims) >= c_ptr);
 
@@ -247,34 +241,38 @@ void sim_lifted_irk_opts_initialize_default(void *config_, void *dims_, void *op
     sim_opts *opts = opts_;
     sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) dims_;
 
-    int nx = dims->nx;
-    int nu = dims->nu;
-    opts->ns = 3;  // GL 3
-    int ns = opts->ns;
-
-    assert(ns <= NS_MAX && "ns > NS_MAX!");
-
-    // set tableau size
-    opts->tableau_size = opts->ns;
-
-    // gauss collocation nodes
-    gauss_nodes(ns, opts->c_vec, opts->work);
-
-    // butcher tableau
-    butcher_table(ns, opts->c_vec, opts->b_vec, opts->A_mat, opts->work);
-
     // default options
-    opts->newton_iter = 1;
-    opts->scheme = NULL;
-    opts->num_steps = 1;
-    opts->num_forw_sens = nx + nu;
+    opts->newton_iter = 3;
+    // opts->scheme = NULL;
+    opts->num_steps = 2;
+    opts->num_forw_sens = dims->nx + dims->nu;
     opts->sens_forw = true;
     opts->sens_adj = false;
     opts->sens_hess = false;
-    opts->jac_reuse = false;
+    opts->jac_reuse = true;
+    opts->exact_z_output = false;
+    opts->ns = 3;
+    opts->collocation_type = GAUSS_LEGENDRE;
 
-    opts->output_z = false;
-    opts->sens_algebraic = false;
+    assert(opts->ns <= NS_MAX && "ns > NS_MAX!");
+
+    // butcher tableau
+    calculate_butcher_tableau(opts->ns, opts->collocation_type, opts->c_vec, opts->b_vec, opts->A_mat, opts->work);
+    // for consistency check
+    opts->tableau_size = opts->ns;
+
+    // TODO(oj): check if constr h or cost depend on z, turn on in this case only.
+    if (dims->nz > 0)
+    {
+        opts->output_z = true;
+        opts->sens_algebraic = true;
+    }
+    else
+    {
+        opts->output_z = false;
+        opts->sens_algebraic = false;
+    }
+
     return;
 }
 
@@ -284,18 +282,11 @@ void sim_lifted_irk_opts_update(void *config_, void *dims, void *opts_)
 {
     sim_opts *opts = opts_;
 
-    int ns = opts->ns;
+    assert(opts->ns <= NS_MAX && "ns > NS_MAX!");
 
-    assert(ns <= NS_MAX && "ns > NS_MAX!");
+    calculate_butcher_tableau(opts->ns, opts->collocation_type, opts->c_vec, opts->b_vec, opts->A_mat, opts->work);
 
-    // set tableau size
     opts->tableau_size = opts->ns;
-
-    // gauss collocation nodes
-    gauss_nodes(ns, opts->c_vec, opts->work);
-
-    // butcher tableau
-    butcher_table(ns, opts->c_vec, opts->b_vec, opts->A_mat, opts->work);
 
     return;
 }

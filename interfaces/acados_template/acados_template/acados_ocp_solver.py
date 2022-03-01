@@ -49,9 +49,9 @@ from .generate_c_code_nls_cost import generate_c_code_nls_cost
 from .generate_c_code_external_cost import generate_c_code_external_cost
 from .acados_ocp import AcadosOcp
 from .acados_model import acados_model_strip_casadi_symbolics
-from .utils import is_column, is_empty, casadi_length, render_template, acados_class2dict,\
+from .utils import is_column, is_empty, casadi_length, render_template,\
      format_class_dict, ocp_check_against_layout, np_array_to_list, make_model_consistent,\
-     set_up_imported_gnsf_model, get_acados_path
+     set_up_imported_gnsf_model, get_acados_path, get_ocp_nlp_layout, get_python_interface_path
 
 
 def make_ocp_dims_consistent(acados_ocp):
@@ -432,9 +432,15 @@ def make_ocp_dims_consistent(acados_ocp):
         if np.shape(opts.shooting_nodes)[0] != dims.N+1:
             raise Exception('inconsistent dimension N, regarding shooting_nodes.')
 
-        time_steps = np.zeros((dims.N,))
-        for i in range(dims.N):
-            time_steps[i] = opts.shooting_nodes[i+1] - opts.shooting_nodes[i]
+        time_steps = opts.shooting_nodes[1:] - opts.shooting_nodes[0:-1]
+        # identify constant time-steps: due to numerical reasons the content of time_steps might vary a bit
+        delta_time_steps = time_steps[1:] - time_steps[0:-1]
+        avg_time_steps = np.average(time_steps)
+        # criterion for constant time-step detection: the min/max difference in values normalized by the average
+        check_const_time_step = np.max(delta_time_steps)-np.min(delta_time_steps) / avg_time_steps
+        # if the criterion is small, we have a constant time-step
+        if check_const_time_step < 1e-9:
+            time_steps[:] = avg_time_steps  # if we have a constant time-step: apply the average time-step
         opts.time_steps = time_steps
 
     elif (not is_empty(opts.time_steps)) and (not is_empty(opts.shooting_nodes)):
@@ -482,13 +488,12 @@ def make_ocp_dims_consistent(acados_ocp):
         raise Exception("Wrong value for sim_method_jac_reuse. Should be either int or array of ints of shape (N,).")
 
 
-
-def get_ocp_nlp_layout():
-    current_module = sys.modules[__name__]
-    acados_path = os.path.dirname(current_module.__file__)
-    with open(acados_path + '/acados_layout.json', 'r') as f:
-        ocp_nlp_layout = json.load(f)
-    return ocp_nlp_layout
+def get_simulink_default_opts():
+    python_interface_path = get_python_interface_path()
+    abs_path = os.path.join(python_interface_path, 'simulink_default_opts.json')
+    with open(abs_path , 'r') as f:
+        simulink_default_opts = json.load(f)
+    return simulink_default_opts
 
 
 def ocp_formulation_json_dump(acados_ocp, simulink_opts, json_file='acados_ocp_nlp.json'):
@@ -513,8 +518,7 @@ def ocp_formulation_json_dump(acados_ocp, simulink_opts, json_file='acados_ocp_n
 
     # strip shooting_nodes
     ocp_nlp_dict['solver_options'].pop('shooting_nodes', None)
-
-    dims_dict = acados_class2dict(acados_ocp.dims)
+    dims_dict = format_class_dict(acados_ocp.dims.__dict__)
 
     ocp_check_against_layout(ocp_nlp_dict, dims_dict)
 
@@ -619,9 +623,7 @@ def ocp_render_templates(acados_ocp, json_file):
     name = acados_ocp.model.name
 
     # setting up loader and environment
-    json_path = '{cwd}/{json_file}'.format(
-        cwd=os.getcwd(),
-        json_file=json_file)
+    json_path = os.path.join(os.getcwd(), json_file)
 
     if not os.path.exists(json_path):
         raise Exception('{} not found!'.format(json_path))
@@ -668,8 +670,7 @@ def ocp_render_templates(acados_ocp, json_file):
     render_template(in_file, out_file, template_dir, json_path)
 
     ## folder model
-    template_dir = f'{code_export_dir}/{name}_model/'
-
+    template_dir = os.path.join(code_export_dir, name + '_model')
     in_file = 'model.in.h'
     out_file = f'{name}_model.h'
     render_template(in_file, out_file, template_dir, json_path)
@@ -677,7 +678,7 @@ def ocp_render_templates(acados_ocp, json_file):
     # constraints on convex over nonlinear function
     if acados_ocp.constraints.constr_type == 'BGP' and acados_ocp.dims.nphi > 0:
         # constraints on outer function
-        template_dir = f'{code_export_dir}/{name}_constraints/'
+        template_dir = os.path.join(code_export_dir, name + '_constraints')
         in_file = 'phi_constraint.in.h'
         out_file =  f'{name}_phi_constraint.h'
         render_template(in_file, out_file, template_dir, json_path)
@@ -685,62 +686,62 @@ def ocp_render_templates(acados_ocp, json_file):
     # terminal constraints on convex over nonlinear function
     if acados_ocp.constraints.constr_type_e == 'BGP' and acados_ocp.dims.nphi_e > 0:
         # terminal constraints on outer function
-        template_dir = f'{code_export_dir}/{name}_constraints/'
+        template_dir = os.path.join(code_export_dir, name + '_constraints')
         in_file = 'phi_e_constraint.in.h'
         out_file =  f'{name}_phi_e_constraint.h'
         render_template(in_file, out_file, template_dir, json_path)
 
     # nonlinear constraints
     if acados_ocp.constraints.constr_type == 'BGH' and acados_ocp.dims.nh > 0:
-        template_dir = f'{code_export_dir}/{name}_constraints/'
+        template_dir = os.path.join(code_export_dir, name + '_constraints')
         in_file = 'h_constraint.in.h'
         out_file = f'{name}_h_constraint.h'
         render_template(in_file, out_file, template_dir, json_path)
 
     # terminal nonlinear constraints
     if acados_ocp.constraints.constr_type_e == 'BGH' and acados_ocp.dims.nh_e > 0:
-        template_dir = f'{code_export_dir}/{name}_constraints/'
+        template_dir = os.path.join(code_export_dir, name + '_constraints')
         in_file = 'h_e_constraint.in.h'
         out_file = f'{name}_h_e_constraint.h'
         render_template(in_file, out_file, template_dir, json_path)
 
     # initial stage Nonlinear LS cost function
     if acados_ocp.cost.cost_type_0 == 'NONLINEAR_LS':
-        template_dir = f'{code_export_dir}/{name}_cost/'
+        template_dir = os.path.join(code_export_dir, name + '_cost')
         in_file = 'cost_y_0_fun.in.h'
         out_file = f'{name}_cost_y_0_fun.h'
         render_template(in_file, out_file, template_dir, json_path)
     # external cost - terminal
     elif acados_ocp.cost.cost_type_0 == 'EXTERNAL':
-        template_dir = f'{code_export_dir}/{name}_cost/'
+        template_dir = os.path.join(code_export_dir, name + '_cost')
         in_file = 'external_cost_0.in.h'
         out_file = f'{name}_external_cost_0.h'
         render_template(in_file, out_file, template_dir, json_path)
 
     # path Nonlinear LS cost function
     if acados_ocp.cost.cost_type == 'NONLINEAR_LS':
-        template_dir = f'{code_export_dir}/{name}_cost/'
+        template_dir = os.path.join(code_export_dir, name + '_cost')
         in_file = 'cost_y_fun.in.h'
         out_file = f'{name}_cost_y_fun.h'
         render_template(in_file, out_file, template_dir, json_path)
 
     # terminal Nonlinear LS cost function
     if acados_ocp.cost.cost_type_e == 'NONLINEAR_LS':
-        template_dir = f'{code_export_dir}/{name}_cost/'
+        template_dir = os.path.join(code_export_dir, name + '_cost')
         in_file = 'cost_y_e_fun.in.h'
         out_file = f'{name}_cost_y_e_fun.h'
         render_template(in_file, out_file, template_dir, json_path)
 
     # external cost
     if acados_ocp.cost.cost_type == 'EXTERNAL':
-        template_dir = f'{code_export_dir}/{name}_cost/'
+        template_dir = os.path.join(code_export_dir, name + '_cost')
         in_file = 'external_cost.in.h'
         out_file = f'{name}_external_cost.h'
         render_template(in_file, out_file, template_dir, json_path)
 
     # external cost - terminal
     if acados_ocp.cost.cost_type_e == 'EXTERNAL':
-        template_dir = f'{code_export_dir}/{name}_cost/'
+        template_dir = os.path.join(code_export_dir, name + '_cost')
         in_file = 'external_cost_e.in.h'
         out_file = f'{name}_external_cost_e.h'
         render_template(in_file, out_file, template_dir, json_path)
@@ -775,10 +776,7 @@ class AcadosOcpSolver:
         model = acados_ocp.model
 
         if simulink_opts == None:
-            acados_path = get_acados_path()
-            json_path = os.path.join(acados_path, 'interfaces/acados_template/acados_template')
-            with open(json_path + '/simulink_default_opts.json', 'r') as f:
-                simulink_opts = json.load(f)
+            simulink_opts = get_simulink_default_opts()
 
         # make dims consistent
         make_ocp_dims_consistent(acados_ocp)
@@ -811,6 +809,24 @@ class AcadosOcpSolver:
           os.system('make ocp_shared_lib')
           os.chdir(cwd)
 
+        # Load acados library to avoid unloading the library.
+        # This is necessary if acados was compiled with OpenMP, since the OpenMP threads can't be destroyed.
+        # Unloading a library which uses OpenMP results in a segfault (on any platform?).
+        # see [https://stackoverflow.com/questions/34439956/vc-crash-when-freeing-a-dll-built-with-openmp]
+        # or [https://python.hotexamples.com/examples/_ctypes/-/dlclose/python-dlclose-function-examples.html]
+        libacados_name = 'libacados.so'
+        libacados_filepath = os.path.join(acados_ocp.acados_lib_path, libacados_name)
+        self.__acados_lib = CDLL(libacados_filepath)
+        # find out if acados was compiled with OpenMP
+        try:
+            self.__acados_lib_uses_omp = getattr(self.__acados_lib, 'omp_get_thread_num') is not None
+        except AttributeError as e:
+            self.__acados_lib_uses_omp = False
+        if self.__acados_lib_uses_omp:
+            print('acados was compiled with OpenMP.')
+        else:
+            print('acados was compiled without OpenMP.')
+
         self.shared_lib_name = f'{code_export_dir}/libacados_ocp_solver_{model.name}.so'
 
         # get shared_lib
@@ -826,7 +842,20 @@ class AcadosOcpSolver:
         assert getattr(self.shared_lib, f"{model.name}_acados_create")(self.capsule)==0
         self.solver_created = True
 
+        self.acados_ocp = acados_ocp
+
         # get pointers solver
+        self.__get_pointers_solver()
+
+        self.status = 0
+
+
+    def __get_pointers_solver(self):
+        """
+        Private function to get the pointers for solver
+        """
+        # get pointers solver
+        model = self.acados_ocp.model
         getattr(self.shared_lib, f"{model.name}_acados_get_nlp_opts").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{model.name}_acados_get_nlp_opts").restype = c_void_p
         self.nlp_opts = getattr(self.shared_lib, f"{model.name}_acados_get_nlp_opts")(self.capsule)
@@ -843,6 +872,10 @@ class AcadosOcpSolver:
         getattr(self.shared_lib, f"{model.name}_acados_get_nlp_out").restype = c_void_p
         self.nlp_out = getattr(self.shared_lib, f"{model.name}_acados_get_nlp_out")(self.capsule)
 
+        getattr(self.shared_lib, f"{model.name}_acados_get_sens_out").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{model.name}_acados_get_sens_out").restype = c_void_p
+        self.sens_out = getattr(self.shared_lib, f"{model.name}_acados_get_sens_out")(self.capsule)
+
         getattr(self.shared_lib, f"{model.name}_acados_get_nlp_in").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{model.name}_acados_get_nlp_in").restype = c_void_p
         self.nlp_in = getattr(self.shared_lib, f"{model.name}_acados_get_nlp_in")(self.capsule)
@@ -850,8 +883,6 @@ class AcadosOcpSolver:
         getattr(self.shared_lib, f"{model.name}_acados_get_nlp_solver").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{model.name}_acados_get_nlp_solver").restype = c_void_p
         self.nlp_solver = getattr(self.shared_lib, f"{model.name}_acados_get_nlp_solver")(self.capsule)
-
-        self.acados_ocp = acados_ocp
 
 
     def solve(self):
@@ -862,8 +893,124 @@ class AcadosOcpSolver:
 
         getattr(self.shared_lib, f"{model.name}_acados_solve").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{model.name}_acados_solve").restype = c_int
-        status = getattr(self.shared_lib, f"{model.name}_acados_solve")(self.capsule)
-        return status
+        self.status = getattr(self.shared_lib, f"{model.name}_acados_solve")(self.capsule)
+        return self.status
+
+
+    def set_new_time_steps(self, new_time_steps):
+        """
+        Set new time steps before solving. Only reload library without code generation but with new time steps.
+
+            :param new_time_steps: vector of new time steps for the solver
+
+            .. note:: This allows for different use-cases: either set a new size of time-steps or a new distribution of
+                      the shooting nodes without changing the number, e.g., to reach a different final time. Both cases
+                      do not require a new code export and compilation.
+        """
+
+        # unlikely but still possible
+        if not self.solver_created:
+            raise Exception('Solver was not yet created!')
+
+        # check if time steps really changed in value
+        if np.array_equal(self.acados_ocp.solver_options.time_steps, new_time_steps):
+            return
+
+        N = new_time_steps.size
+        model = self.acados_ocp.model
+        new_time_steps_data = cast(new_time_steps.ctypes.data, POINTER(c_double))
+
+        # check if recreation of acados is necessary (no need to recreate acados if sizes are identical)
+        if self.acados_ocp.solver_options.time_steps.size == N:
+            getattr(self.shared_lib, f"{model.name}_acados_update_time_steps").argtypes = [c_void_p, c_int, c_void_p]
+            getattr(self.shared_lib, f"{model.name}_acados_update_time_steps").restype = c_int
+            assert getattr(self.shared_lib, f"{model.name}_acados_update_time_steps")(self.capsule, N, new_time_steps_data) == 0
+        else:  # recreate the solver with the new time steps
+            self.solver_created = False
+
+            # delete old memory (analog to __del__)
+            getattr(self.shared_lib, f"{model.name}_acados_free").argtypes = [c_void_p]
+            getattr(self.shared_lib, f"{model.name}_acados_free").restype = c_int
+            getattr(self.shared_lib, f"{model.name}_acados_free")(self.capsule)
+
+            # store N and new time steps
+            self.N = self.acados_ocp.dims.N = N
+
+            # create solver with new time steps
+            getattr(self.shared_lib, f"{model.name}_acados_create_with_discretization").argtypes = [c_void_p, c_int, c_void_p]
+            getattr(self.shared_lib, f"{model.name}_acados_create_with_discretization").restype = c_int
+            assert getattr(self.shared_lib, f"{model.name}_acados_create_with_discretization")(self.capsule, N, new_time_steps_data) == 0
+
+            self.solver_created = True
+
+            # get pointers solver
+            self.__get_pointers_solver()
+
+        # store time_steps internally
+        self.acados_ocp.solver_options.time_steps = new_time_steps
+        # set integrator time automatically
+        self.acados_ocp.solver_options.Tsim = self.acados_ocp.solver_options.time_steps[0]
+
+
+    def update_qp_solver_cond_N(self, qp_solver_cond_N: int):
+        """
+        Set new `qp_solver_cond_N` before solving with a partial condensing QP solver. This function is relevant for
+        code reuse, i.e., if either `set_new_time_steps(...)` is used or the influence of a different `qp_solver_cond_N`
+        is studied without code export and compilation.
+            :param qp_solver_cond_N: new number of condensing stages for the solver
+
+            .. note:: This function can only be used in combination with a partial condensing QP solver.
+
+            .. note:: After `set_new_time_steps(...)` is used and depending on the new number of time steps it might be
+                      necessary to change `qp_solver_cond_N` as well (using this function), i.e., typically
+                      `qp_solver_cond_N < N`.
+        """
+        # unlikely but still possible
+        if not self.solver_created:
+            raise Exception('Solver was not yet created!')
+        if self.N < qp_solver_cond_N:
+            raise Exception('Setting qp_solver_cond_N to be larger than N does not work!')
+        if self.acados_ocp.solver_options.qp_solver_cond_N != qp_solver_cond_N:
+            # reinitialize the solver
+            self.solver_created = False
+
+            # create solver with new time steps
+            fun_name = f'{self.acados_ocp.model.name}_acados_update_qp_solver_cond_N'
+            getattr(self.shared_lib, fun_name).argtypes = [c_void_p, c_int]
+            getattr(self.shared_lib, fun_name).restype = c_int
+            assert getattr(self.shared_lib, fun_name)(self.capsule, qp_solver_cond_N) == 0
+
+            # store the new value
+            self.acados_ocp.solver_options.qp_solver_cond_N = qp_solver_cond_N
+            self.solver_created = True
+
+            # get pointers solver
+            self.__get_pointers_solver()
+
+
+    def eval_param_sens(self, index, stage=0, field="ex"):
+        """
+        Calculate the sensitivity of the curent solution with respect to the initial state component of index
+
+            :param index: integer corresponding to initial state index in range(nx)
+        """
+
+        field_ = field
+        field = field_.encode('utf-8')
+
+        if not isinstance(index, int):
+            raise Exception('AcadosOcpSolver.get(): index must be Integer.')
+
+        if index < 0 or index > self.acados_ocp.dims.nx:
+            raise Exception('AcadosOcpSolver.get(): index must be in [0, nx-1], got: {}.'.format(index))
+
+        self.shared_lib.ocp_nlp_eval_param_sens.argtypes = \
+            [c_void_p, c_char_p, c_int, c_int, c_void_p]
+        self.shared_lib.ocp_nlp_eval_param_sens.restype = None
+        self.shared_lib.ocp_nlp_eval_param_sens( \
+            self.nlp_solver, field, stage, index, self.sens_out)
+
+        return
 
 
     def get(self, stage_, field_):
@@ -885,24 +1032,31 @@ class AcadosOcpSolver:
                       su: slack variables of soft upper inequality constraints \n
         """
 
-        out_fields = ['x', 'u', 'z', 'pi', 'lam', 't']
-        mem_fields = ['sl', 'su']
-        field = field_
-        field = field.encode('utf-8')
+        out_fields = ['x', 'u', 'z', 'pi', 'lam', 't', 'sl', 'su']
+        # mem_fields = ['sl', 'su']
+        sens_fields = ['sens_u', "sens_x"]
+        all_fields = out_fields + sens_fields
 
-        if (field_ not in out_fields + mem_fields):
+        field = field_
+
+        if (field_ not in all_fields):
             raise Exception('AcadosOcpSolver.get(): {} is an invalid argument.\
-                    \n Possible values are {}. Exiting.'.format(field_, out_fields + mem_fields))
+                    \n Possible values are {}. Exiting.'.format(field_, all_fields))
 
         if not isinstance(stage_, int):
             raise Exception('AcadosOcpSolver.get(): stage index must be Integer.')
 
         if stage_ < 0 or stage_ > self.N:
-            raise Exception('AcadosOcpSolver.get(): stage index must be in [0, N], got: {}.'.format(self.N))
+            raise Exception('AcadosOcpSolver.get(): stage index must be in [0, N], got: {}.'.format(stage_))
 
         if stage_ == self.N and field_ == 'pi':
             raise Exception('AcadosOcpSolver.get(): field {} does not exist at final stage {}.'\
                 .format(field_, stage_))
+
+        if field_ in sens_fields:
+            field = field_.replace('sens_', '')
+
+        field = field.encode('utf-8')
 
         self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = \
             [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
@@ -919,11 +1073,16 @@ class AcadosOcpSolver:
                 [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
             self.shared_lib.ocp_nlp_out_get(self.nlp_config, \
                 self.nlp_dims, self.nlp_out, stage_, field, out_data)
-        elif field_ in mem_fields:
-            self.shared_lib.ocp_nlp_get_at_stage.argtypes = \
+        # elif field_ in mem_fields:
+        #     self.shared_lib.ocp_nlp_get_at_stage.argtypes = \
+        #         [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+        #     self.shared_lib.ocp_nlp_get_at_stage(self.nlp_config, \
+        #         self.nlp_dims, self.nlp_solver, stage_, field, out_data)
+        elif field_ in sens_fields:
+            self.shared_lib.ocp_nlp_out_get.argtypes = \
                 [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
-            self.shared_lib.ocp_nlp_get_at_stage(self.nlp_config, \
-                self.nlp_dims, self.nlp_solver, stage_, field, out_data)
+            self.shared_lib.ocp_nlp_out_get(self.nlp_config, \
+                self.nlp_dims, self.sens_out, stage_, field, out_data)
 
         return out
 
@@ -938,6 +1097,7 @@ class AcadosOcpSolver:
             - res_comp: residual wrt complementarity conditions
             - qp_stat: status of QP solver
             - qp_iter: number of QP iterations
+            - alpha: SQP step size
             - qp_res_stat: stationarity residual of the last QP solution
             - qp_res_eq: residual wrt equality constraints (dynamics) of the last QP solution
             - qp_res_ineq: residual wrt inequality constraints (constraints)  of the last QP solution
@@ -946,16 +1106,15 @@ class AcadosOcpSolver:
         stat = self.get_stats("statistics")
 
         if self.acados_ocp.solver_options.nlp_solver_type == 'SQP':
-            print('\niter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp_stat\tqp_iter')
-            if stat.shape[0]>7:
+            print('\niter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp_stat\tqp_iter\talpha')
+            if stat.shape[0]>8:
                 print('\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp')
             for jj in range(stat.shape[1]):
-                print('{:d}\t{:e}\t{:e}\t{:e}\t{:e}\t{:d}\t{:d}'.format( \
-                     int(stat[0][jj]), stat[1][jj], stat[2][jj], \
-                     stat[3][jj], stat[4][jj], int(stat[5][jj]), int(stat[6][jj])))
-                if stat.shape[0]>7:
+                print(f'{int(stat[0][jj]):d}\t{stat[1][jj]:e}\t{stat[2][jj]:e}\t{stat[3][jj]:e}\t' +
+                      f'{stat[4][jj]:e}\t{int(stat[5][jj]):d}\t{int(stat[6][jj]):d}\t{stat[7][jj]:e}\t')
+                if stat.shape[0]>8:
                     print('\t{:e}\t{:e}\t{:e}\t{:e}'.format( \
-                        stat[7][jj], stat[8][jj], stat[9][jj], stat[10][jj]))
+                        stat[8][jj], stat[9][jj], stat[10][jj], stat[11][jj]))
             print('\n')
         elif self.acados_ocp.solver_options.nlp_solver_type == 'SQP_RTI':
             print('\niter\tqp_stat\tqp_iter')
@@ -1017,6 +1176,7 @@ class AcadosOcpSolver:
         with open(filename, 'r') as f:
             solution = json.load(f)
 
+        print(f"loading iterate {filename}")
         for key in solution.keys():
             (field, stage) = key.split('_')
             self.set(int(stage), field, np.array(solution[key]))
@@ -1026,24 +1186,46 @@ class AcadosOcpSolver:
         """
         Get the information of the last solver call.
 
-            :param field: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg', 'sqp_iter']
+            :param field: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg', 'sqp_iter', 'residuals', 'qp_iter', 'alpha']
+
+        Available fileds:
+            - time_tot: total CPU time previous call
+            - time_lin: CPU time for linearization
+            - time_sim: CPU time for integrator
+            - time_sim_ad: CPU time for integrator contribution of external function calls
+            - time_sim_la: CPU time for integrator contribution of linear algebra
+            - time_qp: CPU time qp solution
+            - time_qp_solver_call: CPU time inside qp solver (without converting the QP)
+            - time_qp_xcond: time_glob: CPU time globalization
+            - time_solution_sensitivities: CPU time for previous call to eval_param_sens
+            - time_reg: CPU time regularization
+            - sqp_iter: number of SQP iterations
+            - qp_iter: vector of QP iterations for last SQP call
+            - statistics: table with info about last iteration
+            - stat_m: number of rows in statistics matrix
+            - stat_n: number of columns in statistics matrix
+            - residuals: residuals of last iterate
+            - alpha: step sizes of SQP iterations
         """
 
-        fields = ['time_tot',  # total cpu time previous call
-                  'time_lin',  # cpu time for linearization
-                  'time_sim',  # cpu time for integrator
-                  'time_sim_ad',  # cpu time for integrator contribution of external function calls
-                  'time_sim_la',  # cpu time for integrator contribution of linear algebra
-                  'time_qp',   # cpu time qp solution
-                  'time_qp_solver_call',  # cpu time inside qp solver (without converting the QP)
+        fields = ['time_tot',
+                  'time_lin',
+                  'time_sim',
+                  'time_sim_ad',
+                  'time_sim_la',
+                  'time_qp',
+                  'time_qp_solver_call',
                   'time_qp_xcond',
-                  'time_glob',  # cpu time globalization
-                  'time_reg',  # cpu time regularization
-                  'sqp_iter',  # number of SQP iterations
-                  'qp_iter',  # vector of QP iterations for last SQP call
-                  'statistics',  # table with info about last iteration
+                  'time_glob',
+                  'time_solution_sensitivities',
+                  'time_reg',
+                  'sqp_iter',
+                  'qp_iter',
+                  'statistics',
                   'stat_m',
                   'stat_n',
+                  'residuals',
+                  'alpha',
                 ]
 
         field = field_
@@ -1074,11 +1256,28 @@ class AcadosOcpSolver:
             elif self.acados_ocp.solver_options.nlp_solver_type == 'SQP_RTI':
                 out = full_stats[2, :]
 
+        elif field_ == 'alpha':
+            full_stats = self.get_stats('statistics')
+            if self.acados_ocp.solver_options.nlp_solver_type == 'SQP':
+                out = full_stats[7, :]
+            else: # self.acados_ocp.solver_options.nlp_solver_type == 'SQP_RTI':
+                raise Exception("alpha values are not available for SQP_RTI")
+
+        elif field_ == 'residuals':
+            if self.acados_ocp.solver_options.nlp_solver_type == 'SQP':
+                full_stats = self.get_stats('statistics')
+                if self.status != 2:
+                    out = (full_stats.T)[-1][1:5]
+                else: # when exiting with max_iter, residuals are computed for second last iterate only
+                    out = (full_stats.T)[-2][1:5]
+            else:
+                raise Exception("residuals are not computed for SQP_RTI")
+
         else:
             out = np.ascontiguousarray(np.zeros((1,)), dtype=np.float64)
             out_data = cast(out.ctypes.data, POINTER(c_double))
 
-        if not field_ == 'qp_iter':
+        if not field_ in ['qp_iter', 'residuals', 'alpha']:
             self.shared_lib.ocp_nlp_get.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
             self.shared_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
 
@@ -1161,8 +1360,8 @@ class AcadosOcpSolver:
         """
         cost_fields = ['y_ref', 'yref']
         constraints_fields = ['lbx', 'ubx', 'lbu', 'ubu']
-        out_fields = ['x', 'u', 'pi', 'lam', 't', 'z']
-        mem_fields = ['sl', 'su']
+        out_fields = ['x', 'u', 'pi', 'lam', 't', 'z', 'sl', 'su']
+        mem_fields = ['xdot_guess']
 
         # cast value_ to avoid conversion issues
         if isinstance(value_, (float, int)):
@@ -1185,7 +1384,7 @@ class AcadosOcpSolver:
 
             assert getattr(self.shared_lib, f"{model.name}_acados_update_params")(self.capsule, stage, value_data, value_.shape[0])==0
         else:
-            if field_ not in constraints_fields + cost_fields + out_fields + mem_fields:
+            if field_ not in constraints_fields + cost_fields + out_fields:
                 raise Exception("AcadosOcpSolver.set(): {} is not a valid argument.\
                     \nPossible values are {}. Exiting.".format(field, \
                     constraints_fields + cost_fields + out_fields + ['p']))
@@ -1409,11 +1608,11 @@ class AcadosOcpSolver:
         """
         Set options of the solver.
 
-            :param field: string, e.g. 'print_level', 'rti_phase', 'initialize_t_slacks', 'step_length', 'alpha_min', 'alpha_reduction'
+            :param field: string, e.g. 'print_level', 'rti_phase', 'initialize_t_slacks', 'step_length', 'alpha_min', 'alpha_reduction', 'qp_warm_start', 'line_search_use_sufficient_descent', 'full_step_dual', 'globalization_use_SOC'
             :param value: of type int, float
         """
-        int_fields = ['print_level', 'rti_phase', 'initialize_t_slacks']
-        double_fields = ['step_length', 'tol_eq', 'tol_stat', 'tol_ineq', 'tol_comp', 'alpha_min', 'alpha_reduction']
+        int_fields = ['print_level', 'rti_phase', 'initialize_t_slacks', 'qp_warm_start', 'line_search_use_sufficient_descent', 'full_step_dual', 'globalization_use_SOC']
+        double_fields = ['step_length', 'tol_eq', 'tol_stat', 'tol_ineq', 'tol_comp', 'alpha_min', 'alpha_reduction', 'eps_sufficient_descent']
         string_fields = ['globalization']
 
         # check field availability and type
@@ -1441,10 +1640,10 @@ class AcadosOcpSolver:
 
         if field_ == 'rti_phase':
             if value_ < 0 or value_ > 2:
-                raise Exception('AcadosOcpSolver.solve(): argument \'rti_phase\' can '
+                raise Exception('AcadosOcpSolver.options_set(): argument \'rti_phase\' can '
                     'take only values 0, 1, 2 for SQP-RTI-type solvers')
             if self.acados_ocp.solver_options.nlp_solver_type != 'SQP_RTI' and value_ > 0:
-                raise Exception('AcadosOcpSolver.solve(): argument \'rti_phase\' can '
+                raise Exception('AcadosOcpSolver.options_set(): argument \'rti_phase\' can '
                     'take only value 0 for SQP-type solvers')
 
         # encode

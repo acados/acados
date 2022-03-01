@@ -948,16 +948,44 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             ocp_nlp_solver_opts_set(config, opts, "alpha_min", &alpha_min);
             double alpha_reduction = mxGetScalar( mxGetField( matlab_opts, 0, "alpha_reduction" ) );
             ocp_nlp_solver_opts_set(config, opts, "alpha_reduction", &alpha_reduction);
+            double eps_sufficient_descent = mxGetScalar( mxGetField( matlab_opts, 0, "eps_sufficient_descent" ) );
+            ocp_nlp_solver_opts_set(config, opts, "eps_sufficient_descent", &eps_sufficient_descent);
+            int globalization_use_SOC = mxGetScalar( mxGetField( matlab_opts, 0, "globalization_use_SOC" ) );
+            ocp_nlp_solver_opts_set(config, opts, "globalization_use_SOC", &globalization_use_SOC);
+            int line_search_use_sufficient_descent = mxGetScalar( mxGetField( matlab_opts, 0, "line_search_use_sufficient_descent" ) );
+            ocp_nlp_solver_opts_set(config, opts, "line_search_use_sufficient_descent", &line_search_use_sufficient_descent);
         }
     }
     else
     {
         MEX_MISSING_ARGUMENT(fun_name, "globalization");
     }
+    int full_step_dual = mxGetScalar( mxGetField( matlab_opts, 0, "full_step_dual" ) );
+    ocp_nlp_solver_opts_set(config, opts, "full_step_dual", &full_step_dual);
 
 
     if (strcmp(dyn_type, "discrete"))
     {
+        // collocation_type
+        char *collocation_type = mxArrayToString( mxGetField( matlab_opts, 0, "collocation_type" ) );
+        sim_collocation_type collo_type;
+        if (!strcmp(collocation_type, "gauss_legendre"))
+        {
+            collo_type = GAUSS_LEGENDRE;
+        }
+        else if (!strcmp(collocation_type, "gauss_radau_iia"))
+        {
+            collo_type = GAUSS_RADAU_IIA;
+        }
+        else
+        {
+            MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "collocation_type", collocation_type, "gauss_legendre, gauss_radau_iia");
+        }
+        for (int ii=0; ii<N; ii++)
+        {
+            ocp_nlp_solver_opts_set_at_stage(config, opts, ii, "dynamics_collocation_type", &collo_type);
+        }
+
         // sim_method_num_stages
         sprintf(matlab_field_name, "sim_method_num_stages");
         const mxArray *matlab_array;

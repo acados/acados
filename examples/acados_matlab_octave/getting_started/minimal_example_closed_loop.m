@@ -228,7 +228,6 @@ end
 
 figure
 stairs(ts, [u_sim'; u_sim(end)])
-
 ylabel('F [N]')
 xlabel('t [s]')
 grid on

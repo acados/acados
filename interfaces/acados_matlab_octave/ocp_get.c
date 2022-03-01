@@ -160,7 +160,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             length = ocp_nlp_dims_get_from_attr(config, dims, out, stage, field);
             plhs[0] = mxCreateNumericMatrix(length, 1, mxDOUBLE_CLASS, mxREAL);
             double *value = mxGetPr( plhs[0] );
-            ocp_nlp_get_at_stage(config, dims, solver, stage, field, value);
+            ocp_nlp_out_get(config, dims, out, stage, field, value);
         }
         else
         {

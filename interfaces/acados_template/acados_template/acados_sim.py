@@ -70,28 +70,28 @@ class AcadosSimDims:
 
     @nx.setter
     def nx(self, nx):
-        if type(nx) == int and nx > 0:
+        if isinstance(nx, int) and nx > 0:
             self.__nx = nx
         else:
             raise Exception('Invalid nx value, expected positive integer. Exiting.')
 
     @nz.setter
     def nz(self, nz):
-        if type(nz) == int and nz > -1:
+        if isinstance(nz, int) and nz > -1:
             self.__nz = nz
         else:
             raise Exception('Invalid nz value, expected nonnegative integer. Exiting.')
 
     @nu.setter
     def nu(self, nu):
-        if type(nu) == int and nu > -1:
+        if isinstance(nu, int) and nu > -1:
             self.__nu = nu
         else:
             raise Exception('Invalid nu value, expected nonnegative integer. Exiting.')
 
     @np.setter
     def np(self, np):
-        if type(np) == int and np > -1:
+        if isinstance(np, int) and np > -1:
             self.__np = np
         else:
             raise Exception('Invalid np value, expected nonnegative integer. Exiting.')
@@ -106,6 +106,7 @@ class AcadosSimOpts:
     """
     def __init__(self):
         self.__integrator_type = 'ERK'
+        self.__collocation_type = 'GAUSS_LEGENDRE'
         self.__Tsim = None
         # ints
         self.__sim_method_num_stages = 1
@@ -174,6 +175,15 @@ class AcadosSimOpts:
         """Time horizon"""
         return self.__Tsim
 
+    @property
+    def collocation_type(self):
+        """Collocation type: relevant for implicit integrators
+        -- string in {GAUSS_RADAU_IIA, GAUSS_LEGENDRE}
+
+        Default: GAUSS_LEGENDRE
+        """
+        return self.__collocation_type
+
     @integrator_type.setter
     def integrator_type(self, integrator_type):
         integrator_types = ('ERK', 'IRK', 'GNSF')
@@ -182,6 +192,15 @@ class AcadosSimOpts:
         else:
             raise Exception('Invalid integrator_type value. Possible values are:\n\n' \
                     + ',\n'.join(integrator_types) + '.\n\nYou have: ' + integrator_type + '.\n\nExiting.')
+
+    @collocation_type.setter
+    def collocation_type(self, collocation_type):
+        collocation_types = ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE')
+        if collocation_type in collocation_types:
+            self.__collocation_type = collocation_type
+        else:
+            raise Exception('Invalid collocation_type value. Possible values are:\n\n' \
+                    + ',\n'.join(collocation_types) + '.\n\nYou have: ' + collocation_type + '.\n\nExiting.')
 
     @T.setter
     def T(self, T):

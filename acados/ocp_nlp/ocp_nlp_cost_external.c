@@ -286,6 +286,7 @@ acados_size_t ocp_nlp_cost_external_opts_calculate_size(void *config_, void *dim
     acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_cost_external_opts);
+    make_int_multiple_of(8, &size);
 
     return size;
 }

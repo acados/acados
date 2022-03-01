@@ -70,6 +70,11 @@ classdef ocp_nlp_solver_options_json < handle
         alpha_min
         alpha_reduction
         globalization
+        collocation_type
+        line_search_use_sufficient_descent
+        globalization_use_SOC
+        full_step_dual
+        eps_sufficient_descent
 
     end
     methods
@@ -77,6 +82,7 @@ classdef ocp_nlp_solver_options_json < handle
             obj.qp_solver       = 'PARTIAL_CONDENSING_HPIPM';
             obj.hessian_approx  = 'GAUSS_NEWTON';
             obj.integrator_type = 'ERK';
+            obj.collocation_type = 'GAUSS_LEGENDRE';
             obj.tf = [];
             obj.Tsim = [];
             obj.nlp_solver_type = 'SQP_RTI';
@@ -101,7 +107,10 @@ classdef ocp_nlp_solver_options_json < handle
             obj.alpha_min = 0.05;
             obj.alpha_reduction = 0.7;
             obj.globalization = 'FIXED_STEP';
-
+            obj.line_search_use_sufficient_descent = 0
+            obj.globalization_use_SOC = 0
+            obj.full_step_dual = 0
+            obj.eps_sufficient_descent = 1e-4
         end
     end
 end

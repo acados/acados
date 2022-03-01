@@ -125,7 +125,6 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_,
     opts->ext_qp_res = 0;
     opts->warm_start_first_qp = false;
     opts->rti_phase = 0;
-    opts->print_level = 0;
 
     // overwrite default submodules opts
 
@@ -441,15 +440,12 @@ static void ocp_nlp_sqp_rti_cast_workspace(
 int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     void *opts_, void *mem_, void *work_)
 {
-
-    ocp_nlp_out *nlp_out = nlp_out_;
     ocp_nlp_sqp_rti_memory *mem = mem_;
     
     // zero timers
     acados_timer timer0;
     double total_time = 0.0;
     mem->time_tot = 0.0;
-
 
     ocp_nlp_sqp_rti_opts *nlp_opts = opts_;
     int rti_phase = nlp_opts->rti_phase; 
@@ -484,9 +480,7 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     }
 
     total_time += acados_toc(&timer0);
-
     mem->time_tot = total_time;
-    nlp_out->total_time = total_time;
 
     return mem->status;
 
@@ -516,169 +510,14 @@ void ocp_nlp_sqp_rti_preparation_step(void *config_, void *dims_,
     mem->time_lin = 0.0;
     mem->time_reg = 0.0;
 
-    int N = dims->N;
-
-    int ii;
-
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
     int num_threads_bkp = omp_get_num_threads();
     // set number of threads
     omp_set_num_threads(opts->nlp_opts->num_threads);
-    #pragma omp parallel
-    { // beginning of parallel region
 #endif
 
-    // alias to dynamics_memory
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp for nowait
-#endif
-    for (ii = 0; ii < N; ii++)
-    {
-        config->dynamics[ii]->memory_set_ux_ptr(
-                nlp_out->ux+ii, nlp_mem->dynamics[ii]);
-
-        config->dynamics[ii]->memory_set_tmp_ux_ptr(
-                nlp_work->tmp_nlp_out->ux+ii, nlp_mem->dynamics[ii]);
-
-        config->dynamics[ii]->memory_set_ux1_ptr(
-                nlp_out->ux+ii+1, nlp_mem->dynamics[ii]);
-
-        config->dynamics[ii]->memory_set_tmp_ux1_ptr(
-                nlp_work->tmp_nlp_out->ux+ii+1, nlp_mem->dynamics[ii]);
-
-        config->dynamics[ii]->memory_set_pi_ptr(
-                nlp_out->pi+ii, nlp_mem->dynamics[ii]);
-
-        config->dynamics[ii]->memory_set_tmp_pi_ptr(
-                nlp_work->tmp_nlp_out->pi+ii, nlp_mem->dynamics[ii]);
-
-        config->dynamics[ii]->memory_set_BAbt_ptr(
-                nlp_mem->qp_in->BAbt+ii, nlp_mem->dynamics[ii]);
-
-        config->dynamics[ii]->memory_set_RSQrq_ptr(
-                nlp_mem->qp_in->RSQrq+ii, nlp_mem->dynamics[ii]);
-
-        config->dynamics[ii]->memory_set_dzduxt_ptr(
-                nlp_mem->dzduxt+ii, nlp_mem->dynamics[ii]);
-
-        config->dynamics[ii]->memory_set_sim_guess_ptr(
-                nlp_mem->sim_guess+ii, nlp_mem->set_sim_guess+ii,
-                nlp_mem->dynamics[ii]);
-
-        config->dynamics[ii]->memory_set_z_alg_ptr(
-                nlp_mem->z_alg+ii, nlp_mem->dynamics[ii]);
-    }
-
-    // alias to cost_memory
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp for nowait
-#endif
-    for (ii = 0; ii <= N; ii++)
-    {
-        config->cost[ii]->memory_set_ux_ptr(
-            nlp_out->ux+ii, nlp_mem->cost[ii]);
-
-        config->cost[ii]->memory_set_tmp_ux_ptr(
-            nlp_work->tmp_nlp_out->ux+ii, nlp_mem->cost[ii]);
-
-        config->cost[ii]->memory_set_z_alg_ptr(
-            nlp_mem->z_alg+ii, nlp_mem->cost[ii]);
-
-        config->cost[ii]->memory_set_dzdux_tran_ptr(
-            nlp_mem->dzduxt+ii, nlp_mem->cost[ii]);
-
-        config->cost[ii]->memory_set_RSQrq_ptr(
-            nlp_mem->qp_in->RSQrq+ii, nlp_mem->cost[ii]);
-
-        config->cost[ii]->memory_set_Z_ptr(
-            nlp_mem->qp_in->Z+ii, nlp_mem->cost[ii]);
-    }
-
-    // alias to constraints_memory
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp for nowait
-#endif
-    for (ii = 0; ii <= N; ii++)
-    {
-        config->constraints[ii]->memory_set_ux_ptr(
-            nlp_out->ux+ii, nlp_mem->constraints[ii]);
-
-        config->constraints[ii]->memory_set_tmp_ux_ptr(
-            nlp_work->tmp_nlp_out->ux+ii, nlp_mem->constraints[ii]);
-
-        config->constraints[ii]->memory_set_lam_ptr(
-            nlp_out->lam+ii, nlp_mem->constraints[ii]);
-
-        config->constraints[ii]->memory_set_tmp_lam_ptr(
-            nlp_work->tmp_nlp_out->lam+ii, nlp_mem->constraints[ii]);
-
-        config->constraints[ii]->memory_set_z_alg_ptr(
-            nlp_mem->z_alg+ii, nlp_mem->constraints[ii]);
-
-        config->constraints[ii]->memory_set_dzdux_tran_ptr(
-            nlp_mem->dzduxt+ii, nlp_mem->constraints[ii]);
-
-        config->constraints[ii]->memory_set_DCt_ptr(
-            nlp_mem->qp_in->DCt+ii, nlp_mem->constraints[ii]);
-
-        config->constraints[ii]->memory_set_RSQrq_ptr(
-            nlp_mem->qp_in->RSQrq+ii, nlp_mem->constraints[ii]);
-
-        config->constraints[ii]->memory_set_idxb_ptr(
-            nlp_mem->qp_in->idxb[ii], nlp_mem->constraints[ii]);
-
-        config->constraints[ii]->memory_set_idxs_rev_ptr(
-            nlp_mem->qp_in->idxs_rev[ii], nlp_mem->constraints[ii]);
-
-        config->constraints[ii]->memory_set_idxe_ptr(
-            nlp_mem->qp_in->idxe[ii], nlp_mem->constraints[ii]);
-    }
-
-    // alias to regularize memory
-    config->regularize->memory_set_RSQrq_ptr(
-        dims->regularize, nlp_mem->qp_in->RSQrq, nlp_mem->regularize_mem);
-
-    config->regularize->memory_set_rq_ptr(
-        dims->regularize, nlp_mem->qp_in->rqz, nlp_mem->regularize_mem);
-
-    config->regularize->memory_set_BAbt_ptr(
-        dims->regularize, nlp_mem->qp_in->BAbt, nlp_mem->regularize_mem);
-
-    config->regularize->memory_set_b_ptr(
-        dims->regularize, nlp_mem->qp_in->b, nlp_mem->regularize_mem);
-
-    config->regularize->memory_set_idxb_ptr(
-        dims->regularize, nlp_mem->qp_in->idxb, nlp_mem->regularize_mem);
-
-    config->regularize->memory_set_DCt_ptr(
-        dims->regularize, nlp_mem->qp_in->DCt, nlp_mem->regularize_mem);
-
-    config->regularize->memory_set_ux_ptr(
-        dims->regularize, nlp_mem->qp_out->ux, nlp_mem->regularize_mem);
-
-    config->regularize->memory_set_pi_ptr(
-        dims->regularize, nlp_mem->qp_out->pi, nlp_mem->regularize_mem);
-
-    config->regularize->memory_set_lam_ptr(
-        dims->regularize, nlp_mem->qp_out->lam, nlp_mem->regularize_mem);
-
-    // copy sampling times into dynamics model
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp for nowait
-#endif
-
-    // NOTE(oj): this will lead in an error for irk_gnsf, T must be set in precompute;
-    //    -> remove here and make sure precompute is called everywhere (e.g. Python interface).
-    for (ii = 0; ii < N; ii++)
-    {
-        config->dynamics[ii]->model_set(config->dynamics[ii], dims->dynamics[ii],
-                                         nlp_in->dynamics[ii], "T", nlp_in->Ts+ii);
-    }
-
-#if defined(ACADOS_WITH_OPENMP)
-    } // end of parallel region
-#endif
+    ocp_nlp_alias_memory_to_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
     // initialize QP
     ocp_nlp_initialize_qp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
@@ -746,7 +585,7 @@ void ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
         dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
     mem->time_reg += acados_toc(&timer1);
 
-    if (opts->print_level > 0) {
+    if (nlp_opts->print_level > 0) {
         printf("\n------- qp_in --------\n");
         print_ocp_qp_in(nlp_mem->qp_in);
     }
@@ -781,7 +620,6 @@ void ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
     // TODO move into QP solver memory ???
     qp_info *qp_info_;
     ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
-    nlp_out->qp_iter = qp_info_->num_iter;
     qp_iter = qp_info_->num_iter;
 
     // compute external QP residuals (for debugging)
@@ -811,7 +649,7 @@ void ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
         printf("\nSQP_RTI: QP solver returned error status %d QP iteration %d.\n",
                 qp_status, qp_iter);
 #endif
-        if (opts->print_level > 0)
+        if (nlp_opts->print_level > 0)
         {
             printf("\n Failed to solve the following QP:\n");
             print_ocp_qp_in(nlp_mem->qp_in);
@@ -823,7 +661,7 @@ void ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
 
     // globalization
     acados_tic(&timer1);
-    double alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+    double alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0);
     mem->time_glob += acados_toc(&timer1);
 
     // update variables
@@ -903,6 +741,9 @@ void ocp_nlp_sqp_rti_eval_param_sens(void *config_, void *dims_, void *opts_,
     void *mem_, void *work_, char *field, int stage, int index,
     void *sens_nlp_out_)
 {
+    acados_timer timer0;
+    acados_tic(&timer0);
+
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_config *config = config_;
     ocp_nlp_sqp_rti_opts *opts = opts_;
@@ -968,6 +809,7 @@ void ocp_nlp_sqp_rti_eval_param_sens(void *config_, void *dims_, void *opts_,
 
         exit(1);
     }
+    mem->time_solution_sensitivities = acados_toc(&timer0);
 
     return;
 }
@@ -1039,6 +881,11 @@ void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_,
             config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], field, &tmp);
             *ptr += tmp;
         }
+    }
+    else if (!strcmp("time_solution_sensitivities", field))
+    {
+        double *value = return_value_;
+        *value = mem->time_solution_sensitivities;
     }
     else if (!strcmp("stat", field))
     {

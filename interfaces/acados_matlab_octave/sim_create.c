@@ -215,6 +215,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         jac_reuse = true;
     }
 
+    char *collocation_type = mxArrayToString( mxGetField( matlab_opts, 0, "collocation_type" ) );
+    sim_collocation_type collo_type;
+    if (!strcmp(collocation_type, "gauss_legendre"))
+    {
+        collo_type = GAUSS_LEGENDRE;
+    }
+    else if (!strcmp(collocation_type, "gauss_radau_iia"))
+    {
+        collo_type = GAUSS_RADAU_IIA;
+    }
+    else
+    {
+        MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "collocation_type", collocation_type, "gauss_legendre, gauss_radau_iia");
+    }
+
     sim_opts_set(config, opts, "num_stages", &num_stages);
     sim_opts_set(config, opts, "num_steps", &num_steps);
     sim_opts_set(config, opts, "newton_iter", &newton_iter);
@@ -223,6 +238,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     sim_opts_set(config, opts, "sens_hess", &sens_hess);
     sim_opts_set(config, opts, "sens_algebraic", &sens_algebraic);
     sim_opts_set(config, opts, "jac_reuse", &jac_reuse);
+    sim_opts_set(config, opts, "collocation_type", &collo_type);
+
 
 
     /* in */

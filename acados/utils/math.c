@@ -960,8 +960,11 @@ static void tred2(int dim, double *V, double *d, double *e)
         d[j] = V[(dim - 1) * dim + j];
         V[(dim - 1) * dim + j] = 0.0;
     }
-    V[(dim - 1) * dim + dim - 1] = 1.0;
-    e[0] = 0.0;
+    if (dim > 0)
+    {
+        V[(dim - 1) * dim + dim - 1] = 1.0;
+        e[0] = 0.0;
+    }
 }
 
 
