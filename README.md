@@ -10,7 +10,7 @@ Fast and embedded solvers for nonlinear optimal control.
 - `acados` offers interfaces to the programming languages `C`, `Python`, `MATLAB` and `Octave`
 - Documentation can be found on [docs.acados.org](https://docs.acados.org/)
 - Forum: If you have any acados-related question, feel free to post on our forum [discourse.acados.org](https://discourse.acados.org/).
-- Citing acados: references can be found [here](https://arxiv.org/abs/1910.13753) and [here](https://www.sciencedirect.com/science/article/pii/S2405896318327204).
+- Citing acados: references can be found [here](https://docs.acados.org/citing).
 
 ## Installation
 

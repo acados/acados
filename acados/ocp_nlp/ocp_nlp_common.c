@@ -46,6 +46,7 @@
 #include "hpipm/include/hpipm_d_ocp_qp_dim.h"
 // acados
 #include "acados/utils/mem.h"
+#include "acados/utils/print.h"
 // openmp
 #if defined(ACADOS_WITH_OPENMP)
 #include <omp.h>
@@ -58,8 +59,6 @@
 
 acados_size_t ocp_nlp_config_calculate_size(int N)
 {
-    int ii;
-
     acados_size_t size = 0;
 
     // self
@@ -75,17 +74,17 @@ acados_size_t ocp_nlp_config_calculate_size(int N)
     // dynamics
     size += N * sizeof(ocp_nlp_dynamics_config *);
 
-    for (ii = 0; ii < N; ii++) size += ocp_nlp_dynamics_config_calculate_size();
+    for (int i = 0; i < N; i++) size += ocp_nlp_dynamics_config_calculate_size();
 
     // cost
     size += (N + 1) * sizeof(ocp_nlp_cost_config *);
 
-    for (ii = 0; ii <= N; ii++) size += ocp_nlp_cost_config_calculate_size();
+    for (int i = 0; i <= N; i++) size += ocp_nlp_cost_config_calculate_size();
 
     // constraints
     size += (N + 1) * sizeof(ocp_nlp_constraints_config *);
 
-    for (ii = 0; ii <= N; ii++) size += ocp_nlp_constraints_config_calculate_size();
+    for (int i = 0; i <= N; i++) size += ocp_nlp_constraints_config_calculate_size();
 
     return size;
 }
@@ -94,8 +93,6 @@ acados_size_t ocp_nlp_config_calculate_size(int N)
 
 ocp_nlp_config *ocp_nlp_config_assign(int N, void *raw_memory)
 {
-    int ii;
-
     char *c_ptr = (char *) raw_memory;
 
     ocp_nlp_config *config = (ocp_nlp_config *) c_ptr;
@@ -115,9 +112,9 @@ ocp_nlp_config *ocp_nlp_config_assign(int N, void *raw_memory)
     config->dynamics = (ocp_nlp_dynamics_config **) c_ptr;
     c_ptr += N * sizeof(ocp_nlp_dynamics_config *);
 
-    for (ii = 0; ii < N; ii++)
+    for (int i = 0; i < N; i++)
     {
-        config->dynamics[ii] = ocp_nlp_dynamics_config_assign(c_ptr);
+        config->dynamics[i] = ocp_nlp_dynamics_config_assign(c_ptr);
         c_ptr += ocp_nlp_dynamics_config_calculate_size();
     }
 
@@ -125,9 +122,9 @@ ocp_nlp_config *ocp_nlp_config_assign(int N, void *raw_memory)
     config->cost = (ocp_nlp_cost_config **) c_ptr;
     c_ptr += (N + 1) * sizeof(ocp_nlp_cost_config *);
 
-    for (ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        config->cost[ii] = ocp_nlp_cost_config_assign(c_ptr);
+        config->cost[i] = ocp_nlp_cost_config_assign(c_ptr);
         c_ptr += ocp_nlp_cost_config_calculate_size();
     }
 
@@ -135,9 +132,9 @@ ocp_nlp_config *ocp_nlp_config_assign(int N, void *raw_memory)
     config->constraints = (ocp_nlp_constraints_config **) c_ptr;
     c_ptr += (N + 1) * sizeof(ocp_nlp_constraints_config *);
 
-    for (ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        config->constraints[ii] = ocp_nlp_constraints_config_assign(c_ptr);
+        config->constraints[i] = ocp_nlp_constraints_config_assign(c_ptr);
         c_ptr += ocp_nlp_constraints_config_calculate_size();
     }
 
@@ -174,6 +171,8 @@ static acados_size_t ocp_nlp_dims_calculate_size_self(int N)
     size += sizeof(ocp_nlp_reg_dims);
 
     size += 8;  // initial align
+    size += 8;  // intermediate align
+    make_int_multiple_of(8, &size);
 
     return size;
 }
@@ -186,23 +185,21 @@ acados_size_t ocp_nlp_dims_calculate_size(void *config_)
 
     int N = config->N;
 
-    int ii;
-
     acados_size_t size = 0;
 
     // self
     size += ocp_nlp_dims_calculate_size_self(N);
 
     // dynamics
-    for (ii = 0; ii < N; ii++)
-        size += config->dynamics[ii]->dims_calculate_size(config->dynamics[ii]);
+    for (int i = 0; i < N; i++)
+        size += config->dynamics[i]->dims_calculate_size(config->dynamics[i]);
 
     // cost
-    for (ii = 0; ii <= N; ii++) size += config->cost[ii]->dims_calculate_size(config->cost[ii]);
+    for (int i = 0; i <= N; i++) size += config->cost[i]->dims_calculate_size(config->cost[i]);
 
     // constraints
-    for (ii = 0; ii <= N; ii++)
-        size += config->constraints[ii]->dims_calculate_size(config->constraints[ii]);
+    for (int i = 0; i <= N; i++)
+        size += config->constraints[i]->dims_calculate_size(config->constraints[i]);
 
     // qp solver
     size += config->qp_solver->dims_calculate_size(config->qp_solver, N);
@@ -216,14 +213,24 @@ static ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
-    int ii;
-
     // initial align
     align_char_to(8, &c_ptr);
 
     // struct
     ocp_nlp_dims *dims = (ocp_nlp_dims *) c_ptr;
     c_ptr += sizeof(ocp_nlp_dims);
+
+    // dynamics
+    dims->dynamics = (void **) c_ptr;
+    c_ptr += N * sizeof(void *);
+
+    // cost
+    dims->cost = (void **) c_ptr;
+    c_ptr += (N + 1) * sizeof(void *);
+
+    // constraints
+    dims->constraints = (void **) c_ptr;
+    c_ptr += (N + 1) * sizeof(void *);
 
     // nv
     assign_and_advance_int(N + 1, &dims->nv, &c_ptr);
@@ -238,17 +245,8 @@ static ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
     // ns
     assign_and_advance_int(N + 1, &dims->ns, &c_ptr);
 
-    // dynamics
-    dims->dynamics = (void **) c_ptr;
-    c_ptr += N * sizeof(void *);
-
-    // cost
-    dims->cost = (void **) c_ptr;
-    c_ptr += (N + 1) * sizeof(void *);
-
-    // constraints
-    dims->constraints = (void **) c_ptr;
-    c_ptr += (N + 1) * sizeof(void *);
+    // intermediate align
+    align_char_to(8, &c_ptr);
 
     // regularization
     dims->regularize = ocp_nlp_reg_dims_assign(N, c_ptr);
@@ -256,13 +254,13 @@ static ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
 
     /* initialize qp_solver dimensions */
 //    dims->qp_solver->N = N;
-//    for (ii = 0; ii <= N; ii++)
+//    for (int i = 0; i <= N; i++)
 //    {
         // TODO(dimitris): values below are needed for reformulation of QP when soft constraints
         //   are not supported. Make this a bit more transparent as it clushes with nbx/nbu above.
-//        dims->qp_solver->nsbx[ii] = 0;
-//        dims->qp_solver->nsbu[ii] = 0;
-//        dims->qp_solver->nsg[ii] = 0;
+//        dims->qp_solver->nsbx[i] = 0;
+//        dims->qp_solver->nsbu[i] = 0;
+//        dims->qp_solver->nsg[i] = 0;
 //    }
 
     // N
@@ -270,23 +268,23 @@ static ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
 
     // initialize dimensions to zero by default
     // nv
-    for(ii=0; ii<=N; ii++)
-        dims->nv[ii] = 0;
+    for(int i=0; i<=N; i++)
+        dims->nv[i] = 0;
     // nx
-    for(ii=0; ii<=N; ii++)
-        dims->nx[ii] = 0;
+    for(int i=0; i<=N; i++)
+        dims->nx[i] = 0;
     // nu
-    for(ii=0; ii<=N; ii++)
-        dims->nu[ii] = 0;
+    for(int i=0; i<=N; i++)
+        dims->nu[i] = 0;
     // ni
-    for(ii=0; ii<=N; ii++)
-        dims->ni[ii] = 0;
+    for(int i=0; i<=N; i++)
+        dims->ni[i] = 0;
     // nz
-    for(ii=0; ii<=N; ii++)
-        dims->nz[ii] = 0;
+    for(int i=0; i<=N; i++)
+        dims->nz[i] = 0;
     // ns
-    for(ii=0; ii<=N; ii++)
-        dims->ns[ii] = 0;
+    for(int i=0; i<=N; i++)
+        dims->ns[i] = 0;
     // TODO initialize dims to zero by default also in modules !!!!!!!
 
     // assert
@@ -303,8 +301,6 @@ ocp_nlp_dims *ocp_nlp_dims_assign(void *config_, void *raw_memory)
 
     int N = config->N;
 
-    int ii;
-
     char *c_ptr = (char *) raw_memory;
 
     // self
@@ -312,25 +308,25 @@ ocp_nlp_dims *ocp_nlp_dims_assign(void *config_, void *raw_memory)
     c_ptr += ocp_nlp_dims_calculate_size_self(N);
 
     // dynamics
-    for (ii = 0; ii < N; ii++)
+    for (int i = 0; i < N; i++)
     {
-        dims->dynamics[ii] = config->dynamics[ii]->dims_assign(config->dynamics[ii], c_ptr);
-        c_ptr += config->dynamics[ii]->dims_calculate_size(config->dynamics[ii]);
+        dims->dynamics[i] = config->dynamics[i]->dims_assign(config->dynamics[i], c_ptr);
+        c_ptr += config->dynamics[i]->dims_calculate_size(config->dynamics[i]);
     }
 
     // cost
-    for (ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        dims->cost[ii] = config->cost[ii]->dims_assign(config->cost[ii], c_ptr);
-        c_ptr += config->cost[ii]->dims_calculate_size(config->cost[ii]);
+        dims->cost[i] = config->cost[i]->dims_assign(config->cost[i], c_ptr);
+        c_ptr += config->cost[i]->dims_calculate_size(config->cost[i]);
     }
 
     // constraints
-    for (ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        dims->constraints[ii] =
-            config->constraints[ii]->dims_assign(config->constraints[ii], c_ptr);
-        c_ptr += config->constraints[ii]->dims_calculate_size(config->constraints[ii]);
+        dims->constraints[i] =
+            config->constraints[i]->dims_assign(config->constraints[i], c_ptr);
+        c_ptr += config->constraints[i]->dims_calculate_size(config->constraints[i]);
     }
 
     // qp solver
@@ -352,8 +348,6 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
     ocp_nlp_config *config = config_;
     ocp_nlp_dims *dims = dims_;
 
-    int ii;
-
     int N = config->N;
     int *int_array = (int *) value_array;
 
@@ -361,12 +355,12 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
     if (!strcmp(field, "nx"))
     {
         // opt var
-        for (ii = 0; ii <= N; ii++)
+        for (int i = 0; i <= N; i++)
         {
             // set nx
-            dims->nx[ii] = int_array[ii];
+            dims->nx[i] = int_array[i];
             // update nv
-            dims->nv[ii] = dims->nu[ii] + dims->nx[ii] + 2 * dims->ns[ii];
+            dims->nv[i] = dims->nu[i] + dims->nx[i] + 2 * dims->ns[i];
         }
         // cost
         for (int i = 0; i <= N; i++)
@@ -397,20 +391,20 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
             config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nx", &int_array[i]);
         }
         // regularization
-        for (ii = 0; ii <= N; ii++)
+        for (int i = 0; i <= N; i++)
         {
-            config->regularize->dims_set(config->regularize, dims->regularize, ii, "nx", &int_array[ii]);
+            config->regularize->dims_set(config->regularize, dims->regularize, i, "nx", &int_array[i]);
         }
     }
     else if (!strcmp(field, "nu"))
     {
         // nlp opt var
-        for (int ii = 0; ii <= N; ii++)
+        for (int i = 0; i <= N; i++)
         {
             // set nu
-            dims->nu[ii] = int_array[ii];
+            dims->nu[i] = int_array[i];
             // update nv
-            dims->nv[ii] = dims->nu[ii] + dims->nx[ii] + 2 * dims->ns[ii];
+            dims->nv[i] = dims->nu[i] + dims->nx[i] + 2 * dims->ns[i];
         }
         // cost
         for (int i = 0; i <= N; i++)
@@ -441,18 +435,18 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
             config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nu", &int_array[i]);
         }
         // regularization
-        for (ii = 0; ii <= N; ii++)
+        for (int i = 0; i <= N; i++)
         {
-            config->regularize->dims_set(config->regularize, dims->regularize, ii, "nu", &int_array[ii]);
+            config->regularize->dims_set(config->regularize, dims->regularize, i, "nu", &int_array[i]);
         }
     }
     else if (!strcmp(field, "nz"))
     {
         // nlp opt var
-        for (int ii = 0; ii <= N; ii++)
+        for (int i = 0; i <= N; i++)
         {
             // set nz
-            dims->nz[ii] = int_array[ii];
+            dims->nz[i] = int_array[i];
         }
         // cost
         for (int i = 0; i <= N; i++)
@@ -476,12 +470,12 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
     else if (!strcmp(field, "ns"))
     {
         // nlp opt var
-        for (int ii = 0; ii <= N; ii++)
+        for (int i = 0; i <= N; i++)
         {
             // set ns
-            dims->ns[ii] = int_array[ii];
+            dims->ns[i] = int_array[i];
             // update nv
-            dims->nv[ii] = dims->nu[ii] + dims->nx[ii] + 2 * dims->ns[ii];
+            dims->nv[i] = dims->nu[i] + dims->nx[i] + 2 * dims->ns[i];
         }
         // cost
         for (int i = 0; i <= N; i++)
@@ -680,30 +674,28 @@ acados_size_t ocp_nlp_in_calculate_size_self(int N)
 
 acados_size_t ocp_nlp_in_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims)
 {
-    int ii;
-
     int N = dims->N;
 
     acados_size_t size = ocp_nlp_in_calculate_size_self(N);
 
     // dynamics
-    for (ii = 0; ii < N; ii++)
+    for (int i = 0; i < N; i++)
     {
         size +=
-            config->dynamics[ii]->model_calculate_size(config->dynamics[ii], dims->dynamics[ii]);
+            config->dynamics[i]->model_calculate_size(config->dynamics[i], dims->dynamics[i]);
     }
 
     // cost
-    for (ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        size += config->cost[ii]->model_calculate_size(config->cost[ii], dims->cost[ii]);
+        size += config->cost[i]->model_calculate_size(config->cost[i], dims->cost[i]);
     }
 
     // constraints
-    for (ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        size += config->constraints[ii]->model_calculate_size(config->constraints[ii],
-                                                              dims->constraints[ii]);
+        size += config->constraints[i]->model_calculate_size(config->constraints[i],
+                                                              dims->constraints[i]);
     }
 
     size += 8;  // initial align
@@ -751,8 +743,6 @@ ocp_nlp_in *ocp_nlp_in_assign_self(int N, void *raw_memory)
 
 ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *raw_memory)
 {
-    int ii;
-
     int N = dims->N;
 
     char *c_ptr = (char *) raw_memory;
@@ -762,28 +752,28 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *
     c_ptr += ocp_nlp_in_calculate_size_self(N);
 
     // dynamics
-    for (ii = 0; ii < N; ii++)
+    for (int i = 0; i < N; i++)
     {
-        in->dynamics[ii] =
-            config->dynamics[ii]->model_assign(config->dynamics[ii], dims->dynamics[ii], c_ptr);
+        in->dynamics[i] =
+            config->dynamics[i]->model_assign(config->dynamics[i], dims->dynamics[i], c_ptr);
         c_ptr +=
-            config->dynamics[ii]->model_calculate_size(config->dynamics[ii], dims->dynamics[ii]);
+            config->dynamics[i]->model_calculate_size(config->dynamics[i], dims->dynamics[i]);
     }
 
     // cost
-    for (ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        in->cost[ii] = config->cost[ii]->model_assign(config->cost[ii], dims->cost[ii], c_ptr);
-        c_ptr += config->cost[ii]->model_calculate_size(config->cost[ii], dims->cost[ii]);
+        in->cost[i] = config->cost[i]->model_assign(config->cost[i], dims->cost[i], c_ptr);
+        c_ptr += config->cost[i]->model_calculate_size(config->cost[i], dims->cost[i]);
     }
 
     // constraints
-    for (ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        in->constraints[ii] = config->constraints[ii]->model_assign(config->constraints[ii],
-                                                                    dims->constraints[ii], c_ptr);
-        c_ptr += config->constraints[ii]->model_calculate_size(config->constraints[ii],
-                                                               dims->constraints[ii]);
+        in->constraints[i] = config->constraints[i]->model_assign(config->constraints[i],
+                                                                    dims->constraints[i], c_ptr);
+        c_ptr += config->constraints[i]->model_calculate_size(config->constraints[i],
+                                                               dims->constraints[i]);
     }
 
     assert((char *) raw_memory + ocp_nlp_in_calculate_size(config, dims) >= c_ptr);
@@ -812,12 +802,12 @@ acados_size_t ocp_nlp_out_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *d
     size += 4 * (N + 1) * sizeof(struct blasfeo_dvec);  // ux, lam, t, z
     size += 1 * N * sizeof(struct blasfeo_dvec);        // pi
 
-    for (int ii = 0; ii < N; ii++)
+    for (int i = 0; i < N; i++)
     {
-        size += 1 * blasfeo_memsize_dvec(nv[ii]);      // ux
-        size += 1 * blasfeo_memsize_dvec(nz[ii]);      // z
-        size += 2 * blasfeo_memsize_dvec(2 * ni[ii]);  // lam, t
-        size += 1 * blasfeo_memsize_dvec(nx[ii + 1]);  // pi
+        size += 1 * blasfeo_memsize_dvec(nv[i]);      // ux
+        size += 1 * blasfeo_memsize_dvec(nz[i]);      // z
+        size += 2 * blasfeo_memsize_dvec(2 * ni[i]);  // lam, t
+        size += 1 * blasfeo_memsize_dvec(nx[i + 1]);  // pi
     }
     size += 1 * blasfeo_memsize_dvec(nv[N]);      // ux
     size += 1 * blasfeo_memsize_dvec(nz[N]);     // z
@@ -836,9 +826,6 @@ acados_size_t ocp_nlp_out_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *d
 
 ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *raw_memory)
 {
-    // loop index
-    int ii;
-
     // extract sizes
     int N = dims->N;
     int *nv = dims->nv;
@@ -875,45 +862,44 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void
 
     // blasfeo_dvec
     // ux
-    for (int ii = 0; ii <= N; ++ii)
+    for (int i = 0; i <= N; ++i)
     {
-        assign_and_advance_blasfeo_dvec_mem(nv[ii], out->ux + ii, &c_ptr);
+        assign_and_advance_blasfeo_dvec_mem(nv[i], out->ux + i, &c_ptr);
     }
     // z
-    for (int ii = 0; ii <= N; ++ii)
+    for (int i = 0; i <= N; ++i)
     {
-        assign_and_advance_blasfeo_dvec_mem(nz[ii], out->z + ii, &c_ptr);
+        assign_and_advance_blasfeo_dvec_mem(nz[i], out->z + i, &c_ptr);
     }
     // pi
-    for (int ii = 0; ii < N; ++ii)
+    for (int i = 0; i < N; ++i)
     {
-        assign_and_advance_blasfeo_dvec_mem(nx[ii + 1], out->pi + ii, &c_ptr);
+        assign_and_advance_blasfeo_dvec_mem(nx[i + 1], out->pi + i, &c_ptr);
     }
     // lam
-    for (int ii = 0; ii <= N; ++ii)
+    for (int i = 0; i <= N; ++i)
     {
-        assign_and_advance_blasfeo_dvec_mem(2 * ni[ii], out->lam + ii, &c_ptr);
+        assign_and_advance_blasfeo_dvec_mem(2 * ni[i], out->lam + i, &c_ptr);
     }
     // t
-    for (int ii = 0; ii <= N; ++ii)
+    for (int i = 0; i <= N; ++i)
     {
-        assign_and_advance_blasfeo_dvec_mem(2 * ni[ii], out->t + ii, &c_ptr);
+        assign_and_advance_blasfeo_dvec_mem(2 * ni[i], out->t + i, &c_ptr);
     }
 
     // zero solution
-    for(ii=0; ii<N; ii++)
+    for(int i=0; i<N; i++)
     {
-        blasfeo_dvecse(nv[ii], 0.0, out->ux+ii, 0);
-        blasfeo_dvecse(nz[ii], 0.0, out->z+ii, 0);
-        blasfeo_dvecse(nx[ii+1], 0.0, out->pi+ii, 0);
-        blasfeo_dvecse(2*ni[ii], 0.0, out->lam+ii, 0);
-        blasfeo_dvecse(2*ni[ii], 0.0, out->t+ii, 0);
+        blasfeo_dvecse(nv[i], 0.0, out->ux+i, 0);
+        blasfeo_dvecse(nz[i], 0.0, out->z+i, 0);
+        blasfeo_dvecse(nx[i+1], 0.0, out->pi+i, 0);
+        blasfeo_dvecse(2*ni[i], 0.0, out->lam+i, 0);
+        blasfeo_dvecse(2*ni[i], 0.0, out->t+i, 0);
     }
-    ii = N;
-    blasfeo_dvecse(nv[ii], 0.0, out->ux+ii, 0);
-    blasfeo_dvecse(nz[ii], 0.0, out->z+ii, 0);
-    blasfeo_dvecse(2*ni[ii], 0.0, out->lam+ii, 0);
-    blasfeo_dvecse(2*ni[ii], 0.0, out->t+ii, 0);
+    blasfeo_dvecse(nv[N], 0.0, out->ux+N, 0);
+    blasfeo_dvecse(nz[N], 0.0, out->z+N, 0);
+    blasfeo_dvecse(2*ni[N], 0.0, out->lam+N, 0);
+    blasfeo_dvecse(2*ni[N], 0.0, out->t+N, 0);
 
     assert((char *) raw_memory + ocp_nlp_out_calculate_size(config, dims) >= c_ptr);
 
@@ -948,23 +934,23 @@ acados_size_t ocp_nlp_opts_calculate_size(void *config_, void *dims_)
 
     // dynamics
     size += N * sizeof(void *);
-    for (int ii = 0; ii < N; ii++)
+    for (int i = 0; i < N; i++)
     {
-        size += dynamics[ii]->opts_calculate_size(dynamics[ii], dims->dynamics[ii]);
+        size += dynamics[i]->opts_calculate_size(dynamics[i], dims->dynamics[i]);
     }
 
     // cost
     size += (N + 1) * sizeof(void *);
-    for (int ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        size += cost[ii]->opts_calculate_size(cost[ii], dims->cost[ii]);
+        size += cost[i]->opts_calculate_size(cost[i], dims->cost[i]);
     }
 
     // constraints
     size += (N + 1) * sizeof(void *);
-    for (int ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        size += constraints[ii]->opts_calculate_size(constraints[ii], dims->constraints[ii]);
+        size += constraints[i]->opts_calculate_size(constraints[i], dims->constraints[i]);
     }
 
     size += 2*8;  // 2 aligns
@@ -1012,25 +998,25 @@ void *ocp_nlp_opts_assign(void *config_, void *dims_, void *raw_memory)
     c_ptr += config->regularize->opts_calculate_size();
 
     // dynamics
-    for (int ii = 0; ii < N; ii++)
+    for (int i = 0; i < N; i++)
     {
-        opts->dynamics[ii] = dynamics[ii]->opts_assign(dynamics[ii], dims->dynamics[ii], c_ptr);
-        c_ptr += dynamics[ii]->opts_calculate_size(dynamics[ii], dims->dynamics[ii]);
+        opts->dynamics[i] = dynamics[i]->opts_assign(dynamics[i], dims->dynamics[i], c_ptr);
+        c_ptr += dynamics[i]->opts_calculate_size(dynamics[i], dims->dynamics[i]);
     }
 
     // cost
-    for (int ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        opts->cost[ii] = cost[ii]->opts_assign(cost[ii], dims->cost[ii], c_ptr);
-        c_ptr += cost[ii]->opts_calculate_size(cost[ii], dims->cost[ii]);
+        opts->cost[i] = cost[i]->opts_assign(cost[i], dims->cost[i], c_ptr);
+        c_ptr += cost[i]->opts_calculate_size(cost[i], dims->cost[i]);
     }
 
     // constraints
-    for (int ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        opts->constraints[ii] =
-            constraints[ii]->opts_assign(constraints[ii], dims->constraints[ii], c_ptr);
-        c_ptr += constraints[ii]->opts_calculate_size(constraints[ii], dims->constraints[ii]);
+        opts->constraints[i] =
+            constraints[i]->opts_assign(constraints[i], dims->constraints[i], c_ptr);
+        c_ptr += constraints[i]->opts_calculate_size(constraints[i], dims->constraints[i]);
     }
 
     assert((char *) raw_memory + ocp_nlp_opts_calculate_size(config, dims) >= c_ptr);
@@ -1052,8 +1038,6 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     ocp_nlp_constraints_config **constraints = config->constraints;
     ocp_nlp_reg_config *regularize = config->regularize;
 
-    int ii;
-
     int N = dims->N;
 
     opts->reuse_workspace = 1;
@@ -1069,6 +1053,7 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     // printf("\nocp_nlp: openmp threads = %d\n", opts->num_threads);
 
     opts->globalization = FIXED_STEP;
+    opts->print_level = 0;
     opts->step_length = 1.0;
     opts->levenberg_marquardt = 0.0;
 
@@ -1081,26 +1066,30 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     regularize->opts_initialize_default(regularize, dims->regularize, opts->regularize);
 
     // dynamics
-    for (ii = 0; ii < N; ii++)
+    for (int i = 0; i < N; i++)
     {
-        dynamics[ii]->opts_initialize_default(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii]);
+        dynamics[i]->opts_initialize_default(dynamics[i], dims->dynamics[i], opts->dynamics[i]);
     }
 
     // cost
-    for (ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        cost[ii]->opts_initialize_default(cost[ii], dims->cost[ii], opts->cost[ii]);
+        cost[i]->opts_initialize_default(cost[i], dims->cost[i], opts->cost[i]);
     }
 
     // constraints
-    for (ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        constraints[ii]->opts_initialize_default(constraints[ii], dims->constraints[ii], opts->constraints[ii]);
+        constraints[i]->opts_initialize_default(constraints[i], dims->constraints[i], opts->constraints[i]);
     }
 
     // globalization
     opts->alpha_min = 0.05;
     opts->alpha_reduction = 0.7;
+    opts->full_step_dual = 0;
+    opts->line_search_use_sufficient_descent = 0;
+    opts->globalization_use_SOC = 0;
+    opts->eps_sufficient_descent = 1e-4; // Leineweber1999: MUSCOD-I eps_T = 1e-4 (p.89); Note: eps_T = 0.1 originally proposed by Powell 1978 (Leineweber 1999, p. 53)
 
     return;
 }
@@ -1118,28 +1107,26 @@ void ocp_nlp_opts_update(void *config_, void *dims_, void *opts_)
     ocp_nlp_cost_config **cost = config->cost;
     ocp_nlp_constraints_config **constraints = config->constraints;
 
-    int ii;
-
     int N = dims->N;
 
     qp_solver->opts_update(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
     // dynamics
-    for (ii = 0; ii < N; ii++)
+    for (int i = 0; i < N; i++)
     {
-        dynamics[ii]->opts_update(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii]);
+        dynamics[i]->opts_update(dynamics[i], dims->dynamics[i], opts->dynamics[i]);
     }
 
     // cost
-    for (ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        cost[ii]->opts_update(cost[ii], dims->cost[ii], opts->cost[ii]);
+        cost[i]->opts_update(cost[i], dims->cost[i], opts->cost[i]);
     }
 
     // constraints
-    for (ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        constraints[ii]->opts_update(constraints[ii], dims->constraints[ii], opts->constraints[ii]);
+        constraints[i]->opts_update(constraints[i], dims->constraints[i], opts->constraints[i]);
     }
 
     return;
@@ -1152,8 +1139,6 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
     ocp_nlp_opts *opts = (ocp_nlp_opts *) opts_;
     ocp_nlp_config *config = config_;
 
-    int ii;
-
     char module[MAX_STR_LEN];
     char *ptr_module = NULL;
     int module_length = 0;
@@ -1163,8 +1148,8 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
     if (char_!=NULL)
     {
         module_length = char_-field;
-        for (ii=0; ii<module_length; ii++)
-            module[ii] = field[ii];
+        for (int i=0; i<module_length; i++)
+            module[i] = field[i];
         module[module_length] = '\0'; // add end of string
         ptr_module = module;
     }
@@ -1202,6 +1187,26 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             double* alpha_min = (double *) value;
             opts->alpha_min = *alpha_min;
         }
+        else if (!strcmp(field, "eps_sufficient_descent"))
+        {
+            double* eps_sufficient_descent = (double *) value;
+            opts->eps_sufficient_descent = *eps_sufficient_descent;
+        }
+        else if (!strcmp(field, "full_step_dual"))
+        {
+            int* full_step_dual = (int *) value;
+            opts->full_step_dual = *full_step_dual;
+        }
+        else if (!strcmp(field, "line_search_use_sufficient_descent"))
+        {
+            int* line_search_use_sufficient_descent = (int *) value;
+            opts->line_search_use_sufficient_descent = *line_search_use_sufficient_descent;
+        }
+        else if (!strcmp(field, "globalization_use_SOC"))
+        {
+            int* globalization_use_SOC = (int *) value;
+            opts->globalization_use_SOC = *globalization_use_SOC;
+        }
         else if (!strcmp(field, "globalization"))
         {
             char* globalization = (char *) value;
@@ -1229,37 +1234,47 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         {
             int N = config->N;
             // cost
-            for (ii=0; ii<=N; ii++)
-                config->cost[ii]->opts_set(config->cost[ii], opts->cost[ii], "exact_hess", value);
+            for (int i=0; i<=N; i++)
+                config->cost[i]->opts_set(config->cost[i], opts->cost[i], "exact_hess", value);
             // dynamics
-            for (ii=0; ii<N; ii++)
-                config->dynamics[ii]->opts_set(config->dynamics[ii], opts->dynamics[ii],
+            for (int i=0; i<N; i++)
+                config->dynamics[i]->opts_set(config->dynamics[i], opts->dynamics[i],
                                                "compute_hess", value);
             // constraints
-            for (ii=0; ii<=N; ii++)
-                config->constraints[ii]->opts_set(config->constraints[ii], opts->constraints[ii],
+            for (int i=0; i<=N; i++)
+                config->constraints[i]->opts_set(config->constraints[i], opts->constraints[i],
                                                   "compute_hess", value);
         }
         // selectively turn on exact hessian contributions
         else if (!strcmp(field, "exact_hess_cost"))
         {
             int N = config->N;
-            for (ii=0; ii<=N; ii++)
-                config->cost[ii]->opts_set(config->cost[ii], opts->cost[ii], "exact_hess", value);
+            for (int i=0; i<=N; i++)
+                config->cost[i]->opts_set(config->cost[i], opts->cost[i], "exact_hess", value);
         }
         else if (!strcmp(field, "exact_hess_dyn"))
         {
             int N = config->N;
-            for (ii=0; ii<N; ii++)
-                config->dynamics[ii]->opts_set(config->dynamics[ii], opts->dynamics[ii],
+            for (int i=0; i<N; i++)
+                config->dynamics[i]->opts_set(config->dynamics[i], opts->dynamics[i],
                                                "compute_hess", value);
         }
         else if (!strcmp(field, "exact_hess_constr"))
         {
             int N = config->N;
-            for (ii=0; ii<=N; ii++)
-                config->constraints[ii]->opts_set(config->constraints[ii], opts->constraints[ii],
+            for (int i=0; i<=N; i++)
+                config->constraints[i]->opts_set(config->constraints[i], opts->constraints[i],
                                                   "compute_hess", value);
+        }
+        else if (!strcmp(field, "print_level"))
+        {
+            int* print_level = (int *) value;
+            if (*print_level < 0)
+            {
+                printf("\nerror: ocp_nlp_opts_set: invalid value for print_level field, need int >=0, got %d.\n", *print_level);
+                exit(1);
+            }
+            opts->print_level = *print_level;
         }
         else
         {
@@ -1279,8 +1294,6 @@ void ocp_nlp_opts_set_at_stage(void *config_, void *opts_, int stage, const char
     ocp_nlp_opts *opts = (ocp_nlp_opts *) opts_;
     ocp_nlp_config *config = config_;
 
-    int ii;
-
     char module[MAX_STR_LEN];
     char *ptr_module = NULL;
     int module_length = 0;
@@ -1290,8 +1303,8 @@ void ocp_nlp_opts_set_at_stage(void *config_, void *opts_, int stage, const char
     if (char_!=NULL)
     {
         module_length = char_-field;
-        for (ii=0; ii<module_length; ii++)
-            module[ii] = field[ii];
+        for (int i=0; i<module_length; i++)
+            module[i] = field[i];
         module[module_length] = '\0'; // add end of string
         ptr_module = module;
     }
@@ -1361,23 +1374,23 @@ acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims
 
     // dynamics
     size += N * sizeof(void *);
-    for (int ii = 0; ii < N; ii++)
+    for (int i = 0; i < N; i++)
     {
-        size += dynamics[ii]->memory_calculate_size(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii]);
+        size += dynamics[i]->memory_calculate_size(dynamics[i], dims->dynamics[i], opts->dynamics[i]);
     }
 
     // cost
     size += (N + 1) * sizeof(void *);
-    for (int ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        size += cost[ii]->memory_calculate_size(cost[ii], dims->cost[ii], opts->cost[ii]);
+        size += cost[i]->memory_calculate_size(cost[i], dims->cost[i], opts->cost[i]);
     }
 
     // constraints
     size += (N + 1) * sizeof(void *);
-    for (int ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        size += constraints[ii]->memory_calculate_size(constraints[ii], dims->constraints[ii], opts->constraints[ii]);
+        size += constraints[i]->memory_calculate_size(constraints[i], dims->constraints[i], opts->constraints[i]);
     }
 
     // nlp res
@@ -1389,15 +1402,15 @@ acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims
     size += 6*(N+1)*sizeof(struct blasfeo_dvec);  // cost_grad ineq_fun ineq_adj dyn_adj sim_guess z_alg
     size += 1*N*sizeof(struct blasfeo_dvec);        // dyn_fun
 
-    for (int ii = 0; ii < N; ii++)
+    for (int i = 0; i < N; i++)
     {
-        size += 1*blasfeo_memsize_dmat(nu[ii]+nx[ii], nz[ii]); // dzduxt
-        size += 1*blasfeo_memsize_dvec(nz[ii]); // z_alg
-        size += 2*blasfeo_memsize_dvec(nv[ii]);           // cost_grad ineq_adj
-        size += 1*blasfeo_memsize_dvec(nu[ii] + nx[ii]);  // dyn_adj
-        size += 1*blasfeo_memsize_dvec(nx[ii + 1]);       // dyn_fun
-        size += 1*blasfeo_memsize_dvec(2 * ni[ii]);       // ineq_fun
-        size += 1*blasfeo_memsize_dvec(nx[ii] + nz[ii]); // sim_guess
+        size += 1*blasfeo_memsize_dmat(nu[i]+nx[i], nz[i]); // dzduxt
+        size += 1*blasfeo_memsize_dvec(nz[i]); // z_alg
+        size += 2*blasfeo_memsize_dvec(nv[i]);           // cost_grad ineq_adj
+        size += 1*blasfeo_memsize_dvec(nu[i] + nx[i]);  // dyn_adj
+        size += 1*blasfeo_memsize_dvec(nx[i + 1]);       // dyn_fun
+        size += 1*blasfeo_memsize_dvec(2 * ni[i]);       // ineq_fun
+        size += 1*blasfeo_memsize_dvec(nx[i] + nz[i]); // sim_guess
     }
     size += 1*blasfeo_memsize_dmat(nu[N]+nx[N], nz[N]); // dzduxt
     size += 1*blasfeo_memsize_dvec(nz[N]); // z_alg
@@ -1478,26 +1491,26 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
                                                        opts->regularize);
 
     // dynamics
-    for (int ii = 0; ii < N; ii++)
+    for (int i = 0; i < N; i++)
     {
-        mem->dynamics[ii] = dynamics[ii]->memory_assign(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii], c_ptr);
-        c_ptr += dynamics[ii]->memory_calculate_size(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii]);
+        mem->dynamics[i] = dynamics[i]->memory_assign(dynamics[i], dims->dynamics[i], opts->dynamics[i], c_ptr);
+        c_ptr += dynamics[i]->memory_calculate_size(dynamics[i], dims->dynamics[i], opts->dynamics[i]);
     }
 
     // cost
-    for (int ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        mem->cost[ii] = cost[ii]->memory_assign(cost[ii], dims->cost[ii], opts->cost[ii], c_ptr);
-        c_ptr += cost[ii]->memory_calculate_size(cost[ii], dims->cost[ii], opts->cost[ii]);
+        mem->cost[i] = cost[i]->memory_assign(cost[i], dims->cost[i], opts->cost[i], c_ptr);
+        c_ptr += cost[i]->memory_calculate_size(cost[i], dims->cost[i], opts->cost[i]);
     }
 
     // constraints
-    for (int ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        mem->constraints[ii] = constraints[ii]->memory_assign(constraints[ii],
-                                            dims->constraints[ii], opts->constraints[ii], c_ptr);
-        c_ptr += constraints[ii]->memory_calculate_size( constraints[ii], dims->constraints[ii],
-                                                                 opts->constraints[ii]);
+        mem->constraints[i] = constraints[i]->memory_assign(constraints[i],
+                                            dims->constraints[i], opts->constraints[i], c_ptr);
+        c_ptr += constraints[i]->memory_calculate_size( constraints[i], dims->constraints[i],
+                                                                 opts->constraints[i]);
     }
 
     // nlp res
@@ -1527,58 +1540,58 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
 
     // set_sim_guess
     assign_and_advance_bool(N+1, &mem->set_sim_guess, &c_ptr);
-    for (int ii = 0; ii <= N; ++ii)
+    for (int i = 0; i <= N; ++i)
     {
-        mem->set_sim_guess[ii] = false;
+        mem->set_sim_guess[i] = false;
     }
 
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
 
     // dzduxt
-    for (int ii=0; ii<=N; ii++)
+    for (int i=0; i<=N; i++)
     {
-        assign_and_advance_blasfeo_dmat_mem(nu[ii]+nx[ii], nz[ii], mem->dzduxt+ii, &c_ptr);
+        assign_and_advance_blasfeo_dmat_mem(nu[i]+nx[i], nz[i], mem->dzduxt+i, &c_ptr);
     }
     // z_alg
-    for (int ii=0; ii<=N; ii++)
+    for (int i=0; i<=N; i++)
     {
-        blasfeo_create_dvec(nz[ii], mem->z_alg+ii, c_ptr);
-        c_ptr += blasfeo_memsize_dvec(nz[ii]);
+        blasfeo_create_dvec(nz[i], mem->z_alg+i, c_ptr);
+        c_ptr += blasfeo_memsize_dvec(nz[i]);
     }
 
     // cost_grad
-    for (int ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        assign_and_advance_blasfeo_dvec_mem(nv[ii], mem->cost_grad + ii, &c_ptr);
+        assign_and_advance_blasfeo_dvec_mem(nv[i], mem->cost_grad + i, &c_ptr);
     }
     // ineq_fun
-    for (int ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        assign_and_advance_blasfeo_dvec_mem(2 * ni[ii], mem->ineq_fun + ii, &c_ptr);
+        assign_and_advance_blasfeo_dvec_mem(2 * ni[i], mem->ineq_fun + i, &c_ptr);
     }
     // ineq_adj
-    for (int ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        assign_and_advance_blasfeo_dvec_mem(nv[ii], mem->ineq_adj + ii, &c_ptr);
+        assign_and_advance_blasfeo_dvec_mem(nv[i], mem->ineq_adj + i, &c_ptr);
     }
     // dyn_fun
-    for (int ii = 0; ii < N; ii++)
+    for (int i = 0; i < N; i++)
     {
-        assign_and_advance_blasfeo_dvec_mem(nx[ii + 1], mem->dyn_fun + ii, &c_ptr);
+        assign_and_advance_blasfeo_dvec_mem(nx[i + 1], mem->dyn_fun + i, &c_ptr);
     }
     // dyn_adj
-    for (int ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        assign_and_advance_blasfeo_dvec_mem(nu[ii] + nx[ii], mem->dyn_adj + ii, &c_ptr);
+        assign_and_advance_blasfeo_dvec_mem(nu[i] + nx[i], mem->dyn_adj + i, &c_ptr);
     }
     // sim_guess
-    for (int ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        assign_and_advance_blasfeo_dvec_mem(nx[ii] + nz[ii], mem->sim_guess + ii, &c_ptr);
+        assign_and_advance_blasfeo_dvec_mem(nx[i] + nz[i], mem->sim_guess + i, &c_ptr);
         // set to 0;
-        blasfeo_dvecse(nx[ii] + nz[ii], 0.0, mem->sim_guess+ii, 0);
-        // printf("sim_guess ii %d: %p\n", ii, mem->sim_guess+ii);
+        blasfeo_dvecse(nx[i] + nz[i], 0.0, mem->sim_guess+i, 0);
+        // printf("sim_guess i %d: %p\n", i, mem->sim_guess+i);
     }
     // printf("created memory %p\n", mem);
 
@@ -1598,11 +1611,10 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
     ocp_nlp_cost_config **cost = config->cost;
     ocp_nlp_constraints_config **constraints = config->constraints;
 
-    int ii;
-
     int N = dims->N;
-    // int *nx = dims->nx;
-    // int *nu = dims->nu;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ni = dims->ni;
     // int *nz = dims->nz;
 
     acados_size_t size = 0;
@@ -1615,6 +1627,20 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
 
     // weight_merit_fun
     size += ocp_nlp_out_calculate_size(config, dims);
+
+    // blasfeo_dvec
+    int nxu_max = 0;
+    int nx_max = 0;
+    int ni_max = 0;
+    for (int i = 0; i <= N; i++)
+    {
+        nx_max = nx_max > nx[i] ? nx_max : nx[i];
+        nxu_max = nxu_max > (nx[i]+nu[i]) ? nxu_max : (nx[i]+nu[i]);
+        ni_max = ni_max > ni[i] ? ni_max : ni[i];
+    }
+    size += 1 * blasfeo_memsize_dvec(nx_max);
+    size += 1 * blasfeo_memsize_dvec(nxu_max);
+    size += 1 * blasfeo_memsize_dvec(ni_max);
 
     // array of pointers
     // cost
@@ -1635,21 +1661,21 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
             opts->qp_solver_opts);
 
         // dynamics
-        for (ii = 0; ii < N; ii++)
+        for (int i = 0; i < N; i++)
         {
-            size += dynamics[ii]->workspace_calculate_size(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii]);
+            size += dynamics[i]->workspace_calculate_size(dynamics[i], dims->dynamics[i], opts->dynamics[i]);
         }
 
         // cost
-        for (ii = 0; ii <= N; ii++)
+        for (int i = 0; i <= N; i++)
         {
-            size += cost[ii]->workspace_calculate_size(cost[ii], dims->cost[ii], opts->cost[ii]);
+            size += cost[i]->workspace_calculate_size(cost[i], dims->cost[i], opts->cost[i]);
         }
 
         // constraints
-        for (ii = 0; ii <= N; ii++)
+        for (int i = 0; i <= N; i++)
         {
-            size += constraints[ii]->workspace_calculate_size(constraints[ii], dims->constraints[ii], opts->constraints[ii]);
+            size += constraints[i]->workspace_calculate_size(constraints[i], dims->constraints[i], opts->constraints[i]);
         }
 
 #else
@@ -1661,23 +1687,23 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
         size_tmp = tmp > size_tmp ? tmp : size_tmp;
 
         // dynamics
-        for (ii = 0; ii < N; ii++)
+        for (int i = 0; i < N; i++)
         {
-            tmp = dynamics[ii]->workspace_calculate_size(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii]);
+            tmp = dynamics[i]->workspace_calculate_size(dynamics[i], dims->dynamics[i], opts->dynamics[i]);
             size_tmp = tmp > size_tmp ? tmp : size_tmp;
         }
 
         // cost
-        for (ii = 0; ii <= N; ii++)
+        for (int i = 0; i <= N; i++)
         {
-            tmp = cost[ii]->workspace_calculate_size(cost[ii], dims->cost[ii], opts->cost[ii]);
+            tmp = cost[i]->workspace_calculate_size(cost[i], dims->cost[i], opts->cost[i]);
             size_tmp = tmp > size_tmp ? tmp : size_tmp;
         }
 
         // constraints
-        for (ii = 0; ii <= N; ii++)
+        for (int i = 0; i <= N; i++)
         {
-            tmp = constraints[ii]->workspace_calculate_size(constraints[ii], dims->constraints[ii], opts->constraints[ii]);
+            tmp = constraints[i]->workspace_calculate_size(constraints[i], dims->constraints[i], opts->constraints[i]);
             size_tmp = tmp > size_tmp ? tmp : size_tmp;
         }
 
@@ -1694,21 +1720,21 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
             opts->qp_solver_opts);
 
         // dynamics
-        for (ii = 0; ii < N; ii++)
+        for (int i = 0; i < N; i++)
         {
-            size += dynamics[ii]->workspace_calculate_size(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii]);
+            size += dynamics[i]->workspace_calculate_size(dynamics[i], dims->dynamics[i], opts->dynamics[i]);
         }
 
         // cost
-        for (ii = 0; ii <= N; ii++)
+        for (int i = 0; i <= N; i++)
         {
-            size += cost[ii]->workspace_calculate_size(cost[ii], dims->cost[ii], opts->cost[ii]);
+            size += cost[i]->workspace_calculate_size(cost[i], dims->cost[i], opts->cost[i]);
         }
 
         // constraints
-        for (ii = 0; ii <= N; ii++)
+        for (int i = 0; i <= N; i++)
         {
-            size += constraints[ii]->workspace_calculate_size(constraints[ii], dims->constraints[ii], opts->constraints[ii]);
+            size += constraints[i]->workspace_calculate_size(constraints[i], dims->constraints[i], opts->constraints[i]);
         }
 
     }
@@ -1728,8 +1754,10 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
     ocp_nlp_constraints_config **constraints = config->constraints;
 
     int N = dims->N;
-    // int *nx = dims->nx;
-    // int *nu = dims->nu;
+    int *nx = dims->nx;
+    // int *nv = dims->nv;
+    int *nu = dims->nu;
+    int *ni = dims->ni;
     // int *nz = dims->nz;
 
     char *c_ptr = (char *) raw_memory;
@@ -1759,6 +1787,20 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
     work->weight_merit_fun = ocp_nlp_out_assign(config, dims, c_ptr);
     c_ptr += ocp_nlp_out_calculate_size(config, dims);
 
+    // blasfeo_dvec
+    int nxu_max = 0;
+    int nx_max = 0;
+    int ni_max = 0;
+    for (int i = 0; i <= N; i++)
+    {
+        nx_max = nx_max > nx[i] ? nx_max : nx[i];
+        nxu_max = nxu_max > (nx[i]+nu[i]) ? nxu_max : (nx[i]+nu[i]);
+        ni_max = ni_max > ni[i] ? ni_max : ni[i];
+    }
+    assign_and_advance_blasfeo_dvec_mem(nxu_max, &work->tmp_nxu, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(ni_max, &work->tmp_ni, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(nx_max, &work->dxnext_dy, &c_ptr);
+
     if (opts->reuse_workspace)
     {
 
@@ -1769,24 +1811,24 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
         c_ptr += qp_solver->workspace_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
         // dynamics
-        for (int ii = 0; ii < N; ii++)
+        for (int i = 0; i < N; i++)
         {
-            work->dynamics[ii] = c_ptr;
-            c_ptr += dynamics[ii]->workspace_calculate_size(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii]);
+            work->dynamics[i] = c_ptr;
+            c_ptr += dynamics[i]->workspace_calculate_size(dynamics[i], dims->dynamics[i], opts->dynamics[i]);
         }
 
         // cost
-        for (int ii = 0; ii <= N; ii++)
+        for (int i = 0; i <= N; i++)
         {
-            work->cost[ii] = c_ptr;
-            c_ptr += cost[ii]->workspace_calculate_size(cost[ii], dims->cost[ii], opts->cost[ii]);
+            work->cost[i] = c_ptr;
+            c_ptr += cost[i]->workspace_calculate_size(cost[i], dims->cost[i], opts->cost[i]);
         }
 
         // constraints
-        for (int ii = 0; ii <= N; ii++)
+        for (int i = 0; i <= N; i++)
         {
-            work->constraints[ii] = c_ptr;
-            c_ptr += constraints[ii]->workspace_calculate_size(constraints[ii], dims->constraints[ii], opts->constraints[ii]);
+            work->constraints[i] = c_ptr;
+            c_ptr += constraints[i]->workspace_calculate_size(constraints[i], dims->constraints[i], opts->constraints[i]);
         }
 
 #else
@@ -1800,26 +1842,26 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
         size_tmp = tmp > size_tmp ? tmp : size_tmp;
 
         // dynamics
-        for (int ii = 0; ii < N; ii++)
+        for (int i = 0; i < N; i++)
         {
-            work->dynamics[ii] = c_ptr;
-            tmp = dynamics[ii]->workspace_calculate_size(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii]);
+            work->dynamics[i] = c_ptr;
+            tmp = dynamics[i]->workspace_calculate_size(dynamics[i], dims->dynamics[i], opts->dynamics[i]);
             size_tmp = tmp > size_tmp ? tmp : size_tmp;
         }
 
         // cost
-        for (int ii = 0; ii <= N; ii++)
+        for (int i = 0; i <= N; i++)
         {
-            work->cost[ii] = c_ptr;
-            tmp = cost[ii]->workspace_calculate_size(cost[ii], dims->cost[ii], opts->cost[ii]);
+            work->cost[i] = c_ptr;
+            tmp = cost[i]->workspace_calculate_size(cost[i], dims->cost[i], opts->cost[i]);
             size_tmp = tmp > size_tmp ? tmp : size_tmp;
         }
 
         // constraints
-        for (int ii = 0; ii <= N; ii++)
+        for (int i = 0; i <= N; i++)
         {
-            work->constraints[ii] = c_ptr;
-            tmp = constraints[ii]->workspace_calculate_size(constraints[ii], dims->constraints[ii], opts->constraints[ii]);
+            work->constraints[i] = c_ptr;
+            tmp = constraints[i]->workspace_calculate_size(constraints[i], dims->constraints[i], opts->constraints[i]);
             size_tmp = tmp > size_tmp ? tmp : size_tmp;
         }
 
@@ -1837,24 +1879,24 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
             opts->qp_solver_opts);
 
         // dynamics
-        for (int ii = 0; ii < N; ii++)
+        for (int i = 0; i < N; i++)
         {
-            work->dynamics[ii] = c_ptr;
-            c_ptr += dynamics[ii]->workspace_calculate_size(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii]);
+            work->dynamics[i] = c_ptr;
+            c_ptr += dynamics[i]->workspace_calculate_size(dynamics[i], dims->dynamics[i], opts->dynamics[i]);
         }
 
         // cost
-        for (int ii = 0; ii <= N; ii++)
+        for (int i = 0; i <= N; i++)
         {
-            work->cost[ii] = c_ptr;
-            c_ptr += cost[ii]->workspace_calculate_size(cost[ii], dims->cost[ii], opts->cost[ii]);
+            work->cost[i] = c_ptr;
+            c_ptr += cost[i]->workspace_calculate_size(cost[i], dims->cost[i], opts->cost[i]);
         }
 
         // constraints
-        for (int ii = 0; ii <= N; ii++)
+        for (int i = 0; i <= N; i++)
         {
-            work->constraints[ii] = c_ptr;
-            c_ptr += constraints[ii]->workspace_calculate_size(constraints[ii], dims->constraints[ii], opts->constraints[ii]);
+            work->constraints[i] = c_ptr;
+            c_ptr += constraints[i]->workspace_calculate_size(constraints[i], dims->constraints[i], opts->constraints[i]);
         }
 
     }
@@ -1870,29 +1912,124 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
  * functions
  ************************************************/
 
+void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
+         ocp_nlp_out *nlp_out, ocp_nlp_opts *opts, ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work)
+{
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel
+    { // beginning of parallel region
+#endif
+
+    int N = dims->N;
+
+    // alias to dynamics_memory
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp for nowait
+#endif
+    for (int i = 0; i < N; i++)
+    {
+        config->dynamics[i]->memory_set_ux_ptr(nlp_out->ux+i, nlp_mem->dynamics[i]);
+        config->dynamics[i]->memory_set_tmp_ux_ptr(nlp_work->tmp_nlp_out->ux+i, nlp_mem->dynamics[i]);
+        config->dynamics[i]->memory_set_ux1_ptr(nlp_out->ux+i+1, nlp_mem->dynamics[i]);
+        config->dynamics[i]->memory_set_tmp_ux1_ptr(nlp_work->tmp_nlp_out->ux+i+1, nlp_mem->dynamics[i]);
+        config->dynamics[i]->memory_set_pi_ptr(nlp_out->pi+i, nlp_mem->dynamics[i]);
+        config->dynamics[i]->memory_set_tmp_pi_ptr(nlp_work->tmp_nlp_out->pi+i, nlp_mem->dynamics[i]);
+        config->dynamics[i]->memory_set_BAbt_ptr(nlp_mem->qp_in->BAbt+i, nlp_mem->dynamics[i]);
+        config->dynamics[i]->memory_set_RSQrq_ptr(nlp_mem->qp_in->RSQrq+i, nlp_mem->dynamics[i]);
+        config->dynamics[i]->memory_set_dzduxt_ptr(nlp_mem->dzduxt+i, nlp_mem->dynamics[i]);
+        config->dynamics[i]->memory_set_sim_guess_ptr(nlp_mem->sim_guess+i, nlp_mem->set_sim_guess+i, nlp_mem->dynamics[i]);
+        config->dynamics[i]->memory_set_z_alg_ptr(nlp_mem->z_alg+i, nlp_mem->dynamics[i]);
+    }
+#pragma omp parallel for
+    for (int i = 0; i < N; i++)
+    {
+        i+=1;
+    }
+    
+    // alias to cost_memory
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp for nowait
+#endif
+    for (int i = 0; i <= N; i++)
+    {
+        config->cost[i]->memory_set_ux_ptr(nlp_out->ux+i, nlp_mem->cost[i]);
+        config->cost[i]->memory_set_tmp_ux_ptr(nlp_work->tmp_nlp_out->ux+i, nlp_mem->cost[i]);
+        config->cost[i]->memory_set_z_alg_ptr(nlp_mem->z_alg+i, nlp_mem->cost[i]);
+        config->cost[i]->memory_set_dzdux_tran_ptr(nlp_mem->dzduxt+i, nlp_mem->cost[i]);
+        config->cost[i]->memory_set_RSQrq_ptr(nlp_mem->qp_in->RSQrq+i, nlp_mem->cost[i]);
+        config->cost[i]->memory_set_Z_ptr(nlp_mem->qp_in->Z+i, nlp_mem->cost[i]);
+    }
+
+    // alias to constraints_memory
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp for nowait
+#endif
+    for (int i = 0; i <= N; i++)
+    {
+        config->constraints[i]->memory_set_ux_ptr(nlp_out->ux+i, nlp_mem->constraints[i]);
+        config->constraints[i]->memory_set_tmp_ux_ptr(nlp_work->tmp_nlp_out->ux+i, nlp_mem->constraints[i]);
+        config->constraints[i]->memory_set_lam_ptr(nlp_out->lam+i, nlp_mem->constraints[i]);
+        config->constraints[i]->memory_set_tmp_lam_ptr(nlp_work->tmp_nlp_out->lam+i, nlp_mem->constraints[i]);
+        config->constraints[i]->memory_set_z_alg_ptr(nlp_mem->z_alg+i, nlp_mem->constraints[i]);
+        config->constraints[i]->memory_set_dzdux_tran_ptr(nlp_mem->dzduxt+i, nlp_mem->constraints[i]);
+        config->constraints[i]->memory_set_DCt_ptr(nlp_mem->qp_in->DCt+i, nlp_mem->constraints[i]);
+        config->constraints[i]->memory_set_RSQrq_ptr(nlp_mem->qp_in->RSQrq+i, nlp_mem->constraints[i]);
+        config->constraints[i]->memory_set_idxb_ptr(nlp_mem->qp_in->idxb[i], nlp_mem->constraints[i]);
+        config->constraints[i]->memory_set_idxs_rev_ptr(nlp_mem->qp_in->idxs_rev[i], nlp_mem->constraints[i]);
+        config->constraints[i]->memory_set_idxe_ptr(nlp_mem->qp_in->idxe[i], nlp_mem->constraints[i]);
+    }
+
+    // alias to regularize memory
+    config->regularize->memory_set_RSQrq_ptr(dims->regularize, nlp_mem->qp_in->RSQrq, nlp_mem->regularize_mem);
+    config->regularize->memory_set_rq_ptr(dims->regularize, nlp_mem->qp_in->rqz, nlp_mem->regularize_mem);
+    config->regularize->memory_set_BAbt_ptr(dims->regularize, nlp_mem->qp_in->BAbt, nlp_mem->regularize_mem);
+    config->regularize->memory_set_b_ptr(dims->regularize, nlp_mem->qp_in->b, nlp_mem->regularize_mem);
+    config->regularize->memory_set_idxb_ptr(dims->regularize, nlp_mem->qp_in->idxb, nlp_mem->regularize_mem);
+    config->regularize->memory_set_DCt_ptr(dims->regularize, nlp_mem->qp_in->DCt, nlp_mem->regularize_mem);
+    config->regularize->memory_set_ux_ptr(dims->regularize, nlp_mem->qp_out->ux, nlp_mem->regularize_mem);
+    config->regularize->memory_set_pi_ptr(dims->regularize, nlp_mem->qp_out->pi, nlp_mem->regularize_mem);
+    config->regularize->memory_set_lam_ptr(dims->regularize, nlp_mem->qp_out->lam, nlp_mem->regularize_mem);
+
+    // copy sampling times into dynamics model
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp for nowait
+#endif
+    // NOTE(oj): this will lead in an error for irk_gnsf, T must be set in precompute;
+    //    -> remove here and make sure precompute is called everywhere (e.g. Python interface).
+    for (int i = 0; i < N; i++)
+    {
+        config->dynamics[i]->model_set(config->dynamics[i], dims->dynamics[i],
+                                         nlp_in->dynamics[i], "T", nlp_in->Ts+i);
+    }
+
+#if defined(ACADOS_WITH_OPENMP)
+    } // end of parallel region
+#endif
+
+    return;
+}
+
+
 void ocp_nlp_initialize_qp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
          ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
-
-    int ii;
-
     int N = dims->N;
 
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
-    for (ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
         // cost
-        config->cost[ii]->initialize(config->cost[ii], dims->cost[ii], in->cost[ii],
-                opts->cost[ii], mem->cost[ii], work->cost[ii]);
+        config->cost[i]->initialize(config->cost[i], dims->cost[i], in->cost[i],
+                opts->cost[i], mem->cost[i], work->cost[i]);
         // dynamics
-        if (ii < N)
-            config->dynamics[ii]->initialize(config->dynamics[ii], dims->dynamics[ii],
-                    in->dynamics[ii], opts->dynamics[ii], mem->dynamics[ii], work->dynamics[ii]);
+        if (i < N)
+            config->dynamics[i]->initialize(config->dynamics[i], dims->dynamics[i],
+                    in->dynamics[i], opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
         // constraints
-        config->constraints[ii]->initialize(config->constraints[ii], dims->constraints[ii],
-                in->constraints[ii], opts->constraints[ii], mem->constraints[ii], work->constraints[ii]);
+        config->constraints[i]->initialize(config->constraints[i], dims->constraints[i],
+                in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
     }
 
     return;
@@ -1902,7 +2039,6 @@ void ocp_nlp_initialize_qp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
 void ocp_nlp_initialize_t_slacks(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
          ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
-    int ii;
     struct blasfeo_dvec *ineq_fun;
     int N = dims->N;
     int *ni = dims->ni;
@@ -1913,18 +2049,18 @@ void ocp_nlp_initialize_t_slacks(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
-    for (ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
         // copy out->ux to tmp_nlp_out->ux, since this is used in compute_fun
-        blasfeo_dveccp(nx[ii]+nu[ii]+2*ns[ii], out->ux+ii, 0, work->tmp_nlp_out->ux+ii, 0);
+        blasfeo_dveccp(nx[i]+nu[i]+2*ns[i], out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
 
         // evaluate inequalities
-        config->constraints[ii]->compute_fun(config->constraints[ii], dims->constraints[ii],
-                                             in->constraints[ii], opts->constraints[ii],
-                                             mem->constraints[ii], work->constraints[ii]);
-        ineq_fun = config->constraints[ii]->memory_get_fun_ptr(mem->constraints[ii]);
+        config->constraints[i]->compute_fun(config->constraints[i], dims->constraints[i],
+                                             in->constraints[i], opts->constraints[i],
+                                             mem->constraints[i], work->constraints[i]);
+        ineq_fun = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
         // t = -ineq_fun
-        blasfeo_dveccpsc(2 * ni[ii], -1.0, ineq_fun, 0, out->t + ii, 0);
+        blasfeo_dveccpsc(2 * ni[i], -1.0, ineq_fun, 0, out->t + i, 0);
     }
 
     return;
@@ -1936,9 +2072,6 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
     ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem,
     ocp_nlp_workspace *work)
 {
-
-    int i;
-
     int N = dims->N;
     int *nv = dims->nv;
     int *nx = dims->nx;
@@ -1950,7 +2083,7 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
-    for (i = 0; i <= N; i++)
+    for (int i = 0; i <= N; i++)
     {
         // init Hessian to 0 
         blasfeo_dgese(nu[i] + nx[i], nu[i] + nx[i], 0.0, mem->qp_in->RSQrq+i, 0, 0);
@@ -1989,7 +2122,7 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
-    for (i=0; i <= N; i++)
+    for (int i=0; i <= N; i++)
     {
 
         // nlp mem: cost_grad
@@ -2035,7 +2168,7 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
     }
 
-    for (i = 0; i <= N; i++)
+    for (int i = 0; i <= N; i++)
     {
         // TODO(rien) where should the update happen??? move to qp update ???
         // TODO(all): fix and move where appropriate
@@ -2062,8 +2195,6 @@ void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config,
     ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
     ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
-    int i;
-
     int N = dims->N;
     int *nv = dims->nv;
     int *nx = dims->nx;
@@ -2073,7 +2204,7 @@ void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config,
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
-    for (i = 0; i <= N; i++)
+    for (int i = 0; i <= N; i++)
     {
         // g
         blasfeo_dveccp(nv[i], mem->cost_grad + i, 0, mem->qp_in->rqz + i, 0);
@@ -2086,7 +2217,6 @@ void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config,
         blasfeo_dveccp(2 * ni[i], mem->ineq_fun + i, 0, mem->qp_in->d + i, 0);
     }
 }
-
 
 
 
@@ -2111,11 +2241,195 @@ void ocp_nlp_embed_initial_value(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
 
 
+double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims,
+                                  ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
+                                  ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+{
+    /* computes merit function gradient at iterate: out -- using already evaluated gradients of submodules
+       with weights: work->weight_merit_fun */
+    int i, j;
+
+    int N = dims->N;
+    int *nv = dims->nv;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ni = dims->ni;
+
+    double merit_grad = 0.0;
+    double weight;
+
+    // NOTE: step is in: mem->qp_out->ux
+    struct blasfeo_dvec *tmp_vec; // size nv
+    struct blasfeo_dvec tmp_vec_nxu = work->tmp_nxu;  // size nxu
+    struct blasfeo_dvec dxnext_dy = work->dxnext_dy;  // size nx
+
+    // cost
+    for (i=0; i<=N; i++)
+    {
+        tmp_vec = config->cost[i]->memory_get_grad_ptr(mem->cost[i]);
+        merit_grad += blasfeo_ddot(nv[i], tmp_vec, 0, mem->qp_out->ux + i, 0);
+    }
+    double merit_grad_cost = merit_grad;
+
+    /* dynamics */
+    double merit_grad_dyn = 0.0;
+    for (i=0; i<N; i++)
+    {
+        // get shooting node gap x_next(x_n, u_n) - x_{n+1};
+        tmp_vec = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
+
+        /* compute directional derivative of xnext with direction y -> dxnext_dy */
+        blasfeo_dgemv_t(nx[i]+nu[i], nx[i+1], 1.0, mem->qp_in->BAbt+i, 0, 0, mem->qp_out->ux+i, 0,
+                        0.0, &dxnext_dy, 0, &dxnext_dy, 0);
+
+        /* add merit gradient contributions depending on sign of shooting gap */
+        for (j = 0; j < nx[i+1]; j++)
+        {
+            weight = BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j);
+            double deqj_dy = BLASFEO_DVECEL(&dxnext_dy, j) - BLASFEO_DVECEL(mem->qp_out->ux+(i+1), nu[i+1]+j);
+            {
+                if (BLASFEO_DVECEL(tmp_vec, j) > 0)
+                {
+                    merit_grad_dyn += weight * deqj_dy;
+                    // printf("\ndyn_contribution +%e, weight %e, deqj_dy %e, i %d, j %d", weight * deqj_dy, weight, deqj_dy, i, j);
+                }
+                else
+                {
+                    merit_grad_dyn -= weight * deqj_dy;
+                    // printf("\ndyn_contribution %e, weight %e, deqj_dy %e, i %d, j %d", -weight * deqj_dy, weight, deqj_dy, i, j);
+                }
+            }
+        }
+    }
+
+    /* inequality contributions */
+    // NOTE: slack bound inequalities are not considered here.
+    // They should never be infeasible. Only if explicitly initialized infeasible from outside.
+    int constr_index, slack_index_in_ux, slack_index;
+    ocp_qp_dims* qp_dims = mem->qp_in->dim;
+    int *nb = qp_dims->nb;
+    int *ng = qp_dims->ng;
+    int *ns = qp_dims->ns;
+    double merit_grad_ineq = 0.0;
+    double slack_step;
+
+    for (i=0; i<=N; i++)
+    {
+        tmp_vec = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
+        int *idxb = mem->qp_in->idxb[i];
+        if (ni[i] > 0)
+        {
+            // NOTE: loop could be simplified handling lower and upper constraints together.
+            for (j = 0; j < 2 * (nb[i] + ng[i]); j++) // 2 * ni
+            {
+                double constraint_val = BLASFEO_DVECEL(tmp_vec, j);
+                if (constraint_val > 0)
+                {
+                    weight = BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j);
+
+                    // find corresponding slack value
+                    constr_index = j < nb[i]+ng[i] ? j : j-(nb[i]+ng[i]);
+                    slack_index = mem->qp_in->idxs_rev[i][constr_index];
+                    // if softened: add slack contribution
+                    if (slack_index >= 0)
+                    {
+                        slack_index_in_ux = j < (nb[i]+ng[i]) ? nx[i] + nu[i] + slack_index
+                                                              : nx[i] + nu[i] + slack_index + ns[i];
+                        slack_step = BLASFEO_DVECEL(mem->qp_out->ux+i, slack_index_in_ux);
+                        merit_grad_ineq -= weight * slack_step;
+                        // printf("at node %d, ineq %d, idxs_rev[%d] = %d\n", i, j, constr_index, slack_index);
+                        // printf("slack contribution: uxs[%d] = %e\n", slack_index_in_ux, slack_step);
+                    }
+
+
+                    // NOTE: the inequalities are internally organized in the following order:
+                    //     [ lbu lbx lg lh lphi ubu ubx ug uh uphi;
+                    //     lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
+                    // printf("constraint %d %d is active with value %e", i, j, constraint_val);
+                    if (j < nb[i])
+                    {
+                        // printf("lower idxb[%d] = %d dir %f, constraint_val %f, nb = %d\n", j, idxb[j], BLASFEO_DVECEL(mem->qp_out->ux, idxb[j]), constraint_val, nb[i]);
+                        merit_grad_ineq += weight * BLASFEO_DVECEL(mem->qp_out->ux+i, idxb[j]);
+                    }
+                    else if (j < nb[i] + ng[i])
+                    {
+                        // merit_grad_ineq += weight * mem->qp_in->DCt_j * dux
+                        blasfeo_dcolex(nx[i] + nu[i], mem->qp_in->DCt+i, j - nb[i], 0, &tmp_vec_nxu, 0);
+                        merit_grad_ineq += weight * blasfeo_ddot(nx[i] + nu[i], &tmp_vec_nxu, 0, mem->qp_out->ux+i, 0);
+                        // printf("general linear constraint lower contribution = %e, val = %e\n", blasfeo_ddot(nx[i] + nu[i], &tmp_vec_nxu, 0, mem->qp_out->ux+i, 0), constraint_val);
+                    }
+                    else if (j < 2*nb[i] + ng[i])
+                    {
+                        // printf("upper idxb[%d] = %d dir %f, constraint_val %f, nb = %d\n", j-nb[i]-ng[i], idxb[j-nb[i]-ng[i]], BLASFEO_DVECEL(mem->qp_out->ux, idxb[j-nb[i]-ng[i]]), constraint_val, nb[i]);
+                        merit_grad_ineq += weight * BLASFEO_DVECEL(mem->qp_out->ux+i, idxb[j-nb[i]-ng[i]]);
+                    }
+                    else if (j < 2*nb[i] + 2*ng[i])
+                    {
+                        blasfeo_dcolex(nx[i] + nu[i], mem->qp_in->DCt+i, j - 2*nb[i] - ng[i], 0, &tmp_vec_nxu, 0);
+                        merit_grad_ineq += weight * blasfeo_ddot(nx[i] + nu[i], &tmp_vec_nxu, 0, mem->qp_out->ux+i, 0);
+                        // printf("general linear constraint upper contribution = %e, val = %e\n", blasfeo_ddot(nx[i] + nu[i], &tmp_vec_nxu, 0, mem->qp_out->ux+i, 0), constraint_val);
+                    }
+                }
+            }
+        }
+    }
+    // print_ocp_qp_dims(qp_dims);
+    // print_ocp_qp_in(mem->qp_in);
+
+    merit_grad = merit_grad_cost + merit_grad_dyn + merit_grad_ineq;
+    if (opts->print_level > 1)
+        printf("computed merit_grad = %e, merit_grad_cost = %e, merit_grad_dyn = %e, merit_grad_ineq = %e\n", merit_grad, merit_grad_cost, merit_grad_dyn, merit_grad_ineq);
+
+    return merit_grad;
+}
+
+
+
+static double ocp_nlp_get_violation(ocp_nlp_config *config, ocp_nlp_dims *dims,
+                                  ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
+                                  ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+{
+    // computes constraint violation infinity norm
+    // assumes constraint functions are evaluated before, e.g. done in ocp_nlp_evaluate_merit_fun
+    int i, j;
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *ni = dims->ni;
+    struct blasfeo_dvec *tmp_fun_vec;
+    double violation = 0.0;
+    double tmp;
+    for (i=0; i<N; i++)
+    {
+        tmp_fun_vec = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
+        for (j=0; j<nx[i+1]; j++)
+        {
+            tmp = fabs(BLASFEO_DVECEL(tmp_fun_vec, j));
+            violation = tmp > violation ? tmp : violation;
+        }
+    }
+
+    for (i=0; i<=N; i++)
+    {
+        tmp_fun_vec = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
+        for (j=0; j<2*ni[i]; j++)
+        {
+            // Note constraint violation corresponds to > 0
+            tmp = BLASFEO_DVECEL(tmp_fun_vec, j);
+            violation = tmp > violation ? tmp : violation;
+        }
+    }
+
+    return violation;
+}
+
+
+
 double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
                                   ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
                                   ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
-    int i, j;
+    /* computes merit function value at iterate: tmp_nlp_out, with weights: work->weight_merit_fun */
+    //int j;
 
     int N = dims->N;
     int *nx = dims->nx;
@@ -2127,7 +2441,7 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
-    for (i=0; i<=N; i++)
+    for (int i=0; i<=N; i++)
     {
         // cost
         config->cost[i]->compute_fun(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i],
@@ -2136,7 +2450,7 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
-    for (i=0; i<N; i++)
+    for (int i=0; i<N; i++)
     {
         // dynamics
         config->dynamics[i]->compute_fun(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
@@ -2145,7 +2459,7 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
-    for (i=0; i<=N; i++)
+    for (int i=0; i<=N; i++)
     {
         // constr
         config->constraints[i]->compute_fun(config->constraints[i], dims->constraints[i],
@@ -2158,20 +2472,20 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
     struct blasfeo_dvec *tmp_fun_vec;
 
     double cost_fun = 0.0;
-    for(i=0; i<=N; i++)
+    for(int i=0; i<=N; i++)
     {
         tmp_fun = config->cost[i]->memory_get_fun_ptr(mem->cost[i]);
         cost_fun += *tmp_fun;
     }
 
     double dyn_fun = 0.0;
-    for(i=0; i<N; i++)
+    for(int i=0; i<N; i++)
     {
         tmp_fun_vec = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
-        // printf("\nMerit: dyn will multiply tmp_fun, weights\n");
+        // printf("\nMerit: dyn will multiply tmp_fun, weights %d\n", i);
         // blasfeo_print_exp_tran_dvec(nx[i+1], tmp_fun_vec, 0);
         // blasfeo_print_exp_tran_dvec(nx[i+1], work->weight_merit_fun->pi+i, 0);
-        for(j=0; j<nx[i+1]; j++)
+        for(int j=0; j<nx[i+1]; j++)
         {
 //            printf("\n%e %e\n", fabs(BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j)), fabs(BLASFEO_DVECEL(tmp_fun_vec, j)));
             dyn_fun += fabs(BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j)) * fabs(BLASFEO_DVECEL(tmp_fun_vec, j));
@@ -2179,24 +2493,27 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
     }
 
     double constr_fun = 0.0;
-    for(i=0; i<=N; i++)
+    for(int i=0; i<=N; i++)
     {
 //        printf("\ni %d\n", i);
         tmp_fun_vec = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
 //        blasfeo_print_exp_tran_dvec(2*ni[i], tmp_fun_vec, 0);
 //        blasfeo_print_exp_tran_dvec(2*ni[i], work->weight_merit_fun->lam+i, 0);
-        for(j=0; j<2*ni[i]; j++)
+        for (int j=0; j<2*ni[i]; j++)
         {
             tmp = BLASFEO_DVECEL(tmp_fun_vec, j);
-            tmp = tmp>0.0 ? fabs(tmp) : 0.0;  // tmp = constraint violation
-            // printf("IN merit fun: ineq i %d, j %d tmp_fun%e, multiplier %e\n", i, j, BLASFEO_DVECEL(tmp_fun_vec, j), BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j));
-            constr_fun += fabs(BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j)) * tmp;
+            if (tmp > 0.0)
+            {
+                // tmp = constraint violation
+                // printf("IN merit fun: ineq i %d, j %d tmp_fun %e, multiplier %e\n", i, j, tmp, BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j));
+                constr_fun += fabs(BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j)) * tmp;
+            }
         }
     }
 
     merit_fun = cost_fun + dyn_fun + constr_fun;
 
-	// printf("\nMerit fun: %e cost: %e dyn: %e constr: %e\n", merit_fun, cost_fun, dyn_fun, constr_fun);
+	// printf("Merit fun: %e cost: %e dyn: %e constr: %e\n", merit_fun, cost_fun, dyn_fun, constr_fun);
 
     return merit_fun;
 }
@@ -2204,9 +2521,10 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
 
 double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
-            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
+            int check_early_termination)
 {
-    int i;
+    int i, j;
 
     int N = dims->N;
     int *nv = dims->nv;
@@ -2214,99 +2532,24 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
     int *ni = dims->ni;
 
     double alpha = opts->step_length;
-    double tmp0, tmp1;
-    int j;
+    double tmp0, tmp1, merit_fun1;
+    ocp_qp_out *qp_out = mem->qp_out;
 
-
-#if 0 // Line Search Gianluca version
-    // current point
-    for (i = 0; i <= N; i++)
-        blasfeo_dveccp(nv[i], out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
-
-    for (i = 0; i < N; i++)
-        blasfeo_dveccp(nx[i+1], out->pi+i, 0, work->tmp_nlp_out->pi+i, 0);
-
-    for (i = 0; i <= N; i++)
-        blasfeo_dveccp(2*ni[i], out->lam+i, 0, work->tmp_nlp_out->lam+i, 0);
-
-        // linear update of algebraic variables using state and input sensitivity
-//        if (i < N)
-//        {
-//            blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0, mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out->z+i, 0);
-//        }
-
-    // initialize weights
-    if(mem->sqp_iter[0]==0)
-    {
-        for (i = 0; i < N; i++)
-            blasfeo_dveccp(nx[i+1], out->pi+i, 0, work->weight_merit_fun->pi+i, 0);
-
-        for (i = 0; i <= N; i++)
-            blasfeo_dveccp(2*ni[i], out->lam+i, 0, work->weight_merit_fun->lam+i, 0);
-    }
-
-    // update weigths
-    for (i = 0; i < N; i++)
-    {
-        for(j=0; j<nx[i+1]; j++)
-        {
-            tmp0 = fabs(BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j));
-            tmp1 = 0.5 * (tmp0 + fabs(BLASFEO_DVECEL(mem->qp_out->pi+i, j)));
-            BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j) = tmp0>tmp1 ? tmp0 : tmp1;
-        }
-    }
-    for (i = 0; i <= N; i++)
-    {
-        for(j=0; j<2*ni[i]; j++)
-        {
-            tmp0 = fabs(BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j));
-            tmp1 = 0.5 * (tmp0 + fabs(BLASFEO_DVECEL(mem->qp_out->lam+i, j)));
-            BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j) = tmp0>tmp1 ? tmp0 : tmp1;
-        }
-    }
-
-    printf("\n\nmerit fun value\n");
-    double merit_fun0 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
-
-    double alpha_min = 0.1;
-
-    for (j=0; j<10 & alpha>alpha_min; j++)
-    {
-
-        for (i = 0; i <= N; i++)
-            blasfeo_daxpy(nv[i], alpha, mem->qp_out->ux+i, 0, out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
-
-        printf("\n%d tmp merit fun value\n", j);
-        double merit_fun1 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
-
-        if(merit_fun1 < merit_fun0)
-        {
-            break;
-        }
-        else
-        {
-            alpha *= 0.7;
-        }
-    }
-
-    printf("\nalpha %f\n", alpha);
-
-#endif
-
+    // Line search version Jonathan
+    // Following Leineweber1999, Section "3.5.1 Line Search Globalization"
+    // TODO: check out more advanced step search Leineweber1995
 
     if (opts->globalization == MERIT_BACKTRACKING)
     {
-        // Line search version Jonathan
-        // Following Leineweber1999
         // copy out (current iterate) to work->tmp_nlp_out
         for (i = 0; i <= N; i++)
             blasfeo_dveccp(nv[i], out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
 
-        for (i = 0; i < N; i++)
-            blasfeo_dveccp(nx[i+1], out->pi+i, 0, work->tmp_nlp_out->pi+i, 0);
+        // for (i = 0; i < N; i++)
+        //     blasfeo_dveccp(nx[i+1], out->pi+i, 0, work->tmp_nlp_out->pi+i, 0);
 
-        for (i = 0; i <= N; i++)
-            blasfeo_dveccp(2*ni[i], out->lam+i, 0, work->tmp_nlp_out->lam+i, 0);
+        // for (i = 0; i <= N; i++)
+        //     blasfeo_dveccp(2*ni[i], out->lam+i, 0, work->tmp_nlp_out->lam+i, 0);
 
             // linear update of algebraic variables using state and input sensitivity
     //        if (i < N)
@@ -2314,25 +2557,23 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
     //            blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0, mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out->z+i, 0);
     //        }
 
-        /* initialize (Leineweber1999 M5.1) */
+        /* modify/initialize merit function weights (Leineweber1999 M5.1, p.89) */
         if (mem->sqp_iter[0]==0)
         {
             // initialize weights
-            // equality merit weights = abs( eq multipliers )
+            // equality merit weights = abs( eq multipliers of qp_sol )
             for (i = 0; i < N; i++)
             {
                 for (j=0; j<nx[i+1]; j++)
                 {
-                    tmp0 = fabs(BLASFEO_DVECEL(out->pi+i, j));
-                    BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j) = tmp0;
+                    // tmp0 = fabs(BLASFEO_DVECEL(out->pi+i, j));
+                    tmp0 = fabs(BLASFEO_DVECEL(qp_out->pi+i, j));
                 }
             }
 
-            // printf("merit fun: initialize weights lam\n");
             for (i = 0; i <= N; i++)
             {
-                blasfeo_dveccp(2*ni[i], out->lam+i, 0, work->weight_merit_fun->lam+i, 0);
-                // blasfeo_print_dvec(nx[i+1], work->weight_merit_fun->lam+i, 0);
+                blasfeo_dveccp(2*ni[i], qp_out->lam+i, 0, work->weight_merit_fun->lam+i, 0);
             }
         }
         else
@@ -2344,10 +2585,10 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
                 for(j=0; j<nx[i+1]; j++)
                 {
                     // abs(lambda) (LW)
-                    tmp0 = fabs(BLASFEO_DVECEL(out->pi+i, j));
+                    tmp0 = fabs(BLASFEO_DVECEL(qp_out->pi+i, j));
                     // .5 * (abs(lambda) + sigma)
                     tmp1 = 0.5 * (tmp0 + BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j));
-                    BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j) = tmp0>tmp1 ? tmp0 : tmp1;
+                    BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j) = tmp0 > tmp1 ? tmp0 : tmp1;
                 }
             }
             for (i = 0; i <= N; i++)
@@ -2355,7 +2596,7 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
                 for(j=0; j<2*ni[i]; j++)
                 {
                     // mu (LW)
-                    tmp0 = BLASFEO_DVECEL(out->lam+i, j);
+                    tmp0 = BLASFEO_DVECEL(qp_out->lam+i, j);
                     // .5 * (mu + tau)
                     tmp1 = 0.5 * (tmp0 + BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j));
                     BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j) = tmp0>tmp1 ? tmp0 : tmp1;
@@ -2367,24 +2608,93 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
         {
             double merit_fun0 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
 
-            double alpha_min = opts->alpha_min;
             double reduction_factor = opts->alpha_reduction;
+            double max_next_merit_fun_val = merit_fun0;
+            double eps_sufficient_descent = opts->eps_sufficient_descent;
+            double dmerit_dy = 0.0;
+            alpha = 1.0;
+
+            // to avoid armijo evaluation and loop when checking if SOC should be done
+            if (check_early_termination)
+            {
+                // TMP:
+                // printf("tmp: merit_grad eval in early termination\n");
+                // dmerit_dy = ocp_nlp_compute_merit_gradient(config, dims, in, out, opts, mem, work);
+
+                // TODO(oj): should the merit weight update be undone in case of early termination?
+                double violation_current = ocp_nlp_get_violation(config, dims, in, out, opts, mem, work);
+
+                // tmp_nlp_out = out + alpha * qp_out
+                for (i = 0; i <= N; i++)
+                    blasfeo_daxpy(nv[i], alpha, qp_out->ux+i, 0, out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
+                merit_fun1 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
+
+                double violation_step = ocp_nlp_get_violation(config, dims, in, out, opts, mem, work);
+                if (opts->print_level > 0)
+                {
+                    printf("\npreliminary line_search: merit0 %e, merit1 %e; viol_current %e, viol_step %e\n", merit_fun0, merit_fun1, violation_current, violation_step);
+                }
+
+                if (merit_fun1 < merit_fun0 && violation_step < violation_current)
+                {
+                    // TODO: check armijo in this case?
+                    return alpha;
+                }
+                else
+                {
+                    return reduction_factor * reduction_factor;
+                }
+            }
 
             /* actual Line Search*/
-            alpha = 1.0;
-            // TODO: check out more advanced step search Leineweber1995
-
-            for (j=0; alpha*reduction_factor > alpha_min; j++)
+            if (opts->line_search_use_sufficient_descent)
             {
+                // check Armijo-type sufficient descent condition Leinweber1999 (2.35);
+                dmerit_dy = ocp_nlp_compute_merit_gradient(config, dims, in, out, opts, mem, work);
+                if (dmerit_dy > 0.0)
+                {
+                    if (dmerit_dy > 1e-6 && opts->print_level > 0)
+                    {
+                        printf("\nacados line search: found dmerit_dy = %e > 0. Setting it to 0.0 instead\n", dmerit_dy);
+                    }
+                    dmerit_dy = 0.0;
+                }
+            }
 
+            // From Leineweber1999: eq (3.64) -> only relevant for adaptive integrators looking at Remark 3.2.
+            // "It is noteworthy that our practical implementation takes into account the potential nonsmoothness introduced by the fact that certain components of the penalty function - namely the continuity condition residuals - are evaluated only within integration tolerance."
+            // double sum_pi = 0.0;
+            // for (i = 0; i < N; i++)
+            // {
+            //     for (j = 0; j < dims->nx[i+1]; j++)
+            //         sum_pi += BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j);
+            // }
+            // double relaxed_val = 2.0 * 1e-6 * sum_pi;
+            // if (abs(merit_fun0 - merit_fun1) < relaxed_val)
+            // {
+            //     printf("\nexiting because of relaxed_val.");
+            //     break;
+            // }
+
+            for (j=0; alpha*reduction_factor > opts->alpha_min; j++)
+            {
+                // tmp_nlp_out = out + alpha * qp_out
                 for (i = 0; i <= N; i++)
-                    blasfeo_daxpy(nv[i], alpha, mem->qp_out->ux+i, 0, out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
+                    blasfeo_daxpy(nv[i], alpha, qp_out->ux+i, 0, out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
 
-                // printf("\ntmp merit fun value step search iter: %d", j);
-                double merit_fun1 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
+                merit_fun1 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
+                if (opts->print_level > 1)
+                {
+                    printf("backtracking %d, merit_fun1 = %e, merit_fun0 %e\n", j, merit_fun1, merit_fun0);
+                }
 
-                // TODO(oj): also check Armijo-type condition Leinweber1999 (2.35)
-                if (merit_fun1 < merit_fun0)
+                // if (merit_fun1 < merit_fun0 && merit_fun1 > max_next_merit_fun_val)
+                // {
+                //     printf("\nalpha %f would be accepted without sufficient descent condition", alpha);
+                // }
+
+                max_next_merit_fun_val = merit_fun0 + eps_sufficient_descent * dmerit_dy * alpha;
+                if (merit_fun1 < max_next_merit_fun_val)
                 {
                     break;
                 }
@@ -2394,7 +2704,6 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
                 }
             }
         }
-        printf("\nalpha %f\n", alpha);
     }
 
     return alpha;
@@ -2404,8 +2713,6 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
 void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work, double alpha)
 {
-    int i;
-
     int N = dims->N;
     int *nv = dims->nv;
     int *nx = dims->nx;
@@ -2417,20 +2724,31 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
-    for (i = 0; i <= N; i++)
+    for (int i = 0; i <= N; i++)
     {
         // step in primal variables
         blasfeo_daxpy(nv[i], alpha, mem->qp_out->ux + i, 0, out->ux + i, 0, out->ux + i, 0);
-    
-        // update dual variables
-        if (i < N)
-        {
-            blasfeo_dvecsc(nx[i+1], 1.0-alpha, out->pi+i, 0);
-            blasfeo_daxpy(nx[i+1], alpha, mem->qp_out->pi+i, 0, out->pi+i, 0, out->pi+i, 0);
-        }
 
-        blasfeo_dvecsc(2*ni[i], 1.0-alpha, out->lam+i, 0);
-        blasfeo_daxpy(2*ni[i], alpha, mem->qp_out->lam+i, 0, out->lam+i, 0, out->lam+i, 0);
+        // update dual variables
+        if (opts->full_step_dual)
+        {
+            blasfeo_dveccp(2*ni[i], mem->qp_out->lam+i, 0, out->lam+i, 0);
+            if (i < N)
+            {
+                blasfeo_dveccp(nx[i+1], mem->qp_out->pi+i, 0, out->pi+i, 0);
+            }
+        }
+        else
+        {
+            // update duals with alpha step
+            blasfeo_dvecsc(2*ni[i], 1.0-alpha, out->lam+i, 0);
+            blasfeo_daxpy(2*ni[i], alpha, mem->qp_out->lam+i, 0, out->lam+i, 0, out->lam+i, 0);
+            if (i < N)
+            {
+                blasfeo_dvecsc(nx[i+1], 1.0-alpha, out->pi+i, 0);
+                blasfeo_daxpy(nx[i+1], alpha, mem->qp_out->pi+i, 0, out->pi+i, 0, out->pi+i, 0);
+            }
+        }
 
         // update slack values
         blasfeo_dvecsc(2*ni[i], 1.0-alpha, out->t+i, 0);
@@ -2465,11 +2783,11 @@ acados_size_t ocp_nlp_res_calculate_size(ocp_nlp_dims *dims)
     size += 3 * (N + 1) * sizeof(struct blasfeo_dvec);  // res_stat res_ineq res_comp
     size += 1 * N * sizeof(struct blasfeo_dvec);        // res_eq
 
-    for (int ii = 0; ii < N; ii++)
+    for (int i = 0; i < N; i++)
     {
-        size += 1 * blasfeo_memsize_dvec(nv[ii]);      // res_stat
-        size += 1 * blasfeo_memsize_dvec(nx[ii + 1]);  // res_eq
-        size += 2 * blasfeo_memsize_dvec(2 * ni[ii]);  // res_ineq res_comp
+        size += 1 * blasfeo_memsize_dvec(nv[i]);      // res_stat
+        size += 1 * blasfeo_memsize_dvec(nx[i + 1]);  // res_eq
+        size += 2 * blasfeo_memsize_dvec(2 * ni[i]);  // res_ineq res_comp
     }
     size += 1 * blasfeo_memsize_dvec(nv[N]);      // res_stat
     size += 2 * blasfeo_memsize_dvec(2 * ni[N]);  // res_ineq res_comp
@@ -2482,6 +2800,7 @@ acados_size_t ocp_nlp_res_calculate_size(ocp_nlp_dims *dims)
 
     return size;
 }
+
 
 ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory)
 {
@@ -2517,24 +2836,24 @@ ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory)
     align_char_to(64, &c_ptr);
 
     // res_stat
-    for (int ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        assign_and_advance_blasfeo_dvec_mem(nv[ii], res->res_stat + ii, &c_ptr);
+        assign_and_advance_blasfeo_dvec_mem(nv[i], res->res_stat + i, &c_ptr);
     }
     // res_eq
-    for (int ii = 0; ii < N; ii++)
+    for (int i = 0; i < N; i++)
     {
-        assign_and_advance_blasfeo_dvec_mem(nx[ii + 1], res->res_eq + ii, &c_ptr);
+        assign_and_advance_blasfeo_dvec_mem(nx[i + 1], res->res_eq + i, &c_ptr);
     }
     // res_ineq
-    for (int ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        assign_and_advance_blasfeo_dvec_mem(2 * ni[ii], res->res_ineq + ii, &c_ptr);
+        assign_and_advance_blasfeo_dvec_mem(2 * ni[i], res->res_ineq + i, &c_ptr);
     }
     // res_comp
-    for (int ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        assign_and_advance_blasfeo_dvec_mem(2 * ni[ii], res->res_comp + ii, &c_ptr);
+        assign_and_advance_blasfeo_dvec_mem(2 * ni[i], res->res_comp + i, &c_ptr);
     }
 
     res->memsize = ocp_nlp_res_calculate_size(dims);
@@ -2558,45 +2877,56 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
 
     // res_stat
     res->inf_norm_res_stat = 0.0;
-    for (int ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        blasfeo_daxpy(nv[ii], -1.0, mem->ineq_adj + ii, 0, mem->cost_grad + ii, 0, res->res_stat + ii,
+        blasfeo_daxpy(nv[i], -1.0, mem->ineq_adj + i, 0, mem->cost_grad + i, 0, res->res_stat + i,
                       0);
-        blasfeo_daxpy(nu[ii] + nx[ii], -1.0, mem->dyn_adj + ii, 0, res->res_stat + ii, 0,
-                      res->res_stat + ii, 0);
-        blasfeo_dvecnrm_inf(nv[ii], res->res_stat + ii, 0, &tmp_res);
+        blasfeo_daxpy(nu[i] + nx[i], -1.0, mem->dyn_adj + i, 0, res->res_stat + i, 0,
+                      res->res_stat + i, 0);
+        blasfeo_dvecnrm_inf(nv[i], res->res_stat + i, 0, &tmp_res);
         res->inf_norm_res_stat = tmp_res > res->inf_norm_res_stat ? tmp_res : res->inf_norm_res_stat;
     }
 
     // res_eq
     res->inf_norm_res_eq = 0.0;
-    for (int ii = 0; ii < N; ii++)
+    for (int i = 0; i < N; i++)
     {
-        blasfeo_dveccp(nx[ii + 1], mem->dyn_fun + ii, 0, res->res_eq + ii, 0);
-        blasfeo_dvecnrm_inf(nx[ii + 1], res->res_eq + ii, 0, &tmp_res);
+        blasfeo_dveccp(nx[i + 1], mem->dyn_fun + i, 0, res->res_eq + i, 0);
+        blasfeo_dvecnrm_inf(nx[i + 1], res->res_eq + i, 0, &tmp_res);
         res->inf_norm_res_eq = tmp_res > res->inf_norm_res_eq ? tmp_res : res->inf_norm_res_eq;
     }
 
     // res_ineq
     res->inf_norm_res_ineq = 0.0;
-    for (int ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        blasfeo_daxpy(2 * ni[ii], 1.0, out->t + ii, 0, mem->ineq_fun + ii, 0, res->res_ineq + ii, 0);
-        blasfeo_dvecnrm_inf(2 * ni[ii], res->res_ineq + ii, 0, &tmp_res);
+        blasfeo_daxpy(2 * ni[i], 1.0, out->t + i, 0, mem->ineq_fun + i, 0, res->res_ineq + i, 0);
+        blasfeo_dvecnrm_inf(2 * ni[i], res->res_ineq + i, 0, &tmp_res);
         res->inf_norm_res_ineq = tmp_res > res->inf_norm_res_ineq ? tmp_res : res->inf_norm_res_ineq;
     }
 
     // res_comp
     res->inf_norm_res_comp = 0.0;
-    for (int ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
-        blasfeo_dvecmul(2 * ni[ii], out->lam + ii, 0, out->t + ii, 0, res->res_comp + ii, 0);
-        blasfeo_dvecnrm_inf(2 * ni[ii], res->res_comp + ii, 0, &tmp_res);
+        blasfeo_dvecmul(2 * ni[i], out->lam + i, 0, out->t + i, 0, res->res_comp + i, 0);
+        blasfeo_dvecnrm_inf(2 * ni[i], res->res_comp + i, 0, &tmp_res);
         res->inf_norm_res_comp = tmp_res > res->inf_norm_res_comp ? tmp_res : res->inf_norm_res_comp;
     }
 
-    // printf("computed residuals g: %e, b: %e, d: %e, m: %e\n", res->inf_norm_res_stat, res->inf_norm_res_eq,
+    // printf("computed residuals stat: %e, eq: %e, ineq: %e, comp: %e\n", res->inf_norm_res_stat, res->inf_norm_res_eq,
     //        res->inf_norm_res_ineq, res->inf_norm_res_comp);
+}
+
+
+void ocp_nlp_res_get_inf_norm(ocp_nlp_res *res, double *out)
+{
+    double norm = res->inf_norm_res_stat;
+    norm = (res->inf_norm_res_eq > norm) ? res->inf_norm_res_eq : norm;
+    norm = (res->inf_norm_res_ineq > norm) ? res->inf_norm_res_ineq : norm;
+    norm = (res->inf_norm_res_comp > norm) ? res->inf_norm_res_comp : norm;
+    *out = norm;
+    return;
 }
 
 
@@ -2609,18 +2939,18 @@ void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in
     double* tmp_cost = NULL;
     double total_cost = 0.0;
 
-    for (int ii = 0; ii <= N; ii++)
+    for (int i = 0; i <= N; i++)
     {
         // set pointers
         // NOTE(oj): the cost compute function takes the tmp_ux_ptr as input,
         //  since it is also used for globalization,
         //  especially with primal variables that are NOT current SQP iterates.
-        config->cost[ii]->memory_set_tmp_ux_ptr(out->ux+ii, mem->cost[ii]);
+        config->cost[i]->memory_set_tmp_ux_ptr(out->ux+i, mem->cost[i]);
 
-        config->cost[ii]->compute_fun(config->cost[ii], dims->cost[ii], in->cost[ii],
-                    opts->cost[ii], mem->cost[ii], work->cost[ii]);
-        tmp_cost = config->cost[ii]->memory_get_fun_ptr(mem->cost[ii]);
-        // printf("cost at stage %d = %e, total = %e\n", ii, *tmp_cost, total_cost);
+        config->cost[i]->compute_fun(config->cost[i], dims->cost[i], in->cost[i],
+                    opts->cost[i], mem->cost[i], work->cost[i]);
+        tmp_cost = config->cost[i]->memory_get_fun_ptr(mem->cost[i]);
+        // printf("cost at stage %d = %e, total = %e\n", i, *tmp_cost, total_cost);
         total_cost += *tmp_cost;
     }
     mem->cost_value = total_cost;

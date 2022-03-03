@@ -29,6 +29,8 @@ It also provides a higher level interface to `acados`, which is based on the Mat
 - [Mobility-enhanced MPC for Legged Locomotion on Rough Terrain](https://arxiv.org/abs/2105.05998)
     - [Video to Mobility-enhanced MPC for Legged Locomotion on Rough Terrain](https://www.dropbox.com/sh/mkr4pftcug6jlo7/AABNqu1AsGED2WSR8IqvaiUla?dl=0)
 
+- [Continuous Control Set Nonlinear Model Predictive Control of Reluctance Synchronous Machines - IEEE Transactions on Control System Technology -- Andrea Zanelli et al 2021](https://ieeexplore.ieee.org/document/9360312)
+
 ### other
 - [Contraction Properties of the Advanced Step Real-Time Iteration for NMPC at the IFAC World Congress 2020](https://cdn.syscop.de/publications/Nurkanovic2020b.pdf)
 
@@ -40,3 +42,6 @@ It also provides a higher level interface to `acados`, which is based on the Mat
 
 <!-- external -->
 - [Model predictive control of wind turbine fatigue via online rainflow-counting on stress history and prediction](https://iopscience.iop.org/article/10.1088/1742-6596/1618/2/022041/pdf)
+
+- [Embedded Real-Time Nonlinear Model Predictive Control for the Thermal Torque Derating of an Electric Vehicle, Winkler et al, IFAC 2021](https://cdn.syscop.de/publications/Winkler2021.pdf)
+

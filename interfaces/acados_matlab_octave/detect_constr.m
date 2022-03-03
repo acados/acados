@@ -154,7 +154,7 @@ function model = detect_constr(model, is_e)
     
     if is_e
         % checks
-        if any(expr_constr.which_depends(u)) || ~isempty(lbu) || any(D)
+        if any(expr_constr.which_depends(u)) || ~isempty(lbu) || (~isempty(D) && any(D))
             error('terminal constraint may not depend on control input.');
         end
         % h

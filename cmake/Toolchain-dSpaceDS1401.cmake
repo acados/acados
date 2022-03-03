@@ -11,10 +11,10 @@ set(DSPACE_PPCTOOLS "${DSPACE_TOOLS}/Compiler/PPCTools")
 
 # C Compiler
 find_program(CMAKE_C_COMPILER NAMES ${DSPACE_PPCTOOLS}/bin/mccppc.exe)
-# C++ Compiler
+# C++ Compiler -- not used
 find_program(CMAKE_CXX_COMPILER NAMES ${DSPACE_PPCTOOLS}/bin/mccppc.exe)
 # Assembler
-find_program(CMAKE_ASM_COMPILER NAMES ${DSPACE_PPCTOOLS}/bin/asmppc.exe
+find_program(CMAKE_ASM_COMPILER NAMES ${DSPACE_PPCTOOLS}/bin/asmppc.exe)
 set(CMAKE_RANLIB ":")
 
 find_program(CMAKE_MAKE_PROGRAM NAMES "C:/dSPACE RCPHIL 2017-B/Exe/DSMAKE.exe")

@@ -335,6 +335,7 @@ ocp_nlp_dims *ocp_nlp_dims_create(void *config_)
     assert(ptr != 0);
 
     ocp_nlp_dims *dims = ocp_nlp_dims_assign(config, ptr);
+    dims->raw_memory = ptr;
 
     return dims;
 }
@@ -343,7 +344,8 @@ ocp_nlp_dims *ocp_nlp_dims_create(void *config_)
 
 void ocp_nlp_dims_destroy(void *dims_)
 {
-    free(dims_);
+    ocp_nlp_dims *dims = dims_;
+    free(dims->raw_memory);
 }
 
 
@@ -360,15 +362,17 @@ ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_config *config, ocp_nlp_dims *dims)
     assert(ptr != 0);
 
     ocp_nlp_in *nlp_in = ocp_nlp_in_assign(config, dims, ptr);
+    nlp_in->raw_memory = ptr;
 
     return nlp_in;
 }
 
 
 
-void ocp_nlp_in_destroy(void *in)
+void ocp_nlp_in_destroy(void *in_)
 {
-    free(in);
+    ocp_nlp_in *in = in_;
+    free(in->raw_memory);
 }
 
 
@@ -437,6 +441,7 @@ ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_config *config, ocp_nlp_dims *dims)
     assert(ptr != 0);
 
     ocp_nlp_out *nlp_out = ocp_nlp_out_assign(config, dims, ptr);
+    nlp_out->raw_memory = ptr;
 
     // initialize to zeros
 //    for (int ii = 0; ii <= dims->N; ++ii)
@@ -447,9 +452,10 @@ ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_config *config, ocp_nlp_dims *dims)
 
 
 
-void ocp_nlp_out_destroy(void *out)
+void ocp_nlp_out_destroy(void *out_)
 {
-    free(out);
+    ocp_nlp_out *out = out_;
+    free(out->raw_memory);
 }
 
 
@@ -466,6 +472,18 @@ void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
     {
         double *double_values = value;
         blasfeo_pack_dvec(dims->nu[stage], double_values, 1, &out->ux[stage], 0);
+    }
+    else if (!strcmp(field, "sl"))
+    {
+        double *double_values = value;
+        blasfeo_pack_dvec(dims->ns[stage], double_values, 1, &out->ux[stage],
+                            dims->nu[stage] + dims->nx[stage]);
+    }
+    else if (!strcmp(field, "su"))
+    {
+        double *double_values = value;
+        blasfeo_pack_dvec(dims->ns[stage], double_values, 1, &out->ux[stage],
+                            dims->nu[stage] + dims->nx[stage] + dims->ns[stage]);
     }
     else if (!strcmp(field, "pi"))
     {
@@ -508,6 +526,18 @@ void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
     {
         double *double_values = value;
         blasfeo_unpack_dvec(dims->nu[stage], &out->ux[stage], 0, double_values, 1);
+    }
+    else if (!strcmp(field, "sl"))
+    {
+        double *double_values = value;
+        blasfeo_unpack_dvec(dims->ns[stage], &out->ux[stage],
+             dims->nu[stage] + dims->nx[stage], double_values, 1);
+    }
+    else if (!strcmp(field, "su"))
+    {
+        double *double_values = value;
+        blasfeo_unpack_dvec(dims->ns[stage], &out->ux[stage],
+             dims->nu[stage] + dims->nx[stage] + dims->ns[stage], double_values, 1);
     }
     else if (!strcmp(field, "z"))
     {
@@ -582,6 +612,12 @@ int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
                                                     "gnsf_nout", &dims_value);
         return dims_value;
     }
+    else if (!strcmp(field, "xdot_guess"))
+    {
+        config->dynamics[stage]->dims_get(config->dynamics[stage], dims->dynamics[stage],
+                                                    "nx", &dims_value);
+        return dims_value;
+    }
     // ocp_nlp_constraints_dims
     else if (!strcmp(field, "lbx") || !strcmp(field, "ubx"))
     {
@@ -632,6 +668,12 @@ void ocp_nlp_constraint_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims 
     {
         config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage],
                                             "nbx", &dims_out[0]);
+        return;
+    }
+    else if (!strcmp(field, "uphi"))
+    {
+        config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage],
+                                            "nphi", &dims_out[0]);
         return;
     }
     else if (!strcmp(field, "lbu") || !strcmp(field, "ubu"))
@@ -958,17 +1000,7 @@ void ocp_nlp_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_so
     ocp_nlp_memory *nlp_mem;
     config->get(config, dims, solver->mem, "nlp_mem", &nlp_mem);
 
-    if (!strcmp(field, "sl"))
-    {
-        double *double_values = value;
-        d_ocp_qp_sol_get_sl(stage, nlp_mem->qp_out, double_values);
-    }
-    else if (!strcmp(field, "su"))
-    {
-        double *double_values = value;
-        d_ocp_qp_sol_get_su(stage, nlp_mem->qp_out, double_values);
-    }
-    else if (!strcmp(field, "A"))
+    if (!strcmp(field, "A"))
     {
         double *double_values = value;
         d_ocp_qp_get_A(stage, nlp_mem->qp_in, double_values);
@@ -1000,16 +1032,6 @@ void ocp_nlp_set(ocp_nlp_config *config, ocp_nlp_solver *solver,
         mem->set_sim_guess[stage] = true;
         // printf("set z_guess\n");
         // blasfeo_print_exp_dvec(nz, mem->sim_guess+stage, nx);
-    }
-    else if (!strcmp(field, "sl"))
-    {
-        double *double_values = value;
-        d_ocp_qp_sol_set_sl(stage, double_values, mem->qp_out);
-    }
-    else if (!strcmp(field, "su"))
-    {
-        double *double_values = value;
-        d_ocp_qp_sol_set_su(stage, double_values, mem->qp_out);
     }
     else if (!strcmp(field, "xdot_guess"))
     {

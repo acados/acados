@@ -155,7 +155,7 @@ static double lu_system_solve(double *A, double *b, int *perm, int dim, int dim_
 
 
 
-acados_size_t gauss_nodes_work_calculate_size(int ns)
+static acados_size_t gauss_legendre_nodes_work_calculate_size(int ns)
 {
     int N = ns - 1;
     int N1 = N + 1;
@@ -170,8 +170,8 @@ acados_size_t gauss_nodes_work_calculate_size(int ns)
 }
 
 
-// TODO(all): understand how this works and leave a comment!
-void gauss_nodes(int ns, double *nodes, void *work)
+// calculates Gauss-Legendre nodes (c) for Butcher tableau of size ns
+static void gauss_legendre_nodes(int ns, double *nodes, void *work)
 {
     int N = ns - 1;
     int N1 = N + 1;
@@ -197,7 +197,7 @@ void gauss_nodes(int ns, double *nodes, void *work)
     double *der_lgvm = (double *) c_ptr;
     c_ptr += N1 * sizeof(double);
 
-    assert((char *) work + gauss_nodes_work_calculate_size(ns) >= c_ptr);
+    assert((char *) work + gauss_legendre_nodes_work_calculate_size(ns) >= c_ptr);
 
     double a = 0.0;
     double b = 1.0;  // code for collocation interval [a,b]
@@ -246,151 +246,238 @@ void gauss_nodes(int ns, double *nodes, void *work)
     return;
 }
 
-
-
-acados_size_t gauss_simplified_work_calculate_size(int ns)
+// looks up Gauss-Radau IIA nodes (c) for Butcher tableau of size ns
+static void gauss_radau_iia_nodes(int ns, double *nodes, void *work)
 {
-    acados_size_t size = 0;
+    // Radau nodes can be calculated as zeros of polynomial, see:
+    // Encyclopedia of Applied and Computational Mathematics
+    // Full entry, version of August 2, 2011
+    // Radau methods
+    // Ernst Hairer 1 , Gerhard Wanner 1
+    // case 1:
+    //     nodes[0] = 1.0;
+    //     break;
+    // case 2:
+    //     nodes[0] = 1.0 / 3;
+    //     nodes[1] = 1.0;
+    //     break;
+    // case 3:
+    //     nodes[0] = (4 - sqrt(6.0)) / 10;
+    //     nodes[1] = (4 + sqrt(6.0)) / 10;
+    //     nodes[2] = 1.0;
+    //     break;
 
-    size += 1 * 2 * ns * sizeof(double);   // D
-    size += 3 * ns * ns * sizeof(double);  // T, T_inv, lu_work
+    /* hard code: Radau nodes, as done in CasADi */
+    // https://github.com/casadi/casadi/issues/673
 
-    size += 1 * ns * sizeof(int);  // perm
-
-    return size;
+    if (ns < 1 || ns > 9)
+    {
+        printf("\n\nerror: gauss_radau_iia_nodes only available for num_stages = 1,...,9; got %d.\n", ns);
+        exit(1);
+    }
+    // Radau collocation points
+    nodes[ns-1] = 1.00000000000000000000;
+    switch (ns)
+    {
+        case 2:
+            nodes[0] = 0.33333333333333337034;
+            break;
+        case 3:
+            nodes[0] = 0.15505102572168222297;
+            nodes[1] = 0.64494897427831787695;
+            break;
+        case 4:
+            nodes[0] = 0.08858795951270420632;
+            nodes[1] = 0.40946686444073465694;
+            nodes[2] = 0.78765946176084700170;
+            break;
+        case 5:
+            nodes[0] = 0.05710419611451822419;
+            nodes[1] = 0.27684301363812369168;
+            nodes[2] = 0.58359043236891683382;
+            nodes[3] = 0.86024013565621926247;
+            break;
+        case 6:
+            nodes[0] = 0.03980985705146905529;
+            nodes[1] = 0.19801341787360787761;
+            nodes[2] = 0.43797481024738621480;
+            nodes[3] = 0.69546427335363603106;
+            nodes[4] = 0.90146491420117347282;
+            break;
+        case 7:
+            nodes[0] = 0.02931642715978521885;
+            nodes[1] = 0.14807859966848435640;
+            nodes[2] = 0.33698469028115418666;
+            nodes[3] = 0.55867151877155019069;
+            nodes[4] = 0.76923386203005450490;
+            nodes[5] = 0.92694567131974103802;
+            break;
+        case 8:
+            nodes[0] = 0.02247938643871305597;
+            nodes[1] = 0.11467905316090415413;
+            nodes[2] = 0.26578982278458951338;
+            nodes[3] = 0.45284637366944457959;
+            nodes[4] = 0.64737528288683043876;
+            nodes[5] = 0.81975930826310761113;
+            nodes[6] = 0.94373743946307731001;
+            break;
+        case 9:
+            nodes[0] = 0.01777991514736393386;
+            nodes[1] = 0.09132360789979432347;
+            nodes[2] = 0.21430847939563035798;
+            nodes[3] = 0.37193216458327238438;
+            nodes[4] = 0.54518668480342658000;
+            nodes[5] = 0.71317524285556954666;
+            nodes[6] = 0.85563374295785443735;
+            nodes[7] = 0.95536604471003006012;
+            break;
+    }
 }
 
+// acados_size_t gauss_simplified_work_calculate_size(int ns)
+// {
+//     acados_size_t size = 0;
 
-// TODO(all): understand how this works and leave a comment!
-void gauss_simplified(int ns, Newton_scheme *scheme, void *work)
-{
-    char *c_ptr = work;
+//     size += 1 * 2 * ns * sizeof(double);   // D
+//     size += 3 * ns * ns * sizeof(double);  // T, T_inv, lu_work
 
-    // D
-    double *D = (double *) c_ptr;
-    c_ptr += 2 * ns * sizeof(double);
-    // T
-    double *T = (double *) c_ptr;
-    c_ptr += ns * ns * sizeof(double);
-    // T_inv
-    double *T_inv = (double *) c_ptr;
-    c_ptr += ns * ns * sizeof(double);
-    // lu_work
-    double *lu_work = (double *) c_ptr;
-    c_ptr += ns * ns * sizeof(double);
-    // perm
-    int *perm = (int *) c_ptr;
-    c_ptr += ns * sizeof(int);
+//     size += 1 * ns * sizeof(int);  // perm
 
-    assert((char *) work + gauss_simplified_work_calculate_size(ns) >= c_ptr);
-
-    char simplified[MAX_STR_LEN];
-
-    snprintf(simplified, sizeof(simplified), "simplified/GL%d_simpl_%s.txt", 2 * ns, "D");
-    read_matrix(simplified, D, ns, 2);
-
-    snprintf(simplified, sizeof(simplified), "simplified/GL%d_simpl_%s.txt", 2 * ns, "T");
-    read_matrix(simplified, T, ns, ns);
-
-    scheme->single = false;
-    scheme->low_tria = 0;
-    for (int i = 0; i < ns; i++)
-    {
-        scheme->eig[i] = D[i];
-    }
-    for (int i = 0; i < ns * ns; i++)
-    {
-        scheme->transf2[i] = T[i];
-    }
-    // transf1_T:
-    for (int i = 0; i < ns; i++)
-    {
-        if ((i + 1) < ns)
-        {  // complex conjugate pair of eigenvalues
-            for (int i1 = i; i1 < i + 2; i1++)
-            {
-                for (int i2 = 0; i2 < ns; i2++)
-                {
-                    scheme->transf1_T[i2 * ns + i1] = 0.0;
-                    for (int i3 = 0; i3 < 2; i3++)
-                    {
-                        scheme->transf1_T[i2 * ns + i1] +=
-                            D[(i1 - i) * ns + (i + i3)] * T[(i + i3) * ns + i2];
-                    }
-                }
-            }
-            i++;
-        }
-        else
-        {  // real eigenvalue
-            for (int i2 = 0; i2 < ns; i2++)
-            {
-                scheme->transf1_T[i2 * ns + i] = D[i] * T[i * ns + i2];
-            }
-        }
-    }
-
-    for (int i = 0; i < ns; i++)
-    {
-        T_inv[i * (ns + 1)] = 1.0;
-    }
-
-    lu_system_solve(T, T_inv, perm, ns, ns, lu_work);
-
-    // transf1:
-    for (int i = 0; i < ns; i++)
-    {
-        if ((i + 1) < ns)
-        {  // complex conjugate pair of eigenvalues
-            for (int i1 = i; i1 < i + 2; i1++)
-            {
-                for (int i2 = 0; i2 < ns; i2++)
-                {
-                    scheme->transf1[i2 * ns + i1] = 0.0;
-                    for (int i3 = 0; i3 < 2; i3++)
-                    {
-                        scheme->transf1[i2 * ns + i1] += D[i3 * ns + i1] * T_inv[i2 * ns + i + i3];
-                    }
-                }
-            }
-            i++;
-        }
-        else
-        {  // real eigenvalue
-            for (int i2 = 0; i2 < ns; i2++)
-            {
-                scheme->transf1[i2 * ns + i] = D[i] * T_inv[i2 * ns + i];
-            }
-        }
-    }
-    // transf2_T:
-    for (int i = 0; i < ns; i++)
-    {
-        for (int i2 = 0; i2 < ns; i2++)
-        {
-            scheme->transf2_T[i2 * ns + i] = T_inv[i * ns + i2];
-        }
-    }
-
-    return;
-}
+//     return size;
+// }
 
 
+// // TODO(all): understand how this works and leave a comment!
+// void gauss_simplified(int ns, Newton_scheme *scheme, void *work)
+// {
+//     char *c_ptr = work;
 
-acados_size_t butcher_table_work_calculate_size(int ns)
+//     // D
+//     double *D = (double *) c_ptr;
+//     c_ptr += 2 * ns * sizeof(double);
+//     // T
+//     double *T = (double *) c_ptr;
+//     c_ptr += ns * ns * sizeof(double);
+//     // T_inv
+//     double *T_inv = (double *) c_ptr;
+//     c_ptr += ns * ns * sizeof(double);
+//     // lu_work
+//     double *lu_work = (double *) c_ptr;
+//     c_ptr += ns * ns * sizeof(double);
+//     // perm
+//     int *perm = (int *) c_ptr;
+//     c_ptr += ns * sizeof(int);
+
+//     assert((char *) work + gauss_simplified_work_calculate_size(ns) >= c_ptr);
+
+//     char simplified[MAX_STR_LEN];
+
+//     snprintf(simplified, sizeof(simplified), "simplified/GL%d_simpl_%s.txt", 2 * ns, "D");
+//     read_matrix(simplified, D, ns, 2);
+
+//     snprintf(simplified, sizeof(simplified), "simplified/GL%d_simpl_%s.txt", 2 * ns, "T");
+//     read_matrix(simplified, T, ns, ns);
+
+//     scheme->single = false;
+//     scheme->low_tria = 0;
+//     for (int i = 0; i < ns; i++)
+//     {
+//         scheme->eig[i] = D[i];
+//     }
+//     for (int i = 0; i < ns * ns; i++)
+//     {
+//         scheme->transf2[i] = T[i];
+//     }
+//     // transf1_T:
+//     for (int i = 0; i < ns; i++)
+//     {
+//         if ((i + 1) < ns)
+//         {  // complex conjugate pair of eigenvalues
+//             for (int i1 = i; i1 < i + 2; i1++)
+//             {
+//                 for (int i2 = 0; i2 < ns; i2++)
+//                 {
+//                     scheme->transf1_T[i2 * ns + i1] = 0.0;
+//                     for (int i3 = 0; i3 < 2; i3++)
+//                     {
+//                         scheme->transf1_T[i2 * ns + i1] +=
+//                             D[(i1 - i) * ns + (i + i3)] * T[(i + i3) * ns + i2];
+//                     }
+//                 }
+//             }
+//             i++;
+//         }
+//         else
+//         {  // real eigenvalue
+//             for (int i2 = 0; i2 < ns; i2++)
+//             {
+//                 scheme->transf1_T[i2 * ns + i] = D[i] * T[i * ns + i2];
+//             }
+//         }
+//     }
+
+//     for (int i = 0; i < ns; i++)
+//     {
+//         T_inv[i * (ns + 1)] = 1.0;
+//     }
+
+//     lu_system_solve(T, T_inv, perm, ns, ns, lu_work);
+
+//     // transf1:
+//     for (int i = 0; i < ns; i++)
+//     {
+//         if ((i + 1) < ns)
+//         {  // complex conjugate pair of eigenvalues
+//             for (int i1 = i; i1 < i + 2; i1++)
+//             {
+//                 for (int i2 = 0; i2 < ns; i2++)
+//                 {
+//                     scheme->transf1[i2 * ns + i1] = 0.0;
+//                     for (int i3 = 0; i3 < 2; i3++)
+//                     {
+//                         scheme->transf1[i2 * ns + i1] += D[i3 * ns + i1] * T_inv[i2 * ns + i + i3];
+//                     }
+//                 }
+//             }
+//             i++;
+//         }
+//         else
+//         {  // real eigenvalue
+//             for (int i2 = 0; i2 < ns; i2++)
+//             {
+//                 scheme->transf1[i2 * ns + i] = D[i] * T_inv[i2 * ns + i];
+//             }
+//         }
+//     }
+//     // transf2_T:
+//     for (int i = 0; i < ns; i++)
+//     {
+//         for (int i2 = 0; i2 < ns; i2++)
+//         {
+//             scheme->transf2_T[i2 * ns + i] = T_inv[i * ns + i2];
+//         }
+//     }
+
+//     return;
+// }
+
+
+
+acados_size_t butcher_tableau_work_calculate_size(int ns)
 {
     acados_size_t size = 0;
 
     size += 3 * ns * ns * sizeof(double);  // can_vm, rhs, lu_work
-
     size += 1 * ns * sizeof(int);  // perm
 
-    return size;
+    acados_size_t size_legendre = gauss_legendre_nodes_work_calculate_size(ns);
+
+    return size > size_legendre ? size : size_legendre;
 }
 
 
 
-void butcher_table(int ns, double *nodes, double *b, double *A, void *work)
+void calculate_butcher_tableau_from_nodes(int ns, double *nodes, double *b, double *A, void *work)
 {
     int i, j, k;
 
@@ -409,7 +496,7 @@ void butcher_table(int ns, double *nodes, double *b, double *A, void *work)
     int *perm = (int *) c_ptr;
     c_ptr += ns * sizeof(int);
 
-    assert((char *) work + butcher_table_work_calculate_size(ns) >= c_ptr);
+    assert((char *) work + butcher_tableau_work_calculate_size(ns) >= c_ptr);
 
     for (j = 0; j < ns; j++)
     {
@@ -443,4 +530,26 @@ void butcher_table(int ns, double *nodes, double *b, double *A, void *work)
     }
 
     return;
+}
+
+
+void calculate_butcher_tableau(int ns, sim_collocation_type collocation_type, double *c_vec, double *b_vec, double *A_mat, void *work)
+{
+    // compute collocation nodes
+    switch (collocation_type)
+    {
+        case GAUSS_LEGENDRE:
+            // gauss legendre
+            gauss_legendre_nodes(ns, c_vec, work);
+            break;
+        case GAUSS_RADAU_IIA:
+            gauss_radau_iia_nodes(ns, c_vec, work);
+            break;
+        default:
+            printf("\nerror: calculate_butcher_tableau: unsupported collocation_typre\n");
+            exit(1);
+    }
+
+    // butcher tableau
+    calculate_butcher_tableau_from_nodes(ns, c_vec, b_vec, A_mat, work);
 }

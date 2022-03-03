@@ -48,7 +48,7 @@ qp_solver = 'partial_condensing_hpipm';
     % full_condensing_hpipm, partial_condensing_hpipm, full_condensing_qpoases
 qp_solver_cond_N = 5; % for partial condensing
 % integrator type
-sim_method = 'erk'; % erk, irk, irk_gnsf
+sim_method = 'irk'; % erk, irk, irk_gnsf
 
 %% model dynamics
 model = pendulum_on_cart_model;
@@ -109,6 +109,7 @@ ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('sim_method', sim_method);
 ocp_opts.set('qp_solver', qp_solver);
 ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
+ocp_opts.set('collocation_type', 'gauss_radau_iia');
 % ... see ocp_opts.opts_struct to see what other fields can be set
 
 %% create ocp solver

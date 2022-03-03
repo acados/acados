@@ -53,7 +53,9 @@
 
 acados_size_t ocp_nlp_reg_noreg_opts_calculate_size(void)
 {
-    return sizeof(ocp_nlp_reg_noreg_opts);
+    acados_size_t size = 0;
+
+    return size;
 }
 
 
