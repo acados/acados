@@ -67,7 +67,7 @@ static acados_size_t ocp_nlp_plan_calculate_size(int N)
 {
     // N - number of shooting nodes
     acados_size_t bytes = sizeof(ocp_nlp_plan);
-    bytes += N * sizeof(sim_solver_plan);
+    bytes += N * sizeof(sim_solver_plan_t);
     bytes += (N + 1) * sizeof(ocp_nlp_cost_t);
     bytes += N * sizeof(ocp_nlp_dynamics_t);
     bytes += (N+1) * sizeof(ocp_nlp_constraints_t);
@@ -84,7 +84,7 @@ static ocp_nlp_plan *ocp_nlp_plan_assign(int N, void *raw_memory)
     c_ptr += sizeof(ocp_nlp_plan);
 
     plan->sim_solver_plan = (sim_solver_plan_t *) c_ptr;
-    c_ptr += N * sizeof(sim_solver_plan);
+    c_ptr += N * sizeof(sim_solver_plan_t);
 
     plan->nlp_cost = (ocp_nlp_cost_t *) c_ptr;
     c_ptr += (N + 1) * sizeof(ocp_nlp_cost_t);
