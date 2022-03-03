@@ -80,7 +80,7 @@ int main() {
 
 	// Make plan
 
-	ocp_qp_solver_plan qp_plan = {FULL_CONDENSING_QPOASES};
+	ocp_qp_solver_plan_t qp_plan = {FULL_CONDENSING_QPOASES};
 	std::vector<sim_solver_plan> sim_plan(N, {ERK});
 	std::vector<ocp_nlp_cost_t> cost_plan(N+1, LINEAR_LS);
 	std::vector<ocp_nlp_dynamics_t> dynamics_plan(N, CONTINUOUS_MODEL);

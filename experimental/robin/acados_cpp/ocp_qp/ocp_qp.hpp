@@ -103,7 +103,7 @@ class ocp_qp : private ocp
 
     std::unique_ptr<ocp_qp_solver> solver;
 
-    const std::map<std::string, ocp_qp_solver_plan> available_solvers = {
+    const std::map<std::string, ocp_qp_solver_plan_t> available_solvers = {
         {"condensing_hpipm", {FULL_CONDENSING_HPIPM}},
         {"sparse_hpipm", {PARTIAL_CONDENSING_HPIPM}},
 #ifdef ACADOS_WITH_HPMPC

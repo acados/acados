@@ -72,7 +72,7 @@ static void mdlStart(SimStruct *S)
     }
     qp_dims->nx[AC_HORIZON_LENGTH] = nx;
 
-    ocp_qp_solver_plan plan = {PARTIAL_CONDENSING_HPIPM};
+    ocp_qp_solver_plan_t plan = {PARTIAL_CONDENSING_HPIPM};
     ocp_qp_xcond_solver_config *config = ocp_qp_config_create(plan);
 
     ocp_qp_in *qp_in = ocp_qp_in_create(config, qp_dims);

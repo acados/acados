@@ -162,7 +162,7 @@ void ocp_qp::set_field(string field, int stage, std::vector<double> v)
 void ocp_qp::initialize_solver(string solver_name, map<string, option_t *> options)
 {
     // check if solver is available
-    ocp_qp_solver_plan plan;
+    ocp_qp_solver_plan_t plan;
     try
     {
         plan = available_solvers.at(solver_name);

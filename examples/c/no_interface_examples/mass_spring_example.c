@@ -166,7 +166,7 @@ int main() {
     for (int ii = 0; ii < ii_max; ii++)
     {
         // plan
-        ocp_qp_solver_plan plan;
+        ocp_qp_solver_plan_t plan;
         plan.qp_solver = ocp_qp_solvers[ii];
 
         // config

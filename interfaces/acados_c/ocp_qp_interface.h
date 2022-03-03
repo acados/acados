@@ -105,7 +105,7 @@ typedef enum {
 typedef struct
 {
     ocp_qp_solver_t qp_solver;
-} ocp_qp_solver_plan;
+} ocp_qp_solver_plan_t;
 
 
 /// Linear ocp configuration.

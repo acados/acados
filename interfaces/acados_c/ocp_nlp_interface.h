@@ -110,7 +110,7 @@ typedef enum
 typedef struct ocp_nlp_plan
 {
     /// QP solver configuration.
-    ocp_qp_solver_plan ocp_qp_solver_plan;
+    ocp_qp_solver_plan_t ocp_qp_solver_plan;
 
     /// Simulation solver configuration for each stage.
     sim_solver_plan *sim_solver_plan;

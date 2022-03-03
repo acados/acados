@@ -127,7 +127,7 @@ int main()
     * sparse ipm
     ************************************************/
 
-    ocp_qp_solver_plan qp_plan;
+    ocp_qp_solver_plan_t qp_plan;
     qp_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
 
     ocp_qp_xcond_solver_config *config = ocp_qp_config_create(qp_plan);

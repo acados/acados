@@ -156,7 +156,7 @@ void ocp_qp_xcond_solver_config_initialize_from_plan(
 
 
 
-ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_create(ocp_qp_solver_plan plan)
+ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_create(ocp_qp_solver_plan_t plan)
 {
     acados_size_t bytes = ocp_qp_xcond_solver_config_calculate_size();
     void *ptr = calloc(1, bytes);
