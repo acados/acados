@@ -113,7 +113,7 @@ typedef struct ocp_nlp_plan
     ocp_qp_solver_plan_t ocp_qp_solver_plan;
 
     /// Simulation solver configuration for each stage.
-    sim_solver_plan *sim_solver_plan;
+    sim_solver_plan_t *sim_solver_plan;
 
     /// Nlp solver type.
     ocp_nlp_solver_t nlp_solver;

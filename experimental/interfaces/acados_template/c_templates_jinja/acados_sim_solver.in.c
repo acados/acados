@@ -141,7 +141,7 @@ int {{ ocp.model.name}}_acados_sim_create() {
     // sim plan & config
 
     // choose plan
-    sim_solver_plan plan;
+    sim_solver_plan_t plan;
 
     plan.sim_solver = {{ ocp.solver_options.integrator_type }};
 

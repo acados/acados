@@ -48,7 +48,7 @@ class integrator
     sim_in* in_;
     sim_out* out_;
     sim_solver* solver_;
-    sim_solver_plan sim_plan_;
+    sim_solver_plan_t sim_plan_;
 
     void* dims_;
 

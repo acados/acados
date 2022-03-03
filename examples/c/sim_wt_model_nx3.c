@@ -221,7 +221,7 @@ int main()
 		************************************************/
 		// printf("using solver no. %d\n",nss);
 		// choose plan
-		sim_solver_plan plan;
+		sim_solver_plan_t plan;
 
 		switch (nss)
 		{

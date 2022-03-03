@@ -83,7 +83,7 @@ static ocp_nlp_plan *ocp_nlp_plan_assign(int N, void *raw_memory)
     ocp_nlp_plan *plan = (ocp_nlp_plan *) c_ptr;
     c_ptr += sizeof(ocp_nlp_plan);
 
-    plan->sim_solver_plan = (sim_solver_plan *) c_ptr;
+    plan->sim_solver_plan = (sim_solver_plan_t *) c_ptr;
     c_ptr += N * sizeof(sim_solver_plan);
 
     plan->nlp_cost = (ocp_nlp_cost_t *) c_ptr;

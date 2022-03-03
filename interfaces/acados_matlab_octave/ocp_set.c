@@ -412,7 +412,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "init_z")||!strcmp(field, "z"))
     {
-        sim_solver_plan sim_plan = plan->sim_solver_plan[0];
+        sim_solver_plan_t sim_plan = plan->sim_solver_plan[0];
         sim_solver_t type = sim_plan.sim_solver;
         if (type == IRK)
         {
@@ -440,7 +440,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "init_xdot")||!strcmp(field, "xdot"))
     {
-        sim_solver_plan sim_plan = plan->sim_solver_plan[0];
+        sim_solver_plan_t sim_plan = plan->sim_solver_plan[0];
         sim_solver_t type = sim_plan.sim_solver;
         if (type == IRK)
         {
@@ -468,7 +468,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "init_gnsf_phi")||!strcmp(field, "gnsf_phi"))
     {
-        sim_solver_plan sim_plan = plan->sim_solver_plan[0];
+        sim_solver_plan_t sim_plan = plan->sim_solver_plan[0];
         sim_solver_t type = sim_plan.sim_solver;
         if (type == GNSF)
         {

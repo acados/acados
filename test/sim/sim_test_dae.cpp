@@ -250,7 +250,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
 * Create Reference Solution
 ************************************************/
 
-    sim_solver_plan plan;
+    sim_solver_plan_t plan;
     plan.sim_solver = GNSF;  // IRK; -- works but super slow
 
     sim_config *config = sim_config_create(plan);

@@ -115,7 +115,7 @@ int main()
     // external_function_casadi_create(&engine_impl_dae_fun_jac_x_xdot_u_z);
 
     // plan for integrator
-    sim_solver_plan plan;
+    sim_solver_plan_t plan;
 	plan.sim_solver = IRK;
     sim_config *config = sim_config_create(plan);
 
