@@ -71,6 +71,7 @@ ny_e = nx
 # define the different options for the use-case demonstration
 N0 = 20  # original number of shooting nodes
 N12 = 15  # change the number of shooting nodes for use-cases 1 and 2
+condN12 = max(1, round(N12/1)) # change the number of cond_N for use-cases 1 and 2 (for PARTIAL_* solvers only)
 Tf_01 = 1.0  # original final time and for use-case 1
 Tf_2 = Tf_01 * 0.7  # change final time for use-case 2 (but keep N identical)
 
@@ -160,7 +161,14 @@ simU1 = np.ndarray((N12, nu))
 
 ocp_solver.set_new_time_steps(new_time_steps1)
 print(80*'-')
-print(f'solve use-case 1 with N = {N12} (instead of {N0}) and Tf = {Tf_01} s:')
+if ocp.solver_options.qp_solver.startswith('PARTIAL'):
+    ocp_solver.update_qp_solver_cond_N(condN12)
+    print(f'solve use-case 2 with N = {N12}, cond_N = {condN12} and Tf = {Tf_2} s (instead of {Tf_01} s):')
+    X_true_label = f'use-case 1: N={N12}, N_cond = {condN12}'
+else:
+    print(f'solve use-case 2 with N = {N12} and Tf = {Tf_2} s (instead of {Tf_01} s):')
+    X_true_label = f'use-case 1: N={N12}'
+
 status = ocp_solver.solve()
 
 if status != 0:
@@ -175,7 +183,9 @@ simX1[N12, :] = ocp_solver.get(N12, "x")
 
 ocp_solver.print_statistics()  # encapsulates: stat = ocp_solver.get_stats("statistics")
 
-plot_pendulum(time1, Fmax, simU1, simX1, latexify=False, plt_show=False, X_true_label=f'use-case 1: N={N12}')
+
+
+plot_pendulum(time1, Fmax, simU1, simX1, latexify=False, plt_show=False, X_true_label=X_true_label)
 
 # --------------------------------------------------------------------------------
 # 2) reuse the code again, set a new time-steps vector, only with a different final time
@@ -189,7 +199,11 @@ simU2 = np.ndarray((N12, nu))
 
 ocp_solver.set_new_time_steps(new_time_steps2)
 print(80*'-')
-print(f'solve use-case 2 with N = {N12} and Tf = {Tf_2} s (instead of {Tf_01} s):')
+if ocp.solver_options.qp_solver.startswith('PARTIAL'):
+    ocp_solver.update_qp_solver_cond_N(condN12)
+    print(f'solve use-case 2 with N = {N12}, cond_N = {condN12} and Tf = {Tf_2} s (instead of {Tf_01} s):')
+else:
+    print(f'solve use-case 2 with N = {N12} and Tf = {Tf_2} s (instead of {Tf_01} s):')
 status = ocp_solver.solve()
 
 if status != 0:
@@ -205,4 +219,3 @@ simX2[N12, :] = ocp_solver.get(N12, "x")
 ocp_solver.print_statistics()  # encapsulates: stat = ocp_solver.get_stats("statistics")
 
 plot_pendulum(time2, Fmax, simU2, simX2, latexify=False, plt_show=True, X_true_label=f'use-case 2: Tf={Tf_2} s')
-

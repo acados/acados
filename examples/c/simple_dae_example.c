@@ -381,6 +381,10 @@ int main() {
 	ocp_nlp_solver_opts_set(config, nlp_opts, "tol_eq", &tol_eq);
 	ocp_nlp_solver_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
 	ocp_nlp_solver_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
+
+    int print_level = 1;
+    ocp_nlp_solver_opts_set(config, nlp_opts, "print_level", &print_level);
+
 	if(plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
 	{
 		int N2 = N;
@@ -406,7 +410,9 @@ int main() {
 	printf("\nsolution\n");
 	ocp_nlp_out_print(dims, nlp_out);
 
-    printf("\n\nstatus = %i, avg time = %f ms, iters = %d\n\n", solver_status, elapsed_time, nlp_out->sqp_iter);
+    int sqp_iter;
+    ocp_nlp_get(config, solver, "sqp_iter", &sqp_iter);
+    printf("\n\nstatus = %i, avg time = %f ms, iters = %d\n\n", solver_status, elapsed_time, sqp_iter);
 
     free(Vx);
     free(Vu);

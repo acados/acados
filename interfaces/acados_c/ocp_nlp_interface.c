@@ -612,6 +612,12 @@ int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
                                                     "gnsf_nout", &dims_value);
         return dims_value;
     }
+    else if (!strcmp(field, "xdot_guess"))
+    {
+        config->dynamics[stage]->dims_get(config->dynamics[stage], dims->dynamics[stage],
+                                                    "nx", &dims_value);
+        return dims_value;
+    }
     // ocp_nlp_constraints_dims
     else if (!strcmp(field, "lbx") || !strcmp(field, "ubx"))
     {
@@ -662,6 +668,12 @@ void ocp_nlp_constraint_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims 
     {
         config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage],
                                             "nbx", &dims_out[0]);
+        return;
+    }
+    else if (!strcmp(field, "uphi"))
+    {
+        config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage],
+                                            "nphi", &dims_out[0]);
         return;
     }
     else if (!strcmp(field, "lbu") || !strcmp(field, "ubu"))

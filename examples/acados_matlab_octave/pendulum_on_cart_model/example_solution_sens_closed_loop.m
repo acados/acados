@@ -37,17 +37,15 @@ clear all
 model_path = fullfile(pwd,'..','pendulum_on_cart_model');
 addpath(model_path)
 
-check_acados_requirements()
-
 % initial state
-x0 = [0; 0; 0; 0];  % start at stable position
+xcurrent = [0.2; 0; 0; 0];
 
 %% discretization
-h = 0.01; % sampling time = length of first shooting interval
 N = 20; % number of shooting intervals
 % nonuniform discretization
-shooting_nodes = [0.0 0.01, 0.05*(1:N-1)];
-T = shooting_nodes(end);
+T = 1.0;
+shooting_nodes = linspace(0, T, N+1);
+h = T/N; % sampling time = length of first shooting interval
 
 nlp_solver = 'sqp'; % sqp, sqp_rti
 qp_solver = 'partial_condensing_hpipm';
@@ -84,18 +82,24 @@ ocp_model.set('sym_x', model.sym_x);
 ocp_model.set('sym_u', model.sym_u);
 ocp_model.set('sym_xdot', model.sym_xdot);
 
-% nonlinear-least squares cost
-ocp_model.set('cost_type', 'nonlinear_ls');
-ocp_model.set('cost_type_e', 'nonlinear_ls');
+% % nonlinear-least squares cost
+% ocp_model.set('cost_type', 'nonlinear_ls');
+% ocp_model.set('cost_type_e', 'nonlinear_ls');
+% 
+% ocp_model.set('cost_expr_y', model.cost_expr_y);
+% ocp_model.set('cost_expr_y_e', model.cost_expr_y_e);
+% 
+% W_x = diag([1e2, 1e2, 1e-2, 1e-2]);
+% W_u = 1e-3;
+% W = blkdiag(W_x, W_u);
+% ocp_model.set('cost_W', W);
+% ocp_model.set('cost_W_e', model.W_e);
 
-ocp_model.set('cost_expr_y', model.cost_expr_y);
-ocp_model.set('cost_expr_y_e', model.cost_expr_y_e);
+% % external cost -> with detection linear least squares
+% cost
+ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
+ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
 
-W_x = diag([1e2, 1e2, 1e-2, 1e-2]);
-W_u = 1e-3;
-W = blkdiag(W_x, W_u);
-ocp_model.set('cost_W', W);
-ocp_model.set('cost_W_e', model.W_e);
 
 % dynamics
 ocp_model.set('dyn_type', 'explicit');
@@ -107,7 +111,7 @@ ocp_model.set('constr_expr_h', model.expr_h);
 U_max = 80;
 ocp_model.set('constr_lh', -U_max); % lower bound on h
 ocp_model.set('constr_uh', U_max);  % upper bound on h
-ocp_model.set('constr_x0', x0);
+ocp_model.set('constr_x0', xcurrent);
 
 %% acados ocp set opts
 ocp_opts = acados_ocp_opts();
@@ -151,65 +155,66 @@ sim_opts.set('num_steps', plant_sim_method_num_steps);
 sim = acados_sim(sim_model, sim_opts);
 
 %% Simulation
-N_sim = 150;
+N_sim = 100;
 
 x_sim = zeros(nx, N_sim+1);
 u_sim = zeros(nu, N_sim);
 
-x_sim(:,1) = x0;
-
-% time-variant reference: move the cart with constant velocity while
-% keeping the pendulum in upwards position
-v_mean = 1;
-yref = zeros(nx+nu, 1);
-yref_e = zeros(nx, 1);
-
-yref(3) = v_mean;
-yref_e(3) = v_mean;
+x_sim(:,1) = xcurrent;
 
 for i=1:N_sim
     % update initial state
-    x0 = x_sim(:,i);
-    ocp.set('constr_x0', x0);
+    xcurrent = x_sim(:,i);
+    ocp.set('constr_x0', xcurrent);
 
-    % compute reference position on the nonuniform grid
-    t = (i-1)*h;
-    p_ref = (t + shooting_nodes)*v_mean;
-
-    for k=0:N-1
-        yref(1) = p_ref(k+1);
-        ocp.set('cost_y_ref', yref, k);
+    if i == 1 || i == floor(N_sim/2)
+        % solve
+        ocp.solve();
+        % get solution
+        u0 = ocp.get('u', 0);
+        status = ocp.get('status'); % 0 - success
+        x_lin = xcurrent;
+        u_lin = u0;
+        
+        sens_u = zeros(nx, N);
+        % get sensitivities w.r.t. initial state value with index
+        field = 'ex'; % equality constraint on states
+        stage = 0;
+        for index = 0:nx-1
+            ocp.eval_param_sens(field, stage, index);
+            sens_u(index+1,:) = ocp.get('sens_u');
+        end
+    else
+        % use feedback policy
+        delta_x = xcurrent-x_lin;
+        u0 = u_lin + sens_u(:, 1)' * delta_x;
     end
-    yref_e(1) = p_ref(k+1);
-    ocp.set('cost_y_ref_e', yref_e, N);
-
-    % solve
-    ocp.solve();
-
-    % get solution
-    u0 = ocp.get('u', 0);
-    status = ocp.get('status'); % 0 - success
 
     % set initial state
-    sim.set('x', x0);
+    sim.set('x', xcurrent);
     sim.set('u', u0);
 
     % solve
-    sim_status = sim.solve();
-    if sim_status ~= 0
-        disp(['acados integrator returned error status ', num2str(sim_status)])
-    end
+    sim.solve();
 
     % get simulated state
     x_sim(:,i+1) = sim.get('xn');
     u_sim(:,i) = u0;
 end
 
+disp('final state')
+format long e
+disp(x_sim(:,N_sim+1))
+%      1.392073955008204e-03
+%      4.247720422461933e-05
+%     -7.518679517751918e-05
+%     -1.671811407900214e-04
 
 %% Plots
 ts = linspace(0, N_sim*h, N_sim+1);
 figure; hold on;
 States = {'p', 'theta', 'v', 'dtheta'};
+v_mean = 0;
 p_ref = ts*v_mean;
 
 y_ref = zeros(nx, N_sim+1);
@@ -219,15 +224,15 @@ y_ref(3, :) = v_mean;
 for i=1:length(States)
     subplot(length(States), 1, i);
     grid on; hold on;
-    plot(ts, x_sim(i,:)); 
-    plot(ts, y_ref(i, :)); 
+    plot(ts, x_sim(i,:));
+    plot(ts, y_ref(i, :));
     ylabel(States{i});
     xlabel('t [s]')
     legend('closed-loop', 'reference')
 end
 
 figure
-stairs(ts, [u_sim'; u_sim(end)])
+stairs(ts(1:end), [u_sim'; u_sim(end)])
 ylabel('F [N]')
 xlabel('t [s]')
 grid on

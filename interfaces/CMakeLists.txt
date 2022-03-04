@@ -58,6 +58,10 @@ if(ACADOS_OCTAVE_TEMPLATE)
                 COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
                 octave --no-gui --no-window-system ./run_test_template_ocp_pendulum_gnsf.m)
 
+        add_test(NAME octave_test_template_lin_mass_ocp
+                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+                octave --no-gui --no-window-system ./run_test_template_lin_mass_ocp.m)
+
         add_test(NAME octave_test_template_ocp_pendulum_nls
                 COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
                 octave --no-gui --no-window-system ./run_test_template_ocp_pendulum_nls.m)
@@ -158,6 +162,21 @@ add_test(NAME python_chain_ocp
 add_test(NAME python_chain_sim
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/chain_mass
         python minimal_example_sim.py)
+
+# Marathos test problem with different globalization options
+add_test(NAME python_marathos_test_problem_globalization
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/non_ocp_nlp
+        python marathos_test_problem.py)
+
+# Simple OCP with Marathos effect
+add_test(NAME python_OCP_marathos_test_problem_globalization
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/linear_mass_model
+        python linear_mass_test_problem.py)
+
+# Armijo test problem
+add_test(NAME python_armijo_test
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
+        python armijo_test.py)
 
 # qpDUNES example
 if(ACADOS_WITH_QPDUNES)

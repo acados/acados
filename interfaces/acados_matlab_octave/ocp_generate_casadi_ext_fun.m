@@ -219,7 +219,13 @@ if use_msvc
         strjoin(unique(c_files_path), ' '), out_obj_dir, out_lib);
 
     % build
-    system(sprintf('"%s" & %s', msvc_env, build_cmd));
+    compile_command = sprintf('"%s" & %s', msvc_env, build_cmd);
+    compile_status = system(compile_command);
+    if compile_status ~= 0
+        error('Compilation of model functions failed! %s %s\n%s\n\n', ...
+            'Please check the compile command above and the flags therein closely.',...
+            'Compile command was:', compile_command);
+    end
 else % gcc
     % set includes
     acados_include = ['-I' acados_folder];
@@ -230,8 +236,14 @@ else % gcc
     else
         out_lib = fullfile(opts_struct.output_dir, ['lib', model_name, '.so']);
     end
-    system(['gcc -O2 -fPIC -shared ', acados_include, ' ', blasfeo_include,...
-        ' ', strjoin(unique(c_files_path), ' '), ' -o ', out_lib]);
+    compile_command = ['gcc -O2 -fPIC -shared ', acados_include, ' ', blasfeo_include,...
+                       ' ', strjoin(unique(c_files_path), ' '), ' -o ', out_lib];
+    compile_status = system(compile_command);
+    if compile_status ~= 0
+        error('Compilation of model functions failed! %s %s\n%s\n\n', ...
+            'Please check the compile command above and the flags therein closely.',...
+            'Compile command was:', compile_command);
+    end
 end
 
 end

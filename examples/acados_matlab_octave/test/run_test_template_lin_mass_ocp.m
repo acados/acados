@@ -31,41 +31,11 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
-classdef acados_model_json < handle
-    properties
-        dyn_ext_fun_type
-        dyn_source_discrete
-        dyn_disc_fun_jac_hess
-        dyn_disc_fun_jac
-        dyn_disc_fun
-        f_impl_expr
-        f_expl_expr
-        f_phi_expr
-        x
-        xdot
-        u
-        z
-        name
-        p
-        gnsf
-    end
-    methods
-        function obj = acados_model_json()
-            obj.dyn_ext_fun_type = 'casadi';
-            obj.dyn_source_discrete = [];
-            obj.dyn_disc_fun_jac_hess = [];
-            obj.dyn_disc_fun_jac = [];
-            obj.dyn_disc_fun = [];
-            obj.f_impl_expr = [];
-            obj.f_expl_expr = [];
-            obj.f_phi_expr = [];
-            obj.x = [];
-            obj.xdot = [];
-            obj.u = [];
-            obj.z = [];
-            obj.name = [];
-            obj.p = [];
-            obj.gnsf = struct('nontrivial_f_LO', 1, 'purely_linear', 0);
-        end
-    end
+addpath(pwd)
+
+%% ocp tests
+try
+    test_template_lin_mass_ocp;
+catch exception
+    exit_with_error(exception);
 end
