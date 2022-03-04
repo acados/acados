@@ -792,6 +792,7 @@ class AcadosOcpSolver:
             :param build: whether to build the generated C code, return initialized AcadosOcpSolver instance - default: True
         """
         model = acados_ocp.model
+        acados_ocp.code_export_directory = os.path.abspath(acados_ocp.code_export_directory)
 
         if simulink_opts is None:
             simulink_opts = get_simulink_default_opts()
@@ -815,7 +816,8 @@ class AcadosOcpSolver:
         # dump to json
         ocp_formulation_json_dump(acados_ocp, simulink_opts, json_file)
 
-        code_export_dir = acados_ocp.code_export_directory
+        code_export_dir = os.path.relpath(acados_ocp.code_export_directory)
+
         # render templates
         ocp_render_templates(acados_ocp, json_file)
 
