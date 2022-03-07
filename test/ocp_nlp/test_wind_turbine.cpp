@@ -568,7 +568,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     * plan + config
     ************************************************/
 
-    ocp_nlp_plan *plan = ocp_nlp_plan_create(NN);
+    ocp_nlp_plan_t *plan = ocp_nlp_plan_create(NN);
 
     plan->nlp_solver = SQP;
 

@@ -107,7 +107,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
        MEX_MISSING_ARGUMENT(fun_name, "param_scheme_N");
     }
-    ocp_nlp_plan *plan = ocp_nlp_plan_create(N);
+    ocp_nlp_plan_t *plan = ocp_nlp_plan_create(N);
 
 
     // nlp solver

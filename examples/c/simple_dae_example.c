@@ -190,7 +190,7 @@ int main() {
     WN[1+ny[N]*1] = QN[1];
 
 	// Make plan
-	ocp_nlp_plan *plan = ocp_nlp_plan_create(N);
+	ocp_nlp_plan_t *plan = ocp_nlp_plan_create(N);
 	plan->nlp_solver = SQP;
 	plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
 
