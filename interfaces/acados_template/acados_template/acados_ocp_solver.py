@@ -91,7 +91,7 @@ def make_ocp_dims_consistent(acados_ocp):
         raise Exception('inconsistent dimension np, regarding model.p and parameter_values.' + \
             f'\nGot np = {dims.np}, acados_ocp.parameter_values.shape = {acados_ocp.parameter_values.shape[0]}\n')
 
-    # cost
+    ## cost
     # initial stage - if not set, copy fields from path constraints
     if cost.cost_type_0 is None:
         cost.cost_type_0 = cost.cost_type
@@ -435,18 +435,15 @@ def make_ocp_dims_consistent(acados_ocp):
         if np.shape(opts.shooting_nodes)[0] != dims.N+1:
             raise Exception('inconsistent dimension N, regarding shooting_nodes.')
 
-        # time_steps = opts.shooting_nodes[1:] - opts.shooting_nodes[0:-1]
-        # # identify constant time-steps: due to numerical reasons the content of time_steps might vary a bit
-        # delta_time_steps = time_steps[1:] - time_steps[0:-1]
-        # avg_time_steps = np.average(time_steps)
-        # # criterion for constant time-step detection: the min/max difference in values normalized by the average
-        # check_const_time_step = np.max(delta_time_steps)-np.min(delta_time_steps) / avg_time_steps
-        # # if the criterion is small, we have a constant time-step
-        # if check_const_time_step < 1e-9:
-        #     time_steps[:] = avg_time_steps  # if we have a constant time-step: apply the average time-step
-        time_steps = np.zeros((dims.N,))
-        for i in range(dims.N):
-            time_steps[i] = opts.shooting_nodes[i+1] - opts.shooting_nodes[i] # TODO use commented code above
+        time_steps = opts.shooting_nodes[1:] - opts.shooting_nodes[0:-1]
+        # identify constant time-steps: due to numerical reasons the content of time_steps might vary a bit
+        delta_time_steps = time_steps[1:] - time_steps[0:-1]
+        avg_time_steps = np.average(time_steps)
+        # criterion for constant time-step detection: the min/max difference in values normalized by the average
+        check_const_time_step = np.max(delta_time_steps)-np.min(delta_time_steps) / avg_time_steps
+        # if the criterion is small, we have a constant time-step
+        if check_const_time_step < 1e-9:
+            time_steps[:] = avg_time_steps  # if we have a constant time-step: apply the average time-step
 
         opts.time_steps = time_steps
 
@@ -946,28 +943,6 @@ class AcadosOcpSolver:
         getattr(self.shared_lib, f"{self.model_name}_acados_get_nlp_solver").restype = c_void_p
         self.nlp_solver = getattr(self.shared_lib, f"{self.model_name}_acados_get_nlp_solver")(self.capsule)
 
-        # treat parameters separately
-        getattr(self.shared_lib, f"{self.model_name}_acados_update_params").argtypes = [c_void_p, c_int, POINTER(c_double)]
-        getattr(self.shared_lib, f"{self.model_name}_acados_update_params").restype = c_int
-        self._set_param = getattr(self.shared_lib, f"{self.model_name}_acados_update_params")
-
-        self.shared_lib.ocp_nlp_constraint_dims_get_from_attr.argtypes = \
-            [c_void_p, c_void_p, c_void_p, c_int, c_char_p, POINTER(c_int)]
-        self.shared_lib.ocp_nlp_constraint_dims_get_from_attr.restype = c_int
-
-        self.shared_lib.ocp_nlp_cost_dims_get_from_attr.argtypes = \
-            [c_void_p, c_void_p, c_void_p, c_int, c_char_p, POINTER(c_int)]
-        self.shared_lib.ocp_nlp_cost_dims_get_from_attr.restype = c_int
-
-        self.shared_lib.ocp_nlp_constraints_model_set.argtypes = \
-            [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
-        self.shared_lib.ocp_nlp_cost_model_set.argtypes = \
-            [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
-        self.shared_lib.ocp_nlp_out_set.argtypes = \
-            [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
-        self.shared_lib.ocp_nlp_set.argtypes = \
-            [c_void_p, c_void_p, c_int, c_char_p, c_void_p]
-
 
     def solve(self):
         """
@@ -1025,10 +1000,9 @@ class AcadosOcpSolver:
             # get pointers solver
             self.__get_pointers_solver()
 
-        # store time_steps internally
+        # store time_steps, N
         self.solver_options['time_steps'] = new_time_steps
         self.N = N
-        # set integrator time automatically
         self.solver_options['Tsim'] = self.solver_options['time_steps'][0]
 
 
