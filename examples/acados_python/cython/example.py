@@ -116,8 +116,12 @@ ocp.solver_options.nlp_solver_tol_stat = 1e-6
 ocp.solver_options.levenberg_marquardt = 0.1
 ocp.solver_options.sim_method_num_steps = 15
 ocp.solver_options.qp_solver_iter_max = 100
+ocp.code_export_directory = 'c_generated_code'
 
-ocp_solver = AcadosOcpSolver.generate(ocp, json_file = 'acados_ocp.json')
+AcadosOcpSolver.generate(ocp, json_file = 'acados_ocp.json')
+AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
+ocp_solver = AcadosOcpSolver.create_cython_solver(json_file='acados_ocp.json')
+
 
 for i, tau in enumerate(np.linspace(0, 1, N)):
     ocp_solver.set(i, 'x', (1-tau)*x0 + tau*xf)
@@ -139,6 +143,8 @@ for i in range(N):
 simX[N,:] = ocp_solver.get(N, "x")
 
 dts = simU[:, 1]
+
+print("acados solved OCP successfully, creating integrator to simulate the solution")
 
 # simulate on finer grid
 sim = AcadosSim()
