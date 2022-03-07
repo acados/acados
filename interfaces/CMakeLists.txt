@@ -222,6 +222,11 @@ add_test(NAME python_pendulum_ocp_time_optimal
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/crane
         python time_optimal_example.py)
 
+# Cython example
+add_test(NAME cython_crane_example
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/cython
+        python example.py)
+
 # example_ocp_dynamics_formulations all versions
 add_test(NAME python_pendulum_ocp_IRK
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/ocp
