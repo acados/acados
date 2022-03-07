@@ -25,11 +25,11 @@ function check_acados_requirements()
             if ~is_octave
                 destination = fullfile(external_folder, 'casadi-matlab');
             else
-                filename = strcat('casadi-linux-octave-4.4.1-v', CasADi_version, '.tar.gz');
+                filename = strcat('casadi-linux-octave-5.2.0-v', CasADi_version, '.tar.gz');
                 destination = fullfile(external_folder, 'casadi-octave');
-                fprintf(['We cannot set up CasADi for octave.\n',...
+                fprintf(['\nWe cannot set up CasADi for Octave.\n',...
                         'Please download\n', [url,filename],...
-                        '\nand unpack it into <acados_root_dir>/external/casadi-octave.']);
+                        '\nand unpack it into <acados_root_dir>/external/casadi-octave.\n\n']);
                 error('exiting');
             end
             
