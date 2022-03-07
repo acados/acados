@@ -347,6 +347,7 @@ ocp_cython_c: ocp_shared_lib
 
 ocp_cython_o: ocp_cython_c
 	gcc $(ACADOS_FLAGS) -c -O2 \
+	-fPIC \
 	-o acados_ocp_solver_pyx.o \
 	-I /usr/include/python3.8 \
 	-I $(INCLUDE_PATH)/blasfeo/include/ \
