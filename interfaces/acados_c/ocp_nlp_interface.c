@@ -80,8 +80,8 @@ static ocp_nlp_plan_t *ocp_nlp_plan_assign(int N, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
-    ocp_nlp_plan_t *plan = (ocp_nlp_plan *) c_ptr;
-    c_ptr += sizeof(ocp_nlp_plan);
+    ocp_nlp_plan_t *plan = (ocp_nlp_plan_t *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_plan_t);
 
     plan->sim_solver_plan = (sim_solver_plan_t *) c_ptr;
     c_ptr += N * sizeof(sim_solver_plan_t);
