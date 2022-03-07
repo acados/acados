@@ -107,10 +107,10 @@ classdef ocp_nlp_solver_options_json < handle
             obj.alpha_min = 0.05;
             obj.alpha_reduction = 0.7;
             obj.globalization = 'FIXED_STEP';
-            obj.line_search_use_sufficient_descent = 0
-            obj.globalization_use_SOC = 0
-            obj.full_step_dual = 0
-            obj.eps_sufficient_descent = 1e-4
+            obj.line_search_use_sufficient_descent = 0;
+            obj.globalization_use_SOC = 0;
+            obj.full_step_dual = 0;
+            obj.eps_sufficient_descent = 1e-4;
         end
     end
 end

@@ -43,6 +43,8 @@ classdef acados_ocp_nlp_json < handle
         acados_lib_path
         problem_class
         simulink_opts
+        cython_include_dirs
+        code_export_directory
     end
     methods 
         function obj = acados_ocp_nlp_json(simulink_opts)
@@ -56,6 +58,8 @@ classdef acados_ocp_nlp_json < handle
             obj.parameter_values = [];
             obj.problem_class = "OCP";
             obj.simulink_opts = simulink_opts;
+            obj.cython_include_dirs = "";
+            % obj.code_export_directory;
         end
     end
 end
