@@ -39,6 +39,7 @@ cimport cython
 from libc cimport string
 
 cimport acados_solver_common
+# TODO: make this import more clear? it is not a general solver, but problem specific.
 cimport acados_solver
 
 cimport numpy as cnp
@@ -62,18 +63,26 @@ cdef class AcadosOcpSolverFast:
     cdef acados_solver_common.ocp_nlp_dims *nlp_dims
     cdef acados_solver_common.ocp_nlp_config *nlp_config
     cdef acados_solver_common.ocp_nlp_out *nlp_out
+    cdef acados_solver_common.ocp_nlp_out *sens_out
     cdef acados_solver_common.ocp_nlp_in *nlp_in
     cdef acados_solver_common.ocp_nlp_solver *nlp_solver
 
     cdef str model_name
     cdef int N
+    cdef int status
     cdef bint solver_created
+    cdef dict solver_options
 
-    def __cinit__(self, str model_name, int N):
-        self.model_name = model_name
-        self.N = N
+    def __cinit__(self, json_file):
 
         self.solver_created = False
+
+        # load json, store options in object
+        with open(json_file, 'r') as f:
+            acados_ocp_json = json.load(f)
+        self.N = acados_ocp_json['dims']['N']
+        self.model_name = acados_ocp_json['model']['name']
+        self.solver_options = acados_ocp_json['solver_options']
 
         # create capsule
         self.capsule = acados_solver.acados_create_capsule()
@@ -83,10 +92,20 @@ cdef class AcadosOcpSolverFast:
         self.solver_created = True
 
         # get pointers solver
+        self.__get_pointers_solver()
+        self.status = 0
+
+
+    def __get_pointers_solver(self):
+        """
+        Private function to get the pointers for solver
+        """
+        # get pointers solver
         self.nlp_opts = acados_solver.acados_get_nlp_opts(self.capsule)
         self.nlp_dims = acados_solver.acados_get_nlp_dims(self.capsule)
         self.nlp_config = acados_solver.acados_get_nlp_config(self.capsule)
         self.nlp_out = acados_solver.acados_get_nlp_out(self.capsule)
+        self.sens_out = acados_solver.acados_get_sens_out(self.capsule)
         self.nlp_in = acados_solver.acados_get_nlp_in(self.capsule)
         self.nlp_solver = acados_solver.acados_get_nlp_solver(self.capsule)
 
@@ -100,15 +119,106 @@ cdef class AcadosOcpSolverFast:
 
     def set_new_time_steps(self, new_time_steps):
         """
-        Set new time steps before solving. Only reload library without code generation but with new time steps.
+        Set new time steps.
+        Recreates the solver if N changes.
 
-            :param new_time_steps: vector of new time steps for the solver
+            :param new_time_steps: 1 dimensional np array of new time steps for the solver
 
             .. note:: This allows for different use-cases: either set a new size of time-steps or a new distribution of
                       the shooting nodes without changing the number, e.g., to reach a different final time. Both cases
                       do not require a new code export and compilation.
         """
-        raise NotImplementedError()
+
+        # unlikely but still possible
+        if not self.solver_created:
+            raise Exception('Solver was not yet created!')
+
+        # check if time steps really changed in value
+        if np.array_equal(self.solver_options['time_steps'], new_time_steps):
+            return
+
+        N = new_time_steps.size
+        cdef cnp.ndarray[cnp.float64_t, ndim=1] value = np.ascontiguousarray(new_time_steps, dtype=np.float64)
+
+        # check if recreation of acados is necessary (no need to recreate acados if sizes are identical)
+        if len(self.solver_options['time_steps']) == N:
+            assert acados_solver.acados_create_with_discretization(self.capsule, N, <double *> value.data) == 0
+
+        else:  # recreate the solver with the new time steps
+            self.solver_created = False
+
+            # delete old memory (analog to __del__)
+            acados_solver.acados_free(self.capsule)
+
+            # create solver with new time steps
+            assert acados_solver.acados_create_with_discretization(self.capsule, N, <double *> value.data) == 0
+
+            self.solver_created = True
+
+            # get pointers solver
+            self.__get_pointers_solver()
+
+        # store time_steps, N
+        self.solver_options['time_steps'] = new_time_steps
+        self.N = N
+        self.solver_options['Tsim'] = self.solver_options['time_steps'][0]
+
+
+    def update_qp_solver_cond_N(self, qp_solver_cond_N: int):
+        """
+        Recreate solver with new value `qp_solver_cond_N` with a partial condensing QP solver.
+        This function is relevant for code reuse, i.e., if either `set_new_time_steps(...)` is used or
+        the influence of a different `qp_solver_cond_N` is studied without code export and compilation.
+            :param qp_solver_cond_N: new number of condensing stages for the solver
+
+            .. note:: This function can only be used in combination with a partial condensing QP solver.
+
+            .. note:: After `set_new_time_steps(...)` is used and depending on the new number of time steps it might be
+                      necessary to change `qp_solver_cond_N` as well (using this function), i.e., typically
+                      `qp_solver_cond_N < N`.
+        """
+        # unlikely but still possible
+        if not self.solver_created:
+            raise Exception('Solver was not yet created!')
+        if self.N < qp_solver_cond_N:
+            raise Exception('Setting qp_solver_cond_N to be larger than N does not work!')
+        if self.solver_options['qp_solver_cond_N'] != qp_solver_cond_N:
+            self.solver_created = False
+
+            # recreate the solver
+            acados_solver.acados_update_qp_solver_cond_N(self.capsule, qp_solver_cond_N)
+
+            # store the new value
+            self.solver_options['qp_solver_cond_N'] = qp_solver_cond_N
+            self.solver_created = True
+
+            # get pointers solver
+            self.__get_pointers_solver()
+
+
+    def eval_param_sens(self, index, stage=0, field="ex"):
+        """
+        Calculate the sensitivity of the curent solution with respect to the initial state component of index
+
+            :param index: integer corresponding to initial state index in range(nx)
+        """
+
+        field_ = field
+        field = field_.encode('utf-8')
+
+        # checks
+        if not isinstance(index, int):
+            raise Exception('AcadosOcpSolver.eval_param_sens(): index must be Integer.')
+
+        cdef int nx = acados_solver_common.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
+
+        if index < 0 or index > nx:
+            raise Exception(f'AcadosOcpSolver.eval_param_sens(): index must be in [0, nx-1], got: {index}.')
+
+        # actual eval_param
+        acados_solver_common.ocp_nlp_eval_param_sens(self.nlp_solver, field, stage, index, self.sens_out)
+
+        return
 
 
     def get(self, int stage, str field_):
@@ -228,34 +338,59 @@ cdef class AcadosOcpSolverFast:
         Get the information of the last solver call.
 
             :param field: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg', 'sqp_iter']
+        Available fileds:
+            - time_tot: total CPU time previous call
+            - time_lin: CPU time for linearization
+            - time_sim: CPU time for integrator
+            - time_sim_ad: CPU time for integrator contribution of external function calls
+            - time_sim_la: CPU time for integrator contribution of linear algebra
+            - time_qp: CPU time qp solution
+            - time_qp_solver_call: CPU time inside qp solver (without converting the QP)
+            - time_qp_xcond: time_glob: CPU time globalization
+            - time_solution_sensitivities: CPU time for previous call to eval_param_sens
+            - time_reg: CPU time regularization
+            - sqp_iter: number of SQP iterations
+            - qp_iter: vector of QP iterations for last SQP call
+            - statistics: table with info about last iteration
+            - stat_m: number of rows in statistics matrix
+            - stat_n: number of columns in statistics matrix
+            - residuals: residuals of last iterate
+            - alpha: step sizes of SQP iterations
         """
-        fields = ['time_tot',  # total cpu time previous call
-                  'time_lin',  # cpu time for linearization
-                  'time_sim',  # cpu time for integrator
-                  'time_sim_ad',  # cpu time for integrator contribution of external function calls
-                  'time_sim_la',  # cpu time for integrator contribution of linear algebra
-                  'time_qp',   # cpu time qp solution
-                  'time_qp_solver_call',  # cpu time inside qp solver (without converting the QP)
-                  'time_qp_xcond',
-                  'time_glob',  # cpu time globalization
-                  'time_reg',  # cpu time regularization
-                  'sqp_iter',  # number of SQP iterations
-                  'qp_iter',  # vector of QP iterations for last SQP call
-                  'statistics',  # table with info about last iteration
-                  'stat_m',
-                  'stat_n',]
 
+        # TODO: unify with ctypes version
+        time_fields = ['time_tot',
+                  'time_lin',
+                  'time_sim',
+                  'time_sim_ad',
+                  'time_sim_la',
+                  'time_qp',
+                  'time_qp_solver_call',
+                  'time_qp_xcond',
+                  'time_glob',
+                  'time_solution_sensitivities',
+                  'time_reg'
+        ]
+        fields = time_fields + [
+                  'sqp_iter',
+                  'qp_iter',
+                  'statistics',
+                  'stat_m',
+                  'stat_n',
+                  'residuals',
+                  'alpha',
+                ]
         field = field_
         field = field.encode('utf-8')
 
         if (field_ not in fields):
-            raise Exception('AcadosOcpSolver.get_stats(): {} is not a valid argument.\
-                    \n Possible values are {}. Exiting.'.format(fields, fields))
+            raise Exception(f'AcadosOcpSolver.get_stats(): {field} is not a valid argument.'
+                    + f'\n Possible values are {fields}.')
 
         if field_ in ['sqp_iter', 'stat_m', 'stat_n']:
             return self.__get_stat_int(field)
 
-        elif field_.startswith('time'):
+        elif field_ in time_fields:
             return self.__get_stat_double(field)
 
         elif field_ == 'statistics':
@@ -266,14 +401,24 @@ cdef class AcadosOcpSolverFast:
             return self.__get_stat_matrix(field, stat_n+1, min_size)
 
         elif field_ == 'qp_iter':
-            NotImplementedError("TODO! Cython not aware if SQP or SQP_RTI")
             full_stats = self.get_stats('statistics')
-            if self.acados_ocp.solver_options.nlp_solver_type == 'SQP':
-                out = full_stats[6, :]
-            elif self.acados_ocp.solver_options.nlp_solver_type == 'SQP_RTI':
-                out = full_stats[2, :]
+            if self.solver_options['nlp_solver_type'] == 'SQP':
+                return full_stats[6, :]
+            elif self.solver_options['nlp_solver_type'] == 'SQP_RTI':
+                return full_stats[2, :]
+
+        elif field_ == 'alpha':
+            full_stats = self.get_stats('statistics')
+            if self.solver_options['nlp_solver_type'] == 'SQP':
+                return full_stats[7, :]
+            else: # self.solver_options['nlp_solver_type'] == 'SQP_RTI':
+                raise Exception("alpha values are not available for SQP_RTI")
+
+        elif field_ == 'residuals':
+            return self.get_residuals()
+
         else:
-            NotImplementedError("TODO!")
+            raise NotImplementedError("TODO!")
 
 
     def __get_stat_int(self, field):
@@ -312,10 +457,9 @@ cdef class AcadosOcpSolverFast:
         """
         Returns an array of the form [res_stat, res_eq, res_ineq, res_comp].
         """
-        # TODO: check if RTI, only eval then
-        # if self.acados_ocp.solver_options.nlp_solver_type == 'SQP_RTI':
         # compute residuals if RTI
-        acados_solver_common.ocp_nlp_eval_residuals(self.nlp_solver, self.nlp_in, self.nlp_out)
+        if self.solver_options['nlp_solver_type'] == 'SQP_RTI':
+            acados_solver_common.ocp_nlp_eval_residuals(self.nlp_solver, self.nlp_in, self.nlp_out)
 
         # create output array
         cdef cnp.ndarray[cnp.float64_t, ndim=1] out = np.ascontiguousarray(np.zeros((4,), dtype=np.float64))
@@ -363,6 +507,7 @@ cdef class AcadosOcpSolverFast:
         cost_fields = ['y_ref', 'yref']
         constraints_fields = ['lbx', 'ubx', 'lbu', 'ubu']
         out_fields = ['x', 'u', 'pi', 'lam', 't', 'z', 'sl', 'su']
+        mem_fields = ['xdot_guess']
 
         field = field_.encode('utf-8')
 
@@ -394,6 +539,9 @@ cdef class AcadosOcpSolverFast:
             elif field_ in out_fields:
                 acados_solver_common.ocp_nlp_out_set(self.nlp_config,
                     self.nlp_dims, self.nlp_out, stage, field, <void *> value.data)
+            elif field_ in mem_fields:
+                acados_solver_common.ocp_nlp_set(self.nlp_config, \
+                    self.nlp_solver, stage, field, <void *> value.data)
 
 
     def cost_set(self, int stage, str field_, value_):
@@ -494,8 +642,8 @@ cdef class AcadosOcpSolverFast:
             :param field: string, e.g. 'print_level', 'rti_phase', 'initialize_t_slacks', 'step_length', 'alpha_min', 'alpha_reduction'
             :param value: of type int, float
         """
-        int_fields = ['print_level', 'rti_phase', 'initialize_t_slacks']
-        double_fields = ['step_length', 'tol_eq', 'tol_stat', 'tol_ineq', 'tol_comp', 'alpha_min', 'alpha_reduction']
+        int_fields = ['print_level', 'rti_phase', 'initialize_t_slacks', 'qp_warm_start', 'line_search_use_sufficient_descent', 'full_step_dual', 'globalization_use_SOC']
+        double_fields = ['step_length', 'tol_eq', 'tol_stat', 'tol_ineq', 'tol_comp', 'alpha_min', 'alpha_reduction', 'eps_sufficient_descent']
         string_fields = ['globalization']
 
         # encode

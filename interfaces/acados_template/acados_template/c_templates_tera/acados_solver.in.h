@@ -198,6 +198,7 @@ void {{ model.name }}_acados_print_stats({{ model.name }}_solver_capsule * capsu
 
 ocp_nlp_in *{{ model.name }}_acados_get_nlp_in({{ model.name }}_solver_capsule * capsule);
 ocp_nlp_out *{{ model.name }}_acados_get_nlp_out({{ model.name }}_solver_capsule * capsule);
+ocp_nlp_out *{{ model.name }}_acados_get_sens_out({{ model.name }}_solver_capsule * capsule);
 ocp_nlp_solver *{{ model.name }}_acados_get_nlp_solver({{ model.name }}_solver_capsule * capsule);
 ocp_nlp_config *{{ model.name }}_acados_get_nlp_config({{ model.name }}_solver_capsule * capsule);
 void *{{ model.name }}_acados_get_nlp_opts({{ model.name }}_solver_capsule * capsule);

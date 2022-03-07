@@ -8,6 +8,11 @@ cdef extern from "acados_solver_{{ model.name }}.h":
     int acados_free_capsule "{{ model.name }}_acados_free_capsule"(nlp_solver_capsule *capsule)
 
     int acados_create "{{ model.name }}_acados_create"(nlp_solver_capsule * capsule)
+
+    int acados_create_with_discretization "{{ model.name }}_acados_create_with_discretization"(nlp_solver_capsule * capsule, int n_time_steps, double* new_time_steps)
+    int acados_update_time_steps "{{ model.name }}_acados_update_time_steps"(nlp_solver_capsule * capsule, int N, double* new_time_steps)
+    int acados_update_qp_solver_cond_N "{{ model.name }}_acados_update_qp_solver_cond_N"(nlp_solver_capsule * capsule, int qp_solver_cond_N)
+
     int acados_update_params "{{ model.name }}_acados_update_params"(nlp_solver_capsule * capsule, int stage, double *value, int np_)
     int acados_solve "{{ model.name }}_acados_solve"(nlp_solver_capsule * capsule)
     int acados_free "{{ model.name }}_acados_free"(nlp_solver_capsule * capsule)
@@ -15,6 +20,7 @@ cdef extern from "acados_solver_{{ model.name }}.h":
 
     acados_solver_common.ocp_nlp_in *acados_get_nlp_in "{{ model.name }}_acados_get_nlp_in"(nlp_solver_capsule * capsule)
     acados_solver_common.ocp_nlp_out *acados_get_nlp_out "{{ model.name }}_acados_get_nlp_out"(nlp_solver_capsule * capsule)
+    acados_solver_common.ocp_nlp_out *acados_get_sens_out "{{ model.name }}_acados_get_sens_out"(nlp_solver_capsule * capsule)
     acados_solver_common.ocp_nlp_solver *acados_get_nlp_solver "{{ model.name }}_acados_get_nlp_solver"(nlp_solver_capsule * capsule)
     acados_solver_common.ocp_nlp_config *acados_get_nlp_config "{{ model.name }}_acados_get_nlp_config"(nlp_solver_capsule * capsule)
     void *acados_get_nlp_opts "{{ model.name }}_acados_get_nlp_opts"(nlp_solver_capsule * capsule)
