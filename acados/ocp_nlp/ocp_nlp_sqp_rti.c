@@ -220,16 +220,6 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_,
                 exit(1);
             } else opts->rti_phase = *rti_phase;
         }
-        else if (!strcmp(field, "print_level"))
-        {
-            int* print_level = (int *) value;
-            if (*print_level < 0)
-            {
-                printf("\nerror: ocp_nlp_sqp_rti_opts_set: invalid value for print_level field, need int >=0, got %d.", *print_level);
-                exit(1);
-            }
-            opts->print_level = *print_level;
-        }
         else
         {
             ocp_nlp_opts_set(config, nlp_opts, field, value);
