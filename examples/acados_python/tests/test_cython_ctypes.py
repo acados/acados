@@ -223,6 +223,7 @@ def main(use_cython=True):
     if PLOT:
         plot_pendulum(time2, Fmax, simU2, simX2, latexify=False, plt_show=True, X_true_label=f'use-case 2: Tf={Tf_2} s')
     ocp_solver.store_iterate(filename=f'final_iterate_{interface_type}_variant{nvariant}.json', overwrite=True)
+    print(f"timing of last solver call {ocp_solver.get_stats('time_tot')}")
 
 
 if __name__ == "__main__":
