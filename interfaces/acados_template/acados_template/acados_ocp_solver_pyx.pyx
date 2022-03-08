@@ -358,8 +358,7 @@ cdef class AcadosOcpSolverFast:
             - alpha: step sizes of SQP iterations
         """
 
-        # TODO: unify with ctypes version
-        time_fields = ['time_tot',
+        double_fields = ['time_tot',
                   'time_lin',
                   'time_sim',
                   'time_sim_ad',
@@ -371,7 +370,7 @@ cdef class AcadosOcpSolverFast:
                   'time_solution_sensitivities',
                   'time_reg'
         ]
-        fields = time_fields + [
+        fields = double_fields + [
                   'sqp_iter',
                   'qp_iter',
                   'statistics',
@@ -380,17 +379,12 @@ cdef class AcadosOcpSolverFast:
                   'residuals',
                   'alpha',
                 ]
-        field = field_
-        field = field.encode('utf-8')
-
-        if (field_ not in fields):
-            raise Exception(f'AcadosOcpSolver.get_stats(): {field} is not a valid argument.'
-                    + f'\n Possible values are {fields}.')
+        field = field_.encode('utf-8')
 
         if field_ in ['sqp_iter', 'stat_m', 'stat_n']:
             return self.__get_stat_int(field)
 
-        elif field_ in time_fields:
+        elif field_ in double_fields:
             return self.__get_stat_double(field)
 
         elif field_ == 'statistics':
