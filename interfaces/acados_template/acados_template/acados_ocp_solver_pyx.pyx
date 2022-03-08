@@ -142,7 +142,7 @@ cdef class AcadosOcpSolverFast:
 
         # check if recreation of acados is necessary (no need to recreate acados if sizes are identical)
         if len(self.solver_options['time_steps']) == N:
-            assert acados_solver.acados_create_with_discretization(self.capsule, N, <double *> value.data) == 0
+            assert acados_solver.acados_update_time_steps(self.capsule, N, <double *> value.data) == 0
 
         else:  # recreate the solver with the new time steps
             self.solver_created = False
