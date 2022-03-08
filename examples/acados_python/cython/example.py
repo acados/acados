@@ -118,9 +118,9 @@ ocp.solver_options.sim_method_num_steps = 15
 ocp.solver_options.qp_solver_iter_max = 100
 ocp.code_export_directory = 'c_generated_code'
 
-AcadosOcpSolver.generate(ocp, json_file = 'acados_ocp.json')
+AcadosOcpSolver.generate(ocp, json_file='acados_ocp.json')
 AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
-ocp_solver = AcadosOcpSolver.create_cython_solver(json_file='acados_ocp.json')
+ocp_solver = AcadosOcpSolver.create_cython_solver('acados_ocp.json')
 
 
 for i, tau in enumerate(np.linspace(0, 1, N)):

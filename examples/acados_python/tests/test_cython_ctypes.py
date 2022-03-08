@@ -42,6 +42,7 @@ import numpy as np
 import scipy.linalg
 from utils import plot_pendulum
 
+PLOT = False
 
 def main(use_cython=True):
 
@@ -115,7 +116,7 @@ def main(use_cython=True):
     if use_cython:
         AcadosOcpSolver.generate(ocp, json_file='acados_ocp.json')
         AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
-        ocp_solver = AcadosOcpSolver.create_cython_solver(json_file='acados_ocp.json')
+        ocp_solver = AcadosOcpSolver.create_cython_solver('acados_ocp.json')
         interface_type = 'cython'
     else:
         ocp_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json')
@@ -144,8 +145,8 @@ def main(use_cython=True):
     ocp_solver.print_statistics()  # encapsulates: stat = ocp_solver.get_stats("statistics")
     ocp_solver.store_iterate(filename=f'final_iterate_{interface_type}_variant{nvariant}.json', overwrite=True)
 
-    # plot but don't halt
-    plot_pendulum(np.linspace(0, Tf_01, N0 + 1), Fmax, simU0, simX0, latexify=False, plt_show=False, X_true_label=f'original: N={N0}, Tf={Tf_01}')
+    if PLOT:# plot but don't halt
+        plot_pendulum(np.linspace(0, Tf_01, N0 + 1), Fmax, simU0, simX0, latexify=False, plt_show=False, X_true_label=f'original: N={N0}, Tf={Tf_01}')
 
     # --------------------------------------------------------------------------------
     # 1) now reuse the code but set a new time-steps vector, with a new number of elements
@@ -162,10 +163,10 @@ def main(use_cython=True):
     print(80*'-')
     if ocp.solver_options.qp_solver.startswith('PARTIAL'):
         ocp_solver.update_qp_solver_cond_N(condN12)
-        print(f'solve use-case 2 with N = {N12}, cond_N = {condN12} and Tf = {Tf_2} s (instead of {Tf_01} s):')
+        print(f'solve use-case 2 with N = {N12}, cond_N = {condN12} and Tf = {Tf_01} s (instead of {Tf_01} s):')
         X_true_label = f'use-case 1: N={N12}, N_cond = {condN12}'
     else:
-        print(f'solve use-case 2 with N = {N12} and Tf = {Tf_2} s (instead of {Tf_01} s):')
+        print(f'solve use-case 2 with N = {N12} and Tf = {Tf_01} s (instead of {Tf_01} s):')
         X_true_label = f'use-case 1: N={N12}'
 
     status = ocp_solver.solve()
@@ -184,7 +185,8 @@ def main(use_cython=True):
     ocp_solver.store_iterate(filename=f'final_iterate_{interface_type}_variant{nvariant}.json', overwrite=True)
 
 
-    plot_pendulum(time1, Fmax, simU1, simX1, latexify=False, plt_show=False, X_true_label=X_true_label)
+    if PLOT:
+        plot_pendulum(time1, Fmax, simU1, simX1, latexify=False, plt_show=False, X_true_label=X_true_label)
 
     # --------------------------------------------------------------------------------
     # 2) reuse the code again, set a new time-steps vector, only with a different final time
@@ -218,7 +220,8 @@ def main(use_cython=True):
 
     ocp_solver.print_statistics()  # encapsulates: stat = ocp_solver.get_stats("statistics")
 
-    plot_pendulum(time2, Fmax, simU2, simX2, latexify=False, plt_show=True, X_true_label=f'use-case 2: Tf={Tf_2} s')
+    if PLOT:
+        plot_pendulum(time2, Fmax, simU2, simX2, latexify=False, plt_show=True, X_true_label=f'use-case 2: Tf={Tf_2} s')
     ocp_solver.store_iterate(filename=f'final_iterate_{interface_type}_variant{nvariant}.json', overwrite=True)
 
 
@@ -236,6 +239,6 @@ if __name__ == "__main__":
         iterate_filename = f'final_iterate_ctypes_variant{nvariant}.json'    
         with open(iterate_filename, 'r') as f:
             iterate_ctypes = json.load(f)
-    
+
     assert iterate_cython.keys() == iterate_ctypes.keys()
     assert(all ([iterate_cython[k] == iterate_ctypes[k] for k in iterate_cython]))
