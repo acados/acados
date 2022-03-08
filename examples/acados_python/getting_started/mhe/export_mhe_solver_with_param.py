@@ -37,7 +37,7 @@ from scipy.linalg import block_diag
 from acados_template import *
 
 
-def export_mhe_solver_with_param(model, N, h, Q, Q0, R):
+def export_mhe_solver_with_param(model, N, h, Q, Q0, R, use_cython=False):
 
     # create render arguments
     ocp_mhe = AcadosOcp()
@@ -93,8 +93,14 @@ def export_mhe_solver_with_param(model, N, h, Q, Q0, R):
     ocp_mhe.solver_options.nlp_solver_type = 'SQP'
     # ocp_mhe.solver_options.nlp_solver_type = 'SQP_RTI'
     ocp_mhe.solver_options.nlp_solver_max_iter = 200
+    ocp_mhe.code_export_directory = 'mhe_generated_code'
 
-    acados_solver_mhe = AcadosOcpSolver(ocp_mhe, json_file = 'acados_ocp.json')
+    if use_cython:
+        AcadosOcpSolver.generate(ocp_mhe, json_file='acados_ocp_mhe.json')
+        AcadosOcpSolver.build(ocp_mhe.code_export_directory, with_cython=True)
+        acados_solver_mhe = AcadosOcpSolver.create_cython_solver('acados_ocp_mhe.json')
+    else:
+        acados_solver_mhe = AcadosOcpSolver(ocp_mhe, json_file = 'acados_ocp_mhe.json')
 
     # set arrival cost weighting matrix
     acados_solver_mhe.cost_set(0, "W", block_diag(R, Q, Q0))

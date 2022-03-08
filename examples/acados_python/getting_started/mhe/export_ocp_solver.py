@@ -35,7 +35,7 @@ import numpy as np
 import scipy
 from acados_template import *
 
-def export_ocp_solver(model, N, h, Q, R, Fmax=80):
+def export_ocp_solver(model, N, h, Q, R, Fmax=80, use_cython=False):
 
     ocp = AcadosOcp()
 
@@ -86,6 +86,11 @@ def export_ocp_solver(model, N, h, Q, R, Fmax=80):
     # ocp.solver_options.nlp_solver_type = 'SQP_RTI'
     ocp.solver_options.nlp_solver_max_iter = 200
 
-    acados_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
+    if use_cython:
+        AcadosOcpSolver.generate(ocp, json_file='acados_ocp.json')
+        AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
+        acados_solver = AcadosOcpSolver.create_cython_solver('acados_ocp.json')
+    else:
+        acados_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json')
 
     return acados_solver

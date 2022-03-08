@@ -64,7 +64,7 @@ nu = model.u.size()[0]
 Q_ocp = np.diag([1e3, 1e3, 1e-2, 1e-2])
 R_ocp = 1e-2 *np.eye(1)
 
-acados_solver_ocp = export_ocp_solver(model, N, h, Q_ocp, R_ocp, Fmax)
+acados_solver_ocp = export_ocp_solver(model, N, h, Q_ocp, R_ocp, Fmax, use_cython=True)
 
 # mhe model and solver
 model_mhe = export_mhe_ode_model_with_noisy_param()
@@ -77,7 +77,7 @@ Q0_mhe = np.diag([0.1, 0.1, 0.1, 0.1, 1])
 Q_mhe  = 10.*np.diag([0.2, 0.2, 2, 2, 0.1])
 R_mhe  = 2*np.diag([0.1, 0.1, 0.1, 0.1])
 
-acados_solver_mhe = export_mhe_solver_with_param(model_mhe, N, h, Q_mhe, Q0_mhe, R_mhe)
+acados_solver_mhe = export_mhe_solver_with_param(model_mhe, N, h, Q_mhe, Q0_mhe, R_mhe, use_cython=True)
 
 # simulation
 v_stds = [0.2, 0.5, 1, 1]
