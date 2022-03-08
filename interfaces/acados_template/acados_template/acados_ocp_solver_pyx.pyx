@@ -50,7 +50,7 @@ from datetime import datetime
 import numpy as np
 
 
-cdef class AcadosOcpSolverFast:
+cdef class AcadosOcpSolverCython:
     """
     Class to interact with the acados ocp solver C object.
 
@@ -208,12 +208,12 @@ cdef class AcadosOcpSolverFast:
 
         # checks
         if not isinstance(index, int):
-            raise Exception('AcadosOcpSolver.eval_param_sens(): index must be Integer.')
+            raise Exception('AcadosOcpSolverCython.eval_param_sens(): index must be Integer.')
 
         cdef int nx = acados_solver_common.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
 
         if index < 0 or index > nx:
-            raise Exception(f'AcadosOcpSolver.eval_param_sens(): index must be in [0, nx-1], got: {index}.')
+            raise Exception(f'AcadosOcpSolverCython.eval_param_sens(): index must be in [0, nx-1], got: {index}.')
 
         # actual eval_param
         acados_solver_common.ocp_nlp_eval_param_sens(self.nlp_solver, field, stage, index, self.sens_out)
@@ -244,14 +244,14 @@ cdef class AcadosOcpSolverFast:
         field = field_.encode('utf-8')
 
         if field_ not in out_fields:
-            raise Exception('AcadosOcpSolver.get(): {} is an invalid argument.\
+            raise Exception('AcadosOcpSolverCython.get(): {} is an invalid argument.\
                     \n Possible values are {}. Exiting.'.format(field_, out_fields))
 
         if stage < 0 or stage > self.N:
-            raise Exception('AcadosOcpSolver.get(): stage index must be in [0, N], got: {}.'.format(self.N))
+            raise Exception('AcadosOcpSolverCython.get(): stage index must be in [0, N], got: {}.'.format(self.N))
 
         if stage == self.N and field_ == 'pi':
-            raise Exception('AcadosOcpSolver.get(): field {} does not exist at final stage {}.'\
+            raise Exception('AcadosOcpSolverCython.get(): field {} does not exist at final stage {}.'\
                 .format(field_, stage))
 
         cdef int dims = acados_solver_common.ocp_nlp_dims_get_from_attr(self.nlp_config,
@@ -512,7 +512,7 @@ cdef class AcadosOcpSolverFast:
             assert acados_solver.acados_update_params(self.capsule, stage, <double *> value.data, value.shape[0]) == 0
         else:
             if field_ not in constraints_fields + cost_fields + out_fields:
-                raise Exception("AcadosOcpSolver.set(): {} is not a valid argument.\
+                raise Exception("AcadosOcpSolverCython.set(): {} is not a valid argument.\
                     \nPossible values are {}. Exiting.".format(field, \
                     constraints_fields + cost_fields + out_fields + ['p']))
 
@@ -520,7 +520,7 @@ cdef class AcadosOcpSolverFast:
                 self.nlp_dims, self.nlp_out, stage, field)
 
             if value_.shape[0] != dims:
-                msg = 'AcadosOcpSolver.set(): mismatching dimension for field "{}" '.format(field_)
+                msg = 'AcadosOcpSolverCython.set(): mismatching dimension for field "{}" '.format(field_)
                 msg += 'with dimension {} (you have {})'.format(dims, value_.shape[0])
                 raise Exception(msg)
 
@@ -564,7 +564,7 @@ cdef class AcadosOcpSolverFast:
             value = np.asfortranarray(value_)
 
         if value_shape[0] != dims[0] or value_shape[1] != dims[1]:
-            raise Exception('AcadosOcpSolver.cost_set(): mismatching dimension', \
+            raise Exception('AcadosOcpSolverCython.cost_set(): mismatching dimension', \
                 ' for field "{}" with dimension {} (you have {})'.format( \
                 field_, tuple(dims), value_shape))
 
@@ -598,7 +598,7 @@ cdef class AcadosOcpSolverFast:
             value = np.asfortranarray(value_)
 
         if value_shape[0] != dims[0] or value_shape[1] != dims[1]:
-            raise Exception('AcadosOcpSolver.constraints_set(): mismatching dimension' \
+            raise Exception('AcadosOcpSolverCython.constraints_set(): mismatching dimension' \
                 ' for field "{}" with dimension {} (you have {})'.format(field_, tuple(dims), value_shape))
 
         acados_solver_common.ocp_nlp_constraints_model_set(self.nlp_config, \
@@ -654,10 +654,10 @@ cdef class AcadosOcpSolverFast:
 
             if field_ == 'rti_phase':
                 if value_ < 0 or value_ > 2:
-                    raise Exception('AcadosOcpSolver.solve(): argument \'rti_phase\' can '
+                    raise Exception('AcadosOcpSolverCython.solve(): argument \'rti_phase\' can '
                         'take only values 0, 1, 2 for SQP-RTI-type solvers')
                 if self.acados_ocp.solver_options.nlp_solver_type != 'SQP_RTI' and value_ > 0:
-                    raise Exception('AcadosOcpSolver.solve(): argument \'rti_phase\' can '
+                    raise Exception('AcadosOcpSolverCython.solve(): argument \'rti_phase\' can '
                         'take only value 0 for SQP-type solvers')
 
             int_value = value_
@@ -678,7 +678,7 @@ cdef class AcadosOcpSolverFast:
             acados_solver_common.ocp_nlp_solver_opts_set(self.nlp_config, self.nlp_opts, field, <void *> &string_value[0])
 
         else:
-            raise Exception('AcadosOcpSolver.options_set() does not support field {}.'\
+            raise Exception('AcadosOcpSolverCython.options_set() does not support field {}.'\
                 '\n Possible values are {}.'.format(field_, ', '.join(int_fields + double_fields + string_fields)))
 
 
