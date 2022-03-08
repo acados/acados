@@ -194,7 +194,7 @@ static void mdlStart(SimStruct *S)
     double lb_N[] = {0, 0, 0.5, 0.5};
     double ub_N[] = {100, 100, 1.757, 2.125};
 
-    ocp_nlp_plan *plan = ocp_nlp_plan_create(NUM_STAGES);
+    ocp_nlp_plan_t *plan = ocp_nlp_plan_create(NUM_STAGES);
 
 	plan->nlp_solver = SQP_GN;
 

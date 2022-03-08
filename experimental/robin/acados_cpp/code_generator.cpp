@@ -164,7 +164,7 @@ void code_generator::generate_mdl_start(std::ostream& out)
     out << "\tnq[NUM_STAGES] = 0;\n";
     out << "\tnz[NUM_STAGES] = 0;\n";
 
-    out << "\n\tocp_nlp_plan *plan = ocp_nlp_plan_create(NUM_STAGES);\n";
+    out << "\n\tocp_nlp_plan_t *plan = ocp_nlp_plan_create(NUM_STAGES);\n";
     out << "\tplan->nlp_solver = " + std::to_string(nlp_->plan_->nlp_solver) + ";\n";
 
     out << "\n\tfor (i = 0; i < NUM_STAGES; i++)\n";

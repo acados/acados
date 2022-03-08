@@ -238,7 +238,7 @@ TEST_CASE("pendulum_hessians", "[integrators]")
 * Create Reference Solution
 ************************************************/
 
-    sim_solver_plan plan;
+    sim_solver_plan_t plan;
     plan.sim_solver = IRK;  // IRK
 
     sim_config *config = sim_config_create(plan);
@@ -714,7 +714,7 @@ TEST_CASE("pendulum model hessians - Finite Differences", "compare against finit
     external_function_casadi_create(&impl_ode_hess);
 
 /* generate adjoint sensitivities */
-    sim_solver_plan plan;
+    sim_solver_plan_t plan;
     plan.sim_solver = IRK;  // IRK
 
     sim_config *config = sim_config_create(plan);

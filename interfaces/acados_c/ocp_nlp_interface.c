@@ -66,8 +66,8 @@
 static acados_size_t ocp_nlp_plan_calculate_size(int N)
 {
     // N - number of shooting nodes
-    acados_size_t bytes = sizeof(ocp_nlp_plan);
-    bytes += N * sizeof(sim_solver_plan);
+    acados_size_t bytes = sizeof(ocp_nlp_plan_t);
+    bytes += N * sizeof(sim_solver_plan_t);
     bytes += (N + 1) * sizeof(ocp_nlp_cost_t);
     bytes += N * sizeof(ocp_nlp_dynamics_t);
     bytes += (N+1) * sizeof(ocp_nlp_constraints_t);
@@ -76,15 +76,15 @@ static acados_size_t ocp_nlp_plan_calculate_size(int N)
 
 
 
-static ocp_nlp_plan *ocp_nlp_plan_assign(int N, void *raw_memory)
+static ocp_nlp_plan_t *ocp_nlp_plan_assign(int N, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
-    ocp_nlp_plan *plan = (ocp_nlp_plan *) c_ptr;
-    c_ptr += sizeof(ocp_nlp_plan);
+    ocp_nlp_plan_t *plan = (ocp_nlp_plan_t *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_plan_t);
 
-    plan->sim_solver_plan = (sim_solver_plan *) c_ptr;
-    c_ptr += N * sizeof(sim_solver_plan);
+    plan->sim_solver_plan = (sim_solver_plan_t *) c_ptr;
+    c_ptr += N * sizeof(sim_solver_plan_t);
 
     plan->nlp_cost = (ocp_nlp_cost_t *) c_ptr;
     c_ptr += (N + 1) * sizeof(ocp_nlp_cost_t);
@@ -102,7 +102,7 @@ static ocp_nlp_plan *ocp_nlp_plan_assign(int N, void *raw_memory)
 
 
 
-static void ocp_nlp_plan_initialize_default(ocp_nlp_plan *plan)
+static void ocp_nlp_plan_initialize_default(ocp_nlp_plan_t *plan)
 {
     int ii;
 
@@ -143,13 +143,13 @@ static void ocp_nlp_plan_initialize_default(ocp_nlp_plan *plan)
 
 
 
-ocp_nlp_plan *ocp_nlp_plan_create(int N)
+ocp_nlp_plan_t *ocp_nlp_plan_create(int N)
 {
     acados_size_t bytes = ocp_nlp_plan_calculate_size(N);
     void *ptr = acados_malloc(bytes, 1);
     assert(ptr != 0);
 
-    ocp_nlp_plan *plan = ocp_nlp_plan_assign(N, ptr);
+    ocp_nlp_plan_t *plan = ocp_nlp_plan_assign(N, ptr);
 
     ocp_nlp_plan_initialize_default(plan);
 
@@ -169,7 +169,7 @@ void ocp_nlp_plan_destroy(void* plan_)
 * config
 ************************************************/
 
-ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
+ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
 {
     int N = plan.N;
 
@@ -200,7 +200,8 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
     }
 
     // QP solver
-    ocp_qp_xcond_solver_config_initialize_from_plan(plan.ocp_qp_solver_plan.qp_solver, config->qp_solver);
+    ocp_qp_xcond_solver_config_initialize_from_plan(plan.ocp_qp_solver_plan.qp_solver,
+                                                    config->qp_solver);
 
     // regularization
     switch (plan.regularization)
@@ -255,7 +256,8 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
         {
             case CONTINUOUS_MODEL:
                 ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[i]);
-//                config->dynamics[i]->sim_solver = sim_config_create(plan.sim_solver[i]);
+                //                config->dynamics[i]->sim_solver =
+                //                sim_config_create(plan.sim_solver[i]);
                 sim_solver_t solver_name = plan.sim_solver_plan[i].sim_solver;
 
                 switch (solver_name)
@@ -302,7 +304,8 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
                 ocp_nlp_constraints_bgp_config_initialize_default(config->constraints[i]);
                 break;
             case INVALID_CONSTRAINT:
-                printf("\nerror: ocp_nlp_config_create: forgot to initialize plan->nlp_constraints\n");
+                printf(
+                    "\nerror: ocp_nlp_config_create: forgot to initialize plan->nlp_constraints\n");
                 exit(1);
             default:
                 printf("\nerror: ocp_nlp_config_create: unsupported plan->nlp_constraints\n");

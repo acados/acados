@@ -79,7 +79,7 @@ int main() {
 	np.at(N) = 2;
 
 	// Make plan
-	ocp_nlp_plan *plan = ocp_nlp_plan_create(N);
+	ocp_nlp_plan_t *plan = ocp_nlp_plan_create(N);
 	plan->nlp_solver = SQP;
 	plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
 	for (int i = 0; i <= N; i++)

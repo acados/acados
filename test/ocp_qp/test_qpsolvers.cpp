@@ -115,27 +115,31 @@ void set_N2(std::string const &inString, ocp_qp_xcond_solver_config *config, voi
 
 TEST_CASE("mass spring example", "[QP solvers]")
 {
-    vector<std::string> solvers = {
-                                    "DENSE_HPIPM"
-                                   ,"SPARSE_HPIPM"
+    vector<std::string> solvers = {"DENSE_HPIPM",
+                                   "SPARSE_HPIPM"
 #ifdef ACADOS_WITH_HPMPC
-                                   ,"SPARSE_HPMPC"
+                                   ,
+                                   "SPARSE_HPMPC"
 #endif
 #ifdef ACADOS_WITH_QPOASES
-                                   ,"DENSE_QPOASES"
+                                   ,
+                                   "DENSE_QPOASES"
 #endif
 // #ifdef ACADOS_WITH_QPDUNES
 //                                    ,"SPARSE_QPDUNES"
 // #endif
 #ifdef ACADOS_WITH_OOQP
-                                   ,"DENSE_OOQP"
-                                   ,"SPARSE_OOQP"
+                                   ,
+                                   "DENSE_OOQP",
+                                   "SPARSE_OOQP"
 #endif
 #ifdef ACADOS_WITH_OSQP
-                                   ,"SPARSE_OSQP"
+                                   ,
+                                   "SPARSE_OSQP"
 #endif
 #ifdef ACADOS_WITH_QORE
-                                   ,"DENSE_QORE"
+                                   ,
+                                   "DENSE_QORE"
 #endif
     };
 
@@ -163,7 +167,7 @@ TEST_CASE("mass spring example", "[QP solvers]")
 
     ocp_qp_out *qp_out;
 
-    ocp_qp_solver_plan plan;
+    ocp_qp_solver_plan_t plan;
 
     ocp_qp_xcond_solver_config *config;
 
@@ -195,21 +199,21 @@ TEST_CASE("mass spring example", "[QP solvers]")
 
             config = ocp_qp_xcond_solver_config_create(plan);
 
-			qp_dims = create_ocp_qp_dims_mass_spring(config, N, nx_, nu_, nb_, ng_, ngN);
+            qp_dims = create_ocp_qp_dims_mass_spring(config, N, nx_, nu_, nb_, ng_, ngN);
 
-			qp_in = create_ocp_qp_in_mass_spring(qp_dims->orig_dims);
+            qp_in = create_ocp_qp_in_mass_spring(qp_dims->orig_dims);
 
-			qp_out = ocp_qp_out_create(qp_dims->orig_dims);
+            qp_out = ocp_qp_out_create(qp_dims->orig_dims);
 
             opts = ocp_qp_xcond_solver_opts_create(config, qp_dims);
 
             if (sparse_solver)
             {
                 N2_length = 3;
-                #ifdef ACADOS_WITH_HPMPC
+#ifdef ACADOS_WITH_HPMPC
                 if (plan.qp_solver == PARTIAL_CONDENSING_HPMPC)
                     N2_length = 1;  // TODO(dimitris): fix this
-                #endif
+#endif
             }
             else
             {
@@ -218,7 +222,7 @@ TEST_CASE("mass spring example", "[QP solvers]")
 
             for (int ii = 0; ii < N2_length; ii++)
             {
-                SECTION("N2 = " + std::to_string((int)N2_values[ii]))
+                SECTION("N2 = " + std::to_string((int) N2_values[ii]))
                 {
                     set_N2(solver, config, opts, N2_values[ii], N);
 
@@ -236,8 +240,8 @@ TEST_CASE("mass spring example", "[QP solvers]")
                         max_res = (res[ii] > max_res) ? res[ii] : max_res;
                     }
 
-                    std::cout << "\n---> residuals of " << solver << " (N2 = "
-                                                        << N2_values[ii] << ")\n";
+                    std::cout << "\n---> residuals of " << solver << " (N2 = " << N2_values[ii]
+                              << ")\n";
                     printf("\ninf norm res: %e, %e, %e, %e\n", res[0], res[1], res[2], res[3]);
                     REQUIRE(max_res <= tol);
 
@@ -245,9 +249,9 @@ TEST_CASE("mass spring example", "[QP solvers]")
                 }
             }
 
-			free(qp_out);
-			free(qp_in);
-			free(qp_dims);
+            free(qp_out);
+            free(qp_in);
+            free(qp_dims);
 
             free(opts);
             free(config);

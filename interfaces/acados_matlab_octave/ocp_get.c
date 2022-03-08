@@ -74,7 +74,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     ocp_nlp_out *sens_out = (ocp_nlp_out *) ptr[0];
     // plan
     ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "plan" ) );
-    ocp_nlp_plan *plan = (ocp_nlp_plan *) ptr[0];
+    ocp_nlp_plan_t *plan = (ocp_nlp_plan_t *) ptr[0];
 
     // field
     char *field = mxArrayToString( prhs[1] );

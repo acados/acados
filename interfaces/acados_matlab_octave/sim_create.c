@@ -91,7 +91,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     /* plan & config */
     char *method = mxArrayToString( mxGetField( matlab_opts, 0, "method" ) );
 
-    sim_solver_plan plan;
+    sim_solver_plan_t plan;
 
     if (!strcmp(method, "erk"))
     {

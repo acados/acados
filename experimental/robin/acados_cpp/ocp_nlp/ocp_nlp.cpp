@@ -417,7 +417,7 @@ void ocp_nlp::set_dynamics(const casadi::Function &model, std::map<std::string, 
 
     std::fill(nlp_->Ts, nlp_->Ts+N, to_double(options["step"]));
 
-    sim_solver_plan sim_plan;
+    sim_solver_plan_t sim_plan;
     if (to_string(options.at("integrator")) == "rk4")
         sim_plan.sim_solver = ERK;
     else

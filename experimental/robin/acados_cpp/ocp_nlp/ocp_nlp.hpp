@@ -113,7 +113,7 @@ class ocp_nlp : private ocp
 
     std::shared_ptr<ocp_nlp_out> result_;
 
-    ocp_nlp_plan *plan_;
+    ocp_nlp_plan_t *plan_;
 
     std::string cached_model_;
 

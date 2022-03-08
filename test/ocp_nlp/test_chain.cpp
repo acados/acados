@@ -923,7 +923,7 @@ void setup_and_solve_nlp(int NN,
     * plan + config
     ************************************************/
 
-    ocp_nlp_plan *plan = ocp_nlp_plan_create(NN);
+    ocp_nlp_plan_t *plan = ocp_nlp_plan_create(NN);
 
     // TODO(dimitris): not necessarily GN, depends on cost module
     plan->nlp_solver = SQP;

@@ -46,7 +46,7 @@ ocp_nlp_in * nlp_in;
 ocp_nlp_out * nlp_out;
 ocp_nlp_solver * nlp_solver;
 void * nlp_opts;
-ocp_nlp_plan * nlp_solver_plan;
+ocp_nlp_plan_t * nlp_solver_plan;
 ocp_nlp_config * nlp_config;
 ocp_nlp_dims * nlp_dims;
 {% if ocp.solver_config.integrator_type == "ERK" %}

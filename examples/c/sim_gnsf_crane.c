@@ -111,7 +111,7 @@ int main() {
 * Set up sim_gnsf structs
 ************************************************/
 
-    sim_solver_plan plan;
+    sim_solver_plan_t plan;
 
     plan.sim_solver = GNSF;
     sim_config *config = sim_config_create(plan);

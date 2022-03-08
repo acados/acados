@@ -224,7 +224,7 @@ int main()
 		************************************************/
 
     /* choose plan */
-		sim_solver_plan plan;
+		sim_solver_plan_t plan;
 		switch (nss)
 		{
 			case 2:
