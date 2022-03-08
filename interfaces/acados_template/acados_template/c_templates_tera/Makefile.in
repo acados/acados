@@ -338,6 +338,11 @@ ocp_shared_lib: $(OCP_OBJ) $(MODEL_OBJ)
 	$(CC) -shared $^ -o $(LIBACADOS_OCP_SOLVER) $(LDFLAGS) $(LDLIBS) \
 	-L$(EXTERNAL_DIR) -l$(EXTERNAL_LIB)
 
+sim_shared_lib: $(SIM_OBJ) $(MODEL_OBJ)
+	$(CC) -shared $^ -o $(LIBACADOS_SIM_SOLVER) $(LDFLAGS) $(LDLIBS)
+
+
+# Cython targets
 ocp_cython_c: ocp_shared_lib
 	cython \
 	-o acados_ocp_solver_pyx.c \
@@ -346,7 +351,7 @@ ocp_cython_c: ocp_shared_lib
 	-I {{ code_export_directory }} \
 
 ocp_cython_o: ocp_cython_c
-	gcc $(ACADOS_FLAGS) -c -O2 \
+	$(CC) $(ACADOS_FLAGS) -c -O2 \
 	-fPIC \
 	-o acados_ocp_solver_pyx.o \
 	-I /usr/include/python3.8 \
@@ -357,17 +362,12 @@ ocp_cython_o: ocp_cython_c
 	acados_ocp_solver_pyx.c \
 
 ocp_cython: ocp_cython_o
-	gcc $(ACADOS_FLAGS) -shared \
+	$(CC) $(ACADOS_FLAGS) -shared \
 	-o acados_ocp_solver_pyx.so \
 	-Wl,-rpath=$(LIB_PATH) \
 	acados_ocp_solver_pyx.o \
 	$(abspath .)/libacados_ocp_solver_{{ model.name }}.so \
-	-L $(LIB_PATH) -lacados -lhpipm -lblasfeo -lqpOASES_e \
-	{{ link_libs }} \
-	-lm \
-
-sim_shared_lib: $(SIM_OBJ) $(MODEL_OBJ)
-	$(CC) -shared $^ -o $(LIBACADOS_SIM_SOLVER) $(LDFLAGS) $(LDLIBS)
+	$(LDFLAGS) $(LDLIBS)
 
 {%- if os and os == "pc" %}
 
@@ -398,9 +398,9 @@ clean_ocp_shared_lib:
 	$(RM) $(OCP_OBJ)
 
 clean_ocp_cython:
-	rm -f libacados_ocp_solver_{{ model.name }}.so
-	rm -f acados_solver_{{ model.name }}.o
-	rm -f acados_ocp_solver_pyx.so
-	rm -f acados_ocp_solver_pyx.o
+	$(RM) libacados_ocp_solver_{{ model.name }}.so
+	$(RM) acados_solver_{{ model.name }}.o
+	$(RM) acados_ocp_solver_pyx.so
+	$(RM) acados_ocp_solver_pyx.o
 
 {%- endif %}
