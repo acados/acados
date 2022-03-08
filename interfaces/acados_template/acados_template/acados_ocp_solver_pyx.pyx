@@ -53,9 +53,6 @@ import numpy as np
 cdef class AcadosOcpSolverCython:
     """
     Class to interact with the acados ocp solver C object.
-
-        :param model_name:
-        :param N:
     """
 
     cdef acados_solver.nlp_solver_capsule *capsule

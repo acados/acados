@@ -818,7 +818,7 @@ class AcadosOcpSolver:
     @classmethod
     def build(cls, code_export_dir, with_cython=False):
         """
-        Builds the code for an acados OCP solver, that has been generated in
+        Builds the code for an acados OCP solver, that has been generated in code_export_dir
             :param code_export_dir: directory in which acados OCP solver has been generated, see generate()
             :param with_cython: option indicating if the cython interface is build, default: False.
         """
@@ -835,6 +835,14 @@ class AcadosOcpSolver:
 
     @classmethod
     def create_cython_solver(cls, json_file):
+        """
+        Returns an `AcadosOcpSolverCython` object.
+
+        This is an alternative Cython based Python wrapper to the acados OCP solver in C.
+        This offers faster interaction with the solver, because getter and setter calls, which include shape checking are done in compiled C code.
+
+        The default wrapper `AcadosOcpSolver` is based on ctypes.
+        """
         with open(json_file, 'r') as f:
             acados_ocp_json = json.load(f)
         code_export_directory = acados_ocp_json['code_export_directory']
