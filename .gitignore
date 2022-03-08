@@ -90,6 +90,7 @@ env/
 
 # Examples #
 c_generated_code
+*_generated_code
 
 # Misc #
 ########
