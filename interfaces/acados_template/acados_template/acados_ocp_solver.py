@@ -1537,9 +1537,8 @@ class AcadosOcpSolver:
                 raise Exception("Unknown api: '{}'".format(api))
 
         if value_shape != tuple(dims):
-            raise Exception('AcadosOcpSolver.cost_set(): mismatching dimension', \
-                ' for field "{}" with dimension {} (you have {})'.format( \
-                field_, tuple(dims), value_shape))
+            raise Exception('AcadosOcpSolver.cost_set(): mismatching dimension' +
+                f' for field "{field_}" at stage {stage} with dimension {tuple(dims)} (you have {value_shape})')
 
         value_data = cast(value_.ctypes.data, POINTER(c_double))
         value_data_p = cast((value_data), c_void_p)
@@ -1606,8 +1605,8 @@ class AcadosOcpSolver:
                 raise Exception("Unknown api: '{}'".format(api))
 
         if value_shape != tuple(dims):
-            raise Exception('AcadosOcpSolver.constraints_set(): mismatching dimension' \
-                ' for field "{}" with dimension {} (you have {})'.format(field_, tuple(dims), value_shape))
+            raise Exception(f'AcadosOcpSolver.constraints_set(): mismatching dimension' +
+                f' for field "{field_}" at stage {stage} with dimension {tuple(dims)} (you have {value_shape})')
 
         value_data = cast(value_.ctypes.data, POINTER(c_double))
         value_data_p = cast((value_data), c_void_p)

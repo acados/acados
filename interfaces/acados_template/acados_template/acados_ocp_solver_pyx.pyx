@@ -561,9 +561,8 @@ cdef class AcadosOcpSolverCython:
             value = np.asfortranarray(value_)
 
         if value_shape[0] != dims[0] or value_shape[1] != dims[1]:
-            raise Exception('AcadosOcpSolverCython.cost_set(): mismatching dimension', \
-                ' for field "{}" with dimension {} (you have {})'.format( \
-                field_, tuple(dims), value_shape))
+            raise Exception('AcadosOcpSolverCython.cost_set(): mismatching dimension' +
+                f' for field "{field_}" at stage {stage} with dimension {tuple(dims)} (you have {value_shape})')
 
         acados_solver_common.ocp_nlp_cost_model_set(self.nlp_config, \
             self.nlp_dims, self.nlp_in, stage, field, <void *> &value[0][0])
@@ -595,8 +594,8 @@ cdef class AcadosOcpSolverCython:
             value = np.asfortranarray(value_)
 
         if value_shape[0] != dims[0] or value_shape[1] != dims[1]:
-            raise Exception('AcadosOcpSolverCython.constraints_set(): mismatching dimension' \
-                ' for field "{}" with dimension {} (you have {})'.format(field_, tuple(dims), value_shape))
+            raise Exception(f'AcadosOcpSolverCython.constraints_set(): mismatching dimension' +
+                f' for field "{field_}" at stage {stage} with dimension {tuple(dims)} (you have {value_shape})')
 
         acados_solver_common.ocp_nlp_constraints_model_set(self.nlp_config, \
             self.nlp_dims, self.nlp_in, stage, field, <void *> &value[0][0])
