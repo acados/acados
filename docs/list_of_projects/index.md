@@ -2,6 +2,13 @@
 # Other Projects that feature `acados`
 
 ## Software interfaced with `acados`
+
+- [openpilot](https://github.com/commaai/openpilot/)
+is an open source driver assistance system.
+[It has over 150 supported car makes and models.](https://github.com/commaai/openpilot/blob/master/docs/CARS.md)
+`acados` is used within openpilot for lateral and longitudinal MPC.
+It uses the `Cython` wrapper to the `acados` OCP solver in its software stack.
+
 - [Rockit (Rapid Optimal Control kit)](https://gitlab.kuleuven.be/meco-software/rockit)
 is a software framework to quickly prototype optimal control problems.
 Notably, the software allows free end-time problems and multi-stage optimal problems.
