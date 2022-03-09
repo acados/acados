@@ -55,8 +55,11 @@ def get_acados_path():
 
 
 def get_python_interface_path():
-    acados_path = get_acados_path()
-    return os.path.join(acados_path, 'interfaces', 'acados_template', 'acados_template')
+    ACADOS_PYTHON_INTERFACE_PATH = os.environ.get('ACADOS_PYTHON_INTERFACE_PATH')
+    if not ACADOS_PYTHON_INTERFACE_PATH:
+        acados_path = get_acados_path()
+        ACADOS_PYTHON_INTERFACE_PATH = os.path.join(acados_path, 'interfaces', 'acados_template', 'acados_template')
+    return ACADOS_PYTHON_INTERFACE_PATH
 
 
 def get_tera_exec_path():

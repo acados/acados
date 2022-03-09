@@ -5,6 +5,9 @@
     "acados_include_path": [
         "str"
     ],
+    "cython_include_dirs": [
+        "str"
+    ],
     "model": {
          "name" : [
             "str"

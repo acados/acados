@@ -41,6 +41,8 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     ocp_json.dims.N = obj.opts_struct.param_scheme_N;
     ocp_json.solver_options.tf = model.T;
 
+    ocp_json.code_export_directory = fullfile(pwd, 'c_generated_code');
+
     if isfield(obj.opts_struct, 'Tsim')
         ocp_json.solver_options.Tsim = obj.opts_struct.Tsim;
     else

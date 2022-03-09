@@ -59,7 +59,8 @@ setup(name='acados_template',
       'scipy',
       'casadi>=3.5.1',
       'matplotlib',
-      'future-fstrings'
+      'future-fstrings',
+      'cython',
    ],
    package_data={'': [
        'c_templates_tera/main.in.c',

@@ -65,8 +65,15 @@ The following image shows an overview of the available classes in the `acados` P
     :align: center
 ```
 
-## acados OCP solver
-The class `AcadosOcp` can be used to formulate optimal control problems, for which an acados solver (`AcadosOcpSolver`) can be created.
+## acados OCP solver interface
+The class `AcadosOcp` can be used to formulate optimal control problems (OCP), for which an acados solver (`AcadosOcpSolver`) can be created.
+
+The interface to interact with the acados OCP solver in C is based on [ctypes](https://cython.org/).
+
+Additionally, there is the option to use a Cython based wrapper around the C part.
+This offers faster interaction with the solver, because getter and setter calls, which include shape checking are done in compiled C code.
+The cython based wrapper is called `AcadosOcpSolverCython` and was added in [PR #791](https://github.com/acados/acados/pull/791).
+`AcadosOcpSolverCython` and `AcadosOcpSolver` offer the same functionality and equivalent behavior is ensured in CI tests.
 
 ``` eval_rst
 .. automodule:: acados_template.acados_ocp_solver
@@ -97,6 +104,8 @@ The class `AcadosOcp` can be used to formulate optimal control problems, for whi
 
 ## acados integrator interface
 The class `AcadosSim` can be used to formulate a simulation problem, for which an acados integrator (`AcadosSimSolver`) can be created.
+The interface to interact with the acados integrator in C is based on ctypes.
+
 ``` eval_rst
 .. automodule:: acados_template.acados_sim
     :members:

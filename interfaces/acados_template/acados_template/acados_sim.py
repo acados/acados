@@ -302,6 +302,7 @@ class AcadosSim:
         self.code_export_directory = 'c_generated_code'
         """Path to where code will be exported. Default: `c_generated_code`."""
 
+        self.cython_include_dirs = ''
         self.__parameter_values = np.array([])
 
     @property

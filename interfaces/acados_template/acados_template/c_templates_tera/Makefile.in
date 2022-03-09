@@ -171,7 +171,7 @@ MODEL_SRC+= {{ model.name }}_model/{{ model.dyn_source_discrete }}
 {%- endif %}
 MODEL_OBJ := $(MODEL_SRC:.c=.o)
 
-# optimal control problem - mostly CasAdi exports
+# optimal control problem - mostly CasADi exports
 OCP_SRC=
 {%- if constr_type == "BGP" and dims_nphi > 0 %}
 OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_phi_constraint.c
@@ -341,6 +341,34 @@ ocp_shared_lib: $(OCP_OBJ) $(MODEL_OBJ)
 sim_shared_lib: $(SIM_OBJ) $(MODEL_OBJ)
 	$(CC) -shared $^ -o $(LIBACADOS_SIM_SOLVER) $(LDFLAGS) $(LDLIBS)
 
+
+# Cython targets
+ocp_cython_c: ocp_shared_lib
+	cython \
+	-o acados_ocp_solver_pyx.c \
+	-I $(INCLUDE_PATH)/../interfaces/acados_template/acados_template \
+	$(INCLUDE_PATH)/../interfaces/acados_template/acados_template/acados_ocp_solver_pyx.pyx \
+	-I {{ code_export_directory }} \
+
+ocp_cython_o: ocp_cython_c
+	$(CC) $(ACADOS_FLAGS) -c -O2 \
+	-fPIC \
+	-o acados_ocp_solver_pyx.o \
+	-I /usr/include/python3.8 \
+	-I $(INCLUDE_PATH)/blasfeo/include/ \
+	-I $(INCLUDE_PATH)/hpipm/include/ \
+	-I $(INCLUDE_PATH) \
+	-I {{ cython_include_dirs }} \
+	acados_ocp_solver_pyx.c \
+
+ocp_cython: ocp_cython_o
+	$(CC) $(ACADOS_FLAGS) -shared \
+	-o acados_ocp_solver_pyx.so \
+	-Wl,-rpath=$(LIB_PATH) \
+	acados_ocp_solver_pyx.o \
+	$(abspath .)/libacados_ocp_solver_{{ model.name }}.so \
+	$(LDFLAGS) $(LDLIBS)
+
 {%- if os and os == "pc" %}
 
 clean:
@@ -352,6 +380,12 @@ clean_ocp_shared_lib:
 	del \Q libacados_ocp_solver_{{ model.name }}.so 2>nul
 	del \Q acados_solver_{{ model.name }}.o 2>nul
 
+clean_ocp_cython:
+	del \Q libacados_ocp_solver_{{ model.name }}.so 2>nul
+	del \Q acados_solver_{{ model.name }}.o 2>nul
+	del \Q acados_ocp_solver_pyx.so 2>nul
+	del \Q acados_ocp_solver_pyx.o 2>nul
+
 {%- else %}
 
 clean:
@@ -362,5 +396,11 @@ clean:
 clean_ocp_shared_lib:
 	$(RM) $(LIBACADOS_OCP_SOLVER)
 	$(RM) $(OCP_OBJ)
+
+clean_ocp_cython:
+	$(RM) libacados_ocp_solver_{{ model.name }}.so
+	$(RM) acados_solver_{{ model.name }}.o
+	$(RM) acados_ocp_solver_pyx.so
+	$(RM) acados_ocp_solver_pyx.o
 
 {%- endif %}
