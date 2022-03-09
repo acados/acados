@@ -229,15 +229,15 @@ def main(use_cython=True):
 if __name__ == "__main__":
     for use_cython in [False, True]:
         main(use_cython=use_cython)
-    
+
     import json
     # compare iterates
     for nvariant in [0, 1, 2]:
-        iterate_filename = f'final_iterate_cython_variant{nvariant}.json'    
+        iterate_filename = f'final_iterate_cython_variant{nvariant}.json'
         with open(iterate_filename, 'r') as f:
             iterate_cython = json.load(f)
     
-        iterate_filename = f'final_iterate_ctypes_variant{nvariant}.json'    
+        iterate_filename = f'final_iterate_ctypes_variant{nvariant}.json'
         with open(iterate_filename, 'r') as f:
             iterate_ctypes = json.load(f)
 
