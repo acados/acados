@@ -204,6 +204,9 @@ void ocp_nlp_in_destroy(void *in);
 void ocp_nlp_in_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
         const char *field, void *value);
 
+///
+// void ocp_nlp_in_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
+//         const char *field, void *value);
 
 /// Sets the function pointers to the dynamics functions for the given stage.
 ///
@@ -316,6 +319,9 @@ void ocp_nlp_solver_opts_destroy(void *opts);
 /// \param field Name of the option.
 /// \param value Value of the option.
 void ocp_nlp_solver_opts_set(ocp_nlp_config *config, void *opts_, const char *field, void* value);
+
+
+// void ocp_nlp_solver_opts_get(ocp_nlp_config *config, void *opts_, const char *field, void* value);
 
 
 void ocp_nlp_solver_opts_set_at_stage(ocp_nlp_config *config, void *opts_, int stage, const char *field, void* value);
