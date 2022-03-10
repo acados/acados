@@ -44,7 +44,7 @@ from utils import plot_pendulum
 
 PLOT = False
 
-def main(use_cython=True):
+def main(interface_type='ctypes'):
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -113,14 +113,16 @@ def main(use_cython=True):
     print(80*'-')
     print('generate code and compile...')
 
-    if use_cython:
+    if interface_type == 'cython':
         AcadosOcpSolver.generate(ocp, json_file='acados_ocp.json')
         AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
         ocp_solver = AcadosOcpSolver.create_cython_solver('acados_ocp.json')
-        interface_type = 'cython'
-    else:
+    elif interface_type == 'ctypes':
         ocp_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json')
-        interface_type = 'ctypes'
+    elif interface_type == 'cython_prebuilt':
+        from c_generated_code.acados_ocp_solver_pyx import AcadosOcpSolverCython
+        ocp_solver = AcadosOcpSolverCython(ocp.model.name, ocp.solver_options.nlp_solver_type, ocp.dims.N)
+
 
     # --------------------------------------------------------------------------------
     # 0) solve the problem defined here (original from code export), analog to 'minimal_example_ocp.py'
@@ -148,98 +150,99 @@ def main(use_cython=True):
     if PLOT:# plot but don't halt
         plot_pendulum(np.linspace(0, Tf_01, N0 + 1), Fmax, simU0, simX0, latexify=False, plt_show=False, X_true_label=f'original: N={N0}, Tf={Tf_01}')
 
-    # --------------------------------------------------------------------------------
-    # 1) now reuse the code but set a new time-steps vector, with a new number of elements
-    nvariant = 1
-    dt1 = Tf_01 / N12
+    # # --------------------------------------------------------------------------------
+    # # 1) now reuse the code but set a new time-steps vector, with a new number of elements
+    # nvariant = 1
+    # dt1 = Tf_01 / N12
 
-    new_time_steps1 = np.tile(dt1, (N12,))  # Matlab's equivalent to repmat
-    time1 = np.hstack([0, np.cumsum(new_time_steps1)])
+    # new_time_steps1 = np.tile(dt1, (N12,))  # Matlab's equivalent to repmat
+    # time1 = np.hstack([0, np.cumsum(new_time_steps1)])
 
-    simX1 = np.ndarray((N12 + 1, nx))
-    simU1 = np.ndarray((N12, nu))
+    # simX1 = np.ndarray((N12 + 1, nx))
+    # simU1 = np.ndarray((N12, nu))
 
-    ocp_solver.set_new_time_steps(new_time_steps1)
-    print(80*'-')
-    if ocp.solver_options.qp_solver.startswith('PARTIAL'):
-        ocp_solver.update_qp_solver_cond_N(condN12)
-        print(f'solve use-case 2 with N = {N12}, cond_N = {condN12} and Tf = {Tf_01} s (instead of {Tf_01} s):')
-        X_true_label = f'use-case 1: N={N12}, N_cond = {condN12}'
-    else:
-        print(f'solve use-case 2 with N = {N12} and Tf = {Tf_01} s (instead of {Tf_01} s):')
-        X_true_label = f'use-case 1: N={N12}'
+    # ocp_solver.set_new_time_steps(new_time_steps1)
+    # print(80*'-')
+    # if ocp.solver_options.qp_solver.startswith('PARTIAL'):
+    #     ocp_solver.update_qp_solver_cond_N(condN12)
+    #     print(f'solve use-case 2 with N = {N12}, cond_N = {condN12} and Tf = {Tf_01} s (instead of {Tf_01} s):')
+    #     X_true_label = f'use-case 1: N={N12}, N_cond = {condN12}'
+    # else:
+    #     print(f'solve use-case 2 with N = {N12} and Tf = {Tf_01} s (instead of {Tf_01} s):')
+    #     X_true_label = f'use-case 1: N={N12}'
 
-    status = ocp_solver.solve()
+    # status = ocp_solver.solve()
 
-    if status != 0:
-        ocp_solver.print_statistics()  # encapsulates: stat = ocp_solver.get_stats("statistics")
-        raise Exception('acados returned status {}. Exiting.'.format(status))
+    # if status != 0:
+    #     ocp_solver.print_statistics()  # encapsulates: stat = ocp_solver.get_stats("statistics")
+    #     raise Exception('acados returned status {}. Exiting.'.format(status))
 
-    # get solution
-    for i in range(N12):
-        simX1[i, :] = ocp_solver.get(i, "x")
-        simU1[i, :] = ocp_solver.get(i, "u")
-    simX1[N12, :] = ocp_solver.get(N12, "x")
+    # # get solution
+    # for i in range(N12):
+    #     simX1[i, :] = ocp_solver.get(i, "x")
+    #     simU1[i, :] = ocp_solver.get(i, "u")
+    # simX1[N12, :] = ocp_solver.get(N12, "x")
 
-    ocp_solver.print_statistics()  # encapsulates: stat = ocp_solver.get_stats("statistics")
-    ocp_solver.store_iterate(filename=f'final_iterate_{interface_type}_variant{nvariant}.json', overwrite=True)
+    # ocp_solver.print_statistics()  # encapsulates: stat = ocp_solver.get_stats("statistics")
+    # ocp_solver.store_iterate(filename=f'final_iterate_{interface_type}_variant{nvariant}.json', overwrite=True)
 
 
-    if PLOT:
-        plot_pendulum(time1, Fmax, simU1, simX1, latexify=False, plt_show=False, X_true_label=X_true_label)
+    # if PLOT:
+    #     plot_pendulum(time1, Fmax, simU1, simX1, latexify=False, plt_show=False, X_true_label=X_true_label)
 
-    # --------------------------------------------------------------------------------
-    # 2) reuse the code again, set a new time-steps vector, only with a different final time
-    nvariant = 2
-    dt2 = Tf_2 / N12
+    # # --------------------------------------------------------------------------------
+    # # 2) reuse the code again, set a new time-steps vector, only with a different final time
+    # nvariant = 2
+    # dt2 = Tf_2 / N12
 
-    new_time_steps2 = np.tile(dt2, (N12,))  # Matlab's equivalent to repmat
-    time2 = np.hstack([0, np.cumsum(new_time_steps2)])
+    # new_time_steps2 = np.tile(dt2, (N12,))  # Matlab's equivalent to repmat
+    # time2 = np.hstack([0, np.cumsum(new_time_steps2)])
 
-    simX2 = np.ndarray((N12 + 1, nx))
-    simU2 = np.ndarray((N12, nu))
+    # simX2 = np.ndarray((N12 + 1, nx))
+    # simU2 = np.ndarray((N12, nu))
 
-    ocp_solver.set_new_time_steps(new_time_steps2)
-    print(80*'-')
-    if ocp.solver_options.qp_solver.startswith('PARTIAL'):
-        ocp_solver.update_qp_solver_cond_N(condN12)
-        print(f'solve use-case 2 with N = {N12}, cond_N = {condN12} and Tf = {Tf_2} s (instead of {Tf_01} s):')
-    else:
-        print(f'solve use-case 2 with N = {N12} and Tf = {Tf_2} s (instead of {Tf_01} s):')
-    status = ocp_solver.solve()
+    # ocp_solver.set_new_time_steps(new_time_steps2)
+    # print(80*'-')
+    # if ocp.solver_options.qp_solver.startswith('PARTIAL'):
+    #     ocp_solver.update_qp_solver_cond_N(condN12)
+    #     print(f'solve use-case 2 with N = {N12}, cond_N = {condN12} and Tf = {Tf_2} s (instead of {Tf_01} s):')
+    # else:
+    #     print(f'solve use-case 2 with N = {N12} and Tf = {Tf_2} s (instead of {Tf_01} s):')
+    # status = ocp_solver.solve()
 
-    if status != 0:
-        ocp_solver.print_statistics()  # encapsulates: stat = ocp_solver.get_stats("statistics")
-        raise Exception('acados returned status {}. Exiting.'.format(status))
+    # if status != 0:
+    #     ocp_solver.print_statistics()  # encapsulates: stat = ocp_solver.get_stats("statistics")
+    #     raise Exception('acados returned status {}. Exiting.'.format(status))
 
-    # get solution
-    for i in range(N12):
-        simX2[i, :] = ocp_solver.get(i, "x")
-        simU2[i, :] = ocp_solver.get(i, "u")
-    simX2[N12, :] = ocp_solver.get(N12, "x")
+    # # get solution
+    # for i in range(N12):
+    #     simX2[i, :] = ocp_solver.get(i, "x")
+    #     simU2[i, :] = ocp_solver.get(i, "u")
+    # simX2[N12, :] = ocp_solver.get(N12, "x")
 
-    ocp_solver.print_statistics()  # encapsulates: stat = ocp_solver.get_stats("statistics")
+    # ocp_solver.print_statistics()  # encapsulates: stat = ocp_solver.get_stats("statistics")
 
-    if PLOT:
-        plot_pendulum(time2, Fmax, simU2, simX2, latexify=False, plt_show=True, X_true_label=f'use-case 2: Tf={Tf_2} s')
-    ocp_solver.store_iterate(filename=f'final_iterate_{interface_type}_variant{nvariant}.json', overwrite=True)
-    print(f"timing of last solver call {ocp_solver.get_stats('time_tot')}")
+    # if PLOT:
+    #     plot_pendulum(time2, Fmax, simU2, simX2, latexify=False, plt_show=True, X_true_label=f'use-case 2: Tf={Tf_2} s')
+    # ocp_solver.store_iterate(filename=f'final_iterate_{interface_type}_variant{nvariant}.json', overwrite=True)
+    # print(f"timing of last solver call {ocp_solver.get_stats('time_tot')}")
 
 
 if __name__ == "__main__":
-    for use_cython in [False, True]:
-        main(use_cython=use_cython)
+    for interface_type in ['ctypes', 'cython', 'cython_prebuilt']:
+        main(interface_type=interface_type)
 
     import json
     # compare iterates
-    for nvariant in [0, 1, 2]:
-        iterate_filename = f'final_iterate_cython_variant{nvariant}.json'
-        with open(iterate_filename, 'r') as f:
-            iterate_cython = json.load(f)
-    
+    for nvariant in [0]:
         iterate_filename = f'final_iterate_ctypes_variant{nvariant}.json'
         with open(iterate_filename, 'r') as f:
             iterate_ctypes = json.load(f)
 
-    assert iterate_cython.keys() == iterate_ctypes.keys()
-    assert(all ([iterate_cython[k] == iterate_ctypes[k] for k in iterate_cython]))
+        for interface_type in ['cython', 'cython_prebuilt']:
+            iterate_filename = f'final_iterate_{interface_type}_variant{nvariant}.json'
+            with open(iterate_filename, 'r') as f:
+                iterate = json.load(f)
+
+            assert iterate.keys() == iterate_ctypes.keys()
+            assert(all ([iterate[k] == iterate_ctypes[k] for k in iterate]))
