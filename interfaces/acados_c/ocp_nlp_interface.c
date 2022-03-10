@@ -398,6 +398,23 @@ void ocp_nlp_in_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, 
 
 
 
+// void ocp_nlp_in_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
+//         const char *field, void *value)
+// {
+//     if (!strcmp(field, "Ts"))
+//     {
+//         double *Ts_value = value;
+//         Ts_value[0] = in->Ts[stage];
+//     }
+//     else
+//     {
+//         printf("\nerror: ocp_nlp_in_get: field %s not available\n", field);
+//         exit(1);
+//     }
+//     return;
+// }
+
+
 int ocp_nlp_dynamics_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
         int stage, const char *field, void *value)
 {
@@ -851,6 +868,11 @@ void ocp_nlp_solver_opts_set(ocp_nlp_config *config, void *opts_, const char *fi
     config->opts_set(config, opts_, field, value);
 }
 
+
+// void ocp_nlp_solver_opts_get(ocp_nlp_config *config, void *opts_, const char *field, void *value)
+// {
+//     config->opts_get(config, opts_, field, value);
+// }
 
 
 void ocp_nlp_solver_opts_set_at_stage(ocp_nlp_config *config, void *opts_, int stage, const char *field, void *value)
