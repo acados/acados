@@ -155,10 +155,6 @@ add_test(NAME python_pendulum_ocp_example_reuse_code
 add_test(NAME python_pendulum_ocp_example_cmake
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/ocp
         python minimal_example_ocp_cmake.py)
-# CMake and solver=DISCRETE test
-add_test(NAME python_example_ocp_dynamics_formulations_cmake
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/ocp
-        python example_ocp_dynamics_formulations_cmake.py --INTEGRATOR_TYPE DISCRETE)
 add_test(NAME python_nonuniform_discretization_ocp_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/ocp
         python nonuniform_discretization_example.py)
@@ -244,12 +240,16 @@ add_test(NAME python_pendulum_ocp_IRK
 add_test(NAME python_pendulum_ocp_ERK
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/ocp
         python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=ERK)
-add_test(NAME python_pendulum_ocp_DISCRETE
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/ocp
-        python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=DISCRETE)
+# add_test(NAME python_pendulum_ocp_DISCRETE
+#         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/ocp
+#         python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=DISCRETE)
 add_test(NAME python_pendulum_ocp_GNSF
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/ocp
         python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=GNSF)
+# CMake and solver=DISCRETE test
+add_test(NAME python_example_ocp_dynamics_formulations_cmake
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started/ocp
+        python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE DISCRETE --BUILD_SYSTEM cmake)
 
 add_test(NAME python_pendulum_soft_constraints_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests

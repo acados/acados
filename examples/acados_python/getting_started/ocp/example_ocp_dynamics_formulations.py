@@ -35,7 +35,7 @@ import sys
 sys.path.insert(0, '../common')
 
 import json
-from acados_template import AcadosOcp, AcadosOcpSolver
+from acados_template import AcadosOcp, AcadosOcpSolver, ocp_get_default_cmake_builder
 from pendulum_model import export_pendulum_ode_model, export_pendulum_ode_model_with_discrete_rk4
 import numpy as np
 import scipy.linalg
@@ -43,17 +43,30 @@ from utils import plot_pendulum
 import argparse
 
 
+INTEGRATOR_TYPES = ['ERK', 'IRK', 'GNSF', 'DISCRETE']
+BUILD_SYSTEMS = ['cmake', 'make']
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='test Python interface on pendulum example.')
     parser.add_argument('--INTEGRATOR_TYPE', dest='INTEGRATOR_TYPE',
-                    help='INTEGRATOR_TYPE: ERK, IRK, GNSF, DISCRETE')
+                        help=f'INTEGRATOR_TYPE: supports {INTEGRATOR_TYPES}')
+    parser.add_argument('--BUILD_SYSTEM', dest='BUILD_SYSTEM',
+                        default='make',
+                        help=f'BUILD_SYSTEM: supports {BUILD_SYSTEMS}')
+
     args = parser.parse_args()
 
     integrator_type = args.INTEGRATOR_TYPE
-    INTEGRATOR_TYPE_values = ['ERK', 'IRK', 'GNSF', 'DISCRETE']
-    if integrator_type not in INTEGRATOR_TYPE_values:
-        raise Exception('Invalid unit test value {} for parameter INTEGRATOR_TYPE. Possible values are' \
-                ' {}. Exiting.'.format(integrator_type, INTEGRATOR_TYPE_values))
+    if integrator_type not in INTEGRATOR_TYPES:
+        msg = f'Invalid unit test value {integrator_type} for parameter INTEGRATOR_TYPE. Possible values are' \
+              f' {INTEGRATOR_TYPES}, got {integrator_type}.'
+        raise Exception(msg)
+
+    build_system = args.BUILD_SYSTEM
+    if build_system not in BUILD_SYSTEMS:
+        msg = f'Invalid unit test value {build_system} for parameter INTEGRATOR_TYPE. Possible values are' \
+              f' {BUILD_SYSTEMS}, got {build_system}.'
+        raise Exception(msg)
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -75,9 +88,6 @@ if __name__ == "__main__":
     ny_e = nx
 
     # set dimensions
-    ocp.dims.ny = ny
-    ocp.dims.ny_e = ny_e
-    ocp.dims.nbu = nu
     ocp.dims.N = N
 
     # set cost
@@ -106,7 +116,7 @@ if __name__ == "__main__":
     ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
     ocp.constraints.idxbu = np.array([0])
 
-    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'  # FULL_CONDENSING_QPOASES
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = integrator_type
     ocp.solver_options.print_level = 1
@@ -139,9 +149,15 @@ if __name__ == "__main__":
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
-    ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
+    ocp.solver_options.nlp_solver_type = 'SQP'  # SQP_RTI
 
-    ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
+    if build_system == 'cmake':
+        print("\nusing the CMake build system")
+        cmake_builder = ocp_get_default_cmake_builder()
+        ocp_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json', cmake_builder=cmake_builder)
+    elif build_system == 'make':
+        print("\nusing the make build system")
+        ocp_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json')
 
     simX = np.ndarray((N+1, nx))
     simU = np.ndarray((N, nu))
@@ -153,8 +169,8 @@ if __name__ == "__main__":
 
     # get solution
     for i in range(N):
-        simX[i,:] = ocp_solver.get(i, "x")
-        simU[i,:] = ocp_solver.get(i, "u")
-    simX[N,:] = ocp_solver.get(N, "x")
+        simX[i, :] = ocp_solver.get(i, "x")
+        simU[i, :] = ocp_solver.get(i, "u")
+    simX[N, :] = ocp_solver.get(N, "x")
 
     plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX)
