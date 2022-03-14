@@ -633,7 +633,7 @@ def ocp_get_default_cmake_builder() -> CMakeBuilder:
     return cmake_builder
 
 
-def ocp_render_templates(acados_ocp, json_file):
+def ocp_render_templates(acados_ocp, json_file, cmake_builder=None):
 
     name = acados_ocp.model.name
 
@@ -663,15 +663,14 @@ def ocp_render_templates(acados_ocp, json_file):
     out_file = f'acados_solver.pxd'
     render_template(in_file, out_file, template_dir, json_path)
 
-    # Builder: Make
-    in_file = 'Makefile.in'
-    out_file = 'Makefile'
-    render_template(in_file, out_file, template_dir, json_path)
-
-    # Builder: CMake
-    in_file = 'CMakeLists.in.txt'
-    out_file = 'CMakeLists.txt'
-    render_template(in_file, out_file, template_dir, json_path)
+    if cmake_builder is not None:
+        in_file = 'CMakeLists.in.txt'
+        out_file = 'CMakeLists.txt'
+        render_template(in_file, out_file, template_dir, json_path)
+    else:
+        in_file = 'Makefile.in'
+        out_file = 'Makefile'
+        render_template(in_file, out_file, template_dir, json_path)
 
     in_file = 'acados_solver_sfun.in.c'
     out_file = f'acados_solver_sfunction_{name}.c'
@@ -831,7 +830,7 @@ class AcadosOcpSolver:
         ocp_formulation_json_dump(acados_ocp, simulink_opts, json_file)
 
         # render templates
-        ocp_render_templates(acados_ocp, json_file)
+        ocp_render_templates(acados_ocp, json_file, cmake_builder=cmake_builder)
         acados_ocp.json_file = json_file
 
 
