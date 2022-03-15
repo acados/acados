@@ -116,6 +116,9 @@ def main(use_cython=True):
     ocp.solver_options.sim_method_num_steps = 15
     ocp.solver_options.qp_solver_iter_max = 100
     ocp.code_export_directory = 'c_generated_code'
+    ocp.solver_options.hessian_approx = 'EXACT'
+    ocp.solver_options.exact_hess_constr = 0
+    ocp.solver_options.exact_hess_dyn = 0
 
     if use_cython:
         AcadosOcpSolver.generate(ocp, json_file='acados_ocp.json')
