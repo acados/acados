@@ -256,7 +256,7 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.ny_0 * dims.ny_0 }});
   {%- endif %}
 
-  {%- if dims.ny_0 > 0 and simulink_opts.inputs.cost_W %}  {#- cost_W #}
+  {%- if dims.ny > 0 and simulink_opts.inputs.cost_W %}  {#- cost_W #}
     {%- set i_input = i_input + 1 %}
     // cost_W
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.ny * dims.ny }});
