@@ -178,6 +178,9 @@ ACADOS_SYMBOL_EXPORT {{ model.name }}_solver_capsule * {{ model.name }}_acados_c
 ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_free_capsule({{ model.name }}_solver_capsule *capsule);
 
 ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_create({{ model.name }}_solver_capsule * capsule);
+
+ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule);
+
 /**
  * Generic version of {{ model.name }}_acados_create which allows to use a different number of shooting intervals than
  * the number used for code generation. If new_time_steps=NULL and n_time_steps matches the number used for code

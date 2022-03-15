@@ -2071,6 +2071,39 @@ int {{ model.name }}_acados_update_qp_solver_cond_N({{ model.name }}_solver_caps
 }
 
 
+int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule)
+{
+    const int N = capsule->nlp_solver_plan->N;
+    ocp_nlp_config* nlp_config = capsule->nlp_config;
+    ocp_nlp_dims* nlp_dims = capsule->nlp_dims;
+    ocp_nlp_out* nlp_out = capsule->nlp_out;
+
+    int nx, nu, nv, ns, nz, ni, dim;
+
+    // zero solution
+    double* buffer = calloc(NX+NU+NZ+2*NS+2*NSN+NBX+NBU+NG+NH+NPHI+NBX0+NBXN+NHN+NPHIN+NGN, sizeof(double));
+
+    for(int i=0; i<N+1; i++)
+    {
+        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "x", buffer);
+        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "u", buffer);
+        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "sl", buffer);
+        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "su", buffer);
+        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "lam", buffer);
+        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "t", buffer);
+        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "z", buffer);
+        if (i<N)
+        {
+            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "pi", buffer);
+        }
+    }
+
+    free(buffer);
+}
+
+
+
+
 int {{ model.name }}_acados_update_params({{ model.name }}_solver_capsule* capsule, int stage, double *p, int np)
 {
     int solver_status = 0;
