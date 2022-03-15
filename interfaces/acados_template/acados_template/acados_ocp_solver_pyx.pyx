@@ -112,6 +112,13 @@ cdef class AcadosOcpSolverCython:
         return acados_solver.acados_solve(self.capsule)
 
 
+    def reset(self):
+        """
+        Sets current iterate to all zeros.
+        """
+        return acados_solver.acados_reset(self.capsule)
+
+
     def set_new_time_steps(self, new_time_steps):
         """
         Set new time steps.

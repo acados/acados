@@ -128,6 +128,8 @@ def main(use_cython=True):
         ## Note: skip generate and build assuming this is done before (in cython run)
         ocp_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json', build=False, generate=False)
 
+    ocp_solver.reset()
+
     for i, tau in enumerate(np.linspace(0, 1, N)):
         ocp_solver.set(i, 'x', (1-tau)*x0 + tau*xf)
         ocp_solver.set(i, 'u', np.array([0.1, 0.5]))

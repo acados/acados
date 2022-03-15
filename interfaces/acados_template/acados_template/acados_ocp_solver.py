@@ -1020,6 +1020,17 @@ class AcadosOcpSolver:
         return self.status
 
 
+    def reset(self):
+        """
+        Sets current iterate to all zeros.
+        """
+        getattr(self.shared_lib, f"{self.model_name}_acados_reset").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{self.model_name}_acados_reset").restype = c_int
+        getattr(self.shared_lib, f"{self.model_name}_acados_reset")(self.capsule)
+
+        return
+
+
     def set_new_time_steps(self, new_time_steps):
         """
         Set new time steps.
