@@ -43,7 +43,7 @@
     #else
       #define ACADOS_SYMBOL_EXPORT __declspec(dllexport)
     #endif
-  #elif defined(__GNUC__) && defined(GCC_HASCLASSVISIBILITY)
+  #elif defined(__GNUC__) && ((__GNUC__ >= 4) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4))
     #define ACADOS_SYMBOL_EXPORT __attribute__ ((visibility ("default")))
   #else
     #define ACADOS_SYMBOL_EXPORT
