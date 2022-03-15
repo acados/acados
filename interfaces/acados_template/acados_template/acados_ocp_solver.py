@@ -133,6 +133,15 @@ def make_ocp_dims_consistent(acados_ocp):
                             f'\nGot W_0[{cost.W.shape}], yref_0[{cost.yref_0.shape}]\n')
         dims.ny_0 = ny_0
 
+    elif cost.cost_type_0 == 'EXTERNAL':
+        if opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and model.cost_expr_ext_cost_custom_hess_0 is None:
+            print("\nWARNING: Gauss-Newton Hessian approximation with EXTERNAL cost type not possible!\n"
+            "got cost_type_0: EXTERNAL, hessian_approx: 'GAUSS_NEWTON.'\n"
+            "GAUSS_NEWTON hessian is only supported for cost_types [NON]LINEAR_LS.\n"
+            "If you continue, acados will proceed computing the exact hessian for the cost term.\n"
+            "Note: There is also the option to use the external cost module with a numerical hessian approximation (see `ext_cost_num_hess`).\n"
+            "OR the option to provide a symbolic custom hessian approximation (see `cost_expr_ext_cost_custom_hess`).\n")
+
     # path
     if cost.cost_type == 'LINEAR_LS':
         ny = cost.W.shape[0]
@@ -162,6 +171,15 @@ def make_ocp_dims_consistent(acados_ocp):
                             f'\nGot W[{cost.W.shape}], yref[{cost.yref.shape}]\n')
         dims.ny = ny
 
+    elif cost.cost_type == 'EXTERNAL':
+        if opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and model.cost_expr_ext_cost_custom_hess is None:
+            print("\nWARNING: Gauss-Newton Hessian approximation with EXTERNAL cost type not possible!\n"
+            "got cost_type: EXTERNAL, hessian_approx: 'GAUSS_NEWTON.'\n"
+            "GAUSS_NEWTON hessian is only supported for cost_types [NON]LINEAR_LS.\n"
+            "If you continue, acados will proceed computing the exact hessian for the cost term.\n"
+            "Note: There is also the option to use the external cost module with a numerical hessian approximation (see `ext_cost_num_hess`).\n"
+            "OR the option to provide a symbolic custom hessian approximation (see `cost_expr_ext_cost_custom_hess`).\n")
+
     # terminal
     if cost.cost_type_e == 'LINEAR_LS':
         ny_e = cost.W_e.shape[0]
@@ -184,6 +202,14 @@ def make_ocp_dims_consistent(acados_ocp):
             raise Exception('inconsistent dimension: regarding W_e, yref_e.')
         dims.ny_e = ny_e
 
+    elif cost.cost_type_e == 'EXTERNAL':
+        if opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and model.cost_expr_ext_cost_custom_hess_e is None:
+            print("\nWARNING: Gauss-Newton Hessian approximation with EXTERNAL cost type not possible!\n"
+            "got cost_type_e: EXTERNAL, hessian_approx: 'GAUSS_NEWTON.'\n"
+            "GAUSS_NEWTON hessian is only supported for cost_types [NON]LINEAR_LS.\n"
+            "If you continue, acados will proceed computing the exact hessian for the cost term.\n"
+            "Note: There is also the option to use the external cost module with a numerical hessian approximation (see `ext_cost_num_hess`).\n"
+            "OR the option to provide a symbolic custom hessian approximation (see `cost_expr_ext_cost_custom_hess`).\n")
 
     ## constraints
     # initial
