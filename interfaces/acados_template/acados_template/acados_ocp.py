@@ -2890,10 +2890,10 @@ class AcadosOcp:
         self.solver_options = AcadosOcpOptions()
         """Solver Options, type :py:class:`acados_template.acados_ocp.AcadosOcpOptions`"""
 		
-        self.acados_include_path = f'{acados_path}/include'
-        """Path to acados include directory, type: string"""
-        self.acados_lib_path = f'{acados_path}/lib'
-        """Path to where acados library is located, type: string"""
+        self.acados_include_path = os.path.join(acados_path, 'include').replace(os.sep, '/') # the replace part is important on Windows for CMake
+        """Path to acados include directory (set automatically), type: `string`"""
+        self.acados_lib_path = os.path.join(acados_path, 'lib').replace(os.sep, '/') # the replace part is important on Windows for CMake
+        """Path to where acados library is located, type: `string`"""
 
         import numpy
         self.cython_include_dirs = numpy.get_include()
