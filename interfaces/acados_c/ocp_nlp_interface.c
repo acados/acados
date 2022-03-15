@@ -523,7 +523,7 @@ void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
     else if (!strcmp(field, "z"))
     {
         double *double_values = value;
-        blasfeo_pack_dvec(dims->nz[stage], double_values, 0, &out->z[stage], 0);
+        blasfeo_pack_dvec(dims->nz[stage], double_values, 1, &out->z[stage], 0);
     }
     else
     {
