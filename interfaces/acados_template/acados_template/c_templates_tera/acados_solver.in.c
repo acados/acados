@@ -2096,7 +2096,7 @@ int {{ model.name }}_acados_update_params({{ model.name }}_solver_capsule* capsu
         {%- endif %}
     {% elif solver_options.integrator_type == "LIFTED_IRK" %}
         capsule->impl_dae_fun[stage].set_param(capsule->impl_dae_fun+stage, p);
-        capsule->impl_dae_fun_jac_x_xdot_z[stage].set_param(capsule->impl_dae_fun_jac_x_xdot_z+stage, p);
+        capsule->impl_dae_fun_jac_x_xdot_u[stage].set_param(capsule->impl_dae_fun_jac_x_xdot_u+stage, p);
     {% elif solver_options.integrator_type == "ERK" %}
         capsule->forw_vde_casadi[stage].set_param(capsule->forw_vde_casadi+stage, p);
         capsule->expl_ode_fun[stage].set_param(capsule->expl_ode_fun+stage, p);
