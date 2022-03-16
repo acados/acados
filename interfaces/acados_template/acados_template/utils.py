@@ -49,7 +49,7 @@ def get_acados_path():
         ACADOS_PATH = os.path.realpath(acados_path)
         msg = 'Warning: Did not find environment variable ACADOS_SOURCE_DIR, '
         msg += 'guessed ACADOS_PATH to be {}.\n'.format(ACADOS_PATH)
-        msg += 'Please export ACADOS_SOURCE_DIR to not avoid this warning.'
+        msg += 'Please export ACADOS_SOURCE_DIR to avoid this warning.'
         print(msg)
     return ACADOS_PATH
 
@@ -74,7 +74,7 @@ def get_tera_exec_path():
 platform2tera = {
     "linux": "linux",
     "darwin": "osx",
-    "win32": "window.exe"
+    "win32": "windows"
 }
 
 
@@ -216,7 +216,7 @@ def render_template(in_file, out_file, template_dir, json_path):
     # Windows cmd.exe can not cope with '...', so use "..." instead:
     if os.name == 'nt':
         os_cmd = os_cmd.replace('\'', '\"')
-    
+
     status = os.system(os_cmd)
     if (status != 0):
         raise Exception(f'Rendering of {in_file} failed!\n\nAttempted to execute OS command:\n{os_cmd}\n\nExiting.\n')
