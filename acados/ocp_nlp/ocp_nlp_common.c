@@ -1940,12 +1940,7 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
         config->dynamics[i]->memory_set_sim_guess_ptr(nlp_mem->sim_guess+i, nlp_mem->set_sim_guess+i, nlp_mem->dynamics[i]);
         config->dynamics[i]->memory_set_z_alg_ptr(nlp_mem->z_alg+i, nlp_mem->dynamics[i]);
     }
-#pragma omp parallel for
-    for (int i = 0; i < N; i++)
-    {
-        i+=1;
-    }
-    
+
     // alias to cost_memory
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp for nowait
