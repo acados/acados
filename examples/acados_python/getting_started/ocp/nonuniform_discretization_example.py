@@ -163,7 +163,7 @@ def main(discretization='shooting_nodes'):
     status = ocp_solver.solve()
 
     if status not in [0, 2]:
-        raise Exception('acados returned status {}. Exiting.'.format(status))
+        raise Exception(f'acados returned status {status}.')
 
     # get primal solution
     for i in range(N):

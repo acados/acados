@@ -94,7 +94,7 @@ for i in range(N):
     simX[i+1,:] = acados_integrator.get("x")
 
 if status != 0:
-    raise Exception('acados returned status {}. Exiting.'.format(status))
+    raise Exception(f'acados returned status {status}.')
 
 S_algebraic = acados_integrator.get("S_algebraic")
 print("S_algebraic (dz_dxu) = ", S_algebraic)

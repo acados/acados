@@ -130,7 +130,7 @@ for n in range(N):
 status = ocp_solver.solve()
 
 if status != 0:
-    raise Exception('acados returned status {}. Exiting.'.format(status))
+    raise Exception(f'acados returned status {status}.')
 
 # get solution
 stat_fields = ['time_tot', 'time_lin', 'time_qp', 'time_qp_solver_call', 'time_reg', 'sqp_iter']

@@ -153,7 +153,7 @@ status = ocp_solver.solve()
 ocp_solver.print_statistics()
 
 if status != 0:
-    raise Exception('acados returned status {}. Exiting.'.format(status))
+    raise Exception(f'acados returned status {status}.')
 
 # get solution
 for i in range(N):

@@ -96,7 +96,7 @@ x0_bar = np.array([0.0, np.pi, 0.0, 0.0])
 status = acados_solver_ocp.solve()
 
 if status != 0:
-    raise Exception('acados returned status {}. Exiting.'.format(status))
+    raise Exception(f'acados returned status {status}.')
 
 # get solution
 for i in range(N):
@@ -127,7 +127,7 @@ for j in range(1,N):
 status = acados_solver_mhe.solve()
 
 if status != 0 and status != 2:
-    raise Exception('acados returned status {}. Exiting.'.format(status))
+    raise Exception(f'acados returned status {status}.')
 
 # get solution
 for i in range(N):

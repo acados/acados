@@ -141,7 +141,7 @@ def main(use_cython=True):
 
     if status != 0:
         ocp_solver.print_statistics()
-        raise Exception('acados returned status {}. Exiting.'.format(status))
+        raise Exception(f'acados returned status {status}.')
 
     # get solution
     for i in range(N):
@@ -197,7 +197,7 @@ def main(use_cython=True):
             acados_integrator.set("x", simX_fine[k,:])
             status = acados_integrator.solve()
             if status != 0:
-                raise Exception('acados returned status {}. Exiting.'.format(status))
+                raise Exception(f'acados returned status {status}.')
 
             simX_fine[k+1,:] = acados_integrator.get("x")
             simU_fine[k, :] = u
