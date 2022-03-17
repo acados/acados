@@ -510,7 +510,7 @@ void ocp_nlp_sqp_rti_preparation_step(void *config_, void *dims_,
     ocp_nlp_alias_memory_to_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
     // initialize QP
-    ocp_nlp_initialize_qp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+    ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
     /* SQP body */
     int sqp_iter = 0;

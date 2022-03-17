@@ -2005,11 +2005,16 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
 }
 
 
-void ocp_nlp_initialize_qp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+void ocp_nlp_initialize_submodules(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
          ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
     int N = dims->N;
 
+    // NOTE: initialize is called at the start of every NLP solver call.
+    // It computes things in submodules based on stuff that can be changed by the user between
+    // subsequent solver calls, e.g. factorization of weight matrix.
+    // IN CONTRAST: precompute is only called once after solver creation
+    //  -> computes things that are not expected to change between subsequent solver calls
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
