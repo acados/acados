@@ -812,7 +812,8 @@ class AcadosOcpSolver:
     """
     if sys.platform=="win32":
         from ctypes import wintypes
-        dlclose = ctypes.WinDLL('kernel32', use_last_error=True).FreeLibrary
+        from ctypes import WinDLL
+        dlclose = WinDLL('kernel32', use_last_error=True).FreeLibrary
         dlclose.argtypes = [wintypes.HMODULE]
     else:
         dlclose = CDLL(None).dlclose
