@@ -511,7 +511,7 @@ cdef class AcadosOcpSolverCython:
         cost_fields = ['y_ref', 'yref']
         constraints_fields = ['lbx', 'ubx', 'lbu', 'ubu']
         out_fields = ['x', 'u', 'pi', 'lam', 't', 'z', 'sl', 'su']
-        mem_fields = ['xdot_guess']
+        mem_fields = ['xdot_guess', 'z_guess']
 
         field = field_.encode('utf-8')
 
