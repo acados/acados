@@ -132,7 +132,7 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
     # ocp_solver.options_set('print_level', 2)
     for i in range(N):
         ocp_solver.set(i, 'x', np.NaN * np.ones((nx,)))
-        # ocp_solver.set(i, 'u', np.NaN * np.ones((nu,)))
+        ocp_solver.set(i, 'u', np.NaN * np.ones((nu,)))
     status = ocp_solver.solve()
     ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
     if status == 0:
@@ -169,7 +169,6 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
 
 
 if __name__ == '__main__':
-    # for cost_type in ['NONLINEAR_LS']:
     for cost_type in ['EXTERNAL', 'LS', 'NONLINEAR_LS']:
         hessian_approximation = 'GAUSS_NEWTON' # 'GAUSS_NEWTON, EXACT
         ext_cost_use_num_hess = 1
