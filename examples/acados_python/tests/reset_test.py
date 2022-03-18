@@ -42,7 +42,8 @@ from utils import plot_pendulum
 from casadi import vertcat
 
 
-def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_num_hess=0):
+def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_num_hess=0,
+         integrator_type='ERK'):
     print(f"using: cost_type {cost_type}")
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -117,7 +118,12 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
     ocp.solver_options.hessian_approx = hessian_approximation
     ocp.solver_options.regularize_method = 'CONVEXIFY'
-    ocp.solver_options.integrator_type = 'ERK'
+    ocp.solver_options.integrator_type = integrator_type
+    if ocp.solver_options.integrator_type == 'GNSF':
+        import json
+        with open('../getting_started/common/' + model.name + '_gnsf_functions.json', 'r') as f:
+            gnsf_dict = json.load(f)
+        ocp.gnsf_model = gnsf_dict
 
     ocp.solver_options.qp_solver_cond_N = 5
 
@@ -159,7 +165,8 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
 
     ocp_solver.print_statistics()
     if status != 0:
-        raise Exception(f'acados returned status {status}.')
+        raise Exception(f'acados returned status {status} for cost_type {cost_type}\n'
+                        f'integrator_type = {integrator_type}.')
 
     # get solution
     for i in range(N):
@@ -169,7 +176,12 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
 
 
 if __name__ == '__main__':
-    for cost_type in ['EXTERNAL', 'LS', 'NONLINEAR_LS']:
-        hessian_approximation = 'GAUSS_NEWTON' # 'GAUSS_NEWTON, EXACT
-        ext_cost_use_num_hess = 1
-        main(cost_type=cost_type, hessian_approximation=hessian_approximation, ext_cost_use_num_hess=ext_cost_use_num_hess)
+    # for integrator_type in ['ERK', 'IRK']:
+    # ['LIFTED_IRK']
+    for integrator_type in ['GNSF', 'ERK', 'IRK']:
+        for cost_type in ['EXTERNAL', 'LS', 'NONLINEAR_LS']:
+            # for cost_type in ['EXTERNAL', 'LS', 'NONLINEAR_LS']:
+            hessian_approximation = 'GAUSS_NEWTON' # 'GAUSS_NEWTON, EXACT
+            ext_cost_use_num_hess = 1
+            main(cost_type=cost_type, hessian_approximation=hessian_approximation,
+                ext_cost_use_num_hess=ext_cost_use_num_hess, integrator_type=integrator_type)
