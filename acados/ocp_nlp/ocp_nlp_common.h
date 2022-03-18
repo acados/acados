@@ -320,6 +320,8 @@ ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory);
 //
 void ocp_nlp_res_get_inf_norm(ocp_nlp_res *res, double *out);
 
+int ocp_nlp_res_check_nans(ocp_nlp_dims *dims, ocp_nlp_res *res);
+
 /************************************************
  * memory
  ************************************************/
