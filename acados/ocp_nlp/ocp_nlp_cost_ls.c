@@ -793,11 +793,11 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
 
         // tmp_ny = W * res
         blasfeo_dsymv_l(ny, 1.0, &model->W, 0, 0, &memory->res,
-                0, 0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
+                0, 0.0, &model->y_ref, 0, &work->tmp_ny, 0);
 
         // grad = Cyt_tilde * tmp_ny
         blasfeo_dgemv_n(nu + nx, ny, 1.0, &work->Cyt_tilde,
-                0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0, &memory->grad, 0);
+                0, 0, &work->tmp_ny, 0, 0.0, memory->ux, 0, &memory->grad, 0);
 
         memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &memory->res, 0);
         // TODO what about the exact hessian in the case of nz>0 ???
@@ -814,7 +814,7 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
 
         // tmp_ny = W * res
         blasfeo_dsymv_l(ny, 1.0, &model->W, 0, 0, &memory->res, 0,
-                        0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
+                        0.0, &model->y_ref, 0, &work->tmp_ny, 0);
 
         // grad = Cyt * tmp_ny
         blasfeo_dgemv_n(nu + nx, ny, 1.0, &model->Cyt, 0, 0, &work->tmp_ny, 0,
