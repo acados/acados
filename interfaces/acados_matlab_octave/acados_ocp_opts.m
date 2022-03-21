@@ -97,7 +97,7 @@ classdef acados_ocp_opts < handle
             obj.opts_struct.exact_hess_dyn = 1;
             obj.opts_struct.exact_hess_cost = 1;
             obj.opts_struct.exact_hess_constr = 1;
-
+            obj.opts_struct.ext_fun_compile_flags = '-O2';
 
             obj.opts_struct.output_dir = fullfile(pwd, 'build');
             if ismac()
@@ -219,6 +219,8 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.globalization = value;
             elseif (strcmp(field, 'parameter_values'))
                 obj.opts_struct.parameter_values = value;
+            elseif (strcmp(field, 'ext_fun_compile_flags'))
+                obj.opts_struct.ext_fun_compile_flags = value
             elseif (strcmp(field, 'compile_mex'))
                 disp(['Option compile_mex is not supported anymore,'...
                     'please use compile_interface instead or dont set the option.', ...
