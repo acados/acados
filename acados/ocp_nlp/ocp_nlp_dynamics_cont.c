@@ -835,7 +835,7 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
         // compute as forward * adj_seed
         else
         {
-            blasfeo_dgemv_n(nu+nx, nx1, -1.0, mem->BAbt, 0, 0, mem->pi, 0, 0.0, &mem->fun, 0, &mem->adj, 0);
+            blasfeo_dgemv_n(nu+nx, nx1, -1.0, mem->BAbt, 0, 0, mem->pi, 0, 0.0, &mem->adj, 0, &mem->adj, 0);
         }
         blasfeo_dveccp(nx1, mem->pi, 0, &mem->adj, nu+nx);
     }

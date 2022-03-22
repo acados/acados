@@ -725,7 +725,7 @@ void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims_, void *
     // adj TODO if not computed by the external function
     if (opts->compute_adj)
     {
-        blasfeo_dgemv_n(nu+nx, nx1, -1.0, memory->BAbt, 0, 0, memory->pi, 0, 0.0, &memory->fun, 0, &memory->adj, 0);
+        blasfeo_dgemv_n(nu+nx, nx1, -1.0, memory->BAbt, 0, 0, memory->pi, 0, 0.0, &memory->adj, 0, &memory->adj, 0);
         blasfeo_dveccp(nx1, memory->pi, 0, &memory->adj, nu + nx);
     }
 
