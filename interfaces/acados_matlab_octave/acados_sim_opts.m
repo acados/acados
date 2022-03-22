@@ -62,6 +62,7 @@ classdef acados_sim_opts < handle
             obj.opts_struct.jac_reuse = 'false';
             obj.opts_struct.gnsf_detect_struct = 'true';
             obj.opts_struct.output_dir = fullfile(pwd, 'build');
+            obj.opts_struct.ext_fun_compile_flags = '-O2';
         end
 
 
@@ -73,6 +74,8 @@ classdef acados_sim_opts < handle
 
             if (strcmp(field, 'compile_interface'))
                 obj.opts_struct.compile_interface = value;
+            elseif (strcmp(field, 'ext_fun_compile_flags'))
+                obj.opts_struct.ext_fun_compile_flags = value
             elseif (strcmp(field, 'codgen_model'))
                 obj.opts_struct.codgen_model = value;
             elseif (strcmp(field, 'compile_model'))
