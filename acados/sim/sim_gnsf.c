@@ -2121,10 +2121,6 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
         out->info->LAtime = 0;
         out->info->CPUtime = 0;
 
-        // set to zero
-        blasfeo_dgese(nvv, nx1 + nu, 0.0, J_r_x1u, 0, 0);
-        blasfeo_dvecse(nuhat, 0.0, uhat, 0);
-
         // PRECOMPUTE YY0 + YYu * u, KK0 + KKu * u, ZZ0 + ZZu * u;
         if (nx1 > 0 || nz1 > 0)
         {
