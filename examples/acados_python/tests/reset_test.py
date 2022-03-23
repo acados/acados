@@ -44,7 +44,7 @@ from casadi import vertcat
 
 def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_num_hess=0,
          integrator_type='ERK'):
-    print(f"using: cost_type {cost_type}")
+    print(f"using: cost_type {cost_type}, integrator_type {integrator_type}")
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
