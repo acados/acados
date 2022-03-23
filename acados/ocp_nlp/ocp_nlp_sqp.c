@@ -575,12 +575,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 printf("\n\n");
             }
 
-            // check for NaNs
-            int got_nans = ocp_nlp_res_check_nans(dims, nlp_res);
-            if (got_nans > 0)
-            {
-                mem->status = ACADOS_NAN_IN_RESIDUAL;
-            }
             return mem->status;
         }
 

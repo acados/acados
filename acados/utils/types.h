@@ -83,7 +83,6 @@ enum return_values
     ACADOS_MINSTEP,
     ACADOS_QP_FAILURE,
     ACADOS_READY,
-    ACADOS_NAN_IN_RESIDUAL,
 };
 
 
