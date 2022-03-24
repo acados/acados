@@ -2110,6 +2110,7 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule)
     }
 
     free(buffer);
+    return 0;
 }
 
 
