@@ -286,7 +286,7 @@ ocp_solver.print_statistics()
 
 if status != 0:
     # import pdb; pdb.set_trace()
-    raise Exception('acados returned status {}. Exiting.'.format(status))
+    raise Exception(f'acados returned status {status}.')
 
 sqp_iter = ocp_solver.get_stats('sqp_iter')
 if SOLVER_TYPE in {'SQP'}:

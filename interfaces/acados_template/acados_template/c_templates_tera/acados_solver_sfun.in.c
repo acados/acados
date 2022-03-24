@@ -133,6 +133,10 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
 
+  {%- if simulink_opts.inputs.reset_solver -%}  {#- reset_solver #}
+    {%- set n_inputs = n_inputs + 1 -%}
+  {%- endif -%}
+
   {%- if simulink_opts.inputs.x_init -%}  {#- x_init #}
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
@@ -267,6 +271,12 @@ static void mdlInitializeSizes (SimStruct *S)
     // cost_W_e
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.ny_e * dims.ny_e }});
   {%- endif %}
+
+  {%- if simulink_opts.inputs.reset_solver -%}  {#- reset_solver #}
+    {%- set i_input = i_input + 1 %}
+    // reset_solver
+    ssSetInputPortVectorDimension(S, {{ i_input }}, 1);
+  {%- endif -%}
 
   {%- if simulink_opts.inputs.x_init -%}  {#- x_init #}
     {%- set i_input = i_input + 1 %}
@@ -631,6 +641,17 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         buffer[i] = (double)(*in_sign[i]);
 
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, {{ dims.N }}, "W", buffer);
+  {%- endif %}
+
+  {%- if simulink_opts.inputs.reset_solver %}  {#- reset_solver #}
+    // reset_solver
+    {%- set i_input = i_input + 1 %}
+    in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+    double reset = (double)(*in_sign[0]);
+    if (reset)
+    {
+        {{ model.name }}_acados_reset(capsule);
+    }
   {%- endif %}
 
   {%- if simulink_opts.inputs.x_init %}  {#- x_init #}

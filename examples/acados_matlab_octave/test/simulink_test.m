@@ -14,6 +14,7 @@ simulink_opts.inputs.cost_W_0 = 1;
 simulink_opts.inputs.cost_W = 1;
 simulink_opts.inputs.cost_W_e = 1;
 simulink_opts.inputs.x_init = 1;
+simulink_opts.inputs.reset_solver = 1;
 
 % outputs
 simulink_opts.outputs.utraj = 1;
@@ -55,10 +56,12 @@ cd ..
 load('simulink_u_traj_ref.mat')
 
 err_vs_ref = norm(simulink_u_traj_ref - out_sim.logsout{1}.Values.Data);
-disp(['Simulink: Norm of control traj. wrt. reference solution is: ', num2str(err_vs_ref, '%e')]);
+TOL = 1e-8;
+disp(['Simulink: Norm of control traj. wrt. reference solution is: ',...
+    num2str(err_vs_ref, '%e'), ' test TOL = ', num2str(TOL)]);
 
-if err_vs_ref > 1e-8
-    exit_with_error()
+if err_vs_ref > TOL
+    quit(1)
 end
 
 

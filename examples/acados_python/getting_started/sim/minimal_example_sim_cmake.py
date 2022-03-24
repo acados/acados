@@ -89,7 +89,7 @@ for i in range(N):
     simX[i+1,:] = acados_integrator.get("x")
 
 if status != 0:
-    raise Exception('acados returned status {}. Exiting.'.format(status))
+    raise Exception(f'acados returned status {status}.')
 
 S_forw = acados_integrator.get("S_forw")
 print("S_forw, sensitivities of simulaition result wrt x,u:\n", S_forw)

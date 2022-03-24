@@ -336,7 +336,7 @@ for i in range(Nsim):
     status = acados_solver.solve()
 
     if status != 0:
-        raise Exception('acados returned status {}. Exiting.'.format(status))
+        raise Exception(f'acados returned status {status}.')
 
     # get solution
     x0 = acados_solver.get(0, "x")

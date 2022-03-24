@@ -128,6 +128,8 @@ def main(use_cython=True):
         ## Note: skip generate and build assuming this is done before (in cython run)
         ocp_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json', build=False, generate=False)
 
+    ocp_solver.reset()
+
     for i, tau in enumerate(np.linspace(0, 1, N)):
         ocp_solver.set(i, 'x', (1-tau)*x0 + tau*xf)
         ocp_solver.set(i, 'u', np.array([0.1, 0.5]))
@@ -139,7 +141,7 @@ def main(use_cython=True):
 
     if status != 0:
         ocp_solver.print_statistics()
-        raise Exception('acados returned status {}. Exiting.'.format(status))
+        raise Exception(f'acados returned status {status}.')
 
     # get solution
     for i in range(N):
@@ -195,7 +197,7 @@ def main(use_cython=True):
             acados_integrator.set("x", simX_fine[k,:])
             status = acados_integrator.solve()
             if status != 0:
-                raise Exception('acados returned status {}. Exiting.'.format(status))
+                raise Exception(f'acados returned status {status}.')
 
             simX_fine[k+1,:] = acados_integrator.get("x")
             simU_fine[k, :] = u

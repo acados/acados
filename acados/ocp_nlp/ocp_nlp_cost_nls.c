@@ -744,7 +744,7 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
 
     // tmp_ny = W * res
     blasfeo_dsymv_l(ny, 1.0, &model->W, 0, 0, &memory->res, 0,
-                    0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
+                    0.0, &model->y_ref, 0, &work->tmp_ny, 0);
     // grad = Jt * tmp_ny
     blasfeo_dgemv_n(nu+nx, ny, 1.0, &memory->Jt, 0, 0, &work->tmp_ny, 0,
                     0.0, &memory->grad, 0, &memory->grad, 0);

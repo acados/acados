@@ -136,7 +136,7 @@ def main(interface_type='ctypes'):
 
     if status != 0:
         ocp_solver.print_statistics()  # encapsulates: stat = ocp_solver.get_stats("statistics")
-        raise Exception('acados returned status {}. Exiting.'.format(status))
+        raise Exception(f'acados returned status {status}.')
 
     # get solution
     for i in range(N0):
@@ -175,7 +175,7 @@ def main(interface_type='ctypes'):
 
     # if status != 0:
     #     ocp_solver.print_statistics()  # encapsulates: stat = ocp_solver.get_stats("statistics")
-    #     raise Exception('acados returned status {}. Exiting.'.format(status))
+    #     raise Exception(f'acados returned status {status}.')
 
     # # get solution
     # for i in range(N12):
@@ -212,7 +212,7 @@ def main(interface_type='ctypes'):
 
     # if status != 0:
     #     ocp_solver.print_statistics()  # encapsulates: stat = ocp_solver.get_stats("statistics")
-    #     raise Exception('acados returned status {}. Exiting.'.format(status))
+    #     raise Exception(f'acados returned status {status}.')
 
     # # get solution
     # for i in range(N12):

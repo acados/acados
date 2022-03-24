@@ -1021,6 +1021,17 @@ class AcadosOcpSolver:
         return self.status
 
 
+    def reset(self):
+        """
+        Sets current iterate to all zeros.
+        """
+        getattr(self.shared_lib, f"{self.model_name}_acados_reset").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{self.model_name}_acados_reset").restype = c_int
+        getattr(self.shared_lib, f"{self.model_name}_acados_reset")(self.capsule)
+
+        return
+
+
     def set_new_time_steps(self, new_time_steps):
         """
         Set new time steps.
@@ -1465,7 +1476,7 @@ class AcadosOcpSolver:
         Set numerical data inside the solver.
 
             :param stage: integer corresponding to shooting node
-            :param field: string in ['x', 'u', 'pi', 'lam', 't', 'p']
+            :param field: string in ['x', 'u', 'pi', 'lam', 't', 'p', 'xdot_guess', 'z_guess']
 
             .. note:: regarding lam, t: \n
                     the inequalities are internally organized in the following order: \n
@@ -1481,7 +1492,7 @@ class AcadosOcpSolver:
         cost_fields = ['y_ref', 'yref']
         constraints_fields = ['lbx', 'ubx', 'lbu', 'ubu']
         out_fields = ['x', 'u', 'pi', 'lam', 't', 'z', 'sl', 'su']
-        mem_fields = ['xdot_guess']
+        mem_fields = ['xdot_guess', 'z_guess']
 
         # cast value_ to avoid conversion issues
         if isinstance(value_, (float, int)):

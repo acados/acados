@@ -2237,7 +2237,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                 // build x1 stage values
                 for (int ii = 0; ii < num_stages; ii++)
                 {
-                    blasfeo_daxpy(nx1, 0.0, x1_stage_val, 0, x0_traj, ss * nx, x1_stage_val, nx1 * ii);
+                    blasfeo_dveccp(nx1, x0_traj, ss * nx, x1_stage_val, nx1 * ii);
                     for (int jj = 0; jj < num_stages; jj++)
                     {
                         blasfeo_daxpy(nx1, A_dt[ii + num_stages * jj], K1_val, nx1 * jj, x1_stage_val,
@@ -2298,7 +2298,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
             }
 
             /* Get simulation result */
-            blasfeo_daxpy(nx, 0.0, x0_traj, 0, x0_traj, nx * ss, x0_traj, nx * (ss + 1));
+            blasfeo_dveccp(nx, x0_traj, nx * ss, x0_traj, nx * (ss + 1));
             for (int ii = 0; ii < num_stages; ii++)
             {
                 blasfeo_daxpy(nx1, b_dt[ii], K1_val, ii * nx1, x0_traj, nx * (ss + 1), x0_traj,

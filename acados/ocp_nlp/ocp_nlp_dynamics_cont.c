@@ -104,6 +104,7 @@ void ocp_nlp_dynamics_cont_dims_initialize(void *config_, void *dims_, int nx, i
     ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
     sim_config *sim_config_ = (sim_config *) dyn_config->sim_solver;
 
+    // NOTE: this could be done just in precompute.
     sim_config_->dims_set(sim_config_, dims->sim, "nx", &nx);
     sim_config_->dims_set(sim_config_, dims->sim, "nu", &nu);
     sim_config_->dims_set(sim_config_, dims->sim, "nz", &nz);

@@ -121,7 +121,7 @@ simU = np.ndarray((N, nu))
 status = ocp_solver.solve()
 
 if status != 0:
-    raise Exception('acados returned status {}. Exiting.'.format(status))
+    raise Exception(f'acados returned status {status}.')
 
 # get solution
 for i in range(N):

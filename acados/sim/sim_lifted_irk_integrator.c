@@ -411,6 +411,8 @@ void *sim_lifted_irk_memory_assign(void *config, void *dims_, void *opts_, void 
     assign_and_advance_blasfeo_dvec_mem(nu, memory->u, &c_ptr);
     blasfeo_dvecse(nu, 0.0, memory->u, 0);
 
+    // memory->init_K = 0;
+
     // TODO(andrea): need to move this to options.
     memory->update_sens = 1;
 
@@ -429,6 +431,33 @@ int sim_lifted_irk_memory_set(void *config_, void *dims_, void *mem_, const char
 
     printf("sim_lifted_irk_memory_set field %s is not supported! \n", field);
     exit(1);
+
+    // sim_config *config = config_;
+    // sim_lifted_irk_memory *mem = (sim_lifted_irk_memory *) mem_;
+    // if (!strcmp(field, "xdot_guess"))
+    // {
+    //     int nx;
+    //     config->dims_get(config_, dims_, "nx", &nx);
+    //     double *xdot = value;
+    //     blasfeo_pack_dvec(nx, xdot, 0, &mem->K[0], 0);
+    //     mem->init_K = 1;
+    // }
+    // else if (!strcmp(field, "guesses_blasfeo"))
+    // {
+    //     int nx, nz;
+    //     config->dims_get(config_, dims_, "nx", &nx);
+    //     config->dims_get(config_, dims_, "nz", &nz);
+
+    //     struct blasfeo_dvec *sim_guess = (struct blasfeo_dvec *) value;
+    //     blasfeo_dveccp(nx+nz, sim_guess, 0, &mem->K[0], 0);
+    //     mem->init_K = 1;
+    // }
+    // else
+    // {
+    //     printf("sim_lifted_irk_memory_set field %s is not supported! \n", field);
+    //     exit(1);
+    // }
+    // return ACADOS_SUCCESS;
 }
 
 
@@ -709,6 +738,18 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
         exit(1);
     }
 
+    // if (mem->init_K)
+    // {
+    //     for (ss = 0; ss < num_steps; ss++)
+    //     {
+    //         for (ii = 0; ii < ns; ii++)
+    //         {
+    //             if (!(ii == 0 && ss == 0))
+    //                 blasfeo_dveccp(nx, &mem->K[0], 0, &mem->K[ss], ii*nx);
+    //         }
+    //     }
+    //     mem->init_K = 0;
+    // }
 
     blasfeo_dgese(nx, nx, 0.0, J_temp_x, 0, 0);
     blasfeo_dgese(nx, nx, 0.0, J_temp_xdot, 0, 0);

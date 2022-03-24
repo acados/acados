@@ -107,7 +107,7 @@ for i in range(N):
     simX[i+1,:] = acados_integrator.get("x")
 
 if status != 0:
-    raise Exception('acados returned status {}. Exiting.'.format(status))
+    raise Exception(f'acados returned status {status}.')
 
 plot_chain_position_traj(simX)
 
