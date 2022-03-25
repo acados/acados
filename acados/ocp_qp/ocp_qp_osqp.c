@@ -1210,6 +1210,11 @@ void ocp_qp_osqp_memory_get(void *config_, void *mem_, const char *field, void* 
         int *tmp_ptr = value;
         *tmp_ptr = mem->iter;
     }
+    else if (!strcmp(field, "status"))
+    {
+        int *tmp_ptr = value;
+        *tmp_ptr = mem->status;
+    }
     else
     {
         printf("\nerror: ocp_qp_osqp_memory_get: field %s not available\n", field);
@@ -1373,6 +1378,8 @@ int ocp_qp_osqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *m
     // check exit conditions
     if (osqp_status == OSQP_SOLVED) acados_status = ACADOS_SUCCESS;
     if (osqp_status == OSQP_MAX_ITER_REACHED) acados_status = ACADOS_MAXITER;
+    mem->status = acados_status;
+
     return acados_status;
 }
 

@@ -370,6 +370,11 @@ void ocp_qp_qpdunes_memory_get(void *config_, void *mem_, const char *field, voi
         int *tmp_ptr = value;
         *tmp_ptr = mem->iter;
     }
+    else if (!strcmp(field, "status"))
+    {
+        int *tmp_ptr = value;
+        *tmp_ptr = mem->status;
+    }
     else
     {
         printf("\nerror: ocp_qp_qpdunes_memory_get: field %s not available\n", field);
@@ -898,6 +903,7 @@ int ocp_qp_qpdunes(void *config_, ocp_qp_in *in, ocp_qp_out *out, void *opts_, v
         acados_status = ACADOS_QP_FAILURE;
     }
 
+    mem->status = acados_status;
     return acados_status;
 }
 

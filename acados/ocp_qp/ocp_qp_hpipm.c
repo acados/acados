@@ -235,6 +235,11 @@ void ocp_qp_hpipm_memory_get(void *config_, void *mem_, const char *field, void*
         int *tmp_ptr = value;
         *tmp_ptr = mem->iter;
     }
+    else if (!strcmp(field, "status"))
+    {
+        int *tmp_ptr = value;
+        *tmp_ptr = mem->status;
+    }
     else
     {
         printf("\nerror: ocp_qp_hpipm_memory_get: field %s not available\n", field);
@@ -290,9 +295,8 @@ int ocp_qp_hpipm(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *
     // solve ipm
     acados_tic(&qp_timer);
     // print_ocp_qp_in(qp_in);
-    int hpipm_status;
     d_ocp_qp_ipm_solve(qp_in, qp_out, opts->hpipm_opts, mem->hpipm_workspace);
-    d_ocp_qp_ipm_get_status(mem->hpipm_workspace, &hpipm_status);
+    d_ocp_qp_ipm_get_status(mem->hpipm_workspace, &mem->status);
 
     info->solve_QP_time = acados_toc(&qp_timer);
     info->interface_time = 0;  // there are no conversions for hpipm

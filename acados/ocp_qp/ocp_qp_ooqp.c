@@ -1119,18 +1119,17 @@ int ocp_qp_ooqp(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_
     // TODO(dimitris): implement dense OOQP
     // call sparse OOQP
     acados_tic(&qp_timer);
-    int ooqp_status;
     qpsolvesp(mem->c, mem->nx, mem->irowQ, mem->nnzQ, mem->jcolQ, mem->dQ, mem->xlow, mem->ixlow,
               mem->xupp, mem->ixupp, mem->irowA, mem->nnzA, mem->jcolA, mem->dA, mem->bA, mem->my,
               mem->irowC, mem->nnzC, mem->jcolC, mem->dC, mem->clow, mem->mz, mem->iclow, mem->cupp,
               mem->icupp, work->x, work->gamma, work->phi, work->y, work->z, work->lambda, work->pi,
-              &work->objectiveValue, opts->printLevel, &ooqp_status);
+              &work->objectiveValue, opts->printLevel, &mem->status);
     info->solve_QP_time = acados_toc(&qp_timer);
 
     mem->time_qp_solver_call = info->solve_QP_time;
     mem->iter = -1;
 
-    if (0) print_outputs(mem, work, ooqp_status);
+    if (0) print_outputs(mem, work, mem->status);
     acados_tic(&interface_timer);
     fill_in_qp_out(qp_in, qp_out, work);
     ocp_qp_compute_t(qp_in, qp_out);
@@ -1140,9 +1139,9 @@ int ocp_qp_ooqp(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_
     info->num_iter = -1;
     info->t_computed = 1;
 
-    int acados_status = ooqp_status;
-    if (ooqp_status == SPARSE_SUCCESSFUL_TERMINATION) acados_status = ACADOS_SUCCESS;
-    if (ooqp_status == SPARSE_MAX_ITS_EXCEEDED) acados_status = ACADOS_MAXITER;
+    int acados_status = mem->status;
+    if (mem->status == SPARSE_SUCCESSFUL_TERMINATION) acados_status = ACADOS_SUCCESS;
+    if (mem->status == SPARSE_MAX_ITS_EXCEEDED) acados_status = ACADOS_MAXITER;
     return acados_status;
 }
 

@@ -361,6 +361,10 @@ void ocp_qp_xcond_solver_memory_get(void *config_, void *mem_, const char *field
     {
         qp_solver->memory_get(qp_solver, mem->solver_memory, field, value);
     }
+    else if (!strcmp(field, "status"))
+    {
+        qp_solver->memory_get(qp_solver, mem->solver_memory, field, value);
+    }
     else if (!strcmp(field, "time_qp_xcond"))
     {
         xcond->memory_get(xcond, mem->xcond_memory, field, value);
