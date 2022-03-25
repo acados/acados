@@ -88,6 +88,8 @@ acados_size_t ocp_qp_hpipm_workspace_calculate_size(void *config, void *dims, vo
 //
 int ocp_qp_hpipm(void *config, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_);
 //
+void ocp_qp_hpipm_memory_reset(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, void *work_);
+//
 void ocp_qp_hpipm_eval_sens(void *config, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_);
 //
 void ocp_qp_hpipm_config_initialize_default(void *config);

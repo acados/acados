@@ -93,6 +93,7 @@ typedef struct ocp_nlp_config
                             char *field, int stage, int index, void *sens_nlp_out);
     // prepare memory
     int (*precompute)(void *config, void *dims, void *nlp_in, void *nlp_out, void *opts_, void *mem, void *work);
+    void (*memory_reset_qp_solver)(void *config, void *dims, void *nlp_in, void *nlp_out, void *opts_, void *mem, void *work);
     // initalize this struct with default values
     void (*config_initialize_default)(void *config);
     // general getter

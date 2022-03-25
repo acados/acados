@@ -386,6 +386,15 @@ void ocp_qp_qpdunes_memory_get(void *config_, void *mem_, const char *field, voi
 }
 
 
+void ocp_qp_qpdunes_memory_reset(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, void *work_)
+{
+    // ocp_qp_in *qp_in = qp_in_;
+    // reset memory
+    printf("acados: reset qpdunes_mem not implemented.\n");
+    exit(1);
+}
+
+
 
 static void form_H(double *H, int nx, int nu, struct blasfeo_dmat *sRSQrq)
 {
@@ -933,6 +942,7 @@ void ocp_qp_qpdunes_config_initialize_default(void *config_)
     config->memory_assign =
         (void *(*) (void *, void *, void *, void *) ) & ocp_qp_qpdunes_memory_assign;
     config->memory_get = &ocp_qp_qpdunes_memory_get;
+    config->memory_reset = &ocp_qp_qpdunes_memory_reset;
     config->workspace_calculate_size =
         (acados_size_t (*)(void *, void *, void *)) & ocp_qp_qpdunes_workspace_calculate_size;
     config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & ocp_qp_qpdunes;

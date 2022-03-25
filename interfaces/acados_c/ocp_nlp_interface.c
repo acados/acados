@@ -965,6 +965,12 @@ void ocp_nlp_solver_destroy(void *solver)
 }
 
 
+void ocp_nlp_solver_reset_qp_memory(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out)
+{
+    solver->config->memory_reset_qp_solver(solver->config, solver->dims, nlp_in, nlp_out,
+                                    solver->opts, solver->mem, solver->work);
+}
+
 
 int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out)
 {

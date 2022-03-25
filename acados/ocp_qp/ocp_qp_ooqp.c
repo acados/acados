@@ -1028,6 +1028,14 @@ void ocp_qp_ooqp_memory_get(void *config_, void *mem_, const char *field, void* 
 }
 
 
+void ocp_qp_ooqp_memory_reset(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, void *work_)
+{
+    ocp_qp_in *qp_in = qp_in_;
+    // reset memory
+    printf("acados: reset ooqp_mem not implemented.\n");
+    exit(1);
+}
+
 
 /************************************************
  * workspace
@@ -1183,4 +1191,5 @@ void ocp_qp_ooqp_config_initialize_default(void *config_)
         (size_t (*)(void *, void *, void *)) & ocp_qp_ooqp_workspace_calculate_size;
     config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & ocp_qp_ooqp;
     config->eval_sens = &ocp_qp_ooqp_eval_sens;
+    config->memory_reset = &ocp_qp_ooqp_memory_reset;
 }
