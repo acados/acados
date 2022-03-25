@@ -2085,6 +2085,7 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule)
     ocp_nlp_config* nlp_config = capsule->nlp_config;
     ocp_nlp_dims* nlp_dims = capsule->nlp_dims;
     ocp_nlp_out* nlp_out = capsule->nlp_out;
+    ocp_nlp_in* nlp_in = capsule->nlp_in;
     ocp_nlp_solver* nlp_solver = capsule->nlp_solver;
 
     int nx, nu, nv, ns, nz, ni, dim;
@@ -2113,6 +2114,17 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule)
         {%- endif %}
         }
     }
+
+{%- if solver_options.qp_solver == 'PARTIAL_CONDENSING_HPIPM' %}
+    // get qp_status: if NaN -> reset memory
+    int qp_status;
+    ocp_nlp_get(capsule->nlp_config, capsule->nlp_solver, "qp_status", &qp_status);
+    if (qp_status == 3)
+    {
+        // printf("\n\n in reset qp_status %d\n\n", qp_status);
+        ocp_nlp_solver_reset_qp_memory(nlp_solver, nlp_in, nlp_out);
+    }
+{%- endif %}
 
     free(buffer);
     return 0;
