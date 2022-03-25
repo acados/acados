@@ -943,6 +943,11 @@ void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_,
         config->qp_solver->memory_get(config->qp_solver,
             mem->nlp_mem->qp_solver_mem, "iter", return_value_);
     }
+    else if (!strcmp("qp_status", field))
+    {
+        config->qp_solver->memory_get(config->qp_solver,
+            mem->nlp_mem->qp_solver_mem, "status", return_value_);
+    }
     else if (!strcmp("res_stat", field))
     {
         double *value = return_value_;
