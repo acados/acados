@@ -457,12 +457,12 @@ cdef class AcadosOcpSolverCython:
         return out
 
 
-    def get_residuals(self):
+    def get_residuals(self, recompute=False):
         """
         Returns an array of the form [res_stat, res_eq, res_ineq, res_comp].
         """
         # compute residuals if RTI
-        if self.nlp_solver_type == 'SQP_RTI':
+        if self.nlp_solver_type == 'SQP_RTI' or recompute:
             acados_solver_common.ocp_nlp_eval_residuals(self.nlp_solver, self.nlp_in, self.nlp_out)
 
         # create output array
