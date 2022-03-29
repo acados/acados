@@ -75,6 +75,7 @@ classdef ocp_nlp_solver_options_json < handle
         globalization_use_SOC
         full_step_dual
         eps_sufficient_descent
+        hpipm_mode
 
     end
     methods
@@ -111,6 +112,7 @@ classdef ocp_nlp_solver_options_json < handle
             obj.globalization_use_SOC = 0;
             obj.full_step_dual = 0;
             obj.eps_sufficient_descent = 1e-4;
+            obj.hpipm_mode = 'BALANCE';
         end
     end
 end
