@@ -124,6 +124,11 @@ def main(interface_type='ctypes'):
         ocp_solver = AcadosOcpSolverCython(ocp.model.name, ocp.solver_options.nlp_solver_type, ocp.dims.N)
 
 
+    # test setting HPIPM options
+    ocp_solver.options_set('qp_tol_ineq', 1e-8)
+    ocp_solver.options_set('qp_tau_min', 1e-10)
+    ocp_solver.options_set('qp_mu0', 1e0)
+
     # --------------------------------------------------------------------------------
     # 0) solve the problem defined here (original from code export), analog to 'minimal_example_ocp.py'
     nvariant = 0
