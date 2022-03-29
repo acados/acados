@@ -92,15 +92,8 @@ void *dense_qp_hpipm_opts_assign(void *config_, void *dims_, void *raw_memory)
     return (void *) opts;
 }
 
-
-
-void dense_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *opts_)
+static void dense_qp_hpipm_opts_overwrite_mode_opts(dense_qp_hpipm_opts *opts)
 {
-    dense_qp_hpipm_opts *opts = opts_;
-
-//    d_dense_qp_ipm_arg_set_default(SPEED_ABS, opts->hpipm_opts);
-//    d_dense_qp_ipm_arg_set_default(SPEED, opts->hpipm_opts);
-    d_dense_qp_ipm_arg_set_default(BALANCE, opts->hpipm_opts);
     // overwrite some default options
     opts->hpipm_opts->res_g_max = 1e-6;
     opts->hpipm_opts->res_b_max = 1e-8;
@@ -110,6 +103,15 @@ void dense_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *op
     opts->hpipm_opts->stat_max = 50;
     opts->hpipm_opts->alpha_min = 1e-8;
     opts->hpipm_opts->mu0 = 1e0;
+}
+
+
+void dense_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *opts_)
+{
+    dense_qp_hpipm_opts *opts = opts_;
+
+    d_dense_qp_ipm_arg_set_default(BALANCE, opts->hpipm_opts);
+    dense_qp_hpipm_opts_overwrite_mode_opts(opts);
 
     return;
 }
@@ -124,12 +126,31 @@ void dense_qp_hpipm_opts_update(void *config_, void *dims_, void *opts_)
 }
 
 
-
 void dense_qp_hpipm_opts_set(void *config_, void *opts_, const char *field, void *value)
 {
     dense_qp_hpipm_opts *opts = opts_;
 
-    d_dense_qp_ipm_arg_set((char *) field, value, opts->hpipm_opts);
+    const char *mode;
+    if (!strcmp(field, "hpipm_mode"))
+    {
+        mode = (const char *) value;
+        if (!strcmp(mode, "BALANCE"))
+            d_dense_qp_ipm_arg_set_default(BALANCE, opts->hpipm_opts);
+        else if (!strcmp(mode, "SPEED"))
+            d_dense_qp_ipm_arg_set_default(SPEED, opts->hpipm_opts);
+        else if (!strcmp(mode, "SPEED_ABS"))
+            d_dense_qp_ipm_arg_set_default(SPEED_ABS, opts->hpipm_opts);
+        else if (!strcmp(mode, "ROBUST"))
+            d_dense_qp_ipm_arg_set_default(ROBUST, opts->hpipm_opts);
+
+        dense_qp_hpipm_opts_overwrite_mode_opts(opts);
+
+    }
+    else
+    {
+        d_dense_qp_ipm_arg_set((char *) field, value, opts->hpipm_opts);
+    }
+
 
     return;
 }
