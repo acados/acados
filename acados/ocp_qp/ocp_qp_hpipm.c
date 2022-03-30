@@ -96,14 +96,8 @@ void *ocp_qp_hpipm_opts_assign(void *config_, void *dims_, void *raw_memory)
 }
 
 
-
-void ocp_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *opts_)
+static void ocp_qp_hpipm_opts_overwrite_mode_opts(ocp_qp_hpipm_opts *opts)
 {
-    // ocp_qp_dims *dims = dims_;
-    ocp_qp_hpipm_opts *opts = opts_;
-
-//    d_ocp_qp_ipm_arg_set_default(SPEED, opts->hpipm_opts);
-    d_ocp_qp_ipm_arg_set_default(BALANCE, opts->hpipm_opts);
     // overwrite some default options
     opts->hpipm_opts->res_g_max = 1e-6;
     opts->hpipm_opts->res_b_max = 1e-8;
@@ -114,6 +108,18 @@ void ocp_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *opts
     opts->hpipm_opts->alpha_min = 1e-8;
     opts->hpipm_opts->mu0 = 1e0;
     opts->hpipm_opts->var_init_scheme = 1;
+}
+
+
+void ocp_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *opts_)
+{
+    // ocp_qp_dims *dims = dims_;
+    ocp_qp_hpipm_opts *opts = opts_;
+
+//    d_ocp_qp_ipm_arg_set_default(SPEED, opts->hpipm_opts);
+    d_ocp_qp_ipm_arg_set_default(BALANCE, opts->hpipm_opts);
+
+    ocp_qp_hpipm_opts_overwrite_mode_opts(opts);
 
     return;
 }
@@ -133,7 +139,26 @@ void ocp_qp_hpipm_opts_set(void *config_, void *opts_, const char *field, void *
 {
     ocp_qp_hpipm_opts *opts = opts_;
 
-    d_ocp_qp_ipm_arg_set((char *) field, value, opts->hpipm_opts);
+    const char *mode;
+    if (!strcmp(field, "hpipm_mode"))
+    {
+        mode = (const char *) value;
+        if (!strcmp(mode, "BALANCE"))
+            d_ocp_qp_ipm_arg_set_default(BALANCE, opts->hpipm_opts);
+        else if (!strcmp(mode, "SPEED"))
+            d_ocp_qp_ipm_arg_set_default(SPEED, opts->hpipm_opts);
+        else if (!strcmp(mode, "SPEED_ABS"))
+            d_ocp_qp_ipm_arg_set_default(SPEED_ABS, opts->hpipm_opts);
+        else if (!strcmp(mode, "ROBUST"))
+            d_ocp_qp_ipm_arg_set_default(ROBUST, opts->hpipm_opts);
+
+        ocp_qp_hpipm_opts_overwrite_mode_opts(opts);
+
+    }
+    else
+    {
+        d_ocp_qp_ipm_arg_set((char *) field, value, opts->hpipm_opts);
+    }
 
     return;
 }

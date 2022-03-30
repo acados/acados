@@ -1862,6 +1862,11 @@ void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* 
 {%- endif %}
 
 
+{%- if solver_options.qp_solver is containing("HPIPM") %}
+    // set HPIPM mode: should be done before setting other QP solver options
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_hpipm_mode", "{{ solver_options.hpipm_mode }}");
+{%- endif %}
+
 {% if solver_options.nlp_solver_type == "SQP" %}
     // set SQP specific options
     double nlp_solver_tol_stat = {{ solver_options.nlp_solver_tol_stat }};
@@ -2110,6 +2115,7 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule)
     }
 
     free(buffer);
+    return 0;
 }
 
 

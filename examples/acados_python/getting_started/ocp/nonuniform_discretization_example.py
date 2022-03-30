@@ -128,6 +128,7 @@ def main(discretization='shooting_nodes'):
     ocp.constraints.idxbu = np.array([0])
 
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
+    ocp.solver_options.hpipm_mode = 'ROBUST'
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = integrator_type
     ocp.solver_options.print_level = 0
