@@ -980,8 +980,6 @@ int main()
 
     for (int rep = 0; rep < NREP; rep++)
     {
-        // TODO(oj): @giaf how should this be done? using the ocp_nlp_out_set()
-        //    seems unintuitive for warmstarting
         // warm start output initial guess of solution
         for (int i=0; i<=NN; i++)
         {
