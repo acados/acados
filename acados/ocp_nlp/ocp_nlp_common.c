@@ -2792,6 +2792,8 @@ acados_size_t ocp_nlp_res_calculate_size(ocp_nlp_dims *dims)
     size += 1 * blasfeo_memsize_dvec(nv[N]);      // res_stat
     size += 2 * blasfeo_memsize_dvec(2 * ni[N]);  // res_ineq res_comp
 
+    size += 1 * blasfeo_memsize_dvec(N);      // tmp
+
     size += 8;   // initial align
     size += 8;   // blasfeo_struct align
     size += 64;  // blasfeo_mem align
@@ -2856,7 +2858,11 @@ ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory)
         assign_and_advance_blasfeo_dvec_mem(2 * ni[i], res->res_comp + i, &c_ptr);
     }
 
+    assign_and_advance_blasfeo_dvec_mem(N, &res->tmp, &c_ptr);
+
     res->memsize = ocp_nlp_res_calculate_size(dims);
+
+    assert((char *) raw_memory + res->memsize >= c_ptr);
 
     return res;
 }
@@ -2876,7 +2882,6 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
     double tmp_res;
 
     // res_stat
-    res->inf_norm_res_stat = 0.0;
     for (int i = 0; i <= N; i++)
     {
         blasfeo_daxpy(nv[i], -1.0, mem->ineq_adj + i, 0, mem->cost_grad + i, 0, res->res_stat + i,
@@ -2884,17 +2889,18 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
         blasfeo_daxpy(nu[i] + nx[i], -1.0, mem->dyn_adj + i, 0, res->res_stat + i, 0,
                       res->res_stat + i, 0);
         blasfeo_dvecnrm_inf(nv[i], res->res_stat + i, 0, &tmp_res);
-        res->inf_norm_res_stat = tmp_res > res->inf_norm_res_stat ? tmp_res : res->inf_norm_res_stat;
+        blasfeo_dvecse(1, tmp_res, &res->tmp, i);
     }
+    blasfeo_dvecnrm_inf(N+1, &res->tmp, 0, &res->inf_norm_res_stat);
 
     // res_eq
-    res->inf_norm_res_eq = 0.0;
     for (int i = 0; i < N; i++)
     {
         blasfeo_dveccp(nx[i + 1], mem->dyn_fun + i, 0, res->res_eq + i, 0);
         blasfeo_dvecnrm_inf(nx[i + 1], res->res_eq + i, 0, &tmp_res);
-        res->inf_norm_res_eq = tmp_res > res->inf_norm_res_eq ? tmp_res : res->inf_norm_res_eq;
+        blasfeo_dvecse(1, tmp_res, &res->tmp, i);
     }
+    blasfeo_dvecnrm_inf(N, &res->tmp, 0, &res->inf_norm_res_eq);
 
     // res_ineq
     res->inf_norm_res_ineq = 0.0;
@@ -2902,8 +2908,9 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
     {
         blasfeo_daxpy(2 * ni[i], 1.0, out->t + i, 0, mem->ineq_fun + i, 0, res->res_ineq + i, 0);
         blasfeo_dvecnrm_inf(2 * ni[i], res->res_ineq + i, 0, &tmp_res);
-        res->inf_norm_res_ineq = tmp_res > res->inf_norm_res_ineq ? tmp_res : res->inf_norm_res_ineq;
+        blasfeo_dvecse(1, tmp_res, &res->tmp, i);
     }
+    blasfeo_dvecnrm_inf(N+1, &res->tmp, 0, &res->inf_norm_res_ineq);
 
     // res_comp
     res->inf_norm_res_comp = 0.0;
@@ -2911,8 +2918,10 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
     {
         blasfeo_dvecmul(2 * ni[i], out->lam + i, 0, out->t + i, 0, res->res_comp + i, 0);
         blasfeo_dvecnrm_inf(2 * ni[i], res->res_comp + i, 0, &tmp_res);
-        res->inf_norm_res_comp = tmp_res > res->inf_norm_res_comp ? tmp_res : res->inf_norm_res_comp;
+        blasfeo_dvecse(1, tmp_res, &res->tmp, i);
     }
+    blasfeo_dvecnrm_inf(N+1, &res->tmp, 0, &res->inf_norm_res_comp);
+
 
     // printf("computed residuals stat: %e, eq: %e, ineq: %e, comp: %e\n", res->inf_norm_res_stat, res->inf_norm_res_eq,
     //        res->inf_norm_res_ineq, res->inf_norm_res_comp);
