@@ -138,7 +138,7 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
     ocp_solver = AcadosOcpSolver.create_cython_solver('acados_ocp.json')
 
     # time create
-    Ncreate = 10000
+    Ncreate = 1
     create_time = []
     for i in range(Ncreate):
         t0 = time.time()
@@ -149,22 +149,22 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
     print(f"create_time: min {np.min(create_time)*1e3:.4f} ms mean {np.mean(create_time)*1e3:.4f} ms max {np.max(create_time)*1e3:.4f} ms over {Ncreate} executions")
     # create_time: min 0.2189 ms mean 0.2586 ms max 0.6881 ms over 10000 executions
 
-    # set NaNs as input to test reset() -> NOT RECOMMENDED!!!
-    # ocp_solver.options_set('print_level', 2)
-    for i in range(N):
-        ocp_solver.set(i, 'x', np.NaN * np.ones((nx,)))
-        ocp_solver.set(i, 'u', np.NaN * np.ones((nu,)))
-    status = ocp_solver.solve()
-    ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
-    if status == 0:
-        raise Exception(f'acados returned status {status}, although NaNs were given.')
-    else:
-        print(f'acados returned status {status}, which is expected, since NaNs were given.')
-
     # RESET
-    Nreset = 10000
+    Nreset = 3
     reset_time = []
     for i in range(Nreset):
+        # set NaNs as input to test reset() -> NOT RECOMMENDED!!!
+        # ocp_solver.options_set('print_level', 2)
+        for i in range(N):
+            ocp_solver.set(i, 'x', np.NaN * np.ones((nx,)))
+            ocp_solver.set(i, 'u', np.NaN * np.ones((nu,)))
+        status = ocp_solver.solve()
+        ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
+        if status == 0:
+            raise Exception(f'acados returned status {status}, although NaNs were given.')
+        else:
+            print(f'acados returned status {status}, which is expected, since NaNs were given.')
+
         t0 = time.time()
         ocp_solver.reset()
         reset_time.append( time.time() - t0)
