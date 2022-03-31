@@ -765,6 +765,13 @@ void dense_qp_qpoases_eval_sens(void *config_, void *qp_in, void *qp_out, void *
 }
 
 
+// void dense_qp_qpoases_memory_reset(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_,
+//                      void *memory_, void *work_)
+// {
+//     printf("\nerror: dense_qp_qpoases_memory_reset: not implemented yet\n");
+//     // exit(1);
+// }
+
 
 void dense_qp_qpoases_config_initialize_default(void *config_)
 {
@@ -784,6 +791,7 @@ void dense_qp_qpoases_config_initialize_default(void *config_)
     config->workspace_calculate_size =
         (acados_size_t (*)(void *, void *, void *)) & dense_qp_qpoases_workspace_calculate_size;
     config->eval_sens = &dense_qp_qpoases_eval_sens;
+    // config->memory_reset = &dense_qp_qpoases_memory_reset;
     config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & dense_qp_qpoases;
 
     return;

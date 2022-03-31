@@ -360,6 +360,16 @@ ACADOS_SYMBOL_EXPORT void ocp_nlp_solver_destroy(void *solver);
 /// \param nlp_out The output struct.
 ACADOS_SYMBOL_EXPORT int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out);
 
+
+
+/// Resets the memory of the QP solver
+///
+/// \param solver The solver struct.
+/// \param nlp_in The inputs struct.
+/// \param nlp_out The output struct.
+ACADOS_SYMBOL_EXPORT void ocp_nlp_solver_reset_qp_memory(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out);
+
+
 /// Performs precomputations for the solver. Needs to be called before
 /// ocl_nlp_solve (TBC).
 ///

@@ -343,6 +343,27 @@ void *ocp_qp_xcond_solver_memory_assign(void *config_, ocp_qp_xcond_solver_dims 
 
 
 
+void ocp_qp_xcond_solver_memory_reset(void *config_, ocp_qp_xcond_solver_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
+                                     void *opts_, void *mem_, void *work_)
+{
+    // cast data structures
+    ocp_qp_xcond_solver_config *config = config_;
+    qp_solver_config *qp_solver = config->qp_solver;
+    ocp_qp_xcond_config *xcond = config->xcond;
+    ocp_qp_xcond_solver_opts *opts = opts_;
+    ocp_qp_xcond_solver_memory *mem = mem_;
+    // ocp_qp_xcond_solver_workspace *work = work_;
+
+    void *xcond_qp_dims;
+    xcond->dims_get(xcond, dims->xcond_dims, "xcond_dims", &xcond_qp_dims);
+
+    mem->solver_memory = qp_solver->memory_assign(qp_solver, xcond_qp_dims, opts->qp_solver_opts, mem->solver_memory);
+
+    return;
+}
+
+
+
 void ocp_qp_xcond_solver_memory_get(void *config_, void *mem_, const char *field, void* value)
 {
     ocp_qp_xcond_solver_config *config = config_;
@@ -358,6 +379,10 @@ void ocp_qp_xcond_solver_memory_get(void *config_, void *mem_, const char *field
         qp_solver->memory_get(qp_solver, mem->solver_memory, field, value);
     }
     else if (!strcmp(field, "iter"))
+    {
+        qp_solver->memory_get(qp_solver, mem->solver_memory, field, value);
+    }
+    else if (!strcmp(field, "status"))
     {
         qp_solver->memory_get(qp_solver, mem->solver_memory, field, value);
     }
@@ -551,6 +576,7 @@ void ocp_qp_xcond_solver_config_initialize_default(void *config_)
     config->memory_calculate_size = &ocp_qp_xcond_solver_memory_calculate_size;
     config->memory_assign = &ocp_qp_xcond_solver_memory_assign;
     config->memory_get = &ocp_qp_xcond_solver_memory_get;
+    config->memory_reset = &ocp_qp_xcond_solver_memory_reset;
     config->workspace_calculate_size = &ocp_qp_xcond_solver_workspace_calculate_size;
     config->evaluate = &ocp_qp_xcond_solver;
     config->eval_sens = &ocp_qp_xcond_solver_eval_sens;

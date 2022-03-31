@@ -1197,7 +1197,7 @@ void *ocp_qp_osqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
 
 void ocp_qp_osqp_memory_get(void *config_, void *mem_, const char *field, void* value)
 {
-    qp_solver_config *config = config_;
+    // qp_solver_config *config = config_;
     ocp_qp_osqp_memory *mem = mem_;
 
     if(!strcmp(field, "time_qp_solver_call"))
@@ -1210,6 +1210,11 @@ void ocp_qp_osqp_memory_get(void *config_, void *mem_, const char *field, void* 
         int *tmp_ptr = value;
         *tmp_ptr = mem->iter;
     }
+    else if (!strcmp(field, "status"))
+    {
+        int *tmp_ptr = value;
+        *tmp_ptr = mem->status;
+    }
     else
     {
         printf("\nerror: ocp_qp_osqp_memory_get: field %s not available\n", field);
@@ -1218,6 +1223,15 @@ void ocp_qp_osqp_memory_get(void *config_, void *mem_, const char *field, void* 
 
     return;
 
+}
+
+
+void ocp_qp_osqp_memory_reset(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, void *work_)
+{
+    // ocp_qp_in *qp_in = qp_in_;
+    // reset memory
+    printf("acados: reset osqp_mem not implemented.\n");
+    exit(1);
 }
 
 
@@ -1373,6 +1387,8 @@ int ocp_qp_osqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *m
     // check exit conditions
     if (osqp_status == OSQP_SOLVED) acados_status = ACADOS_SUCCESS;
     if (osqp_status == OSQP_MAX_ITER_REACHED) acados_status = ACADOS_MAXITER;
+    mem->status = acados_status;
+
     return acados_status;
 }
 
@@ -1401,6 +1417,7 @@ void ocp_qp_osqp_config_initialize_default(void *config_)
     config->workspace_calculate_size = &ocp_qp_osqp_workspace_calculate_size;
     config->evaluate = &ocp_qp_osqp;
     config->eval_sens = &ocp_qp_osqp_eval_sens;
+    config->memory_reset = &ocp_qp_osqp_memory_reset;
 
     return;
 }

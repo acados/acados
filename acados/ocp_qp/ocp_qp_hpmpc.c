@@ -344,6 +344,11 @@ void ocp_qp_hpmpc_memory_get(void *config_, void *mem_, const char *field, void*
         int *tmp_ptr = value;
         *tmp_ptr = mem->iter;
     }
+    else if (!strcmp(field, "status"))
+    {
+        int *tmp_ptr = value;
+        *tmp_ptr = mem->status;
+    }
     else
     {
         printf("\nerror: ocp_qp_hpipm_memory_get: field %s not available\n", field);
@@ -352,6 +357,14 @@ void ocp_qp_hpmpc_memory_get(void *config_, void *mem_, const char *field, void*
 
     return;
 
+}
+
+void ocp_qp_hpmpc_memory_reset(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, void *work_)
+{
+    ocp_qp_in *qp_in = qp_in_;
+    // reset memory
+    printf("acados: reset hpmpc_mem not implemented.\n");
+    exit(1);
 }
 
 
@@ -472,7 +485,7 @@ int ocp_qp_hpmpc(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *
         qp_out->ux[M].pa += nuM;
 
         // IPM at the beginning
-        hpmpc_status = d_ip2_res_mpc_hard_libstr(
+        mem->status = d_ip2_res_mpc_hard_libstr(
             &kk, k_max, mu0, mu_tol, hpmpc_args->alpha_min, warm_start, mem->stats, M, nx, nu, nb,
             qp_in->idxb, ng, qp_in->BAbt, qp_in->RSQrq, qp_in->DCt, qp_in->d, qp_out->ux,
             compute_mult, mem->hpi, qp_out->lam, mem->t0,
@@ -516,7 +529,7 @@ int ocp_qp_hpmpc(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *
     else
     {
         // IPM at the beginning
-        hpmpc_status = d_ip2_res_mpc_hard_libstr(
+        mem->status = d_ip2_res_mpc_hard_libstr(
             &kk, k_max, mu0, mu_tol, hpmpc_args->alpha_min, warm_start, mem->stats, N, nx, nu, nb,
             qp_in->idxb, ng, qp_in->BAbt, qp_in->RSQrq, qp_in->DCt, qp_in->d, qp_out->ux,
             compute_mult, mem->hpi, qp_out->lam, qp_out->t,
@@ -545,10 +558,10 @@ int ocp_qp_hpmpc(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *
     info->total_time = acados_toc(&tot_timer);
     info->num_iter = kk;
 
-    int acados_status = hpmpc_status;
-    if (hpmpc_status == 0) acados_status = ACADOS_SUCCESS;
-    if (hpmpc_status == 1) acados_status = ACADOS_MAXITER;
-    if (hpmpc_status == 2) acados_status = ACADOS_MINSTEP;
+    int acados_status = mem->status;
+    if (mem->status == 0) acados_status = ACADOS_SUCCESS;
+    if (mem->status == 1) acados_status = ACADOS_MAXITER;
+    if (mem->status == 2) acados_status = ACADOS_MINSTEP;
 
     return acados_status;
 }
@@ -583,6 +596,7 @@ void ocp_qp_hpmpc_config_initialize_default(void *config_)
         (size_t (*)(void *, void *, void *)) & ocp_qp_hpmpc_workspace_calculate_size;
     config->evaluate = &ocp_qp_hpmpc;
     config->eval_sens = &ocp_qp_hpmpc_eval_sens;
+    config->memory_reset = &ocp_qp_hpmpc_memory_reset;
 
     return;
 }
