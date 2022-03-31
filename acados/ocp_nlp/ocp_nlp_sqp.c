@@ -577,6 +577,20 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
             return mem->status;
         }
+        // check for nans
+        else if (isnan(nlp_res->inf_norm_res_stat) || isnan(nlp_res->inf_norm_res_eq) ||
+             isnan(nlp_res->inf_norm_res_ineq) || isnan(nlp_res->inf_norm_res_comp))
+        {
+#if defined(ACADOS_WITH_OPENMP)
+            // restore number of threads
+            omp_set_num_threads(num_threads_bkp);
+#endif
+            mem->status = ACADOS_FAILURE;
+            mem->sqp_iter = sqp_iter;
+            mem->time_tot = acados_toc(&timer0);
+
+            return mem->status;
+        }
 
         // regularize Hessian
         acados_tic(&timer1);
