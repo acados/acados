@@ -133,7 +133,11 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
     ocp.solver_options.ext_cost_num_hess = ext_cost_use_num_hess
 
     # create solver
-    ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
+    AcadosOcpSolver.generate(ocp, json_file='acados_ocp.json')
+    AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
+    ocp_solver = AcadosOcpSolver.create_cython_solver('acados_ocp.json')
+
+    # time create
     Ncreate = 10000
     create_time = []
     for i in range(Ncreate):
@@ -142,7 +146,8 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
         from c_generated_code.acados_ocp_solver_pyx import AcadosOcpSolverCython
         ocp_solver = AcadosOcpSolverCython(ocp.model.name, ocp.solver_options.nlp_solver_type, ocp.dims.N)
         create_time.append( time.time() - t0)
-    print(f"create_time: min {np.min(create_time)*1e3:.4f} ms mean {np.mean(create_time)*1e3:.4f} ms max {np.max(create_time)*1e3:.4f} ms")
+    print(f"create_time: min {np.min(create_time)*1e3:.4f} ms mean {np.mean(create_time)*1e3:.4f} ms max {np.max(create_time)*1e3:.4f} ms over {Ncreate} executions")
+    # create_time: min 0.2189 ms mean 0.2586 ms max 0.6881 ms over 10000 executions
 
     # set NaNs as input to test reset() -> NOT RECOMMENDED!!!
     # ocp_solver.options_set('print_level', 2)
@@ -165,11 +170,11 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
         reset_time.append( time.time() - t0)
     print(f"reset_time: min {np.min(reset_time)*1e3:.4f} ms mean {np.mean(reset_time)*1e3:.4f} ms max {np.max(reset_time)*1e3:.4f} ms over {Nreset} executions")
 
-    # without HPIPM mem reset:
+    # OLD: without HPIPM mem reset:
     # reset_time: min 0.0019 ms mean 0.0022 ms max 0.0250 ms over 10000 executions
 
-    # with HPIPM mem reset:
-    # reset_time: min 0.0038 ms mean 0.0042 ms max 0.0303 ms over 10000 executions
+    # NEW: with HPIPM mem reset:
+    # reset_time: min 0.0036 ms mean 0.0047 ms max 0.0906 ms over 10000 executions
 
     for i in range(N):
         ocp_solver.set(i, 'x', x0)
