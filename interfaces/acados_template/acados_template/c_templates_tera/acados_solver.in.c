@@ -2121,7 +2121,7 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule)
     ocp_nlp_get(capsule->nlp_config, capsule->nlp_solver, "qp_status", &qp_status);
     if (qp_status == 3)
     {
-        // printf("\n\n in reset qp_status %d\n\n", qp_status);
+        // printf("\nin reset qp_status %d -> resetting QP memory\n", qp_status);
         ocp_nlp_solver_reset_qp_memory(nlp_solver, nlp_in, nlp_out);
     }
 {%- endif %}
