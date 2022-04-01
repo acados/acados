@@ -718,8 +718,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         {
             // NOTE: following Waechter2006:
             // Do SOC
-            // 1.if "the first trial step size alpha_k,0 has been rejected and
+            // 1. if "the first trial step size alpha_k,0 has been rejected and
             // 2. if the infeasibility would have increased when accepting the previous step
+            // NOTE: the "and" is interpreted as an "or" in the current implementation
 
             // preliminary line search
             alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1);
