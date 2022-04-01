@@ -1,9 +1,23 @@
-# Memory management in acados:
-Guidelines on how memory should be assigned for an `acados` structure `astruct`.
+# Developer Guide
+
+This page contains additional information for people who want to extend `acados`.
+
+## Contributions
+are handled via Pull Requests (PR) on Github
+- Fork the project
+- Push your changes to your fork
+- Open a pull request https://github.com/acados/acados
+- Describe what you changed and why.
+- Rather make minimal changes
+- Rather more commits than less
+
+
+## Memory management in `acados`
+The following are guidelines on how memory should be assigned for an `acados` structure `astruct`.
 
 There are two functions: `astruct_calculate_size()`, `astruct_assign()`.
 
-## `astruct_calculate_size()`
+### `astruct_calculate_size()`
 Must return a multiple of 8 to keep the pointer aligned to 8 bytes when allocating substructures.
 Thus, it should end with:
 ```
@@ -11,7 +25,7 @@ Thus, it should end with:
 ```
 
 
-## `astruct_assign()`
+### `astruct_assign()`
 Should assign its members in the following order:
 
 - Align to 8 bytes, i.e.:
@@ -42,7 +56,7 @@ Should assign its members in the following order:
 ```
 
 - Note:
-    - since calculate_size returns multiple of 8, c_ptr is still aligned to 8 bytes.
+    - since calculate_size returns multiple of 8, `c_ptr` is still aligned to 8 bytes.
     - `blasfeo_dmat_structs`, `blasfeo_dvec_structs` can be seen as "substructures" here.
 
 
@@ -80,4 +94,4 @@ Should assign its members in the following order:
 ```
 
 - Align c_ptr to 8 byte here for nested assigns, see "substructures"
-   - relevant if no blasfeo_mems are in `astruct`
+   - relevant if no `blasfeo_mems` are in `astruct`

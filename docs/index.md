@@ -29,6 +29,7 @@ Documentation latest build: |today|
    faq/index
    embedded_workflow/index
    list_of_projects/index
+   developer_guide/index
    citing/index
 ```
 
