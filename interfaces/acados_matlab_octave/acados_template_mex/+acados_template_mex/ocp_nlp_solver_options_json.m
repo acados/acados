@@ -76,6 +76,8 @@ classdef ocp_nlp_solver_options_json < handle
         full_step_dual
         eps_sufficient_descent
         hpipm_mode
+        qp_solver_ric_alg
+        qp_solver_cond_ric_alg
 
     end
     methods
@@ -111,6 +113,8 @@ classdef ocp_nlp_solver_options_json < handle
             obj.line_search_use_sufficient_descent = 0;
             obj.globalization_use_SOC = 0;
             obj.full_step_dual = 0;
+            obj.qp_solver_cond_ric_alg = 0;
+            obj.qp_solver_ric_alg = 0;
             obj.eps_sufficient_descent = 1e-4;
             obj.hpipm_mode = 'BALANCE';
         end

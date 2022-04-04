@@ -92,6 +92,8 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     ocp_json.solver_options.globalization_use_SOC = obj.opts_struct.globalization_use_SOC;
     ocp_json.solver_options.full_step_dual = obj.opts_struct.full_step_dual;
     ocp_json.solver_options.eps_sufficient_descent = obj.opts_struct.eps_sufficient_descent;
+    ocp_json.solver_options.qp_solver_ric_alg = obj.opts_struct.qp_solver_ric_alg;
+    ocp_json.solver_options.qp_solver_cond_ric_alg = obj.opts_struct.qp_solver_cond_ric_alg;
     if isfield(obj.opts_struct, 'qp_solver_cond_N')
         ocp_json.solver_options.qp_solver_cond_N = obj.opts_struct.qp_solver_cond_N;
     else

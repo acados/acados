@@ -2132,6 +2132,8 @@ class AcadosOcpOptions:
         self.__qp_solver_iter_max = 50                        # QP solver max iter
         self.__qp_solver_cond_N = None                        # QP solver: new horizon after partial condensing
         self.__qp_solver_warm_start = 0
+        self.__qp_solver_cond_ric_alg = 0
+        self.__qp_solver_ric_alg = 0
         self.__nlp_solver_tol_stat = 1e-6                     # NLP solver stationarity tolerance
         self.__nlp_solver_tol_eq   = 1e-6                     # NLP solver equality tolerance
         self.__nlp_solver_tol_ineq = 1e-6                     # NLP solver inequality
@@ -2331,6 +2333,35 @@ class AcadosOcpOptions:
         """QP solver: Warm starting.
         0: no warm start; 1: warm start; 2: hot start."""
         return self.__qp_solver_warm_start
+
+    @property
+    def qp_solver_cond_ric_alg(self):
+        """
+        QP solver: Determines which algorithm is used in HPIPM condensing.
+        0: dont factorize hessian in the condensing; 1: factorize.
+        Default: 0
+        """
+        return self.__qp_solver_cond_ric_alg
+
+    @property
+    def qp_solver_ric_alg(self):
+        """
+        QP solver: Determines which algorithm is used in HPIPM OCP QP solver.
+        0 classical Riccati, 1 square-root Riccati.
+
+        Note: taken from [HPIPM paper]:
+
+        (a) the classical implementation requires the reduced Hessian with respect to the dynamics
+            equality constraints to be positive definite, but allows the full-space Hessian to be indefinite)
+        (b) the square-root implementation, which in order to reduce the flop count employs the Cholesky
+            factorization of the Riccati recursion matrix, and therefore requires the full-space Hessian to be positive definite
+
+        [HPIPM paper]: HPIPM: a high-performance quadratic programming framework for model predictive control, Frison and Diehl, 2020
+        https://cdn.syscop.de/publications/Frison2020a.pdf
+
+        Default: 0
+        """
+        return self.__qp_solver_ric_alg
 
     @property
     def qp_solver_iter_max(self):
@@ -2721,6 +2752,21 @@ class AcadosOcpOptions:
             self.__qp_solver_iter_max = qp_solver_iter_max
         else:
             raise Exception('Invalid qp_solver_iter_max value. qp_solver_iter_max must be a positive int. Exiting')
+
+    @qp_solver_ric_alg.setter
+    def qp_solver_ric_alg(self, qp_solver_ric_alg):
+        if qp_solver_ric_alg in [0, 1]:
+            self.__qp_solver_ric_alg = qp_solver_ric_alg
+        else:
+            raise Exception(f'Invalid qp_solver_ric_alg value. qp_solver_ric_alg must be in [0, 1], got {qp_solver_ric_alg}.')
+
+    @qp_solver_cond_ric_alg.setter
+    def qp_solver_cond_ric_alg(self, qp_solver_cond_ric_alg):
+        if qp_solver_cond_ric_alg in [0, 1]:
+            self.__qp_solver_cond_ric_alg = qp_solver_cond_ric_alg
+        else:
+            raise Exception(f'Invalid qp_solver_cond_ric_alg value. qp_solver_cond_ric_alg must be in [0, 1], got {qp_solver_cond_ric_alg}.')
+
 
     @qp_solver_cond_N.setter
     def qp_solver_cond_N(self, qp_solver_cond_N):

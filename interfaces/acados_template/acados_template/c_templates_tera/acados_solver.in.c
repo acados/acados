@@ -1920,6 +1920,15 @@ void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* 
     int print_level = {{ solver_options.print_level }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "print_level", &print_level);
 
+{%- if solver_options.qp_solver is containing('PARTIAL_CONDENSING') %}
+    int qp_solver_cond_ric_alg = {{ solver_options.qp_solver_cond_ric_alg }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_cond_ric_alg", &qp_solver_cond_ric_alg);
+{% endif %}
+
+{%- if solver_options.qp_solver  == 'PARTIAL_CONDENSING_HPIPM' %}
+    int qp_solver_ric_alg = {{ solver_options.qp_solver_ric_alg }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_ric_alg", &qp_solver_ric_alg);
+{% endif %}
 
     int ext_cost_num_hess = {{ solver_options.ext_cost_num_hess }};
 {%- if cost.cost_type == "EXTERNAL" %}
