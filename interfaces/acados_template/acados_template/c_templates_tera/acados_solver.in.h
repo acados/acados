@@ -160,7 +160,9 @@ typedef struct {{ model.name }}_solver_capsule
 {% elif constraints.constr_type == "BGH" and dims.nh > 0 %}
     external_function_param_casadi *nl_constr_h_fun_jac;
     external_function_param_casadi *nl_constr_h_fun;
+{%- if solver_options.hessian_approx == "EXACT" %}
     external_function_param_casadi *nl_constr_h_fun_jac_hess;
+{%- endif %}
 {%- endif %}
 
 
@@ -169,7 +171,9 @@ typedef struct {{ model.name }}_solver_capsule
 {% elif constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
     external_function_param_casadi nl_constr_h_e_fun_jac;
     external_function_param_casadi nl_constr_h_e_fun;
+{%- if solver_options.hessian_approx == "EXACT" %}
     external_function_param_casadi nl_constr_h_e_fun_jac_hess;
+{%- endif %}
 {%- endif %}
 
 } {{ model.name }}_solver_capsule;
