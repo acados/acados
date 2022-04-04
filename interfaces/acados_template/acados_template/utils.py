@@ -220,7 +220,7 @@ def render_template(in_file, out_file, template_dir, json_path):
 
     status = os.system(os_cmd)
     if (status != 0):
-        raise Exception(f'Rendering of {in_file} failed!\n\nAttempted to execute OS command:\n{os_cmd}\n\nExiting.\n')
+        raise Exception(f'Rendering of {in_file} failed!\n\nAttempted to execute OS command:\n{os_cmd}\n.\n')
 
     os.chdir(cwd)
 
@@ -324,9 +324,9 @@ def J_to_idx(J):
         this_idx = np.nonzero(J[i,:])[0]
         if len(this_idx) != 1:
             raise Exception('Invalid J matrix structure detected, ' \
-                'must contain one nonzero element per row. Exiting.')
+                'must contain one nonzero element per row.')
         if this_idx.size > 0 and J[i,this_idx[0]] != 1:
-            raise Exception('J matrices can only contain 1s. Exiting.')
+            raise Exception('J matrices can only contain 1s.')
         idx[i] = this_idx[0]
     return idx
 
@@ -342,7 +342,7 @@ def J_to_idx_slack(J):
             idx[i_idx] = i
             i_idx = i_idx + 1
         elif len(this_idx) > 1:
-            raise Exception('J_to_idx_slack: Invalid J matrix. Exiting. ' \
+            raise Exception('J_to_idx_slack: Invalid J matrix. ' \
                 'Found more than one nonzero in row ' + str(i))
         if this_idx.size > 0 and J[i,this_idx[0]] != 1:
             raise Exception('J_to_idx_slack: J matrices can only contain 1s, ' \

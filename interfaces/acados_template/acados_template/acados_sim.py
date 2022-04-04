@@ -73,28 +73,28 @@ class AcadosSimDims:
         if isinstance(nx, int) and nx > 0:
             self.__nx = nx
         else:
-            raise Exception('Invalid nx value, expected positive integer. Exiting.')
+            raise Exception('Invalid nx value, expected positive integer.')
 
     @nz.setter
     def nz(self, nz):
         if isinstance(nz, int) and nz > -1:
             self.__nz = nz
         else:
-            raise Exception('Invalid nz value, expected nonnegative integer. Exiting.')
+            raise Exception('Invalid nz value, expected nonnegative integer.')
 
     @nu.setter
     def nu(self, nu):
         if isinstance(nu, int) and nu > -1:
             self.__nu = nu
         else:
-            raise Exception('Invalid nu value, expected nonnegative integer. Exiting.')
+            raise Exception('Invalid nu value, expected nonnegative integer.')
 
     @np.setter
     def np(self, np):
         if isinstance(np, int) and np > -1:
             self.__np = np
         else:
-            raise Exception('Invalid np value, expected nonnegative integer. Exiting.')
+            raise Exception('Invalid np value, expected nonnegative integer.')
 
     def set(self, attr, value):
         setattr(self, attr, value)
@@ -191,7 +191,7 @@ class AcadosSimOpts:
             self.__integrator_type = integrator_type
         else:
             raise Exception('Invalid integrator_type value. Possible values are:\n\n' \
-                    + ',\n'.join(integrator_types) + '.\n\nYou have: ' + integrator_type + '.\n\nExiting.')
+                    + ',\n'.join(integrator_types) + '.\n\nYou have: ' + integrator_type + '.\n\n')
 
     @collocation_type.setter
     def collocation_type(self, collocation_type):
@@ -200,7 +200,7 @@ class AcadosSimOpts:
             self.__collocation_type = collocation_type
         else:
             raise Exception('Invalid collocation_type value. Possible values are:\n\n' \
-                    + ',\n'.join(collocation_types) + '.\n\nYou have: ' + collocation_type + '.\n\nExiting.')
+                    + ',\n'.join(collocation_types) + '.\n\nYou have: ' + collocation_type + '.\n\n')
 
     @T.setter
     def T(self, T):

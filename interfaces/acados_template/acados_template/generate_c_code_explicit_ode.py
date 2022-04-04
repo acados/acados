@@ -62,7 +62,7 @@ def generate_c_code_explicit_ode( model, opts ):
     elif isinstance(f_expl, casadi.SX):
         symbol = SX.sym
     else:
-        raise Exception("Invalid type for f_expl! Possible types are 'SX' and 'MX'. Exiting.")
+        raise Exception("Invalid type for f_expl! Possible types are 'SX' and 'MX'.")
     ## set up functions to be exported
     Sx = symbol('Sx', nx, nx)
     Sp = symbol('Sp', nx, nu)
