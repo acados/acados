@@ -782,6 +782,9 @@
         "nlp_solver_max_iter": [
             "int"
         ],
+        "nlp_solver_ext_qp_res": [
+            "int"
+        ],
         "print_level": [
             "int"
         ],

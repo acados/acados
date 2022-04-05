@@ -78,7 +78,7 @@ classdef ocp_nlp_solver_options_json < handle
         hpipm_mode
         qp_solver_ric_alg
         qp_solver_cond_ric_alg
-
+        nlp_solver_ext_qp_res
     end
     methods
         function obj = ocp_nlp_solver_options_json()
@@ -117,6 +117,7 @@ classdef ocp_nlp_solver_options_json < handle
             obj.qp_solver_ric_alg = 0;
             obj.eps_sufficient_descent = 1e-4;
             obj.hpipm_mode = 'BALANCE';
+            obj.nlp_solver_ext_qp_res = 0;
         end
     end
 end
