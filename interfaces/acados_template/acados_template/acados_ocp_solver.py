@@ -1021,13 +1021,13 @@ class AcadosOcpSolver:
         return self.status
 
 
-    def reset(self):
+    def reset(self, reset_qp_solver_mem=1):
         """
         Sets current iterate to all zeros.
         """
-        getattr(self.shared_lib, f"{self.model_name}_acados_reset").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{self.model_name}_acados_reset").argtypes = [c_void_p, c_int]
         getattr(self.shared_lib, f"{self.model_name}_acados_reset").restype = c_int
-        getattr(self.shared_lib, f"{self.model_name}_acados_reset")(self.capsule)
+        getattr(self.shared_lib, f"{self.model_name}_acados_reset")(self.capsule, reset_qp_solver_mem)
 
         return
 
