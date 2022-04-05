@@ -761,6 +761,12 @@
         "qp_solver_iter_max": [
             "int"
         ],
+        "qp_solver_cond_ric_alg": [
+            "int"
+        ],
+        "qp_solver_ric_alg": [
+            "int"
+        ],
         "nlp_solver_tol_stat": [
             "float"
         ],

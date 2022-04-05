@@ -180,6 +180,8 @@ def solve_marathos_ocp(setting):
     ocp.solver_options.qp_solver_tol_eq = qp_tol
     ocp.solver_options.qp_solver_tol_ineq = qp_tol
     ocp.solver_options.qp_solver_tol_comp = qp_tol
+    ocp.solver_options.qp_solver_ric_alg = 1
+    # ocp.solver_options.qp_solver_cond_ric_alg = 1
 
     # set prediction horizon
     ocp.solver_options.tf = Tf

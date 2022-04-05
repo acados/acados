@@ -253,7 +253,7 @@ cdef class AcadosOcpSolverCython:
 
         if field_ not in out_fields:
             raise Exception('AcadosOcpSolverCython.get(): {} is an invalid argument.\
-                    \n Possible values are {}. Exiting.'.format(field_, out_fields))
+                    \n Possible values are {}.'.format(field_, out_fields))
 
         if stage < 0 or stage > self.N:
             raise Exception('AcadosOcpSolverCython.get(): stage index must be in [0, N], got: {}.'.format(self.N))
@@ -523,7 +523,7 @@ cdef class AcadosOcpSolverCython:
         else:
             if field_ not in constraints_fields + cost_fields + out_fields:
                 raise Exception("AcadosOcpSolverCython.set(): {} is not a valid argument.\
-                    \nPossible values are {}. Exiting.".format(field, \
+                    \nPossible values are {}.".format(field, \
                     constraints_fields + cost_fields + out_fields + ['p']))
 
             dims = acados_solver_common.ocp_nlp_dims_get_from_attr(self.nlp_config,

@@ -2637,10 +2637,11 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
 
                 if (merit_fun1 < merit_fun0 && violation_step < violation_current)
                 {
+                    // full step if merit and constraint violation improves
                     // TODO: check armijo in this case?
                     return alpha;
                 }
-                else
+                else // this implies SOC will be done
                 {
                     return reduction_factor * reduction_factor;
                 }

@@ -1,2 +1,0 @@
-This folder contains examples using `acados_template`, a Python package that can be used to specify optimal control problems from Python and to generate self-contained C code that uses the acados solvers to solve them. The framework is based on templated C files which are rendered from Python using the templating engine Jinja2. Please follow the installation on `<acados_root>/interfaces/acados_template/README.md`. 
-

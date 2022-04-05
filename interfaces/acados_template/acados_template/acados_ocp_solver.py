@@ -1176,7 +1176,7 @@ class AcadosOcpSolver:
 
         if (field_ not in all_fields):
             raise Exception('AcadosOcpSolver.get(): {} is an invalid argument.\
-                    \n Possible values are {}. Exiting.'.format(field_, all_fields))
+                    \n Possible values are {}.'.format(field_, all_fields))
 
         if not isinstance(stage_, int):
             raise Exception('AcadosOcpSolver.get(): stage index must be Integer.')
@@ -1515,7 +1515,7 @@ class AcadosOcpSolver:
         else:
             if field_ not in constraints_fields + cost_fields + out_fields:
                 raise Exception("AcadosOcpSolver.set(): {} is not a valid argument.\
-                    \nPossible values are {}. Exiting.".format(field, \
+                    \nPossible values are {}.".format(field, \
                     constraints_fields + cost_fields + out_fields + ['p']))
 
             self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = \
