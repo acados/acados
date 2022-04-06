@@ -600,9 +600,11 @@ def ocp_generate_external_functions(acados_ocp, model):
     code_export_dir = acados_ocp.code_export_directory
     opts['code_export_directory'] = code_export_dir
 
-    if acados_ocp.model.dyn_ext_fun_type != 'casadi':
-        raise Exception("ocp_generate_external_functions: dyn_ext_fun_type only supports 'casadi' for now.\
-            Extending the Python interface with generic function support is welcome.")
+    # create code_export_dir, model_dir
+    # TODO: remove dir gen from all the generate_c_* functions
+    model_dir = os.path.join(code_export_dir, model.name + '_model')
+    if not os.path.exists(model_dir):
+        os.makedirs(model_dir)
 
     if acados_ocp.solver_options.integrator_type == 'ERK':
         # explicit model -- generate C code
@@ -615,7 +617,12 @@ def ocp_generate_external_functions(acados_ocp, model):
     elif acados_ocp.solver_options.integrator_type == 'GNSF':
         generate_c_code_gnsf(model, opts)
     elif acados_ocp.solver_options.integrator_type == 'DISCRETE':
-        generate_c_code_discrete_dynamics(model, opts)
+        if acados_ocp.model.dyn_ext_fun_type == 'casadi':
+            generate_c_code_discrete_dynamics(model, opts)
+        else:
+            import shutil
+            target_location = os.path.join(code_export_dir, model.name +'_model', model.dyn_source_discrete)
+            shutil.copyfile(model.dyn_source_discrete, target_location)
     else:
         raise Exception("ocp_generate_external_functions: unknown integrator type.")
 
