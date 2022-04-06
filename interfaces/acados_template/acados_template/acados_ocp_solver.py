@@ -230,8 +230,10 @@ def make_ocp_dims_consistent(acados_ocp):
             and all(constraints.idxbxe_0 == constraints.idxbx_0):
         # case: x0 was set: nbx0 are all equlities.
         dims.nbxe_0 = dims.nbx_0
+    elif constraints.idxbxe_0 is not None:
+        dims.nbxe_0 = constraints.idxbxe_0.shape[0]
     elif dims.nbxe_0 is None:
-        # case: x0 was not set -> dont assume nbx0 to be equality constraints.
+        # case: x0 and idxbxe_0 were not set -> dont assume nbx0 to be equality constraints.
         dims.nbxe_0 = 0
 
     # path
