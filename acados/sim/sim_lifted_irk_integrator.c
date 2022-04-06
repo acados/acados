@@ -732,6 +732,11 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
     double timing_ad = 0.0;
     out->info->LAtime = 0.0;
 
+    if (opts->sens_hess)
+    {
+        printf("LIFTED_IRK with HESSIAN PROPAGATION - NOT IMPLEMENTED YET - EXITING.");
+        exit(1);
+    }
     if (opts->sens_adj)
     {
         printf("LIFTED_IRK with ADJOINT SENSITIVITIES - NOT IMPLEMENTED YET - EXITING.");
