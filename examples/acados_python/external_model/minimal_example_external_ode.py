@@ -54,8 +54,8 @@ ocp = AcadosOcp()
 # set model
 model = export_external_ode_model()
 ocp.model = model
-ocp.solver_options.model_external_shared_lib_dir     = os.getcwd()+"/test_external_lib/build"
-ocp.solver_options.model_external_shared_lib_name    = "external_ode_casadi"
+ocp.solver_options.model_external_shared_lib_dir = os.getcwd()+"/test_external_lib/build"
+ocp.solver_options.model_external_shared_lib_name = "external_ode_casadi"
 
 Tf = 1.0
 nx = model.x.size()[0]
@@ -67,11 +67,7 @@ x0 = np.array([0, 0])
 xT = np.array([1/2, 1])
 
 # set dimensions
-ocp.dims.nx    = nx
-ocp.dims.ny    = ny
-ocp.dims.ny_e  = ny_e
-ocp.dims.nu    = nu
-ocp.dims.N     = N
+ocp.dims.N = N
 
 # set cost module
 ocp.cost.cost_type = 'LINEAR_LS'
@@ -100,12 +96,11 @@ ocp.constraints.constr_type = 'BGH'
 # ocp.constraints.lbu = np.array([-Fmax])
 # ocp.constraints.ubu = np.array([+Fmax])
 # ocp.constraints.idxbu = np.array([0])
-# ocp.dims.nbu   = nu
 
 # terminal constraints
-ocp.constraints.Jbx_e  = np.eye(nx)
-ocp.constraints.ubx_e  = xT
-ocp.constraints.lbx_e  = xT
+ocp.constraints.Jbx_e = np.eye(nx)
+ocp.constraints.ubx_e = xT
+ocp.constraints.lbx_e = xT
 ocp.constraints.idxbx_e = np.array(range(nx))
 ocp.dims.nbx_e = nx
 
@@ -121,9 +116,9 @@ t_traj = np.linspace(0, Tf, N+1)
 x_traj = np.linspace(x0,xT,N+1)
 u_traj = np.ones((N,1))+np.random.rand(N,1)*1e-6
 for n in range(N+1):
-  ocp_solver.set(n, 'x', x_traj[n,:])
+    ocp_solver.set(n, 'x', x_traj[n,:])
 for n in range(N):
-  ocp_solver.set(n, 'u', u_traj[n])
+    ocp_solver.set(n, 'u', u_traj[n])
 
 
 # solve
@@ -135,7 +130,7 @@ if status != 0:
 # get solution
 stat_fields = ['time_tot', 'time_lin', 'time_qp', 'time_qp_solver_call', 'time_reg', 'sqp_iter']
 for field in stat_fields:
-  print(f"{field} : {ocp_solver.get_stats(field)}")
+    print(f"{field} : {ocp_solver.get_stats(field)}")
 simX = np.ndarray((N + 1, nx))
 simU = np.ndarray((N, nu))
 for i in range(N):
