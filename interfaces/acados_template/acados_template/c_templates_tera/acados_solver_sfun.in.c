@@ -650,7 +650,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     double reset = (double)(*in_sign[0]);
     if (reset)
     {
-        {{ model.name }}_acados_reset(capsule);
+        {{ model.name }}_acados_reset(capsule, 1);
     }
   {%- endif %}
 

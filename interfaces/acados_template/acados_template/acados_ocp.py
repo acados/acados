@@ -2139,6 +2139,7 @@ class AcadosOcpOptions:
         self.__nlp_solver_tol_ineq = 1e-6                     # NLP solver inequality
         self.__nlp_solver_tol_comp = 1e-6                     # NLP solver complementarity
         self.__nlp_solver_max_iter = 100                      # NLP solver maximum number of iterations
+        self.__nlp_solver_ext_qp_res = 0
         self.__Tsim = None                                    # automatically calculated as tf/N
         self.__print_level = 0                                # print level
         self.__initialize_t_slacks = 0                        # possible values: 0, 1
@@ -2459,6 +2460,15 @@ class AcadosOcpOptions:
     def nlp_solver_tol_ineq(self):
         """NLP solver inequality tolerance"""
         return self.__nlp_solver_tol_ineq
+
+    @property
+    def nlp_solver_ext_qp_res(self):
+        """Determines if residuals of QP are computed externally within NLP solver (for debugging)
+
+        Type: int; 0 or 1;
+        Default: 0.
+        """
+        return self.__nlp_solver_ext_qp_res
 
     @property
     def nlp_solver_tol_comp(self):
@@ -2850,6 +2860,13 @@ class AcadosOcpOptions:
             self.__nlp_solver_tol_ineq = nlp_solver_tol_ineq
         else:
             raise Exception('Invalid nlp_solver_tol_ineq value. nlp_solver_tol_ineq must be a positive float.')
+
+    @nlp_solver_ext_qp_res.setter
+    def nlp_solver_ext_qp_res(self, nlp_solver_ext_qp_res):
+        if nlp_solver_ext_qp_res in [0, 1]:
+            self.__nlp_solver_ext_qp_res = nlp_solver_ext_qp_res
+        else:
+            raise Exception('Invalid nlp_solver_ext_qp_res value. nlp_solver_ext_qp_res must be in [0, 1].')
 
     @nlp_solver_tol_comp.setter
     def nlp_solver_tol_comp(self, nlp_solver_tol_comp):

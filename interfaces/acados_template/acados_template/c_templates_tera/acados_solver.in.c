@@ -1861,6 +1861,8 @@ void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* 
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_cond_N", &qp_solver_cond_N);
 {%- endif %}
 
+    int nlp_solver_ext_qp_res = {{ solver_options.nlp_solver_ext_qp_res }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "ext_qp_res", &nlp_solver_ext_qp_res);
 
 {%- if solver_options.qp_solver is containing("HPIPM") %}
     // set HPIPM mode: should be done before setting other QP solver options
@@ -2085,7 +2087,7 @@ int {{ model.name }}_acados_update_qp_solver_cond_N({{ model.name }}_solver_caps
 }
 
 
-int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule)
+int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int reset_qp_solver_mem)
 {
 
     // set initialization to all zeros
@@ -2128,7 +2130,7 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule)
     // get qp_status: if NaN -> reset memory
     int qp_status;
     ocp_nlp_get(capsule->nlp_config, capsule->nlp_solver, "qp_status", &qp_status);
-    if (qp_status == 3)
+    if (reset_qp_solver_mem || (qp_status == 3))
     {
         // printf("\nin reset qp_status %d -> resetting QP memory\n", qp_status);
         ocp_nlp_solver_reset_qp_memory(nlp_solver, nlp_in, nlp_out);
@@ -2470,8 +2472,13 @@ void {{ model.name }}_acados_print_stats({{ model.name }}_solver_capsule* capsul
 
     int nrow = sqp_iter+1 < stat_m ? sqp_iter+1 : stat_m;
 
+    printf("iter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp_stat\tqp_iter\talpha");
+    if (stat_n > 8)
+        printf("\t\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp");
+    printf("\n");
+
 {%- if solver_options.nlp_solver_type == "SQP" %}
-    printf("iter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp_stat\tqp_iter\talpha\n");
+
     for (int i = 0; i < nrow; i++)
     {
         for (int j = 0; j < stat_n + 1; j++)
