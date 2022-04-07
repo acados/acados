@@ -77,8 +77,8 @@ classdef acados_ocp_opts < handle
 
             obj.opts_struct.qp_solver_iter_max = 50;
             % obj.opts_struct.qp_solver_cond_N = 5; % New horizon after partial condensing
-            obj.opts_struct.qp_solver_cond_ric_alg = 0; % 0: dont factorize hessian in the condensing; 1: factorize
-            obj.opts_struct.qp_solver_ric_alg = 0; % HPIPM specific
+            obj.opts_struct.qp_solver_cond_ric_alg = 1; % 0: dont factorize hessian in the condensing; 1: factorize
+            obj.opts_struct.qp_solver_ric_alg = 1; % HPIPM specific
             obj.opts_struct.qp_solver_warm_start = 0;
                     % 0 no warm start; 1 warm start primal variables; 2 warm start primal and dual variables
             obj.opts_struct.warm_start_first_qp = 0;

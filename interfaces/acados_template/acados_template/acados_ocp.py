@@ -2132,8 +2132,8 @@ class AcadosOcpOptions:
         self.__qp_solver_iter_max = 50                        # QP solver max iter
         self.__qp_solver_cond_N = None                        # QP solver: new horizon after partial condensing
         self.__qp_solver_warm_start = 0
-        self.__qp_solver_cond_ric_alg = 0
-        self.__qp_solver_ric_alg = 0
+        self.__qp_solver_cond_ric_alg = 1
+        self.__qp_solver_ric_alg = 1
         self.__nlp_solver_tol_stat = 1e-6                     # NLP solver stationarity tolerance
         self.__nlp_solver_tol_eq   = 1e-6                     # NLP solver equality tolerance
         self.__nlp_solver_tol_ineq = 1e-6                     # NLP solver inequality
@@ -2340,7 +2340,7 @@ class AcadosOcpOptions:
         """
         QP solver: Determines which algorithm is used in HPIPM condensing.
         0: dont factorize hessian in the condensing; 1: factorize.
-        Default: 0
+        Default: 1
         """
         return self.__qp_solver_cond_ric_alg
 
@@ -2360,7 +2360,7 @@ class AcadosOcpOptions:
         [HPIPM paper]: HPIPM: a high-performance quadratic programming framework for model predictive control, Frison and Diehl, 2020
         https://cdn.syscop.de/publications/Frison2020a.pdf
 
-        Default: 0
+        Default: 1
         """
         return self.__qp_solver_ric_alg
 
