@@ -155,7 +155,7 @@ def main():
     uh_e = 4.0 * np.ones(nx)
 
     # acados ocp model
-    casadi_dynamics = 1 # 0=generic, 1=casadi
+    casadi_dynamics = 0 # 0=generic, 1=casadi
     casadi_cost = 1 # 0=generic, 1=casadi
 
 
@@ -218,6 +218,7 @@ def main():
     ocp.solver_options.qp_solver_cond_N = qp_solver_cond_N
     ocp.solver_options.integrator_type = 'DISCRETE'
     ocp.solver_options.nlp_solver_type = nlp_solver
+    ocp.solver_options.print_level = 2
 
     # create ocp solver
     ocp_solver = AcadosOcpSolver(ocp);
@@ -225,6 +226,12 @@ def main():
     # initial state
     ocp_solver.set(0, 'lbx', x0);
     ocp_solver.set(0, 'ubx', x0);
+
+    # initialize
+    for i in range(N):
+        ocp_solver.set(i, 'x', np.zeros(nx))
+        ocp_solver.set(i, 'u', np.zeros(nu))
+    ocp_solver.set(N, 'x', np.zeros(nx))
 
     # solve
     # tic;
