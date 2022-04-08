@@ -144,7 +144,7 @@ MODEL_SRC+= {{ model.name }}_model/{{ model.name }}_impl_dae_jac_x_xdot_u_z.c
 MODEL_SRC+= {{ model.name }}_model/{{ model.name }}_impl_dae_hess.c
 		{%- endif %}
 	{%- else %}
-MODEL_SRC+= {{ model.name }}_model/{{ model.dyn_source_impl_dyn }}
+MODEL_SRC+= {{ model.name }}_model/{{ model.dyn_generic_source }}
 	{%- endif %}
 {%- elif solver_options.integrator_type == "LIFTED_IRK" %}
 MODEL_SRC+= {{ model.name }}_model/{{ model.name }}_impl_dae_fun.c
@@ -170,7 +170,7 @@ MODEL_SRC+= {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun_jac.c
 MODEL_SRC+= {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun_jac_hess.c
 		{%- endif %}
 	{%- else %}
-MODEL_SRC+= {{ model.name }}_model/{{ model.dyn_source_discrete }}
+MODEL_SRC+= {{ model.name }}_model/{{ model.dyn_generic_source }}
 	{%- endif %}
 {%- endif %}
 MODEL_OBJ := $(MODEL_SRC:.c=.o)

@@ -34,7 +34,7 @@
 classdef acados_model_json < handle
     properties
         dyn_ext_fun_type
-        dyn_source_discrete
+        dyn_generic_source
         dyn_disc_fun_jac_hess
         dyn_disc_fun_jac
         dyn_disc_fun
@@ -52,7 +52,7 @@ classdef acados_model_json < handle
     methods
         function obj = acados_model_json()
             obj.dyn_ext_fun_type = 'casadi';
-            obj.dyn_source_discrete = [];
+            obj.dyn_generic_source = [];
             obj.dyn_disc_fun_jac_hess = [];
             obj.dyn_disc_fun_jac = [];
             obj.dyn_disc_fun = [];

@@ -615,8 +615,8 @@ def ocp_generate_external_functions(acados_ocp, model):
             generate_c_code_implicit_ode(model, opts)
         else:
             import shutil
-            target_location = os.path.join(code_export_dir, model.name +'_model', model.dyn_source_impl_dyn)
-            shutil.copyfile(model.dyn_source_impl_dyn, target_location)
+            target_location = os.path.join(code_export_dir, model_dir, model.dyn_generic_source)
+            shutil.copyfile(model.dyn_generic_source, target_location)
     elif acados_ocp.solver_options.integrator_type == 'LIFTED_IRK':
         generate_c_code_implicit_ode(model, opts)
     elif acados_ocp.solver_options.integrator_type == 'GNSF':
@@ -626,8 +626,8 @@ def ocp_generate_external_functions(acados_ocp, model):
             generate_c_code_discrete_dynamics(model, opts)
         else:
             import shutil
-            target_location = os.path.join(code_export_dir, model.name +'_model', model.dyn_source_discrete)
-            shutil.copyfile(model.dyn_source_discrete, target_location)
+            target_location = os.path.join(code_export_dir, model_dir, model.dyn_generic_source)
+            shutil.copyfile(model.dyn_generic_source, target_location)
     else:
         raise Exception("ocp_generate_external_functions: unknown integrator type.")
 

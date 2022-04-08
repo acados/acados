@@ -183,7 +183,7 @@ set(MODEL_SRC
     {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun_jac_hess.c
 		{%- endif %}
 	{%- else %}
-    {{ model.name }}_model/{{ model.dyn_source_discrete }}
+    {{ model.name }}_model/{{ model.dyn_generic_source }}
 	{%- endif %}
 {%- endif -%}
 )

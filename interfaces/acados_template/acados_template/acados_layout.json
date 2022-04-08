@@ -15,10 +15,7 @@
         "dyn_ext_fun_type" : [
             "str"
         ],
-        "dyn_source_discrete" : [
-            "str"
-        ],
-        "dyn_source_impl_dyn" : [
+        "dyn_generic_source" : [
             "str"
         ],
         "dyn_impl_dae_fun" : [

@@ -73,7 +73,7 @@ class AcadosModel():
         """
 
         self.dyn_ext_fun_type = 'casadi'  #: type of external functions for dynamics module; 'casadi' or 'generic'; Default: 'casadi'
-        self.dyn_source_discrete = None  #: name of source file for discrete dyanamics; Default: :code:`None`
+        self.dyn_generic_source = None  #: name of source file for discrete dyanamics; Default: :code:`None`
         self.dyn_disc_fun_jac_hess = None  #: name of function discrete dyanamics + jacobian and hessian; Default: :code:`None`
         self.dyn_disc_fun_jac = None  #: name of function discrete dyanamics + jacobian; Default: :code:`None`
         self.dyn_disc_fun = None  #: name of function discrete dyanamics; Default: :code:`None`

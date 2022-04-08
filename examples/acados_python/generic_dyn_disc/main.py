@@ -175,7 +175,7 @@ def main():
     if (casadi_dynamics == 0):
         # Generic dynamics
         ocp.model.dyn_ext_fun_type = 'generic'
-        ocp.model.dyn_source_discrete = 'generic_disc_dyn.c'
+        ocp.model.dyn_generic_source = 'generic_disc_dyn.c'
         ocp.model.dyn_disc_fun = 'disc_dyn_fun'
         ocp.model.dyn_disc_fun_jac = 'disc_dyn_fun_jac'
         ocp.model.dyn_disc_fun_jac_hess = 'disc_dyn_fun_jac_hess' # only needed for exact hessi

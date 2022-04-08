@@ -57,7 +57,7 @@ N = 20
 
 # GENERIC
 ocp.model.dyn_ext_fun_type = 'generic'
-ocp.model.dyn_source_impl_dyn = 'generic_impl_dyn.c'
+ocp.model.dyn_generic_source = 'generic_impl_dyn.c'
 ocp.model.dyn_impl_dae_fun = 'generic_impl_dyn_fun'
 ocp.model.dyn_impl_dae_fun_jac = 'generic_impl_dyn_fun_jac'
 ocp.model.dyn_impl_dae_jac = 'generic_impl_dyn_jac'
