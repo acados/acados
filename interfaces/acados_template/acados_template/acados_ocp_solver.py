@@ -610,8 +610,13 @@ def ocp_generate_external_functions(acados_ocp, model):
         # explicit model -- generate C code
         generate_c_code_explicit_ode(model, opts)
     elif acados_ocp.solver_options.integrator_type == 'IRK':
-        # implicit model -- generate C code
-        generate_c_code_implicit_ode(model, opts)
+        if acados_ocp.model.dyn_ext_fun_type == 'casadi':
+            # implicit model -- generate C code
+            generate_c_code_implicit_ode(model, opts)
+        else:
+            import shutil
+            target_location = os.path.join(code_export_dir, model.name +'_model', model.dyn_source_impl_dyn)
+            shutil.copyfile(model.dyn_source_impl_dyn, target_location)
     elif acados_ocp.solver_options.integrator_type == 'LIFTED_IRK':
         generate_c_code_implicit_ode(model, opts)
     elif acados_ocp.solver_options.integrator_type == 'GNSF':
