@@ -38,6 +38,9 @@ classdef acados_model_json < handle
         dyn_disc_fun_jac_hess
         dyn_disc_fun_jac
         dyn_disc_fun
+        dyn_impl_dae_fun
+        dyn_impl_dae_fun_jac
+        dyn_impl_dae_jac
         f_impl_expr
         f_expl_expr
         f_phi_expr
@@ -56,6 +59,9 @@ classdef acados_model_json < handle
             obj.dyn_disc_fun_jac_hess = [];
             obj.dyn_disc_fun_jac = [];
             obj.dyn_disc_fun = [];
+            obj.dyn_impl_dae_fun = [];
+            obj.dyn_impl_dae_fun_jac = [];
+            obj.dyn_impl_dae_jac = [];
             obj.f_impl_expr = [];
             obj.f_expl_expr = [];
             obj.f_phi_expr = [];
