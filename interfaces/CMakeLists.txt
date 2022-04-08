@@ -139,6 +139,10 @@ endif()
 
 ### PYTHON ###
 if(ACADOS_PYTHON)
+
+add_test(NAME python_test_generic_impl_dyn
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/generic_impl_dyn
+        python minimal_example_ocp_generic_impl_dyn.py)
 add_test(NAME python_test_reset
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
         python reset_test.py)
