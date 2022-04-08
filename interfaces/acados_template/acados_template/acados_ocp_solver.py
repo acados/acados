@@ -597,39 +597,32 @@ def ocp_generate_external_functions(acados_ocp, model):
         opts = dict(generate_hess=1)
     else:
         opts = dict(generate_hess=0)
-    code_export_dir = acados_ocp.code_export_directory
-    opts['code_export_directory'] = code_export_dir
 
     # create code_export_dir, model_dir
-    # TODO: remove dir gen from all the generate_c_* functions
+    code_export_dir = acados_ocp.code_export_directory
+    opts['code_export_directory'] = code_export_dir
     model_dir = os.path.join(code_export_dir, model.name + '_model')
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
 
-    if acados_ocp.solver_options.integrator_type == 'ERK':
-        # explicit model -- generate C code
-        generate_c_code_explicit_ode(model, opts)
-    elif acados_ocp.solver_options.integrator_type == 'IRK':
-        if acados_ocp.model.dyn_ext_fun_type == 'casadi':
-            # implicit model -- generate C code
+    # TODO: remove dir gen from all the generate_c_* functions
+    if acados_ocp.model.dyn_ext_fun_type == 'casadi':
+        if acados_ocp.solver_options.integrator_type == 'ERK':
+            generate_c_code_explicit_ode(model, opts)
+        elif acados_ocp.solver_options.integrator_type == 'IRK':
             generate_c_code_implicit_ode(model, opts)
-        else:
-            import shutil
-            target_location = os.path.join(code_export_dir, model_dir, model.dyn_generic_source)
-            shutil.copyfile(model.dyn_generic_source, target_location)
-    elif acados_ocp.solver_options.integrator_type == 'LIFTED_IRK':
-        generate_c_code_implicit_ode(model, opts)
-    elif acados_ocp.solver_options.integrator_type == 'GNSF':
-        generate_c_code_gnsf(model, opts)
-    elif acados_ocp.solver_options.integrator_type == 'DISCRETE':
-        if acados_ocp.model.dyn_ext_fun_type == 'casadi':
+        elif acados_ocp.solver_options.integrator_type == 'LIFTED_IRK':
+            generate_c_code_implicit_ode(model, opts)
+        elif acados_ocp.solver_options.integrator_type == 'GNSF':
+            generate_c_code_gnsf(model, opts)
+        elif acados_ocp.solver_options.integrator_type == 'DISCRETE':
             generate_c_code_discrete_dynamics(model, opts)
         else:
-            import shutil
-            target_location = os.path.join(code_export_dir, model_dir, model.dyn_generic_source)
-            shutil.copyfile(model.dyn_generic_source, target_location)
+            raise Exception("ocp_generate_external_functions: unknown integrator type.")
     else:
-        raise Exception("ocp_generate_external_functions: unknown integrator type.")
+        import shutil
+        target_location = os.path.join(code_export_dir, model_dir, model.dyn_generic_source)
+        shutil.copyfile(model.dyn_generic_source, target_location)
 
     if acados_ocp.dims.nphi > 0 or acados_ocp.dims.nh > 0:
         generate_c_code_constraint(model, model.name, False, opts)
