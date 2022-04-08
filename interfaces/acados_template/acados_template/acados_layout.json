@@ -15,7 +15,16 @@
         "dyn_ext_fun_type" : [
             "str"
         ],
-        "dyn_source_discrete" : [
+        "dyn_generic_source" : [
+            "str"
+        ],
+        "dyn_impl_dae_fun" : [
+            "str"
+        ],
+        "dyn_impl_dae_fun_jac" : [
+            "str"
+        ],
+        "dyn_impl_dae_jac" : [
             "str"
         ],
         "dyn_disc_fun_jac_hess" : [

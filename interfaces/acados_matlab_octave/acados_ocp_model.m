@@ -205,8 +205,8 @@ classdef acados_ocp_model < handle
                     obj.model_struct.dyn_expr_phi = value;
                 elseif (strcmp(field, 'dyn_ext_fun_type'))
                     obj.model_struct.dyn_ext_fun_type = value;
-                elseif (strcmp(field, 'dyn_source_discrete'))
-                    obj.model_struct.dyn_source_discrete = value;
+                elseif (strcmp(field, 'dyn_generic_source'))
+                    obj.model_struct.dyn_generic_source = value;
                     obj.model_struct.dyn_ext_fun_type = 'generic';
                 elseif (strcmp(field, 'dyn_disc_fun_jac_hess'))
                     obj.model_struct.dyn_disc_fun_jac_hess = value;

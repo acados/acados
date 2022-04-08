@@ -53,7 +53,7 @@ function ocp_generate_c_code(obj)
         generate_c_code_disc_dyn(obj.acados_ocp_nlp_json.model);
     end
     if strcmp(obj.acados_ocp_nlp_json.model.dyn_ext_fun_type, 'generic')
-        copyfile( fullfile(pwd, obj.acados_ocp_nlp_json.model.dyn_source_discrete),...
+        copyfile( fullfile(pwd, obj.acados_ocp_nlp_json.model.dyn_generic_source),...
             fullfile(pwd, 'c_generated_code', [obj.model_struct.name '_model']));
     end
 
@@ -94,7 +94,7 @@ function ocp_generate_c_code(obj)
     %% remove CasADi objects from model
     model.name = obj.acados_ocp_nlp_json.model.name;
     model.dyn_ext_fun_type = obj.acados_ocp_nlp_json.model.dyn_ext_fun_type;
-    model.dyn_source_discrete = obj.acados_ocp_nlp_json.model.dyn_source_discrete;
+    model.dyn_generic_source = obj.acados_ocp_nlp_json.model.dyn_generic_source;
     model.dyn_disc_fun_jac_hess = obj.acados_ocp_nlp_json.model.dyn_disc_fun_jac_hess;
     model.dyn_disc_fun_jac = obj.acados_ocp_nlp_json.model.dyn_disc_fun_jac;
     model.dyn_disc_fun = obj.acados_ocp_nlp_json.model.dyn_disc_fun;

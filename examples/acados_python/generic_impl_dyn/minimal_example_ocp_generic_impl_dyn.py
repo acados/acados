@@ -29,128 +29,106 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.;
-
-# NOTE: requires CasADi system installation and compilation
-#    of the test external library. To do so:
-# cd test_external_lib
-# mkdir build
-# cd build
-# cmake ..
-# make
 #
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver
-from export_external_ode_model import export_external_ode_model
-import numpy as np
-import os
-import scipy.linalg
-import matplotlib.pyplot as plt
+import sys
+sys.path.insert(0, '../getting_started/common')
 
-# os.environ["ACADOS_SOURCE_DIR"] =
+from acados_template import AcadosOcp, AcadosOcpSolver
+from pendulum_model import export_pendulum_ode_model
+import numpy as np
+import scipy.linalg
+from utils import plot_pendulum
 
 # create ocp object to formulate the OCP
 ocp = AcadosOcp()
 
 # set model
-model = export_external_ode_model()
+model = export_pendulum_ode_model()
 ocp.model = model
-ocp.solver_options.model_external_shared_lib_dir = os.getcwd()+"/test_external_lib/build"
-ocp.solver_options.model_external_shared_lib_name = "external_ode_casadi"
 
 Tf = 1.0
 nx = model.x.size()[0]
 nu = model.u.size()[0]
 ny = nx + nu
 ny_e = nx
-N = 30
-x0 = np.array([0, 0])
-xT = np.array([1/2, 1])
+N = 20
+
+
+# GENERIC
+ocp.model.dyn_ext_fun_type = 'generic'
+ocp.model.dyn_generic_source = 'generic_impl_dyn.c'
+ocp.model.dyn_impl_dae_fun = 'generic_impl_dyn_fun'
+ocp.model.dyn_impl_dae_fun_jac = 'generic_impl_dyn_fun_jac'
+ocp.model.dyn_impl_dae_jac = 'generic_impl_dyn_jac'
 
 # set dimensions
 ocp.dims.N = N
 
-# set cost module
+# set cost
+Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
+R = 2*np.diag([1e-2])
+
+ocp.cost.W_e = Q
+ocp.cost.W = scipy.linalg.block_diag(Q, R)
+
 ocp.cost.cost_type = 'LINEAR_LS'
 ocp.cost.cost_type_e = 'LINEAR_LS'
 
-Q = 2*np.diag([1e-3, 1e-3])
-R = 2*np.diag([1e-4])
-ocp.cost.W = scipy.linalg.block_diag(Q, R)
-ocp.cost.W_e = Q
-
 ocp.cost.Vx = np.zeros((ny, nx))
+ocp.cost.Vx[:nx,:nx] = np.eye(nx)
 
 Vu = np.zeros((ny, nu))
-Vu[2,0] = 1.0
+Vu[4,0] = 1.0
 ocp.cost.Vu = Vu
 
-ocp.cost.Vx_e = np.zeros((nx,nx))
+ocp.cost.Vx_e = np.eye(nx)
+
 ocp.cost.yref  = np.zeros((ny, ))
 ocp.cost.yref_e = np.zeros((ny_e, ))
 
 # set constraints
-Fmax = 10
-ocp.constraints.x0 = x0
-ocp.dims.nbx_0 = nx
-ocp.constraints.constr_type = 'BGH'
-# ocp.constraints.lbu = np.array([-Fmax])
-# ocp.constraints.ubu = np.array([+Fmax])
-# ocp.constraints.idxbu = np.array([0])
+Fmax = 80
+ocp.constraints.lbu = np.array([-Fmax])
+ocp.constraints.ubu = np.array([+Fmax])
+ocp.constraints.idxbu = np.array([0])
 
-# terminal constraints
-ocp.constraints.Jbx_e = np.eye(nx)
-ocp.constraints.ubx_e = xT
-ocp.constraints.lbx_e = xT
-ocp.constraints.idxbx_e = np.array(range(nx))
-ocp.dims.nbx_e = nx
+ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
-ocp.solver_options.tf = Tf
+# set options
 ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
+# PARTIAL_CONDENSING_HPIPM, FULL_CONDENSING_QPOASES, FULL_CONDENSING_HPIPM,
+# PARTIAL_CONDENSING_QPDUNES, PARTIAL_CONDENSING_OSQP
 ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
-ocp.solver_options.integrator_type = 'ERK'
-ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
+ocp.solver_options.integrator_type = 'IRK'
+ocp.solver_options.print_level = 0
+ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
+
+# set prediction horizon
+ocp.solver_options.tf = Tf
+ocp.solver_options.nlp_solver_max_iter = 200
+ocp.solver_options.sim_method_num_stages = 1
+ocp.solver_options.sim_method_num_steps = 1
+
+
+
 ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
-# initial guess
-t_traj = np.linspace(0, Tf, N+1)
-x_traj = np.linspace(x0,xT,N+1)
-u_traj = np.ones((N,1))+np.random.rand(N,1)*1e-6
-for n in range(N+1):
-    ocp_solver.set(n, 'x', x_traj[n,:])
-for n in range(N):
-    ocp_solver.set(n, 'u', u_traj[n])
+simX = np.ndarray((N+1, nx))
+simU = np.ndarray((N, nu))
 
-
-# solve
 status = ocp_solver.solve()
 
 if status != 0:
+    ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
     raise Exception(f'acados returned status {status}.')
 
 # get solution
-stat_fields = ['time_tot', 'time_lin', 'time_qp', 'time_qp_solver_call', 'time_reg', 'sqp_iter']
-for field in stat_fields:
-    print(f"{field} : {ocp_solver.get_stats(field)}")
-simX = np.ndarray((N + 1, nx))
-simU = np.ndarray((N, nu))
 for i in range(N):
     simX[i,:] = ocp_solver.get(i, "x")
     simU[i,:] = ocp_solver.get(i, "u")
 simX[N,:] = ocp_solver.get(N, "x")
 
-print(simX)
-plt.plot(simX[:,:nu],'o',label='opt_sol')
-plt.plot(x_traj[:,0],'x',label='init_sol')
-plt.legend()
-plt.title('position')
-plt.figure()
-plt.plot(simX[:,nu:],'o',label='opt_sol')
-plt.plot(x_traj[:,1],'x',label='init_sol')
-plt.legend()
-plt.title('velocity')
-plt.figure()
-plt.plot(simU,'o',label='opt_sol')
-plt.plot(u_traj,'x',label='init_traj')
-plt.legend()
-plt.title('control')
-plt.show(block=True)
+ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
+
+plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)

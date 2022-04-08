@@ -170,6 +170,14 @@ def sim_generate_casadi_functions(acados_sim):
 
     opts = dict(generate_hess = acados_sim.solver_options.sens_hess,
                 code_export_directory = acados_sim.code_export_directory)
+
+    # create code_export_dir, model_dir
+    code_export_dir = acados_sim.code_export_directory
+    opts['code_export_directory'] = code_export_dir
+    model_dir = os.path.join(code_export_dir, model.name + '_model')
+    if not os.path.exists(model_dir):
+        os.makedirs(model_dir)
+
     # generate external functions
     if integrator_type == 'ERK':
         generate_c_code_explicit_ode(model, opts)
