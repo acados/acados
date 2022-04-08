@@ -146,6 +146,7 @@ set(SIM_OBJ sim_{{ model.name }})
 
 # model
 set(MODEL_SRC
+	{%- if model.dyn_ext_fun_type == "casadi" %}
 {%- if  solver_options.integrator_type == "ERK" %}
     {{ model.name }}_model/{{ model.name }}_expl_ode_fun.c
     {{ model.name }}_model/{{ model.name }}_expl_vde_forw.c
@@ -176,16 +177,15 @@ set(MODEL_SRC
 	{%- endif %}
     {{ model.name }}_model/{{ model.name }}_gnsf_get_matrices_fun.c
 {%- elif solver_options.integrator_type == "DISCRETE" %}
-	{%- if model.dyn_ext_fun_type == "casadi" %}
     {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun.c
     {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun_jac.c
 		{%- if hessian_approx == "EXACT" %}
     {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun_jac_hess.c
 		{%- endif %}
+{%- endif -%}
 	{%- else %}
     {{ model.name }}_model/{{ model.dyn_generic_source }}
 	{%- endif %}
-{%- endif -%}
 )
 add_library(${MODEL_OBJ} OBJECT ${MODEL_SRC} )
 
