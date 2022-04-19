@@ -42,6 +42,7 @@ extern "C" {
 
 #if defined(__MABX2__)
 double fmax(double a, double b);
+int isnan(double x);
 #endif
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
