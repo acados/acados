@@ -386,8 +386,6 @@ ACADOS_SYMBOL_EXPORT int ocp_nlp_precompute(ocp_nlp_solver *solver, ocp_nlp_in *
 /// \param nlp_out The output struct.
 ACADOS_SYMBOL_EXPORT void ocp_nlp_eval_cost(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out);
 
-//
-void ocp_nlp_eval_residuals(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out);
 
 /// Computes the residuals.
 ///
