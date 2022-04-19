@@ -112,7 +112,7 @@ Note: this workflow is preliminary and not thoroughly tested.
 ```
 cmake -G "Visual Studio 15 2017 Win64" -DBLASFEO_TARGET=GENERIC -DACADOS_INSTALL_DIR=.. -DBUILD_SHARED_LIBS=OFF ..
 # respectively for MVSC 2019
-# cmake -G "Visual Studio 16 2019 Win64" -DBLASFEO_TARGET=GENERIC -DACADOS_INSTALL_DIR=.. -DBUILD_SHARED_LIBS=OFF ..
+# cmake -G "Visual Studio 16 2019" -DBLASFEO_TARGET=GENERIC -DACADOS_INSTALL_DIR=.. -DBUILD_SHARED_LIBS=OFF ..
 cmake --build . -j10 --target INSTALL --config Release
 ```
 - In Matlab, run `mex -setup C` and select the same `MSVC` version.
