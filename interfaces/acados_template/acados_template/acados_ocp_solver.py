@@ -861,11 +861,11 @@ class AcadosOcpSolver:
         ocp_generate_external_functions(acados_ocp, model)
 
         # dump to json
+        acados_ocp.json_file = json_file
         ocp_formulation_json_dump(acados_ocp, simulink_opts, json_file)
 
         # render templates
         ocp_render_templates(acados_ocp, json_file, cmake_builder=cmake_builder)
-        acados_ocp.json_file = json_file
 
 
     @classmethod

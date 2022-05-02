@@ -8,6 +8,9 @@
     "cython_include_dirs": [
         "str"
     ],
+    "json_file": [
+        "str"
+    ],
     "model": {
          "name" : [
             "str"
