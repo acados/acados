@@ -13,7 +13,6 @@
     - [x] closely stick to setter names!
 - [x] Windows Matlab, reiterate, look into Visual C
 - [ ] Windows Python
-- [ ] 
 - [ ] MacOS Matlab
 
 #### `ocp_nlp`
@@ -23,7 +22,7 @@
 - [ ] support cost on z for external, NLS
 
 #### `sim`
-- [ ] collocation integrators Radau
+- [x] collocation integrators Radau
     - NOTE: currently always Gauss(-Legendre) Butcher tables
         - A-stable, but not L-stable
         - order is 2 * num_stages
