@@ -489,7 +489,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->time_sim_ad = 0.0;
 
     int N = dims->N;
-    int ii, qp_iter, qp_status;
+    int ii, qp_status;
+    int qp_iter = 0;
     double alpha;
 
 #if defined(ACADOS_WITH_OPENMP)
@@ -569,9 +570,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
             if (nlp_opts->print_level > 0)
             {
-                printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, nlp_res->inf_norm_res_stat,
+                printf("%i\t%e\t%e\t%e\t%e\t%d\n", sqp_iter, nlp_res->inf_norm_res_stat,
                     nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_ineq,
-                    nlp_res->inf_norm_res_comp );
+                    nlp_res->inf_norm_res_comp, qp_iter);
                 printf("\n\n");
             }
 
@@ -949,10 +950,10 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         {
             if (sqp_iter%10 == 0)
             {
-                printf("# it\tstat\t\teq\t\tineq\t\tcomp\n");
+                printf("# it\tstat\t\teq\t\tineq\t\tcomp\t\tqp_iter\n");
             }
-            printf("%i\t%e\t%e\t%e\t%e.\n", sqp_iter, nlp_res->inf_norm_res_stat,
-                nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_ineq, nlp_res->inf_norm_res_comp );
+            printf("%i\t%e\t%e\t%e\t%e\t%d\n", sqp_iter, nlp_res->inf_norm_res_stat,
+                nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_ineq, nlp_res->inf_norm_res_comp, qp_iter);
         }
     }  // end SQP loop
 
