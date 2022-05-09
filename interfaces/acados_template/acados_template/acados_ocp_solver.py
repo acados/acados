@@ -977,6 +977,8 @@ class AcadosOcpSolver:
         assert getattr(self.shared_lib, f"{self.model_name}_acados_create")(self.capsule)==0
         self.solver_created = True
 
+        self.acados_ocp = acados_ocp
+
         # get pointers solver
         self.__get_pointers_solver()
 
