@@ -270,12 +270,12 @@ function ocp_generate_c_code(obj)
     % else % Matlab
     %     json_string = jsonencode(obj.acados_ocp_nlp_json);
     % end
-    fid = fopen('acados_ocp_nlp.json', 'w');
+    fid = fopen(obj.acados_ocp_nlp_json.json_file, 'w');
     if fid == -1, error('Cannot create JSON file'); end
     fwrite(fid, json_string, 'char');
     fclose(fid);
     %% render templated code
-    acados_template_mex.render_acados_templates('acados_ocp_nlp.json')
+    acados_template_mex.render_acados_templates(obj.acados_ocp_nlp_json.json_file)
     if ~ispc
         %% compile main
         acados_template_mex.compile_main()
