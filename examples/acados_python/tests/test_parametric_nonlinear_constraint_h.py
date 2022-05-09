@@ -87,14 +87,18 @@ Fmax = 80
 # ocp.constraints.lbu = np.array([-Fmax])
 # ocp.constraints.ubu = np.array([+Fmax])
 # ocp.constraints.idxbu = np.array([0])
-p = SX.sym('p')
+n_param = 42
+p = SX.sym('p', n_param)
+p_relevant = p[0]
 ocp.model.p = p
 
 ocp.constraints.lh = np.array([-Fmax])
 ocp.constraints.uh = np.array([+Fmax])
-ocp.model.con_h_expr = model.u / p
+ocp.model.con_h_expr = model.u / p_relevant
 
-ocp.parameter_values = np.array([0])
+p_0 = np.ones(n_param)
+p_0[0] = 1.0
+ocp.parameter_values = p_0
 
 ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
@@ -115,7 +119,7 @@ for i in range(N):
     ## Two equivalent ways to set parameters
     if i < N/2:
         # set all parameters
-        ocp_solver.set(i, "p", np.array([1.0]))
+        ocp_solver.set(i, "p", p_0)
     else:
         # set subset of parameters
         ocp_solver.set_params_sparse(i, [0], np.array([1.0]))
