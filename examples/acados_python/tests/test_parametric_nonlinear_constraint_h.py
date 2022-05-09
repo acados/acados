@@ -118,7 +118,7 @@ for i in range(N):
         ocp_solver.set(i, "p", np.array([1.0]))
     else:
         # set subset of parameters
-        ocp_solver.param_set(i, [0], np.array([1.0]))
+        ocp_solver.set_params_sparse(i, [0], np.array([1.0]))
 
 
 simX = np.ndarray((N+1, nx))

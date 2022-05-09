@@ -1811,7 +1811,7 @@ class AcadosOcpSolver:
         return
 
 
-    def param_set(self, stage_, idx_values_, param_values_):
+    def set_params_sparse(self, stage_, idx_values_, param_values_):
         """
         set parameters of the solvers external function partially:
         Pseudo: solver.param[idx_values_] = param_values_;
@@ -1829,18 +1829,17 @@ class AcadosOcpSolver:
             raise Exception('param_values_ must be np.array.')
 
         if param_values_.shape[0] != len(idx_values_):
-            raise Exception('param_values_ and idx_values_ must be of the same size.' \
-                + ' Got idx {}, param_values {}.'.format(param_values_.shape[0], len(idx_values_)))
+            raise Exception(f'param_values_ and idx_values_ must be of the same size.',
+                 f' Got idx {param_values_.shape[0]}, param_values {len(idx_values_)}.')
 
-        self.shared_lib.acados_update_params_sparse.argtypes = [c_int, POINTER(c_int), POINTER(c_double), c_int]
-        self.shared_lib.acados_update_params_sparse.restype = c_int
         param_data = cast(param_values_.ctypes.data, POINTER(c_double))
         idx_data = cast(param_values_.ctypes.data, POINTER(c_int))
-        # n_update = c_int()
-        # import pdb; pdb.set_trace()
-
-        self.shared_lib.acados_update_params_sparse(stage, idx_data, param_data, len(idx_values_))
-
+        n_update = c_int(len(idx_values_))
+        getattr(self.shared_lib, f"{self.model_name}_acados_update_params_sparse").argtypes = \
+                        [c_void_p, c_int, POINTER(c_int), POINTER(c_double), c_int]
+        getattr(self.shared_lib, f"{self.model_name}_acados_update_params_sparse").restype = c_int
+        getattr(self.shared_lib, f"{self.model_name}_acados_update_params_sparse") \
+                                    (self.capsule, stage, idx_data, param_data, n_update)
 
 
     def __del__(self):

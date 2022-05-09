@@ -2277,7 +2277,7 @@ int {{ model.name }}_acados_update_params({{ model.name }}_solver_capsule* capsu
 }
 
 
-int {{ model.name }}_acados_update_params_sparse({{ model.name }}_solver_capsule * capsule, int stage, int *idx, double *p, int n_update);
+int {{ model.name }}_acados_update_params_sparse({{ model.name }}_solver_capsule * capsule, int stage, int *idx, double *p, int n_update)
 {
     int solver_status = 0;
 
@@ -2301,48 +2301,48 @@ int {{ model.name }}_acados_update_params_sparse({{ model.name }}_solver_capsule
     if (stage < N && stage >= 0)
     {
     {%- if solver_options.integrator_type == "IRK" %}
-        capsule->impl_dae_fun[stage].set_param(capsule->impl_dae_fun+stage, n_update, idx, p);
-        capsule->impl_dae_fun_jac_x_xdot_z[stage].set_param(capsule->impl_dae_fun_jac_x_xdot_z+stage, n_update, idx, p);
-        capsule->impl_dae_jac_x_xdot_u_z[stage].set_param(capsule->impl_dae_jac_x_xdot_u_z+stage, n_update, idx, p);
+        capsule->impl_dae_fun[stage].set_param_sparse(capsule->impl_dae_fun+stage, n_update, idx, p);
+        capsule->impl_dae_fun_jac_x_xdot_z[stage].set_param_sparse(capsule->impl_dae_fun_jac_x_xdot_z+stage, n_update, idx, p);
+        capsule->impl_dae_jac_x_xdot_u_z[stage].set_param_sparse(capsule->impl_dae_jac_x_xdot_u_z+stage, n_update, idx, p);
 
         {%- if solver_options.hessian_approx == "EXACT" %}
-        capsule->impl_dae_hess[stage].set_param(capsule->impl_dae_hess+stage, n_update, idx, p);
+        capsule->impl_dae_hess[stage].set_param_sparse(capsule->impl_dae_hess+stage, n_update, idx, p);
         {%- endif %}
     {% elif solver_options.integrator_type == "LIFTED_IRK" %}
-        capsule->impl_dae_fun[stage].set_param(capsule->impl_dae_fun+stage, n_update, idx, p);
-        capsule->impl_dae_fun_jac_x_xdot_u[stage].set_param(capsule->impl_dae_fun_jac_x_xdot_u+stage, n_update, idx, p);
+        capsule->impl_dae_fun[stage].set_param_sparse(capsule->impl_dae_fun+stage, n_update, idx, p);
+        capsule->impl_dae_fun_jac_x_xdot_u[stage].set_param_sparse(capsule->impl_dae_fun_jac_x_xdot_u+stage, n_update, idx, p);
     {% elif solver_options.integrator_type == "ERK" %}
-        capsule->forw_vde_casadi[stage].set_param(capsule->forw_vde_casadi+stage, n_update, idx, p);
-        capsule->expl_ode_fun[stage].set_param(capsule->expl_ode_fun+stage, n_update, idx, p);
+        capsule->forw_vde_casadi[stage].set_param_sparse(capsule->forw_vde_casadi+stage, n_update, idx, p);
+        capsule->expl_ode_fun[stage].set_param_sparse(capsule->expl_ode_fun+stage, n_update, idx, p);
 
         {%- if solver_options.hessian_approx == "EXACT" %}
-        capsule->hess_vde_casadi[stage].set_param(capsule->hess_vde_casadi+stage, n_update, idx, p);
+        capsule->hess_vde_casadi[stage].set_param_sparse(capsule->hess_vde_casadi+stage, n_update, idx, p);
         {%- endif %}
     {% elif solver_options.integrator_type == "GNSF" %}
     {% if model.gnsf.purely_linear != 1 %}
-        capsule->gnsf_phi_fun[stage].set_param(capsule->gnsf_phi_fun+stage, n_update, idx, p);
-        capsule->gnsf_phi_fun_jac_y[stage].set_param(capsule->gnsf_phi_fun_jac_y+stage, n_update, idx, p);
-        capsule->gnsf_phi_jac_y_uhat[stage].set_param(capsule->gnsf_phi_jac_y_uhat+stage, n_update, idx, p);
+        capsule->gnsf_phi_fun[stage].set_param_sparse(capsule->gnsf_phi_fun+stage, n_update, idx, p);
+        capsule->gnsf_phi_fun_jac_y[stage].set_param_sparse(capsule->gnsf_phi_fun_jac_y+stage, n_update, idx, p);
+        capsule->gnsf_phi_jac_y_uhat[stage].set_param_sparse(capsule->gnsf_phi_jac_y_uhat+stage, n_update, idx, p);
         {% if model.gnsf.nontrivial_f_LO == 1 %}
-            capsule->gnsf_f_lo_jac_x1_x1dot_u_z[stage].set_param(capsule->gnsf_f_lo_jac_x1_x1dot_u_z+stage, n_update, idx, p);
+            capsule->gnsf_f_lo_jac_x1_x1dot_u_z[stage].set_param_sparse(capsule->gnsf_f_lo_jac_x1_x1dot_u_z+stage, n_update, idx, p);
         {%- endif %}
     {%- endif %}
     {% elif solver_options.integrator_type == "DISCRETE" %}
-        capsule->discr_dyn_phi_fun[stage].set_param(capsule->discr_dyn_phi_fun+stage, n_update, idx, p);
-        capsule->discr_dyn_phi_fun_jac_ut_xt[stage].set_param(capsule->discr_dyn_phi_fun_jac_ut_xt+stage, n_update, idx, p);
+        capsule->discr_dyn_phi_fun[stage].set_param_sparse(capsule->discr_dyn_phi_fun+stage, n_update, idx, p);
+        capsule->discr_dyn_phi_fun_jac_ut_xt[stage].set_param_sparse(capsule->discr_dyn_phi_fun_jac_ut_xt+stage, n_update, idx, p);
     {%- if solver_options.hessian_approx == "EXACT" %}
-        capsule->discr_dyn_phi_fun_jac_ut_xt_hess[stage].set_param(capsule->discr_dyn_phi_fun_jac_ut_xt_hess+stage, n_update, idx, p);
+        capsule->discr_dyn_phi_fun_jac_ut_xt_hess[stage].set_param_sparse(capsule->discr_dyn_phi_fun_jac_ut_xt_hess+stage, n_update, idx, p);
     {% endif %}
     {%- endif %}{# integrator_type #}
 
         // constraints
     {% if constraints.constr_type == "BGP" %}
-        capsule->phi_constraint[stage].set_param(capsule->phi_constraint+stage, n_update, idx, p);
+        capsule->phi_constraint[stage].set_param_sparse(capsule->phi_constraint+stage, n_update, idx, p);
     {% elif constraints.constr_type == "BGH" and dims.nh > 0 %}
-        capsule->nl_constr_h_fun_jac[stage].set_param(capsule->nl_constr_h_fun_jac+stage, n_update, idx, p);
-        capsule->nl_constr_h_fun[stage].set_param(capsule->nl_constr_h_fun+stage, n_update, idx, p);
+        capsule->nl_constr_h_fun_jac[stage].set_param_sparse(capsule->nl_constr_h_fun_jac+stage, n_update, idx, p);
+        capsule->nl_constr_h_fun[stage].set_param_sparse(capsule->nl_constr_h_fun+stage, n_update, idx, p);
     {%- if solver_options.hessian_approx == "EXACT" %}
-        capsule->nl_constr_h_fun_jac_hess[stage].set_param(capsule->nl_constr_h_fun_jac_hess+stage, n_update, idx, p);
+        capsule->nl_constr_h_fun_jac_hess[stage].set_param_sparse(capsule->nl_constr_h_fun_jac_hess+stage, n_update, idx, p);
     {%- endif %}
     {%- endif %}
 
@@ -2350,25 +2350,25 @@ int {{ model.name }}_acados_update_params_sparse({{ model.name }}_solver_capsule
         if (stage == 0)
         {
         {%- if cost.cost_type_0 == "NONLINEAR_LS" %}
-            capsule->cost_y_0_fun.set_param(&capsule->cost_y_0_fun, n_update, idx, p);
-            capsule->cost_y_0_fun_jac_ut_xt.set_param(&capsule->cost_y_0_fun_jac_ut_xt, n_update, idx, p);
-            capsule->cost_y_0_hess.set_param(&capsule->cost_y_0_hess, n_update, idx, p);
+            capsule->cost_y_0_fun.set_param_sparse(&capsule->cost_y_0_fun, n_update, idx, p);
+            capsule->cost_y_0_fun_jac_ut_xt.set_param_sparse(&capsule->cost_y_0_fun_jac_ut_xt, n_update, idx, p);
+            capsule->cost_y_0_hess.set_param_sparse(&capsule->cost_y_0_hess, n_update, idx, p);
         {%- elif cost.cost_type_0 == "EXTERNAL" %}
-            capsule->ext_cost_0_fun.set_param(&capsule->ext_cost_0_fun, n_update, idx, p);
-            capsule->ext_cost_0_fun_jac.set_param(&capsule->ext_cost_0_fun_jac, n_update, idx, p);
-            capsule->ext_cost_0_fun_jac_hess.set_param(&capsule->ext_cost_0_fun_jac_hess, n_update, idx, p);
+            capsule->ext_cost_0_fun.set_param_sparse(&capsule->ext_cost_0_fun, n_update, idx, p);
+            capsule->ext_cost_0_fun_jac.set_param_sparse(&capsule->ext_cost_0_fun_jac, n_update, idx, p);
+            capsule->ext_cost_0_fun_jac_hess.set_param_sparse(&capsule->ext_cost_0_fun_jac_hess, n_update, idx, p);
         {% endif %}
         }
         else // 0 < stage < N
         {
         {%- if cost.cost_type == "NONLINEAR_LS" %}
-            capsule->cost_y_fun[stage-1].set_param(capsule->cost_y_fun+stage-1, n_update, idx, p);
-            capsule->cost_y_fun_jac_ut_xt[stage-1].set_param(capsule->cost_y_fun_jac_ut_xt+stage-1, n_update, idx, p);
-            capsule->cost_y_hess[stage-1].set_param(capsule->cost_y_hess+stage-1, n_update, idx, p);
+            capsule->cost_y_fun[stage-1].set_param_sparse(capsule->cost_y_fun+stage-1, n_update, idx, p);
+            capsule->cost_y_fun_jac_ut_xt[stage-1].set_param_sparse(capsule->cost_y_fun_jac_ut_xt+stage-1, n_update, idx, p);
+            capsule->cost_y_hess[stage-1].set_param_sparse(capsule->cost_y_hess+stage-1, n_update, idx, p);
         {%- elif cost.cost_type == "EXTERNAL" %}
-            capsule->ext_cost_fun[stage-1].set_param(capsule->ext_cost_fun+stage-1, n_update, idx, p);
-            capsule->ext_cost_fun_jac[stage-1].set_param(capsule->ext_cost_fun_jac+stage-1, n_update, idx, p);
-            capsule->ext_cost_fun_jac_hess[stage-1].set_param(capsule->ext_cost_fun_jac_hess+stage-1, n_update, idx, p);
+            capsule->ext_cost_fun[stage-1].set_param_sparse(capsule->ext_cost_fun+stage-1, n_update, idx, p);
+            capsule->ext_cost_fun_jac[stage-1].set_param_sparse(capsule->ext_cost_fun_jac+stage-1, n_update, idx, p);
+            capsule->ext_cost_fun_jac_hess[stage-1].set_param_sparse(capsule->ext_cost_fun_jac_hess+stage-1, n_update, idx, p);
         {%- endif %}
         }
     }
@@ -2378,22 +2378,22 @@ int {{ model.name }}_acados_update_params_sparse({{ model.name }}_solver_capsule
         // terminal shooting node has no dynamics
         // cost
     {%- if cost.cost_type_e == "NONLINEAR_LS" %}
-        capsule->cost_y_e_fun.set_param(&capsule->cost_y_e_fun, n_update, idx, p);
-        capsule->cost_y_e_fun_jac_ut_xt.set_param(&capsule->cost_y_e_fun_jac_ut_xt, n_update, idx, p);
-        capsule->cost_y_e_hess.set_param(&capsule->cost_y_e_hess, n_update, idx, p);
+        capsule->cost_y_e_fun.set_param_sparse(&capsule->cost_y_e_fun, n_update, idx, p);
+        capsule->cost_y_e_fun_jac_ut_xt.set_param_sparse(&capsule->cost_y_e_fun_jac_ut_xt, n_update, idx, p);
+        capsule->cost_y_e_hess.set_param_sparse(&capsule->cost_y_e_hess, n_update, idx, p);
     {%- elif cost.cost_type_e == "EXTERNAL" %}
-        capsule->ext_cost_e_fun.set_param(&capsule->ext_cost_e_fun, n_update, idx, p);
-        capsule->ext_cost_e_fun_jac.set_param(&capsule->ext_cost_e_fun_jac, n_update, idx, p);
-        capsule->ext_cost_e_fun_jac_hess.set_param(&capsule->ext_cost_e_fun_jac_hess, n_update, idx, p);
+        capsule->ext_cost_e_fun.set_param_sparse(&capsule->ext_cost_e_fun, n_update, idx, p);
+        capsule->ext_cost_e_fun_jac.set_param_sparse(&capsule->ext_cost_e_fun_jac, n_update, idx, p);
+        capsule->ext_cost_e_fun_jac_hess.set_param_sparse(&capsule->ext_cost_e_fun_jac_hess, n_update, idx, p);
     {% endif %}
         // constraints
     {% if constraints.constr_type_e == "BGP" %}
-        capsule->phi_e_constraint.set_param(&capsule->phi_e_constraint, n_update, idx, p);
+        capsule->phi_e_constraint.set_param_sparse(&capsule->phi_e_constraint, n_update, idx, p);
     {% elif constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
-        capsule->nl_constr_h_e_fun_jac.set_param(&capsule->nl_constr_h_e_fun_jac, n_update, idx, p);
-        capsule->nl_constr_h_e_fun.set_param(&capsule->nl_constr_h_e_fun, n_update, idx, p);
+        capsule->nl_constr_h_e_fun_jac.set_param_sparse(&capsule->nl_constr_h_e_fun_jac, n_update, idx, p);
+        capsule->nl_constr_h_e_fun.set_param_sparse(&capsule->nl_constr_h_e_fun, n_update, idx, p);
     {%- if solver_options.hessian_approx == "EXACT" %}
-        capsule->nl_constr_h_e_fun_jac_hess.set_param(&capsule->nl_constr_h_e_fun_jac_hess, n_update, idx, p);
+        capsule->nl_constr_h_e_fun_jac_hess.set_param_sparse(&capsule->nl_constr_h_e_fun_jac_hess, n_update, idx, p);
     {%- endif %}
     {% endif %}
     }
