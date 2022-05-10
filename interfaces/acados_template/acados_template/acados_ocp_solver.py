@@ -1817,30 +1817,32 @@ class AcadosOcpSolver:
         Pseudo: solver.param[idx_values_] = param_values_;
         Parameters:
             :param stage_: integer corresponding to shooting node
-            :param idx_values_: 0 based integer array corresponding to parameter indices to be set
+            :param idx_values_: 0 based np array (or iterable) of integers: indices of parameter to be set
             :param param_values_: new parameter values as numpy array
         """
-        stage = c_int(stage_)
 
-        if not isinstance(idx_values_, list) or not isinstance(idx_values_[0], int):
-            raise Exception('idx_values_ must be list of integers.')
+        # if not isinstance(idx_values_, np.ndarray) or not issubclass(type(idx_values_[0]), np.integer):
+        #     raise Exception('idx_values_ must be np.array of integers.')
 
         if not isinstance(param_values_, np.ndarray):
             raise Exception('param_values_ must be np.array.')
 
         if param_values_.shape[0] != len(idx_values_):
-            raise Exception(f'param_values_ and idx_values_ must be of the same size.',
-                 f' Got idx {param_values_.shape[0]}, param_values {len(idx_values_)}.')
+            raise Exception(f'param_values_ and idx_values_ must be of the same size.' +
+                 f' Got sizes idx {param_values_.shape[0]}, param_values {len(idx_values_)}.')
+
+        stage = c_int(stage_)
+        n_update = c_int(len(param_values_))
 
         param_data = cast(param_values_.ctypes.data, POINTER(c_double))
-        idx_data = cast(param_values_.ctypes.data, POINTER(c_int))
-        n_update = c_int(len(idx_values_))
+        c_idx_values = np.ascontiguousarray(idx_values_, dtype=np.intc)
+        idx_data = cast(c_idx_values.ctypes.data, POINTER(c_int))
+
         getattr(self.shared_lib, f"{self.model_name}_acados_update_params_sparse").argtypes = \
                         [c_void_p, c_int, POINTER(c_int), POINTER(c_double), c_int]
         getattr(self.shared_lib, f"{self.model_name}_acados_update_params_sparse").restype = c_int
         getattr(self.shared_lib, f"{self.model_name}_acados_update_params_sparse") \
                                     (self.capsule, stage, idx_data, param_data, n_update)
-
 
     def __del__(self):
         if self.solver_created:

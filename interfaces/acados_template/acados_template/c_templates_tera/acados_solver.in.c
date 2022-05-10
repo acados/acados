@@ -2283,17 +2283,18 @@ int {{ model.name }}_acados_update_params_sparse({{ model.name }}_solver_capsule
 
     int casadi_np = {{ dims.np }};
     if (casadi_np < n_update) {
-        printf("{{ model.name }}_acados_update_params_sparse: trying to set %i parameters for external functions."
-            " External function has %i parameters. Exiting.\n", n_update, casadi_np);
+        printf("{{ model.name }}_acados_update_params_sparse: trying to set %d parameters for external functions."
+            " External function has %d parameters. Exiting.\n", n_update, casadi_np);
         exit(1);
     }
     for (int i = 0; i < n_update; i++)
     {
         if (idx[i] > casadi_np) {                   
-            printf("{{ model.name }}_acados_update_params_sparse: attempt to set parameters with index %i, while"
-                " external functions only has %i parameters. Exiting.\n", idx[i], casadi_np);
+            printf("{{ model.name }}_acados_update_params_sparse: attempt to set parameters with index %d, while"
+                " external functions only has %d parameters. Exiting.\n", idx[i], casadi_np);
             exit(1);
         }
+        printf("param %d value %e\n", idx[i], p[i]);
     }
 
 {%- if dims.np > 0 %}
