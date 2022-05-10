@@ -2400,6 +2400,7 @@ int {{ model.name }}_acados_update_params_sparse({{ model.name }}_solver_capsule
     }
 {% endif %}{# if dims.np #}
 
+    return 0;
 }
 
 int {{ model.name }}_acados_solve({{ model.name }}_solver_capsule* capsule)

@@ -140,12 +140,13 @@ ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
 # set prediction horizon
 ocp.solver_options.tf = Tf
 
-# TODO: test cython
-# AcadosOcpSolver.generate(ocp, json_file='acados_ocp.json')
-# AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
-# ocp_solver = AcadosOcpSolver.create_cython_solver('acados_ocp.json')
-
-ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
+# Cython
+if 0:
+    AcadosOcpSolver.generate(ocp, json_file='acados_ocp.json')
+    AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
+    ocp_solver = AcadosOcpSolver.create_cython_solver('acados_ocp.json')
+else:
+    ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
 for i in range(N):
     ## Two equivalent ways to set parameters
