@@ -2287,15 +2287,15 @@ int {{ model.name }}_acados_update_params_sparse({{ model.name }}_solver_capsule
             " External function has %d parameters. Exiting.\n", n_update, casadi_np);
         exit(1);
     }
-    for (int i = 0; i < n_update; i++)
-    {
-        if (idx[i] > casadi_np) {                   
-            printf("{{ model.name }}_acados_update_params_sparse: attempt to set parameters with index %d, while"
-                " external functions only has %d parameters. Exiting.\n", idx[i], casadi_np);
-            exit(1);
-        }
-        printf("param %d value %e\n", idx[i], p[i]);
-    }
+    // for (int i = 0; i < n_update; i++)
+    // {
+    //     if (idx[i] > casadi_np) {
+    //         printf("{{ model.name }}_acados_update_params_sparse: attempt to set parameters with index %d, while"
+    //             " external functions only has %d parameters. Exiting.\n", idx[i], casadi_np);
+    //         exit(1);
+    //     }
+    //     printf("param %d value %e\n", idx[i], p[i]);
+    // }
 
 {%- if dims.np > 0 %}
     const int N = capsule->nlp_solver_plan->N;
