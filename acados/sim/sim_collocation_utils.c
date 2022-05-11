@@ -45,6 +45,7 @@
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
 #include "acados/utils/print.h"
+#include "acados/utils/mem.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -472,7 +473,10 @@ acados_size_t butcher_tableau_work_calculate_size(int ns)
 
     acados_size_t size_legendre = gauss_legendre_nodes_work_calculate_size(ns);
 
-    return size > size_legendre ? size : size_legendre;
+    size = size > size_legendre ? size : size_legendre;
+    make_int_multiple_of(8, &size);
+
+    return size;
 }
 
 
