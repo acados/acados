@@ -39,7 +39,10 @@ from pendulum_model import export_pendulum_ode_model
 import numpy as np
 import scipy.linalg
 from utils import plot_pendulum
-from casadi import SX
+from casadi import SX, vertcat
+
+
+COST_MODULE = 'EXTERNAL'
 
 # create ocp object to formulate the OCP
 ocp = AcadosOcp()
@@ -47,10 +50,12 @@ ocp = AcadosOcp()
 # set model
 model = export_pendulum_ode_model()
 ocp.model = model
+x = model.x
+u = model.u
 
 Tf = 1.0
-nx = model.x.size()[0]
-nu = model.u.size()[0]
+nx = x.size()[0]
+nu = u.size()[0]
 ny = nx + nu
 ny_e = nx
 N = 20
@@ -61,24 +66,50 @@ ocp.dims.N = N
 # set cost
 Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
 R = 2*np.diag([1e-2])
+cost_W = scipy.linalg.block_diag(Q, R)
 
-ocp.cost.W_e = Q
-ocp.cost.W = scipy.linalg.block_diag(Q, R)
 
-ocp.cost.cost_type = 'LINEAR_LS'
-ocp.cost.cost_type_e = 'LINEAR_LS'
+#
+n_param = 42
+p = SX.sym('p', n_param)
+constraint_quotient = p[0]
+y_param = p[1:nx+nu+1]
+ocp.model.p = p
 
-ocp.cost.Vx = np.zeros((ny, nx))
-ocp.cost.Vx[:nx,:nx] = np.eye(nx)
+if COST_MODULE == 'LS':
+    ocp.cost.W_e = Q
+    ocp.cost.W = cost_W
 
-Vu = np.zeros((ny, nu))
-Vu[4,0] = 1.0
-ocp.cost.Vu = Vu
+    ocp.cost.cost_type = 'LINEAR_LS'
+    ocp.cost.cost_type_e = 'LINEAR_LS'
 
-ocp.cost.Vx_e = np.eye(nx)
+    ocp.cost.Vx = np.zeros((ny, nx))
+    ocp.cost.Vx[:nx,:nx] = np.eye(nx)
 
-ocp.cost.yref = np.zeros((ny, ))
-ocp.cost.yref_e = np.zeros((ny_e, ))
+    Vu = np.zeros((ny, nu))
+    Vu[4,0] = 1.0
+    ocp.cost.Vu = Vu
+
+    ocp.cost.Vx_e = np.eye(nx)
+
+    ocp.cost.yref = np.zeros((ny, ))
+    ocp.cost.yref_e = np.zeros((ny_e, ))
+
+# elif COST_MODULE == 'NLS':
+#     ocp.cost.cost_type = 'NONLINEAR_LS'
+#     ocp.cost.cost_type_e = 'NONLINEAR_LS'
+
+#     ocp.model.cost_y_expr = vertcat(x, u)
+#     ocp.model.cost_y_expr_e = x
+
+elif COST_MODULE == 'EXTERNAL':
+    ocp.cost.cost_type = 'EXTERNAL'
+    ocp.cost.cost_type_e = 'EXTERNAL'
+
+    residual = y_param - vertcat(x, u)
+    ocp.model.cost_expr_ext_cost = residual.T @ cost_W @ residual
+    res_e = y_param[0:nx] - x
+    ocp.model.cost_expr_ext_cost_e = res_e.T @ Q @ res_e
 
 # set constraints
 
@@ -87,14 +118,15 @@ Fmax = 80
 # ocp.constraints.lbu = np.array([-Fmax])
 # ocp.constraints.ubu = np.array([+Fmax])
 # ocp.constraints.idxbu = np.array([0])
-p = SX.sym('p')
-ocp.model.p = p
 
 ocp.constraints.lh = np.array([-Fmax])
 ocp.constraints.uh = np.array([+Fmax])
-ocp.model.con_h_expr = model.u / p
+ocp.model.con_h_expr = model.u / constraint_quotient
 
-ocp.parameter_values = np.array([0])
+p_0 = np.zeros(n_param)
+p_0[0] = 1.0
+p_0[1] = 1.0
+ocp.parameter_values = p_0
 
 ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
@@ -108,12 +140,23 @@ ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
 # set prediction horizon
 ocp.solver_options.tf = Tf
 
-
-ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
+# Cython
+if 0:
+    AcadosOcpSolver.generate(ocp, json_file='acados_ocp.json')
+    AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
+    ocp_solver = AcadosOcpSolver.create_cython_solver('acados_ocp.json')
+else:
+    ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
 for i in range(N):
-    ocp_solver.set(i, "p", np.array([1.0]))
-
+    ## Two equivalent ways to set parameters
+    if i < N/2:
+        # set all parameters
+        ocp_solver.set(i, "p", p_0)
+    else:
+        # set subset of parameters
+        ocp_solver.set_params_sparse(i, np.array(range(n_param)), np.zeros(n_param))
+        ocp_solver.set_params_sparse(i, np.ascontiguousarray([0, 1]), np.array([1.0, 1.0]))
 
 simX = np.ndarray((N+1, nx))
 simU = np.ndarray((N, nu))

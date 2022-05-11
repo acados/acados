@@ -701,6 +701,50 @@ cdef class AcadosOcpSolverCython:
                 '\n Possible values are {}.'.format(field_, ', '.join(int_fields + double_fields + string_fields)))
 
 
+    def set_params_sparse(self, int stage, idx_values_, param_values_):
+        """
+        set parameters of the solvers external function partially:
+        Pseudo: solver.param[idx_values_] = param_values_;
+        Parameters:
+            :param stage_: integer corresponding to shooting node
+            :param idx_values_: 0 based integer array corresponding to parameter indices to be set
+            :param param_values_: new parameter values as numpy array
+        """
+
+        if not isinstance(param_values_, np.ndarray):
+            raise Exception('param_values_ must be np.array.')
+
+        if param_values_.shape[0] != len(idx_values_):
+            raise Exception(f'param_values_ and idx_values_ must be of the same size.' +
+                 f' Got sizes idx {param_values_.shape[0]}, param_values {len(idx_values_)}.')
+
+        # n_update = c_int(len(param_values_))
+
+        # param_data = cast(param_values_.ctypes.data, POINTER(c_double))
+        # c_idx_values = np.ascontiguousarray(idx_values_, dtype=np.intc)
+        # idx_data = cast(c_idx_values.ctypes.data, POINTER(c_int))
+
+        # getattr(self.shared_lib, f"{self.model_name}_acados_update_params_sparse").argtypes = \
+        #                 [c_void_p, c_int, POINTER(c_int), POINTER(c_double), c_int]
+        # getattr(self.shared_lib, f"{self.model_name}_acados_update_params_sparse").restype = c_int
+        # getattr(self.shared_lib, f"{self.model_name}_acados_update_params_sparse") \
+        #                             (self.capsule, stage, idx_data, param_data, n_update)
+
+        cdef cnp.ndarray[cnp.float64_t, ndim=1] value = np.ascontiguousarray(param_values_, dtype=np.float64)
+        # cdef cnp.ndarray[cnp.intc, ndim=1] idx = np.ascontiguousarray(idx_values_, dtype=np.intc)
+
+        # NOTE: this does throw an error somehow:
+        # ValueError: Buffer dtype mismatch, expected 'int object' but got 'int'
+        # cdef cnp.ndarray[cnp.int, ndim=1] idx = np.ascontiguousarray(idx_values_, dtype=np.intc)
+
+        cdef cnp.ndarray[cnp.int32_t, ndim=1] idx = np.ascontiguousarray(idx_values_, dtype=np.int32)
+        cdef int n_update = value.shape[0]
+        # print(f"in set_params_sparse Cython n_update {n_update}")
+
+        assert acados_solver.acados_update_params_sparse(self.capsule, stage, <int *> idx.data,  <double *> value.data, n_update) == 0
+        return
+
+
     def __del__(self):
         if self.solver_created:
             acados_solver.acados_free(self.capsule)
