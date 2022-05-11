@@ -1135,7 +1135,7 @@ void external_function_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, 
     external_function_param_casadi *fun = self;
 
     // loop index
-    int ii, jj;
+    int ii;
 
     // in as args
     // skip last argument (that is the parameters vector)
