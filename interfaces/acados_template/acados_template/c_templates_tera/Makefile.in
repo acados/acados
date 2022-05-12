@@ -306,9 +306,9 @@ LDLIBS+= -lm
 LDLIBS+= {{ link_libs }}
 
 # libraries
-LIBACADOS_SOLVER=libacados_solver_{{ model.name }}.so
-LIBACADOS_OCP_SOLVER=libacados_ocp_solver_{{ model.name }}.so
-LIBACADOS_SIM_SOLVER=lib$(SIM_SRC:.c=.so)
+LIBACADOS_SOLVER=libacados_solver_{{ model.name }}{{ shared_lib_ext }}
+LIBACADOS_OCP_SOLVER=libacados_ocp_solver_{{ model.name }}{{ shared_lib_ext }}
+LIBACADOS_SIM_SOLVER=lib$(SIM_SRC:.c={{ shared_lib_ext }})
 
 # virtual targets
 .PHONY : all clean
@@ -363,27 +363,27 @@ ocp_cython_o: ocp_cython_c
 
 ocp_cython: ocp_cython_o
 	$(CC) $(ACADOS_FLAGS) -shared \
-	-o acados_ocp_solver_pyx.so \
+	-o acados_ocp_solver_pyx{{ shared_lib_ext }} \
 	-Wl,-rpath=$(LIB_PATH) \
 	acados_ocp_solver_pyx.o \
-	$(abspath .)/libacados_ocp_solver_{{ model.name }}.so \
+	$(abspath .)/libacados_ocp_solver_{{ model.name }}{{ shared_lib_ext }} \
 	$(LDFLAGS) $(LDLIBS)
 
 {%- if os and os == "pc" %}
 
 clean:
 	del \Q *.o 2>nul
-	del \Q *.so 2>nul
+	del \Q *{{ shared_lib_ext }} 2>nul
 	del \Q main_{{ model.name }} 2>nul
 
 clean_ocp_shared_lib:
-	del \Q libacados_ocp_solver_{{ model.name }}.so 2>nul
+	del \Q libacados_ocp_solver_{{ model.name }}{{ shared_lib_ext }} 2>nul
 	del \Q acados_solver_{{ model.name }}.o 2>nul
 
 clean_ocp_cython:
-	del \Q libacados_ocp_solver_{{ model.name }}.so 2>nul
+	del \Q libacados_ocp_solver_{{ model.name }}{{ shared_lib_ext }} 2>nul
 	del \Q acados_solver_{{ model.name }}.o 2>nul
-	del \Q acados_ocp_solver_pyx.so 2>nul
+	del \Q acados_ocp_solver_pyx{{ shared_lib_ext }} 2>nul
 	del \Q acados_ocp_solver_pyx.o 2>nul
 
 {%- else %}
@@ -398,9 +398,9 @@ clean_ocp_shared_lib:
 	$(RM) $(OCP_OBJ)
 
 clean_ocp_cython:
-	$(RM) libacados_ocp_solver_{{ model.name }}.so
+	$(RM) libacados_ocp_solver_{{ model.name }}{{ shared_lib_ext }}
 	$(RM) acados_solver_{{ model.name }}.o
-	$(RM) acados_ocp_solver_pyx.so
+	$(RM) acados_ocp_solver_pyx{{ shared_lib_ext }}
 	$(RM) acados_ocp_solver_pyx.o
 
 {%- endif %}
