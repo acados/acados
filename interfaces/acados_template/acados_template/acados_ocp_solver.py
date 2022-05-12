@@ -53,7 +53,7 @@ from .acados_ocp import AcadosOcp
 from .acados_model import acados_model_strip_casadi_symbolics
 from .utils import is_column, is_empty, casadi_length, render_template,\
      format_class_dict, ocp_check_against_layout, np_array_to_list, make_model_consistent,\
-     set_up_imported_gnsf_model, get_ocp_nlp_layout, get_python_interface_path
+     set_up_imported_gnsf_model, get_ocp_nlp_layout, get_python_interface_path, get_lib_ext
 from .builders import CMakeBuilder
 
 
@@ -938,11 +938,9 @@ class AcadosOcpSolver:
 
         # prepare library loading
         lib_prefix = 'lib'
-        lib_ext = '.so'
+        lib_ext = get_lib_ext()
         if os.name == 'nt':
             lib_prefix = ''
-            lib_ext = ''
-        # ToDo: check for mac
 
         # Load acados library to avoid unloading the library.
         # This is necessary if acados was compiled with OpenMP, since the OpenMP threads can't be destroyed.

@@ -46,7 +46,7 @@ from .acados_sim import AcadosSim
 from .acados_ocp import AcadosOcp
 from .acados_model import acados_model_strip_casadi_symbolics
 from .utils import is_column, render_template, format_class_dict, np_array_to_list,\
-     make_model_consistent, set_up_imported_gnsf_model, get_python_interface_path
+     make_model_consistent, set_up_imported_gnsf_model, get_python_interface_path, get_lib_ext
 from .builders import CMakeBuilder
 
 
@@ -248,12 +248,18 @@ class AcadosSimSolver:
         model_name = self.sim_struct.model.name
         self.model_name = model_name
 
+        # prepare library loading
+        lib_prefix = 'lib'
+        lib_ext = get_lib_ext()
+        if os.name == 'nt':
+            lib_prefix = ''
+
         # Load acados library to avoid unloading the library.
         # This is necessary if acados was compiled with OpenMP, since the OpenMP threads can't be destroyed.
         # Unloading a library which uses OpenMP results in a segfault (on any platform?).
         # see [https://stackoverflow.com/questions/34439956/vc-crash-when-freeing-a-dll-built-with-openmp]
         # or [https://python.hotexamples.com/examples/_ctypes/-/dlclose/python-dlclose-function-examples.html]
-        libacados_name = 'libacados.so'
+        libacados_name = f'{lib_prefix}acados{lib_ext}'
         libacados_filepath = os.path.join(acados_sim.acados_lib_path, libacados_name)
         self.__acados_lib = CDLL(libacados_filepath)
         # find out if acados was compiled with OpenMP
@@ -265,16 +271,10 @@ class AcadosSimSolver:
             print('acados was compiled with OpenMP.')
         else:
             print('acados was compiled without OpenMP.')
+        libacados_sim_solver_name = f'{lib_prefix}acados_sim_solver_{self.model_name}{lib_ext}'
+        self.shared_lib_name = os.path.join(code_export_dir, libacados_sim_solver_name)
 
-        # Ctypes
-        lib_prefix = 'lib'
-        lib_ext = '.so'
-        if os.name == 'nt':
-            lib_prefix = ''
-            lib_ext = ''
-        self.shared_lib_name = os.path.join(code_export_dir, f'{lib_prefix}acados_sim_solver_{model_name}{lib_ext}')
-        print(f'self.shared_lib_name = "{self.shared_lib_name}"')
-        
+        # get shared_lib
         self.shared_lib = CDLL(self.shared_lib_name)
 
 
