@@ -239,13 +239,13 @@ void *sim_irk_opts_assign(void *config_, void *dims, void *raw_memory)
 
     align_char_to(8, &c_ptr);
 
-    assign_and_advance_double(ns_max * ns_max, &opts->A_mat, &c_ptr);
-    assign_and_advance_double(ns_max, &opts->b_vec, &c_ptr);
-    assign_and_advance_double(ns_max, &opts->c_vec, &c_ptr);
-
     // work
     opts->work = c_ptr;
     c_ptr += butcher_tableau_work_calculate_size(ns_max);
+
+    assign_and_advance_double(ns_max * ns_max, &opts->A_mat, &c_ptr);
+    assign_and_advance_double(ns_max, &opts->b_vec, &c_ptr);
+    assign_and_advance_double(ns_max, &opts->c_vec, &c_ptr);
 
     assert((char *) raw_memory + sim_irk_opts_calculate_size(config_, dims) >= c_ptr);
 

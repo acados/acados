@@ -667,6 +667,7 @@ acados_size_t ocp_nlp_in_calculate_size_self(int N)
 
     size += (N + 1) * sizeof(void *);  // constraints
 
+    size += 3*8;  // aligns
     return size;
 }
 
@@ -697,10 +698,6 @@ acados_size_t ocp_nlp_in_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *di
         size += config->constraints[i]->model_calculate_size(config->constraints[i],
                                                               dims->constraints[i]);
     }
-
-    size += 8;  // initial align
-    size += 8;  // final align
-
     //  make_int_multiple_of(64, &size);
 
     return size;
@@ -719,6 +716,9 @@ ocp_nlp_in *ocp_nlp_in_assign_self(int N, void *raw_memory)
     ocp_nlp_in *in = (ocp_nlp_in *) c_ptr;
     c_ptr += sizeof(ocp_nlp_in);
 
+    // align
+    align_char_to(8, &c_ptr);
+
     // Ts
     assign_and_advance_double(N, &in->Ts, &c_ptr);
 
@@ -735,6 +735,8 @@ ocp_nlp_in *ocp_nlp_in_assign_self(int N, void *raw_memory)
     c_ptr += (N + 1) * sizeof(void *);
 
     align_char_to(8, &c_ptr);
+
+    assert((char *) raw_memory + ocp_nlp_in_calculate_size_self(N) >= c_ptr);
 
     return in;
 }

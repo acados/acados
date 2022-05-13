@@ -97,7 +97,7 @@ acados_size_t sim_in_calculate_size(void *config_, void *dims)
     size += config->model_calculate_size(config, dims);
 
     make_int_multiple_of(8, &size);
-    size += 1 * 8;
+    size += 2 * 8;
 
     return size;
 }
@@ -110,30 +110,34 @@ sim_in *sim_in_assign(void *config_, void *dims, void *raw_memory)
 
     char *c_ptr = (char *) raw_memory;
 
+    // assign structure itself
     sim_in *in = (sim_in *) c_ptr;
     c_ptr += sizeof(sim_in);
 
-    in->dims = dims;
+    // align
+    align_char_to(8, &c_ptr);
 
+    // assign substructures
+    in->model = config->model_assign(config, dims, c_ptr);
+    c_ptr += config->model_calculate_size(config, dims);
+
+    // set pointers and dimensions, defaults
+    in->dims = dims;
     int nx, nu, nz;
     config->dims_get(config_, dims, "nx", &nx);
     config->dims_get(config_, dims, "nu", &nu);
     config->dims_get(config_, dims, "nz", &nz);
-
     int NF = nx + nu;
-
-    align_char_to(8, &c_ptr);
-
-    assign_and_advance_double(nx, &in->x, &c_ptr);
-    assign_and_advance_double(nu, &in->u, &c_ptr);
-
-    assign_and_advance_double(nx * NF, &in->S_forw, &c_ptr);
-    assign_and_advance_double(NF, &in->S_adj, &c_ptr);
-
     in->identity_seed = false;
 
-    in->model = config->model_assign(config, dims, c_ptr);
-    c_ptr += config->model_calculate_size(config, dims);
+    // align
+    align_char_to(8, &c_ptr);
+
+    // assign doubles
+    assign_and_advance_double(nx, &in->x, &c_ptr);
+    assign_and_advance_double(nu, &in->u, &c_ptr);
+    assign_and_advance_double(nx * NF, &in->S_forw, &c_ptr);
+    assign_and_advance_double(NF, &in->S_adj, &c_ptr);
 
     assert((char *) raw_memory + sim_in_calculate_size(config_, dims) >= c_ptr);
 
