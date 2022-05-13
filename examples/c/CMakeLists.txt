@@ -69,11 +69,11 @@ file(GLOB CHAIN_MODEL_SRC
     # chain_model/casadi_erk4_chain_nm5.c
     # NOTE: chain_model/casadi_erk4_chain_nm5.c (and 6) commented, because compilation takes quite a while
     # 6 masses
-    chain_model/vde_chain_nm6.c
-    chain_model/vde_adj_chain_nm6.c
-    #chain_model/vde_hess_chain_nm6.c
-    chain_model/ls_cost_nm6.c
-    chain_model/ls_costN_nm6.c
+    # chain_model/vde_chain_nm6.c
+    # chain_model/vde_adj_chain_nm6.c
+    # chain_model/vde_hess_chain_nm6.c
+    # chain_model/ls_cost_nm6.c
+    # chain_model/ls_costN_nm6.c
     # chain_model/casadi_erk4_chain_nm6.c
 
     # external cost
@@ -109,11 +109,11 @@ file(GLOB CHAIN_MODEL_SRC
     implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm5.c
     implicit_chain_model/impl_ode_jac_x_u_chain_nm5.c
     # 6 masses
-    implicit_chain_model/impl_ode_fun_chain_nm6.c
-    implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm6.c
-    implicit_chain_model/impl_ode_fun_jac_x_xdot_u_chain_nm6.c
-    implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm6.c
-    implicit_chain_model/impl_ode_jac_x_u_chain_nm6.c
+    # implicit_chain_model/impl_ode_fun_chain_nm6.c
+    # implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm6.c
+    # implicit_chain_model/impl_ode_fun_jac_x_xdot_u_chain_nm6.c
+    # implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm6.c
+    # implicit_chain_model/impl_ode_jac_x_u_chain_nm6.c
 
 )
 

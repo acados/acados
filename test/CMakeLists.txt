@@ -77,11 +77,11 @@ set(TEST_OCP_NLP_SRC
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/ls_costN_nm5.c
     #${CMAKE_SOURCE_DIR}/examples/c/chain_model/casadi_erk4_chain_nm5.c
     # 6 masses
-    ${CMAKE_SOURCE_DIR}/examples/c/chain_model/vde_chain_nm6.c
-    ${CMAKE_SOURCE_DIR}/examples/c/chain_model/vde_adj_chain_nm6.c
+    # ${CMAKE_SOURCE_DIR}/examples/c/chain_model/vde_chain_nm6.c
+    # ${CMAKE_SOURCE_DIR}/examples/c/chain_model/vde_adj_chain_nm6.c
     #chain_model/vde_hess_chain_nm6.c
-    ${CMAKE_SOURCE_DIR}/examples/c/chain_model/ls_cost_nm6.c
-    ${CMAKE_SOURCE_DIR}/examples/c/chain_model/ls_costN_nm6.c
+    # ${CMAKE_SOURCE_DIR}/examples/c/chain_model/ls_cost_nm6.c
+    # ${CMAKE_SOURCE_DIR}/examples/c/chain_model/ls_costN_nm6.c
     #${CMAKE_SOURCE_DIR}/examples/c/chain_model/casadi_erk4_chain_nm6.c
 
     # external cost
@@ -89,7 +89,7 @@ set(TEST_OCP_NLP_SRC
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/chain_nm_3_external_cost.c
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/chain_nm_4_external_cost.c
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/chain_nm_5_external_cost.c
-    ${CMAKE_SOURCE_DIR}/examples/c/chain_model/chain_nm_6_external_cost.c
+    # ${CMAKE_SOURCE_DIR}/examples/c/chain_model/chain_nm_6_external_cost.c
 
     ### implicit ###
     # 2 masses
@@ -117,10 +117,10 @@ set(TEST_OCP_NLP_SRC
     ${CMAKE_SOURCE_DIR}/examples/c/implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm5.c
     #${CMAKE_SOURCE_DIR}/examples/c/implicit_chain_model/impl_ode_jac_x_u_chain_nm5.c
     # 6 masses
-    ${CMAKE_SOURCE_DIR}/examples/c/implicit_chain_model/impl_ode_fun_chain_nm6.c
-    ${CMAKE_SOURCE_DIR}/examples/c/implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm6.c
-    ${CMAKE_SOURCE_DIR}/examples/c/implicit_chain_model/impl_ode_fun_jac_x_xdot_u_chain_nm6.c
-    ${CMAKE_SOURCE_DIR}/examples/c/implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm6.c
+    # ${CMAKE_SOURCE_DIR}/examples/c/implicit_chain_model/impl_ode_fun_chain_nm6.c
+    # ${CMAKE_SOURCE_DIR}/examples/c/implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm6.c
+    # ${CMAKE_SOURCE_DIR}/examples/c/implicit_chain_model/impl_ode_fun_jac_x_xdot_u_chain_nm6.c
+    # ${CMAKE_SOURCE_DIR}/examples/c/implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm6.c
     #${CMAKE_SOURCE_DIR}/examples/c/implicit_chain_model/impl_ode_jac_x_u_chain_nm6.c
 
     ############################
