@@ -35,7 +35,7 @@
 import numpy as np
 import os
 from .acados_model import AcadosModel
-from .utils import get_acados_path, J_to_idx, J_to_idx_slack
+from .utils import get_acados_path, J_to_idx, J_to_idx_slack, get_lib_ext
 
 class AcadosOcpDims:
     """
@@ -2956,6 +2956,7 @@ class AcadosOcp:
         - :py:attr:`solver_options` of type :py:class:`acados_template.acados_ocp.AcadosOcpOptions`
 
         - :py:attr:`acados_include_path` (set automatically)
+        - :py:attr:`shared_lib_ext` (set automatically)
         - :py:attr:`acados_lib_path` (set automatically)
         - :py:attr:`parameter_values` - used to initialize the parameters (can be changed)
     """
@@ -2982,6 +2983,7 @@ class AcadosOcp:
         """Path to acados include directory (set automatically), type: `string`"""
         self.acados_lib_path = os.path.join(acados_path, 'lib').replace(os.sep, '/') # the replace part is important on Windows for CMake
         """Path to where acados library is located, type: `string`"""
+        self.shared_lib_ext = get_lib_ext()
 
         import numpy
         self.cython_include_dirs = numpy.get_include()

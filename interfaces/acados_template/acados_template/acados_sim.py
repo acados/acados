@@ -36,7 +36,7 @@ import numpy as np
 import casadi as ca
 import os
 from .acados_model import AcadosModel
-from .utils import get_acados_path
+from .utils import get_acados_path, get_lib_ext
 
 class AcadosSimDims:
     """
@@ -280,6 +280,7 @@ class AcadosSim:
     - :py:attr:`solver_options` of type :py:class:`acados_template.acados_sim.AcadosSimOpts`
 
     - :py:attr:`acados_include_path` (set automatically)
+    - :py:attr:`shared_lib_ext` (set automatically)
     - :py:attr:`acados_lib_path` (set automatically)
     - :py:attr:`parameter_values` - used to initialize the parameters (can be changed)
 
@@ -301,6 +302,7 @@ class AcadosSim:
 
         self.code_export_directory = 'c_generated_code'
         """Path to where code will be exported. Default: `c_generated_code`."""
+        self.shared_lib_ext = get_lib_ext()
 
         self.cython_include_dirs = ''
         self.__parameter_values = np.array([])

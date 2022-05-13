@@ -11,6 +11,9 @@
     "json_file": [
         "str"
     ],
+    "shared_lib_ext": [
+        "str"
+    ],
     "model": {
          "name" : [
             "str"

@@ -155,6 +155,14 @@ def make_model_consistent(model):
 
     return model
 
+def get_lib_ext():
+    lib_ext = '.so'
+    if sys.platform == 'darwin':
+        lib_ext = '.dylib'
+    elif os.name == 'nt':
+        lib_ext = ''
+
+    return lib_ext
 
 def get_tera():
     tera_path = get_tera_exec_path()
