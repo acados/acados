@@ -388,9 +388,9 @@ def acados_dae_model_json_dump(model):
     print("dumped ", model_name, " dae to file:", json_file, "\n")
 
 
-def set_up_imported_gnsf_model(acados_formulation):
+def set_up_imported_gnsf_model(acados_ocp):
 
-    gnsf = acados_formulation.gnsf_model
+    gnsf = acados_ocp.gnsf_model
 
     # check CasADi version
     # dump_casadi_version = gnsf['casadi_version']
@@ -410,39 +410,39 @@ def set_up_imported_gnsf_model(acados_formulation):
 
     # obtain gnsf dimensions
     size_gnsf_A = get_matrices_fun.size_out(0)
-    acados_formulation.dims.gnsf_nx1 = size_gnsf_A[1]
-    acados_formulation.dims.gnsf_nz1 = size_gnsf_A[0] - size_gnsf_A[1]
-    acados_formulation.dims.gnsf_nuhat = max(phi_fun.size_in(1))
-    acados_formulation.dims.gnsf_ny = max(phi_fun.size_in(0))
-    acados_formulation.dims.gnsf_nout = max(phi_fun.size_out(0))
+    acados_ocp.dims.gnsf_nx1 = size_gnsf_A[1]
+    acados_ocp.dims.gnsf_nz1 = size_gnsf_A[0] - size_gnsf_A[1]
+    acados_ocp.dims.gnsf_nuhat = max(phi_fun.size_in(1))
+    acados_ocp.dims.gnsf_ny = max(phi_fun.size_in(0))
+    acados_ocp.dims.gnsf_nout = max(phi_fun.size_out(0))
 
     # save gnsf functions in model
-    acados_formulation.model.phi_fun = phi_fun
-    acados_formulation.model.phi_fun_jac_y = phi_fun_jac_y
-    acados_formulation.model.phi_jac_y_uhat = phi_jac_y_uhat
-    acados_formulation.model.get_matrices_fun = get_matrices_fun
+    acados_ocp.model.phi_fun = phi_fun
+    acados_ocp.model.phi_fun_jac_y = phi_fun_jac_y
+    acados_ocp.model.phi_jac_y_uhat = phi_jac_y_uhat
+    acados_ocp.model.get_matrices_fun = get_matrices_fun
 
     # get_matrices_fun = Function([model_name,'_gnsf_get_matrices_fun'], {dummy},...
     #  {A, B, C, E, L_x, L_xdot, L_z, L_u, A_LO, c, E_LO, B_LO,...
     #   nontrivial_f_LO, purely_linear, ipiv_x, ipiv_z, c_LO});
     get_matrices_out = get_matrices_fun(0)
-    acados_formulation.model.gnsf['nontrivial_f_LO'] = int(get_matrices_out[12])
-    acados_formulation.model.gnsf['purely_linear'] = int(get_matrices_out[13])
+    acados_ocp.model.gnsf['nontrivial_f_LO'] = int(get_matrices_out[12])
+    acados_ocp.model.gnsf['purely_linear'] = int(get_matrices_out[13])
 
     if "f_lo_fun_jac_x1k1uz" in gnsf:
         f_lo_fun_jac_x1k1uz = Function.deserialize(gnsf['f_lo_fun_jac_x1k1uz'])
-        acados_formulation.model.f_lo_fun_jac_x1k1uz = f_lo_fun_jac_x1k1uz
+        acados_ocp.model.f_lo_fun_jac_x1k1uz = f_lo_fun_jac_x1k1uz
     else:
-        dummy_var_x1 = SX.sym('dummy_var_x1', acados_formulation.dims.gnsf_nx1)
-        dummy_var_x1dot = SX.sym('dummy_var_x1dot', acados_formulation.dims.gnsf_nx1)
-        dummy_var_z1 = SX.sym('dummy_var_z1', acados_formulation.dims.gnsf_nz1)
-        dummy_var_u = SX.sym('dummy_var_z1', acados_formulation.dims.nu)
-        dummy_var_p = SX.sym('dummy_var_z1', acados_formulation.dims.np)
+        dummy_var_x1 = SX.sym('dummy_var_x1', acados_ocp.dims.gnsf_nx1)
+        dummy_var_x1dot = SX.sym('dummy_var_x1dot', acados_ocp.dims.gnsf_nx1)
+        dummy_var_z1 = SX.sym('dummy_var_z1', acados_ocp.dims.gnsf_nz1)
+        dummy_var_u = SX.sym('dummy_var_z1', acados_ocp.dims.nu)
+        dummy_var_p = SX.sym('dummy_var_z1', acados_ocp.dims.np)
         empty_var = SX.sym('empty_var', 0, 0)
 
         empty_fun = Function('empty_fun', \
             [dummy_var_x1, dummy_var_x1dot, dummy_var_z1, dummy_var_u, dummy_var_p],
                 [empty_var])
-        acados_formulation.model.f_lo_fun_jac_x1k1uz = empty_fun
+        acados_ocp.model.f_lo_fun_jac_x1k1uz = empty_fun
 
-    del acados_formulation.gnsf_model
+    del acados_ocp.gnsf_model

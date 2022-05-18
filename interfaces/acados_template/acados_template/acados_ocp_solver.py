@@ -49,6 +49,7 @@ from .generate_c_code_discrete_dynamics import generate_c_code_discrete_dynamics
 from .generate_c_code_constraint import generate_c_code_constraint
 from .generate_c_code_nls_cost import generate_c_code_nls_cost
 from .generate_c_code_external_cost import generate_c_code_external_cost
+from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 from .acados_ocp import AcadosOcp
 from .acados_model import acados_model_strip_casadi_symbolics
 from .utils import is_column, is_empty, casadi_length, render_template,\
@@ -846,7 +847,8 @@ class AcadosOcpSolver:
 
         # module dependent post processing
         if acados_ocp.solver_options.integrator_type == 'GNSF':
-            set_up_imported_gnsf_model(acados_ocp)
+            # set_up_imported_gnsf_model(acados_ocp)
+            detect_gnsf_structure(acados_ocp.model)
 
         if acados_ocp.solver_options.qp_solver == 'PARTIAL_CONDENSING_QPDUNES':
             remove_x0_elimination(acados_ocp)
