@@ -1304,6 +1304,10 @@ class AcadosOcpSolver:
             if i < self.N:
                 solution['pi_'+i_string] = self.get(i,'pi')
 
+        for k in list(solution.keys()):
+            if len(solution[k]) == 0:
+                del solution[k]
+
         # save
         with open(filename, 'w') as f:
             json.dump(solution, f, default=np_array_to_list, indent=4, sort_keys=True)
