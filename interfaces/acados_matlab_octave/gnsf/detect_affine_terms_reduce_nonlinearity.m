@@ -84,7 +84,7 @@ for ii = 1:length(gnsf.phi_expr)
             jac_fii_xi_fun = Function(['jac_fii_xi_fun'],...
                             {x(1)}, {jac_fii_xi});
             % x(1) as input just to have a scalar input and call the function as follows:
-            gnsf.A(ii, ix) = full(jac_fii_xi_fun(0));                
+            gnsf.A(ii, ix) = full(jac_fii_xi_fun(0));
         else
             gnsf.A(ii, ix) = 0;
             if print_info
@@ -115,48 +115,47 @@ check_reformulation(model, gnsf, print_info);
 
 
 %% determine B
+if nu > 0
+    n_nodes_current = gnsf.phi_expr.n_nodes();
 
-n_nodes_current = gnsf.phi_expr.n_nodes();
-
-for ii = 1:length(gnsf.phi_expr)
-    fii = gnsf.phi_expr(ii);
-    for iu = 1:nu
-        var = u(iu);
-        varname = var.name;
-        % symbolic jacobian of fii w.r.t. ui;
-        jac_fii_ui = jacobian(fii, var);
-        if jac_fii_ui.is_constant % i.e. hessian is structural zero
-            % jacobian value
-            jac_fii_ui_fun = Function(['jac_fii_ui_fun'],...
-                            {x(1)}, {jac_fii_ui});
-            gnsf.B(ii, iu) = full(jac_fii_ui_fun(0));                
-        else
-            gnsf.B(ii, iu) = 0;
-            if print_info
-                disp(['phi(' num2str(ii) ') is nonlinear in u(', num2str(iu), ') = ' varname]);
-                disp(fii)
-                disp('-----------------------------------------------------');
+    for ii = 1:length(gnsf.phi_expr)
+        fii = gnsf.phi_expr(ii);
+        for iu = 1:nu
+            var = u(iu);
+            varname = var.name;
+            % symbolic jacobian of fii w.r.t. ui;
+            jac_fii_ui = jacobian(fii, var);
+            if jac_fii_ui.is_constant % i.e. hessian is structural zero
+                % jacobian value
+                jac_fii_ui_fun = Function(['jac_fii_ui_fun'],...
+                                {x(1)}, {jac_fii_ui});
+                gnsf.B(ii, iu) = full(jac_fii_ui_fun(0));
+            else
+                gnsf.B(ii, iu) = 0;
+                if print_info
+                    disp(['phi(' num2str(ii) ') is nonlinear in u(', num2str(iu), ') = ' varname]);
+                    disp(fii)
+                    disp('-----------------------------------------------------');
+                end
             end
         end
     end
+    f_next = gnsf.phi_expr - gnsf.B * u;
+    f_next = f_next.simplify();
+    n_nodes_next = f_next.n_nodes();
+
+    if print_info
+        fprintf('\n')
+        disp(['determined matrix B:']);
+        disp(gnsf.B)
+        disp(['reduced nonlinearity from  ', num2str(n_nodes_current),...
+              ' to ', num2str(n_nodes_next) ' nodes']);
+    end
+
+    gnsf.phi_expr = f_next;
+
+    check_reformulation(model, gnsf, print_info);
 end
-
-f_next = gnsf.phi_expr - gnsf.B * u;
-f_next = f_next.simplify();
-n_nodes_next = f_next.n_nodes();
-
-if print_info
-    fprintf('\n')
-    disp(['determined matrix B:']);
-    disp(gnsf.B)
-    disp(['reduced nonlinearity from  ', num2str(n_nodes_current),...
-          ' to ', num2str(n_nodes_next) ' nodes']);
-end
-
-gnsf.phi_expr = f_next;
-
-check_reformulation(model, gnsf, print_info);
-
 
 %% determine E
 n_nodes_current = gnsf.phi_expr.n_nodes();
@@ -173,7 +172,7 @@ for ii = 1:length(gnsf.phi_expr)
             % jacobian value
             jac_fii_ki_fun = Function(['jac_fii_ki_fun'],...
                         {x(1)}, {jac_fii_ki});
-            gnsf.E(ii, ik) = - full(jac_fii_ki_fun(0));                
+            gnsf.E(ii, ik) = - full(jac_fii_ki_fun(0));
         else
             gnsf.E(ii, ik) = 0;
             if print_info
@@ -209,7 +208,7 @@ for ii = 1:length(gnsf.phi_expr)
         % function value goes into c
         fii_fun = Function(['fii_fun'],...
                 {x(1)}, {fii});
-        gnsf.c(ii) = full(fii_fun(0));                
+        gnsf.c(ii) = full(fii_fun(0));
     else
         gnsf.c(ii) = 0;
         if print_info
