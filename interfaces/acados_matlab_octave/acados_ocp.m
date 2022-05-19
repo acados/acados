@@ -382,7 +382,7 @@ classdef acados_ocp < handle
             if strcmp(field, 'stat')
                 stat = obj.get('stat');
                 if strcmp(ocp_solver_string, 'sqp')
-                    fprintf('\niter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp_stat\tqp_iter\talpha');
+                    fprintf('\niter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp_stat\tqp_iter\talpha\t');
                     if size(stat,2)>8
                         fprintf('\t\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp');
                     end
