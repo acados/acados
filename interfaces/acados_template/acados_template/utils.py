@@ -118,11 +118,16 @@ def is_empty(x):
             return True
         else:
             return False
-    elif x == None or x == []:
+    elif x == None:
         return True
+    elif isinstance(x, (set, list)):
+        if len(x)==0:
+            return True
+        else:
+            return False
     else:
         raise Exception("is_empty expects one of the following types: casadi.MX, casadi.SX, "
-                        + "None, numpy array empty list. Got: " + str(type(x)))
+                        + "None, numpy array empty list, set. Got: " + str(type(x)))
 
 
 def casadi_length(x):
@@ -446,3 +451,30 @@ def set_up_imported_gnsf_model(acados_ocp):
         acados_ocp.model.f_lo_fun_jac_x1k1uz = empty_fun
 
     del acados_ocp.gnsf_model
+
+
+def idx_perm_to_ipiv(idx_perm):
+    n = len(idx_perm)
+    vec = list(range(n))
+    ipiv = np.zeros(n)
+
+    print(n, idx_perm)
+    # import pdb; pdb.set_trace()
+    for ii in range(n):
+        idx0 = idx_perm[ii]
+        for jj in range(ii,n):
+            if vec[jj]==idx0:
+                idx1 = jj
+                break
+        tmp = vec[ii]
+        vec[ii] = vec[idx1]
+        vec[idx1] = tmp
+        ipiv[ii] = idx1
+
+    ipiv = ipiv-1 # C 0-based indexing
+    return ipiv
+
+
+def print_casadi_expression(f):
+    for ii in range(casadi_length(f)):
+        print(f[ii,:])

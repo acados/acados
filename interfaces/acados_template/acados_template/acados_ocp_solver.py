@@ -848,7 +848,7 @@ class AcadosOcpSolver:
         # module dependent post processing
         if acados_ocp.solver_options.integrator_type == 'GNSF':
             # set_up_imported_gnsf_model(acados_ocp)
-            detect_gnsf_structure(acados_ocp.model)
+            detect_gnsf_structure(acados_ocp)
 
         if acados_ocp.solver_options.qp_solver == 'PARTIAL_CONDENSING_QPDUNES':
             remove_x0_elimination(acados_ocp)
