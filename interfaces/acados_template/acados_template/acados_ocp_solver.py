@@ -213,16 +213,13 @@ def make_ocp_dims_consistent(acados_ocp):
 
     ## constraints
     # initial
-    if (constraints.lbx_0 == [] and constraints.ubx_0 == []):
-        dims.nbx_0 = 0
-    else:
-        this_shape = constraints.lbx_0.shape
-        other_shape = constraints.ubx_0.shape
-        if not this_shape == other_shape:
-            raise Exception('lbx_0, ubx_0 have different shapes!')
-        if not is_column(constraints.lbx_0):
-            raise Exception('lbx_0, ubx_0 must be column vectors!')
-        dims.nbx_0 = constraints.lbx_0.size
+    this_shape = constraints.lbx_0.shape
+    other_shape = constraints.ubx_0.shape
+    if not this_shape == other_shape:
+        raise Exception('lbx_0, ubx_0 have different shapes!')
+    if not is_column(constraints.lbx_0):
+        raise Exception('lbx_0, ubx_0 must be column vectors!')
+    dims.nbx_0 = constraints.lbx_0.size
 
     if all(constraints.lbx_0 == constraints.ubx_0) and dims.nbx_0 == dims.nx \
         and dims.nbxe_0 is None \
