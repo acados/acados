@@ -239,6 +239,8 @@ classdef acados_ocp_model < handle
                     obj.model_struct.constr_ubx_0 = value;
                 elseif (strcmp(field, 'constr_Jbx_0'))
                     obj.model_struct.constr_Jbx_0 = value;
+                elseif (strcmp(field, 'constr_idxbxe_0'))
+                    obj.model_struct.constr_idxbxe_0 = value;
 
                 elseif (strcmp(field, 'constr_Jbx'))
                     obj.model_struct.constr_Jbx = value;

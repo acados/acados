@@ -220,7 +220,7 @@ classdef acados_ocp_opts < handle
             elseif (strcmp(field, 'parameter_values'))
                 obj.opts_struct.parameter_values = value;
             elseif (strcmp(field, 'ext_fun_compile_flags'))
-                obj.opts_struct.ext_fun_compile_flags = value
+                obj.opts_struct.ext_fun_compile_flags = value;
             elseif (strcmp(field, 'compile_mex'))
                 disp(['Option compile_mex is not supported anymore,'...
                     'please use compile_interface instead or dont set the option.', ...

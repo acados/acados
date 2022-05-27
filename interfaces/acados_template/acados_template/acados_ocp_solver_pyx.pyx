@@ -310,16 +310,22 @@ cdef class AcadosOcpSolverCython:
         # get iterate:
         solution = dict()
 
+        lN = len(str(self.N+1))
         for i in range(self.N+1):
-            solution['x_'+str(i)] = self.get(i,'x')
-            solution['u_'+str(i)] = self.get(i,'u')
-            solution['z_'+str(i)] = self.get(i,'z')
-            solution['lam_'+str(i)] = self.get(i,'lam')
-            solution['t_'+str(i)] = self.get(i, 't')
-            solution['sl_'+str(i)] = self.get(i, 'sl')
-            solution['su_'+str(i)] = self.get(i, 'su')
-        for i in range(self.N):
-            solution['pi_'+str(i)] = self.get(i,'pi')
+            i_string = f'{i:0{lN}d}'
+            solution['x_'+i_string] = self.get(i,'x')
+            solution['u_'+i_string] = self.get(i,'u')
+            solution['z_'+i_string] = self.get(i,'z')
+            solution['lam_'+i_string] = self.get(i,'lam')
+            solution['t_'+i_string] = self.get(i, 't')
+            solution['sl_'+i_string] = self.get(i, 'sl')
+            solution['su_'+i_string] = self.get(i, 'su')
+            if i < self.N:
+                solution['pi_'+i_string] = self.get(i,'pi')
+
+        for k in list(solution.keys()):
+            if len(solution[k]) == 0:
+                del solution[k]
 
         # save
         with open(filename, 'w') as f:
