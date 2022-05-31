@@ -29,6 +29,8 @@
         "ug": 1,
         "lh": 1,
         "uh": 1,
+        "lh_e": 1,
+        "uh_e": 1,
         "cost_W_0": 0,
         "cost_W": 0,
         "cost_W_e": 0,
