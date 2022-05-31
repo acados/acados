@@ -32,7 +32,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import sys, os, json
+import os, json
 
 import numpy as np
 
@@ -244,8 +244,8 @@ class AcadosSimSolver:
                 os.system('make sim_shared_lib')
             os.chdir(cwd)
 
-        self.sim_struct = acados_sim
-        model_name = self.sim_struct.model.name
+        self.acados_sim = acados_sim
+        model_name = self.acados_sim.model.name
         self.model_name = model_name
 
         # prepare library loading
@@ -276,7 +276,6 @@ class AcadosSimSolver:
 
         # get shared_lib
         self.shared_lib = CDLL(self.shared_lib_name)
-
 
         # create capsule
         getattr(self.shared_lib, f"{model_name}_acados_sim_solver_create_capsule").restype = c_void_p
@@ -312,9 +311,9 @@ class AcadosSimSolver:
         getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver").restype = c_void_p
         self.sim_solver = getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver")(self.capsule)
 
-        nu = self.sim_struct.dims.nu
-        nx = self.sim_struct.dims.nx
-        nz = self.sim_struct.dims.nz
+        nu = self.acados_sim.dims.nu
+        nx = self.acados_sim.dims.nx
+        nz = self.acados_sim.dims.nz
         self.gettable = {
             'x': nx,
             'xn': nx,
@@ -362,24 +361,24 @@ class AcadosSimSolver:
             self.shared_lib.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, out_data)
 
             if field_ == 'S_forw':
-                nu = self.sim_struct.dims.nu
-                nx = self.sim_struct.dims.nx
+                nu = self.acados_sim.dims.nu
+                nx = self.acados_sim.dims.nx
                 out = out.reshape(nx, nx+nu, order='F')
             elif field_ == 'Sx':
-                nx = self.sim_struct.dims.nx
+                nx = self.acados_sim.dims.nx
                 out = out.reshape(nx, nx, order='F')
             elif field_ == 'Su':
-                nx = self.sim_struct.dims.nx
-                nu = self.sim_struct.dims.nu
+                nx = self.acados_sim.dims.nx
+                nu = self.acados_sim.dims.nu
                 out = out.reshape(nx, nu, order='F')
             elif field_ == 'S_hess':
-                nx = self.sim_struct.dims.nx
-                nu = self.sim_struct.dims.nu
+                nx = self.acados_sim.dims.nx
+                nu = self.acados_sim.dims.nu
                 out = out.reshape(nx+nu, nx+nu, order='F')
             elif field_ == 'S_algebraic':
-                nx = self.sim_struct.dims.nx
-                nu = self.sim_struct.dims.nu
-                nz = self.sim_struct.dims.nz
+                nx = self.acados_sim.dims.nx
+                nu = self.acados_sim.dims.nu
+                nz = self.acados_sim.dims.nz
                 out = out.reshape(nz, nx+nu, order='F')
         else:
             raise Exception(f'AcadosSimSolver.get(): Unknown field {field_},' \
@@ -408,7 +407,7 @@ class AcadosSimSolver:
 
         # treat parameters separately
         if field_ == 'p':
-            model_name = self.sim_struct.model.name
+            model_name = self.acados_sim.model.name
             getattr(self.shared_lib, f"{model_name}_acados_sim_update_params").argtypes = [c_void_p, POINTER(c_double), c_int]
             value_data = cast(value_.ctypes.data, POINTER(c_double))
             getattr(self.shared_lib, f"{model_name}_acados_sim_update_params")(self.capsule, value_data, value_.shape[0])
