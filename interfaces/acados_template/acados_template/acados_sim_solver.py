@@ -444,6 +444,33 @@ class AcadosSimSolver:
         return
 
 
+    def options_set(self, field_, value_):
+        """
+        Set solver options
+
+            :param field: string in ['sens_forw', 'sens_adj', 'sens_hess']
+            :param value: the value with appropriate size.
+        """
+        fields = ['sens_forw', 'sens_adj', 'sens_hess']
+        if field_ not in fields:
+            raise Exception(f"field {field_} not supported. Supported values are {', '.join(fields)}.\n")
+
+        field = field_.encode('utf-8')
+        value_ctypes = c_bool(value_)
+
+        if not isinstance(value_, bool):
+            raise TypeError("options_set: expected boolean for value")
+
+        # only allow setting
+        if getattr(self.acados_sim.solver_options, field_) or value_ == False:
+            self.shared_lib.sim_opts_set.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_bool)]
+            self.shared_lib.sim_opts_set(self.sim_config, self.sim_opts, field, value_ctypes)
+        else:
+            raise RuntimeError(f"Cannot set option {field_} to True, because it was False in original solver options.\n")
+
+        return
+
+
     def __del__(self):
 
         if self.solver_created:
