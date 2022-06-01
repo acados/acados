@@ -249,6 +249,15 @@ input_note = strcat(input_note, num2str(i_in), ') uh, size [{{ dims.nh }}]\n ');
 i_in = i_in + 1;
 {%- endif %}
 
+{%- if dims.nh_e > 0 and simulink_opts.inputs.lh_e -%}  {#- lh_e #}
+input_note = strcat(input_note, num2str(i_in), ') lh_e, size [{{ dims.nh_e }}]\n ');
+i_in = i_in + 1;
+{%- endif %}
+{%- if dims.nh_e > 0 and simulink_opts.inputs.uh_e -%}  {#- uh_e #}
+input_note = strcat(input_note, num2str(i_in), ') uh_e, size [{{ dims.nh_e }}]\n ');
+i_in = i_in + 1;
+{%- endif %}
+
 {%- if dims.ny_0 > 0 and simulink_opts.inputs.cost_W_0 %}  {#- cost_W_0 #}
 input_note = strcat(input_note, num2str(i_in), ') cost_W_0 in column-major format, size [{{ dims.ny_0 * dims.ny_0 }}]\n ');
 i_in = i_in + 1;

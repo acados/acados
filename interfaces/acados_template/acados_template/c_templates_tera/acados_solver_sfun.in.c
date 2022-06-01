@@ -117,6 +117,12 @@ static void mdlInitializeSizes (SimStruct *S)
   {%- if dims.nh > 0 and simulink_opts.inputs.uh -%}  {#- uh #}
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
+  {%- if dims.nh_e > 0 and simulink_opts.inputs.lh_e -%}  {#- lh_e #}
+    {%- set n_inputs = n_inputs + 1 -%}
+  {%- endif -%}
+  {%- if dims.nh_e > 0 and simulink_opts.inputs.uh_e -%}  {#- uh_e #}
+    {%- set n_inputs = n_inputs + 1 -%}
+  {%- endif -%}
 
   {%- for key, val in simulink_opts.inputs -%}
     {%- if val != 0 and val != 1 -%}
@@ -252,6 +258,17 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- set i_input = i_input + 1 %}
     // uh
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nh }});
+  {%- endif -%}
+
+  {%- if dims.nh_e > 0 and simulink_opts.inputs.lh_e -%}  {#- lh_e #}
+    {%- set i_input = i_input + 1 %}
+    // lh_e
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nh_e }});
+  {%- endif -%}
+  {%- if dims.nh_e > 0 and simulink_opts.inputs.uh_e -%}  {#- uh_e #}
+    {%- set i_input = i_input + 1 %}
+    // uh_e
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nh_e }});
   {%- endif -%}
 
   {%- if dims.ny_0 > 0 and simulink_opts.inputs.cost_W_0 %}  {#- cost_W_0 #}
@@ -610,6 +627,24 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     for (int ii = 0; ii < {{ dims.N }}; ii++)
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "uh", buffer);
+  {%- endif -%}
+
+
+  {%- if dims.nh_e > 0 and simulink_opts.inputs.lh_e -%}  {#- lh_e #}
+    // lh_e
+    {%- set i_input = i_input + 1 %}
+    in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+    for (int i = 0; i < {{ dims.nh_e }}; i++)
+        buffer[i] = (double)(*in_sign[i]);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, {{ dims.N }}, "lh", buffer);
+  {%- endif -%}
+  {%- if dims.nh_e > 0 and simulink_opts.inputs.uh_e -%}  {#- uh_e #}
+    // uh_e
+    {%- set i_input = i_input + 1 %}
+    in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+    for (int i = 0; i < {{ dims.nh_e }}; i++)
+        buffer[i] = (double)(*in_sign[i]);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, {{ dims.N }}, "uh", buffer);
   {%- endif -%}
 
   {%- if dims.ny_0 > 0 and simulink_opts.inputs.cost_W_0 %}  {#- cost_W_0 #}
