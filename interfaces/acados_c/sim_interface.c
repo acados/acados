@@ -166,6 +166,10 @@ void sim_dims_get_from_attr(sim_config *config, void *dims, const char *field, i
         sim_dims_get(config, dims, "nx", &dims_out[0]);
         dims_out[0] += tmp;
     }
+    else if (!strcmp(field, "seed_adj"))
+    {
+        sim_dims_get(config, dims, "nx", &dims_out[0]);
+    }
     else
     {
         printf("\nerror: sim_dims_get_from_attr: field %s not available\n", field);
