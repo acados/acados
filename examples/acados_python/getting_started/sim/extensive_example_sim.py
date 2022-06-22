@@ -57,16 +57,17 @@ N = 200
 # set simulation time
 sim.solver_options.T = Tf
 # set options
-sim.solver_options.num_stages = 4
+sim.solver_options.num_stages = 7
 sim.solver_options.num_steps = 3
-sim.solver_options.newton_iter = 3 # for implicit integrator
-sim.solver_options.integrator_type = "GNSF" # ERK, IRK, GNSF
+sim.solver_options.newton_iter = 10 # for implicit integrator
+sim.solver_options.collocation_type = "GAUSS_RADAU_IIA"
+sim.solver_options.integrator_type = "IRK" # ERK, IRK, GNSF
 sim.solver_options.sens_forw = True
 sim.solver_options.sens_adj = True
 sim.solver_options.sens_hess = True
 sim.solver_options.sens_algebraic = False
 sim.solver_options.output_z = False
-sim.solver_options.jac_reuse = False
+sim.solver_options.sim_method_jac_reuse = False
 
 
 # if sim.solver_options.integrator_type == "GNSF":
@@ -115,18 +116,13 @@ acados_integrator.set("u", u0)
 
 simX[0,:] = x0
 
-acados_integrator.set("S_adj", np.ones((nx+nu, 1)))
+## Single test call
+# acados_integrator.set("S_adj", np.ones((nx+nu, 1)))
+acados_integrator.set("seed_adj", np.ones((nx, 1)))
+acados_integrator.set("x", x0)
+acados_integrator.set("u", u0)
+status = acados_integrator.solve()
 
-for i in range(N):
-    # set initial state
-    acados_integrator.set("x", simX[i,:])
-    # solve
-    status = acados_integrator.solve()
-    # get solution
-    simX[i+1,:] = acados_integrator.get("x")
-
-if status != 0:
-    raise Exception(f'acados returned status {status}.')
 
 S_forw = acados_integrator.get("S_forw")
 Sx = acados_integrator.get("Sx")
@@ -139,6 +135,19 @@ print("Sx, sensitivities of simulaition result wrt x:\n", Sx)
 print("Su, sensitivities of simulaition result wrt u:\n", Su)
 print("S_adj, adjoint sensitivities:\n", S_adj)
 print("S_hess, second order sensitivities:\n", S_hess)
+
+# call in loop:
+for i in range(N):
+    # set initial state
+    acados_integrator.set("x", simX[i,:])
+    # solve
+    status = acados_integrator.solve()
+    # get solution
+    simX[i+1,:] = acados_integrator.get("x")
+
+if status != 0:
+    raise Exception(f'acados returned status {status}.')
+
 
 # plot results
 plot_pendulum(np.linspace(0, Tf, N+1), 10, np.zeros((N, nu)), simX, latexify=False)
