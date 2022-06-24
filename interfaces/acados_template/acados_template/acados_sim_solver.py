@@ -322,14 +322,13 @@ class AcadosSimSolver:
             'S_forw': nx*(nx+nu),
             'Sx': nx*nx,
             'Su': nx*nu,
-            # TODO: just use "seed_adj", S_adj needed?!
             'S_adj': nx+nu,
             'seed_adj': nx,
             'S_hess': (nx+nu)*(nx+nu),
             'S_algebraic': (nz)*(nx+nu),
         }
 
-        self.settable = ['S_adj', 'seed_adj', 'T', 'x', 'u', 'xdot', 'z', 'p'] # S_forw
+        self.settable = ['seed_adj', 'T', 'x', 'u', 'xdot', 'z', 'p'] # S_forw
 
 
     def solve(self):
@@ -393,7 +392,7 @@ class AcadosSimSolver:
         """
         Set numerical data inside the solver.
 
-            :param field: string in ['p', 'S_adj', 'seed_adj', 'T', 'x', 'u', 'xdot', 'z']
+            :param field: string in ['p', 'seed_adj', 'T', 'x', 'u', 'xdot', 'z']
             :param value: the value with appropriate size.
         """
         # cast value_ to avoid conversion issues

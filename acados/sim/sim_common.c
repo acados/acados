@@ -203,16 +203,6 @@ int sim_in_set_(void *config_, void *dims_, sim_in *in, const char *field, void 
         for (int ii=0; ii < nx*(nu+nx); ii++)
             in->S_forw[ii] = S_forw[ii];
     }
-    else if (!strcmp(field, "S_adj"))
-    {
-        // NOTE: this assumes nf = nu+nx !!!
-        int nx, nu;
-        config->dims_get(config_, dims_, "nx", &nx);
-        config->dims_get(config_, dims_, "nu", &nu);
-        double *S_adj = value;
-        for (int ii=0; ii < nx+nu; ii++)
-            in->S_adj[ii] = S_adj[ii];
-    }
     else if (!strcmp(field, "seed_adj"))
     {
         // NOTE: this assumes nf = nu+nx !!!

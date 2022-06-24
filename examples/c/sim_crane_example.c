@@ -89,9 +89,9 @@ int main()
 
 	double *Su = calloc(nx*nu, sizeof(double));
 
-	double *S_adj = calloc(nx+nu, sizeof(double));
+	double *seed_adj = calloc(nx, sizeof(double));
 	for (ii = 0; ii < nx; ii++)
-		S_adj[ii] = 1.0;
+		seed_adj[ii] = 1.0;
 
     /************************************************
     * external functions (explicit model)
@@ -236,7 +236,7 @@ int main()
 		sim_in_set(config, dims, in, "u", uref);
 		sim_in_set(config, dims, in, "Sx", Sx);
 		sim_in_set(config, dims, in, "Su", Su);
-		sim_in_set(config, dims, in, "S_adj", S_adj);
+		sim_in_set(config, dims, in, "seed_adj", seed_adj);
 
         // external functions
         switch (nss)
@@ -372,7 +372,7 @@ int main()
 	free(uref);
 	free(Sx);
 	free(Su);
-	free(S_adj);
+	free(seed_adj);
 
     // explicit model
     external_function_casadi_free(&expl_vde_for);

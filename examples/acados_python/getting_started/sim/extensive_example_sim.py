@@ -117,7 +117,6 @@ acados_integrator.set("u", u0)
 simX[0,:] = x0
 
 ## Single test call
-# acados_integrator.set("S_adj", np.ones((nx+nu, 1)))
 acados_integrator.set("seed_adj", np.ones((nx, 1)))
 acados_integrator.set("x", x0)
 acados_integrator.set("u", u0)
