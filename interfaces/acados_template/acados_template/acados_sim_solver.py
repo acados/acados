@@ -323,9 +323,11 @@ class AcadosSimSolver:
             'Sx': nx*nx,
             'Su': nx*nu,
             'S_adj': nx+nu,
-            'seed_adj': nx,
             'S_hess': (nx+nu)*(nx+nu),
             'S_algebraic': (nz)*(nx+nu),
+            'CPUtime': 1,
+            'ADtime': 1,
+            'LAtime': 1
         }
 
         self.settable = ['seed_adj', 'T', 'x', 'u', 'xdot', 'z', 'p'] # S_forw
@@ -346,7 +348,7 @@ class AcadosSimSolver:
         """
         Get the last solution of the solver.
 
-            :param str field: string in ['x', 'u', 'z', 'S_forw', 'Sx', 'Su', 'S_adj', 'S_hess', 'S_algebraic']
+            :param str field: string in ['x', 'u', 'z', 'S_forw', 'Sx', 'Su', 'S_adj', 'S_hess', 'S_algebraic', 'CPUtime', 'ADtime', 'LAtime']
         """
         field = field_
         field = field.encode('utf-8')
