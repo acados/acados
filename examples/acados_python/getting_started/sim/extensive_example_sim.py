@@ -148,5 +148,12 @@ if status != 0:
     raise Exception(f'acados returned status {status}.')
 
 
+# get timings (of last call)
+CPUtime = acados_integrator.get("CPUtime")
+LAtime = acados_integrator.get("LAtime")
+ADtime = acados_integrator.get("ADtime")
+print(f"\ntimings of last call to acados_integrator: overall CPU: {CPUtime*1e3:.4f} ms, linear algebra {LAtime*1e3:.4f} ms, external functions {ADtime*1e3:.4f} ms")
+
+
 # plot results
 plot_pendulum(np.linspace(0, Tf, N+1), 10, np.zeros((N, nu)), simX, latexify=False)

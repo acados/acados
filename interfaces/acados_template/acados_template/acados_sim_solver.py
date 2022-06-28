@@ -324,11 +324,10 @@ class AcadosSimSolver:
             'Su': nx*nu,
             'S_adj': nx+nu,
             'S_hess': (nx+nu)*(nx+nu),
-            'S_algebraic': (nz)*(nx+nu),
-            'CPUtime': 1,
-            'ADtime': 1,
-            'LAtime': 1
+            'S_algebraic': (nz)*(nx+nu)
         }
+
+        self.gettable_scalars = ['CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
 
         self.settable = ['seed_adj', 'T', 'x', 'u', 'xdot', 'z', 'p'] # S_forw
 
@@ -348,13 +347,12 @@ class AcadosSimSolver:
         """
         Get the last solution of the solver.
 
-            :param str field: string in ['x', 'u', 'z', 'S_forw', 'Sx', 'Su', 'S_adj', 'S_hess', 'S_algebraic', 'CPUtime', 'ADtime', 'LAtime']
+            :param str field: string in ['x', 'u', 'z', 'S_forw', 'Sx', 'Su', 'S_adj', 'S_hess', 'S_algebraic', 'CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
         """
         field = field_
         field = field.encode('utf-8')
 
         if field_ in self.gettable.keys():
-
             # allocate array
             dims = self.gettable[field_]
             out = np.ascontiguousarray(np.zeros((dims,)), dtype=np.float64)
@@ -383,6 +381,13 @@ class AcadosSimSolver:
                 nu = self.acados_sim.dims.nu
                 nz = self.acados_sim.dims.nz
                 out = out.reshape(nz, nx+nu, order='F')
+        elif field_ in self.gettable_scalars:
+            scalar = c_double()
+            scalar_data = byref(scalar)
+            self.shared_lib.sim_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
+            self.shared_lib.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, scalar_data)
+
+            out = scalar.value
         else:
             raise Exception(f'AcadosSimSolver.get(): Unknown field {field_},' \
                 f' available fields are {", ".join(self.gettable.keys())}')
