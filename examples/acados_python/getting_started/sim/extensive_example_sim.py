@@ -116,18 +116,30 @@ acados_integrator.set("u", u0)
 
 simX[0,:] = x0
 
+
 ## Single test call
+import time
+
+t0 = time.time()
 acados_integrator.set("seed_adj", np.ones((nx, 1)))
 acados_integrator.set("x", x0)
 acados_integrator.set("u", u0)
 status = acados_integrator.solve()
-
+time_external = time.time() - t0
 
 S_forw = acados_integrator.get("S_forw")
 Sx = acados_integrator.get("Sx")
 Su = acados_integrator.get("Su")
 S_hess = acados_integrator.get("S_hess")
 S_adj = acados_integrator.get("S_adj")
+print(f"\ntimings of last call to acados_integrator: with Python interface, set and get {time_external*1e3:.4f}ms")
+
+
+# get timings (of last call)
+CPUtime = acados_integrator.get("CPUtime")
+LAtime = acados_integrator.get("LAtime")
+ADtime = acados_integrator.get("ADtime")
+print(f"\ntimings of last call to acados_integrator: overall CPU: {CPUtime*1e3:.4f} ms, linear algebra {LAtime*1e3:.4f} ms, external functions {ADtime*1e3:.4f} ms")
 
 print("S_forw, sensitivities of simulaition result wrt x,u:\n", S_forw)
 print("Sx, sensitivities of simulaition result wrt x:\n", Sx)
@@ -148,11 +160,6 @@ if status != 0:
     raise Exception(f'acados returned status {status}.')
 
 
-# get timings (of last call)
-CPUtime = acados_integrator.get("CPUtime")
-LAtime = acados_integrator.get("LAtime")
-ADtime = acados_integrator.get("ADtime")
-print(f"\ntimings of last call to acados_integrator: overall CPU: {CPUtime*1e3:.4f} ms, linear algebra {LAtime*1e3:.4f} ms, external functions {ADtime*1e3:.4f} ms")
 
 
 # plot results
