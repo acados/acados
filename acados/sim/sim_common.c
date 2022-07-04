@@ -92,6 +92,7 @@ acados_size_t sim_in_calculate_size(void *config_, void *dims)
     size += nx * sizeof(double);              // x
     size += nu * sizeof(double);              // u
     size += nx * (nx + nu) * sizeof(double);  // S_forw (max dimension)
+    // TODO: S_adj of sim_in is adjoint seed and should be just nx!
     size += (nx + nu) * sizeof(double);       // S_adj
 
     size += config->model_calculate_size(config, dims);
@@ -202,20 +203,10 @@ int sim_in_set_(void *config_, void *dims_, sim_in *in, const char *field, void 
         for (int ii=0; ii < nx*(nu+nx); ii++)
             in->S_forw[ii] = S_forw[ii];
     }
-    else if (!strcmp(field, "S_adj"))
-    {
-        // NOTE: this assumes nf = nu+nx !!!
-        int nx, nu;
-        config->dims_get(config_, dims_, "nx", &nx);
-        config->dims_get(config_, dims_, "nu", &nu);
-        double *S_adj = value;
-        for (int ii=0; ii < nx+nu; ii++)
-            in->S_adj[ii] = S_adj[ii];
-    }
     else if (!strcmp(field, "seed_adj"))
     {
         // NOTE: this assumes nf = nu+nx !!!
-        // NOTE: this correctly initialized the u-part to 0, unless the above S_adj which copies it from outside
+        // NOTE: this correctly initialized the u-part to 0, in contrast to the above S_adj which copies it from outside
         int nx, nu;
         config->dims_get(config_, dims_, "nx", &nx);
         config->dims_get(config_, dims_, "nu", &nu);
