@@ -258,6 +258,8 @@ int {{ model.name }}_acados_sim_create(sim_solver_capsule * capsule)
     capsule->acados_sim_opts = {{ model.name }}_sim_opts;
     int tmp_int = {{ solver_options.sim_method_newton_iter }};
     sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "newton_iter", &tmp_int);
+    double tmp_double = {{ solver_options.sim_method_newton_tol }};
+    sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "newton_tol", &tmp_double);
     sim_collocation_type collocation_type = {{ solver_options.collocation_type }};
     sim_opts_set({{ model.name }}_sim_config, {{ model.name }}_sim_opts, "collocation_type", &collocation_type);
 

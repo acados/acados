@@ -2124,6 +2124,7 @@ class AcadosOcpOptions:
         self.__sim_method_num_stages  = 4                     # number of stages in the integrator
         self.__sim_method_num_steps   = 1                     # number of steps in the integrator
         self.__sim_method_newton_iter = 3                     # number of Newton iterations in simulation method
+        self.__sim_method_newton_tol = 0.0
         self.__sim_method_jac_reuse = 0
         self.__qp_solver_tol_stat = None                      # QP solver stationarity tolerance
         self.__qp_solver_tol_eq   = None                      # QP solver equality tolerance
@@ -2281,6 +2282,15 @@ class AcadosOcpOptions:
         Default: 3
         """
         return self.__sim_method_newton_iter
+
+    @property
+    def sim_method_newton_tol(self):
+        """
+        Tolerance of Newton system in simulation method.
+        Type: float: 0.0 means not used
+        Default: 0.0
+        """
+        return self.__sim_method_newton_tol
 
     @property
     def sim_method_jac_reuse(self):

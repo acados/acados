@@ -43,6 +43,7 @@ classdef ocp_nlp_solver_options_json < handle
         sim_method_num_steps   %  number of steps in integrator
         sim_method_num_stages  %  size of butcher tableau
         sim_method_newton_iter
+        sim_method_newton_tol
         sim_method_jac_reuse
         nlp_solver_max_iter
         nlp_solver_tol_stat
@@ -92,6 +93,7 @@ classdef ocp_nlp_solver_options_json < handle
             obj.sim_method_num_steps = 1;
             obj.sim_method_num_stages = 2;
             obj.sim_method_newton_iter = 3;
+            obj.sim_method_newton_tol = 0.0;
             obj.sim_method_jac_reuse = 0;
             obj.nlp_solver_max_iter = 50;
             obj.qp_solver_cond_N = [];
