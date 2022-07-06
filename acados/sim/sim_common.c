@@ -474,9 +474,14 @@ void sim_opts_set_(sim_opts *opts, const char *field, void *value)
         sim_collocation_type *collocation_type = (sim_collocation_type *) value;
         opts->collocation_type = *collocation_type;
     }
+    else if (!strcmp(field, "newton_tol"))
+    {
+        double *newton_tol = value;
+        opts->newton_tol = *newton_tol;
+    }
     else
     {
-        printf("\nerror: field %s not available in sim_opts_set\n", field);
+        printf("\nerror: field %s not available in sim_opts_set_\n", field);
         exit(1);
     }
 
@@ -504,7 +509,7 @@ void sim_opts_get_(sim_config *config, sim_opts *opts, const char *field, void *
     }
     else
     {
-        printf("sim_opts_get: field %s not supported \n", field);
+        printf("sim_opts_get_: field %s not supported \n", field);
         exit(1);
     }
 

@@ -303,6 +303,7 @@ void sim_gnsf_opts_initialize_default(void *config_, void *dims_, void *opts_)
 
     // default options
     opts->newton_iter = 3;
+    opts->newton_tol = 0.0;
     // opts->scheme = NULL;
     opts->num_steps = 2;
     opts->num_forw_sens = dims->nx + dims->nu;
@@ -1939,6 +1940,8 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     struct blasfeo_dvec *YY0 = &mem->YY0;
     struct blasfeo_dvec *ZZ0 = &mem->ZZ0;
 
+    double tmp_double;
+
     // ONLY available for algebraic sensitivity propagation
     // struct blasfeo_dmat *Z0x = mem->Z0x;
     // struct blasfeo_dmat *Z0u = mem->Z0u;
@@ -2220,6 +2223,15 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
 
                     blasfeo_daxpy(nvv, -1.0, res_val, 0, &vv_traj[ss], 0, &vv_traj[ss], 0);
 
+                    // check early termination based on tolerance
+                    if (opts->newton_tol > 0)
+                    {
+                        blasfeo_dvecnrm_inf(nvv, res_val, 0, &tmp_double);
+                        if (tmp_double < opts->newton_tol)
+                        {
+                            break;
+                        }
+                    }
                 }  // END NEWTON-ITERATION
 
                 // compute K1 and Z values
@@ -2507,7 +2519,6 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                     }
 
                     // dz1_du
-                    double interpolated_value;
                     for (int jj = 0; jj < nu; jj++)
                     {
                         for (int ii = 0; ii < nz1; ii++)
@@ -2516,11 +2527,11 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                             {
                                 Z_work[kk] = blasfeo_dgeex1(dZ_du, kk*nz1+ii, jj);
                             }
-                            neville_algorithm(0.0, num_stages - 1, opts->c_vec, Z_work, &interpolated_value);
+                            neville_algorithm(0.0, num_stages - 1, opts->c_vec, Z_work, &tmp_double);
                                         // eval polynomial through (c_kk, k_kk) at 0.
-                            out->S_algebraic[ii + (jj+nx)*nz] = interpolated_value;
-                            // printf("\ndz[ii=%d]_dxu[jj=%d] = %e\n", ii, jj, interpolated_value);
-                            // blasfeo_pack_dvec(1, &interpolated_value, 1, xtdot, ii);
+                            out->S_algebraic[ii + (jj+nx)*nz] = tmp_double;
+                            // printf("\ndz[ii=%d]_dxu[jj=%d] = %e\n", ii, jj, tmp_double);
+                            // blasfeo_pack_dvec(1, &tmp_double, 1, xtdot, ii);
                         }
                     }
                     // dz1_dx1
@@ -2532,9 +2543,9 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                             {
                                 Z_work[kk] = blasfeo_dgeex1(dZ_dx1, kk*nz1+ii, jj);
                             }
-                            neville_algorithm(0.0, num_stages - 1, opts->c_vec, Z_work, &interpolated_value);
+                            neville_algorithm(0.0, num_stages - 1, opts->c_vec, Z_work, &tmp_double);
                                         // eval polynomial at 0.
-                            out->S_algebraic[ii + jj*nz] = interpolated_value;
+                            out->S_algebraic[ii + jj*nz] = tmp_double;
                         }
                     }
                     // dz1_dx2 = 0
@@ -2554,9 +2565,9 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                             {
                                 Z_work[kk] = blasfeo_dgeex1(dK2_dx1, kk * nxz2 + nx2 + ii, jj);
                             }
-                            neville_algorithm(0.0, num_stages - 1, opts->c_vec, Z_work, &interpolated_value);
+                            neville_algorithm(0.0, num_stages - 1, opts->c_vec, Z_work, &tmp_double);
                                         // eval polynomial at 0.
-                            out->S_algebraic[ii+nz1+jj*nz] = interpolated_value;
+                            out->S_algebraic[ii+nz1+jj*nz] = tmp_double;
                         }
                     }
                     // dz2_dx2
@@ -2568,9 +2579,9 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                             {
                                 Z_work[kk] = blasfeo_dgeex1(dK2_dx2, kk*nxz2+nx2+ii, jj);
                             }
-                            neville_algorithm(0.0, num_stages - 1, opts->c_vec, Z_work, &interpolated_value);
+                            neville_algorithm(0.0, num_stages - 1, opts->c_vec, Z_work, &tmp_double);
                                         // eval polynomial at 0.
-                            out->S_algebraic[ii + nz1 + (jj+nx1)*nz] = interpolated_value;
+                            out->S_algebraic[ii + nz1 + (jj+nx1)*nz] = tmp_double;
                         }
                     }
                     // dz2_du
@@ -2582,9 +2593,9 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                             {
                                 Z_work[kk] = blasfeo_dgeex1(dK2_du, kk*nxz2+nx2+ii, jj);
                             }
-                            neville_algorithm(0.0, num_stages - 1, opts->c_vec, Z_work, &interpolated_value);
+                            neville_algorithm(0.0, num_stages - 1, opts->c_vec, Z_work, &tmp_double);
                                         // eval polynomial at 0.
-                            out->S_algebraic[ii + nz1 + (jj+nx)*nz] = interpolated_value;
+                            out->S_algebraic[ii + nz1 + (jj+nx)*nz] = tmp_double;
                         }
                     }
                 }

@@ -149,6 +149,8 @@ typedef struct
     bool jac_reuse;
     // Newton_scheme *scheme;
 
+    double newton_tol; // optinally used in implicit integrators
+
     // workspace
     void *work;
 
