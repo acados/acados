@@ -205,7 +205,6 @@ void {{ model.name }}_acados_create_1_set_plan(ocp_nlp_plan_t* nlp_solver_plan, 
     nlp_solver_plan->nlp_constraints[N] = BGH;
     {%- endif %}
 
-{%- if solver_options.hessian_approx == "EXACT" %}
     {%- if solver_options.regularize_method == "NO_REGULARIZE" %}
     nlp_solver_plan->regularization = NO_REGULARIZE;
     {%- elif solver_options.regularize_method == "MIRROR" %}
@@ -217,7 +216,6 @@ void {{ model.name }}_acados_create_1_set_plan(ocp_nlp_plan_t* nlp_solver_plan, 
     {%- elif solver_options.regularize_method == "CONVEXIFY" %}
     nlp_solver_plan->regularization = CONVEXIFY;
     {%- endif %}
-{%- endif %}
 }
 
 
