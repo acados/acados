@@ -186,14 +186,14 @@ void ocp_nlp_dims_print(ocp_nlp_dims *dims)
     int N = dims->N;
 
     //    printf("k\tnx\tnu\tnb\tnbx\tnbu\tng\tns\n");
-    printf("k\tnx\tnu\tni\n");
+    printf("k\tnx\tnu\tni\tns\n");
 
     for (int kk = 0; kk < N + 1; kk++)
     {
         //        printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t\n", kk, dims->nx[kk], dims->nu[kk],
         //        dims->nb[kk],
         //            dims->nbx[kk], dims->nbu[kk], dims->ng[kk], dims->ns[kk]);
-        printf("%d\t%d\t%d\t%d\n", kk, dims->nx[kk], dims->nu[kk], dims->ni[kk]);
+        printf("%d\t%d\t%d\t%d\t%d\n", kk, dims->nx[kk], dims->nu[kk], dims->ni[kk], dims->ns[kk]);
     }
 }
 
