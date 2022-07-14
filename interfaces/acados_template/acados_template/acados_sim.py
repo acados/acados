@@ -121,6 +121,7 @@ class AcadosSimOpts:
         self.__sens_hess = False
         self.__output_z = False
         self.__sim_method_jac_reuse = 0
+        self.__ext_fun_compile_flags = '-O2'
 
     @property
     def integrator_type(self):
@@ -194,6 +195,21 @@ class AcadosSimOpts:
         Default: GAUSS_LEGENDRE
         """
         return self.__collocation_type
+
+    @property
+    def ext_fun_compile_flags(self):
+        """
+        String with compiler flags for external function compilation.
+        Default: '-O2'.
+        """
+        return self.__ext_fun_compile_flags
+
+    @ext_fun_compile_flags.setter
+    def ext_fun_compile_flags(self, ext_fun_compile_flags):
+        if isinstance(ext_fun_compile_flags, str):
+            self.__ext_fun_compile_flags = ext_fun_compile_flags
+        else:
+            raise Exception('Invalid ext_fun_compile_flags, expected a string.\n')
 
     @integrator_type.setter
     def integrator_type(self, integrator_type):

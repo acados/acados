@@ -132,6 +132,8 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     ocp_json.solver_options.exact_hess_cost = obj.opts_struct.exact_hess_cost;
     ocp_json.solver_options.exact_hess_constr = obj.opts_struct.exact_hess_constr;
 
+    ocp_json.solver_options.ext_fun_compile_flags = obj.opts_struct.ext_fun_compile_flags;
+
     ocp_json.solver_options.time_steps = obj.opts_struct.time_steps;
     ocp_json.solver_options.print_level = obj.opts_struct.print_level;
 

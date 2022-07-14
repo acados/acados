@@ -80,6 +80,7 @@ classdef ocp_nlp_solver_options_json < handle
         qp_solver_ric_alg
         qp_solver_cond_ric_alg
         nlp_solver_ext_qp_res
+        ext_fun_compile_flags
     end
     methods
         function obj = ocp_nlp_solver_options_json()
@@ -120,6 +121,7 @@ classdef ocp_nlp_solver_options_json < handle
             obj.eps_sufficient_descent = 1e-4;
             obj.hpipm_mode = 'BALANCE';
             obj.nlp_solver_ext_qp_res = 0;
+            obj.ext_fun_compile_flags = '-O2'
         end
     end
 end
