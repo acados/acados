@@ -32,11 +32,13 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import os, json
+import sys
+import os
+import json
 
 import numpy as np
 
-from ctypes import *
+from ctypes import POINTER, cast, CDLL, c_void_p, c_char_p, c_double, c_int, byref
 from copy import deepcopy
 
 from .generate_c_code_explicit_ode import generate_c_code_explicit_ode
