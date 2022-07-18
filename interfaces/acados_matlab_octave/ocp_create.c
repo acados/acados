@@ -1613,6 +1613,27 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             ocp_nlp_out_set(config, dims, out, ii, "x", x_init+ii*nx);
         }
     }
+    else if (nbx_0 == nx && nbx_0 > 0)
+    {
+        // initialize with x0
+        // lbx_0
+        if (mxGetField( matlab_model, 0, "constr_lbx_0" )!=NULL)
+        {
+            int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_lbx_0" ) );
+            int acados_size = nbx_0;
+            MEX_DIM_CHECK_VEC(fun_name, "constr_lbx_0", matlab_size, acados_size);
+            double *lbx_0 = mxGetPr( mxGetField( matlab_model, 0, "constr_lbx_0" ) );
+
+            for (int ii=0; ii<=N; ii++)
+            {
+                ocp_nlp_out_set(config, dims, out, ii, "x", lbx_0);
+            }
+        }
+        else
+        {
+            MEX_MISSING_ARGUMENT_NOTE(fun_name, "constr_lbx_0", "can be updated after creation");
+        }
+    }
     else // initialize to zero
     {
         double *x_init = calloc(nx, sizeof(double));
