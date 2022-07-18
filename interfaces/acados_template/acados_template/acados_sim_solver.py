@@ -32,11 +32,13 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import os, json
+import sys
+import os
+import json
 
 import numpy as np
 
-from ctypes import *
+from ctypes import POINTER, cast, CDLL, c_void_p, c_char_p, c_double, c_int, byref
 from copy import deepcopy
 
 from .generate_c_code_explicit_ode import generate_c_code_explicit_ode
@@ -198,6 +200,14 @@ class AcadosSimSolver:
             the `CMake` pipeline instead of a `Makefile` (`CMake` seems to be the better option in conjunction with
             `MS Visual Studio`); default: `None`
     """
+    if sys.platform=="win32":
+        from ctypes import wintypes
+        from ctypes import WinDLL
+        dlclose = WinDLL('kernel32', use_last_error=True).FreeLibrary
+        dlclose.argtypes = [wintypes.HMODULE]
+    else:
+        dlclose = CDLL(None).dlclose
+        dlclose.argtypes = [c_void_p]
     def __init__(self, acados_sim_, json_file='acados_sim.json', build=True, cmake_builder: CMakeBuilder = None):
 
         self.solver_created = False
