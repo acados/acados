@@ -98,6 +98,7 @@ ocp_opts.set('sim_method', sim_method);
 ocp_opts.set('qp_solver', qp_solver);
 ocp_opts.set('qp_solver_iter_max', 2000);
 ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
+ocp_opts.set('ext_fun_compile_flags', '');
 % ... see ocp_opts.opts_struct to see what other fields can be set
 
 %% create ocp solver

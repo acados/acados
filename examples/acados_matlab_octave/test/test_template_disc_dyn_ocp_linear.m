@@ -227,6 +227,8 @@ if (strcmp(dyn_type, 'explicit') || strcmp(dyn_type, 'implicit'))
 	ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
 	ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
 end
+ocp_opts.set('ext_fun_compile_flags', '');
+
 
 
 %% acados ocp

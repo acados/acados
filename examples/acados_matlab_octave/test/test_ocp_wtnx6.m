@@ -276,6 +276,7 @@ ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', ocp_sim_method_num_steps);
 ocp_opts.set('sim_method_newton_iter', ocp_sim_method_newton_iter);
 ocp_opts.set('regularize_method', 'no_regularize');
+ocp_opts.set('ext_fun_compile_flags', '');
 
 ocp_opts.opts_struct;
 

@@ -109,6 +109,8 @@ ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('sim_method', sim_method);
 ocp_opts.set('qp_solver', qp_solver);
 ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
+ocp_opts.set('ext_fun_compile_flags', '');
+
 ocp_opts.set('collocation_type', 'gauss_radau_iia');
 % ... see ocp_opts.opts_struct to see what other fields can be set
 

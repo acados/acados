@@ -190,6 +190,8 @@ ocp_opts.set('exact_hess_dyn', 1);
 ocp_opts.set('exact_hess_cost', 1);
 ocp_opts.set('exact_hess_constr', 1);
 
+ocp_opts.set('ext_fun_compile_flags', '');
+
 % set default parameter values
 ocp_opts.set('parameter_values', 1);
 

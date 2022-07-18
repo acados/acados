@@ -203,6 +203,7 @@ ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_interface', compile_interface);
 ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme_N', N);
+ocp_opts.set('ext_fun_compile_flags', '');
 if (exist('shooting_nodes', 'var'))
 	ocp_opts.set('shooting_nodes', shooting_nodes);
 end
