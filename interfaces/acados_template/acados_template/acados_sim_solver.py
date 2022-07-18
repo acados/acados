@@ -200,6 +200,14 @@ class AcadosSimSolver:
             the `CMake` pipeline instead of a `Makefile` (`CMake` seems to be the better option in conjunction with
             `MS Visual Studio`); default: `None`
     """
+    if sys.platform=="win32":
+        from ctypes import wintypes
+        from ctypes import WinDLL
+        dlclose = WinDLL('kernel32', use_last_error=True).FreeLibrary
+        dlclose.argtypes = [wintypes.HMODULE]
+    else:
+        dlclose = CDLL(None).dlclose
+        dlclose.argtypes = [c_void_p]
     def __init__(self, acados_sim_, json_file='acados_sim.json', build=True, cmake_builder: CMakeBuilder = None):
 
         self.solver_created = False
