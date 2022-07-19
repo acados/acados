@@ -181,6 +181,7 @@ ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
 ocp_opts.set('exact_hess_dyn', 1);
 ocp_opts.set('exact_hess_cost', 1);
 ocp_opts.set('exact_hess_constr', 1);
+ocp_opts.set('ext_fun_compile_flags', '');
 
 %% create ocp solver
 ocp = acados_ocp(ocp_model, ocp_opts);

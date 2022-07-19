@@ -251,6 +251,8 @@ ocp.solver_options.nlp_solver_max_iter = 200
 ocp.solver_options.qp_solver_iter_max = 50
 ocp.solver_options.print_level = 0
 
+ocp.solver_options.ext_fun_compile_flags = ''
+
 # set prediction horizon
 ocp.solver_options.tf = Tf
 ocp.solver_options.nlp_solver_type = SOLVER_TYPE

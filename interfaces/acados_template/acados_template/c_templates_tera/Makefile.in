@@ -291,7 +291,7 @@ CPPFLAGS+= -I $(INCLUDE_PATH)/qpOASES_e/
 
 {# c-compiler flags #}
 # define the c-compiler flags for make's implicit rules
-CFLAGS = -fPIC -std=c99 {{ openmp_flag }} #-fno-diagnostics-show-line-numbers -g
+CFLAGS = -fPIC -std=c99 {{ openmp_flag }} {{ solver_options.ext_fun_compile_flags }}#-fno-diagnostics-show-line-numbers -g
 # # Debugging
 # CFLAGS += -g3
 

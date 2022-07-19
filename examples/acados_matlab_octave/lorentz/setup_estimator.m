@@ -113,6 +113,7 @@ ocp_opts.set('sim_method_num_steps', 5);
 ocp_opts.set('qp_solver', qp_solver);
 ocp_opts.set('qp_solver_cond_N', N);
 ocp_opts.set('print_level', 0);
+ocp_opts.set('ext_fun_compile_flags', '');
 
 %% create ocp solver
 estimator = acados_ocp(ocp_model, ocp_opts);

@@ -221,7 +221,7 @@ for itest = 1:3
     if (strcmp(sim_method, 'irk_gnsf'))
         ocp_opts.set('gnsf_detect_struct', gnsf_detect_struct);
     end
-
+    ocp_opts.set('ext_fun_compile_flags', '');
 
     %% acados ocp
     % create ocp

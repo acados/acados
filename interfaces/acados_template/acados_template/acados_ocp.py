@@ -2160,6 +2160,7 @@ class AcadosOcpOptions:
         self.__full_step_dual = 0
         self.__eps_sufficient_descent = 1e-4
         self.__hpipm_mode = 'BALANCE'
+        self.__ext_fun_compile_flags = '-O2'
 
 
     @property
@@ -2169,6 +2170,14 @@ class AcadosOcpOptions:
         Default: 'PARTIAL_CONDENSING_HPIPM'.
         """
         return self.__qp_solver
+
+    @property
+    def ext_fun_compile_flags(self):
+        """
+        String with compiler flags for external function compilation.
+        Default: '-O2'.
+        """
+        return self.__ext_fun_compile_flags
 
     @property
     def hpipm_mode(self):
@@ -2616,6 +2625,13 @@ class AcadosOcpOptions:
         else:
             raise Exception('Invalid hpipm_mode value. Possible values are:\n\n' \
                     + ',\n'.join(hpipm_modes) + '.\n\nYou have: ' + hpipm_mode + '.\n\n')
+
+    @ext_fun_compile_flags.setter
+    def ext_fun_compile_flags(self, ext_fun_compile_flags):
+        if isinstance(ext_fun_compile_flags, str):
+            self.__ext_fun_compile_flags = ext_fun_compile_flags
+        else:
+            raise Exception('Invalid ext_fun_compile_flags, expected a string.\n')
 
     @hessian_approx.setter
     def hessian_approx(self, hessian_approx):

@@ -821,6 +821,9 @@
         "ext_cost_num_hess": [
             "int"
         ],
+        "ext_fun_compile_flags": [
+            "str"
+        ],
         "model_external_shared_lib_dir": [
             "str"
         ],
