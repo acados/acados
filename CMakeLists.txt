@@ -64,6 +64,7 @@ endif()
 
 option(ACADOS_WITH_OPENMP "OpenMP Parallelization" OFF)
 option(ACADOS_SILENT "No console status output" OFF)
+option(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE "Print QP inputs and outputs to file in SQP" OFF)
 
 # Additional targets
 option(ACADOS_UNIT_TESTS "Compile Unit tests" OFF)
@@ -160,6 +161,12 @@ if(ACADOS_SILENT)
     message(STATUS "ACADOS_SILENT is ON")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DACADOS_SILENT")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DACADOS_SILENT")
+endif()
+
+if(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
+    message(STATUS "ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE is ON")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE")
 endif()
 
 # uninstall
