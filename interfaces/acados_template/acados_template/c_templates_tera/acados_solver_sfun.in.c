@@ -241,23 +241,23 @@ static void mdlInitializeSizes (SimStruct *S)
   {%- if dims.ng > 0 and simulink_opts.inputs.lg -%}  {#- lg #}
     {%- set i_input = i_input + 1 %}
     // lg
-    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.ng }});
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.N*dims.ng }});
   {%- endif -%}
   {%- if dims.ng > 0 and simulink_opts.inputs.ug -%}  {#- ug #}
     {%- set i_input = i_input + 1 %}
     // ug
-    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.ng }});
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.N*dims.ng }});
   {%- endif -%}
 
   {%- if dims.nh > 0 and simulink_opts.inputs.lh -%}  {#- lh #}
     {%- set i_input = i_input + 1 %}
     // lh
-    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nh }});
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.N*dims.nh }});
   {%- endif -%}
   {%- if dims.nh > 0 and simulink_opts.inputs.uh -%}  {#- uh #}
     {%- set i_input = i_input + 1 %}
     // uh
-    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nh }});
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.N*dims.nh }});
   {%- endif -%}
 
   {%- if dims.nh_e > 0 and simulink_opts.inputs.lh_e -%}  {#- lh_e #}
@@ -589,44 +589,41 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
 
-    for (int i = 0; i < {{ dims.ng }}; i++)
-        buffer[i] = (double)(*in_sign[i]);
-
     for (int ii = 0; ii < {{ dims.N }}; ii++)
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "lg", buffer);
+        for (int jj = 0; jj < {{ dims.ng }}; jj++)
+            buffer[jj] = (double)(*in_sign[ii*{{ dims.ng }}+jj]);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "lg", (void *) buffer);
   {%- endif -%}
   {%- if dims.ng > 0 and simulink_opts.inputs.ug -%}  {#- ug #}
     // ug
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
 
-    for (int i = 0; i < {{ dims.ng }}; i++)
-        buffer[i] = (double)(*in_sign[i]);
-
     for (int ii = 0; ii < {{ dims.N }}; ii++)
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "ug", buffer);
+        for (int jj = 0; jj < {{ dims.ng }}; jj++)
+            buffer[jj] = (double)(*in_sign[ii*{{ dims.ng }}+jj]);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "ug", (void *) buffer);
   {%- endif -%}
+
   {%- if dims.nh > 0 and simulink_opts.inputs.lh -%}  {#- lh #}
     // lh
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
 
-    for (int i = 0; i < {{ dims.nh }}; i++)
-        buffer[i] = (double)(*in_sign[i]);
-
     for (int ii = 0; ii < {{ dims.N }}; ii++)
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "lh", buffer);
+        for (int jj = 0; jj < {{ dims.nh }}; jj++)
+            buffer[jj] = (double)(*in_sign[ii*{{ dims.nh }}+jj]);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "lh", (void *) buffer);
   {%- endif -%}
   {%- if dims.nh > 0 and simulink_opts.inputs.uh -%}  {#- uh #}
     // uh
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
 
-    for (int i = 0; i < {{ dims.nh }}; i++)
-        buffer[i] = (double)(*in_sign[i]);
-
     for (int ii = 0; ii < {{ dims.N }}; ii++)
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "uh", buffer);
+        for (int jj = 0; jj < {{ dims.nh }}; jj++)
+            buffer[jj] = (double)(*in_sign[ii*{{ dims.nh }}+jj]);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "uh", (void *) buffer);
   {%- endif -%}
 
 
