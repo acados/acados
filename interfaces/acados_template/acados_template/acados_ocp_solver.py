@@ -1827,13 +1827,15 @@ class AcadosOcpSolver:
 
         if not isinstance(param_values_, np.ndarray):
             raise Exception('param_values_ must be np.array.')
+        elif np.float64 != param_values_.dtype:
+            raise TypeError('param_values_ must be np.array of float64.')
 
         if param_values_.shape[0] != len(idx_values_):
             raise Exception(f'param_values_ and idx_values_ must be of the same size.' +
                  f' Got sizes idx {param_values_.shape[0]}, param_values {len(idx_values_)}.')
 
-        if any(idx_values_ > self.acados_ocp.dims.np):
-            raise Exception(f'idx_values_ contains value > np = {self.acados_ocp.dims.np}')
+        if any(idx_values_ >= self.acados_ocp.dims.np):
+            raise Exception(f'idx_values_ contains value >= np = {self.acados_ocp.dims.np}')
 
         stage = c_int(stage_)
         n_update = c_int(len(param_values_))
