@@ -133,6 +133,9 @@ COMPDEFINES = [ COMPDEFINES, ' -DACADOS_WITH_OSQP ' ];
 {%- elif solver_options.qp_solver is containing("QPDUNES") %}
 CFLAGS = [ CFLAGS, ' -DACADOS_WITH_QPDUNES ' ];
 COMPDEFINES = [ COMPDEFINES, ' -DACADOS_WITH_QPDUNES ' ];
+{%- elif solver_options.qp_solver is containing("DAQP") %}
+CFLAGS = [ CFLAGS, ' -DACADOS_WITH_DAQP' ];
+COMPDEFINES = [ COMPDEFINES, ' -DACADOS_WITH_DAQP' ];
 {%- elif solver_options.qp_solver is containing("HPMPC") %}
 CFLAGS = [ CFLAGS, ' -DACADOS_WITH_HPMPC ' ];
 COMPDEFINES = [ COMPDEFINES, ' -DACADOS_WITH_HPMPC ' ];
@@ -152,6 +155,9 @@ LIBS{end+1} = '{{ acados_link_libs.osqp }}';
 {%- else %}
     {% if solver_options.qp_solver is containing("QPOASES") %}
 LIBS{end+1} = '-lqpOASES_e';
+    {% endif %}
+    {% if solver_options.qp_solver is containing("DAQP") %}
+LIBS{end+1} = '-ldaqp';
     {% endif %}
 {%- endif %}
 

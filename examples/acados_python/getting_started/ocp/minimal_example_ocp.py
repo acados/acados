@@ -90,7 +90,7 @@ ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 # set options
 ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
 # PARTIAL_CONDENSING_HPIPM, FULL_CONDENSING_QPOASES, FULL_CONDENSING_HPIPM,
-# PARTIAL_CONDENSING_QPDUNES, PARTIAL_CONDENSING_OSQP
+# PARTIAL_CONDENSING_QPDUNES, PARTIAL_CONDENSING_OSQP, FULL_CONDENSING_DAQP
 ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
 ocp.solver_options.integrator_type = 'IRK'
 # ocp.solver_options.print_level = 1

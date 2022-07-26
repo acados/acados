@@ -121,6 +121,8 @@
 	{%- set openmp_flag = " " %}
 	{%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
 		{%- set link_libs = "-lqpOASES_e" %}
+	{%- elif qp_solver == "FULL_CONDENSING_DAQP" %}
+		{%- set link_libs = "-ldaqp" %}
 	{%- else %}
 		{%- set link_libs = "" %}
 	{%- endif %}
@@ -293,6 +295,9 @@ set(CMAKE_C_FLAGS "
 {%- if qp_solver == "FULL_CONDENSING_QPOASES" -%}
    -DACADOS_WITH_QPOASES
 {%- endif -%}
+{%- if qp_solver == "FULL_CONDENSING_DAQP" -%}
+   -DACADOS_WITH_DAQP
+{%- endif -%}
 {%- if qp_solver == "PARTIAL_CONDENSING_OSQP" -%}
    -DACADOS_WITH_OSQP
 {%- endif -%}
@@ -309,6 +314,9 @@ include_directories(
    ${ACADOS_INCLUDE_PATH}/hpipm/include
 {%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
    ${ACADOS_INCLUDE_PATH}/qpOASES_e/
+{%- endif %}
+{%- if qp_solver == "FULL_CONDENSING_DAQP" %}
+   ${ACADOS_INCLUDE_PATH}/daqp/include
 {%- endif %}
 )
 

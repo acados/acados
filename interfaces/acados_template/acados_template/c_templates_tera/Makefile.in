@@ -120,6 +120,8 @@
 	{%- set openmp_flag = " " %}
 	{%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
 		{%- set link_libs = "-lqpOASES_e" %}
+	{%- elif qp_solver == "FULL_CONDENSING_DAQP" %}
+		{%- set link_libs = "-ldaqp" %}
 	{%- else %}
 		{%- set link_libs = "" %}
 	{%- endif %}
@@ -275,6 +277,9 @@ LIB_PATH = {{ acados_lib_path }}
 {%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
 CPPFLAGS += -DACADOS_WITH_QPOASES
 {%- endif %}
+{%- if qp_solver == "FULL_CONDENSING_DAQP" %}
+CPPFLAGS += -DACADOS_WITH_DAQP
+{%- endif %}
 {%- if qp_solver == "PARTIAL_CONDENSING_OSQP" %}
 CPPFLAGS += -DACADOS_WITH_OSQP
 {%- endif %}
@@ -287,6 +292,9 @@ CPPFLAGS+= -I$(INCLUDE_PATH)/blasfeo/include
 CPPFLAGS+= -I$(INCLUDE_PATH)/hpipm/include
  {%- if qp_solver == "FULL_CONDENSING_QPOASES" %}
 CPPFLAGS+= -I $(INCLUDE_PATH)/qpOASES_e/
+ {%- endif %}
+ {%- if qp_solver == "FULL_CONDENSING_DAQP" %}
+CPPFLAGS+= -I $(INCLUDE_PATH)/daqp/include
  {%- endif %}
 
 {# c-compiler flags #}
