@@ -36,3 +36,6 @@
 [submodule "examples/acados_python/tests/test_data"]
 	path = examples/acados_python/tests/test_data
 	url = https://github.com/acados/test_data
+[submodule "external/daqp"]
+	path = external/daqp
+	url = https://github.com/darnstrom/daqp.git
