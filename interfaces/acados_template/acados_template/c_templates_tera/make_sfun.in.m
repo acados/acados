@@ -238,20 +238,20 @@ i_in = i_in + 1;
 {%- endif -%}
 
 {%- if dims.ng > 0 and simulink_opts.inputs.lg -%}  {#- lg #}
-input_note = strcat(input_note, num2str(i_in), ') lg, size [{{ dims.ng }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') lg for shooting nodes 0 to N-1, size [{{ dims.N*dims.ng }}]\n ');
 i_in = i_in + 1;
 {%- endif %}
 {%- if dims.ng > 0 and simulink_opts.inputs.ug -%}  {#- ug #}
-input_note = strcat(input_note, num2str(i_in), ') ug, size [{{ dims.ng }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') ug for shooting nodes 0 to N-1, size [{{ dims.N*dims.ng }}]\n ');
 i_in = i_in + 1;
 {%- endif %}
 
 {%- if dims.nh > 0 and simulink_opts.inputs.lh -%}  {#- lh #}
-input_note = strcat(input_note, num2str(i_in), ') lh, size [{{ dims.nh }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') lh for shooting nodes 0 to N-1, size [{{ dims.N*dims.nh }}]\n ');
 i_in = i_in + 1;
 {%- endif %}
 {%- if dims.nh > 0 and simulink_opts.inputs.uh -%}  {#- uh #}
-input_note = strcat(input_note, num2str(i_in), ') uh, size [{{ dims.nh }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') uh for shooting nodes 0 to N-1, size [{{ dims.N*dims.nh }}]\n ');
 i_in = i_in + 1;
 {%- endif %}
 
