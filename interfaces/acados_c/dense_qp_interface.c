@@ -53,6 +53,9 @@
 #ifdef ACADOS_WITH_QPOASES
 #include "acados/dense_qp/dense_qp_qpoases.h"
 #endif
+#ifdef ACADOS_WITH_QPOASES
+#include "acados/dense_qp/dense_qp_daqp.h"
+#endif
 #ifdef ACADOS_WITH_OOQP
 #include "acados/dense_qp/dense_qp_ooqp.h"
 #endif
@@ -72,6 +75,11 @@ qp_solver_config *dense_qp_config_create(dense_qp_solver_plan *plan)
             break;
 #ifdef ACADOS_WITH_QPOASES
         case DENSE_QP_QPOASES:
+            dense_qp_qpoases_config_initialize_default(solver_config);
+            break;
+#endif
+#ifdef ACADOS_WITH_DAQP
+        case DENSE_QP_DAQP:
             dense_qp_qpoases_config_initialize_default(solver_config);
             break;
 #endif

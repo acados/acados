@@ -41,7 +41,7 @@ extern "C" {
 
 #include "acados/dense_qp/dense_qp_common.h"
 
-typedef enum { DENSE_QP_HPIPM, DENSE_QP_QORE, DENSE_QP_QPOASES, DENSE_QP_OOQP } dense_qp_solver_t;
+typedef enum { DENSE_QP_HPIPM, DENSE_QP_QORE, DENSE_QP_QPOASES, DENSE_QP_OOQP, DENSE_QP_DAQP } dense_qp_solver_t;
 
 typedef struct
 {
