@@ -365,6 +365,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
     }
 #endif
+#if defined(ACADOS_WITH_DAQP)
+    else if (!strcmp(qp_solver, "full_condensing_daqp"))
+    {
+        plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_DAQP;
+    }
+#endif
 #if defined(ACADOS_WITH_HPMPC)
     else if (!strcmp(qp_solver, "partial_condensing_hpmpc"))
     {

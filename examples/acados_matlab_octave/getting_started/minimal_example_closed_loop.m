@@ -51,7 +51,7 @@ T = shooting_nodes(end);
 
 nlp_solver = 'sqp'; % sqp, sqp_rti
 qp_solver = 'partial_condensing_hpipm';
-% full_condensing_hpipm, partial_condensing_hpipm, full_condensing_qpoases
+% full_condensing_hpipm, partial_condensing_hpipm, full_condensing_qpoases, full_condensing_daqp
 qp_solver_cond_N = 5; % for partial condensing
 
 % we add some model-plant mismatch by choosing different integration
