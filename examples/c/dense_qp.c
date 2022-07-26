@@ -88,6 +88,7 @@ int main() {
 
     dense_qp_solver_plan plan;
 //    plan.qp_solver = DENSE_QP_QPOASES;
+//    plan.qp_solver = DENSE_QP_DAQP;
     plan.qp_solver = DENSE_QP_HPIPM;
 
     qp_solver_config *config = dense_qp_config_create(&plan);
