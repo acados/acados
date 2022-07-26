@@ -141,7 +141,7 @@ void dense_qp_daqp_opts_set(void *config_, void *opts_, const char *field, void 
 	  // Complementary slackness is implicitly 
 	  // handled by the worlking set
     }
-    if (!strcmp(field, "iter_max"))
+	else if (!strcmp(field, "iter_max"))
     {
         int *iter_max= value;
         opts->daqp_opts->iter_limit = *iter_max;
