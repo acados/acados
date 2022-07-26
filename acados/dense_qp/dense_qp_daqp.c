@@ -353,7 +353,6 @@ void *dense_qp_daqp_memory_assign(void *config_, dense_qp_dims *dims, void *opts
 
 	// Assign raw memory to workspace
 	mem->daqp_work = daqp_workspace_assign(n,m,ms,c_ptr);
-	c_ptr += daqp_qp_calculate_size(n,m,ms);
 	c_ptr += daqp_workspace_calculate_size(n,m,ms);
 
     assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
