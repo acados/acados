@@ -72,6 +72,7 @@ option(ACADOS_EXAMPLES "Compile Examples" OFF)
 option(ACADOS_LINT "Compile Lint" OFF)
 # Extarnal libs
 option(ACADOS_WITH_QPOASES  "qpOASES solver" OFF)
+option(ACADOS_WITH_DAQP "DAQP solver" OFF)
 option(ACADOS_WITH_HPMPC "HPMPC solver" OFF)
 option(ACADOS_WITH_QORE "QORE solver" OFF)
 option(ACADOS_WITH_OOQP "OOQP solver" OFF)
