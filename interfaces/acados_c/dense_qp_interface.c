@@ -53,7 +53,7 @@
 #ifdef ACADOS_WITH_QPOASES
 #include "acados/dense_qp/dense_qp_qpoases.h"
 #endif
-#ifdef ACADOS_WITH_QPOASES
+#ifdef ACADOS_WITH_DAQP
 #include "acados/dense_qp/dense_qp_daqp.h"
 #endif
 #ifdef ACADOS_WITH_OOQP
