@@ -55,6 +55,10 @@
 #include "acados/dense_qp/dense_qp_qpoases.h"
 #endif
 
+#ifdef ACADOS_WITH_DAQP
+#include "acados/dense_qp/dense_qp_daqp.h"
+#endif
+
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
 #ifdef ACADOS_WITH_HPMPC
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
@@ -123,6 +127,13 @@ void ocp_qp_xcond_solver_config_initialize_from_plan(
         case FULL_CONDENSING_QPOASES:
 			ocp_qp_xcond_solver_config_initialize_default(solver_config);
             dense_qp_qpoases_config_initialize_default(solver_config->qp_solver);
+			ocp_qp_full_condensing_config_initialize_default(solver_config->xcond);
+            break;
+#endif
+#ifdef ACADOS_WITH_DAQP
+        case FULL_CONDENSING_DAQP:
+			ocp_qp_xcond_solver_config_initialize_default(solver_config);
+            dense_qp_daqp_config_initialize_default(solver_config->qp_solver);
 			ocp_qp_full_condensing_config_initialize_default(solver_config->xcond);
             break;
 #endif
