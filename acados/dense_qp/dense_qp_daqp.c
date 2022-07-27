@@ -58,13 +58,14 @@
 #include "acados_c/dense_qp_interface.h"
 
 /************************************************
- * auxiliary 
+ * auxiliary
  ************************************************/
 
-static void acados_daqp_get_dims(dense_qp_dims *dims, int *n_ptr, int *m_ptr,int *ms_ptr){
-  *n_ptr = dims->nv; 
-  *m_ptr = dims->nv+dims->ng; 
-  *ms_ptr = dims->nv; 
+static void acados_daqp_get_dims(dense_qp_dims *dims, int *n_ptr, int *m_ptr, int *ms_ptr)
+{
+    *n_ptr = dims->nv;
+    *m_ptr = dims->nv+dims->ng;
+    *ms_ptr = dims->nv;
 }
 
 
@@ -92,8 +93,8 @@ void *dense_qp_daqp_opts_assign(void *config_, dense_qp_dims *dims, void *raw_me
     opts = (dense_qp_daqp_opts *) c_ptr;
     c_ptr += sizeof(dense_qp_daqp_opts);
 
-	opts->daqp_opts = (DAQPSettings *) c_ptr;
-	c_ptr += sizeof(DAQPSettings);
+    opts->daqp_opts = (DAQPSettings *) c_ptr;
+    c_ptr += sizeof(DAQPSettings);
 
     assert((char *) raw_memory + dense_qp_daqp_opts_calculate_size(config_, dims) == c_ptr);
 
@@ -105,8 +106,8 @@ void *dense_qp_daqp_opts_assign(void *config_, dense_qp_dims *dims, void *raw_me
 void dense_qp_daqp_opts_initialize_default(void *config_, dense_qp_dims *dims, void *opts_)
 {
     dense_qp_daqp_opts *opts = (dense_qp_daqp_opts *) opts_;
-	daqp_default_settings(opts->daqp_opts);
-	opts->warm_start=1;
+    daqp_default_settings(opts->daqp_opts);
+    opts->warm_start=1;
     return;
 }
 
@@ -124,12 +125,12 @@ void dense_qp_daqp_opts_set(void *config_, void *opts_, const char *field, void 
     dense_qp_daqp_opts *opts = opts_;
     if (!strcmp(field, "tol_stat"))
     {
-	  // DAQP always "aims" at a stationary point 
+        // DAQP always "aims" at a stationary point
     }
     else if (!strcmp(field, "tol_eq"))
     {
-	  // Equality constraints are explicitly 
-	  // handled by the working set
+        // Equality constraints are explicitly
+        // handled by the working set
     }
     else if (!strcmp(field, "tol_ineq"))
     {
@@ -138,19 +139,19 @@ void dense_qp_daqp_opts_set(void *config_, void *opts_, const char *field, void 
     }
     else if (!strcmp(field, "tol_comp"))
     {
-	  // Complementary slackness is implicitly 
-	  // handled by the worlking set
+        // Complementary slackness is implicitly
+        // handled by the worlking set
     }
-	else if (!strcmp(field, "iter_max"))
+    else if (!strcmp(field, "iter_max"))
     {
         int *iter_max= value;
         opts->daqp_opts->iter_limit = *iter_max;
     }
     else if (!strcmp(field, "warm_start"))
     {
-	    int *warm_start = value;
-		opts->warm_start = *warm_start;
-	}
+        int *warm_start = value;
+        opts->warm_start = *warm_start;
+    }
     else
     {
         printf("\nerror: dense_qp_daqp_opts_set: wrong field: %s\n", field);
@@ -168,167 +169,170 @@ void dense_qp_daqp_opts_set(void *config_, void *opts_, const char *field, void 
 
 static acados_size_t daqp_workspace_calculate_size(int n, int m, int ms)
 {
-  acados_size_t size = 0;
+    acados_size_t size = 0;
 
-  size += sizeof(DAQPWorkspace);
-  size += sizeof(DAQPProblem);
-  //size += sizeof(DAQPSettings);
+    size += sizeof(DAQPWorkspace);
+    size += sizeof(DAQPProblem);
+    //size += sizeof(DAQPSettings);
 
-  size += n * n * sizeof(c_float); // H
-  size += 1 * n * sizeof(c_float); // f
-  size += n * (m-ms) * sizeof(c_float); // A
-  size += 2 * m * sizeof(c_float); // bupper/blower 
-  size += 1 * m * sizeof(int); // sense 
+    size += n * n * sizeof(c_float); // H
+    size += 1 * n * sizeof(c_float); // f
+    size += n * (m-ms) * sizeof(c_float); // A
+    size += 2 * m * sizeof(c_float); // bupper/blower
+    size += 1 * m * sizeof(int); // sense
 
-  size += n * (m-ms) * sizeof(c_float); // M
-  size += 2 * m * sizeof(c_float); // dupper/dlower 
-  size += (n+1)*n/2 * sizeof(c_float); // Rinv 
-  size += n * sizeof(c_float); // v 
-  size += m * sizeof(int); // sense 
-  size += m * sizeof(c_float); // scaling
+    size += n * (m-ms) * sizeof(c_float); // M
+    size += 2 * m * sizeof(c_float); // dupper/dlower
+    size += (n+1)*n/2 * sizeof(c_float); // Rinv
+    size += n * sizeof(c_float); // v
+    size += m * sizeof(int); // sense
+    size += m * sizeof(c_float); // scaling
 
-  size += 2 * n * sizeof(c_float); // x & xold
-  size += 2*(n+1) * sizeof(c_float); // lam & lam_star 
-  size += n * sizeof(c_float); // u 
+    size += 2 * n * sizeof(c_float); // x & xold
+    size += 2*(n+1) * sizeof(c_float); // lam & lam_star
+    size += n * sizeof(c_float); // u
 
-  size += (n+2)*(n+1)/2 * sizeof(c_float); // L
-  size += (n+1) * sizeof(c_float); // D 
+    size += (n+2)*(n+1)/2 * sizeof(c_float); // L
+    size += (n+1) * sizeof(c_float); // D
 
-  size += 2*(n+1) * sizeof(c_float); //xldl & zldl
+    size += 2*(n+1) * sizeof(c_float); //xldl & zldl
 
-  size += (n+1) * sizeof(int); // WS 
+    size += (n+1) * sizeof(int); // WS
 
-  return size;
+    return size;
 }
 
 
 acados_size_t dense_qp_daqp_memory_calculate_size(void *config_, dense_qp_dims *dims, void *opts_)
 {
-	int n,m,ms;
-	acados_daqp_get_dims(dims, &n,&m,&ms);
-	int nb = dims->nb;
-	int ns = dims->ns;
+    int n, m, ms;
+    acados_daqp_get_dims(dims, &n,&m,&ms);
+    int nb = dims->nb;
+    int ns = dims->ns;
 
     acados_size_t size = sizeof(dense_qp_daqp_memory);
 
-	size += daqp_workspace_calculate_size(n,m,ms);
-	
-	size += nb * 2 * sizeof(c_float); // lb_tmp & ub_tmp
-	size += nb * 1 * sizeof(int); // idbx
-	size += n * 1 * sizeof(int); // idxv_to_idxb;
-	size += ns * 1 * sizeof(int); // idbs
+    size += daqp_workspace_calculate_size(n, m, ms);
+
+    size += nb * 2 * sizeof(c_float); // lb_tmp & ub_tmp
+    size += nb * 1 * sizeof(int); // idbx
+    size += n * 1 * sizeof(int); // idxv_to_idxb;
+    size += ns * 1 * sizeof(int); // idbs
 
     make_int_multiple_of(8, &size);
 
     return size;
 }
 
-static void *daqp_workspace_assign(int n, int m, int ms, void *raw_memory){
-  DAQPWorkspace *work;
-  char *c_ptr = (char *) raw_memory;
 
-  work = (DAQPWorkspace *) c_ptr;
-  c_ptr += sizeof(DAQPWorkspace);
+static void *daqp_workspace_assign(int n, int m, int ms, void *raw_memory)
+{
+    DAQPWorkspace *work;
+    char *c_ptr = (char *) raw_memory;
 
-  work->qp = (DAQPProblem *) c_ptr;
-  c_ptr += sizeof(DAQPProblem);
+    work = (DAQPWorkspace *) c_ptr;
+    c_ptr += sizeof(DAQPWorkspace);
 
-  //work->settings = (DAQPSettings *) c_ptr;
-  //c_ptr += sizeof(DAQPSettings);
+    work->qp = (DAQPProblem *) c_ptr;
+    c_ptr += sizeof(DAQPProblem);
 
-  align_char_to(8, &c_ptr);
+    //work->settings = (DAQPSettings *) c_ptr;
+    //c_ptr += sizeof(DAQPSettings);
 
-  // double
+    align_char_to(8, &c_ptr);
 
-  work->qp->H = (c_float*) c_ptr;
-  c_ptr += n * n * sizeof(c_float);
-  
-  work->qp->f = (c_float*) c_ptr;
-  c_ptr += 1 * n * sizeof(c_float);
-  
-  work->qp->A = (c_float*) c_ptr;
-  c_ptr += n * (m-ms) * sizeof(c_float);
+    // double
 
-  work->qp->bupper = (c_float*) c_ptr;
-  c_ptr += 1 * m * sizeof(c_float);
-  
-  work->qp->blower = (c_float*) c_ptr;
-  c_ptr += 1 * m * sizeof(c_float);
+    work->qp->H = (c_float*) c_ptr;
+    c_ptr += n * n * sizeof(c_float);
 
-  work->M = (c_float *) c_ptr;
-  c_ptr += n * (m - ms) * sizeof(c_float);
+    work->qp->f = (c_float*) c_ptr;
+    c_ptr += 1 * n * sizeof(c_float);
 
-  work->dupper = (c_float *) c_ptr;
-  c_ptr += 1 * m * sizeof(c_float);
+    work->qp->A = (c_float*) c_ptr;
+    c_ptr += n * (m-ms) * sizeof(c_float);
 
-  work->dlower = (c_float *) c_ptr;
-  c_ptr += 1 * m * sizeof(c_float);
-  
-  work->Rinv = (c_float *) c_ptr;
-  c_ptr += (n + 1) * n / 2 * sizeof(c_float);
+    work->qp->bupper = (c_float*) c_ptr;
+    c_ptr += 1 * m * sizeof(c_float);
 
-  work->v = (c_float *) c_ptr;
-  c_ptr += n * sizeof(c_float);
-  
-  work->scaling = (c_float *) c_ptr;
-  c_ptr += m * sizeof(c_float);
+    work->qp->blower = (c_float*) c_ptr;
+    c_ptr += 1 * m * sizeof(c_float);
 
-  work->x = (c_float *) c_ptr;
-  c_ptr += n * sizeof(c_float);
-  
-  work->xold = (c_float *) c_ptr;
-  c_ptr += n * sizeof(c_float);
+    work->M = (c_float *) c_ptr;
+    c_ptr += n * (m - ms) * sizeof(c_float);
 
-  work->lam = (c_float *) c_ptr;
-  c_ptr += (n+1) * sizeof(c_float);
-  
-  work->lam_star = (c_float *) c_ptr;
-  c_ptr += (n+1) * sizeof(c_float);
+    work->dupper = (c_float *) c_ptr;
+    c_ptr += 1 * m * sizeof(c_float);
 
-  work->u = (c_float *) c_ptr;
-  c_ptr += n * sizeof(c_float);
+    work->dlower = (c_float *) c_ptr;
+    c_ptr += 1 * m * sizeof(c_float);
 
-  work->L = (c_float *) c_ptr;
-  c_ptr += (n+2)*(n+1)/2 * sizeof(c_float);
-  
-  work->D = (c_float *) c_ptr;
-  c_ptr += (n + 1) * sizeof(c_float);
-  
-  work->xldl = (c_float *) c_ptr;
-  c_ptr += (n + 1) * sizeof(c_float);
-  
-  work->zldl = (c_float *) c_ptr;
-  c_ptr += (n + 1) * sizeof(c_float);
+    work->Rinv = (c_float *) c_ptr;
+    c_ptr += (n + 1) * n / 2 * sizeof(c_float);
 
-  // ints 
-  work->qp->sense = (int *) c_ptr;
-  c_ptr += 1 * m * sizeof(int);
+    work->v = (c_float *) c_ptr;
+    c_ptr += n * sizeof(c_float);
 
-  work->sense = (int *) c_ptr;
-  c_ptr += m * sizeof(int);
-  
-  work->WS= (int *) c_ptr;
-  c_ptr += (n + 1) * sizeof(int);
+    work->scaling = (c_float *) c_ptr;
+    c_ptr += m * sizeof(c_float);
 
-  // Initialize constants of workspace
-  work->qp->nb = 0;
-  work->qp->bin_ids = NULL;
+    work->x = (c_float *) c_ptr;
+    c_ptr += n * sizeof(c_float);
 
-  work->n = n;
-  work->m = m;
-  work->ms = ms;
-  work->fval = -1;
-  work->n_active = 0;
-  work->iterations = 0;
-  work->sing_ind  = 0;
-  work->soft_slack = 0;
+    work->xold = (c_float *) c_ptr;
+    c_ptr += n * sizeof(c_float);
 
-  work->bnb = NULL; // No need to solve MIQP 
+    work->lam = (c_float *) c_ptr;
+    c_ptr += (n+1) * sizeof(c_float);
 
-  // Make sure sense is clean 
-  for(int ii=0; ii<m; ii++) work->sense[ii] = 0;
+    work->lam_star = (c_float *) c_ptr;
+    c_ptr += (n+1) * sizeof(c_float);
 
-  return work;
+    work->u = (c_float *) c_ptr;
+    c_ptr += n * sizeof(c_float);
+
+    work->L = (c_float *) c_ptr;
+    c_ptr += (n+2)*(n+1)/2 * sizeof(c_float);
+
+    work->D = (c_float *) c_ptr;
+    c_ptr += (n + 1) * sizeof(c_float);
+
+    work->xldl = (c_float *) c_ptr;
+    c_ptr += (n + 1) * sizeof(c_float);
+
+    work->zldl = (c_float *) c_ptr;
+    c_ptr += (n + 1) * sizeof(c_float);
+
+    // ints
+    work->qp->sense = (int *) c_ptr;
+    c_ptr += 1 * m * sizeof(int);
+
+    work->sense = (int *) c_ptr;
+    c_ptr += m * sizeof(int);
+
+    work->WS= (int *) c_ptr;
+    c_ptr += (n + 1) * sizeof(int);
+
+    // Initialize constants of workspace
+    work->qp->nb = 0;
+    work->qp->bin_ids = NULL;
+
+    work->n = n;
+    work->m = m;
+    work->ms = ms;
+    work->fval = -1;
+    work->n_active = 0;
+    work->iterations = 0;
+    work->sing_ind  = 0;
+    work->soft_slack = 0;
+
+    work->bnb = NULL; // No need to solve MIQP
+
+    // Make sure sense is clean
+    for (int ii=0; ii<m; ii++)
+        work->sense[ii] = 0;
+
+    return work;
 }
 
 
@@ -337,10 +341,10 @@ void *dense_qp_daqp_memory_assign(void *config_, dense_qp_dims *dims, void *opts
 {
     dense_qp_daqp_memory *mem;
 
-	int n,m,ms;
-	acados_daqp_get_dims(dims, &n,&m,&ms);
-	int nb = dims->nb;
-	int ns = dims->ns;
+    int n, m, ms;
+    acados_daqp_get_dims(dims, &n,&m,&ms);
+    int nb = dims->nb;
+    int ns = dims->ns;
 
 
     // char pointer
@@ -351,26 +355,26 @@ void *dense_qp_daqp_memory_assign(void *config_, dense_qp_dims *dims, void *opts
 
     assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
-	// Assign raw memory to workspace
-	mem->daqp_work = daqp_workspace_assign(n,m,ms,c_ptr);
-	c_ptr += daqp_workspace_calculate_size(n,m,ms);
+    // Assign raw memory to workspace
+    mem->daqp_work = daqp_workspace_assign(n, m, ms,c_ptr);
+    c_ptr += daqp_workspace_calculate_size(n, m, ms);
 
     assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
-	mem->lb_tmp = (c_float *) c_ptr;
-	c_ptr += nb * 1 * sizeof(c_float);
+    mem->lb_tmp = (c_float *) c_ptr;
+    c_ptr += nb * 1 * sizeof(c_float);
 
-	mem->ub_tmp = (c_float *) c_ptr;
-	c_ptr += nb * 1 * sizeof(c_float);
+    mem->ub_tmp = (c_float *) c_ptr;
+    c_ptr += nb * 1 * sizeof(c_float);
 
-	mem->idxb = (int *) c_ptr;
-	c_ptr += nb * 1 * sizeof(int);
+    mem->idxb = (int *) c_ptr;
+    c_ptr += nb * 1 * sizeof(int);
 
-	mem->idxv_to_idxb = (int *) c_ptr;
-	c_ptr += n * 1 * sizeof(int);
+    mem->idxv_to_idxb = (int *) c_ptr;
+    c_ptr += n * 1 * sizeof(int);
 
-	mem->idxs= (int *) c_ptr;
-	c_ptr += ns * 1 * sizeof(int);
+    mem->idxs= (int *) c_ptr;
+    c_ptr += ns * 1 * sizeof(int);
 
     assert((char *) raw_memory + dense_qp_daqp_memory_calculate_size(config_, dims, opts_) >=
            c_ptr);
@@ -405,94 +409,8 @@ void dense_qp_daqp_memory_get(void *config_, void *mem_, const char *field, void
 
 }
 
-static void dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_opts *opts, dense_qp_daqp_memory *mem){
-  // extract dense qp size
-  DAQPWorkspace * work = mem->daqp_work;
-  int nv  = qp_in->dim->nv;
-  int nb  = qp_in->dim->nb;
-  int ns  = qp_in->dim->ns;
-
-
-  // extract daqp data
-  double *lb_tmp = mem->lb_tmp; 
-  double *ub_tmp = mem->ub_tmp;
-  int *idxb = mem->idxb;
-  int *idxs = mem->idxs;
-
-
-
-  double * sink = work->dupper; // Use this memory "terminate" slack information 
-								// fill in the upper triangular of H in dense_qp
-  blasfeo_dtrtr_l(nv, qp_in->Hv, 0, 0, qp_in->Hv, 0, 0);
-  // extract data from qp_in in row-major
-  // (assumes that there are no equality constraints)
-  d_dense_qp_get_all_rowmaj(qp_in, work->qp->H, work->qp->f, NULL, NULL, 
-	  idxb, lb_tmp, ub_tmp, 
-	  work->qp->A, work->qp->blower+nv, work->qp->bupper+nv,
-	  sink, sink, sink, sink, idxs, sink, sink);
-
-
-  // Setup upper/lower bounds
-  for (int ii = 0; ii < nv; ii++)
-  {
-	work->qp->blower[ii] = -DAQP_INF;
-	work->qp->bupper[ii] = +DAQP_INF;
-	work->qp->sense[ii] |= IMMUTABLE;
-  }
-  for (int ii = 0; ii < nb; ii++)
-  {
-	work->qp->blower[idxb[ii]] = lb_tmp[ii];
-	work->qp->bupper[idxb[ii]] = ub_tmp[ii];
-	work->qp->sense[idxb[ii]] &= ~IMMUTABLE; // "Unignore" these bounds
-	mem->idxv_to_idxb[idxb[ii]] = ii;
-  }
-
-  // Handle slack. 
-  // XXX: DAQP uses a single slack variable for all soft constraints 
-  // in contrast to the multiple slack variables used in HPIPM
-  for (int ii = 0; ii < ns; ii++){
-	if(idxs[ii]<nb)
-	  work->qp->sense[idxb[idxs[ii]]] |= SOFT;
-	else 
-	  work->qp->sense[nb+idxs[ii]-nv] |= SOFT;
-  }
-
-}
-
-static void dense_qp_daqp_fill_output(const DAQPWorkspace *work, const dense_qp_out *qp_out,dense_qp_dims *dims, int* idxv_to_idxb){
-  int i;
-  int nv = dims->nv;
-  int nb = dims->nb;
-  int ng = dims->ng;
-  int ns = dims->ns;
-  // primal variables
-  blasfeo_pack_dvec(nv, work->x, 1, qp_out->v, 0);
-  for(i=nv; i<nv+2*ns; i++){ // XXX: pack single slack into multiple.
-	qp_out->v->pa[i] = work->soft_slack;
-  }
-
-  // dual variables
-  c_float lam;
-  for(i = 0; i < 2 * nb+ 2 * ng + 2 * ns; i++) qp_out->lam->pa[i]=0.0;
-  for(i = 0; i < work->n_active; i++){
-	lam = work->lam_star[i];
-	if(work->WS[i] < nv) // bound constraint
-	  if(lam >= 0.0)
-		qp_out->lam->pa[nb+ng+idxv_to_idxb[work->WS[i]]] = lam;
-	  else
-		qp_out->lam->pa[idxv_to_idxb[work->WS[i]]] = -lam; 
-	else // general constraint
-	  if(lam >= 0.0)
-		qp_out->lam->pa[2*nb+ng+work->WS[i]-nv] = lam; 
-	  else
-		qp_out->lam->pa[nb+work->WS[i]-nv] = -lam; 
-  }
-  // XXX multipliers for upper/lower bounds for slacks are  
-  // always set to zero since such bounds are not used in DAQP
-
-}
 /************************************************
- * workspcae
+ * workspace
  ************************************************/
 
 acados_size_t dense_qp_daqp_workspace_calculate_size(void *config_, dense_qp_dims *dims, void *opts_)
@@ -501,12 +419,111 @@ acados_size_t dense_qp_daqp_workspace_calculate_size(void *config_, dense_qp_dim
 }
 
 
-
 /************************************************
  * functions
  ************************************************/
 
-int dense_qp_daqp(void* config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_, void *memory_, void *work_){
+
+static void dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_opts *opts, dense_qp_daqp_memory *mem)
+{
+    // extract dense qp size
+    DAQPWorkspace * work = mem->daqp_work;
+    int nv = qp_in->dim->nv;
+    int nb = qp_in->dim->nb;
+    int ns = qp_in->dim->ns;
+
+    // extract daqp data
+    double *lb_tmp = mem->lb_tmp;
+    double *ub_tmp = mem->ub_tmp;
+    int *idxb = mem->idxb;
+    int *idxs = mem->idxs;
+
+    double * sink = work->dupper; // Use this memory "terminate" slack information
+                                    // fill in the upper triangular of H in dense_qp
+    blasfeo_dtrtr_l(nv, qp_in->Hv, 0, 0, qp_in->Hv, 0, 0);
+    // extract data from qp_in in row-major
+    // (assumes that there are no equality constraints)
+    d_dense_qp_get_all_rowmaj(qp_in, work->qp->H, work->qp->f, NULL, NULL,
+        idxb, lb_tmp, ub_tmp,
+        work->qp->A, work->qp->blower+nv, work->qp->bupper+nv,
+        sink, sink, sink, sink, idxs, sink, sink);
+
+    // Setup upper/lower bounds
+    for (int ii = 0; ii < nv; ii++)
+    {
+        work->qp->blower[ii] = -DAQP_INF;
+        work->qp->bupper[ii] = +DAQP_INF;
+        work->qp->sense[ii] |= IMMUTABLE;
+    }
+    for (int ii = 0; ii < nb; ii++)
+    {
+        work->qp->blower[idxb[ii]] = lb_tmp[ii];
+        work->qp->bupper[idxb[ii]] = ub_tmp[ii];
+        work->qp->sense[idxb[ii]] &= ~IMMUTABLE; // "Unignore" these bounds
+        mem->idxv_to_idxb[idxb[ii]] = ii;
+    }
+
+    // Handle slack.
+    // XXX: DAQP uses a single slack variable for all soft constraints
+    // in contrast to the multiple slack variables used in HPIPM
+    for (int ii = 0; ii < ns; ii++)
+    {
+        if (idxs[ii]<nb)
+            work->qp->sense[idxb[idxs[ii]]] |= SOFT;
+        else
+            work->qp->sense[nb+idxs[ii]-nv] |= SOFT;
+    }
+
+}
+
+
+
+static void dense_qp_daqp_fill_output(const DAQPWorkspace *work, const dense_qp_out *qp_out,dense_qp_dims *dims, int* idxv_to_idxb)
+{
+    int i;
+    int nv = dims->nv;
+    int nb = dims->nb;
+    int ng = dims->ng;
+    int ns = dims->ns;
+    // primal variables
+    blasfeo_pack_dvec(nv, work->x, 1, qp_out->v, 0);
+    for (i=nv; i<nv+2*ns; i++)
+    { // XXX: pack single slack into multiple.
+        //   blasfeo_dvecse
+        qp_out->v->pa[i] = work->soft_slack;
+    }
+
+    // dual variables
+    c_float lam;
+    for (i = 0; i < 2 * nb+ 2 * ng + 2 * ns; i++)
+        qp_out->lam->pa[i]=0.0;
+    for (i = 0; i < work->n_active; i++)
+    {
+        lam = work->lam_star[i];
+        if (work->WS[i] < nv) // bound constraint
+        {
+            if (lam >= 0.0)
+                qp_out->lam->pa[nb+ng+idxv_to_idxb[work->WS[i]]] = lam;
+            else
+                qp_out->lam->pa[idxv_to_idxb[work->WS[i]]] = -lam;
+        }
+        else // general constraint
+        {
+            if (lam >= 0.0)
+                qp_out->lam->pa[2*nb+ng+work->WS[i]-nv] = lam;
+            else
+                qp_out->lam->pa[nb+work->WS[i]-nv] = -lam;
+        }
+    }
+    // XXX multipliers for upper/lower bounds for slacks are 
+    // always set to zero since such bounds are not used in DAQP
+
+}
+
+
+
+int dense_qp_daqp(void* config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_, void *memory_, void *work_)
+{
     qp_info *info = (qp_info *) qp_out->misc;
     acados_timer tot_timer, qp_timer, interface_timer;
 
@@ -516,47 +533,53 @@ int dense_qp_daqp(void* config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     // cast structures
     dense_qp_daqp_opts *opts = (dense_qp_daqp_opts *) opts_;
     dense_qp_daqp_memory *memory = (dense_qp_daqp_memory *) memory_;
-	// Move data into daqp workspace
-	dense_qp_daqp_update_memory(qp_in,opts,memory);
+    // Move data into daqp workspace
+    dense_qp_daqp_update_memory(qp_in,opts,memory);
     info->interface_time = acados_toc(&interface_timer);
 
-	// Extract workspace and update settings
-	DAQPWorkspace* work = memory->daqp_work;
-	work->settings = opts->daqp_opts; 
+    // Extract workspace and update settings
+    DAQPWorkspace* work = memory->daqp_work;
+    work->settings = opts->daqp_opts;
 
-	// === Solve starts === 
+    // === Solve starts ===
     acados_tic(&qp_timer);
-	if(opts->warm_start==0) deactivate_constraints(work);
-	// setup LDP
-	int update_mask,daqp_status;
-	update_mask= (opts->warm_start==2) ? 
-	  UPDATE_v+UPDATE_d: UPDATE_Rinv+UPDATE_M+UPDATE_v+UPDATE_d;
-	update_ldp(update_mask,work);
-    // solve LDP 
-	if(opts->warm_start==1) activate_constraints(work); //TODO: shift active set?
-	daqp_status = daqp_ldp(memory->daqp_work); 
-	ldp2qp_solution(work);
+    if (opts->warm_start==0) deactivate_constraints(work);
+    // setup LDP
+    int update_mask,daqp_status;
+    update_mask= (opts->warm_start==2) ?
+        UPDATE_v+UPDATE_d: UPDATE_Rinv+UPDATE_M+UPDATE_v+UPDATE_d;
+    update_ldp(update_mask,work);
+    // solve LDP
+    if (opts->warm_start==1) activate_constraints(work); //TODO: shift active set?
+    daqp_status = daqp_ldp(memory->daqp_work);
+    ldp2qp_solution(work);
 
-	// extract primal and dual solution
-	dense_qp_daqp_fill_output(work,qp_out,qp_in->dim,memory->idxv_to_idxb);
+    // extract primal and dual solution
+    dense_qp_daqp_fill_output(work,qp_out,qp_in->dim,memory->idxv_to_idxb);
     info->solve_QP_time = acados_toc(&qp_timer);
 
     acados_tic(&interface_timer);
 
     // compute slacks
-	dense_qp_compute_t(qp_in, qp_out);
-	info->t_computed = 1;
-    
-	// log solve info
-	info->interface_time += acados_toc(&interface_timer);
+    dense_qp_compute_t(qp_in, qp_out);
+    info->t_computed = 1;
+
+    // log solve info
+    info->interface_time += acados_toc(&interface_timer);
     info->total_time = acados_toc(&tot_timer);
     info->num_iter = memory->daqp_work->iterations;
     memory->time_qp_solver_call = info->solve_QP_time;
     memory->iter = memory->daqp_work->iterations;
 
+    // status
     int acados_status = daqp_status;
-    if (daqp_status == EXIT_OPTIMAL || daqp_status == EXIT_SOFT_OPTIMAL) acados_status = ACADOS_SUCCESS;
-    if (daqp_status == EXIT_ITERLIMIT) acados_status = ACADOS_MAXITER;
+    if (daqp_status == EXIT_OPTIMAL || daqp_status == EXIT_SOFT_OPTIMAL)
+        acados_status = ACADOS_SUCCESS;
+    else if (daqp_status == EXIT_ITERLIMIT)
+        acados_status = ACADOS_MAXITER;
+    // NOTE: There are also:
+    // EXIT_INFEASIBLE, EXIT_CYCLE, EXIT_UNBOUNDED, EXIT_NONCONVEX, EXIT_OVERDETERMINED_INITIAL
+
     return acados_status;
 }
 

@@ -384,7 +384,7 @@ void dense_qp_qpoases_memory_get(void *config_, void *mem_, const char *field, v
 
 
 /************************************************
- * workspcae
+ * workspace
  ************************************************/
 
 acados_size_t dense_qp_qpoases_workspace_calculate_size(void *config_, dense_qp_dims *dims, void *opts_)

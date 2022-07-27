@@ -52,21 +52,21 @@ extern "C" {
 
 typedef struct dense_qp_daqp_opts_
 {
-  DAQPSettings* daqp_opts;
-  int warm_start;
+    DAQPSettings* daqp_opts;
+    int warm_start;
 } dense_qp_daqp_opts;
 
 
 typedef struct dense_qp_daqp_memory_
 {
-  double* lb_tmp;
-  double* ub_tmp;
-  int* idxb;
-  int* idxv_to_idxb;
-  int* idxs;
-  double time_qp_solver_call;
-  int iter;
-  DAQPWorkspace * daqp_work;
+    double* lb_tmp;
+    double* ub_tmp;
+    int* idxb;
+    int* idxv_to_idxb;
+    int* idxs;
+    double time_qp_solver_call;
+    int iter;
+    DAQPWorkspace * daqp_work;
 
 } dense_qp_daqp_memory;
 
