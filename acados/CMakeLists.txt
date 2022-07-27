@@ -116,7 +116,7 @@ endif()
 if(ACADOS_WITH_DAQP)
     target_link_libraries(acados PUBLIC daqp)
 
-	target_compile_definitions(acados PUBLIC ACADOS_WITH_DAQP)
+    target_compile_definitions(acados PUBLIC ACADOS_WITH_DAQP)
 endif()
 
 if(ACADOS_WITH_QPDUNES)
@@ -183,7 +183,7 @@ configure_package_config_file(${PROJECT_SOURCE_DIR}/cmake/acadosConfig.cmake.in
                               PATH_VARS ACADOS_WITH_HPMPC 
                                         ACADOS_WITH_QORE
                                         ACADOS_WITH_QPOASES
-										ACADOS_WITH_DAQP
+                                        ACADOS_WITH_DAQP
                                         ACADOS_WITH_QPDUNES
                                         ACADOS_WITH_OSQP
                                         ACADOS_WITH_OOQP)
