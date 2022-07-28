@@ -493,6 +493,7 @@ static void dense_qp_daqp_fill_output(const DAQPWorkspace *work, const dense_qp_
     int nb = dims->nb;
     int ng = dims->ng;
     int ns = dims->ns;
+
     // primal variables
     blasfeo_pack_dvec(nv, work->x, 1, qp_out->v, 0);
     // XXX: pack single slack into multiple.
@@ -520,7 +521,7 @@ static void dense_qp_daqp_fill_output(const DAQPWorkspace *work, const dense_qp_
                 qp_out->lam->pa[nb+work->WS[i]-nv] = -lam;
         }
     }
-    // XXX multipliers for upper/lower bounds for slacks are 
+    // NOTE: multipliers for upper/lower bounds for slacks are
     // always set to zero since such bounds are not used in DAQP
 
 }
@@ -538,6 +539,7 @@ int dense_qp_daqp(void* config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     // cast structures
     dense_qp_daqp_opts *opts = (dense_qp_daqp_opts *) opts_;
     dense_qp_daqp_memory *memory = (dense_qp_daqp_memory *) memory_;
+
     // Move data into daqp workspace
     dense_qp_daqp_update_memory(qp_in,opts,memory);
     info->interface_time = acados_toc(&interface_timer);
@@ -555,7 +557,11 @@ int dense_qp_daqp(void* config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
         UPDATE_v+UPDATE_d: UPDATE_Rinv+UPDATE_M+UPDATE_v+UPDATE_d;
     update_ldp(update_mask,work);
     // solve LDP
-    if (opts->warm_start==1) activate_constraints(work); //TODO: shift active set?
+    if (opts->warm_start==1)
+        activate_constraints(work);
+
+    // TODO: shift active set? - not in SQP but would be nice as an option in SQP_RTI.
+
     daqp_status = daqp_ldp(memory->daqp_work);
     ldp2qp_solution(work);
 
