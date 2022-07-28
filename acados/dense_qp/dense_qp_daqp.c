@@ -439,8 +439,16 @@ static void dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_
     int *idxs = mem->idxs;
 
     double * sink = work->dupper; // Use this memory "terminate" slack information
-                                    // fill in the upper triangular of H in dense_qp
+
+    // fill in the upper triangular of H in dense_qp
     blasfeo_dtrtr_l(nv, qp_in->Hv, 0, 0, qp_in->Hv, 0, 0);
+
+    if (qp_in->dim->ne != 0)
+    {
+        printf("\n\ndense_qp_daqp: Does not support equality constraints, i.e. qp_in->dim->ne != 0.\n\n");
+        exit(1);
+    }
+
     // extract data from qp_in in row-major
     // (assumes that there are no equality constraints)
     d_dense_qp_get_all_rowmaj(qp_in, work->qp->H, work->qp->f, NULL, NULL,
