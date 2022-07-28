@@ -487,16 +487,13 @@ static void dense_qp_daqp_fill_output(const DAQPWorkspace *work, const dense_qp_
     int ns = dims->ns;
     // primal variables
     blasfeo_pack_dvec(nv, work->x, 1, qp_out->v, 0);
-    for (i=nv; i<nv+2*ns; i++)
-    { // XXX: pack single slack into multiple.
-        //   blasfeo_dvecse
-        qp_out->v->pa[i] = work->soft_slack;
-    }
+    // XXX: pack single slack into multiple.
+    blasfeo_dvecse(nv+2*ns, work->soft_slack, qp_out->v, nv);
 
     // dual variables
     c_float lam;
-    for (i = 0; i < 2 * nb+ 2 * ng + 2 * ns; i++)
-        qp_out->lam->pa[i]=0.0;
+    blasfeo_dvecse(2 * nb + 2 * ng + 2 * ns, 0.0, qp_out->lam, 0);
+
     for (i = 0; i < work->n_active; i++)
     {
         lam = work->lam_star[i];
