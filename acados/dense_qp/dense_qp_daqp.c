@@ -461,13 +461,13 @@ static void dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_
     {
         work->qp->blower[ii] = -DAQP_INF;
         work->qp->bupper[ii] = +DAQP_INF;
-        work->qp->sense[ii] |= IMMUTABLE;
+        work->sense[ii] |= IMMUTABLE;
     }
     for (int ii = 0; ii < nb; ii++)
     {
         work->qp->blower[idxb[ii]] = lb_tmp[ii];
         work->qp->bupper[idxb[ii]] = ub_tmp[ii];
-        work->qp->sense[idxb[ii]] &= ~IMMUTABLE; // "Unignore" these bounds
+        work->sense[idxb[ii]] &= ~IMMUTABLE; // "Unignore" these bounds
         mem->idxv_to_idxb[idxb[ii]] = ii;
     }
 
@@ -477,9 +477,9 @@ static void dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_
     for (int ii = 0; ii < ns; ii++)
     {
         if (idxs[ii]<nb)
-            work->qp->sense[idxb[idxs[ii]]] |= SOFT;
+            work->sense[idxb[idxs[ii]]] |= SOFT;
         else
-            work->qp->sense[nb+idxs[ii]-nv] |= SOFT;
+            work->sense[nb+idxs[ii]-nv] |= SOFT;
     }
 
 }
