@@ -512,13 +512,15 @@ static void dense_qp_daqp_fill_output(const DAQPWorkspace *work, const dense_qp_
             else
                 qp_out->lam->pa[idxv_to_idxb[work->WS[i]]] = -lam;
         }
-        else // general constraint
+        else if(work->WS[i] < nv+ng)// general constraint
         {
             if (lam >= 0.0)
                 qp_out->lam->pa[2*nb+ng+work->WS[i]-nv] = lam;
             else
                 qp_out->lam->pa[nb+work->WS[i]-nv] = -lam;
         }
+        else // equality constraint
+            qp_out->pi->pa[work->WS[i]-nv-ng] = lam;
     }
     // NOTE: multipliers for upper/lower bounds for slacks are
     // always set to zero since such bounds are not used in DAQP
