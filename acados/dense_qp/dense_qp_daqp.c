@@ -64,7 +64,7 @@
 static void acados_daqp_get_dims(dense_qp_dims *dims, int *n_ptr, int *m_ptr, int *ms_ptr)
 {
     *n_ptr = dims->nv;
-    *m_ptr = dims->nv+dims->ng;
+    *m_ptr = dims->nv+dims->ng+dims->ne;
     *ms_ptr = dims->nv;
 }
 
@@ -431,6 +431,8 @@ static void dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_
     int nv = qp_in->dim->nv;
     int nb = qp_in->dim->nb;
     int ns = qp_in->dim->ns;
+    int ng = qp_in->dim->ng;
+    int ne = qp_in->dim->ng;
 
     // extract daqp data
     double *lb_tmp = mem->lb_tmp;
@@ -443,15 +445,9 @@ static void dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_
     // fill in the upper triangular of H in dense_qp
     blasfeo_dtrtr_l(nv, qp_in->Hv, 0, 0, qp_in->Hv, 0, 0);
 
-    if (qp_in->dim->ne != 0)
-    {
-        printf("\n\ndense_qp_daqp: Does not support equality constraints, i.e. qp_in->dim->ne != 0.\n\n");
-        exit(1);
-    }
-
     // extract data from qp_in in row-major
-    // (assumes that there are no equality constraints)
-    d_dense_qp_get_all_rowmaj(qp_in, work->qp->H, work->qp->f, NULL, NULL,
+    d_dense_qp_get_all_rowmaj(qp_in, work->qp->H, work->qp->f,
+        work->qp->A+nv*ng, work->qp->bupper+nv+ng,
         idxb, lb_tmp, ub_tmp,
         work->qp->A, work->qp->blower+nv, work->qp->bupper+nv,
         sink, sink, sink, sink, idxs, sink, sink);
@@ -470,6 +466,9 @@ static void dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_
         work->sense[idxb[ii]] &= ~IMMUTABLE; // "Unignore" these bounds
         mem->idxv_to_idxb[idxb[ii]] = ii;
     }
+	// Mark equality constraint
+    for (int ii = 0; ii < ne; ii++)
+        work->sense[nv+ng+ii] &= ACTIVE+IMMUTABLE;
 
     // Handle slack.
     // XXX: DAQP uses a single slack variable for all soft constraints
