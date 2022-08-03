@@ -124,7 +124,7 @@ def sim_get_default_cmake_builder() -> CMakeBuilder:
     return cmake_builder
 
 
-def sim_render_templates(json_file, model_name, code_export_dir, cmake_options: CMakeBuilder = None):
+def sim_render_templates(json_file, model_name: str, code_export_dir, cmake_options: CMakeBuilder = None):
     # setting up loader and environment
     json_path = os.path.join(os.getcwd(), json_file)
 
@@ -405,7 +405,7 @@ class AcadosSimSolver:
         return out
 
 
-    def set(self, field_, value_):
+    def set(self, field_: str, value_):
         """
         Set numerical data inside the solver.
 
