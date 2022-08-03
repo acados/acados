@@ -218,6 +218,7 @@ acados_size_t dense_qp_daqp_memory_calculate_size(void *config_, dense_qp_dims *
     size += nb * 1 * sizeof(int); // idbx
     size += n *  1 * sizeof(int); // idxv_to_idxb;
     size += ns * 1 * sizeof(int); // idbs
+    size += m  * 1 * sizeof(int); // idxdaqp_to_idxs;
 
     size += ns * 6 * sizeof(c_float); // Zl,Zu,zl,zu,d_ls,d_us
     make_int_multiple_of(8, &size);
@@ -380,6 +381,9 @@ void *dense_qp_daqp_memory_assign(void *config_, dense_qp_dims *dims, void *opts
     mem->idxs = (int *) c_ptr;
     c_ptr += ns * 1 * sizeof(int);
 
+    mem->idxdaqp_to_idxs = (int *) c_ptr;
+    c_ptr += m * 1 * sizeof(int);
+
     mem->Zl = (c_float *) c_ptr;
     c_ptr += ns * 1 * sizeof(c_float);
 
@@ -472,6 +476,10 @@ static void dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_
         work->qp->A, work->qp->blower+nv, work->qp->bupper+nv,
         mem->Zl, mem->Zu, mem->zl, mem->zu, idxs, mem->d_ls, mem->d_us);
 
+    // XXX: currently assumes that all weights in Zl and Zu are the same
+    // (the daqp workspace needs to be updated to separate the weights)
+    if(ns>0) opts->daqp_opts->rho_soft = 1/mem->Zu[0];
+
     // Setup upper/lower bounds
     for (int ii = 0; ii < nv; ii++)
     {
@@ -490,40 +498,41 @@ static void dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_
     for (int ii = 0; ii < ne; ii++)
         work->sense[nv+ng+ii] &= ACTIVE+IMMUTABLE;
 
-    // Handle slack.
-    // XXX: DAQP uses a single slack variable for all soft constraints
-    // in contrast to the multiple slack variables used in HPIPM
+    // Soft constraints
+    int idxdaqp;
     for (int ii = 0; ii < ns; ii++)
     {
-        if (idxs[ii]<nb)
-            work->sense[idxb[idxs[ii]]] |= SOFT;
-        else
-            work->sense[nb+idxs[ii]-nv] |= SOFT;
+        idxdaqp= idxs[ii] < nb ? idxb[idxs[ii]] : nb+idxs[ii]-nv;
+        mem->idxdaqp_to_idxs[idxdaqp] = ii;
+
+        work->sense[idxdaqp] |= SOFT;
     }
 
 }
 
 
 
-static void dense_qp_daqp_fill_output(const DAQPWorkspace *work, const dense_qp_out *qp_out,dense_qp_dims *dims, int* idxv_to_idxb)
+static void dense_qp_daqp_fill_output(dense_qp_daqp_memory *mem, const dense_qp_out *qp_out,dense_qp_dims *dims)
 {
+    int *idxv_to_idxb = mem->idxv_to_idxb;
+    int *idxdaqp_to_idxs= mem->idxdaqp_to_idxs;
     int i;
     int nv = dims->nv;
     int nb = dims->nb;
     int ng = dims->ng;
     int ns = dims->ns;
+    DAQPWorkspace *work = mem->daqp_work;
 
     // primal variables
     blasfeo_pack_dvec(nv, work->x, 1, qp_out->v, 0);
-    // XXX: pack single slack into multiple.
-    blasfeo_dvecse(nv+2*ns, work->soft_slack, qp_out->v, nv);
 
-    // dual variables
-    c_float lam;
+    c_float lam, slack;
     blasfeo_dvecse(2 * nb + 2 * ng + 2 * ns, 0.0, qp_out->lam, 0);
+    blasfeo_dvecse(nv+2*ns, 0, qp_out->v, nv);
 
     for (i = 0; i < work->n_active; i++)
     {
+        // dual variables
         lam = work->lam_star[i];
         if (work->WS[i] < nv) // bound constraint
         {
@@ -541,10 +550,15 @@ static void dense_qp_daqp_fill_output(const DAQPWorkspace *work, const dense_qp_
         }
         else // equality constraint
             qp_out->pi->pa[work->WS[i]-nv-ng] = lam;
+        // slack
+        if(IS_SOFT(work->WS[i])){
+            slack = work->settings->rho_soft*lam;
+            if( lam >= 0.0)
+                qp_out->v->pa[nv+ns+idxdaqp_to_idxs[work->WS[i]]]=slack;
+            else
+                qp_out->v->pa[nv+idxdaqp_to_idxs[work->WS[i]]]=-slack;
+        }
     }
-    // NOTE: multipliers for upper/lower bounds for slacks are
-    // always set to zero since such bounds are not used in DAQP
-
 }
 
 
@@ -587,7 +601,7 @@ int dense_qp_daqp(void* config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     ldp2qp_solution(work);
 
     // extract primal and dual solution
-    dense_qp_daqp_fill_output(work,qp_out,qp_in->dim,memory->idxv_to_idxb);
+    dense_qp_daqp_fill_output(memory,qp_out,qp_in->dim);
     info->solve_QP_time = acados_toc(&qp_timer);
 
     acados_tic(&interface_timer);

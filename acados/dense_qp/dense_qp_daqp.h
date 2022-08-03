@@ -64,6 +64,7 @@ typedef struct dense_qp_daqp_memory_
     int* idxb;
     int* idxv_to_idxb;
     int* idxs;
+    int* idxdaqp_to_idxs;
 
     double* Zl;
     double* Zu;
