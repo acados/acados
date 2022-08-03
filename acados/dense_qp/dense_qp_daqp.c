@@ -506,7 +506,12 @@ static void dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_
         mem->idxdaqp_to_idxs[idxdaqp] = ii;
 
         work->sense[idxdaqp] |= SOFT;
+
+        // Shift QP to handle linear terms on slack
+        work->qp->blower[idxdaqp]+=mem->zl[ii]/mem->Zl[ii];
+        work->qp->bupper[idxdaqp]-=mem->zu[ii]/mem->Zu[ii];
     }
+
 
 }
 
@@ -551,7 +556,8 @@ static void dense_qp_daqp_fill_output(dense_qp_daqp_memory *mem, const dense_qp_
         else // equality constraint
             qp_out->pi->pa[work->WS[i]-nv-ng] = lam;
         // slack
-        if(IS_SOFT(work->WS[i])){
+        if(IS_SOFT(work->WS[i]))
+        {
             slack = work->settings->rho_soft*lam;
             if( lam >= 0.0)
                 qp_out->v->pa[nv+ns+idxdaqp_to_idxs[work->WS[i]]]=slack;
@@ -559,6 +565,19 @@ static void dense_qp_daqp_fill_output(dense_qp_daqp_memory *mem, const dense_qp_
                 qp_out->v->pa[nv+idxdaqp_to_idxs[work->WS[i]]]=-slack;
         }
     }
+
+    // Correct slacks from shifted QP
+    for (i = 0; i < ns; i++)
+    {
+        qp_out->v->pa[nv+i]    -= mem->zl[i]/mem->Zl[i];
+        qp_out->v->pa[nv+ns+i] -= mem->zu[i]/mem->Zu[i];
+
+        // TODO: bounds on slack need to be addressed correctly.
+        // Currently works when only Zl and Zu are set in the ocp
+        // since this ensures that the unconstrained minimum for
+        // the slacks are within the bounds
+    }
+
 }
 
 
