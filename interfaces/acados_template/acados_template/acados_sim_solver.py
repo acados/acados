@@ -38,7 +38,7 @@ import json
 
 import numpy as np
 
-from ctypes import POINTER, cast, CDLL, c_void_p, c_char_p, c_double, c_int, byref
+from ctypes import POINTER, cast, CDLL, c_void_p, c_char_p, c_double, c_int, c_bool, byref
 from copy import deepcopy
 
 from .generate_c_code_explicit_ode import generate_c_code_explicit_ode
@@ -462,12 +462,12 @@ class AcadosSimSolver:
         return
 
 
-    def options_set(self, field_, value_):
+    def options_set(self, field_: str, value_: bool):
         """
         Set solver options
 
             :param field: string in ['sens_forw', 'sens_adj', 'sens_hess']
-            :param value: the value with appropriate size.
+            :param value: Boolean
         """
         fields = ['sens_forw', 'sens_adj', 'sens_hess']
         if field_ not in fields:
