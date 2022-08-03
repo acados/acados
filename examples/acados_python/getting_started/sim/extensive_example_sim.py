@@ -141,11 +141,16 @@ LAtime = acados_integrator.get("LAtime")
 ADtime = acados_integrator.get("ADtime")
 print(f"\ntimings of last call to acados_integrator: overall CPU: {CPUtime*1e3:.4f} ms, linear algebra {LAtime*1e3:.4f} ms, external functions {ADtime*1e3:.4f} ms")
 
-print("S_forw, sensitivities of simulaition result wrt x,u:\n", S_forw)
-print("Sx, sensitivities of simulaition result wrt x:\n", Sx)
-print("Su, sensitivities of simulaition result wrt u:\n", Su)
+print("S_forw, sensitivities of simulation result wrt x,u:\n", S_forw)
+print("Sx, sensitivities of simulation result wrt x:\n", Sx)
+print("Su, sensitivities of simulation result wrt u:\n", Su)
 print("S_adj, adjoint sensitivities:\n", S_adj)
 print("S_hess, second order sensitivities:\n", S_hess)
+
+# turn off sensitivity propagation when not needed
+acados_integrator.options_set('sens_forw', False)
+acados_integrator.options_set('sens_adj', False)
+acados_integrator.options_set('sens_hess', False)
 
 # call in loop:
 for i in range(N):
