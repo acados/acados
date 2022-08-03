@@ -216,9 +216,10 @@ acados_size_t dense_qp_daqp_memory_calculate_size(void *config_, dense_qp_dims *
 
     size += nb * 2 * sizeof(c_float); // lb_tmp & ub_tmp
     size += nb * 1 * sizeof(int); // idbx
-    size += n * 1 * sizeof(int); // idxv_to_idxb;
+    size += n *  1 * sizeof(int); // idxv_to_idxb;
     size += ns * 1 * sizeof(int); // idbs
 
+    size += ns * 6 * sizeof(c_float); // Zl,Zu,zl,zu,d_ls,d_us
     make_int_multiple_of(8, &size);
 
     return size;
@@ -376,6 +377,27 @@ void *dense_qp_daqp_memory_assign(void *config_, dense_qp_dims *dims, void *opts
     mem->idxs= (int *) c_ptr;
     c_ptr += ns * 1 * sizeof(int);
 
+    mem->idxs = (int *) c_ptr;
+    c_ptr += ns * 1 * sizeof(int);
+
+    mem->Zl = (c_float *) c_ptr;
+    c_ptr += ns * 1 * sizeof(c_float);
+
+    mem->Zu = (c_float *) c_ptr;
+    c_ptr += ns * 1 * sizeof(c_float);
+
+    mem->zl = (c_float *) c_ptr;
+    c_ptr += ns * 1 * sizeof(c_float);
+
+    mem->zu = (c_float *) c_ptr;
+    c_ptr += ns * 1 * sizeof(c_float);
+
+    mem->d_ls = (c_float *) c_ptr;
+    c_ptr += ns * 1 * sizeof(c_float);
+
+    mem->d_us = (c_float *) c_ptr;
+    c_ptr += ns * 1 * sizeof(c_float);
+
     assert((char *) raw_memory + dense_qp_daqp_memory_calculate_size(config_, dims, opts_) >=
            c_ptr);
 
@@ -440,8 +462,6 @@ static void dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_
     int *idxb = mem->idxb;
     int *idxs = mem->idxs;
 
-    double * sink = work->dupper; // Use this memory "terminate" slack information
-
     // fill in the upper triangular of H in dense_qp
     blasfeo_dtrtr_l(nv, qp_in->Hv, 0, 0, qp_in->Hv, 0, 0);
 
@@ -450,7 +470,7 @@ static void dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_
         work->qp->A+nv*ng, work->qp->bupper+nv+ng,
         idxb, lb_tmp, ub_tmp,
         work->qp->A, work->qp->blower+nv, work->qp->bupper+nv,
-        sink, sink, sink, sink, idxs, sink, sink);
+        mem->Zl, mem->Zu, mem->zl, mem->zu, idxs, mem->d_ls, mem->d_us);
 
     // Setup upper/lower bounds
     for (int ii = 0; ii < nv; ii++)

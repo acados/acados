@@ -64,6 +64,14 @@ typedef struct dense_qp_daqp_memory_
     int* idxb;
     int* idxv_to_idxb;
     int* idxs;
+
+    double* Zl;
+    double* Zu;
+    double* zl;
+    double* zu;
+    double* d_ls;
+    double* d_us;
+
     double time_qp_solver_call;
     int iter;
     DAQPWorkspace * daqp_work;
