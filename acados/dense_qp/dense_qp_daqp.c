@@ -378,9 +378,6 @@ void *dense_qp_daqp_memory_assign(void *config_, dense_qp_dims *dims, void *opts
     mem->idxs= (int *) c_ptr;
     c_ptr += ns * 1 * sizeof(int);
 
-    mem->idxs = (int *) c_ptr;
-    c_ptr += ns * 1 * sizeof(int);
-
     mem->idxdaqp_to_idxs = (int *) c_ptr;
     c_ptr += m * 1 * sizeof(int);
 
