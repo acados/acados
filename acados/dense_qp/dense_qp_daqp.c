@@ -167,7 +167,7 @@ void dense_qp_daqp_opts_set(void *config_, void *opts_, const char *field, void 
  * memory
  ************************************************/
 
-static acados_size_t daqp_workspace_calculate_size(int n, int m, int ms)
+static acados_size_t daqp_workspace_calculate_size(int n, int m, int ms, int ns)
 {
     acados_size_t size = 0;
 
@@ -189,15 +189,15 @@ static acados_size_t daqp_workspace_calculate_size(int n, int m, int ms)
     size += m * sizeof(c_float); // scaling
 
     size += 2 * n * sizeof(c_float); // x & xold
-    size += 2*(n+1) * sizeof(c_float); // lam & lam_star
+    size += 2*(n+ns+1) * sizeof(c_float); // lam & lam_star
     size += n * sizeof(c_float); // u
 
-    size += (n+2)*(n+1)/2 * sizeof(c_float); // L
-    size += (n+1) * sizeof(c_float); // D
+    size += (n+ns+2)*(n+ns+1)/2 * sizeof(c_float); // L
+    size += (n+ns+1) * sizeof(c_float); // D
 
-    size += 2*(n+1) * sizeof(c_float); //xldl & zldl
+    size += 2*(n+ns+1) * sizeof(c_float); //xldl & zldl
 
-    size += (n+1) * sizeof(int); // WS
+    size += (n+ns+1) * sizeof(int); // WS
 
     return size;
 }
@@ -212,7 +212,7 @@ acados_size_t dense_qp_daqp_memory_calculate_size(void *config_, dense_qp_dims *
 
     acados_size_t size = sizeof(dense_qp_daqp_memory);
 
-    size += daqp_workspace_calculate_size(n, m, ms);
+    size += daqp_workspace_calculate_size(n, m, ms, ns);
 
     size += nb * 2 * sizeof(c_float); // lb_tmp & ub_tmp
     size += nb * 1 * sizeof(int); // idbx
@@ -225,7 +225,7 @@ acados_size_t dense_qp_daqp_memory_calculate_size(void *config_, dense_qp_dims *
 }
 
 
-static void *daqp_workspace_assign(int n, int m, int ms, void *raw_memory)
+static void *daqp_workspace_assign(int n, int m, int ms, int ns, void *raw_memory)
 {
     DAQPWorkspace *work;
     char *c_ptr = (char *) raw_memory;
@@ -283,25 +283,25 @@ static void *daqp_workspace_assign(int n, int m, int ms, void *raw_memory)
     c_ptr += n * sizeof(c_float);
 
     work->lam = (c_float *) c_ptr;
-    c_ptr += (n+1) * sizeof(c_float);
+    c_ptr += (n+ns+1) * sizeof(c_float);
 
     work->lam_star = (c_float *) c_ptr;
-    c_ptr += (n+1) * sizeof(c_float);
+    c_ptr += (n+ns+1) * sizeof(c_float);
 
     work->u = (c_float *) c_ptr;
     c_ptr += n * sizeof(c_float);
 
-    work->L = (c_float *) c_ptr;
-    c_ptr += (n+2)*(n+1)/2 * sizeof(c_float);
-
     work->D = (c_float *) c_ptr;
-    c_ptr += (n + 1) * sizeof(c_float);
+    c_ptr += (n+ns+1) * sizeof(c_float);
 
     work->xldl = (c_float *) c_ptr;
-    c_ptr += (n + 1) * sizeof(c_float);
+    c_ptr += (n+ns+1) * sizeof(c_float);
 
     work->zldl = (c_float *) c_ptr;
-    c_ptr += (n + 1) * sizeof(c_float);
+    c_ptr += (n+ns+1) * sizeof(c_float);
+
+    work->L = (c_float *) c_ptr;
+    c_ptr += (n+ns+2)*(n+ns+1)/2 * sizeof(c_float);
 
     // ints
     work->qp->sense = (int *) c_ptr;
@@ -311,7 +311,7 @@ static void *daqp_workspace_assign(int n, int m, int ms, void *raw_memory)
     c_ptr += m * sizeof(int);
 
     work->WS= (int *) c_ptr;
-    c_ptr += (n + 1) * sizeof(int);
+    c_ptr += (n+ns+1) * sizeof(int);
 
     // Initialize constants of workspace
     work->qp->nb = 0;
@@ -356,8 +356,8 @@ void *dense_qp_daqp_memory_assign(void *config_, dense_qp_dims *dims, void *opts
     assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
     // Assign raw memory to workspace
-    mem->daqp_work = daqp_workspace_assign(n, m, ms,c_ptr);
-    c_ptr += daqp_workspace_calculate_size(n, m, ms);
+    mem->daqp_work = daqp_workspace_assign(n, m, ms, ns, c_ptr);
+    c_ptr += daqp_workspace_calculate_size(n, m, ms, ns);
 
     assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
