@@ -2350,8 +2350,11 @@ class AcadosOcpOptions:
 
     @property
     def qp_solver_warm_start(self):
-        """QP solver: Warm starting.
-        0: no warm start; 1: warm start; 2: hot start."""
+        """
+        QP solver: Warm starting.
+        0: no warm start; 1: warm start; 2: hot start.
+        Default: 0
+        """
         return self.__qp_solver_warm_start
 
     @property
