@@ -455,7 +455,7 @@ static void dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_
     int nb = qp_in->dim->nb;
     int ns = qp_in->dim->ns;
     int ng = qp_in->dim->ng;
-    int ne = qp_in->dim->ng;
+    int ne = qp_in->dim->ne;
 
     // extract daqp data
     double *lb_tmp = mem->lb_tmp;
