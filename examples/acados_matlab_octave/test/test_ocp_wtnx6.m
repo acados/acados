@@ -63,6 +63,8 @@ ocp_nlp_solver_tol_comp = 1e-8;
 ocp_nlp_solver_ext_qp_res = 1;
 ocp_qp_solver = 'partial_condensing_hpipm';
 %ocp_qp_solver = 'full_condensing_hpipm';
+% ocp_qp_solver = 'full_condensing_qpoases';
+% ocp_qp_solver = 'full_condensing_daqp';
 ocp_qp_solver_cond_N = 5;
 ocp_qp_solver_cond_ric_alg = 0;
 ocp_qp_solver_ric_alg = 0;
@@ -265,6 +267,7 @@ if (strcmp(ocp_nlp_solver, 'sqp'))
     ocp_opts.set('nlp_solver_tol_comp', ocp_nlp_solver_tol_comp);
 end
 ocp_opts.set('qp_solver', ocp_qp_solver);
+ocp_opts.set('qp_solver_iter_max', 200);
 if (strcmp(ocp_qp_solver, 'partial_condensing_hpipm'))
     ocp_opts.set('qp_solver_cond_N', ocp_qp_solver_cond_N);
     ocp_opts.set('qp_solver_cond_ric_alg', ocp_qp_solver_cond_ric_alg);
@@ -437,7 +440,8 @@ for ii=1:n_sim
 
     sqp_iter_sim(ii) = sqp_iter;
     if status ~= 0
-        error('ocp_nlp solver returned nonzero status!');
+        ocp.print()
+        error(['ocp_nlp solver returned status ', num2str(status), '!= 0 in simulation instance ', num2str(ii)]);
     end
 
     fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms]), Pel = %f',...
