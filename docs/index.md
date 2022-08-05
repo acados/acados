@@ -1,7 +1,24 @@
 # acados
 
 <!-- ![](https://secure.travis-ci.org/acados/acados.png?branch=master) -->
-![Github actions full build workflow](https://github.com/acados/acados/actions/workflows/full_build.yml/badge.svg)
+
+```eval_rst
+
+|github-workflow-full-build|
+
+|github-workflow-c_test_blasfeo_reference|
+
+.. |github-workflow-full-build| image:: https://github.com/acados/acados/actions/workflows/full_build.yml/badge.svg
+    :target: https://github.com/acados/acados/actions/workflows/full_build.yml
+    :alt: Github workflow status
+
+.. |github-workflow-c_test_blasfeo_reference| image:: https://github.com/acados/acados/actions/workflows/c_test_blasfeo_reference.yml/badge.svg
+    :target: https://github.com/acados/acados/actions/workflows/c_test_blasfeo_reference.yml
+    :alt: Github workflow status
+
+```
+
+
 <!-- ![Github actions full build workflow](https://github.com/acados/acados/actions/workflows/full_build.yml/badge.svg?branch=master) -->
 ![](https://ci.appveyor.com/api/projects/status/q0b2nohk476u5clg?svg=true)
 
