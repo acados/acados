@@ -184,8 +184,16 @@ classdef acados_ocp < handle
                 disp('found compiled acados MEX interface')
             end
 
+            % check for unsupported options:
+            if strcmp(obj.opts_struct.qp_solver, "partial_condensing_osqp") || strcmp(obj.opts_struct.qp_solver, "partial_condensing_hpmpc") || strcmp(obj.opts_struct.qp_solver, "partial_condensing_qpdunes") || ...
+                strcmp(obj.opts_struct.qp_solver, "partial_condensing_ooqp")
+                if obj.model_struct.dim_ns > 0 || obj.model_struct.dim_ns_e > 0
+                    error(['selected QP solver ', obj.opts_struct.qp_solver, ' does not support soft constraints (yet).'])
+                end
+            end
+
+            % create C object
             try
-                % create C object
                 obj.C_ocp = ocp_create(obj.model_struct, obj.opts_struct);
             catch ex
                 str = sprintf('Exception:\n\t%s\n\t%s\n',ex.identifier,ex.message);
