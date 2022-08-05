@@ -27,7 +27,7 @@ Fast and embedded solvers for nonlinear optimal control.
 - `acados` __source code__ is hosted on [Github](https://github.com/acados/acados).
 Contributions via Pull requests are welcome!
 
-- `acados` has a discourse based [__forum__](discourse.acados.org/).
+- `acados` has a discourse based [__forum__](https://discourse.acados.org/).
 
 - `acados` is mainly developed by the group around Prof. Moritz Diehl, the Systems Control and Optimization Laboratory (__syscop__), at the University of Freiburg. [More infos on the syscop web page](https://www.syscop.de/).
 
