@@ -36,7 +36,8 @@
 # Based on the sphinx-quickstart Makefile template.
 
 SPHINXOPTS    =
-SPHINXBUILD   = python -msphinx
+# SPHINXBUILD   = python -msphinx
+SPHINXBUILD   = sphinx-build
 DOXYBUILD     = doxygen
 SPHINXPROJ    = acados
 SOURCEDIR     = .
