@@ -40,9 +40,8 @@ Documentation latest build: |today|
 
 ```eval_rst
 .. toctree::
-   :hidden:
    :maxdepth: 2
-   :caption: Documentation
+   :caption: Contents
 
    about_acados/index
    problem_formulation/index
