@@ -199,6 +199,7 @@ static acados_size_t daqp_workspace_calculate_size(int n, int m, int ms, int ns)
 
     size += (n+ns+1) * sizeof(int); // WS
 
+    size += 4 * m * sizeof(c_float); // d_ls, d_us,  rho_ls, rho_us
     return size;
 }
 
@@ -305,6 +306,17 @@ static void *daqp_workspace_assign(int n, int m, int ms, int ns, void *raw_memor
     work->L = (c_float *) c_ptr;
     c_ptr += (n+ns+2)*(n+ns+1)/2 * sizeof(c_float);
 
+    work->d_ls = (c_float *) c_ptr;
+    c_ptr += m * sizeof(c_float);
+
+    work->d_us = (c_float *) c_ptr;
+    c_ptr += m * sizeof(c_float);
+
+    work->rho_ls = (c_float *) c_ptr;
+    c_ptr += m * sizeof(c_float);
+
+    work->rho_us = (c_float *) c_ptr;
+    c_ptr += m * sizeof(c_float);
     // ints
     work->qp->sense = (int *) c_ptr;
     c_ptr += 1 * m * sizeof(int);
@@ -330,9 +342,12 @@ static void *daqp_workspace_assign(int n, int m, int ms, int ns, void *raw_memor
 
     work->bnb = NULL; // No need to solve MIQP
 
-    // Make sure sense is clean
-    for (int ii=0; ii<m; ii++)
+    // initialize d_ls, d_us and sense
+    for (int ii=0; ii<m; ii++){
+        work->d_ls[ii] = 0;
+        work->d_us[ii] = 0;
         work->sense[ii] = 0;
+    }
 
     return work;
 }
