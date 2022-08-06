@@ -504,37 +504,45 @@ static void dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_
 
         work->sense[idxdaqp] |= SOFT;
 
+        // Setup soft weight used in DAQP
+        work->rho_ls[idxdaqp] = 1/mem->Zl[ii];
+        work->rho_us[idxdaqp] = 1/mem->Zu[ii];
+
         // Shift QP to handle linear terms on slack
         work->qp->blower[idxdaqp]+=mem->zl[ii]/mem->Zl[ii];
         work->qp->bupper[idxdaqp]-=mem->zu[ii]/mem->Zu[ii];
+
+        work->d_ls[idxdaqp] = MAX(0,mem->zl[ii]+mem->Zl[ii]*mem->d_ls[ii]);
+        work->d_us[idxdaqp] = MAX(0,mem->zu[ii]+mem->Zu[ii]*mem->d_us[ii]);
+
+        work->qp->blower[idxdaqp] -= work->d_ls[idxdaqp]/mem->Zl[ii];
+        work->qp->bupper[idxdaqp] += work->d_us[idxdaqp]/mem->Zu[ii];
     }
-
-
 }
 
 
 
-static void dense_qp_daqp_fill_output(dense_qp_daqp_memory *mem, const dense_qp_out *qp_out,dense_qp_dims *dims)
+static void dense_qp_daqp_fill_output(dense_qp_daqp_memory *mem, const dense_qp_out *qp_out, const dense_qp_in *qp_in)
 {
     int *idxv_to_idxb = mem->idxv_to_idxb;
-    int *idxdaqp_to_idxs= mem->idxdaqp_to_idxs;
+    int *idxs = mem->idxs;
+    int *idxb = mem->idxb;
     int i;
-    int nv = dims->nv;
-    int nb = dims->nb;
-    int ng = dims->ng;
-    int ns = dims->ns;
+    int nv = qp_in->dim->nv;
+    int nb = qp_in->dim->nb;
+    int ng = qp_in->dim->ng;
+    int ns = qp_in->dim->ns;
     DAQPWorkspace *work = mem->daqp_work;
 
     // primal variables
     blasfeo_pack_dvec(nv, work->x, 1, qp_out->v, 0);
 
-    c_float lam, slack;
-    blasfeo_dvecse(2 * nb + 2 * ng + 2 * ns, 0.0, qp_out->lam, 0);
-    blasfeo_dvecse(nv+2*ns, 0, qp_out->v, nv);
 
+    // dual variables
+    blasfeo_dvecse(2 * nb + 2 * ng + 2 * ns, 0.0, qp_out->lam, 0);
+    c_float lam;
     for (i = 0; i < work->n_active; i++)
     {
-        // dual variables
         lam = work->lam_star[i];
         if (work->WS[i] < nv) // bound constraint
         {
@@ -617,7 +625,7 @@ int dense_qp_daqp(void* config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     ldp2qp_solution(work);
 
     // extract primal and dual solution
-    dense_qp_daqp_fill_output(memory,qp_out,qp_in->dim);
+    dense_qp_daqp_fill_output(memory,qp_out,qp_in);
     info->solve_QP_time = acados_toc(&qp_timer);
 
     acados_tic(&interface_timer);
