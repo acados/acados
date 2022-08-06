@@ -42,6 +42,7 @@
 #include "blasfeo/include/blasfeo_d_blas.h"
 
 // daqp
+#define SOFT_WEIGHTS
 #include "daqp/include/types.h"
 #include "daqp/include/api.h"
 #include "daqp/include/daqp.h"

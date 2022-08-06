@@ -42,7 +42,7 @@ extern "C" {
 // blasfeo
 #include "blasfeo/include/blasfeo_common.h"
 
-//
+// daqp
 #include "daqp/include/types.h"
 
 // acados

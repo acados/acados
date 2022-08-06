@@ -62,6 +62,7 @@ endif()
 
 if(ACADOS_WITH_DAQP)
     set(PROFILING OFF CACHE BOOL "Turn off profiling in DAQP")
+    set(SOFT_WEIGHTS ON CACHE BOOL "Turn on soft weights in DAQP")
     add_subdirectory(daqp)
 endif()
 
