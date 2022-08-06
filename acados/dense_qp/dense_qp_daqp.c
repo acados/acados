@@ -488,10 +488,6 @@ static void dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_
         work->qp->A, work->qp->blower+nv, work->qp->bupper+nv,
         mem->Zl, mem->Zu, mem->zl, mem->zu, idxs, mem->d_ls, mem->d_us);
 
-    // XXX: currently assumes that all weights in Zl and Zu are the same
-    // (the daqp workspace needs to be updated to separate the weights)
-    if(ns>0) opts->daqp_opts->rho_soft = 1/mem->Zu[0];
-
     // Setup upper/lower bounds
     for (int ii = 0; ii < nv; ii++)
     {
@@ -575,29 +571,56 @@ static void dense_qp_daqp_fill_output(dense_qp_daqp_memory *mem, const dense_qp_
         }
         else // equality constraint
             qp_out->pi->pa[work->WS[i]-nv-ng] = lam;
-        // slack
-        if(IS_SOFT(work->WS[i]))
-        {
-            slack = work->settings->rho_soft*lam;
-            if( lam >= 0.0)
-                qp_out->v->pa[nv+ns+idxdaqp_to_idxs[work->WS[i]]]=slack;
-            else
-                qp_out->v->pa[nv+idxdaqp_to_idxs[work->WS[i]]]=-slack;
-        }
     }
 
-    // Correct slacks from shifted QP
+    // soft slacks
+    int idx;
     for (i = 0; i < ns; i++)
     {
-        qp_out->v->pa[nv+i]    -= mem->zl[i]/mem->Zl[i];
-        qp_out->v->pa[nv+ns+i] -= mem->zu[i]/mem->Zu[i];
+        idx= idxs[i] < nb ? idxb[idxs[i]] : nb+idxs[i]-nv;
+        // shift back QP
+        work->qp->blower[idx]-=(mem->zl[i]-work->d_ls[idx]/work->scaling[idx])/mem->Zl[i];
+        work->qp->bupper[idx]+=(mem->zu[i]-work->d_us[idx]/work->scaling[idx])/mem->Zu[i];
 
-        // TODO: bounds on slack need to be addressed correctly.
-        // Currently works when only Zl and Zu are set in the ocp
-        // since this ensures that the unconstrained minimum for
-        // the slacks are within the bounds
+        // lower
+        if(qp_out->lam->pa[idxs[i]]==0) // inactive soft => active slack bound
+        {
+            qp_out->v->pa[nv+i] = mem->d_ls[i];
+            qp_out->lam->pa[2*nb+2*ng+i] = mem->d_ls[i]/mem->Zl[i]+mem->zl[i];
+        }
+        else{ // if soft active => compute slack directly from equality
+            qp_out->v->pa[nv+i] = work->qp->blower[idx];
+            if(idx<nv)
+                qp_out->v->pa[nv+i] -= qp_out->v->pa[idx];
+            else{ // general constraint
+                for(int j=0, disp=(idx-nv)*nv; j < nv; j++,disp++)
+                    qp_out->v->pa[nv+i] -= work->qp->A[disp]*qp_out->v->pa[j];
+            }
+            // compute dual variable from stationarity condition
+            qp_out->lam->pa[2*(nb+ng)+i] = mem->Zl[i]*qp_out->v->pa[nv+i]+mem->zl[i]
+                -qp_out->lam->pa[idxs[i]];
+        }
+
+        // upper
+        if(qp_out->lam->pa[idxs[i]+nb+ng]==0) // inactive soft => active slack bound
+        {
+            qp_out->v->pa[nv+ns+i] = mem->d_us[i];
+            qp_out->lam->pa[2*nb+2*ng+ns+i] = mem->d_us[i]/mem->Zu[i]+mem->zu[i];
+        }
+        else{ // if soft active => compute slack directly from equality
+            idx= idxs[i] < nb ? idxb[idxs[i]] : nb+idxs[i]-nv;
+            qp_out->v->pa[nv+ns+i] = -work->qp->bupper[idx];
+            if(idx<nv)
+                qp_out->v->pa[nv+ns+i] += qp_out->v->pa[idx];
+            else{ // general constraint
+                for(int j=0, disp=(idx-nv)*nv; j < nv; j++,disp++)
+                    qp_out->v->pa[nv+ns+i] += work->qp->A[disp]*qp_out->v->pa[j];
+            }
+            // compute dual variable from stationarity condition
+			qp_out->lam->pa[2*(nb+ng)+ns+i] = mem->Zu[i]*qp_out->v->pa[nv+ns+i]+mem->zu[i]
+			  -qp_out->lam->pa[idxs[i]+nb+ng];
+        }
     }
-
 }
 
 
