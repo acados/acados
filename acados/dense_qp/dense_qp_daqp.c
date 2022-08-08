@@ -534,12 +534,15 @@ static void dense_qp_daqp_fill_output(dense_qp_daqp_memory *mem, const dense_qp_
     int ns = qp_in->dim->ns;
     DAQPWorkspace *work = mem->daqp_work;
 
+    struct blasfeo_dvec *v = qp_out->v;
+    struct blasfeo_dvec *lambda = qp_out->lam;
+
     // primal variables
-    blasfeo_pack_dvec(nv, work->x, 1, qp_out->v, 0);
+    blasfeo_pack_dvec(nv, work->x, 1, v, 0);
 
 
     // dual variables
-    blasfeo_dvecse(2 * nb + 2 * ng + 2 * ns, 0.0, qp_out->lam, 0);
+    blasfeo_dvecse(2 * nb + 2 * ng + 2 * ns, 0.0, lambda, 0);
     c_float lam;
     for (i = 0; i < work->n_active; i++)
     {
@@ -547,16 +550,16 @@ static void dense_qp_daqp_fill_output(dense_qp_daqp_memory *mem, const dense_qp_
         if (work->WS[i] < nv) // bound constraint
         {
             if (lam >= 0.0)
-                qp_out->lam->pa[nb+ng+idxv_to_idxb[work->WS[i]]] = lam;
+                lambda->pa[nb+ng+idxv_to_idxb[work->WS[i]]] = lam;
             else
-                qp_out->lam->pa[idxv_to_idxb[work->WS[i]]] = -lam;
+                lambda->pa[idxv_to_idxb[work->WS[i]]] = -lam;
         }
         else if (work->WS[i] < nv+ng)// general constraint
         {
             if (lam >= 0.0)
-                qp_out->lam->pa[2*nb+ng+work->WS[i]-nv] = lam;
+                lambda->pa[2*nb+ng+work->WS[i]-nv] = lam;
             else
-                qp_out->lam->pa[nb+work->WS[i]-nv] = -lam;
+                lambda->pa[nb+work->WS[i]-nv] = -lam;
         }
         else // equality constraint
             qp_out->pi->pa[work->WS[i]-nv-ng] = lam;
@@ -572,48 +575,48 @@ static void dense_qp_daqp_fill_output(dense_qp_daqp_memory *mem, const dense_qp_
         work->qp->bupper[idx]+=(mem->zu[i]-work->d_us[idx]/work->scaling[idx])/mem->Zu[i];
 
         // lower
-        if (qp_out->lam->pa[idxs[i]]==0) // inactive soft => active slack bound
+        if (lambda->pa[idxs[i]]==0) // inactive soft => active slack bound
         {
-            qp_out->v->pa[nv+i] = mem->d_ls[i];
-            qp_out->lam->pa[2*nb+2*ng+i] = mem->d_ls[i]/mem->Zl[i]+mem->zl[i];
+            v->pa[nv+i] = mem->d_ls[i];
+            lambda->pa[2*nb+2*ng+i] = mem->d_ls[i]/mem->Zl[i]+mem->zl[i];
         }
         else
         { // if soft active => compute slack directly from equality
-            qp_out->v->pa[nv+i] = work->qp->blower[idx];
+            v->pa[nv+i] = work->qp->blower[idx];
             if (idx<nv)
-                qp_out->v->pa[nv+i] -= qp_out->v->pa[idx];
+                v->pa[nv+i] -= v->pa[idx];
             else
             { // general constraint
                 for (int j=0, disp = (idx-nv)*nv; j < nv; j++, disp++)
                 {
-                    qp_out->v->pa[nv+i] -= work->qp->A[disp]*qp_out->v->pa[j];
+                    v->pa[nv+i] -= work->qp->A[disp]*v->pa[j];
                 }
             }
             // compute dual variable from stationarity condition
-            qp_out->lam->pa[2*(nb+ng)+i] = mem->Zl[i]*qp_out->v->pa[nv+i]+mem->zl[i]
-                -qp_out->lam->pa[idxs[i]];
+            lambda->pa[2*(nb+ng)+i] = mem->Zl[i]*v->pa[nv+i]+mem->zl[i]
+                -lambda->pa[idxs[i]];
         }
 
         // upper
-        if (qp_out->lam->pa[idxs[i]+nb+ng]==0) // inactive soft => active slack bound
+        if (lambda->pa[idxs[i]+nb+ng]==0) // inactive soft => active slack bound
         {
-            qp_out->v->pa[nv+ns+i] = mem->d_us[i];
-            qp_out->lam->pa[2*nb+2*ng+ns+i] = mem->d_us[i]/mem->Zu[i]+mem->zu[i];
+            v->pa[nv+ns+i] = mem->d_us[i];
+            lambda->pa[2*nb+2*ng+ns+i] = mem->d_us[i]/mem->Zu[i]+mem->zu[i];
         }
         else
         { // if soft active => compute slack directly from equality
             idx = idxs[i] < nb ? idxb[idxs[i]] : nb+idxs[i]-nv;
-            qp_out->v->pa[nv+ns+i] = -work->qp->bupper[idx];
+            v->pa[nv+ns+i] = -work->qp->bupper[idx];
             if (idx<nv)
-                qp_out->v->pa[nv+ns+i] += qp_out->v->pa[idx];
+                v->pa[nv+ns+i] += v->pa[idx];
             else
             { // general constraint
                 for (int j=0, disp = (idx-nv)*nv; j < nv; j++, disp++)
-                    qp_out->v->pa[nv+ns+i] += work->qp->A[disp]*qp_out->v->pa[j];
+                    v->pa[nv+ns+i] += work->qp->A[disp]*v->pa[j];
             }
             // compute dual variable from stationarity condition
-            qp_out->lam->pa[2*(nb+ng)+ns+i] = mem->Zu[i]*qp_out->v->pa[nv+ns+i]+mem->zu[i]
-                -qp_out->lam->pa[idxs[i]+nb+ng];
+            lambda->pa[2*(nb+ng)+ns+i] = mem->Zu[i]*v->pa[nv+ns+i]+mem->zu[i]
+                -lambda->pa[idxs[i]+nb+ng];
         }
     }
 }
