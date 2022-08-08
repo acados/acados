@@ -35,6 +35,8 @@
 
 addpath('../wind_turbine_nx6/');
 
+% qpOASES too slow to test on CI
+for itest = 1:3
 
 %% arguments
 compile_interface = 'auto';
@@ -61,10 +63,17 @@ ocp_nlp_solver_tol_eq   = 1e-8;
 ocp_nlp_solver_tol_ineq = 1e-8;
 ocp_nlp_solver_tol_comp = 1e-8;
 ocp_nlp_solver_ext_qp_res = 1;
-ocp_qp_solver = 'partial_condensing_hpipm';
-%ocp_qp_solver = 'full_condensing_hpipm';
-% ocp_qp_solver = 'full_condensing_qpoases';
-% ocp_qp_solver = 'full_condensing_daqp';
+switch itest
+case 1
+    ocp_qp_solver = 'partial_condensing_hpipm';
+case 2
+    ocp_qp_solver = 'full_condensing_hpipm';
+case 3
+    ocp_qp_solver = 'full_condensing_daqp';
+case 4
+    ocp_qp_solver = 'full_condensing_qpoases';
+end
+fprintf(['\n\nrunning with qp solver ', ocp_qp_solver, '\n'])
 ocp_qp_solver_cond_N = 5;
 ocp_qp_solver_cond_ric_alg = 0;
 ocp_qp_solver_ric_alg = 0;
@@ -283,7 +292,7 @@ ocp_opts.set('sim_method_newton_iter', ocp_sim_method_newton_iter);
 ocp_opts.set('regularize_method', 'no_regularize');
 ocp_opts.set('ext_fun_compile_flags', '');
 
-ocp_opts.set('parameter_values', wind0_ref(:,1))
+ocp_opts.set('parameter_values', wind0_ref(:,1));
 
 ocp_opts.opts_struct;
 
@@ -436,6 +445,7 @@ for ii=1:n_sim
     time_tot = ocp.get('time_tot');
     time_lin = ocp.get('time_lin');
     time_qp_sol = ocp.get('time_qp_sol');
+    qp_iter = ocp.get('stat')(:,7);
 
     sqp_iter_sim(ii) = sqp_iter;
     if status ~= 0
@@ -443,8 +453,8 @@ for ii=1:n_sim
         error(['ocp_nlp solver returned status ', num2str(status), '!= 0 in simulation instance ', num2str(ii)]);
     end
 
-    fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms]), Pel = %f',...
-            status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, electrical_power);
+    fprintf('\nstatus = %d, sqp_iter = %d, qp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms]), Pel = %f',...
+            status, sqp_iter, sum(qp_iter), time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, electrical_power);
 
     if 0
         ocp.print('stat')
@@ -526,6 +536,7 @@ if 0
     end
 end
 
+end
 
 % remove temporary created files
 delete('y_ref')
