@@ -89,6 +89,8 @@ acados_size_t dense_qp_qpoases_opts_calculate_size(void *config_, dense_qp_dims 
     acados_size_t size = 0;
     size += sizeof(dense_qp_qpoases_opts);
 
+    make_int_multiple_of(8, &size);
+
     return size;
 }
 
@@ -103,7 +105,7 @@ void *dense_qp_qpoases_opts_assign(void *config_, dense_qp_dims *dims, void *raw
     opts = (dense_qp_qpoases_opts *) c_ptr;
     c_ptr += sizeof(dense_qp_qpoases_opts);
 
-    assert((char *) raw_memory + dense_qp_qpoases_opts_calculate_size(config_, dims) == c_ptr);
+    assert((char *) raw_memory + dense_qp_qpoases_opts_calculate_size(config_, dims) >= c_ptr);
 
     return (void *) opts;
 }
