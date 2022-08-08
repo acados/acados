@@ -174,19 +174,16 @@ static acados_size_t daqp_workspace_calculate_size(int n, int m, int ms, int ns)
 
     size += sizeof(DAQPWorkspace);
     size += sizeof(DAQPProblem);
-    //size += sizeof(DAQPSettings);
 
     size += n * n * sizeof(c_float); // H
     size += 1 * n * sizeof(c_float); // f
     size += n * (m-ms) * sizeof(c_float); // A
     size += 2 * m * sizeof(c_float); // bupper/blower
-    size += 1 * m * sizeof(int); // sense
 
     size += n * (m-ms) * sizeof(c_float); // M
     size += 2 * m * sizeof(c_float); // dupper/dlower
     size += (n+1)*n/2 * sizeof(c_float); // Rinv
     size += n * sizeof(c_float); // v
-    size += m * sizeof(int); // sense
     size += m * sizeof(c_float); // scaling
 
     size += 2 * n * sizeof(c_float); // x & xold
@@ -198,9 +195,13 @@ static acados_size_t daqp_workspace_calculate_size(int n, int m, int ms, int ns)
 
     size += 2*(n+ns+1) * sizeof(c_float); //xldl & zldl
 
+    size += 4 * m * sizeof(c_float); // d_ls, d_us,  rho_ls, rho_us
+
+    size += 2 * m * sizeof(int); // work->sense, work->qp->sense // TODO: both needed?
     size += (n+ns+1) * sizeof(int); // WS
 
-    size += 4 * m * sizeof(c_float); // d_ls, d_us,  rho_ls, rho_us
+    make_int_multiple_of(8, &size);
+
     return size;
 }
 
@@ -240,13 +241,9 @@ static void *daqp_workspace_assign(int n, int m, int ms, int ns, void *raw_memor
     work->qp = (DAQPProblem *) c_ptr;
     c_ptr += sizeof(DAQPProblem);
 
-    //work->settings = (DAQPSettings *) c_ptr;
-    //c_ptr += sizeof(DAQPSettings);
-
     align_char_to(8, &c_ptr);
 
     // double
-
     work->qp->H = (c_float*) c_ptr;
     c_ptr += n * n * sizeof(c_float);
 
@@ -318,6 +315,7 @@ static void *daqp_workspace_assign(int n, int m, int ms, int ns, void *raw_memor
 
     work->rho_us = (c_float *) c_ptr;
     c_ptr += m * sizeof(c_float);
+
     // ints
     work->qp->sense = (int *) c_ptr;
     c_ptr += 1 * m * sizeof(int);
