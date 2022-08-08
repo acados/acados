@@ -40,12 +40,21 @@ from utils import plot_pendulum
 import numpy as np
 import scipy.linalg
 
+import itertools
+
 SOFT_CONSTRAINT_TYPES = ['bx', 'h']
 TOL = 1E-6
 N = 20
 
+QP_SOLVERS = ('PARTIAL_CONDENSING_HPIPM', \
+                'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_HPIPM', \
+                'FULL_CONDENSING_DAQP'
+                )
+# no soft constraint support:
+# 'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP', \
 
-def run_closed_loop_experiment(soft_constr_type='bx', verbose=False):
+
+def run_closed_loop_experiment(soft_constr_type='bx', verbose=False, qp_solver='PARTIAL_CONDENSING_HPIPM'):
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
@@ -124,10 +133,7 @@ def run_closed_loop_experiment(soft_constr_type='bx', verbose=False):
     ocp.cost.Zu = 1*np.ones((1,))
 
     # set options
-    # ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-    ocp.solver_options.qp_solver = 'FULL_CONDENSING_DAQP'
-    # ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM'
-    ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
+    ocp.solver_options.qp_solver = qp_solver
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = 'ERK'
     ocp.solver_options.tf = Tf
@@ -147,6 +153,8 @@ def run_closed_loop_experiment(soft_constr_type='bx', verbose=False):
     simX = np.ndarray((Nsim+1, nx))
     simU = np.ndarray((Nsim, nu))
     xcurrent = x0
+    qp_iter = np.zeros(Nsim)
+    sqp_iter = np.zeros(Nsim)
 
     for i in range(Nsim):
         simX[i,:] = xcurrent
@@ -162,6 +170,9 @@ def run_closed_loop_experiment(soft_constr_type='bx', verbose=False):
         if status != 0:
             acados_ocp_solver.print_statistics()
             raise Exception('acados acados_ocp_solver returned status {}. Exiting.'.format(status))
+
+        qp_iter[i] = np.sum(acados_ocp_solver.get_stats('qp_iter'))
+        sqp_iter[i] = acados_ocp_solver.get_stats('sqp_iter')
 
         simU[i,:] = acados_ocp_solver.get(0, "u")
 
@@ -187,35 +198,45 @@ def run_closed_loop_experiment(soft_constr_type='bx', verbose=False):
     # plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
 
     # store results
-    np.savetxt(f'test_results/simX_soft_formulation_{soft_constr_type}', simX)
-    np.savetxt(f'test_results/simU_soft_formulation_{soft_constr_type}', simU)
+    np.savetxt(f'test_results/simX_soft_formulation_{soft_constr_type}_{qp_solver}', simX)
+    np.savetxt(f'test_results/simU_soft_formulation_{soft_constr_type}_{qp_solver}', simU)
+    np.savetxt(f'test_results/sqp_iter_soft_formulation_{soft_constr_type}_{qp_solver}', sqp_iter)
 
-    print("soft constraint example: ran formulation", soft_constr_type, "successfully.")
+    print(f"\nsoft constraint example: ran formulation {soft_constr_type} with {qp_solver} successfully.\n")
+    print(f"took {sqp_iter} SQP iterations and {qp_iter} QP iterations.")
 
+    del acados_ocp_solver
 
 def main():
-    for soft_constr_type in SOFT_CONSTRAINT_TYPES:
-        run_closed_loop_experiment(soft_constr_type=soft_constr_type)
+    # import pdb; pdb.set_trace()
+    for (soft_constr_type, qp_solver) in itertools.product(SOFT_CONSTRAINT_TYPES, QP_SOLVERS):
+        run_closed_loop_experiment(soft_constr_type=soft_constr_type, qp_solver=qp_solver)
 
     # load reference solution
     soft_constr_type = 'bx'
-    simX_ref = np.loadtxt(f'test_results/simX_soft_formulation_{soft_constr_type}')
-    simU_ref = np.loadtxt(f'test_results/simU_soft_formulation_{soft_constr_type}')
+    qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+    simX_ref = np.loadtxt(f'test_results/simX_soft_formulation_{soft_constr_type}_{qp_solver}')
+    simU_ref = np.loadtxt(f'test_results/simU_soft_formulation_{soft_constr_type}_{qp_solver}')
+    sqp_iter_ref = np.loadtxt(f'test_results/sqp_iter_soft_formulation_{soft_constr_type}_{qp_solver}')
 
     # compare
-    for soft_constr_type in SOFT_CONSTRAINT_TYPES:
-        simX = np.loadtxt(f'test_results/simX_soft_formulation_{soft_constr_type}')
-        simU = np.loadtxt(f'test_results/simU_soft_formulation_{soft_constr_type}')
+    for (soft_constr_type, qp_solver) in itertools.product(SOFT_CONSTRAINT_TYPES, QP_SOLVERS):
+        simX = np.loadtxt(f'test_results/simX_soft_formulation_{soft_constr_type}_{qp_solver}')
+        simU = np.loadtxt(f'test_results/simU_soft_formulation_{soft_constr_type}_{qp_solver}')
+        sqp_iter = np.loadtxt(f'test_results/sqp_iter_soft_formulation_{soft_constr_type}_{qp_solver}')
 
         error_x = np.linalg.norm(simX_ref - simX)
         error_u = np.linalg.norm(simU_ref - simU)
 
         error_xu = max([error_x, error_u])
 
-        print("soft constraint example: formulation", soft_constr_type, " solution deviates from reference by", error_xu, ".")
+        print(f"soft constraint example: formulation {soft_constr_type} with {qp_solver} deviates from reference by {error_xu}")
 
         if error_xu > TOL:
-            raise Exception(f"soft constraint example: formulations should return same solution up to {TOL:.2e}")
+            raise Exception(f"soft constraint example: formulations should return same solution up to {TOL:.2e}, got error_x {error_x}, error_u {error_u} for {soft_constr_type}, {qp_solver}")
+
+        if any(sqp_iter != sqp_iter_ref):
+            raise Exception(f"all formulations should take the same number of SQP iterations.")
 
     print(f"soft constraint example: SUCCESS, got same solutions for equivalent formulations up to tolerance {TOL:.2e}")
 
