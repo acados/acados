@@ -73,10 +73,12 @@ ocp_qp_solver_warm_start = 2;
 ocp_sim_method = 'irk';
 ocp_sim_method_num_stages = 4 * ones(ocp_N, 1); % scalar or vector of size ocp_N;
 ocp_sim_method_num_steps = 1 * ones(ocp_N, 1); % scalar or vector of size ocp_N;
-ocp_sim_method_newton_iter = 3 * ones(ocp_N, 1); % scalar or vector of size ocp_N;
+ocp_sim_method_newton_iter = 3% * ones(ocp_N, 1); % scalar or vector of size ocp_N;
 %cost_type = 'linear_ls';
 cost_type = 'nonlinear_ls';
 
+% get references
+compute_setup;
 
 
 %% create model entries
@@ -244,8 +246,8 @@ ocp_model.set('constr_Jsh', Jsh);
 ocp_model.set('constr_Jsh_e', Jsh_e);
 
 % initial state dummy
-ocp_model.set('constr_x0', zeros(nx, 1));
-
+ocp_model.set('constr_x0', x0_ref);
+%
 ocp_model.model_struct;
 
 
@@ -267,7 +269,7 @@ if (strcmp(ocp_nlp_solver, 'sqp'))
     ocp_opts.set('nlp_solver_tol_comp', ocp_nlp_solver_tol_comp);
 end
 ocp_opts.set('qp_solver', ocp_qp_solver);
-ocp_opts.set('qp_solver_iter_max', 200);
+ocp_opts.set('qp_solver_iter_max', 500);
 if (strcmp(ocp_qp_solver, 'partial_condensing_hpipm'))
     ocp_opts.set('qp_solver_cond_N', ocp_qp_solver_cond_N);
     ocp_opts.set('qp_solver_cond_ric_alg', ocp_qp_solver_cond_ric_alg);
@@ -281,6 +283,8 @@ ocp_opts.set('sim_method_newton_iter', ocp_sim_method_newton_iter);
 ocp_opts.set('regularize_method', 'no_regularize');
 ocp_opts.set('ext_fun_compile_flags', '');
 
+ocp_opts.set('parameter_values', wind0_ref(:,1))
+
 ocp_opts.opts_struct;
 
 
@@ -291,8 +295,6 @@ ocp = acados_ocp(ocp_model, ocp_opts);
 %ocp
 %ocp.C_ocp
 %ocp.C_ocp_ext_fun
-
-
 
 %% acados sim model
 sim_model = acados_sim_model();
@@ -338,9 +340,6 @@ sim = acados_sim(sim_model, sim_opts);
 
 
 %% closed loop simulation
-% get references
-compute_setup;
-
 n_sim = 100;
 n_sim_max = length(wind0_ref) - ocp_N;
 if n_sim>n_sim_max
