@@ -69,6 +69,8 @@ acados_size_t dense_qp_daqp_opts_calculate_size(void *config_, dense_qp_dims *di
     size += sizeof(dense_qp_daqp_opts);
     size += sizeof(DAQPSettings);
 
+    make_int_multiple_of(8, &size);
+
     return size;
 }
 
@@ -86,7 +88,7 @@ void *dense_qp_daqp_opts_assign(void *config_, dense_qp_dims *dims, void *raw_me
     opts->daqp_opts = (DAQPSettings *) c_ptr;
     c_ptr += sizeof(DAQPSettings);
 
-    assert((char *) raw_memory + dense_qp_daqp_opts_calculate_size(config_, dims) == c_ptr);
+    assert((char *) raw_memory + dense_qp_daqp_opts_calculate_size(config_, dims) >= c_ptr);
 
     return (void *) opts;
 }
