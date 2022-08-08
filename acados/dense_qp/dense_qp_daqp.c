@@ -491,7 +491,7 @@ static void dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_
         work->sense[idxb[ii]] &= ~IMMUTABLE; // "Unignore" these bounds
         mem->idxv_to_idxb[idxb[ii]] = ii;
     }
-	// Mark equality constraint
+    // Mark equality constraint
     for (int ii = 0; ii < ne; ii++)
         work->sense[nv+ng+ii] &= ACTIVE+IMMUTABLE;
 
@@ -566,7 +566,7 @@ static void dense_qp_daqp_fill_output(dense_qp_daqp_memory *mem, const dense_qp_
     int idx;
     for (i = 0; i < ns; i++)
     {
-        idx= idxs[i] < nb ? idxb[idxs[i]] : nb+idxs[i]-nv;
+        idx = idxs[i] < nb ? idxb[idxs[i]] : nb+idxs[i]-nv;
         // shift back QP
         work->qp->blower[idx]-=(mem->zl[i]-work->d_ls[idx]/work->scaling[idx])/mem->Zl[i];
         work->qp->bupper[idx]+=(mem->zu[i]-work->d_us[idx]/work->scaling[idx])/mem->Zu[i];
@@ -577,7 +577,8 @@ static void dense_qp_daqp_fill_output(dense_qp_daqp_memory *mem, const dense_qp_
             qp_out->v->pa[nv+i] = mem->d_ls[i];
             qp_out->lam->pa[2*nb+2*ng+i] = mem->d_ls[i]/mem->Zl[i]+mem->zl[i];
         }
-        else{ // if soft active => compute slack directly from equality
+        else
+        { // if soft active => compute slack directly from equality
             qp_out->v->pa[nv+i] = work->qp->blower[idx];
             if(idx<nv)
                 qp_out->v->pa[nv+i] -= qp_out->v->pa[idx];
@@ -596,8 +597,9 @@ static void dense_qp_daqp_fill_output(dense_qp_daqp_memory *mem, const dense_qp_
             qp_out->v->pa[nv+ns+i] = mem->d_us[i];
             qp_out->lam->pa[2*nb+2*ng+ns+i] = mem->d_us[i]/mem->Zu[i]+mem->zu[i];
         }
-        else{ // if soft active => compute slack directly from equality
-            idx= idxs[i] < nb ? idxb[idxs[i]] : nb+idxs[i]-nv;
+        else
+        { // if soft active => compute slack directly from equality
+            idx = idxs[i] < nb ? idxb[idxs[i]] : nb+idxs[i]-nv;
             qp_out->v->pa[nv+ns+i] = -work->qp->bupper[idx];
             if(idx<nv)
                 qp_out->v->pa[nv+ns+i] += qp_out->v->pa[idx];
@@ -606,8 +608,8 @@ static void dense_qp_daqp_fill_output(dense_qp_daqp_memory *mem, const dense_qp_
                     qp_out->v->pa[nv+ns+i] += work->qp->A[disp]*qp_out->v->pa[j];
             }
             // compute dual variable from stationarity condition
-			qp_out->lam->pa[2*(nb+ng)+ns+i] = mem->Zu[i]*qp_out->v->pa[nv+ns+i]+mem->zu[i]
-			  -qp_out->lam->pa[idxs[i]+nb+ng];
+            qp_out->lam->pa[2*(nb+ng)+ns+i] = mem->Zu[i]*qp_out->v->pa[nv+ns+i]+mem->zu[i]
+                -qp_out->lam->pa[idxs[i]+nb+ng];
         }
     }
 }
