@@ -58,17 +58,6 @@
 
 #include "acados_c/dense_qp_interface.h"
 
-/************************************************
- * auxiliary
- ************************************************/
-
-static void acados_daqp_get_dims(dense_qp_dims *dims, int *n_ptr, int *m_ptr, int *ms_ptr)
-{
-    *n_ptr = dims->nv;
-    *m_ptr = dims->nv+dims->ng+dims->ne;
-    *ms_ptr = dims->nv;
-}
-
 
 /************************************************
  * opts
@@ -208,8 +197,9 @@ static acados_size_t daqp_workspace_calculate_size(int n, int m, int ms, int ns)
 
 acados_size_t dense_qp_daqp_memory_calculate_size(void *config_, dense_qp_dims *dims, void *opts_)
 {
-    int n, m, ms;
-    acados_daqp_get_dims(dims, &n,&m,&ms);
+    int n = dims->nv;
+    int m = dims->nv + dims->ng + dims->ne;
+    int ms = dims->nv;
     int nb = dims->nb;
     int ns = dims->ns;
 
@@ -357,11 +347,11 @@ void *dense_qp_daqp_memory_assign(void *config_, dense_qp_dims *dims, void *opts
 {
     dense_qp_daqp_memory *mem;
 
-    int n, m, ms;
-    acados_daqp_get_dims(dims, &n,&m,&ms);
+    int n = dims->nv;
+    int m = dims->nv + dims->ng + dims->ne;
+    int ms = dims->nv;
     int nb = dims->nb;
     int ns = dims->ns;
-
 
     // char pointer
     char *c_ptr = (char *) raw_memory;
