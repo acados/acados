@@ -359,11 +359,16 @@ x_sim(:,1) = x0_ref; % initial state
 u_sim = zeros(nu, n_sim);
 
 sqp_iter_sim = zeros(n_sim,1);
+time_ext = zeros(n_sim, 1);
+time_tot = zeros(n_sim, 1);
+time_lin = zeros(n_sim, 1);
+time_qp_sol = zeros(n_sim, 1);
 
 % set trajectory initialization
 x_traj_init = repmat(x0_ref, 1, ocp_N+1);
 u_traj_init = repmat(u0_ref, 1, ocp_N);
 pi_traj_init = zeros(nx, ocp_N);
+
 
 for ii=1:n_sim
 
@@ -436,16 +441,17 @@ for ii=1:n_sim
     u_traj_init = [u(:,2:ocp_N), u(:,ocp_N)];
     pi_traj_init = [pi(:,2:ocp_N), pi(:,ocp_N)];
 
-    time_ext = toc;
+    time_ext(ii) = toc;
 
     electrical_power = 0.944*97/100*x(1,1)*x(6,1);
 
     status = ocp.get('status');
     sqp_iter = ocp.get('sqp_iter');
-    time_tot = ocp.get('time_tot');
-    time_lin = ocp.get('time_lin');
-    time_qp_sol = ocp.get('time_qp_sol');
-    qp_iter = ocp.get('stat')(:,7);
+    time_tot(ii) = ocp.get('time_tot');
+    time_lin(ii) = ocp.get('time_lin');
+    time_qp_sol(ii) = ocp.get('time_qp_sol');
+    sqp_stats = ocp.get('stat');
+    qp_iter = sqp_stats(:,7);
 
     sqp_iter_sim(ii) = sqp_iter;
     if status ~= 0
@@ -454,7 +460,7 @@ for ii=1:n_sim
     end
 
     fprintf('\nstatus = %d, sqp_iter = %d, qp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms]), Pel = %f',...
-            status, sqp_iter, sum(qp_iter), time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, electrical_power);
+            status, sqp_iter, sum(qp_iter), time_ext(ii)*1e3, time_tot(ii)*1e3, time_lin(ii)*1e3, time_qp_sol(ii)*1e3, electrical_power);
 
     if 0
         ocp.print('stat')
@@ -489,6 +495,9 @@ x_sim_ref = [   1.263425730522397
    3.882220255648666];
 
 err_vs_ref = x_sim_ref - x_sim(:,end);
+
+fprintf('\nmedian computation times: time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])', ...
+        median(time_ext)*1e3, median(time_tot)*1e3, median(time_lin)*1e3, median(time_qp_sol)*1e3)
 
 if status~=0
     error('test_ocp_wtnx6: solution failed!');
