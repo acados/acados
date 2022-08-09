@@ -499,7 +499,7 @@ static void dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_
     int idxdaqp;
     for (int ii = 0; ii < ns; ii++)
     {
-        idxdaqp= idxs[ii] < nb ? idxb[idxs[ii]] : nb+idxs[ii]-nv;
+        idxdaqp= idxs[ii] < nb ? idxb[idxs[ii]] : nv+idxs[ii]-nb;
         mem->idxdaqp_to_idxs[idxdaqp] = ii;
 
         work->sense[idxdaqp] |= SOFT;
@@ -569,7 +569,7 @@ static void dense_qp_daqp_fill_output(dense_qp_daqp_memory *mem, const dense_qp_
     int idx;
     for (i = 0; i < ns; i++)
     {
-        idx = idxs[i] < nb ? idxb[idxs[i]] : nb+idxs[i]-nv;
+        idx = idxs[i] < nb ? idxb[idxs[i]] : nv+idxs[i]-nb;
         // shift back QP
         work->qp->blower[idx]-=(mem->zl[i]-work->d_ls[idx]/work->scaling[idx])/mem->Zl[i];
         work->qp->bupper[idx]+=(mem->zu[i]-work->d_us[idx]/work->scaling[idx])/mem->Zu[i];
