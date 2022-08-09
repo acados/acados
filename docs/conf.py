@@ -45,7 +45,6 @@
 #
 import os
 import sys
-import subprocess
 import datetime
 
 import recommonmark
@@ -69,6 +68,17 @@ project = 'acados'
 now = datetime.datetime.now()
 copyright = str(now.year) +', syscop'
 author = 'syscop'
+github_url = "https://github.com/acados/acados"
+
+# https://stackoverflow.com/questions/62904172/how-do-i-replace-view-page-source-with-edit-on-github-links-in-sphinx-rtd-th
+# These variables are intended to be set directly in the .rst files rather than in html_theme_options or conf.py in general. To make this actually apply site-wide as if it were defined in every .rst file, just put it in html_context.
+# TODO: use rst files everywhere to get rid of this.
+html_context = {
+  'display_github': True,
+  'github_user': 'acados',
+  'github_repo': 'acados',
+  'github_version': 'master/docs/',
+}
 
 
 # -- General configuration ---------------------------------------------------

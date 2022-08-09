@@ -36,7 +36,8 @@
 # Based on the sphinx-quickstart Makefile template.
 
 SPHINXOPTS    =
-SPHINXBUILD   = python -msphinx
+# SPHINXBUILD   = python -msphinx
+SPHINXBUILD   = sphinx-build
 DOXYBUILD     = doxygen
 SPHINXPROJ    = acados
 SOURCEDIR     = .
@@ -63,7 +64,7 @@ doxygen:
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 upload:
-	rsync -aP -e ssh $(BUILDDIR)/* acados_website@syscop.de:~/website_public/
+	rsync -aP -e ssh $(BUILDDIR)/ acados_website@syscop.de:~/website_public/ --delete
 
 clean:
 	@echo Clean Sphinx
