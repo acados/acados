@@ -188,7 +188,7 @@ static acados_size_t daqp_workspace_calculate_size(int n, int m, int ms, int ns)
 
     size += 4 * m * sizeof(c_float); // d_ls, d_us,  rho_ls, rho_us
 
-    size += 2 * m * sizeof(int); // work->sense, work->qp->sense // TODO: both needed?
+    size += m * sizeof(int); // work->sense
     size += (n+ns+1) * sizeof(int); // WS
 
     make_int_multiple_of(8, &size);
@@ -309,9 +309,6 @@ static void *daqp_workspace_assign(int n, int m, int ms, int ns, void *raw_memor
     c_ptr += m * sizeof(c_float);
 
     // ints
-    work->qp->sense = (int *) c_ptr;
-    c_ptr += 1 * m * sizeof(int);
-
     work->sense = (int *) c_ptr;
     c_ptr += m * sizeof(int);
 
