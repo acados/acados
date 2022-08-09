@@ -605,7 +605,6 @@ static void dense_qp_daqp_fill_output(dense_qp_daqp_memory *mem, const dense_qp_
         }
         else
         { // if soft active => compute slack directly from equality
-            idx = idxs[i] < nb ? idxb[idxs[i]] : nb+idxs[i]-nv;
             BLASFEO_DVECEL(v, nv+ns+i) = -work->qp->bupper[idx];
             if (idx<nv)
                 BLASFEO_DVECEL(v, nv+ns+i) += BLASFEO_DVECEL(v, idx);
