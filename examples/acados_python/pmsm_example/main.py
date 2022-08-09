@@ -357,6 +357,7 @@ ocp.parameter_values = nmp.array([w_val, 0.0, 0.0, tau_wal])
 # ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
 ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM'
 # ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
+# ocp.solver_options.qp_solver = 'FULL_CONDENSING_DAQP'
 ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
 ocp.solver_options.integrator_type = 'IRK'
 # ocp.solver_options.integrator_type = 'ERK'
