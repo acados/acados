@@ -477,6 +477,9 @@ static void dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_
         work->qp->A, work->qp->blower+nv, work->qp->bupper+nv,
         mem->Zl, mem->Zu, mem->zl, mem->zu, idxs, mem->d_ls, mem->d_us);
 
+    // Ensure that all constraints are "unignored"
+    for ( int ii = nv; ii < nv+ng; ii++) work->sense[ii] &=~IMMUTABLE;
+
     // Setup upper/lower bounds
     for (int ii = 0; ii < nv; ii++)
     {
