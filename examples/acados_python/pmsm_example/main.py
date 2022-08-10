@@ -235,7 +235,7 @@ def get_general_terminal_constraints_DC():
     return res
 
 
-def main():
+def run_simulation(qp_solver="FULL_CONDENSING_HPIPM", show_plots=False, verbose=False):
     # create render arguments
     ocp = AcadosOcp()
 
@@ -371,10 +371,7 @@ def main():
     ocp.parameter_values = np.array([w_val, 0.0, 0.0, tau_wal])
 
     # set QP solver
-    # ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-    ocp.solver_options.qp_solver = "FULL_CONDENSING_HPIPM"
-    # ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
-    # ocp.solver_options.qp_solver = 'FULL_CONDENSING_DAQP'
+    ocp.solver_options.qp_solver = qp_solver
     ocp.solver_options.hessian_approx = "GAUSS_NEWTON"
     ocp.solver_options.integrator_type = "IRK"
     # ocp.solver_options.integrator_type = 'ERK'
@@ -440,23 +437,24 @@ def main():
         status = acados_solver.solve()
 
     for i in range(Nsim):
-        print("\n")
-        print("SimulationStep = ", i)
-        print("=================")
+        if verbose:
+            print("\n")
+            print("SimulationStep = ", i)
+            print("=================")
 
         # set options
         acados_solver.options_set("print_level", 0)
         status = acados_solver.solve()
 
         if status != 0:
-            raise Exception(f"acados returned status {status}.")
+            acados_solver.print_statistics()
+            raise Exception(f"acados returned status {status} in simulation step {i}.")
 
         # get solution
         x0 = acados_solver.get(0, "x")
         xN = acados_solver.get(N, "x")
         u0 = acados_solver.get(0, "u")
 
-        # get computation time
         CPU_time = acados_solver.get_stats("time_tot")
 
         for j in range(nx):
@@ -496,9 +494,10 @@ def main():
         xvec_arg[0] = xvec[0, 0]
         xvec_arg[1] = xvec[1, 0]
 
-        print("States= ", xvec)
-        print("Controls= ", uvec)
-        print("\n")
+        if verbose:
+            print("States= ", xvec)
+            print("Controls= ", uvec)
+            print("\n")
 
         # update initial condition xk+1
         acados_solver.constraints_set(0, "lbx", xvec_arg)
@@ -511,8 +510,24 @@ def main():
         simXR[i + 1, 0] = xvec[0]
         simXR[i + 1, 1] = xvec[1]
 
+    del acados_solver
+
+    # tests
+    xref_sol = np.array([[-77.39723565], [77.84933005]])
+    err_x_final = np.max(np.abs(xvec - xref_sol))
+    print(f"error in x wrt reference solution: {err_x_final:.2e}")
+
+    uref_sol = np.array([[-24.75529731], [ 12.44582214]])
+    err_u_final = np.max(np.abs(uvec - uref_sol))
+    print(f"error in u wrt reference solution: {err_u_final:.2e}")
+
+    if err_x_final > 1e-3:
+        raise Exception("error wrt reference solution should be < 1e-3.")
+    if err_u_final > 1e-3:
+        raise Exception("error wrt reference solution should be < 1e-3.")
+
     # avoid plotting when running on Travis
-    if os.environ.get("ACADOS_ON_TRAVIS") is None:
+    if os.environ.get("ACADOS_ON_TRAVIS") is None and show_plots:
         # plot results
         t = np.linspace(0.0, Ts * Nsim, Nsim)
         plt.subplot(4, 1, 1)
@@ -623,6 +638,11 @@ def main():
         plt.grid(True)
 
         plt.show()
+
+
+def main():
+    for qp_solver in ["FULL_CONDENSING_DAQP", "FULL_CONDENSING_QPOASES", "FULL_CONDENSING_HPIPM"]:
+        run_simulation(qp_solver=qp_solver)
 
 
 if __name__ == "__main__":
