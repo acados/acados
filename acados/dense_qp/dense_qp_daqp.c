@@ -512,6 +512,7 @@ static void dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_
     // Mark equality constraints
     for (int ii = 0; ii < ne; ii++)
     {
+        // NOTE: b_eq values are ONLY in bupper, but sense status is default upper, thus fine.
         work->sense[nv+ng+ii] &= ACTIVE+IMMUTABLE;
         // SET_ACTIVE(nv+ng+ii);
         // SET_IMMUTABLE(nv+ng+ii);
