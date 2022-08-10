@@ -102,6 +102,7 @@ This structure has to be populated with three things:
 - the primal solution,
 - the dual solution,
 - constraint slacks,
+
 which corresponds to the fields `v`, `lam`, and `t`, respectively, in the `dense_qp_out` structure.
 If there are, in addition, equality constraint their dual variables should be added to the field `pi`. 
 
