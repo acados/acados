@@ -95,3 +95,33 @@ Should assign its members in the following order:
 
 - Align c_ptr to 8 byte here for nested assigns, see "substructures"
    - relevant if no `blasfeo_mems` are in `astruct`
+
+## Dense QP solution: Populating `dense_qp_out`
+After solving a dense QP, the solution should be stored in the `dense_qp_out` structure that is passed as an argument to the function `dense_qp_XXX` (where `XXX` is the name of the solver).
+This structure has to be populated with three things:
+- the primal solution,
+- the dual solution,
+- constraint slacks,
+
+which corresponds to the fields `v`, `lam`, and `t`, respectively, in the `dense_qp_out` structure.
+If there are, in addition, equality constraint their dual variables should be added to the field `pi`.
+
+### Primal and soft slack variables
+The field `v` should be populated with variables in the following order:
+```
+primal, lower soft slack, upper soft slack
+```
+with the corresponding dimensions `nv`,`ns`,`ns`.
+
+### Dual variables
+The field `lam` should be populated with dual variables corresponding to bounds in the following order:
+```
+lower bounds, lower general, upper bounds, upper general, lower soft slack, upper soft slack
+```
+with the corresponding dimensions `nb`,`ng`,`nb`,`ng`,`ns`,`ns`.
+
+The sign convention used is that all dual variables are nonnegative, even the ones that correspond to lower bounds.
+
+### Constraint slacks
+If `v` has been set correctly, the constraint slack `t` can be computed using the auxiliary function `dense_qp_compute_t()`.
+
