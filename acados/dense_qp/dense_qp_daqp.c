@@ -488,6 +488,11 @@ static void dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_
         mem->Zl, mem->Zu, mem->zl, mem->zu, idxs, mem->d_ls, mem->d_us  // slacks
     );
 
+    // printf("\nDAQP: matrix A\n");
+    // int m = qp_in->dim->nv + qp_in->dim->ng + qp_in->dim->ne;
+    // int ms = qp_in->dim->nv;
+    // d_print_exp_tran_mat(nv, m-ms, work->qp->A, nv);
+
     // "Unignore" all general linear inequalites (ng)
     for (int ii = nv; ii < nv+ng; ii++)
         SET_MUTABLE(ii);
@@ -571,6 +576,17 @@ static void dense_qp_daqp_fill_output(dense_qp_daqp_memory *mem, const dense_qp_
 
     struct blasfeo_dvec *v = qp_out->v;
     struct blasfeo_dvec *lambda = qp_out->lam;
+
+    // print DAQP solution before expansion:
+    // printf("\n\nDAQP solution\n");
+    // printf("------------------\n");
+    // printf("\nx (primals):\n\n");
+    // for (i = 0; i<nv; i++)
+    //     printf("%e\t", work->x[i]);
+    // printf("\nlambda (duals):\n\n");
+    // for (i = 0; i<work->n_active; i++)
+    //     printf("%e\t", work->lam_star[i]);
+    // printf("\n\n");
 
     // primal variables
     blasfeo_pack_dvec(nv, work->x, 1, v, 0);
