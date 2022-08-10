@@ -450,6 +450,16 @@ acados_size_t dense_qp_daqp_workspace_calculate_size(void *config_, dense_qp_dim
  * functions
  ************************************************/
 
+// NOTE on transcription of acados dense QP into DAQP formulation:
+
+
+// DAQP constraints are: [bounds on ALL x; linear constraints (ng); equality constraints (ne)]
+
+// A_DAQP = [C; A]
+// blower = [lower bounds on ALL x (-INF if not set); lg; b_eq]
+// bupper = [upper bounds on ALL x (+INF if not set); ug; b_eq]
+
+
 
 static void dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_opts *opts, dense_qp_daqp_memory *mem)
 {
@@ -471,41 +481,50 @@ static void dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_
     blasfeo_dtrtr_l(nv, qp_in->Hv, 0, 0, qp_in->Hv, 0, 0);
 
     // extract data from qp_in in row-major
-    d_dense_qp_get_all_rowmaj(qp_in, work->qp->H, work->qp->f,
-        work->qp->A+nv*ng, work->qp->bupper+nv+ng,
-        idxb, lb_tmp, ub_tmp,
-        work->qp->A, work->qp->blower+nv, work->qp->bupper+nv,
-        mem->Zl, mem->Zu, mem->zl, mem->zu, idxs, mem->d_ls, mem->d_us);
+    d_dense_qp_get_all_rowmaj(qp_in, work->qp->H, work->qp->f,  // objective
+        work->qp->A+nv*ng, work->qp->bupper+nv+ng,  // equalities
+        idxb, lb_tmp, ub_tmp,  // bounds
+        work->qp->A, work->qp->blower+nv, work->qp->bupper+nv,  // general linear constraints
+        mem->Zl, mem->Zu, mem->zl, mem->zu, idxs, mem->d_ls, mem->d_us  // slacks
+    );
 
-    // Ensure that all constraints are "unignored"
-    for ( int ii = nv; ii < nv+ng; ii++) work->sense[ii] &=~IMMUTABLE;
+    // "Unignore" all general linear inequalites (ng)
+    for (int ii = nv; ii < nv+ng; ii++)
+        SET_MUTABLE(ii);
 
     // Setup upper/lower bounds
     for (int ii = 0; ii < nv; ii++)
     {
+        // "ignore" bounds that are not in acados dense QP
         work->qp->blower[ii] = -DAQP_INF;
         work->qp->bupper[ii] = +DAQP_INF;
-        work->sense[ii] |= IMMUTABLE;
+        SET_IMMUTABLE(ii);
     }
     for (int ii = 0; ii < nb; ii++)
     {
+        // "Unignore" bounds that are in acados dense QP and set bound values
         work->qp->blower[idxb[ii]] = lb_tmp[ii];
         work->qp->bupper[idxb[ii]] = ub_tmp[ii];
-        work->sense[idxb[ii]] &= ~IMMUTABLE; // "Unignore" these bounds
+        SET_MUTABLE(idxb[ii]);
         mem->idxv_to_idxb[idxb[ii]] = ii;
     }
-    // Mark equality constraint
+
+    // Mark equality constraints
     for (int ii = 0; ii < ne; ii++)
+    {
         work->sense[nv+ng+ii] &= ACTIVE+IMMUTABLE;
+        // SET_ACTIVE(nv+ng+ii);
+        // SET_IMMUTABLE(nv+ng+ii);
+    }
 
     // Soft constraints
-    int idxdaqp;
+    int idxdaqp;  // index of soft constraint within DAQP ordering
     for (int ii = 0; ii < ns; ii++)
     {
-        idxdaqp= idxs[ii] < nb ? idxb[idxs[ii]] : nv+idxs[ii]-nb;
+        idxdaqp = idxs[ii] < nb ? idxb[idxs[ii]] : nv+idxs[ii]-nb;
         mem->idxdaqp_to_idxs[idxdaqp] = ii;
 
-        work->sense[idxdaqp] |= SOFT;
+        SET_SOFT(idxdaqp);
 
         // Quadratic slack penalty needs to be nonzero in DAQP
         mem->Zl[ii] = MAX(1e-8,mem->Zl[ii]);
