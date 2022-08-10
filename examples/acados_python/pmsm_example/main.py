@@ -1,5 +1,5 @@
 from acados_template import *
-import numpy as nmp
+import numpy as np
 from ctypes import *
 import matplotlib
 import matplotlib.pyplot as plt
@@ -35,7 +35,7 @@ i_max = 155.0  # only for simulation
 
 phi = 0.0
 
-x0Start = nmp.array([0, 0])
+x0Start = np.array([0, 0])
 
 N = 2
 Ts_sim = 125e-6
@@ -178,14 +178,14 @@ def get_general_constraints_DC():
 
     # form D and C matrices
     # (acados C interface works with column major format)
-    D = nmp.array([[h1, h7], [h2, h8], [h3, h9]])
-    C = nmp.array([[0, 0], [0, 0], [0, 0]])
+    D = np.array([[h1, h7], [h2, h8], [h3, h9]])
+    C = np.array([[0, 0], [0, 0], [0, 0]])
 
     g1 = 2.0 / s3 * u_max
     g2 = 1.0 / s3 * u_max
 
-    lg = nmp.array([-g1, -g2, -g1])
-    ug = nmp.array([g1, g2, g1])
+    lg = np.array([-g1, -g2, -g1])
+    ug = np.array([g1, g2, g1])
 
     res = dict()
     res["D"] = D
@@ -213,11 +213,11 @@ def get_general_terminal_constraints_DC():
     h9 = s3 * sphi + cphi
 
     # form D and C matrices
-    D = nmp.array([[h1, h7], [h2, h8], [h3, h9]])
+    D = np.array([[h1, h7], [h2, h8], [h3, h9]])
 
-    A = nmp.array([[-R_m / L_d, w_val * L_q / L_d], [-w_val * L_d / L_q, -R_m / L_q]])
-    invB = nmp.array([[L_d, 0], [0, L_q]])
-    f = nmp.array([[0], [-K_m * w_val / L_q]])
+    A = np.array([[-R_m / L_d, w_val * L_q / L_d], [-w_val * L_d / L_q, -R_m / L_q]])
+    invB = np.array([[L_d, 0], [0, L_q]])
+    f = np.array([[0], [-K_m * w_val / L_q]])
 
     invBA = invB.dot(A)
     Ce = D.dot(invBA)
@@ -226,8 +226,8 @@ def get_general_terminal_constraints_DC():
     g2 = 1.0 / s3 * u_max
 
     invBf = invB.dot(f)
-    lge = -nmp.array([[g1], [g2], [g1]]) - D.dot(invBf)
-    uge = +nmp.array([[g1], [g2], [g1]]) - D.dot(invBf)
+    lge = -np.array([[g1], [g2], [g1]]) - D.dot(invBf)
+    uge = +np.array([[g1], [g2], [g1]]) - D.dot(invBf)
 
     res = dict()
     res["Ce"] = Ce
@@ -248,7 +248,6 @@ def main():
     # model dims
     nx = model.x.size()[0]
     nu = model.u.size()[0]
-    np = model.p.size()[0]
     ny = nu + nx
     ny_e = nx
     Tf = N * Ts
@@ -260,52 +259,52 @@ def main():
     # set weighting matrices
     nlp_cost = ocp.cost
 
-    Q = nmp.eye(nx)
+    Q = np.eye(nx)
     Q[0, 0] = wd * Weight_TUNING
     Q[1, 1] = wq * Weight_TUNING
 
-    Q_e = nmp.eye(nx)
+    Q_e = np.eye(nx)
     Q_e[0, 0] = wd * Weight_E_TUNING * Tf / N
     Q_e[1, 1] = wq * Weight_E_TUNING * Tf / N
 
-    R = nmp.eye(nu)
+    R = np.eye(nu)
     R[0, 0] = INPUT_REG
     R[1, 1] = INPUT_REG
 
     nlp_cost.W = scipy.linalg.block_diag(Q, R)  # weight matrix
     nlp_cost.W_e = Q_e  # weight matrix for Mayer term
 
-    Vu = nmp.zeros((ny, nu))
+    Vu = np.zeros((ny, nu))
     Vu[2, 0] = 1.0
     Vu[3, 1] = 1.0
     nlp_cost.Vu = Vu
 
-    Vx = nmp.zeros((ny, nx))
+    Vx = np.zeros((ny, nx))
     Vx[0, 0] = 1.0
     Vx[1, 1] = 1.0
     nlp_cost.Vx = Vx
 
-    Vx_e = nmp.zeros((ny_e, nx))
+    Vx_e = np.zeros((ny_e, nx))
     Vx_e[0, 0] = 1.0
     Vx_e[1, 1] = 1.0
     nlp_cost.Vx_e = Vx_e
 
     if FORMULATION == 0:
-        nlp_cost.yref = nmp.zeros((ny,))
+        nlp_cost.yref = np.zeros((ny,))
         nlp_cost.yref[0] = i_d_ref
         nlp_cost.yref[1] = i_q_ref
         nlp_cost.yref[2] = 0
         nlp_cost.yref[3] = 0
-        nlp_cost.yref_e = nmp.zeros((ny_e,))
+        nlp_cost.yref_e = np.zeros((ny_e,))
         nlp_cost.yref_e[0] = i_d_ref
         nlp_cost.yref_e[1] = i_q_ref
     else:
-        nlp_cost.yref = nmp.zeros((ny,))
+        nlp_cost.yref = np.zeros((ny,))
         nlp_cost.yref[0] = 0
         nlp_cost.yref[1] = 0
         nlp_cost.yref[2] = 0
         nlp_cost.yref[3] = 0
-        nlp_cost.yref_e = nmp.zeros((ny_e,))
+        nlp_cost.yref_e = np.zeros((ny_e,))
         nlp_cost.yref_e[0] = 0
         nlp_cost.yref_e[1] = 0
 
@@ -344,42 +343,42 @@ def main():
         nlp_con.ug_e = uge
 
         # lower gradient/hessian wrt lower slack
-        nlp_cost.zl = SLACK_TUNING * nmp.array([1])
-        nlp_cost.Zl = SLACK_TUNINGHessian * nmp.ones((1,))  # hessian
-        nlp_cost.zu = SLACK_TUNING * nmp.array([1])
-        nlp_cost.Zu = SLACK_TUNINGHessian * nmp.ones((1,))  # hessian
+        nlp_cost.zl = SLACK_TUNING * np.array([1])
+        nlp_cost.Zl = SLACK_TUNINGHessian * np.ones((1,))  # hessian
+        nlp_cost.zu = SLACK_TUNING * np.array([1])
+        nlp_cost.Zu = SLACK_TUNINGHessian * np.ones((1,))  # hessian
         # _e
-        nlp_cost.zl_e = SLACK_E_TUNING * nmp.array([1])
-        nlp_cost.Zl_e = SLACK_TUNINGHessian * nmp.ones((1,))  # hessian
-        nlp_cost.zu_e = SLACK_E_TUNING * nmp.array([1])
-        nlp_cost.Zu_e = SLACK_TUNINGHessian * nmp.ones((1,))  # hessian
+        nlp_cost.zl_e = SLACK_E_TUNING * np.array([1])
+        nlp_cost.Zl_e = SLACK_TUNINGHessian * np.ones((1,))  # hessian
+        nlp_cost.zu_e = SLACK_E_TUNING * np.array([1])
+        nlp_cost.Zu_e = SLACK_TUNINGHessian * np.ones((1,))  # hessian
 
-        nlp_con.lphi = nmp.array(
+        nlp_con.lphi = np.array(
             [0, -1e9]
         )  # 1st torque constraint | 2nd voltage constraint
-        nlp_con.uphi = nmp.array([0, u_max**2 / 3])
+        nlp_con.uphi = np.array([0, u_max**2 / 3])
 
         # ls*, us* are OPTIONAL fields now, default is zeros of appropriate dimension
-        # nlp_con.lsphi = nmp.array([0])  # soft lower bounds --> greater than 0
-        # nlp_con.usphi = nmp.array([0])  # soft upper bounds --> greater than 0
+        # nlp_con.lsphi = np.array([0])  # soft lower bounds --> greater than 0
+        # nlp_con.usphi = np.array([0])  # soft upper bounds --> greater than 0
 
         # _e
-        nlp_con.lphi_e = nmp.array(
+        nlp_con.lphi_e = np.array(
             [0, -1e9]
         )  # 1st torque constraint | 2nd terminal set
-        nlp_con.uphi_e = nmp.array([0, u_max**2 / 3])
+        nlp_con.uphi_e = np.array([0, u_max**2 / 3])
 
         # ls*, us* are OPTIONAL fields now, default is zeros of appropriate dimension
-        # nlp_con.lsphi_e = nmp.array([0])
-        # nlp_con.usphi_e = nmp.array([0])
+        # nlp_con.lsphi_e = np.array([0])
+        # nlp_con.usphi_e = np.array([0])
 
-        nlp_con.idxsphi = nmp.array([0])
-        nlp_con.idxsphi_e = nmp.array([0])
+        nlp_con.idxsphi = np.array([0])
+        nlp_con.idxsphi_e = np.array([0])
 
         nlp_con.x0 = x0Start
 
     # setting parameters
-    ocp.parameter_values = nmp.array([w_val, 0.0, 0.0, tau_wal])
+    ocp.parameter_values = np.array([w_val, 0.0, 0.0, tau_wal])
 
     # set QP solver
     # ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
@@ -426,10 +425,10 @@ def main():
     # closed loop simulation
     Nsim = 20
 
-    simX = nmp.ndarray((Nsim, nx))
-    simU = nmp.ndarray((Nsim, nu))
-    simXR = nmp.ndarray((Nsim + 1, nx))
-    simXRN = nmp.ndarray((Nsim, nx))
+    simX = np.ndarray((Nsim, nx))
+    simU = np.ndarray((Nsim, nu))
+    simXR = np.ndarray((Nsim + 1, nx))
+    simXRN = np.ndarray((Nsim, nx))
 
     print(
         "============================================================================================"
@@ -448,7 +447,7 @@ def main():
     simXR[0, 0] = x0Start[0]
     simXR[0, 1] = x0Start[1]
 
-    xvec = nmp.array([[x0Start[0]], [x0Start[1]]])
+    xvec = np.array([[x0Start[0]], [x0Start[1]]])
 
     # compute warm-start
     for i in range(WARMSTART_ITERS):
@@ -481,15 +480,15 @@ def main():
         for j in range(nu):
             simU[i, j] = u0[j]
 
-        uvec = nmp.array([[u0[0]], [u0[1]]])
+        uvec = np.array([[u0[0]], [u0[1]]])
 
         # real Simulation
-        A = nmp.array(
+        A = np.array(
             [[-R_m / L_d, w_val * L_q / L_d], [-w_val * L_d / L_q, -R_m / L_q]],
             dtype=float,
         )
-        B = nmp.array([[1.0 / L_d, 0.0], [0.0, 1.0 / L_q]], dtype=float)
-        f = nmp.array([[0.0], [-K_m * w_val / L_q]], dtype=float)
+        B = np.array([[1.0 / L_d, 0.0], [0.0, 1.0 / L_q]], dtype=float)
+        f = np.array([[0.0], [-K_m * w_val / L_q]], dtype=float)
 
         # Euler
         # ========================
@@ -502,12 +501,12 @@ def main():
         # Z-Transformation
         # ========================
         Ad = scipy.linalg.expm(A * Ts_sim)
-        invA = nmp.linalg.inv(A)
-        Bd = nmp.dot(invA, nmp.dot((Ad - nmp.eye(2)), B))
-        fd = nmp.dot(invA, nmp.dot((Ad - nmp.eye(2)), f))
-        xvec = nmp.dot(Ad, xvec) + nmp.dot(Bd, uvec) + fd
-        # xvec_arg = nmp.zeros((2,0))
-        xvec_arg = nmp.zeros((2,))
+        invA = np.linalg.inv(A)
+        Bd = np.dot(invA, np.dot((Ad - np.eye(2)), B))
+        fd = np.dot(invA, np.dot((Ad - np.eye(2)), f))
+        xvec = np.dot(Ad, xvec) + np.dot(Bd, uvec) + fd
+        # xvec_arg = np.zeros((2,0))
+        xvec_arg = np.zeros((2,))
         xvec_arg[0] = xvec[0, 0]
         xvec_arg[1] = xvec[1, 0]
 
@@ -527,7 +526,7 @@ def main():
         simXR[i + 1, 1] = xvec[1]
 
     # plot results
-    t = nmp.linspace(0.0, Ts * Nsim, Nsim)
+    t = np.linspace(0.0, Ts * Nsim, Nsim)
     plt.subplot(4, 1, 1)
     plt.step(t, simU[:, 0], "r")
     plt.step(t, simU[:, 0], "ro")
@@ -572,24 +571,24 @@ def main():
     plt.plot(simU[:, 0], simU[:, 1], "o")
     plt.xlabel("ud")
     plt.ylabel("uq")
-    ud = nmp.linspace(-1.5 * u_max, 1.5 * u_max, 100)
+    ud = np.linspace(-1.5 * u_max, 1.5 * u_max, 100)
     plt.plot(ud, -m1 * ud - q1)
     plt.plot(ud, -m1 * ud + q1)
     plt.plot(ud, +m1 * ud - q1)
     plt.plot(ud, +m1 * ud + q1)
-    plt.plot(ud, -q2 * nmp.ones((100, 1)))
-    plt.plot(ud, q2 * nmp.ones((100, 1)))
+    plt.plot(ud, -q2 * np.ones((100, 1)))
+    plt.plot(ud, q2 * np.ones((100, 1)))
     plt.grid(True)
     ax = plt.gca()
     ax.set_xlim([-u_max, u_max])
     ax.set_ylim([-u_max, u_max])
-    circle = plt.Circle((0, 0), u_max / nmp.sqrt(3), color="red", fill=False)
+    circle = plt.Circle((0, 0), u_max / np.sqrt(3), color="red", fill=False)
     ax.add_artist(circle)
 
     delta = 100
-    x = nmp.linspace(-i_max, i_max / 3, delta)
-    y = nmp.linspace(-i_max, i_max, delta)
-    XV, YV = nmp.meshgrid(x, y)
+    x = np.linspace(-i_max, i_max / 3, delta)
+    y = np.linspace(-i_max, i_max, delta)
+    XV, YV = np.meshgrid(x, y)
 
     alpha = R_m**2 + w_val**2 * L_d**2
     beta = R_m**2 + w_val**2 * L_q**2
