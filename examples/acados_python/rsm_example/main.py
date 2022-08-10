@@ -429,5 +429,5 @@ circle = plt.Circle((0, 0), u_max*nmp.sqrt(3)/2, color='red', fill=False)
 ax.add_artist(circle)
 
 # avoid plotting when running on Travis
-if os.environ.get('ACADOS_ON_TRAVIS') is None: 
+if os.environ.get('ACADOS_ON_CI') is None:
     plt.show()

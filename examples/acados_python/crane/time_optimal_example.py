@@ -206,7 +206,7 @@ def main(use_cython=True):
             k += 1
 
     # visualize
-    if os.environ.get('ACADOS_ON_TRAVIS'):
+    if os.environ.get('ACADOS_ON_CI'):
         plt.figure()
 
         state_labels = ['p1', 'v1', 'p2', 'v2']

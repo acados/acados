@@ -131,5 +131,5 @@ print("Maximum computation time: {}".format(tcomp_max))
 print("Average speed:{}m/s".format(np.average(simX[:, 3])))
 print("Lap time: {}s".format(Tf * Nsim / N))
 # avoid plotting when running on Travis
-if os.environ.get("ACADOS_ON_TRAVIS") is None:
+if os.environ.get("ACADOS_ON_CI") is None:
     plt.show()

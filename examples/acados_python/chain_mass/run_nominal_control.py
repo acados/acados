@@ -262,7 +262,7 @@ def run_nominal_control(chain_params):
     print("dist2wall (minimum over simulation) ", str(np.min(wall_dist)))
 
     #%% plot results
-    if os.environ.get('ACADOS_ON_TRAVIS') is None and show_plots:
+    if os.environ.get('ACADOS_ON_CI') is None and show_plots:
         plot_chain_control_traj(simU)
         plot_chain_position_traj(simX, yPosWall=yPosWall)
         plot_chain_velocity_traj(simX)

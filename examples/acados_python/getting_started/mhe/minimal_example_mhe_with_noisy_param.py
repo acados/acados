@@ -170,5 +170,5 @@ plt.grid()
 plt.ylabel('l')
 plt.legend(['true l', 'estimated l'])
 # avoid plotting when running on Travis
-if os.environ.get('ACADOS_ON_TRAVIS') is None:
+if os.environ.get('ACADOS_ON_CI') is None:
     plt.show()

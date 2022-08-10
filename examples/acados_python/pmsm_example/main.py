@@ -527,7 +527,7 @@ def run_simulation(qp_solver="FULL_CONDENSING_HPIPM", show_plots=False, verbose=
         raise Exception("error wrt reference solution should be < 1e-3.")
 
     # avoid plotting when running on Travis
-    if os.environ.get("ACADOS_ON_TRAVIS") is None and show_plots:
+    if os.environ.get("ACADOS_ON_CI") is None and show_plots:
         # plot results
         t = np.linspace(0.0, Ts * Nsim, Nsim)
         plt.subplot(4, 1, 1)
