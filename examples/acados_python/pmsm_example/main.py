@@ -1,7 +1,6 @@
 from acados_template import *
 import numpy as np
 from ctypes import *
-import matplotlib
 import matplotlib.pyplot as plt
 import scipy.linalg
 
@@ -525,118 +524,118 @@ def main():
         simXR[i + 1, 0] = xvec[0]
         simXR[i + 1, 1] = xvec[1]
 
-    # plot results
-    t = np.linspace(0.0, Ts * Nsim, Nsim)
-    plt.subplot(4, 1, 1)
-    plt.step(t, simU[:, 0], "r")
-    plt.step(t, simU[:, 0], "ro")
-    plt.plot([0, Ts * Nsim], [nlp_cost.yref[2], nlp_cost.yref[2]], "--")
-    plt.title("closed-loop simulation")
-    plt.ylabel("u_d")
-    plt.xlabel("t")
-    plt.grid(True)
-    plt.subplot(4, 1, 2)
-    plt.step(t, simU[:, 1], "r")
-    plt.step(t, simU[:, 1], "ro")
-    plt.plot([0, Ts * Nsim], [nlp_cost.yref[3], nlp_cost.yref[3]], "--")
-    plt.ylabel("u_q")
-    plt.xlabel("t")
-    plt.grid(True)
-    plt.subplot(4, 1, 3)
-    plt.plot(t, simX[:, 0])
-    plt.ylabel("x_d")
-    plt.xlabel("t")
-    plt.grid(True)
-    plt.subplot(4, 1, 4)
-    plt.plot(t, simX[:, 1])
-    plt.ylabel("x_q")
-    plt.xlabel("t")
-    plt.grid(True)
-
-    # plot hexagon
-    r = 2 / 3 * u_max
-    x1 = r
-    y1 = 0
-    x2 = r * cos(pi / 3)
-    y2 = r * sin(pi / 3)
-    q1 = -(y2 - y1 / x1 * x2) / (1 - x2 / x1)
-    m1 = -(y1 + q1) / x1
-
-    # box constraints
-    m2 = 0
-    q2 = r * sin(pi / 3)
-    # -q2 <= uq  <= q2
-
-    plt.figure()
-    plt.plot(simU[:, 0], simU[:, 1], "o")
-    plt.xlabel("ud")
-    plt.ylabel("uq")
-    ud = np.linspace(-1.5 * u_max, 1.5 * u_max, 100)
-    plt.plot(ud, -m1 * ud - q1)
-    plt.plot(ud, -m1 * ud + q1)
-    plt.plot(ud, +m1 * ud - q1)
-    plt.plot(ud, +m1 * ud + q1)
-    plt.plot(ud, -q2 * np.ones((100, 1)))
-    plt.plot(ud, q2 * np.ones((100, 1)))
-    plt.grid(True)
-    ax = plt.gca()
-    ax.set_xlim([-u_max, u_max])
-    ax.set_ylim([-u_max, u_max])
-    circle = plt.Circle((0, 0), u_max / np.sqrt(3), color="red", fill=False)
-    ax.add_artist(circle)
-
-    delta = 100
-    x = np.linspace(-i_max, i_max / 3, delta)
-    y = np.linspace(-i_max, i_max, delta)
-    XV, YV = np.meshgrid(x, y)
-
-    alpha = R_m**2 + w_val**2 * L_d**2
-    beta = R_m**2 + w_val**2 * L_q**2
-    gamma = 2 * R_m * w_val * (L_d - L_q)
-    delta = 2 * w_val**2 * L_d * K_m
-    epsilon = 2 * R_m * w_val * K_m
-    rho = w_val**2 * K_m**2 - (u_max) ** 2 / 3
-
-    FeaSetV = (
-        alpha * XV**2
-        + beta * YV**2
-        + gamma * XV * YV
-        + delta * XV
-        + epsilon * YV
-        + rho
-    )
-    TauV = 1.5 * N_P * ((L_d - L_q) * XV * YV + K_m * YV)
-
-    # trajectory in the dq-plane
-    plt.figure()
-    plt.plot(simXR[:, 0], simXR[:, 1], "bo")
-    plt.plot(simXR[:, 0], simXR[:, 1], "b")
-    plt.plot(simX[:, 0], simX[:, 1], "r")
-    plt.plot(simX[:, 0], simX[:, 1], "r*")
-    plt.contour(XV, YV, FeaSetV, [0], colors="r")
-    plt.contour(XV, YV, TauV, [tau_wal], colors="g")
-    plt.xlabel("x_d")
-    plt.ylabel("x_q")
-    plt.grid(True)
-
-    S1 = -0.24543672 * XV + 0.50146524 * YV
-    S2 = -0.214 * XV - 0.01815 * YV
-    S3 = -0.18256328 * XV - 0.53776524 * YV
-
-    plt.figure()
-    plt.plot(simXRN[:, 0], simXRN[:, 1], "bo")
-    plt.plot(simXRN[:, 0], simXRN[:, 1], "b")
-    plt.contour(XV, YV, FeaSetV, [0], colors="r")
-    plt.contour(XV, YV, S1, [-27.82562584, 83.02562584], colors="k")
-    plt.contour(XV, YV, S2, [-0.11281292, 55.31281292], colors="k")
-    plt.contour(XV, YV, S3, [-27.82562584, 83.02562584], colors="k")
-    plt.contour(XV, YV, TauV, [tau_wal], colors="g")
-    plt.xlabel("x_d")
-    plt.ylabel("x_q")
-    plt.grid(True)
-
     # avoid plotting when running on Travis
     if os.environ.get("ACADOS_ON_TRAVIS") is None:
+        # plot results
+        t = np.linspace(0.0, Ts * Nsim, Nsim)
+        plt.subplot(4, 1, 1)
+        plt.step(t, simU[:, 0], "r")
+        plt.step(t, simU[:, 0], "ro")
+        plt.plot([0, Ts * Nsim], [nlp_cost.yref[2], nlp_cost.yref[2]], "--")
+        plt.title("closed-loop simulation")
+        plt.ylabel("u_d")
+        plt.xlabel("t")
+        plt.grid(True)
+        plt.subplot(4, 1, 2)
+        plt.step(t, simU[:, 1], "r")
+        plt.step(t, simU[:, 1], "ro")
+        plt.plot([0, Ts * Nsim], [nlp_cost.yref[3], nlp_cost.yref[3]], "--")
+        plt.ylabel("u_q")
+        plt.xlabel("t")
+        plt.grid(True)
+        plt.subplot(4, 1, 3)
+        plt.plot(t, simX[:, 0])
+        plt.ylabel("x_d")
+        plt.xlabel("t")
+        plt.grid(True)
+        plt.subplot(4, 1, 4)
+        plt.plot(t, simX[:, 1])
+        plt.ylabel("x_q")
+        plt.xlabel("t")
+        plt.grid(True)
+
+        # plot hexagon
+        r = 2 / 3 * u_max
+        x1 = r
+        y1 = 0
+        x2 = r * cos(pi / 3)
+        y2 = r * sin(pi / 3)
+        q1 = -(y2 - y1 / x1 * x2) / (1 - x2 / x1)
+        m1 = -(y1 + q1) / x1
+
+        # box constraints
+        m2 = 0
+        q2 = r * sin(pi / 3)
+        # -q2 <= uq  <= q2
+
+        plt.figure()
+        plt.plot(simU[:, 0], simU[:, 1], "o")
+        plt.xlabel("ud")
+        plt.ylabel("uq")
+        ud = np.linspace(-1.5 * u_max, 1.5 * u_max, 100)
+        plt.plot(ud, -m1 * ud - q1)
+        plt.plot(ud, -m1 * ud + q1)
+        plt.plot(ud, +m1 * ud - q1)
+        plt.plot(ud, +m1 * ud + q1)
+        plt.plot(ud, -q2 * np.ones((100, 1)))
+        plt.plot(ud, q2 * np.ones((100, 1)))
+        plt.grid(True)
+        ax = plt.gca()
+        ax.set_xlim([-u_max, u_max])
+        ax.set_ylim([-u_max, u_max])
+        circle = plt.Circle((0, 0), u_max / np.sqrt(3), color="red", fill=False)
+        ax.add_artist(circle)
+
+        delta = 100
+        x = np.linspace(-i_max, i_max / 3, delta)
+        y = np.linspace(-i_max, i_max, delta)
+        XV, YV = np.meshgrid(x, y)
+
+        alpha = R_m**2 + w_val**2 * L_d**2
+        beta = R_m**2 + w_val**2 * L_q**2
+        gamma = 2 * R_m * w_val * (L_d - L_q)
+        delta = 2 * w_val**2 * L_d * K_m
+        epsilon = 2 * R_m * w_val * K_m
+        rho = w_val**2 * K_m**2 - (u_max) ** 2 / 3
+
+        FeaSetV = (
+            alpha * XV**2
+            + beta * YV**2
+            + gamma * XV * YV
+            + delta * XV
+            + epsilon * YV
+            + rho
+        )
+        TauV = 1.5 * N_P * ((L_d - L_q) * XV * YV + K_m * YV)
+
+        # trajectory in the dq-plane
+        plt.figure()
+        plt.plot(simXR[:, 0], simXR[:, 1], "bo")
+        plt.plot(simXR[:, 0], simXR[:, 1], "b")
+        plt.plot(simX[:, 0], simX[:, 1], "r")
+        plt.plot(simX[:, 0], simX[:, 1], "r*")
+        plt.contour(XV, YV, FeaSetV, [0], colors="r")
+        plt.contour(XV, YV, TauV, [tau_wal], colors="g")
+        plt.xlabel("x_d")
+        plt.ylabel("x_q")
+        plt.grid(True)
+
+        S1 = -0.24543672 * XV + 0.50146524 * YV
+        S2 = -0.214 * XV - 0.01815 * YV
+        S3 = -0.18256328 * XV - 0.53776524 * YV
+
+        plt.figure()
+        plt.plot(simXRN[:, 0], simXRN[:, 1], "bo")
+        plt.plot(simXRN[:, 0], simXRN[:, 1], "b")
+        plt.contour(XV, YV, FeaSetV, [0], colors="r")
+        plt.contour(XV, YV, S1, [-27.82562584, 83.02562584], colors="k")
+        plt.contour(XV, YV, S2, [-0.11281292, 55.31281292], colors="k")
+        plt.contour(XV, YV, S3, [-27.82562584, 83.02562584], colors="k")
+        plt.contour(XV, YV, TauV, [tau_wal], colors="g")
+        plt.xlabel("x_d")
+        plt.ylabel("x_q")
+        plt.grid(True)
+
         plt.show()
 
 
