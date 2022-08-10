@@ -21,7 +21,7 @@ env:
   ACADOS_WITH_QPOASES: ON
   ACADOS_WITH_DAQP: ON
   ACADOS_WITH_QPDUNES: ON
-
+  ACADOS_ON_CI: ON
 
 jobs:
   full_build:
