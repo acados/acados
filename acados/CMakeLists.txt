@@ -57,6 +57,10 @@ if(NOT ACADOS_WITH_QPOASES)
     list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/dense_qp/dense_qp_qpoases.c")
 endif()
 
+if(NOT ACADOS_WITH_DAQP)
+    list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/dense_qp/dense_qp_daqp.c")
+endif()
+
 if(NOT ACADOS_WITH_QPDUNES)
     list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_qpdunes.c")
 endif()
@@ -107,6 +111,12 @@ if(ACADOS_WITH_QPOASES)
 
     target_compile_definitions(acados PUBLIC ACADOS_WITH_QPOASES)
     target_compile_definitions(acados PUBLIC USE_ACADOS_TYPES)
+endif()
+
+if(ACADOS_WITH_DAQP)
+    target_link_libraries(acados PUBLIC daqp)
+
+    target_compile_definitions(acados PUBLIC ACADOS_WITH_DAQP)
 endif()
 
 if(ACADOS_WITH_QPDUNES)
@@ -173,6 +183,7 @@ configure_package_config_file(${PROJECT_SOURCE_DIR}/cmake/acadosConfig.cmake.in
                               PATH_VARS ACADOS_WITH_HPMPC 
                                         ACADOS_WITH_QORE
                                         ACADOS_WITH_QPOASES
+                                        ACADOS_WITH_DAQP
                                         ACADOS_WITH_QPDUNES
                                         ACADOS_WITH_OSQP
                                         ACADOS_WITH_OOQP)

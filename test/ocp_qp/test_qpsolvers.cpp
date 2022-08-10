@@ -60,6 +60,9 @@ ocp_qp_solver_t hashit(std::string const &inString)
 #ifdef ACADOS_WITH_QPOASES
     if (inString == "DENSE_QPOASES") return FULL_CONDENSING_QPOASES;
 #endif
+#ifdef ACADOS_WITH_DAQP
+    if (inString == "DENSE_DAQP") return FULL_CONDENSING_DAQP;
+#endif
 #ifdef ACADOS_WITH_QPDUNES
     if (inString == "SPARSE_QPDUNES") return PARTIAL_CONDENSING_QPDUNES;
 #endif
@@ -85,6 +88,7 @@ double solver_tolerance(std::string const &inString)
     // if (inString == "SPARSE_QPDUNES") return 1e-8;
     if (inString == "DENSE_HPIPM") return 1e-8;
     if (inString == "DENSE_QPOASES") return 1e-10;
+    if (inString == "DENSE_DAQP") return 1e-10;
     if (inString == "DENSE_QORE") return 1e-10;
     if (inString == "SPARSE_OOQP") return 1e-5;
     if (inString == "DENSE_OOQP") return 1e-5;
@@ -124,6 +128,10 @@ TEST_CASE("mass spring example", "[QP solvers]")
 #ifdef ACADOS_WITH_QPOASES
                                    ,
                                    "DENSE_QPOASES"
+#endif
+#ifdef ACADOS_WITH_DAQP
+                                   ,
+                                   "DENSE_DAQP"
 #endif
 // #ifdef ACADOS_WITH_QPDUNES
 //                                    ,"SPARSE_QPDUNES"

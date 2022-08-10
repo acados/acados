@@ -2166,7 +2166,7 @@ class AcadosOcpOptions:
     @property
     def qp_solver(self):
         """QP solver to be used in the NLP solver.
-        String in ('PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP').
+        String in ('PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP', 'FULL_CONDENSING_DAQP').
         Default: 'PARTIAL_CONDENSING_HPIPM'.
         """
         return self.__qp_solver
@@ -2594,7 +2594,8 @@ class AcadosOcpOptions:
     def qp_solver(self, qp_solver):
         qp_solvers = ('PARTIAL_CONDENSING_HPIPM', \
                 'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_HPIPM', \
-                'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP')
+                'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP', \
+                'FULL_CONDENSING_DAQP')
         if qp_solver in qp_solvers:
             self.__qp_solver = qp_solver
         else:

@@ -2,3 +2,4 @@
 # cmake --build build --target install
 *Config*.cmake
 *Targets*.cmake
+daqp*.cmake

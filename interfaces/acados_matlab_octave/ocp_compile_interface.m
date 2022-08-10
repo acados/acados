@@ -96,6 +96,9 @@ if is_octave()
     if ~isempty(libs.qpoases)
         defines_tmp = [defines_tmp, ' -DACADOS_WITH_QPOASES'];
     end
+    if ~isempty(libs.daqp)
+        defines_tmp = [defines_tmp, ' -DACADOS_WITH_DAQP'];
+    end
     if ~isempty(libs.osqp)
         defines_tmp = [defines_tmp, ' -DACADOS_WITH_OSQP'];
     end
@@ -133,6 +136,9 @@ if ~is_octave()
     if ~isempty(libs.qpoases)
         defines_tmp = [defines_tmp, ' -DACADOS_WITH_QPOASES'];
     end
+    if ~isempty(libs.daqp)
+        defines_tmp = [defines_tmp, ' -DACADOS_WITH_DAQP'];
+    end
     if ~isempty(libs.osqp)
         defines_tmp = [defines_tmp, ' -DACADOS_WITH_OSQP'];
     end
@@ -168,7 +174,7 @@ for ii=1:length(mex_files)
         % NOTE: empty linker flags do not work in Octave
         mex(mex_flags, FLAGS, LDFLAGS, COMPDEFINES, COMPFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
             acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', libs.qpoases,...
-            libs.qpdunes, libs.osqp, libs.hpmpc, libs.ooqp, mex_files{ii}, '-outdir', opts.output_dir)
+            libs.daqp, libs.qpdunes, libs.osqp, libs.hpmpc, libs.ooqp, mex_files{ii}, '-outdir', opts.output_dir)
     end
 end
 

@@ -60,6 +60,12 @@ if(ACADOS_WITH_QPOASES)
     add_subdirectory(qpoases)
 endif()
 
+if(ACADOS_WITH_DAQP)
+    set(PROFILING OFF CACHE BOOL "Turn off profiling in DAQP")
+    set(SOFT_WEIGHTS ON CACHE BOOL "Turn on soft weights in DAQP")
+    add_subdirectory(daqp)
+endif()
+
 if(ACADOS_WITH_OSQP)
     set(PROFILING OFF CACHE BOOL "Turn off profiling in OSQP")
     set(CTRLC OFF CACHE BOOL "Turn off CTRLC in OSQP")

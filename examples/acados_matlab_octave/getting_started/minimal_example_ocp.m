@@ -46,7 +46,7 @@ x0 = [0; pi; 0; 0];
 
 nlp_solver = 'sqp'; % sqp, sqp_rti
 qp_solver = 'partial_condensing_hpipm';
-    % full_condensing_hpipm, partial_condensing_hpipm, full_condensing_qpoases
+    % full_condensing_hpipm, partial_condensing_hpipm, full_condensing_qpoases, full_condensing_daqp
 qp_solver_cond_N = 5; % for partial condensing
 % integrator type
 sim_method = 'erk'; % erk, irk, irk_gnsf

@@ -35,6 +35,8 @@
 
 addpath('../wind_turbine_nx6/');
 
+% qpOASES too slow to test on CI
+for itest = 1:3
 
 %% arguments
 compile_interface = 'auto';
@@ -61,8 +63,17 @@ ocp_nlp_solver_tol_eq   = 1e-8;
 ocp_nlp_solver_tol_ineq = 1e-8;
 ocp_nlp_solver_tol_comp = 1e-8;
 ocp_nlp_solver_ext_qp_res = 1;
-ocp_qp_solver = 'partial_condensing_hpipm';
-%ocp_qp_solver = 'full_condensing_hpipm';
+switch itest
+case 1
+    ocp_qp_solver = 'partial_condensing_hpipm';
+case 2
+    ocp_qp_solver = 'full_condensing_hpipm';
+case 3
+    ocp_qp_solver = 'full_condensing_daqp';
+case 4
+    ocp_qp_solver = 'full_condensing_qpoases';
+end
+fprintf(['\n\nrunning with qp solver ', ocp_qp_solver, '\n'])
 ocp_qp_solver_cond_N = 5;
 ocp_qp_solver_cond_ric_alg = 0;
 ocp_qp_solver_ric_alg = 0;
@@ -71,10 +82,12 @@ ocp_qp_solver_warm_start = 2;
 ocp_sim_method = 'irk';
 ocp_sim_method_num_stages = 4 * ones(ocp_N, 1); % scalar or vector of size ocp_N;
 ocp_sim_method_num_steps = 1 * ones(ocp_N, 1); % scalar or vector of size ocp_N;
-ocp_sim_method_newton_iter = 3 * ones(ocp_N, 1); % scalar or vector of size ocp_N;
+ocp_sim_method_newton_iter = 3% * ones(ocp_N, 1); % scalar or vector of size ocp_N;
 %cost_type = 'linear_ls';
 cost_type = 'nonlinear_ls';
 
+% get references
+compute_setup;
 
 
 %% create model entries
@@ -242,8 +255,8 @@ ocp_model.set('constr_Jsh', Jsh);
 ocp_model.set('constr_Jsh_e', Jsh_e);
 
 % initial state dummy
-ocp_model.set('constr_x0', zeros(nx, 1));
-
+ocp_model.set('constr_x0', x0_ref);
+%
 ocp_model.model_struct;
 
 
@@ -265,6 +278,7 @@ if (strcmp(ocp_nlp_solver, 'sqp'))
     ocp_opts.set('nlp_solver_tol_comp', ocp_nlp_solver_tol_comp);
 end
 ocp_opts.set('qp_solver', ocp_qp_solver);
+ocp_opts.set('qp_solver_iter_max', 500);
 if (strcmp(ocp_qp_solver, 'partial_condensing_hpipm'))
     ocp_opts.set('qp_solver_cond_N', ocp_qp_solver_cond_N);
     ocp_opts.set('qp_solver_cond_ric_alg', ocp_qp_solver_cond_ric_alg);
@@ -278,6 +292,8 @@ ocp_opts.set('sim_method_newton_iter', ocp_sim_method_newton_iter);
 ocp_opts.set('regularize_method', 'no_regularize');
 ocp_opts.set('ext_fun_compile_flags', '');
 
+ocp_opts.set('parameter_values', wind0_ref(:,1));
+
 ocp_opts.opts_struct;
 
 
@@ -288,8 +304,6 @@ ocp = acados_ocp(ocp_model, ocp_opts);
 %ocp
 %ocp.C_ocp
 %ocp.C_ocp_ext_fun
-
-
 
 %% acados sim model
 sim_model = acados_sim_model();
@@ -335,9 +349,6 @@ sim = acados_sim(sim_model, sim_opts);
 
 
 %% closed loop simulation
-% get references
-compute_setup;
-
 n_sim = 100;
 n_sim_max = length(wind0_ref) - ocp_N;
 if n_sim>n_sim_max
@@ -348,11 +359,16 @@ x_sim(:,1) = x0_ref; % initial state
 u_sim = zeros(nu, n_sim);
 
 sqp_iter_sim = zeros(n_sim,1);
+time_ext = zeros(n_sim, 1);
+time_tot = zeros(n_sim, 1);
+time_lin = zeros(n_sim, 1);
+time_qp_sol = zeros(n_sim, 1);
 
 % set trajectory initialization
 x_traj_init = repmat(x0_ref, 1, ocp_N+1);
 u_traj_init = repmat(u0_ref, 1, ocp_N);
 pi_traj_init = zeros(nx, ocp_N);
+
 
 for ii=1:n_sim
 
@@ -425,23 +441,26 @@ for ii=1:n_sim
     u_traj_init = [u(:,2:ocp_N), u(:,ocp_N)];
     pi_traj_init = [pi(:,2:ocp_N), pi(:,ocp_N)];
 
-    time_ext = toc;
+    time_ext(ii) = toc;
 
     electrical_power = 0.944*97/100*x(1,1)*x(6,1);
 
     status = ocp.get('status');
     sqp_iter = ocp.get('sqp_iter');
-    time_tot = ocp.get('time_tot');
-    time_lin = ocp.get('time_lin');
-    time_qp_sol = ocp.get('time_qp_sol');
+    time_tot(ii) = ocp.get('time_tot');
+    time_lin(ii) = ocp.get('time_lin');
+    time_qp_sol(ii) = ocp.get('time_qp_sol');
+    sqp_stats = ocp.get('stat');
+    qp_iter = sqp_stats(:,7);
 
     sqp_iter_sim(ii) = sqp_iter;
     if status ~= 0
-        error('ocp_nlp solver returned nonzero status!');
+        ocp.print()
+        error(['ocp_nlp solver returned status ', num2str(status), '!= 0 in simulation instance ', num2str(ii)]);
     end
 
-    fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms]), Pel = %f',...
-            status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, electrical_power);
+    fprintf('\nstatus = %d, sqp_iter = %d, qp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms]), Pel = %f',...
+            status, sqp_iter, sum(qp_iter), time_ext(ii)*1e3, time_tot(ii)*1e3, time_lin(ii)*1e3, time_qp_sol(ii)*1e3, electrical_power);
 
     if 0
         ocp.print('stat')
@@ -476,6 +495,9 @@ x_sim_ref = [   1.263425730522397
    3.882220255648666];
 
 err_vs_ref = x_sim_ref - x_sim(:,end);
+
+fprintf('\nmedian computation times: time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])', ...
+        median(time_ext)*1e3, median(time_tot)*1e3, median(time_lin)*1e3, median(time_qp_sol)*1e3)
 
 if status~=0
     error('test_ocp_wtnx6: solution failed!');
@@ -523,6 +545,7 @@ if 0
     end
 end
 
+end
 
 % remove temporary created files
 delete('y_ref')

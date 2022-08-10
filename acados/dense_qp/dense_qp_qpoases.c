@@ -89,6 +89,8 @@ acados_size_t dense_qp_qpoases_opts_calculate_size(void *config_, dense_qp_dims 
     acados_size_t size = 0;
     size += sizeof(dense_qp_qpoases_opts);
 
+    make_int_multiple_of(8, &size);
+
     return size;
 }
 
@@ -103,7 +105,7 @@ void *dense_qp_qpoases_opts_assign(void *config_, dense_qp_dims *dims, void *raw
     opts = (dense_qp_qpoases_opts *) c_ptr;
     c_ptr += sizeof(dense_qp_qpoases_opts);
 
-    assert((char *) raw_memory + dense_qp_qpoases_opts_calculate_size(config_, dims) == c_ptr);
+    assert((char *) raw_memory + dense_qp_qpoases_opts_calculate_size(config_, dims) >= c_ptr);
 
     return (void *) opts;
 }
@@ -384,7 +386,7 @@ void dense_qp_qpoases_memory_get(void *config_, void *mem_, const char *field, v
 
 
 /************************************************
- * workspcae
+ * workspace
  ************************************************/
 
 acados_size_t dense_qp_qpoases_workspace_calculate_size(void *config_, dense_qp_dims *dims, void *opts_)
@@ -681,7 +683,7 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
     acados_tic(&interface_timer);
     // copy prim_sol and dual_sol to qp_out
     blasfeo_pack_dvec(nv2, prim_sol, 1, qp_out->v, 0);
-    for (int ii = 0; ii < 2 * nb + 2 * ng + 2 * ns; ii++) qp_out->lam->pa[ii] = 0.0;
+    blasfeo_dvecse(2 * nb + 2 * ng + 2 * ns, 0.0, qp_out->lam, 0);
     for (int ii = 0; ii < nb; ii++)
     {
         if (dual_sol[idxb[ii]] >= 0.0)
