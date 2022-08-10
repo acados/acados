@@ -1,6 +1,5 @@
 from acados_template import *
 import numpy as np
-from ctypes import *
 import matplotlib.pyplot as plt
 import scipy.linalg
 
@@ -299,13 +298,7 @@ def main():
         nlp_cost.yref_e[1] = i_q_ref
     else:
         nlp_cost.yref = np.zeros((ny,))
-        nlp_cost.yref[0] = 0
-        nlp_cost.yref[1] = 0
-        nlp_cost.yref[2] = 0
-        nlp_cost.yref[3] = 0
         nlp_cost.yref_e = np.zeros((ny_e,))
-        nlp_cost.yref_e[0] = 0
-        nlp_cost.yref_e[1] = 0
 
     # get D and C
     res = get_general_constraints_DC()
@@ -362,9 +355,7 @@ def main():
         # nlp_con.usphi = np.array([0])  # soft upper bounds --> greater than 0
 
         # _e
-        nlp_con.lphi_e = np.array(
-            [0, -1e9]
-        )  # 1st torque constraint | 2nd terminal set
+        nlp_con.lphi_e = np.array([0, -1e9])  # 1st torque constraint | 2nd terminal set
         nlp_con.uphi_e = np.array([0, u_max**2 / 3])
 
         # ls*, us* are OPTIONAL fields now, default is zeros of appropriate dimension
@@ -429,15 +420,11 @@ def main():
     simXR = np.ndarray((Nsim + 1, nx))
     simXRN = np.ndarray((Nsim, nx))
 
-    print(
-        "============================================================================================"
-    )
+    print("=========================================")
     print("Mode = ", FORMULATION)
     print("speed_el = ", w_val)
     print("Sample Time = ", Ts)
-    print(
-        "============================================================================================"
-    )
+    print("=========================================")
     print("Initial Condition")
     print("id0 = ", x0Start[0])
     print("iq0 = ", x0Start[1])
@@ -564,7 +551,6 @@ def main():
         m1 = -(y1 + q1) / x1
 
         # box constraints
-        m2 = 0
         q2 = r * sin(pi / 3)
         # -q2 <= uq  <= q2
 
