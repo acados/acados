@@ -536,12 +536,20 @@ static void dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_
         work->rho_us[idxdaqp] = 1/mem->Zu[ii];
 
         // Shift QP to handle linear terms on slack
+        // DAQP penalizes soft slacks s using a quadratic penalty s' s, bounded by s >= d_l
+        // (instead of weighting the soft slacks in the objective as in acados,
+        // the soft slacks are weighted in the constraint by rho=1/Z).
+        // To remove the linear term from acados we use the transformation
+        //             s_daqp = (Z*s_acados+z/Z),
+        // which will shift blower/bupper and scale the nominal slack bounds with 1/Z
         work->qp->blower[idxdaqp]+=mem->zl[ii]/mem->Zl[ii];
         work->qp->bupper[idxdaqp]-=mem->zu[ii]/mem->Zu[ii];
 
         work->d_ls[idxdaqp] = MAX(0,mem->zl[ii]+mem->Zl[ii]*mem->d_ls[ii]);
         work->d_us[idxdaqp] = MAX(0,mem->zu[ii]+mem->Zu[ii]*mem->d_us[ii]);
 
+        // The default state in DAQP is that the soft slacks are active at their bounds
+        // => shift bupper/blower with these bounds
         work->qp->blower[idxdaqp] -= work->d_ls[idxdaqp]/mem->Zl[ii];
         work->qp->bupper[idxdaqp] += work->d_us[idxdaqp]/mem->Zu[ii];
     }
