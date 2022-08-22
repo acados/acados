@@ -1088,8 +1088,7 @@ void ocp_nlp_set(ocp_nlp_config *config, ocp_nlp_solver *solver,
     }
     else
     {
-        printf("\nerror: ocp_nlp_mem_set: field %s not available\n", field);
+        printf("\nerror: ocp_nlp_set: field %s not available\n", field);
         exit(1);
     }
-    // printf("exit ocp_nlp_set\n");
 }

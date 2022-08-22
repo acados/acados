@@ -161,9 +161,18 @@ LIBS{end+1} = '-ldaqp';
     {% endif %}
 {%- endif %}
 
-mex('-v', '-O', CFLAGS, LDFLAGS, COMPFLAGS, COMPDEFINES, INCS{:}, ...
-    LIB_PATH, LIBS{:}, SOURCES{:}, ...
-    '-output', 'acados_solver_sfunction_{{ model.name }}' );
+
+try
+    %     mex('-v', '-O', CFLAGS, LDFLAGS, COMPFLAGS, COMPDEFINES, INCS{:}, ...
+    mex('-O', CFLAGS, LDFLAGS, COMPFLAGS, COMPDEFINES, INCS{:}, ...
+            LIB_PATH, LIBS{:}, SOURCES{:}, ...
+            '-output', 'acados_solver_sfunction_pendulum' );
+catch exception
+    disp('make_sfun failed with the following exception:')
+    disp(exception);
+    disp('Try adding -v to the mex command above to get more information.')
+    keyboard
+end
 
 fprintf( [ '\n\nSuccessfully created sfunction:\nacados_solver_sfunction_{{ model.name }}', '.', ...
     eval('mexext')] );

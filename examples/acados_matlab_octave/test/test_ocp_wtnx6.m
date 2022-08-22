@@ -82,7 +82,7 @@ ocp_qp_solver_warm_start = 2;
 ocp_sim_method = 'irk';
 ocp_sim_method_num_stages = 4 * ones(ocp_N, 1); % scalar or vector of size ocp_N;
 ocp_sim_method_num_steps = 1 * ones(ocp_N, 1); % scalar or vector of size ocp_N;
-ocp_sim_method_newton_iter = 3% * ones(ocp_N, 1); % scalar or vector of size ocp_N;
+ocp_sim_method_newton_iter = 3; % * ones(ocp_N, 1); % scalar or vector of size ocp_N;
 %cost_type = 'linear_ls';
 cost_type = 'nonlinear_ls';
 
@@ -477,10 +477,14 @@ ocp.set('cost_zl', ones(2,1), N-1)
 for i = 0:N-1
     sl = ocp.get('sl', i);
     su = ocp.get('su', i);
+    % test setters
+    ocp.set('sl', sl, i);
+    ocp.set('su', su, i);
     t = ocp.get('t', i);
 end
 sl = ocp.get('sl', N);
 su = ocp.get('su', N);
+
 
 
 electrical_power = 0.944*97/100*x_sim(1,:).*x_sim(6,:);

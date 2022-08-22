@@ -234,7 +234,7 @@ classdef acados_ocp < handle
             % set up acados_ocp_nlp_json
             obj.acados_ocp_nlp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts);
             % render templated code
-            ocp_generate_c_code(obj)
+            ocp_generate_c_code(obj);
         end
 
 

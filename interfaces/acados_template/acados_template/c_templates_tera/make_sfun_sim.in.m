@@ -71,8 +71,18 @@ LIB_PATH = '{{ acados_lib_path }}';
 
 LIBS = '-lacados -lblasfeo -lhpipm';
 
-eval( [ 'mex -v -output  acados_sim_solver_sfunction_{{ model.name }} ', ...
-    CFLAGS, INCS, ' ', SOURCES, ' -L', LIB_PATH, ' ', LIBS ]);
+try
+    % eval( [ 'mex -v -output  acados_sim_solver_sfunction_{{ model.name }} ', ...
+    eval( [ 'mex -output  acados_sim_solver_sfunction_{{ model.name }} ', ...
+        CFLAGS, INCS, ' ', SOURCES, ' -L', LIB_PATH, ' ', LIBS ]);
+
+catch exception
+    disp('make_sfun failed with the following exception:')
+    disp(exception);
+    disp('Try adding -v to the mex command above to get more information.')
+    keyboard
+end
+
 
 fprintf( [ '\n\nSuccessfully created sfunction:\nacados_sim_solver_sfunction_{{ model.name }}', '.', ...
     eval('mexext')] );
