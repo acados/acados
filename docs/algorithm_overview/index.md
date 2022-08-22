@@ -24,3 +24,5 @@ The following steps are carried out:
 
 - call the regularization module (`regularize_hessian`)
 
+<!-- TODO: change this to have a seperate levenberg_marquardt term on the terminal stage (instead of 1 replacing Ts).
++ add the option to provide a vector that is added on diagonal, i.e. make levenberg_marquardt a vector of size nx+nu. -->
