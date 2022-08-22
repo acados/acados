@@ -549,7 +549,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         {
             acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, s0, "sl");
             MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-            ocp_nlp_set(config, solver, s0, field, value);
+            ocp_nlp_out_set(config, dims, out, s0, field, value);
         }
     }
     else if (!strcmp(field, "init_su")||!strcmp(field, "su"))
@@ -562,7 +562,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         {
             acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, s0, "su");
             MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-            ocp_nlp_set(config, solver, s0, field, value);
+            ocp_nlp_out_set(config, dims, out, s0, field, value);
         }
     }
     else if (!strcmp(field, "p"))
