@@ -50,6 +50,7 @@ Documentation latest build: |today|
 
    about_acados/index
    problem_formulation/index
+   algorithm_overview/index
    installation/index
    interfaces/index
    python_interface/index
