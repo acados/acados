@@ -5,8 +5,8 @@
 ```eval_rst
 
 |github-workflow-full-build|
-
 |github-workflow-c_test_blasfeo_reference|
+|appveyor-build|
 
 .. |github-workflow-full-build| image:: https://github.com/acados/acados/actions/workflows/full_build.yml/badge.svg
     :target: https://github.com/acados/acados/actions/workflows/full_build.yml
@@ -16,11 +16,16 @@
     :target: https://github.com/acados/acados/actions/workflows/c_test_blasfeo_reference.yml
     :alt: Github workflow status
 
+
+.. |appveyor-build| image:: https://ci.appveyor.com/api/projects/status/q0b2nohk476u5clg?svg=true
+    :target: https://ci.appveyor.com/project/roversch/acados
+    :alt: Appveyor workflow status
+
 ```
 
 
 <!-- ![Github actions full build workflow](https://github.com/acados/acados/actions/workflows/full_build.yml/badge.svg?branch=master) -->
-![](https://ci.appveyor.com/api/projects/status/q0b2nohk476u5clg?svg=true)
+<!-- ![](https://ci.appveyor.com/api/projects/status/q0b2nohk476u5clg?svg=true) -->
 
 Fast and embedded solvers for nonlinear optimal control.
 
