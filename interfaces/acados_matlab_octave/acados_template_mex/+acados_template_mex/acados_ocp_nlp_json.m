@@ -62,9 +62,9 @@ classdef acados_ocp_nlp_json < handle
             obj.simulink_opts = simulink_opts;
             obj.cython_include_dirs = '';
             obj.json_file = 'acados_ocp_nlp.json';
-            obj.shared_lib_ext = '.so'
+            obj.shared_lib_ext = '.so';
             if ismac()
-                obj.shared_lib_ext = '.dylib'
+                obj.shared_lib_ext = '.dylib';
             end
             % obj.code_export_directory;
         end

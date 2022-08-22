@@ -50,7 +50,7 @@ classdef acados_sim_opts < handle
             obj.opts_struct.codgen_model = 'true';
             obj.opts_struct.compile_model = 'true';
             obj.opts_struct.method = 'irk';
-            obj.opts_struct.collocation_type = 'gauss_legendre'
+            obj.opts_struct.collocation_type = 'gauss_legendre';
             obj.opts_struct.num_stages = 4;
             obj.opts_struct.num_steps = 1;
             obj.opts_struct.newton_iter = 3;
@@ -75,7 +75,7 @@ classdef acados_sim_opts < handle
             if (strcmp(field, 'compile_interface'))
                 obj.opts_struct.compile_interface = value;
             elseif (strcmp(field, 'ext_fun_compile_flags'))
-                obj.opts_struct.ext_fun_compile_flags = value
+                obj.opts_struct.ext_fun_compile_flags = value;
             elseif (strcmp(field, 'codgen_model'))
                 obj.opts_struct.codgen_model = value;
             elseif (strcmp(field, 'compile_model'))
