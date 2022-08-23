@@ -641,7 +641,7 @@ def run_simulation(qp_solver="FULL_CONDENSING_HPIPM", show_plots=False, verbose=
 
 
 def main():
-    for qp_solver in ["FULL_CONDENSING_DAQP", "FULL_CONDENSING_QPOASES", "FULL_CONDENSING_HPIPM"]:
+    for qp_solver in ["FULL_CONDENSING_DAQP", "FULL_CONDENSING_HPIPM"]: # , "FULL_CONDENSING_QPOASES"
         run_simulation(qp_solver=qp_solver)
 
 
