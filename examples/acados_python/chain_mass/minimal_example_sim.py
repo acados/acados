@@ -115,7 +115,7 @@ plot_chain_position_traj(simX)
 
 xrest = compute_steady_state(n_mass, m, D, L, xPosFirstMass, xEndRef)
 
-if os.environ.get('ACADOS_ON_TRAVIS') is None:
+if os.environ.get('ACADOS_ON_CI') is None:
 
     plot_chain_position(xrest, xPosFirstMass)
 
