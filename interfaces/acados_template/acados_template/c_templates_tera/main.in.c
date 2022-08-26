@@ -42,6 +42,9 @@
 #include "acados_c/external_function_interface.h"
 #include "acados_solver_{{ model.name }}.h"
 
+// blasfeo
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+
 #define NX     {{ model.name | upper }}_NX
 #define NZ     {{ model.name | upper }}_NZ
 #define NU     {{ model.name | upper }}_NU
