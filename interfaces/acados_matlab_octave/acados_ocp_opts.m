@@ -100,9 +100,9 @@ classdef acados_ocp_opts < handle
             obj.opts_struct.ext_fun_compile_flags = '-O2';
 
             obj.opts_struct.output_dir = fullfile(pwd, 'build');
-            if ismac()
-                obj.opts_struct.output_dir = '/usr/local/lib';
-            end
+            % if ismac()
+            %     obj.opts_struct.output_dir = '/usr/local/lib';
+            % end
         end
 
 

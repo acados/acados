@@ -1618,7 +1618,7 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
     double* lg_e = lug_e;
     double* ug_e = lug_e + NGN;
 
-    {% for j in range(end=dims.ng) %}
+    {% for j in range(end=dims.ng_e) %}
         {%- for k in range(end=dims.nx) %}
             {%- if constraints.C_e[j][k] != 0 %}
     C_e[{{ j }}+NG * {{ k }}] = {{ constraints.C_e[j][k] }};
