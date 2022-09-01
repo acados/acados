@@ -348,9 +348,7 @@ class AcadosSimSolver:
         field = field_
         field = field.encode('utf-8')
 
-        fields = fields_vec + fields_mat
-
-        if field_ in fields:
+        if field_ in fields_vec:
             # get dims
             dims = np.ascontiguousarray(np.zeros((2,)), dtype=np.intc)
             dims_data = cast(dims.ctypes.data, POINTER(c_int))
@@ -359,11 +357,21 @@ class AcadosSimSolver:
             self.shared_lib.sim_dims_get_from_attr(self.sim_config, self.sim_dims, field, dims_data)
 
             # allocate array
-            if dims[1] == 0: # vector
-                out = np.ascontiguousarray(np.zeros((dims[0],)), dtype=np.float64)
-            else: # matrix
-                out = np.ascontiguousarray(np.zeros(np.prod(dims)), dtype=np.float64)
-                out = out.reshape(dims[0], dims[1], order='F')
+            out = np.ascontiguousarray(np.zeros((dims[0],)), dtype=np.float64)
+            out_data = cast(out.ctypes.data, POINTER(c_double))
+
+            self.shared_lib.sim_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
+            self.shared_lib.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, out_data)
+
+        elif field_ in fields_mat:
+            # get dims
+            dims = np.ascontiguousarray(np.zeros((2,)), dtype=np.intc)
+            dims_data = cast(dims.ctypes.data, POINTER(c_int))
+
+            self.shared_lib.sim_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_int)]
+            self.shared_lib.sim_dims_get_from_attr(self.sim_config, self.sim_dims, field, dims_data)
+
+            out = np.zeros((dims[0], dims[1]), order='F')
             out_data = cast(out.ctypes.data, POINTER(c_double))
 
             self.shared_lib.sim_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
@@ -378,7 +386,7 @@ class AcadosSimSolver:
             out = scalar.value
         else:
             raise Exception(f'AcadosSimSolver.get(): Unknown field {field_},' \
-                f' available fields are {", ".join(fields)} {", ".join(gettable_scalars())}')
+                f' available fields are {", ".join(fields_vec+fields_mat)} {", ".join(gettable_scalars)}')
 
         return out
 
