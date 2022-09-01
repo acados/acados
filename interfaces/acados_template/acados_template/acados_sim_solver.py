@@ -324,24 +324,7 @@ class AcadosSimSolver:
         getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver").restype = c_void_p
         self.sim_solver = getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver")(self.capsule)
 
-        nu = self.acados_sim.dims.nu
-        nx = self.acados_sim.dims.nx
-        nz = self.acados_sim.dims.nz
-        self.gettable = {
-            'x': nx,
-            'xn': nx,
-            'u': nu,
-            'z': nz,
-            'S_forw': nx*(nx+nu),
-            'Sx': nx*nx,
-            'Su': nx*nu,
-            'S_adj': nx+nu,
-            'S_hess': (nx+nu)*(nx+nu),
-            'S_algebraic': (nz)*(nx+nu)
-        }
-
         self.gettable_scalars = ['CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
-
         self.settable = ['seed_adj', 'T', 'x', 'u', 'xdot', 'z', 'p'] # S_forw
 
 
@@ -362,38 +345,29 @@ class AcadosSimSolver:
 
             :param str field: string in ['x', 'u', 'z', 'S_forw', 'Sx', 'Su', 'S_adj', 'S_hess', 'S_algebraic', 'CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
         """
+        fields = ['x', 'u', 'z', 'S_forw', 'Sx', 'Su', 'S_adj', 'S_hess', 'S_algebraic']
         field = field_
         field = field.encode('utf-8')
 
-        if field_ in self.gettable.keys():
+        if field_ in fields:
+            # get dims
+            dims = np.ascontiguousarray(np.zeros((2,)), dtype=np.intc)
+            dims_data = cast(dims.ctypes.data, POINTER(c_int))
+
+            self.shared_lib.sim_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_int)]
+            self.shared_lib.sim_dims_get_from_attr(self.sim_config, self.sim_dims, field, dims_data)
+
             # allocate array
-            dims = self.gettable[field_]
-            out = np.ascontiguousarray(np.zeros((dims,)), dtype=np.float64)
+            if dims[1] == 0: # vector
+                out = np.ascontiguousarray(np.zeros((dims[0],)), dtype=np.float64)
+            else: # matrix
+                out = np.ascontiguousarray(np.zeros(np.prod(dims)), dtype=np.float64)
+                out = out.reshape(dims[0], dims[1], order='F')
             out_data = cast(out.ctypes.data, POINTER(c_double))
 
             self.shared_lib.sim_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
             self.shared_lib.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, out_data)
 
-            if field_ == 'S_forw':
-                nu = self.acados_sim.dims.nu
-                nx = self.acados_sim.dims.nx
-                out = out.reshape(nx, nx+nu, order='F')
-            elif field_ == 'Sx':
-                nx = self.acados_sim.dims.nx
-                out = out.reshape(nx, nx, order='F')
-            elif field_ == 'Su':
-                nx = self.acados_sim.dims.nx
-                nu = self.acados_sim.dims.nu
-                out = out.reshape(nx, nu, order='F')
-            elif field_ == 'S_hess':
-                nx = self.acados_sim.dims.nx
-                nu = self.acados_sim.dims.nu
-                out = out.reshape(nx+nu, nx+nu, order='F')
-            elif field_ == 'S_algebraic':
-                nx = self.acados_sim.dims.nx
-                nu = self.acados_sim.dims.nu
-                nz = self.acados_sim.dims.nz
-                out = out.reshape(nz, nx+nu, order='F')
         elif field_ in self.gettable_scalars:
             scalar = c_double()
             scalar_data = byref(scalar)
