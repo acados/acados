@@ -324,9 +324,6 @@ class AcadosSimSolver:
         getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver").restype = c_void_p
         self.sim_solver = getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver")(self.capsule)
 
-        self.gettable_scalars = ['CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
-        self.settable = ['seed_adj', 'T', 'x', 'u', 'xdot', 'z', 'p'] # S_forw
-
 
     def solve(self):
         """
@@ -345,9 +342,13 @@ class AcadosSimSolver:
 
             :param str field: string in ['x', 'u', 'z', 'S_forw', 'Sx', 'Su', 'S_adj', 'S_hess', 'S_algebraic', 'CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
         """
-        fields = ['x', 'u', 'z', 'S_forw', 'Sx', 'Su', 'S_adj', 'S_hess', 'S_algebraic']
+        fields_vec = ['x', 'u', 'z', 'S_adj']
+        fields_mat = ['S_forw', 'Sx', 'Su', 'S_hess', 'S_algebraic']
+        gettable_scalars = ['CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
         field = field_
         field = field.encode('utf-8')
+
+        fields = fields_vec + fields_mat
 
         if field_ in fields:
             # get dims
@@ -368,7 +369,7 @@ class AcadosSimSolver:
             self.shared_lib.sim_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
             self.shared_lib.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, out_data)
 
-        elif field_ in self.gettable_scalars:
+        elif field_ in gettable_scalars:
             scalar = c_double()
             scalar_data = byref(scalar)
             self.shared_lib.sim_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
@@ -377,9 +378,12 @@ class AcadosSimSolver:
             out = scalar.value
         else:
             raise Exception(f'AcadosSimSolver.get(): Unknown field {field_},' \
-                f' available fields are {", ".join(self.gettable.keys())}')
+                f' available fields are {", ".join(fields)} {", ".join(gettable_scalars())}')
 
         return out
+
+
+    # def get_vec(field):
 
 
     def set(self, field_: str, value_):
@@ -389,6 +393,8 @@ class AcadosSimSolver:
             :param field: string in ['p', 'seed_adj', 'T', 'x', 'u', 'xdot', 'z']
             :param value: the value with appropriate size.
         """
+        settable = ['seed_adj', 'T', 'x', 'u', 'xdot', 'z', 'p'] # S_forw
+
         # cast value_ to avoid conversion issues
         if isinstance(value_, (float, int)):
             value_ = np.array([value_])
@@ -397,8 +403,7 @@ class AcadosSimSolver:
         value_data = cast(value_.ctypes.data, POINTER(c_double))
         value_data_p = cast((value_data), c_void_p)
 
-        field = field_
-        field = field.encode('utf-8')
+        field = field_.encode('utf-8')
 
         # treat parameters separately
         if field_ == 'p':
@@ -429,12 +434,12 @@ class AcadosSimSolver:
         if field_ in ['xdot', 'z']:
             self.shared_lib.sim_solver_set.argtypes = [c_void_p, c_char_p, c_void_p]
             self.shared_lib.sim_solver_set(self.sim_solver, field, value_data_p)
-        elif field_ in self.settable:
+        elif field_ in settable:
             self.shared_lib.sim_in_set.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
             self.shared_lib.sim_in_set(self.sim_config, self.sim_dims, self.sim_in, field, value_data_p)
         else:
             raise Exception(f'AcadosSimSolver.set(): Unknown field {field_},' \
-                f' available fields are {", ".join(self.settable)}')
+                f' available fields are {", ".join(settable)}')
 
         return
 
