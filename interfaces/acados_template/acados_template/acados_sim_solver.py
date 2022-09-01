@@ -164,7 +164,7 @@ def sim_render_templates(json_file, model_name: str, code_export_dir, cmake_opti
     render_template(in_file, out_file, template_dir, json_path)
 
 
-def sim_generate_casadi_functions(acados_sim):
+def sim_generate_external_functions(acados_sim):
     model = acados_sim.model
     model = make_model_consistent(model)
 
@@ -208,8 +208,46 @@ class AcadosSimSolver:
     else:
         dlclose = CDLL(None).dlclose
         dlclose.argtypes = [c_void_p]
-    def __init__(self, acados_sim_, json_file='acados_sim.json', build=True, cmake_builder: CMakeBuilder = None):
 
+
+    @classmethod
+    def generate(cls, acados_sim: AcadosSim, json_file='acados_sim.json', cmake_builder: CMakeBuilder = None):
+        """
+        Generates the code for an acados sim solver, given the description in acados_sim
+        """
+
+        acados_sim.code_export_directory = os.path.abspath(acados_sim.code_export_directory)
+
+        # make dims consistent
+        make_sim_dims_consistent(acados_sim)
+
+        # module dependent post processing
+        if acados_sim.solver_options.integrator_type == 'GNSF':
+            set_up_imported_gnsf_model(acados_sim)
+
+        # generate external functions
+        sim_generate_external_functions(acados_sim)
+
+        # dump to json
+        sim_formulation_json_dump(acados_sim, json_file)
+
+        # render templates
+        sim_render_templates(json_file, acados_sim.model.name, acados_sim.code_export_directory, cmake_builder)
+
+
+    @classmethod
+    def build(cls, code_export_dir, cmake_builder: CMakeBuilder = None):
+        # Compile solver
+        cwd = os.getcwd()
+        os.chdir(code_export_dir)
+        if cmake_builder is not None:
+            cmake_builder.exec(code_export_dir)
+        else:
+            os.system('make sim_shared_lib')
+        os.chdir(cwd)
+
+
+    def __init__(self, acados_sim_, json_file='acados_sim.json', generate=True, build=True, cmake_builder: CMakeBuilder = None):
         self.solver_created = False
 
         if isinstance(acados_sim_, AcadosOcp):
@@ -229,30 +267,14 @@ class AcadosSimSolver:
         acados_sim.__problem_class = 'SIM'
 
         model_name = acados_sim.model.name
-        make_sim_dims_consistent(acados_sim)
+        code_export_dir = os.path.abspath(acados_sim.code_export_directory)
 
         # reuse existing json and casadi functions, when creating integrator from ocp
-        if isinstance(acados_sim_, AcadosSim):
-            if acados_sim.solver_options.integrator_type == 'GNSF':
-                set_up_imported_gnsf_model(acados_sim)
+        if generate and not isinstance(acados_sim_, AcadosOcp):
+            self.generate(acados_sim, json_file=json_file, cmake_builder=cmake_builder)
 
-            sim_generate_casadi_functions(acados_sim)
-            sim_formulation_json_dump(acados_sim, json_file)
-
-        code_export_dir = acados_sim.code_export_directory
         if build:
-            # render templates
-            sim_render_templates(json_file, model_name, code_export_dir, cmake_builder)
-
-            # Compile solver
-            cwd = os.getcwd()
-            code_export_dir = os.path.abspath(code_export_dir)
-            os.chdir(code_export_dir)
-            if cmake_builder is not None:
-                cmake_builder.exec(code_export_dir)
-            else:
-                os.system('make sim_shared_lib')
-            os.chdir(cwd)
+            self.build(code_export_dir, cmake_builder=cmake_builder)
 
         self.acados_sim = acados_sim
         model_name = self.acados_sim.model.name
