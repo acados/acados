@@ -33,7 +33,6 @@
 #
 
 import numpy as np
-import casadi as ca
 import os
 from .acados_model import AcadosModel
 from .utils import get_acados_path, get_lib_ext
@@ -340,6 +339,7 @@ class AcadosSim:
 
         self.cython_include_dirs = ''
         self.__parameter_values = np.array([])
+        self.__problem_class = 'SIM'
 
     @property
     def parameter_values(self):

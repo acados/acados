@@ -264,8 +264,6 @@ class AcadosSimSolver:
         elif isinstance(acados_sim_, AcadosSim):
             acados_sim = acados_sim_
 
-        acados_sim.__problem_class = 'SIM'
-
         model_name = acados_sim.model.name
         code_export_dir = os.path.abspath(acados_sim.code_export_directory)
 
@@ -277,7 +275,6 @@ class AcadosSimSolver:
             self.build(code_export_dir, cmake_builder=cmake_builder)
 
         self.acados_sim = acados_sim
-        model_name = self.acados_sim.model.name
         self.model_name = model_name
 
         # prepare library loading
@@ -467,8 +464,8 @@ class AcadosSimSolver:
                 value_shape = (value_shape[0], 0)
 
             if value_shape != tuple(dims):
-                raise Exception('AcadosSimSolver.set(): mismatching dimension' \
-                    ' for field "{}" with dimension {} (you have {})'.format(field_, tuple(dims), value_shape))
+                raise Exception(f'AcadosSimSolver.set(): mismatching dimension' \
+                    f' for field "{field_}" with dimension {tuple(dims)} (you have {value_shape}).')
 
         # set
         if field_ in ['xdot', 'z']:
