@@ -48,7 +48,8 @@ from .acados_sim import AcadosSim
 from .acados_ocp import AcadosOcp
 from .acados_model import acados_model_strip_casadi_symbolics
 from .utils import is_column, render_template, format_class_dict, np_array_to_list,\
-     make_model_consistent, set_up_imported_gnsf_model, get_python_interface_path, get_lib_ext
+     make_model_consistent, set_up_imported_gnsf_model, get_python_interface_path, get_lib_ext,\
+     casadi_length, is_empty
 from .builders import CMakeBuilder
 
 
@@ -57,33 +58,30 @@ def make_sim_dims_consistent(acados_sim):
     model = acados_sim.model
     # nx
     if is_column(model.x):
-        dims.nx = model.x.shape[0]
+        dims.nx = casadi_length(model.x)
     else:
-        raise Exception("model.x should be column vector!")
+        raise Exception('model.x should be column vector!')
 
     # nu
-    if is_column(model.u):
-        dims.nu = model.u.shape[0]
-    elif model.u == None or model.u == []:
+    if is_empty(model.u):
         dims.nu = 0
     else:
-        raise Exception("model.u should be column vector or None!")
+        dims.nu = casadi_length(model.u)
 
     # nz
-    if is_column(model.z):
-        dims.nz = model.z.shape[0]
-    elif model.z == None or model.z == []:
+    if is_empty(model.z):
         dims.nz = 0
     else:
-        raise Exception("model.z should be column vector or None!")
+        dims.nz = casadi_length(model.z)
 
     # np
-    if is_column(model.p):
-        dims.np = model.p.shape[0]
-    elif model.p == None or model.p == []:
+    if is_empty(model.p):
         dims.np = 0
     else:
-        raise Exception("model.p should be column vector or None!")
+        dims.np = casadi_length(model.p)
+    if acados_sim.parameter_values.shape[0] != dims.np:
+        raise Exception('inconsistent dimension np, regarding model.p and parameter_values.' + \
+            f'\nGot np = {dims.np}, acados_sim.parameter_values.shape = {acados_sim.parameter_values.shape[0]}\n')
 
 
 def get_sim_layout():
@@ -247,35 +245,21 @@ class AcadosSimSolver:
         os.chdir(cwd)
 
 
-    def __init__(self, acados_sim_, json_file='acados_sim.json', generate=True, build=True, cmake_builder: CMakeBuilder = None):
+    def __init__(self, acados_sim, json_file='acados_sim.json', generate=True, build=True, cmake_builder: CMakeBuilder = None):
+
         self.solver_created = False
-
-        if isinstance(acados_sim_, AcadosOcp):
-            # set up acados_sim_
-            acados_sim = AcadosSim()
-            acados_sim.model = acados_sim_.model
-            acados_sim.dims.nx = acados_sim_.dims.nx
-            acados_sim.dims.nu = acados_sim_.dims.nu
-            acados_sim.dims.nz = acados_sim_.dims.nz
-            acados_sim.dims.np = acados_sim_.dims.np
-            acados_sim.solver_options.integrator_type = acados_sim_.solver_options.integrator_type
-            acados_sim.code_export_directory = acados_sim_.code_export_directory
-
-        elif isinstance(acados_sim_, AcadosSim):
-            acados_sim = acados_sim_
-
+        self.acados_sim = acados_sim
         model_name = acados_sim.model.name
+        self.model_name = model_name
+
         code_export_dir = os.path.abspath(acados_sim.code_export_directory)
 
         # reuse existing json and casadi functions, when creating integrator from ocp
-        if generate and not isinstance(acados_sim_, AcadosOcp):
+        if generate and not isinstance(acados_sim, AcadosOcp):
             self.generate(acados_sim, json_file=json_file, cmake_builder=cmake_builder)
 
         if build:
             self.build(code_export_dir, cmake_builder=cmake_builder)
-
-        self.acados_sim = acados_sim
-        self.model_name = model_name
 
         # prepare library loading
         lib_prefix = 'lib'
