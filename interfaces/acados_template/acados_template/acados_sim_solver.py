@@ -324,6 +324,9 @@ class AcadosSimSolver:
         getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver").restype = c_void_p
         self.sim_solver = getattr(self.shared_lib, f"{model_name}_acados_get_sim_solver")(self.capsule)
 
+        self.gettable_vectors = ['x', 'u', 'z', 'S_adj']
+        self.gettable_matrices = ['S_forw', 'Sx', 'Su', 'S_hess', 'S_algebraic']
+        self.gettable_scalars = ['CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
 
     def solve(self):
         """
@@ -342,13 +345,9 @@ class AcadosSimSolver:
 
             :param str field: string in ['x', 'u', 'z', 'S_forw', 'Sx', 'Su', 'S_adj', 'S_hess', 'S_algebraic', 'CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
         """
-        fields_vec = ['x', 'u', 'z', 'S_adj']
-        fields_mat = ['S_forw', 'Sx', 'Su', 'S_hess', 'S_algebraic']
-        gettable_scalars = ['CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
-        field = field_
-        field = field.encode('utf-8')
+        field = field_.encode('utf-8')
 
-        if field_ in fields_vec:
+        if field_ in self.gettable_vectors:
             # get dims
             dims = np.ascontiguousarray(np.zeros((2,)), dtype=np.intc)
             dims_data = cast(dims.ctypes.data, POINTER(c_int))
@@ -363,7 +362,7 @@ class AcadosSimSolver:
             self.shared_lib.sim_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
             self.shared_lib.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, out_data)
 
-        elif field_ in fields_mat:
+        elif field_ in self.gettable_matrices:
             # get dims
             dims = np.ascontiguousarray(np.zeros((2,)), dtype=np.intc)
             dims_data = cast(dims.ctypes.data, POINTER(c_int))
@@ -377,7 +376,7 @@ class AcadosSimSolver:
             self.shared_lib.sim_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
             self.shared_lib.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, out_data)
 
-        elif field_ in gettable_scalars:
+        elif field_ in self.gettable_scalars:
             scalar = c_double()
             scalar_data = byref(scalar)
             self.shared_lib.sim_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
@@ -386,7 +385,7 @@ class AcadosSimSolver:
             out = scalar.value
         else:
             raise Exception(f'AcadosSimSolver.get(): Unknown field {field_},' \
-                f' available fields are {", ".join(fields_vec+fields_mat)} {", ".join(gettable_scalars)}')
+                f' available fields are {", ".join(self.gettable_vectors+self.gettable_matrices)} {", ".join(self.gettable_scalars)}')
 
         return out
 
