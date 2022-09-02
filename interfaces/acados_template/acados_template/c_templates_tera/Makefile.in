@@ -377,6 +377,33 @@ ocp_cython: ocp_cython_o
 	$(abspath .)/libacados_ocp_solver_{{ model.name }}{{ shared_lib_ext }} \
 	$(LDFLAGS) $(LDLIBS)
 
+# Sim Cython targets
+sim_cython_c: sim_shared_lib
+	cython \
+	-o acados_sim_solver_pyx.c \
+	-I $(INCLUDE_PATH)/../interfaces/acados_template/acados_template \
+	$(INCLUDE_PATH)/../interfaces/acados_template/acados_template/acados_sim_solver_pyx.pyx \
+	-I {{ code_export_directory }} \
+
+sim_cython_o: sim_cython_c
+	$(CC) $(ACADOS_FLAGS) -c -O2 \
+	-fPIC \
+	-o acados_sim_solver_pyx.o \
+	-I /usr/include/python3.8 \
+	-I $(INCLUDE_PATH)/blasfeo/include/ \
+	-I $(INCLUDE_PATH)/hpipm/include/ \
+	-I $(INCLUDE_PATH) \
+	-I {{ cython_include_dirs }} \
+	acados_sim_solver_pyx.c \
+
+sim_cython: sim_cython_o
+	$(CC) $(ACADOS_FLAGS) -shared \
+	-o acados_sim_solver_pyx{{ shared_lib_ext }} \
+	-Wl,-rpath=$(LIB_PATH) \
+	acados_sim_solver_pyx.o \
+	$(abspath .)/libacados_sim_solver_{{ model.name }}{{ shared_lib_ext }} \
+	$(LDFLAGS) $(LDLIBS)
+
 {%- if os and os == "pc" %}
 
 clean:
