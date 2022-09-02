@@ -63,7 +63,6 @@ cdef class AcadosOcpSolverCython:
     cdef acados_solver_common.ocp_nlp_in *nlp_in
     cdef acados_solver_common.ocp_nlp_solver *nlp_solver
 
-    cdef int status
     cdef bint solver_created
 
     cdef str model_name
@@ -88,7 +87,6 @@ cdef class AcadosOcpSolverCython:
 
         # get pointers solver
         self.__get_pointers_solver()
-        self.status = 0
 
 
     def __get_pointers_solver(self):
