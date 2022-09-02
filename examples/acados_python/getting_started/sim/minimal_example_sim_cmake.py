@@ -42,7 +42,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def main(build=True, generate=True, use_cmake=True):
+def main(build=True, generate=True, use_cmake=True, use_cython=False):
     sim = AcadosSim()
 
     model = export_pendulum_ode_model()
@@ -70,7 +70,12 @@ def main(build=True, generate=True, use_cmake=True):
 
     # create
     # acados_integrator = AcadosSimSolver(sim, cmake_builder=cmake_builder)
-    acados_integrator = AcadosSimSolver(sim, cmake_builder=cmake_builder, generate=generate, build=build)
+    if use_cython:
+        AcadosSimSolver.generate(sim, json_file='acados_sim.json')
+        AcadosSimSolver.build(sim.code_export_directory, with_cython=True)
+        acados_integrator = AcadosSimSolver.create_cython_solver('acados_sim.json')
+    else:
+        acados_integrator = AcadosSimSolver(sim, cmake_builder=cmake_builder, generate=generate, build=build)
 
     simX = np.ndarray((N+1, nx))
     x0 = np.array([0.0, np.pi+1, 0.0, 0.0])
@@ -108,3 +113,5 @@ if __name__ == "__main__":
     main(build=False, generate=False)
     # reuse code, but build with make
     main(build=True, generate=False, use_cmake=False)
+    # test cython wrapper
+    main(build=True, generate=True, use_cmake=False, use_cython=True)
