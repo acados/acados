@@ -337,7 +337,7 @@ class AcadosSim:
         """Path to where code will be exported. Default: `c_generated_code`."""
         self.shared_lib_ext = get_lib_ext()
 
-        self.cython_include_dirs = ''
+        self.cython_include_dirs = np.get_include()
         self.__parameter_values = np.array([])
         self.__problem_class = 'SIM'
 

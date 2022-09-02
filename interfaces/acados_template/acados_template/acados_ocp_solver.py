@@ -876,7 +876,7 @@ class AcadosOcpSolver:
                    `MS Visual Studio`); default: `None`
         """
         code_export_dir = os.path.abspath(code_export_dir)
-        cwd=os.getcwd()
+        cwd = os.getcwd()
         os.chdir(code_export_dir)
         if with_cython:
             os.system('make clean_ocp_cython')
