@@ -60,7 +60,7 @@ cdef extern from "acados_c/sim_interface.h":
     int sim_dims_get_from_attr(sim_config *config, void *dims, const char *field, void *dims_data)
 
     # opts
-    # void sim_solver_opts_set(sim_config *config, void *opts_, const char *field, void* value)
+    void sim_opts_set(sim_config *config, void *opts_, const char *field, void *value)
 
     # get/set
     void sim_in_set(sim_config *config, void *dims, sim_in *sim_in, const char *field, void *value)

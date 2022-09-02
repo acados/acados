@@ -37,6 +37,7 @@
 
 cimport cython
 from libc cimport string
+# from libc cimport bool as bool_t
 
 cimport acados_sim_solver_common
 cimport acados_sim_solver
@@ -111,6 +112,48 @@ cdef class AcadosSimSolverCython:
         return acados_sim_solver.acados_sim_solve(self.capsule)
 
 
+    def get(self, field_):
+        """
+        Get the last solution of the solver.
+
+            :param str field: string in ['x', 'u', 'z', 'S_forw', 'Sx', 'Su', 'S_adj', 'S_hess', 'S_algebraic', 'CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
+        """
+        field = field_.encode('utf-8')
+
+        if field_ in self.gettable_vectors:
+            return self.__get_vector(field)
+        elif field_ in self.gettable_matrices:
+            return self.__get_matrix(field)
+        elif field_ in self.gettable_scalars:
+            return self.__get_scalar(field)
+        else:
+            raise Exception(f'AcadosSimSolver.get(): Unknown field {field_},' \
+                f' available fields are {", ".join(self.gettable.keys())}')
+
+
+    def __get_scalar(self, field):
+        cdef double scalar
+        acados_sim_solver_common.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, <void *> &scalar)
+        return scalar
+
+
+    def __get_vector(self, field):
+        cdef int[2] dims
+        acados_sim_solver_common.sim_dims_get_from_attr(self.sim_config, self.sim_dims, field, &dims[0])
+        # cdef cnp.ndarray[cnp.float64_t, ndim=1] out = np.ascontiguousarray(np.zeros((dims[0],), dtype=np.float64))
+        cdef cnp.ndarray[cnp.float64_t, ndim=1] out = np.zeros((dims[0]),)
+        acados_sim_solver_common.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, <void *> out.data)
+        return out
+
+
+    def __get_matrix(self, field):
+        cdef int[2] dims
+        acados_sim_solver_common.sim_dims_get_from_attr(self.sim_config, self.sim_dims, field, &dims[0])
+        cdef cnp.ndarray[cnp.float64_t, ndim=2] out = np.zeros((dims[0], dims[1]), order='F', dtype=np.float64)
+        acados_sim_solver_common.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, <void *> out.data)
+        return out
+
+
     def set(self, field_: str, value_):
         """
         Set numerical data inside the solver.
@@ -123,8 +166,10 @@ cdef class AcadosSimSolverCython:
         # cast value_ to avoid conversion issues
         if isinstance(value_, (float, int)):
             value_ = np.array([value_])
+        # if len(value_.shape) > 1:
+            # raise RuntimeError('AcadosSimSolverCython.set(): value_ should be 1 dimensional')
 
-        cdef cnp.ndarray[cnp.float64_t, ndim=1] value = np.ascontiguousarray(value_, dtype=np.float64)
+        cdef cnp.ndarray[cnp.float64_t, ndim=1] value = np.ascontiguousarray(value_, dtype=np.float64).flatten()
 
         field = field_.encode('utf-8')
         cdef int[2] dims
@@ -156,45 +201,31 @@ cdef class AcadosSimSolverCython:
                 f' available fields are {", ".join(settable)}')
 
 
-    def get(self, field_):
+    def options_set(self, field_: str, value_: bool):
         """
-        Get the last solution of the solver.
+        Set solver options
 
-            :param str field: string in ['x', 'u', 'z', 'S_forw', 'Sx', 'Su', 'S_adj', 'S_hess', 'S_algebraic', 'CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
+            :param field: string in ['sens_forw', 'sens_adj', 'sens_hess']
+            :param value: Boolean
         """
+        fields = ['sens_forw', 'sens_adj', 'sens_hess']
+        if field_ not in fields:
+            raise Exception(f"field {field_} not supported. Supported values are {', '.join(fields)}.\n")
+
         field = field_.encode('utf-8')
 
+        if not isinstance(value_, bool):
+            raise TypeError("options_set: expected boolean for value")
 
-        if field_ in self.gettable_vectors:
-            return self.__get_vector(field)
-        elif field_ in self.gettable_matrices:
-            return self.__get_matrix(field)
-        elif field_ in self.gettable_scalars:
-            return self.__get_scalar(field)
-        else:
-            raise Exception(f'AcadosSimSolver.get(): Unknown field {field_},' \
-                f' available fields are {", ".join(self.gettable.keys())}')
+        cdef bint bool_value = value_
+        acados_sim_solver_common.sim_opts_set(self.sim_config, self.sim_opts, field, <void *> &bool_value)
+        # TODO: only allow setting
+        # if getattr(self.acados_sim.solver_options, field_) or value_ == False:
+        #     acados_sim_solver_common.sim_opts_set(self.sim_config, self.sim_opts, field, <void *> &bool_value)
+        # else:
+        #     raise RuntimeError(f"Cannot set option {field_} to True, because it was False in original solver options.\n")
 
-
-    def __get_scalar(self, field):
-        raise NotImplementedError
-
-
-    def __get_vector(self, field):
-        cdef int[2] dims
-        acados_sim_solver_common.sim_dims_get_from_attr(self.sim_config, self.sim_dims, field, &dims[0])
-        # cdef cnp.ndarray[cnp.float64_t, ndim=1] out = np.ascontiguousarray(np.zeros((dims[0],), dtype=np.float64))
-        cdef cnp.ndarray[cnp.float64_t, ndim=1] out = np.zeros((dims[0]),)
-        acados_sim_solver_common.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, <void *> out.data)
-        return out
-
-
-    def __get_matrix(self, field):
-        cdef int[2] dims
-        acados_sim_solver_common.sim_dims_get_from_attr(self.sim_config, self.sim_dims, field, &dims[0])
-        cdef cnp.ndarray[cnp.float64_t, ndim=2] out = np.zeros((dims[0], dims[1]), order='F', dtype=np.float64)
-        acados_sim_solver_common.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, <void *> out.data)
-        return out
+        return
 
 
     def __del__(self):

@@ -414,8 +414,6 @@ class AcadosSimSolver:
         return out
 
 
-    # def get_vec(field):
-
 
     def set(self, field_: str, value_):
         """
