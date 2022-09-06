@@ -43,7 +43,7 @@ cdef extern from "acados_sim_solver_{{ model.name }}.h":
     int acados_sim_create "{{ model.name }}_acados_sim_create"(sim_solver_capsule * capsule)
     int acados_sim_solve "{{ model.name }}_acados_sim_solve"(sim_solver_capsule * capsule)
     int acados_sim_free "{{ model.name }}_acados_sim_free"(sim_solver_capsule * capsule)
-    int acados_sim_update_params "{{ model.name }}_acados_sim_update_params"(sim_solver_capsule * capsule, int stage, double *value, int np_)
+    int acados_sim_update_params "{{ model.name }}_acados_sim_update_params"(sim_solver_capsule * capsule, double *value, int np_)
     # int acados_sim_update_params_sparse "{{ model.name }}_acados_sim_update_params_sparse"(sim_solver_capsule * capsule, int stage, int *idx, double *p, int n_update)
 
     acados_sim_solver_common.sim_in *acados_get_sim_in "{{ model.name }}_acados_get_sim_in"(sim_solver_capsule * capsule)

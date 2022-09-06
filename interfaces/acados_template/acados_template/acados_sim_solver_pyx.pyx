@@ -176,8 +176,8 @@ cdef class AcadosSimSolverCython:
 
         # treat parameters separately
         if field_ == 'p':
-            # assert acados_sim_solver.acados_update_params(self.capsule, <double *> value_.data, value_.shape[0]) == 0
-            raise NotImplementedError
+            assert acados_sim_solver.acados_sim_update_params(self.capsule, <double *> value.data, value.shape[0]) == 0
+            return
         else:
             acados_sim_solver_common.sim_dims_get_from_attr(self.sim_config, self.sim_dims, field, &dims[0])
 
