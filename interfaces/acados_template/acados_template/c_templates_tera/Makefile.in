@@ -421,6 +421,12 @@ clean_ocp_cython:
 	del \Q acados_ocp_solver_pyx{{ shared_lib_ext }} 2>nul
 	del \Q acados_ocp_solver_pyx.o 2>nul
 
+clean_sim_cython:
+	del \Q libacados_sim_solver_{{ model.name }}{{ shared_lib_ext }} 2>nul
+	del \Q acados_sim_solver_{{ model.name }}.o 2>nul
+	del \Q acados_sim_solver_pyx{{ shared_lib_ext }} 2>nul
+	del \Q acados_sim_solver_pyx.o 2>nul
+
 {%- else %}
 
 clean:
@@ -437,5 +443,11 @@ clean_ocp_cython:
 	$(RM) acados_solver_{{ model.name }}.o
 	$(RM) acados_ocp_solver_pyx{{ shared_lib_ext }}
 	$(RM) acados_ocp_solver_pyx.o
+
+clean_sim_cython:
+	$(RM) libacados_sim_solver_{{ model.name }}{{ shared_lib_ext }}
+	$(RM) acados_sim_solver_{{ model.name }}.o
+	$(RM) acados_sim_solver_pyx{{ shared_lib_ext }}
+	$(RM) acados_sim_solver_pyx.o
 
 {%- endif %}
