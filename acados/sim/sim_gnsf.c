@@ -236,6 +236,14 @@ static void sim_gnsf_import_matrices(void *dims_, gnsf_model *model)
         model->ipiv_z[ii] = (int) model->ipiv_z_double[ii];
 
     // printf("\nimported model matrices\n");
+    // printf("\nipiv_x\n");
+    // for (int ii = 0; ii < nx; ii++)
+    //     printf("%d\t", model->ipiv_x[ii]);
+
+    // printf("\nipiv_z\n");
+    // for (int ii = 0; ii < nz; ii++)
+    //     printf("%d\t", model->ipiv_z[ii]);
+
     // printf("\nc_LO =\n");
     // for (int ii = 0; ii < nx2 + nz2; ii++) {
     //     printf("%e \t", model->c_LO[ii]);
