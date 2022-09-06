@@ -98,8 +98,8 @@ def check_reformulation(model, gnsf, print_info):
         "f_lo_fun", [x[range(nx1)], xdot[range(nx1)], z, u, p], [gnsf["f_lo_expr"]]
     )
 
-    print(gnsf)
-    print(gnsf["n_out"])
+    # print(gnsf)
+    # print(gnsf["n_out"])
 
     for i_check in range(num_eval):
         # generate random values

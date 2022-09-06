@@ -101,20 +101,6 @@ def detect_gnsf_structure(acados_ocp, transcribe_opts=None):
         if print_info:
             print("check_E_invertibility option was not set - default is true")
 
-    if "generate_gnsf_model" in transcribe_opts:
-        generate_gnsf_model = transcribe_opts["generate_gnsf_model"]
-    else:
-        generate_gnsf_model = 1
-        if print_info:
-            print("generate_gnsf_model option was not set - default is true")
-
-    if "generate_reordered_model" in transcribe_opts:
-        generate_reordered_model = transcribe_opts["generate_reordered_model"]
-    else:
-        generate_reordered_model = 0
-        if print_info:
-            print("generate_reordered_model option was not set - default is false")
-
     ## Reformulate implicit index-1 DAE into GNSF form
     # (Generalized nonlinear static feedback)
     gnsf = determine_trivial_gnsf_transcription(acados_ocp, print_info)
