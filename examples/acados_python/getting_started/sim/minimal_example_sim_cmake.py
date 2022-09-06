@@ -41,58 +41,70 @@ from utils import plot_pendulum
 import numpy as np
 import matplotlib.pyplot as plt
 
-sim = AcadosSim()
 
-# export model 
-model = export_pendulum_ode_model()
+def main(build=True, generate=True, use_cmake=True):
+    sim = AcadosSim()
 
-# set model_name 
-sim.model = model
+    model = export_pendulum_ode_model()
+    sim.model = model
 
-Tf = 0.1
-nx = model.x.size()[0]
-nu = model.u.size()[0]
-N = 200
+    Tf = 0.1
+    nx = model.x.size()[0]
+    nu = model.u.size()[0]
+    N = 200
 
-# set simulation time
-sim.solver_options.T = Tf
-# set options
-sim.solver_options.integrator_type = 'IRK'
-sim.solver_options.num_stages = 3
-sim.solver_options.num_steps = 3
-sim.solver_options.newton_iter = 3 # for implicit integrator
-sim.solver_options.collocation_type = "GAUSS_RADAU_IIA"
+    # set simulation time
+    sim.solver_options.T = Tf
+    # set options
+    sim.solver_options.integrator_type = 'IRK'
+    sim.solver_options.num_stages = 3
+    sim.solver_options.num_steps = 3
+    sim.solver_options.newton_iter = 3 # for implicit integrator
+    sim.solver_options.collocation_type = "GAUSS_RADAU_IIA"
 
-# use the CMake build pipeline
-cmake_builder = sim_get_default_cmake_builder()
+    if use_cmake:
+        # use the CMake build pipeline
+        cmake_builder = sim_get_default_cmake_builder()
+    else:
+        cmake_builder = None
 
-# create
-acados_integrator = AcadosSimSolver(sim, cmake_builder=cmake_builder)
+    # create
+    # acados_integrator = AcadosSimSolver(sim, cmake_builder=cmake_builder)
+    acados_integrator = AcadosSimSolver(sim, cmake_builder=cmake_builder, generate=generate, build=build)
 
-simX = np.ndarray((N+1, nx))
-x0 = np.array([0.0, np.pi+1, 0.0, 0.0])
-u0 = np.array([0.0])
-acados_integrator.set("u", u0)
+    simX = np.ndarray((N+1, nx))
+    x0 = np.array([0.0, np.pi+1, 0.0, 0.0])
+    u0 = np.array([0.0])
+    acados_integrator.set("u", u0)
 
-simX[0,:] = x0
+    simX[0,:] = x0
 
-for i in range(N):
-    # set initial state
-    acados_integrator.set("x", simX[i,:])
-    # initialize IRK
-    if sim.solver_options.integrator_type == 'IRK':
-        acados_integrator.set("xdot", np.zeros((nx,)))
+    for i in range(N):
+        # set initial state
+        acados_integrator.set("x", simX[i,:])
+        # initialize IRK
+        if sim.solver_options.integrator_type == 'IRK':
+            acados_integrator.set("xdot", np.zeros((nx,)))
 
-    # solve
-    status = acados_integrator.solve()
-    # get solution
-    simX[i+1,:] = acados_integrator.get("x")
+        # solve
+        status = acados_integrator.solve()
+        # get solution
+        simX[i+1,:] = acados_integrator.get("x")
 
-if status != 0:
-    raise Exception(f'acados returned status {status}.')
+    if status != 0:
+        raise Exception(f'acados returned status {status}.')
 
-S_forw = acados_integrator.get("S_forw")
-print("S_forw, sensitivities of simulaition result wrt x,u:\n", S_forw)
+    S_forw = acados_integrator.get("S_forw")
+    print("S_forw, sensitivities of simulaition result wrt x,u:\n", S_forw)
 
-# plot results
-plot_pendulum(np.linspace(0, Tf, N+1), 10, np.zeros((N, nu)), simX, latexify=False)
+    # plot results
+    # plot_pendulum(np.linspace(0, Tf, N+1), 10, np.zeros((N, nu)), simX, latexify=False)
+
+
+if __name__ == "__main__":
+    # full cmake build
+    main(build=True, generate=True)
+    # reuse code
+    main(build=False, generate=False)
+    # reuse code, but build with make
+    main(build=True, generate=False, use_cmake=False)
