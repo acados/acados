@@ -173,7 +173,7 @@ def structure_detection_print_summary(gnsf, acados_ocp):
     print(f"nx    ", {nx})
     print(f"nu    ", {nu})
     print(f"nz    ", {nz})
-    print(f"np    ", {np})
+    # print(f"np    ", {np})
     print(f"nx1   ", {nx1})
     print(f"nz1   ", {nz1})
     print(f"n_out ", {n_out})

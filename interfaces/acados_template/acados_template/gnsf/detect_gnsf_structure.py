@@ -158,8 +158,8 @@ def detect_gnsf_structure(acados_ocp, transcribe_opts=None):
             gnsf["B_LO"],
             gnsf["nontrivial_f_LO"],
             gnsf["purely_linear"],
-            gnsf["ipiv_x"],
-            gnsf["ipiv_z"],
+            gnsf["ipiv_x"] + 1,
+            gnsf["ipiv_z"] + 1,
             gnsf["c_LO"],
         ],
     )
