@@ -35,7 +35,7 @@ from acados_template import *
 import numpy as np
 
 
-def export_ode_mhe_integrator(model, h):
+def export_ode_mhe_integrator(model, h, use_cython=True):
 
     sim = AcadosSim()
 
@@ -49,6 +49,11 @@ def export_ode_mhe_integrator(model, h):
     sim.solver_options.num_steps = 3
     sim.solver_options.newton_iter = 3 # for implicit integrator
 
-    acados_integrator = AcadosSimSolver(sim)
+    if use_cython:
+        AcadosSimSolver.generate(sim, json_file='acados_sim.json')
+        AcadosSimSolver.build(sim.code_export_directory, with_cython=True)
+        acados_integrator = AcadosSimSolver.create_cython_solver('acados_sim.json')
+    else:
+        acados_integrator = AcadosSimSolver(sim)
 
     return acados_integrator
