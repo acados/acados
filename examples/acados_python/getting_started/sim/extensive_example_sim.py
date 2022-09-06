@@ -61,7 +61,7 @@ sim.solver_options.num_stages = 7
 sim.solver_options.num_steps = 3
 sim.solver_options.newton_iter = 10 # for implicit integrator
 sim.solver_options.collocation_type = "GAUSS_RADAU_IIA"
-sim.solver_options.integrator_type = "IRK" # ERK, IRK, GNSF
+sim.solver_options.integrator_type = "GNSF" # ERK, IRK, GNSF
 sim.solver_options.sens_forw = True
 sim.solver_options.sens_adj = True
 sim.solver_options.sens_hess = True
@@ -82,7 +82,8 @@ sim.solver_options.sim_method_jac_reuse = False
 #         gnsf_dict = json.load(f)
 #     sim.gnsf_model = gnsf_dict
 
-if sim.solver_options.integrator_type == "GNSF":
+DETECT_GNSF = True
+if sim.solver_options.integrator_type == "GNSF" and not DETECT_GNSF:
     from acados_template import acados_dae_model_json_dump
     import os
     acados_dae_model_json_dump(model)
