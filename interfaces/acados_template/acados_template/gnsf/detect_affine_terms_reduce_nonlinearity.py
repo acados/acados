@@ -275,7 +275,7 @@ def detect_affine_terms_reduce_nonlinearity(gnsf, acados_ocp, print_info):
             "-----------------------------------------------------------------------------------"
         )
 
-    #
-    print(f"gnsf: {gnsf}")
+    # if print_info:
+    #     print(f"gnsf: {gnsf}")
 
     return gnsf
