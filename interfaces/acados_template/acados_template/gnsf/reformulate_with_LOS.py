@@ -135,6 +135,8 @@ def reformulate_with_LOS(acados_ocp, gnsf, print_info):
             I_eq = set.intersection(set(np.nonzero(E[:, ii])[0]), unsorted_dyn)
             if len(I_eq) == 1:
                 i_eq = I_eq.pop()
+                if print_info:
+                    print(f"component {i_eq} is associated with state {ii}")
             elif len(I_eq) > 1:  # x_ii_dot occurs in more than 1 eq linearly
                 # find the equation with least linear dependencies on
                 # I_LOS_cancidates
@@ -230,7 +232,8 @@ def reformulate_with_LOS(acados_ocp, gnsf, print_info):
         I_nsf_eq = []
 
     I_LOS_components = I_LOS_candidates
-    I_LOS_eq = set.difference(set(range(nx + nz)), I_nsf_eq)
+    I_LOS_eq = sorted(set.difference(set(range(nx + nz)), I_nsf_eq))
+    I_nsf_eq = sorted(I_nsf_eq)
 
     I_x1 = set.intersection(I_nsf_components, set(range(nx)))
     I_z1 = set.intersection(I_nsf_components, set(range(nx, nx + nz)))
@@ -239,6 +242,9 @@ def reformulate_with_LOS(acados_ocp, gnsf, print_info):
     I_x2 = set.intersection(I_LOS_components, set(range(nx)))
     I_z2 = set.intersection(I_LOS_components, set(range(nx, nx + nz)))
     I_z2 = set([i - nx for i in I_z2])
+
+    if print_info:
+        print(f"I_x1 {I_x1}, I_x2 {I_x2}")
 
     ## permute x, xdot
     if is_empty(I_x1):
@@ -261,21 +267,25 @@ def reformulate_with_LOS(acados_ocp, gnsf, print_info):
         z2 = []
     else:
         z2 = z[list(I_z2)]
+
+    I_x1 = sorted(I_x1)
+    I_x2 = sorted(I_x2)
+    I_z1 = sorted(I_z1)
+    I_z2 = sorted(I_z2)
     gnsf["xdot"] = vertcat(x1dot, x2dot)
     gnsf["x"] = vertcat(x1, x2)
     gnsf["z"] = vertcat(z1, z2)
-
-    gnsf["nx1"] = len(list(I_x1))
-    gnsf["nx2"] = len(list(I_x2))
-    gnsf["nz1"] = len(list(I_z1))
-    gnsf["nz2"] = len(list(I_z2))
+    gnsf["nx1"] = len(I_x1)
+    gnsf["nx2"] = len(I_x2)
+    gnsf["nz1"] = len(I_z1)
+    gnsf["nz2"] = len(I_z2)
 
     # store permutations
-    gnsf["idx_perm_x"] = list(I_x1) + list(I_x2)
+    gnsf["idx_perm_x"] = I_x1 + I_x2
     gnsf["ipiv_x"] = idx_perm_to_ipiv(gnsf["idx_perm_x"])
-    gnsf["idx_perm_z"] = list(I_z1) + list(I_z2)
+    gnsf["idx_perm_z"] = I_z1 + I_z2
     gnsf["ipiv_z"] = idx_perm_to_ipiv(gnsf["idx_perm_z"])
-    gnsf["idx_perm_f"] = list(I_nsf_eq) + list(I_LOS_eq)
+    gnsf["idx_perm_f"] = I_nsf_eq + I_LOS_eq
     gnsf["ipiv_f"] = idx_perm_to_ipiv(gnsf["idx_perm_f"])
 
     f_LO = SX.sym("f_LO", 0, 0)
@@ -300,7 +310,6 @@ def reformulate_with_LOS(acados_ocp, gnsf, print_info):
     c_LO = np.zeros((n_LO, 1))
 
     I_LOS_eq = list(I_LOS_eq)
-    I_x2 = list(I_x2)
     for eq in I_LOS_eq:
         i_LO = I_LOS_eq.index(eq)
         f_LO = vertcat(f_LO, Ax1[eq] + C_phi[eq] - lhs_nsf[eq])

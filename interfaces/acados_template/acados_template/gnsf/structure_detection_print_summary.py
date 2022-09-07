@@ -107,11 +107,7 @@ def structure_detection_print_summary(gnsf, acados_ocp):
         gnsf["ny"] + gnsf["nuhat"],
     )
     print(" ")
-    print(f"reduced number of nodes in CasADi expression of")
-    print(
-        "nonlinearity phi from                             ", str(n_nodes_initial)
-    ), " to ", str(n_nodes(phi_current))
-    print(" ")
+    print(f"reduced number of nodes in CasADi expression of nonlinearity phi from  {n_nodes_initial}  to  {n_nodes(phi_current)}\n")
     print("----------- Linear Output System (LOS) ---------------")
     if nx2 + nz2 > 0:
         print(" ")
