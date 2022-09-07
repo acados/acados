@@ -32,7 +32,6 @@
 #
 #   Author: Jonathan Frey: jonathanpaulfrey(at)gmail.com
 
-from pdb import Pdb
 from .determine_input_nonlinearity_function import determine_input_nonlinearity_function
 from .check_reformulation import check_reformulation
 from casadi import *
@@ -95,7 +94,7 @@ def reformulate_with_LOS(acados_ocp, gnsf, print_info):
             if which_depends(y, x[ii])[0] or which_depends(y, xdot[ii])[0]:
                 # i.e. xii or xiidot are part of y, and enter phi_expr
                 if print_info:
-                    print("xii is part of x1, ii = ", ii)
+                    print(f"x_{ii} is part of x1")
                 I_nsf_components = set.union(I_nsf_components, set([ii]))
             else:
                 # i.e. neither xii nor xiidot are part of y, i.e. enter phi_expr
@@ -106,7 +105,7 @@ def reformulate_with_LOS(acados_ocp, gnsf, print_info):
             if which_depends(y, z[ii])[0]:
                 # i.e. xii or xiidot are part of y, and enter phi_expr
                 if print_info:
-                    print("zii is part of z1, ii = ", ii)
+                    print(f"z_{ii} is part of x1")
                 I_nsf_components = set.union(I_nsf_components, set([ii + nx]))
             else:
                 # i.e. neither xii nor xiidot are part of y, i.e. enter phi_expr
@@ -197,16 +196,15 @@ def reformulate_with_LOS(acados_ocp, gnsf, print_info):
                         " to correspond to variable ",
                         var_name,
                     )
-                I_nsf_eq = set.union(I_nsf_eq, i_eq)
+            I_nsf_eq = set.union(I_nsf_eq, {i_eq})
             # remove i_eq from unsorted_dyn
             unsorted_dyn.remove(i_eq)
             Eq_map.append([ii, i_eq])
 
         ## add components to I_x1
         for eq in I_nsf_eq:
-            I_linear_dependence = np.nonzero(E[eq, :])[0]
             I_linear_dependence = set.union(
-                np.nonzero(A[eq, :])[0], I_linear_dependence
+                set(np.nonzero(A[eq, :])[0]), set(np.nonzero(E[eq, :])[0])
             )
             I_nsf_components = set.union(I_linear_dependence, I_nsf_components)
             # I_nsf_components = I_nsf_components[:]

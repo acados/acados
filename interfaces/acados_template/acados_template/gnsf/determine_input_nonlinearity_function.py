@@ -51,7 +51,7 @@ def determine_input_nonlinearity_function(gnsf):
     # Furthermore the dimensions ny, nuhat, n_out are updated
 
     ## y
-    y = []
+    y = SX.sym('y', 0, 0)
     # components of x1
     for ii in range(gnsf["nx1"]):
         if which_depends(gnsf["phi_expr"], gnsf["x"][ii])[0]:
@@ -72,7 +72,7 @@ def determine_input_nonlinearity_function(gnsf):
         # else:
         # z[ii] is not part of y
     ## uhat
-    uhat = []
+    uhat = SX.sym('uhat', 0, 0)
     # components of u
     for ii in range(gnsf["nu"]):
         if which_depends(gnsf["phi_expr"], gnsf["u"][ii])[0]:

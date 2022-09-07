@@ -146,7 +146,7 @@ def reformulate_with_invertible_E_mat(gnsf, model, print_info):
             )
             print("==>  model reformulation finished")
             print(" ")
-    if det(gnsf["E_LO"]) == 0:
+    if (gnsf['nx2'] > 0 or gnsf['nz2'] > 0) and det(gnsf["E_LO"]) == 0:
         print(
             "_______________________________________________________________________________________________________"
         )
