@@ -627,7 +627,7 @@ cdef class AcadosOcpSolverCython:
         return
 
 
-    def dynamics_get(self, int stage, str field_):
+    def get_from_qp_in(self, int stage, str field_):
         """
         Get numerical data from the dynamics module of the solver:
 
@@ -638,7 +638,7 @@ cdef class AcadosOcpSolverCython:
 
         # get dims
         cdef int[2] dims
-        acados_solver_common.ocp_nlp_dynamics_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage, field, &dims[0])
+        acados_solver_common.ocp_nlp_qp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage, field, &dims[0])
 
         # create output data
         cdef cnp.ndarray[cnp.float64_t, ndim=2] out = np.zeros((dims[0], dims[1]), order='F')

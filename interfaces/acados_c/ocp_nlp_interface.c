@@ -747,7 +747,7 @@ void ocp_nlp_constraint_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims 
 }
 
 
-void ocp_nlp_dynamics_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
+void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
         int stage, const char *field, int *dims_out)
 {
     // vectors first
@@ -755,13 +755,20 @@ void ocp_nlp_dynamics_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *d
     // only matrices here matrices
     if (!strcmp(field, "A"))
     {
-        config->dynamics[stage]->dims_get(config->dynamics[stage], dims->dynamics[stage],
-                                          "nx1", &dims_out[0]);
-        dims_out[1] = dims->nx[stage];
+        // config->dynamics[stage]->dims_get(config->dynamics[stage], dims->dynamics[stage],
+        //                                   "nx1", &dims_out[0]);
+        // dims_out[1] = dims->nx[stage];
+        dims_out[0] = dims->nx[stage];
+        dims_out[1] = dims->nx[stage+1];
+    }
+    else if (!strcmp(field, "B"))
+    {
+        dims_out[0] = dims->nu[stage];
+        dims_out[1] = dims->nx[stage+1];
     }
     else
     {
-        printf("\nerror: ocp_nlp_dynamics_dims_get_from_attr: field %s not available\n", field);
+        printf("\nerror: ocp_nlp_qp_dims_get_from_attr: field %s not available\n", field);
         exit(1);
     }
 }
