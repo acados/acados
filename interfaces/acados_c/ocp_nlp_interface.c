@@ -781,6 +781,16 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         dims_out[0] = dims->nx[stage];
         dims_out[1] = dims->nu[stage];
     }
+    else if (!strcmp(field, "r"))
+    {
+        dims_out[0] = 1;
+        dims_out[1] = dims->nu[stage];
+    }
+    else if (!strcmp(field, "q"))
+    {
+        dims_out[0] = 1;
+        dims_out[1] = dims->nx[stage];
+    }
     else
     {
         printf("\nerror: ocp_nlp_qp_dims_get_from_attr: field %s not available\n", field);
@@ -1069,6 +1079,11 @@ void ocp_nlp_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_so
         double *double_values = value;
         d_ocp_qp_get_B(stage, nlp_mem->qp_in, double_values);
     }
+    else if (!strcmp(field, "b"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_b(stage, nlp_mem->qp_in, double_values);
+    }
     else if (!strcmp(field, "Q"))
     {
         double *double_values = value;
@@ -1083,6 +1098,16 @@ void ocp_nlp_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_so
     {
         double *double_values = value;
         d_ocp_qp_get_S(stage, nlp_mem->qp_in, double_values);
+    }
+    else if (!strcmp(field, "r"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_r(stage, nlp_mem->qp_in, double_values);
+    }
+    else if (!strcmp(field, "q"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_q(stage, nlp_mem->qp_in, double_values);
     }
     else
     {
