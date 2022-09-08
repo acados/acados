@@ -424,6 +424,7 @@ class AcadosSimSolver:
         """
         settable = ['seed_adj', 'T', 'x', 'u', 'xdot', 'z', 'p'] # S_forw
 
+        # TODO: check and throw error here. then remove checks in Cython for speed
         # cast value_ to avoid conversion issues
         if isinstance(value_, (float, int)):
             value_ = np.array([value_])
