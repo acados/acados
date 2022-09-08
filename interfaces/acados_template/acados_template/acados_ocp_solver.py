@@ -1710,7 +1710,7 @@ class AcadosOcpSolver:
         Get numerical data from the current QP.
 
             :param stage: integer corresponding to shooting node
-            :param field: string, e.g., 'A'
+            :param field: string in ['A', 'B', 'Q', 'R', 'S', 'b', 'q', 'r']
         """
 
         field = field_.encode('utf-8')
