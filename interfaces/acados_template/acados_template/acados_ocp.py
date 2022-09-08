@@ -2243,6 +2243,13 @@ class AcadosOcpOptions:
         """Regularization method for the Hessian.
         String in ('NO_REGULARIZE', 'MIRROR', 'PROJECT', 'PROJECT_REDUC_HESS', 'CONVEXIFY') or :code:`None`.
 
+        - MIRROR: performs eigenvalue decomposition H = V^T D V and sets D_ii = max(eps, abs(D_ii))
+        - PROJECT: performs eigenvalue decomposition H = V^T D V and sets D_ii = max(eps, D_ii)
+        - CONVEXIFY: Algorithm 6 from Verschueren2017, https://cdn.syscop.de/publications/Verschueren2017.pdf
+        - PROJECT_REDUC_HESS: experimental
+
+        Note: default eps = 1e-4
+
         Default: :code:`None`.
         """
         return self.__regularize_method
