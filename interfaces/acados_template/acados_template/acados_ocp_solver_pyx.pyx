@@ -610,7 +610,7 @@ cdef class AcadosOcpSolverCython:
             # Get elements in column major order
             value = np.asfortranarray(value_)
 
-        if value_shape[0] != dims[0] or value_shape[1] != dims[1]:
+        if value_shape != tuple(dims):
             raise Exception(f'AcadosOcpSolverCython.constraints_set(): mismatching dimension' +
                 f' for field "{field_}" at stage {stage} with dimension {tuple(dims)} (you have {value_shape})')
 
@@ -745,7 +745,7 @@ cdef class AcadosOcpSolverCython:
         cdef int n_update = value.shape[0]
         # print(f"in set_params_sparse Cython n_update {n_update}")
 
-        assert acados_solver.acados_update_params_sparse(self.capsule, stage, <int *> idx.data,  <double *> value.data, n_update) == 0
+        assert acados_solver.acados_update_params_sparse(self.capsule, stage, <int *> idx.data, <double *> value.data, n_update) == 0
         return
 
 
