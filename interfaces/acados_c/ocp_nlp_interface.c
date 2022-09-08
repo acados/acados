@@ -758,13 +758,28 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         // config->dynamics[stage]->dims_get(config->dynamics[stage], dims->dynamics[stage],
         //                                   "nx1", &dims_out[0]);
         // dims_out[1] = dims->nx[stage];
-        dims_out[0] = dims->nx[stage];
-        dims_out[1] = dims->nx[stage+1];
+        dims_out[0] = dims->nx[stage+1];
+        dims_out[1] = dims->nx[stage];
     }
     else if (!strcmp(field, "B"))
     {
+        dims_out[0] = dims->nx[stage+1];
+        dims_out[1] = dims->nu[stage];
+    }
+    else if (!strcmp(field, "Q"))
+    {
+        dims_out[0] = dims->nx[stage];
+        dims_out[1] = dims->nx[stage];
+    }
+    else if (!strcmp(field, "R"))
+    {
         dims_out[0] = dims->nu[stage];
-        dims_out[1] = dims->nx[stage+1];
+        dims_out[1] = dims->nu[stage];
+    }
+    else if (!strcmp(field, "S"))
+    {
+        dims_out[0] = dims->nx[stage];
+        dims_out[1] = dims->nu[stage];
     }
     else
     {
@@ -1048,6 +1063,26 @@ void ocp_nlp_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_so
     {
         double *double_values = value;
         d_ocp_qp_get_A(stage, nlp_mem->qp_in, double_values);
+    }
+    else if (!strcmp(field, "B"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_B(stage, nlp_mem->qp_in, double_values);
+    }
+    else if (!strcmp(field, "Q"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_Q(stage, nlp_mem->qp_in, double_values);
+    }
+    else if (!strcmp(field, "R"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_R(stage, nlp_mem->qp_in, double_values);
+    }
+    else if (!strcmp(field, "S"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_S(stage, nlp_mem->qp_in, double_values);
     }
     else
     {
