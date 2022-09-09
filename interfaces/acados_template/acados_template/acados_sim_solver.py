@@ -35,6 +35,7 @@
 import sys
 import os
 import json
+import importlib
 
 import numpy as np
 
@@ -140,6 +141,10 @@ def sim_render_templates(json_file, model_name: str, code_export_dir, cmake_opti
     out_file = f'acados_sim_solver_{model_name}.h'
     render_template(in_file, out_file, template_dir, json_path)
 
+    in_file = 'acados_sim_solver.in.pxd'
+    out_file = f'acados_sim_solver.pxd'
+    render_template(in_file, out_file, template_dir, json_path)
+
     # Builder
     if cmake_options is not None:
         in_file = 'CMakeLists.in.txt'
@@ -234,16 +239,35 @@ class AcadosSimSolver:
 
 
     @classmethod
-    def build(cls, code_export_dir, cmake_builder: CMakeBuilder = None):
+    def build(cls, code_export_dir, with_cython=False, cmake_builder: CMakeBuilder = None):
         # Compile solver
         cwd = os.getcwd()
         os.chdir(code_export_dir)
-        if cmake_builder is not None:
-            cmake_builder.exec(code_export_dir)
+        if with_cython:
+            os.system('make clean_sim_cython')
+            os.system('make sim_cython')
         else:
-            os.system('make sim_shared_lib')
+            if cmake_builder is not None:
+                cmake_builder.exec(code_export_dir)
+            else:
+                os.system('make sim_shared_lib')
         os.chdir(cwd)
 
+
+    @classmethod
+    def create_cython_solver(cls, json_file):
+        """
+        """
+        with open(json_file, 'r') as f:
+            acados_sim_json = json.load(f)
+        code_export_directory = acados_sim_json['code_export_directory']
+
+        importlib.invalidate_caches()
+        rel_code_export_directory = os.path.relpath(code_export_directory)
+        acados_sim_solver_pyx = importlib.import_module(f'{rel_code_export_directory}.acados_sim_solver_pyx')
+
+        AcadosSimSolverCython = getattr(acados_sim_solver_pyx, 'AcadosSimSolverCython')
+        return AcadosSimSolverCython(acados_sim_json['model']['name'])
 
     def __init__(self, acados_sim, json_file='acados_sim.json', generate=True, build=True, cmake_builder: CMakeBuilder = None):
 
@@ -390,8 +414,6 @@ class AcadosSimSolver:
         return out
 
 
-    # def get_vec(field):
-
 
     def set(self, field_: str, value_):
         """
@@ -402,6 +424,7 @@ class AcadosSimSolver:
         """
         settable = ['seed_adj', 'T', 'x', 'u', 'xdot', 'z', 'p'] # S_forw
 
+        # TODO: check and throw error here. then remove checks in Cython for speed
         # cast value_ to avoid conversion issues
         if isinstance(value_, (float, int)):
             value_ = np.array([value_])

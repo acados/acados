@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 #
 # Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
 # Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
@@ -31,29 +32,36 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from acados_template import *
-import numpy as np
+
+cdef extern from "acados/sim/sim_common.h":
+    ctypedef struct sim_config:
+        pass
+
+    ctypedef struct sim_opts:
+        pass
+
+    ctypedef struct sim_in:
+        pass
+
+    ctypedef struct sim_out:
+        pass
 
 
-def export_ode_mhe_integrator(model, h, use_cython=True):
+cdef extern from "acados_c/sim_interface.h":
 
-    sim = AcadosSim()
+    ctypedef struct sim_plan:
+        pass
 
-    # set model
-    sim.model = model
-    sim.parameter_values = np.zeros(np.prod(model.p.shape))
+    ctypedef struct sim_solver:
+        pass
 
-    # set simulation time
-    sim.solver_options.T = h
-    sim.solver_options.num_stages = 4
-    sim.solver_options.num_steps = 3
-    sim.solver_options.newton_iter = 3 # for implicit integrator
+    # out
+    void sim_out_get(sim_config *config, void *dims, sim_out *out, const char *field, void *value)
+    int sim_dims_get_from_attr(sim_config *config, void *dims, const char *field, void *dims_data)
 
-    if use_cython:
-        AcadosSimSolver.generate(sim, json_file='acados_sim.json')
-        AcadosSimSolver.build(sim.code_export_directory, with_cython=True)
-        acados_integrator = AcadosSimSolver.create_cython_solver('acados_sim.json')
-    else:
-        acados_integrator = AcadosSimSolver(sim)
+    # opts
+    void sim_opts_set(sim_config *config, void *opts_, const char *field, void *value)
 
-    return acados_integrator
+    # get/set
+    void sim_in_set(sim_config *config, void *dims, sim_in *sim_in, const char *field, void *value)
+    void sim_solver_set(sim_solver *solver, const char *field, void *value)

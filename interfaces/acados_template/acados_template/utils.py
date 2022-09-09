@@ -298,9 +298,10 @@ def ocp_check_against_layout_recursion(ocp_nlp, ocp_dims, layout):
             ocp_check_against_layout_recursion(item, ocp_dims, layout_of_key)
 
         if 'ndarray' in layout_of_key:
+            # cast to np array
             if isinstance(item, int) or isinstance(item, float):
                 item = np.array([item])
-        if isinstance(item, (list, np.ndarray)) and (layout_of_key[0] != 'str'):
+        if isinstance(item, np.ndarray) and (layout_of_key[0] != 'str'):
             dim_layout = []
             dim_names = layout_of_key[1]
 
@@ -309,7 +310,6 @@ def ocp_check_against_layout_recursion(ocp_nlp, ocp_dims, layout):
 
             dims = tuple(dim_layout)
 
-            item = np.array(item)
             item_dims = item.shape
             if len(item_dims) != len(dims):
                 raise Exception('Mismatching dimensions for field {0}. ' \
