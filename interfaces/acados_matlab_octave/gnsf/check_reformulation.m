@@ -171,10 +171,10 @@ for i_check = 1:num_eval
 %         check = 0;
 
 
-        lo_expr =  A_LO * x(I_x2) + B_LO * u + c_LO + ...
-            gnsf.f_lo_expr - E_LO * [xdot(I_x2)];
-        nsf_expr = (A * x(I_x1) + B * u + ...
-            C * gnsf.phi_expr + c) - E * [xdot(I_x1); z(I_z1)];
+        % lo_expr =  A_LO * x(I_x2) + B_LO * u + c_LO + ...
+        %     gnsf.f_lo_expr - E_LO * [xdot(I_x2)];
+        % nsf_expr = (A * x(I_x1) + B * u + ...
+        %     C * gnsf.phi_expr + c) - E * [xdot(I_x1); z(I_z1)];
     end            
 end
 

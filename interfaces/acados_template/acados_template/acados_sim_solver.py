@@ -52,6 +52,8 @@ from .utils import is_column, render_template, format_class_dict, np_array_to_li
      make_model_consistent, set_up_imported_gnsf_model, get_python_interface_path, get_lib_ext,\
      casadi_length, is_empty
 from .builders import CMakeBuilder
+from .gnsf.detect_gnsf_structure import detect_gnsf_structure
+
 
 
 def make_sim_dims_consistent(acados_sim):
@@ -226,7 +228,10 @@ class AcadosSimSolver:
 
         # module dependent post processing
         if acados_sim.solver_options.integrator_type == 'GNSF':
-            set_up_imported_gnsf_model(acados_sim)
+            if 'gnsf_model' in acados_sim.__dict__:
+                set_up_imported_gnsf_model(acados_sim)
+            else:
+                detect_gnsf_structure(acados_sim)
 
         # generate external functions
         sim_generate_external_functions(acados_sim)

@@ -76,6 +76,7 @@ sim.solver_options.T = Tf
 # set options
 sim.solver_options.num_stages = 4
 sim.solver_options.num_steps = 3
+sim.solver_options.integrator_type = 'GNSF'
 sim.solver_options.newton_iter = 3 # for implicit integrator
 
 # create

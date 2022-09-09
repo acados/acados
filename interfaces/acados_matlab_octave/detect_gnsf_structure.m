@@ -49,12 +49,6 @@ function model = detect_gnsf_structure(model, transcribe_opts)
 % Options: transcribe_opts is a Matlab struct consisting of booleans:
 %   print_info: if extensive information on how the model is processed
 %       is printed to the console.
-%   generate_gnsf_model: if the neccessary C functions to simulate the gnsf
-%       model with the acados implementation of the GNSF exploiting
-%       integrator should be generated.
-%   generate_gnsf_model: if the neccessary C functions to simulate the
-%       reordered model with the acados implementation of the IRK
-%       integrator should be generated.
 %   check_E_invertibility: if the transcription method should check if the
 %       assumption that the main blocks of the matrix gnsf.E are invertible
 %       holds. If not, the method will try to reformulate the gnsf model
@@ -94,24 +88,6 @@ else
     check_E_invertibility = 1;
     if print_info
     disp('check_E_invertibility option was not set - default is true')
-    end
-end
-
-if isfield(transcribe_opts, 'generate_gnsf_model')
-    generate_gnsf_model = transcribe_opts.generate_gnsf_model;
-else
-    generate_gnsf_model = 1;
-    if print_info
-    disp('generate_gnsf_model option was not set - default is true')
-    end
-end
-
-if isfield(transcribe_opts, 'generate_reordered_model')
-    generate_reordered_model = transcribe_opts.generate_reordered_model;
-else
-    generate_reordered_model = 0;
-    if print_info
-    disp('generate_reordered_model option was not set - default is false')
     end
 end
 
