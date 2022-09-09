@@ -6,7 +6,7 @@
         "str"
     ],
     "cython_include_dirs": [
-        "str"
+        "list"
     ],
     "json_file": [
         "str"

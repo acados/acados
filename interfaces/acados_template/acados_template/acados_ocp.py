@@ -3015,7 +3015,9 @@ class AcadosOcp:
         """Path to where acados library is located, type: `string`"""
         self.shared_lib_ext = get_lib_ext()
 
-        self.cython_include_dirs = np.get_include()
+        # get cython paths
+        from sysconfig import get_paths
+        self.cython_include_dirs = [np.get_include(), get_paths()['include']]
 
         self.__parameter_values = np.array([])
         self.__problem_class = 'OCP'
