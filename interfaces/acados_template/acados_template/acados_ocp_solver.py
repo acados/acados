@@ -1183,18 +1183,17 @@ class AcadosOcpSolver:
         field = field_
 
         if (field_ not in all_fields):
-            raise Exception('AcadosOcpSolver.get(): {} is an invalid argument.\
-                    \n Possible values are {}.'.format(field_, all_fields))
+            raise Exception(f'AcadosOcpSolver.get(stage={stage_}, field={field_}): \'{field_}\' is an invalid argument.\
+                    \n Possible values are {all_fields}.')
 
         if not isinstance(stage_, int):
-            raise Exception('AcadosOcpSolver.get(): stage index must be Integer.')
+            raise Exception(f'AcadosOcpSolver.get(stage={stage_}, field={field_}): stage index must be an integer, got type {type(stage_)}.')
 
         if stage_ < 0 or stage_ > self.N:
-            raise Exception('AcadosOcpSolver.get(): stage index must be in [0, N], got: {}.'.format(stage_))
+            raise Exception(f'AcadosOcpSolver.get(stage={stage_}, field={field_}): stage index must be in [0, {self.N}], got: {stage_}.')
 
         if stage_ == self.N and field_ == 'pi':
-            raise Exception('AcadosOcpSolver.get(): field {} does not exist at final stage {}.'\
-                .format(field_, stage_))
+            raise Exception(f'AcadosOcpSolver.get(stage={stage_}, field={field_}): field \'{field_}\' does not exist at final stage {stage_}.')
 
         if field_ in sens_fields:
             field = field_.replace('sens_', '')
@@ -1426,7 +1425,7 @@ class AcadosOcpSolver:
             return self.get_residuals()
 
         else:
-            raise Exception(f'AcadosOcpSolver.get_stats(): {field} is not a valid argument.'
+            raise Exception(f'AcadosOcpSolver.get_stats(): \'{field}\' is not a valid argument.'
                     + f'\n Possible values are {fields}.')
 
 
@@ -1528,9 +1527,8 @@ class AcadosOcpSolver:
             assert getattr(self.shared_lib, f"{self.model_name}_acados_update_params")(self.capsule, stage, value_data, value_.shape[0])==0
         else:
             if field_ not in constraints_fields + cost_fields + out_fields:
-                raise Exception("AcadosOcpSolver.set(): {} is not a valid argument.\
-                    \nPossible values are {}.".format(field, \
-                    constraints_fields + cost_fields + out_fields + ['p']))
+                raise Exception(f"AcadosOcpSolver.set(): '{field}' is not a valid argument.\n"
+                    f" Possible values are {constraints_fields + cost_fields + out_fields + ['p']}.")
 
             self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = \
                 [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
@@ -1540,8 +1538,8 @@ class AcadosOcpSolver:
                 self.nlp_dims, self.nlp_out, stage_, field)
 
             if value_.shape[0] != dims:
-                msg = 'AcadosOcpSolver.set(): mismatching dimension for field "{}" '.format(field_)
-                msg += 'with dimension {} (you have {})'.format(dims, value_.shape[0])
+                msg = f'AcadosOcpSolver.set(): mismatching dimension for field "{field_}" '
+                msg += f'with dimension {dims} (you have {value_.shape[0]})'
                 raise Exception(msg)
 
             value_data = cast(value_.ctypes.data, POINTER(c_double))
@@ -1609,7 +1607,7 @@ class AcadosOcpSolver:
                     raise Exception("Ambiguity in API detected.\n"
                                     "Are you making an acados model from scrach? Add api='new' to cost_set and carry on.\n"
                                     "Are you seeing this error suddenly in previously running code? Read on.\n"
-                                    "  You are relying on a now-fixed bug in cost_set for field '{}'.\n".format(field_) +
+                                    f"  You are relying on a now-fixed bug in cost_set for field '{field_}'.\n" +
                                     "  acados_template now correctly passes on any matrices to acados in column major format.\n" +
                                     "  Two options to fix this error: \n" +
                                     "   * Add api='old' to cost_set to restore old incorrect behaviour\n" +
@@ -1677,7 +1675,7 @@ class AcadosOcpSolver:
                     raise Exception("Ambiguity in API detected.\n"
                                     "Are you making an acados model from scrach? Add api='new' to constraints_set and carry on.\n"
                                     "Are you seeing this error suddenly in previously running code? Read on.\n"
-                                    "  You are relying on a now-fixed bug in constraints_set for field '{}'.\n".format(field_) +
+                                    f"  You are relying on a now-fixed bug in constraints_set for field '{field}'.\n" +
                                     "  acados_template now correctly passes on any matrices to acados in column major format.\n" +
                                     "  Two options to fix this error: \n" +
                                     "   * Add api='old' to constraints_set to restore old incorrect behaviour\n" +
@@ -1690,7 +1688,7 @@ class AcadosOcpSolver:
                 # Get elements in column major order
                 value_ = np.ravel(value_, order='F')
             else:
-                raise Exception("Unknown api: '{}'".format(api))
+                raise Exception(f"Unknown api: '{api}'")
 
         if value_shape != tuple(dims):
             raise Exception(f'AcadosOcpSolver.constraints_set(): mismatching dimension' +
@@ -1712,7 +1710,7 @@ class AcadosOcpSolver:
         Get numerical data from the dynamics module of the solver:
 
             :param stage: integer corresponding to shooting node
-            :param field: string, e.g. 'A'
+            :param field: string, e.g., 'A'
         """
 
         field = field_
@@ -1762,32 +1760,34 @@ class AcadosOcpSolver:
             - qp_mu0: for HPIPM QP solvers: initial value for complementarity slackness
             - warm_start_first_qp: indicates if first QP in SQP is warm_started
         """
-        int_fields = ['print_level', 'rti_phase', 'initialize_t_slacks', 'qp_warm_start', 'line_search_use_sufficient_descent', 'full_step_dual', 'globalization_use_SOC', 'warm_start_first_qp']
-        double_fields = ['step_length', 'tol_eq', 'tol_stat', 'tol_ineq', 'tol_comp', 'alpha_min', 'alpha_reduction', 'eps_sufficient_descent',
-        'qp_tol_stat', 'qp_tol_eq', 'qp_tol_ineq', 'qp_tol_comp', 'qp_tau_min', 'qp_mu0']
+        int_fields = ['print_level', 'rti_phase', 'initialize_t_slacks', 'qp_warm_start',
+                      'line_search_use_sufficient_descent', 'full_step_dual', 'globalization_use_SOC', 'warm_start_first_qp']
+        double_fields = ['step_length', 'tol_eq', 'tol_stat', 'tol_ineq', 'tol_comp', 'alpha_min', 'alpha_reduction',
+                         'eps_sufficient_descent', 'qp_tol_stat', 'qp_tol_eq', 'qp_tol_ineq', 'qp_tol_comp', 'qp_tau_min', 'qp_mu0']
         string_fields = ['globalization']
 
         # check field availability and type
         if field_ in int_fields:
             if not isinstance(value_, int):
-                raise Exception('solver option {} must be of type int. You have {}.'.format(field_, type(value_)))
+                raise Exception(f'solver option \'{field_}\' must be of type int. You have {type(value_)}.')
             else:
                 value_ctypes = c_int(value_)
 
         elif field_ in double_fields:
             if not isinstance(value_, float):
-                raise Exception('solver option {} must be of type float. You have {}.'.format(field_, type(value_)))
+                raise Exception(f'solver option \'{field_}\' must be of type float. You have {type(value_)}.')
             else:
                 value_ctypes = c_double(value_)
 
         elif field_ in string_fields:
             if not isinstance(value_, str):
-                raise Exception('solver option {} must be of type str. You have {}.'.format(field_, type(value_)))
+                raise Exception(f'solver option \'{field_}\' must be of type str. You have {type(value_)}.')
             else:
                 value_ctypes = value_.encode('utf-8')
         else:
-            raise Exception('AcadosOcpSolver.options_set() does not support field {}.'\
-                '\n Possible values are {}.'.format(field_, ', '.join(int_fields + double_fields + string_fields)))
+            fields = ', '.join(int_fields + double_fields + string_fields)
+            raise Exception(f'AcadosOcpSolver.options_set() does not support field \'{field_}\'.\n'\
+                f' Possible values are {fields}.')
 
 
         if field_ == 'rti_phase':

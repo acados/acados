@@ -297,7 +297,7 @@ def ocp_check_against_layout_recursion(ocp_nlp, ocp_dims, layout):
             layout_of_key = layout[key]
         except KeyError:
             raise Exception("ocp_check_against_layout_recursion: field" \
-                            " '{0}' is not in layout but in OCP description.".format(key))
+                            f" '{key}' is not in layout but in OCP description.")
 
         if isinstance(item, dict):
             ocp_check_against_layout_recursion(item, ocp_dims, layout_of_key)
@@ -317,16 +317,14 @@ def ocp_check_against_layout_recursion(ocp_nlp, ocp_dims, layout):
 
             item_dims = item.shape
             if len(item_dims) != len(dims):
-                raise Exception('Mismatching dimensions for field {0}. ' \
-                    'Expected {1} dimensional array, got {2} dimensional array.' \
-                        .format(key, len(dims), len(item_dims)))
+                raise Exception(f'Mismatching dimensions for field "{key}". ' \
+                    f'Expected {len(dims)} dimensional array, got {len(item_dims)} dimensional array.')
 
             if np.prod(item_dims) != 0 or np.prod(dims) != 0:
                 if dims != item_dims:
-                    raise Exception('acados -- mismatching dimensions for field {0}. ' \
-                        'Provided data has dimensions {1}, ' \
-                        'while associated dimensions {2} are {3}' \
-                            .format(key, item_dims, dim_names, dims))
+                    raise Exception(f'acados -- mismatching dimensions for field "{key}". ' \
+                        f'Provided data has dimensions {item_dims}, ' \
+                        f'while associated dimensions {dim_names} are {dims}')
     return
 
 
