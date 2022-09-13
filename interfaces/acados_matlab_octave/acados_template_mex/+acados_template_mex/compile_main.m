@@ -35,7 +35,7 @@ function compile_main()
     return_dir = pwd;
     cd c_generated_code
     %% build main file
-    if isunix || ismac 
+    if isunix
         [ status, result ] = system('make');
         if status
             cd(return_dir);
