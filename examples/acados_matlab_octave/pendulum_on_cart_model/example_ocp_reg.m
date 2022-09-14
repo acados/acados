@@ -283,7 +283,7 @@ else
         ocp.print('stat');
 
         % check stability of qp
-        qp_A = ocp.get('qp_solver_A');
+        qp_A = ocp.get('qp_A');
         qp_A_eig_max = 0;
         for jj=1:length(qp_A)
             tmp_A = qp_A{jj};
