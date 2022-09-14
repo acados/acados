@@ -400,11 +400,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		if (plan->ocp_qp_solver_plan.qp_solver==FULL_CONDENSING_QPOASES)
 			solver_type=2;
 #endif
-		// ocp solver
+#if defined(ACADOS_WITH_DAQP)
+		if (plan->ocp_qp_solver_plan.qp_solver==FULL_CONDENSING_DAQP)
+			solver_type=2;
+#endif
+		// ocp solver (not dense)
 		if(solver_type==1)
 		{
 			ocp_qp_in *qp_in = qp_in_;
-			int N = qp_in->dim->N;
 			int *nu = qp_in->dim->nu;
 			int *nx = qp_in->dim->nx;
 
@@ -439,27 +442,33 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	}
     else if (!strcmp(field, "qp_solver_A"))
     {
-		ocp_qp_in *qp_in;
-        ocp_nlp_get(config, solver, "qp_in", &qp_in);
+        int out_dims[2];
+        if (nrhs==2)
+        {
+            mxArray *cell_array = mxCreateCellMatrix(N, 1);
+            plhs[0] = cell_array;
 
-		int N = qp_in->dim->N;
-		int *nu = qp_in->dim->nu;
-		int *nx = qp_in->dim->nx;
+            mxArray *tmp_mat;
 
-		mxArray *cell_array = mxCreateCellMatrix(N, 1);
-		plhs[0] = cell_array;
+            for (ii=0; ii<N; ii++)
+            {
+                // tmp_mat = mxCreateNumericMatrix(nx[ii+1], nx[ii], mxDOUBLE_CLASS, mxREAL);
+                ocp_nlp_qp_dims_get_from_attr(config, dims, out, ii, "A", out_dims);
+                tmp_mat = mxCreateNumericMatrix(out_dims[0], out_dims[1], mxDOUBLE_CLASS, mxREAL);
+                double *mat_ptr = mxGetPr( tmp_mat );
+                ocp_nlp_get_at_stage(config, dims, solver, ii, "A", mat_ptr);
+                mxSetCell(cell_array, ii, tmp_mat);
+            }
+        }
+        else if (nrhs==3)
+        {
+            ocp_nlp_qp_dims_get_from_attr(config, dims, out, stage, "A", out_dims);
 
-		mxArray *tmp_mat;
-
-		for (ii=0; ii<N; ii++)
-		{
-			tmp_mat = mxCreateNumericMatrix(nx[ii+1], nx[ii], mxDOUBLE_CLASS, mxREAL);
-			double *mat_ptr = mxGetPr( tmp_mat );
-			blasfeo_unpack_tran_dmat(nx[ii], nx[ii+1], qp_in->BAbt+ii, nu[ii], 0, mat_ptr, nx[ii+1]);
-
-			mxSetCell(cell_array, ii, tmp_mat);
-		}
-	}
+            plhs[0] = mxCreateNumericMatrix(out_dims[0], out_dims[1], mxDOUBLE_CLASS, mxREAL);
+            double *mat_ptr = mxGetPr( plhs[0] );
+            ocp_nlp_get_at_stage(config, dims, solver, stage, "A", mat_ptr);
+        }
+    }
     else
     {
         MEX_FIELD_NOT_SUPPORTED_SUGGEST(fun_name, field,
