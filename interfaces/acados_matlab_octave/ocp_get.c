@@ -389,57 +389,57 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "qp_solver_cond_H"))
     {
-		void *qp_in_;
+        void *qp_in_;
         ocp_nlp_get(config, solver, "qp_xcond_in", &qp_in_);
-		int solver_type = 0;
-		if (plan->ocp_qp_solver_plan.qp_solver==PARTIAL_CONDENSING_HPIPM)
-			solver_type=1;
-		if (plan->ocp_qp_solver_plan.qp_solver==FULL_CONDENSING_HPIPM)
-			solver_type=2;
+        int solver_type = 0;
+        if (plan->ocp_qp_solver_plan.qp_solver==PARTIAL_CONDENSING_HPIPM)
+            solver_type=1;
+        if (plan->ocp_qp_solver_plan.qp_solver==FULL_CONDENSING_HPIPM)
+            solver_type=2;
 #if defined(ACADOS_WITH_QPOASES)
-		if (plan->ocp_qp_solver_plan.qp_solver==FULL_CONDENSING_QPOASES)
-			solver_type=2;
+        if (plan->ocp_qp_solver_plan.qp_solver==FULL_CONDENSING_QPOASES)
+            solver_type=2;
 #endif
 #if defined(ACADOS_WITH_DAQP)
-		if (plan->ocp_qp_solver_plan.qp_solver==FULL_CONDENSING_DAQP)
-			solver_type=2;
+        if (plan->ocp_qp_solver_plan.qp_solver==FULL_CONDENSING_DAQP)
+            solver_type=2;
 #endif
-		// ocp solver (not dense)
-		if(solver_type==1)
-		{
-			ocp_qp_in *qp_in = qp_in_;
-			int *nu = qp_in->dim->nu;
-			int *nx = qp_in->dim->nx;
+        // ocp solver (not dense)
+        if(solver_type==1)
+        {
+            ocp_qp_in *qp_in = qp_in_;
+            int *nu = qp_in->dim->nu;
+            int *nx = qp_in->dim->nx;
 
-			mxArray *cell_array = mxCreateCellMatrix(N+1, 1);
-			plhs[0] = cell_array;
+            mxArray *cell_array = mxCreateCellMatrix(N+1, 1);
+            plhs[0] = cell_array;
 
-			mxArray *tmp_mat;
+            mxArray *tmp_mat;
 
-			for (ii=0; ii<=N; ii++)
-			{
-				tmp_mat = mxCreateNumericMatrix(nu[ii]+nx[ii], nu[ii]+nx[ii], mxDOUBLE_CLASS, mxREAL);
-				double *mat_ptr = mxGetPr( tmp_mat );
-				blasfeo_unpack_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], qp_in->RSQrq+ii, 0, 0, mat_ptr, nu[ii]+nx[ii]);
+            for (ii=0; ii<=N; ii++)
+            {
+                tmp_mat = mxCreateNumericMatrix(nu[ii]+nx[ii], nu[ii]+nx[ii], mxDOUBLE_CLASS, mxREAL);
+                double *mat_ptr = mxGetPr( tmp_mat );
+                blasfeo_unpack_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], qp_in->RSQrq+ii, 0, 0, mat_ptr, nu[ii]+nx[ii]);
 
-				mxSetCell(cell_array, ii, tmp_mat);
-			}
-		}
-		// dense solver
-		else if(solver_type==2)
-		{
-			dense_qp_in *qp_in = qp_in_;
-			int nv = qp_in->dim->nv;
-			plhs[0] = mxCreateNumericMatrix(nv, nv, mxDOUBLE_CLASS, mxREAL);
-			double *mat_ptr = mxGetPr( plhs[0] );
-			blasfeo_unpack_dmat(nv, nv, qp_in->Hv, 0, 0, mat_ptr, nv);
-		}
-		else
-		{
-			mexPrintf("\nerror: ocp_get: qp_solver_cond_H: unsupported solver\n");
-			exit(1);
-		}
-	}
+                mxSetCell(cell_array, ii, tmp_mat);
+            }
+        }
+        // dense solver
+        else if(solver_type==2)
+        {
+            dense_qp_in *qp_in = qp_in_;
+            int nv = qp_in->dim->nv;
+            plhs[0] = mxCreateNumericMatrix(nv, nv, mxDOUBLE_CLASS, mxREAL);
+            double *mat_ptr = mxGetPr( plhs[0] );
+            blasfeo_unpack_dmat(nv, nv, qp_in->Hv, 0, 0, mat_ptr, nv);
+        }
+        else
+        {
+            mexPrintf("\nerror: ocp_get: qp_solver_cond_H: unsupported solver\n");
+            exit(1);
+        }
+    }
     else if (!strcmp(field, "qp_A") || !strcmp(field, "qp_B") || !strcmp(field, "qp_Q") ||
              !strcmp(field, "qp_R") || !strcmp(field, "qp_S") || !strcmp(field, "qp_b") ||
              !strcmp(field, "qp_q") || !strcmp(field, "qp_r"))
