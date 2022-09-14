@@ -196,8 +196,8 @@ else
     ocp_model.set('constr_lbu', lbu);
     ocp_model.set('constr_ubu', ubu);
 end
-disp('ocp_model.model_struct')
-disp(ocp_model.model_struct)
+% disp('ocp_model.model_struct')
+% disp(ocp_model.model_struct)
 
 
 %% acados ocp opts
@@ -232,8 +232,8 @@ if (strcmp(sim_method, 'irk_gnsf'))
     ocp_opts.set('gnsf_detect_struct', gnsf_detect_struct);
 end
 
-disp('ocp_opts');
-disp(ocp_opts.opts_struct);
+% disp('ocp_opts');
+% disp(ocp_opts.opts_struct);
 
 
 %% acados ocp
@@ -329,7 +329,7 @@ else
         end
 
 		% check residuals and terminate if tol is reached
-		residuals = ocp.get("residuals");
+		residuals = ocp.get('residuals');
 		if residuals(1) < nlp_solver_tol_stat && residuals(2) < nlp_solver_tol_eq && residuals(3) < nlp_solver_tol_ineq && residuals(4) < nlp_solver_tol_comp
 			break
 		end
@@ -362,6 +362,7 @@ for ii=1:N+1
 %visualize;
 end
 
+%% plot trajectory
 figure;
 subplot(2,1,1);
 plot(0:N, x);
@@ -372,24 +373,26 @@ plot(0:N-1, u);
 xlim([0 N]);
 legend('F');
 
-stat = ocp.get('stat');
-if (strcmp(nlp_solver, 'sqp'))
-    figure;
-    plot([0: size(stat,1)-1], log10(stat(:,2)), 'r-x');
-    hold on
-    plot([0: size(stat,1)-1], log10(stat(:,3)), 'b-x');
-    plot([0: size(stat,1)-1], log10(stat(:,4)), 'g-x');
-    plot([0: size(stat,1)-1], log10(stat(:,5)), 'k-x');
-%    semilogy(0: size(stat,1)-1, stat(:,2), 'r-x');
-%    hold on
-%    semilogy(0: size(stat,1)-1, stat(:,3), 'b-x');
-%    semilogy(0: size(stat,1)-1, stat(:,4), 'g-x');
-%    semilogy(0: size(stat,1)-1, stat(:,5), 'k-x');
-    hold off
-    xlabel('iter')
-    ylabel('res')
-    legend('res stat', 'res eq', 'res ineq', 'res compl');
-end
+
+%% plot residual
+% stat = ocp.get('stat');
+% if (strcmp(nlp_solver, 'sqp'))
+%     figure;
+%     plot([0: size(stat,1)-1], log10(stat(:,2)), 'r-x');
+%     hold on
+%     plot([0: size(stat,1)-1], log10(stat(:,3)), 'b-x');
+%     plot([0: size(stat,1)-1], log10(stat(:,4)), 'g-x');
+%     plot([0: size(stat,1)-1], log10(stat(:,5)), 'k-x');
+% %    semilogy(0: size(stat,1)-1, stat(:,2), 'r-x');
+% %    hold on
+% %    semilogy(0: size(stat,1)-1, stat(:,3), 'b-x');
+% %    semilogy(0: size(stat,1)-1, stat(:,4), 'g-x');
+% %    semilogy(0: size(stat,1)-1, stat(:,5), 'k-x');
+%     hold off
+%     xlabel('iter')
+%     ylabel('res')
+%     legend('res stat', 'res eq', 'res ineq', 'res compl');
+% end
 
 
 if status==0
