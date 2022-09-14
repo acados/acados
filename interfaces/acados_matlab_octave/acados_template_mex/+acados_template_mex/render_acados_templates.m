@@ -270,10 +270,10 @@ function set_up_t_renderer( t_renderer_location )
         error('Please set up t_renderer yourself and try again');
     else
         t_renderer_version = 'v0.0.34';
-        if isunix()
-            suffix = '-linux';
-        elseif ismac()
+        if ismac()
             suffix = '-osx';
+        elseif isunix()
+            suffix = '-linux';
         elseif ispc()
             suffix = '-windows';
         end
@@ -290,7 +290,7 @@ function set_up_t_renderer( t_renderer_location )
 
         movefile(tmp_file, t_renderer_location);
 
-        if isunix() || ismac()
+        if isunix()
             % make executable
             system(['chmod a+x ', t_renderer_location]);
         end
