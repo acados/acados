@@ -1453,6 +1453,12 @@ class AcadosOcpSolver:
     def get_residuals(self, recompute=False):
         """
         Returns an array of the form [res_stat, res_eq, res_ineq, res_comp].
+        This residual has to be computed for SQP_RTI solver, since it is not available by default.
+
+        - res_stat: stationarity residual
+        - res_eq: residual wrt equality constraints (dynamics)
+        - res_ineq: residual wrt inequality constraints (constraints)
+        - res_comp: residual wrt complementarity conditions
         """
         # compute residuals if RTI
         if self.solver_options['nlp_solver_type'] == 'SQP_RTI' or recompute:
