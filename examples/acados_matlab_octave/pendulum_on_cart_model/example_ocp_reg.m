@@ -328,7 +328,11 @@ else
 
         end
 
-        fprintf('\n\n');
+		% check residuals and terminate if tol is reached
+		residuals = ocp.get("residuals");
+		if residuals(1) < nlp_solver_tol_stat && residuals(2) < nlp_solver_tol_eq && residuals(3) < nlp_solver_tol_ineq && residuals(4) < nlp_solver_tol_comp
+			break
+		end
     end
 end
 
@@ -371,11 +375,11 @@ legend('F');
 stat = ocp.get('stat');
 if (strcmp(nlp_solver, 'sqp'))
     figure;
-     plot([0: size(stat,1)-1], log10(stat(:,2)), 'r-x');
-     hold on
-     plot([0: size(stat,1)-1], log10(stat(:,3)), 'b-x');
-     plot([0: size(stat,1)-1], log10(stat(:,4)), 'g-x');
-     plot([0: size(stat,1)-1], log10(stat(:,5)), 'k-x');
+    plot([0: size(stat,1)-1], log10(stat(:,2)), 'r-x');
+    hold on
+    plot([0: size(stat,1)-1], log10(stat(:,3)), 'b-x');
+    plot([0: size(stat,1)-1], log10(stat(:,4)), 'g-x');
+    plot([0: size(stat,1)-1], log10(stat(:,5)), 'k-x');
 %    semilogy(0: size(stat,1)-1, stat(:,2), 'r-x');
 %    hold on
 %    semilogy(0: size(stat,1)-1, stat(:,3), 'b-x');

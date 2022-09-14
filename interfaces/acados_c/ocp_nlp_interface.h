@@ -297,7 +297,7 @@ ACADOS_SYMBOL_EXPORT void ocp_nlp_constraint_dims_get_from_attr(ocp_nlp_config *
 ACADOS_SYMBOL_EXPORT void ocp_nlp_cost_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
         int stage, const char *field, int *dims_out);
 
-void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
+ACADOS_SYMBOL_EXPORT void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
         int stage, const char *field, int *dims_out);
 
 /* opts */

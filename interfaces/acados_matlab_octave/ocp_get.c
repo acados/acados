@@ -70,6 +70,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // solver
     ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "solver" ) );
     ocp_nlp_solver *solver = (ocp_nlp_solver *) ptr[0];
+    // in
+    ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "in" ) );
+    ocp_nlp_in *in = (ocp_nlp_in *) ptr[0];
     // sens_out
     ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "sens_out" ) );
     ocp_nlp_out *sens_out = (ocp_nlp_out *) ptr[0];
@@ -372,6 +375,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             for (jj=0; jj<stat_n; jj++)
                 mat_ptr[ii+(jj+1)*min_size] = stat[jj+ii*stat_n];
         }
+    }
+    else if (!strcmp(field, "residuals"))
+    {
+        if (plan->nlp_solver == SQP_RTI)
+            ocp_nlp_eval_residuals(solver, in, out);
+        plhs[0] = mxCreateNumericMatrix(4, 1, mxDOUBLE_CLASS, mxREAL);
+        double *mat_ptr = mxGetPr( plhs[0] );
+        ocp_nlp_get(config, solver, "res_stat", &mat_ptr[0]);
+        ocp_nlp_get(config, solver, "res_eq", &mat_ptr[1]);
+        ocp_nlp_get(config, solver, "res_ineq", &mat_ptr[2]);
+        ocp_nlp_get(config, solver, "res_comp", &mat_ptr[3]);
     }
     else if (!strcmp(field, "qp_solver_cond_H"))
     {
