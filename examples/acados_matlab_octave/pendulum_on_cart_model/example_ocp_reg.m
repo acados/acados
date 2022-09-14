@@ -239,11 +239,11 @@ disp(ocp_opts.opts_struct);
 %% acados ocp
 % create ocp
 ocp = acados_ocp(ocp_model, ocp_opts);
-ocp
-disp('ocp.C_ocp');
-disp(ocp.C_ocp);
-disp('ocp.C_ocp_ext_fun');
-disp(ocp.C_ocp_ext_fun);
+% ocp
+% disp('ocp.C_ocp');
+% disp(ocp.C_ocp);
+% disp('ocp.C_ocp_ext_fun');
+% disp(ocp.C_ocp_ext_fun);
 %ocp.model_struct
 
 
@@ -313,12 +313,12 @@ else
 				end
 				qp_H_cond_num = cond(tmp_H);
 				qp_H_eig = eig(tmp_H);
-				fprintf('cond H condition number %e %e %e\n', qp_H_cond_num, min(qp_H_eig), max(qp_H_eig));
+    			fprintf('cond H condition number %e min eigenval %e max eigenvalue %e\n', qp_H_cond_num, min(qp_H_eig), max(qp_H_eig));
 
 			end
 
 		else
-			
+
 			nv = size(qp_cond_H, 1);
 			% make full
 			for jj=1:nv
@@ -328,7 +328,7 @@ else
 			end
 			qp_H_cond_num = cond(qp_cond_H);
 			qp_H_eig = eig(qp_cond_H);
-			fprintf('cond H condition number %e %e %e\n', qp_H_cond_num, min(qp_H_eig), max(qp_H_eig));
+			fprintf('cond H condition number %e min eigenval %e max eigenvalue %e\n', qp_H_cond_num, min(qp_H_eig), max(qp_H_eig));
 
 		end
 
@@ -339,8 +339,6 @@ else
 end
 
 time_ext = toc;
-% TODO: add getter for internal timing
-fprintf(['time for ocp.solve (matlab tic-toc): ', num2str(time_ext), ' s\n'])
 
 % get solution
 u = ocp.get('u');
