@@ -99,7 +99,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             sprintf(buffer, "\nocp_get: invalid stage index, got %d\n", stage);
             mexErrMsgTxt(buffer);
         }
-        else if (stage == N && strcmp(field, "x") && strcmp(field, "lam") && strcmp(field, "t") && strcmp(field, "sens_x") && strcmp(field, "sl") && strcmp(field, "su") )
+        else if (stage == N && strcmp(field, "x") && strcmp(field, "lam") && strcmp(field, "t") && strcmp(field, "sens_x") && strcmp(field, "sl") && strcmp(field, "su") && strcmp(field, "qp_Q") && strcmp(field, "qp_R") && strcmp(field, "qp_S") && strcmp(field, "qp_q") )
         {
             sprintf(buffer, "\nocp_get: invalid stage index, got stage = %d = N, field = %s, only x, lam, t, slacks available at this stage\n", stage, field);
             mexErrMsgTxt(buffer);
@@ -440,39 +440,38 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			exit(1);
 		}
 	}
-    else if (!strcmp(field, "qp_A"))
+    else if (!strcmp(field, "qp_A") || !strcmp(field, "qp_B") || !strcmp(field, "qp_Q") ||
+             !strcmp(field, "qp_R") || !strcmp(field, "qp_S") || !strcmp(field, "qp_b") ||
+             !strcmp(field, "qp_q") || !strcmp(field, "qp_r"))
     {
         int out_dims[2];
         if (nrhs==2)
         {
             mxArray *cell_array = mxCreateCellMatrix(N, 1);
             plhs[0] = cell_array;
-
             mxArray *tmp_mat;
 
             for (ii=0; ii<N; ii++)
             {
-                // tmp_mat = mxCreateNumericMatrix(nx[ii+1], nx[ii], mxDOUBLE_CLASS, mxREAL);
-                ocp_nlp_qp_dims_get_from_attr(config, dims, out, ii, "A", out_dims);
+                ocp_nlp_qp_dims_get_from_attr(config, dims, out, ii, &field[3], out_dims);
                 tmp_mat = mxCreateNumericMatrix(out_dims[0], out_dims[1], mxDOUBLE_CLASS, mxREAL);
                 double *mat_ptr = mxGetPr( tmp_mat );
-                ocp_nlp_get_at_stage(config, dims, solver, ii, "A", mat_ptr);
+                ocp_nlp_get_at_stage(config, dims, solver, ii, &field[3], mat_ptr);
                 mxSetCell(cell_array, ii, tmp_mat);
             }
         }
         else if (nrhs==3)
         {
-            ocp_nlp_qp_dims_get_from_attr(config, dims, out, stage, "A", out_dims);
-
+            ocp_nlp_qp_dims_get_from_attr(config, dims, out, stage, &field[3], out_dims);
             plhs[0] = mxCreateNumericMatrix(out_dims[0], out_dims[1], mxDOUBLE_CLASS, mxREAL);
             double *mat_ptr = mxGetPr( plhs[0] );
-            ocp_nlp_get_at_stage(config, dims, solver, stage, "A", mat_ptr);
+            ocp_nlp_get_at_stage(config, dims, solver, stage, &field[3], mat_ptr);
         }
     }
     else
     {
         MEX_FIELD_NOT_SUPPORTED_SUGGEST(fun_name, field,
-             "x, u, z, pi, lam, sl, su, t, sens_x, sens_u, sens_pi, status, sqp_iter, time_tot, time_lin, time_reg, time_qp_sol, stat, qp_solver_cond_H, qp_A");
+             "x, u, z, pi, lam, sl, su, t, sens_x, sens_u, sens_pi, status, sqp_iter, time_tot, time_lin, time_reg, time_qp_sol, stat, qp_solver_cond_H, qp_A, qp_B, qp_Q, qp_R, qp_S, qp_b, qp_q, qp_r");
     }
 
     return;
