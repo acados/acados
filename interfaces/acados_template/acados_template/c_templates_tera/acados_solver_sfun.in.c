@@ -336,6 +336,11 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetOutputPortVectorDimension(S, {{ i_output }}, 1 );
   {%- endif %}
 
+  {%- if simulink_opts.outputs.KKT_residuals == 1 %}
+    {%- set i_output = i_output + 1 %}
+    ssSetOutputPortVectorDimension(S, {{ i_output }}, 4 );
+  {%- endif %}
+
   {%- if dims.N > 0 and simulink_opts.outputs.x1 == 1 %}
     {%- set i_output = i_output + 1 %}
     ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.nx }} ); // state at shooting node 1
@@ -730,7 +735,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     /* set outputs */
     // assign pointers to output signals
-    real_t *out_u0, *out_utraj, *out_xtraj, *out_status, *out_sqp_iter, *out_KKT_res, *out_x1, *out_cpu_time, *out_cpu_time_sim, *out_cpu_time_qp, *out_cpu_time_lin;
+    real_t *out_u0, *out_utraj, *out_xtraj, *out_status, *out_sqp_iter, *out_KKT_res, *out_KKT_residuals, *out_x1, *out_cpu_time, *out_cpu_time_sim, *out_cpu_time_qp, *out_cpu_time_lin;
     int tmp_int;
 
     {%- set i_output = -1 -%}{# note here i_output is 0-based #}
@@ -767,6 +772,19 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     {%- set i_output = i_output + 1 %}
     out_KKT_res = ssGetOutputPortRealSignal(S, {{ i_output }});
     *out_KKT_res = (real_t) nlp_out->inf_norm_res;
+  {%- endif %}
+
+  {%- if simulink_opts.outputs.KKT_residuals == 1 %}
+    {%- set i_output = i_output + 1 %}
+    out_KKT_residuals = ssGetOutputPortRealSignal(S, {{ i_output }});
+
+    {%- if solver_options.nlp_solver_type == "SQP_RTI" %}
+    ocp_nlp_eval_residuals(capsule->nlp_solver, nlp_in, nlp_out);
+    {%- endif %}
+    ocp_nlp_get(nlp_config, capsule->nlp_solver, "res_stat", (void *) &out_KKT_residuals[0]);
+    ocp_nlp_get(nlp_config, capsule->nlp_solver, "res_eq", (void *) &out_KKT_residuals[1]);
+    ocp_nlp_get(nlp_config, capsule->nlp_solver, "res_ineq", (void *) &out_KKT_residuals[2]);
+    ocp_nlp_get(nlp_config, capsule->nlp_solver, "res_comp", (void *) &out_KKT_residuals[3]);
   {%- endif %}
 
   {%- if dims.N > 0 and simulink_opts.outputs.x1 == 1 %}

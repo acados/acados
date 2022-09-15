@@ -335,6 +335,11 @@ i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') KKT residual\n ');
 {%- endif %}
 
+{%- if simulink_opts.outputs.KKT_residuals == 1 %}
+i_out = i_out + 1;
+output_note = strcat(output_note, num2str(i_out), ') KKT residuals, size [4] (stat, eq, ineq, comp)\n ');
+{%- endif %}
+
 {%- if dims.N > 0 and simulink_opts.outputs.x1 == 1 %}
 i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') x1, state at node 1\n ');

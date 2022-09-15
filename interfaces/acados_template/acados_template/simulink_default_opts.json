@@ -5,6 +5,7 @@
         "xtraj": 0,
         "solver_status": 1,
         "KKT_residual": 1,
+        "KKT_residuals": 0,
         "x1": 1,
         "CPU_time": 1,
         "CPU_time_sim": 0,
