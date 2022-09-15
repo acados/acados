@@ -23,6 +23,7 @@ simulink_opts.inputs.reset_solver = 1;
 % outputs
 simulink_opts.outputs.utraj = 1;
 simulink_opts.outputs.xtraj = 1;
+simulink_opts.outputs.cost_value = 1;
 simulink_opts.outputs.KKT_residual = 0;
 simulink_opts.outputs.KKT_residuals = 1;
 
