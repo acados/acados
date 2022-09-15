@@ -331,6 +331,11 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetOutputPortVectorDimension(S, {{ i_output }}, 1 );
   {%- endif %}
 
+  {%- if simulink_opts.outputs.cost_value == 1 %}
+    {%- set i_output = i_output + 1 %}
+    ssSetOutputPortVectorDimension(S, {{ i_output }}, 1 );
+  {%- endif %}
+
   {%- if simulink_opts.outputs.KKT_residual == 1 %}
     {%- set i_output = i_output + 1 %}
     ssSetOutputPortVectorDimension(S, {{ i_output }}, 1 );
@@ -735,7 +740,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     /* set outputs */
     // assign pointers to output signals
-    real_t *out_u0, *out_utraj, *out_xtraj, *out_status, *out_sqp_iter, *out_KKT_res, *out_KKT_residuals, *out_x1, *out_cpu_time, *out_cpu_time_sim, *out_cpu_time_qp, *out_cpu_time_lin;
+    real_t *out_u0, *out_utraj, *out_xtraj, *out_status, *out_sqp_iter, *out_KKT_res, *out_KKT_residuals, *out_x1, *out_cpu_time, *out_cpu_time_sim, *out_cpu_time_qp, *out_cpu_time_lin, *out_cost_value;
     int tmp_int;
 
     {%- set i_output = -1 -%}{# note here i_output is 0-based #}
@@ -766,6 +771,13 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     {%- set i_output = i_output + 1 %}
     out_status = ssGetOutputPortRealSignal(S, {{ i_output }});
     *out_status = (real_t) acados_status;
+  {%- endif %}
+
+  {%- if simulink_opts.outputs.cost_value == 1 %}
+    {%- set i_output = i_output + 1 %}
+    out_cost_value = ssGetOutputPortRealSignal(S, {{ i_output }});
+    ocp_nlp_eval_cost(capsule->nlp_solver, nlp_in, nlp_out);
+    ocp_nlp_get(nlp_config, capsule->nlp_solver, "cost_value", (void *) out_cost_value);
   {%- endif %}
 
   {%- if simulink_opts.outputs.KKT_residual == 1 %}

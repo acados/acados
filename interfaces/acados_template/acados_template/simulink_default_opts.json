@@ -4,6 +4,7 @@
         "utraj": 0,
         "xtraj": 0,
         "solver_status": 1,
+        "cost_value": 0,
         "KKT_residual": 1,
         "KKT_residuals": 0,
         "x1": 1,
