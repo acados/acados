@@ -1453,6 +1453,12 @@ class AcadosOcpSolver:
     def get_residuals(self, recompute=False):
         """
         Returns an array of the form [res_stat, res_eq, res_ineq, res_comp].
+        This residual has to be computed for SQP_RTI solver, since it is not available by default.
+
+        - res_stat: stationarity residual
+        - res_eq: residual wrt equality constraints (dynamics)
+        - res_ineq: residual wrt inequality constraints (constraints)
+        - res_comp: residual wrt complementarity conditions
         """
         # compute residuals if RTI
         if self.solver_options['nlp_solver_type'] == 'SQP_RTI' or recompute:
@@ -1705,27 +1711,26 @@ class AcadosOcpSolver:
         return
 
 
-    def dynamics_get(self, stage_, field_):
+    def get_from_qp_in(self, stage_, field_):
         """
-        Get numerical data from the dynamics module of the solver:
+        Get numerical data from the current QP.
 
             :param stage: integer corresponding to shooting node
-            :param field: string, e.g., 'A'
+            :param field: string in ['A', 'B', 'Q', 'R', 'S', 'b', 'q', 'r']
         """
 
-        field = field_
-        field = field.encode('utf-8')
+        field = field_.encode('utf-8')
         stage = c_int(stage_)
 
         # get dims
-        self.shared_lib.ocp_nlp_dynamics_dims_get_from_attr.argtypes = \
+        self.shared_lib.ocp_nlp_qp_dims_get_from_attr.argtypes = \
             [c_void_p, c_void_p, c_void_p, c_int, c_char_p, POINTER(c_int)]
-        self.shared_lib.ocp_nlp_dynamics_dims_get_from_attr.restype = c_int
+        self.shared_lib.ocp_nlp_qp_dims_get_from_attr.restype = c_int
 
         dims = np.ascontiguousarray(np.zeros((2,)), dtype=np.intc)
         dims_data = cast(dims.ctypes.data, POINTER(c_int))
 
-        self.shared_lib.ocp_nlp_dynamics_dims_get_from_attr(self.nlp_config, \
+        self.shared_lib.ocp_nlp_qp_dims_get_from_attr(self.nlp_config, \
             self.nlp_dims, self.nlp_out, stage_, field, dims_data)
 
         # create output data

@@ -295,6 +295,38 @@ su = ocp.get('su', N);
 % get cost value
 cost_val_ocp = ocp.get_cost();
 
+
+%% get QP matrices:
+% See https://docs.acados.org/problem_formulation
+% either stage wise
+for stage = [0, N-1]
+    % Note loop over field doesnt work because stupid matlab diff between
+    % chars and strings
+    field = 'qp_A';
+    disp(strcat(field, " at stage ", num2str(stage), " = "));
+    ocp.get(field, stage)
+    field = 'qp_B';
+    disp(strcat(field, " at stage ", num2str(stage), " = "));
+    ocp.get(field, stage)
+    field = 'qp_R';
+    disp(strcat(field, " at stage ", num2str(stage), " = "));
+    ocp.get(field, stage)
+    field = 'qp_Q';
+    disp(strcat(field, " at stage ", num2str(stage), " = "));
+    ocp.get(field, stage)
+end
+
+stage = N;
+field = 'qp_Q';
+disp(strcat(field, " at stage ", num2str(stage), " = "));
+ocp.get(field, stage)
+field = 'qp_R';
+disp(strcat(field, " at stage ", num2str(stage), " = "));
+ocp.get(field, stage)
+
+% or for all stages
+qp_Q = ocp.get('qp_Q');
+
 %% Plot trajectories
 figure; hold on;
 States = {'p', 'theta', 'v', 'dtheta'};
