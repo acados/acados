@@ -330,9 +330,20 @@ i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') acados solver status (0 = SUCCESS)\n ');
 {%- endif %}
 
+{%- if simulink_opts.outputs.cost_value == 1 %}
+i_out = i_out + 1;
+output_note = strcat(output_note, num2str(i_out), ') cost function value\n ');
+{%- endif %}
+
+
 {%- if simulink_opts.outputs.KKT_residual == 1 %}
 i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') KKT residual\n ');
+{%- endif %}
+
+{%- if simulink_opts.outputs.KKT_residuals == 1 %}
+i_out = i_out + 1;
+output_note = strcat(output_note, num2str(i_out), ') KKT residuals, size [4] (stat, eq, ineq, comp)\n ');
 {%- endif %}
 
 {%- if dims.N > 0 and simulink_opts.outputs.x1 == 1 %}
