@@ -918,7 +918,7 @@ class AcadosOcpSolver:
                     acados_ocp_json['dims']['N'])
 
 
-    def __init__(self, acados_ocp, json_file='acados_ocp_nlp.json', simulink_opts=None, build=True, generate=True, cmake_builder: CMakeBuilder = None):
+    def __init__(self, acados_ocp: AcadosOcp, json_file='acados_ocp_nlp.json', simulink_opts=None, build=True, generate=True, cmake_builder: CMakeBuilder = None):
 
         self.solver_created = False
         if generate:
@@ -985,9 +985,9 @@ class AcadosOcpSolver:
 
 
     def __get_pointers_solver(self):
-        """
-        Private function to get the pointers for solver
-        """
+        # """
+        # Private function to get the pointers for solver
+        # """
         # get pointers solver
         getattr(self.shared_lib, f"{self.model_name}_acados_get_nlp_opts").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{self.model_name}_acados_get_nlp_opts").restype = c_void_p
