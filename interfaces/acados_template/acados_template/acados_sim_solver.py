@@ -228,6 +228,8 @@ class AcadosSimSolver:
 
         # module dependent post processing
         if acados_sim.solver_options.integrator_type == 'GNSF':
+            if acados_sim.solver_options.sens_hess == True:
+                raise Exception("AcadosSimSolver: GNSF does not support sens_hess = True.")
             if 'gnsf_model' in acados_sim.__dict__:
                 set_up_imported_gnsf_model(acados_sim)
             else:
