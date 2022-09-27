@@ -45,8 +45,42 @@ make run_examples_c
 ### Interfaces installation
 For the installation of Python/MATLAB/Octave interfaces, please refer to the [Interfaces](../interfaces/index.md) page.
 
+## Windows 10+ (WSL)
+
+### Prerequisites
+
+- Install [Ubuntu on WSL](https://ubuntu.com/wsl) using the [Microsoft Store](https://apps.microsoft.com/store/detail/ubuntu/9PDXGNCFSCZV). 
+
+- Start Ubuntu, the shell should pop up.
+
+- Update Apt
+
+  ```bash
+  apt-get update
+  ```
+
+- Install cmake , build-essentials , pip, virtualenv
+
+  ```bash
+  apt-get install cmake build-essential python3-pip python3-virtualenv
+  ```
+
+### Clone, Build and Install Acados
+
+- Navigate to the directory where you would like to install Acados.  For example 
+
+  ```
+  cd /mnt/c/Users/Documents/
+  ```
+
+- Follow the Linux/Mac Tutorial above to install Acados using cmake.
+
+### Interfaces installation
+
+For the installation of Python/MATLAB/Octave interfaces, please refer to the [Interfaces](../interfaces/index.md) page.
 
 ## Windows (for use with Matlab)
+
 Disclaimer: The high-level interfaces on Windows are not tested on Github Actions.
 
 ### Prerequisites
