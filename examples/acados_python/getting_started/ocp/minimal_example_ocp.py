@@ -76,7 +76,7 @@ ocp.cost.Vu = Vu
 
 ocp.cost.Vx_e = np.eye(nx)
 
-ocp.cost.yref  = np.zeros((ny, ))
+ocp.cost.yref = np.zeros((ny, ))
 ocp.cost.yref_e = np.zeros((ny_e, ))
 
 # set constraints
@@ -105,9 +105,9 @@ simX = np.ndarray((N+1, nx))
 simU = np.ndarray((N, nu))
 
 status = ocp_solver.solve()
+ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
 
 if status != 0:
-    ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
     raise Exception(f'acados returned status {status}.')
 
 # get solution
@@ -115,7 +115,5 @@ for i in range(N):
     simX[i,:] = ocp_solver.get(i, "x")
     simU[i,:] = ocp_solver.get(i, "u")
 simX[N,:] = ocp_solver.get(N, "x")
-
-ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
 
 plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
