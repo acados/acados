@@ -53,10 +53,10 @@ nx = model.x.size()[0]
 nu = model.u.size()[0]
 ny = nx + nu
 ny_e = nx
-N = 20
+N_horizon = 20
 
 # set dimensions
-ocp.dims.N = N
+ocp.dims.N = N_horizon
 # NOTE: all dimensions but N are now detected automatically in the Python
 #  interface, all other dimensions will be overwritten by the detection.
 
@@ -64,12 +64,12 @@ ocp.dims.N = N
 ocp.cost.cost_type = 'LINEAR_LS'
 ocp.cost.cost_type_e = 'LINEAR_LS'
 
-Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
-R = 2*np.diag([1e-2])
+Q_mat = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
+R_mat = 2*np.diag([1e-2])
 
-ocp.cost.W = scipy.linalg.block_diag(Q, R)
+ocp.cost.W = scipy.linalg.block_diag(Q_mat, R_mat)
 
-ocp.cost.W_e = Q
+ocp.cost.W_e = Q_mat
 
 ocp.cost.Vx = np.zeros((ny, nx))
 ocp.cost.Vx[:nx,:nx] = np.eye(nx)
@@ -92,17 +92,18 @@ ocp.constraints.ubu = np.array([+Fmax])
 ocp.constraints.x0 = x0
 ocp.constraints.idxbu = np.array([0])
 
-ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
+ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_Q_matPOASES
 ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
 ocp.solver_options.integrator_type = 'ERK'
 ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
 
-ocp.solver_options.qp_solver_cond_N = N
+ocp.solver_options.qp_solver_cond_N = N_horizon
 
 # set prediction horizon
 ocp.solver_options.tf = Tf
 
 acados_ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp_' + model.name + '.json')
+# create an integrator with the same settings as used in the OCP solver.
 acados_integrator = AcadosSimSolver(ocp, json_file = 'acados_ocp_' + model.name + '.json')
 
 Nsim = 100
@@ -122,7 +123,7 @@ for i in range(Nsim):
     status = acados_ocp_solver.solve()
 
     if status != 0:
-        raise Exception('acados acados_ocp_solver returned status {}. Exiting.'.format(status))
+        raise Exception(f'acados acados_ocp_solver returned status {status}')
 
     simU[i,:] = acados_ocp_solver.get(0, "u")
 
@@ -132,11 +133,11 @@ for i in range(Nsim):
 
     status = acados_integrator.solve()
     if status != 0:
-        raise Exception('acados integrator returned status {}. Exiting.'.format(status))
+        raise Exception(f'acados integrator returned status {status}.')
 
     # update state
     xcurrent = acados_integrator.get("x")
     simX[i+1,:] = xcurrent
 
 # plot results
-plot_pendulum(np.linspace(0, Tf/N*Nsim, Nsim+1), Fmax, simU, simX)
+plot_pendulum(np.linspace(0, Tf/N_horizon*Nsim, Nsim+1), Fmax, simU, simX)

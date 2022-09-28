@@ -49,12 +49,12 @@ def export_pendulum_ode_model() -> AcadosModel:
     theta   = SX.sym('theta')
     v1      = SX.sym('v1')
     dtheta  = SX.sym('dtheta')
-    
+
     x = vertcat(x1, theta, v1, dtheta)
 
     F = SX.sym('F')
     u = vertcat(F)
-    
+
     # xdot
     x1_dot      = SX.sym('x1_dot')
     theta_dot   = SX.sym('theta_dot')
@@ -68,7 +68,7 @@ def export_pendulum_ode_model() -> AcadosModel:
 
     # parameters
     p = []
-    
+
     # dynamics
     cos_theta = cos(theta)
     sin_theta = sin(theta)
