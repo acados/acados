@@ -68,17 +68,17 @@ Follow the installation instructions above, using a virtual environment.
 
 - Inside the WSL Ubuntu shell run
 
-  ```bash
-  code .
-  ```
+```bash
+code .
+```
 
-  to start VS-Code in the current folder.
+to start VS-Code in the current folder.
 
-- Select the created virtual environment as python interpreter.
+- Select the created virtual environment as Python interpreter.
 
 ### Windows
 
-The Python interface of acados can run under Windows using the CMake process.
+The Python interface of acados can run natively under Windows using the CMake process.
 Take a look at the [CMake installation instructions for Workflow with Microsoft Visual C Compiler (MSVC)](../installation/index.html#workflow-with-microsoft-visual-c-compiler-msvc).
 We suggest to get started with the example
 `<acados_root>/examples/acados_python/getting_started/minimal_example_ocp_cmake.py`. It uses CMake instead of Make by providing an instance of the [CMakeBuilder class](#acados_template.builders.CMakeBuilder) to the constructor of [`AcadosOcpSolver`](#acados_template.acados_ocp_solver.AcadosOcpSolver) or [`AcadosSimSolver`](#acados_template.acados_sim_solver.AcadosSimSolver). Depending on your Visual Studio Version the CMake generator might have to be adapted (see [`CMakeBuilder.generator`](#acados_template.builders.CMakeBuilder.generator)).

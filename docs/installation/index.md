@@ -53,27 +53,27 @@ For the installation of Python/MATLAB/Octave interfaces, please refer to the [In
 
 - Start Ubuntu, the shell should pop up.
 
-- Update Apt
+- Update apt
 
-  ```bash
-  apt-get update
-  ```
+```bash
+apt-get update
+```
 
-- Install cmake , build-essentials , pip, virtualenv
+- Install cmake, build-essentials, pip, virtualenv
 
-  ```bash
-  apt-get install cmake build-essential python3-pip python3-virtualenv
-  ```
+```bash
+apt-get install cmake build-essential python3-pip python3-virtualenv
+```
 
-### Clone, Build and Install Acados
+### Clone, Build and Install acados
 
-- Navigate to the directory where you would like to install Acados.  For example 
+- Navigate to the directory where you would like to install acados. For example
 
-  ```
-  cd /mnt/c/Users/Documents/
-  ```
+```
+cd /mnt/c/Users/Documents/
+```
 
-- Follow the Linux/Mac Tutorial above to install Acados using cmake.
+- Follow the [Linux/Mac workflow above and install acados using cmake](#linux-mac).
 
 ### Interfaces installation
 
