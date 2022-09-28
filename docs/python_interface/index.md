@@ -30,11 +30,10 @@ The Python interface relies on the same problem formulation as the MATLAB interf
 
 2. Install `acados_template` Python package:
     ```
-    pip3 install -e <acados_root>/interfaces/acados_template
+    pip install -e <acados_root>/interfaces/acados_template
     ```
-    Note: If you are working with a virtual Python environment, use the `pip` corresponding to this Python environment instead of `pip3`.
-    Note: The option `-e` makes the installation editable, so you can seeminglessly switch to a later `acados` version and make changes in the Python interface yourself.
-
+    Note: The option `-e` makes the installation editable, so you can seamlessly switch to a later `acados` version and make changes in the Python interface yourself.
+    
 3. Add the path to the compiled shared libraries `libacados.so, libblasfeo.so, libhpipm.so` to `LD_LIBRARY_PATH` (default path is `<acados_root/lib>`) by running:
     ```bash
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"<acados_root>/lib"
@@ -55,8 +54,31 @@ The Python interface relies on the same problem formulation as the MATLAB interf
 6. Optional: Set `acados_lib_path`, `acados_include_path`.
     If you want the generated Makefile to refer to a specific path (e.g. when cross-compiling or compiling from a location different from the one where you generate the C code), you will have to set these paths accordingly in the generating Python code.
 
+### Windows 10+ (WSL) and VSCode
+
+#### Virtual Environment
+
+Follow the installation instructions above, using a virtual environment.
+
+#### Connect to VS-Code
+
+- Install VS-Code on Windows
+
+- Install the [Remote Development Extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.vscode-remote-extensionpack).
+
+- Inside the WSL Ubuntu shell run
+
+```bash
+code .
+```
+
+to start VS-Code in the current folder.
+
+- Select the created virtual environment as Python interpreter.
+
 ### Windows
-The Python interface of acados can run under Windows using the CMake process.
+
+The Python interface of acados can run natively under Windows using the CMake process.
 Take a look at the [CMake installation instructions for Workflow with Microsoft Visual C Compiler (MSVC)](../installation/index.html#workflow-with-microsoft-visual-c-compiler-msvc).
 We suggest to get started with the example
 `<acados_root>/examples/acados_python/getting_started/minimal_example_ocp_cmake.py`. It uses CMake instead of Make by providing an instance of the [CMakeBuilder class](#acados_template.builders.CMakeBuilder) to the constructor of [`AcadosOcpSolver`](#acados_template.acados_ocp_solver.AcadosOcpSolver) or [`AcadosSimSolver`](#acados_template.acados_sim_solver.AcadosSimSolver). Depending on your Visual Studio Version the CMake generator might have to be adapted (see [`CMakeBuilder.generator`](#acados_template.builders.CMakeBuilder.generator)).
