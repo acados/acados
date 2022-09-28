@@ -50,34 +50,21 @@ ocp.model = model
 Tf = 1.0
 nx = model.x.size()[0]
 nu = model.u.size()[0]
-ny = nx + nu
-ny_e = nx
 N = 20
 
 # set dimensions
 ocp.dims.N = N
 
 # set cost
-Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
-R = 2*np.diag([1e-2])
+Q_mat = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
+R_mat = 2*np.diag([1e-2])
 
-ocp.cost.W_e = Q
-ocp.cost.W = scipy.linalg.block_diag(Q, R)
-
-ocp.cost.cost_type = 'LINEAR_LS'
-ocp.cost.cost_type_e = 'LINEAR_LS'
-
-ocp.cost.Vx = np.zeros((ny, nx))
-ocp.cost.Vx[:nx,:nx] = np.eye(nx)
-
-Vu = np.zeros((ny, nu))
-Vu[4,0] = 1.0
-ocp.cost.Vu = Vu
-
-ocp.cost.Vx_e = np.eye(nx)
-
-ocp.cost.yref = np.zeros((ny, ))
-ocp.cost.yref_e = np.zeros((ny_e, ))
+# the 'EXTERNAL' cost type can be used to define general cost terms
+# NOTE: This leads to additional (exact) hessian contributions when using GAUSS_NEWTON hessian.
+ocp.cost.cost_type = 'EXTERNAL'
+ocp.cost.cost_type_e = 'EXTERNAL'
+ocp.model.cost_expr_ext_cost = model.x.T @ Q_mat @ model.x + model.u.T @ R_mat @ model.u
+ocp.model.cost_expr_ext_cost_e = model.x.T @ Q_mat @ model.x
 
 # set constraints
 Fmax = 80
@@ -91,7 +78,7 @@ ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
 # PARTIAL_CONDENSING_HPIPM, FULL_CONDENSING_QPOASES, FULL_CONDENSING_HPIPM,
 # PARTIAL_CONDENSING_QPDUNES, PARTIAL_CONDENSING_OSQP, FULL_CONDENSING_DAQP
-ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+ocp.solver_options.hessian_approx = 'GAUSS_NEWTON' # 'GAUSS_NEWTON', 'EXACT'
 ocp.solver_options.integrator_type = 'IRK'
 # ocp.solver_options.print_level = 1
 ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
@@ -117,3 +104,26 @@ for i in range(N):
 simX[N,:] = ocp_solver.get(N, "x")
 
 plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
+
+
+# # formulation using the 'LINEAR_LS' cost type
+# ocp.cost.cost_type = 'LINEAR_LS'
+# ocp.cost.cost_type_e = 'LINEAR_LS'
+
+# ny = nx + nu
+# ny_e = nx
+
+# ocp.cost.W_e = Q_mat
+# ocp.cost.W = scipy.linalg.block_diag(Q_mat, R_mat)
+
+# ocp.cost.Vx = np.zeros((ny, nx))
+# ocp.cost.Vx[:nx,:nx] = np.eye(nx)
+
+# Vu = np.zeros((ny, nu))
+# Vu[nx:nx+nu, 0:nu] = np.eye(nu)
+# ocp.cost.Vu = Vu
+
+# ocp.cost.Vx_e = np.eye(nx)
+
+# ocp.cost.yref = np.zeros((ny, ))
+# ocp.cost.yref_e = np.zeros((ny_e, ))
