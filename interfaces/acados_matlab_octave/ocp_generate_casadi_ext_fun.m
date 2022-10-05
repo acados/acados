@@ -208,6 +208,9 @@ end
 
 ext_fun_compile_flags = opts_struct.ext_fun_compile_flags;
 
+%Store the current PATH environment variable value
+origEnvPath=getenv('PATH');
+
 if use_msvc
     % get env vars for MSVC
     msvc_env = fullfile(mexOpts.Location, 'VC\Auxiliary\Build\vcvars64.bat');
@@ -223,6 +226,13 @@ if use_msvc
     % build
     compile_command = sprintf('"%s" & %s', msvc_env, build_cmd);
 else % gcc
+    %Read the mex C compiler configuration and extract the location
+    cCompilerConfig = mex.getCompilerConfigurations('C');
+    pathToCompilerLocation = cCompilerConfig.Location;
+    %Modify the environment PATH varuable for this Matlab session such that 
+    %the mex C compiler takes periority ensuring calls to gcc uses the
+    %configured mex compiler
+    setenv('PATH', [fullfile(pathToCompilerLocation,'bin') ';' origEnvPath]);
     % set includes
     acados_include = ['-I' acados_folder];
     blasfeo_include = ['-I' fullfile(acados_folder, 'external' , 'blasfeo', 'include')];
@@ -236,11 +246,22 @@ else % gcc
                        ' ', strjoin(unique(c_files_path), ' '), ' -o ', out_lib];
 end
 
+
 compile_status = system(compile_command);
+
+%Store the PATH environment variable used during compile for error reporting
+envPath=getenv('PATH');
+
+%Reset the environment path variable to its original value
+%This is done before potentially raising an error to ensure that the path
+%environment variable is clean
+setenv('PATH',origEnvPath);
+
 if compile_status ~= 0
     error('Compilation of model functions failed! %s %s\n%s\n\n', ...
         'Please check the compile command above and the flags therein closely.',...
-        'Compile command was:', compile_command);
+        'Compile command was:', compile_command, '\n', ...
+        'Environment path was: ', envPath);
 end
 
 end
