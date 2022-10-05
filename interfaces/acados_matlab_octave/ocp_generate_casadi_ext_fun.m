@@ -230,7 +230,7 @@ else % gcc
     cCompilerConfig = mex.getCompilerConfigurations('C');
     pathToCompilerLocation = cCompilerConfig.Location;
     %Modify the environment PATH varuable for this Matlab session such that 
-    %the mex C compiler takes periority ensuring calls to gcc uses the
+    %the mex C compiler takes priority ensuring calls to gcc uses the
     %configured mex compiler
     setenv('PATH', [fullfile(pathToCompilerLocation,'bin') ';' origEnvPath]);
     % set includes
