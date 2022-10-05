@@ -98,7 +98,7 @@ function model = detect_constr(model, is_e)
     % loop over CasADi formulated constraints
     for ii = 1:length(expr_constr)
         c = expr_constr(ii);
-        if any(c.which_depends(z)) || ~c.is_linear([ x; u ])
+        if any(c.which_depends(z)) || ~c.is_linear([ x; u ]) || any(c.which_depends(model.sym_p))
             % external constraint
             constr_expr_h = vertcat(constr_expr_h, c);
             lh = [ lh; LB(ii)];
