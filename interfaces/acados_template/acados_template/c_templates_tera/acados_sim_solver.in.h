@@ -61,6 +61,7 @@ typedef struct sim_solver_capsule
     /* external functions */
     // ERK
     external_function_param_{{ model.dyn_ext_fun_type }} * sim_forw_vde_casadi;
+    external_function_param_{{ model.dyn_ext_fun_type }} * sim_vde_adj_casadi;
     external_function_param_{{ model.dyn_ext_fun_type }} * sim_expl_ode_fun_casadi;
     external_function_param_{{ model.dyn_ext_fun_type }} * sim_expl_ode_hess;
 

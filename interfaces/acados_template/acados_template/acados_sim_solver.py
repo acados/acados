@@ -228,6 +228,8 @@ class AcadosSimSolver:
 
         # module dependent post processing
         if acados_sim.solver_options.integrator_type == 'GNSF':
+            if acados_sim.solver_options.sens_hess == True:
+                raise Exception("AcadosSimSolver: GNSF does not support sens_hess = True.")
             if 'gnsf_model' in acados_sim.__dict__:
                 set_up_imported_gnsf_model(acados_sim)
             else:
@@ -424,10 +426,10 @@ class AcadosSimSolver:
         """
         Set numerical data inside the solver.
 
-            :param field: string in ['p', 'seed_adj', 'T', 'x', 'u', 'xdot', 'z']
+            :param field: string in ['x', 'u', 'p', 'xdot', 'z', 'seed_adj', 'T']
             :param value: the value with appropriate size.
         """
-        settable = ['seed_adj', 'T', 'x', 'u', 'xdot', 'z', 'p'] # S_forw
+        settable = ['x', 'u', 'p', 'xdot', 'z', 'seed_adj', 'T'] # S_forw
 
         # TODO: check and throw error here. then remove checks in Cython for speed
         # cast value_ to avoid conversion issues
