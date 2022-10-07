@@ -124,7 +124,8 @@ function model = detect_cost_type(model, stage_type)
             end
 
             for id = z_idx
-                Vz(i, id) = 1;
+                iz = id - nx - nu;
+                Vz(i, iz) = 1;
                 W(i, :) = H_xuz(id, xuz_idx)/2;
                 i = i+1;
             end
