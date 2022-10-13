@@ -34,7 +34,7 @@ def create_ocp_solver_description() -> AcadosOcp:
 
     # set cost
     Q_mat = 2*np.diag([1e3, 1e3, 0.0, 0.0, 0.0])  #[x,y,x_d,y_d,th,th_d]
-    R_mat = 2*np.diag([1e-1, 1e-2])
+    R_mat = 2*5*np.diag([1e-1, 1e-2])
  
     ocp.cost.cost_type = 'LINEAR_LS'
     ocp.cost.cost_type_e = 'LINEAR_LS'
