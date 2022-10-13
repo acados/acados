@@ -1,9 +1,11 @@
 from acados_template import AcadosModel
 from casadi import SX, vertcat, sin, cos
 
+# Reference for model equations:
+# http://users.isr.ist.utl.pt/~jag/publications/08-JETC-RCarona-vcontrol.pdf
 
 def export_robot_model() -> AcadosModel:
-    model_name = "param_robot_ode"
+    model_name = "unicycle_ode"
 
     # set up states & controls
     x = SX.sym("x")
