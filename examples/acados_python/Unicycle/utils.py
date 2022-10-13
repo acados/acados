@@ -46,6 +46,7 @@ def plot_robot(
 
     N_sim = X_true.shape[0]
     nx = X_true.shape[1]
+    nu = U.shape[1]
 
     Tf = shooting_nodes[N_sim - 1]
     t = shooting_nodes
@@ -55,26 +56,29 @@ def plot_robot(
         N_mhe = N_sim - X_est.shape[0]
         t_mhe = np.linspace(N_mhe * Ts, Tf, N_sim - N_mhe)
 
-    plt.subplot(nx + 1, 1, 1)
-    # line, = plt.step(t, np.append([U[0]], U))
-    # line, = plt.plot(t, U[:, 0], label='U')
-    (line,) = plt.step(t, np.append([U[0, 0]], U[:, 0]))
-    if X_true_label is not None:
-        line.set_label(X_true_label)
-    else:
-        line.set_color("r")
-    # plt.title('closed-loop simulation')
-    plt.ylabel("$Force$")
-    plt.xlabel("$t$")
-    plt.hlines(u_max, t[0], t[-1], linestyles="dashed", alpha=0.7)
-    plt.hlines(-u_max, t[0], t[-1], linestyles="dashed", alpha=0.7)
-    plt.ylim([-1.2 * u_max, 1.2 * u_max])
-    plt.grid()
+    control_lables = ["$F$", "$T$"]
+    for i in range(nu):
+        plt.subplot(nx + nu, 1, i+1)
+        # line, = plt.step(t, np.append([U[0]], U))
+        # line, = plt.plot(t, U[:, 0], label='U')
+        (line,) = plt.step(t, np.append([U[0, i]], U[:, i]))
+        # (line,) = plt.step(t, np.append([U[0, 0]], U[:, 0]))
+        if X_true_label is not None:
+            line.set_label(X_true_label)
+        else:
+            line.set_color("r")
+        # plt.title('closed-loop simulation')
+        plt.ylabel(control_lables[i])
+        plt.xlabel("$t$")
+        if u_max[i] is not None:
+            plt.hlines(u_max[i], t[0], t[-1], linestyles="dashed", alpha=0.7)
+            plt.hlines(-u_max[i], t[0], t[-1], linestyles="dashed", alpha=0.7)
+            plt.ylim([-1.2 * u_max[i], 1.2 * u_max[i]])
+        plt.grid()
 
     states_lables = ["$x$", "$y$", "$v$", "$theta$", "$thetad$"]
-
     for i in range(nx):
-        plt.subplot(nx + 1, 1, i + 2)
+        plt.subplot(nx + nu, 1, i + nu+1)
         (line,) = plt.plot(t, X_true[:, i], label="true")
         if X_true_label is not None:
             line.set_label(X_true_label)

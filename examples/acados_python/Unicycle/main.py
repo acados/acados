@@ -1,4 +1,3 @@
-# Imports
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver
 from robot_model import export_robot_model
 import numpy as np
@@ -153,7 +152,7 @@ def closed_loop_simulation():
 
     # plot results
     plot_robot(
-        np.linspace(0, T_horizon / N_horizon * Nsim, Nsim + 1), F_max, simU, simX
+        np.linspace(0, T_horizon / N_horizon * Nsim, Nsim + 1), [F_max, None], simU, simX
     )
 
 
