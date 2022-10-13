@@ -2,7 +2,7 @@
 
 #Imports
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver
-from robot_model import  export_parametric_robot_model
+from robot_model import  export_robot_model
 import numpy as np
 import scipy.linalg
 from utils import plot_robot
@@ -23,19 +23,16 @@ def create_ocp_solver_description() -> AcadosOcp:
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
-
-    model = export_parametric_robot_model()
+    model = export_robot_model()
     ocp.model = model
     nx = model.x.size()[0]
     nu = model.u.size()[0]
     ny = nx + nu
 
-    
     # set dimensions
     ocp.dims.N = N_horizon
 
-    # set costf
-
+    # set cost
     Q_mat = 2*np.diag([1e3, 1e3, 0.0, 0.0, 0.0])  #[x,y,x_d,y_d,th,th_d]
     R_mat = 2*np.diag([1e-1, 1e-2])
  
@@ -60,7 +57,6 @@ def create_ocp_solver_description() -> AcadosOcp:
     ocp.cost.yref = np.zeros((ny, ))
     ocp.cost.yref_e = np.zeros((ny_e, ))
 
-
     # set constraints
     ocp.constraints.lbu = np.array([-F_max])
     ocp.constraints.ubu = np.array([+F_max])
@@ -74,6 +70,7 @@ def create_ocp_solver_description() -> AcadosOcp:
     ocp.solver_options.integrator_type = 'IRK'
     ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
     ocp.solver_options.nlp_solver_max_iter = 400
+    # ocp.solver_options.levenberg_marquardt = 1e-2
 
     # set prediction horizon
     ocp.solver_options.tf = T_horizon
@@ -84,18 +81,17 @@ def create_ocp_solver_description() -> AcadosOcp:
 
 
 def closed_loop_simulation():
+
+    # create solvers
     ocp = create_ocp_solver_description()
     acados_ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp_' + ocp.model.name + '.json')
-
     acados_integrator = AcadosSimSolver(ocp, json_file = 'acados_ocp_' + ocp.model.name + '.json')
 
-
+    # prepare simulation
     Nsim = 100
-
     nx = ocp.model.x.size()[0]
     nu = ocp.model.u.size()[0]
-    ny = nx + nu
-    xcurrent = X0
+
     simX = np.ndarray((Nsim+1, nx))
     simU = np.ndarray((Nsim, nu))
 
@@ -103,30 +99,25 @@ def closed_loop_simulation():
     simX[0,:] = xcurrent
 
 
+    # initialize solver
+    for stage in range(N_horizon+1):
+        acados_ocp_solver.set(stage, 'x', 0.*np.ones(xcurrent.shape))
+    for stage in range(N_horizon):
+        acados_ocp_solver.set(stage, 'u', np.zeros((nu,)))
+
     # closed loop
     for i in range(Nsim):
 
         # set initial state constraint
         acados_ocp_solver.set(0, "lbx", xcurrent)
         acados_ocp_solver.set(0, "ubx", xcurrent)
-        
 
+        # update yref
         for j in range(N_horizon):
             yref=np.array([1,1,0,0,0,0,0])
             acados_ocp_solver.set(j, "yref", yref)
         yref_N=np.array([1,1,0,0,0])
         acados_ocp_solver.set(N_horizon, "yref", yref_N)
-
-
-        # initialize solver
-        for stage in range(N_horizon+1):
-            acados_ocp_solver.set(stage, 'x', xcurrent)
-        for stage in range(N_horizon):
-            acados_ocp_solver.set(stage, 'u', np.array([0.0, 0.0]))
-
-
-
-
 
         # solve ocp
         status = acados_ocp_solver.solve()
@@ -136,6 +127,8 @@ def closed_loop_simulation():
             plot_robot(np.linspace(0, T_horizon/N_horizon*i, i+1), F_max, simU[:i,:], simX[:i+1,:])
             raise Exception(f'acados acados_ocp_solver returned status {status} in closed loop instance {i} with {xcurrent}')
 
+        if status == 2:
+            print(f'acados acados_ocp_solver returned status {status} in closed loop instance {i} with {xcurrent}')
         simU[i,:] = acados_ocp_solver.get(0, "u")
 
         # simulate system
@@ -155,5 +148,4 @@ def closed_loop_simulation():
 
 
 if __name__ == "__main__":
-    #solve_single_ocp()
     closed_loop_simulation()

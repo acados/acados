@@ -1,23 +1,16 @@
 from acados_template import AcadosModel
-from casadi import SX, vertcat, sin, cos, Function
+from casadi import SX, vertcat, sin, cos
 
 
-
-
-def export_parametric_robot_model() -> AcadosModel:
+def export_robot_model() -> AcadosModel:
     model_name = 'param_robot_ode'
 
-    # constants
- 
-    p = []
-    x_ref = SX.ones(5,1)
     # set up states & controls
     x      = SX.sym('x')
     y      = SX.sym('y')
     v      = SX.sym('x_d')
     theta   = SX.sym('theta')
     theta_d = SX.sym('theta_d')
-    
 
     x = vertcat(x, y, v, theta,theta_d)
 
@@ -39,6 +32,7 @@ def export_parametric_robot_model() -> AcadosModel:
     # z = None
 
     # parameters
+    p = []
 
     # dynamics
     f_expl = vertcat(v * cos (theta), 
