@@ -70,8 +70,8 @@ option(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE "Print QP inputs and outputs to file i
 option(ACADOS_UNIT_TESTS "Compile Unit tests" OFF)
 option(ACADOS_EXAMPLES "Compile Examples" OFF)
 option(ACADOS_LINT "Compile Lint" OFF)
-# Extarnal libs
-option(ACADOS_WITH_QPOASES  "qpOASES solver" OFF)
+# External libs
+option(ACADOS_WITH_QPOASES "qpOASES solver" OFF)
 option(ACADOS_WITH_DAQP "DAQP solver" OFF)
 option(ACADOS_WITH_HPMPC "HPMPC solver" OFF)
 option(ACADOS_WITH_QORE "QORE solver" OFF)
@@ -96,7 +96,6 @@ if(NOT CMAKE_BUILD_TYPE)
         CACHE STRING "Valid build types are: \
         Release (default), None, Debug, WithExternalLibs, RelWithDebInfo, MinSizeRel." FORCE)
 endif()
-### Defaults
 
 message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
 
