@@ -1525,7 +1525,7 @@ class AcadosOcpSolver:
 
         # treat parameters separately
         if field_ == 'p':
-            getattr(self.shared_lib, f"{self.model_name}_acados_update_params").argtypes = [c_void_p, c_int, POINTER(c_double)]
+            getattr(self.shared_lib, f"{self.model_name}_acados_update_params").argtypes = [c_void_p, c_int, POINTER(c_double), c_int]
             getattr(self.shared_lib, f"{self.model_name}_acados_update_params").restype = c_int
 
             value_data = cast(value_.ctypes.data, POINTER(c_double))
