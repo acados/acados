@@ -366,6 +366,13 @@ ocp_nlp_dims* {{ model.name }}_acados_create_2_create_and_set_dimensions({{ mode
         }
     }
 {%- endif %}
+
+{%- if solver_options.cost_discretization == "INTEGRATOR" %}
+    for (int i = 0; i < N; i++)
+        ocp_nlp_dims_set_dynamics(nlp_config, nlp_dims, i, "ny", &ny[i]);
+{%- endif %}
+
+
 return nlp_dims;
 }
 
@@ -376,12 +383,6 @@ return nlp_dims;
 void {{ model.name }}_acados_create_3_create_and_set_functions({{ model.name }}_solver_capsule* capsule)
 {
     const int N = capsule->nlp_solver_plan->N;
-
-{%- if solver_options.cost_discretization == "INTEGRATOR" %}
-    for (int i = 0; i < N; i++)
-        ocp_nlp_dims_set_dynamics(nlp_config, nlp_dims, i, "ny", &ny[i]);
-{%- endif %}
-
 
 
     /************************************************
