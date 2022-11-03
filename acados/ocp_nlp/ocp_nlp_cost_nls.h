@@ -38,8 +38,22 @@
 /// @{
 /// \addtogroup ocp_nlp_cost_nls ocp_nlp_cost_nls
 /// \brief This module implements nonlinear-least squares costs of the form
-/// \f$\min_{x,u} \| r(x,u) - y_{\text{ref}} \|_W^2\f$.
+/// \f$\min_{x,u} \| y(x,u) - y_{\text{ref}} \|_W^2\f$,
+/// respectively
+/// \f$\min_{x,u} phi(y(x,u) - y_{\text{ref}}) \f$.
 /// @{
+
+// NOTE: either W is used to define norm (weighted l2-norm)
+//  OR
+// phi defines the outer loss function.
+
+// TODO:
+// - generate phi in interface (Python)
+// - eval_cost
+// - gradient: now: Jt * W * res; -> Jt * dphi/dy^T
+// - hess:
+// only implement gauss_newton_hess, otherwise EXTERNAL should be used.
+
 
 #ifndef ACADOS_OCP_NLP_OCP_NLP_COST_NLS_H_
 #define ACADOS_OCP_NLP_OCP_NLP_COST_NLS_H_
