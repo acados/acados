@@ -86,8 +86,11 @@ class AcadosModel():
         """
 
         ## for OCP
+        # TODO: docu in docstrings, not comments!!
         # constraints
+        # BGH(default): lh <= h(x, u) <= uh
         self.con_h_expr = None  #: CasADi expression for the constraint :math:`h`; Default: :code:`None`
+        # BGP(convex over nonlinear): lphi <= phi(r(x, u)) <= uphi
         self.con_phi_expr = None  #: CasADi expression for the constraint phi; Default: :code:`None`
         self.con_r_expr = None  #: CasADi expression for the constraint phi(r); Default: :code:`None`
         self.con_r_in_phi = None
