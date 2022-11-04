@@ -591,7 +591,6 @@ void ocp_nlp_dynamics_disc_model_set(void *config_, void *dims_, void *model_, c
     else
     {
         printf("\nerror: field %s not available in ocp_nlp_dynamics_disc_model_set\n", field);
-        
         exit(1);
     }
 
