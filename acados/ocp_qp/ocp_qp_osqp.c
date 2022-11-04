@@ -1066,6 +1066,7 @@ static int osqp_init_data(OSQPData *data, OSQPSettings *settings, OSQPWorkspace 
     }
 
     // Initialize linear system solver structure
+    // NOTE: mallocs
     work->linsys_solver = init_linsys_solver(work->data->P, work->data->A, work->settings->sigma,
                                              work->rho_vec, work->settings->linsys_solver, 0);
 

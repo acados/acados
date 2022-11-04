@@ -309,6 +309,8 @@ def make_ocp_dims_consistent(acados_ocp):
 
     # Slack dimensions
     nsbx = constraints.idxsbx.shape[0]
+    if nsbx > nbx:
+        raise Exception(f'inconsistent dimension nsbx = {nsbx}. Is greater than nbx = {nbx}.')
     if is_empty(constraints.lsbx):
         constraints.lsbx = np.zeros((nsbx,))
     elif constraints.lsbx.shape[0] != nsbx:
@@ -320,6 +322,8 @@ def make_ocp_dims_consistent(acados_ocp):
     dims.nsbx = nsbx
 
     nsbu = constraints.idxsbu.shape[0]
+    if nsbu > nbu:
+        raise Exception(f'inconsistent dimension nsbu = {nsbu}. Is greater than nbu = {nbu}.')
     if is_empty(constraints.lsbu):
         constraints.lsbu = np.zeros((nsbu,))
     elif constraints.lsbu.shape[0] != nsbu:
@@ -331,6 +335,8 @@ def make_ocp_dims_consistent(acados_ocp):
     dims.nsbu = nsbu
 
     nsh = constraints.idxsh.shape[0]
+    if nsh > nh:
+        raise Exception(f'inconsistent dimension nsh = {nsh}. Is greater than nh = {nh}.')
     if is_empty(constraints.lsh):
         constraints.lsh = np.zeros((nsh,))
     elif constraints.lsh.shape[0] != nsh:
@@ -342,6 +348,8 @@ def make_ocp_dims_consistent(acados_ocp):
     dims.nsh = nsh
 
     nsphi = constraints.idxsphi.shape[0]
+    if nsphi > dims.nphi:
+        raise Exception(f'inconsistent dimension nsphi = {nsphi}. Is greater than nphi = {dims.nphi}.')
     if is_empty(constraints.lsphi):
         constraints.lsphi = np.zeros((nsphi,))
     elif constraints.lsphi.shape[0] != nsphi:
@@ -353,6 +361,8 @@ def make_ocp_dims_consistent(acados_ocp):
     dims.nsphi = nsphi
 
     nsg = constraints.idxsg.shape[0]
+    if nsg > ng:
+        raise Exception(f'inconsistent dimension nsg = {nsg}. Is greater than ng = {ng}.')
     if is_empty(constraints.lsg):
         constraints.lsg = np.zeros((nsg,))
     elif constraints.lsg.shape[0] != nsg:
@@ -386,6 +396,8 @@ def make_ocp_dims_consistent(acados_ocp):
     dims.ns = ns
 
     nsbx_e = constraints.idxsbx_e.shape[0]
+    if nsbx_e > nbx_e:
+        raise Exception(f'inconsistent dimension nsbx_e = {nsbx_e}. Is greater than nbx_e = {nbx_e}.')
     if is_empty(constraints.lsbx_e):
         constraints.lsbx_e = np.zeros((nsbx_e,))
     elif constraints.lsbx_e.shape[0] != nsbx_e:
@@ -397,6 +409,8 @@ def make_ocp_dims_consistent(acados_ocp):
     dims.nsbx_e = nsbx_e
 
     nsh_e = constraints.idxsh_e.shape[0]
+    if nsh_e > nh_e:
+        raise Exception(f'inconsistent dimension nsh_e = {nsh_e}. Is greater than nh_e = {nh_e}.')
     if is_empty(constraints.lsh_e):
         constraints.lsh_e = np.zeros((nsh_e,))
     elif constraints.lsh_e.shape[0] != nsh_e:
@@ -408,6 +422,8 @@ def make_ocp_dims_consistent(acados_ocp):
     dims.nsh_e = nsh_e
 
     nsg_e = constraints.idxsg_e.shape[0]
+    if nsg_e > ng_e:
+        raise Exception(f'inconsistent dimension nsg_e = {nsg_e}. Is greater than ng_e = {ng_e}.')
     if is_empty(constraints.lsg_e):
         constraints.lsg_e = np.zeros((nsg_e,))
     elif constraints.lsg_e.shape[0] != nsg_e:
@@ -419,6 +435,8 @@ def make_ocp_dims_consistent(acados_ocp):
     dims.nsg_e = nsg_e
 
     nsphi_e = constraints.idxsphi_e.shape[0]
+    if nsphi_e > dims.nphi_e:
+        raise Exception(f'inconsistent dimension nsphi_e = {nsphi_e}. Is greater than nphi_e = {dims.nphi_e}.')
     if is_empty(constraints.lsphi_e):
         constraints.lsphi_e = np.zeros((nsphi_e,))
     elif constraints.lsphi_e.shape[0] != nsphi_e:
