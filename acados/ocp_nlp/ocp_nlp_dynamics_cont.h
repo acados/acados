@@ -76,10 +76,6 @@ acados_size_t ocp_nlp_dynamics_cont_dims_calculate_size(void *config);
 //
 void *ocp_nlp_dynamics_cont_dims_assign(void *config, void *raw_memory);
 //
-void ocp_nlp_dynamics_cont_dims_initialize(void *config, void *dims, int nx, int nu, int nx1,
-                                           int nu1, int nz);
-
-//
 void ocp_nlp_dynamics_cont_dims_set(void *config_, void *dims_, const char *field, int* value);
 
 /************************************************
