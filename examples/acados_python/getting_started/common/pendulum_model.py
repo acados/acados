@@ -121,10 +121,11 @@ def export_augmented_pendulum_model():
     model = export_pendulum_ode_model()
     model_name = 'augmented_pendulum'
 
-    z = SX.sym('z')
+    z = SX.sym('z', 2, 1)
 
     f_impl = vertcat( model.xdot - model.f_expl_expr, \
-        z - model.u*model.u)
+        z - vertcat(model.x[0], model.u**2)
+    )
 
     model.f_impl_expr = f_impl
     model.z = z
