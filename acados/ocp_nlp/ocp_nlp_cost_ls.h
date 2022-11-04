@@ -90,22 +90,6 @@ acados_size_t ocp_nlp_cost_ls_dims_calculate_size(void *config);
 ///  \param[out] []
 ///  \return dims
 void *ocp_nlp_cost_ls_dims_assign(void *config, void *raw_memory);
-
-
-///  Initialize the dimensions struct of the
-///  ocp_nlp-cost_ls component
-///
-///  \param[in] config structure containing configuration ocp_nlp-cost_ls component
-///  \param[in] nx number of states
-///  \param[in] nu number of inputs
-///  \param[in] ny number of residuals
-///  \param[in] ns number of slacks
-///  \param[in] nz number of algebraic variables
-///  \param[out] dims
-///  \return size
-void ocp_nlp_cost_ls_dims_initialize(void *config, void *dims, int nx,
-        int nu, int ny, int ns, int nz);
-
 //
 void ocp_nlp_cost_ls_dims_set(void *config_, void *dims_, const char *field, int* value);
 //

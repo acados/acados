@@ -85,34 +85,6 @@ void *ocp_nlp_cost_ls_dims_assign(void *config_, void *raw_memory)
 
 
 
-void ocp_nlp_cost_ls_dims_initialize(void *config_, void *dims_, int nx,
-        int nu, int ny, int ns, int nz)
-{
-
-    ///  Initialize the dimensions struct of the
-    ///  ocp_nlp_cost_ls module
-    ///
-    ///  \param[in] config_ structure containing configuration of ocp_nlp_cost module
-    ///  \param[in] nx number of states
-    ///  \param[in] nu number of inputs
-    ///  \param[in] ny number of residuals
-    ///  \param[in] ns number of slacks
-    ///  \param[out] dims
-    ///  \return []
-
-    ocp_nlp_cost_ls_dims *dims = dims_;
-
-    dims->nx = nx;
-    dims->nu = nu;
-    dims->ny = ny;
-    dims->ns = ns;
-    dims->nz = nz;
-
-    return;
-}
-
-
-
 static void ocp_nlp_cost_ls_set_nx(void *config_, void *dims_, int *nx)
 {
     ///  Initialize the dimensions struct of the
@@ -920,7 +892,6 @@ void ocp_nlp_cost_ls_config_initialize_default(void *config_)
 
     config->dims_calculate_size = &ocp_nlp_cost_ls_dims_calculate_size;
     config->dims_assign = &ocp_nlp_cost_ls_dims_assign;
-    config->dims_initialize = &ocp_nlp_cost_ls_dims_initialize;
     config->dims_set = &ocp_nlp_cost_ls_dims_set;
     config->dims_get = &ocp_nlp_cost_ls_dims_get;
     config->model_calculate_size = &ocp_nlp_cost_ls_model_calculate_size;
