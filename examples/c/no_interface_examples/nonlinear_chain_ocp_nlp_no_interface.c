@@ -1299,7 +1299,6 @@ int main() {
 	int dims_size = ocp_nlp_dims_calculate_size(config);
 	void *dims_mem = malloc(dims_size);
 	ocp_nlp_dims *dims = ocp_nlp_dims_assign(config, dims_mem);
-//	ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, nq, ns, nz, dims);
 	ocp_nlp_dims_set_opt_vars(config, dims, "nx", nx);
 	ocp_nlp_dims_set_opt_vars(config, dims, "nu", nu);
 	ocp_nlp_dims_set_opt_vars(config, dims, "nz", nz);
