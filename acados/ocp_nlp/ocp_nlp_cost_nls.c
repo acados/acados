@@ -74,59 +74,12 @@ void *ocp_nlp_cost_nls_dims_assign(void *config_, void *raw_memory)
 
 
 
-void ocp_nlp_cost_nls_dims_initialize(void *config_, void *dims_, int nx, int nu, int ny, int ns, int nz)
-{
-    ocp_nlp_cost_nls_dims *dims = dims_;
-
-    dims->nx = nx;
-    dims->nu = nu;
-    dims->ny = ny;
-    dims->ns = ns;
-
-    // TODO nz
-
-    return;
-}
-
-
-
-static void ocp_nlp_cost_nls_set_nx(void *config_, void *dims_, int *nx)
-{
-    ocp_nlp_cost_nls_dims *dims = (ocp_nlp_cost_nls_dims *) dims_;
-    dims->nx = *nx;
-}
-
-
-
-static void ocp_nlp_cost_nls_set_nu(void *config_, void *dims_, int *nu)
-{
-    ocp_nlp_cost_nls_dims *dims = (ocp_nlp_cost_nls_dims *) dims_;
-    dims->nu = *nu;
-}
-
-
-
-static void ocp_nlp_cost_nls_set_ny(void *config_, void *dims_, int *ny)
-{
-    ocp_nlp_cost_nls_dims *dims = (ocp_nlp_cost_nls_dims *) dims_;
-    dims->ny = *ny;
-}
-
-
-
-static void ocp_nlp_cost_nls_set_ns(void *config_, void *dims_, int *ns)
-{
-    ocp_nlp_cost_nls_dims *dims = (ocp_nlp_cost_nls_dims *) dims_;
-    dims->ns = *ns;
-}
-
-
-
 void ocp_nlp_cost_nls_dims_set(void *config_, void *dims_, const char *field, int* value)
 {
+    ocp_nlp_cost_nls_dims *dims = (ocp_nlp_cost_nls_dims *) dims_;
     if (!strcmp(field, "nx"))
     {
-        ocp_nlp_cost_nls_set_nx(config_, dims_, value);
+        dims->nx = *value;
     }
     else if (!strcmp(field, "nz"))
     {
@@ -135,15 +88,15 @@ void ocp_nlp_cost_nls_dims_set(void *config_, void *dims_, const char *field, in
     }
     else if (!strcmp(field, "nu"))
     {
-        ocp_nlp_cost_nls_set_nu(config_, dims_, value);
+        dims->nu = *value;
     }
     else if (!strcmp(field, "ny"))
     {
-        ocp_nlp_cost_nls_set_ny(config_, dims_, value);
+        dims->ny = *value;
     }
     else if (!strcmp(field, "ns"))
     {
-        ocp_nlp_cost_nls_set_ns(config_, dims_, value);
+        dims->ns = *value;
     }
     else
     {
@@ -637,7 +590,7 @@ static void ocp_nlp_cost_nls_cast_workspace(void *config_, void *dims_, void *op
 
     // tmp_nv_ny
     assign_and_advance_blasfeo_dmat_mem(nu + nx, ny, &work->tmp_nv_ny, &c_ptr);
-   
+
     // tmp_nv_nv
     assign_and_advance_blasfeo_dmat_mem(nu + nx, nu + nx, &work->tmp_nv_nv, &c_ptr);
 
@@ -903,7 +856,6 @@ void ocp_nlp_cost_nls_config_initialize_default(void *config_)
 
     config->dims_calculate_size = &ocp_nlp_cost_nls_dims_calculate_size;
     config->dims_assign = &ocp_nlp_cost_nls_dims_assign;
-    config->dims_initialize = &ocp_nlp_cost_nls_dims_initialize;
     config->dims_set = &ocp_nlp_cost_nls_dims_set;
     config->dims_get = &ocp_nlp_cost_nls_dims_get;
     config->model_calculate_size = &ocp_nlp_cost_nls_model_calculate_size;

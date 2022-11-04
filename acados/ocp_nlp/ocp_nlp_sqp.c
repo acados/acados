@@ -239,10 +239,11 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
         {
             int* rti_phase = (int *) value;
             if (*rti_phase < 0 || *rti_phase > 0) {
-                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for rti_phase field."); 
+                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for rti_phase field.");
                 printf("possible values are: 0\n");
                 exit(1);
-            } else opts->rti_phase = *rti_phase;
+            }
+            opts->rti_phase = *rti_phase;
         }
         else if (!strcmp(field, "initialize_t_slacks"))
         {
@@ -1095,7 +1096,7 @@ void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *
 
 //        d_ocp_qp_sol_print(work->tmp_qp_out->dim, work->tmp_qp_out);
 //        exit(1);
-        
+
         /* copy tmp_qp_out into sens_nlp_out */
 
         int i;
@@ -1133,7 +1134,6 @@ void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *
 
 
 
-// TODO rename memory_get ???
 void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, void *return_value_)
 {
     ocp_nlp_config *config = config_;

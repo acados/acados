@@ -215,7 +215,7 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_,
         {
             int* rti_phase = (int *) value;
             if (*rti_phase < 0 || *rti_phase > 2) {
-                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for rti_phase field."); 
+                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for rti_phase field.");
                 printf("possible values are: 0, 1, 2\n");
                 exit(1);
             } else opts->rti_phase = *rti_phase;
@@ -379,7 +379,7 @@ acados_size_t ocp_nlp_sqp_rti_workspace_calculate_size(void *config_,
 
 
 static void ocp_nlp_sqp_rti_cast_workspace(
-    ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_sqp_rti_opts *opts, 
+    ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_sqp_rti_opts *opts,
     ocp_nlp_sqp_rti_memory *mem, ocp_nlp_sqp_rti_workspace *work)
 {
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
@@ -431,19 +431,19 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     void *opts_, void *mem_, void *work_)
 {
     ocp_nlp_sqp_rti_memory *mem = mem_;
-    
+
     // zero timers
     acados_timer timer0;
     double total_time = 0.0;
     mem->time_tot = 0.0;
 
     ocp_nlp_sqp_rti_opts *nlp_opts = opts_;
-    int rti_phase = nlp_opts->rti_phase; 
+    int rti_phase = nlp_opts->rti_phase;
 
     acados_tic(&timer0);
-    switch(rti_phase) 
+    switch(rti_phase)
     {
-        
+
         // perform preparation and feedback rti_phase
         case 0:
             ocp_nlp_sqp_rti_preparation_step(
@@ -527,7 +527,7 @@ void ocp_nlp_sqp_rti_preparation_step(void *config_, void *dims_,
     // restore number of threads
     omp_set_num_threads(num_threads_bkp);
 #endif
-	
+
 	return;
 
 }
@@ -687,7 +687,7 @@ void ocp_nlp_sqp_rti_memory_reset_qp_solver(void *config_, void *dims_, void *nl
 }
 
 
-int ocp_nlp_sqp_rti_precompute(void *config_, void *dims_, void *nlp_in_, 
+int ocp_nlp_sqp_rti_precompute(void *config_, void *dims_, void *nlp_in_,
     void *nlp_out_, void *opts_, void *mem_, void *work_)
 {
     ocp_nlp_dims *dims = dims_;

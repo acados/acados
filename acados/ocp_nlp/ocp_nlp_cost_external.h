@@ -63,9 +63,6 @@ acados_size_t ocp_nlp_cost_external_dims_calculate_size(void *config);
 //
 void *ocp_nlp_cost_external_dims_assign(void *config, void *raw_memory);
 //
-void ocp_nlp_cost_external_dims_initialize(void *config, void *dims, int nx,
-                                           int nu, int ny, int ns, int nz);
-//
 void ocp_nlp_cost_external_dims_set(void *config_, void *dims_, const char *field, int* value);
 //
 void ocp_nlp_cost_external_dims_get(void *config_, void *dims_, const char *field, int* value);

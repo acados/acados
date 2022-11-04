@@ -73,22 +73,6 @@ void *ocp_nlp_dynamics_disc_dims_assign(void *config_, void *raw_memory)
     return dims;
 }
 
-
-
-void ocp_nlp_dynamics_disc_dims_initialize(void *config_, void *dims_, int nx, int nu, int nx1,
-                                           int nu1, int nz)
-{
-    ocp_nlp_dynamics_disc_dims *dims = dims_;
-
-    dims->nx = nx;
-    dims->nu = nu;
-    dims->nx1 = nx1;
-    dims->nu1 = nu1;
-
-    return;
-}
-
-
 // setters
 static void ocp_nlp_dynamics_disc_set_nx(void *config_, void *dims_, int *nx)
 {
@@ -607,7 +591,6 @@ void ocp_nlp_dynamics_disc_model_set(void *config_, void *dims_, void *model_, c
     else
     {
         printf("\nerror: field %s not available in ocp_nlp_dynamics_disc_model_set\n", field);
-        
         exit(1);
     }
 
@@ -802,7 +785,6 @@ void ocp_nlp_dynamics_disc_config_initialize_default(void *config_)
 
     config->dims_calculate_size = &ocp_nlp_dynamics_disc_dims_calculate_size;
     config->dims_assign = &ocp_nlp_dynamics_disc_dims_assign;
-    config->dims_initialize = &ocp_nlp_dynamics_disc_dims_initialize;
     config->dims_set =  &ocp_nlp_dynamics_disc_dims_set;
     config->dims_get = &ocp_nlp_dynamics_disc_dims_get;
     config->model_calculate_size = &ocp_nlp_dynamics_disc_model_calculate_size;

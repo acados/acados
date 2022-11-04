@@ -68,7 +68,6 @@ typedef struct
     /* dims */
     acados_size_t (*dims_calculate_size)(void *config);
     void *(*dims_assign)(void *config, void *raw_memory);
-    void (*dims_initialize)(void *config, void *dims, int nx, int nu, int nx1, int nu1, int nz);
     void (*dims_set)(void *config_, void *dims_, const char *field, int *value);
     void (*dims_get)(void *config_, void *dims_, const char *field, int* value);
     /* model */

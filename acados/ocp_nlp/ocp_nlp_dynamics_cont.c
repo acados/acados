@@ -89,30 +89,6 @@ void *ocp_nlp_dynamics_cont_dims_assign(void *config_, void *raw_memory)
 }
 
 
-
-void ocp_nlp_dynamics_cont_dims_initialize(void *config_, void *dims_, int nx, int nu, int nx1,
-                                           int nu1, int nz)
-{
-    ocp_nlp_dynamics_cont_dims *dims = dims_;
-
-    dims->nx = nx;
-    dims->nz = nz;
-    dims->nu = nu;
-    dims->nx1 = nx1;
-    dims->nu1 = nu1;
-
-    ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
-    sim_config *sim_config_ = (sim_config *) dyn_config->sim_solver;
-
-    // NOTE: this could be done just in precompute.
-    sim_config_->dims_set(sim_config_, dims->sim, "nx", &nx);
-    sim_config_->dims_set(sim_config_, dims->sim, "nu", &nu);
-    sim_config_->dims_set(sim_config_, dims->sim, "nz", &nz);
-
-    return;
-}
-
-
 // setters
 static void ocp_nlp_dynamics_cont_set_nx(void *config_, void *dims_, int *nx)
 {
@@ -968,7 +944,6 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
     config->dims_assign = &ocp_nlp_dynamics_cont_dims_assign;
     config->dims_set = &ocp_nlp_dynamics_cont_dims_set;
     config->dims_get = &ocp_nlp_dynamics_cont_dims_get;
-    config->dims_initialize = &ocp_nlp_dynamics_cont_dims_initialize;
     config->model_calculate_size = &ocp_nlp_dynamics_cont_model_calculate_size;
     config->model_assign = &ocp_nlp_dynamics_cont_model_assign;
     config->model_set = &ocp_nlp_dynamics_cont_model_set;
