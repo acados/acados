@@ -43,6 +43,7 @@ from utils import plot_pendulum
 from casadi import vertcat, SX
 
 COST_MODULE = 'GGN' #'EXTERNAL' # 'LS', 'EXTERNAL'
+COST_MODULE = 'GGN'
 HESSIAN_APPROXIMATION = 'GAUSS_NEWTON' # 'GAUSS_NEWTON
 EXTERNAL_COST_USE_NUM_HESS = False
 
@@ -92,49 +93,21 @@ elif COST_MODULE == 'NLS':
     ocp.model.cost_y_expr_e = x
 
 elif COST_MODULE == 'GGN':
-    ocp.cost.cost_type = 'LINEAR_LS'
-    ocp.cost.cost_type_e = 'LINEAR_LS'
-    ocp.constraints.constr_type = 'BGP'
-    ocp.constraints.constr_type_e = 'BGP'
+    ocp.cost.cost_type = 'CONVEX_OVER_NONLINEAR'
+    ocp.cost.cost_type_e = 'CONVEX_OVER_NONLINEAR'
 
-    # set dummy LS cost
-    ocp.cost.Vx = np.zeros((ny, nx))
-    ocp.cost.Vu = np.zeros((ny, nu))
-    ocp.cost.Vx_e = np.zeros((nx, nx))
+    r = SX.sym('r', ny)
+    r_e = SX.sym('r_e', ny_e)
 
-    v = SX.sym('v', ny)
-    v_e = SX.sym('v', ny_e)
+    ocp.model.cost_psi_expr = 0.5 * (r.T @ cost_W @ r)
+    ocp.model.cost_psi_expr_e = 0.5 * (r_e.T @ Q @ r_e)
 
-    # convex-over-linear constraints corresponding to the cost
-    ocp.model.con_phi_expr = 0.5 * (v.T @ cost_W @ v)
-    ocp.model.con_phi_expr_e = 0.5 * (v_e.T @ Q @ v_e)
+    ocp.model.cost_r_in_psi_expr = r
+    ocp.model.cost_r_in_psi_expr_e = r_e
 
-    ocp.model.con_r_expr = vertcat(x, u)
-    ocp.model.con_r_expr_e = x
+    ocp.model.cost_y_expr = vertcat(x, u)
+    ocp.model.cost_y_expr_e = x
 
-    ocp.model.con_r_in_phi = v
-    ocp.model.con_r_in_phi_e = v_e
-
-    ocp.constraints.constr_type = 'BGP'
-    ocp.constraints.uphi = np.array([0])
-    ocp.constraints.uphi_e = np.array([0])
-    ocp.constraints.lphi = np.array([0])
-    ocp.constraints.lphi_e = np.array([0])
-    ocp.constraints.Jsphi = np.array([[1]])
-    ocp.constraints.Jsphi_e = np.array([[1]])
-
-    ocp.constraints.idxsphi = np.array([0])
-    ocp.constraints.idxsphi_e = np.array([0])
-
-    ocp.cost.Zl = np.array([0])
-    ocp.cost.Zl_e = np.array([0])
-    ocp.cost.zl = np.array([0])
-    ocp.cost.zl_e = np.array([0])
-
-    ocp.cost.Zu = np.array([0])
-    ocp.cost.Zu_e = np.array([0])
-    ocp.cost.zu = np.array([1])
-    ocp.cost.zu_e = np.array([1])
 
 elif COST_MODULE == 'EXTERNAL':
     ocp.cost.cost_type = 'EXTERNAL'
@@ -174,9 +147,10 @@ ocp.solver_options.qp_solver_cond_N = 5
 ocp.solver_options.tf = Tf
 ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
 ocp.solver_options.ext_cost_num_hess = EXTERNAL_COST_USE_NUM_HESS
-
+ocp.solver_options.print_level = 2
 ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
+print('solver built!')
 # from casadi import jacobian
 # ux = vertcat(ocp.model.u, ocp.model.x)
 # jacobian(jacobian(ocp.model.cost_expr_ext_cost, ux), ux)
