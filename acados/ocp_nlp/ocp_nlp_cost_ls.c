@@ -763,6 +763,8 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
     int ny = dims->ny;
     int ns = dims->ns;
 
+    struct blasfeo_dmat *Cyt = &model->Cyt;
+
     if (nz > 0)
     { // eliminate algebraic variables and update Cyt and y_ref
 
@@ -791,15 +793,7 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
         blasfeo_dgemv_t(nu + nx, ny, 1.0, &work->Cyt_tilde, 0, 0, memory->ux,
                 0, -1.0, &work->y_ref_tilde, 0, &memory->res, 0);
 
-        // tmp_ny = W * res
-        blasfeo_dsymv_l(ny, 1.0, &model->W, 0, 0, &memory->res,
-                0, 0.0, &model->y_ref, 0, &work->tmp_ny, 0);
-
-        // grad = Cyt_tilde * tmp_ny
-        blasfeo_dgemv_n(nu + nx, ny, 1.0, &work->Cyt_tilde,
-                0, 0, &work->tmp_ny, 0, 0.0, memory->ux, 0, &memory->grad, 0);
-
-        memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &memory->res, 0);
+        Cyt = &work->Cyt_tilde;
         // TODO what about the exact hessian in the case of nz>0 ???
     }
     else // nz == 0
@@ -812,16 +806,16 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
         blasfeo_dgemv_t(nu + nx, ny, 1.0, &model->Cyt, 0, 0, memory->ux, 0,
                         -1.0, &model->y_ref, 0, &memory->res, 0);
 
-        // tmp_ny = W * res
-        blasfeo_dsymv_l(ny, 1.0, &model->W, 0, 0, &memory->res, 0,
-                        0.0, &model->y_ref, 0, &work->tmp_ny, 0);
-
-        // grad = Cyt * tmp_ny
-        blasfeo_dgemv_n(nu + nx, ny, 1.0, &model->Cyt, 0, 0, &work->tmp_ny, 0,
-                        0.0, &memory->grad, 0, &memory->grad, 0);
-
-        memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &memory->res, 0);
     }
+    // tmp_ny = W * res
+    blasfeo_dsymv_l(ny, 1.0, &model->W, 0, 0, &memory->res, 0,
+                    0.0, &model->y_ref, 0, &work->tmp_ny, 0);
+
+    // grad = Cyt_tilde * tmp_ny
+    blasfeo_dgemv_n(nu + nx, ny, 1.0, Cyt, 0, 0, &work->tmp_ny, 0,
+                    0.0, memory->ux, 0, &memory->grad, 0);
+
+    memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &memory->res, 0);
 
     // slack update gradient
     blasfeo_dveccp(2*ns, &model->z, 0, &memory->grad, nu+nx);
@@ -833,7 +827,7 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
     memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->ux, nu+nx);
 
     // scale
-    if(model->scaling!=1.0)
+    if (model->scaling!=1.0)
     {
         blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
         memory->fun *= model->scaling;
