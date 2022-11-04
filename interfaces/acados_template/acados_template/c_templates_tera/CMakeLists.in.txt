@@ -221,6 +221,9 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {{ model.name }}_cost/{{ model.name }}_cost_y_0_fun.c
         {{ model.name }}_cost/{{ model.name }}_cost_y_0_fun_jac_ut_xt.c
         {{ model.name }}_cost/{{ model.name }}_cost_y_0_hess.c
+{%- elif cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
+        {{ model.name }}_cost/{{ model.name }}_conl_cost_0_fun.c
+        {{ model.name }}_cost/{{ model.name }}_conl_cost_0_fun_jac_hess.c
 {%- elif cost_type_0 == "EXTERNAL" %}
     {%- if cost.cost_ext_fun_type_0 == "casadi" %}
         {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_0_fun.c
@@ -234,6 +237,9 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {{ model.name }}_cost/{{ model.name }}_cost_y_fun.c
         {{ model.name }}_cost/{{ model.name }}_cost_y_fun_jac_ut_xt.c
         {{ model.name }}_cost/{{ model.name }}_cost_y_hess.c
+{%- elif cost_type == "CONVEX_OVER_NONLINEAR" %}
+        {{ model.name }}_cost/{{ model.name }}_conl_cost_fun.c
+        {{ model.name }}_cost/{{ model.name }}_conl_cost_fun_jac_hess.c
 {%- elif cost_type == "EXTERNAL" %}
     {%- if cost.cost_ext_fun_type == "casadi" %}
         {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_fun.c
@@ -247,6 +253,9 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {{ model.name }}_cost/{{ model.name }}_cost_y_e_fun.c
         {{ model.name }}_cost/{{ model.name }}_cost_y_e_fun_jac_ut_xt.c
         {{ model.name }}_cost/{{ model.name }}_cost_y_e_hess.c
+{%- elif cost_type_e == "CONVEX_OVER_NONLINEAR" %}
+        {{ model.name }}_cost/{{ model.name }}_conl_cost_e_fun.c
+        {{ model.name }}_cost/{{ model.name }}_conl_cost_e_fun_jac_hess.c
 {%- elif cost_type_e == "EXTERNAL" %}
     {%- if cost.cost_ext_fun_type_e == "casadi" %}
         {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_fun.c
