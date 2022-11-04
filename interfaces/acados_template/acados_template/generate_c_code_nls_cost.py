@@ -44,7 +44,9 @@ def generate_c_code_nls_cost( model, cost_name, stage_type, opts ):
         casadi_version_warning(casadi_version)
 
     x = model.x
+    z = model.z
     p = model.p
+    u = model.u
 
     if isinstance(x, casadi.MX):
         symbol = MX.sym
@@ -58,12 +60,10 @@ def generate_c_code_nls_cost( model, cost_name, stage_type, opts ):
 
     elif stage_type == 'initial':
         middle_name = '_cost_y_0'
-        u = model.u
         y_expr = model.cost_y_expr_0
 
     elif stage_type == 'path':
         middle_name = '_cost_y'
-        u = model.u
         y_expr = model.cost_y_expr
 
     # set up directory
@@ -81,7 +81,7 @@ def generate_c_code_nls_cost( model, cost_name, stage_type, opts ):
 
     # set up expressions
     cost_jac_expr = transpose(jacobian(y_expr, vertcat(u, x)))
-
+    dy_dz = jacobian(y_expr, z)
     ny = casadi_length(y_expr)
 
     y = symbol('y', ny, 1)
@@ -92,17 +92,17 @@ def generate_c_code_nls_cost( model, cost_name, stage_type, opts ):
     ## generate C code
     suffix_name = '_fun'
     fun_name = cost_name + middle_name + suffix_name
-    y_fun = Function( fun_name, [x, u, p], [ y_expr ])
+    y_fun = Function( fun_name, [x, u, z, p], [ y_expr ])
     y_fun.generate( fun_name, casadi_opts )
 
     suffix_name = '_fun_jac_ut_xt'
     fun_name = cost_name + middle_name + suffix_name
-    y_fun_jac_ut_xt = Function(fun_name, [x, u, p], [ y_expr, cost_jac_expr ])
+    y_fun_jac_ut_xt = Function(fun_name, [x, u, z, p], [ y_expr, cost_jac_expr, dy_dz ])
     y_fun_jac_ut_xt.generate( fun_name, casadi_opts )
 
     suffix_name = '_hess'
     fun_name = cost_name + middle_name + suffix_name
-    y_hess = Function(fun_name, [x, u, y, p], [ y_hess ])
+    y_hess = Function(fun_name, [x, u, z, y, p], [ y_hess ])
     y_hess.generate( fun_name, casadi_opts )
 
     os.chdir(cwd)
