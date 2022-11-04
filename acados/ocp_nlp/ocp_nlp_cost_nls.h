@@ -38,22 +38,7 @@
 /// @{
 /// \addtogroup ocp_nlp_cost_nls ocp_nlp_cost_nls
 /// \brief This module implements nonlinear-least squares costs of the form
-/// \f$\min_{x,u} \| y(x,u) - y_{\text{ref}} \|_W^2\f$,
-/// respectively
-/// \f$\min_{x,u} phi(y(x,u) - y_{\text{ref}}) \f$.
-/// @{
-
-// NOTE: either W is used to define norm (weighted l2-norm)
-//  OR
-// phi defines the outer loss function.
-
-// TODO:
-// - generate phi in interface (Python)
-// - eval_cost
-// - gradient: now: Jt * W * res; -> Jt * dphi/dy^T
-// - hess:
-// only implement gauss_newton_hess, otherwise EXTERNAL should be used.
-
+/// \f$\min_{x,u} \| y(x,u,p) - y_{\text{ref}} \|_W^2\f$,
 
 #ifndef ACADOS_OCP_NLP_OCP_NLP_COST_NLS_H_
 #define ACADOS_OCP_NLP_OCP_NLP_COST_NLS_H_
@@ -157,10 +142,10 @@ typedef struct
     struct blasfeo_dvec grad;    // gradient of cost function
     struct blasfeo_dvec *ux;     // pointer to ux in nlp_out
     struct blasfeo_dvec *tmp_ux;     // pointer to ux in tmp_nlp_out
-    struct blasfeo_dvec *z_alg;         ///< pointer to z in sim_out
-    struct blasfeo_dmat *dzdux_tran;    ///< pointer to sensitivity of a wrt ux in sim_out
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
     struct blasfeo_dvec *Z;      // pointer to Z in qp_in
+    struct blasfeo_dvec *z_alg;         ///< pointer to z in sim_out
+    struct blasfeo_dmat *dzdux_tran;    ///< pointer to sensitivity of a wrt ux in sim_out
 	double fun;                         ///< value of the cost function
 } ocp_nlp_cost_nls_memory;
 
