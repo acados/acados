@@ -637,7 +637,7 @@ static void ocp_nlp_cost_nls_cast_workspace(void *config_, void *dims_, void *op
 
     // tmp_nv_ny
     assign_and_advance_blasfeo_dmat_mem(nu + nx, ny, &work->tmp_nv_ny, &c_ptr);
-   
+
     // tmp_nv_nv
     assign_and_advance_blasfeo_dmat_mem(nu + nx, nu + nx, &work->tmp_nv_nv, &c_ptr);
 
