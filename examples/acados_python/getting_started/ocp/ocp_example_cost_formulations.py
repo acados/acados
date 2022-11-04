@@ -36,21 +36,25 @@ import sys
 sys.path.insert(0, '../common')
 
 from acados_template import AcadosOcp, AcadosOcpSolver
-from pendulum_model import export_pendulum_ode_model
+from pendulum_model import export_pendulum_ode_model, export_augmented_pendulum_model
 import numpy as np
 import scipy.linalg
 from utils import plot_pendulum
 from casadi import vertcat
 
-COST_MODULE = 'EXTERNAL' # 'LS', 'EXTERNAL'
-HESSIAN_APPROXIMATION = 'EXACT' # 'GAUSS_NEWTON
+COST_MODULE = 'LS_Z' # 'LS', 'EXTERNAL', 'NLS', 'NLS_Z'
+HESSIAN_APPROXIMATION = 'GAUSS_NEWTON' # 'GAUSS_NEWTON
 EXTERNAL_COST_USE_NUM_HESS = 1
 
 # create ocp object to formulate the OCP
 ocp = AcadosOcp()
 
+if COST_MODULE in ['NLS_Z', 'LS_Z']:
+    model = export_augmented_pendulum_model()
+    nz = model.z.size()[0]
+else:
+    model = export_pendulum_ode_model()
 # set model
-model = export_pendulum_ode_model()
 ocp.model = model
 
 Tf = 1.0
@@ -84,11 +88,36 @@ if COST_MODULE == 'LS':
 
     ocp.cost.Vx_e = np.eye(nx)
 
+elif COST_MODULE == 'LS_Z':
+    ocp.cost.cost_type = 'LINEAR_LS'
+    ocp.cost.cost_type_e = 'LINEAR_LS'
+
+    ocp.cost.Vx = np.zeros((ny, nx))
+    ocp.cost.Vx[:nx,:nx] = np.eye(nx)
+    ocp.cost.Vx[0, 0] = 0.0
+
+    ocp.cost.Vz = np.zeros((ny, nz))
+    ocp.cost.Vz[0, 0] = 1.0
+
+    Vu = np.zeros((ny, nu))
+    Vu[4,0] = 1.0
+    ocp.cost.Vu = Vu
+    ocp.cost.Vx_e = np.eye(nx)
+
 elif COST_MODULE == 'NLS':
     ocp.cost.cost_type = 'NONLINEAR_LS'
     ocp.cost.cost_type_e = 'NONLINEAR_LS'
 
     ocp.model.cost_y_expr = vertcat(x, u)
+    ocp.model.cost_y_expr_e = x
+
+elif COST_MODULE == 'NLS_Z':
+    ocp.cost.cost_type = 'NONLINEAR_LS'
+    ocp.cost.cost_type_e = 'NONLINEAR_LS'
+
+    y_expr_z = vertcat(model.z[0], model.x[1:], u)
+    print(f"{y_expr_z=}")
+    ocp.model.cost_y_expr = y_expr_z
     ocp.model.cost_y_expr_e = x
 
 elif COST_MODULE == 'EXTERNAL':
@@ -101,7 +130,7 @@ elif COST_MODULE == 'EXTERNAL':
 else:
     raise Exception('Unknown COST_MODULE. Possible values are \'LS\' and \'NLS\'.')
 
-if COST_MODULE in ['LS', 'NLS']:
+if COST_MODULE in ['LS', 'NLS', 'NLS_Z', 'LS_Z']:
     ocp.cost.yref = np.zeros((ny, ))
     ocp.cost.yref_e = np.zeros((ny_e, ))
     ocp.cost.W_e = Q
@@ -118,7 +147,7 @@ ocp.constraints.idxbu = np.array([0])
 ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
 ocp.solver_options.hessian_approx = HESSIAN_APPROXIMATION
 ocp.solver_options.regularize_method = 'CONVEXIFY'
-ocp.solver_options.integrator_type = 'ERK'
+ocp.solver_options.integrator_type = 'IRK'
 
 ocp.solver_options.qp_solver_cond_N = 5
 
@@ -140,7 +169,7 @@ ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 #  [00, 00, 00, 00, @1]])
 
 # NOTE: hessian is wrt [u,x]
-if EXTERNAL_COST_USE_NUM_HESS:
+if EXTERNAL_COST_USE_NUM_HESS and COST_MODULE == 'EXTERNAL':
     for i in range(N):
         ocp_solver.cost_set(i, "ext_cost_num_hess", np.diag([0.04, 4000, 4000, 0.04, 0.04, ]))
     ocp_solver.cost_set(N, "ext_cost_num_hess", np.diag([4000, 4000, 0.04, 0.04, ]))
