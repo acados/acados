@@ -81,9 +81,6 @@ acados_size_t ocp_nlp_constraints_bgp_dims_calculate_size(void *config);
 //
 void *ocp_nlp_constraints_bgp_dims_assign(void *config, void *raw_memory);
 //
-void ocp_nlp_constraints_bgp_dims_initialize(void *config, void *dims, int nx, int nu, int nz,
-		int nbx, int nbu, int ng, int nphi, int nq, int ns);
-//
 void ocp_nlp_constraints_bgp_dims_get(void *config_, void *dims_, const char *field, int* value);
 
 

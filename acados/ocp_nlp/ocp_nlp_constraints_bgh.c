@@ -93,27 +93,6 @@ void *ocp_nlp_constraints_bgh_dims_assign(void *config_, void *raw_memory)
 }
 
 
-
-// TODO outdated? to remove?
-void ocp_nlp_constraints_bgh_dims_initialize(void *config_, void *dims_, int nx, int nu, int nz, int nbx,
-                                             int nbu, int ng, int nh, int dummy0, int ns)
-{
-    ocp_nlp_constraints_bgh_dims *dims = dims_;
-
-    dims->nx = nx;
-    dims->nu = nu;
-    dims->nz = nz;
-    dims->nbx = nbx;
-    dims->nbu = nbu;
-    dims->nb = nbx + nbu;
-    dims->ng = ng;
-    dims->nh = nh;
-    dims->ns = ns;
-
-    return;
-}
-
-
 /* dimension setters */
 static void ocp_nlp_constraints_bgh_set_nx(void *config_, void *dims_, const int *nx)
 {
@@ -1568,7 +1547,6 @@ void ocp_nlp_constraints_bgh_config_initialize_default(void *config_)
 
     config->dims_calculate_size = &ocp_nlp_constraints_bgh_dims_calculate_size;
     config->dims_assign = &ocp_nlp_constraints_bgh_dims_assign;
-    config->dims_initialize = &ocp_nlp_constraints_bgh_dims_initialize;
     config->dims_set = &ocp_nlp_constraints_bgh_dims_set;
     config->dims_get = &ocp_nlp_constraints_bgh_dims_get;
     config->model_calculate_size = &ocp_nlp_constraints_bgh_model_calculate_size;
