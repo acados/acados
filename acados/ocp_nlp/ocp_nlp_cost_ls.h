@@ -82,20 +82,20 @@ typedef struct
 acados_size_t ocp_nlp_cost_ls_dims_calculate_size(void *config);
 
 
-///  Assign memory pointed to by raw_memory to ocp_nlp-cost_ls dims struct 
+///  Assign memory pointed to by raw_memory to ocp_nlp-cost_ls dims struct
 ///
-///  \param[in] config structure containing configuration of ocp_nlp_cost 
+///  \param[in] config structure containing configuration of ocp_nlp_cost
 ///  module
-///  \param[in] raw_memory pointer to memory location  
+///  \param[in] raw_memory pointer to memory location
 ///  \param[out] []
 ///  \return dims
 void *ocp_nlp_cost_ls_dims_assign(void *config, void *raw_memory);
 
 
-///  Initialize the dimensions struct of the 
-///  ocp_nlp-cost_ls component    
+///  Initialize the dimensions struct of the
+///  ocp_nlp-cost_ls component
 ///
-///  \param[in] config structure containing configuration ocp_nlp-cost_ls component 
+///  \param[in] config structure containing configuration ocp_nlp-cost_ls component
 ///  \param[in] nx number of states
 ///  \param[in] nu number of inputs
 ///  \param[in] ny number of residuals
@@ -117,7 +117,7 @@ void ocp_nlp_cost_ls_dims_get(void *config_, void *dims_, const char *field, int
 ////////////////////////////////////////////////////////////////////////////////
 
 
-/// structure containing the data describing the linear least-square cost 
+/// structure containing the data describing the linear least-square cost
 typedef struct
 {
     // slack penalty has the form z^T * s + .5 * s^T * Z * s
@@ -170,7 +170,7 @@ void ocp_nlp_cost_ls_opts_set(void *config, void *opts, const char *field, void 
 
 
 
-/// structure containing the memory associated with cost_ls component 
+/// structure containing the memory associated with cost_ls component
 /// of the ocp_nlp module
 typedef struct
 {
