@@ -154,6 +154,7 @@ def main(cost_version: str):
     ocp.solver_options.integrator_type = 'IRK'
 
     ocp.solver_options.qp_solver_cond_N = 5
+    # ocp.solver_options.print_level = 2
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
@@ -204,9 +205,8 @@ def main(cost_version: str):
     ocp_solver.load_iterate(filename='solution.json')
 
 if __name__ == "__main__":
-    # for cost_version in COST_VERSIONS:
+    for cost_version in COST_VERSIONS:
     # for cost_version in ['EXTERNAL', 'NLS', 'LS_Z', 'NLS_Z']:
-    for cost_version in ['LS_Z', 'NLS_Z']:
         main(cost_version=cost_version)
 
 # timings
