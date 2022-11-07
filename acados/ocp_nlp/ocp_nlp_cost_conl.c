@@ -722,23 +722,20 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
     void *ext_fun_out[3];
 
     // INPUT
-    struct blasfeo_dvec_args u_in;  // input u
-    u_in.x = memory->ux;
-    u_in.xi = 0;
     struct blasfeo_dvec_args x_in;  // input x
     x_in.x = memory->ux;
     x_in.xi = nu;
 
-    struct blasfeo_dvec_args y_ref_in;  // input y_ref
-    y_ref_in.x = &model->y_ref;
-    y_ref_in.xi = 0;
+    struct blasfeo_dvec_args u_in;  // input u
+    u_in.x = memory->ux;
+    u_in.xi = 0;
 
     ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
     ext_fun_in[0] = &x_in;
     ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
     ext_fun_in[1] = &u_in;
-    ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
-    ext_fun_in[2] = &y_ref_in;
+    ext_fun_type_in[2] = BLASFEO_DVEC;
+    ext_fun_in[2] = &model->y_ref;
 
     // OUTPUT
     ext_fun_type_out[0] = COLMAJ;
@@ -748,21 +745,17 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
     ext_fun_type_out[2] = BLASFEO_DMAT;
     ext_fun_out[2] = &work->tmp_nv_nv;  // hess: (nu+nx) x (nu+nx)
 
-
     // evaluate external function
     model->conl_cost_fun_jac_hess->evaluate(model->conl_cost_fun_jac_hess, ext_fun_type_in,
                                             ext_fun_in, ext_fun_type_out, ext_fun_out);
+    // printf("grad\n");
+    // blasfeo_print_dvec(nu+nx, &memory->grad, 0);
+
+    // printf("val\n");
+    // printf("%f\n", memory->fun);
+
     // hessian contribution
     blasfeo_dgead(nx+nu, nx+nu, model->scaling, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
-
-
-    // if (opts->gauss_newton_hess)
-    // {
-    //  TODO should not be needed any more? check in interface
-    // }
-    // else
-    // {
-    // }
 
     // slack update gradient
     blasfeo_dveccp(2*ns, &model->z, 0, &memory->grad, nu+nx);
@@ -810,38 +803,33 @@ void ocp_nlp_cost_conl_compute_fun(void *config_, void *dims_, void *model_,
     int ns = dims->ns;
 
     /* specify input types and pointers for external cost function */
-    // TODO(oj): add z
     ext_fun_arg_t ext_fun_type_in[3];
     void *ext_fun_in[3];
     ext_fun_arg_t ext_fun_type_out[1];
     void *ext_fun_out[1];
 
     // INPUT
-    struct blasfeo_dvec_args u_in;  // input u
-    u_in.x = memory->tmp_ux;
-    u_in.xi = 0;
-
     struct blasfeo_dvec_args x_in;  // input x
     x_in.x = memory->tmp_ux;
     x_in.xi = nu;
 
-    struct blasfeo_dvec_args y_ref_in;  // input y_ref
-    x_in.x = &model->y_ref;
-    x_in.xi = 0;
+    struct blasfeo_dvec_args u_in;  // input u
+    u_in.x = memory->tmp_ux;
+    u_in.xi = 0;
 
     ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
     ext_fun_in[0] = &x_in;
     ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
     ext_fun_in[1] = &u_in;
-    ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
-    ext_fun_in[2] = &y_ref_in;
+    ext_fun_type_in[2] = BLASFEO_DVEC;
+    ext_fun_in[2] = &model->y_ref;
 
     // OUTPUT
     ext_fun_type_out[0] = COLMAJ;
     ext_fun_out[0] = &memory->fun;  // function: scalar
 
     model->conl_cost_fun->evaluate(model->conl_cost_fun, ext_fun_type_in, ext_fun_in,
-                                  ext_fun_type_out, ext_fun_out);
+                                   ext_fun_type_out, ext_fun_out);
 
     // slack update function value
     blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);

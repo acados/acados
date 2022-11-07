@@ -122,15 +122,13 @@ else:
 if COST_MODULE in ['LS', 'NLS', 'GGN']:
     ocp.cost.yref = np.zeros((ny, ))
     ocp.cost.yref_e = np.zeros((ny_e, ))
+
+if COST_MODULE in ['LS', 'NLS']:
     ocp.cost.W_e = Q
     ocp.cost.W = cost_W
 
 # set constraints
 Fmax = 80
-ocp.constraints.lbu = np.array([-Fmax])
-ocp.constraints.ubu = np.array([+Fmax])
-ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
-ocp.constraints.idxbu = np.array([0])
 ocp.constraints.lbu = np.array([-Fmax])
 ocp.constraints.ubu = np.array([+Fmax])
 ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])

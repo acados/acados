@@ -151,6 +151,10 @@ def make_ocp_dims_consistent(acados_ocp):
             raise Exception('inconsistent dimension: regarding yref_0 and cost_y_expr_0, cost_r_in_psi_0.')
         dims.ny_0 = ny_0
 
+        if not (opts.hessian_approx=='EXACT' and opts.exact_hess_cost==False) and opts.hessian_approx != 'GAUSS_NEWTON':
+            raise Exception("\nWith CONVEX_OVER_NONLINEAR cost type, possible Hessian approximations are:\n"
+            "GAUSS_NEWTON or EXACT with 'exact_hess_cost' == False.\n")
+
     elif cost.cost_type_0 == 'EXTERNAL':
         if opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and model.cost_expr_ext_cost_custom_hess_0 is None:
             print("\nWARNING: Gauss-Newton Hessian approximation with EXTERNAL cost type not possible!\n"
@@ -201,6 +205,11 @@ def make_ocp_dims_consistent(acados_ocp):
             raise Exception('inconsistent dimension: regarding yref and cost_y_expr, cost_r_in_psi.')
         dims.ny = ny
 
+        if not (opts.hessian_approx=='EXACT' and opts.exact_hess_cost==False) and opts.hessian_approx != 'GAUSS_NEWTON':
+            raise Exception("\nWith CONVEX_OVER_NONLINEAR cost type, possible Hessian approximations are:\n"
+            "GAUSS_NEWTON or EXACT with 'exact_hess_cost' == False.\n")
+
+
     elif cost.cost_type == 'EXTERNAL':
         if opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and model.cost_expr_ext_cost_custom_hess is None:
             print("\nWARNING: Gauss-Newton Hessian approximation with EXTERNAL cost type not possible!\n"
@@ -243,6 +252,11 @@ def make_ocp_dims_consistent(acados_ocp):
         if cost.yref_e.shape[0] != ny_e:
             raise Exception('inconsistent dimension: regarding yref_e and cost_y_expr_e, cost_r_in_psi_e.')
         dims.ny_e = ny_e
+
+        if not (opts.hessian_approx=='EXACT' and opts.exact_hess_cost==False) and opts.hessian_approx != 'GAUSS_NEWTON':
+            raise Exception("\nWith CONVEX_OVER_NONLINEAR cost type, possible Hessian approximations are:\n"
+            "GAUSS_NEWTON or EXACT with 'exact_hess_cost' == False.\n")
+
 
 
     elif cost.cost_type_e == 'EXTERNAL':
@@ -703,6 +717,13 @@ def ocp_generate_external_functions(acados_ocp, model):
         acados_ocp.cost.Vx_e = np.zeros((acados_ocp.dims.ny_e, acados_ocp.dims.nx))
         # NOTE: is not in layout
         # acados_ocp.cost.Vz_e = np.zeros((acados_ocp.dims.ny_e, acados_ocp.dims.nz))
+
+    if acados_ocp.cost.cost_type_0 == 'CONVEX_OVER_NONLINEAR':
+        acados_ocp.cost.W_0 = np.zeros((acados_ocp.dims.ny_0, acados_ocp.dims.ny_0))
+    if acados_ocp.cost.cost_type == 'CONVEX_OVER_NONLINEAR':
+        acados_ocp.cost.W = np.zeros((acados_ocp.dims.ny, acados_ocp.dims.ny))
+    if acados_ocp.cost.cost_type_e == 'CONVEX_OVER_NONLINEAR':
+        acados_ocp.cost.W_e = np.zeros((acados_ocp.dims.ny_e, acados_ocp.dims.ny_e))
 
     if acados_ocp.cost.cost_type_0 == 'NONLINEAR_LS':
         generate_c_code_nls_cost(model, model.name, 'initial', opts)

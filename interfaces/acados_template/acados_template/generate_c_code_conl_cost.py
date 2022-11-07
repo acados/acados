@@ -92,7 +92,9 @@ def generate_c_code_conl_cost(model, cost_name, stage_type, opts):
     outer_loss_fun = casadi.Function('psi', [res_expr, p], [outer_expr])
     cost_expr = outer_loss_fun(inner_expr, p)
 
-    inner_hess_fun = casadi.Function('inner_hess', [res_expr, p], [casadi.hessian(outer_loss_fun(res_expr, p), res_expr)[0]])
+    cost_jac_expr = casadi.jacobian(cost_expr, casadi.vertcat(u, x))
+
+    outer_hess_fun = casadi.Function('inner_hess', [res_expr, p], [casadi.hessian(outer_loss_fun(res_expr, p), res_expr)[0]])
     J_expr = casadi.jacobian(inner_expr, casadi.vertcat(u, x))
 
     cost_fun = casadi.Function(
@@ -103,9 +105,8 @@ def generate_c_code_conl_cost(model, cost_name, stage_type, opts):
     cost_fun_jac_hess = casadi.Function(
         fun_name_cost_fun_jac_hess,
         [x, u, yref, p],
-        [J_expr.T @ inner_hess_fun(inner_expr, p) @ J_expr]
+        [cost_expr, cost_jac_expr.T, J_expr.T @ outer_hess_fun(inner_expr, p) @ J_expr]
     )
-
     # set up directory
     code_export_dir = opts["code_export_directory"]
     if not os.path.exists(code_export_dir):
