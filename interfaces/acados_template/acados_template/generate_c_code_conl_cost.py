@@ -106,7 +106,7 @@ def generate_c_code_conl_cost(model, cost_name, stage_type, opts):
     cost_fun_jac_hess = casadi.Function(
         fun_name_cost_fun_jac_hess,
         [x, u, yref, p],
-        [cost_expr, cost_jac_expr.T, J_expr.T @ outer_hess_fun(inner_expr, p) @ J_expr]
+        [cost_expr, cost_jac_expr.T, J_expr.T, outer_hess_fun(inner_expr, p)]
     )
     # set up directory
     code_export_dir = opts["code_export_directory"]

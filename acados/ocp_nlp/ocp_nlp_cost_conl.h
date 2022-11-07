@@ -36,7 +36,7 @@
 /// @{
 /// \addtogroup ocp_nlp_cost ocp_nlp_cost
 /// @{
-/// \addtogroup ocp_nlp_cost_nls ocp_nlp_cost_nls
+/// \addtogroup ocp_nlp_cost_conl ocp_nlp_cost_conl
 /// \brief This module implements convex-over-nonlinear costs of the form
 /// \f$\min_{x,u} \psi(y(x,u,p) - y_{\text{ref}}, p)\f$,
 
@@ -89,14 +89,9 @@ void ocp_nlp_cost_conl_dims_get(void *config_, void *dims_, const char *field, i
 
 typedef struct
 {
-    // nonliner function nls_y(x,u) replaces Cy * [x,u] in ls_cost
     // slack penalty has the form z^T * s + .5 * s^T * Z * s
-    external_function_generic *nls_y_fun;  // evaluation of nls function
-    external_function_generic *nls_y_fun_jac;  // evaluation nls function and jacobian
-    external_function_generic *nls_y_hess;  // hessian*seeds of nls residuals
     external_function_generic *conl_cost_fun;
     external_function_generic *conl_cost_fun_jac_hess;
-    struct blasfeo_dmat W;                //
     struct blasfeo_dvec y_ref;
     struct blasfeo_dvec Z;              // diagonal Hessian of slacks as vector
     struct blasfeo_dvec z;              // gradient of slacks as vector
@@ -118,7 +113,7 @@ int ocp_nlp_cost_conl_model_set(void *config_, void *dims_, void *model_, const 
 
 typedef struct
 {
-    bool gauss_newton_hess;  // gauss-newton hessian approximation
+    bool gauss_newton_hess;  // dummy options, we always use a gauss-newton hessian
 } ocp_nlp_cost_conl_opts;
 
 //
@@ -137,15 +132,11 @@ void ocp_nlp_cost_conl_opts_set(void *config, void *opts, const char *field, voi
 /************************************************
  * memory
  ************************************************/
-
 typedef struct
 {
-    struct blasfeo_dmat W_chol;  // cholesky factor of weight matrix
-    struct blasfeo_dmat Jt;      // jacobian of nls fun
-    struct blasfeo_dvec res;     // nls residual r(x)
     struct blasfeo_dvec grad;    // gradient of cost function
     struct blasfeo_dvec *ux;     // pointer to ux in nlp_out
-    struct blasfeo_dvec *tmp_ux;     // pointer to ux in tmp_nlp_out
+    struct blasfeo_dvec *tmp_ux; // pointer to ux in tmp_nlp_out
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
     struct blasfeo_dvec *Z;      // pointer to Z in qp_in
     struct blasfeo_dvec *z_alg;         ///< pointer to z in sim_out
@@ -180,10 +171,11 @@ void ocp_nlp_cost_conl_memory_set_dzdux_tran_ptr(struct blasfeo_dmat *dzdux_tran
 
 typedef struct
 {
+    struct blasfeo_dmat W;          // hessian of outer loss function
+    struct blasfeo_dmat W_chol;     // cholesky factor of hessian of outer loss function
+    struct blasfeo_dmat Jt;         // jacobian of inner residual function
     struct blasfeo_dmat tmp_nv_ny;
-    struct blasfeo_dmat tmp_nv_nv;
-    struct blasfeo_dvec tmp_ny;
-    struct blasfeo_dvec tmp_2ns;     // temporary vector of dimension ny
+    struct blasfeo_dvec tmp_2ns;
 } ocp_nlp_cost_conl_workspace;
 
 //
