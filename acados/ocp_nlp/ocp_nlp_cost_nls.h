@@ -65,6 +65,7 @@ extern "C" {
 typedef struct
 {
     int nx;  // number of states
+    int nz;  // number of algebraic variables
     int nu;  // number of inputs
     int ny;  // number of outputs
     int ns;  // number of slacks
@@ -178,8 +179,11 @@ typedef struct
 {
     struct blasfeo_dmat tmp_nv_ny;
     struct blasfeo_dmat tmp_nv_nv;
+    struct blasfeo_dmat Vz;
+    struct blasfeo_dmat Cyt_tilde;
     struct blasfeo_dvec tmp_ny;
-    struct blasfeo_dvec tmp_2ns;     // temporary vector of dimension ny
+    struct blasfeo_dvec tmp_2ns;
+    struct blasfeo_dvec tmp_nz;
 } ocp_nlp_cost_nls_workspace;
 
 //

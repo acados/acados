@@ -42,10 +42,10 @@ import matplotlib.pyplot as plt
 
 sim = AcadosSim()
 
-# export model 
+# export model
 model = export_augmented_pendulum_model()
 
-# set model_name 
+# set model_name
 sim.model = model
 
 Tf = 0.1
@@ -75,10 +75,11 @@ acados_integrator = AcadosSimSolver(sim)
 
 simX = np.ndarray((N+1, nx))
 x0 = np.array([0.0, np.pi+1, 0.0, 0.0])
-u0 = np.array([2.0])
+
+u0_val = 2.0
+u0 = np.array([u0_val])
 
 # test setter
-acados_integrator.set("u", np.array([2.0]))
 acados_integrator.set("u", 2)
 acados_integrator.set("u", 2.0)
 acados_integrator.set("u", u0)
@@ -101,9 +102,17 @@ print("S_algebraic (dz_dxu) = ", S_algebraic)
 
 z = acados_integrator.get("z")
 print("z = ", z)
+last_x0 = simX[N-1,:]
+print(f"{last_x0 = }")
+
+z_analytic = np.array([last_x0[0], u0_val**2])
+err_z = np.abs(z - z_analytic)
+if np.any(err_z > 1e-6):
+    raise Exception(f'z and z_analytic should match! Difference is {err_z}')
+print("Success: z and z_analytic match!")
 
 S_forw = acados_integrator.get("S_forw")
 print("S_forw, sensitivities of simulaition result wrt x,u:\n", S_forw)
 
 # plot results
-plot_pendulum(np.linspace(0, Tf, N+1), 10, np.zeros((N, nu)), simX, latexify=False)
+plot_pendulum(np.linspace(0, Tf, N+1), 10, u0_val * np.ones((N, nu)), simX, latexify=False)
