@@ -139,7 +139,6 @@ def make_ocp_dims_consistent(acados_ocp):
         dims.ny_0 = ny_0
 
     elif cost.cost_type_0 == 'CONVEX_OVER_NONLINEAR':
-        # TODO: check again
         if is_empty(model.cost_y_expr_0):
             raise Exception('cost_y_expr_0 and/or cost_y_expr not provided.')
         ny_0 = casadi_length(model.cost_y_expr_0)
@@ -267,8 +266,6 @@ def make_ocp_dims_consistent(acados_ocp):
             "If you continue, acados will proceed computing the exact hessian for the cost term.\n"
             "Note: There is also the option to use the external cost module with a numerical hessian approximation (see `ext_cost_num_hess`).\n"
             "OR the option to provide a symbolic custom hessian approximation (see `cost_expr_ext_cost_custom_hess`).\n")
-
-        # TODO: allow only GN for CONVEX_OVER_NONLINEAR
 
     ## constraints
     # initial
@@ -865,7 +862,6 @@ def ocp_render_templates(acados_ocp, json_file, cmake_builder=None):
         in_file = 'conl_cost_0.in.h'
         out_file = f'{name}_conl_cost_0.h'
         render_template(in_file, out_file, template_dir, json_path)
-        # TODO
 
     elif acados_ocp.cost.cost_type_0 == 'EXTERNAL':
         template_dir = os.path.join(code_export_dir, name + '_cost')
@@ -885,7 +881,6 @@ def ocp_render_templates(acados_ocp, json_file, cmake_builder=None):
         in_file = 'conl_cost.in.h'
         out_file = f'{name}_conl_cost.h'
         render_template(in_file, out_file, template_dir, json_path)
-        # TODO
 
     elif acados_ocp.cost.cost_type == 'EXTERNAL':
         template_dir = os.path.join(code_export_dir, name + '_cost')

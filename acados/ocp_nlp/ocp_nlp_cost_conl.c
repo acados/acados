@@ -361,7 +361,6 @@ int ocp_nlp_cost_conl_model_set(void *config_, void *dims_, void *model_,
 
 acados_size_t ocp_nlp_cost_conl_opts_calculate_size(void *config_, void *dims_)
 {
-    // ocp_nlp_cost_config *config = config_;
 
     acados_size_t size = 0;
 
@@ -375,7 +374,6 @@ acados_size_t ocp_nlp_cost_conl_opts_calculate_size(void *config_, void *dims_)
 
 void *ocp_nlp_cost_conl_opts_assign(void *config_, void *dims_, void *raw_memory)
 {
-    // ocp_nlp_cost_config *config = config_;
 
     char *c_ptr = (char *) raw_memory;
 
@@ -391,7 +389,6 @@ void *ocp_nlp_cost_conl_opts_assign(void *config_, void *dims_, void *raw_memory
 
 void ocp_nlp_cost_conl_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
-    // ocp_nlp_cost_config *config = config_;
     ocp_nlp_cost_conl_opts *opts = opts_;
 
     opts->gauss_newton_hess = 1;
@@ -403,8 +400,6 @@ void ocp_nlp_cost_conl_opts_initialize_default(void *config_, void *dims_, void 
 
 void ocp_nlp_cost_conl_opts_update(void *config_, void *dims_, void *opts_)
 {
-    // ocp_nlp_cost_config *config = config_;
-    // ocp_nlp_cost_conl_opts *opts = opts_;
 
     return;
 }
@@ -413,27 +408,12 @@ void ocp_nlp_cost_conl_opts_update(void *config_, void *dims_, void *opts_)
 
 void ocp_nlp_cost_conl_opts_set(void *config_, void *opts_, const char *field, void* value)
 {
-    // TODO: adapt for conl: only GN Hessian possible
-
-    // ocp_nlp_cost_config *config = config_;
     ocp_nlp_cost_conl_opts *opts = opts_;
 
     if(!strcmp(field, "gauss_newton_hess"))
     {
         int *int_ptr = value;
         opts->gauss_newton_hess = *int_ptr;
-    }
-    else if(!strcmp(field, "exact_hess"))
-    {
-        int *int_ptr = value;
-        if(*int_ptr==0)
-        {
-            opts->gauss_newton_hess = 1;
-        }
-        else
-        {
-            opts->gauss_newton_hess = 0;
-        }
     }
     else
     {
@@ -453,9 +433,7 @@ void ocp_nlp_cost_conl_opts_set(void *config_, void *opts_, const char *field, v
 
 acados_size_t ocp_nlp_cost_conl_memory_calculate_size(void *config_, void *dims_, void *opts_)
 {
-    // ocp_nlp_cost_config *config = config_;
     ocp_nlp_cost_conl_dims *dims = dims_;
-    // ocp_nlp_cost_conl_opts *opts = opts_;
 
     // extract dims
     int nx = dims->nx;
@@ -483,9 +461,7 @@ acados_size_t ocp_nlp_cost_conl_memory_calculate_size(void *config_, void *dims_
 
 void *ocp_nlp_cost_conl_memory_assign(void *config_, void *dims_, void *opts_, void *raw_memory)
 {
-    // ocp_nlp_cost_config *config = config_;
     ocp_nlp_cost_conl_dims *dims = dims_;
-    // ocp_nlp_cost_conl_opts *opts = opts_;
 
     char *c_ptr = (char *) raw_memory;
 
@@ -607,9 +583,7 @@ void ocp_nlp_cost_conl_memory_set_dzdux_tran_ptr(struct blasfeo_dmat *dzdux_tran
 
 acados_size_t ocp_nlp_cost_conl_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
-    // ocp_nlp_cost_config *config = config_;
     ocp_nlp_cost_conl_dims *dims = dims_;
-    // ocp_nlp_cost_conl_opts *opts = opts_;
 
     // extract dims
     int nx = dims->nx;
@@ -629,7 +603,6 @@ acados_size_t ocp_nlp_cost_conl_workspace_calculate_size(void *config_, void *di
     size += 1 * blasfeo_memsize_dvec(2*ns);              // tmp_2ns
 
     size += 64;  // blasfeo_mem align
-//    size += 8;
 
     return size;
 }
@@ -703,6 +676,8 @@ void ocp_nlp_cost_conl_initialize(void *config_, void *dims_, void *model_, void
 void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *model_, void *opts_,
                                          void *memory_, void *work_)
 {
+    // NOTE: We assume that opts->gauss_newton_hess is True (this is checked in the interface)
+
     ocp_nlp_cost_conl_dims *dims = dims_;
     ocp_nlp_cost_conl_model *model = model_;
     ocp_nlp_cost_conl_opts *opts = opts_;
@@ -773,11 +748,6 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
         memory->fun *= model->scaling;
     }
 
-    // blasfeo_print_dmat(nu+nx, nu+nx, memory->RSQrq, 0, 0);
-    // blasfeo_print_tran_dvec(2*ns, memory->Z, 0);
-    // blasfeo_print_tran_dvec(nu+nx+2*ns, &memory->grad, 0);
-    // exit(1);
-
     return;
 }
 
@@ -786,12 +756,9 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
 void ocp_nlp_cost_conl_compute_fun(void *config_, void *dims_, void *model_,
                                   void *opts_, void *memory_, void *work_)
 {
-//    printf("\nerror: ocp_nlp_cost_conl_compute_fun: not implemented yet\n");
-//    exit(1);
-
     ocp_nlp_cost_conl_dims *dims = dims_;
     ocp_nlp_cost_conl_model *model = model_;
-    // ocp_nlp_cost_conl_opts *opts = opts_;
+    // ocp_nlp_cost_conl_opts *opts = opts_; TODO ??
     ocp_nlp_cost_conl_memory *memory = memory_;
     ocp_nlp_cost_conl_workspace *work = work_;
 
@@ -843,7 +810,6 @@ void ocp_nlp_cost_conl_compute_fun(void *config_, void *dims_, void *model_,
     }
 
     return;
-
 }
 
 

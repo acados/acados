@@ -84,6 +84,7 @@ def generate_c_code_conl_cost(model, cost_name, stage_type, opts):
         suffix_name_fun = '_conl_cost_fun'
         suffix_name_fun_jac_hess = '_conl_cost_fun_jac_hess'
 
+
     # set up function names
     fun_name_cost_fun = model.name + suffix_name_fun
     fun_name_cost_fun_jac_hess = model.name + suffix_name_fun_jac_hess

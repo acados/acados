@@ -42,7 +42,7 @@ import scipy.linalg
 from utils import plot_pendulum
 from casadi import vertcat, SX
 
-COST_MODULE = 'GGN' #'EXTERNAL' # 'LS', 'EXTERNAL'
+COST_MODULE = 'NLS' #'EXTERNAL' # 'LS', 'EXTERNAL'
 COST_MODULE = 'GGN'
 HESSIAN_APPROXIMATION = 'GAUSS_NEWTON' # 'GAUSS_NEWTON
 EXTERNAL_COST_USE_NUM_HESS = False
@@ -145,10 +145,9 @@ ocp.solver_options.qp_solver_cond_N = 5
 ocp.solver_options.tf = Tf
 ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
 ocp.solver_options.ext_cost_num_hess = EXTERNAL_COST_USE_NUM_HESS
-ocp.solver_options.print_level = 2
+ocp.solver_options.print_level = 0
 ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
-print('solver built!')
 # from casadi import jacobian
 # ux = vertcat(ocp.model.u, ocp.model.x)
 # jacobian(jacobian(ocp.model.cost_expr_ext_cost, ux), ux)
@@ -164,7 +163,6 @@ if EXTERNAL_COST_USE_NUM_HESS:
     for i in range(N):
         ocp_solver.cost_set(i, "ext_cost_num_hess", np.diag([0.04, 4000, 4000, 0.04, 0.04, ]))
     ocp_solver.cost_set(N, "ext_cost_num_hess", np.diag([4000, 4000, 0.04, 0.04, ]))
-
 
 simX = np.ndarray((N+1, nx))
 simU = np.ndarray((N, nu))
