@@ -135,7 +135,18 @@ class AcadosModel():
         """
         CasADi expression for the argument :math:`r`; to the outer loss function :math:`\psi(r, p)`, terminal; Default: :code:`None`
         """
-
+        self.cost_conl_custom_outer_hess_0 = None
+        """
+        CasADi expression for the custom hessian of the outer loss function (only for convex-over-nonlinear cost), initial; Default: :code:`None`
+        """
+        self.cost_conl_custom_outer_hess = None
+        """
+        CasADi expression for the custom hessian of the outer loss function (only for convex-over-nonlinear cost); Default: :code:`None`
+        """
+        self.cost_conl_custom_outer_hess_e = None
+        """
+        CasADi expression for the custom hessian of the outer loss function (only for convex-over-nonlinear cost), terminal; Default: :code:`None`
+        """
 
 
 def acados_model_strip_casadi_symbolics(model):
@@ -206,4 +217,10 @@ def acados_model_strip_casadi_symbolics(model):
         del out['cost_r_in_psi_expr']
     if 'cost_r_in_psi_expr_e' in out.keys():
         del out['cost_r_in_psi_expr_e']
+    if 'cost_conl_custom_outer_hess_0' in out.keys():
+        del out['cost_conl_custom_outer_hess_0']
+    if 'cost_conl_custom_outer_hess' in out.keys():
+        del out['cost_conl_custom_outer_hess']
+    if 'cost_conl_custom_outer_hess_e' in out.keys():
+        del out['cost_conl_custom_outer_hess_e']
     return out

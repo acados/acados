@@ -63,6 +63,8 @@ def generate_c_code_conl_cost(model, cost_name, stage_type, opts):
         suffix_name_fun = '_conl_cost_e_fun'
         suffix_name_fun_jac_hess = '_conl_cost_e_fun_jac_hess'
 
+        custom_hess = model.cost_conl_custom_outer_hess_e
+
     elif stage_type == 'initial':
         u = model.u
 
@@ -73,6 +75,8 @@ def generate_c_code_conl_cost(model, cost_name, stage_type, opts):
 
         suffix_name_fun = '_conl_cost_0_fun'
         suffix_name_fun_jac_hess = '_conl_cost_0_fun_jac_hess'
+
+        custom_hess = model.cost_conl_custom_outer_hess_0
 
     elif stage_type == 'path':
         u = model.u
@@ -85,6 +89,9 @@ def generate_c_code_conl_cost(model, cost_name, stage_type, opts):
         suffix_name_fun = '_conl_cost_fun'
         suffix_name_fun_jac_hess = '_conl_cost_fun_jac_hess'
 
+        custom_hess = model.cost_conl_custom_outer_hess
+
+
 
     # set up function names
     fun_name_cost_fun = model.name + suffix_name_fun
@@ -96,7 +103,11 @@ def generate_c_code_conl_cost(model, cost_name, stage_type, opts):
 
     outer_loss_grad_fun = casadi.Function('outer_loss_grad', [res_expr, p], [casadi.jacobian(outer_expr, res_expr).T])
 
-    outer_hess_fun = casadi.Function('inner_hess', [res_expr, p], [casadi.hessian(outer_loss_fun(res_expr, p), res_expr)[0]])
+    if custom_hess is None:
+        outer_hess_fun = casadi.Function('inner_hess', [res_expr, p], [casadi.hessian(outer_loss_fun(res_expr, p), res_expr)[0]])
+    else:
+        outer_hess_fun = casadi.Function('inner_hess', [res_expr, p], [custom_hess])
+
     Jt_ux_expr = casadi.jacobian(inner_expr, casadi.vertcat(u, x)).T
     Jt_z_expr = casadi.jacobian(inner_expr, z).T
 
