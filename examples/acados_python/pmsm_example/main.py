@@ -397,6 +397,16 @@ def run_simulation(qp_solver="FULL_CONDENSING_HPIPM", show_plots=False, verbose=
             nlp_con.constr_type_e = "BGP"
             acados_solver = AcadosOcpSolver(ocp, json_file=file_name)
 
+
+    # test setter:
+    for i in range(1,N):
+        acados_solver.cost_set(i, 'zl', ocp.cost.zl)
+        acados_solver.cost_set(i, 'zu', ocp.cost.zu)
+        acados_solver.cost_set(i, 'Zl', ocp.cost.Zl)
+        acados_solver.cost_set(i, 'Zu', ocp.cost.Zu)
+        acados_solver.cost_set(i, 'W', ocp.cost.W)
+        acados_solver.cost_set(i, 'yref', ocp.cost.yref)
+
     if COMPILE == 1:
         # make
         os.chdir("c_generated_code")
