@@ -38,7 +38,7 @@
 /// @{
 /// \addtogroup ocp_nlp_cost_conl ocp_nlp_cost_conl
 /// \brief This module implements convex-over-nonlinear costs of the form
-/// \f$\min_{x,u} \psi(y(x,u,p) - y_{\text{ref}}, p)\f$,
+/// \f$\min_{x,u,z} \psi(y(x,u,z,p) - y_{\text{ref}}, p)\f$,
 
 
 #ifndef ACADOS_OCP_NLP_OCP_NLP_COST_CONL_H_
@@ -142,7 +142,7 @@ typedef struct
     struct blasfeo_dvec *Z;      // pointer to Z in qp_in
     struct blasfeo_dvec *z_alg;         ///< pointer to z in sim_out
     struct blasfeo_dmat *dzdux_tran;    ///< pointer to sensitivity of a wrt ux in sim_out
-	double fun;                         ///< value of the cost function
+    double fun;                         ///< value of the cost function
 } ocp_nlp_cost_conl_memory;
 
 //

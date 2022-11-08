@@ -38,7 +38,7 @@
 /// @{
 /// \addtogroup ocp_nlp_cost_nls ocp_nlp_cost_nls
 /// \brief This module implements nonlinear-least squares costs of the form
-/// \f$\min_{x,u} \| y(x,u,p) - y_{\text{ref}} \|_W^2\f$,
+/// \f$\min_{x,u,z} \| y(x,u,z,p) - y_{\text{ref}} \|_W^2\f$,
 
 #ifndef ACADOS_OCP_NLP_OCP_NLP_COST_NLS_H_
 #define ACADOS_OCP_NLP_OCP_NLP_COST_NLS_H_
@@ -146,7 +146,7 @@ typedef struct
     struct blasfeo_dvec *Z;      // pointer to Z in qp_in
     struct blasfeo_dvec *z_alg;         ///< pointer to z in sim_out
     struct blasfeo_dmat *dzdux_tran;    ///< pointer to sensitivity of a wrt ux in sim_out
-	double fun;                         ///< value of the cost function
+    double fun;                         ///< value of the cost function
 } ocp_nlp_cost_nls_memory;
 
 //

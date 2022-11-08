@@ -86,7 +86,6 @@ class AcadosModel():
         """
 
         ## for OCP
-        # TODO: docu in docstrings, not comments!!
         # constraints
         # BGH(default): lh <= h(x, u) <= uh
         self.con_h_expr = None  #: CasADi expression for the constraint :math:`h`; Default: :code:`None`
@@ -110,42 +109,51 @@ class AcadosModel():
         self.cost_expr_ext_cost_custom_hess_e = None  #: CasADi expression for custom hessian (only for external cost), terminal; Default: :code:`None`
         self.cost_expr_ext_cost_custom_hess_0 = None  #: CasADi expression for custom hessian (only for external cost), initial; Default: :code:`None`
 
-        # convex-over-nonlinear cost: psi(y(x, u, p) - y_ref; p)
+        ## CONVEX_OVER_NONLINEAR convex-over-nonlinear cost: psi(y(x, u, p) - y_ref; p)
         self.cost_psi_expr_0 = None
         """
         CasADi expression for the outer loss function :math:`\psi(r, p)`, initial; Default: :code:`None`
+        Used if :py:attr:`acados_template.acados_ocp.AcadosOcpOptions.cost_type_0` == 'CONVEX_OVER_NONLINEAR'.
         """
         self.cost_psi_expr = None
         """
         CasADi expression for the outer loss function :math:`\psi(r, p)`; Default: :code:`None`
+        Used if :py:attr:`acados_template.acados_ocp.AcadosOcpOptions.cost_type` == 'CONVEX_OVER_NONLINEAR'.
         """
         self.cost_psi_expr_e = None
         """
         CasADi expression for the outer loss function :math:`\psi(r, p)`, terminal; Default: :code:`None`
+        Used if :py:attr:`acados_template.acados_ocp.AcadosOcpOptions.cost_type_e` == 'CONVEX_OVER_NONLINEAR'.
         """
         self.cost_r_in_psi_expr_0 = None
         """
         CasADi expression for the argument :math:`r`; to the outer loss function :math:`\psi(r, p)`, initial; Default: :code:`None`
+        Used if :py:attr:`acados_template.acados_ocp.AcadosOcpOptions.cost_type_0` == 'CONVEX_OVER_NONLINEAR'.
         """
         self.cost_r_in_psi_expr = None
         """
         CasADi expression for the argument :math:`r`; to the outer loss function :math:`\psi(r, p)`; Default: :code:`None`
+        Used if :py:attr:`acados_template.acados_ocp.AcadosOcpOptions.cost_type` == 'CONVEX_OVER_NONLINEAR'.
         """
         self.cost_r_in_psi_expr_e = None
         """
         CasADi expression for the argument :math:`r`; to the outer loss function :math:`\psi(r, p)`, terminal; Default: :code:`None`
+        Used if :py:attr:`acados_template.acados_ocp.AcadosOcpOptions.cost_type_e` == 'CONVEX_OVER_NONLINEAR'.
         """
         self.cost_conl_custom_outer_hess_0 = None
         """
         CasADi expression for the custom hessian of the outer loss function (only for convex-over-nonlinear cost), initial; Default: :code:`None`
+        Used if :py:attr:`acados_template.acados_ocp.AcadosOcpOptions.cost_type_0` == 'CONVEX_OVER_NONLINEAR'.
         """
         self.cost_conl_custom_outer_hess = None
         """
         CasADi expression for the custom hessian of the outer loss function (only for convex-over-nonlinear cost); Default: :code:`None`
+        Used if :py:attr:`acados_template.acados_ocp.AcadosOcpOptions.cost_type` == 'CONVEX_OVER_NONLINEAR'.
         """
         self.cost_conl_custom_outer_hess_e = None
         """
         CasADi expression for the custom hessian of the outer loss function (only for convex-over-nonlinear cost), terminal; Default: :code:`None`
+        Used if :py:attr:`acados_template.acados_ocp.AcadosOcpOptions.cost_type_e` == 'CONVEX_OVER_NONLINEAR'.
         """
 
 

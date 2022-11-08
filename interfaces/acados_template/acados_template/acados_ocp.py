@@ -508,7 +508,7 @@ class AcadosOcpCost:
 
     In case of NONLINEAR_LS:
     stage cost is
-    :math:`l(x,u,p) = || y(x,u,p) - y_\\text{ref}||^2_W`,
+    :math:`l(x,u,z,p) = || y(x,u,z,p) - y_\\text{ref}||^2_W`,
     terminal cost is
     :math:`m(x,p) = || y^e(x,p) - y_\\text{ref}^e||^2_{W^e}`
 
