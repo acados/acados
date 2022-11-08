@@ -40,9 +40,9 @@ from pendulum_model import export_pendulum_ode_model, export_augmented_pendulum_
 import numpy as np
 import scipy.linalg
 from utils import plot_pendulum
-from casadi import vertcat
+from casadi import vertcat, SX
 
-COST_VERSIONS = ['LS', 'EXTERNAL', 'NLS', 'NLS_Z', 'LS_Z']
+COST_VERSIONS = ['LS', 'EXTERNAL', 'NLS', 'NLS_Z', 'LS_Z', 'CONL', 'CONL_Z']
 HESSIAN_APPROXIMATION = 'GAUSS_NEWTON' # 'GAUSS_NEWTON
 EXTERNAL_COST_USE_NUM_HESS = 1
 
@@ -50,7 +50,7 @@ def main(cost_version: str):
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
-    if cost_version in ['NLS_Z', 'LS_Z']:
+    if cost_version in ['NLS_Z', 'LS_Z', 'CONL_Z']:
         model = export_augmented_pendulum_model()
         nz = model.z.size()[0]
     else:
@@ -120,7 +120,44 @@ def main(cost_version: str):
         ocp.cost.cost_type_e = 'NONLINEAR_LS'
 
         y_expr_z = vertcat(model.z[0], model.x[1:], u)
-        print(f"{y_expr_z=}")
+        print(f"{y_expr_z}")
+        ocp.model.cost_y_expr = y_expr_z
+        ocp.model.cost_y_expr_e = x
+
+    elif cost_version == 'CONL':
+        ocp.cost.cost_type = 'CONVEX_OVER_NONLINEAR'
+        ocp.cost.cost_type_e = 'CONVEX_OVER_NONLINEAR'
+
+        r = SX.sym('r', ny)
+        r_e = SX.sym('r_e', ny_e)
+
+        ocp.model.cost_psi_expr = 0.5 * (r.T @ cost_W @ r)
+        ocp.model.cost_psi_expr_e = 0.5 * (r_e.T @ Q @ r_e)
+
+        ocp.model.cost_r_in_psi_expr = r
+        ocp.model.cost_r_in_psi_expr_e = r_e
+
+        ocp.model.cost_y_expr = vertcat(x, u)
+        ocp.model.cost_y_expr_e = x
+
+        # with custom hessian
+        # ocp.model.cost_conl_custom_outer_hess = cost_W
+
+    elif cost_version == 'CONL_Z':
+        ocp.cost.cost_type = 'CONVEX_OVER_NONLINEAR'
+        ocp.cost.cost_type_e = 'CONVEX_OVER_NONLINEAR'
+
+        r = SX.sym('r', ny)
+        r_e = SX.sym('r_e', ny_e)
+
+        ocp.model.cost_psi_expr = 0.5 * (r.T @ cost_W @ r)
+        ocp.model.cost_psi_expr_e = 0.5 * (r_e.T @ Q @ r_e)
+
+        ocp.model.cost_r_in_psi_expr = r
+        ocp.model.cost_r_in_psi_expr_e = r_e
+
+        y_expr_z = vertcat(model.z[0], model.x[1:], u)
+        print(f"{y_expr_z}")
         ocp.model.cost_y_expr = y_expr_z
         ocp.model.cost_y_expr_e = x
 
@@ -134,7 +171,7 @@ def main(cost_version: str):
     else:
         raise Exception('Unknown cost_version. Possible values are \'LS\' and \'NLS\'.')
 
-    if cost_version in ['LS', 'NLS', 'NLS_Z', 'LS_Z']:
+    if cost_version in ['LS', 'NLS', 'NLS_Z', 'LS_Z', 'CONL', 'CONL_Z']:
         ocp.cost.yref = np.zeros((ny, ))
         ocp.cost.yref_e = np.zeros((ny_e, ))
         ocp.cost.W_e = Q
@@ -205,6 +242,7 @@ def main(cost_version: str):
     ocp_solver.load_iterate(filename='solution.json')
 
 if __name__ == "__main__":
+
     for cost_version in COST_VERSIONS:
     # for cost_version in ['EXTERNAL', 'NLS', 'LS_Z', 'NLS_Z']:
         main(cost_version=cost_version)
