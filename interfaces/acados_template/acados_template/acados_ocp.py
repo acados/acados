@@ -508,9 +508,15 @@ class AcadosOcpCost:
 
     In case of NONLINEAR_LS:
     stage cost is
-    :math:`l(x,u,z) = || y(x,u,z) - y_\\text{ref}||^2_W`,
+    :math:`l(x,u,z,p) = || y(x,u,z,p) - y_\\text{ref}||^2_W`,
     terminal cost is
-    :math:`m(x) = || y^e(x) - y_\\text{ref}^e||^2_{W^e}`
+    :math:`m(x,p) = || y^e(x,p) - y_\\text{ref}^e||^2_{W^e}`
+
+    In case of CONVEX_OVER_NONLINEAR:
+    stage cost is
+    :math:`l(x,u,p) = \psi(y(x,u,p) - y_\\text{ref}, p)`,
+    terminal cost is
+    :math:`m(x, p) = \psi^e (y^e(x,p) - y_\\text{ref}^e, p)`
     """
     def __init__(self):
         # initial stage
@@ -548,7 +554,7 @@ class AcadosOcpCost:
     @property
     def cost_type_0(self):
         """Cost type at initial shooting node (0)
-        -- string in {EXTERNAL, LINEAR_LS, NONLINEAR_LS} or :code:`None`.
+        -- string in {EXTERNAL, LINEAR_LS, NONLINEAR_LS, CONVEX_OVER_NONLINEAR} or :code:`None`.
         Default: :code:`None`.
 
             .. note:: Cost at initial stage is the same as for intermediate shooting nodes if not set differently explicitly.
@@ -653,7 +659,7 @@ class AcadosOcpCost:
     def cost_type(self):
         """
         Cost type at intermediate shooting nodes (1 to N-1)
-        -- string in {EXTERNAL, LINEAR_LS, NONLINEAR_LS}.
+        -- string in {EXTERNAL, LINEAR_LS, NONLINEAR_LS, CONVEX_OVER_NONLINEAR}.
         Default: 'LINEAR_LS'.
         """
         return self.__cost_type
@@ -731,7 +737,7 @@ class AcadosOcpCost:
 
     @cost_type.setter
     def cost_type(self, cost_type):
-        cost_types = ('LINEAR_LS', 'NONLINEAR_LS', 'EXTERNAL')
+        cost_types = ('LINEAR_LS', 'NONLINEAR_LS', 'EXTERNAL', 'CONVEX_OVER_NONLINEAR')
         if cost_type in cost_types:
             self.__cost_type = cost_type
         else:
@@ -739,7 +745,7 @@ class AcadosOcpCost:
 
     @cost_type_0.setter
     def cost_type_0(self, cost_type_0):
-        cost_types = ('LINEAR_LS', 'NONLINEAR_LS', 'EXTERNAL')
+        cost_types = ('LINEAR_LS', 'NONLINEAR_LS', 'EXTERNAL', 'CONVEX_OVER_NONLINEAR')
         if cost_type_0 in cost_types:
             self.__cost_type_0 = cost_type_0
         else:
@@ -825,7 +831,7 @@ class AcadosOcpCost:
     def cost_type_e(self):
         """
         Cost type at terminal shooting node (N)
-        -- string in {EXTERNAL, LINEAR_LS, NONLINEAR_LS}.
+        -- string in {EXTERNAL, LINEAR_LS, NONLINEAR_LS, CONVEX_OVER_NONLINEAR}.
         Default: 'LINEAR_LS'.
         """
         return self.__cost_type_e
@@ -889,7 +895,7 @@ class AcadosOcpCost:
 
     @cost_type_e.setter
     def cost_type_e(self, cost_type_e):
-        cost_types = ('LINEAR_LS', 'NONLINEAR_LS', 'EXTERNAL')
+        cost_types = ('LINEAR_LS', 'NONLINEAR_LS', 'EXTERNAL', 'CONVEX_OVER_NONLINEAR')
 
         if cost_type_e in cost_types:
             self.__cost_type_e = cost_type_e
@@ -3015,7 +3021,7 @@ class AcadosOcp:
         """Constraints definitions, type :py:class:`acados_template.acados_ocp.AcadosOcpConstraints`"""
         self.solver_options = AcadosOcpOptions()
         """Solver Options, type :py:class:`acados_template.acados_ocp.AcadosOcpOptions`"""
-		
+
         self.acados_include_path = os.path.join(acados_path, 'include').replace(os.sep, '/') # the replace part is important on Windows for CMake
         """Path to acados include directory (set automatically), type: `string`"""
         self.acados_lib_path = os.path.join(acados_path, 'lib').replace(os.sep, '/') # the replace part is important on Windows for CMake

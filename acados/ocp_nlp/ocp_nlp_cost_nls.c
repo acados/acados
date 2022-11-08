@@ -643,7 +643,6 @@ void ocp_nlp_cost_nls_initialize(void *config_, void *dims_, void *model_, void 
     // TODO(all): recompute factorization only if W are re-tuned ???
     blasfeo_dpotrf_l(ny, &model->W, 0, 0, &memory->W_chol, 0, 0);
 
-    // mem->Z = scaling * model->Z
     blasfeo_dveccpsc(2*ns, model->scaling, &model->Z, 0, memory->Z, 0);
 
     return;
@@ -853,7 +852,7 @@ void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims_, void *model_,
     ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
     ext_fun_in[1] = &u_in;
 
-    ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
+    ext_fun_type_in[2] = BLASFEO_DVEC;
     ext_fun_in[2] = memory->z_alg;
 
     ext_fun_type_out[0] = BLASFEO_DVEC;

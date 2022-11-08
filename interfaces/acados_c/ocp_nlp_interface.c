@@ -45,6 +45,7 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_external.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_nls.h"
+#include "acados/ocp_nlp/ocp_nlp_cost_conl.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_disc.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
@@ -236,6 +237,9 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan_t plan)
                 break;
             case NONLINEAR_LS:
                 ocp_nlp_cost_nls_config_initialize_default(config->cost[i]);
+                break;
+            case CONVEX_OVER_NONLINEAR:
+                ocp_nlp_cost_conl_config_initialize_default(config->cost[i]);
                 break;
             case EXTERNAL:
                 ocp_nlp_cost_external_config_initialize_default(config->cost[i]);

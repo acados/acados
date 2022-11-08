@@ -203,6 +203,9 @@ OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_constr_h_e_fun_jac_uxt_z
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_y_0_fun.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_y_0_fun_jac_ut_xt.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_y_0_hess.c
+{%- elif cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
+OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_conl_cost_0_fun.c
+OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_conl_cost_0_fun_jac_hess.c
 {%- elif cost_type_0 == "EXTERNAL" %}
 	{%- if cost.cost_ext_fun_type_0 == "casadi" %}
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_0_fun.c
@@ -216,6 +219,9 @@ OCP_SRC+= {{ model.name }}_cost/{{ cost.cost_source_ext_cost_0 }}
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_y_fun.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_y_fun_jac_ut_xt.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_y_hess.c
+{%- elif cost_type == "CONVEX_OVER_NONLINEAR" %}
+OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_conl_cost_fun.c
+OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_conl_cost_fun_jac_hess.c
 {%- elif cost_type == "EXTERNAL" %}
 	{%- if cost.cost_ext_fun_type == "casadi" %}
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_fun.c
@@ -229,6 +235,9 @@ OCP_SRC+= {{ model.name }}_cost/{{ cost.cost_source_ext_cost }}
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_y_e_fun.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_y_e_fun_jac_ut_xt.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_y_e_hess.c
+{%- elif cost_type_e == "CONVEX_OVER_NONLINEAR" %}
+OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_conl_cost_e_fun.c
+OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_conl_cost_e_fun_jac_hess.c
 {%- elif cost_type_e == "EXTERNAL" %}
 	{%- if cost.cost_ext_fun_type_e == "casadi" %}
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_fun.c

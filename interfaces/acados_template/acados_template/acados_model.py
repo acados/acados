@@ -37,7 +37,7 @@ class AcadosModel():
     Class containing all the information to code generate the external CasADi functions
     that are needed when creating an acados ocp solver or acados integrator.
     Thus, this class contains:
-    
+
     a) the :py:attr:`name` of the model,
     b) all CasADi variables/expressions needed in the CasADi function generation process.
     """
@@ -87,7 +87,9 @@ class AcadosModel():
 
         ## for OCP
         # constraints
+        # BGH(default): lh <= h(x, u) <= uh
         self.con_h_expr = None  #: CasADi expression for the constraint :math:`h`; Default: :code:`None`
+        # BGP(convex over nonlinear): lphi <= phi(r(x, u)) <= uphi
         self.con_phi_expr = None  #: CasADi expression for the constraint phi; Default: :code:`None`
         self.con_r_expr = None  #: CasADi expression for the constraint phi(r); Default: :code:`None`
         self.con_r_in_phi = None
@@ -107,8 +109,56 @@ class AcadosModel():
         self.cost_expr_ext_cost_custom_hess_e = None  #: CasADi expression for custom hessian (only for external cost), terminal; Default: :code:`None`
         self.cost_expr_ext_cost_custom_hess_0 = None  #: CasADi expression for custom hessian (only for external cost), initial; Default: :code:`None`
 
+        ## CONVEX_OVER_NONLINEAR convex-over-nonlinear cost: psi(y(x, u, p) - y_ref; p)
+        self.cost_psi_expr_0 = None
+        """
+        CasADi expression for the outer loss function :math:`\psi(r, p)`, initial; Default: :code:`None`
+        Used if :py:attr:`acados_template.acados_ocp.AcadosOcpOptions.cost_type_0` == 'CONVEX_OVER_NONLINEAR'.
+        """
+        self.cost_psi_expr = None
+        """
+        CasADi expression for the outer loss function :math:`\psi(r, p)`; Default: :code:`None`
+        Used if :py:attr:`acados_template.acados_ocp.AcadosOcpOptions.cost_type` == 'CONVEX_OVER_NONLINEAR'.
+        """
+        self.cost_psi_expr_e = None
+        """
+        CasADi expression for the outer loss function :math:`\psi(r, p)`, terminal; Default: :code:`None`
+        Used if :py:attr:`acados_template.acados_ocp.AcadosOcpOptions.cost_type_e` == 'CONVEX_OVER_NONLINEAR'.
+        """
+        self.cost_r_in_psi_expr_0 = None
+        """
+        CasADi expression for the argument :math:`r`; to the outer loss function :math:`\psi(r, p)`, initial; Default: :code:`None`
+        Used if :py:attr:`acados_template.acados_ocp.AcadosOcpOptions.cost_type_0` == 'CONVEX_OVER_NONLINEAR'.
+        """
+        self.cost_r_in_psi_expr = None
+        """
+        CasADi expression for the argument :math:`r`; to the outer loss function :math:`\psi(r, p)`; Default: :code:`None`
+        Used if :py:attr:`acados_template.acados_ocp.AcadosOcpOptions.cost_type` == 'CONVEX_OVER_NONLINEAR'.
+        """
+        self.cost_r_in_psi_expr_e = None
+        """
+        CasADi expression for the argument :math:`r`; to the outer loss function :math:`\psi(r, p)`, terminal; Default: :code:`None`
+        Used if :py:attr:`acados_template.acados_ocp.AcadosOcpOptions.cost_type_e` == 'CONVEX_OVER_NONLINEAR'.
+        """
+        self.cost_conl_custom_outer_hess_0 = None
+        """
+        CasADi expression for the custom hessian of the outer loss function (only for convex-over-nonlinear cost), initial; Default: :code:`None`
+        Used if :py:attr:`acados_template.acados_ocp.AcadosOcpOptions.cost_type_0` == 'CONVEX_OVER_NONLINEAR'.
+        """
+        self.cost_conl_custom_outer_hess = None
+        """
+        CasADi expression for the custom hessian of the outer loss function (only for convex-over-nonlinear cost); Default: :code:`None`
+        Used if :py:attr:`acados_template.acados_ocp.AcadosOcpOptions.cost_type` == 'CONVEX_OVER_NONLINEAR'.
+        """
+        self.cost_conl_custom_outer_hess_e = None
+        """
+        CasADi expression for the custom hessian of the outer loss function (only for convex-over-nonlinear cost), terminal; Default: :code:`None`
+        Used if :py:attr:`acados_template.acados_ocp.AcadosOcpOptions.cost_type_e` == 'CONVEX_OVER_NONLINEAR'.
+        """
+
 
 def acados_model_strip_casadi_symbolics(model):
+    # casadi expression can not easily be written to json (TODO: implement using serialize)
     out = model
     if 'f_impl_expr' in out.keys():
         del out['f_impl_expr']
@@ -163,5 +213,22 @@ def acados_model_strip_casadi_symbolics(model):
         del out['cost_expr_ext_cost_custom_hess_e']
     if 'cost_expr_ext_cost_custom_hess_0' in out.keys():
         del out['cost_expr_ext_cost_custom_hess_0']
-
+    if 'cost_psi_expr_0' in out.keys():
+        del out['cost_psi_expr_0']
+    if 'cost_psi_expr' in out.keys():
+        del out['cost_psi_expr']
+    if 'cost_psi_expr_e' in out.keys():
+        del out['cost_psi_expr_e']
+    if 'cost_r_in_psi_expr_0' in out.keys():
+        del out['cost_r_in_psi_expr_0']
+    if 'cost_r_in_psi_expr' in out.keys():
+        del out['cost_r_in_psi_expr']
+    if 'cost_r_in_psi_expr_e' in out.keys():
+        del out['cost_r_in_psi_expr_e']
+    if 'cost_conl_custom_outer_hess_0' in out.keys():
+        del out['cost_conl_custom_outer_hess_0']
+    if 'cost_conl_custom_outer_hess' in out.keys():
+        del out['cost_conl_custom_outer_hess']
+    if 'cost_conl_custom_outer_hess_e' in out.keys():
+        del out['cost_conl_custom_outer_hess_e']
     return out
