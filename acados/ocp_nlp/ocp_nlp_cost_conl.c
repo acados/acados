@@ -571,7 +571,6 @@ void ocp_nlp_cost_conl_initialize(void *config_, void *dims_, void *model_, void
 
     int ns = dims->ns;
 
-    // mem->Z = scaling * model->Z
     blasfeo_dveccpsc(2*ns, model->scaling, &model->Z, 0, memory->Z, 0);
 
     return;
