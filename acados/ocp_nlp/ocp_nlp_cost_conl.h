@@ -65,6 +65,7 @@ extern "C" {
 typedef struct
 {
     int nx;  // number of states
+    int nz;  // number of algebraic variables
     int nu;  // number of inputs
     int ny;  // number of outputs
     int ns;  // number of slacks
@@ -171,10 +172,13 @@ void ocp_nlp_cost_conl_memory_set_dzdux_tran_ptr(struct blasfeo_dmat *dzdux_tran
 
 typedef struct
 {
-    struct blasfeo_dmat W;          // hessian of outer loss function
-    struct blasfeo_dmat W_chol;     // cholesky factor of hessian of outer loss function
-    struct blasfeo_dmat Jt;         // jacobian of inner residual function
+    struct blasfeo_dmat W;             // hessian of outer loss function
+    struct blasfeo_dmat W_chol;        // cholesky factor of hessian of outer loss function
+    struct blasfeo_dmat Jt_ux;         // jacobian of inner residual function
+    struct blasfeo_dmat Jt_ux_tilde;   // jacobian of inner residual function plus gradient contribution of algebraic variables
+    struct blasfeo_dmat Jt_z;          // jacobian of inner residual function wrt algebraic variables
     struct blasfeo_dmat tmp_nv_ny;
+    struct blasfeo_dvec tmp_ny;
     struct blasfeo_dvec tmp_2ns;
 } ocp_nlp_cost_conl_workspace;
 

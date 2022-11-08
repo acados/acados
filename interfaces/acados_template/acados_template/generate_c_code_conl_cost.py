@@ -44,6 +44,7 @@ def generate_c_code_conl_cost(model, cost_name, stage_type, opts):
         casadi_version_warning(casadi_version)
 
     x = model.x
+    z = model.z
     p = model.p
 
     if isinstance(x, casadi.MX):
@@ -93,20 +94,21 @@ def generate_c_code_conl_cost(model, cost_name, stage_type, opts):
     outer_loss_fun = casadi.Function('psi', [res_expr, p], [outer_expr])
     cost_expr = outer_loss_fun(inner_expr, p)
 
-    cost_jac_expr = casadi.jacobian(cost_expr, casadi.vertcat(u, x))
+    outer_loss_grad_fun = casadi.Function('outer_loss_grad', [res_expr, p], [casadi.jacobian(outer_expr, res_expr).T])
 
     outer_hess_fun = casadi.Function('inner_hess', [res_expr, p], [casadi.hessian(outer_loss_fun(res_expr, p), res_expr)[0]])
-    J_expr = casadi.jacobian(inner_expr, casadi.vertcat(u, x))
+    Jt_ux_expr = casadi.jacobian(inner_expr, casadi.vertcat(u, x)).T
+    Jt_z_expr = casadi.jacobian(inner_expr, z).T
 
     cost_fun = casadi.Function(
         fun_name_cost_fun,
-        [x, u, yref, p],
+        [x, u, z, yref, p],
         [cost_expr])
 
     cost_fun_jac_hess = casadi.Function(
         fun_name_cost_fun_jac_hess,
-        [x, u, yref, p],
-        [cost_expr, cost_jac_expr.T, J_expr.T, outer_hess_fun(inner_expr, p)]
+        [x, u, z, yref, p],
+        [cost_expr, outer_loss_grad_fun(inner_expr, p), Jt_ux_expr, Jt_z_expr, outer_hess_fun(inner_expr, p)]
     )
     # set up directory
     code_export_dir = opts["code_export_directory"]
