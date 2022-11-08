@@ -165,8 +165,8 @@ def main(cost_version: str):
         ocp.cost.cost_type = 'EXTERNAL'
         ocp.cost.cost_type_e = 'EXTERNAL'
 
-        ocp.model.cost_expr_ext_cost = vertcat(x, u).T @ cost_W @ vertcat(x, u)
-        ocp.model.cost_expr_ext_cost_e = x.T @ Q @ x
+        ocp.model.cost_expr_ext_cost = .5*vertcat(x, u).T @ cost_W @ vertcat(x, u)
+        ocp.model.cost_expr_ext_cost_e = .5*x.T @ Q @ x
 
     else:
         raise Exception('Unknown cost_version. Possible values are \'LS\' and \'NLS\'.')
@@ -214,8 +214,8 @@ def main(cost_version: str):
     # NOTE: hessian is wrt [u,x]
     if EXTERNAL_COST_USE_NUM_HESS and cost_version == 'EXTERNAL':
         for i in range(N):
-            ocp_solver.cost_set(i, "ext_cost_num_hess", np.diag([0.04, 4000, 4000, 0.04, 0.04, ]))
-        ocp_solver.cost_set(N, "ext_cost_num_hess", np.diag([4000, 4000, 0.04, 0.04, ]))
+            ocp_solver.cost_set(i, "ext_cost_num_hess", np.diag([0.02, 2000, 2000, 0.02, 0.02, ]))
+        ocp_solver.cost_set(N, "ext_cost_num_hess", np.diag([2000, 2000, 0.02, 0.02, ]))
 
 
     simX = np.ndarray((N+1, nx))
@@ -234,6 +234,8 @@ def main(cost_version: str):
         simU[i,:] = ocp_solver.get(i, "u")
     simX[N,:] = ocp_solver.get(N, "x")
 
+    cost_val = ocp_solver.get_cost()
+    print(f"cost value is: {cost_val}")
 
     # plot results
     plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
