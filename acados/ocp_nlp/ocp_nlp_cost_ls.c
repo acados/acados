@@ -263,6 +263,10 @@ void *ocp_nlp_cost_ls_model_assign(void *config_, void *dims_, void *raw_memory)
     // default initialization
     model->scaling = 1.0;
 
+    // initialize with 1 to factorize in the beginning
+    model->Cyt_changed = 1;
+    model->W_changed = 1;
+
     // assert
     assert((char *) raw_memory +
         ocp_nlp_cost_ls_model_calculate_size(config_, dims) >= c_ptr);
@@ -298,23 +302,27 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
     {
         double *W_col_maj = (double *) value_;
         blasfeo_pack_dmat(ny, ny, W_col_maj, ny, &model->W, 0, 0);
-        // NOTE(oj): W_chol is computed in _initialize(), called in preparation phase.
+        model->W_changed = 1;
+        // NOTE(oj): W_chol is computed in _initialize(), called in preparation phase, if W or Cyt changed
     }
     else if (!strcmp(field, "Cyt"))
     {
         double *Cyt_col_maj = (double *) value_;
         blasfeo_pack_dmat(nx + nu, dims->ny, Cyt_col_maj, nx + nu,
             &model->Cyt, 0, 0);
+        model->Cyt_changed = 1;
     }
     else if (!strcmp(field, "Vx"))
     {
         double *Vx_col_maj = (double *) value_;
         blasfeo_pack_tran_dmat(ny, nx, Vx_col_maj, ny, &model->Cyt, nu, 0);
+        model->Cyt_changed = 1;
     }
     else if (!strcmp(field, "Vu"))
     {
         double *Vu_col_maj = (double *) value_;
         blasfeo_pack_tran_dmat(ny, nu, Vu_col_maj, ny, &model->Cyt, 0, 0);
+        model->Cyt_changed = 1;
     }
     // TODO(andrea): inconsistent order x, u, z. Make x, z, u later!
     else if (!strcmp(field, "Vz"))
@@ -679,15 +687,11 @@ static void ocp_nlp_cost_ls_cast_workspace(void *config_,
 
 
 
-// TODO move computataion of hess into pre-compute???
-// NOTE(oj): factorization should stay here, precompute is only called at creation, initialize in every SQP call.
-// Thus, updating W would not work properly in precompute.
 void ocp_nlp_cost_ls_initialize(void *config_, void *dims_, void *model_,
     void *opts_, void *memory_, void *work_)
 {
     ocp_nlp_cost_ls_dims *dims = dims_;
     ocp_nlp_cost_ls_model *model = model_;
-    // ocp_nlp_cost_ls_opts *opts = opts_;
     ocp_nlp_cost_ls_memory *memory = memory_;
     ocp_nlp_cost_ls_workspace *work = work_;
 
@@ -698,17 +702,32 @@ void ocp_nlp_cost_ls_initialize(void *config_, void *dims_, void *model_,
     int ny = dims->ny;
     int ns = dims->ns;
 
-    // general Cyt
+    // refactorize Hessian only if W has changed
+    if (model->W_changed) {
+        blasfeo_dpotrf_l(ny, &model->W, 0, 0, &memory->W_chol, 0, 0);
 
-    // TODO(all): recompute factorization only if W are re-tuned ???
-    blasfeo_dpotrf_l(ny, &model->W, 0, 0, &memory->W_chol, 0, 0);
+        blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0, &model->Cyt,
+                            0, 0, &work->tmp_nv_ny, 0, 0);
 
-    // TODO(all): avoid recomputing the Hessian if both W and Cyt do not change
-    blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0, &model->Cyt,
-                        0, 0, &work->tmp_nv_ny, 0, 0);
-    // hess = scaling * tmp_nv_ny * tmp_nv_ny^T
-    blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0,
-        &work->tmp_nv_ny, 0, 0, 0.0, &memory->hess, 0, 0, &memory->hess, 0, 0);
+        // hess = scaling * tmp_nv_ny * tmp_nv_ny^T
+        blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0,
+            &work->tmp_nv_ny, 0, 0, 0.0, &memory->hess, 0, 0, &memory->hess, 0, 0);
+
+        model->W_changed = 0;
+        model->Cyt_changed = 0;
+        printf("W factorized!\n");
+    }
+    else if (model->Cyt_changed)
+    {
+        blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0, &model->Cyt,
+                            0, 0, &work->tmp_nv_ny, 0, 0);
+
+        // hess = scaling * tmp_nv_ny * tmp_nv_ny^T
+        blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0,
+            &work->tmp_nv_ny, 0, 0, 0.0, &memory->hess, 0, 0, &memory->hess, 0, 0);
+
+        model->Cyt_changed = 0;
+    }
 
     // mem->Z = scaling * model->Z
     blasfeo_dveccpsc(2*ns, model->scaling, &model->Z, 0, memory->Z, 0);
