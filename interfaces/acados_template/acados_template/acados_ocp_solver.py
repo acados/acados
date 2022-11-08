@@ -1685,7 +1685,7 @@ class AcadosOcpSolver:
         Set numerical data in the cost module of the solver.
 
             :param stage: integer corresponding to shooting node
-            :param field: string, e.g. 'yref', 'W', 'ext_cost_num_hess'
+            :param field: string, e.g. 'yref', 'W', 'ext_cost_num_hess', 'zl', 'zu', 'Zl', 'Zu'
             :param value: of appropriate size
         """
         # cast value_ to avoid conversion issues

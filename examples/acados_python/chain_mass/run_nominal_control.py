@@ -32,7 +32,7 @@
 #
 
 # authors: Florian Messerer, Jonathan Frey
-# 
+#
 # This implementation of the nonlinear chain example follows the problem formulation:
 # https://github.com/dkouzoup/hanging-chain-acado
 # and the publication

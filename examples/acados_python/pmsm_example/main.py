@@ -3,8 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.linalg
 
-CODE_GEN = 1
-COMPILE = 1
 
 FORMULATION = 1
 # Tracking MPC
@@ -389,19 +387,21 @@ def run_simulation(qp_solver="FULL_CONDENSING_HPIPM", show_plots=False, verbose=
 
     file_name = "acados_ocp.json"
 
-    if CODE_GEN == 1:
-        if FORMULATION == 0:
-            acados_solver = AcadosOcpSolver(ocp, json_file=file_name)
-        if FORMULATION == 1:
-            nlp_con.constr_type = "BGP"
-            nlp_con.constr_type_e = "BGP"
-            acados_solver = AcadosOcpSolver(ocp, json_file=file_name)
+    if FORMULATION == 1:
+        nlp_con.constr_type = "BGP"
+        nlp_con.constr_type_e = "BGP"
 
-    if COMPILE == 1:
-        # make
-        os.chdir("c_generated_code")
-        os.system("make ocp_shared_lib")
-        os.chdir("..")
+    acados_solver = AcadosOcpSolver(ocp, json_file=file_name)
+
+
+    # test setter:
+    for i in range(1,N):
+        acados_solver.cost_set(i, 'zl', ocp.cost.zl)
+        acados_solver.cost_set(i, 'zu', ocp.cost.zu)
+        acados_solver.cost_set(i, 'Zl', ocp.cost.Zl)
+        acados_solver.cost_set(i, 'Zu', ocp.cost.Zu)
+        acados_solver.cost_set(i, 'W', ocp.cost.W)
+        acados_solver.cost_set(i, 'yref', ocp.cost.yref)
 
     # test constraints set with polytopic constraints
     acados_solver.constraints_set(1, "lg", lg)
