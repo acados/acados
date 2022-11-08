@@ -818,7 +818,7 @@ class AcadosOcpCost:
         if cost_ext_fun_type in ['casadi', 'generic']:
             self.__cost_ext_fun_type = cost_ext_fun_type
         else:
-            raise Exception('Invalid cost_ext_fun_type value, expected numpy array.')
+            raise Exception("Invalid cost_ext_fun_type value, expected one in ['casadi', 'generic'].")
 
     # Mayer term
     @property
@@ -881,7 +881,7 @@ class AcadosOcpCost:
 
     @property
     def cost_ext_fun_type_e(self):
-        """Type of external function for cost at intermediate shooting nodes (1 to N-1).
+        """Type of external function for cost at terminal shooting node (N).
         -- string in {casadi, generic}
         Default: :code:'casadi'.
         """
@@ -952,7 +952,7 @@ class AcadosOcpCost:
         if cost_ext_fun_type_e in ['casadi', 'generic']:
             self.__cost_ext_fun_type_e = cost_ext_fun_type_e
         else:
-            raise Exception('Invalid cost_ext_fun_type_e value, expected numpy array.')
+            raise Exception("Invalid cost_ext_fun_type_e value, expected one in ['casadi', 'generic'].")
 
     def set(self, attr, value):
         setattr(self, attr, value)
