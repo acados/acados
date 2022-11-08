@@ -74,82 +74,28 @@ void *ocp_nlp_cost_conl_dims_assign(void *config_, void *raw_memory)
 
 
 
-void ocp_nlp_cost_conl_dims_initialize(void *config_, void *dims_, int nx, int nu, int ny, int ns, int nz)
-{
-    ocp_nlp_cost_conl_dims *dims = dims_;
-
-    dims->nx = nx;
-    dims->nu = nu;
-    dims->ny = ny;
-    dims->ns = ns;
-    dims->nz = nz;
-
-    return;
-}
-
-
-
-static void ocp_nlp_cost_conl_set_nx(void *config_, void *dims_, int *nx)
-{
-    ocp_nlp_cost_conl_dims *dims = (ocp_nlp_cost_conl_dims *) dims_;
-    dims->nx = *nx;
-}
-
-
-
-static void ocp_nlp_cost_conl_set_nz(void *config_, void *dims_, int *nz)
-{
-    ocp_nlp_cost_conl_dims *dims = (ocp_nlp_cost_conl_dims *) dims_;
-    dims->nz = *nz;
-}
-
-
-
-static void ocp_nlp_cost_conl_set_nu(void *config_, void *dims_, int *nu)
-{
-    ocp_nlp_cost_conl_dims *dims = (ocp_nlp_cost_conl_dims *) dims_;
-    dims->nu = *nu;
-}
-
-
-
-static void ocp_nlp_cost_conl_set_ny(void *config_, void *dims_, int *ny)
-{
-    ocp_nlp_cost_conl_dims *dims = (ocp_nlp_cost_conl_dims *) dims_;
-    dims->ny = *ny;
-}
-
-
-
-static void ocp_nlp_cost_conl_set_ns(void *config_, void *dims_, int *ns)
-{
-    ocp_nlp_cost_conl_dims *dims = (ocp_nlp_cost_conl_dims *) dims_;
-    dims->ns = *ns;
-}
-
-
-
 void ocp_nlp_cost_conl_dims_set(void *config_, void *dims_, const char *field, int* value)
 {
+    ocp_nlp_cost_conl_dims *dims = (ocp_nlp_cost_conl_dims *) dims_;
     if (!strcmp(field, "nx"))
     {
-        ocp_nlp_cost_conl_set_nx(config_, dims_, value);
+        dims->nx = *value;
     }
     else if (!strcmp(field, "nz"))
     {
-        ocp_nlp_cost_conl_set_nz(config_, dims_, value);
+        dims->nz = *value;
     }
     else if (!strcmp(field, "nu"))
     {
-        ocp_nlp_cost_conl_set_nu(config_, dims_, value);
+        dims->nu = *value;
     }
     else if (!strcmp(field, "ny"))
     {
-        ocp_nlp_cost_conl_set_ny(config_, dims_, value);
+        dims->ny = *value;
     }
     else if (!strcmp(field, "ns"))
     {
-        ocp_nlp_cost_conl_set_ns(config_, dims_, value);
+        dims->ns = *value;
     }
     else
     {
