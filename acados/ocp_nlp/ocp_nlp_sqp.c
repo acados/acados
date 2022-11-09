@@ -1056,6 +1056,10 @@ int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_
                                                 nlp_mem->dynamics[ii], nlp_work->dynamics[ii]);
         if (status != ACADOS_SUCCESS)
             return status;
+
+        // cost precompute
+        config->cost[ii]->precompute(config->cost[ii], dims->cost[ii], nlp_in->cost[ii],
+                                     opts->nlp_opts->cost[ii], nlp_mem->cost[ii], nlp_work->cost[ii]);
     }
     return status;
 }

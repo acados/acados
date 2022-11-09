@@ -33,8 +33,8 @@
 
 
 ///
-/// \defgroup ocp_nlp_cost ocp_nlp_cost 
-/// 
+/// \defgroup ocp_nlp_cost ocp_nlp_cost
+///
 
 /// \addtogroup ocp_nlp_cost ocp_nlp_cost
 /// @{
@@ -90,6 +90,8 @@ typedef struct
     // computes the cost function value (intended for globalization)
     void (*compute_fun)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*config_initialize_default)(void *config);
+    void (*precompute)(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_);
+
 } ocp_nlp_cost_config;
 
 //
@@ -104,5 +106,5 @@ ocp_nlp_cost_config *ocp_nlp_cost_config_assign(void *raw_memory);
 #endif
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_COST_COMMON_H_
-/// @} 
-/// @} 
+/// @}
+/// @}

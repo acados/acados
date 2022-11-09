@@ -244,9 +244,6 @@ def main(cost_version: str):
 
 if __name__ == "__main__":
 
-    main('LS')
-
-    breakpoint()
     for cost_version in COST_VERSIONS:
     # for cost_version in ['EXTERNAL', 'NLS', 'LS_Z', 'NLS_Z']:
         main(cost_version=cost_version)

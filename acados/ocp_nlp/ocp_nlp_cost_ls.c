@@ -263,7 +263,7 @@ void *ocp_nlp_cost_ls_model_assign(void *config_, void *dims_, void *raw_memory)
     // default initialization
     model->scaling = 1.0;
 
-    // initialize with 1 to factorize in the beginning
+    // initialize to 1 to update Hessian in precompute
     model->Cyt_changed = 1;
     model->W_changed = 1;
 
@@ -687,8 +687,7 @@ static void ocp_nlp_cost_ls_cast_workspace(void *config_,
 
 
 
-void ocp_nlp_cost_ls_initialize(void *config_, void *dims_, void *model_,
-    void *opts_, void *memory_, void *work_)
+static void ocp_nlp_cost_ls_update_hessian(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_)
 {
     ocp_nlp_cost_ls_dims *dims = dims_;
     ocp_nlp_cost_ls_model *model = model_;
@@ -700,10 +699,10 @@ void ocp_nlp_cost_ls_initialize(void *config_, void *dims_, void *model_,
     int nx = dims->nx;
     int nu = dims->nu;
     int ny = dims->ny;
-    int ns = dims->ns;
 
     // refactorize Hessian only if W has changed
-    if (model->W_changed) {
+    if (model->W_changed)
+    {
         blasfeo_dpotrf_l(ny, &model->W, 0, 0, &memory->W_chol, 0, 0);
 
         blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0, &model->Cyt,
@@ -715,7 +714,6 @@ void ocp_nlp_cost_ls_initialize(void *config_, void *dims_, void *model_,
 
         model->W_changed = 0;
         model->Cyt_changed = 0;
-        printf("W factorized!\n");
     }
     else if (model->Cyt_changed)
     {
@@ -728,7 +726,31 @@ void ocp_nlp_cost_ls_initialize(void *config_, void *dims_, void *model_,
 
         model->Cyt_changed = 0;
     }
+    return;
+}
 
+
+
+void ocp_nlp_cost_ls_precompute(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_)
+{
+    // NOTE: model->Cyt_changed, model->W_changed are initialized to 1
+    ocp_nlp_cost_ls_update_hessian(config_, dims_, model_, opts_, memory_, work_);
+    return;
+}
+
+
+
+void ocp_nlp_cost_ls_initialize(void *config_, void *dims_, void *model_,
+    void *opts_, void *memory_, void *work_)
+{
+    ocp_nlp_cost_ls_dims *dims = dims_;
+    ocp_nlp_cost_ls_model *model = model_;
+    ocp_nlp_cost_ls_memory *memory = memory_;
+
+    ocp_nlp_cost_ls_cast_workspace(config_, dims_, opts_, work_);
+    ocp_nlp_cost_ls_update_hessian(config_, dims_, model_, opts_, memory_, work_);
+
+    int ns = dims->ns;
     // mem->Z = scaling * model->Z
     blasfeo_dveccpsc(2*ns, model->scaling, &model->Z, 0, memory->Z, 0);
 
@@ -936,6 +958,7 @@ void ocp_nlp_cost_ls_config_initialize_default(void *config_)
     config->update_qp_matrices = &ocp_nlp_cost_ls_update_qp_matrices;
     config->compute_fun = &ocp_nlp_cost_ls_compute_fun;
     config->config_initialize_default = &ocp_nlp_cost_ls_config_initialize_default;
+    config->precompute = &ocp_nlp_cost_ls_precompute;
 
     return;
 }

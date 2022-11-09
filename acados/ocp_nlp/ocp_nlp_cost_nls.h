@@ -193,8 +193,8 @@ acados_size_t ocp_nlp_cost_nls_workspace_calculate_size(void *config, void *dims
  * functions
  ************************************************/
 
-// TODO add precompute
-// void ocp_nlp_cost_nls_precompute(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
+//
+void ocp_nlp_cost_nls_precompute(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_);
 //
 void ocp_nlp_cost_nls_config_initialize_default(void *config);
 //

@@ -504,7 +504,7 @@ acados_size_t ocp_nlp_cost_external_workspace_calculate_size(void *config_, void
     size += 1 * blasfeo_memsize_dvec(2*ns);  // tmp_2ns
 
     size += 64;  // blasfeo_mem align
-    
+
     return size;
 }
 
@@ -515,18 +515,18 @@ static void ocp_nlp_cost_external_cast_workspace(void *config_, void *dims_, voi
 {
     ocp_nlp_cost_external_dims *dims = dims_;
     ocp_nlp_cost_external_workspace *work = work_;
-    
+
     // extract dims
     int nx = dims->nx;
     int nu = dims->nu;
     int ns = dims->ns;
-    
+
     char *c_ptr = (char *) work_;
     c_ptr += sizeof(ocp_nlp_cost_external_workspace);
 
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
-    
+
     // tmp_nv_nv
     assign_and_advance_blasfeo_dmat_mem(nu + nx, nu + nx, &work->tmp_nv_nv, &c_ptr);
 
@@ -544,13 +544,19 @@ static void ocp_nlp_cost_external_cast_workspace(void *config_, void *dims_, voi
  * functions
  ************************************************/
 
+void ocp_nlp_cost_external_precompute(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_)
+{
+    return;
+}
+
+
+
 void ocp_nlp_cost_external_initialize(void *config_, void *dims_, void *model_, void *opts_,
                                       void *memory_, void *work_)
 {
     ocp_nlp_cost_external_dims *dims = dims_;
     ocp_nlp_cost_external_model *model = model_;
     ocp_nlp_cost_external_memory *memory = memory_;
-    // ocp_nlp_cost_external_workspace *work= work_;
 
     // ocp_nlp_cost_external_cast_workspace(config_, dims, opts_, work_);
 
@@ -751,6 +757,7 @@ void ocp_nlp_cost_external_config_initialize_default(void *config_)
     config->update_qp_matrices = &ocp_nlp_cost_external_update_qp_matrices;
     config->compute_fun = &ocp_nlp_cost_external_compute_fun;
     config->config_initialize_default = &ocp_nlp_cost_external_config_initialize_default;
+    config->precompute = &ocp_nlp_cost_external_precompute;
 
     return;
 }

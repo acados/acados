@@ -223,7 +223,8 @@ acados_size_t ocp_nlp_cost_ls_workspace_calculate_size(void *config, void *dims,
 ////////////////////////////////////////////////////////////////////////////////
 
 
-
+// computations that are done once when solver is created
+void ocp_nlp_cost_ls_precompute(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_);
 //
 void ocp_nlp_cost_ls_config_initialize_default(void *config);
 //

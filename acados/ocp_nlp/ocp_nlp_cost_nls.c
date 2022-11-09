@@ -198,8 +198,8 @@ void *ocp_nlp_cost_nls_model_assign(void *config_, void *dims_, void *raw_memory
     // default initialization
     model->scaling = 1.0;
 
-    // initialize with 1 to factorize in the beginning
-    model->W_changed = 1;
+    // initialize to 1 to update factorization of W in precompute
+    model->W_changed = 1.0;
 
     // assert
     assert((char *) raw_memory + ocp_nlp_cost_nls_model_calculate_size(config_, dims) >= c_ptr);
@@ -625,27 +625,45 @@ static void ocp_nlp_cost_nls_cast_workspace(void *config_, void *dims_, void *op
  * functions
  ************************************************/
 
-void ocp_nlp_cost_nls_initialize(void *config_, void *dims_, void *model_, void *opts_,
-                                 void *memory_, void *work_)
+static void ocp_nlp_cost_nls_update_W_factorization(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_)
 {
     ocp_nlp_cost_nls_dims *dims = dims_;
     ocp_nlp_cost_nls_model *model = model_;
     ocp_nlp_cost_nls_memory *memory = memory_;
-    // ocp_nlp_cost_nls_workspace *work= work_;
 
-    ocp_nlp_cost_nls_cast_workspace(config_, dims, opts_, work_);
+    ocp_nlp_cost_nls_cast_workspace(config_, dims_, opts_, work_);
 
-    // int nx = dims->nx;
-    // int nu = dims->nu;
     int ny = dims->ny;
-    int ns = dims->ns;
 
     if (model->W_changed)
     {
         blasfeo_dpotrf_l(ny, &model->W, 0, 0, &memory->W_chol, 0, 0);
         model->W_changed = 0;
     }
+    return;
+}
 
+
+
+void ocp_nlp_cost_nls_precompute(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_)
+{
+    ocp_nlp_cost_nls_update_W_factorization(config_, dims_, model_, opts_, memory_, work_);
+    return;
+}
+
+
+
+void ocp_nlp_cost_nls_initialize(void *config_, void *dims_, void *model_, void *opts_,
+                                 void *memory_, void *work_)
+{
+    ocp_nlp_cost_nls_dims *dims = dims_;
+    ocp_nlp_cost_nls_model *model = model_;
+    ocp_nlp_cost_nls_memory *memory = memory_;
+
+    ocp_nlp_cost_nls_cast_workspace(config_, dims_, opts_, work_);
+    ocp_nlp_cost_nls_update_W_factorization(config_, dims_, model_, opts_, memory_, work_);
+
+    int ns = dims->ns;
     blasfeo_dveccpsc(2*ns, model->scaling, &model->Z, 0, memory->Z, 0);
 
     return;
@@ -925,6 +943,7 @@ void ocp_nlp_cost_nls_config_initialize_default(void *config_)
     config->update_qp_matrices = &ocp_nlp_cost_nls_update_qp_matrices;
     config->compute_fun = &ocp_nlp_cost_nls_compute_fun;
     config->config_initialize_default = &ocp_nlp_cost_nls_config_initialize_default;
+    config->precompute = &ocp_nlp_cost_nls_precompute;
 
     return;
 }
