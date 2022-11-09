@@ -199,7 +199,7 @@ void *ocp_nlp_cost_nls_model_assign(void *config_, void *dims_, void *raw_memory
     model->scaling = 1.0;
 
     // initialize to 1 to update factorization of W in precompute
-    model->W_changed = 1.0;
+    model->W_changed = 1;
 
     // assert
     assert((char *) raw_memory + ocp_nlp_cost_nls_model_calculate_size(config_, dims) >= c_ptr);
@@ -647,6 +647,8 @@ static void ocp_nlp_cost_nls_update_W_factorization(void *config_, void *dims_, 
 
 void ocp_nlp_cost_nls_precompute(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_)
 {
+    ocp_nlp_cost_nls_model *model = model_;
+    model->W_changed = 1;
     ocp_nlp_cost_nls_update_W_factorization(config_, dims_, model_, opts_, memory_, work_);
     return;
 }

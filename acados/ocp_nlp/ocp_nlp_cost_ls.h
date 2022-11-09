@@ -113,7 +113,7 @@ typedef struct
     struct blasfeo_dvec z;              ///< gradient of slacks as vector (lower and upper)
     double scaling;
     int W_changed;                      ///< flag indicating whether W has changed and needs to be refactorized
-    int Cyt_changed;                    ///< flag indicating whether Cyt has changed and needs to be refactorized
+    int Cyt_or_scaling_changed;         ///< flag indicating whether Cyt or scaling has changed and Hessian needs to be recomputed
 } ocp_nlp_cost_ls_model;
 
 //
