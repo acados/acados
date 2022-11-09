@@ -695,56 +695,14 @@ int ocp_nlp_sqp_rti_precompute(void *config_, void *dims_, void *nlp_in_,
     ocp_nlp_sqp_rti_opts *opts = opts_;
     ocp_nlp_sqp_rti_memory *mem = mem_;
     ocp_nlp_in *nlp_in = nlp_in_;
-    // ocp_nlp_out *nlp_out = nlp_out_;
+    ocp_nlp_out *nlp_out = nlp_out_;
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
 
     ocp_nlp_sqp_rti_workspace *work = work_;
     ocp_nlp_sqp_rti_cast_workspace(config, dims, opts, mem, work);
     ocp_nlp_workspace *nlp_work = work->nlp_work;
 
-    int N = dims->N;
-    int status = ACADOS_SUCCESS;
-
-    int ii;
-
-    // TODO(giaf) flag to enable/disable checks
-    for (ii = 0; ii <= N; ii++)
-    {
-        int module_val;
-        config->constraints[ii]->dims_get(config->constraints[ii],
-            dims->constraints[ii], "ns", &module_val);
-        if (dims->ns[ii] != module_val)
-        {
-            printf("ocp_nlp_sqp_rti_precompute: inconsistent dimension ns \
-                for stage %d with constraint module, got %d, module: %d.",
-                ii, dims->ns[ii], module_val);
-            exit(1);
-        }
-    }
-
-    // precompute
-    for (ii = 0; ii < N; ii++)
-    {
-        // set T
-        config->dynamics[ii]->model_set(config->dynamics[ii],
-            dims->dynamics[ii], nlp_in->dynamics[ii], "T", nlp_in->Ts+ii);
-
-        // dynamics precompute
-        status = config->dynamics[ii]->precompute(config->dynamics[ii],
-            dims->dynamics[ii], nlp_in->dynamics[ii],
-            opts->nlp_opts->dynamics[ii],
-            nlp_mem->dynamics[ii],
-            nlp_work->dynamics[ii]);
-
-        if (status != ACADOS_SUCCESS)
-            return status;
-
-        // cost precompute
-        config->cost[ii]->precompute(config->cost[ii], dims->cost[ii], nlp_in->cost[ii],
-                                     opts->nlp_opts->cost[ii], nlp_mem->cost[ii], nlp_work->cost[ii]);
-    }
-
-    return status;
+    return ocp_nlp_precompute_common(config, dims, nlp_in, nlp_out, opts->nlp_opts, nlp_mem, nlp_work);
 }
 
 

@@ -2767,6 +2767,46 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
 }
 
 
+int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+{
+    int N = dims->N;
+    int status = ACADOS_SUCCESS;
+    int ii;
+
+    for (ii = 0; ii <= N; ii++)
+    {
+        int module_val;
+        config->constraints[ii]->dims_get(config->constraints[ii], dims->constraints[ii], "ns", &module_val);
+        if (dims->ns[ii] != module_val)
+        {
+            printf("ocp_nlp_sqp_precompute: inconsistent dimension ns for stage %d with constraint module, got %d, module: %d.",
+                   ii, dims->ns[ii], module_val);
+            exit(1);
+        }
+    }
+
+    // precompute
+    for (ii = 0; ii < N; ii++)
+    {
+        // set T
+        config->dynamics[ii]->model_set(config->dynamics[ii], dims->dynamics[ii],
+                                        in->dynamics[ii], "T", in->Ts+ii);
+        // dynamics precompute
+        status = config->dynamics[ii]->precompute(config->dynamics[ii], dims->dynamics[ii],
+                                                in->dynamics[ii], opts->dynamics[ii],
+                                                mem->dynamics[ii], work->dynamics[ii]);
+        if (status != ACADOS_SUCCESS)
+            return status;
+
+        // cost precompute
+        config->cost[ii]->precompute(config->cost[ii], dims->cost[ii], in->cost[ii],
+                                     opts->cost[ii], mem->cost[ii], work->cost[ii]);
+    }
+    return status;
+}
+
+
 
 /************************************************
  * residuals
