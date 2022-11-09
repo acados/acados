@@ -703,18 +703,10 @@ static void ocp_nlp_cost_ls_update_hessian(void *config_, void *dims_, void *mod
     if (model->W_changed)
     {
         blasfeo_dpotrf_l(ny, &model->W, 0, 0, &memory->W_chol, 0, 0);
-
-        blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0, &model->Cyt,
-                            0, 0, &work->tmp_nv_ny, 0, 0);
-
-        // hess = scaling * tmp_nv_ny * tmp_nv_ny^T
-        blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0,
-            &work->tmp_nv_ny, 0, 0, 0.0, &memory->hess, 0, 0, &memory->hess, 0, 0);
-
         model->W_changed = 0;
-        model->Cyt_or_scaling_changed = 0;
+        model->Cyt_or_scaling_changed = 1; // execute lower part
     }
-    else if (model->Cyt_or_scaling_changed)
+    if (model->Cyt_or_scaling_changed)
     {
         blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0, &model->Cyt,
                             0, 0, &work->tmp_nv_ny, 0, 0);
