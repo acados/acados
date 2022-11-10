@@ -217,7 +217,6 @@ def main(cost_version: str):
             ocp_solver.cost_set(i, "ext_cost_num_hess", np.diag([0.02, 2000, 2000, 0.02, 0.02, ]))
         ocp_solver.cost_set(N, "ext_cost_num_hess", np.diag([2000, 2000, 0.02, 0.02, ]))
 
-
     simX = np.ndarray((N+1, nx))
     simU = np.ndarray((N, nu))
 

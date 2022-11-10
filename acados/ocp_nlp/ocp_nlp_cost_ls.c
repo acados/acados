@@ -263,13 +263,16 @@ void *ocp_nlp_cost_ls_model_assign(void *config_, void *dims_, void *raw_memory)
     // default initialization
     model->scaling = 1.0;
 
+    // initialize to 1 to update Hessian in precompute
+    model->W_changed = 1;
+    model->Cyt_or_scaling_changed = 0;
+
     // assert
     assert((char *) raw_memory +
         ocp_nlp_cost_ls_model_calculate_size(config_, dims) >= c_ptr);
 
     return model;
 }
-
 
 
 
@@ -298,23 +301,26 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
     {
         double *W_col_maj = (double *) value_;
         blasfeo_pack_dmat(ny, ny, W_col_maj, ny, &model->W, 0, 0);
-        // NOTE(oj): W_chol is computed in _initialize(), called in preparation phase.
+        model->W_changed = 1;
     }
     else if (!strcmp(field, "Cyt"))
     {
         double *Cyt_col_maj = (double *) value_;
         blasfeo_pack_dmat(nx + nu, dims->ny, Cyt_col_maj, nx + nu,
             &model->Cyt, 0, 0);
+        model->Cyt_or_scaling_changed = 1;
     }
     else if (!strcmp(field, "Vx"))
     {
         double *Vx_col_maj = (double *) value_;
         blasfeo_pack_tran_dmat(ny, nx, Vx_col_maj, ny, &model->Cyt, nu, 0);
+        model->Cyt_or_scaling_changed = 1;
     }
     else if (!strcmp(field, "Vu"))
     {
         double *Vu_col_maj = (double *) value_;
         blasfeo_pack_tran_dmat(ny, nu, Vu_col_maj, ny, &model->Cyt, 0, 0);
+        model->Cyt_or_scaling_changed = 1;
     }
     // TODO(andrea): inconsistent order x, u, z. Make x, z, u later!
     else if (!strcmp(field, "Vz"))
@@ -363,6 +369,7 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
     {
         double *scaling_ptr = (double *) value_;
         model->scaling = *scaling_ptr;
+        model->Cyt_or_scaling_changed = 1;
     }
     else
     {
@@ -679,15 +686,10 @@ static void ocp_nlp_cost_ls_cast_workspace(void *config_,
 
 
 
-// TODO move computataion of hess into pre-compute???
-// NOTE(oj): factorization should stay here, precompute is only called at creation, initialize in every SQP call.
-// Thus, updating W would not work properly in precompute.
-void ocp_nlp_cost_ls_initialize(void *config_, void *dims_, void *model_,
-    void *opts_, void *memory_, void *work_)
+static void ocp_nlp_cost_ls_update_hessian(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_)
 {
     ocp_nlp_cost_ls_dims *dims = dims_;
     ocp_nlp_cost_ls_model *model = model_;
-    // ocp_nlp_cost_ls_opts *opts = opts_;
     ocp_nlp_cost_ls_memory *memory = memory_;
     ocp_nlp_cost_ls_workspace *work = work_;
 
@@ -696,20 +698,51 @@ void ocp_nlp_cost_ls_initialize(void *config_, void *dims_, void *model_,
     int nx = dims->nx;
     int nu = dims->nu;
     int ny = dims->ny;
+
+    // refactorize Hessian only if W has changed
+    if (model->W_changed)
+    {
+        blasfeo_dpotrf_l(ny, &model->W, 0, 0, &memory->W_chol, 0, 0);
+        model->W_changed = 0;
+        model->Cyt_or_scaling_changed = 1; // execute lower part
+    }
+    if (model->Cyt_or_scaling_changed)
+    {
+        blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0, &model->Cyt,
+                            0, 0, &work->tmp_nv_ny, 0, 0);
+
+        // hess = scaling * tmp_nv_ny * tmp_nv_ny^T
+        blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0,
+            &work->tmp_nv_ny, 0, 0, 0.0, &memory->hess, 0, 0, &memory->hess, 0, 0);
+
+        model->Cyt_or_scaling_changed = 0;
+    }
+    return;
+}
+
+
+
+void ocp_nlp_cost_ls_precompute(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_)
+{
+    ocp_nlp_cost_ls_model *model = model_;
+    model->W_changed = 1;
+    ocp_nlp_cost_ls_update_hessian(config_, dims_, model_, opts_, memory_, work_);
+    return;
+}
+
+
+
+void ocp_nlp_cost_ls_initialize(void *config_, void *dims_, void *model_,
+    void *opts_, void *memory_, void *work_)
+{
+    ocp_nlp_cost_ls_dims *dims = dims_;
+    ocp_nlp_cost_ls_model *model = model_;
+    ocp_nlp_cost_ls_memory *memory = memory_;
+
+    ocp_nlp_cost_ls_cast_workspace(config_, dims_, opts_, work_);
+    ocp_nlp_cost_ls_update_hessian(config_, dims_, model_, opts_, memory_, work_);
+
     int ns = dims->ns;
-
-    // general Cyt
-
-    // TODO(all): recompute factorization only if W are re-tuned ???
-    blasfeo_dpotrf_l(ny, &model->W, 0, 0, &memory->W_chol, 0, 0);
-
-    // TODO(all): avoid recomputing the Hessian if both W and Cyt do not change
-    blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0, &model->Cyt,
-                        0, 0, &work->tmp_nv_ny, 0, 0);
-    // hess = scaling * tmp_nv_ny * tmp_nv_ny^T
-    blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0,
-        &work->tmp_nv_ny, 0, 0, 0.0, &memory->hess, 0, 0, &memory->hess, 0, 0);
-
     // mem->Z = scaling * model->Z
     blasfeo_dveccpsc(2*ns, model->scaling, &model->Z, 0, memory->Z, 0);
 
@@ -917,6 +950,7 @@ void ocp_nlp_cost_ls_config_initialize_default(void *config_)
     config->update_qp_matrices = &ocp_nlp_cost_ls_update_qp_matrices;
     config->compute_fun = &ocp_nlp_cost_ls_compute_fun;
     config->config_initialize_default = &ocp_nlp_cost_ls_config_initialize_default;
+    config->precompute = &ocp_nlp_cost_ls_precompute;
 
     return;
 }

@@ -198,6 +198,9 @@ void *ocp_nlp_cost_nls_model_assign(void *config_, void *dims_, void *raw_memory
     // default initialization
     model->scaling = 1.0;
 
+    // initialize to 1 to update factorization of W in precompute
+    model->W_changed = 1;
+
     // assert
     assert((char *) raw_memory + ocp_nlp_cost_nls_model_calculate_size(config_, dims) >= c_ptr);
 
@@ -229,7 +232,7 @@ int ocp_nlp_cost_nls_model_set(void *config_, void *dims_, void *model_,
     {
         double *W_col_maj = (double *) value_;
         blasfeo_pack_dmat(ny, ny, W_col_maj, ny, &model->W, 0, 0);
-        // NOTE(oj): W_chol is computed in _initialize(), called in preparation phase.
+        // NOTE(oj): W_chol is computed in _initialize(), called in preparation phase, if W changed
     }
     else if (!strcmp(field, "y_ref") || !strcmp(field, "yref"))
     {
@@ -622,27 +625,47 @@ static void ocp_nlp_cost_nls_cast_workspace(void *config_, void *dims_, void *op
  * functions
  ************************************************/
 
-// TODO(giaf) move factorization of W into pre-compute???
-// NOTE(oj): factorization should stay here, precompute is only called at creation, initialize in every SQP call.
-// Thus, updating W would not work properly in precompute.
+static void ocp_nlp_cost_nls_update_W_factorization(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_)
+{
+    ocp_nlp_cost_nls_dims *dims = dims_;
+    ocp_nlp_cost_nls_model *model = model_;
+    ocp_nlp_cost_nls_memory *memory = memory_;
+
+    ocp_nlp_cost_nls_cast_workspace(config_, dims_, opts_, work_);
+
+    int ny = dims->ny;
+
+    if (model->W_changed)
+    {
+        blasfeo_dpotrf_l(ny, &model->W, 0, 0, &memory->W_chol, 0, 0);
+        model->W_changed = 0;
+    }
+    return;
+}
+
+
+
+void ocp_nlp_cost_nls_precompute(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_)
+{
+    ocp_nlp_cost_nls_model *model = model_;
+    model->W_changed = 1;
+    ocp_nlp_cost_nls_update_W_factorization(config_, dims_, model_, opts_, memory_, work_);
+    return;
+}
+
+
+
 void ocp_nlp_cost_nls_initialize(void *config_, void *dims_, void *model_, void *opts_,
                                  void *memory_, void *work_)
 {
     ocp_nlp_cost_nls_dims *dims = dims_;
     ocp_nlp_cost_nls_model *model = model_;
     ocp_nlp_cost_nls_memory *memory = memory_;
-    // ocp_nlp_cost_nls_workspace *work= work_;
 
-    ocp_nlp_cost_nls_cast_workspace(config_, dims, opts_, work_);
+    ocp_nlp_cost_nls_cast_workspace(config_, dims_, opts_, work_);
+    ocp_nlp_cost_nls_update_W_factorization(config_, dims_, model_, opts_, memory_, work_);
 
-    // int nx = dims->nx;
-    // int nu = dims->nu;
-    int ny = dims->ny;
     int ns = dims->ns;
-
-    // TODO(all): recompute factorization only if W are re-tuned ???
-    blasfeo_dpotrf_l(ny, &model->W, 0, 0, &memory->W_chol, 0, 0);
-
     blasfeo_dveccpsc(2*ns, model->scaling, &model->Z, 0, memory->Z, 0);
 
     return;
@@ -922,6 +945,7 @@ void ocp_nlp_cost_nls_config_initialize_default(void *config_)
     config->update_qp_matrices = &ocp_nlp_cost_nls_update_qp_matrices;
     config->compute_fun = &ocp_nlp_cost_nls_compute_fun;
     config->config_initialize_default = &ocp_nlp_cost_nls_config_initialize_default;
+    config->precompute = &ocp_nlp_cost_nls_precompute;
 
     return;
 }

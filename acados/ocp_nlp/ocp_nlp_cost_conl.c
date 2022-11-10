@@ -560,6 +560,11 @@ static void ocp_nlp_cost_conl_cast_workspace(void *config_, void *dims_, void *o
  * functions
  ************************************************/
 
+void ocp_nlp_cost_conl_precompute(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_)
+{
+    return;
+}
+
 void ocp_nlp_cost_conl_initialize(void *config_, void *dims_, void *model_, void *opts_,
                                   void *memory_, void *work_)
 {
@@ -782,6 +787,7 @@ void ocp_nlp_cost_conl_config_initialize_default(void *config_)
     config->update_qp_matrices = &ocp_nlp_cost_conl_update_qp_matrices;
     config->compute_fun = &ocp_nlp_cost_conl_compute_fun;
     config->config_initialize_default = &ocp_nlp_cost_conl_config_initialize_default;
+    config->precompute = &ocp_nlp_cost_conl_precompute;
 
     return;
 }

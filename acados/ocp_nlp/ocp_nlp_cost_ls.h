@@ -112,6 +112,8 @@ typedef struct
     struct blasfeo_dvec Z;              ///< diagonal Hessian of slacks as vector (lower and upper)
     struct blasfeo_dvec z;              ///< gradient of slacks as vector (lower and upper)
     double scaling;
+    int W_changed;                      ///< flag indicating whether W has changed and needs to be refactorized
+    int Cyt_or_scaling_changed;         ///< flag indicating whether Cyt or scaling has changed and Hessian needs to be recomputed
 } ocp_nlp_cost_ls_model;
 
 //
@@ -221,7 +223,8 @@ acados_size_t ocp_nlp_cost_ls_workspace_calculate_size(void *config, void *dims,
 ////////////////////////////////////////////////////////////////////////////////
 
 
-
+// computations that are done once when solver is created
+void ocp_nlp_cost_ls_precompute(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_);
 //
 void ocp_nlp_cost_ls_config_initialize_default(void *config);
 //

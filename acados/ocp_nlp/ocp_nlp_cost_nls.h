@@ -97,6 +97,7 @@ typedef struct
     struct blasfeo_dvec Z;              // diagonal Hessian of slacks as vector
     struct blasfeo_dvec z;              // gradient of slacks as vector
     double scaling;
+    int W_changed;                      ///< flag indicating whether W has changed and needs to be refactorized
 } ocp_nlp_cost_nls_model;
 
 //
@@ -192,6 +193,8 @@ acados_size_t ocp_nlp_cost_nls_workspace_calculate_size(void *config, void *dims
  * functions
  ************************************************/
 
+//
+void ocp_nlp_cost_nls_precompute(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_);
 //
 void ocp_nlp_cost_nls_config_initialize_default(void *config);
 //
