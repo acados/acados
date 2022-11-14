@@ -110,34 +110,17 @@ Nsim = 100
 simX = np.ndarray((Nsim+1, nx))
 simU = np.ndarray((Nsim, nu))
 
-xcurrent = x0
-simX[0,:] = xcurrent
+simX[0,:] = x0
 
 # closed loop
 for i in range(Nsim):
 
-    # solve ocp
-    acados_ocp_solver.set(0, "lbx", xcurrent)
-    acados_ocp_solver.set(0, "ubx", xcurrent)
-
-    status = acados_ocp_solver.solve()
-
-    if status != 0:
-        raise Exception(f'acados acados_ocp_solver returned status {status}')
-
-    simU[i,:] = acados_ocp_solver.get(0, "u")
+    # solve ocp and get next control input
+    simU[i,:] = acados_ocp_solver.solve_for_x0(x0_bar = simX[i, :])
 
     # simulate system
-    acados_integrator.set("x", xcurrent)
-    acados_integrator.set("u", simU[i,:])
+    simX[i+1, :] = acados_integrator.simulate(x=simX[i, :], u=simU[i,:])
 
-    status = acados_integrator.solve()
-    if status != 0:
-        raise Exception(f'acados integrator returned status {status}.')
-
-    # update state
-    xcurrent = acados_integrator.get("x")
-    simX[i+1,:] = xcurrent
 
 # plot results
 plot_pendulum(np.linspace(0, Tf/N_horizon*Nsim, Nsim+1), Fmax, simU, simX)
