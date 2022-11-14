@@ -2229,7 +2229,6 @@ int {{ model.name }}_acados_update_params({{ model.name }}_solver_capsule* capsu
         exit(1);
     }
 
-{%- if dims.np > 0 %}
     const int N = capsule->nlp_solver_plan->N;
     if (stage < N && stage >= 0)
     {
@@ -2302,8 +2301,8 @@ int {{ model.name }}_acados_update_params({{ model.name }}_solver_capsule* capsu
             capsule->cost_y_fun_jac_ut_xt[stage-1].set_param(capsule->cost_y_fun_jac_ut_xt+stage-1, p);
             capsule->cost_y_hess[stage-1].set_param(capsule->cost_y_hess+stage-1, p);
         {%- elif cost.cost_type == "CONVEX_OVER_NONLINEAR" %}
-            capsule->conl_cost_fun.set_param(&capsule->conl_cost_fun, p);
-            capsule->conl_cost_fun_jac_hess.set_param(&capsule->conl_cost_fun_jac_hess, p);
+            capsule->conl_cost_fun[stage-1].set_param(capsule->conl_cost_fun+stage-1, p);
+            capsule->conl_cost_fun_jac_hess[stage-1].set_param(capsule->conl_cost_fun_jac_hess+stage-1, p);
         {%- elif cost.cost_type == "EXTERNAL" %}
             capsule->ext_cost_fun[stage-1].set_param(capsule->ext_cost_fun+stage-1, p);
             capsule->ext_cost_fun_jac[stage-1].set_param(capsule->ext_cost_fun_jac+stage-1, p);
@@ -2321,8 +2320,8 @@ int {{ model.name }}_acados_update_params({{ model.name }}_solver_capsule* capsu
         capsule->cost_y_e_fun_jac_ut_xt.set_param(&capsule->cost_y_e_fun_jac_ut_xt, p);
         capsule->cost_y_e_hess.set_param(&capsule->cost_y_e_hess, p);
     {%- elif cost.cost_type_e == "CONVEX_OVER_NONLINEAR" %}
-        capsule->conl_cost_e_fun.set_param(&capsule->ext_cost_e_fun, p);
-        capsule->conl_cost_e_fun_jac_hess.set_param(&capsule->ext_cost_e_fun_jac_hess, p);
+        capsule->conl_cost_e_fun.set_param(&capsule->conl_cost_e_fun, p);
+        capsule->conl_cost_e_fun_jac_hess.set_param(&capsule->conl_cost_e_fun_jac_hess, p);
     {%- elif cost.cost_type_e == "EXTERNAL" %}
         capsule->ext_cost_e_fun.set_param(&capsule->ext_cost_e_fun, p);
         capsule->ext_cost_e_fun_jac.set_param(&capsule->ext_cost_e_fun_jac, p);
@@ -2339,7 +2338,6 @@ int {{ model.name }}_acados_update_params({{ model.name }}_solver_capsule* capsu
     {%- endif %}
     {% endif %}
     }
-{% endif %}{# if dims.np #}
 
     return solver_status;
 }
