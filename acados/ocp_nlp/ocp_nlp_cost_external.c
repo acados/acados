@@ -85,8 +85,7 @@ void ocp_nlp_cost_external_dims_set(void *config_, void *dims_, const char *fiel
     }
     else if (!strcmp(field, "nz"))
     {
-        // do nothing
-        // TODO(oj): implement constraints with daes
+        dims->nz = *value;
     }
     else if (!strcmp(field, "nu"))
     {
@@ -492,6 +491,7 @@ acados_size_t ocp_nlp_cost_external_workspace_calculate_size(void *config_, void
 
     // extract dims
     int nx = dims->nx;
+    int nz = dims->nz;
     int nu = dims->nu;
     int ns = dims->ns;
 
@@ -500,6 +500,8 @@ acados_size_t ocp_nlp_cost_external_workspace_calculate_size(void *config_, void
     size += sizeof(ocp_nlp_cost_external_workspace);
 
     size += 1 * blasfeo_memsize_dmat(nu+nx, nu+nx);  // tmp_nv_nv
+    size += 1 * blasfeo_memsize_dvec(nu+nx);  // tmp_nv
+    size += 1 * blasfeo_memsize_dvec(nz);  // tmp_nz
 
     size += 1 * blasfeo_memsize_dvec(2*ns);  // tmp_2ns
 
@@ -518,6 +520,7 @@ static void ocp_nlp_cost_external_cast_workspace(void *config_, void *dims_, voi
 
     // extract dims
     int nx = dims->nx;
+    int nz = dims->nz;
     int nu = dims->nu;
     int ns = dims->ns;
 
@@ -529,6 +532,12 @@ static void ocp_nlp_cost_external_cast_workspace(void *config_, void *dims_, voi
 
     // tmp_nv_nv
     assign_and_advance_blasfeo_dmat_mem(nu + nx, nu + nx, &work->tmp_nv_nv, &c_ptr);
+
+    // tmp_nv
+    assign_and_advance_blasfeo_dvec_mem(nu + nx, &work->tmp_nv, &c_ptr);
+
+    // tmp_nz
+    assign_and_advance_blasfeo_dvec_mem(nz, &work->tmp_nz, &c_ptr);
 
     // tmp_2ns
     assign_and_advance_blasfeo_dvec_mem(2*ns, &work->tmp_2ns, &c_ptr);
@@ -581,16 +590,15 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
     ocp_nlp_cost_external_cast_workspace(config_, dims, opts_, work_);
 
     int nx = dims->nx;
+    int nz = dims->nz;
     int nu = dims->nu;
     int ns = dims->ns;
 
     /* specify input types and pointers for external cost function */
-    // TODO(oj): add z
-    ext_fun_arg_t ext_fun_type_in[2];
-    void *ext_fun_in[2];
-    ext_fun_arg_t ext_fun_type_out[3];
-    void *ext_fun_out[3];
-
+    ext_fun_arg_t ext_fun_type_in[3];
+    void *ext_fun_in[3];
+    ext_fun_arg_t ext_fun_type_out[4];
+    void *ext_fun_out[4];
 
     // INPUT
     struct blasfeo_dvec_args u_in;  // input u
@@ -604,12 +612,19 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
     ext_fun_in[0] = &x_in;
     ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
     ext_fun_in[1] = &u_in;
+    ext_fun_type_in[2] = BLASFEO_DVEC;
+    ext_fun_in[2] = memory->z_alg;
 
     // OUTPUT
     ext_fun_type_out[0] = COLMAJ;
     ext_fun_out[0] = &memory->fun;  // fun: scalar
     ext_fun_type_out[1] = BLASFEO_DVEC;
-    ext_fun_out[1] = &memory->grad;  // grad: nu+nx
+    ext_fun_out[1] = &memory->grad;  // grad_ux: nu+nx
+    ext_fun_type_out[2] = BLASFEO_DVEC;
+    ext_fun_out[2] = &work->tmp_nz;  // grad_z: nz
+
+    printf("z\n");
+    blasfeo_print_dvec(nz, memory->z_alg, 0);
 
     if (opts->use_numerical_hessian > 0)
     {
@@ -618,18 +633,41 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
                                             ext_fun_in, ext_fun_type_out, ext_fun_out);
         // custom hessian
         blasfeo_dgead(nx+nu, nx+nu, model->scaling, &model->numerical_hessian, 0, 0, memory->RSQrq, 0, 0);
+        printf("hess ux\n");
+        blasfeo_print_dmat(nx + nu, nx + nu, memory->RSQrq, 0, 0);
     }
     else
     {
         // additional output
-        ext_fun_type_out[2] = BLASFEO_DMAT;
-        ext_fun_out[2] = &work->tmp_nv_nv;   // hess: (nu+nx) * (nu+nx)
+        ext_fun_type_out[3] = BLASFEO_DMAT;
+        ext_fun_out[3] = &work->tmp_nv_nv;   // hess: (nu+nx) * (nu+nx)
         // evaluate external function
         model->ext_cost_fun_jac_hess->evaluate(model->ext_cost_fun_jac_hess, ext_fun_type_in,
                                             ext_fun_in, ext_fun_type_out, ext_fun_out);
         // hessian contribution
         blasfeo_dgead(nx+nu, nx+nu, model->scaling, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
+
+        printf("hess ux\n");
+        blasfeo_print_dmat(nx + nu, nx + nu, memory->RSQrq, 0, 0);
+
     }
+
+    if (nz > 0)
+    {
+        // gradient contribution
+        blasfeo_dgemv_n(nu + nx, nz, 1.0, memory->dzdux_tran, 0, 0, &work->tmp_nz, 0, 0., &work->tmp_nv, 0, &work->tmp_nv, 0);
+        blasfeo_dvecad(nu + nx, 1., &work->tmp_nv, 0, &memory->grad, 0);
+
+        // printf("grad ux\n");
+        // blasfeo_print_dvec(nx + nu, &work->tmp_nv, 0);
+
+        // printf("grad z\n");
+        // blasfeo_print_dvec(nz, &work->tmp_nz, 0);
+        // TODO Hessian contribution
+    }
+
+    printf("grad ux\n");
+    blasfeo_print_dvec(nx + nu, &memory->grad, 0);
 
     // slack update gradient
     blasfeo_dveccp(2*ns, &model->z, 0, &memory->grad, nu+nx);
@@ -675,9 +713,8 @@ void ocp_nlp_cost_external_compute_fun(void *config_, void *dims_, void *model_,
     int ns = dims->ns;
 
     /* specify input types and pointers for external cost function */
-    // TODO(oj): add z
-    ext_fun_arg_t ext_fun_type_in[2];
-    void *ext_fun_in[2];
+    ext_fun_arg_t ext_fun_type_in[3];
+    void *ext_fun_in[3];
     ext_fun_arg_t ext_fun_type_out[1];
     void *ext_fun_out[1];
 
@@ -694,7 +731,8 @@ void ocp_nlp_cost_external_compute_fun(void *config_, void *dims_, void *model_,
     ext_fun_in[0] = &x_in;
     ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
     ext_fun_in[1] = &u_in;
-
+    ext_fun_type_in[2] = BLASFEO_DVEC;
+    ext_fun_in[2] = memory->z_alg;
     // OUTPUT
     ext_fun_type_out[0] = COLMAJ;
     ext_fun_out[0] = &memory->fun;  // function: scalar

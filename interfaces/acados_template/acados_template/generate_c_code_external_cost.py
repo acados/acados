@@ -32,7 +32,7 @@
 #
 
 import os
-from casadi import SX, MX, Function, vertcat, hessian, CasadiMeta
+from casadi import SX, MX, Function, vertcat, jacobian, hessian, CasadiMeta
 from .utils import check_casadi_version
 
 
@@ -44,6 +44,7 @@ def generate_c_code_external_cost(model, stage_type, opts):
 
     x = model.x
     p = model.p
+    z = model.z
 
     if isinstance(x, MX):
         symbol = MX.sym
@@ -80,17 +81,23 @@ def generate_c_code_external_cost(model, stage_type, opts):
     fun_name_jac = model.name + suffix_name_jac
 
     # generate expression for full gradient and Hessian
-    full_hess, grad = hessian(ext_cost, vertcat(u, x))
+    full_hess_ux, grad_ux = hessian(ext_cost, vertcat(u, x))
+
+    # generate expression for cost gradient wrt z
+    grad_z = jacobian(ext_cost, z)
+
+    # generate expression for cost hessian wrt dw dz
+    # hess_ux_z = jacobian(grad_z, vertcat(u, x))
 
     if custom_hess is not None:
-        full_hess = custom_hess
+        full_hess_ux = custom_hess
 
-    ext_cost_fun = Function(fun_name, [x, u, p], [ext_cost])
+    ext_cost_fun = Function(fun_name, [x, u, z, p], [ext_cost])
     ext_cost_fun_jac_hess = Function(
-        fun_name_hess, [x, u, p], [ext_cost, grad, full_hess]
+        fun_name_hess, [x, u, z, p], [ext_cost, grad_ux, grad_z, full_hess_ux]
     )
     ext_cost_fun_jac = Function(
-        fun_name_jac, [x, u, p], [ext_cost, grad]
+        fun_name_jac, [x, u, z, p], [ext_cost, grad_ux, grad_z]
     )
 
     # change directory

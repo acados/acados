@@ -54,6 +54,7 @@ extern "C" {
 typedef struct
 {
     int nx;  // number of states
+    int nz;  // number of algebraic variables
     int nu;  // number of inputs
     int ns;  // number of slacks
 } ocp_nlp_cost_external_dims;
@@ -155,6 +156,8 @@ void ocp_nlp_cost_external_memory_set_dzdux_tran_ptr(struct blasfeo_dmat *dzdux_
 typedef struct
 {
     struct blasfeo_dmat tmp_nv_nv;
+    struct blasfeo_dvec tmp_nv;
+    struct blasfeo_dvec tmp_nz;
     struct blasfeo_dvec tmp_2ns;  // temporary vector of dimension 2*ns
 } ocp_nlp_cost_external_workspace;
 
