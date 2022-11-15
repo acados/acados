@@ -41,86 +41,93 @@ from utils import plot_pendulum
 import numpy as np
 import scipy.linalg
 
-# create ocp object to formulate the OCP
-ocp = AcadosOcp()
 
-# set model
-model = export_pendulum_ode_model()
-ocp.model = model
+def main():
+    # create ocp object to formulate the OCP
+    ocp = AcadosOcp()
 
-Tf = 1.0
-nx = model.x.size()[0]
-nu = model.u.size()[0]
-ny = nx + nu
-ny_e = nx
-N_horizon = 20
+    # set model
+    model = export_pendulum_ode_model()
+    ocp.model = model
 
-# set dimensions
-ocp.dims.N = N_horizon
-# NOTE: all dimensions but N are now detected automatically in the Python
-#  interface, all other dimensions will be overwritten by the detection.
+    Tf = 1.0
+    nx = model.x.size()[0]
+    nu = model.u.size()[0]
+    ny = nx + nu
+    ny_e = nx
+    N_horizon = 20
 
-# set cost module
-ocp.cost.cost_type = 'LINEAR_LS'
-ocp.cost.cost_type_e = 'LINEAR_LS'
+    # set dimensions
+    ocp.dims.N = N_horizon
+    # NOTE: all dimensions but N are now detected automatically in the Python
+    #  interface, all other dimensions will be overwritten by the detection.
 
-Q_mat = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
-R_mat = 2*np.diag([1e-2])
+    # set cost module
+    ocp.cost.cost_type = 'LINEAR_LS'
+    ocp.cost.cost_type_e = 'LINEAR_LS'
 
-ocp.cost.W = scipy.linalg.block_diag(Q_mat, R_mat)
+    Q_mat = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
+    R_mat = 2*np.diag([1e-2])
 
-ocp.cost.W_e = Q_mat
+    ocp.cost.W = scipy.linalg.block_diag(Q_mat, R_mat)
 
-ocp.cost.Vx = np.zeros((ny, nx))
-ocp.cost.Vx[:nx,:nx] = np.eye(nx)
+    ocp.cost.W_e = Q_mat
 
-Vu = np.zeros((ny, nu))
-Vu[4,0] = 1.0
-ocp.cost.Vu = Vu
+    ocp.cost.Vx = np.zeros((ny, nx))
+    ocp.cost.Vx[:nx,:nx] = np.eye(nx)
 
-ocp.cost.Vx_e = np.eye(nx)
+    Vu = np.zeros((ny, nu))
+    Vu[4,0] = 1.0
+    ocp.cost.Vu = Vu
 
-ocp.cost.yref  = np.zeros((ny, ))
-ocp.cost.yref_e = np.zeros((ny_e, ))
+    ocp.cost.Vx_e = np.eye(nx)
 
-# set constraints
-Fmax = 80
-x0 = np.array([0.0, np.pi, 0.0, 0.0])
-ocp.constraints.constr_type = 'BGH'
-ocp.constraints.lbu = np.array([-Fmax])
-ocp.constraints.ubu = np.array([+Fmax])
-ocp.constraints.x0 = x0
-ocp.constraints.idxbu = np.array([0])
+    ocp.cost.yref  = np.zeros((ny, ))
+    ocp.cost.yref_e = np.zeros((ny_e, ))
 
-ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
-ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
-ocp.solver_options.integrator_type = 'ERK'
-ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
+    # set constraints
+    Fmax = 80
+    x0 = np.array([0.0, np.pi, 0.0, 0.0])
+    ocp.constraints.constr_type = 'BGH'
+    ocp.constraints.lbu = np.array([-Fmax])
+    ocp.constraints.ubu = np.array([+Fmax])
+    ocp.constraints.x0 = x0
+    ocp.constraints.idxbu = np.array([0])
 
-ocp.solver_options.qp_solver_cond_N = N_horizon
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
+    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+    ocp.solver_options.integrator_type = 'ERK'
+    ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
 
-# set prediction horizon
-ocp.solver_options.tf = Tf
+    ocp.solver_options.qp_solver_cond_N = N_horizon
 
-acados_ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp_' + model.name + '.json')
-# create an integrator with the same settings as used in the OCP solver.
-acados_integrator = AcadosSimSolver(ocp, json_file = 'acados_ocp_' + model.name + '.json')
+    # set prediction horizon
+    ocp.solver_options.tf = Tf
 
-Nsim = 100
-simX = np.ndarray((Nsim+1, nx))
-simU = np.ndarray((Nsim, nu))
+    solver_json = 'acados_ocp_' + model.name + '.json'
+    acados_ocp_solver = AcadosOcpSolver(ocp, json_file = solver_json)
 
-simX[0,:] = x0
+    # create an integrator with the same settings as used in the OCP solver.
+    acados_integrator = AcadosSimSolver(ocp, json_file = solver_json)
 
-# closed loop
-for i in range(Nsim):
+    Nsim = 100
+    simX = np.ndarray((Nsim+1, nx))
+    simU = np.ndarray((Nsim, nu))
 
-    # solve ocp and get next control input
-    simU[i,:] = acados_ocp_solver.solve_for_x0(x0_bar = simX[i, :])
+    simX[0,:] = x0
 
-    # simulate system
-    simX[i+1, :] = acados_integrator.simulate(x=simX[i, :], u=simU[i,:])
+    # closed loop
+    for i in range(Nsim):
+
+        # solve ocp and get next control input
+        simU[i,:] = acados_ocp_solver.solve_for_x0(x0_bar = simX[i, :])
+
+        # simulate system
+        simX[i+1, :] = acados_integrator.simulate(x=simX[i, :], u=simU[i,:])
 
 
-# plot results
-plot_pendulum(np.linspace(0, Tf/N_horizon*Nsim, Nsim+1), Fmax, simU, simX)
+    # plot results
+    plot_pendulum(np.linspace(0, Tf/N_horizon*Nsim, Nsim+1), Fmax, simU, simX)
+
+if __name__ == '__main__':
+    main()
