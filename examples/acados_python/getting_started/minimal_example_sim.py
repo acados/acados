@@ -32,14 +32,10 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import sys
-sys.path.insert(0, '../common')
-
 from acados_template import AcadosSim, AcadosSimSolver
 from pendulum_model import export_pendulum_ode_model
 from utils import plot_pendulum
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 def main():
@@ -94,7 +90,7 @@ def main():
     print("S_forw, sensitivities of simulation result wrt x,u:\n", S_forw)
 
     # plot results
-    plot_pendulum(np.linspace(0, Tf, N+1), 10, np.zeros((N, nu)), simX, latexify=False)
+    plot_pendulum(np.linspace(0, Tf, N+1), 10, np.repeat(u0, N), simX, latexify=False)
 
 
 if __name__ == "__main__":

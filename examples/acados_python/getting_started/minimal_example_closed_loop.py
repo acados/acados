@@ -32,9 +32,6 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import sys
-sys.path.insert(0, 'common')
-
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver
 from pendulum_model import export_pendulum_ode_model
 from utils import plot_pendulum
@@ -59,8 +56,6 @@ def main():
 
     # set dimensions
     ocp.dims.N = N_horizon
-    # NOTE: all dimensions but N are now detected automatically in the Python
-    #  interface, all other dimensions will be overwritten by the detection.
 
     # set cost module
     ocp.cost.cost_type = 'LINEAR_LS'
@@ -125,9 +120,9 @@ def main():
         # simulate system
         simX[i+1, :] = acados_integrator.simulate(x=simX[i, :], u=simU[i,:])
 
-
     # plot results
     plot_pendulum(np.linspace(0, Tf/N_horizon*Nsim, Nsim+1), Fmax, simU, simX)
+
 
 if __name__ == '__main__':
     main()

@@ -31,99 +31,77 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import sys
-sys.path.insert(0, '../common')
-
 from acados_template import AcadosOcp, AcadosOcpSolver
 from pendulum_model import export_pendulum_ode_model
 import numpy as np
-import scipy.linalg
 from utils import plot_pendulum
 
-# create ocp object to formulate the OCP
-ocp = AcadosOcp()
+def main():
+    # create ocp object to formulate the OCP
+    ocp = AcadosOcp()
 
-# set model
-model = export_pendulum_ode_model()
-ocp.model = model
+    # set model
+    model = export_pendulum_ode_model()
+    ocp.model = model
 
-Tf = 1.0
-nx = model.x.size()[0]
-nu = model.u.size()[0]
-N = 20
+    Tf = 1.0
+    nx = model.x.size()[0]
+    nu = model.u.size()[0]
+    N = 20
 
-# set dimensions
-ocp.dims.N = N
+    # set dimensions
+    ocp.dims.N = N
 
-# set cost
-Q_mat = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
-R_mat = 2*np.diag([1e-2])
+    # set cost
+    Q_mat = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
+    R_mat = 2*np.diag([1e-2])
 
-# the 'EXTERNAL' cost type can be used to define general cost terms
-# NOTE: This leads to additional (exact) hessian contributions when using GAUSS_NEWTON hessian.
-ocp.cost.cost_type = 'EXTERNAL'
-ocp.cost.cost_type_e = 'EXTERNAL'
-ocp.model.cost_expr_ext_cost = model.x.T @ Q_mat @ model.x + model.u.T @ R_mat @ model.u
-ocp.model.cost_expr_ext_cost_e = model.x.T @ Q_mat @ model.x
+    # the 'EXTERNAL' cost type can be used to define general cost terms
+    # NOTE: This leads to additional (exact) hessian contributions when using GAUSS_NEWTON hessian.
+    ocp.cost.cost_type = 'EXTERNAL'
+    ocp.cost.cost_type_e = 'EXTERNAL'
+    ocp.model.cost_expr_ext_cost = model.x.T @ Q_mat @ model.x + model.u.T @ R_mat @ model.u
+    ocp.model.cost_expr_ext_cost_e = model.x.T @ Q_mat @ model.x
 
-# set constraints
-Fmax = 80
-ocp.constraints.lbu = np.array([-Fmax])
-ocp.constraints.ubu = np.array([+Fmax])
-ocp.constraints.idxbu = np.array([0])
+    # set constraints
+    Fmax = 80
+    ocp.constraints.lbu = np.array([-Fmax])
+    ocp.constraints.ubu = np.array([+Fmax])
+    ocp.constraints.idxbu = np.array([0])
 
-ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
+    ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
-# set options
-ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
-# PARTIAL_CONDENSING_HPIPM, FULL_CONDENSING_QPOASES, FULL_CONDENSING_HPIPM,
-# PARTIAL_CONDENSING_QPDUNES, PARTIAL_CONDENSING_OSQP, FULL_CONDENSING_DAQP
-ocp.solver_options.hessian_approx = 'GAUSS_NEWTON' # 'GAUSS_NEWTON', 'EXACT'
-ocp.solver_options.integrator_type = 'IRK'
-# ocp.solver_options.print_level = 1
-ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
+    # set options
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
+    # PARTIAL_CONDENSING_HPIPM, FULL_CONDENSING_QPOASES, FULL_CONDENSING_HPIPM,
+    # PARTIAL_CONDENSING_QPDUNES, PARTIAL_CONDENSING_OSQP, FULL_CONDENSING_DAQP
+    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON' # 'GAUSS_NEWTON', 'EXACT'
+    ocp.solver_options.integrator_type = 'IRK'
+    # ocp.solver_options.print_level = 1
+    ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
 
-# set prediction horizon
-ocp.solver_options.tf = Tf
+    # set prediction horizon
+    ocp.solver_options.tf = Tf
 
-ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
+    ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
-simX = np.ndarray((N+1, nx))
-simU = np.ndarray((N, nu))
+    simX = np.ndarray((N+1, nx))
+    simU = np.ndarray((N, nu))
 
-status = ocp_solver.solve()
-ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
+    status = ocp_solver.solve()
+    ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
 
-if status != 0:
-    raise Exception(f'acados returned status {status}.')
+    if status != 0:
+        raise Exception(f'acados returned status {status}.')
 
-# get solution
-for i in range(N):
-    simX[i,:] = ocp_solver.get(i, "x")
-    simU[i,:] = ocp_solver.get(i, "u")
-simX[N,:] = ocp_solver.get(N, "x")
+    # get solution
+    for i in range(N):
+        simX[i,:] = ocp_solver.get(i, "x")
+        simU[i,:] = ocp_solver.get(i, "u")
+    simX[N,:] = ocp_solver.get(N, "x")
 
-plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
+    plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
 
 
-# # formulation using the 'LINEAR_LS' cost type
-# ocp.cost.cost_type = 'LINEAR_LS'
-# ocp.cost.cost_type_e = 'LINEAR_LS'
-
-# ny = nx + nu
-# ny_e = nx
-
-# ocp.cost.W_e = Q_mat
-# ocp.cost.W = scipy.linalg.block_diag(Q_mat, R_mat)
-
-# ocp.cost.Vx = np.zeros((ny, nx))
-# ocp.cost.Vx[:nx,:nx] = np.eye(nx)
-
-# Vu = np.zeros((ny, nu))
-# Vu[nx:nx+nu, 0:nu] = np.eye(nu)
-# ocp.cost.Vu = Vu
-
-# ocp.cost.Vx_e = np.eye(nx)
-
-# ocp.cost.yref = np.zeros((ny, ))
-# ocp.cost.yref_e = np.zeros((ny_e, ))
+if __name__ == '__main__':
+    main()
