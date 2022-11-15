@@ -34,7 +34,7 @@
 #
 import sys
 
-sys.path.insert(0, '../getting_started/common')
+sys.path.insert(0, '../pendulum_on_cart/common')
 
 from acados_template import AcadosOcp, AcadosOcpSolver
 from pendulum_model import export_pendulum_ode_model
