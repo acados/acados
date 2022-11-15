@@ -140,6 +140,17 @@ endif()
 ### PYTHON ###
 if(ACADOS_PYTHON)
 
+# Minimal examples
+add_test(NAME python_pendulum_closed_loop_example
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started
+        python minimal_example_closed_loop.py)
+add_test(NAME python_pendulum_sim_example
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started
+        python minimal_example_sim.py)
+add_test(NAME python_pendulum_ocp_example
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started
+        python minimal_example_ocp.py)
+
 add_test(NAME python_test_generic_impl_dyn
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/generic_impl_dyn
         python minimal_example_ocp_generic_impl_dyn.py)
@@ -155,9 +166,7 @@ add_test(NAME python_test_cython_vs_ctypes
 add_test(NAME python_test_ocp
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
         python main_test.py)
-add_test(NAME python_pendulum_ocp_example
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
-        python minimal_example_ocp.py)
+
 add_test(NAME python_pendulum_ocp_example_reuse_code
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
         python minimal_example_ocp_reuse_code.py)
@@ -226,9 +235,7 @@ add_test(NAME python_pendulum_mhe_ocp_closed_loop_example
 add_test(NAME python_pendulum_ocp_cost_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
         python ocp_example_cost_formulations.py)
-add_test(NAME python_pendulum_sim_example
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/sim
-        python minimal_example_sim.py)
+
 # CMake test
 add_test(NAME python_pendulum_sim_example_cmake
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/sim
@@ -236,9 +243,7 @@ add_test(NAME python_pendulum_sim_example_cmake
 add_test(NAME python_pendulum_ext_sim_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/sim
         python extensive_example_sim.py)
-add_test(NAME python_pendulum_closed_loop_example
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart
-        python minimal_example_closed_loop.py)
+
 add_test(NAME cython_pendulum_closed_loop_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart
         python cython_example_closed_loop.py)
