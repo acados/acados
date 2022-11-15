@@ -32,7 +32,7 @@
 #
 
 import sys
-sys.path.insert(0, '../getting_started/common')
+sys.path.insert(0, '../pendulum_on_cart/common')
 
 from acados_template import *
 from pendulum_model import export_pendulum_ode_model
@@ -258,7 +258,7 @@ ocp.solver_options.tf = Tf
 ocp.solver_options.nlp_solver_type = SOLVER_TYPE
 
 if ocp.solver_options.integrator_type == 'GNSF':
-    with open('../getting_started/common/' + model.name + '_gnsf_functions.json', 'r') as f:
+    with open('../pendulum_on_cart/common/' + model.name + '_gnsf_functions.json', 'r') as f:
         gnsf_dict = json.load(f)
     ocp.gnsf_model = gnsf_dict
 
