@@ -1123,17 +1123,18 @@ class AcadosOcpSolver:
         getattr(self.shared_lib, f"{self.model_name}_acados_get_nlp_solver").restype = c_void_p
         self.nlp_solver = getattr(self.shared_lib, f"{self.model_name}_acados_get_nlp_solver")(self.capsule)
 
-    def solve_for_x0(self, x0_bar=None):
+    def solve_for_x0(self, x0_bar):
         """
         Wrapper around `solve()` which sets initial state constraint, solves the OCP, and returns u0.
         """
-        if x0_bar is not None:
-            self.set(0, "lbx", x0_bar)
-            self.set(0, "ubx", x0_bar)
+        self.set(0, "lbx", x0_bar)
+        self.set(0, "ubx", x0_bar)
 
         status = self.solve()
 
-        if status != 0:
+        if status == 2:
+            print("Warning: acados_ocp_solver reached maximum iterations.")
+        elif status != 0:
             raise Exception(f'acados acados_ocp_solver returned status {status}')
 
         u0 = self.get(0, "u")
