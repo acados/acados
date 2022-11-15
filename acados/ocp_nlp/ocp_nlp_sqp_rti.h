@@ -145,12 +145,6 @@ acados_size_t ocp_nlp_sqp_rti_workspace_calculate_size(void *config_, void *dims
 /************************************************
  * functions
  ************************************************/
-
-void ocp_nlp_sqp_rti_preparation_step(void *config_, void *dims_,
-    void *nlp_in_, void *nlp_out_, void *opts, void *mem_, void *work_);
-//
-void ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
-    void *nlp_in_, void *nlp_out_, void *opts_, void *mem_, void *work_);
 //
 int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     void *opts_, void *mem_, void *work_);
