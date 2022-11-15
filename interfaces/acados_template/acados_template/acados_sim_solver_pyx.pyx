@@ -105,6 +105,31 @@ cdef class AcadosSimSolverCython:
         self.sim_solver = acados_sim_solver.acados_get_sim_solver(self.capsule)
 
 
+    def simulate(self, x=None, u=None, z=None, p=None):
+        """
+        Simulate the system forward for the given x, u, z, p and return x_next.
+        Wrapper around `solve()` taking care of setting/getting inputs/outputs.
+        """
+        if x is not None:
+            self.set('x', x)
+        if u is not None:
+            self.set('u', u)
+        if z is not None:
+            self.set('z', z)
+        if p is not None:
+            self.set('p', p)
+
+        status = self.solve()
+
+        if status == 2:
+            print("Warning: acados_sim_solver reached maximum iterations.")
+        elif status != 0:
+            raise Exception(f'acados_sim_solver for model {self.model_name} returned status {status}.')
+
+        x_next = self.get('x')
+        return x_next
+
+
     def solve(self):
         """
         Solve the sim with current input.
