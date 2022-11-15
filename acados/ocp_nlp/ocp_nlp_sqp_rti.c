@@ -427,74 +427,14 @@ static void ocp_nlp_sqp_rti_cast_workspace(
  * functions
  ************************************************/
 
-int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
-    void *opts_, void *mem_, void *work_)
-{
-    ocp_nlp_sqp_rti_memory *mem = mem_;
-
-    // zero timers
-    acados_timer timer0;
-    double total_time = 0.0;
-    mem->time_tot = 0.0;
-
-    ocp_nlp_sqp_rti_opts *nlp_opts = opts_;
-    int rti_phase = nlp_opts->rti_phase;
-
-    acados_tic(&timer0);
-    switch(rti_phase)
-    {
-
-        // perform preparation and feedback rti_phase
-        case 0:
-            ocp_nlp_sqp_rti_preparation_step(
-                config_, dims_, nlp_in_, nlp_out_, opts_, mem_, work_);
-
-            ocp_nlp_sqp_rti_feedback_step(
-                config_, dims_, nlp_in_, nlp_out_, opts_, mem_, work_);
-
-            break;
-
-        // perform preparation rti_phase
-        case 1:
-            ocp_nlp_sqp_rti_preparation_step(
-                config_, dims_, nlp_in_, nlp_out_, opts_, mem_, work_);
-
-            break;
-
-        // perform feedback rti_phase
-        case 2:
-            ocp_nlp_sqp_rti_feedback_step(
-                config_, dims_, nlp_in_, nlp_out_, opts_, mem_, work_);
-
-            break;
-    }
-
-    total_time += acados_toc(&timer0);
-    mem->time_tot = total_time;
-
-    return mem->status;
-
-}
-
-
-
-void ocp_nlp_sqp_rti_preparation_step(void *config_, void *dims_,
-    void *nlp_in_, void *nlp_out_, void *opts_, void *mem_, void *work_)
+static void ocp_nlp_sqp_rti_preparation_step(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
+    ocp_nlp_out *nlp_out, ocp_nlp_sqp_rti_opts *opts, ocp_nlp_sqp_rti_memory *mem, ocp_nlp_sqp_rti_workspace *work)
 {
     acados_timer timer1;
-
-    ocp_nlp_dims *dims = dims_;
-    ocp_nlp_config *config = config_;
-    ocp_nlp_sqp_rti_opts *opts = opts_;
-    ocp_nlp_opts *nlp_opts = opts->nlp_opts;
-    ocp_nlp_sqp_rti_memory *mem = mem_;
-    ocp_nlp_in *nlp_in = nlp_in_;
-    ocp_nlp_out *nlp_out = nlp_out_;
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    ocp_nlp_opts *nlp_opts = opts->nlp_opts;
     // ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
 
-    ocp_nlp_sqp_rti_workspace *work = work_;
-    ocp_nlp_sqp_rti_cast_workspace(config, dims, opts, mem, work);
     ocp_nlp_workspace *nlp_work = work->nlp_work;
 
     mem->time_lin = 0.0;
@@ -528,30 +468,21 @@ void ocp_nlp_sqp_rti_preparation_step(void *config_, void *dims_,
     omp_set_num_threads(num_threads_bkp);
 #endif
 
-	return;
+    return;
 
 }
 
 
 
-void ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
-    void *nlp_in_, void *nlp_out_, void *opts_, void *mem_, void *work_)
+static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
+    ocp_nlp_out *nlp_out, ocp_nlp_sqp_rti_opts *opts, ocp_nlp_sqp_rti_memory *mem, ocp_nlp_sqp_rti_workspace *work)
 {
     acados_timer timer1;
 
-    ocp_nlp_dims *dims = dims_;
-    ocp_nlp_config *config = config_;
-    ocp_nlp_sqp_rti_opts *opts = opts_;
-    ocp_nlp_opts *nlp_opts = opts->nlp_opts;
-    ocp_nlp_sqp_rti_memory *mem = mem_;
-    ocp_nlp_in *nlp_in = nlp_in_;
-    ocp_nlp_out *nlp_out = nlp_out_;
-    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-    ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
-
-    ocp_nlp_sqp_rti_workspace *work = work_;
-    ocp_nlp_sqp_rti_cast_workspace(config, dims, opts, mem, work);
     ocp_nlp_workspace *nlp_work = work->nlp_work;
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    ocp_nlp_opts *nlp_opts = opts->nlp_opts;
+    ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
 
     int qp_iter = 0;
     int qp_status = 0;
@@ -604,7 +535,6 @@ void ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
     acados_tic(&timer1);
     config->regularize->correct_dual_sol(config->regularize,
         dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
-
     mem->time_reg += acados_toc(&timer1);
 
     // TODO move into QP solver memory ???
@@ -664,6 +594,50 @@ void ocp_nlp_sqp_rti_feedback_step(void *config_, void *dims_,
     // print_ocp_qp_in(mem->qp_in);
 
     mem->status = ACADOS_SUCCESS;
+
+}
+
+
+int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
+    void *opts_, void *mem_, void *work_)
+{
+    acados_timer timer;
+    acados_tic(&timer);
+
+    ocp_nlp_sqp_rti_memory *mem = mem_;
+    ocp_nlp_dims *dims = dims_;
+    ocp_nlp_config *config = config_;
+    ocp_nlp_sqp_rti_opts *opts = opts_;
+    ocp_nlp_in *nlp_in = nlp_in_;
+    ocp_nlp_out *nlp_out = nlp_out_;
+    ocp_nlp_sqp_rti_workspace *work = work_;
+    ocp_nlp_sqp_rti_cast_workspace(config, dims, opts, mem, work);
+
+    ocp_nlp_sqp_rti_opts *nlp_opts = opts_;
+    int rti_phase = nlp_opts->rti_phase;
+
+    switch(rti_phase)
+    {
+
+        // perform preparation and feedback rti_phase
+        case 0:
+            ocp_nlp_sqp_rti_preparation_step(config, dims, nlp_in, nlp_out, opts, mem, work);
+            ocp_nlp_sqp_rti_feedback_step(config, dims, nlp_in, nlp_out, opts, mem, work);
+            break;
+
+        // perform preparation rti_phase
+        case 1:
+            ocp_nlp_sqp_rti_preparation_step(config, dims, nlp_in, nlp_out, opts, mem, work);
+            break;
+
+        // perform feedback rti_phase
+        case 2:
+            ocp_nlp_sqp_rti_feedback_step(config, dims, nlp_in, nlp_out, opts, mem, work);
+            break;
+    }
+    mem->time_tot = acados_toc(&timer);
+
+    return mem->status;
 
 }
 
