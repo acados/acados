@@ -61,7 +61,22 @@ def plot_pendulum(shooting_nodes, u_max, U, X_true, X_est=None, Y_measured=None,
 
     # latexify plot
     if latexify:
+<<<<<<< HEAD
         latexify_plot()
+=======
+        params = {'backend': 'ps',
+                'text.latex.preamble': r"\usepackage{gensymb} \usepackage{amsmath}",
+                'axes.labelsize': 10,
+                'axes.titlesize': 10,
+                'legend.fontsize': 10,
+                'xtick.labelsize': 10,
+                'ytick.labelsize': 10,
+                'text.usetex': True,
+                'font.family': 'serif'
+        }
+
+        matplotlib.rcParams.update(params)
+>>>>>>> 7c4e77b77 (Cleanup Python getting_started folder (#881))
 
     WITH_ESTIMATION = X_est is not None and Y_measured is not None
 
