@@ -2738,3 +2738,11 @@ void {{ model.name }}_acados_print_stats({{ model.name }}_solver_capsule* capsul
 {%- endif %}
 }
 
+
+int {{ model.name }}_acados_custom_update({{ model.name }}_solver_capsule* capsule)
+{
+    printf("\ndummy function that can be called in between solver calls to update parameters or numerical data efficiently in C.\n");
+    printf("nothing set yet..\n");
+    return 1;
+}
+

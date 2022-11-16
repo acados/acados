@@ -1141,6 +1141,20 @@ class AcadosOcpSolver:
         return self.status
 
 
+    def custom_update(self):
+        """
+        A custom function that can be implemented by a user to be called between solver calls.
+        By default this does nothing.
+        The idea is to have a convenient wrapper to do complex updates of parameters and numerical data efficiently in C,
+        in a function that is compiled into the solver library and can be conveniently used in the Python environment.
+        """
+        getattr(self.shared_lib, f"{self.model_name}_acados_custom_update").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{self.model_name}_acados_custom_update").restype = c_int
+        status = getattr(self.shared_lib, f"{self.model_name}_acados_custom_update")(self.capsule)
+
+        return status
+
+
     def reset(self, reset_qp_solver_mem=1):
         """
         Sets current iterate to all zeros.
