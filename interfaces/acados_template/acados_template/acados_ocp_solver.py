@@ -52,9 +52,8 @@ from .generate_c_code_conl_cost import generate_c_code_conl_cost
 from .generate_c_code_external_cost import generate_c_code_external_cost
 from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 from .acados_ocp import AcadosOcp
-from .acados_model import acados_model_strip_casadi_symbolics
 from .utils import is_column, is_empty, casadi_length, render_template,\
-     format_class_dict, ocp_check_against_layout, make_object_json_dumpable, make_model_consistent,\
+     format_class_dict, make_object_json_dumpable, make_model_consistent,\
      set_up_imported_gnsf_model, get_ocp_nlp_layout, get_python_interface_path, get_lib_ext
 from .builders import CMakeBuilder
 

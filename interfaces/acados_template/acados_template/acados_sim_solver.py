@@ -47,7 +47,6 @@ from .generate_c_code_implicit_ode import generate_c_code_implicit_ode
 from .generate_c_code_gnsf import generate_c_code_gnsf
 from .acados_sim import AcadosSim
 from .acados_ocp import AcadosOcp
-from .acados_model import acados_model_strip_casadi_symbolics
 from .utils import is_column, render_template, format_class_dict, make_object_json_dumpable,\
      make_model_consistent, set_up_imported_gnsf_model, get_python_interface_path, get_lib_ext,\
      casadi_length, is_empty
@@ -108,7 +107,6 @@ def sim_formulation_json_dump(acados_sim, json_file='acados_sim.json'):
         # Copy sim object attributes dictionaries
         sim_dict[key]=dict(getattr(acados_sim, key).__dict__)
 
-    sim_dict['model'] = acados_model_strip_casadi_symbolics(sim_dict['model'])
     sim_json = format_class_dict(sim_dict)
 
     with open(json_file, 'w') as f:
