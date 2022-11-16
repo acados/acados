@@ -38,6 +38,8 @@ import json
 import numpy as np
 from datetime import datetime
 import importlib
+import shutil
+
 from ctypes import POINTER, cast, CDLL, c_void_p, c_char_p, c_double, c_int, c_int64, byref
 
 from copy import deepcopy
@@ -52,6 +54,7 @@ from .generate_c_code_conl_cost import generate_c_code_conl_cost
 from .generate_c_code_external_cost import generate_c_code_external_cost
 from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 from .acados_ocp import AcadosOcp
+from .acados_model import AcadosModel
 from .utils import is_column, is_empty, casadi_length, render_template,\
      format_class_dict, make_object_json_dumpable, make_model_consistent,\
      set_up_imported_gnsf_model, get_ocp_nlp_layout, get_python_interface_path, get_lib_ext
@@ -649,7 +652,7 @@ def ocp_formulation_json_load(json_file='acados_ocp_nlp.json'):
     return acados_ocp
 
 
-def ocp_generate_external_functions(acados_ocp, model):
+def ocp_generate_external_functions(acados_ocp: AcadosOcp, model: AcadosModel):
 
     model = make_model_consistent(model)
 
@@ -680,7 +683,6 @@ def ocp_generate_external_functions(acados_ocp, model):
         else:
             raise Exception("ocp_generate_external_functions: unknown integrator type.")
     else:
-        import shutil
         target_location = os.path.join(code_export_dir, model_dir, model.dyn_generic_source)
         shutil.copyfile(model.dyn_generic_source, target_location)
 
@@ -731,6 +733,13 @@ def ocp_generate_external_functions(acados_ocp, model):
         generate_c_code_conl_cost(model, model.name, 'terminal', opts)
     elif acados_ocp.cost.cost_type_e == 'EXTERNAL':
         generate_c_code_external_cost(model, 'terminal', opts)
+
+    if acados_ocp.solver_options.custom_update_filename != "":
+        target_location = os.path.join(code_export_dir, acados_ocp.solver_options.custom_update_filename)
+        shutil.copyfile(acados_ocp.solver_options.custom_update_filename, target_location)
+    if acados_ocp.solver_options.custom_update_header_filename != "":
+        target_location = os.path.join(code_export_dir, acados_ocp.solver_options.custom_update_header_filename)
+        shutil.copyfile(acados_ocp.solver_options.custom_update_header_filename, target_location)
 
 
 def ocp_get_default_cmake_builder() -> CMakeBuilder:

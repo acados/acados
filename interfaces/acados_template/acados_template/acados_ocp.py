@@ -2167,6 +2167,8 @@ class AcadosOcpOptions:
         self.__eps_sufficient_descent = 1e-4
         self.__hpipm_mode = 'BALANCE'
         self.__ext_fun_compile_flags = '-O2'
+        self.__custom_update_filename = ''
+        self.__custom_update_header_filename = ''
 
 
     @property
@@ -2184,6 +2186,26 @@ class AcadosOcpOptions:
         Default: '-O2'.
         """
         return self.__ext_fun_compile_flags
+
+
+    @property
+    def custom_update_filename(self):
+        """
+        Filename of the custom C function to update solver data and parameters in between solver calls
+        Default: ''.
+        """
+        return self.__custom_update_filename
+
+
+    @property
+    def custom_update_header_filename(self):
+        """
+        Header filename of the custom C function to update solver data and parameters in between solver calls
+        Default: ''.
+        """
+        return self.__custom_update_header_filename
+
+
 
     @property
     def hpipm_mode(self):
@@ -2649,6 +2671,23 @@ class AcadosOcpOptions:
             self.__ext_fun_compile_flags = ext_fun_compile_flags
         else:
             raise Exception('Invalid ext_fun_compile_flags, expected a string.\n')
+
+
+    @custom_update_filename.setter
+    def custom_update_filename(self, custom_update_filename):
+        if isinstance(custom_update_filename, str):
+            self.__custom_update_filename = custom_update_filename
+        else:
+            raise Exception('Invalid custom_update_filename, expected a string.\n')
+
+
+    @custom_update_header_filename.setter
+    def custom_update_header_filename(self, custom_update_header_filename):
+        if isinstance(custom_update_header_filename, str):
+            self.__custom_update_header_filename = custom_update_header_filename
+        else:
+            raise Exception('Invalid custom_update_header_filename, expected a string.\n')
+
 
     @hessian_approx.setter
     def hessian_approx(self, hessian_approx):
