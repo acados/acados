@@ -48,7 +48,7 @@ from .generate_c_code_gnsf import generate_c_code_gnsf
 from .acados_sim import AcadosSim
 from .acados_ocp import AcadosOcp
 from .acados_model import acados_model_strip_casadi_symbolics
-from .utils import is_column, render_template, format_class_dict, np_array_to_list,\
+from .utils import is_column, render_template, format_class_dict, make_object_json_dumpable,\
      make_model_consistent, set_up_imported_gnsf_model, get_python_interface_path, get_lib_ext,\
      casadi_length, is_empty
 from .builders import CMakeBuilder
@@ -112,7 +112,7 @@ def sim_formulation_json_dump(acados_sim, json_file='acados_sim.json'):
     sim_json = format_class_dict(sim_dict)
 
     with open(json_file, 'w') as f:
-        json.dump(sim_json, f, default=np_array_to_list, indent=4, sort_keys=True)
+        json.dump(sim_json, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
 
 
 def sim_get_default_cmake_builder() -> CMakeBuilder:

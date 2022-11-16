@@ -239,7 +239,9 @@ def render_template(in_file, out_file, template_dir, json_path):
 
 
 ## Conversion functions
+# TODO: remove!
 def np_array_to_list(np_array):
+    print("Warning: the function np_array_to_list is ambigious and should not be used anymore! Consider using make_object_json_dumpable() instead.")
     if isinstance(np_array, (np.ndarray)):
         return np_array.tolist()
     elif isinstance(np_array, (SX)):
@@ -247,7 +249,18 @@ def np_array_to_list(np_array):
     elif isinstance(np_array, (DM)):
         return np_array.full()
     else:
-        raise(Exception(f"Cannot convert to list type {type(np_array)}"))
+        raise Exception(f"Cannot convert to list type {type(np_array)}")
+
+
+def make_object_json_dumpable(input):
+    if isinstance(input, (np.ndarray)):
+        return input.tolist()
+    elif isinstance(input, (SX)):
+        return input.serialize()
+    elif isinstance(input, (DM)):
+        return input.full()
+    else:
+        raise TypeError(f"Cannot make input of type {type(input)} dumpable.")
 
 
 def format_class_dict(d):
@@ -387,7 +400,7 @@ def acados_dae_model_json_dump(model):
     # dump
     json_file = model_name + '_acados_dae.json'
     with open(json_file, 'w') as f:
-        json.dump(dae_dict, f, default=np_array_to_list, indent=4, sort_keys=True)
+        json.dump(dae_dict, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
     print("dumped ", model_name, " dae to file:", json_file, "\n")
 
 
