@@ -113,9 +113,9 @@ def main():
     for i in range(20):
         status = ocp_solver.solve()
         ocp_solver.custom_update()
-        ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
+        # ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
         residuals = ocp_solver.get_residuals()
-        print("residuals after ", i, "SQP_RTI iterations:\n", residuals)
+        # print("residuals after ", i, "SQP_RTI iterations:\n", residuals)
         if max(residuals) < tol:
             break
 

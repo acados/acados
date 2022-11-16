@@ -31,6 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.;
  */
 
+#include <stdlib.h>
+#include <stdio.h>
+
 #include "acados_solver_pendulum_ode.h"
 #include "acados_c/ocp_nlp_interface.h"
 
@@ -44,18 +47,35 @@ static void print_x_trajectory(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_n
     int N = nlp_dims->N;
     int nx = nlp_dims->nx[0];
 
-    double buffer[2000]; // TODO: buffer has to be big enough; malloc is slow;
+    double *buffer = malloc(nx*(N+1) * sizeof(double)); // TODO: buffer has to be big enough; malloc is slow;
     for (int ii = 0; ii <= nlp_dims->N; ii++)
         ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, ii, "x", &buffer[ii*nx]);
-    printf("\n--- xtraj ---\n");
+    printf("xtraj in custom function:\t");
     d_print_exp_tran_mat( nx, N+1, buffer, nx);
+    free(buffer);
+}
+
+static void print_u_trajectory(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out)
+{
+    ocp_nlp_config *nlp_config = solver->config;
+    ocp_nlp_dims *nlp_dims = solver->dims;
+
+    int N = nlp_dims->N;
+    int nu = nlp_dims->nu[0];
+
+    double *buffer = malloc(nu*(N+1) * sizeof(double)); // TODO: buffer has to be big enough; malloc is slow;
+    for (int ii = 0; ii <= nlp_dims->N; ii++)
+        ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, ii, "u", &buffer[ii*nu]);
+    printf("utraj in custom function:\t");
+    d_print_exp_mat( nu, N+1, buffer, nu);
+    free(buffer);
 }
 
 
 
 int pendulum_ode_custom_update_function(pendulum_ode_solver_capsule* capsule)
 {
-    printf("\nInside the actual custom_function\n");
+    // printf("\nInside the actual custom_function\n");
     ocp_nlp_config *nlp_config = pendulum_ode_acados_get_nlp_config(capsule);
     ocp_nlp_dims *nlp_dims = pendulum_ode_acados_get_nlp_dims(capsule);
     ocp_nlp_in *nlp_in = pendulum_ode_acados_get_nlp_in(capsule);
@@ -63,8 +83,10 @@ int pendulum_ode_custom_update_function(pendulum_ode_solver_capsule* capsule)
     ocp_nlp_solver *nlp_solver = pendulum_ode_acados_get_nlp_solver(capsule);
     void *nlp_opts = pendulum_ode_acados_get_nlp_opts(capsule);
 
-    // EXAMPLE 1: print x trajectory
-    print_x_trajectory(nlp_solver, nlp_in, nlp_out);
+    // // EXAMPLE 1: print x trajectory
+    // print_x_trajectory(nlp_solver, nlp_in, nlp_out);
+    // EXAMPLE 2: print u trajectory
+    print_u_trajectory(nlp_solver, nlp_in, nlp_out);
 
 }
 
