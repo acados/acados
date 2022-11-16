@@ -73,7 +73,7 @@ def main(discretization='shooting_nodes'):
     ocp.dims.N = N
     # shooting_nodes = np.linspace(0, Tf, N+1)
 
-    time_steps = np.linspace(0, 1, N)
+    time_steps = np.linspace(0, 1, N+1)[1:]
     time_steps = Tf * time_steps / sum(time_steps)
 
     shooting_nodes = np.zeros((N+1,))
