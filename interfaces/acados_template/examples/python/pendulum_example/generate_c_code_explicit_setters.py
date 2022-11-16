@@ -127,7 +127,7 @@ ocp.set('acados_lib_path', '/usr/local/lib')
 
 # json_layout = acados_ocp2json_layout(ocp)
 # with open('acados_layout.json', 'w') as f:
-#     json.dump(json_layout, f, default=np_array_to_list)
+#     json.dump(json_layout, f, default=make_object_json_dumpable)
 # exit()
 
 acados_solver = generate_solver(model, ocp, json_file = 'acados_ocp.json')

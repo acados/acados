@@ -52,9 +52,8 @@ from .generate_c_code_conl_cost import generate_c_code_conl_cost
 from .generate_c_code_external_cost import generate_c_code_external_cost
 from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 from .acados_ocp import AcadosOcp
-from .acados_model import acados_model_strip_casadi_symbolics
 from .utils import is_column, is_empty, casadi_length, render_template,\
-     format_class_dict, ocp_check_against_layout, np_array_to_list, make_model_consistent,\
+     format_class_dict, make_object_json_dumpable, make_model_consistent,\
      set_up_imported_gnsf_model, get_ocp_nlp_layout, get_python_interface_path, get_lib_ext
 from .builders import CMakeBuilder
 
@@ -615,21 +614,11 @@ def ocp_formulation_json_dump(acados_ocp, simulink_opts, json_file='acados_ocp_n
         ocp_nlp_dict[acados_struct]=dict(getattr(acados_ocp, acados_struct).__dict__)
 
     ocp_nlp_dict = format_class_dict(ocp_nlp_dict)
-
-    # strip symbolics
-    ocp_nlp_dict['model'] = acados_model_strip_casadi_symbolics(ocp_nlp_dict['model'])
-
-    # strip shooting_nodes
-    ocp_nlp_dict['solver_options'].pop('shooting_nodes', None)
-    dims_dict = format_class_dict(acados_ocp.dims.__dict__)
-
-    ocp_check_against_layout(ocp_nlp_dict, dims_dict)
-
     # add simulink options
     ocp_nlp_dict['simulink_opts'] = simulink_opts
 
     with open(json_file, 'w') as f:
-        json.dump(ocp_nlp_dict, f, default=np_array_to_list, indent=4, sort_keys=True)
+        json.dump(ocp_nlp_dict, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
 
 
 
@@ -1433,7 +1422,7 @@ class AcadosOcpSolver:
 
         # save
         with open(filename, 'w') as f:
-            json.dump(solution, f, default=np_array_to_list, indent=4, sort_keys=True)
+            json.dump(solution, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
         print("stored current iterate in ", os.path.join(os.getcwd(), filename))
 
 

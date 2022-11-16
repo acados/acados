@@ -239,7 +239,9 @@ def render_template(in_file, out_file, template_dir, json_path):
 
 
 ## Conversion functions
+# TODO: remove!
 def np_array_to_list(np_array):
+    print("Warning: the function np_array_to_list is ambigious and should not be used anymore! Consider using make_object_json_dumpable() instead.")
     if isinstance(np_array, (np.ndarray)):
         return np_array.tolist()
     elif isinstance(np_array, (SX)):
@@ -247,7 +249,21 @@ def np_array_to_list(np_array):
     elif isinstance(np_array, (DM)):
         return np_array.full()
     else:
-        raise(Exception(f"Cannot convert to list type {type(np_array)}"))
+        raise Exception(f"Cannot convert to list type {type(np_array)}")
+
+
+def make_object_json_dumpable(input):
+    if isinstance(input, (np.ndarray)):
+        return input.tolist()
+    elif isinstance(input, (SX)):
+        return input.serialize()
+    elif isinstance(input, (MX)):
+        # NOTE: MX expressions can not be serialized, only Functions.
+        return input.__str__()
+    elif isinstance(input, (DM)):
+        return input.full()
+    else:
+        raise TypeError(f"Cannot make input of type {type(input)} dumpable.")
 
 
 def format_class_dict(d):
@@ -270,63 +286,6 @@ def get_ocp_nlp_layout():
     with open(abs_path, 'r') as f:
         ocp_nlp_layout = json.load(f)
     return ocp_nlp_layout
-
-
-def ocp_check_against_layout(ocp_nlp, ocp_dims):
-    """
-    Check dimensions against layout
-    Parameters
-    ---------
-    ocp_nlp : dict
-        dictionary loaded from JSON to be post-processed.
-
-    ocp_dims : instance of AcadosOcpDims
-    """
-
-    ocp_nlp_layout = get_ocp_nlp_layout()
-
-    ocp_check_against_layout_recursion(ocp_nlp, ocp_dims, ocp_nlp_layout)
-    return
-
-
-def ocp_check_against_layout_recursion(ocp_nlp, ocp_dims, layout):
-
-    for key, item in ocp_nlp.items():
-
-        try:
-            layout_of_key = layout[key]
-        except KeyError:
-            raise Exception("ocp_check_against_layout_recursion: field" \
-                            f" '{key}' is not in layout but in OCP description.")
-
-        if isinstance(item, dict):
-            ocp_check_against_layout_recursion(item, ocp_dims, layout_of_key)
-
-        if 'ndarray' in layout_of_key:
-            # cast to np array
-            if isinstance(item, int) or isinstance(item, float):
-                item = np.array([item])
-        if isinstance(item, np.ndarray) and (layout_of_key[0] != 'str'):
-            dim_layout = []
-            dim_names = layout_of_key[1]
-
-            for dim_name in dim_names:
-                dim_layout.append(ocp_dims[dim_name])
-
-            dims = tuple(dim_layout)
-
-            item_dims = item.shape
-            if len(item_dims) != len(dims):
-                raise Exception(f'Mismatching dimensions for field "{key}". ' \
-                    f'Expected {len(dims)} dimensional array, got {len(item_dims)} dimensional array.')
-
-            if np.prod(item_dims) != 0 or np.prod(dims) != 0:
-                if dims != item_dims:
-                    raise Exception(f'acados -- mismatching dimensions for field "{key}". ' \
-                        f'Provided data has dimensions {item_dims}, ' \
-                        f'while associated dimensions {dim_names} are {dims}')
-    return
-
 
 def J_to_idx(J):
     nrows = J.shape[0]
@@ -387,7 +346,7 @@ def acados_dae_model_json_dump(model):
     # dump
     json_file = model_name + '_acados_dae.json'
     with open(json_file, 'w') as f:
-        json.dump(dae_dict, f, default=np_array_to_list, indent=4, sort_keys=True)
+        json.dump(dae_dict, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
     print("dumped ", model_name, " dae to file:", json_file, "\n")
 
 
