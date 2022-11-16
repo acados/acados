@@ -108,6 +108,7 @@ tol = 1e-6
 
 for i in range(20):
     status = ocp_solver.solve()
+    ocp_solver.custom_update()
     ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
     residuals = ocp_solver.get_residuals()
     print("residuals after ", i, "SQP_RTI iterations:\n", residuals)
@@ -130,7 +131,7 @@ ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("stati
 cost = ocp_solver.get_cost()
 print("cost function value of solution = ", cost)
 
-PRINT_QP = True
+PRINT_QP = False
 if PRINT_QP:
     for i in range(N):
         A_qp = ocp_solver.get_from_qp_in(i, "A")
