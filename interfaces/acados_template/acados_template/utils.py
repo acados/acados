@@ -284,63 +284,6 @@ def get_ocp_nlp_layout():
         ocp_nlp_layout = json.load(f)
     return ocp_nlp_layout
 
-
-def ocp_check_against_layout(ocp_nlp, ocp_dims):
-    """
-    Check dimensions against layout
-    Parameters
-    ---------
-    ocp_nlp : dict
-        dictionary loaded from JSON to be post-processed.
-
-    ocp_dims : instance of AcadosOcpDims
-    """
-
-    ocp_nlp_layout = get_ocp_nlp_layout()
-
-    ocp_check_against_layout_recursion(ocp_nlp, ocp_dims, ocp_nlp_layout)
-    return
-
-
-def ocp_check_against_layout_recursion(ocp_nlp, ocp_dims, layout):
-
-    for key, item in ocp_nlp.items():
-
-        try:
-            layout_of_key = layout[key]
-        except KeyError:
-            raise Exception("ocp_check_against_layout_recursion: field" \
-                            f" '{key}' is not in layout but in OCP description.")
-
-        if isinstance(item, dict):
-            ocp_check_against_layout_recursion(item, ocp_dims, layout_of_key)
-
-        if 'ndarray' in layout_of_key:
-            # cast to np array
-            if isinstance(item, int) or isinstance(item, float):
-                item = np.array([item])
-        if isinstance(item, np.ndarray) and (layout_of_key[0] != 'str'):
-            dim_layout = []
-            dim_names = layout_of_key[1]
-
-            for dim_name in dim_names:
-                dim_layout.append(ocp_dims[dim_name])
-
-            dims = tuple(dim_layout)
-
-            item_dims = item.shape
-            if len(item_dims) != len(dims):
-                raise Exception(f'Mismatching dimensions for field "{key}". ' \
-                    f'Expected {len(dims)} dimensional array, got {len(item_dims)} dimensional array.')
-
-            if np.prod(item_dims) != 0 or np.prod(dims) != 0:
-                if dims != item_dims:
-                    raise Exception(f'acados -- mismatching dimensions for field "{key}". ' \
-                        f'Provided data has dimensions {item_dims}, ' \
-                        f'while associated dimensions {dim_names} are {dims}')
-    return
-
-
 def J_to_idx(J):
     nrows = J.shape[0]
     idx = np.zeros((nrows, ))
