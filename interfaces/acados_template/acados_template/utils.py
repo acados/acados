@@ -257,6 +257,9 @@ def make_object_json_dumpable(input):
         return input.tolist()
     elif isinstance(input, (SX)):
         return input.serialize()
+    elif isinstance(input, (MX)):
+        # NOTE: MX expressions can not be serialized, only Functions.
+        return input.__str__()
     elif isinstance(input, (DM)):
         return input.full()
     else:
