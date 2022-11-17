@@ -33,4 +33,8 @@
 
 #include "acados_solver_pendulum_ode.h"
 
-int pendulum_ode_custom_update_function(pendulum_ode_solver_capsule* capsule);
+int example_custom_update_init_function(pendulum_ode_solver_capsule* capsule);
+
+int example_custom_update_function(pendulum_ode_solver_capsule* capsule);
+
+int example_custom_update_terminate_function(pendulum_ode_solver_capsule* capsule);
