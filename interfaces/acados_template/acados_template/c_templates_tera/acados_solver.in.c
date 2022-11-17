@@ -2144,7 +2144,8 @@ int {{ model.name }}_acados_create_with_discretization({{ model.name }}_solver_c
     int status = {{ model.name }}_acados_create_9_precompute(capsule);
 
     {%- if custom_update_filename != "" %}
-    {{ solver_options.custom_update_init_function_name }}(capsule);
+    // Initialize custom update function
+    custom_update_init_function(capsule);
     {%- endif %}
 
     return status;
@@ -2512,7 +2513,7 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
     // before destroying, keep some info
     const int N = capsule->nlp_solver_plan->N;
     {%- if custom_update_filename != "" %}
-    {{ solver_options.custom_update_terminate_function_name }}(capsule);
+    custom_update_terminate_function(capsule);
     {%- endif %}
     // free memory
     ocp_nlp_solver_opts_destroy(capsule->nlp_opts);
@@ -2759,7 +2760,7 @@ int {{ model.name }}_acados_custom_update({{ model.name }}_solver_capsule* capsu
     printf("nothing set yet..\n");
     return 1;
 {% else %}
-    {{ solver_options.custom_update_function_name }}(capsule);
+    custom_update_function(capsule);
 {%- endif %}
 }
 

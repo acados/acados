@@ -97,9 +97,6 @@ def main():
 
     ocp.solver_options.custom_update_filename = 'custom_update_function.c'
     ocp.solver_options.custom_update_header_filename = 'custom_update_function.h'
-    ocp.solver_options.custom_update_function_name = 'example_custom_update_function'
-    ocp.solver_options.custom_update_init_function_name = 'example_custom_update_init_function'
-    ocp.solver_options.custom_update_terminate_function_name = 'example_custom_update_terminate_function'
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
