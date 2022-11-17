@@ -2211,6 +2211,10 @@ class AcadosOcpOptions:
     @property
     def custom_update_function_name(self):
         """
+        Function name for the custom_update function.
+        Signature has to be
+        `custom_update_function_name([model_name]_solver_capsule *capsule)`
+
         Default: ''.
         """
         return self.__custom_update_function_name
@@ -2219,6 +2223,13 @@ class AcadosOcpOptions:
     @property
     def custom_update_init_function_name(self):
         """
+        Function name to initialize the custom_update function.
+        Signature has to be
+        `custom_update_init_function_name([model_name]_solver_capsule *capsule)`
+
+        Called at the end of solver creation.
+        This is allowed to allocate memory and store the pointer to it into capsule->custom_update_memory.
+
         Default: ''.
         """
         return self.__custom_update_init_function_name
@@ -2227,6 +2238,13 @@ class AcadosOcpOptions:
     @property
     def custom_update_terminate_function_name(self):
         """
+        Function name to terminate the custom_update function.
+        Signature has to be
+        `custom_update_init_function_name([model_name]_solver_capsule *capsule)`
+
+        Called just before destroying the solver.
+        Responsible to free allocated memory, stored at capsule->custom_update_memory.
+
         Default: ''.
         """
         return self.__custom_update_terminate_function_name
