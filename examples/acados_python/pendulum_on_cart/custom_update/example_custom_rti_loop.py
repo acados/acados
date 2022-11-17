@@ -95,6 +95,9 @@ def main():
     ocp.solver_options.print_level = 0
     ocp.solver_options.nlp_solver_type = 'SQP_RTI' # SQP_RTI, SQP
 
+    ocp.solver_options.custom_update_filename = 'custom_update_function.c'
+    ocp.solver_options.custom_update_header_filename = 'custom_update_function.h'
+
     # set prediction horizon
     ocp.solver_options.tf = Tf
 
@@ -110,9 +113,9 @@ def main():
     for i in range(20):
         status = ocp_solver.solve()
         ocp_solver.custom_update()
-        ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
+        # ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
         residuals = ocp_solver.get_residuals()
-        print("residuals after ", i, "SQP_RTI iterations:\n", residuals)
+        # print("residuals after ", i, "SQP_RTI iterations:\n", residuals)
         if max(residuals) < tol:
             break
 
@@ -125,42 +128,6 @@ def main():
         simX[i,:] = ocp_solver.get(i, "x")
         simU[i,:] = ocp_solver.get(i, "u")
     simX[N,:] = ocp_solver.get(N, "x")
-
-    ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
-
-    #
-    cost = ocp_solver.get_cost()
-    print("cost function value of solution = ", cost)
-
-    PRINT_QP = False
-    if PRINT_QP:
-        for i in range(N):
-            A_qp = ocp_solver.get_from_qp_in(i, "A")
-            print(f"qp: A at stage {i}: {A_qp}")
-
-        for i in range(N):
-            B_qp = ocp_solver.get_from_qp_in(i, "B")
-            print(f"qp: B at stage {i}: {B_qp}")
-
-        for i in range(N+1):
-            Q_qp = ocp_solver.get_from_qp_in(i, "Q")
-            print(f"qp: Q at stage {i}: {Q_qp}")
-
-        for i in range(N+1):
-            R_qp = ocp_solver.get_from_qp_in(i, "R")
-            print(f"qp: R at stage {i}: {R_qp}")
-
-        for i in range(N+1):
-            S_qp = ocp_solver.get_from_qp_in(i, "S")
-            print(f"qp: S at stage {i}: {S_qp}")
-
-        for i in range(N+1):
-            r_qp = ocp_solver.get_from_qp_in(i, "r")
-            print(f"qp: r at stage {i}: {r_qp}")
-
-        for i in range(N+1):
-            q_qp = ocp_solver.get_from_qp_in(i, "q")
-            print(f"qp: q at stage {i}: {q_qp}")
 
     # plot
     plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)

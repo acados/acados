@@ -132,7 +132,7 @@
 # model
 MODEL_SRC=
 	{%- if model.dyn_ext_fun_type == "casadi" %}
-{%- if  solver_options.integrator_type == "ERK" %}
+{%- if solver_options.integrator_type == "ERK" %}
 MODEL_SRC+= {{ model.name }}_model/{{ model.name }}_expl_ode_fun.c
 MODEL_SRC+= {{ model.name }}_model/{{ model.name }}_expl_vde_forw.c
 MODEL_SRC+= {{ model.name }}_model/{{ model.name }}_expl_vde_adj.c
@@ -247,6 +247,12 @@ OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_fun_jac_hess.c
 OCP_SRC+= {{ model.name }}_cost/{{ cost.cost_source_ext_cost_e }}
 	{%- endif %}
 {%- endif %}
+{%- if solver_options.custom_update_filename %}
+	{%- if solver_options.custom_update_filename != "" %}
+OCP_SRC+= {{ solver_options.custom_update_filename }}
+	{%- endif %}
+{%- endif %}
+
 OCP_SRC+= acados_solver_{{ model.name }}.c
 OCP_OBJ := $(OCP_SRC:.c=.o)
 

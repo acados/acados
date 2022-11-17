@@ -2167,7 +2167,8 @@ class AcadosOcpOptions:
         self.__eps_sufficient_descent = 1e-4
         self.__hpipm_mode = 'BALANCE'
         self.__ext_fun_compile_flags = '-O2'
-
+        self.__custom_update_filename = ''
+        self.__custom_update_header_filename = ''
 
     @property
     def qp_solver(self):
@@ -2184,6 +2185,47 @@ class AcadosOcpOptions:
         Default: '-O2'.
         """
         return self.__ext_fun_compile_flags
+
+
+    @property
+    def custom_update_filename(self):
+        """
+        Filename of the custom C function to update solver data and parameters in between solver calls
+
+        This file has to implement the functions
+        int custom_update_init_function([model.name]_solver_capsule* capsule);
+        int custom_update_function([model.name]_solver_capsule* capsule);
+        int custom_update_terminate_function([model.name]_solver_capsule* capsule);
+
+
+        Default: ''.
+        """
+        return self.__custom_update_filename
+
+
+    @property
+    def custom_update_header_filename(self):
+        """
+        Header filename of the custom C function to update solver data and parameters in between solver calls
+
+        This file has to declare the custom_update functions and look as follows:
+
+        ```
+        // Called at the end of solver creation.
+        // This is allowed to allocate memory and store the pointer to it into capsule->custom_update_memory.
+        int custom_update_init_function([model.name]_solver_capsule* capsule);
+
+        // Custom update function that can be called between solver calls
+        int custom_update_function([model.name]_solver_capsule* capsule);
+
+        // Called just before destroying the solver.
+        // Responsible to free allocated memory, stored at capsule->custom_update_memory.
+        int custom_update_terminate_function([model.name]_solver_capsule* capsule);
+
+        Default: ''.
+        """
+        return self.__custom_update_header_filename
+
 
     @property
     def hpipm_mode(self):
@@ -2649,6 +2691,22 @@ class AcadosOcpOptions:
             self.__ext_fun_compile_flags = ext_fun_compile_flags
         else:
             raise Exception('Invalid ext_fun_compile_flags, expected a string.\n')
+
+
+    @custom_update_filename.setter
+    def custom_update_filename(self, custom_update_filename):
+        if isinstance(custom_update_filename, str):
+            self.__custom_update_filename = custom_update_filename
+        else:
+            raise Exception('Invalid custom_update_filename, expected a string.\n')
+
+
+    @custom_update_header_filename.setter
+    def custom_update_header_filename(self, custom_update_header_filename):
+        if isinstance(custom_update_header_filename, str):
+            self.__custom_update_header_filename = custom_update_header_filename
+        else:
+            raise Exception('Invalid custom_update_header_filename, expected a string.\n')
 
     @hessian_approx.setter
     def hessian_approx(self, hessian_approx):

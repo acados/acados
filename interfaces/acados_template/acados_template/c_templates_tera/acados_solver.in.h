@@ -74,6 +74,12 @@
 extern "C" {
 #endif
 
+{%- if not solver_options.custom_update_filename %}
+    {%- set custom_update_filename = "" %}
+{% else %}
+    {%- set custom_update_filename = solver_options.custom_update_filename %}
+{%- endif %}
+
 // ** capsule for solver data **
 typedef struct {{ model.name }}_solver_capsule
 {
@@ -185,6 +191,10 @@ typedef struct {{ model.name }}_solver_capsule
 {%- endif %}
 {%- endif %}
 
+{%- if custom_update_filename != "" %}
+    void * custom_update_memory;
+{%- endif %}
+
 } {{ model.name }}_solver_capsule;
 
 ACADOS_SYMBOL_EXPORT {{ model.name }}_solver_capsule * {{ model.name }}_acados_create_capsule(void);
@@ -215,6 +225,7 @@ ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_update_params_sparse({{ model.n
 ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_solve({{ model.name }}_solver_capsule * capsule);
 ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_free({{ model.name }}_solver_capsule * capsule);
 ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_print_stats({{ model.name }}_solver_capsule * capsule);
+ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_custom_update({{ model.name }}_solver_capsule* capsule);
 
 ACADOS_SYMBOL_EXPORT ocp_nlp_in *{{ model.name }}_acados_get_nlp_in({{ model.name }}_solver_capsule * capsule);
 ACADOS_SYMBOL_EXPORT ocp_nlp_out *{{ model.name }}_acados_get_nlp_out({{ model.name }}_solver_capsule * capsule);
