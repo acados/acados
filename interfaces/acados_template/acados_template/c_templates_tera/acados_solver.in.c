@@ -2142,6 +2142,11 @@ int {{ model.name }}_acados_create_with_discretization({{ model.name }}_solver_c
 
     // 9) do precomputations
     int status = {{ model.name }}_acados_create_9_precompute(capsule);
+
+    {%- if custom_update_filename != "" %}
+    {{ solver_options.custom_update_init_function_name }}(capsule);
+    {%- endif %}
+
     return status;
 }
 
@@ -2506,6 +2511,9 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
 {
     // before destroying, keep some info
     const int N = capsule->nlp_solver_plan->N;
+    {%- if custom_update_filename != "" %}
+    {{ solver_options.custom_update_terminate_function_name }}(capsule);
+    {%- endif %}
     // free memory
     ocp_nlp_solver_opts_destroy(capsule->nlp_opts);
     ocp_nlp_in_destroy(capsule->nlp_in);
@@ -2693,15 +2701,6 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
     return 0;
 }
 
-ocp_nlp_in *{{ model.name }}_acados_get_nlp_in({{ model.name }}_solver_capsule* capsule) { return capsule->nlp_in; }
-ocp_nlp_out *{{ model.name }}_acados_get_nlp_out({{ model.name }}_solver_capsule* capsule) { return capsule->nlp_out; }
-ocp_nlp_out *{{ model.name }}_acados_get_sens_out({{ model.name }}_solver_capsule* capsule) { return capsule->sens_out; }
-ocp_nlp_solver *{{ model.name }}_acados_get_nlp_solver({{ model.name }}_solver_capsule* capsule) { return capsule->nlp_solver; }
-ocp_nlp_config *{{ model.name }}_acados_get_nlp_config({{ model.name }}_solver_capsule* capsule) { return capsule->nlp_config; }
-void *{{ model.name }}_acados_get_nlp_opts({{ model.name }}_solver_capsule* capsule) { return capsule->nlp_opts; }
-ocp_nlp_dims *{{ model.name }}_acados_get_nlp_dims({{ model.name }}_solver_capsule* capsule) { return capsule->nlp_dims; }
-ocp_nlp_plan_t *{{ model.name }}_acados_get_nlp_plan({{ model.name }}_solver_capsule* capsule) { return capsule->nlp_solver_plan; }
-
 
 void {{ model.name }}_acados_print_stats({{ model.name }}_solver_capsule* capsule)
 {
@@ -2760,7 +2759,17 @@ int {{ model.name }}_acados_custom_update({{ model.name }}_solver_capsule* capsu
     printf("nothing set yet..\n");
     return 1;
 {% else %}
-    {{ model.name }}_custom_update_function(capsule);
+    {{ solver_options.custom_update_function_name }}(capsule);
 {%- endif %}
 }
 
+
+
+ocp_nlp_in *{{ model.name }}_acados_get_nlp_in({{ model.name }}_solver_capsule* capsule) { return capsule->nlp_in; }
+ocp_nlp_out *{{ model.name }}_acados_get_nlp_out({{ model.name }}_solver_capsule* capsule) { return capsule->nlp_out; }
+ocp_nlp_out *{{ model.name }}_acados_get_sens_out({{ model.name }}_solver_capsule* capsule) { return capsule->sens_out; }
+ocp_nlp_solver *{{ model.name }}_acados_get_nlp_solver({{ model.name }}_solver_capsule* capsule) { return capsule->nlp_solver; }
+ocp_nlp_config *{{ model.name }}_acados_get_nlp_config({{ model.name }}_solver_capsule* capsule) { return capsule->nlp_config; }
+void *{{ model.name }}_acados_get_nlp_opts({{ model.name }}_solver_capsule* capsule) { return capsule->nlp_opts; }
+ocp_nlp_dims *{{ model.name }}_acados_get_nlp_dims({{ model.name }}_solver_capsule* capsule) { return capsule->nlp_dims; }
+ocp_nlp_plan_t *{{ model.name }}_acados_get_nlp_plan({{ model.name }}_solver_capsule* capsule) { return capsule->nlp_solver_plan; }

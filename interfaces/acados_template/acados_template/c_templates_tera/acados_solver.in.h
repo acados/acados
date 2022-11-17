@@ -74,6 +74,12 @@
 extern "C" {
 #endif
 
+{%- if not solver_options.custom_update_filename %}
+    {%- set custom_update_filename = "" %}
+{% else %}
+    {%- set custom_update_filename = solver_options.custom_update_filename %}
+{%- endif %}
+
 // ** capsule for solver data **
 typedef struct {{ model.name }}_solver_capsule
 {
@@ -183,6 +189,10 @@ typedef struct {{ model.name }}_solver_capsule
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_param_casadi nl_constr_h_e_fun_jac_hess;
 {%- endif %}
+{%- endif %}
+
+{%- if custom_update_filename != "" %}
+    void * custom_update_memory;
 {%- endif %}
 
 } {{ model.name }}_solver_capsule;

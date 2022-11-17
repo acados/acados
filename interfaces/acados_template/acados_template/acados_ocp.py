@@ -2169,7 +2169,9 @@ class AcadosOcpOptions:
         self.__ext_fun_compile_flags = '-O2'
         self.__custom_update_filename = ''
         self.__custom_update_header_filename = ''
-
+        self.__custom_update_function_name = ''
+        self.__custom_update_init_function_name = ''
+        self.__custom_update_terminate_function_name = ''
 
     @property
     def qp_solver(self):
@@ -2205,6 +2207,29 @@ class AcadosOcpOptions:
         """
         return self.__custom_update_header_filename
 
+
+    @property
+    def custom_update_function_name(self):
+        """
+        Default: ''.
+        """
+        return self.__custom_update_function_name
+
+
+    @property
+    def custom_update_init_function_name(self):
+        """
+        Default: ''.
+        """
+        return self.__custom_update_init_function_name
+
+
+    @property
+    def custom_update_terminate_function_name(self):
+        """
+        Default: ''.
+        """
+        return self.__custom_update_terminate_function_name
 
 
     @property
@@ -2688,6 +2713,28 @@ class AcadosOcpOptions:
         else:
             raise Exception('Invalid custom_update_header_filename, expected a string.\n')
 
+
+    @custom_update_function_name.setter
+    def custom_update_function_name(self, custom_update_function_name):
+        if isinstance(custom_update_function_name, str):
+            self.__custom_update_function_name = custom_update_function_name
+        else:
+            raise Exception('Invalid custom_update_header_filename, expected a string.\n')
+
+    @custom_update_init_function_name.setter
+    def custom_update_init_function_name(self, custom_update_init_function_name):
+        if isinstance(custom_update_init_function_name, str):
+            self.__custom_update_init_function_name = custom_update_init_function_name
+        else:
+            raise Exception('Invalid custom_update_header_filename, expected a string.\n')
+
+
+    @custom_update_terminate_function_name.setter
+    def custom_update_terminate_function_name(self, custom_update_terminate_function_name):
+        if isinstance(custom_update_terminate_function_name, str):
+            self.__custom_update_terminate_function_name = custom_update_terminate_function_name
+        else:
+            raise Exception('Invalid custom_update_header_filename, expected a string.\n')
 
     @hessian_approx.setter
     def hessian_approx(self, hessian_approx):
