@@ -145,7 +145,7 @@ static void print_u_trajectory(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_n
 
 
 
-int custom_update_function(pendulum_ode_solver_capsule* capsule)
+int custom_update_function(pendulum_ode_solver_capsule* capsule, double* data, int data_len)
 {
     // printf("\nin example_custom_update_function\n");
     custom_memory *custom_mem = (custom_memory *) capsule->custom_update_memory;
@@ -155,6 +155,13 @@ int custom_update_function(pendulum_ode_solver_capsule* capsule)
     ocp_nlp_out *nlp_out = pendulum_ode_acados_get_nlp_out(capsule);
     ocp_nlp_solver *nlp_solver = pendulum_ode_acados_get_nlp_solver(capsule);
     void *nlp_opts = pendulum_ode_acados_get_nlp_opts(capsule);
+
+    printf("got data\t:");
+    for (int i = 0; i < data_len; i++)
+    {
+        printf("%e\t", data[i]);
+    }
+    printf("\n");
 
 
 

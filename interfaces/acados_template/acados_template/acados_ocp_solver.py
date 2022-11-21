@@ -1150,16 +1150,20 @@ class AcadosOcpSolver:
         return self.status
 
 
-    def custom_update(self):
+    def custom_update(self, data_: np.ndarray):
         """
         A custom function that can be implemented by a user to be called between solver calls.
         By default this does nothing.
         The idea is to have a convenient wrapper to do complex updates of parameters and numerical data efficiently in C,
         in a function that is compiled into the solver library and can be conveniently used in the Python environment.
         """
-        getattr(self.shared_lib, f"{self.model_name}_acados_custom_update").argtypes = [c_void_p]
+        data = np.ascontiguousarray(data_, dtype=np.float64)
+        c_data = cast(data.ctypes.data, POINTER(c_double))
+        data_len = len(data)
+
+        getattr(self.shared_lib, f"{self.model_name}_acados_custom_update").argtypes = [c_void_p, POINTER(c_double), c_int]
         getattr(self.shared_lib, f"{self.model_name}_acados_custom_update").restype = c_int
-        status = getattr(self.shared_lib, f"{self.model_name}_acados_custom_update")(self.capsule)
+        status = getattr(self.shared_lib, f"{self.model_name}_acados_custom_update")(self.capsule, c_data, data_len)
 
         return status
 

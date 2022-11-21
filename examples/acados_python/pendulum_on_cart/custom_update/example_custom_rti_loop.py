@@ -40,7 +40,7 @@ import numpy as np
 import scipy.linalg
 from utils import plot_pendulum
 
-def main():
+def main(use_cython=False):
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
@@ -101,7 +101,13 @@ def main():
     # set prediction horizon
     ocp.solver_options.tf = Tf
 
-    ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
+    solver_json = 'acados_ocp_' + model.name + '.json'
+    if use_cython:
+        AcadosOcpSolver.generate(ocp, json_file=solver_json)
+        AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
+        ocp_solver = AcadosOcpSolver.create_cython_solver(solver_json)
+    else:
+        ocp_solver = AcadosOcpSolver(ocp, json_file = solver_json)
 
     simX = np.ndarray((N+1, nx))
     simU = np.ndarray((N, nu))
@@ -111,8 +117,9 @@ def main():
     tol = 1e-6
 
     for i in range(20):
+        data = np.array([float(i)])
         status = ocp_solver.solve()
-        ocp_solver.custom_update()
+        ocp_solver.custom_update(data)
         # ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
         residuals = ocp_solver.get_residuals()
         # print("residuals after ", i, "SQP_RTI iterations:\n", residuals)
@@ -134,4 +141,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(use_cython=False)
+    main(use_cython=True)
