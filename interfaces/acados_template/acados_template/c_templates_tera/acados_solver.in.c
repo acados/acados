@@ -2753,14 +2753,14 @@ void {{ model.name }}_acados_print_stats({{ model.name }}_solver_capsule* capsul
 {%- endif %}
 }
 
-int {{ model.name }}_acados_custom_update({{ model.name }}_solver_capsule* capsule)
+int {{ model.name }}_acados_custom_update({{ model.name }}_solver_capsule* capsule, double* data, int data_len)
 {
 {%- if custom_update_filename == "" %}
     printf("\ndummy function that can be called in between solver calls to update parameters or numerical data efficiently in C.\n");
     printf("nothing set yet..\n");
     return 1;
 {% else %}
-    custom_update_function(capsule);
+    custom_update_function(capsule, data, data_len);
 {%- endif %}
 }
 
