@@ -1027,6 +1027,11 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         blasfeo_dvecse(nx+nu, 0.0, cost_grad, 0);
         blasfeo_dgese(nx+nu, nx+nu, 0.0, cost_hess, 0, 0);
         mem->cost_fun[0] = 0.0;
+        if (nz > 0)
+        {
+            printf("\nIRK cost_computation not implemented for nz>0!\n\n");
+            exit(1);
+        }
     }
 
     // pack
@@ -1277,15 +1282,20 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             {
                 for (int ii = 0; ii < ns; ii++)
                 {
-                    ext_fun_arg_t nls_y_fun_jac_type_in[2];
-                    void *nls_y_fun_jac_in[2];
-                    ext_fun_arg_t nls_y_fun_jac_type_out[2];
-                    void *nls_y_fun_jac_out[2];
+                    ext_fun_arg_t nls_y_fun_jac_type_in[3];
+                    void *nls_y_fun_jac_in[3];
+                    ext_fun_arg_t nls_y_fun_jac_type_out[3];
+                    void *nls_y_fun_jac_out[3];
 
                     nls_y_fun_jac_type_in[0] = BLASFEO_DVEC;
                     nls_y_fun_jac_in[0] = xt;
                     nls_y_fun_jac_type_in[1] = COLMAJ;
                     nls_y_fun_jac_in[1] = u;
+                    nls_y_fun_jac_type_in[2] = BLASFEO_DVEC_ARGS;
+                    nls_y_fun_jac_in[2] = &impl_ode_z_in;
+
+                    impl_ode_z_in.x = &K_traj[ss];
+                    impl_ode_z_in.xi = ns * nx + ii * nz;
 
                     nls_y_fun_jac_type_out[0] = BLASFEO_DVEC;
                     nls_y_fun_jac_out[0] = nls_res;  // fun: ny
@@ -1293,6 +1303,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     // nls_y_fun_jac_out[1] = &workspace->tmp_nux_ny;  // jac': (nu+nx) * ny
                     nls_y_fun_jac_out[1] = tmp_nux_ny;  // jac': (nu+nx) * ny
                     // dy_dux^T
+                    // TODO: set output
+                    nls_y_fun_jac_type_out[2] = BLASFEO_DMAT;
+                    nls_y_fun_jac_out[2] = tmp_nux_ny;   // jac_yexpr_z:  ny * nz
 
                     // compute x at stage (xt) and sensitivity (S_forw_stage)
                     blasfeo_dveccp(nx, xn, 0, xt, 0);
