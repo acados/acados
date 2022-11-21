@@ -117,8 +117,9 @@ def main(use_cython=False):
     tol = 1e-6
 
     for i in range(20):
+        data = np.array([float(i)])
         status = ocp_solver.solve()
-        ocp_solver.custom_update()
+        ocp_solver.custom_update(data)
         # ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
         residuals = ocp_solver.get_residuals()
         # print("residuals after ", i, "SQP_RTI iterations:\n", residuals)
@@ -140,4 +141,5 @@ def main(use_cython=False):
 
 
 if __name__ == "__main__":
-    main()
+    main(use_cython=False)
+    main(use_cython=True)
