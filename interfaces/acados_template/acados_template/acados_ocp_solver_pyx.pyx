@@ -135,6 +135,16 @@ cdef class AcadosOcpSolverCython:
         return acados_solver.acados_reset(self.capsule, reset_qp_solver_mem)
 
 
+    def custom_update(self):
+        """
+        A custom function that can be implemented by a user to be called between solver calls.
+        By default this does nothing.
+        The idea is to have a convenient wrapper to do complex updates of parameters and numerical data efficiently in C,
+        in a function that is compiled into the solver library and can be conveniently used in the Python environment.
+        """
+        return acados_solver.acados_custom_update(self.capsule)
+
+
     def set_new_time_steps(self, new_time_steps):
         """
         Set new time steps.
