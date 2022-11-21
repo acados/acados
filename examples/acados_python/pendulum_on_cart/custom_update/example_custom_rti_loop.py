@@ -40,7 +40,7 @@ import numpy as np
 import scipy.linalg
 from utils import plot_pendulum
 
-def main():
+def main(use_cython=False):
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
@@ -101,7 +101,13 @@ def main():
     # set prediction horizon
     ocp.solver_options.tf = Tf
 
-    ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
+    solver_json = 'acados_ocp_' + model.name + '.json'
+    if use_cython:
+        AcadosOcpSolver.generate(ocp, json_file=solver_json)
+        AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
+        ocp_solver = AcadosOcpSolver.create_cython_solver(solver_json)
+    else:
+        ocp_solver = AcadosOcpSolver(ocp, json_file = solver_json)
 
     simX = np.ndarray((N+1, nx))
     simU = np.ndarray((N, nu))
