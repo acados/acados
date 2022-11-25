@@ -600,7 +600,7 @@ def get_simulink_default_opts():
     return simulink_default_opts
 
 
-def ocp_formulation_json_dump(acados_ocp, simulink_opts, json_file='acados_ocp_nlp.json'):
+def ocp_formulation_json_dump(acados_ocp, simulink_opts=None, json_file='acados_ocp_nlp.json'):
     # Load acados_ocp_nlp structure description
     ocp_layout = get_ocp_nlp_layout()
 
@@ -617,8 +617,9 @@ def ocp_formulation_json_dump(acados_ocp, simulink_opts, json_file='acados_ocp_n
         ocp_nlp_dict[acados_struct]=dict(getattr(acados_ocp, acados_struct).__dict__)
 
     ocp_nlp_dict = format_class_dict(ocp_nlp_dict)
-    # add simulink options
-    ocp_nlp_dict['simulink_opts'] = simulink_opts
+
+    if simulink_opts is not None:
+        ocp_nlp_dict['simulink_opts'] = simulink_opts
 
     with open(json_file, 'w') as f:
         json.dump(ocp_nlp_dict, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
@@ -753,7 +754,7 @@ def ocp_get_default_cmake_builder() -> CMakeBuilder:
 
 
 
-def ocp_render_templates(acados_ocp, json_file, cmake_builder=None):
+def ocp_render_templates(acados_ocp, json_file, cmake_builder=None, simulink_opts=None):
 
     # setting up loader and environment
     json_path = os.path.abspath(json_file)
@@ -762,7 +763,7 @@ def ocp_render_templates(acados_ocp, json_file, cmake_builder=None):
         raise Exception(f'Path "{json_path}" not found!')
 
     ## Render templates
-    render_list = ocp_get_template_io_names(acados_ocp, cmake_builder=cmake_builder)
+    render_list = ocp_get_template_io_names(acados_ocp, cmake_builder=cmake_builder, simulink_opts=None)
     for tup in render_list:
         render_template(tup[0], tup[1], tup[2], json_path)
 
@@ -770,7 +771,7 @@ def ocp_render_templates(acados_ocp, json_file, cmake_builder=None):
 
 
 
-def ocp_get_template_io_names(acados_ocp, cmake_builder=None) -> list:
+def ocp_get_template_io_names(acados_ocp, cmake_builder=None, simulink_opts=None) -> list:
     """
     returns a list of tuples in the form (input_filename, output_filname, output_directory)
     """
@@ -788,11 +789,6 @@ def ocp_get_template_io_names(acados_ocp, cmake_builder=None) -> list:
     else:
         render_list.append(('Makefile.in', 'Makefile', target_dir))
 
-    # Simulink
-    template_file = os.path.join('matlab_templates', 'acados_solver_sfun.in.c')
-    render_list.append((template_file, f'acados_solver_sfunction_{name}.c', target_dir))
-    template_file = os.path.join('matlab_templates', 'acados_solver_sfun.in.c')
-    render_list.append((template_file, f'make_sfun_{name}.m', target_dir))
 
     # sim
     render_list.append(('acados_sim_solver.in.c', f'acados_sim_solver_{name}.c', target_dir))
@@ -808,6 +804,13 @@ def ocp_get_template_io_names(acados_ocp, cmake_builder=None) -> list:
     # cost
     target_dir = os.path.join(code_export_directory, f'{name}_cost')
     render_list.append(('cost.in.h', f'{name}_cost.h', target_dir))
+
+    # Simulink
+    if simulink_opts is not None:
+        template_file = os.path.join('matlab_templates', 'acados_solver_sfun.in.c')
+        render_list.append((template_file, f'acados_solver_sfunction_{name}.c', target_dir))
+        template_file = os.path.join('matlab_templates', 'acados_solver_sfun.in.c')
+        render_list.append((template_file, f'make_sfun_{name}.m', target_dir))
 
     return render_list
 
@@ -849,9 +852,6 @@ class AcadosOcpSolver:
         model = acados_ocp.model
         acados_ocp.code_export_directory = os.path.abspath(acados_ocp.code_export_directory)
 
-        if simulink_opts is None:
-            simulink_opts = get_simulink_default_opts()
-
         # make dims consistent
         make_ocp_dims_consistent(acados_ocp)
 
@@ -873,10 +873,10 @@ class AcadosOcpSolver:
 
         # dump to json
         acados_ocp.json_file = json_file
-        ocp_formulation_json_dump(acados_ocp, simulink_opts, json_file)
+        ocp_formulation_json_dump(acados_ocp, simulink_opts=simulink_opts, json_file=json_file)
 
         # render templates
-        ocp_render_templates(acados_ocp, json_file, cmake_builder=cmake_builder)
+        ocp_render_templates(acados_ocp, json_file, cmake_builder=cmake_builder, simulink_opts=simulink_opts)
 
 
     @classmethod
