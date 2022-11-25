@@ -762,7 +762,6 @@ def ocp_render_templates(acados_ocp, json_file, cmake_builder=None):
         raise Exception(f'Path "{json_path}" not found!')
 
     code_export_dir = acados_ocp.code_export_directory
-    template_dir = code_export_dir
 
     ## Render templates
     render_list = ocp_get_template_io_names(acados_ocp, cmake_builder=cmake_builder)
