@@ -42,16 +42,7 @@
 
 // example specific
 #include "{{ model.name }}_model/{{ model.name }}_model.h"
-{% if constraints.constr_type == "BGP" and dims.nphi %}
-#include "{{ model.name }}_constraints/{{ model.name }}_phi_constraint.h"
-{% elif constraints.constr_type_e == "BGP" and dims.nphi_e > 0 %}
-#include "{{ model.name }}_constraints/{{ model.name }}_phi_constraint.h"
-{% endif %}
-{% if constraints.constr_type == "BGH" and dims.nh > 0 %}
-#include "{{ model.name }}_constraints/{{ model.name }}_h_constraint.h"
-{% elif constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
-#include "{{ model.name }}_constraints/{{ model.name }}_h_constraint.h"
-{% endif %}
+#include "{{ model.name }}_constraints/{{ model.name }}_constraints.h"
 
 {%- if cost.cost_type != "LINEAR_LS" or cost.cost_type_e != "LINEAR_LS" or cost.cost_type_0 != "LINEAR_LS" %}
 #include "{{ model.name }}_cost/{{ model.name }}_cost.h"

@@ -801,19 +801,10 @@ def ocp_get_template_io_names(acados_ocp, cmake_builder=None) -> list:
     # model
     target_dir = os.path.join(code_export_directory, f'{name}_model')
     render_list.append(('model.in.h', f'{name}_model.h', target_dir))
-
-    # constraints on convex over nonlinear function
-    if (acados_ocp.constraints.constr_type == 'BGP' and acados_ocp.dims.nphi > 0) or \
-       (acados_ocp.constraints.constr_type_e == 'BGP' and acados_ocp.dims.nphi_e > 0):
-        target_dir = os.path.join(code_export_directory, f'{name}_constraints')
-        render_list.append(('phi_constraint.in.h', f'{name}_phi_constraint.h', target_dir))
-
-    # nonlinear constraints
-    if acados_ocp.constraints.constr_type == 'BGH' and acados_ocp.dims.nh > 0 or \
-       acados_ocp.constraints.constr_type_e == 'BGH' and acados_ocp.dims.nh_e > 0:
-        target_dir = os.path.join(code_export_directory, f'{name}_constraints')
-        render_list.append(('h_constraint.in.h', f'{name}_h_constraint.h', target_dir))
-
+    # constraints
+    target_dir = os.path.join(code_export_directory, f'{name}_constraints')
+    render_list.append(('constraints.in.h', f'{name}_constraints.h', target_dir))
+    # cost
     target_dir = os.path.join(code_export_directory, f'{name}_cost')
     render_list.append(('cost.in.h', f'{name}_cost.h', target_dir))
 
