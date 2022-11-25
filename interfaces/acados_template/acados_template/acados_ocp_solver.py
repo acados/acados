@@ -761,8 +761,6 @@ def ocp_render_templates(acados_ocp, json_file, cmake_builder=None):
     if not os.path.exists(json_path):
         raise Exception(f'Path "{json_path}" not found!')
 
-    code_export_dir = acados_ocp.code_export_directory
-
     ## Render templates
     render_list = ocp_get_template_io_names(acados_ocp, cmake_builder=cmake_builder)
     for tup in render_list:
@@ -789,8 +787,12 @@ def ocp_get_template_io_names(acados_ocp, cmake_builder=None) -> list:
         render_list.append(('CMakeLists.in.txt', 'CMakeLists.txt', target_dir))
     else:
         render_list.append(('Makefile.in', 'Makefile', target_dir))
-    render_list.append(('acados_solver_sfun.in.c', f'acados_solver_sfunction_{name}.c', target_dir))
-    render_list.append(('make_sfun.in.m', f'make_sfun_{name}.m', target_dir))
+
+    # Simulink
+    template_file = os.path.join('matlab_templates', 'acados_solver_sfun.in.c')
+    render_list.append((template_file, f'acados_solver_sfunction_{name}.c', target_dir))
+    template_file = os.path.join('matlab_templates', 'acados_solver_sfun.in.c')
+    render_list.append((template_file, f'make_sfun_{name}.m', target_dir))
 
     # sim
     render_list.append(('acados_sim_solver.in.c', f'acados_sim_solver_{name}.c', target_dir))

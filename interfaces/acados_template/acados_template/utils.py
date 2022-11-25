@@ -213,17 +213,17 @@ def get_tera():
     sys.exit(1)
 
 
-def render_template(in_file, out_file, template_dir, json_path):
+def render_template(in_file, out_file, output_dir, json_path):
     cwd = os.getcwd()
-    if not os.path.exists(template_dir):
-        os.mkdir(template_dir)
-    os.chdir(template_dir)
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
+    os.chdir(output_dir)
 
     tera_path = get_tera()
 
     # setting up loader and environment
     acados_path = os.path.dirname(os.path.abspath(__file__))
-    template_glob = os.path.join(acados_path, 'c_templates_tera', '*')
+    template_glob = os.path.join(acados_path, 'c_templates_tera', '**', '*')
 
     # call tera as system cmd
     os_cmd = f"{tera_path} '{template_glob}' '{in_file}' '{json_path}' '{out_file}'"

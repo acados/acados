@@ -59,6 +59,7 @@ function render_acados_templates(acados_ocp_nlp_json_file)
 
     %% render templates
     template_dir = fullfile(acados_template_folder, 'c_templates_tera','*');
+    matlab_template_dir = fullfile(acados_template_folder, 'c_templates_tera','matlab_templates', '*');
     json_fullfile = fullfile(pwd, acados_ocp_nlp_json_file);
     main_dir = pwd;
     chdir('c_generated_code');
@@ -76,42 +77,42 @@ function render_acados_templates(acados_ocp_nlp_json_file)
     % make_main_mex
     template_file = 'make_main_mex.in.m';
     out_file = ['make_main_mex_', model_name, '.m'];
-    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+    render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
 
     % main for matlab/octave
     template_file = 'main_mex.in.c';
     out_file = ['main_mex_', model_name, '.c'];
-    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+    render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
 
     % make_mex
     template_file = 'make_mex.in.m';
     out_file = ['make_mex_', model_name, '.m'];
-    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+    render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
 
     % MEX constructor
     template_file = 'acados_mex_create.in.c';
     out_file = ['acados_mex_create_', model_name, '.c'];
-    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+    render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
 
     % MEX destructor
     template_file = 'acados_mex_free.in.c';
     out_file = ['acados_mex_free_', model_name, '.c'];
-    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+    render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
 
     % MEX solve
     template_file = 'acados_mex_solve.in.c';
     out_file = ['acados_mex_solve_', model_name, '.c'];
-    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+    render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
 
     % MEX set
     template_file = 'acados_mex_set.in.c';
     out_file = ['acados_mex_set_', model_name, '.c'];
-    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+    render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
 
     % MEX class
     template_file = 'mex_solver.in.m';
     out_file = [ model_name, '_mex_solver.m'];
-    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+    render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
 
     % solver
     template_file = 'acados_solver.in.c';
@@ -133,11 +134,11 @@ function render_acados_templates(acados_ocp_nlp_json_file)
 
     template_file = 'acados_sim_solver_sfun.in.c';
     out_file = ['acados_sim_solver_sfunction_', model_name, '.c'];
-    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+    render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
 
     template_file = 'make_sfun_sim.in.m';
     out_file = 'make_sfun_sim.m';
-    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+    render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
 
     % headers and custom C-code files
     c_dir = pwd;
@@ -180,12 +181,12 @@ function render_acados_templates(acados_ocp_nlp_json_file)
     % S-function
     template_file = 'acados_solver_sfun.in.c';
     out_file = ['acados_solver_sfunction_' , model_name, '.c'];
-    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+    render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
 
     % MATLAB make script
     template_file = 'make_sfun.in.m';
     out_file = 'make_sfun.m';
-    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+    render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
 
     fprintf('Successfully rendered acados templates!\n');
     cd(main_dir)
