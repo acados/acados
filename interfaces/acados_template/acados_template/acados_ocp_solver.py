@@ -814,36 +814,8 @@ def ocp_get_template_io_names(acados_ocp, cmake_builder=None) -> list:
         target_dir = os.path.join(code_export_directory, f'{name}_constraints')
         render_list.append(('h_constraint.in.h', f'{name}_h_constraint.h', target_dir))
 
-    # cost - initial stage
-    if acados_ocp.cost.cost_type_0 == 'NONLINEAR_LS' or acados_ocp.cost.cost_type == 'NONLINEAR_LS' or acados_ocp.cost.cost_type_e == 'NONLINEAR_LS':
-        target_dir = os.path.join(code_export_directory, f'{name}_cost')
-        render_list.append(('cost_y_fun.in.h', f'{name}_cost_y_fun.h', target_dir))
-
-    elif acados_ocp.cost.cost_type_0 == 'CONVEX_OVER_NONLINEAR':
-        target_dir = os.path.join(code_export_directory, f'{name}_cost')
-        render_list.append(('conl_cost_0.in.h', f'{name}_conl_cost_0.h', target_dir))
-
-    elif acados_ocp.cost.cost_type_0 == 'EXTERNAL':
-        target_dir = os.path.join(code_export_directory, f'{name}_cost')
-        render_list.append(('external_cost_0.in.h', f'{name}_external_cost_0.h', target_dir))
-
-    # cost - path
-    if acados_ocp.cost.cost_type == 'CONVEX_OVER_NONLINEAR':
-        target_dir = os.path.join(code_export_directory, f'{name}_cost')
-        render_list.append(('conl_cost.in.h', f'{name}_conl_cost.h', target_dir))
-
-    elif acados_ocp.cost.cost_type == 'EXTERNAL':
-        target_dir = os.path.join(code_export_directory, f'{name}_cost')
-        render_list.append(('external_cost.in.h', f'{name}_external_cost.h', target_dir))
-
-    # cost - terminal
-    if acados_ocp.cost.cost_type_e == 'CONVEX_OVER_NONLINEAR':
-        target_dir = os.path.join(code_export_directory, f'{name}_cost')
-        render_list.append(('conl_cost_e.in.h', f'{name}_conl_cost_e.h', target_dir))
-
-    elif acados_ocp.cost.cost_type_e == 'EXTERNAL':
-        target_dir = os.path.join(code_export_directory, f'{name}_cost')
-        render_list.append(('external_cost_e.in.h', f'{name}_external_cost_e.h', target_dir))
+    target_dir = os.path.join(code_export_directory, f'{name}_cost')
+    render_list.append(('cost.in.h', f'{name}_cost.h', target_dir))
 
     return render_list
 
