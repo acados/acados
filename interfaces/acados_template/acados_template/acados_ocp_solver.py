@@ -803,26 +803,16 @@ def ocp_get_template_io_names(acados_ocp, cmake_builder=None) -> list:
     render_list.append(('model.in.h', f'{name}_model.h', target_dir))
 
     # constraints on convex over nonlinear function
-    if acados_ocp.constraints.constr_type == 'BGP' and acados_ocp.dims.nphi > 0:
-        # constraints on outer function
+    if (acados_ocp.constraints.constr_type == 'BGP' and acados_ocp.dims.nphi > 0) or \
+       (acados_ocp.constraints.constr_type_e == 'BGP' and acados_ocp.dims.nphi_e > 0):
         target_dir = os.path.join(code_export_directory, f'{name}_constraints')
         render_list.append(('phi_constraint.in.h', f'{name}_phi_constraint.h', target_dir))
 
-    # terminal constraints on convex over nonlinear function
-    if acados_ocp.constraints.constr_type_e == 'BGP' and acados_ocp.dims.nphi_e > 0:
-        # terminal constraints on outer function
-        target_dir = os.path.join(code_export_directory, f'{name}_constraints')
-        render_list.append(('phi_e_constraint.in.h', f'{name}_phi_e_constraint.h', target_dir))
-
     # nonlinear constraints
-    if acados_ocp.constraints.constr_type == 'BGH' and acados_ocp.dims.nh > 0:
+    if acados_ocp.constraints.constr_type == 'BGH' and acados_ocp.dims.nh > 0 or \
+       acados_ocp.constraints.constr_type_e == 'BGH' and acados_ocp.dims.nh_e > 0:
         target_dir = os.path.join(code_export_directory, f'{name}_constraints')
         render_list.append(('h_constraint.in.h', f'{name}_h_constraint.h', target_dir))
-
-    # terminal nonlinear constraints
-    if acados_ocp.constraints.constr_type_e == 'BGH' and acados_ocp.dims.nh_e > 0:
-        target_dir = os.path.join(code_export_directory, f'{name}_constraints')
-        render_list.append(('h_e_constraint.in.h', f'{name}_h_e_constraint.h', target_dir))
 
     # cost - initial stage
     if acados_ocp.cost.cost_type_0 == 'NONLINEAR_LS':
