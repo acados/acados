@@ -152,34 +152,10 @@ function render_acados_templates(acados_ocp_nlp_json_file)
         mkdir(cost_dir);
     end
     chdir(cost_dir);
-    
-    if strcmp(acados_ocp.cost.cost_type, 'NONLINEAR_LS')
-        template_file = 'cost_y_fun.in.h';
-        out_file = [model_name, '_cost_y_fun.h'];
-        render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-    elseif strcmp(acados_ocp.cost.cost_type, 'EXTERNAL')
-        template_file = 'external_cost.in.h';
-        out_file = [model_name, '_external_cost.h'];
-        render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-    end
-    if strcmp(acados_ocp.cost.cost_type_0, 'NONLINEAR_LS')
-        template_file = 'cost_y_0_fun.in.h';
-        out_file = [model_name, '_cost_y_0_fun.h'];
-        render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-    elseif strcmp(acados_ocp.cost.cost_type_0, 'EXTERNAL')
-        template_file = 'external_cost_0.in.h';
-        out_file = [model_name, '_external_cost_0.h'];
-        render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-    end
-    if strcmp(acados_ocp.cost.cost_type_e, 'NONLINEAR_LS')
-        template_file = 'cost_y_e_fun.in.h';
-        out_file = [model_name, '_cost_y_e_fun.h'];
-        render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-    elseif strcmp(acados_ocp.cost.cost_type_e, 'EXTERNAL')
-        template_file = 'external_cost_e.in.h';
-        out_file = [model_name, '_external_cost_e.h'];
-        render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-    end
+
+    template_file = 'cost.in.h';
+    out_file = [model_name, '_cost.h'];
+    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
     cd(c_dir);
 
     % constraints
@@ -189,28 +165,11 @@ function render_acados_templates(acados_ocp_nlp_json_file)
     end
     chdir(constr_dir)
 
-    if (acados_ocp.dims.npd > 0)
-        template_file = 'p_constraint.in.h';
-        out_file = [model_name, '_p_constraint.h'];
-        render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-    end
-    if (acados_ocp.dims.nh > 0)
-        % render source template
-        template_file = 'h_constraint.in.h';
-        out_file = [model_name, '_h_constraint.h'];
-        render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-    end
-    if (acados_ocp.dims.nh_e > 0)
-        % render source template
-        template_file = 'h_e_constraint.in.h';
-        out_file = [model_name, '_h_e_constraint.h'];
-        render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-    end
-    if (acados_ocp.dims.npd_e > 0)
-        template_file = 'p_e_constraint.in.h';
-        out_file = [model_name, '_p_e_constraint.h'];
-        render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-    end
+
+    template_file = 'constraints.in.h';
+    out_file = [model_name, '_constraints.h'];
+    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+
     cd(c_dir);
 
     % Makefile
