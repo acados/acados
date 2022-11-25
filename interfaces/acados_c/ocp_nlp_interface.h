@@ -247,6 +247,10 @@ ACADOS_SYMBOL_EXPORT int ocp_nlp_cost_model_set(ocp_nlp_config *config, ocp_nlp_
 ACADOS_SYMBOL_EXPORT int ocp_nlp_constraints_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
         ocp_nlp_in *in, int stage, const char *field, void *value);
 
+///
+ACADOS_SYMBOL_EXPORT void ocp_nlp_constraints_model_get(ocp_nlp_config *config, ocp_nlp_dims *dims,
+        ocp_nlp_in *in, int stage, const char *field, void *value);
+
 /* out */
 
 /// Constructs an output struct for the non-linear program.

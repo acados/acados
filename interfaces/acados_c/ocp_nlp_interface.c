@@ -452,6 +452,18 @@ int ocp_nlp_constraints_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
 }
 
 
+void ocp_nlp_constraints_model_get(ocp_nlp_config *config, ocp_nlp_dims *dims,
+        ocp_nlp_in *in, int stage, const char *field, void *value)
+{
+    ocp_nlp_constraints_config *constr_config = config->constraints[stage];
+
+    constr_config->model_get(constr_config, dims->constraints[stage],
+            in->constraints[stage], field, value);
+    return;
+}
+
+
+
 
 /************************************************
 * out

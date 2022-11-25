@@ -113,6 +113,9 @@ void *ocp_nlp_constraints_bgh_model_assign(void *config, void *dims, void *raw_m
 int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
                          void *model_, const char *field, void *value);
 
+//
+void ocp_nlp_constraints_bgh_model_get(void *config_, void *dims_,
+                         void *model_, const char *field, void *value);
 
 
 /************************************************
