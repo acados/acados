@@ -719,8 +719,12 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
 
     struct blasfeo_dvec_args ext_fun_in_K;
 
-    ext_fun_arg_t ext_fun_type_in[3];
-    void *ext_fun_in[3];
+    ext_fun_arg_t ext_fun_type_in[4];
+    void *ext_fun_in[4];
+    // TODO: fix this for z
+    ext_fun_type_in[3] = COLMAJ;
+    ext_fun_in[3] = u;
+
 
     struct blasfeo_dvec_args ext_fun_out_rG;
     ext_fun_arg_t ext_fun_type_out[5];
