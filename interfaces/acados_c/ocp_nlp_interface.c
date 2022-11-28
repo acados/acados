@@ -452,6 +452,18 @@ int ocp_nlp_constraints_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
 }
 
 
+void ocp_nlp_constraints_model_get(ocp_nlp_config *config, ocp_nlp_dims *dims,
+        ocp_nlp_in *in, int stage, const char *field, void *value)
+{
+    ocp_nlp_constraints_config *constr_config = config->constraints[stage];
+
+    constr_config->model_get(constr_config, dims->constraints[stage],
+            in->constraints[stage], field, value);
+    return;
+}
+
+
+
 
 /************************************************
 * out
@@ -1112,6 +1124,36 @@ void ocp_nlp_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_so
     {
         double *double_values = value;
         d_ocp_qp_get_q(stage, nlp_mem->qp_in, double_values);
+    }
+    else if (!strcmp(field, "lbx"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_lbx(stage, nlp_mem->qp_in, double_values);
+    }
+    else if (!strcmp(field, "ubx"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_ubx(stage, nlp_mem->qp_in, double_values);
+    }
+    else if (!strcmp(field, "lbu"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_lbu(stage, nlp_mem->qp_in, double_values);
+    }
+    else if (!strcmp(field, "ubu"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_ubu(stage, nlp_mem->qp_in, double_values);
+    }
+    else if (!strcmp(field, "lb"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_lb(stage, nlp_mem->qp_in, double_values);
+    }
+    else if (!strcmp(field, "ub"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_ub(stage, nlp_mem->qp_in, double_values);
     }
     else
     {

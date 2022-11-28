@@ -792,6 +792,55 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
 
 
 
+void ocp_nlp_constraints_bgp_model_get(void *config_, void *dims_,
+                         void *model_, const char *field, void *value)
+{
+    // NOTE(oj): this is adapted from the bgh module, maybe something has to be changed here.
+    ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
+    ocp_nlp_constraints_bgp_model *model = (ocp_nlp_constraints_bgp_model *) model_;
+
+    // int ii;
+    // int *ptr_i;
+
+    if (!dims || !model || !field || !value)
+    {
+        printf("ocp_nlp_constraints_bgp_model_get: got Null pointer \n");
+        exit(1);
+    }
+
+    // int nu = dims->nu;
+    // int nx = dims->nx;
+    // int nb = dims->nb;
+    // int ng = dims->ng;
+    // int nphi = dims->nphi;
+    // int ns = dims->ns;
+    // int nsbu = dims->nsbu;
+    // int nsbx = dims->nsbx;
+    // int nsg = dims->nsg;
+    // int nsphi = dims->nsphi;
+    int nbx = dims->nbx;
+    int nbu = dims->nbu;
+    // int nbue = dims->nbue;
+    // int nbxe = dims->nbxe;
+    // int nge = dims->nge;
+    // int nphie = dims->nphie;
+
+    if (!strcmp(field, "lbx"))
+    {
+        blasfeo_unpack_dvec(nbx, &model->d, nbu, value, 0);
+    }
+    else
+    {
+        printf("\nerror: ocp_nlp_constraints_bgp_model_get field %s not available.\n",
+            field);
+        exit(1);
+    }
+
+    return;
+}
+
+
+
 /* options */
 
 acados_size_t ocp_nlp_constraints_bgp_opts_calculate_size(void *config_, void *dims_)
@@ -1476,6 +1525,7 @@ void ocp_nlp_constraints_bgp_config_initialize_default(void *config_)
     config->model_calculate_size = &ocp_nlp_constraints_bgp_model_calculate_size;
     config->model_assign = &ocp_nlp_constraints_bgp_model_assign;
     config->model_set = &ocp_nlp_constraints_bgp_model_set;
+    config->model_get = &ocp_nlp_constraints_bgp_model_get;
     config->opts_calculate_size = &ocp_nlp_constraints_bgp_opts_calculate_size;
     config->opts_assign = &ocp_nlp_constraints_bgp_opts_assign;
     config->opts_initialize_default = &ocp_nlp_constraints_bgp_opts_initialize_default;
