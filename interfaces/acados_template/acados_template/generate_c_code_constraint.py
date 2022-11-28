@@ -33,15 +33,13 @@
 
 import os
 from casadi import *
-from .utils import ALLOWED_CASADI_VERSIONS, is_empty, casadi_length, casadi_version_warning
+from .utils import is_empty, casadi_length, check_casadi_version
 
 def generate_c_code_constraint( model, con_name, is_terminal, opts ):
 
-    casadi_version = CasadiMeta.version()
-    casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
+    check_casadi_version()
 
-    if casadi_version not in (ALLOWED_CASADI_VERSIONS):
-        casadi_version_warning(casadi_version)
+    casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
     # load constraint variables and expression
     x = model.x
@@ -109,7 +107,7 @@ def generate_c_code_constraint( model, con_name, is_terminal, opts ):
             constraint_fun_jac_tran = Function(fun_name, [x, u, z, p], \
                     [con_h_expr, jac_ux_t, jac_z_t])
 
-            constraint_fun_jac_tran.generate(fun_name, casadi_opts)
+            constraint_fun_jac_tran.generate(fun_name, casadi_codegen_opts)
             if opts['generate_hess']:
 
                 if is_terminal:
@@ -131,14 +129,14 @@ def generate_c_code_constraint( model, con_name, is_terminal, opts ):
                       [con_h_expr, jac_ux_t, hess_ux, jac_z_t, hess_z])
 
                 # generate C code
-                constraint_fun_jac_tran_hess.generate(fun_name, casadi_opts)
+                constraint_fun_jac_tran_hess.generate(fun_name, casadi_codegen_opts)
 
             if is_terminal:
                 fun_name = con_name + '_constr_h_e_fun'
             else:
                 fun_name = con_name + '_constr_h_fun'
             h_fun = Function(fun_name, [x, u, z, p], [con_h_expr])
-            h_fun.generate(fun_name, casadi_opts)
+            h_fun.generate(fun_name, casadi_codegen_opts)
 
         else: # BGP constraint
             if is_terminal:
@@ -172,7 +170,7 @@ def generate_c_code_constraint( model, con_name, is_terminal, opts ):
                     hess, vertcat(transpose(r_jac_u), \
                     transpose(r_jac_x))])
 
-            constraint_phi.generate(fun_name, casadi_opts)
+            constraint_phi.generate(fun_name, casadi_codegen_opts)
 
         # change directory back
         os.chdir(cwd)

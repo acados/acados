@@ -79,13 +79,17 @@ platform2tera = {
 }
 
 
-def casadi_version_warning(casadi_version):
-    msg =  'Warning: Please note that the following versions of CasADi  are '
-    msg += 'officially supported: {}.\n '.format(" or ".join(ALLOWED_CASADI_VERSIONS))
-    msg += 'If there is an incompatibility with the CasADi generated code, '
-    msg += 'please consider changing your CasADi version.\n'
-    msg += 'Version {} currently in use.'.format(casadi_version)
-    print(msg)
+def check_casadi_version():
+    casadi_version = CasadiMeta.version()
+    if casadi_version in ALLOWED_CASADI_VERSIONS:
+        return
+    else:
+        msg =  'Warning: Please note that the following versions of CasADi  are '
+        msg += 'officially supported: {}.\n '.format(" or ".join(ALLOWED_CASADI_VERSIONS))
+        msg += 'If there is an incompatibility with the CasADi generated code, '
+        msg += 'please consider changing your CasADi version.\n'
+        msg += 'Version {} currently in use.'.format(casadi_version)
+        print(msg)
 
 
 def is_column(x):

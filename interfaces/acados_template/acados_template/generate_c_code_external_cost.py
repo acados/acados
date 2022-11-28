@@ -33,16 +33,14 @@
 
 import os
 from casadi import SX, MX, Function, vertcat, hessian, CasadiMeta
-from .utils import ALLOWED_CASADI_VERSIONS, casadi_version_warning
+from .utils import check_casadi_version
 
 
 def generate_c_code_external_cost(model, stage_type, opts):
 
-    casadi_version = CasadiMeta.version()
-    casadi_opts = dict(mex=False, casadi_int="int", casadi_real="double")
+    check_casadi_version()
 
-    if casadi_version not in (ALLOWED_CASADI_VERSIONS):
-        casadi_version_warning(casadi_version)
+    casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
     x = model.x
     p = model.p
@@ -108,9 +106,9 @@ def generate_c_code_external_cost(model, stage_type, opts):
     gen_dir_location = "./" + gen_dir
     os.chdir(gen_dir_location)
 
-    ext_cost_fun.generate(fun_name, casadi_opts)
-    ext_cost_fun_jac_hess.generate(fun_name_hess, casadi_opts)
-    ext_cost_fun_jac.generate(fun_name_jac, casadi_opts)
+    ext_cost_fun.generate(fun_name, casadi_codegen_opts)
+    ext_cost_fun_jac_hess.generate(fun_name_hess, casadi_codegen_opts)
+    ext_cost_fun_jac.generate(fun_name_jac, casadi_codegen_opts)
 
     os.chdir(cwd)
     return

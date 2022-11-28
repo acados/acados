@@ -33,16 +33,14 @@
 
 import os
 import casadi as ca
-from .utils import ALLOWED_CASADI_VERSIONS, casadi_length, casadi_version_warning
+from .utils import check_casadi_version, casadi_length
 
 def generate_c_code_discrete_dynamics( model, opts ):
 
-    casadi_version = ca.CasadiMeta.version()
-    casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
+    check_casadi_version()
 
-    if casadi_version not in (ALLOWED_CASADI_VERSIONS):
-        casadi_version_warning(casadi_version)
-    
+    casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
+
     # load model
     x = model.x
     u = model.u
@@ -68,7 +66,7 @@ def generate_c_code_discrete_dynamics( model, opts ):
     adj_ux = ca.jtimes(phi, ux, lam, True)
     # generate hessian
     hess_ux = ca.jacobian(adj_ux, ux)
-    
+
     ## change directory
     code_export_dir = opts["code_export_directory"]
     if not os.path.exists(code_export_dir):
@@ -85,14 +83,14 @@ def generate_c_code_discrete_dynamics( model, opts ):
     # set up & generate Functions
     fun_name = model_name + '_dyn_disc_phi_fun'
     phi_fun = ca.Function(fun_name, [x, u, p], [phi])
-    phi_fun.generate(fun_name, casadi_opts)
+    phi_fun.generate(fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_dyn_disc_phi_fun_jac'
     phi_fun_jac_ut_xt = ca.Function(fun_name, [x, u, p], [phi, jac_ux.T])
-    phi_fun_jac_ut_xt.generate(fun_name, casadi_opts)
+    phi_fun_jac_ut_xt.generate(fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_dyn_disc_phi_fun_jac_hess'
     phi_fun_jac_ut_xt_hess = ca.Function(fun_name, [x, u, lam, p], [phi, jac_ux.T, hess_ux])
-    phi_fun_jac_ut_xt_hess.generate(fun_name, casadi_opts)
-    
+    phi_fun_jac_ut_xt_hess.generate(fun_name, casadi_codegen_opts)
+
     os.chdir(cwd)

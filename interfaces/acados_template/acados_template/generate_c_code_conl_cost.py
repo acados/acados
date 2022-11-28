@@ -33,15 +33,13 @@
 
 import os
 import casadi
-from .utils import ALLOWED_CASADI_VERSIONS, casadi_version_warning
+from .utils import check_casadi_version
 
 def generate_c_code_conl_cost(model, cost_name, stage_type, opts):
 
-    casadi_version = casadi.CasadiMeta.version()
-    casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
+    check_casadi_version()
 
-    if casadi_version not in (ALLOWED_CASADI_VERSIONS):
-        casadi_version_warning(casadi_version)
+    casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
     x = model.x
     z = model.z
@@ -135,8 +133,8 @@ def generate_c_code_conl_cost(model, cost_name, stage_type, opts):
     os.chdir(gen_dir_location)
 
     # generate C code
-    cost_fun.generate(fun_name_cost_fun, casadi_opts)
-    cost_fun_jac_hess.generate(fun_name_cost_fun_jac_hess, casadi_opts)
+    cost_fun.generate(fun_name_cost_fun, casadi_codegen_opts)
+    cost_fun_jac_hess.generate(fun_name_cost_fun_jac_hess, casadi_codegen_opts)
 
     os.chdir(cwd)
 

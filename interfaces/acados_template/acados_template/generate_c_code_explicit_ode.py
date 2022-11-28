@@ -33,15 +33,13 @@
 
 import os
 from casadi import *
-from .utils import ALLOWED_CASADI_VERSIONS, is_empty, casadi_version_warning
+from .utils import check_casadi_version
 
 def generate_c_code_explicit_ode( model, opts ):
 
-    casadi_version = CasadiMeta.version()
-    casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
-    if casadi_version not in (ALLOWED_CASADI_VERSIONS):
-        casadi_version_warning(casadi_version)
+    check_casadi_version()
 
+    casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
     generate_hess = opts["generate_hess"]
     code_export_dir = opts["code_export_directory"]
@@ -108,17 +106,17 @@ def generate_c_code_explicit_ode( model, opts ):
     model_dir_location = os.path.join('.', model_dir)
     os.chdir(model_dir_location)
     fun_name = model_name + '_expl_ode_fun'
-    expl_ode_fun.generate(fun_name, casadi_opts)
+    expl_ode_fun.generate(fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_expl_vde_forw'
-    expl_vde_forw.generate(fun_name, casadi_opts)
+    expl_vde_forw.generate(fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_expl_vde_adj'
-    expl_vde_adj.generate(fun_name, casadi_opts)
+    expl_vde_adj.generate(fun_name, casadi_codegen_opts)
 
     if generate_hess:
         fun_name = model_name + '_expl_ode_hess'
-        expl_ode_hess.generate(fun_name, casadi_opts)
+        expl_ode_hess.generate(fun_name, casadi_codegen_opts)
     os.chdir(cwd)
 
     return

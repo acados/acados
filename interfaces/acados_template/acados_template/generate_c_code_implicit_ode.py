@@ -32,18 +32,17 @@
 #
 
 import os
-from casadi import SX, MX, Function, jacobian, vertcat, jtimes, CasadiMeta
-from .utils import ALLOWED_CASADI_VERSIONS, casadi_length, casadi_version_warning
+from casadi import SX, MX, Function, jacobian, vertcat, jtimes
+from .utils import casadi_length, check_casadi_version
 
 def generate_c_code_implicit_ode( model, opts ):
 
-    casadi_version = CasadiMeta.version()
-    casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
-    if casadi_version not in (ALLOWED_CASADI_VERSIONS):
-        casadi_version_warning(casadi_version)
+    check_casadi_version()
 
     generate_hess = opts["generate_hess"]
     code_export_dir = opts["code_export_directory"]
+
+    casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
     # load model
     x = model.x
@@ -110,22 +109,22 @@ def generate_c_code_implicit_ode( model, opts ):
     os.chdir(model_dir_location)
 
     fun_name = model_name + '_impl_dae_fun'
-    impl_dae_fun.generate(fun_name, casadi_opts)
+    impl_dae_fun.generate(fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
-    impl_dae_fun_jac_x_xdot_z.generate(fun_name, casadi_opts)
+    impl_dae_fun_jac_x_xdot_z.generate(fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
-    impl_dae_jac_x_xdot_u_z.generate(fun_name, casadi_opts)
+    impl_dae_jac_x_xdot_u_z.generate(fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u_z'
-    impl_dae_fun_jac_x_xdot_u_z.generate(fun_name, casadi_opts)
+    impl_dae_fun_jac_x_xdot_u_z.generate(fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u'
-    impl_dae_fun_jac_x_xdot_u.generate(fun_name, casadi_opts)
+    impl_dae_fun_jac_x_xdot_u.generate(fun_name, casadi_codegen_opts)
 
     if generate_hess:
         fun_name = model_name + '_impl_dae_hess'
-        impl_dae_hess.generate(fun_name, casadi_opts)
+        impl_dae_hess.generate(fun_name, casadi_codegen_opts)
 
     os.chdir(cwd)
