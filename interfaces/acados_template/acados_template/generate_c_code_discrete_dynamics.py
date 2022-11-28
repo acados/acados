@@ -67,18 +67,12 @@ def generate_c_code_discrete_dynamics( model, opts ):
     # generate hessian
     hess_ux = ca.jacobian(adj_ux, ux)
 
-    ## change directory
-    code_export_dir = opts["code_export_directory"]
-    if not os.path.exists(code_export_dir):
-        os.makedirs(code_export_dir)
-
+    # change directory
     cwd = os.getcwd()
-    os.chdir(code_export_dir)
-    model_dir = model_name + '_model'
+    model_dir = os.path.abspath(os.path.join(opts["code_export_directory"], f'{model_name}_model'))
     if not os.path.exists(model_dir):
-        os.mkdir(model_dir)
-    model_dir_location = os.path.join('.', model_dir)
-    os.chdir(model_dir_location)
+        os.makedirs(model_dir)
+    os.chdir(model_dir)
 
     # set up & generate Functions
     fun_name = model_name + '_dyn_disc_phi_fun'

@@ -89,8 +89,6 @@ def generate_c_code_conl_cost(model, cost_name, stage_type, opts):
 
         custom_hess = model.cost_conl_custom_outer_hess
 
-
-
     # set up function names
     fun_name_cost_fun = model.name + suffix_name_fun
     fun_name_cost_fun_jac_hess = model.name + suffix_name_fun_jac_hess
@@ -119,18 +117,12 @@ def generate_c_code_conl_cost(model, cost_name, stage_type, opts):
         [x, u, z, yref, p],
         [cost_expr, outer_loss_grad_fun(inner_expr, p), Jt_ux_expr, Jt_z_expr, outer_hess_fun(inner_expr, p)]
     )
-    # set up directory
-    code_export_dir = opts["code_export_directory"]
-    if not os.path.exists(code_export_dir):
-        os.makedirs(code_export_dir)
-
+    # change directory
     cwd = os.getcwd()
-    os.chdir(code_export_dir)
-    gen_dir = cost_name + '_cost'
-    if not os.path.exists(gen_dir):
-        os.mkdir(gen_dir)
-    gen_dir_location = os.path.join('.', gen_dir)
-    os.chdir(gen_dir_location)
+    cost_dir = os.path.abspath(os.path.join(opts["code_export_directory"], f'{model.name}_cost'))
+    if not os.path.exists(cost_dir):
+        os.makedirs(cost_dir)
+    os.chdir(cost_dir)
 
     # generate C code
     cost_fun.generate(fun_name_cost_fun, casadi_codegen_opts)

@@ -41,21 +41,14 @@ def generate_c_code_gnsf( model, opts ):
 
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
-
     model_name = model.name
-    code_export_dir = opts["code_export_directory"]
 
     # set up directory
-    if not os.path.exists(code_export_dir):
-        os.makedirs(code_export_dir)
-
     cwd = os.getcwd()
-    os.chdir(code_export_dir)
-    model_dir = model_name + '_model'
+    model_dir = os.path.abspath(os.path.join(opts["code_export_directory"], f'{model_name}_model'))
     if not os.path.exists(model_dir):
-        os.mkdir(model_dir)
-    model_dir_location = os.path.join('.', model_dir)
-    os.chdir(model_dir_location)
+        os.makedirs(model_dir)
+    os.chdir(model_dir)
 
     # obtain gnsf dimensions
     get_matrices_fun = model.get_matrices_fun

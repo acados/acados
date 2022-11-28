@@ -86,17 +86,11 @@ def generate_c_code_constraint( model, con_name, is_terminal, opts ):
         lam_h = symbol('lam_h', nh, 1)
 
     # set up & change directory
-    code_export_dir = opts["code_export_directory"]
-    if not os.path.exists(code_export_dir):
-        os.makedirs(code_export_dir)
-
     cwd = os.getcwd()
-    os.chdir(code_export_dir)
-    gen_dir = con_name + '_constraints'
-    if not os.path.exists(gen_dir):
-        os.mkdir(gen_dir)
-    gen_dir_location = os.path.join('.', gen_dir)
-    os.chdir(gen_dir_location)
+    constraints_dir = os.path.abspath(os.path.join(opts["code_export_directory"], f'{model.name}_constraints'))
+    if not os.path.exists(constraints_dir):
+        os.makedirs(constraints_dir)
+    os.chdir(constraints_dir)
 
     # export casadi functions
     if constr_type == 'BGH':

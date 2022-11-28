@@ -42,7 +42,6 @@ def generate_c_code_explicit_ode( model, opts ):
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
     generate_hess = opts["generate_hess"]
-    code_export_dir = opts["code_export_directory"]
 
     # load model
     x = model.x
@@ -94,17 +93,14 @@ def generate_c_code_explicit_ode( model, opts ):
         fun_name = model_name + '_expl_ode_hess'
         expl_ode_hess = Function(fun_name, [x, Sx, Sp, lambdaX, u, p], [adj, hess2])
 
-    ## generate C code
-    if not os.path.exists(code_export_dir):
-        os.makedirs(code_export_dir)
-
+    # change directory
     cwd = os.getcwd()
-    os.chdir(code_export_dir)
-    model_dir = model_name + '_model'
+    model_dir = os.path.abspath(os.path.join(opts["code_export_directory"], f'{model_name}_model'))
     if not os.path.exists(model_dir):
-        os.mkdir(model_dir)
-    model_dir_location = os.path.join('.', model_dir)
-    os.chdir(model_dir_location)
+        os.makedirs(model_dir)
+    os.chdir(model_dir)
+
+    # generate C code
     fun_name = model_name + '_expl_ode_fun'
     expl_ode_fun.generate(fun_name, casadi_codegen_opts)
 

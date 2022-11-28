@@ -93,18 +93,12 @@ def generate_c_code_external_cost(model, stage_type, opts):
         fun_name_jac, [x, u, p], [ext_cost, grad]
     )
 
-    # generate C code
-    code_export_dir = opts["code_export_directory"]
-    if not os.path.exists(code_export_dir):
-        os.makedirs(code_export_dir)
-
+    # change directory
     cwd = os.getcwd()
-    os.chdir(code_export_dir)
-    gen_dir = model.name + '_cost'
-    if not os.path.exists(gen_dir):
-        os.mkdir(gen_dir)
-    gen_dir_location = "./" + gen_dir
-    os.chdir(gen_dir_location)
+    cost_dir = os.path.abspath(os.path.join(opts["code_export_directory"], f'{model.name}_cost'))
+    if not os.path.exists(cost_dir):
+        os.makedirs(cost_dir)
+    os.chdir(cost_dir)
 
     ext_cost_fun.generate(fun_name, casadi_codegen_opts)
     ext_cost_fun_jac_hess.generate(fun_name_hess, casadi_codegen_opts)
