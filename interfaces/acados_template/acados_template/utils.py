@@ -79,13 +79,17 @@ platform2tera = {
 }
 
 
-def casadi_version_warning(casadi_version):
-    msg =  'Warning: Please note that the following versions of CasADi  are '
-    msg += 'officially supported: {}.\n '.format(" or ".join(ALLOWED_CASADI_VERSIONS))
-    msg += 'If there is an incompatibility with the CasADi generated code, '
-    msg += 'please consider changing your CasADi version.\n'
-    msg += 'Version {} currently in use.'.format(casadi_version)
-    print(msg)
+def check_casadi_version():
+    casadi_version = CasadiMeta.version()
+    if casadi_version in ALLOWED_CASADI_VERSIONS:
+        return
+    else:
+        msg =  'Warning: Please note that the following versions of CasADi  are '
+        msg += 'officially supported: {}.\n '.format(" or ".join(ALLOWED_CASADI_VERSIONS))
+        msg += 'If there is an incompatibility with the CasADi generated code, '
+        msg += 'please consider changing your CasADi version.\n'
+        msg += 'Version {} currently in use.'.format(casadi_version)
+        print(msg)
 
 
 def is_column(x):
@@ -213,17 +217,18 @@ def get_tera():
     sys.exit(1)
 
 
-def render_template(in_file, out_file, template_dir, json_path):
+def render_template(in_file, out_file, output_dir, json_path, template_glob=None):
+
+    acados_path = os.path.dirname(os.path.abspath(__file__))
+    if template_glob is None:
+        template_glob = os.path.join(acados_path, 'c_templates_tera', '**', '*')
     cwd = os.getcwd()
-    if not os.path.exists(template_dir):
-        os.mkdir(template_dir)
-    os.chdir(template_dir)
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    os.chdir(output_dir)
 
     tera_path = get_tera()
-
-    # setting up loader and environment
-    acados_path = os.path.dirname(os.path.abspath(__file__))
-    template_glob = os.path.join(acados_path, 'c_templates_tera', '*')
 
     # call tera as system cmd
     os_cmd = f"{tera_path} '{template_glob}' '{in_file}' '{json_path}' '{out_file}'"
@@ -233,7 +238,7 @@ def render_template(in_file, out_file, template_dir, json_path):
 
     status = os.system(os_cmd)
     if (status != 0):
-        raise Exception(f'Rendering of {in_file} failed!\n\nAttempted to execute OS command:\n{os_cmd}\n.\n')
+        raise Exception(f'Rendering of {in_file} failed!\n\nAttempted to execute OS command:\n{os_cmd}\n\n')
 
     os.chdir(cwd)
 

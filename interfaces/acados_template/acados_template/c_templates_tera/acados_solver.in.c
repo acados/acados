@@ -42,38 +42,10 @@
 
 // example specific
 #include "{{ model.name }}_model/{{ model.name }}_model.h"
-{% if constraints.constr_type == "BGP" and dims.nphi %}
-#include "{{ model.name }}_constraints/{{ model.name }}_phi_constraint.h"
-{% endif %}
-{% if constraints.constr_type_e == "BGP" and dims.nphi_e > 0 %}
-#include "{{ model.name }}_constraints/{{ model.name }}_phi_e_constraint.h"
-{% endif %}
-{% if constraints.constr_type == "BGH" and dims.nh > 0 %}
-#include "{{ model.name }}_constraints/{{ model.name }}_h_constraint.h"
-{% endif %}
-{% if constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
-#include "{{ model.name }}_constraints/{{ model.name }}_h_e_constraint.h"
-{% endif %}
-{%- if cost.cost_type == "NONLINEAR_LS" %}
-#include "{{ model.name }}_cost/{{ model.name }}_cost_y_fun.h"
-{%- elif cost.cost_type == "CONVEX_OVER_NONLINEAR" %}
-#include "{{ model.name }}_cost/{{ model.name }}_conl_cost.h"
-{%- elif cost.cost_type == "EXTERNAL" %}
-#include "{{ model.name }}_cost/{{ model.name }}_external_cost.h"
-{%- endif %}
-{%- if cost.cost_type_0 == "NONLINEAR_LS" %}
-#include "{{ model.name }}_cost/{{ model.name }}_cost_y_0_fun.h"
-{%- elif cost.cost_type == "CONVEX_OVER_NONLINEAR" %}
-#include "{{ model.name }}_cost/{{ model.name }}_conl_cost_0.h"
-{%- elif cost.cost_type_0 == "EXTERNAL" %}
-#include "{{ model.name }}_cost/{{ model.name }}_external_cost_0.h"
-{%- endif %}
-{%- if cost.cost_type_e == "NONLINEAR_LS" %}
-#include "{{ model.name }}_cost/{{ model.name }}_cost_y_e_fun.h"
-{%- elif cost.cost_type == "CONVEX_OVER_NONLINEAR" %}
-#include "{{ model.name }}_cost/{{ model.name }}_conl_cost_e.h"
-{%- elif cost.cost_type_e == "EXTERNAL" %}
-#include "{{ model.name }}_cost/{{ model.name }}_external_cost_e.h"
+#include "{{ model.name }}_constraints/{{ model.name }}_constraints.h"
+
+{%- if cost.cost_type != "LINEAR_LS" or cost.cost_type_e != "LINEAR_LS" or cost.cost_type_0 != "LINEAR_LS" %}
+#include "{{ model.name }}_cost/{{ model.name }}_cost.h"
 {%- endif %}
 
 {%- if not solver_options.custom_update_filename %}

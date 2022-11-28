@@ -33,29 +33,22 @@
 
 import os
 from casadi import *
-from .utils import ALLOWED_CASADI_VERSIONS, is_empty, casadi_version_warning
+from .utils import is_empty, check_casadi_version
 
 def generate_c_code_gnsf( model, opts ):
 
-    casadi_version = CasadiMeta.version()
-    casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
-    if casadi_version not in (ALLOWED_CASADI_VERSIONS):
-        casadi_version_warning(casadi_version)
+    check_casadi_version()
+
+    casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
     model_name = model.name
-    code_export_dir = opts["code_export_directory"]
 
     # set up directory
-    if not os.path.exists(code_export_dir):
-        os.makedirs(code_export_dir)
-
     cwd = os.getcwd()
-    os.chdir(code_export_dir)
-    model_dir = model_name + '_model'
+    model_dir = os.path.abspath(os.path.join(opts["code_export_directory"], f'{model_name}_model'))
     if not os.path.exists(model_dir):
-        os.mkdir(model_dir)
-    model_dir_location = os.path.join('.', model_dir)
-    os.chdir(model_dir_location)
+        os.makedirs(model_dir)
+    os.chdir(model_dir)
 
     # obtain gnsf dimensions
     get_matrices_fun = model.get_matrices_fun
@@ -91,17 +84,17 @@ def generate_c_code_gnsf( model, opts ):
     ## generate C code
     fun_name = model_name + '_gnsf_phi_fun'
     phi_fun_ = Function(fun_name, [y, uhat, p], [phi_fun(y, uhat, p)])
-    phi_fun_.generate(fun_name, casadi_opts)
+    phi_fun_.generate(fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_gnsf_phi_fun_jac_y'
     phi_fun_jac_y = model.phi_fun_jac_y
     phi_fun_jac_y_ = Function(fun_name, [y, uhat, p], phi_fun_jac_y(y, uhat, p))
-    phi_fun_jac_y_.generate(fun_name, casadi_opts)
+    phi_fun_jac_y_.generate(fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_gnsf_phi_jac_y_uhat'
     phi_jac_y_uhat = model.phi_jac_y_uhat
     phi_jac_y_uhat_ = Function(fun_name, [y, uhat, p], phi_jac_y_uhat(y, uhat, p))
-    phi_jac_y_uhat_.generate(fun_name, casadi_opts)
+    phi_jac_y_uhat_.generate(fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_gnsf_f_lo_fun_jac_x1k1uz'
     f_lo_fun_jac_x1k1uz = model.f_lo_fun_jac_x1k1uz
@@ -113,11 +106,11 @@ def generate_c_code_gnsf( model, opts ):
 
     f_lo_fun_jac_x1k1uz_ = Function(fun_name, [x1, x1dot, z1, u, p],
                  f_lo_fun_jac_x1k1uz_eval)
-    f_lo_fun_jac_x1k1uz_.generate(fun_name, casadi_opts)
+    f_lo_fun_jac_x1k1uz_.generate(fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_gnsf_get_matrices_fun'
     get_matrices_fun_ = Function(fun_name, [dummy], get_matrices_fun(1))
-    get_matrices_fun_.generate(fun_name, casadi_opts)
+    get_matrices_fun_.generate(fun_name, casadi_codegen_opts)
 
     # remove fields for json dump
     del model.phi_fun

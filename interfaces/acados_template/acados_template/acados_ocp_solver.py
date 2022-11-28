@@ -600,7 +600,7 @@ def get_simulink_default_opts():
     return simulink_default_opts
 
 
-def ocp_formulation_json_dump(acados_ocp, simulink_opts, json_file='acados_ocp_nlp.json'):
+def ocp_formulation_json_dump(acados_ocp, simulink_opts=None, json_file='acados_ocp_nlp.json'):
     # Load acados_ocp_nlp structure description
     ocp_layout = get_ocp_nlp_layout()
 
@@ -617,8 +617,9 @@ def ocp_formulation_json_dump(acados_ocp, simulink_opts, json_file='acados_ocp_n
         ocp_nlp_dict[acados_struct]=dict(getattr(acados_ocp, acados_struct).__dict__)
 
     ocp_nlp_dict = format_class_dict(ocp_nlp_dict)
-    # add simulink options
-    ocp_nlp_dict['simulink_opts'] = simulink_opts
+
+    if simulink_opts is not None:
+        ocp_nlp_dict['simulink_opts'] = simulink_opts
 
     with open(json_file, 'w') as f:
         json.dump(ocp_nlp_dict, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
@@ -692,27 +693,6 @@ def ocp_generate_external_functions(acados_ocp: AcadosOcp, model: AcadosModel):
     if acados_ocp.dims.nphi_e > 0 or acados_ocp.dims.nh_e > 0:
         generate_c_code_constraint(model, model.name, True, opts)
 
-    # dummy matrices
-    if not acados_ocp.cost.cost_type_0 == 'LINEAR_LS':
-        acados_ocp.cost.Vx_0 = np.zeros((acados_ocp.dims.ny_0, acados_ocp.dims.nx))
-        acados_ocp.cost.Vu_0 = np.zeros((acados_ocp.dims.ny_0, acados_ocp.dims.nu))
-        acados_ocp.cost.Vz_0 = np.zeros((acados_ocp.dims.ny_0, acados_ocp.dims.nz))
-    if not acados_ocp.cost.cost_type == 'LINEAR_LS':
-        acados_ocp.cost.Vx = np.zeros((acados_ocp.dims.ny, acados_ocp.dims.nx))
-        acados_ocp.cost.Vu = np.zeros((acados_ocp.dims.ny, acados_ocp.dims.nu))
-        acados_ocp.cost.Vz = np.zeros((acados_ocp.dims.ny, acados_ocp.dims.nz))
-    if not acados_ocp.cost.cost_type_e == 'LINEAR_LS':
-        acados_ocp.cost.Vx_e = np.zeros((acados_ocp.dims.ny_e, acados_ocp.dims.nx))
-        # NOTE: is not in layout
-        # acados_ocp.cost.Vz_e = np.zeros((acados_ocp.dims.ny_e, acados_ocp.dims.nz))
-
-    if acados_ocp.cost.cost_type_0 == 'CONVEX_OVER_NONLINEAR':
-        acados_ocp.cost.W_0 = np.zeros((acados_ocp.dims.ny_0, acados_ocp.dims.ny_0))
-    if acados_ocp.cost.cost_type == 'CONVEX_OVER_NONLINEAR':
-        acados_ocp.cost.W = np.zeros((acados_ocp.dims.ny, acados_ocp.dims.ny))
-    if acados_ocp.cost.cost_type_e == 'CONVEX_OVER_NONLINEAR':
-        acados_ocp.cost.W_e = np.zeros((acados_ocp.dims.ny_e, acados_ocp.dims.ny_e))
-
     if acados_ocp.cost.cost_type_0 == 'NONLINEAR_LS':
         generate_c_code_nls_cost(model, model.name, 'initial', opts)
     elif acados_ocp.cost.cost_type_0 == 'CONVEX_OVER_NONLINEAR':
@@ -734,13 +714,6 @@ def ocp_generate_external_functions(acados_ocp: AcadosOcp, model: AcadosModel):
     elif acados_ocp.cost.cost_type_e == 'EXTERNAL':
         generate_c_code_external_cost(model, 'terminal', opts)
 
-    if acados_ocp.solver_options.custom_update_filename != "":
-        target_location = os.path.join(code_export_dir, acados_ocp.solver_options.custom_update_filename)
-        shutil.copyfile(acados_ocp.solver_options.custom_update_filename, target_location)
-    if acados_ocp.solver_options.custom_update_header_filename != "":
-        target_location = os.path.join(code_export_dir, acados_ocp.solver_options.custom_update_header_filename)
-        shutil.copyfile(acados_ocp.solver_options.custom_update_header_filename, target_location)
-
 
 def ocp_get_default_cmake_builder() -> CMakeBuilder:
     """
@@ -752,9 +725,8 @@ def ocp_get_default_cmake_builder() -> CMakeBuilder:
     return cmake_builder
 
 
-def ocp_render_templates(acados_ocp, json_file, cmake_builder=None):
 
-    name = acados_ocp.model.name
+def ocp_render_templates(acados_ocp: AcadosOcp, json_file, cmake_builder=None, simulink_opts=None):
 
     # setting up loader and environment
     json_path = os.path.abspath(json_file)
@@ -762,148 +734,63 @@ def ocp_render_templates(acados_ocp, json_file, cmake_builder=None):
     if not os.path.exists(json_path):
         raise Exception(f'Path "{json_path}" not found!')
 
-    code_export_dir = acados_ocp.code_export_directory
-    template_dir = code_export_dir
+    # Render templates
+    template_list = __ocp_get_template_list(acados_ocp, cmake_builder=cmake_builder, simulink_opts=simulink_opts)
+    for tup in template_list:
+        if len(tup) > 2:
+            output_dir = tup[2]
+        else:
+            output_dir = acados_ocp.code_export_directory
+        render_template(tup[0], tup[1], output_dir, json_path)
 
-    ## Render templates
-    in_file = 'main.in.c'
-    out_file = f'main_{name}.c'
-    render_template(in_file, out_file, template_dir, json_path)
+    return
 
-    in_file = 'acados_solver.in.c'
-    out_file = f'acados_solver_{name}.c'
-    render_template(in_file, out_file, template_dir, json_path)
 
-    in_file = 'acados_solver.in.h'
-    out_file = f'acados_solver_{name}.h'
-    render_template(in_file, out_file, template_dir, json_path)
 
-    in_file = 'acados_solver.in.pxd'
-    out_file = f'acados_solver.pxd'
-    render_template(in_file, out_file, template_dir, json_path)
+def __ocp_get_template_list(acados_ocp: AcadosOcp, cmake_builder=None, simulink_opts=None) -> list:
+    """
+    returns a list of tuples in the form:
+    (input_filename, output_filname)
+    or
+    (input_filename, output_filname, output_directory)
+    """
+    name = acados_ocp.model.name
+    code_export_directory = acados_ocp.code_export_directory
+    template_list = []
 
+    template_list.append(('main.in.c', f'main_{name}.c'))
+    template_list.append(('acados_solver.in.c', f'acados_solver_{name}.c'))
+    template_list.append(('acados_solver.in.h', f'acados_solver_{name}.h'))
+    template_list.append(('acados_solver.in.pxd', f'acados_solver.pxd'))
     if cmake_builder is not None:
-        in_file = 'CMakeLists.in.txt'
-        out_file = 'CMakeLists.txt'
-        render_template(in_file, out_file, template_dir, json_path)
+        template_list.append(('CMakeLists.in.txt', 'CMakeLists.txt'))
     else:
-        in_file = 'Makefile.in'
-        out_file = 'Makefile'
-        render_template(in_file, out_file, template_dir, json_path)
+        template_list.append(('Makefile.in', 'Makefile'))
 
-    in_file = 'acados_solver_sfun.in.c'
-    out_file = f'acados_solver_sfunction_{name}.c'
-    render_template(in_file, out_file, template_dir, json_path)
-
-    in_file = 'make_sfun.in.m'
-    out_file = f'make_sfun_{name}.m'
-    render_template(in_file, out_file, template_dir, json_path)
 
     # sim
-    in_file = 'acados_sim_solver.in.c'
-    out_file = f'acados_sim_solver_{name}.c'
-    render_template(in_file, out_file, template_dir, json_path)
+    template_list.append(('acados_sim_solver.in.c', f'acados_sim_solver_{name}.c'))
+    template_list.append(('acados_sim_solver.in.h', f'acados_sim_solver_{name}.h'))
+    template_list.append(('main_sim.in.c', f'main_sim_{name}.c'))
 
-    in_file = 'acados_sim_solver.in.h'
-    out_file = f'acados_sim_solver_{name}.h'
-    render_template(in_file, out_file, template_dir, json_path)
+    # model
+    model_dir = os.path.join(code_export_directory, f'{name}_model')
+    template_list.append(('model.in.h', f'{name}_model.h', model_dir))
+    # constraints
+    constraints_dir = os.path.join(code_export_directory, f'{name}_constraints')
+    template_list.append(('constraints.in.h', f'{name}_constraints.h', constraints_dir))
+    # cost
+    cost_dir = os.path.join(code_export_directory, f'{name}_cost')
+    template_list.append(('cost.in.h', f'{name}_cost.h', cost_dir))
 
-    in_file = 'main_sim.in.c'
-    out_file = f'main_sim_{name}.c'
-    render_template(in_file, out_file, template_dir, json_path)
+    # Simulink
+    if simulink_opts is not None:
+        template_file = os.path.join('matlab_templates', 'acados_solver_sfun.in.c')
+        template_list.append((template_file, f'acados_solver_sfunction_{name}.c'))
+        template_file = os.path.join('matlab_templates', 'acados_solver_sfun.in.c')
+        template_list.append((template_file, f'make_sfun_{name}.m'))
 
-    ## folder model
-    template_dir = os.path.join(code_export_dir, name + '_model')
-    in_file = 'model.in.h'
-    out_file = f'{name}_model.h'
-    render_template(in_file, out_file, template_dir, json_path)
-
-    # constraints on convex over nonlinear function
-    if acados_ocp.constraints.constr_type == 'BGP' and acados_ocp.dims.nphi > 0:
-        # constraints on outer function
-        template_dir = os.path.join(code_export_dir, name + '_constraints')
-        in_file = 'phi_constraint.in.h'
-        out_file = f'{name}_phi_constraint.h'
-        render_template(in_file, out_file, template_dir, json_path)
-
-    # terminal constraints on convex over nonlinear function
-    if acados_ocp.constraints.constr_type_e == 'BGP' and acados_ocp.dims.nphi_e > 0:
-        # terminal constraints on outer function
-        template_dir = os.path.join(code_export_dir, name + '_constraints')
-        in_file = 'phi_e_constraint.in.h'
-        out_file = f'{name}_phi_e_constraint.h'
-        render_template(in_file, out_file, template_dir, json_path)
-
-    # nonlinear constraints
-    if acados_ocp.constraints.constr_type == 'BGH' and acados_ocp.dims.nh > 0:
-        template_dir = os.path.join(code_export_dir, name + '_constraints')
-        in_file = 'h_constraint.in.h'
-        out_file = f'{name}_h_constraint.h'
-        render_template(in_file, out_file, template_dir, json_path)
-
-    # terminal nonlinear constraints
-    if acados_ocp.constraints.constr_type_e == 'BGH' and acados_ocp.dims.nh_e > 0:
-        template_dir = os.path.join(code_export_dir, name + '_constraints')
-        in_file = 'h_e_constraint.in.h'
-        out_file = f'{name}_h_e_constraint.h'
-        render_template(in_file, out_file, template_dir, json_path)
-
-    # cost - initial stage
-    if acados_ocp.cost.cost_type_0 == 'NONLINEAR_LS':
-        template_dir = os.path.join(code_export_dir, name + '_cost')
-        in_file = 'cost_y_0_fun.in.h'
-        out_file = f'{name}_cost_y_0_fun.h'
-        render_template(in_file, out_file, template_dir, json_path)
-
-    elif acados_ocp.cost.cost_type_0 == 'CONVEX_OVER_NONLINEAR':
-        template_dir = os.path.join(code_export_dir, name + '_cost')
-        in_file = 'conl_cost_0.in.h'
-        out_file = f'{name}_conl_cost_0.h'
-        render_template(in_file, out_file, template_dir, json_path)
-
-    elif acados_ocp.cost.cost_type_0 == 'EXTERNAL':
-        template_dir = os.path.join(code_export_dir, name + '_cost')
-        in_file = 'external_cost_0.in.h'
-        out_file = f'{name}_external_cost_0.h'
-        render_template(in_file, out_file, template_dir, json_path)
-
-    # cost - path
-    if acados_ocp.cost.cost_type == 'NONLINEAR_LS':
-        template_dir = os.path.join(code_export_dir, name + '_cost')
-        in_file = 'cost_y_fun.in.h'
-        out_file = f'{name}_cost_y_fun.h'
-        render_template(in_file, out_file, template_dir, json_path)
-
-    elif acados_ocp.cost.cost_type == 'CONVEX_OVER_NONLINEAR':
-        template_dir = os.path.join(code_export_dir, name + '_cost')
-        in_file = 'conl_cost.in.h'
-        out_file = f'{name}_conl_cost.h'
-        render_template(in_file, out_file, template_dir, json_path)
-
-    elif acados_ocp.cost.cost_type == 'EXTERNAL':
-        template_dir = os.path.join(code_export_dir, name + '_cost')
-        in_file = 'external_cost.in.h'
-        out_file = f'{name}_external_cost.h'
-        render_template(in_file, out_file, template_dir, json_path)
-
-    # cost - terminal
-    if acados_ocp.cost.cost_type_e == 'NONLINEAR_LS':
-        template_dir = os.path.join(code_export_dir, name + '_cost')
-        in_file = 'cost_y_e_fun.in.h'
-        out_file = f'{name}_cost_y_e_fun.h'
-        render_template(in_file, out_file, template_dir, json_path)
-
-    elif acados_ocp.cost.cost_type_e == 'CONVEX_OVER_NONLINEAR':
-        template_dir = os.path.join(code_export_dir, name + '_cost')
-        in_file = 'conl_cost_e.in.h'
-        out_file = f'{name}_conl_cost_e.h'
-        render_template(in_file, out_file, template_dir, json_path)
-
-    elif acados_ocp.cost.cost_type_e == 'EXTERNAL':
-        template_dir = os.path.join(code_export_dir, name + '_cost')
-        in_file = 'external_cost_e.in.h'
-        out_file = f'{name}_external_cost_e.h'
-        render_template(in_file, out_file, template_dir, json_path)
+    return template_list
 
 
 def remove_x0_elimination(acados_ocp):
@@ -943,9 +830,6 @@ class AcadosOcpSolver:
         model = acados_ocp.model
         acados_ocp.code_export_directory = os.path.abspath(acados_ocp.code_export_directory)
 
-        if simulink_opts is None:
-            simulink_opts = get_simulink_default_opts()
-
         # make dims consistent
         make_ocp_dims_consistent(acados_ocp)
 
@@ -967,10 +851,18 @@ class AcadosOcpSolver:
 
         # dump to json
         acados_ocp.json_file = json_file
-        ocp_formulation_json_dump(acados_ocp, simulink_opts, json_file)
+        ocp_formulation_json_dump(acados_ocp, simulink_opts=simulink_opts, json_file=json_file)
 
         # render templates
-        ocp_render_templates(acados_ocp, json_file, cmake_builder=cmake_builder)
+        ocp_render_templates(acados_ocp, json_file, cmake_builder=cmake_builder, simulink_opts=simulink_opts)
+
+        # copy custom update function
+        if acados_ocp.solver_options.custom_update_filename != "":
+            target_location = os.path.join(acados_ocp.code_export_directory, acados_ocp.solver_options.custom_update_filename)
+            shutil.copyfile(acados_ocp.solver_options.custom_update_filename, target_location)
+        if acados_ocp.solver_options.custom_update_header_filename != "":
+            target_location = os.path.join(acados_ocp.code_export_directory, acados_ocp.solver_options.custom_update_header_filename)
+            shutil.copyfile(acados_ocp.solver_options.custom_update_header_filename, target_location)
 
 
     @classmethod

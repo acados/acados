@@ -130,41 +130,39 @@ def sim_render_templates(json_file, model_name: str, code_export_dir, cmake_opti
     if not os.path.exists(json_path):
         raise Exception(f"{json_path} not found!")
 
-    template_dir = code_export_dir
-
-    ## Render templates
+    # Render templates
     in_file = 'acados_sim_solver.in.c'
     out_file = f'acados_sim_solver_{model_name}.c'
-    render_template(in_file, out_file, template_dir, json_path)
+    render_template(in_file, out_file, code_export_dir, json_path)
 
     in_file = 'acados_sim_solver.in.h'
     out_file = f'acados_sim_solver_{model_name}.h'
-    render_template(in_file, out_file, template_dir, json_path)
+    render_template(in_file, out_file, code_export_dir, json_path)
 
     in_file = 'acados_sim_solver.in.pxd'
     out_file = f'acados_sim_solver.pxd'
-    render_template(in_file, out_file, template_dir, json_path)
+    render_template(in_file, out_file, code_export_dir, json_path)
 
     # Builder
     if cmake_options is not None:
         in_file = 'CMakeLists.in.txt'
         out_file = 'CMakeLists.txt'
-        render_template(in_file, out_file, template_dir, json_path)
+        render_template(in_file, out_file, code_export_dir, json_path)
     else:
         in_file = 'Makefile.in'
         out_file = 'Makefile'
-        render_template(in_file, out_file, template_dir, json_path)
+        render_template(in_file, out_file, code_export_dir, json_path)
 
     in_file = 'main_sim.in.c'
     out_file = f'main_sim_{model_name}.c'
-    render_template(in_file, out_file, template_dir, json_path)
+    render_template(in_file, out_file, code_export_dir, json_path)
 
-    ## folder model
-    template_dir = os.path.join(code_export_dir, model_name + '_model')
+    # folder model
+    model_dir = os.path.join(code_export_dir, model_name + '_model')
 
     in_file = 'model.in.h'
     out_file = f'{model_name}_model.h'
-    render_template(in_file, out_file, template_dir, json_path)
+    render_template(in_file, out_file, model_dir, json_path)
 
 
 def sim_generate_external_functions(acados_sim):
@@ -356,6 +354,7 @@ class AcadosSimSolver:
         self.gettable_vectors = ['x', 'u', 'z', 'S_adj']
         self.gettable_matrices = ['S_forw', 'Sx', 'Su', 'S_hess', 'S_algebraic']
         self.gettable_scalars = ['CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
+
 
     def simulate(self, x=None, u=None, z=None, p=None):
         """
