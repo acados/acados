@@ -714,13 +714,6 @@ def ocp_generate_external_functions(acados_ocp: AcadosOcp, model: AcadosModel):
     elif acados_ocp.cost.cost_type_e == 'EXTERNAL':
         generate_c_code_external_cost(model, 'terminal', opts)
 
-    if acados_ocp.solver_options.custom_update_filename != "":
-        target_location = os.path.join(code_export_dir, acados_ocp.solver_options.custom_update_filename)
-        shutil.copyfile(acados_ocp.solver_options.custom_update_filename, target_location)
-    if acados_ocp.solver_options.custom_update_header_filename != "":
-        target_location = os.path.join(code_export_dir, acados_ocp.solver_options.custom_update_header_filename)
-        shutil.copyfile(acados_ocp.solver_options.custom_update_header_filename, target_location)
-
 
 def ocp_get_default_cmake_builder() -> CMakeBuilder:
     """
@@ -862,6 +855,14 @@ class AcadosOcpSolver:
 
         # render templates
         ocp_render_templates(acados_ocp, json_file, cmake_builder=cmake_builder, simulink_opts=simulink_opts)
+
+        # copy custom update function
+        if acados_ocp.solver_options.custom_update_filename != "":
+            target_location = os.path.join(acados_ocp.code_export_directory, acados_ocp.solver_options.custom_update_filename)
+            shutil.copyfile(acados_ocp.solver_options.custom_update_filename, target_location)
+        if acados_ocp.solver_options.custom_update_header_filename != "":
+            target_location = os.path.join(acados_ocp.code_export_directory, acados_ocp.solver_options.custom_update_header_filename)
+            shutil.copyfile(acados_ocp.solver_options.custom_update_header_filename, target_location)
 
 
     @classmethod
