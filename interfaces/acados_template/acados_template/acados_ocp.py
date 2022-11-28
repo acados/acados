@@ -2150,8 +2150,6 @@ class AcadosOcpOptions:
         self.__Tsim = None                                    # automatically calculated as tf/N
         self.__print_level = 0                                # print level
         self.__initialize_t_slacks = 0                        # possible values: 0, 1
-        self.__model_external_shared_lib_dir   = None         # path to the the .so lib
-        self.__model_external_shared_lib_name  = None         # name of the the .so lib
         self.__regularize_method = None
         self.__time_steps = None
         self.__shooting_nodes = None
@@ -2166,7 +2164,10 @@ class AcadosOcpOptions:
         self.__full_step_dual = 0
         self.__eps_sufficient_descent = 1e-4
         self.__hpipm_mode = 'BALANCE'
+        # TODO: move those out? they are more about generation than about the acados OCP solver.
         self.__ext_fun_compile_flags = '-O2'
+        self.__model_external_shared_lib_dir   = None         # path to the the .so lib
+        self.__model_external_shared_lib_name  = None         # name of the the .so lib
         self.__custom_update_filename = ''
         self.__custom_update_header_filename = ''
 
