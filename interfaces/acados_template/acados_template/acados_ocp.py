@@ -2170,6 +2170,8 @@ class AcadosOcpOptions:
         self.__model_external_shared_lib_name  = None         # name of the the .so lib
         self.__custom_update_filename = ''
         self.__custom_update_header_filename = ''
+        self.__custom_templates = []
+        self.__custom_update_copy = True
 
     @property
     def qp_solver(self):
@@ -2205,6 +2207,19 @@ class AcadosOcpOptions:
 
 
     @property
+    def custom_templates(self):
+        """
+        List of tuples of the form:
+        (input_filename, output_filename)
+
+        Custom templates are render in OCP solver generation.
+
+        Default: [].
+        """
+        return self.__custom_templates
+
+
+    @property
     def custom_update_header_filename(self):
         """
         Header filename of the custom C function to update solver data and parameters in between solver calls
@@ -2226,6 +2241,13 @@ class AcadosOcpOptions:
         Default: ''.
         """
         return self.__custom_update_header_filename
+
+    @property
+    def custom_update_copy(self):
+        """
+        Boolean;
+        If True, the custom update function files are copied into the `code_export_directory`.
+        """
 
 
     @property
@@ -2701,6 +2723,17 @@ class AcadosOcpOptions:
         else:
             raise Exception('Invalid custom_update_filename, expected a string.\n')
 
+    @custom_templates.setter
+    def custom_templates(self, custom_templates):
+        if not isinstance(custom_templates, list):
+            raise Exception('Invalid custom_templates, expected a list.\n')
+        for tup in custom_templates:
+            if not isinstance(tup, tuple):
+                raise Exception('Invalid custom_templates, shoubld be list of tuples.\n')
+            for s in tup:
+                if not isinstance(s, str):
+                    raise Exception('Invalid custom_templates, shoubld be list of tuples of strings.\n')
+        self.__custom_templates = custom_templates
 
     @custom_update_header_filename.setter
     def custom_update_header_filename(self, custom_update_header_filename):
@@ -2708,6 +2741,13 @@ class AcadosOcpOptions:
             self.__custom_update_header_filename = custom_update_header_filename
         else:
             raise Exception('Invalid custom_update_header_filename, expected a string.\n')
+
+    @custom_update_copy.setter
+    def custom_update_copy(self, custom_update_copy):
+        if isinstance(custom_update_copy, bool):
+            self.__custom_update_copy = custom_update_copy
+        else:
+            raise Exception('Invalid custom_update_copy, expected a bool.\n')
 
     @hessian_approx.setter
     def hessian_approx(self, hessian_approx):
