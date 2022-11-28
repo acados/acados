@@ -693,27 +693,6 @@ def ocp_generate_external_functions(acados_ocp: AcadosOcp, model: AcadosModel):
     if acados_ocp.dims.nphi_e > 0 or acados_ocp.dims.nh_e > 0:
         generate_c_code_constraint(model, model.name, True, opts)
 
-    # dummy matrices
-    if not acados_ocp.cost.cost_type_0 == 'LINEAR_LS':
-        acados_ocp.cost.Vx_0 = np.zeros((acados_ocp.dims.ny_0, acados_ocp.dims.nx))
-        acados_ocp.cost.Vu_0 = np.zeros((acados_ocp.dims.ny_0, acados_ocp.dims.nu))
-        acados_ocp.cost.Vz_0 = np.zeros((acados_ocp.dims.ny_0, acados_ocp.dims.nz))
-    if not acados_ocp.cost.cost_type == 'LINEAR_LS':
-        acados_ocp.cost.Vx = np.zeros((acados_ocp.dims.ny, acados_ocp.dims.nx))
-        acados_ocp.cost.Vu = np.zeros((acados_ocp.dims.ny, acados_ocp.dims.nu))
-        acados_ocp.cost.Vz = np.zeros((acados_ocp.dims.ny, acados_ocp.dims.nz))
-    if not acados_ocp.cost.cost_type_e == 'LINEAR_LS':
-        acados_ocp.cost.Vx_e = np.zeros((acados_ocp.dims.ny_e, acados_ocp.dims.nx))
-        # NOTE: is not in layout
-        # acados_ocp.cost.Vz_e = np.zeros((acados_ocp.dims.ny_e, acados_ocp.dims.nz))
-
-    if acados_ocp.cost.cost_type_0 == 'CONVEX_OVER_NONLINEAR':
-        acados_ocp.cost.W_0 = np.zeros((acados_ocp.dims.ny_0, acados_ocp.dims.ny_0))
-    if acados_ocp.cost.cost_type == 'CONVEX_OVER_NONLINEAR':
-        acados_ocp.cost.W = np.zeros((acados_ocp.dims.ny, acados_ocp.dims.ny))
-    if acados_ocp.cost.cost_type_e == 'CONVEX_OVER_NONLINEAR':
-        acados_ocp.cost.W_e = np.zeros((acados_ocp.dims.ny_e, acados_ocp.dims.ny_e))
-
     if acados_ocp.cost.cost_type_0 == 'NONLINEAR_LS':
         generate_c_code_nls_cost(model, model.name, 'initial', opts)
     elif acados_ocp.cost.cost_type_0 == 'CONVEX_OVER_NONLINEAR':
