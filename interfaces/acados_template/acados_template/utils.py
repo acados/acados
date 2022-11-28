@@ -217,17 +217,18 @@ def get_tera():
     sys.exit(1)
 
 
-def render_template(in_file, out_file, output_dir, json_path):
+def render_template(in_file, out_file, output_dir, json_path, template_glob=None):
+
+    acados_path = os.path.dirname(os.path.abspath(__file__))
+    if template_glob is None:
+        template_glob = os.path.join(acados_path, 'c_templates_tera', '**', '*')
     cwd = os.getcwd()
+
     if not os.path.exists(output_dir):
-        os.mkdir(output_dir)
+        os.makedirs(output_dir)
     os.chdir(output_dir)
 
     tera_path = get_tera()
-
-    # setting up loader and environment
-    acados_path = os.path.dirname(os.path.abspath(__file__))
-    template_glob = os.path.join(acados_path, 'c_templates_tera', '**', '*')
 
     # call tera as system cmd
     os_cmd = f"{tera_path} '{template_glob}' '{in_file}' '{json_path}' '{out_file}'"
@@ -237,7 +238,7 @@ def render_template(in_file, out_file, output_dir, json_path):
 
     status = os.system(os_cmd)
     if (status != 0):
-        raise Exception(f'Rendering of {in_file} failed!\n\nAttempted to execute OS command:\n{os_cmd}\n.\n')
+        raise Exception(f'Rendering of {in_file} failed!\n\nAttempted to execute OS command:\n{os_cmd}\n\n')
 
     os.chdir(cwd)
 

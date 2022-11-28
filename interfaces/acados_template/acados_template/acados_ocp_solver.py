@@ -754,7 +754,7 @@ def ocp_get_default_cmake_builder() -> CMakeBuilder:
 
 
 
-def ocp_render_templates(acados_ocp, json_file, cmake_builder=None, simulink_opts=None):
+def ocp_render_templates(acados_ocp: AcadosOcp, json_file, cmake_builder=None, simulink_opts=None):
 
     # setting up loader and environment
     json_path = os.path.abspath(json_file)
@@ -762,57 +762,63 @@ def ocp_render_templates(acados_ocp, json_file, cmake_builder=None, simulink_opt
     if not os.path.exists(json_path):
         raise Exception(f'Path "{json_path}" not found!')
 
-    ## Render templates
-    render_list = ocp_get_template_io_names(acados_ocp, cmake_builder=cmake_builder, simulink_opts=None)
-    for tup in render_list:
-        render_template(tup[0], tup[1], tup[2], json_path)
+    # Render templates
+    template_list = __ocp_get_template_list(acados_ocp, cmake_builder=cmake_builder, simulink_opts=simulink_opts)
+    for tup in template_list:
+        if len(tup) > 2:
+            output_dir = tup[2]
+        else:
+            output_dir = acados_ocp.code_export_directory
+        render_template(tup[0], tup[1], output_dir, json_path)
 
     return
 
 
 
-def ocp_get_template_io_names(acados_ocp, cmake_builder=None, simulink_opts=None) -> list:
+def __ocp_get_template_list(acados_ocp: AcadosOcp, cmake_builder=None, simulink_opts=None) -> list:
     """
-    returns a list of tuples in the form (input_filename, output_filname, output_directory)
+    returns a list of tuples in the form:
+    (input_filename, output_filname)
+    or
+    (input_filename, output_filname, output_directory)
     """
     name = acados_ocp.model.name
     code_export_directory = acados_ocp.code_export_directory
-    render_list = []
+    template_list = []
 
-    target_dir = code_export_directory
-    render_list.append(('main.in.c', f'main_{name}.c', target_dir))
-    render_list.append(('acados_solver.in.c', f'acados_solver_{name}.c', target_dir))
-    render_list.append(('acados_solver.in.h', f'acados_solver_{name}.h', target_dir))
-    render_list.append(('acados_solver.in.pxd', f'acados_solver.pxd', target_dir))
+    template_list.append(('main.in.c', f'main_{name}.c'))
+    template_list.append(('acados_solver.in.c', f'acados_solver_{name}.c'))
+    template_list.append(('acados_solver.in.h', f'acados_solver_{name}.h'))
+    template_list.append(('acados_solver.in.pxd', f'acados_solver.pxd'))
     if cmake_builder is not None:
-        render_list.append(('CMakeLists.in.txt', 'CMakeLists.txt', target_dir))
+        template_list.append(('CMakeLists.in.txt', 'CMakeLists.txt'))
     else:
-        render_list.append(('Makefile.in', 'Makefile', target_dir))
+        template_list.append(('Makefile.in', 'Makefile'))
 
 
     # sim
-    render_list.append(('acados_sim_solver.in.c', f'acados_sim_solver_{name}.c', target_dir))
-    render_list.append(('acados_sim_solver.in.h', f'acados_sim_solver_{name}.h', target_dir))
-    render_list.append(('main_sim.in.c', f'main_sim_{name}.c', target_dir))
+    template_list.append(('acados_sim_solver.in.c', f'acados_sim_solver_{name}.c'))
+    template_list.append(('acados_sim_solver.in.h', f'acados_sim_solver_{name}.h'))
+    template_list.append(('main_sim.in.c', f'main_sim_{name}.c'))
 
     # model
-    target_dir = os.path.join(code_export_directory, f'{name}_model')
-    render_list.append(('model.in.h', f'{name}_model.h', target_dir))
+    model_dir = os.path.join(code_export_directory, f'{name}_model')
+    template_list.append(('model.in.h', f'{name}_model.h', model_dir))
     # constraints
-    target_dir = os.path.join(code_export_directory, f'{name}_constraints')
-    render_list.append(('constraints.in.h', f'{name}_constraints.h', target_dir))
+    constraints_dir = os.path.join(code_export_directory, f'{name}_constraints')
+    template_list.append(('constraints.in.h', f'{name}_constraints.h', constraints_dir))
     # cost
-    target_dir = os.path.join(code_export_directory, f'{name}_cost')
-    render_list.append(('cost.in.h', f'{name}_cost.h', target_dir))
+    cost_dir = os.path.join(code_export_directory, f'{name}_cost')
+    template_list.append(('cost.in.h', f'{name}_cost.h', cost_dir))
 
     # Simulink
     if simulink_opts is not None:
         template_file = os.path.join('matlab_templates', 'acados_solver_sfun.in.c')
-        render_list.append((template_file, f'acados_solver_sfunction_{name}.c', target_dir))
+        template_list.append((template_file, f'acados_solver_sfunction_{name}.c'))
         template_file = os.path.join('matlab_templates', 'acados_solver_sfun.in.c')
-        render_list.append((template_file, f'make_sfun_{name}.m', target_dir))
+        template_list.append((template_file, f'make_sfun_{name}.m'))
 
-    return render_list
+    return template_list
 
 
 def remove_x0_elimination(acados_ocp):
