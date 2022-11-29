@@ -499,7 +499,10 @@ acados_size_t ocp_nlp_cost_external_workspace_calculate_size(void *config_, void
 
     size += sizeof(ocp_nlp_cost_external_workspace);
 
-    size += 1 * blasfeo_memsize_dmat(nu+nx, nu+nx);  // tmp_nv_nv
+    size += 1 * blasfeo_memsize_dmat(nu+nx, nu+nx);  // tmp_nunx_nunx
+    size += 1 * blasfeo_memsize_dmat(nz, nz);  // tmp_nz_nz
+    size += 1 * blasfeo_memsize_dmat(nz, nu+nx);  // tmp_nz_nunx
+    size += 1 * blasfeo_memsize_dmat(nu+nx, nz);  // tmp_nunx_nz
     size += 1 * blasfeo_memsize_dvec(nu+nx);  // tmp_nv
     size += 1 * blasfeo_memsize_dvec(nz);  // tmp_nz
 
@@ -530,8 +533,17 @@ static void ocp_nlp_cost_external_cast_workspace(void *config_, void *dims_, voi
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
 
-    // tmp_nv_nv
-    assign_and_advance_blasfeo_dmat_mem(nu + nx, nu + nx, &work->tmp_nv_nv, &c_ptr);
+    // tmp_nunx_nunx
+    assign_and_advance_blasfeo_dmat_mem(nu + nx, nu + nx, &work->tmp_nunx_nunx, &c_ptr);
+
+    // tmp_nz_nz
+    assign_and_advance_blasfeo_dmat_mem(nz, nz, &work->tmp_nz_nz, &c_ptr);
+
+    // tmp_nz_nunx
+    assign_and_advance_blasfeo_dmat_mem(nz, nu+nx, &work->tmp_nz_nunx, &c_ptr);
+
+    // tmp_nunx_nz
+    assign_and_advance_blasfeo_dmat_mem(nu+nx, nz, &work->tmp_nunx_nz, &c_ptr);
 
     // tmp_nv
     assign_and_advance_blasfeo_dvec_mem(nu + nx, &work->tmp_nv, &c_ptr);
@@ -597,8 +609,8 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
     /* specify input types and pointers for external cost function */
     ext_fun_arg_t ext_fun_type_in[3];
     void *ext_fun_in[3];
-    ext_fun_arg_t ext_fun_type_out[4];
-    void *ext_fun_out[4];
+    ext_fun_arg_t ext_fun_type_out[6];
+    void *ext_fun_out[6];
 
     // INPUT
     struct blasfeo_dvec_args u_in;  // input u
@@ -618,6 +630,7 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
     // OUTPUT
     ext_fun_type_out[0] = COLMAJ;
     ext_fun_out[0] = &memory->fun;  // fun: scalar
+
     ext_fun_type_out[1] = BLASFEO_DVEC;
     ext_fun_out[1] = &memory->grad;  // grad_ux: nu+nx
     ext_fun_type_out[2] = BLASFEO_DVEC;
@@ -640,16 +653,57 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
     {
         // additional output
         ext_fun_type_out[3] = BLASFEO_DMAT;
-        ext_fun_out[3] = &work->tmp_nv_nv;   // hess: (nu+nx) * (nu+nx)
+        ext_fun_out[3] = &work->tmp_nunx_nunx;   // hess: (nu+nx) * (nu+nx)
+        ext_fun_type_out[4] = BLASFEO_DMAT;
+        ext_fun_out[4] = &work->tmp_nz_nz;       // hess_z: nz x nz
+        ext_fun_type_out[5] = BLASFEO_DMAT;
+        ext_fun_out[5] = &work->tmp_nz_nunx;    // hess_z_nunx: nz x nu+nx
+
+        printf("evaluate external function\n");
         // evaluate external function
         model->ext_cost_fun_jac_hess->evaluate(model->ext_cost_fun_jac_hess, ext_fun_type_in,
                                             ext_fun_in, ext_fun_type_out, ext_fun_out);
-        // hessian contribution
-        blasfeo_dgead(nx+nu, nx+nu, model->scaling, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
+
+
+        // hessian contribution from xu WITH SCALING
+        blasfeo_dgead(nx+nu, nx+nu, model->scaling, &work->tmp_nunx_nunx, 0, 0, memory->RSQrq, 0, 0);
 
         printf("hess ux\n");
         blasfeo_print_dmat(nx + nu, nx + nu, memory->RSQrq, 0, 0);
 
+        if (nz > 0)
+        {
+            printf("hess z\n");
+            blasfeo_print_dmat(nz, nz, &work->tmp_nz_nz, 0, 0);
+
+            printf("hess z ux\n");
+            blasfeo_print_dmat(nz, nu + nx, &work->tmp_nz_nunx, 0, 0);
+
+            printf("dz_dux_tran\n");
+            blasfeo_print_dmat(nx+nu, nz, memory->dzdux_tran, 0, 0);
+            // compute and add cross terms
+            //  TODO use dsyrk2 ??
+
+            blasfeo_dgemm_nn(nx+nu, nz, nx+nu, 1., memory->dzdux_tran, 0, 0, &work->tmp_nz_nunx, 0, 0, 0., &work->tmp_nunx_nunx, 0, 0, &work->tmp_nunx_nunx, 0, 0);
+
+            printf("cross term \n");
+            blasfeo_print_dmat(nx+nu, nx+nu, &work->tmp_nunx_nunx, 0, 0);
+            blasfeo_dgead(nx+nu, nx+nu, 1.0, &work->tmp_nunx_nunx, 0, 0, memory->RSQrq, 0, 0);
+            blasfeo_dgetr(nx+nu, nx+nu, &work->tmp_nunx_nunx, 0, 0, &work->tmp_nunx_nunx, 0, 0);
+            // NOTE: with scaling
+            blasfeo_dgead(nx+nu, nx+nu, model->scaling, &work->tmp_nunx_nunx, 0, 0, memory->RSQrq, 0, 0);
+
+            // hessian contribution from z
+            blasfeo_dgemm_nn(nx+nu, nz, nz, 1., memory->dzdux_tran, 0, 0, &work->tmp_nz_nz, 0, 0, 0.0, &work->tmp_nunx_nz, 0, 0, &work->tmp_nunx_nz, 0, 0);
+            blasfeo_dgemm_nt(nz, nz, nx+nu, 1., &work->tmp_nunx_nz, 0, 0, memory->dzdux_tran, 0, 0, 0., &work->tmp_nunx_nunx, 0, 0, &work->tmp_nunx_nunx, 0, 0);
+            printf("contribution z\n");
+            blasfeo_print_dmat(nx+nu, nx+nu, &work->tmp_nunx_nunx, 0, 0);
+
+
+            printf("full hess ux with scaling\n");
+            blasfeo_dgead(nx+nu, nx+nu, model->scaling, &work->tmp_nunx_nunx, 0, 0, memory->RSQrq, 0, 0);
+            blasfeo_print_dmat(nx + nu, nx + nu, memory->RSQrq, 0, 0);
+        }
     }
 
     if (nz > 0)

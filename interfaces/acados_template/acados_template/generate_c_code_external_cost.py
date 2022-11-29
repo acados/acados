@@ -46,6 +46,7 @@ def generate_c_code_external_cost(model, stage_type, opts):
     p = model.p
     z = model.z
 
+
     if isinstance(x, MX):
         symbol = MX.sym
     else:
@@ -75,26 +76,36 @@ def generate_c_code_external_cost(model, stage_type, opts):
         ext_cost = model.cost_expr_ext_cost_0
         custom_hess = model.cost_expr_ext_cost_custom_hess_0
 
+    nunx = x.shape[0] + u.shape[0]
+
     # set up functions to be exported
     fun_name = model.name + suffix_name
     fun_name_hess = model.name + suffix_name_hess
     fun_name_jac = model.name + suffix_name_jac
 
     # generate expression for full gradient and Hessian
-    full_hess_ux, grad_ux = hessian(ext_cost, vertcat(u, x))
+    hess_uxz, grad_uxz = hessian(ext_cost, vertcat(u, x, z))
 
-    # generate expression for cost gradient wrt z
-    grad_z = jacobian(ext_cost, z)
+    hess_ux = hess_uxz[:nunx, :nunx]
+    hess_z = hess_uxz[nunx:, nunx:]
+    hess_z_ux = hess_uxz[nunx:, :nunx]
+
+    grad_ux = grad_uxz[:nunx]
+    grad_z = grad_uxz[nunx:]
+
+    # # generate expression for cost gradient wrt z
+    # grad_z = jacobian(ext_cost, z)
 
     # generate expression for cost hessian wrt dw dz
     # hess_ux_z = jacobian(grad_z, vertcat(u, x))
 
     if custom_hess is not None:
-        full_hess_ux = custom_hess
+        hess_ux = custom_hess
 
     ext_cost_fun = Function(fun_name, [x, u, z, p], [ext_cost])
+
     ext_cost_fun_jac_hess = Function(
-        fun_name_hess, [x, u, z, p], [ext_cost, grad_ux, grad_z, full_hess_ux]
+        fun_name_hess, [x, u, z, p], [ext_cost, grad_ux, grad_z, hess_ux, hess_z, hess_z_ux]
     )
     ext_cost_fun_jac = Function(
         fun_name_jac, [x, u, z, p], [ext_cost, grad_ux, grad_z]

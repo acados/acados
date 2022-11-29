@@ -46,7 +46,7 @@ COST_VERSIONS = ['LS', 'EXTERNAL', 'EXTERNAL_Z', 'NLS', 'NLS_Z', 'LS_Z', 'CONL',
 HESSIAN_APPROXIMATION = 'GAUSS_NEWTON' # 'GAUSS_NEWTON
 
 def main(cost_version: str):
-    EXTERNAL_COST_USE_NUM_HESS = 1
+    EXTERNAL_COST_USE_NUM_HESS = 0
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
@@ -179,7 +179,6 @@ def main(cost_version: str):
         ocp.model.cost_expr_ext_cost = .5*y_expr_z.T @ cost_W @ y_expr_z
         ocp.model.cost_expr_ext_cost_e = .5*x.T @ Q @ x
 
-        EXTERNAL_COST_USE_NUM_HESS = True
     else:
         raise Exception('Unknown cost_version. Possible values are \'LS\' and \'NLS\'.')
 
@@ -256,7 +255,7 @@ def main(cost_version: str):
 
 if __name__ == "__main__":
 
-    main(cost_version='EXTERNAL')
+    main(cost_version='EXTERNAL_Z')
     # main(cost_version='EXTERNAL_Z')
 
     # for cost_version in COST_VERSIONS:
