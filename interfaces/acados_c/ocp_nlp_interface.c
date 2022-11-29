@@ -1155,6 +1155,26 @@ void ocp_nlp_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_so
         double *double_values = value;
         d_ocp_qp_get_ub(stage, nlp_mem->qp_in, double_values);
     }
+    else if (!strcmp(field, "C"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_C(stage, nlp_mem->qp_in, double_values);
+    }
+    else if (!strcmp(field, "D"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_D(stage, nlp_mem->qp_in, double_values);
+    }
+    else if (!strcmp(field, "lg"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_lg(stage, nlp_mem->qp_in, double_values);
+    }
+    else if (!strcmp(field, "ug"))
+    {
+        double *double_values = value;
+        d_ocp_qp_get_ug(stage, nlp_mem->qp_in, double_values);
+    }
     else
     {
         printf("\nerror: ocp_nlp_get_at_stage: field %s not available\n", field);
