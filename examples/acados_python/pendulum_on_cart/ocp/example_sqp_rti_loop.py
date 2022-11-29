@@ -109,7 +109,7 @@ def main():
 
     for i in range(20):
         status = ocp_solver.solve()
-        ocp_solver.custom_update(np.array([]))
+        # ocp_solver.custom_update(np.array([]))
         ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
         residuals = ocp_solver.get_residuals()
         print("residuals after ", i, "SQP_RTI iterations:\n", residuals)
@@ -132,33 +132,40 @@ def main():
     cost = ocp_solver.get_cost()
     print("cost function value of solution = ", cost)
 
-    PRINT_QP = False
+    PRINT_QP = True
+
+    range_without_terminal = [0, 1, N-2, N-1, N]
+    range_with_terminal = [0, 1, N-1, N]
     if PRINT_QP:
-        for i in range(N):
+        for i in range_without_terminal:
             A_qp = ocp_solver.get_from_qp_in(i, "A")
             print(f"qp: A at stage {i}: {A_qp}")
 
-        for i in range(N):
+        for i in range_without_terminal:
             B_qp = ocp_solver.get_from_qp_in(i, "B")
             print(f"qp: B at stage {i}: {B_qp}")
 
-        for i in range(N+1):
+        for i in range_without_terminal:
+            b_qp = ocp_solver.get_from_qp_in(i, "b")
+            print(f"qp: b at stage {i}: {b_qp}")
+
+        for i in range_with_terminal:
             Q_qp = ocp_solver.get_from_qp_in(i, "Q")
             print(f"qp: Q at stage {i}: {Q_qp}")
 
-        for i in range(N+1):
+        for i in range_with_terminal:
             R_qp = ocp_solver.get_from_qp_in(i, "R")
             print(f"qp: R at stage {i}: {R_qp}")
 
-        for i in range(N+1):
+        for i in range_with_terminal:
             S_qp = ocp_solver.get_from_qp_in(i, "S")
             print(f"qp: S at stage {i}: {S_qp}")
 
-        for i in range(N+1):
+        for i in range_with_terminal:
             r_qp = ocp_solver.get_from_qp_in(i, "r")
             print(f"qp: r at stage {i}: {r_qp}")
 
-        for i in range(N+1):
+        for i in range_with_terminal:
             q_qp = ocp_solver.get_from_qp_in(i, "q")
             print(f"qp: q at stage {i}: {q_qp}")
 
