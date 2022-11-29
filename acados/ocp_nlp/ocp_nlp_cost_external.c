@@ -684,6 +684,10 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
             // compute and add cross terms
             //  TODO use dsyrk2 ??
 
+            // NOTE: we compute the Hessian as follows:
+            // H = dl2_dxu2 + dz_dux.T * d2l_dz2 * dz_dux + d2l_dux_dz * dz_dux + (d2l_dux_dz * dz_dux).T
+            // the term d2z_dux2 is dropped!
+
             blasfeo_dgemm_nn(nx+nu, nz, nx+nu, 1., memory->dzdux_tran, 0, 0, &work->tmp_nz_nunx, 0, 0, 0., &work->tmp_nunx_nunx, 0, 0, &work->tmp_nunx_nunx, 0, 0);
 
             printf("cross term \n");
