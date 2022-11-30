@@ -190,6 +190,7 @@ def main():
             print(f"qp: D at stage {i}: {D_qp}")
 
     # plot
+    ocp_solver.dump_last_qp_to_json(overwrite=True)
     # plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
 
 
