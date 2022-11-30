@@ -829,6 +829,26 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "ng", &dims_out[0]);
         dims_out[1] = 1;
     }
+    else if (!strcmp(field, "lbx"))
+    {
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nbx", &dims_out[0]);
+        dims_out[1] = 1;
+    }
+    else if (!strcmp(field, "ubx"))
+    {
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nbx", &dims_out[0]);
+        dims_out[1] = 1;
+    }
+    else if (!strcmp(field, "lbu"))
+    {
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nbu", &dims_out[0]);
+        dims_out[1] = 1;
+    }
+    else if (!strcmp(field, "ubu"))
+    {
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nbu", &dims_out[0]);
+        dims_out[1] = 1;
+    }
     else
     {
         printf("\nerror: ocp_nlp_qp_dims_get_from_attr: field %s not available\n", field);

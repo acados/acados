@@ -979,6 +979,11 @@ class AcadosOcpSolver:
 
         self.status = 0
 
+        # gettable fields
+        self.__qp_dynamics_fields = ['A', 'B', 'b']
+        self.__qp_cost_fields = ['Q', 'R', 'S', 'q', 'r']
+        self.__qp_constraint_fields = ['C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu']
+
 
     def __get_pointers_solver(self):
         # """
@@ -1368,24 +1373,15 @@ class AcadosOcpSolver:
         qp_data = dict()
 
         lN = len(str(self.N+1))
-        for i in range(self.N+1):
-            i_string = f'{i:0{lN}d}'
-            qp_data['Q_'+i_string] = self.get_from_qp_in(i,'Q')
-            qp_data['R_'+i_string] = self.get_from_qp_in(i,'R')
-            qp_data['S_'+i_string] = self.get_from_qp_in(i,'S')
-            qp_data['q_'+i_string] = self.get_from_qp_in(i,'q')
-            qp_data['r_'+i_string] = self.get_from_qp_in(i,'r')
-            # constraints
-            qp_data['C_'+i_string] = self.get_from_qp_in(i,'C')
-            qp_data['D_'+i_string] = self.get_from_qp_in(i,'D')
-            qp_data['lg_'+i_string] = self.get_from_qp_in(i,'lg')
-            qp_data['ug_'+i_string] = self.get_from_qp_in(i,'ug')
+        for field in self.__qp_dynamics_fields:
+            for i in range(self.N):
+                qp_data[f'{field}_{i:0{lN}d}'] = self.get_from_qp_in(i,field)
 
-            if i < self.N:
-                qp_data['A_'+i_string] = self.get_from_qp_in(i,'A')
-                qp_data['B_'+i_string] = self.get_from_qp_in(i,'B')
-                qp_data['b_'+i_string] = self.get_from_qp_in(i,'b')
+        for field in self.__qp_constraint_fields + self.__qp_cost_fields:
+            for i in range(self.N):
+                qp_data[f'{field}_{i:0{lN}d}'] = self.get_from_qp_in(i,field)
 
+        # remove empty fields
         for k in list(qp_data.keys()):
             if len(qp_data[k]) == 0:
                 del qp_data[k]
@@ -1799,18 +1795,17 @@ class AcadosOcpSolver:
         Get numerical data from the current QP.
 
             :param stage: integer corresponding to shooting node
-            :param field: string in ['A', 'B', 'b', 'Q', 'R', 'S', 'q', 'r', 'C', 'D']
+            :param field: string in ['A', 'B', 'b', 'Q', 'R', 'S', 'q', 'r', 'C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu']
         """
-        dynamics_fields = ['A', 'B', 'b']
-        cost_fields = ['Q', 'R', 'S', 'q', 'r']
-        constraint_fields = ['C', 'D', 'lg', 'ug']
-
+        # idx* should be added too..
         if not isinstance(stage_, int):
             raise TypeError("stage should be int")
         if stage_ > self.N:
             raise Exception("stage should be <= self.N")
-        if field_ in dynamics_fields and stage_ >= self.N:
+        if field_ in self.__qp_dynamics_fields and stage_ >= self.N:
             raise ValueError(f"dynamics field {field_} not available at terminal stage")
+        if field_ not in self.__qp_dynamics_fields + self.__qp_cost_fields + self.__qp_constraint_fields:
+            raise Exception(f"field {field_} not supported.")
 
         field = field_.encode('utf-8')
         stage = c_int(stage_)
