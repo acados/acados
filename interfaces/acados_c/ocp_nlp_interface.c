@@ -766,14 +766,9 @@ void ocp_nlp_constraint_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims 
 void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
         int stage, const char *field, int *dims_out)
 {
-    // vectors first
-    dims_out[1] = 0;
     // only matrices here matrices
     if (!strcmp(field, "A"))
     {
-        // config->dynamics[stage]->dims_get(config->dynamics[stage], dims->dynamics[stage],
-        //                                   "nx1", &dims_out[0]);
-        // dims_out[1] = dims->nx[stage];
         dims_out[0] = dims->nx[stage+1];
         dims_out[1] = dims->nx[stage];
     }
@@ -781,6 +776,11 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
     {
         dims_out[0] = dims->nx[stage+1];
         dims_out[1] = dims->nu[stage];
+    }
+    else if (!strcmp(field, "b"))
+    {
+        dims_out[0] = 1;
+        dims_out[1] = dims->nx[stage+1];
     }
     else if (!strcmp(field, "Q"))
     {
