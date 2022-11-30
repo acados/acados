@@ -1347,6 +1347,56 @@ class AcadosOcpSolver:
         print("stored current iterate in ", os.path.join(os.getcwd(), filename))
 
 
+
+    def dump_last_qp_to_json(self, filename: str = '', overwrite=False):
+        """
+        Dumps the latest QP data into a json file
+
+            :param filename: if not set, use model_name + timestamp + '.json'
+            :param overwrite: if false and filename exists add timestamp to filename
+        """
+        if filename == '':
+            filename = f'{self.model_name}_QP.json'
+
+        if not overwrite:
+            # append timestamp
+            if os.path.isfile(filename):
+                filename = filename[:-5]
+                filename += datetime.utcnow().strftime('%Y-%m-%d-%H:%M:%S.%f') + '.json'
+
+        # get QP data:
+        qp_data = dict()
+
+        lN = len(str(self.N+1))
+        for i in range(self.N+1):
+            i_string = f'{i:0{lN}d}'
+            qp_data['Q_'+i_string] = self.get_from_qp_in(i,'Q')
+            qp_data['R_'+i_string] = self.get_from_qp_in(i,'R')
+            qp_data['S_'+i_string] = self.get_from_qp_in(i,'S')
+            qp_data['q_'+i_string] = self.get_from_qp_in(i,'q')
+            qp_data['r_'+i_string] = self.get_from_qp_in(i,'r')
+            # constraints
+            qp_data['C_'+i_string] = self.get_from_qp_in(i,'C')
+            qp_data['D_'+i_string] = self.get_from_qp_in(i,'D')
+            qp_data['lg_'+i_string] = self.get_from_qp_in(i,'lg')
+            qp_data['ug_'+i_string] = self.get_from_qp_in(i,'ug')
+
+            if i < self.N:
+                qp_data['A_'+i_string] = self.get_from_qp_in(i,'A')
+                qp_data['B_'+i_string] = self.get_from_qp_in(i,'B')
+                qp_data['b_'+i_string] = self.get_from_qp_in(i,'b')
+
+        for k in list(qp_data.keys()):
+            if len(qp_data[k]) == 0:
+                del qp_data[k]
+
+        # save
+        with open(filename, 'w') as f:
+            json.dump(qp_data, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
+        print("stored qp from solver memory in ", os.path.join(os.getcwd(), filename))
+
+
+
     def load_iterate(self, filename):
         """
         Loads the iterate stored in json file with filename into the ocp solver.
@@ -1753,7 +1803,7 @@ class AcadosOcpSolver:
         """
         dynamics_fields = ['A', 'B', 'b']
         cost_fields = ['Q', 'R', 'S', 'q', 'r']
-        constraint_fields = ['C', 'D']
+        constraint_fields = ['C', 'D', 'lg', 'ug']
 
         if not isinstance(stage_, int):
             raise TypeError("stage should be int")
