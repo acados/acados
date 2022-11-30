@@ -34,7 +34,8 @@
 
 import numpy as np
 from scipy.linalg import block_diag
-from acados_template import *
+from acados_template import AcadosOcp, AcadosOcpSolver
+from casadi import vertcat
 
 
 def export_mhe_solver(model, N, h, Q, Q0, R):

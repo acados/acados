@@ -31,7 +31,8 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from acados_template import *
+from acados_template import AcadosModel
+from casadi import SX, vertcat, cos, sin
 
 def export_mhe_ode_model():
 

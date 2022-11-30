@@ -33,7 +33,8 @@
 
 import numpy as np
 import scipy
-from acados_template import *
+from acados_template import AcadosOcpSolver, AcadosOcp
+from casadi import vertcat
 
 def export_ocp_solver(model, N, h, Q, R, Fmax=80, use_cython=False):
 
