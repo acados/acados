@@ -55,7 +55,7 @@ from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 
 
 
-def make_sim_dims_consistent(acados_sim):
+def make_sim_dims_consistent(acados_sim: AcadosSim):
     dims = acados_sim.dims
     model = acados_sim.model
     # nx
@@ -94,7 +94,7 @@ def get_sim_layout():
     return sim_layout
 
 
-def sim_formulation_json_dump(acados_sim, json_file='acados_sim.json'):
+def sim_formulation_json_dump(acados_sim: AcadosSim, json_file='acados_sim.json'):
     # Load acados_sim structure description
     sim_layout = get_sim_layout()
 
@@ -165,7 +165,7 @@ def sim_render_templates(json_file, model_name: str, code_export_dir, cmake_opti
     render_template(in_file, out_file, model_dir, json_path)
 
 
-def sim_generate_external_functions(acados_sim):
+def sim_generate_external_functions(acados_sim: AcadosSim):
     model = acados_sim.model
     model = make_model_consistent(model)
 
