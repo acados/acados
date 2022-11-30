@@ -1742,16 +1742,25 @@ class AcadosOcpSolver:
         return
 
 
-    def get_from_qp_in(self, stage_, field_):
+    def get_from_qp_in(self, stage_: int, field_: str):
         """
         Get numerical data from the current QP.
 
             :param stage: integer corresponding to shooting node
-            :param field: string in ['A', 'B', 'Q', 'R', 'S', 'b', 'q', 'r']
+            :param field: string in ['A', 'B', 'b', 'Q', 'R', 'S', 'q', 'r']
         """
-
+        dynamics_fields = ['A', 'B', 'b']
+        cost_fields = ['Q', 'R', 'S', 'q', 'r']
+        constraint_fields = ['C', 'D']
         field = field_.encode('utf-8')
         stage = c_int(stage_)
+
+        if not isinstance(stage, int):
+            raise TypeError("stage should be int")
+        if stage > self.N:
+            raise Exception("stage should be <= self.N")
+        if field in dynamics_fields and stage_ >= self.N:
+            raise ValueError(f"dynamics field {field_} not available at terminal stage")
 
         # get dims
         self.shared_lib.ocp_nlp_qp_dims_get_from_attr.argtypes = \
