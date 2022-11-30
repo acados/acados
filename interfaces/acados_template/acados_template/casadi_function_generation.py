@@ -404,8 +404,6 @@ def generate_c_code_discrete_dynamics( model, opts ):
 
 
 
-
-
 def generate_c_code_explicit_ode( model, opts ):
 
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
