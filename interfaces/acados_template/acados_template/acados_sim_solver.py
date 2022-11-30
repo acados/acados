@@ -47,7 +47,7 @@ from .acados_sim import AcadosSim
 from .acados_ocp import AcadosOcp
 from .utils import is_column, render_template, format_class_dict, make_object_json_dumpable,\
      make_model_consistent, set_up_imported_gnsf_model, get_python_interface_path, get_lib_ext,\
-     casadi_length, is_empty
+     casadi_length, is_empty, check_casadi_version
 from .builders import CMakeBuilder
 from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 
@@ -180,6 +180,7 @@ def sim_generate_external_functions(acados_sim: AcadosSim):
         os.makedirs(model_dir)
 
     # generate external functions
+    check_casadi_version()
     if integrator_type == 'ERK':
         generate_c_code_explicit_ode(model, opts)
     elif integrator_type == 'IRK':

@@ -32,14 +32,20 @@
 #
 
 import os
-from casadi import SX, MX, Function, jacobian, vertcat, jtimes, hessian
+import casadi as ca
+from .utils import is_empty, casadi_length
 
-from .utils import casadi_length, check_casadi_version
-from .utils import is_empty, casadi_length, check_casadi_version
+
+def get_casadi_symbol(x):
+    if isinstance(x, ca.MX):
+        return ca.MX.sym
+    elif isinstance(x, ca.SX):
+        return ca.SX.sym
+    else:
+        raise TypeError("Expected casadi SX or MX.")
+
 
 def generate_c_code_implicit_ode( model, opts ):
-
-    check_casadi_version()
 
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
@@ -57,39 +63,36 @@ def generate_c_code_implicit_ode( model, opts ):
     nz = casadi_length(z)
 
     # generate jacobians
-    jac_x       = jacobian(f_impl, x)
-    jac_xdot    = jacobian(f_impl, xdot)
-    jac_u       = jacobian(f_impl, u)
-    jac_z       = jacobian(f_impl, z)
+    jac_x       = ca.jacobian(f_impl, x)
+    jac_xdot    = ca.jacobian(f_impl, xdot)
+    jac_u       = ca.jacobian(f_impl, u)
+    jac_z       = ca.jacobian(f_impl, z)
 
     # Set up functions
     p = model.p
     fun_name = model_name + '_impl_dae_fun'
-    impl_dae_fun = Function(fun_name, [x, xdot, u, z, p], [f_impl])
+    impl_dae_fun = ca.Function(fun_name, [x, xdot, u, z, p], [f_impl])
 
     fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
-    impl_dae_fun_jac_x_xdot_z = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_z])
+    impl_dae_fun_jac_x_xdot_z = ca.Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_z])
 
     fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u_z'
-    impl_dae_fun_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_u, jac_z])
+    impl_dae_fun_jac_x_xdot_u_z = ca.Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_u, jac_z])
 
     fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u'
-    impl_dae_fun_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_u])
+    impl_dae_fun_jac_x_xdot_u = ca.Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_u])
 
     fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
-    impl_dae_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z, p], [jac_x, jac_xdot, jac_u, jac_z])
+    impl_dae_jac_x_xdot_u_z = ca.Function(fun_name, [x, xdot, u, z, p], [jac_x, jac_xdot, jac_u, jac_z])
 
     if opts["generate_hess"]:
-        x_xdot_z_u = vertcat(x, xdot, z, u)
-        if isinstance(x, MX):
-            symbol = MX.sym
-        else:
-            symbol = SX.sym
+        x_xdot_z_u = ca.vertcat(x, xdot, z, u)
+        symbol = get_casadi_symbol(x)
         multiplier = symbol('multiplier', nx + nz)
-        ADJ = jtimes(f_impl, x_xdot_z_u, multiplier, True)
-        HESS = jacobian(ADJ, x_xdot_z_u)
+        ADJ = ca.jtimes(f_impl, x_xdot_z_u, multiplier, True)
+        HESS = ca.jacobian(ADJ, x_xdot_z_u)
         fun_name = model_name + '_impl_dae_hess'
-        impl_dae_hess = Function(fun_name, [x, xdot, u, z, multiplier, p], [HESS])
+        impl_dae_hess = ca.Function(fun_name, [x, xdot, u, z, multiplier, p], [HESS])
 
     # change directory
     cwd = os.getcwd()
@@ -119,13 +122,11 @@ def generate_c_code_implicit_ode( model, opts ):
         impl_dae_hess.generate(fun_name, casadi_codegen_opts)
 
     os.chdir(cwd)
-
+    return
 
 
 
 def generate_c_code_conl_cost(model, cost_name, stage_type, opts):
-
-    check_casadi_version()
 
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
@@ -133,10 +134,7 @@ def generate_c_code_conl_cost(model, cost_name, stage_type, opts):
     z = model.z
     p = model.p
 
-    if isinstance(x, casadi.MX):
-        symbol = casadi.MX.sym
-    else:
-        symbol = casadi.SX.sym
+    symbol = get_casadi_symbol(x)
 
     if stage_type == 'terminal':
         u = symbol('u', 0, 0)
@@ -182,25 +180,25 @@ def generate_c_code_conl_cost(model, cost_name, stage_type, opts):
     fun_name_cost_fun_jac_hess = model.name + suffix_name_fun_jac_hess
 
     # set up functions to be exported
-    outer_loss_fun = casadi.Function('psi', [res_expr, p], [outer_expr])
+    outer_loss_fun = ca.Function('psi', [res_expr, p], [outer_expr])
     cost_expr = outer_loss_fun(inner_expr, p)
 
-    outer_loss_grad_fun = casadi.Function('outer_loss_grad', [res_expr, p], [casadi.jacobian(outer_expr, res_expr).T])
+    outer_loss_grad_fun = ca.Function('outer_loss_grad', [res_expr, p], [ca.jacobian(outer_expr, res_expr).T])
 
     if custom_hess is None:
-        outer_hess_fun = casadi.Function('inner_hess', [res_expr, p], [casadi.hessian(outer_loss_fun(res_expr, p), res_expr)[0]])
+        outer_hess_fun = ca.Function('inner_hess', [res_expr, p], [ca.hessian(outer_loss_fun(res_expr, p), res_expr)[0]])
     else:
-        outer_hess_fun = casadi.Function('inner_hess', [res_expr, p], [custom_hess])
+        outer_hess_fun = ca.Function('inner_hess', [res_expr, p], [custom_hess])
 
-    Jt_ux_expr = casadi.jacobian(inner_expr, casadi.vertcat(u, x)).T
-    Jt_z_expr = casadi.jacobian(inner_expr, z).T
+    Jt_ux_expr = ca.jacobian(inner_expr, ca.vertcat(u, x)).T
+    Jt_z_expr = ca.jacobian(inner_expr, z).T
 
-    cost_fun = casadi.Function(
+    cost_fun = ca.Function(
         fun_name_cost_fun,
         [x, u, z, yref, p],
         [cost_expr])
 
-    cost_fun_jac_hess = casadi.Function(
+    cost_fun_jac_hess = ca.Function(
         fun_name_cost_fun_jac_hess,
         [x, u, z, yref, p],
         [cost_expr, outer_loss_grad_fun(inner_expr, p), Jt_ux_expr, Jt_z_expr, outer_hess_fun(inner_expr, p)]
@@ -224,18 +222,13 @@ def generate_c_code_conl_cost(model, cost_name, stage_type, opts):
 
 def generate_c_code_constraint( model, con_name, is_terminal, opts ):
 
-    check_casadi_version()
-
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
     # load constraint variables and expression
     x = model.x
     p = model.p
 
-    if isinstance(x, casadi.MX):
-        symbol = MX.sym
-    else:
-        symbol = SX.sym
+    symbol = get_casadi_symbol(x)
 
     if is_terminal:
         con_h_expr = model.con_h_expr_e
@@ -286,9 +279,9 @@ def generate_c_code_constraint( model, con_name, is_terminal, opts ):
         else:
             fun_name = con_name + '_constr_h_fun_jac_uxt_zt'
 
-        jac_ux_t = transpose(jacobian(con_h_expr, vertcat(u,x)))
-        jac_z_t = jacobian(con_h_expr, z)
-        constraint_fun_jac_tran = Function(fun_name, [x, u, z, p], \
+        jac_ux_t = ca.transpose(ca.jacobian(con_h_expr, ca.vertcat(u,x)))
+        jac_z_t = ca.jacobian(con_h_expr, z)
+        constraint_fun_jac_tran = ca.Function(fun_name, [x, u, z, p], \
                 [con_h_expr, jac_ux_t, jac_z_t])
 
         constraint_fun_jac_tran.generate(fun_name, casadi_codegen_opts)
@@ -300,16 +293,16 @@ def generate_c_code_constraint( model, con_name, is_terminal, opts ):
                 fun_name = con_name + '_constr_h_fun_jac_uxt_zt_hess'
 
             # adjoint
-            adj_ux = jtimes(con_h_expr, vertcat(u, x), lam_h, True)
+            adj_ux = ca.jtimes(con_h_expr, ca.vertcat(u, x), lam_h, True)
             # hessian
-            hess_ux = jacobian(adj_ux, vertcat(u, x))
+            hess_ux = ca.jacobian(adj_ux, ca.vertcat(u, x))
 
-            adj_z = jtimes(con_h_expr, z, lam_h, True)
-            hess_z = jacobian(adj_z, z)
+            adj_z = ca.jtimes(con_h_expr, z, lam_h, True)
+            hess_z = ca.jacobian(adj_z, z)
 
             # set up functions
             constraint_fun_jac_tran_hess = \
-                Function(fun_name, [x, u, lam_h, z, p], \
+                ca.Function(fun_name, [x, u, lam_h, z, p], \
                     [con_h_expr, jac_ux_t, hess_ux, jac_z_t, hess_z])
 
             # generate C code
@@ -319,7 +312,7 @@ def generate_c_code_constraint( model, con_name, is_terminal, opts ):
             fun_name = con_name + '_constr_h_e_fun'
         else:
             fun_name = con_name + '_constr_h_fun'
-        h_fun = Function(fun_name, [x, u, z, p], [con_h_expr])
+        h_fun = ca.Function(fun_name, [x, u, z, p], [con_h_expr])
         h_fun.generate(fun_name, casadi_codegen_opts)
 
     else: # BGP constraint
@@ -333,25 +326,25 @@ def generate_c_code_constraint( model, con_name, is_terminal, opts ):
             con_r_expr = model.con_r_expr
 
         nphi = casadi_length(con_phi_expr)
-        con_phi_expr_x_u_z = substitute(con_phi_expr, r, con_r_expr)
-        phi_jac_u = jacobian(con_phi_expr_x_u_z, u)
-        phi_jac_x = jacobian(con_phi_expr_x_u_z, x)
-        phi_jac_z = jacobian(con_phi_expr_x_u_z, z)
+        con_phi_expr_x_u_z = ca.substitute(con_phi_expr, r, con_r_expr)
+        phi_jac_u = ca.jacobian(con_phi_expr_x_u_z, u)
+        phi_jac_x = ca.jacobian(con_phi_expr_x_u_z, x)
+        phi_jac_z = ca.jacobian(con_phi_expr_x_u_z, z)
 
-        hess = hessian(con_phi_expr[0], r)[0]
+        hess = ca.hessian(con_phi_expr[0], r)[0]
         for i in range(1, nphi):
-            hess = vertcat(hess, hessian(con_phi_expr[i], r)[0])
+            hess = ca.vertcat(hess, ca.hessian(con_phi_expr[i], r)[0])
 
-        r_jac_u = jacobian(con_r_expr, u)
-        r_jac_x = jacobian(con_r_expr, x)
+        r_jac_u = ca.jacobian(con_r_expr, u)
+        r_jac_x = ca.jacobian(con_r_expr, x)
 
         constraint_phi = \
-            Function(fun_name, [x, u, z, p], \
+            ca.Function(fun_name, [x, u, z, p], \
                 [con_phi_expr_x_u_z, \
-                vertcat(transpose(phi_jac_u), transpose(phi_jac_x)), \
-                transpose(phi_jac_z), \
+                ca.vertcat(ca.transpose(phi_jac_u), ca.transpose(phi_jac_x)), \
+                ca.transpose(phi_jac_z), \
                 hess,
-                vertcat(transpose(r_jac_u), transpose(r_jac_x))])
+                ca.vertcat(ca.transpose(r_jac_u), ca.transpose(r_jac_x))])
 
         constraint_phi.generate(fun_name, casadi_codegen_opts)
 
@@ -364,8 +357,6 @@ def generate_c_code_constraint( model, con_name, is_terminal, opts ):
 
 def generate_c_code_discrete_dynamics( model, opts ):
 
-    check_casadi_version()
-
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
     # load model
@@ -376,13 +367,7 @@ def generate_c_code_discrete_dynamics( model, opts ):
     model_name = model.name
     nx = casadi_length(x)
 
-    if isinstance(phi, ca.MX):
-        symbol = ca.MX.sym
-    elif isinstance(phi, ca.SX):
-        symbol = ca.SX.sym
-    else:
-        raise Exception("generate_c_code_disc_dyn: disc_dyn_expr must be a CasADi expression, you have type: {}".format(type(phi)))
-
+    symbol = get_casadi_symbol(x)
     # assume nx1 = nx !!!
     lam = symbol('lam', nx, 1)
 
@@ -401,7 +386,7 @@ def generate_c_code_discrete_dynamics( model, opts ):
         os.makedirs(model_dir)
     os.chdir(model_dir)
 
-    # set up & generate Functions
+    # set up & generate ca.Functions
     fun_name = model_name + '_dyn_disc_phi_fun'
     phi_fun = ca.Function(fun_name, [x, u, p], [phi])
     phi_fun.generate(fun_name, casadi_codegen_opts)
@@ -415,14 +400,13 @@ def generate_c_code_discrete_dynamics( model, opts ):
     phi_fun_jac_ut_xt_hess.generate(fun_name, casadi_codegen_opts)
 
     os.chdir(cwd)
+    return
 
 
 
 
 
 def generate_c_code_explicit_ode( model, opts ):
-
-    check_casadi_version()
 
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
@@ -439,12 +423,8 @@ def generate_c_code_explicit_ode( model, opts ):
     nx = x.size()[0]
     nu = u.size()[0]
 
-    if isinstance(f_expl, casadi.MX):
-        symbol = MX.sym
-    elif isinstance(f_expl, casadi.SX):
-        symbol = SX.sym
-    else:
-        raise Exception("Invalid type for f_expl! Possible types are 'SX' and 'MX'.")
+    symbol = get_casadi_symbol(x)
+
     ## set up functions to be exported
     Sx = symbol('Sx', nx, nx)
     Sp = symbol('Sp', nx, nu)
@@ -453,30 +433,30 @@ def generate_c_code_explicit_ode( model, opts ):
     fun_name = model_name + '_expl_ode_fun'
 
     ## Set up functions
-    expl_ode_fun = Function(fun_name, [x, u, p], [f_expl])
+    expl_ode_fun = ca.Function(fun_name, [x, u, p], [f_expl])
 
-    vdeX = jtimes(f_expl,x,Sx)
-    vdeP = jacobian(f_expl,u) + jtimes(f_expl,x,Sp)
+    vdeX = ca.jtimes(f_expl,x,Sx)
+    vdeP = ca.jacobian(f_expl,u) + ca.jtimes(f_expl,x,Sp)
 
     fun_name = model_name + '_expl_vde_forw'
 
-    expl_vde_forw = Function(fun_name, [x, Sx, Sp, u, p], [f_expl, vdeX, vdeP])
+    expl_vde_forw = ca.Function(fun_name, [x, Sx, Sp, u, p], [f_expl, vdeX, vdeP])
 
-    adj = jtimes(f_expl, vertcat(x, u), lambdaX, True)
+    adj = ca.jtimes(f_expl, ca.vertcat(x, u), lambdaX, True)
 
     fun_name = model_name + '_expl_vde_adj'
-    expl_vde_adj = Function(fun_name, [x, lambdaX, u, p], [adj])
+    expl_vde_adj = ca.Function(fun_name, [x, lambdaX, u, p], [adj])
 
     if generate_hess:
-        S_forw = vertcat(horzcat(Sx, Sp), horzcat(DM.zeros(nu,nx), DM.eye(nu)))
-        hess = mtimes(transpose(S_forw),jtimes(adj, vertcat(x,u), S_forw))
+        S_forw = ca.vertcat(ca.horzcat(Sx, Sp), ca.horzcat(ca.DM.zeros(nu,nx), ca.DM.eye(nu)))
+        hess = ca.mtimes(ca.transpose(S_forw),ca.jtimes(adj, ca.vertcat(x,u), S_forw))
         hess2 = []
         for j in range(nx+nu):
             for i in range(j,nx+nu):
-                hess2 = vertcat(hess2, hess[i,j])
+                hess2 = ca.vertcat(hess2, hess[i,j])
 
         fun_name = model_name + '_expl_ode_hess'
-        expl_ode_hess = Function(fun_name, [x, Sx, Sp, lambdaX, u, p], [adj, hess2])
+        expl_ode_hess = ca.Function(fun_name, [x, Sx, Sp, lambdaX, u, p], [adj, hess2])
 
     # change directory
     cwd = os.getcwd()
@@ -507,17 +487,12 @@ def generate_c_code_explicit_ode( model, opts ):
 
 def generate_c_code_external_cost(model, stage_type, opts):
 
-    check_casadi_version()
-
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
     x = model.x
     p = model.p
 
-    if isinstance(x, MX):
-        symbol = MX.sym
-    else:
-        symbol = SX.sym
+    symbol = get_casadi_symbol(x)
 
     if stage_type == 'terminal':
         suffix_name = "_cost_ext_cost_e_fun"
@@ -555,7 +530,7 @@ def generate_c_code_external_cost(model, stage_type, opts):
     fun_name_jac = model.name + suffix_name_jac
 
     # generate expression for full gradient and Hessian
-    hess_uxz, grad_uxz = hessian(ext_cost, vertcat(u, x, z))
+    hess_uxz, grad_uxz = ca.hessian(ext_cost, ca.vertcat(u, x, z))
 
     hess_ux = hess_uxz[:nunx, :nunx]
     hess_z = hess_uxz[nunx:, nunx:]
@@ -564,12 +539,12 @@ def generate_c_code_external_cost(model, stage_type, opts):
     if custom_hess is not None:
         hess_ux = custom_hess
 
-    ext_cost_fun = Function(fun_name, [x, u, z, p], [ext_cost])
+    ext_cost_fun = ca.Function(fun_name, [x, u, z, p], [ext_cost])
 
-    ext_cost_fun_jac_hess = Function(
+    ext_cost_fun_jac_hess = ca.Function(
         fun_name_hess, [x, u, z, p], [ext_cost, grad_uxz, hess_ux, hess_z, hess_z_ux]
     )
-    ext_cost_fun_jac = Function(
+    ext_cost_fun_jac = ca.Function(
         fun_name_jac, [x, u, z, p], [ext_cost, grad_uxz]
     )
 
@@ -591,8 +566,6 @@ def generate_c_code_external_cost(model, stage_type, opts):
 
 
 def generate_c_code_gnsf( model, opts ):
-
-    check_casadi_version()
 
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
@@ -617,15 +590,11 @@ def generate_c_code_gnsf( model, opts ):
     gnsf_nout = max(phi_fun.size_out(0))
 
     # set up expressions
-    # if the model uses MX because of cost/constraints
-    # the DAE can be exported as SX -> detect GNSF in Matlab
-    # -> evaluated SX GNSF functions with MX.
+    # if the model uses ca.MX because of cost/constraints
+    # the DAE can be exported as ca.SX -> detect GNSF in Matlab
+    # -> evaluated ca.SX GNSF functions with ca.MX.
     u = model.u
-
-    if isinstance(u, casadi.MX):
-        symbol = MX.sym
-    else:
-        symbol = SX.sym
+    symbol = get_casadi_symbol(u)
 
     y = symbol("y", gnsf_ny, 1)
     uhat = symbol("uhat", gnsf_nuhat, 1)
@@ -638,17 +607,17 @@ def generate_c_code_gnsf( model, opts ):
 
     ## generate C code
     fun_name = model_name + '_gnsf_phi_fun'
-    phi_fun_ = Function(fun_name, [y, uhat, p], [phi_fun(y, uhat, p)])
+    phi_fun_ = ca.Function(fun_name, [y, uhat, p], [phi_fun(y, uhat, p)])
     phi_fun_.generate(fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_gnsf_phi_fun_jac_y'
     phi_fun_jac_y = model.phi_fun_jac_y
-    phi_fun_jac_y_ = Function(fun_name, [y, uhat, p], phi_fun_jac_y(y, uhat, p))
+    phi_fun_jac_y_ = ca.Function(fun_name, [y, uhat, p], phi_fun_jac_y(y, uhat, p))
     phi_fun_jac_y_.generate(fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_gnsf_phi_jac_y_uhat'
     phi_jac_y_uhat = model.phi_jac_y_uhat
-    phi_jac_y_uhat_ = Function(fun_name, [y, uhat, p], phi_jac_y_uhat(y, uhat, p))
+    phi_jac_y_uhat_ = ca.Function(fun_name, [y, uhat, p], phi_jac_y_uhat(y, uhat, p))
     phi_jac_y_uhat_.generate(fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_gnsf_f_lo_fun_jac_x1k1uz'
@@ -659,12 +628,12 @@ def generate_c_code_gnsf( model, opts ):
     if not isinstance(f_lo_fun_jac_x1k1uz_eval, tuple) and is_empty(f_lo_fun_jac_x1k1uz_eval):
         f_lo_fun_jac_x1k1uz_eval = [empty_var]
 
-    f_lo_fun_jac_x1k1uz_ = Function(fun_name, [x1, x1dot, z1, u, p],
+    f_lo_fun_jac_x1k1uz_ = ca.Function(fun_name, [x1, x1dot, z1, u, p],
                  f_lo_fun_jac_x1k1uz_eval)
     f_lo_fun_jac_x1k1uz_.generate(fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_gnsf_get_matrices_fun'
-    get_matrices_fun_ = Function(fun_name, [dummy], get_matrices_fun(1))
+    get_matrices_fun_ = ca.Function(fun_name, [dummy], get_matrices_fun(1))
     get_matrices_fun_.generate(fun_name, casadi_codegen_opts)
 
     # remove fields for json dump
@@ -682,8 +651,6 @@ def generate_c_code_gnsf( model, opts ):
 
 def generate_c_code_nls_cost( model, cost_name, stage_type, opts ):
 
-    check_casadi_version()
-
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
     x = model.x
@@ -691,10 +658,7 @@ def generate_c_code_nls_cost( model, cost_name, stage_type, opts ):
     p = model.p
     u = model.u
 
-    if isinstance(x, casadi.MX):
-        symbol = MX.sym
-    else:
-        symbol = SX.sym
+    symbol = get_casadi_symbol(x)
 
     if stage_type == 'terminal':
         middle_name = '_cost_y_e'
@@ -717,29 +681,29 @@ def generate_c_code_nls_cost( model, cost_name, stage_type, opts ):
     os.chdir(cost_dir)
 
     # set up expressions
-    cost_jac_expr = transpose(jacobian(y_expr, vertcat(u, x)))
-    dy_dz = jacobian(y_expr, z)
+    cost_jac_expr = ca.transpose(ca.jacobian(y_expr, ca.vertcat(u, x)))
+    dy_dz = ca.jacobian(y_expr, z)
     ny = casadi_length(y_expr)
 
     y = symbol('y', ny, 1)
 
-    y_adj = jtimes(y_expr, vertcat(u, x), y, True)
-    y_hess = jacobian(y_adj, vertcat(u, x))
+    y_adj = ca.jtimes(y_expr, ca.vertcat(u, x), y, True)
+    y_hess = ca.jacobian(y_adj, ca.vertcat(u, x))
 
     ## generate C code
     suffix_name = '_fun'
     fun_name = cost_name + middle_name + suffix_name
-    y_fun = Function( fun_name, [x, u, z, p], [ y_expr ])
+    y_fun = ca.Function( fun_name, [x, u, z, p], [ y_expr ])
     y_fun.generate( fun_name, casadi_codegen_opts )
 
     suffix_name = '_fun_jac_ut_xt'
     fun_name = cost_name + middle_name + suffix_name
-    y_fun_jac_ut_xt = Function(fun_name, [x, u, z, p], [ y_expr, cost_jac_expr, dy_dz ])
+    y_fun_jac_ut_xt = ca.Function(fun_name, [x, u, z, p], [ y_expr, cost_jac_expr, dy_dz ])
     y_fun_jac_ut_xt.generate( fun_name, casadi_codegen_opts )
 
     suffix_name = '_hess'
     fun_name = cost_name + middle_name + suffix_name
-    y_hess = Function(fun_name, [x, u, z, y, p], [ y_hess ])
+    y_hess = ca.Function(fun_name, [x, u, z, y, p], [ y_hess ])
     y_hess.generate( fun_name, casadi_codegen_opts )
 
     os.chdir(cwd)
