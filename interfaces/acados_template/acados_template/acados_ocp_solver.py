@@ -1013,6 +1013,8 @@ class AcadosOcpSolver:
         getattr(self.shared_lib, f"{self.model_name}_acados_get_nlp_solver").restype = c_void_p
         self.nlp_solver = getattr(self.shared_lib, f"{self.model_name}_acados_get_nlp_solver")(self.capsule)
 
+
+
     def solve_for_x0(self, x0_bar):
         """
         Wrapper around `solve()` which sets initial state constraint, solves the OCP, and returns u0.
@@ -1303,15 +1305,15 @@ class AcadosOcpSolver:
         return
 
 
-    def store_iterate(self, filename='', overwrite=False):
+    def store_iterate(self, filename: str = '', overwrite=False):
         """
         Stores the current iterate of the ocp solver in a json file.
 
-            :param filename: if not set, use model_name + timestamp + '.json'
+            :param filename: if not set, use f'{self.model_name}_iterate.json'
             :param overwrite: if false and filename exists add timestamp to filename
         """
         if filename == '':
-            filename += self.model_name + '_' + 'iterate' + '.json'
+            filename = f'{self.model_name}_iterate.json'
 
         if not overwrite:
             # append timestamp
