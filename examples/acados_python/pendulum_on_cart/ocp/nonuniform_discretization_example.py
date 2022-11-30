@@ -166,6 +166,8 @@ def main(discretization='shooting_nodes'):
     status = ocp_solver.solve()
 
     if status not in [0, 2]:
+        ocp_solver.store_iterate()
+        ocp_solver.dump_last_qp_to_json()
         raise Exception(f'acados returned status {status}.')
 
     # get primal solution

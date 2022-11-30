@@ -979,6 +979,11 @@ class AcadosOcpSolver:
 
         self.status = 0
 
+        # gettable fields
+        self.__qp_dynamics_fields = ['A', 'B', 'b']
+        self.__qp_cost_fields = ['Q', 'R', 'S', 'q', 'r']
+        self.__qp_constraint_fields = ['C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu']
+
 
     def __get_pointers_solver(self):
         # """
@@ -1012,6 +1017,8 @@ class AcadosOcpSolver:
         getattr(self.shared_lib, f"{self.model_name}_acados_get_nlp_solver").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{self.model_name}_acados_get_nlp_solver").restype = c_void_p
         self.nlp_solver = getattr(self.shared_lib, f"{self.model_name}_acados_get_nlp_solver")(self.capsule)
+
+
 
     def solve_for_x0(self, x0_bar):
         """
@@ -1303,15 +1310,15 @@ class AcadosOcpSolver:
         return
 
 
-    def store_iterate(self, filename='', overwrite=False):
+    def store_iterate(self, filename: str = '', overwrite=False):
         """
         Stores the current iterate of the ocp solver in a json file.
 
-            :param filename: if not set, use model_name + timestamp + '.json'
+            :param filename: if not set, use f'{self.model_name}_iterate.json'
             :param overwrite: if false and filename exists add timestamp to filename
         """
         if filename == '':
-            filename += self.model_name + '_' + 'iterate' + '.json'
+            filename = f'{self.model_name}_iterate.json'
 
         if not overwrite:
             # append timestamp
@@ -1343,6 +1350,47 @@ class AcadosOcpSolver:
         with open(filename, 'w') as f:
             json.dump(solution, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
         print("stored current iterate in ", os.path.join(os.getcwd(), filename))
+
+
+
+    def dump_last_qp_to_json(self, filename: str = '', overwrite=False):
+        """
+        Dumps the latest QP data into a json file
+
+            :param filename: if not set, use model_name + timestamp + '.json'
+            :param overwrite: if false and filename exists add timestamp to filename
+        """
+        if filename == '':
+            filename = f'{self.model_name}_QP.json'
+
+        if not overwrite:
+            # append timestamp
+            if os.path.isfile(filename):
+                filename = filename[:-5]
+                filename += datetime.utcnow().strftime('%Y-%m-%d-%H:%M:%S.%f') + '.json'
+
+        # get QP data:
+        qp_data = dict()
+
+        lN = len(str(self.N+1))
+        for field in self.__qp_dynamics_fields:
+            for i in range(self.N):
+                qp_data[f'{field}_{i:0{lN}d}'] = self.get_from_qp_in(i,field)
+
+        for field in self.__qp_constraint_fields + self.__qp_cost_fields:
+            for i in range(self.N+1):
+                qp_data[f'{field}_{i:0{lN}d}'] = self.get_from_qp_in(i,field)
+
+        # remove empty fields
+        for k in list(qp_data.keys()):
+            if len(qp_data[k]) == 0:
+                del qp_data[k]
+
+        # save
+        with open(filename, 'w') as f:
+            json.dump(qp_data, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
+        print("stored qp from solver memory in ", os.path.join(os.getcwd(), filename))
+
 
 
     def load_iterate(self, filename):
@@ -1742,13 +1790,22 @@ class AcadosOcpSolver:
         return
 
 
-    def get_from_qp_in(self, stage_, field_):
+    def get_from_qp_in(self, stage_: int, field_: str):
         """
         Get numerical data from the current QP.
 
             :param stage: integer corresponding to shooting node
-            :param field: string in ['A', 'B', 'Q', 'R', 'S', 'b', 'q', 'r']
+            :param field: string in ['A', 'B', 'b', 'Q', 'R', 'S', 'q', 'r', 'C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu']
         """
+        # idx* should be added too..
+        if not isinstance(stage_, int):
+            raise TypeError("stage should be int")
+        if stage_ > self.N:
+            raise Exception("stage should be <= self.N")
+        if field_ in self.__qp_dynamics_fields and stage_ >= self.N:
+            raise ValueError(f"dynamics field {field_} not available at terminal stage")
+        if field_ not in self.__qp_dynamics_fields + self.__qp_cost_fields + self.__qp_constraint_fields:
+            raise Exception(f"field {field_} not supported.")
 
         field = field_.encode('utf-8')
         stage = c_int(stage_)

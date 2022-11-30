@@ -818,7 +818,7 @@ void ocp_nlp_constraints_bgh_model_get(void *config_, void *dims_,
     }
 
     int nu = dims->nu;
-    // int nx = dims->nx;
+    int nx = dims->nx;
     int nb = dims->nb;
     int ng = dims->ng;
     int nh = dims->nh;
@@ -862,6 +862,31 @@ void ocp_nlp_constraints_bgh_model_get(void *config_, void *dims_,
     else if (!strcmp(field, "ubu"))
     {
         blasfeo_unpack_dvec(nbu, &model->d, nb + ng + nh, value, 1);
+    }
+    else if (!strcmp(field, "lg"))
+    {
+        blasfeo_unpack_dvec(ng, &model->d, nb, value, 1);
+    }
+    else if (!strcmp(field, "ug"))
+    {
+        blasfeo_unpack_dvec(ng, &model->d, nb + ng + nh + nb, value, 1);
+    }
+    else if (!strcmp(field, "lh"))
+    {
+        blasfeo_unpack_dvec(nh, &model->d, nb + ng, value, 1);
+    }
+    else if (!strcmp(field, "uh"))
+    {
+        blasfeo_unpack_dvec(nh, &model->d, nb + ng + nh + nb + ng, value, 1);
+    }
+    // TODO: C, D?
+    else if (!strcmp(field, "Ct"))
+    {
+        blasfeo_unpack_dmat(nx, ng, &model->DCt, nu, 0, value, nx);
+    }
+    else if (!strcmp(field, "Dt"))
+    {
+        blasfeo_unpack_dmat(nu, ng, &model->DCt, 0, 0, value, nu);
     }
     else
     {
