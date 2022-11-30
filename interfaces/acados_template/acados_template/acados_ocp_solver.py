@@ -1378,7 +1378,7 @@ class AcadosOcpSolver:
                 qp_data[f'{field}_{i:0{lN}d}'] = self.get_from_qp_in(i,field)
 
         for field in self.__qp_constraint_fields + self.__qp_cost_fields:
-            for i in range(self.N):
+            for i in range(self.N+1):
                 qp_data[f'{field}_{i:0{lN}d}'] = self.get_from_qp_in(i,field)
 
         # remove empty fields

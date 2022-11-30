@@ -87,7 +87,6 @@ def main():
     ocp.constraints.lbu = np.array([-Fmax])
     ocp.constraints.ubu = np.array([+Fmax])
     ocp.constraints.idxbu = np.array([0])
-    ocp.constraints.idxbu = np.array([0])
 
     # duplicated bound on u as a linear constraint
     ocp.constraints.C = np.zeros((1, nx))
@@ -191,7 +190,7 @@ def main():
 
     # plot
     ocp_solver.dump_last_qp_to_json(overwrite=True)
-    # plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
+    plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
 
 
 if __name__ == "__main__":
