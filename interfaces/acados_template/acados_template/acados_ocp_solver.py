@@ -44,14 +44,10 @@ from ctypes import POINTER, cast, CDLL, c_void_p, c_char_p, c_double, c_int, c_i
 
 from copy import deepcopy
 
-from .generate_c_code_explicit_ode import generate_c_code_explicit_ode
-from .generate_c_code_implicit_ode import generate_c_code_implicit_ode
-from .generate_c_code_gnsf import generate_c_code_gnsf
-from .generate_c_code_discrete_dynamics import generate_c_code_discrete_dynamics
-from .generate_c_code_constraint import generate_c_code_constraint
-from .generate_c_code_nls_cost import generate_c_code_nls_cost
-from .generate_c_code_conl_cost import generate_c_code_conl_cost
-from .generate_c_code_external_cost import generate_c_code_external_cost
+from casadi_function_generation import generate_c_code_explicit_ode, \
+    generate_c_code_implicit_ode, generate_c_code_gnsf, generate_c_code_discrete_dynamics, \
+    generate_c_code_constraint, generate_c_code_nls_cost, generate_c_code_conl_cost, \
+    generate_c_code_external_cost
 from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 from .acados_ocp import AcadosOcp
 from .acados_model import AcadosModel

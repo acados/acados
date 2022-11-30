@@ -42,9 +42,7 @@ import numpy as np
 from ctypes import POINTER, cast, CDLL, c_void_p, c_char_p, c_double, c_int, c_bool, byref
 from copy import deepcopy
 
-from .generate_c_code_explicit_ode import generate_c_code_explicit_ode
-from .generate_c_code_implicit_ode import generate_c_code_implicit_ode
-from .generate_c_code_gnsf import generate_c_code_gnsf
+from .casadi_function_generation import generate_c_code_implicit_ode, generate_c_code_gnsf, generate_c_code_explicit_ode
 from .acados_sim import AcadosSim
 from .acados_ocp import AcadosOcp
 from .utils import is_column, render_template, format_class_dict, make_object_json_dumpable,\
