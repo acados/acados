@@ -144,6 +144,42 @@ sim_in *sim_in_assign(void *config_, void *dims, void *raw_memory)
 }
 
 
+void sim_in_assign_and_advance(void *config_, void *dims, sim_in **sim_in_p, char **c_ptr)
+{
+    sim_config *config = config_;
+
+    // assign structure itself
+    *sim_in_p = (sim_in *) *c_ptr;
+    *c_ptr += sizeof(sim_in);
+    // shorthand
+    sim_in *in = (sim_in *) *sim_in_p;
+
+    // align
+    align_char_to(8, &*c_ptr);
+
+    // assign substructures
+    in->model = config->model_assign(config, dims, *c_ptr);
+    *c_ptr += config->model_calculate_size(config, dims);
+
+    // set pointers and dimensions, defaults
+    in->dims = dims;
+    int nx, nu, nz;
+    config->dims_get(config_, dims, "nx", &nx);
+    config->dims_get(config_, dims, "nu", &nu);
+    config->dims_get(config_, dims, "nz", &nz);
+    int NF = nx + nu;
+    in->identity_seed = false;
+
+    // align
+    align_char_to(8, c_ptr);
+
+    // assign doubles
+    assign_and_advance_double(nx, &in->x, c_ptr);
+    assign_and_advance_double(nu, &in->u, c_ptr);
+    assign_and_advance_double(nx * NF, &in->S_forw, c_ptr);
+    assign_and_advance_double(NF, &in->S_adj, c_ptr);
+}
+
 
 int sim_in_set_(void *config_, void *dims_, sim_in *in, const char *field, void *value)
 {

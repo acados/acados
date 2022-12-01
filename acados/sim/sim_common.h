@@ -205,6 +205,8 @@ acados_size_t sim_in_calculate_size(void *config, void *dims);
 //
 sim_in *sim_in_assign(void *config, void *dims, void *raw_memory);
 //
+void sim_in_assign_and_advance(void *config, void *dims, sim_in **sim_in_p, char **c_ptr);
+//
 int sim_in_set_(void *config_, void *dims_, sim_in *in, const char *field, void *value);
 
 /* out */

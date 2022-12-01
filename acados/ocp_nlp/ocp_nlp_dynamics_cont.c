@@ -650,8 +650,8 @@ static void ocp_nlp_dynamics_cont_cast_workspace(void *config_, void *dims_, voi
     int nu = dims->nu;
 
     // sim in
-    work->sim_in = sim_in_assign(config->sim_solver, dims->sim, c_ptr);
-    c_ptr += sim_in_calculate_size(config->sim_solver, dims->sim);
+    sim_in_assign_and_advance(config->sim_solver, dims->sim, &work->sim_in, &c_ptr);
+
     // sim out
     work->sim_out = sim_out_assign(config->sim_solver, dims->sim, c_ptr);
     c_ptr += sim_out_calculate_size(config->sim_solver, dims->sim);
