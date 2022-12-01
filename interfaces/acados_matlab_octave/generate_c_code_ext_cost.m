@@ -64,6 +64,8 @@ else
 end
 % u
 u = model.sym_u;
+% z
+z = model.sym_z;
 % p
 if isfield(model, 'sym_p')
     p = model.sym_p;
@@ -80,15 +82,15 @@ model_name = model.name;
 if isfield(model, 'cost_expr_ext_cost') && strcmp(model.cost_ext_fun_type, 'casadi') && strcmp(model.cost_type, 'ext_cost')
     ext_cost = model.cost_expr_ext_cost;
     % generate jacobian, hessian
-    [full_hess, grad] = hessian(ext_cost, vertcat(u, x));
+    [full_hess, grad] = hessian(ext_cost, vertcat(u, x, z));
     % Set up functions
-    ext_cost_fun = Function([model_name,'_cost_ext_cost_fun'], {x, u, p}, {ext_cost});
-    ext_cost_fun_jac = Function([model_name,'_cost_ext_cost_fun_jac'], {x, u, p}, {ext_cost, grad});
+    ext_cost_fun = Function([model_name,'_cost_ext_cost_fun'], {x, u, z, p}, {ext_cost});
+    ext_cost_fun_jac = Function([model_name,'_cost_ext_cost_fun_jac'], {x, u, z, p}, {ext_cost, grad});
     if isfield(model, 'cost_expr_ext_cost_custom_hess')
-        ext_cost_fun_jac_hess = Function([model_name,'_cost_ext_cost_fun_jac_hess'], {x, u, p},...
+        ext_cost_fun_jac_hess = Function([model_name,'_cost_ext_cost_fun_jac_hess'], {x, u, z, p},...
                                      {ext_cost, grad, model.cost_expr_ext_cost_custom_hess});
     else
-        ext_cost_fun_jac_hess = Function([model_name,'_cost_ext_cost_fun_jac_hess'], {x, u, p},...
+        ext_cost_fun_jac_hess = Function([model_name,'_cost_ext_cost_fun_jac_hess'], {x, u, z, p},...
                                      {ext_cost, grad, full_hess});
     end
     % generate C code
@@ -100,15 +102,15 @@ end
 if isfield(model, 'cost_expr_ext_cost_0') && strcmp(model.cost_ext_fun_type_0, 'casadi') && strcmp(model.cost_type_0, 'ext_cost')
     ext_cost_0 = model.cost_expr_ext_cost_0;
     % generate jacobian, hessian
-    [full_hess, grad] = hessian(ext_cost_0, vertcat(u, x));
+    [full_hess, grad] = hessian(ext_cost_0, vertcat(u, x, z));
     % Set up functions
-    ext_cost_0_fun = Function([model_name,'_cost_ext_cost_0_fun'], {x, u, p}, {ext_cost_0});
-    ext_cost_0_fun_jac = Function([model_name,'_cost_ext_cost_0_fun_jac'], {x, u, p}, {ext_cost_0, grad});
+    ext_cost_0_fun = Function([model_name,'_cost_ext_cost_0_fun'], {x, u, z, p}, {ext_cost_0});
+    ext_cost_0_fun_jac = Function([model_name,'_cost_ext_cost_0_fun_jac'], {x, u, z, p}, {ext_cost_0, grad});
     if isfield(model, 'cost_expr_ext_cost_custom_hess_0')
-        ext_cost_0_fun_jac_hess = Function([model_name,'_cost_ext_cost_0_fun_jac_hess'], {x, u, p},...
+        ext_cost_0_fun_jac_hess = Function([model_name,'_cost_ext_cost_0_fun_jac_hess'], {x, u, z, p},...
                                      {ext_cost_0, grad, model.cost_expr_ext_cost_custom_hess_0});
     else
-        ext_cost_0_fun_jac_hess = Function([model_name,'_cost_ext_cost_0_fun_jac_hess'], {x, u, p}, {ext_cost_0, grad, full_hess});
+        ext_cost_0_fun_jac_hess = Function([model_name,'_cost_ext_cost_0_fun_jac_hess'], {x, u, z, p}, {ext_cost_0, grad, full_hess});
     end
     % generate C code
     ext_cost_0_fun.generate([model_name,'_cost_ext_cost_0_fun'], casadi_opts);

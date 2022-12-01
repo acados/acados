@@ -54,6 +54,7 @@ extern "C" {
 typedef struct
 {
     int nx;  // number of states
+    int nz;  // number of algebraic variables
     int nu;  // number of inputs
     int ns;  // number of slacks
 } ocp_nlp_cost_external_dims;
@@ -119,7 +120,7 @@ typedef struct
 {
     struct blasfeo_dvec grad;    // gradient of cost function
     struct blasfeo_dvec *ux;     // pointer to ux in nlp_out
-    struct blasfeo_dvec *tmp_ux;     // pointer to tmp_ux in nlp_out
+    struct blasfeo_dvec *tmp_ux; // pointer to tmp_ux in nlp_out
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
     struct blasfeo_dvec *Z;      // pointer to Z in qp_in
     struct blasfeo_dvec *z_alg;         ///< pointer to z in sim_out
@@ -154,7 +155,10 @@ void ocp_nlp_cost_external_memory_set_dzdux_tran_ptr(struct blasfeo_dmat *dzdux_
 
 typedef struct
 {
-    struct blasfeo_dmat tmp_nv_nv;
+    struct blasfeo_dmat tmp_nunx_nunx;
+    struct blasfeo_dmat tmp_nz_nz;
+    struct blasfeo_dmat tmp_nz_nunx;
+    struct blasfeo_dvec tmp_nunxnz;
     struct blasfeo_dvec tmp_2ns;  // temporary vector of dimension 2*ns
 } ocp_nlp_cost_external_workspace;
 

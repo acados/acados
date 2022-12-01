@@ -42,15 +42,15 @@ import scipy.linalg
 from utils import plot_pendulum
 from casadi import vertcat, SX
 
-COST_VERSIONS = ['LS', 'EXTERNAL', 'NLS', 'NLS_Z', 'LS_Z', 'CONL', 'CONL_Z']
+COST_VERSIONS = ['LS', 'EXTERNAL', 'EXTERNAL_Z', 'NLS', 'NLS_Z', 'LS_Z', 'CONL', 'CONL_Z']
 HESSIAN_APPROXIMATION = 'GAUSS_NEWTON' # 'GAUSS_NEWTON
-EXTERNAL_COST_USE_NUM_HESS = 1
 
 def main(cost_version: str):
+    EXTERNAL_COST_USE_NUM_HESS = 0
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
-    if cost_version in ['NLS_Z', 'LS_Z', 'CONL_Z']:
+    if cost_version in ['EXTERNAL_Z','NLS_Z', 'LS_Z', 'CONL_Z']:
         model = export_augmented_pendulum_model()
         nz = model.z.size()[0]
     else:
@@ -168,6 +168,17 @@ def main(cost_version: str):
         ocp.model.cost_expr_ext_cost = .5*vertcat(x, u).T @ cost_W @ vertcat(x, u)
         ocp.model.cost_expr_ext_cost_e = .5*x.T @ Q @ x
 
+        EXTERNAL_COST_USE_NUM_HESS = True
+
+    elif cost_version == 'EXTERNAL_Z':
+        ocp.cost.cost_type = 'EXTERNAL'
+        ocp.cost.cost_type_e = 'EXTERNAL'
+
+        y_expr_z = vertcat(model.z[0], model.x[1:], u)
+
+        ocp.model.cost_expr_ext_cost = .5*y_expr_z.T @ cost_W @ y_expr_z
+        ocp.model.cost_expr_ext_cost_e = .5*x.T @ Q @ x
+
     else:
         raise Exception('Unknown cost_version. Possible values are \'LS\' and \'NLS\'.')
 
@@ -187,7 +198,7 @@ def main(cost_version: str):
 
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
     ocp.solver_options.hessian_approx = HESSIAN_APPROXIMATION
-    ocp.solver_options.regularize_method = 'CONVEXIFY'
+    # ocp.solver_options.regularize_method = 'CONVEXIFY'
     ocp.solver_options.integrator_type = 'IRK'
 
     ocp.solver_options.qp_solver_cond_N = 5
@@ -196,7 +207,7 @@ def main(cost_version: str):
     # set prediction horizon
     ocp.solver_options.tf = Tf
     ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
-    if cost_version == 'EXTERNAL':
+    if cost_version in ['EXTERNAL', 'EXTERNAL_Z']:
         ocp.solver_options.ext_cost_num_hess = EXTERNAL_COST_USE_NUM_HESS
 
     ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
@@ -212,7 +223,7 @@ def main(cost_version: str):
     #  [00, 00, 00, 00, @1]])
 
     # NOTE: hessian is wrt [u,x]
-    if EXTERNAL_COST_USE_NUM_HESS and cost_version == 'EXTERNAL':
+    if EXTERNAL_COST_USE_NUM_HESS and cost_version in  ['EXTERNAL', 'EXTERNAL_Z']:
         for i in range(N):
             ocp_solver.cost_set(i, "ext_cost_num_hess", np.diag([0.02, 2000, 2000, 0.02, 0.02, ]))
         ocp_solver.cost_set(N, "ext_cost_num_hess", np.diag([2000, 2000, 0.02, 0.02, ]))
@@ -245,7 +256,6 @@ def main(cost_version: str):
 if __name__ == "__main__":
 
     for cost_version in COST_VERSIONS:
-    # for cost_version in ['EXTERNAL', 'NLS', 'LS_Z', 'NLS_Z']:
         main(cost_version=cost_version)
 
 # timings

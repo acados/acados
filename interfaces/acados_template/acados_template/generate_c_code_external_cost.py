@@ -32,7 +32,7 @@
 #
 
 import os
-from casadi import SX, MX, Function, vertcat, hessian, CasadiMeta
+from casadi import SX, MX, Function, vertcat, jacobian, hessian, CasadiMeta
 from .utils import check_casadi_version
 
 
@@ -54,15 +54,18 @@ def generate_c_code_external_cost(model, stage_type, opts):
         suffix_name = "_cost_ext_cost_e_fun"
         suffix_name_hess = "_cost_ext_cost_e_fun_jac_hess"
         suffix_name_jac = "_cost_ext_cost_e_fun_jac"
-        u = symbol("u", 0, 0)
         ext_cost = model.cost_expr_ext_cost_e
         custom_hess = model.cost_expr_ext_cost_custom_hess_e
+        # Last stage cannot depend on u and z
+        u = symbol("u", 0, 0)
+        z = symbol("z", 0, 0)
 
     elif stage_type == 'path':
         suffix_name = "_cost_ext_cost_fun"
         suffix_name_hess = "_cost_ext_cost_fun_jac_hess"
         suffix_name_jac = "_cost_ext_cost_fun_jac"
         u = model.u
+        z = model.z
         ext_cost = model.cost_expr_ext_cost
         custom_hess = model.cost_expr_ext_cost_custom_hess
 
@@ -71,8 +74,11 @@ def generate_c_code_external_cost(model, stage_type, opts):
         suffix_name_hess = "_cost_ext_cost_0_fun_jac_hess"
         suffix_name_jac = "_cost_ext_cost_0_fun_jac"
         u = model.u
+        z = model.z
         ext_cost = model.cost_expr_ext_cost_0
         custom_hess = model.cost_expr_ext_cost_custom_hess_0
+
+    nunx = x.shape[0] + u.shape[0]
 
     # set up functions to be exported
     fun_name = model.name + suffix_name
@@ -80,17 +86,22 @@ def generate_c_code_external_cost(model, stage_type, opts):
     fun_name_jac = model.name + suffix_name_jac
 
     # generate expression for full gradient and Hessian
-    full_hess, grad = hessian(ext_cost, vertcat(u, x))
+    hess_uxz, grad_uxz = hessian(ext_cost, vertcat(u, x, z))
+
+    hess_ux = hess_uxz[:nunx, :nunx]
+    hess_z = hess_uxz[nunx:, nunx:]
+    hess_z_ux = hess_uxz[nunx:, :nunx]
 
     if custom_hess is not None:
-        full_hess = custom_hess
+        hess_ux = custom_hess
 
-    ext_cost_fun = Function(fun_name, [x, u, p], [ext_cost])
+    ext_cost_fun = Function(fun_name, [x, u, z, p], [ext_cost])
+
     ext_cost_fun_jac_hess = Function(
-        fun_name_hess, [x, u, p], [ext_cost, grad, full_hess]
+        fun_name_hess, [x, u, z, p], [ext_cost, grad_uxz, hess_ux, hess_z, hess_z_ux]
     )
     ext_cost_fun_jac = Function(
-        fun_name_jac, [x, u, p], [ext_cost, grad]
+        fun_name_jac, [x, u, z, p], [ext_cost, grad_uxz]
     )
 
     # change directory
