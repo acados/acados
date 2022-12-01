@@ -255,12 +255,8 @@ def main(cost_version: str):
 
 if __name__ == "__main__":
 
-    main(cost_version='EXTERNAL_Z')
-    # main(cost_version='EXTERNAL_Z')
-
-    # for cost_version in COST_VERSIONS:
-    # # for cost_version in ['EXTERNAL', 'NLS', 'LS_Z', 'NLS_Z']:
-    #     main(cost_version=cost_version)
+    for cost_version in COST_VERSIONS:
+        main(cost_version=cost_version)
 
 # timings
 # time_tot = 1e8

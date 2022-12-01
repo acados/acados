@@ -158,7 +158,6 @@ typedef struct
     struct blasfeo_dmat tmp_nunx_nunx;
     struct blasfeo_dmat tmp_nz_nz;
     struct blasfeo_dmat tmp_nz_nunx;
-    struct blasfeo_dmat tmp_nunx_nz;
     struct blasfeo_dvec tmp_nv;
     struct blasfeo_dvec tmp_nz;
     struct blasfeo_dvec tmp_2ns;  // temporary vector of dimension 2*ns
