@@ -44,8 +44,6 @@ def generate_c_code_external_cost(model, stage_type, opts):
 
     x = model.x
     p = model.p
-    z = model.z
-
 
     if isinstance(x, MX):
         symbol = MX.sym
@@ -56,15 +54,18 @@ def generate_c_code_external_cost(model, stage_type, opts):
         suffix_name = "_cost_ext_cost_e_fun"
         suffix_name_hess = "_cost_ext_cost_e_fun_jac_hess"
         suffix_name_jac = "_cost_ext_cost_e_fun_jac"
-        u = symbol("u", 0, 0)
         ext_cost = model.cost_expr_ext_cost_e
         custom_hess = model.cost_expr_ext_cost_custom_hess_e
+        # Last stage cannot depend on u and z
+        u = symbol("u", 0, 0)
+        z = symbol("z", 0, 0)
 
     elif stage_type == 'path':
         suffix_name = "_cost_ext_cost_fun"
         suffix_name_hess = "_cost_ext_cost_fun_jac_hess"
         suffix_name_jac = "_cost_ext_cost_fun_jac"
         u = model.u
+        z = model.z
         ext_cost = model.cost_expr_ext_cost
         custom_hess = model.cost_expr_ext_cost_custom_hess
 
@@ -73,6 +74,7 @@ def generate_c_code_external_cost(model, stage_type, opts):
         suffix_name_hess = "_cost_ext_cost_0_fun_jac_hess"
         suffix_name_jac = "_cost_ext_cost_0_fun_jac"
         u = model.u
+        z = model.z
         ext_cost = model.cost_expr_ext_cost_0
         custom_hess = model.cost_expr_ext_cost_custom_hess_0
 
@@ -90,25 +92,16 @@ def generate_c_code_external_cost(model, stage_type, opts):
     hess_z = hess_uxz[nunx:, nunx:]
     hess_z_ux = hess_uxz[nunx:, :nunx]
 
-    grad_ux = grad_uxz[:nunx]
-    grad_z = grad_uxz[nunx:]
-
-    # # generate expression for cost gradient wrt z
-    # grad_z = jacobian(ext_cost, z)
-
-    # generate expression for cost hessian wrt dw dz
-    # hess_ux_z = jacobian(grad_z, vertcat(u, x))
-
     if custom_hess is not None:
         hess_ux = custom_hess
 
     ext_cost_fun = Function(fun_name, [x, u, z, p], [ext_cost])
 
     ext_cost_fun_jac_hess = Function(
-        fun_name_hess, [x, u, z, p], [ext_cost, grad_ux, grad_z, hess_ux, hess_z, hess_z_ux]
+        fun_name_hess, [x, u, z, p], [ext_cost, grad_uxz, hess_ux, hess_z, hess_z_ux]
     )
     ext_cost_fun_jac = Function(
-        fun_name_jac, [x, u, z, p], [ext_cost, grad_ux, grad_z]
+        fun_name_jac, [x, u, z, p], [ext_cost, grad_uxz]
     )
 
     # change directory

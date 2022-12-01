@@ -502,8 +502,7 @@ acados_size_t ocp_nlp_cost_external_workspace_calculate_size(void *config_, void
     size += 1 * blasfeo_memsize_dmat(nu+nx, nu+nx);  // tmp_nunx_nunx
     size += 1 * blasfeo_memsize_dmat(nz, nz);  // tmp_nz_nz
     size += 1 * blasfeo_memsize_dmat(nz, nu+nx);  // tmp_nz_nunx
-    size += 1 * blasfeo_memsize_dvec(nu+nx);  // tmp_nv
-    size += 1 * blasfeo_memsize_dvec(nz);  // tmp_nz
+    size += 1 * blasfeo_memsize_dvec(nu+nx+nz);  // tmp_nunxnz
 
     size += 1 * blasfeo_memsize_dvec(2*ns);  // tmp_2ns
 
@@ -541,11 +540,8 @@ static void ocp_nlp_cost_external_cast_workspace(void *config_, void *dims_, voi
     // tmp_nz_nunx
     assign_and_advance_blasfeo_dmat_mem(nz, nu+nx, &work->tmp_nz_nunx, &c_ptr);
 
-    // tmp_nv
-    assign_and_advance_blasfeo_dvec_mem(nu + nx, &work->tmp_nv, &c_ptr);
-
-    // tmp_nz
-    assign_and_advance_blasfeo_dvec_mem(nz, &work->tmp_nz, &c_ptr);
+    // tmp_nunxnz
+    assign_and_advance_blasfeo_dvec_mem(nu + nx + nz, &work->tmp_nunxnz, &c_ptr);
 
     // tmp_2ns
     assign_and_advance_blasfeo_dvec_mem(2*ns, &work->tmp_2ns, &c_ptr);
@@ -605,8 +601,8 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
     /* specify input types and pointers for external cost function */
     ext_fun_arg_t ext_fun_type_in[3];
     void *ext_fun_in[3];
-    ext_fun_arg_t ext_fun_type_out[6];
-    void *ext_fun_out[6];
+    ext_fun_arg_t ext_fun_type_out[5];
+    void *ext_fun_out[5];
 
     // INPUT
     struct blasfeo_dvec_args u_in;  // input u
@@ -628,9 +624,7 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
     ext_fun_out[0] = &memory->fun;  // fun: scalar
 
     ext_fun_type_out[1] = BLASFEO_DVEC;
-    ext_fun_out[1] = &memory->grad;  // grad_ux: nu+nx
-    ext_fun_type_out[2] = BLASFEO_DVEC;
-    ext_fun_out[2] = &work->tmp_nz;  // grad_z: nz
+    ext_fun_out[1] = &work->tmp_nunxnz;  // tmp_nunxnz: nu+nx+nz
 
     if (opts->use_numerical_hessian > 0)
     {
@@ -643,12 +637,12 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
     else
     {
         // additional output
+        ext_fun_type_out[2] = BLASFEO_DMAT;
+        ext_fun_out[2] = &work->tmp_nunx_nunx;   // hess: (nu+nx) * (nu+nx)
         ext_fun_type_out[3] = BLASFEO_DMAT;
-        ext_fun_out[3] = &work->tmp_nunx_nunx;   // hess: (nu+nx) * (nu+nx)
+        ext_fun_out[3] = &work->tmp_nz_nz;       // hess_z: nz x nz
         ext_fun_type_out[4] = BLASFEO_DMAT;
-        ext_fun_out[4] = &work->tmp_nz_nz;       // hess_z: nz x nz
-        ext_fun_type_out[5] = BLASFEO_DMAT;
-        ext_fun_out[5] = &work->tmp_nz_nunx;    // hess_z_nunx: nz x nu+nx
+        ext_fun_out[4] = &work->tmp_nz_nunx;    // hess_z_nunx: nz x nu+nx
 
         // evaluate external function
         model->ext_cost_fun_jac_hess->evaluate(model->ext_cost_fun_jac_hess, ext_fun_type_in,
@@ -660,7 +654,7 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
         if (nz > 0)
         {
             // NOTE: we compute the Hessian as follows:
-            // H = dl2_dxu2 + dz_dux.T * d2l_dz2 * dz_dux + d2l_dux_dz * dz_dux + (d2l_dux_dz * dz_dux).T
+            // H = d2l_dxu2 + dz_dux.T * d2l_dz2 * dz_dux + d2l_dux_dz * dz_dux + (d2l_dux_dz * dz_dux).T
             // the term d2z_dux2 is dropped!
 
             // compute and add cross terms (NOTE: only lower triangular is computed)
@@ -672,11 +666,11 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
         }
     }
 
+    // gradient
+    blasfeo_dveccp(nu+nx, &work->tmp_nunxnz, 0, &memory->grad, 0);
     if (nz > 0)
     {
-        // gradient contribution
-        blasfeo_dgemv_n(nu + nx, nz, 1.0, memory->dzdux_tran, 0, 0, &work->tmp_nz, 0, 0., &work->tmp_nv, 0, &work->tmp_nv, 0);
-        blasfeo_dvecad(nu + nx, 1., &work->tmp_nv, 0, &memory->grad, 0);
+        blasfeo_dgemv_n(nu+nx, nz, 1.0, memory->dzdux_tran, 0, 0, &work->tmp_nunxnz, nu+nx, 1., &memory->grad, 0, &memory->grad, 0);
     }
 
     // slack update gradient
