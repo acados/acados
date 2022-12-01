@@ -202,15 +202,12 @@ if FORMULATION == 2:
     # constraints name
     ocp.constraints.constr_type = 'BGP'
 
-# Ts  = 0.0016
-# Ts  = 0.0012
+
 Ts  = 0.0008
-# Ts  = 0.0004
 
 nx = model.x.size()[0]
 nu = model.u.size()[0]
 nz = model.z.size()[0]
-# np = model.p.size()[0]
 ny = nu + nx
 ny_e = nx
 N = 2
