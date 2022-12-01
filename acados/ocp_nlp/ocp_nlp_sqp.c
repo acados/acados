@@ -468,7 +468,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     ocp_nlp_res *nlp_res = nlp_mem->nlp_res;
 
     ocp_nlp_sqp_workspace *work = work_;
-    ocp_nlp_sqp_cast_workspace(config, dims, opts, mem, work);
+    // ocp_nlp_sqp_cast_workspace(config, dims, opts, mem, work);
     ocp_nlp_workspace *nlp_work = work->nlp_work;
 
     ocp_qp_in *qp_in = nlp_mem->qp_in;
@@ -1039,7 +1039,7 @@ void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *
     ocp_nlp_out *sens_nlp_out = sens_nlp_out_;
 
     ocp_nlp_sqp_workspace *work = work_;
-    ocp_nlp_sqp_cast_workspace(config, dims, opts, mem, work);
+    // ocp_nlp_sqp_cast_workspace(config, dims, opts, mem, work);
     ocp_nlp_workspace *nlp_work = work->nlp_work;
 
     d_ocp_qp_copy_all(nlp_mem->qp_in, work->tmp_qp_in);
