@@ -34,7 +34,8 @@
 
 import numpy as np
 from scipy.linalg import block_diag
-from acados_template import *
+from acados_template import AcadosOcpSolver, AcadosOcp
+from casadi import vertcat
 
 
 def export_mhe_solver_with_param(model, N, h, Q, Q0, R, use_cython=False):
@@ -49,7 +50,7 @@ def export_mhe_solver_with_param(model, N, h, Q, Q0, R, use_cython=False):
     nparam = model.p.size()[0]
     nx = nx_augmented-1
 
-    ny = R.shape[0] + Q.shape[0]                    # h(x), w 
+    ny = R.shape[0] + Q.shape[0]                    # h(x), w
     ny_e = 0
     ny_0 = R.shape[0] + Q.shape[0] + Q0.shape[0]    # h(x), w and arrival cost
 
@@ -62,7 +63,7 @@ def export_mhe_solver_with_param(model, N, h, Q, Q0, R, use_cython=False):
     # set cost type
     ocp_mhe.cost.cost_type = 'NONLINEAR_LS'
     ocp_mhe.cost.cost_type_e = 'LINEAR_LS'
-    ocp_mhe.cost.cost_type_0 = 'NONLINEAR_LS' 
+    ocp_mhe.cost.cost_type_0 = 'NONLINEAR_LS'
 
     ocp_mhe.cost.W_0 = block_diag(R, Q, Q0)
     ocp_mhe.model.cost_y_expr_0 = vertcat(x[:nx], u, x)

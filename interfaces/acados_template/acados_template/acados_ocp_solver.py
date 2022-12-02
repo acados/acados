@@ -44,20 +44,16 @@ from ctypes import POINTER, cast, CDLL, c_void_p, c_char_p, c_double, c_int, c_i
 
 from copy import deepcopy
 
-from .generate_c_code_explicit_ode import generate_c_code_explicit_ode
-from .generate_c_code_implicit_ode import generate_c_code_implicit_ode
-from .generate_c_code_gnsf import generate_c_code_gnsf
-from .generate_c_code_discrete_dynamics import generate_c_code_discrete_dynamics
-from .generate_c_code_constraint import generate_c_code_constraint
-from .generate_c_code_nls_cost import generate_c_code_nls_cost
-from .generate_c_code_conl_cost import generate_c_code_conl_cost
-from .generate_c_code_external_cost import generate_c_code_external_cost
+from .casadi_function_generation import generate_c_code_explicit_ode, \
+    generate_c_code_implicit_ode, generate_c_code_gnsf, generate_c_code_discrete_dynamics, \
+    generate_c_code_constraint, generate_c_code_nls_cost, generate_c_code_conl_cost, \
+    generate_c_code_external_cost
 from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 from .acados_ocp import AcadosOcp
 from .acados_model import AcadosModel
 from .utils import is_column, is_empty, casadi_length, render_template,\
      format_class_dict, make_object_json_dumpable, make_model_consistent,\
-     set_up_imported_gnsf_model, get_ocp_nlp_layout, get_python_interface_path, get_lib_ext
+     set_up_imported_gnsf_model, get_ocp_nlp_layout, get_python_interface_path, get_lib_ext, check_casadi_version
 from .builders import CMakeBuilder
 
 
@@ -669,6 +665,7 @@ def ocp_generate_external_functions(acados_ocp: AcadosOcp, model: AcadosModel):
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
 
+    check_casadi_version()
     # TODO: remove dir gen from all the generate_c_* functions
     if acados_ocp.model.dyn_ext_fun_type == 'casadi':
         if acados_ocp.solver_options.integrator_type == 'ERK':

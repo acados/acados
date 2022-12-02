@@ -42,6 +42,13 @@ ALLOWED_CASADI_VERSIONS = ('3.5.6', '3.5.5', '3.5.4', '3.5.3', '3.5.2', '3.5.1',
 
 TERA_VERSION = "0.0.34"
 
+PLATFORM2TERA = {
+    "linux": "linux",
+    "darwin": "osx",
+    "win32": "windows"
+}
+
+
 def get_acados_path():
     ACADOS_PATH = os.environ.get('ACADOS_SOURCE_DIR')
     if not ACADOS_PATH:
@@ -70,13 +77,6 @@ def get_tera_exec_path():
         if os.name == 'nt':
             TERA_PATH += '.exe'
     return TERA_PATH
-
-
-platform2tera = {
-    "linux": "linux",
-    "darwin": "osx",
-    "win32": "windows"
-}
 
 
 def check_casadi_version():
@@ -182,7 +182,7 @@ def get_tera():
 
     repo_url = "https://github.com/acados/tera_renderer/releases"
     url = "{}/download/v{}/t_renderer-v{}-{}".format(
-        repo_url, TERA_VERSION, TERA_VERSION, platform2tera[sys.platform])
+        repo_url, TERA_VERSION, TERA_VERSION, PLATFORM2TERA[sys.platform])
 
     manual_install = 'For manual installation follow these instructions:\n'
     manual_install += '1 Download binaries from {}\n'.format(url)
@@ -244,19 +244,6 @@ def render_template(in_file, out_file, output_dir, json_path, template_glob=None
 
 
 ## Conversion functions
-# TODO: remove!
-def np_array_to_list(np_array):
-    print("Warning: the function np_array_to_list is ambigious and should not be used anymore! Consider using make_object_json_dumpable() instead.")
-    if isinstance(np_array, (np.ndarray)):
-        return np_array.tolist()
-    elif isinstance(np_array, (SX)):
-        return DM(np_array).full()
-    elif isinstance(np_array, (DM)):
-        return np_array.full()
-    else:
-        raise Exception(f"Cannot convert to list type {type(np_array)}")
-
-
 def make_object_json_dumpable(input):
     if isinstance(input, (np.ndarray)):
         return input.tolist()

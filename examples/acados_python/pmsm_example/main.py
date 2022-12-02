@@ -1,5 +1,7 @@
-from acados_template import *
+from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver
+from casadi import SX, vertcat, sqrt, cos, sin
 import numpy as np
+import os
 import matplotlib.pyplot as plt
 import scipy.linalg
 

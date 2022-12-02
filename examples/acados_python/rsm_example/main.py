@@ -31,8 +31,10 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from acados_template import *
-import numpy as nmp
+from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver
+import os
+from casadi import vertcat, atan, exp, cos, sin, sqrt, SX
+import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import scipy.linalg
@@ -53,7 +55,7 @@ w_val   = 300
 udc = 580
 u_max = 2/3*udc
 
-x0 = nmp.array([0.0, 0.0])
+x0 = np.array([0.0, 0.0])
 
 # fitted psi_d map
 def psi_d_num(x,y):
@@ -91,7 +93,7 @@ def export_rsm_model():
     theta = 0.0352
     Rs = 0.4
     m_load = 0.0
-    J = nmp.array([[0, -1], [1, 0]])
+    J = np.array([[0, -1], [1, 0]])
 
     # set up states
     psi_d = SX.sym('psi_d')
@@ -154,8 +156,8 @@ def get_general_constraints_DC(u_max):
 
     x1 = r
     y1 = 0
-    x2 = r*cos(pi/3)
-    y2 = r*sin(pi/3)
+    x2 = r*cos(np.pi/3)
+    y2 = r*sin(np.pi/3)
 
     q1 = -(y2 - y1/x1*x2)/(1-x2/x1)
     m1 = -(y1 + q1)/x1
@@ -165,19 +167,19 @@ def get_general_constraints_DC(u_max):
 
     # box constraints
     m2 = 0
-    q2 = r*sin(pi/3)
+    q2 = r*sin(np.pi/3)
     # -q2 <= uq  <= q2
 
     # form D and C matrices
     # (acados C interface works with column major format)
-    D = nmp.transpose(nmp.array([[1, m1],[1, -m1]]))
-    D = nmp.array([[m1, 1],[-m1, 1]])
-    C = nmp.transpose(nmp.array([[0, 0], [0, 0]]))
+    D = np.transpose(np.array([[1, m1],[1, -m1]]))
+    D = np.array([[m1, 1],[-m1, 1]])
+    C = np.transpose(np.array([[0, 0], [0, 0]]))
 
-    ug  = nmp.array([-q1, -q1])
-    lg  = nmp.array([+q1, +q1])
-    lbu = nmp.array([-q2])
-    ubu = nmp.array([+q2])
+    ug  = np.array([-q1, -q1])
+    lg  = np.array([+q1, +q1])
+    lbu = np.array([-q2])
+    ubu = np.array([+q2])
 
     res = dict()
     res["D"] = D
@@ -200,15 +202,12 @@ if FORMULATION == 2:
     # constraints name
     ocp.constraints.constr_type = 'BGP'
 
-# Ts  = 0.0016
-# Ts  = 0.0012
+
 Ts  = 0.0008
-# Ts  = 0.0004
 
 nx = model.x.size()[0]
 nu = model.u.size()[0]
 nz = model.z.size()[0]
-np = model.p.size()[0]
 ny = nu + nx
 ny_e = nx
 N = 2
@@ -218,50 +217,50 @@ Tf = N*Ts
 ocp.dims.N = N
 
 # set cost module
-Q = nmp.eye(nx)
+Q = np.eye(nx)
 Q[0,0] = 5e2
 Q[1,1] = 5e2
 
-R = nmp.eye(nu)
+R = np.eye(nu)
 R[0,0] = 1e-4
 R[1,1] = 1e-4
 
 ocp.cost.W = scipy.linalg.block_diag(Q, R)
 
-Vx = nmp.zeros((ny, nx))
+Vx = np.zeros((ny, nx))
 Vx[0,0] = 1.0
 Vx[1,1] = 1.0
 
 ocp.cost.Vx = Vx
 
-Vu = nmp.zeros((ny, nu))
+Vu = np.zeros((ny, nu))
 Vu[2,0] = 1.0
 Vu[3,1] = 1.0
 ocp.cost.Vu = Vu
 
-Vz = nmp.zeros((ny, nz))
+Vz = np.zeros((ny, nz))
 Vz[0,0] = 0.0
 Vz[1,1] = 0.0
 
 ocp.cost.Vz = Vz
 
-Q_e = nmp.eye(nx)
+Q_e = np.eye(nx)
 Q_e[0,0] = 1e-3
 Q_e[1,1] = 1e-3
 ocp.cost.W_e = Q_e
 
-Vx_e = nmp.zeros((ny_e, nx))
+Vx_e = np.zeros((ny_e, nx))
 Vx_e[0,0] = 1.0
 Vx_e[1,1] = 1.0
 
 ocp.cost.Vx_e = Vx_e
 
-ocp.cost.yref  = nmp.zeros((ny, ))
+ocp.cost.yref  = np.zeros((ny, ))
 ocp.cost.yref[0]  = psi_d_ref
 ocp.cost.yref[1]  = psi_q_ref
 ocp.cost.yref[2]  = u_d_ref
 ocp.cost.yref[3]  = u_q_ref
-ocp.cost.yref_e = nmp.zeros((ny_e, ))
+ocp.cost.yref_e = np.zeros((ny_e, ))
 ocp.cost.yref_e[0]  = psi_d_ref
 ocp.cost.yref_e[1]  = psi_q_ref
 
@@ -276,14 +275,14 @@ ubu = res["ubu"]
 
 # setting bounds
 # lbu <= u <= ubu and lbx <= x <= ubx
-ocp.constraints.idxbu = nmp.array([1])
+ocp.constraints.idxbu = np.array([1])
 
 ocp.constraints.lbu = lbu
 ocp.constraints.ubu = ubu
 
 if FORMULATION > 0:
-    ocp.constraints.lphi = nmp.array([-1.0e8])
-    ocp.constraints.uphi = nmp.array([(u_max*sqrt(3)/2)**2])
+    ocp.constraints.lphi = np.array([-1.0e8])
+    ocp.constraints.uphi = np.array([(u_max*sqrt(3)/2)**2])
 
 ocp.constraints.x0 = x0
 
@@ -296,7 +295,7 @@ if FORMULATION == 0 or FORMULATION == 2:
     ocp.constraints.ug  = ug
 
 # setting parameters
-ocp.parameter_values = nmp.array([w_val, 0.0, 0.0])
+ocp.parameter_values = np.array([w_val, 0.0, 0.0])
 
 # set QP solver
 ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
@@ -318,8 +317,8 @@ acados_solver = AcadosOcpSolver(ocp, json_file = file_name)
 # closed loop simulation TODO(add proper simulation)
 Nsim = 100
 
-simX = nmp.ndarray((Nsim, nx))
-simU = nmp.ndarray((Nsim, nu))
+simX = np.ndarray((Nsim, nx))
+simU = np.ndarray((Nsim, nu))
 
 for i in range(Nsim):
 
@@ -353,18 +352,18 @@ for i in range(Nsim):
     if i > Nsim/3 and i < Nsim/2:
         # update params
         for i in range(N):
-            acados_solver.set(i, "p", nmp.array([w_val/2.0, 0, 0]))
+            acados_solver.set(i, "p", np.array([w_val/2.0, 0, 0]))
     else:
         # update params
         for i in range(N):
-            acados_solver.set(i, "p", nmp.array([w_val, 0, 0]))
+            acados_solver.set(i, "p", np.array([w_val, 0, 0]))
 
     # get next state
     x0 = acados_solver.get(1, "x")
 
 
 # plot results
-t = nmp.linspace(0.0, Ts*Nsim, Nsim)
+t = np.linspace(0.0, Ts*Nsim, Nsim)
 plt.subplot(4, 1, 1)
 plt.step(t, simU[:,0], color='r')
 plt.plot([0, Ts*Nsim], [ocp.cost.yref[2], ocp.cost.yref[2]], '--')
@@ -396,8 +395,8 @@ r = u_max
 
 x1 = r
 y1 = 0
-x2 = r*cos(pi/3)
-y2 = r*sin(pi/3)
+x2 = r*cos(np.pi/3)
+y2 = r*sin(np.pi/3)
 
 q1 = -(y2 - y1/x1*x2)/(1-x2/x1)
 m1 = -(y1 + q1)/x1
@@ -407,25 +406,25 @@ m1 = -(y1 + q1)/x1
 
 # box constraints
 m2 = 0
-q2 = r*sin(pi/3)
+q2 = r*sin(np.pi/3)
 # -q2 <= uq  <= q2
 
 plt.figure()
 plt.plot(simU[:,0], simU[:,1], 'o')
 plt.xlabel('ud')
 plt.ylabel('uq')
-ud = nmp.linspace(-1.5*u_max, 1.5*u_max, 100)
+ud = np.linspace(-1.5*u_max, 1.5*u_max, 100)
 plt.plot(ud, -m1*ud -q1)
 plt.plot(ud, -m1*ud +q1)
 plt.plot(ud, +m1*ud -q1)
 plt.plot(ud, +m1*ud +q1)
-plt.plot(ud, -q2*nmp.ones((100, 1)))
-plt.plot(ud, q2*nmp.ones((100, 1)))
+plt.plot(ud, -q2*np.ones((100, 1)))
+plt.plot(ud, q2*np.ones((100, 1)))
 plt.grid(True)
 ax = plt.gca()
 ax.set_xlim([-1.5*u_max, 1.5*u_max])
 ax.set_ylim([-1.5*u_max, 1.5*u_max])
-circle = plt.Circle((0, 0), u_max*nmp.sqrt(3)/2, color='red', fill=False)
+circle = plt.Circle((0, 0), u_max*np.sqrt(3)/2, color='red', fill=False)
 ax.add_artist(circle)
 
 # avoid plotting when running on Travis

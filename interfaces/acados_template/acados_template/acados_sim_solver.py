@@ -42,20 +42,18 @@ import numpy as np
 from ctypes import POINTER, cast, CDLL, c_void_p, c_char_p, c_double, c_int, c_bool, byref
 from copy import deepcopy
 
-from .generate_c_code_explicit_ode import generate_c_code_explicit_ode
-from .generate_c_code_implicit_ode import generate_c_code_implicit_ode
-from .generate_c_code_gnsf import generate_c_code_gnsf
+from .casadi_function_generation import generate_c_code_implicit_ode, generate_c_code_gnsf, generate_c_code_explicit_ode
 from .acados_sim import AcadosSim
 from .acados_ocp import AcadosOcp
 from .utils import is_column, render_template, format_class_dict, make_object_json_dumpable,\
      make_model_consistent, set_up_imported_gnsf_model, get_python_interface_path, get_lib_ext,\
-     casadi_length, is_empty
+     casadi_length, is_empty, check_casadi_version
 from .builders import CMakeBuilder
 from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 
 
 
-def make_sim_dims_consistent(acados_sim):
+def make_sim_dims_consistent(acados_sim: AcadosSim):
     dims = acados_sim.dims
     model = acados_sim.model
     # nx
@@ -94,7 +92,7 @@ def get_sim_layout():
     return sim_layout
 
 
-def sim_formulation_json_dump(acados_sim, json_file='acados_sim.json'):
+def sim_formulation_json_dump(acados_sim: AcadosSim, json_file='acados_sim.json'):
     # Load acados_sim structure description
     sim_layout = get_sim_layout()
 
@@ -165,7 +163,7 @@ def sim_render_templates(json_file, model_name: str, code_export_dir, cmake_opti
     render_template(in_file, out_file, model_dir, json_path)
 
 
-def sim_generate_external_functions(acados_sim):
+def sim_generate_external_functions(acados_sim: AcadosSim):
     model = acados_sim.model
     model = make_model_consistent(model)
 
@@ -182,6 +180,7 @@ def sim_generate_external_functions(acados_sim):
         os.makedirs(model_dir)
 
     # generate external functions
+    check_casadi_version()
     if integrator_type == 'ERK':
         generate_c_code_explicit_ode(model, opts)
     elif integrator_type == 'IRK':
