@@ -32,9 +32,9 @@
 %
 
 
-example_dir = fileparts(which('acados_env_variables_windows'));
+interface_dir = fileparts(which('acados_env_variables_windows'));
 
-acados_dir = fullfile(example_dir, '..', '..');
+acados_dir = fullfile(interface_dir, '..', '..');
 casadi_dir = fullfile(acados_dir, 'external', 'casadi-matlab');
 matlab_interface_dir = fullfile(acados_dir, 'interfaces', 'acados_matlab_octave');
 mex_template_dir = fullfile(matlab_interface_dir, 'acados_template_mex');

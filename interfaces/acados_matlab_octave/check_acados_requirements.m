@@ -1,4 +1,7 @@
-function check_acados_requirements()
+function check_acados_requirements(force)
+arguments
+    force=false;
+end
 
     % check environment variables
     env_run = getenv('ENV_RUN');
@@ -13,8 +16,13 @@ function check_acados_requirements()
             ',\n which is needed to run the acados Matlab/Octave examples.',...
             '\n Press any key to proceed setting up the CasADi automatically.',...
             '\n Press "n" or "N" to exit, if you wish to set up CasADi yourself.\n'];
-        In = input(message,'s');
-        if strcmpi( In, 'n')
+        if ~force
+            In = input(message,'s');
+        else
+            In = 'Y';
+        end
+        
+        if strcmpi( In, 'n') 
             error('Please set up CasADi yourself and try again.');
         else
             % download CasADi
