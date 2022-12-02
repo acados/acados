@@ -43,11 +43,11 @@ addpath(fullfile(acados_folder, 'external', 'jsonlab'));
 
 % set paths
 acados_mex_folder = fullfile(acados_folder, 'interfaces', 'acados_matlab_octave');
-acados_include = ['-I' acados_folder];
+acados_include = ['-I' fullfile(acados_folder,'include')];
 acados_interfaces_include = ['-I' fullfile(acados_folder, 'interfaces')];
 external_include = ['-I' fullfile(acados_folder, 'external')];
-blasfeo_include = ['-I' fullfile(acados_folder, 'external' , 'blasfeo', 'include')];
-hpipm_include = ['-I' fullfile(acados_folder, 'external' , 'hpipm', 'include')];
+blasfeo_include = ['-I' fullfile(acados_folder, 'include' , 'blasfeo', 'include')];
+hpipm_include = ['-I' fullfile(acados_folder, 'include' , 'hpipm', 'include')];
 acados_lib_path = ['-L' fullfile(acados_folder, 'lib')];
 acados_matlab_octave_lib_path = ['-L' fullfile(acados_folder, 'interfaces', 'acados_matlab_octave')];
 model_lib_path = ['-L', opts_struct.output_dir];
