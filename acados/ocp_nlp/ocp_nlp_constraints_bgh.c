@@ -879,7 +879,14 @@ void ocp_nlp_constraints_bgh_model_get(void *config_, void *dims_,
     {
         blasfeo_unpack_dvec(nh, &model->d, nb + ng + nh + nb + ng, value, 1);
     }
-    // TODO: C, D?
+    else if (!strcmp(field, "C"))
+    {
+        blasfeo_unpack_tran_dmat(nx, ng, &model->DCt, nu, 0, value, ng);
+    }
+    else if (!strcmp(field, "D"))
+    {
+        blasfeo_unpack_tran_dmat(nu, ng, &model->DCt, 0, 0, value, ng);
+    }
     else if (!strcmp(field, "Ct"))
     {
         blasfeo_unpack_dmat(nx, ng, &model->DCt, nu, 0, value, nx);
