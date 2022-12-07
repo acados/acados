@@ -199,7 +199,8 @@ int main()
         printf("{{ model.name }}_acados_solve() failed with status %d.\n", status);
     }
 
-{%- if custom_update_filename == "" %}
+
+{%- if custom_update_filename != "" %}
     {{ model.name }}_acados_custom_update(acados_ocp_capsule, xtraj, NX*(N+1));
 {%- endif %}
 
