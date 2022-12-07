@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
 import numpy as np
-import os
 
 @dataclass
 class MPCParam():
@@ -24,8 +23,8 @@ class MPCParam():
     _min_forward_acceleration: float=-1.0
     _max_forward_acceleration: float=0.3
     _max_angular_acceleration: float=2.84
-    _term_forward_velocity: float=0.01
-    _term_angular_velocity: float=0.01
+    _term_forward_velocity: float=0.05
+    _term_angular_velocity: float=0.05
 
     # feedback matrix
     _fdbk_k: float=6.0
@@ -53,10 +52,8 @@ class MPCParam():
         self._fdbk_K_mat = np.array([[0., 0., 0., self._fdbk_k, 0.], \
             [0., 0., 0., 0., self._fdbk_k]])
         self._unc_jac_G_mat = np.eye(self._nx)
-        self._W_mat = np.diag([0.0001691, 0.0001389, 0.0003245, 0.14297, 0.68013])\
-            * (self._delta_t**2)
-        self._P0_mat = np.diag([0.0001691, 0.0001389, 0.0003245, 0.14297, 0.68013])\
-            * (self._delta_t**2)
+        self._W_mat = np.diag([2.0e-06, 2.0e-06, 4.0e-06, 1.5e-03, 7.0e-03])
+        self._P0_mat = np.diag([2.0e-06, 2.0e-06, 4.0e-06, 1.5e-03, 7.0e-03])
 
     @property
     def nx(self)->int:
@@ -141,11 +138,11 @@ class MPCParam():
 
     @property
     def W_mat(self)->np.ndarray:
-        return np.diag([0.0001691, 0.0001389, 0.0003245, 0.14297, 0.68013]) * (self._delta_t**2)
+        return self._W_mat
 
     @property
     def P0_mat(self)->np.ndarray:
-        return np.diag([0.0001691, 0.0001389, 0.0003245, 0.14297, 0.68013]) * (self._delta_t**2)
+        return self._P0_mat
 
     @property
     def num_obs(self)->int:
