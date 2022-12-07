@@ -2248,6 +2248,7 @@ class AcadosOcpOptions:
         Boolean;
         If True, the custom update function files are copied into the `code_export_directory`.
         """
+        return self.__custom_update_copy
 
 
     @property
