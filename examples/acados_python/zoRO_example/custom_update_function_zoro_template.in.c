@@ -572,6 +572,15 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
                 + sqrt(blasfeo_dgeex1(&custom_mem->temp_KPK_mat,
                     custom_mem->idxbu[{{it}}], custom_mem->idxbu[{{it}}]));
         {%- endfor %}
+        // printf("A_%d:\n", (ii+1));
+        // blasfeo_print_exp_dmat(nx, nx, &custom_mem->A_mat, 0, 0);
+        // printf("B_%d:\n", (ii+1));
+        // blasfeo_print_exp_dmat(nx, nu, &custom_mem->B_mat, 0, 0);
+        // printf("P_%d:\n", (ii+1));
+        // blasfeo_print_exp_dmat(nx, nx, &(custom_mem->uncertainty_matrix_buffer[ii+1]), 0, 0);
+        // printf("d_lbu=%f, %f. d_lbu_tightened=%f, %f.\n",
+        //         custom_mem->d_lbu[0], custom_mem->d_lbu[1],
+        //         custom_mem->d_lbu_tightened[0], custom_mem->d_lbu_tightened[1]);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii+1, "lbu", custom_mem->d_lbu_tightened);
     {%- endif %}
     {%- if zoro_stuff.nubu_t > 0 %}

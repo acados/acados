@@ -78,6 +78,8 @@ class ZoroMPCSolver:
         self.ocp.constraints.lh_e = cfg.obs_radius
         self.ocp.constraints.uh_e = 1e3 * np.ones((num_obs, ))
 
+        # self.ocp.solver_options.ext_fun_compile_flags = '-g3'
+
         # custom update: disturbance propagation
         self.ocp.solver_options.custom_update_filename = 'custom_update_function.c'
         self.ocp.solver_options.custom_update_header_filename = 'custom_update_function.h'
@@ -280,7 +282,6 @@ class ZoroMPCSolver:
         temp_P_mat = self.P_mats[0,:,:] = p0_mat.copy()
 
         i_mpc_stage = 0
-        i_diff_ctrl_stage = 0
         while i_mpc_stage < self.cfg.n_hrzn:
             # get the A matrix
             temp_A = self.acados_ocp_solver.get_from_qp_in(i_mpc_stage, "A")
