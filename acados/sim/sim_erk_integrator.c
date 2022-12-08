@@ -696,11 +696,11 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         printf("sim_erk: nz should be zero - DAEs are not supported by the ERK integrator\n");
         exit(1);
     }
-    if (opts->output_z)
-    {
-        printf("sim_erk: opts->output_z should be false - DAEs are not supported for the ERK integrator\n");
-        exit(1);
-    }
+    // if (opts->output_z)
+    // {
+    //     printf("sim_erk: opts->output_z should be false - DAEs are not supported for the ERK integrator\n");
+    //     exit(1);
+    // }
     if (opts->sens_algebraic)
     {
         printf("sim_erk: opts->sens_algebraic should be false - DAEs are not supported for the ERK integrator\n");
