@@ -700,7 +700,10 @@ int dense_qp_daqp(void* config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     int update_mask,daqp_status;
     update_mask= (opts->warm_start==2) ?
         UPDATE_v+UPDATE_d: UPDATE_Rinv+UPDATE_M+UPDATE_v+UPDATE_d;
-    update_ldp(update_mask,work);
+    daqp_status = update_ldp(update_mask,work);
+    // if setup failed, abort
+    if(daqp_status < 0)
+        return daqp_status;
     // solve LDP
     if (opts->warm_start==1)
         activate_constraints(work);
