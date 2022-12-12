@@ -1,9 +1,12 @@
 ## Differential Drive Robot
+Run tests:
+```python ./diff_drive/main.py```
 
+Timings of solving one OCP with fast zoRO (BLASFEO) when $\mathrm{max\_iter} = 2$:
+![plot](./figures/timings_diff_drive_BLASFEO.png)
 
-
-## Continuous Stirred-tank Reactor (CSTR)
-
+Timings of solving one OCP with zoRO (numpy) when $\mathrm{max\_iter} = 2$:
+![plot](./figures/timings_diff_drive_numpy.png)
 
 ## Hanging Chain
 
@@ -15,3 +18,9 @@ CPU time per OCP when $n_\mathrm{mass} = 5$ and $\mathrm{max\_iter} = 50$:
 
 Closest distance to the wall:
 ![plot](./figures/constraint_violation_nmass_5_seeds_20.png)
+
+
+
+
+
+## Continuous Stirred-tank Reactor (CSTR)

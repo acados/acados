@@ -13,10 +13,10 @@ import casadi
 
 from diff_drive_zoro_mpc import ZoroMPCSolver
 from mpc_parameters import MPCParam
-from utils import plot_timings, sampleFromEllipsoid
+from utils import plot_timings, samplesFromEllipsoid, compute_min_dis
 
-N_EXEC = 1
-N_SIM = 450
+N_EXEC = 5
+N_SIM = 200
 
 
 def main():
@@ -37,15 +37,16 @@ def main():
     I = casadi.integrator('I', 'rk', dae, opts)
 
     # Process Noise
-    process_noise = sampleFromEllipsoid(N_SIM, np.zeros((cfg_zo.nw,)), cfg_zo.W_mat)
+    process_noise = samplesFromEllipsoid(N_SIM, np.zeros((cfg_zo.nw,)), cfg_zo.W_mat)
 
     # Reference trajectory
     local_path = os.path.dirname(os.path.abspath(__file__))
     mat_file_path = os.path.join(
         local_path, 'refTrajInLab.mat')
     ref_traj_mat = scipy.io.loadmat(mat_file_path)
-    ref_traj_x = ref_traj_mat['filtered_states'][:-1,:]
-    ref_traj_u = ref_traj_mat['filtered_inputs'][:-1,:]
+    # The delta_t in reference trajectory = 0.5 * cfg_zo.delta_t
+    ref_traj_x = ref_traj_mat['filtered_states'][:-1:2,:]
+    ref_traj_u = ref_traj_mat['filtered_inputs'][:-1:2,:]
 
     time_prep = []
     time_prop = []
@@ -86,10 +87,11 @@ def main():
             print(i_sim, u_opt, traj_zo[i_sim,:2])
             traj_zo[i_sim+1,:] = I(x0=traj_zo[i_sim, :], p=u_opt)['xf'].full().flatten()
             traj_zo[i_sim+1,:] += process_noise[i_sim,:]
-            for idx_obs in range(cfg_zo.num_obs):
-                if np.linalg.norm(traj_zo[i_sim+1,:2] - cfg_zo.obs_pos[idx_obs,:]) < cfg_zo.obs_radius[idx_obs]:
-                    print("collision take place")
-                    return False
+
+            min_dist = compute_min_dis(cfg=cfg_zo, s=traj_zo[i_sim+1,:])
+            if min_dist < 1e-8:
+                print("collision take place")
+                return False
 
 
     total_time = [time_prep[i] + time_feedback[i] + time_prop[i] for i in range(len(time_prep))]
