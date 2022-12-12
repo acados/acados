@@ -12,9 +12,30 @@ import matplotlib
 from typing import Optional
 
 from cstr_model import CSTRParameters, setup_cstr_model, setup_linearized_model
-from zoro_ocp_solver import MpcCSTRParameters, setup_acados_ocp_solver, AcadosOcpSolver
+from zoro_ocp_solver import MpcCSTRParameters, DistCSTRParameters, setup_acados_ocp_solver, AcadosOcpSolver
 from setup_acados_integrator import setup_acados_integrator, AcadosSimSolver
 from cstr_utils import plot_cstr, compute_lqr_gain
+
+
+def samplesFromEllipsoid(N, w, Z)->np.ndarray:
+    """
+    draws samples from ellipsoid with center w and variability matrix Z
+    """
+
+    nw = w.shape[0]                  # dimension
+    lam, v = np.linalg.eig(Z)
+
+    # sample in hypersphere
+    r = np.random.rand()**(1/nw)     # radial position of sample
+    x = np.random.randn(N, nw)
+    y = np.zeros((N, nw))
+    for idx in range(N):
+        x[idx,:] = x[idx,:] / np.linalg.norm(x[idx,:])
+        x[idx,:] *= r
+        # project to ellipsoid
+        y[idx,:] = v @ (np.sqrt(lam) * x[idx,:]) + w
+
+    return y
 
 
 def simulate(
@@ -24,7 +45,8 @@ def simulate(
     Nsim: int,
     X_ref: np.ndarray,
     U_ref: np.ndarray,
-    cstr_tightening: Boolean
+    cstr_tightening: Boolean,
+    dist_samples: np.ndarray
 ):
 
     nx = X_ref.shape[1]
@@ -80,7 +102,7 @@ def simulate(
 
         timings_integrator[i] = plant.get("time_tot")
         # update state
-        xcurrent = plant.get("x")
+        xcurrent = plant.get("x") + dist_samples[i,:]
         X[i + 1, :] = xcurrent
 
     return X, U, timings_solver, timings_integrator
@@ -106,11 +128,16 @@ def main():
     U_ref = np.tile(us, Nsim).T
 
     cstr_params = CSTRParameters()
+    dist_params = DistCSTRParameters()
     mpc_params = MpcCSTRParameters(xs=cstr_params.xs, us=cstr_params.us)
     model = setup_cstr_model(cstr_params)
     plant_model = setup_cstr_model(cstr_params)
 
     integrator = setup_acados_integrator(plant_model, dt_plant, cstr_param=cstr_params)
+
+    # Disturbance Generator
+    dist_samples = samplesFromEllipsoid(Nsim, \
+        np.zeros((plant_model.x.shape[0])), dist_params.W_mat)
 
     X_all = []
     U_all = []
@@ -121,10 +148,11 @@ def main():
     label = "Nominal"
     print(f"\n\nRunning simulation with {label}\n\n")
     mpc_params.cstr_tightening = False
-    ocp_solver = setup_acados_ocp_solver(model, mpc_params, cstr_params=cstr_params)
+    ocp_solver = setup_acados_ocp_solver(model, mpc_params, cstr_params=cstr_params, dist_params=dist_params)
 
     X, U, timings_solver, _ = simulate(
-        ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref, cstr_tightening=False
+        ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref, \
+            cstr_tightening=False, dist_samples = dist_samples,
     )
     X_all.append(X)
     U_all.append(U)
@@ -133,13 +161,14 @@ def main():
     ocp_solver = None
 
     # simulation with zoRO MPC
-    label = "zoRO"
+    label = "fast zoRO"
     print(f"\n\nRunning simulation with {label}\n\n")
     mpc_params.cstr_tightening = True
-    ocp_solver = setup_acados_ocp_solver(model, mpc_params, cstr_params=cstr_params)
+    ocp_solver = setup_acados_ocp_solver(model, mpc_params, cstr_params=cstr_params, dist_params=dist_params)
 
     X, U, timings_solver, _ = simulate(
-        ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref, cstr_tightening=True
+        ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref, \
+            cstr_tightening=True, dist_samples = dist_samples,
     )
     X_all.append(X)
     U_all.append(U)
@@ -157,6 +186,8 @@ def main():
         )
 
     matplotlib.use("TkAgg")
+    x_max = cstr_params.xs \
+        * (1.0 + np.array([dist_params.c_exceed_ratio, dist_params.t_exceed_ratio, dist_params.h_exceed_ratio]))
     plot_cstr(
         dt_plant,
         X_all,
@@ -166,6 +197,7 @@ def main():
         mpc_params.umin,
         mpc_params.umax,
         labels_all,
+        x_max = x_max
     )  # , fig_filename='cstr_acados_RTI.pdf')
 
 

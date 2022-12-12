@@ -75,8 +75,17 @@ class MpcCSTRParameters:
         self.umax = np.array([1.05, 1.15]) * us
 
 
+@dataclass
+class DistCSTRParameters:
+    W_mat: np.ndarray = np.diag([0.001, 0.3, 0.001])
+    c_exceed_ratio: float = 0.2
+    t_exceed_ratio: float = 0.1
+    h_exceed_ratio: float = 0.12
+
+
 def setup_acados_ocp_solver(
-    model, mpc_params: MpcCSTRParameters, cstr_params, use_rti=False
+    model, mpc_params: MpcCSTRParameters, cstr_params, \
+        dist_params: DistCSTRParameters, use_rti=False
 ):
 
     ocp = AcadosOcp()
@@ -110,12 +119,21 @@ def setup_acados_ocp_solver(
     ocp.cost.yref = np.zeros((nx + nu,))
     ocp.cost.yref_e = np.zeros((nx,))
 
-    # set constraints
+    # set input constraints
     ocp.constraints.lbu = mpc_params.umin
     ocp.constraints.ubu = mpc_params.umax
     ocp.constraints.idxbu = np.arange(nu)
 
+    # set state constraints
     ocp.constraints.x0 = cstr_params.xs
+    ocp.constraints.idxbx = np.arange(nx)
+    ocp.constraints.lbx = np.zeros((nx,))
+    ocp.constraints.ubx = cstr_params.xs \
+        * (1.0 + np.array([dist_params.c_exceed_ratio, dist_params.t_exceed_ratio, dist_params.h_exceed_ratio]))
+    ocp.constraints.idxbx_e = np.arange(nx)
+    ocp.constraints.lbx_e = np.zeros((nx,))
+    ocp.constraints.ubx_e = cstr_params.xs \
+        * (1.0 + np.array([dist_params.c_exceed_ratio, dist_params.t_exceed_ratio, dist_params.h_exceed_ratio]))
 
     # set options
     ocp.solver_options.qp_solver = "PARTIAL_CONDENSING_HPIPM"  # FULL_CONDENSING_QPOASES
@@ -155,13 +173,15 @@ def setup_acados_ocp_solver(
 
         # zoro stuff
         zoro_stuff = ZoroDescription()
-        zoro_stuff.P0_mat = np.eye(nx)*1e-3
+        zoro_stuff.P0_mat = np.zeros((nx, nx))
         # computed from dlqr
         zoro_stuff.fdbk_K_mat = np.array([[-1.01490524e+02, 9.03426809e-01, 4.59465726e-01],
                                           [ 7.74149612e-04, -1.69695112e-06, -1.33963922e-01]])
-        zoro_stuff.W_mat = 2*np.eye(nx)*1e-3
+        zoro_stuff.W_mat = dist_params.W_mat
         zoro_stuff.idx_lbu_t = np.arange(nu)
         zoro_stuff.idx_ubu_t = np.arange(nu)
+        zoro_stuff.idx_ubx_t = np.arange(nx)
+        zoro_stuff.idx_ubx_e_t = np.arange(nx)
         ocp.zoro_stuff = process_zoro_stuff(zoro_stuff)
 
     # create
