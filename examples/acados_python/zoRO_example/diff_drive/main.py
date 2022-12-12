@@ -13,8 +13,9 @@ import casadi
 
 from diff_drive_zoro_mpc import ZoroMPCSolver
 from mpc_parameters import MPCParam
+from utils import plot_timings, sampleFromEllipsoid
 
-N_EXEC = 3
+N_EXEC = 1
 N_SIM = 450
 
 
@@ -36,11 +37,7 @@ def main():
     I = casadi.integrator('I', 'rk', dae, opts)
 
     # Process Noise
-    process_noise = np.zeros((N_SIM, cfg_zo.nx))
-    """ w_bound = np.sqrt(np.diag(cfg_zo.noise_sigma_mat)) * cfg_zo.delta_t
-    for idx in range(N_SIM):
-        np.random.seed(idx)
-        process_noise[idx,:] = np.random.normal(scale=w_bound/6) """
+    process_noise = sampleFromEllipsoid(N_SIM, np.zeros((cfg_zo.nw,)), cfg_zo.W_mat)
 
     # Reference trajectory
     local_path = os.path.dirname(os.path.abspath(__file__))
@@ -80,9 +77,12 @@ def main():
                 time_prop[i_sim] = min(time_prop[i_sim], zoroMPC.propagation_t)
                 time_sim[i_sim] = min(time_sim[i_sim], zoroMPC.acados_integrator_time)
                 time_qp[i_sim] = min(time_qp[i_sim], zoroMPC.acados_qp_time)
+
             if status != 0:
                 print('error status=',status,'Reset Solver')
                 zoroMPC.initialized = False
+                zoroMPC.acados_ocp_solver.reset()
+
             print(i_sim, u_opt, traj_zo[i_sim,:2])
             traj_zo[i_sim+1,:] = I(x0=traj_zo[i_sim, :], p=u_opt)['xf'].full().flatten()
             traj_zo[i_sim+1,:] += process_noise[i_sim,:]
@@ -116,23 +116,6 @@ def main():
     plt.legend()
     plt.show()
 
-
-def plot_timings(timing_dict):
-    print("timings\t\tmin\tmean\tmax\n--------------------------------")
-    for k, v in timing_dict.items():
-        print(f"{k:10}\t{np.min(v):.3f}\t {np.mean(v):.3f}\t {np.max(v):.3f}")
-
-    medianprops = dict(linestyle='-', linewidth=2.5, color='darkgreen')
-    green_square = dict(markerfacecolor='palegreen', marker='D')
-    plt.rcParams.update({'font.size': 16})
-    _, ax = plt.subplots()
-    ax.boxplot(timing_dict.values(), vert=False,
-        # flierprops=green_square, \
-        medianprops=medianprops, showmeans=False)
-    ax.set_yticklabels(timing_dict.keys())
-    plt.grid()
-    plt.xlabel('CPU time [ms]')
-    plt.show()
 
 if __name__ == "__main__":
     main()
