@@ -1,23 +1,33 @@
 import sys
 import os
-from xmlrpc.client import Boolean
+from typing import Optional
+import numpy as np
 local_path = os.path.dirname(os.path.abspath(__file__))
-cstr_source_dir = os.path.join(local_path, '..', '..', 'cstr')
-sys.path.append(cstr_source_dir)
+
 zoro_source_dir = os.path.join(local_path, '..')
 sys.path.append(zoro_source_dir)
 
-import numpy as np
 import matplotlib
-from typing import Optional
+from acados_template import AcadosSimSolver, AcadosOcpSolver
 
-from cstr_model import CSTRParameters, setup_cstr_model, setup_linearized_model
-from zoro_ocp_solver import MpcCSTRParameters, DistCSTRParameters, setup_acados_ocp_solver, AcadosOcpSolver
-from setup_acados_integrator import setup_acados_integrator, AcadosSimSolver
-from cstr_utils import plot_cstr, compute_lqr_gain
+from zoro_ocp_solver import MpcCSTRParameters, DistCSTRParameters, setup_acados_ocp_solver
+
+# same as in normal cstr model
+cstr_source_dir = os.path.join(local_path, '..', '..', 'cstr')
+sys.path.append(cstr_source_dir)
+
+from cstr_model import CSTRParameters, setup_cstr_model
+from setup_acados_integrator import setup_acados_integrator
+from cstr_utils import plot_cstr
+
+# NOTE: this a variation of the cstr example in acados with the following modifications:
+# - add tighter bounds on x.
+# - add disturbance, see samplesFromEllipsoid
+# - use a nominal controller and a fast zoRO implementation and compare them in closed loop with disturbance
 
 
-def samplesFromEllipsoid(N, w, Z)->np.ndarray:
+
+def samplesFromEllipsoid(N, w, Z) -> np.ndarray:
     """
     draws samples from ellipsoid with center w and variability matrix Z
     """
@@ -47,7 +57,7 @@ def simulate(
     Nsim: int,
     X_ref: np.ndarray,
     U_ref: np.ndarray,
-    cstr_tightening: Boolean,
+    cstr_tightening: bool,
     dist_samples: np.ndarray,
     ubx: np.ndarray
 ):
@@ -70,7 +80,7 @@ def simulate(
         # Reset the controller
         xcurrent = x0
         controller.reset()
-        for i_stage in range(0, controller.acados_ocp.dims.N):
+        for i_stage in range(0, controller.N):
             controller.set(i_stage, 'u', np.zeros((controller.acados_ocp.dims.nu,)))
             controller.set(i_stage, 'x', x0)
 
@@ -81,9 +91,9 @@ def simulate(
             controller.set(0, "ubx", xcurrent)
 
             yref = np.concatenate((X_ref[i_sim, :], U_ref[i_sim, :]))
-            for stage in range(controller.acados_ocp.dims.N):
+            for stage in range(controller.N):
                 controller.set(stage, "yref", yref)
-            controller.set(controller.acados_ocp.dims.N, "yref", X_ref[i_sim, :])
+            controller.set(controller.N, "yref", X_ref[i_sim, :])
 
             if cstr_tightening:
                 controller.custom_update([])
@@ -127,12 +137,12 @@ def simulate(
 
             # if exceeds the upper bound of the state constraints
             if (xcurrent > ubx).any():
-                X[(i_sim+1):, :] = np.nan
-                U[min(i_sim+1, Nsim):, :] = np.nan
-                timings_solver[min(i_sim+1, Nsim):] = np.nan
-                timings_integrator[min(i_sim+1, Nsim):] = np.nan
+                # X[(i_sim+1):, :] = np.nan
+                # U[min(i_sim+1, Nsim):, :] = np.nan
+                # timings_solver[min(i_sim+1, Nsim):] = np.nan
+                # timings_integrator[min(i_sim+1, Nsim):] = np.nan
                 print("exceed the upper bound at i_sim=", i_sim)
-                break
+                # break
 
     return X, U, timings_solver, timings_integrator
 
