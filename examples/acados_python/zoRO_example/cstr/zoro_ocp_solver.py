@@ -79,8 +79,8 @@ class MpcCSTRParameters:
 class DistCSTRParameters:
     W_mat: np.ndarray = np.diag([0.001, 0.3, 0.001])
     c_exceed_ratio: float = 0.2
-    t_exceed_ratio: float = 0.1
-    h_exceed_ratio: float = 0.12
+    t_exceed_ratio: float = 0.2
+    h_exceed_ratio: float = 0.075
 
 
 def setup_acados_ocp_solver(
@@ -186,6 +186,9 @@ def setup_acados_ocp_solver(
 
     # create
     ocp_solver = AcadosOcpSolver(ocp, json_file="acados_ocp.json")
+    # AcadosOcpSolver.generate(ocp, json_file='acados_ocp_' + model.name + '.json')
+    # AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
+    # ocp_solver = AcadosOcpSolver.create_cython_solver('acados_ocp_' + model.name + '.json')
 
     return ocp_solver
 

@@ -26,7 +26,7 @@ State and input trajectory ($\mathrm{max\_iter} = 1$):
 ![plot](./figures/trajectory_cstr.png)
 
 Nominal:
- min: 0.761 ms, mean: 1.913 ms, max: 4.984 ms
+ min: 1.079 ms, mean: 1.937 ms, max: 5.451 ms
 
-zoRO:
- min: 0.861 ms, mean: 2.368 ms, max: 5.111 ms
+fast zoRO:
+ min: 1.328 ms, mean: 2.333 ms, max: 4.767 ms

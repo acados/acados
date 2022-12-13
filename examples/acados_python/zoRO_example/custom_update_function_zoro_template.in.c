@@ -674,13 +674,6 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
             + sqrt(blasfeo_dgeex1(&custom_mem->uncertainty_matrix_buffer[N],
                 custom_mem->idxbx_e[{{it}}],custom_mem->idxbx_e[{{it}}]));
     {%- endfor %}
-    // printf("P_k+1:\n");
-    // blasfeo_print_exp_dmat(nx, nx, &(custom_mem->uncertainty_matrix_buffer[N]), 0, 0);
-    // printf("d_lbx=%f, %f. beta=%f, %f. d_lbx_tightened=%f, %f.\n",
-    //         custom_mem->d_lbx_e[0], custom_mem->d_lbx_e[1],
-    //         sqrt(blasfeo_dgeex1(&custom_mem->uncertainty_matrix_buffer[N], 3, 3)),
-    //         sqrt(blasfeo_dgeex1(&custom_mem->uncertainty_matrix_buffer[N], 4, 4)),
-    //         custom_mem->d_lbx_e_tightened[0], custom_mem->d_lbx_e_tightened[1]);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lbx", custom_mem->d_lbx_e_tightened);
 {%- endif %}
 {% if zoro_stuff.nubx_e_t > 0 %}
@@ -690,11 +683,6 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
             - sqrt(blasfeo_dgeex1(&custom_mem->uncertainty_matrix_buffer[N],
                 custom_mem->idxbx_e[{{it}}],custom_mem->idxbx_e[{{it}}]));
     {%- endfor %}
-    // printf("d_ubx=%f, %f. beta=%f, %f. d_ubx_tightened=%f, %f.\n",
-    //         custom_mem->d_ubx_e[0], custom_mem->d_ubx_e[1],
-    //         sqrt(blasfeo_dgeex1(&custom_mem->uncertainty_matrix_buffer[N], 3, 3)),
-    //         sqrt(blasfeo_dgeex1(&custom_mem->uncertainty_matrix_buffer[N], 4, 4)),
-    //         custom_mem->d_ubx_e_tightened[0], custom_mem->d_ubx_e_tightened[1]);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ubx", custom_mem->d_ubx_e_tightened);
 {%- endif %}
 {%- endif %}

@@ -22,6 +22,8 @@ def samplesFromEllipsoid(N, w, Z)->np.ndarray:
     draws samples from ellipsoid with center w and variability matrix Z
     """
 
+    np.random.seed(1)
+
     nw = w.shape[0]                  # dimension
     lam, v = np.linalg.eig(Z)
 
@@ -46,7 +48,8 @@ def simulate(
     X_ref: np.ndarray,
     U_ref: np.ndarray,
     cstr_tightening: Boolean,
-    dist_samples: np.ndarray
+    dist_samples: np.ndarray,
+    ubx: np.ndarray
 ):
 
     nx = X_ref.shape[1]
@@ -57,53 +60,79 @@ def simulate(
     timings_solver = np.zeros((Nsim))
     timings_integrator = np.zeros((Nsim))
 
+    Nexec = 10
+
     # closed loop
     xcurrent = x0
     X[0, :] = xcurrent
 
-    for i in range(Nsim):
+    for i_exec in range(Nexec):
+        # Reset the controller
+        xcurrent = x0
+        controller.reset()
+        for i_stage in range(0, controller.acados_ocp.dims.N):
+            controller.set(i_stage, 'u', np.zeros((controller.acados_ocp.dims.nu,)))
+            controller.set(i_stage, 'x', x0)
 
-        # set initial state
-        controller.set(0, "lbx", xcurrent)
-        controller.set(0, "ubx", xcurrent)
+        for i_sim in range(Nsim):
 
-        yref = np.concatenate((X_ref[i, :], U_ref[i, :]))
-        for stage in range(controller.acados_ocp.dims.N):
-            controller.set(stage, "yref", yref)
-        controller.set(controller.acados_ocp.dims.N, "yref", X_ref[i, :])
+            # set initial state
+            controller.set(0, "lbx", xcurrent)
+            controller.set(0, "ubx", xcurrent)
 
-        if cstr_tightening:
-            controller.custom_update([])
+            yref = np.concatenate((X_ref[i_sim, :], U_ref[i_sim, :]))
+            for stage in range(controller.acados_ocp.dims.N):
+                controller.set(stage, "yref", yref)
+            controller.set(controller.acados_ocp.dims.N, "yref", X_ref[i_sim, :])
 
-        # solve ocp
-        status = controller.solve()
+            if cstr_tightening:
+                controller.custom_update([])
 
-        if status != 0:
-            controller.print_statistics()
-            raise Exception(
-                f"acados controller returned status {status} in simulation step {i}. Exiting."
-            )
+            # solve ocp
+            status = controller.solve()
 
-        U[i, :] = controller.get(0, "u")
-        timings_solver[i] = controller.get_stats("time_tot")
+            if status != 0:
+                controller.print_statistics()
+                raise Exception(
+                    f"acados controller returned status {status} in simulation step {i_sim}. Exiting."
+                )
 
-        # simulate system
-        plant.set("x", xcurrent)
-        plant.set("u", U[i, :])
+            U[i_sim, :] = controller.get(0, "u")
+            if i_exec ==0:
+                timings_solver[i_sim] = controller.get_stats("time_tot")
+            else:
+                timings_solver[i_sim] = min(controller.get_stats("time_tot"), timings_solver[i_sim])
 
-        if plant.acados_sim.solver_options.integrator_type == "IRK":
-            plant.set("xdot", np.zeros((nx,)))
+            # simulate system
+            plant.set("x", xcurrent)
+            plant.set("u", U[i_sim, :])
 
-        status = plant.solve()
-        if status != 0:
-            raise Exception(
-                f"acados integrator returned status {status} in simulation step {i}. Exiting."
-            )
+            if plant.acados_sim.solver_options.integrator_type == "IRK":
+                plant.set("xdot", np.zeros((nx,)))
 
-        timings_integrator[i] = plant.get("time_tot")
-        # update state
-        xcurrent = plant.get("x") + dist_samples[i,:]
-        X[i + 1, :] = xcurrent
+            status = plant.solve()
+            if status != 0:
+                raise Exception(
+                    f"acados integrator returned status {status} in simulation step {i_sim}. Exiting."
+                )
+
+            if i_exec == 0:
+                timings_integrator[i_sim] = plant.get("time_tot")
+            else:
+                timings_integrator[i_sim] = min(plant.get("time_tot"), timings_integrator[i_sim])
+
+            # update state
+            xcurrent = plant.get("x") + dist_samples[i_sim,:]
+            X[i_sim + 1, :] = xcurrent
+
+            # if exceeds the upper bound of the state constraints
+            if (xcurrent > ubx).any():
+                X[(i_sim+1):, :] = np.nan
+                U[min(i_sim+1, Nsim):, :] = np.nan
+                timings_solver[min(i_sim+1, Nsim):] = np.nan
+                timings_integrator[min(i_sim+1, Nsim):] = np.nan
+                print("exceed the upper bound at i_sim=", i_sim)
+                break
 
     return X, U, timings_solver, timings_integrator
 
@@ -150,10 +179,10 @@ def main():
     mpc_params.cstr_tightening = False
     ocp_solver = setup_acados_ocp_solver(model, mpc_params, cstr_params=cstr_params, dist_params=dist_params)
 
+    ubx = cstr_params.xs * (1.0 + np.array([dist_params.c_exceed_ratio, dist_params.t_exceed_ratio, dist_params.h_exceed_ratio]))
     X, U, timings_solver, _ = simulate(
         ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref, \
-            cstr_tightening=False, dist_samples = dist_samples,
-    )
+            cstr_tightening=False, dist_samples=dist_samples, ubx=ubx)
     X_all.append(X)
     U_all.append(U)
     timings_solver_all.append(timings_solver)
@@ -168,8 +197,7 @@ def main():
 
     X, U, timings_solver, _ = simulate(
         ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref, \
-            cstr_tightening=True, dist_samples = dist_samples,
-    )
+            cstr_tightening=True, dist_samples=dist_samples, ubx = ubx)
     X_all.append(X)
     U_all.append(U)
     timings_solver_all.append(timings_solver)
@@ -182,7 +210,7 @@ def main():
         label = labels_all[i]
         timings_solver = timings_solver_all[i] * 1e3
         print(
-            f"{label}:\n min: {np.min(timings_solver):.3f} ms, mean: {np.mean(timings_solver):.3f} ms, max: {np.max(timings_solver):.3f} ms\n"
+            f"{label}:\n min: {np.nanmin(timings_solver):.3f} ms, mean: {np.nanmean(timings_solver):.3f} ms, max: {np.nanmax(timings_solver):.3f} ms\n"
         )
 
     matplotlib.use("TkAgg")
