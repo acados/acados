@@ -112,7 +112,7 @@ static int custom_memory_calculate_size(ocp_nlp_config *nlp_config, ocp_nlp_dims
     int N = nlp_dims->N;
     int nx = {{ dims.nx }};
     int nu = {{ dims.nu }};
-    int nw = {{ zoro_stuff.nw }};
+    int nw = {{ zoro_description.nw }};
 
     int ng = {{ dims.ng }};
     int nh = {{ dims.nh }};
@@ -125,20 +125,20 @@ static int custom_memory_calculate_size(ocp_nlp_config *nlp_config, ocp_nlp_dims
     int ngh_me_max = int_max(ngh_e_max, int_max(ng, nh));
     int nbx_e = {{ dims.nbx_e }};
 
-    assert({{zoro_stuff.nlbx_t}} <= nbx);
-    assert({{zoro_stuff.nubx_t}} <= nbx);
-    assert({{zoro_stuff.nlbu_t}} <= nbu);
-    assert({{zoro_stuff.nubu_t}} <= nbu);
-    assert({{zoro_stuff.nlg_t}} <= ng);
-    assert({{zoro_stuff.nug_t}} <= ng);
-    assert({{zoro_stuff.nlh_t}} <= nh);
-    assert({{zoro_stuff.nuh_t}} <= nh);
-    assert({{zoro_stuff.nlbx_e_t}} <= nbx_e);
-    assert({{zoro_stuff.nubx_e_t}} <= nbx_e);
-    assert({{zoro_stuff.nlg_e_t}} <= ng_e);
-    assert({{zoro_stuff.nug_e_t}} <= ng_e);
-    assert({{zoro_stuff.nlh_e_t}} <= nh_e);
-    assert({{zoro_stuff.nuh_e_t}} <= nh_e);
+    assert({{zoro_description.nlbx_t}} <= nbx);
+    assert({{zoro_description.nubx_t}} <= nbx);
+    assert({{zoro_description.nlbu_t}} <= nbu);
+    assert({{zoro_description.nubu_t}} <= nbu);
+    assert({{zoro_description.nlg_t}} <= ng);
+    assert({{zoro_description.nug_t}} <= ng);
+    assert({{zoro_description.nlh_t}} <= nh);
+    assert({{zoro_description.nuh_t}} <= nh);
+    assert({{zoro_description.nlbx_e_t}} <= nbx_e);
+    assert({{zoro_description.nubx_e_t}} <= nbx_e);
+    assert({{zoro_description.nlg_e_t}} <= ng_e);
+    assert({{zoro_description.nug_e_t}} <= ng_e);
+    assert({{zoro_description.nlh_e_t}} <= nh_e);
+    assert({{zoro_description.nuh_e_t}} <= nh_e);
 
     acados_size_t size = sizeof(custom_memory);
     size += nbx * sizeof(int);
@@ -189,7 +189,7 @@ static custom_memory *custom_memory_assign(ocp_nlp_config *nlp_config, ocp_nlp_d
     int N = nlp_dims->N;
     int nx = {{ dims.nx }};
     int nu = {{ dims.nu }};
-    int nw = {{ zoro_stuff.nw }};
+    int nw = {{ zoro_description.nw }};
 
     int ng = {{ dims.ng }};
     int nh = {{ dims.nh }};
@@ -311,7 +311,7 @@ static void custom_val_init_function(ocp_nlp_dims *nlp_dims, ocp_nlp_in *nlp_in,
     int N = nlp_dims->N;
     int nx = {{ dims.nx }};
     int nu = {{ dims.nu }};
-    int nw = {{ zoro_stuff.nw }};
+    int nw = {{ zoro_description.nw }};
 
     int ng = {{ dims.ng }};
     int nh = {{ dims.nh }};
@@ -370,15 +370,15 @@ static void custom_val_init_function(ocp_nlp_dims *nlp_dims, ocp_nlp_in *nlp_in,
 
     /* Initialize the W matrix */
     // blasfeo_dgese(nw, nw, 0., &custom_mem->W_mat, 0, 0);
-{%- for ir in range(end=zoro_stuff.nw) %}
-    {%- for ic in range(end=zoro_stuff.nw) %}
-    blasfeo_dgein1({{zoro_stuff.W_mat[ir][ic]}}, &custom_mem->W_mat, {{ir}}, {{ic}});
+{%- for ir in range(end=zoro_description.nw) %}
+    {%- for ic in range(end=zoro_description.nw) %}
+    blasfeo_dgein1({{zoro_description.W_mat[ir][ic]}}, &custom_mem->W_mat, {{ir}}, {{ic}});
     {%- endfor %}
 {%- endfor %}
 
 {%- for ir in range(end=dims.nx) %}
-    {%- for ic in range(end=zoro_stuff.nw) %}
-    blasfeo_dgein1({{zoro_stuff.unc_jac_G_mat[ir][ic]}}, &custom_mem->unc_jac_G_mat, {{ir}}, {{ic}});
+    {%- for ic in range(end=zoro_description.nw) %}
+    blasfeo_dgein1({{zoro_description.unc_jac_G_mat[ir][ic]}}, &custom_mem->unc_jac_G_mat, {{ir}}, {{ic}});
     {%- endfor %}
 {%- endfor %}
 
@@ -395,14 +395,14 @@ static void custom_val_init_function(ocp_nlp_dims *nlp_dims, ocp_nlp_in *nlp_in,
     /* Initialize the uncertainty_matrix_buffer[0] */
 {%- for ir in range(end=dims.nx) %}
     {%- for ic in range(end=dims.nx) %}
-    blasfeo_dgein1({{zoro_stuff.P0_mat[ir][ic]}}, &custom_mem->uncertainty_matrix_buffer[0], {{ir}}, {{ic}});
+    blasfeo_dgein1({{zoro_description.P0_mat[ir][ic]}}, &custom_mem->uncertainty_matrix_buffer[0], {{ir}}, {{ic}});
     {%- endfor %}
 {%- endfor %}
 
     /* Initialize the feedback gain matrix */
 {%- for ir in range(end=dims.nu) %}
     {%- for ic in range(end=dims.nx) %}
-    blasfeo_dgein1({{zoro_stuff.fdbk_K_mat[ir][ic]}}, &custom_mem->K_mat, {{ir}}, {{ic}});
+    blasfeo_dgein1({{zoro_description.fdbk_K_mat[ir][ic]}}, &custom_mem->K_mat, {{ir}}, {{ic}});
     {%- endfor %}
 {%- endfor %}
 }
@@ -496,13 +496,13 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
     // NOTE: lg_0 and ug_0 are not tightened.
     // NOTE: lh_0 and uh_0 are not tightened.
     // TODO: check that the tightened lower bounds are lower than tightened upper bounds
-{%- if zoro_stuff.nlbu_t + zoro_stuff.nubu_t > 0 %}
+{%- if zoro_description.nlbu_t + zoro_description.nubu_t > 0 %}
     compute_KPK(&custom_mem->K_mat, &custom_mem->temp_KP_mat,
                 &custom_mem->temp_KPK_mat, &(custom_mem->uncertainty_matrix_buffer[0]), nx, nu);
 
-{%- if zoro_stuff.nlbu_t > 0 %}
+{%- if zoro_description.nlbu_t > 0 %}
     // backoff lbu
-    {%- for it in zoro_stuff.idx_lbu_t %}
+    {%- for it in zoro_description.idx_lbu_t %}
     custom_mem->d_lbu_tightened[{{it}}]
         = custom_mem->d_lbu[{{it}}]
             + sqrt(blasfeo_dgeex1(&custom_mem->temp_KPK_mat,
@@ -510,9 +510,9 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
     {%- endfor %}
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbu", custom_mem->d_lbu_tightened);
 {%- endif %}
-{%- if zoro_stuff.nubu_t > 0 %}
+{%- if zoro_description.nubu_t > 0 %}
     // backoff ubu
-    {%- for it in zoro_stuff.idx_ubu_t %}
+    {%- for it in zoro_description.idx_ubu_t %}
     custom_mem->d_ubu_tightened[{{it}}]
         = custom_mem->d_ubu[{{it}}]
             - sqrt(blasfeo_dgeex1(&custom_mem->temp_KPK_mat,
@@ -539,10 +539,10 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
                               &custom_mem->AK_mat, &custom_mem->temp_AP_mat, nx, nu);
 
         // state constraints
-{%- if zoro_stuff.nlbx_t + zoro_stuff.nubx_t> 0 %}
-    {%- if zoro_stuff.nlbx_t > 0 %}
+{%- if zoro_description.nlbx_t + zoro_description.nubx_t> 0 %}
+    {%- if zoro_description.nlbx_t > 0 %}
         // lbx
-        {%- for it in zoro_stuff.idx_lbx_t %}
+        {%- for it in zoro_description.idx_lbx_t %}
         custom_mem->d_lbx_tightened[{{it}}]
             = custom_mem->d_lbx[{{it}}]
                 + sqrt(blasfeo_dgeex1(&custom_mem->uncertainty_matrix_buffer[ii+1],
@@ -550,9 +550,9 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
         {%- endfor %}
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii+1, "lbx", custom_mem->d_lbx_tightened);
     {%- endif %}
-    {% if zoro_stuff.nubx_t > 0 %}
+    {% if zoro_description.nubx_t > 0 %}
         // ubx
-        {%- for it in zoro_stuff.idx_ubx_t %}
+        {%- for it in zoro_description.idx_ubx_t %}
         custom_mem->d_ubx_tightened[{{it}}] = custom_mem->d_ubx[{{it}}]
                 - sqrt(blasfeo_dgeex1(&custom_mem->uncertainty_matrix_buffer[ii+1],
                     custom_mem->idxbx[{{it}}],custom_mem->idxbx[{{it}}]));
@@ -561,13 +561,13 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
     {%- endif %}
 {%- endif %}
 
-{%- if zoro_stuff.nlbu_t + zoro_stuff.nubu_t > 0 %}
+{%- if zoro_description.nlbu_t + zoro_description.nubu_t > 0 %}
         // input constraints
         compute_KPK(&custom_mem->K_mat, &custom_mem->temp_KP_mat,
             &custom_mem->temp_KPK_mat, &(custom_mem->uncertainty_matrix_buffer[ii+1]), nx, nu);
 
-    {%- if zoro_stuff.nlbu_t > 0 %}
-        {%- for it in zoro_stuff.idx_lbu_t %}
+    {%- if zoro_description.nlbu_t > 0 %}
+        {%- for it in zoro_description.idx_lbu_t %}
         custom_mem->d_lbu_tightened[{{it}}] = custom_mem->d_lbu[{{it}}]
                 + sqrt(blasfeo_dgeex1(&custom_mem->temp_KPK_mat,
                     custom_mem->idxbu[{{it}}], custom_mem->idxbu[{{it}}]));
@@ -583,8 +583,8 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
         //         custom_mem->d_lbu_tightened[0], custom_mem->d_lbu_tightened[1]);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii+1, "lbu", custom_mem->d_lbu_tightened);
     {%- endif %}
-    {%- if zoro_stuff.nubu_t > 0 %}
-        {%- for it in zoro_stuff.idx_ubu_t %}
+    {%- if zoro_description.nubu_t > 0 %}
+        {%- for it in zoro_description.idx_ubu_t %}
         custom_mem->d_ubu_tightened[{{it}}] = custom_mem->d_ubu[{{it}}]
                 - sqrt(blasfeo_dgeex1(&custom_mem->temp_KPK_mat,
                     custom_mem->idxbu[{{it}}], custom_mem->idxbu[{{it}}]));
@@ -593,23 +593,23 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
     {%- endif %}
 {%- endif %}
 
-{%- if zoro_stuff.nlg_t + zoro_stuff.nug_t > 0 %}
+{%- if zoro_description.nlg_t + zoro_description.nug_t > 0 %}
         // Linear constraints: g
         compute_gh_beta(&custom_mem->K_mat, &custom_mem->Cg_mat,
                      &custom_mem->Dg_mat, &custom_mem->temp_CaDK_mat,
                      &custom_mem->temp_CaDKmP_mat, &custom_mem->temp_beta_mat,
                      &custom_mem->uncertainty_matrix_buffer[ii+1], ng, nx, nu);
 
-    {%- if zoro_stuff.nlg_t > 0 %}
-        {%- for it in zoro_stuff.idx_lg_t %}
+    {%- if zoro_description.nlg_t > 0 %}
+        {%- for it in zoro_description.idx_lg_t %}
         custom_mem->d_lg_tightened[{{it}}]
             = custom_mem->d_lg[{{it}}]
                 + sqrt(blasfeo_dgeex1(&custom_mem->temp_beta_mat, {{it}}, {{it}}));
         {%- endfor %}
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii+1, "lg", custom_mem->d_lg_tightened);
     {%- endif %}
-    {%- if zoro_stuff.nug_t > 0 %}
-        {%- for it in zoro_stuff.idx_ug_t %}
+    {%- if zoro_description.nug_t > 0 %}
+        {%- for it in zoro_description.idx_ug_t %}
         custom_mem->d_ug_tightened[{{it}}]
             = custom_mem->d_ug[{{it}}]
                 - sqrt(blasfeo_dgeex1(&custom_mem->temp_beta_mat, {{it}}, {{it}}));
@@ -619,7 +619,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
 {%- endif %}
 
 
-{%- if zoro_stuff.nlh_t + zoro_stuff.nuh_t > 0 %}
+{%- if zoro_description.nlh_t + zoro_description.nuh_t > 0 %}
         // nonlinear constraints: h
         // Get C_{k+1} and D_{k+1}
         ocp_nlp_get_at_stage(solver->config, nlp_dims, solver, ii+1, "C", custom_mem->d_Cgh_mat);
@@ -633,16 +633,16 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
                      &custom_mem->temp_CaDKmP_mat, &custom_mem->temp_beta_mat,
                      &custom_mem->uncertainty_matrix_buffer[ii+1], nh, nx, nu);
 
-    {%- if zoro_stuff.nlh_t > 0 %}
-        {%- for it in zoro_stuff.idx_lh_t %}
+    {%- if zoro_description.nlh_t > 0 %}
+        {%- for it in zoro_description.idx_lh_t %}
         custom_mem->d_lh_tightened[{{it}}]
             = custom_mem->d_lh[{{it}}]
                 + sqrt(blasfeo_dgeex1(&custom_mem->temp_beta_mat, {{it}}, {{it}}));
         {%- endfor %}
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii+1, "lh", custom_mem->d_lh_tightened);
     {%- endif %}
-    {%- if zoro_stuff.nuh_t > 0 %}
-        {%- for it in zoro_stuff.idx_uh_t %}
+    {%- if zoro_description.nuh_t > 0 %}
+        {%- for it in zoro_description.idx_uh_t %}
         custom_mem->d_uh_tightened[{{it}}] = custom_mem->d_uh[{{it}}]
                         - sqrt(blasfeo_dgeex1(&custom_mem->temp_beta_mat, {{it}}, {{it}}));
         {%- endfor %}
@@ -665,10 +665,10 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
                         &custom_mem->AK_mat, &custom_mem->temp_AP_mat, nx, nu);
 
     // state constraints nlbx_e_t
-{%- if zoro_stuff.nlbx_e_t + zoro_stuff.nubx_e_t> 0 %}
-{%- if zoro_stuff.nlbx_e_t > 0 %}
+{%- if zoro_description.nlbx_e_t + zoro_description.nubx_e_t> 0 %}
+{%- if zoro_description.nlbx_e_t > 0 %}
     // lbx_e
-    {%- for it in zoro_stuff.idx_lbx_e_t %}
+    {%- for it in zoro_description.idx_lbx_e_t %}
     custom_mem->d_lbx_e_tightened[{{it}}]
         = custom_mem->d_lbx_e[{{it}}]
             + sqrt(blasfeo_dgeex1(&custom_mem->uncertainty_matrix_buffer[N],
@@ -676,9 +676,9 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
     {%- endfor %}
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lbx", custom_mem->d_lbx_e_tightened);
 {%- endif %}
-{% if zoro_stuff.nubx_e_t > 0 %}
+{% if zoro_description.nubx_e_t > 0 %}
     // ubx_e
-    {%- for it in zoro_stuff.idx_ubx_e_t %}
+    {%- for it in zoro_description.idx_ubx_e_t %}
     custom_mem->d_ubx_e_tightened[{{it}}] = custom_mem->d_ubx_e[{{it}}]
             - sqrt(blasfeo_dgeex1(&custom_mem->uncertainty_matrix_buffer[N],
                 custom_mem->idxbx_e[{{it}}],custom_mem->idxbx_e[{{it}}]));
@@ -687,23 +687,23 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
 {%- endif %}
 {%- endif %}
 
-{%- if zoro_stuff.nlg_e_t + zoro_stuff.nug_e_t > 0 %}
+{%- if zoro_description.nlg_e_t + zoro_description.nug_e_t > 0 %}
     // Linear constraints: g
     compute_gh_beta(&custom_mem->K_mat, &custom_mem->Cg_mat,
                     &custom_mem->dummy_Dgh_e_mat, &custom_mem->temp_CaDK_mat,
                     &custom_mem->temp_CaDKmP_mat, &custom_mem->temp_beta_mat,
                     &custom_mem->uncertainty_matrix_buffer[N], ng, nx, nu);
 
-{%- if zoro_stuff.nlg_e_t > 0 %}
-    {%- for it in zoro_stuff.idx_lg_e_t %}
+{%- if zoro_description.nlg_e_t > 0 %}
+    {%- for it in zoro_description.idx_lg_e_t %}
     custom_mem->d_lg_e_tightened[{{it}}]
         = custom_mem->d_lg_e[{{it}}]
             + sqrt(blasfeo_dgeex1(&custom_mem->temp_beta_mat, {{it}}, {{it}}));
     {%- endfor %}
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lg", custom_mem->d_lg_e_tightened);
 {%- endif %}
-{%- if zoro_stuff.nug_e_t > 0 %}
-    {%- for it in zoro_stuff.idx_ug_e_t %}
+{%- if zoro_description.nug_e_t > 0 %}
+    {%- for it in zoro_description.idx_ug_e_t %}
     custom_mem->d_ug_e_tightened[{{it}}]
         = custom_mem->d_ug_e[{{it}}]
             - sqrt(blasfeo_dgeex1(&custom_mem->temp_beta_mat, {{it}}, {{it}}));
@@ -713,7 +713,7 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
 {%- endif %}
 
 
-{%- if zoro_stuff.nlh_e_t + zoro_stuff.nuh_e_t > 0 %}
+{%- if zoro_description.nlh_e_t + zoro_description.nuh_e_t > 0 %}
     // nonlinear constraints: h
     // Get C_{k+1} and D_{k+1}
     ocp_nlp_get_at_stage(solver->config, nlp_dims, solver, N, "C", custom_mem->d_Cgh_mat);
@@ -725,16 +725,16 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
                     &custom_mem->temp_CaDKmP_mat, &custom_mem->temp_beta_mat,
                     &custom_mem->uncertainty_matrix_buffer[N], nh, nx, nu);
 
-    {%- if zoro_stuff.nlh_e_t > 0 %}
-        {%- for it in zoro_stuff.idx_lh_e_t %}
+    {%- if zoro_description.nlh_e_t > 0 %}
+        {%- for it in zoro_description.idx_lh_e_t %}
         custom_mem->d_lh_e_tightened[{{it}}]
             = custom_mem->d_lh_e[{{it}}]
                 + sqrt(blasfeo_dgeex1(&custom_mem->temp_beta_mat, {{it}}, {{it}}));
         {%- endfor %}
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lh", custom_mem->d_lh_e_tightened);
     {%- endif %}
-    {%- if zoro_stuff.nuh_e_t > 0 %}
-        {%- for it in zoro_stuff.idx_uh_e_t %}
+    {%- if zoro_description.nuh_e_t > 0 %}
+        {%- for it in zoro_description.idx_uh_e_t %}
         custom_mem->d_uh_e_tightened[{{it}}] = custom_mem->d_uh_e[{{it}}]
                         - sqrt(blasfeo_dgeex1(&custom_mem->temp_beta_mat, {{it}}, {{it}}));
         {%- endfor %}

@@ -40,7 +40,7 @@ import numpy as np
 from dataclasses import dataclass
 from casadi import vertcat
 
-from zoro_description import ZoroDescription, process_zoro_stuff
+from zoro_description import ZoroDescription, process_zoro_description
 
 
 @dataclass
@@ -172,17 +172,17 @@ def setup_acados_ocp_solver(
         ]
 
         # zoro stuff
-        zoro_stuff = ZoroDescription()
-        zoro_stuff.P0_mat = np.zeros((nx, nx))
+        zoro_description = ZoroDescription()
+        zoro_description.P0_mat = np.zeros((nx, nx))
         # computed from dlqr
-        zoro_stuff.fdbk_K_mat = np.array([[-1.01490524e+02, 9.03426809e-01, 4.59465726e-01],
+        zoro_description.fdbk_K_mat = np.array([[-1.01490524e+02, 9.03426809e-01, 4.59465726e-01],
                                           [ 7.74149612e-04, -1.69695112e-06, -1.33963922e-01]])
-        zoro_stuff.W_mat = dist_params.W_mat
-        zoro_stuff.idx_lbu_t = np.arange(nu)
-        zoro_stuff.idx_ubu_t = np.arange(nu)
-        zoro_stuff.idx_ubx_t = np.arange(nx)
-        zoro_stuff.idx_ubx_e_t = np.arange(nx)
-        ocp.zoro_stuff = process_zoro_stuff(zoro_stuff)
+        zoro_description.W_mat = dist_params.W_mat
+        zoro_description.idx_lbu_t = np.arange(nu)
+        zoro_description.idx_ubu_t = np.arange(nu)
+        zoro_description.idx_ubx_t = np.arange(nx)
+        zoro_description.idx_ubx_e_t = np.arange(nx)
+        ocp.zoro_description = process_zoro_description(zoro_description)
 
     # create
     ocp_solver = AcadosOcpSolver(ocp, json_file="acados_ocp.json")

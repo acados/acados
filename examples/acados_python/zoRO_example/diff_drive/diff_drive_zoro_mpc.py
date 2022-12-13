@@ -13,7 +13,7 @@ from acados_template import AcadosOcp, AcadosOcpSolver
 
 from diff_drive_model import export_diff_drive_model, RobotState
 from mpc_parameters import MPCParam
-from zoro_description import ZoroDescription, process_zoro_stuff
+from zoro_description import ZoroDescription, process_zoro_description
 
 class ZoroMPCSolver:
     def __init__(self, cfg: MPCParam) -> None:
@@ -116,21 +116,21 @@ class ZoroMPCSolver:
         # self.ocp.solver_options.sim_method_newton_iter = 3
 
         # zoro stuff
-        zoro_stuff = ZoroDescription()
+        zoro_description = ZoroDescription()
         # QUESTION: what's the benifit of having a fixed G matrix?
         # uncertainty propagation: P_{k+1} = (A_k+B_kK) @ P_k @ (A_k+B_kK)^T + G @ W @ G^T
         # G.shape = (nx, nw), W.shape = (nw, nw)
-        zoro_stuff.fdbk_K_mat = cfg.fdbk_K_mat
-        zoro_stuff.unc_jac_G_mat = cfg.unc_jac_G_mat # G above
-        zoro_stuff.P0_mat = cfg.P0_mat
-        zoro_stuff.W_mat = cfg.W_mat
-        zoro_stuff.idx_lbx_t = [1]
-        zoro_stuff.idx_ubx_t = [0, 1]
-        # zoro_stuff.idx_lbu_t = [0, 1]
-        # zoro_stuff.idx_ubu_t = [0, 1]
-        zoro_stuff.idx_lh_t = list(range(0, cfg.num_obs))
-        zoro_stuff.idx_uh_t = []
-        zoro_stuff.idx_lh_e_t = list(range(0, cfg.num_obs))
+        zoro_description.fdbk_K_mat = cfg.fdbk_K_mat
+        zoro_description.unc_jac_G_mat = cfg.unc_jac_G_mat # G above
+        zoro_description.P0_mat = cfg.P0_mat
+        zoro_description.W_mat = cfg.W_mat
+        zoro_description.idx_lbx_t = [1]
+        zoro_description.idx_ubx_t = [0, 1]
+        # zoro_description.idx_lbu_t = [0, 1]
+        # zoro_description.idx_ubu_t = [0, 1]
+        zoro_description.idx_lh_t = list(range(0, cfg.num_obs))
+        zoro_description.idx_uh_t = []
+        zoro_description.idx_lh_e_t = list(range(0, cfg.num_obs))
 
         # dummy linear constraints for testing
         self.ocp.constraints.C = np.array([[1., 0., 0., 0., 0.0], [0., 1., 0., 0., 0.]])
@@ -140,12 +140,12 @@ class ZoroMPCSolver:
         self.ocp.constraints.ug = np.array([1e3, 1e3])
         self.ocp.constraints.lg_e = np.array([-1e3, -1e3])
         self.ocp.constraints.ug_e = np.array([1e3, 1e3])
-        zoro_stuff.idx_lg_t = [0,1]
-        zoro_stuff.idx_ug_t = [0,1]
-        zoro_stuff.idx_lg_e_t = [0,1]
-        zoro_stuff.idx_ug_e_t = [0,1]
+        zoro_description.idx_lg_t = [0,1]
+        zoro_description.idx_ug_t = [0,1]
+        zoro_description.idx_lg_e_t = [0,1]
+        zoro_description.idx_ug_e_t = [0,1]
 
-        self.ocp.zoro_stuff = process_zoro_stuff(zoro_stuff)
+        self.ocp.zoro_description = process_zoro_description(zoro_description)
 
         self.acados_ocp_solver = AcadosOcpSolver(self.ocp, json_file = 'acados_ocp_' + self.model.name + '.json')
         """ AcadosOcpSolver.generate(self.ocp, json_file='acados_ocp_' + self.model.name + '.json')

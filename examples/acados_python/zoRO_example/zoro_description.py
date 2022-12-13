@@ -23,22 +23,22 @@ class ZoroDescription:
     idx_lh_e_t: list = field(default_factory=list)
     idx_uh_e_t: list = field(default_factory=list)
 
-def process_zoro_stuff(zoro_stuff: ZoroDescription):
-    zoro_stuff.nw, _ = zoro_stuff.W_mat.shape
-    if zoro_stuff.unc_jac_G_mat is None:
-        zoro_stuff.unc_jac_G_mat = np.eye(zoro_stuff.nw)
-    zoro_stuff.nlbx_t = len(zoro_stuff.idx_lbx_t)
-    zoro_stuff.nubx_t = len(zoro_stuff.idx_ubx_t)
-    zoro_stuff.nlbx_e_t = len(zoro_stuff.idx_lbx_e_t)
-    zoro_stuff.nubx_e_t = len(zoro_stuff.idx_ubx_e_t)
-    zoro_stuff.nlbu_t = len(zoro_stuff.idx_lbu_t)
-    zoro_stuff.nubu_t = len(zoro_stuff.idx_ubu_t)
-    zoro_stuff.nlg_t = len(zoro_stuff.idx_lg_t)
-    zoro_stuff.nug_t = len(zoro_stuff.idx_ug_t)
-    zoro_stuff.nlg_e_t = len(zoro_stuff.idx_lg_e_t)
-    zoro_stuff.nug_e_t = len(zoro_stuff.idx_ug_e_t)
-    zoro_stuff.nlh_t = len(zoro_stuff.idx_lh_t)
-    zoro_stuff.nuh_t = len(zoro_stuff.idx_uh_t)
-    zoro_stuff.nlh_e_t = len(zoro_stuff.idx_lh_e_t)
-    zoro_stuff.nuh_e_t = len(zoro_stuff.idx_uh_e_t)
-    return zoro_stuff.__dict__
+def process_zoro_description(zoro_description: ZoroDescription):
+    zoro_description.nw, _ = zoro_description.W_mat.shape
+    if zoro_description.unc_jac_G_mat is None:
+        zoro_description.unc_jac_G_mat = np.eye(zoro_description.nw)
+    zoro_description.nlbx_t = len(zoro_description.idx_lbx_t)
+    zoro_description.nubx_t = len(zoro_description.idx_ubx_t)
+    zoro_description.nlbx_e_t = len(zoro_description.idx_lbx_e_t)
+    zoro_description.nubx_e_t = len(zoro_description.idx_ubx_e_t)
+    zoro_description.nlbu_t = len(zoro_description.idx_lbu_t)
+    zoro_description.nubu_t = len(zoro_description.idx_ubu_t)
+    zoro_description.nlg_t = len(zoro_description.idx_lg_t)
+    zoro_description.nug_t = len(zoro_description.idx_ug_t)
+    zoro_description.nlg_e_t = len(zoro_description.idx_lg_e_t)
+    zoro_description.nug_e_t = len(zoro_description.idx_ug_e_t)
+    zoro_description.nlh_t = len(zoro_description.idx_lh_t)
+    zoro_description.nuh_t = len(zoro_description.idx_uh_t)
+    zoro_description.nlh_e_t = len(zoro_description.idx_lh_e_t)
+    zoro_description.nuh_e_t = len(zoro_description.idx_uh_e_t)
+    return zoro_description.__dict__
