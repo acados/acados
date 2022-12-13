@@ -42,8 +42,9 @@ def plot_timings(timing_dict):
     plt.grid()
     plt.xlabel('CPU time [ms]')
     plt.tight_layout()
-    plt.savefig("figures/timings_diff_drive.png", \
+    plt.savefig("figures/timings_diff_drive.png",
         bbox_inches='tight', transparent=True, pad_inches=0.05)
+    plt.show()
 
 
 def compute_min_dis(cfg:MPCParam, s:np.ndarray)->Double:
