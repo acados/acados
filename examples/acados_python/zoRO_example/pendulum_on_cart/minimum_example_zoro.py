@@ -141,7 +141,8 @@ def main():
             status = ocp_solver.solve()
 
             if status != 0:
-                raise Exception(f'acados returned status {status} at idx_sim={idx_sim}.')
+                print(f"{simU[idx_sim, :]=}")
+                raise Exception(f'acados returned status {status} at idx_sim={idx_sim} for initial state {simX[idx_sim,:]}.')
 
             residuals = ocp_solver.get_residuals()
             if max(residuals) <= zoro_tol:
