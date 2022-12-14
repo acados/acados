@@ -135,9 +135,13 @@ def main():
         ocp_solver.set(0, "ubx", simX[idx_sim,:])
 
         for idx_iter in range(max_zoro_iter):
+            # preparation phase
+            ocp_solver.options_set('rti_phase', 1)
+            status = ocp_solver.solve()
             # constraint tightening
             ocp_solver.custom_update([])
-            # call SQP_RTI solver
+            # call SQP_RTI solver: feedback phase
+            ocp_solver.options_set('rti_phase', 2)
             status = ocp_solver.solve()
 
             if status != 0:
