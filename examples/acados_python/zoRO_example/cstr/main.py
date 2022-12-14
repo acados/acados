@@ -11,6 +11,7 @@ import matplotlib
 from acados_template import AcadosSimSolver, AcadosOcpSolver
 
 from zoro_ocp_solver import MpcCSTRParameters, DistCSTRParameters, setup_acados_ocp_solver
+from zoro_utils import samplesFromEllipsoid
 
 # same as in normal cstr model
 cstr_source_dir = os.path.join(local_path, '..', '..', 'cstr')
@@ -24,30 +25,6 @@ from cstr_utils import plot_cstr
 # - add tighter bounds on x.
 # - add disturbance, see samplesFromEllipsoid
 # - use a nominal controller and a fast zoRO implementation and compare them in closed loop with disturbance
-
-
-
-def samplesFromEllipsoid(N, w, Z) -> np.ndarray:
-    """
-    draws samples from ellipsoid with center w and variability matrix Z
-    """
-
-    np.random.seed(1)
-
-    nw = w.shape[0]                  # dimension
-    lam, v = np.linalg.eig(Z)
-
-    # sample in hypersphere
-    r = np.random.rand()**(1/nw)     # radial position of sample
-    x = np.random.randn(N, nw)
-    y = np.zeros((N, nw))
-    for idx in range(N):
-        x[idx,:] = x[idx,:] / np.linalg.norm(x[idx,:])
-        x[idx,:] *= r
-        # project to ellipsoid
-        y[idx,:] = v @ (np.sqrt(lam) * x[idx,:]) + w
-
-    return y
 
 
 def simulate(
@@ -175,6 +152,7 @@ def main():
     integrator = setup_acados_integrator(plant_model, dt_plant, cstr_param=cstr_params)
 
     # Disturbance Generator
+    np.random.seed(1)
     dist_samples = samplesFromEllipsoid(Nsim, \
         np.zeros((plant_model.x.shape[0])), dist_params.W_mat)
 

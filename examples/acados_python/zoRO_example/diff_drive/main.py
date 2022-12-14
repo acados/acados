@@ -11,9 +11,11 @@ from time import process_time
 
 import casadi
 
+from zoro_utils import samplesFromEllipsoid
+
 from diff_drive_zoro_mpc import ZoroMPCSolver
 from mpc_parameters import MPCParam
-from utils import plot_timings, samplesFromEllipsoid, compute_min_dis
+from diff_drive_utils import plot_timings, compute_min_dis
 
 N_EXEC = 5
 N_SIM = 200
