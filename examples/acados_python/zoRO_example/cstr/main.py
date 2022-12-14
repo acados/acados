@@ -114,12 +114,12 @@ def simulate(
 
             # if exceeds the upper bound of the state constraints
             if (xcurrent > ubx).any():
-                X[(i_sim+1):, :] = np.nan
-                U[min(i_sim+1, Nsim):, :] = np.nan
-                timings_solver[min(i_sim+1, Nsim):] = np.nan
-                timings_integrator[min(i_sim+1, Nsim):] = np.nan
+                # X[(i_sim+1):, :] = np.nan
+                # U[min(i_sim+1, Nsim):, :] = np.nan
+                # timings_solver[min(i_sim+1, Nsim):] = np.nan
+                # timings_integrator[min(i_sim+1, Nsim):] = np.nan
                 print("exceed the upper bound at i_sim=", i_sim)
-                break
+                # break
 
     return X, U, timings_solver, timings_integrator
 
