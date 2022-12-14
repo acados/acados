@@ -73,10 +73,18 @@ def simulate(
             controller.set(controller.N, "yref", X_ref[i_sim, :])
 
             if cstr_tightening:
+                # preparation phase
+                controller.options_set('rti_phase', 1)
+                status = controller.solve()
+                # constraint tightening
                 controller.custom_update([])
-
-            # solve ocp
-            status = controller.solve()
+                # call SQP_RTI solver: feedback phase
+                controller.options_set('rti_phase', 2)
+                status = controller.solve()
+            else:
+                # solve ocp
+                controller.options_set('rti_phase', 0)
+                status = controller.solve()
 
             if status != 0:
                 controller.print_statistics()
@@ -165,7 +173,7 @@ def main():
     label = "Nominal"
     print(f"\n\nRunning simulation with {label}\n\n")
     mpc_params.cstr_tightening = False
-    ocp_solver = setup_acados_ocp_solver(model, mpc_params, cstr_params=cstr_params, dist_params=dist_params)
+    ocp_solver = setup_acados_ocp_solver(model, mpc_params, cstr_params=cstr_params, dist_params=dist_params, use_rti=True)
 
     ubx = cstr_params.xs * (1.0 + np.array([dist_params.c_exceed_ratio, dist_params.t_exceed_ratio, dist_params.h_exceed_ratio]))
     X, U, timings_solver, _ = simulate(
@@ -181,7 +189,7 @@ def main():
     label = "fast zoRO"
     print(f"\n\nRunning simulation with {label}\n\n")
     mpc_params.cstr_tightening = True
-    ocp_solver = setup_acados_ocp_solver(model, mpc_params, cstr_params=cstr_params, dist_params=dist_params)
+    ocp_solver = setup_acados_ocp_solver(model, mpc_params, cstr_params=cstr_params, dist_params=dist_params, use_rti=True)
 
     X, U, timings_solver, _ = simulate(
         ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref, \

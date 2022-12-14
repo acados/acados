@@ -78,8 +78,8 @@ class MpcCSTRParameters:
 @dataclass
 class DistCSTRParameters:
     W_mat: np.ndarray = np.diag([0.001, 0.3, 0.001])
-    c_exceed_ratio: float = 0.2
-    t_exceed_ratio: float = 0.2
+    c_exceed_ratio: float = 0.25
+    t_exceed_ratio: float = 0.25
     h_exceed_ratio: float = 0.075
 
 
