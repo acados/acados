@@ -258,7 +258,7 @@ for i = 1:Nsim
         % borrowed from acados/utils/types.h
         %statuses = {
         %    0: 'ACADOS_SUCCESS',
-        %    1: 'ACADOS_FAILURE',
+        %    1: 'ACADOS_NAN_DETECTED',
         %    2: 'ACADOS_MAXITER',
         %    3: 'ACADOS_MINSTEP',
         %    4: 'ACADOS_QP_FAILURE',
