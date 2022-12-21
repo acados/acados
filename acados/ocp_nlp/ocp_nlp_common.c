@@ -1923,6 +1923,12 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
 #endif
 
     int N = dims->N;
+    // TODO: For z, why dont we use nlp_out->z+i instead of nlp_mem->z_alg+i? as is done for ux.
+    //  - z_alg contains values from integrator, used in cost and constraint linearization.
+    //  - nlp_out->z is updated as nlp_out->z = mem->z_alg + alpha * dzdux * qp_out->ux
+    // Probably, this can also be achieved without mem->z_alg.
+    // Would it work to initialize integrator always with z_out? Probably no, e.g. for lifted IRK.
+
 
     // alias to dynamics_memory
 #if defined(ACADOS_WITH_OPENMP)
@@ -2537,10 +2543,10 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
     double tmp0, tmp1, merit_fun1;
     ocp_qp_out *qp_out = mem->qp_out;
 
-    // Line search version Jonathan
     // Following Leineweber1999, Section "3.5.1 Line Search Globalization"
     // TODO: check out more advanced step search Leineweber1995
 
+    // TODO: check that z is updated in tmp_nlp_out?
     if (opts->globalization == MERIT_BACKTRACKING)
     {
         // copy out (current iterate) to work->tmp_nlp_out
@@ -2760,6 +2766,7 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
         // linear update of algebraic variables using state and input sensitivity
         if (i < N)
         {
+            // out->z = mem->z_alg + alpha * dzdux * qp_out->ux
             blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0,
                     mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out->z+i, 0);
         }
