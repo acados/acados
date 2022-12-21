@@ -1594,8 +1594,7 @@ class AcadosOcpSolver:
             value_ = np.array([value_])
         value_ = value_.astype(float)
 
-        field = field_
-        field = field.encode('utf-8')
+        field = field_.encode('utf-8')
 
         stage = c_int(stage_)
 
@@ -1608,9 +1607,9 @@ class AcadosOcpSolver:
 
             assert getattr(self.shared_lib, f"{self.model_name}_acados_update_params")(self.capsule, stage, value_data, value_.shape[0])==0
         else:
-            if field_ not in constraints_fields + cost_fields + out_fields:
+            if field_ not in constraints_fields + cost_fields + out_fields + mem_fields:
                 raise Exception(f"AcadosOcpSolver.set(): '{field}' is not a valid argument.\n"
-                    f" Possible values are {constraints_fields + cost_fields + out_fields + ['p']}.")
+                    f" Possible values are {constraints_fields + cost_fields + out_fields + mem_fields + ['p']}.")
 
             self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = \
                 [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
@@ -1643,6 +1642,13 @@ class AcadosOcpSolver:
                 self.shared_lib.ocp_nlp_out_set(self.nlp_config, \
                     self.nlp_dims, self.nlp_out, stage, field, value_data_p)
             elif field_ in mem_fields:
+                self.shared_lib.ocp_nlp_set.argtypes = \
+                    [c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+                self.shared_lib.ocp_nlp_set(self.nlp_config, \
+                    self.nlp_solver, stage, field, value_data_p)
+            # also set z_guess, when setting z.
+            if field_ == 'z':
+                field = 'z_guess'.encode('utf-8')
                 self.shared_lib.ocp_nlp_set.argtypes = \
                     [c_void_p, c_void_p, c_int, c_char_p, c_void_p]
                 self.shared_lib.ocp_nlp_set(self.nlp_config, \
