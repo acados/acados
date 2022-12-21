@@ -2093,7 +2093,7 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
 #endif
     for (int i = 0; i <= N; i++)
     {
-        // init Hessian to 0 
+        // init Hessian to 0
         blasfeo_dgese(nu[i] + nx[i], nu[i] + nx[i], 0.0, mem->qp_in->RSQrq+i, 0, 0);
 
 
