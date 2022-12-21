@@ -1608,9 +1608,9 @@ class AcadosOcpSolver:
 
             assert getattr(self.shared_lib, f"{self.model_name}_acados_update_params")(self.capsule, stage, value_data, value_.shape[0])==0
         else:
-            if field_ not in constraints_fields + cost_fields + out_fields:
+            if field_ not in constraints_fields + cost_fields + out_fields + mem_fields:
                 raise Exception(f"AcadosOcpSolver.set(): '{field}' is not a valid argument.\n"
-                    f" Possible values are {constraints_fields + cost_fields + out_fields + ['p']}.")
+                    f" Possible values are {constraints_fields + cost_fields + out_fields + mem_fields + ['p']}.")
 
             self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = \
                 [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
