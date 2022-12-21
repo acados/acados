@@ -584,6 +584,11 @@ cdef class AcadosOcpSolverCython:
                 acados_solver_common.ocp_nlp_set(self.nlp_config, \
                     self.nlp_solver, stage, field, <void *> value.data)
 
+            if field_ == 'z':
+                field = 'z_guess'.encode('utf-8')
+                acados_solver_common.ocp_nlp_set(self.nlp_config, \
+                    self.nlp_solver, stage, field, <void *> value.data)
+        return
 
     def cost_set(self, int stage, str field_, value_):
         """
