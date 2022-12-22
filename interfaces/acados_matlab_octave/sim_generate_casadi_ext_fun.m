@@ -90,26 +90,31 @@ for k=1:length(c_files)
 	c_files_path{k} = fullfile(opts_struct.output_dir, c_files{k});
 end
 
+%Store the current PATH environment variable value
+origEnvPath=getenv('PATH');
+
 % check compiler
 use_msvc = false;
 if ~is_octave()
     mexOpts = mex.getCompilerConfigurations('C', 'Selected');
     if contains(mexOpts.ShortName, 'MSVC')
         use_msvc = true;
+    else
+        %Read the mex C compiler configuration and extract the location
+        pathToCompilerLocation = mexOpts.Location;
+        %Modify the environment PATH varuable for this Matlab session such that 
+        %the mex C compiler takes priority ensuring calls to gcc uses the
+        %configured mex compiler
+        setenv('PATH', [fullfile(pathToCompilerLocation,'bin') ';' origEnvPath]);
     end
 end
 
 ext_fun_compile_flags = opts_struct.ext_fun_compile_flags;
 
-%Store the current PATH environment variable value
-origEnvPath=getenv('PATH');
-
-
 if use_msvc
     % get env vars for MSVC
     msvc_env = fullfile(mexOpts.Location, 'VC\Auxiliary\Build\vcvars64.bat');
     assert(isfile(msvc_env), 'Cannot find definition of MSVC env vars.');
-
     % assemble build command for MSVC
     out_obj_dir = [fullfile(opts_struct.output_dir), '\\'];
     out_lib = fullfile(opts_struct.output_dir, [model_name, '.dll']);
@@ -118,13 +123,6 @@ if use_msvc
 
     compile_command = sprintf('"%s" & %s', msvc_env, build_cmd);
 else % gcc
-    %Read the mex C compiler configuration and extract the location
-    cCompilerConfig = mex.getCompilerConfigurations('C');
-    pathToCompilerLocation = cCompilerConfig.Location;
-    %Modify the environment PATH varuable for this Matlab session such that 
-    %the mex C compiler takes priority ensuring calls to gcc uses the
-    %configured mex compiler
-    setenv('PATH', [fullfile(pathToCompilerLocation,'bin') ';' origEnvPath]);
     if ispc
         out_lib = fullfile(opts_struct.output_dir, ['lib', model_name, '.lib']);
     else
@@ -133,10 +131,10 @@ else % gcc
     compile_command = ['gcc ', ext_fun_compile_flags, ' -fPIC -shared ', strjoin(unique(c_files_path), ' '), ' -o ', out_lib];
 end
 
-compile_status = system(compile_command);
-
 %Store the PATH environment variable used during compile for error reporting
 envPath=getenv('PATH');
+
+compile_status = system(compile_command);
 
 %Reset the environment path variable to its original value
 %This is done before potentially raising an error to ensure that the path
