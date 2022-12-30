@@ -57,7 +57,7 @@ class ZoroMPCSolver:
         self.lbv = cfg.min_forward_velocity
         self.ubv = cfg.max_forward_velocity
         self.ubw = cfg.max_angular_velocity
-        self.ocp.constraints.idxbx = np.array([int(RobotState.VEL), int(RobotState.OMEGA)])
+        self.ocp.constraints.idxbx = np.array([RobotState.VEL.value, RobotState.OMEGA.value])
         self.ocp.constraints.lbx = np.array([self.lbv, -self.ubw])
         self.ocp.constraints.ubx = np.array([self.ubv,  self.ubw])
         # initial state
@@ -65,7 +65,7 @@ class ZoroMPCSolver:
         # terminal state
         v_e = cfg.term_forward_velocity
         omega_e = cfg.term_angular_velocity
-        self.ocp.constraints.idxbx_e = np.array([int(RobotState.VEL), int(RobotState.OMEGA)])
+        self.ocp.constraints.idxbx_e = np.array([RobotState.VEL.value, RobotState.OMEGA.value])
         self.ocp.constraints.lbx_e = np.array([-v_e, -omega_e])
         self.ocp.constraints.ubx_e = np.array([v_e, omega_e])
 

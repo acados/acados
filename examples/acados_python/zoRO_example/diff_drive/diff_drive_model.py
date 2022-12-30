@@ -1,4 +1,4 @@
-from enum import IntEnum
+from enum import Enum
 import numpy as np
 
 from acados_template import AcadosModel
@@ -7,7 +7,7 @@ from casadi import SX, vertcat, cos, sin, sqrt, sumsqr
 from mpc_parameters import MPCParam
 
 
-class RobotState(IntEnum):
+class RobotState(Enum):
     POSX = 0
     POSY = 1
     THETA = 2

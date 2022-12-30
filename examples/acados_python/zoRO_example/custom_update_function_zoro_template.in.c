@@ -460,14 +460,14 @@ static void compute_next_P_matrix(struct blasfeo_dmat* P_mat, struct blasfeo_dma
                                   struct blasfeo_dmat* K_mat, struct blasfeo_dmat* W_mat,
                                   struct blasfeo_dmat* AK_mat, struct blasfeo_dmat* temp_AP_mat, int nx, int nu)
 {
-    // AK_mat = -B*K + A
+    // AK_mat = -B@K + A
     blasfeo_dgemm_nn(nx, nx, nu, -1.0, B_mat, 0, 0, K_mat, 0, 0,
                         1.0, A_mat, 0, 0, AK_mat, 0, 0);
-    // temp_AP_mat = AK_mat * P_k
+    // temp_AP_mat = AK_mat @ P_k
     blasfeo_dgemm_nn(nx, nx, nx, 1.0, AK_mat, 0, 0,
                         P_mat, 0, 0, 0.0,
                         temp_AP_mat, 0, 0, temp_AP_mat, 0, 0);
-    // P_{k+1} = temp_AP_mat * AK_mat^T + GWG_mat
+    // P_{k+1} = temp_AP_mat @ AK_mat^T + GWG_mat
     blasfeo_dgemm_nt(nx, nx, nx, 1.0, temp_AP_mat, 0, 0,
                         AK_mat, 0, 0, 1.0,
                         W_mat, 0, 0, P_next_mat, 0, 0);
@@ -495,7 +495,6 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
     // NOTE: lbu_0 and ubu_0 are tightened.
     // NOTE: lg_0 and ug_0 are not tightened.
     // NOTE: lh_0 and uh_0 are not tightened.
-    // TODO: check that the tightened lower bounds are lower than tightened upper bounds
 {%- if zoro_description.nlbu_t + zoro_description.nubu_t > 0 %}
     compute_KPK(&custom_mem->K_mat, &custom_mem->temp_KP_mat,
                 &custom_mem->temp_KPK_mat, &(custom_mem->uncertainty_matrix_buffer[0]), nx, nu);

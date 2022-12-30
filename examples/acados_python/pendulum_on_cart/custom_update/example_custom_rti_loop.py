@@ -142,4 +142,4 @@ def main(use_cython=False):
 
 if __name__ == "__main__":
     main(use_cython=False)
-    # main(use_cython=True)
+    main(use_cython=True)
