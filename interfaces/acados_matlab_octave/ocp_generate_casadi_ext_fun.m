@@ -197,8 +197,8 @@ if (strcmp(model_struct.dyn_type, 'discrete') && strcmp(model_struct.dyn_ext_fun
     c_files_path{end+1} = model_struct.dyn_generic_source;
 end
 
-%Store the current PATH environment variable value
-origEnvPath=getenv('PATH');
+% Store the current PATH environment variable value
+origEnvPath = getenv('PATH');
 
 % check compiler
 use_msvc = false;
@@ -207,11 +207,10 @@ if ~is_octave()
     if contains(mexOpts.ShortName, 'MSVC')
         use_msvc = true;
     else
-        %Read the mex C compiler configuration and extract the location
+        % Get mex C compiler configuration and extract the location
         pathToCompilerLocation = mexOpts.Location;
-        %Modify the environment PATH varuable for this Matlab session such that 
-        %the mex C compiler takes priority ensuring calls to gcc uses the
-        %configured mex compiler
+        % Set environment PATH variable for this Matlab session such that
+        % configured mex C compiler is prioritized
         setenv('PATH', [fullfile(pathToCompilerLocation,'bin') ';' origEnvPath]);
     end
 end
@@ -246,14 +245,13 @@ else % gcc
                        ' ', strjoin(unique(c_files_path), ' '), ' -o ', out_lib];
 end
 
-%Store the PATH environment variable used during compile for error reporting
-envPath=getenv('PATH');
+% Store the PATH environment variable used during compilation for error reporting
+envPath = getenv('PATH');
 
 compile_status = system(compile_command);
 
-%Reset the environment path variable to its original value
-%This is done before potentially raising an error to ensure that the path
-%environment variable is clean
+% Reset the environment PATH variable to its original value before potentially
+% raising an error to ensure that the path environment variable is clean
 setenv('PATH',origEnvPath);
 
 if compile_status ~= 0
