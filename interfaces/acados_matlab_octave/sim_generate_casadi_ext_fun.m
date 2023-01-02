@@ -90,12 +90,21 @@ for k=1:length(c_files)
 	c_files_path{k} = fullfile(opts_struct.output_dir, c_files{k});
 end
 
+% Store the current PATH environment variable value
+origEnvPath = getenv('PATH');
+
 % check compiler
 use_msvc = false;
 if ~is_octave()
     mexOpts = mex.getCompilerConfigurations('C', 'Selected');
     if contains(mexOpts.ShortName, 'MSVC')
         use_msvc = true;
+    else
+        % Get mex C compiler configuration and extract the location
+        pathToCompilerLocation = mexOpts.Location;
+        % Set environment PATH variable for this Matlab session such that
+        % configured mex C compiler is prioritized
+        setenv('PATH', [fullfile(pathToCompilerLocation,'bin') ';' origEnvPath]);
     end
 end
 
@@ -105,7 +114,6 @@ if use_msvc
     % get env vars for MSVC
     msvc_env = fullfile(mexOpts.Location, 'VC\Auxiliary\Build\vcvars64.bat');
     assert(isfile(msvc_env), 'Cannot find definition of MSVC env vars.');
-
     % assemble build command for MSVC
     out_obj_dir = [fullfile(opts_struct.output_dir), '\\'];
     out_lib = fullfile(opts_struct.output_dir, [model_name, '.dll']);
@@ -122,11 +130,20 @@ else % gcc
     compile_command = ['gcc ', ext_fun_compile_flags, ' -fPIC -shared ', strjoin(unique(c_files_path), ' '), ' -o ', out_lib];
 end
 
+% Store the PATH environment variable used during compilation for error reporting
+envPath = getenv('PATH');
+
 compile_status = system(compile_command);
+
+% Reset the environment PATH variable to its original value before potentially
+% raising an error to ensure that the path environment variable is clean
+setenv('PATH',origEnvPath);
+
 if compile_status ~= 0
     error('Compilation of model functions failed! %s %s\n%s\n\n', ...
         'Please check the compile command above and the flags therein closely.',...
-        'Compile command was:', compile_command);
+        'Compile command was:', compile_command, '\n', ...
+        'Environment path was: ', envPath);
 end
 
 end
