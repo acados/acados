@@ -14,7 +14,8 @@ function acados_install_windows(varargin)
 
     %% Acados installation instructions:
     % Add the subfolders bin and x86_64-w64-mingw32\bin of the above mentioned mingw installation to your environment variable PATH.
-
+    fprintf('Setting up environment PATH variable\n');
+    
     %Store the current PATH environment variable value
     origEnvPath=getenv('PATH');
     %Read the mex C compiler configuration and extract the location
@@ -29,7 +30,8 @@ function acados_install_windows(varargin)
     % $ACADOS_INSTALL_DIR=$(pwd)
     % mkdir -p build
     % cd build
-
+    fprintf('Creating build dir in %s\n',acadosBuildPath);
+    
     setenv('ACADOS_INSTALL_DIR',acadosPath);
     mkdir(acadosBuildPath);
     cd(acadosBuildPath);
@@ -41,7 +43,8 @@ function acados_install_windows(varargin)
     % # -DBLASFEO_TARGET=GENERIC -DHPIPM_TARGET=GENERIC
     % # NOTE: check the output of cmake: -- Installation directory: should be <acados_root_folder>,
     % #     if this is not the case, set -DACADOS_INSTALL_DIR=<acados_root_folder> explicitly above.
-
+    fprintf('Executing cmake configuration\n');
+    
     %Command slightly modified to work with CMD instead of PowerShell
     cmake_cmd = 'cmake.exe -G "MinGW Makefiles" -DACADOS_INSTALL_DIR=%ACADOS_INSTALL_DIR% -DBUILD_SHARED_LIBS=OFF -DACADOS_WITH_OSQP=OFF ..';
 
@@ -53,7 +56,7 @@ function acados_install_windows(varargin)
     %% Acados installation instructions:
     % mingw32-make.exe -j4
     % mingw32-make.exe install
-
+    fprintf('Compiling and installing using minGW\n');
 
     compile_command='mingw32-make.exe -j4';
     status = system(compile_command);
@@ -81,11 +84,13 @@ function acados_install_windows(varargin)
     setenv('PATH',origEnvPath);
     
     %% Install is not complete - download casadi
+    fprintf('Downloading casadi\n');
     addpath(fullfile(acadosPath,'interfaces\acados_matlab_octave'));
     run('acados_env_variables_windows');
     check_acados_requirements(true);
     
     %%Install is still not complete - install the renderer 
+    fprintf('Install the template renderer\n');
     acados_root_dir = getenv('ACADOS_INSTALL_DIR');
  
     %% check if t_renderer is available -> download if not
