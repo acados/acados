@@ -1,7 +1,17 @@
-function check_acados_requirements(force)
-arguments
-    force=false;
-end
+function check_acados_requirements(varargin)
+% check_acados_requirements([force])
+% If force is not provided it is default set to true
+
+    %The first variable parameter determines whether to force install
+    switch(nargin)
+        case 0
+            force=true;
+        case 1
+            force=varargin{1};
+        otherwise
+            error('function called with %d parameters, was expecting max 1',nargin);       
+    end
+
 
     % check environment variables
     env_run = getenv('ENV_RUN');
