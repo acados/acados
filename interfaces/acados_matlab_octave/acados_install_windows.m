@@ -1,7 +1,14 @@
-function acados_install(acadosPath)
-arguments
-    acadosPath=pwd; %If path is not supplied, assume acados path is current directory
-end
+function acados_install_windows(varargin)
+
+    %The first variable parameter determines whether to force install
+    switch(nargin)
+        case 0
+            acadosPath=pwd; 
+        case 1
+            acadosPath=varargin{1};
+        otherwise 
+            error('function called with %d parameters, was expecting max 1',nargin);
+    end
 
     acadosBuildPath=fullfile(acadosPath,'build');
 
