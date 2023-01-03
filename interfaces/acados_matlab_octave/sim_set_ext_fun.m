@@ -41,7 +41,7 @@ mex_flags = getenv('ACADOS_MEX_FLAGS');
 
 % set paths
 acados_mex_folder = fullfile(acados_folder, 'interfaces', 'acados_matlab_octave');
-acados_include = ['-I' acados_folder];
+acados_include = ['-I' fullfile(acados_folder,'include')];
 acados_interfaces_include = ['-I' fullfile(acados_folder, 'interfaces')];
 acados_lib_path = ['-L' fullfile(acados_folder, 'lib')];
 acados_matlab_octave_lib_path = ['-L' fullfile(acados_folder, 'interfaces', 'acados_matlab_octave')];
