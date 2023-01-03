@@ -33,12 +33,13 @@ The Python interface relies on the same problem formulation as the MATLAB interf
     pip install -e <acados_root>/interfaces/acados_template
     ```
     Note: The option `-e` makes the installation editable, so you can seamlessly switch to a later `acados` version and make changes in the Python interface yourself.
-    
+
 3. Add the path to the compiled shared libraries `libacados.so, libblasfeo.so, libhpipm.so` to `LD_LIBRARY_PATH` (default path is `<acados_root/lib>`) by running:
     ```bash
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"<acados_root>/lib"
     export ACADOS_SOURCE_DIR="<acados_root>"
     ```
+    NOTE: On MacOS `DYLD_LIBRARY_PATH` should be used instead of `LD_LIBRARY_PATH`.
     Hint: you can add these lines to your `.bashrc`/`.zshrc`.
 
 4. Run a Python example to check that everything works.

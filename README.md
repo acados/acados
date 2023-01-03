@@ -44,6 +44,7 @@ Please choose one and proceed with the corresponding paragraph.
     make examples_c
     make run_examples_c
     ```
+NOTE: On MacOS `DYLD_LIBRARY_PATH` should be used instead of `LD_LIBRARY_PATH`.
 
 ## `acados` interfaces
 `acados` written in `C` and offers interfaces to the programming languages `C`, `Python`, `MATLAB` and `Octave`.
