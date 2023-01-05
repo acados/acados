@@ -1,27 +1,25 @@
 function acados_install_windows(varargin)
-% acados_install_windows([AcadosPath],[CmakeConfigString])
+% acados_install_windows([CmakeConfigString])
 % Install script for acados on windows
-% AcadosPath - path to the root of the acados repository [Default='PATHOFTHISFILE\..\..']
 % CmakeConfigString - config string for the CMAKE command [Default='-DBUILD_SHARED_LIBS=OFF -DACADOS_WITH_OSQP=OFF']
+
 
     switch(nargin)
         case 0
-            fullPath = mfilename('fullpath');
-            % Extract path for this file
-            [folderPath,~,~]=fileparts(fullPath);
-            % Remove the two top directories to get the acados path
-            [folderPath,~,~]=fileparts(folderPath);
-            [acadosPath,~,~]=fileparts(folderPath);
             cmakeConfigString='-DBUILD_SHARED_LIBS=OFF -DACADOS_WITH_OSQP=OFF';
         case 1
-            acadosPath=varargin{1};
-            cmakeConfigString='-DBUILD_SHARED_LIBS=OFF -DACADOS_WITH_OSQP=OFF';
-        case 2
-            acadosPath=varargin{1};
-            cmakeConfigString=varargin{2};
+            cmakeConfigString=varargin{1};
         otherwise 
-            error('function called with %d parameters, was expecting max 2',nargin);
-    end
+            error('function called with %d parameters, was expecting max 1',nargin);
+    end    
+
+    % Derive the path for the acados root
+    fullPath = mfilename('fullpath');
+    % Extract path for this file
+    [folderPath,~,~]=fileparts(fullPath);
+    % Remove the two top directories to get the acados path
+    [folderPath,~,~]=fileparts(folderPath);
+    [acadosPath,~,~]=fileparts(folderPath);
 
     acadosBuildPath=fullfile(acadosPath,'build');
 

@@ -111,8 +111,7 @@ acados_install_windows()
 
 This will build acados with the standard options and install the external dependencies; casadi and terra renderer
 
-The `acados_install_windows(acados_root_folder,CMakeConfigString)` script can take two optional parameters:
-- acados_root_folder: Specify the path to the acados root manually
+The `acados_install_windows(CMakeConfigString)` script can take an optional argument:
 - CMake configuration string: Configuration options for CMake. The default is `-DBUILD_SHARED_LIBS=OFF -DACADOS_WITH_OSQP=OFF`
 
 ### Build acados manually (minGW)
