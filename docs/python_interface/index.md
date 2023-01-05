@@ -8,8 +8,11 @@
 ``` -->
 
 `acados_template` is a Python package that can be used to specify optimal control problems from Python and to generate self-contained C code to solve them using `acados`.
-The pip package is based on templated code (C files, Header files and Makefiles), which are rendered from Python using the templating engine `Tera`.
+The `pip` package is based on templated code (C files, Header files and Makefiles), which are rendered from Python using the templating engine `Tera`.
 The genereated C code can be compiled into a self-contained C library that can be deployed on an embedded system.
+
+One can interact with the generated solver using the Python wrapper.
+There is a `ctypes` based wrapper which is the default and a `cython` based wrapper which allows for faster interaction with the C code, to allow deployment of the `acados` solver in a Python framework with less overhead.
 
 ## Optimal Control Problem description
 The Python interface relies on the same problem formulation as the MATLAB interface [see here](https://github.com/acados/acados/blob/master/docs/problem_formulation/problem_formulation_ocp_mex.pdf).
