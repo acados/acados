@@ -1,12 +1,26 @@
 function acados_install_windows(varargin)
+% acados_install_windows([AcadosPath],[CmakeConfigString])
+% Install script for acados on windows
+% AcadosPath - path to the root of the acados repository [Default='PATHOFTHISFILE\..\..']
+% CmakeConfigString - config string for the CMAKE command [Default='-DBUILD_SHARED_LIBS=OFF -DACADOS_WITH_OSQP=OFF']
 
     switch(nargin)
         case 0
-            acadosPath=pwd;
+            fullPath = mfilename('fullpath');
+            % Extract path for this file
+            [folderPath,~,~]=fileparts(fullPath);
+            % Remove the two top directories to get the acados path
+            [folderPath,~,~]=fileparts(folderPath);
+            [acadosPath,~,~]=fileparts(folderPath);
+            cmakeConfigString='-DBUILD_SHARED_LIBS=OFF -DACADOS_WITH_OSQP=OFF';
         case 1
             acadosPath=varargin{1};
-        otherwise
-            error('function called with %d parameters, was expecting max 1', nargin);
+            cmakeConfigString='-DBUILD_SHARED_LIBS=OFF -DACADOS_WITH_OSQP=OFF';
+        case 2
+            acadosPath=varargin{1};
+            cmakeConfigString=varargin{2};
+        otherwise 
+            error('function called with %d parameters, was expecting max 2',nargin);
     end
 
     acadosBuildPath=fullfile(acadosPath,'build');
@@ -43,7 +57,7 @@ function acados_install_windows(varargin)
     % #     if this is not the case, set -DACADOS_INSTALL_DIR=<acados_root_folder> explicitly above.
     fprintf('Executing cmake configuration\n');
     % Command slightly modified to work with CMD instead of PowerShell
-    cmake_cmd = 'cmake.exe -G "MinGW Makefiles" -DACADOS_INSTALL_DIR=%ACADOS_INSTALL_DIR% -DBUILD_SHARED_LIBS=OFF -DACADOS_WITH_OSQP=OFF ..';
+    cmake_cmd = sprintf('cmake.exe -G "MinGW Makefiles" -DACADOS_INSTALL_DIR=%%ACADOS_INSTALL_DIR%% %s ..',cmakeConfigString);
 
     status=system(cmake_cmd);
     if (status~=0)
