@@ -41,6 +41,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path_to_acados_folder>/lib
 make examples_c
 make run_examples_c
 ```
+NOTE: On MacOS `DYLD_LIBRARY_PATH` should be used instead of `LD_LIBRARY_PATH`.
 
 ### Interfaces installation
 For the installation of Python/MATLAB/Octave interfaces, please refer to the [Interfaces](../interfaces/index.md) page.
@@ -49,7 +50,7 @@ For the installation of Python/MATLAB/Octave interfaces, please refer to the [In
 
 ### Prerequisites
 
-- Install [Ubuntu on WSL](https://ubuntu.com/wsl) using the [Microsoft Store](https://apps.microsoft.com/store/detail/ubuntu/9PDXGNCFSCZV). 
+- Install [Ubuntu on WSL](https://ubuntu.com/wsl) using the [Microsoft Store](https://apps.microsoft.com/store/detail/ubuntu/9PDXGNCFSCZV).
 
 - Start Ubuntu, the shell should pop up.
 
@@ -85,7 +86,7 @@ Disclaimer: The high-level interfaces on Windows are not tested on Github Action
 
 ### Prerequisites
 You should have the following software installed on your machine.
-- Recent Matlab version, with 
+- Recent Matlab version
 - CMake for Windows
 - [Windows Git Client](https://git-scm.com/download/win)
 

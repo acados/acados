@@ -8,8 +8,11 @@
 ``` -->
 
 `acados_template` is a Python package that can be used to specify optimal control problems from Python and to generate self-contained C code to solve them using `acados`.
-The pip package is based on templated code (C files, Header files and Makefiles), which are rendered from Python using the templating engine `Tera`.
+The `pip` package is based on templated code (C files, Header files and Makefiles), which are rendered from Python using the templating engine `Tera`.
 The genereated C code can be compiled into a self-contained C library that can be deployed on an embedded system.
+
+One can interact with the generated solver using the Python wrapper.
+There is a `ctypes` based wrapper which is the default and a `cython` based wrapper which allows for faster interaction with the C code, to allow deployment of the `acados` solver in a Python framework with less overhead.
 
 ## Optimal Control Problem description
 The Python interface relies on the same problem formulation as the MATLAB interface [see here](https://github.com/acados/acados/blob/master/docs/problem_formulation/problem_formulation_ocp_mex.pdf).
@@ -33,12 +36,13 @@ The Python interface relies on the same problem formulation as the MATLAB interf
     pip install -e <acados_root>/interfaces/acados_template
     ```
     Note: The option `-e` makes the installation editable, so you can seamlessly switch to a later `acados` version and make changes in the Python interface yourself.
-    
+
 3. Add the path to the compiled shared libraries `libacados.so, libblasfeo.so, libhpipm.so` to `LD_LIBRARY_PATH` (default path is `<acados_root/lib>`) by running:
     ```bash
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"<acados_root>/lib"
     export ACADOS_SOURCE_DIR="<acados_root>"
     ```
+    NOTE: On MacOS `DYLD_LIBRARY_PATH` should be used instead of `LD_LIBRARY_PATH`.
     Hint: you can add these lines to your `.bashrc`/`.zshrc`.
 
 4. Run a Python example to check that everything works.
