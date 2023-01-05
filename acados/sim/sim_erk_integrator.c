@@ -258,7 +258,7 @@ void sim_erk_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->ns = 4;  // ERK 4
     int ns = opts->ns;
 
-    assert((ns == 1 || ns == 2 || ns == 4) && "only number of stages = {1,2,4} implemented!");
+    assert((ns == 1 || ns == 2 || ns == 3 || ns == 4) && "only number of stages = {1,2,3,4} implemented!");
 
     // set tableau size
     opts->tableau_size = opts->ns;
@@ -294,6 +294,28 @@ void sim_erk_opts_initialize_default(void *config_, void *dims_, void *opts_)
             c[1] = 0.5;
             break;
         }
+        case 3:
+        {
+            //A
+            A[0 + ns * 0] = 0.0;
+            A[0 + ns * 1] = 0.0;
+            A[0 + ns * 2] = 0.0;
+            A[1 + ns * 0] = 0.5;
+            A[1 + ns * 1] = 0.0;
+            A[1 + ns * 2] = 0.0;
+            A[2 + ns * 0] = -1.0;
+            A[2 + ns * 1] = 2.0;
+            A[2 + ns * 2] = 0.0;
+            //b
+            b[0] = 1.0 / 6.0;
+            b[1] = 2.0 / 3.0;
+            b[2] = 1.0 / 6.0;   
+            // c
+            c[0] = 0.0;
+            c[1] = 0.5;
+            c[2] = 1.0;
+            break;         
+        }
         case 4:
         {
             // A
@@ -328,8 +350,9 @@ void sim_erk_opts_initialize_default(void *config_, void *dims_, void *opts_)
         default:
         {
             // impossible
-            assert((ns == 1 || ns == 2 || ns == 4) &&
-                   "only number of stages = {1,2,4} implemented!");
+            // assert((ns == 1 || ns == 2 || ns == 4) &&
+            //        "only number of stages = {1,2,4} implemented!");
+            exit(1);
         }
     }
 
@@ -353,7 +376,7 @@ void sim_erk_opts_update(void *config_, void *dims, void *opts_)
 
     opts->tableau_size = opts->ns;
 
-    assert((ns == 1 || ns == 2 || ns == 4) && "only number of stages = {1,2,4} implemented!");
+    assert((ns == 1 || ns == 2 || ns == 3 || ns == 4) && "only number of stages = {1,2,3,4} implemented!");
 
     assert(ns <= NS_MAX && "ns > NS_MAX!");
 
@@ -391,6 +414,28 @@ void sim_erk_opts_update(void *config_, void *dims, void *opts_)
             c[1] = 0.5;
             break;
         }
+        case 3:
+        {
+            //A
+            A[0 + ns * 0] = 0.0;
+            A[0 + ns * 1] = 0.0;
+            A[0 + ns * 2] = 0.0;
+            A[1 + ns * 0] = 0.5;
+            A[1 + ns * 1] = 0.0;
+            A[1 + ns * 2] = 0.0;
+            A[2 + ns * 0] = -1.0;
+            A[2 + ns * 1] = 2.0;
+            A[2 + ns * 2] = 0.0;
+            //b
+            b[0] = 1.0 / 6.0;
+            b[1] = 2.0 / 3.0;
+            b[2] = 1.0 / 6.0;   
+            // c
+            c[0] = 0.0;
+            c[1] = 0.5;
+            c[2] = 1.0;
+            break;         
+        }
         case 4:
         {
             // A
@@ -425,8 +470,9 @@ void sim_erk_opts_update(void *config_, void *dims, void *opts_)
         default:
         {
             // impossible
-            assert((ns == 1 || ns == 2 || ns == 4) &&
-                   "only number of stages = {1,2,4} implemented!");
+            // assert((ns == 1 || ns == 2 || ns == 4) &&
+            //        "only number of stages = {1,2,4} implemented!");
+            exit(1);
         }
     }
 
