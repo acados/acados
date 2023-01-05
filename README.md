@@ -7,10 +7,22 @@
 Fast and embedded solvers for nonlinear optimal control.
 
 ## General
+- `acados` offers fast
+  - fast SQP-type solvers for Nonlinear Programming (NLP) formulations with an Optimal Control Problem (OCP) structure
+  - efficient integration methods to solve initial value problems
+    - with ODE or index-1 DAE
+    - efficient first and second-order sensitivity propagation of the results
+<!-- Sequential Quadratic Programming (SQP) -->
 - `acados` offers interfaces to the programming languages `C`, `Python`, `MATLAB` and `Octave`
+
+## Documentation
 - Documentation can be found on [docs.acados.org](https://docs.acados.org/)
-- Forum: If you have any acados-related question, feel free to post on our forum [discourse.acados.org](https://discourse.acados.org/).
-- Citing acados: references can be found [here](https://docs.acados.org/citing).
+
+## Forum
+- Forum: If you have any `acados`-related question, feel free to post on our forum [discourse.acados.org](https://discourse.acados.org/).
+
+## Citing
+- Citing acados: references can be found [docs.acados.org/citing](https://docs.acados.org/citing).
 
 ## Installation
 Instructions can be found on
@@ -18,5 +30,6 @@ Instructions can be found on
 
 ## `acados` interfaces
 `acados` written in `C` and offers interfaces to the programming languages `C`, `Python`, `MATLAB` and `Octave`.
+
 An overview can be found at:
 [docs.acados.org/interfaces](https://docs.acados.org/interfaces)
