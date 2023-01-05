@@ -300,16 +300,54 @@ cost_val_ocp = ocp.get_cost();
 for stage = [0, N-1]
     % Note loop over field doesnt work because stupid matlab diff between
     % chars and strings
+    % dynamics
     field = 'qp_A';
     disp(strcat(field, " at stage ", num2str(stage), " = "));
     ocp.get(field, stage)
     field = 'qp_B';
     disp(strcat(field, " at stage ", num2str(stage), " = "));
     ocp.get(field, stage)
+    field = 'qp_b';
+    disp(strcat(field, " at stage ", num2str(stage), " = "));
+    ocp.get(field, stage)
+
+    % cost
     field = 'qp_R';
     disp(strcat(field, " at stage ", num2str(stage), " = "));
     ocp.get(field, stage)
     field = 'qp_Q';
+    disp(strcat(field, " at stage ", num2str(stage), " = "));
+    ocp.get(field, stage)
+    field = 'qp_r';
+    disp(strcat(field, " at stage ", num2str(stage), " = "));
+    ocp.get(field, stage)
+
+    % constraints
+    field = 'qp_C';
+    disp(strcat(field, " at stage ", num2str(stage), " = "));
+    ocp.get(field, stage)
+    field = 'qp_D';
+    disp(strcat(field, " at stage ", num2str(stage), " = "));
+    ocp.get(field, stage)
+
+    field = 'qp_lg';
+    disp(strcat(field, " at stage ", num2str(stage), " = "));
+    ocp.get(field, stage)
+    field = 'qp_ug';
+    disp(strcat(field, " at stage ", num2str(stage), " = "));
+    ocp.get(field, stage)
+
+    field = 'qp_lbx';
+    disp(strcat(field, " at stage ", num2str(stage), " = "));
+    ocp.get(field, stage)
+    field = 'qp_ubx';
+    disp(strcat(field, " at stage ", num2str(stage), " = "));
+    ocp.get(field, stage)
+
+    field = 'qp_lbu';
+    disp(strcat(field, " at stage ", num2str(stage), " = "));
+    ocp.get(field, stage)
+    field = 'qp_ubu';
     disp(strcat(field, " at stage ", num2str(stage), " = "));
     ocp.get(field, stage)
 end
