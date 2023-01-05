@@ -250,23 +250,8 @@ void sim_erk_opts_get(void *config_, void *opts_, const char *field, void *value
 
 
 
-void sim_erk_opts_initialize_default(void *config_, void *dims_, void *opts_)
+static void get_explicit_butcher_tableau(int ns, double *A, double *b, double *c)
 {
-    sim_opts *opts = opts_;
-    sim_erk_dims *dims = (sim_erk_dims *) dims_;
-
-    opts->ns = 4;  // ERK 4
-    int ns = opts->ns;
-
-    assert((ns == 1 || ns == 2 || ns == 3 || ns == 4) && "only number of stages = {1,2,3,4} implemented!");
-
-    // set tableau size
-    opts->tableau_size = opts->ns;
-
-    double *A = opts->A_mat;
-    double *b = opts->b_vec;
-    double *c = opts->c_vec;
-
     switch (ns)
     {
         case 1:
@@ -350,11 +335,33 @@ void sim_erk_opts_initialize_default(void *config_, void *dims_, void *opts_)
         default:
         {
             // impossible
-            // assert((ns == 1 || ns == 2 || ns == 4) &&
-            //        "only number of stages = {1,2,4} implemented!");
-            exit(1);
+            // assert((ns == 1 || ns == 2 || ns == 4) && "only number of stages = {1,2,4} implemented!");
+            printf("\n error: ERK: ns = %d not available. Only number of stages = {1,2,3,4} implemented!\n",ns);
+            // exit(1);
         }
     }
+}
+
+
+
+void sim_erk_opts_initialize_default(void *config_, void *dims_, void *opts_)
+{
+    sim_opts *opts = opts_;
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
+
+    opts->ns = 4;  // ERK 4
+    int ns = opts->ns;
+
+    assert((ns == 1 || ns == 2 || ns == 3 || ns == 4) && "only number of stages = {1,2,3,4} implemented!");
+
+    // set tableau size
+    opts->tableau_size = opts->ns;
+
+    double *A = opts->A_mat;
+    double *b = opts->b_vec;
+    double *c = opts->c_vec;
+
+    get_explicit_butcher_tableau(ns, A, b, c);
 
     opts->num_steps = 1;
     opts->num_forw_sens = dims->nx + dims->nu;
@@ -387,94 +394,7 @@ void sim_erk_opts_update(void *config_, void *dims, void *opts_)
     double *b = opts->b_vec;
     double *c = opts->c_vec;
 
-    switch (ns)
-    {
-        case 1:
-        {
-            // A
-            A[0 + ns * 0] = 0.0;
-            // b
-            b[0] = 1.0;
-            // c
-            c[0] = 0.0;
-            break;
-        }
-        case 2:
-        {
-            // A
-            A[0 + ns * 0] = 0.0;
-            A[0 + ns * 1] = 0.0;
-            A[1 + ns * 0] = 0.5;
-            A[1 + ns * 1] = 0.0;
-            // b
-            b[0] = 0.0;
-            b[1] = 1.0;
-            // c
-            c[0] = 0.0;
-            c[1] = 0.5;
-            break;
-        }
-        case 3:
-        {
-            //A
-            A[0 + ns * 0] = 0.0;
-            A[0 + ns * 1] = 0.0;
-            A[0 + ns * 2] = 0.0;
-            A[1 + ns * 0] = 0.5;
-            A[1 + ns * 1] = 0.0;
-            A[1 + ns * 2] = 0.0;
-            A[2 + ns * 0] = -1.0;
-            A[2 + ns * 1] = 2.0;
-            A[2 + ns * 2] = 0.0;
-            //b
-            b[0] = 1.0 / 6.0;
-            b[1] = 2.0 / 3.0;
-            b[2] = 1.0 / 6.0;   
-            // c
-            c[0] = 0.0;
-            c[1] = 0.5;
-            c[2] = 1.0;
-            break;         
-        }
-        case 4:
-        {
-            // A
-            A[0 + ns * 0] = 0.0;
-            A[0 + ns * 1] = 0.0;
-            A[0 + ns * 2] = 0.0;
-            A[0 + ns * 3] = 0.0;
-            A[1 + ns * 0] = 0.5;
-            A[1 + ns * 1] = 0.0;
-            A[1 + ns * 2] = 0.0;
-            A[1 + ns * 3] = 0.0;
-            A[2 + ns * 0] = 0.0;
-            A[2 + ns * 1] = 0.5;
-            A[2 + ns * 2] = 0.0;
-            A[2 + ns * 3] = 0.0;
-            A[3 + ns * 0] = 0.0;
-            A[3 + ns * 1] = 0.0;
-            A[3 + ns * 2] = 1.0;
-            A[3 + ns * 3] = 0.0;
-            // b
-            b[0] = 1.0 / 6.0;
-            b[1] = 1.0 / 3.0;
-            b[2] = 1.0 / 3.0;
-            b[3] = 1.0 / 6.0;
-            // c
-            c[0] = 0.0;
-            c[1] = 0.5;
-            c[2] = 0.5;
-            c[3] = 1.0;
-            break;
-        }
-        default:
-        {
-            // impossible
-            // assert((ns == 1 || ns == 2 || ns == 4) &&
-            //        "only number of stages = {1,2,4} implemented!");
-            exit(1);
-        }
-    }
+    get_explicit_butcher_tableau(ns, A, b, c);
 
     return;
 }
