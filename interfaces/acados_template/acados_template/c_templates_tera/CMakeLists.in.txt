@@ -305,13 +305,13 @@ set(CMAKE_C_FLAGS "-fPIC -std=c99 {{ openmp_flag }}
     -DACADOS_WITH_QPOASES
 {%- endif -%}
 {%- if qp_solver == "FULL_CONDENSING_DAQP" -%}
-   -DACADOS_WITH_DAQP
+    -DACADOS_WITH_DAQP
 {%- endif -%}
 {%- if qp_solver == "PARTIAL_CONDENSING_OSQP" -%}
-   -DACADOS_WITH_OSQP
+    -DACADOS_WITH_OSQP
 {%- endif -%}
 {%- if qp_solver == "PARTIAL_CONDENSING_QPDUNES" -%}
-   -DACADOS_WITH_QPDUNES
+    -DACADOS_WITH_QPDUNES
 {%- endif -%}
 ")
 #-fno-diagnostics-show-line-numbers -g
