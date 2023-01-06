@@ -300,9 +300,9 @@ set(ACADOS_LIB_PATH {{ acados_lib_path }} CACHE PATH "Define the path which cont
 # c-compiler flags for debugging
 set(CMAKE_C_FLAGS_DEBUG "-O0 -ggdb")
 
-set(CMAKE_C_FLAGS "
+set(CMAKE_C_FLAGS "-fPIC -std=c99 {{ openmp_flag }}
 {%- if qp_solver == "FULL_CONDENSING_QPOASES" -%}
-   -DACADOS_WITH_QPOASES
+    -DACADOS_WITH_QPOASES
 {%- endif -%}
 {%- if qp_solver == "FULL_CONDENSING_DAQP" -%}
    -DACADOS_WITH_DAQP
@@ -313,7 +313,7 @@ set(CMAKE_C_FLAGS "
 {%- if qp_solver == "PARTIAL_CONDENSING_QPDUNES" -%}
    -DACADOS_WITH_QPDUNES
 {%- endif -%}
-    -fPIC -std=c99 {{ openmp_flag }}")
+")
 #-fno-diagnostics-show-line-numbers -g
 
 include_directories(
