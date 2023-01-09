@@ -103,10 +103,21 @@ git submodule update --recursive --init
 - Add this path to your environment variable PATH, using the Windows GUI. To open the GUI press Windows key and type "env".
 - Install mingw from MATLAB add-ons manager.
 - Locate this mingw installation. The default location is `C:\ProgramData\MATLAB\SupportPackages\R2018a\3P.instrset\mingw_w64.instrset`.
-- Add the subfolders `bin` and `x86_64-w64-mingw32\bin` of the above mentioned mingw installation to your environment variable PATH.
 
+### Automatic build of acados (minGW)
+Run the following in Matlab in the folder `<acados_root_folder>/interfaces/acados_matlab_octave`:
+```
+acados_install_windows()
+```
 
-### Build acados (minGW)
+This will build acados with the standard options and install the external dependencies; casadi and terra renderer
+
+The `acados_install_windows(CMakeConfigString)` script can take an optional argument:
+- CMake configuration string: Configuration options for CMake. The default is `-DBUILD_SHARED_LIBS=OFF -DACADOS_WITH_OSQP=OFF`
+
+### Build acados manually (minGW)
+If the automated install procedure does not work acados can be built manually using these steps.
+
 Run the following from a powershell in the `<acados_root_folder>`:
 ```
 $ACADOS_INSTALL_DIR=$(pwd)
