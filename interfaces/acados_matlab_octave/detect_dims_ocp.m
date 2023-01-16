@@ -392,6 +392,13 @@ function [model, opts] = detect_dims_ocp(model, opts)
         error(['ocp discretization: time_steps between shooting nodes must all be > 0', ...
             ' got: ' num2str(opts.time_steps)])
     end
+%     if ~isempty(opts.sim_method_num_stages)
+%         if(opts.sim_method_num_stages == 1 || opts.sim_method_num_stages == 2 || ...
+%              opts.sim_method_num_stages == 3 || opts.sim_method_num_stages == 4)
+%         else     
+%             error(['ERK:',num2str(opts.sim_method_num_stages) ' not available. Only number of stages = {1,2,3,4} implemented!']);
+%         end
+%     end
 
     % qp_dunes
     if ~isempty(strfind(opts.qp_solver,'qpdunes'))

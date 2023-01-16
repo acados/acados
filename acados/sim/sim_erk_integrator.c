@@ -337,7 +337,7 @@ static void get_explicit_butcher_tableau(int ns, double *A, double *b, double *c
             // impossible
             // assert((ns == 1 || ns == 2 || ns == 4) && "only number of stages = {1,2,4} implemented!");
             printf("\n error: ERK: ns = %d not available. Only number of stages = {1,2,3,4} implemented!\n",ns);
-            // exit(1);
+            exit(1);
         }
     }
 }
