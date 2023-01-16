@@ -39,12 +39,13 @@ mex_flags = getenv('ACADOS_MEX_FLAGS');
 
 % set paths
 acados_mex_folder = fullfile(acados_folder, 'interfaces', 'acados_matlab_octave');
-acados_include = ['-I', acados_folder];
-acados_interfaces_include = ['-I', fullfile(acados_folder, 'interfaces')];
-external_include = ['-I', fullfile(acados_folder, 'external')];
-blasfeo_include = ['-I', fullfile(acados_folder, 'external', 'blasfeo', 'include')];
-hpipm_include = ['-I', fullfile(acados_folder, 'external', 'hpipm', 'include')];
-acados_lib_path = ['-L', fullfile(acados_folder, 'lib')];
+acados_include = ['-I' fullfile(acados_folder,'include')];
+acados_interfaces_include = ['-I' fullfile(acados_folder, 'interfaces')];
+external_include = ['-I' fullfile(acados_folder, 'external')];
+blasfeo_include = ['-I' fullfile(acados_folder, 'include' , 'blasfeo', 'include')];
+hpipm_include = ['-I' fullfile(acados_folder, 'include' , 'hpipm', 'include')];
+acados_lib_path = ['-L' fullfile(acados_folder, 'lib')];
+
 
 mex_names = { ...
     'ocp_create', ...

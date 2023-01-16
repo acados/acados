@@ -146,11 +146,11 @@ if (strcmp(opts_struct.codgen_model, 'true') && ...
     ((strcmp(model_struct.cost_ext_fun_type, 'casadi') && strcmp(model_struct.cost_type, 'ext_cost')) || ...
     (strcmp(model_struct.cost_ext_fun_type_e, 'casadi') && strcmp(model_struct.cost_type_e, 'ext_cost')) || ...
     (strcmp(model_struct.cost_ext_fun_type_0, 'casadi') && strcmp(model_struct.cost_type_0, 'ext_cost'))))
-    % generate c for function and derivatives using casadi    
-    generate_c_code_ext_cost(model_struct, opts_struct);    
+    % generate c for function and derivatives using casadi
+    generate_c_code_ext_cost(model_struct, opts_struct);
 end
-% external cost sources list 
-if (strcmp(model_struct.cost_type, 'ext_cost') && strcmp(model_struct.cost_ext_fun_type, 'casadi') && isfield(model_struct, 'cost_expr_ext_cost'))       
+% external cost sources list
+if (strcmp(model_struct.cost_type, 'ext_cost') && strcmp(model_struct.cost_ext_fun_type, 'casadi') && isfield(model_struct, 'cost_expr_ext_cost'))
     c_files{end+1} = [model_name, '_cost_ext_cost_fun.c'];
     c_files{end+1} = [model_name, '_cost_ext_cost_fun_jac.c'];
     c_files{end+1} = [model_name, '_cost_ext_cost_fun_jac_hess.c'];
@@ -158,12 +158,12 @@ end
 if (strcmp(model_struct.cost_type_e, 'ext_cost') && strcmp(model_struct.cost_ext_fun_type_e, 'casadi') && isfield(model_struct, 'cost_expr_ext_cost_e'))
     c_files{end+1} = [model_name, '_cost_ext_cost_e_fun.c'];
     c_files{end+1} = [model_name, '_cost_ext_cost_e_fun_jac.c'];
-    c_files{end+1} = [model_name, '_cost_ext_cost_e_fun_jac_hess.c'];    
+    c_files{end+1} = [model_name, '_cost_ext_cost_e_fun_jac_hess.c'];
 end
 if (strcmp(model_struct.cost_type_0, 'ext_cost') && strcmp(model_struct.cost_ext_fun_type_0, 'casadi') && isfield(model_struct, 'cost_expr_ext_cost_0'))
     c_files{end+1} = [model_name, '_cost_ext_cost_0_fun.c'];
     c_files{end+1} = [model_name, '_cost_ext_cost_0_fun_jac.c'];
-    c_files{end+1} = [model_name, '_cost_ext_cost_0_fun_jac_hess.c'];    
+    c_files{end+1} = [model_name, '_cost_ext_cost_0_fun_jac_hess.c'];
 end
 
 if (strcmp(opts_struct.codgen_model, 'true'))
@@ -180,15 +180,15 @@ end
 % generic external cost
 if (strcmp(model_struct.cost_type, 'ext_cost') && strcmp(model_struct.cost_ext_fun_type, 'generic') &&...
     isfield(model_struct, 'cost_source_ext_cost') && isfield(model_struct, 'cost_function_ext_cost'))
-    c_files_path{end+1} = model_struct.cost_source_ext_cost;        
+    c_files_path{end+1} = model_struct.cost_source_ext_cost;
 end
 if (strcmp(model_struct.cost_type_e, 'ext_cost') && strcmp(model_struct.cost_ext_fun_type_e, 'generic') &&...
     isfield(model_struct, 'cost_source_ext_cost_e') && isfield(model_struct, 'cost_function_ext_cost_e'))
-    c_files_path{end+1} = model_struct.cost_source_ext_cost_e;        
+    c_files_path{end+1} = model_struct.cost_source_ext_cost_e;
 end
 if (strcmp(model_struct.cost_type_0, 'ext_cost') && strcmp(model_struct.cost_ext_fun_type_0, 'generic') &&...
     isfield(model_struct, 'cost_source_ext_cost_0') && isfield(model_struct, 'cost_function_ext_cost_0'))
-    c_files_path{end+1} = model_struct.cost_source_ext_cost_0;        
+    c_files_path{end+1} = model_struct.cost_source_ext_cost_0;
 end
 
 % generic discrete dynamics
@@ -197,12 +197,21 @@ if (strcmp(model_struct.dyn_type, 'discrete') && strcmp(model_struct.dyn_ext_fun
     c_files_path{end+1} = model_struct.dyn_generic_source;
 end
 
+% Store the current PATH environment variable value
+origEnvPath = getenv('PATH');
+
 % check compiler
 use_msvc = false;
 if ~is_octave()
     mexOpts = mex.getCompilerConfigurations('C', 'Selected');
     if contains(mexOpts.ShortName, 'MSVC')
         use_msvc = true;
+    else
+        % Get mex C compiler configuration and extract the location
+        pathToCompilerLocation = mexOpts.Location;
+        % Set environment PATH variable for this Matlab session such that
+        % configured mex C compiler is prioritized
+        setenv('PATH', [fullfile(pathToCompilerLocation,'bin') ';' origEnvPath]);
     end
 end
 
@@ -236,11 +245,20 @@ else % gcc
                        ' ', strjoin(unique(c_files_path), ' '), ' -o ', out_lib];
 end
 
+% Store the PATH environment variable used during compilation for error reporting
+envPath = getenv('PATH');
+
 compile_status = system(compile_command);
+
+% Reset the environment PATH variable to its original value before potentially
+% raising an error to ensure that the path environment variable is clean
+setenv('PATH',origEnvPath);
+
 if compile_status ~= 0
     error('Compilation of model functions failed! %s %s\n%s\n\n', ...
         'Please check the compile command above and the flags therein closely.',...
-        'Compile command was:', compile_command);
+        'Compile command was:', compile_command, '\n', ...
+        'Environment path was: ', envPath);
 end
 
 end
