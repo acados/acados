@@ -31,7 +31,7 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
-function [model, opts]  = detect_dims_sim(model, opts)
+function model  = detect_dims_sim(model, opts)
 
     %% general
     model.dim_nx = length(model.sym_x);

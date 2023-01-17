@@ -93,7 +93,7 @@ classdef acados_sim < handle
             end
 
             % detect dimensions & sanity checks
-            [obj.model_struct, obj.opts_struct] = detect_dims_sim(obj.model_struct,obj.opts_struct);
+            obj.model_struct = detect_dims_sim(obj.model_struct,obj.opts_struct);
 
             % create C object
             obj.C_sim = sim_create(obj.model_struct, obj.opts_struct);
