@@ -31,7 +31,7 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
-function model = detect_dims_sim(model)
+function model  = detect_dims_sim(model, opts)
 
     %% general
     model.dim_nx = length(model.sym_x);
@@ -52,5 +52,15 @@ function model = detect_dims_sim(model)
         model.dim_np = length(model.sym_p);
     else
         model.dim_np = 0;
+    end
+
+    if ~isempty(opts.num_stages)
+        if(strcmp(opts.method,"erk"))
+            if(opts.num_stages == 1 || opts.num_stages == 2 || ...
+                opts.num_stages == 3 || opts.num_stages == 4)
+            else
+                error(['ERK: num_stages = ',num2str(opts.num_stages) ' not available. Only number of stages = {1,2,3,4} implemented!']);
+            end
+        end
     end
 end
