@@ -57,7 +57,7 @@ from .utils import is_column, is_empty, casadi_length, render_template,\
 from .builders import CMakeBuilder
 
 
-def make_ocp_dims_consistent(acados_ocp):
+def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
     dims = acados_ocp.dims
     cost = acados_ocp.cost
     constraints = acados_ocp.constraints

@@ -610,10 +610,10 @@ class AcadosOcpCost:
 
     @yref_0.setter
     def yref_0(self, yref_0):
-        if isinstance(yref_0, np.ndarray):
+        if isinstance(yref_0, np.ndarray) and len(yref_0.shape) == 1:
             self.__yref_0 = yref_0
         else:
-            raise Exception('Invalid yref_0 value, expected numpy array.')
+            raise Exception('Invalid yref_0 value, expected 1-dimensional numpy array.')
 
     @W_0.setter
     def W_0(self, W_0):
@@ -786,10 +786,10 @@ class AcadosOcpCost:
 
     @yref.setter
     def yref(self, yref):
-        if isinstance(yref, np.ndarray):
+        if isinstance(yref, np.ndarray) and len(yref.shape) == 1:
             self.__yref = yref
         else:
-            raise Exception('Invalid yref value, expected numpy array.')
+            raise Exception('Invalid yref value, expected 1-dimensional numpy array.')
 
     @Zl.setter
     def Zl(self, Zl):
@@ -920,10 +920,10 @@ class AcadosOcpCost:
 
     @yref_e.setter
     def yref_e(self, yref_e):
-        if isinstance(yref_e, np.ndarray):
+        if isinstance(yref_e, np.ndarray) and len(yref_e.shape) == 1:
             self.__yref_e = yref_e
         else:
-            raise Exception('Invalid yref_e value, expected numpy array.')
+            raise Exception('Invalid yref_e value, expected 1-dimensional numpy array.')
 
     @Zl_e.setter
     def Zl_e(self, Zl_e):
