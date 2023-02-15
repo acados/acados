@@ -40,6 +40,7 @@ OBJS += ocp_nlp_common.o
 OBJS += ocp_nlp_cost_common.o
 OBJS += ocp_nlp_cost_ls.o
 OBJS += ocp_nlp_cost_nls.o
+OBJS += ocp_nlp_cost_conl.o
 OBJS += ocp_nlp_cost_external.o
 OBJS += ocp_nlp_constraints_common.o
 OBJS += ocp_nlp_constraints_bgh.o
