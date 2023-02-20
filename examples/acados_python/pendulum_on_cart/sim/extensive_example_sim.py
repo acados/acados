@@ -166,7 +166,5 @@ if status != 0:
     raise Exception(f'acados returned status {status}.')
 
 
-
-
 # plot results
-plot_pendulum(np.linspace(0, Tf, N+1), 10, np.zeros((N, nu)), simX, latexify=False)
+plot_pendulum(np.linspace(0, N*Tf, N+1), 10, np.zeros((N, nu)), simX, latexify=False)
