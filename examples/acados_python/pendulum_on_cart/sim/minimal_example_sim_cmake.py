@@ -103,7 +103,7 @@ def main(build=True, generate=True, use_cmake=True, use_cython=False):
     print("S_forw, sensitivities of simulaition result wrt x,u:\n", S_forw)
 
     # plot results
-    # plot_pendulum(np.linspace(0, Tf, N+1), 10, np.zeros((N, nu)), simX, latexify=False)
+    # plot_pendulum(np.linspace(0, N*Tf, N+1), 10, np.zeros((N, nu)), simX, latexify=False)
 
 
 if __name__ == "__main__":

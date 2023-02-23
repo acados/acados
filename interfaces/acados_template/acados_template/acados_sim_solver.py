@@ -437,7 +437,7 @@ class AcadosSimSolver:
             out = scalar.value
         else:
             raise Exception(f'AcadosSimSolver.get(): Unknown field {field_},' \
-                f' available fields are {", ".join(self.gettable_vectors+self.gettable_matrices)} {", ".join(self.gettable_scalars)}')
+                f' available fields are {", ".join(self.gettable_vectors+self.gettable_matrices)}, {", ".join(self.gettable_scalars)}')
 
         return out
 
