@@ -1756,12 +1756,9 @@ void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* 
     ************************************************/
 
 {% if solver_options.hessian_approx == "EXACT" %}
-    bool nlp_solver_exact_hessian = true;
-    // TODO: this if should not be needed! however, calling the setter with false leads to weird behavior. Investigate!
-    if (nlp_solver_exact_hessian)
-    {
-        ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "exact_hess", &nlp_solver_exact_hessian);
-    }
+    int nlp_solver_exact_hessian = 1;
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "exact_hess", &nlp_solver_exact_hessian);
+
     int exact_hess_dyn = {{ solver_options.exact_hess_dyn }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "exact_hess_dyn", &exact_hess_dyn);
 

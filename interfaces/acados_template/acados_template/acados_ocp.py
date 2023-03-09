@@ -701,28 +701,28 @@ class AcadosOcpCost:
 
     @property
     def Zl(self):
-        """:math:`Z_l` - diagonal of Hessian wrt lower slack at intermediate shooting nodes (1 to N-1).
+        """:math:`Z_l` - diagonal of Hessian wrt lower slack at intermediate shooting nodes (0 to N-1).
         Default: :code:`np.array([])`.
         """
         return self.__Zl
 
     @property
     def Zu(self):
-        """:math:`Z_u` - diagonal of Hessian wrt upper slack at intermediate shooting nodes (1 to N-1).
+        """:math:`Z_u` - diagonal of Hessian wrt upper slack at intermediate shooting nodes (0 to N-1).
         Default: :code:`np.array([])`.
         """
         return self.__Zu
 
     @property
     def zl(self):
-        """:math:`z_l` - gradient wrt lower slack at intermediate shooting nodes (1 to N-1).
+        """:math:`z_l` - gradient wrt lower slack at intermediate shooting nodes (0 to N-1).
         Default: :code:`np.array([])`.
         """
         return self.__zl
 
     @property
     def zu(self):
-        """:math:`z_u` - gradient wrt upper slack at intermediate shooting nodes (1 to N-1).
+        """:math:`z_u` - gradient wrt upper slack at intermediate shooting nodes (0 to N-1).
         Default: :code:`np.array([])`.
         """
         return self.__zu
