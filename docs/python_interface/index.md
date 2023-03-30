@@ -29,7 +29,7 @@ The Python interface relies on the same problem formulation as the MATLAB interf
     ```
     Note: There are known path issues with more high level virtual environment managers. Such as `conda`, `miniconda`, `Pycharm`.
     It is not recommended to use them.
-    However, if you need to do so and have issues, please have a look in the [`acados` forum](discourse.acados.org/).
+    However, if you need to do so and have issues, please have a look in the [`acados` forum](https://discourse.acados.org/).
 
 2. Install `acados_template` Python package:
     ```
