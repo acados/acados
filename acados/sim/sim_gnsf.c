@@ -1986,7 +1986,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
 
     if (model->fully_linear && !mem->first_call)
     {
-        // xf = x_0 + S_forw_x * x0 + S_forw_u * u0; 
+        // xf = x_0 + S_forw_x * x0 + S_forw_u * u0;
         blasfeo_dgemv_n(nx, nx, 1.0, S_forw, 0, 0, x0_traj, 0, 0.0,
                         x0_traj, 0, x0_traj, nx * num_steps);
         blasfeo_dgemv_n(nx, nu, 1.0, S_forw, 0, nx, u0, 0, 1.0,
@@ -2014,7 +2014,6 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
             // copy into S_forw_new and unpack from there later
             blasfeo_dgecp(nx, nx + nu, S_forw, 0, 0, S_forw_new, 0, 0);
         }
-        
 
         // adjoint
         blasfeo_dgemv_t(nx, nx+nu, 1.0, S_forw, 0, 0, lambda_old, 0, 0.0, lambda_old, 0, lambda, 0);
@@ -2830,7 +2829,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                     blasfeo_dtrsm_lunn(nK2, nu, 1.0, M2_LU, 0, 0, dK2_du, 0, 0, dK2_du, 0, 0);
                     out->info->LAtime += acados_toc(&la_timer);
                 }
-                
+
 
                 /*  SOLVE LINEAR SYSTEMS  */
                 acados_tic(&la_timer);
