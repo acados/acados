@@ -37,8 +37,9 @@ class MPCParam():
 
     # obstacles
     _num_obs: int=3
-    _obs_radius: np.ndarray=np.array([0.48, 0.29, 0.43])
-    _obs_pos: np.ndarray=np.array([[0.6, 0.65], [2.35, 1.2], [0.2, 1.7]])
+    # _obs_radius: np.ndarray=np.array([0.48, 0.29, 0.42])
+    _obs_radius: np.ndarray=np.array([0.4, 0.29, 0.42])
+    _obs_pos: np.ndarray=np.array([[0.0, 1.0], [2.35, 1.2], [0.2, 1.7]])
 
     # zoRO
     _backoff_eps: float=1e-8
@@ -181,3 +182,30 @@ class MPCParam():
     @zoRO_iter.setter
     def zoRO_iter(self, n: int):
         self._zoRO_iter = n
+
+
+@dataclass
+class PathTrackingParam:
+    _nx: int=2
+    _nu: int=1
+    _nu_wT:  int=2
+    _n_hrzn: int=500
+    _v_s_0:  float=0.001
+    _v_s_e: float=0.001
+
+
+    @property
+    def nx(self)->int:
+        return self._nx
+
+    @property
+    def nu(self)->int:
+        return self._nu
+
+    @property
+    def n_hrzn(self)->int:
+        return self._n_hrzn
+
+    @property
+    def nu_wT(self)->int:
+        return self._nu_wT

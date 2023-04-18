@@ -6,22 +6,23 @@ sys.path.append(mpc_source_dir)
 
 import numpy as np
 import casadi
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel
 import matplotlib.pyplot as plt
+from scipy.interpolate import interp1d
 
 from track_spline import TrackSpline
 from mpc_parameters import PathTrackingParam, MPCParam
 
 class NominalPathTrackingSolver:
-    def __init__(self, track_spline:TrackSpline, path_cfg: PathTrackingParam, traj_cfg: MPCParam) -> None:
+    def __init__(self, track_spline:TrackSpline, cfg_path: PathTrackingParam, cfg_traj: MPCParam) -> None:
         self._track_spline = track_spline
-        self._path_cfg = path_cfg
-        self._traj_cfg = traj_cfg
+        self._path_cfg = cfg_path
+        self._traj_cfg = cfg_traj
         self._dt_sol = 0.1
-        self._x_sol  = np.zeros((path_cfg.nx, path_cfg.n_hrzn+1))
-        self._u_sol  = np.zeros((path_cfg.nu, path_cfg.n_hrzn  ))
-        self._x_ref  = np.zeros((traj_cfg.n_hrzn+1, traj_cfg.nx))
-        self._spline_timestamps   = np.full((path_cfg.n_hrzn+1, path_cfg.nx ), np.nan)
+        self._x_sol  = np.zeros((cfg_path.nx, cfg_path.n_hrzn+1))
+        self._u_sol  = np.zeros((cfg_path.nu, cfg_path.n_hrzn  ))
+        self._x_robot_ref  = np.zeros((cfg_path.n_hrzn+1, cfg_traj.nx, ))
+        self._u_robot_ref  = np.zeros((cfg_path.n_hrzn,   cfg_traj.nu  ))
+        self._spline_timestamps   = np.full((cfg_path.n_hrzn+1, ), np.nan)
         self._setup_MPC()
 
     def _setup_MPC(self) -> None:
@@ -75,7 +76,7 @@ class NominalPathTrackingSolver:
         self._ub_g.append([0., 0.])
 
     def _setup_state_input_constraints(self) -> None:
-        for i_hrzn in range(1, self._path_cfg.n_hrzn):
+        for i_hrzn in range(0, self._path_cfg.n_hrzn):
             v_i     = self._track_spline.ca_fun_v_t    (self._x_traj[0, i_hrzn], self._x_traj[1, i_hrzn])
             a_i     = self._track_spline.ca_fun_a_t    (self._x_traj[0, i_hrzn], self._x_traj[1, i_hrzn], self._u_traj[0, i_hrzn])
             omega_i = self._track_spline.ca_fun_omega_t(self._x_traj[0, i_hrzn], self._x_traj[1, i_hrzn])
@@ -102,29 +103,52 @@ class NominalPathTrackingSolver:
         self._x_sol = primal_sol[:(self._path_cfg.n_hrzn+1)*self._path_cfg.nx].reshape((self._path_cfg.nx, -1), order='F')
         self._u_sol = primal_sol[(self._path_cfg.n_hrzn+1)*self._path_cfg.nx:-1].reshape((self._path_cfg.nu, -1), order='F')
         self._dt_sol = primal_sol[-1]
+        self._compute_whole_reference_trajectory()
 
     def plot_results(self) -> None:
-        self._spline_timestamps = np.linspace(0, self._path_cfg.n_hrzn*self._dt_sol, self._path_cfg.n_hrzn+1, endpoint=True)
         self._track_spline.plot_trajectories_over_time(s=self._x_sol[0, :], v_s=self._x_sol[1,:], a_s=self._u_sol[0,:], timestamps=self._spline_timestamps)
-        plt.show()
 
-    def compute_reference_trajectory(self, robot_state:np.ndarray) -> None:
-        dist2spline = np.linalg.norm(robot_state[:2] - self._x_sol.T, axis=1)
+    def _compute_whole_reference_trajectory(self) -> None:
+        for i_hrzn in range(0, self._path_cfg.n_hrzn+1):
+            self._x_robot_ref[i_hrzn, 0] = self._track_spline.ca_fun_pos_x(self._x_sol[0, i_hrzn]).full()
+            self._x_robot_ref[i_hrzn, 1] = self._track_spline.ca_fun_pos_y(self._x_sol[0, i_hrzn]).full()
+            self._x_robot_ref[i_hrzn, 2] = self._track_spline.ca_fun_heading(self._x_sol[0, i_hrzn]).full()
+            self._x_robot_ref[i_hrzn, 3] = self._track_spline.ca_fun_v_t(self._x_sol[0, i_hrzn], self._x_sol[1, i_hrzn]).full()
+            self._x_robot_ref[i_hrzn, 4] = self._track_spline.ca_fun_omega_t(self._x_sol[0, i_hrzn], self._x_sol[1, i_hrzn]).full()
+            if i_hrzn < self._path_cfg.n_hrzn:
+                self._u_robot_ref[i_hrzn, 0] = self._track_spline.ca_fun_a_t(self._x_sol[0, i_hrzn], self._x_sol[1, i_hrzn], self._u_sol[0, i_hrzn]).full()
+                self._u_robot_ref[i_hrzn, 1] = self._track_spline.ca_fun_alpha_t(self._x_sol[0, i_hrzn], self._x_sol[1, i_hrzn], self._u_sol[0, i_hrzn]).full()
+        self._spline_timestamps = np.linspace(0, self._path_cfg.n_hrzn*self._dt_sol, self._path_cfg.n_hrzn+1, endpoint=True)
+        self.f_x_ref = interp1d(self._spline_timestamps, self._x_robot_ref, axis=0)
+        self.f_u_ref = interp1d(self._spline_timestamps[:-1], self._u_robot_ref, axis=0)
+
+    def interpolate_reference_trajectory(self, robot_state:np.ndarray):
+        dist2spline = np.linalg.norm(robot_state[:2] - self._x_robot_ref[:,:2], axis=1)
         idx = np.argmin(dist2spline)
-        ref_traj_timestamps = idx*self._dt_sol + np.linspace(0, self._traj_cfg.n_hrzn*self._traj_cfg.delta_t, self._path_cfg.n_hrzn+1, endpoint=True)
-        s_ref = np.interp(ref_traj_timestamps, self._spline_timestamps, self._x_sol[0, :])
-        v_ref = np.interp(ref_traj_timestamps, self._spline_timestamps, self._x_sol[1, :])
-        self._x_ref[0, :] = robot_state.copy()
-        for i_hrzn in range(1, self._traj_cfg.n_hrzn+1):
-            self._x_ref[i_hrzn, 0] = self._track_spline.ca_fun_pos_x(s_ref[i_hrzn])
-            self._x_ref[i_hrzn, 1] = self._track_spline.ca_fun_pos_y(s_ref[i_hrzn])
-            self._x_ref[i_hrzn, 2] = self._track_spline.ca_fun_heading(s_ref[i_hrzn])
-            self._x_ref[i_hrzn, 3] = self._track_spline.ca_fun_v_t(s_ref[i_hrzn], v_ref[i_hrzn])
-            self._x_ref[i_hrzn, 4] = self._track_spline.ca_fun_omega_t(s_ref[i_hrzn], v_ref[i_hrzn])
+        ref_traj_timestamps = idx*self._dt_sol + np.linspace(0, self._traj_cfg.n_hrzn*self._traj_cfg.delta_t, self._traj_cfg.n_hrzn+1, endpoint=True)
+        x_ref_interp = self.f_x_ref(ref_traj_timestamps)
+        u_ref_interp = self.f_u_ref(ref_traj_timestamps)
+        return x_ref_interp, u_ref_interp
 
     @property
-    def x_ref(self) -> np.ndarray:
-        return self._x_ref
+    def x_robot_ref(self) -> np.ndarray:
+        return self._x_robot_ref
+
+    @property
+    def u_robot_ref(self) -> np.ndarray:
+        return self._u_robot_ref
+
+    @property
+    def x_sol(self) -> np.ndarray:
+        return self._x_sol
+
+    @property
+    def u_sol(self) -> np.ndarray:
+        return self._u_sol
+
+    @property
+    def spline_timestamps(self) -> np.ndarray:
+        return self._spline_timestamps
 
 if __name__ == '__main__':
     control_points = np.array([[-2.0, 2.0],
@@ -138,10 +162,10 @@ if __name__ == '__main__':
                                [8.0, 8.0]])
     spline_seg_length = np.array([0.0, np.pi, 2.0, 2.0, 2.0, np.pi, 2.0, 2.0, 2.0])
     track_spline = TrackSpline(control_points, spline_seg_length)
-    path_cfg = PathTrackingParam()
-    traj_cfg = MPCParam()
-    path_tracking_solver = NominalPathTrackingSolver(track_spline, path_cfg=path_cfg, traj_cfg=traj_cfg)
-    x_init = np.array([0.0, path_cfg._v_s_0])
-    x_e    = np.array([1.0, path_cfg._v_s_e])
+    cfg_path = PathTrackingParam()
+    cfg_traj = MPCParam()
+    path_tracking_solver = NominalPathTrackingSolver(track_spline, cfg_path=cfg_path, cfg_traj=cfg_traj)
+    x_init = np.array([0.0, cfg_path._v_s_0])
+    x_e    = np.array([1.0, cfg_path._v_s_e])
     path_tracking_solver.solve(x_init=x_init, x_e=x_e)
     path_tracking_solver.plot_results()

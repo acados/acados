@@ -44,7 +44,7 @@ class TrackSpline:
         a_s = casadi.MX.sym('a_s')
         v_t = v_s * self._spline_length
         a_t = a_s * self._spline_length
-        heading = casadi.arctan2(pos_y, pos_x)
+        heading = casadi.arctan2(pos_y_1st_deriv, pos_x_1st_deriv)
         omega_t = v_s * casadi.gradient(heading, s)
         alpha_t = a_s * casadi.gradient(heading, s) + v_s * casadi.gradient(omega_t, s)
         self._ca_fun_heading = casadi.Function('heading', [s], [heading])
@@ -125,31 +125,33 @@ class TrackSpline:
 
     def plot_trajectories_over_time(self, s:np.ndarray, v_s:np.ndarray, a_s:np.ndarray, timestamps:np.ndarray):
         n_points = timestamps.size
+        heading = np.full((n_points,), np.nan)
         v = np.full((n_points,), np.nan)
         a = np.full((n_points,), np.nan)
         omega = np.full((n_points,), np.nan)
         alpha = np.full((n_points,), np.nan)
         for i in range(n_points):
+            heading[i] = self.ca_fun_heading(s[i]).full()[0, 0]
             v[i] = self.ca_fun_v_t(s[i], v_s[i]).full()[0, 0]
             omega[i] = self.ca_fun_omega_t(s[i], v_s[i]).full()[0, 0]
             if i < n_points-1:
                 a[i] = self.ca_fun_a_t(s[i], v_s[i], a_s[i]).full()[0, 0]
                 alpha[i] = self.ca_fun_alpha_t(s[i], v_s[i], a_s[i]).full()[0, 0]
         fig = plt.figure(1)
-        ax = fig.subplots(5, 1, sharex=True)
+        ax = fig.subplots(6, 1, sharex=True)
         ax[0].plot(timestamps, s)
         ax[0].set_ylabel('s')
-        ax[1].plot(timestamps, v)
-        ax[1].set_ylabel('v')
-        ax[2].plot(timestamps, a)
-        ax[2].set_ylabel('a')
-        ax[3].plot(timestamps, omega)
-        ax[3].set_ylabel('omega')
-        ax[4].plot(timestamps, alpha)
-        ax[4].set_xlabel('timestamps')
-        ax[4].set_ylabel('alpha')
-
-
+        ax[1].plot(timestamps, heading)
+        ax[1].set_ylabel('heading')
+        ax[2].plot(timestamps, v)
+        ax[2].set_ylabel('v')
+        ax[3].plot(timestamps, a)
+        ax[3].set_ylabel('a')
+        ax[4].plot(timestamps, omega)
+        ax[4].set_ylabel('omega')
+        ax[5].plot(timestamps, alpha)
+        ax[5].set_xlabel('timestamps')
+        ax[5].set_ylabel('alpha')
 
 if __name__ == '__main__':
     control_points = np.array([[-2.0, 2.0],
@@ -171,7 +173,7 @@ if __name__ == '__main__':
         tf = (np.sqrt(v_s_0 * v_s_0 + 2 * a_s_constant) - v_s_0) / a_s_constant
     else:
         tf = 1.0 / v_s_0
-    n_points = 100
+    n_points = 1000
     timestamps = np.linspace(0, tf, n_points+1, endpoint=True)
     a_s = np.ones(n_points) * a_s_constant
     v_s = v_s_0 + a_s_constant * timestamps
