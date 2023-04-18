@@ -117,7 +117,7 @@ class ZoroMPCSolver:
 
         # zoro stuff
         zoro_description = ZoroDescription()
-        zoro_description.backoff_scaling_gamma = 1.0
+        zoro_description.backoff_scaling_gamma = 3.0
         # uncertainty propagation: P_{k+1} = (A_k+B_kK) @ P_k @ (A_k+B_kK)^T + G @ W @ G^T
         # G.shape = (nx, nw), W.shape = (nw, nw)
         zoro_description.fdbk_K_mat = cfg.fdbk_K_mat

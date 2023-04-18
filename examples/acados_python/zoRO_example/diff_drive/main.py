@@ -10,8 +10,6 @@ from time import process_time
 
 import casadi
 
-from zoro_utils import samplesFromEllipsoid
-
 from diff_drive_zoro_mpc import ZoroMPCSolver
 from mpc_parameters import MPCParam, PathTrackingParam
 from diff_drive_utils import plot_timings, compute_min_dis
@@ -40,7 +38,7 @@ def main():
 
     # Process Noise
     np.random.seed(1)
-    process_noise = samplesFromEllipsoid(N_SIM, np.zeros((cfg_zo.nw,)), cfg_zo.W_mat)
+    process_noise = np.random.multivariate_normal(np.zeros((cfg_zo.nw,)), cfg_zo.W_mat, N_SIM)
 
     # Reference trajectory
     spline_control_points = np.array([[-2.0, 2.0],
