@@ -4,6 +4,7 @@ import numpy as np
 
 @dataclass
 class ZoroDescription:
+    backoff_scaling_gamma: float = 1.0
     fdbk_K_mat: np.ndarray = None   # TODO: default: a full-zero matrix
     unc_jac_G_mat: np.ndarray = None    # default: an identity matrix
     P0_mat: np.ndarray = None       # TODO: default: a full-zero matrix
