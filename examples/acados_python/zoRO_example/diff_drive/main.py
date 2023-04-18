@@ -105,6 +105,18 @@ def main():
                    "propagation": 1e3*np.array(time_prop),
                    "total": 1e3*np.array(total_time)
                 }
+    import json
+    timing_dict_list = {
+                   "integrator": (1e3*np.array(time_sim)).tolist(),
+                   "preparation": (1e3*np.array(time_prep)).tolist(),
+                   "QP": (1e3*np.array(time_qp)).tolist(),
+                   "feedback": (1e3*np.array(time_feedback)).tolist(),
+                   "propagation": (1e3*np.array(time_prop)).tolist(),
+                   "total": (1e3*np.array(total_time)).tolist()
+                }
+    with open(os.path.join(local_path, '..', 'results','timings_fast_zoro.json'), 'w') as f:
+        json.dump(timing_dict_list, f)
+
     plot_timings(timing_dict)
 
     # plot trajectory
