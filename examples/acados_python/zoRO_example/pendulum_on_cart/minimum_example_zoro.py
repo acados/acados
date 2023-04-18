@@ -10,7 +10,6 @@ local_path = os.path.dirname(os.path.abspath(__file__))
 zoro_source_dir = os.path.join(local_path, '..')
 sys.path.append(zoro_source_dir)
 from zoro_description import ZoroDescription, process_zoro_description
-from zoro_utils import samplesFromEllipsoid
 
 # same as in normal pendulum model
 pendulum_source_dir = os.path.join(local_path, '..', '..', 'pendulum_on_cart', 'common')
@@ -66,7 +65,7 @@ def main():
     ocp.constraints.idxbu = np.array([0])
 
     # bound on x
-    theta_min = -np.pi * 0.1
+    theta_min = -np.pi * 0.15
     theta_max = np.pi * 0.3
     ocp.constraints.lbx = np.array([theta_min])
     ocp.constraints.ubx = np.array([theta_max])
@@ -103,10 +102,11 @@ def main():
 
     # zoro stuff
     zoro_description = ZoroDescription()
+    zoro_description.backoff_scaling_gamma = 2
     zoro_description.P0_mat = np.zeros((nx, nx))
     zoro_description.fdbk_K_mat = np.array([[0.0, 0.0, 10.0, 10.0]])
     # zoro_description.fdbk_K_mat = np.zeros((nu, nx))
-    zoro_description.W_mat = np.diag([5*1e-4, 5*1e-4, 5*1e-3, 5*1e-3])
+    zoro_description.W_mat = np.diag([5*1e-6, 5*1e-6, 1*1e-4, 1*1e-4])
     zoro_description.idx_lbu_t = [0]
     zoro_description.idx_ubu_t = [0]
     zoro_description.idx_lbx_t = [0]
@@ -125,8 +125,8 @@ def main():
     zoro_tol = 1e-5
 
     # sample disturbances
-    np.random.seed(1)
-    dist_samples = samplesFromEllipsoid(Nsim, np.zeros((nx,)), zoro_description.W_mat)
+    np.random.seed(0)
+    dist_samples = np.random.multivariate_normal(np.zeros((nx,)), zoro_description.W_mat, Nsim)
 
     for idx_sim in range(Nsim):
         residuals = np.inf
