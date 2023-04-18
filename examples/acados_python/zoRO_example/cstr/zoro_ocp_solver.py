@@ -77,7 +77,7 @@ class MpcCSTRParameters:
 
 @dataclass
 class DistCSTRParameters:
-    W_mat: np.ndarray = np.diag([0.001, 0.3, 0.001])
+    W_mat: np.ndarray = np.diag([0.0001, 0.03, 0.00025])
     c_exceed_ratio: float = 0.25
     t_exceed_ratio: float = 0.25
     h_exceed_ratio: float = 0.075
@@ -173,6 +173,7 @@ def setup_acados_ocp_solver(
 
         # zoro stuff
         zoro_description = ZoroDescription()
+        zoro_description.backoff_scaling_gamma = 2.0
         zoro_description.P0_mat = np.zeros((nx, nx))
         # computed from dlqr
         zoro_description.fdbk_K_mat = np.array([[-1.01490524e+02, 9.03426809e-01, 4.59465726e-01],

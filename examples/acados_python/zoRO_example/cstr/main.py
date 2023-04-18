@@ -11,7 +11,6 @@ import matplotlib
 from acados_template import AcadosSimSolver, AcadosOcpSolver
 
 from zoro_ocp_solver import MpcCSTRParameters, DistCSTRParameters, setup_acados_ocp_solver
-from zoro_utils import samplesFromEllipsoid
 
 # same as in normal cstr model
 cstr_source_dir = os.path.join(local_path, '..', '..', 'cstr')
@@ -53,6 +52,7 @@ def simulate(
     xcurrent = x0
     X[0, :] = xcurrent
 
+    temp_timings = 0.
     for i_exec in range(Nexec):
         # Reset the controller
         xcurrent = x0
@@ -73,18 +73,22 @@ def simulate(
             controller.set(controller.N, "yref", X_ref[i_sim, :])
 
             if cstr_tightening:
+                temp_timings = 0.
                 # preparation phase
                 controller.options_set('rti_phase', 1)
                 status = controller.solve()
+                temp_timings += controller.get_stats("time_tot")
                 # constraint tightening
                 controller.custom_update([])
                 # call SQP_RTI solver: feedback phase
                 controller.options_set('rti_phase', 2)
                 status = controller.solve()
+                temp_timings += controller.get_stats("time_tot")
             else:
                 # solve ocp
                 controller.options_set('rti_phase', 0)
                 status = controller.solve()
+                temp_timings = controller.get_stats("time_tot")
 
             if status != 0:
                 controller.print_statistics()
@@ -94,9 +98,9 @@ def simulate(
 
             U[i_sim, :] = controller.get(0, "u")
             if i_exec ==0:
-                timings_solver[i_sim] = controller.get_stats("time_tot")
+                timings_solver[i_sim] = temp_timings
             else:
-                timings_solver[i_sim] = min(controller.get_stats("time_tot"), timings_solver[i_sim])
+                timings_solver[i_sim] = min(temp_timings, timings_solver[i_sim])
 
             # simulate system
             plant.set("x", xcurrent)
@@ -161,8 +165,7 @@ def main():
 
     # Disturbance Generator
     np.random.seed(1)
-    dist_samples = samplesFromEllipsoid(Nsim, \
-        np.zeros((plant_model.x.shape[0])), dist_params.W_mat)
+    dist_samples = np.random.multivariate_normal(np.zeros((plant_model.x.shape[0])), dist_params.W_mat, Nsim)
 
     X_all = []
     U_all = []
