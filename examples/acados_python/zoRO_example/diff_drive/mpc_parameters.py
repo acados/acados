@@ -37,9 +37,8 @@ class MPCParam():
 
     # obstacles
     _num_obs: int=3
-    # _obs_radius: np.ndarray=np.array([0.48, 0.29, 0.42])
-    _obs_radius: np.ndarray=np.array([0.4, 0.29, 0.42])
-    _obs_pos: np.ndarray=np.array([[0.0, 1.0], [2.35, 1.2], [0.2, 1.7]])
+    _obs_radius: np.ndarray=np.array([1.02, 0.7, 0.6])
+    _obs_pos: np.ndarray=np.array([[0.0, 1.0], [3.0, 0.68], [7.0, 1.2]])
 
     # zoRO
     _backoff_eps: float=1e-8

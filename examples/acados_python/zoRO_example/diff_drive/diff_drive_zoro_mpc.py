@@ -117,7 +117,6 @@ class ZoroMPCSolver:
 
         # zoro stuff
         zoro_description = ZoroDescription()
-        # QUESTION: what's the benifit of having a fixed G matrix?
         # uncertainty propagation: P_{k+1} = (A_k+B_kK) @ P_k @ (A_k+B_kK)^T + G @ W @ G^T
         # G.shape = (nx, nw), W.shape = (nw, nw)
         zoro_description.fdbk_K_mat = cfg.fdbk_K_mat

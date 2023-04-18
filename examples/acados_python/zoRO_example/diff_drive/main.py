@@ -6,7 +6,6 @@ sys.path.append(mpc_source_dir)
 
 import numpy as np
 import matplotlib.pyplot as plt
-import scipy.io
 from time import process_time
 
 import casadi
@@ -14,12 +13,13 @@ import casadi
 from zoro_utils import samplesFromEllipsoid
 
 from diff_drive_zoro_mpc import ZoroMPCSolver
-from mpc_parameters import MPCParam
+from mpc_parameters import MPCParam, PathTrackingParam
 from diff_drive_utils import plot_timings, compute_min_dis
+from nominal_path_tracking_casadi import NominalPathTrackingSolver
+from track_spline import TrackSpline
 
 N_EXEC = 5
-N_SIM = 200
-
+N_SIM = 175
 
 def main():
     cfg_zo = MPCParam()
@@ -39,16 +39,26 @@ def main():
     I = casadi.integrator('I', 'rk', dae, opts)
 
     # Process Noise
+    np.random.seed(1)
     process_noise = samplesFromEllipsoid(N_SIM, np.zeros((cfg_zo.nw,)), cfg_zo.W_mat)
 
     # Reference trajectory
-    local_path = os.path.dirname(os.path.abspath(__file__))
-    mat_file_path = os.path.join(
-        local_path, 'refTrajInLab.mat')
-    ref_traj_mat = scipy.io.loadmat(mat_file_path)
-    # The delta_t in reference trajectory = 0.5 * cfg_zo.delta_t
-    ref_traj_x = ref_traj_mat['filtered_states'][:-1:2,:]
-    ref_traj_u = ref_traj_mat['filtered_inputs'][:-1:2,:]
+    spline_control_points = np.array([[-2.0, 2.0],
+                               [0.0, 0.0],
+                               [2.0, 0.0],
+                               [4.0, 0.0],
+                               [6.0, 0.0],
+                               [8.0, 2.0],
+                               [8.0, 4.0],
+                               [8.0, 6.0],
+                               [8.0, 8.0]])
+    spline_seg_length = np.array([0.0, np.pi, 2.0, 2.0, 2.0, np.pi, 2.0, 2.0, 2.0])
+    track_spline = TrackSpline(spline_control_points, spline_seg_length)
+    cfg_path = PathTrackingParam()
+    path_tracking_solver = NominalPathTrackingSolver(track_spline, cfg_path=cfg_path, cfg_traj=cfg_zo)
+    x_init = np.array([0.0, cfg_path._v_s_0])
+    x_e    = np.array([1.0, cfg_path._v_s_e])
+    path_tracking_solver.solve(x_init=x_init, x_e=x_e)
 
     time_prep = []
     time_prop = []
@@ -57,15 +67,15 @@ def main():
     time_qp = []
 
     for i_exec in range(N_EXEC):
+        zoroMPC.initialized = False
+        zoroMPC.acados_ocp_solver.reset()
         # closed loop mpc
         traj_zo = np.zeros((N_SIM+1, cfg_zo.nx))
-        traj_zo[0,:] = ref_traj_x[0,:]
+        traj_zo[0,:] = path_tracking_solver.x_robot_ref[0,:]
         for i_sim in range(N_SIM):
-            u_opt, status = zoroMPC.solve(x_current=traj_zo[i_sim, :], \
-                y_ref = np.hstack((ref_traj_x[i_sim:i_sim+cfg_zo.n_hrzn+1,:], \
-                    ref_traj_u[i_sim:i_sim+cfg_zo.n_hrzn+1,:])), \
-                obs_position=cfg_zo.obs_pos.flatten(), \
-                    obs_radius=cfg_zo.obs_radius)
+            x_ref_interp, u_ref_interp = path_tracking_solver.interpolate_reference_trajectory(robot_state=traj_zo[i_sim,:])
+            u_opt, status = zoroMPC.solve(x_current=traj_zo[i_sim, :], y_ref = np.hstack((x_ref_interp, u_ref_interp)), \
+                obs_position=cfg_zo.obs_pos.flatten(), obs_radius=cfg_zo.obs_radius)
 
             # collect timings
             if i_exec == 0:
@@ -85,11 +95,13 @@ def main():
                 print('error status=',status,'Reset Solver')
                 zoroMPC.initialized = False
                 zoroMPC.acados_ocp_solver.reset()
+                u_opt, status = zoroMPC.solve(x_current=traj_zo[i_sim, :], \
+                    y_ref = np.hstack((x_ref_interp, u_ref_interp)), \
+                    obs_position=cfg_zo.obs_pos.flatten(), obs_radius=cfg_zo.obs_radius)
 
             print(i_sim, u_opt, traj_zo[i_sim,:2])
             traj_zo[i_sim+1,:] = I(x0=traj_zo[i_sim, :], p=u_opt)['xf'].full().flatten()
             traj_zo[i_sim+1,:] += process_noise[i_sim,:]
-
             min_dist = compute_min_dis(cfg=cfg_zo, s=traj_zo[i_sim+1,:])
             if min_dist < 1e-8:
                 print("collision take place")
@@ -105,18 +117,6 @@ def main():
                    "propagation": 1e3*np.array(time_prop),
                    "total": 1e3*np.array(total_time)
                 }
-    import json
-    timing_dict_list = {
-                   "integrator": (1e3*np.array(time_sim)).tolist(),
-                   "preparation": (1e3*np.array(time_prep)).tolist(),
-                   "QP": (1e3*np.array(time_qp)).tolist(),
-                   "feedback": (1e3*np.array(time_feedback)).tolist(),
-                   "propagation": (1e3*np.array(time_prop)).tolist(),
-                   "total": (1e3*np.array(total_time)).tolist()
-                }
-    with open(os.path.join(local_path, '..', 'results','timings_fast_zoro.json'), 'w') as f:
-        json.dump(timing_dict_list, f)
-
     plot_timings(timing_dict)
 
     # plot trajectory
@@ -127,8 +127,8 @@ def main():
         circ = plt.Circle(cfg_zo.obs_pos[idx_obs,:], cfg_zo.obs_radius[idx_obs], \
             edgecolor="red", facecolor=(1,0,0,.5))
         ax.add_artist(circ)
-    plt.plot(ref_traj_x[:, 0], ref_traj_x[:, 1], label='ref')
-    plt.plot(traj_zo[:, 0], traj_zo[:, 1], label='opt sqp')
+    plt.plot(path_tracking_solver.x_robot_ref[:, 0], path_tracking_solver.x_robot_ref[:, 1], c='m', label='ref')
+    plt.plot(traj_zo[:, 0], traj_zo[:, 1], c='b', label='opt sqp')
     plt.legend()
     plt.show()
 

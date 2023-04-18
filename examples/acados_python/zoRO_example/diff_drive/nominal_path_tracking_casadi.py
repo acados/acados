@@ -169,3 +169,4 @@ if __name__ == '__main__':
     x_e    = np.array([1.0, cfg_path._v_s_e])
     path_tracking_solver.solve(x_init=x_init, x_e=x_e)
     path_tracking_solver.plot_results()
+    plt.show()
