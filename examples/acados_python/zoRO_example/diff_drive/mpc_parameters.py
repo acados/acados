@@ -208,3 +208,11 @@ class PathTrackingParam:
     @property
     def nu_wT(self)->int:
         return self._nu_wT
+
+    @property
+    def v_s_0(self) -> float:
+        return self._v_s_0
+
+    @property
+    def v_s_e(self) -> float:
+        return self._v_s_e
