@@ -473,6 +473,12 @@ static void compute_next_P_matrix(struct blasfeo_dmat* P_mat, struct blasfeo_dma
                         W_mat, 0, 0, P_next_mat, 0, 0);
 }
 
+static void reset_P0_matrix(ocp_nlp_dims *nlp_dims, struct blasfeo_dmat* P_mat, double* data)
+{
+    int nx = nlp_dims->nx[0];
+    blasfeo_pack_dmat(nx, nx, data, nx, P_mat, 0, 0);
+}
+
 static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, custom_memory *custom_mem)
 {
     ocp_nlp_config *nlp_config = solver->config;
@@ -747,6 +753,10 @@ int custom_update_function({{ model.name }}_solver_capsule* capsule, double* dat
     ocp_nlp_solver *nlp_solver = {{ model.name }}_acados_get_nlp_solver(capsule);
     void *nlp_opts = {{ model.name }}_acados_get_nlp_opts(capsule);
 
+    if (data_len > 0)
+    {
+        reset_P0_matrix(nlp_dims, &custom_mem->uncertainty_matrix_buffer[0], data);
+    }
     uncertainty_propagate_and_update(nlp_solver, nlp_in, nlp_out, custom_mem);
 
     return 1;

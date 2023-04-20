@@ -215,7 +215,7 @@ class ZoroMPCSolver:
             t_start = process_time()
             # self.propagate_and_update(obs_position=obs_position, \
             #     obs_radius=obs_radius, p0_mat=p0_mat)
-            self.acados_ocp_solver.custom_update(np.hstack((obs_position, obs_radius)))
+            self.acados_ocp_solver.custom_update([]) # self.cfg.W_mat.flatten()
             self.propagation_t += process_time() - t_start
 
             # feedback rti_phase
