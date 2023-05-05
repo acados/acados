@@ -47,7 +47,7 @@ The Python interface relies on the same problem formulation as the MATLAB interf
 
 4. Run a Python example to check that everything works.
     We suggest to get started with the example
-    `<acados_root>/examples/acados_python/getting_started/ocp/minimal_example_ocp.py`.
+    `<acados_root>/examples/acados_python/getting_started/minimal_example_ocp.py`.
     The example has to be run from the folder in which it is located.
 
 5. Optional: Can be done automatically through the interface:
