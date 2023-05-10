@@ -547,7 +547,7 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
         Exception('Please provide either time_steps or shooting_nodes for nonuniform discretization')
 
     tf = np.sum(opts.time_steps)
-    if (tf - opts.tf) / tf > 1e-15:
+    if (tf - opts.tf) / tf > 1e-13:
         raise Exception(f'Inconsistent discretization: {opts.tf}'\
             f' = tf != sum(opts.time_steps) = {tf}.')
 
