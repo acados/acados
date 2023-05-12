@@ -577,7 +577,7 @@ static void d_cvt_dmat_args_to_casadi(struct blasfeo_dmat_args *in, double *out,
         {
             for (idx = idxcol[jj]; idx != idxcol[jj + 1]; idx++)
             {
-                ptr[0] = BLASFEO_DMATEL(A, ai + row[idx], aj + nrow);
+                ptr[0] = BLASFEO_DMATEL(A, ai + row[idx], aj + jj);
                 ptr++;
             }
         }
