@@ -145,6 +145,9 @@ add_test(NAME python_rti_loop_ocp_example
 add_test(NAME python_render_simulink_wrapper
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
         python simulink_example.py)
+add_test(NAME python_constraints_expression_example
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
+        python ocp_example_h_init_contraints.py)
 
 add_test(NAME python_chain_ocp
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/chain_mass
