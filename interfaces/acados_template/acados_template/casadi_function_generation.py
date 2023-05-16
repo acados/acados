@@ -573,7 +573,7 @@ def generate_c_code_conl_cost(model, cost_name, stage_type, opts):
 ################
 # Constraints
 ################
-def generate_c_code_constraint( model, con_name, is_terminal, opts ):
+def generate_c_code_constraint( model, con_name, is_terminal, opts, is_initial= False):
 
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
@@ -586,6 +586,12 @@ def generate_c_code_constraint( model, con_name, is_terminal, opts ):
     if is_terminal:
         con_h_expr = model.con_h_expr_e
         con_phi_expr = model.con_phi_expr_e
+        # create dummy u, z
+        u = symbol('u', 0, 0)
+        z = symbol('z', 0, 0)
+    elif is_initial:
+        con_h_expr = model.con_h_expr_0
+        con_phi_expr = model.con_phi_expr
         # create dummy u, z
         u = symbol('u', 0, 0)
         z = symbol('z', 0, 0)
@@ -629,6 +635,8 @@ def generate_c_code_constraint( model, con_name, is_terminal, opts ):
     if constr_type == 'BGH':
         if is_terminal:
             fun_name = con_name + '_constr_h_e_fun_jac_uxt_zt'
+        elif is_initial:
+            fun_name = con_name + '_constr_h_0_fun_jac_uxt_zt'
         else:
             fun_name = con_name + '_constr_h_fun_jac_uxt_zt'
 
@@ -642,6 +650,8 @@ def generate_c_code_constraint( model, con_name, is_terminal, opts ):
 
             if is_terminal:
                 fun_name = con_name + '_constr_h_e_fun_jac_uxt_zt_hess'
+            elif is_initial:
+                fun_name = con_name + '_constr_h_0_fun_jac_uxt_zt_hess'
             else:
                 fun_name = con_name + '_constr_h_fun_jac_uxt_zt_hess'
 
@@ -663,6 +673,8 @@ def generate_c_code_constraint( model, con_name, is_terminal, opts ):
 
         if is_terminal:
             fun_name = con_name + '_constr_h_e_fun'
+        elif is_initial:
+            fun_name = con_name + '_constr_h_0_fun'
         else:
             fun_name = con_name + '_constr_h_fun'
         h_fun = ca.Function(fun_name, [x, u, z, p], [con_h_expr])

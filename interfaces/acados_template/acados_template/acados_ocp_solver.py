@@ -317,6 +317,16 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
     else:
         dims.nh = nh
 
+    if not is_empty(model.con_h_expr_0):
+        nh_0 = casadi_length(model.con_h_expr_0)
+    else:
+        nh_0 = 0
+
+    if constraints.uh_0.shape[0] != nh_0 or constraints.lh_0.shape[0] != nh_0:
+        raise Exception('inconsistent dimension nh_0, regarding lh_0, uh_0, con_h_expr_0.')
+    else:
+        dims.nh_0 = nh_0
+
     if is_empty(model.con_phi_expr):
         dims.nphi = 0
         dims.nr = 0
@@ -686,6 +696,9 @@ def ocp_generate_external_functions(acados_ocp: AcadosOcp, model: AcadosModel):
 
     if acados_ocp.dims.nphi > 0 or acados_ocp.dims.nh > 0:
         generate_c_code_constraint(model, model.name, False, opts)
+
+    if acados_ocp.dims.nphi > 0 or acados_ocp.dims.nh_0 > 0:
+        generate_c_code_constraint(model, model.name, False, opts, is_initial=True)
 
     if acados_ocp.dims.nphi_e > 0 or acados_ocp.dims.nh_e > 0:
         generate_c_code_constraint(model, model.name, True, opts)
