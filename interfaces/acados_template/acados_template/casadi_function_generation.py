@@ -592,9 +592,8 @@ def generate_c_code_constraint( model, con_name, is_terminal, opts, is_initial= 
     elif is_initial:
         con_h_expr = model.con_h_expr_0
         con_phi_expr = model.con_phi_expr
-        # create dummy u, z
-        u = symbol('u', 0, 0)
-        z = symbol('z', 0, 0)
+        u = model.u
+        z = model.z
     else:
         con_h_expr = model.con_h_expr
         con_phi_expr = model.con_phi_expr

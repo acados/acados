@@ -236,7 +236,6 @@ ocp_nlp_dims* {{ model.name }}_acados_create_2_create_and_set_dimensions({{ mode
     int* nsphi = intNp1mem + (N+1)*8;
     int* ns    = intNp1mem + (N+1)*9;
     int* ng    = intNp1mem + (N+1)*10;
-    // int* nh    = intNp1mem + (N)*11;
     int* nh    = intNp1mem + (N+1)*11;
     int* nphi  = intNp1mem + (N+1)*12;
     int* nz    = intNp1mem + (N+1)*13;
