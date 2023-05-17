@@ -42,6 +42,7 @@ classdef ocp_nlp_dims_json < handle
         npd    % number of positive definite constraints
         npd_e  % number of positive definite constraints at t=T
         nh     % number of nonlinear constraints
+        nh_0   % number of nonlinear constraints at t=0
         nh_e   % number of nonlinear constraints at t=T
         nbx    % number of state bounds
         nbx_e  % number of state bounds at t=T
@@ -86,6 +87,7 @@ classdef ocp_nlp_dims_json < handle
             obj.npd   = 0;
             obj.npd_e  = 0;
             obj.nh    = 0;
+            obj.nh_0   = 0;
             obj.nh_e   = 0;
             obj.nbx   = 0;
             obj.nbu   = 0;

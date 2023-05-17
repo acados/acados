@@ -121,6 +121,32 @@ if isfield(model, 'constr_expr_h')
     h_fun_jac_uxt_zt_hess.generate([model_name,'_constr_h_fun_jac_uxt_zt_hess'], casadi_opts);
 end
 
+if isfield(model, 'constr_expr_h_0')
+    % NOTE: terminal node has no u, z
+    h_0 = model.constr_expr_h_0;
+    % multipliers for hessian
+    nh_0 = length(h_0);
+    if isSX
+        lam_h_0 = SX.sym('lam_h', nh_0, 1);
+    else
+        lam_h_0 = MX.sym('lam_h', nh_0, 1);
+    end
+    % generate jacobians
+    jac_x_e = jacobian(h_0, x);
+    % generate adjoint (TODO output also adjoint when hessian is computed ?????)
+    adj_ux_e = jtimes(h_0, x, lam_h_0, true);
+    % generate hessian
+    hess_ux_e = jacobian(adj_ux_e, x);
+    % Set up functions
+    h_0_fun = Function([model_name,'_constr_h_0_fun'], {x, p}, {h_0});
+    h_0_fun_jac_uxt_zt = Function([model_name,'_constr_h_0_fun_jac_uxt_zt'], {x, p}, {h_0, jac_x_e'});
+    h_0_fun_jac_uxt_zt_hess = Function([model_name,'_constr_h_0_fun_jac_uxt_zt_hess'], {x, lam_h_0, p}, {h_0, jac_x_e', hess_ux_e});
+    % generate C code
+    h_0_fun.generate([model_name,'_constr_h_0_fun'], casadi_opts);
+    h_0_fun_jac_uxt_zt.generate([model_name,'_constr_h_0_fun_jac_uxt_zt'], casadi_opts);
+    h_0_fun_jac_uxt_zt_hess.generate([model_name,'_constr_h_0_fun_jac_uxt_zt_hess'], casadi_opts);
+end
+
 if isfield(model, 'constr_expr_h_e')
     % NOTE: terminal node has no u, z
     h_e = model.constr_expr_h_e;

@@ -83,6 +83,9 @@ classdef ocp_nlp_constraints_json < handle
         % nonlinear constraints
         lh      % lower bound for nonlinear inequalities
         uh      % upper bound for nonlinear inequalities
+        % nonlinear constraints at t=0
+        lh_0     % lower bound on nonlinear inequalities at t=0
+        uh_0     % upper bound on nonlinear inequalities at t=0
         % nonlinear constraints at t=T
         lh_e     % lower bound on nonlinear inequalities at t=T
         uh_e     % upper bound on nonlinear inequalities at t=T
@@ -127,6 +130,8 @@ classdef ocp_nlp_constraints_json < handle
             obj.ug              = [];
             obj.lh              = [];
             obj.uh              = [];
+            obj.lh_0            = [];
+            obj.uh_0            = [];
             obj.D               = [];
             obj.C               = [];
             obj.lbx_e           = [];

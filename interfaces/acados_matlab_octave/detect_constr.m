@@ -36,7 +36,12 @@
 % nsg;  // number of softened general linear constraints
 % nsh;  // number of softened nonlinear constraints
 
-function model = detect_constr(model, is_e)
+function model = detect_constr(model, is_e, is_init)
+
+    if ~exist('is_init','var')
+        is_init = false;
+    end
+   
 
     import casadi.*
 
@@ -67,6 +72,11 @@ function model = detect_constr(model, is_e)
         LB = model.constr_lh_e;
         UB = model.constr_uh_e;
         fprintf('\nConstraint detection for terminal constraints.\n');
+    elseif is_init
+        expr_constr = model.constr_expr_h_0;
+        LB = model.constr_lh_0;
+        UB = model.constr_uh_0;
+        fprintf('\nConstraint detection for initial constraints.\n');
     else
         expr_constr = model.constr_expr_h;
         LB = model.constr_lh;
@@ -182,8 +192,42 @@ function model = detect_constr(model, is_e)
             model.dim_nbx_e = length(lbx);
         end
 
+    elseif is_init
+        model.constr_type = 'bgh';
+        % h
+        model.dim_nh = length(lh);
+        if ~isempty(lh)
+            model.constr_expr_h_0 = constr_expr_h;
+            model.constr_lh_0 = lh;
+            model.constr_uh_0 = uh;
+        else
+            model = rmfield(model, 'constr_expr_h_0');
+            model = rmfield(model, 'constr_lh_0');
+            model = rmfield(model, 'constr_uh_0');
+        end
+        % g
+        model.dim_ng = length(lg);
+        if ~isempty(lg)
+            model.constr_C = C;
+            model.constr_D = D;
+            model.constr_lg = lg;
+            model.constr_ug = ug;
+        end
+        % bounds x
+        if ~isempty(lbx)
+            model.constr_Jbx = Jbx;
+            model.constr_lbx = lbx;
+            model.constr_ubx = ubx;
+            model.dim_nbx = length(lbx);
+        end
+        % bounds u
+        if ~isempty(lbu)
+            model.constr_Jbu = Jbu;
+            model.constr_lbu = lbu;
+            model.constr_ubu = ubu;
+            model.dim_nbu = length(lbu);
+        end
     else
-
         model.constr_type = 'bgh';
         % h
         model.dim_nh = length(lh);
