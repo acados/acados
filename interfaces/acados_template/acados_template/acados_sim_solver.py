@@ -39,6 +39,8 @@ import importlib
 
 import numpy as np
 
+from subprocess import DEVNULL, call, STDOUT
+
 from ctypes import POINTER, cast, CDLL, c_void_p, c_char_p, c_double, c_int, c_bool, byref
 from copy import deepcopy
 
@@ -241,18 +243,30 @@ class AcadosSimSolver:
 
 
     @classmethod
-    def build(cls, code_export_dir, with_cython=False, cmake_builder: CMakeBuilder = None):
+    def build(cls, code_export_dir, with_cython=False, cmake_builder: CMakeBuilder = None, verbose=True):
         # Compile solver
         cwd = os.getcwd()
         os.chdir(code_export_dir)
         if with_cython:
-            os.system('make clean_sim_cython')
-            os.system('make sim_cython')
+            call(
+                ['make', 'clean_sim_cython'],
+                stdout=None if verbose else DEVNULL, 
+                stderr=None if verbose else STDOUT
+            )
+            call(
+                ['make', 'sim_cython'],
+                stdout=None if verbose else DEVNULL, 
+                stderr=None if verbose else STDOUT
+            )
         else:
             if cmake_builder is not None:
-                cmake_builder.exec(code_export_dir)
+                cmake_builder.exec(code_export_dir, verbose=verbose)
             else:
-                os.system('make sim_shared_lib')
+                call(
+                    ['make', 'sim_shared_lib'],
+                    stdout=None if verbose else DEVNULL,
+                    stderr=None if verbose else STDOUT
+                )
         os.chdir(cwd)
 
 
