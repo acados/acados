@@ -190,6 +190,12 @@ void {{ model.name }}_acados_create_1_set_plan(ocp_nlp_plan_t* nlp_solver_plan, 
         {%- endif %}
     }
 
+    {%- if constraints.constr_type_0 == "BGP" %}
+    nlp_solver_plan->nlp_constraints[0] = BGP;
+    {%- else %}
+    nlp_solver_plan->nlp_constraints[0] = BGH;
+    {%- endif %}
+
     {%- if constraints.constr_type_e == "BGP" %}
     nlp_solver_plan->nlp_constraints[N] = BGP;
     {%- else %}
@@ -340,7 +346,7 @@ ocp_nlp_dims* {{ model.name }}_acados_create_2_create_and_set_dimensions({{ mode
     ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, 0, "nh", &nh[0]);
     // TODO: check with Jonathan, it looks like it is better to separate initial h and phi constraints (Mohammad)
 //     ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, 0, "nsh", &nsh[0]);
-// {%- elif constraints.constr_type_e == "BGP" %}
+// {%- elif constraints.constr_type_0 == "BGP" %}
 //     ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, 0, "nr", &nr[0]);
 //     ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, 0, "nphi", &nphi[0]);
 //     ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, 0, "nsphi", &nsphi[0]);
@@ -2315,10 +2321,10 @@ int {{ model.name }}_acados_update_params({{ model.name }}_solver_capsule* capsu
     {% if constraints.constr_type_0 == "BGH" and dims.nh_0 > 0 %}
         capsule->nl_constr_h_0_fun_jac.set_param(&capsule->nl_constr_h_0_fun_jac, p);
         capsule->nl_constr_h_0_fun.set_param(&capsule->nl_constr_h_0_fun, p);
-    {% endif %}
     {%- if solver_options.hessian_approx == "EXACT" %}
         capsule->nl_constr_h_0_fun_jac_hess.set_param(&capsule->nl_constr_h_0_fun_jac_hess, p);
     {%- endif %}
+    {% endif %}
 
         // cost
         if (stage == 0)
@@ -2458,10 +2464,10 @@ int {{ model.name }}_acados_update_params_sparse({{ model.name }}_solver_capsule
     {% if constraints.constr_type_0 == "BGH" and dims.nh_0 > 0 %}
         capsule->nl_constr_h_0_fun_jac.set_param_sparse(&capsule->nl_constr_h_0_fun_jac, n_update, idx, p);
         capsule->nl_constr_h_0_fun.set_param_sparse(&capsule->nl_constr_h_0_fun, n_update, idx, p);
-    {% endif %}
     {%- if solver_options.hessian_approx == "EXACT" %}
         capsule->nl_constr_h_0_fun_jac_hess.set_param_sparse(&capsule->nl_constr_h_0_fun_jac_hess, n_update, idx, p);
     {%- endif %}
+    {% endif %}
 
         // cost
         if (stage == 0)
@@ -2718,12 +2724,12 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
     free(capsule->phi_constraint);
 {%- endif %}
 
-{%- if constraints.constr_type_e == "BGH" and dims.nh_0 > 0 %}
+{%- if constraints.constr_type_0 == "BGH" and dims.nh_0 > 0 %}
     external_function_param_casadi_free(&capsule->nl_constr_h_0_fun_jac);
     external_function_param_casadi_free(&capsule->nl_constr_h_0_fun);
-{%- endif %}
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_param_casadi_free(&capsule->nl_constr_h_0_fun_jac_hess);
+{%- endif %}
 {%- endif %}
 
 {%- if constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}

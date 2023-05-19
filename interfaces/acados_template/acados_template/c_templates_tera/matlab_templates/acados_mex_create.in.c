@@ -294,7 +294,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     l_ptr[0] = (long long) acados_ocp_capsule->nl_constr_h_fun_jac;
 {% endif %}
 {% if constraints.constr_type_0 == "BGH" and dims.nh_0 > 0 %}
-    l_ptr[1] = (long long) &acados_ocp_capsule->nl_constr_h_0_fun_jac;
+    l_ptr[0] = (long long) &acados_ocp_capsule->nl_constr_h_0_fun_jac;
 {%- endif %}
 {% if constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
     l_ptr[1] = (long long) &acados_ocp_capsule->nl_constr_h_e_fun_jac;
@@ -307,7 +307,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     l_ptr[0] = (long long) acados_ocp_capsule->nl_constr_h_fun;
 {% endif %}
 {% if constraints.constr_type_0 == "BGH" and dims.nh_0 > 0 %}
-    l_ptr[1] = (long long) &acados_ocp_capsule->nl_constr_h_0_fun;
+    l_ptr[0] = (long long) &acados_ocp_capsule->nl_constr_h_0_fun;
 {%- endif %}
 {% if constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
     l_ptr[1] = (long long) &acados_ocp_capsule->nl_constr_h_e_fun;
@@ -320,7 +320,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     l_ptr[0] = (long long) acados_ocp_capsule->nl_constr_h_fun_jac_hess;
 {% endif %}
 {% if constraints.constr_type_0 == "BGH" and dims.nh_0 > 0 and solver_options.hessian_approx == "EXACT" %}
-    l_ptr[1] = (long long) &acados_ocp_capsule->nl_constr_h_0_fun_jac_hess;
+    l_ptr[0] = (long long) &acados_ocp_capsule->nl_constr_h_0_fun_jac_hess;
 {%- endif %}
 {% if constraints.constr_type_e == "BGH" and dims.nh_e > 0 and solver_options.hessian_approx == "EXACT" %}
     l_ptr[1] = (long long) &acados_ocp_capsule->nl_constr_h_e_fun_jac_hess;

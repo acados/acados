@@ -228,6 +228,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     end
     
     ocp_json.constraints.constr_type = upper(model.constr_type);
+    ocp_json.constraints.constr_type_0 = upper(model.constr_type_0);
     ocp_json.constraints.constr_type_e = upper(model.constr_type_e);
 
     % parameters

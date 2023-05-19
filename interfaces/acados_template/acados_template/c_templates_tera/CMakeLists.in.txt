@@ -48,6 +48,12 @@
 	{%- set constr_type = "NONE" %}
 {%- endif %}
 
+{%- if constraints.constr_type_0 %}
+	{%- set constr_type_0 = constraints.constr_type_0 %}
+{%- else %}
+	{%- set constr_type_0 = "NONE" %}
+{%- endif %}
+
 {%- if constraints.constr_type_e %}
 	{%- set constr_type_e = constraints.constr_type_e %}
 {%- else %}
@@ -212,6 +218,14 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {{ model.name }}_constraints/{{ model.name }}_constr_h_fun.c
     {%- if hessian_approx == "EXACT" %}
         {{ model.name }}_constraints/{{ model.name }}_constr_h_fun_jac_uxt_zt_hess.c
+    {%- endif %}
+{%- endif %}
+
+{%- if constr_type_0 == "BGH" and dims_nh_0 > 0 %}
+        {{ model.name }}_constraints/{{ model.name }}_constr_h_0_fun_jac_uxt_zt.c
+        {{ model.name }}_constraints/{{ model.name }}_constr_h_0_fun.c
+    {%- if hessian_approx == "EXACT" %}
+        {{ model.name }}_constraints/{{ model.name }}_constr_h_0_fun_jac_uxt_zt_hess.c
     {%- endif %}
 {%- endif %}
 

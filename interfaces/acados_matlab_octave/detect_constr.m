@@ -227,6 +227,7 @@ function model = detect_constr(model, is_e, is_init)
             model.constr_ubu = ubu;
             model.dim_nbu = length(lbu);
         end
+        
     else
         model.constr_type = 'bgh';
         % h

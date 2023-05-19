@@ -224,7 +224,7 @@ classdef acados_ocp_model < handle
                 if (strcmp(field, 'constr_type'))
                     obj.model_struct.constr_type = value;
                 elseif(strcmp(field, 'constr_type_0'))
-                    obj.model_struct.constr_type_e = value;
+                    obj.model_struct.constr_type_0 = value;
                 elseif (strcmp(field, 'constr_type_e'))
                     obj.model_struct.constr_type_e = value;
 
@@ -286,7 +286,7 @@ classdef acados_ocp_model < handle
                 elseif (strcmp(field, 'constr_lh_0'))
                     obj.model_struct.constr_lh_0 = value;
                 elseif (strcmp(field, 'constr_uh_0'))
-                    obj.model_struct.constr_uh_e = value;
+                    obj.model_struct.constr_uh_0 = value;
                 elseif (strcmp(field, 'constr_expr_h_e'))
                     obj.model_struct.constr_expr_h_e = value;
                 elseif (strcmp(field, 'constr_lh_e'))

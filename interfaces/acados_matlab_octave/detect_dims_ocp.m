@@ -206,7 +206,7 @@ function [model, opts] = detect_dims_ocp(model, opts)
     if isfield(model, 'constr_expr_h_0') && ...
             isfield(model, 'constr_lh_0') && isfield(model, 'constr_uh_0')
     nh_0 = length(model.constr_lh_0);
-    if nh_0 ~= length(model.constr_uh_0) || nh_0 ~= length(model.constr_0xpr_h_0)
+    if nh_0 ~= length(model.constr_uh_0) || nh_0 ~= length(model.constr_expr_h_0)
         error('inconsistent dimension nh_0, regarding expr_h_0, lh_0, uh_0.');
     end
     elseif isfield(model, 'constr_expr_h_0') || ...

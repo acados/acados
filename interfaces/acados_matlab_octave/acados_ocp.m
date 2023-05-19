@@ -122,6 +122,9 @@ classdef acados_ocp < handle
             if (strcmp(obj.model_struct.constr_type, 'auto'))
                 obj.model_struct = detect_constr(obj.model_struct, 0);
             end
+            if (strcmp(obj.model_struct.constr_type_0, 'auto'))
+                obj.model_struct = detect_constr(obj.model_struct, 0, true);
+            end
             if (strcmp(obj.model_struct.constr_type_e, 'auto'))
                 obj.model_struct = detect_constr(obj.model_struct, 1);
             end

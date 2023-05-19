@@ -32,6 +32,7 @@
 classdef ocp_nlp_constraints_json < handle
     properties
         constr_type
+        constr_type_0
         constr_type_e
         % bounds on x and u
         lbx     % lower bounds on x
@@ -111,6 +112,7 @@ classdef ocp_nlp_constraints_json < handle
     methods
         function obj = ocp_nlp_constraints_json()
             obj.constr_type     = 'BGH';
+            obj.constr_type_0     = 'BGH';
             obj.constr_type_e   = 'BGH';
             obj.lbx             = [];
             obj.lbu             = [];
