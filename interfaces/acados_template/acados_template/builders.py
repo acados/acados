@@ -34,7 +34,6 @@
 
 import os
 import sys
-from subprocess import call
 from subprocess import DEVNULL, call, STDOUT
 
 
@@ -98,9 +97,9 @@ class CMakeBuilder:
             cmd_str = self.get_cmd1_cmake()
             print(f'call("{cmd_str})"')
             retcode = call(
-                cmd_str, 
-                shell=True, 
-                stdout=None if verbose else DEVNULL, 
+                cmd_str,
+                shell=True,
+                stdout=None if verbose else DEVNULL,
                 stderr=None if verbose else STDOUT
             )
             if retcode != 0:
@@ -110,7 +109,7 @@ class CMakeBuilder:
             retcode = call(
                 cmd_str,
                 shell=True,
-                stdout=None if verbose else DEVNULL, 
+                stdout=None if verbose else DEVNULL,
                 stderr=None if verbose else STDOUT
             )
             if retcode != 0:
@@ -120,7 +119,7 @@ class CMakeBuilder:
             retcode = call(
                 cmd_str,
                 shell=True,
-                stdout=None if verbose else DEVNULL, 
+                stdout=None if verbose else DEVNULL,
                 stderr=None if verbose else STDOUT
             )
             if retcode != 0:

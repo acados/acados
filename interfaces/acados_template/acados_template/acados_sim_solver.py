@@ -243,19 +243,19 @@ class AcadosSimSolver:
 
 
     @classmethod
-    def build(cls, code_export_dir, with_cython=False, cmake_builder: CMakeBuilder = None, verbose=True):
+    def build(cls, code_export_dir, with_cython=False, cmake_builder: CMakeBuilder = None, verbose: bool = True):
         # Compile solver
         cwd = os.getcwd()
         os.chdir(code_export_dir)
         if with_cython:
             call(
                 ['make', 'clean_sim_cython'],
-                stdout=None if verbose else DEVNULL, 
+                stdout=None if verbose else DEVNULL,
                 stderr=None if verbose else STDOUT
             )
             call(
                 ['make', 'sim_cython'],
-                stdout=None if verbose else DEVNULL, 
+                stdout=None if verbose else DEVNULL,
                 stderr=None if verbose else STDOUT
             )
         else:
@@ -285,7 +285,7 @@ class AcadosSimSolver:
         AcadosSimSolverCython = getattr(acados_sim_solver_pyx, 'AcadosSimSolverCython')
         return AcadosSimSolverCython(acados_sim_json['model']['name'])
 
-    def __init__(self, acados_sim, json_file='acados_sim.json', generate=True, build=True, cmake_builder: CMakeBuilder = None):
+    def __init__(self, acados_sim, json_file='acados_sim.json', generate=True, build=True, cmake_builder: CMakeBuilder = None, verbose: bool = True):
 
         self.solver_created = False
         self.acados_sim = acados_sim
@@ -299,7 +299,7 @@ class AcadosSimSolver:
             self.generate(acados_sim, json_file=json_file, cmake_builder=cmake_builder)
 
         if build:
-            self.build(code_export_dir, cmake_builder=cmake_builder)
+            self.build(code_export_dir, cmake_builder=cmake_builder, verbose=True)
 
         # prepare library loading
         lib_prefix = 'lib'
