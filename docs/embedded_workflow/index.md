@@ -138,12 +138,13 @@ It is usually sufficient to copy-paste the compiler folder to a new one without 
 ### Step 1: Adapt the CMake toolchain file for your system
 The CMake toolchain file, needed to cross-compile `acados` for the dSPACE Platform contains paths to compilers, provided in the dSPACE installation.
 As the dSPACE installation varies from system to system, this toolchain file first has to be adapted.
-- The Toolchain files are located in `'acados_root_folder'/cmake`.
+- The toolchain files are located in `'acados_root_folder'/cmake`.
 - The toolchain file for MABX2 is called `Toolchain-dSpaceDS1401.cmake`, the one for MABX3 is called `Toolchain-dSpaceDS1403.cmake`.
 - The lines that contain the paths (line 1 - 17) to the compilers have to be adapted to fit your system.
     It is possible to locate the correct compiler path from the Simulink dSPACE build output (e.g. building `'dSPACE_Model_Name'.slx` without acados S-Functions in it):
-
-    <img src="simulink_dspace_build_compiler_path.png" width="60%">
+```eval_rst
+.. image:: ./simulink_dspace_build_compiler_path.png
+```
 
 ### Step 2: Cross-compile `acados` for your dSPACE platform
 In order to compile `acados` for your dSPACE platform, you need the `acados` libraries and header files in the correct format.
@@ -165,18 +166,20 @@ These are the folders you need to deploy `acados` on your dSPACE Platform.
 2. Open Simulink model configuration parameters, and under Code Generation / Custom Code / Additional build info, add the following paths:
 - Include directories:
     all the include directories in the `buildDS1401/install/include` (or `buildDS1403/install/include`) folder as in this example:
-
-    <img src="simulink_dspace_configuration_include_dir.png" width="60%">
+```eval_rst
+.. image:: ./simulink_dspace_configuration_include_dir.png
+```
 - Libraries:
     all acados `*.lib` files in the `buildDS1401/install/lib` (or `buildDS1403/install/lib`) folder as in this example:
-
-    <img src="simulink_dspace_configuration_libraries.png" width="60%">
+```eval_rst
+.. image:: ./simulink_dspace_configuration_libraries.png
+```
 - Source files:
-    all `*.c` files in your `c_generated_code` folder, as in this example:
-
-    <img src="simulink_dspace_configuration_source_files.png" width="60%">
-
+    all `*.c` files in your `c_generated_code` folder, as in the example below
     Note that these files may change based on the selected `acados` ocp options.
     It is possible to obtain a space separated list of all the `*.c` files by running the following command in the `c_generated_code` folder:
     ```find "$(pwd)" -type f -not -path "*examples*" -name "*.c" | tr '\n' ' ' | sed 's/\/c\//C:\//g'```
+```eval_rst
+.. image:: ./simulink_dspace_configuration_source_files.png
+```
 3. Build the dSPACE Simulink model as usual, pressing Ctrl+B in Simulink.
