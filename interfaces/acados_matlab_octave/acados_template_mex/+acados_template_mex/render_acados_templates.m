@@ -178,6 +178,11 @@ function render_acados_templates(acados_ocp_nlp_json_file)
     out_file = 'Makefile';
     render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
 
+    % CMake
+    template_file = 'CMakeLists.in.txt';
+    out_file = 'CMakeLists.txt';
+    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+
     % S-function
     template_file = 'acados_solver_sfun.in.c';
     out_file = ['acados_solver_sfunction_' , model_name, '.c'];

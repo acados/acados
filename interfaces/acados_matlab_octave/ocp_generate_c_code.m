@@ -276,8 +276,5 @@ function ocp_generate_c_code(obj)
     fclose(fid);
     %% render templated code
     acados_template_mex.render_acados_templates(obj.acados_ocp_nlp_json.json_file)
-    if ~ispc
-        %% compile main
-        acados_template_mex.compile_main()
-    end
+    acados_template_mex.compile_main(obj.acados_ocp_nlp_json.code_export_directory)
 end

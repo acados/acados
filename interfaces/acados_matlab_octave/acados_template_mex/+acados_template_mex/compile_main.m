@@ -31,9 +31,9 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
-function compile_main()
+function compile_main(export_dir)
     return_dir = pwd;
-    cd c_generated_code
+    cd(export_dir);
     %% build main file
     if isunix
         [ status, result ] = system('make');
@@ -50,43 +50,14 @@ function compile_main()
         end
         fprintf('Successfully built main file!\n');
     else
-        % compile if on Windows platform
-        disp(['Compilation of generated C code main file not thoroughly tested under Windows. Attempting to continue.'])
-
-        % check compiler
-        use_msvc = false;
-        if ~is_octave()
-            mexOpts = mex.getCompilerConfigurations('C', 'Selected');
-            if contains(mexOpts.ShortName, 'MSVC')
-                use_msvc = true;
-            end
-        end
-
-        % get compiler
-        if use_msvc
-            % get env vars for MSVC
-            msvc_env = fullfile(mexOpts.Location, 'VC\Auxiliary\Build\vcvars64.bat');
-            assert(isfile(msvc_env), 'Cannot find definition of MSVC env vars.');
-
-            make_cmd = sprintf('"%s" & nmake', msvc_env);
-
-            % TODO
-            warning('Templated Makefile not (yet) implemented for MSVC compiler.')
-            cd(return_dir);
-            return;
-        else
-            % using MinGW
-            make_cmd = 'mingw32-make.exe';
-        end
-
-        % compile
-        [ status, result ] = system(make_cmd);
+        % compile on Windows platform
+        [ status, result ] = system('cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DBUILD_ACADOS_OCP_SOLVER_LIB=ON -S . -B .');
         if status
             cd(return_dir);
             error('Building templated code failed.\nGot status %d, result: %s',...
                   status, result);
         end
-        [ status, result ] = system(sprintf('%s shared_lib', make_cmd));
+        [ status, result ] = system('cmake --build . --config Release');
         if status
             cd(return_dir);
             error('Building templated code as shared library failed.\nGot status %d, result: %s',...
