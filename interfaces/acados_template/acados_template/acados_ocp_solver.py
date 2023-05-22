@@ -40,6 +40,8 @@ from datetime import datetime
 import importlib
 import shutil
 
+from subprocess import DEVNULL, call, STDOUT
+
 from ctypes import POINTER, cast, CDLL, c_void_p, c_char_p, c_double, c_int, c_int64, byref
 
 from copy import deepcopy
@@ -863,7 +865,7 @@ class AcadosOcpSolver:
 
 
     @classmethod
-    def build(cls, code_export_dir, with_cython=False, cmake_builder: CMakeBuilder = None):
+    def build(cls, code_export_dir, with_cython=False, cmake_builder: CMakeBuilder = None, verbose: bool = True):
         """
         Builds the code for an acados OCP solver, that has been generated in code_export_dir
             :param code_export_dir: directory in which acados OCP solver has been generated, see generate()
@@ -871,19 +873,36 @@ class AcadosOcpSolver:
             :param cmake_builder: type :py:class:`~acados_template.builders.CMakeBuilder` generate a `CMakeLists.txt` and use
                    the `CMake` pipeline instead of a `Makefile` (`CMake` seems to be the better option in conjunction with
                    `MS Visual Studio`); default: `None`
+            :param verbose: indicating if build command is printed
         """
         code_export_dir = os.path.abspath(code_export_dir)
         cwd = os.getcwd()
         os.chdir(code_export_dir)
         if with_cython:
-            os.system('make clean_ocp_cython')
-            os.system('make ocp_cython')
+            call(
+                ['make', 'clean_all'],
+                stdout=None if verbose else DEVNULL,
+                stderr=None if verbose else STDOUT
+            )
+            call(
+                ['make', 'ocp_cython'],
+                stdout=None if verbose else DEVNULL,
+                stderr=None if verbose else STDOUT
+            )
         else:
             if cmake_builder is not None:
                 cmake_builder.exec(code_export_dir)
             else:
-                os.system('make clean_ocp_shared_lib')
-                os.system('make ocp_shared_lib')
+                call(
+                    ['make', 'clean_ocp_shared_lib'],
+                    stdout=None if verbose else DEVNULL,
+                    stderr=None if verbose else STDOUT
+                )
+                call(
+                    ['make', 'ocp_shared_lib'],
+                    stdout=None if verbose else DEVNULL,
+                    stderr=None if verbose else STDOUT
+                )
         os.chdir(cwd)
 
 
@@ -911,7 +930,7 @@ class AcadosOcpSolver:
                     acados_ocp_json['dims']['N'])
 
 
-    def __init__(self, acados_ocp: AcadosOcp, json_file='acados_ocp_nlp.json', simulink_opts=None, build=True, generate=True, cmake_builder: CMakeBuilder = None):
+    def __init__(self, acados_ocp: AcadosOcp, json_file='acados_ocp_nlp.json', simulink_opts=None, build=True, generate=True, cmake_builder: CMakeBuilder = None, verbose=True):
 
         self.solver_created = False
         if generate:
@@ -928,7 +947,7 @@ class AcadosOcpSolver:
         code_export_directory = acados_ocp_json['code_export_directory']
 
         if build:
-            self.build(code_export_directory, with_cython=False, cmake_builder=cmake_builder)
+            self.build(code_export_directory, with_cython=False, cmake_builder=cmake_builder, verbose=verbose)
 
         # prepare library loading
         lib_prefix = 'lib'
