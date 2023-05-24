@@ -9,7 +9,7 @@ from acados_template import AcadosOcp, AcadosOcpSolver
 local_path = os.path.dirname(os.path.abspath(__file__))
 zoro_source_dir = os.path.join(local_path, '..')
 sys.path.append(zoro_source_dir)
-from acados_template.custom_update_template.zoro_template.zoro_description import ZoroDescription, process_zoro_description
+from acados_template import ZoroDescription, process_zoro_description
 
 # same as in normal pendulum model
 pendulum_source_dir = os.path.join(local_path, '..', '..', 'pendulum_on_cart', 'common')

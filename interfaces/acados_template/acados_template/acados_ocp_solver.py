@@ -742,8 +742,8 @@ def ocp_render_templates(acados_ocp: AcadosOcp, json_file, cmake_builder=None, s
         render_template(tup[0], tup[1], output_dir, json_path)
 
     # Custom templates
-    acados_path = os.path.dirname(os.path.abspath(__file__))
-    custom_template_glob = os.path.join(acados_path, 'custom_update_template', '**', '*')
+    acados_template_path = os.path.dirname(os.path.abspath(__file__))
+    custom_template_glob = os.path.join(acados_template_path, 'custom_update_templates', '*')
     for tup in acados_ocp.solver_options.custom_templates:
         render_template(tup[0], tup[1], acados_ocp.code_export_directory, json_path, template_glob=custom_template_glob)
 

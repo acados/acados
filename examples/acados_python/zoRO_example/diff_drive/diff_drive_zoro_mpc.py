@@ -9,11 +9,10 @@ from scipy.linalg import block_diag
 import matplotlib.pyplot as plt
 from time import process_time
 
-from acados_template import AcadosOcp, AcadosOcpSolver
+from acados_template import AcadosOcp, AcadosOcpSolver, ZoroDescription, process_zoro_description
 
 from diff_drive_model import export_diff_drive_model, RobotState
 from mpc_parameters import MPCParam
-from zoro_description import ZoroDescription, process_zoro_description
 
 class ZoroMPCSolver:
     def __init__(self, cfg: MPCParam) -> None:

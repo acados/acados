@@ -37,4 +37,5 @@ from .acados_sim import AcadosSim, AcadosSimDims, AcadosSimOpts
 from .acados_ocp_solver import AcadosOcpSolver, get_simulink_default_opts, ocp_get_default_cmake_builder
 from .acados_sim_solver import AcadosSimSolver, sim_get_default_cmake_builder
 from .utils import print_casadi_expression, get_acados_path, get_python_interface_path, get_tera_exec_path, get_tera, check_casadi_version, acados_dae_model_json_dump
-from .custom_update_template.zoro_template.zoro_description import ZoroDescription, process_zoro_description
+
+from .zoro_description import ZoroDescription, process_zoro_description

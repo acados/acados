@@ -4,6 +4,11 @@ import numpy as np
 
 @dataclass
 class ZoroDescription:
+    """
+    Zero-Order Robust Optimization scheme.
+
+    For advanced users.
+    """
     backoff_scaling_gamma: float = 1.0
     fdbk_K_mat: np.ndarray = None   # TODO: default: a full-zero matrix
     unc_jac_G_mat: np.ndarray = None    # default: an identity matrix
