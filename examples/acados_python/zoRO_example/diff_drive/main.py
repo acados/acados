@@ -128,7 +128,8 @@ def main():
     plt.plot(path_tracking_solver.x_robot_ref[:, 0], path_tracking_solver.x_robot_ref[:, 1], c='m', label='ref')
     plt.plot(traj_zo[:, 0], traj_zo[:, 1], c='b', label='opt sqp')
     plt.legend()
-    plt.show()
+    plt.savefig(os.path.join("figures", "diff_drive_sim_trajectory.pdf"),
+        bbox_inches='tight', transparent=True, pad_inches=0.05)
 
 
 if __name__ == "__main__":

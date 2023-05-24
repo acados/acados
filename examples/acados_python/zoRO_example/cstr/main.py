@@ -212,7 +212,6 @@ def main():
             f"{label}:\n min: {np.nanmin(timings_solver):.3f} ms, mean: {np.nanmean(timings_solver):.3f} ms, max: {np.nanmax(timings_solver):.3f} ms\n"
         )
 
-    matplotlib.use("TkAgg")
     x_max = cstr_params.xs \
         * (1.0 + np.array([dist_params.c_exceed_ratio, dist_params.t_exceed_ratio, dist_params.h_exceed_ratio]))
     plot_cstr(
@@ -224,8 +223,9 @@ def main():
         mpc_params.umin,
         mpc_params.umax,
         labels_all,
-        x_max = x_max
-    )  # , fig_filename='cstr_acados_RTI.pdf')
+        x_max = x_max,
+        fig_filename=os.path.join("figures", "cstr_acados_RTI.pdf"),
+    )
 
 
 if __name__ == "__main__":

@@ -3,15 +3,10 @@ import os
 
 import numpy as np
 import scipy.linalg
-from acados_template import AcadosOcp, AcadosOcpSolver
-
-# import zoro
-local_path = os.path.dirname(os.path.abspath(__file__))
-zoro_source_dir = os.path.join(local_path, '..')
-sys.path.append(zoro_source_dir)
-from acados_template import ZoroDescription, process_zoro_description
+from acados_template import AcadosOcp, AcadosOcpSolver, ZoroDescription, process_zoro_description
 
 # same as in normal pendulum model
+local_path = os.path.dirname(os.path.abspath(__file__))
 pendulum_source_dir = os.path.join(local_path, '..', '..', 'pendulum_on_cart', 'common')
 sys.path.append(pendulum_source_dir)
 from pendulum_model import export_pendulum_ode_model

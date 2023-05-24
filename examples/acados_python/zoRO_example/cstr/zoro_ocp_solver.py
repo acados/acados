@@ -32,15 +32,13 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-# authors: Katrin Baumgaertner, Jonathan Frey
+# authors: Katrin Baumgaertner, Jonathan Frey, Yunfan Gao
 
-from acados_template import AcadosOcp, AcadosOcpSolver
+from acados_template import AcadosOcp, AcadosOcpSolver, ZoroDescription, process_zoro_description
 from scipy.linalg import block_diag
 import numpy as np
 from dataclasses import dataclass
 from casadi import vertcat
-
-from zoro_description import ZoroDescription, process_zoro_description
 
 
 @dataclass
@@ -137,9 +135,6 @@ def setup_acados_ocp_solver(
 
     # set options
     ocp.solver_options.qp_solver = "PARTIAL_CONDENSING_HPIPM"  # FULL_CONDENSING_QPOASES
-    # PARTIAL_CONDENSING_HPIPM, FULL_CONDENSING_QPOASES, FULL_CONDENSING_HPIPM,
-    # PARTIAL_CONDENSING_QPDUNES, PARTIAL_CONDENSING_OSQP
-    # ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
     ocp.solver_options.qp_solver_cond_N = mpc_params.N  # for partial condensing
 
     ocp.solver_options.hessian_approx = "GAUSS_NEWTON"

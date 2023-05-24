@@ -1,9 +1,3 @@
-import sys
-import os
-local_path = os.path.dirname(os.path.abspath(__file__))
-mpc_source_dir = os.path.join(local_path, '..')
-sys.path.append(mpc_source_dir)
-
 import numpy as np
 from scipy.linalg import block_diag
 import matplotlib.pyplot as plt
@@ -77,8 +71,6 @@ class ZoroMPCSolver:
         self.ocp.constraints.lh_e = cfg.obs_radius
         self.ocp.constraints.uh_e = 1e3 * np.ones((num_obs, ))
 
-        # self.ocp.solver_options.ext_fun_compile_flags = '-g3'
-
         # custom update: disturbance propagation
         self.ocp.solver_options.custom_update_filename = 'custom_update_function.c'
         self.ocp.solver_options.custom_update_header_filename = 'custom_update_function.h'
@@ -90,29 +82,15 @@ class ZoroMPCSolver:
         ]
 
         # solver options
-        # self.ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' #'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_DAQP'
         self.ocp.solver_options.qp_solver = 'FULL_CONDENSING_DAQP' #'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_DAQP'
         self.ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
         self.ocp.solver_options.nlp_solver_type = 'SQP_RTI' # SQP, SQP_RTI
-        # self.ocp.solver_options.nlp_solver_ext_qp_res = 1
-        # self.ocp.solver_options.hpipm_mode = 'BALANCE'
-
-        # self.ocp.solver_options.regularize_method = 'CONVEXIFY'
-        # self.ocp.solver_options.print_level = 5
-        # self.ocp.solver_options.levenberg_marquardt = 1e-5
-
         self.ocp.solver_options.qp_tol = 1e-4
-        # self.ocp.solver_options.qp_tol_stat = 1e-4
-        # self.ocp.solver_options.qp_tol_eq = 1e-4
-        # self.ocp.solver_options.qp_tol_ineq = 1e-4
-        # self.ocp.solver_options.qp_solver_cond_N = 2
 
         # integrator options
         self.ocp.solver_options.integrator_type = 'IRK'
         self.ocp.solver_options.sim_method_num_stages = 2
         self.ocp.solver_options.sim_method_jac_reuse = 1
-        # self.ocp.solver_options.sim_method_jac_reuse = 1
-        # self.ocp.solver_options.sim_method_newton_iter = 3
 
         # zoro stuff
         zoro_description = ZoroDescription()
@@ -125,8 +103,6 @@ class ZoroMPCSolver:
         zoro_description.W_mat = cfg.W_mat
         zoro_description.idx_lbx_t = [1]
         zoro_description.idx_ubx_t = [0, 1]
-        # zoro_description.idx_lbu_t = [0, 1]
-        # zoro_description.idx_ubu_t = [0, 1]
         zoro_description.idx_lh_t = list(range(0, cfg.num_obs))
         zoro_description.idx_uh_t = []
         zoro_description.idx_lh_e_t = list(range(0, cfg.num_obs))
@@ -212,9 +188,7 @@ class ZoroMPCSolver:
             self.acados_integrator_time += self.acados_ocp_solver.get_stats("time_sim")[0]
 
             t_start = process_time()
-            # self.propagate_and_update(obs_position=obs_position, \
-            #     obs_radius=obs_radius, p0_mat=p0_mat)
-            self.acados_ocp_solver.custom_update([]) # self.cfg.W_mat.flatten()
+            self.acados_ocp_solver.custom_update([])
             self.propagation_t += process_time() - t_start
 
             # feedback rti_phase
@@ -232,8 +206,6 @@ class ZoroMPCSolver:
             residuals = self.acados_ocp_solver.get_residuals()
 
         u_opt = self.acados_ocp_solver.get(0, "u")
-
-        # print(acados_phase1, acados_phase2)
 
         return u_opt, status
 
@@ -270,51 +242,3 @@ class ZoroMPCSolver:
             collision_cstr_active =  not (np.isclose(temp_lam[cstr_index], b=0., atol=1e-7).all())
             i_stage += 1
         return collision_cstr_active
-
-
-    def propagate_and_update(self, obs_position, obs_radius, p0_mat):
-        # debug_list = []
-        lbx_tightened = np.zeros((self.cfg.num_state_cstr, ))
-        ubx_tightened = np.zeros((self.cfg.num_state_cstr, ))
-        dist_guess = np.zeros((self.cfg.num_obs, 2))
-        Pj_diag = np.zeros((self.cfg.nx,))
-        temp_P_mat = self.P_mats[0,:,:] = p0_mat.copy()
-
-        i_mpc_stage = 0
-        while i_mpc_stage < self.cfg.n_hrzn:
-            # get the A matrix
-            temp_A = self.acados_ocp_solver.get_from_qp_in(i_mpc_stage, "A")
-            temp_B = self.acados_ocp_solver.get_from_qp_in(i_mpc_stage, "B")
-            temp_AK = temp_A - temp_B @ self.cfg.fdbk_K_mat
-            temp_P_mat = temp_AK @ temp_P_mat @ temp_AK.T + self.cfg.W_mat
-            i_mpc_stage += 1
-            self.P_mats[i_mpc_stage,:,:] = temp_P_mat.copy()
-
-            """ Compute backoff using P, set bounds with backoff
-            v - ubv + sqrt(P(3, 3)) <= 0,
-            w - ubw + sqrt(P(4, 4)) <= 0,
-            a - uba + k1*sqrt(P(3, 3)) <= 0,
-            alpha - ubalpha + k2*sqrt(P(4, 4)) <= 0,
-                """
-            Pj = self.P_mats[i_mpc_stage,:,:]
-            Pj_diag = np.diag(Pj)
-            if i_mpc_stage < self.cfg.n_hrzn:
-                # v, cstr_idx[0]
-                lbx_tightened[0] = self.lbv
-                ubx_tightened[0] = self.ubv - np.sqrt(Pj_diag[3] + self.cfg.backoff_eps)
-                # w, cstr_idx[1]
-                lbx_tightened[1] = -self.ubw + np.sqrt(Pj_diag[4] + self.cfg.backoff_eps)
-                ubx_tightened[1] = self.ubw - np.sqrt(Pj_diag[4] + self.cfg.backoff_eps)
-                self.acados_ocp_solver.constraints_set(i_mpc_stage, "lbx", lbx_tightened)
-                self.acados_ocp_solver.constraints_set(i_mpc_stage, "ubx", ubx_tightened)
-
-            # obstacles
-            x_guess_i = self.x_temp_sol[i_mpc_stage, 0:2]
-            for i_obs in range(self.cfg.num_obs):
-                dist_guess[i_obs,:] = x_guess_i - obs_position[2*i_obs:2*(i_obs+1)]
-            dist_norm_mat = dist_guess @ Pj[:2,:2] @ dist_guess.T
-            dist_norm = np.diag(dist_norm_mat)
-            sqr_dist_val = dist_guess[:,0]**2 + dist_guess[:,1]**2
-            h_backoff = np.sqrt(dist_norm / sqr_dist_val + self.cfg.backoff_eps)
-            self.acados_ocp_solver.constraints_set(i_mpc_stage, "lh", obs_radius + h_backoff)
-        return
