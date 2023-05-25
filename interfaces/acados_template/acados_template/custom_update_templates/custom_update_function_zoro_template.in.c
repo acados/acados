@@ -499,7 +499,6 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
 
     // First Stage
     // NOTE: lbx_0 and ubx_0 should not be tightened.
-    // NOTE: lbu_0 and ubu_0 are tightened.
     // NOTE: lg_0 and ug_0 are not tightened.
     // NOTE: lh_0 and uh_0 are not tightened.
 {%- if zoro_description.nlbu_t + zoro_description.nubu_t > 0 %}
@@ -788,45 +787,3 @@ printf("W_mat:\n");
 blasfeo_print_exp_dmat(nx, nx, &custom_mem->W_mat, 0, 0);
 printf("P_k+1:\n");
 blasfeo_print_exp_dmat(nx, nx, &(custom_mem->uncertainty_matrix_buffer[ii+1]), 0, 0);*/
-
-
-/*
-printf("temp_KP_mat:\n");
-blasfeo_print_exp_dmat(nu, nx, &custom_mem->temp_KP_mat, 0, 0);
-printf("temp_KPK_mat:\n");
-blasfeo_print_exp_dmat(nu, nu, &custom_mem->temp_KPK_mat, 0, 0); */
-
-
-/*
-printf("Ct_mat:\n");
-blasfeo_print_exp_dmat(nx, ng, &custom_mem->Ct_mat, 0, 0);
-printf("Dt_mat:\n");
-blasfeo_print_exp_dmat(nu, ng, &custom_mem->Dt_mat, 0, 0);
-printf("Ct_e_mat:\n");
-blasfeo_print_exp_dmat(nx, ng_e, &custom_mem->Ct_e_mat, 0, 0); */
-// printf("lh: %f, %f, %f.\n", custom_mem->d_lh[0], custom_mem->d_lh[1], custom_mem->d_lh[2]);
-// printf("uh: %f, %f, %f.\n", custom_mem->d_uh[0], custom_mem->d_uh[1], custom_mem->d_uh[2]);
-
-/* printf("Ch_mat:\n");
-blasfeo_print_exp_dmat(nh, nx, &custom_mem->Ch_mat, 0, 0);
-printf("Dh_mat:\n");
-blasfeo_print_exp_dmat(nh, nu, &custom_mem->Dh_mat, 0, 0);
-printf("Ch_e_mat:\n");
-blasfeo_print_exp_dmat(nh_e, nx, &custom_mem->Ch_e_mat, 0, 0); */
-
-/* printf("W_mat:\n");
-blasfeo_print_exp_dmat(nw, nw, &custom_mem->W_mat, 0, 0);
-printf("unc_jac_G_mat:\n");
-blasfeo_print_exp_dmat(nx, nw, &custom_mem->unc_jac_G_mat, 0, 0);
-printf("temp_GW_mat:\n");
-blasfeo_print_exp_dmat(nx, nw, &custom_mem->temp_GW_mat, 0, 0);
-printf("GWG_mat:\n");
-blasfeo_print_exp_dmat(nx, nx, &custom_mem->GWG_mat, 0, 0); */
-
-// printf("P_k+1:\n");
-// blasfeo_print_exp_dmat(nx, nx, &(custom_mem->uncertainty_matrix_buffer[ii+1]), 0, 0);
-// printf("d_lg=%f, %f. beta=%f, %f. d_lg_tightened=%f, %f.\n",
-//         custom_mem->d_lg[0], custom_mem->d_lg[1],
-//         sqrt(blasfeo_dgeex1(&custom_mem->temp_g_beta_mat, 0, 0)),
-//         sqrt(blasfeo_dgeex1(&custom_mem->temp_g_beta_mat, 1, 1)),
-//         custom_mem->d_lg_tightened[0], custom_mem->d_lg_tightened[1]);

@@ -123,9 +123,9 @@ class ZoroMPCSolver:
         self.ocp.zoro_description = process_zoro_description(zoro_description)
 
         self.acados_ocp_solver = AcadosOcpSolver(self.ocp, json_file = 'acados_ocp_' + self.model.name + '.json')
-        """ AcadosOcpSolver.generate(self.ocp, json_file='acados_ocp_' + self.model.name + '.json')
-        AcadosOcpSolver.build(self.ocp.code_export_directory, with_cython=True)
-        self.acados_ocp_solver = AcadosOcpSolver.create_cython_solver('acados_ocp_' + self.model.name + '.json') """
+        # AcadosOcpSolver.generate(self.ocp, json_file='acados_ocp_' + self.model.name + '.json')
+        # AcadosOcpSolver.build(self.ocp.code_export_directory, with_cython=True)
+        # self.acados_ocp_solver = AcadosOcpSolver.create_cython_solver('acados_ocp_' + self.model.name + '.json')
 
         self.initialized = False
 
@@ -188,7 +188,7 @@ class ZoroMPCSolver:
             self.acados_integrator_time += self.acados_ocp_solver.get_stats("time_sim")[0]
 
             t_start = process_time()
-            self.acados_ocp_solver.custom_update([])
+            self.acados_ocp_solver.custom_update([self.cfg.W_mat.flatten()])
             self.propagation_t += process_time() - t_start
 
             # feedback rti_phase

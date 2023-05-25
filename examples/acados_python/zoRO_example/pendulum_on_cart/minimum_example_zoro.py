@@ -100,7 +100,6 @@ def main():
     zoro_description.backoff_scaling_gamma = 2
     zoro_description.P0_mat = np.zeros((nx, nx))
     zoro_description.fdbk_K_mat = np.array([[0.0, 0.0, 10.0, 10.0]])
-    # zoro_description.fdbk_K_mat = np.zeros((nu, nx))
     zoro_description.W_mat = np.diag([5*1e-6, 5*1e-6, 1*1e-4, 1*1e-4])
     zoro_description.idx_lbu_t = [0]
     zoro_description.idx_ubu_t = [0]
@@ -117,7 +116,7 @@ def main():
 
     # zoro parameters
     max_zoro_iter = 100
-    zoro_tol = 1e-5
+    zoro_tol = 1e-6
 
     # sample disturbances
     np.random.seed(0)

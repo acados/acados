@@ -182,9 +182,6 @@ def setup_acados_ocp_solver(
 
     # create
     ocp_solver = AcadosOcpSolver(ocp, json_file="acados_ocp.json")
-    # AcadosOcpSolver.generate(ocp, json_file='acados_ocp_' + model.name + '.json')
-    # AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
-    # ocp_solver = AcadosOcpSolver.create_cython_solver('acados_ocp_' + model.name + '.json')
 
     return ocp_solver
 

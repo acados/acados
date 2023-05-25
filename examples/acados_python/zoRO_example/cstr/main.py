@@ -22,7 +22,7 @@ from cstr_utils import plot_cstr
 
 # NOTE: this a variation of the cstr example in acados with the following modifications:
 # - add tighter bounds on x.
-# - add disturbance, see samplesFromEllipsoid
+# - add disturbance sampled from multivariate_normal
 # - use a nominal controller and a fast zoRO implementation and compare them in closed loop with disturbance
 
 
@@ -126,12 +126,7 @@ def simulate(
 
             # if exceeds the upper bound of the state constraints
             if (xcurrent > ubx).any():
-                # X[(i_sim+1):, :] = np.nan
-                # U[min(i_sim+1, Nsim):, :] = np.nan
-                # timings_solver[min(i_sim+1, Nsim):] = np.nan
-                # timings_integrator[min(i_sim+1, Nsim):] = np.nan
                 print("exceed the upper bound at i_sim=", i_sim)
-                # break
 
     return X, U, timings_solver, timings_integrator
 

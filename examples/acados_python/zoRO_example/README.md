@@ -47,6 +47,10 @@ Everytime before solving the optimal control problem, run
 ```
 ocp_solver.custom_update([])
 ```
+The initial disturbance matrix $P_0$ can be passed as function parameters:
+```
+ocp_solver.custom_update([W_mat.flatten()])
+```
 
 ## Examples
 The minimum example can be found in *pendulum_on_cart/minimum_example_zoro.py*. Other examples of the mass chain, the continuous stirred-tank reactor, and the differential drive robot are also in this folder.

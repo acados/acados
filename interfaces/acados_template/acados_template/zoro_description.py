@@ -10,9 +10,9 @@ class ZoroDescription:
     For advanced users.
     """
     backoff_scaling_gamma: float = 1.0
-    fdbk_K_mat: np.ndarray = None   # TODO: default: a full-zero matrix
+    fdbk_K_mat: np.ndarray = None
     unc_jac_G_mat: np.ndarray = None    # default: an identity matrix
-    P0_mat: np.ndarray = None       # TODO: default: a full-zero matrix
+    P0_mat: np.ndarray = None
     W_mat: np.ndarray = None
     idx_lbx_t: list = field(default_factory=list)
     idx_ubx_t: list = field(default_factory=list)
