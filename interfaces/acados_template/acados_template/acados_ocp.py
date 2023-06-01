@@ -500,6 +500,12 @@ class AcadosOcpCost:
     """
     Class containing the numerical data of the cost:
 
+    NOTE: all cost terms, except for the terminal one are weighted with the corresponding time step.
+    This means given the time steps are :math:`\Delta t_0,..., \Delta t_N`, the total cost is given by:
+    :math:`c_\\text{total} = \Delta t_0 \cdot c_0(x_0, u_0, p_0, z_0) + ... + \Delta t_{N-1} \cdot c_{N-1}(x_0, u_0, p_0, z_0) + c_N(x_N, p_N)`.
+
+    This means the Lagrange cost term is given in continuous time, this makes up for a seeminglessly OCP discretization with a nonuniform time grid.
+
     In case of LINEAR_LS:
     stage cost is
     :math:`l(x,u,z) = || V_x \, x + V_u \, u + V_z \, z - y_\\text{ref}||^2_W`,
