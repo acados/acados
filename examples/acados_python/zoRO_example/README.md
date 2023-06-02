@@ -1,5 +1,7 @@
 # About
-Here is the implementation of the zero-order robust optimization (zoRO) algorithm [1]. The disturbance propagation and the constraint tightening of the zoRO algorithm are in the template c function. The function can be called through the *custom_update* interface in Acados.
+This folder contains examples of a fast implementation of the zero-order robust optimization (zoRO) algorithm [1].
+The disturbance propagation and the constraint tightening of the zoRO algorithm are in a template based `C` function.
+The function can be called through the *custom_update* interface in acados.
 
 In Python, one can define the disturbance/uncertainty matrix and set which constraints to be tightened. The robustification of the optimal control problem against disturbance/uncertainty is achieved by calling the *custom_update()* function before solving the MPC problem.
 
@@ -8,9 +10,6 @@ The disturbance/uncertainty propagation is modelled as
 $$P_{k+1} = (A_k + B_kK)P_k(A_k + B_kK)^\top + GWG^\top$$
 
 ## How to use it
-
-
-
 In the python file, define the filenames of the custom update function:
 ```
 ocp.solver_options.custom_update_filename = 'custom_update_function.c'
@@ -47,14 +46,14 @@ Everytime before solving the optimal control problem, run
 ```
 ocp_solver.custom_update([])
 ```
-The initial disturbance matrix $P_0$ can be passed as function parameters:
+The initial disturbance matrix $P_0$ can be passed as a function argument:
 ```
 ocp_solver.custom_update([W_mat.flatten()])
 ```
 
 ## Examples
-The minimum example can be found in *pendulum_on_cart/minimum_example_zoro.py*. Other examples of the mass chain, the continuous stirred-tank reactor, and the differential drive robot are also in this folder.
-
+The minimum example can be found in *pendulum_on_cart/minimum_example_zoro.py*.
+Other examples include the continuous stirred-tank reactor, and the differential drive robot and are also in this folder.
 
 
 [1] Andrea Zanelli, Jonathan Frey, Florian Messerer, Moritz Diehl, Zero-Order Robust Nonlinear Model Predictive Control with Ellipsoidal Uncertainty Sets, IFAC-PapersOnLine,
