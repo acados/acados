@@ -2,17 +2,13 @@ import sys
 import os
 from typing import Optional
 import numpy as np
-local_path = os.path.dirname(os.path.abspath(__file__))
 
-zoro_source_dir = os.path.join(local_path, '..')
-sys.path.append(zoro_source_dir)
-
-import matplotlib
 from acados_template import AcadosSimSolver, AcadosOcpSolver
 
 from zoro_ocp_solver import MpcCSTRParameters, DistCSTRParameters, setup_acados_ocp_solver
 
 # same as in normal cstr model
+local_path = os.path.dirname(os.path.abspath(__file__))
 cstr_source_dir = os.path.join(local_path, '..', '..', 'cstr')
 sys.path.append(cstr_source_dir)
 
@@ -206,6 +202,9 @@ def main():
         print(
             f"{label}:\n min: {np.nanmin(timings_solver):.3f} ms, mean: {np.nanmean(timings_solver):.3f} ms, max: {np.nanmax(timings_solver):.3f} ms\n"
         )
+
+    if not os.path.exists('figures'):
+        os.makedirs('figures')
 
     x_max = cstr_params.xs \
         * (1.0 + np.array([dist_params.c_exceed_ratio, dist_params.t_exceed_ratio, dist_params.h_exceed_ratio]))
