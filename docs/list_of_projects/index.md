@@ -38,6 +38,9 @@ It also provides a higher level interface to `acados`, which is based on the Mat
 
 - [Continuous Control Set Nonlinear Model Predictive Control of Reluctance Synchronous Machines - IEEE Transactions on Control System Technology -- Andrea Zanelli et al 2021](https://ieeexplore.ieee.org/document/9360312)
 
+- [Steering Action-aware Adaptive Cruise Control for Teleoperated Driving](https://ieeexplore.ieee.org/document/9945081)
+  - [with public code on Github which has been applied on an F1TENTH vehicle](https://github.com/TUMFTM/tod_control/tree/2b67e8411e2ba1c5ddeb879d564ed28a989aebce/tod_shared_control)
+
 ### other
 - [Contraction Properties of the Advanced Step Real-Time Iteration for NMPC at the IFAC World Congress 2020](https://cdn.syscop.de/publications/Nurkanovic2020b.pdf)
 
