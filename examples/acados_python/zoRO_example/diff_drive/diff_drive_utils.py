@@ -41,6 +41,9 @@ def plot_timings(timing_dict):
     plt.grid()
     plt.xlabel('CPU time [ms]')
     plt.tight_layout()
+
+    if not os.path.exists('figures'):
+        os.makedirs('figures')
     plt.savefig(os.path.join("figures", "timings_diff_drive.pdf"),
         bbox_inches='tight', transparent=True, pad_inches=0.05)
 

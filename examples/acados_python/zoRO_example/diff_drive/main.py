@@ -1,12 +1,7 @@
-import sys
 import os
-local_path = os.path.dirname(os.path.abspath(__file__))
-mpc_source_dir = os.path.join(local_path, '..')
-sys.path.append(mpc_source_dir)
 
 import numpy as np
 import matplotlib.pyplot as plt
-from time import process_time
 
 import casadi
 
@@ -128,6 +123,9 @@ def main():
     plt.plot(path_tracking_solver.x_robot_ref[:, 0], path_tracking_solver.x_robot_ref[:, 1], c='m', label='ref')
     plt.plot(traj_zo[:, 0], traj_zo[:, 1], c='b', label='opt sqp')
     plt.legend()
+
+    if not os.path.exists('figures'):
+        os.makedirs('figures')
     plt.savefig(os.path.join("figures", "diff_drive_sim_trajectory.pdf"),
         bbox_inches='tight', transparent=True, pad_inches=0.05)
 
