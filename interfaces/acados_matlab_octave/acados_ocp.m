@@ -190,6 +190,7 @@ classdef acados_ocp < handle
                 end
             end
 
+            % TODO: remove this...
             % create C object
             try
                 obj.C_ocp = ocp_create(obj.model_struct, obj.opts_struct);
@@ -198,11 +199,14 @@ classdef acados_ocp < handle
                 error(str);
             end
 
+            % TODO: only generate, template cmake will compile
             % generate and compile casadi functions
             if (strcmp(obj.opts_struct.codgen_model, 'true') || strcmp(obj.opts_struct.compile_model, 'true'))
                 ocp_generate_casadi_ext_fun(obj.model_struct, obj.opts_struct);
             end
 
+            % TODO: remove and return templated solver instead
+            % TODO: call ocp_generate_c_code()
             obj.C_ocp_ext_fun = ocp_create_ext_fun();
 
             % compile mex with model dependency & set pointers for external functions in model
