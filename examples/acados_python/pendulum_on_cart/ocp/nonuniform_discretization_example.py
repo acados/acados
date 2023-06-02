@@ -144,7 +144,7 @@ def main(discretization='shooting_nodes'):
     json_path = os.path.join(acados_path, 'interfaces/acados_template/acados_template')
     with open(json_path + '/simulink_default_opts.json', 'r') as f:
         simulink_opts = json.load(f)
-    ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json', simulink_opts = simulink_opts)
+    ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json', simulink_opts = simulink_opts, verbose=False)
 
     # ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 

@@ -146,8 +146,6 @@ void ocp_qp_xcond_solver_dims_set_(void *config_, ocp_qp_xcond_solver_dims *dims
 void ocp_qp_xcond_solver_dims_get_(void *config_, ocp_qp_xcond_solver_dims *dims,
                                   int stage, const char *field, int* value)
 {
-    ocp_qp_xcond_solver_config *config = config_;
-
     // get from orig_dims
     ocp_qp_dims_get(config_, dims->orig_dims, stage, field, value);
 

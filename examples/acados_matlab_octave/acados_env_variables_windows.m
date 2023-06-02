@@ -45,4 +45,3 @@ addpath(casadi_dir);
 
 setenv('ACADOS_INSTALL_DIR', acados_dir);
 setenv('ENV_RUN', 'true');
-

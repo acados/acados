@@ -587,7 +587,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // restore number of threads
             omp_set_num_threads(num_threads_bkp);
 #endif
-            mem->status = ACADOS_FAILURE;
+            mem->status = ACADOS_NAN_DETECTED;
             mem->sqp_iter = sqp_iter;
             mem->time_tot = acados_toc(&timer0);
 

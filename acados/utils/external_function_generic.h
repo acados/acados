@@ -137,8 +137,8 @@ typedef struct
     int (*casadi_work)(int *, int *, int *, int *);
     const int *(*casadi_sparsity_in)(int);
     const int *(*casadi_sparsity_out)(int);
-    int (*casadi_n_in)();
-    int (*casadi_n_out)();
+    int (*casadi_n_in)(void);
+    int (*casadi_n_out)(void);
     double **args;
     double **res;
     double *w;
@@ -195,8 +195,8 @@ typedef struct
     int (*casadi_work)(int *, int *, int *, int *);
     const int *(*casadi_sparsity_in)(int);
     const int *(*casadi_sparsity_out)(int);
-    int (*casadi_n_in)();
-    int (*casadi_n_out)();
+    int (*casadi_n_in)(void);
+    int (*casadi_n_out)(void);
     double **args;
     double **res;
     double *w;

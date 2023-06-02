@@ -34,13 +34,13 @@
 SOURCES = [ 'acados_sim_solver_sfunction_{{ model.name }}.c ', ...
             'acados_sim_solver_{{ model.name }}.c ', ...
             {%- if  solver_options.integrator_type == 'ERK' %}
-            '{{ model.name }}_model/{{ model.name }}_expl_ode_fun.c ', ...
+            '{{ model.name }}_model/{{ model.name }}_expl_ode_fun.c ',...
             '{{ model.name }}_model/{{ model.name }}_expl_vde_forw.c ',...
             '{{ model.name }}_model/{{ model.name }}_expl_vde_adj.c ',...
                 {%- if solver_options.hessian_approx == 'EXACT' %}
             '{{ model.name }}_model/{{ model.name }}_expl_ode_hess.c ',...
                 {%- endif %}
-        {%- elif solver_options.integrator_type == "IRK" %}
+            {%- elif solver_options.integrator_type == "IRK" %}
             '{{ model.name }}_model/{{ model.name }}_impl_dae_fun.c ', ...
             '{{ model.name }}_model/{{ model.name }}_impl_dae_fun_jac_x_xdot_z.c ', ...
             '{{ model.name }}_model/{{ model.name }}_impl_dae_jac_x_xdot_u_z.c ', ...
@@ -48,15 +48,15 @@ SOURCES = [ 'acados_sim_solver_sfunction_{{ model.name }}.c ', ...
             '{{ model.name }}_model/{{ model.name }}_impl_dae_hess.c ',...
                 {%- endif %}
             {%- elif solver_options.integrator_type == "GNSF" %}
-                {% if model.gnsf.purely_linear != 1 %}
-            '{{ model.name }}_model/{{ model.name }}_gnsf_phi_fun.c '
-            '{{ model.name }}_model/{{ model.name }}_gnsf_phi_fun_jac_y.c '
-            '{{ model.name }}_model/{{ model.name }}_gnsf_phi_jac_y_uhat.c '
-                {% if model.gnsf.nontrivial_f_LO == 1 %}
-            '{{ model.name }}_model/{{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz.c '
+                {%- if model.gnsf.purely_linear != 1 %}
+            '{{ model.name }}_model/{{ model.name }}_gnsf_phi_fun.c ',...
+            '{{ model.name }}_model/{{ model.name }}_gnsf_phi_fun_jac_y.c ',...
+            '{{ model.name }}_model/{{ model.name }}_gnsf_phi_jac_y_uhat.c ',...
+                {%- if model.gnsf.nontrivial_f_LO == 1 %}
+            '{{ model.name }}_model/{{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz.c ',...
                 {%- endif %}
                 {%- endif %}
-            '{{ model.name }}_model/{{ model.name }}_gnsf_get_matrices_fun.c '
+            '{{ model.name }}_model/{{ model.name }}_gnsf_get_matrices_fun.c ',...
             {%- endif %}
           ];
 
@@ -89,18 +89,25 @@ fprintf( [ '\n\nSuccessfully created sfunction:\nacados_sim_solver_sfunction_{{ 
     eval('mexext')] );
 
 
+global sfun_sim_input_names
+sfun_sim_input_names = {};
+
 %% print note on usage of s-function
 fprintf('\n\nNote: Usage of Sfunction is as follows:\n')
 input_note = 'Inputs are:\n1) x0, initial state, size [{{ dims.nx }}]\n ';
 i_in = 2;
+sfun_sim_input_names = [sfun_sim_input_names; 'x0 [{{ dims.nx }}]'];
+
 {%- if dims.nu > 0 %}
 input_note = strcat(input_note, num2str(i_in), ') u, size [{{ dims.nu }}]\n ');
 i_in = i_in + 1;
+sfun_sim_input_names = [sfun_sim_input_names; 'u [{{ dims.nu }}]'];
 {%- endif %}
 
 {%- if dims.np > 0 %}
 input_note = strcat(input_note, num2str(i_in), ') parameters, size [{{ dims.np }}]\n ');
 i_in = i_in + 1;
+sfun_sim_input_names = [sfun_sim_input_names; 'p [{{ dims.np }}]'];
 {%- endif %}
 
 
@@ -108,7 +115,25 @@ fprintf(input_note)
 
 disp(' ')
 
+global sfun_sim_output_names
+sfun_sim_output_names = {};
+
 output_note = strcat('Outputs are:\n', ...
                 '1) x1 - simulated state, size [{{ dims.nx }}]\n');
+sfun_sim_output_names = [sfun_sim_output_names; 'x1 [{{ dims.nx }}]'];
 
 fprintf(output_note)
+
+
+% The mask drawing command is:
+% ---
+% global sfun_sim_input_names sfun_sim_output_names
+% for i = 1:length(sfun_sim_input_names)
+% 	port_label('input', i, sfun_sim_input_names{i})
+% end
+% for i = 1:length(sfun_sim_output_names)
+% 	port_label('output', i, sfun_sim_output_names{i})
+% end
+% ---
+% It can be used by copying it in sfunction/Mask/Edit mask/Icon drawing commands
+%   (you can access it wirth ctrl+M on the s-function)

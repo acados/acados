@@ -500,6 +500,12 @@ class AcadosOcpCost:
     """
     Class containing the numerical data of the cost:
 
+    NOTE: all cost terms, except for the terminal one are weighted with the corresponding time step.
+    This means given the time steps are :math:`\Delta t_0,..., \Delta t_N`, the total cost is given by:
+    :math:`c_\\text{total} = \Delta t_0 \cdot c_0(x_0, u_0, p_0, z_0) + ... + \Delta t_{N-1} \cdot c_{N-1}(x_0, u_0, p_0, z_0) + c_N(x_N, p_N)`.
+
+    This means the Lagrange cost term is given in continuous time, this makes up for a seeminglessly OCP discretization with a nonuniform time grid.
+
     In case of LINEAR_LS:
     stage cost is
     :math:`l(x,u,z) = || V_x \, x + V_u \, u + V_z \, z - y_\\text{ref}||^2_W`,
@@ -610,10 +616,10 @@ class AcadosOcpCost:
 
     @yref_0.setter
     def yref_0(self, yref_0):
-        if isinstance(yref_0, np.ndarray):
+        if isinstance(yref_0, np.ndarray) and len(yref_0.shape) == 1:
             self.__yref_0 = yref_0
         else:
-            raise Exception('Invalid yref_0 value, expected numpy array.')
+            raise Exception('Invalid yref_0 value, expected 1-dimensional numpy array.')
 
     @W_0.setter
     def W_0(self, W_0):
@@ -701,28 +707,28 @@ class AcadosOcpCost:
 
     @property
     def Zl(self):
-        """:math:`Z_l` - diagonal of Hessian wrt lower slack at intermediate shooting nodes (1 to N-1).
+        """:math:`Z_l` - diagonal of Hessian wrt lower slack at intermediate shooting nodes (0 to N-1).
         Default: :code:`np.array([])`.
         """
         return self.__Zl
 
     @property
     def Zu(self):
-        """:math:`Z_u` - diagonal of Hessian wrt upper slack at intermediate shooting nodes (1 to N-1).
+        """:math:`Z_u` - diagonal of Hessian wrt upper slack at intermediate shooting nodes (0 to N-1).
         Default: :code:`np.array([])`.
         """
         return self.__Zu
 
     @property
     def zl(self):
-        """:math:`z_l` - gradient wrt lower slack at intermediate shooting nodes (1 to N-1).
+        """:math:`z_l` - gradient wrt lower slack at intermediate shooting nodes (0 to N-1).
         Default: :code:`np.array([])`.
         """
         return self.__zl
 
     @property
     def zu(self):
-        """:math:`z_u` - gradient wrt upper slack at intermediate shooting nodes (1 to N-1).
+        """:math:`z_u` - gradient wrt upper slack at intermediate shooting nodes (0 to N-1).
         Default: :code:`np.array([])`.
         """
         return self.__zu
@@ -786,10 +792,10 @@ class AcadosOcpCost:
 
     @yref.setter
     def yref(self, yref):
-        if isinstance(yref, np.ndarray):
+        if isinstance(yref, np.ndarray) and len(yref.shape) == 1:
             self.__yref = yref
         else:
-            raise Exception('Invalid yref value, expected numpy array.')
+            raise Exception('Invalid yref value, expected 1-dimensional numpy array.')
 
     @Zl.setter
     def Zl(self, Zl):
@@ -920,10 +926,10 @@ class AcadosOcpCost:
 
     @yref_e.setter
     def yref_e(self, yref_e):
-        if isinstance(yref_e, np.ndarray):
+        if isinstance(yref_e, np.ndarray) and len(yref_e.shape) == 1:
             self.__yref_e = yref_e
         else:
-            raise Exception('Invalid yref_e value, expected numpy array.')
+            raise Exception('Invalid yref_e value, expected 1-dimensional numpy array.')
 
     @Zl_e.setter
     def Zl_e(self, Zl_e):

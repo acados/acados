@@ -31,39 +31,18 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
-function compile_main(export_dir)
-    return_dir = pwd;
-    cd(export_dir);
-    %% build main file
-    if isunix
-        [ status, result ] = system('make');
-        if status
-            cd(return_dir);
-            error('building templated code failed.\nGot status %d, result: %s',...
-                  status, result);
-        end
-        [ status, result ] = system('make shared_lib');
-        if status
-            cd(return_dir);
-            error('building templated code as shared library failed.\nGot status %d, result: %s',...
-                  status, result);
-        end
-        fprintf('Successfully built main file!\n');
-    else
-        % compile on Windows platform
-        [ status, result ] = system('cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DBUILD_ACADOS_OCP_SOLVER_LIB=ON -S . -B .');
-        if status
-            cd(return_dir);
-            error('Building templated code failed.\nGot status %d, result: %s',...
-                  status, result);
-        end
-        [ status, result ] = system('cmake --build . --config Release');
-        if status
-            cd(return_dir);
-            error('Building templated code as shared library failed.\nGot status %d, result: %s',...
-                  status, result);
-        end
-        fprintf('Successfully built main file!\n');
-    end
-    cd(return_dir);
-end
+
+interface_dir = fileparts(which('acados_env_variables_windows'));
+
+acados_dir = fullfile(interface_dir, '..', '..');
+casadi_dir = fullfile(acados_dir, 'external', 'casadi-matlab');
+matlab_interface_dir = fullfile(acados_dir, 'interfaces', 'acados_matlab_octave');
+mex_template_dir = fullfile(matlab_interface_dir, 'acados_template_mex');
+
+addpath(matlab_interface_dir);
+addpath(mex_template_dir);
+addpath(casadi_dir);
+
+setenv('ACADOS_INSTALL_DIR', acados_dir);
+setenv('ENV_RUN', 'true');
+

@@ -41,6 +41,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path_to_acados_folder>/lib
 make examples_c
 make run_examples_c
 ```
+NOTE: On MacOS `DYLD_LIBRARY_PATH` should be used instead of `LD_LIBRARY_PATH`.
 
 ### Interfaces installation
 For the installation of Python/MATLAB/Octave interfaces, please refer to the [Interfaces](../interfaces/index.md) page.
@@ -49,7 +50,7 @@ For the installation of Python/MATLAB/Octave interfaces, please refer to the [In
 
 ### Prerequisites
 
-- Install [Ubuntu on WSL](https://ubuntu.com/wsl) using the [Microsoft Store](https://apps.microsoft.com/store/detail/ubuntu/9PDXGNCFSCZV). 
+- Install [Ubuntu on WSL](https://ubuntu.com/wsl) using the [Microsoft Store](https://apps.microsoft.com/store/detail/ubuntu/9PDXGNCFSCZV).
 
 - Start Ubuntu, the shell should pop up.
 
@@ -85,7 +86,7 @@ Disclaimer: The high-level interfaces on Windows are not tested on Github Action
 
 ### Prerequisites
 You should have the following software installed on your machine.
-- Recent Matlab version, with 
+- Recent Matlab version
 - CMake for Windows
 - [Windows Git Client](https://git-scm.com/download/win)
 
@@ -102,10 +103,21 @@ git submodule update --recursive --init
 - Add this path to your environment variable PATH, using the Windows GUI. To open the GUI press Windows key and type "env".
 - Install mingw from MATLAB add-ons manager.
 - Locate this mingw installation. The default location is `C:\ProgramData\MATLAB\SupportPackages\R2018a\3P.instrset\mingw_w64.instrset`.
-- Add the subfolders `bin` and `x86_64-w64-mingw32\bin` of the above mentioned mingw installation to your environment variable PATH.
 
+### Automatic build of acados (minGW)
+Run the following in Matlab in the folder `<acados_root_folder>/interfaces/acados_matlab_octave`:
+```
+acados_install_windows()
+```
 
-### Build acados (minGW)
+This will build acados with the standard options and install the external dependencies; casadi and terra renderer
+
+The `acados_install_windows(CMakeConfigString)` script can take an optional argument:
+- CMake configuration string: Configuration options for CMake. The default is `-DBUILD_SHARED_LIBS=OFF -DACADOS_WITH_OSQP=OFF`
+
+### Build acados manually (minGW)
+If the automated install procedure does not work acados can be built manually using these steps.
+
 Run the following from a powershell in the `<acados_root_folder>`:
 ```
 $ACADOS_INSTALL_DIR=$(pwd)

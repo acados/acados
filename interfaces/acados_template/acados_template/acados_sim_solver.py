@@ -39,6 +39,8 @@ import importlib
 
 import numpy as np
 
+from subprocess import DEVNULL, call, STDOUT
+
 from ctypes import POINTER, cast, CDLL, c_void_p, c_char_p, c_double, c_int, c_bool, byref
 from copy import deepcopy
 
@@ -241,18 +243,30 @@ class AcadosSimSolver:
 
 
     @classmethod
-    def build(cls, code_export_dir, with_cython=False, cmake_builder: CMakeBuilder = None):
+    def build(cls, code_export_dir, with_cython=False, cmake_builder: CMakeBuilder = None, verbose: bool = True):
         # Compile solver
         cwd = os.getcwd()
         os.chdir(code_export_dir)
         if with_cython:
-            os.system('make clean_sim_cython')
-            os.system('make sim_cython')
+            call(
+                ['make', 'clean_sim_cython'],
+                stdout=None if verbose else DEVNULL,
+                stderr=None if verbose else STDOUT
+            )
+            call(
+                ['make', 'sim_cython'],
+                stdout=None if verbose else DEVNULL,
+                stderr=None if verbose else STDOUT
+            )
         else:
             if cmake_builder is not None:
-                cmake_builder.exec(code_export_dir)
+                cmake_builder.exec(code_export_dir, verbose=verbose)
             else:
-                os.system('make sim_shared_lib')
+                call(
+                    ['make', 'sim_shared_lib'],
+                    stdout=None if verbose else DEVNULL,
+                    stderr=None if verbose else STDOUT
+                )
         os.chdir(cwd)
 
 
@@ -271,7 +285,7 @@ class AcadosSimSolver:
         AcadosSimSolverCython = getattr(acados_sim_solver_pyx, 'AcadosSimSolverCython')
         return AcadosSimSolverCython(acados_sim_json['model']['name'])
 
-    def __init__(self, acados_sim, json_file='acados_sim.json', generate=True, build=True, cmake_builder: CMakeBuilder = None):
+    def __init__(self, acados_sim, json_file='acados_sim.json', generate=True, build=True, cmake_builder: CMakeBuilder = None, verbose: bool = True):
 
         self.solver_created = False
         self.acados_sim = acados_sim
@@ -285,7 +299,7 @@ class AcadosSimSolver:
             self.generate(acados_sim, json_file=json_file, cmake_builder=cmake_builder)
 
         if build:
-            self.build(code_export_dir, cmake_builder=cmake_builder)
+            self.build(code_export_dir, cmake_builder=cmake_builder, verbose=True)
 
         # prepare library loading
         lib_prefix = 'lib'
@@ -437,7 +451,7 @@ class AcadosSimSolver:
             out = scalar.value
         else:
             raise Exception(f'AcadosSimSolver.get(): Unknown field {field_},' \
-                f' available fields are {", ".join(self.gettable_vectors+self.gettable_matrices)} {", ".join(self.gettable_scalars)}')
+                f' available fields are {", ".join(self.gettable_vectors+self.gettable_matrices)}, {", ".join(self.gettable_scalars)}')
 
         return out
 

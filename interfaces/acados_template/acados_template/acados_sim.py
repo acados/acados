@@ -118,7 +118,7 @@ class AcadosSimOpts:
         self.__sens_adj = False
         self.__sens_algebraic = False
         self.__sens_hess = False
-        self.__output_z = False
+        self.__output_z = True
         self.__sim_method_jac_reuse = 0
         self.__ext_fun_compile_flags = '-O2'
 
@@ -173,7 +173,7 @@ class AcadosSimOpts:
 
     @property
     def output_z(self):
-        """Boolean determining if values for algebraic variables (corresponding to start of simulation interval) are computed. Default: False"""
+        """Boolean determining if values for algebraic variables (corresponding to start of simulation interval) are computed. Default: True"""
         return self.__output_z
 
     @property

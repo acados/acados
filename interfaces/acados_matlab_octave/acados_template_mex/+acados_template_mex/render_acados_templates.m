@@ -45,7 +45,7 @@ function render_acados_templates(acados_ocp_nlp_json_file)
     end
 
     if ~exist( t_renderer_location, 'file' )
-        set_up_t_renderer( t_renderer_location )
+        acados_template_mex.set_up_t_renderer( t_renderer_location )
     end
 
     %% load json data
@@ -178,6 +178,11 @@ function render_acados_templates(acados_ocp_nlp_json_file)
     out_file = 'Makefile';
     render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
 
+    % CMake
+    template_file = 'CMakeLists.in.txt';
+    out_file = 'CMakeLists.txt';
+    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+
     % S-function
     template_file = 'acados_solver_sfun.in.c';
     out_file = ['acados_solver_sfunction_' , model_name, '.c'];
@@ -216,44 +221,3 @@ function render_file( json_fullfile, template_dir, template_file, out_file, ...
     end
 end
 
-
-function set_up_t_renderer( t_renderer_location )
-    message = ['\nDear acados user, we could not find t_renderer binaries,',...
-        '\n which are needed to export templated C code from ',...
-        'Matlab.\n Press any key to proceed setting up the t_renderer automatically.',...
-        '\n Press "n" or "N" to exit, if you wish to set up t_renderer yourself.\n',...
-        '\n https://github.com/acados/tera_renderer/releases'];
-
-    In = input(message,'s');
-
-    if strcmpi( In, 'n')
-        error('Please set up t_renderer yourself and try again');
-    else
-        t_renderer_version = 'v0.0.34';
-        if ismac()
-            suffix = '-osx';
-        elseif isunix()
-            suffix = '-linux';
-        elseif ispc()
-            suffix = '-windows';
-        end
-        acados_root_dir = getenv('ACADOS_INSTALL_DIR');
-
-        tera_url = ['https://github.com/acados/tera_renderer/releases/download/', ...
-                t_renderer_version '/t_renderer-', t_renderer_version, suffix];
-        destination = fullfile(acados_root_dir, 'bin');
-        tmp_file = websave(destination, tera_url);
-
-        if ~exist(destination, 'dir')
-            [~,~] = mkdir(destination);
-        end
-
-        movefile(tmp_file, t_renderer_location);
-
-        if isunix()
-            % make executable
-            system(['chmod a+x ', t_renderer_location]);
-        end
-        fprintf('\nSuccessfully set up t_renderer\n')
-    end
-end

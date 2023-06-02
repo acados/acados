@@ -141,6 +141,14 @@ option(BUILD_SIM_EXAMPLE "Should the simulation example main_sim_{{ model.name }
 option(BUILD_ACADOS_SIM_SOLVER_LIB "Should the simulation solver library acados_sim_solver_{{ model.name }} be build?" OFF)
 {%- endif %}
 
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_SYSTEM_NAME MATCHES "Windows")
+    # MinGW, change to .lib such that mex recognizes it
+    set(CMAKE_SHARED_LIBRARY_SUFFIX ".lib")
+    set(CMAKE_SHARED_LIBRARY_PREFIX "")
+endif()
+
+
 # object target names
 set(MODEL_OBJ model_{{ model.name }})
 set(OCP_OBJ ocp_{{ model.name }})
@@ -152,6 +160,7 @@ set(MODEL_SRC
 {%- if  solver_options.integrator_type == "ERK" %}
     {{ model.name }}_model/{{ model.name }}_expl_ode_fun.c
     {{ model.name }}_model/{{ model.name }}_expl_vde_forw.c
+    {{ model.name }}_model/{{ model.name }}_expl_vde_adj.c
 	{%- if hessian_approx == "EXACT" %}
     {{ model.name }}_model/{{ model.name }}_expl_ode_hess.c
 	{%- endif %}
@@ -286,7 +295,7 @@ set(EX_SRC main_{{ model.name }}.c)
 set(EX_EXE main_{{ model.name }})
 
 {%- if model_external_shared_lib_dir and model_external_shared_lib_name %}
-set(EXTERNAL_DIR {{ model_external_shared_lib_dir  }})
+set(EXTERNAL_DIR {{ model_external_shared_lib_dir | replace(from="\", to="/")  }})
 set(EXTERNAL_LIB {{ model_external_shared_lib_name }})
 {%- else %}
 set(EXTERNAL_DIR)
@@ -294,26 +303,26 @@ set(EXTERNAL_LIB)
 {%- endif %}
 
 # set some search paths for preprocessor and linker
-set(ACADOS_INCLUDE_PATH {{ acados_include_path }} CACHE PATH "Define the path which contains the include directory for acados.")
-set(ACADOS_LIB_PATH {{ acados_lib_path }} CACHE PATH "Define the path which contains the lib directory for acados.")
+set(ACADOS_INCLUDE_PATH {{ acados_include_path | replace(from="\", to="/")  }} CACHE PATH "Define the path which contains the include directory for acados.")
+set(ACADOS_LIB_PATH {{ acados_lib_path | replace(from="\", to="/") }} CACHE PATH "Define the path which contains the lib directory for acados.")
 
 # c-compiler flags for debugging
 set(CMAKE_C_FLAGS_DEBUG "-O0 -ggdb")
 
-set(CMAKE_C_FLAGS "
+set(CMAKE_C_FLAGS "-fPIC -std=c99 {{ openmp_flag }}
 {%- if qp_solver == "FULL_CONDENSING_QPOASES" -%}
-   -DACADOS_WITH_QPOASES
+    -DACADOS_WITH_QPOASES
 {%- endif -%}
 {%- if qp_solver == "FULL_CONDENSING_DAQP" -%}
-   -DACADOS_WITH_DAQP
+    -DACADOS_WITH_DAQP
 {%- endif -%}
 {%- if qp_solver == "PARTIAL_CONDENSING_OSQP" -%}
-   -DACADOS_WITH_OSQP
+    -DACADOS_WITH_OSQP
 {%- endif -%}
 {%- if qp_solver == "PARTIAL_CONDENSING_QPDUNES" -%}
-   -DACADOS_WITH_QPDUNES
+    -DACADOS_WITH_QPDUNES
 {%- endif -%}
-    -fPIC -std=c99 {{ openmp_flag }}")
+")
 #-fno-diagnostics-show-line-numbers -g
 
 include_directories(

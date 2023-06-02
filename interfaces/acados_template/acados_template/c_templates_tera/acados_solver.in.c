@@ -379,7 +379,6 @@ return nlp_dims;
 void {{ model.name }}_acados_create_3_create_and_set_functions({{ model.name }}_solver_capsule* capsule)
 {
     const int N = capsule->nlp_solver_plan->N;
-    ocp_nlp_config* nlp_config = capsule->nlp_config;
 
     /************************************************
     *  external functions
@@ -1748,7 +1747,6 @@ void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* 
 {
     const int N = capsule->nlp_solver_plan->N;
     ocp_nlp_config* nlp_config = capsule->nlp_config;
-    ocp_nlp_dims* nlp_dims = capsule->nlp_dims;
     void *nlp_opts = capsule->nlp_opts;
 
     /************************************************
@@ -1756,12 +1754,9 @@ void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* 
     ************************************************/
 
 {% if solver_options.hessian_approx == "EXACT" %}
-    bool nlp_solver_exact_hessian = true;
-    // TODO: this if should not be needed! however, calling the setter with false leads to weird behavior. Investigate!
-    if (nlp_solver_exact_hessian)
-    {
-        ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "exact_hess", &nlp_solver_exact_hessian);
-    }
+    int nlp_solver_exact_hessian = 1;
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "exact_hess", &nlp_solver_exact_hessian);
+
     int exact_hess_dyn = {{ solver_options.exact_hess_dyn }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "exact_hess_dyn", &exact_hess_dyn);
 
@@ -2166,8 +2161,6 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int 
     ocp_nlp_in* nlp_in = capsule->nlp_in;
     ocp_nlp_solver* nlp_solver = capsule->nlp_solver;
 
-    int nx, nu, nv, ns, nz, ni, dim;
-
     double* buffer = calloc(NX+NU+NZ+2*NS+2*NSN+NBX+NBU+NG+NH+NPHI+NBX0+NBXN+NHN+NPHIN+NGN, sizeof(double));
 
     for(int i=0; i<N+1; i++)
@@ -2468,7 +2461,7 @@ int {{ model.name }}_acados_update_params_sparse({{ model.name }}_solver_capsule
     }
 {% endif %}{# if dims.np #}
 
-    return 0;
+    return solver_status;
 }
 
 int {{ model.name }}_acados_solve({{ model.name }}_solver_capsule* capsule)
@@ -2728,6 +2721,9 @@ void {{ model.name }}_acados_print_stats({{ model.name }}_solver_capsule* capsul
 int {{ model.name }}_acados_custom_update({{ model.name }}_solver_capsule* capsule, double* data, int data_len)
 {
 {%- if custom_update_filename == "" %}
+    (void)capsule;
+    (void)data;
+    (void)data_len;
     printf("\ndummy function that can be called in between solver calls to update parameters or numerical data efficiently in C.\n");
     printf("nothing set yet..\n");
     return 1;
