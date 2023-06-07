@@ -104,6 +104,7 @@ function ocp_generate_c_code(obj)
 
     constr = obj.acados_ocp_nlp_json.constraints;
     props = fieldnames(constr);
+    disable_last_warning();  % show warning for struct conversion only once
     for iprop = 1:length(props)
         this_prop = props{iprop};
         % add logic here if you want to work with select properties
@@ -247,7 +248,6 @@ function ocp_generate_c_code(obj)
         % savejson does not work for classes!
         % -> consider making the acados_ocp_nlp_json properties structs directly.
         ocp_json_struct = struct(obj.acados_ocp_nlp_json);
-        disable_last_warning();
         ocp_json_struct.dims = struct(ocp_json_struct.dims);
         ocp_json_struct.cost = struct(ocp_json_struct.cost);
         ocp_json_struct.constraints = struct(ocp_json_struct.constraints);

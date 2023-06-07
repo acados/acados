@@ -38,6 +38,7 @@ classdef {{ model.name }}_mex_solver < handle
         cost_ext_fun_type_e
         N
         name
+        code_gen_dir
     end % properties
 
 
@@ -54,13 +55,19 @@ classdef {{ model.name }}_mex_solver < handle
             obj.cost_ext_fun_type_e = '{{ cost.cost_ext_fun_type_e }}';
             obj.N = {{ dims.N }};
             obj.name = '{{ model.name }}';
+            obj.code_gen_dir = pwd();
         end
 
         % destructor
         function delete(obj)
+            disp("delete template...");
+            return_dir = pwd();
+            cd(obj.code_gen_dir);
             if ~isempty(obj.C_ocp)
                 acados_mex_free_{{ model.name }}(obj.C_ocp);
             end
+            cd(return_dir);
+            disp("done.");
         end
 
         % solve
