@@ -141,17 +141,7 @@ jobs:
       uses: matlab-actions/run-command@v1
       if: always()
       with:
-        command: cd examples/acados_matlab_octave/test; matlab_test_native_mex
-
-    - name: Matlab test templates
-      uses: matlab-actions/run-command@v1
-      with:
-        command: cd examples/acados_matlab_octave/test; matlab_test_templates
-
-    - name: Matlab test templates 2
-      uses: matlab-actions/run-command@v1
-      with:
-        command: cd examples/acados_matlab_octave/test; run_test_template_ocp_pendulum_nls
+        command: cd examples/acados_matlab_octave/test; run_matlab_tests
 
     - name: Run Simulink test
       uses: matlab-actions/run-command@v1
