@@ -415,21 +415,6 @@ for ii=1:n_sim
 
     % get new state
     x_sim(:,ii+1) = sim.get('xn');
-%    x_sim(:,ii+1) = x(:,2);
-
-%    (x(:,2) - sim.get('xn'))'
-
-    % simulate to initialize last stage
-    % set initial state of sim
-%    sim.set('x', x(:,ocp_N+1));
-    % set input in sim
-%    sim.set('u', zeros(nu, 1));
-%    sim.set('u', u(:,ocp_N));
-    % set parameter
-%    sim.set('p', wind0_ref(:,ii+ocp_N));
-
-    % simulate state
-%    sim.solve();
 
     % shift trajectory for initialization
 %    x_traj_init = [x(:,2:ocp_N+1), zeros(nx, 1)];
@@ -550,7 +535,7 @@ end
 end
 
 % remove temporary created files
-delete('y_ref')
-delete('y_e_ref')
-delete('wind0_ref')
-delete('windN_ref')
+delete('y_ref.mat')
+delete('y_e_ref.mat')
+delete('wind0_ref.mat')
+delete('windN_ref.mat')
