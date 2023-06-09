@@ -247,11 +247,11 @@ function ocp_generate_c_code(obj)
     % if is_octave()
         % savejson does not work for classes!
         % -> consider making the acados_ocp_nlp_json properties structs directly.
-        ocp_json_struct = struct(obj.acados_ocp_nlp_json);
-        ocp_json_struct.dims = struct(ocp_json_struct.dims);
-        ocp_json_struct.cost = struct(ocp_json_struct.cost);
-        ocp_json_struct.constraints = struct(ocp_json_struct.constraints);
-        ocp_json_struct.solver_options = struct(ocp_json_struct.solver_options);
+        ocp_json_struct = obj.acados_ocp_nlp_json.struct();
+        ocp_json_struct.dims = ocp_json_struct.dims.struct();
+        ocp_json_struct.cost = ocp_json_struct.cost.struct();
+        ocp_json_struct.constraints = ocp_json_struct.constraints.struct();
+        ocp_json_struct.solver_options = ocp_json_struct.solver_options.struct();
 
         % add compilation information to json
         libs = loadjson(fileread(fullfile(acados_folder, 'lib', 'link_libs.json')));

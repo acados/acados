@@ -66,6 +66,13 @@ classdef acados_ocp_nlp_json < handle
             end
             % obj.code_export_directory;
         end
+        function s = struct(self)
+            publicProperties = properties(self);
+            s = struct();
+            for fi = 1:numel(publicProperties)
+                s.(publicProperties{fi}) = self.(publicProperties{fi});
+            end
+        end
     end
 end
 

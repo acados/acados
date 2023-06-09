@@ -107,6 +107,13 @@ classdef ocp_nlp_cost_json < handle
             obj.zl_e        = [];
             obj.zu_e        = [];
         end
+        function s = struct(self)
+            publicProperties = properties(self);
+            s = struct();
+            for fi = 1:numel(publicProperties)
+                s.(publicProperties{fi}) = self.(publicProperties{fi});
+            end
+        end
     end
 end
 

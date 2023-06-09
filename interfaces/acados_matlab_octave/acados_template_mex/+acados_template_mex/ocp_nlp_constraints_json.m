@@ -157,6 +157,13 @@ classdef ocp_nlp_constraints_json < handle
             obj.usphi_e            = [];
             obj.idxsphi_e = [];
         end
+        function s = struct(self)
+            publicProperties = properties(self);
+            s = struct();
+            for fi = 1:numel(publicProperties)
+                s.(publicProperties{fi}) = self.(publicProperties{fi});
+            end
+        end
     end
 end
 
