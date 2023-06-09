@@ -57,7 +57,7 @@ qp_solver = 'partial_condensing_hpipm';
 qp_solver_cond_N = 5;
 % sim_method = 'irk';
 %sim_method = 'irk_gnsf';
-sim_method = 'discrete'
+sim_method = 'discrete';
 sim_method_num_stages = 4;
 sim_method_num_steps = 3;
 %cost_type = 'linear_ls';
@@ -211,14 +211,12 @@ ocp_opts.set('regularize_method', regularize_method);
 ocp_opts.set('nlp_solver_ext_qp_res', nlp_solver_ext_qp_res);
 ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
 ocp_opts.set('qp_solver', qp_solver);
+ocp_opts.set('sim_method', sim_method);
 if (strcmp(qp_solver, 'partial_condensing_hpipm'))
 	ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
 end
-if (strcmp(dyn_type, 'explicit') || strcmp(dyn_type, 'implicit'))
-	ocp_opts.set('sim_method', sim_method);
-	ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
-	ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
-end
+ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
+ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
 
 
 %% acados ocp
