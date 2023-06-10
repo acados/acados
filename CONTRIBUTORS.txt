@@ -1,41 +1,43 @@
 acados contributor list:
 
-- Jonathan Frey
-- Robin Verschueren
-- Gianluca Frison
-- Andrea Zanelli
-- Dimitris Kouzoupis
-- Branimir Novoselnik
-- Tommaso Sartor
+- Jonathan Frey (University Freiburg)
+- Robin Verschueren (University Freiburg)
+- Gianluca Frison (University Freiburg)
+- Andrea Zanelli (University Freiburg)
+- Dimitris Kouzoupis (University Freiburg)
+- Branimir Novoselnik (University Freiburg)
+- Tommaso Sartor (University Freiburg)
 - Niels van Duijkeren
-- Rien Quirynen
-- Jonas Koenemann
+- Rien Quirynen (University Freiburg)
+- Jonas Koenemann (University Freiburg)
 - Martin Kirchengast
-- Katrin Baumgärtner
+- Katrin Baumgärtner (University Freiburg)
 - Markus Schwienbacher
-- Rezart Qelibari
-- Daniel Arnström
-- Caspar Gruijthuijsen
-- Dang Doan
 - Yutao Chen
-- Tobias Schöls
-- Jonas Schlagenhauf
-- Joris Gillis
-- Thomas Jespersen
+- Rezart Qelibari (University Freiburg)
+- Daniel Arnström (Linköping University)
+- Caspar Gruijthuijsen (Sioux)
+- Tom Geelen (Sioux)
+- Dang Doan (University Freiburg)
+- Tobias Schöls (University Freiburg)
+- Hasan Berkay Çağır (University Freiburg)
+- Jonas Schlagenhauf (University Freiburg)
+- Joris Gillis (KU Leuven)
+- Thomas Jespersen (TKJ electronics)
 - François Bailly
 - Benjamin Michaud
-- Daniel Geweth
+- Daniel Geweth (Robert Bosch GmbH)
 - Greg Horn
 - Jacob Grunnet
-- Hasan Berkay Çağır
-- Yizhen Wang
-- Severin Hänggi
-- Harald Schäfer
+- Leonardo Cecchin (Robert Bosch GmbH)
+- Yizhen Wang (University Freiburg)
+- Severin Hänggi (ETH Zürich)
+- Harald Schäfer (comma.ai)
 - Sourish Pramanick
-- Adeeb Shihadeh
+- Adeeb Shihadeh (comma.ai)
 - Martin Koch
-- Miralem Saljanin
-- Moritz Diehl
+- Miralem Saljanin (Uni Stuttgart)
+- Moritz Diehl (University Freiburg)
 
 
 Note: this is roughly sorted by number of commits.
