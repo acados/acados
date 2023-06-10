@@ -1,0 +1,42 @@
+acados contributor list:
+
+- Jonathan Frey
+- Robin Verschueren
+- Gianluca Frison
+- Andrea Zanelli
+- Dimitris Kouzoupis
+- Branimir Novoselnik
+- Tommaso Sartor
+- Niels van Duijkeren
+- Rien Quirynen
+- Jonas Koenemann
+- Martin Kirchengast
+- Katrin Baumgärtner
+- Markus Schwienbacher
+- Rezart Qelibari
+- Daniel Arnström
+- Caspar Gruijthuijsen
+- Dang Doan
+- Yutao Chen
+- Tobias Schöls
+- Jonas Schlagenhauf
+- Joris Gillis
+- Thomas Jespersen
+- François Bailly
+- Benjamin Michaud
+- Daniel Geweth
+- Greg Horn
+- Jacob Grunnet
+- Hasan Berkay Çağır
+- Yizhen Wang
+- Severin Hänggi
+- Harald Schäfer
+- Sourish Pramanick
+- Adeeb Shihadeh
+- Martin Koch
+- Miralem Saljanin
+- Moritz Diehl
+
+
+Note: this is roughly sorted by number of commits.
+Not all commits are created equal.
