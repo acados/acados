@@ -41,6 +41,9 @@ acados contributor list:
 - Moritz Diehl (University Freiburg)
 
 
-Note: this is roughly sorted by number of commits.
-Not all commits are created equal.
-At some point, `acados` switched to squash-merge pull requests, which results in less commits of later contributors and a cleaner git history.
+Notes:
+- This list is roughly sorted by number of commits.
+- Not all commits are created equal.
+- At some point, `acados` switched to squash-merge pull requests, which results in less commits of later contributors and a cleaner git history.
+- Affiliations are added in brackets if they are known.
+- Please reach out, if you or your affiliation is not mentioned correctly.
