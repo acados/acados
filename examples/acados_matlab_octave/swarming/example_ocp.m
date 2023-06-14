@@ -186,6 +186,7 @@ if (strcmp(nlp_solver, 'sqp'))
 	ocp_opts.set('nlp_solver_tol_ineq', nlp_solver_tol_ineq);
 	ocp_opts.set('nlp_solver_tol_comp', nlp_solver_tol_comp);
     ocp_opts.set('nlp_solver_step_length', nlp_solver_step_length);
+    ocp_opts.set('qp_solver_tol_stat', .1 * nlp_solver_tol_stat);
 end
 ocp_opts.set('qp_solver', qp_solver);
 if (strcmp(qp_solver, 'partial_condensing_hpipm'))
