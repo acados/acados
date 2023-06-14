@@ -7,7 +7,7 @@ acados contributor list:
 - Dimitris Kouzoupis (University Freiburg)
 - Branimir Novoselnik (University Freiburg)
 - Tommaso Sartor (University Freiburg)
-- Niels van Duijkeren
+- Niels van Duijkeren (2016-2018 KU Leuven, 2018- Robert Bosch GmbH)
 - Rien Quirynen (University Freiburg)
 - Jonas Koenemann (University Freiburg)
 - Martin Kirchengast
