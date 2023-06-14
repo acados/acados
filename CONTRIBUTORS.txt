@@ -27,6 +27,7 @@ acados contributor list:
 - François Bailly
 - Benjamin Michaud
 - Daniel Geweth (Robert Bosch GmbH)
+- Andrea Ghezzi (University Freiburg)
 - Greg Horn
 - Jacob Grunnet
 - Leonardo Cecchin (Robert Bosch GmbH)
@@ -42,3 +43,4 @@ acados contributor list:
 
 Note: this is roughly sorted by number of commits.
 Not all commits are created equal.
+At some point, `acados` switched to squash-merge pull requests, which results in less commits of later contributors and a cleaner git history.
