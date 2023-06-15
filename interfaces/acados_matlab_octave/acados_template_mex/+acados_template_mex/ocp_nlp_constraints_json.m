@@ -158,7 +158,11 @@ classdef ocp_nlp_constraints_json < handle
             obj.idxsphi_e = [];
         end
         function s = struct(self)
-            publicProperties = properties(self);
+            if exist('properties')
+                publicProperties = eval('properties(self)');
+            else
+                publicProperties = fieldnames(self);
+            end
             s = struct();
             for fi = 1:numel(publicProperties)
                 s.(publicProperties{fi}) = self.(publicProperties{fi});
