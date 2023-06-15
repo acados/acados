@@ -1,8 +1,5 @@
 #
-# Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
-# Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
-# Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
-# Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+# Copyright (c) The acados authors.
 #
 # This file is part of acados.
 #
@@ -152,6 +149,7 @@ def main(use_cython=True):
     dts = simU[:, 1]
 
     print("acados solved OCP successfully, creating integrator to simulate the solution")
+    print(f"optimal time: {sum(dts)} s")
 
     # simulate on finer grid
     sim = AcadosSim()
@@ -206,7 +204,7 @@ def main(use_cython=True):
             k += 1
 
     # visualize
-    if os.environ.get('ACADOS_ON_CI'):
+    if not os.environ.get('ACADOS_ON_CI'):
         plt.figure()
 
         state_labels = ['p1', 'v1', 'p2', 'v2']

@@ -1,0 +1,49 @@
+acados contributor list:
+
+- Jonathan Frey (University Freiburg)
+- Robin Verschueren (University Freiburg)
+- Gianluca Frison (University Freiburg)
+- Andrea Zanelli (University Freiburg)
+- Dimitris Kouzoupis (University Freiburg)
+- Branimir Novoselnik (University Freiburg)
+- Tommaso Sartor (University Freiburg)
+- Niels van Duijkeren (2016-2018 KU Leuven, 2018- Robert Bosch GmbH)
+- Rien Quirynen (University Freiburg)
+- Jonas Koenemann (University Freiburg)
+- Martin Kirchengast
+- Katrin Baumgärtner (University Freiburg)
+- Markus Schwienbacher
+- Yutao Chen
+- Rezart Qelibari (University Freiburg)
+- Daniel Arnström (Linköping University)
+- Caspar Gruijthuijsen (Sioux)
+- Tom Geelen (Sioux)
+- Dang Doan (University Freiburg)
+- Tobias Schöls (University Freiburg)
+- Hasan Berkay Çağır (University Freiburg)
+- Jonas Schlagenhauf (University Freiburg)
+- Joris Gillis (KU Leuven)
+- Thomas Jespersen (TKJ electronics)
+- François Bailly
+- Benjamin Michaud
+- Daniel Geweth (Robert Bosch GmbH)
+- Andrea Ghezzi (University Freiburg)
+- Greg Horn
+- Jacob Grunnet
+- Leonardo Cecchin (Robert Bosch GmbH)
+- Yizhen Wang (University Freiburg)
+- Severin Hänggi (ETH Zürich)
+- Harald Schäfer (comma.ai)
+- Sourish Pramanick
+- Adeeb Shihadeh (comma.ai)
+- Martin Koch
+- Miralem Saljanin (Uni Stuttgart)
+- Moritz Diehl (University Freiburg)
+
+
+Notes:
+- This list is roughly sorted by number of commits.
+- Not all commits are created equal.
+- At some point, `acados` switched to squash-merge pull requests, which results in less commits of later contributors and a cleaner git history.
+- Affiliations are added in brackets if they are known.
+- Please reach out, if you or your affiliation is not mentioned correctly.
