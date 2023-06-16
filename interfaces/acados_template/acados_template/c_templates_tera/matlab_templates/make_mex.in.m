@@ -45,13 +45,23 @@ function make_mex_{{ model.name }}()
     external_include = ['-I', fullfile(acados_folder, 'external')];
     blasfeo_include = ['-I', fullfile(acados_folder, 'external', 'blasfeo', 'include')];
     hpipm_include = ['-I', fullfile(acados_folder, 'external', 'hpipm', 'include')];
-    {% set_global acados_compiled_libs = [] %}
-    {%- for key, value in acados_link_libs -%}
-        {%- if value is string and value | wordcount > 0 -%}
-            {%- set_global acados_compiled_libs = acados_compiled_libs | concat(with=`'`~value~`'`) -%}
-        {%- endif -%}
-    {%- endfor -%}
-    acados_lib_extra = { {{ acados_compiled_libs | join(sep=`, `) }} };
+
+    % load linking information of compiled acados
+    link_libs_core_filename = fullfile(acados_folder, 'lib', 'link_libs.json');
+    addpath(fullfile(acados_folder, 'external', 'jsonlab'));
+    link_libs = loadjson(link_libs_core_filename);
+
+    % add necessary link instructs
+    acados_lib_extra = {};
+    lib_names = fieldnames(link_libs);
+    for idx = 1 : numel(lib_names)
+        lib_name = lib_names{idx};
+        link_arg = link_libs.(lib_name);
+        if ~isempty(link_arg)
+            acados_lib_extra = [acados_lib_extra, link_arg];
+        end
+    end
+
 
     mex_include = ['-I', fullfile(acados_folder, 'interfaces', 'acados_matlab_octave')];
 
