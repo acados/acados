@@ -48,7 +48,7 @@ ocp_solver.custom_update([])
 ```
 The initial disturbance matrix $P_0$ can be passed as a function argument:
 ```
-ocp_solver.custom_update([W_mat.flatten()])
+ocp_solver.custom_update([P0_mat.flatten()])
 ```
 
 ## Examples
