@@ -216,7 +216,7 @@ class ZoroMPCSolver:
             self.acados_integrator_time += self.acados_ocp_solver.get_stats("time_sim")[0]
 
             t_start = process_time()
-            self.acados_ocp_solver.custom_update([self.cfg.W_mat.flatten()])
+            self.acados_ocp_solver.custom_update([self.cfg.P0_mat.flatten()])
             self.propagation_t += process_time() - t_start
 
             # feedback rti_phase
