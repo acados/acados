@@ -39,7 +39,17 @@ function set_up_t_renderer(t_renderer_location,varargin)
     tera_url = ['https://github.com/acados/tera_renderer/releases/download/', ...
             t_renderer_version '/t_renderer-', t_renderer_version, suffix];
     destination = fullfile(acados_root_dir, 'bin');
-    tmp_file = websave(destination, tera_url);
+
+    if exist('websave')
+        tmp_file = websave(destination, tera_url);
+    else
+        tmp_file = [destination, '/t_renderer-', t_renderer_version, suffix];
+        cmd = sprintf('wget -O %s %s', tmp_file, tera_url);
+        status = system(cmd);
+        if status
+            error('Failed to download t_renderer');
+        end
+    end
 
     if ~exist(destination, 'dir')
         [~,~] = mkdir(destination);

@@ -49,7 +49,6 @@ sim_newton_iter = 3;
 model_name = 'pend_dae';
 
 % ocp
-param_scheme = 'multiple_shooting_unif_grid';
 ocp_N = 50;
 nlp_solver = 'sqp_rti'; % sqp, sqp_rti
 nlp_solver_exact_hessian = 'false';
@@ -104,7 +103,7 @@ nbu = nu; % number of bounds on controls u
 nh_e = 0;
 
 % cost
-% linear least square cost: y^T * W * y, where y = Vx * x + Vu * u - y_ref
+% linear least square cost: y^T * W * y, where y = Vx * x + Vu * u  + Vz * z - y_ref
 Vx = eye(ny, nx); % state-to-output matrix in lagrange term
 Vu = zeros(ny, nu);
 Vu(nx:end, nx:end) = eye(nu); % input-to-output matrix in lagrange term
@@ -114,6 +113,7 @@ W = diag([1e3 * ones(3,1);... % xpos, ypos, alpha
             ones(3,1); ... %speeds
             1e2 ]); % control
 W_e = W(nu+1:nu+nx, nu+1:nu+nx); % weight matrix in mayer term
+Vz = zeros(ny, nz);
 yr = [xtarget; uref]; % output reference in lagrange term
 yr_e = xtarget; % output reference in mayer term
 
@@ -156,6 +156,7 @@ ocp_model.set('cost_type', cost_type);
 ocp_model.set('cost_type_e', cost_type);
 if (strcmp(cost_type, 'linear_ls'))
 	ocp_model.set('cost_Vu', Vu);
+    ocp_model.set('cost_Vz', Vz);
 	ocp_model.set('cost_Vx', Vx);
 	ocp_model.set('cost_Vx_e', Vx_e);
 	ocp_model.set('cost_W', W);
@@ -199,7 +200,6 @@ end
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_interface', compile_interface);
 ocp_opts.set('codgen_model', codgen_model);
-ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', ocp_N);
 ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);

@@ -46,6 +46,23 @@ function make_mex_{{ model.name }}()
     blasfeo_include = ['-I', fullfile(acados_folder, 'external', 'blasfeo', 'include')];
     hpipm_include = ['-I', fullfile(acados_folder, 'external', 'hpipm', 'include')];
 
+    % load linking information of compiled acados
+    link_libs_core_filename = fullfile(acados_folder, 'lib', 'link_libs.json');
+    addpath(fullfile(acados_folder, 'external', 'jsonlab'));
+    link_libs = loadjson(link_libs_core_filename);
+
+    % add necessary link instructs
+    acados_lib_extra = {};
+    lib_names = fieldnames(link_libs);
+    for idx = 1 : numel(lib_names)
+        lib_name = lib_names{idx};
+        link_arg = link_libs.(lib_name);
+        if ~isempty(link_arg)
+            acados_lib_extra = [acados_lib_extra, link_arg];
+        end
+    end
+
+
     mex_include = ['-I', fullfile(acados_folder, 'interfaces', 'acados_matlab_octave')];
 
     mex_names = { ...
@@ -92,7 +109,8 @@ function make_mex_{{ model.name }}()
         if is_octave()
     %        mkoctfile -p CFLAGS
             mex(acados_include, template_lib_include, external_include, blasfeo_include, hpipm_include,...
-            acados_lib_path, template_lib_path, mex_include, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
+                template_lib_path, mex_include, acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo',...
+                acados_lib_extra{:}, mex_files{ii})
         else
             if ismac()
                 FLAGS = 'CFLAGS=$CFLAGS -std=c99';
@@ -100,7 +118,8 @@ function make_mex_{{ model.name }}()
                 FLAGS = 'CFLAGS=$CFLAGS -std=c99 -fopenmp';
             end
             mex(FLAGS, acados_include, template_lib_include, external_include, blasfeo_include, hpipm_include,...
-                acados_lib_path, template_lib_path, mex_include, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
+                template_lib_path, mex_include, acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo',...
+                acados_lib_extra{:}, mex_files{ii})
         end
     end
 

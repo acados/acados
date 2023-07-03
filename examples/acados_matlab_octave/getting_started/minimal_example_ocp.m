@@ -30,7 +30,11 @@
 %
 
 %% test of native matlab interface
-clear all
+if ~exist('simulink_opts')
+    disp('using acados simulink default options')
+    simulink_opts = get_acados_simulink_opts;
+end
+
 
 model_path = fullfile(pwd,'..','pendulum_on_cart_model');
 addpath(model_path)
@@ -103,7 +107,7 @@ ocp_opts.set('ext_fun_compile_flags', ''); % '-O2'
 % ... see ocp_opts.opts_struct to see what other fields can be set
 
 %% create ocp solver
-ocp = acados_ocp(ocp_model, ocp_opts);
+ocp = acados_ocp(ocp_model, ocp_opts, simulink_opts);
 
 x_traj_init = zeros(nx, N+1);
 u_traj_init = zeros(nu, N);

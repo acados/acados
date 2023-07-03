@@ -1,14 +1,11 @@
 %% Simulink example
 %
+clear all;
 
 %% Run minimal example
 %
 minimal_example_ocp;
 
-
-%% Render templated Code for the model contained in ocp object
-%
-ocp.generate_c_code;
 
 %% Compile Sfunctions
 cd c_generated_code

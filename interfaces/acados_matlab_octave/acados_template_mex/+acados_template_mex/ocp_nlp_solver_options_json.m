@@ -121,5 +121,16 @@ classdef ocp_nlp_solver_options_json < handle
             obj.nlp_solver_ext_qp_res = 0;
             obj.ext_fun_compile_flags = '-O2';
         end
+        function s = struct(self)
+            if exist('properties')
+                publicProperties = eval('properties(self)');
+            else
+                publicProperties = fieldnames(self);
+            end
+            s = struct();
+            for fi = 1:numel(publicProperties)
+                s.(publicProperties{fi}) = self.(publicProperties{fi});
+            end
+        end
     end
 end

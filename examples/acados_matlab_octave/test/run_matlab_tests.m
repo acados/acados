@@ -32,7 +32,9 @@ test_names = ["run_test_dim_check",
 % "run_test_sim_adj",
 "run_test_sim_dae",
 % "run_test_sim_forw",
-"run_test_sim_hess"];
+"run_test_sim_hess",
+"run_test_mhe_lorentz"
+];
 
 for k = 1:length(test_names)
     disp(strcat("running test ", test_names(k)));

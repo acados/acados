@@ -1,5 +1,8 @@
 %
-% Copyright (c) The acados authors.
+% Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+% Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+% Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+% Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
 %
 % This file is part of acados.
 %
@@ -110,6 +113,9 @@ for n=1:N_sim-model.N
     x0_bar = estimator.get('x', 1);
 end
 
+disp('MHE test works!')
+% TODO: add more checks!
+
 %% Plot
 % ts = model.h*(0:N_sim);
 
@@ -139,42 +145,3 @@ end
 %     ylabel(States{i});
 %     xlabel('t [s]');
 % end
-
-%% test templated solver
-disp('testing templated solver');
-estimator.generate_c_code;
-cd c_generated_code/
-command = strcat('t_ocp = ', estimator.model_struct.name , '_mex_solver');
-eval(command);
-
-% set measurements
-yref_0(1:ny) = y_sim(:, 1);
-yref_0(ny+nu+1:end) = x0;
-
-estimator.set('cost_y_ref', yref_0, 0);
-t_ocp.set('cost_y_ref', yref_0, 0);
-
-for i=1:model.N-1
-    yref(1:ny) = y_sim(:, i+1);
-    estimator.set('cost_y_ref', yref, i);
-    t_ocp.set('cost_y_ref', yref, i);
-end
-
-t_ocp.solve()
-xt_traj = t_ocp.get('x');
-
-estimator.solve()
-x_traj = estimator.get('x');
-
-max_diff = max(max(abs(xt_traj - x_traj)));
-disp(['difference ' num2str(max_diff)]);
-
-if max_diff > 2 * estimator.opts_struct.nlp_solver_tol_stat
-    error("solution of templated and native MEX MHE solver differ too much")
-end
-
-t_ocp.print('stat')
-cost_val_t_ocp = t_ocp.get_cost();
-clear t_ocp
-cd ..
-

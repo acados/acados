@@ -1,6 +1,6 @@
+clear all
 addpath(fullfile('..','getting_started'));
 
-minimal_example_ocp;
 % extensive_example_ocp;
 
 
@@ -26,11 +26,10 @@ simulink_opts.samplingtime = '-1';
 
 % set time step for code generated integrator - default is length of first
 % time step of ocp object
-ocp.opts_struct.Tsim = 0.05;
 
+%% run minimal example
+minimal_example_ocp;
 
-%% Render templated Code for the model contained in ocp object
-ocp.generate_c_code(simulink_opts);
 
 %% Compile Sfunctions
 cd c_generated_code

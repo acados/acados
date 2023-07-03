@@ -46,14 +46,7 @@ acados_lib_path = ['-L' fullfile(acados_folder, 'lib')];
 
 
 mex_names = { ...
-    'ocp_create', ...
-    'ocp_destroy', ...
-    'ocp_create_ext_fun', ...
-    'ocp_destroy_ext_fun', ...
-    'ocp_solve', ...
     'ocp_get_cost', ...
-    'ocp_precompute', ...
-    'ocp_set', ...
     'ocp_get' ...
     'ocp_eval_param_sens', ...
 };
@@ -68,7 +61,23 @@ link_libs_core_filename = fullfile(acados_folder, 'lib', 'link_libs.json');
 link_libs_interface_filename = fullfile(opts.output_dir, 'link_libs.json');
 copyfile(link_libs_core_filename, link_libs_interface_filename);
 addpath(fullfile(acados_folder, 'external', 'jsonlab'));
-libs = loadjson(link_libs_core_filename);
+link_libs = loadjson(link_libs_core_filename);
+
+% add necessary link instructs
+acados_def_extra = '';
+acados_lib_extra = {};
+lib_names = fieldnames(link_libs);
+for idx = 1 : numel(lib_names)
+    lib_name = lib_names{idx};
+    link_arg = link_libs.(lib_name);
+    if ~isempty(link_arg)
+        def_arg = sprintf('-DACADOS_WITH_%s', upper(lib_name));
+        acados_def_extra = [acados_def_extra, ' ', def_arg];
+        acados_lib_extra = [acados_lib_extra, link_arg];
+    end
+end
+
+
 
 %% compile mex
 if is_octave()
@@ -91,31 +100,12 @@ if is_octave()
     fclose(input_file);
 
     % add flags
-    defines_tmp = '';
-    if ~isempty(libs.qpoases)
-        defines_tmp = [defines_tmp, ' -DACADOS_WITH_QPOASES'];
-    end
-    if ~isempty(libs.daqp)
-        defines_tmp = [defines_tmp, ' -DACADOS_WITH_DAQP'];
-    end
-    if ~isempty(libs.osqp)
-        defines_tmp = [defines_tmp, ' -DACADOS_WITH_OSQP'];
-    end
-    if ~isempty(libs.hpmpc)
-        defines_tmp = [defines_tmp, ' -DACADOS_WITH_HPMPC'];
-    end
-    if ~isempty(libs.qpdunes)
-        defines_tmp = [defines_tmp, ' -DACADOS_WITH_QPDUNES'];
-    end
-    if ~isempty(libs.ooqp)
-        defines_tmp = [defines_tmp, ' -DACADOS_WITH_OOQP'];
-    end
-    setenv('CFLAGS', [cflags_tmp, defines_tmp]);
-    setenv('COMPDEFINES', defines_tmp);
+    setenv('CFLAGS', [cflags_tmp, acados_def_extra]);
+    setenv('COMPDEFINES', acados_def_extra);
 
-    if ~ismac() && ~isempty(libs.openmp)
-        setenv('LDFLAGS', libs.openmp);
-        setenv('COMPFLAGS', libs.openmp);
+    if ~ismac() && ~isempty(link_libs.openmp)
+        setenv('LDFLAGS', link_libs.openmp);
+        setenv('COMPFLAGS', link_libs.openmp);
     end
 
 end
@@ -125,45 +115,20 @@ FLAGS = 'CFLAGS=$CFLAGS -std=c99';
 LDFLAGS = 'LDFLAGS=$LDFLAGS';
 COMPFLAGS = 'COMPFLAGS=$COMPFLAGS';
 COMPDEFINES = 'COMPDEFINES=$COMPDEFINES';
-if ~ismac() && ~isempty(libs.openmp)
-    LDFLAGS = [LDFLAGS, ' ', libs.openmp];
-    COMPFLAGS = [COMPFLAGS, ' ', libs.openmp]; % seems unnecessary
+if ~ismac() && ~isempty(link_libs.openmp)
+    LDFLAGS = [LDFLAGS, ' ', link_libs.openmp];
+    COMPFLAGS = [COMPFLAGS, ' ', link_libs.openmp]; % seems unnecessary
 end
 
 if ~is_octave()
-    defines_tmp = '';
-    if ~isempty(libs.qpoases)
-        defines_tmp = [defines_tmp, ' -DACADOS_WITH_QPOASES'];
-    end
-    if ~isempty(libs.daqp)
-        defines_tmp = [defines_tmp, ' -DACADOS_WITH_DAQP'];
-    end
-    if ~isempty(libs.osqp)
-        defines_tmp = [defines_tmp, ' -DACADOS_WITH_OSQP'];
-    end
-    if ~isempty(libs.hpmpc)
-        defines_tmp = [defines_tmp, ' -DACADOS_WITH_HPMPC'];
-    end
-    if ~isempty(libs.qpdunes)
-        defines_tmp = [defines_tmp, ' -DACADOS_WITH_QPDUNES'];
-    end
-    if ~isempty(libs.ooqp)
-        defines_tmp = [defines_tmp, ' -DACADOS_WITH_OOQP'];
-    end
-    FLAGS = [FLAGS, defines_tmp];
-    COMPDEFINES = [COMPDEFINES, defines_tmp];
+    FLAGS = [FLAGS, acados_def_extra];
+    COMPDEFINES = [COMPDEFINES, acados_def_extra];
 end
 
 for ii=1:length(mex_files)
     disp(['compiling ', mex_files{ii}])
     if is_octave()
-        fn = fieldnames(libs);
-        linker_flags = {'-lacados', '-lhpipm', '-lblasfeo'};
-        for k = 1:numel(fn)
-            if ~isempty(libs.(fn{k}))
-                linker_flags{end+1} = libs.(fn{k});
-            end
-        end
+        linker_flags = ['-lacados', '-lhpipm', '-lblasfeo', acados_lib_extra];
         % NOTE: multiple linker flags in 1 argument do not work in Matlab
         mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
             acados_lib_path, linker_flags{:}, mex_files{ii})
@@ -172,8 +137,7 @@ for ii=1:length(mex_files)
         % MSVC uses COMPFLAGS, COMPDEFINES
         % NOTE: empty linker flags do not work in Octave
         mex(mex_flags, FLAGS, LDFLAGS, COMPDEFINES, COMPFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-            acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', libs.qpoases,...
-            libs.daqp, libs.qpdunes, libs.osqp, libs.hpmpc, libs.ooqp, mex_files{ii}, '-outdir', opts.output_dir)
+            acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', acados_lib_extra{:}, mex_files{ii}, '-outdir', opts.output_dir)
     end
 end
 

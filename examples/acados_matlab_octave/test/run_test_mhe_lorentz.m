@@ -1,5 +1,8 @@
 %
-% Copyright (c) The acados authors.
+% Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+% Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+% Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+% Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
 %
 % This file is part of acados.
 %
@@ -48,7 +51,9 @@ end
 
 %% ocp tests
 try
-    test_template_disc_dyn_ocp_linear;
+    test_mhe_lorentz;
 catch exception
     exit_with_error(exception);
 end
+
+fprintf('\nrun_tests_ocp: success!\n\n');

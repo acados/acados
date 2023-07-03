@@ -32,6 +32,10 @@
 classdef acados_ocp < handle
 
     properties
+        % templated
+        t_ocp
+        code_gen_dir
+
         C_ocp
         C_ocp_ext_fun
         model_struct
@@ -48,7 +52,7 @@ classdef acados_ocp < handle
     methods
 
 
-        function obj = acados_ocp(model, opts)
+        function obj = acados_ocp(model, opts, simulink_opts)
             obj.model_struct = model.model_struct;
             obj.opts_struct = opts.opts_struct;
 
@@ -190,248 +194,82 @@ classdef acados_ocp < handle
                 end
             end
 
-            % create C object
-            try
-                obj.C_ocp = ocp_create(obj.model_struct, obj.opts_struct);
-            catch ex
-                str = sprintf('Exception:\n\t%s\n\t%s\n',ex.identifier,ex.message);
-                error(str);
+            % TODO: call ocp_generate_c_code()
+            if nargin < 3
+                simulink_opts = get_acados_simulink_opts;
             end
+            obj.acados_ocp_nlp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts);
+            ocp_generate_c_code(obj);
 
-            % generate and compile casadi functions
-            if (strcmp(obj.opts_struct.codgen_model, 'true') || strcmp(obj.opts_struct.compile_model, 'true'))
-                ocp_generate_casadi_ext_fun(obj.model_struct, obj.opts_struct);
-            end
+            % templated MEX
+            return_dir = pwd();
+            obj.code_gen_dir = obj.acados_ocp_nlp_json.code_export_directory; 
+            cd(obj.code_gen_dir)
 
-            obj.C_ocp_ext_fun = ocp_create_ext_fun();
+            mex_solver_name = sprintf('%s_mex_solver', obj.model_struct.name);
+            mex_solver = str2func(mex_solver_name);
+            obj.t_ocp = mex_solver();
+            addpath(pwd());
 
-            % compile mex with model dependency & set pointers for external functions in model
-            obj.C_ocp_ext_fun = ocp_set_ext_fun(obj.C_ocp, obj.C_ocp_ext_fun,...
-                                             obj.model_struct, obj.opts_struct);
-
-            % precompute
-            ocp_precompute(obj.C_ocp);
-
-            % set parameters to nominal value
-            if obj.model_struct.dim_np > 0 && ~isempty(obj.opts_struct.parameter_values)
-                obj.set('p', obj.opts_struct.parameter_values)
-            end
+            cd(return_dir);
 
         end
 
 
         function solve(obj)
-            ocp_solve(obj.C_ocp);
+            obj.t_ocp.solve();
         end
 
 
         function generate_c_code(obj, simulink_opts)
             if nargin < 2
-                simulink_opts = get_acados_simulink_opts;
+                warning("Code is generated with the default simulink options via the constructor of acados_ocp.")
+            else
+                error("If you want to provide simulink options, put it in the constructor of acados_ocp.")
             end
-            % set up acados_ocp_nlp_json
-            obj.acados_ocp_nlp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts);
-            % render templated code
-            ocp_generate_c_code(obj);
         end
 
 
         function eval_param_sens(obj, field, stage, index)
-            ocp_eval_param_sens(obj.C_ocp, field, stage, index);
+            ocp.t_ocp.eval_param_sens(field, stage, index);
         end
 
         function value = get_cost(obj)
-            value = ocp_get_cost(obj.C_ocp);
+            value = obj.t_ocp.get_cost();
         end
 
-        function set(varargin)
-            obj = varargin{1};
-            field = varargin{2};
-            value = varargin{3};
-            if ~isa(field, 'char')
-                error('field must be a char vector, use '' ''');
-            end
-            if nargin==3
-                ocp_set(obj.cost_ext_fun_type, obj.cost_ext_fun_type_e, obj.C_ocp, obj.C_ocp_ext_fun, field, value);
-            elseif nargin==4
-                stage = varargin{4};
-                ocp_set(obj.cost_ext_fun_type, obj.cost_ext_fun_type_e, obj.C_ocp, obj.C_ocp_ext_fun, field, value, stage);
-            else
-                disp('acados_ocp.set: wrong number of input arguments (2 or 3 allowed)');
-            end
+        function set(obj, field, value, varargin)
+            obj.t_ocp.set(field, value, varargin{:});
         end
 
-
-
-        function value = get(varargin)
-            obj = varargin{1};
-            field = varargin{2};
-            if ~isa(field, 'char')
-                error('field must be a char vector, use '' ''');
-            end
-
-            if nargin==2
-                value = ocp_get(obj.C_ocp, field);
-            elseif nargin==3
-                stage = varargin{3};
-                value = ocp_get(obj.C_ocp, field, stage);
-            else
-                disp('acados_ocp.get: wrong number of input arguments (1 or 2 allowed)');
-            end
+        function value = get(obj, field, varargin)
+            value = obj.t_ocp.get(field, varargin{:});
         end
 
-        function [] = store_iterate(varargin)
-            %%%  Stores the current iterate of the ocp solver in a json file.
-            %%% param1: filename: if not set, use model_name + timestamp + '.json'
-            %%% param2: overwrite: if false and filename exists add timestamp to filename
-
-            obj = varargin{1};
-            filename = '';
-            overwrite = false;
-
-            if nargin>=2
-                filename = varargin{2};
-                if ~isa(filename, 'char')
-                    error('filename must be a char vector, use '' ''');
-                end
-            end
-
-            if nargin==3
-                overwrite = varargin{3};
-            end
-
-            if nargin > 3
-                disp('acados_ocp.get: wrong number of input arguments (1 or 2 allowed)');
-            end
-
-            if strcmp(filename,'')
-                filename = [obj.model_struct.name '_iterate.json'];
-            end
-            if ~overwrite
-                % append timestamp
-                if exist(filename, 'file')
-                    filename = filename(1:end-5);
-                    filename = [filename '_' datestr(now,'yyyy-mm-dd-HH:MM:SS') '.json'];
-                end
-            end
-            filename = fullfile(pwd, filename);
-
-            % get iterate:
-            solution = struct();
-            for i=0:obj.opts_struct.param_scheme_N
-                solution.(['x_' num2str(i)]) = obj.get('x', i);
-                solution.(['lam_' num2str(i)]) = obj.get('lam', i);
-                solution.(['t_' num2str(i)]) = obj.get('t', i);
-                solution.(['sl_' num2str(i)]) = obj.get('sl', i);
-                solution.(['su_' num2str(i)]) = obj.get('su', i);
-            end
-            for i=0:obj.opts_struct.param_scheme_N-1
-                solution.(['z_' num2str(i)]) = obj.get('z', i);
-                solution.(['u_' num2str(i)]) = obj.get('u', i);
-                solution.(['pi_' num2str(i)]) = obj.get('pi', i);
-            end
-
-            acados_folder = getenv('ACADOS_INSTALL_DIR');
-            addpath(fullfile(acados_folder, 'external', 'jsonlab'));
-            savejson('', solution, filename);
-
-            json_string = savejson('', solution, 'ForceRootName', 0);
-
-            fid = fopen(filename, 'w');
-            if fid == -1, error('store_iterate: Cannot create JSON file'); end
-            fwrite(fid, json_string, 'char');
-            fclose(fid);
-
-            disp(['stored current iterate in ' filename]);
+        function [] = store_iterate(obj, varargin)
+            obj.t_ocp.store_iterate(varargin{:});
         end
 
 
         function [] = load_iterate(obj, filename)
-            %%%  Loads the iterate stored in json file with filename into the ocp solver.
-            acados_folder = getenv('ACADOS_INSTALL_DIR');
-            addpath(fullfile(acados_folder, 'external', 'jsonlab'));
-            filename = fullfile(pwd, filename);
-
-            if ~exist(filename, 'file')
-                error(['load_iterate: failed, file does not exist: ' filename])
-            end
-
-            solution = loadjson(filename);
-            keys = fieldnames(solution);
-
-            for k = 1:numel(keys)
-                key = keys{k};
-                key_parts = strsplit(key, '_');
-                field = key_parts{1};
-                stage = key_parts{2};
-
-                val = solution.(key);
-
-                % check if array is empty (can happen for z)
-                if numel(val) > 0
-                    obj.set(field, val, str2num(stage))
-                end
-            end
+            obj.t_ocp.load_iterate(filename);
         end
 
 
-        function print(varargin)
-            if nargin < 2
-                field = 'stat';
-            else
-                field = varargin{2};
-            end
-
-            obj = varargin{1};
-            ocp_solver_string = obj.opts_struct.nlp_solver;
-
-            if strcmp(field, 'stat')
-                stat = obj.get('stat');
-                if strcmp(ocp_solver_string, 'sqp')
-                    fprintf('\niter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp_stat\tqp_iter\talpha\t');
-                    if size(stat,2)>8
-                        fprintf('\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp');
-                    end
-                    fprintf('\n');
-                    for jj=1:size(stat,1)
-                        fprintf('%d\t%e\t%e\t%e\t%e\t%d\t%d\t%e', stat(jj,1), stat(jj,2), stat(jj,3), stat(jj,4), stat(jj,5), stat(jj,6), stat(jj,7), stat(jj, 8));
-                        if size(stat,2)>8
-                            fprintf('\t%e\t%e\t%e\t%e', stat(jj,9), stat(jj,10), stat(jj,11), stat(jj,12));
-                        end
-                        fprintf('\n');
-                    end
-                    fprintf('\n');
-                elseif strcmp(ocp_solver_string, 'sqp_rti')
-                    fprintf('\niter\tqp_status\tqp_iter');
-                    if size(stat,2)>3
-                        fprintf('\t\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp');
-                    end
-                    fprintf('\n');
-                    for jj=1:size(stat,1)
-                        fprintf('%d\t%d\t\t%d', stat(jj,1), stat(jj,2), stat(jj,3));
-                        if size(stat,2)>3
-                            fprintf('\t%e\t%e\t%e\t%e', stat(jj,4), stat(jj,5), stat(jj,6), stat(jj,7));
-                        end
-                        fprintf('\n');
-                    end
-                end
-
-            else
-                fprintf('unsupported field in function print of acados_ocp.print, got %s', field);
-                keyboard
-            end
-
+        function print(obj, varargin)
+            obj.t_ocp.print(varargin{:});
         end
 
 
-        function delete(obj)
-            if ~isempty(obj.C_ocp_ext_fun)
-                ocp_destroy_ext_fun(obj.model_struct, obj.C_ocp, obj.C_ocp_ext_fun);
-            end
-            if ~isempty(obj.C_ocp)
-                ocp_destroy(obj.C_ocp);
-            end
-        end
+        % function delete(obj)
+        %     if ~isempty(obj.t_ocp)
+        %         return_dir = pwd();
+        %         % the library is located in that directory 
+        %         cd(obj.code_gen_dir);
+        %         clear(obj.t_ocp);
+        %         cd(return_dir);
+        %     end
+        % end
 
 
     end % methods

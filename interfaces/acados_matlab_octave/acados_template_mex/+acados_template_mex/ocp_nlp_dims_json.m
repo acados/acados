@@ -116,6 +116,17 @@ classdef ocp_nlp_dims_json < handle
             obj.gnsf_ny = 0;
             obj.gnsf_nuhat = 0;
         end
+        function s = struct(self)
+            if exist('properties')
+                publicProperties = eval('properties(self)');
+            else
+                publicProperties = fieldnames(self);
+            end
+            s = struct();
+            for fi = 1:numel(publicProperties)
+                s.(publicProperties{fi}) = self.(publicProperties{fi});
+            end
+        end
     end
 end
 

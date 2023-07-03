@@ -99,10 +99,11 @@ git submodule update --recursive --init
 ```
 
 ### Prepare acados build (minGW)
-- Locate the `cmake.exe` file. The default location is `C:\Program Files\CMake311\bin`.
-- Add this path to your environment variable PATH, using the Windows GUI. To open the GUI press Windows key and type "env".
 - Install mingw from MATLAB add-ons manager.
-- Locate this mingw installation. The default location is `C:\ProgramData\MATLAB\SupportPackages\R2018a\3P.instrset\mingw_w64.instrset`.
+- Add the following paths to your environment variable `PATH`, using the Windows GUI. To open the GUI press Windows key and type "env".
+1. The path to the `cmake.exe` file. The default location is `C:\Program Files\CMake\bin`.
+2. The path to the MATLAB installation of `mingw32-make.exe` file. The default location is `C:\ProgramData\MATLAB\SupportPackages\R2018a\3P.instrset\mingw_w64.instrset\bin`.
+- You can check whether the modification to `PATH` variable is in effect by executing in cmd `echo %PATH%` or in PowerShell `echo $env:path`.
 
 ### Automatic build of acados (minGW)
 Run the following in Matlab in the folder `<acados_root_folder>/interfaces/acados_matlab_octave`:

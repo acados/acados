@@ -129,8 +129,18 @@ ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('sim_method', sim_method);
 ocp_opts.set('qp_solver', qp_solver);
 
+
+%% test with simulink options
+simulink_opts = get_acados_simulink_opts;
+simulink_opts.inputs.x_init = 1;
+simulink_opts.outputs.u0 = 0;
+
+simulink_opts.outputs.sqp_iter = 0;
+simulink_opts.outputs.CPU_time = 0;
+simulink_opts.outputs.x1 = 0;
+
 %% create ocp solver
-ocp = acados_ocp(ocp_model, ocp_opts);
+ocp = acados_ocp(ocp_model, ocp_opts, simulink_opts);
 
 % initialize
 % 2 working initializations
@@ -153,41 +163,10 @@ x_acados = ocp.get('x', 0);
 % [x_acados, x_ipopt]
 diff_acados_ipopt = norm(x_acados-x_ipopt)
 
-%% test templated ocp solver
-disp('testing templated solver');
-simulink_opts = get_acados_simulink_opts;
-simulink_opts.inputs.x_init = 1;
-simulink_opts.outputs.u0 = 0;
-
-simulink_opts.outputs.sqp_iter = 0;
-simulink_opts.outputs.CPU_time = 0;
-simulink_opts.outputs.x1 = 0;
-
-ocp.generate_c_code(simulink_opts);
-cd c_generated_code/
-
-%% Test template based solver from Matlab
-% Note: This does not work on Windows (yet)
-t_ocp = target_selector_mex_solver;
-
-t_ocp.set('init_x', x_traj_init);
-ocp.set('init_pi', zeros(nx, N))
-
-t_ocp.solve();
-disp(['acados ocp solver returned status ', t_ocp.get('status')]); % 0 - success
-t_ocp.print('stat')
-
-% get solution
-x_acados_template = t_ocp.get('x', 0);
-
-diff_acadosmex_acadostemplate = norm(x_acados - x_acados_template)
 
 tol = 1e-6;
-if any([diff_acadosmex_acadostemplate, diff_acados_ipopt] > tol)
-    disp(['diff_acadosmex_acadostemplate', diff_acadosmex_acadostemplate, 'diff_acados_ipopt', diff_acados_ipopt'])
+if any([diff_acados_ipopt] > tol)
+    disp(['diff_acados_ipopt', diff_acados_ipopt'])
     error(['test_target_selector: solution of templated MEX and original MEX and IPOPT',...
          ' differ too much. Should be < tol = ' num2str(tol)]);
 end
-
-
-cd ..
