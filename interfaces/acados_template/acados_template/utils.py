@@ -269,12 +269,21 @@ def format_class_dict(d):
     return out
 
 
-def get_ocp_nlp_layout():
+def get_ocp_nlp_layout() -> dict:
     python_interface_path = get_python_interface_path()
     abs_path = os.path.join(python_interface_path, 'acados_layout.json')
     with open(abs_path, 'r') as f:
         ocp_nlp_layout = json.load(f)
     return ocp_nlp_layout
+
+
+def get_default_simulink_opts() -> dict:
+    python_interface_path = get_python_interface_path()
+    abs_path = os.path.join(python_interface_path, 'simulink_default_opts.json')
+    with open(abs_path, 'r') as f:
+        simulink_opts = json.load(f)
+    return simulink_opts
+
 
 def J_to_idx(J):
     nrows = J.shape[0]
