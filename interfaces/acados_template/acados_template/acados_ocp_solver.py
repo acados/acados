@@ -42,6 +42,7 @@ from subprocess import DEVNULL, call, STDOUT
 from ctypes import POINTER, cast, CDLL, c_void_p, c_char_p, c_double, c_int, c_int64, byref
 
 from copy import deepcopy
+from pathlib import Path
 
 from .casadi_function_generation import generate_c_code_explicit_ode, \
     generate_c_code_implicit_ode, generate_c_code_gnsf, generate_c_code_discrete_dynamics, \
@@ -739,6 +740,12 @@ def ocp_render_templates(acados_ocp: AcadosOcp, json_file, cmake_builder=None, s
             output_dir = acados_ocp.code_export_directory
         render_template(tup[0], tup[1], output_dir, json_path)
 
+    # Custom templates
+    acados_template_path = os.path.dirname(os.path.abspath(__file__))
+    custom_template_glob = os.path.join(acados_template_path, 'custom_update_templates', '*')
+    for tup in acados_ocp.solver_options.custom_templates:
+        render_template(tup[0], tup[1], acados_ocp.code_export_directory, json_path, template_glob=custom_template_glob)
+
     return
 
 
@@ -853,10 +860,10 @@ class AcadosOcpSolver:
         ocp_render_templates(acados_ocp, json_file, cmake_builder=cmake_builder, simulink_opts=simulink_opts)
 
         # copy custom update function
-        if acados_ocp.solver_options.custom_update_filename != "":
+        if acados_ocp.solver_options.custom_update_filename != "" and acados_ocp.solver_options.custom_update_copy:
             target_location = os.path.join(acados_ocp.code_export_directory, acados_ocp.solver_options.custom_update_filename)
             shutil.copyfile(acados_ocp.solver_options.custom_update_filename, target_location)
-        if acados_ocp.solver_options.custom_update_header_filename != "":
+        if acados_ocp.solver_options.custom_update_header_filename != "" and acados_ocp.solver_options.custom_update_copy:
             target_location = os.path.join(acados_ocp.code_export_directory, acados_ocp.solver_options.custom_update_header_filename)
             shutil.copyfile(acados_ocp.solver_options.custom_update_header_filename, target_location)
 

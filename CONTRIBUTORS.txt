@@ -31,6 +31,7 @@ acados contributor list:
 - Greg Horn
 - Jacob Grunnet
 - Leonardo Cecchin (Robert Bosch GmbH)
+- Yunfan Gao (Robert Bosch GmbH)
 - Yizhen Wang (University Freiburg)
 - Severin Hänggi (ETH Zürich)
 - Harald Schäfer (comma.ai)

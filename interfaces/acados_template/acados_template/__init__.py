@@ -36,3 +36,5 @@ from .acados_sim_solver import AcadosSimSolver, sim_get_default_cmake_builder
 from .utils import print_casadi_expression, get_acados_path, get_python_interface_path, \
     get_tera_exec_path, get_tera, check_casadi_version, acados_dae_model_json_dump, \
     casadi_length, make_object_json_dumpable, J_to_idx
+
+from .zoro_description import ZoroDescription, process_zoro_description

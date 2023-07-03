@@ -103,6 +103,7 @@ static void *example_custom_memory_create(pendulum_ode_solver_capsule* capsule)
 
 int custom_update_init_function(pendulum_ode_solver_capsule* capsule)
 {
+    printf("\nin example_custom_update_init_function\n");
     capsule->custom_update_memory = example_custom_memory_create(capsule);
 
     return 1;
@@ -144,7 +145,7 @@ static void print_u_trajectory(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_n
 
 int custom_update_function(pendulum_ode_solver_capsule* capsule, double* data, int data_len)
 {
-    // printf("\nin example_custom_update_function\n");
+    printf("\nin example_custom_update_function\n");
     custom_memory *custom_mem = (custom_memory *) capsule->custom_update_memory;
     ocp_nlp_config *nlp_config = pendulum_ode_acados_get_nlp_config(capsule);
     ocp_nlp_dims *nlp_dims = pendulum_ode_acados_get_nlp_dims(capsule);
@@ -173,7 +174,7 @@ int custom_update_function(pendulum_ode_solver_capsule* capsule, double* data, i
 
 int custom_update_terminate_function(pendulum_ode_solver_capsule* capsule)
 {
-    // printf("\nin example_custom_update_terminate_function\n");
+    printf("\nin example_custom_update_terminate_function\n");
 
     custom_memory *mem = capsule->custom_update_memory;
 
