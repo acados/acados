@@ -229,7 +229,7 @@ int ocp_nlp_cost_nls_model_set(void *config_, void *dims_, void *model_,
     {
         double *W_col_maj = (double *) value_;
         blasfeo_pack_dmat(ny, ny, W_col_maj, ny, &model->W, 0, 0);
-        // NOTE(oj): W_chol is computed in _initialize(), called in preparation phase, if W changed
+        model->W_changed = 1;
     }
     else if (!strcmp(field, "y_ref") || !strcmp(field, "yref"))
     {
