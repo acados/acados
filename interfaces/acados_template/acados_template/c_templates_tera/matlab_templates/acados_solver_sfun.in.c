@@ -42,6 +42,22 @@
 #include "{{ model.name }}_model/{{ model.name }}_model.h"
 #include "acados_solver_{{ model.name }}.h"
 
+
+{%- if not solver_options.custom_update_filename %}
+    {%- set custom_update_filename = "" %}
+{% else %}
+    {%- set custom_update_filename = solver_options.custom_update_filename %}
+{%- endif %}
+
+{%- if not solver_options.custom_update_header_filename %}
+    {%- set custom_update_header_filename = "" %}
+{% else %}
+    {%- set custom_update_header_filename = solver_options.custom_update_header_filename %}
+{%- endif %}
+{%- if custom_update_header_filename != "" %}
+#include "{{ custom_update_header_filename }}"
+{%- endif %}
+
 #include "simstruc.h"
 
 {% if simulink_opts.samplingtime == "t0" -%}
@@ -730,10 +746,26 @@ static void mdlOutputs(SimStruct *S, int_T tid)
   {%- endif %}
 
     /* call solver */
+  {%- if custom_update_filename == "" %}
     int rti_phase = 0;
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "rti_phase", &rti_phase);
     int acados_status = {{ model.name }}_acados_solve(capsule);
+  {%- else -%}{# TODO: check that we have RTI #}
+    // preparation
+    int rti_phase = 1;
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "rti_phase", &rti_phase);
+    int acados_status = {{ model.name }}_acados_solve(capsule);
+    // TODO: time_tot =
 
+    // call custom update function
+    status = {{ model.name }}_acados_custom_update(self.capsule, c_data, data_len)
+
+    // feedback
+    rti_phase = 2;
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "rti_phase", &rti_phase);
+    acados_status = {{ model.name }}_acados_solve(capsule);
+    // TODO: time_tot =
+  {%- endif %}
 
     /* set outputs */
     // assign pointers to output signals
