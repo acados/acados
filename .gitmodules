@@ -1,41 +1,10 @@
-[submodule "hpmpc"]
-	path = acados/external/hpmpc
-	url = https://github.com/giaf/hpmpc.git
-	branch = stable
 [submodule "blasfeo"]
 	path = acados/external/blasfeo
 	url = https://github.com/giaf/blasfeo.git
-[submodule "qpdunes"]
-	path = acados/external/qpdunes
-	url = https://github.com/acados/qpDUNES-dev.git
-[submodule "catch"]
-	path = acados/external/catch
-	url = https://github.com/philsquared/Catch.git
-# [submodule "swig"]
-# 	path = acados/external/swig
-# 	url = https://github.com/jaeandersson/swig
-# 	branch = matlab
-# 	ignore = dirty
-[submodule "hpipm"]
-	path = acados/external/hpipm
-	url = https://github.com/giaf/hpipm.git
-	branch = stable
-[submodule "qpoases"]
-	path = acados/external/qpoases
-	url = https://github.com/acados/qpOASES.git
-[submodule "external/osqp"]
-	path = acados/external/osqp
-	url = https://github.com/oxfordcontrol/osqp.git
-	branch = develop
 [submodule "interfaces/acados_template/tera_renderer"]
 	path = acados_python/tera_renderer
 	url = https://github.com/acados/tera_renderer
-[submodule "external/jsonlab"]
-	path = acados/external/jsonlab
-	url = https://github.com/fangq/jsonlab.git
 [submodule "examples/acados_python/tests/test_data"]
 	path = acados_python/examples/tests/test_data
 	url = https://github.com/acados/test_data
-[submodule "external/daqp"]
-	path = acados/external/daqp
-	url = https://github.com/darnstrom/daqp.git
+
