@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>acados</name>
+  <version>0.0.4</version>
+  <description>acados</description>
+  <author>The acados authors</author>
+
+  <maintainer email="jonathan.frey@imtek.uni-freiburg.de">Jonathan Frey</maintainer>
+  <license>BSD-2-Clause</license>
+
+  <buildtool_depend>cmake</buildtool_depend>
+
+  <build_depend>blasfeo</build_depend>
+  <build_depend>catch2</build_depend>
+  <build_depend>hpipm</build_depend>
+
+  <exec_depend>blasfeo</exec_depend>
+  <exec_depend>hpipm</exec_depend>
+
+  <test_depend>blasfeo</test_depend>
+  <test_depend>catch2</test_depend>
+  <test_depend>hpipm</test_depend>
+
+  <export>
+    <build_type>cmake</build_type>
+  </export>
+</package>

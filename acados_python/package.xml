@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>acados_python</name>
+  <version>0.0.4</version>
+  <description>acados_python</description>
+  <author>The acados authors</author>
+
+  <maintainer email="jonathan.frey@imtek.uni-freiburg.de">Jonathan Frey</maintainer>
+  <license>BSD-2-Clause</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <depend>acados</depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
