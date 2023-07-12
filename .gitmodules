@@ -2,10 +2,10 @@
 	path = acados/external/blasfeo
 	url = https://github.com/giaf/blasfeo.git
 [submodule "interfaces/acados_template/tera_renderer"]
-	path = acados_python/tera_renderer
+	path = acados_template/tera_renderer
 	url = https://github.com/acados/tera_renderer
 [submodule "examples/acados_python/tests/test_data"]
-	path = acados_python/examples/tests/test_data
+	path = acados_template/examples/tests/test_data
 	url = https://github.com/acados/test_data
 
 [submodule "acados/external/catch"]

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>acados_python</name>
-  <version>0.0.4</version>
+  <name>acados_template</name>
+  <version>0.1.0</version>
   <description>acados_python</description>
   <author>The acados authors</author>
 

@@ -28,30 +28,27 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from setuptools import setup, find_packages
+from setuptools import setup
+from setuptools import find_packages
 
-import sys
-print(sys.version_info)
+# import sys
+# print(sys.version_info)
 
-if sys.version_info < (3,5):
-    sys.exit('Python version 3.5 or later required. Exiting.')
+# if sys.version_info < (3.5):
+#     sys.exit('Python version 3.5 or later required. Exiting.')
 
-setup(name='acados_template',
-    version='0.1',
+package_name = 'acados_template'
+
+setup(
+    name=package_name,
+    version='0.1.0',
     python_requires='>=3.5',
-    description='A templating framework for acados',
-    url='http://github.com/acados/acados',
-    author='Andrea Zanelli',
-    maintainer="Jonathan Frey",
-    license='BSD 2-Clause',
-    packages = find_packages(),
-    include_package_data = True,
-    setup_requires=['setuptools_scm'],
-    use_scm_version={
-      "fallback_version": "0.1-local",
-      "root": "../..",
-      "relative_to": __file__
-    },
+    packages=[package_name],
+    data_files=[
+        ('share/ament_index/resource_index/packages',
+            ['resource/' + package_name]),
+        ('share/' + package_name, ['package.xml']),
+    ],
     install_requires=[
        'numpy',
        'scipy',
@@ -60,6 +57,12 @@ setup(name='acados_template',
        'future-fstrings',
        'cython',
     ],
+    zip_safe=True,
+    author='Andrea Zanelli',
+    maintainer='Jonathan Frey',
+    maintainer_email='jonathan.frey@imtek.uni-freiburg.de',
+    description='A templating framework for acados',
+    license='BSD-2-Clause',
     package_data={'': [
         'acados_layout.json',
         'acados_sim_layout.json',
@@ -91,6 +94,10 @@ setup(name='acados_template',
         'c_templates_tera/matlab_templates/mex_solver.in.m',
         'custom_update_templates/custom_update_function_zoro_template.in.c',
         'custom_update_templates/custom_update_function_zoro_template.in.h',
-        ]},
-    zip_safe=False
+    ]},
+    tests_require=['pytest'],
+    entry_points={
+        'console_scripts': [
+        ],
+    },
 )
