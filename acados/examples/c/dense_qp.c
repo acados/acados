@@ -41,7 +41,7 @@
 #include "acados/utils/mem.h"
 #include "acados_c/dense_qp_interface.h"
 // hpipm
-#include "hpipm/include/hpipm_d_dense_qp_kkt.h"
+#include "hpipm_d_dense_qp_kkt.h"
 
 #include "blasfeo_d_aux_ext_dep.h"
 

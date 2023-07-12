@@ -37,15 +37,15 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_partial_condensing.h"
 #include "acados/utils/mem.h"
-#include "hpipm/include/hpipm_d_ocp_qp_red.h"
+#include "hpipm_d_ocp_qp_red.h"
 // hpipm
-#include "hpipm/include/hpipm_d_cond.h"
-#include "hpipm/include/hpipm_d_dense_qp.h"
-#include "hpipm/include/hpipm_d_dense_qp_sol.h"
-#include "hpipm/include/hpipm_d_ocp_qp.h"
-#include "hpipm/include/hpipm_d_ocp_qp_dim.h"
-#include "hpipm/include/hpipm_d_ocp_qp_sol.h"
-#include "hpipm/include/hpipm_d_part_cond.h"
+#include "hpipm_d_cond.h"
+#include "hpipm_d_dense_qp.h"
+#include "hpipm_d_dense_qp_sol.h"
+#include "hpipm_d_ocp_qp.h"
+#include "hpipm_d_ocp_qp_dim.h"
+#include "hpipm_d_ocp_qp_sol.h"
+#include "hpipm_d_part_cond.h"
 #include "acados/utils/timing.h"
 
 

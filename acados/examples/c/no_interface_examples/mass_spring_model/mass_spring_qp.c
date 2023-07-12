@@ -39,7 +39,7 @@
 #include "blasfeo_i_aux_ext_dep.h"
 
 // hpipm
-#include "hpipm/include/hpipm_d_ocp_qp.h"
+#include "hpipm_d_ocp_qp.h"
 
 // acados
 #include "acados/utils/math.h"

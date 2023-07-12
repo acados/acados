@@ -194,6 +194,11 @@ if(CMAKE_BUILD_TYPE MATCHES WithExternalLibs)
     set(ACADOS_WITH_OSQP ON CACHE BOOL "Add OSQP solver")
 endif()
 
+if(NOT ACADOS_BUILD_DEPENDENCIES)
+    find_package(blasfeo REQUIRED)
+    find_package(hpipm REQUIRED)
+endif()
+
 ## External lib checks (
 
 if(ACADOS_WITH_HPMPC MATCHES ON AND CMAKE_C_COMPILER_ID MATCHES "MSVC")

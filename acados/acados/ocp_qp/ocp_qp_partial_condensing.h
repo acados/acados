@@ -37,7 +37,7 @@ extern "C" {
 #endif
 
 // hpipm
-#include "hpipm/include/hpipm_d_ocp_qp_red.h"
+#include "hpipm_d_ocp_qp_red.h"
 // acados
 #include "acados/ocp_qp/ocp_qp_common.h"
 

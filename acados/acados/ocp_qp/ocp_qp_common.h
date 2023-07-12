@@ -37,10 +37,10 @@ extern "C" {
 #endif
 
 // hpipm
-#include "hpipm/include/hpipm_d_ocp_qp.h"
-#include "hpipm/include/hpipm_d_ocp_qp_dim.h"
-#include "hpipm/include/hpipm_d_ocp_qp_res.h"
-#include "hpipm/include/hpipm_d_ocp_qp_sol.h"
+#include "hpipm_d_ocp_qp.h"
+#include "hpipm_d_ocp_qp_dim.h"
+#include "hpipm_d_ocp_qp_res.h"
+#include "hpipm_d_ocp_qp_sol.h"
 // acados
 #include "acados/utils/types.h"
 

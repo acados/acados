@@ -34,9 +34,9 @@
 #include <assert.h>
 #include <string.h>
 // hpipm
-#include "hpipm/include/hpipm_d_dense_qp.h"
-#include "hpipm/include/hpipm_d_dense_qp_ipm.h"
-#include "hpipm/include/hpipm_d_dense_qp_sol.h"
+#include "hpipm_d_dense_qp.h"
+#include "hpipm_d_dense_qp_ipm.h"
+#include "hpipm_d_dense_qp_sol.h"
 // acados
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/dense_qp/dense_qp_hpipm.h"

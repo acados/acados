@@ -72,16 +72,18 @@ add_library(acados ${ACADOS_SRC})
 target_include_directories(acados
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}> # to be able to include "acados/header.h"
-        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/QPSOLVER_DENSE/include>
-        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/QPSOLVER_DENSE/source>
-        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/KKTPACK_DENSE/include>
-        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/KKTPACK_DENSE/source>
-        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/QPCORE/include>
-        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore>
-        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/hpipm/include>
-        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}>
+        # $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/QPSOLVER_DENSE/include>
+        # $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/QPSOLVER_DENSE/source>
+        # $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/KKTPACK_DENSE/include>
+        # $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/KKTPACK_DENSE/source>
+        # $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/QPCORE/include>
+        # $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore>
+        # $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/hpipm/include>
+        # $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}>
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/interfaces>
         $<INSTALL_INTERFACE:include>)
+
+target_link_libraries(acados PUBLIC hpipm blasfeo m)
 
 # OPENMP
 # find_package(OpenMP)
@@ -135,8 +137,6 @@ if(ACADOS_WITH_OOQP)
     target_compile_definitions(acados PUBLIC ACADOS_WITH_OOQP)
     target_link_libraries(acados PUBLIC ooqp)
 endif()
-
-target_link_libraries(acados PUBLIC hpipm blasfeo m)
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     target_compile_definitions(acados PRIVATE DEBUG)
