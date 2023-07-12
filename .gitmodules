@@ -20,3 +20,15 @@
 [submodule "acados/external/hpmpc"]
 	path = acados/external/hpmpc
 	url = https://github.com/giaf/hpmpc.git
+[submodule "acados/external/jsonlab"]
+	path = acados/external/jsonlab
+	url = https://github.com/fangq/jsonlab.git
+[submodule "acados/external/osqp"]
+	path = acados/external/osqp
+	url = https://github.com/oxfordcontrol/osqp.git
+[submodule "acados/external/qpdunes"]
+	path = acados/external/qpdunes
+	url = https://github.com/acados/qpDUNES-dev.git
+[submodule "acados/external/qpoases"]
+	path = acados/external/qpoases
+	url = https://github.com/acados/qpOASES.git
