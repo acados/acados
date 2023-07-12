@@ -8,3 +8,9 @@
 	path = acados_python/examples/tests/test_data
 	url = https://github.com/acados/test_data
 
+[submodule "acados/external/catch"]
+	path = acados/external/catch
+	url = https://github.com/catchorg/Catch2.git
+[submodule "acados/external/daqp"]
+	path = acados/external/daqp
+	url = https://github.com/darnstrom/daqp.git
