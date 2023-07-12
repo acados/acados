@@ -14,3 +14,9 @@
 [submodule "acados/external/daqp"]
 	path = acados/external/daqp
 	url = https://github.com/darnstrom/daqp.git
+[submodule "acados/external/hpipm"]
+	path = acados/external/hpipm
+	url = https://github.com/giaf/hpipm.git
+[submodule "acados/external/hpmpc"]
+	path = acados/external/hpmpc
+	url = https://github.com/giaf/hpmpc.git
