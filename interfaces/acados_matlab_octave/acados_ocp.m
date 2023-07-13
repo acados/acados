@@ -32,12 +32,10 @@
 classdef acados_ocp < handle
 
     properties
-        % templated
+        % templated solver
         t_ocp
+        % matlab objects
         code_gen_dir
-
-        C_ocp
-        C_ocp_ext_fun
         model_struct
         opts_struct
         acados_ocp_nlp_json
