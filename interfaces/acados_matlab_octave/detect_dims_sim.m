@@ -52,6 +52,12 @@ function model  = detect_dims_sim(model, opts)
         model.dim_np = 0;
     end
 
+    if isfield(model, 'sym_xdot')
+        if numel(model.sym_xdot) ~= model.dim_nx
+            error('sym_xdot is not of shape nx');
+        end
+    end
+
     if ~isempty(opts.num_stages)
         if(strcmp(opts.method,"erk"))
             if(opts.num_stages == 1 || opts.num_stages == 2 || ...
