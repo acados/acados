@@ -30,6 +30,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 import os
+import shutil
 
 from mpc_parameters import MPCParam
 
@@ -51,8 +52,11 @@ def get_latex_plot_params():
 
 def plot_timings(timing_dict):
     # latexify plot
-    params = get_latex_plot_params()
-    matplotlib.rcParams.update(params)
+    if shutil.which('latex'):
+        params = get_latex_plot_params()
+        matplotlib.rcParams.update(params)
+    else:
+        print("WARNING: LATEX not installed")
 
     print("timings\t\tmin\tmean\tmax\n--------------------------------")
     for k, v in timing_dict.items():
