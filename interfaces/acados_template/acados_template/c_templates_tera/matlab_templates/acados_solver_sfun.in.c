@@ -758,7 +758,9 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // TODO: time_tot =
 
     // call custom update function
-    status = {{ model.name }}_acados_custom_update(self.capsule, c_data, data_len)
+    int data_len = 0;
+    double* c_data; // TODO: only works with empty..
+    acados_status = {{ model.name }}_acados_custom_update(capsule, c_data, data_len);
 
     // feedback
     rti_phase = 2;
