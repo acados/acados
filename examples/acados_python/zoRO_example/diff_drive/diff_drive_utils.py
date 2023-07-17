@@ -80,9 +80,10 @@ def plot_timings(timing_dict):
 
 
 def plot_trajectory(cfg:MPCParam, traj_ref:np.ndarray, traj_zo:np.ndarray):
-    if shutil.which('latex'):
-        params = get_latex_plot_params()
-        matplotlib.rcParams.update(params)
+    # latexify plot
+    params = get_latex_plot_params()
+    matplotlib.rcParams.update(params)
+
     fig = plt.figure(1)
     ax = fig.add_subplot(1,1,1)
     for idx_obs in range(cfg.num_obs):
