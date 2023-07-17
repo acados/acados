@@ -36,6 +36,7 @@ from mpc_parameters import MPCParam
 
 
 def get_latex_plot_params():
+    text_usetex = True if shutil.which('latex') else False
     params = {'backend': 'ps',
             'text.latex.preamble': r"\usepackage{gensymb} \usepackage{amsmath}",
             'axes.labelsize': 12,
@@ -43,7 +44,7 @@ def get_latex_plot_params():
             'legend.fontsize': 12,
             'xtick.labelsize': 12,
             'ytick.labelsize': 12,
-            'text.usetex': True,
+            'text.usetex': text_usetex,
             'font.family': 'serif'
     }
 
@@ -52,11 +53,8 @@ def get_latex_plot_params():
 
 def plot_timings(timing_dict):
     # latexify plot
-    if shutil.which('latex'):
-        params = get_latex_plot_params()
-        matplotlib.rcParams.update(params)
-    else:
-        print("LATEX NOT INSTALLED. The plot is not rendered with LATEX")
+    params = get_latex_plot_params()
+    matplotlib.rcParams.update(params)
 
     print("timings\t\tmin\tmean\tmax\n--------------------------------")
     for k, v in timing_dict.items():
