@@ -35,12 +35,6 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <fenv.h>
-
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
-
 // acados_c
 
 #include "acados/utils/mem.h"
@@ -85,7 +79,7 @@
 void ocp_qp_xcond_solver_config_initialize_from_plan(
         ocp_qp_solver_t solver_name, ocp_qp_xcond_solver_config *solver_config)
 {
-    //feenableexcept(FE_ALL_EXCEPT & (~FE_INEXACT) & (~FE_UNDERFLOW));  // Enable all floating point exceptions but FE_INEXACT
+
     switch (solver_name)
     {
         case PARTIAL_CONDENSING_HPIPM:
