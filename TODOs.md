@@ -1,6 +1,6 @@
 # Matlab integrator template migration
-- [ ] make matlab `acados_sim_template` class similar to acados_sim.py
-- [ ] create instance in `acados_sim`
+- [x] make matlab `acados_sim_json` class similar to `acados_sim.py`
+- [x] create instance in `acados_sim`
 - [ ] render templates
 - [ ] build using CMake
 - [ ] remove: `sim_create.c`, `sim_precompute.c`, `sim_destroy.c`, `sim_set_ext*.c`
