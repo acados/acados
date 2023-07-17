@@ -67,7 +67,7 @@ def plot_timings(timing_dict):
     fig = plt.figure(0)
     ax = fig.add_subplot(111)
     ax.boxplot(timing_dict.values(), vert=False,
-               flierprops=green_square, 
+               flierprops=green_square,
                medianprops=medianprops, showmeans=False
                )
     ax.set_yticklabels(timing_dict.keys())
@@ -88,18 +88,14 @@ def plot_trajectory(cfg:MPCParam, traj_ref:np.ndarray, traj_zo:np.ndarray):
     fig = plt.figure(1)
     ax = fig.add_subplot(1,1,1)
     for idx_obs in range(cfg.num_obs):
-        if idx_obs == 0:
-            circ = plt.Circle(cfg.obs_pos[idx_obs,:], cfg.obs_radius[idx_obs],
-                            edgecolor="red", facecolor=(1,0,0,.5), label="obstacle"
-                            )
-        else:
-            circ = plt.Circle(cfg.obs_pos[idx_obs,:], cfg.obs_radius[idx_obs],
-                              edgecolor="red", facecolor=(1,0,0,.5)
-                              )
+        circ_label = "Obstacle" if idx_obs == 0 else None
+        circ = plt.Circle(cfg.obs_pos[idx_obs,:], cfg.obs_radius[idx_obs],
+                          edgecolor="red", facecolor=(1,0,0,.5), label=circ_label
+                          )
         ax.add_artist(circ)
     ax.set_title("Robot Trajectory")
-    ax.plot(traj_ref[:, 0], traj_ref[:, 1], c='m', label='ref')
-    ax.plot(traj_zo[:, 0], traj_zo[:, 1], c='b', label='zoRO')
+    ax.plot(traj_ref[:, 0], traj_ref[:, 1], c='m', label='Ref Traj')
+    ax.plot(traj_zo[:, 0], traj_zo[:, 1], c='b', label='zoRO Traj')
     ax.set_xlabel("x [m]")
     ax.set_ylabel("y [m]")
     ax.set_xticks(np.arange(-2., 9., 2.))
