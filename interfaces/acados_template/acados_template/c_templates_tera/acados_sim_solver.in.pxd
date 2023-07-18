@@ -31,21 +31,21 @@
 cimport acados_sim_solver_common
 
 cdef extern from "acados_sim_solver_{{ model.name }}.h":
-    ctypedef struct sim_solver_capsule "sim_solver_capsule":
+    ctypedef struct {{ model.name }}_sim_solver_capsule "{{ model.name }}_sim_solver_capsule":
         pass
 
-    sim_solver_capsule * acados_sim_solver_create_capsule "{{ model.name }}_acados_sim_solver_create_capsule"()
-    int acados_sim_solver_free_capsule "{{ model.name }}_acados_sim_solver_free_capsule"(sim_solver_capsule *capsule)
+    {{ model.name }}_sim_solver_capsule * acados_sim_solver_create_capsule "{{ model.name }}_acados_sim_solver_create_capsule"()
+    int acados_sim_solver_free_capsule "{{ model.name }}_acados_sim_solver_free_capsule"({{ model.name }}_sim_solver_capsule *capsule)
 
-    int acados_sim_create "{{ model.name }}_acados_sim_create"(sim_solver_capsule * capsule)
-    int acados_sim_solve "{{ model.name }}_acados_sim_solve"(sim_solver_capsule * capsule)
-    int acados_sim_free "{{ model.name }}_acados_sim_free"(sim_solver_capsule * capsule)
-    int acados_sim_update_params "{{ model.name }}_acados_sim_update_params"(sim_solver_capsule * capsule, double *value, int np_)
-    # int acados_sim_update_params_sparse "{{ model.name }}_acados_sim_update_params_sparse"(sim_solver_capsule * capsule, int stage, int *idx, double *p, int n_update)
+    int acados_sim_create "{{ model.name }}_acados_sim_create"({{ model.name }}_sim_solver_capsule * capsule)
+    int acados_sim_solve "{{ model.name }}_acados_sim_solve"({{ model.name }}_sim_solver_capsule * capsule)
+    int acados_sim_free "{{ model.name }}_acados_sim_free"({{ model.name }}_sim_solver_capsule * capsule)
+    int acados_sim_update_params "{{ model.name }}_acados_sim_update_params"({{ model.name }}_sim_solver_capsule * capsule, double *value, int np_)
+    # int acados_sim_update_params_sparse "{{ model.name }}_acados_sim_update_params_sparse"({{ model.name }}_sim_solver_capsule * capsule, int stage, int *idx, double *p, int n_update)
 
-    acados_sim_solver_common.sim_in *acados_get_sim_in "{{ model.name }}_acados_get_sim_in"(sim_solver_capsule * capsule)
-    acados_sim_solver_common.sim_out *acados_get_sim_out "{{ model.name }}_acados_get_sim_out"(sim_solver_capsule * capsule)
-    acados_sim_solver_common.sim_solver *acados_get_sim_solver "{{ model.name }}_acados_get_sim_solver"(sim_solver_capsule * capsule)
-    acados_sim_solver_common.sim_config *acados_get_sim_config "{{ model.name }}_acados_get_sim_config"(sim_solver_capsule * capsule)
-    acados_sim_solver_common.sim_opts *acados_get_sim_opts "{{ model.name }}_acados_get_sim_opts"(sim_solver_capsule * capsule)
-    void *acados_get_sim_dims "{{ model.name }}_acados_get_sim_dims"(sim_solver_capsule * capsule)
+    acados_sim_solver_common.sim_in *acados_get_sim_in "{{ model.name }}_acados_get_sim_in"({{ model.name }}_sim_solver_capsule * capsule)
+    acados_sim_solver_common.sim_out *acados_get_sim_out "{{ model.name }}_acados_get_sim_out"({{ model.name }}_sim_solver_capsule * capsule)
+    acados_sim_solver_common.sim_solver *acados_get_sim_solver "{{ model.name }}_acados_get_sim_solver"({{ model.name }}_sim_solver_capsule * capsule)
+    acados_sim_solver_common.sim_config *acados_get_sim_config "{{ model.name }}_acados_get_sim_config"({{ model.name }}_sim_solver_capsule * capsule)
+    acados_sim_solver_common.sim_opts *acados_get_sim_opts "{{ model.name }}_acados_get_sim_opts"({{ model.name }}_sim_solver_capsule * capsule)
+    void *acados_get_sim_dims "{{ model.name }}_acados_get_sim_dims"({{ model.name }}_sim_solver_capsule * capsule)

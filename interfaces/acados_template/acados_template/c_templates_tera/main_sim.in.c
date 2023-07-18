@@ -47,7 +47,7 @@
 int main()
 {
     int status = 0;
-    sim_solver_capsule *capsule = {{ model.name }}_acados_sim_solver_create_capsule();
+    {{ model.name }}_sim_solver_capsule *capsule = {{ model.name }}_acados_sim_solver_create_capsule();
     status = {{ model.name }}_acados_sim_create(capsule);
 
     if (status)
