@@ -1,5 +1,6 @@
 clear all;
 
+system('python minimal_example_zoro.py')
 acados_folder = getenv('ACADOS_INSTALL_DIR');
 
 copyfile(fullfile(acados_folder, 'examples', 'acados_matlab_octave', 'getting_started', 'simulink_model_closed_loop.slx'), fullfile(pwd, 'c_generated_code'))

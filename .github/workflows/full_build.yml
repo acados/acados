@@ -160,6 +160,5 @@ jobs:
     - name: Run Simulink zoRO test
       uses: matlab-actions/run-command@v1
       if: always()
-      # NOTE: this assumes zoro tests have been run before
       with:
         command: cd examples/acados_python/zoRO_example/pendulum_on_cart; run_simulink
