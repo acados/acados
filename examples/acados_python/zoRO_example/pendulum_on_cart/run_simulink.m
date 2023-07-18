@@ -1,6 +1,8 @@
-% !mkdir -p zoro_test
-!cp simulink_model_closed_loop.slx c_generated_code/
 clear all;
+
+acados_folder = getenv('ACADOS_INSTALL_DIR');
+
+copyfile(fullfile(acados_folder, 'examples', 'acados_matlab_octave', 'getting_started', 'simulink_model_closed_loop.slx'), fullfile(pwd, 'c_generated_code'))
 
 nx = 4;
 nu = 1;
