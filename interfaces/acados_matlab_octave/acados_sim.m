@@ -107,8 +107,8 @@ classdef acados_sim < handle
             obj.code_gen_dir = obj.acados_sim_json.code_export_directory; 
             cd(obj.code_gen_dir)
 
-            mex_solver = str2func(sprintf('%s_mex_sim_solver', obj.model_struct.name));
-            obj.t_sim = mex_solver();
+            mex_sim_solver = str2func(sprintf('%s_mex_sim_solver', obj.model_struct.name));
+            obj.t_sim = mex_sim_solver();
             addpath(pwd());
 
             cd(return_dir)
