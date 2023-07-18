@@ -35,7 +35,7 @@ import casadi
 
 from diff_drive_zoro_mpc import ZoroMPCSolver
 from mpc_parameters import MPCParam, PathTrackingParam
-from diff_drive_utils import plot_timings, compute_min_dis
+from diff_drive_utils import plot_timings, plot_trajectory, compute_min_dis
 from nominal_path_tracking_casadi import NominalPathTrackingSolver
 from track_spline import TrackSpline
 
@@ -139,23 +139,7 @@ def main():
                    "total": 1e3*np.array(total_time)
                 }
     plot_timings(timing_dict)
-
-    # plot trajectory
-    fig = plt.figure(1)
-    plt.rcParams['font.size'] = '16'
-    ax = fig.add_subplot(1,1,1)
-    for idx_obs in range(cfg_zo.num_obs):
-        circ = plt.Circle(cfg_zo.obs_pos[idx_obs,:], cfg_zo.obs_radius[idx_obs], \
-            edgecolor="red", facecolor=(1,0,0,.5))
-        ax.add_artist(circ)
-    plt.plot(path_tracking_solver.x_robot_ref[:, 0], path_tracking_solver.x_robot_ref[:, 1], c='m', label='ref')
-    plt.plot(traj_zo[:, 0], traj_zo[:, 1], c='b', label='opt sqp')
-    plt.legend()
-
-    if not os.path.exists('figures'):
-        os.makedirs('figures')
-    plt.savefig(os.path.join("figures", "diff_drive_sim_trajectory.pdf"),
-        bbox_inches='tight', transparent=True, pad_inches=0.05)
+    plot_trajectory(cfg_zo, path_tracking_solver.x_robot_ref, traj_zo)
 
 
 if __name__ == "__main__":

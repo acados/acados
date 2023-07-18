@@ -30,11 +30,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 import os
+import shutil
 
 from mpc_parameters import MPCParam
 
 
 def get_latex_plot_params():
+    text_usetex = True if shutil.which('latex') else False
     params = {'backend': 'ps',
             'text.latex.preamble': r"\usepackage{gensymb} \usepackage{amsmath}",
             'axes.labelsize': 12,
@@ -42,7 +44,7 @@ def get_latex_plot_params():
             'legend.fontsize': 12,
             'xtick.labelsize': 12,
             'ytick.labelsize': 12,
-            'text.usetex': True,
+            'text.usetex': text_usetex,
             'font.family': 'serif'
     }
 
@@ -63,20 +65,50 @@ def plot_timings(timing_dict):
     fig = plt.figure(0)
     ax = fig.add_subplot(111)
     ax.boxplot(timing_dict.values(), vert=False,
-        flierprops=green_square, \
-        medianprops=medianprops, showmeans=False)
+               flierprops=green_square,
+               medianprops=medianprops, showmeans=False
+               )
     ax.set_yticklabels(timing_dict.keys())
     plt.grid()
-    plt.xlabel('CPU time [ms]')
+    plt.xlabel("CPU time [ms]")
     plt.tight_layout()
 
-    if not os.path.exists('figures'):
-        os.makedirs('figures')
+    if not os.path.exists("figures"):
+        os.makedirs("figures")
     plt.savefig(os.path.join("figures", "timings_diff_drive.pdf"),
         bbox_inches='tight', transparent=True, pad_inches=0.05)
 
 
-def compute_min_dis(cfg:MPCParam, s:np.ndarray)->float:
+def plot_trajectory(cfg:MPCParam, traj_ref:np.ndarray, traj_zo:np.ndarray):
+    # latexify plot
+    params = get_latex_plot_params()
+    matplotlib.rcParams.update(params)
+
+    fig = plt.figure(1)
+    ax = fig.add_subplot(1,1,1)
+    for idx_obs in range(cfg.num_obs):
+        circ_label = "Obstacle" if idx_obs == 0 else None
+        circ = plt.Circle(cfg.obs_pos[idx_obs,:], cfg.obs_radius[idx_obs],
+                          edgecolor="red", facecolor=(1,0,0,.5), label=circ_label
+                          )
+        ax.add_artist(circ)
+    ax.set_title("Robot Trajectory")
+    ax.plot(traj_ref[:, 0], traj_ref[:, 1], c='m', label='Ref Traj')
+    ax.plot(traj_zo[:, 0], traj_zo[:, 1], c='b', label='zoRO Traj')
+    ax.set_xlabel("x [m]")
+    ax.set_ylabel("y [m]")
+    ax.set_xticks(np.arange(-2., 9., 2.))
+    ax.set_yticks(np.arange(0., 11., 2.))
+    ax.set_aspect("equal")
+    ax.legend()
+
+    if not os.path.exists("figures"):
+        os.makedirs("figures")
+    plt.savefig(os.path.join("figures", "diff_drive_sim_trajectory.pdf"),
+        bbox_inches='tight', transparent=True, pad_inches=0.05)
+
+
+def compute_min_dis(cfg:MPCParam, s:np.ndarray) -> float:
     min_dist = np.inf
     for idx_obs in range(cfg.num_obs):
         min_dist = np.min([min_dist, \
