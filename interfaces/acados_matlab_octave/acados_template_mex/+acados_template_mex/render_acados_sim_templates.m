@@ -62,6 +62,11 @@ function render_acados_sim_templates(acados_sim_json_file)
     out_file = ['main_sim_', model_name, '.c'];
     render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
 
+    % MEX class
+    template_file = 'mex_sim_solver.in.m';
+    out_file = [ model_name, '_mex_sim_solver.m'];
+    render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
+
     % MEX constructor
     template_file = 'acados_sim_create.in.c';
     out_file = ['acados_sim_create_', model_name, '.c'];
@@ -80,11 +85,6 @@ function render_acados_sim_templates(acados_sim_json_file)
     % % MEX set
     % template_file = 'acados_mex_set.in.c';
     % out_file = ['acados_mex_set_', model_name, '.c'];
-    % render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
-
-    % % MEX class
-    % template_file = 'mex_solver.in.m';
-    % out_file = [ model_name, '_mex_solver.m'];
     % render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
 
     % sim_solver

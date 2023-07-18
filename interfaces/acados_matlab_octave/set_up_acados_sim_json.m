@@ -121,7 +121,7 @@ function sim_json = set_up_acados_sim_json(obj)
     sim_json.model.p = model.sym_p;
 
     % options
-    sim_json.sim_options.integrator_type = upper(opts.integrator_type);
+    sim_json.sim_options.integrator_type = upper(opts.method);
     sim_json.sim_options.collocation_type = upper(opts.collocation_type);
     sim_json.sim_options.sim_method_num_stages = opts.num_stages;
     sim_json.sim_options.sim_method_num_steps = opts.num_steps;

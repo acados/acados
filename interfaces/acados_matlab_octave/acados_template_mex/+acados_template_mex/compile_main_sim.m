@@ -34,13 +34,7 @@ function compile_main_sim(export_dir)
     cd(export_dir);
     %% build main file
     if isunix
-        [ status, result ] = system('make');
-        if status
-            cd(return_dir);
-            error('building templated code failed.\nGot status %d, result: %s',...
-                  status, result);
-        end
-        [ status, result ] = system('make shared_lib');
+        [ status, result ] = system('make sim_shared_lib');
         if status
             cd(return_dir);
             error('building templated code as shared library failed.\nGot status %d, result: %s',...
@@ -63,5 +57,6 @@ function compile_main_sim(export_dir)
         end
         fprintf('Successfully built main file!\n');
     end
+
     cd(return_dir);
 end

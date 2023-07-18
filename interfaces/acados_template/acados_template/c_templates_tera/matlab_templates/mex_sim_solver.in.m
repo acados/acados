@@ -56,7 +56,7 @@ classdef {{ model.name }}_mex_sim_solver < handle
             if ~isa(field, 'char')
                 error('field must be a char vector, use '' ''');
             end
-            acados_sim_set_{{ model.name }}('none', 'none', obj.C_sim,, field, value);
+            acados_sim_set_{{ model.name }}('none', 'none', obj.C_sim, field, value);
         end
 
         % get -- borrowed from MEX interface

@@ -48,7 +48,6 @@ classdef acados_sim_opts < handle
             obj.opts_struct.codgen_model = 'true';
             obj.opts_struct.compile_model = 'true';
             obj.opts_struct.method = 'irk';
-            obj.opts_struct.integrator_type = 'ERK';
             obj.opts_struct.collocation_type = 'gauss_legendre';
             obj.opts_struct.num_stages = 4;
             obj.opts_struct.num_steps = 1;
@@ -106,8 +105,6 @@ classdef acados_sim_opts < handle
                 obj.opts_struct.gnsf_detect_struct = value;
             elseif (strcmp(field, 'output_dir'))
                 obj.opts_struct.output_dir = value;
-            elseif (strcmp(field, 'integrator_type'))
-                obj.opts_struct.integrator_type = value;
             elseif (strcmp(field, 'collocation_type'))
                 obj.opts_struct.collocation_type = value;
             elseif (strcmp(field, 'compile_mex'))

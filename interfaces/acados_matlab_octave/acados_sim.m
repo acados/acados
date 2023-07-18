@@ -40,6 +40,7 @@ classdef acados_sim < handle
         model_struct
         opts_struct
         acados_sim_json
+        code_gen_dir
     end % properties
 
 
