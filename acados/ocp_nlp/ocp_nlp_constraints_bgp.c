@@ -1353,17 +1353,21 @@ void ocp_nlp_constraints_bgp_update_qp_matrices(void *config_, void *dims_, void
                 0, 0, memory->RSQrq, 0, 0);
     }
 
-    blasfeo_daxpy(nb + ng + nphi, -1.0, &work->tmp_ni, 0, &model->d, 0,
-            &memory->fun, 0);
+    // fun[0:nb+ng+nphi] = model->d[0:] - tmp_ni[0:]
+    blasfeo_daxpy(nb + ng + nphi, -1.0, &work->tmp_ni, 0, &model->d, 0, &memory->fun, 0);
+    // fun[nb+ng+nphi: 2*(nb+ng+nphi)] = tmp_ni - model->d[nb+ng+nphi:]
     blasfeo_daxpy(nb + ng + nphi, -1.0, &model->d, nb + ng + nphi,
             &work->tmp_ni, 0, &memory->fun, nb + ng + nphi);
 
     // soft
+    // subtract slack values from softened constraints
+    // fun_i = fun_i - slack_i for i \in I_slacked
     blasfeo_dvecad_sp(ns, -1.0, memory->ux, nu + nx, model->idxs, &memory->fun, 0);
     blasfeo_dvecad_sp(ns, -1.0, memory->ux, nu + nx + ns, model->idxs, &memory->fun, nb + ng + nphi);
 
-    blasfeo_daxpy(2 * ns, -1.0, memory->ux, nu + nx, &model->d, 2 * nb + 2 * ng + 2 * nphi,
-                  &memory->fun, 2 * nb + 2 * ng + 2 * nphi);
+    // fun[2*ni:] = - slack + slack_bounds
+    blasfeo_daxpy(2*ns, -1.0, memory->ux, nu + nx, &model->d, 2*nb + 2*ng + 2*nphi,
+                  &memory->fun, 2*nb + 2*ng + 2*nphi);
 
     // nlp_mem: ineq_adj
     if (opts->compute_adj)

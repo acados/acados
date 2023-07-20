@@ -1361,7 +1361,7 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
 
         struct blasfeo_dmat_args jac_z_tran_out; // Jacobian dhdz treated separately
         if (nz > 0)
-        { 
+        {
             jac_z_tran_out.A = &work->tmp_nz_nh;
             jac_z_tran_out.ai = 0;
             jac_z_tran_out.aj = 0;
@@ -1480,7 +1480,9 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
                         &memory->fun, 0, &memory->fun, 0);
     }
 
+    // fun[0:nb+ng+nh] = model->d[0:] - tmp_ni
     blasfeo_daxpy(nb+ng+nh, -1.0, &work->tmp_ni, 0, &model->d, 0, &memory->fun, 0);
+    // fun[nb+ng+nh: 2*(nb+ng+nh)] = tmp_ni - model->d[nb+ng+nh:]
     blasfeo_daxpy(nb+ng+nh, -1.0, &model->d, nb+ng+nh, &work->tmp_ni, 0, &memory->fun, nb+ng+nh);
 
     // soft
@@ -1628,9 +1630,8 @@ void ocp_nlp_constraints_bgh_bounds_update(void *config_, void *dims_, void *mod
     int ng = dims->ng;
     int nh = dims->nh;
 
-    // box
+    // box only
     blasfeo_dvecex_sp(nb, 1.0, model->idxb, memory->ux, 0, &work->tmp_ni, 0);
-
     blasfeo_daxpy(nb, -1.0, &work->tmp_ni, 0, &model->d, 0, &memory->fun, 0);
     blasfeo_daxpy(nb, -1.0, &model->d, nb+ng+nh, &work->tmp_ni, 0, &memory->fun, nb+ng+nh);
 
