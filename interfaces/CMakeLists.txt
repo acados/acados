@@ -207,7 +207,7 @@ add_test(NAME python_custom_update_example
 
 add_test(NAME python_fast_zoro_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/zoRO_example
-        python pendulum_on_cart/minimum_example_zoro.py)
+        python pendulum_on_cart/minimal_example_zoro.py)
 
 # CMake test
 add_test(NAME python_pendulum_sim_example_cmake

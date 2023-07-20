@@ -790,8 +790,12 @@ def __ocp_get_template_list(acados_ocp: AcadosOcp, cmake_builder=None, simulink_
     if simulink_opts is not None:
         template_file = os.path.join('matlab_templates', 'acados_solver_sfun.in.c')
         template_list.append((template_file, f'acados_solver_sfunction_{name}.c'))
-        template_file = os.path.join('matlab_templates', 'acados_solver_sfun.in.c')
+        template_file = os.path.join('matlab_templates', 'make_sfun.in.m')
         template_list.append((template_file, f'make_sfun_{name}.m'))
+        template_file = os.path.join('matlab_templates', 'acados_sim_solver_sfun.in.c')
+        template_list.append((template_file, f'acados_sim_solver_sfunction_{name}.c'))
+        template_file = os.path.join('matlab_templates', 'make_sfun_sim.in.m')
+        template_list.append((template_file, f'make_sfun_sim_{name}.m'))
 
     return template_list
 

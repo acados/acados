@@ -136,7 +136,7 @@ jobs:
       with:
       # MATLAB release to set up (R2020a or later)
         release: R2020a
- 
+
     - name: Matlab test native MEX
       uses: matlab-actions/run-command@v1
       if: always()
@@ -148,3 +148,17 @@ jobs:
       if: always()
       with:
         command: cd examples/acados_matlab_octave/test; simulink_test
+
+
+    - name: Export Paths Simulink zoRO test
+      working-directory: ${{runner.workspace}}/acados/examples/acados_python/zoRO_example/pendulum_on_cart
+      shell: bash
+      run: |
+        echo "LD_RUN_PATH=$LD_RUN_PATH:$(pwd)/c_generated_code" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./c_generated_code" >> $GITHUB_ENV
+
+    # - name: Run Simulink zoRO test
+    #   uses: matlab-actions/run-command@v1
+    #   if: always()
+    #   with:
+    #     command: cd examples/acados_python/zoRO_example/pendulum_on_cart; run_simulink

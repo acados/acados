@@ -144,10 +144,10 @@ classdef acados_ocp < handle
                 % check if mex interface exists already
                 if is_octave()
                     mex_exists = exist( fullfile(obj.opts_struct.output_dir,...
-                        '/ocp_create.mex'), 'file');
+                        '/ocp_get.mex'), 'file');
                 else
                     mex_exists = exist( fullfile(obj.opts_struct.output_dir,...
-                        ['ocp_create.', mexext]), 'file');
+                        ['ocp_get.', mexext]), 'file');
                 end
                 % check if mex interface is linked against the same external libs as the core
                 if mex_exists
