@@ -2173,9 +2173,9 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
     }
 
-    for (int i = 0; i <= N; i++)
-    {
-        // TODO(rien) where should the update happen??? move to qp update ???
+    // TODO(rien) where should the update happen??? move to qp update ???
+    // for (int i = 0; i <= N; i++)
+    // {
         // TODO(all): fix and move where appropriate
         //  if (i<N)
         //  {
@@ -2189,7 +2189,7 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
         //     BLASFEO_DVECEL(nlp_mem->cost_grad+i, j) += work->sim_out[i]->grad[nx+j];
         //   }
         //  }
-    }
+    // }
 }
 
 
@@ -2240,8 +2240,6 @@ void ocp_nlp_embed_initial_value(ocp_nlp_config *config, ocp_nlp_dims *dims,
         config->constraints[0]->memory_get_fun_ptr(mem->constraints[0]);
     blasfeo_dveccp(2 * ni[0], ineq_fun, 0, mem->ineq_fun, 0);
 
-    // d
-    blasfeo_dveccp(2 * ni[0], mem->ineq_fun, 0, mem->qp_in->d, 0);
 }
 
 
