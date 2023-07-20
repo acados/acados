@@ -321,7 +321,7 @@ static custom_memory *custom_memory_assign(ocp_nlp_config *nlp_config, ocp_nlp_d
 
 static void *custom_memory_create({{ model.name }}_solver_capsule* capsule)
 {
-    printf("\nin custom_memory_create_function\n");
+    // printf("\nin custom_memory_create_function\n");
 
     ocp_nlp_dims *nlp_dims = {{ model.name }}_acados_get_nlp_dims(capsule);
     ocp_nlp_config *nlp_config = {{ model.name }}_acados_get_nlp_config(capsule);
