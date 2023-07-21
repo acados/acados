@@ -38,7 +38,8 @@
 #include "acados_c/sim_interface.h"
 #include "acados/utils/external_function_generic.h"
 #include "acados_c/external_function_interface.h"
-
+// example specific
+#include "acados_sim_solver_{{ model.name }}.h"
 // mex
 #include "mex.h"
 #include "mex_macros.h"
@@ -55,14 +56,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     /* RHS */
 
     // model_struct
-    char *ext_fun_type;
-    const mxArray *matlab_model = prhs[0];
-    if (mxGetField( matlab_model, 0, "ext_fun_type" )!=NULL)
-        ext_fun_type = mxArrayToString( mxGetField( matlab_model, 0, "ext_fun_type" ) );
+    // char *ext_fun_type;
+    // const mxArray *matlab_model = prhs[0];
+    // if (mxGetField( matlab_model, 0, "ext_fun_type" )!=NULL)
+    //     ext_fun_type = mxArrayToString( mxGetField( matlab_model, 0, "ext_fun_type" ) );
 
-    const mxArray *C_sim = prhs[2];
-    const mxArray *C_ext_fun_pointers = prhs[3];
+    // const mxArray *C_sim = prhs[2];
+    // const mxArray *C_ext_fun_pointers = prhs[3];
 
+    // // opts_struct
+    // const mxArray *matlab_opts = prhs[1];
+    // // method
+    // int method = mxGetScalar( mxGetField( matlab_opts, 0, "method" ) );
+
+    // C object
+    const mxArray *C_sim = prhs[0];
     // solver
     ptr = (long long *) mxGetData( mxGetField( C_sim, 0, "solver" ) );
     sim_solver *solver = (sim_solver *) ptr[0];
@@ -75,28 +83,30 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // in
     ptr = (long long *) mxGetData( mxGetField( C_sim, 0, "in" ) );
     sim_in *in = (sim_in *) ptr[0];
-    // method
-    int method = mxGetScalar( mxGetField( C_sim, 0, "method" ) );
+    // capsule
+    ptr = (long long *) mxGetData( mxGetField( C_sim, 0, "capsule" ) );
+    {{ model.name }}_sim_solver_capsule *capsule = ({{ model.name }}_sim_solver_capsule *) ptr[0];
 
     // field
-    char *field = mxArrayToString( prhs[4] );
-    double *value = mxGetPr( prhs[5] );
+    // char *field = mxArrayToString( prhs[4] );
+    char *field = mxArrayToString( prhs[1] );
 
-    int matlab_size = (int) mxGetNumberOfElements( prhs[5] );
+    // value
+    // double *value = mxGetPr( prhs[5] );
+    // int matlab_size = (int) mxGetNumberOfElements( prhs[5] );
+    double *value = mxGetPr( prhs[2] );
+    int matlab_size = (int) mxGetNumberOfElements( prhs[2] );
 
     // check dimension, set value
     if (!strcmp(field, "T"))
     {
-        if (method != GNSF)
-        {
+        {%- if solver_options.integrator_type == "GNSF" %}
             acados_size = 1;
             MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
             sim_in_set(config, dims, in, field, value);
-        }
-        else
-        {
+        {% else %}
             MEX_FIELD_NOT_SUPPORTED_FOR_SOLVER(fun_name, field, "irk_gnsf")
-        }
+        {% endif %}
     }
     else if (!strcmp(field, "x"))
     {
@@ -112,80 +122,39 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "p"))
     {
-        // loop over number of external functions;
-        int struct_size = mxGetNumberOfFields( C_ext_fun_pointers );
-        for (int ii=0; ii<struct_size; ii++)
-        {
-//            printf("\n%s\n", mxGetFieldNameByNumber( C_ext_fun_pointers, ii) );
-            ptr = (long long *) mxGetData( mxGetFieldByNumber( C_ext_fun_pointers, 0, ii ) );
-            // external function param casadi
-            if (!strcmp(ext_fun_type, "casadi"))
-            {
-                if (ptr[0]!=0)
-                {
-                    external_function_param_casadi *ext_fun_ptr = (external_function_param_casadi *) ptr[0];
-                    acados_size = ext_fun_ptr->np;
-                    MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-
-                    ext_fun_ptr->set_param(ext_fun_ptr, value);
-                }
-            }
-            // external function param generic
-            else if (!strcmp(ext_fun_type, "generic"))
-            {
-                if (ptr[0]!=0)
-                {
-                    external_function_param_generic *ext_fun_ptr = (external_function_param_generic *) ptr[0];
-                    acados_size = ext_fun_ptr->np;
-                    MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-
-                    ext_fun_ptr->set_param(ext_fun_ptr, value);
-                }
-            }
-            else
-            {
-                MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "ext_fun_type", ext_fun_type, "casadi, generic");
-            }
-        }
+        sim_dims_get(config, dims, "nu", &acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+        {{ model.name }}_acados_sim_update_params(capsule, value, acados_size);
     }
     else if (!strcmp(field, "xdot"))
     {
-        if (method == IRK || method == LIFTED_IRK)
-        {
+        {%- if solver_options.integrator_type == "IRK" or solver_options.integrator_type == "LIFTED_IRK" %}
             sim_dims_get(config, dims, "nx", &acados_size);
             MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
             sim_solver_set(solver, field, value);
-        }
-        else
-        {
+        {% else %}
             MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, field, "irk");
-        }
+        {% endif %}
     }
     else if (!strcmp(field, "z"))
     {
-        if (method == IRK || method == LIFTED_IRK)
-        {
+        {%- if solver_options.integrator_type == "IRK" or solver_options.integrator_type == "LIFTED_IRK" %}
             sim_dims_get(config, dims, "nz", &acados_size);
             MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
             sim_solver_set(solver, field, value);
-        }
-        else
-        {
+        {% else %}
             MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, field, "irk");
-        }
+        {% endif %}
     }
     else if (!strcmp(field, "phi_guess"))
     {
-        if (method == GNSF)
-        {
+        {%- if solver_options.integrator_type == "GNSF" %}
             sim_dims_get(config, dims, "nout", &acados_size);
             MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
             sim_solver_set(solver, field, value);
-        }
-        else
-        {
+        {% else %}
             MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, field, "irk_gnsf");
-        }
+        {% endif %}
     }
     else if (!strcmp(field, "seed_adj"))
     {

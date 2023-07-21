@@ -54,6 +54,13 @@ function sim_json = set_up_acados_sim_json(obj)
     sim_json.dims.nu = model.dim_nu;
     sim_json.dims.nz = model.dim_nz;
     sim_json.dims.np = model.dim_np;
+    if isfield(model, 'dim_gnsf_nx1')
+        sim_json.dims.gnsf_nx1 = model.dim_gnsf_nx1;
+        sim_json.dims.gnsf_nz1 = model.dim_gnsf_nz1;
+        sim_json.dims.gnsf_nout = model.dim_gnsf_nout;
+        sim_json.dims.gnsf_ny = model.dim_gnsf_ny;
+        sim_json.dims.gnsf_nuhat = model.dim_gnsf_nuhat;
+    end
 
     % model dynamics
     sim_json.model.name = model.name;
@@ -121,7 +128,11 @@ function sim_json = set_up_acados_sim_json(obj)
     sim_json.model.p = model.sym_p;
 
     % options
-    sim_json.sim_options.integrator_type = upper(opts.method);
+    if strcmp(upper(opts.method), 'IRK_GNSF')
+        sim_json.sim_options.integrator_type = 'GNSF';
+    else
+        sim_json.sim_options.integrator_type = upper(opts.method);
+    end
     sim_json.sim_options.collocation_type = upper(opts.collocation_type);
     sim_json.sim_options.sim_method_num_stages = opts.num_stages;
     sim_json.sim_options.sim_method_num_steps = opts.num_steps;

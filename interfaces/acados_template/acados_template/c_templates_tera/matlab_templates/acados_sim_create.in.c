@@ -67,8 +67,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // no input params
 
     /* LHS */
-    #define FIELDS_SIM 6
-    // #define FIELDS_SIM 7
+    #define FIELDS_SIM 7
 
     // field names of output struct
     char *fieldnames[FIELDS_SIM];
@@ -78,7 +77,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     fieldnames[3] = (char*)mxMalloc(50);
     fieldnames[4] = (char*)mxMalloc(50);
     fieldnames[5] = (char*)mxMalloc(50);
-    // fieldnames[6] = (char*)mxMalloc(50);
+    fieldnames[6] = (char*)mxMalloc(50);
 
     memcpy(fieldnames[0],"config",sizeof("config"));
     memcpy(fieldnames[1],"dims",sizeof("dims"));
@@ -86,7 +85,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     memcpy(fieldnames[3],"in",sizeof("in"));
     memcpy(fieldnames[4],"out",sizeof("out"));
     memcpy(fieldnames[5],"solver",sizeof("solver"));
-    // memcpy(fieldnames[6],"method",sizeof("method"));
+    memcpy(fieldnames[6],"capsule",sizeof("capsule"));
 
     // create output struct
     plhs[0] = mxCreateStructMatrix(1, 1, FIELDS_SIM, (const char **) fieldnames);
@@ -97,7 +96,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxFree( fieldnames[3] );
     mxFree( fieldnames[4] );
     mxFree( fieldnames[5] );
-    // mxFree( fieldnames[6] );
+    mxFree( fieldnames[6] );
 
 
     /* populate output struct */
@@ -143,11 +142,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     l_ptr[0] = (long long) solver;
     mxSetField(plhs[0], 0, "solver", solver_mat);
 
-    // // method
-    // mxArray *method_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-    // l_ptr = mxGetData(method_mat);
-    // l_ptr[0] = plan.sim_solver;
-    // mxSetField(plhs[0], 0, "method", method_mat);
+    // capsule
+    mxArray *capsule_mat = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+    l_ptr = mxGetData(capsule_mat);
+    l_ptr[0] = (long long) acados_sim_capsule;
+    mxSetField(plhs[0], 0, "capsule", capsule_mat);
 
     return;
 

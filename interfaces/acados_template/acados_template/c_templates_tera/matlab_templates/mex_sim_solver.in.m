@@ -56,24 +56,20 @@ classdef {{ model.name }}_mex_sim_solver < handle
             if ~isa(field, 'char')
                 error('field must be a char vector, use '' ''');
             end
-            acados_sim_set_{{ model.name }}('none', 'none', obj.C_sim, field, value);
+            acados_sim_set_{{ model.name }}(obj.C_sim, field, value);
         end
 
         % get -- borrowed from MEX interface
         function value = get(obj, field)
-            if any(strfind('sens', field))
-                error('field sens* (sensitivities of optimal solution) not yet supported for templated MEX.')
-            end
             if ~isa(field, 'char')
                 error('field must be a char vector, use '' ''');
             end
-            
             value = sim_get(obj.C_sim, field);
         end
 
         % solve
-        function solve(obj)
-            acados_sim_solve_{{ model.name }}(obj.C_sim);
+        function status = solve(obj)
+            status = sim_solve(obj.C_sim);
         end
 
         % destructor
