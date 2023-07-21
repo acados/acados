@@ -67,6 +67,11 @@ function render_acados_sim_templates(acados_sim_json_file)
     out_file = [ model_name, '_mex_sim_solver.m'];
     render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
 
+    % method to make mexFunctions
+    template_file = 'make_mex_sim.in.m';
+    out_file = ['make_mex_sim_', model_name, '.m'];
+    render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
+
     % MEX constructor
     template_file = 'acados_sim_create.in.c';
     out_file = ['acados_sim_create_', model_name, '.c'];

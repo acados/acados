@@ -104,7 +104,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // config
     mxArray *config_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(config_mat);
-    sim_config * config = {{ model.name }}_acados_get_sim_config();
+    sim_config * config = {{ model.name }}_acados_get_sim_config(acados_sim_capsule);
     l_ptr[0] = (long long) config;
     mxSetField(plhs[0], 0, "config", config_mat);
 
@@ -118,28 +118,28 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // opts
     mxArray *opts_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(opts_mat);
-    sim_opts * opts = {{ model.name }}_acados_get_sim_opts();
+    sim_opts * opts = {{ model.name }}_acados_get_sim_opts(acados_sim_capsule);
     l_ptr[0] = (long long) opts;
     mxSetField(plhs[0], 0, "opts", opts_mat);
 
     // in
     mxArray *in_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(in_mat);
-    sim_in * in = {{ model.name }}_acados_get_sim_in();
+    sim_in * in = {{ model.name }}_acados_get_sim_in(acados_sim_capsule);
     l_ptr[0] = (long long) in;
     mxSetField(plhs[0], 0, "in", in_mat);
 
     // out
     mxArray *out_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(out_mat);
-    sim_out * out = {{ model.name }}_acados_get_sim_out();
+    sim_out * out = {{ model.name }}_acados_get_sim_out(acados_sim_capsule);
     l_ptr[0] = (long long) out;
     mxSetField(plhs[0], 0, "out", out_mat);
 
     // solver
     mxArray *solver_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(solver_mat);
-    solver = {{ model.name }}_acados_get_sim_solver();
+    sim_solver * solver = {{ model.name }}_acados_get_sim_solver(acados_sim_capsule);
     l_ptr[0] = (long long) solver;
     mxSetField(plhs[0], 0, "solver", solver_mat);
 
