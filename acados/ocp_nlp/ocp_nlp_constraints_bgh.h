@@ -146,7 +146,7 @@ typedef struct
 {
     struct blasfeo_dvec fun;
     struct blasfeo_dvec adj;
-    struct blasfeo_dvec tmp_ni;
+    struct blasfeo_dvec constr_eval_no_bounds;
     struct blasfeo_dvec *ux;     // pointer to ux in nlp_out
     struct blasfeo_dvec *tmp_ux; // pointer to ux in tmp_nlp_out
     struct blasfeo_dvec *lam;    // pointer to lam in nlp_out
@@ -203,6 +203,7 @@ typedef struct
     struct blasfeo_dmat tmp_nz_nh;
     struct blasfeo_dmat tmp_nv_nh;
     struct blasfeo_dmat tmp_nz_nv;
+    struct blasfeo_dvec tmp_ni;
     struct blasfeo_dmat hess_z;
     struct blasfeo_dvec tmp_nh;
 } ocp_nlp_constraints_bgh_workspace;
