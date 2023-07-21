@@ -2190,7 +2190,7 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
 
 // update QP rhs for SQP (step prim var, abs dual var)
-// TODO(all): move in dynamics, cost, constraints modules ???
+// evaluate constraints wrt bounds -> allows to update all bounds between preparation and feedback phase.
 void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config,
     ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
     ocp_nlp_memory *mem, ocp_nlp_workspace *work)
@@ -2202,12 +2202,6 @@ void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config,
     int *ni = dims->ni;
 
 
-    for (int i = 0; i <= N; i++)
-    {
-        // evaluate constraint residuals
-        config->constraints[i]->update_qp_vectors(config->constraints[i], dims->constraints[i],
-            in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
-    }
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
@@ -2220,9 +2214,9 @@ void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config,
         if (i < N)
             blasfeo_dveccp(nx[i + 1], mem->dyn_fun + i, 0, mem->qp_in->b + i, 0);
 
-        // // evaluate constraint residuals
-        // config->constraints[i]->update_qp_vectors(config->constraints[i], dims->constraints[i],
-        //     in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
+        // evaluate constraint residuals
+        config->constraints[i]->update_qp_vectors(config->constraints[i], dims->constraints[i],
+            in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
 
         // copy ineq function value into nlp mem, then into QP
         struct blasfeo_dvec *ineq_fun = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
