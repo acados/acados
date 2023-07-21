@@ -2234,25 +2234,6 @@ void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config,
 }
 
 
-// TODO: remove
-void ocp_nlp_embed_initial_value(ocp_nlp_config *config, ocp_nlp_dims *dims,
-    ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
-    ocp_nlp_memory *mem, ocp_nlp_workspace *work)
-{
-    int *ni = dims->ni;
-
-    // constraints
-    // config->constraints[0]->bounds_update(config->constraints[0], dims->constraints[0],
-    //         in->constraints[0], opts->constraints[0], mem->constraints[0], work->constraints[0]);
-
-    // nlp mem: ineq_fun
-    // struct blasfeo_dvec *ineq_fun = config->constraints[0]->memory_get_fun_ptr(mem->constraints[0]);
-    // blasfeo_dveccp(2 * ni[0], ineq_fun, 0, mem->ineq_fun, 0);
-
-}
-
-
-
 double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims,
                                   ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
                                   ocp_nlp_memory *mem, ocp_nlp_workspace *work)

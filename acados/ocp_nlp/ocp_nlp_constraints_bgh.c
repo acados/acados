@@ -1476,6 +1476,7 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
         }
     }
 
+    // TODO: move this!
     if (nz > 0)
     {
         // update memory->fun wrt z
@@ -1600,41 +1601,6 @@ void ocp_nlp_constraints_bgh_compute_fun(void *config_, void *dims_, void *model
 }
 
 
-
-void ocp_nlp_constraints_bgh_bounds_update(void *config_, void *dims_, void *model_,
-                                            void *opts_, void *memory_, void *work_)
-{
-    ocp_nlp_constraints_bgh_dims *dims = dims_;
-    ocp_nlp_constraints_bgh_model *model = model_;
-    // ocp_nlp_constraints_bgh_opts *opts = opts_;
-    ocp_nlp_constraints_bgh_memory *memory = memory_;
-    ocp_nlp_constraints_bgh_workspace *work = work_;
-
-    // ocp_nlp_constraints_bgh_cast_workspace(config_, dims, opts_, work_);
-
-    // extract dims
-    int nx = dims->nx;
-    int nu = dims->nu;
-    int nb = dims->nb;
-    int ng = dims->ng;
-    int nh = dims->nh;
-    int ns = dims->ns;
-
-    printf("this should not be called anymore\n");
-    error(1);
-
-    // /* old box only variant */
-    // // tmp_ni[0:nb] = ux[idxb]
-    // blasfeo_dvecex_sp(nb, 1.0, model->idxb, memory->ux, 0, &memory->tmp_ni, 0);
-    // // fun[:nb] = - tmp_ni[0:nb] + d[:nb]
-    // blasfeo_daxpy(nb, -1.0, &memory->tmp_ni, 0, &model->d, 0, &memory->fun, 0);
-    // // fun[nb+ng+nh:] = tmp_ni[0:nb] - d[nb+ng+nh]
-    // blasfeo_daxpy(nb, -1.0, &model->d, nb+ng+nh, &memory->tmp_ni, 0, &memory->fun, nb+ng+nh);
-
-    return;
-}
-
-
 void ocp_nlp_constraints_bgh_update_qp_vectors(void *config_, void *dims_, void *model_,
                                             void *opts_, void *memory_, void *work_)
 {
@@ -1642,7 +1608,7 @@ void ocp_nlp_constraints_bgh_update_qp_vectors(void *config_, void *dims_, void 
     ocp_nlp_constraints_bgh_model *model = model_;
     // ocp_nlp_constraints_bgh_opts *opts = opts_;
     ocp_nlp_constraints_bgh_memory *memory = memory_;
-    ocp_nlp_constraints_bgh_workspace *work = work_;
+    // ocp_nlp_constraints_bgh_workspace *work = work_;
 
     // ocp_nlp_constraints_bgh_cast_workspace(config_, dims, opts_, work_);
 
@@ -1710,7 +1676,6 @@ void ocp_nlp_constraints_bgh_config_initialize_default(void *config_)
     config->update_qp_matrices = &ocp_nlp_constraints_bgh_update_qp_matrices;
     config->update_qp_vectors = &ocp_nlp_constraints_bgh_update_qp_vectors;
     config->compute_fun = &ocp_nlp_constraints_bgh_compute_fun;
-    config->bounds_update = &ocp_nlp_constraints_bgh_bounds_update;
     config->config_initialize_default = &ocp_nlp_constraints_bgh_config_initialize_default;
 
     return;
