@@ -51,7 +51,7 @@ cdef class AcadosSimSolverCython:
     Class to interact with the acados sim solver C object.
     """
 
-    cdef acados_sim_solver.{{ model.name }}_sim_solver_capsule *capsule
+    cdef acados_sim_solver.sim_solver_capsule *capsule
     cdef void *sim_dims
     cdef acados_sim_solver_common.sim_opts *sim_opts
     cdef acados_sim_solver_common.sim_config *sim_config
