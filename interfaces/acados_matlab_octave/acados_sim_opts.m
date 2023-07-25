@@ -62,6 +62,7 @@ classdef acados_sim_opts < handle
             obj.opts_struct.gnsf_detect_struct = 'true';
             obj.opts_struct.output_dir = fullfile(pwd, 'build');
             obj.opts_struct.ext_fun_compile_flags = '-O2';
+            obj.opts_struct.parameter_values = [];
         end
 
 
@@ -112,6 +113,8 @@ classdef acados_sim_opts < handle
                     'please use compile_interface instead or dont set the option.', ...
                     'options are: true, false, auto.']);
                 keyboard
+            elseif (strcmp(field, 'parameter_values'))
+                obj.opts_struct.parameter_values = value;
             else
                 disp(['acados_sim_opts: set: wrong field: ', field]);
             end

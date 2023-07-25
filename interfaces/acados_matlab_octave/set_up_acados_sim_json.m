@@ -149,12 +149,12 @@ function sim_json = set_up_acados_sim_json(obj)
 
     % parameters
     if model.dim_np > 0
-        if isempty(obj.opts_struct.parameter_values)
+        if isempty(opts.parameter_values)
             warning(['opts_struct.parameter_values are not set.', ...
-                        10 'Using zeros(np,1) by default.' 10 'You can update them later using the sim object.']);
+                        10 'Using zeros(np,1) by default.' 10 'You can update them later using set().']);
             sim_json.parameter_values = zeros(model.dim_np,1);
         else
-            sim_json.parameter_values = obj.opts_struct.parameter_values(:);
+            sim_json.parameter_values = opts.parameter_values(:);
         end
     end
 end
