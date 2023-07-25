@@ -45,7 +45,7 @@ sim_sens_forw = 'false'; % true, false
 sim_jac_reuse = 'false'; % true, false
 sim_num_stages = 3;
 sim_num_steps = 3;
-sim_newton_iter = 3;
+sim_newton_iter = 10;
 model_name = 'pend_dae';
 
 % ocp
@@ -426,6 +426,9 @@ dist2target = norm( sim.get('xn') - xtarget );
 %requ_dist2target = 1e-4;
 requ_dist2target = 1e-3;
 
+
+fprintf(['test_ocp_pendulum_dae: check for constant pendulum length.\nDeviation by maximum of\t', ...
+        num2str(max(abs(check))), '\n']);
 if any( max(abs(check)) > tol_pendulum )
     error(['test_ocp_pendulum_dae: check for constant pendulum length failed, violation' ...
         num2str(max(abs(check))), '>', num2str(tol_pendulum)]);
