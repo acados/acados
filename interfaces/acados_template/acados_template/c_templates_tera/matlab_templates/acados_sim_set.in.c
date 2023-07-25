@@ -122,7 +122,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "p"))
     {
-        sim_dims_get(config, dims, "nu", &acados_size);
+        acados_size = {{ dims.np }};
         MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
         {{ model.name }}_acados_sim_update_params(capsule, value, acados_size);
     }
