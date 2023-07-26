@@ -275,6 +275,8 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
         raise Exception('lbx_0, ubx_0 must be column vectors!')
     dims.nbx_0 = constraints.lbx_0.size
 
+    if constraints.has_x0 and dims.nbx_0 != dims.nx:
+        raise Exception(f"x0 should have shape nx = {dims.nx}.")
     if all(constraints.lbx_0 == constraints.ubx_0) and dims.nbx_0 == dims.nx \
         and dims.nbxe_0 is None \
         and (constraints.idxbxe_0.shape == constraints.idxbx_0.shape)\
