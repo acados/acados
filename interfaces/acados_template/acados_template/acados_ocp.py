@@ -983,6 +983,7 @@ class AcadosOcpConstraints:
         self.__ubx_0   = np.array([])
         self.__idxbx_0 = np.array([])
         self.__idxbxe_0 = np.array([])
+        self.__has_x0 = False
         # state bounds
         self.__lbx     = np.array([])
         self.__ubx     = np.array([])
@@ -1579,6 +1580,10 @@ class AcadosOcpConstraints:
         print("idxbxe_0: ", self.__idxbxe_0)
         return None
 
+    @property
+    def has_x0(self):
+        return self.__has_x0
+
     # SETTERS
     @constr_type.setter
     def constr_type(self, constr_type):
@@ -1634,7 +1639,6 @@ class AcadosOcpConstraints:
         else:
             raise Exception('Invalid idxbxe_0 value.')
 
-
     @x0.setter
     def x0(self, x0):
         if isinstance(x0, np.ndarray):
@@ -1642,6 +1646,7 @@ class AcadosOcpConstraints:
             self.__ubx_0 = x0
             self.__idxbx_0 = np.arange(x0.size)
             self.__idxbxe_0 = np.arange(x0.size)
+            self.__has_x0 = True
         else:
             raise Exception('Invalid x0 value.')
 
