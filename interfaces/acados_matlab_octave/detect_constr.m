@@ -195,7 +195,7 @@ function model = detect_constr(model, is_e, is_init)
     elseif is_init
         model.constr_type = 'bgh';
         % h
-        model.dim_nh = length(lh);
+        model.dim_nh_0 = length(constr_lh_0);
         if ~isempty(lh)
             model.constr_expr_h_0 = constr_expr_h;
             model.constr_lh_0 = lh;
