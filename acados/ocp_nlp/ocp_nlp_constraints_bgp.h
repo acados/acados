@@ -132,6 +132,7 @@ typedef struct
 {
     struct blasfeo_dvec fun;
     struct blasfeo_dvec adj;
+    struct blasfeo_dvec constr_eval_no_bounds;
     struct blasfeo_dvec *ux;     // pointer to ux in nlp_out
     struct blasfeo_dvec *tmp_ux; // pointer to ux in tmp_nlp_out
     struct blasfeo_dvec *lam;    // pointer to lam in nlp_out
@@ -179,12 +180,12 @@ void ocp_nlp_constraints_bgh_memory_set_idxe_ptr(int *idxe, void *memory_);
 
 typedef struct
 {
-    struct blasfeo_dvec tmp_ni;
     struct blasfeo_dmat jac_r_ux_tran;
     struct blasfeo_dmat tmp_nr_nphi_nr;
     struct blasfeo_dmat tmp_nv_nr;
     struct blasfeo_dmat tmp_nv_nphi;
     struct blasfeo_dmat tmp_nz_nphi;
+    struct blasfeo_dvec tmp_ni;
 } ocp_nlp_constraints_bgp_workspace;
 
 //
@@ -204,7 +205,7 @@ void ocp_nlp_constraints_bgp_update_qp_matrices(void *config_, void *dims,
 void ocp_nlp_constraints_bgp_compute_fun(void *config_, void *dims,
         void *model_, void *opts_, void *memory_, void *work_);
 //
-void ocp_nlp_constraints_bgp_bounds_update(void *config_, void *dims, void *model_,
+void ocp_nlp_constraints_bgp_update_qp_vectors(void *config_, void *dims, void *model_,
         void *opts_, void *memory_, void *work_);
 
 

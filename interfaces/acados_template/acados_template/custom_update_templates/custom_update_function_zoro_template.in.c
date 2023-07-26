@@ -464,6 +464,8 @@ static void compute_gh_beta(struct blasfeo_dmat* K_mat, struct blasfeo_dmat* C_m
     blasfeo_dgemm_nn(n_cstr, nx, nx, 1.0, CaDK_mat, 0, 0,
                         P_mat, 0, 0, 0.0,
                         CaDKmP_mat, 0, 0, CaDKmP_mat, 0, 0);
+    // NOTE: here we also compute cross-terms which are not needed.
+    //       Only diag(beta_mat) is used later
     // beta_mat = CaDKmP_mat @ CaDK_mat^T
     blasfeo_dgemm_nt(n_cstr, n_cstr, nx, 1.0, CaDKmP_mat, 0, 0,
                         CaDK_mat, 0, 0, 0.0,
@@ -659,6 +661,17 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
                      &custom_mem->Dh_mat, &custom_mem->temp_CaDK_mat,
                      &custom_mem->temp_CaDKmP_mat, &custom_mem->temp_beta_mat,
                      &custom_mem->uncertainty_matrix_buffer[ii+1], nh, nx, nu);
+
+        // printf("temp_CaDKmP_mat k = %d", ii);
+        // blasfeo_print_dmat(nh, nx, &custom_mem->temp_CaDKmP_mat, 0, 0);
+
+        // TODO: eval hessian(h) -> H_hess (nh*(nx+nu)**2)
+        // temp_Kt_hhess = h_i_hess[:nx, :] + K^T * h_i_hess[nx:nx+nu, :]
+        // tempCD = temp_CaDKmP_mat * temp_Kt_hhess
+        // acados_CD += tempCD
+        // += for upper or -= for lower bound
+
+        // only works if 1 bound is trivially satisfied.
 
     {%- if zoro_description.nlh_t > 0 %}
         {%- for it in zoro_description.idx_lh_t %}
