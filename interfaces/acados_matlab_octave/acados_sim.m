@@ -35,8 +35,6 @@ classdef acados_sim < handle
         % templated solver
         t_sim
         % matlab objects
-        % C_sim
-        % C_sim_ext_fun
         model_struct
         opts_struct
         acados_sim_json
@@ -113,57 +111,28 @@ classdef acados_sim < handle
             addpath(pwd());
 
             cd(return_dir)
-
-            % % create C object
-            % obj.C_sim = sim_create(obj.model_struct, obj.opts_struct);
-
-            % % generate and compile casadi functions
-            % if (strcmp(obj.opts_struct.codgen_model, 'true') || strcmp(obj.opts_struct.compile_model, 'true'))
-            %     sim_generate_casadi_ext_fun(obj.model_struct, obj.opts_struct)
-            % end
-
-            % obj.C_sim_ext_fun = sim_create_ext_fun();
-
-            % % compile mex with model dependency & set pointers for external functions in model
-            % obj.C_sim_ext_fun = sim_set_ext_fun(obj.C_sim, obj.C_sim_ext_fun, obj.model_struct, obj.opts_struct);
-
-            % % precompute
-            % sim_precompute(obj.C_sim);
-
         end
 
 
         function set(obj, field, value)
-            % if ~isa(field, 'char')
-            %     error('field must be a char vector, use '' ''');
-            % end
-            % sim_set(obj.model_struct, obj.opts_struct, obj.t_sim.C_sim, field, value);
             obj.t_sim.set(field, value);
         end
 
 
         function status = solve(obj)
-            % status = sim_solve(obj.C_sim);
             status = obj.t_sim.solve();
         end
 
 
         function value = get(obj, field)
-            % if ~isa(field, 'char')
-            %     error('field must be a char vector, use '' ''');
-            % end
-            % value = sim_get(obj.C_sim, field);
             value = obj.t_sim.get(field);
         end
 
 
         % function delete(obj)
-        %     if ~isempty(obj.C_sim_ext_fun)
-        %         sim_destroy_ext_fun(obj.model_struct, obj.C_sim_ext_fun);
-        %     end
-        %     if ~isempty(obj.C_sim)
-        %         sim_destroy(obj.C_sim);
-        %     end
+        %     Use default implementation.
+        %     MATLAB destroys the property values after the destruction of the object. 
+        %     Because `t_sim` is the only referrence to the `mex_sim_solver` object, MATLAB also destroys the latter.
         % end
 
 
