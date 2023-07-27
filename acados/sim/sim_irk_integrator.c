@@ -331,7 +331,7 @@ void sim_irk_opts_update(void *config_, void *dims, void *opts_)
 
 
     /* explicit Euler */
-    // if (ns == 1)
+    // if (opts->ns == 1)
     // {
     //     opts->c_vec[0] = 0.0;
     //     opts->A_mat[0] = 0.0;
@@ -1353,7 +1353,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
                     // cost function value
                     // NOTE: slack contribution and scaling done in cost module
-                    mem->cost_fun[0] += 0.5 * blasfeo_ddot(ny, tmp_ny, 0, nls_res, 0);
+                    mem->cost_fun[0] += 0.5 * blasfeo_ddot(ny, tmp_ny, 0, tmp_ny, 0);
                 } // end ii
             } // end cost propagation
 
