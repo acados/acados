@@ -186,7 +186,7 @@ class AcadosSimOpts:
     @property
     def collocation_type(self):
         """Collocation type: relevant for implicit integrators
-        -- string in {GAUSS_RADAU_IIA, GAUSS_LEGENDRE}
+        -- string in {'GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA'}.
 
         Default: GAUSS_LEGENDRE
         """
