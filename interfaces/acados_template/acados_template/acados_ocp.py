@@ -2312,7 +2312,7 @@ class AcadosOcpOptions:
 
     @property
     def collocation_type(self):
-        """Collocation type: relevant for implicit integrators
+        """Collocation type: only relevant for implicit integrators
         -- string in {'GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA'}.
 
         Default: GAUSS_LEGENDRE
@@ -2717,7 +2717,7 @@ class AcadosOcpOptions:
 
     @collocation_type.setter
     def collocation_type(self, collocation_type):
-        collocation_types = ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE')
+        collocation_types = ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA')
         if collocation_type in collocation_types:
             self.__collocation_type = collocation_type
         else:
@@ -2923,7 +2923,7 @@ class AcadosOcpOptions:
             self.__cost_discretization = cost_discretization
         else:
             raise Exception('Invalid cost_discretization value. Possible values are:\n\n' \
-                    + ',\n'.join(cost_discretizations) + '.\n\nYou have: ' + cost_discretization + '.\n\nExiting.')
+                    + ',\n'.join(cost_discretizations) + '.\n\nYou have: ' + cost_discretization + '.')
 
     @nlp_solver_step_length.setter
     def nlp_solver_step_length(self, nlp_solver_step_length):
