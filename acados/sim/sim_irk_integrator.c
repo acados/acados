@@ -1322,12 +1322,13 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     model->nls_y_fun_jac->evaluate(model->nls_y_fun_jac, nls_y_fun_jac_type_in, nls_y_fun_jac_in,
                                         nls_y_fun_jac_type_out, nls_y_fun_jac_out);
 
-                    /* J_y_tilde = tmp_ny_nux * current_forward_sens( in [u,x] form) */
                     // nls_res = nls_res - y_ref
                     blasfeo_daxpy(ny, -1.0, mem->y_ref, 0, nls_res, 0, nls_res, 0);
 
-                    // J_y_tilde (u part)
+                    /* J_y_tilde = tmp_ny_nux * current_forward_sens( in [u,x] form) */
+                    // J_y_tilde[:nu, :ny] = tmp_nux_ny^T
                     blasfeo_dgetr(nu, ny, tmp_nux_ny, 0, 0, J_y_tilde, 0, 0);
+                    // J_y_tilde[:nu, :ny] = tmp_nux_ny^T
                     blasfeo_dgemm_tn(ny, nu, nx, 1.0, tmp_nux_ny, nu, 0, S_forw_stage, 0, nx, 1.0, J_y_tilde, 0, 0,
                                     J_y_tilde, 0, 0);
                     // J_y_tilde (x part)
