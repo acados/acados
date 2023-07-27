@@ -194,7 +194,7 @@ classdef acados_ocp < handle
                 end
             end
 
-            % TODO: call ocp_generate_c_code()
+            % generate templated solver
             if nargin < 3
                 simulink_opts = get_acados_simulink_opts;
             end
