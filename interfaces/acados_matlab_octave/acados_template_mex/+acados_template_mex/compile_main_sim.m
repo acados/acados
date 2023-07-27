@@ -43,7 +43,7 @@ function compile_main_sim(export_dir)
         fprintf('Successfully built main file!\n');
     else
         % compile on Windows platform
-        [ status, result ] = system('cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DBUILD_ACADOS_SIM_SOLVER_LIB=ON -S . -B .');
+        [ status, result ] = system('cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DBUILD_ACADOS_SIM_SOLVER_LIB=ON -DBUILD_ACADOS_OCP_SOLVER_LIB=OFF -S . -B .');
         if status
             cd(return_dir);
             error('Building templated code failed.\nGot status %d, result: %s',...

@@ -73,7 +73,9 @@ for idx = 1 : numel(lib_names)
     if ~isempty(link_arg)
         def_arg = sprintf('-DACADOS_WITH_%s', upper(lib_name));
         acados_def_extra = [acados_def_extra, ' ', def_arg];
-        acados_lib_extra = [acados_lib_extra, link_arg];
+        if ~strcmp(lib_name, 'openmp')
+            acados_lib_extra = [acados_lib_extra, link_arg];
+        end
     end
 end
 
