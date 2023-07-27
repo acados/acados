@@ -49,28 +49,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
 
     int acados_size, tmp;
-    long long *ptr;
     char fun_name[50] = "sim_set";
     char buffer [300]; // for error messages
 
     /* RHS */
 
-    // model_struct
-    // char *ext_fun_type;
-    // const mxArray *matlab_model = prhs[0];
-    // if (mxGetField( matlab_model, 0, "ext_fun_type" )!=NULL)
-    //     ext_fun_type = mxArrayToString( mxGetField( matlab_model, 0, "ext_fun_type" ) );
-
-    // const mxArray *C_sim = prhs[2];
-    // const mxArray *C_ext_fun_pointers = prhs[3];
-
-    // // opts_struct
-    // const mxArray *matlab_opts = prhs[1];
-    // // method
-    // int method = mxGetScalar( mxGetField( matlab_opts, 0, "method" ) );
-
     // C object
     const mxArray *C_sim = prhs[0];
+    long long *ptr;
     // solver
     ptr = (long long *) mxGetData( mxGetField( C_sim, 0, "solver" ) );
     sim_solver *solver = (sim_solver *) ptr[0];
@@ -88,12 +74,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {{ model.name }}_sim_solver_capsule *capsule = ({{ model.name }}_sim_solver_capsule *) ptr[0];
 
     // field
-    // char *field = mxArrayToString( prhs[4] );
     char *field = mxArrayToString( prhs[1] );
 
     // value
-    // double *value = mxGetPr( prhs[5] );
-    // int matlab_size = (int) mxGetNumberOfElements( prhs[5] );
     double *value = mxGetPr( prhs[2] );
     int matlab_size = (int) mxGetNumberOfElements( prhs[2] );
 
