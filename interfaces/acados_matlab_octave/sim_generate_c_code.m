@@ -140,5 +140,5 @@ function sim_generate_c_code(obj)
     fclose(fid);
     %% render templated code
     acados_template_mex.render_acados_sim_templates(obj.acados_sim_json.json_file)
-    acados_template_mex.compile_main_sim(obj.acados_sim_json.code_export_directory)
+    acados_template_mex.compile_sim_shared_lib(obj.acados_sim_json.code_export_directory)
 end
