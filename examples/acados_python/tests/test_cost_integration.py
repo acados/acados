@@ -39,11 +39,11 @@ import casadi as ca
 import scipy.linalg
 from utils import plot_pendulum
 
-FULL_STATE_PENALTY = False
+COST_VARIANTS = ['PARTIAL_STATE_PENALTY', 'FULL_STATE_PENALTY', 'DOUBLE_STATE_PENALTY']
 PLOT = False
 COST_DISCRETIZATIONS = ['EULER', 'INTEGRATOR']
 
-def solve_ocp(cost_discretization):
+def solve_ocp(cost_discretization, cost_variant):
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -65,18 +65,15 @@ def solve_ocp(cost_discretization):
 
     # set cost
     Q = 2 * np.diag([1e3, 1e3, 1e-2, 1e-2])
-    if FULL_STATE_PENALTY:
-        R = 2 * np.diag([1e-2])
-
+    R = 2 * np.diag([1e-2])
+    if cost_variant == "FULL_STATE_PENALTY":
         ny = nx + nu
         ocp.cost.cost_type = 'NONLINEAR_LS'
         ocp.model.cost_y_expr = ca.vertcat(model.x, model.u)
 
         ocp.cost.W = scipy.linalg.block_diag(Q, R)
         ocp.cost.yref = np.zeros((ny, ))
-    else:
-        R = 2 * np.diag([1e-2])
-
+    elif cost_variant == 'PARTIAL_STATE_PENALTY':
         nyx = 2
 
         ny = nyx + nu
@@ -85,6 +82,15 @@ def solve_ocp(cost_discretization):
 
         ocp.cost.W = scipy.linalg.block_diag(Q[:nyx, :nyx], R)
         ocp.cost.yref = np.zeros((ny, ))
+    elif cost_variant == 'DOUBLE_STATE_PENALTY':
+        ny = 2*nx + nu
+        ocp.cost.cost_type = 'NONLINEAR_LS'
+        ocp.model.cost_y_expr = ca.vertcat(model.x, model.x, model.u)
+
+        ocp.cost.W = scipy.linalg.block_diag(Q, Q, R)
+        ocp.cost.yref = np.zeros((ny, ))
+    else:
+        raise Exception(f"cost_variant {cost_variant} not supported")
 
     ny_e = nx
     ocp.cost.cost_type_e = 'NONLINEAR_LS'
@@ -139,22 +145,25 @@ def solve_ocp(cost_discretization):
     simX[N, :] = ocp_solver.get(N, "x")
 
     ocp_solver.print_statistics()  # encapsulates: stat = ocp_solver.get_stats("statistics")
-    ocp_solver.store_iterate(filename=f'final_iterate_{cost_discretization}.json', overwrite=True)
+    ocp_solver.store_iterate(filename=get_iterate_filename(cost_discretization, cost_variant), overwrite=True)
 
     if PLOT:# plot but don't halt
         plot_pendulum(np.linspace(0, Tf, N + 1), Fmax, simU, simX, latexify=False, plt_show=False, X_true_label=f'original: N={N}, Tf={Tf}')
 
+def get_iterate_filename(cost_discretization, cost_variant):
+    return f'final_iterate_{cost_discretization}_{cost_variant}.json'
 
-def compare_iterates():
+def compare_iterates(cost_variant):
     import json
     ref_cost_discretization = COST_DISCRETIZATIONS[0]
-    ref_iterate_filename = f'final_iterate_{ref_cost_discretization}.json'
+
+    ref_iterate_filename = get_iterate_filename(ref_cost_discretization, cost_variant)
     with open(ref_iterate_filename, 'r') as f:
         ref_iterate = json.load(f)
 
     tol = 1e-10
     for cost_discretization in COST_DISCRETIZATIONS[1:]:
-        iterate_filename = f'final_iterate_{cost_discretization}.json'
+        iterate_filename = get_iterate_filename(cost_discretization, cost_variant)
         with open(iterate_filename, 'r') as f:
             iterate = json.load(f)
 
@@ -163,13 +172,16 @@ def compare_iterates():
         errors = [np.max(np.abs((np.array(iterate[k]) - np.array(ref_iterate[k])))) for k in iterate]
         max_error = max(errors)
         print(f"max error {max_error:e}")
-        assert(max_error < tol)
+        if (max_error < tol):
+            print(f"successfuly compared {len(COST_DISCRETIZATIONS)} cost discretizations for {cost_variant}")
+        else:
+            raise Exception(f"comparing {cost_variant=}, {cost_discretization=} failed with {max_error=}")
 
-    print(f"successfuly compared {len(COST_DISCRETIZATIONS)} cost discretizations")
 
 
 if __name__ == "__main__":
-    for cost_discretization in COST_DISCRETIZATIONS:
-        solve_ocp(cost_discretization)
-    compare_iterates()
+    for cost_variant in COST_VARIANTS:
+        for cost_discretization in COST_DISCRETIZATIONS:
+            solve_ocp(cost_discretization, cost_variant)
+        compare_iterates(cost_variant)
 
