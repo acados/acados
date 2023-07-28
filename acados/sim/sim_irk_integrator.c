@@ -1354,7 +1354,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
                     // cost function value
                     // NOTE: slack contribution and scaling done in cost module
-                    mem->cost_fun[0] += 0.5 * blasfeo_ddot(ny, tmp_ny, 0, tmp_ny, 0);
+                    mem->cost_fun[0] += 0.5 * b_vec[ii]/num_steps * blasfeo_ddot(ny, tmp_ny, 0, tmp_ny, 0);
                 } // end ii
             } // end cost propagation
 
