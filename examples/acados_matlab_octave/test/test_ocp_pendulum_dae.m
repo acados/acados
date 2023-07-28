@@ -45,7 +45,7 @@ sim_sens_forw = 'false'; % true, false
 sim_jac_reuse = 'false'; % true, false
 sim_num_stages = 3;
 sim_num_steps = 3;
-sim_newton_iter = 3;
+sim_newton_iter = 10;
 model_name = 'pend_dae';
 
 % ocp
@@ -206,12 +206,13 @@ ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
 ocp_opts.set('regularize_method', regularize_method);
 ocp_opts.set('ext_fun_compile_flags', '');
 
+tol_sqp = 1e-10;
 if (strcmp(nlp_solver, 'sqp'))
 	ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
-    ocp_opts.set('nlp_solver_tol_stat', 1e-8);
-    ocp_opts.set('nlp_solver_tol_eq', 1e-8);
-    ocp_opts.set('nlp_solver_tol_ineq', 1e-8);
-    ocp_opts.set('nlp_solver_tol_comp', 1e-8);
+    ocp_opts.set('nlp_solver_tol_stat', tol_sqp);
+    ocp_opts.set('nlp_solver_tol_eq', tol_sqp);
+    ocp_opts.set('nlp_solver_tol_ineq', tol_sqp);
+    ocp_opts.set('nlp_solver_tol_comp', tol_sqp);
 end
 ocp_opts.set('qp_solver', qp_solver);
 if (strcmp(qp_solver, 'partial_condensing_hpipm'))
@@ -425,9 +426,12 @@ dist2target = norm( sim.get('xn') - xtarget );
 %requ_dist2target = 1e-4;
 requ_dist2target = 1e-3;
 
+
+fprintf(['test_ocp_pendulum_dae: check for constant pendulum length.\nDeviation by maximum of\t', ...
+        num2str(max(abs(check))), '\n']);
 if any( max(abs(check)) > tol_pendulum )
-    error(['test_ocp_pendulum_dae: check for constant pendulum length failed, violation >' ...
-        num2str(tol_pendulum)]);
+    error(['test_ocp_pendulum_dae: check for constant pendulum length failed, violation' ...
+        num2str(max(abs(check))), '>', num2str(tol_pendulum)]);
 elseif dist2target > requ_dist2target
     error(['test_ocp_pendulum_dae: system should have reached desired state up to accuracy ' ...
            num2str(requ_dist2target,'%e') ' is ' num2str(dist2target,'%e')]);
