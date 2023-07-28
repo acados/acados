@@ -725,8 +725,8 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     if (opts->cost_computation)
     {
         assign_and_advance_blasfeo_dmat_mem(ny, nx+nu, workspace->J_y_tilde, &c_ptr);
-        assign_and_advance_blasfeo_dmat_mem(ny, nx+nu, workspace->tmp_nux_ny, &c_ptr);
-        assign_and_advance_blasfeo_dmat_mem(ny, nx+nu, workspace->tmp_nux_ny2, &c_ptr);
+        assign_and_advance_blasfeo_dmat_mem(nx+nu, ny, workspace->tmp_nux_ny, &c_ptr);
+        assign_and_advance_blasfeo_dmat_mem(nx+nu, ny, workspace->tmp_nux_ny2, &c_ptr);
         assign_and_advance_blasfeo_dmat_mem(nx, nx+nu, workspace->S_forw_stage, &c_ptr);
         assign_and_advance_blasfeo_dvec_mem(ny, workspace->tmp_ny, &c_ptr);
         assign_and_advance_blasfeo_dvec_mem(ny, workspace->nls_res, &c_ptr);
