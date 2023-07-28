@@ -329,15 +329,6 @@ void sim_irk_opts_update(void *config_, void *dims, void *opts_)
     // printf("\nA_mat:\n");
     // d_print_mat(opts->ns, opts->ns, opts->A_mat, opts->ns);
 
-
-    /* explicit Euler */
-    // if (opts->ns == 1)
-    // {
-    //     opts->c_vec[0] = 0.0;
-    //     opts->A_mat[0] = 0.0;
-    //     opts->b_vec[0] = 1.0;
-    // }
-
     return;
 }
 
@@ -1303,7 +1294,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     // nls_y_fun_jac_out[1] = &workspace->tmp_nux_ny;  // jac': (nu+nx) * ny
                     nls_y_fun_jac_out[1] = tmp_nux_ny;  // jac': (nu+nx) * ny
                     // dy_dux^T
-                    // TODO: set output
+                    // TODO: set output in case of nz > 0
                     nls_y_fun_jac_type_out[2] = BLASFEO_DMAT;
                     nls_y_fun_jac_out[2] = tmp_nux_ny;   // jac_yexpr_z:  ny * nz
 
@@ -1326,14 +1317,17 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     blasfeo_daxpy(ny, -1.0, mem->y_ref, 0, nls_res, 0, nls_res, 0);
 
                     /* J_y_tilde = tmp_ny_nux * current_forward_sens( in [u,x] form) */
+                    // NOTE: tmp_nux_ny = dy_dux^T here
                     // J_y_tilde[:nu, :ny] = tmp_nux_ny^T
                     blasfeo_dgetr(nu, ny, tmp_nux_ny, 0, 0, J_y_tilde, 0, 0);
-                    // J_y_tilde[:nu, :ny] = tmp_nux_ny^T
+                    // J_y_tilde[:nu, :ny] += tmp_nux_ny^T[nu:,:] * S_forw_stage[:, nx:]
                     blasfeo_dgemm_tn(ny, nu, nx, 1.0, tmp_nux_ny, nu, 0, S_forw_stage, 0, nx, 1.0, J_y_tilde, 0, 0,
                                     J_y_tilde, 0, 0);
+
                     // J_y_tilde (x part)
                     blasfeo_dgemm_tn(ny, nx, nx, 1.0, tmp_nux_ny, nu, 0, S_forw_stage, 0, 0, 0.0, J_y_tilde, 0, nu,
                                     J_y_tilde, 0, nu);
+
                     // transpose
                     blasfeo_dgetr(nx+nu, ny, J_y_tilde, 0, 0, tmp_nux_ny, 0, 0);
 
@@ -1369,6 +1363,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
         // obtain x(n+1)
         for (int ii = 0; ii < ns; ii++){
+            // xn += b_i * k_i
             blasfeo_daxpy(nx, step * b_vec[ii], K, ii * nx, xn, 0, xn, 0);
         }
 

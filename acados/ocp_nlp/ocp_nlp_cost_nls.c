@@ -844,9 +844,12 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
         blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
         memory->fun *= model->scaling;
     }
-    // printf("cost_fun: %e\n grad \n", memory->fun);
-    // blasfeo_print_tran_dvec(nu+nx+2*ns, &memory->grad, 0);
+    // printf("cost_fun: %e\n", memory->fun);
 
+    // printf("cost grad\n");
+    // blasfeo_print_exp_tran_dvec(nu+nx+2*ns, &memory->grad, 0);
+
+    // printf("cost hess\n");
     // blasfeo_print_dmat(nu+nx, nu+nx, memory->RSQrq, 0, 0);
     // blasfeo_print_tran_dvec(2*ns, memory->Z, 0);
     // blasfeo_print_tran_dvec(nu+nx+2*ns, &memory->grad, 0);
