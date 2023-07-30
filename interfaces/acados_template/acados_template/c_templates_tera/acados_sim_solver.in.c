@@ -427,26 +427,39 @@ int {{ model.name }}_acados_sim_free(sim_solver_capsule *capsule)
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_impl_dae_fun);
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_impl_dae_fun_jac_x_xdot_z);
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_impl_dae_jac_x_xdot_u_z);
+    free(capsule->sim_impl_dae_fun);
+    free(capsule->sim_impl_dae_fun_jac_x_xdot_z);
+    free(capsule->sim_impl_dae_jac_x_xdot_u_z);
 {%- if hessian_approx == "EXACT" %}
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_impl_dae_hess);
+    free(capsule->sim_impl_dae_hess);
 {%- endif %}
 {%- elif solver_options.integrator_type == "ERK" %}
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_forw_vde_casadi);
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_vde_adj_casadi);
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_expl_ode_fun_casadi);
+    free(capsule->sim_forw_vde_casadi);
+    free(capsule->sim_vde_adj_casadi);
+    free(capsule->sim_expl_ode_fun_casadi);
 {%- if hessian_approx == "EXACT" %}
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_expl_ode_hess);
+    free(capsule->sim_expl_ode_hess);
 {%- endif %}
 {%- elif solver_options.integrator_type == "GNSF" %}
   {% if model.gnsf.purely_linear != 1 %}
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_gnsf_phi_fun);
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_gnsf_phi_fun_jac_y);
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_gnsf_phi_jac_y_uhat);
+    free(capsule->sim_gnsf_phi_fun);
+    free(capsule->sim_gnsf_phi_fun_jac_y);
+    free(capsule->sim_gnsf_phi_jac_y_uhat);
   {% if model.gnsf.nontrivial_f_LO == 1 %}
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_gnsf_f_lo_jac_x1_x1dot_u_z);
+    free(capsule->sim_gnsf_f_lo_jac_x1_x1dot_u_z);
   {%- endif %}
   {%- endif %}
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_gnsf_get_matrices_fun);
+    free(capsule->sim_gnsf_get_matrices_fun);
 {% endif %}
 
     return 0;
