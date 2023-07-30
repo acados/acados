@@ -344,7 +344,6 @@ ocp_nlp_dims* {{ model.name }}_acados_create_2_create_and_set_dimensions({{ mode
 {%- if cost.cost_type_e == "NONLINEAR_LS" or cost.cost_type_e == "LINEAR_LS" or cost.cost_type_e == "CONVEX_OVER_NONLINEAR"%}
     ocp_nlp_dims_set_cost(nlp_config, nlp_dims, N, "ny", &ny[N]);
 {%- endif %}
-    free(intNp1mem);
 
 {%- if solver_options.integrator_type == "GNSF" -%}
     // GNSF specific dimensions
@@ -372,6 +371,7 @@ ocp_nlp_dims* {{ model.name }}_acados_create_2_create_and_set_dimensions({{ mode
         ocp_nlp_dims_set_dynamics(nlp_config, nlp_dims, i, "ny", &ny[i]);
 {%- endif %}
 
+    free(intNp1mem);
 
 return nlp_dims;
 }
