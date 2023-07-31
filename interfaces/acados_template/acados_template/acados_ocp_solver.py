@@ -1048,7 +1048,7 @@ class AcadosOcpSolver:
 
 
 
-    def solve_for_x0(self, x0_bar):
+    def solve_for_x0(self, x0_bar, fail_on_nonzero_status=True):
         """
         Wrapper around `solve()` which sets initial state constraint, solves the OCP, and returns u0.
         """
@@ -1057,10 +1057,11 @@ class AcadosOcpSolver:
 
         status = self.solve()
 
-        if status == 2:
-            print("Warning: acados_ocp_solver reached maximum iterations.")
-        elif status != 0:
-            raise Exception(f'acados acados_ocp_solver returned status {status}')
+        if status != 0:
+            if fail_on_nonzero_status:
+                raise Exception(f'acados acados_ocp_solver returned status {status}')
+            else:
+                print(f'Warning: acados acados_ocp_solver returned status {status}')
 
         u0 = self.get(0, "u")
         return u0
