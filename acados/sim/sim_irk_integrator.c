@@ -1329,7 +1329,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                                     J_y_tilde, 0, nu);
 
                     // transpose
-                    blasfeo_dgetr(nx+nu, ny, J_y_tilde, 0, 0, tmp_nux_ny, 0, 0);
+                    blasfeo_dgetr(ny, nx+nu, J_y_tilde, 0, 0, tmp_nux_ny, 0, 0);
 
                     // tmp_nux_ny2 = W_chol * J_y_tilde (ny * (nx+nu))
                     blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, mem->W_chol, 0, 0, tmp_nux_ny, 0, 0,
