@@ -39,7 +39,7 @@ import casadi as ca
 import scipy.linalg
 from utils import plot_pendulum
 
-COST_VARIANTS = ['PARTIAL_STATE_PENALTY', 'FULL_STATE_PENALTY', 'DOUBLE_STATE_PENALTY']
+COST_VARIANTS = ['PARTIAL_STATE_PENALTY', 'FULL_STATE_PENALTY', 'DOUBLE_STATE_PENALTY', 'CREATIVE_NONLINEAR']
 PLOT = False
 COST_DISCRETIZATIONS = ['EULER', 'INTEGRATOR']
 
@@ -88,6 +88,13 @@ def solve_ocp(cost_discretization, cost_variant):
         ocp.model.cost_y_expr = ca.vertcat(model.x, model.x, model.u)
 
         ocp.cost.W = scipy.linalg.block_diag(Q, Q, R)
+        ocp.cost.yref = np.zeros((ny, ))
+    elif cost_variant == 'CREATIVE_NONLINEAR':
+        ocp.model.cost_y_expr = ca.vertcat(model.x[2], model.u, 0.1*(model.x[0]+model.u[0]+1.)**3)
+        ny = max(ocp.model.cost_y_expr.shape)
+        ocp.cost.cost_type = 'NONLINEAR_LS'
+
+        ocp.cost.W = Q[:ny, :ny]
         ocp.cost.yref = np.zeros((ny, ))
     else:
         raise Exception(f"cost_variant {cost_variant} not supported")
