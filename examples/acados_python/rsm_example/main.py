@@ -50,6 +50,7 @@ w_val   = 300
 
 udc = 580
 u_max = 2/3*udc
+Rs = 0.4
 
 X0 = np.array([0.0, 0.0])
 
@@ -77,10 +78,6 @@ def psi_q_num(x,y):
 
 def export_rsm_model():
     model_name = 'rsm'
-
-    # constants
-    Rs = 0.4
-    J = np.array([[0, -1], [1, 0]])
 
     # set up states
     psi_d = SX.sym('psi_d')
@@ -129,10 +126,11 @@ def export_rsm_model():
     model.name = model_name
 
     # BGP constraint
-    r = SX.sym('r', 2, 1)
-    model.con_phi_expr = r[0]**2 + r[1]**2
-    model.con_r_expr = vertcat(u_d, u_q)
-    model.con_r_in_phi = r
+    if FORMULATION > 0:
+        r = SX.sym('r', 2, 1)
+        model.con_phi_expr = r[0]**2 + r[1]**2
+        model.con_r_expr = vertcat(u_d, u_q)
+        model.con_r_in_phi = r
 
     return model
 
@@ -149,9 +147,6 @@ def create_ocp_solver():
     Rs = 0.4
     u_d_ref = Rs*i_d_ref - w_val*psi_q_ref
     u_q_ref = Rs*i_q_ref + w_val*psi_d_ref
-
-    if FORMULATION == 2:
-        ocp.constraints.constr_type = 'BGP'
 
     nx = model.x.size()[0]
     nu = model.u.size()[0]
@@ -216,55 +211,48 @@ def create_ocp_solver():
     q1 = -(y2 - y1/x1*x2)/(1-x2/x1)
     m1 = -(y1 + q1)/x1
 
+    print('q1', q1)
+
     # box constraints
     q2 = r*sin(np.pi/3)
 
-    # form D and C matrices
-    # (acados C interface works with column major format)
-    D = np.array([[m1, 1],[-m1, 1]])
-    C = np.transpose(np.array([[0, 0], [0, 0]]))
-    ug  = np.array([-q1, -q1])
-    lg  = np.array([+q1, +q1])
-
     # setting bounds
-    # lbu <= u <= ubu and lbx <= x <= ubx
     lbu = np.array([-q2])
     ubu = np.array([+q2])
     ocp.constraints.idxbu = np.array([1])
 
     ocp.constraints.lbu = lbu
     ocp.constraints.ubu = ubu
+    ocp.constraints.x0 = X0
 
     if FORMULATION > 0:
+        ocp.constraints.constr_type = 'BGP'
         ocp.constraints.lphi = np.array([-1.0e8])
         ocp.constraints.uphi = np.array([(u_max*sqrt(3)/2)**2])
 
-    ocp.constraints.x0 = X0
-
     if FORMULATION == 0 or FORMULATION == 2:
-        # setting general constraints
-        # lg <= D*u + C*u <= ug
-        ocp.constraints.D   = D
-        ocp.constraints.C   = C
-        ocp.constraints.lg  = lg
-        ocp.constraints.ug  = ug
+        # lg <= C*x + D*u <= ug
+        ocp.constraints.D = np.array([[m1, 1],[-m1, 1]])
+        ocp.constraints.C = np.zeros((nx, nx))
+        ocp.constraints.ug  = np.array([-q1, -q1])
+        ocp.constraints.lg  = np.array([+q1, +q1])
 
     # setting parameters
     ocp.parameter_values = np.array([w_val, 0.0, 0.0])
 
     # set QP solver
-    # ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     # ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM'
     # ocp.solver_options.qp_solver = 'FULL_CONDENSING_DAQP'
-    ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
+    # ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
-    # ocp.solver_options.integrator_type = 'ERK'
     ocp.solver_options.integrator_type = 'IRK'
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
     ocp.solver_options.nlp_solver_type = 'SQP_RTI'
     # ocp.solver_options.nlp_solver_type = 'SQP'
+    # ocp.solver_options.tol = 1e-4
 
     acados_solver = AcadosOcpSolver(ocp)
 
