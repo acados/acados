@@ -36,7 +36,9 @@ import scipy.linalg
 
 from plot_utils import plot_rsm_trajectories, plot_hexagon
 
-FORMULATION = 2 # 0 for hexagon 2 SCQP sphere
+
+# TODO(Jonathan): formulation, plant, yref updaten, squashed version, RTI/non RTI
+FORMULATION = 1 # 0 for hexagon 2 SCQP sphere
 
 Ts = 0.0008
 
@@ -296,14 +298,10 @@ def main():
                 raise Exception(f'acados returned status {status}.')
 
             # get solution
-            xcurrent = acados_solver.get(0, "x")
             u0 = acados_solver.get(0, "u")
 
-            for j in range(nx):
-                simX[i,j] = xcurrent[j]
-
-            for j in range(nu):
-                simU[i,j] = u0[j]
+            simX[i, :] = xcurrent
+            simU[i, :] = u0
 
             # update params
             if i > Nsim/3 and i < Nsim/2:
