@@ -120,4 +120,4 @@ simX[N,:] = ocp_solver.get(N, "x")
 
 ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
 
-plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
+plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=True)

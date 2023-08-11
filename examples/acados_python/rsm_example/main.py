@@ -352,8 +352,6 @@ def main():
         for j in range(nu):
             simU[i,j] = u0[j]
 
-        field_name = "u"
-
         if i > Nsim/3 and i < Nsim/2:
             # update params
             for i in range(N):

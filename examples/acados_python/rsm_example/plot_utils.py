@@ -31,9 +31,10 @@
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-
+from acados_template import latexify_plot
 
 def plot_rsm_trajectories(simX, simU, ocp, Ts):
+    latexify_plot()
     Nsim = simU.shape[0]
     t = np.linspace(0.0, Ts*Nsim, Nsim)
     plt.subplot(4, 1, 1)
@@ -63,6 +64,8 @@ def plot_rsm_trajectories(simX, simU, ocp, Ts):
     plt.grid(True)
 
 def plot_hexagon(simU, u_max):
+    latexify_plot()
+
     r = u_max
 
     x1 = r
@@ -77,7 +80,6 @@ def plot_hexagon(simU, u_max):
     # q1 <= uq - m1*ud <= -q1
 
     # box constraints
-    m2 = 0
     q2 = r*np.sin(np.pi/3)
     # -q2 <= uq  <= q2
 
