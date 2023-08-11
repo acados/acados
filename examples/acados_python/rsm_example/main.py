@@ -313,7 +313,7 @@ def main():
             if USE_RTI:
                 acados_solver.options_set('rti_phase', 1)
                 status = acados_solver.solve()
-                time_prep = acados_solver.get_stats('time_tot') * 1e3
+                time_prep = acados_solver.get_stats('time_tot')[0] * 1e3
                 if i_exec == 0:
                     times_prep[i] = time_prep
                 else:
@@ -329,7 +329,7 @@ def main():
 
             # solve
             status = acados_solver.solve()
-            time_feed = acados_solver.get_stats('time_tot') * 1e3
+            time_feed = acados_solver.get_stats('time_tot')[0] * 1e3
             if i_exec == 0:
                 times_feed[i] = time_feed
             else:
@@ -372,7 +372,7 @@ def main():
     cpu_times = times_prep + times_feed
 
     print(f"Ran experiment with {WITH_ELLIPSOIDAL_CONSTRAINT=}, {WITH_HEXAGON_CONSTRAINT=}, {USE_RTI=}")
-    print(f"CPU time in ms {np.min(cpu_times):.3f} {np.median(cpu_times):.3f} {np.max(cpu_times):.3f}")
+    print(f"CPU time in ms: min {np.min(cpu_times):.3f}, median {np.median(cpu_times):.3f}, max {np.max(cpu_times):.3f}")
 
     # plot results
     plot_rsm_trajectories(simX, simU, ocp.cost.yref, Ts)
