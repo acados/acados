@@ -114,10 +114,10 @@ def export_rsm_model():
     Psi = vertcat(psi_d_num(i_d, i_q), psi_q_num(i_d, i_q))
 
     # dynamics
-    f_impl = vertcat(   psi_d_dot - u_d + Rs*i_d - w*psi_q - dist_d, \
-                        psi_q_dot - u_q + Rs*i_q + w*psi_d - dist_q, \
-                        psi_d - Psi[0], \
-                        psi_q - Psi[1])
+    f_impl = vertcat(psi_d_dot - u_d + Rs*i_d - w*psi_q - dist_d,
+                     psi_q_dot - u_q + Rs*i_q + w*psi_d - dist_q,
+                     psi_d - Psi[0],
+                     psi_q - Psi[1])
 
     model = AcadosModel()
 
@@ -138,47 +138,6 @@ def export_rsm_model():
 
     return model
 
-def get_general_constraints_DC(u_max):
-
-    # polytopic constraint on the input
-    r = u_max
-
-    x1 = r
-    y1 = 0
-    x2 = r*cos(np.pi/3)
-    y2 = r*sin(np.pi/3)
-
-    q1 = -(y2 - y1/x1*x2)/(1-x2/x1)
-    m1 = -(y1 + q1)/x1
-
-    # q1 <= uq + m1*ud <= -q1
-    # q1 <= uq - m1*ud <= -q1
-
-    # box constraints
-    m2 = 0
-    q2 = r*sin(np.pi/3)
-    # -q2 <= uq  <= q2
-
-    # form D and C matrices
-    # (acados C interface works with column major format)
-    D = np.transpose(np.array([[1, m1],[1, -m1]]))
-    D = np.array([[m1, 1],[-m1, 1]])
-    C = np.transpose(np.array([[0, 0], [0, 0]]))
-
-    ug  = np.array([-q1, -q1])
-    lg  = np.array([+q1, +q1])
-    lbu = np.array([-q2])
-    ubu = np.array([+q2])
-
-    res = dict()
-    res["D"] = D
-    res["C"] = C
-    res["lg"] = lg
-    res["ug"] = ug
-    res["lbu"] = lbu
-    res["ubu"] = ubu
-
-    return res
 
 def create_ocp_solver():
     # create ocp object to formulate the OCP
@@ -191,7 +150,7 @@ def create_ocp_solver():
     # compute steady-state u
     psi_d_ref = psi_d_num(i_d_ref, i_q_ref)
     psi_q_ref = psi_q_num(i_d_ref, i_q_ref)
-    Rs      = 0.4
+    Rs = 0.4
     u_d_ref = Rs*i_d_ref - w_val*psi_q_ref
     u_q_ref = Rs*i_q_ref + w_val*psi_d_ref
 
@@ -249,26 +208,41 @@ def create_ocp_solver():
 
     ocp.cost.Vx_e = Vx_e
 
-    ocp.cost.yref  = np.zeros((ny, ))
-    ocp.cost.yref[0]  = psi_d_ref
-    ocp.cost.yref[1]  = psi_q_ref
-    ocp.cost.yref[2]  = u_d_ref
-    ocp.cost.yref[3]  = u_q_ref
+    ocp.cost.yref = np.zeros((ny, ))
+    ocp.cost.yref[0] = psi_d_ref
+    ocp.cost.yref[1] = psi_q_ref
+    ocp.cost.yref[2] = u_d_ref
+    ocp.cost.yref[3] = u_q_ref
     ocp.cost.yref_e = np.zeros((ny_e, ))
-    ocp.cost.yref_e[0]  = psi_d_ref
-    ocp.cost.yref_e[1]  = psi_q_ref
+    ocp.cost.yref_e[0] = psi_d_ref
+    ocp.cost.yref_e[1] = psi_q_ref
 
-    # get D and C
-    res = get_general_constraints_DC(u_max)
-    D = res["D"]
-    C = res["C"]
-    lg = res["lg"]
-    ug = res["ug"]
-    lbu = res["lbu"]
-    ubu = res["ubu"]
+    # setup constraints
+    # polytopic constraint on the input
+    r = u_max
+
+    x1 = r
+    y1 = 0
+    x2 = r*cos(np.pi/3)
+    y2 = r*sin(np.pi/3)
+
+    q1 = -(y2 - y1/x1*x2)/(1-x2/x1)
+    m1 = -(y1 + q1)/x1
+
+    # box constraints
+    q2 = r*sin(np.pi/3)
+
+    # form D and C matrices
+    # (acados C interface works with column major format)
+    D = np.array([[m1, 1],[-m1, 1]])
+    C = np.transpose(np.array([[0, 0], [0, 0]]))
+    ug  = np.array([-q1, -q1])
+    lg  = np.array([+q1, +q1])
 
     # setting bounds
     # lbu <= u <= ubu and lbx <= x <= ubx
+    lbu = np.array([-q2])
+    ubu = np.array([+q2])
     ocp.constraints.idxbu = np.array([1])
 
     ocp.constraints.lbu = lbu
@@ -360,12 +334,11 @@ def main():
             for j in range(nu):
                 simU[i,j] = u0[j]
 
+            # update params
             if i > Nsim/3 and i < Nsim/2:
-                # update params
                 for j in range(N):
                     acados_solver.set(j, "p", np.array([w_val/2.0, 0, 0]))
             else:
-                # update params
                 for j in range(N):
                     acados_solver.set(j, "p", np.array([w_val, 0, 0]))
 
