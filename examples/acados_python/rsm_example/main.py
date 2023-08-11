@@ -37,17 +37,17 @@ import scipy.linalg
 from plot_utils import plot_rsm_trajectories, plot_hexagon
 
 
-# TODO(Jonathan):
-# - yref update
+# TODO(oj):
 # - squashed version
 WITH_ELLIPSOIDAL_CONSTRAINT = True
+# WITH_ELLIPSOIDAL_CONSTRAINT = False
 WITH_HEXAGON_CONSTRAINT = True
 # WITH_HEXAGON_CONSTRAINT = False
-# USE_RTI = False
+USE_RTI = False
 USE_RTI = True
 
 USE_PLANT = True
-USE_PLANT = False
+# USE_PLANT = False
 
 # multiple executions for consistent timings:
 N_EXEC = 5
@@ -229,7 +229,9 @@ def create_ocp_solver():
     m1 = -(y1 + q1)/x1
 
     if WITH_ELLIPSOIDAL_CONSTRAINT:
+        # to avoid LICQ violations
         eps = 1e-3
+        # eps = 0.0
         ocp.constraints.constr_type = 'BGP'
         ocp.constraints.lphi = np.array([-1.0e8])
         ocp.constraints.uphi = (1-eps)*np.array([(u_max*sqrt(3)/2)**2])
@@ -245,10 +247,10 @@ def create_ocp_solver():
     ocp.parameter_values = np.array([w_val, 0.0, 0.0])
 
     # set QP solver
-    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+    # ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     # ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM'
     # ocp.solver_options.qp_solver = 'FULL_CONDENSING_DAQP'
-    # ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
+    ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = 'IRK'
     ocp.solver_options.sim_method_num_stages = 2
@@ -318,9 +320,9 @@ def main():
         xcurrent = X0.copy()
         acados_solver.reset()
 
-        # initialize
-        for i in range(N):
-            acados_solver.set(i, 'u', -0.9 * u_max * np.ones(nu,))
+        # # initialize
+        # for i in range(N):
+        #     acados_solver.set(i, 'u', -0.9 * u_max * np.ones(nu,))
 
         # simulation
         for i in range(Nsim):
