@@ -29,17 +29,16 @@
 #
 
 from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver
-import os
 from casadi import vertcat, atan, exp, cos, sin, sqrt, SX
 import numpy as np
-import matplotlib
 import matplotlib.pyplot as plt
 import scipy.linalg
 
-CODE_GEN = 1
-COMPILE = 1
+from plot_utils import plot_rsm_trajectories, plot_hexagon
 
 FORMULATION = 2 # 0 for hexagon 2 SCQP sphere
+
+Ts = 0.0008
 
 i_d_ref = 1.484
 i_q_ref = 1.429
@@ -52,7 +51,8 @@ w_val   = 300
 udc = 580
 u_max = 2/3*udc
 
-x0 = np.array([0.0, 0.0])
+X0 = np.array([0.0, 0.0])
+
 
 # fitted psi_d map
 def psi_d_num(x,y):
@@ -73,14 +73,6 @@ def psi_q_num(x,y):
         exp(x**2*(-1.0/7.2e1))*atan(y)*6.649036351062812e-2
 
     return psi_q_expression
-
-psi_d_ref = psi_d_num(i_d_ref, i_q_ref)
-psi_q_ref = psi_q_num(i_d_ref, i_q_ref)
-
-# compute steady-state u
-Rs      = 0.4
-u_d_ref = Rs*i_d_ref - w_val*psi_q_ref
-u_q_ref = Rs*i_q_ref + w_val*psi_d_ref
 
 
 def export_rsm_model():
@@ -188,242 +180,199 @@ def get_general_constraints_DC(u_max):
 
     return res
 
-# create ocp object to formulate the OCP
-ocp = AcadosOcp()
+def create_ocp_solver():
+    # create ocp object to formulate the OCP
+    ocp = AcadosOcp()
 
-# export model
-model = export_rsm_model()
-ocp.model = model
+    # export model
+    model = export_rsm_model()
+    ocp.model = model
 
-if FORMULATION == 2:
-    # constraints name
-    ocp.constraints.constr_type = 'BGP'
+    # compute steady-state u
+    psi_d_ref = psi_d_num(i_d_ref, i_q_ref)
+    psi_q_ref = psi_q_num(i_d_ref, i_q_ref)
+    Rs      = 0.4
+    u_d_ref = Rs*i_d_ref - w_val*psi_q_ref
+    u_q_ref = Rs*i_q_ref + w_val*psi_d_ref
 
+    if FORMULATION == 2:
+        # constraints name
+        ocp.constraints.constr_type = 'BGP'
 
-Ts  = 0.0008
+    nx = model.x.size()[0]
+    nu = model.u.size()[0]
+    nz = model.z.size()[0]
+    ny = nu + nx
+    ny_e = nx
+    N = 2
+    Tf = N*Ts
 
-nx = model.x.size()[0]
-nu = model.u.size()[0]
-nz = model.z.size()[0]
-ny = nu + nx
-ny_e = nx
-N = 2
-Tf = N*Ts
+    # set number of shooting intervals
+    ocp.dims.N = N
 
-# set number of shooting intervals
-ocp.dims.N = N
+    # set cost module
+    Q = np.eye(nx)
+    Q[0,0] = 5e2
+    Q[1,1] = 5e2
 
-# set cost module
-Q = np.eye(nx)
-Q[0,0] = 5e2
-Q[1,1] = 5e2
+    R = np.eye(nu)
+    R[0,0] = 1e-4
+    R[1,1] = 1e-4
 
-R = np.eye(nu)
-R[0,0] = 1e-4
-R[1,1] = 1e-4
+    ocp.cost.W = scipy.linalg.block_diag(Q, R)
 
-ocp.cost.W = scipy.linalg.block_diag(Q, R)
+    Vx = np.zeros((ny, nx))
+    Vx[0,0] = 1.0
+    Vx[1,1] = 1.0
 
-Vx = np.zeros((ny, nx))
-Vx[0,0] = 1.0
-Vx[1,1] = 1.0
+    ocp.cost.Vx = Vx
 
-ocp.cost.Vx = Vx
+    Vu = np.zeros((ny, nu))
+    Vu[2,0] = 1.0
+    Vu[3,1] = 1.0
+    ocp.cost.Vu = Vu
 
-Vu = np.zeros((ny, nu))
-Vu[2,0] = 1.0
-Vu[3,1] = 1.0
-ocp.cost.Vu = Vu
+    Vz = np.zeros((ny, nz))
+    Vz[0,0] = 0.0
+    Vz[1,1] = 0.0
 
-Vz = np.zeros((ny, nz))
-Vz[0,0] = 0.0
-Vz[1,1] = 0.0
+    ocp.cost.Vz = Vz
 
-ocp.cost.Vz = Vz
+    Q_e = np.eye(nx)
+    Q_e[0,0] = 1e-3
+    Q_e[1,1] = 1e-3
+    ocp.cost.W_e = Q_e
 
-Q_e = np.eye(nx)
-Q_e[0,0] = 1e-3
-Q_e[1,1] = 1e-3
-ocp.cost.W_e = Q_e
+    Vx_e = np.zeros((ny_e, nx))
+    Vx_e[0,0] = 1.0
+    Vx_e[1,1] = 1.0
 
-Vx_e = np.zeros((ny_e, nx))
-Vx_e[0,0] = 1.0
-Vx_e[1,1] = 1.0
+    ocp.cost.Vx_e = Vx_e
 
-ocp.cost.Vx_e = Vx_e
+    ocp.cost.yref  = np.zeros((ny, ))
+    ocp.cost.yref[0]  = psi_d_ref
+    ocp.cost.yref[1]  = psi_q_ref
+    ocp.cost.yref[2]  = u_d_ref
+    ocp.cost.yref[3]  = u_q_ref
+    ocp.cost.yref_e = np.zeros((ny_e, ))
+    ocp.cost.yref_e[0]  = psi_d_ref
+    ocp.cost.yref_e[1]  = psi_q_ref
 
-ocp.cost.yref  = np.zeros((ny, ))
-ocp.cost.yref[0]  = psi_d_ref
-ocp.cost.yref[1]  = psi_q_ref
-ocp.cost.yref[2]  = u_d_ref
-ocp.cost.yref[3]  = u_q_ref
-ocp.cost.yref_e = np.zeros((ny_e, ))
-ocp.cost.yref_e[0]  = psi_d_ref
-ocp.cost.yref_e[1]  = psi_q_ref
+    # get D and C
+    res = get_general_constraints_DC(u_max)
+    D = res["D"]
+    C = res["C"]
+    lg = res["lg"]
+    ug = res["ug"]
+    lbu = res["lbu"]
+    ubu = res["ubu"]
 
-# get D and C
-res = get_general_constraints_DC(u_max)
-D = res["D"]
-C = res["C"]
-lg = res["lg"]
-ug = res["ug"]
-lbu = res["lbu"]
-ubu = res["ubu"]
+    # setting bounds
+    # lbu <= u <= ubu and lbx <= x <= ubx
+    ocp.constraints.idxbu = np.array([1])
 
-# setting bounds
-# lbu <= u <= ubu and lbx <= x <= ubx
-ocp.constraints.idxbu = np.array([1])
+    ocp.constraints.lbu = lbu
+    ocp.constraints.ubu = ubu
 
-ocp.constraints.lbu = lbu
-ocp.constraints.ubu = ubu
+    if FORMULATION > 0:
+        ocp.constraints.lphi = np.array([-1.0e8])
+        ocp.constraints.uphi = np.array([(u_max*sqrt(3)/2)**2])
 
-if FORMULATION > 0:
-    ocp.constraints.lphi = np.array([-1.0e8])
-    ocp.constraints.uphi = np.array([(u_max*sqrt(3)/2)**2])
+    ocp.constraints.x0 = X0
 
-ocp.constraints.x0 = x0
+    if FORMULATION == 0 or FORMULATION == 2:
+        # setting general constraints
+        # lg <= D*u + C*u <= ug
+        ocp.constraints.D   = D
+        ocp.constraints.C   = C
+        ocp.constraints.lg  = lg
+        ocp.constraints.ug  = ug
 
-if FORMULATION == 0 or FORMULATION == 2:
-    # setting general constraints
-    # lg <= D*u + C*u <= ug
-    ocp.constraints.D   = D
-    ocp.constraints.C   = C
-    ocp.constraints.lg  = lg
-    ocp.constraints.ug  = ug
+    # setting parameters
+    ocp.parameter_values = np.array([w_val, 0.0, 0.0])
 
-# setting parameters
-ocp.parameter_values = np.array([w_val, 0.0, 0.0])
+    # set QP solver
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+    # ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM'
+    # ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
+    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+    # ocp.solver_options.integrator_type = 'ERK'
+    ocp.solver_options.integrator_type = 'IRK'
 
-# set QP solver
-ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-# ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM'
-# ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
-ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
-# ocp.solver_options.integrator_type = 'ERK'
-ocp.solver_options.integrator_type = 'IRK'
-
-# set prediction horizon
-ocp.solver_options.tf = Tf
-ocp.solver_options.nlp_solver_type = 'SQP_RTI'
-# ocp.solver_options.nlp_solver_type = 'SQP'
-
-file_name = 'acados_ocp.json'
-
-acados_solver = AcadosOcpSolver(ocp, json_file = file_name)
-
-# closed loop simulation TODO(add proper simulation)
-Nsim = 100
-
-simX = np.ndarray((Nsim, nx))
-simU = np.ndarray((Nsim, nu))
-
-for i in range(Nsim):
-
-    # preparation rti_phase
-    acados_solver.options_set('rti_phase', 1)
-    status = acados_solver.solve()
-
-    # update initial condition
-    acados_solver.set(0, "lbx", x0)
-    acados_solver.set(0, "ubx", x0)
-
-    # feedback rti_phase
-    acados_solver.options_set('rti_phase', 2)
-    status = acados_solver.solve()
-
-    if status != 0:
-        raise Exception(f'acados returned status {status}.')
-
-    # get solution
-    x0 = acados_solver.get(0, "x")
-    u0 = acados_solver.get(0, "u")
-
-    for j in range(nx):
-        simX[i,j] = x0[j]
-
-    for j in range(nu):
-        simU[i,j] = u0[j]
-
-    field_name = "u"
-
-    if i > Nsim/3 and i < Nsim/2:
-        # update params
-        for i in range(N):
-            acados_solver.set(i, "p", np.array([w_val/2.0, 0, 0]))
-    else:
-        # update params
-        for i in range(N):
-            acados_solver.set(i, "p", np.array([w_val, 0, 0]))
-
-    # get next state
-    x0 = acados_solver.get(1, "x")
+    # set prediction horizon
+    ocp.solver_options.tf = Tf
+    ocp.solver_options.nlp_solver_type = 'SQP_RTI'
+    # ocp.solver_options.nlp_solver_type = 'SQP'
 
 
-# plot results
-t = np.linspace(0.0, Ts*Nsim, Nsim)
-plt.subplot(4, 1, 1)
-plt.step(t, simU[:,0], color='r')
-plt.plot([0, Ts*Nsim], [ocp.cost.yref[2], ocp.cost.yref[2]], '--')
-plt.title('closed-loop simulation')
-plt.ylabel('u_d')
-plt.xlabel('t')
-plt.grid(True)
-plt.subplot(4, 1, 2)
-plt.step(t, simU[:,1], color='r')
-plt.plot([0, Ts*Nsim], [ocp.cost.yref[3], ocp.cost.yref[3]], '--')
-plt.ylabel('u_q')
-plt.xlabel('t')
-plt.grid(True)
-plt.subplot(4, 1, 3)
-plt.plot(t, simX[:,0])
-plt.plot([0, Ts*Nsim], [ocp.cost.yref[0], ocp.cost.yref[0]], '--')
-plt.ylabel('psi_d')
-plt.xlabel('t')
-plt.grid(True)
-plt.subplot(4, 1, 4)
-plt.plot(t, simX[:,1])
-plt.plot([0, Ts*Nsim], [ocp.cost.yref[1], ocp.cost.yref[1]], '--')
-plt.ylabel('psi_q')
-plt.xlabel('t')
-plt.grid(True)
+    acados_solver = AcadosOcpSolver(ocp)
 
-# plot hexagon
-r = u_max
+    return acados_solver
 
-x1 = r
-y1 = 0
-x2 = r*cos(np.pi/3)
-y2 = r*sin(np.pi/3)
+def main():
+    acados_solver = create_ocp_solver()
+    # get ocp description
+    ocp = acados_solver.acados_ocp
+    nx = ocp.dims.nx
+    nu = ocp.dims.nu
+    N = ocp.dims.N
 
-q1 = -(y2 - y1/x1*x2)/(1-x2/x1)
-m1 = -(y1 + q1)/x1
+    # closed loop simulation TODO(add proper simulation)
+    Nsim = 100
 
-# q1 <= uq + m1*ud <= -q1
-# q1 <= uq - m1*ud <= -q1
+    simX = np.ndarray((Nsim, nx))
+    simU = np.ndarray((Nsim, nu))
 
-# box constraints
-m2 = 0
-q2 = r*sin(np.pi/3)
-# -q2 <= uq  <= q2
+    xcurrent = X0.copy()
 
-plt.figure()
-plt.plot(simU[:,0], simU[:,1], 'o')
-plt.xlabel('ud')
-plt.ylabel('uq')
-ud = np.linspace(-1.5*u_max, 1.5*u_max, 100)
-plt.plot(ud, -m1*ud -q1)
-plt.plot(ud, -m1*ud +q1)
-plt.plot(ud, +m1*ud -q1)
-plt.plot(ud, +m1*ud +q1)
-plt.plot(ud, -q2*np.ones((100, 1)))
-plt.plot(ud, q2*np.ones((100, 1)))
-plt.grid(True)
-ax = plt.gca()
-ax.set_xlim([-1.5*u_max, 1.5*u_max])
-ax.set_ylim([-1.5*u_max, 1.5*u_max])
-circle = plt.Circle((0, 0), u_max*np.sqrt(3)/2, color='red', fill=False)
-ax.add_artist(circle)
+    for i in range(Nsim):
 
-# avoid plotting when running on Travis
-if os.environ.get('ACADOS_ON_CI') is None:
+        # preparation rti_phase
+        acados_solver.options_set('rti_phase', 1)
+        status = acados_solver.solve()
+
+        # update initial condition
+        acados_solver.set(0, "lbx", xcurrent)
+        acados_solver.set(0, "ubx", xcurrent)
+
+        # feedback rti_phase
+        acados_solver.options_set('rti_phase', 2)
+        status = acados_solver.solve()
+
+        if status != 0:
+            raise Exception(f'acados returned status {status}.')
+
+        # get solution
+        xcurrent = acados_solver.get(0, "x")
+        u0 = acados_solver.get(0, "u")
+
+        for j in range(nx):
+            simX[i,j] = xcurrent[j]
+
+        for j in range(nu):
+            simU[i,j] = u0[j]
+
+        field_name = "u"
+
+        if i > Nsim/3 and i < Nsim/2:
+            # update params
+            for i in range(N):
+                acados_solver.set(i, "p", np.array([w_val/2.0, 0, 0]))
+        else:
+            # update params
+            for i in range(N):
+                acados_solver.set(i, "p", np.array([w_val, 0, 0]))
+
+        # get next state
+        xcurrent = acados_solver.get(1, "x")
+
+    # plot results
+    plot_rsm_trajectories(simX, simU, ocp, Ts)
+
+    # plot hexagon
+    plot_hexagon(simU, u_max)
+
     plt.show()
+
+if __name__ == "__main__":
+    main()
