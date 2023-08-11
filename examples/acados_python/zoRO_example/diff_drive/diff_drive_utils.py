@@ -28,33 +28,14 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib
 import os
-import shutil
 
 from mpc_parameters import MPCParam
+from acados_template import latexify_plot
 
-
-def get_latex_plot_params():
-    text_usetex = True if shutil.which('latex') else False
-    params = {'backend': 'ps',
-            'text.latex.preamble': r"\usepackage{gensymb} \usepackage{amsmath}",
-            'axes.labelsize': 12,
-            'axes.titlesize': 12,
-            'legend.fontsize': 12,
-            'xtick.labelsize': 12,
-            'ytick.labelsize': 12,
-            'text.usetex': text_usetex,
-            'font.family': 'serif'
-    }
-
-    return params
-
+latexify_plot()
 
 def plot_timings(timing_dict):
-    # latexify plot
-    params = get_latex_plot_params()
-    matplotlib.rcParams.update(params)
 
     print("timings\t\tmin\tmean\tmax\n--------------------------------")
     for k, v in timing_dict.items():
@@ -80,9 +61,6 @@ def plot_timings(timing_dict):
 
 
 def plot_trajectory(cfg:MPCParam, traj_ref:np.ndarray, traj_zo:np.ndarray):
-    # latexify plot
-    params = get_latex_plot_params()
-    matplotlib.rcParams.update(params)
 
     fig = plt.figure(1)
     ax = fig.add_subplot(1,1,1)

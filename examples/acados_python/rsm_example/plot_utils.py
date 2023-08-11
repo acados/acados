@@ -28,7 +28,6 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from acados_template import latexify_plot
@@ -58,6 +57,7 @@ def plot_rsm_trajectories(simX, simU, yref, Ts):
     axes[3].set_ylabel(r'$\psi^q$')
     axes[-1].set_xlabel(r'$t$')
     axes[0].set_xlim(t[0], t[-1])
+
 
 def plot_hexagon(simU, u_max):
 

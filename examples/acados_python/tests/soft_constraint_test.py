@@ -33,7 +33,7 @@ sys.path.insert(0, '../pendulum_on_cart/common')
 
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver
 from pendulum_model import export_pendulum_ode_model
-from utils import plot_pendulum
+# from utils import plot_pendulum
 import numpy as np
 import scipy.linalg
 
@@ -192,7 +192,7 @@ def run_closed_loop_experiment(soft_constr_type='bx', verbose=False, qp_solver='
     print("sl", sl, "su", su)
 
     # plot results
-    # plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
+    plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
 
     # store results
     np.savetxt(f'test_results/simX_soft_formulation_{soft_constr_type}_{qp_solver}', simX)

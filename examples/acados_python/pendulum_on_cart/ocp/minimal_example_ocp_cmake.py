@@ -33,7 +33,6 @@ import sys
 sys.path.insert(0, '../common')
 
 from acados_template import AcadosOcp, AcadosOcpSolver, ocp_get_default_cmake_builder
-from acados_template.builders import CMakeBuilder
 from pendulum_model import export_pendulum_ode_model
 import numpy as np
 import scipy.linalg

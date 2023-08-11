@@ -45,7 +45,6 @@ def plot_pendulum(shooting_nodes, u_max, U, X_true, X_est=None, Y_measured=None,
         latexify: latex style plots
     """
 
-    # latexify plot
     if latexify:
         latexify_plot()
 

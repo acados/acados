@@ -39,8 +39,6 @@ from export_ocp_solver import export_ocp_solver
 from export_mhe_solver_with_param import export_mhe_solver_with_param
 
 import numpy as np
-from scipy.linalg import block_diag
-
 from utils import plot_pendulum
 
 
@@ -144,7 +142,6 @@ for i in range(N):
     simXest[i,:] = x_augmented[0:nx]
     sim_l_est[i,:] = x_augmented[nx]
     simWest[i,:] = acados_solver_mhe.get(i, "u")
-    
 
 x_augmented = acados_solver_mhe.get(N, "x")
 simXest[N,:] = x_augmented[0:nx]
@@ -158,7 +155,6 @@ plot_pendulum(ts, Fmax, simU, simX, simXest, simY, latexify=False)
 
 
 import matplotlib.pyplot as plt
-import os
 
 plt.figure()
 plt.plot(ts, l_true*np.ones((N+1, 1)), '-')
@@ -166,6 +162,5 @@ plt.plot(ts, sim_l_est, '.-')
 plt.grid()
 plt.ylabel('l')
 plt.legend(['true l', 'estimated l'])
-# avoid plotting when running on Travis
-if os.environ.get('ACADOS_ON_CI') is None:
-    plt.show()
+
+plt.show()
