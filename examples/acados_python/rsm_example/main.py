@@ -292,9 +292,10 @@ def create_ocp_solver():
     ocp.parameter_values = np.array([w_val, 0.0, 0.0])
 
     # set QP solver
-    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+    # ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     # ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM'
-    # ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
+    # ocp.solver_options.qp_solver = 'FULL_CONDENSING_DAQP'
+    ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     # ocp.solver_options.integrator_type = 'ERK'
     ocp.solver_options.integrator_type = 'IRK'
@@ -320,49 +321,60 @@ def main():
     # closed loop simulation TODO(add proper simulation)
     Nsim = 100
 
+    # multiple executions for consistent timings:
+    N_exec = 2
+
     simX = np.ndarray((Nsim, nx))
     simU = np.ndarray((Nsim, nu))
+    times_prep = 1e10 * np.ones(Nsim)
+    times_feed = 1e10 * np.ones(Nsim)
 
-    xcurrent = X0.copy()
+    for i_exec in range(N_exec):
+        xcurrent = X0.copy()
+        acados_solver.reset()
+        for i in range(Nsim):
+            # preparation rti_phase
+            acados_solver.options_set('rti_phase', 1)
+            status = acados_solver.solve()
+            times_prep[i] = min(times_prep[i], acados_solver.get_stats('time_tot') * 1e3)
 
-    for i in range(Nsim):
+            # update initial condition
+            acados_solver.set(0, "lbx", xcurrent)
+            acados_solver.set(0, "ubx", xcurrent)
 
-        # preparation rti_phase
-        acados_solver.options_set('rti_phase', 1)
-        status = acados_solver.solve()
+            # feedback rti_phase
+            acados_solver.options_set('rti_phase', 2)
+            status = acados_solver.solve()
+            times_feed[i] = min(times_feed[i], acados_solver.get_stats('time_tot') * 1e3)
 
-        # update initial condition
-        acados_solver.set(0, "lbx", xcurrent)
-        acados_solver.set(0, "ubx", xcurrent)
+            if status != 0:
+                raise Exception(f'acados returned status {status}.')
 
-        # feedback rti_phase
-        acados_solver.options_set('rti_phase', 2)
-        status = acados_solver.solve()
+            # get solution
+            xcurrent = acados_solver.get(0, "x")
+            u0 = acados_solver.get(0, "u")
 
-        if status != 0:
-            raise Exception(f'acados returned status {status}.')
+            for j in range(nx):
+                simX[i,j] = xcurrent[j]
 
-        # get solution
-        xcurrent = acados_solver.get(0, "x")
-        u0 = acados_solver.get(0, "u")
+            for j in range(nu):
+                simU[i,j] = u0[j]
 
-        for j in range(nx):
-            simX[i,j] = xcurrent[j]
+            if i > Nsim/3 and i < Nsim/2:
+                # update params
+                for j in range(N):
+                    acados_solver.set(j, "p", np.array([w_val/2.0, 0, 0]))
+            else:
+                # update params
+                for j in range(N):
+                    acados_solver.set(j, "p", np.array([w_val, 0, 0]))
 
-        for j in range(nu):
-            simU[i,j] = u0[j]
+            # get next state
+            xcurrent = acados_solver.get(1, "x")
 
-        if i > Nsim/3 and i < Nsim/2:
-            # update params
-            for i in range(N):
-                acados_solver.set(i, "p", np.array([w_val/2.0, 0, 0]))
-        else:
-            # update params
-            for i in range(N):
-                acados_solver.set(i, "p", np.array([w_val, 0, 0]))
-
-        # get next state
-        xcurrent = acados_solver.get(1, "x")
+    cpu_times = times_prep + times_feed
+    # timings
+    print(f"CPU time in ms {np.min(cpu_times):.3f} {np.median(cpu_times):.3f} {np.max(cpu_times):.3f}")
 
     # plot results
     plot_rsm_trajectories(simX, simU, ocp, Ts)
