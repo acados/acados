@@ -34,7 +34,7 @@ import matplotlib
 
 def latexify_plot() -> None:
     text_usetex = True if shutil.which('latex') else False
-    params = {'backend': 'ps',
+    params = {
             'text.latex.preamble': r"\usepackage{gensymb} \usepackage{amsmath}",
             'axes.labelsize': 12,
             'axes.titlesize': 12,
