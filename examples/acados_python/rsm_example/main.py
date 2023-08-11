@@ -37,8 +37,21 @@ import scipy.linalg
 from plot_utils import plot_rsm_trajectories, plot_hexagon
 
 
-# TODO(Jonathan): formulation, plant, yref updaten, squashed version, RTI/non RTI
-FORMULATION = 1 # 0 for hexagon 2 SCQP sphere
+# TODO(Jonathan):
+# - plant
+# - yref update
+# - squashed version
+WITH_ELLIPSOIDAL_CONSTRAINT = True
+WITH_HEXAGON_CONSTRAINT = True
+WITH_HEXAGON_CONSTRAINT = False
+# USE_RTI = False
+USE_RTI = True
+
+# multiple executions for consistent timings:
+N_EXEC = 5
+
+# shooting intervals
+N = 2
 
 Ts = 0.0008
 
@@ -127,8 +140,7 @@ def export_rsm_model():
     model.p = p
     model.name = model_name
 
-    # BGP constraint
-    if FORMULATION > 0:
+    if WITH_ELLIPSOIDAL_CONSTRAINT:
         r = SX.sym('r', 2, 1)
         model.con_phi_expr = r[0]**2 + r[1]**2
         model.con_r_expr = vertcat(u_d, u_q)
@@ -155,7 +167,6 @@ def create_ocp_solver():
     nz = model.z.size()[0]
     ny = nu + nx
     ny_e = nx
-    N = 2
     Tf = N*Ts
 
     # set number of shooting intervals
@@ -177,11 +188,7 @@ def create_ocp_solver():
     Vu[3,1] = 1.0
     ocp.cost.Vu = Vu
 
-    Vz = np.zeros((ny, nz))
-    Vz[0,0] = 0.0
-    Vz[1,1] = 0.0
-
-    ocp.cost.Vz = Vz
+    ocp.cost.Vz = np.zeros((ny, nz))
 
     Q_e = np.diag([1e-3, 1e-3])
     ocp.cost.W_e = Q_e
@@ -201,36 +208,32 @@ def create_ocp_solver():
     ocp.cost.yref_e[0] = psi_d_ref
     ocp.cost.yref_e[1] = psi_q_ref
 
-    # setup constraints
-    # polytopic constraint on the input
-    r = u_max
+    ## setup constraints
+    ocp.constraints.x0 = X0
 
-    x1 = r
+    # bounds on u
+    q2 = u_max*sin(np.pi/3)
+    lbu = np.array([-q2])
+    ubu = np.array([+q2])
+    ocp.constraints.idxbu = np.array([1])
+    ocp.constraints.lbu = lbu
+    ocp.constraints.ubu = ubu
+
+    # polytopic constraint on the input
+    x1 = u_max
     y1 = 0
-    x2 = r*cos(np.pi/3)
-    y2 = r*sin(np.pi/3)
+    x2 = u_max*cos(np.pi/3)
+    y2 = u_max*sin(np.pi/3)
 
     q1 = -(y2 - y1/x1*x2)/(1-x2/x1)
     m1 = -(y1 + q1)/x1
 
-    # box constraints
-    q2 = r*sin(np.pi/3)
-
-    # setting bounds
-    lbu = np.array([-q2])
-    ubu = np.array([+q2])
-    ocp.constraints.idxbu = np.array([1])
-
-    ocp.constraints.lbu = lbu
-    ocp.constraints.ubu = ubu
-    ocp.constraints.x0 = X0
-
-    if FORMULATION > 0:
+    if WITH_ELLIPSOIDAL_CONSTRAINT:
         ocp.constraints.constr_type = 'BGP'
         ocp.constraints.lphi = np.array([-1.0e8])
         ocp.constraints.uphi = np.array([(u_max*sqrt(3)/2)**2])
 
-    if FORMULATION == 0 or FORMULATION == 2:
+    if WITH_HEXAGON_CONSTRAINT:
         # lg <= C*x + D*u <= ug
         ocp.constraints.D = np.array([[m1, 1],[-m1, 1]])
         ocp.constraints.C = np.zeros((nx, nx))
@@ -241,20 +244,22 @@ def create_ocp_solver():
     ocp.parameter_values = np.array([w_val, 0.0, 0.0])
 
     # set QP solver
-    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+    # ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     # ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM'
     # ocp.solver_options.qp_solver = 'FULL_CONDENSING_DAQP'
-    # ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
+    ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = 'IRK'
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
-    ocp.solver_options.nlp_solver_type = 'SQP_RTI'
-    # ocp.solver_options.nlp_solver_type = 'SQP'
     # ocp.solver_options.tol = 1e-4
+    if USE_RTI:
+        ocp.solver_options.nlp_solver_type = 'SQP_RTI'
+    else:
+        ocp.solver_options.nlp_solver_type = 'SQP'
 
-    acados_solver = AcadosOcpSolver(ocp)
+    acados_solver = AcadosOcpSolver(ocp, verbose=False)
 
     return acados_solver
 
@@ -265,35 +270,43 @@ def main():
     nu = ocp.dims.nu
     N = ocp.dims.N
 
-    # closed loop simulation TODO(add proper simulation/plant)
+    # closed loop simulation
     Nsim = 100
-
-    # multiple executions for consistent timings:
-    N_exec = 2
 
     simX = np.ndarray((Nsim, nx))
     simU = np.ndarray((Nsim, nu))
-    times_prep = 1e10 * np.ones(Nsim)
-    times_feed = 1e10 * np.ones(Nsim)
+    times_prep = np.zeros(Nsim)
+    times_feed = np.zeros(Nsim)
 
-    for _ in range(N_exec):
+    for i_exec in range(N_EXEC):
         xcurrent = X0.copy()
         acados_solver.reset()
         for i in range(Nsim):
             # preparation rti_phase
-            acados_solver.options_set('rti_phase', 1)
-            status = acados_solver.solve()
-            times_prep[i] = min(times_prep[i], acados_solver.get_stats('time_tot') * 1e3)
+            if USE_RTI:
+                acados_solver.options_set('rti_phase', 1)
+                status = acados_solver.solve()
+                time_prep = acados_solver.get_stats('time_tot') * 1e3
+                if i_exec == 0:
+                    times_prep[i] = time_prep
+                else:
+                    times_prep[i] = min(times_prep[i], time_prep)
 
             # update initial condition
             acados_solver.set(0, "lbx", xcurrent)
             acados_solver.set(0, "ubx", xcurrent)
 
             # feedback rti_phase
-            acados_solver.options_set('rti_phase', 2)
-            status = acados_solver.solve()
-            times_feed[i] = min(times_feed[i], acados_solver.get_stats('time_tot') * 1e3)
+            if USE_RTI:
+                acados_solver.options_set('rti_phase', 2)
 
+            # solve
+            status = acados_solver.solve()
+            time_feed = acados_solver.get_stats('time_tot') * 1e3
+            if i_exec == 0:
+                times_feed[i] = time_feed
+            else:
+                times_feed[i] = min(times_feed[i], time_feed)
             if status != 0:
                 raise Exception(f'acados returned status {status}.')
 
@@ -316,6 +329,8 @@ def main():
 
     # timings
     cpu_times = times_prep + times_feed
+
+    print(f"Ran experiment with {WITH_ELLIPSOIDAL_CONSTRAINT=}, {WITH_HEXAGON_CONSTRAINT=}, {USE_RTI=}")
     print(f"CPU time in ms {np.min(cpu_times):.3f} {np.median(cpu_times):.3f} {np.max(cpu_times):.3f}")
 
     # plot results
