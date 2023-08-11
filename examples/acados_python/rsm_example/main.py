@@ -69,6 +69,8 @@ udc = 580
 u_max = 2/3*udc
 Rs = 0.4
 
+w_val_tilde = .5 * w_val
+
 X0 = np.array([0.0, 0.0])
 
 
@@ -151,18 +153,21 @@ def export_rsm_model():
     return model
 
 
+def compute_y_ref(w_val):
+    # compute steady-state u
+    psi_d_ref = psi_d_num(i_d_ref, i_q_ref)
+    psi_q_ref = psi_q_num(i_d_ref, i_q_ref)
+    u_d_ref = Rs*i_d_ref - w_val*psi_q_ref
+    u_q_ref = Rs*i_q_ref + w_val*psi_d_ref
+
+    return np.array([psi_d_ref, psi_q_ref, u_d_ref, u_q_ref])
+
+
 def create_ocp_solver():
 
     ocp = AcadosOcp()
     model = export_rsm_model()
     ocp.model = model
-
-    # compute steady-state u
-    psi_d_ref = psi_d_num(i_d_ref, i_q_ref)
-    psi_q_ref = psi_q_num(i_d_ref, i_q_ref)
-    Rs = 0.4
-    u_d_ref = Rs*i_d_ref - w_val*psi_q_ref
-    u_q_ref = Rs*i_q_ref + w_val*psi_d_ref
 
     nx = model.x.size()[0]
     nu = model.u.size()[0]
@@ -174,7 +179,7 @@ def create_ocp_solver():
     # set number of shooting intervals
     ocp.dims.N = N
 
-    # set cost module
+    # set cost
     Q = np.diag([5e2, 5e2])
     R = np.diag([1e-4, 1e-4])
 
@@ -182,7 +187,6 @@ def create_ocp_solver():
 
     Vx = np.zeros((ny, nx))
     Vx[:nx, :nx] = np.eye(nx)
-
     ocp.cost.Vx = Vx
 
     Vu = np.zeros((ny, nu))
@@ -196,19 +200,13 @@ def create_ocp_solver():
     ocp.cost.W_e = Q_e
 
     Vx_e = np.zeros((ny_e, nx))
-    Vx_e[0,0] = 1.0
-    Vx_e[1,1] = 1.0
+    Vx_e[:nx, :nx] = np.eye(nx)
 
     ocp.cost.Vx_e = Vx_e
 
-    ocp.cost.yref = np.zeros((ny, ))
-    ocp.cost.yref[0] = psi_d_ref
-    ocp.cost.yref[1] = psi_q_ref
-    ocp.cost.yref[2] = u_d_ref
-    ocp.cost.yref[3] = u_q_ref
-    ocp.cost.yref_e = np.zeros((ny_e, ))
-    ocp.cost.yref_e[0] = psi_d_ref
-    ocp.cost.yref_e[1] = psi_q_ref
+    y_ref = compute_y_ref(w_val)
+    ocp.cost.yref = y_ref
+    ocp.cost.yref_e = y_ref[:ny_e]
 
     ## setup constraints
     ocp.constraints.x0 = X0
@@ -347,12 +345,18 @@ def main():
 
             # update params
             if i > Nsim / 3 and i < Nsim / 2:
-                p_val = np.array([w_val/2.0, 0, 0])
+                p_val = np.array([w_val_tilde, 0, 0])
+                y_ref = compute_y_ref(w_val_tilde)
             else:
                 p_val = np.array([w_val, 0, 0])
+                y_ref = compute_y_ref(w_val)
 
             for j in range(N):
                 acados_solver.set(j, "p", p_val)
+                acados_solver.cost_set(j, "yref", y_ref)
+
+            acados_solver.set(N+1, "p", p_val)
+            # acados_solver.cost_set(N+1, "yref", y_ref[:nx])
 
             # get next state
             if USE_PLANT:
