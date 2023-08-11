@@ -170,19 +170,13 @@ def create_ocp_solver():
     ocp.dims.N = N
 
     # set cost module
-    Q = np.eye(nx)
-    Q[0,0] = 5e2
-    Q[1,1] = 5e2
-
-    R = np.eye(nu)
-    R[0,0] = 1e-4
-    R[1,1] = 1e-4
+    Q = np.diag([5e2, 5e2])
+    R = np.diag([1e-4, 1e-4])
 
     ocp.cost.W = scipy.linalg.block_diag(Q, R)
 
     Vx = np.zeros((ny, nx))
-    Vx[0,0] = 1.0
-    Vx[1,1] = 1.0
+    Vx[:nx, :nx] = np.eye(nx)
 
     ocp.cost.Vx = Vx
 
@@ -197,9 +191,7 @@ def create_ocp_solver():
 
     ocp.cost.Vz = Vz
 
-    Q_e = np.eye(nx)
-    Q_e[0,0] = 1e-3
-    Q_e[1,1] = 1e-3
+    Q_e = np.diag([1e-3, 1e-3])
     ocp.cost.W_e = Q_e
 
     Vx_e = np.zeros((ny_e, nx))
