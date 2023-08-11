@@ -37,8 +37,6 @@ import scipy.linalg
 from plot_utils import plot_rsm_trajectories, plot_hexagon
 
 
-# TODO(oj):
-# - squashed version
 WITH_ELLIPSOIDAL_CONSTRAINT = True
 # WITH_ELLIPSOIDAL_CONSTRAINT = False
 WITH_HEXAGON_CONSTRAINT = True
