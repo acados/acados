@@ -33,8 +33,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from acados_template import latexify_plot
 
+latexify_plot()
+
 def plot_rsm_trajectories(simX, simU, ocp, Ts):
-    latexify_plot()
     Nsim = simU.shape[0]
     t = np.linspace(0.0, Ts*Nsim, Nsim)
     plt.subplot(4, 1, 1)
@@ -64,7 +65,6 @@ def plot_rsm_trajectories(simX, simU, ocp, Ts):
     plt.grid(True)
 
 def plot_hexagon(simU, u_max):
-    latexify_plot()
 
     r = u_max
 
@@ -81,22 +81,27 @@ def plot_hexagon(simU, u_max):
 
     # box constraints
     q2 = r*np.sin(np.pi/3)
-    # -q2 <= uq  <= q2
 
-    plt.figure()
-    plt.plot(simU[:,0], simU[:,1], 'o')
-    plt.xlabel('ud')
-    plt.ylabel('uq')
     ud = np.linspace(-1.5*u_max, 1.5*u_max, 100)
-    plt.plot(ud, -m1*ud -q1)
-    plt.plot(ud, -m1*ud +q1)
-    plt.plot(ud, +m1*ud -q1)
-    plt.plot(ud, +m1*ud +q1)
-    plt.plot(ud, -q2*np.ones((100, 1)))
-    plt.plot(ud, q2*np.ones((100, 1)))
-    plt.grid(True)
-    ax = plt.gca()
+
+    ms = [0., m1, -m1, 0., m1, -m1]
+    qs = [q2, -q1, q1, -q2,  q1, -q1]
+
+    crossings_ud = [(qs[i]-qs[i-1])/(ms[i-1]-ms[i]) for i in range(len(ms))]
+    crossings_uq = [ms[i]*crossings_ud[i] + qs[i] for i in range(len(ms))]
+
+    fig, ax = plt.subplots(ncols=1, nrows=1)
+    ax.fill(crossings_ud, crossings_uq, color='k', alpha=0.2)
+
+    for m, q in zip(ms, qs):
+        ax.plot(ud, m*ud + q, color='k', alpha=0.5)
+
+    ax.plot(simU[:,0], simU[:,1], 'o')
+    ax.grid(True)
+    ax.set_ylabel('$u^q$')
+    ax.set_xlabel('$u^d$')
     ax.set_xlim([-1.5*u_max, 1.5*u_max])
     ax.set_ylim([-1.5*u_max, 1.5*u_max])
-    circle = plt.Circle((0, 0), u_max*np.sqrt(3)/2, color='red', fill=False)
+    ax.set_aspect('equal', 'box')
+    circle = plt.Circle((0, 0), u_max*np.sqrt(3)/2, color='k', fill=False)
     ax.add_artist(circle)
