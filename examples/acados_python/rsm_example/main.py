@@ -355,8 +355,8 @@ def main():
                 acados_solver.set(j, "p", p_val)
                 acados_solver.cost_set(j, "yref", y_ref)
 
-            acados_solver.set(N+1, "p", p_val)
-            # acados_solver.cost_set(N+1, "yref", y_ref[:nx])
+            acados_solver.set(N, "p", p_val)
+            acados_solver.cost_set(N, "yref", y_ref[:nx])
 
             # get next state
             if USE_PLANT:
