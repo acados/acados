@@ -229,9 +229,10 @@ def create_ocp_solver():
     m1 = -(y1 + q1)/x1
 
     if WITH_ELLIPSOIDAL_CONSTRAINT:
+        eps = 1e-3
         ocp.constraints.constr_type = 'BGP'
         ocp.constraints.lphi = np.array([-1.0e8])
-        ocp.constraints.uphi = np.array([(u_max*sqrt(3)/2)**2])
+        ocp.constraints.uphi = (1-eps)*np.array([(u_max*sqrt(3)/2)**2])
 
     if WITH_HEXAGON_CONSTRAINT:
         # lg <= C*x + D*u <= ug
@@ -244,17 +245,21 @@ def create_ocp_solver():
     ocp.parameter_values = np.array([w_val, 0.0, 0.0])
 
     # set QP solver
-    # ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     # ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM'
-    ocp.solver_options.qp_solver = 'FULL_CONDENSING_DAQP'
+    # ocp.solver_options.qp_solver = 'FULL_CONDENSING_DAQP'
     # ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = 'IRK'
     ocp.solver_options.sim_method_num_stages = 2
+    ocp.solver_options.sim_method_newton_iter = 20
+    ocp.solver_options.sim_method_newton_tol = 1e-6
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
-    # ocp.solver_options.tol = 1e-4
+    tol = 1e-3
+    ocp.solver_options.tol = tol
+    ocp.solver_options.qp_tol = tol/10.
     if USE_RTI:
         ocp.solver_options.nlp_solver_type = 'SQP_RTI'
     else:
@@ -265,21 +270,24 @@ def create_ocp_solver():
     return acados_solver
 
 
-def setup_acados_integrator():
+def setup_acados_integrator(ocp=None):
 
-    sim = AcadosSim()
-    sim.model = export_rsm_model()
-    sim.model.name = 'rsm_integrator'
-    sim.solver_options.integrator_type = 'IRK'
-    sim.solver_options.sens_forw = False
-    sim.solver_options.sens_adj = False
-    sim.solver_options.num_stages = 6
-    sim.solver_options.num_steps = 3
-    sim.solver_options.newton_tol = 1e-10
-    sim.solver_options.newton_iter = 50
-    sim.solver_options.T = Ts
-    sim.parameter_values = np.array([w_val, 0.0, 0.0])
-    integrator = AcadosSimSolver(sim)
+    if ocp is None:
+        integrator = AcadosSimSolver(ocp)
+    else:
+        sim = AcadosSim()
+        sim.model = export_rsm_model()
+        sim.model.name = 'rsm_integrator'
+        sim.solver_options.integrator_type = 'IRK'
+        sim.solver_options.sens_forw = False
+        sim.solver_options.sens_adj = False
+        sim.solver_options.num_stages = 6
+        sim.solver_options.num_steps = 3
+        sim.solver_options.newton_tol = 1e-10
+        sim.solver_options.newton_iter = 50
+        sim.solver_options.T = Ts
+        sim.parameter_values = np.array([w_val, 0.0, 0.0])
+        integrator = AcadosSimSolver(sim)
 
     return integrator
 
@@ -289,17 +297,22 @@ def main():
     nx = ocp.dims.nx
     nu = ocp.dims.nu
     N = ocp.dims.N
+    Nsim = 100
 
     if USE_PLANT:
-        plant = setup_acados_integrator()
-
-    # closed loop simulation
-    Nsim = 100
+        plant = setup_acados_integrator(acados_solver.acados_ocp)
 
     simX = np.ndarray((Nsim, nx))
     simU = np.ndarray((Nsim, nu))
+    simY = np.ndarray((Nsim, nu+nx))
     times_prep = np.zeros(Nsim)
     times_feed = np.zeros(Nsim)
+
+    p_val_1 = np.array([w_val, 0, 0])
+    y_ref_1 = compute_y_ref(w_val)
+
+    p_val_2 = np.array([w_val_tilde, 0, 0])
+    y_ref_2 = compute_y_ref(w_val_tilde)
 
     for i_exec in range(N_EXEC):
         xcurrent = X0.copy()
@@ -307,8 +320,27 @@ def main():
 
         # initialize
         for i in range(N):
-            acados_solver.set(i, 'u', -u_max * np.ones(nu,))
+            acados_solver.set(i, 'u', -0.9 * u_max * np.ones(nu,))
+
+        # simulation
         for i in range(Nsim):
+
+            # update params
+            if i > Nsim / 3 and i < Nsim / 2:
+                p_val = p_val_2
+                y_ref = y_ref_2
+            else:
+                p_val = p_val_1
+                y_ref = y_ref_1
+
+            # set params and y_ref
+            for j in range(N):
+                acados_solver.set(j, "p", p_val)
+                acados_solver.cost_set(j, "yref", y_ref)
+
+            acados_solver.set(N, "p", p_val)
+            acados_solver.cost_set(N, "yref", y_ref[:nx])
+
             # preparation rti_phase
             if USE_RTI:
                 acados_solver.options_set('rti_phase', 1)
@@ -335,28 +367,15 @@ def main():
             else:
                 times_feed[i] = min(times_feed[i], time_feed)
             if status != 0:
-                raise Exception(f'acados returned status {status}.')
+                acados_solver.print_statistics()
+                # raise Exception(f'acados returned status {status}.')
 
             # get solution
             u0 = acados_solver.get(0, "u")
 
             simX[i, :] = xcurrent
             simU[i, :] = u0
-
-            # update params
-            if i > Nsim / 3 and i < Nsim / 2:
-                p_val = np.array([w_val_tilde, 0, 0])
-                y_ref = compute_y_ref(w_val_tilde)
-            else:
-                p_val = np.array([w_val, 0, 0])
-                y_ref = compute_y_ref(w_val)
-
-            for j in range(N):
-                acados_solver.set(j, "p", p_val)
-                acados_solver.cost_set(j, "yref", y_ref)
-
-            acados_solver.set(N, "p", p_val)
-            acados_solver.cost_set(N, "yref", y_ref[:nx])
+            simY[i, :] = y_ref
 
             # get next state
             if USE_PLANT:
@@ -375,8 +394,8 @@ def main():
     print(f"CPU time in ms: min {np.min(cpu_times):.3f}, median {np.median(cpu_times):.3f}, max {np.max(cpu_times):.3f}")
 
     # plot results
-    plot_rsm_trajectories(simX, simU, ocp.cost.yref, Ts)
-    plot_hexagon(simU, u_max)
+    plot_rsm_trajectories(simX, simU, simY, Ts)
+    plot_hexagon(simU, u_max, simY[:, nx:])
 
     plt.show()
 

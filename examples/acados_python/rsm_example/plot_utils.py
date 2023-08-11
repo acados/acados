@@ -34,7 +34,7 @@ from acados_template import latexify_plot
 
 latexify_plot()
 
-def plot_rsm_trajectories(simX, simU, yref, Ts):
+def plot_rsm_trajectories(simX, simU, simY, Ts):
     Nsim = simU.shape[0]
     t = np.linspace(0.0, Ts*Nsim, Nsim)
 
@@ -42,12 +42,12 @@ def plot_rsm_trajectories(simX, simU, yref, Ts):
 
     for i in range(2):
         axes[i].step(t, simU[:,i], color='C1')
-        axes[i].plot([0, Ts*Nsim], [yref[2+i], yref[2+i]], '--', color='k')
+        axes[i].step(t, simY[:, 2+i], '--', color='k')
         axes[i].grid(True)
 
     for i in range(2):
         axes[2+i].plot(t, simX[:,i], color='C2')
-        axes[2+i].plot([0, Ts*Nsim], [yref[i], yref[i]], '--', color='k')
+        axes[2+i].step(t, simY[:, i], '--', color='k')
         axes[2+i].grid(True)
 
     axes[0].set_title('closed-loop simulation')
@@ -59,7 +59,7 @@ def plot_rsm_trajectories(simX, simU, yref, Ts):
     axes[0].set_xlim(t[0], t[-1])
 
 
-def plot_hexagon(simU, u_max):
+def plot_hexagon(simU, u_max, Uref):
 
     Nsim = simU.shape[0]
     r = u_max
@@ -96,6 +96,7 @@ def plot_hexagon(simU, u_max):
 
     cmap = plt.get_cmap('viridis_r')
     ax.scatter(simU[:,0], simU[:,1], color=[cmap(tau) for tau in np.linspace(0.1, 1., Nsim)])
+    ax.scatter(Uref[:,0], Uref[:,1], color='k', alpha=0.9, marker='x')
     ax.grid(True)
     ax.set_ylabel('$u^q$')
     ax.set_xlabel('$u^d$')
