@@ -43,7 +43,7 @@ from plot_utils import plot_rsm_trajectories, plot_hexagon
 # - squashed version
 WITH_ELLIPSOIDAL_CONSTRAINT = True
 WITH_HEXAGON_CONSTRAINT = True
-WITH_HEXAGON_CONSTRAINT = False
+# WITH_HEXAGON_CONSTRAINT = False
 # USE_RTI = False
 USE_RTI = True
 
@@ -281,6 +281,10 @@ def main():
     for i_exec in range(N_EXEC):
         xcurrent = X0.copy()
         acados_solver.reset()
+
+        # initialize
+        for i in range(N):
+            acados_solver.set(i, 'u', -u_max * np.ones(nu,))
         for i in range(Nsim):
             # preparation rti_phase
             if USE_RTI:
