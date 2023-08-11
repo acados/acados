@@ -79,9 +79,7 @@ def export_rsm_model():
     model_name = 'rsm'
 
     # constants
-    theta = 0.0352
     Rs = 0.4
-    m_load = 0.0
     J = np.array([[0, -1], [1, 0]])
 
     # set up states
@@ -140,10 +138,8 @@ def export_rsm_model():
 
 
 def create_ocp_solver():
-    # create ocp object to formulate the OCP
-    ocp = AcadosOcp()
 
-    # export model
+    ocp = AcadosOcp()
     model = export_rsm_model()
     ocp.model = model
 
@@ -155,7 +151,6 @@ def create_ocp_solver():
     u_q_ref = Rs*i_q_ref + w_val*psi_d_ref
 
     if FORMULATION == 2:
-        # constraints name
         ocp.constraints.constr_type = 'BGP'
 
     nx = model.x.size()[0]
@@ -271,20 +266,18 @@ def create_ocp_solver():
     ocp.solver_options.nlp_solver_type = 'SQP_RTI'
     # ocp.solver_options.nlp_solver_type = 'SQP'
 
-
     acados_solver = AcadosOcpSolver(ocp)
 
     return acados_solver
 
 def main():
     acados_solver = create_ocp_solver()
-    # get ocp description
     ocp = acados_solver.acados_ocp
     nx = ocp.dims.nx
     nu = ocp.dims.nu
     N = ocp.dims.N
 
-    # closed loop simulation TODO(add proper simulation)
+    # closed loop simulation TODO(add proper simulation/plant)
     Nsim = 100
 
     # multiple executions for consistent timings:
@@ -295,7 +288,7 @@ def main():
     times_prep = 1e10 * np.ones(Nsim)
     times_feed = 1e10 * np.ones(Nsim)
 
-    for i_exec in range(N_exec):
+    for _ in range(N_exec):
         xcurrent = X0.copy()
         acados_solver.reset()
         for i in range(Nsim):
@@ -337,14 +330,12 @@ def main():
             # get next state
             xcurrent = acados_solver.get(1, "x")
 
-    cpu_times = times_prep + times_feed
     # timings
+    cpu_times = times_prep + times_feed
     print(f"CPU time in ms {np.min(cpu_times):.3f} {np.median(cpu_times):.3f} {np.max(cpu_times):.3f}")
 
     # plot results
     plot_rsm_trajectories(simX, simU, ocp.cost.yref, Ts)
-
-    # plot hexagon
     plot_hexagon(simU, u_max)
 
     plt.show()
