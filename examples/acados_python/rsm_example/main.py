@@ -350,7 +350,7 @@ def main():
     print(f"CPU time in ms {np.min(cpu_times):.3f} {np.median(cpu_times):.3f} {np.max(cpu_times):.3f}")
 
     # plot results
-    plot_rsm_trajectories(simX, simU, ocp, Ts)
+    plot_rsm_trajectories(simX, simU, ocp.cost.yref, Ts)
 
     # plot hexagon
     plot_hexagon(simU, u_max)

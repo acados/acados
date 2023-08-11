@@ -35,34 +35,29 @@ from acados_template import latexify_plot
 
 latexify_plot()
 
-def plot_rsm_trajectories(simX, simU, ocp, Ts):
+def plot_rsm_trajectories(simX, simU, yref, Ts):
     Nsim = simU.shape[0]
     t = np.linspace(0.0, Ts*Nsim, Nsim)
-    plt.subplot(4, 1, 1)
-    plt.step(t, simU[:,0], color='r')
-    plt.plot([0, Ts*Nsim], [ocp.cost.yref[2], ocp.cost.yref[2]], '--')
-    plt.title('closed-loop simulation')
-    plt.ylabel('u_d')
-    plt.xlabel('t')
-    plt.grid(True)
-    plt.subplot(4, 1, 2)
-    plt.step(t, simU[:,1], color='r')
-    plt.plot([0, Ts*Nsim], [ocp.cost.yref[3], ocp.cost.yref[3]], '--')
-    plt.ylabel('u_q')
-    plt.xlabel('t')
-    plt.grid(True)
-    plt.subplot(4, 1, 3)
-    plt.plot(t, simX[:,0])
-    plt.plot([0, Ts*Nsim], [ocp.cost.yref[0], ocp.cost.yref[0]], '--')
-    plt.ylabel('psi_d')
-    plt.xlabel('t')
-    plt.grid(True)
-    plt.subplot(4, 1, 4)
-    plt.plot(t, simX[:,1])
-    plt.plot([0, Ts*Nsim], [ocp.cost.yref[1], ocp.cost.yref[1]], '--')
-    plt.ylabel('psi_q')
-    plt.xlabel('t')
-    plt.grid(True)
+
+    fig, axes = plt.subplots(ncols=1, nrows=4, sharex=True)
+
+    for i in range(2):
+        axes[i].step(t, simU[:,i], color='C1')
+        axes[i].plot([0, Ts*Nsim], [yref[2+i], yref[2+i]], '--', color='k')
+        axes[i].grid(True)
+
+    for i in range(2):
+        axes[2+i].plot(t, simX[:,i], color='C2')
+        axes[2+i].plot([0, Ts*Nsim], [yref[i], yref[i]], '--', color='k')
+        axes[2+i].grid(True)
+
+    axes[0].set_title('closed-loop simulation')
+    axes[0].set_ylabel(r'$u^q$')
+    axes[1].set_ylabel(r'$u^d$')
+    axes[2].set_ylabel(r'$\psi^d$')
+    axes[3].set_ylabel(r'$\psi^q$')
+    axes[-1].set_xlabel(r'$t$')
+    axes[0].set_xlim(t[0], t[-1])
 
 def plot_hexagon(simU, u_max):
 
