@@ -28,7 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver
+from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver, AcadosSim, AcadosSimSolver
 from casadi import vertcat, atan, exp, cos, sin, sqrt, SX
 import numpy as np
 import matplotlib.pyplot as plt
@@ -38,7 +38,6 @@ from plot_utils import plot_rsm_trajectories, plot_hexagon
 
 
 # TODO(Jonathan):
-# - plant
 # - yref update
 # - squashed version
 WITH_ELLIPSOIDAL_CONSTRAINT = True
@@ -46,6 +45,9 @@ WITH_HEXAGON_CONSTRAINT = True
 # WITH_HEXAGON_CONSTRAINT = False
 # USE_RTI = False
 USE_RTI = True
+
+USE_PLANT = True
+USE_PLANT = False
 
 # multiple executions for consistent timings:
 N_EXEC = 5
@@ -246,10 +248,11 @@ def create_ocp_solver():
     # set QP solver
     # ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     # ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM'
-    # ocp.solver_options.qp_solver = 'FULL_CONDENSING_DAQP'
-    ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
+    ocp.solver_options.qp_solver = 'FULL_CONDENSING_DAQP'
+    # ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = 'IRK'
+    ocp.solver_options.sim_method_num_stages = 2
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
@@ -263,12 +266,34 @@ def create_ocp_solver():
 
     return acados_solver
 
+
+def setup_acados_integrator():
+
+    sim = AcadosSim()
+    sim.model = export_rsm_model()
+    sim.model.name = 'rsm_integrator'
+    sim.solver_options.integrator_type = 'IRK'
+    sim.solver_options.sens_forw = False
+    sim.solver_options.sens_adj = False
+    sim.solver_options.num_stages = 6
+    sim.solver_options.num_steps = 3
+    sim.solver_options.newton_tol = 1e-10
+    sim.solver_options.newton_iter = 50
+    sim.solver_options.T = Ts
+    sim.parameter_values = np.array([w_val, 0.0, 0.0])
+    integrator = AcadosSimSolver(sim)
+
+    return integrator
+
 def main():
     acados_solver = create_ocp_solver()
     ocp = acados_solver.acados_ocp
     nx = ocp.dims.nx
     nu = ocp.dims.nu
     N = ocp.dims.N
+
+    if USE_PLANT:
+        plant = setup_acados_integrator()
 
     # closed loop simulation
     Nsim = 100
@@ -321,15 +346,23 @@ def main():
             simU[i, :] = u0
 
             # update params
-            if i > Nsim/3 and i < Nsim/2:
-                for j in range(N):
-                    acados_solver.set(j, "p", np.array([w_val/2.0, 0, 0]))
+            if i > Nsim / 3 and i < Nsim / 2:
+                p_val = np.array([w_val/2.0, 0, 0])
             else:
-                for j in range(N):
-                    acados_solver.set(j, "p", np.array([w_val, 0, 0]))
+                p_val = np.array([w_val, 0, 0])
+
+            for j in range(N):
+                acados_solver.set(j, "p", p_val)
 
             # get next state
-            xcurrent = acados_solver.get(1, "x")
+            if USE_PLANT:
+                plant.set('u', u0)
+                plant.set('x', xcurrent)
+                plant.set('p', p_val)
+                plant.solve()
+                xcurrent = plant.get('x')
+            else:
+                xcurrent = acados_solver.get(1, "x")
 
     # timings
     cpu_times = times_prep + times_feed
