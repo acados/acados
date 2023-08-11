@@ -211,8 +211,6 @@ def create_ocp_solver():
     q1 = -(y2 - y1/x1*x2)/(1-x2/x1)
     m1 = -(y1 + q1)/x1
 
-    print('q1', q1)
-
     # box constraints
     q2 = r*sin(np.pi/3)
 

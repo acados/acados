@@ -61,6 +61,7 @@ def plot_rsm_trajectories(simX, simU, yref, Ts):
 
 def plot_hexagon(simU, u_max):
 
+    Nsim = simU.shape[0]
     r = u_max
 
     x1 = r
@@ -86,17 +87,19 @@ def plot_hexagon(simU, u_max):
     crossings_uq = [ms[i]*crossings_ud[i] + qs[i] for i in range(len(ms))]
 
     fig, ax = plt.subplots(ncols=1, nrows=1)
-    ax.fill(crossings_ud, crossings_uq, color='k', alpha=0.2)
+    ax.fill(crossings_ud, crossings_uq, color='k', alpha=0.15)
 
     for m, q in zip(ms, qs):
-        ax.plot(ud, m*ud + q, color='k', alpha=0.5)
+        ax.plot(ud, m*ud + q, color='k', alpha=0.3)
 
-    ax.plot(simU[:,0], simU[:,1], 'o')
+    circle = plt.Circle((0, 0), u_max*np.sqrt(3)/2, color='k', fill=False, alpha=0.8)
+
+    cmap = plt.get_cmap('viridis_r')
+    ax.scatter(simU[:,0], simU[:,1], color=[cmap(tau) for tau in np.linspace(0.1, 1., Nsim)])
     ax.grid(True)
     ax.set_ylabel('$u^q$')
     ax.set_xlabel('$u^d$')
     ax.set_xlim([-1.5*u_max, 1.5*u_max])
     ax.set_ylim([-1.5*u_max, 1.5*u_max])
     ax.set_aspect('equal', 'box')
-    circle = plt.Circle((0, 0), u_max*np.sqrt(3)/2, color='k', fill=False)
     ax.add_artist(circle)
