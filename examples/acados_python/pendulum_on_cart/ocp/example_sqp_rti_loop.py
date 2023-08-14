@@ -134,7 +134,6 @@ def main():
 
     ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
 
-    #
     cost = ocp_solver.get_cost()
     print("cost function value of solution = ", cost)
 

@@ -29,14 +29,13 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import os, sys, json
+import sys, json
 sys.path.insert(0, '../common')
 
 from acados_template import AcadosSim, AcadosSimSolver, acados_dae_model_json_dump, sim_get_default_cmake_builder
 from pendulum_model import export_pendulum_ode_model
 from utils import plot_pendulum
 import numpy as np
-import matplotlib.pyplot as plt
 
 sim = AcadosSim()
 

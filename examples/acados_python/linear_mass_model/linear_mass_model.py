@@ -28,10 +28,9 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from acados_template import AcadosModel
+from acados_template import AcadosModel, latexify_plot
 import numpy as np
 from casadi import SX, vertcat
-import matplotlib
 import matplotlib.pyplot as plt
 
 def export_linear_mass_model():
@@ -44,7 +43,6 @@ def export_linear_mass_model():
     vy = SX.sym('vy')
     x = vertcat(qx, qy, vx, vy)
 
-    # u = SX.sym('u', 2)
     ux = SX.sym('ux')
     uy = SX.sym('uy')
     u = vertcat(ux, uy)
@@ -52,13 +50,9 @@ def export_linear_mass_model():
     f_expl = vertcat(vx, vy, u)
     model = AcadosModel()
 
-    # model.f_impl_expr = f_impl
     model.f_expl_expr = f_expl
-    # model.disc_dyn_expr
     model.x = x
     model.u = u
-    # model.xdot = xdot
-    # model.z = z
     model.p = []
     model.name = model_name
 
@@ -72,20 +66,8 @@ def plot_linear_mass_system_X_state_space(simX, latexify=False, circle=None, x_g
         latexify: latex style plots
     """
 
-    # latexify plot
     if latexify:
-        params = {'backend': 'ps',
-                'text.latex.preamble': r"\usepackage{gensymb} \usepackage{amsmath}",
-                'axes.labelsize': 10,
-                'axes.titlesize': 10,
-                'legend.fontsize': 10,
-                'xtick.labelsize': 10,
-                'ytick.labelsize': 10,
-                'text.usetex': True,
-                'font.family': 'serif'
-        }
-
-        matplotlib.rcParams.update(params)
+        latexify_plot()
 
     fig, axs = plt.subplots(1, 1)
     if x_goal is not None:
@@ -101,7 +83,7 @@ def plot_linear_mass_system_X_state_space(simX, latexify=False, circle=None, x_g
 
     axs.axis('equal')
     plt.show()
-    return
+
 
 def plot_linear_mass_system_U(shooting_nodes, simU, latexify=False):
     """
@@ -109,6 +91,10 @@ def plot_linear_mass_system_U(shooting_nodes, simU, latexify=False):
         simU: u trajectory
         latexify: latex style plots
     """
+
+    if latexify:
+        latexify_plot()
+
     nu = simU.shape[1]
     for i in range(nu):
         plt.subplot(nu, 1, i+1)
@@ -116,7 +102,6 @@ def plot_linear_mass_system_U(shooting_nodes, simU, latexify=False):
         plt.grid()
     plt.show()
 
-    return
 
 def plot_linear_mass_system_X(shooting_nodes, simX, latexify=False):
     """
@@ -124,13 +109,15 @@ def plot_linear_mass_system_X(shooting_nodes, simX, latexify=False):
         simX: x trajectory
         latexify: latex style plots
     """
+
+    if latexify:
+        latexify_plot()
+
     nx = simX.shape[1]
     for i in range(nx):
         plt.subplot(nx, 1, i+1)
         line, = plt.plot(shooting_nodes, simX[:,i])
         plt.grid()
     plt.show()
-
-    return
 
 

@@ -1618,6 +1618,11 @@ class AcadosOcpSolver:
         out_fields = ['x', 'u', 'pi', 'lam', 't', 'z', 'sl', 'su']
         mem_fields = ['xdot_guess', 'z_guess']
 
+        if not isinstance(stage_, int):
+            raise Exception('stage should be integer.')
+        elif stage_ < 0 or stage_ > self.N:
+            raise Exception(f'stage should be in [0, N], got {stage_}')
+
         # cast value_ to avoid conversion issues
         if isinstance(value_, (float, int)):
             value_ = np.array([value_])
@@ -1696,6 +1701,12 @@ class AcadosOcpSolver:
         # cast value_ to avoid conversion issues
         if isinstance(value_, (float, int)):
             value_ = np.array([value_])
+
+        if not isinstance(stage_, int):
+            raise Exception('stage should be integer.')
+        elif stage_ < 0 or stage_ > self.N:
+            raise Exception(f'stage should be in [0, N], got {stage_}')
+
         value_ = value_.astype(float)
 
         field = field_
@@ -1766,6 +1777,11 @@ class AcadosOcpSolver:
         if isinstance(value_, (float, int)):
             value_ = np.array([value_])
         value_ = value_.astype(float)
+
+        if not isinstance(stage_, int):
+            raise Exception('stage should be integer.')
+        elif stage_ < 0 or stage_ > self.N:
+            raise Exception(f'stage should be in [0, N], got {stage_}')
 
         field = field_
         field = field.encode('utf-8')
@@ -1950,6 +1966,11 @@ class AcadosOcpSolver:
             :param idx_values_: 0 based np array (or iterable) of integers: indices of parameter to be set
             :param param_values_: new parameter values as numpy array
         """
+
+        if not isinstance(stage_, int):
+            raise Exception('stage should be integer.')
+        elif stage_ < 0 or stage_ > self.N:
+            raise Exception(f'stage should be in [0, N], got {stage_}')
 
         # if not isinstance(idx_values_, np.ndarray) or not issubclass(type(idx_values_[0]), np.integer):
         #     raise Exception('idx_values_ must be np.array of integers.')

@@ -34,7 +34,7 @@ sys.path.insert(0, '../common')
 from acados_template import AcadosOcp, AcadosOcpSolver, get_default_simulink_opts
 from pendulum_model import export_pendulum_ode_model
 import numpy as np
-from utils import plot_pendulum
+# from utils import plot_pendulum
 
 def main():
     # create ocp object to formulate the OCP
