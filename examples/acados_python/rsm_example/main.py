@@ -41,8 +41,8 @@ WITH_ELLIPSOIDAL_CONSTRAINT = True
 # WITH_ELLIPSOIDAL_CONSTRAINT = False
 WITH_HEXAGON_CONSTRAINT = True
 # WITH_HEXAGON_CONSTRAINT = False
-USE_RTI = False
 USE_RTI = True
+# USE_RTI = False
 
 USE_PLANT = True
 # USE_PLANT = False
@@ -161,7 +161,7 @@ def compute_y_ref(w_val):
     return np.array([psi_d_ref, psi_q_ref, u_d_ref, u_q_ref])
 
 
-def create_ocp_solver():
+def create_ocp_solver(tol = 1e-3):
 
     ocp = AcadosOcp()
     model = export_rsm_model()
@@ -228,8 +228,7 @@ def create_ocp_solver():
 
     if WITH_ELLIPSOIDAL_CONSTRAINT:
         # to avoid LICQ violations
-        eps = 1e-3
-        # eps = 0.0
+        eps = 1e-3 # Note: was originally eps = 0.0.
         ocp.constraints.constr_type = 'BGP'
         ocp.constraints.lphi = np.array([-1.0e8])
         ocp.constraints.uphi = (1-eps)*np.array([(u_max*sqrt(3)/2)**2])
@@ -257,7 +256,6 @@ def create_ocp_solver():
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
-    tol = 1e-3
     ocp.solver_options.tol = tol
     ocp.solver_options.qp_tol = tol/10.
     if USE_RTI:
