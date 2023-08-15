@@ -28,7 +28,6 @@
 
 import numpy as np
 from scipy.linalg import block_diag
-import matplotlib.pyplot as plt
 from time import process_time
 
 from acados_template import AcadosOcp, AcadosOcpSolver, ZoroDescription, process_zoro_description

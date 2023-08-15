@@ -26,10 +26,8 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.;
 
-import os
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 import casadi
 
@@ -120,7 +118,7 @@ def main():
                     y_ref = np.hstack((x_ref_interp, u_ref_interp)), \
                     obs_position=cfg_zo.obs_pos.flatten(), obs_radius=cfg_zo.obs_radius)
 
-            print(i_sim, u_opt, traj_zo[i_sim,:2])
+            # print(i_sim, u_opt, traj_zo[i_sim,:2])
             traj_zo[i_sim+1,:] = I(x0=traj_zo[i_sim, :], p=u_opt)['xf'].full().flatten()
             traj_zo[i_sim+1,:] += process_noise[i_sim,:]
             min_dist = compute_min_dis(cfg=cfg_zo, s=traj_zo[i_sim+1,:])

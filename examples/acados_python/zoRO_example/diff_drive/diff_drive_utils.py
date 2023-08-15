@@ -56,8 +56,9 @@ def plot_timings(timing_dict):
 
     if not os.path.exists("figures"):
         os.makedirs("figures")
-    plt.savefig(os.path.join("figures", "timings_diff_drive.pdf"),
-        bbox_inches='tight', transparent=True, pad_inches=0.05)
+    fig_filename = os.path.join("figures", "timings_diff_drive.pdf")
+    plt.savefig(fig_filename, bbox_inches='tight', transparent=True, pad_inches=0.05)
+    print(f"stored figure in {fig_filename}")
 
 
 def plot_trajectory(cfg:MPCParam, traj_ref:np.ndarray, traj_zo:np.ndarray):
@@ -82,8 +83,10 @@ def plot_trajectory(cfg:MPCParam, traj_ref:np.ndarray, traj_zo:np.ndarray):
 
     if not os.path.exists("figures"):
         os.makedirs("figures")
-    plt.savefig(os.path.join("figures", "diff_drive_sim_trajectory.pdf"),
-        bbox_inches='tight', transparent=True, pad_inches=0.05)
+
+    fig_filename = os.path.join("figures", "diff_drive_sim_trajectory.pdf")
+    plt.savefig(fig_filename, bbox_inches='tight', transparent=True, pad_inches=0.05)
+    print(f"stored figure in {fig_filename}")
 
 
 def compute_min_dis(cfg:MPCParam, s:np.ndarray) -> float:
