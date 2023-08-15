@@ -97,10 +97,8 @@ def setup(x0, Fmax, N_horizon, Tf, RTI=False):
 
     return acados_ocp_solver, acados_integrator
 
-def main(use_RTI=False):
 
-    nu = 1
-    nx = 4
+def main(use_RTI=False):
 
     x0 = np.array([0.0, np.pi, 0.0, 0.0])
     Fmax = 80
@@ -109,6 +107,9 @@ def main(use_RTI=False):
     N_horizon = 40
 
     ocp_solver, integrator = setup(x0, Fmax, N_horizon, Tf, use_RTI)
+
+    nx = ocp_solver.acados_ocp.dims.nx
+    nu = ocp_solver.acados_ocp.dims.nu
 
     Nsim = 100
     simX = np.ndarray((Nsim+1, nx))
@@ -162,21 +163,21 @@ def main(use_RTI=False):
         # scale to milliseconds
         t_preparation *= 1000
         t_feedback *= 1000
-        print('Computation time in preparation phase in ms: min %.3f median %.3f max %.3f'
-                % (np.min(t_preparation), np.median(t_preparation), np.max(t_preparation)))
-        print('Computation time in feedback phase in ms:    min %.3f median %.3f max %.3f'
-                % (np.min(t_feedback), np.median(t_feedback), np.max(t_feedback)))
+        print(f'Computation time in preparation phase in ms: \
+                min {np.min(t_preparation):.3f} median {np.min(t_preparation):.3f} max {np.max(t_preparation):.3f}')
+        print(f'Computation time in feedback phase in ms:    \
+                min {np.min(t_feedback):.3f} median {np.min(t_feedback):.3f} max {np.max(t_feedback):.3f}')
     else:
         # scale to milliseconds
         t *= 1000
-        print('Computation time in ms: min %.3f median %.3f max %.3f'
-                % (np.min(t), np.median(t), np.max(t)))
+        print(f'Computation time in ms: min {np.min(t):.3f} median {np.min(t):.3f} max {np.max(t):.3f}')
 
     # plot results
     plot_pendulum(np.linspace(0, (Tf/N_horizon)*Nsim, Nsim+1), Fmax, simU, simX)
 
+    ocp_solver = None
+
 
 if __name__ == '__main__':
-    use_RTI = False
-    # use_RTI = True
-    main(use_RTI)
+    main(use_RTI=False)
+    main(use_RTI=True)
