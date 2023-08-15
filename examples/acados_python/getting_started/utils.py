@@ -67,13 +67,15 @@ def plot_pendulum(shooting_nodes, u_max, U, X_true, X_est=None, Y_measured=None,
         line.set_label(X_true_label)
     else:
         line.set_color('r')
-    plt.title('closed-loop simulation')
+
     plt.ylabel('$u$')
     plt.xlabel('$t$')
     plt.hlines(u_max, t[0], t[-1], linestyles='dashed', alpha=0.7)
     plt.hlines(-u_max, t[0], t[-1], linestyles='dashed', alpha=0.7)
     plt.ylim([-1.2*u_max, 1.2*u_max])
+    plt.xlim(t[0], t[-1])
     plt.grid()
+
 
     states_lables = ['$x$', r'$\theta$', '$v$', r'$\dot{\theta}$']
 
@@ -91,6 +93,7 @@ def plot_pendulum(shooting_nodes, u_max, U, X_true, X_est=None, Y_measured=None,
         plt.xlabel('$t$')
         plt.grid()
         plt.legend(loc=1)
+        plt.xlim(t[0], t[-1])
 
     plt.subplots_adjust(left=None, bottom=None, right=None, top=None, hspace=0.4)
 
