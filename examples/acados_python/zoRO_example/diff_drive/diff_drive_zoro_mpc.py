@@ -288,7 +288,7 @@ class ZoroMPCSolver:
         i_mpc_stage = 0
         i_diff_ctrl_stage = 0
 
-        backoff_scaling_gamma = self.ocp.zoro_description['backoff_scaling_gamma']
+        backoff_scaling_gamma = self.ocp.zoro_description.backoff_scaling_gamma
         while i_mpc_stage < self.cfg.n_hrzn:
             # get the A matrix
             temp_A = self.acados_ocp_solver.get_from_qp_in(i_mpc_stage, "A")

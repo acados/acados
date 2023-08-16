@@ -29,11 +29,34 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import pickle
 
 from mpc_parameters import MPCParam
 from acados_template import latexify_plot
 
 latexify_plot()
+
+# RESULTS_DIR = 'results'
+
+def get_results_filename(use_custom_update: bool, n_executions: int):
+    results_filename = 'results_'
+    if use_custom_update:
+        results_filename += 'custom_update'
+    else:
+        results_filename += 'python_prop'
+    results_filename += f'_exec_{n_executions}'
+    results_filename += '.pkl'
+    return results_filename
+
+def store_results(results_filename, results):
+    pickle.dump(results, open(results_filename, "wb"))
+
+
+def load_results(results_filename):
+    with open(results_filename, 'rb') as f:
+        results = pickle.load(f)
+    return results
+
 
 def plot_timings(timing_dict):
 
