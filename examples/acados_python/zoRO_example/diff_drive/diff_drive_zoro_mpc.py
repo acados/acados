@@ -30,7 +30,7 @@ import numpy as np
 from scipy.linalg import block_diag
 from time import process_time
 
-from acados_template import AcadosOcp, AcadosOcpSolver, ZoroDescription, process_zoro_description
+from acados_template import AcadosOcp, AcadosOcpSolver, ZoroDescription
 
 from diff_drive_model import export_diff_drive_model, RobotState
 from mpc_parameters import MPCParam
@@ -133,8 +133,9 @@ class ZoroMPCSolver:
         zoro_description.idx_lh_t = list(range(0, cfg.num_obs))
         zoro_description.idx_uh_t = []
         zoro_description.idx_lh_e_t = list(range(0, cfg.num_obs))
+        zoro_description.idx_uh_e_t = []
 
-        # dummy linear constraints for testing
+        ## dummy linear constraints for testing
         self.ocp.constraints.C = np.array([[1., 0., 0., 0., 0.0], [0., 1., 0., 0., 0.]])
         self.ocp.constraints.D = np.array([[-0., 0.], [-0., 0.]])
         self.ocp.constraints.C_e = np.array([[1., 0., 0., 0., 0.0], [0., 1., 0., 0., 0.]])
@@ -147,7 +148,7 @@ class ZoroMPCSolver:
         zoro_description.idx_lg_e_t = [0,1]
         zoro_description.idx_ug_e_t = [0,1]
 
-        self.ocp.zoro_description = process_zoro_description(zoro_description)
+        self.ocp.zoro_description = zoro_description
 
         self.acados_ocp_solver = AcadosOcpSolver(self.ocp, json_file = 'acados_ocp_' + self.model.name + '.json')
         # AcadosOcpSolver.generate(self.ocp, json_file='acados_ocp_' + self.model.name + '.json')

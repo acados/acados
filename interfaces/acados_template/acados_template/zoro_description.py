@@ -75,4 +75,4 @@ def process_zoro_description(zoro_description: ZoroDescription):
     zoro_description.nuh_t = len(zoro_description.idx_uh_t)
     zoro_description.nlh_e_t = len(zoro_description.idx_lh_e_t)
     zoro_description.nuh_e_t = len(zoro_description.idx_uh_e_t)
-    return zoro_description.__dict__
+    return zoro_description

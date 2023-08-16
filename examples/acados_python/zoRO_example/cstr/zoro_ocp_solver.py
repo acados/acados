@@ -172,7 +172,7 @@ def setup_acados_ocp_solver(
         zoro_description.idx_ubu_t = np.arange(nu)
         zoro_description.idx_ubx_t = np.arange(nx)
         zoro_description.idx_ubx_e_t = np.arange(nx)
-        ocp.zoro_description = process_zoro_description(zoro_description)
+        ocp.zoro_description = zoro_description
 
     # create
     ocp_solver = AcadosOcpSolver(ocp, json_file="acados_ocp.json")

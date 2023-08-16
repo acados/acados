@@ -37,12 +37,7 @@ The settings of constraints tightening include idx_lbx_t (the index of the lower
 zoro_description.idx_lbu_t = [0]
 ```
 
-After all the settings are done, call the *process_zoro_description()* function:
-```
-ocp.zoro_description = process_zoro_description(zoro_description)
-```
-
-Everytime before solving the optimal control problem, run
+Every time before solving the optimal control problem, run
 ```
 ocp_solver.custom_update([])
 ```
