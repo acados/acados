@@ -27,8 +27,13 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 
 
-import numpy as np
+# TODO:
+# - make test comparing the 2 zoro implementations;
+# - beta only diagonal
+# - P symmetric exploitation
+# - cleanup Zoro interface
 
+import numpy as np
 import casadi
 
 from diff_drive_zoro_mpc import ZoroMPCSolver

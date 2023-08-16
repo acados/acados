@@ -136,17 +136,17 @@ class ZoroMPCSolver:
         zoro_description.idx_uh_e_t = []
 
         ## dummy linear constraints for testing
-        self.ocp.constraints.C = np.array([[1., 0., 0., 0., 0.0], [0., 1., 0., 0., 0.]])
-        self.ocp.constraints.D = np.array([[-0., 0.], [-0., 0.]])
-        self.ocp.constraints.C_e = np.array([[1., 0., 0., 0., 0.0], [0., 1., 0., 0., 0.]])
-        self.ocp.constraints.lg = np.array([-1e3, -1e3])
-        self.ocp.constraints.ug = np.array([1e3, 1e3])
-        self.ocp.constraints.lg_e = np.array([-1e3, -1e3])
-        self.ocp.constraints.ug_e = np.array([1e3, 1e3])
-        zoro_description.idx_lg_t = [0,1]
-        zoro_description.idx_ug_t = [0,1]
-        zoro_description.idx_lg_e_t = [0,1]
-        zoro_description.idx_ug_e_t = [0,1]
+        # self.ocp.constraints.C = np.array([[1., 0., 0., 0., 0.0], [0., 1., 0., 0., 0.]])
+        # self.ocp.constraints.D = np.array([[-0., 0.], [-0., 0.]])
+        # self.ocp.constraints.C_e = np.array([[1., 0., 0., 0., 0.0], [0., 1., 0., 0., 0.]])
+        # self.ocp.constraints.lg = np.array([-1e3, -1e3])
+        # self.ocp.constraints.ug = np.array([1e3, 1e3])
+        # self.ocp.constraints.lg_e = np.array([-1e3, -1e3])
+        # self.ocp.constraints.ug_e = np.array([1e3, 1e3])
+        # zoro_description.idx_lg_t = [0,1]
+        # zoro_description.idx_ug_t = [0,1]
+        # zoro_description.idx_lg_e_t = [0,1]
+        # zoro_description.idx_ug_e_t = [0,1]
 
         self.ocp.zoro_description = zoro_description
 
@@ -215,9 +215,14 @@ class ZoroMPCSolver:
             self.rti_phase1_t += self.acados_ocp_solver.get_stats("time_tot")[0]
             self.acados_integrator_time += self.acados_ocp_solver.get_stats("time_sim")[0]
 
-            t_start = process_time()
-            self.acados_ocp_solver.custom_update([self.cfg.P0_mat.flatten()])
-            self.propagation_t += process_time() - t_start
+            if self.cfg.use_custom_update:
+                t_start = process_time()
+                self.acados_ocp_solver.custom_update([self.cfg.P0_mat.flatten()])
+                self.propagation_t += process_time() - t_start
+            else:
+                t_start = process_time()
+                self.propagate_and_update(obs_position=obs_position, obs_radius=obs_radius, p0_mat=self.cfg.P0_mat)
+                self.propagation_t += process_time() - t_start
 
             # feedback rti_phase
             self.acados_ocp_solver.options_set('rti_phase', 2)
@@ -270,3 +275,55 @@ class ZoroMPCSolver:
             collision_cstr_active =  not (np.isclose(temp_lam[cstr_index], b=0., atol=1e-7).all())
             i_stage += 1
         return collision_cstr_active
+
+
+    def propagate_and_update(self, obs_position, obs_radius, p0_mat):
+        # debug_list = []
+        lbx_tightened = np.zeros((self.cfg.num_state_cstr, ))
+        ubx_tightened = np.zeros((self.cfg.num_state_cstr, ))
+        dist_guess = np.zeros((self.cfg.num_obs, 2))
+        Pj_diag = np.zeros((self.cfg.nx,))
+        temp_P_mat = self.P_mats[0,:,:] = p0_mat.copy()
+
+        i_mpc_stage = 0
+        i_diff_ctrl_stage = 0
+
+        backoff_scaling_gamma = self.ocp.zoro_description['backoff_scaling_gamma']
+        while i_mpc_stage < self.cfg.n_hrzn:
+            # get the A matrix
+            temp_A = self.acados_ocp_solver.get_from_qp_in(i_mpc_stage, "A")
+            temp_B = self.acados_ocp_solver.get_from_qp_in(i_mpc_stage, "B")
+            temp_AK = temp_A - temp_B @ self.cfg.fdbk_K_mat
+            temp_P_mat = temp_AK @ temp_P_mat @ temp_AK.T + self.cfg.W_mat
+            i_mpc_stage += 1
+            self.P_mats[i_mpc_stage,:,:] = temp_P_mat.copy()
+
+            """ Compute backoff using P, set bounds with backoff
+            v - ubv + sqrt(P(3, 3)) <= 0,
+            w - ubw + sqrt(P(4, 4)) <= 0,
+            a - uba + k1*sqrt(P(3, 3)) <= 0,
+            alpha - ubalpha + k2*sqrt(P(4, 4)) <= 0,
+            """
+            Pj = self.P_mats[i_mpc_stage,:,:]
+            Pj_diag = np.diag(Pj)
+            # dont tighten x constraints at last node.
+            if i_mpc_stage < self.cfg.n_hrzn:
+                # v, cstr_idx[0]
+                lbx_tightened[0] = self.lbv
+                ubx_tightened[0] = self.ubv - backoff_scaling_gamma * np.sqrt(Pj_diag[3] + self.cfg.backoff_eps)
+                # w, cstr_idx[1]
+                lbx_tightened[1] = -self.ubw + backoff_scaling_gamma * np.sqrt(Pj_diag[4] + self.cfg.backoff_eps)
+                ubx_tightened[1] = self.ubw - backoff_scaling_gamma * np.sqrt(Pj_diag[4] + self.cfg.backoff_eps)
+                self.acados_ocp_solver.constraints_set(i_mpc_stage, "lbx", lbx_tightened)
+                self.acados_ocp_solver.constraints_set(i_mpc_stage, "ubx", ubx_tightened)
+
+            # obstacles
+            x_guess_i = self.x_temp_sol[i_mpc_stage, 0:2]
+            for i_obs in range(self.cfg.num_obs):
+                dist_guess[i_obs,:] = x_guess_i - obs_position[2*i_obs:2*(i_obs+1)]
+            dist_norm_mat = dist_guess @ Pj[:2,:2] @ dist_guess.T
+            dist_norm = np.diag(dist_norm_mat)
+            sqr_dist_val = dist_guess[:,0]**2 + dist_guess[:,1]**2
+            h_backoff = backoff_scaling_gamma * np.sqrt(dist_norm / sqr_dist_val + self.cfg.backoff_eps)
+            self.acados_ocp_solver.constraints_set(i_mpc_stage, "lh", obs_radius + h_backoff)
+        return
