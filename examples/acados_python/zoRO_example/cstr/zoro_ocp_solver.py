@@ -28,7 +28,7 @@
 
 # authors: Katrin Baumgaertner, Jonathan Frey, Yunfan Gao
 
-from acados_template import AcadosOcp, AcadosOcpSolver, ZoroDescription, process_zoro_description
+from acados_template import AcadosOcp, AcadosOcpSolver, ZoroDescription
 from scipy.linalg import block_diag
 import numpy as np
 from dataclasses import dataclass

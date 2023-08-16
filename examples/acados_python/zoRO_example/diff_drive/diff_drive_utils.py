@@ -89,20 +89,23 @@ def plot_trajectory(cfg:MPCParam, traj_ref:np.ndarray, traj_zo:np.ndarray):
     fig = plt.figure(1)
     ax = fig.add_subplot(1,1,1)
     for idx_obs in range(cfg.num_obs):
-        circ_label = "Obstacle" if idx_obs == 0 else None
+        circ_label = "Obstacles" if idx_obs == 0 else None
         circ = plt.Circle(cfg.obs_pos[idx_obs,:], cfg.obs_radius[idx_obs],
                           edgecolor="red", facecolor=(1,0,0,.5), label=circ_label
                           )
         ax.add_artist(circ)
-    ax.set_title("Robot Trajectory")
-    ax.plot(traj_ref[:, 0], traj_ref[:, 1], c='m', label='Ref Traj')
-    ax.plot(traj_zo[:, 0], traj_zo[:, 1], c='b', label='zoRO Traj')
+    # ax.set_title("Robot Trajectory")
+    ax.plot(traj_zo[:, 0], traj_zo[:, 1], c='b', label='zoRO trajectory')
+    ax.plot(traj_ref[:, 0], traj_ref[:, 1], c='m', linestyle='dotted', label='Reference trajectory')
     ax.set_xlabel("x [m]")
     ax.set_ylabel("y [m]")
     ax.set_xticks(np.arange(-2., 9., 2.))
-    ax.set_yticks(np.arange(0., 11., 2.))
+    ax.set_yticks(np.arange(0., 5., 2.))
+    ax.set_ylim([-.5, 4.])
     ax.set_aspect("equal")
     ax.legend()
+    plt.tight_layout()
+    ax.grid()
 
     if not os.path.exists("figures"):
         os.makedirs("figures")
@@ -110,6 +113,7 @@ def plot_trajectory(cfg:MPCParam, traj_ref:np.ndarray, traj_zo:np.ndarray):
     fig_filename = os.path.join("figures", "diff_drive_sim_trajectory.pdf")
     plt.savefig(fig_filename, bbox_inches='tight', transparent=True, pad_inches=0.05)
     print(f"stored figure in {fig_filename}")
+    plt.show()
 
 
 def compute_min_dis(cfg:MPCParam, s:np.ndarray) -> float:

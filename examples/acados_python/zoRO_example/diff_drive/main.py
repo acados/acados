@@ -126,7 +126,7 @@ def run_closed_loop_simulation(use_custom_update: bool, n_executions: int = 1):
             traj_zo[i_sim+1,:] += process_noise[i_sim,:]
             min_dist = compute_min_dis(cfg=cfg_zo, s=traj_zo[i_sim+1,:])
             if min_dist < 1e-8:
-                print("collision take place")
+                print("collision takes place")
                 return False
 
     total_time = [time_prep[i] + time_feedback[i] + time_prop[i] for i in range(len(time_prep))]
@@ -149,15 +149,18 @@ def run_closed_loop_simulation(use_custom_update: bool, n_executions: int = 1):
 
     results_filename = get_results_filename(use_custom_update, n_executions)
     store_results(results_filename, results)
+    del zoroMPC
 
 
-def plot_results(n_executions: int, use_custom_update=True):
+def plot_result_trajectory(n_executions: int, use_custom_update=True):
     results_filename = get_results_filename(use_custom_update, n_executions)
     results = load_results(results_filename)
-
-    plot_timings(results['timings'])
     plot_trajectory(results['cfg_zo'], results['ref_trajectory'], results['trajectory'])
 
+def plot_result_timings(n_executions: int, use_custom_update=True):
+    results_filename = get_results_filename(use_custom_update, n_executions)
+    results = load_results(results_filename)
+    plot_timings(results['timings'])
 
 def compare_results(n_executions: int):
     results1 = load_results(get_results_filename(use_custom_update=True, n_executions=n_executions))
@@ -174,4 +177,12 @@ if __name__ == "__main__":
     run_closed_loop_simulation(use_custom_update=True, n_executions=n_executions)
     run_closed_loop_simulation(use_custom_update=False, n_executions=n_executions)
     compare_results(n_executions=n_executions)
-    # plot_results(n_executions=n_executions, use_custom_update=True)
+
+    # plot_result_trajectory(n_executions=n_executions, use_custom_update=True)
+
+    # timing comparison:
+    # n_executions = 100
+    # run_closed_loop_simulation(use_custom_update=False, n_executions=n_executions)
+    # run_closed_loop_simulation(use_custom_update=True, n_executions=n_executions)
+    # plot_result_timings(n_executions=n_executions, use_custom_update=True)
+    # plot_result_timings(n_executions=n_executions, use_custom_update=False)
