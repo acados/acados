@@ -62,15 +62,15 @@ def plot_timings(timing_dict):
 
     print("timings\t\tmin\tmean\tmax\n--------------------------------")
     for k, v in timing_dict.items():
-        print(f"{k:10}\t{np.min(v):.3f}\t {np.mean(v):.3f}\t {np.max(v):.3f}")
+        print(f"& {k:10} & {np.min(v):.3f} & {np.mean(v):.3f} & {np.max(v):.3f} \\\\")
 
     medianprops = dict(linestyle='-', linewidth=2.5, color='darkgreen')
     green_square = dict(markerfacecolor='palegreen', marker='D')
-    fig = plt.figure(0)
+    fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.boxplot(timing_dict.values(), vert=False,
                flierprops=green_square,
-               medianprops=medianprops, showmeans=False
+               medianprops=medianprops, showmeans=False,
                )
     ax.set_yticklabels(timing_dict.keys())
     plt.grid()
@@ -83,6 +83,41 @@ def plot_timings(timing_dict):
     plt.savefig(fig_filename, bbox_inches='tight', transparent=True, pad_inches=0.05)
     print(f"stored figure in {fig_filename}")
 
+    plt.show()
+
+
+def plot_timing_comparison(timings_list, label_list):
+    fig = plt.figure(figsize=(6.0, 2.0))
+    ax = fig.add_subplot(111)
+    colors = ['C0', 'C1']
+    n_variants = len(timings_list)
+    bp = n_variants*[None]
+
+    for i in range(n_variants):
+        bp[i] = ax.boxplot(
+            [timings_list[i]['total'], timings_list[i]['propagation']],
+                vert=False, patch_artist=True, whis=[0.0, 100.],
+                boxprops={"facecolor": colors[i]},
+                showmeans=False,
+                medianprops = dict(linestyle='-', linewidth=2.5, color=colors[i])
+                )
+
+    ax.set_yticks([1, 2])
+    ax.set_yticklabels(['total', 'propagation'])
+    ax.legend([bp[i]["boxes"][0] for i in range(n_variants)], label_list, loc='center')
+
+    plt.xlabel("CPU time [ms]")
+    plt.tight_layout()
+    plt.grid()
+
+    if not os.path.exists("figures"):
+        os.makedirs("figures")
+    fig_filename = os.path.join("figures", "timings_diff_drive_compare.pdf")
+    plt.savefig(fig_filename, bbox_inches='tight', transparent=True, pad_inches=0.05)
+    print(f"stored figure in {fig_filename}")
+
+    plt.show()
+
 
 def plot_trajectory(cfg:MPCParam, traj_ref:np.ndarray, traj_zo:np.ndarray):
 
@@ -91,21 +126,21 @@ def plot_trajectory(cfg:MPCParam, traj_ref:np.ndarray, traj_zo:np.ndarray):
     for idx_obs in range(cfg.num_obs):
         circ_label = "Obstacles" if idx_obs == 0 else None
         circ = plt.Circle(cfg.obs_pos[idx_obs,:], cfg.obs_radius[idx_obs],
-                          edgecolor="red", facecolor=(1,0,0,.5), label=circ_label
+                          edgecolor="red", facecolor=(1,0,0,.5), label=circ_label,
                           )
         ax.add_artist(circ)
     # ax.set_title("Robot Trajectory")
-    ax.plot(traj_zo[:, 0], traj_zo[:, 1], c='b', label='zoRO trajectory')
+    ax.plot(traj_zo[:, 0], traj_zo[:, 1], c='b', alpha=0.5, label='zoRO trajectory')
     ax.plot(traj_ref[:, 0], traj_ref[:, 1], c='m', linestyle='dotted', label='Reference trajectory')
     ax.set_xlabel("x [m]")
     ax.set_ylabel("y [m]")
     ax.set_xticks(np.arange(-2., 9., 2.))
     ax.set_yticks(np.arange(0., 5., 2.))
-    ax.set_ylim([-.5, 4.])
+    ax.set_ylim([-.5, 3.6])
     ax.set_aspect("equal")
     ax.legend()
     plt.tight_layout()
-    ax.grid()
+    # ax.grid()
 
     if not os.path.exists("figures"):
         os.makedirs("figures")

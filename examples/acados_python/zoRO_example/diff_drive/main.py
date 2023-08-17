@@ -36,7 +36,7 @@ import casadi
 
 from diff_drive_zoro_mpc import ZoroMPCSolver
 from mpc_parameters import MPCParam, PathTrackingParam
-from diff_drive_utils import plot_timings, plot_trajectory, compute_min_dis, get_results_filename, store_results, load_results
+from diff_drive_utils import plot_timings, plot_trajectory, compute_min_dis, get_results_filename, store_results, load_results, plot_timing_comparison
 from nominal_path_tracking_casadi import NominalPathTrackingSolver
 from track_spline import TrackSpline
 
@@ -131,11 +131,11 @@ def run_closed_loop_simulation(use_custom_update: bool, n_executions: int = 1):
 
     total_time = [time_prep[i] + time_feedback[i] + time_prop[i] for i in range(len(time_prep))]
     timings = {
-                   "integrator": 1e3*np.array(time_sim),
                    "preparation": 1e3*np.array(time_prep),
-                   "QP": 1e3*np.array(time_qp),
-                   "feedback": 1e3*np.array(time_feedback),
+                   "integrator": 1e3*np.array(time_sim),
                    "propagation": 1e3*np.array(time_prop),
+                   "feedback": 1e3*np.array(time_feedback),
+                   "QP": 1e3*np.array(time_qp),
                    "total": 1e3*np.array(total_time)
                 }
 
@@ -172,6 +172,22 @@ def compare_results(n_executions: int):
     if error > tol:
         raise Exception(f"zoRO implementations differ too much, error = {error:.2e} > tol = {tol:.2e}")
 
+
+def plot_result_timing_comparison(n_executions: int):
+    fast_timings = load_results(get_results_filename(use_custom_update=True, n_executions=n_executions))['timings']
+    slow_timings = load_results(get_results_filename(use_custom_update=False, n_executions=n_executions))['timings']
+    plot_timing_comparison([fast_timings, slow_timings], ['fast zoRO', 'zoRO'])
+
+def timing_comparison():
+    n_executions = 50
+    # run_closed_loop_simulation(use_custom_update=False, n_executions=n_executions)
+    # run_closed_loop_simulation(use_custom_update=True, n_executions=n_executions)
+    # plot_result_timings(n_executions=n_executions, use_custom_update=True)
+    # plot_result_timings(n_executions=n_executions, use_custom_update=False)
+
+    plot_result_timing_comparison(n_executions=n_executions)
+
+
 if __name__ == "__main__":
     n_executions = 2
     run_closed_loop_simulation(use_custom_update=True, n_executions=n_executions)
@@ -179,10 +195,4 @@ if __name__ == "__main__":
     compare_results(n_executions=n_executions)
 
     # plot_result_trajectory(n_executions=n_executions, use_custom_update=True)
-
-    # timing comparison:
-    # n_executions = 100
-    # run_closed_loop_simulation(use_custom_update=False, n_executions=n_executions)
-    # run_closed_loop_simulation(use_custom_update=True, n_executions=n_executions)
-    # plot_result_timings(n_executions=n_executions, use_custom_update=True)
-    # plot_result_timings(n_executions=n_executions, use_custom_update=False)
+    # timing_comparison()
