@@ -58,28 +58,30 @@ def load_results(results_filename):
     return results
 
 
-def plot_timings(timing_dict):
+def plot_timings(timing_dict, use_custom_update: bool):
 
     print("timings\t\tmin\tmean\tmax\n--------------------------------")
     for k, v in timing_dict.items():
         print(f"& {k:10} & {np.min(v):.3f} & {np.mean(v):.3f} & {np.max(v):.3f} \\\\")
 
     medianprops = dict(linestyle='-', linewidth=2.5, color='darkgreen')
-    green_square = dict(markerfacecolor='palegreen', marker='D')
-    fig = plt.figure()
+    # green_square = dict(markerfacecolor='palegreen', marker='D')
+    fig = plt.figure(figsize=(6.0, 3.2))
     ax = fig.add_subplot(111)
     ax.boxplot(timing_dict.values(), vert=False,
-               flierprops=green_square,
+            #    flierprops=green_square,
                medianprops=medianprops, showmeans=False,
+               whis=[0.0, 100.],
                )
     ax.set_yticklabels(timing_dict.keys())
     plt.grid()
     plt.xlabel("CPU time [ms]")
     plt.tight_layout()
+    ax.set_xlim([-.01, 0.01 + max([np.max(t) for t in timing_dict.values()])])
 
     if not os.path.exists("figures"):
         os.makedirs("figures")
-    fig_filename = os.path.join("figures", "timings_diff_drive.pdf")
+    fig_filename = os.path.join("figures", f"timings_diff_drive_{'fast' if use_custom_update else 'slow'}.pdf")
     plt.savefig(fig_filename, bbox_inches='tight', transparent=True, pad_inches=0.05)
     print(f"stored figure in {fig_filename}")
 

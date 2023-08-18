@@ -160,7 +160,7 @@ def plot_result_trajectory(n_executions: int, use_custom_update=True):
 def plot_result_timings(n_executions: int, use_custom_update=True):
     results_filename = get_results_filename(use_custom_update, n_executions)
     results = load_results(results_filename)
-    plot_timings(results['timings'])
+    plot_timings(results['timings'], use_custom_update)
 
 def compare_results(n_executions: int):
     results1 = load_results(get_results_filename(use_custom_update=True, n_executions=n_executions))
@@ -182,8 +182,8 @@ def timing_comparison():
     n_executions = 50
     # run_closed_loop_simulation(use_custom_update=False, n_executions=n_executions)
     # run_closed_loop_simulation(use_custom_update=True, n_executions=n_executions)
-    # plot_result_timings(n_executions=n_executions, use_custom_update=True)
-    # plot_result_timings(n_executions=n_executions, use_custom_update=False)
+    plot_result_timings(n_executions=n_executions, use_custom_update=True)
+    plot_result_timings(n_executions=n_executions, use_custom_update=False)
 
     plot_result_timing_comparison(n_executions=n_executions)
 

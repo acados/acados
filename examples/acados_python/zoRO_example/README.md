@@ -22,7 +22,8 @@ ocp.solver_options.custom_templates = [
 ]
 ```
 
-Then do the zoRO settings. The settings of the disturbance propagation include the initial disturbance matrix $P_0$ (P0_mat), the feedback K matrix $K$ (fdbk_K_mat), the $W$ matrix (W_mat), and the $G$ matrix (unc_jac_G_mat).
+Then do the zoRO settings.
+The settings of the disturbance propagation include the initial disturbance matrix $P_0$ (P0_mat), the feedback matrix $K$ (fdbk_K_mat), the $W$ matrix (W_mat), and the sensitivity of the discretized dynamics with respect to the noise, i.e. the $G$ matrix (unc_jac_G_mat).
 
 
 ```
