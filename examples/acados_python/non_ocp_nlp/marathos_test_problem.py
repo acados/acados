@@ -173,7 +173,7 @@ def solve_marathos_problem_with_setting(setting):
     else:
         ocp_solver.solve()
         ocp_solver.print_statistics()
-        iter = ocp_solver.get_stats('sqp_iter')[0]
+        iter = ocp_solver.get_stats('sqp_iter')
         alphas = ocp_solver.get_stats('alpha')[1:]
         qp_iters = ocp_solver.get_stats('qp_iter')
         residuals = ocp_solver.get_stats('statistics')[1:5,1:iter]
