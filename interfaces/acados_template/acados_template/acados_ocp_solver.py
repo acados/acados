@@ -931,8 +931,9 @@ class AcadosOcpSolver:
         code_export_directory = acados_ocp_json['code_export_directory']
 
         importlib.invalidate_caches()
-        rel_code_export_directory = os.path.relpath(code_export_directory)
-        acados_ocp_solver_pyx = importlib.import_module(f'{rel_code_export_directory}.acados_ocp_solver_pyx')
+
+        sys.path.append(os.path.dirname(code_export_directory))
+        acados_ocp_solver_pyx = importlib.import_module(f'{os.path.split(code_export_directory)[1]}.acados_ocp_solver_pyx')
 
         AcadosOcpSolverCython = getattr(acados_ocp_solver_pyx, 'AcadosOcpSolverCython')
         return AcadosOcpSolverCython(acados_ocp_json['model']['name'],
