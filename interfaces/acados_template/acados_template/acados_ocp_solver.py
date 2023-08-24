@@ -1487,19 +1487,16 @@ class AcadosOcpSolver:
 
 
         if field_ in ['sqp_iter', 'stat_m', 'stat_n']:
-            out = np.ascontiguousarray(np.zeros((1,)), dtype=np.int64)
-            out_data = cast(out.ctypes.data, POINTER(c_int64))
+            out = c_int(0)
             self.shared_lib.ocp_nlp_get.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
-            self.shared_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
-            return out
+            self.shared_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, byref(out))
+            return out.value
 
-        # TODO: just return double instead of np.
         elif field_ in double_fields:
-            out = np.zeros((1,))
-            out_data = cast(out.ctypes.data, POINTER(c_double))
+            out = c_double(0)
             self.shared_lib.ocp_nlp_get.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
-            self.shared_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
-            return out
+            self.shared_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, byref(out))
+            return out.value
 
         elif field_ == 'statistics':
             sqp_iter = self.get_stats("sqp_iter")
@@ -1507,7 +1504,7 @@ class AcadosOcpSolver:
             stat_n = self.get_stats("stat_n")
             min_size = min([stat_m, sqp_iter+1])
             out = np.ascontiguousarray(
-                        np.zeros((stat_n[0]+1, min_size[0])), dtype=np.float64)
+                        np.zeros((stat_n+1, min_size)), dtype=np.float64)
             out_data = cast(out.ctypes.data, POINTER(c_double))
             self.shared_lib.ocp_nlp_get.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
             self.shared_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
