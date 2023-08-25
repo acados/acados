@@ -106,7 +106,8 @@ def plot_timing_comparison(timings_list, label_list):
 
     ax.set_yticks([1, 2])
     ax.set_yticklabels(['total', 'propagation'])
-    ax.legend([bp[i]["boxes"][0] for i in range(n_variants)], label_list, loc='center')
+    ax.legend([bp[i]["boxes"][0] for i in range(n_variants)], label_list) #, loc='center')
+    ax.set_xscale('log')
 
     plt.xlabel("CPU time [ms]")
     plt.tight_layout()
