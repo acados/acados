@@ -1572,6 +1572,21 @@ class AcadosOcpSolver:
 
         return out[0]
 
+    def get_optimal_value_gradient(self):
+        """
+        Returns the gradient of the optimal value function w.r.t. the current initial state.
+        Disclaimer: This function only returns reasonable values if the solver has converged for the current problem instance.
+        """
+        if not self.acados_ocp.constraints.has_x0:
+            raise Exception("OCP does not have an initial state constraint.")
+
+        nx = self.acados_ocp.dims.nx
+        nu = self.acados_ocp.dims.nu
+        lam = self.get(0, 'lam')
+        nlam = lam.shape[0]//2
+        grad = lam[nu:nu+nx] - lam[nlam+nu:nlam+nu+nx]
+        return grad
+
 
     def get_residuals(self, recompute=False):
         """
