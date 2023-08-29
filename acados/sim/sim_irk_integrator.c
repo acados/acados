@@ -73,6 +73,7 @@ void *sim_irk_dims_assign(void *config_, void *raw_memory)
     dims->nx = 0;
     dims->nu = 0;
     dims->nz = 0;
+    dims->ny = 0;
 
     assert((char *) raw_memory + sim_irk_dims_calculate_size() >= c_ptr);
 
@@ -96,6 +97,10 @@ void sim_irk_dims_set(void *config_, void *dims_, const char *field, const int *
     else if (!strcmp(field, "nz"))
     {
         dims->nz = *value;
+    }
+    else if (!strcmp(field, "ny"))
+    {
+        dims->ny = *value;
     }
     else
     {
@@ -190,6 +195,14 @@ int sim_irk_model_set(void *model_, const char *field, void *value)
     {
         model->impl_ode_hess = value;
     }
+    else if (!strcmp(field, "nls_y_fun_jac") )
+    {
+        model->nls_y_fun_jac = value;
+    }
+    else if (!strcmp(field, "nls_y_fun") )
+    {
+        model->nls_y_fun = value;
+    }
     else
     {
         printf("\nerror: sim_irk_model_set: wrong field: %s\n", field);
@@ -276,6 +289,7 @@ void sim_irk_opts_initialize_default(void *config_, void *dims_, void *opts_)
     calculate_butcher_tableau(opts->ns, opts->collocation_type, opts->c_vec, opts->b_vec, opts->A_mat, opts->work);
     // for consistency check
     opts->tableau_size = opts->ns;
+    opts->cost_computation = false;
 
     // TODO(oj): check if constr h or cost depend on z, turn on in this case only.
     if (dims->nz > 0)
@@ -348,17 +362,26 @@ acados_size_t sim_irk_memory_calculate_size(void *config, void *dims_, void *opt
 {
     // typecast
     sim_irk_dims *dims = (sim_irk_dims *) dims_;
-    // sim_opts *opts = opts_;
+    sim_opts *opts = opts_;
 
     // necessary integers
     int nx = dims->nx;
     int nz = dims->nz;
+    int nu = dims->nu;
 
     acados_size_t size = sizeof(sim_irk_memory);
 
     size += nx * sizeof(double); // xdot
     size += nz * sizeof(double); // z
     size += 8;  // corresponds to memory alignment
+
+    if (opts->cost_computation)
+    {
+        size += 1 * sizeof(struct blasfeo_dmat);  // cost_hess
+        size += 1 * blasfeo_memsize_dmat(nx+nu, nx+nu);  // cost_hess
+    }
+
+    make_int_multiple_of(8, &size);
 
     return size;
 }
@@ -370,10 +393,11 @@ void *sim_irk_memory_assign(void *config, void *dims_, void *opts_, void *raw_me
 
     // typecast
     sim_irk_dims *dims = (sim_irk_dims *) dims_;
-    // sim_opts *opts = opts_;
+    sim_opts *opts = opts_;
 
     // necessary integers
     int nx = dims->nx;
+    int nu = dims->nu;
     int nz = dims->nz;
 
     // struct
@@ -381,10 +405,20 @@ void *sim_irk_memory_assign(void *config, void *dims_, void *opts_, void *raw_me
     c_ptr += sizeof(sim_irk_memory);
 
     align_char_to(8, &c_ptr);
+    if (opts->cost_computation)
+    {
+        assign_and_advance_blasfeo_dmat_structs(1, &mem->cost_hess, &c_ptr);
+    }
 
     // assign doubles
     assign_and_advance_double(nz, &mem->z, &c_ptr);
     assign_and_advance_double(nx, &mem->xdot, &c_ptr);
+
+    if (opts->cost_computation)
+    {
+        align_char_to(64, &c_ptr);
+        assign_and_advance_blasfeo_dmat_mem(nx+nu, nx+nu, mem->cost_hess, &c_ptr);
+    }
 
     // initialization of xdot, z is 0 if not changed
     for (int ii = 0; ii < nx; ii++)
@@ -419,6 +453,22 @@ int sim_irk_memory_set(void *config_, void *dims_, void *mem_, const char *field
         double *z = value;
         for (int ii=0; ii < nz; ii++)
             mem->z[ii] = z[ii];
+    }
+    else if (!strcmp(field, "cost_fun"))
+    {
+        mem->cost_fun = value;
+    }
+    else if (!strcmp(field, "cost_grad"))
+    {
+        mem->cost_grad = value;
+    }
+    else if (!strcmp(field, "W_chol"))
+    {
+        mem->W_chol = value;
+    }
+    else if (!strcmp(field, "y_ref"))
+    {
+        mem->y_ref = value;
     }
     else if (!strcmp(field, "guesses_blasfeo"))
     {
@@ -488,6 +538,11 @@ void sim_irk_memory_get(void *config_, void *dims_, void *mem_, const char *fiel
         double *ptr = value;
         *ptr = mem->time_la;
     }
+    else if (!strcmp(field, "cost_hess"))
+    {
+        struct blasfeo_dmat **ptr = value;
+        *ptr = mem->cost_hess;
+    }
     else
     {
         printf("sim_irk_memory_get field %s is not supported! \n", field);
@@ -511,6 +566,7 @@ acados_size_t sim_irk_workspace_calculate_size(void *config_, void *dims_, void 
     int nx = dims->nx;
     int nu = dims->nu;
     int nz = dims->nz;
+    int ny = dims->ny;
 
     int nK = (nx + nz) * ns;
 
@@ -541,7 +597,21 @@ acados_size_t sim_irk_workspace_calculate_size(void *config_, void *dims_, void 
         size += (4 * steps + 1) * sizeof(struct blasfeo_dmat);  // dG_dxu, dG_dK, dK_dxu, S_forw
     }
 
+    if (opts->cost_computation)
+    {
+        size += 4 * sizeof(struct blasfeo_dmat);  // J_y_tilde, tmp_nux_ny, S_forw_stage, tmp_nux_ny2
+        size += 2 * sizeof(struct blasfeo_dvec);  // tmp_ny, nls_res
+    }
+
     /* blasfeo mem */
+    if (opts->cost_computation)
+    {
+        size += 1 * blasfeo_memsize_dmat(ny, nx+nu);  // J_y_tilde
+        size += 2 * blasfeo_memsize_dmat(nx+nu, ny);  // tmp_nux_ny, tmp_nux_ny2
+        size += 2 * blasfeo_memsize_dvec(ny);  // tmp_ny, nls_res
+        size += 1 * blasfeo_memsize_dmat(nx, nx + nu);  // S_forw_stage
+    }
+
     size += blasfeo_memsize_dvec(nK);   // K
     size += blasfeo_memsize_dvec(nK);   // rG
     size += 3 * blasfeo_memsize_dvec(nx);           // xt, xn, xtdot
@@ -605,6 +675,7 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     int nx = dims->nx;
     int nu = dims->nu;
     int nz = dims->nz;
+    int ny = dims->ny;
     int nK = (nx + nz) * ns;
 
     int steps = opts->num_steps;
@@ -642,8 +713,28 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     assign_and_advance_blasfeo_dvec_structs(1, &workspace->xt, &c_ptr);
     assign_and_advance_blasfeo_dvec_structs(1, &workspace->xn, &c_ptr);
 
+    if (opts->cost_computation)
+    {
+        assign_and_advance_blasfeo_dmat_structs(1, &workspace->J_y_tilde, &c_ptr);
+        assign_and_advance_blasfeo_dmat_structs(1, &workspace->tmp_nux_ny, &c_ptr);
+        assign_and_advance_blasfeo_dmat_structs(1, &workspace->tmp_nux_ny2, &c_ptr);
+        assign_and_advance_blasfeo_dmat_structs(1, &workspace->S_forw_stage, &c_ptr);
+        assign_and_advance_blasfeo_dvec_structs(1, &workspace->tmp_ny, &c_ptr);
+        assign_and_advance_blasfeo_dvec_structs(1, &workspace->nls_res, &c_ptr);
+    }
+
     /* algin c_ptr to 64 blasfeo_dmat_mem has to be assigned directly after that  */
     align_char_to(64, &c_ptr);
+
+    if (opts->cost_computation)
+    {
+        assign_and_advance_blasfeo_dmat_mem(ny, nx+nu, workspace->J_y_tilde, &c_ptr);
+        assign_and_advance_blasfeo_dmat_mem(nx+nu, ny, workspace->tmp_nux_ny, &c_ptr);
+        assign_and_advance_blasfeo_dmat_mem(nx+nu, ny, workspace->tmp_nux_ny2, &c_ptr);
+        assign_and_advance_blasfeo_dmat_mem(nx, nx+nu, workspace->S_forw_stage, &c_ptr);
+        assign_and_advance_blasfeo_dvec_mem(ny, workspace->tmp_ny, &c_ptr);
+        assign_and_advance_blasfeo_dvec_mem(ny, workspace->nls_res, &c_ptr);
+    }
 
     if (!opts->sens_hess){
         assign_and_advance_blasfeo_dmat_mem(nK, nx + nu, workspace->dG_dxu, &c_ptr);
@@ -758,6 +849,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     int nx = dims->nx;
     int nu = dims->nu;
     int nz = dims->nz;
+    int ny = dims->ny;
 
     int nK = (nx + nz) * ns;
 
@@ -808,6 +900,18 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     double *S_forw_out = out->S_forw;
     double *S_adj_out = out->S_adj;
     double *S_algebraic = out->S_algebraic;
+
+    // for cost propagation only
+    struct blasfeo_dvec *cost_grad = mem->cost_grad;
+    struct blasfeo_dvec *nls_res = workspace->nls_res;
+    struct blasfeo_dvec *tmp_ny = workspace->tmp_ny;
+
+    struct blasfeo_dmat *cost_hess = mem->cost_hess;
+    struct blasfeo_dmat *J_y_tilde = workspace->J_y_tilde;
+    struct blasfeo_dmat *tmp_nux_ny = workspace->tmp_nux_ny;
+    struct blasfeo_dmat *tmp_nux_ny2 = workspace->tmp_nux_ny2;
+    // struct blasfeo_dmat *tmp_nx_nu = workspace->tmp_nx_nu;
+    struct blasfeo_dmat *S_forw_stage = workspace->S_forw_stage;
 
     // declare
     acados_timer timer, timer_ad, timer_la;
@@ -913,6 +1017,19 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         blasfeo_dgese(nx + nu, nx + nu, 0.0, Hess, 0, 0);
     }
 
+    if (opts->cost_computation)
+    {
+        // initialize cost_fun, cost_grad, cost_hess
+        blasfeo_dvecse(nx+nu, 0.0, cost_grad, 0);
+        blasfeo_dgese(nx+nu, nx+nu, 0.0, cost_hess, 0, 0);
+        mem->cost_fun[0] = 0.0;
+        if (nz > 0)
+        {
+            printf("\nIRK cost_computation not implemented for nz>0!\n\n");
+            exit(1);
+        }
+    }
+
     // pack
     blasfeo_pack_dvec(nx, in->x, 1, xn, 0);
     blasfeo_pack_dmat(nx, nx + nu, in->S_forw, nx, S_forw, 0, 0);
@@ -996,8 +1113,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     blasfeo_daxpy(nx, a, K, jj * nx, xt, 0, xt, 0);
                 }
                 impl_ode_xdot_in.xi = ii * nx;  // use k_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
-                impl_ode_z_in.xi    = ns * nx + ii * nz;
-                                              // use z_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
+                impl_ode_z_in.xi = ns * nx + ii * nz;
+                                // use z_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
                 impl_ode_res_out.xi = ii * (nx + nz);  // store output in this position of rG
 
                 // compute the residual of implicit ode at time t_ii
@@ -1076,7 +1193,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     break;
                 }
             }
-        }
+        } // end newton_iter
 
         if ( opts->sens_adj || opts->sens_hess )
         {
@@ -1157,6 +1274,89 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             // printf("dK_dxu (solved) = (IRK, ss = %d) \n", ss);
             // blasfeo_print_exp_dmat(nK, nx + nu, dK_dxu_ss, 0, 0);
 
+            if (opts->cost_computation)
+            {
+                for (int ii = 0; ii < ns; ii++)
+                {
+                    ext_fun_arg_t nls_y_fun_jac_type_in[3];
+                    void *nls_y_fun_jac_in[3];
+                    ext_fun_arg_t nls_y_fun_jac_type_out[3];
+                    void *nls_y_fun_jac_out[3];
+
+                    nls_y_fun_jac_type_in[0] = BLASFEO_DVEC;
+                    nls_y_fun_jac_in[0] = xt;
+                    nls_y_fun_jac_type_in[1] = COLMAJ;
+                    nls_y_fun_jac_in[1] = u;
+                    nls_y_fun_jac_type_in[2] = BLASFEO_DVEC_ARGS;
+                    nls_y_fun_jac_in[2] = &impl_ode_z_in;
+
+                    impl_ode_z_in.x = &K_traj[ss];
+                    impl_ode_z_in.xi = ns * nx + ii * nz;
+
+                    nls_y_fun_jac_type_out[0] = BLASFEO_DVEC;
+                    nls_y_fun_jac_out[0] = nls_res;  // fun: ny
+                    nls_y_fun_jac_type_out[1] = BLASFEO_DMAT;
+                    // nls_y_fun_jac_out[1] = &workspace->tmp_nux_ny;  // jac': (nu+nx) * ny
+                    nls_y_fun_jac_out[1] = tmp_nux_ny;  // jac': (nu+nx) * ny
+                    // dy_dux^T
+                    // TODO: set output in case of nz > 0
+                    nls_y_fun_jac_type_out[2] = BLASFEO_DMAT;
+                    nls_y_fun_jac_out[2] = tmp_nux_ny;   // jac_yexpr_z:  ny * nz
+
+                    // compute x at stage (xt) and sensitivity (S_forw_stage)
+                    blasfeo_dveccp(nx, xn, 0, xt, 0);
+                    blasfeo_dgecp(nx, nx+nu, S_forw_ss, 0, 0, S_forw_stage, 0, 0);
+                    for (int jj = 0; jj < ns; jj++)
+                    {
+                        a = A_mat[ii + ns * jj] * step;
+                        // xt = xt + T_int * a[i,j]*K_j
+                        blasfeo_daxpy(nx, a, K, jj * nx, xt, 0, xt, 0);
+                        // NOTE(oj): dK_dxu_ss is actually -dK_dxu_ss, because alpha = -1.0 was not supported by blasfeo initially
+                        blasfeo_dgead(nx, nx+nu, -a, dK_dxu_ss, jj*nx, 0, S_forw_stage, 0, 0);
+                    }
+
+                    model->nls_y_fun_jac->evaluate(model->nls_y_fun_jac, nls_y_fun_jac_type_in, nls_y_fun_jac_in,
+                                        nls_y_fun_jac_type_out, nls_y_fun_jac_out);
+
+                    // nls_res = nls_res - y_ref
+                    blasfeo_daxpy(ny, -1.0, mem->y_ref, 0, nls_res, 0, nls_res, 0);
+
+                    /* J_y_tilde = tmp_ny_nux * current_forward_sens( in [u,x] form) */
+                    // NOTE: tmp_nux_ny = dy_dux^T here
+                    // J_y_tilde[:nu, :ny] = tmp_nux_ny^T
+                    blasfeo_dgetr(nu, ny, tmp_nux_ny, 0, 0, J_y_tilde, 0, 0);
+                    // J_y_tilde[:nu, :ny] += tmp_nux_ny^T[nu:,:] * S_forw_stage[:, nx:]
+                    blasfeo_dgemm_tn(ny, nu, nx, 1.0, tmp_nux_ny, nu, 0, S_forw_stage, 0, nx, 1.0, J_y_tilde, 0, 0,
+                                    J_y_tilde, 0, 0);
+
+                    // J_y_tilde (x part)
+                    blasfeo_dgemm_tn(ny, nx, nx, 1.0, tmp_nux_ny, nu, 0, S_forw_stage, 0, 0, 0.0, J_y_tilde, 0, nu,
+                                    J_y_tilde, 0, nu);
+
+                    // transpose
+                    blasfeo_dgetr(ny, nx+nu, J_y_tilde, 0, 0, tmp_nux_ny, 0, 0);
+
+                    // tmp_nux_ny2 = W_chol * J_y_tilde (ny * (nx+nu))
+                    blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, mem->W_chol, 0, 0, tmp_nux_ny, 0, 0,
+                                       tmp_nux_ny2, 0, 0);
+
+                    // tmp_ny = W_chol * nls_res
+                    blasfeo_dtrmv_lnn(ny, mem->W_chol, 0, 0, nls_res, 0, tmp_ny, 0);
+
+                    // cost_grad += b * tmp_ny^T * tmp_ny_nux = b * tmp_ny_nux^T * tmp_ny
+                    blasfeo_dgemv_n(nx+nu, ny, b_vec[ii]/num_steps, tmp_nux_ny2, 0, 0, tmp_ny, 0,
+                                    1.0, cost_grad, 0, cost_grad, 0);
+
+                    // cost_hess += b * tmp_nux_ny_2 * tmp_nux_ny_2^T
+                    blasfeo_dgemm_nt(nx+nu, nx+nu, ny, b_vec[ii]/num_steps, tmp_nux_ny2, 0, 0, tmp_nux_ny2, 0, 0,
+                                    1.0, cost_hess, 0, 0, cost_hess, 0, 0);
+
+                    // cost function value
+                    // NOTE: slack contribution and scaling done in cost module
+                    mem->cost_fun[0] += 0.5 * b_vec[ii]/num_steps * blasfeo_ddot(ny, tmp_ny, 0, tmp_ny, 0);
+                } // end ii
+            } // end cost propagation
+
             // update forward sensitivity
             // NOTE(oj): dK_dxu_ss is actually -dK_dxu_ss, because alpha = -1.0
             // was not supported by blasfeos backsolve initially.
@@ -1164,10 +1364,56 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 blasfeo_dgead(nx, nx + nu, -step * b_vec[jj], dK_dxu_ss, jj * nx, 0,
                                                      S_forw_ss, 0, 0);
         }  // end if sens_forw || sens_hess
+        else if (opts->cost_computation)
+        {
+            for (int ii = 0; ii < ns; ii++)
+            {
+                ext_fun_arg_t nls_y_fun_type_in[3];
+                void *nls_y_fun_in[3];
+                ext_fun_arg_t nls_y_fun_type_out[1];
+                void *nls_y_fun_out[1];
+
+                nls_y_fun_type_in[0] = BLASFEO_DVEC;
+                nls_y_fun_in[0] = xt;
+                nls_y_fun_type_in[1] = COLMAJ;
+                nls_y_fun_in[1] = u;
+
+                nls_y_fun_type_in[2] = BLASFEO_DVEC;
+                nls_y_fun_in[2] = &impl_ode_z_in;
+                impl_ode_z_in.x = &K_traj[ss];
+                impl_ode_z_in.xi = ns * nx + ii * nz;
+
+                nls_y_fun_type_out[0] = BLASFEO_DVEC;
+                nls_y_fun_out[0] = nls_res;  // fun: ny
+
+                // compute x at stage (xt) and sensitivity (S_forw_stage)
+                blasfeo_dveccp(nx, xn, 0, xt, 0);
+                for (int jj = 0; jj < ns; jj++)
+                {
+                    a = A_mat[ii + ns * jj] * step;
+                    // xt = xt + T_int * a[i,j]*K_j
+                    blasfeo_daxpy(nx, a, K, jj * nx, xt, 0, xt, 0);
+                }
+
+                model->nls_y_fun->evaluate(model->nls_y_fun, nls_y_fun_type_in,
+                                nls_y_fun_in, nls_y_fun_type_out, nls_y_fun_out);
+
+                // nls_res = nls_res - y_ref
+                blasfeo_daxpy(ny, -1.0, mem->y_ref, 0, nls_res, 0, nls_res, 0);
+
+                // tmp_ny = W_chol * nls_res
+                blasfeo_dtrmv_lnn(ny, mem->W_chol, 0, 0, nls_res, 0, tmp_ny, 0);
+
+                // cost function value
+                // NOTE: slack contribution and scaling done in cost module
+                mem->cost_fun[0] += 0.5 * b_vec[ii]/num_steps * blasfeo_ddot(ny, tmp_ny, 0, tmp_ny, 0);
+            }
+        } // end cost_computation without sens
 
 
         // obtain x(n+1)
         for (int ii = 0; ii < ns; ii++){
+            // xn += b_i * k_i
             blasfeo_daxpy(nx, step * b_vec[ii], K, ii * nx, xn, 0, xn, 0);
         }
 

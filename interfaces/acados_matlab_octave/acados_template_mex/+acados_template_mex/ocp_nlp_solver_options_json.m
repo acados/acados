@@ -79,6 +79,8 @@ classdef ocp_nlp_solver_options_json < handle
         qp_solver_cond_ric_alg
         nlp_solver_ext_qp_res
         ext_fun_compile_flags
+        cost_discretization
+
     end
     methods
         function obj = ocp_nlp_solver_options_json()
@@ -120,6 +122,8 @@ classdef ocp_nlp_solver_options_json < handle
             obj.hpipm_mode = 'BALANCE';
             obj.nlp_solver_ext_qp_res = 0;
             obj.ext_fun_compile_flags = '-O2';
+            obj.cost_discretization = 'EULER';
+
         end
         function s = struct(self)
             if exist('properties')

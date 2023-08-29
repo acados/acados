@@ -255,8 +255,6 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
             raise Exception("\nWith CONVEX_OVER_NONLINEAR cost type, possible Hessian approximations are:\n"
             "GAUSS_NEWTON or EXACT with 'exact_hess_cost' == False.\n")
 
-
-
     elif cost.cost_type_e == 'EXTERNAL':
         if opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and model.cost_expr_ext_cost_custom_hess_e is None:
             print("\nWARNING: Gauss-Newton Hessian approximation with EXTERNAL cost type not possible!\n"
@@ -265,6 +263,10 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
             "If you continue, acados will proceed computing the exact hessian for the cost term.\n"
             "Note: There is also the option to use the external cost module with a numerical hessian approximation (see `ext_cost_num_hess`).\n"
             "OR the option to provide a symbolic custom hessian approximation (see `cost_expr_ext_cost_custom_hess`).\n")
+
+    if any([cost.cost_type_0 != "NONLINEAR_LS", cost.cost_type != "NONLINEAR_LS", cost.cost_type_e != "NONLINEAR_LS"])\
+        and opts.cost_discretization == 'INTEGRATOR':
+        raise Exception('cost_discretization == INTEGRATOR only works with NONLINEAR_LS costs.')
 
     ## constraints
     # initial
@@ -550,7 +552,7 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
         Exception('Please provide either time_steps or shooting_nodes for nonuniform discretization')
 
     tf = np.sum(opts.time_steps)
-    if (tf - opts.tf) / tf > 1e-15:
+    if (tf - opts.tf) / tf > 1e-13:
         raise Exception(f'Inconsistent discretization: {opts.tf}'\
             f' = tf != sum(opts.time_steps) = {tf}.')
 
@@ -1050,7 +1052,7 @@ class AcadosOcpSolver:
 
 
 
-    def solve_for_x0(self, x0_bar):
+    def solve_for_x0(self, x0_bar, fail_on_nonzero_status=True):
         """
         Wrapper around `solve()` which sets initial state constraint, solves the OCP, and returns u0.
         """
@@ -1059,10 +1061,11 @@ class AcadosOcpSolver:
 
         status = self.solve()
 
-        if status == 2:
-            print("Warning: acados_ocp_solver reached maximum iterations.")
-        elif status != 0:
-            raise Exception(f'acados acados_ocp_solver returned status {status}')
+        if status != 0:
+            if fail_on_nonzero_status:
+                raise Exception(f'acados acados_ocp_solver returned status {status}')
+            else:
+                print(f'Warning: acados acados_ocp_solver returned status {status}')
 
         u0 = self.get(0, "u")
         return u0
@@ -1343,6 +1346,7 @@ class AcadosOcpSolver:
     def store_iterate(self, filename: str = '', overwrite=False):
         """
         Stores the current iterate of the ocp solver in a json file.
+        Note: This does not contain the iterate of the integrators, and the parameters.
 
             :param filename: if not set, use f'{self.model_name}_iterate.json'
             :param overwrite: if false and filename exists add timestamp to filename
@@ -1426,6 +1430,7 @@ class AcadosOcpSolver:
     def load_iterate(self, filename):
         """
         Loads the iterate stored in json file with filename into the ocp solver.
+        Note: This does not contain the iterate of the integrators, and the parameters.
         """
         if not os.path.isfile(filename):
             raise Exception('load_iterate: failed, file does not exist: ' + os.path.join(os.getcwd(), filename))
@@ -1532,6 +1537,17 @@ class AcadosOcpSolver:
 
         elif field_ == 'residuals':
             return self.get_residuals()
+
+        elif field_ == 'residuals':
+            if self.acados_ocp.solver_options.nlp_solver_type == 'SQP':
+                full_stats = self.get_stats('statistics')
+                if self.status != 2:
+                    out = (full_stats.T)[-1][1:5]
+                else: # when exiting with max_iter, residuals are computed for second last iterate only
+                    out = (full_stats.T)[-2][1:5]
+            else:
+                Exception("residuals are not computed for SQP_RTI")
+
 
         else:
             raise Exception(f'AcadosOcpSolver.get_stats(): \'{field}\' is not a valid argument.'

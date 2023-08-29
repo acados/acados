@@ -686,6 +686,9 @@
         "hpipm_mode": [
             "str"
         ],
+        "cost_discretization": [
+            "str"
+        ],
         "regularize_method": [
             "str"
         ],
@@ -816,6 +819,9 @@
             "int"
         ],
         "exact_hess_dyn": [
+            "int"
+        ],
+        "ext_qp_res": [
             "int"
         ],
         "ext_cost_num_hess": [
