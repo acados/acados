@@ -29,32 +29,36 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import sys
-import os
-import json
-import numpy as np
-from datetime import datetime
 import importlib
+import json
+import os
 import shutil
-
-from subprocess import DEVNULL, call, STDOUT
-
-from ctypes import POINTER, cast, CDLL, c_void_p, c_char_p, c_double, c_int, c_int64, byref
-
+import sys
 from copy import deepcopy
+from ctypes import (CDLL, POINTER, byref, c_char_p, c_double, c_int, c_int64,
+                    c_void_p, cast)
+from datetime import datetime
 from pathlib import Path
 
-from .casadi_function_generation import generate_c_code_explicit_ode, \
-    generate_c_code_implicit_ode, generate_c_code_gnsf, generate_c_code_discrete_dynamics, \
-    generate_c_code_constraint, generate_c_code_nls_cost, generate_c_code_conl_cost, \
-    generate_c_code_external_cost
-from .gnsf.detect_gnsf_structure import detect_gnsf_structure
-from .acados_ocp import AcadosOcp
+import numpy as np
+
 from .acados_model import AcadosModel
-from .utils import is_column, is_empty, casadi_length, render_template,\
-     format_class_dict, make_object_json_dumpable, make_model_consistent,\
-     set_up_imported_gnsf_model, get_ocp_nlp_layout, get_python_interface_path, get_lib_ext, check_casadi_version
+from .acados_ocp import AcadosOcp
 from .builders import CMakeBuilder
+from .casadi_function_generation import (generate_c_code_conl_cost,
+                                         generate_c_code_constraint,
+                                         generate_c_code_discrete_dynamics,
+                                         generate_c_code_explicit_ode,
+                                         generate_c_code_external_cost,
+                                         generate_c_code_gnsf,
+                                         generate_c_code_implicit_ode,
+                                         generate_c_code_nls_cost)
+from .gnsf.detect_gnsf_structure import detect_gnsf_structure
+from .utils import (casadi_length, check_casadi_version, format_class_dict,
+                    get_lib_ext, get_ocp_nlp_layout, get_python_interface_path,
+                    is_column, is_empty, make_model_consistent,
+                    make_object_json_dumpable, render_template,
+                    set_up_imported_gnsf_model, verbose_system_call)
 
 
 def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
@@ -816,8 +820,7 @@ class AcadosOcpSolver:
         :param simulink_opts: Options to configure Simulink S-function blocks, mainly to activate possible Inputs and Outputs
     """
     if sys.platform=="win32":
-        from ctypes import wintypes
-        from ctypes import WinDLL
+        from ctypes import WinDLL, wintypes
         dlclose = WinDLL('kernel32', use_last_error=True).FreeLibrary
         dlclose.argtypes = [wintypes.HMODULE]
     else:
@@ -889,30 +892,14 @@ class AcadosOcpSolver:
         cwd = os.getcwd()
         os.chdir(code_export_dir)
         if with_cython:
-            call(
-                ['make', 'clean_all'],
-                stdout=None if verbose else DEVNULL,
-                stderr=None if verbose else STDOUT
-            )
-            call(
-                ['make', 'ocp_cython'],
-                stdout=None if verbose else DEVNULL,
-                stderr=None if verbose else STDOUT
-            )
+            verbose_system_call(['make', 'clean_all'], verbose)
+            verbose_system_call(['make', 'ocp_cython'], verbose)
         else:
             if cmake_builder is not None:
-                cmake_builder.exec(code_export_dir)
+                cmake_builder.exec(code_export_dir, verbose)
             else:
-                call(
-                    ['make', 'clean_ocp_shared_lib'],
-                    stdout=None if verbose else DEVNULL,
-                    stderr=None if verbose else STDOUT
-                )
-                call(
-                    ['make', 'ocp_shared_lib'],
-                    stdout=None if verbose else DEVNULL,
-                    stderr=None if verbose else STDOUT
-                )
+                verbose_system_call(['make', 'clean_ocp_shared_lib'], verbose)
+                verbose_system_call(['make', 'ocp_shared_lib'], verbose)
         os.chdir(cwd)
 
 
@@ -978,10 +965,11 @@ class AcadosOcpSolver:
             self.__acados_lib_uses_omp = getattr(self.__acados_lib, 'omp_get_thread_num') is not None
         except AttributeError as e:
             self.__acados_lib_uses_omp = False
-        if self.__acados_lib_uses_omp:
-            print('acados was compiled with OpenMP.')
-        else:
-            print('acados was compiled without OpenMP.')
+        if verbose:
+            if self.__acados_lib_uses_omp:
+                print('acados was compiled with OpenMP.')
+            else:
+                print('acados was compiled without OpenMP.')
         libacados_ocp_solver_name = f'{lib_prefix}acados_ocp_solver_{self.model_name}{lib_ext}'
         self.shared_lib_name = os.path.join(code_export_directory, libacados_ocp_solver_name)
 
