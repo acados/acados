@@ -51,12 +51,9 @@ def setup_solver(N: int, dt: float, u_max: float):
     nx = model.x.rows()
     nu = model.u.rows()
 
-    # set cost
     Q_mat = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
     R_mat = 5*np.diag([1e-2])
 
-    # the 'EXTERNAL' cost type can be used to define general cost terms
-    # NOTE: This leads to additional (exact) hessian contributions when using GAUSS_NEWTON hessian.
     ocp.cost.cost_type = 'NONLINEAR_LS'
     ocp.cost.cost_type_e = 'NONLINEAR_LS'
 
@@ -66,7 +63,6 @@ def setup_solver(N: int, dt: float, u_max: float):
     ocp.cost.yref_e = np.zeros((nx, ))
     ocp.cost.W_e = Q_mat
     ocp.cost.W = scipy.linalg.block_diag(Q_mat, R_mat)
-
 
     # set constraints
     ocp.constraints.lbu = np.array([-u_max])
@@ -82,11 +78,9 @@ def setup_solver(N: int, dt: float, u_max: float):
     ocp.solver_options.nlp_solver_max_iter = 600
     ocp.solver_options.levenberg_marquardt = 0.001
 
-    # set prediction horizon
     ocp.solver_options.tf = Tf
 
-    ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
-    return ocp_solver
+    return AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
 
 def main():
@@ -98,12 +92,11 @@ def main():
     ocp_solver = setup_solver(N, dt, u_max)
 
     nx = ocp_solver.acados_ocp.dims.nx
-    nu = ocp_solver.acados_ocp.dims.nu
 
     num_grid = 50
     thetas = np.linspace(0, 0.2*np.pi, num_grid)
-    costs = np.zeros((num_grid))
-    cost_grads = np.zeros((num_grid))
+    optimal_value_fun = np.zeros((num_grid))
+    optimal_value_grad = np.zeros((num_grid))
 
     x0 = np.zeros((nx,))
 
@@ -115,21 +108,21 @@ def main():
         print(f'Solving OCP for {theta=}')
 
         x0[1] = theta
-        _ = ocp_solver.solve_for_x0(x0, fail_on_nonzero_status=False)
-        costs[k] = ocp_solver.get_cost()
-        cost_grads[k] = ocp_solver.get_optimal_value_gradient()[1]
+        _ = ocp_solver.solve_for_x0(x0)
+        optimal_value_fun[k] = ocp_solver.get_cost()
+        optimal_value_grad[k] = ocp_solver.get_optimal_value_gradient()[1]
 
-    cd_cost_grads = (costs[2:]-costs[:-2])/(thetas[2:]-thetas[:-2])
+    cd_optimal_value_grad = (optimal_value_fun[2:]-optimal_value_fun[:-2])/(thetas[2:]-thetas[:-2])
 
-    assert np.allclose(cost_grads[1:-1], cd_cost_grads, rtol=1e-2, atol=1e-2)
+    assert np.allclose(optimal_value_grad[1:-1], cd_optimal_value_grad, rtol=1e-2, atol=1e-2)
 
     fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True)
 
-    axes[0].plot(thetas, costs)
-    axes[1].plot(thetas, cost_grads, label='exact')
+    axes[0].plot(thetas, optimal_value_fun)
+    axes[1].plot(thetas, optimal_value_grad, label='exact')
 
-    axes[1].plot(thetas[1:-1], cd_cost_grads, label='central differences')
-    axes[0].set_ylabel(r'$V^*(\bar{x}_0(\theta))$')
+    axes[1].plot(thetas[1:-1], cd_optimal_value_grad, label='central differences')
+    axes[0].set_ylabel(r'optimal value $V^*(\bar{x}_0(\theta))$')
     axes[1].set_ylabel(r'$\nabla_{\theta} V^*(\bar{x}_0(\theta))$')
     axes[1].set_xlabel(r'$\theta$')
 
@@ -139,7 +132,6 @@ def main():
     axes[0].set_xlim(thetas[0], thetas[-1])
 
     plt.show()
-
 
 
 if __name__ == '__main__':
