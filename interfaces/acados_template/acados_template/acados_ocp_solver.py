@@ -43,6 +43,7 @@ from ctypes import POINTER, cast, CDLL, c_void_p, c_char_p, c_double, c_int, c_i
 
 from copy import deepcopy
 from pathlib import Path
+from typing import Union
 
 from .casadi_function_generation import generate_c_code_explicit_ode, \
     generate_c_code_implicit_ode, generate_c_code_gnsf, generate_c_code_discrete_dynamics, \
@@ -1435,7 +1436,7 @@ class AcadosOcpSolver:
             self.set(int(stage), field, np.array(solution[key]))
 
 
-    def get_stats(self, field_):
+    def get_stats(self, field_: str) -> Union[int, float, np.ndarray]:
         """
         Get the information of the last solver call.
 
