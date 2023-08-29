@@ -19,7 +19,7 @@ ocp.solver_options.custom_templates = [
 ```
 
 Then setup the ZoroDescription.
-The settings of the uncertainty propagation include the initial uncertainty matrix $P_0$ (P0_mat), the feedback matrix $K$ (fdbk_K_mat), the $W$ matrix (W_mat), and the sensitivity of the discretized dynamics with respect to the noise, i.e. the $G$ matrix (unc_jac_G_mat).
+These settings include the initial uncertainty matrix $P_0$ (P0_mat), the feedback matrix $K$ (fdbk_K_mat), the $W$ matrix (W_mat), and the sensitivity of the discretized dynamics with respect to the noise, i.e. the $G$ matrix (unc_jac_G_mat), and the scaling of the backoff terms, which relates to the probability level of constraint satisfaction.
 
 For example:
 ```
