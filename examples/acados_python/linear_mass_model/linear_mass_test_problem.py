@@ -196,7 +196,7 @@ def solve_marathos_ocp(setting):
     # solve
     status = ocp_solver.solve()
     ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
-    sqp_iter = ocp_solver.get_stats('sqp_iter')[0]
+    sqp_iter = ocp_solver.get_stats('sqp_iter')
     print(f'acados returned status {status}.')
 
     # ocp_solver.store_iterate(f'it{ocp.solver_options.nlp_solver_max_iter}_{model.name}.json')

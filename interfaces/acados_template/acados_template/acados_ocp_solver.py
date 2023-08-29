@@ -43,6 +43,7 @@ from ctypes import POINTER, cast, CDLL, c_void_p, c_char_p, c_double, c_int, c_i
 
 from copy import deepcopy
 from pathlib import Path
+from typing import Union
 
 from .casadi_function_generation import generate_c_code_explicit_ode, \
     generate_c_code_implicit_ode, generate_c_code_gnsf, generate_c_code_discrete_dynamics, \
@@ -937,8 +938,8 @@ class AcadosOcpSolver:
         code_export_directory = acados_ocp_json['code_export_directory']
 
         importlib.invalidate_caches()
-        rel_code_export_directory = os.path.relpath(code_export_directory)
-        acados_ocp_solver_pyx = importlib.import_module(f'{rel_code_export_directory}.acados_ocp_solver_pyx')
+        sys.path.append(os.path.dirname(code_export_directory))
+        acados_ocp_solver_pyx = importlib.import_module(f'{os.path.split(code_export_directory)[1]}.acados_ocp_solver_pyx')
 
         AcadosOcpSolverCython = getattr(acados_ocp_solver_pyx, 'AcadosOcpSolverCython')
         return AcadosOcpSolverCython(acados_ocp_json['model']['name'],
@@ -1444,7 +1445,7 @@ class AcadosOcpSolver:
             self.set(int(stage), field, np.array(solution[key]))
 
 
-    def get_stats(self, field_):
+    def get_stats(self, field_: str) -> Union[int, float, np.ndarray]:
         """
         Get the information of the last solver call.
 
@@ -1495,19 +1496,16 @@ class AcadosOcpSolver:
 
 
         if field_ in ['sqp_iter', 'stat_m', 'stat_n']:
-            out = np.ascontiguousarray(np.zeros((1,)), dtype=np.int64)
-            out_data = cast(out.ctypes.data, POINTER(c_int64))
+            out = c_int(0)
             self.shared_lib.ocp_nlp_get.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
-            self.shared_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
-            return out
+            self.shared_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, byref(out))
+            return out.value
 
-        # TODO: just return double instead of np.
         elif field_ in double_fields:
-            out = np.zeros((1,))
-            out_data = cast(out.ctypes.data, POINTER(c_double))
+            out = c_double(0)
             self.shared_lib.ocp_nlp_get.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
-            self.shared_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
-            return out
+            self.shared_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, byref(out))
+            return out.value
 
         elif field_ == 'statistics':
             sqp_iter = self.get_stats("sqp_iter")
@@ -1515,7 +1513,7 @@ class AcadosOcpSolver:
             stat_n = self.get_stats("stat_n")
             min_size = min([stat_m, sqp_iter+1])
             out = np.ascontiguousarray(
-                        np.zeros((stat_n[0]+1, min_size[0])), dtype=np.float64)
+                        np.zeros((stat_n+1, min_size)), dtype=np.float64)
             out_data = cast(out.ctypes.data, POINTER(c_double))
             self.shared_lib.ocp_nlp_get.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
             self.shared_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)

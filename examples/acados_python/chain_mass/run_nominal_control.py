@@ -227,7 +227,7 @@ def run_nominal_control(chain_params):
         acados_ocp_solver.set(0, "ubx", xcurrent)
 
         status = acados_ocp_solver.solve()
-        timings[i] = acados_ocp_solver.get_stats("time_tot")[0]
+        timings[i] = acados_ocp_solver.get_stats("time_tot")
 
         if status != 0:
             raise Exception('acados acados_ocp_solver returned status {} in time step {}. Exiting.'.format(status, i))

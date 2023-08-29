@@ -212,8 +212,8 @@ class ZoroMPCSolver:
             # preparation rti_phase
             self.acados_ocp_solver.options_set('rti_phase', 1)
             status = self.acados_ocp_solver.solve()
-            self.rti_phase1_t += self.acados_ocp_solver.get_stats("time_tot")[0]
-            self.acados_integrator_time += self.acados_ocp_solver.get_stats("time_sim")[0]
+            self.rti_phase1_t += self.acados_ocp_solver.get_stats("time_tot")
+            self.acados_integrator_time += self.acados_ocp_solver.get_stats("time_sim")
 
             if self.cfg.use_custom_update:
                 t_start = process_time()
@@ -227,8 +227,8 @@ class ZoroMPCSolver:
             # feedback rti_phase
             self.acados_ocp_solver.options_set('rti_phase', 2)
             status = self.acados_ocp_solver.solve()
-            self.acados_qp_time += self.acados_ocp_solver.get_stats("time_qp")[0]
-            self.rti_phase2_t += self.acados_ocp_solver.get_stats("time_tot")[0]
+            self.acados_qp_time += self.acados_ocp_solver.get_stats("time_qp")
+            self.rti_phase2_t += self.acados_ocp_solver.get_stats("time_tot")
 
             # Get solution
             for i_stage in range(self.cfg.n_hrzn):

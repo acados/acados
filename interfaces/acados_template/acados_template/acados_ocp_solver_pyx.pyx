@@ -463,8 +463,8 @@ cdef class AcadosOcpSolverCython:
         return out
 
     def __get_stat_double(self, field):
-        cdef cnp.ndarray[cnp.float64_t, ndim=1] out = np.zeros((1,))
-        acados_solver_common.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, <void *> out.data)
+        cdef double out
+        acados_solver_common.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, <void *> &out)
         return out
 
     def __get_stat_matrix(self, field, n, m):
