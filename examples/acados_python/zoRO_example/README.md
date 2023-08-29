@@ -18,8 +18,8 @@ ocp.solver_options.custom_templates = [
 ]
 ```
 
-Then setup the ZoroDescription.
-These settings include the initial uncertainty matrix $P_0$ (P0_mat), the feedback matrix $K$ (fdbk_K_mat), the $W$ matrix (W_mat), and the sensitivity of the discretized dynamics with respect to the noise, i.e. the $G$ matrix (unc_jac_G_mat), and the scaling of the backoff terms, which relates to the probability level of constraint satisfaction.
+Then setup the `ZoroDescription`. For all properties, check the documentation of this class.
+These settings include the initial uncertainty matrix $P_0$ (P0_mat), the feedback matrix $K$ (fdbk_K_mat), the $W$ matrix (W_mat), and the sensitivity of the discretized dynamics with respect to the noise, i.e. the $G$ matrix (unc_jac_G_mat), the scaling of the backoff terms, which relates to the probability level of constraint satisfaction.
 
 For example:
 ```
@@ -28,8 +28,8 @@ zoro_description.fdbk_K_mat = np.zeros((nu, nx))
 zoro_description.P0_mat = np.zeros((nx, nx))
 zoro_description.W_mat = np.eye(nx)
 ```
-
-The settings of constraints tightening include idx_lbx_t (the index of the lower bound state constraints to be tightened), idx_lbx_e_t, idx_lbu, idx_lg_t, idx_lg_e_t, idx_lh_t, idx_lh_e_t, etc.
+Setting the constraints to be tightened can be done using the index sets idx_lbx_t (the index of the lower bound state constraints to be tightened), idx_lbx_e_t, idx_lbu, idx_lg_t, idx_lg_e_t, idx_lh_t, idx_lh_e_t, etc.
+E.g.
 ```
 zoro_description.idx_lbu_t = [0]
 ```
