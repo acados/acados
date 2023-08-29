@@ -26,11 +26,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.;
 
-
-# TODO:
-# - beta only diagonal
-# - P symmetric exploitation
-
 import numpy as np
 import casadi
 
