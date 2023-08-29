@@ -1554,9 +1554,6 @@ class AcadosOcpSolver:
         """
         Returns the cost value of the current solution.
         """
-        if self.acados_ocp.solver_options.cost_discretization != "EULER":
-            print("Warning: get_cost only computes accurate result for EULER cost_discretization")
-
         # compute cost internally
         self.shared_lib.ocp_nlp_eval_cost.argtypes = [c_void_p, c_void_p, c_void_p]
         self.shared_lib.ocp_nlp_eval_cost(self.nlp_solver, self.nlp_in, self.nlp_out)

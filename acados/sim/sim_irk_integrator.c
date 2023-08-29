@@ -199,6 +199,10 @@ int sim_irk_model_set(void *model_, const char *field, void *value)
     {
         model->nls_y_fun_jac = value;
     }
+    else if (!strcmp(field, "nls_y_fun") )
+    {
+        model->nls_y_fun = value;
+    }
     else
     {
         printf("\nerror: sim_irk_model_set: wrong field: %s\n", field);
@@ -1013,8 +1017,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         blasfeo_dgese(nx + nu, nx + nu, 0.0, Hess, 0, 0);
     }
 
-    if (opts->cost_computation){
-        // cost_grad = zeros
+    if (opts->cost_computation)
+    {
+        // initialize cost_fun, cost_grad, cost_hess
         blasfeo_dvecse(nx+nu, 0.0, cost_grad, 0);
         blasfeo_dgese(nx+nu, nx+nu, 0.0, cost_hess, 0, 0);
         mem->cost_fun[0] = 0.0;
@@ -1188,7 +1193,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     break;
                 }
             }
-        }
+        } // end newton_iter
 
         if ( opts->sens_adj || opts->sens_hess )
         {
@@ -1359,6 +1364,51 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 blasfeo_dgead(nx, nx + nu, -step * b_vec[jj], dK_dxu_ss, jj * nx, 0,
                                                      S_forw_ss, 0, 0);
         }  // end if sens_forw || sens_hess
+        else if (opts->cost_computation)
+        {
+            for (int ii = 0; ii < ns; ii++)
+            {
+                ext_fun_arg_t nls_y_fun_type_in[3];
+                void *nls_y_fun_in[3];
+                ext_fun_arg_t nls_y_fun_type_out[1];
+                void *nls_y_fun_out[1];
+
+                nls_y_fun_type_in[0] = BLASFEO_DVEC;
+                nls_y_fun_in[0] = xt;
+                nls_y_fun_type_in[1] = COLMAJ;
+                nls_y_fun_in[1] = u;
+
+                nls_y_fun_type_in[2] = BLASFEO_DVEC;
+                nls_y_fun_in[2] = &impl_ode_z_in;
+                impl_ode_z_in.x = &K_traj[ss];
+                impl_ode_z_in.xi = ns * nx + ii * nz;
+
+                nls_y_fun_type_out[0] = BLASFEO_DVEC;
+                nls_y_fun_out[0] = nls_res;  // fun: ny
+
+                // compute x at stage (xt) and sensitivity (S_forw_stage)
+                blasfeo_dveccp(nx, xn, 0, xt, 0);
+                for (int jj = 0; jj < ns; jj++)
+                {
+                    a = A_mat[ii + ns * jj] * step;
+                    // xt = xt + T_int * a[i,j]*K_j
+                    blasfeo_daxpy(nx, a, K, jj * nx, xt, 0, xt, 0);
+                }
+
+                model->nls_y_fun->evaluate(model->nls_y_fun, nls_y_fun_type_in,
+                                nls_y_fun_in, nls_y_fun_type_out, nls_y_fun_out);
+
+                // nls_res = nls_res - y_ref
+                blasfeo_daxpy(ny, -1.0, mem->y_ref, 0, nls_res, 0, nls_res, 0);
+
+                // tmp_ny = W_chol * nls_res
+                blasfeo_dtrmv_lnn(ny, mem->W_chol, 0, 0, nls_res, 0, tmp_ny, 0);
+
+                // cost function value
+                // NOTE: slack contribution and scaling done in cost module
+                mem->cost_fun[0] += 0.5 * b_vec[ii]/num_steps * blasfeo_ddot(ny, tmp_ny, 0, tmp_ny, 0);
+            }
+        } // end cost_computation without sens
 
 
         // obtain x(n+1)

@@ -68,7 +68,7 @@ typedef struct
 
     // for cost propagation
     external_function_generic *nls_y_fun_jac;  // evaluation nls function and jacobian
-
+    external_function_generic *nls_y_fun;  // evaluation nls function
 
 } irk_model;
 

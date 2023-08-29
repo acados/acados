@@ -827,7 +827,7 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
                             1.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
             blasfeo_dgead(nu+nx, nu+nx, model->scaling, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
         }
-    }
+    } // end if (opts->integrator_cost == 0)
 
     // slack update gradient
     blasfeo_dveccp(2*ns, &model->z, 0, &memory->grad, nu+nx);
@@ -868,7 +868,7 @@ void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims_, void *model_,
 
     ocp_nlp_cost_nls_dims *dims = dims_;
     ocp_nlp_cost_nls_model *model = model_;
-    // ocp_nlp_cost_nls_opts *opts = opts_;
+    ocp_nlp_cost_nls_opts *opts = opts_;
     ocp_nlp_cost_nls_memory *memory = memory_;
     ocp_nlp_cost_nls_workspace *work = work_;
 
@@ -879,47 +879,51 @@ void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims_, void *model_,
     int ny = dims->ny;
     int ns = dims->ns;
 
-    ext_fun_arg_t ext_fun_type_in[3];
-    void *ext_fun_in[3];
-    ext_fun_arg_t ext_fun_type_out[3];
-    void *ext_fun_out[3];
-
-    struct blasfeo_dvec_args x_in;  // input x of external fun;
-    struct blasfeo_dvec_args u_in;  // input u of external fun;
-
-    x_in.x = memory->tmp_ux;
-    x_in.xi = nu;
-
-    u_in.x = memory->tmp_ux;
-    u_in.xi = 0;
-
-    ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
-    ext_fun_in[0] = &x_in;
-
-    ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
-    ext_fun_in[1] = &u_in;
-
-    ext_fun_type_in[2] = BLASFEO_DVEC;
-    ext_fun_in[2] = memory->z_alg;
-
-    ext_fun_type_out[0] = BLASFEO_DVEC;
-    ext_fun_out[0] = &memory->res;  // fun: ny
-
-    if (model->nls_y_fun == 0)
+    if (opts->integrator_cost == 0)
     {
-        printf("ocp_nlp_cost_nls_compute_fun: nls_y_fun is not provided. Exiting.\n");
-        exit(1);
+
+        ext_fun_arg_t nls_y_fun_type_in[3];
+        void *nls_y_fun_in[3];
+        ext_fun_arg_t nls_y_fun_type_out[1];
+        void *nls_y_fun_out[1];
+
+        struct blasfeo_dvec_args x_in;  // input x of external fun;
+        struct blasfeo_dvec_args u_in;  // input u of external fun;
+
+        x_in.x = memory->tmp_ux;
+        x_in.xi = nu;
+
+        u_in.x = memory->tmp_ux;
+        u_in.xi = 0;
+
+        nls_y_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+        nls_y_fun_in[0] = &x_in;
+
+        nls_y_fun_type_in[1] = BLASFEO_DVEC_ARGS;
+        nls_y_fun_in[1] = &u_in;
+
+        nls_y_fun_type_in[2] = BLASFEO_DVEC;
+        nls_y_fun_in[2] = memory->z_alg;
+
+        nls_y_fun_type_out[0] = BLASFEO_DVEC;
+        nls_y_fun_out[0] = &memory->res;  // fun: ny
+
+        if (model->nls_y_fun == 0)
+        {
+            printf("ocp_nlp_cost_nls_compute_fun: nls_y_fun is not provided. Exiting.\n");
+            exit(1);
+        }
+        // evaluate external function
+        model->nls_y_fun->evaluate(model->nls_y_fun, nls_y_fun_type_in, nls_y_fun_in,
+                                nls_y_fun_type_out, nls_y_fun_out);
+
+        // res = res - y_ref
+        blasfeo_daxpy(ny, -1.0, &model->y_ref, 0, &memory->res, 0, &memory->res, 0);
+        // tmp_ny = W_chol * nls_res
+        blasfeo_dtrmv_ltn(ny, &memory->W_chol, 0, 0, &memory->res, 0, &work->tmp_ny, 0);
+
+        memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &work->tmp_ny, 0);
     }
-    // evaluate external function
-    model->nls_y_fun->evaluate(model->nls_y_fun, ext_fun_type_in, ext_fun_in,
-                             ext_fun_type_out, ext_fun_out);
-
-    // res = res - y_ref
-    blasfeo_daxpy(ny, -1.0, &model->y_ref, 0, &memory->res, 0, &memory->res, 0);
-
-    blasfeo_dtrmv_ltn(ny, &memory->W_chol, 0, 0, &memory->res, 0, &work->tmp_ny, 0);
-
-    memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &work->tmp_ny, 0);
 
     // slack update function value
     blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);
