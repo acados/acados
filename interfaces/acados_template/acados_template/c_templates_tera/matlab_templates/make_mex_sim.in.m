@@ -38,7 +38,7 @@ function make_mex_{{ model.name }}()
 
     % set paths
     acados_include = ['-I' fullfile(acados_folder, 'include')];
-    template_lib_include = ['-l' 'acados_ocp_solver_{{ model.name }}'];
+    template_lib_include = ['-l' 'acados_sim_solver_{{ model.name }}'];
     template_lib_path = ['-L' fullfile(pwd)];
 
     acados_lib_path = ['-L' fullfile(acados_folder, 'lib')];
@@ -67,13 +67,13 @@ function make_mex_{{ model.name }}()
         end
     end
 
+
     mex_include = ['-I', fullfile(acados_folder, 'interfaces', 'acados_matlab_octave')];
 
     mex_names = { ...
-        'acados_mex_create_{{ model.name }}' ...
-        'acados_mex_free_{{ model.name }}' ...
-        'acados_mex_solve_{{ model.name }}' ...
-        'acados_mex_set_{{ model.name }}' ...
+        'acados_sim_create_{{ model.name }}', ...
+        'acados_sim_free_{{ model.name }}', ...
+        'acados_sim_set_{{ model.name }}' ...
     };
 
     mex_files = cell(length(mex_names), 1);

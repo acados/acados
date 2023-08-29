@@ -28,24 +28,10 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import os
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+from acados_template import latexify_plot
 
-def latexify_plot():
-    params = {'backend': 'ps',
-            'text.latex.preamble': r"\usepackage{gensymb} \usepackage{amsmath}",
-            'axes.labelsize': 10,
-            'axes.titlesize': 10,
-            'legend.fontsize': 10,
-            'xtick.labelsize': 10,
-            'ytick.labelsize': 10,
-            'text.usetex': True,
-            'font.family': 'serif'
-    }
-
-    matplotlib.rcParams.update(params)
 
 def plot_pendulum(shooting_nodes, u_max, U, X_true, X_est=None, Y_measured=None, latexify=False, plt_show=True, X_true_label=None):
     """
@@ -59,7 +45,6 @@ def plot_pendulum(shooting_nodes, u_max, U, X_true, X_est=None, Y_measured=None,
         latexify: latex style plots
     """
 
-    # latexify plot
     if latexify:
         latexify_plot()
 
@@ -82,13 +67,15 @@ def plot_pendulum(shooting_nodes, u_max, U, X_true, X_est=None, Y_measured=None,
         line.set_label(X_true_label)
     else:
         line.set_color('r')
-    plt.title('closed-loop simulation')
+
     plt.ylabel('$u$')
     plt.xlabel('$t$')
     plt.hlines(u_max, t[0], t[-1], linestyles='dashed', alpha=0.7)
     plt.hlines(-u_max, t[0], t[-1], linestyles='dashed', alpha=0.7)
     plt.ylim([-1.2*u_max, 1.2*u_max])
+    plt.xlim(t[0], t[-1])
     plt.grid()
+
 
     states_lables = ['$x$', r'$\theta$', '$v$', r'$\dot{\theta}$']
 
@@ -106,9 +93,9 @@ def plot_pendulum(shooting_nodes, u_max, U, X_true, X_est=None, Y_measured=None,
         plt.xlabel('$t$')
         plt.grid()
         plt.legend(loc=1)
+        plt.xlim(t[0], t[-1])
 
     plt.subplots_adjust(left=None, bottom=None, right=None, top=None, hspace=0.4)
 
-    # avoid plotting when running on Travis
-    if os.environ.get('ACADOS_ON_CI') is None and plt_show:
+    if plt_show:
         plt.show()

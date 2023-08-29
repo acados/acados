@@ -26,55 +26,24 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.;
-
-import sys
-import numpy as np
-import scipy.linalg
-
-from acados_template import AcadosSim, AcadosOcpSolver, AcadosSimSolver
-
-from export_disturbed_chain_mass_model import export_disturbed_chain_mass_model
-
-from plot_utils import *
-from utils import *
-import matplotlib.pyplot as plt
-
-# create ocp object to formulate the simulation problem
-sim = AcadosSim()
+#
 
 
-def export_chain_mass_integrator(n_mass, m, D, L):
+import shutil
+import matplotlib
 
-    # simulation options
-    Ts = 0.2
+def latexify_plot() -> None:
+    text_usetex = True if shutil.which('latex') else False
+    params = {
+            'text.latex.preamble': r"\usepackage{gensymb} \usepackage{amsmath}",
+            'axes.labelsize': 12,
+            'axes.titlesize': 12,
+            'legend.fontsize': 12,
+            'xtick.labelsize': 12,
+            'ytick.labelsize': 12,
+            'text.usetex': text_usetex,
+            'font.family': 'serif'
+    }
 
-    # export model
-    M = n_mass - 2 # number of intermediate masses
-    model = export_disturbed_chain_mass_model(n_mass, m, D, L)
-
-    # set model
-    sim.model = model
-
-    nx = model.x.size()[0]
-    nu = model.u.size()[0]
-    ny = nx + nu
-    ny_e = nx
-
-    # disturbances
-    nparam = 3*M
-    sim.parameter_values = np.zeros((nparam,))
-
-    # solver options
-    sim.solver_options.integrator_type = 'IRK'
-
-    sim.solver_options.num_stages = 2
-    sim.solver_options.num_steps = 2
-    # sim.solver_options.nlp_solver_tol_eq = 1e-9
-
-    # set prediction horizon
-    sim.solver_options.T = Ts
-
-    # acados_ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp_' + model.name + '.json')
-    acados_integrator = AcadosSimSolver(sim, json_file = 'acados_ocp_' + model.name + '.json')
-
-    return acados_integrator
+    matplotlib.rcParams.update(params)
+    return

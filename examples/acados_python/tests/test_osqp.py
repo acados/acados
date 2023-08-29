@@ -35,7 +35,7 @@ from acados_template import AcadosOcp, AcadosOcpSolver
 from pendulum_model import export_pendulum_ode_model
 import numpy as np
 import scipy.linalg
-from utils import plot_pendulum
+# from utils import plot_pendulum
 
 # create ocp object to formulate the OCP
 ocp = AcadosOcp()

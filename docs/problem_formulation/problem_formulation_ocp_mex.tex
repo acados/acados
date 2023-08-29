@@ -120,13 +120,13 @@
     %% lower terminal constraints
     &&&\mathComment{Terminal constraints with lower bounds, see section \ref{sec:constraints:terminal}}\nonumber\\
     &&&\underline{h}\terminal \leq h\terminal(x(T), p) + J\ind{sh}\terminal\, s\lowerh\terminal, &&\label{eq:constraints:terminal:lower_bounds:start}\\
-    &&&\underline{x}\terminal \leq J_{\textrm{bx}}\terminal\, x(T) + J\ind{sbx}\, s\lowerbx\terminal, &&\\ % TODO: add Jsbx_e?!
+    &&&\underline{x}\terminal \leq J_{\textrm{bx}}\terminal\, x(T) + J\ind{sbx}\terminal\, s\lowerbx\terminal, &&\\ % TODO: add Jsbx_e?!
     &&&\underline{g}\terminal \leq C\terminal\, x(T) + J\ind{sg}\terminal\, s\lowerg\terminal \leq \bar{g}\terminal, && \\
     &&& s\lowerh\terminal, s\lowerbx\terminal, s\lowerbu\terminal, s\lowerg\terminal \geq 0, \label{eq:constraints:terminal:lower_bounds:end}\\[1ex]
     %% upper terminal constraints
     &&&\mathComment{Terminal constraints with upper bound, see section \ref{sec:constraints:terminal}}\nonumber\\
     &&& h\terminal(x(T), p) - J\ind{sh}\terminal\, s\ind{u,h}\terminal \leq \bar{h}\terminal, &&\label{eq:constraints:terminal:upper_bounds:start}\\
-    &&& J_{\textrm{bx}}\terminal\, x(T) - J\ind{sbx}\, s\ind{u,bx}\terminal \leq \bar{x}^{e}, &&\\ % TODO: add Jsbx_e?!
+    &&& J_{\textrm{bx}}\terminal\, x(T) - J\ind{sbx}\terminal\, s\ind{u,bx}\terminal \leq \bar{x}^{e}, &&\\ % TODO: add Jsbx_e?!
     &&& C\terminal\, x(T) - J\ind{sg}\terminal\, s\ind{u,g}\terminal \leq \bar{g}\terminal \\
     &&& s\upperh\terminal, s\upperbx\terminal, s\upperbu\terminal, s\upperg\terminal \geq 0,\label{eq:constraints:terminal:upper_bounds:end}
 \end{align}

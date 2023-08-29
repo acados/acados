@@ -56,23 +56,23 @@
 
 // ** solver data **
 
-sim_solver_capsule * {{ model.name }}_acados_sim_solver_create_capsule()
+{{ model.name }}_sim_solver_capsule * {{ model.name }}_acados_sim_solver_create_capsule()
 {
-    void* capsule_mem = malloc(sizeof(sim_solver_capsule));
-    sim_solver_capsule *capsule = (sim_solver_capsule *) capsule_mem;
+    void* capsule_mem = malloc(sizeof({{ model.name }}_sim_solver_capsule));
+    {{ model.name }}_sim_solver_capsule *capsule = ({{ model.name }}_sim_solver_capsule *) capsule_mem;
 
     return capsule;
 }
 
 
-int {{ model.name }}_acados_sim_solver_free_capsule(sim_solver_capsule * capsule)
+int {{ model.name }}_acados_sim_solver_free_capsule({{ model.name }}_sim_solver_capsule * capsule)
 {
     free(capsule);
     return 0;
 }
 
 
-int {{ model.name }}_acados_sim_create(sim_solver_capsule * capsule)
+int {{ model.name }}_acados_sim_create({{ model.name }}_sim_solver_capsule * capsule)
 {
     // initialize
     const int nx = {{ model.name | upper }}_NX;
@@ -400,7 +400,7 @@ int {{ model.name }}_acados_sim_create(sim_solver_capsule * capsule)
 }
 
 
-int {{ model.name }}_acados_sim_solve(sim_solver_capsule *capsule)
+int {{ model.name }}_acados_sim_solve({{ model.name }}_sim_solver_capsule *capsule)
 {
     // integrate dynamics using acados sim_solver
     int status = sim_solve(capsule->acados_sim_solver,
@@ -412,7 +412,7 @@ int {{ model.name }}_acados_sim_solve(sim_solver_capsule *capsule)
 }
 
 
-int {{ model.name }}_acados_sim_free(sim_solver_capsule *capsule)
+int {{ model.name }}_acados_sim_free({{ model.name }}_sim_solver_capsule *capsule)
 {
     // free memory
     sim_solver_destroy(capsule->acados_sim_solver);
@@ -466,7 +466,7 @@ int {{ model.name }}_acados_sim_free(sim_solver_capsule *capsule)
 }
 
 
-int {{ model.name }}_acados_sim_update_params(sim_solver_capsule *capsule, double *p, int np)
+int {{ model.name }}_acados_sim_update_params({{ model.name }}_sim_solver_capsule *capsule, double *p, int np)
 {
     int status = 0;
     int casadi_np = {{ model.name | upper }}_NP;
@@ -507,32 +507,32 @@ int {{ model.name }}_acados_sim_update_params(sim_solver_capsule *capsule, doubl
 }
 
 /* getters pointers to C objects*/
-sim_config * {{ model.name }}_acados_get_sim_config(sim_solver_capsule *capsule)
+sim_config * {{ model.name }}_acados_get_sim_config({{ model.name }}_sim_solver_capsule *capsule)
 {
     return capsule->acados_sim_config;
 };
 
-sim_in * {{ model.name }}_acados_get_sim_in(sim_solver_capsule *capsule)
+sim_in * {{ model.name }}_acados_get_sim_in({{ model.name }}_sim_solver_capsule *capsule)
 {
     return capsule->acados_sim_in;
 };
 
-sim_out * {{ model.name }}_acados_get_sim_out(sim_solver_capsule *capsule)
+sim_out * {{ model.name }}_acados_get_sim_out({{ model.name }}_sim_solver_capsule *capsule)
 {
     return capsule->acados_sim_out;
 };
 
-void * {{ model.name }}_acados_get_sim_dims(sim_solver_capsule *capsule)
+void * {{ model.name }}_acados_get_sim_dims({{ model.name }}_sim_solver_capsule *capsule)
 {
     return capsule->acados_sim_dims;
 };
 
-sim_opts * {{ model.name }}_acados_get_sim_opts(sim_solver_capsule *capsule)
+sim_opts * {{ model.name }}_acados_get_sim_opts({{ model.name }}_sim_solver_capsule *capsule)
 {
     return capsule->acados_sim_opts;
 };
 
-sim_solver  * {{ model.name }}_acados_get_sim_solver(sim_solver_capsule *capsule)
+sim_solver  * {{ model.name }}_acados_get_sim_solver({{ model.name }}_sim_solver_capsule *capsule)
 {
     return capsule->acados_sim_solver;
 };

@@ -26,24 +26,20 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.;
 
-import os
-
 import numpy as np
-import matplotlib.pyplot as plt
-
 import casadi
 
 from diff_drive_zoro_mpc import ZoroMPCSolver
 from mpc_parameters import MPCParam, PathTrackingParam
-from diff_drive_utils import plot_timings, plot_trajectory, compute_min_dis
+from diff_drive_utils import plot_timings, plot_trajectory, compute_min_dis, get_results_filename, store_results, load_results, plot_timing_comparison
 from nominal_path_tracking_casadi import NominalPathTrackingSolver
 from track_spline import TrackSpline
 
-N_EXEC = 5
 N_SIM = 175
 
-def main():
+def run_closed_loop_simulation(use_custom_update: bool, n_executions: int = 1):
     cfg_zo = MPCParam()
+    cfg_zo.use_custom_update = use_custom_update
     zoroMPC = ZoroMPCSolver(cfg_zo)
 
     # Differential equation of the model
@@ -87,7 +83,7 @@ def main():
     time_sim = []
     time_qp = []
 
-    for i_exec in range(N_EXEC):
+    for i_exec in range(n_executions):
         zoroMPC.initialized = False
         zoroMPC.acados_ocp_solver.reset()
         # closed loop mpc
@@ -120,27 +116,78 @@ def main():
                     y_ref = np.hstack((x_ref_interp, u_ref_interp)), \
                     obs_position=cfg_zo.obs_pos.flatten(), obs_radius=cfg_zo.obs_radius)
 
-            print(i_sim, u_opt, traj_zo[i_sim,:2])
+            # print(i_sim, u_opt, traj_zo[i_sim,:2])
             traj_zo[i_sim+1,:] = I(x0=traj_zo[i_sim, :], p=u_opt)['xf'].full().flatten()
             traj_zo[i_sim+1,:] += process_noise[i_sim,:]
             min_dist = compute_min_dis(cfg=cfg_zo, s=traj_zo[i_sim+1,:])
             if min_dist < 1e-8:
-                print("collision take place")
+                print("collision takes place")
                 return False
 
-
     total_time = [time_prep[i] + time_feedback[i] + time_prop[i] for i in range(len(time_prep))]
-    timing_dict = {
-                   "integrator": 1e3*np.array(time_sim),
+    timings = {
                    "preparation": 1e3*np.array(time_prep),
-                   "QP": 1e3*np.array(time_qp),
-                   "feedback": 1e3*np.array(time_feedback),
+                   "integrator": 1e3*np.array(time_sim),
                    "propagation": 1e3*np.array(time_prop),
+                   "feedback": 1e3*np.array(time_feedback),
+                   "QP": 1e3*np.array(time_qp),
                    "total": 1e3*np.array(total_time)
                 }
-    plot_timings(timing_dict)
-    plot_trajectory(cfg_zo, path_tracking_solver.x_robot_ref, traj_zo)
+
+    results = {
+        "timings": timings,
+        "trajectory": traj_zo,
+        "ref_trajectory": path_tracking_solver.x_robot_ref,
+        "cfg_zo": cfg_zo
+    }
+
+
+    results_filename = get_results_filename(use_custom_update, n_executions)
+    store_results(results_filename, results)
+    del zoroMPC
+
+
+def plot_result_trajectory(n_executions: int, use_custom_update=True):
+    results_filename = get_results_filename(use_custom_update, n_executions)
+    results = load_results(results_filename)
+    plot_trajectory(results['cfg_zo'], results['ref_trajectory'], results['trajectory'])
+
+def plot_result_timings(n_executions: int, use_custom_update=True):
+    results_filename = get_results_filename(use_custom_update, n_executions)
+    results = load_results(results_filename)
+    plot_timings(results['timings'], use_custom_update)
+
+def compare_results(n_executions: int):
+    results1 = load_results(get_results_filename(use_custom_update=True, n_executions=n_executions))
+    results2 = load_results(get_results_filename(use_custom_update=False, n_executions=n_executions))
+    traj_diff = results1['trajectory'] - results2['trajectory']
+    error = np.max(np.abs(traj_diff))
+    print(f"trajectory diff after closed loop simulation {error:.2e}")
+    tol = 1e-5
+    if error > tol:
+        raise Exception(f"zoRO implementations differ too much, error = {error:.2e} > tol = {tol:.2e}")
+
+
+def plot_result_timing_comparison(n_executions: int):
+    fast_timings = load_results(get_results_filename(use_custom_update=True, n_executions=n_executions))['timings']
+    slow_timings = load_results(get_results_filename(use_custom_update=False, n_executions=n_executions))['timings']
+    plot_timing_comparison([fast_timings, slow_timings], ['fast zoRO', 'zoRO'])
+
+def timing_comparison():
+    n_executions = 50
+    # run_closed_loop_simulation(use_custom_update=False, n_executions=n_executions)
+    # run_closed_loop_simulation(use_custom_update=True, n_executions=n_executions)
+    plot_result_timings(n_executions=n_executions, use_custom_update=True)
+    plot_result_timings(n_executions=n_executions, use_custom_update=False)
+
+    plot_result_timing_comparison(n_executions=n_executions)
 
 
 if __name__ == "__main__":
-    main()
+    n_executions = 2
+    run_closed_loop_simulation(use_custom_update=True, n_executions=n_executions)
+    run_closed_loop_simulation(use_custom_update=False, n_executions=n_executions)
+    compare_results(n_executions=n_executions)
+
+    # plot_result_trajectory(n_executions=n_executions, use_custom_update=True)
+    # timing_comparison()

@@ -37,4 +37,6 @@ from .utils import print_casadi_expression, get_acados_path, get_python_interfac
     get_tera_exec_path, get_tera, check_casadi_version, acados_dae_model_json_dump, \
     casadi_length, make_object_json_dumpable, J_to_idx, get_default_simulink_opts
 
-from .zoro_description import ZoroDescription, process_zoro_description
+from .plot_utils import latexify_plot
+
+from .zoro_description import ZoroDescription

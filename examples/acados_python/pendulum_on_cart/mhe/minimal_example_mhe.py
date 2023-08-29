@@ -39,8 +39,6 @@ from export_ocp_solver import export_ocp_solver
 from export_mhe_solver import export_mhe_solver
 
 import numpy as np
-from scipy.linalg import block_diag
-
 from utils import plot_pendulum
 
 # general

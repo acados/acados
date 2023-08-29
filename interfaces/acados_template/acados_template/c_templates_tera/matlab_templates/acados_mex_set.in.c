@@ -54,7 +54,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     char buffer [500]; // for error messages
 
     /* RHS */
-    int min_nrhs = 6;
+    int min_nrhs = 5;
 
     // C ocp
     const mxArray *C_ocp = prhs[2];
@@ -83,16 +83,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "solver" ) );
     ocp_nlp_solver *solver = (ocp_nlp_solver *) ptr[0];
 
-    const mxArray *C_ext_fun_pointers = prhs[3];
     // field
-    char *field = mxArrayToString( prhs[4] );
+    char *field = mxArrayToString( prhs[3] );
     // value
-    double *value = mxGetPr( prhs[5] );
+    double *value = mxGetPr( prhs[4] );
 
     // for checks
-    int matlab_size = (int) mxGetNumberOfElements( prhs[5] );
-    int nrow = (int) mxGetM( prhs[5] );
-    int ncol = (int) mxGetN( prhs[5] );
+    int matlab_size = (int) mxGetNumberOfElements( prhs[4] );
+    int nrow = (int) mxGetM( prhs[4] );
+    int ncol = (int) mxGetN( prhs[4] );
 
     int N = dims->N;
     int nu = dims->nu[0];
@@ -107,7 +106,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (nrhs==min_nrhs+1)
     {
-        s0 = mxGetScalar( prhs[6] );
+        s0 = mxGetScalar( prhs[5] );
         if (s0 > N)
         {
             sprintf(buffer, "ocp_set: N < specified stage = %d\n", s0);
@@ -574,7 +573,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
         else if (nrhs==min_nrhs+1) // one stage
         {
-            int stage = mxGetScalar( prhs[6] );
+            int stage = mxGetScalar( prhs[5] );
             {{ model.name }}_acados_update_params(capsule, stage, value, matlab_size);
         }
     }

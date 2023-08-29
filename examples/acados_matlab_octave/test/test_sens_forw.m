@@ -163,7 +163,7 @@ for integrator = {'irk_gnsf', 'irk', 'erk'}
     error_abs = max(max(abs(S_forw_fd - S_forw_ind)));
     disp(' ')
     disp(['integrator:  ' method]);
-    disp(['error forward sensitivities (wrt forward sens):   ' num2str(error_abs)])
+    disp(['error forward sensitivities (wrt finite differences):   ' num2str(error_abs)])
     disp(' ')
     if error_abs > 1e-6
         disp(['forward sensitivities error too large'])

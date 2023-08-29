@@ -33,21 +33,35 @@ import numpy as np
 @dataclass
 class ZoroDescription:
     """
-    Zero-Order Robust Optimization scheme.
+    Zero-Order Robust Optimization (zoRO) scheme.
+
+    The uncertainty propagation is performed by:
+    $$P_{k+1} = (A_k + B_kK)P_k(A_k + B_kK)^\top + GWG^\top$$
 
     For advanced users.
     """
     backoff_scaling_gamma: float = 1.0
+    """backoff scaling factor, for stochastic MPC"""
     fdbk_K_mat: np.ndarray = None
+    """constant feedback gain matrix K"""
     unc_jac_G_mat: np.ndarray = None    # default: an identity matrix
+    """matrix G, describes how noise enters the dynamics"""
     P0_mat: np.ndarray = None
+    """initial uncertainty matrix $\bar{P}_0$"""
     W_mat: np.ndarray = None
+    """matrix W, covariance of noise in stochastic setting, defines uncertainty ellipsoids in robust setting"""
     idx_lbx_t: list = field(default_factory=list)
+    """Indices of constraints to be tightened within the lower bounds on x for intermediate shooting nodes 1,...,N-1"""
     idx_ubx_t: list = field(default_factory=list)
+    """Indices of constraints to be tightened within the upper bounds on x for intermediate shooting nodes 1,...,N-1"""
     idx_lbx_e_t: list = field(default_factory=list)
+    """Indices of constraints to be tightened within the lower bounds on x for terminal shooting node"""
     idx_ubx_e_t: list = field(default_factory=list)
+    """Indices of constraints to be tightened within the upper bounds on x for terminal shooting node"""
     idx_lbu_t: list = field(default_factory=list)
+    """Indices of constraints to be tightened within the lower bounds on u for intermediate shooting nodes 1,...,N-1"""
     idx_ubu_t: list = field(default_factory=list)
+    """Indices of constraints to be tightened within the upper bounds on u for intermediate shooting nodes 1,...,N-1"""
     idx_lg_t: list = field(default_factory=list)
     idx_ug_t: list = field(default_factory=list)
     idx_lg_e_t: list = field(default_factory=list)
@@ -75,4 +89,4 @@ def process_zoro_description(zoro_description: ZoroDescription):
     zoro_description.nuh_t = len(zoro_description.idx_uh_t)
     zoro_description.nlh_e_t = len(zoro_description.idx_lh_e_t)
     zoro_description.nuh_e_t = len(zoro_description.idx_uh_e_t)
-    return zoro_description.__dict__
+    return zoro_description

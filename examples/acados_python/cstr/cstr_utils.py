@@ -31,26 +31,11 @@
 
 # authors: Katrin Baumgaertner, Jonathan Frey
 
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+from acados_template import latexify_plot
 
-
-def latexify():
-    params = {
-        "backend": "ps",
-        "text.latex.preamble": r"\usepackage{gensymb} \usepackage{amsmath}",
-        "axes.labelsize": 10,
-        "axes.titlesize": 10,
-        "legend.fontsize": 10,
-        "xtick.labelsize": 10,
-        "ytick.labelsize": 10,
-        "text.usetex": True,
-        "font.family": "serif",
-    }
-
-    matplotlib.rcParams.update(params)
-
+latexify_plot()
 
 def plot_cstr(
     dt,
@@ -80,7 +65,6 @@ def plot_cstr(
     states_lables = ["$c$ [kmol/m$^3$]", "$T$ [K]", "$h$ [m]"]
     controls_lables = ["$T_c$ [K]", "$F$ [m$^3$/min]"]
 
-    latexify()
     fig, axes = plt.subplots(ncols=2, nrows=nx)
 
     for i in range(nx):
