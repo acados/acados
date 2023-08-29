@@ -235,6 +235,9 @@ add_test(NAME cython_pendulum_closed_loop_example
 add_test(NAME py_time_optimal_cython_ctypes
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/crane
         python time_optimal_example.py)
+add_test(NAME pendulum_optimal_value_gradient
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
+        python example_optimal_cost_derivative.py)
 
 # example_ocp_dynamics_formulations all versions
 add_test(NAME python_pendulum_ocp_IRK
