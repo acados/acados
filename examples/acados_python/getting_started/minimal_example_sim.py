@@ -80,8 +80,8 @@ def main():
         # get solution
         simX[i+1,:] = acados_integrator.get("x")
 
-    if status != 0:
-        raise Exception(f'acados returned status {status}.')
+        if status != 0:
+            raise Exception(f'acados returned status {status}.')
 
     S_forw = acados_integrator.get("S_forw")
     print("S_forw, sensitivities of simulation result wrt x,u:\n", S_forw)
