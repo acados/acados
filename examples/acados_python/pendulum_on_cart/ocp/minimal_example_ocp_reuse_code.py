@@ -40,9 +40,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.;
 #
-import os
 import sys
-
 sys.path.insert(0, '../common')
 
 from acados_template import AcadosOcp, AcadosOcpSolver
@@ -179,8 +177,6 @@ for i in range(N12):
 simX1[N12, :] = ocp_solver.get(N12, "x")
 
 ocp_solver.print_statistics()  # encapsulates: stat = ocp_solver.get_stats("statistics")
-
-
 
 plot_pendulum(time1, Fmax, simU1, simX1, latexify=False, plt_show=False, X_true_label=X_true_label)
 

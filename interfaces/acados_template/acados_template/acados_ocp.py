@@ -2877,6 +2877,13 @@ class AcadosOcpOptions:
         else:
             raise Exception('Invalid sim_method_newton_iter value. sim_method_newton_iter must be an integer.')
 
+    @sim_method_newton_tol.setter
+    def sim_method_newton_tol(self, sim_method_newton_tol):
+        if isinstance(sim_method_newton_tol, float) and sim_method_newton_tol > 0:
+            self.__sim_method_newton_tol = sim_method_newton_tol
+        else:
+            raise Exception('Invalid sim_method_newton_tol value. sim_method_newton_tol must be a positive float.')
+
     @sim_method_jac_reuse.setter
     def sim_method_jac_reuse(self, sim_method_jac_reuse):
         # if sim_method_jac_reuse in (True, False):

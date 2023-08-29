@@ -83,6 +83,10 @@ def make_sim_dims_consistent(acados_sim: AcadosSim):
         raise Exception('inconsistent dimension np, regarding model.p and parameter_values.' + \
             f'\nGot np = {dims.np}, acados_sim.parameter_values.shape = {acados_sim.parameter_values.shape[0]}\n')
 
+    # check required arguments are given
+    if acados_sim.solver_options.T is None:
+        raise Exception('acados_sim.solver_options.T is None, should be provided.')
+
 
 def get_sim_layout():
     python_interface_path = get_python_interface_path()
