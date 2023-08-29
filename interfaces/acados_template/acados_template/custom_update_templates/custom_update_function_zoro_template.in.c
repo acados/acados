@@ -467,9 +467,15 @@ static void compute_gh_beta(struct blasfeo_dmat* K_mat, struct blasfeo_dmat* C_m
     // NOTE: here we also compute cross-terms which are not needed.
     //       Only diag(beta_mat) is used later
     // beta_mat = CaDKmP_mat @ CaDK_mat^T
-    blasfeo_dgemm_nt(n_cstr, n_cstr, nx, 1.0, CaDKmP_mat, 0, 0,
-                        CaDK_mat, 0, 0, 0.0,
-                        beta_mat, 0, 0, beta_mat, 0, 0);
+    // blasfeo_dgemm_nt(n_cstr, n_cstr, nx, 1.0, CaDKmP_mat, 0, 0,
+    //                     CaDK_mat, 0, 0, 0.0,
+    //                     beta_mat, 0, 0, beta_mat, 0, 0);
+    for (int ii = 0; ii < n_cstr; ii++)
+    {
+        blasfeo_dgemm_nt(1, 1, nx, 1.0, CaDKmP_mat, ii, 0,
+                CaDK_mat, ii, 0, 0.0,
+                beta_mat, ii, ii, beta_mat, ii, ii);
+    }
 }
 
 static void compute_KPK(struct blasfeo_dmat* K_mat, struct blasfeo_dmat* temp_KP_mat,
@@ -492,6 +498,7 @@ static void compute_next_P_matrix(struct blasfeo_dmat* P_mat, struct blasfeo_dma
                                   struct blasfeo_dmat* K_mat, struct blasfeo_dmat* W_mat,
                                   struct blasfeo_dmat* AK_mat, struct blasfeo_dmat* temp_AP_mat, int nx, int nu)
 {
+    // TODO: exploit symmetry of P, however, only blasfeo_dtrmm_rlnn is implemented in high-performance BLAFEO variant.
     // AK_mat = -B@K + A
     blasfeo_dgemm_nn(nx, nx, nu, -1.0, B_mat, 0, 0, K_mat, 0, 0,
                         1.0, A_mat, 0, 0, AK_mat, 0, 0);

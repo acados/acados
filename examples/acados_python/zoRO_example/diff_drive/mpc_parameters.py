@@ -71,6 +71,7 @@ class MPCParam():
     # zoRO
     _backoff_eps: float=1e-8
     _zoRO_iter: int=2
+    _use_custom_update: bool=True
 
     def __post_init__(self):
         self._Q: np.eye(self._nx)
@@ -210,6 +211,13 @@ class MPCParam():
     def zoRO_iter(self, n: int):
         self._zoRO_iter = n
 
+    @property
+    def use_custom_update(self)->bool:
+        return self._use_custom_update
+
+    @use_custom_update.setter
+    def use_custom_update(self, val: bool):
+        self._use_custom_update = val
 
 @dataclass
 class PathTrackingParam:

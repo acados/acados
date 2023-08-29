@@ -49,12 +49,13 @@ from .casadi_function_generation import generate_c_code_explicit_ode, \
     generate_c_code_constraint, generate_c_code_nls_cost, generate_c_code_conl_cost, \
     generate_c_code_external_cost
 from .gnsf.detect_gnsf_structure import detect_gnsf_structure
-from .acados_ocp import AcadosOcp
+from .acados_ocp import AcadosOcp, AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost, AcadosOcpOptions
 from .acados_model import AcadosModel
 from .utils import is_column, is_empty, casadi_length, render_template,\
      format_class_dict, make_object_json_dumpable, make_model_consistent,\
      set_up_imported_gnsf_model, get_ocp_nlp_layout, get_python_interface_path, get_lib_ext, check_casadi_version
 from .builders import CMakeBuilder
+from .zoro_description import ZoroDescription, process_zoro_description
 
 
 def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
@@ -589,6 +590,12 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
     else:
         raise Exception("Wrong value for sim_method_jac_reuse. Should be either int or array of ints of shape (N,).")
 
+    if acados_ocp.zoro_description is not None:
+        if not isinstance(acados_ocp.zoro_description, ZoroDescription):
+            raise Exception('zoro_description should be of type ZoroDescription or None')
+        else:
+            acados_ocp.zoro_description = process_zoro_description(acados_ocp.zoro_description)
+
 
 def get_simulink_default_opts():
     python_interface_path = get_python_interface_path()
@@ -606,13 +613,10 @@ def ocp_formulation_json_dump(acados_ocp, simulink_opts=None, json_file='acados_
     ocp_nlp_dict = dict(deepcopy(acados_ocp).__dict__)
     # TODO: maybe make one function with formatting
 
-    for acados_struct, v in ocp_layout.items():
-        # skip non dict attributes
-        if not isinstance(v, dict):
-            continue
-        #  setattr(ocp_nlp, acados_struct, dict(getattr(acados_ocp, acados_struct).__dict__))
-        # Copy ocp object attributes dictionaries
-        ocp_nlp_dict[acados_struct]=dict(getattr(acados_ocp, acados_struct).__dict__)
+    # convert acados classes to dicts
+    for key, v in ocp_nlp_dict.items():
+        if isinstance(v, (AcadosModel, AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost, AcadosOcpOptions, ZoroDescription)):
+            ocp_nlp_dict[key]=dict(getattr(acados_ocp, key).__dict__)
 
     ocp_nlp_dict = format_class_dict(ocp_nlp_dict)
 
@@ -640,13 +644,13 @@ def ocp_formulation_json_load(json_file='acados_ocp_nlp.json'):
     acados_ocp.__dict__ = ocp_nlp_dict
 
     # load class attributes dict, dims, constraints, etc
-    for acados_struct, v in ocp_layout.items():
+    for key, v in ocp_layout.items():
         # skip non dict attributes
         if not isinstance(v, dict):
             continue
-        acados_attribute = getattr(acados_ocp, acados_struct)
-        acados_attribute.__dict__ = ocp_nlp_dict[acados_struct]
-        setattr(acados_ocp, acados_struct, acados_attribute)
+        acados_attribute = getattr(acados_ocp, key)
+        acados_attribute.__dict__ = ocp_nlp_dict[key]
+        setattr(acados_ocp, key, acados_attribute)
 
     return acados_ocp
 
