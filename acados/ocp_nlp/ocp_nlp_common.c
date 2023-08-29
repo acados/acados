@@ -2081,7 +2081,6 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
     int *nv = dims->nv;
     int *nx = dims->nx;
     int *nu = dims->nu;
-    int *ni = dims->ni;
 
     /* prepare memory */
     int cost_integration;
