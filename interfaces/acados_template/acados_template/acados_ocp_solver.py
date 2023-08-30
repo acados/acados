@@ -285,7 +285,7 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
         and dims.nbxe_0 is None \
         and (constraints.idxbxe_0.shape == constraints.idxbx_0.shape)\
             and all(constraints.idxbxe_0 == constraints.idxbx_0):
-        # case: x0 was set: nbx0 are all equlities.
+        # case: x0 was set: nbx0 are all equalities.
         dims.nbxe_0 = dims.nbx_0
     elif constraints.idxbxe_0 is not None:
         dims.nbxe_0 = constraints.idxbxe_0.shape[0]
@@ -453,6 +453,8 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
             + f'With nsbx = {nsbx}, nsbu = {nsbu}, nsg = {nsg}, nsh = {nsh}, nsphi = {nsphi}')
 
     dims.ns = ns
+    # Note: at stage 0 bounds on x are not slacked!
+    dims.ns_0 = nsbu + nsh + nsg + nsphi
 
     nsbx_e = constraints.idxsbx_e.shape[0]
     if nsbx_e > nbx_e:

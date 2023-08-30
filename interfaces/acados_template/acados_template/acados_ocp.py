@@ -63,6 +63,7 @@ class AcadosOcpDims:
         self.__nsh_e   = 0
         self.__nsphi   = 0
         self.__nsphi_e = 0
+        self.__ns_0    = 0
         self.__ns      = 0
         self.__ns_e    = 0
         self.__ng      = 0
@@ -236,8 +237,14 @@ class AcadosOcpDims:
         return self.__nsphi_e
 
     @property
+    def ns_0(self):
+        """:math:`n_{s}^0` - total number of slacks at shooting node 0.
+        Type: int; default: 0"""
+        return self.__ns_0
+
+    @property
     def ns(self):
-        """:math:`n_{s}` - total number of slacks.
+        """:math:`n_{s}` - total number of slacks at stages (1, N-1).
         Type: int; default: 0"""
         return self.__ns
 
@@ -453,6 +460,13 @@ class AcadosOcpDims:
             self.__nsphi_e = nsphi_e
         else:
             raise Exception('Invalid nsphi_e value, expected nonnegative integer.')
+
+    @ns.setter
+    def ns_0(self, ns_0):
+        if isinstance(ns_0, int) and ns_0 > -1:
+            self.__ns_0 = ns_0
+        else:
+            raise Exception('Invalid ns_0 value, expected nonnegative integer.')
 
     @ns.setter
     def ns(self, ns):
