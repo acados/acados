@@ -1585,8 +1585,9 @@ class AcadosOcpSolver:
         nx = self.acados_ocp.dims.nx
         nu = self.acados_ocp.dims.nu
         lam = self.get(0, 'lam')
-        nlam = lam.shape[0]//2
-        grad = lam[nu:nu+nx] - lam[nlam+nu:nlam+nu+nx]
+        nlam_non_slack = lam.shape[0]//2 - self.acados_ocp.dims.ns_0
+        grad = lam[nu:nu+nx] - lam[nlam_non_slack+nu:nlam_non_slack+nu+nx]
+
         return grad
 
 
