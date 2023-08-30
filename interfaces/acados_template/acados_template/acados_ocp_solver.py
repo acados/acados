@@ -285,7 +285,7 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
         and dims.nbxe_0 is None \
         and (constraints.idxbxe_0.shape == constraints.idxbx_0.shape)\
             and all(constraints.idxbxe_0 == constraints.idxbx_0):
-        # case: x0 was set: nbx0 are all equlities.
+        # case: x0 was set: nbx0 are all equalities.
         dims.nbxe_0 = dims.nbx_0
     elif constraints.idxbxe_0 is not None:
         dims.nbxe_0 = constraints.idxbxe_0.shape[0]
@@ -453,6 +453,8 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
             + f'With nsbx = {nsbx}, nsbu = {nsbu}, nsg = {nsg}, nsh = {nsh}, nsphi = {nsphi}')
 
     dims.ns = ns
+    # Note: at stage 0 bounds on x are not slacked!
+    dims.ns_0 = nsbu + nsh + nsg + nsphi
 
     nsbx_e = constraints.idxsbx_e.shape[0]
     if nsbx_e > nbx_e:
@@ -1571,6 +1573,22 @@ class AcadosOcpSolver:
         self.shared_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
 
         return out[0]
+
+    def get_optimal_value_gradient(self):
+        """
+        Returns the gradient of the optimal value function w.r.t. the current initial state.
+        Disclaimer: This function only returns reasonable values if the solver has converged for the current problem instance.
+        """
+        if not self.acados_ocp.constraints.has_x0:
+            raise Exception("OCP does not have an initial state constraint.")
+
+        nx = self.acados_ocp.dims.nx
+        nu = self.acados_ocp.dims.nu
+        lam = self.get(0, 'lam')
+        nlam_non_slack = lam.shape[0]//2 - self.acados_ocp.dims.ns_0
+        grad = lam[nu:nu+nx] - lam[nlam_non_slack+nu:nlam_non_slack+nu+nx]
+
+        return grad
 
 
     def get_residuals(self, recompute=False):
