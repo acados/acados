@@ -39,7 +39,7 @@ import scipy
 
 latexify_plot()
 
-def setup_solver(N: int, dt: float, u_max: float):
+def setup_solver(N: int, dt: float, u_max: float = 60):
     ocp = AcadosOcp()
 
     model = export_pendulum_ode_model()
@@ -52,7 +52,7 @@ def setup_solver(N: int, dt: float, u_max: float):
     nu = model.u.rows()
 
     Q_mat = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
-    R_mat = 5*np.diag([1e-2])
+    R_mat = 2*np.diag([1e-1])
 
     ocp.cost.cost_type = 'NONLINEAR_LS'
     ocp.cost.cost_type_e = 'NONLINEAR_LS'
@@ -68,6 +68,11 @@ def setup_solver(N: int, dt: float, u_max: float):
     ocp.constraints.lbu = np.array([-u_max])
     ocp.constraints.ubu = np.array([+u_max])
     ocp.constraints.idxbu = np.array([0])
+    ocp.cost.zl = np.array([[200]])
+    ocp.cost.zu = np.array([[200]])
+    ocp.cost.Zl = np.array([[0.5]])
+    ocp.cost.Zu = np.array([[0.5]])
+    ocp.constraints.idxsbu = np.array([0])
 
     ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
@@ -76,7 +81,6 @@ def setup_solver(N: int, dt: float, u_max: float):
     ocp.solver_options.integrator_type = 'IRK'
     ocp.solver_options.nlp_solver_type = 'SQP'
     ocp.solver_options.nlp_solver_max_iter = 600
-    ocp.solver_options.levenberg_marquardt = 0.001
 
     ocp.solver_options.tf = Tf
 
@@ -87,9 +91,8 @@ def main():
 
     dt = 0.05
     N = 25
-    u_max = 80
 
-    ocp_solver = setup_solver(N, dt, u_max)
+    ocp_solver = setup_solver(N, dt)
 
     nx = ocp_solver.acados_ocp.dims.nx
 
@@ -116,7 +119,7 @@ def main():
 
     assert np.allclose(optimal_value_grad[1:-1], cd_optimal_value_grad, rtol=1e-2, atol=1e-2)
 
-    fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True)
+    _, axes = plt.subplots(nrows=2, ncols=1, sharex=True)
 
     axes[0].plot(thetas, optimal_value_fun)
     axes[1].plot(thetas, optimal_value_grad, label='exact')
