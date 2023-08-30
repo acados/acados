@@ -3,23 +3,15 @@
 - [ ] Test OOQP
 
 #### core
-- [ ] propagate cost in integrator
+- [x] propagate cost in integrator for NLS+IRK
     - or: add support for quadrature state, separate dimension in integrator and OCP solver
-- [ ] stage transition functions for changing model dimensions
+- [ ] propagate cost in integrator for CONL+IRK
 
-
-#### documentation
-- [x] provide OCP NLP formulation that is handled by `ocp_nlp` as a formula
-    - [x] closely stick to setter names!
-- [x] Windows Matlab, reiterate, look into Visual C
-- [ ] Windows Python
-- [ ] MacOS Matlab
 
 #### `ocp_nlp`
-- [ ] partial tightening <!-- - [ ] HPNMPC (what?!) -->
-- [ ] blockSQP (https://github.com/djanka2/blockSQP)
+- [ ] partial tightening
 - [x] RTI implementation similar to ACADO
-- [ ] support cost on z for external, NLS
+- [x] support cost on z for external, NLS
 
 #### `sim`
 - [x] collocation integrators Radau
@@ -30,7 +22,6 @@
         - L-stable
         - order is 2 * num_stages - 1
 - [ ] GNSF Hessians
-
 
 
 ## DONE
@@ -46,7 +37,7 @@
 
 #### matlab interface
 - [x] detect dimensions
-- [ ] detect slack dimensions
+- [x] detect slack dimensions
 - [x] structure detections for constraints
 - [x] getting started folder
 - [x] add Mex templating support for: ( in prioritized order )
