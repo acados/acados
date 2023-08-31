@@ -136,7 +136,7 @@ def main(use_RTI=False):
             # preparation phase
             ocp_solver.options_set('rti_phase', 1)
             status = ocp_solver.solve()
-            t_preparation[i] = ocp_solver.get_stats('time_tot').flatten()
+            t_preparation[i] = ocp_solver.get_stats('time_tot')
 
             # set initial state
             ocp_solver.set(0, "lbx", simX[i, :])
@@ -145,7 +145,7 @@ def main(use_RTI=False):
             # feedback phase
             ocp_solver.options_set('rti_phase', 2)
             status = ocp_solver.solve()
-            t_feedback[i] = ocp_solver.get_stats('time_tot').flatten()
+            t_feedback[i] = ocp_solver.get_stats('time_tot')
 
             simU[i, :] = ocp_solver.get(0, "u")
 

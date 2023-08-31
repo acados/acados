@@ -268,13 +268,13 @@ class AcadosSimSolver:
         code_export_directory = acados_sim_json['code_export_directory']
 
         importlib.invalidate_caches()
-        rel_code_export_directory = os.path.relpath(code_export_directory)
-        acados_sim_solver_pyx = importlib.import_module(f'{rel_code_export_directory}.acados_sim_solver_pyx')
+        sys.path.append(os.path.dirname(code_export_directory))
+        acados_sim_solver_pyx = importlib.import_module(f'{os.path.split(code_export_directory)[1]}.acados_sim_solver_pyx')
 
         AcadosSimSolverCython = getattr(acados_sim_solver_pyx, 'AcadosSimSolverCython')
         return AcadosSimSolverCython(acados_sim_json['model']['name'])
 
-    def __init__(self, acados_sim, json_file='acados_sim.json', generate=True, build=True, cmake_builder: CMakeBuilder = None, verbose: bool = True):
+    def __init__(self, acados_sim: AcadosSim, json_file='acados_sim.json', generate=True, build=True, cmake_builder: CMakeBuilder = None, verbose: bool = True):
 
         self.solver_created = False
         self.acados_sim = acados_sim

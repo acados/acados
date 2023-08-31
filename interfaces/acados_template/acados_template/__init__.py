@@ -39,4 +39,4 @@ from .utils import print_casadi_expression, get_acados_path, get_python_interfac
 
 from .plot_utils import latexify_plot
 
-from .zoro_description import ZoroDescription, process_zoro_description
+from .zoro_description import ZoroDescription

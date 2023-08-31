@@ -36,6 +36,7 @@
 #include <string.h>
 // acados
 #include "acados/sim/sim_common.h"
+#include "acados/sim/sim_collocation_utils.h"
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/utils/mem.h"
 
@@ -246,101 +247,6 @@ void sim_erk_opts_get(void *config_, void *opts_, const char *field, void *value
 }
 
 
-
-static void get_explicit_butcher_tableau(int ns, double *A, double *b, double *c)
-{
-    switch (ns)
-    {
-        case 1:
-        {
-            // A
-            A[0 + ns * 0] = 0.0;
-            // b
-            b[0] = 1.0;
-            // c
-            c[0] = 0.0;
-            break;
-        }
-        case 2:
-        {
-            // A
-            A[0 + ns * 0] = 0.0;
-            A[0 + ns * 1] = 0.0;
-            A[1 + ns * 0] = 0.5;
-            A[1 + ns * 1] = 0.0;
-            // b
-            b[0] = 0.0;
-            b[1] = 1.0;
-            // c
-            c[0] = 0.0;
-            c[1] = 0.5;
-            break;
-        }
-        case 3:
-        {
-            //A
-            A[0 + ns * 0] = 0.0;
-            A[0 + ns * 1] = 0.0;
-            A[0 + ns * 2] = 0.0;
-            A[1 + ns * 0] = 0.5;
-            A[1 + ns * 1] = 0.0;
-            A[1 + ns * 2] = 0.0;
-            A[2 + ns * 0] = -1.0;
-            A[2 + ns * 1] = 2.0;
-            A[2 + ns * 2] = 0.0;
-            //b
-            b[0] = 1.0 / 6.0;
-            b[1] = 2.0 / 3.0;
-            b[2] = 1.0 / 6.0;   
-            // c
-            c[0] = 0.0;
-            c[1] = 0.5;
-            c[2] = 1.0;
-            break;         
-        }
-        case 4:
-        {
-            // A
-            A[0 + ns * 0] = 0.0;
-            A[0 + ns * 1] = 0.0;
-            A[0 + ns * 2] = 0.0;
-            A[0 + ns * 3] = 0.0;
-            A[1 + ns * 0] = 0.5;
-            A[1 + ns * 1] = 0.0;
-            A[1 + ns * 2] = 0.0;
-            A[1 + ns * 3] = 0.0;
-            A[2 + ns * 0] = 0.0;
-            A[2 + ns * 1] = 0.5;
-            A[2 + ns * 2] = 0.0;
-            A[2 + ns * 3] = 0.0;
-            A[3 + ns * 0] = 0.0;
-            A[3 + ns * 1] = 0.0;
-            A[3 + ns * 2] = 1.0;
-            A[3 + ns * 3] = 0.0;
-            // b
-            b[0] = 1.0 / 6.0;
-            b[1] = 1.0 / 3.0;
-            b[2] = 1.0 / 3.0;
-            b[3] = 1.0 / 6.0;
-            // c
-            c[0] = 0.0;
-            c[1] = 0.5;
-            c[2] = 0.5;
-            c[3] = 1.0;
-            break;
-        }
-        default:
-        {
-            // impossible
-            // assert((ns == 1 || ns == 2 || ns == 4) && "only number of stages = {1,2,4} implemented!");
-            printf("\n error: ERK: num_stages = %d not available. Only number of stages = {1,2,3,4} implemented!\n",ns);
-            exit(1);
-        }
-    }
-}
-
-
-
 void sim_erk_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
     sim_opts *opts = opts_;
@@ -365,6 +271,7 @@ void sim_erk_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->sens_forw = true;
     opts->sens_adj = false;
     opts->sens_hess = false;
+    opts->cost_computation = false;
 
     opts->output_z = false;
     opts->sens_algebraic = false;

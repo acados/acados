@@ -128,6 +128,14 @@ add_test(NAME python_test_ocp
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
         python main_test.py)
 
+add_test(NAME python_test_cost_integration_euler
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
+        python test_cost_integration_euler.py)
+
+add_test(NAME python_test_cost_integration_value
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
+        python test_cost_integration_value.py)
+
 add_test(NAME python_pendulum_ocp_example_reuse_code
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
         python minimal_example_ocp_reuse_code.py)
@@ -209,6 +217,10 @@ add_test(NAME python_fast_zoro_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/zoRO_example
         python pendulum_on_cart/minimal_example_zoro.py)
 
+add_test(NAME python_zoro_diff_drive_example
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/zoRO_example
+        python diff_drive/main.py)
+
 # CMake test
 add_test(NAME python_pendulum_sim_example_cmake
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/sim
@@ -223,6 +235,9 @@ add_test(NAME cython_pendulum_closed_loop_example
 add_test(NAME py_time_optimal_cython_ctypes
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/crane
         python time_optimal_example.py)
+add_test(NAME pendulum_optimal_value_gradient
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
+        python example_optimal_value_derivative.py)
 
 # example_ocp_dynamics_formulations all versions
 add_test(NAME python_pendulum_ocp_IRK

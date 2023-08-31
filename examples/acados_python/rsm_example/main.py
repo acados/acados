@@ -343,7 +343,7 @@ def main():
             if USE_RTI:
                 acados_solver.options_set('rti_phase', 1)
                 status = acados_solver.solve()
-                time_prep = acados_solver.get_stats('time_tot')[0] * 1e3
+                time_prep = acados_solver.get_stats('time_tot') * 1e3
                 if i_exec == 0:
                     times_prep[i] = time_prep
                 else:
@@ -359,7 +359,7 @@ def main():
 
             # solve
             status = acados_solver.solve()
-            time_feed = acados_solver.get_stats('time_tot')[0] * 1e3
+            time_feed = acados_solver.get_stats('time_tot') * 1e3
             if i_exec == 0:
                 times_feed[i] = time_feed
             else:

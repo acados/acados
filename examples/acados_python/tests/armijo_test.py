@@ -122,7 +122,7 @@ def solve_armijo_problem_with_setting(setting):
     # get stats
     status = ocp_solver.solve()
     ocp_solver.print_statistics()
-    iter = ocp_solver.get_stats('sqp_iter')[0]
+    iter = ocp_solver.get_stats('sqp_iter')
     alphas = ocp_solver.get_stats('alpha')[1:]
     qp_iters = ocp_solver.get_stats('qp_iter')
     print(f"acados ocp solver returned status {status}")

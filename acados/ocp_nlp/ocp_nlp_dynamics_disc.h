@@ -77,6 +77,7 @@ typedef struct
 {
     int compute_adj;
     int compute_hess;
+    int cost_computation;
 } ocp_nlp_dynamics_disc_opts;
 
 //

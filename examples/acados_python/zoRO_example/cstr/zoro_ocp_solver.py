@@ -28,7 +28,7 @@
 
 # authors: Katrin Baumgaertner, Jonathan Frey, Yunfan Gao
 
-from acados_template import AcadosOcp, AcadosOcpSolver, ZoroDescription, process_zoro_description
+from acados_template import AcadosOcp, AcadosOcpSolver, ZoroDescription
 from scipy.linalg import block_diag
 import numpy as np
 from dataclasses import dataclass
@@ -172,7 +172,7 @@ def setup_acados_ocp_solver(
         zoro_description.idx_ubu_t = np.arange(nu)
         zoro_description.idx_ubx_t = np.arange(nx)
         zoro_description.idx_ubx_e_t = np.arange(nx)
-        ocp.zoro_description = process_zoro_description(zoro_description)
+        ocp.zoro_description = zoro_description
 
     # create
     ocp_solver = AcadosOcpSolver(ocp, json_file="acados_ocp.json")

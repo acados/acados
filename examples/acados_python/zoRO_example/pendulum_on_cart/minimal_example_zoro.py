@@ -31,7 +31,7 @@ import os
 
 import numpy as np
 import scipy.linalg
-from acados_template import AcadosOcp, AcadosOcpSolver, ZoroDescription, process_zoro_description, get_default_simulink_opts
+from acados_template import AcadosOcp, AcadosOcpSolver, ZoroDescription, get_default_simulink_opts
 
 # same as in normal pendulum model
 local_path = os.path.dirname(os.path.abspath(__file__))
@@ -133,7 +133,7 @@ def main():
     zoro_description.idx_ubu_t = [0]
     zoro_description.idx_lbx_t = [0]
     zoro_description.idx_lbx_e_t = [0]
-    ocp.zoro_description = process_zoro_description(zoro_description)
+    ocp.zoro_description = zoro_description
 
     # to export Simulink block
     simulink_opts = get_default_simulink_opts()
