@@ -65,11 +65,10 @@ function build_acados {
 		-D MATLAB_EXECUTABLE="${MATLAB_EXECUTABLE}" \
 		-D ACADOS_MATLAB="${ACADOS_MATLAB}" \
 		-D ACADOS_OCTAVE="${ACADOS_OCTAVE}" \
-		-D ACADOS_OCTAVE_TEMPLATE="${ACADOS_OCTAVE_TEMPLATE}" \
 		-D ACADOS_PYTHON="${ACADOS_PYTHON}" \
 		..;
 	[ $? -ne 0 ] && exit 110;
-	
+
 	if [ "${ACADOS_LINT}" = 'ON' ]; then
 		cmake --build build --target lint;
 		[ $? -ne 0 ] && exit 110;
@@ -81,7 +80,7 @@ function build_acados {
 	cmake --build build --target install;
 	[ $? -ne 0 ] && exit 110;
 
-    if [[ "${ACADOS_PYTHON}" = 'ON' || "${ACADOS_OCTAVE_TEMPLATE}" = 'ON' ]] ;
+    if [[ "${ACADOS_PYTHON}" = 'ON' ]] ;
     then
         source "${SCRIPT_DIR}/install_python_dependencies.sh";
         pushd interfaces/acados_template;
