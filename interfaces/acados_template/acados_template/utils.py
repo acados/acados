@@ -439,9 +439,10 @@ def print_casadi_expression(f):
         print(f[ii,:])
 
 
-def verbose_system_call(cmd, verbose=True):
+def verbose_system_call(cmd, verbose=True, shell=False):
     return call(
         cmd,
         stdout=None if verbose else DEVNULL,
-        stderr=None if verbose else STDOUT
+        stderr=None if verbose else STDOUT,
+        shell=shell
     )

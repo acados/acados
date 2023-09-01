@@ -97,17 +97,17 @@ class CMakeBuilder:
             os.chdir(self._build_dir)
             cmd_str = self.get_cmd1_cmake()
             print(f'call("{cmd_str})"')
-            retcode = verbose_system_call(cmd_str, verbose)
+            retcode = verbose_system_call(cmd_str, verbose, shell=True)
             if retcode != 0:
                 raise RuntimeError(f'CMake command "{cmd_str}" was terminated by signal {retcode}')
             cmd_str = self.get_cmd2_build()
             print(f'call("{cmd_str}")')
-            retcode = verbose_system_call(cmd_str, verbose)
+            retcode = verbose_system_call(cmd_str, verbose, shell=True)
             if retcode != 0:
                 raise RuntimeError(f'Build command "{cmd_str}" was terminated by signal {retcode}')
             cmd_str = self.get_cmd3_install()
             print(f'call("{cmd_str}")')
-            retcode = verbose_system_call(cmd_str, verbose)
+            retcode = verbose_system_call(cmd_str, verbose, shell=True)
             if retcode != 0:
                 raise RuntimeError(f'Install command "{cmd_str}" was terminated by signal {retcode}')
         except OSError as e:
