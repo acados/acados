@@ -41,14 +41,13 @@ elif [ "${SECTION}" = 'install' ]; then
     source "${SHARED_SCRIPT_DIR}/install_eigen.sh";
     source "${SCRIPT_DIR}/install_python.sh";
 
-    if  [[ "${ACADOS_OCTAVE_TEMPLATE}" = 'ON' ]] ||
-        [[ "${ACADOS_MATLAB}" = 'ON' || "${ACADOS_OCTAVE}" = 'ON' ]] ||
+    if  [[ "${ACADOS_MATLAB}" = 'ON' || "${ACADOS_OCTAVE}" = 'ON' ]] ||
         [[ "${ACADOS_PYTHON}" = 'ON' ]];
         then
         source "${SCRIPT_DIR}/install_casadi.sh";
     fi
 
-    if [[ "${ACADOS_OCTAVE_TEMPLATE}" = 'ON' || "${ACADOS_OCTAVE}" = 'ON' ]];
+    if [[ "${ACADOS_OCTAVE}" = 'ON' ]];
     then
         # echo "find hpipm_common.h"
         # find $(pwd) -name 'hpipm_common.h';
@@ -60,8 +59,7 @@ elif [ "${SECTION}" = 'install' ]; then
     fi
 
     # Prepare ctest with Matlab/Octave interface
-    if [[ "${ACADOS_OCTAVE_TEMPLATE}" = 'ON' ]] ||
-        [[ "${ACADOS_OCTAVE}" = 'ON' || "${ACADOS_MATLAB}" = 'ON' ]];
+    if [[ "${ACADOS_OCTAVE}" = 'ON' || "${ACADOS_MATLAB}" = 'ON' ]];
     then
         # Export paths
         pushd examples/acados_matlab_octave/pendulum_on_cart_model;

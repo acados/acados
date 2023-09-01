@@ -78,7 +78,6 @@ option(ACADOS_WITH_OSQP "OSQP solver" OFF)
 # Interfaces
 option(ACADOS_MATLAB "The Matlab Interface" OFF)
 option(ACADOS_OCTAVE "The Octave Interface" OFF)
-option(ACADOS_OCTAVE_TEMPLATE "Template MEX Interface" OFF)
 option(ACADOS_PYTHON "Python Interface" OFF)
 
 

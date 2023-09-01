@@ -43,8 +43,7 @@ elif [ "${SECTION}" = 'install' ]; then
     source "${SHARED_SCRIPT_DIR}/install_eigen.sh";
     source "${SCRIPT_DIR}/install_python.sh";
 
-    if  "${ACADOS_OCTAVE_TEMPLATE}" = 'ON' ||
-        [[ "${ACADOS_MATLAB}" = 'ON' || "${ACADOS_OCTAVE}" = 'ON' ]] ||
+    if  [[ "${ACADOS_MATLAB}" = 'ON' || "${ACADOS_OCTAVE}" = 'ON' ]] ||
         [[ "${ACADOS_PYTHON}" = 'ON' ]];
         then
         source "${SCRIPT_DIR}/install_casadi.sh";

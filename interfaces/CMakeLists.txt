@@ -29,18 +29,6 @@
 #
 
 
-# MEX Template
-if(ACADOS_OCTAVE_TEMPLATE)
-        add_test(NAME octave_test_target_selector
-                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
-                octave --no-gui --no-window-system ./test_target_selector.m)
-
-        add_test(NAME octave_test_generic_ext_cost_disc_dyn
-                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/generic_dyn_disc
-                octave --no-gui --no-window-system ./run_generic_disc_dyn_example.m)
-endif()
-
-
 # MATLAB / OCTAVE
 if(ACADOS_MATLAB OR ACADOS_OCTAVE)
         add_test(NAME octave_test_dim_check
@@ -94,6 +82,13 @@ if(ACADOS_MATLAB OR ACADOS_OCTAVE)
                 COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
                 octave --no-gui --no-window-system ./test_ocp_qpdunes.m)
         endif()
+        #
+        add_test(NAME octave_test_target_selector
+                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+                octave --no-gui --no-window-system ./test_target_selector.m)
+        add_test(NAME octave_test_generic_ext_cost_disc_dyn
+                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/generic_dyn_disc
+                octave --no-gui --no-window-system ./run_generic_disc_dyn_example.m)
 endif()
 
 

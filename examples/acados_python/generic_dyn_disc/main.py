@@ -28,65 +28,59 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from casadi import MX, SX
+import casadi as ca
 import numpy as np
-from acados_template import *
+from acados_template import AcadosOcp, AcadosOcpSolver, casadi_length
 import scipy.linalg
 
 def linear_mass_spring_model():
 
     # dims
-    num_mass = 4;
+    num_mass = 4
 
-    nx = 2*num_mass;
-    nu = num_mass-1;
+    nx = 2*num_mass
+    nu = num_mass-1
 
     # symbolic variables
-    if True:
-        sym_x = SX.sym('x', nx, 1); # states
-        sym_u = SX.sym('u', nu, 1); # controls
-        sym_xdot = SX.sym('xdot',casadi_length(sym_x)); #state derivatives
-    else:
-        sym_x = MX.sym('x', nx, 1); # states
-        sym_u = MX.sym('u', nu, 1); # controls
-        sym_xdot = MX.sym('xdot',size(sym_x)); #state derivatives
-
+    sym_x = ca.SX.sym('x', nx, 1) # states
+    sym_u = ca.SX.sym('u', nu, 1) # controls
+    sym_xdot = ca.SX.sym('xdot', casadi_length(sym_x)) #state derivatives
 
     # dynamics
     # continuous time
-    Ac = np.zeros((nx, nx));
+    Ac = np.zeros((nx, nx))
     for ii in range(num_mass):
-        Ac[ii,num_mass+ii] = 1.0;
-        Ac[num_mass+ii,ii] = -2.0;
+        Ac[ii,num_mass+ii] = 1.0
+        Ac[num_mass+ii,ii] = -2.0
 
     for ii in range(num_mass-1):
-        Ac[num_mass+ii,ii+1] = 1.0;
-        Ac[num_mass+ii+1,ii] = 1.0;
+        Ac[num_mass+ii,ii+1] = 1.0
+        Ac[num_mass+ii+1,ii] = 1.0
 
 
-    Bc = np.zeros((nx, nu));
+    Bc = np.zeros((nx, nu))
     for ii in range(nu):
-        Bc[num_mass+ii, ii] = 1.0;
+        Bc[num_mass+ii, ii] = 1.0
 
 
-    c_const = np.zeros(nx);
+    c_const = np.zeros(nx)
 
     # discrete time
-    Ts = 0.5; # sampling time
+    Ts = 0.5 # sampling time
     M = scipy.linalg.expm(np.vstack(( np.hstack((Ts*Ac, Ts*Bc)), np.zeros((nu, int(2*nx/2+nu))))))
     A = M[:nx,:nx]
     B = M[:nx,nx:]
 
-    expr_f_expl = Ac@sym_x + Bc@sym_u + c_const;
-    expr_f_impl = expr_f_expl - sym_xdot;
-    expr_phi = A@sym_x + B@sym_u;
+    expr_f_expl = Ac@sym_x + Bc@sym_u + c_const
+    expr_f_impl = expr_f_expl - sym_xdot
+    expr_phi = A@sym_x + B@sym_u
 
     # constraints
-    expr_h = vertcat(sym_u, sym_x)
+    expr_h = ca.vertcat(sym_u, sym_x)
     expr_h_e = sym_x
 
     # nonlnear least squares
-    expr_y = vertcat(sym_u, sym_x)
+    expr_y = ca.vertcat(sym_u, sym_x)
     expr_y_e = sym_x
 
     # external cost
@@ -95,7 +89,7 @@ def linear_mass_spring_model():
     dWu = 2*np.ones(nu)
     dWx = np.ones(nx)
 
-    ymyr = vertcat(sym_u, sym_x) - vertcat(yr_u, yr_x)
+    ymyr = ca.vertcat(sym_u, sym_x) - ca.vertcat(yr_u, yr_x)
     ymyr_e = sym_x - yr_x
 
     expr_ext_cost = 0.5 * (ymyr.T @ ( np.concatenate((dWu, dWx)) *  ymyr))
@@ -103,28 +97,28 @@ def linear_mass_spring_model():
 
     # populate structure
     model = {}
-    model['nx'] = nx;
-    model['nu'] = nu;
-    model['sym_x'] = sym_x;
-    model['sym_xdot'] = sym_xdot;
-    model['sym_u'] = sym_u;
-    model['expr_f_expl'] = expr_f_expl;
-    model['expr_f_impl'] = expr_f_impl;
-    model['expr_phi'] = expr_phi;
-    model['expr_h'] = expr_h;
-    model['expr_h_e'] = expr_h_e;
-    model['expr_y'] = expr_y;
-    model['expr_y_e'] = expr_y_e;
-    model['expr_ext_cost'] = expr_ext_cost;
-    model['expr_ext_cost_e'] = expr_ext_cost_e;
+    model['nx'] = nx
+    model['nu'] = nu
+    model['sym_x'] = sym_x
+    model['sym_xdot'] = sym_xdot
+    model['sym_u'] = sym_u
+    model['expr_f_expl'] = expr_f_expl
+    model['expr_f_impl'] = expr_f_impl
+    model['expr_phi'] = expr_phi
+    model['expr_h'] = expr_h
+    model['expr_h_e'] = expr_h_e
+    model['expr_y'] = expr_y
+    model['expr_y_e'] = expr_y_e
+    model['expr_ext_cost'] = expr_ext_cost
+    model['expr_ext_cost_e'] = expr_ext_cost_e
 
     return model
 
 
 
 def main():
-    N = 20;
-    tol = 1e-10;
+    N = 20
+    tol = 1e-10
     shooting_nodes = np.linspace(0,10,N+1)
 
     model_name = 'lin_mass'
@@ -153,8 +147,7 @@ def main():
 
     # acados ocp model
     casadi_dynamics = 0 # 0=generic, 1=casadi
-    casadi_cost = 1 # 0=generic, 1=casadi
-
+    casadi_cost = 1 # 0=generic, 1=casadi # NOTE: generic cost is not implemented in python interface.
 
     ocp = AcadosOcp()
     ocp.model.name = model_name
@@ -204,7 +197,7 @@ def main():
     ocp.constraints.uh_e = uh_e
 
     # acados ocp opts
-    ocp.dims.N = N;
+    ocp.dims.N = N
     ocp.solver_options.shooting_nodes = shooting_nodes
     ocp.solver_options.hessian_approx = 'EXACT'
     ocp.solver_options.regularize_method = regularize_method
@@ -218,11 +211,11 @@ def main():
     ocp.solver_options.print_level = 2
 
     # create ocp solver
-    ocp_solver = AcadosOcpSolver(ocp);
+    ocp_solver = AcadosOcpSolver(ocp)
 
     # initial state
-    ocp_solver.set(0, 'lbx', x0);
-    ocp_solver.set(0, 'ubx', x0);
+    ocp_solver.set(0, 'lbx', x0)
+    ocp_solver.set(0, 'ubx', x0)
 
     # initialize
     for i in range(N):
@@ -231,20 +224,20 @@ def main():
     ocp_solver.set(N, 'x', np.zeros(nx))
 
     # solve
-    # tic;
-    status = ocp_solver.solve();
-    # time_ext = toc;
+    # tic
+    status = ocp_solver.solve()
+    # time_ext = toc
 
     # get solution
-    utraj = ocp_solver.get(0, 'u');
-    xtraj = ocp_solver.get(0, 'x');
+    utraj = ocp_solver.get(0, 'u')
+    xtraj = ocp_solver.get(0, 'x')
 
     # get info
-    sqp_iter = ocp_solver.get_stats('sqp_iter');
-    time_tot = ocp_solver.get_stats('time_tot');
-    time_lin = ocp_solver.get_stats('time_lin');
-    time_reg = ocp_solver.get_stats('time_reg');
-    time_qp = ocp_solver.get_stats('time_qp');
+    sqp_iter = ocp_solver.get_stats('sqp_iter')
+    time_tot = ocp_solver.get_stats('time_tot')
+    time_lin = ocp_solver.get_stats('time_lin')
+    time_reg = ocp_solver.get_stats('time_reg')
+    time_qp = ocp_solver.get_stats('time_qp')
 
     print(f'\nstatus = {status}, sqp_iter = {sqp_iter}')
 
