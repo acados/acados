@@ -47,6 +47,7 @@ class CMakeBuilder:
         self.build_dir = 'build'
         self._build_dir = None  # private build directory, usually rendered to abspath(build_dir)
         self.generator = None
+        self.host = None
         """Defines the generator, options can be found via `cmake --help` under 'Generator'. Type: string. Linux default 'Unix Makefiles', Windows 'Visual Studio 15 2017 Win64'; default value: `None`."""
         # set something for Windows
         if os.name == 'nt':
@@ -65,7 +66,10 @@ class CMakeBuilder:
         generator_str = ''
         if self.generator is not None:
             generator_str = f' -G"{self.generator}"'
-        return f'cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="{self._source_dir}"{defines_str}{generator_str} -Wdev -S"{self._source_dir}" -B"{self._build_dir}"'
+        host_str = ''
+        if self.host is not None:
+            host_str = f' -A"{self.host}"'
+        return f'cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="{self._source_dir}"{defines_str}{generator_str}{host_str} -Wdev -S"{self._source_dir}" -B"{self._build_dir}"'
 
     # Generate the command string for handling the build.
     def get_cmd2_build(self):
