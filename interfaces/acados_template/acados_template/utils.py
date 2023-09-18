@@ -222,7 +222,8 @@ def render_template(in_file, out_file, output_dir, json_path, template_glob=None
 
     acados_path = os.path.dirname(os.path.abspath(__file__))
     if template_glob is None:
-        template_glob = os.path.join(acados_path, 'c_templates_tera', '**', '*')
+        head, in_file = os.path.split(in_file)
+        template_glob = os.path.join(acados_path, 'c_templates_tera', head, '**', '*')
     cwd = os.getcwd()
 
     if not os.path.exists(output_dir):
