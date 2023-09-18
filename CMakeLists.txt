@@ -102,7 +102,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT CMAKE_SYSTEM_NAME MATCHES "Window
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_SYSTEM_NAME MATCHES "Windows")
-    # MinGW, change to .lib such that mex recognizes it
+    # MinGW: remove prefix and change suffix to match MSVC
+    # (such that Matlab mex recognizes the libraries)
+    set(CMAKE_SHARED_LIBRARY_PREFIX "")
     set(CMAKE_STATIC_LIBRARY_SUFFIX ".lib")
     set(CMAKE_STATIC_LIBRARY_PREFIX "")
     if(BUILD_SHARED_LIBS MATCHES ON)

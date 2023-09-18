@@ -165,14 +165,25 @@ def make_model_consistent(model):
 
     return model
 
-def get_lib_ext():
-    lib_ext = '.so'
+def get_shared_lib_ext():
     if sys.platform == 'darwin':
-        lib_ext = '.dylib'
+        return '.dylib'
     elif os.name == 'nt':
-        lib_ext = ''
+        return '.dll'
+    else:
+        return '.so'
 
-    return lib_ext
+def get_shared_lib_dir():
+    if os.name == 'nt':
+        return 'bin'
+    else:
+        return 'lib'
+
+def get_shared_lib_prefix():
+    if os.name == 'nt':
+        return ''
+    else:
+        return 'lib'
 
 def get_tera():
     tera_path = get_tera_exec_path()

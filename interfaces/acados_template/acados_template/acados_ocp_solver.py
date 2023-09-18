@@ -62,7 +62,8 @@ from .casadi_function_generation import (generate_c_code_conl_cost,
                                          generate_c_code_nls_cost)
 from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 from .utils import (casadi_length, check_casadi_version, format_class_dict,
-                    get_lib_ext, get_ocp_nlp_layout, get_python_interface_path,
+                    get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir,
+                    get_ocp_nlp_layout, get_python_interface_path,
                     is_column, is_empty, make_model_consistent,
                     make_object_json_dumpable, render_template,
                     set_up_imported_gnsf_model, verbose_system_call)
@@ -969,10 +970,9 @@ class AcadosOcpSolver:
             self.build(code_export_directory, with_cython=False, cmake_builder=cmake_builder, verbose=verbose)
 
         # prepare library loading
-        lib_prefix = 'lib'
-        lib_ext = get_lib_ext()
-        if os.name == 'nt':
-            lib_prefix = ''
+        lib_ext = get_shared_lib_ext()
+        lib_prefix = get_shared_lib_prefix()
+        lib_dir = get_shared_lib_dir()
 
         # Load acados library to avoid unloading the library.
         # This is necessary if acados was compiled with OpenMP, since the OpenMP threads can't be destroyed.
@@ -980,7 +980,7 @@ class AcadosOcpSolver:
         # see [https://stackoverflow.com/questions/34439956/vc-crash-when-freeing-a-dll-built-with-openmp]
         # or [https://python.hotexamples.com/examples/_ctypes/-/dlclose/python-dlclose-function-examples.html]
         libacados_name = f'{lib_prefix}acados{lib_ext}'
-        libacados_filepath = os.path.join(acados_lib_path, libacados_name)
+        libacados_filepath = os.path.join(acados_lib_path, '..', lib_dir, libacados_name)
         self.__acados_lib = DllLoader(libacados_filepath, winmode=self.winmode)
 
         # find out if acados was compiled with OpenMP
