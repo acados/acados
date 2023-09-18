@@ -136,7 +136,11 @@ if(ACADOS_WITH_OOQP)
     target_link_libraries(acados PUBLIC ooqp)
 endif()
 
-target_link_libraries(acados PUBLIC hpipm blasfeo m)
+if(CMAKE_C_COMPILER_ID MATCHES MSVC) # no explicit math library
+    target_link_libraries(acados PUBLIC hpipm blasfeo)
+else() # add explicit math library
+    target_link_libraries(acados PUBLIC hpipm blasfeo m)
+endif()
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     target_compile_definitions(acados PRIVATE DEBUG)
