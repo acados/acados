@@ -397,3 +397,9 @@ if(${BUILD_ACADOS_SIM_SOLVER_LIB})
 endif(${BUILD_ACADOS_SIM_SOLVER_LIB})
 {%- endif %}
 
+# unset options for clean cmake cache on subsequent cmake runs
+unset(BUILD_ACADOS_SOLVER_LIB CACHE)
+unset(BUILD_ACADOS_OCP_SOLVER_LIB CACHE)
+unset(BUILD_EXAMPLE CACHE)
+unset(BUILD_SIM_EXAMPLE CACHE)
+unset(BUILD_ACADOS_SIM_SOLVER_LIB CACHE)
