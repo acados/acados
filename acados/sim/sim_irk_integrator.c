@@ -1274,7 +1274,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             // printf("dK_dxu (solved) = (IRK, ss = %d) \n", ss);
             // blasfeo_print_exp_dmat(nK, nx + nu, dK_dxu_ss, 0, 0);
 
-            if (opts->cost_computation)
+            if (opts->cost_computation && opts->cost_type == NONLINEAR_LS)
             {
                 for (int ii = 0; ii < ns; ii++)
                 {
@@ -1355,7 +1355,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     // NOTE: slack contribution and scaling done in cost module
                     mem->cost_fun[0] += 0.5 * b_vec[ii]/num_steps * blasfeo_ddot(ny, tmp_ny, 0, tmp_ny, 0);
                 } // end ii
-            } // end cost propagation
+            } // end cost propagation NLS COST
 
             // update forward sensitivity
             // NOTE(oj): dK_dxu_ss is actually -dK_dxu_ss, because alpha = -1.0
@@ -1364,7 +1364,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 blasfeo_dgead(nx, nx + nu, -step * b_vec[jj], dK_dxu_ss, jj * nx, 0,
                                                      S_forw_ss, 0, 0);
         }  // end if sens_forw || sens_hess
-        else if (opts->cost_computation)
+        // Cost computation without sensitivities
+        else if (opts->cost_computation && opts->cost_type == NONLINEAR_LS)
         {
             for (int ii = 0; ii < ns; ii++)
             {

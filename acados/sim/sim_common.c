@@ -476,6 +476,11 @@ void sim_opts_set_(sim_opts *opts, const char *field, void *value)
         sim_collocation_type *collocation_type = (sim_collocation_type *) value;
         opts->collocation_type = *collocation_type;
     }
+    else if (!strcmp(field, "cost_type"))
+    {
+        ocp_nlp_cost_t *cost_type = (ocp_nlp_cost_t *) value;
+        opts->cost_type = *cost_type;
+    }
     else if (!strcmp(field, "newton_tol"))
     {
         double *newton_tol = value;

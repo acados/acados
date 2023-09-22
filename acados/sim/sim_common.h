@@ -135,6 +135,7 @@ typedef struct
     bool sens_adj;
     bool sens_hess;
     bool cost_computation;
+    ocp_nlp_cost_t cost_type;
 
     bool output_z;        // 1 -- if zn should be computed
     bool sens_algebraic;  // 1 -- if S_algebraic should be computed

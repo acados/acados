@@ -58,17 +58,6 @@ typedef enum
 } ocp_nlp_solver_t;
 
 
-/// Types of the cost function.
-typedef enum
-{
-    LINEAR_LS,
-    NONLINEAR_LS,
-    CONVEX_OVER_NONLINEAR,
-    EXTERNAL,
-    INVALID_COST,
-} ocp_nlp_cost_t;
-
-
 /// Types of the system dynamics, discrete or continuous time.
 typedef enum
 {
