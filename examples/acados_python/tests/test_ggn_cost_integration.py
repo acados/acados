@@ -120,6 +120,7 @@ def solve_ocp(cost_discretization, cost_type):
     ocp.solver_options.sim_method_num_steps = 1
     ocp.solver_options.nlp_solver_type = 'SQP'  # SQP_RTI, SQP
     ocp.solver_options.cost_discretization = cost_discretization
+    ocp.solver_options.nlp_solver_max_iter = 20
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
@@ -134,7 +135,7 @@ def solve_ocp(cost_discretization, cost_type):
     simU = np.ndarray((N, nu))
 
     print(80*'-')
-    print(f'solve original code with N = {N} and Tf = {Tf} s:')
+    print(f'solve OCP with {cost_type} {cost_discretization} N = {N} and Tf = {Tf} s:')
     status = ocp_solver.solve()
 
     ocp_solver.print_statistics()
@@ -168,7 +169,7 @@ def solve_ocp(cost_discretization, cost_type):
     #     raise Exception(f"  ERROR for {cost_type=}, {num_stages=}:\n  {abs_diff=:.3e}\n")
 
     if PLOT:# plot but don't halt
-        plot_pendulum(np.linspace(0, Tf, N + 1), Fmax, simU, simX[:, :-1], latexify=False, plt_show=False, X_true_label=f'original: N={N}, Tf={Tf}')
+        plot_pendulum(np.linspace(0, Tf, N + 1), Fmax, simU, simX[:, :-1], latexify=False, plt_show=True, X_true_label=f'original: N={N}, Tf={Tf}')
 
 
 def get_iterate_filename(cost_discretization, cost_type):

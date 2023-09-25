@@ -134,7 +134,7 @@ def solve_ocp(cost_discretization, cost_variant):
     simU = np.ndarray((N, nu))
 
     print(80*'-')
-    print(f'solve original code with N = {N} and Tf = {Tf} s:')
+    print(f'solve OCP with cost variant {cost_variant} discretization {cost_discretization} N = {N} and Tf = {Tf} s:')
     status = ocp_solver.solve()
     ocp_solver.print_statistics()
 
