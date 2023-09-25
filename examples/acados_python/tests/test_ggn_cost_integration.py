@@ -163,13 +163,13 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
     terminal_cost = 0.5* resN.T @ Q @ resN
     cost_state = simX[-1, -1] + terminal_cost
 
-    # abs_diff = np.abs(cost_solver - cost_state)
+    abs_diff = np.abs(cost_solver - cost_state).item()
 
-    # print(f"\nComparing solver cost and cost state for {cost_type=}, {num_stages=}:\n  {abs_diff=:.3e}")
-    # if abs_diff < TOL:
-    #     print('  SUCCESS!\n')
-    # else:
-    #     raise Exception(f"  ERROR for {cost_type=}, {num_stages=}:\n  {abs_diff=:.3e}\n")
+    print(f"\nComparing solver cost and cost state for {cost_type=}, {num_stages=}:\n  {abs_diff=:.3e}")
+    if abs_diff < TOL:
+        print('  SUCCESS!\n')
+    else:
+        raise Exception(f"  ERROR for {cost_type=}, {num_stages=}:\n  {abs_diff=:.3e}\n")
 
     if PLOT:# plot but don't halt
         plot_pendulum(np.linspace(0, Tf, N + 1), Fmax, simU, simX[:, :-1], latexify=False, plt_show=True, X_true_label=f'original: N={N}, Tf={Tf}')
