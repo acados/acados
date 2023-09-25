@@ -69,6 +69,8 @@ typedef struct
     // for cost propagation
     external_function_generic *nls_y_fun_jac;  // evaluation nls function and jacobian
     external_function_generic *nls_y_fun;  // evaluation nls function
+    external_function_generic *conl_cost_fun_jac_hess;
+    external_function_generic *conl_cost_fun;
 
 } irk_model;
 
@@ -144,6 +146,12 @@ typedef struct
     struct blasfeo_dmat *S_forw_stage;
     struct blasfeo_dvec *tmp_ny;
     struct blasfeo_dvec *nls_res;
+    // only for cost_propagation with CONVEX_OVER_NONLINEAR
+    struct blasfeo_dmat *W;
+    struct blasfeo_dmat *W_chol;
+    struct blasfeo_dmat *tmp_nv_ny;
+    struct blasfeo_dmat *Jt_z;
+
 
 } sim_irk_workspace;
 

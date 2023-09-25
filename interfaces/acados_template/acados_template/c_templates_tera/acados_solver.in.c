@@ -844,13 +844,23 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
 
 
 {%- if solver_options.cost_discretization == "INTEGRATOR" %}
+  {%- if cost.cost_type_0 == "NONLINEAR_LS" %}
     ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, 0, "nls_y_fun_jac", &capsule->cost_y_0_fun_jac_ut_xt);
     ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, 0, "nls_y_fun", &capsule->cost_y_0_fun);
+  {%- elif cost.cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
+    ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, 0, "conl_cost_fun", &capsule->conl_cost_0_fun);
+    ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, 0, "conl_cost_fun_jac_hess", &capsule->conl_cost_0_fun_jac_hess);
+  {%- endif %}
+
     for (int i = 1; i < N; i++)
     {
+  {%- if cost.cost_type_0 == "NONLINEAR_LS" %}
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_y_fun_jac", &capsule->cost_y_fun_jac_ut_xt[i-1]);
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_y_fun", &capsule->cost_y_fun[i-1]);
-        // ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_y_fun_jac", &capsule->cost_y_fun_jac_ut_xt[i-1]);
+  {%- elif cost.cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
+        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "conl_cost_fun", &capsule->conl_cost_fun[i-1]);
+        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "conl_cost_fun_jac_hess", &capsule->conl_cost_fun_jac_hess[i-1]);
+  {%- endif %}
     }
 {%- endif %}
 
@@ -1881,7 +1891,6 @@ void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* 
     int newton_iter_val = {{ solver_options.sim_method_newton_iter }};
     for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_newton_iter", &newton_iter_val);
-
 
     // set up sim_method_jac_reuse
     {%- set all_equal = true %}
