@@ -41,13 +41,12 @@ from utils import plot_pendulum
 
 COST_TYPE = ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']
 PLOT = False
-NUM_STAGES = 1
 COST_DISCRETIZATIONS = ['EULER', 'INTEGRATOR']
 
 TOL = 1e-10
 
 
-def solve_ocp(cost_discretization, cost_type):
+def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
 
     model = export_pendulum_ode_model()
 
@@ -116,7 +115,7 @@ def solve_ocp(cost_discretization, cost_type):
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'  # FULL_CONDENSING_QPOASES
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = 'IRK'
-    ocp.solver_options.sim_method_num_stages = NUM_STAGES
+    ocp.solver_options.sim_method_num_stages = num_stages
     ocp.solver_options.sim_method_num_steps = 1
     ocp.solver_options.nlp_solver_type = 'SQP'  # SQP_RTI, SQP
     ocp.solver_options.cost_discretization = cost_discretization
@@ -124,8 +123,7 @@ def solve_ocp(cost_discretization, cost_type):
 
     # for debugging:
     # ocp.solver_options.nlp_solver_max_iter = 1
-    ocp.solver_options.collocation_type = 'EXPLICIT_RUNGE_KUTTA'
-
+    ocp.solver_options.collocation_type = collocation_type
     # set prediction horizon
     ocp.solver_options.tf = Tf
     ocp_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json')
@@ -206,10 +204,10 @@ def compare_iterates(cost_type):
 
 if __name__ == "__main__":
 
-    # solve_ocp('EULER', 'CONVEX_OVER_NONLINEAR')
-    # solve_ocp('INTEGRATOR', 'CONVEX_OVER_NONLINEAR')
-
     for cost_type in COST_TYPE:
         for cost_discretization in COST_DISCRETIZATIONS:
-            solve_ocp(cost_discretization, cost_type)
+            solve_ocp(cost_discretization, cost_type, num_stages=1, collocation_type='EXPLICIT_RUNGE_KUTTA')
         compare_iterates(cost_type)
+
+    for cost_type in COST_TYPE:
+            solve_ocp('INTEGRATOR', cost_type, num_stages=3, collocation_type='GAUSS_LEGENDRE')
