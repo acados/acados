@@ -599,6 +599,7 @@ void ocp_nlp_cost_conl_initialize(void *config_, void *dims_, void *model_, void
     return;
 }
 
+// NOTE: it implementing without W_chol should have the same computational complexity.
 
 
 void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *model_, void *opts_,
@@ -723,6 +724,7 @@ void ocp_nlp_cost_conl_compute_fun(void *config_, void *dims_, void *model_,
     ocp_nlp_cost_conl_model *model = model_;
     ocp_nlp_cost_conl_memory *memory = memory_;
     ocp_nlp_cost_conl_workspace *work = work_;
+    ocp_nlp_cost_conl_opts *opts = opts_;
 
     ocp_nlp_cost_conl_cast_workspace(config_, dims, opts_, work_);
 
@@ -730,36 +732,39 @@ void ocp_nlp_cost_conl_compute_fun(void *config_, void *dims_, void *model_,
     int nu = dims->nu;
     int ns = dims->ns;
 
-    /* specify input types and pointers for external cost function */
-    ext_fun_arg_t ext_fun_type_in[4];
-    void *ext_fun_in[4];
-    ext_fun_arg_t ext_fun_type_out[1];
-    void *ext_fun_out[1];
+    if (opts->integrator_cost == 0)
+    {
+        /* specify input types and pointers for external cost function */
+        ext_fun_arg_t ext_fun_type_in[4];
+        void *ext_fun_in[4];
+        ext_fun_arg_t ext_fun_type_out[1];
+        void *ext_fun_out[1];
 
-    // INPUT
-    struct blasfeo_dvec_args x_in;  // input x
-    x_in.x = memory->tmp_ux;
-    x_in.xi = nu;
+        // INPUT
+        struct blasfeo_dvec_args x_in;  // input x
+        x_in.x = memory->tmp_ux;
+        x_in.xi = nu;
 
-    struct blasfeo_dvec_args u_in;  // input u
-    u_in.x = memory->tmp_ux;
-    u_in.xi = 0;
+        struct blasfeo_dvec_args u_in;  // input u
+        u_in.x = memory->tmp_ux;
+        u_in.xi = 0;
 
-    ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
-    ext_fun_in[0] = &x_in;
-    ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
-    ext_fun_in[1] = &u_in;
-    ext_fun_type_in[2] = BLASFEO_DVEC;
-    ext_fun_in[2] = memory->z_alg;
-    ext_fun_type_in[3] = BLASFEO_DVEC;
-    ext_fun_in[3] = &model->y_ref;
+        ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+        ext_fun_in[0] = &x_in;
+        ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
+        ext_fun_in[1] = &u_in;
+        ext_fun_type_in[2] = BLASFEO_DVEC;
+        ext_fun_in[2] = memory->z_alg;
+        ext_fun_type_in[3] = BLASFEO_DVEC;
+        ext_fun_in[3] = &model->y_ref;
 
-    // OUTPUT
-    ext_fun_type_out[0] = COLMAJ;
-    ext_fun_out[0] = &memory->fun;  // function: scalar
+        // OUTPUT
+        ext_fun_type_out[0] = COLMAJ;
+        ext_fun_out[0] = &memory->fun;  // function: scalar
 
-    model->conl_cost_fun->evaluate(model->conl_cost_fun, ext_fun_type_in, ext_fun_in,
-                                   ext_fun_type_out, ext_fun_out);
+        model->conl_cost_fun->evaluate(model->conl_cost_fun, ext_fun_type_in, ext_fun_in,
+                                    ext_fun_type_out, ext_fun_out);
+    }
 
     // slack update function value
     blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);
