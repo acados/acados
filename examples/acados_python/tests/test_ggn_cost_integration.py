@@ -40,8 +40,8 @@ import scipy.linalg
 from utils import plot_pendulum
 
 COST_TYPE = ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']
-PLOT = True
-NUM_STAGES = 3
+PLOT = False
+NUM_STAGES = 1
 COST_DISCRETIZATIONS = ['EULER', 'INTEGRATOR']
 
 TOL = 1e-10
@@ -124,7 +124,7 @@ def solve_ocp(cost_discretization, cost_type):
 
     # for debugging:
     # ocp.solver_options.nlp_solver_max_iter = 1
-    # ocp.solver_options.collocation_type = 'EXPLICIT_RUNGE_KUTTA'
+    ocp.solver_options.collocation_type = 'EXPLICIT_RUNGE_KUTTA'
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
