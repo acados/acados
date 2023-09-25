@@ -57,22 +57,22 @@ def solve_ocp(cost_discretization, cost_type):
     nx = model.x.size()[0]
     nu = model.u.size()[0]
     ny = nx + nu
-    ny_e = nx
 
     Tf = 1.0
     N = 20
     ocp.dims.N = N
 
-    Q = 2 * np.diag([1e3, 1e3, 1e-2, 1e-2])
+    Q = 2 * np.diag([1e3, 1e3, 1e-2, 1e-2, 1e-3])
     R = 2 * np.diag([1e-2])
     cost_W = scipy.linalg.block_diag(Q, R)
 
     ocp.cost.cost_type = cost_type
     ocp.cost.cost_type_e = cost_type
 
-    ny = nx + nu
-    ocp.model.cost_y_expr = ca.vertcat(model.x, model.u)
-    ocp.model.cost_y_expr_e = model.x
+    ny = nx + nu + 1
+    ny_e = nx + 1
+    ocp.model.cost_y_expr = ca.vertcat(model.x, model.x[-1]**2, model.u)
+    ocp.model.cost_y_expr_e = ca.vertcat(model.x, model.x[-1]**2)
     ocp.cost.yref = np.zeros((ny, ))
     ocp.cost.yref_e = np.zeros((ny_e, ))
 
@@ -154,7 +154,9 @@ def solve_ocp(cost_discretization, cost_type):
     cost_solver = ocp_solver.get_cost()
 
     xN = simX[N, :nx]
-    terminal_cost = 0.5*xN @ Q @ xN
+
+    resN = ca.vertcat(xN, xN[-1]**2).full()
+    terminal_cost = 0.5* resN.T @ Q @ resN
     cost_state = simX[-1, -1] + terminal_cost
 
     # abs_diff = np.abs(cost_solver - cost_state)
