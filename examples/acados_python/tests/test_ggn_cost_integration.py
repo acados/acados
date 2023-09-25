@@ -122,6 +122,10 @@ def solve_ocp(cost_discretization, cost_type):
     ocp.solver_options.cost_discretization = cost_discretization
     ocp.solver_options.nlp_solver_max_iter = 20
 
+    # for debugging:
+    # ocp.solver_options.nlp_solver_max_iter = 1
+    # ocp.solver_options.collocation_type = 'EXPLICIT_RUNGE_KUTTA'
+
     # set prediction horizon
     ocp.solver_options.tf = Tf
     ocp_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json')
@@ -137,6 +141,7 @@ def solve_ocp(cost_discretization, cost_type):
     print(80*'-')
     print(f'solve OCP with {cost_type} {cost_discretization} N = {N} and Tf = {Tf} s:')
     status = ocp_solver.solve()
+    # ocp_solver.dump_last_qp_to_json(f'qp_{cost_discretization}.json', overwrite=True)
 
     ocp_solver.print_statistics()
 
@@ -200,6 +205,9 @@ def compare_iterates(cost_type):
             raise Exception(f"comparing {cost_type=}, {cost_discretization=} failed with {max_error=}")
 
 if __name__ == "__main__":
+
+    # solve_ocp('EULER', 'CONVEX_OVER_NONLINEAR')
+    # solve_ocp('INTEGRATOR', 'CONVEX_OVER_NONLINEAR')
 
     for cost_type in COST_TYPE:
         for cost_discretization in COST_DISCRETIZATIONS:
