@@ -2173,7 +2173,8 @@ class AcadosOcpOptions:
         self.__print_level = 0                                # print level
         self.__initialize_t_slacks = 0                        # possible values: 0, 1
         self.__cost_discretization = 'EULER'
-        self.__regularize_method = None
+        self.__regularize_method = 'NO_REGULARIZE'
+        self.__reg_epsilon = 1e-4
         self.__time_steps = None
         self.__shooting_nodes = None
         self.__exact_hess_cost = 1
@@ -2345,7 +2346,7 @@ class AcadosOcpOptions:
 
         Note: default eps = 1e-4
 
-        Default: :code:`None`.
+        Default: 'NO_REGULARIZE'.
         """
         return self.__regularize_method
 
@@ -2547,6 +2548,11 @@ class AcadosOcpOptions:
     def alpha_min(self):
         """Minimal step size for globalization MERIT_BACKTRACKING, default: 0.05."""
         return self.__alpha_min
+
+    @property
+    def reg_epsilon(self):
+        """Epsilon for regularization, used if regularize_method in ['PROJECT', 'MIRROR', 'CONVEXIFY']"""
+        return self.__reg_epsilon
 
     @property
     def alpha_reduction(self):
@@ -2842,6 +2848,10 @@ class AcadosOcpOptions:
         else:
             raise Exception('Invalid globalization value. Possible values are:\n\n' \
                     + ',\n'.join(globalization_types) + '.\n\nYou have: ' + globalization + '.\n\n')
+
+    @reg_epsilon.setter
+    def reg_epsilon(self, reg_epsilon):
+        self.__reg_epsilon = reg_epsilon
 
     @alpha_min.setter
     def alpha_min(self, alpha_min):
