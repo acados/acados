@@ -375,9 +375,7 @@ class AcadosSimSolver:
 
         status = self.solve()
 
-        if status == 2:
-            print("Warning: acados_sim_solver reached maximum iterations.")
-        elif status != 0:
+        if status != 0:
             raise Exception(f'acados_sim_solver for model {self.model_name} returned status {status}.')
 
         x_next = self.get('x')
