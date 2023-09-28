@@ -164,13 +164,13 @@ def main(use_RTI=False):
         t_preparation *= 1000
         t_feedback *= 1000
         print(f'Computation time in preparation phase in ms: \
-                min {np.min(t_preparation):.3f} median {np.min(t_preparation):.3f} max {np.max(t_preparation):.3f}')
+                min {np.min(t_preparation):.3f} median {np.median(t_preparation):.3f} max {np.max(t_preparation):.3f}')
         print(f'Computation time in feedback phase in ms:    \
-                min {np.min(t_feedback):.3f} median {np.min(t_feedback):.3f} max {np.max(t_feedback):.3f}')
+                min {np.min(t_feedback):.3f} median {np.median(t_feedback):.3f} max {np.max(t_feedback):.3f}')
     else:
         # scale to milliseconds
         t *= 1000
-        print(f'Computation time in ms: min {np.min(t):.3f} median {np.min(t):.3f} max {np.max(t):.3f}')
+        print(f'Computation time in ms: min {np.min(t):.3f} median {np.median(t):.3f} max {np.max(t):.3f}')
 
     # plot results
     plot_pendulum(np.linspace(0, (Tf/N_horizon)*Nsim, Nsim+1), Fmax, simU, simX)
