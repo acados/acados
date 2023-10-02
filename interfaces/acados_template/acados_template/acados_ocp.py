@@ -2369,16 +2369,6 @@ class AcadosOcpOptions:
         return self.__levenberg_marquardt
 
     @property
-    def ext_qp_res(self):
-        """
-        Option determining if residual of QP solution is evaluated externally.
-        Mainly for debugging.
-        Type: int [0, 1]
-        Default: 0.
-        """
-        return self.__ext_qp_res
-
-    @property
     def sim_method_num_stages(self):
         """
         Number of stages in the integrator.
