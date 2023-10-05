@@ -1382,6 +1382,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                                     1.0, cost_grad, 0, cost_grad, 0);
 
                     // cost_hess += b * tmp_nux_ny_2 * tmp_nux_ny_2^T
+                    // TODO: use syrk (exploit symmetry)
                     blasfeo_dgemm_nt(nx+nu, nx+nu, ny, b_vec[ii]/num_steps, tmp_nux_ny2, 0, 0, tmp_nux_ny2, 0, 0,
                                     1.0, cost_hess, 0, 0, cost_hess, 0, 0);
 
@@ -1479,7 +1480,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                                         tmp_nux_ny2, 0, 0);
 
                         // cost_grad += b * J_y_tilde^T * tmp_ny
-                        blasfeo_dgemv_t(nu+nx, ny, b_vec[ii]/num_steps, J_y_tilde, 0, 0, tmp_ny, 0,
+                        blasfeo_dgemv_t(ny, nx+nu, b_vec[ii]/num_steps, J_y_tilde, 0, 0, tmp_ny, 0,
                                         1.0, cost_grad, 0, cost_grad, 0);
                     }
                     // cost_hess += b * tmp_nux_ny2 * tmp_nux_ny2^T
