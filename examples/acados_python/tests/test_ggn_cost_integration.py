@@ -61,17 +61,17 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
     N = 20
     ocp.dims.N = N
 
-    Q = 2 * np.diag([1e3, 1e3, 1e-2, 1e-2, 1e-3])
+    Q = 2 * np.diag([1e3, 1e3, 1e-2, 1e-2, 0.1, 1e-3])
     R = 2 * np.diag([1e-2])
     cost_W = scipy.linalg.block_diag(Q, R)
 
     ocp.cost.cost_type = cost_type
     ocp.cost.cost_type_e = cost_type
 
-    ny = nx + nu + 1
-    ny_e = nx + 1
-    ocp.model.cost_y_expr = ca.vertcat(model.x, model.x[-1]**2, model.u)
-    ocp.model.cost_y_expr_e = ca.vertcat(model.x, model.x[-1]**2)
+    ny = nx + nu + 2
+    ny_e = nx + 2
+    ocp.model.cost_y_expr = ca.vertcat(model.x, model.x[-1]**2, model.x[-1]*model.u, model.u)
+    ocp.model.cost_y_expr_e = ca.vertcat(model.x, model.x[-1]**2, model.x[-1])
     ocp.cost.yref = np.zeros((ny, ))
     ocp.cost.yref_e = np.zeros((ny_e, ))
 
@@ -119,7 +119,7 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
     ocp.solver_options.sim_method_num_steps = 1
     ocp.solver_options.nlp_solver_type = 'SQP'  # SQP_RTI, SQP
     ocp.solver_options.cost_discretization = cost_discretization
-    ocp.solver_options.nlp_solver_max_iter = 20
+    ocp.solver_options.nlp_solver_max_iter = 100
 
     # for debugging:
     # ocp.solver_options.nlp_solver_max_iter = 1
@@ -159,7 +159,7 @@ def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
 
     xN = simX[N, :nx]
 
-    resN = ca.vertcat(xN, xN[-1]**2).full()
+    resN = ca.vertcat(xN, xN[-1]**2, xN[-1]).full()
     terminal_cost = 0.5* resN.T @ Q @ resN
     cost_state = simX[-1, -1] + terminal_cost
 
