@@ -286,6 +286,7 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
 
     if constraints.has_x0 and dims.nbx_0 != dims.nx:
         raise Exception(f"x0 should have shape nx = {dims.nx}.")
+
     if all(constraints.lbx_0 == constraints.ubx_0) and dims.nbx_0 == dims.nx \
         and dims.nbxe_0 is None \
         and (constraints.idxbxe_0.shape == constraints.idxbx_0.shape)\
@@ -297,6 +298,9 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
     elif dims.nbxe_0 is None:
         # case: x0 and idxbxe_0 were not set -> dont assume nbx0 to be equality constraints.
         dims.nbxe_0 = 0
+
+    # for solution sens testing!
+    dims.nbxe_0 = 0
 
     # path
     nbx = constraints.idxbx.shape[0]
