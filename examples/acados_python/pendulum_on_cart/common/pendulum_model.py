@@ -30,6 +30,7 @@
 
 from acados_template import AcadosModel
 from casadi import SX, vertcat, sin, cos, Function
+import casadi as ca
 
 def export_pendulum_ode_model() -> AcadosModel:
 
@@ -89,6 +90,19 @@ def export_pendulum_ode_model() -> AcadosModel:
     model.p = p
     model.name = model_name
 
+    return model
+
+
+def export_linearized_pendulum(xbar, ubar):
+    model = export_pendulum_ode_model()
+
+    val = ca.substitute(ca.substitute(model.f_expl_expr, model.x, xbar), model.u, ubar)
+    jac_x = ca.substitute(ca.substitute(ca.jacobian(model.f_expl_expr, model.x), model.x, xbar), model.u, ubar)
+    jac_u = ca.substitute(ca.substitute(ca.jacobian(model.f_expl_expr, model.u), model.x, xbar), model.u, ubar)
+
+    model.f_expl_expr = val + jac_x @ (model.x-xbar) + jac_u @ (model.u-ubar)
+    model.f_impl_expr = model.f_expl_expr - model.xdot
+    model.name += '_linearized'
     return model
 
 

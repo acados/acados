@@ -1054,6 +1054,7 @@ class AcadosOcpSolver:
         status = self.solve()
 
         if status != 0:
+            self.print_statistics()
             if fail_on_nonzero_status:
                 raise Exception(f'acados acados_ocp_solver returned status {status}')
             else:

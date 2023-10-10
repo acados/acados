@@ -40,7 +40,7 @@ import numpy as np
 import scipy.linalg
 import matplotlib.pyplot as plt
 
-X0 = np.array([0.5, 0.001, 0.0001, 0.0001])
+X0 = np.array([0.5, 0.0001, 0.00001, 0.00001])
 FMAX = 80
 T_HORIZON = 1.0
 N = 20
@@ -50,8 +50,8 @@ def create_solver_and_integrator():
     ocp = AcadosOcp()
 
     # set model
-    # model = export_pendulum_ode_model()
-    model = export_linearized_pendulum(X0, np.array([1.]))
+    model = export_pendulum_ode_model()
+    # model = export_linearized_pendulum(X0, np.array([1.]))
     # model = export_pendulum_ode_model_with_discrete_rk4(dT=T_HORIZON/N)
 
     ocp.model = model
@@ -71,7 +71,7 @@ def create_solver_and_integrator():
     ocp.cost.cost_type_e = 'LINEAR_LS'
 
     Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
-    R = 2*np.diag([1e-1])
+    R = 3*np.diag([1e-1])
     # R = 2*np.diag([1e0])
 
     ocp.cost.W = scipy.linalg.block_diag(Q, R)
@@ -93,24 +93,25 @@ def create_solver_and_integrator():
     # set constraints
     ocp.constraints.lbu = np.array([-FMAX])
     ocp.constraints.ubu = np.array([+FMAX])
-    ocp.constraints.x0 = X0
     ocp.constraints.idxbu = np.array([0])
+    ocp.constraints.x0 = X0
 
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
     ocp.solver_options.hessian_approx = 'EXACT'
     # ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
-    ocp.solver_options.integrator_type = 'IRK'
+    ocp.solver_options.integrator_type = 'ERK'
     # ocp.solver_options.integrator_type = 'DISCRETE'
     ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
     ocp.solver_options.sim_method_num_steps = 5
-    ocp.solver_options.tol = 1e-7
-    ocp.solver_options.sim_method_newton_tol = 1e-7
+    ocp.solver_options.tol = 1e-5
+    # ocp.solver_options.sim_method_newton_tol = 1e-5
 
     ocp.solver_options.qp_solver_cond_N = N
 
     ocp.solver_options.qp_solver_iter_max = 500
-    ocp.solver_options.nlp_solver_max_iter = 1000
-
+    ocp.solver_options.nlp_solver_max_iter = 500
+    # ocp.solver_options.globalization = 'MERIT_BACKTRACKING'
+    ocp.solver_options.nlp_solver_step_length = 0.5
     # set prediction horizon
     ocp.solver_options.tf = T_HORIZON
 
@@ -192,12 +193,12 @@ def main():
 def sensitivity_experiment():
     acados_ocp_solver, _ = create_solver_and_integrator()
 
-    nval = 201
-    idxp = 0
-    p_max = 2.5
+    nval = 251
+    # idxp = 0
+    # p_max = 1.05
 
-    # idxp = 1
-    # p_max = np.pi/4
+    idxp = 1
+    p_max = 0.6
     p_vals = np.linspace(0, p_max, nval)
     u0_values = []
     x0 = X0.copy()
@@ -206,6 +207,7 @@ def sensitivity_experiment():
     plt.figure()
 
     for i, p0 in enumerate(p_vals):
+        print(f'\n\n{p0=}')
         x0[idxp] = p0
         u0 = acados_ocp_solver.solve_for_x0(x0)
         u0_values.append(u0)
