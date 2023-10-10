@@ -107,6 +107,7 @@ def create_solver_and_integrator():
     # ocp.solver_options.sim_method_newton_tol = 1e-5
 
     ocp.solver_options.qp_solver_cond_N = N
+    ocp.solver_options.qp_solver_warm_start = 0
 
     ocp.solver_options.qp_solver_iter_max = 500
     ocp.solver_options.nlp_solver_max_iter = 500
@@ -219,6 +220,7 @@ def sensitivity_experiment():
             plt.scatter(p0, u0, marker='*', color="C1")
             plt.plot([p_vals[0], p_vals[-1]], [taylor_0, taylor_1], color="C1", alpha=0.3)
 
+    acados_ocp_solver.dump_last_qp_to_json('last_qp.json', overwrite=True)
     plt.plot(p_vals, u0_values, ':', color="C0")
     plt.xlabel('$p$')
     plt.ylabel('$u_0$')
