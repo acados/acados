@@ -32,13 +32,19 @@
 import sys
 sys.path.insert(0, 'common')
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver, latexify_plot
 from pendulum_model import export_pendulum_ode_model
 from utils import plot_pendulum
 import numpy as np
 import scipy.linalg
+import matplotlib.pyplot as plt
 
-def main():
+X0 = np.array([0.5, 0.0, 0.0, 0.0])
+FMAX = 80
+T_HORIZON = 1.0
+N = 20
+
+def create_solver_and_integrator():
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
@@ -46,12 +52,10 @@ def main():
     model = export_pendulum_ode_model()
     ocp.model = model
 
-    Tf = 1.0
     nx = model.x.size()[0]
     nu = model.u.size()[0]
     ny = nx + nu
     ny_e = nx
-    N = 20
 
     # set dimensions
     ocp.dims.N = N
@@ -83,11 +87,9 @@ def main():
     ocp.cost.yref_e = np.zeros((ny_e, ))
 
     # set constraints
-    Fmax = 80
-    x0 = np.array([1.0, 0.2, 0.0, 0.0])
-    ocp.constraints.lbu = np.array([-Fmax])
-    ocp.constraints.ubu = np.array([+Fmax])
-    ocp.constraints.x0 = x0
+    ocp.constraints.lbu = np.array([-FMAX])
+    ocp.constraints.ubu = np.array([+FMAX])
+    ocp.constraints.x0 = X0
     ocp.constraints.idxbu = np.array([0])
 
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
@@ -101,17 +103,26 @@ def main():
     ocp.solver_options.qp_solver_iter_max = 200
 
     # set prediction horizon
-    ocp.solver_options.tf = Tf
+    ocp.solver_options.tf = T_HORIZON
 
     acados_ocp_solver = AcadosOcpSolver(ocp)
     acados_integrator = AcadosSimSolver(ocp)
+    return acados_ocp_solver, acados_integrator
 
+
+def main():
+    acados_ocp_solver, acados_integrator = create_solver_and_integrator()
+
+    nx = acados_ocp_solver.acados_ocp.dims.nx
+    nu = acados_ocp_solver.acados_ocp.dims.nu
 
     Nsim = 100
     simX = np.ndarray((Nsim+1, nx))
     simU = np.ndarray((Nsim, nu))
+    sens_u = np.ndarray((nu, nx))
+    sens_x = np.ndarray((nx, nx))
 
-    xcurrent = x0
+    xcurrent = X0
     simX[0,:] = xcurrent
 
     k_lin_feedback = 20 # use lin feedback k_lin_feedback -1 times
@@ -135,8 +146,6 @@ def main():
             u_lin = simU[i,:]
             x_lin = xcurrent
 
-            sens_u = np.ndarray((nu, nx))
-            sens_x = np.ndarray((nx, nx))
             for index in range(nx):
                 acados_ocp_solver.eval_param_sens(index)
                 sens_u[:, index] = acados_ocp_solver.get(0, "sens_u")
@@ -146,12 +155,13 @@ def main():
             # print("using solution sensitivities as feedback")
             simU[i,:] = u_lin + sens_u @ (xcurrent - x_lin)
             # clip
-            if simU[i,:] > Fmax:
-                simU[i,:] = Fmax
-            elif simU[i,:] < -Fmax:
-                simU[i,:] = -Fmax
+            if simU[i,:] > FMAX:
+                simU[i,:] = FMAX
+            elif simU[i,:] < -FMAX:
+                simU[i,:] = -FMAX
             # for debugging: compute difference of linear feedback wrt real optimal u
-            #
+            # u_exact = acados_ocp_solver.solve_for_x0(xcurrent)
+            # print(f"difference u_lin wrt u_exact {u_exact-simU[i,:]=}")
 
 
         # simulate system
@@ -167,8 +177,43 @@ def main():
         simX[i+1,:] = xcurrent
 
     # plot results
-    plot_pendulum(np.linspace(0, Tf/N*Nsim, Nsim+1), Fmax, simU, simX)
+    plot_pendulum(np.linspace(0, T_HORIZON/N*Nsim, Nsim+1), FMAX, simU, simX)
 
+
+def sensitivity_experiment():
+    acados_ocp_solver, _ = create_solver_and_integrator()
+
+    nval = 102
+    idxp = 0
+    p_max = 1
+
+    # idxp = 1
+    # p_max = np.pi/10
+    p_vals = np.linspace(-p_max, p_max, nval)
+    u0_values = []
+    x0 = X0.copy()
+
+    latexify_plot()
+    plt.figure()
+
+    for i, p0 in enumerate(p_vals):
+        x0[idxp] = p0
+        u0 = acados_ocp_solver.solve_for_x0(x0)
+        u0_values.append(u0)
+        acados_ocp_solver.eval_param_sens(index=idxp)
+        du0_dp = acados_ocp_solver.get(0, "sens_u")
+        if i % 25 == 0:
+            taylor_0 = u0 + du0_dp * (p_vals[0] - p0)
+            taylor_1 = u0 + du0_dp * (p_vals[-1] - p0)
+            plt.scatter(p0, u0, marker='*', color="C1")
+            plt.plot([p_vals[0], p_vals[-1]], [taylor_0, taylor_1], color="C1", alpha=0.3)
+
+    plt.plot(p_vals, u0_values, ':', color="C0")
+    plt.xlabel('$p$')
+    plt.ylabel('$u_0$')
+    plt.grid()
+    plt.show()
 
 if __name__ == "__main__":
-    main()
+    # main()
+    sensitivity_experiment()
