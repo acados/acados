@@ -85,26 +85,43 @@ class AcadosModel():
         ## for OCP
         # constraints
         # BGH(default): lh <= h(x, u) <= uh
-        self.con_h_expr = None  #: CasADi expression for the constraint :math:`h`; Default: :code:`None`
+        self.con_h_expr = None
+        """
+        CasADi expression for the constraint :math:`h`; Default: :code:`None`
+        """
         # BGP(convex over nonlinear): lphi <= phi(r(x, u)) <= uphi
-        self.con_phi_expr = None  #: CasADi expression for the constraint phi; Default: :code:`None`
-        self.con_r_expr = None  #: CasADi expression for the constraint phi(r); Default: :code:`None`
+        self.con_phi_expr = None
+        """CasADi expression for the constraint phi; Default: :code:`None`"""
+        self.con_r_expr = None
+        """CasADi expression for the constraint phi(r); Default: :code:`None`"""
         self.con_r_in_phi = None
         # terminal
-        self.con_h_expr_e = None  #: CasADi expression for the terminal constraint :math:`h^e`; Default: :code:`None`
-        self.con_r_expr_e = None  #: CasADi expression for the terminal constraint; Default: :code:`None`
-        self.con_phi_expr_e = None  #: CasADi expression for the terminal constraint; Default: :code:`None`
+        self.con_h_expr_e = None
+        """CasADi expression for the terminal constraint :math:`h^e`; Default: :code:`None`"""
+        self.con_r_expr_e = None
+        """CasADi expression for the terminal constraint; Default: :code:`None`"""
+        self.con_phi_expr_e = None
+        """CasADi expression for the terminal constraint; Default: :code:`None`"""
         self.con_r_in_phi_e = None
         # cost
-        self.cost_y_expr = None  #: CasADi expression for nonlinear least squares; Default: :code:`None`
-        self.cost_y_expr_e = None  #: CasADi expression for nonlinear least squares, terminal; Default: :code:`None`
-        self.cost_y_expr_0 = None  #: CasADi expression for nonlinear least squares, initial; Default: :code:`None`
-        self.cost_expr_ext_cost = None  #: CasADi expression for external cost; Default: :code:`None`
-        self.cost_expr_ext_cost_e = None  #: CasADi expression for external cost, terminal; Default: :code:`None`
-        self.cost_expr_ext_cost_0 = None  #: CasADi expression for external cost, initial; Default: :code:`None`
-        self.cost_expr_ext_cost_custom_hess = None  #: CasADi expression for custom hessian (only for external cost); Default: :code:`None`
-        self.cost_expr_ext_cost_custom_hess_e = None  #: CasADi expression for custom hessian (only for external cost), terminal; Default: :code:`None`
-        self.cost_expr_ext_cost_custom_hess_0 = None  #: CasADi expression for custom hessian (only for external cost), initial; Default: :code:`None`
+        self.cost_y_expr = None
+        """CasADi expression for nonlinear least squares; Default: :code:`None`"""
+        self.cost_y_expr_e = None
+        """CasADi expression for nonlinear least squares, terminal; Default: :code:`None`"""
+        self.cost_y_expr_0 = None
+        """CasADi expression for nonlinear least squares, initial; Default: :code:`None`"""
+        self.cost_expr_ext_cost = None
+        """CasADi expression for external cost; Default: :code:`None`"""
+        self.cost_expr_ext_cost_e = None
+        """CasADi expression for external cost, terminal; Default: :code:`None`"""
+        self.cost_expr_ext_cost_0 = None
+        """CasADi expression for external cost, initial; Default: :code:`None`"""
+        self.cost_expr_ext_cost_custom_hess = None
+        """CasADi expression for custom hessian (only for external cost); Default: :code:`None`"""
+        self.cost_expr_ext_cost_custom_hess_e = None
+        """CasADi expression for custom hessian (only for external cost), terminal; Default: :code:`None`"""
+        self.cost_expr_ext_cost_custom_hess_0 = None
+        """CasADi expression for custom hessian (only for external cost), initial; Default: :code:`None`"""
 
         ## CONVEX_OVER_NONLINEAR convex-over-nonlinear cost: psi(y(x, u, p) - y_ref; p)
         self.cost_psi_expr_0 = None
