@@ -33,13 +33,14 @@ import sys
 sys.path.insert(0, 'common')
 
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver, latexify_plot
-from pendulum_model import export_pendulum_ode_model
+from pendulum_model import export_pendulum_ode_model, export_linearized_pendulum, export_pendulum_ode_model_with_discrete_rk4
+
 from utils import plot_pendulum
 import numpy as np
 import scipy.linalg
 import matplotlib.pyplot as plt
 
-X0 = np.array([0.5, 0.0, 0.0, 0.0])
+X0 = np.array([0.5, 0.001, 0.0001, 0.0001])
 FMAX = 80
 T_HORIZON = 1.0
 N = 20
@@ -49,7 +50,10 @@ def create_solver_and_integrator():
     ocp = AcadosOcp()
 
     # set model
-    model = export_pendulum_ode_model()
+    # model = export_pendulum_ode_model()
+    model = export_linearized_pendulum(X0, np.array([1.]))
+    # model = export_pendulum_ode_model_with_discrete_rk4(dT=T_HORIZON/N)
+
     ocp.model = model
 
     nx = model.x.size()[0]
@@ -93,14 +97,19 @@ def create_solver_and_integrator():
     ocp.constraints.idxbu = np.array([0])
 
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
-    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
-    ocp.solver_options.integrator_type = 'ERK'
+    ocp.solver_options.hessian_approx = 'EXACT'
+    # ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+    ocp.solver_options.integrator_type = 'IRK'
+    # ocp.solver_options.integrator_type = 'DISCRETE'
     ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
-    ocp.solver_options.sim_method_num_steps = 2
+    ocp.solver_options.sim_method_num_steps = 5
+    ocp.solver_options.tol = 1e-7
+    ocp.solver_options.sim_method_newton_tol = 1e-7
 
     ocp.solver_options.qp_solver_cond_N = N
 
-    ocp.solver_options.qp_solver_iter_max = 200
+    ocp.solver_options.qp_solver_iter_max = 500
+    ocp.solver_options.nlp_solver_max_iter = 1000
 
     # set prediction horizon
     ocp.solver_options.tf = T_HORIZON
@@ -183,13 +192,13 @@ def main():
 def sensitivity_experiment():
     acados_ocp_solver, _ = create_solver_and_integrator()
 
-    nval = 102
+    nval = 201
     idxp = 0
-    p_max = 1
+    p_max = 2.5
 
     # idxp = 1
-    # p_max = np.pi/10
-    p_vals = np.linspace(-p_max, p_max, nval)
+    # p_max = np.pi/4
+    p_vals = np.linspace(0, p_max, nval)
     u0_values = []
     x0 = X0.copy()
 
@@ -200,9 +209,9 @@ def sensitivity_experiment():
         x0[idxp] = p0
         u0 = acados_ocp_solver.solve_for_x0(x0)
         u0_values.append(u0)
-        acados_ocp_solver.eval_param_sens(index=idxp)
-        du0_dp = acados_ocp_solver.get(0, "sens_u")
-        if i % 25 == 0:
+        if i % 50 == 0:
+            acados_ocp_solver.eval_param_sens(index=idxp)
+            du0_dp = acados_ocp_solver.get(0, "sens_u")
             taylor_0 = u0 + du0_dp * (p_vals[0] - p0)
             taylor_1 = u0 + du0_dp * (p_vals[-1] - p0)
             plt.scatter(p0, u0, marker='*', color="C1")
