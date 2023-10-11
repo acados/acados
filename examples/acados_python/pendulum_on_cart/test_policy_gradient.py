@@ -118,7 +118,7 @@ def create_ocp_description(hessian_approx, linearized_dynamics=False, discrete=F
     ocp.solver_options.nlp_solver_max_iter = 1000
     # ocp.solver_options.globalization = 'MERIT_BACKTRACKING'
     if hessian_approx == 'EXACT':
-        ocp.solver_options.nlp_solver_step_length = 0.0
+        ocp.solver_options.nlp_solver_step_length = 0.5
         ocp.solver_options.nlp_solver_max_iter = 1
         ocp.solver_options.tol = 1e-14
     # set prediction horizon
@@ -211,7 +211,7 @@ def create_casadi_solver(linearized_dynamics=False, discrete=False):
 
 
 
-def sensitivity_experiment(linearized_dynamics=False, discrete=False):
+def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True):
     acados_ocp_solver_exact = create_solver(hessian_approx='EXACT', linearized_dynamics=linearized_dynamics, discrete=discrete)
     acados_ocp_solver_gn = create_solver(hessian_approx='GAUSS_NEWTON', linearized_dynamics=linearized_dynamics, discrete=discrete)
 
@@ -220,11 +220,12 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False):
     # p_max = 1.05
 
     idxp = 1
-    p_max = 0.3
+    p_max = 0.4
     p_vals = np.linspace(0, p_max, nval)
     u0_values = np.zeros(nval)
     du0_dp_values = np.zeros(nval)
     x0 = X0.copy()
+    exact_hessian_status = 0.0*p_vals
 
     latexify_plot()
 
@@ -239,6 +240,7 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False):
         acados_ocp_solver_exact.set(0, 'u', u0+1e-7)
         acados_ocp_solver_exact.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
         acados_ocp_solver_exact.eval_param_sens(index=idxp)
+        exact_hessian_status[i] = acados_ocp_solver_exact.get_stats('qp_stat')[-1]
 
         # check_hessian_last_qp(acados_ocp_solver_exact)
 
@@ -252,14 +254,23 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False):
     # Finite difference comparison
     du0_dp_finite_diff = np.gradient(u0_values, p_vals[1]-p_vals[0])
 
-    plt.figure()
-    plt.plot(p_vals, du0_dp_values, '--', label='acados')
-    plt.plot(p_vals, du0_dp_finite_diff, ':', label='finite differences')
-    plt.xlabel('p')
-    plt.grid()
-    plt.legend()
-    plt.ylabel(r'$\partial_p u_0$')
-    plt.show()
+    fig, axes = plt.subplots(nrows=3, ncols=1, sharex=True)
+    axes[0].plot(p_vals, u0_values)
+    axes[0].grid()
+    axes[0].set_ylabel("$u_0$")
+    axes[1].plot(p_vals, du0_dp_values, '--', label='acados')
+    axes[1].plot(p_vals, du0_dp_finite_diff, ':', label='finite differences')
+    axes[2].set_xlabel('p')
+    axes[1].grid()
+    axes[1].legend()
+    axes[1].set_ylabel(r'$\partial_p u_0$')
+
+    axes[2].plot(p_vals, exact_hessian_status)
+    axes[2].set_ylabel("QP status")
+    axes[2].grid()
+
+    if show:
+        plt.show()
 
     err = np.max(np.abs(du0_dp_finite_diff - du0_dp_values))
     rel_err = np.max(np.abs(du0_dp_finite_diff - du0_dp_values) /
@@ -329,5 +340,5 @@ def compare_acados_casadi_hessians(linearized_dynamics=False, discrete=False):
         breakpoint()
 
 if __name__ == "__main__":
-    # sensitivity_experiment(linearized_dynamics=False, discrete=True)
-    compare_acados_casadi_hessians(linearized_dynamics=False, discrete=True)
+    sensitivity_experiment(linearized_dynamics=False, discrete=True)
+    # compare_acados_casadi_hessians(linearized_dynamics=False, discrete=True)
