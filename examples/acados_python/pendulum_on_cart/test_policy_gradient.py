@@ -32,7 +32,7 @@
 import sys
 sys.path.insert(0, 'common')
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver, latexify_plot
+from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver, AcadosSimSolver, latexify_plot, casadi_length
 from pendulum_model import export_pendulum_ode_model, export_linearized_pendulum, export_pendulum_ode_model_with_discrete_rk4, export_linearized_pendulum_ode_model_with_discrete_rk4
 
 from utils import plot_pendulum
@@ -47,28 +47,26 @@ T_HORIZON = 1.0
 N = 20
 
 # TODO:
-# - compare correctness via finite differences
 # - exact Hessian CasADi check
-# - check definiteness
+# - compare correctness via finite differences -> done
+# - check definiteness -> a lot of indefiniteness
 
-def create_solver_and_integrator(hessian_approx, linearized_dynamics=False, discrete=False):
+def create_ocp_description(hessian_approx, linearized_dynamics=False, discrete=False) -> AcadosOcp:
     ocp = AcadosOcp()
 
-    ocp.solver_options.integrator_type = 'DISCRETE'
-
-    if linearized_dynamics:
-        if discrete:
-            model = export_linearized_pendulum_ode_model_with_discrete_rk4(T_HORIZON/N, X0, np.array([1.]))
+    if discrete:
+        ocp.solver_options.integrator_type = 'DISCRETE'
+        if linearized_dynamics:
+            model: AcadosModel = export_linearized_pendulum_ode_model_with_discrete_rk4(T_HORIZON/N, X0, np.array([1.]))
         else:
-            model = export_linearized_pendulum(X0, np.array([1.]))
-            ocp.solver_options.integrator_type = 'ERK'
+            model: AcadosModel = export_pendulum_ode_model_with_discrete_rk4(T_HORIZON/N)
 
     else:
-        if discrete:
-            model = export_pendulum_ode_model_with_discrete_rk4(T_HORIZON/N)
+        ocp.solver_options.integrator_type = 'ERK'
+        if linearized_dynamics:
+            model: AcadosModel = export_linearized_pendulum(X0, np.array([1.]))
         else:
-            model = export_pendulum_ode_model()
-            ocp.solver_options.integrator_type = 'ERK'
+            model: AcadosModel = export_pendulum_ode_model()
 
 
     model.name += f'{hessian_approx}'
@@ -96,7 +94,7 @@ def create_solver_and_integrator(hessian_approx, linearized_dynamics=False, disc
 
     ocp.cost.Vx_e = np.eye(nx)
 
-    ocp.cost.yref  = np.zeros((ny, ))
+    ocp.cost.yref = np.zeros((ny, ))
     ocp.cost.yref_e = np.zeros((ny_e, ))
 
     # set constraints
@@ -122,19 +120,100 @@ def create_solver_and_integrator(hessian_approx, linearized_dynamics=False, disc
     if hessian_approx == 'EXACT':
         ocp.solver_options.nlp_solver_step_length = 0.0
         ocp.solver_options.nlp_solver_max_iter = 1
-        ocp.solver_options.tol = 1e-10
+        ocp.solver_options.tol = 1e-14
     # set prediction horizon
     ocp.solver_options.tf = T_HORIZON
+    return ocp
+
+
+def create_solver(hessian_approx, linearized_dynamics=False, discrete=False) -> AcadosOcpSolver:
+    ocp = create_ocp_description(hessian_approx, linearized_dynamics=linearized_dynamics, discrete=discrete)
 
     acados_ocp_solver = AcadosOcpSolver(ocp, json_file=f'solver_f{hessian_approx}.json')
-    # acados_integrator = AcadosSimSolver(ocp)
+
     return acados_ocp_solver
 
 
 
+def create_casadi_solver(linearized_dynamics=False, discrete=False):
+    ocp = create_ocp_description(hessian_approx='EXACT', linearized_dynamics=linearized_dynamics, discrete=discrete)
+
+    model = ocp.model
+    if discrete:
+        f_discrete_fun = ca.Function('f_discrete_fun', [model.x, model.u], [model.disc_dyn_expr])
+    else:
+        raise NotImplementedError()
+
+    if ocp.cost.cost_type == "NONLINEAR_LS":
+        cost_res = ocp.model.cost_y_expr - ocp.cost.yref
+        cost_term = .5 * (T_HORIZON/N) * (cost_res.T @ ocp.cost.W @ cost_res)
+        path_cost_fun = ca.Function('path_cost_fun', [model.x, model.u], [cost_term])
+    else:
+        raise NotImplementedError()
+
+    if ocp.cost.cost_type_e == "LINEAR_LS":
+        cost_res = ocp.cost.yref_e - ocp.cost.Vx_e @ model.x
+        cost_term = .5 * cost_res.T @ ocp.cost.W_e @ cost_res
+        terminal_cost_fun = ca.Function('terminal_cost_fun', [model.x], [cost_term])
+    else:
+        raise NotImplementedError()
+
+    # create CasADi NLP
+    nlp_vars = []
+    nlp_constr = []
+    nx = casadi_length(model.x)
+    nu = casadi_length(model.u)
+
+    nlp_params = []
+    x0 = ca.SX.sym('x0', nx)
+    nlp_params += [x0]
+    cost = 0.0
+
+    for k in range(N):
+        xk = ca.SX.sym('xk', nx)
+        uk = ca.SX.sym('uk', nu)
+        nlp_vars += [uk, xk]
+        # dynamics
+        if k == 0:
+            nlp_constr += [xk - x0]
+        else:
+            nlp_constr += [xnext - xk]
+        xnext = f_discrete_fun(xk, uk)
+        cost += path_cost_fun(xk, uk)
+
+    # terminal
+    xk = ca.SX.sym('xk', nx)
+    nlp_constr += [xnext - xk]
+    nlp_vars += [xk]
+    cost += terminal_cost_fun(xk)
+
+    constr_vec = ca.vertcat(*nlp_constr)
+    nlp_x = ca.vertcat(*nlp_vars)
+    nlp = {
+            'x': nlp_x,
+            'f': cost,
+            'g': constr_vec,
+            'p': ca.vertcat(*nlp_params),
+           }
+    casadi_solver = ca.nlpsol('casadi_solver', 'ipopt', nlp)
+
+    # exact hessian
+    ng = casadi_length(constr_vec)
+    # lam_g = ca.SX.sym('lam_g', ng)
+    # lagrangian = cost + lam_g.T @ constr_vec
+    # lag_hess_expr, _ = ca.hessian(lagrangian, nlp_x)
+    # lag_hess_fun = ca.Function('lag_hess_fun', [nlp_x, lam_g], [lag_hess_expr])
+    lag_hess_fun = casadi_solver.get_function('nlp_hess_l')
+
+    lbg = np.zeros(ng)
+    ubg = np.zeros(ng)
+    return casadi_solver, lag_hess_fun, lbg, ubg
+
+
+
 def sensitivity_experiment(linearized_dynamics=False, discrete=False):
-    acados_ocp_solver_exact = create_solver_and_integrator(hessian_approx='EXACT', linearized_dynamics=linearized_dynamics, discrete=discrete)
-    acados_ocp_solver_gn = create_solver_and_integrator(hessian_approx='GAUSS_NEWTON', linearized_dynamics=linearized_dynamics, discrete=discrete)
+    acados_ocp_solver_exact = create_solver(hessian_approx='EXACT', linearized_dynamics=linearized_dynamics, discrete=discrete)
+    acados_ocp_solver_gn = create_solver(hessian_approx='GAUSS_NEWTON', linearized_dynamics=linearized_dynamics, discrete=discrete)
 
     nval = 250
     # idxp = 0
@@ -160,6 +239,8 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False):
         acados_ocp_solver_exact.set(0, 'u', u0+1e-7)
         acados_ocp_solver_exact.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
         acados_ocp_solver_exact.eval_param_sens(index=idxp)
+
+        # check_hessian_last_qp(acados_ocp_solver_exact)
 
         residuals = acados_ocp_solver_exact.get_stats("residuals")
         print(f"residuals sensitivity_solver {residuals}")
@@ -201,5 +282,52 @@ def plot_tangents(p_vals, u0_values, du0_dp_values):
     plt.ylabel('$u_0$')
     plt.grid()
 
+def check_hessian_last_qp(solver: AcadosOcpSolver):
+    for i in range(N+1):
+        hess_block = get_hessian_block(solver, i)
+        eig_vals, _ = np.linalg.eig(hess_block)
+        if any(eig_vals < 0.0):
+            print(f"found eig < 0 at node {i} {eig_vals=}")
+
+def get_hessian_block(solver, i) -> np.ndarray:
+    Q_mat = solver.get_from_qp_in(i, 'Q')
+    R_mat = solver.get_from_qp_in(i, 'R')
+    S_mat = solver.get_from_qp_in(i, 'S')
+    hess_block = scipy.linalg.block_diag(
+        R_mat, Q_mat
+    )
+    nu = R_mat.shape[0]
+    hess_block[nu:, :nu] = S_mat
+    hess_block[:nu, nu:] = S_mat.T
+    return hess_block
+
+def compare_acados_casadi_hessians(linearized_dynamics=False, discrete=False):
+    casadi_solver, lag_hess_fun, lbg, ubg = create_casadi_solver(linearized_dynamics=linearized_dynamics, discrete=discrete)
+
+    acados_ocp_solver_gn = create_solver(hessian_approx='GAUSS_NEWTON', linearized_dynamics=linearized_dynamics, discrete=discrete)
+    acados_ocp_solver_exact = create_solver(hessian_approx='EXACT', linearized_dynamics=linearized_dynamics, discrete=discrete)
+
+    x0 = X0.copy()
+    x0[1] = 0.1
+
+    nlp_sol = casadi_solver(p=x0, lbg=lbg, ubg=ubg)
+    # print(f"{nlp_sol=}")
+    casadi_hess = lag_hess_fun(x=nlp_sol['x'], p=x0, lam_f=1.0, lam_g=nlp_sol['lam_g'])['triu_hess_gamma_x_x'].full()
+
+    acados_ocp_solver_gn.solve_for_x0(x0)
+    acados_ocp_solver_gn.store_iterate(filename='iterate.json', overwrite=True)
+    acados_ocp_solver_exact.load_iterate(filename='iterate.json')
+    acados_ocp_solver_exact.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
+
+    offset = 0
+    for i in range(N+1):
+        hess_block_acados = get_hessian_block(acados_ocp_solver_exact, i)
+        nv = hess_block_acados.shape[0]
+        hess_block_casadi = casadi_hess[offset:offset+nv, offset:offset+nv]
+        print(f"diff\n{hess_block_acados - hess_block_casadi}")
+        print(f"\nhess acados\n{hess_block_acados}")
+        breakpoint()
+
 if __name__ == "__main__":
-    sensitivity_experiment(linearized_dynamics=False, discrete=True)
+    # sensitivity_experiment(linearized_dynamics=False, discrete=True)
+    compare_acados_casadi_hessians(linearized_dynamics=False, discrete=True)
