@@ -80,22 +80,29 @@ def create_ocp_description(hessian_approx, linearized_dynamics=False, discrete=F
     ocp.dims.N = N
 
     # set cost module
-    ocp.cost.cost_type = 'NONLINEAR_LS'
-    ocp.cost.cost_type_e = 'LINEAR_LS'
-
     Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
-    R = 5*np.diag([1e-4])
     # R = 2*np.diag([1e0])
+    R = 5*np.diag([1e-4])
+    W = scipy.linalg.block_diag(Q, R)
+    y_expr = ca.vertcat(model.x, model.u**2)
+    if hessian_approx == 'GAUSS_NEWTON':
+        ocp.cost.cost_type = 'NONLINEAR_LS'
+        ocp.cost.cost_type_e = 'LINEAR_LS'
 
-    ocp.cost.W = scipy.linalg.block_diag(Q, R)
-    ocp.cost.W_e = Q
+        ocp.cost.W = W
+        ocp.cost.W_e = Q
 
-    ocp.model.cost_y_expr = ca.vertcat(model.x, model.u**2)
+        ocp.model.cost_y_expr = y_expr
 
-    ocp.cost.Vx_e = np.eye(nx)
+        ocp.cost.Vx_e = np.eye(nx)
 
-    ocp.cost.yref = np.zeros((ny, ))
-    ocp.cost.yref_e = np.zeros((ny_e, ))
+        ocp.cost.yref  = np.zeros((ny, ))
+        ocp.cost.yref_e = np.zeros((ny_e, ))
+    else:
+        ocp.cost.cost_type = 'EXTERNAL'
+        ocp.cost.cost_type_e = 'EXTERNAL'
+        ocp.model.cost_expr_ext_cost = 0.5 * (y_expr.T @ W @ y_expr)
+        ocp.model.cost_expr_ext_cost_e = 0.5* model.x.T @ Q @ model.x
 
     # set constraints
     # ocp.constraints.lbu = np.array([-FMAX])
@@ -148,6 +155,8 @@ def create_casadi_solver(linearized_dynamics=False, discrete=False):
         cost_res = ocp.model.cost_y_expr - ocp.cost.yref
         cost_term = .5 * (T_HORIZON/N) * (cost_res.T @ ocp.cost.W @ cost_res)
         path_cost_fun = ca.Function('path_cost_fun', [model.x, model.u], [cost_term])
+    elif ocp.cost.cost_type == "EXTERNAL":
+        path_cost_fun = ca.Function('path_cost_fun', [model.x, model.u], [(T_HORIZON/N) * model.cost_expr_ext_cost])
     else:
         raise NotImplementedError()
 
@@ -155,6 +164,8 @@ def create_casadi_solver(linearized_dynamics=False, discrete=False):
         cost_res = ocp.cost.yref_e - ocp.cost.Vx_e @ model.x
         cost_term = .5 * cost_res.T @ ocp.cost.W_e @ cost_res
         terminal_cost_fun = ca.Function('terminal_cost_fun', [model.x], [cost_term])
+    elif ocp.cost.cost_type_e == "EXTERNAL":
+        terminal_cost_fun = ca.Function('terminal_cost_fun', [model.x], [model.cost_expr_ext_cost_e])
     else:
         raise NotImplementedError()
 
@@ -323,8 +334,8 @@ def compare_acados_casadi_hessians(linearized_dynamics=False, discrete=False):
 
     nlp_sol = casadi_solver(p=x0, lbg=lbg, ubg=ubg)
     # print(f"{nlp_sol=}")
-    casadi_hess = lag_hess_fun(x=nlp_sol['x'], p=x0, lam_f=1.0, lam_g=nlp_sol['lam_g'])['triu_hess_gamma_x_x'].full()
-
+    casadi_hess_l = lag_hess_fun(x=nlp_sol['x'], p=x0, lam_f=1.0, lam_g=nlp_sol['lam_g'])['triu_hess_gamma_x_x']
+    casadi_hess = ca.triu2symm(ca.triu(casadi_hess_l)).full()
     acados_ocp_solver_gn.solve_for_x0(x0)
     acados_ocp_solver_gn.store_iterate(filename='iterate.json', overwrite=True)
     acados_ocp_solver_exact.load_iterate(filename='iterate.json')
@@ -336,12 +347,14 @@ def compare_acados_casadi_hessians(linearized_dynamics=False, discrete=False):
         nv = hess_block_acados.shape[0]
         hess_block_casadi = casadi_hess[offset:offset+nv, offset:offset+nv]
         hess_error_norm = np.max(np.abs(hess_block_acados - hess_block_casadi))
+        offset += nv
         print(f"hess block {i} error {hess_error_norm:.2e}")
-        if hess_error_norm > 0:
+        if hess_error_norm > 1e-5:
             print(f"diff\n{hess_block_acados - hess_block_casadi}")
             print(f"\nhess acados\n{hess_block_acados}")
+            print(f"\nhess casadi\n{hess_block_casadi}")
             breakpoint()
 
 if __name__ == "__main__":
     # sensitivity_experiment(linearized_dynamics=False, discrete=True)
-    compare_acados_casadi_hessians(linearized_dynamics=True, discrete=True)
+    compare_acados_casadi_hessians(linearized_dynamics=False, discrete=True)
