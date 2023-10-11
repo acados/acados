@@ -335,10 +335,13 @@ def compare_acados_casadi_hessians(linearized_dynamics=False, discrete=False):
         hess_block_acados = get_hessian_block(acados_ocp_solver_exact, i)
         nv = hess_block_acados.shape[0]
         hess_block_casadi = casadi_hess[offset:offset+nv, offset:offset+nv]
-        print(f"diff\n{hess_block_acados - hess_block_casadi}")
-        print(f"\nhess acados\n{hess_block_acados}")
-        breakpoint()
+        hess_error_norm = np.max(np.abs(hess_block_acados - hess_block_casadi))
+        print(f"hess block {i} error {hess_error_norm:.2e}")
+        if hess_error_norm > 0:
+            print(f"diff\n{hess_block_acados - hess_block_casadi}")
+            print(f"\nhess acados\n{hess_block_acados}")
+            breakpoint()
 
 if __name__ == "__main__":
-    sensitivity_experiment(linearized_dynamics=False, discrete=True)
-    # compare_acados_casadi_hessians(linearized_dynamics=False, discrete=True)
+    # sensitivity_experiment(linearized_dynamics=False, discrete=True)
+    compare_acados_casadi_hessians(linearized_dynamics=True, discrete=True)
