@@ -225,6 +225,7 @@ def create_casadi_solver(linearized_dynamics=False, discrete=False):
 def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True):
     acados_ocp_solver_exact = create_solver(hessian_approx='EXACT', linearized_dynamics=linearized_dynamics, discrete=discrete)
     acados_ocp_solver_gn = create_solver(hessian_approx='GAUSS_NEWTON', linearized_dynamics=linearized_dynamics, discrete=discrete)
+    casadi_solver, lag_hess_fun, lbg, ubg = create_casadi_solver(linearized_dynamics=linearized_dynamics, discrete=discrete)
 
     nval = 250
     # idxp = 0
@@ -233,19 +234,23 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True)
     idxp = 1
     p_max = 0.4
     p_vals = np.linspace(0, p_max, nval)
+    min_eigv_vals = 0. * p_vals
+    min_abs_eigv_vals = 0. * p_vals
     u0_values = np.zeros(nval)
     du0_dp_values = np.zeros(nval)
     x0 = X0.copy()
     exact_hessian_status = 0.0*p_vals
 
     latexify_plot()
-
     for i, p0 in enumerate(p_vals):
         x0[idxp] = p0
         u0 = acados_ocp_solver_gn.solve_for_x0(x0)
         u0_values[i] = u0
 
-        print(f'solve sens for {p0=}')
+    du0_dp_finite_diff = np.gradient(u0_values, p_vals[1]-p_vals[0])
+    for i, p0 in enumerate(p_vals):
+        x0[idxp] = p0
+        u0 = acados_ocp_solver_gn.solve_for_x0(x0)
         acados_ocp_solver_gn.store_iterate(filename='iterate.json', overwrite=True)
         acados_ocp_solver_exact.load_iterate(filename='iterate.json')
         acados_ocp_solver_exact.set(0, 'u', u0+1e-7)
@@ -260,18 +265,25 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True)
 
         du0_dp_values[i] = acados_ocp_solver_exact.get(0, "sens_u")
 
+        if np.abs(du0_dp_finite_diff[i] - du0_dp_values[i]) > 1e-6:
+            nlp_sol = casadi_solver(p=x0, lbg=lbg, ubg=ubg)
+            # print(f"{nlp_sol=}")
+            casadi_hess_l = lag_hess_fun(x=nlp_sol['x'], p=x0, lam_f=1.0, lam_g=nlp_sol['lam_g'])['triu_hess_gamma_x_x']
+            casadi_hess = ca.triu2symm(ca.triu(casadi_hess_l)).full()
+            min_eigv, min_abs_eigv, hcorrect = compare_hessian(casadi_hess, acados_ocp_solver_exact)
+            min_eigv_vals[i] = min_eigv
+            min_abs_eigv_vals[i] = min_abs_eigv
+
     # plot_tangents(p_vals, u0_values, du0_dp_values)
 
-    # Finite difference comparison
-    du0_dp_finite_diff = np.gradient(u0_values, p_vals[1]-p_vals[0])
+    # Finite difference compariso
 
-    fig, axes = plt.subplots(nrows=3, ncols=1, sharex=True)
+    fig, axes = plt.subplots(nrows=5, ncols=1, sharex=True)
     axes[0].plot(p_vals, u0_values)
     axes[0].grid()
     axes[0].set_ylabel("$u_0$")
     axes[1].plot(p_vals, du0_dp_values, '--', label='acados')
     axes[1].plot(p_vals, du0_dp_finite_diff, ':', label='finite differences')
-    axes[2].set_xlabel('p')
     axes[1].grid()
     axes[1].legend()
     axes[1].set_ylabel(r'$\partial_p u_0$')
@@ -280,6 +292,15 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True)
     axes[2].set_ylabel("QP status")
     axes[2].grid()
 
+    axes[3].plot(p_vals, min_eigv_vals)
+    axes[3].set_ylabel("minimum eigvalue")
+    axes[3].grid()
+
+    axes[4].plot(p_vals, min_abs_eigv_vals)
+    axes[4].set_ylabel("minimum absolute eigvalue")
+    axes[4].set_yscale('log')
+    axes[4].grid()
+    axes[-1].set_xlabel('p')
     if show:
         plt.show()
 
@@ -323,7 +344,7 @@ def get_hessian_block(solver, i) -> np.ndarray:
     hess_block[:nu, nu:] = S_mat.T
     return hess_block
 
-def compare_acados_casadi_hessians(linearized_dynamics=False, discrete=False):
+def run_hessian_comparison(linearized_dynamics=False, discrete=False):
     casadi_solver, lag_hess_fun, lbg, ubg = create_casadi_solver(linearized_dynamics=linearized_dynamics, discrete=discrete)
 
     acados_ocp_solver_gn = create_solver(hessian_approx='GAUSS_NEWTON', linearized_dynamics=linearized_dynamics, discrete=discrete)
@@ -341,20 +362,35 @@ def compare_acados_casadi_hessians(linearized_dynamics=False, discrete=False):
     acados_ocp_solver_exact.load_iterate(filename='iterate.json')
     acados_ocp_solver_exact.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
 
+    _, _ = compare_hessian(casadi_hess, acados_ocp_solver_exact)
+
+def compare_hessian(casadi_hess, acados_solver):
     offset = 0
+    min_eigv_total = 1e12
+    min_abs_eigv = 1e12
+    hessians_coincide = False
+
     for i in range(N+1):
-        hess_block_acados = get_hessian_block(acados_ocp_solver_exact, i)
+        hess_block_acados = get_hessian_block(acados_solver, i)
         nv = hess_block_acados.shape[0]
         hess_block_casadi = casadi_hess[offset:offset+nv, offset:offset+nv]
         hess_error_norm = np.max(np.abs(hess_block_acados - hess_block_casadi))
         offset += nv
         print(f"hess block {i} error {hess_error_norm:.2e}")
+        print("eigenvalues ", )
+
+        eigv = np.linalg.eigvals(hess_block_casadi)
+        min_eigv = np.min(eigv)
+        min_eigv_total = min(min_eigv, min_eigv_total)
+        min_abs_eigv = min(min_abs_eigv, np.min(np.abs(eigv)))
         if hess_error_norm > 1e-5:
             print(f"diff\n{hess_block_acados - hess_block_casadi}")
             print(f"\nhess acados\n{hess_block_acados}")
             print(f"\nhess casadi\n{hess_block_casadi}")
-            breakpoint()
+            hessians_coincide = False
+            # breakpoint()
+    return min_eigv_total, min_abs_eigv, hessians_coincide
 
 if __name__ == "__main__":
-    # sensitivity_experiment(linearized_dynamics=False, discrete=True)
-    compare_acados_casadi_hessians(linearized_dynamics=False, discrete=True)
+    sensitivity_experiment(linearized_dynamics=False, discrete=True)
+    # run_hessian_comparison(linearized_dynamics=False, discrete=True)
