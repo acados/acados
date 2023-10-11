@@ -1048,7 +1048,7 @@ class AcadosOcpSolver:
 
 
 
-    def solve_for_x0(self, x0_bar, fail_on_nonzero_status=True):
+    def solve_for_x0(self, x0_bar, fail_on_nonzero_status=True, print_stats_on_failure=True):
         """
         Wrapper around `solve()` which sets initial state constraint, solves the OCP, and returns u0.
         """
@@ -1058,10 +1058,11 @@ class AcadosOcpSolver:
         status = self.solve()
 
         if status != 0:
-            self.print_statistics()
+            if print_stats_on_failure:
+                self.print_statistics()
             if fail_on_nonzero_status:
                 raise Exception(f'acados acados_ocp_solver returned status {status}')
-            else:
+            elif print_stats_on_failure:
                 print(f'Warning: acados acados_ocp_solver returned status {status}')
 
         u0 = self.get(0, "u")
