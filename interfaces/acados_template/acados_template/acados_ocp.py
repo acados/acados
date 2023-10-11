@@ -2354,7 +2354,7 @@ class AcadosOcpOptions:
     def nlp_solver_step_length(self):
         """
         Fixed Newton step length.
-        Type: float > 0.
+        Type: float >= 0.
         Default: 1.0.
         """
         return self.__nlp_solver_step_length
@@ -2941,7 +2941,7 @@ class AcadosOcpOptions:
 
     @nlp_solver_step_length.setter
     def nlp_solver_step_length(self, nlp_solver_step_length):
-        if isinstance(nlp_solver_step_length, float) and nlp_solver_step_length > 0:
+        if isinstance(nlp_solver_step_length, float) and nlp_solver_step_length >= 0:
             self.__nlp_solver_step_length = nlp_solver_step_length
         else:
             raise Exception('Invalid nlp_solver_step_length value. nlp_solver_step_length must be a positive float.')
