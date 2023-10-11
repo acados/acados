@@ -46,6 +46,11 @@ FMAX = 80
 T_HORIZON = 1.0
 N = 20
 
+# TODO:
+# - compare correctness via finite differences
+# - exact Hessian CasADi check
+# - check definiteness
+
 def create_solver_and_integrator(hessian_approx, linearized_dynamics=False, discrete=False):
     ocp = AcadosOcp()
 
@@ -115,8 +120,8 @@ def create_solver_and_integrator(hessian_approx, linearized_dynamics=False, disc
     ocp.solver_options.nlp_solver_max_iter = 1000
     # ocp.solver_options.globalization = 'MERIT_BACKTRACKING'
     if hessian_approx == 'EXACT':
-        ocp.solver_options.nlp_solver_step_length = 1e-12
-        ocp.solver_options.nlp_solver_max_iter = 2
+        ocp.solver_options.nlp_solver_step_length = 0.0
+        ocp.solver_options.nlp_solver_max_iter = 1
         ocp.solver_options.tol = 1e-10
     # set prediction horizon
     ocp.solver_options.tf = T_HORIZON
@@ -138,26 +143,56 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False):
     idxp = 1
     p_max = 0.3
     p_vals = np.linspace(0, p_max, nval)
-    u0_values = []
+    u0_values = np.zeros(nval)
+    du0_dp_values = np.zeros(nval)
     x0 = X0.copy()
 
     latexify_plot()
-    plt.figure()
 
     for i, p0 in enumerate(p_vals):
         x0[idxp] = p0
         u0 = acados_ocp_solver_gn.solve_for_x0(x0)
-        u0_values.append(u0)
+        u0_values[i] = u0
+
+        print(f'solve sens for {p0=}')
+        acados_ocp_solver_gn.store_iterate(filename='iterate.json', overwrite=True)
+        acados_ocp_solver_exact.load_iterate(filename='iterate.json')
+        acados_ocp_solver_exact.set(0, 'u', u0+1e-7)
+        acados_ocp_solver_exact.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
+        acados_ocp_solver_exact.eval_param_sens(index=idxp)
+
+        residuals = acados_ocp_solver_exact.get_stats("residuals")
+        print(f"residuals sensitivity_solver {residuals}")
+
+        du0_dp_values[i] = acados_ocp_solver_exact.get(0, "sens_u")
+
+    # plot_tangents(p_vals, u0_values, du0_dp_values)
+
+    # Finite difference comparison
+    du0_dp_finite_diff = np.gradient(u0_values, p_vals[1]-p_vals[0])
+
+    plt.figure()
+    plt.plot(p_vals, du0_dp_values, '--', label='acados')
+    plt.plot(p_vals, du0_dp_finite_diff, ':', label='finite differences')
+    plt.xlabel('p')
+    plt.grid()
+    plt.legend()
+    plt.ylabel(r'$\partial_p u_0$')
+    plt.show()
+
+    err = np.max(np.abs(du0_dp_finite_diff - du0_dp_values))
+    rel_err = np.max(np.abs(du0_dp_finite_diff - du0_dp_values) /
+                     np.abs(du0_dp_finite_diff))
+    print(f"max error acados vs finite differences: abs: {err:.2e} rel {rel_err:.2e}")
+
+
+def plot_tangents(p_vals, u0_values, du0_dp_values):
+    plt.figure()
+    for i, p0 in enumerate(p_vals):
         if i % 50 == 25:
-            print(f'solve sens for {p0=}')
-            acados_ocp_solver_gn.store_iterate(filename='iterate.json', overwrite=True)
-            acados_ocp_solver_exact.load_iterate(filename='iterate.json')
-            acados_ocp_solver_exact.set(0, 'u', u0+1e-7)
-            acados_ocp_solver_exact.solve_for_x0(x0, fail_on_nonzero_status=False)
-            acados_ocp_solver_exact.eval_param_sens(index=idxp)
-            du0_dp = acados_ocp_solver_exact.get(0, "sens_u")
-            taylor_0 = u0 + du0_dp * (p_vals[0] - p0)
-            taylor_1 = u0 + du0_dp * (p_vals[-1] - p0)
+            u0 = u0_values[i]
+            taylor_0 = u0 + du0_dp_values[i] * (p_vals[0] - p0)
+            taylor_1 = u0 + du0_dp_values[i] * (p_vals[-1] - p0)
             plt.scatter(p0, u0, marker='*', color="C1")
             plt.plot([p_vals[0], p_vals[-1]], [taylor_0, taylor_1], color="C1", alpha=0.3)
 
@@ -165,7 +200,6 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False):
     plt.xlabel('$p$')
     plt.ylabel('$u_0$')
     plt.grid()
-    plt.show()
 
 if __name__ == "__main__":
     sensitivity_experiment(linearized_dynamics=False, discrete=True)
