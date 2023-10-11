@@ -299,9 +299,6 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
         # case: x0 and idxbxe_0 were not set -> dont assume nbx0 to be equality constraints.
         dims.nbxe_0 = 0
 
-    # for solution sens testing!
-    dims.nbxe_0 = 0
-
     # path
     nbx = constraints.idxbx.shape[0]
     if constraints.ubx.shape[0] != nbx or constraints.lbx.shape[0] != nbx:
@@ -1460,6 +1457,7 @@ class AcadosOcpSolver:
             - time_solution_sensitivities: CPU time for previous call to eval_param_sens
             - time_reg: CPU time regularization
             - sqp_iter: number of SQP iterations
+            - qp_stat: status of QP solver
             - qp_iter: vector of QP iterations for last SQP call
             - statistics: table with info about last iteration
             - stat_m: number of rows in statistics matrix
@@ -1482,6 +1480,7 @@ class AcadosOcpSolver:
         ]
         fields = double_fields + [
                   'sqp_iter',
+                  'qp_stat',
                   'qp_iter',
                   'statistics',
                   'stat_m',
@@ -1515,6 +1514,13 @@ class AcadosOcpSolver:
             self.shared_lib.ocp_nlp_get.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
             self.shared_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
             return out
+
+        elif field_ == 'qp_stat':
+            full_stats = self.get_stats('statistics')
+            if self.solver_options['nlp_solver_type'] == 'SQP':
+                return full_stats[5, :]
+            elif self.solver_options['nlp_solver_type'] == 'SQP_RTI':
+                return full_stats[1, :]
 
         elif field_ == 'qp_iter':
             full_stats = self.get_stats('statistics')
