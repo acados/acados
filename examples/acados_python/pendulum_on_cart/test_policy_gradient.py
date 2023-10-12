@@ -256,6 +256,7 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True)
         acados_ocp_solver_exact.set(0, 'u', u0+1e-7)
         acados_ocp_solver_exact.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
         acados_ocp_solver_exact.eval_param_sens(index=idxp)
+
         exact_hessian_status[i] = acados_ocp_solver_exact.get_stats('qp_stat')[-1]
 
         # check_hessian_last_qp(acados_ocp_solver_exact)
@@ -273,6 +274,8 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True)
             min_eigv, min_abs_eigv, hcorrect = compare_hessian(casadi_hess, acados_ocp_solver_exact)
             min_eigv_vals[i] = min_eigv
             min_abs_eigv_vals[i] = min_abs_eigv
+
+            compute_K(acados_ocp_solver_exact)
 
     # plot_tangents(p_vals, u0_values, du0_dp_values)
 
@@ -343,6 +346,32 @@ def get_hessian_block(solver, i) -> np.ndarray:
     hess_block[nu:, :nu] = S_mat
     hess_block[:nu, nu:] = S_mat.T
     return hess_block
+
+def compute_K(solver):
+
+    Q_mat = solver.get_from_qp_in(0, 'Q')
+    R_mat = solver.get_from_qp_in(0, 'R')
+    S_mat = solver.get_from_qp_in(0, 'S')
+    A_mat = solver.get_from_qp_in(0, 'A')
+    B_mat = solver.get_from_qp_in(0, 'B')
+
+    P_mat = solver.get_P(1)
+
+    M_mat = R_mat + B_mat.T @ P_mat @ B_mat
+
+    eigvals, eigvecs = np.linalg.eigh(M_mat)
+
+    print("eigenvalues\n", eigvals)
+
+    eigvals_regularized = [ev if np.abs(ev) > 1e-4 else np.sign(ev)*1e-4 for ev in eigvals]
+
+    P_mat_regularized = eigvecs @ np.diag(eigvals_regularized) @ eigvecs.T
+
+    breakpoint()
+
+    K = np.linalg.solve(P_mat, S_mat + B_mat.T @ P_mat @ A_mat)
+    K_regularized = np.linalg.solve(P_mat_regularized, S_mat + B_mat.T @ P_mat @ A_mat)
+
 
 def run_hessian_comparison(linearized_dynamics=False, discrete=False):
     casadi_solver, lag_hess_fun, lbg, ubg = create_casadi_solver(linearized_dynamics=linearized_dynamics, discrete=discrete)
