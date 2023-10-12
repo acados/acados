@@ -296,11 +296,11 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True)
     axes[2].grid()
 
     axes[3].plot(p_vals, min_eigv_vals)
-    axes[3].set_ylabel("minimum eigvalue")
+    axes[3].set_ylabel("min eigval")
     axes[3].grid()
 
     axes[4].plot(p_vals, min_abs_eigv_vals)
-    axes[4].set_ylabel("minimum absolute eigvalue")
+    axes[4].set_ylabel("min abs eigval")
     axes[4].set_yscale('log')
     axes[4].grid()
     axes[-1].set_xlabel('p')
@@ -355,7 +355,7 @@ def compute_K(solver):
     A_mat = solver.get_from_qp_in(0, 'A')
     B_mat = solver.get_from_qp_in(0, 'B')
 
-    P_mat = solver.get_P(1)
+    P_mat = solver.get_from_qp_in(1, 'P')
 
     M_mat = R_mat + B_mat.T @ P_mat @ B_mat
 
