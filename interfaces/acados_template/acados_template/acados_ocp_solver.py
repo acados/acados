@@ -1008,6 +1008,7 @@ class AcadosOcpSolver:
         self.__qp_dynamics_fields = ['A', 'B', 'b']
         self.__qp_cost_fields = ['Q', 'R', 'S', 'q', 'r']
         self.__qp_constraint_fields = ['C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu']
+        self.__qp_pc_hpipm_fields = ['P', 'K']
 
 
     def __get_pointers_solver(self):
@@ -1889,8 +1890,11 @@ class AcadosOcpSolver:
             raise Exception("stage should be <= self.N")
         if field_ in self.__qp_dynamics_fields and stage_ >= self.N:
             raise ValueError(f"dynamics field {field_} not available at terminal stage")
-        if field_ not in self.__qp_dynamics_fields + self.__qp_cost_fields + self.__qp_constraint_fields:
+        if field_ not in self.__qp_dynamics_fields + self.__qp_cost_fields + self.__qp_constraint_fields + self.__qp_pc_hpipm_fields:
             raise Exception(f"field {field_} not supported.")
+        if field_ in self.__qp_pc_hpipm_fields and self.acados_ocp.solver_options.qp_solver != "PARTIAL_CONDENSING_HPIPM":
+            raise Exception("field only works for PARTIAL_CONDENSING_HPIPM QP solver.")
+
 
         field = field_.encode('utf-8')
         stage = c_int(stage_)

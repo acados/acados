@@ -780,7 +780,7 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         dims_out[0] = 1;
         dims_out[1] = dims->nx[stage+1];
     }
-    else if (!strcmp(field, "Q"))
+    else if (!strcmp(field, "Q") || !strcmp(field, "P"))
     {
         dims_out[0] = dims->nx[stage];
         dims_out[1] = dims->nx[stage];
@@ -790,7 +790,7 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         dims_out[0] = dims->nu[stage];
         dims_out[1] = dims->nu[stage];
     }
-    else if (!strcmp(field, "S"))
+    else if (!strcmp(field, "S") || !strcmp(field, "K"))
     {
         dims_out[0] = dims->nx[stage];
         dims_out[1] = dims->nu[stage];
@@ -1214,12 +1214,14 @@ void ocp_nlp_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_so
         double *double_values = value;
         d_ocp_qp_get_ug(stage, nlp_mem->qp_in, double_values);
     }
-    else if (!strcmp(field, "P"))
+    else if (!strcmp(field, "P") || (!strcmp(field, "K")))
     {
-        double *double_values = value;
-        config->qp_solver->solver_get(config, nlp_mem->qp_in, nlp_mem->qp_out, solver->opts, // qp_opts must be cast in nlp!!
-        // write getter?
-        )
+        ocp_nlp_opts *nlp_opts;
+        config->opts_get(config, dims, solver->opts, "nlp_opts", &nlp_opts);
+
+        ocp_qp_xcond_solver_config *xcond_solver_config = config->qp_solver;
+
+        xcond_solver_config->solver_get(xcond_solver_config, nlp_mem->qp_in, nlp_mem->qp_out, nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, field, stage, value);
     }
     else
     {

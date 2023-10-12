@@ -323,7 +323,7 @@ void ocp_qp_hpipm_memory_reset(void *config_, void *qp_in_, void *qp_out_, void 
     ocp_qp_hpipm_memory_assign(config_, qp_in->dim, opts_, mem_);
 }
 
-void ocp_qp_hpipm_solver_get(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, void *work_, const char *field, int stage, void* value)
+void ocp_qp_hpipm_solver_get(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, const char *field, int stage, void* value)
 {
     ocp_qp_in *qp_in = qp_in_;
     // ocp_qp_out *qp_out = qp_out_;
@@ -336,6 +336,11 @@ void ocp_qp_hpipm_solver_get(void *config_, void *qp_in_, void *qp_out_, void *o
         double *double_values = value;
         d_ocp_qp_ipm_get_ric_P(qp_in, opts->hpipm_opts, mem->hpipm_workspace, stage, double_values);
         // void OCP_QP_IPM_GET_RIC_P(struct OCP_QP *qp, struct OCP_QP_IPM_ARG *arg, struct OCP_QP_IPM_WS *ws, int stage, REAL *P)
+    }
+    else if (!strcmp(field, "K"))
+    {
+        double *double_values = value;
+        d_ocp_qp_ipm_get_ric_K(qp_in, opts->hpipm_opts, mem->hpipm_workspace, stage, double_values);
     }
     return;
 }
