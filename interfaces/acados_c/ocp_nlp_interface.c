@@ -1214,6 +1214,13 @@ void ocp_nlp_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_so
         double *double_values = value;
         d_ocp_qp_get_ug(stage, nlp_mem->qp_in, double_values);
     }
+    else if (!strcmp(field, "P"))
+    {
+        double *double_values = value;
+        config->qp_solver->solver_get(config, nlp_mem->qp_in, nlp_mem->qp_out, solver->opts, // qp_opts must be cast in nlp!!
+        // write getter?
+        )
+    }
     else
     {
         printf("\nerror: ocp_nlp_get_at_stage: field %s not available\n", field);

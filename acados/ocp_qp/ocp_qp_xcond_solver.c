@@ -371,6 +371,23 @@ void ocp_qp_xcond_solver_memory_reset(void *config_, ocp_qp_xcond_solver_dims *d
 }
 
 
+void ocp_qp_xcond_solver_get(void *config_, ocp_qp_xcond_solver_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
+                                     void *opts_, void *mem_, void *work_, const char *field, int stage, void* value)
+{
+    // cast data structures
+    ocp_qp_xcond_solver_config *config = config_;
+    qp_solver_config *qp_solver = config->qp_solver;
+    ocp_qp_xcond_config *xcond = config->xcond;
+    ocp_qp_xcond_solver_opts *opts = opts_;
+    ocp_qp_xcond_solver_memory *mem = mem_;
+    ocp_qp_xcond_solver_workspace *work = work_;
+
+    qp_solver->solver_get(qp_solver, qp_in, qp_out, opts->qp_solver_opts, mem->solver_memory, work->qp_solver_work, field, stage, value);
+
+    return;
+}
+
+
 
 void ocp_qp_xcond_solver_memory_get(void *config_, void *mem_, const char *field, void* value)
 {
