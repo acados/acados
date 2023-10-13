@@ -206,7 +206,7 @@ def create_casadi_solver(linearized_dynamics=False, discrete=False):
             'g': constr_vec,
             'p': ca.vertcat(*nlp_params),
            }
-    casadi_solver = ca.nlpsol('casadi_solver', 'ipopt', nlp)
+    casadi_solver = ca.nlpsol('casadi_solver', 'ipopt', nlp, {'ipopt': {'print_level': 0}, 'print_time': False})
 
     # exact hessian
     ng = casadi_length(constr_vec)
@@ -236,10 +236,15 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True)
     p_vals = np.linspace(0, p_max, nval)
     min_eigv_vals = 0. * p_vals
     min_abs_eigv_vals = 0. * p_vals
+    min_abs_eigv_proj = 0. * p_vals
+    min_eigv_proj = 0. * p_vals
+    cond_proj_hess_vals = 0. * p_vals
     u0_values = np.zeros(nval)
     du0_dp_values = np.zeros(nval)
     x0 = X0.copy()
     exact_hessian_status = 0.0*p_vals
+
+    nu = acados_ocp_solver_exact.acados_ocp.dims.nu
 
     latexify_plot()
     for i, p0 in enumerate(p_vals):
@@ -259,8 +264,6 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True)
 
         exact_hessian_status[i] = acados_ocp_solver_exact.get_stats('qp_stat')[-1]
 
-        # check_hessian_last_qp(acados_ocp_solver_exact)
-
         residuals = acados_ocp_solver_exact.get_stats("residuals")
         print(f"residuals sensitivity_solver {residuals}")
 
@@ -271,39 +274,71 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True)
             # print(f"{nlp_sol=}")
             casadi_hess_l = lag_hess_fun(x=nlp_sol['x'], p=x0, lam_f=1.0, lam_g=nlp_sol['lam_g'])['triu_hess_gamma_x_x']
             casadi_hess = ca.triu2symm(ca.triu(casadi_hess_l)).full()
-            min_eigv, min_abs_eigv, hcorrect = compare_hessian(casadi_hess, acados_ocp_solver_exact)
+            min_eigv, min_abs_eigv, hcorrect, min_abs_eig_proj_hess, min_eig_proj_hess, cond_proj_hess = compare_hessian(casadi_hess, acados_ocp_solver_exact)
             min_eigv_vals[i] = min_eigv
             min_abs_eigv_vals[i] = min_abs_eigv
+            min_abs_eigv_proj[i] = min_abs_eig_proj_hess
+            min_eigv_proj[i] = min_eig_proj_hess
+            cond_proj_hess_vals[i] = cond_proj_hess
 
-            compute_K(acados_ocp_solver_exact)
+            K_mat, K_regularized = compute_K(acados_ocp_solver_exact)
+
+            # du0_dp_values[i] = K_regularized[0][idxp]
+
+            if np.abs(du0_dp_values[i] - K_mat[0][idxp]) > 1e-5:
+                print(f"K and du0_dp differ too much")
+                print(f"{du0_dp_values[i]=} {K_mat[0][idxp]=}")
 
     # plot_tangents(p_vals, u0_values, du0_dp_values)
 
-    # Finite difference compariso
+    # Finite difference comparison
 
-    fig, axes = plt.subplots(nrows=5, ncols=1, sharex=True)
-    axes[0].plot(p_vals, u0_values)
-    axes[0].grid()
-    axes[0].set_ylabel("$u_0$")
-    axes[1].plot(p_vals, du0_dp_values, '--', label='acados')
-    axes[1].plot(p_vals, du0_dp_finite_diff, ':', label='finite differences')
-    axes[1].grid()
-    axes[1].legend()
-    axes[1].set_ylabel(r'$\partial_p u_0$')
+    fig, axes = plt.subplots(nrows=5, ncols=1, sharex=True, figsize=(9.,9.))
+    isub = 0
+    axes[isub].plot(p_vals, u0_values)
+    axes[isub].grid()
+    axes[isub].set_ylabel("$u_0$")
+    axes[isub].set_xlim([p_vals[0], p_vals[-1]])
 
-    axes[2].plot(p_vals, exact_hessian_status)
-    axes[2].set_ylabel("QP status")
-    axes[2].grid()
+    isub += 1
+    axes[isub].plot(p_vals, du0_dp_values, '--', label='acados')
+    axes[isub].plot(p_vals, du0_dp_finite_diff, ':', label='finite differences')
+    axes[isub].grid()
+    axes[isub].legend()
+    axes[isub].set_ylabel(r'$\partial_p u_0$')
 
-    axes[3].plot(p_vals, min_eigv_vals)
-    axes[3].set_ylabel("min eigval")
-    axes[3].grid()
+    # isub += 1
+    # axes[isub].plot(p_vals, exact_hessian_status)
+    # axes[isub].set_ylabel("QP status")
+    # axes[isub].grid()
 
-    axes[4].plot(p_vals, min_abs_eigv_vals)
-    axes[4].set_ylabel("min abs eigval")
-    axes[4].set_yscale('log')
-    axes[4].grid()
+    isub += 1
+    axes[isub].plot(p_vals, min_eigv_vals, label='full hess')
+    axes[isub].plot(p_vals, min_eigv_proj, label='proj hess')
+    axes[isub].set_ylabel("min eigval")
+    axes[isub].legend()
+    axes[isub].grid()
+
+    isub += 1
+    axes[isub].plot(p_vals, cond_proj_hess_vals, label='proj hess')
+    axes[isub].legend()
+    axes[isub].grid()
+    axes[isub].set_yscale('log')
+    axes[isub].set_ylabel("cond")
+
+    isub += 1
+    axes[isub].plot(p_vals, min_abs_eigv_vals, '--', label='full hess')
+    axes[isub].plot(p_vals, min_abs_eigv_proj, label='proj hess')
+    axes[isub].set_ylabel("abs eigval")
+    axes[isub].set_yscale('log')
+    axes[isub].legend()
+    axes[isub].grid()
     axes[-1].set_xlabel('p')
+
+    filename = 'sensitivity_experiment.pdf'
+    plt.savefig(filename)
+    print(f"stored figure in {filename}")
+
     if show:
         plt.show()
 
@@ -328,14 +363,8 @@ def plot_tangents(p_vals, u0_values, du0_dp_values):
     plt.ylabel('$u_0$')
     plt.grid()
 
-def check_hessian_last_qp(solver: AcadosOcpSolver):
-    for i in range(N+1):
-        hess_block = get_hessian_block(solver, i)
-        eig_vals, _ = np.linalg.eig(hess_block)
-        if any(eig_vals < 0.0):
-            print(f"found eig < 0 at node {i} {eig_vals=}")
 
-def get_hessian_block(solver, i) -> np.ndarray:
+def get_hessian_block(solver: AcadosOcpSolver, i) -> np.ndarray:
     Q_mat = solver.get_from_qp_in(i, 'Q')
     R_mat = solver.get_from_qp_in(i, 'R')
     S_mat = solver.get_from_qp_in(i, 'S')
@@ -343,13 +372,11 @@ def get_hessian_block(solver, i) -> np.ndarray:
         R_mat, Q_mat
     )
     nu = R_mat.shape[0]
-    hess_block[nu:, :nu] = S_mat
-    hess_block[:nu, nu:] = S_mat.T
+    hess_block[nu:, :nu] = S_mat.T
+    hess_block[:nu, nu:] = S_mat
     return hess_block
 
-def compute_K(solver):
-
-    Q_mat = solver.get_from_qp_in(0, 'Q')
+def compute_K(solver: AcadosOcpSolver):
     R_mat = solver.get_from_qp_in(0, 'R')
     S_mat = solver.get_from_qp_in(0, 'S')
     A_mat = solver.get_from_qp_in(0, 'A')
@@ -361,16 +388,15 @@ def compute_K(solver):
 
     eigvals, eigvecs = np.linalg.eigh(M_mat)
 
-    print("eigenvalues\n", eigvals)
+    # print("eigenvalues\n", eigvals)
 
     eigvals_regularized = [ev if np.abs(ev) > 1e-4 else np.sign(ev)*1e-4 for ev in eigvals]
 
+    K_mat = -np.linalg.solve(M_mat, S_mat + B_mat.T @ P_mat @ A_mat)
+
     P_mat_regularized = eigvecs @ np.diag(eigvals_regularized) @ eigvecs.T
-
-    breakpoint()
-
-    K = np.linalg.solve(P_mat, S_mat + B_mat.T @ P_mat @ A_mat)
-    K_regularized = np.linalg.solve(P_mat_regularized, S_mat + B_mat.T @ P_mat @ A_mat)
+    K_regularized = -np.linalg.solve(P_mat_regularized, S_mat + B_mat.T @ P_mat @ A_mat)
+    return K_mat, K_regularized
 
 
 def run_hessian_comparison(linearized_dynamics=False, discrete=False):
@@ -391,7 +417,7 @@ def run_hessian_comparison(linearized_dynamics=False, discrete=False):
     acados_ocp_solver_exact.load_iterate(filename='iterate.json')
     acados_ocp_solver_exact.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
 
-    _, _ = compare_hessian(casadi_hess, acados_ocp_solver_exact)
+    _, _, _ = compare_hessian(casadi_hess, acados_ocp_solver_exact)
 
 def compare_hessian(casadi_hess, acados_solver):
     offset = 0
@@ -405,8 +431,7 @@ def compare_hessian(casadi_hess, acados_solver):
         hess_block_casadi = casadi_hess[offset:offset+nv, offset:offset+nv]
         hess_error_norm = np.max(np.abs(hess_block_acados - hess_block_casadi))
         offset += nv
-        print(f"hess block {i} error {hess_error_norm:.2e}")
-        print("eigenvalues ", )
+        # print(f"hess block {i} error {hess_error_norm:.2e}")
 
         eigv = np.linalg.eigvals(hess_block_casadi)
         min_eigv = np.min(eigv)
@@ -417,8 +442,23 @@ def compare_hessian(casadi_hess, acados_solver):
             print(f"\nhess acados\n{hess_block_acados}")
             print(f"\nhess casadi\n{hess_block_casadi}")
             hessians_coincide = False
-            # breakpoint()
-    return min_eigv_total, min_abs_eigv, hessians_coincide
+
+    # check projected Hessian
+    min_abs_eig_proj_hess = 1e12
+    min_eig_proj_hess = 1e12
+    cond_proj_hess = 0.
+    for i in range(1, N):
+        P_mat = acados_solver.get_from_qp_in(i, 'P')
+        B_mat = acados_solver.get_from_qp_in(i, 'B')
+        R_mat = acados_solver.get_from_qp_in(i, 'R')
+        proj_hess_block = R_mat + B_mat.T @ P_mat @ B_mat
+        eigv = np.linalg.eigvals(proj_hess_block)
+        min_eigv = np.min(eigv)
+        min_eig_proj_hess = min(min_eigv, min_eig_proj_hess)
+        min_abs_eig_proj_hess = min(min_abs_eig_proj_hess, np.min(np.abs(eigv)))
+        cond_proj_hess = max(cond_proj_hess, np.linalg.cond(proj_hess_block))
+
+    return min_eigv_total, min_abs_eigv, hessians_coincide, min_abs_eig_proj_hess, min_eig_proj_hess, cond_proj_hess
 
 if __name__ == "__main__":
     sensitivity_experiment(linearized_dynamics=False, discrete=True)

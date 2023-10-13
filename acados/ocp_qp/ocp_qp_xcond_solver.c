@@ -380,7 +380,6 @@ void ocp_qp_xcond_solver_get(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out
     ocp_qp_xcond_solver_opts *opts = opts_;
     ocp_qp_xcond_solver_memory *mem = mem_;
 
-    printf("ocp_qp_xcond_solver_get\n");
     qp_solver->solver_get(qp_solver, qp_in, qp_out, opts->qp_solver_opts, mem->solver_memory, field, stage, value);
 
     return;
