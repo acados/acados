@@ -792,8 +792,8 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
     }
     else if (!strcmp(field, "S") || !strcmp(field, "K"))
     {
-        dims_out[0] = dims->nx[stage];
-        dims_out[1] = dims->nu[stage];
+        dims_out[0] = dims->nu[stage];
+        dims_out[1] = dims->nx[stage];
     }
     else if (!strcmp(field, "r"))
     {
