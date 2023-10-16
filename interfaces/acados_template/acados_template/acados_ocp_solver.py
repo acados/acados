@@ -42,6 +42,7 @@ from pathlib import Path
 from typing import Union
 
 import numpy as np
+import scipy.linalg
 
 from .acados_model import AcadosModel
 from .acados_ocp import (AcadosOcp, AcadosOcpConstraints, AcadosOcpCost,
@@ -1900,6 +1901,24 @@ class AcadosOcpSolver:
             self.nlp_dims, self.nlp_in, stage, field, value_data_p)
 
         return
+
+
+    def get_hessian_block(self, stage: int) -> np.ndarray:
+        """
+        Get Hessian block from last QP at stage i
+        In HPIPM form [[R, S^T],
+                    [S, Q]]
+        """
+        Q_mat = self.get_from_qp_in(stage, 'Q')
+        R_mat = self.get_from_qp_in(stage, 'R')
+        S_mat = self.get_from_qp_in(stage, 'S')
+        hess_block = scipy.linalg.block_diag(
+            R_mat, Q_mat
+        )
+        nu = R_mat.shape[0]
+        hess_block[nu:, :nu] = S_mat.T
+        hess_block[:nu, nu:] = S_mat
+        return hess_block
 
 
     def get_from_qp_in(self, stage_: int, field_: str):
