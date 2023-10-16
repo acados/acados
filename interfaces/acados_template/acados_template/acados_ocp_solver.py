@@ -1215,7 +1215,7 @@ class AcadosOcpSolver:
 
 
         if not (
-           (self.acados_ocp.solver_options.hessian_approx == 'EXACT_HESSIAN' or
+           (self.acados_ocp.solver_options.hessian_approx == 'EXACT' or
            (self.acados_ocp.cost.cost_type == 'LINEAR_LS' and
             self.acados_ocp.cost.cost_type_0 == 'LINEAR_LS' and
             self.acados_ocp.cost.cost_type_e == 'LINEAR_LS'))
