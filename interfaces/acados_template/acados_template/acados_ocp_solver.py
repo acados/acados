@@ -1362,7 +1362,7 @@ class AcadosOcpSolver:
         return
 
 
-    def store_iterate(self, filename: str = '', overwrite=False):
+    def store_iterate(self, filename: str = '', overwrite=False, verbose=True):
         """
         Stores the current iterate of the ocp solver in a json file.
         Note: This does not contain the iterate of the integrators, and the parameters.
@@ -1402,7 +1402,9 @@ class AcadosOcpSolver:
         # save
         with open(filename, 'w') as f:
             json.dump(solution, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
-        print("stored current iterate in ", os.path.join(os.getcwd(), filename))
+
+        if verbose:
+            print("stored current iterate in ", os.path.join(os.getcwd(), filename))
 
 
 
@@ -1446,7 +1448,7 @@ class AcadosOcpSolver:
 
 
 
-    def load_iterate(self, filename):
+    def load_iterate(self, filename:str, verbose: bool=True):
         """
         Loads the iterate stored in json file with filename into the ocp solver.
         Note: This does not contain the iterate of the integrators, and the parameters.
@@ -1457,7 +1459,8 @@ class AcadosOcpSolver:
         with open(filename, 'r') as f:
             solution = json.load(f)
 
-        print(f"loading iterate {filename}")
+        if verbose:
+            print(f"loading iterate {filename}")
         for key in solution.keys():
             (field, stage) = key.split('_')
             self.set(int(stage), field, np.array(solution[key]))
