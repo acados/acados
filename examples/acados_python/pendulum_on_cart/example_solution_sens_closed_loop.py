@@ -40,10 +40,10 @@ import numpy as np
 import scipy.linalg
 import matplotlib.pyplot as plt
 
-X0 = np.array([0.5, 0.0001, 0.00001, 0.00001])
+X0 = np.array([1.0, 0.2, 0.0, 0.0])
 FMAX = 80
-T_HORIZON = 1.0
-N = 20
+T_HORIZON = 2.0
+N = 40
 
 def create_solver_and_integrator():
     # create ocp object to formulate the OCP
@@ -87,7 +87,7 @@ def create_solver_and_integrator():
 
     ocp.cost.Vx_e = np.eye(nx)
 
-    ocp.cost.yref  = np.zeros((ny, ))
+    ocp.cost.yref = np.zeros((ny, ))
     ocp.cost.yref_e = np.zeros((ny_e, ))
 
     # set constraints
@@ -97,22 +97,21 @@ def create_solver_and_integrator():
     ocp.constraints.x0 = X0
 
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
-    ocp.solver_options.hessian_approx = 'EXACT'
-    # ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = 'ERK'
     # ocp.solver_options.integrator_type = 'DISCRETE'
     ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
-    ocp.solver_options.sim_method_num_steps = 5
+    ocp.solver_options.sim_method_num_steps = 1
     ocp.solver_options.tol = 1e-5
     # ocp.solver_options.sim_method_newton_tol = 1e-5
 
     ocp.solver_options.qp_solver_cond_N = N
     ocp.solver_options.qp_solver_warm_start = 0
 
-    ocp.solver_options.qp_solver_iter_max = 500
+    ocp.solver_options.qp_solver_iter_max = 200
     ocp.solver_options.nlp_solver_max_iter = 500
     # ocp.solver_options.globalization = 'MERIT_BACKTRACKING'
-    ocp.solver_options.nlp_solver_step_length = 0.5
+    ocp.solver_options.nlp_solver_step_length = 1.0
     # set prediction horizon
     ocp.solver_options.tf = T_HORIZON
 
@@ -191,42 +190,5 @@ def main():
     plot_pendulum(np.linspace(0, T_HORIZON/N*Nsim, Nsim+1), FMAX, simU, simX)
 
 
-def sensitivity_experiment():
-    acados_ocp_solver, _ = create_solver_and_integrator()
-
-    nval = 251
-    # idxp = 0
-    # p_max = 1.05
-
-    idxp = 1
-    p_max = 0.6
-    p_vals = np.linspace(0, p_max, nval)
-    u0_values = []
-    x0 = X0.copy()
-
-    latexify_plot()
-    plt.figure()
-
-    for i, p0 in enumerate(p_vals):
-        print(f'\n\n{p0=}')
-        x0[idxp] = p0
-        u0 = acados_ocp_solver.solve_for_x0(x0)
-        u0_values.append(u0)
-        if i % 50 == 0:
-            acados_ocp_solver.eval_param_sens(index=idxp)
-            du0_dp = acados_ocp_solver.get(0, "sens_u")
-            taylor_0 = u0 + du0_dp * (p_vals[0] - p0)
-            taylor_1 = u0 + du0_dp * (p_vals[-1] - p0)
-            plt.scatter(p0, u0, marker='*', color="C1")
-            plt.plot([p_vals[0], p_vals[-1]], [taylor_0, taylor_1], color="C1", alpha=0.3)
-
-    acados_ocp_solver.dump_last_qp_to_json('last_qp.json', overwrite=True)
-    plt.plot(p_vals, u0_values, ':', color="C0")
-    plt.xlabel('$p$')
-    plt.ylabel('$u_0$')
-    plt.grid()
-    plt.show()
-
 if __name__ == "__main__":
-    # main()
-    sensitivity_experiment()
+    main()
