@@ -116,6 +116,8 @@ def create_ocp_description(hessian_approx, linearized_dynamics=False, discrete=F
     ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
     ocp.solver_options.sim_method_num_steps = 5
     ocp.solver_options.tol = 1e-6
+    ocp.solver_options.qp_solver_ric_alg = 1
+    # qp_solver_ric_alg
     # ocp.solver_options.sim_method_newton_tol = 1e-5
 
     ocp.solver_options.qp_solver_cond_N = N
@@ -239,6 +241,8 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True)
     min_abs_eigv_proj = 0. * p_vals
     min_eigv_proj = 0. * p_vals
     cond_proj_hess_vals = 0. * p_vals
+    min_eigP_vals = 0. * p_vals
+    min_abs_eigP_vals = 0. * p_vals
     u0_values = np.zeros(nval)
     du0_dp_values = np.zeros(nval)
     x0 = X0.copy()
@@ -274,12 +278,14 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True)
             # print(f"{nlp_sol=}")
             casadi_hess_l = lag_hess_fun(x=nlp_sol['x'], p=x0, lam_f=1.0, lam_g=nlp_sol['lam_g'])['triu_hess_gamma_x_x']
             casadi_hess = ca.triu2symm(ca.triu(casadi_hess_l)).full()
-            min_eigv, min_abs_eigv, hcorrect, min_abs_eig_proj_hess, min_eig_proj_hess, cond_proj_hess = compare_hessian(casadi_hess, acados_ocp_solver_exact)
+            min_eigv, min_abs_eigv, hcorrect, min_abs_eig_proj_hess, min_eig_proj_hess, cond_proj_hess, min_eig_P, min_abs_eig_P = compare_hessian(casadi_hess, acados_ocp_solver_exact)
             min_eigv_vals[i] = min_eigv
             min_abs_eigv_vals[i] = min_abs_eigv
             min_abs_eigv_proj[i] = min_abs_eig_proj_hess
             min_eigv_proj[i] = min_eig_proj_hess
             cond_proj_hess_vals[i] = cond_proj_hess
+            min_eigP_vals[i] = min_eig_P
+            min_abs_eigP_vals[i] = min_abs_eig_P
 
             K_mat, K_regularized = compute_K(acados_ocp_solver_exact)
 
@@ -315,6 +321,7 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True)
     isub += 1
     axes[isub].plot(p_vals, min_eigv_vals, label='full hess')
     axes[isub].plot(p_vals, min_eigv_proj, label='proj hess')
+    axes[isub].plot(p_vals, min_eigP_vals, label='P')
     axes[isub].set_ylabel("min eigval")
     axes[isub].legend()
     axes[isub].grid()
@@ -329,13 +336,14 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True)
     isub += 1
     axes[isub].plot(p_vals, min_abs_eigv_vals, '--', label='full hess')
     axes[isub].plot(p_vals, min_abs_eigv_proj, label='proj hess')
+    axes[isub].plot(p_vals, min_abs_eigP_vals, label='P')
     axes[isub].set_ylabel("abs eigval")
     axes[isub].set_yscale('log')
     axes[isub].legend()
     axes[isub].grid()
     axes[-1].set_xlabel('p')
 
-    filename = 'sensitivity_experiment.pdf'
+    filename = f'sensitivity_experiment_{"lindyn" if linearized_dynamics else "nonlindyn"}.pdf'
     plt.savefig(filename)
     print(f"stored figure in {filename}")
 
@@ -363,18 +371,6 @@ def plot_tangents(p_vals, u0_values, du0_dp_values):
     plt.ylabel('$u_0$')
     plt.grid()
 
-
-def get_hessian_block(solver: AcadosOcpSolver, i) -> np.ndarray:
-    Q_mat = solver.get_from_qp_in(i, 'Q')
-    R_mat = solver.get_from_qp_in(i, 'R')
-    S_mat = solver.get_from_qp_in(i, 'S')
-    hess_block = scipy.linalg.block_diag(
-        R_mat, Q_mat
-    )
-    nu = R_mat.shape[0]
-    hess_block[nu:, :nu] = S_mat.T
-    hess_block[:nu, nu:] = S_mat
-    return hess_block
 
 def compute_K(solver: AcadosOcpSolver):
     R_mat = solver.get_from_qp_in(0, 'R')
@@ -419,21 +415,21 @@ def run_hessian_comparison(linearized_dynamics=False, discrete=False):
 
     _, _, _ = compare_hessian(casadi_hess, acados_ocp_solver_exact)
 
-def compare_hessian(casadi_hess, acados_solver):
+def compare_hessian(casadi_hess, acados_solver: AcadosOcpSolver):
     offset = 0
     min_eigv_total = 1e12
     min_abs_eigv = 1e12
-    hessians_coincide = False
+    hessians_coincide = True
 
     for i in range(N+1):
-        hess_block_acados = get_hessian_block(acados_solver, i)
+        hess_block_acados = acados_solver.get_hessian_block(i)
         nv = hess_block_acados.shape[0]
         hess_block_casadi = casadi_hess[offset:offset+nv, offset:offset+nv]
         hess_error_norm = np.max(np.abs(hess_block_acados - hess_block_casadi))
         offset += nv
         # print(f"hess block {i} error {hess_error_norm:.2e}")
 
-        eigv = np.linalg.eigvals(hess_block_casadi)
+        eigv = np.linalg.eigvals(hess_block_acados)
         min_eigv = np.min(eigv)
         min_eigv_total = min(min_eigv, min_eigv_total)
         min_abs_eigv = min(min_abs_eigv, np.min(np.abs(eigv)))
@@ -443,9 +439,11 @@ def compare_hessian(casadi_hess, acados_solver):
             print(f"\nhess casadi\n{hess_block_casadi}")
             hessians_coincide = False
 
-    # check projected Hessian
+    # check projected Hessian & P matrices
     min_abs_eig_proj_hess = 1e12
     min_eig_proj_hess = 1e12
+    min_eig_P = 1e12
+    min_abs_eig_P = 1e12
     cond_proj_hess = 0.
     for i in range(1, N):
         P_mat = acados_solver.get_from_qp_in(i, 'P')
@@ -457,8 +455,12 @@ def compare_hessian(casadi_hess, acados_solver):
         min_eig_proj_hess = min(min_eigv, min_eig_proj_hess)
         min_abs_eig_proj_hess = min(min_abs_eig_proj_hess, np.min(np.abs(eigv)))
         cond_proj_hess = max(cond_proj_hess, np.linalg.cond(proj_hess_block))
+        # P
+        eigv = np.linalg.eigvals(P_mat)
+        min_eig_P = min(min_eig_P, np.min(eigv))
+        min_abs_eig_P = min(min_abs_eig_P, np.min(np.abs(eigv)))
 
-    return min_eigv_total, min_abs_eigv, hessians_coincide, min_abs_eig_proj_hess, min_eig_proj_hess, cond_proj_hess
+    return min_eigv_total, min_abs_eigv, hessians_coincide, min_abs_eig_proj_hess, min_eig_proj_hess, cond_proj_hess, min_eig_P, min_abs_eig_P
 
 if __name__ == "__main__":
     sensitivity_experiment(linearized_dynamics=False, discrete=True)
