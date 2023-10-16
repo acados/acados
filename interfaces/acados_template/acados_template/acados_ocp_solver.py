@@ -1196,10 +1196,33 @@ class AcadosOcpSolver:
 
     def eval_param_sens(self, index, stage=0, field="ex"):
         """
-        Calculate the sensitivity of the curent solution with respect to the initial state component of index
+        Calculate the sensitivity of the curent solution with respect to the initial state component of index.
+
+        NOTE: Correct computation of sensitivities requires
+        (1) HPIPM as QP solver,
+        (2) the usage of an exact Hessian,
+        (3) positive semi-definiteness of the P matrices within the Riccati recursion if the square-root version is used
+            OR positive semi-definiteness of the reduced Hessian if the classic Riccati recursion is used (compare: `solver_options.qp_solver_ric_alg`),
+        (4) the solution of at least one QP in advance to evaluation of the sensitivities as the factorization is reused.
 
             :param index: integer corresponding to initial state index in range(nx)
         """
+
+        if not (self.acados_ocp.solver_options.qp_solver == 'FULL_CONDENSING_HPIPM' or
+                self.acados_ocp.solver_options.qp_solver == 'PARTIAL_CONDENSING_HPIPM'):
+            raise Exception("Parametric sensitivities are only available with HPIPM as QP solver.")
+
+
+        if not (
+           (self.acados_ocp.solver_options.hessian_approx == 'EXACT_HESSIAN' or
+           (self.acados_ocp.cost.cost_type == 'LINEAR_LS' and
+            self.acados_ocp.cost.cost_type_0 == 'LINEAR_LS' and
+            self.acados_ocp.cost.cost_type_e == 'LINEAR_LS'))
+            and
+            self.acados_ocp.solver_options.regularize_method == 'NO_REGULARIZE' and
+            self.acados_ocp.solver_options.levenberg_marquardt == 0
+        ):
+            raise Exception("Parametric sensitivities are only correct if an exact Hessian is used!")
 
         field_ = field
         field = field_.encode('utf-8')
