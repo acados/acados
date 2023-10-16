@@ -2477,10 +2477,10 @@ class AcadosOcpOptions:
 
         Note: taken from [HPIPM paper]:
 
-        (a) the classical implementation requires the reduced Hessian with respect to the dynamics
+        (a) the classical implementation requires the reduced  (projected) Hessian with respect to the dynamics
             equality constraints to be positive definite, but allows the full-space Hessian to be indefinite)
         (b) the square-root implementation, which in order to reduce the flop count employs the Cholesky
-            factorization of the Riccati recursion matrix, and therefore requires the full-space Hessian to be positive definite
+            factorization of the Riccati recursion matrix (P), and therefore requires the full-space Hessian to be positive definite
 
         [HPIPM paper]: HPIPM: a high-performance quadratic programming framework for model predictive control, Frison and Diehl, 2020
         https://cdn.syscop.de/publications/Frison2020a.pdf
