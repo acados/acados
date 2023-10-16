@@ -237,7 +237,7 @@ def main(param_M_as_state: bool, idxp: int, qp_solver_ric_alg: int, eigen_analys
     if idxp == 4:
         # vary M
         parameter_name = 'M'
-        delta_p = 0.01
+        delta_p = 0.005
         p_test = np.arange(p_nominal - 0.5, p_nominal + 0.5, delta_p)
         x0_augmented = [np.array(x0[:-1].tolist() + [p]) for p in p_test]
 
@@ -354,7 +354,7 @@ def main(param_M_as_state: bool, idxp: int, qp_solver_ric_alg: int, eigen_analys
         isub += 1
         ax[isub].plot(p_test, min_eig_full, "--", label='full Hessian')
         ax[isub].plot(p_test, min_eig_proj_hess, "--", label='proj Hessian')
-        ax[isub].plot(p_test, min_eig_P, "--", label='P Riccati')
+        ax[isub].plot(p_test, min_eig_P, "--", label='$P$ Riccati')
         ax[isub].grid(True)
         ax[isub].legend()
         ax[isub].set_ylabel("min eig")
