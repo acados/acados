@@ -287,6 +287,11 @@ class AcadosSimSolver:
         if generate and not isinstance(acados_sim, AcadosOcp):
             self.generate(acados_sim, json_file=json_file, cmake_builder=cmake_builder)
 
+        if isinstance(acados_sim, AcadosOcp):
+            print("Warning: An AcadosSimSolver is created from an AcadosOcp description.",
+                  "This only works if you created an AcadosOcpSolver before with the same description."
+                  "Otherwise it leads to undefined behavior. Using an AcadosSim description is recommended.")
+
         if build:
             self.build(code_export_dir, cmake_builder=cmake_builder, verbose=verbose)
 
