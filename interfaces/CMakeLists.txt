@@ -135,7 +135,7 @@ add_test(NAME python_pendulum_ocp_example_reuse_code
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
         python minimal_example_ocp_reuse_code.py)
 
-add_test(NAME python_pendulum_ocp_example_reuse_code
+add_test(NAME python_solution_sensitivities_and_exact_hess
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/solution_sensitivities
         python test_solution_sens_and_exact_hess.py)
 
