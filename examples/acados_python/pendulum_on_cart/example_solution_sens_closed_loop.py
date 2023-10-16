@@ -32,7 +32,7 @@
 import sys
 sys.path.insert(0, 'common')
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver, latexify_plot
+from acados_template import AcadosOcp, AcadosSim, AcadosOcpSolver, AcadosSimSolver, latexify_plot
 from pendulum_model import export_pendulum_ode_model, export_linearized_pendulum, export_pendulum_ode_model_with_discrete_rk4
 
 from utils import plot_pendulum
@@ -40,17 +40,17 @@ import numpy as np
 import scipy.linalg
 import matplotlib.pyplot as plt
 
-X0 = np.array([1.0, 0.2, 0.0, 0.0])
+X0 = np.array([1.0, np.pi/6, 0.0, 0.0])
 FMAX = 80
 T_HORIZON = 2.0
 N = 40
 
-def create_solver_and_integrator():
+def create_ocp_solver():
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
     # set model
-    model = export_pendulum_ode_model()
+    model = export_linearized_pendulum(0*X0, np.array([0.]))
     # model = export_linearized_pendulum(X0, np.array([1.]))
     # model = export_pendulum_ode_model_with_discrete_rk4(dT=T_HORIZON/N)
 
@@ -116,12 +116,23 @@ def create_solver_and_integrator():
     ocp.solver_options.tf = T_HORIZON
 
     acados_ocp_solver = AcadosOcpSolver(ocp)
-    acados_integrator = AcadosSimSolver(ocp)
-    return acados_ocp_solver, acados_integrator
 
+    return acados_ocp_solver
+
+
+def create_integrator():
+    sim = AcadosSim()
+    model = export_pendulum_ode_model()
+    sim.model = model
+    sim.solver_options.T = T_HORIZON/N
+    acados_integrator = AcadosSimSolver(sim)
+
+    return acados_integrator
 
 def main():
-    acados_ocp_solver, acados_integrator = create_solver_and_integrator()
+    acados_ocp_solver = create_ocp_solver()
+    acados_integrator = create_integrator()
+    print("Please check the documentation fo eval_param_sens for the requirements on exact solution sensitivities with acados.")
 
     nx = acados_ocp_solver.acados_ocp.dims.nx
     nu = acados_ocp_solver.acados_ocp.dims.nu
