@@ -1574,6 +1574,7 @@ class AcadosOcpSolver:
 
         return out[0]
 
+
     def get_optimal_value_gradient(self):
         """
         Returns the gradient of the optimal value function w.r.t. the current initial state.

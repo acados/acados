@@ -1,17 +1,30 @@
 ## Roadmap
 - [ ] Test 32 bit
 - [ ] Test OOQP
+- [ ] More flexible solution sensitivities?
+- [ ] get_optimal_value_hessian() - at least for HPIPM and exact Hessians
+- [ ] remove old layer in Matlab interface
 
 #### core
 - [x] propagate cost in integrator for NLS+IRK
     - or: add support for quadrature state, separate dimension in integrator and OCP solver
-- [ ] propagate cost in integrator for CONL+IRK
-
+- [ ] faster workspace memory casting
 
 #### `ocp_nlp`
 - [ ] partial tightening
 - [x] RTI implementation similar to ACADO
 - [x] support cost on z for external, NLS
+
+#### `sim`
+- [ ] GNSF Hessians
+- [ ] propagate cost in integrator for CONL+IRK
+- [ ] time in integrator + time dependent model functions
+
+
+## DONE
+- [x] closed loop example MPC + MHE
+- [x] Templates: avoid global memory
+- [x] add support for manual model functions -- partly done: external cost and discrete dynamics
 
 #### `sim`
 - [x] collocation integrators Radau
@@ -21,13 +34,6 @@
     - implement also Radau IIA collocation methods
         - L-stable
         - order is 2 * num_stages - 1
-- [ ] GNSF Hessians
-
-
-## DONE
-- [x] closed loop example MPC + MHE
-- [x] Templates: avoid global memory
-- [x] add support for manual model functions -- partly done: external cost and discrete dynamics
 
 #### C
 - [x] split ocp solve into prepare and feedback
