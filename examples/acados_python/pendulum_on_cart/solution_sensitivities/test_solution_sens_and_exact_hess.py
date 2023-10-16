@@ -111,8 +111,7 @@ def create_ocp_description(hessian_approx, linearized_dynamics=False, discrete=F
     ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
     ocp.solver_options.sim_method_num_steps = 5
     ocp.solver_options.tol = 1e-6
-    ocp.solver_options.qp_solver_ric_alg = 1
-    # qp_solver_ric_alg
+    ocp.solver_options.qp_solver_ric_alg = 0
     # ocp.solver_options.sim_method_newton_tol = 1e-5
 
     ocp.solver_options.qp_solver_cond_N = N
@@ -269,24 +268,27 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True)
 
         du0_dp_values[i] = acados_ocp_solver_exact.get(0, "sens_u")
 
-        if np.abs(du0_dp_finite_diff[i] - du0_dp_values[i]) > 1e-6:
-            nlp_sol = casadi_solver(p=x0, lbg=lbg, ubg=ubg)
-            # print(f"{nlp_sol=}")
-            casadi_hess_l = lag_hess_fun(x=nlp_sol['x'], p=x0, lam_f=1.0, lam_g=nlp_sol['lam_g'])['triu_hess_gamma_x_x']
-            casadi_hess = ca.triu2symm(ca.triu(casadi_hess_l)).full()
-            min_eigv_vals[i], min_abs_eigv_vals[i], hess_errors[i], min_abs_eigv_proj[i], min_eigv_proj[i], cond_proj_hess_vals[i], min_eigP_vals[i], min_abs_eigP_vals[i] = compare_hessian(casadi_hess, acados_ocp_solver_exact)
+        # solve with casadi and compare hessians
+        nlp_sol = casadi_solver(p=x0, lbg=lbg, ubg=ubg)
+        casadi_hess_l = lag_hess_fun(x=nlp_sol['x'], p=x0, lam_f=1.0, lam_g=nlp_sol['lam_g'])['triu_hess_gamma_x_x']
+        casadi_hess = ca.triu2symm(ca.triu(casadi_hess_l)).full()
+        min_eigv_vals[i], min_abs_eigv_vals[i], hess_errors[i], min_abs_eigv_proj[i], min_eigv_proj[i], cond_proj_hess_vals[i], min_eigP_vals[i], min_abs_eigP_vals[i] = compare_hessian(casadi_hess, acados_ocp_solver_exact)
 
-            K_mat, K_regularized = compute_K(acados_ocp_solver_exact)
+        K_mat, K_regularized = compute_K(acados_ocp_solver_exact)
 
-            # du0_dp_values[i] = K_regularized[0][idxp]
+        # du0_dp_values[i] = K_regularized[0][idxp]
 
-            if np.abs(du0_dp_values[i] - K_mat[0][idxp]) > 1e-5:
-                print(f"K and du0_dp differ too much")
-                print(f"{du0_dp_values[i]=} {K_mat[0][idxp]=}")
+        if np.abs(du0_dp_values[i] - K_mat[0][idxp]) > 1e-5:
+            print(f"K and du0_dp differ too much")
+            print(f"{du0_dp_values[i]=} {K_mat[0][idxp]=}")
 
     max_hess_error = np.max(hess_errors)
     if max_hess_error > 1e-4:
         raise Exception(f"Hessian error {max_hess_error} > 1e-4 when comparing to casadi.")
+
+    solution_sens_mean_diff = np.mean(np.abs(du0_dp_values -du0_dp_finite_diff))
+    if solution_sens_mean_diff > 1.0:
+        raise Exception(f"Mean of solution sensitivity difference wrt finite differences {solution_sens_mean_diff} > 1.0.")
 
     # plot_tangents(p_vals, u0_values, du0_dp_values)
     # Finite difference comparison
@@ -312,7 +314,7 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True)
     isub += 1
     axes[isub].plot(p_vals, min_eigv_vals, label='full hess')
     axes[isub].plot(p_vals, min_eigv_proj, label='proj hess')
-    axes[isub].plot(p_vals, min_eigP_vals, label='P')
+    axes[isub].plot(p_vals, min_eigP_vals, label='$P$ Riccati')
     axes[isub].set_ylabel("min eigval")
     axes[isub].legend()
     axes[isub].grid()
@@ -327,7 +329,7 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True)
     isub += 1
     axes[isub].plot(p_vals, min_abs_eigv_vals, '--', label='full hess')
     axes[isub].plot(p_vals, min_abs_eigv_proj, label='proj hess')
-    axes[isub].plot(p_vals, min_abs_eigP_vals, label='P')
+    axes[isub].plot(p_vals, min_abs_eigP_vals, label='$P$ Riccati')
     axes[isub].set_ylabel("abs eigval")
     axes[isub].set_yscale('log')
     axes[isub].legend()

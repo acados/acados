@@ -122,8 +122,8 @@ def export_pendulum_ode_model_with_discrete_rk4(dT):
     xf = x + dT/6 * (k1 + 2*k2 + 2*k3 + k4)
 
     model.disc_dyn_expr = xf
-    print("built RK4 for pendulum model with dT = ", dT)
-    print(xf)
+    # print("built RK4 for pendulum model with dT = ", dT)
+    # print(xf)
     return model
 
 def export_linearized_pendulum_ode_model_with_discrete_rk4(dT, xbar, ubar):
@@ -142,8 +142,8 @@ def export_linearized_pendulum_ode_model_with_discrete_rk4(dT, xbar, ubar):
     xf = x + dT/6 * (k1 + 2*k2 + 2*k3 + k4)
 
     model.disc_dyn_expr = xf
-    print("built RK4 for pendulum model with dT = ", dT)
-    print(xf)
+    # print("built RK4 for pendulum model with dT = ", dT)
+    # print(xf)
     return model
 
 def export_augmented_pendulum_model():
