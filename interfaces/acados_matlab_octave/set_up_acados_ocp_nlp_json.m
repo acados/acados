@@ -102,6 +102,9 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     if isfield(obj.opts_struct, 'qp_solver_tol_stat')
         ocp_json.solver_options.qp_solver_tol_stat = obj.opts_struct.qp_solver_tol_stat;
     end
+    if isfield(obj.opts_struct, 'reg_epsilon')
+        ocp_json.solver_options.reg_epsilon = obj.opts_struct.reg_epsilon;
+    end
     if isfield(obj.opts_struct, 'qp_solver_tol_eq')
         ocp_json.solver_options.qp_solver_tol_eq = obj.opts_struct.qp_solver_tol_eq;
     end
