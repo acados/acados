@@ -1928,6 +1928,8 @@ class AcadosOcpSolver:
 
             :param stage: integer corresponding to shooting node
             :param field: string in ['A', 'B', 'b', 'Q', 'R', 'S', 'q', 'r', 'C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu']
+
+        Note: additional supported fields are ['P', 'K', 'Lr'], which can be extracted form QP solver PARTIAL_CONDENSING_HPIPM.
         """
         # idx* should be added too..
         if not isinstance(stage_, int):
