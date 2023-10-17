@@ -436,9 +436,11 @@ def compare_hessian(casadi_hess, acados_solver: AcadosOcpSolver):
     cond_proj_hess = 0.
     for i in range(1, N):
         P_mat = acados_solver.get_from_qp_in(i, 'P')
-        B_mat = acados_solver.get_from_qp_in(i, 'B')
-        R_mat = acados_solver.get_from_qp_in(i, 'R')
-        proj_hess_block = R_mat + B_mat.T @ P_mat @ B_mat
+        B_mat = acados_solver.get_from_qp_in(i-1, 'B')
+        # Lr: lower triangular decomposition of R within Riccati != R in qp_in!
+        Lr = acados_solver.get_from_qp_in(i-1, 'Lr')
+        R_ric = Lr @ Lr.T
+        proj_hess_block = R_ric + B_mat.T @ P_mat @ B_mat
         eigv = np.linalg.eigvals(proj_hess_block)
         min_eigv = np.min(eigv)
         min_eig_proj_hess = min(min_eigv, min_eig_proj_hess)

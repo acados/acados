@@ -785,7 +785,7 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         dims_out[0] = dims->nx[stage];
         dims_out[1] = dims->nx[stage];
     }
-    else if (!strcmp(field, "R"))
+    else if (!strcmp(field, "R") || !strcmp(field, "Lr"))
     {
         dims_out[0] = dims->nu[stage];
         dims_out[1] = dims->nu[stage];
@@ -1214,7 +1214,7 @@ void ocp_nlp_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_so
         double *double_values = value;
         d_ocp_qp_get_ug(stage, nlp_mem->qp_in, double_values);
     }
-    else if (!strcmp(field, "P") || (!strcmp(field, "K")))
+    else if (!strcmp(field, "P") || !strcmp(field, "K") || !strcmp(field, "Lr"))
     {
         ocp_nlp_opts *nlp_opts;
         config->opts_get(config, dims, solver->opts, "nlp_opts", &nlp_opts);

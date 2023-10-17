@@ -212,12 +212,16 @@ def evaluate_hessian_eigenvalues(acados_solver: AcadosOcpSolver):
     for i in range(1, N_horizon):
         P_mat = acados_solver.get_from_qp_in(i, 'P')
         B_mat = acados_solver.get_from_qp_in(i-1, 'B')
-        R_mat = acados_solver.get_from_qp_in(i-1, 'R')
-        # print(f"{R_mat=}, {B_mat=}, {P_mat=}")
-        proj_hess_block = R_mat + B_mat.T @ P_mat @ B_mat
+        # Lr: lower triangular decomposition of R within Riccati != R in qp_in!
+        Lr = acados_solver.get_from_qp_in(i-1, 'Lr')
+        R_ric = Lr @ Lr.T
+        proj_hess_block = R_ric + B_mat.T @ P_mat @ B_mat
         eigv = np.linalg.eigvals(proj_hess_block)
         min_eigv = np.min(eigv)
         min_eig_proj_hess = min(min_eigv, min_eig_proj_hess)
+        # if min_eig_proj_hess < 0:
+        #     print(f"min_eig_proj_hess < 0 at {i}")
+        #     breakpoint()
         min_abs_eig_proj_hess = min(min_abs_eig_proj_hess, np.min(np.abs(eigv)))
         # P
         eigv = np.linalg.eigvals(P_mat)
