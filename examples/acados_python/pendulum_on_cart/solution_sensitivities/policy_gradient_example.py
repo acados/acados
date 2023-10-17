@@ -211,8 +211,9 @@ def evaluate_hessian_eigenvalues(acados_solver: AcadosOcpSolver):
     min_abs_eig_P = 1e12
     for i in range(1, N_horizon):
         P_mat = acados_solver.get_from_qp_in(i, 'P')
-        B_mat = acados_solver.get_from_qp_in(i, 'B')
-        R_mat = acados_solver.get_from_qp_in(i, 'R')
+        B_mat = acados_solver.get_from_qp_in(i-1, 'B')
+        R_mat = acados_solver.get_from_qp_in(i-1, 'R')
+        # print(f"{R_mat=}, {B_mat=}, {P_mat=}")
         proj_hess_block = R_mat + B_mat.T @ P_mat @ B_mat
         eigv = np.linalg.eigvals(proj_hess_block)
         min_eigv = np.min(eigv)
@@ -352,12 +353,12 @@ def main(param_M_as_state: bool, idxp: int, qp_solver_ric_alg: int, eigen_analys
 
     if eigen_analysis:
         isub += 1
-        ax[isub].plot(p_test, min_eig_full, "--", label='full Hessian')
-        ax[isub].plot(p_test, min_eig_proj_hess, "--", label='proj Hessian')
-        ax[isub].plot(p_test, min_eig_P, "--", label='$P$ Riccati')
+        ax[isub].plot(p_test, np.sign(min_eig_full), linestyle="-", alpha=.6, label='full Hessian')
+        ax[isub].plot(p_test, np.sign(min_eig_proj_hess), "--", label='proj Hessian')
+        ax[isub].plot(p_test, np.sign(min_eig_P), ":", label='$P$ Riccati')
         ax[isub].grid(True)
         ax[isub].legend()
-        ax[isub].set_ylabel("min eig")
+        ax[isub].set_ylabel("sign min eig")
 
         isub += 1
         ax[isub].plot(p_test, min_abs_eig_full, "--", label='full Hessian')
