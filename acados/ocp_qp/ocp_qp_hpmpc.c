@@ -564,7 +564,7 @@ int ocp_qp_hpmpc(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *
 }
 
 
-void ocp_qp_hpmpc_solver_get(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, const char *field, int stage, void* value)
+void ocp_qp_hpmpc_solver_get(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, const char *field, int stage, void* value, int size1, int size2)
 {
     printf("\nerror: ocp_qp_hpmpc_solver_get: not implemented yet\n");
     exit(1);

@@ -323,7 +323,7 @@ void ocp_qp_hpipm_memory_reset(void *config_, void *qp_in_, void *qp_out_, void 
     ocp_qp_hpipm_memory_assign(config_, qp_in->dim, opts_, mem_);
 }
 
-void ocp_qp_hpipm_solver_get(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, const char *field, int stage, void* value)
+void ocp_qp_hpipm_solver_get(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, const char *field, int stage, void* value, int size1, int size2)
 {
     ocp_qp_in *qp_in = qp_in_;
     // ocp_qp_out *qp_out = qp_out_;
@@ -331,19 +331,33 @@ void ocp_qp_hpipm_solver_get(void *config_, void *qp_in_, void *qp_out_, void *o
     ocp_qp_hpipm_memory *mem = mem_;
 
     double *double_values = value;
+    int nx = qp_in->dim->nx[stage];
+    int nu = qp_in->dim->nu[stage];
 
     // d_ocp_qp_ipm_get_ric_P
     if (!strcmp(field, "P"))
     {
+        if ((size1 != nx) || (size2 != nx))
+        {
+            printf("ocp_qp_hpipm_solver_get: size of P not as expected, got size %d %d.", size1, size2);
+        }
         d_ocp_qp_ipm_get_ric_P(qp_in, opts->hpipm_opts, mem->hpipm_workspace, stage, double_values);
         // void OCP_QP_IPM_GET_RIC_P(struct OCP_QP *qp, struct OCP_QP_IPM_ARG *arg, struct OCP_QP_IPM_WS *ws, int stage, REAL *P)
     }
     else if (!strcmp(field, "K"))
     {
+        if ((size1 != nu) || (size2 != nx))
+        {
+            printf("ocp_qp_hpipm_solver_get: size of K not as expected, got size %d %d.", size1, size2);
+        }
         d_ocp_qp_ipm_get_ric_K(qp_in, opts->hpipm_opts, mem->hpipm_workspace, stage, double_values);
     }
     else if (!strcmp(field, "Lr"))
     {
+        if ((size1 != nu) || (size2 != nu))
+        {
+            printf("ocp_qp_hpipm_solver_get: size of Lr not as expected, got size %d %d.", size1, size2);
+        }
         d_ocp_qp_ipm_get_ric_Lr(qp_in, opts->hpipm_opts, mem->hpipm_workspace, stage, double_values);
     }
     else
