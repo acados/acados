@@ -75,7 +75,7 @@ void ocp_nlp_reg_convexify_opts_initialize_default(void *config_, ocp_nlp_reg_di
 
 
 
-void ocp_nlp_reg_convexify_opts_set(void *config_, ocp_nlp_reg_dims *dims, void *opts_, char *field, void* value)
+void ocp_nlp_reg_convexify_opts_set(void *config_, void *opts_, const char *field, void* value)
 {
 
     ocp_nlp_reg_convexify_opts *opts = opts_;

@@ -42,6 +42,7 @@ from pathlib import Path
 from typing import Union
 
 import numpy as np
+import scipy.linalg
 
 from .acados_model import AcadosModel
 from .acados_ocp import (AcadosOcp, AcadosOcpConstraints, AcadosOcpCost,
@@ -286,6 +287,7 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
 
     if constraints.has_x0 and dims.nbx_0 != dims.nx:
         raise Exception(f"x0 should have shape nx = {dims.nx}.")
+
     if all(constraints.lbx_0 == constraints.ubx_0) and dims.nbx_0 == dims.nx \
         and dims.nbxe_0 is None \
         and (constraints.idxbxe_0.shape == constraints.idxbx_0.shape)\
@@ -1007,7 +1009,9 @@ class AcadosOcpSolver:
         self.__qp_dynamics_fields = ['A', 'B', 'b']
         self.__qp_cost_fields = ['Q', 'R', 'S', 'q', 'r']
         self.__qp_constraint_fields = ['C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu']
+        self.__qp_pc_hpipm_fields = ['P', 'K', 'Lr']
 
+        return
 
     def __get_pointers_solver(self):
         # """
@@ -1044,7 +1048,7 @@ class AcadosOcpSolver:
 
 
 
-    def solve_for_x0(self, x0_bar, fail_on_nonzero_status=True):
+    def solve_for_x0(self, x0_bar, fail_on_nonzero_status=True, print_stats_on_failure=True):
         """
         Wrapper around `solve()` which sets initial state constraint, solves the OCP, and returns u0.
         """
@@ -1054,9 +1058,11 @@ class AcadosOcpSolver:
         status = self.solve()
 
         if status != 0:
+            if print_stats_on_failure:
+                self.print_statistics()
             if fail_on_nonzero_status:
                 raise Exception(f'acados acados_ocp_solver returned status {status}')
-            else:
+            elif print_stats_on_failure:
                 print(f'Warning: acados acados_ocp_solver returned status {status}')
 
         u0 = self.get(0, "u")
@@ -1190,12 +1196,35 @@ class AcadosOcpSolver:
             self.__get_pointers_solver()
 
 
-    def eval_param_sens(self, index, stage=0, field="ex"):
+    def eval_param_sens(self, index: int, stage: int=0, field="ex"):
         """
-        Calculate the sensitivity of the curent solution with respect to the initial state component of index
+        Calculate the sensitivity of the current solution with respect to the initial state component of index.
+
+        NOTE: Correct computation of sensitivities requires
+        (1) HPIPM as QP solver,
+        (2) the usage of an exact Hessian,
+        (3) positive definiteness of the full-space Hessian if the square-root version of the Riccati recursion is used
+            OR positive definiteness of the reduced Hessian if the classic Riccati recursion is used (compare: `solver_options.qp_solver_ric_alg`),
+        (4) the solution of at least one QP in advance to evaluation of the sensitivities as the factorization is reused.
 
             :param index: integer corresponding to initial state index in range(nx)
         """
+
+        if not (self.acados_ocp.solver_options.qp_solver == 'FULL_CONDENSING_HPIPM' or
+                self.acados_ocp.solver_options.qp_solver == 'PARTIAL_CONDENSING_HPIPM'):
+            raise Exception("Parametric sensitivities are only available with HPIPM as QP solver.")
+
+
+        if not (
+           (self.acados_ocp.solver_options.hessian_approx == 'EXACT' or
+           (self.acados_ocp.cost.cost_type == 'LINEAR_LS' and
+            self.acados_ocp.cost.cost_type_0 == 'LINEAR_LS' and
+            self.acados_ocp.cost.cost_type_e == 'LINEAR_LS'))
+            and
+            self.acados_ocp.solver_options.regularize_method == 'NO_REGULARIZE' and
+            self.acados_ocp.solver_options.levenberg_marquardt == 0
+        ):
+            raise Exception("Parametric sensitivities are only correct if an exact Hessian is used!")
 
         field_ = field
         field = field_.encode('utf-8')
@@ -1335,7 +1364,7 @@ class AcadosOcpSolver:
         return
 
 
-    def store_iterate(self, filename: str = '', overwrite=False):
+    def store_iterate(self, filename: str = '', overwrite=False, verbose=True):
         """
         Stores the current iterate of the ocp solver in a json file.
         Note: This does not contain the iterate of the integrators, and the parameters.
@@ -1375,7 +1404,9 @@ class AcadosOcpSolver:
         # save
         with open(filename, 'w') as f:
             json.dump(solution, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
-        print("stored current iterate in ", os.path.join(os.getcwd(), filename))
+
+        if verbose:
+            print("stored current iterate in ", os.path.join(os.getcwd(), filename))
 
 
 
@@ -1419,7 +1450,7 @@ class AcadosOcpSolver:
 
 
 
-    def load_iterate(self, filename):
+    def load_iterate(self, filename:str, verbose: bool=True):
         """
         Loads the iterate stored in json file with filename into the ocp solver.
         Note: This does not contain the iterate of the integrators, and the parameters.
@@ -1430,7 +1461,8 @@ class AcadosOcpSolver:
         with open(filename, 'r') as f:
             solution = json.load(f)
 
-        print(f"loading iterate {filename}")
+        if verbose:
+            print(f"loading iterate {filename}")
         for key in solution.keys():
             (field, stage) = key.split('_')
             self.set(int(stage), field, np.array(solution[key]))
@@ -1454,6 +1486,7 @@ class AcadosOcpSolver:
             - time_solution_sensitivities: CPU time for previous call to eval_param_sens
             - time_reg: CPU time regularization
             - sqp_iter: number of SQP iterations
+            - qp_stat: status of QP solver
             - qp_iter: vector of QP iterations for last SQP call
             - statistics: table with info about last iteration
             - stat_m: number of rows in statistics matrix
@@ -1476,6 +1509,7 @@ class AcadosOcpSolver:
         ]
         fields = double_fields + [
                   'sqp_iter',
+                  'qp_stat',
                   'qp_iter',
                   'statistics',
                   'stat_m',
@@ -1509,6 +1543,13 @@ class AcadosOcpSolver:
             self.shared_lib.ocp_nlp_get.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
             self.shared_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
             return out
+
+        elif field_ == 'qp_stat':
+            full_stats = self.get_stats('statistics')
+            if self.solver_options['nlp_solver_type'] == 'SQP':
+                return full_stats[5, :]
+            elif self.solver_options['nlp_solver_type'] == 'SQP_RTI':
+                return full_stats[1, :]
 
         elif field_ == 'qp_iter':
             full_stats = self.get_stats('statistics')
@@ -1864,12 +1905,32 @@ class AcadosOcpSolver:
         return
 
 
+    def get_hessian_block(self, stage: int) -> np.ndarray:
+        """
+        Get Hessian block from last QP at stage i
+        In HPIPM form [[R, S^T],
+                    [S, Q]]
+        """
+        Q_mat = self.get_from_qp_in(stage, 'Q')
+        R_mat = self.get_from_qp_in(stage, 'R')
+        S_mat = self.get_from_qp_in(stage, 'S')
+        hess_block = scipy.linalg.block_diag(
+            R_mat, Q_mat
+        )
+        nu = R_mat.shape[0]
+        hess_block[nu:, :nu] = S_mat.T
+        hess_block[:nu, nu:] = S_mat
+        return hess_block
+
+
     def get_from_qp_in(self, stage_: int, field_: str):
         """
         Get numerical data from the current QP.
 
             :param stage: integer corresponding to shooting node
             :param field: string in ['A', 'B', 'b', 'Q', 'R', 'S', 'q', 'r', 'C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu']
+
+        Note: additional supported fields are ['P', 'K', 'Lr'], which can be extracted form QP solver PARTIAL_CONDENSING_HPIPM.
         """
         # idx* should be added too..
         if not isinstance(stage_, int):
@@ -1878,8 +1939,13 @@ class AcadosOcpSolver:
             raise Exception("stage should be <= self.N")
         if field_ in self.__qp_dynamics_fields and stage_ >= self.N:
             raise ValueError(f"dynamics field {field_} not available at terminal stage")
-        if field_ not in self.__qp_dynamics_fields + self.__qp_cost_fields + self.__qp_constraint_fields:
+        if field_ not in self.__qp_dynamics_fields + self.__qp_cost_fields + self.__qp_constraint_fields + self.__qp_pc_hpipm_fields:
             raise Exception(f"field {field_} not supported.")
+        if field_ in self.__qp_pc_hpipm_fields:
+            if self.acados_ocp.solver_options.qp_solver != "PARTIAL_CONDENSING_HPIPM" or self.acados_ocp.solver_options.qp_solver_cond_N != self.acados_ocp.dims.N:
+                raise Exception(f"field {field_} only works for PARTIAL_CONDENSING_HPIPM QP solver with qp_solver_cond_N == N.")
+            if field_ in ["P", "K"] and stage_ == 0 and self.acados_ocp.dims.nbxe_0 > 0:
+                raise Exception(f"getting field {field_} at stage 0 only works without x0 elimination (see nbxe_0).")
 
         field = field_.encode('utf-8')
         stage = c_int(stage_)

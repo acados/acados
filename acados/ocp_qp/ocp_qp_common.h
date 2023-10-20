@@ -69,6 +69,7 @@ typedef struct
     void (*memory_get)(void *config_, void *mem_, const char *field, void* value);
     acados_size_t (*workspace_calculate_size)(void *config, void *dims, void *opts);
     int (*evaluate)(void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);
+    void (*solver_get)(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, const char *field, int stage, void* value, int size1, int size2);
     void (*memory_reset)(void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);
     void (*eval_sens)(void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);
 } qp_solver_config;

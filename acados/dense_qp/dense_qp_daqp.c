@@ -746,6 +746,18 @@ void dense_qp_daqp_eval_sens(void *config_, void *qp_in, void *qp_out, void *opt
     exit(1);
 }
 
+void dense_qp_daqp_memory_reset(void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work)
+{
+    printf("\nerror: dense_qp_daqp_memory_reset: not implemented yet\n");
+    exit(1);
+}
+
+void dense_qp_daqp_solver_get(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, const char *field, int stage, void* value, int size1, int size2)
+{
+    printf("\nerror: dense_qp_daqp_solver_get: not implemented yet\n");
+    exit(1);
+}
+
 
 void dense_qp_daqp_config_initialize_default(void *config_)
 {
@@ -765,8 +777,9 @@ void dense_qp_daqp_config_initialize_default(void *config_)
     config->workspace_calculate_size =
         (acados_size_t (*)(void *, void *, void *)) & dense_qp_daqp_workspace_calculate_size;
     config->eval_sens = &dense_qp_daqp_eval_sens;
-    // config->memory_reset = &dense_qp_daqp_memory_reset;
     config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & dense_qp_daqp;
+    config->memory_reset = &dense_qp_daqp_memory_reset;
+    config->solver_get = &dense_qp_daqp_solver_get;
 
     return;
 }

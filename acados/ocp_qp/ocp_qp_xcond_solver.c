@@ -371,6 +371,21 @@ void ocp_qp_xcond_solver_memory_reset(void *config_, ocp_qp_xcond_solver_dims *d
 }
 
 
+void ocp_qp_xcond_solver_get(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_, void *mem_, const char *field, int stage, void* value, int size1, int size2)
+{
+    // cast data structures
+    ocp_qp_xcond_solver_config *config = config_;
+    qp_solver_config *qp_solver = config->qp_solver;
+    ocp_qp_xcond_config *xcond = config->xcond;
+    ocp_qp_xcond_solver_opts *opts = opts_;
+    ocp_qp_xcond_solver_memory *mem = mem_;
+
+    qp_solver->solver_get(qp_solver, qp_in, qp_out, opts->qp_solver_opts, mem->solver_memory, field, stage, value, size1, size2);
+
+    return;
+}
+
+
 
 void ocp_qp_xcond_solver_memory_get(void *config_, void *mem_, const char *field, void* value)
 {
@@ -585,7 +600,8 @@ void ocp_qp_xcond_solver_config_initialize_default(void *config_)
     config->memory_calculate_size = &ocp_qp_xcond_solver_memory_calculate_size;
     config->memory_assign = &ocp_qp_xcond_solver_memory_assign;
     config->memory_get = &ocp_qp_xcond_solver_memory_get;
-    config->memory_reset = &ocp_qp_xcond_solver_memory_reset;
+    config->solver_get = &ocp_qp_xcond_solver_get;
+    config->memory_reset = &ocp_qp_xcond_solver_memory_reset; // TODO: unused?
     config->workspace_calculate_size = &ocp_qp_xcond_solver_workspace_calculate_size;
     config->evaluate = &ocp_qp_xcond_solver;
     config->eval_sens = &ocp_qp_xcond_solver_eval_sens;

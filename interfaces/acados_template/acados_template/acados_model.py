@@ -44,12 +44,18 @@ class AcadosModel():
         """
         The model name is used for code generation. Type: string. Default: :code:`None`
         """
-        self.x = None           #: CasADi variable describing the state of the system; Default: :code:`None`
-        self.xdot = None        #: CasADi variable describing the derivative of the state wrt time; Default: :code:`None`
-        self.u = None           #: CasADi variable describing the input of the system; Default: :code:`None`
-        self.z = []             #: CasADi variable describing the algebraic variables of the DAE; Default: :code:`empty`
-        self.p = []             #: CasADi variable describing parameters of the DAE; Default: :code:`empty`
-        # dynamics
+        self.x = None
+        """CasADi variable describing the state of the system; Default: :code:`None`"""
+        self.xdot = None
+        """CasADi variable describing the derivative of the state wrt time; Default: :code:`None`"""
+        self.u = None
+        """CasADi variable describing the input of the system; Default: :code:`None`"""
+        self.z = []
+        """CasADi variable describing the algebraic variables of the DAE; Default: :code:`empty`"""
+        self.p = []
+        """CasADi variable describing parameters of the DAE; Default: :code:`empty`"""
+
+        ## dynamics
         self.f_impl_expr = None
         """
         CasADi expression for the implicit dynamics :math:`f_\\text{impl}(\dot{x}, x, u, z, p) = 0`.
@@ -69,11 +75,16 @@ class AcadosModel():
         Default: :code:`None`
         """
 
-        self.dyn_ext_fun_type = 'casadi'  #: type of external functions for dynamics module; 'casadi' or 'generic'; Default: 'casadi'
-        self.dyn_generic_source = None  #: name of source file for discrete dyanamics; Default: :code:`None`
-        self.dyn_disc_fun_jac_hess = None  #: name of function discrete dyanamics + jacobian and hessian; Default: :code:`None`
-        self.dyn_disc_fun_jac = None  #: name of function discrete dyanamics + jacobian; Default: :code:`None`
-        self.dyn_disc_fun = None  #: name of function discrete dyanamics; Default: :code:`None`
+        self.dyn_ext_fun_type = 'casadi'
+        """type of external functions for dynamics module; 'casadi' or 'generic'; Default: 'casadi'"""
+        self.dyn_generic_source = None
+        """name of source file for discrete dyanamics; Default: :code:`None`"""
+        self.dyn_disc_fun_jac_hess = None
+        """name of function discrete dyanamics + jacobian and hessian; Default: :code:`None`"""
+        self.dyn_disc_fun_jac = None
+        """name of function discrete dyanamics + jacobian; Default: :code:`None`"""
+        self.dyn_disc_fun = None
+        """name of function discrete dyanamics; Default: :code:`None`"""
 
         # for GNSF models
         self.gnsf = {'nontrivial_f_LO': 1, 'purely_linear': 0}
@@ -82,29 +93,53 @@ class AcadosModel():
         Contains integers `nontrivial_f_LO`, `purely_linear`.
         """
 
-        ## for OCP
+        ### for OCP only.
+        # This could be moved to cost / constraints
         # constraints
         # BGH(default): lh <= h(x, u) <= uh
-        self.con_h_expr = None  #: CasADi expression for the constraint :math:`h`; Default: :code:`None`
+        self.con_h_expr = None
+        """CasADi expression for the constraint :math:`h`; Default: :code:`None`"""
+
         # BGP(convex over nonlinear): lphi <= phi(r(x, u)) <= uphi
-        self.con_phi_expr = None  #: CasADi expression for the constraint phi; Default: :code:`None`
-        self.con_r_expr = None  #: CasADi expression for the constraint phi(r); Default: :code:`None`
+        self.con_phi_expr = None
+        """CasADi expression for the constraint phi; Default: :code:`None`"""
+        self.con_r_expr = None
+        """CasADi expression for the constraint phi(r),
+        dummy input for outer function; Default: :code:`None`"""
         self.con_r_in_phi = None
+        """CasADi expression for the terminal constraint :math:`\phi(r)`,
+        input for outer function; Default: :code:`None`"""
+
         # terminal
-        self.con_h_expr_e = None  #: CasADi expression for the terminal constraint :math:`h^e`; Default: :code:`None`
-        self.con_r_expr_e = None  #: CasADi expression for the terminal constraint; Default: :code:`None`
-        self.con_phi_expr_e = None  #: CasADi expression for the terminal constraint; Default: :code:`None`
+        self.con_h_expr_e = None
+        """CasADi expression for the terminal constraint :math:`h^e`; Default: :code:`None`"""
+        self.con_phi_expr_e = None
+        """CasADi expression for the terminal constraint :math:`\phi_e`; Default: :code:`None`"""
+        self.con_r_expr_e = None
+        """CasADi expression for the terminal constraint :math:`\phi_e(r)`,
+        dummy input for outer function; Default: :code:`None`"""
         self.con_r_in_phi_e = None
+        """CasADi expression for the terminal constraint :math:`\phi_e(r)`, input for outer function; Default: :code:`None`"""
+
         # cost
-        self.cost_y_expr = None  #: CasADi expression for nonlinear least squares; Default: :code:`None`
-        self.cost_y_expr_e = None  #: CasADi expression for nonlinear least squares, terminal; Default: :code:`None`
-        self.cost_y_expr_0 = None  #: CasADi expression for nonlinear least squares, initial; Default: :code:`None`
-        self.cost_expr_ext_cost = None  #: CasADi expression for external cost; Default: :code:`None`
-        self.cost_expr_ext_cost_e = None  #: CasADi expression for external cost, terminal; Default: :code:`None`
-        self.cost_expr_ext_cost_0 = None  #: CasADi expression for external cost, initial; Default: :code:`None`
-        self.cost_expr_ext_cost_custom_hess = None  #: CasADi expression for custom hessian (only for external cost); Default: :code:`None`
-        self.cost_expr_ext_cost_custom_hess_e = None  #: CasADi expression for custom hessian (only for external cost), terminal; Default: :code:`None`
-        self.cost_expr_ext_cost_custom_hess_0 = None  #: CasADi expression for custom hessian (only for external cost), initial; Default: :code:`None`
+        self.cost_y_expr = None
+        """CasADi expression for nonlinear least squares; Default: :code:`None`"""
+        self.cost_y_expr_e = None
+        """CasADi expression for nonlinear least squares, terminal; Default: :code:`None`"""
+        self.cost_y_expr_0 = None
+        """CasADi expression for nonlinear least squares, initial; Default: :code:`None`"""
+        self.cost_expr_ext_cost = None
+        """CasADi expression for external cost; Default: :code:`None`"""
+        self.cost_expr_ext_cost_e = None
+        """CasADi expression for external cost, terminal; Default: :code:`None`"""
+        self.cost_expr_ext_cost_0 = None
+        """CasADi expression for external cost, initial; Default: :code:`None`"""
+        self.cost_expr_ext_cost_custom_hess = None
+        """CasADi expression for custom hessian (only for external cost); Default: :code:`None`"""
+        self.cost_expr_ext_cost_custom_hess_e = None
+        """CasADi expression for custom hessian (only for external cost), terminal; Default: :code:`None`"""
+        self.cost_expr_ext_cost_custom_hess_0 = None
+        """CasADi expression for custom hessian (only for external cost), initial; Default: :code:`None`"""
 
         ## CONVEX_OVER_NONLINEAR convex-over-nonlinear cost: psi(y(x, u, p) - y_ref; p)
         self.cost_psi_expr_0 = None

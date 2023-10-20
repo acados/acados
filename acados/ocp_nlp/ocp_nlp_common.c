@@ -1159,6 +1159,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts,
                                     field+module_length+1, value);
     }
+    else if ( ptr_module!=NULL && (!strcmp(ptr_module, "reg")) )
+    {
+        config->regularize->opts_set(config->regularize, opts->regularize,
+                                    field+module_length+1, value);
+    }
     else // nlp opts
     {
         if (!strcmp(field, "reuse_workspace"))

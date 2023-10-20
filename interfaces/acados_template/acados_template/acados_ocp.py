@@ -2173,7 +2173,8 @@ class AcadosOcpOptions:
         self.__print_level = 0                                # print level
         self.__initialize_t_slacks = 0                        # possible values: 0, 1
         self.__cost_discretization = 'EULER'
-        self.__regularize_method = None
+        self.__regularize_method = 'NO_REGULARIZE'
+        self.__reg_epsilon = 1e-4
         self.__time_steps = None
         self.__shooting_nodes = None
         self.__exact_hess_cost = 1
@@ -2345,7 +2346,7 @@ class AcadosOcpOptions:
 
         Note: default eps = 1e-4
 
-        Default: :code:`None`.
+        Default: 'NO_REGULARIZE'.
         """
         return self.__regularize_method
 
@@ -2353,7 +2354,7 @@ class AcadosOcpOptions:
     def nlp_solver_step_length(self):
         """
         Fixed Newton step length.
-        Type: float > 0.
+        Type: float >= 0.
         Default: 1.0.
         """
         return self.__nlp_solver_step_length
@@ -2366,16 +2367,6 @@ class AcadosOcpOptions:
         Default: 0.0.
         """
         return self.__levenberg_marquardt
-
-    @property
-    def ext_qp_res(self):
-        """
-        Option determining if residual of QP solution is evaluated externally.
-        Mainly for debugging.
-        Type: int [0, 1]
-        Default: 0.
-        """
-        return self.__ext_qp_res
 
     @property
     def sim_method_num_stages(self):
@@ -2486,10 +2477,10 @@ class AcadosOcpOptions:
 
         Note: taken from [HPIPM paper]:
 
-        (a) the classical implementation requires the reduced Hessian with respect to the dynamics
+        (a) the classical implementation requires the reduced  (projected) Hessian with respect to the dynamics
             equality constraints to be positive definite, but allows the full-space Hessian to be indefinite)
         (b) the square-root implementation, which in order to reduce the flop count employs the Cholesky
-            factorization of the Riccati recursion matrix, and therefore requires the full-space Hessian to be positive definite
+            factorization of the Riccati recursion matrix (P), and therefore requires the full-space Hessian to be positive definite
 
         [HPIPM paper]: HPIPM: a high-performance quadratic programming framework for model predictive control, Frison and Diehl, 2020
         https://cdn.syscop.de/publications/Frison2020a.pdf
@@ -2547,6 +2538,11 @@ class AcadosOcpOptions:
     def alpha_min(self):
         """Minimal step size for globalization MERIT_BACKTRACKING, default: 0.05."""
         return self.__alpha_min
+
+    @property
+    def reg_epsilon(self):
+        """Epsilon for regularization, used if regularize_method in ['PROJECT', 'MIRROR', 'CONVEXIFY']"""
+        return self.__reg_epsilon
 
     @property
     def alpha_reduction(self):
@@ -2843,6 +2839,10 @@ class AcadosOcpOptions:
             raise Exception('Invalid globalization value. Possible values are:\n\n' \
                     + ',\n'.join(globalization_types) + '.\n\nYou have: ' + globalization + '.\n\n')
 
+    @reg_epsilon.setter
+    def reg_epsilon(self, reg_epsilon):
+        self.__reg_epsilon = reg_epsilon
+
     @alpha_min.setter
     def alpha_min(self, alpha_min):
         self.__alpha_min = alpha_min
@@ -2941,7 +2941,7 @@ class AcadosOcpOptions:
 
     @nlp_solver_step_length.setter
     def nlp_solver_step_length(self, nlp_solver_step_length):
-        if isinstance(nlp_solver_step_length, float) and nlp_solver_step_length > 0:
+        if isinstance(nlp_solver_step_length, float) and nlp_solver_step_length >= 0:
             self.__nlp_solver_step_length = nlp_solver_step_length
         else:
             raise Exception('Invalid nlp_solver_step_length value. nlp_solver_step_length must be a positive float.')
@@ -3098,7 +3098,7 @@ class AcadosOcpOptions:
     @model_external_shared_lib_name.setter
     def model_external_shared_lib_name(self, model_external_shared_lib_name):
         if isinstance(model_external_shared_lib_name, str) :
-            if model_external_shared_lib_name[-3:] == '.so' : 
+            if model_external_shared_lib_name[-3:] == '.so' :
                 raise Exception('Invalid model_external_shared_lib_name value. Remove the .so extension.' \
             + '.\n\nYou have: ' + type(model_external_shared_lib_name) + '.\n\n')
             else :
