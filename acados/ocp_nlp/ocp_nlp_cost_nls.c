@@ -881,7 +881,6 @@ void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims_, void *model_,
 
     if (opts->integrator_cost == 0)
     {
-
         ext_fun_arg_t nls_y_fun_type_in[3];
         void *nls_y_fun_in[3];
         ext_fun_arg_t nls_y_fun_type_out[1];

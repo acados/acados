@@ -39,14 +39,14 @@ import casadi as ca
 import scipy.linalg
 from utils import plot_pendulum
 
-COST_VARIANTS = ['FULL_STATE_PENALTY', 'PARTIAL_STATE_PENALTY', 'DOUBLE_STATE_PENALTY', 'CREATIVE_NONLINEAR']
+COST_TYPE = ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']
 PLOT = False
-NUM_STAGES = [1, 3]
+COST_DISCRETIZATIONS = ['EULER', 'INTEGRATOR']
 
 TOL = 1e-10
 
 
-def solve_ocp(cost_variant, num_stages):
+def solve_ocp(cost_discretization, cost_type, num_stages, collocation_type):
 
     model = export_pendulum_ode_model()
 
@@ -56,56 +56,48 @@ def solve_ocp(cost_variant, num_stages):
     nx = model.x.size()[0]
     nu = model.u.size()[0]
     ny = nx + nu
-    ny_e = nx
 
     Tf = 1.0
     N = 20
     ocp.dims.N = N
 
-    # set cost
-    Q = 2 * np.diag([1e3, 1e3, 1e-2, 1e-2])
+    Q = 2 * np.diag([1e3, 1e3, 1e-2, 1e-2, 0.1, 1e-3])
     R = 2 * np.diag([1e-2])
+    cost_W = scipy.linalg.block_diag(Q, R)
 
-    ocp.cost.cost_type = 'NONLINEAR_LS'
+    ocp.cost.cost_type = cost_type
+    ocp.cost.cost_type_e = cost_type
 
-    if cost_variant == "FULL_STATE_PENALTY":
-        ny = nx + nu
-        ocp.model.cost_y_expr = ca.vertcat(model.x, model.u)
-        ocp.cost.W = scipy.linalg.block_diag(Q, R)
-        ocp.cost.yref = np.zeros((ny, ))
-
-    elif cost_variant == 'PARTIAL_STATE_PENALTY':
-        nyx = 2
-        ny = nyx + nu
-        ocp.model.cost_y_expr = ca.vertcat(model.x[:nyx], model.u)
-        ocp.cost.W = scipy.linalg.block_diag(Q[:nyx, :nyx], R)
-        ocp.cost.yref = np.zeros((ny, ))
-
-    elif cost_variant == 'DOUBLE_STATE_PENALTY':
-        ny = 2*nx + nu
-        ocp.model.cost_y_expr = ca.vertcat(model.x, model.x, model.u)
-        ocp.cost.W = scipy.linalg.block_diag(Q, Q, R)
-        ocp.cost.yref = np.zeros((ny, ))
-
-    elif cost_variant == 'CREATIVE_NONLINEAR':
-        ocp.model.cost_y_expr = ca.vertcat(model.x[2], model.u, 0.1*(model.x[0]+model.u[0]+1.)**3)
-        ny = max(ocp.model.cost_y_expr.shape)
-        ocp.cost.W = Q[:ny, :ny]
-        ocp.cost.yref = np.zeros((ny, ))
-    else:
-        raise Exception(f"cost_variant {cost_variant} not supported")
-
-    ny_e = nx
-    ocp.cost.cost_type_e = 'NONLINEAR_LS'
-    ocp.model.cost_y_expr_e = model.x
-    ocp.cost.W_e = Q
+    ny = nx + nu + 2
+    ny_e = nx + 2
+    ocp.model.cost_y_expr = ca.vertcat(model.x, model.x[-1]**2, model.x[-1]*model.u, model.u)
+    ocp.model.cost_y_expr_e = ca.vertcat(model.x, model.x[-1]**2, model.x[-1])
+    ocp.cost.yref = np.zeros((ny, ))
     ocp.cost.yref_e = np.zeros((ny_e, ))
+
+    if cost_type == "NONLINEAR_LS":
+        ocp.cost.W = cost_W
+        ocp.cost.W_e = Q
+
+    elif cost_type == 'CONVEX_OVER_NONLINEAR':
+        r = ca.SX.sym('r', ny)
+        r_e = ca.SX.sym('r_e', ny_e)
+
+        ocp.model.cost_psi_expr = 0.5 * (r.T @ cost_W @ r)
+        ocp.model.cost_psi_expr_e = 0.5 * (r_e.T @ Q @ r_e)
+
+        ocp.model.cost_r_in_psi_expr = r
+        ocp.model.cost_r_in_psi_expr_e = r_e
+
+    else:
+        raise Exception(f"cost_type {cost_type} not supported")
+
 
     # augment with cost state
     cost_state = ca.SX.sym('cost_state')
     cost_state_dot = ca.SX.sym('cost_state_dot')
     res = ocp.model.cost_y_expr - ocp.cost.yref
-    cost = 0.5*res.T @ ocp.cost.W @ res
+    cost = 0.5*res.T @ cost_W @ res
 
     ocp.model.f_expl_expr = ca.vertcat(ocp.model.f_expl_expr, cost)
     ocp.model.x = ca.vertcat(ocp.model.x, cost_state)
@@ -126,8 +118,12 @@ def solve_ocp(cost_variant, num_stages):
     ocp.solver_options.sim_method_num_stages = num_stages
     ocp.solver_options.sim_method_num_steps = 1
     ocp.solver_options.nlp_solver_type = 'SQP'  # SQP_RTI, SQP
-    ocp.solver_options.cost_discretization = 'INTEGRATOR'
+    ocp.solver_options.cost_discretization = cost_discretization
+    ocp.solver_options.nlp_solver_max_iter = 100
 
+    # for debugging:
+    # ocp.solver_options.nlp_solver_max_iter = 1
+    ocp.solver_options.collocation_type = collocation_type
     # set prediction horizon
     ocp.solver_options.tf = Tf
     ocp_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json')
@@ -141,13 +137,16 @@ def solve_ocp(cost_variant, num_stages):
     simU = np.ndarray((N, nu))
 
     print(80*'-')
-    print(f'solve original code with N = {N} and Tf = {Tf} s:')
+    print(f'solve OCP with {cost_type} {cost_discretization} N = {N} and Tf = {Tf} s:')
     status = ocp_solver.solve()
+    # ocp_solver.dump_last_qp_to_json(f'qp_{cost_discretization}.json', overwrite=True)
 
     ocp_solver.print_statistics()
 
     if status != 0:
         raise Exception(f'acados returned status {status}.')
+
+    ocp_solver.store_iterate(filename=get_iterate_filename(cost_discretization, cost_type), overwrite=True)
 
     # get solution
     for i in range(N):
@@ -159,25 +158,56 @@ def solve_ocp(cost_variant, num_stages):
     cost_solver = ocp_solver.get_cost()
 
     xN = simX[N, :nx]
-    terminal_cost = 0.5*xN @ ocp.cost.W_e @ xN
+
+    resN = ca.vertcat(xN, xN[-1]**2, xN[-1]).full()
+    terminal_cost = 0.5* resN.T @ Q @ resN
     cost_state = simX[-1, -1] + terminal_cost
 
-    abs_diff = np.abs(cost_solver - cost_state)
+    abs_diff = np.abs(cost_solver - cost_state).item()
 
-    print(f"\nComparing solver cost and cost state for {cost_variant=}, {num_stages=}:\n  {abs_diff=:.3e}")
+    print(f"\nComparing solver cost and cost state for {cost_type=}, {num_stages=}:\n  {abs_diff=:.3e}")
     if abs_diff < TOL:
         print('  SUCCESS!\n')
     else:
-        raise Exception(f"  ERROR for {cost_variant=}, {num_stages=}:\n  {abs_diff=:.3e}\n")
+        raise Exception(f"  ERROR for {cost_type=}, {num_stages=}:\n  {abs_diff=:.3e}\n")
 
     if PLOT:# plot but don't halt
-        plot_pendulum(np.linspace(0, Tf, N + 1), Fmax, simU, simX, latexify=False, plt_show=False, X_true_label=f'original: N={N}, Tf={Tf}')
+        plot_pendulum(np.linspace(0, Tf, N + 1), Fmax, simU, simX[:, :-1], latexify=False, plt_show=True, X_true_label=f'original: N={N}, Tf={Tf}')
 
+
+def get_iterate_filename(cost_discretization, cost_type):
+    return f'final_iterate_{cost_discretization}_{cost_type}.json'
+
+def compare_iterates(cost_type):
+    import json
+    ref_cost_discretization = COST_DISCRETIZATIONS[0]
+
+    ref_iterate_filename = get_iterate_filename(ref_cost_discretization, cost_type)
+    with open(ref_iterate_filename, 'r') as f:
+        ref_iterate = json.load(f)
+
+    tol = 1e-10
+    for cost_discretization in COST_DISCRETIZATIONS[1:]:
+        iterate_filename = get_iterate_filename(cost_discretization, cost_type)
+        with open(iterate_filename, 'r') as f:
+            iterate = json.load(f)
+
+        assert iterate.keys() == ref_iterate.keys()
+
+        errors = [np.max(np.abs((np.array(iterate[k]) - np.array(ref_iterate[k])))) for k in iterate]
+        max_error = max(errors)
+        print(f"max error {max_error:e}")
+        if (max_error < tol):
+            print(f"successfuly compared {len(COST_DISCRETIZATIONS)} cost discretizations for {cost_type}")
+        else:
+            raise Exception(f"comparing {cost_type=}, {cost_discretization=} failed with {max_error=}")
 
 if __name__ == "__main__":
-    for num_stages in NUM_STAGES:
-        for cost_variant in COST_VARIANTS:
-            solve_ocp(cost_variant, num_stages)
 
+    for cost_type in COST_TYPE:
+        for cost_discretization in COST_DISCRETIZATIONS:
+            solve_ocp(cost_discretization, cost_type, num_stages=1, collocation_type='EXPLICIT_RUNGE_KUTTA')
+        compare_iterates(cost_type)
 
-
+    for cost_type in COST_TYPE:
+            solve_ocp('INTEGRATOR', cost_type, num_stages=3, collocation_type='GAUSS_LEGENDRE')
