@@ -1381,11 +1381,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     blasfeo_dgemv_n(nx+nu, ny, b_vec[ii]/num_steps, tmp_nux_ny2, 0, 0, tmp_ny, 0,
                                     1.0, cost_grad, 0, cost_grad, 0);
 
-                    // cost_hess += b * tmp_nux_ny_2 * tmp_nux_ny_2^T
-                    // TODO: use syrk (exploit symmetry)
-                    blasfeo_dgemm_nt(nx+nu, nx+nu, ny, b_vec[ii]/num_steps, tmp_nux_ny2, 0, 0, tmp_nux_ny2, 0, 0,
+                    // cost_hess += b * tmp_nux_ny2 * tmp_nux_ny2^T
+                    blasfeo_dsyrk_ln(nu+nx, ny, b_vec[ii]/num_steps, tmp_nux_ny2, 0, 0, tmp_nux_ny2, 0, 0,
                                     1.0, cost_hess, 0, 0, cost_hess, 0, 0);
-
                     // cost function value
                     // NOTE: slack contribution and scaling done in cost module
                     mem->cost_fun[0] += 0.5 * b_vec[ii]/num_steps * blasfeo_ddot(ny, tmp_ny, 0, tmp_ny, 0);
