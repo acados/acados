@@ -454,10 +454,10 @@ class AcadosSimSolver:
         """
         Set numerical data inside the solver.
 
-            :param field: string in ['x', 'u', 'p', 'xdot', 'z', 'seed_adj', 'T']
+            :param field: string in ['x', 'u', 'p', 'xdot', 'z', 'seed_adj', 'T', 't0']
             :param value: the value with appropriate size.
         """
-        settable = ['x', 'u', 'p', 'xdot', 'z', 'seed_adj', 'T'] # S_forw
+        settable = ['x', 'u', 'p', 'xdot', 'z', 'seed_adj', 'T', 't0'] # S_forw
 
         # TODO: check and throw error here. then remove checks in Cython for speed
         # cast value_ to avoid conversion issues

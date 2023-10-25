@@ -127,6 +127,7 @@ sim_in *sim_in_assign(void *config_, void *dims, void *raw_memory)
     config->dims_get(config_, dims, "nz", &nz);
     int NF = nx + nu;
     in->identity_seed = false;
+    in->t0 = 0.0;
 
     // align
     align_char_to(8, &c_ptr);
@@ -154,6 +155,11 @@ int sim_in_set_(void *config_, void *dims_, sim_in *in, const char *field, void 
     {
         double *T = value;
         in->T = T[0];
+    }
+    else if (!strcmp(field, "t0"))
+    {
+        double *t0 = value;
+        in->t0 = t0[0];
     }
     else if (!strcmp(field, "x"))
     {

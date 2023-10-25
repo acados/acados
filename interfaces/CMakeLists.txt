@@ -139,6 +139,11 @@ add_test(NAME python_solution_sensitivities_and_exact_hess
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/solution_sensitivities
         python test_solution_sens_and_exact_hess.py)
 
+add_test(NAME python_time_varying_irk
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/time_varying
+        python test_time_varying_irk.py)
+
+
 # CMake test
 add_test(NAME python_pendulum_ocp_example_cmake
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp

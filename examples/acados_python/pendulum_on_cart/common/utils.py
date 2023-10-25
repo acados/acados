@@ -33,7 +33,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from acados_template import latexify_plot
 
-def plot_pendulum(shooting_nodes, u_max, U, X_true, X_est=None, Y_measured=None, latexify=False, plt_show=True, X_true_label=None,
+def plot_pendulum(shooting_nodes, u_max, U, X_true, X_est=None, Y_measured=None, latexify=True, plt_show=True, X_true_label=None,
     states_lables = ['$x$', r'$\theta$', '$v$', r'$\dot{\theta}$']
                   ):
     """
