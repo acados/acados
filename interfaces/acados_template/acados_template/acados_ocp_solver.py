@@ -1192,8 +1192,11 @@ class AcadosOcpSolver:
         Calculate the sensitivity of the current solution with respect to the initial state component of index.
 
         NOTE: Correct computation of sensitivities requires
+
         (1) HPIPM as QP solver,
+
         (2) the usage of an exact Hessian,
+
         (3) positive definiteness of the full-space Hessian if the square-root version of the Riccati recursion is used
             OR positive definiteness of the reduced Hessian if the classic Riccati recursion is used (compare: `solver_options.qp_solver_ric_alg`),
         (4) the solution of at least one QP in advance to evaluation of the sensitivities as the factorization is reused.
