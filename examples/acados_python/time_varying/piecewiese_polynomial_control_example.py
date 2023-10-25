@@ -29,7 +29,7 @@
 #
 
 
-from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver, casadi_length
+from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver, casadi_length, formulate_constraints_as_penalty
 import numpy as np
 import casadi as ca
 from scipy.linalg import block_diag
@@ -58,26 +58,23 @@ def augment_model_with_polynomial_control(model: AcadosModel, d: int = 1, delta_
     model.cost_y_expr = ca.substitute(model.cost_y_expr, u_old, u_new)
 
     model.u = u_coeff
-
+    model.nu_original = nu_original
     model.p = ca.vertcat(model.p, delta_T)
 
     return model, evaluate_polynomial_u_fun
 
-
-def main():
+def create_ocp_solver(cost_type, N_horizon, degree_u_polynom, explicit_symmetric_penalties=True) -> AcadosOcpSolver:
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
     # set model
     model = export_pendulum_ode_model()
-    nu_original = model.u.size()[0]
+    nu_original = casadi_length(model.u)
 
-    ocp.model = model
+    ocp.model: AcadosModel = model
 
     T_horizon = 1.0
-    nx = model.x.size()[0]
-    N_horizon = 20
-    d = 3
+    nx = casadi_length(model.x)
 
     # set dimensions
     ocp.dims.N = N_horizon
@@ -85,29 +82,36 @@ def main():
     # set cost
     Q_mat = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
     R_mat = 2*np.diag([1e-1])
+    W_mat = block_diag(Q_mat, R_mat)
 
-    # the 'EXTERNAL' cost type can be used to define general cost terms
-    # NOTE: This leads to additional (exact) hessian contributions when using GAUSS_NEWTON hessian.
-    ocp.cost.cost_type = 'NONLINEAR_LS'
-    ocp.cost.cost_type_e = 'NONLINEAR_LS'
     ocp.model.cost_y_expr = ca.vertcat(model.x, model.u)
     ocp.model.cost_y_expr_e = model.x
-
-    ocp.cost.W = block_diag(Q_mat, R_mat)
-    ocp.cost.W_e = Q_mat
     ocp.cost.yref = np.zeros(nx+nu_original)
     ocp.cost.yref_e = np.zeros(nx)
+    if cost_type == 'NONLINEAR_LS':
+        ocp.cost.cost_type = 'NONLINEAR_LS'
+        ocp.cost.cost_type_e = 'NONLINEAR_LS'
+        ocp.cost.W = W_mat
+        ocp.cost.W_e = Q_mat
+    elif cost_type == 'CONVEX_OVER_NONLINEAR':
+        ocp.cost.cost_type = 'CONVEX_OVER_NONLINEAR'
+        ocp.cost.cost_type_e = 'CONVEX_OVER_NONLINEAR'
+        conl_res = ca.SX.sym('residual_conl', ocp.model.cost_y_expr.shape)
+        conl_res_e = ca.SX.sym('residual_conl', ocp.model.cost_y_expr_e.shape)
+        ocp.model.cost_r_in_psi_expr = conl_res
+        ocp.model.cost_r_in_psi_expr_e = conl_res_e
+        ocp.model.cost_psi_expr = .5 * conl_res.T @ W_mat @ conl_res
+        ocp.model.cost_psi_expr_e = .5 * conl_res_e.T @ Q_mat @ conl_res_e
+    else:
+        raise ValueError(f'cost_type {cost_type} not supported.')
 
-    # set constraints
+    # set constraints as penalties
     Fmax = 80
-    # ocp.constraints.lbu = np.array([-Fmax])
-    # ocp.constraints.ubu = np.array([+Fmax])
-    # ocp.constraints.idxbu = np.array([0])
-    # formulate u bounds as barrier
-    ocp.cost.W = block_diag(ocp.cost.W, 1e5)
-    ocp.cost.yref = np.concatenate((ocp.cost.yref, np.zeros(nu_original)))
-    ocp.model.cost_y_expr = ca.vertcat(ocp.model.cost_y_expr,
-                                       ca.fmax(ca.fmax(0.0, (ocp.model.u - Fmax)), -Fmax - ocp.model.u))
+    if explicit_symmetric_penalties:
+        ocp = formulate_constraints_as_penalty(ocp, ocp.model.u, 1e5, Fmax, -Fmax)
+    else:
+        ocp = formulate_constraints_as_penalty(ocp, ocp.model.u, 1e5, Fmax, None)
+        ocp = formulate_constraints_as_penalty(ocp, ocp.model.u, 1e5, None, -Fmax)
 
     ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
@@ -122,25 +126,38 @@ def main():
     ocp.solver_options.cost_discretization = 'INTEGRATOR'
 
     # set prediction horizon
-    n_short = 3
+    n_short = 1
     dt_short = 0.02
     n_long = N_horizon-n_short
     ocp.solver_options.time_steps = np.array(n_short * [dt_short] + n_long * [(T_horizon - dt_short * n_short) / n_long])
     ocp.solver_options.tf = T_horizon
 
     ocp.parameter_values = np.array([T_horizon / N_horizon])
-    model, evaluate_polynomial_u_fun = augment_model_with_polynomial_control(model, d=d)
-    ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
+    model, evaluate_polynomial_u_fun = augment_model_with_polynomial_control(model, d=degree_u_polynom)
+    ocp_solver = AcadosOcpSolver(ocp, verbose=False)
     for i in range(N_horizon):
         ocp_solver.set(i, 'p', ocp.solver_options.time_steps[i])
 
-    nu = model.u.size()[0]
-    simX = np.ndarray((N_horizon+1, nx))
-    simU = np.ndarray((N_horizon, nu))
+    return ocp_solver, evaluate_polynomial_u_fun
 
 
+
+def main(cost_type='NONLINEAR_LS', explicit_symmetric_penalties=True):
+
+    N_horizon = 5
+    degree_u_polynom = 3
+
+    # create solver and extract
+    ocp_solver, evaluate_polynomial_u_fun = create_ocp_solver(cost_type, N_horizon, degree_u_polynom, explicit_symmetric_penalties=explicit_symmetric_penalties)
+    ocp = ocp_solver.acados_ocp
+    model = ocp.model
+    nu_original = model.nu_original
+    nu = casadi_length(model.u)
+    nx = casadi_length(model.x)
+
+    # solve OCP
     status = ocp_solver.solve()
-    ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
+    ocp_solver.print_statistics()
 
     if status != 0:
         raise Exception(f'acados returned status {status}.')
@@ -149,6 +166,8 @@ def main():
     print(f"found optimal cost: {cost_val:.4e}")
 
     # get solution
+    simX = np.ndarray((N_horizon+1, nx))
+    simU = np.ndarray((N_horizon, nu))
     for i in range(N_horizon):
         simX[i,:] = ocp_solver.get(i, "x")
         simU[i,:] = ocp_solver.get(i, "u")
@@ -165,10 +184,9 @@ def main():
             U_interval[j, :] = evaluate_polynomial_u_fun(u_coeff, t, dt)
         U_fine.append(U_interval)
 
-
-    shooting_nodes = np.concatenate((np.array([0.]), np.cumsum(ocp.solver_options.time_steps)))
-    plot_open_loop_trajectory_pwpol_u(shooting_nodes, simX, U_fine, title=f'controls: piecewise polynomials of degree {d}')
+    # plot
+    plot_open_loop_trajectory_pwpol_u(ocp.solver_options.shooting_nodes, simX, U_fine, title=f'controls: piecewise polynomials of degree {degree_u_polynom}')
 
 
 if __name__ == '__main__':
-    main()
+    main(cost_type="CONVEX_OVER_NONLINEAR", explicit_symmetric_penalties=True)
