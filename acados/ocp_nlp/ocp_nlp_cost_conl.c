@@ -179,6 +179,7 @@ void *ocp_nlp_cost_conl_model_assign(void *config_, void *dims_, void *raw_memor
 
     // default initialization
     model->scaling = 1.0;
+    model->t = 0.0;
 
     // assert
     assert((char *) raw_memory + ocp_nlp_cost_conl_model_calculate_size(config_, dims) >= c_ptr);
@@ -623,8 +624,8 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
 
     if (opts->integrator_cost == 0)
     {
-        ext_fun_arg_t conl_fun_jac_hess_type_in[4];
-        void *conl_fun_jac_hess_in[4];
+        ext_fun_arg_t conl_fun_jac_hess_type_in[5];
+        void *conl_fun_jac_hess_in[5];
         ext_fun_arg_t conl_fun_jac_hess_type_out[5];
         void *conl_fun_jac_hess_out[5];
 
@@ -646,6 +647,9 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
         conl_fun_jac_hess_in[2] = memory->z_alg;
         conl_fun_jac_hess_type_in[3] = BLASFEO_DVEC;
         conl_fun_jac_hess_in[3] = &model->y_ref;
+
+        conl_fun_jac_hess_type_in[4] = COLMAJ;
+        conl_fun_jac_hess_in[4] = &model->t;
 
         // OUTPUT
         conl_fun_jac_hess_type_out[0] = COLMAJ;
@@ -735,8 +739,8 @@ void ocp_nlp_cost_conl_compute_fun(void *config_, void *dims_, void *model_,
     if (opts->integrator_cost == 0)
     {
         /* specify input types and pointers for external cost function */
-        ext_fun_arg_t ext_fun_type_in[4];
-        void *ext_fun_in[4];
+        ext_fun_arg_t ext_fun_type_in[5];
+        void *ext_fun_in[5];
         ext_fun_arg_t ext_fun_type_out[1];
         void *ext_fun_out[1];
 
@@ -757,6 +761,8 @@ void ocp_nlp_cost_conl_compute_fun(void *config_, void *dims_, void *model_,
         ext_fun_in[2] = memory->z_alg;
         ext_fun_type_in[3] = BLASFEO_DVEC;
         ext_fun_in[3] = &model->y_ref;
+        ext_fun_type_in[4] = COLMAJ;
+        ext_fun_in[4] = &model->t;
 
         // OUTPUT
         ext_fun_type_out[0] = COLMAJ;

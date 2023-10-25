@@ -42,7 +42,7 @@ import casadi as ca
 COST_VERSIONS = ['LS', 'EXTERNAL', 'EXTERNAL_Z', 'NLS', 'NLS_Z', 'LS_Z', 'CONL', 'CONL_Z']
 HESSIAN_APPROXIMATION = 'GAUSS_NEWTON' # 'GAUSS_NEWTON
 
-def main(cost_version: str):
+def main(cost_version: str, plot=False):
     EXTERNAL_COST_USE_NUM_HESS = 0
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -244,15 +244,15 @@ def main(cost_version: str):
     print(f"cost value is: {cost_val}")
 
     # plot results
-    plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
+    if plot:
+        plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
 
     ocp_solver.store_iterate(filename='solution.json', overwrite=True)
     ocp_solver.load_iterate(filename='solution.json')
 
 if __name__ == "__main__":
-
     for cost_version in COST_VERSIONS:
-        main(cost_version=cost_version)
+        main(cost_version=cost_version, plot=False)
 
 # timings
 # time_tot = 1e8

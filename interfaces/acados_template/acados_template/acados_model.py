@@ -51,9 +51,11 @@ class AcadosModel():
         self.u = None
         """CasADi variable describing the input of the system; Default: :code:`None`"""
         self.z = []
-        """CasADi variable describing the algebraic variables of the DAE; Default: :code:`empty`"""
+        """CasADi variable describing the algebraic variables of the DAE; Default: :code:`[]`"""
         self.p = []
-        """CasADi variable describing parameters of the DAE; Default: :code:`empty`"""
+        """CasADi variable describing parameters of the DAE; Default: :code:`[]`"""
+        self.t = []
+        """CasADi variable representing time t in functions; Default: :code:`[]`"""
 
         ## dynamics
         self.f_impl_expr = None

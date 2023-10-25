@@ -135,13 +135,9 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
 
     elif cost.cost_type_0 == 'NONLINEAR_LS':
         ny_0 = cost.W_0.shape[0]
-        if is_empty(model.cost_y_expr_0) and ny_0 != 0:
-            raise Exception('inconsistent dimension ny_0: regarding W_0, cost_y_expr.')
-        elif casadi_length(model.cost_y_expr_0) != ny_0:
-            raise Exception('inconsistent dimension ny_0: regarding W_0, cost_y_expr.')
-        if cost.yref_0.shape[0] != ny_0:
-            raise Exception('inconsistent dimension: regarding W_0, yref_0.' + \
-                            f'\nGot W_0[{cost.W.shape}], yref_0[{cost.yref_0.shape}]\n')
+        if (is_empty(model.cost_y_expr_0) and ny_0 != 0) or casadi_length(model.cost_y_expr_0) != ny_0 or cost.yref_0.shape[0] != ny_0:
+            raise Exception('inconsistent dimension ny_0: regarding W_0, cost_y_expr.' +
+                            f'\nGot W_0[{cost.W_0.shape}], yref_0[{cost.yref_0.shape}], {casadi_length(model.cost_y_expr_0)=}\n')
         dims.ny_0 = ny_0
 
     elif cost.cost_type_0 == 'CONVEX_OVER_NONLINEAR':
@@ -189,13 +185,9 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
 
     elif cost.cost_type == 'NONLINEAR_LS':
         ny = cost.W.shape[0]
-        if is_empty(model.cost_y_expr) and ny != 0:
-            raise Exception('inconsistent dimension ny: regarding W, cost_y_expr.')
-        elif casadi_length(model.cost_y_expr) != ny:
-            raise Exception('inconsistent dimension ny: regarding W, cost_y_expr.')
-        if cost.yref.shape[0] != ny:
+        if (is_empty(model.cost_y_expr) and ny != 0) or casadi_length(model.cost_y_expr) != ny or cost.yref.shape[0] != ny:
             raise Exception('inconsistent dimension: regarding W, yref.' + \
-                            f'\nGot W[{cost.W.shape}], yref[{cost.yref.shape}]\n')
+                            f'\nGot W[{cost.W.shape}], yref[{cost.yref.shape}], {casadi_length(model.cost_y_expr)=}\n')
         dims.ny = ny
 
     elif cost.cost_type == 'CONVEX_OVER_NONLINEAR':
@@ -238,12 +230,9 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
 
     elif cost.cost_type_e == 'NONLINEAR_LS':
         ny_e = cost.W_e.shape[0]
-        if is_empty(model.cost_y_expr_e) and ny_e != 0:
-            raise Exception('inconsistent dimension ny_e: regarding W_e, cost_y_expr_e.')
-        elif casadi_length(model.cost_y_expr_e) != ny_e:
-            raise Exception('inconsistent dimension ny_e: regarding W_e, cost_y_expr_e.')
-        if cost.yref_e.shape[0] != ny_e:
-            raise Exception('inconsistent dimension: regarding W_e, yref_e.')
+        if (is_empty(model.cost_y_expr_e) and ny_e != 0) or casadi_length(model.cost_y_expr_e) != ny_e or cost.yref_e.shape[0] != ny_e:
+            raise Exception('inconsistent dimension ny_e: regarding W_e, cost_y_expr.' +
+                            f'\nGot W_e[{cost.W_e.shape}], yref_e[{cost.yref_e.shape}], {casadi_length(model.cost_y_expr_e)=}\n')
         dims.ny_e = ny_e
 
     elif cost.cost_type_e == 'CONVEX_OVER_NONLINEAR':
@@ -668,34 +657,35 @@ def ocp_formulation_json_load(json_file='acados_ocp_nlp.json'):
     return acados_ocp
 
 
-def ocp_generate_external_functions(acados_ocp: AcadosOcp, model: AcadosModel):
+def ocp_generate_external_functions(ocp: AcadosOcp, model: AcadosModel):
 
     model = make_model_consistent(model)
 
-    if acados_ocp.solver_options.hessian_approx == 'EXACT':
+    if ocp.solver_options.hessian_approx == 'EXACT':
         opts = dict(generate_hess=1)
     else:
         opts = dict(generate_hess=0)
 
     # create code_export_dir, model_dir
-    code_export_dir = acados_ocp.code_export_directory
+    code_export_dir = ocp.code_export_directory
     opts['code_export_directory'] = code_export_dir
     model_dir = os.path.join(code_export_dir, model.name + '_model')
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
 
     check_casadi_version()
-    # TODO: remove dir gen from all the generate_c_* functions
-    if acados_ocp.model.dyn_ext_fun_type == 'casadi':
-        if acados_ocp.solver_options.integrator_type == 'ERK':
+    if ocp.model.dyn_ext_fun_type == 'casadi':
+        if ocp.solver_options.integrator_type == 'ERK':
             generate_c_code_explicit_ode(model, opts)
-        elif acados_ocp.solver_options.integrator_type == 'IRK':
+        elif ocp.solver_options.integrator_type == 'IRK':
             generate_c_code_implicit_ode(model, opts)
-        elif acados_ocp.solver_options.integrator_type == 'LIFTED_IRK':
+        elif ocp.solver_options.integrator_type == 'LIFTED_IRK':
+            if model.t != []:
+                raise NotImplementedError("LIFTED_IRK with time-varying dynamics not implemented yet.")
             generate_c_code_implicit_ode(model, opts)
-        elif acados_ocp.solver_options.integrator_type == 'GNSF':
+        elif ocp.solver_options.integrator_type == 'GNSF':
             generate_c_code_gnsf(model, opts)
-        elif acados_ocp.solver_options.integrator_type == 'DISCRETE':
+        elif ocp.solver_options.integrator_type == 'DISCRETE':
             generate_c_code_discrete_dynamics(model, opts)
         else:
             raise Exception("ocp_generate_external_functions: unknown integrator type.")
@@ -703,32 +693,32 @@ def ocp_generate_external_functions(acados_ocp: AcadosOcp, model: AcadosModel):
         target_location = os.path.join(code_export_dir, model_dir, model.dyn_generic_source)
         shutil.copyfile(model.dyn_generic_source, target_location)
 
-    if acados_ocp.dims.nphi > 0 or acados_ocp.dims.nh > 0:
+    if ocp.dims.nphi > 0 or ocp.dims.nh > 0:
         generate_c_code_constraint(model, model.name, False, opts)
 
-    if acados_ocp.dims.nphi_e > 0 or acados_ocp.dims.nh_e > 0:
+    if ocp.dims.nphi_e > 0 or ocp.dims.nh_e > 0:
         generate_c_code_constraint(model, model.name, True, opts)
 
-    if acados_ocp.cost.cost_type_0 == 'NONLINEAR_LS':
-        generate_c_code_nls_cost(model, model.name, 'initial', opts)
-    elif acados_ocp.cost.cost_type_0 == 'CONVEX_OVER_NONLINEAR':
-        generate_c_code_conl_cost(model, model.name, 'initial', opts)
-    elif acados_ocp.cost.cost_type_0 == 'EXTERNAL':
-        generate_c_code_external_cost(model, 'initial', opts)
+    if ocp.cost.cost_type_0 == 'NONLINEAR_LS':
+        generate_c_code_nls_cost(ocp, 'initial')
+    elif ocp.cost.cost_type_0 == 'CONVEX_OVER_NONLINEAR':
+        generate_c_code_conl_cost(ocp, 'initial')
+    elif ocp.cost.cost_type_0 == 'EXTERNAL':
+        generate_c_code_external_cost(ocp, 'initial', opts)
 
-    if acados_ocp.cost.cost_type == 'NONLINEAR_LS':
-        generate_c_code_nls_cost(model, model.name, 'path', opts)
-    elif acados_ocp.cost.cost_type == 'CONVEX_OVER_NONLINEAR':
-        generate_c_code_conl_cost(model, model.name, 'path', opts)
-    elif acados_ocp.cost.cost_type == 'EXTERNAL':
-        generate_c_code_external_cost(model, 'path', opts)
+    if ocp.cost.cost_type == 'NONLINEAR_LS':
+        generate_c_code_nls_cost(ocp, 'path')
+    elif ocp.cost.cost_type == 'CONVEX_OVER_NONLINEAR':
+        generate_c_code_conl_cost(ocp, 'path')
+    elif ocp.cost.cost_type == 'EXTERNAL':
+        generate_c_code_external_cost(ocp, 'path', opts)
 
-    if acados_ocp.cost.cost_type_e == 'NONLINEAR_LS':
-        generate_c_code_nls_cost(model, model.name, 'terminal', opts)
-    elif acados_ocp.cost.cost_type_e == 'CONVEX_OVER_NONLINEAR':
-        generate_c_code_conl_cost(model, model.name, 'terminal', opts)
-    elif acados_ocp.cost.cost_type_e == 'EXTERNAL':
-        generate_c_code_external_cost(model, 'terminal', opts)
+    if ocp.cost.cost_type_e == 'NONLINEAR_LS':
+        generate_c_code_nls_cost(ocp, 'terminal')
+    elif ocp.cost.cost_type_e == 'CONVEX_OVER_NONLINEAR':
+        generate_c_code_conl_cost(ocp, 'terminal')
+    elif ocp.cost.cost_type_e == 'EXTERNAL':
+        generate_c_code_external_cost(ocp, 'terminal', opts)
 
 
 def ocp_get_default_cmake_builder() -> CMakeBuilder:

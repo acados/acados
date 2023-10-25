@@ -83,6 +83,7 @@ typedef struct
     void *model;
 
     double T;  // simulation time
+    double t0; // initial time (only relevant for time dependent dynamics)
 
 } sim_in;
 
