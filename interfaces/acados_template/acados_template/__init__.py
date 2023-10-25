@@ -39,6 +39,6 @@ from .utils import print_casadi_expression, get_acados_path, get_python_interfac
 
 from .plot_utils import latexify_plot
 
-from .penalty_utils import formulate_constraint_as_Huber_penalty, formulate_constraint_as_L2_penalty
+from .penalty_utils import formulate_constraint_as_Huber_penalty, formulate_constraint_as_L2_penalty, symmetric_huber_penalty
 
 from .zoro_description import ZoroDescription
