@@ -33,7 +33,7 @@ def formulate_constraints_as_penalty(
         elif ocp.cost.cost_type == "CONVEX_OVER_NONLINEAR":
             new_residual = ca.SX.sym('new_residual', violation_expr.shape)
             ocp.model.cost_r_in_psi_expr = ca.vertcat(ocp.model.cost_r_in_psi_expr, new_residual)
-            ocp.model.cost_psi_expr += weight * new_residual**2
+            ocp.model.cost_psi_expr += .5 * weight * new_residual**2
         else:
             raise NotImplementedError(
                 f"Penalty type {penalty_type} is not yet supported for ocp.."
