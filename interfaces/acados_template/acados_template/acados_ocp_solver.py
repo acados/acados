@@ -548,6 +548,10 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
 
         opts.time_steps = time_steps
 
+    elif not is_empty(opts.time_steps) and is_empty(opts.shooting_nodes):
+        # compute shooting nodes from time_steps for convenience
+        opts.shooting_nodes = np.concatenate((np.array([0.]), np.cumsum(opts.time_steps)))
+
     elif (not is_empty(opts.time_steps)) and (not is_empty(opts.shooting_nodes)):
         Exception('Please provide either time_steps or shooting_nodes for nonuniform discretization')
 
