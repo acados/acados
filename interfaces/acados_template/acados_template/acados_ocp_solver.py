@@ -680,6 +680,8 @@ def ocp_generate_external_functions(ocp: AcadosOcp, model: AcadosModel):
         elif ocp.solver_options.integrator_type == 'IRK':
             generate_c_code_implicit_ode(model, opts)
         elif ocp.solver_options.integrator_type == 'LIFTED_IRK':
+            if model.t != []:
+                raise NotImplementedError("LIFTED_IRK with time-varying dynamics not implemented yet.")
             generate_c_code_implicit_ode(model, opts)
         elif ocp.solver_options.integrator_type == 'GNSF':
             generate_c_code_gnsf(model, opts)
