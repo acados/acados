@@ -25,7 +25,6 @@ def test_polynomial_controls_and_penalties():
         ocp_solver, evaluate_polynomial_u_fun = create_ocp_solver(cost_type, N_horizon, degree_u_polynom, explicit_symmetric_penalties=explicit_symmetric_penalties)
         ocp = ocp_solver.acados_ocp
         model = ocp.model
-        nu_original = model.nu_original
         nu = casadi_length(model.u)
         nx = casadi_length(model.x)
 

@@ -29,7 +29,7 @@
 #
 
 
-from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver, casadi_length, formulate_constraints_as_penalty
+from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver, casadi_length, formulate_constraint_as_L2_penalty, formulate_constraint_as_Huber_penalty
 import numpy as np
 import casadi as ca
 from scipy.linalg import block_diag
@@ -63,7 +63,7 @@ def augment_model_with_polynomial_control(model: AcadosModel, d: int = 1, delta_
 
     return model, evaluate_polynomial_u_fun
 
-def create_ocp_solver(cost_type, N_horizon, degree_u_polynom, explicit_symmetric_penalties=True) -> AcadosOcpSolver:
+def create_ocp_solver(cost_type, N_horizon, degree_u_polynom, explicit_symmetric_penalties=True, penalty_type='L2') -> AcadosOcpSolver:
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
@@ -107,11 +107,20 @@ def create_ocp_solver(cost_type, N_horizon, degree_u_polynom, explicit_symmetric
 
     # set constraints as penalties
     Fmax = 80
-    if explicit_symmetric_penalties:
-        ocp = formulate_constraints_as_penalty(ocp, ocp.model.u, 1e5, Fmax, -Fmax)
-    else:
-        ocp = formulate_constraints_as_penalty(ocp, ocp.model.u, 1e5, Fmax, None)
-        ocp = formulate_constraints_as_penalty(ocp, ocp.model.u, 1e5, None, -Fmax)
+    if penalty_type == 'L2':
+        weight = 1e5
+        if explicit_symmetric_penalties:
+            ocp = formulate_constraint_as_L2_penalty(ocp, ocp.model.u, weight, Fmax, -Fmax)
+        else:
+            ocp = formulate_constraint_as_L2_penalty(ocp, ocp.model.u, weight, Fmax, None)
+            ocp = formulate_constraint_as_L2_penalty(ocp, ocp.model.u, weight, None, -Fmax)
+    elif penalty_type == 'Huber':
+        ocp.solver_options.nlp_solver_max_iter = 1000
+        weight = 1e1
+        if explicit_symmetric_penalties:
+            ocp = formulate_constraint_as_Huber_penalty(ocp, ocp.model.u, weight, Fmax, -Fmax)
+        else:
+            raise NotImplementedError('Huber penalty not implemented for non-explicit symmetric penalties.')
 
     ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
@@ -142,13 +151,13 @@ def create_ocp_solver(cost_type, N_horizon, degree_u_polynom, explicit_symmetric
 
 
 
-def main(cost_type='NONLINEAR_LS', explicit_symmetric_penalties=True):
+def main(cost_type='NONLINEAR_LS', explicit_symmetric_penalties=True, penalty_type='L2'):
 
     N_horizon = 5
     degree_u_polynom = 3
 
     # create solver and extract
-    ocp_solver, evaluate_polynomial_u_fun = create_ocp_solver(cost_type, N_horizon, degree_u_polynom, explicit_symmetric_penalties=explicit_symmetric_penalties)
+    ocp_solver, evaluate_polynomial_u_fun = create_ocp_solver(cost_type, N_horizon, degree_u_polynom, explicit_symmetric_penalties=explicit_symmetric_penalties, penalty_type=penalty_type)
     ocp = ocp_solver.acados_ocp
     model = ocp.model
     nu_original = model.nu_original
@@ -189,4 +198,5 @@ def main(cost_type='NONLINEAR_LS', explicit_symmetric_penalties=True):
 
 
 if __name__ == '__main__':
-    main(cost_type="CONVEX_OVER_NONLINEAR", explicit_symmetric_penalties=True)
+    # main(cost_type="CONVEX_OVER_NONLINEAR", explicit_symmetric_penalties=True)
+    main(cost_type="CONVEX_OVER_NONLINEAR", explicit_symmetric_penalties=True, penalty_type='Huber')
