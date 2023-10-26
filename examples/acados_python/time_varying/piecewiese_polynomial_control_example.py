@@ -102,6 +102,12 @@ def create_ocp_solver(cost_type, N_horizon, degree_u_polynom, explicit_symmetric
         ocp.model.cost_r_in_psi_expr_e = conl_res_e
         ocp.model.cost_psi_expr = .5 * conl_res.T @ W_mat @ conl_res
         ocp.model.cost_psi_expr_e = .5 * conl_res_e.T @ Q_mat @ conl_res_e
+    elif cost_type == 'NLS_TO_CONL':
+        ocp.cost.cost_type = 'NONLINEAR_LS'
+        ocp.cost.cost_type_e = 'NONLINEAR_LS'
+        ocp.cost.W = W_mat
+        ocp.cost.W_e = Q_mat
+        ocp.translate_nls_cost_to_conl()
     else:
         raise ValueError(f'cost_type {cost_type} not supported.')
 

@@ -5,7 +5,7 @@ from acados_template import casadi_length
 
 from piecewiese_polynomial_control_example import create_ocp_solver
 
-COST_TYPES = ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']
+COST_TYPES = ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR', 'NLS_TO_CONL']
 EXPLICIT_SYMMETRIC_PENALTIES = [True, False]
 
 

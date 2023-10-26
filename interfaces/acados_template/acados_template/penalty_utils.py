@@ -146,4 +146,3 @@ def symmetric_huber_penalty(u: ca.SX, delta: float, tau: Optional[float] = None,
 
     return penalty, penalty_grad, penalty_hess, penalty_hess_xgn
 
-

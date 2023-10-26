@@ -30,6 +30,7 @@
 #
 
 import numpy as np
+import casadi as ca
 import os
 from .acados_model import AcadosModel
 from .utils import get_acados_path, J_to_idx, J_to_idx_slack, get_lib_ext
@@ -3218,4 +3219,52 @@ class AcadosOcp:
 
         setter_to_call(tokens[1], value)
 
+        return
+
+
+    def translate_nls_cost_to_conl(self):
+        """
+        Translates a NONLINEAR_LS cost to a CONVEX_OVER_NONLINEAR cost.
+        """
+
+        # initial cost
+        if self.cost.cost_type_0 is None:
+            print("Initial cost is None, skipping.")
+        elif self.cost.cost_type_0 == "CONVEX_OVER_NONLINEAR":
+            print("Initial cost is already CONVEX_OVER_NONLINEAR, skipping.")
+        elif self.cost.cost_type_0 == "NONLINEAR_LS":
+            print("Translating initial NONLINEAR_LS cost to CONVEX_OVER_NONLINEAR.")
+            self.cost.cost_type_0 = "CONVEX_OVER_NONLINEAR"
+            ny_0 = self.model.cost_y_expr_0.shape[0]
+            conl_res_0 = ca.SX.sym('residual_conl', ny_0)
+            self.model.cost_r_in_psi_expr_0 = conl_res_0
+            self.model.cost_psi_expr_0 = .5 * conl_res_0.T @ self.cost.W_0 @ conl_res_0
+        else:
+            raise Exception(f"Terminal Cost type must be NONLINEAR_LS, got {self.cost.cost_type_0=}.")
+
+        # path cost
+        if self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
+            print("Path cost is already CONVEX_OVER_NONLINEAR, skipping.")
+        elif self.cost.cost_type == "NONLINEAR_LS":
+            print("Translating path NONLINEAR_LS cost to CONVEX_OVER_NONLINEAR.")
+            self.cost.cost_type = "CONVEX_OVER_NONLINEAR"
+            ny = self.model.cost_y_expr.shape[0]
+            conl_res = ca.SX.sym('residual_conl', ny)
+            self.model.cost_r_in_psi_expr = conl_res
+            self.model.cost_psi_expr = .5 * conl_res.T @ self.cost.W @ conl_res
+        else:
+            raise Exception(f"Path Cost type must be NONLINEAR_LS, got {self.cost.cost_type=}.")
+
+        # terminal cost
+        if self.cost.cost_type_e == "CONVEX_OVER_NONLINEAR":
+            print("Terminal cost is already CONVEX_OVER_NONLINEAR, skipping.")
+        elif self.cost.cost_type_e == "NONLINEAR_LS":
+            print("Translating terminal NONLINEAR_LS cost to CONVEX_OVER_NONLINEAR.")
+            self.cost.cost_type_e = "CONVEX_OVER_NONLINEAR"
+            ny_e = self.model.cost_y_expr_e.shape[0]
+            conl_res_e = ca.SX.sym('residual_conl', ny_e)
+            self.model.cost_r_in_psi_expr_e = conl_res_e
+            self.model.cost_psi_expr_e = .5 * conl_res_e.T @ self.cost.W_e @ conl_res_e
+        else:
+            raise Exception(f"Terminal Cost type must be NONLINEAR_LS, got {self.cost.cost_type_e=}.")
         return
