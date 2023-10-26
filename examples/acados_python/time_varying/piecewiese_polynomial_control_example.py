@@ -29,7 +29,7 @@
 #
 
 
-from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver, casadi_length, formulate_constraint_as_L2_penalty, formulate_constraint_as_Huber_penalty
+from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver, casadi_length
 import numpy as np
 import casadi as ca
 from scipy.linalg import block_diag
@@ -116,16 +116,17 @@ def create_ocp_solver(cost_type, N_horizon, degree_u_polynom, explicit_symmetric
     if penalty_type == 'L2':
         weight = 1e5
         if explicit_symmetric_penalties:
-            ocp = formulate_constraint_as_L2_penalty(ocp, ocp.model.u, weight, Fmax, -Fmax)
+            ocp.formulate_constraint_as_L2_penalty(ocp.model.u, weight, Fmax, -Fmax)
         else:
-            ocp = formulate_constraint_as_L2_penalty(ocp, ocp.model.u, weight, Fmax, None)
-            ocp = formulate_constraint_as_L2_penalty(ocp, ocp.model.u, weight, None, -Fmax)
+            ocp.formulate_constraint_as_L2_penalty(ocp.model.u, weight, Fmax, None)
+            ocp.formulate_constraint_as_L2_penalty(ocp.model.u, weight, None, -Fmax)
     elif penalty_type == 'Huber':
+        # combined Huber and L2 penalty
         ocp.solver_options.nlp_solver_max_iter = 200
-        weight = 1e1
+        weight = 1e0
         if explicit_symmetric_penalties:
-            # ocp = formulate_constraint_as_Huber_penalty(ocp, ocp.model.u, weight, Fmax, -Fmax, huber_delta=1e-1, use_xgn=True)
-            ocp = formulate_constraint_as_L2_penalty(ocp, ocp.model.u, 1e5, Fmax, -Fmax)
+            ocp.formulate_constraint_as_Huber_penalty(ocp.model.u, weight, Fmax, -Fmax, huber_delta=1e0, use_xgn=True)
+            ocp.formulate_constraint_as_L2_penalty(ocp.model.u, 1e5, Fmax, -Fmax)
         else:
             raise NotImplementedError('Huber penalty not implemented for non-explicit symmetric penalties.')
 
@@ -160,7 +161,7 @@ def create_ocp_solver(cost_type, N_horizon, degree_u_polynom, explicit_symmetric
 
 def main(cost_type='NONLINEAR_LS', explicit_symmetric_penalties=True, penalty_type='L2'):
 
-    N_horizon = 5
+    N_horizon = 20
     degree_u_polynom = 3
 
     # create solver and extract
