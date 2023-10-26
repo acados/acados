@@ -3318,9 +3318,13 @@ class AcadosOcp:
         residual_name: str = "new_residual",
         huber_delta: float = 1.0,
         use_xgn = True,
+        min_hess = 0,
     ) -> None:
         """
         Formulate a constraint as Huber penalty and add it to the current cost.
+
+        use_xgn: if true an XGN Hessian is used, if false a GGN Hessian (= exact Hessian, in this case) is used.
+        min_hess: provide a minimum value for the hessian
         """
 
         if upper_bound is None and lower_bound is None:
@@ -3349,7 +3353,7 @@ class AcadosOcp:
 
         # define penalty
         penalty, penalty_grad, penalty_hess, penalty_hess_xgn = \
-                symmetric_huber_penalty(new_residual, delta=huber_delta, w=weight*width**2)
+                symmetric_huber_penalty(new_residual, delta=huber_delta, w=weight*width**2, min_hess=min_hess)
 
         # add penalty to cost
         self.model.cost_r_in_psi_expr = ca.vertcat(self.model.cost_r_in_psi_expr, new_residual)

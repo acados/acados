@@ -47,11 +47,12 @@ def huber_loss(var: ca.SX, delta: float, tau: float):
     return loss, loss_grad, loss_hess, loss_hess_XGN
 
 
-def symmetric_huber_penalty(u: ca.SX, delta: float, tau: Optional[float] = None, w: Optional[float] = None):
+def symmetric_huber_penalty(u: ca.SX, delta: float, tau: Optional[float] = None, w: Optional[float] = None, min_hess: float = 0.):
     """
     Symmetric Huber penalty for a constraint -1 <= u <= 1.
     delta: the length of the quadratic behavior
     w: hessian in quadratic region
+    min_hess: provide a minimum value for the hessian
     """
 
     if delta < 0:
@@ -79,6 +80,10 @@ def symmetric_huber_penalty(u: ca.SX, delta: float, tau: Optional[float] = None,
     penalty_hess, penalty_grad = ca.hessian(penalty, u)
 
     penalty_hess_xgn = 0.5*ca.if_else(u < 0, ca.substitute(loss_hess_XGN, u, u+1+delta), ca.substitute(loss_hess_XGN, u, u-1-delta))
+
+    if min_hess > 0.:
+        penalty_hess = ca.fmax(min_hess, penalty_hess)
+        penalty_hess_xgn = ca.fmax(min_hess, penalty_hess_xgn)
 
     return penalty, penalty_grad, penalty_hess, penalty_hess_xgn
 
