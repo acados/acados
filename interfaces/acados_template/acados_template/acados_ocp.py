@@ -3244,7 +3244,7 @@ class AcadosOcp:
             self.model.cost_r_in_psi_expr_0 = conl_res_0
             self.model.cost_psi_expr_0 = .5 * conl_res_0.T @ self.cost.W_0 @ conl_res_0
         else:
-            raise Exception(f"Terminal Cost type must be NONLINEAR_LS, got {self.cost.cost_type_0=}.")
+            raise Exception(f"Terminal cost type must be NONLINEAR_LS, got {self.cost.cost_type_0=}.")
 
         # path cost
         if self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
@@ -3257,7 +3257,7 @@ class AcadosOcp:
             self.model.cost_r_in_psi_expr = conl_res
             self.model.cost_psi_expr = .5 * conl_res.T @ self.cost.W @ conl_res
         else:
-            raise Exception(f"Path Cost type must be NONLINEAR_LS, got {self.cost.cost_type=}.")
+            raise Exception(f"Path cost type must be NONLINEAR_LS, got {self.cost.cost_type=}.")
 
         # terminal cost
         if self.cost.cost_type_e == "CONVEX_OVER_NONLINEAR":
@@ -3270,7 +3270,7 @@ class AcadosOcp:
             self.model.cost_r_in_psi_expr_e = conl_res_e
             self.model.cost_psi_expr_e = .5 * conl_res_e.T @ self.cost.W_e @ conl_res_e
         else:
-            raise Exception(f"Terminal Cost type must be NONLINEAR_LS, got {self.cost.cost_type_e=}.")
+            raise Exception(f"Initial cost type must be NONLINEAR_LS, got {self.cost.cost_type_e=}.")
         return
 
 
