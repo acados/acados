@@ -143,6 +143,10 @@ add_test(NAME python_time_varying_irk
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/time_varying
         python test_time_varying_irk.py)
 
+add_test(NAME test_polynomial_controls_and_penalties
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/time_varying
+        python test_polynomial_controls_and_penalties.py)
+
 
 # CMake test
 add_test(NAME python_pendulum_ocp_example_cmake

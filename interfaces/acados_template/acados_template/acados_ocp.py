@@ -29,10 +29,15 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+from typing import Optional
 import numpy as np
+from scipy.linalg import block_diag
+
+import casadi as ca
 import os
 from .acados_model import AcadosModel
 from .utils import get_acados_path, J_to_idx, J_to_idx_slack, get_lib_ext
+from .penalty_utils import symmetric_huber_penalty
 
 class AcadosOcpDims:
     """
@@ -3221,5 +3226,154 @@ class AcadosOcp:
             setter_to_call = getattr(self, 'set')
 
         setter_to_call(tokens[1], value)
+
+        return
+
+
+    def translate_nls_cost_to_conl(self):
+        """
+        Translates a NONLINEAR_LS cost to a CONVEX_OVER_NONLINEAR cost.
+        """
+
+        # initial cost
+        if self.cost.cost_type_0 is None:
+            print("Initial cost is None, skipping.")
+        elif self.cost.cost_type_0 == "CONVEX_OVER_NONLINEAR":
+            print("Initial cost is already CONVEX_OVER_NONLINEAR, skipping.")
+        elif self.cost.cost_type_0 == "NONLINEAR_LS":
+            print("Translating initial NONLINEAR_LS cost to CONVEX_OVER_NONLINEAR.")
+            self.cost.cost_type_0 = "CONVEX_OVER_NONLINEAR"
+            ny_0 = self.model.cost_y_expr_0.shape[0]
+            conl_res_0 = ca.SX.sym('residual_conl', ny_0)
+            self.model.cost_r_in_psi_expr_0 = conl_res_0
+            self.model.cost_psi_expr_0 = .5 * conl_res_0.T @ self.cost.W_0 @ conl_res_0
+        else:
+            raise Exception(f"Terminal cost type must be NONLINEAR_LS, got {self.cost.cost_type_0=}.")
+
+        # path cost
+        if self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
+            print("Path cost is already CONVEX_OVER_NONLINEAR, skipping.")
+        elif self.cost.cost_type == "NONLINEAR_LS":
+            print("Translating path NONLINEAR_LS cost to CONVEX_OVER_NONLINEAR.")
+            self.cost.cost_type = "CONVEX_OVER_NONLINEAR"
+            ny = self.model.cost_y_expr.shape[0]
+            conl_res = ca.SX.sym('residual_conl', ny)
+            self.model.cost_r_in_psi_expr = conl_res
+            self.model.cost_psi_expr = .5 * conl_res.T @ self.cost.W @ conl_res
+        else:
+            raise Exception(f"Path cost type must be NONLINEAR_LS, got {self.cost.cost_type=}.")
+
+        # terminal cost
+        if self.cost.cost_type_e == "CONVEX_OVER_NONLINEAR":
+            print("Terminal cost is already CONVEX_OVER_NONLINEAR, skipping.")
+        elif self.cost.cost_type_e == "NONLINEAR_LS":
+            print("Translating terminal NONLINEAR_LS cost to CONVEX_OVER_NONLINEAR.")
+            self.cost.cost_type_e = "CONVEX_OVER_NONLINEAR"
+            ny_e = self.model.cost_y_expr_e.shape[0]
+            conl_res_e = ca.SX.sym('residual_conl', ny_e)
+            self.model.cost_r_in_psi_expr_e = conl_res_e
+            self.model.cost_psi_expr_e = .5 * conl_res_e.T @ self.cost.W_e @ conl_res_e
+        else:
+            raise Exception(f"Initial cost type must be NONLINEAR_LS, got {self.cost.cost_type_e=}.")
+        return
+
+
+    def formulate_constraint_as_L2_penalty(
+        self,
+        constr_expr: ca.SX,
+        weight: float,
+        upper_bound: Optional[float],
+        lower_bound: Optional[float],
+        residual_name: str = "new_residual",
+    ) -> None:
+        """
+        Formulate a constraint as an L2 penalty and add it to the current cost.
+        """
+
+        if upper_bound is None and lower_bound is None:
+            raise ValueError("Either upper or lower bound must be provided.")
+
+        # compute violation expression
+        violation_expr = 0.0
+        if upper_bound is not None:
+            violation_expr = ca.fmax(violation_expr, (constr_expr - upper_bound))
+        if lower_bound is not None:
+            violation_expr = ca.fmax(violation_expr, (lower_bound - constr_expr))
+
+        # add penalty as cost
+        self.cost.yref = np.concatenate((self.cost.yref, np.zeros(1)))
+        self.model.cost_y_expr = ca.vertcat(self.model.cost_y_expr, violation_expr)
+        if self.cost.cost_type == "NONLINEAR_LS":
+            self.cost.W = block_diag(self.cost.W, weight)
+        elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
+            new_residual = ca.SX.sym(residual_name, constr_expr.shape)
+            self.model.cost_r_in_psi_expr = ca.vertcat(self.model.cost_r_in_psi_expr, new_residual)
+            self.model.cost_psi_expr += .5 * weight * new_residual**2
+
+        return
+
+
+    def formulate_constraint_as_Huber_penalty(
+        self,
+        constr_expr: ca.SX,
+        weight: float,
+        upper_bound: Optional[float],
+        lower_bound: Optional[float],
+        residual_name: str = "new_residual",
+        huber_delta: float = 1.0,
+        use_xgn = True,
+        min_hess = 0,
+    ) -> None:
+        """
+        Formulate a constraint as Huber penalty and add it to the current cost.
+
+        use_xgn: if true an XGN Hessian is used, if false a GGN Hessian (= exact Hessian, in this case) is used.
+        min_hess: provide a minimum value for the hessian
+        """
+
+        if upper_bound is None and lower_bound is None:
+            raise ValueError("Either upper or lower bound must be provided.")
+        elif upper_bound < lower_bound:
+            raise ValueError("Upper bound must be greater than lower bound.")
+
+        if self.cost.cost_type != "CONVEX_OVER_NONLINEAR":
+            raise Exception("Huber penalty is only supported for CONVEX_OVER_NONLINEAR cost type.")
+
+        if (upper_bound is None or lower_bound is None):
+            raise NotImplementedError("only symmetric Huber for now")
+
+        # normalize constraint to [-1, 1]
+        width = upper_bound - lower_bound
+        center = lower_bound + 0.5 * width
+        constr_expr = 2 * (constr_expr - center) / width
+
+        if use_xgn and self.model.cost_conl_custom_outer_hess is None:
+            # switch to XGN Hessian start with exact Hessian of previously defined cost
+            exact_cost_hess = ca.hessian(self.model.cost_psi_expr, self.model.cost_r_in_psi_expr)[0]
+            self.model.cost_conl_custom_outer_hess = exact_cost_hess
+
+        # define residual
+        new_residual = ca.SX.sym(residual_name, constr_expr.shape)
+
+        # define penalty
+        penalty, penalty_grad, penalty_hess, penalty_hess_xgn = \
+                symmetric_huber_penalty(new_residual, delta=huber_delta, w=weight*width**2, min_hess=min_hess)
+
+        # add penalty to cost
+        self.model.cost_r_in_psi_expr = ca.vertcat(self.model.cost_r_in_psi_expr, new_residual)
+        self.model.cost_psi_expr += penalty
+        self.model.cost_y_expr = ca.vertcat(self.model.cost_y_expr, constr_expr)
+        self.cost.yref = np.concatenate((self.cost.yref, np.zeros(1)))
+
+        # add Hessian term
+        if use_xgn:
+            zero_offdiag = ca.SX.zeros(self.model.cost_conl_custom_outer_hess.shape[0], penalty_hess_xgn.shape[1])
+            self.model.cost_conl_custom_outer_hess = ca.blockcat(self.model.cost_conl_custom_outer_hess,
+                                                                zero_offdiag, zero_offdiag.T, penalty_hess_xgn)
+        elif self.model.cost_conl_custom_outer_hess is not None:
+            zero_offdiag = ca.SX.zeros(self.model.cost_conl_custom_outer_hess.shape[0], penalty_hess_xgn.shape[1])
+            # add penalty Hessian to existing Hessian
+            self.model.cost_conl_custom_outer_hess = ca.blockcat(self.model.cost_conl_custom_outer_hess,
+                                                                zero_offdiag, zero_offdiag.T, penalty_hess)
 
         return
