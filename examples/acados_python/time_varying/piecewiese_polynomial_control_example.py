@@ -121,10 +121,11 @@ def create_ocp_solver(cost_type, N_horizon, degree_u_polynom, explicit_symmetric
             ocp = formulate_constraint_as_L2_penalty(ocp, ocp.model.u, weight, Fmax, None)
             ocp = formulate_constraint_as_L2_penalty(ocp, ocp.model.u, weight, None, -Fmax)
     elif penalty_type == 'Huber':
-        ocp.solver_options.nlp_solver_max_iter = 1000
+        ocp.solver_options.nlp_solver_max_iter = 200
         weight = 1e1
         if explicit_symmetric_penalties:
-            ocp = formulate_constraint_as_Huber_penalty(ocp, ocp.model.u, weight, Fmax, -Fmax)
+            # ocp = formulate_constraint_as_Huber_penalty(ocp, ocp.model.u, weight, Fmax, -Fmax, huber_delta=1e-1, use_xgn=True)
+            ocp = formulate_constraint_as_L2_penalty(ocp, ocp.model.u, 1e5, Fmax, -Fmax)
         else:
             raise NotImplementedError('Huber penalty not implemented for non-explicit symmetric penalties.')
 

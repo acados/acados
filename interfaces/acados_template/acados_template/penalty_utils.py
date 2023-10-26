@@ -87,11 +87,13 @@ def formulate_constraint_as_Huber_penalty(
     # add Hessian term
     if use_xgn:
         zero_offdiag = ca.SX.zeros(ocp.model.cost_conl_custom_outer_hess.shape[0], penalty_hess_xgn.shape[1])
-        ocp.model.cost_conl_custom_outer_hess = ca.blockcat(ocp.model.cost_conl_custom_outer_hess, zero_offdiag, zero_offdiag.T, penalty_hess_xgn)
+        ocp.model.cost_conl_custom_outer_hess = ca.blockcat(ocp.model.cost_conl_custom_outer_hess,
+                                                            zero_offdiag, zero_offdiag.T, penalty_hess_xgn)
     elif ocp.model.cost_conl_custom_outer_hess is not None:
         zero_offdiag = ca.SX.zeros(ocp.model.cost_conl_custom_outer_hess.shape[0], penalty_hess_xgn.shape[1])
         # add penalty Hessian to existing Hessian
-        ocp.model.cost_conl_custom_outer_hess = ca.blockcat(ocp.model.cost_conl_custom_outer_hess, zero_offdiag, zero_offdiag.T, penalty_hess)
+        ocp.model.cost_conl_custom_outer_hess = ca.blockcat(ocp.model.cost_conl_custom_outer_hess,
+                                                            zero_offdiag, zero_offdiag.T, penalty_hess)
 
     return ocp
 
