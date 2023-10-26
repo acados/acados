@@ -3282,6 +3282,9 @@ class AcadosOcp:
         lower_bound: Optional[float],
         residual_name: str = "new_residual",
     ) -> None:
+        """
+        Formulate a constraint as an L2 penalty and add it to the current cost.
+        """
 
         if upper_bound is None and lower_bound is None:
             raise ValueError("Either upper or lower bound must be provided.")
@@ -3316,6 +3319,9 @@ class AcadosOcp:
         huber_delta: float = 1.0,
         use_xgn = True,
     ) -> None:
+        """
+        Formulate a constraint as Huber penalty and add it to the current cost.
+        """
 
         if upper_bound is None and lower_bound is None:
             raise ValueError("Either upper or lower bound must be provided.")
