@@ -186,7 +186,7 @@ int sim_irk_model_set(void *model_, const char *field, void *value)
     {
         model->impl_ode_jac_x_xdot_u_z = value;
     }
-    else if (!strcmp(field, "impl_ode_hes") | !strcmp(field, "impl_ode_hess") | !strcmp(field, "impl_dae_hess"))
+    else if (!strcmp(field, "impl_ode_hes") || !strcmp(field, "impl_ode_hess") || !strcmp(field, "impl_dae_hess"))
     {
         model->impl_ode_hess = value;
     }

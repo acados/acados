@@ -1049,7 +1049,7 @@ void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *
 
     double one = 1.0;
 
-    if ((!strcmp("ex", field)) & (stage==0))
+    if ((!strcmp("ex", field)) && (stage==0))
     {
         d_ocp_qp_set_el("lbx", stage, index, &one, work->tmp_qp_in);
         d_ocp_qp_set_el("ubx", stage, index, &one, work->tmp_qp_in);
