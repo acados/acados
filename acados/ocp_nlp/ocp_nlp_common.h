@@ -353,8 +353,6 @@ typedef struct ocp_nlp_memory
     bool *set_sim_guess; // indicate if there is new explicitly provided guess for integration variables
     struct blasfeo_dvec *sim_guess;
 
-    int *sqp_iter; // pointer to iteration number
-
 } ocp_nlp_memory;
 
 //

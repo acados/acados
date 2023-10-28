@@ -450,9 +450,6 @@ static void ocp_nlp_sqp_rti_preparation_step(ocp_nlp_config *config, ocp_nlp_dim
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
     /* SQP body */
-    int sqp_iter = 0;
-    nlp_mem->sqp_iter = &sqp_iter;
-
     // linearizate NLP and update QP matrices
     acados_tic(&timer1);
     ocp_nlp_approximate_qp_matrices(config, dims, nlp_in,

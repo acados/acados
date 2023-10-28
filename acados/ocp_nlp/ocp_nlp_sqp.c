@@ -508,7 +508,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     // main sqp loop
     int sqp_iter = 0;
-    nlp_mem->sqp_iter = &sqp_iter;
 
     for (; sqp_iter < opts->max_iter; sqp_iter++)
     {

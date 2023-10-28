@@ -1976,7 +1976,10 @@ int main() {
 	printf("\nsolution\n");
 	ocp_nlp_out_print(dims, nlp_out);
 
-    printf("\n\nstatus = %i, iterations (max %d) = %d, total time = %f ms\n\n", status, MAX_SQP_ITERS, nlp_mem->sqp_iter, time*1e3);
+    int sqp_iter;
+    ocp_nlp_sqp_get(config, dims, nlp_mem, "sqp_iter", &sqp_iter);
+
+    printf("\n\nstatus = %i, iterations (max %d) = %d, total time = %f ms\n\n", status, MAX_SQP_ITERS, time*1e3);
 
     for (int k =0; k < 3; k++) {
         printf("u[%d] = \n", k);
