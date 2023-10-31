@@ -94,6 +94,10 @@ int ocp_qp_osqp(void *config, void *qp_in, void *qp_out, void *opts_, void *mem_
 //
 void ocp_qp_osqp_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_);
 //
+void ocp_qp_osqp_memory_reset(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, void *work_);
+//
+void ocp_qp_osqp_solver_get(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, const char *field, int stage, void* value, int size1, int size2);
+//
 void ocp_qp_osqp_config_initialize_default(void *config);
 
 #ifdef __cplusplus

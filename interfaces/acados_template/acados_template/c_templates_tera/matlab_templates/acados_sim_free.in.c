@@ -28,41 +28,53 @@
  * POSSIBILITY OF SUCH DAMAGE.;
  */
 
-//This program creates a structure and returns it to MATLAB.
+// system
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+// acados
+#include "acados/sim/sim_common.h"
+#include "acados_c/sim_interface.h"
+// example specific
+#include "acados_sim_solver_{{ model.name }}.h"
+// mex
 #include "mex.h"
-void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[])
+
+
+
+void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    //DATA
-    mxArray *mydouble,*mystring;
-    double *dblptr;
-    int i;
-    const char *fieldnames[2]; //This will hold field names.
-      //PROGRAM
-      if((nlhs!=1)||(nrhs!=0))
-      {
-      mexErrMsgTxt("One output and no input needed");
-      return;
-      }
-      //Create mxArray data structures to hold the data
-      //to be assigned for the structure.
-      mystring  = mxCreateString("This is my char");
-      mydouble  = mxCreateDoubleMatrix(1,100, mxREAL);
-      dblptr    = mxGetPr(mydouble);
-      for(i = 0; i<100; i++)
-          dblptr[i] = (double)i;
-      //Assign field names
-      fieldnames[0] = (char*)mxMalloc(20);
-      fieldnames[1] = (char*)mxMalloc(20);
-      memcpy(fieldnames[0],"Doublestuff",sizeof("Doublestuff"));
-      memcpy(fieldnames[1],"Charstuff", sizeof("Charstuff"));
-      //Allocate memory for the structure
-      plhs[0] = mxCreateStructMatrix(1,1,2,fieldnames);
-      //Deallocate memory for the fieldnames
-      mxFree( fieldnames[0] );
-      mxFree( fieldnames[1] );
-      //Assign the field values
-      mxSetFieldByNumber(plhs[0],0,0, mydouble);
-      mxSetFieldByNumber(plhs[0],0,1, mystring);
-      //NOTE: mxSetFieldByNumber(..) will automatically take care
-      //      of allocating required memory for the fields.
-  }//mexFunction(..)
+
+//    mexPrintf("\nin sim_destroy\n");
+
+//    void *config = mxGetPr( mxGetField( prhs[0], 0, "config" ) );
+//    long long *config_mat = (long long *) mxGetData( mxGetField( prhs[0], 0, "config" ) );
+//    long long config = (long long) mxGetScalar( mxGetField( prhs[0], 0, "config" ) );
+
+    /* RHS */
+    const mxArray *C_sim = prhs[0];
+    long long * ptr;
+
+    // capsule
+    ptr = (long long *) mxGetData( mxGetField( C_sim, 0, "capsule" ) );
+    {{ model.name }}_sim_solver_capsule *capsule = ({{ model.name }}_sim_solver_capsule *) ptr[0];
+
+
+    /* free memory */
+    int status = 0;
+
+    status = {{ model.name }}_acados_sim_free(capsule);
+    if (status)
+    {
+        mexPrintf("{{ model.name }}_acados_sim_free() returned status %d.\n", status);
+    }
+
+    status = {{ model.name }}_acados_sim_solver_free_capsule(capsule);
+    if (status)
+    {
+        mexPrintf("{{ model.name }}_acados_sim_solver_free_capsule() returned status %d.\n", status);
+    }
+
+    return;
+
+}

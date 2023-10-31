@@ -94,6 +94,7 @@ typedef struct
     struct blasfeo_dvec Z;              // diagonal Hessian of slacks as vector
     struct blasfeo_dvec z;              // gradient of slacks as vector
     double scaling;
+    double t; // time (always zero) to match signature of external function wrt cost integration
     int W_changed;                      ///< flag indicating whether W has changed and needs to be refactorized
 } ocp_nlp_cost_nls_model;
 
@@ -113,6 +114,7 @@ int ocp_nlp_cost_nls_model_set(void *config_, void *dims_, void *model_, const c
 typedef struct
 {
     bool gauss_newton_hess;  // gauss-newton hessian approximation
+    int integrator_cost; // > 0 indicating that cost is propagated within integrator instead of cost module, only add slack contributions
 } ocp_nlp_cost_nls_opts;
 
 //
@@ -155,6 +157,8 @@ void *ocp_nlp_cost_nls_memory_assign(void *config, void *dims, void *opts, void 
 double *ocp_nlp_cost_nls_memory_get_fun_ptr(void *memory_);
 //
 struct blasfeo_dvec *ocp_nlp_cost_nls_memory_get_grad_ptr(void *memory_);
+//
+struct blasfeo_dmat *ocp_nlp_cost_nls_memory_get_W_chol_ptr(void *memory_);
 //
 void ocp_nlp_cost_nls_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, void *memory);
 //

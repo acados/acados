@@ -32,12 +32,10 @@
 classdef acados_ocp < handle
 
     properties
-        % templated
+        % templated solver
         t_ocp
+        % matlab objects
         code_gen_dir
-
-        C_ocp
-        C_ocp_ext_fun
         model_struct
         opts_struct
         acados_ocp_nlp_json
@@ -144,10 +142,10 @@ classdef acados_ocp < handle
                 % check if mex interface exists already
                 if is_octave()
                     mex_exists = exist( fullfile(obj.opts_struct.output_dir,...
-                        '/ocp_create.mex'), 'file');
+                        '/ocp_get.mex'), 'file');
                 else
                     mex_exists = exist( fullfile(obj.opts_struct.output_dir,...
-                        ['ocp_create.', mexext]), 'file');
+                        ['ocp_get.', mexext]), 'file');
                 end
                 % check if mex interface is linked against the same external libs as the core
                 if mex_exists
@@ -194,7 +192,7 @@ classdef acados_ocp < handle
                 end
             end
 
-            % TODO: call ocp_generate_c_code()
+            % generate templated solver
             if nargin < 3
                 simulink_opts = get_acados_simulink_opts;
             end
@@ -262,13 +260,9 @@ classdef acados_ocp < handle
 
 
         % function delete(obj)
-        %     if ~isempty(obj.t_ocp)
-        %         return_dir = pwd();
-        %         % the library is located in that directory 
-        %         cd(obj.code_gen_dir);
-        %         clear(obj.t_ocp);
-        %         cd(return_dir);
-        %     end
+        %     Use default implementation.
+        %     MATLAB destroys the property values after the destruction of the object.
+        %     Because `t_ocp` is the only referrence to the `mex_solver` object, MATLAB also destroys the latter.
         % end
 
 

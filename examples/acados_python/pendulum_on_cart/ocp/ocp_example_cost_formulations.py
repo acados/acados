@@ -37,12 +37,12 @@ from pendulum_model import export_pendulum_ode_model, export_augmented_pendulum_
 import numpy as np
 import scipy.linalg
 from utils import plot_pendulum
-from casadi import vertcat, SX
+import casadi as ca
 
 COST_VERSIONS = ['LS', 'EXTERNAL', 'EXTERNAL_Z', 'NLS', 'NLS_Z', 'LS_Z', 'CONL', 'CONL_Z']
 HESSIAN_APPROXIMATION = 'GAUSS_NEWTON' # 'GAUSS_NEWTON
 
-def main(cost_version: str):
+def main(cost_version: str, plot=False):
     EXTERNAL_COST_USE_NUM_HESS = 0
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -109,14 +109,14 @@ def main(cost_version: str):
         ocp.cost.cost_type = 'NONLINEAR_LS'
         ocp.cost.cost_type_e = 'NONLINEAR_LS'
 
-        ocp.model.cost_y_expr = vertcat(x, u)
+        ocp.model.cost_y_expr = ca.vertcat(x, u)
         ocp.model.cost_y_expr_e = x
 
     elif cost_version == 'NLS_Z':
         ocp.cost.cost_type = 'NONLINEAR_LS'
         ocp.cost.cost_type_e = 'NONLINEAR_LS'
 
-        y_expr_z = vertcat(model.z[0], model.x[1:], u)
+        y_expr_z = ca.vertcat(model.z[0], model.x[1:], u)
         print(f"{y_expr_z}")
         ocp.model.cost_y_expr = y_expr_z
         ocp.model.cost_y_expr_e = x
@@ -125,17 +125,16 @@ def main(cost_version: str):
         ocp.cost.cost_type = 'CONVEX_OVER_NONLINEAR'
         ocp.cost.cost_type_e = 'CONVEX_OVER_NONLINEAR'
 
-        r = SX.sym('r', ny)
-        r_e = SX.sym('r_e', ny_e)
+        ocp.model.cost_y_expr = ca.vertcat(x, u)
+        ocp.model.cost_y_expr_e = x
 
-        ocp.model.cost_psi_expr = 0.5 * (r.T @ cost_W @ r)
-        ocp.model.cost_psi_expr_e = 0.5 * (r_e.T @ Q @ r_e)
-
+        r = ca.SX.sym('r', ny)
+        r_e = ca.SX.sym('r_e', ny_e)
         ocp.model.cost_r_in_psi_expr = r
         ocp.model.cost_r_in_psi_expr_e = r_e
 
-        ocp.model.cost_y_expr = vertcat(x, u)
-        ocp.model.cost_y_expr_e = x
+        ocp.model.cost_psi_expr = 0.5 * (r.T @ cost_W @ r)
+        ocp.model.cost_psi_expr_e = 0.5 * (r_e.T @ Q @ r_e)
 
         # with custom hessian
         # ocp.model.cost_conl_custom_outer_hess = cost_W
@@ -144,8 +143,8 @@ def main(cost_version: str):
         ocp.cost.cost_type = 'CONVEX_OVER_NONLINEAR'
         ocp.cost.cost_type_e = 'CONVEX_OVER_NONLINEAR'
 
-        r = SX.sym('r', ny)
-        r_e = SX.sym('r_e', ny_e)
+        r = ca.SX.sym('r', ny)
+        r_e = ca.SX.sym('r_e', ny_e)
 
         ocp.model.cost_psi_expr = 0.5 * (r.T @ cost_W @ r)
         ocp.model.cost_psi_expr_e = 0.5 * (r_e.T @ Q @ r_e)
@@ -153,7 +152,7 @@ def main(cost_version: str):
         ocp.model.cost_r_in_psi_expr = r
         ocp.model.cost_r_in_psi_expr_e = r_e
 
-        y_expr_z = vertcat(model.z[0], model.x[1:], u)
+        y_expr_z = ca.vertcat(model.z[0], model.x[1:], u)
         print(f"{y_expr_z}")
         ocp.model.cost_y_expr = y_expr_z
         ocp.model.cost_y_expr_e = x
@@ -162,7 +161,7 @@ def main(cost_version: str):
         ocp.cost.cost_type = 'EXTERNAL'
         ocp.cost.cost_type_e = 'EXTERNAL'
 
-        ocp.model.cost_expr_ext_cost = .5*vertcat(x, u).T @ cost_W @ vertcat(x, u)
+        ocp.model.cost_expr_ext_cost = .5*ca.vertcat(x, u).T @ cost_W @ ca.vertcat(x, u)
         ocp.model.cost_expr_ext_cost_e = .5*x.T @ Q @ x
 
         EXTERNAL_COST_USE_NUM_HESS = True
@@ -171,7 +170,7 @@ def main(cost_version: str):
         ocp.cost.cost_type = 'EXTERNAL'
         ocp.cost.cost_type_e = 'EXTERNAL'
 
-        y_expr_z = vertcat(model.z[0], model.x[1:], u)
+        y_expr_z = ca.vertcat(model.z[0], model.x[1:], u)
 
         ocp.model.cost_expr_ext_cost = .5*y_expr_z.T @ cost_W @ y_expr_z
         ocp.model.cost_expr_ext_cost_e = .5*x.T @ Q @ x
@@ -210,9 +209,9 @@ def main(cost_version: str):
     ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
     # from casadi import jacobian
-    # ux = vertcat(ocp.model.u, ocp.model.x)
+    # ux = ca.vertcat(ocp.model.u, ocp.model.x)
     # jacobian(jacobian(ocp.model.cost_expr_ext_cost, ux), ux)
-    # SX(@1=0.04, @2=4000,
+    # ca.SX(@1=0.04, @2=4000,
     # [[@1, 00, 00, 00, 00],
     #  [00, @2, 00, 00, 00],
     #  [00, 00, @2, 00, 00],
@@ -245,15 +244,15 @@ def main(cost_version: str):
     print(f"cost value is: {cost_val}")
 
     # plot results
-    plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
+    if plot:
+        plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
 
     ocp_solver.store_iterate(filename='solution.json', overwrite=True)
     ocp_solver.load_iterate(filename='solution.json')
 
 if __name__ == "__main__":
-
     for cost_version in COST_VERSIONS:
-        main(cost_version=cost_version)
+        main(cost_version=cost_version, plot=False)
 
 # timings
 # time_tot = 1e8

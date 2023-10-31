@@ -1159,6 +1159,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts,
                                     field+module_length+1, value);
     }
+    else if ( ptr_module!=NULL && (!strcmp(ptr_module, "reg")) )
+    {
+        config->regularize->opts_set(config->regularize, opts->regularize,
+                                    field+module_length+1, value);
+    }
     else // nlp opts
     {
         if (!strcmp(field, "reuse_workspace"))
@@ -2081,7 +2086,27 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
     int *nv = dims->nv;
     int *nx = dims->nx;
     int *nu = dims->nu;
-    int *ni = dims->ni;
+
+    /* prepare memory */
+    int cost_integration;
+    for (int i = 0; i < N; i++)
+    {
+        config->dynamics[i]->opts_get(config->dynamics[i], opts->dynamics[i],
+                                        "cost_computation", &cost_integration);
+        if (cost_integration)
+        {
+            // set pointers to cost function & gradient in integrator
+            double *cost_fun = config->cost[i]->memory_get_fun_ptr(mem->cost[i]);
+            struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get_grad_ptr(mem->cost[i]);
+            struct blasfeo_dvec *y_ref = config->cost[i]->model_get_y_ref_ptr(in->cost[i]);
+            struct blasfeo_dmat *W_chol = config->cost[i]->memory_get_W_chol_ptr(mem->cost[i]);
+
+            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], mem->dynamics[i], "cost_grad", cost_grad);
+            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], mem->dynamics[i], "cost_fun", cost_fun);
+            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], mem->dynamics[i], "y_ref", y_ref);
+            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], mem->dynamics[i], "W_chol", W_chol);
+        }
+    }
 
     /* stage-wise multiple shooting lagrangian evaluation */
 
@@ -2161,11 +2186,6 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
                 mem->dyn_adj+i, nu[i]);
         }
 
-        // nlp mem: ineq_fun
-        struct blasfeo_dvec *ineq_fun =
-            config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
-        blasfeo_dveccp(2 * ni[i], ineq_fun, 0, mem->ineq_fun + i, 0);
-
         // nlp mem: ineq_adj
         struct blasfeo_dvec *ineq_adj =
             config->constraints[i]->memory_get_adj_ptr(mem->constraints[i]);
@@ -2173,9 +2193,9 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
     }
 
-    for (int i = 0; i <= N; i++)
-    {
-        // TODO(rien) where should the update happen??? move to qp update ???
+    // TODO(rien) where should the update happen??? move to qp update ???
+    // for (int i = 0; i <= N; i++)
+    // {
         // TODO(all): fix and move where appropriate
         //  if (i<N)
         //  {
@@ -2189,13 +2209,13 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
         //     BLASFEO_DVECEL(nlp_mem->cost_grad+i, j) += work->sim_out[i]->grad[nx+j];
         //   }
         //  }
-    }
+    // }
 }
 
 
 
 // update QP rhs for SQP (step prim var, abs dual var)
-// TODO(all): move in dynamics, cost, constraints modules ???
+// evaluate constraints wrt bounds -> allows to update all bounds between preparation and feedback phase.
 void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config,
     ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
     ocp_nlp_memory *mem, ocp_nlp_workspace *work)
@@ -2205,6 +2225,7 @@ void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config,
     int *nx = dims->nx;
     // int *nu = dims->nu;
     int *ni = dims->ni;
+
 
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
@@ -2218,32 +2239,18 @@ void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config,
         if (i < N)
             blasfeo_dveccp(nx[i + 1], mem->dyn_fun + i, 0, mem->qp_in->b + i, 0);
 
+        // evaluate constraint residuals
+        config->constraints[i]->update_qp_vectors(config->constraints[i], dims->constraints[i],
+            in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
+
+        // copy ineq function value into nlp mem, then into QP
+        struct blasfeo_dvec *ineq_fun = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
+        blasfeo_dveccp(2 * ni[i], ineq_fun, 0, mem->ineq_fun + i, 0);
+
         // d
         blasfeo_dveccp(2 * ni[i], mem->ineq_fun + i, 0, mem->qp_in->d + i, 0);
     }
 }
-
-
-
-void ocp_nlp_embed_initial_value(ocp_nlp_config *config, ocp_nlp_dims *dims,
-    ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
-    ocp_nlp_memory *mem, ocp_nlp_workspace *work)
-{
-    int *ni = dims->ni;
-
-    // constraints
-    config->constraints[0]->bounds_update(config->constraints[0], dims->constraints[0],
-            in->constraints[0], opts->constraints[0], mem->constraints[0], work->constraints[0]);
-
-    // nlp mem: ineq_fun
-    struct blasfeo_dvec *ineq_fun =
-        config->constraints[0]->memory_get_fun_ptr(mem->constraints[0]);
-    blasfeo_dveccp(2 * ni[0], ineq_fun, 0, mem->ineq_fun, 0);
-
-    // d
-    blasfeo_dveccp(2 * ni[0], mem->ineq_fun, 0, mem->qp_in->d, 0);
-}
-
 
 
 double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims,
@@ -2446,20 +2453,20 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
+    for (int i=0; i<N; i++)
+    {
+        // dynamics: Note has to be first, because cost_integration might be used.
+        config->dynamics[i]->compute_fun(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
+                                         opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
+    }
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
     for (int i=0; i<=N; i++)
     {
         // cost
         config->cost[i]->compute_fun(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i],
                                     mem->cost[i], work->cost[i]);
-    }
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp parallel for
-#endif
-    for (int i=0; i<N; i++)
-    {
-        // dynamics
-        config->dynamics[i]->compute_fun(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
-                                         opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
     }
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
@@ -2527,7 +2534,7 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
 double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
-            int check_early_termination)
+            int check_early_termination, int sqp_iter)
 {
     int i, j;
 
@@ -2563,7 +2570,7 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
     //        }
 
         /* modify/initialize merit function weights (Leineweber1999 M5.1, p.89) */
-        if (mem->sqp_iter[0]==0)
+        if (sqp_iter==0)
         {
             // initialize weights
             // equality merit weights = abs( eq multipliers of qp_sol )
@@ -2584,7 +2591,7 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
         else
         {
             // update weights
-            // printf("merit fun: update weights, sqp_iter = %d\n", mem->sqp_iter[0]);
+            // printf("merit fun: update weights, sqp_iter = %d\n", sqp_iter);
             for (i = 0; i < N; i++)
             {
                 for(j=0; j<nx[i+1]; j++)
@@ -2609,7 +2616,7 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
             }
         }
 
-        if (1) // (mem->sqp_iter[0]!=0) // TODO: why does Leineweber do full step in first SQP iter?
+        if (1) // (sqp_iter!=0) // TODO: why does Leineweber do full step in first SQP iter?
         {
             double merit_fun0 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
 
@@ -2711,6 +2718,8 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
             }
         }
     }
+    if (opts->globalization != FIXED_STEP)
+        printf("alpha %f\n", alpha);
 
     return alpha;
 }
@@ -2995,8 +3004,24 @@ void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in
     double* tmp_cost = NULL;
     double total_cost = 0.0;
 
+    int cost_integration;
+
     for (int i = 0; i <= N; i++)
     {
+        if (i < N)
+        {
+            config->dynamics[i]->opts_get(config->dynamics[i], opts->dynamics[i], "cost_computation", &cost_integration);
+
+            if (cost_integration)
+            {
+                // evaluate at out, instead tmp_out;
+                config->dynamics[i]->memory_set_tmp_ux_ptr(out->ux+i, mem->dynamics[i]);
+                // evaluate: TODO, where to put cost?
+                config->dynamics[i]->compute_fun(config->dynamics[i], dims->dynamics[i],
+                        in->dynamics[i], opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
+            }
+        }
+
         // set pointers
         // NOTE(oj): the cost compute function takes the tmp_ux_ptr as input,
         //  since it is also used for globalization,

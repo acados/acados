@@ -120,6 +120,7 @@ _autogen
 tags
 compile_commands.json
 
+*.pkl
 private*
 sandbox
 _out*

@@ -52,6 +52,7 @@ classdef acados_sim_opts < handle
             obj.opts_struct.num_stages = 4;
             obj.opts_struct.num_steps = 1;
             obj.opts_struct.newton_iter = 3;
+            obj.opts_struct.newton_tol = 0.0;
             obj.opts_struct.sens_forw = 'false';
             obj.opts_struct.sens_adj = 'false';
             obj.opts_struct.sens_hess = 'false';
@@ -61,6 +62,7 @@ classdef acados_sim_opts < handle
             obj.opts_struct.gnsf_detect_struct = 'true';
             obj.opts_struct.output_dir = fullfile(pwd, 'build');
             obj.opts_struct.ext_fun_compile_flags = '-O2';
+            obj.opts_struct.parameter_values = [];
         end
 
 
@@ -83,6 +85,8 @@ classdef acados_sim_opts < handle
             elseif (strcmp(field, 'num_steps'))
                 obj.opts_struct.num_steps = value;
             elseif (strcmp(field, 'newton_iter'))
+                obj.opts_struct.newton_iter = value;
+            elseif (strcmp(field, 'newton_tol'))
                 obj.opts_struct.newton_iter = value;
             elseif (strcmp(field, 'method'))
                 obj.opts_struct.method = value;
@@ -109,6 +113,8 @@ classdef acados_sim_opts < handle
                     'please use compile_interface instead or dont set the option.', ...
                     'options are: true, false, auto.']);
                 keyboard
+            elseif (strcmp(field, 'parameter_values'))
+                obj.opts_struct.parameter_values = value;
             else
                 disp(['acados_sim_opts: set: wrong field: ', field]);
             end

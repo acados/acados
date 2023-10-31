@@ -29,30 +29,23 @@
 
 %
 
-function compile_main(export_dir)
+function compile_ocp_shared_lib(export_dir)
     return_dir = pwd;
     cd(export_dir);
     %% build main file
     if isunix
-        [ status, result ] = system('make');
-        if status
-            cd(return_dir);
-            error('building templated code failed.\nGot status %d, result: %s',...
-                  status, result);
-        end
         [ status, result ] = system('make shared_lib');
         if status
             cd(return_dir);
-            error('building templated code as shared library failed.\nGot status %d, result: %s',...
+            error('Building templated code as shared library failed.\nGot status %d, result: %s',...
                   status, result);
         end
-        fprintf('Successfully built main file!\n');
     else
         % compile on Windows platform
         [ status, result ] = system('cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DBUILD_ACADOS_OCP_SOLVER_LIB=ON -S . -B .');
         if status
             cd(return_dir);
-            error('Building templated code failed.\nGot status %d, result: %s',...
+            error('Generating buildsystem failed.\nGot status %d, result: %s',...
                   status, result);
         end
         [ status, result ] = system('cmake --build . --config Release');
@@ -61,7 +54,6 @@ function compile_main(export_dir)
             error('Building templated code as shared library failed.\nGot status %d, result: %s',...
                   status, result);
         end
-        fprintf('Successfully built main file!\n');
     end
     cd(return_dir);
 end

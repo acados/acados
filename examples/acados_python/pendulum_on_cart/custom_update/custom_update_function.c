@@ -31,7 +31,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "acados_solver_pendulum_ode.h"
+#include "acados_solver_pendulum.h"
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados/utils/mem.h"
 
@@ -87,9 +87,9 @@ static custom_memory *custom_memory_assign(ocp_nlp_dims *nlp_dims, void *raw_mem
 
 
 
-static void *example_custom_memory_create(pendulum_ode_solver_capsule* capsule)
+static void *example_custom_memory_create(pendulum_solver_capsule* capsule)
 {
-    ocp_nlp_dims *nlp_dims = pendulum_ode_acados_get_nlp_dims(capsule);
+    ocp_nlp_dims *nlp_dims = pendulum_acados_get_nlp_dims(capsule);
     acados_size_t bytes = custom_memory_calculate_size(nlp_dims);
 
     void *ptr = acados_calloc(1, bytes);
@@ -101,7 +101,7 @@ static void *example_custom_memory_create(pendulum_ode_solver_capsule* capsule)
 }
 
 
-int custom_update_init_function(pendulum_ode_solver_capsule* capsule)
+int custom_update_init_function(pendulum_solver_capsule* capsule)
 {
     printf("\nin example_custom_update_init_function\n");
     capsule->custom_update_memory = example_custom_memory_create(capsule);
@@ -143,16 +143,16 @@ static void print_u_trajectory(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_n
 
 
 
-int custom_update_function(pendulum_ode_solver_capsule* capsule, double* data, int data_len)
+int custom_update_function(pendulum_solver_capsule* capsule, double* data, int data_len)
 {
     printf("\nin example_custom_update_function\n");
     custom_memory *custom_mem = (custom_memory *) capsule->custom_update_memory;
-    ocp_nlp_config *nlp_config = pendulum_ode_acados_get_nlp_config(capsule);
-    ocp_nlp_dims *nlp_dims = pendulum_ode_acados_get_nlp_dims(capsule);
-    ocp_nlp_in *nlp_in = pendulum_ode_acados_get_nlp_in(capsule);
-    ocp_nlp_out *nlp_out = pendulum_ode_acados_get_nlp_out(capsule);
-    ocp_nlp_solver *nlp_solver = pendulum_ode_acados_get_nlp_solver(capsule);
-    void *nlp_opts = pendulum_ode_acados_get_nlp_opts(capsule);
+    ocp_nlp_config *nlp_config = pendulum_acados_get_nlp_config(capsule);
+    ocp_nlp_dims *nlp_dims = pendulum_acados_get_nlp_dims(capsule);
+    ocp_nlp_in *nlp_in = pendulum_acados_get_nlp_in(capsule);
+    ocp_nlp_out *nlp_out = pendulum_acados_get_nlp_out(capsule);
+    ocp_nlp_solver *nlp_solver = pendulum_acados_get_nlp_solver(capsule);
+    void *nlp_opts = pendulum_acados_get_nlp_opts(capsule);
 
     printf("got data\t:");
     for (int i = 0; i < data_len; i++)
@@ -172,7 +172,7 @@ int custom_update_function(pendulum_ode_solver_capsule* capsule, double* data, i
 }
 
 
-int custom_update_terminate_function(pendulum_ode_solver_capsule* capsule)
+int custom_update_terminate_function(pendulum_solver_capsule* capsule)
 {
     printf("\nin example_custom_update_terminate_function\n");
 

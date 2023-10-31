@@ -94,6 +94,7 @@ typedef struct
     struct blasfeo_dvec Z;              // diagonal Hessian of slacks as vector
     struct blasfeo_dvec z;              // gradient of slacks as vector
     double scaling;
+    double t; // time (always zero) to match signature of external function wrt cost integration
 } ocp_nlp_cost_conl_model;
 
 //
@@ -112,6 +113,7 @@ int ocp_nlp_cost_conl_model_set(void *config_, void *dims_, void *model_, const 
 typedef struct
 {
     bool gauss_newton_hess;  // dummy options, we always use a gauss-newton hessian
+    int integrator_cost; // > 0 indicating that cost is propagated within integrator instead of cost module, only add slack contributions
 } ocp_nlp_cost_conl_opts;
 
 //
@@ -139,6 +141,8 @@ typedef struct
     struct blasfeo_dvec *Z;      // pointer to Z in qp_in
     struct blasfeo_dvec *z_alg;         ///< pointer to z in sim_out
     struct blasfeo_dmat *dzdux_tran;    ///< pointer to sensitivity of a wrt ux in sim_out
+    struct blasfeo_dmat W_chol;        // cholesky factor of hessian of outer loss function
+        // NOTE: could be in work, but needed for compatibility with NLS and cost integration
     double fun;                         ///< value of the cost function
 } ocp_nlp_cost_conl_memory;
 
@@ -170,7 +174,6 @@ void ocp_nlp_cost_conl_memory_set_dzdux_tran_ptr(struct blasfeo_dmat *dzdux_tran
 typedef struct
 {
     struct blasfeo_dmat W;             // hessian of outer loss function
-    struct blasfeo_dmat W_chol;        // cholesky factor of hessian of outer loss function
     struct blasfeo_dmat Jt_ux;         // jacobian of inner residual function
     struct blasfeo_dmat Jt_ux_tilde;   // jacobian of inner residual function plus gradient contribution of algebraic variables
     struct blasfeo_dmat Jt_z;          // jacobian of inner residual function wrt algebraic variables

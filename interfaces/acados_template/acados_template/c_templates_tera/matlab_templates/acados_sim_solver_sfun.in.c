@@ -130,7 +130,7 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 
 static void mdlStart(SimStruct *S)
 {
-    sim_solver_capsule *capsule = {{ model.name }}_acados_sim_solver_create_capsule();
+    {{ model.name }}_sim_solver_capsule *capsule = {{ model.name }}_acados_sim_solver_create_capsule();
     {{ model.name }}_acados_sim_create(capsule);
 
     ssSetUserData(S, (void*)capsule);
@@ -138,7 +138,7 @@ static void mdlStart(SimStruct *S)
 
 static void mdlOutputs(SimStruct *S, int_T tid)
 {
-    sim_solver_capsule *capsule = ssGetUserData(S);
+    {{ model.name }}_sim_solver_capsule *capsule = ssGetUserData(S);
 
     sim_config *acados_sim_config = {{ model.name }}_acados_get_sim_config(capsule);
     sim_in *acados_sim_in = {{ model.name }}_acados_get_sim_in(capsule);
@@ -216,7 +216,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
 static void mdlTerminate(SimStruct *S)
 {
-    sim_solver_capsule *capsule = ssGetUserData(S);
+    {{ model.name }}_sim_solver_capsule *capsule = ssGetUserData(S);
 
     {{ model.name }}_acados_sim_free(capsule);
     {{ model.name }}_acados_sim_solver_free_capsule(capsule);

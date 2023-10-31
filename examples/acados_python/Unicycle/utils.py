@@ -1,8 +1,7 @@
 import os
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-
+from acados_template import latexify_plot
 
 def plot_robot(
     shooting_nodes,
@@ -26,21 +25,8 @@ def plot_robot(
         latexify: latex style plots
     """
 
-    # latexify plot
     if latexify:
-        params = {
-            "backend": "ps",
-            "text.latex.preamble": r"\usepackage{gensymb} \usepackage{amsmath}",
-            "axes.labelsize": 10,
-            "axes.titlesize": 10,
-            "legend.fontsize": 10,
-            "xtick.labelsize": 10,
-            "ytick.labelsize": 10,
-            "text.usetex": True,
-            "font.family": "serif",
-        }
-
-        matplotlib.rcParams.update(params)
+        latexify_plot()
 
     WITH_ESTIMATION = X_est is not None and Y_measured is not None
 
@@ -94,6 +80,5 @@ def plot_robot(
 
     plt.subplots_adjust(left=None, bottom=None, right=None, top=None, hspace=0.4)
 
-    # avoid plotting when running on Travis
-    if os.environ.get("ACADOS_ON_CI") is None and plt_show:
+    if plt_show:
         plt.show()

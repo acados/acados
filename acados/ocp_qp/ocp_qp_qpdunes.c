@@ -921,6 +921,11 @@ void ocp_qp_qpdunes_eval_sens(void *config_, void *qp_in, void *qp_out, void *op
     exit(1);
 }
 
+void ocp_qp_qpdunes_solver_get(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, const char *field, int stage, void* value, int size1, int size2)
+{
+    printf("\nerror: ocp_qp_osqp_solver_get: not implemented yet\n");
+    exit(1);
+}
 
 
 void ocp_qp_qpdunes_config_initialize_default(void *config_)
@@ -944,6 +949,6 @@ void ocp_qp_qpdunes_config_initialize_default(void *config_)
         (acados_size_t (*)(void *, void *, void *)) & ocp_qp_qpdunes_workspace_calculate_size;
     config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & ocp_qp_qpdunes;
     config->eval_sens = &ocp_qp_qpdunes_eval_sens;
-
+    config->solver_get = &ocp_qp_qpdunes_solver_get;
     return;
 }

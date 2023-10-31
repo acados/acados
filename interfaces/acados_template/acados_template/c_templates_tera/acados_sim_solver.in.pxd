@@ -31,7 +31,7 @@
 cimport acados_sim_solver_common
 
 cdef extern from "acados_sim_solver_{{ model.name }}.h":
-    ctypedef struct sim_solver_capsule "sim_solver_capsule":
+    ctypedef struct sim_solver_capsule "{{ model.name }}_sim_solver_capsule":
         pass
 
     sim_solver_capsule * acados_sim_solver_create_capsule "{{ model.name }}_acados_sim_solver_create_capsule"()

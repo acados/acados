@@ -780,20 +780,20 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         dims_out[0] = 1;
         dims_out[1] = dims->nx[stage+1];
     }
-    else if (!strcmp(field, "Q"))
+    else if (!strcmp(field, "Q") || !strcmp(field, "P"))
     {
         dims_out[0] = dims->nx[stage];
         dims_out[1] = dims->nx[stage];
     }
-    else if (!strcmp(field, "R"))
+    else if (!strcmp(field, "R") || !strcmp(field, "Lr"))
     {
         dims_out[0] = dims->nu[stage];
         dims_out[1] = dims->nu[stage];
     }
-    else if (!strcmp(field, "S"))
+    else if (!strcmp(field, "S") || !strcmp(field, "K"))
     {
-        dims_out[0] = dims->nx[stage];
-        dims_out[1] = dims->nu[stage];
+        dims_out[0] = dims->nu[stage];
+        dims_out[1] = dims->nx[stage];
     }
     else if (!strcmp(field, "r"))
     {
@@ -867,26 +867,18 @@ void ocp_nlp_cost_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims,
     else if (!strcmp(field, "Zl"))
     {
         dims_out[0] = dims->ns[stage];
-
-        return;
     }
     else if (!strcmp(field, "Zu"))
     {
         dims_out[0] = dims->ns[stage];
-
-        return;
     }
     else if (!strcmp(field, "zl"))
     {
         dims_out[0] = dims->ns[stage];
-
-        return;
     }
     else if (!strcmp(field, "zu"))
     {
         dims_out[0] = dims->ns[stage];
-
-        return;
     }
     // matrices
     else if (!strcmp(field, "W"))
@@ -896,44 +888,36 @@ void ocp_nlp_cost_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
         config->cost[stage]->dims_get(config->cost[stage], dims->cost[stage],
                                             "ny", &dims_out[1]);
-        return;
     }
     else if (!strcmp(field, "Vx"))
     {
         config->cost[stage]->dims_get(config->cost[stage], dims->cost[stage],
                                             "ny", &dims_out[0]);
         dims_out[1] = dims->nx[stage];
-
-        return;
     }
     else if (!strcmp(field, "Vu"))
     {
         config->cost[stage]->dims_get(config->cost[stage], dims->cost[stage],
                                             "ny", &dims_out[0]);
         dims_out[1] = dims->nu[stage];
-
-        return;
     }
     else if (!strcmp(field, "Vz"))
     {
         config->cost[stage]->dims_get(config->cost[stage], dims->cost[stage],
                                             "ny", &dims_out[0]);
         dims_out[1] = dims->nz[stage];
-
-        return;
     }
     else if (!strcmp(field, "ext_cost_num_hess"))
     {
         dims_out[0] = dims->nx[stage] + dims->nu[stage];
         dims_out[1] = dims->nx[stage] + dims->nu[stage];
-
-        return;
     }
     else
     {
         printf("\nerror: ocp_nlp_cost_dims_get_from_attr: field %s not available\n", field);
         exit(1);
     }
+    return;
 }
 
 /************************************************
@@ -1213,6 +1197,32 @@ void ocp_nlp_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_so
     {
         double *double_values = value;
         d_ocp_qp_get_ug(stage, nlp_mem->qp_in, double_values);
+    }
+    else if (!strcmp(field, "P") || !strcmp(field, "K") || !strcmp(field, "Lr"))
+    {
+        ocp_nlp_opts *nlp_opts;
+        config->opts_get(config, dims, solver->opts, "nlp_opts", &nlp_opts);
+
+        ocp_qp_xcond_solver_config *xcond_solver_config = config->qp_solver;
+
+        int size1 = 0;
+        int size2 = 0;
+        if (!strcmp(field, "P"))
+        {
+            size1 = dims->nx[stage];
+            size2 = dims->nx[stage];
+        }
+        else if (!strcmp(field, "K"))
+        {
+            size1 = dims->nu[stage];
+            size2 = dims->nx[stage];
+        }
+        else if (!strcmp(field, "Lr"))
+        {
+            size1 = dims->nu[stage];
+            size2 = dims->nu[stage];
+        }
+        xcond_solver_config->solver_get(xcond_solver_config, nlp_mem->qp_in, nlp_mem->qp_out, nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, field, stage, value, size1, size2);
     }
     else
     {

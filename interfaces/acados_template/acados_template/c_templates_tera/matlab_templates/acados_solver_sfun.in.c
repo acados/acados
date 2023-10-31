@@ -42,6 +42,22 @@
 #include "{{ model.name }}_model/{{ model.name }}_model.h"
 #include "acados_solver_{{ model.name }}.h"
 
+
+{%- if not solver_options.custom_update_filename %}
+    {%- set custom_update_filename = "" %}
+{% else %}
+    {%- set custom_update_filename = solver_options.custom_update_filename %}
+{%- endif %}
+
+{%- if not solver_options.custom_update_header_filename %}
+    {%- set custom_update_header_filename = "" %}
+{% else %}
+    {%- set custom_update_header_filename = solver_options.custom_update_header_filename %}
+{%- endif %}
+{%- if custom_update_header_filename != "" %}
+#include "{{ custom_update_header_filename }}"
+{%- endif %}
+
 #include "simstruc.h"
 
 {% if simulink_opts.samplingtime == "t0" -%}
@@ -457,6 +473,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // local buffer
     {%- set buffer_size = buffer_sizes | sort | last %}
     real_t buffer[{{ buffer_size }}];
+    double tmp_cpu_time;
 
     /* go through inputs */
     {%- set i_input = -1 %}
@@ -730,10 +747,38 @@ static void mdlOutputs(SimStruct *S, int_T tid)
   {%- endif %}
 
     /* call solver */
+  {%- if custom_update_filename == "" %}
     int rti_phase = 0;
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "rti_phase", &rti_phase);
     int acados_status = {{ model.name }}_acados_solve(capsule);
+    // get time
+    ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_tot", (void *) buffer);
+    tmp_cpu_time = buffer[0];
+  {%- elif solver_options.nlp_solver_type == "SQP_RTI" %}
+    // preparation
+    int rti_phase = 1;
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "rti_phase", &rti_phase);
+    int acados_status = {{ model.name }}_acados_solve(capsule);
 
+    // preparation time
+    ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_tot", (void *) buffer);
+    tmp_cpu_time = buffer[0];
+
+    // call custom update function
+    int data_len = 0;
+    double* c_data; // TODO: only works with empty..
+    acados_status = {{ model.name }}_acados_custom_update(capsule, c_data, data_len);
+
+    // feedback
+    rti_phase = 2;
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "rti_phase", &rti_phase);
+    acados_status = {{ model.name }}_acados_solve(capsule);
+    // feedback time
+    ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_tot", (void *) buffer);
+    tmp_cpu_time += buffer[0];
+  {%- else -%}
+    Simulink block with custom solver template only works with SQP_RTI!
+  {%- endif %}
 
     /* set outputs */
     // assign pointers to output signals
@@ -805,8 +850,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
   {%- if simulink_opts.outputs.CPU_time == 1 %}
     {%- set i_output = i_output + 1 %}
     out_cpu_time = ssGetOutputPortRealSignal(S, {{ i_output }});
-    // get solution time
-    ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_tot", (void *) out_cpu_time);
+    out_cpu_time[0] = tmp_cpu_time;
   {%- endif -%}
 
   {%- if simulink_opts.outputs.CPU_time_sim == 1 %}

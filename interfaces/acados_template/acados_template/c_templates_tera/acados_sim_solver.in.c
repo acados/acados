@@ -56,23 +56,23 @@
 
 // ** solver data **
 
-sim_solver_capsule * {{ model.name }}_acados_sim_solver_create_capsule()
+{{ model.name }}_sim_solver_capsule * {{ model.name }}_acados_sim_solver_create_capsule()
 {
-    void* capsule_mem = malloc(sizeof(sim_solver_capsule));
-    sim_solver_capsule *capsule = (sim_solver_capsule *) capsule_mem;
+    void* capsule_mem = malloc(sizeof({{ model.name }}_sim_solver_capsule));
+    {{ model.name }}_sim_solver_capsule *capsule = ({{ model.name }}_sim_solver_capsule *) capsule_mem;
 
     return capsule;
 }
 
 
-int {{ model.name }}_acados_sim_solver_free_capsule(sim_solver_capsule * capsule)
+int {{ model.name }}_acados_sim_solver_free_capsule({{ model.name }}_sim_solver_capsule * capsule)
 {
     free(capsule);
     return 0;
 }
 
 
-int {{ model.name }}_acados_sim_create(sim_solver_capsule * capsule)
+int {{ model.name }}_acados_sim_create({{ model.name }}_sim_solver_capsule * capsule)
 {
     // initialize
     const int nx = {{ model.name | upper }}_NX;
@@ -400,7 +400,7 @@ int {{ model.name }}_acados_sim_create(sim_solver_capsule * capsule)
 }
 
 
-int {{ model.name }}_acados_sim_solve(sim_solver_capsule *capsule)
+int {{ model.name }}_acados_sim_solve({{ model.name }}_sim_solver_capsule *capsule)
 {
     // integrate dynamics using acados sim_solver
     int status = sim_solve(capsule->acados_sim_solver,
@@ -412,7 +412,7 @@ int {{ model.name }}_acados_sim_solve(sim_solver_capsule *capsule)
 }
 
 
-int {{ model.name }}_acados_sim_free(sim_solver_capsule *capsule)
+int {{ model.name }}_acados_sim_free({{ model.name }}_sim_solver_capsule *capsule)
 {
     // free memory
     sim_solver_destroy(capsule->acados_sim_solver);
@@ -427,33 +427,46 @@ int {{ model.name }}_acados_sim_free(sim_solver_capsule *capsule)
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_impl_dae_fun);
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_impl_dae_fun_jac_x_xdot_z);
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_impl_dae_jac_x_xdot_u_z);
+    free(capsule->sim_impl_dae_fun);
+    free(capsule->sim_impl_dae_fun_jac_x_xdot_z);
+    free(capsule->sim_impl_dae_jac_x_xdot_u_z);
 {%- if hessian_approx == "EXACT" %}
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_impl_dae_hess);
+    free(capsule->sim_impl_dae_hess);
 {%- endif %}
 {%- elif solver_options.integrator_type == "ERK" %}
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_forw_vde_casadi);
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_vde_adj_casadi);
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_expl_ode_fun_casadi);
+    free(capsule->sim_forw_vde_casadi);
+    free(capsule->sim_vde_adj_casadi);
+    free(capsule->sim_expl_ode_fun_casadi);
 {%- if hessian_approx == "EXACT" %}
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_expl_ode_hess);
+    free(capsule->sim_expl_ode_hess);
 {%- endif %}
 {%- elif solver_options.integrator_type == "GNSF" %}
   {% if model.gnsf.purely_linear != 1 %}
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_gnsf_phi_fun);
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_gnsf_phi_fun_jac_y);
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_gnsf_phi_jac_y_uhat);
+    free(capsule->sim_gnsf_phi_fun);
+    free(capsule->sim_gnsf_phi_fun_jac_y);
+    free(capsule->sim_gnsf_phi_jac_y_uhat);
   {% if model.gnsf.nontrivial_f_LO == 1 %}
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_gnsf_f_lo_jac_x1_x1dot_u_z);
+    free(capsule->sim_gnsf_f_lo_jac_x1_x1dot_u_z);
   {%- endif %}
   {%- endif %}
     external_function_param_{{ model.dyn_ext_fun_type }}_free(capsule->sim_gnsf_get_matrices_fun);
+    free(capsule->sim_gnsf_get_matrices_fun);
 {% endif %}
 
     return 0;
 }
 
 
-int {{ model.name }}_acados_sim_update_params(sim_solver_capsule *capsule, double *p, int np)
+int {{ model.name }}_acados_sim_update_params({{ model.name }}_sim_solver_capsule *capsule, double *p, int np)
 {
     int status = 0;
     int casadi_np = {{ model.name | upper }}_NP;
@@ -494,32 +507,32 @@ int {{ model.name }}_acados_sim_update_params(sim_solver_capsule *capsule, doubl
 }
 
 /* getters pointers to C objects*/
-sim_config * {{ model.name }}_acados_get_sim_config(sim_solver_capsule *capsule)
+sim_config * {{ model.name }}_acados_get_sim_config({{ model.name }}_sim_solver_capsule *capsule)
 {
     return capsule->acados_sim_config;
 };
 
-sim_in * {{ model.name }}_acados_get_sim_in(sim_solver_capsule *capsule)
+sim_in * {{ model.name }}_acados_get_sim_in({{ model.name }}_sim_solver_capsule *capsule)
 {
     return capsule->acados_sim_in;
 };
 
-sim_out * {{ model.name }}_acados_get_sim_out(sim_solver_capsule *capsule)
+sim_out * {{ model.name }}_acados_get_sim_out({{ model.name }}_sim_solver_capsule *capsule)
 {
     return capsule->acados_sim_out;
 };
 
-void * {{ model.name }}_acados_get_sim_dims(sim_solver_capsule *capsule)
+void * {{ model.name }}_acados_get_sim_dims({{ model.name }}_sim_solver_capsule *capsule)
 {
     return capsule->acados_sim_dims;
 };
 
-sim_opts * {{ model.name }}_acados_get_sim_opts(sim_solver_capsule *capsule)
+sim_opts * {{ model.name }}_acados_get_sim_opts({{ model.name }}_sim_solver_capsule *capsule)
 {
     return capsule->acados_sim_opts;
 };
 
-sim_solver  * {{ model.name }}_acados_get_sim_solver(sim_solver_capsule *capsule)
+sim_solver  * {{ model.name }}_acados_get_sim_solver({{ model.name }}_sim_solver_capsule *capsule)
 {
     return capsule->acados_sim_solver;
 };

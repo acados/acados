@@ -48,7 +48,7 @@ for integrator = {'irk_gnsf', 'irk'}
     jac_reuse = 'false'; % true, false
     num_stages = 3;
     num_steps = 3;
-    newton_iter = 3;
+    newton_iter = 5;
     model_name = ['pend_dae_' method];
 
     length_pendulum = 5;

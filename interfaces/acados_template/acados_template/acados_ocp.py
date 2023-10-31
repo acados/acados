@@ -29,10 +29,15 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+from typing import Optional
 import numpy as np
+from scipy.linalg import block_diag
+
+import casadi as ca
 import os
 from .acados_model import AcadosModel
 from .utils import get_acados_path, J_to_idx, J_to_idx_slack, get_lib_ext
+from .penalty_utils import symmetric_huber_penalty
 
 class AcadosOcpDims:
     """
@@ -63,6 +68,7 @@ class AcadosOcpDims:
         self.__nsh_e   = 0
         self.__nsphi   = 0
         self.__nsphi_e = 0
+        self.__ns_0    = 0
         self.__ns      = 0
         self.__ns_e    = 0
         self.__ng      = 0
@@ -236,8 +242,14 @@ class AcadosOcpDims:
         return self.__nsphi_e
 
     @property
+    def ns_0(self):
+        """:math:`n_{s}^0` - total number of slacks at shooting node 0.
+        Type: int; default: 0"""
+        return self.__ns_0
+
+    @property
     def ns(self):
-        """:math:`n_{s}` - total number of slacks.
+        """:math:`n_{s}` - total number of slacks at stages (1, N-1).
         Type: int; default: 0"""
         return self.__ns
 
@@ -453,6 +465,13 @@ class AcadosOcpDims:
             self.__nsphi_e = nsphi_e
         else:
             raise Exception('Invalid nsphi_e value, expected nonnegative integer.')
+
+    @ns.setter
+    def ns_0(self, ns_0):
+        if isinstance(ns_0, int) and ns_0 > -1:
+            self.__ns_0 = ns_0
+        else:
+            raise Exception('Invalid ns_0 value, expected nonnegative integer.')
 
     @ns.setter
     def ns(self, ns):
@@ -983,6 +1002,7 @@ class AcadosOcpConstraints:
         self.__ubx_0   = np.array([])
         self.__idxbx_0 = np.array([])
         self.__idxbxe_0 = np.array([])
+        self.__has_x0 = False
         # state bounds
         self.__lbx     = np.array([])
         self.__ubx     = np.array([])
@@ -1579,6 +1599,10 @@ class AcadosOcpConstraints:
         print("idxbxe_0: ", self.__idxbxe_0)
         return None
 
+    @property
+    def has_x0(self):
+        return self.__has_x0
+
     # SETTERS
     @constr_type.setter
     def constr_type(self, constr_type):
@@ -1634,7 +1658,6 @@ class AcadosOcpConstraints:
         else:
             raise Exception('Invalid idxbxe_0 value.')
 
-
     @x0.setter
     def x0(self, x0):
         if isinstance(x0, np.ndarray):
@@ -1642,6 +1665,7 @@ class AcadosOcpConstraints:
             self.__ubx_0 = x0
             self.__idxbx_0 = np.arange(x0.size)
             self.__idxbxe_0 = np.arange(x0.size)
+            self.__has_x0 = True
         else:
             raise Exception('Invalid x0 value.')
 
@@ -2153,7 +2177,9 @@ class AcadosOcpOptions:
         self.__Tsim = None                                    # automatically calculated as tf/N
         self.__print_level = 0                                # print level
         self.__initialize_t_slacks = 0                        # possible values: 0, 1
-        self.__regularize_method = None
+        self.__cost_discretization = 'EULER'
+        self.__regularize_method = 'NO_REGULARIZE'
+        self.__reg_epsilon = 1e-4
         self.__time_steps = None
         self.__shooting_nodes = None
         self.__exact_hess_cost = 1
@@ -2229,17 +2255,21 @@ class AcadosOcpOptions:
 
         This file has to declare the custom_update functions and look as follows:
 
-        ```
-        // Called at the end of solver creation.
-        // This is allowed to allocate memory and store the pointer to it into capsule->custom_update_memory.
-        int custom_update_init_function([model.name]_solver_capsule* capsule);
+        `// Called at the end of solver creation.`
 
-        // Custom update function that can be called between solver calls
-        int custom_update_function([model.name]_solver_capsule* capsule, double* data, int data_len);
+        `// This is allowed to allocate memory and store the pointer to it into capsule->custom_update_memory.`
 
-        // Called just before destroying the solver.
-        // Responsible to free allocated memory, stored at capsule->custom_update_memory.
-        int custom_update_terminate_function([model.name]_solver_capsule* capsule);
+        `int custom_update_init_function([model.name]_solver_capsule* capsule);`
+
+        `// Custom update function that can be called between solver calls`
+
+        `int custom_update_function([model.name]_solver_capsule* capsule, double* data, int data_len);`
+
+        `// Called just before destroying the solver.`
+
+        `// Responsible to free allocated memory, stored at capsule->custom_update_memory.`
+
+        `int custom_update_terminate_function([model.name]_solver_capsule* capsule);`
 
         Default: ''.
         """
@@ -2306,8 +2336,8 @@ class AcadosOcpOptions:
 
     @property
     def collocation_type(self):
-        """Collocation type: relevant for implicit integrators
-        -- string in {GAUSS_RADAU_IIA, GAUSS_LEGENDRE}.
+        """Collocation type: only relevant for implicit integrators
+        -- string in {'GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA'}.
 
         Default: GAUSS_LEGENDRE
         """
@@ -2325,7 +2355,7 @@ class AcadosOcpOptions:
 
         Note: default eps = 1e-4
 
-        Default: :code:`None`.
+        Default: 'NO_REGULARIZE'.
         """
         return self.__regularize_method
 
@@ -2333,7 +2363,7 @@ class AcadosOcpOptions:
     def nlp_solver_step_length(self):
         """
         Fixed Newton step length.
-        Type: float > 0.
+        Type: float >= 0.
         Default: 1.0.
         """
         return self.__nlp_solver_step_length
@@ -2456,10 +2486,10 @@ class AcadosOcpOptions:
 
         Note: taken from [HPIPM paper]:
 
-        (a) the classical implementation requires the reduced Hessian with respect to the dynamics
+        (a) the classical implementation requires the reduced  (projected) Hessian with respect to the dynamics
             equality constraints to be positive definite, but allows the full-space Hessian to be indefinite)
         (b) the square-root implementation, which in order to reduce the flop count employs the Cholesky
-            factorization of the Riccati recursion matrix, and therefore requires the full-space Hessian to be positive definite
+            factorization of the Riccati recursion matrix (P), and therefore requires the full-space Hessian to be positive definite
 
         [HPIPM paper]: HPIPM: a high-performance quadratic programming framework for model predictive control, Frison and Diehl, 2020
         https://cdn.syscop.de/publications/Frison2020a.pdf
@@ -2517,6 +2547,11 @@ class AcadosOcpOptions:
     def alpha_min(self):
         """Minimal step size for globalization MERIT_BACKTRACKING, default: 0.05."""
         return self.__alpha_min
+
+    @property
+    def reg_epsilon(self):
+        """Epsilon for regularization, used if regularize_method in ['PROJECT', 'MIRROR', 'CONVEXIFY']"""
+        return self.__reg_epsilon
 
     @property
     def alpha_reduction(self):
@@ -2672,6 +2707,11 @@ class AcadosOcpOptions:
         """
         return self.__ext_cost_num_hess
 
+    @property
+    def cost_discretization(self):
+        """Cost discretization"""
+        return self.__cost_discretization
+
     @qp_solver.setter
     def qp_solver(self, qp_solver):
         qp_solvers = ('PARTIAL_CONDENSING_HPIPM', \
@@ -2696,7 +2736,7 @@ class AcadosOcpOptions:
 
     @collocation_type.setter
     def collocation_type(self, collocation_type):
-        collocation_types = ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE')
+        collocation_types = ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA')
         if collocation_type in collocation_types:
             self.__collocation_type = collocation_type
         else:
@@ -2808,6 +2848,10 @@ class AcadosOcpOptions:
             raise Exception('Invalid globalization value. Possible values are:\n\n' \
                     + ',\n'.join(globalization_types) + '.\n\nYou have: ' + globalization + '.\n\n')
 
+    @reg_epsilon.setter
+    def reg_epsilon(self, reg_epsilon):
+        self.__reg_epsilon = reg_epsilon
+
     @alpha_min.setter
     def alpha_min(self, alpha_min):
         self.__alpha_min = alpha_min
@@ -2872,6 +2916,13 @@ class AcadosOcpOptions:
         else:
             raise Exception('Invalid sim_method_newton_iter value. sim_method_newton_iter must be an integer.')
 
+    @sim_method_newton_tol.setter
+    def sim_method_newton_tol(self, sim_method_newton_tol):
+        if isinstance(sim_method_newton_tol, float) and sim_method_newton_tol > 0:
+            self.__sim_method_newton_tol = sim_method_newton_tol
+        else:
+            raise Exception('Invalid sim_method_newton_tol value. sim_method_newton_tol must be a positive float.')
+
     @sim_method_jac_reuse.setter
     def sim_method_jac_reuse(self, sim_method_jac_reuse):
         # if sim_method_jac_reuse in (True, False):
@@ -2888,9 +2939,18 @@ class AcadosOcpOptions:
             raise Exception('Invalid nlp_solver_type value. Possible values are:\n\n' \
                     + ',\n'.join(nlp_solver_types) + '.\n\nYou have: ' + nlp_solver_type + '.\n\n')
 
+    @cost_discretization.setter
+    def cost_discretization(self, cost_discretization):
+        cost_discretizations = ('EULER', 'INTEGRATOR')
+        if cost_discretization in cost_discretizations:
+            self.__cost_discretization = cost_discretization
+        else:
+            raise Exception('Invalid cost_discretization value. Possible values are:\n\n' \
+                    + ',\n'.join(cost_discretizations) + '.\n\nYou have: ' + cost_discretization + '.')
+
     @nlp_solver_step_length.setter
     def nlp_solver_step_length(self, nlp_solver_step_length):
-        if isinstance(nlp_solver_step_length, float) and nlp_solver_step_length > 0:
+        if isinstance(nlp_solver_step_length, float) and nlp_solver_step_length >= 0:
             self.__nlp_solver_step_length = nlp_solver_step_length
         else:
             raise Exception('Invalid nlp_solver_step_length value. nlp_solver_step_length must be a positive float.')
@@ -3047,7 +3107,7 @@ class AcadosOcpOptions:
     @model_external_shared_lib_name.setter
     def model_external_shared_lib_name(self, model_external_shared_lib_name):
         if isinstance(model_external_shared_lib_name, str) :
-            if model_external_shared_lib_name[-3:] == '.so' : 
+            if model_external_shared_lib_name[-3:] == '.so' :
                 raise Exception('Invalid model_external_shared_lib_name value. Remove the .so extension.' \
             + '.\n\nYou have: ' + type(model_external_shared_lib_name) + '.\n\n')
             else :
@@ -3125,6 +3185,9 @@ class AcadosOcp:
         self.solver_options = AcadosOcpOptions()
         """Solver Options, type :py:class:`acados_template.acados_ocp.AcadosOcpOptions`"""
 
+        self.zoro_description = None
+        """zoRO - zero order robust optimization - description: for advanced users."""
+
         self.acados_include_path = os.path.join(acados_path, 'include').replace(os.sep, '/') # the replace part is important on Windows for CMake
         """Path to acados include directory (set automatically), type: `string`"""
         self.acados_lib_path = os.path.join(acados_path, 'lib').replace(os.sep, '/') # the replace part is important on Windows for CMake
@@ -3163,5 +3226,154 @@ class AcadosOcp:
             setter_to_call = getattr(self, 'set')
 
         setter_to_call(tokens[1], value)
+
+        return
+
+
+    def translate_nls_cost_to_conl(self):
+        """
+        Translates a NONLINEAR_LS cost to a CONVEX_OVER_NONLINEAR cost.
+        """
+
+        # initial cost
+        if self.cost.cost_type_0 is None:
+            print("Initial cost is None, skipping.")
+        elif self.cost.cost_type_0 == "CONVEX_OVER_NONLINEAR":
+            print("Initial cost is already CONVEX_OVER_NONLINEAR, skipping.")
+        elif self.cost.cost_type_0 == "NONLINEAR_LS":
+            print("Translating initial NONLINEAR_LS cost to CONVEX_OVER_NONLINEAR.")
+            self.cost.cost_type_0 = "CONVEX_OVER_NONLINEAR"
+            ny_0 = self.model.cost_y_expr_0.shape[0]
+            conl_res_0 = ca.SX.sym('residual_conl', ny_0)
+            self.model.cost_r_in_psi_expr_0 = conl_res_0
+            self.model.cost_psi_expr_0 = .5 * conl_res_0.T @ self.cost.W_0 @ conl_res_0
+        else:
+            raise Exception(f"Terminal cost type must be NONLINEAR_LS, got {self.cost.cost_type_0=}.")
+
+        # path cost
+        if self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
+            print("Path cost is already CONVEX_OVER_NONLINEAR, skipping.")
+        elif self.cost.cost_type == "NONLINEAR_LS":
+            print("Translating path NONLINEAR_LS cost to CONVEX_OVER_NONLINEAR.")
+            self.cost.cost_type = "CONVEX_OVER_NONLINEAR"
+            ny = self.model.cost_y_expr.shape[0]
+            conl_res = ca.SX.sym('residual_conl', ny)
+            self.model.cost_r_in_psi_expr = conl_res
+            self.model.cost_psi_expr = .5 * conl_res.T @ self.cost.W @ conl_res
+        else:
+            raise Exception(f"Path cost type must be NONLINEAR_LS, got {self.cost.cost_type=}.")
+
+        # terminal cost
+        if self.cost.cost_type_e == "CONVEX_OVER_NONLINEAR":
+            print("Terminal cost is already CONVEX_OVER_NONLINEAR, skipping.")
+        elif self.cost.cost_type_e == "NONLINEAR_LS":
+            print("Translating terminal NONLINEAR_LS cost to CONVEX_OVER_NONLINEAR.")
+            self.cost.cost_type_e = "CONVEX_OVER_NONLINEAR"
+            ny_e = self.model.cost_y_expr_e.shape[0]
+            conl_res_e = ca.SX.sym('residual_conl', ny_e)
+            self.model.cost_r_in_psi_expr_e = conl_res_e
+            self.model.cost_psi_expr_e = .5 * conl_res_e.T @ self.cost.W_e @ conl_res_e
+        else:
+            raise Exception(f"Initial cost type must be NONLINEAR_LS, got {self.cost.cost_type_e=}.")
+        return
+
+
+    def formulate_constraint_as_L2_penalty(
+        self,
+        constr_expr: ca.SX,
+        weight: float,
+        upper_bound: Optional[float],
+        lower_bound: Optional[float],
+        residual_name: str = "new_residual",
+    ) -> None:
+        """
+        Formulate a constraint as an L2 penalty and add it to the current cost.
+        """
+
+        if upper_bound is None and lower_bound is None:
+            raise ValueError("Either upper or lower bound must be provided.")
+
+        # compute violation expression
+        violation_expr = 0.0
+        if upper_bound is not None:
+            violation_expr = ca.fmax(violation_expr, (constr_expr - upper_bound))
+        if lower_bound is not None:
+            violation_expr = ca.fmax(violation_expr, (lower_bound - constr_expr))
+
+        # add penalty as cost
+        self.cost.yref = np.concatenate((self.cost.yref, np.zeros(1)))
+        self.model.cost_y_expr = ca.vertcat(self.model.cost_y_expr, violation_expr)
+        if self.cost.cost_type == "NONLINEAR_LS":
+            self.cost.W = block_diag(self.cost.W, weight)
+        elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
+            new_residual = ca.SX.sym(residual_name, constr_expr.shape)
+            self.model.cost_r_in_psi_expr = ca.vertcat(self.model.cost_r_in_psi_expr, new_residual)
+            self.model.cost_psi_expr += .5 * weight * new_residual**2
+
+        return
+
+
+    def formulate_constraint_as_Huber_penalty(
+        self,
+        constr_expr: ca.SX,
+        weight: float,
+        upper_bound: Optional[float],
+        lower_bound: Optional[float],
+        residual_name: str = "new_residual",
+        huber_delta: float = 1.0,
+        use_xgn = True,
+        min_hess = 0,
+    ) -> None:
+        """
+        Formulate a constraint as Huber penalty and add it to the current cost.
+
+        use_xgn: if true an XGN Hessian is used, if false a GGN Hessian (= exact Hessian, in this case) is used.
+        min_hess: provide a minimum value for the hessian
+        """
+
+        if upper_bound is None and lower_bound is None:
+            raise ValueError("Either upper or lower bound must be provided.")
+        elif upper_bound < lower_bound:
+            raise ValueError("Upper bound must be greater than lower bound.")
+
+        if self.cost.cost_type != "CONVEX_OVER_NONLINEAR":
+            raise Exception("Huber penalty is only supported for CONVEX_OVER_NONLINEAR cost type.")
+
+        if (upper_bound is None or lower_bound is None):
+            raise NotImplementedError("only symmetric Huber for now")
+
+        # normalize constraint to [-1, 1]
+        width = upper_bound - lower_bound
+        center = lower_bound + 0.5 * width
+        constr_expr = 2 * (constr_expr - center) / width
+
+        if use_xgn and self.model.cost_conl_custom_outer_hess is None:
+            # switch to XGN Hessian start with exact Hessian of previously defined cost
+            exact_cost_hess = ca.hessian(self.model.cost_psi_expr, self.model.cost_r_in_psi_expr)[0]
+            self.model.cost_conl_custom_outer_hess = exact_cost_hess
+
+        # define residual
+        new_residual = ca.SX.sym(residual_name, constr_expr.shape)
+
+        # define penalty
+        penalty, penalty_grad, penalty_hess, penalty_hess_xgn = \
+                symmetric_huber_penalty(new_residual, delta=huber_delta, w=weight*width**2, min_hess=min_hess)
+
+        # add penalty to cost
+        self.model.cost_r_in_psi_expr = ca.vertcat(self.model.cost_r_in_psi_expr, new_residual)
+        self.model.cost_psi_expr += penalty
+        self.model.cost_y_expr = ca.vertcat(self.model.cost_y_expr, constr_expr)
+        self.cost.yref = np.concatenate((self.cost.yref, np.zeros(1)))
+
+        # add Hessian term
+        if use_xgn:
+            zero_offdiag = ca.SX.zeros(self.model.cost_conl_custom_outer_hess.shape[0], penalty_hess_xgn.shape[1])
+            self.model.cost_conl_custom_outer_hess = ca.blockcat(self.model.cost_conl_custom_outer_hess,
+                                                                zero_offdiag, zero_offdiag.T, penalty_hess_xgn)
+        elif self.model.cost_conl_custom_outer_hess is not None:
+            zero_offdiag = ca.SX.zeros(self.model.cost_conl_custom_outer_hess.shape[0], penalty_hess_xgn.shape[1])
+            # add penalty Hessian to existing Hessian
+            self.model.cost_conl_custom_outer_hess = ca.blockcat(self.model.cost_conl_custom_outer_hess,
+                                                                zero_offdiag, zero_offdiag.T, penalty_hess)
 
         return

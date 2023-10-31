@@ -69,6 +69,7 @@ typedef enum
 {
     GAUSS_LEGENDRE,
     GAUSS_RADAU_IIA,
+    EXPLICIT_RUNGE_KUTTA,
 } sim_collocation_type;
 
 
@@ -87,6 +88,9 @@ acados_size_t butcher_tableau_work_calculate_size(int ns);
 //
 void calculate_butcher_tableau(int ns, sim_collocation_type collocation_type, double *c_vec,
                                double *b_vec, double *A_mat, void *work);
+
+//
+void get_explicit_butcher_tableau(int ns, double *A, double *b, double *c);
 
 
 

@@ -34,9 +34,8 @@ sys.path.insert(0, '../common')
 
 from acados_template import AcadosSim, AcadosSimSolver, sim_get_default_cmake_builder
 from pendulum_model import export_pendulum_ode_model
-from utils import plot_pendulum
+# from utils import plot_pendulum
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 def main(build=True, generate=True, use_cmake=True, use_cython=False):

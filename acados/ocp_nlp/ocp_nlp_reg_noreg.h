@@ -69,7 +69,7 @@ void *ocp_nlp_reg_noreg_opts_assign(void *raw_memory);
 //
 void ocp_nlp_reg_noreg_opts_initialize_default(void *config_, ocp_nlp_reg_dims *dims, void *opts_);
 //
-void ocp_nlp_reg_noreg_opts_set(void *config_, ocp_nlp_reg_dims *dims, void *opts_, char *field, void* value);
+void ocp_nlp_reg_noreg_opts_set(void *config_, void *opts_, const char *field, void* value);
 
 
 

@@ -42,17 +42,17 @@
 
 
 
-import sys, os
+import os
 import numpy as np
 import scipy.linalg
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver
+from acados_template import AcadosOcp, AcadosOcpSolver
 
 from export_disturbed_chain_mass_model import export_disturbed_chain_mass_model
 from export_chain_mass_integrator import export_chain_mass_integrator
 
 from plot_utils import *
-from utils import *
+from utils import sampleFromEllipsoid, compute_steady_state
 import matplotlib.pyplot as plt
 
 def run_nominal_control(chain_params):
@@ -227,7 +227,7 @@ def run_nominal_control(chain_params):
         acados_ocp_solver.set(0, "ubx", xcurrent)
 
         status = acados_ocp_solver.solve()
-        timings[i] = acados_ocp_solver.get_stats("time_tot")[0]
+        timings[i] = acados_ocp_solver.get_stats("time_tot")
 
         if status != 0:
             raise Exception('acados acados_ocp_solver returned status {} in time step {}. Exiting.'.format(status, i))

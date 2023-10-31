@@ -152,7 +152,7 @@ void sim_dims_get_from_attr(sim_config *config, void *dims, const char *field, i
     {
         sim_dims_get(config, dims, "nu", &dims_out[0]);
     }
-    else if (!strcmp(field, "T"))
+    else if (!strcmp(field, "T") || !strcmp(field, "t0"))
     {
         dims_out[0] = 1;
     }

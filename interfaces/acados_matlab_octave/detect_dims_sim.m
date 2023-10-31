@@ -52,12 +52,18 @@ function model  = detect_dims_sim(model, opts)
         model.dim_np = 0;
     end
 
+    if isfield(model, 'sym_xdot')
+        if numel(model.sym_xdot) ~= model.dim_nx
+            warning('sym_xdot is not of shape nx');
+        end
+    end
+
     if ~isempty(opts.num_stages)
         if(strcmp(opts.method,"erk"))
             if(opts.num_stages == 1 || opts.num_stages == 2 || ...
                 opts.num_stages == 3 || opts.num_stages == 4)
             else
-                error(['ERK: num_stages = ',num2str(opts.num_stages) ' not available. Only number of stages = {1,2,3,4} implemented!']);
+                error(['ERK: num_stages = ', num2str(opts.num_stages) ' not available. Only number of stages = {1,2,3,4} implemented!']);
             end
         end
     end

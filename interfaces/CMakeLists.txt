@@ -29,18 +29,6 @@
 #
 
 
-# MEX Template
-if(ACADOS_OCTAVE_TEMPLATE)
-        add_test(NAME octave_test_target_selector
-                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
-                octave --no-gui --no-window-system ./test_target_selector.m)
-
-        add_test(NAME octave_test_generic_ext_cost_disc_dyn
-                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/generic_dyn_disc
-                octave --no-gui --no-window-system ./run_generic_disc_dyn_example.m)
-endif()
-
-
 # MATLAB / OCTAVE
 if(ACADOS_MATLAB OR ACADOS_OCTAVE)
         add_test(NAME octave_test_dim_check
@@ -94,6 +82,13 @@ if(ACADOS_MATLAB OR ACADOS_OCTAVE)
                 COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
                 octave --no-gui --no-window-system ./test_ocp_qpdunes.m)
         endif()
+        #
+        add_test(NAME octave_test_target_selector
+                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+                octave --no-gui --no-window-system ./test_target_selector.m)
+        add_test(NAME octave_test_generic_ext_cost_disc_dyn
+                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/generic_dyn_disc
+                octave --no-gui --no-window-system ./run_generic_disc_dyn_example.m)
 endif()
 
 
@@ -128,9 +123,31 @@ add_test(NAME python_test_ocp
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
         python main_test.py)
 
+add_test(NAME python_test_cost_integration_euler
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
+        python test_cost_integration_euler.py)
+
+add_test(NAME python_test_cost_integration_value
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
+        python test_cost_integration_value.py)
+
 add_test(NAME python_pendulum_ocp_example_reuse_code
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
         python minimal_example_ocp_reuse_code.py)
+
+add_test(NAME python_solution_sensitivities_and_exact_hess
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/solution_sensitivities
+        python test_solution_sens_and_exact_hess.py)
+
+add_test(NAME python_time_varying_irk
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/time_varying
+        python test_time_varying_irk.py)
+
+add_test(NAME test_polynomial_controls_and_penalties
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/time_varying
+        python test_polynomial_controls_and_penalties.py)
+
+
 # CMake test
 add_test(NAME python_pendulum_ocp_example_cmake
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
@@ -207,7 +224,11 @@ add_test(NAME python_custom_update_example
 
 add_test(NAME python_fast_zoro_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/zoRO_example
-        python pendulum_on_cart/minimum_example_zoro.py)
+        python pendulum_on_cart/minimal_example_zoro.py)
+
+add_test(NAME python_zoro_diff_drive_example
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/zoRO_example
+        python diff_drive/main.py)
 
 # CMake test
 add_test(NAME python_pendulum_sim_example_cmake
@@ -223,6 +244,9 @@ add_test(NAME cython_pendulum_closed_loop_example
 add_test(NAME py_time_optimal_cython_ctypes
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/crane
         python time_optimal_example.py)
+add_test(NAME pendulum_optimal_value_gradient
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
+        python example_optimal_value_derivative.py)
 
 # example_ocp_dynamics_formulations all versions
 add_test(NAME python_pendulum_ocp_IRK

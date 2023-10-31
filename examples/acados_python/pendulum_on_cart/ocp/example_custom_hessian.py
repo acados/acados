@@ -30,16 +30,13 @@
 #
 
 import sys
-
-from casadi.casadi import linspace
 sys.path.insert(0, '../common')
 
 from acados_template import AcadosOcp, AcadosOcpSolver
 from pendulum_model import export_pendulum_ode_model
 import numpy as np
-import scipy.linalg
 from utils import plot_pendulum
-from casadi import tanh, SX, Sparsity, hessian, if_else, vertcat, horzcat, DM, blockcat, fmax
+from casadi import tanh, SX, Sparsity, hessian, if_else, horzcat, DM, blockcat
 
 # create ocp object to formulate the OCP
 ocp = AcadosOcp()

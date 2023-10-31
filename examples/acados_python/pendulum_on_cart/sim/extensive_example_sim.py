@@ -29,21 +29,18 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import os, sys, json
+import sys, json
 sys.path.insert(0, '../common')
 
-from acados_template import AcadosSim, AcadosSimSolver, acados_dae_model_json_dump
+from acados_template import AcadosSim, AcadosSimSolver, acados_dae_model_json_dump, sim_get_default_cmake_builder
 from pendulum_model import export_pendulum_ode_model
 from utils import plot_pendulum
 import numpy as np
-import matplotlib.pyplot as plt
 
 sim = AcadosSim()
 
-# export model 
+# model
 model = export_pendulum_ode_model()
-
-# set model_name 
 sim.model = model
 
 Tf = 0.1
@@ -105,7 +102,8 @@ if sim.solver_options.integrator_type == "GNSF" and not DETECT_GNSF:
     sim.gnsf_model = gnsf_dict
 
 # create
-acados_integrator = AcadosSimSolver(sim)
+cmake_builder = sim_get_default_cmake_builder()
+acados_integrator = AcadosSimSolver(sim, cmake_builder=cmake_builder)
 
 simX = np.ndarray((N+1, nx))
 x0 = np.array([0.0, np.pi+1, 0.0, 0.0])

@@ -321,7 +321,7 @@ static custom_memory *custom_memory_assign(ocp_nlp_config *nlp_config, ocp_nlp_d
 
 static void *custom_memory_create({{ model.name }}_solver_capsule* capsule)
 {
-    printf("\nin custom_memory_create_function\n");
+    // printf("\nin custom_memory_create_function\n");
 
     ocp_nlp_dims *nlp_dims = {{ model.name }}_acados_get_nlp_dims(capsule);
     ocp_nlp_config *nlp_config = {{ model.name }}_acados_get_nlp_config(capsule);
@@ -464,10 +464,18 @@ static void compute_gh_beta(struct blasfeo_dmat* K_mat, struct blasfeo_dmat* C_m
     blasfeo_dgemm_nn(n_cstr, nx, nx, 1.0, CaDK_mat, 0, 0,
                         P_mat, 0, 0, 0.0,
                         CaDKmP_mat, 0, 0, CaDKmP_mat, 0, 0);
+    // NOTE: here we also compute cross-terms which are not needed.
+    //       Only diag(beta_mat) is used later
     // beta_mat = CaDKmP_mat @ CaDK_mat^T
-    blasfeo_dgemm_nt(n_cstr, n_cstr, nx, 1.0, CaDKmP_mat, 0, 0,
-                        CaDK_mat, 0, 0, 0.0,
-                        beta_mat, 0, 0, beta_mat, 0, 0);
+    // blasfeo_dgemm_nt(n_cstr, n_cstr, nx, 1.0, CaDKmP_mat, 0, 0,
+    //                     CaDK_mat, 0, 0, 0.0,
+    //                     beta_mat, 0, 0, beta_mat, 0, 0);
+    for (int ii = 0; ii < n_cstr; ii++)
+    {
+        blasfeo_dgemm_nt(1, 1, nx, 1.0, CaDKmP_mat, ii, 0,
+                CaDK_mat, ii, 0, 0.0,
+                beta_mat, ii, ii, beta_mat, ii, ii);
+    }
 }
 
 static void compute_KPK(struct blasfeo_dmat* K_mat, struct blasfeo_dmat* temp_KP_mat,
@@ -490,6 +498,7 @@ static void compute_next_P_matrix(struct blasfeo_dmat* P_mat, struct blasfeo_dma
                                   struct blasfeo_dmat* K_mat, struct blasfeo_dmat* W_mat,
                                   struct blasfeo_dmat* AK_mat, struct blasfeo_dmat* temp_AP_mat, int nx, int nu)
 {
+    // TODO: exploit symmetry of P, however, only blasfeo_dtrmm_rlnn is implemented in high-performance BLAFEO variant.
     // AK_mat = -B@K + A
     blasfeo_dgemm_nn(nx, nx, nu, -1.0, B_mat, 0, 0, K_mat, 0, 0,
                         1.0, A_mat, 0, 0, AK_mat, 0, 0);
@@ -659,6 +668,17 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
                      &custom_mem->Dh_mat, &custom_mem->temp_CaDK_mat,
                      &custom_mem->temp_CaDKmP_mat, &custom_mem->temp_beta_mat,
                      &custom_mem->uncertainty_matrix_buffer[ii+1], nh, nx, nu);
+
+        // printf("temp_CaDKmP_mat k = %d", ii);
+        // blasfeo_print_dmat(nh, nx, &custom_mem->temp_CaDKmP_mat, 0, 0);
+
+        // TODO: eval hessian(h) -> H_hess (nh*(nx+nu)**2)
+        // temp_Kt_hhess = h_i_hess[:nx, :] + K^T * h_i_hess[nx:nx+nu, :]
+        // tempCD = temp_CaDKmP_mat * temp_Kt_hhess
+        // acados_CD += tempCD
+        // += for upper or -= for lower bound
+
+        // only works if 1 bound is trivially satisfied.
 
     {%- if zoro_description.nlh_t > 0 %}
         {%- for it in zoro_description.idx_lh_t %}

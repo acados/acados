@@ -85,7 +85,7 @@ void dense_qp_daqp_opts_initialize_default(void *config, dense_qp_dims *dims, vo
 //
 void dense_qp_daqp_opts_update(void *config, dense_qp_dims *dims, void *opts_);
 //
-// memory 
+// memory
 acados_size_t dense_qp_daqp_workspace_calculate_size(void *config, dense_qp_dims *dims, void *opts_);
 //
 void *dense_qp_daqp_workspace_assign(void *config, dense_qp_dims *dims, void *raw_memory);
@@ -102,6 +102,11 @@ void dense_qp_daqp_eval_sens(void *config_, void *qp_in, void *qp_out, void *opt
 void dense_qp_daqp_memory_reset(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_);
 //
 void dense_qp_daqp_config_initialize_default(void *config_);
+//
+void dense_qp_daqp_memory_reset(void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);
+//
+void dense_qp_daqp_solver_get(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, const char *field, int stage, void* value, int size1, int size2);
+
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -29,13 +29,17 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import os, sys, json
-import urllib.request
+import json
+import os
 import shutil
-import numpy as np
-from casadi import SX, MX, DM, Function, CasadiMeta
+import sys
+import urllib.request
+from subprocess import DEVNULL, STDOUT, call
 
-ALLOWED_CASADI_VERSIONS = ('3.5.6', '3.5.5', '3.5.4', '3.5.3', '3.5.2', '3.5.1', '3.4.5', '3.4.0')
+import numpy as np
+from casadi import DM, MX, SX, CasadiMeta, Function
+
+ALLOWED_CASADI_VERSIONS = ('3.6.3', '3.6.2', '3.6.1', '3.5.6', '3.5.5', '3.5.4', '3.5.3', '3.5.2', '3.5.1', '3.4.5', '3.4.0')
 
 TERA_VERSION = "0.0.34"
 
@@ -81,7 +85,7 @@ def check_casadi_version():
     if casadi_version in ALLOWED_CASADI_VERSIONS:
         return
     else:
-        msg =  'Warning: Please note that the following versions of CasADi  are '
+        msg =  'Warning: Please note that the following versions of CasADi are '
         msg += 'officially supported: {}.\n '.format(" or ".join(ALLOWED_CASADI_VERSIONS))
         msg += 'If there is an incompatibility with the CasADi generated code, '
         msg += 'please consider changing your CasADi version.\n'
@@ -433,3 +437,12 @@ def idx_perm_to_ipiv(idx_perm):
 def print_casadi_expression(f):
     for ii in range(casadi_length(f)):
         print(f[ii,:])
+
+
+def verbose_system_call(cmd, verbose=True, shell=False):
+    return call(
+        cmd,
+        stdout=None if verbose else DEVNULL,
+        stderr=None if verbose else STDOUT,
+        shell=shell
+    )
