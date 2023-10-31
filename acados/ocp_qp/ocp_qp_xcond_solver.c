@@ -376,7 +376,7 @@ void ocp_qp_xcond_solver_get(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out
     // cast data structures
     ocp_qp_xcond_solver_config *config = config_;
     qp_solver_config *qp_solver = config->qp_solver;
-    ocp_qp_xcond_config *xcond = config->xcond;
+    // ocp_qp_xcond_config *xcond = config->xcond;
     ocp_qp_xcond_solver_opts *opts = opts_;
     ocp_qp_xcond_solver_memory *mem = mem_;
 
