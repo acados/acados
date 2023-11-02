@@ -487,9 +487,10 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->time_sim_ad = 0.0;
 
     int N = dims->N;
-    int ii, qp_status;
+    int ii;
+    int qp_status = 0;
     int qp_iter = 0;
-    double alpha;
+    double alpha = 0.0;
 
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
