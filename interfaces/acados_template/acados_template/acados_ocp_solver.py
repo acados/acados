@@ -813,11 +813,6 @@ def __ocp_get_template_list(acados_ocp: AcadosOcp, cmake_builder=None, simulink_
     return template_list
 
 
-def remove_x0_elimination(acados_ocp):
-    acados_ocp.constraints.idxbxe_0 = np.zeros((0,))
-    acados_ocp.dims.nbxe_0 = 0
-
-
 class AcadosOcpSolver:
     """
     Class to interact with the acados ocp solver C object.
@@ -860,7 +855,7 @@ class AcadosOcpSolver:
                 detect_gnsf_structure(acados_ocp)
 
         if acados_ocp.solver_options.qp_solver == 'PARTIAL_CONDENSING_QPDUNES':
-            remove_x0_elimination(acados_ocp)
+            acados_ocp.remove_x0_elimination()
 
         # set integrator time automatically
         acados_ocp.solver_options.Tsim = acados_ocp.solver_options.time_steps[0]

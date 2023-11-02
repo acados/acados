@@ -3226,7 +3226,13 @@ class AcadosOcp:
             setter_to_call = getattr(self, 'set')
 
         setter_to_call(tokens[1], value)
+        return
 
+
+    def remove_x0_elimination(self):
+        self.constraints.idxbxe_0 = np.zeros((0,))
+        self.dims.nbxe_0 = 0
+        self.constraints.__has_x0 = False
         return
 
 
