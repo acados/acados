@@ -1612,10 +1612,10 @@ class AcadosOcpSolver:
             raise Exception("OCP does not have an initial state constraint.")
 
         nx = self.acados_ocp.dims.nx
-        nu = self.acados_ocp.dims.nu
+        nbu = self.acados_ocp.dims.nbu
         lam = self.get(0, 'lam')
         nlam_non_slack = lam.shape[0]//2 - self.acados_ocp.dims.ns_0
-        grad = lam[nu:nu+nx] - lam[nlam_non_slack+nu:nlam_non_slack+nu+nx]
+        grad = lam[nbu:nbu+nx] - lam[nlam_non_slack+nbu : nlam_non_slack+nbu+nx]
 
         return grad
 
