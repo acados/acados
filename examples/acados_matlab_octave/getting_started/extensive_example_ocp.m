@@ -75,7 +75,7 @@ qp_solver_iter_max = 1000; % default is 50; OSQP needs a lot sometimes.
 % can vary for integrators
 sim_method_num_stages = 1 * ones(N,1);
 sim_method_num_steps = ones(N,1);
-% sim_method_num_steps(1:10) = 2;
+sim_method_num_stages(3:end) = 2;
 
 %% model dynamics
 model = pendulum_on_cart_model;
