@@ -35,7 +35,6 @@ function generate_c_code_implicit_ode( model, opts )
 %% import casadi
 import casadi.*
 
-casadi_version = CasadiMeta.version();
 casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
 check_casadi_version();
 

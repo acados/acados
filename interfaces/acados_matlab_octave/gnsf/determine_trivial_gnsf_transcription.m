@@ -40,7 +40,6 @@ function [ gnsf ] = determine_trivial_gnsf_transcription(model, print_info)
 % import CasADi
 import casadi.*
 
-casadi_version = CasadiMeta.version();
 casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
 check_casadi_version();
 
