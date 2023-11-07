@@ -40,7 +40,7 @@ addpath(fullfile(acados_folder, 'external', 'jsonlab'))
 import casadi.*
 
 casadi_version = CasadiMeta.version();
-if ( strcmp(casadi_version(1:3),'3.5')) % require casadi 3.5 +
+if ( strcmp(casadi_version(1:3),'3.5') || strcmp(casadi_version(1:3),'3.6'))
 else % old casadi versions
     error('Please provide CasADi version or 3.5 to ensure compatibility with acados')
 end

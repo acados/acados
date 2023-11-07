@@ -37,9 +37,7 @@ import casadi.*
 
 casadi_version = CasadiMeta.version();
 casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
-if ~(strcmp(casadi_version(1:3),'3.4') || strcmp(casadi_version(1:3),'3.5'))
-    warning('Tested CasADi versions are 3.4 and 3.5, you are using: %s.', casadi_version);
-end
+check_casadi_version();
 
 is_template = false;
 if isa(model, 'acados_template_mex.acados_model_json')
