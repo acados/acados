@@ -35,36 +35,30 @@ function model = simple_dae_model()
     % that depends on the symbolic CasADi variables x, xdot, u, z,
     % and a model name, which will be used as a prefix for generated C
     % functions later on;
-    
+
     %% CasADi
     import casadi.*
-    casadi_version = CasadiMeta.version();
-    if ( strcmp(casadi_version(1:3),'3.4') || strcmp(casadi_version(1:3),'3.5')) % require casadi 3.4.x
-        casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
-    else % old casadi versions
-        error('Please provide CasADi version 3.4 or 3.5 to ensure compatibility with acados')
-    end
 
     model_name_prefix = 'simple_dae';
-       
+
     %% Set up States & Controls
     x1    = SX.sym('x1');     % Differential States
     x2    = SX.sym('x2');
     x = vertcat(x1, x2);
-    
+
     z1      = SX.sym('z1');     % Algebraic states
     z2      = SX.sym('z2');
     z = vertcat(z1, z2);
-    
+
     u1      = SX.sym('u1');     % Controls
     u2      = SX.sym('u2');
     u       = vertcat(u1, u2);
-    
+
     %% xdot
     x1_dot    = SX.sym('x1_dot');     % Differential States
     x2_dot    = SX.sym('x2_dot');
     xdot = [x1_dot; x2_dot];
-    
+
 	%% cost
 	expr_y = vertcat(u1, u2, z1, z2);
 
@@ -73,11 +67,11 @@ function model = simple_dae_model()
                      x2_dot+x2+0.01*z1-u2,  ...
                      z1-x1, ...
                      z2-x2);
- 
+
 	%% constraints
     expr_h = vertcat(z1, z2);
     expr_h_e = vertcat(x1, x2);
-    
+
     %% initial value
     %     x0 = [0.1; -0.1];
     %     z0 = [0.0, 0.0];
@@ -92,6 +86,6 @@ function model = simple_dae_model()
     model.expr_h = expr_h;
     model.expr_h_e = expr_h_e;
     model.name = model_name_prefix;
-    
+
 end
 
