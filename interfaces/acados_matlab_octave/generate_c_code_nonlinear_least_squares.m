@@ -36,10 +36,9 @@ function generate_c_code_nonlinear_least_squares( model, opts, target_dir )
 import casadi.*
 
 casadi_version = CasadiMeta.version();
-if ( strcmp(casadi_version(1:3),'3.4') || strcmp(casadi_version(1:3),'3.5')) % require casadi 3.4.x
-    casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
-else % old casadi versions
-    error('Please provide CasADi version 3.4 or 3.5 to ensure compatibility with acados')
+casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
+if ~(strcmp(casadi_version(1:3),'3.4') || strcmp(casadi_version(1:3),'3.5'))
+    warning('Tested CasADi versions are 3.4 and 3.5, you are using: %s.', casadi_version);
 end
 
 %% load model
