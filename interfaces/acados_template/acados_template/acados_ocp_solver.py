@@ -1004,7 +1004,7 @@ class AcadosOcpSolver:
         self.__qp_dynamics_fields = ['A', 'B', 'b']
         self.__qp_cost_fields = ['Q', 'R', 'S', 'q', 'r']
         self.__qp_constraint_fields = ['C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu']
-        self.__qp_pc_hpipm_fields = ['P', 'K', 'Lr']
+        self.__qp_pc_hpipm_fields = ['P', 'K', 'Lr', 'p']
 
         return
 
@@ -1942,7 +1942,7 @@ class AcadosOcpSolver:
         if field_ in self.__qp_pc_hpipm_fields:
             if self.acados_ocp.solver_options.qp_solver != "PARTIAL_CONDENSING_HPIPM" or self.acados_ocp.solver_options.qp_solver_cond_N != self.acados_ocp.dims.N:
                 raise Exception(f"field {field_} only works for PARTIAL_CONDENSING_HPIPM QP solver with qp_solver_cond_N == N.")
-            if field_ in ["P", "K"] and stage_ == 0 and self.acados_ocp.dims.nbxe_0 > 0:
+            if field_ in ["P", "K", "p"] and stage_ == 0 and self.acados_ocp.dims.nbxe_0 > 0:
                 raise Exception(f"getting field {field_} at stage 0 only works without x0 elimination (see nbxe_0).")
 
         field = field_.encode('utf-8')
