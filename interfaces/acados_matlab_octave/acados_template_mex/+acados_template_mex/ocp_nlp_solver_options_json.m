@@ -54,6 +54,7 @@ classdef ocp_nlp_solver_options_json < handle
         qp_solver_cond_N
         qp_solver_iter_max
         qp_solver_tol_stat
+        reg_epsilon
         qp_solver_tol_eq
         qp_solver_tol_ineq
         qp_solver_tol_comp
@@ -101,6 +102,7 @@ classdef ocp_nlp_solver_options_json < handle
             obj.nlp_solver_step_length = 1.0;
             obj.rti_phase = 0;
             obj.qp_solver_iter_max = [];
+            obj.reg_epsilon = 1e-4
             obj.print_level = 0;
             obj.time_steps = [];
             obj.initialize_t_slacks = 0;

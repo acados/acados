@@ -66,7 +66,13 @@ def plot_timings(timing_dict, use_custom_update: bool):
 
     medianprops = dict(linestyle='-', linewidth=2.5, color='darkgreen')
     # green_square = dict(markerfacecolor='palegreen', marker='D')
-    fig = plt.figure(figsize=(6.0, 3.2))
+
+    # remove keys not to plot:
+    del timing_dict['integrator']
+    del timing_dict['QP']
+
+    # plot
+    fig = plt.figure(figsize=(6.0, 2.1))
     ax = fig.add_subplot(111)
     ax.boxplot(timing_dict.values(), vert=False,
             #    flierprops=green_square,
@@ -75,9 +81,10 @@ def plot_timings(timing_dict, use_custom_update: bool):
                )
     ax.set_yticklabels(timing_dict.keys())
     plt.grid()
-    plt.xlabel("CPU time [ms]")
+    plt.xlabel("computation time [ms]")
     plt.tight_layout()
-    ax.set_xlim([-.01, 0.01 + max([np.max(t) for t in timing_dict.values()])])
+    max_time = max([np.max(t) for t in timing_dict.values()])
+    ax.set_xlim([0, 1.05*max_time])
 
     if not os.path.exists("figures"):
         os.makedirs("figures")
@@ -89,7 +96,7 @@ def plot_timings(timing_dict, use_custom_update: bool):
 
 
 def plot_timing_comparison(timings_list, label_list):
-    fig = plt.figure(figsize=(6.0, 2.0))
+    fig = plt.figure(figsize=(6.0, 1.8))
     ax = fig.add_subplot(111)
     colors = ['C0', 'C1']
     n_variants = len(timings_list)
@@ -109,7 +116,7 @@ def plot_timing_comparison(timings_list, label_list):
     ax.legend([bp[i]["boxes"][0] for i in range(n_variants)], label_list) #, loc='center')
     ax.set_xscale('log')
 
-    plt.xlabel("CPU time [ms]")
+    plt.xlabel("computation time [ms]")
     plt.tight_layout()
     plt.grid()
 

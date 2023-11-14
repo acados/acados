@@ -323,6 +323,60 @@ void ocp_qp_hpipm_memory_reset(void *config_, void *qp_in_, void *qp_out_, void 
     ocp_qp_hpipm_memory_assign(config_, qp_in->dim, opts_, mem_);
 }
 
+void ocp_qp_hpipm_solver_get(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, const char *field, int stage, void* value, int size1, int size2)
+{
+    ocp_qp_in *qp_in = qp_in_;
+    // ocp_qp_out *qp_out = qp_out_;
+    ocp_qp_hpipm_opts *opts = opts_;
+    ocp_qp_hpipm_memory *mem = mem_;
+
+    double *double_values = value;
+    int nx = qp_in->dim->nx[stage];
+    int nu = qp_in->dim->nu[stage];
+
+    if (!strcmp(field, "P"))
+    {
+        if ((size1 != nx) || (size2 != nx))
+        {
+            printf("\nocp_qp_hpipm_solver_get: size of field %s not as expected, got size %d %d.\n",
+                   field, size1, size2);
+        }
+        d_ocp_qp_ipm_get_ric_P(qp_in, opts->hpipm_opts, mem->hpipm_workspace, stage, double_values);
+    }
+    else if (!strcmp(field, "p"))
+    {
+        if ((size1 != nx) || (size2 != 1))
+        {
+            printf("\nocp_qp_hpipm_solver_get: size of field %s not as expected, got size %d %d.\n",
+                   field, size1, size2);
+        }
+        d_ocp_qp_ipm_get_ric_p(qp_in, opts->hpipm_opts, mem->hpipm_workspace, stage, double_values);
+    }
+    else if (!strcmp(field, "K"))
+    {
+        if ((size1 != nu) || (size2 != nx))
+        {
+            printf("\nocp_qp_hpipm_solver_get: size of field %s not as expected, got size %d %d.\n",
+                   field, size1, size2);
+        }
+        d_ocp_qp_ipm_get_ric_K(qp_in, opts->hpipm_opts, mem->hpipm_workspace, stage, double_values);
+    }
+    else if (!strcmp(field, "Lr"))
+    {
+        if ((size1 != nu) || (size2 != nu))
+        {
+            printf("\nocp_qp_hpipm_solver_get: size of field %s not as expected, got size %d %d.\n",
+                   field, size1, size2);
+        }
+        d_ocp_qp_ipm_get_ric_Lr(qp_in, opts->hpipm_opts, mem->hpipm_workspace, stage, double_values);
+    }
+    else
+    {
+        printf("\nocp_qp_hpipm_solver_get: field %s not supported", field);
+    }
+    return;
+}
+
 
 void ocp_qp_hpipm_eval_sens(void *config_, void *param_qp_in_, void *sens_qp_out_, void *opts_, void *mem_, void *work_)
 {
@@ -368,6 +422,7 @@ void ocp_qp_hpipm_config_initialize_default(void *config_)
     config->memory_get = &ocp_qp_hpipm_memory_get;
     config->workspace_calculate_size = &ocp_qp_hpipm_workspace_calculate_size;
     config->evaluate = &ocp_qp_hpipm;
+    config->solver_get = &ocp_qp_hpipm_solver_get;
     config->memory_reset = &ocp_qp_hpipm_memory_reset;
     config->eval_sens = &ocp_qp_hpipm_eval_sens;
 

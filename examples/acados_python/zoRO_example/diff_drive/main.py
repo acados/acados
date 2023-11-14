@@ -171,7 +171,7 @@ def compare_results(n_executions: int):
 def plot_result_timing_comparison(n_executions: int):
     fast_timings = load_results(get_results_filename(use_custom_update=True, n_executions=n_executions))['timings']
     slow_timings = load_results(get_results_filename(use_custom_update=False, n_executions=n_executions))['timings']
-    plot_timing_comparison([fast_timings, slow_timings], ['fast zoRO', 'zoRO'])
+    plot_timing_comparison([fast_timings, slow_timings], ['zoRO-24', 'zoRO-21'])
 
 def timing_comparison():
     n_executions = 50

@@ -30,6 +30,7 @@
 
 from acados_template import AcadosModel
 from casadi import SX, vertcat, sin, cos, Function
+import casadi as ca
 
 def export_pendulum_ode_model() -> AcadosModel:
 
@@ -92,6 +93,19 @@ def export_pendulum_ode_model() -> AcadosModel:
     return model
 
 
+def export_linearized_pendulum(xbar, ubar):
+    model = export_pendulum_ode_model()
+
+    val = ca.substitute(ca.substitute(model.f_expl_expr, model.x, xbar), model.u, ubar)
+    jac_x = ca.substitute(ca.substitute(ca.jacobian(model.f_expl_expr, model.x), model.x, xbar), model.u, ubar)
+    jac_u = ca.substitute(ca.substitute(ca.jacobian(model.f_expl_expr, model.u), model.x, xbar), model.u, ubar)
+
+    model.f_expl_expr = val + jac_x @ (model.x-xbar) + jac_u @ (model.u-ubar)
+    model.f_impl_expr = model.f_expl_expr - model.xdot
+    model.name += '_linearized'
+    return model
+
+
 def export_pendulum_ode_model_with_discrete_rk4(dT):
 
     model = export_pendulum_ode_model()
@@ -108,10 +122,29 @@ def export_pendulum_ode_model_with_discrete_rk4(dT):
     xf = x + dT/6 * (k1 + 2*k2 + 2*k3 + k4)
 
     model.disc_dyn_expr = xf
-    print("built RK4 for pendulum model with dT = ", dT)
-    print(xf)
+    # print("built RK4 for pendulum model with dT = ", dT)
+    # print(xf)
     return model
 
+def export_linearized_pendulum_ode_model_with_discrete_rk4(dT, xbar, ubar):
+
+    model = export_linearized_pendulum(xbar, ubar)
+
+    x = model.x
+    u = model.u
+
+    ode = Function('ode', [x, u], [model.f_expl_expr])
+    # set up RK4
+    k1 = ode(x,       u)
+    k2 = ode(x+dT/2*k1,u)
+    k3 = ode(x+dT/2*k2,u)
+    k4 = ode(x+dT*k3,  u)
+    xf = x + dT/6 * (k1 + 2*k2 + 2*k3 + k4)
+
+    model.disc_dyn_expr = xf
+    # print("built RK4 for pendulum model with dT = ", dT)
+    # print(xf)
+    return model
 
 def export_augmented_pendulum_model():
     # pendulum model augmented with algebraic variable just for testing

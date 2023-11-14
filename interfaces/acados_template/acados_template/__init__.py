@@ -39,4 +39,6 @@ from .utils import print_casadi_expression, get_acados_path, get_python_interfac
 
 from .plot_utils import latexify_plot
 
+from .penalty_utils import symmetric_huber_penalty, huber_loss
+
 from .zoro_description import ZoroDescription

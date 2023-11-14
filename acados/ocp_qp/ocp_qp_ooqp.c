@@ -1159,6 +1159,12 @@ void ocp_qp_ooqp_destroy(void *mem_, void *work)
 }
 
 
+void ocp_qp_ooqp_solver_get(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, const char *field, int stage, void* value, int size1, int size2)
+{
+    printf("\nerror: ocp_qp_ooqp_solver_get: not implemented yet\n");
+    exit(1);
+}
+
 
 void ocp_qp_ooqp_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
 {
@@ -1189,4 +1195,6 @@ void ocp_qp_ooqp_config_initialize_default(void *config_)
     config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & ocp_qp_ooqp;
     config->eval_sens = &ocp_qp_ooqp_eval_sens;
     config->memory_reset = &ocp_qp_ooqp_memory_reset;
+    config->solver_get = &ocp_qp_ooqp_solver_get;
+
 }

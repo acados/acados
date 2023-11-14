@@ -1399,6 +1399,12 @@ void ocp_qp_osqp_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_
 }
 
 
+void ocp_qp_osqp_solver_get(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, const char *field, int stage, void* value, int size1, int size2)
+{
+    printf("\nerror: ocp_qp_osqp_solver_get: not implemented yet\n");
+    exit(1);
+}
+
 
 void ocp_qp_osqp_config_initialize_default(void *config_)
 {
@@ -1416,6 +1422,7 @@ void ocp_qp_osqp_config_initialize_default(void *config_)
     config->evaluate = &ocp_qp_osqp;
     config->eval_sens = &ocp_qp_osqp_eval_sens;
     config->memory_reset = &ocp_qp_osqp_memory_reset;
+    config->solver_get = &ocp_qp_osqp_solver_get;
 
     return;
 }

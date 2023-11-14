@@ -450,9 +450,6 @@ static void ocp_nlp_sqp_rti_preparation_step(ocp_nlp_config *config, ocp_nlp_dim
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
     /* SQP body */
-    int sqp_iter = 0;
-    nlp_mem->sqp_iter = &sqp_iter;
-
     // linearizate NLP and update QP matrices
     acados_tic(&timer1);
     ocp_nlp_approximate_qp_matrices(config, dims, nlp_in,
@@ -574,7 +571,8 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
 
     // globalization
     acados_tic(&timer1);
-    double alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0);
+    // TODO: not clear if line search should be called with sqp_iter==0 in RTI;
+    double alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, 1);
     mem->time_glob += acados_toc(&timer1);
 
     // update variables
@@ -697,7 +695,7 @@ void ocp_nlp_sqp_rti_eval_param_sens(void *config_, void *dims_, void *opts_,
 
     double one = 1.0;
 
-    if ((!strcmp("ex", field)) & (stage==0))
+    if ((!strcmp("ex", field)) && (stage==0))
     {
         d_ocp_qp_set_el("lbx", stage, index, &one, work->tmp_qp_in);
         d_ocp_qp_set_el("ubx", stage, index, &one, work->tmp_qp_in);

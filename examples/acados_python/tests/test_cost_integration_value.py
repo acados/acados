@@ -65,37 +65,31 @@ def solve_ocp(cost_variant, num_stages):
     # set cost
     Q = 2 * np.diag([1e3, 1e3, 1e-2, 1e-2])
     R = 2 * np.diag([1e-2])
+
+    ocp.cost.cost_type = 'NONLINEAR_LS'
+
     if cost_variant == "FULL_STATE_PENALTY":
         ny = nx + nu
-        ocp.cost.cost_type = 'NONLINEAR_LS'
         ocp.model.cost_y_expr = ca.vertcat(model.x, model.u)
-
         ocp.cost.W = scipy.linalg.block_diag(Q, R)
         ocp.cost.yref = np.zeros((ny, ))
 
     elif cost_variant == 'PARTIAL_STATE_PENALTY':
         nyx = 2
-
         ny = nyx + nu
-        ocp.cost.cost_type = 'NONLINEAR_LS'
         ocp.model.cost_y_expr = ca.vertcat(model.x[:nyx], model.u)
-
         ocp.cost.W = scipy.linalg.block_diag(Q[:nyx, :nyx], R)
         ocp.cost.yref = np.zeros((ny, ))
 
     elif cost_variant == 'DOUBLE_STATE_PENALTY':
         ny = 2*nx + nu
-        ocp.cost.cost_type = 'NONLINEAR_LS'
         ocp.model.cost_y_expr = ca.vertcat(model.x, model.x, model.u)
-
         ocp.cost.W = scipy.linalg.block_diag(Q, Q, R)
         ocp.cost.yref = np.zeros((ny, ))
 
     elif cost_variant == 'CREATIVE_NONLINEAR':
         ocp.model.cost_y_expr = ca.vertcat(model.x[2], model.u, 0.1*(model.x[0]+model.u[0]+1.)**3)
         ny = max(ocp.model.cost_y_expr.shape)
-        ocp.cost.cost_type = 'NONLINEAR_LS'
-
         ocp.cost.W = Q[:ny, :ny]
         ocp.cost.yref = np.zeros((ny, ))
     else:

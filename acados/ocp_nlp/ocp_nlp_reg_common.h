@@ -80,7 +80,7 @@ typedef struct
     acados_size_t (*opts_calculate_size)(void);
     void *(*opts_assign)(void *raw_memory);
     void (*opts_initialize_default)(void *config, ocp_nlp_reg_dims *dims, void *opts);
-    void (*opts_set)(void *config, ocp_nlp_reg_dims *dims, void *opts, char *field, void* value);
+    void (*opts_set)(void *config, void *opts, const char *field, void* value);
     /* memory */
     acados_size_t (*memory_calculate_size)(void *config, ocp_nlp_reg_dims *dims, void *opts);
     void *(*memory_assign)(void *config, ocp_nlp_reg_dims *dims, void *opts, void *raw_memory);

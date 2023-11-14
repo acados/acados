@@ -115,6 +115,10 @@ int dense_qp_qore(void *config, dense_qp_in *qp_in, dense_qp_out *qp_out, void *
 //
 void dense_qp_qore_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_);
 //
+void dense_qp_qore_memory_reset(void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);
+//
+void dense_qp_qore_solver_get(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, const char *field, int stage, void* value, int size1, int size2);
+//
 void dense_qp_qore_config_initialize_default(void *config);
 
 #ifdef __cplusplus

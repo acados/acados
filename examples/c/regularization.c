@@ -105,7 +105,7 @@ int main()
 	double delta = 1e-4;
 	double epsilon = 1e-4;
 //	config->opts_set(config, dims, opts, "delta", &delta);
-	config->opts_set(config, dims, opts, "epsilon", &epsilon);
+	config->opts_set(config, dims, opts, "reg_epsilon", &epsilon);
 
     /************************************************
      * memory

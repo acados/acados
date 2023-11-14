@@ -1,25 +1,30 @@
 ## Roadmap
 - [ ] Test 32 bit
 - [ ] Test OOQP
+- [ ] More flexible solution sensitivities?
+- [ ] get_optimal_value_hessian() - at least for HPIPM and exact Hessians
+- [ ] remove old layer in Matlab interface
 
 #### core
-- [ ] propagate cost in integrator
+- [x] propagate cost in integrator for NLS+IRK
     - or: add support for quadrature state, separate dimension in integrator and OCP solver
-- [ ] stage transition functions for changing model dimensions
-
-
-#### documentation
-- [x] provide OCP NLP formulation that is handled by `ocp_nlp` as a formula
-    - [x] closely stick to setter names!
-- [x] Windows Matlab, reiterate, look into Visual C
-- [ ] Windows Python
-- [ ] MacOS Matlab
+- [ ] faster workspace memory casting
 
 #### `ocp_nlp`
-- [ ] partial tightening <!-- - [ ] HPNMPC (what?!) -->
-- [ ] blockSQP (https://github.com/djanka2/blockSQP)
+- [ ] partial tightening
 - [x] RTI implementation similar to ACADO
-- [ ] support cost on z for external, NLS
+- [x] support cost on z for external, NLS
+
+#### `sim`
+- [ ] GNSF Hessians
+- [ ] propagate cost in integrator for CONL+IRK
+- [ ] time in integrator + time dependent model functions
+
+
+## DONE
+- [x] closed loop example MPC + MHE
+- [x] Templates: avoid global memory
+- [x] add support for manual model functions -- partly done: external cost and discrete dynamics
 
 #### `sim`
 - [x] collocation integrators Radau
@@ -29,14 +34,6 @@
     - implement also Radau IIA collocation methods
         - L-stable
         - order is 2 * num_stages - 1
-- [ ] GNSF Hessians
-
-
-
-## DONE
-- [x] closed loop example MPC + MHE
-- [x] Templates: avoid global memory
-- [x] add support for manual model functions -- partly done: external cost and discrete dynamics
 
 #### C
 - [x] split ocp solve into prepare and feedback
@@ -46,7 +43,7 @@
 
 #### matlab interface
 - [x] detect dimensions
-- [ ] detect slack dimensions
+- [x] detect slack dimensions
 - [x] structure detections for constraints
 - [x] getting started folder
 - [x] add Mex templating support for: ( in prioritized order )

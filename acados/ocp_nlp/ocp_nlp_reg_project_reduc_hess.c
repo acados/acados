@@ -77,7 +77,7 @@ void ocp_nlp_reg_project_reduc_hess_opts_initialize_default(void *config_, ocp_n
 
 
 
-void ocp_nlp_reg_project_reduc_hess_opts_set(void *config_, ocp_nlp_reg_dims *dims, void *opts_, char *field, void* value)
+void ocp_nlp_reg_project_reduc_hess_opts_set(void *config_, void *opts_, const char *field, void* value)
 {
 
     ocp_nlp_reg_project_reduc_hess_opts *opts = opts_;

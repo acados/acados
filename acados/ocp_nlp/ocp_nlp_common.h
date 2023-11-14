@@ -353,8 +353,6 @@ typedef struct ocp_nlp_memory
     bool *set_sim_guess; // indicate if there is new explicitly provided guess for integration variables
     struct blasfeo_dvec *sim_guess;
 
-    int *sqp_iter; // pointer to iteration number
-
 } ocp_nlp_memory;
 
 //
@@ -418,7 +416,7 @@ int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nl
 //
 double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
-            int check_early_termination);
+            int check_early_termination, int sqp_iter);
 //
 double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
           ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);

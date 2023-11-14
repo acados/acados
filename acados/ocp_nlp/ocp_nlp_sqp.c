@@ -487,9 +487,10 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->time_sim_ad = 0.0;
 
     int N = dims->N;
-    int ii, qp_status;
+    int ii;
+    int qp_status = 0;
     int qp_iter = 0;
-    double alpha;
+    double alpha = 0.0;
 
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
@@ -508,7 +509,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     // main sqp loop
     int sqp_iter = 0;
-    nlp_mem->sqp_iter = &sqp_iter;
 
     for (; sqp_iter < opts->max_iter; sqp_iter++)
     {
@@ -726,7 +726,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // NOTE: the "and" is interpreted as an "or" in the current implementation
 
             // preliminary line search
-            alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1);
+            alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1, sqp_iter);
 
             if (alpha < 1.0)
             {
@@ -945,7 +945,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         if (do_line_search)
         {
-            alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0);
+            alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, sqp_iter);
         }
         mem->time_glob += acados_toc(&timer1);
         mem->stat[mem->stat_n*(sqp_iter+1)+6] = alpha;
@@ -1050,7 +1050,7 @@ void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *
 
     double one = 1.0;
 
-    if ((!strcmp("ex", field)) & (stage==0))
+    if ((!strcmp("ex", field)) && (stage==0))
     {
         d_ocp_qp_set_el("lbx", stage, index, &one, work->tmp_qp_in);
         d_ocp_qp_set_el("ubx", stage, index, &one, work->tmp_qp_in);

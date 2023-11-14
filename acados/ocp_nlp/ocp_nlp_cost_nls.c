@@ -194,6 +194,7 @@ void *ocp_nlp_cost_nls_model_assign(void *config_, void *dims_, void *raw_memory
 
     // default initialization
     model->scaling = 1.0;
+    model->t = 0.0;
 
     // initialize to 1 to update factorization of W in precompute
     model->W_changed = 1;
@@ -706,8 +707,8 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
     int ny = dims->ny;
     int ns = dims->ns;
 
-    ext_fun_arg_t ext_fun_type_in[4];
-    void *ext_fun_in[4];
+    ext_fun_arg_t ext_fun_type_in[5];
+    void *ext_fun_in[5];
     ext_fun_arg_t ext_fun_type_out[3];
     void *ext_fun_out[3];
 
@@ -728,6 +729,8 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
         ext_fun_in[1] = &u_in;
         ext_fun_type_in[2] = BLASFEO_DVEC;
         ext_fun_in[2] = memory->z_alg;
+        ext_fun_type_in[3] = COLMAJ;
+        ext_fun_in[3] = &model->t;
 
         ext_fun_type_out[0] = BLASFEO_DVEC;
         ext_fun_out[0] = &memory->res;  // fun: ny
@@ -811,9 +814,11 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
             // the product < r, d2_d[x,u] r >, where the cost is 0.5 * norm2(r(x,u))^2
             // exact hessian of ls cost
 
-            // ext_fun_[type_]in 0,1 are the same as before.
+            // ext_fun_[type_]in 0, 1, 2 are the same as before.
             ext_fun_type_in[3] = BLASFEO_DVEC;
             ext_fun_in[3] = &work->tmp_ny;  // fun: ny
+            ext_fun_type_in[4] = COLMAJ;
+            ext_fun_in[4] = &model->t;
 
             ext_fun_type_out[0] = BLASFEO_DMAT;
             ext_fun_out[0] = &work->tmp_nv_nv;   // hess*fun: (nu+nx) * (nu+nx)
@@ -881,9 +886,8 @@ void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims_, void *model_,
 
     if (opts->integrator_cost == 0)
     {
-
-        ext_fun_arg_t nls_y_fun_type_in[3];
-        void *nls_y_fun_in[3];
+        ext_fun_arg_t nls_y_fun_type_in[4];
+        void *nls_y_fun_in[4];
         ext_fun_arg_t nls_y_fun_type_out[1];
         void *nls_y_fun_out[1];
 
@@ -904,6 +908,9 @@ void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims_, void *model_,
 
         nls_y_fun_type_in[2] = BLASFEO_DVEC;
         nls_y_fun_in[2] = memory->z_alg;
+
+        nls_y_fun_type_in[3] = COLMAJ;
+        nls_y_fun_in[3] = &model->t;
 
         nls_y_fun_type_out[0] = BLASFEO_DVEC;
         nls_y_fun_out[0] = &memory->res;  // fun: ny

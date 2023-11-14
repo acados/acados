@@ -40,9 +40,8 @@ addpath(fullfile(acados_folder, 'external', 'jsonlab'))
 import casadi.*
 
 casadi_version = CasadiMeta.version();
-if ( strcmp(casadi_version(1:3),'3.5')) % require casadi 3.5 +
-else % old casadi versions
-    error('Please provide CasADi version or 3.5 to ensure compatibility with acados')
+if ~(strcmp(casadi_version(1:3),'3.5') || strcmp(casadi_version(1:3),'3.6'))
+    warning('CasADi serialization requires CasADi >= 3.5, you are using: %s.', casadi_version);
 end
 
 %% import models
@@ -168,7 +167,7 @@ json_filename = [model.name '_gnsf_functions.json'];
 json_string = savejson('', out, 'ForceRootName', 0);
 
 fid = fopen(json_filename, 'w');
-if fid == -1, error('Cannot create JSON file'); end
+if fid == -1, error('Cannot create json file'); end
 fwrite(fid, json_string, 'char');
 fclose(fid);
 
