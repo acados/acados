@@ -334,21 +334,30 @@ void ocp_qp_hpipm_solver_get(void *config_, void *qp_in_, void *qp_out_, void *o
     int nx = qp_in->dim->nx[stage];
     int nu = qp_in->dim->nu[stage];
 
-    // d_ocp_qp_ipm_get_ric_P
     if (!strcmp(field, "P"))
     {
         if ((size1 != nx) || (size2 != nx))
         {
-            printf("ocp_qp_hpipm_solver_get: size of P not as expected, got size %d %d.", size1, size2);
+            printf("\nocp_qp_hpipm_solver_get: size of field %s not as expected, got size %d %d.\n",
+                   field, size1, size2);
         }
         d_ocp_qp_ipm_get_ric_P(qp_in, opts->hpipm_opts, mem->hpipm_workspace, stage, double_values);
-        // void OCP_QP_IPM_GET_RIC_P(struct OCP_QP *qp, struct OCP_QP_IPM_ARG *arg, struct OCP_QP_IPM_WS *ws, int stage, REAL *P)
+    }
+    else if (!strcmp(field, "p"))
+    {
+        if ((size1 != nx) || (size2 != 1))
+        {
+            printf("\nocp_qp_hpipm_solver_get: size of field %s not as expected, got size %d %d.\n",
+                   field, size1, size2);
+        }
+        d_ocp_qp_ipm_get_ric_p(qp_in, opts->hpipm_opts, mem->hpipm_workspace, stage, double_values);
     }
     else if (!strcmp(field, "K"))
     {
         if ((size1 != nu) || (size2 != nx))
         {
-            printf("ocp_qp_hpipm_solver_get: size of K not as expected, got size %d %d.", size1, size2);
+            printf("\nocp_qp_hpipm_solver_get: size of field %s not as expected, got size %d %d.\n",
+                   field, size1, size2);
         }
         d_ocp_qp_ipm_get_ric_K(qp_in, opts->hpipm_opts, mem->hpipm_workspace, stage, double_values);
     }
@@ -356,7 +365,8 @@ void ocp_qp_hpipm_solver_get(void *config_, void *qp_in_, void *qp_out_, void *o
     {
         if ((size1 != nu) || (size2 != nu))
         {
-            printf("ocp_qp_hpipm_solver_get: size of Lr not as expected, got size %d %d.", size1, size2);
+            printf("\nocp_qp_hpipm_solver_get: size of field %s not as expected, got size %d %d.\n",
+                   field, size1, size2);
         }
         d_ocp_qp_ipm_get_ric_Lr(qp_in, opts->hpipm_opts, mem->hpipm_workspace, stage, double_values);
     }
