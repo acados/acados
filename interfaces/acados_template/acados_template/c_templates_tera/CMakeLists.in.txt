@@ -78,6 +78,12 @@
 	{%- set cost_type_0 = "NONE" %}
 {%- endif %}
 
+{%- if dims.nh_0 %}
+	{%- set dims_nh_0 = dims.nh_0 %}
+{%- else %}
+	{%- set dims_nh_0 = 0 %}
+{%- endif %}
+
 {%- if dims.nh %}
 	{%- set dims_nh = dims.nh %}
 {%- else %}
