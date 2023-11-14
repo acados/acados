@@ -281,6 +281,8 @@ ocp_nlp_dims* {{ model.name }}_acados_create_2_create_and_set_dimensions({{ mode
     ny[0] = NY0;
     nh[0] = NH0;
     nsh[0] = 0; // not supported yet
+    nsphi[0] = 0; // not supported yet
+    nphi[0] = 0; // not supported yet
 
 
     // terminal - common
@@ -331,12 +333,21 @@ ocp_nlp_dims* {{ model.name }}_acados_create_2_create_and_set_dimensions({{ mode
         ocp_nlp_dims_set_cost(nlp_config, nlp_dims, i, "ny", &ny[i]);
 {%- endif %}
 
-    for (int i = 0; i < N; i++)
+{%- if constraints.constr_type_0 == "BGH" %}
+    ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, 0, "nh", &nh[0]);
+    ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, 0, "nsh", &nsh[0]);
+{%- elif constraints.constr_type_0 == "BGP" %}
+    ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, 0, "nr", &nr[0]);
+    ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, 0, "nphi", &nphi[0]);
+    ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, 0, "nsphi", &nsphi[0]);
+{%- endif %}
+
+    for (int i = 1; i < N; i++)
     {
-        {%- if constraints.constr_type == "BGH" and dims.nh > 0 %}
+        {%- if constraints.constr_type == "BGH" %}
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nh", &nh[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsh", &nsh[i]);
-        {%- elif constraints.constr_type == "BGP" and dims.nphi > 0 %}
+        {%- elif constraints.constr_type == "BGP" %}
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nr", &nr[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nphi", &nphi[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsphi", &nsphi[i]);
@@ -1581,7 +1592,7 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
 {%- endif %}
 
 {% if dims.nphi > 0 and constraints.constr_type == "BGP" %}
-    // set up convex-over-nonlinear constraints for stage 0 to N-1
+    // set up convex-over-nonlinear constraints for stage 1 to N-1
     double* luphi = calloc(2*NPHI, sizeof(double));
     double* lphi = luphi;
     double* uphi = luphi + NPHI;
@@ -1597,7 +1608,7 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
         {%- endif %}
     {%- endfor %}
 
-    for (int i = 0; i < N; i++)
+    for (int i = 1; i < N; i++)
     {
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i,
                                       "nl_constr_phi_o_r_fun_phi_jac_ux_z_phi_hess_r_jac_ux", &capsule->phi_constraint[i]);

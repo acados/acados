@@ -472,7 +472,7 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
 
     dims.ns = ns
     # Note: at stage 0 bounds on x are not slacked!
-    dims.ns_0 = nsbu + nsg + nsphi # TODO: add nsh_0
+    dims.ns_0 = nsbu + nsg # TODO: add nsh_0
 
     nsbx_e = constraints.idxsbx_e.shape[0]
     if nsbx_e > nbx_e:

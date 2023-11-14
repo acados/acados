@@ -1656,7 +1656,8 @@ class AcadosOcpConstraints:
 
     @constr_type_0.setter
     def constr_type_0(self, constr_type_0):
-        constr_types = ('BGH', 'BGP')
+        constr_types = ('BGH')
+        # dont support BGP 0 constraints yet
         if constr_type_0 in constr_types:
             self.__constr_type_0 = constr_type_0
         else:
