@@ -36,7 +36,7 @@ from scipy.linalg import block_diag
 import casadi as ca
 import os
 from .acados_model import AcadosModel
-from .utils import get_acados_path, J_to_idx, J_to_idx_slack, get_lib_ext
+from .utils import get_acados_path, J_to_idx, J_to_idx_slack, get_shared_lib_ext
 from .penalty_utils import symmetric_huber_penalty
 
 class AcadosOcpDims:
@@ -3192,7 +3192,7 @@ class AcadosOcp:
         """Path to acados include directory (set automatically), type: `string`"""
         self.acados_lib_path = os.path.join(acados_path, 'lib').replace(os.sep, '/') # the replace part is important on Windows for CMake
         """Path to where acados library is located, type: `string`"""
-        self.shared_lib_ext = get_lib_ext()
+        self.shared_lib_ext = get_shared_lib_ext()
 
         # get cython paths
         from sysconfig import get_paths

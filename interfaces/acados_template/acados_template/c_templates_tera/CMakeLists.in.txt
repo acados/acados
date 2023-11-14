@@ -140,9 +140,13 @@ option(BUILD_ACADOS_SIM_SOLVER_LIB "Should the simulation solver library acados_
 
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_SYSTEM_NAME MATCHES "Windows")
-    # MinGW, change to .lib such that mex recognizes it
-    set(CMAKE_SHARED_LIBRARY_SUFFIX ".lib")
+    # MinGW: remove prefix and change suffix to match MSVC
+    # (such that Matlab mex recognizes the libraries)
     set(CMAKE_SHARED_LIBRARY_PREFIX "")
+    set(CMAKE_IMPORT_LIBRARY_SUFFIX ".lib")
+    set(CMAKE_IMPORT_LIBRARY_PREFIX "")
+    set(CMAKE_STATIC_LIBRARY_SUFFIX ".lib")
+    set(CMAKE_STATIC_LIBRARY_PREFIX "")
 endif()
 
 
@@ -395,3 +399,9 @@ if(${BUILD_ACADOS_SIM_SOLVER_LIB})
 endif(${BUILD_ACADOS_SIM_SOLVER_LIB})
 {%- endif %}
 
+# unset options for clean cmake cache on subsequent cmake runs
+unset(BUILD_ACADOS_SOLVER_LIB CACHE)
+unset(BUILD_ACADOS_OCP_SOLVER_LIB CACHE)
+unset(BUILD_EXAMPLE CACHE)
+unset(BUILD_SIM_EXAMPLE CACHE)
+unset(BUILD_ACADOS_SIM_SOLVER_LIB CACHE)

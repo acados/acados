@@ -102,9 +102,16 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT CMAKE_SYSTEM_NAME MATCHES "Window
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_SYSTEM_NAME MATCHES "Windows")
-    # MinGW, change to .lib such that mex recognizes it
+    # MinGW: remove prefix and change suffix to match MSVC
+    # (such that Matlab mex recognizes the libraries)
+    set(CMAKE_SHARED_LIBRARY_PREFIX "")
+    set(CMAKE_IMPORT_LIBRARY_SUFFIX ".lib")
+    set(CMAKE_IMPORT_LIBRARY_PREFIX "")
     set(CMAKE_STATIC_LIBRARY_SUFFIX ".lib")
     set(CMAKE_STATIC_LIBRARY_PREFIX "")
+    if(BUILD_SHARED_LIBS MATCHES ON)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wl,--export-all-symbols")
+    endif()
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -113,6 +120,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MT")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
+    if(BUILD_SHARED_LIBS MATCHES ON)
+        set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS 1)
+    endif()
 endif()
 
 # OPENMP

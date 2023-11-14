@@ -34,8 +34,13 @@ import json
 import os
 import sys
 from copy import deepcopy
-from ctypes import (CDLL, POINTER, byref, c_bool, c_char_p, c_double, c_int,
+from ctypes import (POINTER, byref, c_bool, c_char_p, c_double, c_int,
                     c_void_p, cast)
+if os.name == 'nt':
+    from ctypes import wintypes
+    from ctypes import WinDLL as DllLoader
+else:
+    from ctypes import CDLL as DllLoader
 
 import numpy as np
 
@@ -47,7 +52,8 @@ from .casadi_function_generation import (generate_c_code_explicit_ode,
                                          generate_c_code_implicit_ode)
 from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 from .utils import (casadi_length, check_casadi_version, format_class_dict,
-                    get_lib_ext, get_python_interface_path, is_column,
+                    get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir,
+                    get_python_interface_path, is_column,
                     is_empty, make_model_consistent, make_object_json_dumpable,
                     render_template, set_up_imported_gnsf_model,
                     verbose_system_call)
@@ -205,12 +211,13 @@ class AcadosSimSolver:
             `MS Visual Studio`); default: `None`
     """
     if sys.platform=="win32":
-        from ctypes import WinDLL, wintypes
-        dlclose = WinDLL('kernel32', use_last_error=True).FreeLibrary
+        dlclose = DllLoader('kernel32', use_last_error=True).FreeLibrary
         dlclose.argtypes = [wintypes.HMODULE]
+        winmode = 8 # why 8? what does that mean?
     else:
-        dlclose = CDLL(None).dlclose
+        dlclose = DllLoader(None).dlclose
         dlclose.argtypes = [c_void_p]
+        winmode = None
 
 
     @classmethod
@@ -296,10 +303,9 @@ class AcadosSimSolver:
             self.build(code_export_dir, cmake_builder=cmake_builder, verbose=verbose)
 
         # prepare library loading
-        lib_prefix = 'lib'
-        lib_ext = get_lib_ext()
-        if os.name == 'nt':
-            lib_prefix = ''
+        lib_ext = get_shared_lib_ext()
+        lib_prefix = get_shared_lib_prefix()
+        lib_dir = get_shared_lib_dir()
 
         # Load acados library to avoid unloading the library.
         # This is necessary if acados was compiled with OpenMP, since the OpenMP threads can't be destroyed.
@@ -307,8 +313,9 @@ class AcadosSimSolver:
         # see [https://stackoverflow.com/questions/34439956/vc-crash-when-freeing-a-dll-built-with-openmp]
         # or [https://python.hotexamples.com/examples/_ctypes/-/dlclose/python-dlclose-function-examples.html]
         libacados_name = f'{lib_prefix}acados{lib_ext}'
-        libacados_filepath = os.path.join(acados_sim.acados_lib_path, libacados_name)
-        self.__acados_lib = CDLL(libacados_filepath)
+        libacados_filepath = os.path.join(acados_sim.acados_lib_path, '..', lib_dir, libacados_name)
+        self.__acados_lib = DllLoader(libacados_filepath, winmode=self.winmode)
+
         # find out if acados was compiled with OpenMP
         try:
             self.__acados_lib_uses_omp = getattr(self.__acados_lib, 'omp_get_thread_num') is not None
@@ -323,7 +330,7 @@ class AcadosSimSolver:
         self.shared_lib_name = os.path.join(code_export_dir, libacados_sim_solver_name)
 
         # get shared_lib
-        self.shared_lib = CDLL(self.shared_lib_name)
+        self.shared_lib = DllLoader(self.shared_lib_name, winmode=self.winmode)
 
         # create capsule
         getattr(self.shared_lib, f"{model_name}_acados_sim_solver_create_capsule").restype = c_void_p
@@ -411,35 +418,35 @@ class AcadosSimSolver:
             dims = np.ascontiguousarray(np.zeros((2,)), dtype=np.intc)
             dims_data = cast(dims.ctypes.data, POINTER(c_int))
 
-            self.shared_lib.sim_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_int)]
-            self.shared_lib.sim_dims_get_from_attr(self.sim_config, self.sim_dims, field, dims_data)
+            self.__acados_lib.sim_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_int)]
+            self.__acados_lib.sim_dims_get_from_attr(self.sim_config, self.sim_dims, field, dims_data)
 
             # allocate array
             out = np.ascontiguousarray(np.zeros((dims[0],)), dtype=np.float64)
             out_data = cast(out.ctypes.data, POINTER(c_double))
 
-            self.shared_lib.sim_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
-            self.shared_lib.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, out_data)
+            self.__acados_lib.sim_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
+            self.__acados_lib.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, out_data)
 
         elif field_ in self.gettable_matrices:
             # get dims
             dims = np.ascontiguousarray(np.zeros((2,)), dtype=np.intc)
             dims_data = cast(dims.ctypes.data, POINTER(c_int))
 
-            self.shared_lib.sim_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_int)]
-            self.shared_lib.sim_dims_get_from_attr(self.sim_config, self.sim_dims, field, dims_data)
+            self.__acados_lib.sim_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_int)]
+            self.__acados_lib.sim_dims_get_from_attr(self.sim_config, self.sim_dims, field, dims_data)
 
             out = np.zeros((dims[0], dims[1]), order='F')
             out_data = cast(out.ctypes.data, POINTER(c_double))
 
-            self.shared_lib.sim_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
-            self.shared_lib.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, out_data)
+            self.__acados_lib.sim_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
+            self.__acados_lib.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, out_data)
 
         elif field_ in self.gettable_scalars:
             scalar = c_double()
             scalar_data = byref(scalar)
-            self.shared_lib.sim_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
-            self.shared_lib.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, scalar_data)
+            self.__acados_lib.sim_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
+            self.__acados_lib.sim_out_get(self.sim_config, self.sim_dims, self.sim_out, field, scalar_data)
 
             out = scalar.value
         else:
@@ -482,8 +489,8 @@ class AcadosSimSolver:
             dims = np.ascontiguousarray(np.zeros((2,)), dtype=np.intc)
             dims_data = cast(dims.ctypes.data, POINTER(c_int))
 
-            self.shared_lib.sim_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_int)]
-            self.shared_lib.sim_dims_get_from_attr(self.sim_config, self.sim_dims, field, dims_data)
+            self.__acados_lib.sim_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_int)]
+            self.__acados_lib.sim_dims_get_from_attr(self.sim_config, self.sim_dims, field, dims_data)
 
             value_ = np.ravel(value_, order='F')
 
@@ -497,11 +504,11 @@ class AcadosSimSolver:
 
         # set
         if field_ in ['xdot', 'z']:
-            self.shared_lib.sim_solver_set.argtypes = [c_void_p, c_char_p, c_void_p]
-            self.shared_lib.sim_solver_set(self.sim_solver, field, value_data_p)
+            self.__acados_lib.sim_solver_set.argtypes = [c_void_p, c_char_p, c_void_p]
+            self.__acados_lib.sim_solver_set(self.sim_solver, field, value_data_p)
         elif field_ in settable:
-            self.shared_lib.sim_in_set.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
-            self.shared_lib.sim_in_set(self.sim_config, self.sim_dims, self.sim_in, field, value_data_p)
+            self.__acados_lib.sim_in_set.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
+            self.__acados_lib.sim_in_set(self.sim_config, self.sim_dims, self.sim_in, field, value_data_p)
         else:
             raise Exception(f'AcadosSimSolver.set(): Unknown field {field_},' \
                 f' available fields are {", ".join(settable)}')
@@ -528,8 +535,8 @@ class AcadosSimSolver:
 
         # only allow setting
         if getattr(self.acados_sim.solver_options, field_) or value_ == False:
-            self.shared_lib.sim_opts_set.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_bool)]
-            self.shared_lib.sim_opts_set(self.sim_config, self.sim_opts, field, value_ctypes)
+            self.__acados_lib.sim_opts_set.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_bool)]
+            self.__acados_lib.sim_opts_set(self.sim_config, self.sim_opts, field, value_ctypes)
         else:
             raise RuntimeError(f"Cannot set option {field_} to True, because it was False in original solver options.\n")
 

@@ -32,7 +32,7 @@
 import numpy as np
 import os
 from .acados_model import AcadosModel
-from .utils import get_acados_path, get_lib_ext
+from .utils import get_acados_path, get_shared_lib_ext
 
 class AcadosSimDims:
     """
@@ -332,7 +332,7 @@ class AcadosSim:
 
         self.code_export_directory = 'c_generated_code'
         """Path to where code will be exported. Default: `c_generated_code`."""
-        self.shared_lib_ext = get_lib_ext()
+        self.shared_lib_ext = get_shared_lib_ext()
 
         # get cython paths
         from sysconfig import get_paths

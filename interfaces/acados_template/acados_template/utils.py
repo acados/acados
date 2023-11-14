@@ -165,14 +165,25 @@ def make_model_consistent(model):
 
     return model
 
-def get_lib_ext():
-    lib_ext = '.so'
+def get_shared_lib_ext():
     if sys.platform == 'darwin':
-        lib_ext = '.dylib'
+        return '.dylib'
     elif os.name == 'nt':
-        lib_ext = ''
+        return '.dll'
+    else:
+        return '.so'
 
-    return lib_ext
+def get_shared_lib_dir():
+    if os.name == 'nt':
+        return 'bin'
+    else:
+        return 'lib'
+
+def get_shared_lib_prefix():
+    if os.name == 'nt':
+        return ''
+    else:
+        return 'lib'
 
 def get_tera():
     tera_path = get_tera_exec_path()
@@ -222,7 +233,8 @@ def render_template(in_file, out_file, output_dir, json_path, template_glob=None
 
     acados_path = os.path.dirname(os.path.abspath(__file__))
     if template_glob is None:
-        template_glob = os.path.join(acados_path, 'c_templates_tera', '**', '*')
+        head, in_file = os.path.split(in_file)
+        template_glob = os.path.join(acados_path, 'c_templates_tera', head, '**', '*')
     cwd = os.getcwd()
 
     if not os.path.exists(output_dir):
