@@ -296,6 +296,16 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
         # case: x0 and idxbxe_0 were not set -> dont assume nbx0 to be equality constraints.
         dims.nbxe_0 = 0
 
+    if not is_empty(model.con_h_expr_0):
+        nh_0 = casadi_length(model.con_h_expr_0)
+    else:
+        nh_0 = 0
+
+    if constraints.uh_0.shape[0] != nh_0 or constraints.lh_0.shape[0] != nh_0:
+        raise Exception('inconsistent dimension nh_0, regarding lh_0, uh_0, con_h_expr_0.')
+    else:
+        dims.nh_0 = nh_0
+
     # path
     nbx = constraints.idxbx.shape[0]
     if constraints.ubx.shape[0] != nbx or constraints.lbx.shape[0] != nbx:
@@ -326,16 +336,6 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
     else:
         dims.nh = nh
 
-    if not is_empty(model.con_h_expr_0):
-        nh_0 = casadi_length(model.con_h_expr_0)
-    else:
-        nh_0 = 0
-
-    if constraints.uh_0.shape[0] != nh_0 or constraints.lh_0.shape[0] != nh_0:
-        raise Exception('inconsistent dimension nh_0, regarding lh_0, uh_0, con_h_expr_0.')
-    else:
-        dims.nh_0 = nh_0
-
     if is_empty(model.con_phi_expr):
         dims.nphi = 0
         dims.nr = 0
@@ -345,6 +345,11 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
             raise Exception('convex over nonlinear constraints: con_r_expr but con_phi_expr is nonempty')
         else:
             dims.nr = casadi_length(model.con_r_expr)
+
+        # TODO: implement BGP on initial node seperately.
+        constraints.constr_type_0 = 'BGP'
+        print("Warning: BGP constraint is also enforced on initial shooting node, different from h constraint.")
+
 
     # terminal
     nbx_e = constraints.idxbx_e.shape[0]
@@ -713,14 +718,14 @@ def ocp_generate_external_functions(ocp: AcadosOcp, model: AcadosModel):
         target_location = os.path.join(code_export_dir, model_dir, model.dyn_generic_source)
         shutil.copyfile(model.dyn_generic_source, target_location)
 
-    if ocp.dims.nphi > 0 or ocp.dims.nh > 0:
-        generate_c_code_constraint(model, model.name, False, opts)
+    if ocp.dims.nh_0 > 0: # TODO: add option to have BGP not at stage 0
+        generate_c_code_constraint(ocp, opts, 'initial')
 
-    if ocp.dims.nphi > 0 or ocp.dims.nh_0 > 0:
-        generate_c_code_constraint(model, model.name, False, opts, is_initial=True)
+    if ocp.dims.nphi > 0 or ocp.dims.nh > 0:
+        generate_c_code_constraint(ocp, opts, 'path')
 
     if ocp.dims.nphi_e > 0 or ocp.dims.nh_e > 0:
-        generate_c_code_constraint(model, model.name, True, opts)
+        generate_c_code_constraint(ocp, opts, 'terminal')
 
     if ocp.cost.cost_type_0 == 'NONLINEAR_LS':
         generate_c_code_nls_cost(ocp, 'initial')

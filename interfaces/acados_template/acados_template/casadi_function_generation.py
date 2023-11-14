@@ -592,32 +592,36 @@ def generate_c_code_conl_cost(ocp: AcadosOcp, stage_type: str):
 ################
 # Constraints
 ################
-def generate_c_code_constraint(model, con_name, is_terminal, opts, is_initial=False):
+def generate_c_code_constraint(ocp: AcadosOcp, opts: dict, stage_type: str):
 
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
+    model = ocp.model
     # load constraint variables and expression
     x = model.x
     p = model.p
+    u = model.u
+    z = model.z
+
+    breakpoint()
 
     symbol = get_casadi_symbol(x)
 
-    if is_terminal:
+    if stage_type == 'terminal':
+        constr_type = ocp.constraints.constr_type_e
         con_h_expr = model.con_h_expr_e
         con_phi_expr = model.con_phi_expr_e
         # create dummy u, z
         u = symbol('u', 0, 0)
         z = symbol('z', 0, 0)
-    elif is_initial:
+    elif stage_type == 'initial':
+        constr_type = ocp.constraints.constr_type_0
         con_h_expr = model.con_h_expr_0
         con_phi_expr = model.con_phi_expr
-        u = model.u
-        z = model.z
     else:
+        constr_type = ocp.constraints.constr_type
         con_h_expr = model.con_h_expr
         con_phi_expr = model.con_phi_expr
-        u = model.u
-        z = model.z
 
     if (not is_empty(con_h_expr)) and (not is_empty(con_phi_expr)):
         raise Exception("acados: you can either have constraint_h, or constraint_phi, not both.")
@@ -625,11 +629,6 @@ def generate_c_code_constraint(model, con_name, is_terminal, opts, is_initial=Fa
     if (is_empty(con_h_expr) and is_empty(con_phi_expr)):
         # both empty -> nothing to generate
         return
-
-    if is_empty(con_h_expr):
-        constr_type = 'BGP'
-    else:
-        constr_type = 'BGH'
 
     if is_empty(p):
         p = symbol('p', 0, 0)
@@ -651,12 +650,12 @@ def generate_c_code_constraint(model, con_name, is_terminal, opts, is_initial=Fa
 
     # export casadi functions
     if constr_type == 'BGH':
-        if is_terminal:
-            fun_name = con_name + '_constr_h_e_fun_jac_uxt_zt'
-        elif is_initial:
-            fun_name = con_name + '_constr_h_0_fun_jac_uxt_zt'
+        if stage_type == 'terminal':
+            fun_name = model.name + '_constr_h_e_fun_jac_uxt_zt'
+        elif stage_type == 'initial':
+            fun_name = model.name + '_constr_h_0_fun_jac_uxt_zt'
         else:
-            fun_name = con_name + '_constr_h_fun_jac_uxt_zt'
+            fun_name = model.name + '_constr_h_fun_jac_uxt_zt'
 
         jac_ux_t = ca.transpose(ca.jacobian(con_h_expr, ca.vertcat(u,x)))
         jac_z_t = ca.jacobian(con_h_expr, z)
@@ -666,12 +665,12 @@ def generate_c_code_constraint(model, con_name, is_terminal, opts, is_initial=Fa
         constraint_fun_jac_tran.generate(fun_name, casadi_codegen_opts)
         if opts['generate_hess']:
 
-            if is_terminal:
-                fun_name = con_name + '_constr_h_e_fun_jac_uxt_zt_hess'
-            elif is_initial:
-                fun_name = con_name + '_constr_h_0_fun_jac_uxt_zt_hess'
+            if stage_type == 'terminal':
+                fun_name = model.name + '_constr_h_e_fun_jac_uxt_zt_hess'
+            elif stage_type == 'initial':
+                fun_name = model.name + '_constr_h_0_fun_jac_uxt_zt_hess'
             else:
-                fun_name = con_name + '_constr_h_fun_jac_uxt_zt_hess'
+                fun_name = model.name + '_constr_h_fun_jac_uxt_zt_hess'
 
             # adjoint
             adj_ux = ca.jtimes(con_h_expr, ca.vertcat(u, x), lam_h, True)
@@ -689,22 +688,22 @@ def generate_c_code_constraint(model, con_name, is_terminal, opts, is_initial=Fa
             # generate C code
             constraint_fun_jac_tran_hess.generate(fun_name, casadi_codegen_opts)
 
-        if is_terminal:
-            fun_name = con_name + '_constr_h_e_fun'
-        elif is_initial:
-            fun_name = con_name + '_constr_h_0_fun'
+        if stage_type == 'terminal':
+            fun_name = model.name + '_constr_h_e_fun'
+        elif stage_type == 'initial':
+            fun_name = model.name + '_constr_h_0_fun'
         else:
-            fun_name = con_name + '_constr_h_fun'
+            fun_name = model.name + '_constr_h_fun'
         h_fun = ca.Function(fun_name, [x, u, z, p], [con_h_expr])
         h_fun.generate(fun_name, casadi_codegen_opts)
 
     else: # BGP constraint
-        if is_terminal:
-            fun_name = con_name + '_phi_e_constraint'
+        if stage_type == 'terminal':
+            fun_name = model.name + '_phi_e_constraint'
             r = model.con_r_in_phi_e
             con_r_expr = model.con_r_expr_e
         else:
-            fun_name = con_name + '_phi_constraint'
+            fun_name = model.name + '_phi_constraint'
             r = model.con_r_in_phi
             con_r_expr = model.con_r_expr
 
