@@ -329,8 +329,8 @@ ocp_nlp_dims* {{ model.name }}_acados_create_2_create_and_set_dimensions({{ mode
     for (int i = 1; i < N; i++)
         ocp_nlp_dims_set_cost(nlp_config, nlp_dims, i, "ny", &ny[i]);
 {%- endif %}
-    // TODO: check if this loop should start at 1 but maybe separate h and phi constraints (Mohammad)
-    for (int i = 1; i < N; i++)
+
+    for (int i = 0; i < N; i++)
     {
         {%- if constraints.constr_type == "BGH" and dims.nh > 0 %}
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nh", &nh[i]);
@@ -341,16 +341,6 @@ ocp_nlp_dims* {{ model.name }}_acados_create_2_create_and_set_dimensions({{ mode
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsphi", &nsphi[i]);
         {%- endif %}
     }
-
-{%- if constraints.constr_type_0 == "BGH" %}
-    ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, 0, "nh", &nh[0]);
-    // TODO: check with Jonathan, it looks like it is better to separate initial h and phi constraints (Mohammad)
-//     ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, 0, "nsh", &nsh[0]);
-// {%- elif constraints.constr_type_0 == "BGP" %}
-//     ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, 0, "nr", &nr[0]);
-//     ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, 0, "nphi", &nphi[0]);
-//     ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, 0, "nsphi", &nsphi[0]);
-{%- endif %}
 
 {%- if constraints.constr_type_e == "BGH" %}
     ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "nh", &nh[N]);
