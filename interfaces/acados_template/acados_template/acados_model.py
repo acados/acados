@@ -96,12 +96,16 @@ class AcadosModel():
         """
 
         ### for OCP only.
-        # This could be moved to cost / constraints
-        # constraints
+        # NOTE: These could be moved to cost / constraints
+
+        # constraints at initial stage
+        self.con_h_expr_0 = None
+        """CasADi expression for the initial constraint :math:`h^0`; Default: :code:`None`"""
+
+        # path constraints
         # BGH(default): lh <= h(x, u) <= uh
         self.con_h_expr = None
         """CasADi expression for the constraint :math:`h`; Default: :code:`None`"""
-
         # BGP(convex over nonlinear): lphi <= phi(r(x, u)) <= uphi
         self.con_phi_expr = None
         """CasADi expression for the constraint phi; Default: :code:`None`"""

@@ -74,6 +74,7 @@
 #define NH     {{ model.name | upper }}_NH
 #define NPHI   {{ model.name | upper }}_NPHI
 #define NHN    {{ model.name | upper }}_NHN
+#define NH0    {{ model.name | upper }}_NH0
 #define NPHIN  {{ model.name | upper }}_NPHIN
 #define NR     {{ model.name | upper }}_NR
 

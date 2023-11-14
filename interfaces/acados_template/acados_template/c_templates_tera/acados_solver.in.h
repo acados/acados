@@ -64,6 +64,7 @@
 #define {{ model.name | upper }}_NH     {{ dims.nh }}
 #define {{ model.name | upper }}_NPHI   {{ dims.nphi }}
 #define {{ model.name | upper }}_NHN    {{ dims.nh_e }}
+#define {{ model.name | upper }}_NH0    {{ dims.nh_0 }}
 #define {{ model.name | upper }}_NPHIN  {{ dims.nphi_e }}
 #define {{ model.name | upper }}_NR     {{ dims.nr }}
 
@@ -174,6 +175,17 @@ typedef struct {{ model.name }}_solver_capsule
     external_function_param_casadi *nl_constr_h_fun;
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_param_casadi *nl_constr_h_fun_jac_hess;
+{%- endif %}
+{%- endif %}
+
+
+{% if constraints.constr_type_0 == "BGP" %}
+    external_function_param_casadi phi_0_constraint;
+{% elif constraints.constr_type_0 == "BGH" and dims.nh_0 > 0 %}
+    external_function_param_casadi nl_constr_h_0_fun_jac;
+    external_function_param_casadi nl_constr_h_0_fun;
+{%- if solver_options.hessian_approx == "EXACT" %}
+    external_function_param_casadi nl_constr_h_0_fun_jac_hess;
 {%- endif %}
 {%- endif %}
 

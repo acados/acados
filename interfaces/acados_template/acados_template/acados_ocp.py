@@ -54,6 +54,7 @@ class AcadosOcpDims:
         self.__nr      = 0
         self.__nr_e    = 0
         self.__nh      = 0
+        self.__nh_0    = 0
         self.__nh_e    = 0
         self.__nphi    = 0
         self.__nphi_e  = 0
@@ -139,6 +140,12 @@ class AcadosOcpDims:
         Type: int; default: 0"""
         return self.__nh
 
+    @property
+    def nh_0(self):
+        """:math:`n_{h}^e` - number of nonlinear constraints at initial shooting node.
+        Type: int; default: 0"""
+        return self.__nh_0
+    
     @property
     def nh_e(self):
         """:math:`n_{h}^e` - number of nonlinear constraints at terminal shooting node N.
@@ -346,6 +353,13 @@ class AcadosOcpDims:
             self.__nh = nh
         else:
             raise Exception('Invalid nh value, expected nonnegative integer.')
+
+    @nh_0.setter
+    def nh_0(self, nh_0):
+        if isinstance(nh_0, int) and nh_0 > -1:
+            self.__nh_0 = nh_0
+        else:
+            raise Exception('Invalid nh_0 value, expected nonnegative integer.')
 
     @nh_e.setter
     def nh_e(self, nh_e):
@@ -996,6 +1010,7 @@ class AcadosOcpConstraints:
     """
     def __init__(self):
         self.__constr_type   = 'BGH'
+        self.__constr_type_0  = 'BGH'
         self.__constr_type_e = 'BGH'
         # initial x
         self.__lbx_0   = np.array([])
@@ -1027,6 +1042,9 @@ class AcadosOcpConstraints:
         # nonlinear constraints
         self.__lh      = np.array([])
         self.__uh      = np.array([])
+        # nonlinear constraints at initial shooting node
+        self.__uh_0    = np.array([])
+        self.__lh_0    = np.array([])
         # nonlinear constraints at shooting node N
         self.__uh_e    = np.array([])
         self.__lh_e    = np.array([])
@@ -1081,6 +1099,12 @@ class AcadosOcpConstraints:
         """Constraints type for shooting nodes (0 to N-1). string in {BGH, BGP}.
         Default: BGH; BGP is for convex over nonlinear."""
         return self.__constr_type
+
+    @property
+    def constr_type_0(self):
+        """Constraints type for initial shooting node. string in {BGH, BGP}.
+        Default: BGH; BGP is for convex over nonlinear."""
+        return self.__constr_type_0
 
     @property
     def constr_type_e(self):
@@ -1282,6 +1306,23 @@ class AcadosOcpConstraints:
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__uh
+
+    # nonlinear constraints at initial shooting node
+    @property
+    def lh_0(self):
+        """:math:`\\underline{h}^e` - lower bound on nonlinear inequalities
+        at initial shooting node.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`.
+        """
+        return self.__lh_0
+
+    @property
+    def uh_0(self):
+        """:math:`\\bar{h}^e` - upper bound on nonlinear inequalities
+        at initial shooting node.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`.
+        """
+        return self.__uh_0
 
     # nonlinear constraints at shooting node N
     @property
@@ -1613,6 +1654,15 @@ class AcadosOcpConstraints:
             raise Exception('Invalid constr_type value. Possible values are:\n\n' \
                     + ',\n'.join(constr_types) + '.\n\nYou have: ' + constr_type + '.\n\n')
 
+    @constr_type_0.setter
+    def constr_type_0(self, constr_type_0):
+        constr_types = ('BGH', 'BGP')
+        if constr_type_0 in constr_types:
+            self.__constr_type_0 = constr_type_0
+        else:
+            raise Exception('Invalid constr_type_0 value. Possible values are:\n\n' \
+                    + ',\n'.join(constr_types) + '.\n\nYou have: ' + constr_type_0 + '.\n\n')
+
     @constr_type_e.setter
     def constr_type_e(self, constr_type_e):
         constr_types = ('BGH', 'BGP')
@@ -1825,21 +1875,22 @@ class AcadosOcpConstraints:
         else:
             raise Exception('Invalid uh value.')
 
-    # convex-over-nonlinear constraints
-    @lphi.setter
-    def lphi(self, lphi):
-        if isinstance(lphi, np.ndarray):
-            self.__lphi = lphi
-        else:
-            raise Exception('Invalid lphi value.')
 
-    @uphi.setter
-    def uphi(self, uphi):
-        if isinstance(uphi, np.ndarray):
-            self.__uphi = uphi
+    # nonlinear constraints at initial shooting node
+    @lh_0.setter
+    def lh_0(self, lh_0):
+        if isinstance(lh_0, np.ndarray):
+            self.__lh_0 = lh_0
         else:
-            raise Exception('Invalid uphi value.')
+            raise Exception('Invalid lh_0 value.')
 
+    @uh_0.setter
+    def uh_0(self, uh_0):
+        if isinstance(uh_0, np.ndarray):
+            self.__uh_0 = uh_0
+        else:
+            raise Exception('Invalid uh_0 value.')
+        
     # nonlinear constraints at shooting node N
     @lh_e.setter
     def lh_e(self, lh_e):
@@ -1854,6 +1905,21 @@ class AcadosOcpConstraints:
             self.__uh_e = uh_e
         else:
             raise Exception('Invalid uh_e value.')
+        
+    # convex-over-nonlinear constraints
+    @lphi.setter
+    def lphi(self, lphi):
+        if isinstance(lphi, np.ndarray):
+            self.__lphi = lphi
+        else:
+            raise Exception('Invalid lphi value.')
+
+    @uphi.setter
+    def uphi(self, uphi):
+        if isinstance(uphi, np.ndarray):
+            self.__uphi = uphi
+        else:
+            raise Exception('Invalid uphi value.')
 
     # convex-over-nonlinear constraints at shooting node N
     @lphi_e.setter

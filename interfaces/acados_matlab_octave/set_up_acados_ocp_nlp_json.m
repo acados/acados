@@ -155,6 +155,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     ocp_json.dims.nbu = model.dim_nbu;
     ocp_json.dims.ng = model.dim_ng;
     ocp_json.dims.nh = model.dim_nh;
+    ocp_json.dims.nh_0 = model.dim_nh_0;
     ocp_json.dims.nbxe_0 = model.dim_nbxe_0;
     ocp_json.dims.ns = model.dim_ns;
     ocp_json.dims.nsbx = model.dim_nsbx;
@@ -230,6 +231,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     end
     
     ocp_json.constraints.constr_type = upper(model.constr_type);
+    ocp_json.constraints.constr_type_0 = upper(model.constr_type_0);
     ocp_json.constraints.constr_type_e = upper(model.constr_type_e);
 
     % parameters

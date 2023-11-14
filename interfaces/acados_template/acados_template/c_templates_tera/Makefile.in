@@ -48,6 +48,12 @@
 	{%- set constr_type = "NONE" %}
 {%- endif %}
 
+{%- if constraints.constr_type_0 %}
+	{%- set constr_type_0 = constraints.constr_type_0 %}
+{%- else %}
+	{%- set constr_type_0 = "NONE" %}
+{%- endif %}
+
 {%- if constraints.constr_type_e %}
 	{%- set constr_type_e = constraints.constr_type_e %}
 {%- else %}
@@ -83,6 +89,14 @@
 {%- else %}
 	{%- set dims_nphi = 0 %}
 {%- endif %}
+
+
+{%- if dims.nh_0 %}
+	{%- set dims_nh_0 = dims.nh_0 %}
+{%- else %}
+	{%- set dims_nh_0 = 0 %}
+{%- endif %}
+
 
 {%- if dims.nh_e %}
 	{%- set dims_nh_e = dims.nh_e %}
@@ -185,6 +199,15 @@ OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_constr_h_fun_jac_uxt_zt.
 OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_constr_h_fun.c
 	{%- if hessian_approx == "EXACT" %}
 OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_constr_h_fun_jac_uxt_zt_hess.c
+	{%- endif %}
+{%- endif %}
+
+
+{%- if constr_type_0 == "BGH" and dims_nh_0 > 0 %}
+OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_constr_h_0_fun_jac_uxt_zt.c
+OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_constr_h_0_fun.c
+	{%- if hessian_approx == "EXACT" %}
+OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_constr_h_0_fun_jac_uxt_zt_hess.c
 	{%- endif %}
 {%- endif %}
 

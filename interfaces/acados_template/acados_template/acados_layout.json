@@ -67,6 +67,9 @@
         "constr_type": [
             "str"
         ],
+        "constr_type_0": [
+            "str"
+        ],
         "constr_type_e": [
             "str"
         ],
@@ -203,6 +206,18 @@
             "ndarray",
             [
                 "nh"
+            ]
+        ],
+        "lh_0": [
+            "ndarray",
+            [
+                "nh_0"
+            ]
+        ],
+        "uh_0": [
+            "ndarray",
+            [
+                "nh_0"
             ]
         ],
         "lh_e": [
