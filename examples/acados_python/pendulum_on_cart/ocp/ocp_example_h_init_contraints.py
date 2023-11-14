@@ -35,7 +35,7 @@
 import sys
 sys.path.insert(0, '../common')
 
-from acados_template import AcadosOcp, AcadosOcpSolver
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel
 from pendulum_model import export_pendulum_ode_model, export_augmented_pendulum_model
 import numpy as np
 import scipy.linalg
@@ -45,15 +45,15 @@ from casadi import vertcat, SX
 # contraint to test and compare
 # * non-linear constraint expression
 # * non-linear constraint expression + relaxing the initial state constraints
-# * state bounds constraint 
-CNST = ['nl', 'nl_relxd','bound']
+# * state bounds constraint
+CONSTRAINT_VERSIONS = ['nl', 'nl_relxd','bound']
 
-def test_initial_h_constraints(cnst: str):
-    print(f'#################################################################################### {cnst} constraint ####################################################################################')
+def test_initial_h_constraints(constraint_version: str):
+    print(f'#################################################################################### {constraint_version} constraint ####################################################################################')
     ocp = AcadosOcp()
 
     model = export_pendulum_ode_model()
-    model.name = f'{model.name}_{cnst}_LS'
+    model.name = f'{model.name}_{constraint_version}_LS'
     # set model
     ocp.model = model
 
@@ -103,7 +103,7 @@ def test_initial_h_constraints(cnst: str):
     lbx = np.array([-2., -np.pi, -4, -5])
     ubx = -lbx
 
-    if cnst == 'bound':
+    if constraint_version == 'bound':
         ocp.constraints.lbx = lbx
         ocp.constraints.ubx = ubx
         ocp.constraints.idxbx = np.arange(nx)
@@ -111,14 +111,14 @@ def test_initial_h_constraints(cnst: str):
         ocp.constraints.ubx_e = ubx
         ocp.constraints.idxbx_e = np.arange(nx)
 
-    elif cnst == 'nl':
+    elif constraint_version == 'nl':
         # relaxed initial state h constraints
         lbh_0 = np.array([-2, -np.pi, -4, -5])
         ubh_0 = -lbh_0
         ocp.model.con_h_expr = ocp.model.x
         ocp.constraints.lh = lbx
         ocp.constraints.uh = ubx
-        ocp.constraints.constr_type_0 = 'BGH'  
+        ocp.constraints.constr_type_0 = 'BGH'
         ocp.model.con_h_expr_0 = ocp.model.x
         ocp.constraints.lh_0 = lbh_0
         ocp.constraints.uh_0 = ubh_0
@@ -126,14 +126,14 @@ def test_initial_h_constraints(cnst: str):
         ocp.constraints.lh_e = lbx
         ocp.constraints.uh_e = ubx
 
-    elif cnst == 'nl_relxd':
+    elif constraint_version == 'nl_relxd':
         # relaxed initial state h constraints
         lbh_0 = 10 * np.array([-2, -np.pi, -4, -5])
         ubh_0 = -lbh_0
         ocp.model.con_h_expr = ocp.model.x
         ocp.constraints.lh = lbx
         ocp.constraints.uh = ubx
-        ocp.constraints.constr_type_0 = 'BGH'  
+        ocp.constraints.constr_type_0 = 'BGH'
         ocp.model.con_h_expr_0 = ocp.model.x
         ocp.constraints.lh_0 = lbh_0
         ocp.constraints.uh_0 = ubh_0
@@ -141,7 +141,7 @@ def test_initial_h_constraints(cnst: str):
         ocp.constraints.lh_e = lbx
         ocp.constraints.uh_e = ubx
     else:
-        raise NotImplementedError(f'constraint {cnst} is not implemented in this example!')
+        raise NotImplementedError(f'constraint {constraint_version} is not implemented in this example!')
 
     ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM'
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
@@ -151,7 +151,7 @@ def test_initial_h_constraints(cnst: str):
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
-    ocp.solver_options.nlp_solver_type = 'SQP' 
+    ocp.solver_options.nlp_solver_type = 'SQP'
 
     ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
@@ -161,10 +161,10 @@ def test_initial_h_constraints(cnst: str):
     status = ocp_solver.solve()
     if status != 0:
         print(f'acados returned status {status}.')
-    
-    # for debugging 
+
+    # for debugging
     # ocp_solver.print_statistics()
-    # ocp_solver.dump_last_qp_to_json(f'{cnst}_last_qp.json', overwrite=True)
+    # ocp_solver.dump_last_qp_to_json(f'{constraint_version}_last_qp.json', overwrite=True)
 
     # get solution
     for i in range(N):
@@ -173,14 +173,14 @@ def test_initial_h_constraints(cnst: str):
     simX[N,:] = ocp_solver.get(N, "x")
     # plot results
     plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
-    
+
     return status
 
 if __name__ == "__main__":
-    # we expect that the OCP with nl constraints will fail because it contains two active constraints at the initial node. 
+    # we expect that the OCP with nl constraints will fail because it contains two active constraints at the initial node.
     expected_status = [2, 0, 0]
-    for cnst in CNST:
-        if test_initial_h_constraints(cnst=cnst) != expected_status[CNST.index(cnst)]:
-            raise Exception(f'constraint {cnst} failed!')
+    for constraint_version in CONSTRAINT_VERSIONS:
+        if test_initial_h_constraints(constraint_version=constraint_version) != expected_status[CONSTRAINT_VERSIONS.index(constraint_version)]:
+            raise Exception(f'constraint {constraint_version} failed!')
         else:
-            print(f'constraint {cnst} passed!')
+            print(f'constraint {constraint_version} passed!')
