@@ -53,6 +53,7 @@
 #define {{ model.name | upper }}_NSPHIN {{ dims.nsphi_e }}
 #define {{ model.name | upper }}_NSBXN  {{ dims.nsbx_e }}
 #define {{ model.name | upper }}_NS     {{ dims.ns }}
+#define {{ model.name | upper }}_NS0    {{ dims.ns_0 }}
 #define {{ model.name | upper }}_NSN    {{ dims.ns_e }}
 #define {{ model.name | upper }}_NG     {{ dims.ng }}
 #define {{ model.name | upper }}_NBXN   {{ dims.nbx_e }}

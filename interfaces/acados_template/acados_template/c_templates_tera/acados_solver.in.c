@@ -79,6 +79,7 @@
 #define NSPHIN {{ model.name | upper }}_NSPHIN
 #define NSBXN  {{ model.name | upper }}_NSBXN
 #define NS     {{ model.name | upper }}_NS
+#define NS0    {{ model.name | upper }}_NS0
 #define NSN    {{ model.name | upper }}_NSN
 #define NG     {{ model.name | upper }}_NG
 #define NBXN   {{ model.name | upper }}_NBXN
@@ -86,7 +87,6 @@
 #define NY0    {{ model.name | upper }}_NY0
 #define NY     {{ model.name | upper }}_NY
 #define NYN    {{ model.name | upper }}_NYN
-// #define N      {{ model.name | upper }}_N
 #define NH     {{ model.name | upper }}_NH
 #define NPHI   {{ model.name | upper }}_NPHI
 #define NHN    {{ model.name | upper }}_NHN
@@ -274,12 +274,13 @@ ocp_nlp_dims* {{ model.name }}_acados_create_2_create_and_set_dimensions({{ mode
     }
 
     // for initial state
-    nbx[0]  = NBX0;
+    nbx[0] = NBX0;
     nsbx[0] = 0;
-    ns[0] = NS - NSBX;
+    ns[0] = NS0;
     nbxe[0] = {{ dims.nbxe_0 }};
     ny[0] = NY0;
     nh[0] = NH0;
+    nsh[0] = 0; // not supported yet
 
 
     // terminal - common
@@ -1401,7 +1402,7 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
         {%- endif %}
     {%- endfor %}
 
-    for (int i = 0; i < N; i++)
+    for (int i = 1; i < N; i++)
     {
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "idxsh", idxsh);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lsh", lsh);

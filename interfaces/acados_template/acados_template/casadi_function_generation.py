@@ -603,8 +603,6 @@ def generate_c_code_constraint(ocp: AcadosOcp, opts: dict, stage_type: str):
     u = model.u
     z = model.z
 
-    breakpoint()
-
     symbol = get_casadi_symbol(x)
 
     if stage_type == 'terminal':
