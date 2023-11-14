@@ -95,9 +95,9 @@ def solve_marathos_problem_with_setting(setting):
     ocp.model.cost_expr_ext_cost_e = x1
 
     # constarints
-    ocp.model.con_h_expr = x1 ** 2 + x2 ** 2
-    ocp.constraints.lh = np.array([1.0])
-    ocp.constraints.uh = np.array([1.0])
+    ocp.model.con_h_expr_0 = x1 ** 2 + x2 ** 2
+    ocp.constraints.lh_0 = np.array([1.0])
+    ocp.constraints.uh_0 = np.array([1.0])
     # # soften
     # ocp.constraints.idxsh = np.array([0])
     # ocp.cost.zl = 1e5 * np.array([1])
