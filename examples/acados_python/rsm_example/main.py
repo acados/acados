@@ -148,6 +148,10 @@ def export_rsm_model():
         model.con_r_expr = vertcat(u_d, u_q)
         model.con_r_in_phi = r
 
+        model.con_phi_expr_0 = model.con_phi_expr
+        model.con_r_expr_0 = model.con_r_expr
+        model.con_r_in_phi_0 = model.con_r_in_phi
+
     return model
 
 
@@ -230,8 +234,11 @@ def create_ocp_solver(tol = 1e-3):
         # to avoid LICQ violations
         eps = 1e-3 # Note: was originally eps = 0.0.
         ocp.constraints.constr_type = 'BGP'
+        ocp.constraints.constr_type_0 = 'BGP'
         ocp.constraints.lphi = np.array([-1.0e8])
         ocp.constraints.uphi = (1-eps)*np.array([(u_max*sqrt(3)/2)**2])
+        ocp.constraints.lphi_0 = ocp.constraints.lphi
+        ocp.constraints.uphi_0 = ocp.constraints.uphi
 
     if WITH_HEXAGON_CONSTRAINT:
         # lg <= C*x + D*u <= ug

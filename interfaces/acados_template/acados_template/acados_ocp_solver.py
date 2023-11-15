@@ -313,7 +313,7 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
         if is_empty(model.con_r_expr_0):
             raise Exception('convex over nonlinear constraints: con_r_expr_0 but con_phi_expr_0 is nonempty')
         else:
-            dims.nr_e = casadi_length(model.con_r_expr_e)
+            dims.nr_0 = casadi_length(model.con_r_expr_0)
 
     # path
     nbx = constraints.idxbx.shape[0]
