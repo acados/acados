@@ -122,6 +122,11 @@ def export_pmsm_model():
             tau_des - 1.5 * N_P * ((L_d - L_q) * i_d * i_q + K_m * i_q), u_d, u_q
         )
 
+        # also at initial node
+        model.con_r_in_phi_0 = model.con_r_in_phi
+        model.con_phi_expr_0 = model.con_phi_expr
+        model.con_r_expr_0 = model.con_r_expr
+
         # export_torquelineEnd_pd():
         alpha = R_m**2 + omega**2 * L_d**2
         beta = R_m**2 + omega**2 * L_q**2
@@ -344,23 +349,24 @@ def run_simulation(qp_solver="FULL_CONDENSING_HPIPM", show_plots=False, verbose=
         nlp_cost.Zl_e = SLACK_TUNINGHessian * np.ones((1,))  # hessian
         nlp_cost.zu_e = SLACK_E_TUNING * np.array([1])
         nlp_cost.Zu_e = SLACK_TUNINGHessian * np.ones((1,))  # hessian
+        # _0
+        nlp_cost.zl_0 = SLACK_E_TUNING * np.array([1])
+        nlp_cost.Zl_0 = SLACK_TUNINGHessian * np.ones((1,))  # hessian
+        nlp_cost.zu_0 = SLACK_E_TUNING * np.array([1])
+        nlp_cost.Zu_0 = SLACK_TUNINGHessian * np.ones((1,))  # hessian
 
-        nlp_con.lphi = np.array(
-            [0, -1e9]
+
+        lphi = np.array([0, -1e9]
         )  # 1st torque constraint | 2nd voltage constraint
-        nlp_con.uphi = np.array([0, u_max**2 / 3])
+        uphi = np.array([0, u_max**2 / 3])
 
-        # ls*, us* are OPTIONAL fields now, default is zeros of appropriate dimension
-        # nlp_con.lsphi = np.array([0])  # soft lower bounds --> greater than 0
-        # nlp_con.usphi = np.array([0])  # soft upper bounds --> greater than 0
+        nlp_con.lphi = lphi
+        nlp_con.lphi_0 = lphi
+        nlp_con.lphi_e = lphi
 
-        # _e
-        nlp_con.lphi_e = np.array([0, -1e9])  # 1st torque constraint | 2nd terminal set
-        nlp_con.uphi_e = np.array([0, u_max**2 / 3])
-
-        # ls*, us* are OPTIONAL fields now, default is zeros of appropriate dimension
-        # nlp_con.lsphi_e = np.array([0])
-        # nlp_con.usphi_e = np.array([0])
+        nlp_con.uphi = uphi
+        nlp_con.uphi_0 = uphi
+        nlp_con.uphi_e = uphi
 
         nlp_con.idxsphi = np.array([0])
         nlp_con.idxsphi_e = np.array([0])
@@ -392,6 +398,7 @@ def run_simulation(qp_solver="FULL_CONDENSING_HPIPM", show_plots=False, verbose=
     if FORMULATION == 1:
         nlp_con.constr_type = "BGP"
         nlp_con.constr_type_e = "BGP"
+        nlp_con.constr_type_0 = "BGP"
 
     acados_solver = AcadosOcpSolver(ocp, json_file=file_name)
 

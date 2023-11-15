@@ -46,11 +46,13 @@
 #define {{ model.name | upper }}_NSBX   {{ dims.nsbx }}
 #define {{ model.name | upper }}_NSBU   {{ dims.nsbu }}
 #define {{ model.name | upper }}_NSH    {{ dims.nsh }}
+#define {{ model.name | upper }}_NSH0   {{ dims.nsh_0 }}
 #define {{ model.name | upper }}_NSG    {{ dims.nsg }}
 #define {{ model.name | upper }}_NSPHI  {{ dims.nsphi }}
 #define {{ model.name | upper }}_NSHN   {{ dims.nsh_e }}
 #define {{ model.name | upper }}_NSGN   {{ dims.nsg_e }}
 #define {{ model.name | upper }}_NSPHIN {{ dims.nsphi_e }}
+#define {{ model.name | upper }}_NSPHI0 {{ dims.nsphi_0 }}
 #define {{ model.name | upper }}_NSBXN  {{ dims.nsbx_e }}
 #define {{ model.name | upper }}_NS     {{ dims.ns }}
 #define {{ model.name | upper }}_NS0    {{ dims.ns_0 }}
@@ -63,9 +65,10 @@
 #define {{ model.name | upper }}_NYN    {{ dims.ny_e }}
 #define {{ model.name | upper }}_N      {{ dims.N }}
 #define {{ model.name | upper }}_NH     {{ dims.nh }}
-#define {{ model.name | upper }}_NPHI   {{ dims.nphi }}
 #define {{ model.name | upper }}_NHN    {{ dims.nh_e }}
 #define {{ model.name | upper }}_NH0    {{ dims.nh_0 }}
+#define {{ model.name | upper }}_NPHI0  {{ dims.nphi_0 }}
+#define {{ model.name | upper }}_NPHI   {{ dims.nphi }}
 #define {{ model.name | upper }}_NPHIN  {{ dims.nphi_e }}
 #define {{ model.name | upper }}_NR     {{ dims.nr }}
 

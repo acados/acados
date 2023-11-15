@@ -101,6 +101,14 @@ class AcadosModel():
         # constraints at initial stage
         self.con_h_expr_0 = None
         """CasADi expression for the initial constraint :math:`h^0`; Default: :code:`None`"""
+        self.con_phi_expr_0 = None
+        """CasADi expression for the terminal constraint :math:`\phi_0`; Default: :code:`None`"""
+        self.con_r_expr_0 = None
+        """CasADi expression for the terminal constraint :math:`\phi_0(r)`,
+        dummy input for outer function; Default: :code:`None`"""
+        self.con_r_in_phi_0 = None
+        """CasADi expression for the terminal constraint :math:`\phi_0(r)`, input for outer function; Default: :code:`None`"""
+
 
         # path constraints
         # BGH(default): lh <= h(x, u) <= uh

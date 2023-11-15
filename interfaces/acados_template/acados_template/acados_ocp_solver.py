@@ -306,6 +306,16 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
     else:
         dims.nh_0 = nh_0
 
+    if is_empty(model.con_phi_expr_0):
+        dims.nphi_0 = 0
+        dims.nr_0 = 0
+    else:
+        dims.nphi_0 = casadi_length(model.con_phi_expr_0)
+        if is_empty(model.con_r_expr_0):
+            raise Exception('convex over nonlinear constraints: con_r_expr_0 but con_phi_expr_0 is nonempty')
+        else:
+            dims.nr_e = casadi_length(model.con_r_expr_e)
+
     # path
     nbx = constraints.idxbx.shape[0]
     if constraints.ubx.shape[0] != nbx or constraints.lbx.shape[0] != nbx:
@@ -345,10 +355,6 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
             raise Exception('convex over nonlinear constraints: con_r_expr but con_phi_expr is nonempty')
         else:
             dims.nr = casadi_length(model.con_r_expr)
-
-        # TODO: implement BGP on initial node seperately.
-        constraints.constr_type_0 = 'BGP'
-        print("Warning: BGP constraint is also enforced on initial shooting node, different from h constraint.")
 
 
     # terminal
@@ -451,29 +457,77 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
     dims.nsg = nsg
 
     ns = nsbx + nsbu + nsh + nsg + nsphi
-    wrong_field = ""
+    wrong_fields = []
     if cost.Zl.shape[0] != ns:
-        wrong_field = "Zl"
+        wrong_fields += ["Zl"]
         dim = cost.Zl.shape[0]
     elif cost.Zu.shape[0] != ns:
-        wrong_field = "Zu"
+        wrong_fields += ["Zu"]
         dim = cost.Zu.shape[0]
     elif cost.zl.shape[0] != ns:
-        wrong_field = "zl"
+        wrong_fields += ["zl"]
         dim = cost.zl.shape[0]
     elif cost.zu.shape[0] != ns:
-        wrong_field = "zu"
+        wrong_fields += ["zu"]
         dim = cost.zu.shape[0]
 
-    if wrong_field != "":
-        raise Exception(f'Inconsistent size for field {wrong_field}, with dimension {dim}, \n\t'\
+    if wrong_fields != []:
+        raise Exception(f'Inconsistent size for fields {", ".join(wrong_fields)}, with dimension {dim}, \n\t'\
             + f'Detected ns = {ns} = nsbx + nsbu + nsg + nsh + nsphi.\n\t'\
             + f'With nsbx = {nsbx}, nsbu = {nsbu}, nsg = {nsg}, nsh = {nsh}, nsphi = {nsphi}')
-
     dims.ns = ns
-    # Note: at stage 0 bounds on x are not slacked!
-    dims.ns_0 = nsbu + nsg # TODO: add nsh_0
 
+    # slack dimensions at initial node
+    nsh_0 = constraints.idxsh_0.shape[0]
+    if nsh_0 > nh_0:
+        raise Exception(f'inconsistent dimension nsh_0 = {nsh_0}. Is greater than nh_0 = {nh_0}.')
+    if is_empty(constraints.lsh_0):
+        constraints.lsh_0 = np.zeros((nsh_0,))
+    elif constraints.lsh_0.shape[0] != nsh_0:
+        raise Exception('inconsistent dimension nsh_0, regarding idxsh_0, lsh_0.')
+    if is_empty(constraints.ush_0):
+        constraints.ush_0 = np.zeros((nsh_0,))
+    elif constraints.ush_0.shape[0] != nsh_0:
+        raise Exception('inconsistent dimension nsh_0, regarding idxsh_0, ush_0.')
+    dims.nsh_0 = nsh_0
+
+    nsphi_0 = constraints.idxsphi_0.shape[0]
+    if nsphi_0 > dims.nphi_0:
+        raise Exception(f'inconsistent dimension nsphi_0 = {nsphi_0}. Is greater than nphi_0 = {dims.nphi_0}.')
+    if is_empty(constraints.lsphi_0):
+        constraints.lsphi_0 = np.zeros((nsphi_0,))
+    elif constraints.lsphi_0.shape[0] != nsphi_0:
+        raise Exception('inconsistent dimension nsphi_0, regarding idxsphi_0, lsphi_0.')
+    if is_empty(constraints.usphi_0):
+        constraints.usphi_0 = np.zeros((nsphi_0,))
+    elif constraints.usphi_0.shape[0] != nsphi_0:
+        raise Exception('inconsistent dimension nsphi_0, regarding idxsphi_0, usphi_0.')
+    dims.nsphi_0 = nsphi_0
+
+    # Note: at stage 0 bounds on x are not slacked!
+    ns_0 = nsbu + nsg + nsh_0 + nsphi_0 + nsh_0
+
+    wrong_fields = []
+    if cost.Zl_0.shape[0] != ns:
+        wrong_fields += ["Zl"]
+        dim = cost.Zl_0.shape[0]
+    elif cost.Zu_0.shape[0] != ns:
+        wrong_fields += ["Zu"]
+        dim = cost.Zu_0.shape[0]
+    elif cost.zl_0.shape[0] != ns:
+        wrong_fields += ["zl"]
+        dim = cost.zl_0.shape[0]
+    elif cost.zu_0.shape[0] != ns:
+        wrong_fields += ["zu"]
+        dim = cost.zu_0.shape[0]
+
+    if wrong_fields != []:
+        raise Exception(f'Inconsistent size for fields {", ".join(wrong_fields)}, with dimension {dim}, \n\t'\
+            + f'Detected ns_0 = {ns_0} = nsbx + nsbu + nsg + nsh_0 + nsphi_0.\n\t'\
+            + f'With nsbx = {nsbx}, nsbu = {nsbu}, nsg = {nsg}, nsh_0 = {nsh_0}, nsphi_0 = {nsphi_0}')
+    dims.ns_0 = ns_0
+
+    # slacks at terminal node
     nsbx_e = constraints.idxsbx_e.shape[0]
     if nsbx_e > nbx_e:
         raise Exception(f'inconsistent dimension nsbx_e = {nsbx_e}. Is greater than nbx_e = {nbx_e}.')
@@ -500,19 +554,6 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
         raise Exception('inconsistent dimension nsh_e, regarding idxsh_e, ush_e.')
     dims.nsh_e = nsh_e
 
-    nsg_e = constraints.idxsg_e.shape[0]
-    if nsg_e > ng_e:
-        raise Exception(f'inconsistent dimension nsg_e = {nsg_e}. Is greater than ng_e = {ng_e}.')
-    if is_empty(constraints.lsg_e):
-        constraints.lsg_e = np.zeros((nsg_e,))
-    elif constraints.lsg_e.shape[0] != nsg_e:
-        raise Exception('inconsistent dimension nsg_e, regarding idxsg_e, lsg_e.')
-    if is_empty(constraints.usg_e):
-        constraints.usg_e = np.zeros((nsg_e,))
-    elif constraints.usg_e.shape[0] != nsg_e:
-        raise Exception('inconsistent dimension nsg_e, regarding idxsg_e, usg_e.')
-    dims.nsg_e = nsg_e
-
     nsphi_e = constraints.idxsphi_e.shape[0]
     if nsphi_e > dims.nphi_e:
         raise Exception(f'inconsistent dimension nsphi_e = {nsphi_e}. Is greater than nphi_e = {dims.nphi_e}.')
@@ -525,6 +566,19 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
     elif constraints.usphi_e.shape[0] != nsphi_e:
         raise Exception('inconsistent dimension nsphi_e, regarding idxsphi_e, usphi_e.')
     dims.nsphi_e = nsphi_e
+
+    nsg_e = constraints.idxsg_e.shape[0]
+    if nsg_e > ng_e:
+        raise Exception(f'inconsistent dimension nsg_e = {nsg_e}. Is greater than ng_e = {ng_e}.')
+    if is_empty(constraints.lsg_e):
+        constraints.lsg_e = np.zeros((nsg_e,))
+    elif constraints.lsg_e.shape[0] != nsg_e:
+        raise Exception('inconsistent dimension nsg_e, regarding idxsg_e, lsg_e.')
+    if is_empty(constraints.usg_e):
+        constraints.usg_e = np.zeros((nsg_e,))
+    elif constraints.usg_e.shape[0] != nsg_e:
+        raise Exception('inconsistent dimension nsg_e, regarding idxsg_e, usg_e.')
+    dims.nsg_e = nsg_e
 
     # terminal
     ns_e = nsbx_e + nsh_e + nsg_e + nsphi_e

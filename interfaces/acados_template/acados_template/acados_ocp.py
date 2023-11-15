@@ -51,12 +51,14 @@ class AcadosOcpDims:
         self.__ny      = 0
         self.__ny_e    = 0
         self.__ny_0    = 0
-        self.__nr      = 0
-        self.__nr_e    = 0
         self.__nh      = 0
         self.__nh_0    = 0
         self.__nh_e    = 0
+        self.__nr      = 0
+        self.__nr_0    = 0
+        self.__nr_e    = 0
         self.__nphi    = 0
+        self.__nphi_0  = 0
         self.__nphi_e  = 0
         self.__nbx     = 0
         self.__nbx_0   = 0
@@ -67,8 +69,10 @@ class AcadosOcpDims:
         self.__nsbu    = 0
         self.__nsh     = 0
         self.__nsh_e   = 0
+        self.__nsh_0   = 0
         self.__nsphi   = 0
         self.__nsphi_e = 0
+        self.__nsphi_0 = 0
         self.__ns_0    = 0
         self.__ns      = 0
         self.__ns_e    = 0
@@ -123,6 +127,24 @@ class AcadosOcpDims:
         return self.__ny_e
 
     @property
+    def nh(self):
+        """:math:`n_h` - number of nonlinear constraints.
+        Type: int; default: 0"""
+        return self.__nh
+
+    @property
+    def nh_0(self):
+        """:math:`n_{h}^e` - number of nonlinear constraints at initial shooting node.
+        Type: int; default: 0"""
+        return self.__nh_0
+
+    @property
+    def nh_e(self):
+        """:math:`n_{h}^e` - number of nonlinear constraints at terminal shooting node N.
+        Type: int; default: 0"""
+        return self.__nh_e
+
+    @property
     def nr(self):
         """:math:`n_{\pi}` - dimension of the image of the inner nonlinear function in positive definite constraints.
         Type: int; default: 0"""
@@ -135,28 +157,22 @@ class AcadosOcpDims:
         return self.__nr_e
 
     @property
-    def nh(self):
-        """:math:`n_h` - number of nonlinear constraints.
+    def nr_0(self):
+        """:math:`n_{\pi}^0` - dimension of the image of the inner nonlinear function in positive definite constraints.
         Type: int; default: 0"""
-        return self.__nh
-
-    @property
-    def nh_0(self):
-        """:math:`n_{h}^e` - number of nonlinear constraints at initial shooting node.
-        Type: int; default: 0"""
-        return self.__nh_0
-    
-    @property
-    def nh_e(self):
-        """:math:`n_{h}^e` - number of nonlinear constraints at terminal shooting node N.
-        Type: int; default: 0"""
-        return self.__nh_e
+        return self.__nr_0
 
     @property
     def nphi(self):
         """:math:`n_{\phi}` - number of convex-over-nonlinear constraints.
         Type: int; default: 0"""
         return self.__nphi
+
+    @property
+    def nphi_0(self):
+        """:math:`n_{\phi}^0` - number of convex-over-nonlinear constraints at initial shooting node 0.
+        Type: int; default: 0"""
+        return self.__nphi_0
 
     @property
     def nphi_e(self):
@@ -225,6 +241,12 @@ class AcadosOcpDims:
         return self.__nsg_e
 
     @property
+    def nsh_0(self):
+        """:math:`n_{{sh}}^0` - number of soft nonlinear constraints at shooting node 0.
+        Type: int; default: 0"""
+        return self.__nsh_0
+
+    @property
     def nsh(self):
         """:math:`n_{{sh}}` - number of soft nonlinear constraints.
         Type: int; default: 0"""
@@ -235,6 +257,12 @@ class AcadosOcpDims:
         """:math:`n_{{sh}}^e` - number of soft nonlinear constraints at terminal shooting node N.
         Type: int; default: 0"""
         return self.__nsh_e
+
+    @property
+    def nsphi_0(self):
+        """:math:`n_{{s\phi}^0}` - number of soft convex-over-nonlinear constraints at shooting node 0.
+        Type: int; default: 0"""
+        return self.__nsphi_0
 
     @property
     def nsphi(self):
@@ -333,20 +361,6 @@ class AcadosOcpDims:
         else:
             raise Exception('Invalid ny_e value, expected nonnegative integer.')
 
-    @nr.setter
-    def nr(self, nr):
-        if isinstance(nr, int) and nr > -1:
-            self.__nr = nr
-        else:
-            raise Exception('Invalid nr value, expected nonnegative integer.')
-
-    @nr_e.setter
-    def nr_e(self, nr_e):
-        if isinstance(nr_e, int) and nr_e > -1:
-            self.__nr_e = nr_e
-        else:
-            raise Exception('Invalid nr_e value, expected nonnegative integer.')
-
     @nh.setter
     def nh(self, nh):
         if isinstance(nh, int) and nh > -1:
@@ -368,6 +382,13 @@ class AcadosOcpDims:
         else:
             raise Exception('Invalid nh_e value, expected nonnegative integer.')
 
+    @nphi_0.setter
+    def nphi_0(self, nphi_0):
+        if isinstance(nphi_0, int) and nphi_0 > -1:
+            self.__nphi_0 = nphi_0
+        else:
+            raise Exception('Invalid nphi_0 value, expected nonnegative integer.')
+
     @nphi.setter
     def nphi(self, nphi):
         if isinstance(nphi, int) and nphi > -1:
@@ -381,6 +402,27 @@ class AcadosOcpDims:
             self.__nphi_e = nphi_e
         else:
             raise Exception('Invalid nphi_e value, expected nonnegative integer.')
+
+    @nr_0.setter
+    def nr_0(self, nr_0):
+        if isinstance(nr_0, int) and nr_0 > -1:
+            self.__nr_0 = nr_0
+        else:
+            raise Exception('Invalid nr_0 value, expected nonnegative integer.')
+
+    @nr.setter
+    def nr(self, nr):
+        if isinstance(nr, int) and nr > -1:
+            self.__nr = nr
+        else:
+            raise Exception('Invalid nr value, expected nonnegative integer.')
+
+    @nr_e.setter
+    def nr_e(self, nr_e):
+        if isinstance(nr_e, int) and nr_e > -1:
+            self.__nr_e = nr_e
+        else:
+            raise Exception('Invalid nr_e value, expected nonnegative integer.')
 
     @nbx.setter
     def nbx(self, nbx):
@@ -452,6 +494,13 @@ class AcadosOcpDims:
         else:
             raise Exception('Invalid nsg_e value, expected nonnegative integer.')
 
+    @nsh_0.setter
+    def nsh_0(self, nsh_0):
+        if isinstance(nsh_0, int) and nsh_0 > -1:
+            self.__nsh_0 = nsh_0
+        else:
+            raise Exception('Invalid nsh_0 value, expected nonnegative integer.')
+
     @nsh.setter
     def nsh(self, nsh):
         if isinstance(nsh, int) and nsh > -1:
@@ -465,6 +514,13 @@ class AcadosOcpDims:
             self.__nsh_e = nsh_e
         else:
             raise Exception('Invalid nsh_e value, expected nonnegative integer.')
+
+    @nsphi_0.setter
+    def nsphi_0(self, nsphi_0):
+        if isinstance(nsphi_0, int) and nsphi_0 > -1:
+            self.__nsphi_0 = nsphi_0
+        else:
+            raise Exception('Invalid nsphi_0 value, expected nonnegative integer.')
 
     @nsphi.setter
     def nsphi(self, nsphi):
@@ -480,7 +536,7 @@ class AcadosOcpDims:
         else:
             raise Exception('Invalid nsphi_e value, expected nonnegative integer.')
 
-    @ns.setter
+    @ns_0.setter
     def ns_0(self, ns_0):
         if isinstance(ns_0, int) and ns_0 > -1:
             self.__ns_0 = ns_0
@@ -522,9 +578,6 @@ class AcadosOcpDims:
         else:
             raise Exception('Invalid N value, expected positive integer.')
 
-    def set(self, attr, value):
-        setattr(self, attr, value)
-
 
 class AcadosOcpCost:
     """
@@ -563,6 +616,10 @@ class AcadosOcpCost:
         self.__Vz_0 = None
         self.__yref_0 = None
         self.__cost_ext_fun_type_0 = 'casadi'
+        self.__Zl_0        = np.array([])
+        self.__Zu_0        = np.array([])
+        self.__zl_0        = np.array([])
+        self.__zu_0        = np.array([])
         # Lagrange term
         self.__cost_type   = 'LINEAR_LS'  # cost type
         self.__W           = np.zeros((0,0))
@@ -921,6 +978,35 @@ class AcadosOcpCost:
         """
         return self.__zu_e
 
+
+    @property
+    def Zl_0(self):
+        """:math:`Z_l^0` - diagonal of Hessian wrt lower slack at initial node 0.
+        Default: :code:`np.array([])`.
+        """
+        return self.__Zl_0
+
+    @property
+    def Zu_0(self):
+        """:math:`Z_u^0` - diagonal of Hessian wrt upper slack at initial node 0.
+        Default: :code:`np.array([])`.
+        """
+        return self.__Zu_0
+
+    @property
+    def zl_0(self):
+        """:math:`z_l^0` - gradient wrt lower slack at initial node 0.
+        Default: :code:`np.array([])`.
+        """
+        return self.__zl_0
+
+    @property
+    def zu_0(self):
+        """:math:`z_u^0` - gradient wrt upper slack at initial node 0.
+        Default: :code:`np.array([])`.
+        """
+        return self.__zu_0
+
     @property
     def cost_ext_fun_type_e(self):
         """Type of external function for cost at terminal shooting node (N).
@@ -932,7 +1018,6 @@ class AcadosOcpCost:
     @cost_type_e.setter
     def cost_type_e(self, cost_type_e):
         cost_types = ('LINEAR_LS', 'NONLINEAR_LS', 'EXTERNAL', 'CONVEX_OVER_NONLINEAR')
-
         if cost_type_e in cost_types:
             self.__cost_type_e = cost_type_e
         else:
@@ -989,6 +1074,34 @@ class AcadosOcpCost:
         else:
             raise Exception('Invalid zu_e value, expected numpy array.')
 
+    @Zl_0.setter
+    def Zl_0(self, Zl_0):
+        if isinstance(Zl_0, np.ndarray):
+            self.__Zl_0 = Zl_0
+        else:
+            raise Exception('Invalid Zl_0 value, expected numpy array.')
+
+    @Zu_0.setter
+    def Zu_0(self, Zu_0):
+        if isinstance(Zu_0, np.ndarray):
+            self.__Zu_0 = Zu_0
+        else:
+            raise Exception('Invalid Zu_0 value, expected numpy array.')
+
+    @zl_0.setter
+    def zl_0(self, zl_0):
+        if isinstance(zl_0, np.ndarray):
+            self.__zl_0 = zl_0
+        else:
+            raise Exception('Invalid zl_0 value, expected numpy array.')
+
+    @zu_0.setter
+    def zu_0(self, zu_0):
+        if isinstance(zu_0, np.ndarray):
+            self.__zu_0 = zu_0
+        else:
+            raise Exception('Invalid zu_0 value, expected numpy array.')
+
     @cost_ext_fun_type_e.setter
     def cost_ext_fun_type_e(self, cost_ext_fun_type_e):
         if cost_ext_fun_type_e in ['casadi', 'generic']:
@@ -1009,8 +1122,8 @@ class AcadosOcpConstraints:
     class containing the description of the constraints
     """
     def __init__(self):
-        self.__constr_type   = 'BGH'
-        self.__constr_type_0  = 'BGH'
+        self.__constr_type_0 = 'BGH'
+        self.__constr_type = 'BGH'
         self.__constr_type_e = 'BGH'
         # initial x
         self.__lbx_0   = np.array([])
@@ -1091,6 +1204,14 @@ class AcadosOcpConstraints:
         self.__lsphi_e    = np.array([])
         self.__usphi_e    = np.array([])
         self.__idxsphi_e  = np.array([])
+        # soft bounds on nonlinear constraints at shooting node 0
+        self.__lsh_0    = np.array([])
+        self.__ush_0    = np.array([])
+        self.__idxsh_0  = np.array([])
+        # soft bounds on nonlinear constraints at shooting node 0
+        self.__lsphi_0    = np.array([])
+        self.__usphi_0    = np.array([])
+        self.__idxsphi_0  = np.array([])
 
 
     # types
@@ -1577,6 +1698,59 @@ class AcadosOcpConstraints:
         return self.__idxsg_e
 
 
+    # soft bounds on nonlinear constraints at shooting node 0
+    @property
+    def lsh_0(self):
+        """Lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints at initial shooting node 0.
+        Not required - zeros by default"""
+        return self.__lsh_0
+
+    @property
+    def ush_0(self):
+        """Lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints at initial shooting node 0.
+        Not required - zeros by default"""
+        return self.__ush_0
+
+    @property
+    def idxsh_0(self):
+        """Indices of soft nonlinear constraints at shooting node N within the indices of nonlinear constraints at initial shooting node 0.
+        Can be set by using :py:attr:`Jsh_0`."""
+        return self.__idxsh_0
+
+    @property
+    def Jsh_0(self):
+        """:math:`J_{s,h}^0` - matrix coefficient for soft bounds on nonlinear constraints at initial shooting node 0; fills :py:attr:`idxsh_0`"""
+        print_J_to_idx_note()
+        return self.__idxsh_0
+
+    # soft bounds on convex-over-nonlinear constraints at shooting node N
+    @property
+    def lsphi_0(self):
+        """Lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints at initial shooting node 0.
+        Not required - zeros by default"""
+        return self.__lsphi_0
+
+    @property
+    def usphi_0(self):
+        """Lower bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints at initial shooting node 0.
+        Not required - zeros by default"""
+        return self.__usphi_0
+
+    @property
+    def idxsphi_0(self):
+        """Indices of soft nonlinear constraints at shooting node N within the indices of nonlinear constraints at initial shooting node 0.
+        Can be set by using :py:attr:`Jsphi_0`.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`"""
+        return self.__idxsphi_0
+
+    @property
+    def Jsphi_0(self):
+        """:math:`J_{sh}^0` - matrix coefficient for soft bounds on convex-over-nonlinear constraints at shooting node N.
+        Translated internally to :py:attr:`idxsphi_0`"""
+        print_J_to_idx_note()
+        return self.__idxsphi_0
+
+
     # soft bounds on nonlinear constraints at shooting node N
     @property
     def lsh_e(self):
@@ -1656,8 +1830,7 @@ class AcadosOcpConstraints:
 
     @constr_type_0.setter
     def constr_type_0(self, constr_type_0):
-        constr_types = ('BGH')
-        # dont support BGP 0 constraints yet
+        constr_types = ('BGH', 'BGP')
         if constr_type_0 in constr_types:
             self.__constr_type_0 = constr_type_0
         else:
@@ -1906,7 +2079,7 @@ class AcadosOcpConstraints:
             self.__uh_e = uh_e
         else:
             raise Exception('Invalid uh_e value.')
-        
+
     # convex-over-nonlinear constraints
     @lphi.setter
     def lphi(self, lphi):
@@ -2202,6 +2375,63 @@ class AcadosOcpConstraints:
             self.__idxsphi_e = J_to_idx_slack(Jsphi_e)
         else:
             raise Exception('Invalid Jsphi_e value.')
+
+    # soft constraints at shooting node 0
+    @lsh_0.setter
+    def lsh_0(self, lsh_0):
+        if isinstance(lsh_0, np.ndarray):
+            self.__lsh_0 = lsh_0
+        else:
+            raise Exception('Invalid lsh_0 value.')
+
+    @ush_0.setter
+    def ush_0(self, ush_0):
+        if isinstance(ush_0, np.ndarray):
+            self.__ush_0 = ush_0
+        else:
+            raise Exception('Invalid ush_0 value.')
+
+    @idxsh_0.setter
+    def idxsh_0(self, idxsh_0):
+        if isinstance(idxsh_0, np.ndarray):
+            self.__idxsh_0 = idxsh_0
+        else:
+            raise Exception('Invalid idxsh_0 value.')
+
+    @Jsh_0.setter
+    def Jsh_0(self, Jsh_0):
+        if isinstance(Jsh_0, np.ndarray):
+            self.__idxsh_0 = J_to_idx_slack(Jsh_0)
+        else:
+            raise Exception('Invalid Jsh_0 value, expected numpy array.')
+
+    @lsphi_0.setter
+    def lsphi_0(self, lsphi_0):
+        if isinstance(lsphi_0, np.ndarray):
+            self.__lsphi_0 = lsphi_0
+        else:
+            raise Exception('Invalid lsphi_0 value.')
+
+    @usphi_0.setter
+    def usphi_0(self, usphi_0):
+        if isinstance(usphi_0, np.ndarray):
+            self.__usphi_0 = usphi_0
+        else:
+            raise Exception('Invalid usphi_0 value.')
+
+    @idxsphi_0.setter
+    def idxsphi_0(self, idxsphi_0):
+        if isinstance(idxsphi_0, np.ndarray):
+            self.__idxsphi_0 = idxsphi_0
+        else:
+            raise Exception('Invalid idxsphi_0 value.')
+
+    @Jsphi_0.setter
+    def Jsphi_0(self, Jsphi_0):
+        if isinstance(Jsphi_0, np.ndarray):
+            self.__idxsphi_0 = J_to_idx_slack(Jsphi_0)
+        else:
+            raise Exception('Invalid Jsphi_0 value.')
 
     def set(self, attr, value):
         setattr(self, attr, value)
