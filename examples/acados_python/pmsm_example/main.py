@@ -370,6 +370,7 @@ def run_simulation(qp_solver="FULL_CONDENSING_HPIPM", show_plots=False, verbose=
 
         nlp_con.idxsphi = np.array([0])
         nlp_con.idxsphi_e = np.array([0])
+        nlp_con.idxsphi_0 = np.array([0])
 
         nlp_con.x0 = x0Start
 
