@@ -1676,7 +1676,7 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
 {%- endif %}
 
 {% if dims.nh > 0 %}
-    // set up nonlinear constraints for stage 0 to N-1
+    // set up nonlinear constraints for stage 1 to N-1
     double* luh = calloc(2*NH, sizeof(double));
     double* lh = luh;
     double* uh = luh + NH;
@@ -1695,7 +1695,6 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
 
     for (int i = 1; i < N; i++)
     {
-        // nonlinear constraints for stages 0 to N-1
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "nl_constr_h_fun_jac",
                                       &capsule->nl_constr_h_fun_jac[i-1]);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "nl_constr_h_fun",
