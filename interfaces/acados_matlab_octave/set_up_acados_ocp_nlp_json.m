@@ -364,9 +364,14 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
         ocp_json.constraints.ug_e = model.constr_ug_e;
     end
 
-    if ocp_json.dims.nh_e > 0    
+    if ocp_json.dims.nh_e > 0
         ocp_json.constraints.lh_e = model.constr_lh_e;
         ocp_json.constraints.uh_e = model.constr_uh_e;
+    end
+
+    if ocp_json.dims.nh_0 > 0
+        ocp_json.constraints.lh_0 = model.constr_lh_0;
+        ocp_json.constraints.uh_0 = model.constr_uh_0;
     end
 
     if ocp_json.dims.nsbx_e > 0
