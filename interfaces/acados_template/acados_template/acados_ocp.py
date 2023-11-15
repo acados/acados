@@ -1164,9 +1164,10 @@ class AcadosOcpConstraints:
         # convex-over-nonlinear constraints
         self.__lphi    = np.array([])
         self.__uphi    = np.array([])
-        # nonlinear constraints at shooting node N
         self.__uphi_e = np.array([])
         self.__lphi_e = np.array([])
+        self.__uphi_0 = np.array([])
+        self.__lphi_0 = np.array([])
         # SLACK BOUNDS
         # soft bounds on x
         self.__lsbx   = np.array([])
@@ -1495,6 +1496,22 @@ class AcadosOcpConstraints:
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__uphi_e
+
+    @property
+    def lphi_0(self):
+        """:math:`\\underline{\phi}^0` - lower bound on convex-over-nonlinear inequalities
+        at shooting node 0.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`.
+        """
+        return self.__lphi_0
+
+    @property
+    def uphi_0(self):
+        """:math:`\\bar{\phi}^0` - upper bound on convex-over-nonlinear inequalities
+        at shooting node 0.
+        Type: :code:`np.ndarray`; default: :code:`np.array([])`.
+        """
+        return self.__uphi_0
 
 
     # SLACK bounds
@@ -2064,7 +2081,21 @@ class AcadosOcpConstraints:
             self.__uh_0 = uh_0
         else:
             raise Exception('Invalid uh_0 value.')
-        
+
+    @lphi_0.setter
+    def lphi_0(self, lphi_0):
+        if isinstance(lphi_0, np.ndarray):
+            self.__lphi_0 = lphi_0
+        else:
+            raise Exception('Invalid lphi_0 value.')
+
+    @uphi_0.setter
+    def uphi_0(self, uphi_0):
+        if isinstance(uphi_0, np.ndarray):
+            self.__uphi_0 = uphi_0
+        else:
+            raise Exception('Invalid uphi_0 value.')
+
     # nonlinear constraints at shooting node N
     @lh_e.setter
     def lh_e(self, lh_e):
