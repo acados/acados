@@ -84,6 +84,12 @@
 	{%- set dims_nh_0 = 0 %}
 {%- endif %}
 
+{%- if dims.nphi_0 %}
+	{%- set dims_nphi_0 = dims.nphi_0 %}
+{%- else %}
+	{%- set dims_nphi_0 = 0 %}
+{%- endif %}
+
 {%- if dims.nh %}
 	{%- set dims_nh = dims.nh %}
 {%- else %}
@@ -221,6 +227,9 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
 {%- endif %}
 {%- if constr_type_e == "BGP" and dims_nphi_e > 0 %}
         {{ model.name }}_constraints/{{ model.name }}_phi_e_constraint.c
+{%- endif %}
+{%- if constr_type_0 == "BGP" and dims_nphi_0 > 0 %}
+        {{ model.name }}_constraints/{{ model.name }}_phi_0_constraint.c
 {%- endif %}
 
 {%- if constr_type == "BGH" and dims_nh > 0 %}
