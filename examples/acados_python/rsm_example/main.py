@@ -263,7 +263,7 @@ def create_ocp_solver(tol = 1e-3):
     else:
         ocp.solver_options.nlp_solver_type = 'SQP'
 
-    acados_solver = AcadosOcpSolver(ocp, verbose=False)
+    acados_solver = AcadosOcpSolver(ocp, verbose=True)
 
     return acados_solver
 
