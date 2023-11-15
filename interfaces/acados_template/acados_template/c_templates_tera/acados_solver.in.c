@@ -1165,11 +1165,11 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
 
 {% if dims.ns_0 > 0 %}
     // slacks terminal
-    double* zluemem = calloc(4*NSN, sizeof(double));
-    double* Zl_0 = zluemem+NSN*0;
-    double* Zu_0 = zluemem+NSN*1;
-    double* zl_0 = zluemem+NSN*2;
-    double* zu_0 = zluemem+NSN*3;
+    double* zlu0_mem = calloc(4*NSN, sizeof(double));
+    double* Zl_0 = zlu0_mem+NSN*0;
+    double* Zu_0 = zlu0_mem+NSN*1;
+    double* zl_0 = zlu0_mem+NSN*2;
+    double* zu_0 = zlu0_mem+NSN*3;
 
     // change only the non-zero elements:
     {% for j in range(end=dims.ns_0) %}
@@ -1200,7 +1200,7 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "Zu", Zu_0);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "zl", zl_0);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "zu", zu_0);
-    free(zluemem);
+    free(zlu0_mem);
 {%- endif %}
 
 
