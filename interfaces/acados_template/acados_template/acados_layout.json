@@ -417,6 +417,24 @@
             [
                 "nsphi_e"
             ]
+        ],
+        "lsphi_0": [
+            "ndarray",
+            [
+                "nsphi_0"
+            ]
+        ],
+        "usphi_0": [
+            "ndarray",
+            [
+                "nsphi_0"
+            ]
+        ],
+        "idxsphi_0": [
+            "ndarray",
+            [
+                "nsphi_0"
+            ]
         ]
     },
     "cost": {
@@ -573,6 +591,30 @@
             [
                 "ns_e"
             ]
+        ],
+        "Zl_0": [
+            "ndarray",
+            [
+                "ns_0"
+            ]
+        ],
+        "Zu_0": [
+            "ndarray",
+            [
+                "ns_0"
+            ]
+        ],
+        "zl_0": [
+            "ndarray",
+            [
+                "ns_0"
+            ]
+        ],
+        "zu_0": [
+            "ndarray",
+            [
+                "ns_0"
+            ]
         ]
     },
     "dims": {
@@ -613,6 +655,9 @@
             "int"
         ],
         "nsh_e": [
+            "int"
+        ],
+        "nsh_0": [
             "int"
         ],
         "nsphi": [

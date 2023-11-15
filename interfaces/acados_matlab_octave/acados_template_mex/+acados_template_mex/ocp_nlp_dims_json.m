@@ -55,6 +55,7 @@ classdef ocp_nlp_dims_json < handle
         ns_e   % total number of soft bounds at t=T
         nsh    % number of soft bounds on nonlinear constraints
         nsh_e  % number of soft bounds on nonlinear constraints at t=T
+        nsh_0
         ng     % number of general linear constraints
         ng_e   % number of general linear constraints at t=T
         nsg     % number of soft general linear constraints
@@ -70,6 +71,7 @@ classdef ocp_nlp_dims_json < handle
         nsphi_0
         nr %
         nr_e %
+        nr_0
         nbxe_0
         % gnsf
         gnsf_nx1
@@ -110,8 +112,9 @@ classdef ocp_nlp_dims_json < handle
             obj.ng    = 0;
             obj.ng_e   = 0;
             obj.nphi = 0;
-            obj.nsphi = 0;
             obj.nphi_e = 0;
+            obj.nphi_0 = 0;
+            obj.nsphi = 0;
             obj.nsphi_e = 0;
             obj.nsphi_0 = 0;
             obj.nr = 0;

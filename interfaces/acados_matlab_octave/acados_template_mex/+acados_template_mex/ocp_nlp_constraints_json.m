@@ -69,9 +69,13 @@ classdef ocp_nlp_constraints_json < handle
         ush     % lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints
         idxsh   % indexes of soft nonlinear constraints
         % soft bounds on nonlinear constraints at t=T
-        lsh_e    % lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints
-        ush_e    % lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints
-        idxsh_e  % indexes of soft nonlinear constraints at t=T
+        lsh_e
+        ush_e
+        idxsh_e
+        % soft bounds on nonlinear constraints at t=0
+        lsh_0
+        ush_0
+        idxsh_0
         % polytopic constraints
         D       % D matrix in lg <= D * u + C * x <= ug
         C       % C matrix in lg <= D * u + C * x <= ug

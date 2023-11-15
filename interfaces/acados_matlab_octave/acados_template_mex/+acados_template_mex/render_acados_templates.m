@@ -113,12 +113,12 @@ function render_acados_templates(acados_ocp_nlp_json_file)
     render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
 
     % solver
-    template_file = 'acados_solver.in.c';
-    out_file = ['acados_solver_', model_name, '.c'];
-    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-
     template_file = 'acados_solver.in.h';
     out_file = ['acados_solver_', model_name, '.h'];
+    render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+
+    template_file = 'acados_solver.in.c';
+    out_file = ['acados_solver_', model_name, '.c'];
     render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
 
     % sim_solver
