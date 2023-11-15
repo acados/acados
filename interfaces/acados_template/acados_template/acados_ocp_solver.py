@@ -212,7 +212,6 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
             raise Exception("\nWith CONVEX_OVER_NONLINEAR cost type, possible Hessian approximations are:\n"
             "GAUSS_NEWTON or EXACT with 'exact_hess_cost' == False.\n")
 
-
     elif cost.cost_type == 'EXTERNAL':
         if opts.hessian_approx == 'GAUSS_NEWTON' and opts.ext_cost_num_hess == 0 and model.cost_expr_ext_cost_custom_hess is None:
             print("\nWARNING: Gauss-Newton Hessian approximation with EXTERNAL cost type not possible!\n"
@@ -505,26 +504,43 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
     dims.nsphi_0 = nsphi_0
 
     # Note: at stage 0 bounds on x are not slacked!
-    ns_0 = nsbu + nsg + nsh_0 + nsphi_0 + nsh_0
+    ns_0 = nsbu + nsg + nsh_0 + nsphi_0 + nsh_0  # NOTE: nsbx not supported at stage 0
+
+    if cost.zl_0 is None and cost.zu_0 is None and cost.Zl_0 is None and cost.Zu_0 is None:
+        print("Fields cost.[zl_0, zu_0, Zl_0, Zu_0] are not provided.")
+        if ns_0 == 0:
+            cost.zl_0 = np.array([])
+            cost.zu_0 = np.array([])
+            cost.Zl_0 = np.array([])
+            cost.Zu_0 = np.array([])
+            print("Using empty arrays at intial node for slack penalties.\n")
+        elif ns_0 == ns:
+            cost.zl_0 = cost.zl
+            cost.zu_0 = cost.zu
+            cost.Zl_0 = cost.Zl
+            cost.Zu_0 = cost.Zu
+            print("Using entries [zl, zu, Zl, Zu] at intial node for slack penalties.\n")
+        else:
+            raise ValueError("Fields cost.[zl_0, zu_0, Zl_0, Zu_0] are not provided and cannot be inferred from other fields.\n")
 
     wrong_fields = []
-    if cost.Zl_0.shape[0] != ns:
-        wrong_fields += ["Zl"]
+    if cost.Zl_0.shape[0] != ns_0:
+        wrong_fields += ["Zl_0"]
         dim = cost.Zl_0.shape[0]
-    elif cost.Zu_0.shape[0] != ns:
-        wrong_fields += ["Zu"]
+    elif cost.Zu_0.shape[0] != ns_0:
+        wrong_fields += ["Zu_0"]
         dim = cost.Zu_0.shape[0]
-    elif cost.zl_0.shape[0] != ns:
-        wrong_fields += ["zl"]
+    elif cost.zl_0.shape[0] != ns_0:
+        wrong_fields += ["zl_0"]
         dim = cost.zl_0.shape[0]
-    elif cost.zu_0.shape[0] != ns:
-        wrong_fields += ["zu"]
+    elif cost.zu_0.shape[0] != ns_0:
+        wrong_fields += ["zu_0"]
         dim = cost.zu_0.shape[0]
 
     if wrong_fields != []:
         raise Exception(f'Inconsistent size for fields {", ".join(wrong_fields)}, with dimension {dim}, \n\t'\
-            + f'Detected ns_0 = {ns_0} = nsbx + nsbu + nsg + nsh_0 + nsphi_0.\n\t'\
-            + f'With nsbx = {nsbx}, nsbu = {nsbu}, nsg = {nsg}, nsh_0 = {nsh_0}, nsphi_0 = {nsphi_0}')
+            + f'Detected ns_0 = {ns_0} = nsbu + nsg + nsh_0 + nsphi_0.\n\t'\
+            + f'With nsbu = {nsbu}, nsg = {nsg}, nsh_0 = {nsh_0}, nsphi_0 = {nsphi_0}')
     dims.ns_0 = ns_0
 
     # slacks at terminal node

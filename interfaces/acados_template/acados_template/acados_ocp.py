@@ -616,10 +616,10 @@ class AcadosOcpCost:
         self.__Vz_0 = None
         self.__yref_0 = None
         self.__cost_ext_fun_type_0 = 'casadi'
-        self.__Zl_0        = np.array([])
-        self.__Zu_0        = np.array([])
-        self.__zl_0        = np.array([])
-        self.__zu_0        = np.array([])
+        self.__Zl_0 = None
+        self.__Zu_0 = None
+        self.__zl_0 = None
+        self.__zu_0 = None
         # Lagrange term
         self.__cost_type   = 'LINEAR_LS'  # cost type
         self.__W           = np.zeros((0,0))
