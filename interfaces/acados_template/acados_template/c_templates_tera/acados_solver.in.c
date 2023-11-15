@@ -189,7 +189,12 @@ void {{ model.name }}_acados_create_1_set_plan(ocp_nlp_plan_t* nlp_solver_plan, 
         {%- endif %}
     }
 
-    for (int i = 0; i < N; i++)
+    {%- if constraints.constr_type_0 == "BGP" %}
+    nlp_solver_plan->nlp_constraints[0] = BGP;
+    {%- else %}
+    nlp_solver_plan->nlp_constraints[0] = BGH;
+    {%- endif %}
+    for (int i = 1; i < N; i++)
     {
         {%- if constraints.constr_type == "BGP" %}
         nlp_solver_plan->nlp_constraints[i] = BGP;
@@ -197,13 +202,6 @@ void {{ model.name }}_acados_create_1_set_plan(ocp_nlp_plan_t* nlp_solver_plan, 
         nlp_solver_plan->nlp_constraints[i] = BGH;
         {%- endif %}
     }
-
-    {%- if constraints.constr_type_0 == "BGP" %}
-    nlp_solver_plan->nlp_constraints[0] = BGP;
-    {%- else %}
-    nlp_solver_plan->nlp_constraints[0] = BGH;
-    {%- endif %}
-
     {%- if constraints.constr_type_e == "BGP" %}
     nlp_solver_plan->nlp_constraints[N] = BGP;
     {%- else %}
