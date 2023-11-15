@@ -2472,7 +2472,7 @@ int {{ model.name }}_acados_update_params({{ model.name }}_solver_capsule* capsu
         // constraints
         if (stage == 0)
         {
-        {% if constraints.constr_type == "BGP" %}
+        {% if constraints.constr_type_0 == "BGP" %}
             capsule->phi_0_constraint.set_param(&capsule->phi_0_constraint, p);
         {% elif constraints.constr_type_0 == "BGH" and dims.nh_0 > 0 %}
             capsule->nl_constr_h_0_fun_jac.set_param(&capsule->nl_constr_h_0_fun_jac, p);
@@ -2636,9 +2636,9 @@ int {{ model.name }}_acados_update_params_sparse({{ model.name }}_solver_capsule
             capsule->ext_cost_0_fun_jac_hess.set_param_sparse(&capsule->ext_cost_0_fun_jac_hess, n_update, idx, p);
         {% endif %}
             // constraints
-        {% if constraints.constr_type == "BGP" %}
+        {% if constraints.constr_type_0 == "BGP" %}
             capsule->phi_0_constraint.set_param_sparse(&capsule->phi_0_constraint, n_update, idx, p);
-        {% elif constraints.constr_type == "BGH" and dims.nh_0 > 0 %}
+        {% elif constraints.constr_type_0 == "BGH" and dims.nh_0 > 0 %}
             capsule->nl_constr_h_0_fun_jac.set_param_sparse(&capsule->nl_constr_h_0_fun_jac, n_update, idx, p);
             capsule->nl_constr_h_0_fun.set_param_sparse(&capsule->nl_constr_h_0_fun, n_update, idx, p);
             {%- if solver_options.hessian_approx == "EXACT" %}
