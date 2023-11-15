@@ -788,7 +788,7 @@ def ocp_generate_external_functions(ocp: AcadosOcp, model: AcadosModel):
         target_location = os.path.join(code_export_dir, model_dir, model.dyn_generic_source)
         shutil.copyfile(model.dyn_generic_source, target_location)
 
-    if ocp.dims.nh_0 > 0: # TODO: add option to have BGP not at stage 0
+    if ocp.dims.nh_0 > 0 or ocp.dims.nphi_0:
         generate_c_code_constraint(ocp, opts, 'initial')
 
     if ocp.dims.nphi > 0 or ocp.dims.nh > 0:
