@@ -97,16 +97,23 @@ classdef ocp_nlp_constraints_json < handle
         idxbxe_0 %
         % convex over nonlinear constraint (BGP) to work with json
         % TODO: implement in MEX..
-        lphi   % lower bound on convex over nonlinear constraint
-        uphi   % upper bound on convex over nonlinear constraint
-        lphi_e   % lower bound on convex over nonlinear constraint at t=T
-        uphi_e   % upper bound on convex over nonlinear constraint at t=T
-        lsphi   % lower bounds on slacks corresponding to lower bound on convex over nonlinear constraint
-        usphi   % lower bounds on slacks corresponding to upper bound on convex over nonlinear constraint
-        lsphi_e   % lower bounds on slacks corresponding to lower bound on convex over nonlinear constraint at t=T
-        usphi_e   % lower bounds on slacks corresponding to upper bound on convex over nonlinear constraint at t=T
-        idxsphi % indexes of soft convex over nonlinear constraints
-        idxsphi_e % indexes of soft convex over nonlinear constraints at t=T
+        lphi
+        uphi
+        lsphi
+        usphi
+        idxsphi
+
+        lphi_e
+        uphi_e
+        lsphi_e
+        usphi_e
+        idxsphi_e
+
+        lphi_0
+        uphi_0
+        lsphi_0
+        usphi_0
+        idxsphi_0
 
     end
     methods
@@ -147,22 +154,30 @@ classdef ocp_nlp_constraints_json < handle
             obj.lbx_0 = [];
             obj.ubx_0 = [];
             obj.idxbx_0 = [];
-            obj.lphi            = [];
-            obj.uphi            = [];
             obj.lsg = [];
             obj.usg = [];
             obj.idxsg = [];
             obj.lsg_e = [];
             obj.usg_e = [];
             obj.idxsg_e = [];
+
+            obj.lphi            = [];
+            obj.uphi            = [];
             obj.lsphi = [];
             obj.usphi = [];
             obj.idxsphi = [];
-            obj.lphi_e            = [];
-            obj.uphi_e            = [];
-            obj.lsphi_e            = [];
-            obj.usphi_e            = [];
+
+            obj.lphi_e = [];
+            obj.uphi_e = [];
+            obj.lsphi_e = [];
+            obj.usphi_e = [];
             obj.idxsphi_e = [];
+
+            obj.lphi_0 = [];
+            obj.uphi_0 = [];
+            obj.lsphi_0 = [];
+            obj.usphi_0 = [];
+            obj.idxsphi_0 = [];
         end
         function s = struct(self)
             if exist('properties')

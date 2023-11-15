@@ -42,9 +42,9 @@ classdef ocp_nlp_cost_json < handle
         Vu          % u matrix coefficient
         Vz          % z matrix coefficient
         yref        % reference
-        Zl          % Hessian wrt lower slack 
-        Zu          % Hessian wrt upper slack 
-        zl          % gradient wrt lower slack 
+        Zl          % Hessian wrt lower slack
+        Zu          % Hessian wrt upper slack
+        zl          % gradient wrt lower slack
         zu          % gradient wrt upper slack
         % initial cost term
         cost_type_0   % cost type
@@ -56,6 +56,11 @@ classdef ocp_nlp_cost_json < handle
         Vu_0          % u matrix coefficient
         Vz_0          % z matrix coefficient
         yref_0        % reference
+        Zl_0        % Hessian wrt lower slack
+        Zu_0        % Hessian wrt upper slack
+        zl_0        % gradient wrt lower slack
+        zu_0        % gradient wrt upper slack
+
         % Mayer term
         cost_type_e % cost type
         cost_ext_fun_type_e % casadi or generic
@@ -64,10 +69,10 @@ classdef ocp_nlp_cost_json < handle
         W_e         % weight matrix
         Vx_e        % x matrix coefficient
         yref_e      % reference
-        Zl_e        % Hessian wrt lower slack 
-        Zu_e        % Hessian wrt upper slack 
-        zl_e        % gradient wrt lower slack 
-        zu_e        % gradient wrt upper slack 
+        Zl_e        % Hessian wrt lower slack
+        Zu_e        % Hessian wrt upper slack
+        zl_e        % gradient wrt lower slack
+        zu_e        % gradient wrt upper slack
     end
     methods
         function obj = ocp_nlp_cost_json()
@@ -75,7 +80,7 @@ classdef ocp_nlp_cost_json < handle
             obj.cost_ext_fun_type = 'casadi';
             obj.cost_source_ext_cost = [];
             obj.cost_function_ext_cost = [];
-            obj.W           = [];  
+            obj.W           = [];
             obj.Vx          = [];
             obj.Vu          = [];
             obj.Vz          = [];
@@ -94,6 +99,10 @@ classdef ocp_nlp_cost_json < handle
             obj.Vu_0        = [];
             obj.Vz_0        = [];
             obj.yref_0     = [];
+            obj.Zl_0        = [];
+            obj.Zu_0        = [];
+            obj.zl_0        = [];
+            obj.zu_0        = [];
             %
             obj.cost_type_e = 'LINEAR_LS';
             obj.cost_ext_fun_type_e = 'casadi';

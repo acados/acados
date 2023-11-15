@@ -62,10 +62,12 @@ classdef ocp_nlp_dims_json < handle
         N      % prediction horizon
         % Declare convex over nonlinear stuff that should be implemented in MEX
         % TODO..
-        nphi   % dimension of convex outer part for convex over nonlinear constraint (BGP)
-        nphi_e % dimension of convex outer part for convex over nonlinear constraint (BGP) at t=T
-        nsphi  % number of softend convex over nonlinear constraints (BGP)
-        nsphi_e % number of softend convex over nonlinear constraints (BGP) at t=T
+        nphi
+        nphi_e
+        nphi_0
+        nsphi
+        nsphi_e
+        nsphi_0
         nr %
         nr_e %
         nbxe_0
@@ -99,8 +101,10 @@ classdef ocp_nlp_dims_json < handle
             obj.nsbx_e = 0;
             obj.ns    = 0;
             obj.ns_e   = 0;
+            obj.ns_0   = 0;
             obj.nsh   = 0;
             obj.nsh_e  = 0;
+            obj.nsh_0  = 0;
             obj.nsg   = 0;
             obj.nsg_e  = 0;
             obj.ng    = 0;
@@ -109,8 +113,10 @@ classdef ocp_nlp_dims_json < handle
             obj.nsphi = 0;
             obj.nphi_e = 0;
             obj.nsphi_e = 0;
+            obj.nsphi_0 = 0;
             obj.nr = 0;
             obj.nr_e = 0;
+            obj.nr_0 = 0;
             obj.N     = [];
             obj.nbxe_0 = 0;
             %
