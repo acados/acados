@@ -701,11 +701,11 @@ def generate_c_code_constraint(ocp: AcadosOcp, opts: dict, stage_type: str):
             r = model.con_r_in_phi_e
             con_r_expr = model.con_r_expr_e
         elif stage_type == 'initial':
-            fun_name = model.name + '_phi_constraint'
+            fun_name = model.name + '_phi_0_constraint'
             r = model.con_r_in_phi_0
             con_r_expr = model.con_r_expr_0
         elif stage_type == 'path':
-            fun_name = model.name + '_phi_0_constraint'
+            fun_name = model.name + '_phi_constraint'
             r = model.con_r_in_phi
             con_r_expr = model.con_r_expr
 
