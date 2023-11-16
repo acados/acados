@@ -298,11 +298,6 @@ ocp_opts.opts_struct
 %% acados ocp
 % create ocp
 ocp = acados_ocp(ocp_model, ocp_opts);
-%ocp
-%ocp.C_ocp
-%ocp.C_ocp_ext_fun
-
-
 
 %% acados sim model
 sim_model = acados_sim_model();

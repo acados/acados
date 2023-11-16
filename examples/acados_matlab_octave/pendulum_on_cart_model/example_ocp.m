@@ -235,8 +235,6 @@ ocp = acados_ocp(ocp_model, ocp_opts);
 ocp
 disp('ocp.C_ocp');
 disp(ocp.C_ocp);
-disp('ocp.C_ocp_ext_fun');
-disp(ocp.C_ocp_ext_fun);
 %ocp.model_struct
 
 
