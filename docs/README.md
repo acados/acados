@@ -14,7 +14,7 @@ sudo apt-get install doxygen graphviz
 
 ### Python virtual environment
 
-* Get python3.5 or later if not already present.
+* Get python3.8 or later if not already present.
 * Optionally create and activate a python virtual environment
 ```
 python3 -m venv <path_to_virtual_env> # you can use path_to_virtual_env = "env"

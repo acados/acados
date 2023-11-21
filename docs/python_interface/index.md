@@ -16,6 +16,7 @@ There is a `ctypes` based wrapper which is the default and a `cython` based wrap
 
 ## Optimal Control Problem description
 The Python interface relies on the same problem formulation as the MATLAB interface [see here](https://github.com/acados/acados/blob/master/docs/problem_formulation/problem_formulation_ocp_mex.pdf).
+Currently, Python >= 3.8 is required.
 
 ## Installation
 1. Compile and install `acados` by following the [`CMake` installation instructions](../installation/index.md).
@@ -23,7 +24,7 @@ The Python interface relies on the same problem formulation as the MATLAB interf
 2. Optional: Recommended.
     Create a Python virtual environment using `virtualenv`.
     ```
-    virtualenv env --python=/usr/bin/python3.7
+    virtualenv env --python=/usr/bin/python3
     # Source the environment
     source env/bin/activate
     ```
