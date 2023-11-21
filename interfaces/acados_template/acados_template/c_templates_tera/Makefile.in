@@ -48,6 +48,12 @@
 	{%- set constr_type = "NONE" %}
 {%- endif %}
 
+{%- if constraints.constr_type_0 %}
+	{%- set constr_type_0 = constraints.constr_type_0 %}
+{%- else %}
+	{%- set constr_type_0 = "NONE" %}
+{%- endif %}
+
 {%- if constraints.constr_type_e %}
 	{%- set constr_type_e = constraints.constr_type_e %}
 {%- else %}
@@ -83,6 +89,19 @@
 {%- else %}
 	{%- set dims_nphi = 0 %}
 {%- endif %}
+
+{%- if dims.nphi_0 %}
+	{%- set dims_nphi_0 = dims.nphi_0 %}
+{%- else %}
+	{%- set dims_nphi_0 = 0 %}
+{%- endif %}
+
+{%- if dims.nh_0 %}
+	{%- set dims_nh_0 = dims.nh_0 %}
+{%- else %}
+	{%- set dims_nh_0 = 0 %}
+{%- endif %}
+
 
 {%- if dims.nh_e %}
 	{%- set dims_nh_e = dims.nh_e %}
@@ -173,11 +192,15 @@ MODEL_OBJ := $(MODEL_SRC:.c=.o)
 
 # optimal control problem - mostly CasADi exports
 OCP_SRC=
-{%- if constr_type == "BGP" and dims_nphi > 0 %}
-OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_phi_constraint.c
-{%- endif %}
-{%- if constr_type_e == "BGP" and dims_nphi_e > 0 %}
-OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_phi_e_constraint.c
+
+{%- if constr_type_0 == "BGH" and dims_nh_0 > 0 %}
+OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_constr_h_0_fun_jac_uxt_zt.c
+OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_constr_h_0_fun.c
+	{%- if hessian_approx == "EXACT" %}
+OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_constr_h_0_fun_jac_uxt_zt_hess.c
+	{%- endif %}
+{%- elif constr_type_0 == "BGP" and dims_nphi_0 > 0 %}
+OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_phi_0_constraint.c
 {%- endif %}
 
 {%- if constr_type == "BGH" and dims_nh > 0 %}
@@ -186,6 +209,8 @@ OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_constr_h_fun.c
 	{%- if hessian_approx == "EXACT" %}
 OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_constr_h_fun_jac_uxt_zt_hess.c
 	{%- endif %}
+{%- elif constr_type == "BGP" and dims_nphi > 0 %}
+OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_phi_constraint.c
 {%- endif %}
 
 {%- if constr_type_e == "BGH" and dims_nh_e > 0 %}
@@ -194,6 +219,8 @@ OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_constr_h_e_fun.c
 	{%- if hessian_approx == "EXACT" %}
 OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_constr_h_e_fun_jac_uxt_zt_hess.c
 	{%- endif %}
+{%- elif constr_type_e == "BGP" and dims_nphi_e > 0 %}
+OCP_SRC+= {{ model.name }}_constraints/{{ model.name }}_phi_e_constraint.c
 {%- endif %}
 
 {%- if cost_type_0 == "NONLINEAR_LS" %}

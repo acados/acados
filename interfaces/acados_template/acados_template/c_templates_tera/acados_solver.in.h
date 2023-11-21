@@ -46,13 +46,16 @@
 #define {{ model.name | upper }}_NSBX   {{ dims.nsbx }}
 #define {{ model.name | upper }}_NSBU   {{ dims.nsbu }}
 #define {{ model.name | upper }}_NSH    {{ dims.nsh }}
+#define {{ model.name | upper }}_NSH0   {{ dims.nsh_0 }}
 #define {{ model.name | upper }}_NSG    {{ dims.nsg }}
 #define {{ model.name | upper }}_NSPHI  {{ dims.nsphi }}
 #define {{ model.name | upper }}_NSHN   {{ dims.nsh_e }}
 #define {{ model.name | upper }}_NSGN   {{ dims.nsg_e }}
 #define {{ model.name | upper }}_NSPHIN {{ dims.nsphi_e }}
+#define {{ model.name | upper }}_NSPHI0 {{ dims.nsphi_0 }}
 #define {{ model.name | upper }}_NSBXN  {{ dims.nsbx_e }}
 #define {{ model.name | upper }}_NS     {{ dims.ns }}
+#define {{ model.name | upper }}_NS0    {{ dims.ns_0 }}
 #define {{ model.name | upper }}_NSN    {{ dims.ns_e }}
 #define {{ model.name | upper }}_NG     {{ dims.ng }}
 #define {{ model.name | upper }}_NBXN   {{ dims.nbx_e }}
@@ -62,8 +65,10 @@
 #define {{ model.name | upper }}_NYN    {{ dims.ny_e }}
 #define {{ model.name | upper }}_N      {{ dims.N }}
 #define {{ model.name | upper }}_NH     {{ dims.nh }}
-#define {{ model.name | upper }}_NPHI   {{ dims.nphi }}
 #define {{ model.name | upper }}_NHN    {{ dims.nh_e }}
+#define {{ model.name | upper }}_NH0    {{ dims.nh_0 }}
+#define {{ model.name | upper }}_NPHI0  {{ dims.nphi_0 }}
+#define {{ model.name | upper }}_NPHI   {{ dims.nphi }}
 #define {{ model.name | upper }}_NPHIN  {{ dims.nphi_e }}
 #define {{ model.name | upper }}_NR     {{ dims.nr }}
 
@@ -174,6 +179,17 @@ typedef struct {{ model.name }}_solver_capsule
     external_function_param_casadi *nl_constr_h_fun;
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_param_casadi *nl_constr_h_fun_jac_hess;
+{%- endif %}
+{%- endif %}
+
+
+{% if constraints.constr_type_0 == "BGP" %}
+    external_function_param_casadi phi_0_constraint;
+{% elif constraints.constr_type_0 == "BGH" and dims.nh_0 > 0 %}
+    external_function_param_casadi nl_constr_h_0_fun_jac;
+    external_function_param_casadi nl_constr_h_0_fun;
+{%- if solver_options.hessian_approx == "EXACT" %}
+    external_function_param_casadi nl_constr_h_0_fun_jac_hess;
 {%- endif %}
 {%- endif %}
 

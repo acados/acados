@@ -32,6 +32,7 @@
 classdef ocp_nlp_constraints_json < handle
     properties
         constr_type
+        constr_type_0
         constr_type_e
         % bounds on x and u
         lbx     % lower bounds on x
@@ -68,9 +69,13 @@ classdef ocp_nlp_constraints_json < handle
         ush     % lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints
         idxsh   % indexes of soft nonlinear constraints
         % soft bounds on nonlinear constraints at t=T
-        lsh_e    % lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints
-        ush_e    % lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints
-        idxsh_e  % indexes of soft nonlinear constraints at t=T
+        lsh_e
+        ush_e
+        idxsh_e
+        % soft bounds on nonlinear constraints at t=0
+        lsh_0
+        ush_0
+        idxsh_0
         % polytopic constraints
         D       % D matrix in lg <= D * u + C * x <= ug
         C       % C matrix in lg <= D * u + C * x <= ug
@@ -83,6 +88,9 @@ classdef ocp_nlp_constraints_json < handle
         % nonlinear constraints
         lh      % lower bound for nonlinear inequalities
         uh      % upper bound for nonlinear inequalities
+        % nonlinear constraints at t=0
+        lh_0     % lower bound on nonlinear inequalities at t=0
+        uh_0     % upper bound on nonlinear inequalities at t=0
         % nonlinear constraints at t=T
         lh_e     % lower bound on nonlinear inequalities at t=T
         uh_e     % upper bound on nonlinear inequalities at t=T
@@ -93,21 +101,29 @@ classdef ocp_nlp_constraints_json < handle
         idxbxe_0 %
         % convex over nonlinear constraint (BGP) to work with json
         % TODO: implement in MEX..
-        lphi   % lower bound on convex over nonlinear constraint
-        uphi   % upper bound on convex over nonlinear constraint
-        lphi_e   % lower bound on convex over nonlinear constraint at t=T
-        uphi_e   % upper bound on convex over nonlinear constraint at t=T
-        lsphi   % lower bounds on slacks corresponding to lower bound on convex over nonlinear constraint
-        usphi   % lower bounds on slacks corresponding to upper bound on convex over nonlinear constraint
-        lsphi_e   % lower bounds on slacks corresponding to lower bound on convex over nonlinear constraint at t=T
-        usphi_e   % lower bounds on slacks corresponding to upper bound on convex over nonlinear constraint at t=T
-        idxsphi % indexes of soft convex over nonlinear constraints
-        idxsphi_e % indexes of soft convex over nonlinear constraints at t=T
+        lphi
+        uphi
+        lsphi
+        usphi
+        idxsphi
+
+        lphi_e
+        uphi_e
+        lsphi_e
+        usphi_e
+        idxsphi_e
+
+        lphi_0
+        uphi_0
+        lsphi_0
+        usphi_0
+        idxsphi_0
 
     end
     methods
         function obj = ocp_nlp_constraints_json()
             obj.constr_type     = 'BGH';
+            obj.constr_type_0     = 'BGH';
             obj.constr_type_e   = 'BGH';
             obj.lbx             = [];
             obj.lbu             = [];
@@ -127,6 +143,8 @@ classdef ocp_nlp_constraints_json < handle
             obj.ug              = [];
             obj.lh              = [];
             obj.uh              = [];
+            obj.lh_0            = [];
+            obj.uh_0            = [];
             obj.D               = [];
             obj.C               = [];
             obj.lbx_e           = [];
@@ -140,22 +158,30 @@ classdef ocp_nlp_constraints_json < handle
             obj.lbx_0 = [];
             obj.ubx_0 = [];
             obj.idxbx_0 = [];
-            obj.lphi            = [];
-            obj.uphi            = [];
             obj.lsg = [];
             obj.usg = [];
             obj.idxsg = [];
             obj.lsg_e = [];
             obj.usg_e = [];
             obj.idxsg_e = [];
+
+            obj.lphi            = [];
+            obj.uphi            = [];
             obj.lsphi = [];
             obj.usphi = [];
             obj.idxsphi = [];
-            obj.lphi_e            = [];
-            obj.uphi_e            = [];
-            obj.lsphi_e            = [];
-            obj.usphi_e            = [];
+
+            obj.lphi_e = [];
+            obj.uphi_e = [];
+            obj.lsphi_e = [];
+            obj.usphi_e = [];
             obj.idxsphi_e = [];
+
+            obj.lphi_0 = [];
+            obj.uphi_0 = [];
+            obj.lsphi_0 = [];
+            obj.usphi_0 = [];
+            obj.idxsphi_0 = [];
         end
         function s = struct(self)
             if exist('properties')

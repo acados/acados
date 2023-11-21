@@ -204,7 +204,6 @@ class ZoroMPCSolver:
             self.acados_ocp_solver.cost_set(i_stage, 'yref', y_ref[i_stage,:])
         self.acados_ocp_solver.cost_set(self.cfg.n_hrzn, 'yref', y_ref[self.cfg.n_hrzn,:self.cfg.nx])
 
-        self.acados_ocp_solver.constraints_set(0, "lh", obs_radius)
         for i_stage in range(self.cfg.n_hrzn+1):
             self.acados_ocp_solver.set(i_stage,"p", obs_position)
 
@@ -317,13 +316,14 @@ class ZoroMPCSolver:
                 self.acados_ocp_solver.constraints_set(i_mpc_stage, "lbx", lbx_tightened)
                 self.acados_ocp_solver.constraints_set(i_mpc_stage, "ubx", ubx_tightened)
 
-            # obstacles
-            x_guess_i = self.x_temp_sol[i_mpc_stage, 0:2]
-            for i_obs in range(self.cfg.num_obs):
-                dist_guess[i_obs,:] = x_guess_i - obs_position[2*i_obs:2*(i_obs+1)]
-            dist_norm_mat = dist_guess @ Pj[:2,:2] @ dist_guess.T
-            dist_norm = np.diag(dist_norm_mat)
-            sqr_dist_val = dist_guess[:,0]**2 + dist_guess[:,1]**2
-            h_backoff = backoff_scaling_gamma * np.sqrt(dist_norm / sqr_dist_val + self.cfg.backoff_eps)
-            self.acados_ocp_solver.constraints_set(i_mpc_stage, "lh", obs_radius + h_backoff)
+            # obstacle constraint not enforced at node 0
+            if i_mpc_stage > 0:
+                x_guess_i = self.x_temp_sol[i_mpc_stage, 0:2]
+                for i_obs in range(self.cfg.num_obs):
+                    dist_guess[i_obs,:] = x_guess_i - obs_position[2*i_obs:2*(i_obs+1)]
+                dist_norm_mat = dist_guess @ Pj[:2,:2] @ dist_guess.T
+                dist_norm = np.diag(dist_norm_mat)
+                sqr_dist_val = dist_guess[:,0]**2 + dist_guess[:,1]**2
+                h_backoff = backoff_scaling_gamma * np.sqrt(dist_norm / sqr_dist_val + self.cfg.backoff_eps)
+                self.acados_ocp_solver.constraints_set(i_mpc_stage, "lh", obs_radius + h_backoff)
         return

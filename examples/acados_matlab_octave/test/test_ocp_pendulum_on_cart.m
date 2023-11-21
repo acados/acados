@@ -159,13 +159,14 @@ for itest = 1:3
     %% constraints
     ocp_model.set('constr_x0', x0);
     if itest == 1
-        nh = nu;
         ng = 0;
         ocp_model.set('constr_expr_h', model.expr_h);
         ocp_model.set('constr_lh', lbu);
         ocp_model.set('constr_uh', ubu);
+        ocp_model.set('constr_expr_h_0', model.expr_h);
+        ocp_model.set('constr_lh_0', lbu);
+        ocp_model.set('constr_uh_0', ubu);
     elseif itest == 2
-        nh = 0;
         ng = 1;
         C = zeros(ng, nx);
         D = zeros(ng, nu);

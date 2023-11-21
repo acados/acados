@@ -155,11 +155,15 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     ocp_json.dims.nbu = model.dim_nbu;
     ocp_json.dims.ng = model.dim_ng;
     ocp_json.dims.nh = model.dim_nh;
+    ocp_json.dims.nh_0 = model.dim_nh_0;
     ocp_json.dims.nbxe_0 = model.dim_nbxe_0;
     ocp_json.dims.ns = model.dim_ns;
     ocp_json.dims.nsbx = model.dim_nsbx;
     ocp_json.dims.nsbu = model.dim_nsbu;
     ocp_json.dims.nsg = model.dim_nsg;
+
+    % to match python!
+    ocp_json.dims.ns_0 = model.dim_nsbu + model.dim_nsg
 
     if isfield(model, 'dim_ny_0')
         ocp_json.dims.ny_0 = model.dim_ny_0;
@@ -230,6 +234,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     end
     
     ocp_json.constraints.constr_type = upper(model.constr_type);
+    ocp_json.constraints.constr_type_0 = upper(model.constr_type_0);
     ocp_json.constraints.constr_type_e = upper(model.constr_type_e);
 
     % parameters
@@ -359,9 +364,14 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
         ocp_json.constraints.ug_e = model.constr_ug_e;
     end
 
-    if ocp_json.dims.nh_e > 0    
+    if ocp_json.dims.nh_e > 0
         ocp_json.constraints.lh_e = model.constr_lh_e;
         ocp_json.constraints.uh_e = model.constr_uh_e;
+    end
+
+    if ocp_json.dims.nh_0 > 0
+        ocp_json.constraints.lh_0 = model.constr_lh_0;
+        ocp_json.constraints.uh_0 = model.constr_uh_0;
     end
 
     if ocp_json.dims.nsbx_e > 0
