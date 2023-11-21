@@ -244,10 +244,6 @@ sim_opts.set('sens_forw', sim_sens_forw);
 %% acados sim
 % create sim
 sim = acados_sim(sim_model, sim_opts);
-%sim
-%sim.C_sim
-%sim.C_sim_ext_fun
-
 
 
 %% closed loop simulation

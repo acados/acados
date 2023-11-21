@@ -272,8 +272,6 @@ ocp_opts.opts_struct
 ocp = acados_ocp(ocp_model, ocp_opts);
 %ocp
 %ocp.C_ocp
-ocp.C_ocp_ext_fun
-
 
 
 %% solution

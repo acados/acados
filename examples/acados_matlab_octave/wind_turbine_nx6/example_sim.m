@@ -97,7 +97,6 @@ sim_opts.set('sens_forw', sens_forw);
 %% acados sim
 % create sim
 sim = acados_sim(sim_model, sim_opts);
-sim.C_sim_ext_fun
 
 % to avoid unstable behavior introduce a small pi-contorller for rotor speed tracking
 uctrl = 0.0;

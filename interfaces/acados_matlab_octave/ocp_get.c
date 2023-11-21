@@ -439,7 +439,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "qp_A") || !strcmp(field, "qp_B") || !strcmp(field, "qp_Q") ||
              !strcmp(field, "qp_R") || !strcmp(field, "qp_S") || !strcmp(field, "qp_b") ||
-             !strcmp(field, "qp_q") || !strcmp(field, "qp_r"))
+             !strcmp(field, "qp_q") || !strcmp(field, "qp_r") || !strcmp(field, "qp_C") ||
+             !strcmp(field, "qp_D") || !strcmp(field, "qp_lg") || !strcmp(field, "qp_ug") ||
+             !strcmp(field, "qp_lbx") || !strcmp(field, "qp_ubx") || !strcmp(field, "qp_lbu") ||
+             !strcmp(field, "qp_ubu"))
     {
         int out_dims[2];
         if (nrhs==2)
