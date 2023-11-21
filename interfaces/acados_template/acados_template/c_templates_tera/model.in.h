@@ -99,45 +99,45 @@ int {{ model.dyn_impl_dae_fun }}(void **, void **, void *);
 /* GNSF Functions */
 	{% if model.gnsf.purely_linear != 1 %}
 // phi_fun
-int        {{ model.name }}_gnsf_phi_fun(const double** arg, double** res, int* iw, double* w, void *mem);
-int        {{ model.name }}_gnsf_phi_fun_work(int *, int *, int *, int *);
+int {{ model.name }}_gnsf_phi_fun(const double** arg, double** res, int* iw, double* w, void *mem);
+int {{ model.name }}_gnsf_phi_fun_work(int *, int *, int *, int *);
 const int *{{ model.name }}_gnsf_phi_fun_sparsity_in(int);
 const int *{{ model.name }}_gnsf_phi_fun_sparsity_out(int);
-int        {{ model.name }}_gnsf_phi_fun_n_in(void);
-int        {{ model.name }}_gnsf_phi_fun_n_out(void);
+int {{ model.name }}_gnsf_phi_fun_n_in(void);
+int {{ model.name }}_gnsf_phi_fun_n_out(void);
 
 // phi_fun_jac_y
-int        {{ model.name }}_gnsf_phi_fun_jac_y(const double** arg, double** res, int* iw, double* w, void *mem);
-int        {{ model.name }}_gnsf_phi_fun_jac_y_work(int *, int *, int *, int *);
+int {{ model.name }}_gnsf_phi_fun_jac_y(const double** arg, double** res, int* iw, double* w, void *mem);
+int {{ model.name }}_gnsf_phi_fun_jac_y_work(int *, int *, int *, int *);
 const int *{{ model.name }}_gnsf_phi_fun_jac_y_sparsity_in(int);
 const int *{{ model.name }}_gnsf_phi_fun_jac_y_sparsity_out(int);
-int        {{ model.name }}_gnsf_phi_fun_jac_y_n_in(void);
-int        {{ model.name }}_gnsf_phi_fun_jac_y_n_out(void);
+int {{ model.name }}_gnsf_phi_fun_jac_y_n_in(void);
+int {{ model.name }}_gnsf_phi_fun_jac_y_n_out(void);
 
 // phi_jac_y_uhat
-int        {{ model.name }}_gnsf_phi_jac_y_uhat(const double** arg, double** res, int* iw, double* w, void *mem);
-int        {{ model.name }}_gnsf_phi_jac_y_uhat_work(int *, int *, int *, int *);
+int {{ model.name }}_gnsf_phi_jac_y_uhat(const double** arg, double** res, int* iw, double* w, void *mem);
+int {{ model.name }}_gnsf_phi_jac_y_uhat_work(int *, int *, int *, int *);
 const int *{{ model.name }}_gnsf_phi_jac_y_uhat_sparsity_in(int);
 const int *{{ model.name }}_gnsf_phi_jac_y_uhat_sparsity_out(int);
-int        {{ model.name }}_gnsf_phi_jac_y_uhat_n_in(void);
-int        {{ model.name }}_gnsf_phi_jac_y_uhat_n_out(void);
+int {{ model.name }}_gnsf_phi_jac_y_uhat_n_in(void);
+int {{ model.name }}_gnsf_phi_jac_y_uhat_n_out(void);
 	{% if model.gnsf.nontrivial_f_LO == 1 %}
 // f_lo_fun_jac_x1k1uz
-int        {{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz(const double** arg, double** res, int* iw, double* w, void *mem);
-int        {{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz_work(int *, int *, int *, int *);
+int {{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz(const double** arg, double** res, int* iw, double* w, void *mem);
+int {{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz_work(int *, int *, int *, int *);
 const int *{{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz_sparsity_in(int);
 const int *{{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz_sparsity_out(int);
-int        {{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz_n_in(void);
-int        {{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz_n_out(void);
+int {{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz_n_in(void);
+int {{ model.name }}_gnsf_f_lo_fun_jac_x1k1uz_n_out(void);
 	{%- endif %}
 	{%- endif %}
 // used to import model matrices
-int        {{ model.name }}_gnsf_get_matrices_fun(const double** arg, double** res, int* iw, double* w, void *mem);
-int        {{ model.name }}_gnsf_get_matrices_fun_work(int *, int *, int *, int *);
+int {{ model.name }}_gnsf_get_matrices_fun(const double** arg, double** res, int* iw, double* w, void *mem);
+int {{ model.name }}_gnsf_get_matrices_fun_work(int *, int *, int *, int *);
 const int *{{ model.name }}_gnsf_get_matrices_fun_sparsity_in(int);
 const int *{{ model.name }}_gnsf_get_matrices_fun_sparsity_out(int);
-int        {{ model.name }}_gnsf_get_matrices_fun_n_in(void);
-int        {{ model.name }}_gnsf_get_matrices_fun_n_out(void);
+int {{ model.name }}_gnsf_get_matrices_fun_n_in(void);
+int {{ model.name }}_gnsf_get_matrices_fun_n_out(void);
 
 {% elif solver_options.integrator_type == "ERK" %}
 /* explicit ODE */
