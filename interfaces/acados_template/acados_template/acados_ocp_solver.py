@@ -49,9 +49,13 @@ from typing import Union
 import numpy as np
 import scipy.linalg
 
+from .acados_ocp import AcadosOcp
 from .acados_model import AcadosModel
-from .acados_ocp import (AcadosOcp, AcadosOcpConstraints, AcadosOcpCost,
-                         AcadosOcpDims, AcadosOcpOptions)
+from .acados_ocp_cost import AcadosOcpCost
+from .acados_ocp_constraints import AcadosOcpConstraints
+from .acados_ocp_dims import AcadosOcpDims
+from .acados_ocp_options import AcadosOcpOptions
+
 from .builders import CMakeBuilder
 from .casadi_function_generation import (generate_c_code_conl_cost,
                                          generate_c_code_constraint,

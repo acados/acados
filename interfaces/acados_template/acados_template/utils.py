@@ -313,6 +313,10 @@ def J_to_idx_slack(J):
     return idx
 
 
+def print_J_to_idx_note():
+    print("NOTE: J* matrix is converted to zero based vector idx* vector, which is returned here.")
+
+
 def acados_dae_model_json_dump(model):
 
     # load model
