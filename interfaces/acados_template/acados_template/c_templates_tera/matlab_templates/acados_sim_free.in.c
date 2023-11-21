@@ -45,12 +45,6 @@
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
 
-//    mexPrintf("\nin sim_destroy\n");
-
-//    void *config = mxGetPr( mxGetField( prhs[0], 0, "config" ) );
-//    long long *config_mat = (long long *) mxGetData( mxGetField( prhs[0], 0, "config" ) );
-//    long long config = (long long) mxGetScalar( mxGetField( prhs[0], 0, "config" ) );
-
     /* RHS */
     const mxArray *C_sim = prhs[0];
     long long * ptr;
