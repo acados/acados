@@ -67,11 +67,10 @@ from .casadi_function_generation import (generate_c_code_conl_cost,
                                          generate_c_code_nls_cost)
 from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 from .utils import (check_casadi_version, format_class_dict,
-                    get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir,
-                    get_ocp_nlp_layout, get_python_interface_path,
+                    get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_python_interface_path,
                     make_object_json_dumpable, render_template,
                     set_up_imported_gnsf_model, verbose_system_call)
-from .zoro_description import ZoroDescription, process_zoro_description
+from .zoro_description import ZoroDescription
 
 
 def get_simulink_default_opts():
@@ -83,8 +82,6 @@ def get_simulink_default_opts():
 
 
 def ocp_formulation_json_dump(acados_ocp, simulink_opts=None, json_file='acados_ocp_nlp.json'):
-    # Load acados_ocp_nlp structure description
-    ocp_layout = get_ocp_nlp_layout()
 
     # Copy input ocp object dictionary
     ocp_nlp_dict = dict(deepcopy(acados_ocp).__dict__)
@@ -102,34 +99,6 @@ def ocp_formulation_json_dump(acados_ocp, simulink_opts=None, json_file='acados_
 
     with open(json_file, 'w') as f:
         json.dump(ocp_nlp_dict, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
-
-
-
-def ocp_formulation_json_load(json_file='acados_ocp_nlp.json'):
-    # Load acados_ocp_nlp structure description
-    ocp_layout = get_ocp_nlp_layout()
-
-    with open(json_file, 'r') as f:
-        ocp_nlp_json = json.load(f)
-
-    ocp_nlp_dict = json2dict(ocp_nlp_json, ocp_nlp_json['dims'])
-
-    # Instantiate AcadosOcp object
-    acados_ocp = AcadosOcp()
-
-    # load class dict
-    acados_ocp.__dict__ = ocp_nlp_dict
-
-    # load class attributes dict, dims, constraints, etc
-    for key, v in ocp_layout.items():
-        # skip non dict attributes
-        if not isinstance(v, dict):
-            continue
-        acados_attribute = getattr(acados_ocp, key)
-        acados_attribute.__dict__ = ocp_nlp_dict[key]
-        setattr(acados_ocp, key, acados_attribute)
-
-    return acados_ocp
 
 
 def ocp_generate_external_functions(ocp: AcadosOcp, model: AcadosModel):
