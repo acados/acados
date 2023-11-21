@@ -65,7 +65,7 @@ from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 from .utils import (casadi_length, check_casadi_version, format_class_dict,
                     get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir,
                     get_ocp_nlp_layout, get_python_interface_path,
-                    is_column, is_empty, make_model_consistent,
+                    is_column, is_empty,
                     make_object_json_dumpable, render_template,
                     set_up_imported_gnsf_model, verbose_system_call)
 from .zoro_description import ZoroDescription, process_zoro_description
@@ -77,6 +77,8 @@ def make_ocp_dims_consistent(acados_ocp: AcadosOcp):
     constraints = acados_ocp.constraints
     model = acados_ocp.model
     opts = acados_ocp.solver_options
+
+    model.make_consistent()
 
     # nx
     if is_column(model.x):
@@ -753,8 +755,6 @@ def ocp_formulation_json_load(json_file='acados_ocp_nlp.json'):
 
 
 def ocp_generate_external_functions(ocp: AcadosOcp, model: AcadosModel):
-
-    model = make_model_consistent(model)
 
     if ocp.solver_options.hessian_approx == 'EXACT':
         opts = dict(generate_hess=1)

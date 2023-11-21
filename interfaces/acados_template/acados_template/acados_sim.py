@@ -32,7 +32,7 @@
 import numpy as np
 import os
 from .acados_model import AcadosModel
-from .utils import get_acados_path, get_shared_lib_ext
+from .utils import get_acados_path, get_shared_lib_ext, casadi_length, is_empty, is_column
 
 class AcadosSimDims:
     """
@@ -354,14 +354,38 @@ class AcadosSim:
             raise Exception('Invalid parameter_values value. ' +
                             f'Expected numpy array, got {type(parameter_values)}.')
 
-    def set(self, attr, value):
-        # tokenize string
-        tokens = attr.split('_', 1)
-        if len(tokens) > 1:
-            setter_to_call = getattr(getattr(self, tokens[0]), 'set')
+    def make_consistent(self):
+        dims = self.dims
+        model = self.model
+        model.make_consistent()
+
+        # nx
+        if is_column(model.x):
+            dims.nx = casadi_length(model.x)
         else:
-            setter_to_call = getattr(self, 'set')
+            raise Exception('model.x should be column vector!')
 
-        setter_to_call(tokens[1], value)
+        # nu
+        if is_empty(model.u):
+            dims.nu = 0
+        else:
+            dims.nu = casadi_length(model.u)
 
-        return
+        # nz
+        if is_empty(model.z):
+            dims.nz = 0
+        else:
+            dims.nz = casadi_length(model.z)
+
+        # np
+        if is_empty(model.p):
+            dims.np = 0
+        else:
+            dims.np = casadi_length(model.p)
+        if self.parameter_values.shape[0] != dims.np:
+            raise Exception('inconsistent dimension np, regarding model.p and parameter_values.' + \
+                f'\nGot np = {dims.np}, acados_sim.parameter_values.shape = {self.parameter_values.shape[0]}\n')
+
+        # check required arguments are given
+        if self.solver_options.T is None:
+            raise Exception('acados_sim.solver_options.T is None, should be provided.')

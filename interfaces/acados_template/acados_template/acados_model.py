@@ -28,6 +28,8 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+from casadi import MX, SX
+from .utils import is_empty
 
 class AcadosModel():
     """
@@ -201,3 +203,22 @@ class AcadosModel():
         CasADi expression for the custom hessian of the outer loss function (only for convex-over-nonlinear cost), terminal; Default: :code:`None`
         Used if :py:attr:`acados_template.acados_ocp.AcadosOcpOptions.cost_type_e` is 'CONVEX_OVER_NONLINEAR'.
         """
+
+    def make_consistent(self) -> None:
+        x = self.x
+        z = self.z
+        p = self.p
+
+        if isinstance(x, MX):
+            symbol = MX.sym
+        elif isinstance(x, SX):
+            symbol = SX.sym
+        else:
+            raise Exception("model.x must be casadi.SX or casadi.MX, got {}".format(type(x)))
+
+        if is_empty(p):
+            self.p = symbol('p', 0, 0)
+
+        if is_empty(z):
+            self.z = symbol('z', 0, 0)
+        return

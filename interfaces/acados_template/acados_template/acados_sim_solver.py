@@ -51,47 +51,12 @@ from .casadi_function_generation import (generate_c_code_explicit_ode,
                                          generate_c_code_gnsf,
                                          generate_c_code_implicit_ode)
 from .gnsf.detect_gnsf_structure import detect_gnsf_structure
-from .utils import (casadi_length, check_casadi_version, format_class_dict,
+from .utils import (check_casadi_version, format_class_dict,
                     get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir,
-                    get_python_interface_path, is_column,
-                    is_empty, make_model_consistent, make_object_json_dumpable,
+                    get_python_interface_path,
+                    make_object_json_dumpable,
                     render_template, set_up_imported_gnsf_model,
                     verbose_system_call)
-
-
-def make_sim_dims_consistent(acados_sim: AcadosSim):
-    dims = acados_sim.dims
-    model = acados_sim.model
-    # nx
-    if is_column(model.x):
-        dims.nx = casadi_length(model.x)
-    else:
-        raise Exception('model.x should be column vector!')
-
-    # nu
-    if is_empty(model.u):
-        dims.nu = 0
-    else:
-        dims.nu = casadi_length(model.u)
-
-    # nz
-    if is_empty(model.z):
-        dims.nz = 0
-    else:
-        dims.nz = casadi_length(model.z)
-
-    # np
-    if is_empty(model.p):
-        dims.np = 0
-    else:
-        dims.np = casadi_length(model.p)
-    if acados_sim.parameter_values.shape[0] != dims.np:
-        raise Exception('inconsistent dimension np, regarding model.p and parameter_values.' + \
-            f'\nGot np = {dims.np}, acados_sim.parameter_values.shape = {acados_sim.parameter_values.shape[0]}\n')
-
-    # check required arguments are given
-    if acados_sim.solver_options.T is None:
-        raise Exception('acados_sim.solver_options.T is None, should be provided.')
 
 
 def get_sim_layout():
@@ -175,7 +140,6 @@ def sim_render_templates(json_file, model_name: str, code_export_dir, cmake_opti
 
 def sim_generate_external_functions(acados_sim: AcadosSim):
     model = acados_sim.model
-    model = make_model_consistent(model)
 
     integrator_type = acados_sim.solver_options.integrator_type
 
@@ -228,8 +192,7 @@ class AcadosSimSolver:
 
         acados_sim.code_export_directory = os.path.abspath(acados_sim.code_export_directory)
 
-        # make dims consistent
-        make_sim_dims_consistent(acados_sim)
+        acados_sim.make_consistent()
 
         # module dependent post processing
         if acados_sim.solver_options.integrator_type == 'GNSF':

@@ -142,29 +142,6 @@ def casadi_length(x):
         raise Exception("casadi_length expects one of the following types: casadi.MX, casadi.SX."
                         + " Got: " + str(type(x)))
 
-
-def make_model_consistent(model):
-    x = model.x
-    xdot = model.xdot
-    u = model.u
-    z = model.z
-    p = model.p
-
-    if isinstance(x, MX):
-        symbol = MX.sym
-    elif isinstance(x, SX):
-        symbol = SX.sym
-    else:
-        raise Exception("model.x must be casadi.SX or casadi.MX, got {}".format(type(x)))
-
-    if is_empty(p):
-        model.p = symbol('p', 0, 0)
-
-    if is_empty(z):
-        model.z = symbol('z', 0, 0)
-
-    return model
-
 def get_shared_lib_ext():
     if sys.platform == 'darwin':
         return '.dylib'
