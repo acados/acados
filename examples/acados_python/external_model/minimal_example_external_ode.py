@@ -89,7 +89,6 @@ ocp.cost.yref_e = np.zeros((ny_e, ))
 Fmax = 10
 ocp.constraints.x0 = x0
 ocp.dims.nbx_0 = nx
-ocp.constraints.constr_type = 'BGH'
 # ocp.constraints.lbu = np.array([-Fmax])
 # ocp.constraints.ubu = np.array([+Fmax])
 # ocp.constraints.idxbu = np.array([0])

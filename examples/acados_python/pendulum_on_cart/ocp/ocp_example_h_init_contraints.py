@@ -93,7 +93,6 @@ def test_initial_h_constraints(constraint_version: str):
 
     # set constraints
     Fmax = 50
-    ocp.constraints.constr_type = 'BGH'
     ocp.constraints.lbu = np.array([-Fmax])
     ocp.constraints.ubu = np.array([+Fmax])
     ocp.constraints.idxbu = np.array([0])
@@ -118,7 +117,6 @@ def test_initial_h_constraints(constraint_version: str):
         ocp.model.con_h_expr = ocp.model.x
         ocp.constraints.lh = lbx
         ocp.constraints.uh = ubx
-        ocp.constraints.constr_type_0 = 'BGH'
         ocp.model.con_h_expr_0 = ocp.model.x
         ocp.constraints.lh_0 = lbh_0
         ocp.constraints.uh_0 = ubh_0
@@ -133,7 +131,6 @@ def test_initial_h_constraints(constraint_version: str):
         ocp.model.con_h_expr = ocp.model.x
         ocp.constraints.lh = lbx
         ocp.constraints.uh = ubx
-        ocp.constraints.constr_type_0 = 'BGH'
         ocp.model.con_h_expr_0 = ocp.model.x
         ocp.constraints.lh_0 = lbh_0
         ocp.constraints.uh_0 = ubh_0

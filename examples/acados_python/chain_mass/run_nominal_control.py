@@ -143,7 +143,6 @@ def run_nominal_control(chain_params):
     # set constraints
     umax = 1*np.ones((nu,))
 
-    ocp.constraints.constr_type = 'BGH'
     ocp.constraints.lbu = -umax
     ocp.constraints.ubu = umax
     ocp.constraints.x0 = x0.reshape((nx,))

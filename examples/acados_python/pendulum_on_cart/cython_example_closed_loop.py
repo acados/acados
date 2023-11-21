@@ -85,7 +85,6 @@ def main():
     # set constraints
     Fmax = 80
     x0 = np.array([0.0, np.pi, 0.0, 0.0])
-    ocp.constraints.constr_type = 'BGH'
     ocp.constraints.lbu = np.array([-Fmax])
     ocp.constraints.ubu = np.array([+Fmax])
     ocp.constraints.x0 = x0

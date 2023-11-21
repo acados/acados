@@ -105,7 +105,6 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
 
     # set constraints
     Fmax = 80
-    ocp.constraints.constr_type = 'BGH'
     ocp.constraints.lbu = np.array([-Fmax])
     ocp.constraints.ubu = np.array([+Fmax])
     x0 = np.array([0.0, np.pi, 0.0, 0.0])

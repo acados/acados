@@ -360,6 +360,7 @@ class AcadosOcp:
             dims.nr_0 = 0
         else:
             dims.nphi_0 = casadi_length(model.con_phi_expr_0)
+            constraints.constr_type_0 = "BGP"
             if is_empty(model.con_r_expr_0):
                 raise Exception('convex over nonlinear constraints: con_r_expr_0 but con_phi_expr_0 is nonempty')
             else:
@@ -400,6 +401,7 @@ class AcadosOcp:
             dims.nr = 0
         else:
             dims.nphi = casadi_length(model.con_phi_expr)
+            constraints.constr_type = "BGP"
             if is_empty(model.con_r_expr):
                 raise Exception('convex over nonlinear constraints: con_r_expr but con_phi_expr is nonempty')
             else:
@@ -434,6 +436,7 @@ class AcadosOcp:
             dims.nr_e = 0
         else:
             dims.nphi_e = casadi_length(model.con_phi_expr_e)
+            constraints.constr_type_e = "BGP"
             if is_empty(model.con_r_expr_e):
                 raise Exception('convex over nonlinear constraints: con_r_expr_e but con_phi_expr_e is nonempty')
             else:

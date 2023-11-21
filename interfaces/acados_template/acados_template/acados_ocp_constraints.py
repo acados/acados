@@ -134,19 +134,25 @@ class AcadosOcpConstraints:
     @property
     def constr_type(self):
         """Constraints type for shooting nodes (0 to N-1). string in {BGH, BGP}.
-        Default: BGH; BGP is for convex over nonlinear."""
+        Detected automatically from model.
+        Default: BGH; BGP is for convex over nonlinear.
+        """
         return self.__constr_type
 
     @property
     def constr_type_0(self):
         """Constraints type for initial shooting node. string in {BGH, BGP}.
-        Default: BGH; BGP is for convex over nonlinear."""
+        Detected automatically from model.
+        Default: BGH; BGP is for convex over nonlinear.
+        """
         return self.__constr_type_0
 
     @property
     def constr_type_e(self):
         """Constraints type for terminal shooting node N. string in {BGH, BGP}.
-        Default: BGH; BGP is for convex over nonlinear."""
+        Detected automatically from model.
+        Default: BGH; BGP is for convex over nonlinear.
+        """
         return self.__constr_type_e
 
     # initial bounds on x

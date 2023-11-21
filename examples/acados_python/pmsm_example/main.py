@@ -396,13 +396,7 @@ def run_simulation(qp_solver="FULL_CONDENSING_HPIPM", show_plots=False, verbose=
 
     file_name = "acados_ocp.json"
 
-    if FORMULATION == 1:
-        nlp_con.constr_type = "BGP"
-        nlp_con.constr_type_e = "BGP"
-        nlp_con.constr_type_0 = "BGP"
-
     acados_solver = AcadosOcpSolver(ocp, json_file=file_name)
-
 
     # test setter:
     for i in range(1,N):
