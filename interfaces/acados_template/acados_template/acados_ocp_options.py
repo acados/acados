@@ -36,38 +36,38 @@ class AcadosOcpOptions:
     class containing the description of the solver options
     """
     def __init__(self):
-        self.__qp_solver = 'PARTIAL_CONDENSING_HPIPM'  # qp solver to be used in the NLP solver
-        self.__hessian_approx = 'GAUSS_NEWTON'              # hessian approximation
-        self.__integrator_type = 'ERK'                       # integrator type
-        self.__tf = None                        # prediction horizon
-        self.__nlp_solver_type = 'SQP_RTI'                   # NLP solver
+        self.__qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+        self.__hessian_approx = 'GAUSS_NEWTON'
+        self.__integrator_type = 'ERK'
+        self.__tf = None
+        self.__nlp_solver_type = 'SQP_RTI'
         self.__globalization = 'FIXED_STEP'
-        self.__nlp_solver_step_length = 1.0                   # fixed Newton step length
+        self.__nlp_solver_step_length = 1.0
         self.__levenberg_marquardt = 0.0
         self.__collocation_type = 'GAUSS_LEGENDRE'
-        self.__sim_method_num_stages = 4                     # number of stages in the integrator
-        self.__sim_method_num_steps = 1                     # number of steps in the integrator
-        self.__sim_method_newton_iter = 3                     # number of Newton iterations in simulation method
+        self.__sim_method_num_stages = 4
+        self.__sim_method_num_steps = 1
+        self.__sim_method_newton_iter = 3
         self.__sim_method_newton_tol = 0.0
         self.__sim_method_jac_reuse = 0
-        self.__qp_solver_tol_stat = None                      # QP solver stationarity tolerance
-        self.__qp_solver_tol_eq = None                      # QP solver equality tolerance
-        self.__qp_solver_tol_ineq = None                      # QP solver inequality
-        self.__qp_solver_tol_comp = None                      # QP solver complementarity
-        self.__qp_solver_iter_max = 50                        # QP solver max iter
-        self.__qp_solver_cond_N = None                        # QP solver: new horizon after partial condensing
+        self.__qp_solver_tol_stat = None
+        self.__qp_solver_tol_eq = None
+        self.__qp_solver_tol_ineq = None
+        self.__qp_solver_tol_comp = None
+        self.__qp_solver_iter_max = 50
+        self.__qp_solver_cond_N = None
         self.__qp_solver_warm_start = 0
         self.__qp_solver_cond_ric_alg = 1
         self.__qp_solver_ric_alg = 1
-        self.__nlp_solver_tol_stat = 1e-6                     # NLP solver stationarity tolerance
-        self.__nlp_solver_tol_eq = 1e-6                     # NLP solver equality tolerance
-        self.__nlp_solver_tol_ineq = 1e-6                     # NLP solver inequality
-        self.__nlp_solver_tol_comp = 1e-6                     # NLP solver complementarity
-        self.__nlp_solver_max_iter = 100                      # NLP solver maximum number of iterations
+        self.__nlp_solver_tol_stat = 1e-6
+        self.__nlp_solver_tol_eq = 1e-6
+        self.__nlp_solver_tol_ineq = 1e-6
+        self.__nlp_solver_tol_comp = 1e-6
+        self.__nlp_solver_max_iter = 100
         self.__nlp_solver_ext_qp_res = 0
-        self.__Tsim = None                                    # automatically calculated as tf/N
-        self.__print_level = 0                                # print level
-        self.__initialize_t_slacks = 0                        # possible values: 0, 1
+        self.__Tsim = None
+        self.__print_level = 0
+        self.__initialize_t_slacks = 0
         self.__cost_discretization = 'EULER'
         self.__regularize_method = 'NO_REGULARIZE'
         self.__reg_epsilon = 1e-4
@@ -86,8 +86,8 @@ class AcadosOcpOptions:
         self.__hpipm_mode = 'BALANCE'
         # TODO: move those out? they are more about generation than about the acados OCP solver.
         self.__ext_fun_compile_flags = '-O2'
-        self.__model_external_shared_lib_dir = None         # path to the the .so lib
-        self.__model_external_shared_lib_name = None         # name of the the .so lib
+        self.__model_external_shared_lib_dir = None
+        self.__model_external_shared_lib_name = None
         self.__custom_update_filename = ''
         self.__custom_update_header_filename = ''
         self.__custom_templates = []
@@ -1037,4 +1037,3 @@ class AcadosOcpOptions:
 
     def set(self, attr, value):
         setattr(self, attr, value)
-
