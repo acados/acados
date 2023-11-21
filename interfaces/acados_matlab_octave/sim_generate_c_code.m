@@ -73,7 +73,8 @@ function sim_generate_c_code(obj)
     %% load JSON layout
     acados_folder = getenv('ACADOS_INSTALL_DIR');
     json_layout_filename = fullfile(acados_folder, 'interfaces',...
-                                   'acados_template','acados_template','acados_sim_layout.json');
+                                   'acados_matlab_octave', ...
+                                   'acados_template_mex', '+acados_template_mex','acados_sim_layout.json');
     % if is_octave()
     addpath(fullfile(acados_folder, 'external', 'jsonlab'))
     acados_sim_layout = loadjson(fileread(json_layout_filename));

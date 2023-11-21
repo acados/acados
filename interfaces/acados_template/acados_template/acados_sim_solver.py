@@ -44,8 +44,10 @@ else:
 
 import numpy as np
 
+from .acados_model import AcadosModel
 from .acados_ocp import AcadosOcp
-from .acados_sim import AcadosSim
+from .acados_sim import AcadosSim, AcadosSimDims, AcadosSimOpts
+
 from .builders import CMakeBuilder
 from .casadi_function_generation import (generate_c_code_explicit_ode,
                                          generate_c_code_gnsf,
@@ -59,26 +61,16 @@ from .utils import (check_casadi_version, format_class_dict,
                     verbose_system_call)
 
 
-def get_sim_layout():
-    python_interface_path = get_python_interface_path()
-    abs_path = os.path.join(python_interface_path, 'acados_sim_layout.json')
-    with open(abs_path, 'r') as f:
-        sim_layout = json.load(f)
-    return sim_layout
-
-
 def sim_formulation_json_dump(acados_sim: AcadosSim, json_file='acados_sim.json'):
-    # Load acados_sim structure description
-    sim_layout = get_sim_layout()
 
     # Copy input sim object dictionary
     sim_dict = dict(deepcopy(acados_sim).__dict__)
 
-    for key, v in sim_layout.items():
+    # convert acados classes to dicts
+    for key, v in sim_dict.items():
         # skip non dict attributes
-        if not isinstance(v, dict): continue
-        # Copy sim object attributes dictionaries
-        sim_dict[key]=dict(getattr(acados_sim, key).__dict__)
+        if isinstance(v, (AcadosSim, AcadosSimDims, AcadosSimOpts, AcadosModel)):
+            sim_dict[key]=dict(getattr(acados_sim, key).__dict__)
 
     sim_json = format_class_dict(sim_dict)
 
