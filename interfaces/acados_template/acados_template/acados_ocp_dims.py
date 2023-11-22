@@ -34,44 +34,52 @@ class AcadosOcpDims:
     Class containing the dimensions of the optimal control problem.
     """
     def __init__(self):
-        self.__nx      = None
-        self.__nu      = None
-        self.__nz      = 0
-        self.__np      = 0
-        self.__ny      = 0
-        self.__ny_e    = 0
-        self.__ny_0    = 0
-        self.__nh      = 0
-        self.__nh_0    = 0
-        self.__nh_e    = 0
-        self.__nr      = 0
-        self.__nr_0    = 0
-        self.__nr_e    = 0
-        self.__nphi    = 0
-        self.__nphi_0  = 0
-        self.__nphi_e  = 0
-        self.__nbx     = 0
-        self.__nbx_0   = 0
-        self.__nbx_e   = 0
-        self.__nbu     = 0
-        self.__nsbx    = 0
-        self.__nsbx_e  = 0
-        self.__nsbu    = 0
-        self.__nsh     = 0
-        self.__nsh_e   = 0
-        self.__nsh_0   = 0
-        self.__nsphi   = 0
+        # shooting intervals
+        self.__N = None
+        # model
+        self.__nx = None
+        self.__nu = None
+        self.__nz = 0
+        self.__np = 0
+        # cost
+        self.__ny = 0
+        self.__ny_e = 0
+        self.__ny_0 = 0
+        # bounds
+        self.__nbu = 0
+        self.__nbx = 0
+        self.__nbx_0 = 0
+        self.__nbx_e = 0
+        # nonlinear constraints
+        self.__nh = 0
+        self.__nh_0 = 0
+        self.__nh_e = 0
+        self.__nr = 0
+        self.__nr_0 = 0
+        self.__nr_e = 0
+        self.__nphi = 0
+        self.__nphi_0 = 0
+        self.__nphi_e = 0
+        # general linear constraints
+        self.__ng = 0
+        self.__ng_e = 0
+        # soft constraints
+        self.__nsbx = 0
+        self.__nsbx_e = 0
+        self.__nsbu = 0
+        self.__nsh = 0
+        self.__nsh_e = 0
+        self.__nsh_0 = 0
+        self.__nsphi = 0
         self.__nsphi_e = 0
         self.__nsphi_0 = 0
-        self.__ns_0    = 0
-        self.__ns      = 0
-        self.__ns_e    = 0
-        self.__ng      = 0
-        self.__ng_e    = 0
-        self.__nsg     = 0
-        self.__nsg_e   = 0
-        self.__nbxe_0  = None
-        self.__N       = None
+        self.__ns_0 = 0
+        self.__ns = 0
+        self.__ns_e = 0
+        self.__nsg = 0
+        self.__nsg_e = 0
+        # equalities within x bounds
+        self.__nbxe_0 = None
 
 
     @property

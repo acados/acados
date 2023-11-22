@@ -107,7 +107,7 @@ class AcadosOcp:
 
     @property
     def parameter_values(self):
-        """:math:`p` - initial values for parameter - can be updated stagewise"""
+        """:math:`p` - initial values for parameter vector - can be updated stagewise"""
         return self.__parameter_values
 
     @parameter_values.setter
@@ -151,6 +151,8 @@ class AcadosOcp:
             dims.np = 0
         else:
             dims.np = casadi_length(model.p)
+
+        # parameters
         if self.parameter_values.shape[0] != dims.np:
             raise Exception('inconsistent dimension np, regarding model.p and parameter_values.' + \
                 f'\nGot np = {dims.np}, self.parameter_values.shape = {self.parameter_values.shape[0]}\n')
