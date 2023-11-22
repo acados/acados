@@ -109,6 +109,7 @@ class AcadosMultiphaseOcp:
 
 
     def make_consistent(self) -> None:
+
         dims = self.dims
         opts = self.solver_options
         if not isinstance(dims.N, int):
