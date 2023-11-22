@@ -38,6 +38,8 @@ from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_ocp_options import AcadosOcpOptions
 
 from .acados_sim import AcadosSim, AcadosSimOpts
+from .acados_multiphase_ocp import AcadosMultiphaseOcp
+
 from .acados_ocp_solver import AcadosOcpSolver, get_simulink_default_opts, ocp_get_default_cmake_builder
 from .acados_sim_solver import AcadosSimSolver, sim_get_default_cmake_builder
 from .utils import print_casadi_expression, get_acados_path, get_python_interface_path, \

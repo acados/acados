@@ -29,6 +29,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+from typing import Optional
 
 class AcadosSimDims:
     """
@@ -94,7 +95,7 @@ class AcadosOcpDims:
     Class containing the dimensions of the optimal control problem.
     """
     def __init__(self):
-        # shooting intervals
+        # number of shooting intervals
         self.__N = None
         # model
         self.__nx = None
@@ -636,3 +637,57 @@ class AcadosOcpDims:
         else:
             raise Exception('Invalid N value, expected positive integer.')
 
+class MultiphaseOcpDims:
+    """
+    Class containing the dimensions of the optimal control problem.
+    """
+    def __init__(self):
+        self.N = None
+        #
+        self.nx: Optional[list] = None
+        self.nu: Optional[list] = None
+        self.nz: Optional[list] = None
+        self.np: Optional[list] = None
+        # cost
+        self.ny: Optional[list] = None
+        # constraints
+        self.nbu: Optional[list] = None
+        self.nbx: Optional[list] = None
+        self.nh: Optional[list] = None
+        self.nphi: Optional[list] = None
+        self.nr: Optional[list] = None
+        self.ng: Optional[list] = None
+        # slacks
+        self.ns: Optional[list] = None
+        self.nsbu: Optional[list] = None
+        self.nsbx: Optional[list] = None
+        self.nsg: Optional[list] = None
+        self.nsh: Optional[list] = None
+        self.nsphi: Optional[list] = None
+        # equalities within x bounds
+        self.nbxe: Optional[list] = None
+
+    def fix_N(self):
+        # TODO: this is awkward, let's move N to solver_options and create dimensions only in make_consistent?
+        self.nx = [None for _ in range(self.N+1)]
+        self.nu = [None for _ in range(self.N+1)]
+        self.nz = [None for _ in range(self.N+1)]
+        self.np = [None for _ in range(self.N+1)]
+        # cost
+        self.ny = [None for _ in range(self.N+1)]
+        # constraints
+        self.nbu = [None for _ in range(self.N+1)]
+        self.nbx = [None for _ in range(self.N+1)]
+        self.nh = [None for _ in range(self.N+1)]
+        self.nphi = [None for _ in range(self.N+1)]
+        self.nr = [None for _ in range(self.N+1)]
+        self.ng = [None for _ in range(self.N+1)]
+        # slacks
+        self.ns = [None for _ in range(self.N+1)]
+        self.nsbu = [None for _ in range(self.N+1)]
+        self.nsbx = [None for _ in range(self.N+1)]
+        self.nsg = [None for _ in range(self.N+1)]
+        self.nsh = [None for _ in range(self.N+1)]
+        self.nsphi = [None for _ in range(self.N+1)]
+        # equalities within x bounds
+        self.nbxe = [None for _ in range(self.N+1)]
