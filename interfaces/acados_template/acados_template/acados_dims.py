@@ -29,6 +29,66 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+
+class AcadosSimDims:
+    """
+    Class containing the dimensions of the model to be simulated.
+    """
+    def __init__(self):
+        self.__nx = None
+        self.__nu = None
+        self.__nz = 0
+        self.__np = 0
+
+    @property
+    def nx(self):
+        """:math:`n_x` - number of states. Type: int > 0"""
+        return self.__nx
+
+    @property
+    def nz(self):
+        """:math:`n_z` - number of algebraic variables. Type: int >= 0"""
+        return self.__nz
+
+    @property
+    def nu(self):
+        """:math:`n_u` - number of inputs. Type: int >= 0"""
+        return self.__nu
+
+    @property
+    def np(self):
+        """:math:`n_p` - number of parameters. Type: int >= 0"""
+        return self.__np
+
+    @nx.setter
+    def nx(self, nx):
+        if isinstance(nx, int) and nx > 0:
+            self.__nx = nx
+        else:
+            raise Exception('Invalid nx value, expected positive integer.')
+
+    @nz.setter
+    def nz(self, nz):
+        if isinstance(nz, int) and nz > -1:
+            self.__nz = nz
+        else:
+            raise Exception('Invalid nz value, expected nonnegative integer.')
+
+    @nu.setter
+    def nu(self, nu):
+        if isinstance(nu, int) and nu > -1:
+            self.__nu = nu
+        else:
+            raise Exception('Invalid nu value, expected nonnegative integer.')
+
+    @np.setter
+    def np(self, np):
+        if isinstance(np, int) and np > -1:
+            self.__np = np
+        else:
+            raise Exception('Invalid np value, expected nonnegative integer.')
+
+
 class AcadosOcpDims:
     """
     Class containing the dimensions of the optimal control problem.

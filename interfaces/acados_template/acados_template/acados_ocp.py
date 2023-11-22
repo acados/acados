@@ -39,7 +39,7 @@ import os
 from .acados_model import AcadosModel
 from .acados_ocp_cost import AcadosOcpCost
 from .acados_ocp_constraints import AcadosOcpConstraints
-from .acados_ocp_dims import AcadosOcpDims
+from .acados_dims import AcadosOcpDims
 from .acados_ocp_options import AcadosOcpOptions
 
 from .utils import (get_acados_path,
@@ -126,31 +126,7 @@ class AcadosOcp:
         model = self.model
         opts = self.solver_options
 
-        model.make_consistent()
-
-        # nx
-        if is_column(model.x):
-            dims.nx = casadi_length(model.x)
-        else:
-            raise Exception('model.x should be column vector!')
-
-        # nu
-        if is_empty(model.u):
-            dims.nu = 0
-        else:
-            dims.nu = casadi_length(model.u)
-
-        # nz
-        if is_empty(model.z):
-            dims.nz = 0
-        else:
-            dims.nz = casadi_length(model.z)
-
-        # np
-        if is_empty(model.p):
-            dims.np = 0
-        else:
-            dims.np = casadi_length(model.p)
+        model.make_consistent(dims)
 
         # parameters
         if self.parameter_values.shape[0] != dims.np:

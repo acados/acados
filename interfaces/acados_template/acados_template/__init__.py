@@ -29,15 +29,15 @@
 #
 
 from .acados_model import AcadosModel
+from .acados_dims import AcadosOcpDims, AcadosSimDims
+
 from .acados_ocp import AcadosOcp
 
-from .acados_model import AcadosModel
 from .acados_ocp_cost import AcadosOcpCost
 from .acados_ocp_constraints import AcadosOcpConstraints
-from .acados_ocp_dims import AcadosOcpDims
 from .acados_ocp_options import AcadosOcpOptions
 
-from .acados_sim import AcadosSim, AcadosSimDims, AcadosSimOpts
+from .acados_sim import AcadosSim, AcadosSimOpts
 from .acados_ocp_solver import AcadosOcpSolver, get_simulink_default_opts, ocp_get_default_cmake_builder
 from .acados_sim_solver import AcadosSimSolver, sim_get_default_cmake_builder
 from .utils import print_casadi_expression, get_acados_path, get_python_interface_path, \
