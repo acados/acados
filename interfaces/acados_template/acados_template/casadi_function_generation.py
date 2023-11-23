@@ -28,9 +28,10 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import os
+import os, shutil
+
 import casadi as ca
-from .utils import is_empty, casadi_length
+from .utils import is_empty, casadi_length, check_casadi_version
 from .acados_model import AcadosModel
 from .acados_ocp import AcadosOcp
 
@@ -43,10 +44,79 @@ def get_casadi_symbol(x):
     else:
         raise TypeError("Expected casadi SX or MX.")
 
+
+def ocp_generate_external_functions(ocp: AcadosOcp):
+
+    model = ocp.model
+
+    if ocp.solver_options.hessian_approx == 'EXACT':
+        opts = dict(generate_hess=1)
+    else:
+        opts = dict(generate_hess=0)
+
+    # create code_export_dir, model_dir
+    code_export_dir = ocp.code_export_directory
+    opts['code_export_directory'] = code_export_dir
+    model_dir = os.path.join(code_export_dir, model.name + '_model')
+    if not os.path.exists(model_dir):
+        os.makedirs(model_dir)
+
+    check_casadi_version()
+    if ocp.model.dyn_ext_fun_type == 'casadi':
+        if ocp.solver_options.integrator_type == 'ERK':
+            generate_c_code_explicit_ode(model, opts)
+        elif ocp.solver_options.integrator_type == 'IRK':
+            generate_c_code_implicit_ode(model, opts)
+        elif ocp.solver_options.integrator_type == 'LIFTED_IRK':
+            if model.t != []:
+                raise NotImplementedError("LIFTED_IRK with time-varying dynamics not implemented yet.")
+            generate_c_code_implicit_ode(model, opts)
+        elif ocp.solver_options.integrator_type == 'GNSF':
+            generate_c_code_gnsf(model, opts)
+        elif ocp.solver_options.integrator_type == 'DISCRETE':
+            generate_c_code_discrete_dynamics(model, opts)
+        else:
+            raise Exception("ocp_generate_external_functions: unknown integrator type.")
+    else:
+        target_location = os.path.join(code_export_dir, model_dir, model.dyn_generic_source)
+        shutil.copyfile(model.dyn_generic_source, target_location)
+
+    if ocp.dims.nh_0 > 0 or ocp.dims.nphi_0:
+        generate_c_code_constraint(ocp, opts, 'initial')
+
+    if ocp.dims.nphi > 0 or ocp.dims.nh > 0:
+        generate_c_code_constraint(ocp, opts, 'path')
+
+    if ocp.dims.nphi_e > 0 or ocp.dims.nh_e > 0:
+        generate_c_code_constraint(ocp, opts, 'terminal')
+
+    if ocp.cost.cost_type_0 == 'NONLINEAR_LS':
+        generate_c_code_nls_cost(ocp, 'initial')
+    elif ocp.cost.cost_type_0 == 'CONVEX_OVER_NONLINEAR':
+        generate_c_code_conl_cost(ocp, 'initial')
+    elif ocp.cost.cost_type_0 == 'EXTERNAL':
+        generate_c_code_external_cost(ocp, 'initial', opts)
+
+    if ocp.cost.cost_type == 'NONLINEAR_LS':
+        generate_c_code_nls_cost(ocp, 'path')
+    elif ocp.cost.cost_type == 'CONVEX_OVER_NONLINEAR':
+        generate_c_code_conl_cost(ocp, 'path')
+    elif ocp.cost.cost_type == 'EXTERNAL':
+        generate_c_code_external_cost(ocp, 'path', opts)
+
+    if ocp.cost.cost_type_e == 'NONLINEAR_LS':
+        generate_c_code_nls_cost(ocp, 'terminal')
+    elif ocp.cost.cost_type_e == 'CONVEX_OVER_NONLINEAR':
+        generate_c_code_conl_cost(ocp, 'terminal')
+    elif ocp.cost.cost_type_e == 'EXTERNAL':
+        generate_c_code_external_cost(ocp, 'terminal', opts)
+
+
+
+
 ################
 # Dynamics
 ################
-
 
 def generate_c_code_discrete_dynamics( model, opts ):
 

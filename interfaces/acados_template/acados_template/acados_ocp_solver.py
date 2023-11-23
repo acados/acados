@@ -57,16 +57,11 @@ from .acados_dims import AcadosOcpDims
 from .acados_ocp_options import AcadosOcpOptions
 
 from .builders import CMakeBuilder
-from .casadi_function_generation import (generate_c_code_conl_cost,
-                                         generate_c_code_constraint,
-                                         generate_c_code_discrete_dynamics,
-                                         generate_c_code_explicit_ode,
-                                         generate_c_code_external_cost,
-                                         generate_c_code_gnsf,
-                                         generate_c_code_implicit_ode,
-                                         generate_c_code_nls_cost)
+
+from .casadi_function_generation import ocp_generate_external_functions
+
 from .gnsf.detect_gnsf_structure import detect_gnsf_structure
-from .utils import (check_casadi_version, format_class_dict,
+from .utils import (format_class_dict,
                     get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_python_interface_path,
                     make_object_json_dumpable, render_template,
                     set_up_imported_gnsf_model, verbose_system_call)
@@ -99,71 +94,6 @@ def ocp_formulation_json_dump(acados_ocp, simulink_opts=None, json_file='acados_
 
     with open(json_file, 'w') as f:
         json.dump(ocp_nlp_dict, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
-
-
-def ocp_generate_external_functions(ocp: AcadosOcp, model: AcadosModel):
-
-    if ocp.solver_options.hessian_approx == 'EXACT':
-        opts = dict(generate_hess=1)
-    else:
-        opts = dict(generate_hess=0)
-
-    # create code_export_dir, model_dir
-    code_export_dir = ocp.code_export_directory
-    opts['code_export_directory'] = code_export_dir
-    model_dir = os.path.join(code_export_dir, model.name + '_model')
-    if not os.path.exists(model_dir):
-        os.makedirs(model_dir)
-
-    check_casadi_version()
-    if ocp.model.dyn_ext_fun_type == 'casadi':
-        if ocp.solver_options.integrator_type == 'ERK':
-            generate_c_code_explicit_ode(model, opts)
-        elif ocp.solver_options.integrator_type == 'IRK':
-            generate_c_code_implicit_ode(model, opts)
-        elif ocp.solver_options.integrator_type == 'LIFTED_IRK':
-            if model.t != []:
-                raise NotImplementedError("LIFTED_IRK with time-varying dynamics not implemented yet.")
-            generate_c_code_implicit_ode(model, opts)
-        elif ocp.solver_options.integrator_type == 'GNSF':
-            generate_c_code_gnsf(model, opts)
-        elif ocp.solver_options.integrator_type == 'DISCRETE':
-            generate_c_code_discrete_dynamics(model, opts)
-        else:
-            raise Exception("ocp_generate_external_functions: unknown integrator type.")
-    else:
-        target_location = os.path.join(code_export_dir, model_dir, model.dyn_generic_source)
-        shutil.copyfile(model.dyn_generic_source, target_location)
-
-    if ocp.dims.nh_0 > 0 or ocp.dims.nphi_0:
-        generate_c_code_constraint(ocp, opts, 'initial')
-
-    if ocp.dims.nphi > 0 or ocp.dims.nh > 0:
-        generate_c_code_constraint(ocp, opts, 'path')
-
-    if ocp.dims.nphi_e > 0 or ocp.dims.nh_e > 0:
-        generate_c_code_constraint(ocp, opts, 'terminal')
-
-    if ocp.cost.cost_type_0 == 'NONLINEAR_LS':
-        generate_c_code_nls_cost(ocp, 'initial')
-    elif ocp.cost.cost_type_0 == 'CONVEX_OVER_NONLINEAR':
-        generate_c_code_conl_cost(ocp, 'initial')
-    elif ocp.cost.cost_type_0 == 'EXTERNAL':
-        generate_c_code_external_cost(ocp, 'initial', opts)
-
-    if ocp.cost.cost_type == 'NONLINEAR_LS':
-        generate_c_code_nls_cost(ocp, 'path')
-    elif ocp.cost.cost_type == 'CONVEX_OVER_NONLINEAR':
-        generate_c_code_conl_cost(ocp, 'path')
-    elif ocp.cost.cost_type == 'EXTERNAL':
-        generate_c_code_external_cost(ocp, 'path', opts)
-
-    if ocp.cost.cost_type_e == 'NONLINEAR_LS':
-        generate_c_code_nls_cost(ocp, 'terminal')
-    elif ocp.cost.cost_type_e == 'CONVEX_OVER_NONLINEAR':
-        generate_c_code_conl_cost(ocp, 'terminal')
-    elif ocp.cost.cost_type_e == 'EXTERNAL':
-        generate_c_code_external_cost(ocp, 'terminal', opts)
 
 
 def ocp_get_default_cmake_builder() -> CMakeBuilder:
@@ -283,7 +213,6 @@ class AcadosOcpSolver:
                    the `CMake` pipeline instead of a `Makefile` (`CMake` seems to be the better option in conjunction with
                    `MS Visual Studio`); default: `None`
         """
-        model = acados_ocp.model
         acados_ocp.code_export_directory = os.path.abspath(acados_ocp.code_export_directory)
 
         # make consistent
@@ -303,7 +232,7 @@ class AcadosOcpSolver:
         acados_ocp.solver_options.Tsim = acados_ocp.solver_options.time_steps[0]
 
         # generate external functions
-        ocp_generate_external_functions(acados_ocp, model)
+        ocp_generate_external_functions(acados_ocp)
 
         # dump to json
         acados_ocp.json_file = json_file
