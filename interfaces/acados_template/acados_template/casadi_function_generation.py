@@ -34,6 +34,7 @@ import casadi as ca
 from .utils import is_empty, casadi_length, check_casadi_version
 from .acados_model import AcadosModel
 from .acados_ocp import AcadosOcp
+from .acados_multiphase_ocp import AcadosMultiphaseOcp
 
 
 def get_casadi_symbol(x):
@@ -45,8 +46,12 @@ def get_casadi_symbol(x):
         raise TypeError("Expected casadi SX or MX.")
 
 
-def ocp_generate_external_functions(ocp: AcadosOcp):
+def mocp_generate_external_functions(mocp: AcadosMultiphaseOcp):
+    for i in range(mocp.n_phases):
+        ocp_generate_external_functions(mocp.dummy_ocp_list[i])
 
+
+def ocp_generate_external_functions(ocp: AcadosOcp):
     model = ocp.model
 
     if ocp.solver_options.hessian_approx == 'EXACT':

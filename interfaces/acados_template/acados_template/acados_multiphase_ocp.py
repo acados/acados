@@ -46,7 +46,7 @@ from .acados_ocp_options import AcadosOcpOptions
 
 from .acados_ocp import AcadosOcp
 
-from .utils import (get_acados_path,
+from .utils import (get_acados_path, format_class_dict,
                     get_shared_lib_ext, is_column, is_empty, casadi_length,)
 from .penalty_utils import symmetric_huber_penalty
 
@@ -65,6 +65,7 @@ class AcadosMultiphaseOcp:
         self.n_phases = n_phases
         self.N_list = N_list
 
+        self.name = 'multiphase_ocp'
         self.dims = MultiphaseOcpDims()
         self.model = n_phases * [AcadosModel()]
         """Model definitions, type :py:class:`acados_template.acados_model.AcadosModel`"""
@@ -72,6 +73,8 @@ class AcadosMultiphaseOcp:
         """Cost definitions, type :py:class:`acados_template.acados_ocp.AcadosOcpCost`"""
         self.constraints = n_phases * [AcadosOcpConstraints()]
         """Constraints definitions, type :py:class:`acados_template.acados_ocp.AcadosOcpConstraints`"""
+
+        self.dummy_ocp_list = []
 
         # NOTE: this is the same for AcadosOcp
         self.solver_options = AcadosOcpOptions()
@@ -120,6 +123,7 @@ class AcadosMultiphaseOcp:
 
         idx0 = 0
         for i in range(self.n_phases):
+
             # create dummy ocp
             ocp = AcadosOcp()
             ocp.dims.N = dims.N
@@ -132,6 +136,8 @@ class AcadosMultiphaseOcp:
                 ocp.make_consistent()
             except Exception as e:
                 raise Exception(f'make_consistent for phase {i} returned Exception {e}')
+
+            self.dummy_ocp_list.append(ocp)
 
             # copy dimensions:
             for j in range(idx0, idx0 + self.N_list[i]):
@@ -183,6 +189,25 @@ class AcadosMultiphaseOcp:
         dims.nsbu[j] = 0
 
         return
+
+
+    def to_dict(self) -> dict:
+        # Copy ocp object dictionary
+        ocp_dict = dict(deepcopy(self).__dict__)
+        del ocp_dict['dummy_ocp_list']
+
+        # convert acados classes to dicts
+        for key, v in ocp_dict.items():
+            if isinstance(v, (AcadosOcpOptions, MultiphaseOcpDims)):
+                ocp_dict[key]=dict(getattr(self, key).__dict__)
+            if isinstance(v, list):
+                for i, item in enumerate(v):
+                    if isinstance(item, (AcadosModel, AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost)):
+                        ocp_dict[key][i] = dict(item.__dict__)
+
+        ocp_dict = format_class_dict(ocp_dict)
+        return ocp_dict
+
 
     def remove_x0_elimination(self) -> None:
         self.constraints[0].idxbxe_0 = np.zeros((0,))

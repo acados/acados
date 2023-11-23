@@ -31,7 +31,9 @@
 
 from typing import Optional
 import numpy as np
+
 from scipy.linalg import block_diag
+from copy import deepcopy
 
 import casadi as ca
 import os
@@ -42,7 +44,7 @@ from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_dims import AcadosOcpDims
 from .acados_ocp_options import AcadosOcpOptions
 
-from .utils import (get_acados_path,
+from .utils import (get_acados_path, format_class_dict,
                     get_shared_lib_ext, is_column, is_empty, casadi_length,)
 from .penalty_utils import symmetric_huber_penalty
 
@@ -731,6 +733,19 @@ class AcadosOcp:
         self.dims.nbxe_0 = 0
         self.constraints.__has_x0 = False
         return
+
+
+    def to_dict(self) -> dict:
+        # Copy ocp object dictionary
+        ocp_dict = dict(deepcopy(self).__dict__)
+
+        # convert acados classes to dicts
+        for key, v in ocp_dict.items():
+            if isinstance(v, (AcadosModel, AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost, AcadosOcpOptions, ZoroDescription)):
+                ocp_dict[key]=dict(getattr(self, key).__dict__)
+
+        ocp_dict = format_class_dict(ocp_dict)
+        return ocp_dict
 
 
     def translate_nls_cost_to_conl(self):
