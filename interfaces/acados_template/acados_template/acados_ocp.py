@@ -538,18 +538,17 @@ class AcadosOcp:
         ns_0 = nsbu + nsg + nsh_0 + nsphi_0 + nsh_0  # NOTE: nsbx not supported at stage 0
 
         if cost.zl_0 is None and cost.zu_0 is None and cost.Zl_0 is None and cost.Zu_0 is None:
-            print("Fields cost.[zl_0, zu_0, Zl_0, Zu_0] are not provided.")
             if ns_0 == 0:
                 cost.zl_0 = np.array([])
                 cost.zu_0 = np.array([])
                 cost.Zl_0 = np.array([])
                 cost.Zu_0 = np.array([])
-                print("Using empty arrays at intial node for slack penalties.\n")
             elif ns_0 == ns:
                 cost.zl_0 = cost.zl
                 cost.zu_0 = cost.zu
                 cost.Zl_0 = cost.Zl
                 cost.Zu_0 = cost.Zu
+                print("Fields cost.[zl_0, zu_0, Zl_0, Zu_0] are not provided.")
                 print("Using entries [zl, zu, Zl, Zu] at intial node for slack penalties.\n")
             else:
                 raise ValueError("Fields cost.[zl_0, zu_0, Zl_0, Zu_0] are not provided and cannot be inferred from other fields.\n")
@@ -725,7 +724,6 @@ class AcadosOcp:
                 self.zoro_description = process_zoro_description(self.zoro_description)
 
         return
-
 
 
     def remove_x0_elimination(self) -> None:
