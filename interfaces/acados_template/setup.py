@@ -61,8 +61,6 @@ setup(name='acados_template',
        'cython',
     ],
     package_data={'': [
-        'acados_layout.json',
-        'acados_sim_layout.json',
         'simulink_default_opts.json',
         'c_templates_tera/CMakeLists.in.txt',
         'c_templates_tera/Makefile.in',

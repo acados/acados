@@ -233,8 +233,6 @@ def create_ocp_solver(tol = 1e-3):
     if WITH_ELLIPSOIDAL_CONSTRAINT:
         # to avoid LICQ violations
         eps = 1e-3 # Note: was originally eps = 0.0.
-        ocp.constraints.constr_type = 'BGP'
-        ocp.constraints.constr_type_0 = 'BGP'
         ocp.constraints.lphi = np.array([-1.0e8])
         ocp.constraints.uphi = (1-eps)*np.array([(u_max*sqrt(3)/2)**2])
         ocp.constraints.lphi_0 = ocp.constraints.lphi

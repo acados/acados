@@ -142,29 +142,6 @@ def casadi_length(x):
         raise Exception("casadi_length expects one of the following types: casadi.MX, casadi.SX."
                         + " Got: " + str(type(x)))
 
-
-def make_model_consistent(model):
-    x = model.x
-    xdot = model.xdot
-    u = model.u
-    z = model.z
-    p = model.p
-
-    if isinstance(x, MX):
-        symbol = MX.sym
-    elif isinstance(x, SX):
-        symbol = SX.sym
-    else:
-        raise Exception("model.x must be casadi.SX or casadi.MX, got {}".format(type(x)))
-
-    if is_empty(p):
-        model.p = symbol('p', 0, 0)
-
-    if is_empty(z):
-        model.z = symbol('z', 0, 0)
-
-    return model
-
 def get_shared_lib_ext():
     if sys.platform == 'darwin':
         return '.dylib'
@@ -284,15 +261,6 @@ def format_class_dict(d):
         out[k.replace(k, out_key)] = v
     return out
 
-
-def get_ocp_nlp_layout() -> dict:
-    python_interface_path = get_python_interface_path()
-    abs_path = os.path.join(python_interface_path, 'acados_layout.json')
-    with open(abs_path, 'r') as f:
-        ocp_nlp_layout = json.load(f)
-    return ocp_nlp_layout
-
-
 def get_default_simulink_opts() -> dict:
     python_interface_path = get_python_interface_path()
     abs_path = os.path.join(python_interface_path, 'simulink_default_opts.json')
@@ -334,6 +302,10 @@ def J_to_idx_slack(J):
     if not i_idx == ncol:
             raise Exception('J_to_idx_slack: J must contain a 1 in every column!')
     return idx
+
+
+def print_J_to_idx_note():
+    print("NOTE: J* matrix is converted to zero based vector idx* vector, which is returned here.")
 
 
 def acados_dae_model_json_dump(model):

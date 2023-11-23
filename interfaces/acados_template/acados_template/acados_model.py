@@ -28,6 +28,13 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+from typing import Union
+
+from casadi import MX, SX
+
+from .utils import is_empty, casadi_length, is_column
+from .acados_dims import AcadosOcpDims, AcadosSimDims
+
 
 class AcadosModel():
     """
@@ -201,3 +208,47 @@ class AcadosModel():
         CasADi expression for the custom hessian of the outer loss function (only for convex-over-nonlinear cost), terminal; Default: :code:`None`
         Used if :py:attr:`acados_template.acados_ocp.AcadosOcpOptions.cost_type_e` is 'CONVEX_OVER_NONLINEAR'.
         """
+
+    def make_consistent(self, dims: Union[AcadosOcpDims, AcadosSimDims]) -> None:
+        x = self.x
+        z = self.z
+        p = self.p
+
+        if isinstance(x, MX):
+            symbol = MX.sym
+        elif isinstance(x, SX):
+            symbol = SX.sym
+        else:
+            raise Exception("model.x must be casadi.SX or casadi.MX, got {}".format(type(x)))
+
+        if is_empty(p):
+            self.p = symbol('p', 0, 0)
+
+        if is_empty(z):
+            self.z = symbol('z', 0, 0)
+
+        # nx
+        if is_column(self.x):
+            dims.nx = casadi_length(self.x)
+        else:
+            raise Exception('model.x should be column vector!')
+
+        # nu
+        if is_empty(self.u):
+            dims.nu = 0
+        else:
+            dims.nu = casadi_length(self.u)
+
+        # nz
+        if is_empty(self.z):
+            dims.nz = 0
+        else:
+            dims.nz = casadi_length(self.z)
+
+        # np
+        if is_empty(self.p):
+            dims.np = 0
+        else:
+            dims.np = casadi_length(self.p)
+
+        return
