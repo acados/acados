@@ -134,15 +134,17 @@ def ocp_render_templates(acados_ocp: AcadosOcp, json_file, cmake_builder=None, s
 
 
 
-def __ocp_get_template_list(acados_ocp: AcadosOcp, cmake_builder=None, simulink_opts=None) -> list:
+def __ocp_get_template_list(ocp: AcadosOcp, cmake_builder=None, simulink_opts=None) -> list:
     """
     returns a list of tuples in the form:
     (input_filename, output_filname)
     or
     (input_filename, output_filname, output_directory)
     """
-    name = acados_ocp.model.name
-    code_export_directory = acados_ocp.code_export_directory
+    name = ocp.model.name
+    dims = ocp.dims
+    cost = ocp.cost
+    code_export_directory = ocp.code_export_directory
     template_list = []
 
     template_list.append(('main.in.c', f'main_{name}.c'))
@@ -164,11 +166,13 @@ def __ocp_get_template_list(acados_ocp: AcadosOcp, cmake_builder=None, simulink_
     model_dir = os.path.join(code_export_directory, f'{name}_model')
     template_list.append(('model.in.h', f'{name}_model.h', model_dir))
     # constraints
-    constraints_dir = os.path.join(code_export_directory, f'{name}_constraints')
-    template_list.append(('constraints.in.h', f'{name}_constraints.h', constraints_dir))
+    if any(np.array([dims.nh, dims.nh_e, dims.nh_0, dims.nphi, dims.nphi_e, dims.nphi_0]) > 0):
+        constraints_dir = os.path.join(code_export_directory, f'{name}_constraints')
+        template_list.append(('constraints.in.h', f'{name}_constraints.h', constraints_dir))
     # cost
-    cost_dir = os.path.join(code_export_directory, f'{name}_cost')
-    template_list.append(('cost.in.h', f'{name}_cost.h', cost_dir))
+    if any([cost.cost_type != 'LINEAR_LS', cost.cost_type_0 != 'LINEAR_LS', cost.cost_type_e != 'LINEAR_LS']):
+        cost_dir = os.path.join(code_export_directory, f'{name}_cost')
+        template_list.append(('cost.in.h', f'{name}_cost.h', cost_dir))
 
     # Simulink
     if simulink_opts is not None:

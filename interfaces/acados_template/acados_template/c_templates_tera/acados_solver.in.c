@@ -39,7 +39,10 @@
 
 // example specific
 #include "{{ model.name }}_model/{{ model.name }}_model.h"
+
+{%- if dims.nh > 0 or dims.nh_e > 0 or dims.nh_0 > 0 or dims.nphi > 0 or dims.nphi_e > 0 or dims.nphi_0 > 0 %}
 #include "{{ model.name }}_constraints/{{ model.name }}_constraints.h"
+{%- endif %}
 
 {%- if cost.cost_type != "LINEAR_LS" or cost.cost_type_e != "LINEAR_LS" or cost.cost_type_0 != "LINEAR_LS" %}
 #include "{{ model.name }}_cost/{{ model.name }}_cost.h"
