@@ -74,6 +74,8 @@ class AcadosMultiphaseOcp:
         self.constraints = n_phases * [AcadosOcpConstraints()]
         """Constraints definitions, type :py:class:`acados_template.acados_ocp.AcadosOcpConstraints`"""
 
+        self.phases_dims = n_phases * [AcadosOcpDims()]
+
         self.dummy_ocp_list = []
 
         # NOTE: this is the same for AcadosOcp
@@ -126,7 +128,8 @@ class AcadosMultiphaseOcp:
 
             # create dummy ocp
             ocp = AcadosOcp()
-            ocp.dims.N = dims.N
+            ocp.dims = self.phases_dims[i]
+            ocp.dims.N = dims.N # NOTE: to not change options when making ocp consistent
             ocp.model = self.model[i]
             ocp.constraints = self.constraints[i]
             ocp.cost = self.cost[i]
@@ -203,7 +206,7 @@ class AcadosMultiphaseOcp:
             if isinstance(v, list):
                 for i, item in enumerate(v):
                     if isinstance(item, (AcadosModel, AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost)):
-                        ocp_dict[key][i] = dict(item.__dict__)
+                        ocp_dict[key][i] = format_class_dict(dict(item.__dict__))
 
         ocp_dict = format_class_dict(ocp_dict)
         return ocp_dict

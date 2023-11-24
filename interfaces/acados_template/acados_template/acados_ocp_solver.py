@@ -203,8 +203,8 @@ def __mocp_get_template_list(ocp: AcadosMultiphaseOcp, cmake_builder=None, simul
     # TODO: write templates
     # template_list.append(('main.in.c', f'main_{name}.c'))
 
-    template_list.append(('acados_multi_solver.in.c', f'acados_multi_solver_{name}.c'))
-    template_list.append(('acados_solver.in.h', f'acados_solver_{name}.h'))
+    template_list.append(('acados_multi_solver.in.h', f'acados_solver_{name}.h'))
+    template_list.append(('acados_multi_solver.in.c', f'acados_solver_{name}.c'))
     # template_list.append(('acados_solver.in.pxd', f'acados_solver.pxd'))
     if cmake_builder is not None:
         raise NotImplementedError('CMake not yet supported for multiphase OCPs.')
@@ -215,12 +215,12 @@ def __mocp_get_template_list(ocp: AcadosMultiphaseOcp, cmake_builder=None, simul
     # model
     model_dir = os.path.join(code_export_directory, f'{name}_model')
     template_list.append(('multi_model.in.h', f'{name}_model.h', model_dir))
-    # constraints
-    constraints_dir = os.path.join(code_export_directory, f'{name}_constraints')
-    template_list.append(('constraints.in.h', f'{name}_constraints.h', constraints_dir))
-    # cost
-    cost_dir = os.path.join(code_export_directory, f'{name}_cost')
-    template_list.append(('cost.in.h', f'{name}_cost.h', cost_dir))
+    # # constraints
+    # constraints_dir = os.path.join(code_export_directory, f'{name}_constraints')
+    # template_list.append(('constraints.in.h', f'{name}_constraints.h', constraints_dir))
+    # # cost
+    # cost_dir = os.path.join(code_export_directory, f'{name}_cost')
+    # template_list.append(('cost.in.h', f'{name}_cost.h', cost_dir))
 
     # Simulink
     if simulink_opts is not None:
