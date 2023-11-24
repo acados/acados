@@ -34,9 +34,11 @@ import numpy as np
 from utils import plot_pendulum
 
 def main():
+    N = 20
+
     # create ocp object to formulate the OCP
-    N_phases = 1
-    mocp = AcadosMultiphaseOcp(N_phases=N_phases)
+    n_phases = 1
+    mocp = AcadosMultiphaseOcp(n_phases=n_phases, N_list=[N])
 
     # set model
     model = export_pendulum_ode_model()
@@ -45,7 +47,6 @@ def main():
     Tf = 1.0
     nx = model.x.size()[0]
     nu = model.u.size()[0]
-    N = 20
 
     # set dimensions
     mocp.dims.N = N
