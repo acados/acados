@@ -886,39 +886,8 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
     {%- endfor %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "yref", yref_0);
     free(yref_0);
-{%- endif %}
+  {%- if cost.cost_type_0 == "NONLINEAR_LS" or cost.cost_type_0 == "LINEAR_LS" %}
 
-
-{%- if dims.ny != 0 %}
-    double* yref = calloc(NY, sizeof(double));
-    // change only the non-zero elements:
-    {%- for j in range(end=dims.ny) %}
-        {%- if cost.yref[j] != 0 %}
-    yref[{{ j }}] = {{ cost.yref[j] }};
-        {%- endif %}
-    {%- endfor %}
-
-    for (int i = 1; i < N; i++)
-    {
-        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "yref", yref);
-    }
-    free(yref);
-{%- endif %}
-
-{%- if dims.ny_e != 0 %}
-    double* yref_e = calloc(NYN, sizeof(double));
-    // change only the non-zero elements:
-    {%- for j in range(end=dims.ny_e) %}
-        {%- if cost.yref_e[j] != 0 %}
-    yref_e[{{ j }}] = {{ cost.yref_e[j] }};
-        {%- endif %}
-    {%- endfor %}
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "yref", yref_e);
-    free(yref_e);
-{%- endif %}
-
-{%- if dims.ny_0 == 0 %}
-{%- elif cost.cost_type_0 == "NONLINEAR_LS" or cost.cost_type_0 == "LINEAR_LS" %}
    double* W_0 = calloc(NY0*NY0, sizeof(double));
     // change only the non-zero elements:
     {%- for j in range(end=dims.ny_0) %}
@@ -930,43 +899,9 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
     {%- endfor %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "W", W_0);
     free(W_0);
-{%- endif %}
+  {%- endif %}
 
-{%- if dims.ny == 0 %}
-{%- elif cost.cost_type == "NONLINEAR_LS" or cost.cost_type == "LINEAR_LS" %}
-    double* W = calloc(NY*NY, sizeof(double));
-    // change only the non-zero elements:
-    {%- for j in range(end=dims.ny) %}
-        {%- for k in range(end=dims.ny) %}
-            {%- if cost.W[j][k] != 0 %}
-    W[{{ j }}+(NY) * {{ k }}] = {{ cost.W[j][k] }};
-            {%- endif %}
-        {%- endfor %}
-    {%- endfor %}
-
-    for (int i = 1; i < N; i++)
-    {
-        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "W", W);
-    }
-    free(W);
-{%- endif %}
-
-{%- if dims.ny_e == 0 %}
-{%- elif cost.cost_type_e == "NONLINEAR_LS" or cost.cost_type_e == "LINEAR_LS" %}
-    double* W_e = calloc(NYN*NYN, sizeof(double));
-    // change only the non-zero elements:
-    {%- for j in range(end=dims.ny_e) %}
-        {%- for k in range(end=dims.ny_e) %}
-            {%- if cost.W_e[j][k] != 0 %}
-    W_e[{{ j }}+(NYN) * {{ k }}] = {{ cost.W_e[j][k] }};
-            {%- endif %}
-        {%- endfor %}
-    {%- endfor %}
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "W", W_e);
-    free(W_e);
-{%- endif %}
-
-{%- if dims.ny_0 != 0 and cost.cost_type_0 == "LINEAR_LS" %}
+  {%- if cost.cost_type_0 == "LINEAR_LS" %}
     double* Vx_0 = calloc(NY0*NX, sizeof(double));
     // change only the non-zero elements:
     {%- for j in range(end=dims.ny_0) %}
@@ -1005,10 +940,44 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
     {%- endfor %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "Vz", Vz_0);
     free(Vz_0);
-    {%- endif %}
-{%- endif %}
+    {%- endif %}{# nz > 0 #}
+  {%- endif %}{# LINEAR_LS #}
+{%- endif %}{# ny_0 != 0 #}
 
-{%- if dims.ny != 0 and cost.cost_type == "LINEAR_LS" %}
+
+{%- if dims.ny != 0 %}
+    double* yref = calloc(NY, sizeof(double));
+    // change only the non-zero elements:
+    {%- for j in range(end=dims.ny) %}
+        {%- if cost.yref[j] != 0 %}
+    yref[{{ j }}] = {{ cost.yref[j] }};
+        {%- endif %}
+    {%- endfor %}
+
+    for (int i = 1; i < N; i++)
+    {
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "yref", yref);
+    }
+    free(yref);
+  {%- if cost.cost_type == "NONLINEAR_LS" or cost.cost_type == "LINEAR_LS" %}
+    double* W = calloc(NY*NY, sizeof(double));
+    // change only the non-zero elements:
+    {%- for j in range(end=dims.ny) %}
+        {%- for k in range(end=dims.ny) %}
+            {%- if cost.W[j][k] != 0 %}
+    W[{{ j }}+(NY) * {{ k }}] = {{ cost.W[j][k] }};
+            {%- endif %}
+        {%- endfor %}
+    {%- endfor %}
+
+    for (int i = 1; i < N; i++)
+    {
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "W", W);
+    }
+    free(W);
+  {%- endif %}
+
+  {%- if cost.cost_type == "LINEAR_LS" %}
     double* Vx = calloc(NY*NX, sizeof(double));
     // change only the non-zero elements:
     {%- for j in range(end=dims.ny) %}
@@ -1059,9 +1028,38 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
     }
     free(Vz);
     {%- endif %}
-{%- endif %}{# LINEAR LS #}
+  {%- endif %}{# LINEAR LS #}
+{%- endif %}{# ny != 0 #}
 
-{%- if dims.ny_e != 0 and cost.cost_type_e == "LINEAR_LS" %}
+
+{%- if dims.ny_e != 0 %}
+    double* yref_e = calloc(NYN, sizeof(double));
+    // change only the non-zero elements:
+    {%- for j in range(end=dims.ny_e) %}
+        {%- if cost.yref_e[j] != 0 %}
+    yref_e[{{ j }}] = {{ cost.yref_e[j] }};
+        {%- endif %}
+    {%- endfor %}
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "yref", yref_e);
+    free(yref_e);
+
+  {%- if cost.cost_type_e == "NONLINEAR_LS" or cost.cost_type_e == "LINEAR_LS" %}
+
+    double* W_e = calloc(NYN*NYN, sizeof(double));
+    // change only the non-zero elements:
+    {%- for j in range(end=dims.ny_e) %}
+        {%- for k in range(end=dims.ny_e) %}
+            {%- if cost.W_e[j][k] != 0 %}
+    W_e[{{ j }}+(NYN) * {{ k }}] = {{ cost.W_e[j][k] }};
+            {%- endif %}
+        {%- endfor %}
+    {%- endfor %}
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "W", W_e);
+    free(W_e);
+  {%- endif %}
+
+
+  {%- if cost.cost_type_e == "LINEAR_LS" %}
     double* Vx_e = calloc(NYN*NX, sizeof(double));
     // change only the non-zero elements:
     {% for j in range(end=dims.ny_e) %}
@@ -1073,7 +1071,8 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
     {%- endfor %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Vx", Vx_e);
     free(Vx_e);
-{%- endif %}
+  {%- endif %}
+{%- endif %}{# ny_e != 0 #}
 
 {%- if cost.cost_type_0 == "NONLINEAR_LS" %}
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "nls_y_fun", &capsule->cost_y_0_fun);
@@ -1962,9 +1961,10 @@ void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* 
     bool sens_algebraic_val = true;
 
     for (int i = 0; i < N; i++)
+    {
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_output_z", &output_z_val);
-    for (int i = 0; i < N; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_algebraic", &sens_algebraic_val);
+    }
 {%- endif %}
 
 {%- if solver_options.integrator_type != "DISCRETE" %}
@@ -2320,8 +2320,7 @@ int {{ model.name }}_acados_update_qp_solver_cond_N({{ model.name }}_solver_caps
     int status = {{ model.name }}_acados_create_9_precompute(capsule);
     return status;
 {%- else %}
-    printf("\nacados_update_qp_solver_cond_N() failed, since no partial condensing solver is used!\n\n");
-    // Todo: what is an adequate behavior here?
+    printf("\nacados_update_qp_solver_cond_N() not implemented, since no partial condensing solver is used!\n\n");
     exit(1);
     return -1;
 {%- endif %}
