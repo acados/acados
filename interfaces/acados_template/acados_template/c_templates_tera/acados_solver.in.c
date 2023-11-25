@@ -672,7 +672,7 @@ void {{ model.name }}_acados_create_3_create_and_set_functions({{ model.name }}_
         MAP_CASADI_FNC(cost_y_hess[i], {{ model.name }}_cost_y_hess);
     }
 
-{%- elif cost.cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
+{%- elif cost.cost_type == "CONVEX_OVER_NONLINEAR" %}
     // convex-over-nonlinear cost
     capsule->conl_cost_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*(N-1));
     for (int i = 0; i < N-1; i++)
