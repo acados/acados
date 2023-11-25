@@ -164,11 +164,7 @@ void {{ model.name }}_acados_create_1_set_plan(ocp_nlp_plan_t* nlp_solver_plan, 
     *  plan
     ************************************************/
 
-    {%- if solver_options.nlp_solver_type == "SQP" %}
-    nlp_solver_plan->nlp_solver = SQP;
-    {%- else %}
-    nlp_solver_plan->nlp_solver = SQP_RTI;
-    {%- endif %}
+    nlp_solver_plan->nlp_solver = {{ solver_options.nlp_solver_type }};
 
     nlp_solver_plan->ocp_qp_solver_plan.qp_solver = {{ solver_options.qp_solver }};
 
@@ -180,46 +176,25 @@ void {{ model.name }}_acados_create_1_set_plan(ocp_nlp_plan_t* nlp_solver_plan, 
 
     for (int i = 0; i < N; i++)
     {
-        {%- if solver_options.integrator_type == "DISCRETE" %}
+      {%- if solver_options.integrator_type == "DISCRETE" %}
         nlp_solver_plan->nlp_dynamics[i] = DISCRETE_MODEL;
         // discrete dynamics does not need sim solver option, this field is ignored
         nlp_solver_plan->sim_solver_plan[i].sim_solver = INVALID_SIM_SOLVER;
-        {%- else %}
+      {%- else %}
         nlp_solver_plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
         nlp_solver_plan->sim_solver_plan[i].sim_solver = {{ solver_options.integrator_type }};
-        {%- endif %}
+      {%- endif %}
     }
 
-    {%- if constraints.constr_type_0 == "BGP" %}
-    nlp_solver_plan->nlp_constraints[0] = BGP;
-    {%- else %}
-    nlp_solver_plan->nlp_constraints[0] = BGH;
-    {%- endif %}
+    nlp_solver_plan->nlp_constraints[0] = {{ constraints.constr_type_0 }};
+
     for (int i = 1; i < N; i++)
     {
-        {%- if constraints.constr_type == "BGP" %}
-        nlp_solver_plan->nlp_constraints[i] = BGP;
-        {%- else -%}
-        nlp_solver_plan->nlp_constraints[i] = BGH;
-        {%- endif %}
+        nlp_solver_plan->nlp_constraints[i] = {{ constraints.constr_type }};
     }
-    {%- if constraints.constr_type_e == "BGP" %}
-    nlp_solver_plan->nlp_constraints[N] = BGP;
-    {%- else %}
-    nlp_solver_plan->nlp_constraints[N] = BGH;
-    {%- endif %}
+    nlp_solver_plan->nlp_constraints[N] = {{ constraints.constr_type_e }};
 
-    {%- if solver_options.regularize_method == "NO_REGULARIZE" %}
-    nlp_solver_plan->regularization = NO_REGULARIZE;
-    {%- elif solver_options.regularize_method == "MIRROR" %}
-    nlp_solver_plan->regularization = MIRROR;
-    {%- elif solver_options.regularize_method == "PROJECT" %}
-    nlp_solver_plan->regularization = PROJECT;
-    {%- elif solver_options.regularize_method == "PROJECT_REDUC_HESS" %}
-    nlp_solver_plan->regularization = PROJECT_REDUC_HESS;
-    {%- elif solver_options.regularize_method == "CONVEXIFY" %}
-    nlp_solver_plan->regularization = CONVEXIFY;
-    {%- endif %}
+    nlp_solver_plan->regularization = {{ solver_options.regularize_method }};
 }
 
 
