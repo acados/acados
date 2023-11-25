@@ -47,6 +47,14 @@ extern "C" {
     {%- set custom_update_filename = solver_options.custom_update_filename %}
 {%- endif %}
 
+{% set cost_e = cost | last %}
+{% set constraints_e = constraints | last %}
+{% set dims_nh_e = dims.nh | last %}
+
+{% set cost_0 = cost | first %}
+{% set constraints_0 = constraints | first %}
+
+
 // ** capsule for solver data **
 typedef struct {{ name }}_solver_capsule
 {
@@ -121,20 +129,20 @@ typedef struct {{ name }}_solver_capsule
     external_function_param_{{ cost[jj].cost_ext_fun_type }} *ext_cost_fun_jac_{{ jj }};
     external_function_param_{{ cost[jj].cost_ext_fun_type }} *ext_cost_fun_jac_hess_{{ jj }};
 {% endif %}
-	{%- endfor %}{# for j in range(end=n_phases) #}
+	{%- endfor %}{# for jj in range(end=n_phases) #}
 
 
-{% if cost[0].cost_type_0 == "NONLINEAR_LS" %}
+{% if cost_0.cost_type_0 == "NONLINEAR_LS" %}
     external_function_param_casadi cost_y_0_fun;
     external_function_param_casadi cost_y_0_fun_jac_ut_xt;
     external_function_param_casadi cost_y_0_hess;
-{% elif cost[0].cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
+{% elif cost_0.cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
     external_function_param_casadi conl_cost_0_fun;
     external_function_param_casadi conl_cost_0_fun_jac_hess;
-{% elif cost[0].cost_type_0 == "EXTERNAL" %}
-    external_function_param_{{ cost[0].cost_ext_fun_type_0 }} ext_cost_0_fun;
-    external_function_param_{{ cost[0].cost_ext_fun_type_0 }} ext_cost_0_fun_jac;
-    external_function_param_{{ cost[0].cost_ext_fun_type_0 }} ext_cost_0_fun_jac_hess;
+{% elif cost_0.cost_type_0 == "EXTERNAL" %}
+    external_function_param_{{ cost_0.cost_ext_fun_type_0 }} ext_cost_0_fun;
+    external_function_param_{{ cost_0.cost_ext_fun_type_0 }} ext_cost_0_fun_jac;
+    external_function_param_{{ cost_0.cost_ext_fun_type_0 }} ext_cost_0_fun_jac_hess;
 {%- endif %}
 
 
@@ -147,10 +155,6 @@ typedef struct {{ name }}_solver_capsule
     external_function_param_casadi nl_constr_h_0_fun_jac_hess;
 {%- endif %}
 {%- endif %}
-
-{% set cost_e = cost | last %}
-{% set constraints_e = constraints | last %}
-{% set dims_nh_e = dims.nh | last %}
 
 {% if cost_e.cost_type_e == "NONLINEAR_LS" %}
     external_function_param_casadi cost_y_e_fun;

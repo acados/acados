@@ -653,10 +653,10 @@ class MultiphaseOcpDims:
         # constraints
         self.nbu: Optional[list] = None
         self.nbx: Optional[list] = None
+        self.ng: Optional[list] = None
         self.nh: Optional[list] = None
         self.nphi: Optional[list] = None
         self.nr: Optional[list] = None
-        self.ng: Optional[list] = None
         # slacks
         self.ns: Optional[list] = None
         self.nsbu: Optional[list] = None

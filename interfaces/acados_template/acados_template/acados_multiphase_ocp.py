@@ -124,6 +124,15 @@ class AcadosMultiphaseOcp:
         dims.fix_N()
 
         idx0 = 0
+
+        phase_idx = np.cumsum([0] + self.N_list).tolist()
+
+        self.start_idx = phase_idx[:-1]
+        self.end_idx = phase_idx[1:]
+
+        self.cost_start_idx = phase_idx.copy()
+        self.cost_start_idx[0] += 1
+
         for i in range(self.n_phases):
 
             # create dummy ocp
@@ -143,7 +152,7 @@ class AcadosMultiphaseOcp:
             self.dummy_ocp_list.append(ocp)
 
             # copy dimensions:
-            for j in range(idx0, idx0 + self.N_list[i]):
+            for j in range(self.start_idx[i], self.end_idx[i]):
                 # path (default)
                 dims.nx[j] = ocp.dims.nx
                 dims.nu[j] = ocp.dims.nu
@@ -159,6 +168,7 @@ class AcadosMultiphaseOcp:
                 dims.ns[j] = ocp.dims.ns
                 dims.nsbu[j] = ocp.dims.nsbu
                 dims.nsbx[j] = ocp.dims.nsbx
+                dims.nsg[j] = ocp.dims.nsg
                 dims.nsh[j] = ocp.dims.nsh
                 dims.nsphi[j] = ocp.dims.nsphi
                 dims.nbxe[j] = 0
@@ -178,18 +188,24 @@ class AcadosMultiphaseOcp:
 
         j = dims.N
         # terminal node
+        dims.nx[j] = ocp.dims.nx
+        dims.np[j] = ocp.dims.np
+        dims.nz[j] = ocp.dims.nz
         dims.ny[j] = ocp.dims.ny_e
         dims.nbx[j] = ocp.dims.nbx_e
         dims.nh[j] = ocp.dims.nh_e
         dims.nr[j] = ocp.dims.nr_e
         dims.nphi[j] = ocp.dims.nphi_e
         dims.ng[j] = ocp.dims.ng_e
+        dims.ns[j] = ocp.dims.ns_e
+        dims.nsbx[j] = ocp.dims.nsbx_e
+        dims.nsg[j] = ocp.dims.nsg_e
         dims.nsh[j] = ocp.dims.nsh_e
         dims.nsphi[j] = ocp.dims.nsphi_e
-        dims.ns[j] = ocp.dims.ns_e
         dims.nu[j] = 0
         dims.nbu[j] = 0
         dims.nsbu[j] = 0
+        dims.nbxe[j] = 0
 
         return
 

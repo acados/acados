@@ -152,7 +152,9 @@ def __mocp_get_template_list(ocp: AcadosMultiphaseOcp, cmake_builder=None, simul
         raise NotImplementedError('CMake not yet supported for multiphase OCPs.')
         template_list.append(('CMakeLists.in.txt', 'CMakeLists.txt'))
     else:
-        template_list.append(('Makefile.in', 'Makefile'))
+        # TODO: write this!
+        pass
+        # template_list.append(('Makefile.in', 'Makefile'))
 
     # Simulink
     if simulink_opts is not None:
@@ -202,7 +204,8 @@ def mocp_render_templates(ocp: AcadosMultiphaseOcp, json_file: str, cmake_builde
     # custom_template_glob = os.path.join(acados_template_path, 'custom_update_templates', '*')
     # for tup in ocp.solver_options.custom_templates:
     #     render_template(tup[0], tup[1], ocp.code_export_directory, json_path, template_glob=custom_template_glob)
-    print("mocp_render_templates: rendered solver templates successfully")
+    print("\nmocp_render_templates: rendered solver templates successfully!\n")
+
 
     return
 
