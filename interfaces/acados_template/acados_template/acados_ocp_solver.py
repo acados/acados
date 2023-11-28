@@ -408,8 +408,8 @@ class AcadosOcpSolver:
         with open(json_file, 'r') as f:
             acados_ocp_json = json.load(f)
         self.N = acados_ocp_json['dims']['N']
-        self.model_name = acados_ocp_json['model']['name']
         self.solver_options = acados_ocp_json['solver_options']
+        self.model_name = acados_ocp_json['name']
 
         acados_lib_path = acados_ocp_json['acados_lib_path']
         code_export_directory = acados_ocp_json['code_export_directory']

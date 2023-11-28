@@ -103,6 +103,7 @@ class AcadosOcp:
 
         self.__parameter_values = np.array([])
         self.__problem_class = 'OCP'
+        self.__name = None # set in make_consistent to model.name
 
         self.code_export_directory = 'c_generated_code'
         """Path to where code will be exported. Default: `c_generated_code`."""
@@ -129,6 +130,7 @@ class AcadosOcp:
         opts = self.solver_options
 
         model.make_consistent(dims)
+        self.name = model.name
 
         # parameters
         if self.parameter_values.shape[0] != dims.np:
