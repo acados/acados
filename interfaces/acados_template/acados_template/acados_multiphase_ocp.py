@@ -144,10 +144,8 @@ class AcadosMultiphaseOcp:
             ocp.cost = self.cost[i]
             ocp.solver_options = opts
 
-            try:
-                ocp.make_consistent()
-            except Exception as e:
-                raise Exception(f'make_consistent for phase {i} returned Exception {e}')
+            print(f"Calling make_consistent for phase {i}.")
+            ocp.make_consistent()
 
             self.dummy_ocp_list.append(ocp)
 

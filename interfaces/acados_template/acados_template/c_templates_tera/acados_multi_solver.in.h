@@ -194,6 +194,7 @@ ACADOS_SYMBOL_EXPORT int {{ name }}_acados_free_capsule({{ name }}_solver_capsul
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_create({{ name }}_solver_capsule * capsule);
 
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_reset({{ name }}_solver_capsule* capsule, int reset_qp_solver_mem);
+ACADOS_SYMBOL_EXPORT int {{ name }}_acados_create_with_discretization({{ name }}_solver_capsule* capsule, int N, double* new_time_steps);
 
 
 ACADOS_SYMBOL_EXPORT int {{ name }}_acados_update_params({{ name }}_solver_capsule * capsule, int stage, double *value, int np);

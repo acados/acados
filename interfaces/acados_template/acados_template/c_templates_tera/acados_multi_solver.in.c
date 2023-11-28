@@ -923,11 +923,11 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
 {% if dims_0.ns_0 > 0 %}
     // slacks terminal
-    double* zlu0_mem = calloc(4*NSN, sizeof(double));
-    double* Zl_0 = zlu0_mem+NSN*0;
-    double* Zu_0 = zlu0_mem+NSN*1;
-    double* zl_0 = zlu0_mem+NSN*2;
-    double* zu_0 = zlu0_mem+NSN*3;
+    double* zlu0_mem = calloc(4*{{ dims_0.ns_0 }}, sizeof(double));
+    double* Zl_0 = zlu0_mem+{{ dims_0.ns_0 }}*0;
+    double* Zu_0 = zlu0_mem+{{ dims_0.ns_0 }}*1;
+    double* zl_0 = zlu0_mem+{{ dims_0.ns_0 }}*2;
+    double* zu_0 = zlu0_mem+{{ dims_0.ns_0 }}*3;
 
     // change only the non-zero elements:
     {% for j in range(end=dims_0.ns_0) %}
@@ -1005,9 +1005,9 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
 {% if dims_0.nh_0 > 0 %}
     // set up nonlinear constraints for last stage
-    double* luh_0 = calloc(2*NH0, sizeof(double));
+    double* luh_0 = calloc(2*{{ dims_0.nh_0 }}, sizeof(double));
     double* lh_0 = luh_0;
-    double* uh_0 = luh_0 + NH0;
+    double* uh_0 = luh_0 + {{ dims_0.nh_0 }};
     {% for i in range(end=dims_0.nh_0) %}
         {%- if constraints_0.lh_0[i] != 0 %}
     lh_0[{{ i }}] = {{ constraints_0.lh_0[i] }};
@@ -1031,9 +1031,9 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     free(luh_0);
 {%- elif dims_0.nphi_0 > 0 and constraints_0.constr_type_0 == "BGP" %}
     // set up convex-over-nonlinear constraints for last stage
-    double* luphi_0 = calloc(2*NPHI0, sizeof(double));
+    double* luphi_0 = calloc(2*{{ dims_0.nphi_0 }}, sizeof(double));
     double* lphi_0 = luphi_0;
-    double* uphi_0 = luphi_0 + NPHI0;
+    double* uphi_0 = luphi_0 + {{ dims_0.nphi_0 }};
     {% for i in range(end=dims_0.nphi_0) %}
         {%- if constraints_0.lphi_0[i] != 0 %}
     lphi_0[{{ i }}] = {{ constraints_0.lphi_0[i] }};
@@ -1052,13 +1052,13 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
 {% if dims_0.nsh_0 > 0 %}
     // set up soft bounds for nonlinear constraints
-    int* idxsh_0 = malloc(NSH0 * sizeof(int));
+    int* idxsh_0 = malloc({{ dims_0.nsh_0 }} * sizeof(int));
     {% for i in range(end=dims_0.nsh_0) %}
     idxsh_0[{{ i }}] = {{ constraints_0.idxsh_0[i] }};
     {%- endfor %}
-    double* lush_0 = calloc(2*NSH0, sizeof(double));
+    double* lush_0 = calloc(2*{{ dims_0.nsh_0 }}, sizeof(double));
     double* lsh_0 = lush_0;
-    double* ush_0 = lush_0 + NSH0;
+    double* ush_0 = lush_0 + {{ dims_0.nsh_0 }};
     {% for i in range(end=dims_0.nsh_0) %}
         {%- if constraints_0.lsh_0[i] != 0 %}
     lsh_0[{{ i }}] = {{ constraints_0.lsh_0[i] }};
@@ -1077,13 +1077,13 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
 {% if dims_0.nsphi_0 > 0 %}
     // set up soft bounds for convex-over-nonlinear constraints
-    int* idxsphi_0 = malloc(NSPHI0 * sizeof(int));
+    int* idxsphi_0 = malloc({{ dims_0.nsphi_0 }} * sizeof(int));
     {% for i in range(end=dims_0.nsphi_0) %}
     idxsphi_0[{{ i }}] = {{ constraints_0.idxsphi_0[i] }};
     {%- endfor %}
-    double* lusphi_0 = calloc(2*NSPHI0, sizeof(double));
+    double* lusphi_0 = calloc(2*{{ dims_0.nsphi_0 }}, sizeof(double));
     double* lsphi_0 = lusphi_0;
-    double* usphi_0 = lusphi_0 + NSPHI0;
+    double* usphi_0 = lusphi_0 + {{ dims_0.nsphi_0 }};
     {% for i in range(end=dims_0.nsphi_0) %}
         {%- if constraints_0.lsphi_0[i] != 0 %}
     lsphi_0[{{ i }}] = {{ constraints_0.lsphi_0[i] }};
@@ -1197,7 +1197,7 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     /**** Cost ****/
 
 {%- if phases_dims[jj].ny != 0 %}
-    double* yref = calloc(NY, sizeof(double));
+    double* yref = calloc({{ phases_dims[jj].ny }}, sizeof(double));
     // change only the non-zero elements:
     {%- for j in range(end=phases_dims[jj].ny) %}
         {%- if cost[jj].yref[j] != 0 %}
@@ -1212,12 +1212,12 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     }
     free(yref);
   {%- if cost[jj].cost_type == "NONLINEAR_LS" or cost[jj].cost_type == "LINEAR_LS" %}
-    double* W = calloc(NY*NY, sizeof(double));
+    double* W = calloc({{ phases_dims[jj].ny }}*{{ phases_dims[jj].ny }}, sizeof(double));
     // change only the non-zero elements:
     {%- for j in range(end=phases_dims[jj].ny) %}
         {%- for k in range(end=phases_dims[jj].ny) %}
             {%- if cost[jj].W[j][k] != 0 %}
-    W[{{ j }}+(NY) * {{ k }}] = {{ cost[jj].W[j][k] }};
+    W[{{ j }}+({{ phases_dims[jj].ny }}) * {{ k }}] = {{ cost[jj].W[j][k] }};
             {%- endif %}
         {%- endfor %}
     {%- endfor %}
@@ -1248,7 +1248,7 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     free(Vx);
 
     {% if phases_dims[jj].nu > 0 %}
-    double* Vu = calloc({{ phases_dims[jj].ny }}*NU, sizeof(double));
+    double* Vu = calloc({{ phases_dims[jj].ny }}*{{ phases_dims[jj].nu }}, sizeof(double));
     // change only the non-zero elements:
     {% for j in range(end=phases_dims[jj].ny) %}
         {%- for k in range(end=phases_dims[jj].nu) %}
@@ -1267,7 +1267,7 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     {%- endif %}
 
     {%- if phases_dims[jj].nz > 0 %}
-    double* Vz = calloc({{ phases_dims[jj].ny }}*NZ, sizeof(double));
+    double* Vz = calloc({{ phases_dims[jj].ny }}*{{ phases_dims[jj].nz }}, sizeof(double));
     // change only the non-zero elements:
     {% for j in range(end=phases_dims[jj].ny) %}
         {%- for k in range(end=phases_dims[jj].nz) %}
@@ -1290,11 +1290,11 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
 {%- if phases_dims[jj].ns > 0 %}
     // slacks
-    double* zlumem = calloc(4*NS, sizeof(double));
-    double* Zl = zlumem+NS*0;
-    double* Zu = zlumem+NS*1;
-    double* zl = zlumem+NS*2;
-    double* zu = zlumem+NS*3;
+    double* zlumem = calloc(4*{{ phases_dims[jj].ns }}, sizeof(double));
+    double* Zl = zlumem+{{ phases_dims[jj].ns }}*0;
+    double* Zu = zlumem+{{ phases_dims[jj].ns }}*1;
+    double* zl = zlumem+{{ phases_dims[jj].ns }}*2;
+    double* zu = zlumem+{{ phases_dims[jj].ns }}*3;
     // change only the non-zero elements:
     {%- for j in range(end=phases_dims[jj].ns) %}
         {%- if cost[jj].Zl[j] != 0 %}
@@ -1343,14 +1343,14 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     // ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "usbx", usbx);
 
     // soft bounds on x
-    int* idxsbx = malloc(NSBX * sizeof(int));
+    int* idxsbx = malloc({{ phases_dims[jj].nsbx }} * sizeof(int));
     {%- for i in range(end=phases_dims[jj].nsbx) %}
     idxsbx[{{ i }}] = {{ constraints[jj].idxsbx[i] }};
     {%- endfor %}
 
-    double* lusbx = calloc(2*NSBX, sizeof(double));
+    double* lusbx = calloc(2*{{ phases_dims[jj].nsbx }}, sizeof(double));
     double* lsbx = lusbx;
-    double* usbx = lusbx + NSBX;
+    double* usbx = lusbx + {{ phases_dims[jj].nsbx }};
     {%- for i in range(end=phases_dims[jj].nsbx) %}
         {%- if constraints[jj].lsbx[i] != 0 %}
     lsbx[{{ i }}] = {{ constraints[jj].lsbx[i] }};
@@ -1402,13 +1402,13 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
 {%- if phases_dims[jj].nsbu > 0 %}
     // set up soft bounds for u
-    int* idxsbu = malloc(NSBU * sizeof(int));
+    int* idxsbu = malloc({{ phases_dims[jj].nsbu }} * sizeof(int));
     {% for i in range(end=phases_dims[jj].nsbu) %}
     idxsbu[{{ i }}] = {{ constraints[jj].idxsbu[i] }};
     {%- endfor %}
-    double* lusbu = calloc(2*NSBU, sizeof(double));
+    double* lusbu = calloc(2*{{ phases_dims[jj].nsbu }}, sizeof(double));
     double* lsbu = lusbu;
-    double* usbu = lusbu + NSBU;
+    double* usbu = lusbu + {{ phases_dims[jj].nsbu }};
     {% for i in range(end=phases_dims[jj].nsbu) %}
         {%- if constraints[jj].lsbu[i] != 0 %}
     lsbu[{{ i }}] = {{ constraints[jj].lsbu[i] }};
@@ -1429,13 +1429,13 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
 {% if phases_dims[jj].nsg > 0 %}
     // set up soft bounds for general linear constraints
-    int* idxsg = malloc(NSG * sizeof(int));
+    int* idxsg = malloc({{ phases_dims[jj].nsg }} * sizeof(int));
     {% for i in range(end=phases_dims[jj].nsg) %}
     idxsg[{{ i }}] = {{ constraints[jj].idxsg[i] }};
     {%- endfor %}
-    double* lusg = calloc(2*NSG, sizeof(double));
+    double* lusg = calloc(2*{{ phases_dims[jj].nsg }}, sizeof(double));
     double* lsg = lusg;
-    double* usg = lusg + NSG;
+    double* usg = lusg + {{ phases_dims[jj].nsg }};
     {% for i in range(end=phases_dims[jj].nsg) %}
         {%- if constraints[jj].lsg[i] != 0 %}
     lsg[{{ i }}] = {{ constraints[jj].lsg[i] }};
@@ -1457,13 +1457,13 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
 {% if phases_dims[jj].nsh > 0 %}
     // set up soft bounds for nonlinear constraints
-    int* idxsh = malloc(NSH * sizeof(int));
+    int* idxsh = malloc({{ phases_dims[jj].nsh }} * sizeof(int));
     {% for i in range(end=phases_dims[jj].nsh) %}
     idxsh[{{ i }}] = {{ constraints[jj].idxsh[i] }};
     {%- endfor %}
-    double* lush = calloc(2*NSH, sizeof(double));
+    double* lush = calloc(2*{{ phases_dims[jj].nsh }}, sizeof(double));
     double* lsh = lush;
-    double* ush = lush + NSH;
+    double* ush = lush + {{ phases_dims[jj].nsh }};
     {% for i in range(end=phases_dims[jj].nsh) %}
         {%- if constraints[jj].lsh[i] != 0 %}
     lsh[{{ i }}] = {{ constraints[jj].lsh[i] }};
@@ -1486,13 +1486,13 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
 {% if phases_dims[jj].nsphi > 0 %}
     // set up soft bounds for convex-over-nonlinear constraints
-    int* idxsphi = malloc(NSPHI * sizeof(int));
+    int* idxsphi = malloc({{ phases_dims[jj].nsphi }} * sizeof(int));
     {% for i in range(end=phases_dims[jj].nsphi) %}
     idxsphi[{{ i }}] = {{ constraints[jj].idxsphi[i] }};
     {%- endfor %}
-    double* lusphi = calloc(2*NSPHI, sizeof(double));
+    double* lusphi = calloc(2*{{ phases_dims[jj].nsphi }}, sizeof(double));
     double* lsphi = lusphi;
-    double* usphi = lusphi + NSPHI;
+    double* usphi = lusphi + {{ phases_dims[jj].nsphi }};
     {% for i in range(end=phases_dims[jj].nsphi) %}
         {%- if constraints[jj].lsphi[i] != 0 %}
     lsphi[{{ i }}] = {{ constraints[jj].lsphi[i] }};
@@ -1515,13 +1515,13 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
 {% if phases_dims[jj].nbx > 0 %}
     // x
-    int* idxbx = malloc(NBX * sizeof(int));
+    int* idxbx = malloc({{ phases_dims[jj].nbx }} * sizeof(int));
     {% for i in range(end=phases_dims[jj].nbx) %}
     idxbx[{{ i }}] = {{ constraints[jj].idxbx[i] }};
     {%- endfor %}
-    double* lubx = calloc(2*NBX, sizeof(double));
+    double* lubx = calloc(2*{{ phases_dims[jj].nbx }}, sizeof(double));
     double* lbx = lubx;
-    double* ubx = lubx + NBX;
+    double* ubx = lubx + {{ phases_dims[jj].nbx }};
     {% for i in range(end=phases_dims[jj].nbx) %}
         {%- if constraints[jj].lbx[i] != 0 %}
     lbx[{{ i }}] = {{ constraints[jj].lbx[i] }};
@@ -1544,16 +1544,16 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
 {% if phases_dims[jj].ng > 0 %}
     // set up general constraints for stage 0 to N-1
-    double* D = calloc(NG*NU, sizeof(double));
-    double* C = calloc(NG*nx, sizeof(double));
-    double* lug = calloc(2*NG, sizeof(double));
+    double* D = calloc({{ phases_dims[jj].ng }}*{{ phases_dims[jj].nu }}, sizeof(double));
+    double* C = calloc({{ phases_dims[jj].ng }}*nx, sizeof(double));
+    double* lug = calloc(2*{{ phases_dims[jj].ng }}, sizeof(double));
     double* lg = lug;
-    double* ug = lug + NG;
+    double* ug = lug + {{ phases_dims[jj].ng }};
 
     {% for j in range(end=phases_dims[jj].ng) -%}
         {% for k in range(end=phases_dims[jj].nu) %}
             {%- if constraints[jj].D[j][k] != 0 %}
-    D[{{ j }}+NG * {{ k }}] = {{ constraints[jj].D[j][k] }};
+    D[{{ j }}+{{ phases_dims[jj].ng }} * {{ k }}] = {{ constraints[jj].D[j][k] }};
             {%- endif %}
         {%- endfor %}
     {%- endfor %}
@@ -1561,7 +1561,7 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     {% for j in range(end=phases_dims[jj].ng) -%}
         {% for k in range(end=phases_dims[jj].nx) %}
             {%- if constraints[jj].C[j][k] != 0 %}
-    C[{{ j }}+NG * {{ k }}] = {{ constraints[jj].C[j][k] }};
+    C[{{ j }}+{{ phases_dims[jj].ng }} * {{ k }}] = {{ constraints[jj].C[j][k] }};
             {%- endif %}
         {%- endfor %}
     {%- endfor %}
@@ -1592,9 +1592,9 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
 {% if phases_dims[jj].nh > 0 %}
     // set up nonlinear constraints for stage 1 to N-1
-    double* luh = calloc(2*NH, sizeof(double));
+    double* luh = calloc(2*{{ phases_dims[jj].nh }}, sizeof(double));
     double* lh = luh;
-    double* uh = luh + NH;
+    double* uh = luh + {{ phases_dims[jj].nh }};
 
     {% for i in range(end=phases_dims[jj].nh) %}
         {%- if constraints[jj].lh[i] != 0 %}
@@ -1627,9 +1627,9 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
 {% if phases_dims[jj].nphi > 0 and constraints[jj].constr_type == "BGP" %}
     // set up convex-over-nonlinear constraints for stage 1 to N-1
-    double* luphi = calloc(2*NPHI, sizeof(double));
+    double* luphi = calloc(2*{{ phases_dims[jj].nphi }}, sizeof(double));
     double* lphi = luphi;
-    double* uphi = luphi + NPHI;
+    double* uphi = luphi + {{ phases_dims[jj].nphi }};
     {% for i in range(end=phases_dims[jj].nphi) %}
         {%- if constraints[jj].lphi[i] != 0 %}
     lphi[{{ i }}] = {{ constraints[jj].lphi[i] }};
@@ -1656,7 +1656,7 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
 
 
-///// TERMINAL
+    // TERMINAL node
 {%- if dims_e.ny_e != 0 %}
     double* yref_e = calloc({{ dims_e.ny_e }}, sizeof(double));
     // change only the non-zero elements:
@@ -1720,11 +1720,11 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
 {% if dims_e.ns_e > 0 %}
     // slacks terminal
-    double* zluemem = calloc(4*NSN, sizeof(double));
-    double* Zl_e = zluemem+NSN*0;
-    double* Zu_e = zluemem+NSN*1;
-    double* zl_e = zluemem+NSN*2;
-    double* zu_e = zluemem+NSN*3;
+    double* zluemem = calloc(4*{{ dims_e.ns_e }}, sizeof(double));
+    double* Zl_e = zluemem+{{ dims_e.ns_e }}*0;
+    double* Zu_e = zluemem+{{ dims_e.ns_e }}*1;
+    double* zl_e = zluemem+{{ dims_e.ns_e }}*2;
+    double* zu_e = zluemem+{{ dims_e.ns_e }}*3;
 
     // change only the non-zero elements:
     {% for j in range(end=dims_e.ns_e) %}
@@ -1766,13 +1766,13 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 {% if dims_e.nbx_e > 0 %}
     // set up bounds for last stage
     // x
-    int* idxbx_e = malloc(NBXN * sizeof(int));
+    int* idxbx_e = malloc({{ dims_e.nbx_e }} * sizeof(int));
     {% for i in range(end=dims_e.nbx_e) %}
     idxbx_e[{{ i }}] = {{ constraints_e.idxbx_e[i] }};
     {%- endfor %}
-    double* lubx_e = calloc(2*NBXN, sizeof(double));
+    double* lubx_e = calloc(2*{{ dims_e.nbx_e }}, sizeof(double));
     double* lbx_e = lubx_e;
-    double* ubx_e = lubx_e + NBXN;
+    double* ubx_e = lubx_e + {{ dims_e.nbx_e }};
     {% for i in range(end=dims_e.nbx_e) %}
         {%- if constraints_e.lbx_e[i] != 0 %}
     lbx_e[{{ i }}] = {{ constraints_e.lbx_e[i] }};
@@ -1790,13 +1790,13 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
 {% if dims_e.nsg_e > 0 %}
     // set up soft bounds for general linear constraints
-    int* idxsg_e = calloc(NSGN, sizeof(int));
+    int* idxsg_e = calloc({{ dims_e.nsg_e }}, sizeof(int));
     {% for i in range(end=dims_e.nsg_e) %}
     idxsg_e[{{ i }}] = {{ constraints_e.idxsg_e[i] }};
     {%- endfor %}
-    double* lusg_e = calloc(2*NSGN, sizeof(double));
+    double* lusg_e = calloc(2*{{ dims_e.nsg_e }}, sizeof(double));
     double* lsg_e = lusg_e;
-    double* usg_e = lusg_e + NSGN;
+    double* usg_e = lusg_e + {{ dims_e.nsg_e }};
     {% for i in range(end=dims_e.nsg_e) %}
         {%- if constraints_e.lsg_e[i] != 0 %}
     lsg_e[{{ i }}] = {{ constraints_e.lsg_e[i] }};
@@ -1815,13 +1815,13 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
 {% if dims_e.nsh_e > 0 %}
     // set up soft bounds for nonlinear constraints
-    int* idxsh_e = malloc(NSHN * sizeof(int));
+    int* idxsh_e = malloc({{ dims_e.nsh_e }} * sizeof(int));
     {% for i in range(end=dims_e.nsh_e) %}
     idxsh_e[{{ i }}] = {{ constraints_e.idxsh_e[i] }};
     {%- endfor %}
-    double* lush_e = calloc(2*NSHN, sizeof(double));
+    double* lush_e = calloc(2*{{ dims_e.nsh_e }}, sizeof(double));
     double* lsh_e = lush_e;
-    double* ush_e = lush_e + NSHN;
+    double* ush_e = lush_e + {{ dims_e.nsh_e }};
     {% for i in range(end=dims_e.nsh_e) %}
         {%- if constraints_e.lsh_e[i] != 0 %}
     lsh_e[{{ i }}] = {{ constraints_e.lsh_e[i] }};
@@ -1840,13 +1840,13 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
 {% if dims_e.nsphi_e > 0 %}
     // set up soft bounds for convex-over-nonlinear constraints
-    int* idxsphi_e = malloc(NSPHIN * sizeof(int));
+    int* idxsphi_e = malloc({{ dims_e.nsphi_e }} * sizeof(int));
     {% for i in range(end=dims_e.nsphi_e) %}
     idxsphi_e[{{ i }}] = {{ constraints_e.idxsphi_e[i] }};
     {%- endfor %}
-    double* lusphi_e = calloc(2*NSPHIN, sizeof(double));
+    double* lusphi_e = calloc(2*{{ dims_e.nsphi_e }}, sizeof(double));
     double* lsphi_e = lusphi_e;
-    double* usphi_e = lusphi_e + NSPHIN;
+    double* usphi_e = lusphi_e + {{ dims_e.nsphi_e }};
     {% for i in range(end=dims_e.nsphi_e) %}
         {%- if constraints_e.lsphi_e[i] != 0 %}
     lsphi_e[{{ i }}] = {{ constraints_e.lsphi_e[i] }};
@@ -1865,13 +1865,13 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
 {% if dims_e.nsbx_e > 0 %}
     // soft bounds on x
-    int* idxsbx_e = malloc(NSBXN * sizeof(int));
+    int* idxsbx_e = malloc({{ dims_e.nsbx_e }} * sizeof(int));
     {% for i in range(end=dims_e.nsbx_e) %}
     idxsbx_e[{{ i }}] = {{ constraints_e.idxsbx_e[i] }};
     {%- endfor %}
-    double* lusbx_e = calloc(2*NSBXN, sizeof(double));
+    double* lusbx_e = calloc(2*{{ dims_e.nsbx_e }}, sizeof(double));
     double* lsbx_e = lusbx_e;
-    double* usbx_e = lusbx_e + NSBXN;
+    double* usbx_e = lusbx_e + {{ dims_e.nsbx_e }};
     {% for i in range(end=dims_e.nsbx_e) %}
         {%- if constraints_e.lsbx_e[i] != 0 %}
     lsbx_e[{{ i }}] = {{ constraints_e.lsbx_e[i] }};
@@ -1921,9 +1921,9 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
 {% if dims_e.nh_e > 0 %}
     // set up nonlinear constraints for last stage
-    double* luh_e = calloc(2*NHN, sizeof(double));
+    double* luh_e = calloc(2*{{ dims_e.nh_e }}, sizeof(double));
     double* lh_e = luh_e;
-    double* uh_e = luh_e + NHN;
+    double* uh_e = luh_e + {{ dims_e.nh_e }};
     {% for i in range(end=dims_e.nh_e) %}
         {%- if constraints_e.lh_e[i] != 0 %}
     lh_e[{{ i }}] = {{ constraints_e.lh_e[i] }};
@@ -1947,9 +1947,9 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     free(luh_e);
 {%- elif dims_e.nphi_e > 0 and constraints_e.constr_type_e == "BGP" %}
     // set up convex-over-nonlinear constraints for last stage
-    double* luphi_e = calloc(2*NPHIN, sizeof(double));
+    double* luphi_e = calloc(2*{{ dims_e.nphi_e }}, sizeof(double));
     double* lphi_e = luphi_e;
-    double* uphi_e = luphi_e + NPHIN;
+    double* uphi_e = luphi_e + {{ dims_e.nphi_e }};
     {% for i in range(end=dims_e.nphi_e) %}
         {%- if constraints_e.lphi_e[i] != 0 %}
     lphi_e[{{ i }}] = {{ constraints_e.lphi_e[i] }};
