@@ -49,10 +49,14 @@ extern "C" {
 
 {% set cost_e = cost | last %}
 {% set constraints_e = constraints | last %}
-{% set dims_nh_e = dims.nh | last %}
+{% set dims_e = phases_dims | last %}
+
 
 {% set cost_0 = cost | first %}
+{% set dims_0 = phases_dims | first %}
+{% set model_0 = model | first %}
 {% set constraints_0 = constraints | first %}
+
 
 
 // ** capsule for solver data **
@@ -68,11 +72,8 @@ typedef struct {{ name }}_solver_capsule
     ocp_nlp_config *nlp_config;
     ocp_nlp_dims *nlp_dims;
 
-    // // number of expected runtime parameters
-    // unsigned int nlp_np;
-
 	{%- for jj in range(end=n_phases) %}{# phases loop !#}
-    /* external functions */
+    /* external functions phase {{ jj }} */
     // dynamics
 {% if solver_options.integrator_type == "ERK" %}
     external_function_param_casadi *forw_vde_casadi_{{ jj }};
@@ -171,8 +172,8 @@ typedef struct {{ name }}_solver_capsule
 
 
 {% if constraints_e.constr_type_e == "BGP" %}
-external_function_param_casadi phi_e_constraint;
-{% elif constraints_e.constr_type_e == "BGH" and dims_nh_e > 0 %}
+    external_function_param_casadi phi_e_constraint;
+{% elif constraints_e.constr_type_e == "BGH" and dims_e.nh_e > 0 %}
     external_function_param_casadi nl_constr_h_e_fun_jac;
     external_function_param_casadi nl_constr_h_e_fun;
 {%- if solver_options.hessian_approx == "EXACT" %}
