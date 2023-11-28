@@ -152,9 +152,7 @@ def __mocp_get_template_list(ocp: AcadosMultiphaseOcp, cmake_builder=None, simul
         raise NotImplementedError('CMake not yet supported for multiphase OCPs.')
         template_list.append(('CMakeLists.in.txt', 'CMakeLists.txt'))
     else:
-        # TODO: write this!
-        pass
-        # template_list.append(('Makefile.in', 'Makefile'))
+        template_list.append(('multi_Makefile.in', 'Makefile'))
 
     # Simulink
     if simulink_opts is not None:
