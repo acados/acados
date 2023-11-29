@@ -123,10 +123,13 @@ class AcadosMultiphaseOcp:
 
         dims = self.dims
         opts = self.solver_options
-        if not isinstance(dims.N, int):
-            raise Exception('Number of shooting intervals N must be int.')
-        if sum(self.N_list) != dims.N:
-            raise Exception('Sum of N_list must be equal to N.')
+
+        N_horizon = sum(self.N_list)
+        if dims.N is None:
+            dims.N = sum(self.N_list)
+            print("AcadosMultiphaseOcp: make_consistent: N =", dims.N)
+        elif dims.N != N_horizon:
+            raise Exception(f"AcadosMultiphaseOcp: make_consistent: N = {dims.N} != {N_horizon} = sum(N_list).")
         dims.fix_N()
 
         idx0 = 0
