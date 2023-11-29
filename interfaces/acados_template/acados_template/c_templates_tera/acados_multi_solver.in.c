@@ -783,8 +783,6 @@ void {{ name }}_acados_create_4_set_default_parameters({{ name }}_solver_capsule
 
 
 
-
-
 /**
  * Internal function for {{ name }}_acados_create: step 5
  */
@@ -824,8 +822,6 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     {{ name }}_acados_update_time_steps(capsule, N, time_steps);
     free(time_steps);
 {%- endif %}
-
-    // INITIAL
 
     /* INITIAL NODE */
 {%- if dims_0.ny_0 != 0 %}
@@ -962,8 +958,6 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 {%- endif %}
 
     // constraints at initial node
-
-    // bounds for initial stage
 {%- if dims_0.nbx_0 > 0 %}
     // x0
     int nbx_0 = {{ dims_0.nbx_0 }};
@@ -1101,7 +1095,6 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 {%- endif %}
 
 
-    //////////////// PATH
     int nx, nu;
     int i_fun;
 {%- for jj in range(end=n_phases) %}{# phases loop !#}
