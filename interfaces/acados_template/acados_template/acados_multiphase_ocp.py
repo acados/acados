@@ -94,29 +94,32 @@ class AcadosMultiphaseOcp:
         from sysconfig import get_paths
         self.cython_include_dirs = [np.get_include(), get_paths()['include']]
 
-        self.__parameter_values = np.array([])
+        self.__parameter_values = [np.array([]) for _ in range(n_phases)]
 
         self.code_export_directory = 'c_generated_code'
         """Path to where code will be exported. Default: `c_generated_code`."""
 
     @property
     def parameter_values(self):
-        """:math:`p` - initial values for parameter vector - can be updated stagewise"""
+        """:math:`p` - list of initial values for parameter vector.
+        Type: `list` of `numpy.ndarray` of shape `(np_i, )`.
+        - can be updated stagewise."""
         return self.__parameter_values
 
     @parameter_values.setter
     def parameter_values(self, parameter_values):
-        if isinstance(parameter_values, np.ndarray):
-            self.__parameter_values = parameter_values
-        else:
-            raise Exception('Invalid parameter_values value. ' +
-                            f'Expected numpy array, got {type(parameter_values)}.')
+        if not isinstance(parameter_values, list):
+            raise Exception('parameter_values must be a list of numpy.ndarrays.')
+        elif len(parameter_values) != self.n_phases:
+            raise Exception('parameter_values must be a list of length n_phases.')
+        self.__parameter_values = parameter_values
 
 
     def set_phase(self, ocp: AcadosOcp, phase_idx: int) -> None:
         self.model[phase_idx] = ocp.model
         self.cost[phase_idx] = ocp.cost
         self.constraints[phase_idx] = ocp.constraints
+        self.parameter_values[phase_idx] = ocp.parameter_values
         return
 
     def make_consistent(self) -> None:
@@ -148,6 +151,7 @@ class AcadosMultiphaseOcp:
             ocp.model = self.model[i]
             ocp.constraints = self.constraints[i]
             ocp.cost = self.cost[i]
+            ocp.parameter_values = self.parameter_values[i]
             ocp.solver_options = opts
 
             print(f"Calling make_consistent for phase {i}.")
