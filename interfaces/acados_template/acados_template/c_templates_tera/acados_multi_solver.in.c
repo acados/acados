@@ -251,6 +251,7 @@ ocp_nlp_dims* {{ name }}_acados_create_2_create_and_set_dimensions({{ name }}_so
     // constraints
     nbu[i] = {{ phases_dims[0].nbu }};
     nbx[i] = {{ phases_dims[0].nbx_0 }};
+    nbxe[i] = {{ phases_dims[0].nbxe_0 }};
     ng[i] = {{ phases_dims[0].ng }};
     nh[i] = {{ phases_dims[0].nh_0 }};
     nphi[i] = {{ phases_dims[0].nphi_0 }};
@@ -261,7 +262,6 @@ ocp_nlp_dims* {{ name }}_acados_create_2_create_and_set_dimensions({{ name }}_so
     nsg[i] = {{ phases_dims[0].nsg }};
     nsh[i] = {{ phases_dims[0].nsh_0 }};
     nsphi[i] = {{ phases_dims[0].nsphi_0 }};
-    nbxe[i] = 0;
 
     /* terminal node */
     // common
@@ -2258,8 +2258,6 @@ void {{ name }}_acados_create_7_set_nlp_out({{ name }}_solver_capsule* capsule)
     ocp_nlp_dims* nlp_dims = capsule->nlp_dims;
     ocp_nlp_out* nlp_out = capsule->nlp_out;
 
-
-
 {%- set nx_values = [] -%}
 {%- for jj in range(end=n_phases) %}
     {%- set_global nx_values = nx_values | concat(with=(phases_dims[jj].nx)) %}
@@ -2400,25 +2398,25 @@ int {{ name }}_acados_reset({{ name }}_solver_capsule* capsule, int reset_qp_sol
 {%- set_global buffer_size = 0 %}
 {%- for jj in range(end=n_phases) %}{# phases loop !#}
     {%- set buffer_sizes = [
-                                   phases_dims[jj].nx,
-                                   phases_dims[jj].nu,
-                                   phases_dims[jj].nz,
-                                   2 * phases_dims[jj].ns,
-                                   2 * phases_dims[jj].ns_0,
-                                   2 * phases_dims[jj].ns_e,
-                                   phases_dims[jj].nbx_0,
-                                   phases_dims[jj].nbx,
-                                   phases_dims[jj].nbx_e,
-                                   phases_dims[jj].nbu,
-                                   phases_dims[jj].ng,
-                                   phases_dims[jj].ng_e,
-                                   phases_dims[jj].nh,
-                                   phases_dims[jj].nh_0,
-                                   phases_dims[jj].nh_e,
-                                   phases_dims[jj].nphi,
-                                   phases_dims[jj].nphi_0,
-                                   phases_dims[jj].nphi_e,
-                                ]
+            phases_dims[jj].nx,
+            phases_dims[jj].nu,
+            phases_dims[jj].nz,
+            2 * phases_dims[jj].ns,
+            2 * phases_dims[jj].ns_0,
+            2 * phases_dims[jj].ns_e,
+            phases_dims[jj].nbx_0,
+            phases_dims[jj].nbx,
+            phases_dims[jj].nbx_e,
+            phases_dims[jj].nbu,
+            phases_dims[jj].ng,
+            phases_dims[jj].ng_e,
+            phases_dims[jj].nh,
+            phases_dims[jj].nh_0,
+            phases_dims[jj].nh_e,
+            phases_dims[jj].nphi,
+            phases_dims[jj].nphi_0,
+            phases_dims[jj].nphi_e,
+        ]
     -%}
 {%- for b in buffer_sizes %}
 {%- set_global buffer_size = buffer_size + b %}
@@ -2635,8 +2633,6 @@ int {{ name }}_acados_solve({{ name }}_solver_capsule* capsule)
 
 
 
-
-
 void {{ name }}_acados_print_stats({{ name }}_solver_capsule* capsule)
 {
     int sqp_iter, stat_m, stat_n, tmp_int;
@@ -2708,9 +2704,7 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
     ocp_nlp_plan_destroy(capsule->nlp_solver_plan);
 
     /* free external function */
-
-
-    // cost initial
+    // initial node
 {%- if cost[0].cost_type_0 == "NONLINEAR_LS" %}
     external_function_param_casadi_free(&capsule->cost_y_0_fun);
     external_function_param_casadi_free(&capsule->cost_y_0_fun_jac_ut_xt);
@@ -2767,7 +2761,7 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
     free(capsule->impl_dae_fun_jac_x_xdot_u_{{ jj }});
 
 {%- elif solver_options.integrator_type == "ERK" %}
-    for (int i_fun = 0; i_fun < {{ end_idx[jj] - start_idx[jj] }}; i++)
+    for (int i_fun = 0; i_fun < {{ end_idx[jj] - start_idx[jj] }}; i_fun++)
     {
         external_function_param_casadi_free(&capsule->forw_vde_casadi_{{ jj }}[i_fun]);
         external_function_param_casadi_free(&capsule->expl_ode_fun_{{ jj }}[i_fun]);
@@ -2900,7 +2894,6 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
     external_function_param_{{ cost_e.cost_ext_fun_type_e }}_free(&capsule->ext_cost_e_fun_jac_hess);
 {%- endif %}
 
-
     return 0;
 }
 
@@ -2922,7 +2915,6 @@ int {{ name }}_acados_custom_update({{ name }}_solver_capsule* capsule, double* 
 }
 
 
-
 ocp_nlp_in *{{ name }}_acados_get_nlp_in({{ name }}_solver_capsule* capsule) { return capsule->nlp_in; }
 ocp_nlp_out *{{ name }}_acados_get_nlp_out({{ name }}_solver_capsule* capsule) { return capsule->nlp_out; }
 ocp_nlp_out *{{ name }}_acados_get_sens_out({{ name }}_solver_capsule* capsule) { return capsule->sens_out; }
@@ -2931,4 +2923,3 @@ ocp_nlp_config *{{ name }}_acados_get_nlp_config({{ name }}_solver_capsule* caps
 void *{{ name }}_acados_get_nlp_opts({{ name }}_solver_capsule* capsule) { return capsule->nlp_opts; }
 ocp_nlp_dims *{{ name }}_acados_get_nlp_dims({{ name }}_solver_capsule* capsule) { return capsule->nlp_dims; }
 ocp_nlp_plan_t *{{ name }}_acados_get_nlp_plan({{ name }}_solver_capsule* capsule) { return capsule->nlp_solver_plan; }
-
