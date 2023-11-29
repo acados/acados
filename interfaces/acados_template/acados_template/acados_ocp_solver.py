@@ -195,6 +195,10 @@ def mocp_render_templates(ocp: AcadosMultiphaseOcp, json_file: str, cmake_builde
             output_dir = ocp.code_export_directory
         render_template(tup[0], tup[1], output_dir, json_path)
 
+
+    print(f'Rendered: acados_solver_{ocp.name}.c\n\n')
+    verbose_system_call(['cat', f'{output_dir}/acados_solver_{ocp.name}.c'])
+
     # # Custom templates
     # acados_template_path = os.path.dirname(os.path.abspath(__file__))
     # custom_template_glob = os.path.join(acados_template_path, 'custom_update_templates', '*')
