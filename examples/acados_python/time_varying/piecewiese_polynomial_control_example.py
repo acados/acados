@@ -33,37 +33,9 @@ from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver, casadi_leng
 import numpy as np
 import casadi as ca
 from scipy.linalg import block_diag
-from utils import plot_open_loop_trajectory_pwpol_u, export_pendulum_ode_model
+from polynom_utils import plot_open_loop_trajectory_pwpol_u, export_pendulum_ode_model, augment_model_with_polynomial_control
 
-def augment_model_with_polynomial_control(model: AcadosModel, d: int = 1, delta_T=None):
-    # add time to model
-    if model.t == []:
-        model.t = ca.SX.sym('t')
-    t = model.t
-
-    if delta_T is None:
-        delta_T = ca.SX.sym('delta_T')
-
-    u_old = model.u
-    nu_original = casadi_length(model.u)
-
-    u_coeff = ca.SX.sym('u_coeff', (d+1) * nu_original)
-    u_new = ca.SX.zeros(nu_original, 1)
-    for i in range(d+1):
-        u_new += (t / delta_T) ** i * u_coeff[i*nu_original:(i+1)*nu_original]
-
-    evaluate_polynomial_u_fun = ca.Function("evaluate_polynomial_u", [u_coeff, t, delta_T], [u_new])
-
-    model.f_impl_expr = ca.substitute(model.f_impl_expr, u_old, u_new)
-    model.cost_y_expr = ca.substitute(model.cost_y_expr, u_old, u_new)
-
-    model.u = u_coeff
-    model.nu_original = nu_original
-    model.p = ca.vertcat(model.p, delta_T)
-
-    return model, evaluate_polynomial_u_fun
-
-def create_ocp_solver(cost_type, N_horizon, degree_u_polynom, explicit_symmetric_penalties=True, penalty_type='L2') -> AcadosOcpSolver:
+def create_ocp_formulation(cost_type, N_horizon, degree_u_polynom, explicit_symmetric_penalties=True, penalty_type='L2') -> (AcadosOcp, ca.Function):
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
@@ -72,8 +44,6 @@ def create_ocp_solver(cost_type, N_horizon, degree_u_polynom, explicit_symmetric
     nu_original = casadi_length(model.u)
 
     ocp.model: AcadosModel = model
-
-    T_horizon = 1.0
     nx = casadi_length(model.x)
 
     # set dimensions
@@ -132,6 +102,15 @@ def create_ocp_solver(cost_type, N_horizon, degree_u_polynom, explicit_symmetric
 
     ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
+    model, evaluate_polynomial_u_fun = augment_model_with_polynomial_control(model, d=degree_u_polynom)
+
+    return ocp, evaluate_polynomial_u_fun
+
+
+
+def create_ocp_solver(cost_type, N_horizon, degree_u_polynom, explicit_symmetric_penalties=True, penalty_type='L2') -> (AcadosOcpSolver, ca.Function):
+    ocp, evaluate_polynomial_u_fun = create_ocp_formulation(cost_type, N_horizon, degree_u_polynom, explicit_symmetric_penalties=explicit_symmetric_penalties, penalty_type=penalty_type)
+
     # set options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
     # PARTIAL_CONDENSING_HPIPM, FULL_CONDENSING_QPOASES, FULL_CONDENSING_HPIPM,
@@ -143,6 +122,7 @@ def create_ocp_solver(cost_type, N_horizon, degree_u_polynom, explicit_symmetric
     ocp.solver_options.cost_discretization = 'INTEGRATOR'
 
     # set prediction horizon
+    T_horizon = 1.0
     n_short = 1
     dt_short = 0.02
     n_long = N_horizon-n_short
@@ -150,17 +130,13 @@ def create_ocp_solver(cost_type, N_horizon, degree_u_polynom, explicit_symmetric
     ocp.solver_options.tf = T_horizon
 
     ocp.parameter_values = np.array([T_horizon / N_horizon])
-    model, evaluate_polynomial_u_fun = augment_model_with_polynomial_control(model, d=degree_u_polynom)
     ocp_solver = AcadosOcpSolver(ocp, verbose=False)
     for i in range(N_horizon):
         ocp_solver.set(i, 'p', ocp.solver_options.time_steps[i])
 
     return ocp_solver, evaluate_polynomial_u_fun
 
-
-
 def main(cost_type='NONLINEAR_LS', explicit_symmetric_penalties=True, penalty_type='L2'):
-
     N_horizon = 20
     degree_u_polynom = 3
 

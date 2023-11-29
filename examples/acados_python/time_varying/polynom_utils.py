@@ -31,14 +31,11 @@
 import os
 import matplotlib.pyplot as plt
 import numpy as np
-from acados_template import latexify_plot
+import casadi as ca
 
-
-from acados_template import AcadosModel
-from casadi import SX, vertcat, sin, cos
+from acados_template import latexify_plot, casadi_length, AcadosModel
 
 def export_pendulum_ode_model() -> AcadosModel:
-
     model_name = 'pendulum_ode'
 
     # constants
@@ -48,29 +45,29 @@ def export_pendulum_ode_model() -> AcadosModel:
     l = 0.8 # length of the rod [m]
 
     # set up states & controls
-    x1      = SX.sym('x1')
-    theta   = SX.sym('theta')
-    v1      = SX.sym('v1')
-    dtheta  = SX.sym('dtheta')
+    x1      = ca.SX.sym('x1')
+    theta   = ca.SX.sym('theta')
+    v1      = ca.SX.sym('v1')
+    dtheta  = ca.SX.sym('dtheta')
 
-    x = vertcat(x1, theta, v1, dtheta)
+    x = ca.vertcat(x1, theta, v1, dtheta)
 
-    F = SX.sym('F')
-    u = vertcat(F)
+    F = ca.SX.sym('F')
+    u = ca.vertcat(F)
 
     # xdot
-    x1_dot      = SX.sym('x1_dot')
-    theta_dot   = SX.sym('theta_dot')
-    v1_dot      = SX.sym('v1_dot')
-    dtheta_dot  = SX.sym('dtheta_dot')
+    x1_dot      = ca.SX.sym('x1_dot')
+    theta_dot   = ca.SX.sym('theta_dot')
+    v1_dot      = ca.SX.sym('v1_dot')
+    dtheta_dot  = ca.SX.sym('dtheta_dot')
 
-    xdot = vertcat(x1_dot, theta_dot, v1_dot, dtheta_dot)
+    xdot = ca.vertcat(x1_dot, theta_dot, v1_dot, dtheta_dot)
 
     # dynamics
-    cos_theta = cos(theta)
-    sin_theta = sin(theta)
+    cos_theta = ca.cos(theta)
+    sin_theta = ca.sin(theta)
     denominator = M + m - m*cos_theta*cos_theta
-    f_expl = vertcat(v1,
+    f_expl = ca.vertcat(v1,
                      dtheta,
                      (-m*l*sin_theta*dtheta*dtheta + m*g*cos_theta*sin_theta+F)/denominator,
                      (-m*l*cos_theta*sin_theta*dtheta*dtheta + F*cos_theta+(M+m)*g*sin_theta)/(l*denominator)
@@ -91,12 +88,39 @@ def export_pendulum_ode_model() -> AcadosModel:
 
 
 
+def augment_model_with_polynomial_control(model: AcadosModel, d: int = 1, delta_T=None):
+    # add time to model
+    if model.t == []:
+        model.t = ca.SX.sym('t')
+    t = model.t
+
+    if delta_T is None:
+        delta_T = ca.SX.sym('delta_T')
+
+    u_old = model.u
+    nu_original = casadi_length(model.u)
+
+    u_coeff = ca.SX.sym('u_coeff', (d+1) * nu_original)
+    u_new = ca.SX.zeros(nu_original, 1)
+    for i in range(d+1):
+        u_new += (t / delta_T) ** i * u_coeff[i*nu_original:(i+1)*nu_original]
+
+    evaluate_polynomial_u_fun = ca.Function("evaluate_polynomial_u", [u_coeff, t, delta_T], [u_new])
+
+    model.f_impl_expr = ca.substitute(model.f_impl_expr, u_old, u_new)
+    model.cost_y_expr = ca.substitute(model.cost_y_expr, u_old, u_new)
+
+    model.u = u_coeff
+    model.nu_original = nu_original
+    model.p = ca.vertcat(model.p, delta_T)
+
+    return model, evaluate_polynomial_u_fun
+
 
 def plot_open_loop_trajectory_pwpol_u(shooting_nodes, X_traj, U_fine_traj, plt_show=True, u_max=None, title=None,
     states_lables = ['$x$', r'$\theta$', '$v$', r'$\dot{\theta}$'],
     idxpx=None, idxpu=None
                   ):
-
 
     nx = X_traj.shape[1]
     nu = U_fine_traj[0].shape[1]
