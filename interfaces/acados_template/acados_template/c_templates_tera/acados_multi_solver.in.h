@@ -149,7 +149,7 @@ typedef struct {{ name }}_solver_capsule
 
 {% if constraints[0].constr_type_0 == "BGP" %}
     external_function_param_casadi phi_0_constraint;
-{% elif constraints[0].constr_type_0 == "BGH" and dims.nh[0] > 0 %}
+{% elif constraints[0].constr_type_0 == "BGH" and dims_0.nh_0 > 0 %}
     external_function_param_casadi nl_constr_h_0_fun_jac;
     external_function_param_casadi nl_constr_h_0_fun;
 {%- if solver_options.hessian_approx == "EXACT" %}

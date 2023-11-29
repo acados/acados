@@ -130,9 +130,6 @@ class AcadosMultiphaseOcp:
             print("AcadosMultiphaseOcp: make_consistent: N =", dims.N)
         elif dims.N != N_horizon:
             raise Exception(f"AcadosMultiphaseOcp: make_consistent: N = {dims.N} != {N_horizon} = sum(N_list).")
-        dims.fix_N()
-
-        idx0 = 0
 
         phase_idx = np.cumsum([0] + self.N_list).tolist()
 
@@ -157,62 +154,6 @@ class AcadosMultiphaseOcp:
             ocp.make_consistent()
 
             self.dummy_ocp_list.append(ocp)
-
-            # copy dimensions:
-            for j in range(self.start_idx[i], self.end_idx[i]):
-                # path (default)
-                dims.nx[j] = ocp.dims.nx
-                dims.nu[j] = ocp.dims.nu
-                dims.nz[j] = ocp.dims.nz
-                dims.np[j] = ocp.dims.np
-                dims.ny[j] = ocp.dims.ny
-                dims.nbu[j] = ocp.dims.nbu
-                dims.nbx[j] = ocp.dims.nbx
-                dims.nh[j] = ocp.dims.nh
-                dims.nphi[j] = ocp.dims.nphi
-                dims.nr[j] = ocp.dims.nr
-                dims.ng[j] = ocp.dims.ng
-                dims.ns[j] = ocp.dims.ns
-                dims.nsbu[j] = ocp.dims.nsbu
-                dims.nsbx[j] = ocp.dims.nsbx
-                dims.nsg[j] = ocp.dims.nsg
-                dims.nsh[j] = ocp.dims.nsh
-                dims.nsphi[j] = ocp.dims.nsphi
-                dims.nbxe[j] = 0
-
-                if j == 0:
-                    # initial node
-                    dims.ny[j] = ocp.dims.ny_0
-                    dims.nbx[j] = ocp.dims.nbx_0
-                    dims.nh[j] = ocp.dims.nh_0
-                    dims.nr[j] = ocp.dims.nr_0
-                    dims.nphi[j] = ocp.dims.nphi_0
-                    dims.nsh[j] = ocp.dims.nsh_0
-                    dims.nsphi[j] = ocp.dims.nsphi_0
-                    dims.ns[j] = ocp.dims.ns_0
-                    dims.nbxe[j] = ocp.dims.nbxe_0
-            idx0 += self.N_list[i]
-
-        j = dims.N
-        # terminal node
-        dims.nx[j] = ocp.dims.nx
-        dims.np[j] = ocp.dims.np
-        dims.nz[j] = ocp.dims.nz
-        dims.ny[j] = ocp.dims.ny_e
-        dims.nbx[j] = ocp.dims.nbx_e
-        dims.nh[j] = ocp.dims.nh_e
-        dims.nr[j] = ocp.dims.nr_e
-        dims.nphi[j] = ocp.dims.nphi_e
-        dims.ng[j] = ocp.dims.ng_e
-        dims.ns[j] = ocp.dims.ns_e
-        dims.nsbx[j] = ocp.dims.nsbx_e
-        dims.nsg[j] = ocp.dims.nsg_e
-        dims.nsh[j] = ocp.dims.nsh_e
-        dims.nsphi[j] = ocp.dims.nsphi_e
-        dims.nu[j] = 0
-        dims.nbu[j] = 0
-        dims.nsbu[j] = 0
-        dims.nbxe[j] = 0
 
         return
 
