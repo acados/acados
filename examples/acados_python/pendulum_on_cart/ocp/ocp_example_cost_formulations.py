@@ -207,10 +207,7 @@ def main(cost_version: str, formulation_type='ocp', plot=False):
 
     if formulation_type == 'mocp':
         mocp = AcadosMultiphaseOcp(n_phases=1, N_list=[N])
-        mocp.dims.N = N
-        mocp.model[0] = model
-        mocp.cost[0] = ocp.cost
-        mocp.constraints[0] = ocp.constraints
+        mocp.set_phase(ocp, 0)
         mocp.solver_options = ocp.solver_options
         mocp.name = 'mocp_' + model.name
         ocp_solver = AcadosOcpSolver(mocp)
