@@ -263,7 +263,7 @@ def main(cost_version: str, formulation_type='ocp', plot=False):
     ocp_solver.load_iterate(filename='solution.json')
 
 if __name__ == "__main__":
-    for cost_version in ['LS']:
+    for cost_version in COST_VERSIONS:
         for formulation_type in ['ocp', 'mocp']:
             print(f"cost version: {cost_version}, formulation type: {formulation_type}")
             main(cost_version=cost_version, formulation_type=formulation_type, plot=False)
