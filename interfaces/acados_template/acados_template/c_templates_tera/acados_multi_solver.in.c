@@ -807,14 +807,14 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
         {%- endif %}
     {%- endfor %}
 
-{%- if all_equal == true -%}{# all time_steps are identical #}
+{% if all_equal == true %}{# all time_steps are identical #}
     double time_step = {{ solver_options.time_steps[0] }};
     for (int i = 0; i < N; i++)
     {
         ocp_nlp_in_set(nlp_config, nlp_dims, nlp_in, i, "Ts", &time_step);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "scaling", &time_step);
     }
-{%- else -%}{# time_steps are varying #}
+{% else -%}{# time_steps are varying #}
     double* time_steps = malloc(N*sizeof(double));
     {%- for j in range(end=dims.N) %}
     time_steps[{{ j }}] = {{ solver_options.time_steps[j] }};
