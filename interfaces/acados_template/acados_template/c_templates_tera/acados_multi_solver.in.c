@@ -40,6 +40,25 @@
 {% set model_e = model | last %}
 
 
+{%- set nx_values = [] -%}
+{%- for jj in range(end=n_phases) %}
+    {%- set_global nx_values = nx_values | concat(with=(phases_dims[jj].nx)) %}
+{%- endfor %}
+{%- set nx_max = nx_values | sort | last %}
+
+{%- set nu_values = [] -%}
+{%- for jj in range(end=n_phases) %}
+    {%- set_global nu_values = nu_values | concat(with=(phases_dims[jj].nu)) %}
+{%- endfor %}
+{%- set nu_max = nu_values | sort | last %}
+
+{%- set np_values = [] -%}
+{%- for jj in range(end=n_phases) %}
+    {%- set_global np_values = np_values | concat(with=(phases_dims[jj].np)) %}
+{%- endfor %}
+{%- set np_max = np_values | sort | last %}
+
+
 // standard
 #include <stdio.h>
 #include <stdlib.h>
@@ -760,24 +779,24 @@ void {{ name }}_acados_create_3_create_and_set_functions({{ name }}_solver_capsu
 // TODO: this does not work yet!!!!!!!!!!!!!!!!
 void {{ name }}_acados_create_4_set_default_parameters({{ name }}_solver_capsule* capsule) {
 
-    {# TODO: for loop!!!!! #}
-{%- if dims_e.np > 0 %}
-    const int N = capsule->nlp_solver_plan->N;
+    double* p = calloc({{ np_max }}, sizeof(double));
+{%- for jj in range(end=n_phases) %}{# phases loop !#}
+{%- if phases_dims[jj].np > 0 %}
     // initialize parameters to nominal value
-    double* p = calloc(NP, sizeof(double));
-    {%- for item in parameter_values %}
+    {%- for item in parameter_values[jj] %}
         {%- if item != 0 %}
     p[{{ loop.index0 }}] = {{ item }};
         {%- endif %}
     {%- endfor %}
 
-    for (int i = 0; i <= N; i++) {
-        {{ name }}_acados_update_params(capsule, i, p, NP);
+    for (int i = {{ start_idx[jj] }}; i <= {{ end_idx[jj] }}; i++) {
+        {{ name }}_acados_update_params(capsule, i, p, NP_{{ jj }});
     }
     free(p);
 {%- else %}
     // no parameters defined
-{%- endif %}{# if dims_e.np #}
+{%- endif %}
+{%- endfor %}
 }
 
 
@@ -796,6 +815,9 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     *  nlp_in
     ************************************************/
     ocp_nlp_in * nlp_in = capsule->nlp_in;
+
+    // declare
+    double* yref;
 
     // set up time_steps
     {%- set all_equal = true -%}
@@ -1178,11 +1200,11 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     {
         i_fun = i - {{ cost_start_idx[jj] }};
   {%- if cost[jj].cost_type == "NONLINEAR_LS" %}
-        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_y_fun_jac", &capsule->cost_y_fun_jac_ut_xt[i-1]);
-        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_y_fun", &capsule->cost_y_fun[i-1]);
+        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_y_fun_jac", &capsule->cost_y_fun_jac_ut_xt_{{ jj }}[i_fun]);
+        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_y_fun", &capsule->cost_y_fun_{{ jj }}[i_fun]);
   {%- elif cost[jj].cost_type == "CONVEX_OVER_NONLINEAR" %}
-        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "conl_cost_fun", &capsule->conl_cost_fun[i-1]);
-        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "conl_cost_fun_jac_hess", &capsule->conl_cost_fun_jac_hess[i-1]);
+        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "conl_cost_fun", &capsule->conl_cost_fun_{{ jj }}[i_fun]);
+        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "conl_cost_fun_jac_hess", &capsule->conl_cost_fun_jac_hess_{{ jj }}[i_fun]);
   {%- endif %}
     }
 {%- endif %}
@@ -1190,7 +1212,7 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     /**** Cost ****/
 
 {%- if phases_dims[jj].ny != 0 %}
-    double* yref = calloc({{ phases_dims[jj].ny }}, sizeof(double));
+    yref = calloc({{ phases_dims[jj].ny }}, sizeof(double));
     // change only the non-zero elements:
     {%- for j in range(end=phases_dims[jj].ny) %}
         {%- if cost[jj].yref[j] != 0 %}
@@ -1970,6 +1992,9 @@ void {{ name }}_acados_create_6_set_opts({{ name }}_solver_capsule* capsule)
     ocp_nlp_config* nlp_config = capsule->nlp_config;
     void *nlp_opts = capsule->nlp_opts;
 
+    // declare
+    bool tmp_bool;
+    int newton_iter_val;
     /************************************************
     *  opts
     ************************************************/
@@ -2115,12 +2140,15 @@ void {{ name }}_acados_create_6_set_opts({{ name }}_solver_capsule* capsule)
 
 {# TODO: check this part again carefully!! #}
     /* Stage varying options */
+    int ext_cost_num_hess, sim_method_num_steps, sim_method_num_stages;
+    bool output_z_val = true;
+    bool sens_algebraic_val = true;
+    sim_collocation_type collocation_type;
+
     {%- for jj in range(end=n_phases) %}{# phases loop !#}
 
 {%- if phases_dims[jj].nz > 0 %}
     // TODO: these options are lower level -> should be encapsulated! maybe through hessian approx option.
-    bool output_z_val = true;
-    bool sens_algebraic_val = true;
 
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
     {
@@ -2131,7 +2159,7 @@ void {{ name }}_acados_create_6_set_opts({{ name }}_solver_capsule* capsule)
 {%- if solver_options.integrator_type != "DISCRETE" %}
 
     // set collocation type (relevant for implicit integrators)
-    sim_collocation_type collocation_type = {{ solver_options.collocation_type }};
+    collocation_type = {{ solver_options.collocation_type }};
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_collocation_type", &collocation_type);
 
@@ -2147,7 +2175,7 @@ void {{ name }}_acados_create_6_set_opts({{ name }}_solver_capsule* capsule)
 
     {%- if all_equal == true %}
     // all sim_method_num_steps are identical
-    int sim_method_num_steps = {{ solver_options.sim_method_num_steps[0] }};
+    sim_method_num_steps = {{ solver_options.sim_method_num_steps[0] }};
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_steps", &sim_method_num_steps);
     {%- else %}
@@ -2174,7 +2202,7 @@ void {{ name }}_acados_create_6_set_opts({{ name }}_solver_capsule* capsule)
 
   {%- if all_equal == true %}
     // all sim_method_num_stages are identical
-    int sim_method_num_stages = {{ solver_options.sim_method_num_stages[0] }};
+    sim_method_num_stages = {{ solver_options.sim_method_num_stages[0] }};
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_stages", &sim_method_num_stages);
   {%- else %}
@@ -2188,7 +2216,7 @@ void {{ name }}_acados_create_6_set_opts({{ name }}_solver_capsule* capsule)
     free(sim_method_num_stages);
   {%- endif %}
 
-    int newton_iter_val = {{ solver_options.sim_method_newton_iter }};
+    newton_iter_val = {{ solver_options.sim_method_newton_iter }};
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_newton_iter", &newton_iter_val);
 
@@ -2202,7 +2230,7 @@ void {{ name }}_acados_create_6_set_opts({{ name }}_solver_capsule* capsule)
         {%- endif %}
     {%- endfor %}
   {%- if all_equal == true %}
-    bool tmp_bool = (bool) {{ solver_options.sim_method_jac_reuse[0] }};
+    tmp_bool = (bool) {{ solver_options.sim_method_jac_reuse[0] }};
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_jac_reuse", &tmp_bool);
   {%- else %}
@@ -2217,18 +2245,18 @@ void {{ name }}_acados_create_6_set_opts({{ name }}_solver_capsule* capsule)
   {%- endif %}
 
 {%- if solver_options.cost_discretization == "INTEGRATOR" %}
-    bool cost_in_integrator = true;
+    tmp_bool = true;
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
     {
-        ocp_nlp_solver_opts_set_at_stage(nlp_config, capsule->nlp_opts, i, "dynamics_cost_computation", &cost_in_integrator);
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, capsule->nlp_opts, i, "dynamics_cost_computation", &tmp_bool);
         ocp_nlp_solver_opts_set_at_stage(nlp_config, capsule->nlp_opts, i, "dynamics_cost_type", &capsule->nlp_solver_plan->nlp_cost[i]);
-        ocp_nlp_solver_opts_set_at_stage(nlp_config, capsule->nlp_opts, i, "cost_integrator_cost", &cost_in_integrator);
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, capsule->nlp_opts, i, "cost_integrator_cost", &tmp_bool);
     }
 {%- endif %}
 {%- endif %}{# solver_options.integrator_type != "DISCRETE" #}
 
-    int ext_cost_num_hess = {{ solver_options.ext_cost_num_hess }};
 {%- if cost[jj].cost_type == "EXTERNAL" %}
+    ext_cost_num_hess = {{ solver_options.ext_cost_num_hess }};
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
     {
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "cost_numerical_hessian", &ext_cost_num_hess);
@@ -2250,18 +2278,6 @@ void {{ name }}_acados_create_7_set_nlp_out({{ name }}_solver_capsule* capsule)
     ocp_nlp_config* nlp_config = capsule->nlp_config;
     ocp_nlp_dims* nlp_dims = capsule->nlp_dims;
     ocp_nlp_out* nlp_out = capsule->nlp_out;
-
-{%- set nx_values = [] -%}
-{%- for jj in range(end=n_phases) %}
-    {%- set_global nx_values = nx_values | concat(with=(phases_dims[jj].nx)) %}
-{%- endfor %}
-{%- set nx_max = nx_values | sort | last %}
-
-{%- set nu_values = [] -%}
-{%- for jj in range(end=n_phases) %}
-    {%- set_global nu_values = nu_values | concat(with=(phases_dims[jj].nu)) %}
-{%- endfor %}
-{%- set nu_max = nu_values | sort | last %}
 
     int nx_max = {{ nx_max }};
     int nu_max = {{ nu_max }};
