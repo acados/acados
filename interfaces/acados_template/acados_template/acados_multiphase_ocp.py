@@ -113,6 +113,12 @@ class AcadosMultiphaseOcp:
                             f'Expected numpy array, got {type(parameter_values)}.')
 
 
+    def set_phase(self, ocp: AcadosOcp, phase_idx: int) -> None:
+        self.model[phase_idx] = ocp.model
+        self.cost[phase_idx] = ocp.cost
+        self.constraints[phase_idx] = ocp.constraints
+        return
+
     def make_consistent(self) -> None:
 
         dims = self.dims
