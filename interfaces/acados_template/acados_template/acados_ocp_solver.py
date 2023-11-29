@@ -289,7 +289,7 @@ class AcadosOcpSolver:
         winmode = None
 
     @classmethod
-    def generate(cls, acados_ocp: AcadosOcp, json_file='acados_ocp_nlp.json', simulink_opts=None, cmake_builder: CMakeBuilder = None):
+    def generate(cls, acados_ocp: AcadosOcp, json_file: str, simulink_opts=None, cmake_builder: CMakeBuilder = None):
         """
         Generates the code for an acados OCP solver, given the description in acados_ocp.
             :param acados_ocp: type AcadosOcp - description of the OCP for acados
@@ -396,9 +396,19 @@ class AcadosOcpSolver:
                     acados_ocp_json['dims']['N'])
 
 
-    def __init__(self, acados_ocp: AcadosOcp, json_file='acados_ocp_nlp.json', simulink_opts=None, build=True, generate=True, cmake_builder: CMakeBuilder = None, verbose=True):
+    def __init__(self, acados_ocp: AcadosOcp, json_file=None, simulink_opts=None, build=True, generate=True, cmake_builder: CMakeBuilder = None, verbose=True):
 
         self.solver_created = False
+
+        if isinstance(acados_ocp, AcadosOcp):
+            if json_file is None:
+                json_file = 'acados_ocp_nlp.json'
+        elif isinstance(acados_ocp, AcadosMultiphaseOcp):
+            if json_file is None:
+                json_file = 'mocp.json'
+        else:
+            raise Exception('acados_ocp should be of type AcadosOcp or AcadosMultiphaseOcp.')
+
         if generate:
             self.generate(acados_ocp, json_file=json_file, simulink_opts=simulink_opts, cmake_builder=cmake_builder)
 
