@@ -1128,11 +1128,11 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
 
 {% if dims.ns_0 > 0 %}
     // slacks terminal
-    double* zlu0_mem = calloc(4*NSN, sizeof(double));
-    double* Zl_0 = zlu0_mem+NSN*0;
-    double* Zu_0 = zlu0_mem+NSN*1;
-    double* zl_0 = zlu0_mem+NSN*2;
-    double* zu_0 = zlu0_mem+NSN*3;
+    double* zlu0_mem = calloc(4*NS0, sizeof(double));
+    double* Zl_0 = zlu0_mem+NS0*0;
+    double* Zu_0 = zlu0_mem+NS0*1;
+    double* zl_0 = zlu0_mem+NS0*2;
+    double* zu_0 = zlu0_mem+NS0*3;
 
     // change only the non-zero elements:
     {% for j in range(end=dims.ns_0) %}
@@ -2339,7 +2339,7 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int 
     ocp_nlp_in* nlp_in = capsule->nlp_in;
     ocp_nlp_solver* nlp_solver = capsule->nlp_solver;
 
-    double* buffer = calloc(NX+NU+NZ+2*NS+2*NSN+NBX+NBU+NG+NH+NPHI+NBX0+NBXN+NHN+NH0+NPHIN+NGN, sizeof(double));
+    double* buffer = calloc(NX+NU+NZ+2*NS+2*NSN+2*NS0+NBX+NBU+NG+NH+NPHI+NBX0+NBXN+NHN+NH0+NPHIN+NGN, sizeof(double));
 
     for(int i=0; i<N+1; i++)
     {
