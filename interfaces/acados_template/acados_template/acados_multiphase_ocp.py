@@ -67,14 +67,15 @@ class AcadosMultiphaseOcp:
 
         self.name = 'multiphase_ocp'
         self.dims = MultiphaseOcpDims()
-        self.model = n_phases * [AcadosModel()]
+        self.model = [AcadosModel() for _ in range(n_phases)]
         """Model definitions, type :py:class:`acados_template.acados_model.AcadosModel`"""
-        self.cost = n_phases * [AcadosOcpCost()]
+        self.cost = [AcadosOcpCost() for _ in range(n_phases)]
+
         """Cost definitions, type :py:class:`acados_template.acados_ocp.AcadosOcpCost`"""
-        self.constraints = n_phases * [AcadosOcpConstraints()]
+        self.constraints = [AcadosOcpConstraints() for _ in range(n_phases)]
         """Constraints definitions, type :py:class:`acados_template.acados_ocp.AcadosOcpConstraints`"""
 
-        self.phases_dims = n_phases * [AcadosOcpDims()]
+        self.phases_dims = [AcadosOcpDims() for _ in range(n_phases)]
 
         self.dummy_ocp_list = []
 
