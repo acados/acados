@@ -206,8 +206,9 @@ def main(cost_version: str, formulation_type='ocp', plot=False):
         ocp.solver_options.ext_cost_num_hess = EXTERNAL_COST_USE_NUM_HESS
 
     if formulation_type == 'mocp':
-        mocp = AcadosMultiphaseOcp(n_phases=1, N_list=[N])
+        mocp = AcadosMultiphaseOcp(n_phases=2, N_list=[1, N-1])
         mocp.set_phase(ocp, 0)
+        mocp.set_phase(ocp, 1)
         mocp.solver_options = ocp.solver_options
         mocp.name = 'mocp_' + model.name
         ocp_solver = AcadosOcpSolver(mocp)
