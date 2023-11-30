@@ -114,6 +114,8 @@ def augment_model_with_polynomial_control(model: AcadosModel, d: int = 1, delta_
     model.nu_original = nu_original
     model.p = ca.vertcat(model.p, delta_T)
 
+    model.name = model.name + f"_d{d}"
+
     return model, evaluate_polynomial_u_fun
 
 

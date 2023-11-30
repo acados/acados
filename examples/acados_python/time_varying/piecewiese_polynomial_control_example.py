@@ -102,7 +102,6 @@ def create_ocp_formulation_without_opts(cost_type, degree_u_polynom, explicit_sy
     model, evaluate_polynomial_u_fun = augment_model_with_polynomial_control(model, d=degree_u_polynom)
     ocp.parameter_values = np.array([1.0]) # dummy parameter
 
-
     return ocp, evaluate_polynomial_u_fun
 
 
@@ -187,9 +186,9 @@ def create_mocp_solver(cost_type, N_list, degrees_u_polynom, explicit_symmetric_
 
 
 def main_mocp(cost_type='NONLINEAR_LS', explicit_symmetric_penalties=True, penalty_type='L2'):
-    N_list = [2, 18]
+    N_list = [1, 5]
     N_horizon = sum(N_list)
-    degrees_u_polynom = [3, 2]
+    degrees_u_polynom = [0, 4]
 
     # create solver and extract
     ocp_solver, polynomial_u_funs = create_mocp_solver(cost_type, N_list, degrees_u_polynom, explicit_symmetric_penalties=explicit_symmetric_penalties, penalty_type=penalty_type)
@@ -287,5 +286,5 @@ def main_ocp(cost_type='NONLINEAR_LS', explicit_symmetric_penalties=True, penalt
 if __name__ == '__main__':
     # main(cost_type="CONVEX_OVER_NONLINEAR", explicit_symmetric_penalties=True)
     # main_ocp(cost_type="CONVEX_OVER_NONLINEAR", explicit_symmetric_penalties=True, penalty_type='Huber')
-    main_ocp(cost_type="CONVEX_OVER_NONLINEAR", explicit_symmetric_penalties=True, penalty_type='L2')
+    # main_ocp(cost_type="CONVEX_OVER_NONLINEAR", explicit_symmetric_penalties=True, penalty_type='L2')
     main_mocp(cost_type="CONVEX_OVER_NONLINEAR", explicit_symmetric_penalties=True, penalty_type='L2')
