@@ -776,12 +776,10 @@ void {{ name }}_acados_create_3_create_and_set_functions({{ name }}_solver_capsu
 /**
  * Internal function for {{ name }}_acados_create: step 4
  */
-// TODO: this does not work yet!!!!!!!!!!!!!!!!
 void {{ name }}_acados_create_4_set_default_parameters({{ name }}_solver_capsule* capsule) {
 
     double* p = calloc({{ np_max }}, sizeof(double));
 {%- for jj in range(end=n_phases) %}{# phases loop !#}
-{%- if phases_dims[jj].np > 0 %}
     // initialize parameters to nominal value
     {%- for item in parameter_values[jj] %}
         {%- if item != 0 %}
@@ -792,11 +790,8 @@ void {{ name }}_acados_create_4_set_default_parameters({{ name }}_solver_capsule
     for (int i = {{ start_idx[jj] }}; i <= {{ end_idx[jj] }}; i++) {
         {{ name }}_acados_update_params(capsule, i, p, NP_{{ jj }});
     }
-    free(p);
-{%- else %}
-    // no parameters defined
-{%- endif %}
 {%- endfor %}
+    free(p);
 }
 
 
@@ -818,6 +813,14 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
     // declare
     double* yref;
+    double* lubu;
+    double* lbu;
+    double* ubu;
+    double* Vx;
+    double* Vu;
+    double* Vz;
+    double* W;
+    int* idxbu;
 
     // set up time_steps
     {%- set all_equal = true -%}
@@ -1227,7 +1230,7 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     }
     free(yref);
   {%- if cost[jj].cost_type == "NONLINEAR_LS" or cost[jj].cost_type == "LINEAR_LS" %}
-    double* W = calloc({{ phases_dims[jj].ny }}*{{ phases_dims[jj].ny }}, sizeof(double));
+    W = calloc({{ phases_dims[jj].ny }}*{{ phases_dims[jj].ny }}, sizeof(double));
     // change only the non-zero elements:
     {%- for j in range(end=phases_dims[jj].ny) %}
         {%- for k in range(end=phases_dims[jj].ny) %}
@@ -1246,7 +1249,7 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
   {%- endif %}
 
   {%- if cost[jj].cost_type == "LINEAR_LS" %}
-    double* Vx = calloc({{ phases_dims[jj].ny }}*{{ phases_dims[jj].nx }}, sizeof(double));
+    Vx = calloc({{ phases_dims[jj].ny }}*{{ phases_dims[jj].nx }}, sizeof(double));
     // change only the non-zero elements:
     {%- for j in range(end=phases_dims[jj].ny) %}
         {%- for k in range(end=phases_dims[jj].nx) %}
@@ -1263,7 +1266,7 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     free(Vx);
 
     {% if phases_dims[jj].nu > 0 %}
-    double* Vu = calloc({{ phases_dims[jj].ny }}*{{ phases_dims[jj].nu }}, sizeof(double));
+    Vu = calloc({{ phases_dims[jj].ny }}*{{ phases_dims[jj].nu }}, sizeof(double));
     // change only the non-zero elements:
     {% for j in range(end=phases_dims[jj].ny) %}
         {%- for k in range(end=phases_dims[jj].nu) %}
@@ -1282,7 +1285,7 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     {%- endif %}
 
     {%- if phases_dims[jj].nz > 0 %}
-    double* Vz = calloc({{ phases_dims[jj].ny }}*{{ phases_dims[jj].nz }}, sizeof(double));
+    Vz = calloc({{ phases_dims[jj].ny }}*{{ phases_dims[jj].nz }}, sizeof(double));
     // change only the non-zero elements:
     {% for j in range(end=phases_dims[jj].ny) %}
         {%- for k in range(end=phases_dims[jj].nz) %}
@@ -1389,13 +1392,13 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
 {%- if phases_dims[jj].nbu > 0 %}
     // u
-    int* idxbu = malloc({{ phases_dims[jj].nbu }} * sizeof(int));
+    idxbu = malloc({{ phases_dims[jj].nbu }} * sizeof(int));
     {% for i in range(end=phases_dims[jj].nbu) %}
     idxbu[{{ i }}] = {{ constraints[jj].idxbu[i] }};
     {%- endfor %}
-    double* lubu = calloc(2*{{ phases_dims[jj].nbu }}, sizeof(double));
-    double* lbu = lubu;
-    double* ubu = lubu + {{ phases_dims[jj].nbu }};
+    lubu = calloc(2*{{ phases_dims[jj].nbu }}, sizeof(double));
+    lbu = lubu;
+    ubu = lubu + {{ phases_dims[jj].nbu }};
     {% for i in range(end=phases_dims[jj].nbu) %}
         {%- if constraints[jj].lbu[i] != 0 %}
     lbu[{{ i }}] = {{ constraints[jj].lbu[i] }};
@@ -2483,7 +2486,7 @@ int {{ name }}_acados_update_params({{ name }}_solver_capsule* capsule, int stag
     int i_fun, i_cost_fun;
 
     {%- for jj in range(end=n_phases) %}{# phases loop !#}
-    if (stage > {{ start_idx[jj] }} && stage < {{ end_idx[jj] }})
+    if (stage >= {{ start_idx[jj] }} && stage < {{ end_idx[jj] }})
     {
         if (NP_{{ jj }} != np)
         {
