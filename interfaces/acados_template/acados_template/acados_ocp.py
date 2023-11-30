@@ -535,7 +535,7 @@ class AcadosOcp:
         dims.nsphi_0 = nsphi_0
 
         # Note: at stage 0 bounds on x are not slacked!
-        ns_0 = nsbu + nsg + nsh_0 + nsphi_0 + nsh_0  # NOTE: nsbx not supported at stage 0
+        ns_0 = nsbu + nsg + nsphi_0 + nsh_0  # NOTE: nsbx not supported at stage 0
 
         if cost.zl_0 is None and cost.zu_0 is None and cost.Zl_0 is None and cost.Zu_0 is None:
             if ns_0 == 0:
