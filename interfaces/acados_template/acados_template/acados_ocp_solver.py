@@ -142,7 +142,7 @@ def __mocp_get_template_list(ocp: AcadosMultiphaseOcp, cmake_builder=None, simul
     name = ocp.name
     template_list = []
 
-    # template_list.append(('main.in.c', f'main_{name}.c'))
+    template_list.append(('main_multi.in.c', f'main_{name}.c'))
     template_list.append(('acados_multi_solver.in.h', f'acados_solver_{name}.h'))
     template_list.append(('acados_multi_solver.in.c', f'acados_solver_{name}.c'))
     # template_list.append(('acados_solver.in.pxd', f'acados_solver.pxd'))
