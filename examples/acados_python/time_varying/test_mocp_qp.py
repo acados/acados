@@ -54,13 +54,18 @@ def main():
     mocp_solver, _ = create_mocp_solver(cost_type, [N_1, N_horizon-N_1], degrees_u_polynom, explicit_symmetric_penalties=explicit_symmetric_penalties, penalty_type=penalty_type, nlp_solver_max_iter=nlp_solver_max_iter)
 
     # call solvers
-    mocp_solver.store_iterate('iter_init_mocp.json', overwrite=True)
+    # mocp_solver.store_iterate('iter_init_mocp.json', overwrite=True)
     for solver in [ocp_solver_1, ocp_solver_2, mocp_solver]:
         solver.solve()
         solver.print_statistics()
-    mocp_solver.store_iterate('iter_1_mocp.json', overwrite=True)
-    ocp_solver_1.store_iterate('iter_1_ocp1.json', overwrite=True)
-    ocp_solver_2.store_iterate('iter_1_ocp2.json', overwrite=True)
+    # mocp_solver.store_iterate('iter_1_mocp.json', overwrite=True)
+    # ocp_solver_1.store_iterate('iter_1_ocp1.json', overwrite=True)
+    # ocp_solver_2.store_iterate('iter_1_ocp2.json', overwrite=True)
+
+    if len(ocp_solver_1.get(0, 'u')) != degrees_u_polynom[0]+1:
+        raise Exception("ocp_solver_1: returned u has wrong dimension")
+    if len(ocp_solver_2.get(0, 'u')) != degrees_u_polynom[1]+1:
+        raise Exception("ocp_solver_2: returned u has wrong dimension")
 
     # compare QPs
     print("Comparing QP: Phase 1")
