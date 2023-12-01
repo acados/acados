@@ -2195,14 +2195,18 @@ void {{ name }}_acados_create_6_set_opts({{ name }}_solver_capsule* capsule)
     {%- endif %}
 
     // set up sim_method_num_stages
-    {%- set all_equal = true %}
-    {%- set val = solver_options.sim_method_num_stages[0] %}
+    {%- set_global all_equal = true %}
+    {%- set_global val = solver_options.sim_method_num_stages[0] %}
     {%- for j in range(start=1, end=dims.N) %}
         {%- if val != solver_options.sim_method_num_stages[j] %}
+            // checking solver_options.sim_method_num_stages[{{ j }}] = {{ solver_options.sim_method_num_stages[j] }}
             {%- set_global all_equal = false %}
-            {%- break %}
+            // all_equal: {{ all_equal }} - ref val {{ val }}
         {%- endif %}
     {%- endfor %}
+
+    // solver_options.sim_method_num_stages all_equal: {{ all_equal }}
+
 
   {%- if all_equal == true %}
     // all sim_method_num_stages are identical
