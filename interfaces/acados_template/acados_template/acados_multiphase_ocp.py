@@ -88,6 +88,19 @@ class AcadosMultiphaseOcp:
     Class containing the description of an optimal control problem with multiple phases.
 
     This object can be used to create an :py:class:`acados_template.acados_ocp_solver.AcadosOcpSolver`.
+
+    :param n_phases: number of phases
+    :param N_list: list containing the number of shooting intervals for each phase
+
+    Initial cost and constraints are defined by the first phase, terminal cost and constraints by the last phase.
+    All other phases are treated as intermediate phases, where only dynamics and path cost and constraints are used.
+
+    Limitations:
+    - state dimension must be the same for all phases (all other dimensions can be different), extending would require defining a transition function.
+    - solver options are shared between all phases. Interesing options to set phase-wise are:
+        - integrator_type
+        - collocation_type
+        - cost_discretization
     """
     def __init__(self, n_phases: int, N_list: list):
 
@@ -166,7 +179,7 @@ class AcadosMultiphaseOcp:
         elif dims.N != N_horizon:
             raise Exception(f"AcadosMultiphaseOcp: make_consistent: N = {dims.N} != {N_horizon} = sum(N_list).")
 
-        # phase indices
+        # compute phase indices
         phase_idx = np.cumsum([0] + self.N_list).tolist()
 
         self.start_idx = phase_idx[:-1]
@@ -218,6 +231,10 @@ class AcadosMultiphaseOcp:
             ocp.make_consistent()
 
             self.dummy_ocp_list.append(ocp)
+
+        nx_list = [self.phases_dims[i].nx for i in range(self.n_phases)]
+        if len(set(nx_list)) != 1:
+            raise Exception(f"make_consistent: all phases must have the same dimension nx, detected nx_list = {nx_list}.")
         return
 
 
