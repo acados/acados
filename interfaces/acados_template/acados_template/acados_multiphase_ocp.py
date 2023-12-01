@@ -29,7 +29,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from typing import Optional
+from typing import Optional, Union
 import numpy as np
 from copy import deepcopy
 from scipy.linalg import block_diag
@@ -50,6 +50,37 @@ from .utils import (get_acados_path, format_class_dict,
                     get_shared_lib_ext, is_column, is_empty, casadi_length,)
 from .penalty_utils import symmetric_huber_penalty
 
+
+def find_non_default_fields_of_obj(obj: Union[AcadosOcpCost, AcadosOcpConstraints], stage_type='all') -> list:
+
+    all_fields = [field for field in dir(obj) if not field.startswith("_")]
+    if isinstance(obj, AcadosOcpConstraints):
+        all_fields.remove('x0') # x0 is a special case and translated to other fields
+        all_fields = [field for field in all_fields if not field.startswith("J")] # only idx* fields to avoid prints
+    all_fields = [field for field in all_fields if not callable(getattr(obj, field))]
+
+    if stage_type == 'all':
+        pass
+    elif stage_type == 'initial':
+        all_fields = [field for field in all_fields if field.endswith("_0")]
+    elif stage_type == 'terminal':
+        all_fields = [field for field in all_fields if field.endswith("_e")]
+    else:
+        raise Exception(f"stage_type {stage_type} not supported.")
+
+    obj_type = type(obj)
+    dummy_obj = obj_type()
+    nondefault_fields = []
+    for field in all_fields:
+        val = getattr(obj, field)
+        default_val = getattr(dummy_obj, field)
+        if isinstance(val, np.ndarray):
+            if not np.array_equal(val, default_val):
+                nondefault_fields.append(field)
+        elif val != default_val:
+            nondefault_fields.append(field)
+
+    return nondefault_fields
 
 
 class AcadosMultiphaseOcp:
@@ -135,6 +166,7 @@ class AcadosMultiphaseOcp:
         elif dims.N != N_horizon:
             raise Exception(f"AcadosMultiphaseOcp: make_consistent: N = {dims.N} != {N_horizon} = sum(N_list).")
 
+        # phase indices
         phase_idx = np.cumsum([0] + self.N_list).tolist()
 
         self.start_idx = phase_idx[:-1]
@@ -142,6 +174,18 @@ class AcadosMultiphaseOcp:
 
         self.cost_start_idx = phase_idx.copy()
         self.cost_start_idx[0] += 1
+
+        # make model names unique if necessary
+        model_name_list = [self.model[i].name for i in range(self.n_phases)]
+        n_names = len(set(model_name_list))
+        if n_names != self.n_phases:
+            print(f"model names are not unique: got {model_name_list}")
+            print("adding _i to model names")
+            for i in range(self.n_phases):
+                self.model[i].name = f"{self.model[i].name}_{i}"
+            model_name_list = [self.model[i].name for i in range(self.n_phases)]
+            print(f"new model names are {model_name_list}")
+
 
         for i in range(self.n_phases):
 
@@ -155,11 +199,25 @@ class AcadosMultiphaseOcp:
             ocp.parameter_values = self.parameter_values[i]
             ocp.solver_options = opts
 
+            if i != self.n_phases - 1:
+                nondefault_fields = []
+                nondefault_fields += find_non_default_fields_of_obj(ocp.cost, stage_type='terminal')
+                nondefault_fields += find_non_default_fields_of_obj(ocp.constraints, stage_type='terminal')
+                nondefault_fields += find_non_default_fields_of_obj(ocp.model, stage_type='terminal')
+                if len(nondefault_fields) > 0:
+                    print(f"Phase {i} contains non-default terminal fields: {nondefault_fields}, which will be ignored.")
+            elif i != 0:
+                nondefault_fields = []
+                nondefault_fields += find_non_default_fields_of_obj(ocp.cost, stage_type='initial')
+                nondefault_fields += find_non_default_fields_of_obj(ocp.constraints, stage_type='initial')
+                nondefault_fields += find_non_default_fields_of_obj(ocp.model, stage_type='initial')
+                if len(nondefault_fields) > 0:
+                    print(f"Phase {i} contains non-default initial fields: {nondefault_fields}, which will be ignored.")
+
             print(f"Calling make_consistent for phase {i}.")
             ocp.make_consistent()
 
             self.dummy_ocp_list.append(ocp)
-
         return
 
 
