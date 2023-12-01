@@ -810,6 +810,8 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     ************************************************/
     ocp_nlp_in * nlp_in = capsule->nlp_in;
 
+    // TODO; make this better!
+
     // declare
     double* yref;
     double* lubu;
