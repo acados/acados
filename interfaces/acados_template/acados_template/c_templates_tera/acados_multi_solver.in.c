@@ -824,7 +824,7 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     int* idxbu;
 
     // set up time_steps
-    {%- set all_equal = true -%}
+    {%- set_global all_equal = true -%}
     {%- set val = solver_options.time_steps[0] %}
     {%- for j in range(start=1, end=dims.N) %}
         {%- if val != solver_options.time_steps[j] %}
@@ -2168,7 +2168,7 @@ void {{ name }}_acados_create_6_set_opts({{ name }}_solver_capsule* capsule)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_collocation_type", &collocation_type);
 
     // set up sim_method_num_steps
-    {%- set all_equal = true %}
+    {%- set_global all_equal = true %}
     {%- set val = solver_options.sim_method_num_steps[0] %}
     {%- for j in range(start=1, end=dims.N) %}
         {%- if val != solver_options.sim_method_num_steps[j] %}
@@ -2199,13 +2199,10 @@ void {{ name }}_acados_create_6_set_opts({{ name }}_solver_capsule* capsule)
     {%- set_global val = solver_options.sim_method_num_stages[0] %}
     {%- for j in range(start=1, end=dims.N) %}
         {%- if val != solver_options.sim_method_num_stages[j] %}
-            // checking solver_options.sim_method_num_stages[{{ j }}] = {{ solver_options.sim_method_num_stages[j] }}
             {%- set_global all_equal = false %}
-            // all_equal: {{ all_equal }} - ref val {{ val }}
+            {%- break %}
         {%- endif %}
     {%- endfor %}
-
-    // solver_options.sim_method_num_stages all_equal: {{ all_equal }}
 
 
   {%- if all_equal == true %}
@@ -2229,7 +2226,7 @@ void {{ name }}_acados_create_6_set_opts({{ name }}_solver_capsule* capsule)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_newton_iter", &newton_iter_val);
 
     // set up sim_method_jac_reuse
-    {%- set all_equal = true %}
+    {%- set_global all_equal = true %}
     {%- set val = solver_options.sim_method_jac_reuse[0] %}
     {%- for j in range(start=1, end=dims.N) %}
         {%- if val != solver_options.sim_method_jac_reuse[j] %}
