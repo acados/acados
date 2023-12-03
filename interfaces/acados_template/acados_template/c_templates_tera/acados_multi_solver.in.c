@@ -824,16 +824,16 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     int* idxbu;
 
     // set up time_steps
-    {%- set_global all_equal = true -%}
+    {%- set time_steps_all_equal = true -%}
     {%- set val = solver_options.time_steps[0] %}
     {%- for j in range(start=1, end=dims.N) %}
         {%- if val != solver_options.time_steps[j] %}
-            {%- set_global all_equal = false %}
+            {%- set_global time_steps_all_equal = false %}
             {%- break %}
         {%- endif %}
     {%- endfor %}
 
-{% if all_equal == true %}{# all time_steps are identical #}
+{% if time_steps_all_equal == true %}{# all time_steps are identical #}
     double time_step = {{ solver_options.time_steps[0] }};
     for (int i = 0; i < N; i++)
     {
@@ -2144,10 +2144,28 @@ void {{ name }}_acados_create_6_set_opts({{ name }}_solver_capsule* capsule)
 
 {# TODO: check this part again carefully!! #}
     /* Stage varying options */
-    int ext_cost_num_hess, sim_method_num_steps, sim_method_num_stages;
+    int ext_cost_num_hess;
     bool output_z_val = true;
     bool sens_algebraic_val = true;
     sim_collocation_type collocation_type;
+
+    // set up sim_method_num_stages
+    int* sim_method_num_stages = malloc(N*sizeof(int));
+    {%- for j in range(end=dims.N) %}
+    sim_method_num_stages[{{ j }}] = {{ solver_options.sim_method_num_stages[j] }};
+    {%- endfor %}
+
+    // set up sim_method_num_steps
+    int* sim_method_num_steps = malloc(N*sizeof(int));
+    {%- for j in range(end=dims.N) %}
+    sim_method_num_steps[{{ j }}] = {{ solver_options.sim_method_num_steps[j] }};
+    {%- endfor %}
+
+    // set up sim_method_jac_reuse
+    bool* sim_method_jac_reuse = malloc(N*sizeof(bool));
+    {%- for j in range(end=dims.N) %}
+    sim_method_jac_reuse[{{ j }}] = (bool){{ solver_options.sim_method_jac_reuse[j] }};
+    {%- endfor %}
 
     {%- for jj in range(end=n_phases) %}{# phases loop !#}
 
@@ -2160,6 +2178,7 @@ void {{ name }}_acados_create_6_set_opts({{ name }}_solver_capsule* capsule)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_algebraic", &sens_algebraic_val);
     }
 {%- endif %}
+
 {%- if solver_options.integrator_type != "DISCRETE" %}
 
     // set collocation type (relevant for implicit integrators)
@@ -2167,87 +2186,20 @@ void {{ name }}_acados_create_6_set_opts({{ name }}_solver_capsule* capsule)
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_collocation_type", &collocation_type);
 
-    // set up sim_method_num_steps
-    {%- set_global all_equal = true %}
-    {%- set val = solver_options.sim_method_num_steps[0] %}
-    {%- for j in range(start=1, end=dims.N) %}
-        {%- if val != solver_options.sim_method_num_steps[j] %}
-            {%- set_global all_equal = false %}
-            {%- break %}
-        {%- endif %}
-    {%- endfor %}
-
-    {%- if all_equal == true %}
-    // all sim_method_num_steps are identical
-    sim_method_num_steps = {{ solver_options.sim_method_num_steps[0] }};
-    for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
-        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_steps", &sim_method_num_steps);
-    {%- else %}
-    // sim_method_num_steps are different
-    int* sim_method_num_steps = malloc(N*sizeof(int));
-    {%- for j in range(end=dims.N) %}
-    sim_method_num_steps[{{ j }}] = {{ solver_options.sim_method_num_steps[j] }};
-    {%- endfor %}
-
-    for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
-        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_steps", &sim_method_num_steps[i]);
-    free(sim_method_num_steps);
-    {%- endif %}
-
-    // set up sim_method_num_stages
-    {%- set_global all_equal = true %}
-    {%- set_global val = solver_options.sim_method_num_stages[0] %}
-    {%- for j in range(start=1, end=dims.N) %}
-        {%- if val != solver_options.sim_method_num_stages[j] %}
-            {%- set_global all_equal = false %}
-            {%- break %}
-        {%- endif %}
-    {%- endfor %}
-
-
-  {%- if all_equal == true %}
-    // all sim_method_num_stages are identical
-    sim_method_num_stages = {{ solver_options.sim_method_num_stages[0] }};
-    for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
-        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_stages", &sim_method_num_stages);
-  {%- else %}
-    int* sim_method_num_stages = malloc(N*sizeof(int));
-    {%- for j in range(end=dims.N) %}
-    sim_method_num_stages[{{ j }}] = {{ solver_options.sim_method_num_stages[j] }};
-    {%- endfor %}
-
-    for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
-        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_stages", &sim_method_num_stages[i]);
-    free(sim_method_num_stages);
-  {%- endif %}
-
+    // sim_method_newton_iter
     newton_iter_val = {{ solver_options.sim_method_newton_iter }};
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_newton_iter", &newton_iter_val);
 
-    // set up sim_method_jac_reuse
-    {%- set_global all_equal = true %}
-    {%- set val = solver_options.sim_method_jac_reuse[0] %}
-    {%- for j in range(start=1, end=dims.N) %}
-        {%- if val != solver_options.sim_method_jac_reuse[j] %}
-            {%- set_global all_equal = false %}
-            {%- break %}
-        {%- endif %}
-    {%- endfor %}
-  {%- if all_equal == true %}
-    tmp_bool = (bool) {{ solver_options.sim_method_jac_reuse[0] }};
+    // possibly varying: sim_method_num_steps, sim_method_num_stages, sim_method_jac_reuse
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
-        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_jac_reuse", &tmp_bool);
-  {%- else %}
-    bool* sim_method_jac_reuse = malloc(N*sizeof(bool));
-    {%- for j in range(end=dims.N) %}
-    sim_method_jac_reuse[{{ j }}] = (bool){{ solver_options.sim_method_jac_reuse[j] }};
-    {%- endfor %}
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_steps", &sim_method_num_steps[i]);
+
+    for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_stages", &sim_method_num_stages[i]);
 
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_jac_reuse", &sim_method_jac_reuse[i]);
-    free(sim_method_jac_reuse);
-  {%- endif %}
 
 {%- if solver_options.cost_discretization == "INTEGRATOR" %}
     tmp_bool = true;
@@ -2272,6 +2224,11 @@ void {{ name }}_acados_create_6_set_opts({{ name }}_solver_capsule* capsule)
 {%- if cost_e.cost_type_e == "EXTERNAL" %}
     ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, N, "cost_numerical_hessian", &ext_cost_num_hess);
 {%- endif %}
+
+    // free arrays
+    free(sim_method_num_steps);
+    free(sim_method_num_stages);
+    free(sim_method_jac_reuse);
 }
 
 /**
