@@ -32,9 +32,7 @@
 from typing import Optional, Union
 import numpy as np
 from copy import deepcopy
-from scipy.linalg import block_diag
 
-import casadi as ca
 import os
 
 from .acados_dims import MultiphaseOcpDims
@@ -46,9 +44,7 @@ from .acados_ocp_options import AcadosOcpOptions
 
 from .acados_ocp import AcadosOcp
 
-from .utils import (get_acados_path, format_class_dict,
-                    get_shared_lib_ext, is_column, is_empty, casadi_length,)
-from .penalty_utils import symmetric_huber_penalty
+from .utils import get_acados_path, format_class_dict, get_shared_lib_ext
 
 
 def find_non_default_fields_of_obj(obj: Union[AcadosOcpCost, AcadosOcpConstraints], stage_type='all') -> list:
@@ -254,51 +250,3 @@ class AcadosMultiphaseOcp:
 
         ocp_dict = format_class_dict(ocp_dict)
         return ocp_dict
-
-
-    def remove_x0_elimination(self) -> None:
-        self.constraints[0].idxbxe_0 = np.zeros((0,))
-        self.dims[0].nbxe_0 = 0
-        self.constraints[0].__has_x0 = False
-        return
-
-
-    def translate_nls_cost_to_conl(self):
-        """
-        Translates a NONLINEAR_LS cost to a CONVEX_OVER_NONLINEAR cost.
-        """
-        # TODO: make this functionality more generic, removing it from AcadosOcp
-        raise NotImplementedError("translate_nls_cost_to_conl not implemented for multiphase OCPs.")
-        return
-
-
-    def formulate_constraint_as_L2_penalty(
-        self,
-        constr_expr: ca.SX,
-        weight: float,
-        upper_bound: Optional[float],
-        lower_bound: Optional[float],
-        residual_name: str = "new_residual",
-    ) -> None:
-        """
-        Formulate a constraint as an L2 penalty and add it to the current cost.
-        """
-        # TODO: make this functionality more generic, removing it from AcadosOcp
-        raise NotImplementedError("L2 penalty reformulation not implemented for multiphase OCPs.")
-        return
-
-
-    def formulate_constraint_as_Huber_penalty(
-        self,
-        constr_expr: ca.SX,
-        weight: float,
-        upper_bound: Optional[float],
-        lower_bound: Optional[float],
-        residual_name: str = "new_residual",
-        huber_delta: float = 1.0,
-        use_xgn = True,
-        min_hess = 0,
-    ) -> None:
-        # TODO: make this functionality more generic, removing it from AcadosOcp
-        raise NotImplementedError("Huber penalty reformulation not implemented for multiphase OCPs.")
-        return
