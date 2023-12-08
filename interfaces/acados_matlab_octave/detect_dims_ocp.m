@@ -406,7 +406,7 @@ function [model, opts] = detect_dims_ocp(model, opts)
     end
     if ~isempty(opts.sim_method_num_stages)
         if(strcmp(opts.sim_method, "erk"))
-            if (any(opts.sim_method_num_stages < 1) || all(opts.sim_method_num_stages > 4))
+            if (any(opts.sim_method_num_stages < 1) || any(opts.sim_method_num_stages > 4))
                 error(['ERK: num_stages = ', num2str(opts.sim_method_num_stages) ' not available. Only number of stages = {1,2,3,4} implemented!']);
             end
         end
