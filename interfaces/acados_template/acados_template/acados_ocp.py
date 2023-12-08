@@ -361,12 +361,19 @@ class AcadosOcp:
         else:
             dims.nbu = nbu
 
+        # lg <= C * x + D * u <= ug
         ng = constraints.lg.shape[0]
         if constraints.ug.shape[0] != ng or constraints.C.shape[0] != ng \
         or constraints.D.shape[0] != ng:
             raise Exception('inconsistent dimension ng, regarding lg, ug, C, D.')
         else:
             dims.ng = ng
+
+        if ng > 0:
+            if constraints.C.shape[1] != dims.nx:
+                raise Exception(f'inconsistent dimension nx, regarding C, got C.shape[1] = {constraints.C.shape[1]}.')
+            if constraints.D.shape[1] != dims.nu:
+                raise Exception(f'inconsistent dimension nu, regarding D, got D.shape[1] = {constraints.D.shape[1]}.')
 
         if not is_empty(model.con_h_expr):
             nh = casadi_length(model.con_h_expr)
