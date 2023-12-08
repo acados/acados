@@ -40,7 +40,6 @@ classdef acados_sim_opts < handle
 
 
     methods
-        
 
         function obj = acados_sim_opts()
             obj.opts_struct = struct;
