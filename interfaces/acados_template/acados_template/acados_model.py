@@ -30,6 +30,9 @@
 
 from typing import Union
 
+import casadi as ca
+import numpy as np
+
 from casadi import MX, SX
 
 from .utils import is_empty, casadi_length, is_column
@@ -208,23 +211,24 @@ class AcadosModel():
         CasADi expression for the custom hessian of the outer loss function (only for convex-over-nonlinear cost), terminal; Default: :code:`None`
         Used if :py:attr:`acados_template.acados_ocp.AcadosOcpOptions.cost_type_e` is 'CONVEX_OVER_NONLINEAR'.
         """
+        self.nu_original = None
+        """
+        Number of original control inputs (before polynomial control augmentation); Default: :code:`None`
+        """
 
     def make_consistent(self, dims: Union[AcadosOcpDims, AcadosSimDims]) -> None:
-        x = self.x
-        z = self.z
-        p = self.p
 
-        if isinstance(x, MX):
+        if isinstance(self.x, MX):
             symbol = MX.sym
-        elif isinstance(x, SX):
+        elif isinstance(self.x, SX):
             symbol = SX.sym
         else:
-            raise Exception("model.x must be casadi.SX or casadi.MX, got {}".format(type(x)))
+            raise Exception(f"model.x must be casadi.SX or casadi.MX, got {type(self.x)}")
 
-        if is_empty(p):
+        if is_empty(self.p):
             self.p = symbol('p', 0, 0)
 
-        if is_empty(z):
+        if is_empty(self.z):
             self.z = symbol('z', 0, 0)
 
         # nx
@@ -252,3 +256,61 @@ class AcadosModel():
             dims.np = casadi_length(self.p)
 
         return
+
+    def augment_model_with_polynomial_control(self, degree: int) -> None:
+        """
+        Augment the model with polynomial control.
+
+        Replace the original control input :math:`u` with a polynomial control input :math:`v_{\\text{poly}} = \\sum_{i=0}^d u_i t^i`
+        New controls are :math:`u_0, \\dots, u_d`.
+
+        NOTE: bounds on controls are not changed in this function.
+
+        :param degree: degree of the polynomial control
+        :type degree: int
+        """
+        if self.u is None:
+            raise Exception('model.u must be defined')
+        if self.nu_original is not None:
+            raise Exception('model.u has already been augmented')
+
+        if isinstance(self.x, MX):
+            symbol = MX.sym
+        elif isinstance(self.x, SX):
+            symbol = SX.sym
+        else:
+            raise Exception(f"model.x must be casadi.SX or casadi.MX, got {type(self.x)}")
+
+        # add time to model
+        if self.t == []:
+            self.t = symbol('t')
+
+        t = self.t
+
+        u_old = self.u
+        nu_original = casadi_length(self.u)
+
+        u_coeff = symbol('u_coeff', (degree+1) * nu_original)
+        u_new = np.zeros((nu_original, 1))
+        for i in range(degree+1):
+            u_new += t ** i * u_coeff[i*nu_original:(i+1)*nu_original]
+
+        evaluate_polynomial_u_fun = ca.Function("evaluate_polynomial_u", [u_coeff, t], [u_new])
+
+        if self.f_impl_expr is not None:
+            self.f_impl_expr = ca.substitute(self.f_impl_expr, u_old, u_new)
+        if self.f_expl_expr is not None:
+            self.f_expl_expr = ca.substitute(self.f_expl_expr, u_old, u_new)
+        if self.cost_y_expr is not None:
+            self.cost_y_expr = ca.substitute(self.cost_y_expr, u_old, u_new)
+        if self.cost_y_expr_0 is not None:
+            self.cost_y_expr_0 = ca.substitute(self.cost_y_expr_0, u_old, u_new)
+
+        self.u = u_coeff
+        self.nu_original = nu_original
+        self.p = ca.vertcat(self.p)
+
+        # update name
+        self.name = self.name + f"_d{degree}"
+
+        return evaluate_polynomial_u_fun
