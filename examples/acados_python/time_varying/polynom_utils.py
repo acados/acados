@@ -87,39 +87,7 @@ def export_pendulum_ode_model() -> AcadosModel:
     return model
 
 
-
-def augment_model_with_polynomial_control(model: AcadosModel, d: int = 1, delta_T=None):
-    # add time to model
-    if model.t == []:
-        model.t = ca.SX.sym('t')
-    t = model.t
-
-    if delta_T is None:
-        delta_T = ca.SX.sym('delta_T')
-
-    u_old = model.u
-    nu_original = casadi_length(model.u)
-
-    u_coeff = ca.SX.sym('u_coeff', (d+1) * nu_original)
-    u_new = ca.SX.zeros(nu_original, 1)
-    for i in range(d+1):
-        u_new += (t / delta_T) ** i * u_coeff[i*nu_original:(i+1)*nu_original]
-
-    evaluate_polynomial_u_fun = ca.Function("evaluate_polynomial_u", [u_coeff, t, delta_T], [u_new])
-
-    model.f_impl_expr = ca.substitute(model.f_impl_expr, u_old, u_new)
-    model.cost_y_expr = ca.substitute(model.cost_y_expr, u_old, u_new)
-
-    model.u = u_coeff
-    model.nu_original = nu_original
-    model.p = ca.vertcat(model.p, delta_T)
-
-    model.name = model.name + f"_d{d}"
-
-    return model, evaluate_polynomial_u_fun
-
-
-def plot_open_loop_trajectory_pwpol_u(shooting_nodes, X_traj, U_fine_traj, plt_show=True, u_max=None, title=None,
+def plot_open_loop_trajectory_pwpol_u(shooting_nodes, X_traj: np.ndarray, U_fine_traj: list, plt_show=True, u_max=None, title=None,
     states_lables = ['$x$', r'$\theta$', '$v$', r'$\dot{\theta}$'],
     idxpx=None, idxpu=None
                   ):

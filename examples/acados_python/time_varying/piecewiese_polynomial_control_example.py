@@ -33,7 +33,7 @@ from acados_template import AcadosModel, AcadosOcp, AcadosMultiphaseOcp, AcadosO
 import numpy as np
 import casadi as ca
 from scipy.linalg import block_diag
-from polynom_utils import plot_open_loop_trajectory_pwpol_u, export_pendulum_ode_model, augment_model_with_polynomial_control
+from polynom_utils import plot_open_loop_trajectory_pwpol_u, export_pendulum_ode_model
 
 def create_ocp_formulation_without_opts(cost_type, degree_u_polynom, explicit_symmetric_penalties=True, penalty_type='L2') -> (AcadosOcp, ca.Function):
     # create ocp object to formulate the OCP
@@ -99,8 +99,7 @@ def create_ocp_formulation_without_opts(cost_type, degree_u_polynom, explicit_sy
 
     ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
-    model, evaluate_polynomial_u_fun = augment_model_with_polynomial_control(model, d=degree_u_polynom)
-    ocp.parameter_values = np.array([1.0]) # dummy parameter
+    evaluate_polynomial_u_fun = model.augment_model_with_polynomial_control(degree_u_polynom)
 
     return ocp, evaluate_polynomial_u_fun
 
@@ -135,10 +134,7 @@ def create_ocp_solver(cost_type, N_horizon, degree_u_polynom,
     ocp.solver_options.time_steps = np.array(n_short * [dt_short] + n_long * [(T_horizon - dt_short * n_short) / n_long])
     ocp.solver_options.tf = T_horizon
 
-    ocp.parameter_values = np.array([T_horizon / N_horizon])
     ocp_solver = AcadosOcpSolver(ocp, verbose=False)
-    for i in range(N_horizon):
-        ocp_solver.set(i, 'p', ocp.solver_options.time_steps[i])
 
     return ocp_solver, evaluate_polynomial_u_fun
 
@@ -177,9 +173,9 @@ def create_mocp_solver(cost_type, N_list, degrees_u_polynom, explicit_symmetric_
     mocp.solver_options.time_steps = np.array(n_short * [dt_short] + n_long * [(T_horizon - dt_short * n_short) / n_long])
     mocp.solver_options.tf = T_horizon
 
+    mocp.solver_options.sim_method_num_stages = np.array(n_short * [2] + n_long * [4])
+
     ocp_solver = AcadosOcpSolver(mocp, verbose=True)
-    for i in range(N_horizon):
-        ocp_solver.set(i, 'p', mocp.solver_options.time_steps[i])
 
     return ocp_solver, polynomial_u_funs
 
@@ -226,10 +222,9 @@ def main_mocp(cost_type='NONLINEAR_LS', explicit_symmetric_penalties=True, penal
             U_interval = np.zeros((n_pol_eval+1, nu_original))
             for j in range(n_pol_eval+1):
                 t = (j/n_pol_eval) * dt
-                U_interval[j, :] = polynomial_u_funs[i_phase](u_coeff, t, dt)
+                U_interval[j, :] = polynomial_u_funs[i_phase](u_coeff, t)
             U_fine.append(U_interval)
             i_ocp += 1
-    # breakpoint()
     ocp_solver.store_iterate('mocp_sol.json', overwrite=True)
 
     # plot
@@ -237,8 +232,8 @@ def main_mocp(cost_type='NONLINEAR_LS', explicit_symmetric_penalties=True, penal
 
 
 def main_ocp(cost_type='NONLINEAR_LS', explicit_symmetric_penalties=True, penalty_type='L2'):
-    N_horizon = 20
-    degree_u_polynom = 3
+    N_horizon = 100
+    degree_u_polynom = 0
 
     # create solver and extract
     ocp_solver, evaluate_polynomial_u_fun = create_ocp_solver(cost_type, N_horizon, degree_u_polynom, explicit_symmetric_penalties=explicit_symmetric_penalties, penalty_type=penalty_type)
@@ -274,7 +269,7 @@ def main_ocp(cost_type='NONLINEAR_LS', explicit_symmetric_penalties=True, penalt
         U_interval = np.zeros((n_pol_eval+1, nu_original))
         for j in range(n_pol_eval+1):
             t = (j/n_pol_eval) * dt
-            U_interval[j, :] = evaluate_polynomial_u_fun(u_coeff, t, dt)
+            U_interval[j, :] = evaluate_polynomial_u_fun(u_coeff, t)
         U_fine.append(U_interval)
 
     ocp_solver.store_iterate('ocp_sol.json', overwrite=True)
@@ -286,5 +281,5 @@ def main_ocp(cost_type='NONLINEAR_LS', explicit_symmetric_penalties=True, penalt
 if __name__ == '__main__':
     # main(cost_type="CONVEX_OVER_NONLINEAR", explicit_symmetric_penalties=True)
     # main_ocp(cost_type="CONVEX_OVER_NONLINEAR", explicit_symmetric_penalties=True, penalty_type='Huber')
-    # main_ocp(cost_type="CONVEX_OVER_NONLINEAR", explicit_symmetric_penalties=True, penalty_type='L2')
+    main_ocp(cost_type="CONVEX_OVER_NONLINEAR", explicit_symmetric_penalties=True, penalty_type='L2')
     main_mocp(cost_type="CONVEX_OVER_NONLINEAR", explicit_symmetric_penalties=True, penalty_type='L2')
