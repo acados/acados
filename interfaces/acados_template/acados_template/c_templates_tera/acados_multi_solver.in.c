@@ -1109,7 +1109,6 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 {%- endif %}
 
     /* Path related delarations */
-    int nx, nu;
     int i_fun;
 
     // cost
@@ -1621,7 +1620,7 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 {% if phases_dims[jj].ng > 0 %}
     // set up general constraints for stage 0 to N-1
     D = calloc({{ phases_dims[jj].ng }}*{{ phases_dims[jj].nu }}, sizeof(double));
-    C = calloc({{ phases_dims[jj].ng }}*nx, sizeof(double));
+    C = calloc({{ phases_dims[jj].ng }}*{{ phases_dims[jj].nx }}, sizeof(double));
     lug = calloc(2*{{ phases_dims[jj].ng }}, sizeof(double));
     lg = lug;
     ug = lug + {{ phases_dims[jj].ng }};
