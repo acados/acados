@@ -904,3 +904,29 @@ class AcadosOcp:
                                                                 zero_offdiag, zero_offdiag.T, penalty_hess)
 
         return
+
+
+    def add_linear_constraint(self, C: np.ndarray, D: np.ndarray, lg: np.ndarray, ug: np.ndarray) -> None:
+        """
+        Add a linear constraint of the form lg <= C * x + D * u <= ug to the OCP.
+        """
+
+        if C.shape[0] != lg.shape[0] or C.shape[0] != ug.shape[0]:
+            raise ValueError("C, lg, ug must have the same number of rows.")
+
+        if D.shape[0] != C.shape[0]:
+            raise ValueError("C and D must have the same number of rows.")
+
+        if self.constraints.C.shape[0] == 0:
+            # no linear constraints have been added yet
+            self.constraints.C = C
+            self.constraints.D = D
+            self.constraints.lg = lg
+            self.constraints.ug = ug
+        else:
+            self.constraints.C = ca.vertcat(self.constraints.C, C)
+            self.constraints.D = ca.vertcat(self.constraints.D, D)
+            self.constraints.lg = ca.vertcat(self.constraints.lg, lg)
+            self.constraints.ug = ca.vertcat(self.constraints.ug, ug)
+
+        return
