@@ -93,7 +93,7 @@ class AcadosMultiphaseOcp:
 
     Limitations:
     - state dimension must be the same for all phases (all other dimensions can be different), extending would require defining a transition function.
-    - solver options are shared between all phases. Interesing options to set phase-wise are:
+    - solver options are shared between all phases. Interesting options to set phase-wise are:
         - integrator_type
         - collocation_type
         - cost_discretization
