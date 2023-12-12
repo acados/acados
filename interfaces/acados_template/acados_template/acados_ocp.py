@@ -664,6 +664,7 @@ class AcadosOcp:
         if is_empty(opts.time_steps) and is_empty(opts.shooting_nodes):
             # uniform discretization
             opts.time_steps = opts.tf / dims.N * np.ones((dims.N,))
+            opts.shooting_nodes = np.concatenate((np.array([0.]), np.cumsum(opts.time_steps)))
 
         elif not is_empty(opts.shooting_nodes):
             if np.shape(opts.shooting_nodes)[0] != dims.N+1:

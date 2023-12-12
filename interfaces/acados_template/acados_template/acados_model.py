@@ -257,6 +257,7 @@ class AcadosModel():
 
         return
 
+
     def augment_model_with_polynomial_control(self, degree: int) -> None:
         """
         Augment the model with polynomial control.
