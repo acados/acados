@@ -93,27 +93,27 @@ MODEL_SRC=
 
 {%- for jj in range(end=n_phases) %}{# phases loop !#}
 	{%- if model[jj].dyn_ext_fun_type == "casadi" %}
-{%- if solver_options.integrator_type == "ERK" %}
+{%- if mocp_opts.integrator_type[jj] == "ERK" %}
 MODEL_SRC+= {{ model[jj].name }}_model/{{ model[jj].name }}_expl_ode_fun.c
 MODEL_SRC+= {{ model[jj].name }}_model/{{ model[jj].name }}_expl_vde_forw.c
 MODEL_SRC+= {{ model[jj].name }}_model/{{ model[jj].name }}_expl_vde_adj.c
 	{%- if hessian_approx == "EXACT" %}
 MODEL_SRC+= {{ model[jj].name }}_model/{{ model[jj].name }}_expl_ode_hess.c
 	{%- endif %}
-{%- elif solver_options.integrator_type == "IRK" %}
+{%- elif mocp_opts.integrator_type[jj] == "IRK" %}
 MODEL_SRC+= {{ model[jj].name }}_model/{{ model[jj].name }}_impl_dae_fun.c
 MODEL_SRC+= {{ model[jj].name }}_model/{{ model[jj].name }}_impl_dae_fun_jac_x_xdot_z.c
 MODEL_SRC+= {{ model[jj].name }}_model/{{ model[jj].name }}_impl_dae_jac_x_xdot_u_z.c
 		{%- if hessian_approx == "EXACT" %}
 MODEL_SRC+= {{ model[jj].name }}_model/{{ model[jj].name }}_impl_dae_hess.c
 		{%- endif %}
-{%- elif solver_options.integrator_type == "LIFTED_IRK" %}
+{%- elif mocp_opts.integrator_type[jj] == "LIFTED_IRK" %}
 MODEL_SRC+= {{ model[jj].name }}_model/{{ model[jj].name }}_impl_dae_fun.c
 MODEL_SRC+= {{ model[jj].name }}_model/{{ model[jj].name }}_impl_dae_fun_jac_x_xdot_u.c
 	{%- if hessian_approx == "EXACT" %}
 MODEL_SRC+= {{ model[jj].name }}_model/{{ model[jj].name }}_impl_dae_hess.c
 	{%- endif %}
-{%- elif solver_options.integrator_type == "GNSF" %}
+{%- elif mocp_opts.integrator_type[jj] == "GNSF" %}
 	{% if model[jj].gnsf.purely_linear != 1 %}
 MODEL_SRC+= {{ model[jj].name }}_model/{{ model[jj].name }}_gnsf_phi_fun.c
 MODEL_SRC+= {{ model[jj].name }}_model/{{ model[jj].name }}_gnsf_phi_fun_jac_y.c
@@ -123,7 +123,7 @@ MODEL_SRC+= {{ model[jj].name }}_model/{{ model[jj].name }}_gnsf_f_lo_fun_jac_x1
 		{%- endif %}
 	{%- endif %}
 MODEL_SRC+= {{ model[jj].name }}_model/{{ model[jj].name }}_gnsf_get_matrices_fun.c
-{%- elif solver_options.integrator_type == "DISCRETE" %}
+{%- elif mocp_opts.integrator_type[jj] == "DISCRETE" %}
 MODEL_SRC+= {{ model[jj].name }}_model/{{ model[jj].name }}_dyn_disc_phi_fun.c
 MODEL_SRC+= {{ model[jj].name }}_model/{{ model[jj].name }}_dyn_disc_phi_fun_jac.c
 		{%- if hessian_approx == "EXACT" %}
