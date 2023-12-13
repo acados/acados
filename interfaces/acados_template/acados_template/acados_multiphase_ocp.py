@@ -265,8 +265,8 @@ class AcadosMultiphaseOcp:
 
             # set phase dependent options
             ocp.solver_options.integrator_type = self.mocp_opts.integrator_type[i]
-            # ocp.solver_options.collocation_type = self.mocp_opts.collocation_type[i]
-            # ocp.solver_options.cost_discretization = self.mocp_opts.cost_discretization[i]
+            ocp.solver_options.collocation_type = self.mocp_opts.collocation_type[i]
+            ocp.solver_options.cost_discretization = self.mocp_opts.cost_discretization[i]
 
             if i != self.n_phases - 1:
                 nondefault_fields = []
