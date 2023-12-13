@@ -29,7 +29,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from typing import Optional, Union
+from typing import Union
 import numpy as np
 from copy import deepcopy
 
@@ -46,12 +46,19 @@ from .acados_ocp import AcadosOcp
 from .utils import get_acados_path, format_class_dict, get_shared_lib_ext
 
 
-def find_non_default_fields_of_obj(obj: Union[AcadosOcpCost, AcadosOcpConstraints], stage_type='all') -> list:
+def find_non_default_fields_of_obj(obj: Union[AcadosOcpCost, AcadosOcpConstraints, AcadosOcpOptions], stage_type='all') -> list:
 
     all_fields = [field for field in dir(obj) if not field.startswith("_")]
+
+    # remove special properties which are translated to other fields
     if isinstance(obj, AcadosOcpConstraints):
-        all_fields.remove('x0') # x0 is a special case and translated to other fields
-        all_fields = [field for field in all_fields if not field.startswith("J")] # only idx* fields to avoid prints
+        all_fields.remove('x0')
+        all_fields = [field for field in all_fields if not field.startswith("J")]
+
+    if isinstance(obj, AcadosOcpOptions):
+        all_fields.remove('qp_tol')
+        all_fields.remove('tol')
+
     all_fields = [field for field in all_fields if not callable(getattr(obj, field))]
 
     if stage_type == 'all':
@@ -183,6 +190,21 @@ class AcadosMultiphaseOcp:
 
 
     def set_phase(self, ocp: AcadosOcp, phase_idx: int) -> None:
+        """
+        Set phase of the multiphase ocp.
+
+        - phase_idx: index of the phase, must be in [0, n_phases-1]
+        """
+        if phase_idx >= self.n_phases:
+            raise Exception(f"phase_idx {phase_idx} out of bounds, must be in [0, {self.n_phases-1}].")
+
+        # check options
+        non_default_opts = find_non_default_fields_of_obj(ocp.solver_options)
+        if len(non_default_opts) > 0:
+            print(f"WARNING: set_phase: Phase {phase_idx} contains non-default solver options: {non_default_opts}, which will be ignored.\n",
+                  "Solver options need to be set via AcadosMultiphaseOcp.solver_options or mocp_opts instead.")
+
+        # set stage
         self.model[phase_idx] = ocp.model
         self.cost[phase_idx] = ocp.cost
         self.constraints[phase_idx] = ocp.constraints
@@ -278,4 +300,10 @@ class AcadosMultiphaseOcp:
                         ocp_dict[key][i] = format_class_dict(dict(item.__dict__))
 
         ocp_dict = format_class_dict(ocp_dict)
+
+        # delete keys that should not be used
+        del ocp_dict['solver_options']['integrator_type']
+        del ocp_dict['solver_options']['collocation_type']
+        del ocp_dict['solver_options']['cost_discretization']
+
         return ocp_dict
