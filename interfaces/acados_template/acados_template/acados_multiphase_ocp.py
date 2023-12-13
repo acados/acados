@@ -39,7 +39,7 @@ from .acados_model import AcadosModel
 from .acados_ocp_cost import AcadosOcpCost
 from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_dims import AcadosOcpDims
-from .acados_ocp_options import AcadosOcpOptions
+from .acados_ocp_options import AcadosOcpOptions, INTEGRATOR_TYPES, COLLOCATION_TYPES, COST_DISCRETIZATION_TYPES
 
 from .acados_ocp import AcadosOcp
 
@@ -78,6 +78,31 @@ def find_non_default_fields_of_obj(obj: Union[AcadosOcpCost, AcadosOcpConstraint
     return nondefault_fields
 
 
+class AcadosMultiphaseOptions:
+    """
+    Class containing options that might be different for each phase.
+    """
+    def __init__(self):
+        self.integrator_type = None
+        self.collocation_type = None
+        self.cost_discretization = None
+
+    def make_consistent(self, opts: AcadosOcpOptions, n_phases: int) -> None:
+
+        for field, variants in zip(['integrator_type', 'collocation_type', 'cost_discretization'],
+                                [INTEGRATOR_TYPES, COLLOCATION_TYPES, COST_DISCRETIZATION_TYPES]
+                                ):
+            if getattr(self, field) is None:
+                # non varying field, use value from ocp opts
+                setattr(self, field, [getattr(opts, field) for _ in range(n_phases)])
+            if not isinstance(getattr(self, field), list):
+                raise Exception(f'AcadosMultiphaseOptions.{field} must be a list, got {getattr(self, field)}.')
+            if len(getattr(self, field)) != n_phases:
+                raise Exception(f'AcadosMultiphaseOptions.{field} must be a list of length n_phases, got {getattr(self, field)}.')
+            if not all([item in variants for item in getattr(self, field)]):
+                raise Exception(f'AcadosMultiphaseOptions.{field} must be a list of strings in {variants}, got {getattr(self, field)}.')
+
+
 class AcadosMultiphaseOcp:
     """
     Class containing the description of an optimal control problem with multiple phases.
@@ -88,13 +113,11 @@ class AcadosMultiphaseOcp:
 
     Initial cost and constraints are defined by the first phase, terminal cost and constraints by the last phase.
     All other phases are treated as intermediate phases, where only dynamics and path cost and constraints are used.
+    - solver options are shared between all phases. Options that can vary phase-wise must be set via self.mocp_opts of type AcadosMultiphaseOptions
 
     Limitations:
     - state dimension must be the same for all phases (all other dimensions can be different), extending would require defining a transition function.
-    - solver options are shared between all phases. Interesting options to set phase-wise are:
-        - integrator_type
-        - collocation_type
-        - cost_discretization
+
     """
     def __init__(self, N_list: list):
 
@@ -125,6 +148,7 @@ class AcadosMultiphaseOcp:
         self.solver_options = AcadosOcpOptions()
         """Solver Options, type :py:class:`acados_template.acados_ocp.AcadosOcpOptions`"""
 
+        self.mocp_opts = AcadosMultiphaseOptions()
         acados_path = get_acados_path()
 
         self.acados_include_path = os.path.join(acados_path, 'include').replace(os.sep, '/') # the replace part is important on Windows for CMake
@@ -171,6 +195,9 @@ class AcadosMultiphaseOcp:
 
         self.N_horizon = sum(self.N_list)
 
+        # check options
+        self.mocp_opts.make_consistent(opts, n_phases=self.n_phases)
+
         # compute phase indices
         phase_idx = np.cumsum([0] + self.N_list).tolist()
 
@@ -204,6 +231,11 @@ class AcadosMultiphaseOcp:
             ocp.parameter_values = self.parameter_values[i]
             ocp.solver_options = opts
 
+            # set phase dependent options
+            ocp.solver_options.integrator_type = self.mocp_opts.integrator_type[i]
+            # ocp.solver_options.collocation_type = self.mocp_opts.collocation_type[i]
+            # ocp.solver_options.cost_discretization = self.mocp_opts.cost_discretization[i]
+
             if i != self.n_phases - 1:
                 nondefault_fields = []
                 nondefault_fields += find_non_default_fields_of_obj(ocp.cost, stage_type='terminal')
@@ -227,6 +259,7 @@ class AcadosMultiphaseOcp:
         nx_list = [self.phases_dims[i].nx for i in range(self.n_phases)]
         if len(set(nx_list)) != 1:
             raise Exception(f"make_consistent: all phases must have the same dimension nx, detected nx_list = {nx_list}.")
+
         return
 
 
@@ -237,7 +270,7 @@ class AcadosMultiphaseOcp:
 
         # convert acados classes to dicts
         for key, v in ocp_dict.items():
-            if isinstance(v, (AcadosOcpOptions)):
+            if isinstance(v, (AcadosOcpOptions, AcadosMultiphaseOptions)):
                 ocp_dict[key]=dict(getattr(self, key).__dict__)
             if isinstance(v, list):
                 for i, item in enumerate(v):

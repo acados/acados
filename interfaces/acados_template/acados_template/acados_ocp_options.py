@@ -31,6 +31,12 @@
 
 import numpy as np
 
+
+INTEGRATOR_TYPES = ('ERK', 'IRK', 'GNSF', 'DISCRETE', 'LIFTED_IRK')
+COLLOCATION_TYPES = ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA')
+COST_DISCRETIZATION_TYPES = ('EULER', 'INTEGRATOR')
+
+
 class AcadosOcpOptions:
     """
     class containing the description of the solver options
@@ -600,7 +606,12 @@ class AcadosOcpOptions:
 
     @property
     def cost_discretization(self):
-        """Cost discretization"""
+        """
+        Cost discretization: string in {'EULER', 'INTEGRATOR'}.
+        Default: 'EULER'
+        'EULER': cost is evaluated at shooting nodes
+        'INTEGRATOR': cost is integrated over the shooting intervals - only supported for IRK integrator
+        """
         return self.__cost_discretization
 
     @qp_solver.setter
@@ -627,12 +638,11 @@ class AcadosOcpOptions:
 
     @collocation_type.setter
     def collocation_type(self, collocation_type):
-        collocation_types = ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA')
-        if collocation_type in collocation_types:
+        if collocation_type in COLLOCATION_TYPES:
             self.__collocation_type = collocation_type
         else:
             raise Exception('Invalid collocation_type value. Possible values are:\n\n' \
-                    + ',\n'.join(collocation_types) + '.\n\nYou have: ' + collocation_type + '.\n\n')
+                    + ',\n'.join(COLLOCATION_TYPES) + '.\n\nYou have: ' + collocation_type + '.\n\n')
 
     @hpipm_mode.setter
     def hpipm_mode(self, hpipm_mode):
@@ -695,12 +705,11 @@ class AcadosOcpOptions:
 
     @integrator_type.setter
     def integrator_type(self, integrator_type):
-        integrator_types = ('ERK', 'IRK', 'GNSF', 'DISCRETE', 'LIFTED_IRK')
-        if integrator_type in integrator_types:
+        if integrator_type in INTEGRATOR_TYPES:
             self.__integrator_type = integrator_type
         else:
             raise Exception('Invalid integrator_type value. Possible values are:\n\n' \
-                    + ',\n'.join(integrator_types) + '.\n\nYou have: ' + integrator_type + '.\n\n')
+                    + ',\n'.join(INTEGRATOR_TYPES) + '.\n\nYou have: ' + integrator_type + '.\n\n')
 
     @tf.setter
     def tf(self, tf):
@@ -829,12 +838,11 @@ class AcadosOcpOptions:
 
     @cost_discretization.setter
     def cost_discretization(self, cost_discretization):
-        cost_discretizations = ('EULER', 'INTEGRATOR')
-        if cost_discretization in cost_discretizations:
+        if cost_discretization in COST_DISCRETIZATION_TYPES:
             self.__cost_discretization = cost_discretization
         else:
             raise Exception('Invalid cost_discretization value. Possible values are:\n\n' \
-                    + ',\n'.join(cost_discretizations) + '.\n\nYou have: ' + cost_discretization + '.')
+                    + ',\n'.join(COST_DISCRETIZATION_TYPES) + '.\n\nYou have: ' + cost_discretization + '.')
 
     @nlp_solver_step_length.setter
     def nlp_solver_step_length(self, nlp_solver_step_length):

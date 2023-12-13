@@ -180,13 +180,13 @@ void {{ name }}_acados_create_1_set_plan(ocp_nlp_plan_t* nlp_solver_plan, const 
     }
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
     {
-      {%- if solver_options.integrator_type == "DISCRETE" %}
+      {%- if mocp_opts.integrator_type[jj] == "DISCRETE" %}
         nlp_solver_plan->nlp_dynamics[i] = DISCRETE_MODEL;
         // discrete dynamics does not need sim solver option, this field is ignored
         nlp_solver_plan->sim_solver_plan[i].sim_solver = INVALID_SIM_SOLVER;
       {%- else %}
         nlp_solver_plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
-        nlp_solver_plan->sim_solver_plan[i].sim_solver = {{ solver_options.integrator_type }};
+        nlp_solver_plan->sim_solver_plan[i].sim_solver = {{ mocp_opts.integrator_type[jj] }};
       {%- endif %}
     }
 {%- endfor %}
@@ -356,7 +356,7 @@ ocp_nlp_dims* {{ name }}_acados_create_2_create_and_set_dimensions({{ name }}_so
       {%- endif %}
     }
 
-  {%- if solver_options.integrator_type == "GNSF" -%}
+  {%- if mocp_opts.integrator_type[jj] == "GNSF" -%}
     // GNSF specific dimensions
     int gnsf_nx1 = {{ phases_dims[jj].gnsf_nx1 }};
     int gnsf_nz1 = {{ phases_dims[jj].gnsf_nz1 }};
@@ -374,7 +374,7 @@ ocp_nlp_dims* {{ name }}_acados_create_2_create_and_set_dimensions({{ name }}_so
     }
   {%- endif %}
 
-  {%- if solver_options.cost_discretization == "INTEGRATOR" %}
+  {%- if mocp_opts.cost_discretization[jj] == "INTEGRATOR" %}
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
         ocp_nlp_dims_set_dynamics(nlp_config, nlp_dims, i, "ny", &ny[i]);
   {%- endif %}
@@ -508,7 +508,7 @@ void {{ name }}_acados_create_3_create_and_set_functions({{ name }}_solver_capsu
     }
 {%- endif %}
 
-{% if solver_options.integrator_type == "ERK" %}
+{% if mocp_opts.integrator_type[jj] == "ERK" %}
     // explicit ode
     capsule->forw_vde_casadi_{{ jj }} = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*n_path);
     for (int i = 0; i < n_path; i++) {
@@ -527,7 +527,7 @@ void {{ name }}_acados_create_3_create_and_set_functions({{ name }}_solver_capsu
     }
     {%- endif %}
 
-{% elif solver_options.integrator_type == "IRK" %}
+{% elif mocp_opts.integrator_type[jj] == "IRK" %}
     // implicit dae
     capsule->impl_dae_fun_{{ jj }} = (external_function_param_{{ model[jj].dyn_ext_fun_type }} *) malloc(sizeof(external_function_param_{{ model[jj].dyn_ext_fun_type }})*n_path);
     for (int i = 0; i < n_path; i++) {
@@ -565,7 +565,7 @@ void {{ name }}_acados_create_3_create_and_set_functions({{ name }}_solver_capsu
         MAP_CASADI_FNC(impl_dae_hess_{{ jj }}[i], {{ model[jj].name }}_impl_dae_hess, {{ phases_dims[jj].np }});
     }
     {%- endif %}
-{% elif solver_options.integrator_type == "LIFTED_IRK" %}
+{% elif mocp_opts.integrator_type[jj] == "LIFTED_IRK" %}
     // external functions (implicit model)
     capsule->impl_dae_fun_{{ jj }} = (external_function_param_{{ model[jj].dyn_ext_fun_type }} *) malloc(sizeof(external_function_param_{{ model[jj].dyn_ext_fun_type }})*n_path);
     for (int i = 0; i < n_path; i++) {
@@ -577,7 +577,7 @@ void {{ name }}_acados_create_3_create_and_set_functions({{ name }}_solver_capsu
         MAP_CASADI_FNC(impl_dae_fun_jac_x_xdot_u_{{ jj }}[i], {{ model[jj].name }}_impl_dae_fun_jac_x_xdot_u, {{ phases_dims[jj].np }});
     }
 
-{% elif solver_options.integrator_type == "GNSF" %}
+{% elif mocp_opts.integrator_type[jj] == "GNSF" %}
     {% if model[jj].gnsf.purely_linear != 1 %}
     capsule->gnsf_phi_fun_{{ jj }} = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*n_path);
     for (int i = 0; i < n_path; i++) {
@@ -605,7 +605,7 @@ void {{ name }}_acados_create_3_create_and_set_functions({{ name }}_solver_capsu
     for (int i = 0; i < n_path; i++) {
         MAP_CASADI_FNC(gnsf_get_matrices_fun_{{ jj }}[i], {{ model[jj].name }}_gnsf_get_matrices_fun, {{ phases_dims[jj].np }});
     }
-{% elif solver_options.integrator_type == "DISCRETE" %}
+{% elif mocp_opts.integrator_type[jj] == "DISCRETE" %}
     // discrete dynamics
     capsule->discr_dyn_phi_fun_{{ jj }} = (external_function_param_{{ model[jj].dyn_ext_fun_type }} *) malloc(sizeof(external_function_param_{{ model[jj].dyn_ext_fun_type }})*n_path);
     for (int i = 0; i < n_path; i++)
@@ -920,7 +920,7 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "ext_cost_fun_jac_hess", &capsule->ext_cost_0_fun_jac_hess);
 {%- endif %}
 
-{%- if solver_options.cost_discretization == "INTEGRATOR" %}
+{%- if mocp_opts.cost_discretization[0] == "INTEGRATOR" %}
   {%- if cost[0].cost_type_0 == "NONLINEAR_LS" %}
     ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, 0, "nls_y_fun_jac", &capsule->cost_y_0_fun_jac_ut_xt);
     ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, 0, "nls_y_fun", &capsule->cost_y_0_fun);
@@ -1186,13 +1186,13 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
     {
         i_fun = i - {{ start_idx[jj] }};
-    {%- if solver_options.integrator_type == "ERK" %}
+    {%- if mocp_opts.integrator_type[jj] == "ERK" %}
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "expl_vde_forw", &capsule->forw_vde_casadi_{{ jj }}[i_fun]);
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "expl_ode_fun", &capsule->expl_ode_fun_{{ jj }}[i_fun]);
         {%- if solver_options.hessian_approx == "EXACT" %}
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "expl_ode_hess", &capsule->hess_vde_casadi_{{ jj }}[i_fun]);
         {%- endif %}
-    {%- elif solver_options.integrator_type == "IRK" %}
+    {%- elif mocp_opts.integrator_type[jj] == "IRK" %}
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "impl_dae_fun", &capsule->impl_dae_fun_{{ jj }}[i_fun]);
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i,
                                    "impl_dae_fun_jac_x_xdot_z", &capsule->impl_dae_fun_jac_x_xdot_z_{{ jj }}[i_fun]);
@@ -1201,11 +1201,11 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
         {%- if solver_options.hessian_approx == "EXACT" %}
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "impl_dae_hess", &capsule->impl_dae_hess_{{ jj }}[i_fun]);
         {%- endif %}
-    {%- elif solver_options.integrator_type == "LIFTED_IRK" %}
+    {%- elif mocp_opts.integrator_type[jj] == "LIFTED_IRK" %}
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "impl_dae_fun", &capsule->impl_dae_fun_{{ jj }}[i_fun]);
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i,
                                    "impl_dae_fun_jac_x_xdot_u", &capsule->impl_dae_fun_jac_x_xdot_u_{{ jj }}[i_fun]);
-    {%- elif solver_options.integrator_type == "GNSF" %}
+    {%- elif mocp_opts.integrator_type[jj] == "GNSF" %}
         {% if model[jj].gnsf.purely_linear != 1 %}
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "phi_fun", &capsule->gnsf_phi_fun_{{ jj }}[i_fun]);
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "phi_fun_jac_y", &capsule->gnsf_phi_fun_jac_y_{{ jj }}[i_fun]);
@@ -1217,7 +1217,7 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
         {%- endif %}
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "gnsf_get_matrices_fun",
                                    &capsule->gnsf_get_matrices_fun_{{ jj }}[i_fun]);
-    {%- elif solver_options.integrator_type == "DISCRETE" %}
+    {%- elif mocp_opts.integrator_type[jj] == "DISCRETE" %}
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "disc_dyn_fun", &capsule->discr_dyn_phi_fun_{{ jj }}[i_fun]);
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "disc_dyn_fun_jac",
                                    &capsule->discr_dyn_phi_fun_jac_ut_xt_{{ jj }}[i_fun]);
@@ -1256,7 +1256,7 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
 
 
-{%- if solver_options.cost_discretization == "INTEGRATOR" %}
+{%- if mocp_opts.cost_discretization[jj] == "INTEGRATOR" %}
     for (int i = {{ cost_start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
     {
         i_fun = i - {{ cost_start_idx[jj] }};
@@ -2235,10 +2235,10 @@ void {{ name }}_acados_create_6_set_opts({{ name }}_solver_capsule* capsule)
     }
 {%- endif %}
 
-{%- if solver_options.integrator_type != "DISCRETE" %}
+{%- if mocp_opts.integrator_type[jj] != "DISCRETE" %}
 
     // set collocation type (relevant for implicit integrators)
-    collocation_type = {{ solver_options.collocation_type }};
+    collocation_type = {{ mocp_opts.collocation_type[jj] }};
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_collocation_type", &collocation_type);
 
@@ -2257,7 +2257,7 @@ void {{ name }}_acados_create_6_set_opts({{ name }}_solver_capsule* capsule)
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_jac_reuse", &sim_method_jac_reuse[i]);
 
-{%- if solver_options.cost_discretization == "INTEGRATOR" %}
+{%- if mocp_opts.cost_discretization[jj] == "INTEGRATOR" %}
     tmp_bool = true;
     for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
     {
@@ -2266,7 +2266,7 @@ void {{ name }}_acados_create_6_set_opts({{ name }}_solver_capsule* capsule)
         ocp_nlp_solver_opts_set_at_stage(nlp_config, capsule->nlp_opts, i, "cost_integrator_cost", &tmp_bool);
     }
 {%- endif %}
-{%- endif %}{# solver_options.integrator_type != "DISCRETE" #}
+{%- endif %}{# mocp_opts.integrator_type[jj] != "DISCRETE" #}
 
 {%- if cost[jj].cost_type == "EXTERNAL" %}
     ext_cost_num_hess = {{ solver_options.ext_cost_num_hess }};
@@ -2453,7 +2453,9 @@ int {{ name }}_acados_reset({{ name }}_solver_capsule* capsule, int reset_qp_sol
     double* buffer = calloc({{ buffer_size }}, sizeof(double));
 
 
-    for(int i=0; i<N+1; i++)
+{%- for jj in range(end=n_phases) %}{# phases loop !#}
+    // Reset stage {{ jj }}
+    for (int i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
     {
         ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "x", buffer);
         ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "u", buffer);
@@ -2465,16 +2467,17 @@ int {{ name }}_acados_reset({{ name }}_solver_capsule* capsule, int reset_qp_sol
         if (i<N)
         {
             ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "pi", buffer);
-        {%- if solver_options.integrator_type == "IRK" %}
+        {%- if mocp_opts.integrator_type[jj] == "IRK" %}
             ocp_nlp_set(nlp_config, nlp_solver, i, "xdot_guess", buffer);
             ocp_nlp_set(nlp_config, nlp_solver, i, "z_guess", buffer);
-        {%- elif solver_options.integrator_type == "LIFTED_IRK" %}
+        {%- elif mocp_opts.integrator_type[jj] == "LIFTED_IRK" %}
             ocp_nlp_set(nlp_config, nlp_solver, i, "xdot_guess", buffer);
-        {%- elif solver_options.integrator_type == "GNSF" %}
+        {%- elif mocp_opts.integrator_type[jj] == "GNSF" %}
             ocp_nlp_set(nlp_config, nlp_solver, i, "gnsf_phi_guess", buffer);
         {%- endif %}
         }
     }
+{%- endfor %}
 
 {%- if solver_options.qp_solver == 'PARTIAL_CONDENSING_HPIPM' %}
     // get qp_status: if NaN -> reset memory
@@ -2512,7 +2515,7 @@ int {{ name }}_acados_update_params({{ name }}_solver_capsule* capsule, int stag
 
         i_fun = stage - {{ start_idx[jj] }};
         i_cost_fun = stage - {{ cost_start_idx[jj] }};
-    {%- if solver_options.integrator_type == "IRK" %}
+    {%- if mocp_opts.integrator_type[jj] == "IRK" %}
         capsule->impl_dae_fun_{{ jj }}[i_fun].set_param(capsule->impl_dae_fun_{{ jj }}+i_fun, p);
         capsule->impl_dae_fun_jac_x_xdot_z_{{ jj }}[i_fun].set_param(capsule->impl_dae_fun_jac_x_xdot_z_{{ jj }}+i_fun, p);
         capsule->impl_dae_jac_x_xdot_u_z_{{ jj }}[i_fun].set_param(capsule->impl_dae_jac_x_xdot_u_z_{{ jj }}+i_fun, p);
@@ -2520,17 +2523,17 @@ int {{ name }}_acados_update_params({{ name }}_solver_capsule* capsule, int stag
         {%- if solver_options.hessian_approx == "EXACT" %}
         capsule->impl_dae_hess_{{ jj }}[i_fun].set_param(capsule->impl_dae_hess_{{ jj }}+i_fun, p);
         {%- endif %}
-    {%- elif solver_options.integrator_type == "LIFTED_IRK" %}
+    {%- elif mocp_opts.integrator_type[jj] == "LIFTED_IRK" %}
         capsule->impl_dae_fun_{{ jj }}[i_fun].set_param(capsule->impl_dae_fun_{{ jj }}+i_fun, p);
         capsule->impl_dae_fun_jac_x_xdot_u_{{ jj }}[i_fun].set_param(capsule->impl_dae_fun_jac_x_xdot_u_{{ jj }}+i_fun, p);
-    {%- elif solver_options.integrator_type == "ERK" %}
+    {%- elif mocp_opts.integrator_type[jj] == "ERK" %}
         capsule->forw_vde_casadi_{{ jj }}[i_fun].set_param(capsule->forw_vde_casadi_{{ jj }}+i_fun, p);
         capsule->expl_ode_fun_{{ jj }}[i_fun].set_param(capsule->expl_ode_fun_{{ jj }}+i_fun, p);
 
         {%- if solver_options.hessian_approx == "EXACT" %}
         capsule->hess_vde_casadi_{{ jj }}[i_fun].set_param(capsule->hess_vde_casadi_{{ jj }}+i_fun, p);
         {%- endif %}
-    {%- elif solver_options.integrator_type == "GNSF" %}
+    {%- elif mocp_opts.integrator_type[jj] == "GNSF" %}
     {% if model.gnsf.purely_linear != 1 %}
         capsule->gnsf_phi_fun_{{ jj }}[i_fun].set_param(capsule->gnsf_phi_fun_{{ jj }}+i_fun, p);
         capsule->gnsf_phi_fun_jac_y_{{ jj }}[i_fun].set_param(capsule->gnsf_phi_fun_jac_y_{{ jj }}+i_fun, p);
@@ -2539,7 +2542,7 @@ int {{ name }}_acados_update_params({{ name }}_solver_capsule* capsule, int stag
             capsule->gnsf_f_lo_jac_x1_x1dot_u_z_{{ jj }}[i_fun].set_param(capsule->gnsf_f_lo_jac_x1_x1dot_u_z_{{ jj }}+i_fun, p);
         {%- endif %}
     {%- endif %}
-    {% elif solver_options.integrator_type == "DISCRETE" %}
+    {% elif mocp_opts.integrator_type[jj] == "DISCRETE" %}
         capsule->discr_dyn_phi_fun_{{ jj }}[i_fun].set_param(capsule->discr_dyn_phi_fun_{{ jj }}+i_fun, p);
         capsule->discr_dyn_phi_fun_jac_ut_xt_{{ jj }}[i_fun].set_param(capsule->discr_dyn_phi_fun_jac_ut_xt_{{ jj }}+i_fun, p);
     {%- if solver_options.hessian_approx == "EXACT" %}
@@ -2761,7 +2764,7 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
 {%- for jj in range(end=n_phases) %}{# phases loop !#}
     /* Path phase {jj} */
     // dynamics
-{%- if solver_options.integrator_type == "IRK" %}
+{%- if mocp_opts.integrator_type[jj] == "IRK" %}
     for (int i_fun = 0; i_fun < {{ end_idx[jj] - start_idx[jj] }}; i_fun++)
     {
         external_function_param_{{ model[jj].dyn_ext_fun_type }}_free(&capsule->impl_dae_fun_{{ jj }}[i_fun]);
@@ -2778,7 +2781,7 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
     free(capsule->impl_dae_hess_{{ jj }});
     {%- endif %}
 
-{%- elif solver_options.integrator_type == "LIFTED_IRK" %}
+{%- elif mocp_opts.integrator_type[jj] == "LIFTED_IRK" %}
     for (int i_fun = 0; i_fun < {{ end_idx[jj] - start_idx[jj] }}; i_fun++)
     {
         external_function_param_{{ model[jj].dyn_ext_fun_type }}_free(&capsule->impl_dae_fun_{{ jj }}[i_fun]);
@@ -2787,7 +2790,7 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
     free(capsule->impl_dae_fun_{{ jj }});
     free(capsule->impl_dae_fun_jac_x_xdot_u_{{ jj }});
 
-{%- elif solver_options.integrator_type == "ERK" %}
+{%- elif mocp_opts.integrator_type[jj] == "ERK" %}
     for (int i_fun = 0; i_fun < {{ end_idx[jj] - start_idx[jj] }}; i_fun++)
     {
         external_function_param_casadi_free(&capsule->forw_vde_casadi_{{ jj }}[i_fun]);
@@ -2802,7 +2805,7 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
     free(capsule->hess_vde_casadi_{{ jj }});
     {%- endif %}
 
-{%- elif solver_options.integrator_type == "GNSF" %}
+{%- elif mocp_opts.integrator_type[jj] == "GNSF" %}
     for (int i_fun = 0; i_fun < {{ end_idx[jj] - start_idx[jj] }}; i_fun++)
     {
         {% if model[jj].gnsf.purely_linear != 1 %}
@@ -2824,7 +2827,7 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
   {%- endif %}
   {%- endif %}
     free(capsule->gnsf_get_matrices_fun_{{ jj }});
-{%- elif solver_options.integrator_type == "DISCRETE" %}
+{%- elif mocp_opts.integrator_type[jj] == "DISCRETE" %}
     for (int i_fun = 0; i_fun < {{ end_idx[jj] - start_idx[jj] }}; i++)
     {
         external_function_param_{{ model[jj].dyn_ext_fun_type }}_free(&capsule->discr_dyn_phi_fun_{{ jj }}[i_fun]);
