@@ -162,7 +162,9 @@ def __mocp_get_template_list(ocp: AcadosMultiphaseOcp, cmake_builder=None, simul
 def mocp_render_templates(ocp: AcadosMultiphaseOcp, json_file: str, cmake_builder=None, simulink_opts=None):
 
     # model templates
-    for dummy_ocp in ocp.dummy_ocp_list:
+    for i, dummy_ocp in enumerate(ocp.dummy_ocp_list):
+        # this is the only option that can vary and influence external functions to be generated
+        dummy_ocp.solver_options.integrator_type = ocp.mocp_opts.integrator_type[i]
         template_list = __ocp_get_external_function_header_templates(dummy_ocp)
         # dump dummy_ocp
         tmp_json_file = 'tmp_ocp.json'

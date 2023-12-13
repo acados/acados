@@ -48,6 +48,8 @@ def get_casadi_symbol(x):
 
 def mocp_generate_external_functions(mocp: AcadosMultiphaseOcp):
     for i in range(mocp.n_phases):
+        # this is the only option that can vary and influence external functions to be generated
+        mocp.dummy_ocp_list[i].solver_options.integrator_type = mocp.mocp_opts.integrator_type[i]
         ocp_generate_external_functions(mocp.dummy_ocp_list[i])
 
 

@@ -191,9 +191,13 @@ class AcadosMultiphaseOcp:
 
     def set_phase(self, ocp: AcadosOcp, phase_idx: int) -> None:
         """
-        Set phase of the multiphase ocp.
+        Set phase of the multiphase OCP to match the given OCP.
 
-        - phase_idx: index of the phase, must be in [0, n_phases-1]
+        NOTE: model, cost, constraints and parameter_values are taken from phase OCP,
+              all other fields, especially options are ignored.
+
+        :param ocp: OCP to be set as phase
+        :param phase_idx: index of the phase, must be in [0, n_phases-1]
         """
         if phase_idx >= self.n_phases:
             raise Exception(f"phase_idx {phase_idx} out of bounds, must be in [0, {self.n_phases-1}].")
