@@ -224,6 +224,12 @@ class AcadosMultiphaseOcp:
         # check options
         self.mocp_opts.make_consistent(opts, n_phases=self.n_phases)
 
+        # check phases formulation objects are distinct
+        warning = "\nNOTE: this can happen if set_phase() is called with the same ocp object for multiple phases."
+        for field in ['model', 'cost', 'constraints']:
+            if len(set(getattr(self, field))) != self.n_phases:
+                raise Exception(f"AcadosMultiphaseOcp: make_consistent: {field} objects are not distinct.{warning}")
+
         # compute phase indices
         phase_idx = np.cumsum([0] + self.N_list).tolist()
 
