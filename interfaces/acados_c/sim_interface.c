@@ -333,8 +333,6 @@ sim_solver *sim_assign(sim_config *config, void *dims, void *opts_, void *raw_me
     solver->dims = dims;
     solver->opts = opts_;
 
-    // TODO(dimitris): CHECK ALIGNMENT!
-
     solver->mem = config->memory_assign(config, dims, opts_, c_ptr);
     c_ptr += config->memory_calculate_size(config, dims, opts_);
 

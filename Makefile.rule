@@ -123,9 +123,6 @@ ACADOS_WITH_OSQP = 0
 # C interface
 ACADOS_WITH_C_INTERFACE = 1
 
-# measure timings
-MEASURE_TIMINGS = 1
-
 # compiler flags
 CFLAGS =
 
@@ -167,12 +164,8 @@ CFLAGS += -DACADOS_WITH_C_INTERFACE
 endif
 
 # TEMP
-#CFLAGS += -g -O0 -DRUNTIME_CHECKS -DEXT_DEPS -DALIGNMENT=64 -D__DEBUG__
+#CFLAGS += -g -O0 -DRUNTIME_CHECKS -DEXT_DEPS -D__DEBUG__
 
-# timing
-ifeq ($(MEASURE_TIMINGS), 1)
-CFLAGS += -DMEASURE_TIMINGS
-endif
 
 # search directories
 CFLAGS += -I$(TOP) -I$(TOP)/interfaces -I$(TOP)/include -I$(BLASFEO_PATH)/include -I$(HPIPM_PATH)/include -I$(HPMPC_PATH)/include -I$(QPOASES_PATH)/include -I$(TOP)/include/qore/include -I$(QPDUNES_PATH)/include -I$(OSQP_PATH)/include

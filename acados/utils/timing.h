@@ -38,7 +38,6 @@
 extern "C" {
 #endif
 
-#ifdef MEASURE_TIMINGS
 #if (defined _WIN32 || defined _WIN64) && !(defined __MINGW32__ || defined __MINGW64__)
 
 /* Use Windows QueryPerformanceCounter for timing. */
@@ -101,13 +100,6 @@ typedef struct acados_timer_
 #endif  // __STDC_VERSION__ >= 199901L
 
 #endif  // (defined _WIN32 || defined _WIN64)
-
-#else
-
-// Dummy type when timings are off
-typedef real_t acados_timer;
-
-#endif  // MEASURE_TIMINGS
 
 /** A function for measurement of the current time. */
 void acados_tic(acados_timer* t);

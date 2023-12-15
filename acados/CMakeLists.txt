@@ -146,11 +146,6 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
     target_compile_definitions(acados PRIVATE DEBUG)
 endif()
 
-# Enable or disable timings
-if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
-    target_compile_definitions(acados PUBLIC MEASURE_TIMINGS)
-endif()
-
 if(EXT_DEP MATCHES OFF)
     target_compile_definitions(acados PUBLIC BLASFEO_EXT_DEP_OFF)
 endif()
@@ -163,8 +158,6 @@ if(COVERAGE MATCHES "lcov")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -fprofile-arcs -ftest-coverage")
     target_link_libraries(acados PRIVATE --coverage)
 endif()
-
-target_compile_definitions(acados PRIVATE ALIGNMENT=64)
 
 install(TARGETS acados EXPORT acadosTargets
     LIBRARY DESTINATION lib
