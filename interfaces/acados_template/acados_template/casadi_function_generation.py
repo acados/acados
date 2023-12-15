@@ -138,8 +138,12 @@ def generate_c_code_discrete_dynamics( model, opts ):
     nx = casadi_length(x)
 
     symbol = get_casadi_symbol(x)
-    # assume nx1 = nx !!!
-    lam = symbol('lam', nx, 1)
+    nx1 = casadi_length(phi)
+
+    if nx != nx1:
+        print('Warning: generate_c_code_discrete_dynamics: got nx != nx1, this only works for a single shooting interval.')
+
+    lam = symbol('lam', nx1, 1)
 
     # generate jacobians
     ux = ca.vertcat(u,x)
