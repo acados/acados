@@ -142,9 +142,8 @@ def create_ocp_solver(cost_type, N_horizon, degree_u_polynom,
 def create_mocp_solver(cost_type, N_list, degrees_u_polynom, explicit_symmetric_penalties=True, penalty_type='L2', nlp_solver_max_iter=None) -> (AcadosOcpSolver, ca.Function):
 
     N_horizon = sum(N_list)
-    n_phases = len(N_list)
 
-    mocp = AcadosMultiphaseOcp(n_phases, N_list)
+    mocp = AcadosMultiphaseOcp(N_list)
     polynomial_u_funs = []
 
     for i, degree_u_polynom in enumerate(degrees_u_polynom):

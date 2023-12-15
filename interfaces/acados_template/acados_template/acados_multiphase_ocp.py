@@ -85,7 +85,6 @@ class AcadosMultiphaseOcp:
 
     This object can be used to create an :py:class:`acados_template.acados_ocp_solver.AcadosOcpSolver`.
 
-    :param n_phases: number of phases
     :param N_list: list containing the number of shooting intervals for each phase
 
     Initial cost and constraints are defined by the first phase, terminal cost and constraints by the last phase.
@@ -98,10 +97,15 @@ class AcadosMultiphaseOcp:
         - collocation_type
         - cost_discretization
     """
-    def __init__(self, n_phases: int, N_list: list):
+    def __init__(self, N_list: list):
 
-        if n_phases != len(N_list):
-            raise Exception('Number of phases does not match the length of N_list.')
+        if not isinstance(N_list, list) or len(N_list) < 1:
+            raise Exception("N_list must be a list of integers.")
+        if any([not isinstance(N, int) for N in N_list]):
+            raise Exception("N_list must be a list of integers.")
+
+        n_phases = len(N_list)
+
         self.n_phases = n_phases
         self.N_list = N_list
 
