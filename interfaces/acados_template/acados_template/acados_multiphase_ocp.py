@@ -290,8 +290,11 @@ class AcadosMultiphaseOcp:
 
         nx_list = [self.phases_dims[i].nx for i in range(self.n_phases)]
         if len(set(nx_list)) != 1:
-            raise Exception(f"make_consistent: all phases must have the same dimension nx, detected nx_list = {nx_list}.")
-
+            for i in range(1, self.n_phases):
+                if nx_list[i] != nx_list[i-1]:
+                    print(f"nx differs between phases {i-1} and {i}: {nx_list[i-1]} != {nx_list[i]}")
+                    if self.N_list[i-1] != 1:
+                        raise Exception("nx must be the same for all phases if N_list[i] != 1.")
         return
 
 
