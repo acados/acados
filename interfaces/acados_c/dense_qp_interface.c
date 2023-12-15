@@ -167,8 +167,6 @@ dense_qp_solver *dense_qp_assign(qp_solver_config *config, dense_qp_dims *dims, 
     solver->dims = dims;
     solver->opts = opts_;
 
-    // TODO(dimitris): CHECK ALIGNMENT!
-
     solver->mem = config->memory_assign(config, dims, opts_, c_ptr);
     c_ptr += config->memory_calculate_size(config, dims, opts_);
 
