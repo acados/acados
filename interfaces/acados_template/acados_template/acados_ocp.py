@@ -31,7 +31,9 @@
 
 from typing import Optional
 import numpy as np
+
 from scipy.linalg import block_diag
+from copy import deepcopy
 
 import casadi as ca
 import os
@@ -42,7 +44,7 @@ from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_dims import AcadosOcpDims
 from .acados_ocp_options import AcadosOcpOptions
 
-from .utils import (get_acados_path,
+from .utils import (get_acados_path, format_class_dict,
                     get_shared_lib_ext, is_column, is_empty, casadi_length,)
 from .penalty_utils import symmetric_huber_penalty
 
@@ -101,6 +103,7 @@ class AcadosOcp:
 
         self.__parameter_values = np.array([])
         self.__problem_class = 'OCP'
+        self.__name = None # set in make_consistent to model.name
 
         self.code_export_directory = 'c_generated_code'
         """Path to where code will be exported. Default: `c_generated_code`."""
@@ -127,6 +130,7 @@ class AcadosOcp:
         opts = self.solver_options
 
         model.make_consistent(dims)
+        self.name = model.name
 
         # parameters
         if self.parameter_values.shape[0] != dims.np:
@@ -357,12 +361,19 @@ class AcadosOcp:
         else:
             dims.nbu = nbu
 
+        # lg <= C * x + D * u <= ug
         ng = constraints.lg.shape[0]
         if constraints.ug.shape[0] != ng or constraints.C.shape[0] != ng \
         or constraints.D.shape[0] != ng:
             raise Exception('inconsistent dimension ng, regarding lg, ug, C, D.')
         else:
             dims.ng = ng
+
+        if ng > 0:
+            if constraints.C.shape[1] != dims.nx:
+                raise Exception(f'inconsistent dimension nx, regarding C, got C.shape[1] = {constraints.C.shape[1]}.')
+            if constraints.D.shape[1] != dims.nu:
+                raise Exception(f'inconsistent dimension nu, regarding D, got D.shape[1] = {constraints.D.shape[1]}.')
 
         if not is_empty(model.con_h_expr):
             nh = casadi_length(model.con_h_expr)
@@ -653,6 +664,7 @@ class AcadosOcp:
         if is_empty(opts.time_steps) and is_empty(opts.shooting_nodes):
             # uniform discretization
             opts.time_steps = opts.tf / dims.N * np.ones((dims.N,))
+            opts.shooting_nodes = np.concatenate((np.array([0.]), np.cumsum(opts.time_steps)))
 
         elif not is_empty(opts.shooting_nodes):
             if np.shape(opts.shooting_nodes)[0] != dims.N+1:
@@ -731,6 +743,19 @@ class AcadosOcp:
         self.dims.nbxe_0 = 0
         self.constraints.__has_x0 = False
         return
+
+
+    def to_dict(self) -> dict:
+        # Copy ocp object dictionary
+        ocp_dict = dict(deepcopy(self).__dict__)
+
+        # convert acados classes to dicts
+        for key, v in ocp_dict.items():
+            if isinstance(v, (AcadosModel, AcadosOcpDims, AcadosOcpConstraints, AcadosOcpCost, AcadosOcpOptions, ZoroDescription)):
+                ocp_dict[key]=dict(getattr(self, key).__dict__)
+
+        ocp_dict = format_class_dict(ocp_dict)
+        return ocp_dict
 
 
     def translate_nls_cost_to_conl(self):
@@ -878,5 +903,31 @@ class AcadosOcp:
             # add penalty Hessian to existing Hessian
             self.model.cost_conl_custom_outer_hess = ca.blockcat(self.model.cost_conl_custom_outer_hess,
                                                                 zero_offdiag, zero_offdiag.T, penalty_hess)
+
+        return
+
+
+    def add_linear_constraint(self, C: np.ndarray, D: np.ndarray, lg: np.ndarray, ug: np.ndarray) -> None:
+        """
+        Add a linear constraint of the form lg <= C * x + D * u <= ug to the OCP.
+        """
+
+        if C.shape[0] != lg.shape[0] or C.shape[0] != ug.shape[0]:
+            raise ValueError("C, lg, ug must have the same number of rows.")
+
+        if D.shape[0] != C.shape[0]:
+            raise ValueError("C and D must have the same number of rows.")
+
+        if self.constraints.C.shape[0] == 0:
+            # no linear constraints have been added yet
+            self.constraints.C = C
+            self.constraints.D = D
+            self.constraints.lg = lg
+            self.constraints.ug = ug
+        else:
+            self.constraints.C = ca.vertcat(self.constraints.C, C)
+            self.constraints.D = ca.vertcat(self.constraints.D, D)
+            self.constraints.lg = ca.vertcat(self.constraints.lg, lg)
+            self.constraints.ug = ca.vertcat(self.constraints.ug, ug)
 
         return

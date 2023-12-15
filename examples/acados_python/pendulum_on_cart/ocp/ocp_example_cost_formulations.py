@@ -32,7 +32,7 @@
 import sys
 sys.path.insert(0, '../common')
 
-from acados_template import AcadosOcp, AcadosOcpSolver
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosMultiphaseOcp
 from pendulum_model import export_pendulum_ode_model, export_augmented_pendulum_model
 import numpy as np
 import scipy.linalg
@@ -42,7 +42,7 @@ import casadi as ca
 COST_VERSIONS = ['LS', 'EXTERNAL', 'EXTERNAL_Z', 'NLS', 'NLS_Z', 'LS_Z', 'CONL', 'CONL_Z']
 HESSIAN_APPROXIMATION = 'GAUSS_NEWTON' # 'GAUSS_NEWTON
 
-def main(cost_version: str, plot=False):
+def main(cost_version: str, formulation_type='ocp', plot=False):
     EXTERNAL_COST_USE_NUM_HESS = 0
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -191,7 +191,7 @@ def main(cost_version: str, plot=False):
     ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
     ocp.constraints.idxbu = np.array([0])
 
-    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES, FULL_CONDENSING_DAQP, FULL_CONDENSING_HPIPM
     ocp.solver_options.hessian_approx = HESSIAN_APPROXIMATION
     # ocp.solver_options.regularize_method = 'CONVEXIFY'
     ocp.solver_options.integrator_type = 'IRK'
@@ -205,7 +205,15 @@ def main(cost_version: str, plot=False):
     if cost_version in ['EXTERNAL', 'EXTERNAL_Z']:
         ocp.solver_options.ext_cost_num_hess = EXTERNAL_COST_USE_NUM_HESS
 
-    ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
+    if formulation_type == 'mocp':
+        mocp = AcadosMultiphaseOcp(N_list=[1, N-1])
+        mocp.set_phase(ocp, 0)
+        mocp.set_phase(ocp, 1)
+        mocp.solver_options = ocp.solver_options
+        mocp.name = 'mocp_' + model.name
+        ocp_solver = AcadosOcpSolver(mocp)
+    else:
+        ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
     # from casadi import jacobian
     # ux = ca.vertcat(ocp.model.u, ocp.model.x)
@@ -240,7 +248,13 @@ def main(cost_version: str, plot=False):
     simX[N,:] = ocp_solver.get(N, "x")
 
     cost_val = ocp_solver.get_cost()
-    print(f"cost value is: {cost_val}")
+
+    # compare with reference solution
+    cost_val_ref = 2242.166372615175
+    rel_diff_cost = abs(cost_val - cost_val_ref) / cost_val_ref
+    print(f"cost value is: {cost_val}, difference with reference: {rel_diff_cost:.2e}")
+    if rel_diff_cost > 1e-6:
+        raise Exception(f"Cost value is not correct: rel_diff_cost = {rel_diff_cost:.2e} > {1e-6}.")
 
     # plot results
     if plot:
@@ -251,7 +265,9 @@ def main(cost_version: str, plot=False):
 
 if __name__ == "__main__":
     for cost_version in COST_VERSIONS:
-        main(cost_version=cost_version, plot=False)
+        for formulation_type in ['ocp', 'mocp']:
+            print(f"cost version: {cost_version}, formulation type: {formulation_type}")
+            main(cost_version=cost_version, formulation_type=formulation_type, plot=False)
 
 # timings
 # time_tot = 1e8

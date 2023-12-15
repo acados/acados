@@ -48,6 +48,8 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     end
 
     ocp_json.model.name = model.name;
+    ocp_json.name = model.name;
+
     % modules
     ocp_json.solver_options.qp_solver = upper(obj.opts_struct.qp_solver);
     ocp_json.solver_options.integrator_type = upper(obj.opts_struct.sim_method);

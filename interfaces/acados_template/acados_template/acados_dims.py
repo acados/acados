@@ -29,6 +29,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+from typing import Optional
 
 class AcadosSimDims:
     """
@@ -94,7 +95,7 @@ class AcadosOcpDims:
     Class containing the dimensions of the optimal control problem.
     """
     def __init__(self):
-        # shooting intervals
+        # number of shooting intervals
         self.__N = None
         # model
         self.__nx = None
@@ -635,4 +636,3 @@ class AcadosOcpDims:
             self.__N = N
         else:
             raise Exception('Invalid N value, expected positive integer.')
-

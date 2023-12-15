@@ -31,14 +31,11 @@
 import os
 import matplotlib.pyplot as plt
 import numpy as np
-from acados_template import latexify_plot
+import casadi as ca
 
-
-from acados_template import AcadosModel
-from casadi import SX, vertcat, sin, cos
+from acados_template import latexify_plot, casadi_length, AcadosModel
 
 def export_pendulum_ode_model() -> AcadosModel:
-
     model_name = 'pendulum_ode'
 
     # constants
@@ -48,29 +45,29 @@ def export_pendulum_ode_model() -> AcadosModel:
     l = 0.8 # length of the rod [m]
 
     # set up states & controls
-    x1      = SX.sym('x1')
-    theta   = SX.sym('theta')
-    v1      = SX.sym('v1')
-    dtheta  = SX.sym('dtheta')
+    x1      = ca.SX.sym('x1')
+    theta   = ca.SX.sym('theta')
+    v1      = ca.SX.sym('v1')
+    dtheta  = ca.SX.sym('dtheta')
 
-    x = vertcat(x1, theta, v1, dtheta)
+    x = ca.vertcat(x1, theta, v1, dtheta)
 
-    F = SX.sym('F')
-    u = vertcat(F)
+    F = ca.SX.sym('F')
+    u = ca.vertcat(F)
 
     # xdot
-    x1_dot      = SX.sym('x1_dot')
-    theta_dot   = SX.sym('theta_dot')
-    v1_dot      = SX.sym('v1_dot')
-    dtheta_dot  = SX.sym('dtheta_dot')
+    x1_dot      = ca.SX.sym('x1_dot')
+    theta_dot   = ca.SX.sym('theta_dot')
+    v1_dot      = ca.SX.sym('v1_dot')
+    dtheta_dot  = ca.SX.sym('dtheta_dot')
 
-    xdot = vertcat(x1_dot, theta_dot, v1_dot, dtheta_dot)
+    xdot = ca.vertcat(x1_dot, theta_dot, v1_dot, dtheta_dot)
 
     # dynamics
-    cos_theta = cos(theta)
-    sin_theta = sin(theta)
+    cos_theta = ca.cos(theta)
+    sin_theta = ca.sin(theta)
     denominator = M + m - m*cos_theta*cos_theta
-    f_expl = vertcat(v1,
+    f_expl = ca.vertcat(v1,
                      dtheta,
                      (-m*l*sin_theta*dtheta*dtheta + m*g*cos_theta*sin_theta+F)/denominator,
                      (-m*l*cos_theta*sin_theta*dtheta*dtheta + F*cos_theta+(M+m)*g*sin_theta)/(l*denominator)
@@ -90,13 +87,10 @@ def export_pendulum_ode_model() -> AcadosModel:
     return model
 
 
-
-
-def plot_open_loop_trajectory_pwpol_u(shooting_nodes, X_traj, U_fine_traj, plt_show=True, u_max=None, title=None,
+def plot_open_loop_trajectory_pwpol_u(shooting_nodes, X_traj: np.ndarray, U_fine_traj: list, plt_show=True, u_max=None, title=None,
     states_lables = ['$x$', r'$\theta$', '$v$', r'$\dot{\theta}$'],
     idxpx=None, idxpu=None
                   ):
-
 
     nx = X_traj.shape[1]
     nu = U_fine_traj[0].shape[1]

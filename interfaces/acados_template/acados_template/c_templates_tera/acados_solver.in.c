@@ -1127,7 +1127,7 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
 
 
 {% if dims.ns_0 > 0 %}
-    // slacks terminal
+    // slacks initial
     double* zlu0_mem = calloc(4*NS0, sizeof(double));
     double* Zl_0 = zlu0_mem+NS0*0;
     double* Zu_0 = zlu0_mem+NS0*1;
@@ -2162,7 +2162,7 @@ void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* 
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_cond_ric_alg", &qp_solver_cond_ric_alg);
 {% endif %}
 
-{%- if solver_options.qp_solver  == 'PARTIAL_CONDENSING_HPIPM' %}
+{%- if solver_options.qp_solver == 'PARTIAL_CONDENSING_HPIPM' %}
     int qp_solver_ric_alg = {{ solver_options.qp_solver_ric_alg }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_ric_alg", &qp_solver_ric_alg);
 {% endif %}

@@ -816,10 +816,7 @@ class AcadosOcpOptions:
 
     @sim_method_jac_reuse.setter
     def sim_method_jac_reuse(self, sim_method_jac_reuse):
-        # if sim_method_jac_reuse in (True, False):
         self.__sim_method_jac_reuse = sim_method_jac_reuse
-        # else:
-            # raise Exception('Invalid sim_method_jac_reuse value. sim_method_jac_reuse must be a Boolean.')
 
     @nlp_solver_type.setter
     def nlp_solver_type(self, nlp_solver_type):

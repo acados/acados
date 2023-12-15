@@ -47,13 +47,26 @@
 // blasfeo
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 
-#define NX     {{ name | upper }}_NX
-#define NU     {{ name | upper }}_NU
-#define NBX0   {{ name | upper }}_NBX0
+{%- set nx_values = [] -%}
+{%- for jj in range(end=n_phases) %}
+    {%- set_global nx_values = nx_values | concat(with=(phases_dims[jj].nx)) %}
+{%- endfor %}
+{%- set nx_max = nx_values | sort | last %}
+
+{%- set nu_values = [] -%}
+{%- for jj in range(end=n_phases) %}
+    {%- set_global nu_values = nu_values | concat(with=(phases_dims[jj].nu)) %}
+{%- endfor %}
+{%- set nu_max = nu_values | sort | last %}
+
+#define {{ name | upper }}_N      {{ N_horizon }}
 
 
 int main()
 {
+
+    int nx_max = {{ nx_max }};
+    int nu_max = {{ nu_max }};
 
     {{ name }}_solver_capsule *acados_ocp_capsule = {{ name }}_acados_create_capsule();
     // there is an opportunity to change the number of shooting intervals in C without new code generation
@@ -75,28 +88,11 @@ int main()
     ocp_nlp_solver *nlp_solver = {{ name }}_acados_get_nlp_solver(acados_ocp_capsule);
     void *nlp_opts = {{ name }}_acados_get_nlp_opts(acados_ocp_capsule);
 
-    // initial condition
-    double lbx0[NBX0];
-    double ubx0[NBX0];
-    {%- for i in range(end=dims.nbx_0) %}
-    lbx0[{{ i }}] = {{ constraints.lbx_0[i] }};
-    ubx0[{{ i }}] = {{ constraints.ubx_0[i] }};
-    {%- endfor %}
-
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", lbx0);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", ubx0);
-
     // initialization for state values
-    double x_init[NX];
-    {%- for i in range(end=dims.nx) %}
-    x_init[{{ i }}] = 0.0;
-    {%- endfor %}
-
-    // initial value for control input
-    double u0[NU];
-    {%- for i in range(end=dims.nu) %}
-    u0[{{ i }}] = 0.0;
-    {%- endfor %}
+    double* x_init = calloc(nx_max, sizeof(double));
+    double* u_init = calloc(nu_max, sizeof(double));
+    double* x_val = calloc(nx_max, sizeof(double));
+    double* u_val = calloc(nu_max, sizeof(double));
 
     // prepare evaluation
     int NTIMINGS = 1;
@@ -104,9 +100,6 @@ int main()
     double kkt_norm_inf;
     double elapsed_time;
     int sqp_iter;
-
-    double xtraj[NX * (N+1)];
-    double utraj[NU * N];
 
     // solve ocp in loop
     int rti_phase = 0;
@@ -117,27 +110,32 @@ int main()
         for (int i = 0; i < N; i++)
         {
             ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "x", x_init);
-            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "u", u0);
+            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "u", u_init);
         }
         ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, N, "x", x_init);
         ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "rti_phase", &rti_phase);
         status = {{ name }}_acados_solve(acados_ocp_capsule);
         ocp_nlp_get(nlp_config, nlp_solver, "time_tot", &elapsed_time);
+
         min_time = MIN(elapsed_time, min_time);
     }
 
+    int nx;
+    int nu;
     /* print solution and statistics */
+    printf("\n--- x trajectory ---\n");
     for (int ii = 0; ii <= nlp_dims->N; ii++)
-        ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, ii, "x", &xtraj[ii*NX]);
+    {
+        ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, ii, "x", x_val);
+        nx = ocp_nlp_dims_get_from_attr(nlp_config, nlp_dims, nlp_out, ii, "x");
+        d_print_exp_tran_mat(nx, 1, x_val, 1);
+    }
+    printf("\n--- u trajectory ---\n");
     for (int ii = 0; ii < nlp_dims->N; ii++)
-        ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, ii, "u", &utraj[ii*NU]);
-
-    printf("\n--- xtraj ---\n");
-    d_print_exp_tran_mat( NX, N+1, xtraj, NX);
-    printf("\n--- utraj ---\n");
-    d_print_exp_tran_mat( NU, N, utraj, NU );
-    // ocp_nlp_out_print(nlp_solver->dims, nlp_out);
-
+    {
+        ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, ii, "u", u_val);
+        nu = ocp_nlp_dims_get_from_attr(nlp_config, nlp_dims, nlp_out, ii, "u");
+        d_print_exp_tran_mat(nu, 1, u_val, 1);    }
     printf("\nsolved ocp %d times, solution printed above\n\n", NTIMINGS);
 
     if (status == ACADOS_SUCCESS)
@@ -161,7 +159,7 @@ int main()
     {{ name }}_acados_print_stats(acados_ocp_capsule);
 
     printf("\nSolver info:\n");
-    printf(" SQP iterations %2d\n minimum time for %d solve %f [ms]\n KKT %e\n",
+    printf("SQP iterations %2d\n minimum time for %d solve %f [ms]\n KKT %e\n",
            sqp_iter, NTIMINGS, min_time*1000, kkt_norm_inf);
 
     // free solver

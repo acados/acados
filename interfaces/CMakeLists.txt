@@ -147,6 +147,10 @@ add_test(NAME test_polynomial_controls_and_penalties
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/time_varying
         python test_polynomial_controls_and_penalties.py)
 
+add_test(NAME py_mocp_qp_test
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/time_varying
+        python test_mocp_qp.py)
+
 
 # CMake test
 add_test(NAME python_pendulum_ocp_example_cmake
