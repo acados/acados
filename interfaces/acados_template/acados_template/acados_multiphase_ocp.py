@@ -35,7 +35,6 @@ from copy import deepcopy
 
 import os
 
-from .acados_dims import MultiphaseOcpDims
 from .acados_model import AcadosModel
 from .acados_ocp_cost import AcadosOcpCost
 from .acados_ocp_constraints import AcadosOcpConstraints
@@ -110,7 +109,6 @@ class AcadosMultiphaseOcp:
         self.N_list = N_list
 
         self.name = 'multiphase_ocp'
-        self.dims = MultiphaseOcpDims()
         self.model = [AcadosModel() for _ in range(n_phases)]
         """Model definitions, type :py:class:`acados_template.acados_model.AcadosModel`"""
         self.cost = [AcadosOcpCost() for _ in range(n_phases)]
@@ -169,15 +167,9 @@ class AcadosMultiphaseOcp:
 
     def make_consistent(self) -> None:
 
-        dims = self.dims
         opts = self.solver_options
 
-        N_horizon = sum(self.N_list)
-        if dims.N is None:
-            dims.N = sum(self.N_list)
-            print("AcadosMultiphaseOcp: make_consistent: N =", dims.N)
-        elif dims.N != N_horizon:
-            raise Exception(f"AcadosMultiphaseOcp: make_consistent: N = {dims.N} != {N_horizon} = sum(N_list).")
+        self.N_horizon = sum(self.N_list)
 
         # compute phase indices
         phase_idx = np.cumsum([0] + self.N_list).tolist()
@@ -205,7 +197,7 @@ class AcadosMultiphaseOcp:
             # create dummy ocp
             ocp = AcadosOcp()
             ocp.dims = self.phases_dims[i]
-            ocp.dims.N = dims.N # NOTE: to not change options when making ocp consistent
+            ocp.dims.N = self.N_horizon # NOTE: to not change options when making ocp consistent
             ocp.model = self.model[i]
             ocp.constraints = self.constraints[i]
             ocp.cost = self.cost[i]
@@ -245,7 +237,7 @@ class AcadosMultiphaseOcp:
 
         # convert acados classes to dicts
         for key, v in ocp_dict.items():
-            if isinstance(v, (AcadosOcpOptions, MultiphaseOcpDims)):
+            if isinstance(v, (AcadosOcpOptions)):
                 ocp_dict[key]=dict(getattr(self, key).__dict__)
             if isinstance(v, list):
                 for i, item in enumerate(v):

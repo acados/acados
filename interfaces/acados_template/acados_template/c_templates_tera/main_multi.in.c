@@ -59,7 +59,7 @@
 {%- endfor %}
 {%- set nu_max = nu_values | sort | last %}
 
-#define {{ name | upper }}_N      {{ dims.N }}
+#define {{ name | upper }}_N      {{ N_horizon }}
 
 
 int main()

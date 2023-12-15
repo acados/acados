@@ -636,10 +636,3 @@ class AcadosOcpDims:
             self.__N = N
         else:
             raise Exception('Invalid N value, expected positive integer.')
-
-class MultiphaseOcpDims:
-    """
-    Class containing the dimensions of the optimal control problem.
-    """
-    def __init__(self):
-        self.N = None

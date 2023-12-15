@@ -415,7 +415,10 @@ class AcadosOcpSolver:
         # load json, store options in object
         with open(json_file, 'r') as f:
             acados_ocp_json = json.load(f)
-        self.N = acados_ocp_json['dims']['N']
+        if isinstance(acados_ocp, AcadosOcp):
+            self.N = acados_ocp_json['dims']['N']
+        elif isinstance(acados_ocp, AcadosMultiphaseOcp):
+            self.N = acados_ocp_json['N_horizon']
         self.solver_options = acados_ocp_json['solver_options']
         self.name = acados_ocp_json['name']
 

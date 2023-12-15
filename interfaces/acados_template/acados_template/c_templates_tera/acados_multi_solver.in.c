@@ -98,7 +98,7 @@
 #include "acados_solver_{{ name }}.h"
 
 
-#define {{ name | upper }}_N      {{ dims.N }}
+#define {{ name | upper }}_N      {{ N_horizon }}
 
 {%- for jj in range(end=n_phases) %}
 #define NP_{{ jj }}     {{ phases_dims[jj].np }}
@@ -814,7 +814,7 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     // set up time_steps
     {%- set time_steps_all_equal = true -%}
     {%- set val = solver_options.time_steps[0] %}
-    {%- for j in range(start=1, end=dims.N) %}
+    {%- for j in range(start=1, end=N_horizon) %}
         {%- if val != solver_options.time_steps[j] %}
             {%- set_global time_steps_all_equal = false %}
             {%- break %}
@@ -830,7 +830,7 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     }
 {% else -%}{# time_steps are varying #}
     double* time_steps = malloc(N*sizeof(double));
-    {%- for j in range(end=dims.N) %}
+    {%- for j in range(end=N_horizon) %}
     time_steps[{{ j }}] = {{ solver_options.time_steps[j] }};
     {%- endfor %}
     {{ name }}_acados_update_time_steps(capsule, N, time_steps);
@@ -2207,19 +2207,19 @@ void {{ name }}_acados_create_6_set_opts({{ name }}_solver_capsule* capsule)
 
     // set up sim_method_num_stages
     int* sim_method_num_stages = malloc(N*sizeof(int));
-    {%- for j in range(end=dims.N) %}
+    {%- for j in range(end=N_horizon) %}
     sim_method_num_stages[{{ j }}] = {{ solver_options.sim_method_num_stages[j] }};
     {%- endfor %}
 
     // set up sim_method_num_steps
     int* sim_method_num_steps = malloc(N*sizeof(int));
-    {%- for j in range(end=dims.N) %}
+    {%- for j in range(end=N_horizon) %}
     sim_method_num_steps[{{ j }}] = {{ solver_options.sim_method_num_steps[j] }};
     {%- endfor %}
 
     // set up sim_method_jac_reuse
     bool* sim_method_jac_reuse = malloc(N*sizeof(bool));
-    {%- for j in range(end=dims.N) %}
+    {%- for j in range(end=N_horizon) %}
     sim_method_jac_reuse[{{ j }}] = (bool){{ solver_options.sim_method_jac_reuse[j] }};
     {%- endfor %}
 
