@@ -2828,7 +2828,7 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
   {%- endif %}
     free(capsule->gnsf_get_matrices_fun_{{ jj }});
 {%- elif mocp_opts.integrator_type[jj] == "DISCRETE" %}
-    for (int i_fun = 0; i_fun < {{ end_idx[jj] - start_idx[jj] }}; i++)
+    for (int i_fun = 0; i_fun < {{ end_idx[jj] - start_idx[jj] }}; i_fun++)
     {
         external_function_param_{{ model[jj].dyn_ext_fun_type }}_free(&capsule->discr_dyn_phi_fun_{{ jj }}[i_fun]);
         external_function_param_{{ model[jj].dyn_ext_fun_type }}_free(&capsule->discr_dyn_phi_fun_jac_ut_xt_{{ jj }}[i_fun]);
