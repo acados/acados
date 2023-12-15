@@ -31,7 +31,6 @@
 
 #include "acados/utils/timing.h"
 
-#ifdef MEASURE_TIMINGS
 
 #if (defined _WIN32 || defined _WIN64) && !(defined __MINGW32__ || defined __MINGW64__)
 
@@ -134,10 +133,3 @@ real_t acados_toc(acados_timer* t)
 #endif  // __STDC_VERSION__ >= 199901L
 
 #endif  // (defined _WIN32 || _WIN64)
-
-#else  // Dummy functions when timing is off
-
-void acados_tic(acados_timer *t) {}
-real_t acados_toc(acados_timer *t) { return 0; }
-
-#endif  // MEASURE_TIMINGS
