@@ -723,7 +723,7 @@ class AcadosOcpSolver:
         return
 
 
-    def get(self, stage_, field_):
+    def get(self, stage_: int, field_: str):
         """
         Get the last solution of the solver:
 
@@ -1137,7 +1137,7 @@ class AcadosOcpSolver:
 
 
     # Note: this function should not be used anymore, better use cost_set, constraints_set
-    def set(self, stage_, field_, value_):
+    def set(self, stage_: int, field_: str, value_):
         """
         Set numerical data inside the solver.
 
@@ -1232,7 +1232,7 @@ class AcadosOcpSolver:
         return
 
 
-    def cost_set(self, stage_, field_, value_, api='warn'):
+    def cost_set(self, stage_: int, field_: str, value_, api='warn'):
         """
         Set numerical data in the cost module of the solver.
 
