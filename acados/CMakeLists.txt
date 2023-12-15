@@ -164,8 +164,6 @@ if(COVERAGE MATCHES "lcov")
     target_link_libraries(acados PRIVATE --coverage)
 endif()
 
-target_compile_definitions(acados PRIVATE ALIGNMENT=64)
-
 install(TARGETS acados EXPORT acadosTargets
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
