@@ -29,7 +29,7 @@
 #
 
 
-if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC") # TODO: make this work on windodws?!
+if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 
 configure_file(chain_model/chain_model.h.in ${CMAKE_CURRENT_SOURCE_DIR}/chain_model/chain_model.h @ONLY)
 
