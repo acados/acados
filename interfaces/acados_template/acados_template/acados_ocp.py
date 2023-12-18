@@ -175,7 +175,8 @@ class AcadosOcp:
             ny_0 = cost.W_0.shape[0]
             if (is_empty(model.cost_y_expr_0) and ny_0 != 0) or casadi_length(model.cost_y_expr_0) != ny_0 or cost.yref_0.shape[0] != ny_0:
                 raise Exception('inconsistent dimension ny_0: regarding W_0, cost_y_expr.' +
-                                f'\nGot W_0[{cost.W_0.shape}], yref_0[{cost.yref_0.shape}], {casadi_length(model.cost_y_expr_0)=}\n')
+                                f'\nGot W_0[{cost.W_0.shape}], yref_0[{cost.yref_0.shape}], ',
+                                f'cost_y_expr_0 [{casadi_length(model.cost_y_expr_0)}]\n')
             dims.ny_0 = ny_0
 
         elif cost.cost_type_0 == 'CONVEX_OVER_NONLINEAR':
@@ -225,7 +226,8 @@ class AcadosOcp:
             ny = cost.W.shape[0]
             if (is_empty(model.cost_y_expr) and ny != 0) or casadi_length(model.cost_y_expr) != ny or cost.yref.shape[0] != ny:
                 raise Exception('inconsistent dimension: regarding W, yref.' + \
-                                f'\nGot W[{cost.W.shape}], yref[{cost.yref.shape}], {casadi_length(model.cost_y_expr)=}\n')
+                                f'\nGot W[{cost.W.shape}], yref[{cost.yref.shape}],',
+                                f'cost_y_expr[{casadi_length(model.cost_y_expr)}]\n')
             dims.ny = ny
 
         elif cost.cost_type == 'CONVEX_OVER_NONLINEAR':
@@ -269,7 +271,8 @@ class AcadosOcp:
             ny_e = cost.W_e.shape[0]
             if (is_empty(model.cost_y_expr_e) and ny_e != 0) or casadi_length(model.cost_y_expr_e) != ny_e or cost.yref_e.shape[0] != ny_e:
                 raise Exception('inconsistent dimension ny_e: regarding W_e, cost_y_expr.' +
-                                f'\nGot W_e[{cost.W_e.shape}], yref_e[{cost.yref_e.shape}], {casadi_length(model.cost_y_expr_e)=}\n')
+                                f'\nGot W_e[{cost.W_e.shape}], yref_e[{cost.yref_e.shape}], ',
+                                f'cost_y_expr_e [{casadi_length(model.cost_y_expr_e)}]\n')
             dims.ny_e = ny_e
 
         elif cost.cost_type_e == 'CONVEX_OVER_NONLINEAR':
@@ -776,7 +779,7 @@ class AcadosOcp:
             self.model.cost_r_in_psi_expr_0 = conl_res_0
             self.model.cost_psi_expr_0 = .5 * conl_res_0.T @ self.cost.W_0 @ conl_res_0
         else:
-            raise Exception(f"Terminal cost type must be NONLINEAR_LS, got {self.cost.cost_type_0=}.")
+            raise Exception(f"Terminal cost type must be NONLINEAR_LS, got cost_type_0 {self.cost.cost_type_0}.")
 
         # path cost
         if self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
@@ -789,7 +792,7 @@ class AcadosOcp:
             self.model.cost_r_in_psi_expr = conl_res
             self.model.cost_psi_expr = .5 * conl_res.T @ self.cost.W @ conl_res
         else:
-            raise Exception(f"Path cost type must be NONLINEAR_LS, got {self.cost.cost_type=}.")
+            raise Exception(f"Path cost type must be NONLINEAR_LS, got cost_type {self.cost.cost_type}.")
 
         # terminal cost
         if self.cost.cost_type_e == "CONVEX_OVER_NONLINEAR":
@@ -802,7 +805,7 @@ class AcadosOcp:
             self.model.cost_r_in_psi_expr_e = conl_res_e
             self.model.cost_psi_expr_e = .5 * conl_res_e.T @ self.cost.W_e @ conl_res_e
         else:
-            raise Exception(f"Initial cost type must be NONLINEAR_LS, got {self.cost.cost_type_e=}.")
+            raise Exception(f"Initial cost type must be NONLINEAR_LS, got cost_type_e {self.cost.cost_type_e}.")
         return
 
 
