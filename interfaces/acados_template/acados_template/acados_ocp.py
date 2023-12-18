@@ -661,7 +661,7 @@ class AcadosOcp:
         dims.ns_e = ns_e
 
         # discretization
-        if not isinstance(opts.tf, float):
+        if not isinstance(opts.tf, (float, int)):
             raise Exception(f'Time horizon tf should be float provided, got tf = {opts.tf}.')
 
         if is_empty(opts.time_steps) and is_empty(opts.shooting_nodes):
