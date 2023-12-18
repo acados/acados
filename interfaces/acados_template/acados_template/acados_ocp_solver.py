@@ -440,7 +440,11 @@ class AcadosOcpSolver:
         # or [https://python.hotexamples.com/examples/_ctypes/-/dlclose/python-dlclose-function-examples.html]
         libacados_name = f'{lib_prefix}acados{lib_ext}'
         libacados_filepath = os.path.join(acados_lib_path, '..', lib_dir, libacados_name)
-        self.__acados_lib = DllLoader(libacados_filepath, winmode=self.winmode)
+        if self.winmode is not None:
+            self.__acados_lib = DllLoader(libacados_filepath, winmode=self.winmode)
+        else:
+            # for compatibility with older python versions
+            self.__acados_lib = DllLoader(libacados_filepath)
 
         # find out if acados was compiled with OpenMP
         try:
@@ -456,7 +460,11 @@ class AcadosOcpSolver:
         self.shared_lib_name = os.path.join(code_export_directory, libacados_ocp_solver_name)
 
         # get shared_lib
-        self.shared_lib = DllLoader(self.shared_lib_name, winmode=self.winmode)
+        if self.winmode is not None:
+            self.shared_lib = DllLoader(self.shared_lib_name, winmode=self.winmode)
+        else:
+            # for compatibility with older python versions
+            self.shared_lib = DllLoader(self.shared_lib_name)
 
         # create capsule
         getattr(self.shared_lib, f"{self.name}_acados_create_capsule").restype = c_void_p

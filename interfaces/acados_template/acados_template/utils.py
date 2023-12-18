@@ -238,7 +238,10 @@ def make_object_json_dumpable(input):
     if isinstance(input, (np.ndarray)):
         return input.tolist()
     elif isinstance(input, (SX)):
-        return input.serialize()
+        try:
+            return input.serialize()
+        except: # for older CasADi versions
+            return ''
     elif isinstance(input, (MX)):
         # NOTE: MX expressions can not be serialized, only Functions.
         return input.__str__()
