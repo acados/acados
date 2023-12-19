@@ -33,7 +33,9 @@ import numpy as np
 import casadi as ca
 
 from acados_template import AcadosModel, AcadosOcp, AcadosMultiphaseOcp, AcadosOcpSolver, casadi_length, is_empty, latexify_plot
+import matplotlib.pyplot as plt
 
+latexify_plot()
 
 X0 = np.array([2.0, 0.0])
 PENALTY_X = 1e0
@@ -202,7 +204,6 @@ def main_multiphase_ocp() -> AcadosMultiphaseOcp:
     acados_ocp_solver = AcadosOcpSolver(ocp, verbose=False)
     acados_ocp_solver.solve_for_x0(X0)
 
-
     n_phases = len(N_list)
 
     x_traj_phases = n_phases*[None]
@@ -218,51 +219,36 @@ def main_multiphase_ocp() -> AcadosMultiphaseOcp:
 
     ## plot solution
     t_grid_2_plot = t_grid_phases[2] - 1.0
-    import matplotlib.pyplot as plt
-    latexify_plot()
+
     fig, ax = plt.subplots(3, 1, sharex=True)
-    ax[0].grid(True)
-    ax[0].set_xlim([0, T_HORIZON])
-    plt.xlabel('$t$ [s]')
 
     p_traj_0 = [x[0] for x in x_traj_phases[0]]
     ax[0].plot(t_grid_phases[0], p_traj_0, color='C0', label='phase 1')
 
     p_traj_2 = [x[0] for x in x_traj_phases[2]]
-    ax[0].plot(t_grid_2_plot, p_traj_2, '-.', color='C0', label='phase 2')
-    ax[0].set_ylabel('$p$')
-
-
-    ax[1].set_ylabel('$v$')
-    ax[1].grid(True)
+    ax[0].plot(t_grid_2_plot, p_traj_2, color='C1', label='phase 2')
 
     v_traj_0 = [x[1] for x in x_traj_phases[0]]
     ax[1].plot(t_grid_phases[0], v_traj_0, color='C0')
+
     v_traj_2 = [u_traj_phases[2][0][0]] + [x[0] for x in u_traj_phases[2]]
-    ax[1].step(t_grid_2_plot, v_traj_2, '-.', color='C0')
+    ax[1].step(t_grid_2_plot, v_traj_2, '-', color='C1')
 
-
-    isub = 2
-    ax[isub].set_ylabel('$a$')
-    ax[isub].grid(True)
     a_traj = [u_traj_phases[0][0][0]] + [x[0] for x in u_traj_phases[0]]
-    ax[isub].step(t_grid_phases[0], a_traj, '-', color='C0')
+    ax[2].step(t_grid_phases[0], a_traj, color='C0')
 
-    plt.show()
+    for i, l in enumerate(['$p$', '$v$', '$a$']):
+        ax[i].grid()
+        ax[i].set_ylabel(l)
 
-
-
-    # for i_phase in [0, 2]:
-    #     # breakpoint()
-    #     plot_ocp_solution(t_grid_phases[i_phase], x_traj_phases[i_phase], u_traj_phases[i_phase], title=f"Phase {i_phase}")
-
+    ax[0].set_xlim([0, T_HORIZON])
+    ax[0].legend()
 
 
 def main():
     ocp = formulate_double_integrator_ocp()
     ocp.solver_options.tf = T_HORIZON
     ocp.solver_options.nlp_solver_type = 'SQP'
-
 
     acados_ocp_solver = AcadosOcpSolver(ocp, verbose=False)
 
@@ -279,28 +265,24 @@ def main():
     return
 
 
-def plot_ocp_solution(t_grid: np.ndarray, x_traj: list, u_traj: list, x_labels=["p", "v"], title=None):
-    import matplotlib.pyplot as plt
-    latexify_plot()
+def plot_ocp_solution(t_grid: np.ndarray, x_traj: list, u_traj: list, x_labels=["$p$", "$v$"], title=None):
     nx = len(x_traj[0])
-    nu = len(u_traj[0])
-    # use subplots
+
     fig, ax = plt.subplots(nx, 1, sharex=True)
 
     if title is not None:
         plt.title(title)
-    ax[0].grid(True)
-    plt.xlabel('t [s]')
+
+    plt.xlabel('$t$ [s]')
 
     for i in range(nx):
-        iplot = i
-        ax[iplot].plot(t_grid, np.array(x_traj)[:,i], color='C0')
-        ax[iplot].grid(True)
-        ax[iplot].set_ylabel(x_labels[i])
-    plt.show()
+        ax[i].plot(t_grid, np.array(x_traj)[:,i], color='C0')
+        ax[i].grid(True)
+        ax[i].set_ylabel(x_labels[i])
     return
 
 
 if __name__ == "__main__":
     main_multiphase_ocp()
     main()
+    plt.show()
