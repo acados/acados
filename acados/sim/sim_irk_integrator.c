@@ -845,6 +845,9 @@ int sim_irk_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, voi
 
 int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 {
+    acados_timer timer, timer_ad, timer_la;
+    acados_tic(&timer);
+
     // Get variables from workspace, etc;
     // cast pointers
     sim_config *config = config_;
@@ -936,15 +939,12 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     struct blasfeo_dmat *S_forw_stage = workspace->S_forw_stage;
 
     // declare
-    acados_timer timer, timer_ad, timer_la;
-
     double a;
     struct blasfeo_dmat *dG_dK_ss;
     struct blasfeo_dmat *dG_dxu_ss;
     struct blasfeo_dmat *dK_dxu_ss;
     struct blasfeo_dmat *S_forw_ss = S_forw;
     int *ipiv_ss;
-
 
     // SET FUNCTION IN- & OUTPUT TYPES
     // INPUT: impl_ode
@@ -1027,8 +1027,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     void *impl_ode_hess_out[1];
     impl_ode_hess_type_out[0] = BLASFEO_DMAT;
     impl_ode_hess_out[0] = f_hess;
-//    impl_ode_hess_out[0] = tmp_dxkzu_dw0;
-
 
     /* Initialize & Pack */
     // initialize
@@ -1080,7 +1078,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     impl_ode_z_in.x = K;
 
     // start the loop
-    acados_tic(&timer);
     for (int ss = 0; ss < num_steps; ss++)
     {
 

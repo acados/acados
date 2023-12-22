@@ -634,6 +634,9 @@ int sim_lifted_irk_precompute(void *config_, sim_in *in, sim_out *out, void *opt
 int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_,
                        void *work_)
 {
+    acados_timer timer, timer_ad, timer_la;
+    acados_tic(&timer);
+
     // typecasting
     sim_config *config = config_;
     sim_opts *opts = opts_;
@@ -728,10 +731,8 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
     void *ext_fun_out[5];
 
     lifted_irk_model *model = in->model;
-
-    acados_timer timer, timer_ad, timer_la;
-    double timing_ad = 0.0;
     out->info->LAtime = 0.0;
+    double timing_ad = 0.0;
 
     if (opts->sens_hess)
     {
@@ -763,7 +764,6 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
 
     blasfeo_dvecse(nx * ns, 0.0, rG, 0);
 
-    // TODO(dimitris): shouldn't this be NF instead of nx+nu??
     if (update_sens) blasfeo_pack_dmat(nx, nx + nu, S_forw_in, nx, S_forw, 0, 0);
 
     blasfeo_dvecse(nx * ns, 0.0, rG, 0);
@@ -773,7 +773,6 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
 
 
     // start the loop
-    acados_tic(&timer);
     for (ss = 0; ss < num_steps; ss++)
     {
         // initialize
