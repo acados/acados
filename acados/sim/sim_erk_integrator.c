@@ -537,6 +537,9 @@ int sim_erk_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, voi
 
 int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 {
+    acados_timer timer, timer_ad;
+    acados_tic(&timer);
+
     sim_config *config = config_;
     sim_opts *opts = opts_;
 
@@ -615,11 +618,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     erk_model *model = in->model;
 
-    acados_timer timer, timer_ad;
     double timing_ad = 0.0;
-
-    // start timer
-    acados_tic(&timer);
 
     /************************************************
      * forward sweep
