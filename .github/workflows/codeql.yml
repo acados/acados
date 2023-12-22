@@ -102,6 +102,7 @@ jobs:
           -**:cpp/suspicious-pointer-scaling
           -**:cpp/suspicious-pointer-scaling-void
           -**:cpp/unsigned-comparison-zero
+          -**:cpp/commented-out-code
           -**/cmake*/Modules/**
         input: ${{ steps.step1.outputs.sarif-output }}/cpp.sarif
         output: ${{ steps.step1.outputs.sarif-output }}/cpp.sarif
