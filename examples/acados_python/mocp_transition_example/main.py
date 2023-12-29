@@ -95,6 +95,7 @@ def get_single_integrator_model() -> AcadosModel:
     model.u = u
     model.f_impl_expr = f_impl
     model.f_expl_expr = f_expl
+
     return model
 
 
@@ -116,7 +117,6 @@ def get_transition_model() -> AcadosModel:
     model.disc_dyn_expr = new_x
 
     return model
-
 
 
 def formulate_double_integrator_ocp() -> AcadosOcp:
@@ -168,13 +168,11 @@ def formulate_single_integrator_ocp() -> AcadosOcp:
     ocp.constraints.ubu = np.array([u_max])
     ocp.constraints.idxbu = np.array([0])
 
-    # ocp.constraints.x0 = X0
-
     return ocp
 
 
+def main_multiphase_ocp():
 
-def main_multiphase_ocp() -> AcadosMultiphaseOcp:
     N_list = [10, 1, 15]
     ocp = AcadosMultiphaseOcp(N_list=N_list)
 
@@ -194,9 +192,13 @@ def main_multiphase_ocp() -> AcadosMultiphaseOcp:
     phase_2 = formulate_single_integrator_ocp()
     ocp.set_phase(phase_2, 2)
 
-    ocp.solver_options.tf = T_HORIZON + 1.0
     ocp.solver_options.nlp_solver_type = 'SQP'
+
+    # the transition stage uses discrete dynamics!
     ocp.mocp_opts.integrator_type = ['IRK', 'DISCRETE', 'IRK']
+
+    # the time step for the transition stage is set to 1 to correct for the scaling of the stage cost with the time step
+    ocp.solver_options.tf = T_HORIZON + 1.0
     T_HORIZON_1 = 0.4 * T_HORIZON
     T_HORIZON_2 = T_HORIZON - T_HORIZON_1
     ocp.solver_options.time_steps = np.array(N_list[0] * [T_HORIZON_1/N_list[0]] + [1.0] + N_list[2] * [T_HORIZON_2/N_list[2]] )
@@ -217,7 +219,7 @@ def main_multiphase_ocp() -> AcadosMultiphaseOcp:
         print(f"Phase {i_phase}:\nt grid \n {t_grid_phases[i_phase]} \nx traj\n {x_traj_phases[i_phase]} \nu traj {u_traj_phases[i_phase]}")
         print("-----------------------------------")
 
-    ## plot solution
+    # plot solution
     t_grid_2_plot = t_grid_phases[2] - 1.0
 
     fig, ax = plt.subplots(3, 1, sharex=True)
@@ -245,7 +247,7 @@ def main_multiphase_ocp() -> AcadosMultiphaseOcp:
     ax[0].legend()
 
 
-def main():
+def main_standard_ocp():
     ocp = formulate_double_integrator_ocp()
     ocp.solver_options.tf = T_HORIZON
     ocp.solver_options.nlp_solver_type = 'SQP'
@@ -260,29 +262,19 @@ def main():
 
     t_grid = ocp.solver_options.shooting_nodes
 
-    plot_ocp_solution(t_grid, x_traj, u_traj)
-
-    return
-
-
-def plot_ocp_solution(t_grid: np.ndarray, x_traj: list, u_traj: list, x_labels=["$p$", "$v$"], title=None):
+    # plot solution
     nx = len(x_traj[0])
-
     fig, ax = plt.subplots(nx, 1, sharex=True)
 
-    if title is not None:
-        plt.title(title)
-
-    plt.xlabel('$t$ [s]')
-
-    for i in range(nx):
+    for i, label in enumerate(["$p$", "$v$"]):
         ax[i].plot(t_grid, np.array(x_traj)[:,i], color='C0')
         ax[i].grid(True)
-        ax[i].set_ylabel(x_labels[i])
-    return
+        ax[i].set_ylabel(label)
+
+    ax[-1].set_xlabel('$t$ [s]')
 
 
 if __name__ == "__main__":
     main_multiphase_ocp()
-    main()
+    main_standard_ocp()
     plt.show()
