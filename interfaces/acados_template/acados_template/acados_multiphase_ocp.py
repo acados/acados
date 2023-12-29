@@ -88,6 +88,9 @@ def find_non_default_fields_of_obj(obj: Union[AcadosOcpCost, AcadosOcpConstraint
 class AcadosMultiphaseOptions:
     """
     Class containing options that might be different for each phase.
+
+    All of the fields can be either None, then the corresponding value from ocp.solver_options is used,
+    or a list of length n_phases describing the value for this option at each phase.
     """
     def __init__(self):
         self.integrator_type = None
@@ -113,18 +116,13 @@ class AcadosMultiphaseOptions:
 class AcadosMultiphaseOcp:
     """
     Class containing the description of an optimal control problem with multiple phases.
-
     This object can be used to create an :py:class:`acados_template.acados_ocp_solver.AcadosOcpSolver`.
-
-    :param N_list: list containing the number of shooting intervals for each phase
 
     Initial cost and constraints are defined by the first phase, terminal cost and constraints by the last phase.
     All other phases are treated as intermediate phases, where only dynamics and path cost and constraints are used.
-    - solver options are shared between all phases. Options that can vary phase-wise must be set via self.mocp_opts of type AcadosMultiphaseOptions
+    Solver options are shared between all phases. Options that can vary phase-wise must be set via self.mocp_opts of type AcadosMultiphaseOptions.
 
-    Limitations:
-    - state dimension must be the same for all phases (all other dimensions can be different), extending would require defining a transition function.
-
+    :param N_list: list containing the number of shooting intervals for each phase
     """
     def __init__(self, N_list: list):
 
@@ -142,7 +140,6 @@ class AcadosMultiphaseOcp:
         self.model = [AcadosModel() for _ in range(n_phases)]
         """Model definitions, type :py:class:`acados_template.acados_model.AcadosModel`"""
         self.cost = [AcadosOcpCost() for _ in range(n_phases)]
-
         """Cost definitions, type :py:class:`acados_template.acados_ocp.AcadosOcpCost`"""
         self.constraints = [AcadosOcpConstraints() for _ in range(n_phases)]
         """Constraints definitions, type :py:class:`acados_template.acados_ocp.AcadosOcpConstraints`"""
@@ -154,8 +151,9 @@ class AcadosMultiphaseOcp:
         # NOTE: this is the same for AcadosOcp
         self.solver_options = AcadosOcpOptions()
         """Solver Options, type :py:class:`acados_template.acados_ocp.AcadosOcpOptions`"""
-
         self.mocp_opts = AcadosMultiphaseOptions()
+        """Phase-wise varying solver Options, type :py:class:`acados_template.acados_ocp.AcadosMultiphaseOptions`"""
+
         acados_path = get_acados_path()
 
         self.acados_include_path = os.path.join(acados_path, 'include').replace(os.sep, '/') # the replace part is important on Windows for CMake
@@ -206,7 +204,7 @@ class AcadosMultiphaseOcp:
         non_default_opts = find_non_default_fields_of_obj(ocp.solver_options)
         if len(non_default_opts) > 0:
             print(f"WARNING: set_phase: Phase {phase_idx} contains non-default solver options: {non_default_opts}, which will be ignored.\n",
-                  "Solver options need to be set via AcadosMultiphaseOcp.solver_options or mocp_opts instead.")
+                   "Solver options need to be set via AcadosMultiphaseOcp.solver_options or mocp_opts instead.")
 
         # set stage
         self.model[phase_idx] = ocp.model
