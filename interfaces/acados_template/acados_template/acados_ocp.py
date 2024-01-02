@@ -58,11 +58,11 @@ class AcadosOcp:
 
     The class has the following properties that can be modified to formulate a specific OCP, see below:
 
-        - :py:attr:`dims` of type :py:class:`acados_template.acados_ocp.AcadosOcpDims`
+        - :py:attr:`dims` of type :py:class:`acados_template.acados_dims.AcadosOcpDims`
         - :py:attr:`model` of type :py:class:`acados_template.acados_model.AcadosModel`
-        - :py:attr:`cost` of type :py:class:`acados_template.acados_ocp.AcadosOcpCost`
-        - :py:attr:`constraints` of type :py:class:`acados_template.acados_ocp.AcadosOcpConstraints`
-        - :py:attr:`solver_options` of type :py:class:`acados_template.acados_ocp.AcadosOcpOptions`
+        - :py:attr:`cost` of type :py:class:`acados_template.acados_ocp_cost.AcadosOcpCost`
+        - :py:attr:`constraints` of type :py:class:`acados_template.acados_ocp_constraints.AcadosOcpConstraints`
+        - :py:attr:`solver_options` of type :py:class:`acados_template.acados_ocp_options.AcadosOcpOptions`
 
         - :py:attr:`acados_include_path` (set automatically)
         - :py:attr:`shared_lib_ext` (set automatically)
@@ -78,15 +78,15 @@ class AcadosOcp:
             acados_path = get_acados_path()
 
         self.dims = AcadosOcpDims()
-        """Dimension definitions, type :py:class:`acados_template.acados_ocp.AcadosOcpDims`"""
+        """Dimension definitions, type :py:class:`acados_template.acados_dims.AcadosOcpDims`"""
         self.model = AcadosModel()
         """Model definitions, type :py:class:`acados_template.acados_model.AcadosModel`"""
         self.cost = AcadosOcpCost()
-        """Cost definitions, type :py:class:`acados_template.acados_ocp.AcadosOcpCost`"""
+        """Cost definitions, type :py:class:`acados_template.acados_ocp_cost.AcadosOcpCost`"""
         self.constraints = AcadosOcpConstraints()
-        """Constraints definitions, type :py:class:`acados_template.acados_ocp.AcadosOcpConstraints`"""
+        """Constraints definitions, type :py:class:`acados_template.acados_ocp_constraints.AcadosOcpConstraints`"""
         self.solver_options = AcadosOcpOptions()
-        """Solver Options, type :py:class:`acados_template.acados_ocp.AcadosOcpOptions`"""
+        """Solver Options, type :py:class:`acados_template.acados_ocp_options.AcadosOcpOptions`"""
 
         self.zoro_description = None
         """zoRO - zero order robust optimization - description: for advanced users."""

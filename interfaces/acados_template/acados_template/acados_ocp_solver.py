@@ -277,7 +277,7 @@ class AcadosOcpSolver:
     """
     Class to interact with the acados ocp solver C object.
 
-        :param acados_ocp: type :py:class:`~acados_template.acados_ocp.AcadosOcp` or :py:class:`~acados_template.acados_ocp.AcadosMultiphaseOcp` - description of the OCP for acados
+        :param acados_ocp: type :py:class:`~acados_template.acados_ocp.AcadosOcp` or :py:class:`~acados_template.acados_multiphase_ocp.AcadosMultiphaseOcp` - description of the OCP for acados
         :param json_file: name for the json file used to render the templated code - default: acados_ocp_nlp.json
         :param simulink_opts: Options to configure Simulink S-function blocks, mainly to activate possible Inputs and Outputs
     """
@@ -646,6 +646,7 @@ class AcadosOcpSolver:
         Recreate solver with new value `qp_solver_cond_N` with a partial condensing QP solver.
         This function is relevant for code reuse, i.e., if either `set_new_time_steps(...)` is used or
         the influence of a different `qp_solver_cond_N` is studied without code export and compilation.
+
             :param qp_solver_cond_N: new number of condensing stages for the solver
 
             .. note:: This function can only be used in combination with a partial condensing QP solver.
@@ -1391,8 +1392,7 @@ class AcadosOcpSolver:
     def get_hessian_block(self, stage: int) -> np.ndarray:
         """
         Get Hessian block from last QP at stage i
-        In HPIPM form [[R, S^T],
-                    [S, Q]]
+        In HPIPM form [[R, S^T], [S, Q]]
         """
         Q_mat = self.get_from_qp_in(stage, 'Q')
         R_mat = self.get_from_qp_in(stage, 'R')
@@ -1532,14 +1532,15 @@ class AcadosOcpSolver:
         return
 
 
-    def set_params_sparse(self, stage_, idx_values_, param_values_):
+    def set_params_sparse(self, stage_: int, idx_values_: np.ndarray, param_values_):
         """
         set parameters of the solvers external function partially:
-        Pseudo: solver.param[idx_values_] = param_values_;
+        Pseudo: solver.param[idx_values] = param_values;
         Parameters:
-            :param stage_: integer corresponding to shooting node
-            :param idx_values_: 0 based np array (or iterable) of integers: indices of parameter to be set
-            :param param_values_: new parameter values as numpy array
+
+            :param stage: integer corresponding to shooting node
+            :param idx_values: 0 based np array (or iterable) of integers: indices of parameter to be set
+            :param param_values: new parameter values as numpy array
         """
 
         if not isinstance(stage_, int):

@@ -140,9 +140,9 @@ class AcadosMultiphaseOcp:
         self.model = [AcadosModel() for _ in range(n_phases)]
         """Model definitions, type :py:class:`acados_template.acados_model.AcadosModel`"""
         self.cost = [AcadosOcpCost() for _ in range(n_phases)]
-        """Cost definitions, type :py:class:`acados_template.acados_ocp.AcadosOcpCost`"""
+        """Cost definitions, type :py:class:`acados_template.acados_ocp_cost.AcadosOcpCost`"""
         self.constraints = [AcadosOcpConstraints() for _ in range(n_phases)]
-        """Constraints definitions, type :py:class:`acados_template.acados_ocp.AcadosOcpConstraints`"""
+        """Constraints definitions, type :py:class:`acados_template.acados_ocp_constraints.AcadosOcpConstraints`"""
 
         self.phases_dims = [AcadosOcpDims() for _ in range(n_phases)]
 
@@ -150,9 +150,9 @@ class AcadosMultiphaseOcp:
 
         # NOTE: this is the same for AcadosOcp
         self.solver_options = AcadosOcpOptions()
-        """Solver Options, type :py:class:`acados_template.acados_ocp.AcadosOcpOptions`"""
+        """Solver Options, type :py:class:`acados_template.acados_ocp_options.AcadosOcpOptions`"""
         self.mocp_opts = AcadosMultiphaseOptions()
-        """Phase-wise varying solver Options, type :py:class:`acados_template.acados_ocp.AcadosMultiphaseOptions`"""
+        """Phase-wise varying solver Options, type :py:class:`acados_template.acados_multiphase_ocp.AcadosMultiphaseOptions`"""
 
         acados_path = get_acados_path()
 

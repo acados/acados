@@ -244,7 +244,7 @@ class AcadosSim:
 
     :param acados_path: string with the path to acados. It is used to generate the include and lib paths.
 
-    - :py:attr:`dims` of type :py:class:`acados_template.acados_ocp.AcadosSimDims` - are automatically detected from model
+    - :py:attr:`dims` of type :py:class:`acados_template.acados_dims.AcadosSimDims` - are automatically detected from model
     - :py:attr:`model` of type :py:class:`acados_template.acados_model.AcadosModel`
     - :py:attr:`solver_options` of type :py:class:`acados_template.acados_sim.AcadosSimOpts`
 
@@ -258,7 +258,7 @@ class AcadosSim:
         if acados_path == '':
             acados_path = get_acados_path()
         self.dims = AcadosSimDims()
-        """Dimension definitions, automatically detected from :py:attr:`model`. Type :py:class:`acados_template.acados_sim.AcadosSimDims`"""
+        """Dimension definitions, automatically detected from :py:attr:`model`. Type :py:class:`acados_template.acados_dims.AcadosSimDims`"""
         self.model = AcadosModel()
         """Model definitions, type :py:class:`acados_template.acados_model.AcadosModel`"""
         self.solver_options = AcadosSimOpts()
