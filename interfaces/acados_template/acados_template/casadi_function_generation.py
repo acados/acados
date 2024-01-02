@@ -48,6 +48,8 @@ def get_casadi_symbol(x):
 
 def mocp_generate_external_functions(mocp: AcadosMultiphaseOcp):
     for i in range(mocp.n_phases):
+        # this is the only option that can vary and influence external functions to be generated
+        mocp.dummy_ocp_list[i].solver_options.integrator_type = mocp.mocp_opts.integrator_type[i]
         ocp_generate_external_functions(mocp.dummy_ocp_list[i])
 
 
@@ -136,8 +138,12 @@ def generate_c_code_discrete_dynamics( model, opts ):
     nx = casadi_length(x)
 
     symbol = get_casadi_symbol(x)
-    # assume nx1 = nx !!!
-    lam = symbol('lam', nx, 1)
+    nx1 = casadi_length(phi)
+
+    if nx != nx1:
+        print('Warning: generate_c_code_discrete_dynamics: got nx != nx1, this only works for a single shooting interval.')
+
+    lam = symbol('lam', nx1, 1)
 
     # generate jacobians
     ux = ca.vertcat(u,x)

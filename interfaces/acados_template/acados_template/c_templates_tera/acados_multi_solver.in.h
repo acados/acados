@@ -75,29 +75,29 @@ typedef struct {{ name }}_solver_capsule
 	{%- for jj in range(end=n_phases) %}{# phases loop !#}
     /* external functions phase {{ jj }} */
     // dynamics
-{% if solver_options.integrator_type == "ERK" %}
+{% if mocp_opts.integrator_type[jj] == "ERK" %}
     external_function_param_casadi *forw_vde_casadi_{{ jj }};
     external_function_param_casadi *expl_ode_fun_{{ jj }};
 {% if solver_options.hessian_approx == "EXACT" %}
     external_function_param_casadi *hess_vde_casadi_{{ jj }};
 {%- endif %}
-{% elif solver_options.integrator_type == "IRK" %}
+{% elif mocp_opts.integrator_type[jj] == "IRK" %}
     external_function_param_{{ model[jj].dyn_ext_fun_type }} *impl_dae_fun_{{ jj }};
     external_function_param_{{ model[jj].dyn_ext_fun_type }} *impl_dae_fun_jac_x_xdot_z_{{ jj }};
     external_function_param_{{ model[jj].dyn_ext_fun_type }} *impl_dae_jac_x_xdot_u_z_{{ jj }};
 {% if solver_options.hessian_approx == "EXACT" %}
     external_function_param_{{ model[jj].dyn_ext_fun_type }} *impl_dae_hess_{{ jj }};
 {%- endif %}
-{% elif solver_options.integrator_type == "LIFTED_IRK" %}
+{% elif mocp_opts.integrator_type[jj] == "LIFTED_IRK" %}
     external_function_param_{{ model[jj].dyn_ext_fun_type }} *impl_dae_fun_{{ jj }};
     external_function_param_{{ model[jj].dyn_ext_fun_type }} *impl_dae_fun_jac_x_xdot_u_{{ jj }};
-{% elif solver_options.integrator_type == "GNSF" %}
+{% elif mocp_opts.integrator_type[jj] == "GNSF" %}
     external_function_param_casadi *gnsf_phi_fun_{{ jj }};
     external_function_param_casadi *gnsf_phi_fun_jac_y_{{ jj }};
     external_function_param_casadi *gnsf_phi_jac_y_uhat_{{ jj }};
     external_function_param_casadi *gnsf_f_lo_jac_x1_x1dot_u_z_{{ jj }};
     external_function_param_casadi *gnsf_get_matrices_fun_{{ jj }};
-{% elif solver_options.integrator_type == "DISCRETE" %}
+{% elif mocp_opts.integrator_type[jj] == "DISCRETE" %}
     external_function_param_{{ model[jj].dyn_ext_fun_type }} *discr_dyn_phi_fun_{{ jj }};
     external_function_param_{{ model[jj].dyn_ext_fun_type }} *discr_dyn_phi_fun_jac_ut_xt_{{ jj }};
 {%- if solver_options.hessian_approx == "EXACT" %}

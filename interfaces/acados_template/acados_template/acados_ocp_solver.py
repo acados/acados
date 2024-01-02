@@ -162,7 +162,9 @@ def __mocp_get_template_list(ocp: AcadosMultiphaseOcp, cmake_builder=None, simul
 def mocp_render_templates(ocp: AcadosMultiphaseOcp, json_file: str, cmake_builder=None, simulink_opts=None):
 
     # model templates
-    for dummy_ocp in ocp.dummy_ocp_list:
+    for i, dummy_ocp in enumerate(ocp.dummy_ocp_list):
+        # this is the only option that can vary and influence external functions to be generated
+        dummy_ocp.solver_options.integrator_type = ocp.mocp_opts.integrator_type[i]
         template_list = __ocp_get_external_function_header_templates(dummy_ocp)
         # dump dummy_ocp
         tmp_json_file = 'tmp_ocp.json'
@@ -729,7 +731,7 @@ class AcadosOcpSolver:
         return
 
 
-    def get(self, stage_, field_):
+    def get(self, stage_: int, field_: str):
         """
         Get the last solution of the solver:
 
@@ -1143,7 +1145,7 @@ class AcadosOcpSolver:
 
 
     # Note: this function should not be used anymore, better use cost_set, constraints_set
-    def set(self, stage_, field_, value_):
+    def set(self, stage_: int, field_: str, value_):
         """
         Set numerical data inside the solver.
 
@@ -1238,7 +1240,7 @@ class AcadosOcpSolver:
         return
 
 
-    def cost_set(self, stage_, field_, value_, api='warn'):
+    def cost_set(self, stage_: int, field_: str, value_, api='warn'):
         """
         Set numerical data in the cost module of the solver.
 
