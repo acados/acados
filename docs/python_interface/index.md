@@ -195,7 +195,7 @@ If cross-platform compatibility is required `CMake` can be used to build the bin
 
 
 ## acados multi-phase OCP
-Advanced feature interface to formulate multip-phase OCPs.
+Advanced feature interface to formulate multi-phase OCPs.
 
 Added in
 [#1004](https://github.com/acados/acados/pull/1004) and
