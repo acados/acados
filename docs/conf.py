@@ -102,6 +102,8 @@ exclude_patterns = ['_build', 'README.md', 'Thumbs.db', '.DS_Store', 'env', 'req
 pygments_style = 'sphinx'
 todo_include_todos = True
 
+cpp_id_attributes = ['ACADOS_SYMBOL_EXPORT']
+
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
