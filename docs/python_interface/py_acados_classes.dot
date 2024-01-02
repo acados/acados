@@ -22,13 +22,13 @@ digraph ocp {
     model [label="AcadosModel"
            href="../python_interface/index.html#acados_template.acados_model.AcadosModel", target="_top"];
     ocpdims [label="AcadosOcpDims"
-             href="../python_interface/index.html#acados_template.acados_ocp.AcadosOcpDims", target="_top"];
+             href="../python_interface/index.html#acados_template.acados_dims.AcadosOcpDims", target="_top"];
     ocpcost [label="AcadosOcpCost"
-             href="../python_interface/index.html#acados_template.acados_ocp.AcadosOcpCost", target="_top"];
+             href="../python_interface/index.html#acados_template.acados_ocp_cost.AcadosOcpCost", target="_top"];
     ocpconstr [label="AcadosOcpConstraints"
-               href="../python_interface/index.html#acados_template.acados_ocp.AcadosOcpConstraints", target="_top"];
+               href="../python_interface/index.html#acados_template.acados_ocp_constraints.AcadosOcpConstraints", target="_top"];
     ocpopts [label="AcadosOcpOptions"
-             href="../python_interface/index.html#acados_template.acados_ocp.AcadosOcpOptions", target="_top"];
+             href="../python_interface/index.html#acados_template.acados_ocp_options.AcadosOcpOptions", target="_top"];
 
     // solver graph
     cmakebuilder -> solver;
@@ -44,7 +44,7 @@ digraph ocp {
          shape = "record"
          href="../python_interface/index.html#acados_template.acados_sim.AcadosSim", target="_top"];
     simdims [label="AcadosSimDims"
-             href="../python_interface/index.html#acados_template.acados_sim.AcadosSimDims", target="_top"];
+             href="../python_interface/index.html#acados_template.acados_dims.AcadosSimDims", target="_top"];
     simopts [label="AcadosSimOpts"
              href="../python_interface/index.html#acados_template.acados_sim.AcadosSimOpts", target="_top"];
     simsolver [label="AcadosSimSolver"
