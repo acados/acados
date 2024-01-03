@@ -46,7 +46,6 @@
 
 int main()
 {
-	
 	printf("\nregularization example\n\n");
 
 	int ii, jj;
@@ -102,10 +101,8 @@ int main()
 
 	config->opts_initialize_default(config, dims, opts);
 
-	double delta = 1e-4;
 	double epsilon = 1e-4;
-//	config->opts_set(config, dims, opts, "delta", &delta);
-	config->opts_set(config, dims, opts, "reg_epsilon", &epsilon);
+	config->opts_set(config, opts, "epsilon", &epsilon);
 
     /************************************************
      * memory
