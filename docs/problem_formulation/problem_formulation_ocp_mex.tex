@@ -156,7 +156,7 @@ Here, the focus is to give a mathematical overview of the problem formulation an
 The problem formulation and the possibilities of \acados{} are similar in the \python{} interface, however, some of the string identifiers are different.
 The documentation is not exhaustive and does not contain a full description for the \matlab{} interface.
 
-You can find examples int the directory \code{<acados>/examples/acados\_matlab\_octave}.
+You can find examples in the directory \code{<acados>/examples/acados\_matlab\_octave}.
 The source code of the \acados{} \matlab{} interface is found in: \code{<acados>/interfaces/acados\_matlab\_octave} and should serve as a more extensive, complete and up-to-date documentation about the possibilities.
 %
 \section{Dynamics}\label{sec:dynamics}
@@ -198,7 +198,7 @@ x_{i+1} &= f\ind{disc}(x_i,u_i,p_i).\label{eq:dynamics:discrete}
         \toprule
         Term & String identifier & Data type & Required \\ \midrule
         $ f\ind{impl} $ respectively $ f\ind{expl} $ & \code{dyn\_expr\_f}    & \casadi~expression & \mandatory \\
-        $f\ind{disc}$ & \code{dyn\_exp\_phi} & \casadi~expression & \mandatory \\
+        $f\ind{disc}$ & \code{dyn\_expr\_phi} & \casadi~expression & \mandatory \\
         - & \code{dyn\_type}    & string (\str{explicit}, \str{implicit} or \str{discrete}) & \mandatory \\
         \bottomrule
     \end{tabular}
@@ -468,16 +468,16 @@ Here, matrices
     \end{tabular}
 \end{table}
 %
-\section{External links}\label{sec:external_links}
-%
-A table sheet with additional info is found here:\newline
-\url{https://docs.google.com/spreadsheets/d/1rVRycLnCyaWJLwnV47u30Vokp7vRu68og3OhlDbSjDU/edit?usp=sharing}
+% \section{External links}\label{sec:external_links}
+% % outdated and removed
+% A table sheet with additional info is found here:\newline
+% \url{https://docs.google.com/spreadsheets/d/1rVRycLnCyaWJLwnV47u30Vokp7vRu68og3OhlDbSjDU/edit?usp=sharing}
 %
 \section{Model}\label{sec:model}
 %
 A model instance is created using \code{ocp\_model = acados\_ocp\_model()}. It contains all model definitions for simulation and for usage in the OCP solver.
 See table~\ref{tab:model:options} for the available options.
-Furthermore, see \code{ocp\_model.model\_struct} to see what other fields can be set via direct access.
+Furthermore, see \code{ocp\_model.model\_struct} or \href{https://github.com/acados/acados/blob/master/interfaces/acados_matlab_octave/acados_ocp_model.m}{\code{acados\_ocp\_model.m}} to see what other fields can be set via direct access.
 %
 \begin{table}
     \centering
@@ -509,7 +509,7 @@ Together with the model these options are used when instancing the solver interf
 Tables \ref{tab:solver_options}, \ref{tab:solver_options:qp_solver_option} and \ref{tab:solver_options:regularize_method} show (almost) all available options.
 These options are set in \matlab{} via \code{ocp\_opts.set(<stringid>, <value>)}.
 % Some options are not (yet) implemented in the \code{.set(*)}-interface and can be accessed via a struct by using \code{ocp\_opts.opts\_struct.(<stringid>) = <value>}.
-Furthermore, the struct \code{ocp\_opts.opts\_struct} can be used as a reference for what other fields are available.
+Furthermore, the struct \code{ocp\_opts.opts\_struct} and \href{https://github.com/acados/acados/blob/master/interfaces/acados_matlab_octave/acados_ocp_opts.m}{\code{acados\_ocp\_opts.m}} can be used as a reference for what other fields are available.
 \\
 Note that some options of the solver can be modified after creation using the routine: \code{set(<stringid>, <value>)}.
 Some options can only be set before the solver is created, especially options that influence the memory requirements of OCP solver, such as the modules used in the formulation, the QP solver, etc.
@@ -561,7 +561,7 @@ Some options can only be set before the solver is created, especially options th
         \code{qp\_solver} & string & $\longrightarrow$ & Defines the quadratic programming solver and condensing strategy. See table~\ref{tab:solver_options:qp_solver_option}\\
 
         \code{qp\_solver\_iter\_max} & int & $50$ & maximum number of iterations per QP solver call\\
-        % \code{qp\_solver\_cond\_N} & 5\\ % New horizon after partial condensing
+        % \code{qp\_solver\_cond\_N} & int & $5$ & new horizon after partial condensing\\
         \code{qp\_solver\_cond\_ric\_alg} & int & $0$ & factorize hessian in the condensing: ($0$) no, ($1$) yes \\
         \code{qp\_solver\_ric\_alg} & int & $0$ & HPIPM specific \\
         \code{qp\_solver\_warm\_start} & int & $0$ & ($0$)~cold start, ($1$)~warm start primal variables, ($2$)~warm start and dual variables \\
@@ -594,14 +594,15 @@ Some options can only be set before the solver is created, especially options th
         \toprule
         Solver lib & Condensing & {String identifier} \\ \midrule
         \multirow{2}{1.2cm}{\centering HPIPM} & partial & \code{partial\_condensing\_hpipm}*\\
-         & full & \code{full\_condensing\_hpipm} \\[1ex]
-        HPMPC & partial & \code{partial\_condensing\_hpmpc} \\[1ex]
-        \multirow{2}{2cm}{\centering OOQP} & partial & \code{partial\_condensing\_ooqp} \\
-         & full & \code{full\_condensing\_ooqp} \\[1ex]
+         & full & \code{full\_condensing\_hpipm} \\%[1ex]
+        HPMPC & partial & \code{partial\_condensing\_hpmpc} \\%[1ex]
+        % \multirow{2}{2cm}{\centering OOQP} & partial & \code{partial\_condensing\_ooqp} \\
+         % & full & \code{full\_condensing\_ooqp} \\[1ex]
         OSQP & partial & \code{partial\_condensing\_osqp} \\
-        QORE & full & \code{full\_condensing\_qore} \\
+        % QORE & full & \code{full\_condensing\_qore} \\
         qpDUNES & partial & \code{partial\_condensing\_qpdunes} \\
         qpOASES & full & \code{full\_condensing\_qpoases} \\
+        DAQP & full & \code{full\_condensing\_daqp} \\
         \bottomrule
         \multicolumn{3}{r}{\footnotesize * default}
     \end{tabular}
