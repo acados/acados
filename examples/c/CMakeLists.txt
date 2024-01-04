@@ -281,4 +281,10 @@ add_executable(dense_qp dense_qp.c)
 target_link_libraries(dense_qp acados)
 add_test(dense_qp dense_qp)
 
+# regularization
+add_executable(regularization regularization.c)
+target_link_libraries(regularization acados)
+add_test(regularization regularization)
+
+
 endif()
