@@ -337,7 +337,7 @@ class AcadosOcpConstraints:
     @property
     def lh(self):
         """:math:`\\underline{h}` - lower bound for nonlinear inequalities
-        at shooting nodes (0 to N-1).
+        at intermediate shooting nodes (1 to N-1).
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__lh
@@ -345,7 +345,7 @@ class AcadosOcpConstraints:
     @property
     def uh(self):
         """:math:`\\bar{h}` - upper bound for nonlinear inequalities
-        at shooting nodes (0 to N-1).
+        at intermediate shooting nodes (1 to N-1).
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__uh
@@ -353,16 +353,16 @@ class AcadosOcpConstraints:
     # nonlinear constraints at initial shooting node
     @property
     def lh_0(self):
-        """:math:`\\underline{h}^e` - lower bound on nonlinear inequalities
-        at initial shooting node.
+        """:math:`\\underline{h}^0` - lower bound on nonlinear inequalities
+        at initial shooting node (0).
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__lh_0
 
     @property
     def uh_0(self):
-        """:math:`\\bar{h}^e` - upper bound on nonlinear inequalities
-        at initial shooting node.
+        """:math:`\\bar{h}^0` - upper bound on nonlinear inequalities
+        at initial shooting node (0).
         Type: :code:`np.ndarray`; default: :code:`np.array([])`.
         """
         return self.__uh_0
