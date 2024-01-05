@@ -572,7 +572,7 @@ Some options can only be set before the solver is created, especially options th
         \code{qp\_solver} & string & $\longrightarrow$ & Defines the quadratic programming solver and condensing strategy. See table~\ref{tab:solver_options:qp_solver_option}\\
 
         \code{qp\_solver\_iter\_max} & int & $50$ & maximum number of iterations per QP solver call\\
-        \code{qp\_solver\_cond\_N} & int & $5$ & new horizon after partial condensing\\
+        \code{qp\_solver\_cond\_N} & int & $N$ & new horizon after partial condensing, set to \code{param\_scheme\_N} by default\\
         \code{qp\_solver\_cond\_ric\_alg} & int & $0$ & factorize hessian in the condensing: ($0$) no, ($1$) yes \\
         \code{qp\_solver\_ric\_alg} & int & $0$ & HPIPM specific \\
         \code{qp\_solver\_warm\_start} & int & $0$ & ($0$)~cold start, ($1$)~warm start primal variables, ($2$)~warm start and dual variables \\
