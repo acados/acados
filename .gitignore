@@ -51,6 +51,8 @@ Thumbs.db
 *.bbl
 *.blg
 *.synctex
+*.fdb_latexmk
+*.fls
 
 # dSpace #
 ##########
