@@ -101,12 +101,14 @@
     % constraints
     &&&\mathComment{Initial values, see section \ref{sec:constraints:initial}}\nonumber\\
     &\,\,\,\quad \text{s.t.}    &&\underline{x}_0 \leq J_{\textrm{bx},0} \, x(0) \leq \bar{x}_0 , && \label{eq:constraints:initial}\\[1ex]
+    &&&\mathComment{Nonlinear constraints on initial shooting node} \nonumber\\
+    &&&\underline{h}\initial \leq h\initial(x(0), u(0), p) + J_{\textrm{sh}}\initial \, s\lowerh\initial, &&\label{eq:constraints:path:lower_bounds:start}\\
+    &&& h\initial(x(0), u(0), p) - J\ind{sh}\initial\, s\ind{u,h}\initial \leq \bar{h}\initial, &&\label{eq:constraints:path:upper_bounds:start}\\
     &&&\mathComment{Dynamics, see section \ref{sec:dynamics}}\nonumber\\
     %% dynamics
     &&& f\ind{impl}(x(t), \dot{x}(t), u(t), z(t),p ) = 0, &&\quad t \in [0,\,T), \label{eq:dynamics}\\[1ex]
     &&&\mathComment{Path constraints with lower bounds, see section \ref{sec:constraints:path}}\nonumber\\
     %% path constraints with lower slack
-    &&&\underline{h}\initial \leq h\initial(x(0), u(0), p) + J_{\textrm{sh}}\initial \, s\lowerh\initial, &&\label{eq:constraints:path:lower_bounds:start}\\
     &&&\underline{h} \leq h(x(t), u(t), p) + J_{\textrm{sh}} \, s\lowerh(t), &&\quad t \in (0,\,T),\\
     &&&\underline{x} \leq J_{\textrm{bx}} \, x(t) + J_{\textrm{sbx}} \,s\lowerbx(t), &&\quad t \in (0,\,T),\\
     &&&\underline{u} \leq J_{\textrm{bu}} \,u(t) + J_{\textrm{sbu}} \,s\lowerbu(t), &&\quad t \in [0,\,T),\\
@@ -115,7 +117,6 @@
     &&& s\lowerh\initial \geq 0, && \label{eq:constraints:path:lower_bounds:end}\\[1ex]
     &&&\mathComment{Path constraints with upper bounds, see section \ref{sec:constraints:path}}\nonumber\\
     %% path constraints with upper slack
-    &&& h\initial(x(0), u(0), p) - J\ind{sh}\initial\, s\ind{u,h}\initial \leq \bar{h}\initial, &&\label{eq:constraints:path:upper_bounds:start}\\
     &&& h(x(t), u(t), p) - J_{\textrm{sh}} \, s\upperh(t) \leq \bar{h}, &&\quad t \in (0,\,T),\\
     &&& J_{\textrm{bx}} x(t) - J_{\textrm{sbx}}\, s\upperbx(t) \leq \bar{x}, &&\quad t \in (0,\,T),\\
     &&& J_{\textrm{bu}} u(t) - J_{\textrm{sbu}}\, s\upperbu(t)\leq \bar{u}, &&\quad t \in [0,\,T),\\
