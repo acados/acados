@@ -402,7 +402,8 @@ The options for the extended syntax are found in table~\ref{tab:constraints:exte
 \subsection{Path Constraints}\label{sec:constraints:path}
 %
 Table~\ref{tab:constraints:path} shows the options for defining the path constraints equations~(\ref{eq:constraints:path:lower_bounds:start} ~-~\ref{eq:constraints:path:upper_bounds:end}).
-Here, matrices
+The matrices $ J_{\star} $ are translated into arrays of integers \texttt{idx}$\star$, see Python documentation.
+These matrices described as follows:
 \begin{itemize}
     \item $J\ind{sh}$ maps lower slack vectors $s\ind{l,h}(t)$ and upper slack vectors $s\ind{u,h}(t)$ onto the non-linear constraint expressions $h(x,u,p)$.
     \item $J\ind{bx}$, $J\ind{bu}$ map $x(t)$ and $u(t)$ onto its bounds vectors $\underline{x}$, $\bar{x}$ and $\underline{u}$, $\bar{u}$, respectively.
