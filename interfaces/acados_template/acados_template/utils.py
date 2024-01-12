@@ -50,6 +50,11 @@ PLATFORM2TERA = {
 }
 
 
+def check_if_square(mat: np.ndarray, name: str):
+    if mat.shape[0] != mat.shape[1]:
+        raise ValueError(f"Matrix {name} must be square, got shape {mat.shape}.")
+    return
+
 def get_acados_path():
     ACADOS_PATH = os.environ.get('ACADOS_SOURCE_DIR')
     if not ACADOS_PATH:
