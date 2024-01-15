@@ -871,6 +871,8 @@ class AcadosOcp:
         min_hess: provide a minimum value for the hessian
         """
 
+        if (upper_bound is None or lower_bound is None):
+            raise NotImplementedError("only symmetric Huber for now")
         if upper_bound is None and lower_bound is None:
             raise ValueError("Either upper or lower bound must be provided.")
         elif upper_bound < lower_bound:
@@ -878,9 +880,6 @@ class AcadosOcp:
 
         if self.cost.cost_type != "CONVEX_OVER_NONLINEAR":
             raise Exception("Huber penalty is only supported for CONVEX_OVER_NONLINEAR cost type.")
-
-        if (upper_bound is None or lower_bound is None):
-            raise NotImplementedError("only symmetric Huber for now")
 
         # normalize constraint to [-1, 1]
         width = upper_bound - lower_bound
