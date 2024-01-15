@@ -64,6 +64,16 @@ def one_sided_huber_penalty(
     min_hess: provide a minimum value for the hessian
     """
 
+    if delta < 0:
+        raise ValueError("delta must be positive")
+
+    if tau is None:
+        if w is None:
+            raise Exception("Either specify w or tau")
+        tau = 2 * w * delta
+    elif w is not None:
+        raise Exception("Either specify w or tau")
+
     loss, _, _, loss_hess_XGN = huber_loss(u, delta, tau)
     # shifted by delta to get a penalty
     penalty = 0.5 * (ca.substitute(loss, u, u - delta) + tau * u)
