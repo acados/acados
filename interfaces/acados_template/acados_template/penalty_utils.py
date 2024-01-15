@@ -36,22 +36,25 @@ import numpy as np
 import matplotlib.pyplot as plt
 from plot_utils import latexify_plot
 
+
 def huber_loss(var: ca.SX, delta: float, tau: float):
-    loss = tau/delta * ca.if_else(
-        ca.fabs(var) < delta,
-        0.5*var**2,
-        delta*(ca.fabs(var) - 0.5*delta))
+    loss = (tau / delta) * ca.if_else(
+        ca.fabs(var) < delta, 0.5 * var**2, delta * (ca.fabs(var) - 0.5 * delta)
+    )
 
     loss_hess, loss_grad = ca.hessian(loss, var)
-    loss_hess_XGN = ca.if_else(
-        var == 0,
-        loss_hess,
-        ca.diag(loss_grad / var))
+    loss_hess_XGN = ca.if_else(var == 0, loss_hess, ca.diag(loss_grad / var))
 
     return loss, loss_grad, loss_hess, loss_hess_XGN
 
 
-def one_sided_huber_penalty(u: ca.SX, delta: float, tau: Optional[float] = None, w: Optional[float] = None, min_hess: float = 0.):
+def one_sided_huber_penalty(
+    u: ca.SX,
+    delta: float,
+    tau: Optional[float] = None,
+    w: Optional[float] = None,
+    min_hess: float = 0.0,
+):
     """
     One-sided Huber penalty for a constraint u <= 0.
     Note: either tau or w need to be specified.
@@ -63,24 +66,29 @@ def one_sided_huber_penalty(u: ca.SX, delta: float, tau: Optional[float] = None,
 
     loss, _, _, loss_hess_XGN = huber_loss(u, delta, tau)
     # shifted by delta to get a penalty
-    penalty = 0.5 * (ca.substitute(loss, u, u - delta) + tau*u)
+    penalty = 0.5 * (ca.substitute(loss, u, u - delta) + tau * u)
 
     penalty_0 = ca.substitute(penalty, u, 0)
     penalty = penalty - penalty_0
 
     penalty_hess, penalty_grad = ca.hessian(penalty, u)
 
-    penalty_hess_xgn = 0.5*ca.substitute(loss_hess_XGN, u, u - delta)
+    penalty_hess_xgn = 0.5 * ca.substitute(loss_hess_XGN, u, u - delta)
 
-    if min_hess > 0.:
+    if min_hess > 0.0:
         penalty_hess = ca.fmax(min_hess, penalty_hess)
         penalty_hess_xgn = ca.fmax(min_hess, penalty_hess_xgn)
 
     return penalty, penalty_grad, penalty_hess, penalty_hess_xgn
 
 
-
-def symmetric_huber_penalty(u: ca.SX, delta: float, tau: Optional[float] = None, w: Optional[float] = None, min_hess: float = 0.):
+def symmetric_huber_penalty(
+    u: ca.SX,
+    delta: float,
+    tau: Optional[float] = None,
+    w: Optional[float] = None,
+    min_hess: float = 0.0,
+):
     """
     Symmetric Huber penalty for a constraint -1 <= u <= 1.
     Note: either tau or w need to be specified.
@@ -91,14 +99,14 @@ def symmetric_huber_penalty(u: ca.SX, delta: float, tau: Optional[float] = None,
     """
 
     if delta < 0:
-        raise ValueError('delta must be positive')
+        raise ValueError("delta must be positive")
 
     if tau is None:
         if w is None:
-            raise Exception('Either specify w or tau')
-        tau = 2*w*delta
+            raise Exception("Either specify w or tau")
+        tau = 2 * w * delta
     elif w is not None:
-        raise Exception('Either specify w or tau')
+        raise Exception("Either specify w or tau")
 
     loss, _, _, loss_hess_XGN = huber_loss(u, delta, tau)
 
@@ -106,50 +114,68 @@ def symmetric_huber_penalty(u: ca.SX, delta: float, tau: Optional[float] = None,
     # penalty = 0.5*(ca.substitute(loss, u, u - 1) + ca.substitute(loss, u, u + 1) - ca.substitute(loss, u, -1) - ca.substitute(loss, u, 1))
 
     # shifted by delta to get a penalty
-    penalty = 0.5 * (ca.substitute(loss, u, u - (1+delta)) + ca.substitute(loss, u, u + (1+delta)))
-    penalty += 0.5 * (-ca.substitute(loss, u, -(1+delta)) - ca.substitute(loss, u, 1-delta))
+    penalty = 0.5 * (
+        ca.substitute(loss, u, u - (1 + delta))
+        + ca.substitute(loss, u, u + (1 + delta))
+    )
+    penalty += 0.5 * (
+        -ca.substitute(loss, u, -(1 + delta)) - ca.substitute(loss, u, 1 - delta)
+    )
 
     penalty_0 = ca.substitute(penalty, u, 0)
     penalty = penalty - penalty_0
 
     penalty_hess, penalty_grad = ca.hessian(penalty, u)
 
-    penalty_hess_xgn = 0.5*ca.if_else(u < 0, ca.substitute(loss_hess_XGN, u, u+1+delta), ca.substitute(loss_hess_XGN, u, u-1-delta))
+    penalty_hess_xgn = 0.5 * ca.if_else(
+        u < 0,
+        ca.substitute(loss_hess_XGN, u, u + 1 + delta),
+        ca.substitute(loss_hess_XGN, u, u - 1 - delta),
+    )
 
-    if min_hess > 0.:
+    if min_hess > 0.0:
         penalty_hess = ca.fmax(min_hess, penalty_hess)
         penalty_hess_xgn = ca.fmax(min_hess, penalty_hess_xgn)
 
     return penalty, penalty_grad, penalty_hess, penalty_hess_xgn
 
 
-def plot_huber_penalty(symmetric = True):
-
-    u = ca.SX.sym('u')
+def plot_huber_penalty(symmetric=True):
+    u = ca.SX.sym("u")
 
     delta = 1e-1
     w = 1e4
 
     if symmetric:
-        penalty, penalty_grad, penalty_hess, penalty_hess_xgn = symmetric_huber_penalty(u, delta, w)
+        penalty, penalty_grad, penalty_hess, penalty_hess_xgn = symmetric_huber_penalty(
+            u, delta, w
+        )
     else:
-        penalty, penalty_grad, penalty_hess, penalty_hess_xgn = one_sided_huber_penalty(u, delta, w)
+        penalty, penalty_grad, penalty_hess, penalty_hess_xgn = one_sided_huber_penalty(
+            u, delta, w
+        )
 
-    huber_penalty_fun = ca.Function('penalty', [u], [penalty])
+    huber_penalty_fun = ca.Function("penalty", [u], [penalty])
 
-    u_ = ca.SX.sym('u_')
-    huber_penalty_quad_fun = ca.Function('penalty', [u_, u], [penalty + penalty_grad*(u_ - u) + 0.5*penalty_hess_xgn*(u_ - u)**2])
+    u_ = ca.SX.sym("u_")
+    huber_penalty_quad_fun = ca.Function(
+        "penalty",
+        [u_, u],
+        [penalty + penalty_grad * (u_ - u) + 0.5 * penalty_hess_xgn * (u_ - u) ** 2],
+    )
 
     us = np.linspace(-1.5, 1.5, 800)
     ys = huber_penalty_fun(us).full()
     latexify_plot()
     plt.figure(figsize=(10, 10))
-    plt.plot(us, ys, label='Huber penalty')
+    plt.plot(us, ys, label="Huber penalty")
 
-    u_lins = [-.999, -.8, .4]
+    u_lins = [-0.999, -0.8, 0.4]
     for i in range(len(u_lins)):
         ys_quad = huber_penalty_quad_fun(us, u_lins[i]).full()
-        plt.plot(us, ys_quad, '--', label=f'quadratic approximation {i} at {u_lins[i]:.1f}')
+        plt.plot(
+            us, ys_quad, "--", label=f"quadratic approximation {i} at {u_lins[i]:.1f}"
+        )
 
     plt.grid()
     plt.legend()
@@ -158,7 +184,6 @@ def plot_huber_penalty(symmetric = True):
     plt.show()
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     plot_huber_penalty(symmetric=True)
     plot_huber_penalty(symmetric=False)
