@@ -51,10 +51,41 @@ def huber_loss(var: ca.SX, delta: float, tau: float):
     return loss, loss_grad, loss_hess, loss_hess_XGN
 
 
+def one_sided_huber_penalty(u: ca.SX, delta: float, tau: Optional[float] = None, w: Optional[float] = None, min_hess: float = 0.):
+    """
+    One-sided Huber penalty for a constraint u <= 0.
+    Note: either tau or w need to be specified.
+    delta: the length of the quadratic behavior
+    tau: gradient in linear region
+    w: hessian in quadratic region
+    min_hess: provide a minimum value for the hessian
+    """
+
+    loss, _, _, loss_hess_XGN = huber_loss(u, delta, tau)
+    # shifted by delta to get a penalty
+    penalty = 0.5 * (ca.substitute(loss, u, u - delta) + tau*u)
+
+    penalty_0 = ca.substitute(penalty, u, 0)
+    penalty = penalty - penalty_0
+
+    penalty_hess, penalty_grad = ca.hessian(penalty, u)
+
+    penalty_hess_xgn = 0.5*ca.substitute(loss_hess_XGN, u, u - delta)
+
+    if min_hess > 0.:
+        penalty_hess = ca.fmax(min_hess, penalty_hess)
+        penalty_hess_xgn = ca.fmax(min_hess, penalty_hess_xgn)
+
+    return penalty, penalty_grad, penalty_hess, penalty_hess_xgn
+
+
+
 def symmetric_huber_penalty(u: ca.SX, delta: float, tau: Optional[float] = None, w: Optional[float] = None, min_hess: float = 0.):
     """
     Symmetric Huber penalty for a constraint -1 <= u <= 1.
+    Note: either tau or w need to be specified.
     delta: the length of the quadratic behavior
+    tau: gradient in linear region
     w: hessian in quadratic region
     min_hess: provide a minimum value for the hessian
     """
@@ -91,28 +122,21 @@ def symmetric_huber_penalty(u: ca.SX, delta: float, tau: Optional[float] = None,
 
     return penalty, penalty_grad, penalty_hess, penalty_hess_xgn
 
-def plot_symmetric_huber():
+
+def plot_huber_penalty(symmetric = True):
 
     u = ca.SX.sym('u')
 
     delta = 1e-1
     w = 1e4
-    penalty, penalty_grad, penalty_hess, penalty_hess_xgn = symmetric_huber_penalty(u, delta, w)
 
-    penalty_hess_fun = ca.Function('penalty_hess_fun', [u], [penalty_hess])
-    hess_val = penalty_hess_fun(1+0.5*delta)
-    print(f"{hess_val=}")
+    if symmetric:
+        penalty, penalty_grad, penalty_hess, penalty_hess_xgn = symmetric_huber_penalty(u, delta, w)
+    else:
+        penalty, penalty_grad, penalty_hess, penalty_hess_xgn = one_sided_huber_penalty(u, delta, w)
 
     huber_penalty_fun = ca.Function('penalty', [u], [penalty])
-    print(f"{huber_penalty_fun(0.0)=}")
-    print(f"{huber_penalty_fun(0.999)=}")
-    print(f"{huber_penalty_fun(1.0)=}")
-    print(f"{huber_penalty_fun(1.0001)=}")
-    print(f"{huber_penalty_fun(1.1)=}")
 
-    print(f"{huber_penalty_fun(-1.0)=}")
-    print(f"{huber_penalty_fun(-1.1)=}")
-    print(f"{huber_penalty_fun(-0.999)=}")
     u_ = ca.SX.sym('u_')
     huber_penalty_quad_fun = ca.Function('penalty', [u_, u], [penalty + penalty_grad*(u_ - u) + 0.5*penalty_hess_xgn*(u_ - u)**2])
 
@@ -134,5 +158,7 @@ def plot_symmetric_huber():
     plt.show()
 
 
+
 if __name__ == '__main__':
-    plot_symmetric_huber()
+    plot_huber_penalty(symmetric=True)
+    plot_huber_penalty(symmetric=False)
