@@ -29,7 +29,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from typing import Optional
+from typing import Optional, Union
 import numpy as np
 
 from scipy.linalg import block_diag
@@ -46,7 +46,7 @@ from .acados_ocp_options import AcadosOcpOptions
 
 from .utils import (get_acados_path, format_class_dict,
                     get_shared_lib_ext, is_column, is_empty, casadi_length, check_if_square)
-from .penalty_utils import symmetric_huber_penalty
+from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty
 
 from .zoro_description import ZoroDescription, process_zoro_description
 
@@ -774,7 +774,7 @@ class AcadosOcp:
         """
         Translates a NONLINEAR_LS cost to a CONVEX_OVER_NONLINEAR cost.
         """
-
+        casadi_symbol = self.model.get_casadi_symbol()
         # initial cost
         if self.cost.cost_type_0 is None:
             print("Initial cost is None, skipping.")
@@ -784,7 +784,7 @@ class AcadosOcp:
             print("Translating initial NONLINEAR_LS cost to CONVEX_OVER_NONLINEAR.")
             self.cost.cost_type_0 = "CONVEX_OVER_NONLINEAR"
             ny_0 = self.model.cost_y_expr_0.shape[0]
-            conl_res_0 = ca.SX.sym('residual_conl', ny_0)
+            conl_res_0 = casadi_symbol('residual_conl', ny_0)
             self.model.cost_r_in_psi_expr_0 = conl_res_0
             self.model.cost_psi_expr_0 = .5 * conl_res_0.T @ self.cost.W_0 @ conl_res_0
         else:
@@ -797,7 +797,7 @@ class AcadosOcp:
             print("Translating path NONLINEAR_LS cost to CONVEX_OVER_NONLINEAR.")
             self.cost.cost_type = "CONVEX_OVER_NONLINEAR"
             ny = self.model.cost_y_expr.shape[0]
-            conl_res = ca.SX.sym('residual_conl', ny)
+            conl_res = casadi_symbol('residual_conl', ny)
             self.model.cost_r_in_psi_expr = conl_res
             self.model.cost_psi_expr = .5 * conl_res.T @ self.cost.W @ conl_res
         else:
@@ -810,7 +810,7 @@ class AcadosOcp:
             print("Translating terminal NONLINEAR_LS cost to CONVEX_OVER_NONLINEAR.")
             self.cost.cost_type_e = "CONVEX_OVER_NONLINEAR"
             ny_e = self.model.cost_y_expr_e.shape[0]
-            conl_res_e = ca.SX.sym('residual_conl', ny_e)
+            conl_res_e = casadi_symbol('residual_conl', ny_e)
             self.model.cost_r_in_psi_expr_e = conl_res_e
             self.model.cost_psi_expr_e = .5 * conl_res_e.T @ self.cost.W_e @ conl_res_e
         else:
@@ -855,7 +855,7 @@ class AcadosOcp:
 
     def formulate_constraint_as_Huber_penalty(
         self,
-        constr_expr: ca.SX,
+        constr_expr: Union[ca.SX, ca.MX],
         weight: float,
         upper_bound: Optional[float]=None,
         lower_bound: Optional[float]=None,
@@ -869,22 +869,24 @@ class AcadosOcp:
 
         use_xgn: if true an XGN Hessian is used, if false a GGN Hessian (= exact Hessian, in this case) is used.
         min_hess: provide a minimum value for the hessian
+        weight: weight of the penalty corresponding to Hessian in quadratic region
         """
+        if isinstance(constr_expr, ca.MX):
+            casadi_symbol = ca.MX.sym
+            casadi_zeros = ca.MX.zeros
+        elif isinstance(constr_expr, ca.SX):
+            casadi_symbol = ca.SX.sym
+            casadi_zeros = ca.SX.zeros
 
-        if (upper_bound is None or lower_bound is None):
-            raise NotImplementedError("only symmetric Huber for now")
+
+        # if (upper_bound is None or lower_bound is None):
+        #     raise NotImplementedError("only symmetric Huber for now")
         if upper_bound is None and lower_bound is None:
             raise ValueError("Either upper or lower bound must be provided.")
-        elif upper_bound < lower_bound:
-            raise ValueError("Upper bound must be greater than lower bound.")
+
 
         if self.cost.cost_type != "CONVEX_OVER_NONLINEAR":
             raise Exception("Huber penalty is only supported for CONVEX_OVER_NONLINEAR cost type.")
-
-        # normalize constraint to [-1, 1]
-        width = upper_bound - lower_bound
-        center = lower_bound + 0.5 * width
-        constr_expr = 2 * (constr_expr - center) / width
 
         if use_xgn and self.model.cost_conl_custom_outer_hess is None:
             # switch to XGN Hessian start with exact Hessian of previously defined cost
@@ -892,11 +894,26 @@ class AcadosOcp:
             self.model.cost_conl_custom_outer_hess = exact_cost_hess
 
         # define residual
-        new_residual = ca.SX.sym(residual_name, constr_expr.shape)
+        new_residual = casadi_symbol(residual_name, constr_expr.shape)
 
-        # define penalty
-        penalty, penalty_grad, penalty_hess, penalty_hess_xgn = \
+        if upper_bound is not None and lower_bound is not None:
+            if upper_bound < lower_bound:
+                raise ValueError("Upper bound must be greater than lower bound.")
+            # normalize constraint to [-1, 1]
+            width = upper_bound - lower_bound
+            center = lower_bound + 0.5 * width
+            constr_expr = 2 * (constr_expr - center) / width
+
+            # define penalty
+            penalty, penalty_grad, penalty_hess, penalty_hess_xgn = \
                 symmetric_huber_penalty(new_residual, delta=huber_delta, w=weight*width**2, min_hess=min_hess)
+        elif upper_bound is not None:
+            # define penalty
+            penalty, penalty_grad, penalty_hess, penalty_hess_xgn = \
+                one_sided_huber_penalty(new_residual, delta=huber_delta, w=weight, min_hess=min_hess)
+        elif lower_bound is not None:
+            raise NotImplementedError("lower bound only not implemented, please change sign on constraint and use upper bound.")
+
 
         # add penalty to cost
         self.model.cost_r_in_psi_expr = ca.vertcat(self.model.cost_r_in_psi_expr, new_residual)
@@ -906,11 +923,11 @@ class AcadosOcp:
 
         # add Hessian term
         if use_xgn:
-            zero_offdiag = ca.SX.zeros(self.model.cost_conl_custom_outer_hess.shape[0], penalty_hess_xgn.shape[1])
+            zero_offdiag = casadi_zeros(self.model.cost_conl_custom_outer_hess.shape[0], penalty_hess_xgn.shape[1])
             self.model.cost_conl_custom_outer_hess = ca.blockcat(self.model.cost_conl_custom_outer_hess,
                                                                 zero_offdiag, zero_offdiag.T, penalty_hess_xgn)
         elif self.model.cost_conl_custom_outer_hess is not None:
-            zero_offdiag = ca.SX.zeros(self.model.cost_conl_custom_outer_hess.shape[0], penalty_hess_xgn.shape[1])
+            zero_offdiag = casadi_zeros(self.model.cost_conl_custom_outer_hess.shape[0], penalty_hess_xgn.shape[1])
             # add penalty Hessian to existing Hessian
             self.model.cost_conl_custom_outer_hess = ca.blockcat(self.model.cost_conl_custom_outer_hess,
                                                                 zero_offdiag, zero_offdiag.T, penalty_hess)

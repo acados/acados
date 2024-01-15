@@ -216,20 +216,22 @@ class AcadosModel():
         Number of original control inputs (before polynomial control augmentation); Default: :code:`None`
         """
 
-    def make_consistent(self, dims: Union[AcadosOcpDims, AcadosSimDims]) -> None:
-
+    def get_casadi_symbol(self):
         if isinstance(self.x, MX):
-            symbol = MX.sym
+            return MX.sym
         elif isinstance(self.x, SX):
-            symbol = SX.sym
+            return SX.sym
         else:
             raise Exception(f"model.x must be casadi.SX or casadi.MX, got {type(self.x)}")
 
+    def make_consistent(self, dims: Union[AcadosOcpDims, AcadosSimDims]) -> None:
+
+        casadi_symbol = self.get_casadi_symbol()
         if is_empty(self.p):
-            self.p = symbol('p', 0, 0)
+            self.p = casadi_symbol('p', 0, 0)
 
         if is_empty(self.z):
-            self.z = symbol('z', 0, 0)
+            self.z = casadi_symbol('z', 0, 0)
 
         # nx
         if is_column(self.x):
@@ -275,23 +277,18 @@ class AcadosModel():
         if self.nu_original is not None:
             raise Exception('model.u has already been augmented')
 
-        if isinstance(self.x, MX):
-            symbol = MX.sym
-        elif isinstance(self.x, SX):
-            symbol = SX.sym
-        else:
-            raise Exception(f"model.x must be casadi.SX or casadi.MX, got {type(self.x)}")
+        casadi_symbol = self.get_casadi_symbol()
 
         # add time to model
         if self.t == []:
-            self.t = symbol('t')
+            self.t = casadi_symbol('t')
 
         t = self.t
 
         u_old = self.u
         nu_original = casadi_length(self.u)
 
-        u_coeff = symbol('u_coeff', (degree+1) * nu_original)
+        u_coeff = casadi_symbol('u_coeff', (degree+1) * nu_original)
         u_new = np.zeros((nu_original, 1))
         for i in range(degree+1):
             u_new += t ** i * u_coeff[i*nu_original:(i+1)*nu_original]
