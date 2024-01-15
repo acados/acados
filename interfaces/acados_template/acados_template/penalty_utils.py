@@ -144,15 +144,15 @@ def plot_huber_penalty(symmetric=True):
     u = ca.SX.sym("u")
 
     delta = 1e-1
-    w = 1e4
+    tau = 1e4
 
     if symmetric:
         penalty, penalty_grad, penalty_hess, penalty_hess_xgn = symmetric_huber_penalty(
-            u, delta, w
+            u, delta, tau=tau
         )
     else:
         penalty, penalty_grad, penalty_hess, penalty_hess_xgn = one_sided_huber_penalty(
-            u, delta, w
+            u, delta, tau=tau
         )
 
     huber_penalty_fun = ca.Function("penalty", [u], [penalty])
