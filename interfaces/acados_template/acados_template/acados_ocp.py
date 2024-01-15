@@ -45,7 +45,7 @@ from .acados_dims import AcadosOcpDims
 from .acados_ocp_options import AcadosOcpOptions
 
 from .utils import (get_acados_path, format_class_dict,
-                    get_shared_lib_ext, is_column, is_empty, casadi_length,)
+                    get_shared_lib_ext, is_column, is_empty, casadi_length, check_if_square)
 from .penalty_utils import symmetric_huber_penalty
 
 from .zoro_description import ZoroDescription, process_zoro_description
@@ -155,6 +155,7 @@ class AcadosOcp:
             model.cost_r_in_psi_expr_0 = model.cost_r_in_psi_expr
 
         if cost.cost_type_0 == 'LINEAR_LS':
+            check_if_square(cost.W_0, 'W_0')
             ny_0 = cost.W_0.shape[0]
             if cost.Vx_0.shape[0] != ny_0 or cost.Vu_0.shape[0] != ny_0:
                 raise Exception('inconsistent dimension ny_0, regarding W_0, Vx_0, Vu_0.' + \
@@ -173,6 +174,7 @@ class AcadosOcp:
 
         elif cost.cost_type_0 == 'NONLINEAR_LS':
             ny_0 = cost.W_0.shape[0]
+            check_if_square(cost.W_0, 'W_0')
             if (is_empty(model.cost_y_expr_0) and ny_0 != 0) or casadi_length(model.cost_y_expr_0) != ny_0 or cost.yref_0.shape[0] != ny_0:
                 raise Exception('inconsistent dimension ny_0: regarding W_0, cost_y_expr.' +
                                 f'\nGot W_0[{cost.W_0.shape}], yref_0[{cost.yref_0.shape}], ',
@@ -207,6 +209,7 @@ class AcadosOcp:
         # path
         if cost.cost_type == 'LINEAR_LS':
             ny = cost.W.shape[0]
+            check_if_square(cost.W, 'W')
             if cost.Vx.shape[0] != ny or cost.Vu.shape[0] != ny:
                 raise Exception('inconsistent dimension ny, regarding W, Vx, Vu.' + \
                                 f'\nGot W[{cost.W.shape}], Vx[{cost.Vx.shape}], Vu[{cost.Vu.shape}]\n')
@@ -224,6 +227,7 @@ class AcadosOcp:
 
         elif cost.cost_type == 'NONLINEAR_LS':
             ny = cost.W.shape[0]
+            check_if_square(cost.W, 'W')
             if (is_empty(model.cost_y_expr) and ny != 0) or casadi_length(model.cost_y_expr) != ny or cost.yref.shape[0] != ny:
                 raise Exception('inconsistent dimension: regarding W, yref.' + \
                                 f'\nGot W[{cost.W.shape}], yref[{cost.yref.shape}],',
@@ -258,6 +262,7 @@ class AcadosOcp:
         # terminal
         if cost.cost_type_e == 'LINEAR_LS':
             ny_e = cost.W_e.shape[0]
+            check_if_square(cost.W_e, 'W_e')
             if cost.Vx_e.shape[0] != ny_e:
                 raise Exception('inconsistent dimension ny_e: regarding W_e, cost_y_expr_e.' + \
                     f'\nGot W_e[{cost.W_e.shape}], Vx_e[{cost.Vx_e.shape}]')
@@ -269,6 +274,7 @@ class AcadosOcp:
 
         elif cost.cost_type_e == 'NONLINEAR_LS':
             ny_e = cost.W_e.shape[0]
+            check_if_square(cost.W_e, 'W_e')
             if (is_empty(model.cost_y_expr_e) and ny_e != 0) or casadi_length(model.cost_y_expr_e) != ny_e or cost.yref_e.shape[0] != ny_e:
                 raise Exception('inconsistent dimension ny_e: regarding W_e, cost_y_expr.' +
                                 f'\nGot W_e[{cost.W_e.shape}], yref_e[{cost.yref_e.shape}], ',
