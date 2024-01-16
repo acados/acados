@@ -39,7 +39,7 @@ from subprocess import DEVNULL, STDOUT, call
 import numpy as np
 from casadi import DM, MX, SX, CasadiMeta, Function
 
-ALLOWED_CASADI_VERSIONS = ('3.6.3', '3.6.2', '3.6.1', '3.5.6', '3.5.5', '3.5.4', '3.5.3', '3.5.2', '3.5.1', '3.4.5', '3.4.0')
+ALLOWED_CASADI_VERSIONS = ('3.6.4', '3.6.3', '3.6.2', '3.6.1', '3.5.6', '3.5.5', '3.5.4', '3.5.3', '3.5.2', '3.5.1', '3.4.5', '3.4.0')
 
 TERA_VERSION = "0.0.34"
 
