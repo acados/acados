@@ -180,6 +180,7 @@ def formulate_ocp(cost_version: str) -> AcadosOcp:
     if cost_version in ['LS', 'NLS', 'NLS_Z', 'LS_Z', 'CONL', 'CONL_Z']:
         ocp.cost.yref = np.zeros((ny, ))
         ocp.cost.yref_e = np.zeros((ny_e, ))
+    if cost_version in ['LS', 'NLS', 'NLS_Z', 'LS_Z']:
         ocp.cost.W_e = Q
         ocp.cost.W = cost_W
 
