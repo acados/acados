@@ -165,7 +165,6 @@ def plot_one_sided_huber_through_ocp():
     for i in range(len(u_lins)):
         ys_quad = huber_ggn_quad_fun(us, u_lins[i]).full()
         plt.plot(us, ys_quad, '-', alpha = .5, label=f'GGN approximation at {u_lins[i]:.1f}')
-        print(f"{ys_quad=}")
         ys_quad = huber_xgn_quad_fun(us, u_lins[i]).full()
         plt.plot(us, ys_quad, '--', linewidth=2, label=f'XGN approximation at {u_lins[i]:.1f}')
 
@@ -177,7 +176,7 @@ def plot_one_sided_huber_through_ocp():
 
 
 if __name__ == "__main__":
+    plot_huber_penalty(symmetric=False)
+    plot_one_sided_huber_through_ocp()
     # plot_huber_penalty(symmetric=True)
     # plot_huber_through_ocp()
-    # plot_huber_penalty(symmetric=False)
-    plot_one_sided_huber_through_ocp()
