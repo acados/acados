@@ -134,8 +134,10 @@ def formulate_ocp(cost_version: str) -> AcadosOcp:
         ocp.model.cost_r_in_psi_expr = r
         ocp.model.cost_r_in_psi_expr_e = r_e
 
+        cost_W = ca.sparsify(ca.DM(cost_W))
+        Q_mat = ca.sparsify(ca.DM(Q))
         ocp.model.cost_psi_expr = 0.5 * (r.T @ cost_W @ r)
-        ocp.model.cost_psi_expr_e = 0.5 * (r_e.T @ Q @ r_e)
+        ocp.model.cost_psi_expr_e = 0.5 * (r_e.T @ Q_mat @ r_e)
 
         # with custom hessian
         # ocp.model.cost_conl_custom_outer_hess = cost_W
@@ -147,8 +149,10 @@ def formulate_ocp(cost_version: str) -> AcadosOcp:
         r = ca.SX.sym('r', ny)
         r_e = ca.SX.sym('r_e', ny_e)
 
+        cost_W = ca.sparsify(ca.DM(cost_W))
+        Q_mat = ca.sparsify(ca.DM(Q))
         ocp.model.cost_psi_expr = 0.5 * (r.T @ cost_W @ r)
-        ocp.model.cost_psi_expr_e = 0.5 * (r_e.T @ Q @ r_e)
+        ocp.model.cost_psi_expr_e = 0.5 * (r_e.T @ Q_mat @ r_e)
 
         ocp.model.cost_r_in_psi_expr = r
         ocp.model.cost_r_in_psi_expr_e = r_e
