@@ -638,7 +638,7 @@ def generate_c_code_conl_cost(ocp: AcadosOcp, stage_type: str):
     else:
         hess = custom_hess
 
-    outer_hess_fun = ca.Function('inner_hess', [res_expr, t, p], [hess])
+    outer_hess_fun = ca.Function('outer_hess', [res_expr, t, p], [hess])
 
     Jt_ux_expr = ca.jacobian(inner_expr, ca.vertcat(u, x)).T
     Jt_z_expr = ca.jacobian(inner_expr, z).T
