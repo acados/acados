@@ -830,6 +830,8 @@ class AcadosOcp:
         Formulate a constraint as an L2 penalty and add it to the current cost.
         """
 
+        casadi_symbol = self.model.get_casadi_symbol()
+
         if upper_bound is None and lower_bound is None:
             raise ValueError("Either upper or lower bound must be provided.")
 
@@ -846,7 +848,7 @@ class AcadosOcp:
         if self.cost.cost_type == "NONLINEAR_LS":
             self.cost.W = block_diag(self.cost.W, weight)
         elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
-            new_residual = ca.SX.sym(residual_name, constr_expr.shape)
+            new_residual = casadi_symbol(residual_name, constr_expr.shape)
             self.model.cost_r_in_psi_expr = ca.vertcat(self.model.cost_r_in_psi_expr, new_residual)
             self.model.cost_psi_expr += .5 * weight * new_residual**2
 
