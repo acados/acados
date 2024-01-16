@@ -911,11 +911,11 @@ class AcadosOcp:
                 symmetric_huber_penalty(new_residual, delta=huber_delta, w=weight*width**2, min_hess=min_hess)
         elif upper_bound is not None:
             # define penalty
+            constr_expr -= upper_bound
             penalty, penalty_grad, penalty_hess, penalty_hess_xgn = \
                 one_sided_huber_penalty(new_residual, delta=huber_delta, w=weight, min_hess=min_hess)
         elif lower_bound is not None:
             raise NotImplementedError("lower bound only not implemented, please change sign on constraint and use upper bound.")
-
 
         # add penalty to cost
         self.model.cost_r_in_psi_expr = ca.vertcat(self.model.cost_r_in_psi_expr, new_residual)
