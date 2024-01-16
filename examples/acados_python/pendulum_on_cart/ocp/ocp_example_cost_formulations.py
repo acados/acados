@@ -69,13 +69,17 @@ def formulate_ocp(cost_version: str) -> AcadosOcp:
     ocp.dims.N = N
 
     # set cost
-    Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
-    R = 2*np.diag([1e-2])
+    Q_mat = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
+    R_mat = 2*np.diag([1e-2])
 
     x = ocp.model.x
     u = ocp.model.u
 
-    cost_W = scipy.linalg.block_diag(Q, R)
+    cost_W = scipy.linalg.block_diag(Q_mat, R_mat)
+
+    if cost_version in ['CONL', 'CONL_Z', 'EXTERNAL', 'EXTERNAL_Z']:
+        cost_W = ca.sparsify(ca.DM(cost_W))
+        Q_mat = ca.sparsify(ca.DM(Q_mat))
 
     if cost_version == 'LS':
         ocp.cost.cost_type = 'LINEAR_LS'
@@ -134,8 +138,6 @@ def formulate_ocp(cost_version: str) -> AcadosOcp:
         ocp.model.cost_r_in_psi_expr = r
         ocp.model.cost_r_in_psi_expr_e = r_e
 
-        cost_W = ca.sparsify(ca.DM(cost_W))
-        Q_mat = ca.sparsify(ca.DM(Q))
         ocp.model.cost_psi_expr = 0.5 * (r.T @ cost_W @ r)
         ocp.model.cost_psi_expr_e = 0.5 * (r_e.T @ Q_mat @ r_e)
 
@@ -149,8 +151,6 @@ def formulate_ocp(cost_version: str) -> AcadosOcp:
         r = ca.SX.sym('r', ny)
         r_e = ca.SX.sym('r_e', ny_e)
 
-        cost_W = ca.sparsify(ca.DM(cost_W))
-        Q_mat = ca.sparsify(ca.DM(Q))
         ocp.model.cost_psi_expr = 0.5 * (r.T @ cost_W @ r)
         ocp.model.cost_psi_expr_e = 0.5 * (r_e.T @ Q_mat @ r_e)
 
@@ -167,7 +167,7 @@ def formulate_ocp(cost_version: str) -> AcadosOcp:
         ocp.cost.cost_type_e = 'EXTERNAL'
 
         ocp.model.cost_expr_ext_cost = .5*ca.vertcat(x, u).T @ cost_W @ ca.vertcat(x, u)
-        ocp.model.cost_expr_ext_cost_e = .5*x.T @ Q @ x
+        ocp.model.cost_expr_ext_cost_e = .5*x.T @ Q_mat @ x
 
     elif cost_version == 'EXTERNAL_Z':
         ocp.cost.cost_type = 'EXTERNAL'
@@ -176,7 +176,7 @@ def formulate_ocp(cost_version: str) -> AcadosOcp:
         y_expr_z = ca.vertcat(model.z[0], model.x[1:], u)
 
         ocp.model.cost_expr_ext_cost = .5*y_expr_z.T @ cost_W @ y_expr_z
-        ocp.model.cost_expr_ext_cost_e = .5*x.T @ Q @ x
+        ocp.model.cost_expr_ext_cost_e = .5*x.T @ Q_mat @ x
 
     else:
         raise Exception('Unknown cost_version. Possible values are \'LS\' and \'NLS\'.')
@@ -185,7 +185,7 @@ def formulate_ocp(cost_version: str) -> AcadosOcp:
         ocp.cost.yref = np.zeros((ny, ))
         ocp.cost.yref_e = np.zeros((ny_e, ))
     if cost_version in ['LS', 'NLS', 'NLS_Z', 'LS_Z']:
-        ocp.cost.W_e = Q
+        ocp.cost.W_e = Q_mat
         ocp.cost.W = cost_W
 
     # set constraints
