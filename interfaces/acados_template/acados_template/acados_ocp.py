@@ -786,7 +786,7 @@ class AcadosOcp:
             ny_0 = self.model.cost_y_expr_0.shape[0]
             conl_res_0 = casadi_symbol('residual_conl', ny_0)
             self.model.cost_r_in_psi_expr_0 = conl_res_0
-            self.model.cost_psi_expr_0 = .5 * conl_res_0.T @ self.cost.W_0 @ conl_res_0
+            self.model.cost_psi_expr_0 = .5 * conl_res_0.T @ ca.sparsify(ca.DM(self.cost.W_0)) @ conl_res_0
         else:
             raise Exception(f"Terminal cost type must be NONLINEAR_LS, got cost_type_0 {self.cost.cost_type_0}.")
 
@@ -799,7 +799,7 @@ class AcadosOcp:
             ny = self.model.cost_y_expr.shape[0]
             conl_res = casadi_symbol('residual_conl', ny)
             self.model.cost_r_in_psi_expr = conl_res
-            self.model.cost_psi_expr = .5 * conl_res.T @ self.cost.W @ conl_res
+            self.model.cost_psi_expr = .5 * conl_res.T @ ca.sparsify(ca.DM(self.cost.W)) @ conl_res
         else:
             raise Exception(f"Path cost type must be NONLINEAR_LS, got cost_type {self.cost.cost_type}.")
 
@@ -812,7 +812,7 @@ class AcadosOcp:
             ny_e = self.model.cost_y_expr_e.shape[0]
             conl_res_e = casadi_symbol('residual_conl', ny_e)
             self.model.cost_r_in_psi_expr_e = conl_res_e
-            self.model.cost_psi_expr_e = .5 * conl_res_e.T @ self.cost.W_e @ conl_res_e
+            self.model.cost_psi_expr_e = .5 * conl_res_e.T @ ca.sparsify(ca.DM(self.cost.W_e)) @ conl_res_e
         else:
             raise Exception(f"Initial cost type must be NONLINEAR_LS, got cost_type_e {self.cost.cost_type_e}.")
         return
