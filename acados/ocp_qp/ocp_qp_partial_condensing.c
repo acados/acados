@@ -247,8 +247,9 @@ void ocp_qp_partial_condensing_opts_initialize_default(void *dims_, void *opts_)
     // hpipm_pcond_opts
     d_part_cond_qp_arg_set_default(opts->hpipm_pcond_opts);
     // hpipm_red_opts
+    int tmp_i1 = 1;
     d_ocp_qp_reduce_eq_dof_arg_set_default(opts->hpipm_red_opts);
-    d_ocp_qp_reduce_eq_dof_arg_set_alias_unchanged(opts->hpipm_red_opts, 1);
+    d_ocp_qp_reduce_eq_dof_arg_set_alias_unchanged(&tmp_i1, opts->hpipm_red_opts);
 
     opts->mem_qp_in = 1;
 

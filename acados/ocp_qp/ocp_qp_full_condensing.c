@@ -236,10 +236,11 @@ void ocp_qp_full_condensing_opts_initialize_default(void *dims_, void *opts_)
     d_cond_qp_arg_set_default(opts->hpipm_cond_opts);
 
     // hpipm_red_opts
+    int tmp_i1 = 1;
     d_ocp_qp_reduce_eq_dof_arg_set_default(opts->hpipm_red_opts);
-    d_ocp_qp_reduce_eq_dof_arg_set_alias_unchanged(opts->hpipm_red_opts, 1);
-    d_ocp_qp_reduce_eq_dof_arg_set_comp_dual_sol_eq(opts->hpipm_red_opts, 1);
-    d_ocp_qp_reduce_eq_dof_arg_set_comp_dual_sol_ineq(opts->hpipm_red_opts, 1);
+    d_ocp_qp_reduce_eq_dof_arg_set_alias_unchanged(&tmp_i1, opts->hpipm_red_opts);
+    d_ocp_qp_reduce_eq_dof_arg_set_comp_dual_sol_eq(&tmp_i1, opts->hpipm_red_opts);
+    d_ocp_qp_reduce_eq_dof_arg_set_comp_dual_sol_ineq(&tmp_i1, opts->hpipm_red_opts);
 
     opts->mem_qp_in = 1;
 
@@ -279,8 +280,8 @@ void ocp_qp_full_condensing_opts_set(void *opts_, const char *field, void* value
     {
         int *tmp_ptr = value;
         opts->expand_dual_sol = *tmp_ptr;
-        d_ocp_qp_reduce_eq_dof_arg_set_comp_dual_sol_eq(opts->hpipm_red_opts, *tmp_ptr);
-        d_ocp_qp_reduce_eq_dof_arg_set_comp_dual_sol_ineq(opts->hpipm_red_opts, *tmp_ptr);
+        d_ocp_qp_reduce_eq_dof_arg_set_comp_dual_sol_eq(tmp_ptr, opts->hpipm_red_opts);
+        d_ocp_qp_reduce_eq_dof_arg_set_comp_dual_sol_ineq(tmp_ptr, opts->hpipm_red_opts);
     }
     else
     {
