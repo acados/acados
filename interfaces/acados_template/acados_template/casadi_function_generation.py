@@ -642,13 +642,13 @@ def generate_c_code_conl_cost(ocp: AcadosOcp, stage_type: str):
     outer_hess_expr = outer_hess_fun(inner_expr, t, p)
     phi_hess_is_diag = outer_hess_expr.sparsity().is_diag()
 
-    if stage_type == 'terminal':
+    if stage_type == 'terminal' and ocp.cost.phi_hess_is_diag_e is None:
         ocp.cost.phi_hess_is_diag_e = phi_hess_is_diag
 
-    elif stage_type == 'initial':
+    elif stage_type == 'initial' and ocp.cost.phi_hess_is_diag_0 is None:
         ocp.cost.phi_hess_is_diag_0 = phi_hess_is_diag
 
-    elif stage_type == 'path':
+    elif stage_type == 'path' and ocp.cost.phi_hess_is_diag is None:
         ocp.cost.phi_hess_is_diag = phi_hess_is_diag
 
     Jt_ux_expr = ca.jacobian(inner_expr, ca.vertcat(u, x)).T

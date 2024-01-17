@@ -85,7 +85,7 @@ class AcadosOcpCost:
         self.__zl          = np.array([])
         self.__zu          = np.array([])
         self.__cost_ext_fun_type = 'casadi'
-        self.__phi_hess_is_diag = 0
+        self.__phi_hess_is_diag = None
         # Mayer term
         self.__cost_type_e = 'LINEAR_LS'
         self.__W_e         = np.zeros((0,0))
@@ -96,7 +96,7 @@ class AcadosOcpCost:
         self.__zl_e        = np.array([])
         self.__zu_e        = np.array([])
         self.__cost_ext_fun_type_e = 'casadi'
-        self.__phi_hess_is_diag_e = 0
+        self.__phi_hess_is_diag_e = None
 
     # initial stage
     @property
@@ -304,7 +304,7 @@ class AcadosOcpCost:
     def phi_hess_is_diag(self):
         """Flag indicating whether the hessian of the outer function :math: `\Phi` in convex-over-nonlinear costs is diagonal.
         Flag is set automatically during code generation.
-        Default: :code: `0`.
+        Default: :code: `None`.
         """
         return self.__phi_hess_is_diag
 
@@ -507,7 +507,7 @@ class AcadosOcpCost:
     def phi_hess_is_diag_e(self):
         """Flag indicating whether the hessian of the outer function :math: `\Phi` in convex-over-nonlinear costs is diagonal.
         Flag is set automatically during code generation.
-        Default: :code: `0`.
+        Default: :code: `None`.
         """
         return self.__phi_hess_is_diag_e
 
