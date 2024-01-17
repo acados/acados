@@ -71,6 +71,7 @@ typedef struct
     external_function_generic *nls_y_fun;  // evaluation nls function
     external_function_generic *conl_cost_fun_jac_hess;
     external_function_generic *conl_cost_fun;
+    int phi_hess_is_diag;
 
 } irk_model;
 

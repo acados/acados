@@ -36,6 +36,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
+
 // acados
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
@@ -205,6 +207,11 @@ int sim_irk_model_set(void *model_, const char *field, void *value)
     else if (!strcmp(field, "conl_cost_fun") )
     {
         model->conl_cost_fun = value;
+    }
+    else if (!strcmp(field, "phi_hess_is_diag"))
+    {
+        int *phi_hess_is_diag_ptr = (int *) value;
+        model->phi_hess_is_diag = *phi_hess_is_diag_ptr;
     }
     else
     {
@@ -1436,9 +1443,21 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     // evaluate external function
                     model->conl_cost_fun_jac_hess->evaluate(model->conl_cost_fun_jac_hess, conl_fun_jac_hess_type_in,
                                                 conl_fun_jac_hess_in, conl_fun_jac_hess_type_out, conl_fun_jac_hess_out);
-                    // hessian of outer loss function
-                    blasfeo_dpotrf_l(ny, workspace->W, 0, 0, mem->W_chol, 0, 0);
 
+                    // factorize hessian of outer loss function
+                    if (&model->phi_hess_is_diag) {
+                        float diag_val = 0.;
+                        blasfeo_dgese(ny, ny, 0., mem->W_chol, 0, 0);
+                        for (int i = 0; i < ny; i++)
+                        {
+                            diag_val = sqrt(blasfeo_dgeex1(workspace->W, i, i));
+                            blasfeo_dgese(1, 1, diag_val, mem->W_chol, i, i);
+                        }
+                    }
+                    else
+                    {
+                        blasfeo_dpotrf_l(ny, workspace->W, 0, 0, mem->W_chol, 0, 0);
+                    }
                     if (nz > 0) // TODO: test this!
                     {
                         // // Jt_ux_tilde = workspace->tmp_nux_ny + dzdux_tran*Jt_z

@@ -639,6 +639,17 @@ def generate_c_code_conl_cost(ocp: AcadosOcp, stage_type: str):
         hess = custom_hess
 
     outer_hess_fun = ca.Function('outer_hess', [res_expr, t, p], [hess])
+    outer_hess_expr = outer_hess_fun(inner_expr, t, p)
+    phi_hess_is_diag = outer_hess_expr.sparsity().is_diag()
+
+    if stage_type == 'terminal':
+        ocp.cost.phi_hess_is_diag_e = phi_hess_is_diag
+
+    elif stage_type == 'initial':
+        ocp.cost.phi_hess_is_diag_0 = phi_hess_is_diag
+
+    elif stage_type == 'path':
+        ocp.cost.phi_hess_is_diag = phi_hess_is_diag
 
     Jt_ux_expr = ca.jacobian(inner_expr, ca.vertcat(u, x)).T
     Jt_z_expr = ca.jacobian(inner_expr, z).T
@@ -651,7 +662,7 @@ def generate_c_code_conl_cost(ocp: AcadosOcp, stage_type: str):
     cost_fun_jac_hess = ca.Function(
         fun_name_cost_fun_jac_hess,
         [x, u, z, yref, t, p],
-        [cost_expr, outer_loss_grad_fun(inner_expr, t, p), Jt_ux_expr, Jt_z_expr, outer_hess_fun(inner_expr, t, p)]
+        [cost_expr, outer_loss_grad_fun(inner_expr, t, p), Jt_ux_expr, Jt_z_expr, outer_hess_expr]
     )
 
     # change directory
