@@ -1446,7 +1446,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
                     // factorize hessian of outer loss function
                     if (&model->phi_hess_is_diag) {
-                        float diag_val = 0.;
+                        double diag_val = 0.;
                         blasfeo_dgese(ny, ny, 0., mem->W_chol, 0, 0);
                         for (int i = 0; i < ny; i++)
                         {

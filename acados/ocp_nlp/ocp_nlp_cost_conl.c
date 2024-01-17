@@ -675,8 +675,9 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
                                                 conl_fun_jac_hess_in, conl_fun_jac_hess_type_out, conl_fun_jac_hess_out);
 
         // factorize hessian of outer loss function
-        if (&model->phi_hess_is_diag) {
-            float diag_val = 0.;
+        if (&model->phi_hess_is_diag)
+        {
+            double diag_val = 0.;
             blasfeo_dgese(ny, ny, 0., &memory->W_chol, 0, 0);
             for (int i = 0; i < ny; i++)
             {
