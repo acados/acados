@@ -72,7 +72,7 @@ class AcadosOcpCost:
         self.__Zu_0 = None
         self.__zl_0 = None
         self.__zu_0 = None
-        self.__phi_hess_is_diag_0 = None
+        self.__psi_hess_is_diag_0 = None
         # Lagrange term
         self.__cost_type   = 'LINEAR_LS'  # cost type
         self.__W           = np.zeros((0,0))
@@ -85,7 +85,7 @@ class AcadosOcpCost:
         self.__zl          = np.array([])
         self.__zu          = np.array([])
         self.__cost_ext_fun_type = 'casadi'
-        self.__phi_hess_is_diag = None
+        self.__psi_hess_is_diag = None
         # Mayer term
         self.__cost_type_e = 'LINEAR_LS'
         self.__W_e         = np.zeros((0,0))
@@ -96,7 +96,7 @@ class AcadosOcpCost:
         self.__zl_e        = np.array([])
         self.__zu_e        = np.array([])
         self.__cost_ext_fun_type_e = 'casadi'
-        self.__phi_hess_is_diag_e = None
+        self.__psi_hess_is_diag_e = None
 
     # initial stage
     @property
@@ -157,12 +157,12 @@ class AcadosOcpCost:
         return self.__cost_ext_fun_type_0
 
     @property
-    def phi_hess_is_diag_0(self):
-        """Flag indicating whether the hessian of the outer function :math: `\Phi` in convex-over-nonlinear costs is diagonal.
+    def psi_hess_is_diag_0(self):
+        """Flag indicating whether the hessian of the outer function :math: `\Psi` in convex-over-nonlinear costs is diagonal.
         Flag is set automatically during code generation.
         Default: :code: `None`.
         """
-        return self.__phi_hess_is_diag_0
+        return self.__psi_hess_is_diag_0
 
 
     @yref_0.setter
@@ -211,11 +211,11 @@ class AcadosOcpCost:
         else:
             raise Exception('Invalid cost_ext_fun_type_0 value, expected numpy array.')
 
-    @phi_hess_is_diag_0.setter
-    def phi_hess_is_diag_0(self, phi_hess_is_diag_0):
-        phi_hess_is_diag_0 = int(phi_hess_is_diag_0)
-        if phi_hess_is_diag_0 == 0 or phi_hess_is_diag_0 == 1:
-            self.__phi_hess_is_diag_0 = phi_hess_is_diag_0
+    @psi_hess_is_diag_0.setter
+    def psi_hess_is_diag_0(self, psi_hess_is_diag_0):
+        psi_hess_is_diag_0 = int(psi_hess_is_diag_0)
+        if psi_hess_is_diag_0 == 0 or psi_hess_is_diag_0 == 1:
+            self.__psi_hess_is_diag_0 = psi_hess_is_diag_0
         else:
             raise Exception('Invalid phi_hess_diag_0 value, expected bool or int in [0, 1].')
 
@@ -301,12 +301,12 @@ class AcadosOcpCost:
         return self.__cost_ext_fun_type
 
     @property
-    def phi_hess_is_diag(self):
-        """Flag indicating whether the hessian of the outer function :math: `\Phi` in convex-over-nonlinear costs is diagonal.
+    def psi_hess_is_diag(self):
+        """Flag indicating whether the hessian of the outer function :math: `\Psi` in convex-over-nonlinear costs is diagonal.
         Flag is set automatically during code generation.
         Default: :code: `None`.
         """
-        return self.__phi_hess_is_diag
+        return self.__psi_hess_is_diag
 
     @cost_type.setter
     def cost_type(self, cost_type):
@@ -399,11 +399,11 @@ class AcadosOcpCost:
         else:
             raise Exception("Invalid cost_ext_fun_type value, expected one in ['casadi', 'generic'].")
 
-    @phi_hess_is_diag.setter
-    def phi_hess_is_diag(self, phi_hess_is_diag):
-        phi_hess_is_diag = int(phi_hess_is_diag)
-        if phi_hess_is_diag == 0 or phi_hess_is_diag == 1:
-            self.__phi_hess_is_diag = phi_hess_is_diag
+    @psi_hess_is_diag.setter
+    def psi_hess_is_diag(self, psi_hess_is_diag):
+        psi_hess_is_diag = int(psi_hess_is_diag)
+        if psi_hess_is_diag == 0 or psi_hess_is_diag == 1:
+            self.__psi_hess_is_diag = psi_hess_is_diag
         else:
             raise Exception('Invalid phi_hess_diag value, expected bool or int in [0, 1].')
 
@@ -504,12 +504,12 @@ class AcadosOcpCost:
         return self.__cost_ext_fun_type_e
 
     @property
-    def phi_hess_is_diag_e(self):
-        """Flag indicating whether the hessian of the outer function :math: `\Phi` in convex-over-nonlinear costs is diagonal.
+    def psi_hess_is_diag_e(self):
+        """Flag indicating whether the hessian of the outer function :math: `\Psi` in convex-over-nonlinear costs is diagonal.
         Flag is set automatically during code generation.
         Default: :code: `None`.
         """
-        return self.__phi_hess_is_diag_e
+        return self.__psi_hess_is_diag_e
 
     @cost_type_e.setter
     def cost_type_e(self, cost_type_e):
@@ -605,11 +605,11 @@ class AcadosOcpCost:
         else:
             raise Exception("Invalid cost_ext_fun_type_e value, expected one in ['casadi', 'generic'].")
 
-    @phi_hess_is_diag_e.setter
-    def phi_hess_is_diag_e(self, phi_hess_is_diag_e):
-        phi_hess_is_diag_e = int(phi_hess_is_diag_e)
-        if phi_hess_is_diag_e == 0 or phi_hess_is_diag_e == 1:
-            self.__phi_hess_is_diag_e = phi_hess_is_diag_e
+    @psi_hess_is_diag_e.setter
+    def psi_hess_is_diag_e(self, psi_hess_is_diag_e):
+        psi_hess_is_diag_e = int(psi_hess_is_diag_e)
+        if psi_hess_is_diag_e == 0 or psi_hess_is_diag_e == 1:
+            self.__psi_hess_is_diag_e = psi_hess_is_diag_e
         else:
             raise Exception('Invalid phi_hess_diag_e value, expected bool or int in [0, 1].')
 

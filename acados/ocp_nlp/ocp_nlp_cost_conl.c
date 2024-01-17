@@ -181,7 +181,7 @@ void *ocp_nlp_cost_conl_model_assign(void *config_, void *dims_, void *raw_memor
     // default initialization
     model->scaling = 1.0;
     model->t = 0.0;
-    model->phi_hess_is_diag = 0;
+    model->psi_hess_is_diag = 0;
 
     // assert
     assert((char *) raw_memory + ocp_nlp_cost_conl_model_calculate_size(config_, dims) >= c_ptr);
@@ -258,10 +258,10 @@ int ocp_nlp_cost_conl_model_set(void *config_, void *dims_, void *model_,
         double *scaling_ptr = (double *) value_;
         model->scaling = *scaling_ptr;
     }
-    else if (!strcmp(field, "phi_hess_is_diag"))
+    else if (!strcmp(field, "psi_hess_is_diag"))
     {
-        int *phi_hess_is_diag_ptr = (int *) value_;
-        model->phi_hess_is_diag = *phi_hess_is_diag_ptr;
+        int *psi_hess_is_diag_ptr = (int *) value_;
+        model->psi_hess_is_diag = *psi_hess_is_diag_ptr;
     }
     else
     {
@@ -675,7 +675,7 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
                                                 conl_fun_jac_hess_in, conl_fun_jac_hess_type_out, conl_fun_jac_hess_out);
 
         // factorize hessian of outer loss function
-        if (model->phi_hess_is_diag)
+        if (model->psi_hess_is_diag)
         {
             printf("sparse factorization\n");
             double diag_val = 0.;

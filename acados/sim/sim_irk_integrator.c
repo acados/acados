@@ -208,10 +208,10 @@ int sim_irk_model_set(void *model_, const char *field, void *value)
     {
         model->conl_cost_fun = value;
     }
-    else if (!strcmp(field, "phi_hess_is_diag"))
+    else if (!strcmp(field, "psi_hess_is_diag"))
     {
-        int *phi_hess_is_diag_ptr = (int *) value;
-        model->phi_hess_is_diag = *phi_hess_is_diag_ptr;
+        int *psi_hess_is_diag_ptr = (int *) value;
+        model->psi_hess_is_diag = *psi_hess_is_diag_ptr;
     }
     else
     {
@@ -1445,7 +1445,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                                                 conl_fun_jac_hess_in, conl_fun_jac_hess_type_out, conl_fun_jac_hess_out);
 
                     // factorize hessian of outer loss function
-                    if (model->phi_hess_is_diag) {
+                    if (model->psi_hess_is_diag) {
                         printf("sparse factorization\n");
                         double diag_val = 0.;
                         blasfeo_dgese(ny, ny, 0., mem->W_chol, 0, 0);
