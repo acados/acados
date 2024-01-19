@@ -40,6 +40,7 @@
 // blasfeo
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo/include/blasfeo_common.h"
 // acados
 #include "acados/utils/mem.h"
 
@@ -675,15 +676,16 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
                                                 conl_fun_jac_hess_in, conl_fun_jac_hess_type_out, conl_fun_jac_hess_out);
 
         // factorize hessian of outer loss function
-        if (model->psi_hess_is_diag)
+        // TODO: benchmark whether sparse factorization is faster
+        if (model->psi_hess_is_diag & ny > 4)
         {
-            printf("sparse factorization\n");
-            double diag_val = 0.;
+            // TODO move flag to opts and store both W and W_chol as vec if they are diagonal
+            // and then use diagonal matrix matrix multiplication
+            // void blasfeo_dgemm_dn(int m, int n, double alpha, struct blasfeo_dvec *sA, int ai, struct blasfeo_dmat *sB, int bi, int bj, double beta, struct blasfeo_dmat *sC, int ci, int cj, struct blasfeo_dmat *sD, int di, int dj);
             blasfeo_dgese(ny, ny, 0., &memory->W_chol, 0, 0);
             for (int i = 0; i < ny; i++)
             {
-                diag_val = sqrt(blasfeo_dgeex1(&work->W, i, i));
-                blasfeo_dgese(1, 1, diag_val, &memory->W_chol, i, i);
+                BLASFEO_DMATEL(&memory->W_chol, i, i) = sqrt(BLASFEO_DMATEL(&work->W, i, i));
             }
         }
         else

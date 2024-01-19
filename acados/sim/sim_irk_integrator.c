@@ -47,6 +47,7 @@
 
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo/include/blasfeo_common.h"
 
 
 /************************************************
@@ -1445,14 +1446,12 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                                                 conl_fun_jac_hess_in, conl_fun_jac_hess_type_out, conl_fun_jac_hess_out);
 
                     // factorize hessian of outer loss function
-                    if (model->psi_hess_is_diag) {
-                        printf("sparse factorization\n");
-                        double diag_val = 0.;
+                    // TODO: benchmark whether sparse factorization is faster
+                    if (model->psi_hess_is_diag & ny > 4) {
                         blasfeo_dgese(ny, ny, 0., mem->W_chol, 0, 0);
                         for (int i = 0; i < ny; i++)
                         {
-                            diag_val = sqrt(blasfeo_dgeex1(workspace->W, i, i));
-                            blasfeo_dgese(1, 1, diag_val, mem->W_chol, i, i);
+                            BLASFEO_DMATEL(mem->W_chol, i, i) = sqrt(BLASFEO_DMATEL(workspace->W, i, i));
                         }
                     }
                     else
