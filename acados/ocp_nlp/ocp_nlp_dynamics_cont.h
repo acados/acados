@@ -121,6 +121,8 @@ typedef struct
     // struct blasfeo_dvec *z;             // pointer to (input) z in nlp_out at current stage
     struct blasfeo_dmat *dzduxt;        // pointer to dzdux transposed
     void *sim_solver;                   // sim solver memory
+    acados_size_t workspace_size;
+
 } ocp_nlp_dynamics_cont_memory;
 
 //

@@ -1881,7 +1881,6 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
     }
     else
     {
-
         // qp solver
         work->qp_work = (void *) c_ptr;
         c_ptr += qp_solver->workspace_calculate_size(qp_solver, dims->qp_solver,
@@ -1910,7 +1909,7 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
 
     }
 
-    assert((char *) work + ocp_nlp_workspace_calculate_size(config, dims, opts) >= c_ptr);
+    assert((char *) work + mem->workspace_size >= c_ptr);
 
     return work;
 }
