@@ -165,7 +165,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     ocp_json.dims.nsg = model.dim_nsg;
 
     % to match python!
-    ocp_json.dims.ns_0 = model.dim_nsbu + model.dim_nsg
+    ocp_json.dims.ns_0 = model.dim_nsbu + model.dim_nsg;
 
     if isfield(model, 'dim_ny_0')
         ocp_json.dims.ny_0 = model.dim_ny_0;
