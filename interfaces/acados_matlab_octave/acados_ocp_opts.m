@@ -131,8 +131,6 @@ classdef acados_ocp_opts < handle
             elseif (strcmp(field, 'nlp_solver_exact_hessian'))
                 obj.opts_struct.nlp_solver_exact_hessian = value;
             % hessian approx
-            elseif (strcmp(field, 'nlp_solver_exact_hessian'))
-                obj.opts_struct.nlp_solver_exact_hessian = value;
             elseif (strcmp(field, 'exact_hess_dyn'))
                 obj.opts_struct.exact_hess_dyn = value;
             elseif (strcmp(field, 'exact_hess_cost'))
