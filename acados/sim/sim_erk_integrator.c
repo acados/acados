@@ -440,10 +440,11 @@ acados_size_t sim_erk_workspace_calculate_size(void *config_, void *dims_, void 
 
 
 
-static void *sim_erk_cast_workspace(void *config_, void *dims_, void *opts_, void *raw_memory)
+static void *sim_erk_cast_workspace(void *config_, void *dims_, void *opts_, void *raw_memory, void *mem_)
 {
     sim_opts *opts = opts_;
     sim_erk_dims *dims = (sim_erk_dims *) dims_;
+    sim_erk_memory *mem = mem_;
 
     int ns = opts->ns;
 
@@ -478,7 +479,6 @@ static void *sim_erk_cast_workspace(void *config_, void *dims_, void *opts_, voi
         //assign_and_advance_double((num_steps + 1) * nX, &workspace->out_forw_traj, &c_ptr);
         work->out_forw_traj = d_ptr;
         d_ptr += (num_steps+1)*nX;
-        
     }
     else
     {
@@ -518,7 +518,7 @@ static void *sim_erk_cast_workspace(void *config_, void *dims_, void *opts_, voi
     // update c_ptr
     c_ptr = (char *) d_ptr;
 
-    assert((char *) raw_memory + sim_erk_workspace_calculate_size(config_, dims, opts_) >= c_ptr);
+    assert((char *) raw_memory + mem->workspace_size >= c_ptr);
 
     return (void *) work;
 }
@@ -530,6 +530,8 @@ static void *sim_erk_cast_workspace(void *config_, void *dims_, void *opts_, voi
 int sim_erk_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_,
                        void *work_)
 {
+    sim_erk_memory *mem = mem_;
+    mem->workspace_size = sim_erk_workspace_calculate_size(config_, in->dims, opts_);
     return ACADOS_SUCCESS;
 }
 
@@ -555,7 +557,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     void *dims_ = in->dims;
     sim_erk_dims *dims = (sim_erk_dims *) dims_;
 
-    sim_erk_workspace *work = sim_erk_cast_workspace(config, dims, opts, work_);
+    sim_erk_workspace *work = sim_erk_cast_workspace(config, dims, opts, work_, mem_);
 
     int i, j, s, istep;
     double a = 0, b = 0;  // temp values of A_mat and b_vec
