@@ -49,7 +49,7 @@ qp_solver_cond_N = 5; % for partial condensing
 sim_method = 'erk'; % erk, irk, irk_gnsf
 
 %% model dynamics
-model = pendulum_on_cart_model;
+model = pendulum_on_cart_model();
 nx = model.nx;
 nu = model.nu;
 

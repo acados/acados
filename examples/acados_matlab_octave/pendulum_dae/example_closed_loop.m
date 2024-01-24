@@ -71,7 +71,7 @@ ocp_sim_method_newton_iter = 3 * ones(ocp_N, 1); % scalar or vector of size ocp_
 cost_type = 'linear_ls'; % linear_ls, ext_cost
 
 %% model
-model = pendulum_dae_model;
+model = pendulum_dae_model();
 %  sym_x = [xpos, ypos, alpha, vx, vy, valpha]
 length_pendulum = 5;
 xsteady = [ 0; -length_pendulum; 0; 0; 0; 0];

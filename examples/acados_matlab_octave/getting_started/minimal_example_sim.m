@@ -48,7 +48,7 @@ x0 = [0; 1e-1; 0; 0]; % initial state
 u0 = 0; % control input
 
 %% define model dynamics
-model = pendulum_on_cart_model;
+model = pendulum_on_cart_model();
 
 nx = model.nx;
 nu = model.nu;

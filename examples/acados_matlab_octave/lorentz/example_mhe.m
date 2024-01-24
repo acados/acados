@@ -33,7 +33,7 @@
 clear all
 
 %% model
-model = lorentz_model;
+model = lorentz_model();
 
 nx = model.nx;
 nu = model.nu;
