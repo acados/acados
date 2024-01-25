@@ -71,7 +71,7 @@ constr_variant = 1; % 0: x bounds; 1: z bounds
 cost_variant = 1; % 0: ls on u,x; 1: ls on u,z; (not implemented yet: 2: nls on u,z)
 
 % get model
-model = simple_dae_model;
+model = simple_dae_model();
 
 nx = length(model.sym_x);
 nu = length(model.sym_u);

@@ -56,7 +56,7 @@ num_steps = 4;
 
 
 %% model
-model = linear_mass_spring_model;
+model = linear_mass_spring_model();
 
 nx = model.nx;
 nu = model.nu;

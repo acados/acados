@@ -66,7 +66,7 @@ u = 0;
 % x0 = [ 0; -length_pendulum; 0; 0; 0; 0];
 
 %% model
-model = pendulum_dae_model;
+model = pendulum_dae_model();
 disp('state')
 disp(model.sym_x)
 

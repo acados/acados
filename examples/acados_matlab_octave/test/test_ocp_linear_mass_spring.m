@@ -75,7 +75,7 @@ end
 
 
 %% create model entries
-model = linear_mass_spring_model;
+model = linear_mass_spring_model();
 
 
 % dims

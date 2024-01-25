@@ -50,7 +50,7 @@ for integrator = {'irk_gnsf', 'irk', 'erk'}
     FD_epsilon = 1e-6;
 
     %% model
-    model = pendulum_on_cart_model;
+    model = pendulum_on_cart_model();
 
     model_name = ['pendulum_' method];
     nx = model.nx;

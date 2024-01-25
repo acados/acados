@@ -66,7 +66,7 @@ plant_sim_method_num_stages = 3;
 plant_sim_method_num_steps = 3;
 
 %% model dynamics
-model = pendulum_on_cart_model;
+model = pendulum_on_cart_model();
 nx = model.nx;
 nu = model.nu;
 

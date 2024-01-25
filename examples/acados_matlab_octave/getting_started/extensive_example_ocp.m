@@ -78,7 +78,7 @@ sim_method_num_steps = ones(N,1);
 sim_method_num_stages(3:end) = 2;
 
 %% model dynamics
-model = pendulum_on_cart_model;
+model = pendulum_on_cart_model();
 
 %% model to create the solver
 ocp_model = acados_ocp_model();

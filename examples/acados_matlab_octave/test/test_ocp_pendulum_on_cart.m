@@ -85,7 +85,7 @@ for itest = 1:3
     model_name = ['pendulum_' num2str(itest)];
 
     %% create model entries
-    model = pendulum_on_cart_model;
+    model = pendulum_on_cart_model();
 
     % dims
     T = N*h; % horizon length time
