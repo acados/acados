@@ -1280,6 +1280,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             }
             opts->print_level = *print_level;
         }
+        else if (!strcmp(field, "fixed_hess"))
+        {
+            int* fixed_hess = (int *) value;
+            opts->fixed_hess = *fixed_hess;
+        }
         else
         {
             printf("\nerror: ocp_nlp_opts_set: wrong field: %s\n", field);
@@ -1597,7 +1602,7 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
         blasfeo_dvecse(nx[i] + nz[i], 0.0, mem->sim_guess+i, 0);
         // printf("sim_guess i %d: %p\n", i, mem->sim_guess+i);
     }
-    // printf("created memory %p\n", mem);
+    mem->compute_hess = 1;
 
     return mem;
 }
@@ -2116,13 +2121,15 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
     for (int i = 0; i <= N; i++)
     {
         // init Hessian to 0
-        blasfeo_dgese(nu[i] + nx[i], nu[i] + nx[i], 0.0, mem->qp_in->RSQrq+i, 0, 0);
-
+        if (mem->compute_hess)
+        {
+            blasfeo_dgese(nu[i] + nx[i], nu[i] + nx[i], 0.0, mem->qp_in->RSQrq+i, 0, 0);
+        }
 
         if (i < N)
         {
             // Levenberg Marquardt term: Ts[i] * levenberg_marquardt * eye()
-            if (opts->levenberg_marquardt > 0.0)
+            if (opts->levenberg_marquardt > 0.0 && mem->compute_hess)
                 blasfeo_ddiare(nu[i] + nx[i], in->Ts[i] * opts->levenberg_marquardt,
                                mem->qp_in->RSQrq+i, 0, 0);
 
@@ -2133,7 +2140,7 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
         else
         {
             // Levenberg Marquardt term: 1.0 * levenberg_marquardt * eye()
-            if (opts->levenberg_marquardt > 0.0)
+            if (opts->levenberg_marquardt > 0.0 && mem->compute_hess)
                 blasfeo_ddiare(nu[i] + nx[i], opts->levenberg_marquardt,
                                mem->qp_in->RSQrq+i, 0, 0);
         }
@@ -2818,6 +2825,17 @@ int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nl
         config->cost[ii]->precompute(config->cost[ii], dims->cost[ii], in->cost[ii],
                                      opts->cost[ii], mem->cost[ii], work->cost[ii]);
     }
+
+    ocp_nlp_alias_memory_to_submodules(config, dims, in, out, opts, mem, work);
+    if (opts->fixed_hess)
+    {
+        mem->compute_hess = 1;
+        ocp_nlp_approximate_qp_matrices(config, dims, in, out, opts, mem, work);
+        mem->compute_hess = 0;
+        for (ii=0; ii<=N; ii++)
+            config->cost[ii]->opts_set(config->cost[ii], opts->cost[ii], "compute_hess", &mem->compute_hess);
+    }
+
     return status;
 }
 

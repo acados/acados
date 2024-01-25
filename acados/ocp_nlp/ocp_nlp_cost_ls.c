@@ -386,10 +386,12 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
 
 acados_size_t ocp_nlp_cost_ls_opts_calculate_size(void *config_, void *dims_)
 {
+    // ocp_nlp_cost_config *config = config_;
+
     acados_size_t size = 0;
 
-    // size += sizeof(ocp_nlp_cost_ls_opts);
-    // make_int_multiple_of(8, &size);
+    size += sizeof(ocp_nlp_cost_ls_opts);
+    make_int_multiple_of(8, &size);
 
     return size;
 }
@@ -398,13 +400,15 @@ acados_size_t ocp_nlp_cost_ls_opts_calculate_size(void *config_, void *dims_)
 
 void *ocp_nlp_cost_ls_opts_assign(void *config_, void *dims_, void *raw_memory)
 {
-    // char *c_ptr = (char *) raw_memory;
-    // ocp_nlp_cost_ls_opts *opts = (ocp_nlp_cost_ls_opts *) c_ptr;
-    // c_ptr += sizeof(ocp_nlp_cost_ls_opts);
-    // assert((char *) raw_memory +
-    //     ocp_nlp_cost_ls_opts_calculate_size(config_, dims_) >= c_ptr);
+    // ocp_nlp_cost_config *config = config_;
 
-    void *opts = raw_memory;
+    char *c_ptr = (char *) raw_memory;
+
+    ocp_nlp_cost_ls_opts *opts = (ocp_nlp_cost_ls_opts *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_cost_ls_opts);
+
+    assert((char *) raw_memory + ocp_nlp_cost_ls_opts_calculate_size(config_, dims_) >= c_ptr);
+
     return opts;
 }
 
@@ -413,7 +417,8 @@ void *ocp_nlp_cost_ls_opts_assign(void *config_, void *dims_, void *raw_memory)
 void ocp_nlp_cost_ls_opts_initialize_default(void *config_,
     void *dims_, void *opts_)
 {
-    // ocp_nlp_cost_ls_opts *opts = opts_;
+    ocp_nlp_cost_ls_opts *opts = opts_;
+    opts->compute_hess = 1;
 
     return;
 }
@@ -432,11 +437,16 @@ void ocp_nlp_cost_ls_opts_update(void *config_, void *dims_, void *opts_)
 void ocp_nlp_cost_ls_opts_set(void *config_, void *opts_, const char *field, void* value)
 {
     // ocp_nlp_cost_config *config = config_;
-    // ocp_nlp_cost_ls_opts *opts = opts_;
+    ocp_nlp_cost_ls_opts *opts = opts_;
 
     if (!strcmp(field, "exact_hess"))
     {
         // do nothing: the exact hessian is always computed
+    }
+    else if (!strcmp(field, "compute_hess"))
+    {
+        int* int_ptr = value;
+        opts->compute_hess = *int_ptr;
     }
     else
     {
@@ -766,6 +776,7 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
     int ns = dims->ns;
 
     struct blasfeo_dmat *Cyt = &model->Cyt;
+    ocp_nlp_cost_ls_opts *opts = opts_;
 
     if (nz > 0)
     { // eliminate algebraic variables and update Cyt and y_ref
@@ -786,9 +797,12 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
                            &work->Cyt_tilde, 0, 0, &work->tmp_nv_ny, 0, 0);
 
         // add hessian of the cost contribution
-        // RSQrq += scaling * tmp_nv_ny * tmp_nv_ny^T
-        blasfeo_dsyrk_ln(nu + nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny,
-                         0, 0, 1.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
+        if (opts->compute_hess)
+        {
+            // RSQrq += scaling * tmp_nv_ny * tmp_nv_ny^T
+            blasfeo_dsyrk_ln(nu + nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny,
+                                0, 0, 1.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
+        }
 
         // compute gradient, function
         // res = \tilde{V}_x * x + \tilde{V}_u * u - \tilde{y}_ref
@@ -800,8 +814,11 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
     }
     else // nz == 0
     {
-        // add hessian of the cost contribution
-        blasfeo_dgead(nx + nu, nx + nu, 1.0, &memory->hess, 0, 0, memory->RSQrq, 0, 0);
+        if (opts->compute_hess)
+        {
+            // add hessian of the cost contribution
+            blasfeo_dgead(nx + nu, nx + nu, 1.0, &memory->hess, 0, 0, memory->RSQrq, 0, 0);
+        }
 
         // compute gradient, function
         // res = Cyt * ux - y_ref

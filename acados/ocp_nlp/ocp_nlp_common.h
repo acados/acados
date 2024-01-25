@@ -269,6 +269,7 @@ typedef struct ocp_nlp_opts
     int reuse_workspace;
     int num_threads;
     int print_level;
+    int fixed_hess;
 
     // TODO: move to separate struct?
     ocp_nlp_globalization_t globalization;
@@ -349,6 +350,7 @@ typedef struct ocp_nlp_memory
     struct blasfeo_dvec *dyn_adj;
 
     double cost_value;
+    int compute_hess;
 
     bool *set_sim_guess; // indicate if there is new explicitly provided guess for integration variables
     struct blasfeo_dvec *sim_guess;
