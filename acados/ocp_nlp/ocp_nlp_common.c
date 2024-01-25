@@ -2811,7 +2811,9 @@ int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nl
                                                 mem->dynamics[ii], work->dynamics[ii]);
         if (status != ACADOS_SUCCESS)
             return status;
-
+    }
+    for (ii = 0; ii <= N; ii++)
+    {
         // cost precompute
         config->cost[ii]->precompute(config->cost[ii], dims->cost[ii], in->cost[ii],
                                      opts->cost[ii], mem->cost[ii], work->cost[ii]);
