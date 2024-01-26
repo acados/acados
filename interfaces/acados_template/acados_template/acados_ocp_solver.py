@@ -413,6 +413,8 @@ class AcadosOcpSolver:
 
         if generate:
             self.generate(acados_ocp, json_file=json_file, simulink_opts=simulink_opts, cmake_builder=cmake_builder)
+        else:
+            acados_ocp.make_consistent()
 
         # load json, store options in object
         with open(json_file, 'r') as f:
