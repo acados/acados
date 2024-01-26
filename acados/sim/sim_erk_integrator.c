@@ -623,7 +623,8 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     ext_fun_arg_t expl_vde_type_out[3];
     void *expl_vde_out[3];
 
-    int nx_squared = nx * nx;
+    int nx_squared_plus_nx = nx * nx + nx;
+    int nx_times_nu = nx * nu;
 
     if (opts->sens_forw)
     {  // simulation + forward sensitivities
@@ -632,9 +633,9 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         expl_vde_type_in[1] = COLMAJ;
         expl_vde_in[1] = rhs_forw_in + nx;  // Sx: nx*nx
         expl_vde_type_in[2] = COLMAJ;
-        expl_vde_in[2] = rhs_forw_in + nx + nx_squared;  // Su: nx*nu
+        expl_vde_in[2] = rhs_forw_in + nx_squared_plus_nx;  // Su: nx*nu
         expl_vde_type_in[3] = COLMAJ;
-        expl_vde_in[3] = rhs_forw_in + nx + nx_squared + nx * nu;  // u: nu
+        expl_vde_in[3] = rhs_forw_in + nx_squared_plus_nx + nx_times_nu;  // u: nu
 
         expl_vde_type_out[0] = COLMAJ;
         expl_vde_type_out[1] = COLMAJ;
@@ -697,7 +698,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 // forward VDE evaluation
                 expl_vde_out[0] = K_traj + s * nX;  // fun: nx
                 expl_vde_out[1] = K_traj + s * nX + nx;  // Sx: nx*nx
-                expl_vde_out[2] = K_traj + s * nX + nx + nx_squared;  // Su: nx*nu
+                expl_vde_out[2] = K_traj + s * nX + nx_squared_plus_nx;  // Su: nx*nu
                 model->expl_vde_for->evaluate(model->expl_vde_for, expl_vde_type_in, expl_vde_in,
                                               expl_vde_type_out, expl_vde_out);
             }
@@ -825,11 +826,11 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     ext_fun_type_in[1] = COLMAJ;
                     ext_fun_in[1] = rhs_adj_in + nx;  // Sx: nx*nx
                     ext_fun_type_in[2] = COLMAJ;
-                    ext_fun_in[2] = rhs_adj_in + nx + nx_squared;  // Su: nx*nu
+                    ext_fun_in[2] = rhs_adj_in + nx_squared_plus_nx;  // Su: nx*nu
                     ext_fun_type_in[3] = COLMAJ;
-                    ext_fun_in[3] = rhs_adj_in + nx + nx_squared + nx * nu;  // lam: nx
+                    ext_fun_in[3] = rhs_adj_in + nx_squared_plus_nx + nx_times_nu;  // lam: nx
                     ext_fun_type_in[4] = COLMAJ;
-                    ext_fun_in[4] = rhs_adj_in + nx + nx_squared + nx * nu + nx;  // u: nu
+                    ext_fun_in[4] = rhs_adj_in + nx_squared_plus_nx + nx_times_nu + nx;  // u: nu
 
                     ext_fun_type_out[0] = COLMAJ;
                     ext_fun_out[0] = adj_traj + s * nAdj + 0;  // adj: nx+nu
