@@ -602,6 +602,9 @@ class AcadosOcpOptions:
         """
         Indicates if the hessian is fixed (1) or not (0).\n
         If fixed, the hessian is computed only once and not updated in the SQP loop.
+        This can safely be set to 1 if there are no slacked constraints, cost module is 'LINEAR_LS' with Gauss-Newton Hessian,
+        and the weighting matrix 'W' is not updated after solver creation.
+        Default: 0
         """
         return self.__fixed_hess
 

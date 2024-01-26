@@ -2129,7 +2129,7 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
         if (i < N)
         {
             // Levenberg Marquardt term: Ts[i] * levenberg_marquardt * eye()
-            if (opts->levenberg_marquardt > 0.0 && mem->compute_hess)
+            if (mem->compute_hess && opts->levenberg_marquardt > 0.0)
                 blasfeo_ddiare(nu[i] + nx[i], in->Ts[i] * opts->levenberg_marquardt,
                                mem->qp_in->RSQrq+i, 0, 0);
 
@@ -2140,7 +2140,7 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
         else
         {
             // Levenberg Marquardt term: 1.0 * levenberg_marquardt * eye()
-            if (opts->levenberg_marquardt > 0.0 && mem->compute_hess)
+            if (mem->compute_hess && opts->levenberg_marquardt > 0.0)
                 blasfeo_ddiare(nu[i] + nx[i], opts->levenberg_marquardt,
                                mem->qp_in->RSQrq+i, 0, 0);
         }
@@ -2199,24 +2199,6 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
         blasfeo_dveccp(nv[i], ineq_adj, 0, mem->ineq_adj + i, 0);
 
     }
-
-    // TODO(rien) where should the update happen??? move to qp update ???
-    // for (int i = 0; i <= N; i++)
-    // {
-        // TODO(all): fix and move where appropriate
-        //  if (i<N)
-        //  {
-        //   ocp_nlp_dynamics_opts *dynamics_opts = opts->dynamics[i];
-        //   sim_opts *opts = dynamics_opts->sim_solver;
-        //   if (opts->scheme != NULL && opts->scheme->type != exact)
-        //   {
-        //    for (int_t j = 0; j < nx; j++)
-        //     BLASFEO_DVECEL(nlp_mem->cost_grad+i, nu+j) += work->sim_out[i]->grad[j];
-        //    for (int_t j = 0; j < nu; j++)
-        //     BLASFEO_DVECEL(nlp_mem->cost_grad+i, j) += work->sim_out[i]->grad[nx+j];
-        //   }
-        //  }
-    // }
 }
 
 
