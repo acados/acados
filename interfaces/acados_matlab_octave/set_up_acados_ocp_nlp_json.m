@@ -134,6 +134,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     ocp_json.solver_options.exact_hess_dyn = obj.opts_struct.exact_hess_dyn;
     ocp_json.solver_options.exact_hess_cost = obj.opts_struct.exact_hess_cost;
     ocp_json.solver_options.exact_hess_constr = obj.opts_struct.exact_hess_constr;
+    ocp_json.solver_options.fixed_hess = obj.opts_struct.fixed_hess;
 
     ocp_json.solver_options.ext_fun_compile_flags = obj.opts_struct.ext_fun_compile_flags;
 
@@ -146,7 +147,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     ocp_json.dims.nu = model.dim_nu;
     ocp_json.dims.nz = model.dim_nz;
     ocp_json.dims.np = model.dim_np;
-    
+
     if strcmp(model.cost_type, 'ext_cost')
         ocp_json.dims.ny = 0;
     else
@@ -218,7 +219,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     else
         ocp_json.cost.cost_type_e = upper(model.cost_type_e);
     end
-    
+
     ocp_json.cost.cost_ext_fun_type = model.cost_ext_fun_type;
     if strcmp(model.cost_ext_fun_type, 'generic')
         ocp_json.cost.cost_source_ext_cost = model.cost_source_ext_cost;
@@ -234,7 +235,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
         ocp_json.cost.cost_source_ext_cost_e = model.cost_source_ext_cost_e;
         ocp_json.cost.cost_function_ext_cost_e = model.cost_function_ext_cost_e;
     end
-    
+
     ocp_json.constraints.constr_type = upper(model.constr_type);
     ocp_json.constraints.constr_type_0 = upper(model.constr_type_0);
     ocp_json.constraints.constr_type_e = upper(model.constr_type_e);
