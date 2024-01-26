@@ -1932,6 +1932,9 @@ void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* 
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "exact_hess_constr", &exact_hess_constr);
 {%- endif -%}
 
+    int fixed_hess = {{ solver_options.fixed_hess }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "fixed_hess", &fixed_hess);
+
 {%- if solver_options.globalization == "FIXED_STEP" %}
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization", "fixed_step");
 {%- elif solver_options.globalization == "MERIT_BACKTRACKING" %}

@@ -741,6 +741,17 @@ class AcadosOcp:
         else:
             raise Exception("Wrong value for sim_method_jac_reuse. Should be either int or array of ints of shape (N,).")
 
+        # fixed hessian
+        if opts.fixed_hess:
+            if opts.hessian_approx == 'EXACT':
+                raise Exception('fixed_hess is not compatible with hessian_approx == EXACT.')
+            if cost.cost_type != "LINEAR_LS":
+                raise Exception('fixed_hess is only compatible LINEAR_LS cost_type.')
+            if cost.cost_type_0 != "LINEAR_LS":
+                raise Exception('fixed_hess is only compatible LINEAR_LS cost_type_0.')
+            if cost.cost_type_e != "LINEAR_LS":
+                raise Exception('fixed_hess is only compatible LINEAR_LS cost_type_e.')
+
         if self.zoro_description is not None:
             if not isinstance(self.zoro_description, ZoroDescription):
                 raise Exception('zoro_description should be of type ZoroDescription or None')

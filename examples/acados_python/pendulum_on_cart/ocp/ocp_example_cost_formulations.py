@@ -93,6 +93,7 @@ def formulate_ocp(cost_version: str) -> AcadosOcp:
         ocp.cost.Vu = Vu
 
         ocp.cost.Vx_e = np.eye(NX)
+        ocp.solver_options.fixed_hess = 1
 
     elif cost_version == 'LS_Z':
         ocp.cost.cost_type = 'LINEAR_LS'
