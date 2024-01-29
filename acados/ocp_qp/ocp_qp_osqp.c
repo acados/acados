@@ -1064,10 +1064,13 @@ static int osqp_init_data(OSQPData *data, OSQPSettings *settings, OSQPWorkspace 
 
     // Initialize linear system solver structure
     // NOTE: mallocs
-    work->linsys_solver = init_linsys_solver(work->data->P, work->data->A, work->settings->sigma,
-                                             work->rho_vec, work->settings->linsys_solver, 0);
+    if(init_linsys_solver(&(work->linsys_solver), work->data->P, work->data->A, work->settings->sigma,
+                                             work->rho_vec, work->settings->linsys_solver, 0)){
+        c_eprint("Failed to initialize %s linear system solver",
+                 LINSYS_SOLVER_NAME[work->settings->linsys_solver]);
+        return 0;
+    }
 
-    if (!work->linsys_solver) return 0;
 
     // Initialize solution to 0
     set_vec(n, 0.0, work->solution->x);
