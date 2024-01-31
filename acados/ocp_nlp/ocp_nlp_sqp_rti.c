@@ -430,7 +430,7 @@ static void ocp_nlp_sqp_rti_preparation_step(ocp_nlp_config *config, ocp_nlp_dim
     acados_timer timer1;
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
-    // ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+    ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
 
     ocp_nlp_workspace *nlp_work = work->nlp_work;
 
@@ -450,7 +450,7 @@ static void ocp_nlp_sqp_rti_preparation_step(ocp_nlp_config *config, ocp_nlp_dim
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
     /* SQP body */
-    // linearizate NLP and update QP matrices
+    // linearize NLP and update QP matrices
     acados_tic(&timer1);
     ocp_nlp_approximate_qp_matrices(config, dims, nlp_in,
         nlp_out, nlp_opts, nlp_mem, nlp_work);
@@ -464,6 +464,12 @@ static void ocp_nlp_sqp_rti_preparation_step(ocp_nlp_config *config, ocp_nlp_dim
         dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
     mem->time_reg += acados_toc(&timer1);
 
+    if (opts->rti_phase == 1)
+    {
+        int qp_status = qp_solver->condense_lhs(qp_solver, dims->qp_solver,
+            nlp_mem->qp_in, nlp_mem->qp_out, opts->nlp_opts->qp_solver_opts,
+            nlp_mem->qp_solver_mem, nlp_work->qp_work);
+    }
 #if defined(ACADOS_WITH_OPENMP)
     // restore number of threads
     omp_set_num_threads(num_threads_bkp);
@@ -511,9 +517,18 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
 
     // solve qp
     acados_tic(&timer1);
-    qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver,
-        nlp_mem->qp_in, nlp_mem->qp_out, opts->nlp_opts->qp_solver_opts,
-        nlp_mem->qp_solver_mem, nlp_work->qp_work);
+    if (opts->rti_phase == 0)
+    {
+        qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver,
+            nlp_mem->qp_in, nlp_mem->qp_out, opts->nlp_opts->qp_solver_opts,
+            nlp_mem->qp_solver_mem, nlp_work->qp_work);
+    }
+    else // just feedback
+    {
+        qp_status = qp_solver->condense_rhs_and_solve(qp_solver, dims->qp_solver,
+            nlp_mem->qp_in, nlp_mem->qp_out, opts->nlp_opts->qp_solver_opts,
+            nlp_mem->qp_solver_mem, nlp_work->qp_work);
+    }
 
     mem->time_qp_sol += acados_toc(&timer1);
 
@@ -528,7 +543,6 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
         dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
     mem->time_reg += acados_toc(&timer1);
 
-    // TODO move into QP solver memory ???
     qp_info *qp_info_;
     ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
     qp_iter = qp_info_->num_iter;
@@ -540,14 +554,8 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
             work->qp_res, work->qp_res_ws);
 
         ocp_qp_res_compute_nrm_inf(work->qp_res, mem->stat+(mem->stat_n*1+2));
-//      printf("\nsqp_iter %d, res %e %e %e %e\n", sqp_iter,
-//      inf_norm_qp_res[0], inf_norm_qp_res[1],
-//      inf_norm_qp_res[2], inf_norm_qp_res[3]);
     }
 
-    // printf("\n------- qp_out (sqp iter %d) ---------\n", sqp_iter);
-    // print_ocp_qp_out(nlp_mem->qp_out);
-    // exit(1);
 
     // save statistics
     mem->stat[mem->stat_n*1+0] = qp_status;
@@ -579,12 +587,6 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     // update variables
     ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, alpha);
 
-    // ocp_nlp_dims_print(nlp_out->dims);
-    // ocp_nlp_out_print(nlp_out);
-    // exit(1);
-
-    // print_ocp_qp_in(mem->qp_in);
-
     mem->status = ACADOS_SUCCESS;
 
 }
@@ -605,8 +607,7 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     ocp_nlp_sqp_rti_workspace *work = work_;
     ocp_nlp_sqp_rti_cast_workspace(config, dims, opts, mem, work);
 
-    ocp_nlp_sqp_rti_opts *nlp_opts = opts_;
-    int rti_phase = nlp_opts->rti_phase;
+    int rti_phase = opts->rti_phase;
 
     switch(rti_phase)
     {

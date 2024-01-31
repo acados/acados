@@ -691,8 +691,6 @@ void ocp_nlp_reg_convexify_regularize_hessian(void *config, ocp_nlp_reg_dims *di
 
 
 
-// NOTE this only considers the case of (dynamcs) equality constraints (no inequality constraints)
-// TODO inequality constraints case
 void ocp_nlp_reg_convexify_correct_dual_sol(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *mem_)
 {
     ocp_nlp_reg_convexify_memory *mem = mem_;

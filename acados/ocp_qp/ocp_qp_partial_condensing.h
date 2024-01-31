@@ -107,6 +107,10 @@ acados_size_t ocp_qp_partial_condensing_workspace_calculate_size(void *dims, voi
 //
 int ocp_qp_partial_condensing(void *in, void *out, void *opts, void *mem, void *work);
 //
+int ocp_qp_partial_condensing_condense_lhs(void *in, void *out, void *opts, void *mem, void *work);
+//
+int ocp_qp_partial_condensing_condense_rhs(void *in, void *out, void *opts, void *mem, void *work);
+//
 int ocp_qp_partial_expansion(void *in, void *out, void *opts, void *mem, void *work);
 //
 void ocp_qp_partial_condensing_config_initialize_default(void *config_);
