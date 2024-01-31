@@ -818,7 +818,6 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     config->sim_solver->evaluate(config->sim_solver, work->sim_in, work->sim_out, opts->sim_solver,
             mem->sim_solver, work->sim_solver);
 
-    // TODO transition functions for changing dimensions not yet implemented!
 
     // B
     blasfeo_pack_tran_dmat(nx1, nu, work->sim_out->S_forw + nx1 * nx, nx1, mem->BAbt, 0, 0);

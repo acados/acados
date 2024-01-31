@@ -457,6 +457,13 @@ static void ocp_nlp_sqp_rti_preparation_step(ocp_nlp_config *config, ocp_nlp_dim
 
     mem->time_lin += acados_toc(&timer1);
 
+
+    // regularize Hessian
+    acados_tic(&timer1);
+    config->regularize->regularize_hessian(config->regularize,
+        dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
+    mem->time_reg += acados_toc(&timer1);
+
 #if defined(ACADOS_WITH_OPENMP)
     // restore number of threads
     omp_set_num_threads(num_threads_bkp);
@@ -489,12 +496,6 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     // update QP rhs for SQP (step prim var, abs dual var)
     ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in,
         nlp_out, nlp_opts, nlp_mem, nlp_work);
-
-    // regularize Hessian
-    acados_tic(&timer1);
-    config->regularize->regularize_hessian(config->regularize,
-        dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
-    mem->time_reg += acados_toc(&timer1);
 
     if (nlp_opts->print_level > 0) {
         printf("\n------- qp_in --------\n");
