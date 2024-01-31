@@ -48,7 +48,7 @@ extern "C" {
 
 /* dims */
 
-//typedef ocp_qp_dims ocp_nlp_reg_dims;
+// same as qp_dims
 typedef struct
 {
     int *nx;
