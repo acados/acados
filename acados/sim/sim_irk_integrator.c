@@ -1374,12 +1374,24 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     // transpose
                     blasfeo_dgetr(ny, nx+nu, J_y_tilde, 0, 0, tmp_nux_ny, 0, 0);
 
-                    // tmp_nux_ny2 = W_chol * J_y_tilde (ny * (nx+nu))
-                    blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, mem->W_chol, 0, 0, tmp_nux_ny, 0, 0,
-                                       tmp_nux_ny2, 0, 0);
 
-                    // tmp_ny = W_chol * nls_res
-                    blasfeo_dtrmv_lnn(ny, mem->W_chol, 0, 0, nls_res, 0, tmp_ny, 0);
+                    if (model->outer_hess_is_diag)
+                    {
+                        // tmp_nv_ny = W_chol_diag * Cyt_tilde
+                        blasfeo_dgemm_nd(nu+nx, ny, 1.0, tmp_nux_ny, 0, 0, mem->W_chol_diag, 0, 0., tmp_nux_ny2, 0, 0, tmp_nux_ny2, 0, 0);
+
+
+                        // tmp_ny = W_chol_diag * nls_res (componentwise)
+                        blasfeo_dvecmul(ny, mem->W_chol_diag, 0, nls_res, 0, tmp_ny, 0);
+                    }
+                    else {
+                        // tmp_nux_ny2 = W_chol * J_y_tilde (ny * (nx+nu))
+                        blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, mem->W_chol, 0, 0, tmp_nux_ny, 0, 0,
+                                        tmp_nux_ny2, 0, 0);
+
+                        // tmp_ny = W_chol * nls_res
+                        blasfeo_dtrmv_lnn(ny, mem->W_chol, 0, 0, nls_res, 0, tmp_ny, 0);
+                    }
 
                     // cost_grad += b * tmp_ny^T * tmp_ny_nux = b * tmp_ny_nux^T * tmp_ny
                     blasfeo_dgemv_n(nx+nu, ny, b_vec[ii]/num_steps, tmp_nux_ny2, 0, 0, tmp_ny, 0,
@@ -1496,7 +1508,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
                         if (model->outer_hess_is_diag)
                         {
-                            // tmp_nux_ny2 = W_chol * J_y_tilde (ny * (nx+nu))
+                            // tmp_nux_ny2 = W_chol_diag * J_y_tilde (ny * (nx+nu))
                             blasfeo_dgemm_nd(nu+nx, ny, 1.0, tmp_nux_ny, 0, 0, mem->W_chol_diag, 0, 0., tmp_nux_ny2, 0, 0, tmp_nux_ny2, 0, 0);
                         }
                         else
@@ -1566,8 +1578,15 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 // nls_res = nls_res - y_ref
                 blasfeo_daxpy(ny, -1.0, mem->y_ref, 0, nls_res, 0, nls_res, 0);
 
-                // tmp_ny = W_chol * nls_res
-                blasfeo_dtrmv_lnn(ny, mem->W_chol, 0, 0, nls_res, 0, tmp_ny, 0);
+                if (model->outer_hess_is_diag)
+                {
+                    // tmp_ny = W_chol_diag * nls_res (componentwise)
+                    blasfeo_dvecmul(ny, mem->W_chol_diag, 0, nls_res, 0, tmp_ny, 0);
+                }
+                else {
+                    // tmp_ny = W_chol * nls_res
+                    blasfeo_dtrmv_lnn(ny, mem->W_chol, 0, 0, nls_res, 0, tmp_ny, 0);
+                }
 
                 // cost function value
                 // NOTE: slack contribution and scaling done in cost module

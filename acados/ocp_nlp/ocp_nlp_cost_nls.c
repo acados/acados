@@ -35,6 +35,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 // blasfeo
 #include "blasfeo/include/blasfeo_d_aux.h"
@@ -672,8 +673,18 @@ static void ocp_nlp_cost_nls_update_W_factorization(void *config_, void *dims_, 
 
     if (model->W_changed)
     {
-        // TODO W_chol_diag
-        blasfeo_dpotrf_l(ny, &model->W, 0, 0, &memory->W_chol, 0, 0);
+        if (model->outer_hess_is_diag)
+        {
+            // store only diagonal element of W_chol
+            for (int i = 0; i < ny; i++)
+            {
+                BLASFEO_DVECEL(&memory->W_chol_diag, i) = sqrt(BLASFEO_DMATEL(&model->W, i, i));
+            }
+        }
+        else
+        {
+            blasfeo_dpotrf_l(ny, &model->W, 0, 0, &memory->W_chol, 0, 0);
+        }
         model->W_changed = 0;
     }
     return;
@@ -786,11 +797,18 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
             blasfeo_dgemv_n(nu+nx, ny, 1.0, &work->Cyt_tilde, 0, 0, &work->tmp_ny, 0,
                             0.0, &memory->grad, 0, &memory->grad, 0);
 
-
             // gauss-newton component update
-            // tmp_nv_ny = W_chol * Cyt_tilde
-            blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0,
-                            &work->Cyt_tilde, 0, 0, &work->tmp_nv_ny, 0, 0);
+            if (model->outer_hess_is_diag)
+            {
+                // tmp_nv_ny = W_chol_diag * Cyt_tilde
+                blasfeo_dgemm_nd(nu + nx, ny, 1.0, &work->Cyt_tilde, 0, 0, &memory->W_chol_diag, 0, 0., &work->Cyt_tilde, 0, 0, &work->tmp_nv_ny, 0, 0);
+            }
+            else
+            {
+                // tmp_nv_ny = W_chol * Cyt_tilde
+                blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0,
+                                &work->Cyt_tilde, 0, 0, &work->tmp_nv_ny, 0, 0);
+            }
         }
         else
         {
@@ -798,9 +816,17 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
             blasfeo_dgemv_n(nu+nx, ny, 1.0, &memory->Jt, 0, 0, &work->tmp_ny, 0,
                             0.0, &memory->grad, 0, &memory->grad, 0);
             // gauss-newton component update
-            // tmp_nv_ny = Jt * W_chol, where W_chol is lower triangular
-            blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &memory->Jt, 0, 0,
-                                &work->tmp_nv_ny, 0, 0);
+            if (model->outer_hess_is_diag)
+            {
+                // tmp_nv_ny = Jt * W_chol_diag
+                blasfeo_dgemm_nd(nu + nx, ny, 1.0, &memory->Jt, 0, 0, &memory->W_chol_diag, 0, 0., &work->Cyt_tilde, 0, 0, &work->tmp_nv_ny, 0, 0);
+            }
+            else
+            {
+                // tmp_nv_ny = Jt * W_chol, where W_chol is lower triangular
+                blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &memory->Jt, 0, 0,
+                                    &work->tmp_nv_ny, 0, 0);
+            }
         }
 
         // function
@@ -945,8 +971,17 @@ void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims_, void *model_,
 
         // res = res - y_ref
         blasfeo_daxpy(ny, -1.0, &model->y_ref, 0, &memory->res, 0, &memory->res, 0);
-        // tmp_ny = W_chol * nls_res
-        blasfeo_dtrmv_ltn(ny, &memory->W_chol, 0, 0, &memory->res, 0, &work->tmp_ny, 0);
+
+        if (model->outer_hess_is_diag)
+        {
+            // tmp_ny = W_chol_diag * nls_res (componentwise)
+            blasfeo_dvecmul(ny, &memory->W_chol_diag, 0, &memory->res, 0, &work->tmp_ny, 0);
+        }
+        else
+        {
+            // tmp_ny = W_chol * nls_res
+            blasfeo_dtrmv_ltn(ny, &memory->W_chol, 0, 0, &memory->res, 0, &work->tmp_ny, 0);
+        }
 
         memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &work->tmp_ny, 0);
     }

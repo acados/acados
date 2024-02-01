@@ -509,14 +509,19 @@ def generate_c_code_nls_cost(ocp: AcadosOcp, stage_type ):
         u = symbol('u', 0, 0)
         t = symbol('t', 0, 0)
         y_expr = model.cost_y_expr_e
+        outer_hess = ocp.cost.W_e
 
     elif stage_type == 'initial':
         middle_name = '_cost_y_0'
         y_expr = model.cost_y_expr_0
+        outer_hess = ocp.cost.W_0
 
     elif stage_type == 'path':
         middle_name = '_cost_y'
         y_expr = model.cost_y_expr
+        outer_hess = ocp.cost.W
+
+    outer_hess_is_diag = ca.sparsify(ca.DM(outer_hess)).sparsity().is_diag()
 
     # checks on time dependency
     if any(ca.which_depends(y_expr, model.t)):
@@ -524,6 +529,15 @@ def generate_c_code_nls_cost(ocp: AcadosOcp, stage_type ):
             raise Exception("NLS y_expr depends on time t. This is only supported with cost_discretization=='INTEGRATOR'")
         if stage_type == 'terminal':
             raise Exception("NLS cost_y_expr_e depends on time t. Time dependency is not supported on terminal shooting node.")
+
+    if stage_type == 'terminal' and ocp.cost.outer_hess_is_diag_e is None:
+        ocp.cost.outer_hess_is_diag_e = outer_hess_is_diag
+
+    elif stage_type == 'initial' and ocp.cost.outer_hess_is_diag_0 is None:
+        ocp.cost.outer_hess_is_diag_0 = outer_hess_is_diag
+
+    elif stage_type == 'path' and ocp.cost.outer_hess_is_diag is None:
+        ocp.cost.outer_hess_is_diag = outer_hess_is_diag
 
     # change directory
     cwd = os.getcwd()
