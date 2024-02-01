@@ -860,8 +860,8 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
     ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, 0, "nls_y_fun_jac", &capsule->cost_y_0_fun_jac_ut_xt);
     ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, 0, "nls_y_fun", &capsule->cost_y_0_fun);
   {%- elif cost.cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
-    tmp_int = {{ cost.psi_hess_is_diag_0 }};
-    ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, 0, "psi_hess_is_diag", &tmp_int);
+    tmp_int = {{ cost.outer_hess_is_diag_0 }};
+    ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, 0, "outer_hess_is_diag", &tmp_int);
     ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, 0, "conl_cost_fun", &capsule->conl_cost_0_fun);
     ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, 0, "conl_cost_fun_jac_hess", &capsule->conl_cost_0_fun_jac_hess);
   {%- endif %}
@@ -872,8 +872,8 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_y_fun_jac", &capsule->cost_y_fun_jac_ut_xt[i-1]);
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_y_fun", &capsule->cost_y_fun[i-1]);
   {%- elif cost.cost_type == "CONVEX_OVER_NONLINEAR" %}
-        tmp_int = {{ cost.psi_hess_is_diag }};
-        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "psi_hess_is_diag", &tmp_int);
+        tmp_int = {{ cost.outer_hess_is_diag }};
+        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "outer_hess_is_diag", &tmp_int);
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "conl_cost_fun", &capsule->conl_cost_fun[i-1]);
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "conl_cost_fun_jac_hess", &capsule->conl_cost_fun_jac_hess[i-1]);
   {%- endif %}
@@ -1085,8 +1085,8 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "nls_y_fun_jac", &capsule->cost_y_0_fun_jac_ut_xt);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "nls_y_hess", &capsule->cost_y_0_hess);
 {%- elif cost.cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
-    tmp_int = {{ cost.psi_hess_is_diag_0 }};
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "psi_hess_is_diag", &tmp_int);
+    tmp_int = {{ cost.outer_hess_is_diag_0 }};
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "outer_hess_is_diag", &tmp_int);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "conl_cost_fun", &capsule->conl_cost_0_fun);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "conl_cost_fun_jac_hess", &capsule->conl_cost_0_fun_jac_hess);
 {%- elif cost.cost_type_0 == "EXTERNAL" %}
@@ -1105,8 +1105,8 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
 {%- elif cost.cost_type == "CONVEX_OVER_NONLINEAR" %}
     for (int i = 1; i < N; i++)
     {
-        tmp_int = {{ cost.psi_hess_is_diag }};
-        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "psi_hess_is_diag", &tmp_int);
+        tmp_int = {{ cost.outer_hess_is_diag }};
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "outer_hess_is_diag", &tmp_int);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "conl_cost_fun", &capsule->conl_cost_fun[i-1]);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "conl_cost_fun_jac_hess", &capsule->conl_cost_fun_jac_hess[i-1]);
     }
@@ -1125,8 +1125,8 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "nls_y_hess", &capsule->cost_y_e_hess);
 
 {%- elif cost.cost_type_e == "CONVEX_OVER_NONLINEAR" %}
-    tmp_int = {{ cost.psi_hess_is_diag_e }};
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "psi_hess_is_diag", &tmp_int);
+    tmp_int = {{ cost.outer_hess_is_diag_e }};
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "outer_hess_is_diag", &tmp_int);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "conl_cost_fun", &capsule->conl_cost_e_fun);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "conl_cost_fun_jac_hess", &capsule->conl_cost_e_fun_jac_hess);
 

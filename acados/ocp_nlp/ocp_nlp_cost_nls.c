@@ -195,6 +195,7 @@ void *ocp_nlp_cost_nls_model_assign(void *config_, void *dims_, void *raw_memory
     // default initialization
     model->scaling = 1.0;
     model->t = 0.0;
+    model->outer_hess_is_diag = 0;
 
     // initialize to 1 to update factorization of W in precompute
     model->W_changed = 1;
@@ -285,6 +286,11 @@ int ocp_nlp_cost_nls_model_set(void *config_, void *dims_, void *model_,
     {
         double *scaling_ptr = (double *) value_;
         model->scaling = *scaling_ptr;
+    }
+    else if (!strcmp(field, "outer_hess_is_diag"))
+    {
+        int *outer_hess_is_diag_ptr = (int *) value_;
+        model->outer_hess_is_diag = *outer_hess_is_diag_ptr;
     }
     else
     {

@@ -95,7 +95,7 @@ typedef struct
     struct blasfeo_dvec z;              // gradient of slacks as vector
     double scaling;
     double t; // time (always zero) to match signature of external function wrt cost integration
-    int psi_hess_is_diag;
+    int outer_hess_is_diag;
 } ocp_nlp_cost_conl_model;
 
 //

@@ -209,10 +209,10 @@ int sim_irk_model_set(void *model_, const char *field, void *value)
     {
         model->conl_cost_fun = value;
     }
-    else if (!strcmp(field, "psi_hess_is_diag"))
+    else if (!strcmp(field, "outer_hess_is_diag"))
     {
-        int *psi_hess_is_diag_ptr = (int *) value;
-        model->psi_hess_is_diag = *psi_hess_is_diag_ptr;
+        int *outer_hess_is_diag_ptr = (int *) value;
+        model->outer_hess_is_diag = *outer_hess_is_diag_ptr;
     }
     else
     {
@@ -1450,7 +1450,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                                                 conl_fun_jac_hess_in, conl_fun_jac_hess_type_out, conl_fun_jac_hess_out);
 
                     // factorize hessian of outer loss function
-                    if (model->psi_hess_is_diag) {
+                    if (model->outer_hess_is_diag) {
                         // store only diagonal element of W_chol
                         for (int i = 0; i < ny; i++)
                         {
@@ -1494,7 +1494,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                         blasfeo_dgetr(ny, nx+nu, J_y_tilde, 0, 0, tmp_nux_ny, 0, 0);
 
 
-                        if (model->psi_hess_is_diag)
+                        if (model->outer_hess_is_diag)
                         {
                             // tmp_nux_ny2 = W_chol * J_y_tilde (ny * (nx+nu))
                             blasfeo_dgemm_nd(nu+nx, ny, 1.0, tmp_nux_ny, 0, 0, mem->W_chol_diag, 0, 0., tmp_nux_ny2, 0, 0, tmp_nux_ny2, 0, 0);

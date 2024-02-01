@@ -640,16 +640,16 @@ def generate_c_code_conl_cost(ocp: AcadosOcp, stage_type: str):
 
     outer_hess_fun = ca.Function('outer_hess', [res_expr, t, p], [hess])
     outer_hess_expr = outer_hess_fun(inner_expr, t, p)
-    psi_hess_is_diag = outer_hess_expr.sparsity().is_diag()
+    outer_hess_is_diag = outer_hess_expr.sparsity().is_diag()
 
-    if stage_type == 'terminal' and ocp.cost.psi_hess_is_diag_e is None:
-        ocp.cost.psi_hess_is_diag_e = psi_hess_is_diag
+    if stage_type == 'terminal' and ocp.cost.outer_hess_is_diag_e is None:
+        ocp.cost.outer_hess_is_diag_e = outer_hess_is_diag
 
-    elif stage_type == 'initial' and ocp.cost.psi_hess_is_diag_0 is None:
-        ocp.cost.psi_hess_is_diag_0 = psi_hess_is_diag
+    elif stage_type == 'initial' and ocp.cost.outer_hess_is_diag_0 is None:
+        ocp.cost.outer_hess_is_diag_0 = outer_hess_is_diag
 
-    elif stage_type == 'path' and ocp.cost.psi_hess_is_diag is None:
-        ocp.cost.psi_hess_is_diag = psi_hess_is_diag
+    elif stage_type == 'path' and ocp.cost.outer_hess_is_diag is None:
+        ocp.cost.outer_hess_is_diag = outer_hess_is_diag
 
     Jt_ux_expr = ca.jacobian(inner_expr, ca.vertcat(u, x)).T
     Jt_z_expr = ca.jacobian(inner_expr, z).T

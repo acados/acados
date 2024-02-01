@@ -182,7 +182,7 @@ void *ocp_nlp_cost_conl_model_assign(void *config_, void *dims_, void *raw_memor
     // default initialization
     model->scaling = 1.0;
     model->t = 0.0;
-    model->psi_hess_is_diag = 0;
+    model->outer_hess_is_diag = 0;
 
     // assert
     assert((char *) raw_memory + ocp_nlp_cost_conl_model_calculate_size(config_, dims) >= c_ptr);
@@ -259,10 +259,10 @@ int ocp_nlp_cost_conl_model_set(void *config_, void *dims_, void *model_,
         double *scaling_ptr = (double *) value_;
         model->scaling = *scaling_ptr;
     }
-    else if (!strcmp(field, "psi_hess_is_diag"))
+    else if (!strcmp(field, "outer_hess_is_diag"))
     {
-        int *psi_hess_is_diag_ptr = (int *) value_;
-        model->psi_hess_is_diag = *psi_hess_is_diag_ptr;
+        int *outer_hess_is_diag_ptr = (int *) value_;
+        model->outer_hess_is_diag = *outer_hess_is_diag_ptr;
     }
     else
     {
@@ -689,7 +689,7 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
 
         // factorize hessian of outer loss function
         // TODO: benchmark whether sparse factorization is faster
-        if (model->psi_hess_is_diag)
+        if (model->outer_hess_is_diag)
         {
             // store only diagonal element of W_chol
             for (int i = 0; i < ny; i++)
@@ -713,7 +713,7 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
                             0.0, &memory->grad, 0, &memory->grad, 0);
 
 
-            if (model->psi_hess_is_diag)
+            if (model->outer_hess_is_diag)
             {
                 // tmp_nv_ny = Jt_ux_tilde * W_chol_diag
                 blasfeo_dgemm_nd(nu + nx, ny, 1.0, &work->Jt_ux_tilde, 0, 0, &memory->W_chol_diag, 0, 0., &work->Jt_ux_tilde, 0, 0, &work->tmp_nv_ny, 0, 0);
@@ -732,7 +732,7 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
                             0.0, &memory->grad, 0, &memory->grad, 0);
 
 
-            if (model->psi_hess_is_diag)
+            if (model->outer_hess_is_diag)
             {
                 // tmp_nv_ny = Jt_ux * W_chol_diag
                 blasfeo_dgemm_nd(nu+nx, ny, 1.0, &work->Jt_ux, 0, 0, &memory->W_chol_diag, 0, 0., &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0);
