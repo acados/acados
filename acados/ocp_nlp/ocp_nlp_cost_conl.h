@@ -143,6 +143,7 @@ typedef struct
     struct blasfeo_dvec *z_alg;         ///< pointer to z in sim_out
     struct blasfeo_dmat *dzdux_tran;    ///< pointer to sensitivity of a wrt ux in sim_out
     struct blasfeo_dmat W_chol;        // cholesky factor of hessian of outer loss function
+    struct blasfeo_dvec W_chol_diag;   // cholesky factor of hessian of outer loss function if Hessian is diagonal
         // NOTE: could be in work, but needed for compatibility with NLS and cost integration
     double fun;                         ///< value of the cost function
 } ocp_nlp_cost_conl_memory;

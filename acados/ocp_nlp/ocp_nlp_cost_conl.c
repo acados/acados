@@ -301,6 +301,8 @@ void *ocp_nlp_cost_conl_opts_assign(void *config_, void *dims_, void *raw_memory
 
     assert((char *) raw_memory + ocp_nlp_cost_conl_opts_calculate_size(config_, dims_) >= c_ptr);
 
+
+
     return opts;
 }
 
@@ -371,6 +373,7 @@ acados_size_t ocp_nlp_cost_conl_memory_calculate_size(void *config_, void *dims_
     size += 64;  // blasfeo_mem align
 
     size += 1 * blasfeo_memsize_dmat(ny, ny);            // W_chol
+    size += 1 * blasfeo_memsize_dvec(ny);                // W_chol_diag
 
     return size;
 }
@@ -399,6 +402,9 @@ void *ocp_nlp_cost_conl_memory_assign(void *config_, void *dims_, void *opts_, v
     // W_chol
     assign_and_advance_blasfeo_dmat_mem(ny, ny, &memory->W_chol, &c_ptr);
 
+    // W_chol_diag
+    assign_and_advance_blasfeo_dvec_mem(ny, &memory->W_chol_diag, &c_ptr);
+
     // grad
     assign_and_advance_blasfeo_dvec_mem(nu + nx + 2 * ns, &memory->grad, &c_ptr);
 
@@ -420,6 +426,12 @@ struct blasfeo_dmat *ocp_nlp_cost_conl_memory_get_W_chol_ptr(void *memory_)
 {
     ocp_nlp_cost_conl_memory *memory = memory_;
     return &memory->W_chol;
+}
+
+struct blasfeo_dvec *ocp_nlp_cost_conl_memory_get_W_chol_diag_ptr(void *memory_)
+{
+    ocp_nlp_cost_conl_memory *memory = memory_;
+    return &memory->W_chol_diag;
 }
 
 
@@ -677,15 +689,12 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
 
         // factorize hessian of outer loss function
         // TODO: benchmark whether sparse factorization is faster
-        if (model->psi_hess_is_diag & ny > 4)
+        if (model->psi_hess_is_diag)
         {
-            // TODO move flag to opts and store both W and W_chol as vec if they are diagonal
-            // and then use diagonal matrix matrix multiplication
-            // void blasfeo_dgemm_dn(int m, int n, double alpha, struct blasfeo_dvec *sA, int ai, struct blasfeo_dmat *sB, int bi, int bj, double beta, struct blasfeo_dmat *sC, int ci, int cj, struct blasfeo_dmat *sD, int di, int dj);
-            blasfeo_dgese(ny, ny, 0., &memory->W_chol, 0, 0);
+            // store only diagonal element of W_chol
             for (int i = 0; i < ny; i++)
             {
-                BLASFEO_DMATEL(&memory->W_chol, i, i) = sqrt(BLASFEO_DMATEL(&work->W, i, i));
+                BLASFEO_DVECEL(&memory->W_chol_diag, i) = sqrt(BLASFEO_DMATEL(&work->W, i, i));
             }
         }
         else
@@ -703,9 +712,18 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
             blasfeo_dgemv_n(nu+nx, ny, 1.0, &work->Jt_ux_tilde, 0, 0, &work->tmp_ny, 0,
                             0.0, &memory->grad, 0, &memory->grad, 0);
 
-            // tmp_nv_ny = Jt_ux_tilde * W_chol
-            blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0,
-                            &work->Jt_ux_tilde, 0, 0, &work->tmp_nv_ny, 0, 0);
+
+            if (model->psi_hess_is_diag)
+            {
+                // tmp_nv_ny = Jt_ux_tilde * W_chol_diag
+                blasfeo_dgemm_nd(nu + nx, ny, 1.0, &work->Jt_ux_tilde, 0, 0, &memory->W_chol_diag, 0, 0., &work->Jt_ux_tilde, 0, 0, &work->tmp_nv_ny, 0, 0);
+            }
+            else
+            {
+                // tmp_nv_ny = Jt_ux_tilde * W_chol
+                blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0,
+                                    &work->Jt_ux_tilde, 0, 0, &work->tmp_nv_ny, 0, 0);
+            }
         }
         else
         {
@@ -713,9 +731,18 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
             blasfeo_dgemv_n(nu+nx, ny, 1.0, &work->Jt_ux, 0, 0, &work->tmp_ny, 0,
                             0.0, &memory->grad, 0, &memory->grad, 0);
 
-            // tmp_nv_ny = Jt_ux * W_chol, where W_chol is lower triangular
-            blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &work->Jt_ux, 0, 0,
-                                &work->tmp_nv_ny, 0, 0);
+
+            if (model->psi_hess_is_diag)
+            {
+                // tmp_nv_ny = Jt_ux * W_chol_diag
+                blasfeo_dgemm_nd(nu+nx, ny, 1.0, &work->Jt_ux, 0, 0, &memory->W_chol_diag, 0, 0., &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0);
+            }
+            else
+            {
+                // tmp_nv_ny = Jt_ux * W_chol, where W_chol is lower triangular
+                blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &work->Jt_ux, 0, 0,
+                                    &work->tmp_nv_ny, 0, 0);
+            }
 
         }
         // RSQrq += scaling * tmp_nv_ny * tmp_nv_ny^T
@@ -832,6 +859,7 @@ void ocp_nlp_cost_conl_config_initialize_default(void *config_)
     config->memory_get_fun_ptr = &ocp_nlp_cost_conl_memory_get_fun_ptr;
     config->memory_get_grad_ptr = &ocp_nlp_cost_conl_memory_get_grad_ptr;
     config->memory_get_W_chol_ptr = &ocp_nlp_cost_conl_memory_get_W_chol_ptr;
+    config->memory_get_W_chol_diag_ptr = &ocp_nlp_cost_conl_memory_get_W_chol_diag_ptr;
     config->model_get_y_ref_ptr = &ocp_nlp_cost_conl_model_get_y_ref_ptr;
     config->memory_set_ux_ptr = &ocp_nlp_cost_conl_memory_set_ux_ptr;
     config->memory_set_tmp_ux_ptr = &ocp_nlp_cost_conl_memory_set_tmp_ux_ptr;

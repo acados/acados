@@ -477,6 +477,10 @@ int sim_irk_memory_set(void *config_, void *dims_, void *mem_, const char *field
     {
         mem->W_chol = value;
     }
+    else if (!strcmp(field, "W_chol_diag"))
+    {
+        mem->W_chol_diag = value;
+    }
     else if (!strcmp(field, "y_ref"))
     {
         mem->y_ref = value;
@@ -1446,12 +1450,11 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                                                 conl_fun_jac_hess_in, conl_fun_jac_hess_type_out, conl_fun_jac_hess_out);
 
                     // factorize hessian of outer loss function
-                    // TODO: benchmark whether sparse factorization is faster
-                    if (model->psi_hess_is_diag & ny > 4) {
-                        blasfeo_dgese(ny, ny, 0., mem->W_chol, 0, 0);
+                    if (model->psi_hess_is_diag) {
+                        // store only diagonal element of W_chol
                         for (int i = 0; i < ny; i++)
                         {
-                            BLASFEO_DMATEL(mem->W_chol, i, i) = sqrt(BLASFEO_DMATEL(workspace->W, i, i));
+                            BLASFEO_DVECEL(mem->W_chol_diag, i) = sqrt(BLASFEO_DMATEL(workspace->W, i, i));
                         }
                     }
                     else
@@ -1459,6 +1462,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                         blasfeo_dpotrf_l(ny, workspace->W, 0, 0, mem->W_chol, 0, 0);
                     }
                     if (nz > 0) // TODO: test this!
+                    // TODO use diag hess also here
                     {
                         // // Jt_ux_tilde = workspace->tmp_nux_ny + dzdux_tran*Jt_z
                         // blasfeo_dgemm_nn(nu + nx, ny, nz, 1.0, memory->dzdux_tran, 0, 0,
@@ -1489,9 +1493,18 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                         // transpose
                         blasfeo_dgetr(ny, nx+nu, J_y_tilde, 0, 0, tmp_nux_ny, 0, 0);
 
-                        // tmp_nux_ny2 = W_chol * J_y_tilde (ny * (nx+nu))
-                        blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, mem->W_chol, 0, 0, tmp_nux_ny, 0, 0,
-                                        tmp_nux_ny2, 0, 0);
+
+                        if (model->psi_hess_is_diag)
+                        {
+                            // tmp_nux_ny2 = W_chol * J_y_tilde (ny * (nx+nu))
+                            blasfeo_dgemm_nd(nu+nx, ny, 1.0, tmp_nux_ny, 0, 0, mem->W_chol_diag, 0, 0., tmp_nux_ny2, 0, 0, tmp_nux_ny2, 0, 0);
+                        }
+                        else
+                        {
+                            // tmp_nux_ny2 = W_chol * J_y_tilde (ny * (nx+nu))
+                            blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, mem->W_chol, 0, 0, tmp_nux_ny, 0, 0,
+                                            tmp_nux_ny2, 0, 0);
+                        }
 
                         // cost_grad += b * J_y_tilde^T * tmp_ny
                         blasfeo_dgemv_t(ny, nx+nu, b_vec[ii]/num_steps, J_y_tilde, 0, 0, tmp_ny, 0,

@@ -412,6 +412,7 @@ acados_size_t ocp_nlp_cost_nls_memory_calculate_size(void *config_, void *dims_,
     size += sizeof(ocp_nlp_cost_nls_memory);
 
     size += 1 * blasfeo_memsize_dmat(ny, ny);            // W_chol
+    size += 1 * blasfeo_memsize_dvec(ny);                // W_chol_diag
     size += 1 * blasfeo_memsize_dmat(nu + nx, ny);       // Jt
     size += 1 * blasfeo_memsize_dvec(ny);                // res
     size += 1 * blasfeo_memsize_dvec(nu + nx + 2 * ns);  // grad
@@ -446,6 +447,8 @@ void *ocp_nlp_cost_nls_memory_assign(void *config_, void *dims_, void *opts_, vo
 
     // W_chol
     assign_and_advance_blasfeo_dmat_mem(ny, ny, &memory->W_chol, &c_ptr);
+    // W_chol_diag
+    assign_and_advance_blasfeo_dvec_mem(ny, &memory->W_chol_diag, &c_ptr);
     // Jt
     assign_and_advance_blasfeo_dmat_mem(nu + nx, ny, &memory->Jt, &c_ptr);
     // res
@@ -475,6 +478,15 @@ struct blasfeo_dmat *ocp_nlp_cost_nls_memory_get_W_chol_ptr(void *memory_)
 
     return &memory->W_chol;
 }
+
+
+struct blasfeo_dvec *ocp_nlp_cost_nls_memory_get_W_chol_diag_ptr(void *memory_)
+{
+    ocp_nlp_cost_nls_memory *memory = memory_;
+
+    return &memory->W_chol_diag;
+}
+
 
 
 struct blasfeo_dvec *ocp_nlp_cost_nls_model_get_y_ref_ptr(void *in_)
@@ -654,6 +666,7 @@ static void ocp_nlp_cost_nls_update_W_factorization(void *config_, void *dims_, 
 
     if (model->W_changed)
     {
+        // TODO W_chol_diag
         blasfeo_dpotrf_l(ny, &model->W, 0, 0, &memory->W_chol, 0, 0);
         model->W_changed = 0;
     }
@@ -970,6 +983,7 @@ void ocp_nlp_cost_nls_config_initialize_default(void *config_)
     config->memory_get_fun_ptr = &ocp_nlp_cost_nls_memory_get_fun_ptr;
     config->memory_get_grad_ptr = &ocp_nlp_cost_nls_memory_get_grad_ptr;
     config->memory_get_W_chol_ptr = &ocp_nlp_cost_nls_memory_get_W_chol_ptr;
+    config->memory_get_W_chol_diag_ptr = &ocp_nlp_cost_nls_memory_get_W_chol_diag_ptr;
     config->model_get_y_ref_ptr = &ocp_nlp_cost_nls_model_get_y_ref_ptr;
     config->memory_set_ux_ptr = &ocp_nlp_cost_nls_memory_set_ux_ptr;
     config->memory_set_tmp_ux_ptr = &ocp_nlp_cost_nls_memory_set_tmp_ux_ptr;

@@ -567,7 +567,7 @@ void ocp_nlp_dynamics_cont_memory_set(void *config_, void *dims_, void *mem_, co
 
     sim_config *sim = config->sim_solver;
 
-    if (!strcmp(field, "W_chol") || !strcmp(field, "cost_fun") || !strcmp(field, "cost_hess") || !strcmp(field, "cost_grad")
+    if (!strcmp(field, "W_chol") || !strcmp(field, "W_chol_diag") || !strcmp(field, "cost_fun") || !strcmp(field, "cost_hess") || !strcmp(field, "cost_grad")
          || !strcmp(field, "y_ref"))
     {
         sim->memory_set(sim, dims->sim, mem->sim_solver, field, value);
