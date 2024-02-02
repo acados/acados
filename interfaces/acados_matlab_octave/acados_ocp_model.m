@@ -29,6 +29,8 @@
 
 %
 
+import casadi.*
+
 classdef acados_ocp_model < handle
 
     properties
@@ -146,10 +148,13 @@ classdef acados_ocp_model < handle
                     obj.model_struct.cost_Vz_0 = value;
                 elseif (strcmp(field, 'cost_W'))
                     obj.model_struct.cost_W = value;
+                    obj.model_struct.cost_outer_hess_is_diag = int(is_diag(sparsify(DM(value))));
                 elseif (strcmp(field, 'cost_W_e'))
                     obj.model_struct.cost_W_e = value;
+                    obj.model_struct.cost_outer_hess_is_diag_e = int(is_diag(sparsify(DM(value))));
                 elseif (strcmp(field, 'cost_W_0'))
                     obj.model_struct.cost_W_0 = value;
+                    obj.model_struct.cost_outer_hess_is_diag_0 = int(is_diag(sparsify(DM(value))));
                 elseif (strcmp(field, 'cost_y_ref'))
                     obj.model_struct.cost_y_ref = value;
                 elseif (strcmp(field, 'cost_y_ref_e'))
@@ -404,18 +409,18 @@ classdef acados_ocp_model < handle
             else
 
                 if (strcmp(field, 'name'))
-                    obj.model_struct.name = value;                    
+                    obj.model_struct.name = value;
                 elseif (strcmp(field, 'T'))
                     obj.model_struct.T = value;
                 else
                     disp(['acados_ocp_model: set: wrong field: ', field]);
                     keyboard;
                 end
-            end    
+            end
         end
 
     end % methods
-    
+
 
 
 

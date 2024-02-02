@@ -146,7 +146,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     ocp_json.dims.nu = model.dim_nu;
     ocp_json.dims.nz = model.dim_nz;
     ocp_json.dims.np = model.dim_np;
-    
+
     if strcmp(model.cost_type, 'ext_cost')
         ocp_json.dims.ny = 0;
     else
@@ -218,7 +218,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     else
         ocp_json.cost.cost_type_e = upper(model.cost_type_e);
     end
-    
+
     ocp_json.cost.cost_ext_fun_type = model.cost_ext_fun_type;
     if strcmp(model.cost_ext_fun_type, 'generic')
         ocp_json.cost.cost_source_ext_cost = model.cost_source_ext_cost;
@@ -234,7 +234,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
         ocp_json.cost.cost_source_ext_cost_e = model.cost_source_ext_cost_e;
         ocp_json.cost.cost_function_ext_cost_e = model.cost_function_ext_cost_e;
     end
-    
+
     ocp_json.constraints.constr_type = upper(model.constr_type);
     ocp_json.constraints.constr_type_0 = upper(model.constr_type_0);
     ocp_json.constraints.constr_type_e = upper(model.constr_type_e);
@@ -430,6 +430,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
 
     if strcmp(model.cost_type, 'nonlinear_ls') || strcmp(model.cost_type, 'linear_ls')
         ocp_json.cost.W = model.cost_W;
+        ocp_json.cost.outer_hess_is_diag = model.cost_outer_hess_is_diag;
         if isfield(model, 'cost_y_ref')
             ocp_json.cost.yref = model.cost_y_ref;
         else
@@ -447,6 +448,8 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     end
     if strcmp(model.cost_type_0, 'nonlinear_ls') || strcmp(model.cost_type_0, 'linear_ls')
         ocp_json.cost.W_0 = model.cost_W_0;
+        ocp_json.cost.outer_hess_is_diag_0 = model.cost_outer_hess_is_diag_0;
+
         if isfield(model, 'cost_y_ref_0')
             ocp_json.cost.yref_0 = model.cost_y_ref_0;
         else
@@ -462,6 +465,8 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     if strcmp(model.cost_type_e, 'nonlinear_ls') || strcmp(model.cost_type_e, 'linear_ls')
         if isfield(model, 'cost_W_e')
             ocp_json.cost.W_e = model.cost_W_e;
+            ocp_json.cost.outer_hess_is_diag_e = model.cost_outer_hess_is_diag_e;
+
         end
         if isfield(model, 'cost_y_ref_e')
             ocp_json.cost.yref_e = model.cost_y_ref_e;

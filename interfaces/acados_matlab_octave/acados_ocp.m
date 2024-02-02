@@ -204,7 +204,7 @@ classdef acados_ocp < handle
 
             % templated MEX
             return_dir = pwd();
-            obj.code_gen_dir = obj.acados_ocp_nlp_json.code_export_directory; 
+            obj.code_gen_dir = obj.acados_ocp_nlp_json.code_export_directory;
             cd(obj.code_gen_dir)
 
             mex_solver_name = sprintf('%s_mex_solver', obj.model_struct.name);
