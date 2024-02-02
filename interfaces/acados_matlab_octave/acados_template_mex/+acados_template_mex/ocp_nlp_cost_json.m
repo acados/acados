@@ -84,7 +84,7 @@ classdef ocp_nlp_cost_json < handle
             obj.cost_source_ext_cost = [];
             obj.cost_function_ext_cost = [];
             obj.W           = [];
-            obj.outer_hess_is_diag = [];
+            obj.outer_hess_is_diag = 0;
             obj.Vx          = [];
             obj.Vu          = [];
             obj.Vz          = [];
@@ -99,7 +99,7 @@ classdef ocp_nlp_cost_json < handle
             obj.cost_source_ext_cost_0 = [];
             obj.cost_function_ext_cost_0 = [];
             obj.W_0           = [];
-            obj.outer_hess_is_diag_0 = [];
+            obj.outer_hess_is_diag_0 = 0;
             obj.Vx_0         = [];
             obj.Vu_0        = [];
             obj.Vz_0        = [];
@@ -114,7 +114,7 @@ classdef ocp_nlp_cost_json < handle
             obj.cost_source_ext_cost_e = [];
             obj.cost_function_ext_cost_e = [];
             obj.W_e         = [];
-            obj.outer_hess_is_diag_e = [];
+            obj.outer_hess_is_diag_e = 0;
             obj.Vx_e        = [];
             obj.yref_e      = [];
             obj.Zl_e        = [];
