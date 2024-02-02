@@ -107,6 +107,7 @@ classdef acados_ocp < handle
                 end
                 if (strcmp(obj.model_struct.cost_type, 'linear_ls')) || (strcmp(obj.model_struct.cost_type, 'nonlinear_ls'))
                     obj.model_struct.cost_W_0 = obj.model_struct.cost_W;
+                    obj.model_struct.cost_outer_hess_is_diag_0 = obj.model_struct.cost_outer_hess_is_diag;
                     if isfield(obj.model_struct,'cost_y_ref')
                         obj.model_struct.cost_y_ref_0 = obj.model_struct.cost_y_ref;
                     end

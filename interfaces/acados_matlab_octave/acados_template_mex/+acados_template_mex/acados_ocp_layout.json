@@ -519,6 +519,22 @@
                 "ny"
             ]
         ],
+        "W_e": [
+            "ndarray",
+            [
+                "ny_e",
+                "ny_e"
+            ]
+        ],
+         "outer_hess_is_diag_0": [
+            "int"
+        ],
+        "outer_hess_is_diag": [
+            "int"
+        ],
+        "outer_hess_is_diag_e": [
+            "int"
+        ],
         "Zl": [
             "ndarray",
             [
@@ -541,13 +557,6 @@
             "ndarray",
             [
                 "ns"
-            ]
-        ],
-        "W_e": [
-            "ndarray",
-            [
-                "ny_e",
-                "ny_e"
             ]
         ],
         "yref_0": [

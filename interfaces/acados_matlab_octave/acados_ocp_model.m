@@ -29,7 +29,6 @@
 
 %
 
-import casadi.*
 
 classdef acados_ocp_model < handle
 
@@ -56,6 +55,7 @@ classdef acados_ocp_model < handle
             obj.model_struct.constr_type = 'bgh';
             obj.model_struct.constr_type_0 = 'bgh';
             obj.model_struct.constr_type_e = 'bgh';
+            obj.model_struct.cost_outer_hess_is_diag_0 = [];
         end
 
 
@@ -148,13 +148,13 @@ classdef acados_ocp_model < handle
                     obj.model_struct.cost_Vz_0 = value;
                 elseif (strcmp(field, 'cost_W'))
                     obj.model_struct.cost_W = value;
-                    obj.model_struct.cost_outer_hess_is_diag = int(is_diag(sparsify(DM(value))));
+                    obj.model_struct.cost_outer_hess_is_diag = int16(isdiag(value));
                 elseif (strcmp(field, 'cost_W_e'))
                     obj.model_struct.cost_W_e = value;
-                    obj.model_struct.cost_outer_hess_is_diag_e = int(is_diag(sparsify(DM(value))));
+                    obj.model_struct.cost_outer_hess_is_diag_e = int16(isdiag(value));
                 elseif (strcmp(field, 'cost_W_0'))
                     obj.model_struct.cost_W_0 = value;
-                    obj.model_struct.cost_outer_hess_is_diag_0 = int(is_diag(sparsify(DM(value))));
+                    obj.model_struct.cost_outer_hess_is_diag_0 = int16(isdiag(value));
                 elseif (strcmp(field, 'cost_y_ref'))
                     obj.model_struct.cost_y_ref = value;
                 elseif (strcmp(field, 'cost_y_ref_e'))

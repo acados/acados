@@ -38,6 +38,7 @@ classdef ocp_nlp_cost_json < handle
         cost_source_ext_cost % C-source file of cost function
         cost_function_ext_cost % C-function name
         W           % weight matrix
+        outer_hess_is_diag % flag indicating whether outer hess is diag
         Vx          % x matrix coefficient
         Vu          % u matrix coefficient
         Vz          % z matrix coefficient
@@ -52,6 +53,7 @@ classdef ocp_nlp_cost_json < handle
         cost_source_ext_cost_0 % C-source file of cost function
         cost_function_ext_cost_0 % C-function name
         W_0           % weight matrix
+        outer_hess_is_diag_0 % flag indicating whether outer hess is diag
         Vx_0          % x matrix coefficient
         Vu_0          % u matrix coefficient
         Vz_0          % z matrix coefficient
@@ -67,6 +69,7 @@ classdef ocp_nlp_cost_json < handle
         cost_source_ext_cost_e % C-source file of cost function
         cost_function_ext_cost_e % C-function name
         W_e         % weight matrix
+        outer_hess_is_diag_e % flag indicating whether outer hess is diag
         Vx_e        % x matrix coefficient
         yref_e      % reference
         Zl_e        % Hessian wrt lower slack
@@ -81,6 +84,7 @@ classdef ocp_nlp_cost_json < handle
             obj.cost_source_ext_cost = [];
             obj.cost_function_ext_cost = [];
             obj.W           = [];
+            obj.outer_hess_is_diag = [];
             obj.Vx          = [];
             obj.Vu          = [];
             obj.Vz          = [];
@@ -95,6 +99,7 @@ classdef ocp_nlp_cost_json < handle
             obj.cost_source_ext_cost_0 = [];
             obj.cost_function_ext_cost_0 = [];
             obj.W_0           = [];
+            obj.outer_hess_is_diag_0 = [];
             obj.Vx_0         = [];
             obj.Vu_0        = [];
             obj.Vz_0        = [];
@@ -109,6 +114,7 @@ classdef ocp_nlp_cost_json < handle
             obj.cost_source_ext_cost_e = [];
             obj.cost_function_ext_cost_e = [];
             obj.W_e         = [];
+            obj.outer_hess_is_diag_e = [];
             obj.Vx_e        = [];
             obj.yref_e      = [];
             obj.Zl_e        = [];
