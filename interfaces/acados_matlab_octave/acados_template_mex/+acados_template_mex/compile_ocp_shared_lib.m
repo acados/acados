@@ -41,8 +41,24 @@ function compile_ocp_shared_lib(export_dir)
                   status, result);
         end
     else
+        % check compiler
+        use_msvc = false;
+        if ~is_octave()
+            mexOpts = mex.getCompilerConfigurations('C', 'Selected');
+            if contains(mexOpts.ShortName, 'MSVC')
+                use_msvc = true;
+            end
+        end
         % compile on Windows platform
-        [ status, result ] = system('cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DBUILD_ACADOS_OCP_SOLVER_LIB=ON -S . -B .');
+        if use_msvc
+            % get env vars for MSVC
+            msvc_env = fullfile(mexOpts.Location, 'VC\Auxiliary\Build\vcvars64.bat');
+            assert(isfile(msvc_env), 'Cannot find definition of MSVC env vars.');
+            % TODO: detect MSVC version?
+            [ status, result ] = system(['cmake -G "Visual Studio 16 2019" -A x64 -DCMAKE_BUILD_TYPE=Release -DBUILD_ACADOS_OCP_SOLVER_LIB=ON -S . -B .']);
+        else
+            [ status, result ] = system('cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DBUILD_ACADOS_OCP_SOLVER_LIB=ON -S . -B .');
+        end
         if status
             cd(return_dir);
             error('Generating buildsystem failed.\nGot status %d, result: %s',...
