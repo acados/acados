@@ -169,9 +169,9 @@ endif()
 
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE {{ code_export_directory }})
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE {{ code_export_directory }})
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE {{ code_export_directory }})
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE {{ code_export_directory | replace(from="\", to="/") }})
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE {{ code_export_directory | replace(from="\", to="/") }})
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE {{ code_export_directory | replace(from="\", to="/") }})
 endif()
 
 
