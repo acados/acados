@@ -168,6 +168,13 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_SYSTEM_NAME MATCHES "Windows")
 endif()
 
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE {{ code_export_directory | replace(from="\", to="/") }})
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE {{ code_export_directory | replace(from="\", to="/") }})
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE {{ code_export_directory | replace(from="\", to="/") }})
+endif()
+
+
 # object target names
 set(MODEL_OBJ model_{{ model.name }})
 set(OCP_OBJ ocp_{{ model.name }})
