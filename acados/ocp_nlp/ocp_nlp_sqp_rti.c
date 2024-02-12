@@ -460,13 +460,13 @@ static void ocp_nlp_sqp_rti_preparation_step(ocp_nlp_config *config, ocp_nlp_dim
 
     // regularize Hessian
     acados_tic(&timer1);
-    config->regularize->regularize_hessian(config->regularize,
+    config->regularize->regularize_lhs(config->regularize,
         dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
     mem->time_reg += acados_toc(&timer1);
 
     if (opts->rti_phase == 1)
     {
-        int qp_status = qp_solver->condense_lhs(qp_solver, dims->qp_solver,
+        qp_solver->condense_lhs(qp_solver, dims->qp_solver,
             nlp_mem->qp_in, nlp_mem->qp_out, opts->nlp_opts->qp_solver_opts,
             nlp_mem->qp_solver_mem, nlp_work->qp_work);
     }
@@ -498,6 +498,13 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     mem->time_qp_solver_call = 0.0;
     mem->time_qp_xcond = 0.0;
     mem->time_glob = 0.0;
+
+
+    // finish regularization
+    acados_tic(&timer1);
+    config->regularize->regularize_rhs(config->regularize,
+        dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
+    mem->time_reg += acados_toc(&timer1);
 
     // update QP rhs for SQP (step prim var, abs dual var)
     ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in,

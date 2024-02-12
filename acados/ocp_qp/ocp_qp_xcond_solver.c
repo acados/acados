@@ -539,7 +539,7 @@ int ocp_qp_xcond_condense_lhs(void *config_, ocp_qp_xcond_solver_dims *dims, ocp
                                      void *opts_, void *mem_, void *work_)
 {
     ocp_qp_xcond_solver_config *config = config_;
-    qp_solver_config *qp_solver = config->qp_solver;
+    // qp_solver_config *qp_solver = config->qp_solver;
     ocp_qp_xcond_config *xcond = config->xcond;
 
     qp_info *info = (qp_info *) qp_out->misc;
