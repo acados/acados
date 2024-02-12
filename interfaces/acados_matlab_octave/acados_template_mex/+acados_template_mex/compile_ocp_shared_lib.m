@@ -32,7 +32,6 @@
 function compile_ocp_shared_lib(export_dir)
     return_dir = pwd;
     cd(export_dir);
-    %% build main file
     if isunix
         [ status, result ] = system('make shared_lib');
         if status
@@ -52,8 +51,8 @@ function compile_ocp_shared_lib(export_dir)
         % compile on Windows platform
         if use_msvc
             % get env vars for MSVC
-            msvc_env = fullfile(mexOpts.Location, 'VC\Auxiliary\Build\vcvars64.bat');
-            assert(isfile(msvc_env), 'Cannot find definition of MSVC env vars.');
+            % msvc_env = fullfile(mexOpts.Location, 'VC\Auxiliary\Build\vcvars64.bat');
+            % assert(isfile(msvc_env), 'Cannot find definition of MSVC env vars.');
             % detect MSVC version
             msvc_ver_str = "Visual Studio " + mexOpts.Version(1:2) + " " + mexOpts.Name(22:25);
             [ status, result ] = system(['cmake -G "' + msvc_ver_str + '" -A x64 -DCMAKE_BUILD_TYPE=Release -DBUILD_ACADOS_OCP_SOLVER_LIB=ON -S . -B .']);
