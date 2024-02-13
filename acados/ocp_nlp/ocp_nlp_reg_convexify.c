@@ -784,6 +784,12 @@ void ocp_nlp_reg_convexify_regularize_rhs(void *config, ocp_nlp_reg_dims *dims, 
 
     double delta = opts->delta;
 
+    // start from original qp and do it all from scratch
+    for (ii = 0; ii<=N; ii++)
+    {
+        blasfeo_dgecp(nu[ii]+nx[ii], nu[ii]+nx[ii], &mem->original_RSQrq[ii], 0, 0, mem->RSQrq[ii], 0, 0);
+    }
+
     // Algorithm 6 from Verschueren2017
 
     blasfeo_drowin(nu[N]+nx[N], 1.0, mem->rq[N], 0, mem->RSQrq[N], nu[N]+nx[N], 0);
