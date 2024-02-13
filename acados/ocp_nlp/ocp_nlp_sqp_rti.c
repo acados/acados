@@ -499,16 +499,15 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     mem->time_qp_xcond = 0.0;
     mem->time_glob = 0.0;
 
+    // update QP rhs for SQP (step prim var, abs dual var)
+    ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in,
+        nlp_out, nlp_opts, nlp_mem, nlp_work);
 
     // finish regularization
     acados_tic(&timer1);
     config->regularize->regularize_rhs(config->regularize,
         dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
     mem->time_reg += acados_toc(&timer1);
-
-    // update QP rhs for SQP (step prim var, abs dual var)
-    ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in,
-        nlp_out, nlp_opts, nlp_mem, nlp_work);
 
     if (nlp_opts->print_level > 0) {
         printf("\n------- qp_in --------\n");
