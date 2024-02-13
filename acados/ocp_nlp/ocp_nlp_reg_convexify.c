@@ -540,7 +540,7 @@ void ocp_nlp_reg_convexify_memory_set(void *config_, ocp_nlp_reg_dims *dims, voi
 /************************************************
  * functions
  ************************************************/
-
+// Algorithm 6 from Verschueren2017
 // NOTE this only considers the case of (dynamics) equality constraints (no inequality constraints)
 // TODO inequality constraints case
 void ocp_nlp_reg_convexify_regularize(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *mem_)
@@ -555,8 +555,6 @@ void ocp_nlp_reg_convexify_regularize(void *config, ocp_nlp_reg_dims *dims, void
     int N = dims->N;
 
     double delta = opts->delta;
-
-    // Algorithm 6 from Verschueren2017
 
     blasfeo_drowin(nu[N]+nx[N], 1.0, mem->rq[N], 0, mem->RSQrq[N], nu[N]+nx[N], 0);
     blasfeo_dgecp(nu[N]+nx[N]+1, nu[N]+nx[N], mem->RSQrq[N], 0, 0, &mem->original_RSQrq[N], 0, 0);
@@ -682,6 +680,8 @@ void ocp_nlp_reg_convexify_regularize(void *config, ocp_nlp_reg_dims *dims, void
 }
 
 
+// TODO: implement proper split! Right now, we basically do everything twice.
+
 void ocp_nlp_reg_convexify_regularize_lhs(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *mem_)
 {
     ocp_nlp_reg_convexify_memory *mem = mem_;
@@ -696,9 +696,8 @@ void ocp_nlp_reg_convexify_regularize_lhs(void *config, ocp_nlp_reg_dims *dims, 
 
     double delta = opts->delta;
 
-    // Algorithm 6 from Verschueren2017
-
-    blasfeo_drowin(nu[N]+nx[N], 1.0, mem->rq[N], 0, mem->RSQrq[N], nu[N]+nx[N], 0);
+    // regularize() without updating mem->rq!
+    // blasfeo_drowin(nu[N]+nx[N], 1.0, mem->rq[N], 0, mem->RSQrq[N], nu[N]+nx[N], 0);
 
     blasfeo_dgecp(nu[N]+nx[N]+1, nu[N]+nx[N], mem->RSQrq[N], 0, 0, &mem->original_RSQrq[N], 0, 0);
 
@@ -713,7 +712,7 @@ void ocp_nlp_reg_convexify_regularize_lhs(void *config, ocp_nlp_reg_dims *dims, 
     for (ii = N-1; ii >= 0; --ii)
     {
         blasfeo_drowin(nx[ii+1], 1.0, mem->b[ii], 0, mem->BAbt[ii], nu[ii]+nx[ii], 0);
-        blasfeo_drowin(nu[ii]+nx[ii], 1.0, mem->rq[ii], 0, mem->RSQrq[ii], nu[ii]+nx[ii], 0);
+        // blasfeo_drowin(nu[ii]+nx[ii], 1.0, mem->rq[ii], 0, mem->RSQrq[ii], nu[ii]+nx[ii], 0);
 
         blasfeo_dgecp(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, &mem->original_RSQrq[ii], 0, 0);
 
@@ -787,12 +786,10 @@ void ocp_nlp_reg_convexify_regularize_rhs(void *config, ocp_nlp_reg_dims *dims, 
     // start from original qp and do it all from scratch
     for (ii = 0; ii<=N; ii++)
     {
-        blasfeo_dgecp(nu[ii]+nx[ii], nu[ii]+nx[ii], &mem->original_RSQrq[ii], 0, 0, mem->RSQrq[ii], 0, 0);
+        blasfeo_dgecp(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &mem->original_RSQrq[ii], 0, 0, mem->RSQrq[ii], 0, 0);
     }
 
-    // Algorithm 6 from Verschueren2017
     blasfeo_drowin(nu[N]+nx[N], 1.0, mem->rq[N], 0, mem->RSQrq[N], nu[N]+nx[N], 0);
-
     blasfeo_dgecp(nu[N]+nx[N]+1, nu[N]+nx[N], mem->RSQrq[N], 0, 0, &mem->original_RSQrq[N], 0, 0);
 
     blasfeo_dgese(nx[N], nx[N], 0.0, &mem->delta_eye, 0, 0);
@@ -808,7 +805,7 @@ void ocp_nlp_reg_convexify_regularize_rhs(void *config, ocp_nlp_reg_dims *dims, 
         blasfeo_drowin(nx[ii+1], 1.0, mem->b[ii], 0, mem->BAbt[ii], nu[ii]+nx[ii], 0);
         blasfeo_drowin(nu[ii]+nx[ii], 1.0, mem->rq[ii], 0, mem->RSQrq[ii], nu[ii]+nx[ii], 0);
 
-        blasfeo_dgecp(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, &mem->original_RSQrq[ii], 0, 0);
+        // blasfeo_dgecp(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, &mem->original_RSQrq[ii], 0, 0);
 
         blasfeo_dgemm_nt(nu[ii]+nx[ii], nx[ii], nx[ii+1], 1.0, mem->BAbt[ii], 0, 0, &mem->Q_bar, 0, 0, 0.0, &mem->BAQ, 0, 0, &mem->BAQ, 0, 0);
         blasfeo_dsyrk_ln_mn(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], nx[ii+1], 1.0, mem->BAbt[ii], 0, 0, &mem->BAQ, 0, 0, 1.0, mem->RSQrq[ii], 0, 0, mem->RSQrq[ii], 0, 0);
