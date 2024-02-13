@@ -576,19 +576,17 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     switch(rti_phase)
     {
 
-        // perform preparation and feedback rti_phase
-        case 0:
+        case PREPARATION_AND_FEEDBACK:
             ocp_nlp_sqp_rti_preparation_step(config, dims, nlp_in, nlp_out, opts, mem, work);
             ocp_nlp_sqp_rti_feedback_step(config, dims, nlp_in, nlp_out, opts, mem, work);
             break;
 
-        // perform preparation rti_phase
-        case 1:
+        case PREPARATION:
             ocp_nlp_sqp_rti_preparation_step(config, dims, nlp_in, nlp_out, opts, mem, work);
             break;
 
         // perform feedback rti_phase
-        case 2:
+        case FEEDBACK:
             ocp_nlp_sqp_rti_feedback_step(config, dims, nlp_in, nlp_out, opts, mem, work);
             break;
     }
