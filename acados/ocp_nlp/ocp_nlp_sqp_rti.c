@@ -458,14 +458,14 @@ static void ocp_nlp_sqp_rti_preparation_step(ocp_nlp_config *config, ocp_nlp_dim
     mem->time_lin += acados_toc(&timer1);
 
 
-    // regularize Hessian
-    acados_tic(&timer1);
-    config->regularize->regularize_lhs(config->regularize,
-        dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
-    mem->time_reg += acados_toc(&timer1);
-
     if (opts->rti_phase == 1)
     {
+        // regularize Hessian
+        acados_tic(&timer1);
+        config->regularize->regularize_lhs(config->regularize,
+            dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
+        mem->time_reg += acados_toc(&timer1);
+        // condense lhs
         qp_solver->condense_lhs(qp_solver, dims->qp_solver,
             nlp_mem->qp_in, nlp_mem->qp_out, opts->nlp_opts->qp_solver_opts,
             nlp_mem->qp_solver_mem, nlp_work->qp_work);
@@ -503,11 +503,22 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in,
         nlp_out, nlp_opts, nlp_mem, nlp_work);
 
-    // finish regularization
-    acados_tic(&timer1);
-    config->regularize->regularize_rhs(config->regularize,
-        dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
-    mem->time_reg += acados_toc(&timer1);
+    if (opts->rti_phase == 2)
+    {
+        // finish regularization
+        acados_tic(&timer1);
+        config->regularize->regularize_rhs(config->regularize,
+            dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
+        mem->time_reg += acados_toc(&timer1);
+    }
+    else
+    {
+        // full regularization
+        acados_tic(&timer1);
+        config->regularize->regularize(config->regularize,
+            dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
+        mem->time_reg += acados_toc(&timer1);
+    }
 
     if (nlp_opts->print_level > 0) {
         printf("\n------- qp_in --------\n");
