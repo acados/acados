@@ -229,6 +229,7 @@ void ocp_nlp_reg_noreg_config_initialize_default(ocp_nlp_reg_config *config)
     config->memory_set_pi_ptr = &ocp_nlp_reg_noreg_memory_set_pi_ptr;
     config->memory_set_lam_ptr = &ocp_nlp_reg_noreg_memory_set_lam_ptr;
     // functions
+    config->regularize = &ocp_nlp_reg_noreg_regularize;
     config->regularize_lhs = &ocp_nlp_reg_noreg_regularize_lhs;
     config->regularize_rhs = &ocp_nlp_reg_noreg_regularize_rhs;
     config->correct_dual_sol = &ocp_nlp_reg_noreg_correct_dual_sol;
