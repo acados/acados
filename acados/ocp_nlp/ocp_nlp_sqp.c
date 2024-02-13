@@ -511,7 +511,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     for (; sqp_iter < opts->max_iter; sqp_iter++)
     {
-        // linearizate NLP and update QP matrices
+        // linearize NLP and update QP matrices
         acados_tic(&timer1);
         ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
         mem->time_lin += acados_toc(&timer1);
