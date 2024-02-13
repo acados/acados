@@ -485,6 +485,19 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
         ocp_json.cost.zu = model.cost_zu;
     end
 
+    if isfield(model, 'cost_Zl_0')
+        ocp_json.cost.Zl_0 = diag(model.cost_Zl_0);
+    end
+    if isfield(model, 'cost_Zu_0')
+        ocp_json.cost.Zu_0 = diag(model.cost_Zu_0);
+    end
+    if isfield(model, 'cost_zl_0')
+        ocp_json.cost.zl_0 = model.cost_zl_0;
+    end
+    if isfield(model, 'cost_zu_0')
+        ocp_json.cost.zu_0 = model.cost_zu_0;
+    end
+
 
     if isfield(model, 'cost_Zl_e')
         ocp_json.cost.Zl_e = diag(model.cost_Zl_e);

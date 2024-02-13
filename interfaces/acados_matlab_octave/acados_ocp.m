@@ -197,7 +197,7 @@ classdef acados_ocp < handle
 
             % generate templated solver
             if nargin < 3
-                simulink_opts = get_acados_simulink_opts;
+                simulink_opts = get_acados_simulink_opts();
             end
             obj.acados_ocp_nlp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts);
             ocp_generate_c_code(obj);
