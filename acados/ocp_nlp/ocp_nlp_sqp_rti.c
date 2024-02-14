@@ -299,7 +299,6 @@ acados_size_t ocp_nlp_sqp_rti_workspace_calculate_size(void *config_,
 
     acados_size_t size = 0;
 
-    // sqp
     size += sizeof(ocp_nlp_sqp_rti_workspace);
 
     // nlp
@@ -575,7 +574,6 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     switch(rti_phase)
     {
-
         case PREPARATION_AND_FEEDBACK:
             ocp_nlp_sqp_rti_preparation_step(config, dims, nlp_in, nlp_out, opts, mem, work);
             ocp_nlp_sqp_rti_feedback_step(config, dims, nlp_in, nlp_out, opts, mem, work);
@@ -585,7 +583,6 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             ocp_nlp_sqp_rti_preparation_step(config, dims, nlp_in, nlp_out, opts, mem, work);
             break;
 
-        // perform feedback rti_phase
         case FEEDBACK:
             ocp_nlp_sqp_rti_feedback_step(config, dims, nlp_in, nlp_out, opts, mem, work);
             break;
@@ -700,7 +697,6 @@ void ocp_nlp_sqp_rti_eval_param_sens(void *config_, void *dims_, void *opts_,
                 sens_nlp_out->t + i, 0);
 
         }
-
     }
     else
     {
@@ -716,7 +712,6 @@ void ocp_nlp_sqp_rti_eval_param_sens(void *config_, void *dims_, void *opts_,
 
 
 
-// TODO rename memory_get ???
 void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_,
     const char *field, void *return_value_)
 {
