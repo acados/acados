@@ -393,19 +393,16 @@ static void ocp_nlp_sqp_rti_preparation_step(ocp_nlp_config *config, ocp_nlp_dim
     omp_set_num_threads(opts->nlp_opts->num_threads);
 #endif
 
-    // initialize QP
+    // prepare submodules
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
-    /* SQP body */
     // linearize NLP and update QP matrices
     acados_tic(&timer1);
     ocp_nlp_approximate_qp_matrices(config, dims, nlp_in,
         nlp_out, nlp_opts, nlp_mem, nlp_work);
-
     mem->time_lin += acados_toc(&timer1);
 
-
-    if (opts->rti_phase == 1)
+    if (opts->rti_phase == PREPARATION)
     {
         // regularize Hessian
         acados_tic(&timer1);
@@ -450,22 +447,25 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in,
         nlp_out, nlp_opts, nlp_mem, nlp_work);
 
-    if (opts->rti_phase == 2)
+    // regularization
+    acados_tic(&timer1);
+    if (opts->rti_phase == FEEDBACK)
     {
         // finish regularization
-        acados_tic(&timer1);
         config->regularize->regularize_rhs(config->regularize,
             dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
-        mem->time_reg += acados_toc(&timer1);
+    }
+    else if (opts->rti_phase == PREPARATION_AND_FEEDBACK)
+    {
+        // full regularization
+        config->regularize->regularize(config->regularize,
+            dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
     }
     else
     {
-        // full regularization
-        acados_tic(&timer1);
-        config->regularize->regularize(config->regularize,
-            dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
-        mem->time_reg += acados_toc(&timer1);
+        printf("ocp_nlp_sqp_rti_feedback_step: rti_phase must be FEEDBACK or PREPARATION_AND_FEEDBACK\n");
     }
+    mem->time_reg += acados_toc(&timer1);
 
     if (nlp_opts->print_level > 0) {
         printf("\n------- qp_in --------\n");
@@ -479,21 +479,20 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
             opts->nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
     }
 
-    // solve qp
+    // solve QP
     acados_tic(&timer1);
-    if (opts->rti_phase == 0)
-    {
-        qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver,
-            nlp_mem->qp_in, nlp_mem->qp_out, opts->nlp_opts->qp_solver_opts,
-            nlp_mem->qp_solver_mem, nlp_work->qp_work);
-    }
-    else // just feedback
+    if (opts->rti_phase == FEEDBACK)
     {
         qp_status = qp_solver->condense_rhs_and_solve(qp_solver, dims->qp_solver,
             nlp_mem->qp_in, nlp_mem->qp_out, opts->nlp_opts->qp_solver_opts,
             nlp_mem->qp_solver_mem, nlp_work->qp_work);
     }
-
+    else if (opts->rti_phase == PREPARATION_AND_FEEDBACK)
+    {
+        qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver,
+            nlp_mem->qp_in, nlp_mem->qp_out, opts->nlp_opts->qp_solver_opts,
+            nlp_mem->qp_solver_mem, nlp_work->qp_work);
+    }
     mem->time_qp_sol += acados_toc(&timer1);
 
     qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);
@@ -514,9 +513,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     // compute external QP residuals (for debugging)
     if (opts->ext_qp_res)
     {
-        ocp_qp_res_compute(nlp_mem->qp_in, nlp_mem->qp_out,
-            work->qp_res, work->qp_res_ws);
-
+        ocp_qp_res_compute(nlp_mem->qp_in, nlp_mem->qp_out, work->qp_res, work->qp_res_ws);
         ocp_qp_res_compute_nrm_inf(work->qp_res, mem->stat+(mem->stat_n*1+2));
     }
 
