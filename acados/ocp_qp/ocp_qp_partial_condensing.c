@@ -543,7 +543,7 @@ int ocp_qp_partial_condensing_condense_rhs(void *qp_in_, void *pcond_qp_in_, voi
     d_part_cond_qp_cond_rhs(mem->red_qp, pcond_qp_in, opts->hpipm_pcond_opts, mem->hpipm_pcond_work);
 
     // stop timer
-    mem->time_qp_xcond = acados_toc(&timer);
+    mem->time_qp_xcond += acados_toc(&timer);
 
     return ACADOS_SUCCESS;
 }
