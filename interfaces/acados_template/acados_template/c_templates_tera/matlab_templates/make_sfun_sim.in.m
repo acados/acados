@@ -77,7 +77,7 @@ CFLAGS  = ' -O';
 
 LIB_PATH = '{{ acados_lib_path }}';
 
-LIBS = '-lacados -lblasfeo -lhpipm';
+LIBS = '-lacados -lhpipm -lblasfeo';
 
 try
     % eval( [ 'mex -v -output  acados_sim_solver_sfunction_{{ model.name }} ', ...
