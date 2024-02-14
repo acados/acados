@@ -385,6 +385,10 @@ static void ocp_nlp_sqp_rti_preparation_step(ocp_nlp_config *config, ocp_nlp_dim
 
     mem->time_lin = 0.0;
     mem->time_reg = 0.0;
+    mem->time_qp_sol = 0.0;
+    mem->time_qp_solver_call = 0.0;
+    mem->time_qp_xcond = 0.0;
+    mem->time_glob = 0.0;
 
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
@@ -410,9 +414,11 @@ static void ocp_nlp_sqp_rti_preparation_step(ocp_nlp_config *config, ocp_nlp_dim
             dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
         mem->time_reg += acados_toc(&timer1);
         // condense lhs
+        acados_tic(&timer1);
         qp_solver->condense_lhs(qp_solver, dims->qp_solver,
             nlp_mem->qp_in, nlp_mem->qp_out, opts->nlp_opts->qp_solver_opts,
             nlp_mem->qp_solver_mem, nlp_work->qp_work);
+        mem->time_qp_sol += acados_toc(&timer1);
     }
 #if defined(ACADOS_WITH_OPENMP)
     // restore number of threads
@@ -420,9 +426,7 @@ static void ocp_nlp_sqp_rti_preparation_step(ocp_nlp_config *config, ocp_nlp_dim
 #endif
 
     return;
-
 }
-
 
 
 static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
@@ -438,10 +442,6 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     int qp_iter = 0;
     int qp_status = 0;
     double tmp_time;
-    mem->time_qp_sol = 0.0;
-    mem->time_qp_solver_call = 0.0;
-    mem->time_qp_xcond = 0.0;
-    mem->time_glob = 0.0;
 
     // update QP rhs for SQP (step prim var, abs dual var)
     ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in,
@@ -493,8 +493,9 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
             nlp_mem->qp_in, nlp_mem->qp_out, opts->nlp_opts->qp_solver_opts,
             nlp_mem->qp_solver_mem, nlp_work->qp_work);
     }
+    // add qp timings
     mem->time_qp_sol += acados_toc(&timer1);
-
+    // NOTE: timings within qp solver are added internally (lhs+rhs)
     qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);
     mem->time_qp_solver_call += tmp_time;
     qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_xcond", &tmp_time);
@@ -536,7 +537,6 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
         mem->status = ACADOS_QP_FAILURE;
         return;
     }
-
 
     // globalization
     acados_tic(&timer1);
