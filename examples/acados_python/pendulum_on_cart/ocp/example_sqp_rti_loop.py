@@ -109,12 +109,20 @@ def main():
     simX = np.ndarray((N+1, nx))
     simU = np.ndarray((N, nu))
 
-
     # call SQP_RTI solver in the loop:
     tol = 1e-6
 
+    SPLIT_RTI = True
     for i in range(20):
-        status = ocp_solver.solve()
+        if SPLIT_RTI:
+            # preparation
+            ocp_solver.options_set("rti_phase", 1)
+            status = ocp_solver.solve()
+            # feedback
+            ocp_solver.options_set("rti_phase", 2)
+            status = ocp_solver.solve()
+        else:
+            status = ocp_solver.solve()
         # ocp_solver.custom_update(np.array([]))
         ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
         residuals = ocp_solver.get_residuals()
@@ -137,7 +145,7 @@ def main():
     cost = ocp_solver.get_cost()
     print("cost function value of solution = ", cost)
 
-    PRINT_QP = True
+    PRINT_QP = False
 
     range_without_terminal = [0, 1, N-2, N-1]
     range_with_terminal = [0, 1, N-1, N]

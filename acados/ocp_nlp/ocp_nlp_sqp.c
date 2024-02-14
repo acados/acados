@@ -591,7 +591,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         // regularize Hessian
         acados_tic(&timer1);
-        config->regularize->regularize_hessian(config->regularize, dims->regularize,
+        config->regularize->regularize(config->regularize, dims->regularize,
                                                opts->nlp_opts->regularize, nlp_mem->regularize_mem);
         mem->time_reg += acados_toc(&timer1);
 

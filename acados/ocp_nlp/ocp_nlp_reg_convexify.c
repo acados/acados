@@ -166,14 +166,14 @@ acados_size_t ocp_nlp_reg_convexify_calculate_memory_size(void *config_, ocp_nlp
     {
         size += 2*blasfeo_memsize_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]); // original_RSQrq
     }
-	size += blasfeo_memsize_dmat(nuxM, nuxM); // tmp_RSQ
+    size += blasfeo_memsize_dmat(nuxM, nuxM); // tmp_RSQ
 
 //    size += 2*blasfeo_memsize_dvec(nxM); // grad b2
 
     // giaf's
     size += (2*(N+1)+N)*sizeof(struct blasfeo_dmat *); // RSQrq BAbt DCt
     size += (3*(N+1)+2*N)*sizeof(struct blasfeo_dvec *); // rq b ux pi lam
-	size += (N+1)*sizeof(int *); // idxb
+    size += (N+1)*sizeof(int *); // idxb
 
     return size;
 }
@@ -264,8 +264,8 @@ void *ocp_nlp_reg_convexify_assign_memory(void *config_, ocp_nlp_reg_dims *dims,
     mem->lam = (struct blasfeo_dvec **) c_ptr;
     c_ptr += (N+1)*sizeof(struct blasfeo_dvec *);
 
-	mem->idxb = (int **) c_ptr;
-	c_ptr += (N+1)*sizeof(int *);
+    mem->idxb = (int **) c_ptr;
+    c_ptr += (N+1)*sizeof(int *);
 
     align_char_to(64, &c_ptr);
 
@@ -540,10 +540,10 @@ void ocp_nlp_reg_convexify_memory_set(void *config_, ocp_nlp_reg_dims *dims, voi
 /************************************************
  * functions
  ************************************************/
-
-// NOTE this only considers the case of (dynamcs) equality constraints (no inequality constraints)
+// Algorithm 6 from Verschueren2017
+// NOTE this only considers the case of (dynamics) equality constraints (no inequality constraints)
 // TODO inequality constraints case
-void ocp_nlp_reg_convexify_regularize_hessian(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *mem_)
+void ocp_nlp_reg_convexify_regularize(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *mem_)
 {
     ocp_nlp_reg_convexify_memory *mem = mem_;
     ocp_nlp_reg_convexify_opts *opts = opts_;
@@ -554,38 +554,34 @@ void ocp_nlp_reg_convexify_regularize_hessian(void *config, ocp_nlp_reg_dims *di
     int *nu = dims->nu;
     int N = dims->N;
 
-#if 0
-	for(ii=0; ii<=N; ii++)
-	{
-        blasfeo_drowin(nu[ii]+nx[ii], 1.0, mem->rq[ii], 0, mem->RSQrq[ii], nu[ii]+nx[ii], 0);
-        blasfeo_dgecp(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, &mem->original_RSQrq[ii], 0, 0);
-	}
-	return;
-#endif
-
     double delta = opts->delta;
 
-    // Algorithm 6 from Verschueren2017
-
-	blasfeo_drowin(nu[N]+nx[N], 1.0, mem->rq[N], 0, mem->RSQrq[N], nu[N]+nx[N], 0);
-
+    blasfeo_drowin(nu[N]+nx[N], 1.0, mem->rq[N], 0, mem->RSQrq[N], nu[N]+nx[N], 0);
     blasfeo_dgecp(nu[N]+nx[N]+1, nu[N]+nx[N], mem->RSQrq[N], 0, 0, &mem->original_RSQrq[N], 0, 0);
 
     // TODO regularize R at last stage if needed !!!
-	// TODO fix for nu[N]>0 !!!!!!!!!!
+    // TODO fix for nu[N]>0 !!!!!!!!!!
+
+    // delta_eye = delta * eye(nx[N])
     blasfeo_dgese(nx[N], nx[N], 0.0, &mem->delta_eye, 0, 0);
     blasfeo_ddiare(nx[N], delta, &mem->delta_eye, 0, 0);
+    // Q_tilde = delta_eye
     blasfeo_dgecp(nx[N], nx[N], &mem->delta_eye, 0, 0, &mem->Q_tilde, 0, 0);
+    // Q_bar = RSQ[N]
     blasfeo_dgecp(nx[N], nx[N], mem->RSQrq[N], nu[N], nu[N], &mem->Q_bar, 0, 0);
+    // RSQ[N] = Q_tilde
     blasfeo_dgecp(nx[N], nx[N], &mem->Q_tilde, 0, 0, mem->RSQrq[N], nu[N], nu[N]);
+    // Q_bar -= Q_tilde
     blasfeo_dgead(nx[N], nx[N], -1.0, &mem->Q_tilde, 0, 0, &mem->Q_bar, 0, 0);
+    // make Q_bar symmetric
     blasfeo_dtrtr_l(nx[N], &mem->Q_bar, 0, 0, &mem->Q_bar, 0, 0);
 
     for (ii = N-1; ii >= 0; --ii)
     {
+        // add b in BAbt, rq in RSQrq
         blasfeo_drowin(nx[ii+1], 1.0, mem->b[ii], 0, mem->BAbt[ii], nu[ii]+nx[ii], 0);
         blasfeo_drowin(nu[ii]+nx[ii], 1.0, mem->rq[ii], 0, mem->RSQrq[ii], nu[ii]+nx[ii], 0);
-
+        // backup RSQrq -> original_RSQrq
         blasfeo_dgecp(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, &mem->original_RSQrq[ii], 0, 0);
 
         // printf("----------------\n");
@@ -602,10 +598,13 @@ void ocp_nlp_reg_convexify_regularize_hessian(void *config, ocp_nlp_reg_dims *di
         // blasfeo_print_dmat(nx+nu, nx, &work->qp_in->BAbt[i], 0, 0);
 
         // TODO implement using cholesky
+
+        // BAQ = BA * Q_bar
         blasfeo_dgemm_nt(nu[ii]+nx[ii], nx[ii], nx[ii+1], 1.0, mem->BAbt[ii], 0, 0, &mem->Q_bar, 0, 0, 0.0, &mem->BAQ, 0, 0, &mem->BAQ, 0, 0);
+        // rank nx[ii+1] update to RSQrq with BAQ
         blasfeo_dsyrk_ln_mn(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], nx[ii+1], 1.0, mem->BAbt[ii], 0, 0, &mem->BAQ, 0, 0, 1.0, mem->RSQrq[ii], 0, 0, mem->RSQrq[ii], 0, 0);
 
-		blasfeo_drowex(nu[ii]+nx[ii], 1.0, mem->RSQrq[ii], nu[ii]+nx[ii], 0, mem->rq[ii], 0);
+        blasfeo_drowex(nu[ii]+nx[ii], 1.0, mem->RSQrq[ii], nu[ii]+nx[ii], 0, mem->rq[ii], 0);
 
         // printf("BAQ\n");
         // blasfeo_print_dmat(nx+nu, nx, &BAQ, 0, 0);
@@ -620,32 +619,23 @@ void ocp_nlp_reg_convexify_regularize_hessian(void *config, ocp_nlp_reg_dims *di
 
         if (needs_regularization)
         {
-			blasfeo_dgecp(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, &mem->tmp_RSQ, 0, 0);
-			// TODO project only nu instead ???????????
-			// TODO compute correction as a separate matrix, and apply to original_RSQrq too (TODO change this name then)
+            blasfeo_dgecp(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, &mem->tmp_RSQ, 0, 0);
+            // TODO project only nu instead ???????????
+            // TODO compute correction as a separate matrix, and apply to original_RSQrq too (TODO change this name then)
 //            acados_mirror(nu[ii]+nx[ii], mem->reg_hess, mem->V, mem->d, mem->e, 1e-4);
-#if 1
-			blasfeo_unpack_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, mem->reg_hess, nu[ii]+nx[ii]);
-			acados_project(nu[ii]+nx[ii], mem->reg_hess, mem->V, mem->d, mem->e, 1e-4);
-			blasfeo_pack_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->reg_hess, nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0);
-#else
-			blasfeo_unpack_dmat(nu[ii], nu[ii], mem->RSQrq[ii], 0, 0, mem->reg_hess, nu[ii]);
-			acados_project(nu[ii], mem->reg_hess, mem->V, mem->d, mem->e, 1e-4);
-			blasfeo_pack_dmat(nu[ii], nu[ii], mem->reg_hess, nu[ii], mem->RSQrq[ii], 0, 0);
-#endif
-//            blasfeo_unpack_dmat(nu[ii], nu[ii], mem->RSQrq[ii], 0, 0, mem->reg_hess, nu[ii]);
-//            acados_mirror(nu[ii], mem->reg_hess, mem->V, mem->d, mem->e, 1e-4);
-//            acados_project(nu[ii], mem->reg_hess, mem->V, mem->d, mem->e, 1e-4);
-//            blasfeo_pack_dmat(nu[ii], nu[ii], mem->reg_hess, nu[ii], mem->RSQrq[ii], 0, 0);
-			blasfeo_dgead(nu[ii]+nx[ii], nu[ii]+nx[ii], -1.0, mem->RSQrq[ii], 0, 0, &mem->tmp_RSQ, 0, 0);
-			blasfeo_dgead(nu[ii]+nx[ii], nu[ii]+nx[ii], -1.0, &mem->tmp_RSQ, 0, 0, &mem->original_RSQrq[ii], 0, 0);
+            blasfeo_unpack_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, mem->reg_hess, nu[ii]+nx[ii]);
+            acados_project(nu[ii]+nx[ii], mem->reg_hess, mem->V, mem->d, mem->e, 1e-4);
+            blasfeo_pack_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->reg_hess, nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0);
+
+            blasfeo_dgead(nu[ii]+nx[ii], nu[ii]+nx[ii], -1.0, mem->RSQrq[ii], 0, 0, &mem->tmp_RSQ, 0, 0);
+            blasfeo_dgead(nu[ii]+nx[ii], nu[ii]+nx[ii], -1.0, &mem->tmp_RSQ, 0, 0, &mem->original_RSQrq[ii], 0, 0);
         }
 
         // printf("QSR_hat\n");
         // blasfeo_print_dmat(nx+nu+1, nx+nu, &work->qp_in->RSQrq[i], 0, 0);
 
 
-		// backup Q
+        // backup Q
         blasfeo_dgecp(nx[ii], nx[ii], mem->RSQrq[ii], nu[ii], nu[ii], &mem->Q_bar, 0, 0);
 
         // R = L * L^T
@@ -656,8 +646,8 @@ void ocp_nlp_reg_convexify_regularize_hessian(void *config, ocp_nlp_reg_dims *di
         blasfeo_dtrsm_rltn(nx[ii], nu[ii], 1.0, &mem->L, 0, 0, &mem->St_copy, 0, 0, &mem->St_copy, 0, 0);
 
         // Q = S^T * R^-1 * S + delta*I
-		blasfeo_dgese(nx[ii], nx[ii], 0.0, &mem->delta_eye, 0, 0);
-		blasfeo_ddiare(nx[ii], delta, &mem->delta_eye, 0, 0);
+        blasfeo_dgese(nx[ii], nx[ii], 0.0, &mem->delta_eye, 0, 0);
+        blasfeo_ddiare(nx[ii], delta, &mem->delta_eye, 0, 0);
 //        blasfeo_dsyrk_ln(nx[ii], nx[ii], 1.0, &mem->Q_tilde, 0, 0, &mem->Q_tilde, 0, 0, 1.0, &mem->delta_eye, 0, 0, mem->RSQrq[ii], nu[ii], nu[ii]);
         blasfeo_dsyrk_ln(nx[ii], nu[ii], 1.0, &mem->St_copy, 0, 0, &mem->St_copy, 0, 0, 1.0, &mem->delta_eye, 0, 0, mem->RSQrq[ii], nu[ii], nu[ii]);
 
@@ -690,9 +680,185 @@ void ocp_nlp_reg_convexify_regularize_hessian(void *config, ocp_nlp_reg_dims *di
 }
 
 
+// TODO: implement proper split! Right now, we basically do everything twice.
 
-// NOTE this only considers the case of (dynamcs) equality constraints (no inequality constraints)
-// TODO inequality constraints case
+void ocp_nlp_reg_convexify_regularize_lhs(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *mem_)
+{
+    ocp_nlp_reg_convexify_memory *mem = mem_;
+    ocp_nlp_reg_convexify_opts *opts = opts_;
+
+    int ii, jj;
+
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int N = dims->N;
+
+
+    double delta = opts->delta;
+
+    // regularize() without updating mem->rq!
+    // blasfeo_drowin(nu[N]+nx[N], 1.0, mem->rq[N], 0, mem->RSQrq[N], nu[N]+nx[N], 0);
+
+    blasfeo_dgecp(nu[N]+nx[N]+1, nu[N]+nx[N], mem->RSQrq[N], 0, 0, &mem->original_RSQrq[N], 0, 0);
+
+    blasfeo_dgese(nx[N], nx[N], 0.0, &mem->delta_eye, 0, 0);
+    blasfeo_ddiare(nx[N], delta, &mem->delta_eye, 0, 0);
+    blasfeo_dgecp(nx[N], nx[N], &mem->delta_eye, 0, 0, &mem->Q_tilde, 0, 0);
+    blasfeo_dgecp(nx[N], nx[N], mem->RSQrq[N], nu[N], nu[N], &mem->Q_bar, 0, 0);
+    blasfeo_dgecp(nx[N], nx[N], &mem->Q_tilde, 0, 0, mem->RSQrq[N], nu[N], nu[N]);
+    blasfeo_dgead(nx[N], nx[N], -1.0, &mem->Q_tilde, 0, 0, &mem->Q_bar, 0, 0);
+    blasfeo_dtrtr_l(nx[N], &mem->Q_bar, 0, 0, &mem->Q_bar, 0, 0);
+
+    for (ii = N-1; ii >= 0; --ii)
+    {
+        blasfeo_drowin(nx[ii+1], 1.0, mem->b[ii], 0, mem->BAbt[ii], nu[ii]+nx[ii], 0);
+        // blasfeo_drowin(nu[ii]+nx[ii], 1.0, mem->rq[ii], 0, mem->RSQrq[ii], nu[ii]+nx[ii], 0);
+
+        blasfeo_dgecp(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, &mem->original_RSQrq[ii], 0, 0);
+
+        blasfeo_dgemm_nt(nu[ii]+nx[ii], nx[ii], nx[ii+1], 1.0, mem->BAbt[ii], 0, 0, &mem->Q_bar, 0, 0, 0.0, &mem->BAQ, 0, 0, &mem->BAQ, 0, 0);
+        blasfeo_dsyrk_ln_mn(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], nx[ii+1], 1.0, mem->BAbt[ii], 0, 0, &mem->BAQ, 0, 0, 1.0, mem->RSQrq[ii], 0, 0, mem->RSQrq[ii], 0, 0);
+
+        // blasfeo_drowex(nu[ii]+nx[ii], 1.0, mem->RSQrq[ii], nu[ii]+nx[ii], 0, mem->rq[ii], 0);
+
+        blasfeo_unpack_dmat(nu[ii], nu[ii], mem->RSQrq[ii], 0, 0, mem->R, nu[ii]);
+        acados_eigen_decomposition(nu[ii], mem->R, mem->V, mem->d, mem->e);
+
+        bool needs_regularization = false;
+        for (jj = 0; jj < nu[ii]; jj++)
+            if (mem->d[jj] < 1e-10)
+                needs_regularization = true;
+
+        if (needs_regularization)
+        {
+            blasfeo_dgecp(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, &mem->tmp_RSQ, 0, 0);
+
+            blasfeo_unpack_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, mem->reg_hess, nu[ii]+nx[ii]);
+            acados_project(nu[ii]+nx[ii], mem->reg_hess, mem->V, mem->d, mem->e, 1e-4);
+            blasfeo_pack_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->reg_hess, nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0);
+
+            blasfeo_dgead(nu[ii]+nx[ii], nu[ii]+nx[ii], -1.0, mem->RSQrq[ii], 0, 0, &mem->tmp_RSQ, 0, 0);
+            blasfeo_dgead(nu[ii]+nx[ii], nu[ii]+nx[ii], -1.0, &mem->tmp_RSQ, 0, 0, &mem->original_RSQrq[ii], 0, 0);
+        }
+
+        // backup Q
+        blasfeo_dgecp(nx[ii], nx[ii], mem->RSQrq[ii], nu[ii], nu[ii], &mem->Q_bar, 0, 0);
+
+        // R = L * L^T
+        blasfeo_dpotrf_l(nu[ii], mem->RSQrq[ii], 0, 0, &mem->L, 0, 0);
+        // Q = S^T * L^-T
+        blasfeo_dgecp(nx[ii], nu[ii], mem->RSQrq[ii], nu[ii], 0, &mem->St_copy, 0, 0);
+//        blasfeo_dtrsm_rltn(nx[ii], nu[ii], 1.0, &mem->L, 0, 0, &mem->St_copy, 0, 0, &mem->Q_tilde, 0, 0);
+        blasfeo_dtrsm_rltn(nx[ii], nu[ii], 1.0, &mem->L, 0, 0, &mem->St_copy, 0, 0, &mem->St_copy, 0, 0);
+
+        // Q = S^T * R^-1 * S + delta*I
+        blasfeo_dgese(nx[ii], nx[ii], 0.0, &mem->delta_eye, 0, 0);
+        blasfeo_ddiare(nx[ii], delta, &mem->delta_eye, 0, 0);
+//        blasfeo_dsyrk_ln(nx[ii], nx[ii], 1.0, &mem->Q_tilde, 0, 0, &mem->Q_tilde, 0, 0, 1.0, &mem->delta_eye, 0, 0, mem->RSQrq[ii], nu[ii], nu[ii]);
+        blasfeo_dsyrk_ln(nx[ii], nu[ii], 1.0, &mem->St_copy, 0, 0, &mem->St_copy, 0, 0, 1.0, &mem->delta_eye, 0, 0, mem->RSQrq[ii], nu[ii], nu[ii]);
+
+        blasfeo_dgead(nx[ii], nx[ii], -1.0, mem->RSQrq[ii], nu[ii], nu[ii], &mem->Q_bar, 0, 0);
+
+        // make symmetric
+        blasfeo_dtrtr_l(nx[ii], &mem->Q_bar, 0, 0, &mem->Q_bar, 0, 0);
+
+    }
+
+    return;
+}
+
+
+
+void ocp_nlp_reg_convexify_regularize_rhs(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *mem_)
+{
+    ocp_nlp_reg_convexify_memory *mem = mem_;
+    ocp_nlp_reg_convexify_opts *opts = opts_;
+
+    int ii, jj;
+
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int N = dims->N;
+
+
+    double delta = opts->delta;
+
+    // start from original qp and do it all from scratch
+    for (ii = 0; ii<=N; ii++)
+    {
+        blasfeo_dgecp(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &mem->original_RSQrq[ii], 0, 0, mem->RSQrq[ii], 0, 0);
+    }
+
+    blasfeo_drowin(nu[N]+nx[N], 1.0, mem->rq[N], 0, mem->RSQrq[N], nu[N]+nx[N], 0);
+    blasfeo_dgecp(nu[N]+nx[N]+1, nu[N]+nx[N], mem->RSQrq[N], 0, 0, &mem->original_RSQrq[N], 0, 0);
+
+    blasfeo_dgese(nx[N], nx[N], 0.0, &mem->delta_eye, 0, 0);
+    blasfeo_ddiare(nx[N], delta, &mem->delta_eye, 0, 0);
+    blasfeo_dgecp(nx[N], nx[N], &mem->delta_eye, 0, 0, &mem->Q_tilde, 0, 0);
+    blasfeo_dgecp(nx[N], nx[N], mem->RSQrq[N], nu[N], nu[N], &mem->Q_bar, 0, 0);
+    blasfeo_dgecp(nx[N], nx[N], &mem->Q_tilde, 0, 0, mem->RSQrq[N], nu[N], nu[N]);
+    blasfeo_dgead(nx[N], nx[N], -1.0, &mem->Q_tilde, 0, 0, &mem->Q_bar, 0, 0);
+    blasfeo_dtrtr_l(nx[N], &mem->Q_bar, 0, 0, &mem->Q_bar, 0, 0);
+
+    for (ii = N-1; ii >= 0; --ii)
+    {
+        blasfeo_drowin(nx[ii+1], 1.0, mem->b[ii], 0, mem->BAbt[ii], nu[ii]+nx[ii], 0);
+        blasfeo_drowin(nu[ii]+nx[ii], 1.0, mem->rq[ii], 0, mem->RSQrq[ii], nu[ii]+nx[ii], 0);
+
+        // blasfeo_dgecp(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, &mem->original_RSQrq[ii], 0, 0);
+
+        blasfeo_dgemm_nt(nu[ii]+nx[ii], nx[ii], nx[ii+1], 1.0, mem->BAbt[ii], 0, 0, &mem->Q_bar, 0, 0, 0.0, &mem->BAQ, 0, 0, &mem->BAQ, 0, 0);
+        blasfeo_dsyrk_ln_mn(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], nx[ii+1], 1.0, mem->BAbt[ii], 0, 0, &mem->BAQ, 0, 0, 1.0, mem->RSQrq[ii], 0, 0, mem->RSQrq[ii], 0, 0);
+
+        blasfeo_drowex(nu[ii]+nx[ii], 1.0, mem->RSQrq[ii], nu[ii]+nx[ii], 0, mem->rq[ii], 0);
+
+        blasfeo_unpack_dmat(nu[ii], nu[ii], mem->RSQrq[ii], 0, 0, mem->R, nu[ii]);
+        acados_eigen_decomposition(nu[ii], mem->R, mem->V, mem->d, mem->e);
+
+        bool needs_regularization = false;
+        for (jj = 0; jj < nu[ii]; jj++)
+            if (mem->d[jj] < 1e-10)
+                needs_regularization = true;
+
+        if (needs_regularization)
+        {
+            blasfeo_dgecp(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, &mem->tmp_RSQ, 0, 0);
+
+            blasfeo_unpack_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, mem->reg_hess, nu[ii]+nx[ii]);
+            acados_project(nu[ii]+nx[ii], mem->reg_hess, mem->V, mem->d, mem->e, 1e-4);
+            blasfeo_pack_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->reg_hess, nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0);
+
+            blasfeo_dgead(nu[ii]+nx[ii], nu[ii]+nx[ii], -1.0, mem->RSQrq[ii], 0, 0, &mem->tmp_RSQ, 0, 0);
+            blasfeo_dgead(nu[ii]+nx[ii], nu[ii]+nx[ii], -1.0, &mem->tmp_RSQ, 0, 0, &mem->original_RSQrq[ii], 0, 0);
+        }
+
+        // backup Q
+        blasfeo_dgecp(nx[ii], nx[ii], mem->RSQrq[ii], nu[ii], nu[ii], &mem->Q_bar, 0, 0);
+
+        // R = L * L^T
+        blasfeo_dpotrf_l(nu[ii], mem->RSQrq[ii], 0, 0, &mem->L, 0, 0);
+        // Q = S^T * L^-T
+        blasfeo_dgecp(nx[ii], nu[ii], mem->RSQrq[ii], nu[ii], 0, &mem->St_copy, 0, 0);
+//        blasfeo_dtrsm_rltn(nx[ii], nu[ii], 1.0, &mem->L, 0, 0, &mem->St_copy, 0, 0, &mem->Q_tilde, 0, 0);
+        blasfeo_dtrsm_rltn(nx[ii], nu[ii], 1.0, &mem->L, 0, 0, &mem->St_copy, 0, 0, &mem->St_copy, 0, 0);
+
+        // Q = S^T * R^-1 * S + delta*I
+        blasfeo_dgese(nx[ii], nx[ii], 0.0, &mem->delta_eye, 0, 0);
+        blasfeo_ddiare(nx[ii], delta, &mem->delta_eye, 0, 0);
+//        blasfeo_dsyrk_ln(nx[ii], nx[ii], 1.0, &mem->Q_tilde, 0, 0, &mem->Q_tilde, 0, 0, 1.0, &mem->delta_eye, 0, 0, mem->RSQrq[ii], nu[ii], nu[ii]);
+        blasfeo_dsyrk_ln(nx[ii], nu[ii], 1.0, &mem->St_copy, 0, 0, &mem->St_copy, 0, 0, 1.0, &mem->delta_eye, 0, 0, mem->RSQrq[ii], nu[ii], nu[ii]);
+
+        blasfeo_dgead(nx[ii], nx[ii], -1.0, mem->RSQrq[ii], nu[ii], nu[ii], &mem->Q_bar, 0, 0);
+
+        // make symmetric
+        blasfeo_dtrtr_l(nx[ii], &mem->Q_bar, 0, 0, &mem->Q_bar, 0, 0);
+
+    }
+}
+
+
+
+// TODO: check if inequality constraints case is implemented correctly
 void ocp_nlp_reg_convexify_correct_dual_sol(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *mem_)
 {
     ocp_nlp_reg_convexify_memory *mem = mem_;
@@ -707,58 +873,58 @@ void ocp_nlp_reg_convexify_correct_dual_sol(void *config, ocp_nlp_reg_dims *dims
     int *nbu = dims->nbu;
     int *ng = dims->ng;
 
-//	printf("\nRSQrq reg\n");
-//	for(ii=0; ii<=N; ii++)
-//		blasfeo_print_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0);
+//    printf("\nRSQrq reg\n");
+//    for(ii=0; ii<=N; ii++)
+//        blasfeo_print_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0);
 
-	// restore original hessian and gradient
-	for(ii=0; ii<=N; ii++)
-	{
+    // restore original hessian and gradient
+    for(ii=0; ii<=N; ii++)
+    {
         blasfeo_dgecp(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &mem->original_RSQrq[ii], 0, 0, mem->RSQrq[ii], 0, 0);
-		blasfeo_drowex(nu[ii]+nx[ii], 1.0, &mem->original_RSQrq[ii], nu[ii]+nx[ii], 0, mem->rq[ii], 0);
-	}
+        blasfeo_drowex(nu[ii]+nx[ii], 1.0, &mem->original_RSQrq[ii], nu[ii]+nx[ii], 0, mem->rq[ii], 0);
+    }
 
-//	printf("\nRSQrq orig\n");
-//	for(ii=0; ii<=N; ii++)
-//		blasfeo_print_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0);
+//    printf("\nRSQrq orig\n");
+//    for(ii=0; ii<=N; ii++)
+//        blasfeo_print_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0);
 
 
 
-	// compute multipliers of equality constraints
+    // compute multipliers of equality constraints
 
 #if 0
     blasfeo_dgemv_n(nx[N], nu[N]+nx[N], 1.0, mem->RSQrq[N], nu[N], 0, mem->ux[N], 0, 1.0, mem->rq[N], nu[N], mem->pi[N-1], 0);
 
     for(ii=1; ii<N; ii++)
     {
-		ss = N-ii;
+        ss = N-ii;
         blasfeo_dgemv_n(nx[ss], nu[ss]+nx[ss], 1.0, mem->RSQrq[ss], nu[ss], 0, mem->ux[ss], 0, 1.0, mem->rq[ss], nu[ss], mem->pi[ss-1], 0);
         blasfeo_dgemv_n(nx[ss], nx[ss+1], 1.0, mem->BAbt[ss], nu[ss], 0, mem->pi[ss], 0, 1.0, mem->pi[ss-1], 0, mem->pi[ss-1], 0);
     }
 
 #else
 
-	// last stage
-	blasfeo_dveccp(nx[N], mem->rq[N], nu[N], &mem->tmp_nuxM, nu[N]);
-	blasfeo_daxpy(nbu[N]+nbx[N]+ng[N], -1.0, mem->lam[N], 0, mem->lam[N], nbu[N]+nbx[N]+ng[N], &mem->tmp_nbgM, 0);
-	blasfeo_dvecad_sp(nbu[N]+nbx[N], 1.0, &mem->tmp_nbgM, 0, mem->idxb[N], &mem->tmp_nuxM, 0);
-	// TODO avoid to multiply by R ???
-	blasfeo_dsymv_l(nu[N]+nx[N], 1.0, mem->RSQrq[N], 0, 0, mem->ux[N], 0, 1.0, &mem->tmp_nuxM, 0, &mem->tmp_nuxM, 0);
-	blasfeo_dgemv_n(nx[N], ng[N], 1.0, mem->DCt[N], nu[N], 0, &mem->tmp_nbgM, nbu[N]+nbx[N], 1.0, &mem->tmp_nuxM, nu[N], &mem->tmp_nuxM, nu[N]);
-	blasfeo_dveccp(nx[N], &mem->tmp_nuxM, nu[N], mem->pi[N-1], 0);
+    // last stage
+    blasfeo_dveccp(nx[N], mem->rq[N], nu[N], &mem->tmp_nuxM, nu[N]);
+    blasfeo_daxpy(nbu[N]+nbx[N]+ng[N], -1.0, mem->lam[N], 0, mem->lam[N], nbu[N]+nbx[N]+ng[N], &mem->tmp_nbgM, 0);
+    blasfeo_dvecad_sp(nbu[N]+nbx[N], 1.0, &mem->tmp_nbgM, 0, mem->idxb[N], &mem->tmp_nuxM, 0);
+    // TODO avoid to multiply by R ???
+    blasfeo_dsymv_l(nu[N]+nx[N], 1.0, mem->RSQrq[N], 0, 0, mem->ux[N], 0, 1.0, &mem->tmp_nuxM, 0, &mem->tmp_nuxM, 0);
+    blasfeo_dgemv_n(nx[N], ng[N], 1.0, mem->DCt[N], nu[N], 0, &mem->tmp_nbgM, nbu[N]+nbx[N], 1.0, &mem->tmp_nuxM, nu[N], &mem->tmp_nuxM, nu[N]);
+    blasfeo_dveccp(nx[N], &mem->tmp_nuxM, nu[N], mem->pi[N-1], 0);
 
-	// middle stages
-	for(ii=0; ii<N-1; ii++)
-		{
-		blasfeo_dveccp(nx[N-1-ii], mem->rq[N-1-ii], nu[N-1-ii], &mem->tmp_nuxM, nu[N-1-ii]);
-		blasfeo_daxpy(nbu[N-1-ii]+nbx[N-1-ii]+ng[N-1-ii], -1.0, mem->lam[N-1-ii], 0, mem->lam[N-1-ii], nbu[N-1-ii]+nbx[N-1-ii]+ng[N-1-ii], &mem->tmp_nbgM, 0);
-		blasfeo_dvecad_sp(nbu[N-1-ii]+nbx[N-1-ii], 1.0, &mem->tmp_nbgM, 0, mem->idxb[N-1-ii], &mem->tmp_nuxM, 0);
-		// TODO avoid to multiply by R ???
-		blasfeo_dsymv_l(nu[N-1-ii]+nx[N-1-ii], 1.0, mem->RSQrq[N-1-ii], 0, 0, mem->ux[N-1-ii], 0, 1.0, &mem->tmp_nuxM, 0, &mem->tmp_nuxM, 0);
-		blasfeo_dgemv_n(nx[N-1-ii], nx[N-ii], 1.0, mem->BAbt[N-1-ii], nu[N-1-ii], 0, mem->pi[N-1-ii], 0, 1.0, &mem->tmp_nuxM, nu[N-1-ii], &mem->tmp_nuxM, nu[N-1-ii]);
-		blasfeo_dgemv_n(nx[N-1-ii], ng[N-1-ii], 1.0, mem->DCt[N-1-ii], nu[N-1-ii], 0, &mem->tmp_nbgM, nbu[N-1-ii]+nbx[N-1-ii], 1.0, &mem->tmp_nuxM, nu[N-1-ii], &mem->tmp_nuxM, nu[N-1-ii]);
-		blasfeo_dveccp(nx[N-1-ii], &mem->tmp_nuxM, nu[N-1-ii], mem->pi[N-2-ii], 0);
-		}
+    // middle stages
+    for(ii=0; ii<N-1; ii++)
+        {
+        blasfeo_dveccp(nx[N-1-ii], mem->rq[N-1-ii], nu[N-1-ii], &mem->tmp_nuxM, nu[N-1-ii]);
+        blasfeo_daxpy(nbu[N-1-ii]+nbx[N-1-ii]+ng[N-1-ii], -1.0, mem->lam[N-1-ii], 0, mem->lam[N-1-ii], nbu[N-1-ii]+nbx[N-1-ii]+ng[N-1-ii], &mem->tmp_nbgM, 0);
+        blasfeo_dvecad_sp(nbu[N-1-ii]+nbx[N-1-ii], 1.0, &mem->tmp_nbgM, 0, mem->idxb[N-1-ii], &mem->tmp_nuxM, 0);
+        // TODO avoid to multiply by R ???
+        blasfeo_dsymv_l(nu[N-1-ii]+nx[N-1-ii], 1.0, mem->RSQrq[N-1-ii], 0, 0, mem->ux[N-1-ii], 0, 1.0, &mem->tmp_nuxM, 0, &mem->tmp_nuxM, 0);
+        blasfeo_dgemv_n(nx[N-1-ii], nx[N-ii], 1.0, mem->BAbt[N-1-ii], nu[N-1-ii], 0, mem->pi[N-1-ii], 0, 1.0, &mem->tmp_nuxM, nu[N-1-ii], &mem->tmp_nuxM, nu[N-1-ii]);
+        blasfeo_dgemv_n(nx[N-1-ii], ng[N-1-ii], 1.0, mem->DCt[N-1-ii], nu[N-1-ii], 0, &mem->tmp_nbgM, nbu[N-1-ii]+nbx[N-1-ii], 1.0, &mem->tmp_nuxM, nu[N-1-ii], &mem->tmp_nuxM, nu[N-1-ii]);
+        blasfeo_dveccp(nx[N-1-ii], &mem->tmp_nuxM, nu[N-1-ii], mem->pi[N-2-ii], 0);
+        }
 #endif
 
     return;
@@ -791,6 +957,9 @@ void ocp_nlp_reg_convexify_config_initialize_default(ocp_nlp_reg_config *config)
     config->memory_set_pi_ptr = &ocp_nlp_reg_convexify_memory_set_pi_ptr;
     config->memory_set_lam_ptr = &ocp_nlp_reg_convexify_memory_set_lam_ptr;
     // functions
-    config->regularize_hessian = &ocp_nlp_reg_convexify_regularize_hessian;
+    // TODO: fix split
+    config->regularize = &ocp_nlp_reg_convexify_regularize;
+    config->regularize_lhs = &ocp_nlp_reg_convexify_regularize_lhs;
+    config->regularize_rhs = &ocp_nlp_reg_convexify_regularize_rhs;
     config->correct_dual_sol = &ocp_nlp_reg_convexify_correct_dual_sol;
 }

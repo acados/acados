@@ -465,6 +465,7 @@ int ocp_qp_full_condensing(void *qp_in_, void *fcond_qp_in_, void *opts_, void *
 //d_ocp_qp_print(mem->red_qp->dim, mem->red_qp);
 //exit(1);
 
+    // TODO: remove this flag and instead call the different functions
     // convert to dense qp structure
     if (opts->cond_hess == 0)
     {
@@ -484,8 +485,36 @@ int ocp_qp_full_condensing(void *qp_in_, void *fcond_qp_in_, void *opts_, void *
 }
 
 
+int ocp_qp_full_condensing_condense_lhs(void *qp_in_, void *fcond_qp_in_, void *opts_, void *mem_, void *work_)
+{
+    ocp_qp_in *qp_in = qp_in_;
+    dense_qp_in *fcond_qp_in = fcond_qp_in_;
+    ocp_qp_full_condensing_opts *opts = opts_;
+    ocp_qp_full_condensing_memory *mem = mem_;
 
-int ocp_qp_full_condensing_rhs(void *qp_in_, void *fcond_qp_in_, void *opts_, void *mem_, void *work_)
+    acados_timer timer;
+
+    // save pointer to ocp_qp_in in memory (needed for expansion)
+    mem->ptr_qp_in = qp_in;
+
+    // start timer
+    acados_tic(&timer);
+
+    // reduce eq constr DOF
+    d_ocp_qp_reduce_eq_dof_lhs(qp_in, mem->red_qp, opts->hpipm_red_opts, mem->hpipm_red_work);
+
+    // condense Hessian
+    d_cond_qp_cond_lhs(mem->red_qp, fcond_qp_in, opts->hpipm_cond_opts, mem->hpipm_cond_work);
+
+    // stop timer
+    mem->time_qp_xcond = acados_toc(&timer);
+
+    return ACADOS_SUCCESS;
+}
+
+
+
+int ocp_qp_full_condensing_condense_rhs(void *qp_in_, void *fcond_qp_in_, void *opts_, void *mem_, void *work_)
 {
     ocp_qp_in *qp_in = qp_in_;
     dense_qp_in *fcond_qp_in = fcond_qp_in_;
@@ -501,16 +530,17 @@ int ocp_qp_full_condensing_rhs(void *qp_in_, void *fcond_qp_in_, void *opts_, vo
     mem->ptr_qp_in = qp_in;
 
     // reduce eq constr DOF
-    d_ocp_qp_reduce_eq_dof(qp_in, mem->red_qp, opts->hpipm_red_opts, mem->hpipm_red_work);
+    d_ocp_qp_reduce_eq_dof_rhs(qp_in, mem->red_qp, opts->hpipm_red_opts, mem->hpipm_red_work);
 
     // condense gradient only
     d_cond_qp_cond_rhs(mem->red_qp, fcond_qp_in, opts->hpipm_cond_opts, mem->hpipm_cond_work);
 
     // stop timer
-    mem->time_qp_xcond = acados_toc(&timer);
+    mem->time_qp_xcond += acados_toc(&timer);
 
     return ACADOS_SUCCESS;
 }
+
 
 
 
@@ -568,7 +598,8 @@ void ocp_qp_full_condensing_config_initialize_default(void *config_)
     config->memory_get = &ocp_qp_full_condensing_memory_get;
     config->workspace_calculate_size = &ocp_qp_full_condensing_workspace_calculate_size;
     config->condensing = &ocp_qp_full_condensing;
-    config->condensing_rhs = &ocp_qp_full_condensing_rhs;
+    config->condense_rhs = &ocp_qp_full_condensing_condense_rhs;
+    config->condense_lhs = &ocp_qp_full_condensing_condense_lhs;
     config->expansion = &ocp_qp_full_expansion;
 
     return;
