@@ -58,6 +58,7 @@ typedef enum
     PREPARATION_AND_FEEDBACK, // = 0,
     PREPARATION, // = 1,
     FEEDBACK, // = 2,
+    PREPARATION_ADVANCED_STEP, // = 3,
 } rti_phase_t;
 
 
@@ -114,6 +115,7 @@ typedef struct
     int stat_n;
 
     int status;
+    bool is_first_call;
 
 } ocp_nlp_sqp_rti_memory;
 

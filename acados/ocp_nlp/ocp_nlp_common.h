@@ -384,6 +384,8 @@ typedef struct ocp_nlp_workspace
     struct blasfeo_dvec tmp_nxu;
     struct blasfeo_dvec tmp_ni;
     struct blasfeo_dvec dxnext_dy;
+    // AS-RTI
+    double *tmp_nxu_double;
 
 } ocp_nlp_workspace;
 

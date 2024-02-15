@@ -1659,6 +1659,9 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
     // constraints
     size += (N+1)*sizeof(void *);
 
+    // doubles
+    size += nxu_max * sizeof(double); // tmp_nxu_double
+
     // module workspace
     if (opts->reuse_workspace)
     {
@@ -1749,6 +1752,7 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
     }
 
     size += 8; // struct align
+    size += 64; // blasfeo align
     return size;
 }
 
@@ -1768,6 +1772,15 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
     int *nu = dims->nu;
     int *ni = dims->ni;
     // int *nz = dims->nz;
+    int nxu_max = 0;
+    int nx_max = 0;
+    int ni_max = 0;
+    for (int i = 0; i <= N; i++)
+    {
+        nx_max = nx_max > nx[i] ? nx_max : nx[i];
+        nxu_max = nxu_max > (nx[i]+nu[i]) ? nxu_max : (nx[i]+nu[i]);
+        ni_max = ni_max > ni[i] ? ni_max : ni[i];
+    }
 
     char *c_ptr = (char *) raw_memory;
 
@@ -1796,16 +1809,11 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
     work->weight_merit_fun = ocp_nlp_out_assign(config, dims, c_ptr);
     c_ptr += ocp_nlp_out_calculate_size(config, dims);
 
+    assign_and_advance_double(nxu_max, &work->tmp_nxu_double, &c_ptr);
+    // align for blasfeo mem
+    align_char_to(64, &c_ptr);
+
     // blasfeo_dvec
-    int nxu_max = 0;
-    int nx_max = 0;
-    int ni_max = 0;
-    for (int i = 0; i <= N; i++)
-    {
-        nx_max = nx_max > nx[i] ? nx_max : nx[i];
-        nxu_max = nxu_max > (nx[i]+nu[i]) ? nxu_max : (nx[i]+nu[i]);
-        ni_max = ni_max > ni[i] ? ni_max : ni[i];
-    }
     assign_and_advance_blasfeo_dvec_mem(nxu_max, &work->tmp_nxu, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(ni_max, &work->tmp_ni, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx_max, &work->dxnext_dy, &c_ptr);
@@ -3041,4 +3049,3 @@ void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in
 
     // printf("\ncomputed total cost: %e\n", total_cost);
 }
-

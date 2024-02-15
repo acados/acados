@@ -54,7 +54,9 @@
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
+// acados_c
 #include "acados_c/ocp_qp_interface.h"
+#include "acados_c/ocp_nlp_interface.h"
 
 
 
@@ -183,9 +185,9 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_,
         else if (!strcmp(field, "rti_phase"))
         {
             int* rti_phase = (int *) value;
-            if (*rti_phase < 0 || *rti_phase > 2) {
+            if (*rti_phase < 0 || *rti_phase > 3) {
                 printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for rti_phase field.");
-                printf("possible values are: 0, 1, 2\n");
+                printf("possible values are: 0, 1, 2, 3\n");
                 exit(1);
             } else opts->rti_phase = *rti_phase;
         }
@@ -276,6 +278,7 @@ void *ocp_nlp_sqp_rti_memory_assign(void *config_, void *dims_,
     c_ptr += mem->stat_m*mem->stat_n*sizeof(double);
 
     mem->status = ACADOS_READY;
+    mem->is_first_call = true;
 
     assert((char *) raw_memory+ocp_nlp_sqp_rti_memory_calculate_size(
         config, dims, opts) >= c_ptr);
@@ -457,7 +460,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
 
     // regularization
     acados_tic(&timer1);
-    if (opts->rti_phase == FEEDBACK)
+    if (opts->rti_phase == FEEDBACK || opts->rti_phase == PREPARATION_ADVANCED_STEP)
     {
         // finish regularization
         config->regularize->regularize_rhs(config->regularize,
@@ -489,7 +492,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
 
     // solve QP
     acados_tic(&timer1);
-    if (opts->rti_phase == FEEDBACK)
+    if (opts->rti_phase == FEEDBACK || opts->rti_phase == PREPARATION_ADVANCED_STEP)
     {
         qp_status = qp_solver->condense_rhs_and_solve(qp_solver, dims->qp_solver,
             nlp_mem->qp_in, nlp_mem->qp_out, opts->nlp_opts->qp_solver_opts,
@@ -560,6 +563,132 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
 }
 
 
+
+/***************************
+ * AS-RTI functionality
+****************************/
+
+static void copy_ocp_nlp_out(ocp_nlp_dims *dims, ocp_nlp_out *from, ocp_nlp_out *to)
+{
+    // extract dims
+    int N = dims->N;
+    int *nv = dims->nv;
+    int *nx = dims->nx;
+    // int *nu = dims->nu;
+    int *ni = dims->ni;
+    int *nz = dims->nz;
+    for (int i = 0; i <= N; i++)
+    {
+        blasfeo_dveccp(nv[i], from->ux+i, 0, to->ux+i, 0);
+        blasfeo_dveccp(nz[i], from->z+i, 0, to->z+i, 0);
+        blasfeo_dveccp(2*ni[i], from->lam+i, 0, to->lam+i, 0);
+        blasfeo_dveccp(2*ni[i], from->t+i, 0, to->t+i, 0);
+    }
+
+    for (int i = 0; i < N; i++)
+        blasfeo_dveccp(nx[i+1], from->pi+i, 0, to->pi+i, 0);
+
+    return;
+}
+
+
+
+static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
+    ocp_nlp_out *nlp_out, ocp_nlp_sqp_rti_opts *opts, ocp_nlp_sqp_rti_memory *mem, ocp_nlp_sqp_rti_workspace *work)
+{
+    acados_timer timer1;
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    ocp_nlp_opts *nlp_opts = opts->nlp_opts;
+    ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+
+    ocp_nlp_workspace *nlp_work = work->nlp_work;
+    ocp_nlp_out *tmp_nlp_out = nlp_work->tmp_nlp_out;
+
+    reset_sub_timers(mem);
+
+#if defined(ACADOS_WITH_OPENMP)
+    // backup number of threads
+    int num_threads_bkp = omp_get_num_threads();
+    // set number of threads
+    omp_set_num_threads(opts->nlp_opts->num_threads);
+#endif
+
+    // prepare submodules
+    ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+
+
+    // setup advanced problem
+    if (!mem->is_first_call)
+    {
+        blasfeo_unpack_dvec(dims->nx[1], nlp_out->ux+1, dims->nu[1], nlp_work->tmp_nxu_double, 1);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", nlp_work->tmp_nxu_double);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", nlp_work->tmp_nxu_double);
+        // printf("advanced x value\n");
+        // blasfeo_print_exp_tran_dvec(dims->nx[1], nlp_out->ux+1, dims->nu[1]);
+    }
+    else
+    {
+        // sanity check
+        if (dims->nx[0] != dims->nx[1])
+        {
+            printf("dimensions nx[0] != nx[1], cannot perform AS-RTI!");
+        }
+    }
+
+    // TODO: if as_prep == A and not first call!
+    if (!mem->is_first_call)
+    {
+        // load iterate from tmp
+        copy_ocp_nlp_out(dims, tmp_nlp_out, nlp_out);
+        // perform QP solve (implemented as feedback)
+        ocp_nlp_sqp_rti_feedback_step(config, dims, nlp_in, nlp_out, opts, mem, work);
+
+        // DEBUG
+        // printf("AS-RTI prep qp\n");
+        // printf("qp_in\n");
+        // d_ocp_qp_print(nlp_mem->qp_in->dim, nlp_mem->qp_in);
+    }
+
+
+    /* NORMAL RTI PREPARATION */
+    // linearize NLP and update QP matrices
+    acados_tic(&timer1);
+    ocp_nlp_approximate_qp_matrices(config, dims, nlp_in,
+        nlp_out, nlp_opts, nlp_mem, nlp_work);
+    mem->time_lin += acados_toc(&timer1);
+
+    if (opts->rti_phase == PREPARATION || opts->rti_phase == PREPARATION_ADVANCED_STEP)
+    {
+        // regularize Hessian
+        acados_tic(&timer1);
+        config->regularize->regularize_lhs(config->regularize,
+            dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
+        mem->time_reg += acados_toc(&timer1);
+        // condense lhs
+        qp_solver->condense_lhs(qp_solver, dims->qp_solver,
+            nlp_mem->qp_in, nlp_mem->qp_out, opts->nlp_opts->qp_solver_opts,
+            nlp_mem->qp_solver_mem, nlp_work->qp_work);
+    }
+#if defined(ACADOS_WITH_OPENMP)
+    // restore number of threads
+    omp_set_num_threads(num_threads_bkp);
+#endif
+
+    /* AS-RTI */
+    // TODO: if as_prep == A
+    if (1) //(!mem->is_first_call)
+    {
+        // backup iterate:
+        // tmp_nlp_out <- nlp_out
+        copy_ocp_nlp_out(dims, nlp_out, tmp_nlp_out);
+    }
+
+    mem->is_first_call = false;
+
+    return;
+}
+
+
 int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     void *opts_, void *mem_, void *work_)
 {
@@ -591,6 +720,10 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         case FEEDBACK:
             ocp_nlp_sqp_rti_feedback_step(config, dims, nlp_in, nlp_out, opts, mem, work);
             break;
+
+        case PREPARATION_ADVANCED_STEP:
+            ocp_nlp_sqp_rti_preparation_advanced_step(config, dims, nlp_in, nlp_out, opts, mem, work);
+            break;
     }
     mem->time_tot = acados_toc(&timer);
 
@@ -610,6 +743,8 @@ void ocp_nlp_sqp_rti_memory_reset_qp_solver(void *config_, void *dims_, void *nl
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_sqp_rti_workspace *work = work_;
     ocp_nlp_workspace *nlp_work = work->nlp_work;
+
+    mem->is_first_call = true;
 
     config->qp_solver->memory_reset(qp_solver, dims->qp_solver,
         nlp_mem->qp_in, nlp_mem->qp_out, opts->nlp_opts->qp_solver_opts,
