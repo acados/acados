@@ -444,8 +444,10 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     double tmp_time;
 
     // update QP rhs for SQP (step prim var, abs dual var)
+    acados_tic(&timer1);
     ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in,
         nlp_out, nlp_opts, nlp_mem, nlp_work);
+    mem->time_lin += acados_toc(&timer1);
 
     // regularization
     acados_tic(&timer1);
