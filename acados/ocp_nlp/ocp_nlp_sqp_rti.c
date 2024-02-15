@@ -368,6 +368,18 @@ static void ocp_nlp_sqp_rti_cast_workspace(
 }
 
 
+// utility functions
+static void reset_sub_timers(ocp_nlp_sqp_rti_memory *mem)
+{
+    mem->time_lin = 0.0;
+    mem->time_reg = 0.0;
+    mem->time_qp_sol = 0.0;
+    mem->time_qp_solver_call = 0.0;
+    mem->time_qp_xcond = 0.0;
+    mem->time_glob = 0.0;
+}
+
+
 
 /************************************************
  * functions
@@ -383,13 +395,7 @@ static void ocp_nlp_sqp_rti_preparation_step(ocp_nlp_config *config, ocp_nlp_dim
 
     ocp_nlp_workspace *nlp_work = work->nlp_work;
 
-    mem->time_lin = 0.0;
-    mem->time_reg = 0.0;
-    mem->time_qp_sol = 0.0;
-    mem->time_qp_solver_call = 0.0;
-    mem->time_qp_xcond = 0.0;
-    mem->time_glob = 0.0;
-
+    reset_sub_timers(mem);
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
     int num_threads_bkp = omp_get_num_threads();
