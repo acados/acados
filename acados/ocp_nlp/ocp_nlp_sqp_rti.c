@@ -116,6 +116,7 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_,
     opts->warm_start_first_qp = false;
     opts->rti_phase = 0;
     opts->as_rti_level = LEVEL_A;
+    opts->as_rti_iter = 1;
 
     return;
 }
@@ -186,11 +187,29 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_,
         else if (!strcmp(field, "rti_phase"))
         {
             int* rti_phase = (int *) value;
-            if (*rti_phase < 0 || *rti_phase > 3) {
-                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for rti_phase field.");
-                printf("possible values are: 0, 1, 2, 3\n");
+            if (*rti_phase < 0 || *rti_phase > 3)
+            {
+                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for rti_phase field.\n");
+                printf("possible values are: 0, 1, 2, 3, got %d.\n", *rti_phase);
                 exit(1);
-            } else opts->rti_phase = *rti_phase;
+            }
+            opts->rti_phase = *rti_phase;
+        }
+        else if (!strcmp(field, "as_rti_iter"))
+        {
+            int* as_rti_iter = (int *) value;
+            opts->as_rti_iter = *as_rti_iter;
+        }
+        else if (!strcmp(field, "as_rti_level"))
+        {
+            int* as_rti_level = (int *) value;
+            if (*as_rti_level < LEVEL_A || *as_rti_level > LEVEL_D)
+            {
+                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for as_rti_level field.\n");
+                printf("possible values are: 0, 1, 2, 3, got %d.\n", *as_rti_level);
+                exit(1);
+            }
+            opts->as_rti_level = *as_rti_level;
         }
         else
         {
@@ -635,9 +654,14 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             printf("dimensions nx[0] != nx[1], cannot perform AS-RTI!");
             exit(1);
         }
-        if (opts->as_rti_level != LEVEL_A)
+        if (opts->as_rti_level == LEVEL_B)
         {
-            printf("AS-RTI -- only LEVEL_A implemented");
+            printf("AS-RTI: LEVEL_B implemented yet.\n");
+            exit(1);
+        }
+        if (opts->as_rti_level == LEVEL_C)
+        {
+            printf("AS-RTI: LEVEL_C implemented yet.\n");
             exit(1);
         }
     }
@@ -655,7 +679,65 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
         // printf("qp_in\n");
         // d_ocp_qp_print(nlp_mem->qp_in->dim, nlp_mem->qp_in);
     }
+    else if (opts->as_rti_level == LEVEL_D)
+    {
+        // perform k full SQP iterations
+        int qp_status;
+        double alpha, tmp_time;
+        // TODO: how to log qp_iter?
+        for (int i = 0; i < opts->as_rti_iter; i++)
+        {
+            acados_tic(&timer1);
+            // linearize NLP
+            ocp_nlp_approximate_qp_matrices(config, dims, nlp_in,
+                nlp_out, nlp_opts, nlp_mem, nlp_work);
+            ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in,
+                nlp_out, nlp_opts, nlp_mem, nlp_work);
+            mem->time_lin += acados_toc(&timer1);
+            // full regularization
+            acados_tic(&timer1);
+            config->regularize->regularize(config->regularize,
+                dims->regularize, nlp_opts->regularize, nlp_mem->regularize_mem);
+            mem->time_reg += acados_toc(&timer1);
+            // QP solve
+            acados_tic(&timer1);
+            qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver,
+                    nlp_mem->qp_in, nlp_mem->qp_out, nlp_opts->qp_solver_opts,
+                    nlp_mem->qp_solver_mem, nlp_work->qp_work);
 
+            // add qp timings
+            mem->time_qp_sol += acados_toc(&timer1);
+            // NOTE: timings within qp solver are added internally (lhs+rhs)
+            qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);
+            mem->time_qp_solver_call += tmp_time;
+            qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_xcond", &tmp_time);
+            mem->time_qp_xcond += tmp_time;
+
+            // compute correct dual solution in case of Hessian regularization
+            acados_tic(&timer1);
+            config->regularize->correct_dual_sol(config->regularize,
+                dims->regularize, nlp_opts->regularize, nlp_mem->regularize_mem);
+            mem->time_reg += acados_toc(&timer1);
+            if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
+            {
+#ifndef ACADOS_SILENT
+                printf("\nSQP_RTI: QP solver returned error status %d QP iteration %d.\n",
+                    qp_status, qp_iter);
+#endif
+                mem->status = ACADOS_QP_FAILURE;
+                return;
+            }
+
+            // globalization
+            acados_tic(&timer1);
+            // TODO: not clear if line search should be called with sqp_iter==0 in RTI;
+            alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, 1);
+            mem->time_glob += acados_toc(&timer1);
+
+            // update variables
+            ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, alpha);
+        }
+    }
 
     /* NORMAL RTI PREPARATION */
     // linearize NLP and update QP matrices

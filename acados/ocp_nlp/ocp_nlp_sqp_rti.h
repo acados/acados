@@ -78,6 +78,7 @@ typedef struct
     bool warm_start_first_qp; // to set qp_warm_start in first iteration
     rti_phase_t rti_phase;
     as_rti_level_t as_rti_level;
+    int as_rti_iter;
 
 } ocp_nlp_sqp_rti_opts;
 
