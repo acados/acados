@@ -61,7 +61,13 @@ typedef enum
     PREPARATION_ADVANCED_STEP, // = 3,
 } rti_phase_t;
 
-
+typedef enum
+{
+    LEVEL_A, // 0
+    LEVEL_B, // 1
+    LEVEL_C, // 2
+    LEVEL_D, // 3
+} as_rti_level_t;
 
 typedef struct
 {
@@ -71,6 +77,7 @@ typedef struct
     int qp_warm_start;        // NOTE: this is not actually setting the warm_start! Just for compatibility with sqp.
     bool warm_start_first_qp; // to set qp_warm_start in first iteration
     rti_phase_t rti_phase;
+    as_rti_level_t as_rti_level;
 
 } ocp_nlp_sqp_rti_opts;
 

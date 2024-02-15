@@ -115,6 +115,7 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_,
     opts->ext_qp_res = 0;
     opts->warm_start_first_qp = false;
     opts->rti_phase = 0;
+    opts->as_rti_level = LEVEL_A;
 
     return;
 }
@@ -632,11 +633,17 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
         if (dims->nx[0] != dims->nx[1])
         {
             printf("dimensions nx[0] != nx[1], cannot perform AS-RTI!");
+            exit(1);
+        }
+        if (opts->as_rti_level != LEVEL_A)
+        {
+            printf("AS-RTI -- only LEVEL_A implemented");
+            exit(1);
         }
     }
 
-    // TODO: if as_prep == A and not first call!
-    if (!mem->is_first_call)
+    // if AS_RTI-A and not first call!
+    if (opts->as_rti_level == LEVEL_A && !mem->is_first_call)
     {
         // load iterate from tmp
         copy_ocp_nlp_out(dims, tmp_nlp_out, nlp_out);
@@ -675,8 +682,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
 #endif
 
     /* AS-RTI */
-    // TODO: if as_prep == A
-    if (1) //(!mem->is_first_call)
+    if (opts->as_rti_level == LEVEL_A)
     {
         // backup iterate:
         // tmp_nlp_out <- nlp_out
