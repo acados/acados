@@ -635,8 +635,9 @@ acados_size_t ocp_nlp_dynamics_cont_workspace_calculate_size(void *config_, void
 
 
 static void ocp_nlp_dynamics_cont_cast_workspace(void *config_, void *dims_, void *opts_,
-                                                 void *work_)
+                                                 void *work_, void *mem_)
 {
+    ocp_nlp_dynamics_cont_memory *mem = mem_;
     ocp_nlp_dynamics_config *config = config_;
     ocp_nlp_dynamics_cont_dims *dims = dims_;
     ocp_nlp_dynamics_cont_opts *opts = opts_;
@@ -650,8 +651,8 @@ static void ocp_nlp_dynamics_cont_cast_workspace(void *config_, void *dims_, voi
     int nu = dims->nu;
 
     // sim in
-    work->sim_in = sim_in_assign(config->sim_solver, dims->sim, c_ptr);
-    c_ptr += sim_in_calculate_size(config->sim_solver, dims->sim);
+    sim_in_assign_and_advance(config->sim_solver, dims->sim, &work->sim_in, &c_ptr);
+
     // sim out
     work->sim_out = sim_out_assign(config->sim_solver, dims->sim, c_ptr);
     c_ptr += sim_out_calculate_size(config->sim_solver, dims->sim);
@@ -665,7 +666,7 @@ static void ocp_nlp_dynamics_cont_cast_workspace(void *config_, void *dims_, voi
     // hess
     assign_and_advance_blasfeo_dmat_mem(nu+nx, nu+nx, &work->hess, &c_ptr);
 
-    assert((char *) work + ocp_nlp_dynamics_cont_workspace_calculate_size(config, dims, opts) >= c_ptr);
+    assert((char *) work + mem->workspace_size >= c_ptr);
 
     return;
 }
@@ -764,7 +765,7 @@ void ocp_nlp_dynamics_cont_initialize(void *config_, void *dims_, void *model_, 
 
 void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *model_, void *opts_, void *mem_, void *work_)
 {
-    ocp_nlp_dynamics_cont_cast_workspace(config_, dims_, opts_, work_);
+    ocp_nlp_dynamics_cont_cast_workspace(config_, dims_, opts_, work_, mem_);
 
     ocp_nlp_dynamics_config *config = config_;
     ocp_nlp_dynamics_cont_dims *dims = dims_;
@@ -896,7 +897,7 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
 
 void ocp_nlp_dynamics_cont_compute_fun(void *config_, void *dims_, void *model_, void *opts_, void *mem_, void *work_)
 {
-    ocp_nlp_dynamics_cont_cast_workspace(config_, dims_, opts_, work_);
+    ocp_nlp_dynamics_cont_cast_workspace(config_, dims_, opts_, work_, mem_);
 
     ocp_nlp_dynamics_config *config = config_;
     ocp_nlp_dynamics_cont_dims *dims = dims_;
@@ -968,13 +969,14 @@ void ocp_nlp_dynamics_cont_compute_fun(void *config_, void *dims_, void *model_,
 int ocp_nlp_dynamics_cont_precompute(void *config_, void *dims_, void *model_, void *opts_,
                                         void *mem_, void *work_)
 {
-    ocp_nlp_dynamics_cont_cast_workspace(config_, dims_, opts_, work_);
-
+    ocp_nlp_dynamics_cont_memory *mem = mem_;
     ocp_nlp_dynamics_config *config = config_;
+    mem->workspace_size = ocp_nlp_dynamics_cont_workspace_calculate_size(config, dims_, opts_);
+    ocp_nlp_dynamics_cont_cast_workspace(config_, dims_, opts_, work_, mem_);
+
     // ocp_nlp_dynamics_cont_dims *dims = dims_;
     ocp_nlp_dynamics_cont_opts *opts = opts_;
     ocp_nlp_dynamics_cont_workspace *work = work_;
-    ocp_nlp_dynamics_cont_memory *mem = mem_;
     ocp_nlp_dynamics_cont_model *model = model_;
     work->sim_in->model = model->sim_model;
     work->sim_in->T = model->T;
@@ -982,7 +984,7 @@ int ocp_nlp_dynamics_cont_precompute(void *config_, void *dims_, void *model_, v
     // call integrator
     int status = config->sim_solver->precompute(config->sim_solver, work->sim_in, work->sim_out,
                                    opts->sim_solver, mem->sim_solver, work->sim_solver);
-    
+
     config->sim_solver->memory_set_to_zero(config->sim_solver, work->sim_in->dims,
                                     opts->sim_solver, mem->sim_solver, "guesses");
 

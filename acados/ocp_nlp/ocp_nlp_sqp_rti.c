@@ -444,8 +444,6 @@ static void ocp_nlp_sqp_rti_preparation_step(ocp_nlp_config *config, ocp_nlp_dim
     omp_set_num_threads(opts->nlp_opts->num_threads);
 #endif
 
-    ocp_nlp_alias_memory_to_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-
     // initialize QP
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
@@ -622,7 +620,7 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     ocp_nlp_in *nlp_in = nlp_in_;
     ocp_nlp_out *nlp_out = nlp_out_;
     ocp_nlp_sqp_rti_workspace *work = work_;
-    ocp_nlp_sqp_rti_cast_workspace(config, dims, opts, mem, work);
+    // ocp_nlp_sqp_rti_cast_workspace(config, dims, opts, mem, work);
 
     int rti_phase = opts->rti_phase;
 
@@ -682,6 +680,8 @@ int ocp_nlp_sqp_rti_precompute(void *config_, void *dims_, void *nlp_in_,
     ocp_nlp_out *nlp_out = nlp_out_;
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
 
+    nlp_mem->workspace_size = ocp_nlp_workspace_calculate_size(config, dims, opts->nlp_opts);
+
     ocp_nlp_sqp_rti_workspace *work = work_;
     ocp_nlp_sqp_rti_cast_workspace(config, dims, opts, mem, work);
     ocp_nlp_workspace *nlp_work = work->nlp_work;
@@ -706,7 +706,7 @@ void ocp_nlp_sqp_rti_eval_param_sens(void *config_, void *dims_, void *opts_,
     ocp_nlp_out *sens_nlp_out = sens_nlp_out_;
 
     ocp_nlp_sqp_rti_workspace *work = work_;
-    ocp_nlp_sqp_rti_cast_workspace(config, dims, opts, mem, work);
+    // ocp_nlp_sqp_rti_cast_workspace(config, dims, opts, mem, work);
     ocp_nlp_workspace *nlp_work = work->nlp_work;
 
     d_ocp_qp_copy_all(nlp_mem->qp_in, work->tmp_qp_in);

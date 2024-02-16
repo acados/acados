@@ -1415,12 +1415,14 @@ void setup_and_solve_nlp(int NN,
     ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 
     ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts);
+    int status;
+    status = ocp_nlp_precompute(solver, nlp_in, nlp_out);
+
 
     /************************************************
     * sqp solve
     ************************************************/
 
-    int status;
 
     // warm start output initial guess of
     // solution

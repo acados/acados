@@ -1192,12 +1192,18 @@ acados_size_t ocp_nlp_constraints_bgh_workspace_calculate_size(void *config_, vo
 
     size += sizeof(ocp_nlp_constraints_bgh_workspace);
 
-    size += 1 * blasfeo_memsize_dmat(nu+nx, nu+nx); // tmp_nv_nv
-    size += 1 * blasfeo_memsize_dmat(nz, nh);       // tmp_nz_nh
-    size += 1 * blasfeo_memsize_dmat(nz, nx+nu);       // tmp_nz_nv
-    size += 1 * blasfeo_memsize_dmat(nx+nu, nh);    // tmp_nv_nh
-    size += 1 * blasfeo_memsize_dmat(nz, nz);    // hess_z
-    size += 1 * blasfeo_memsize_dvec(nh);           // tmp_nh
+    if (nz > 0)
+    {
+        size += 1 * blasfeo_memsize_dmat(nz, nh);       // tmp_nz_nh
+        size += 1 * blasfeo_memsize_dmat(nz, nz);    // hess_z
+        size += 1 * blasfeo_memsize_dmat(nz, nx+nu);       // tmp_nz_nv
+    }
+    if (nh > 0)
+    {
+        size += 1 * blasfeo_memsize_dmat(nu+nx, nu+nx); // tmp_nv_nv
+        size += 1 * blasfeo_memsize_dmat(nx+nu, nh);    // tmp_nv_nh
+        size += 1 * blasfeo_memsize_dvec(nh);           // tmp_nh
+    }
     size += 1 * blasfeo_memsize_dvec(nb+ng+nh+ns);  // tmp_ni
 
     size += 1 * 64;                                 // blasfeo_mem align
@@ -1227,23 +1233,24 @@ static void ocp_nlp_constraints_bgh_cast_workspace(void *config_, void *dims_, v
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
 
-    // tmp_nv_nv
-    assign_and_advance_blasfeo_dmat_mem(nu+nx, nu+nx, &work->tmp_nv_nv, &c_ptr);
-
-    // tmp_nz_nh
-    assign_and_advance_blasfeo_dmat_mem(nz, nh, &work->tmp_nz_nh, &c_ptr);
-
-    // tmp_nv_nh
-    assign_and_advance_blasfeo_dmat_mem(nx + nu, nh, &work->tmp_nv_nh, &c_ptr);
-
-    // hess_z
-    assign_and_advance_blasfeo_dmat_mem(nz, nz, &work->hess_z, &c_ptr);
-
-    // tmp_nz_nv
-    assign_and_advance_blasfeo_dmat_mem(nz, nx+nu, &work->tmp_nz_nv, &c_ptr);
-
-    // tmp_nh
-    assign_and_advance_blasfeo_dvec_mem(nh, &work->tmp_nh, &c_ptr);
+    if (nz > 0)
+    {
+        // tmp_nz_nh
+        assign_and_advance_blasfeo_dmat_mem(nz, nh, &work->tmp_nz_nh, &c_ptr);
+        // hess_z
+        assign_and_advance_blasfeo_dmat_mem(nz, nz, &work->hess_z, &c_ptr);
+        // tmp_nz_nv
+        assign_and_advance_blasfeo_dmat_mem(nz, nx+nu, &work->tmp_nz_nv, &c_ptr);
+    }
+    if (nh > 0)
+    {
+        // tmp_nv_nv
+        assign_and_advance_blasfeo_dmat_mem(nu+nx, nu+nx, &work->tmp_nv_nv, &c_ptr);
+        // tmp_nv_nh
+        assign_and_advance_blasfeo_dmat_mem(nx + nu, nh, &work->tmp_nv_nh, &c_ptr);
+        // tmp_nh
+        assign_and_advance_blasfeo_dvec_mem(nh, &work->tmp_nh, &c_ptr);
+    }
 
     // tmp_ni
     assign_and_advance_blasfeo_dvec_mem(nb+ng+nh+ns, &work->tmp_ni, &c_ptr);

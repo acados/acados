@@ -142,6 +142,8 @@ typedef struct
     int *iw;
     int *args_size;     // size of args[i]
     int *res_size;      // size of res[i]
+    int *args_dense;    // indicates if args[i] is dense
+    int *res_dense;     // indicates if res[i] is dense
     int args_num;       // number of args arrays
     int args_size_tot;  // total size of args arrays
     int res_num;        // number of res arrays
@@ -200,6 +202,8 @@ typedef struct
     int *iw;
     int *args_size;     // size of args[i]
     int *res_size;      // size of res[i]
+    int *args_dense;    // indicates if args[i] is dense
+    int *res_dense;     // indicates if res[i] is dense
     int args_num;       // number of args arrays
     int args_size_tot;  // total size of args arrays
     int res_num;        // number of res arrays

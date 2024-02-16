@@ -354,6 +354,7 @@ typedef struct ocp_nlp_memory
 
     bool *set_sim_guess; // indicate if there is new explicitly provided guess for integration variables
     struct blasfeo_dvec *sim_guess;
+    acados_size_t workspace_size;
 
 } ocp_nlp_memory;
 
