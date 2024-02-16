@@ -122,6 +122,7 @@ typedef struct
     struct blasfeo_dmat *dzduxt;        // pointer to dzdux transposed
     void *sim_solver;                   // sim solver memory
     acados_size_t workspace_size;
+    acados_size_t sim_workspace_size;
 
 } ocp_nlp_dynamics_cont_memory;
 
