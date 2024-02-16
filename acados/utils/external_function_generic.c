@@ -192,6 +192,8 @@ static int casadi_nnz(const int *sparsity)
 
 static int casadi_is_dense(const int *sparsity)
 {
+    // returns true if casadi sparsity goes through all elements of the matrix as it would for a dense matrix;
+    // otherwise false.
     int idx, jj;
     if (sparsity != NULL)
     {
