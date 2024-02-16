@@ -1472,9 +1472,12 @@ void ocp_nlp_constraints_bgp_compute_fun(void *config_, void *dims_, void *model
     blasfeo_daxpy(nb+ng+nphi, -1.0, &model->d, nb+ng+nphi, &work->tmp_ni, 0, &memory->fun, nb+ng+nphi);
 
     // soft
+    // subtract slacks from softened constraints
+    // fun_i = fun_i - slack_i for i \in I_slacked
     blasfeo_dvecad_sp(ns, -1.0, ux, nu+nx, model->idxs, &memory->fun, 0);
     blasfeo_dvecad_sp(ns, -1.0, ux, nu+nx+ns, model->idxs, &memory->fun, nb+ng+nphi);
 
+    // fun[2*ni : 2*(ni+ns)] = - slack + slack_bounds
     blasfeo_daxpy(2*ns, -1.0, ux, nu+nx, &model->d, 2*nb+2*ng+2*nphi, &memory->fun, 2*nb+2*ng+2*nphi);
 
     return;
