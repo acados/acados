@@ -101,7 +101,7 @@ typedef struct
     acados_size_t (*workspace_calculate_size)(void *config, void *dims, void *opts);
     void (*initialize)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*update_qp_matrices)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
-    void (*compute_fun)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
+    void (*compute_fun)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_, bool use_tmp_values);
     int (*precompute)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
 } ocp_nlp_dynamics_config;
 

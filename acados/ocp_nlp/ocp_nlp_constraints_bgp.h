@@ -203,7 +203,7 @@ void ocp_nlp_constraints_bgp_update_qp_matrices(void *config_, void *dims,
         void *model_, void *opts_, void *memory_, void *work_);
 //
 void ocp_nlp_constraints_bgp_compute_fun(void *config_, void *dims,
-        void *model_, void *opts_, void *memory_, void *work_);
+        void *model_, void *opts_, void *memory_, void *work_, bool use_tmp_values);
 //
 void ocp_nlp_constraints_bgp_update_qp_vectors(void *config_, void *dims, void *model_,
         void *opts_, void *memory_, void *work_);

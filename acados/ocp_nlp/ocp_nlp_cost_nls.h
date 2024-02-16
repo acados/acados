@@ -203,7 +203,8 @@ void ocp_nlp_cost_nls_initialize(void *config_, void *dims, void *model_, void *
 //
 void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_);
 //
-void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_);
+void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims, void *model_, void *opts_,
+                                  void *memory_, void *work_, bool use_tmp_values);
 
 #ifdef __cplusplus
 } /* extern "C" */

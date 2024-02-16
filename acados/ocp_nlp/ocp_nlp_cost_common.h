@@ -87,7 +87,7 @@ typedef struct
     // computes the function value, gradient and hessian (approximation) of the cost function
     void (*update_qp_matrices)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     // computes the cost function value (intended for globalization)
-    void (*compute_fun)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
+    void (*compute_fun)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_, bool use_tmp_values);
     void (*config_initialize_default)(void *config);
     void (*precompute)(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_);
 

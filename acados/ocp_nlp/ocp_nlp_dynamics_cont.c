@@ -895,7 +895,7 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
 
 
 
-void ocp_nlp_dynamics_cont_compute_fun(void *config_, void *dims_, void *model_, void *opts_, void *mem_, void *work_)
+void ocp_nlp_dynamics_cont_compute_fun(void *config_, void *dims_, void *model_, void *opts_, void *mem_, void *work_, bool use_tmp_values)
 {
     ocp_nlp_dynamics_cont_cast_workspace(config_, dims_, opts_, work_, mem_);
 
@@ -905,6 +905,19 @@ void ocp_nlp_dynamics_cont_compute_fun(void *config_, void *dims_, void *model_,
     ocp_nlp_dynamics_cont_workspace *work = work_;
     ocp_nlp_dynamics_cont_memory *mem = mem_;
     ocp_nlp_dynamics_cont_model *model = model_;
+
+    struct blasfeo_dvec *ux;
+    struct blasfeo_dvec *ux1;
+    if (use_tmp_values)
+    {
+        ux = mem->tmp_ux;
+        ux1 = mem->tmp_ux1;
+    }
+    else
+    {
+        ux = mem->ux;
+        ux1 = mem->ux1;
+    }
 
     int nx = dims->nx;
     int nu = dims->nu;
@@ -917,8 +930,8 @@ void ocp_nlp_dynamics_cont_compute_fun(void *config_, void *dims_, void *model_,
     work->sim_in->T = model->T;
 
     // pass state and control to integrator
-    blasfeo_unpack_dvec(nu, mem->tmp_ux, 0, work->sim_in->u, 1);
-    blasfeo_unpack_dvec(nx, mem->tmp_ux, nu, work->sim_in->x, 1);
+    blasfeo_unpack_dvec(nu, ux, 0, work->sim_in->u, 1);
+    blasfeo_unpack_dvec(nx, ux, nu, work->sim_in->x, 1);
 
     // printf("sim_guess, bool %d\n", mem->set_sim_guess[0]);
     // blasfeo_print_exp_dvec(nx + nz, mem->sim_guess, 0);
@@ -952,16 +965,14 @@ void ocp_nlp_dynamics_cont_compute_fun(void *config_, void *dims_, void *model_,
     config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_adj", &sens_adj_bkp);
     config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_hess", &sens_hess_bkp);
 
-    // function
+    // fun = integrator(x, u) - x[next_stage]
     blasfeo_pack_dvec(nx1, work->sim_out->xn, 1, &mem->fun, 0);
-    // fun -= x[next_stage]
-    blasfeo_daxpy(nx1, -1.0, mem->tmp_ux1, nu1, &mem->fun, 0, &mem->fun, 0);
+    blasfeo_daxpy(nx1, -1.0, ux1, nu1, &mem->fun, 0, &mem->fun, 0);
 //    blasfeo_pack_dvec(nz, work->sim_out->zn, 1, mem->z_alg, 0);
     // printf("\ndyn_cont: compute f:\n");
     // blasfeo_print_exp_tran_dvec(nx1, &mem->fun, 0);
 
     return;
-
 }
 
 

@@ -85,7 +85,7 @@ typedef struct
     void (*initialize)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
     void (*update_qp_matrices)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
     void (*update_qp_vectors)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
-    void (*compute_fun)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
+    void (*compute_fun)(void *config, void *dims, void *model, void *opts, void *mem, void *work, bool use_tmp_values);
     void (*config_initialize_default)(void *config);
     // dimension setters
     void (*dims_set)(void *config_, void *dims_, const char *field, const int *value);

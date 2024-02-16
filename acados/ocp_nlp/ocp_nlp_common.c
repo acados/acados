@@ -2057,22 +2057,19 @@ void ocp_nlp_initialize_t_slacks(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp
     struct blasfeo_dvec *ineq_fun;
     int N = dims->N;
     int *ni = dims->ni;
-    int *ns = dims->ns;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
+    // int *ns = dims->ns;
+    // int *nx = dims->nx;
+    // int *nu = dims->nu;
 
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
     for (int i = 0; i <= N; i++)
     {
-        // copy out->ux to tmp_nlp_out->ux, since this is used in compute_fun
-        blasfeo_dveccp(nx[i]+nu[i]+2*ns[i], out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
-
         // evaluate inequalities
         config->constraints[i]->compute_fun(config->constraints[i], dims->constraints[i],
                                              in->constraints[i], opts->constraints[i],
-                                             mem->constraints[i], work->constraints[i]);
+                                             mem->constraints[i], work->constraints[i], false);
         ineq_fun = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
         // t = -ineq_fun
         blasfeo_dveccpsc(2 * ni[i], -1.0, ineq_fun, 0, out->t + i, 0);
@@ -2446,7 +2443,7 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
     {
         // dynamics: Note has to be first, because cost_integration might be used.
         config->dynamics[i]->compute_fun(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
-                                         opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
+                                         opts->dynamics[i], mem->dynamics[i], work->dynamics[i], true);
     }
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
@@ -2455,7 +2452,7 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
     {
         // cost
         config->cost[i]->compute_fun(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i],
-                                    mem->cost[i], work->cost[i]);
+                                    mem->cost[i], work->cost[i], true);
     }
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
@@ -2465,7 +2462,7 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
         // constr
         config->constraints[i]->compute_fun(config->constraints[i], dims->constraints[i],
                                             in->constraints[i], opts->constraints[i],
-                                            mem->constraints[i], work->constraints[i]);
+                                            mem->constraints[i], work->constraints[i], true);
     }
 
     double *tmp_fun;
@@ -3007,6 +3004,7 @@ void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in
     double total_cost = 0.0;
 
     int cost_integration;
+    bool use_tmp_values = false;
 
     for (int i = 0; i <= N; i++)
     {
@@ -3016,22 +3014,13 @@ void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in
 
             if (cost_integration)
             {
-                // evaluate at out, instead tmp_out;
-                config->dynamics[i]->memory_set_tmp_ux_ptr(out->ux+i, mem->dynamics[i]);
-                // evaluate: TODO, where to put cost?
                 config->dynamics[i]->compute_fun(config->dynamics[i], dims->dynamics[i],
-                        in->dynamics[i], opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
+                        in->dynamics[i], opts->dynamics[i], mem->dynamics[i], work->dynamics[i], use_tmp_values);
             }
         }
 
-        // set pointers
-        // NOTE(oj): the cost compute function takes the tmp_ux_ptr as input,
-        //  since it is also used for globalization,
-        //  especially with primal variables that are NOT current SQP iterates.
-        config->cost[i]->memory_set_tmp_ux_ptr(out->ux+i, mem->cost[i]);
-
         config->cost[i]->compute_fun(config->cost[i], dims->cost[i], in->cost[i],
-                    opts->cost[i], mem->cost[i], work->cost[i]);
+                    opts->cost[i], mem->cost[i], work->cost[i], use_tmp_values);
         tmp_cost = config->cost[i]->memory_get_fun_ptr(mem->cost[i]);
         // printf("cost at stage %d = %e, total = %e\n", i, *tmp_cost, total_cost);
         total_cost += *tmp_cost;

@@ -860,7 +860,7 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
 
 
 void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims_, void *model_, void *opts_,
-                                 void *memory_, void *work_)
+                                 void *memory_, void *work_, bool use_tmp_values)
 {
     ocp_nlp_cost_ls_dims *dims = dims_;
     ocp_nlp_cost_ls_model *model = model_;
@@ -874,6 +874,16 @@ void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims_, void *model_, void 
     int nz = dims->nz;
     int ny = dims->ny;
     int ns = dims->ns;
+
+    struct blasfeo_dvec *ux;
+    if (use_tmp_values)
+    {
+        ux = memory->tmp_ux;
+    }
+    else
+    {
+        ux = memory->ux;
+    }
 
     // TODO should this overwrite memory->{res,fun,...} (as now) or not ????
     if (nz > 0)
@@ -903,7 +913,7 @@ void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims_, void *model_, void 
     else
     {
         // res = Cy * ux - yref
-        blasfeo_dgemv_t(nu+nx, ny, 1.0, &model->Cyt, 0, 0, memory->tmp_ux, 0, -1.0,
+        blasfeo_dgemv_t(nu+nx, ny, 1.0, &model->Cyt, 0, 0, ux, 0, -1.0,
                         &model->y_ref, 0, &memory->res, 0);
     }
 
@@ -920,8 +930,8 @@ void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims_, void *model_, void 
 
     // slack update function value
     blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);
-    blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->tmp_ux, nu+nx, &work->tmp_2ns, 0);
-    memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->tmp_ux, nu+nx);
+    blasfeo_dvecmulacc(2*ns, &model->Z, 0, ux, nu+nx, &work->tmp_2ns, 0);
+    memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, ux, nu+nx);
 
     // scale
     if (model->scaling!=1.0)

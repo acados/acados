@@ -180,7 +180,7 @@ void ocp_nlp_dynamics_disc_initialize(void *config_, void *dims, void *model_, v
 //
 void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
 //
-void ocp_nlp_dynamics_disc_compute_fun(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
+void ocp_nlp_dynamics_disc_compute_fun(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_, bool use_tmp_values);
 
 
 

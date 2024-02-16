@@ -741,7 +741,7 @@ void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims_, void *
 
 
 void ocp_nlp_dynamics_disc_compute_fun(void *config_, void *dims_, void *model_, void *opts_,
-                                              void *mem_, void *work_)
+                                              void *mem_, void *work_, bool use_tmp_values)
 {
     ocp_nlp_dynamics_disc_cast_workspace(config_, dims_, opts_, work_);
 
@@ -762,13 +762,26 @@ void ocp_nlp_dynamics_disc_compute_fun(void *config_, void *dims_, void *model_,
     ext_fun_arg_t ext_fun_type_out[1];
     void *ext_fun_out[1];
 
+    struct blasfeo_dvec *ux;
+    struct blasfeo_dvec *ux1;
+    if (use_tmp_values)
+    {
+        ux = memory->tmp_ux;
+        ux1 = memory->tmp_ux1;
+    }
+    else
+    {
+        ux = memory->ux;
+        ux1 = memory->ux1;
+    }
+
     // pass state and control to integrator
     struct blasfeo_dvec_args x_in;  // input x of external fun;
-    x_in.x = memory->tmp_ux;
+    x_in.x = ux;
     x_in.xi = nu;
 
     struct blasfeo_dvec_args u_in;  // input u of external fun;
-    u_in.x = memory->tmp_ux;
+    u_in.x = ux;
     u_in.xi = 0;
 
     struct blasfeo_dvec_args fun_out;
@@ -787,7 +800,7 @@ void ocp_nlp_dynamics_disc_compute_fun(void *config_, void *dims_, void *model_,
 	model->disc_dyn_fun->evaluate(model->disc_dyn_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
     // fun
-    blasfeo_daxpy(nx1, -1.0, memory->tmp_ux1, nu1, &memory->fun, 0, &memory->fun, 0);
+    blasfeo_daxpy(nx1, -1.0, ux1, nu1, &memory->fun, 0, &memory->fun, 0);
 
     return;
 }

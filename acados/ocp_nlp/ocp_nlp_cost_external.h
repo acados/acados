@@ -178,7 +178,7 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims, void *m
                                                void *opts_, void *memory_, void *work_);
 //
 void ocp_nlp_cost_external_compute_fun(void *config_, void *dims, void *model_,
-                                       void *opts_, void *memory_, void *work_);
+                                       void *opts_, void *memory_, void *work_, bool use_tmp_values);
 
 #ifdef __cplusplus
 } /* extern "C" */

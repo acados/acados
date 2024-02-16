@@ -224,7 +224,7 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims, void 
 
 //
 void ocp_nlp_constraints_bgh_compute_fun(void *config_, void *dims, void *model_,
-                                            void *opts_, void *memory_, void *work_);
+                                            void *opts_, void *memory_, void *work_, bool use_tmp_values);
 //
 void ocp_nlp_constraints_bgh_bounds_update(void *config_, void *dims, void *model_,
                                             void *opts_, void *memory_, void *work_);
