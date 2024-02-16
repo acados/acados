@@ -746,18 +746,15 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
         nlp_out, nlp_opts, nlp_mem, nlp_work);
     mem->time_lin += acados_toc(&timer1);
 
-    if (opts->rti_phase == PREPARATION || opts->rti_phase == PREPARATION_ADVANCED_STEP)
-    {
-        // regularize Hessian
-        acados_tic(&timer1);
-        config->regularize->regularize_lhs(config->regularize,
-            dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
-        mem->time_reg += acados_toc(&timer1);
-        // condense lhs
-        qp_solver->condense_lhs(qp_solver, dims->qp_solver,
-            nlp_mem->qp_in, nlp_mem->qp_out, opts->nlp_opts->qp_solver_opts,
-            nlp_mem->qp_solver_mem, nlp_work->qp_work);
-    }
+    // regularize Hessian
+    acados_tic(&timer1);
+    config->regularize->regularize_lhs(config->regularize,
+        dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
+    mem->time_reg += acados_toc(&timer1);
+    // condense lhs
+    qp_solver->condense_lhs(qp_solver, dims->qp_solver,
+        nlp_mem->qp_in, nlp_mem->qp_out, opts->nlp_opts->qp_solver_opts,
+        nlp_mem->qp_solver_mem, nlp_work->qp_work);
 #if defined(ACADOS_WITH_OPENMP)
     // restore number of threads
     omp_set_num_threads(num_threads_bkp);
