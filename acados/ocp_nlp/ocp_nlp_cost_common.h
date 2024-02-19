@@ -75,7 +75,6 @@ typedef struct
     struct blasfeo_dvec *(*model_get_y_ref_ptr)(void *memory);
     struct blasfeo_dmat *(*memory_get_W_chol_ptr)(void *memory_);
     void (*memory_set_ux_ptr)(struct blasfeo_dvec *ux, void *memory);
-    void (*memory_set_tmp_ux_ptr)(struct blasfeo_dvec *tmp_ux, void *memory);
     void (*memory_set_z_alg_ptr)(struct blasfeo_dvec *z_alg, void *memory);
     void (*memory_set_dzdux_tran_ptr)(struct blasfeo_dmat *dzdux, void *memory);
     void (*memory_set_RSQrq_ptr)(struct blasfeo_dmat *RSQrq, void *memory);
@@ -87,7 +86,7 @@ typedef struct
     // computes the function value, gradient and hessian (approximation) of the cost function
     void (*update_qp_matrices)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     // computes the cost function value (intended for globalization)
-    void (*compute_fun)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_, bool use_tmp_values);
+    void (*compute_fun)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*config_initialize_default)(void *config);
     void (*precompute)(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_);
 

@@ -1920,6 +1920,25 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
  * functions
  ************************************************/
 
+static void ocp_nlp_set_primal_variable_pointers_in_submodules(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
+                                                       ocp_nlp_out *nlp_out, ocp_nlp_memory *nlp_mem)
+{
+    int N = dims->N;
+    for (int i = 0; i < N; i++)
+    {
+        config->dynamics[i]->memory_set_ux_ptr(nlp_out->ux+i, nlp_mem->dynamics[i]);
+        config->dynamics[i]->memory_set_ux1_ptr(nlp_out->ux+i+1, nlp_mem->dynamics[i]);
+    }
+    for (int i = 0; i <= N; i++)
+    {
+        config->cost[i]->memory_set_ux_ptr(nlp_out->ux+i, nlp_mem->cost[i]);
+        config->constraints[i]->memory_set_ux_ptr(nlp_out->ux+i, nlp_mem->constraints[i]);
+    }
+    return;
+}
+
+
+
 void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
          ocp_nlp_out *nlp_out, ocp_nlp_opts *opts, ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work)
 {
@@ -1943,11 +1962,8 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
     for (int i = 0; i < N; i++)
     {
         config->dynamics[i]->memory_set_ux_ptr(nlp_out->ux+i, nlp_mem->dynamics[i]);
-        config->dynamics[i]->memory_set_tmp_ux_ptr(nlp_work->tmp_nlp_out->ux+i, nlp_mem->dynamics[i]);
         config->dynamics[i]->memory_set_ux1_ptr(nlp_out->ux+i+1, nlp_mem->dynamics[i]);
-        config->dynamics[i]->memory_set_tmp_ux1_ptr(nlp_work->tmp_nlp_out->ux+i+1, nlp_mem->dynamics[i]);
         config->dynamics[i]->memory_set_pi_ptr(nlp_out->pi+i, nlp_mem->dynamics[i]);
-        config->dynamics[i]->memory_set_tmp_pi_ptr(nlp_work->tmp_nlp_out->pi+i, nlp_mem->dynamics[i]);
         config->dynamics[i]->memory_set_BAbt_ptr(nlp_mem->qp_in->BAbt+i, nlp_mem->dynamics[i]);
         config->dynamics[i]->memory_set_RSQrq_ptr(nlp_mem->qp_in->RSQrq+i, nlp_mem->dynamics[i]);
         config->dynamics[i]->memory_set_dzduxt_ptr(nlp_mem->dzduxt+i, nlp_mem->dynamics[i]);
@@ -1963,7 +1979,6 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
     for (int i = 0; i <= N; i++)
     {
         config->cost[i]->memory_set_ux_ptr(nlp_out->ux+i, nlp_mem->cost[i]);
-        config->cost[i]->memory_set_tmp_ux_ptr(nlp_work->tmp_nlp_out->ux+i, nlp_mem->cost[i]);
         config->cost[i]->memory_set_z_alg_ptr(nlp_mem->z_alg+i, nlp_mem->cost[i]);
         config->cost[i]->memory_set_dzdux_tran_ptr(nlp_mem->dzduxt+i, nlp_mem->cost[i]);
         config->cost[i]->memory_set_RSQrq_ptr(nlp_mem->qp_in->RSQrq+i, nlp_mem->cost[i]);
@@ -1977,9 +1992,7 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
     for (int i = 0; i <= N; i++)
     {
         config->constraints[i]->memory_set_ux_ptr(nlp_out->ux+i, nlp_mem->constraints[i]);
-        config->constraints[i]->memory_set_tmp_ux_ptr(nlp_work->tmp_nlp_out->ux+i, nlp_mem->constraints[i]);
         config->constraints[i]->memory_set_lam_ptr(nlp_out->lam+i, nlp_mem->constraints[i]);
-        config->constraints[i]->memory_set_tmp_lam_ptr(nlp_work->tmp_nlp_out->lam+i, nlp_mem->constraints[i]);
         config->constraints[i]->memory_set_z_alg_ptr(nlp_mem->z_alg+i, nlp_mem->constraints[i]);
         config->constraints[i]->memory_set_dzdux_tran_ptr(nlp_mem->dzduxt+i, nlp_mem->constraints[i]);
         config->constraints[i]->memory_set_DCt_ptr(nlp_mem->qp_in->DCt+i, nlp_mem->constraints[i]);
@@ -2069,7 +2082,7 @@ void ocp_nlp_initialize_t_slacks(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp
         // evaluate inequalities
         config->constraints[i]->compute_fun(config->constraints[i], dims->constraints[i],
                                              in->constraints[i], opts->constraints[i],
-                                             mem->constraints[i], work->constraints[i], false);
+                                             mem->constraints[i], work->constraints[i]);
         ineq_fun = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
         // t = -ineq_fun
         blasfeo_dveccpsc(2 * ni[i], -1.0, ineq_fun, 0, out->t + i, 0);
@@ -2422,6 +2435,7 @@ static double ocp_nlp_get_violation(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
 
 
+
 double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
                                   ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
                                   ocp_nlp_memory *mem, ocp_nlp_workspace *work)
@@ -2435,6 +2449,8 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
     double merit_fun = 0.0;
 
+    // set evaluation point to tmp_nlp_out
+    ocp_nlp_set_primal_variable_pointers_in_submodules(config, dims, in, work->tmp_nlp_out, mem);
     // compute fun value
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
@@ -2443,7 +2459,7 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
     {
         // dynamics: Note has to be first, because cost_integration might be used.
         config->dynamics[i]->compute_fun(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
-                                         opts->dynamics[i], mem->dynamics[i], work->dynamics[i], true);
+                                         opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
     }
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
@@ -2452,7 +2468,7 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
     {
         // cost
         config->cost[i]->compute_fun(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i],
-                                    mem->cost[i], work->cost[i], true);
+                                    mem->cost[i], work->cost[i]);
     }
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
@@ -2462,8 +2478,10 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
         // constr
         config->constraints[i]->compute_fun(config->constraints[i], dims->constraints[i],
                                             in->constraints[i], opts->constraints[i],
-                                            mem->constraints[i], work->constraints[i], true);
+                                            mem->constraints[i], work->constraints[i]);
     }
+    // reset evaluation point to SQP iterate
+    ocp_nlp_set_primal_variable_pointers_in_submodules(config, dims, in, out, mem);
 
     double *tmp_fun;
     double tmp;
@@ -3004,7 +3022,6 @@ void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in
     double total_cost = 0.0;
 
     int cost_integration;
-    bool use_tmp_values = false;
 
     for (int i = 0; i <= N; i++)
     {
@@ -3015,12 +3032,12 @@ void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in
             if (cost_integration)
             {
                 config->dynamics[i]->compute_fun(config->dynamics[i], dims->dynamics[i],
-                        in->dynamics[i], opts->dynamics[i], mem->dynamics[i], work->dynamics[i], use_tmp_values);
+                        in->dynamics[i], opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
             }
         }
 
         config->cost[i]->compute_fun(config->cost[i], dims->cost[i], in->cost[i],
-                    opts->cost[i], mem->cost[i], work->cost[i], use_tmp_values);
+                    opts->cost[i], mem->cost[i], work->cost[i]);
         tmp_cost = config->cost[i]->memory_get_fun_ptr(mem->cost[i]);
         // printf("cost at stage %d = %e, total = %e\n", i, *tmp_cost, total_cost);
         total_cost += *tmp_cost;

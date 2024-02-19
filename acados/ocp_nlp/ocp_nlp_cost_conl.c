@@ -466,17 +466,6 @@ void ocp_nlp_cost_conl_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_)
 
 
 
-void ocp_nlp_cost_conl_memory_set_tmp_ux_ptr(struct blasfeo_dvec *tmp_ux, void *memory_)
-{
-    ocp_nlp_cost_conl_memory *memory = memory_;
-
-    memory->tmp_ux = tmp_ux;
-
-    return;
-}
-
-
-
 void ocp_nlp_cost_conl_memory_set_z_alg_ptr(struct blasfeo_dvec *z_alg, void *memory_)
 {
     ocp_nlp_cost_conl_memory *memory = memory_;
@@ -724,7 +713,7 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
 
 
 void ocp_nlp_cost_conl_compute_fun(void *config_, void *dims_, void *model_,
-                                  void *opts_, void *memory_, void *work_, bool use_tmp_values)
+                                  void *opts_, void *memory_, void *work_)
 {
     ocp_nlp_cost_conl_dims *dims = dims_;
     ocp_nlp_cost_conl_model *model = model_;
@@ -738,15 +727,7 @@ void ocp_nlp_cost_conl_compute_fun(void *config_, void *dims_, void *model_,
     int nu = dims->nu;
     int ns = dims->ns;
 
-    struct blasfeo_dvec *ux;
-    if (use_tmp_values)
-    {
-        ux = memory->tmp_ux;
-    }
-    else
-    {
-        ux = memory->ux;
-    }
+    struct blasfeo_dvec *ux = memory->ux;
 
     if (opts->integrator_cost == 0)
     {
@@ -823,7 +804,6 @@ void ocp_nlp_cost_conl_config_initialize_default(void *config_)
     config->memory_get_W_chol_ptr = &ocp_nlp_cost_conl_memory_get_W_chol_ptr;
     config->model_get_y_ref_ptr = &ocp_nlp_cost_conl_model_get_y_ref_ptr;
     config->memory_set_ux_ptr = &ocp_nlp_cost_conl_memory_set_ux_ptr;
-    config->memory_set_tmp_ux_ptr = &ocp_nlp_cost_conl_memory_set_tmp_ux_ptr;
     config->memory_set_z_alg_ptr = &ocp_nlp_cost_conl_memory_set_z_alg_ptr;
     config->memory_set_dzdux_tran_ptr = &ocp_nlp_cost_conl_memory_set_dzdux_tran_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_cost_conl_memory_set_RSQrq_ptr;

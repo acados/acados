@@ -141,7 +141,6 @@ typedef struct
     struct blasfeo_dvec res;     // nls residual r(x)
     struct blasfeo_dvec grad;    // gradient of cost function
     struct blasfeo_dvec *ux;     // pointer to ux in nlp_out
-    struct blasfeo_dvec *tmp_ux;     // pointer to ux in tmp_nlp_out
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
     struct blasfeo_dvec *Z;      // pointer to Z in qp_in
     struct blasfeo_dvec *z_alg;         ///< pointer to z in sim_out
@@ -165,8 +164,6 @@ void ocp_nlp_cost_nls_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, void *mem
 void ocp_nlp_cost_nls_memory_set_Z_ptr(struct blasfeo_dvec *Z, void *memory);
 //
 void ocp_nlp_cost_nls_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_);
-//
-void ocp_nlp_cost_nls_memory_set_tmp_ux_ptr(struct blasfeo_dvec *tmp_ux, void *memory_);
 //
 void ocp_nlp_cost_nls_memory_set_z_alg_ptr(struct blasfeo_dvec *z_alg, void *memory_);
 //
@@ -204,7 +201,7 @@ void ocp_nlp_cost_nls_initialize(void *config_, void *dims, void *model_, void *
 void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_);
 //
 void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims, void *model_, void *opts_,
-                                  void *memory_, void *work_, bool use_tmp_values);
+                                  void *memory_, void *work_);
 
 #ifdef __cplusplus
 } /* extern "C" */

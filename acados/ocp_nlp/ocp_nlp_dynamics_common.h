@@ -85,11 +85,8 @@ typedef struct
     struct blasfeo_dvec *(*memory_get_fun_ptr)(void *memory_);
     struct blasfeo_dvec *(*memory_get_adj_ptr)(void *memory_);
     void (*memory_set_ux_ptr)(struct blasfeo_dvec *ux, void *memory_);
-    void (*memory_set_tmp_ux_ptr)(struct blasfeo_dvec *tmp_ux, void *memory_);
     void (*memory_set_ux1_ptr)(struct blasfeo_dvec *ux1, void *memory_);
-    void (*memory_set_tmp_ux1_ptr)(struct blasfeo_dvec *tmp_ux1, void *memory_);
     void (*memory_set_pi_ptr)(struct blasfeo_dvec *pi, void *memory_);
-    void (*memory_set_tmp_pi_ptr)(struct blasfeo_dvec *tmp_pi, void *memory_);
     void (*memory_set_BAbt_ptr)(struct blasfeo_dmat *BAbt, void *memory_);
     void (*memory_set_RSQrq_ptr)(struct blasfeo_dmat *RSQrq, void *memory_);
     void (*memory_set_dzduxt_ptr)(struct blasfeo_dmat *mat, void *memory_);
@@ -101,7 +98,7 @@ typedef struct
     acados_size_t (*workspace_calculate_size)(void *config, void *dims, void *opts);
     void (*initialize)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*update_qp_matrices)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
-    void (*compute_fun)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_, bool use_tmp_values);
+    void (*compute_fun)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     int (*precompute)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
 } ocp_nlp_dynamics_config;
 
