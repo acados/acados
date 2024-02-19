@@ -633,6 +633,8 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
     omp_set_num_threads(opts->nlp_opts->num_threads);
 #endif
 
+    // printf("AS_RTI preparation\n");
+
     // prepare submodules
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
@@ -654,11 +656,6 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             printf("dimensions nx[0] != nx[1], cannot perform AS-RTI!");
             exit(1);
         }
-        if (opts->as_rti_level == LEVEL_B)
-        {
-            printf("AS-RTI: LEVEL_B implemented yet.\n");
-            exit(1);
-        }
         if (opts->as_rti_level == LEVEL_C)
         {
             printf("AS-RTI: LEVEL_C implemented yet.\n");
@@ -678,6 +675,72 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
         // printf("AS-RTI prep qp\n");
         // printf("qp_in\n");
         // d_ocp_qp_print(nlp_mem->qp_in->dim, nlp_mem->qp_in);
+    }
+    else if (opts->as_rti_level == LEVEL_B && !mem->is_first_call)
+    {
+        // perform zero-order iterations
+        int qp_status;
+        double alpha, tmp_time;
+        // TODO: how to log qp_iter?
+        for (int i = 0; i < opts->as_rti_iter; i++)
+        {
+            acados_tic(&timer1);
+            // zero order QP update
+            ocp_nlp_zero_order_qp_update(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+            mem->time_lin += acados_toc(&timer1);
+            // rhs regularization
+            acados_tic(&timer1);
+            config->regularize->regularize_rhs(config->regularize,
+                dims->regularize, nlp_opts->regularize, nlp_mem->regularize_mem);
+            mem->time_reg += acados_toc(&timer1);
+            // QP solve
+            acados_tic(&timer1);
+            qp_status = qp_solver->condense_rhs_and_solve(qp_solver, dims->qp_solver,
+                    nlp_mem->qp_in, nlp_mem->qp_out, nlp_opts->qp_solver_opts,
+                    nlp_mem->qp_solver_mem, nlp_work->qp_work);
+
+            // add qp timings
+            mem->time_qp_sol += acados_toc(&timer1);
+            // NOTE: timings within qp solver are added internally (lhs+rhs)
+            qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);
+            mem->time_qp_solver_call += tmp_time;
+            qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_xcond", &tmp_time);
+            mem->time_qp_xcond += tmp_time;
+
+            // compute correct dual solution in case of Hessian regularization
+            acados_tic(&timer1);
+            config->regularize->correct_dual_sol(config->regularize,
+                dims->regularize, nlp_opts->regularize, nlp_mem->regularize_mem);
+            mem->time_reg += acados_toc(&timer1);
+            if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
+            {
+#ifndef ACADOS_SILENT
+                printf("\nSQP_RTI: QP solver returned error status %d QP iteration %d.\n",
+                    qp_status, qp_iter);
+#endif
+                mem->status = ACADOS_QP_FAILURE;
+                return;
+            }
+
+            // globalization
+            acados_tic(&timer1);
+            // TODO: not clear if line search should be called with sqp_iter==0 in RTI;
+            alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, 1);
+            mem->time_glob += acados_toc(&timer1);
+
+            // update variables
+            ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, alpha);
+
+            // DEBUG
+            // d_ocp_qp_print(nlp_mem->qp_in->dim, nlp_mem->qp_in);
+            // for (int jj = 0; jj < 3; jj++)
+            // {
+            //     printf("rq %d\n", jj);
+            //     blasfeo_print_tran_dvec(dims->nx[jj]+dims->nu[jj], nlp_mem->qp_in->rqz+jj, 0);
+            //     printf("RSQ %d\n", jj);
+            //     blasfeo_print_dmat(dims->nx[jj]+dims->nu[jj], dims->nx[jj]+dims->nu[jj], nlp_mem->qp_in->RSQrq, 0, 0);
+            // }
+        }
     }
     else if (opts->as_rti_level == LEVEL_D)
     {

@@ -2255,6 +2255,56 @@ void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config,
 }
 
 
+// zero order update QP: Update all constraint evaluations in QP
+void ocp_nlp_zero_order_qp_update(ocp_nlp_config *config,
+    ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
+    ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+{
+    int N = dims->N;
+    int *nv = dims->nv;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ni = dims->ni;
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (int i = 0; i <= N; i++)
+    {
+        // evaluate constraint residuals
+        config->constraints[i]->compute_fun(config->constraints[i], dims->constraints[i],
+            in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
+        // copy ineq function value into QP
+        struct blasfeo_dvec *ineq_fun = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
+        blasfeo_dveccp(2 * ni[i], ineq_fun, 0, mem->qp_in->d + i, 0);
+    }
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (int i=0; i<N; i++)
+    {
+        // dynamics
+        config->dynamics[i]->compute_fun(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
+                                         opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
+
+        struct blasfeo_dvec *dyn_fun = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
+        blasfeo_dveccp(nx[i + 1], dyn_fun, 0, mem->qp_in->b + i, 0);
+    }
+
+    // add gradient correction
+    // rqz += Hess * last_step = RQ * qp_out
+    for (int i = 0; i <= N; i++)
+    {
+        // TODO: Make sure RSQ is full (not just triagonal stored!)
+        blasfeo_dgemv_n(nx[i]+nu[i], nx[i]+nu[i], 1.0, mem->qp_in->RSQrq+i, 0, 0,
+                        mem->qp_out->ux+i, 0, 1.0, mem->qp_in->rqz+i, 0, mem->qp_in->rqz+i, 0);
+        // TODO: fix for ns > 0.
+    }
+}
+
+
+
 double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims,
                                   ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
                                   ocp_nlp_memory *mem, ocp_nlp_workspace *work)
