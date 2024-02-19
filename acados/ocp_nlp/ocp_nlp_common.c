@@ -2204,7 +2204,8 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
 
 // update QP rhs for SQP (step prim var, abs dual var)
-// evaluate constraints wrt bounds -> allows to update all bounds between preparation and feedback phase.
+// - use cost gradient and dynamics residual from memory
+// - evaluate constraints wrt bounds -> allows to update all bounds between preparation and feedback phase.
 void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config,
     ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
     ocp_nlp_memory *mem, ocp_nlp_workspace *work)

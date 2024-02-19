@@ -53,6 +53,15 @@ extern "C" {
  * options
  ************************************************/
 
+typedef enum
+{
+    PREPARATION_AND_FEEDBACK, // = 0,
+    PREPARATION, // = 1,
+    FEEDBACK, // = 2,
+} rti_phase_t;
+
+
+
 typedef struct
 {
     ocp_nlp_opts *nlp_opts;
@@ -60,7 +69,7 @@ typedef struct
     int ext_qp_res;           // compute external QP residuals (i.e. at SQP level) at each SQP iteration (for debugging)
     int qp_warm_start;        // NOTE: this is not actually setting the warm_start! Just for compatibility with sqp.
     bool warm_start_first_qp; // to set qp_warm_start in first iteration
-    int rti_phase;            // phase of RTI. Possible values 1 (preparation), 2 (feedback) 0 (both)
+    rti_phase_t rti_phase;
 
 } ocp_nlp_sqp_rti_opts;
 
@@ -89,6 +98,7 @@ typedef struct
     // nlp memory
     ocp_nlp_memory *nlp_mem;
 
+    // timers
     double time_qp_sol;
     double time_qp_solver_call;
     double time_qp_xcond;

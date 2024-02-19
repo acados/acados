@@ -91,7 +91,7 @@ typedef struct ocp_nlp_config
     // prepare memory
     int (*precompute)(void *config, void *dims, void *nlp_in, void *nlp_out, void *opts_, void *mem, void *work);
     void (*memory_reset_qp_solver)(void *config, void *dims, void *nlp_in, void *nlp_out, void *opts_, void *mem, void *work);
-    // initalize this struct with default values
+    // initialize this struct with default values
     void (*config_initialize_default)(void *config);
     // general getter
     void (*get)(void *config_, void *dims, void *mem_, const char *field, void *return_value_);
@@ -143,7 +143,7 @@ acados_size_t ocp_nlp_dims_calculate_size(void *config);
 ocp_nlp_dims *ocp_nlp_dims_assign(void *config, void *raw_memory);
 
 /// Sets the dimension of optimization variables
-/// (states, constrols, algebraic variables, slack variables).
+/// (states, controls, algebraic variables, slack variables).
 ///
 /// \param config_ The configuration struct.
 /// \param dims_ The dimension struct.
@@ -169,7 +169,7 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage,
 /// \param config_ The configuration struct.
 /// \param dims_ The dimension struct.
 /// \param stage Stage number.
-/// \param field Type of cost term, can be eiter ny.
+/// \param field Type of cost dimension
 /// \param value_field Number of cost terms/residuals for the given stage.
 void ocp_nlp_dims_set_cost(void *config_, void *dims_, int stage, const char *field,
                            const void* value_field);
@@ -191,7 +191,7 @@ void ocp_nlp_dims_set_dynamics(void *config_, void *dims_, int stage, const char
 /// Struct for storing the inputs of an OCP NLP solver
 typedef struct ocp_nlp_in
 {
-    /// Length of sampling intervals/timesteps.
+    /// Timesteps.
     double *Ts;
 
     /// Pointers to cost functions (TBC).
@@ -225,9 +225,9 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *
 typedef struct ocp_nlp_out
 {
     struct blasfeo_dvec *ux;  // NOTE: this contains [u; x; s_l; s_u]! - rename to uxs?
-    struct blasfeo_dvec *z;  // algebraic vairables
+    struct blasfeo_dvec *z;  // algebraic variables
     struct blasfeo_dvec *pi;  // multipliers for dynamics
-    struct blasfeo_dvec *lam;  // inequality mulitpliers
+    struct blasfeo_dvec *lam;  // inequality multipliers
     struct blasfeo_dvec *t;  // slack variables corresponding to evaluation of all inequalities (at the solution)
 
     // NOTE: the inequalities are internally organized in the following order:

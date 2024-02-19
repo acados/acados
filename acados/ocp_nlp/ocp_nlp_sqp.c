@@ -511,7 +511,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     for (; sqp_iter < opts->max_iter; sqp_iter++)
     {
-        // linearizate NLP and update QP matrices
+        // linearize NLP and update QP matrices
         acados_tic(&timer1);
         ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
         mem->time_lin += acados_toc(&timer1);
@@ -742,41 +742,10 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 // int *ni = dims->ni;
 
                 /* evaluate constraints & dynamics at new step */
-                // The following (setting up ux + p in tmp_nlp_out and evaluation of constraints + dynamics)
-                // is not needed anymore because done in prelim. line search with early termination)
+                // NOTE: setting up the new iterate and evaluating is not needed here,
+                //   since this evaluation was perfomed just before this call in the early terminated line search.
+
                 // NOTE: similar to ocp_nlp_evaluate_merit_fun
-                // set up new linearization point in work->tmp_nlp_out
-                // for (ii = 0; ii < N; ii++)
-                //     blasfeo_dveccp(nx[ii+1], nlp_out->pi+ii, 0, work->nlp_work->tmp_nlp_out->pi+ii, 0);
-
-                // for (ii = 0; ii <= N; ii++)
-                //     blasfeo_dveccp(2*ni[ii], nlp_out->lam+ii, 0, work->nlp_work->tmp_nlp_out->lam+ii, 0);
-
-                // // tmp_nlp_out = iterate + step
-                // for (ii = 0; ii <= N; ii++)
-                //     blasfeo_daxpy(nv[ii], 1.0, qp_out->ux+ii, 0, nlp_out->ux+ii, 0, work->nlp_work->tmp_nlp_out->ux+ii, 0);
-
-    //             // evaluate
-    // #if defined(ACADOS_WITH_OPENMP)
-    //     #pragma omp parallel for
-    // #endif
-    //             for (ii=0; ii<N; ii++)
-    //             {
-    //                 config->dynamics[ii]->compute_fun(config->dynamics[ii], dims->dynamics[ii], nlp_in->dynamics[ii],
-    //                                                 nlp_opts->dynamics[ii], nlp_mem->dynamics[ii], work->nlp_work->dynamics[ii]);
-    //             }
-    // #if defined(ACADOS_WITH_OPENMP)
-    //     #pragma omp parallel for
-    // #endif
-    //             for (ii=0; ii<=N; ii++)
-    //             {
-    //                 config->constraints[ii]->compute_fun(config->constraints[ii], dims->constraints[ii],
-    //                                                     nlp_in->constraints[ii], nlp_opts->constraints[ii],
-    //                                                     nlp_mem->constraints[ii], work->nlp_work->constraints[ii]);
-    //             }
-    // #if defined(ACADOS_WITH_OPENMP)
-    //     #pragma omp parallel for
-    // #endif
                 // update QP rhs
                 // d_i = c_i(x_k + p_k) - \nabla c_i(x_k)^T * p_k
                 struct blasfeo_dvec *tmp_fun_vec;
@@ -799,7 +768,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                     // d -- constraints
                     tmp_fun_vec = config->constraints[ii]->memory_get_fun_ptr(nlp_mem->constraints[ii]);
                     /* SOC for bounds can be skipped (because linear) */
-                    // NOTE: SOC can also be skipped for truely linear constraint, i.e. ng of nlp, now using ng of QP = (nh+ng)
+                    // NOTE: SOC can also be skipped for truely linear constraint, i.e. ng of nlp,
+                    //      now using ng of QP = (nh+ng)
 
                     // upper & lower
                     blasfeo_dveccp(ng[ii], tmp_fun_vec, nb[ii], qp_in->d+ii, nb[ii]); // lg
@@ -859,6 +829,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 // acados_tic(&timer1);
                 qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver, qp_in, qp_out,
                                                 opts->nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
+                // NOTE: QP is not timed, since this computation time is attributed to globalization.
                 // tmp_time = acados_toc(&timer1);
                 // mem->time_qp_sol += tmp_time;
                 // qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);

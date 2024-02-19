@@ -640,7 +640,7 @@ static void ocp_nlp_dynamics_cont_cast_workspace(void *config_, void *dims_, voi
     ocp_nlp_dynamics_cont_memory *mem = mem_;
     ocp_nlp_dynamics_config *config = config_;
     ocp_nlp_dynamics_cont_dims *dims = dims_;
-    ocp_nlp_dynamics_cont_opts *opts = opts_;
+    // ocp_nlp_dynamics_cont_opts *opts = opts_;
     ocp_nlp_dynamics_cont_workspace *work = work_;
 
     char *c_ptr = (char *) work_;
@@ -658,7 +658,7 @@ static void ocp_nlp_dynamics_cont_cast_workspace(void *config_, void *dims_, voi
     c_ptr += sim_out_calculate_size(config->sim_solver, dims->sim);
     // workspace
     work->sim_solver = c_ptr;
-    c_ptr += config->sim_solver->workspace_calculate_size(config->sim_solver, dims->sim, opts->sim_solver);
+    c_ptr += mem->sim_workspace_size;
 
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
@@ -971,13 +971,15 @@ int ocp_nlp_dynamics_cont_precompute(void *config_, void *dims_, void *model_, v
 {
     ocp_nlp_dynamics_cont_memory *mem = mem_;
     ocp_nlp_dynamics_config *config = config_;
-    mem->workspace_size = ocp_nlp_dynamics_cont_workspace_calculate_size(config, dims_, opts_);
-    ocp_nlp_dynamics_cont_cast_workspace(config_, dims_, opts_, work_, mem_);
-
-    // ocp_nlp_dynamics_cont_dims *dims = dims_;
-    ocp_nlp_dynamics_cont_opts *opts = opts_;
-    ocp_nlp_dynamics_cont_workspace *work = work_;
     ocp_nlp_dynamics_cont_model *model = model_;
+    ocp_nlp_dynamics_cont_opts *opts = opts_;
+    ocp_nlp_dynamics_cont_dims *dims = dims_;
+
+    mem->workspace_size = ocp_nlp_dynamics_cont_workspace_calculate_size(config, dims_, opts_);
+    mem->sim_workspace_size = config->sim_solver->workspace_calculate_size(config->sim_solver, dims->sim, opts->sim_solver);
+
+    ocp_nlp_dynamics_cont_cast_workspace(config_, dims_, opts_, work_, mem_);
+    ocp_nlp_dynamics_cont_workspace *work = work_;
     work->sim_in->model = model->sim_model;
     work->sim_in->T = model->T;
 
