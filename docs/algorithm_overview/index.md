@@ -10,7 +10,7 @@ The Hessian of the QP is computed in the `ocp_nlp_sqp`, `ocp_nlp_sqp_rti` module
 
 The following steps are carried out:
 
-- `ocp_nlp_approximate_qp_preparation()`
+- `ocp_nlp_approximate_qp_matrices()`
   - sets all Hessian blocks to 0.0
   - for `i in range(N+1)`
     - if `i<N:`

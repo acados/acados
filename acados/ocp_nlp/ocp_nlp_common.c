@@ -2083,7 +2083,7 @@ void ocp_nlp_initialize_t_slacks(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp
 
 
 
-void ocp_nlp_approximate_qp_preparation(ocp_nlp_config *config, ocp_nlp_dims *dims,
+void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
     ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem,
     ocp_nlp_workspace *work)
 {
@@ -2162,18 +2162,16 @@ void ocp_nlp_approximate_qp_preparation(ocp_nlp_config *config, ocp_nlp_dims *di
     for (int i=0; i <= N; i++)
     {
 
-        // update cost gradient in QP and nlp_mem
+        // nlp mem: cost_grad
         struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get_grad_ptr(mem->cost[i]);
         blasfeo_dveccp(nv[i], cost_grad, 0, mem->cost_grad + i, 0);
-        blasfeo_dveccp(nv[i], mem->cost_grad + i, 0, mem->qp_in->rqz + i, 0);
 
-        // update dynamics residual in QP and nlp_mem
+        // nlp mem: dyn_fun
         if (i < N)
         {
             struct blasfeo_dvec *dyn_fun
                 = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
             blasfeo_dveccp(nx[i + 1], dyn_fun, 0, mem->dyn_fun + i, 0);
-            blasfeo_dveccp(nx[i + 1], mem->dyn_fun + i, 0, mem->qp_in->b + i, 0);
         }
 
         // nlp mem: dyn_adj
@@ -2199,6 +2197,7 @@ void ocp_nlp_approximate_qp_preparation(ocp_nlp_config *config, ocp_nlp_dims *di
         struct blasfeo_dvec *ineq_adj =
             config->constraints[i]->memory_get_adj_ptr(mem->constraints[i]);
         blasfeo_dveccp(nv[i], ineq_adj, 0, mem->ineq_adj + i, 0);
+
     }
 }
 
@@ -2206,7 +2205,7 @@ void ocp_nlp_approximate_qp_preparation(ocp_nlp_config *config, ocp_nlp_dims *di
 
 // update QP rhs for SQP (step prim var, abs dual var)
 // evaluate constraints wrt bounds -> allows to update all bounds between preparation and feedback phase.
-void ocp_nlp_approximate_qp_feedback(ocp_nlp_config *config,
+void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config,
     ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
     ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
@@ -2222,6 +2221,13 @@ void ocp_nlp_approximate_qp_feedback(ocp_nlp_config *config,
 #endif
     for (int i = 0; i <= N; i++)
     {
+        // g
+        blasfeo_dveccp(nv[i], mem->cost_grad + i, 0, mem->qp_in->rqz + i, 0);
+
+        // b
+        if (i < N)
+            blasfeo_dveccp(nx[i + 1], mem->dyn_fun + i, 0, mem->qp_in->b + i, 0);
+
         // evaluate constraint residuals
         config->constraints[i]->update_qp_vectors(config->constraints[i], dims->constraints[i],
             in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
@@ -2806,7 +2812,7 @@ int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nl
     if (opts->fixed_hess)
     {
         mem->compute_hess = 1;
-        ocp_nlp_approximate_qp_preparation(config, dims, in, out, opts, mem, work);
+        ocp_nlp_approximate_qp_matrices(config, dims, in, out, opts, mem, work);
         mem->compute_hess = 0;
         for (ii=0; ii<=N; ii++)
             config->cost[ii]->opts_set(config->cost[ii], opts->cost[ii], "compute_hess", &mem->compute_hess);

@@ -513,7 +513,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     {
         // linearize NLP and update QP matrices
         acados_tic(&timer1);
-        ocp_nlp_approximate_qp_preparation(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+        ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
         mem->time_lin += acados_toc(&timer1);
 
         // get timings from integrator
@@ -528,7 +528,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         // update QP rhs for SQP (step prim var, abs dual var)
-        ocp_nlp_approximate_qp_feedback(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+        ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
         // compute nlp residuals
         ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);

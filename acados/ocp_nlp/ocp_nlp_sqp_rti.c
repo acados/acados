@@ -408,7 +408,7 @@ static void ocp_nlp_sqp_rti_preparation_step(ocp_nlp_config *config, ocp_nlp_dim
 
     // linearize NLP and update QP matrices
     acados_tic(&timer1);
-    ocp_nlp_approximate_qp_preparation(config, dims, nlp_in,
+    ocp_nlp_approximate_qp_matrices(config, dims, nlp_in,
         nlp_out, nlp_opts, nlp_mem, nlp_work);
     mem->time_lin += acados_toc(&timer1);
 
@@ -451,7 +451,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
 
     // update QP rhs for SQP (step prim var, abs dual var)
     acados_tic(&timer1);
-    ocp_nlp_approximate_qp_feedback(config, dims, nlp_in,
+    ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in,
         nlp_out, nlp_opts, nlp_mem, nlp_work);
     mem->time_lin += acados_toc(&timer1);
 
