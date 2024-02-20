@@ -731,15 +731,6 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             // update variables
             ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, alpha);
 
-            // DEBUG
-            // d_ocp_qp_print(nlp_mem->qp_in->dim, nlp_mem->qp_in);
-            // for (int jj = 0; jj < 3; jj++)
-            // {
-            //     printf("rq %d\n", jj);
-            //     blasfeo_print_tran_dvec(dims->nx[jj]+dims->nu[jj], nlp_mem->qp_in->rqz+jj, 0);
-            //     printf("RSQ %d\n", jj);
-            //     blasfeo_print_dmat(dims->nx[jj]+dims->nu[jj], dims->nx[jj]+dims->nu[jj], nlp_mem->qp_in->RSQrq, 0, 0);
-            // }
         }
     }
     else if (opts->as_rti_level == LEVEL_D)

@@ -2296,8 +2296,8 @@ void ocp_nlp_zero_order_qp_update(ocp_nlp_config *config,
     // rqz += Hess * last_step = RQ * qp_out
     for (int i = 0; i <= N; i++)
     {
-        // TODO: Make sure RSQ is full (not just triagonal stored!)
-        blasfeo_dgemv_n(nx[i]+nu[i], nx[i]+nu[i], 1.0, mem->qp_in->RSQrq+i, 0, 0,
+        // NOTE: only lower triagonal of RSQ is stored
+        blasfeo_dsymv_l_mn(nx[i]+nu[i], nx[i]+nu[i], 1.0, mem->qp_in->RSQrq+i, 0, 0,
                         mem->qp_out->ux+i, 0, 1.0, mem->qp_in->rqz+i, 0, mem->qp_in->rqz+i, 0);
         // TODO: fix for ns > 0.
     }
