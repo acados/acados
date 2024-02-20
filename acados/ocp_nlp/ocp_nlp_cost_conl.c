@@ -466,17 +466,6 @@ void ocp_nlp_cost_conl_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_)
 
 
 
-void ocp_nlp_cost_conl_memory_set_tmp_ux_ptr(struct blasfeo_dvec *tmp_ux, void *memory_)
-{
-    ocp_nlp_cost_conl_memory *memory = memory_;
-
-    memory->tmp_ux = tmp_ux;
-
-    return;
-}
-
-
-
 void ocp_nlp_cost_conl_memory_set_z_alg_ptr(struct blasfeo_dvec *z_alg, void *memory_)
 {
     ocp_nlp_cost_conl_memory *memory = memory_;
@@ -738,6 +727,8 @@ void ocp_nlp_cost_conl_compute_fun(void *config_, void *dims_, void *model_,
     int nu = dims->nu;
     int ns = dims->ns;
 
+    struct blasfeo_dvec *ux = memory->ux;
+
     if (opts->integrator_cost == 0)
     {
         /* specify input types and pointers for external cost function */
@@ -748,11 +739,11 @@ void ocp_nlp_cost_conl_compute_fun(void *config_, void *dims_, void *model_,
 
         // INPUT
         struct blasfeo_dvec_args x_in;  // input x
-        x_in.x = memory->tmp_ux;
+        x_in.x = ux;
         x_in.xi = nu;
 
         struct blasfeo_dvec_args u_in;  // input u
-        u_in.x = memory->tmp_ux;
+        u_in.x = ux;
         u_in.xi = 0;
 
         ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
@@ -776,8 +767,8 @@ void ocp_nlp_cost_conl_compute_fun(void *config_, void *dims_, void *model_,
 
     // slack update function value
     blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);
-    blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->tmp_ux, nu+nx, &work->tmp_2ns, 0);
-    memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->tmp_ux, nu+nx);
+    blasfeo_dvecmulacc(2*ns, &model->Z, 0, ux, nu+nx, &work->tmp_2ns, 0);
+    memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, ux, nu+nx);
 
     // scale
     if (model->scaling!=1.0)
@@ -813,7 +804,6 @@ void ocp_nlp_cost_conl_config_initialize_default(void *config_)
     config->memory_get_W_chol_ptr = &ocp_nlp_cost_conl_memory_get_W_chol_ptr;
     config->model_get_y_ref_ptr = &ocp_nlp_cost_conl_model_get_y_ref_ptr;
     config->memory_set_ux_ptr = &ocp_nlp_cost_conl_memory_set_ux_ptr;
-    config->memory_set_tmp_ux_ptr = &ocp_nlp_cost_conl_memory_set_tmp_ux_ptr;
     config->memory_set_z_alg_ptr = &ocp_nlp_cost_conl_memory_set_z_alg_ptr;
     config->memory_set_dzdux_tran_ptr = &ocp_nlp_cost_conl_memory_set_dzdux_tran_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_cost_conl_memory_set_RSQrq_ptr;

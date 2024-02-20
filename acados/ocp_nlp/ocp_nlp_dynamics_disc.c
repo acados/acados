@@ -365,18 +365,6 @@ void ocp_nlp_dynamics_disc_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memo
 }
 
 
-
-void ocp_nlp_dynamics_disc_memory_set_tmp_ux_ptr(struct blasfeo_dvec *tmp_ux, void *memory_)
-{
-    ocp_nlp_dynamics_disc_memory *memory = memory_;
-
-    memory->tmp_ux = tmp_ux;
-
-    return;
-}
-
-
-
 void ocp_nlp_dynamics_disc_memory_set_ux1_ptr(struct blasfeo_dvec *ux1, void *memory_)
 {
     ocp_nlp_dynamics_disc_memory *memory = memory_;
@@ -385,18 +373,6 @@ void ocp_nlp_dynamics_disc_memory_set_ux1_ptr(struct blasfeo_dvec *ux1, void *me
 
     return;
 }
-
-
-
-void ocp_nlp_dynamics_disc_memory_set_tmp_ux1_ptr(struct blasfeo_dvec *tmp_ux1, void *memory_)
-{
-    ocp_nlp_dynamics_disc_memory *memory = memory_;
-
-    memory->tmp_ux1 = tmp_ux1;
-
-    return;
-}
-
 
 
 void ocp_nlp_dynamics_disc_memory_set_pi_ptr(struct blasfeo_dvec *pi, void *memory_)
@@ -408,16 +384,6 @@ void ocp_nlp_dynamics_disc_memory_set_pi_ptr(struct blasfeo_dvec *pi, void *memo
     return;
 }
 
-
-
-void ocp_nlp_dynamics_disc_memory_set_tmp_pi_ptr(struct blasfeo_dvec *tmp_pi, void *memory_)
-{
-    ocp_nlp_dynamics_disc_memory *memory = memory_;
-
-    memory->tmp_pi = tmp_pi;
-
-    return;
-}
 
 
 
@@ -762,13 +728,16 @@ void ocp_nlp_dynamics_disc_compute_fun(void *config_, void *dims_, void *model_,
     ext_fun_arg_t ext_fun_type_out[1];
     void *ext_fun_out[1];
 
+    struct blasfeo_dvec *ux = memory->ux;
+    struct blasfeo_dvec *ux1 = memory->ux1;
+
     // pass state and control to integrator
     struct blasfeo_dvec_args x_in;  // input x of external fun;
-    x_in.x = memory->tmp_ux;
+    x_in.x = ux;
     x_in.xi = nu;
 
     struct blasfeo_dvec_args u_in;  // input u of external fun;
-    u_in.x = memory->tmp_ux;
+    u_in.x = ux;
     u_in.xi = 0;
 
     struct blasfeo_dvec_args fun_out;
@@ -787,7 +756,7 @@ void ocp_nlp_dynamics_disc_compute_fun(void *config_, void *dims_, void *model_,
 	model->disc_dyn_fun->evaluate(model->disc_dyn_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
     // fun
-    blasfeo_daxpy(nx1, -1.0, memory->tmp_ux1, nu1, &memory->fun, 0, &memory->fun, 0);
+    blasfeo_daxpy(nx1, -1.0, ux1, nu1, &memory->fun, 0, &memory->fun, 0);
 
     return;
 }
@@ -824,11 +793,8 @@ void ocp_nlp_dynamics_disc_config_initialize_default(void *config_)
     config->memory_get_fun_ptr = &ocp_nlp_dynamics_disc_memory_get_fun_ptr;
     config->memory_get_adj_ptr = &ocp_nlp_dynamics_disc_memory_get_adj_ptr;
     config->memory_set_ux_ptr = &ocp_nlp_dynamics_disc_memory_set_ux_ptr;
-    config->memory_set_tmp_ux_ptr = &ocp_nlp_dynamics_disc_memory_set_tmp_ux_ptr;
     config->memory_set_ux1_ptr = &ocp_nlp_dynamics_disc_memory_set_ux1_ptr;
-    config->memory_set_tmp_ux1_ptr = &ocp_nlp_dynamics_disc_memory_set_tmp_ux1_ptr;
     config->memory_set_pi_ptr = &ocp_nlp_dynamics_disc_memory_set_pi_ptr;
-    config->memory_set_tmp_pi_ptr = &ocp_nlp_dynamics_disc_memory_set_tmp_pi_ptr;
     config->memory_set_BAbt_ptr = &ocp_nlp_dynamics_disc_memory_set_BAbt_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_dynamics_disc_memory_set_RSQrq_ptr;
     config->memory_set_dzduxt_ptr = &ocp_nlp_dynamics_disc_memory_set_dzduxt_ptr;

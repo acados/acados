@@ -223,14 +223,8 @@ def solve_marathos_ocp(setting):
         if sqp_iter != 18:
             raise Exception(f"acados solver took {sqp_iter} iterations, expected 18.")
     elif globalization == "MERIT_BACKTRACKING":
-        if globalization_use_SOC == 1 and line_search_use_sufficient_descent == 0 and sqp_iter not in range(21, 23):
-            raise Exception(f"acados solver took {sqp_iter} iterations, expected range(21, 23).")
-        elif globalization_use_SOC == 1 and line_search_use_sufficient_descent == 1 and sqp_iter not in range(21, 24):
-            raise Exception(f"acados solver took {sqp_iter} iterations, expected range(21, 24).")
-        elif globalization_use_SOC == 0 and line_search_use_sufficient_descent == 0 and sqp_iter not in range(155, 165):
-            raise Exception(f"acados solver took {sqp_iter} iterations, expected range(155, 165).")
-        elif globalization_use_SOC == 0 and line_search_use_sufficient_descent == 1 and sqp_iter not in range(160, 175):
-            raise Exception(f"acados solver took {sqp_iter} iterations, expected range(160, 175).")
+        if sqp_iter not in range(17, 23):
+            raise Exception(f"acados solver took {sqp_iter} iterations, expected range(17, 23).")
 
     if PLOT:
         plot_linear_mass_system_X_state_space(simX, circle=circle, x_goal=x_goal)
