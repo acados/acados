@@ -548,6 +548,10 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
         ocp_qp_res_compute(nlp_mem->qp_in, nlp_mem->qp_out, work->qp_res, work->qp_res_ws);
         ocp_qp_res_compute_nrm_inf(work->qp_res, mem->stat+(mem->stat_n*1+2));
     }
+    if (nlp_opts->print_level > 0) {
+        printf("\n------- qp_out --------\n");
+        print_ocp_qp_out(nlp_mem->qp_out);
+    }
 
     // save statistics
     mem->stat[mem->stat_n*1+0] = qp_status;
@@ -720,6 +724,13 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
 #endif
                 mem->status = ACADOS_QP_FAILURE;
                 return;
+            }
+
+            if (nlp_opts->print_level > 0) {
+                printf("\n------- qp_in B-iter %d --------\n", i);
+                print_ocp_qp_in(nlp_mem->qp_in);
+                printf("\n------- qp_out B-iter %d --------\n", i);
+                print_ocp_qp_out(nlp_mem->qp_out);
             }
 
             // globalization
