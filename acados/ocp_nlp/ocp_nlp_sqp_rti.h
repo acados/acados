@@ -63,6 +63,13 @@ typedef enum
 
 typedef enum
 {
+    SHIFT_ADVANCE, // = 0,
+    SIMULATE_ADVANCE, // = 1,
+    NO_ADVANCE, // = 2,
+} as_rti_advancement_strategy_t;
+
+typedef enum
+{
     LEVEL_A, // 0
     LEVEL_B, // 1
     LEVEL_C, // 2
@@ -78,6 +85,7 @@ typedef struct
     bool warm_start_first_qp; // to set qp_warm_start in first iteration
     rti_phase_t rti_phase;
     as_rti_level_t as_rti_level;
+    as_rti_advancement_strategy_t as_rti_advancement_strategy;
     int as_rti_iter;
 
 } ocp_nlp_sqp_rti_opts;

@@ -116,6 +116,7 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_,
     opts->warm_start_first_qp = false;
     opts->rti_phase = 0;
     opts->as_rti_level = LEVEL_A;
+    opts->as_rti_advancement_strategy = SIMULATE_ADVANCE;
     opts->as_rti_iter = 1;
 
     return;
@@ -643,12 +644,30 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
 
-    // setup advanced problem
     if (!mem->is_first_call)
     {
-        blasfeo_unpack_dvec(dims->nx[1], nlp_out->ux+1, dims->nu[1], nlp_work->tmp_nxu_double, 1);
-        ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", nlp_work->tmp_nxu_double);
-        ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", nlp_work->tmp_nxu_double);
+        // setup advanced problem
+        if (opts->as_rti_advancement_strategy == SHIFT_ADVANCE)
+        {
+            // tmp_nxu_double = x at stage 1
+            blasfeo_unpack_dvec(dims->nx[1], nlp_out->ux+1, dims->nu[1], nlp_work->tmp_nxu_double, 1);
+        }
+        else if (opts->as_rti_advancement_strategy == SIMULATE_ADVANCE)
+        {
+            // dyn_fun = phi(x_0, u_0) - x_1
+            config->dynamics[0]->compute_fun(config->dynamics[0], dims->dynamics[0], nlp_in->dynamics[0],
+                                nlp_opts->dynamics[0], nlp_mem->dynamics[0], nlp_work->dynamics[0]);
+            struct blasfeo_dvec *dyn_fun = config->dynamics[0]->memory_get_fun_ptr(nlp_mem->dynamics[0]);
+            // dyn_fun += x_1
+            blasfeo_daxpy(dims->nx[0], +1.0, nlp_out->ux+1, dims->nu[1], dyn_fun, 0, dyn_fun, 0);
+            // tmp_nxu_double = phi(x0, u0)
+            blasfeo_unpack_dvec(dims->nx[1], dyn_fun, 0, nlp_work->tmp_nxu_double, 1);
+        }
+        if (opts->as_rti_advancement_strategy != NO_ADVANCE)
+        {
+            ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", nlp_work->tmp_nxu_double);
+            ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", nlp_work->tmp_nxu_double);
+        }
         // printf("advanced x value\n");
         // blasfeo_print_exp_tran_dvec(dims->nx[1], nlp_out->ux+1, dims->nu[1]);
     }
