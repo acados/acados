@@ -2199,6 +2199,7 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
         }
         if (i > 0)
         {
+            // TODO: this could be simplified by not copying pi in the dynamics module.
             struct blasfeo_dvec *dyn_adj
                 = config->dynamics[i-1]->memory_get_adj_ptr(mem->dynamics[i-1]);
             blasfeo_daxpy(nx[i], 1.0, dyn_adj, nu[i-1]+nx[i-1], mem->dyn_adj+i, nu[i],
