@@ -2304,6 +2304,79 @@ void ocp_nlp_zero_order_qp_update(ocp_nlp_config *config,
 }
 
 
+// Level C iterations Update all constraint evaluations in QP and Lagrange gradient
+void ocp_nlp_level_c_update(ocp_nlp_config *config,
+    ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
+    ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+{
+    int N = dims->N;
+    int *nv = dims->nv;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ni = dims->ni;
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (int i = 0; i <= N; i++)
+    {
+        // evaluate constraint residuals
+        config->constraints[i]->compute_fun(config->constraints[i], dims->constraints[i],
+            in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
+        // copy ineq function value into QP
+        struct blasfeo_dvec *ineq_fun = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
+        blasfeo_dveccp(2 * ni[i], ineq_fun, 0, mem->qp_in->d + i, 0);
+    }
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (int i=0; i<N; i++)
+    {
+        // dynamics
+        // config->dynamics[i]->update_qp_matrices(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
+        config->dynamics[i]->compute_fun_and_adjoint(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
+                                         opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
+
+        struct blasfeo_dvec *dyn_fun = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
+        blasfeo_dveccp(nx[i + 1], dyn_fun, 0, mem->qp_in->b + i, 0);
+
+        // add adjoint contribution to gradient
+        struct blasfeo_dvec *dyn_adj = config->dynamics[i]->memory_get_adj_ptr(mem->dynamics[i]);
+        blasfeo_dvecad(nu[i] + nx[i], -1.0, dyn_adj, 0, mem->qp_in->rqz+i, 0);
+        // add adjoint contribution C * lambda_k
+        blasfeo_dgemv_n(nu[i] + nx[i], nx[i+1], -1.0, mem->qp_in->BAbt+i, 0, 0, out->pi+i, 0, 1.0, mem->qp_in->rqz+i, 0, mem->qp_in->rqz+i, 0);
+
+        // - I part is linear, so dont need to add that!
+        // blasfeo_dvecad(nx[i+1], 1.0, out->pi+i, 0, mem->qp_in->rqz+i, 0)
+
+        // DEBUG:
+        // printf("\ndyn_adj i %d\n", i);
+        // blasfeo_print_exp_tran_dvec(nu[i] + nx[i], dyn_adj, 0);
+        // printf("pi\n");
+        // blasfeo_print_exp_tran_dvec(nx[i], out->pi+i, 0);
+
+        // blasfeo_dgemv_n(nu[i] + nx[i], nx[i+1], 1.0, mem->qp_in->BAbt+i, 0, 0, out->pi+i, 0, 0.0, &work->tmp_nxu, 0, &work->tmp_nxu, 0);
+        // printf("C * lam\n");
+        // blasfeo_print_exp_tran_dvec(nu[i] + nx[i], &work->tmp_nxu, 0);
+    }
+
+    // TODO:
+    // - evaluate cost gradient exactly
+    // - adjoint call for inequalities as for dynamics
+
+    // add gradient correction
+    // rqz += Hess * last_step = RQ * qp_out
+    for (int i = 0; i <= N; i++)
+    {
+        // NOTE: only lower triagonal of RSQ is stored
+        blasfeo_dsymv_l_mn(nx[i]+nu[i], nx[i]+nu[i], 1.0, mem->qp_in->RSQrq+i, 0, 0,
+                        mem->qp_out->ux+i, 0, 1.0, mem->qp_in->rqz+i, 0, mem->qp_in->rqz+i, 0);
+        // TODO: fix for ns > 0.
+    }
+}
+
+
 
 double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims,
                                   ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
