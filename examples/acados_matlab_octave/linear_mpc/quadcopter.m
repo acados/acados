@@ -26,13 +26,13 @@
 % CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
-
 %
 
 % this function implements the quadcopter model from https://osqp.org/docs/examples/mpc.html
 % more infomation can be found here: https://github.com/orgs/osqp/discussions/558
 
-function model = quadcopter()
+function model = quadcopter(h)
+% input: sampling time
 import casadi.*
 
 % system matrices
@@ -73,27 +73,36 @@ dyn_expr_phi = Ad * sym_x + Bd * sym_u;  % x+ = A*x + B*u
 
 % cost matrices
 Q = diag([0 0 10 10 10 10 0 0 0 5 5 5]);  % state cost
-R = 0.1*eye(4);  % input cost
+R = 0.1*eye(nu);  % input cost
 
 % generic cost formulation
 cost_expr_ext_cost_e = (sym_x-xr)'*Q*(sym_x-xr);  % terminal cost
 cost_expr_ext_cost = cost_expr_ext_cost_e + sym_u'*R*sym_u;  % stage cost
-h = 1/14;  % [s] sampling time
 cost_expr_ext_cost = 1/h * cost_expr_ext_cost;  % scale the stage cost to match the discrete formulation
+cost_expr_ext_cost_0 = 1/h * sym_u'*R*sym_u;  % penalize the inputs in the first stage
 % more info on discrete cost scaling: 
 % https://discourse.acados.org/t/question-regarding-terminal-cost-in-discrete-time/1096
 
 % linear least-squares cost formulation (alternative)
-ny = nu+nx;  % number of outputs in the stage cost
-Vu = [eye(nu); zeros(nx,nu)];  % input-to-output matrix in the stage cost
-Vx = [zeros(nu, nx); eye(nx)];  % state-to-output matrix in the stage cost
-W = blkdiag(2*R,2*Q);  % weight matrix in the stage cost; factor of 2 to match original cost
-y_ref = zeros(ny, 1);  % output reference in the stage cost
+% initial cost
+ny_0 = nu;
+Vu_0 = eye(ny_0);
+Vx_0 = zeros(ny_0,nx);
+W_0 = 1/h * 2 * R;  % scale to match the original cost
+y_ref_0 = zeros(ny_0,1);
 
-ny_e = nx;  % number of outputs in the terminal cost
-Vx_e = eye(ny_e, nx);  % state-to-output matrix in the terminal cost
-W_e = W(nu+1:nu+nx, nu+1:nu+nx);  % weight matrix in the terminal cost
-y_ref_e = zeros(ny_e, 1);  % output reference in the terminal cost
+% intermediate cost
+ny = nu+nx;
+Vu = [eye(nu); zeros(nx,nu)];
+Vx = [zeros(nu, nx); eye(nx)];
+W = 1/h * 2 * blkdiag(R,Q);  % scale to match the original cost
+y_ref = zeros(ny, 1);
+
+% terminal cost
+ny_e = nx;
+Vx_e = eye(ny_e, nx);
+W_e = h * W(nu+1:nu+nx, nu+1:nu+nx);  % terminal cost is not scaled with h later
+y_ref_e = zeros(ny_e, 1);
 
 % input constraints
 u0 = 10.5916;  % steady-state input
@@ -102,6 +111,7 @@ lbu = [9.6; 9.6; 9.6; 9.6] - u0;  % input lower bounds
 ubu = [13; 13; 13; 13] - u0;  % input upper bounds
 
 % state constraints on the first, second and sixth state
+% (not applied to the initial state)
 Jbx = zeros(3,nx);
 Jbx(1,1) = 1;
 Jbx(2,2) = 1;
@@ -127,15 +137,22 @@ model.sym_p = sym_p;
 
 model.dyn_expr_phi = dyn_expr_phi;
 
+model.cost_expr_ext_cost_0 = cost_expr_ext_cost_0;
 model.cost_expr_ext_cost = cost_expr_ext_cost;
 model.cost_expr_ext_cost_e = cost_expr_ext_cost_e;
 
+model.Vu_0 = Vu_0;
+model.Vx_0 = Vx_0;
+model.W_0 = W_0;
+model.y_ref_0 = y_ref_0;
+
 model.Vu = Vu;
 model.Vx = Vx;
-model.Vx_e = Vx_e;
 model.W = W;
-model.W_e = W_e;
 model.y_ref = y_ref;
+
+model.Vx_e = Vx_e;
+model.W_e = W_e;
 model.y_ref_e = y_ref_e;
 
 model.Jbu = Jbu;
@@ -148,6 +165,3 @@ model.Jbx_e = Jbx_e;
 model.lbx_e = lbx_e;
 model.ubx_e = ubx_e;
 end
-
-
-
