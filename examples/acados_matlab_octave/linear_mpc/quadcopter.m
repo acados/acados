@@ -87,7 +87,7 @@ cost_expr_ext_cost = 1/h * cost_expr_ext_cost;  % scale the stage cost to match 
 ny = nu+nx;  % number of outputs in the stage cost
 Vu = [eye(nu); zeros(nx,nu)];  % input-to-output matrix in the stage cost
 Vx = [zeros(nu, nx); eye(nx)];  % state-to-output matrix in the stage cost
-W = blkdiag(R,Q);  % weight matrix in the stage cost
+W = blkdiag(2*R,2*Q);  % weight matrix in the stage cost; factor of 2 to match original cost
 y_ref = zeros(ny, 1);  % output reference in the stage cost
 
 ny_e = nx;  % number of outputs in the terminal cost
