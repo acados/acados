@@ -75,8 +75,8 @@ expr_h = sym_u;
 %% cost
 W_x = diag([1e3, 1e3, 1e-2, 1e-2]);
 W_u = 1e-2;
-expr_ext_cost_e = sym_x'* W_x * sym_x;
-expr_ext_cost = expr_ext_cost_e + sym_u' * W_u * sym_u;
+expr_ext_cost_e = 0.5 * sym_x'* W_x * sym_x;
+expr_ext_cost = expr_ext_cost_e + 0.5 * sym_u' * W_u * sym_u;
 % nonlinear least sqares
 cost_expr_y = vertcat(sym_x, sym_u);
 W = blkdiag(W_x, W_u);

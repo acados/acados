@@ -34,12 +34,12 @@ clear all; clc; close all;
 check_acados_requirements()
 
 %% create the controller
-model = quadcopter();       % system dynamics
-[nx, nu] = size(model.Bd);  % state and input dimensions
-
 h = 1/14;       % [s] sampling time
 N_ocp = 10;     % [-] number of prediction steps
 T = N_ocp*h;    % [s] prediction horizon length
+
+model = quadcopter(h);       % system dynamics
+[nx, nu] = size(model.Bd);  % state and input dimensions
 
 % ocp model
 ocp_model = acados_ocp_model();
@@ -54,14 +54,21 @@ cost_type = 'auto';  % auto, ext_cost, linear_ls
 ocp_model.set('cost_type', cost_type);
 ocp_model.set('cost_type_e', cost_type);
 if strcmp(cost_type,'linear_ls')
+    ocp_model.set('cost_Vu_0', model.Vu_0);
+    ocp_model.set('cost_Vx_0', model.Vx_0);
+    ocp_model.set('cost_W_0', model.W_0);
+    ocp_model.set('cost_y_ref_0', model.y_ref_0);
+
     ocp_model.set('cost_Vu', model.Vu);
     ocp_model.set('cost_Vx', model.Vx);
-    ocp_model.set('cost_Vx_e', model.Vx_e);
     ocp_model.set('cost_W', model.W);
-    ocp_model.set('cost_W_e', model.W_e);
     ocp_model.set('cost_y_ref', model.y_ref);
+
+    ocp_model.set('cost_Vx_e', model.Vx_e);    
+    ocp_model.set('cost_W_e', model.W_e);    
     ocp_model.set('cost_y_ref_e', model.y_ref_e);
 else
+    ocp_model.set('cost_expr_ext_cost_0', model.cost_expr_ext_cost_0);
     ocp_model.set('cost_expr_ext_cost', model.cost_expr_ext_cost);
     ocp_model.set('cost_expr_ext_cost_e', model.cost_expr_ext_cost_e);
 end
