@@ -81,7 +81,7 @@ cost_expr_ext_cost = cost_expr_ext_cost_e + sym_u'*R*sym_u;  % stage cost (state
 cost_expr_ext_cost = 1/h * cost_expr_ext_cost;  % scale the stage cost to match the discrete formulation
 cost_expr_ext_cost_0 = 1/h * sym_u'*R*sym_u;  % penalize only the inputs in the first stage
 % more info on discrete cost scaling: 
-% https://discourse.acados.org/t/question-regarding-terminal-cost-in-discrete-time/1096
+% https://docs.acados.org/python_interface/index.html#acados_template.acados_ocp_cost.AcadosOcpCost
 
 % linear least-squares cost formulation (alternative)
 % initial cost
