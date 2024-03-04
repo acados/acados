@@ -76,10 +76,10 @@ Q = diag([0 0 10 10 10 10 0 0 0 5 5 5]);  % state cost
 R = 0.1*eye(nu);  % input cost
 
 % generic cost formulation
-cost_expr_ext_cost_e = (sym_x-xr)'*Q*(sym_x-xr);  % terminal cost
-cost_expr_ext_cost = cost_expr_ext_cost_e + sym_u'*R*sym_u;  % stage cost
+cost_expr_ext_cost_e = (sym_x-xr)'*Q*(sym_x-xr);  % terminal cost (only states)
+cost_expr_ext_cost = cost_expr_ext_cost_e + sym_u'*R*sym_u;  % stage cost (states and inputs)
 cost_expr_ext_cost = 1/h * cost_expr_ext_cost;  % scale the stage cost to match the discrete formulation
-cost_expr_ext_cost_0 = 1/h * sym_u'*R*sym_u;  % penalize the inputs in the first stage
+cost_expr_ext_cost_0 = 1/h * sym_u'*R*sym_u;  % penalize only the inputs in the first stage
 % more info on discrete cost scaling: 
 % https://discourse.acados.org/t/question-regarding-terminal-cost-in-discrete-time/1096
 
@@ -101,7 +101,7 @@ y_ref = zeros(ny, 1);
 % terminal cost
 ny_e = nx;
 Vx_e = eye(ny_e, nx);
-W_e = h * W(nu+1:nu+nx, nu+1:nu+nx);  % terminal cost is not scaled with h later
+W_e = 2 * Q;  % terminal cost is not scaled with h later
 y_ref_e = zeros(ny_e, 1);
 
 % input constraints
