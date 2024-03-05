@@ -54,6 +54,8 @@ typedef struct
     int nz;  // number of algebraic variables
     int nu;  // number of inputs
     int ns;  // number of slacks
+    // TODO(params_sens): set number of parameters
+    int np; // number of parameters
 } ocp_nlp_cost_external_dims;
 
 //
@@ -74,6 +76,8 @@ typedef struct
     external_function_generic *ext_cost_fun;  // function
     external_function_generic *ext_cost_fun_jac_hess;  // function, gradient and hessian
     external_function_generic *ext_cost_fun_jac;  // function, gradient
+    // TODO(params_sens)
+    // external_function_generic *ext_cost_jac_params; // cost gradient wrt. params
     struct blasfeo_dvec Z;
     struct blasfeo_dvec z;
     struct blasfeo_dmat numerical_hessian;  // custom hessian approximation
@@ -106,7 +110,6 @@ void ocp_nlp_cost_external_opts_initialize_default(void *config, void *dims, voi
 void ocp_nlp_cost_external_opts_update(void *config, void *dims, void *opts);
 //
 void ocp_nlp_cost_external_opts_set(void *config, void *opts, const char *field, void *value);
-
 
 
 /************************************************
@@ -176,6 +179,9 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims, void *m
 //
 void ocp_nlp_cost_external_compute_fun(void *config_, void *dims, void *model_,
                                        void *opts_, void *memory_, void *work_);
+
+// TODO(params_sens)
+// void ocp_nlp_cost_external_update_params_sens(...)
 
 #ifdef __cplusplus
 } /* extern "C" */

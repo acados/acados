@@ -59,6 +59,8 @@ typedef struct
     int nu;   // number of inputs at the current stage
     int nx1;  // number of states at the next stage
     int nu1;  // number of inputes at the next stage
+    int np;   // number of parameters TODO(params_sens): needs to be set
+
 } ocp_nlp_dynamics_disc_dims;
 
 //
@@ -106,6 +108,8 @@ typedef struct
     struct blasfeo_dvec *pi;     // pointer to pi in nlp_out at current stage
     struct blasfeo_dmat *BAbt;   // pointer to BAbt in qp_in
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
+
+    // TODO(params_sens) add memory for jacobian wrt. p
 } ocp_nlp_dynamics_disc_memory;
 
 //
@@ -149,6 +153,7 @@ typedef struct
     external_function_generic *disc_dyn_fun;
     external_function_generic *disc_dyn_fun_jac;
     external_function_generic *disc_dyn_fun_jac_hess;
+    // external_function_generic *disc_dyn_jac_params; // TODO(params_sens): casadi function providing the jacobian of dynamics wrt. p
 } ocp_nlp_dynamics_disc_model;
 
 //
@@ -173,6 +178,11 @@ void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims, void *m
 //
 void ocp_nlp_dynamics_disc_compute_fun(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
 
+// TODO(params_sens):
+// step 1: evaluate jacobian of dynamics wrt all parameters
+// void ocp_nlp_dynamics_disc_update_params_jacobian(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
+//  step 2: get params gradient for a given parameter component (index)
+// void ocp_nlp_dynamics_disc_get_params_grad(void *config, void *dims, void *mem, int *index);
 
 
 #ifdef __cplusplus

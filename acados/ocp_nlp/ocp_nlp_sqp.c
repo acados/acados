@@ -1024,38 +1024,18 @@ void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *
     {
         d_ocp_qp_set_el("lbx", stage, index, &one, work->tmp_qp_in);
         d_ocp_qp_set_el("ubx", stage, index, &one, work->tmp_qp_in);
+    }
+    else if (!strcmp("params_stage", field))
+    {
+        printf("\nerror: field %s at stage %d not available in ocp_nlp_sqp_eval_param_sens\n", field, stage);
+        exit(1);
 
-//        d_ocp_qp_print(work->tmp_qp_in->dim, work->tmp_qp_in);
-
-        config->qp_solver->eval_sens(config->qp_solver, dims->qp_solver, work->tmp_qp_in, work->tmp_qp_out,
-                               opts->nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
-
-//        d_ocp_qp_sol_print(work->tmp_qp_out->dim, work->tmp_qp_out);
-//        exit(1);
-
-        /* copy tmp_qp_out into sens_nlp_out */
-
-        int i;
-
-        int N = dims->N;
-        int *nv = dims->nv;
-        int *nx = dims->nx;
-        // int *nu = dims->nu;
-        int *ni = dims->ni;
-        // int *nz = dims->nz;
-
-        for (i = 0; i <= N; i++)
-        {
-            blasfeo_dveccp(nv[i], work->tmp_qp_out->ux + i, 0, sens_nlp_out->ux + i, 0);
-
-            if (i < N)
-                blasfeo_dveccp(nx[i + 1], work->tmp_qp_out->pi + i, 0, sens_nlp_out->pi + i, 0);
-
-            blasfeo_dveccp(2 * ni[i], work->tmp_qp_out->lam + i, 0, sens_nlp_out->lam + i, 0);
-
-            blasfeo_dveccp(2 * ni[i], work->tmp_qp_out->t + i, 0, sens_nlp_out->t + i, 0);
-
-        }
+    }
+    else if (!strcmp("params_global", field))
+    {
+        // TODO get gradient wrt p from all modules
+        printf("\nerror: field %s at stage %d not available in ocp_nlp_sqp_eval_param_sens\n", field, stage);
+        exit(1);
 
     }
     else
@@ -1063,6 +1043,32 @@ void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *
         printf("\nerror: field %s at stage %d not available in ocp_nlp_sqp_eval_param_sens\n", field, stage);
         exit(1);
     }
+
+//        d_ocp_qp_print(work->tmp_qp_in->dim, work->tmp_qp_in);
+    config->qp_solver->eval_sens(config->qp_solver, dims->qp_solver, work->tmp_qp_in, work->tmp_qp_out,
+                            opts->nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
+//        d_ocp_qp_sol_print(work->tmp_qp_out->dim, work->tmp_qp_out);
+
+    /* copy tmp_qp_out into sens_nlp_out */
+
+    int i;
+
+    int N = dims->N;
+    int *nv = dims->nv;
+    int *nx = dims->nx;
+    int *ni = dims->ni;
+
+    for (i = 0; i <= N; i++)
+    {
+        blasfeo_dveccp(nv[i], work->tmp_qp_out->ux + i, 0, sens_nlp_out->ux + i, 0);
+
+        if (i < N)
+            blasfeo_dveccp(nx[i + 1], work->tmp_qp_out->pi + i, 0, sens_nlp_out->pi + i, 0);
+
+        blasfeo_dveccp(2 * ni[i], work->tmp_qp_out->lam + i, 0, sens_nlp_out->lam + i, 0);
+        blasfeo_dveccp(2 * ni[i], work->tmp_qp_out->t + i, 0, sens_nlp_out->t + i, 0);
+    }
+
     mem->time_solution_sensitivities = acados_toc(&timer0);
 
     return;

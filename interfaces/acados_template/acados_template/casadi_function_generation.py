@@ -126,6 +126,7 @@ def ocp_generate_external_functions(ocp: AcadosOcp):
 ################
 
 def generate_c_code_discrete_dynamics( model, opts ):
+    # TODO(params_sens) generate jacobian wrt p
 
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
@@ -416,7 +417,7 @@ def generate_c_code_gnsf( model, opts ):
 ################
 
 def generate_c_code_external_cost(ocp: AcadosOcp, stage_type, opts):
-
+    # TODO(params_sens) generate jacobian wrt p
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
     model = ocp.model
