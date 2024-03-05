@@ -30,7 +30,7 @@
 %
 
 %% test of native matlab interface
-clear all
+clear all; clc;
 
 model_name = 'simple_dae';
 

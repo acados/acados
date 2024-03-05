@@ -30,7 +30,7 @@
 %
 
 %% test of native matlab interface
-clear all
+clear all; clc;
 import casadi.*
 
 % model_path = fullfile(pwd,'..','pendulum_on_cart_model');
@@ -101,18 +101,21 @@ ocp_model.set('cost_expr_ext_cost_custom_hess_e', cost_expr_ext_cost_custom_hess
 % dynamics
 if (strcmp(sim_method, 'erk'))
     ocp_model.set('dyn_type', 'explicit');
-    ocp_model.set('dyn_expr_f', model.expr_f_expl);
+    ocp_model.set('dyn_expr_f', model.dyn_expr_f_expl);
 else % irk irk_gnsf
     ocp_model.set('dyn_type', 'implicit');
-    ocp_model.set('dyn_expr_f', model.expr_f_impl);
+    ocp_model.set('dyn_expr_f', model.dyn_expr_f_impl);
 end
 
 % constraints
 ocp_model.set('constr_type', 'auto');
-ocp_model.set('constr_expr_h', model.expr_h);
+ocp_model.set('constr_expr_h_0', model.constr_expr_h);
+ocp_model.set('constr_expr_h', model.constr_expr_h);
 U_max = 35;
-ocp_model.set('constr_lh', -U_max); % lower bound on h
-ocp_model.set('constr_uh', U_max);  % upper bound on h
+ocp_model.set('constr_lh_0', -U_max); % lower bound on h
+ocp_model.set('constr_uh_0', U_max);  % upper bound on h
+ocp_model.set('constr_lh', -U_max);
+ocp_model.set('constr_uh', U_max);
 
 ocp_model.set('constr_x0', x0);
 % ... see ocp_model.model_struct to see what other fields can be set

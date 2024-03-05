@@ -30,7 +30,7 @@
 %
 
 %% test of native matlab interface
-clear VARIABLES
+clear all; clc;
 
 % check that env.sh has been run
 env_run = getenv('ENV_RUN');
@@ -158,10 +158,10 @@ ocp_model.set('cost_type_e', cost_type);
 % dynamics
 if (strcmp(sim_method, 'erk'))
 	ocp_model.set('dyn_type', 'explicit');
-	ocp_model.set('dyn_expr_f', model.expr_f_expl);
+	ocp_model.set('dyn_expr_f', model.dyn_expr_f_expl);
 else % irk irk_gnsf
 	ocp_model.set('dyn_type', 'implicit');
-	ocp_model.set('dyn_expr_f', model.expr_f_impl);
+	ocp_model.set('dyn_expr_f', model.dyn_expr_f_impl);
 end
 % constraints
 ocp_model.set('constr_x0', x0);
@@ -174,7 +174,10 @@ if (ng>0)
 	ocp_model.set('constr_lg_e', lg_e);
 	ocp_model.set('constr_ug_e', ug_e);
 elseif (nh>0)
-	ocp_model.set('constr_expr_h', model.expr_h);
+	ocp_model.set('constr_expr_h_0', model.constr_expr_h);
+	ocp_model.set('constr_lh_0', lbu);
+	ocp_model.set('constr_uh_0', ubu);
+	ocp_model.set('constr_expr_h', model.constr_expr_h);
 	ocp_model.set('constr_lh', lbu);
 	ocp_model.set('constr_uh', ubu);
 %	ocp_model.set('constr_expr_h_e', model.expr_h_e);
@@ -212,7 +215,7 @@ ocp_opts.set('qp_solver', qp_solver);
 ocp_opts.set('qp_solver_cond_ric_alg', qp_solver_cond_ric_alg);
 ocp_opts.set('qp_solver_warm_start', qp_solver_warm_start);
 ocp_opts.set('qp_solver_iter_max', qp_solver_max_iter);
-if (~isempty(strfind(qp_solver, 'partial_condensing')))
+if (contains(qp_solver, 'partial_condensing'))
 	ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
 end
 if (strcmp(qp_solver, 'partial_condensing_hpipm'))
@@ -232,9 +235,6 @@ disp(ocp_opts.opts_struct);
 %% acados ocp
 % create ocp
 ocp = acados_ocp(ocp_model, ocp_opts);
-ocp
-disp('ocp.C_ocp');
-disp(ocp.C_ocp);
 %ocp.model_struct
 
 

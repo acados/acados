@@ -66,21 +66,21 @@ ocp_model.set('sym_u', model.sym_u);
 ocp_model.set('sym_xdot', model.sym_xdot);
 
 % cost
-ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
-ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
+ocp_model.set('cost_expr_ext_cost', model.cost_expr_ext_cost);
+ocp_model.set('cost_expr_ext_cost_e', model.cost_expr_ext_cost_e);
 
 % dynamics
 if (strcmp(sim_method, 'erk'))
     ocp_model.set('dyn_type', 'explicit');
-    ocp_model.set('dyn_expr_f', model.expr_f_expl);
+    ocp_model.set('dyn_expr_f', model.dyn_expr_f_expl);
 else % irk irk_gnsf
     ocp_model.set('dyn_type', 'implicit');
-    ocp_model.set('dyn_expr_f', model.expr_f_impl);
+    ocp_model.set('dyn_expr_f', model.dyn_expr_f_impl);
 end
 
 % constraints
 ocp_model.set('constr_type', 'auto');
-ocp_model.set('constr_expr_h', model.expr_h);
+ocp_model.set('constr_expr_h', model.constr_expr_h);
 U_max = 80;
 ocp_model.set('constr_lh', -U_max); % lower bound on h
 ocp_model.set('constr_uh', U_max);  % upper bound on h

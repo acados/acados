@@ -30,17 +30,8 @@
 %
 
 %% test of native matlab interface
-clear all
-
-
-
-% check that env.sh has been run
-env_run = getenv('ENV_RUN');
-if (~strcmp(env_run, 'true'))
-	error('env.sh has not been sourced! Before executing this example, run: source env.sh');
-end
-
-
+clear all; clc;
+check_acados_requirements();
 
 %% arguments
 compile_interface = 'auto';
@@ -53,29 +44,25 @@ sens_forw = 'true';
 num_stages = 4;
 num_steps = 4;
 
-
-
 %% model
 model = linear_mass_spring_model();
 
 nx = model.nx;
 nu = model.nu;
 
-
-
 %% acados sim model
 sim_model = acados_sim_model();
 sim_model.set('T', 0.5);
 if (strcmp(method, 'erk'))
 	sim_model.set('dyn_type', 'explicit');
-	sim_model.set('dyn_expr_f', model.expr_f_expl);
+	sim_model.set('dyn_expr_f', model.dyn_expr_f_expl);
 	sim_model.set('sym_x', model.sym_x);
 	if isfield(model, 'sym_u')
 		sim_model.set('sym_u', model.sym_u);
 	end
 else % irk irk_gnsf
 	sim_model.set('dyn_type', 'implicit');
-	sim_model.set('dyn_expr_f', model.expr_f_impl);
+	sim_model.set('dyn_expr_f', model.dyn_expr_f_impl);
 	sim_model.set('sym_x', model.sym_x);
 	sim_model.set('sym_xdot', model.sym_xdot);
 	if isfield(model, 'sym_u')
@@ -87,9 +74,6 @@ else % irk irk_gnsf
 end
 
 sim_model.model_struct
-
-
-
 
 %% acados sim opts
 sim_opts = acados_sim_opts();
@@ -104,8 +88,6 @@ if (strcmp(method, 'irk_gnsf'))
 end
 
 sim_opts.opts_struct
-
-
 
 %% acados sim
 % create sim

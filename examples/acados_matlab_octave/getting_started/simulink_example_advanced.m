@@ -1,5 +1,5 @@
 %% Simulink example
-clear all;
+clear all; clc;
 
 %% get available simulink_opts with default options
 simulink_opts = get_acados_simulink_opts;
@@ -38,13 +38,19 @@ make_sfun_sim; % integrator
 make_sfun; % ocp solver
 
 
-%% Copy Simulink example blocks into c_generated_code
+%% Copy Simulink example block into c_generated_code
 source_folder = fullfile(pwd, '..');
 target_folder = pwd;
 copyfile( fullfile(source_folder, 'simulink_model_advanced_closed_loop.slx'), target_folder );
 
-%% Open Simulink example blocks
+%% Open Simulink example block
 open_system(fullfile(target_folder, 'simulink_model_advanced_closed_loop'))
 
-%%
-disp('Press play in Simulink!');
+%% Run the Simulink model
+try
+    sim('simulink_model_advanced_closed_loop.slx');
+    cd ..
+catch
+    cd ..
+    error('Simulink advanced closed loop example failed')
+end

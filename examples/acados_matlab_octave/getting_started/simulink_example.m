@@ -1,6 +1,6 @@
 %% Simulink example
 %
-clear all;
+clear all; clc;
 
 %% Run minimal example
 %
@@ -26,5 +26,20 @@ open_system(fullfile(target_folder, 'simulink_model_integrator'))
 open_system(fullfile(target_folder, 'simulink_model_closed_loop'))
 
 
-%%
-disp('Press play in Simulink!');
+%% Run the models
+try
+    sim('simulink_model_integrator.slx');
+    cd ..
+catch
+    cd ..
+    error('Simulink integrator example failed')
+end
+
+try
+    cd c_generated_code
+    sim('simulink_model_closed_loop.slx');
+    cd ..
+catch
+    cd ..
+    error('Simulink closed loop example failed')
+end

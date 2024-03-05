@@ -79,17 +79,19 @@ M = expm([Ts*Ac, Ts*Bc; zeros(nu, 2*nx/2+nu)]);
 A = M(1:nx,1:nx);
 B = M(1:nx,nx+1:end);
 
-expr_f_expl = Ac*sym_x + Bc*sym_u + c_const;
-expr_f_impl = expr_f_expl - sym_xdot;
-expr_phi = A*sym_x + B*sym_u;
+dyn_expr_f_expl = Ac*sym_x + Bc*sym_u + c_const;
+dyn_expr_f_impl = dyn_expr_f_expl - sym_xdot;
+dyn_expr_phi = A*sym_x + B*sym_u;
 
 %% constraints
-expr_h = [sym_u; sym_x];
-expr_h_e = [sym_x];
+constr_expr_h_0 = sym_u;
+constr_expr_h = [sym_u; sym_x];
+constr_expr_h_e = sym_x;
 
-%% nonlnear least squares
-expr_y = [sym_u; sym_x];
-expr_y_e = [sym_x];
+%% nonlinear least squares
+cost_expr_y_0 = sym_u;
+cost_expr_y = [sym_u; sym_x];
+cost_expr_y_e = sym_x;
 
 %% external cost
 yr_u = zeros(nu, 1);
@@ -97,11 +99,13 @@ yr_x = zeros(nx, 1);
 dWu = 2*ones(nu, 1);
 dWx = ones(nx, 1);
 
+ymyr_0 = sym_u - yr_u;
 ymyr = [sym_u; sym_x] - [yr_u; yr_x];
 ymyr_e = sym_x - yr_x;
 
-expr_ext_cost = 0.5 * ymyr' * ([dWu; dWx] .* ymyr);
-expr_ext_cost_e = 0.5 * ymyr_e' * (dWx .* ymyr_e);
+cost_expr_ext_cost_0 = 0.5 * ymyr_0' * (dWu .* ymyr_0);
+cost_expr_ext_cost = 0.5 * ymyr' * ([dWu; dWx] .* ymyr);
+cost_expr_ext_cost_e = 0.5 * ymyr_e' * (dWx .* ymyr_e);
 
 %% populate structure
 model.nx = nx;
@@ -109,13 +113,16 @@ model.nu = nu;
 model.sym_x = sym_x;
 model.sym_xdot = sym_xdot;
 model.sym_u = sym_u;
-model.expr_f_expl = expr_f_expl;
-model.expr_f_impl = expr_f_impl;
-model.expr_phi = expr_phi;
-model.expr_h = expr_h;
-model.expr_h_e = expr_h_e;
-model.expr_y = expr_y;
-model.expr_y_e = expr_y_e;
-model.expr_ext_cost = expr_ext_cost;
-model.expr_ext_cost_e = expr_ext_cost_e;
-
+model.dyn_expr_f_expl = dyn_expr_f_expl;
+model.dyn_expr_f_impl = dyn_expr_f_impl;
+model.dyn_expr_phi = dyn_expr_phi;
+model.constr_expr_h_0 = constr_expr_h_0;
+model.constr_expr_h = constr_expr_h;
+model.constr_expr_h_e = constr_expr_h_e;
+model.cost_expr_y_0 = cost_expr_y_0;
+model.cost_expr_y = cost_expr_y;
+model.cost_expr_y_e = cost_expr_y_e;
+model.cost_expr_ext_cost_0 = cost_expr_ext_cost_0;
+model.cost_expr_ext_cost = cost_expr_ext_cost;
+model.cost_expr_ext_cost_e = cost_expr_ext_cost_e;
+end

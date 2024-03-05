@@ -30,7 +30,7 @@
 %
 
 %% test of native matlab interface
-clear all
+clear all; clc;
 
 model_path = fullfile(pwd,'..','pendulum_on_cart_model');
 addpath(model_path)
@@ -95,20 +95,23 @@ ocp_model.set('sym_xdot', model.sym_xdot);
 
 % % external cost -> with detection linear least squares
 % cost
-ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
-ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
+ocp_model.set('cost_expr_ext_cost', model.cost_expr_ext_cost);
+ocp_model.set('cost_expr_ext_cost_e', model.cost_expr_ext_cost_e);
 
 
 % dynamics
 ocp_model.set('dyn_type', 'explicit');
-ocp_model.set('dyn_expr_f', model.expr_f_expl);
+ocp_model.set('dyn_expr_f', model.dyn_expr_f_expl);
 
 % constraints
 ocp_model.set('constr_type', 'auto');
-ocp_model.set('constr_expr_h', model.expr_h);
+ocp_model.set('constr_expr_h_0', model.constr_expr_h);
+ocp_model.set('constr_expr_h', model.constr_expr_h);
 U_max = 80;
-ocp_model.set('constr_lh', -U_max); % lower bound on h
-ocp_model.set('constr_uh', U_max);  % upper bound on h
+ocp_model.set('constr_lh_0', -U_max); % lower bound on h
+ocp_model.set('constr_uh_0', U_max);  % upper bound on h
+ocp_model.set('constr_lh', -U_max);
+ocp_model.set('constr_uh', U_max);
 ocp_model.set('constr_x0', xcurrent);
 
 %% acados ocp set opts
@@ -142,7 +145,7 @@ sim_model.set('sym_x', model.sym_x);
 sim_model.set('sym_u', model.sym_u);
 sim_model.set('sym_xdot', model.sym_xdot);
 sim_model.set('dyn_type', 'implicit');
-sim_model.set('dyn_expr_f', model.expr_f_impl);
+sim_model.set('dyn_expr_f', model.dyn_expr_f_impl);
 
 % acados sim opts
 sim_opts = acados_sim_opts();
