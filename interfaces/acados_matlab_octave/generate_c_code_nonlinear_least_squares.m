@@ -95,7 +95,7 @@ if isfield(model, 'cost_expr_y_0')
     % generate hessian
     y_0_adj = jtimes(fun, x, y_0, true);
     y_0_hess = jacobian(y_0_adj, [u; x]);
-    dy_dz = jacobian(fun, z)
+    dy_dz = jacobian(fun, z);
     % Set up functions
     y_0_fun = Function([model_name,'_cost_y_0_fun'], {x, u, z, p}, {fun});
     y_0_fun_jac_ut_xt = Function([model_name,'_cost_y_0_fun_jac_ut_xt'], {x, u, z, p}, {fun, [jac_u'; jac_x'], dy_dz});
@@ -150,10 +150,10 @@ if isfield(model, 'cost_expr_y_e')
     ny_e = length(fun);
     if isSX
         y_e = SX.sym('y', ny_e, 1);
-        u = SX.sym('u', 0, 0)
+        u = SX.sym('u', 0, 0);
     else
         y_e = MX.sym('y', ny_e, 1);
-        u = MX.sym('u', 0, 0)
+        u = MX.sym('u', 0, 0);
     end
     % generate hessian
     y_e_adj = jtimes(fun, x, y_e, true);
