@@ -252,7 +252,7 @@ void ocp_nlp_dynamics_cont_opts_initialize_default(void *config_, void *dims_, v
     // sim opts
     config->sim_solver->opts_initialize_default(config->sim_solver, dims->sim, opts->sim_solver);
 
-	// overwrite defaults
+    // overwrite defaults
 
     bool sens_forw = true;
     bool sens_adj = false;
@@ -296,7 +296,7 @@ void ocp_nlp_dynamics_cont_opts_set(void *config_, void *opts_, const char *fiel
     {
         int *int_ptr = value;
         opts->compute_adj = *int_ptr;
-		// TODO set in the sim solver too ???
+        // TODO set in the sim solver too ???
     }
     else if (!strcmp(field, "compute_hess"))
     {
@@ -552,16 +552,16 @@ void ocp_nlp_dynamics_cont_memory_get(void *config_, void *dims_, void *mem_, co
     ocp_nlp_dynamics_cont_dims *dims = dims_;
     ocp_nlp_dynamics_cont_memory *mem = mem_;
 
-	sim_config *sim = config->sim_solver;
+    sim_config *sim = config->sim_solver;
 
     if (!strcmp(field, "time_sim") || !strcmp(field, "time_sim_ad") || !strcmp(field, "time_sim_la"))
     {
-		sim->memory_get(sim, dims->sim, mem->sim_solver, field, value);
+        sim->memory_get(sim, dims->sim, mem->sim_solver, field, value);
     }
     else
     {
-		printf("\nerror: ocp_nlp_dynamics_cont_memory_get: field %s not available\n", field);
-		exit(1);
+        printf("\nerror: ocp_nlp_dynamics_cont_memory_get: field %s not available\n", field);
+        exit(1);
     }
 
 }
@@ -900,14 +900,14 @@ void ocp_nlp_dynamics_cont_compute_fun(void *config_, void *dims_, void *model_,
         mem->set_sim_guess[0] = false;
     }
 
-	// backup sens options
-	bool sens_forw_bkp, sens_adj_bkp, sens_hess_bkp;
+    // backup sens options
+    bool sens_forw_bkp, sens_adj_bkp, sens_hess_bkp;
     config->sim_solver->opts_get(config->sim_solver, opts->sim_solver, "sens_forw", &sens_forw_bkp);
     config->sim_solver->opts_get(config->sim_solver, opts->sim_solver, "sens_adj", &sens_adj_bkp);
     config->sim_solver->opts_get(config->sim_solver, opts->sim_solver, "sens_hess", &sens_hess_bkp);
 
-	// set all sens to false
-	bool sens_all = false;
+    // set all sens to false
+    bool sens_all = false;
     config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_forw", &sens_all);
     config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_adj", &sens_all);
     config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_hess", &sens_all);
@@ -916,7 +916,7 @@ void ocp_nlp_dynamics_cont_compute_fun(void *config_, void *dims_, void *model_,
     config->sim_solver->evaluate(config->sim_solver, work->sim_in, work->sim_out, opts->sim_solver,
             mem->sim_solver, work->sim_solver);
 
-	// restore sens options
+    // restore sens options
     config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_forw", &sens_forw_bkp);
     config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_adj", &sens_adj_bkp);
     config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_hess", &sens_hess_bkp);
