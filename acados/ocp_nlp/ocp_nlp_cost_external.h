@@ -54,7 +54,6 @@ typedef struct
     int nz;  // number of algebraic variables
     int nu;  // number of inputs
     int ns;  // number of slacks
-    // TODO(params_sens): set number of parameters
     int np; // number of parameters
 } ocp_nlp_cost_external_dims;
 

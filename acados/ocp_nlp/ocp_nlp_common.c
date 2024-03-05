@@ -151,7 +151,7 @@ static acados_size_t ocp_nlp_dims_calculate_size_self(int N)
     size += sizeof(ocp_nlp_dims);
 
     // nlp sizes
-    size += 6 * (N + 1) * sizeof(int);  // nv, nx, nu, ni, nz, ns
+    size += 7 * (N + 1) * sizeof(int);  // nv, nx, nu, ni, nz, ns, np
 
     // dynamics
     size += N * sizeof(void *);
@@ -241,6 +241,8 @@ static ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
     assign_and_advance_int(N + 1, &dims->nz, &c_ptr);
     // ns
     assign_and_advance_int(N + 1, &dims->ns, &c_ptr);
+    // np
+    assign_and_advance_int(N + 1, &dims->np, &c_ptr);
 
     // intermediate align
     align_char_to(8, &c_ptr);
@@ -282,6 +284,9 @@ static ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
     // ns
     for(int i=0; i<=N; i++)
         dims->ns[i] = 0;
+    // np
+    for(int i=0; i<=N; i++)
+        dims->np[i] = 0;
     // TODO initialize dims to zero by default also in modules !!!!!!!
 
     // assert
@@ -341,7 +346,7 @@ ocp_nlp_dims *ocp_nlp_dims_assign(void *config_, void *raw_memory)
 void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
                                     const void* value_array)
 {
-    // to set dimension nx, nu, nz, ns (number of slacks = number of soft constraints)
+    // to set dimension nx, nu, nz, ns (number of slacks = number of soft constraints), np
     ocp_nlp_config *config = config_;
     ocp_nlp_dims *dims = dims_;
 
@@ -486,6 +491,32 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
             config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "ns",
                                         &int_array[i]);
         }
+    }
+    else if (!strcmp(field, "np"))
+    {
+        // TODO(params_sens) implement np for constraints
+        // nlp opt var
+        for (int i = 0; i <= N; i++)
+        {
+            // set np
+            dims->np[i] = int_array[i];
+        }
+        // // cost
+        for (int i = 0; i <= N; i++)
+        {
+            config->cost[i]->dims_set(config->cost[i], dims->cost[i], "np", &int_array[i]);
+        }
+        // dynamics
+        for (int i = 0; i < N; i++)
+        {
+            config->dynamics[i]->dims_set(config->dynamics[i], dims->dynamics[i], "np", &int_array[i]);
+        }
+        // // constraints
+        // for (int i = 0; i <= N; i++)
+        // {
+        //     config->constraints[i]->dims_set(config->constraints[i], dims->constraints[i], "np", &int_array[i]);
+        // }
+
     }
     else
     {

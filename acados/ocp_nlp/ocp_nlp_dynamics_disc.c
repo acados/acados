@@ -95,6 +95,12 @@ static void ocp_nlp_dynamics_disc_set_nu1(void *config_, void *dims_, int *nu1)
     dims->nu1 = *nu1;
 }
 
+static void ocp_nlp_dynamics_disc_set_np(void *config_, void *dims_, int *np)
+{
+    ocp_nlp_dynamics_disc_dims *dims = (ocp_nlp_dynamics_disc_dims *) dims_;
+    dims->np = *np;
+}
+
 void ocp_nlp_dynamics_disc_dims_set(void *config_, void *dims_, const char *dim, int* value)
 {
     if (!strcmp(dim, "nx"))
@@ -120,6 +126,10 @@ void ocp_nlp_dynamics_disc_dims_set(void *config_, void *dims_, const char *dim,
     else if (!strcmp(dim, "nu1"))
     {
         ocp_nlp_dynamics_disc_set_nu1(config_, dims_, value);
+    }
+    else if (!strcmp(dim, "np"))
+    {
+        ocp_nlp_dynamics_disc_set_np(config_, dims_, value);
     }
     else
     {
@@ -155,6 +165,10 @@ void ocp_nlp_dynamics_disc_dims_get(void *config_, void *dims_, const char *dim,
     else if (!strcmp(dim, "nu1"))
     {
         *value = dims->nu1;
+    }
+    else if (!strcmp(dim, "np"))
+    {
+        *value = dims->np;
     }
     else
     {

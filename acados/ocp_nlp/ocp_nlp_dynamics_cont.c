@@ -182,6 +182,10 @@ void ocp_nlp_dynamics_cont_dims_get(void *config_, void *dims_, const char *fiel
     {
         *value = dims->nx1;
     }
+    else if (!strcmp(field, "np"))
+    {
+        // np dimension not needed
+    }
     else
     {
         // get GNSF dims from integrator module

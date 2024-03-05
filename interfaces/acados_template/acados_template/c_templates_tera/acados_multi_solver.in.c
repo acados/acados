@@ -210,7 +210,7 @@ ocp_nlp_dims* {{ name }}_acados_create_2_create_and_set_dimensions({{ name }}_so
     /************************************************
     *  dimensions
     ************************************************/
-    #define NINTNP1MEMS 17
+    #define NINTNP1MEMS 18
     int* intNp1mem = (int*)malloc( (N+1)*sizeof(int)*NINTNP1MEMS );
 
     int* nx    = intNp1mem + (N+1)*0;
@@ -230,6 +230,7 @@ ocp_nlp_dims* {{ name }}_acados_create_2_create_and_set_dimensions({{ name }}_so
     int* ny    = intNp1mem + (N+1)*14;
     int* nr    = intNp1mem + (N+1)*15;
     int* nbxe  = intNp1mem + (N+1)*16;
+    int* np    = intNp1mem + (N+1)*17;
 
 {% for jj in range(end=n_phases) %}{# phases loop !#}
     for (i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
@@ -239,6 +240,7 @@ ocp_nlp_dims* {{ name }}_acados_create_2_create_and_set_dimensions({{ name }}_so
         nu[i] = {{ phases_dims[jj].nu }};
         nz[i] = {{ phases_dims[jj].nz }};
         ns[i] = {{ phases_dims[jj].ns }};
+        np[i] = {{ phases_dims[jj].np }};
         // cost
         ny[i] = {{ phases_dims[jj].ny }};
         // constraints
@@ -313,6 +315,7 @@ ocp_nlp_dims* {{ name }}_acados_create_2_create_and_set_dimensions({{ name }}_so
     ocp_nlp_dims_set_opt_vars(nlp_config, nlp_dims, "nu", nu);
     ocp_nlp_dims_set_opt_vars(nlp_config, nlp_dims, "nz", nz);
     ocp_nlp_dims_set_opt_vars(nlp_config, nlp_dims, "ns", ns);
+    ocp_nlp_dims_set_opt_vars(nlp_config, nlp_dims, "np", np);
 
     for (int i = 0; i <= N; i++)
     {

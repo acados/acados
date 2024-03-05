@@ -59,7 +59,7 @@ typedef struct
     int nu;   // number of inputs at the current stage
     int nx1;  // number of states at the next stage
     int nu1;  // number of inputes at the next stage
-    int np;   // number of parameters TODO(params_sens): needs to be set
+    int np;   // number of parameters
 
 } ocp_nlp_dynamics_disc_dims;
 

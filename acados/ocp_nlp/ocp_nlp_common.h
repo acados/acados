@@ -132,6 +132,7 @@ typedef struct ocp_nlp_dims
     int *ni;  // number of two-sided inequality constraints: nb+ng+nh+ns
     int *nz;  // number of algebraic variables
     int *ns;  // number of slack variables
+    int *np;  // number of parameters
     int N;    // number of shooting nodes
 
     void *raw_memory; // Pointer to allocated memory, to be used for freeing
