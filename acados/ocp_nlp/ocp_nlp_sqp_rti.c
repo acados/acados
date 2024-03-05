@@ -639,6 +639,8 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
 #endif
 
     // printf("AS_RTI preparation\n");
+    qp_info *qp_info_;
+    int qp_iter;
 
     // prepare submodules
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
@@ -725,6 +727,9 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_xcond", &tmp_time);
             mem->time_qp_xcond += tmp_time;
 
+            ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
+            qp_iter = qp_info_->num_iter;
+
             // compute correct dual solution in case of Hessian regularization
             acados_tic(&timer1);
             config->regularize->correct_dual_sol(config->regularize,
@@ -789,6 +794,9 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             mem->time_qp_solver_call += tmp_time;
             qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_xcond", &tmp_time);
             mem->time_qp_xcond += tmp_time;
+
+            ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
+            qp_iter = qp_info_->num_iter;
 
             // compute correct dual solution in case of Hessian regularization
             acados_tic(&timer1);
@@ -863,6 +871,9 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             mem->time_qp_solver_call += tmp_time;
             qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_xcond", &tmp_time);
             mem->time_qp_xcond += tmp_time;
+
+            ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
+            qp_iter = qp_info_->num_iter;
 
             // compute correct dual solution in case of Hessian regularization
             acados_tic(&timer1);
