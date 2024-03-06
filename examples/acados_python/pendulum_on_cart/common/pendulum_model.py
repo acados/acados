@@ -61,9 +61,6 @@ def export_pendulum_ode_model() -> AcadosModel:
 
     xdot = vertcat(x1_dot, theta_dot, v1_dot, dtheta_dot)
 
-    # algebraic variables
-    # z = None
-
     # parameters
     p = []
 
@@ -163,3 +160,69 @@ def export_augmented_pendulum_model():
 
     return model
 
+
+def export_pendulum_ode_model_with_mass_as_param(dt) -> AcadosModel:
+
+    model_name = 'pendulum_parametric'
+
+    # constants
+    m = 0.1 # mass of the ball [kg]
+    g = 9.81 # gravity constant [m/s^2]
+    l = 0.8 # length of the rod [m]
+
+    # set up states & controls
+    x1      = SX.sym('x1')
+    theta   = SX.sym('theta')
+    v1      = SX.sym('v1')
+    dtheta  = SX.sym('dtheta')
+
+    x = vertcat(x1, theta, v1, dtheta)
+
+    F = SX.sym('F')
+    u = F
+
+    # xdot
+    x1_dot      = SX.sym('x1_dot')
+    theta_dot   = SX.sym('theta_dot')
+    v1_dot      = SX.sym('v1_dot')
+    dtheta_dot  = SX.sym('dtheta_dot')
+
+    xdot = vertcat(x1_dot, theta_dot, v1_dot, dtheta_dot)
+
+    # parameters
+    m_cart = SX.sym('m_cart')  # mass of the cart [kg]
+    p = m_cart
+
+    # dynamics
+    cos_theta = cos(theta)
+    sin_theta = sin(theta)
+    denominator = m_cart + m - m*cos_theta*cos_theta
+    f_expl = vertcat(v1,
+                     dtheta,
+                     (-m*l*sin_theta*dtheta*dtheta + m*g*cos_theta*sin_theta+F)/denominator,
+                     (-m*l*cos_theta*sin_theta*dtheta*dtheta + F*cos_theta+(m_cart+m)*g*sin_theta)/(l*denominator)
+                     )
+
+    f_impl = xdot - f_expl
+
+    # discrete dynamics via RK4
+    ode = Function('ode', [x, u, p], [f_expl])
+    k1 = ode(x, u, p)
+    k2 = ode(x + dt/2*k1, u, p)
+    k3 = ode(x + dt/2*k2, u, p)
+    k4 = ode(x + dt*k3, u, p)
+
+    xf = x + dt/6 * (k1 + 2*k2 + 2*k3 + k4)
+
+    model = AcadosModel()
+
+    model.disc_dyn_expr = xf
+    model.f_impl_expr = f_impl
+    model.f_expl_expr = f_expl
+    model.x = x
+    model.xdot = xdot
+    model.u = u
+    model.p = p
+    model.name = model_name
+
+    return model
