@@ -675,11 +675,27 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
     }
     else
     {
-        // sanity check
+        // sanity checks
         if (dims->nx[0] != dims->nx[1])
         {
-            printf("dimensions nx[0] != nx[1], cannot perform AS-RTI!");
+            printf("dimensions nx[0] != nx[1], cannot perform AS-RTI!\n");
             exit(1);
+        }
+        if (opts->as_rti_level == LEVEL_C)
+        {
+            int ng_ineq, ng_qp;
+            // does not work for nonlinear constraints yet
+            for (int k = 0; k < dims->N; k++)
+            {
+                config->constraints[k]->dims_get(config->constraints[k], dims->constraints[k], "ng", &ng_ineq);
+                config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, k, "ng", &ng_qp);
+                if (ng_ineq != ng_qp)
+                {
+                    printf("AS-RTI with LEVEL_C not implemented for nonlinear inequality constraints.");
+                    printf("Got ng_ineq = %d != %d = ng_qp at stage %d \n\n", ng_ineq, ng_qp, k);
+                    exit(1);
+                }
+            }
         }
     }
 
