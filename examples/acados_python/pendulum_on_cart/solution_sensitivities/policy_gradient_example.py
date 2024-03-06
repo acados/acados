@@ -97,9 +97,6 @@ def export_parameter_augmented_pendulum_ode_model(param_M_as_state=True) -> Acad
     if param_M_as_state:
         f_expl = vertcat(f_expl, 0)
 
-    # algebraic variables
-    # z = None
-
     # parameters
     param = []
 
@@ -112,7 +109,6 @@ def export_parameter_augmented_pendulum_ode_model(param_M_as_state=True) -> Acad
     model.x = x
     model.xdot = xdot
     model.u = u
-    # model.z = z
     model.p = param
     model.name = model_name
 
