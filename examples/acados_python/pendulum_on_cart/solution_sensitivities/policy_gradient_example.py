@@ -293,6 +293,7 @@ def main(param_M_as_state: bool, idxp: int, qp_solver_ric_alg: int, eigen_analys
         sensitivity_solver.solve_for_x0(x, fail_on_nonzero_status=False, print_stats_on_failure=False)
         residuals = sensitivity_solver.get_stats("residuals")
         print(f"residuals sensitivity_solver {residuals} status {sensitivity_solver.status}")
+
         if sensitivity_solver.status not in [0, 2]:
             print(f"warning")
             breakpoint()
@@ -303,6 +304,11 @@ def main(param_M_as_state: bool, idxp: int, qp_solver_ric_alg: int, eigen_analys
         # Calculate the policy gradient
         sensitivity_solver.eval_param_sens(idxp)
         sens_u[i] = sensitivity_solver.get(0, "sens_u")[0]
+
+        # new interface
+        _, sens_u_ = sensitivity_solver.eval_solution_sensitivity(0, "initial_state")
+
+        assert sens_u[i] == sens_u_[:, idxp]
 
         # plot solution
         # if i < 0:
