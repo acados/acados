@@ -679,19 +679,19 @@ class AcadosOcpSolver:
             self.__get_pointers_solver()
 
 
-    def eval_solution_sensitivity(self, stages: Union[int, List[int]], with_respect_to: str) -> Tuple[np.ndarray, np.ndarray]:
+    def eval_solution_sensitivity(self, output_stages: Union[int, List[int]], with_respect_to: str) -> Tuple[Union[List[np.ndarray], np.ndarray], Union[List[np.ndarray], np.ndarray]]:
         """
-        Evaluate the sensitivity of the current solution x_i, u_i with respect to the initial state or the parameters for all stages i in `stages`.
+        Evaluate the sensitivity of the current solution x_i, u_i with respect to the initial state or the parameters for all stages i in `output_stages`.
 
-            :param stages: stages for which the sensitivities are returned, int or list of int
+            :param output_stages: stages for which the sensitivities are returned, int or list of int
             :param with_respect_to: string in ["initital_state", "params_global"]
             :returns: a tuple (sens_x, sens_u) with the solution sensitivities.
-                    If stages is a list, sens_x has shape (len(stages), nx, ngrad). For sens_u, the first dimension is len(stages) or len(stages)-1 depending on whether N is included or not.
-                    If stages is a scalar, sens_x has shape (nx, ngrad).
+                    If output_stages is a list, sens_x is a list of the same length. For sens_u, the list has length len(output_stages) or len(output_stages)-1 depending on whether N is included or not.
+                    If output_stages is a scalar, sens_x and sens_u are np.ndarrays of shape (nx[output_stages], ngrad) and (nu[output_stages], ngrad).
         """
 
-        stages_is_list = isinstance(stages, list)
-        stages_ = stages if stages_is_list else [stages]
+        output_stages_is_list = isinstance(output_stages, list)
+        output_stages_ = output_stages if output_stages_is_list else [output_stages]
 
         sens_x = []
         sens_u = []
@@ -702,16 +702,9 @@ class AcadosOcpSolver:
 
         N = self.acados_ocp.dims.N
 
-        for s in stages_:
+        for s in output_stages_:
             if not isinstance(s, int) or s < 0 or s > N:
                 raise Exception("AcadosOcpSolver.eval_solution_sensitivity(): stages need to be int or [int] and in [0, N].")
-
-        N_in_stages = N in stages_
-        num_stages_x = len(stages_)
-        num_stages_u = num_stages_x - 1 if N_in_stages else num_stages_x
-
-        if num_stages_x != len(set(stages_)):
-            raise Exception("AcadosOcpSolver.eval_solution_sensitivity(): elements in stages need to be unique.")
 
         if with_respect_to == "initial_state":
             ngrad = nx
@@ -724,21 +717,33 @@ class AcadosOcpSolver:
         else:
             raise Exception(f"AcadosOcpSolver.eval_solution_sensitivity(): Unknown field: {with_respect_to=}")
 
-        sens_x = np.zeros((num_stages_x, nx, ngrad))
-        sens_u = np.zeros((num_stages_u, nu, ngrad))
+        # initialize jacobians with zeros
+        for s in output_stages_:
+            self.__acados_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
+            self.__acados_lib.ocp_nlp_dims_get_from_attr.restype = c_int
+            nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "x".encode('utf-8'))
+
+            sens_x.append(np.zeros((nx, ngrad)))
+
+            if s < N:
+                self.__acados_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
+                self.__acados_lib.ocp_nlp_dims_get_from_attr.restype = c_int
+                nu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "u".encode('utf-8'))
+
+                sens_u.append(np.zeros((nu, ngrad)))
 
         for k in range(ngrad):
             self.eval_param_sens(k, 0, field)
 
-            for n, s in enumerate(stages_):
-                sens_x[n, :, k] = self.get(s, "sens_x")
+            for n, s in enumerate(output_stages_):
+                sens_x[n][:, k] = self.get(s, "sens_x")
 
                 if s < N:
-                    sens_u[n, :, k] = self.get(s, "sens_u")
+                    sens_u[n][:, k] = self.get(s, "sens_u")
 
-        if not stages_is_list:
-            sens_x = np.squeeze(sens_x, axis=0)
-            sens_u = np.squeeze(sens_u, axis=0)
+        if not output_stages_is_list:
+            sens_x = sens_x[0]
+            sens_u = sens_u[0]
 
         return sens_x, sens_u
 
