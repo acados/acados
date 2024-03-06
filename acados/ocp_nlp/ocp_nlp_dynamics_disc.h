@@ -153,7 +153,7 @@ typedef struct
     external_function_generic *disc_dyn_fun;
     external_function_generic *disc_dyn_fun_jac;
     external_function_generic *disc_dyn_fun_jac_hess;
-    // external_function_generic *disc_dyn_jac_params; // TODO(params_sens): casadi function providing the jacobian of dynamics wrt. p
+    external_function_generic *disc_dyn_params_jac;
 } ocp_nlp_dynamics_disc_model;
 
 //

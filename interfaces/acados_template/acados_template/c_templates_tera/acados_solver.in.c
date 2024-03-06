@@ -575,6 +575,17 @@ void {{ model.name }}_acados_create_3_create_and_set_functions({{ model.name }}_
         {%- endif %}
     }
 
+    capsule->discr_dyn_phi_params_jac = (external_function_param_{{ model.dyn_ext_fun_type }} *) malloc(sizeof(external_function_param_{{ model.dyn_ext_fun_type }})*N);
+    for (int i = 0; i < N; i++)
+    {
+        {%- if model.dyn_ext_fun_type == "casadi" %}
+        MAP_CASADI_FNC(discr_dyn_phi_params_jac[i], {{ model.name }}_dyn_disc_phi_params_jac);
+        {%- else %}
+        capsule->discr_dyn_phi_params_jac[i].fun = &{{ model.dyn_disc_params_jac }};
+        external_function_param_{{ model.dyn_ext_fun_type }}_create(&capsule->discr_dyn_phi_params_jac[i], {{ dims.np }});
+        {%- endif %}
+    }
+
   {%- if solver_options.hessian_approx == "EXACT" %}
     capsule->discr_dyn_phi_fun_jac_ut_xt_hess = (external_function_param_{{ model.dyn_ext_fun_type }} *) malloc(sizeof(external_function_param_{{ model.dyn_ext_fun_type }})*N);
     for (int i = 0; i < N; i++)
@@ -848,6 +859,8 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "disc_dyn_fun", &capsule->discr_dyn_phi_fun[i]);
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "disc_dyn_fun_jac",
                                    &capsule->discr_dyn_phi_fun_jac_ut_xt[i]);
+        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "disc_dyn_params_jac",
+                                   &capsule->discr_dyn_phi_params_jac[i]);
         {%- if solver_options.hessian_approx == "EXACT" %}
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "disc_dyn_fun_jac_hess",
                                    &capsule->discr_dyn_phi_fun_jac_ut_xt_hess[i]);
@@ -2769,12 +2782,14 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
     {
         external_function_param_{{ model.dyn_ext_fun_type }}_free(&capsule->discr_dyn_phi_fun[i]);
         external_function_param_{{ model.dyn_ext_fun_type }}_free(&capsule->discr_dyn_phi_fun_jac_ut_xt[i]);
+        external_function_param_{{ model.dyn_ext_fun_type }}_free(&capsule->discr_dyn_phi_params_jac[i]);
     {%- if solver_options.hessian_approx == "EXACT" %}
         external_function_param_{{ model.dyn_ext_fun_type }}_free(&capsule->discr_dyn_phi_fun_jac_ut_xt_hess[i]);
     {%- endif %}
     }
     free(capsule->discr_dyn_phi_fun);
     free(capsule->discr_dyn_phi_fun_jac_ut_xt);
+    free(capsule->discr_dyn_phi_params_jac);
     {%- if solver_options.hessian_approx == "EXACT" %}
     free(capsule->discr_dyn_phi_fun_jac_ut_xt_hess);
     {%- endif %}

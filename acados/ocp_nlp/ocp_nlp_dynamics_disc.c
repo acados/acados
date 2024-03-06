@@ -591,6 +591,10 @@ void ocp_nlp_dynamics_disc_model_set(void *config_, void *dims_, void *model_, c
     {
         model->disc_dyn_fun_jac_hess = (external_function_generic *) value;
     }
+    else if (!strcmp(field, "disc_dyn_params_jac"))
+    {
+        model->disc_dyn_params_jac = (external_function_generic *) value;
+    }
     else
     {
         printf("\nerror: field %s not available in ocp_nlp_dynamics_disc_model_set\n", field);

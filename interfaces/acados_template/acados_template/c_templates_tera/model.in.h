@@ -192,6 +192,13 @@ const int *{{ model.name }}_dyn_disc_phi_fun_jac_sparsity_out(int);
 int {{ model.name }}_dyn_disc_phi_fun_jac_n_in(void);
 int {{ model.name }}_dyn_disc_phi_fun_jac_n_out(void);
 
+int {{ model.name }}_dyn_disc_phi_params_jac(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ model.name }}_dyn_disc_phi_params_jac_work(int *, int *, int *, int *);
+const int *{{ model.name }}_dyn_disc_phi_params_jac_sparsity_in(int);
+const int *{{ model.name }}_dyn_disc_phi_params_jac_sparsity_out(int);
+int {{ model.name }}_dyn_disc_phi_params_jac_n_in(void);
+int {{ model.name }}_dyn_disc_phi_params_jac_n_out(void);
+
 {%- if hessian_approx == "EXACT" %}
 int {{ model.name }}_dyn_disc_phi_fun_jac_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_dyn_disc_phi_fun_jac_hess_work(int *, int *, int *, int *);

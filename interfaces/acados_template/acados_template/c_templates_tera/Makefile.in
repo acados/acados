@@ -181,6 +181,7 @@ MODEL_SRC+= {{ model.name }}_model/{{ model.name }}_gnsf_get_matrices_fun.c
 {%- elif solver_options.integrator_type == "DISCRETE" %}
 MODEL_SRC+= {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun.c
 MODEL_SRC+= {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun_jac.c
+MODEL_SRC+= {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_params_jac.c
 		{%- if hessian_approx == "EXACT" %}
 MODEL_SRC+= {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun_jac_hess.c
 		{%- endif %}

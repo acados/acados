@@ -216,6 +216,7 @@ set(MODEL_SRC
 {%- elif solver_options.integrator_type == "DISCRETE" %}
     {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun.c
     {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun_jac.c
+    {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_params_jac.c
 		{%- if hessian_approx == "EXACT" %}
     {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun_jac_hess.c
 		{%- endif %}

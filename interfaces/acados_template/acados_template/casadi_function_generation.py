@@ -149,6 +149,7 @@ def generate_c_code_discrete_dynamics( model, opts ):
     # generate jacobians
     ux = ca.vertcat(u,x)
     jac_ux = ca.jacobian(phi, ux)
+    jac_p = ca.jacobian(phi, p)
     # generate adjoint
     adj_ux = ca.jtimes(phi, ux, lam, True)
     # generate hessian
@@ -170,6 +171,10 @@ def generate_c_code_discrete_dynamics( model, opts ):
 
     fun_name = model_name + '_dyn_disc_phi_fun_jac_hess'
     phi_fun_jac_ut_xt_hess = ca.Function(fun_name, [x, u, lam, p], [phi, jac_ux.T, hess_ux])
+    phi_fun_jac_ut_xt_hess.generate(fun_name, casadi_codegen_opts)
+
+    fun_name = model_name + '_dyn_disc_phi_params_jac'
+    phi_fun_jac_ut_xt_hess = ca.Function(fun_name, [x, u, p], [jac_p])
     phi_fun_jac_ut_xt_hess.generate(fun_name, casadi_codegen_opts)
 
     os.chdir(cwd)
