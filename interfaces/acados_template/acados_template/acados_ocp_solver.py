@@ -679,7 +679,8 @@ class AcadosOcpSolver:
             self.__get_pointers_solver()
 
 
-    def eval_solution_sensitivity(self, output_stages: Union[int, List[int]], with_respect_to: str) -> Tuple[Union[List[np.ndarray], np.ndarray], Union[List[np.ndarray], np.ndarray]]:
+    def eval_solution_sensitivity(self, output_stages: Union[int, List[int]], with_respect_to: str) \
+                -> Tuple[Union[List[np.ndarray], np.ndarray], Union[List[np.ndarray], np.ndarray]]:
         """
         Evaluate the sensitivity of the current solution x_i, u_i with respect to the initial state or the parameters for all stages i in `output_stages`.
 

@@ -543,10 +543,6 @@ acados_size_t ocp_nlp_dynamics_disc_model_calculate_size(void *config_, void *di
 {
     // ocp_nlp_dynamics_config *config = config_;
 
-    // extract dims
-    // int nx = dims->nx;
-    // int nu = dims->nu;
-
     acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_dynamics_disc_model);
@@ -558,13 +554,8 @@ acados_size_t ocp_nlp_dynamics_disc_model_calculate_size(void *config_, void *di
 
 void *ocp_nlp_dynamics_disc_model_assign(void *config_, void *dims_, void *raw_memory)
 {
-    // ocp_nlp_dynamics_config *config = config_;
 
     char *c_ptr = (char *) raw_memory;
-
-    // extract dims
-    // int nx = dims->nx;
-    // int nu = dims->nu;
 
     // struct
     ocp_nlp_dynamics_disc_model *model = (ocp_nlp_dynamics_disc_model *) c_ptr;
@@ -789,12 +780,7 @@ void ocp_nlp_dynamics_disc_compute_fun(void *config_, void *dims_, void *model_,
 
 void ocp_nlp_dynamics_disc_compute_params_jac(void *config_, void *dims_, void *model_, void *opts_, void *mem_, void *work_)
 {
-    // ocp_nlp_dynamics_disc_cast_workspace(config_, dims_, opts_, work_);
-
-    // ocp_nlp_dynamics_config *config = config_;
     ocp_nlp_dynamics_disc_dims *dims = dims_;
-    // ocp_nlp_dynamics_disc_opts *opts = opts_;
-    // ocp_nlp_dynamics_disc_workspace *work = work_;
     ocp_nlp_dynamics_disc_memory *memory = mem_;
     ocp_nlp_dynamics_disc_model *model = model_;
 
@@ -815,11 +801,10 @@ void ocp_nlp_dynamics_disc_compute_params_jac(void *config_, void *dims_, void *
     u_in.x = ux;
     u_in.xi = 0;
 
-    struct blasfeo_dvec_args pi_in;  // input pi of external fun;
+    struct blasfeo_dvec_args pi_in; // input pi of external fun;
     pi_in.x = memory->pi;
     pi_in.xi = 0;
 
-    // TODO(params_sens) maybe not use BLASFEO_DMAT as ouput?
 	ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
 	ext_fun_in[0] = &x_in;
 	ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
@@ -841,22 +826,29 @@ void ocp_nlp_dynamics_disc_compute_params_jac(void *config_, void *dims_, void *
 }
 
 
-void ocp_nlp_dynamics_disc_memory_get_params_grad(void *config_, void *dims_, void *opts_, void *memory_, int index, struct blasfeo_dvec *out, int offset)
+void ocp_nlp_dynamics_disc_memory_get_params_grad(void *config_, void *dims_, void *opts_, void *memory_,
+                                                        int index, struct blasfeo_dvec *out, int offset)
 {
-    // ocp_nlp_dynamics_config *config = config_;
     ocp_nlp_dynamics_disc_dims *dims = dims_;
-    // ocp_nlp_dynamics_disc_opts *opts = opts_;
     ocp_nlp_dynamics_disc_memory *memory = memory_;
 
     int nx1 = dims->nx1;
-    int np = dims->np;
 
     blasfeo_dcolex(nx1, &memory->params_jac, 0, index, out, offset);
-
-    // printf("extracted col\n");
-    // blasfeo_print_dvec(nx1, out, offset);
 }
 
+
+void ocp_nlp_dynamics_disc_memory_get_params_lag_grad(void *config_, void *dims_, void *opts_, void *memory_,
+                                                        int index, struct blasfeo_dvec *out, int offset)
+{
+    ocp_nlp_dynamics_disc_dims *dims = dims_;
+    ocp_nlp_dynamics_disc_memory *memory = memory_;
+
+    int nx = dims->nx;
+    int nu = dims->nu;
+
+    blasfeo_dcolex(nx + nu, &memory->params_lag_jac, 0, index, out, offset);
+}
 
 int ocp_nlp_dynamics_disc_precompute(void *config_, void *dims, void *model_, void *opts_,
                                         void *mem_, void *work_)
@@ -897,6 +889,7 @@ void ocp_nlp_dynamics_disc_config_initialize_default(void *config_)
     config->memory_set_z_alg_ptr = &ocp_nlp_dynamics_disc_memory_set_z_alg_ptr;
     config->memory_get = &ocp_nlp_dynamics_disc_memory_get;
     config->memory_get_params_grad = &ocp_nlp_dynamics_disc_memory_get_params_grad;
+    config->memory_get_params_lag_grad = &ocp_nlp_dynamics_disc_memory_get_params_lag_grad;
     config->workspace_calculate_size = &ocp_nlp_dynamics_disc_workspace_calculate_size;
     config->initialize = &ocp_nlp_dynamics_disc_initialize;
     config->update_qp_matrices = &ocp_nlp_dynamics_disc_update_qp_matrices;

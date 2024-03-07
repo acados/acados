@@ -1014,17 +1014,15 @@ void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *
     ocp_nlp_out *sens_nlp_out = sens_nlp_out_;
 
     ocp_nlp_sqp_workspace *work = work_;
-    // ocp_nlp_sqp_cast_workspace(config, dims, opts, mem, work);
     ocp_nlp_workspace *nlp_work = work->nlp_work;
 
     d_ocp_qp_copy_all(nlp_mem->qp_in, work->tmp_qp_in);
     d_ocp_qp_set_rhs_zero(work->tmp_qp_in);
 
-    double one = 1.0;
-
 
     if ((!strcmp("ex", field)) && (stage==0))
     {
+        double one = 1.0;
         d_ocp_qp_set_el("lbx", stage, index, &one, work->tmp_qp_in);
         d_ocp_qp_set_el("ubx", stage, index, &one, work->tmp_qp_in);
     }
@@ -1041,8 +1039,9 @@ void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *
         {
             config->dynamics[i]->memory_get_params_grad(config->dynamics[i], dims->dynamics[i], opts,
                                     nlp_mem->dynamics[i], index, &work->tmp_qp_in->b[i], 0);
+            config->dynamics[i]->memory_get_params_lag_grad(config->dynamics[i], dims->dynamics[i], opts,
+                        nlp_mem->dynamics[i], index, &work->tmp_qp_in->rqz[i], 0);
         }
-
         // print_ocp_qp_in(work->tmp_qp_in);
     }
     else
@@ -1052,13 +1051,12 @@ void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *
     }
 
 
-//        d_ocp_qp_print(work->tmp_qp_in->dim, work->tmp_qp_in);
+    // d_ocp_qp_print(work->tmp_qp_in->dim, work->tmp_qp_in);
     config->qp_solver->eval_sens(config->qp_solver, dims->qp_solver, work->tmp_qp_in, work->tmp_qp_out,
                             opts->nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
-//        d_ocp_qp_sol_print(work->tmp_qp_out->dim, work->tmp_qp_out);
+    // d_ocp_qp_sol_print(work->tmp_qp_out->dim, work->tmp_qp_out);
 
     /* copy tmp_qp_out into sens_nlp_out */
-
     int i;
 
     int N = dims->N;
