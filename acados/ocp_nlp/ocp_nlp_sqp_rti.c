@@ -118,6 +118,7 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_,
     opts->as_rti_level = LEVEL_A;
     opts->as_rti_advancement_strategy = SIMULATE_ADVANCE;
     opts->as_rti_iter = 1;
+    opts->rti_log_residuals = 0;
 
     return;
 }
@@ -201,6 +202,11 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_,
             int* as_rti_iter = (int *) value;
             opts->as_rti_iter = *as_rti_iter;
         }
+        else if (!strcmp(field, "rti_log_residuals"))
+        {
+            int* rti_log_residuals = (int *) value;
+            opts->rti_log_residuals = *rti_log_residuals;
+        }
         else if (!strcmp(field, "as_rti_level"))
         {
             int* as_rti_level = (int *) value;
@@ -255,10 +261,12 @@ acados_size_t ocp_nlp_sqp_rti_memory_calculate_size(void *config_,
     size += ocp_nlp_memory_calculate_size(config, dims, nlp_opts);
 
     // stat
-    int stat_m = 1+1;
-    int stat_n = 2;
+    int stat_m = 2 + opts->as_rti_iter;
+    int stat_n = 2; // qp_status, qp_iter
+    if (opts->rti_log_residuals)
+        stat_n += 4;  // nlp_res
     if (opts->ext_qp_res)
-        stat_n += 4;
+        stat_n += 4;  // qp_res
     size += stat_n*stat_m*sizeof(double);
 
     size += 8;  // initial align
@@ -292,10 +300,13 @@ void *ocp_nlp_sqp_rti_memory_assign(void *config_, void *dims_,
 
     // stat
     mem->stat = (double *) c_ptr;
-    mem->stat_m = 1+1;
-    mem->stat_n = 2;
+    mem->stat_m = 2 + opts->as_rti_iter;
+    mem->stat_n = 2; // qp_status, qp_iter
+    if (opts->rti_log_residuals)
+        mem->stat_n += 4;  // nlp_res
     if (opts->ext_qp_res)
-        mem->stat_n += 4;
+        mem->stat_n += 4;  // qp_res
+    printf("stat_m = %d, stat_n = %d", mem->stat_m, mem->stat_n);
     c_ptr += mem->stat_m*mem->stat_n*sizeof(double);
 
     mem->status = ACADOS_READY;
@@ -401,6 +412,7 @@ static void reset_stats_and_sub_timers(ocp_nlp_sqp_rti_memory *mem)
     mem->time_qp_solver_call = 0.0;
     mem->time_qp_xcond = 0.0;
     mem->time_glob = 0.0;
+    mem->sqp_iter = 0;
 }
 
 
@@ -672,6 +684,23 @@ static void as_rti_advance_problem(ocp_nlp_config *config, ocp_nlp_dims *dims, o
 }
 
 
+static void as_rti_store_residuals_in_stats(ocp_nlp_sqp_rti_opts *opts, ocp_nlp_sqp_rti_memory *mem)
+{
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    ocp_nlp_res *nlp_res = nlp_mem->nlp_res;
+    if (mem->sqp_iter < mem->stat_m)
+    {
+        int m_offset = 2 + 4 * opts->ext_qp_res;
+        // printf("storing residuals AS RTI, m_offset %d\n", m_offset);
+        // printf("%e\t%e\t%e\t%e\n", nlp_res->inf_norm_res_stat, nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_ineq, nlp_res->inf_norm_res_comp);
+        mem->stat[mem->stat_n * mem->sqp_iter+0+m_offset] = nlp_res->inf_norm_res_stat;
+        mem->stat[mem->stat_n * mem->sqp_iter+1+m_offset] = nlp_res->inf_norm_res_eq;
+        mem->stat[mem->stat_n * mem->sqp_iter+2+m_offset] = nlp_res->inf_norm_res_ineq;
+        mem->stat[mem->stat_n * mem->sqp_iter+3+m_offset] = nlp_res->inf_norm_res_comp;
+    }
+}
+
+
 static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
     ocp_nlp_out *nlp_out, ocp_nlp_sqp_rti_opts *opts, ocp_nlp_sqp_rti_memory *mem, ocp_nlp_sqp_rti_workspace *work)
 {
@@ -717,23 +746,29 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
         // perform QP solve (implemented as feedback)
         ocp_nlp_sqp_rti_feedback_step(config, dims, nlp_in, nlp_out, opts, mem, work);
 
-        // DEBUG
-        // printf("AS-RTI prep qp\n");
-        // printf("qp_in\n");
-        // d_ocp_qp_print(nlp_mem->qp_in->dim, nlp_mem->qp_in);
+        // save statistics
+        mem->stat[mem->stat_n * mem->sqp_iter+0] = qp_status;
+        mem->stat[mem->stat_n * mem->sqp_iter+1] = qp_iter;
     }
     else if (opts->as_rti_level == LEVEL_B && !mem->is_first_call)
     {
         // perform zero-order iterations
         int qp_status;
         double alpha, tmp_time;
-        // TODO: how to log qp_iter?
-        for (int i = 0; i < opts->as_rti_iter; i++)
+        for (mem->sqp_iter = 0; mem->sqp_iter < opts->as_rti_iter; mem->sqp_iter++)
         {
             acados_tic(&timer1);
             // zero order QP update
             ocp_nlp_zero_order_qp_update(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
             mem->time_lin += acados_toc(&timer1);
+
+            if (opts->rti_log_residuals)
+            {
+                // TODO: evaluate what is needed!!
+                ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_mem->nlp_res, nlp_mem);
+                as_rti_store_residuals_in_stats(opts, mem);
+            }
+
             // rhs regularization
             acados_tic(&timer1);
             config->regularize->regularize_rhs(config->regularize,
@@ -756,6 +791,10 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
             qp_iter = qp_info_->num_iter;
 
+            // save statistics
+            mem->stat[mem->stat_n * mem->sqp_iter+0] = qp_status;
+            mem->stat[mem->stat_n * mem->sqp_iter+1] = qp_iter;
+
             // compute correct dual solution in case of Hessian regularization
             acados_tic(&timer1);
             config->regularize->correct_dual_sol(config->regularize,
@@ -772,9 +811,9 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             }
 
             if (nlp_opts->print_level > 0) {
-                printf("\n------- qp_in B-iter %d --------\n", i);
+                printf("\n------- qp_in B-iter %d --------\n", mem->sqp_iter);
                 print_ocp_qp_in(nlp_mem->qp_in);
-                printf("\n------- qp_out B-iter %d --------\n", i);
+                printf("\n------- qp_out B-iter %d --------\n", mem->sqp_iter);
                 print_ocp_qp_out(nlp_mem->qp_out);
             }
 
@@ -794,14 +833,26 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
         // perform iterations
         int qp_status;
         double alpha, tmp_time;
-        // TODO: how to log qp_iter?
-        for (int i = 0; i < opts->as_rti_iter; i++)
+        for (mem->sqp_iter = 0; mem->sqp_iter < opts->as_rti_iter; mem->sqp_iter++)
         {
             // double norm, tmp_norm = 0.0;
             acados_tic(&timer1);
             // QP update
             ocp_nlp_level_c_update(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
             mem->time_lin += acados_toc(&timer1);
+
+            if (opts->rti_log_residuals)
+            {
+                // TODO: evaluate cost gradient for lagrange gradient
+                // for (int k = 0; k < dims->N; k++)
+                // {
+                //     config[k]->cost[k]->
+                // }
+                ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_mem->nlp_res, nlp_mem);
+                as_rti_store_residuals_in_stats(opts, mem);
+            }
+
+
             // rhs regularization
             acados_tic(&timer1);
             config->regularize->regularize_rhs(config->regularize,
@@ -824,6 +875,10 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
             qp_iter = qp_info_->num_iter;
 
+            // save statistics
+            mem->stat[mem->stat_n * mem->sqp_iter+0] = qp_status;
+            mem->stat[mem->stat_n * mem->sqp_iter+1] = qp_iter;
+
             // compute correct dual solution in case of Hessian regularization
             acados_tic(&timer1);
             config->regularize->correct_dual_sol(config->regularize,
@@ -840,9 +895,9 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             }
 
             if (nlp_opts->print_level > 0) {
-                printf("\n------- qp_in B-iter %d --------\n", i);
+                printf("\n------- qp_in B-iter %d --------\n", mem->sqp_iter);
                 print_ocp_qp_in(nlp_mem->qp_in);
-                printf("\n------- qp_out B-iter %d --------\n", i);
+                printf("\n------- qp_out B-iter %d --------\n", mem->sqp_iter);
                 print_ocp_qp_out(nlp_mem->qp_out);
             }
 
@@ -869,9 +924,14 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
         // perform k full SQP iterations
         int qp_status;
         double alpha, tmp_time;
-        // TODO: how to log qp_iter?
-        for (int i = 0; i < opts->as_rti_iter; i++)
+        for (mem->sqp_iter = 0; mem->sqp_iter < opts->as_rti_iter; mem->sqp_iter++)
         {
+            if (opts->rti_log_residuals)
+            {
+                // TODO: evaluate what is needed!!
+                ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_mem->nlp_res, nlp_mem);
+                as_rti_store_residuals_in_stats(opts, mem);
+            }
             acados_tic(&timer1);
             // linearize NLP
             ocp_nlp_approximate_qp_matrices(config, dims, nlp_in,
@@ -900,6 +960,10 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
 
             ocp_qp_out_get(nlp_mem->qp_out, "qp_info", &qp_info_);
             qp_iter = qp_info_->num_iter;
+
+            // save statistics
+            mem->stat[mem->stat_n * mem->sqp_iter+0] = qp_status;
+            mem->stat[mem->stat_n * mem->sqp_iter+1] = qp_iter;
 
             // compute correct dual solution in case of Hessian regularization
             acados_tic(&timer1);
@@ -1135,7 +1199,7 @@ void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_,
     if (!strcmp("sqp_iter", field))
     {
         int *value = return_value_;
-        *value = 1;
+        *value = mem->sqp_iter;
     }
     else if (!strcmp("status", field))
     {
@@ -1202,7 +1266,7 @@ void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_,
     }
     else if (!strcmp("statistics", field))
     {
-        int n_row = 2;
+        int n_row = mem->stat_m<mem->sqp_iter+1 ? mem->stat_m : mem->sqp_iter+1;
         double *value = return_value_;
         for (int ii=0; ii<n_row; ii++)
         {

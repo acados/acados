@@ -87,6 +87,7 @@ typedef struct
     as_rti_level_t as_rti_level;
     as_rti_advancement_strategy_t as_rti_advancement_strategy;
     int as_rti_iter;
+    int rti_log_residuals;
 
 } ocp_nlp_sqp_rti_opts;
 
@@ -129,6 +130,7 @@ typedef struct
     double *stat;
     int stat_m;
     int stat_n;
+    int sqp_iter;
 
     int status;
     bool is_first_call;

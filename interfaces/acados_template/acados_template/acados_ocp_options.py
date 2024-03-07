@@ -71,6 +71,7 @@ class AcadosOcpOptions:
         self.__nlp_solver_tol_comp = 1e-6
         self.__nlp_solver_max_iter = 100
         self.__nlp_solver_ext_qp_res = 0
+        self.__rti_log_residuals = 0
         self.__Tsim = None
         self.__print_level = 0
         self.__initialize_t_slacks = 0
@@ -516,6 +517,17 @@ class AcadosOcpOptions:
         Default: 0.
         """
         return self.__nlp_solver_ext_qp_res
+
+
+    @property
+    def rti_log_residuals(self):
+        """Determines if residuals are computed and logged within RTI / AS-RTI iterations (for debugging).
+
+        Type: int; 0 or 1;
+        Default: 0.
+        """
+        return self.__rti_log_residuals
+
 
     @property
     def nlp_solver_tol_comp(self):
@@ -998,6 +1010,13 @@ class AcadosOcpOptions:
             self.__nlp_solver_ext_qp_res = nlp_solver_ext_qp_res
         else:
             raise Exception('Invalid nlp_solver_ext_qp_res value. nlp_solver_ext_qp_res must be in [0, 1].')
+
+    @rti_log_residuals.setter
+    def rti_log_residuals(self, rti_log_residuals):
+        if rti_log_residuals in [0, 1]:
+            self.__rti_log_residuals = rti_log_residuals
+        else:
+            raise Exception('Invalid rti_log_residuals value. rti_log_residuals must be in [0, 1].')
 
     @nlp_solver_tol_comp.setter
     def nlp_solver_tol_comp(self, nlp_solver_tol_comp):

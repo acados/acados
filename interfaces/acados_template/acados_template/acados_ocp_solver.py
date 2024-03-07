@@ -837,14 +837,23 @@ class AcadosOcpSolver:
                         stat[8][jj], stat[9][jj], stat[10][jj], stat[11][jj]))
             print('\n')
         elif self.solver_options['nlp_solver_type'] == 'SQP_RTI':
-            print('\niter\tqp_stat\tqp_iter')
-            if stat.shape[0]>3:
-                print('\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp')
+            header = '\niter\tqp_stat\tqp_iter'
+            if self.solver_options['nlp_solver_ext_qp_res'] == 1:
+                header += '\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp'
+            if self.solver_options['rti_log_residuals'] == 1:
+                header += '\tres_stat\tres_eq\tres_ineq\tres_comp'
+            print(header)
             for jj in range(stat.shape[1]):
-                print('{:d}\t{:d}\t{:d}'.format( int(stat[0][jj]), int(stat[1][jj]), int(stat[2][jj])))
-                if stat.shape[0]>3:
-                    print('\t{:e}\t{:e}\t{:e}\t{:e}'.format( \
-                         stat[3][jj], stat[4][jj], stat[5][jj], stat[6][jj]))
+                line = '{:d}\t{:d}\t{:d}'.format( int(stat[0][jj]), int(stat[1][jj]), int(stat[2][jj]))
+                offset = 2
+                if self.solver_options['nlp_solver_ext_qp_res'] == 1:
+                    line += '\t{:e}\t{:e}\t{:e}\t{:e}'.format( \
+                         stat[offset+1][jj], stat[offset+2][jj], stat[offset+3][jj], stat[offset+4][jj])
+                    offset += 4
+                if self.solver_options['rti_log_residuals'] == 1:
+                    line += '\t{:e}\t{:e}\t{:e}\t{:e}'.format( \
+                         stat[offset+1][jj], stat[offset+2][jj], stat[offset+3][jj], stat[offset+4][jj])
+                print(line)
             print('\n')
 
         return
@@ -1063,7 +1072,6 @@ class AcadosOcpSolver:
                     out = (full_stats.T)[-2][1:5]
             else:
                 Exception("residuals are not computed for SQP_RTI")
-
 
         else:
             raise Exception(f'AcadosOcpSolver.get_stats(): \'{field}\' is not a valid argument.'
