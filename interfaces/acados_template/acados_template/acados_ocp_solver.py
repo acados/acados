@@ -679,43 +679,73 @@ class AcadosOcpSolver:
             self.__get_pointers_solver()
 
 
-    def eval_solution_sensitivity(self, output_stages: Union[int, List[int]], with_respect_to: str) \
+    def eval_solution_sensitivity(self, stages: Union[int, List[int]], with_respect_to: str) \
                 -> Tuple[Union[List[np.ndarray], np.ndarray], Union[List[np.ndarray], np.ndarray]]:
         """
-        Evaluate the sensitivity of the current solution x_i, u_i with respect to the initial state or the parameters for all stages i in `output_stages`.
+        Evaluate the sensitivity of the current solution x_i, u_i with respect to the initial state or the parameters for all stages i in `stages`.
 
-            :param output_stages: stages for which the sensitivities are returned, int or list of int
+            :param stages: stages for which the sensitivities are returned, int or list of int
             :param with_respect_to: string in ["initital_state", "params_global"]
             :returns: a tuple (sens_x, sens_u) with the solution sensitivities.
-                    If output_stages is a list, sens_x is a list of the same length. For sens_u, the list has length len(output_stages) or len(output_stages)-1 depending on whether N is included or not.
-                    If output_stages is a scalar, sens_x and sens_u are np.ndarrays of shape (nx[output_stages], ngrad) and (nu[output_stages], ngrad).
+                    If stages is a list, sens_x is a list of the same length. For sens_u, the list has length len(stages) or len(stages)-1 depending on whether N is included or not.
+                    If stages is a scalar, sens_x and sens_u are np.ndarrays of shape (nx[stages], ngrad) and (nu[stages], ngrad).
+
+        .. note::  Correct computation of sensitivities requires \n
+
+        (1) HPIPM as QP solver, \n
+
+        (2) the usage of an exact Hessian, \n
+
+        (3) positive definiteness of the full-space Hessian if the square-root version of the Riccati recursion is used
+            OR positive definiteness of the reduced Hessian if the classic Riccati recursion is used (compare: `solver_options.qp_solver_ric_alg`), \n
+
+        (4) the solution of at least one QP in advance to evaluation of the sensitivities as the factorization is reused.
         """
 
-        output_stages_is_list = isinstance(output_stages, list)
-        output_stages_ = output_stages if output_stages_is_list else [output_stages]
+        if not (self.acados_ocp.solver_options.qp_solver == 'FULL_CONDENSING_HPIPM' or
+                self.acados_ocp.solver_options.qp_solver == 'PARTIAL_CONDENSING_HPIPM'):
+            raise Exception("Parametric sensitivities are only available with HPIPM as QP solver.")
+
+        if not (
+           (self.acados_ocp.solver_options.hessian_approx == 'EXACT' or
+           (self.acados_ocp.cost.cost_type == 'LINEAR_LS' and
+            self.acados_ocp.cost.cost_type_0 == 'LINEAR_LS' and
+            self.acados_ocp.cost.cost_type_e == 'LINEAR_LS'))
+            and
+            self.acados_ocp.solver_options.regularize_method == 'NO_REGULARIZE' and
+            self.acados_ocp.solver_options.levenberg_marquardt == 0
+        ):
+            raise Exception("Parametric sensitivities are only correct if an exact Hessian is used!")
+
+        stages_is_list = isinstance(stages, list)
+        stages_ = stages if stages_is_list else [stages]
 
         sens_x = []
         sens_u = []
 
-        nx = self.acados_ocp.dims.nx
-        nu = self.acados_ocp.dims.nu
-        nparam = self.acados_ocp.dims.np
-
         N = self.acados_ocp.dims.N
 
-        for s in output_stages_:
+        for s in stages_:
             if not isinstance(s, int) or s < 0 or s > N:
                 raise Exception("AcadosOcpSolver.eval_solution_sensitivity(): stages need to be int or [int] and in [0, N].")
 
         if with_respect_to == "initial_state":
+            self.__acados_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
+            self.__acados_lib.ocp_nlp_dims_get_from_attr.restype = c_int
+            nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
+
             ngrad = nx
             field = "ex"
 
         elif with_respect_to == "params_global":
+            self.__acados_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
+            self.__acados_lib.ocp_nlp_dims_get_from_attr.restype = c_int
+            nparam = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p".encode('utf-8'))
+
             ngrad = nparam
             field = "params_global"
-            # TODO call eval jacobian on dynamics, cost, constraints
-            # compute jacobians wrt params
+
+            # compute jacobians wrt params in all modules
             self.__acados_lib.ocp_nlp_eval_params_jac.argtypes = [c_void_p, c_void_p, c_void_p]
             self.__acados_lib.ocp_nlp_eval_params_jac(self.nlp_solver, self.nlp_in, self.nlp_out)
 
@@ -723,7 +753,7 @@ class AcadosOcpSolver:
             raise Exception(f"AcadosOcpSolver.eval_solution_sensitivity(): Unknown field: {with_respect_to=}")
 
         # initialize jacobians with zeros
-        for s in output_stages_:
+        for s in stages_:
             self.__acados_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
             self.__acados_lib.ocp_nlp_dims_get_from_attr.restype = c_int
             nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "x".encode('utf-8'))
@@ -737,16 +767,21 @@ class AcadosOcpSolver:
 
                 sens_u.append(np.zeros((nu, ngrad)))
 
-        for k in range(ngrad):
-            self.eval_param_sens(index=k, field=field)
+        # set input and output types
+        self.__acados_lib.ocp_nlp_eval_param_sens.argtypes = [c_void_p, c_char_p, c_int, c_int, c_void_p]
+        self.__acados_lib.ocp_nlp_eval_param_sens.restype = None
 
-            for n, s in enumerate(output_stages_):
+        for k in range(ngrad):
+            # evaluate sensitivity
+            self.__acados_lib.ocp_nlp_eval_param_sens(self.nlp_solver, field.encode('utf-8'), 0, k, self.sens_out)
+
+            for n, s in enumerate(stages_):
                 sens_x[n][:, k] = self.get(s, "sens_x")
 
                 if s < N:
                     sens_u[n][:, k] = self.get(s, "sens_u")
 
-        if not output_stages_is_list:
+        if not stages_is_list:
             sens_x = sens_x[0]
             sens_u = sens_u[0]
 
@@ -769,7 +804,8 @@ class AcadosOcpSolver:
 
             :param index: integer corresponding to initial state index in range(nx)
         """
-        # TODO(params_sens) stage is ignored at the moment ?!
+
+        print("WARNING: eval_param_sens() is deprecated. Please use eval_solution_sensitivity() instead!")
 
         if not (self.acados_ocp.solver_options.qp_solver == 'FULL_CONDENSING_HPIPM' or
                 self.acados_ocp.solver_options.qp_solver == 'PARTIAL_CONDENSING_HPIPM'):
@@ -789,7 +825,6 @@ class AcadosOcpSolver:
         field_ = field
         field = field_.encode('utf-8')
 
-        # checks TODO: only ex
         if not isinstance(index, int):
             raise Exception('AcadosOcpSolver.eval_param_sens(): index must be Integer.')
 
