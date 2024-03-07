@@ -685,6 +685,15 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
 
 
 
+void ocp_nlp_cost_external_compute_gradient(void *config_, void *dims_, void *model_, void *opts_,
+                                 void *memory_, void *work_)
+{
+    printf("\nocp_nlp_cost_external_compute_gradient not implemented.\n\n");
+    exit(1);
+}
+
+
+
 void ocp_nlp_cost_external_compute_fun(void *config_, void *dims_, void *model_,
                                        void *opts_, void *memory_, void *work_)
 {
@@ -784,6 +793,7 @@ void ocp_nlp_cost_external_config_initialize_default(void *config_)
     config->initialize = &ocp_nlp_cost_external_initialize;
     config->update_qp_matrices = &ocp_nlp_cost_external_update_qp_matrices;
     config->compute_fun = &ocp_nlp_cost_external_compute_fun;
+    config->compute_gradient = &ocp_nlp_cost_external_compute_gradient;
     config->config_initialize_default = &ocp_nlp_cost_external_config_initialize_default;
     config->precompute = &ocp_nlp_cost_external_precompute;
 
