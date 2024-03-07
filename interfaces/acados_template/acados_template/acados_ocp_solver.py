@@ -493,6 +493,9 @@ class AcadosOcpSolver:
         self.__qp_constraint_fields = ['C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu']
         self.__qp_pc_hpipm_fields = ['P', 'K', 'Lr', 'p']
 
+        self.__acados_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
+        self.__acados_lib.ocp_nlp_dims_get_from_attr.restype = c_int
+
         return
 
     def __get_pointers_solver(self):
@@ -730,16 +733,12 @@ class AcadosOcpSolver:
                 raise Exception("AcadosOcpSolver.eval_solution_sensitivity(): stages need to be int or [int] and in [0, N].")
 
         if with_respect_to == "initial_state":
-            self.__acados_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
-            self.__acados_lib.ocp_nlp_dims_get_from_attr.restype = c_int
             nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
 
             ngrad = nx
             field = "ex"
 
         elif with_respect_to == "params_global":
-            self.__acados_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
-            self.__acados_lib.ocp_nlp_dims_get_from_attr.restype = c_int
             nparam = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p".encode('utf-8'))
 
             ngrad = nparam
@@ -754,15 +753,11 @@ class AcadosOcpSolver:
 
         # initialize jacobians with zeros
         for s in stages_:
-            self.__acados_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
-            self.__acados_lib.ocp_nlp_dims_get_from_attr.restype = c_int
             nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "x".encode('utf-8'))
 
             sens_x.append(np.zeros((nx, ngrad)))
 
             if s < N:
-                self.__acados_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
-                self.__acados_lib.ocp_nlp_dims_get_from_attr.restype = c_int
                 nu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "u".encode('utf-8'))
 
                 sens_u.append(np.zeros((nu, ngrad)))
@@ -829,15 +824,11 @@ class AcadosOcpSolver:
             raise Exception('AcadosOcpSolver.eval_param_sens(): index must be Integer.')
 
         if field == "ex":
-            self.__acados_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
-            self.__acados_lib.ocp_nlp_dims_get_from_attr.restype = c_int
             nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
 
             if index < 0 or index > nx:
                 raise Exception(f'AcadosOcpSolver.eval_param_sens(): index must be in [0, nx-1], got: {index}.')
         elif field == "params_global":
-            self.__acados_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
-            self.__acados_lib.ocp_nlp_dims_get_from_attr.restype = c_int
             nparam = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p".encode('utf-8'))
 
             if index < 0 or index > nparam:
@@ -1216,8 +1207,9 @@ class AcadosOcpSolver:
         if not self.acados_ocp.constraints.has_x0:
             raise Exception("OCP does not have an initial state constraint.")
 
-        nx = self.acados_ocp.dims.nx
-        nbu = self.acados_ocp.dims.nbu
+        nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
+        nbu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "lbu".encode('utf-8'))
+
         lam = self.get(0, 'lam')
         nlam_non_slack = lam.shape[0]//2 - self.acados_ocp.dims.ns_0
         grad = lam[nbu:nbu+nx] - lam[nlam_non_slack+nbu : nlam_non_slack+nbu+nx]
@@ -1314,10 +1306,6 @@ class AcadosOcpSolver:
             if field_ not in constraints_fields + cost_fields + out_fields + mem_fields:
                 raise Exception(f"AcadosOcpSolver.set(): '{field}' is not a valid argument.\n"
                     f" Possible values are {constraints_fields + cost_fields + out_fields + mem_fields + ['p']}.")
-
-            self.__acados_lib.ocp_nlp_dims_get_from_attr.argtypes = \
-                [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
-            self.__acados_lib.ocp_nlp_dims_get_from_attr.restype = c_int
 
             dims = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, \
                 self.nlp_dims, self.nlp_out, stage_, field)
