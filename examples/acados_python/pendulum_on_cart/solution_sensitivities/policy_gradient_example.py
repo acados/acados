@@ -98,19 +98,13 @@ def export_parameter_augmented_pendulum_ode_model(param_M_as_state=True) -> Acad
     if param_M_as_state:
         f_expl = vertcat(f_expl, 0)
 
-    # parameters
-    param = []
-
-    f_impl = xdot - f_expl
-
     model = AcadosModel()
 
-    model.f_impl_expr = f_impl
+    model.f_impl_expr = xdot - f_expl
     model.f_expl_expr = f_expl
     model.x = x
     model.xdot = xdot
     model.u = u
-    model.p = param
     model.name = model_name
 
     return model, nx_original
@@ -357,12 +351,8 @@ def main_augmented(param_M_as_state: bool, idxp: int, qp_solver_ric_alg: int, ei
 
         # Calculate the policy gradient
         sensitivity_solver.eval_param_sens(idxp)
-        sens_u[i] = sensitivity_solver.get(0, "sens_u")[0]
-
-        # new interface
         _, sens_u_ = sensitivity_solver.eval_solution_sensitivity(0, "initial_state")
-
-        assert sens_u[i] == sens_u_[:, idxp]
+        sens_u[i] = sens_u_[:, idxp]
 
         # plot solution
         # if i < 1:
@@ -382,7 +372,10 @@ def main_augmented(param_M_as_state: bool, idxp: int, qp_solver_ric_alg: int, ei
     pi_reconstructed_np_grad = np.cumsum(np_grad) * delta_p + pi[0]
     pi_reconstructed_np_grad += pi[0] - pi_reconstructed_np_grad[0]
 
-    plot_results(p_test, pi, pi_reconstructed_np_grad, sens_u, np_grad,
+    pi_reconstructed_acados = np.cumsum(sens_u) * delta_p + pi[0]
+    pi_reconstructed_acados += pi[0] - pi_reconstructed_acados[0]
+
+    plot_results(p_test, pi, pi_reconstructed_acados, pi_reconstructed_np_grad, sens_u, np_grad,
                  min_eig_full, min_eig_proj_hess, min_eig_P,
                  min_abs_eig_full, min_abs_eig_proj_hess, min_abs_eig_P,
                  eigen_analysis, qp_solver_ric_alg, parameter_name)
@@ -459,25 +452,30 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True):
     pi_reconstructed_np_grad = np.cumsum(np_grad) * delta_p + pi[0]
     pi_reconstructed_np_grad += pi[0] - pi_reconstructed_np_grad[0]
 
-    plot_results(p_test, pi, pi_reconstructed_np_grad, sens_u, np_grad,
+    pi_reconstructed_acados = np.cumsum(sens_u) * delta_p + pi[0]
+    pi_reconstructed_acados += pi[0] - pi_reconstructed_acados[0]
+
+
+    plot_results(p_test, pi, pi_reconstructed_acados, pi_reconstructed_np_grad, sens_u, np_grad,
                  min_eig_full, min_eig_proj_hess, min_eig_P,
                  min_abs_eig_full, min_abs_eig_proj_hess, min_abs_eig_P,
                  eigen_analysis, qp_solver_ric_alg, parameter_name="mass")
 
 
-def plot_results(p_test, pi, pi_reconstructed_np_grad, sens_u, np_grad,
+def plot_results(p_test, pi, pi_reconstructed_acados, pi_reconstructed_np_grad, sens_u, np_grad,
                  min_eig_full=None, min_eig_proj_hess=None, min_eig_P=None,
                  min_abs_eig_full=None, min_abs_eig_proj_hess=None, min_abs_eig_P=None,
                  eigen_analysis=False, qp_solver_ric_alg=1, parameter_name=""):
     latexify_plot()
-    nsub = 3
-    if eigen_analysis:
-        nsub +=2
+
+    nsub = 5 if eigen_analysis else 3
 
     _, ax = plt.subplots(nrows=nsub, ncols=1, sharex=True, figsize=(9,9))
+
     isub = 0
-    ax[isub].plot(p_test, pi, label='$p$ acados')
-    ax[isub].plot(p_test, pi_reconstructed_np_grad, "--", label='$p$ reconstructed from finite diff')
+    ax[isub].plot(p_test, pi, label='acados', color='k')
+    ax[isub].plot(p_test, pi_reconstructed_acados, "--", label='reconstructed from acados')
+    ax[isub].plot(p_test, pi_reconstructed_np_grad, "--", label='reconstructed from finite diff')
     ax[isub].set_ylabel(r"$u$")
     ax[isub].legend()
     ax[isub].set_title(f'qp_solver_ric_alg {qp_solver_ric_alg}')
@@ -485,16 +483,13 @@ def plot_results(p_test, pi, pi_reconstructed_np_grad, sens_u, np_grad,
 
     isub += 1
     ax[isub].plot(p_test, sens_u, label="acados")
-    ax[isub].plot(p_test, np_grad, "--", label="np.grad")
+    ax[isub].plot(p_test, np_grad, "--", label="finite diff")
     ax[isub].legend()
     ax[isub].set_xlim([p_test[0], p_test[-1]])
     ax[isub].grid(True)
     ax[isub].set_ylabel(r"$\partial_p u$")
 
     isub += 1
-    # ax[isub].plot(p_test, np.abs(sens_u))
-    # ax[isub].plot(p_test, np.abs(np_grad), "--")
-    # ax[isub].plot(p_test[1:-1], np.abs(central_diff), "-.")
     ax[isub].plot(p_test, np.abs(sens_u- np_grad), "--", label='acados - finite diff')
     ax[isub].legend()
     ax[isub].set_ylabel(r"diff $\partial_p u$")
@@ -520,7 +515,6 @@ def plot_results(p_test, pi, pi_reconstructed_np_grad, sens_u, np_grad,
         ax[isub].set_yscale("log")
 
     ax[-1].set_xlabel(f"{parameter_name}")
-
 
     fig_filename = f"solution_sens_{qp_solver_ric_alg}.pdf"
     plt.savefig(fig_filename)
