@@ -99,6 +99,7 @@ class AcadosOcpOptions:
         self.__custom_update_header_filename = ''
         self.__custom_templates = []
         self.__custom_update_copy = True
+        self.__as_rti_iter = 1
 
     @property
     def qp_solver(self):
@@ -404,6 +405,15 @@ class AcadosOcpOptions:
         Default: 50
         """
         return self.__qp_solver_iter_max
+
+
+    @property
+    def as_rti_iter(self):
+        """
+        Maximum number of iterations in the advanced-step real-time iteration.
+        Default: 1
+        """
+        return self.__as_rti_iter
 
     @property
     def tol(self):
@@ -876,6 +886,13 @@ class AcadosOcpOptions:
             self.__qp_solver_iter_max = qp_solver_iter_max
         else:
             raise Exception('Invalid qp_solver_iter_max value. qp_solver_iter_max must be a positive int.')
+
+    @as_rti_iter.setter
+    def as_rti_iter(self, as_rti_iter):
+        if isinstance(as_rti_iter, int) and as_rti_iter >= 0:
+            self.__as_rti_iter = as_rti_iter
+        else:
+            raise Exception('Invalid as_rti_iter value. as_rti_iter must be a nonnegative int.')
 
     @qp_solver_ric_alg.setter
     def qp_solver_ric_alg(self, qp_solver_ric_alg):
