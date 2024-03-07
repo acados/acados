@@ -433,6 +433,7 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True):
 
         for n in range(N_horizon+1):
             acados_ocp_solver.set(n, 'p', p)
+            sensitivity_solver.set(n, 'p', p)
         pi[i] = acados_ocp_solver.solve_for_x0(x0)[0]
 
         acados_ocp_solver.store_iterate(filename='iterate.json', overwrite=True, verbose=False)
