@@ -1063,16 +1063,6 @@ class AcadosOcpSolver:
         elif field_ == 'residuals':
             return self.get_residuals()
 
-        elif field_ == 'residuals':
-            if self.acados_ocp.solver_options.nlp_solver_type == 'SQP':
-                full_stats = self.get_stats('statistics')
-                if self.status != 2:
-                    out = (full_stats.T)[-1][1:5]
-                else: # when exiting with max_iter, residuals are computed for second last iterate only
-                    out = (full_stats.T)[-2][1:5]
-            else:
-                Exception("residuals are not computed for SQP_RTI")
-
         else:
             raise Exception(f'AcadosOcpSolver.get_stats(): \'{field}\' is not a valid argument.'
                     + f'\n Possible values are {fields}.')
