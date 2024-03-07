@@ -714,6 +714,10 @@ class AcadosOcpSolver:
             ngrad = nparam
             field = "params_global"
             # TODO call eval jacobian on dynamics, cost, constraints
+            # compute jacobians wrt params
+            self.__acados_lib.ocp_nlp_eval_params_jac.argtypes = [c_void_p, c_void_p, c_void_p]
+            self.__acados_lib.ocp_nlp_eval_params_jac(self.nlp_solver, self.nlp_in, self.nlp_out)
+
         else:
             raise Exception(f"AcadosOcpSolver.eval_solution_sensitivity(): Unknown field: {with_respect_to=}")
 
@@ -733,7 +737,7 @@ class AcadosOcpSolver:
                 sens_u.append(np.zeros((nu, ngrad)))
 
         for k in range(ngrad):
-            self.eval_param_sens(k, 0, field)
+            self.eval_param_sens(index=k, stage=0, field=field)
 
             for n, s in enumerate(output_stages_):
                 sens_x[n][:, k] = self.get(s, "sens_x")
@@ -764,11 +768,11 @@ class AcadosOcpSolver:
 
             :param index: integer corresponding to initial state index in range(nx)
         """
+        # TODO(params_sens) stage is ignored at the moment ?!
 
         if not (self.acados_ocp.solver_options.qp_solver == 'FULL_CONDENSING_HPIPM' or
                 self.acados_ocp.solver_options.qp_solver == 'PARTIAL_CONDENSING_HPIPM'):
             raise Exception("Parametric sensitivities are only available with HPIPM as QP solver.")
-
 
         if not (
            (self.acados_ocp.solver_options.hessian_approx == 'EXACT' or
@@ -784,16 +788,24 @@ class AcadosOcpSolver:
         field_ = field
         field = field_.encode('utf-8')
 
-        # checks
+        # checks TODO: only ex
         if not isinstance(index, int):
             raise Exception('AcadosOcpSolver.eval_param_sens(): index must be Integer.')
 
-        self.__acados_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
-        self.__acados_lib.ocp_nlp_dims_get_from_attr.restype = c_int
-        nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
+        if field == "ex":
+            self.__acados_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
+            self.__acados_lib.ocp_nlp_dims_get_from_attr.restype = c_int
+            nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
 
-        if index < 0 or index > nx:
-            raise Exception(f'AcadosOcpSolver.eval_param_sens(): index must be in [0, nx-1], got: {index}.')
+            if index < 0 or index > nx:
+                raise Exception(f'AcadosOcpSolver.eval_param_sens(): index must be in [0, nx-1], got: {index}.')
+        elif field == "params_global":
+            self.__acados_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
+            self.__acados_lib.ocp_nlp_dims_get_from_attr.restype = c_int
+            nparam = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p".encode('utf-8'))
+
+            if index < 0 or index > nparam:
+                raise Exception(f'AcadosOcpSolver.eval_param_sens(): index must be in [0, nparam-1], got: {index}.')
 
         # actual eval_param
         self.__acados_lib.ocp_nlp_eval_param_sens.argtypes = [c_void_p, c_char_p, c_int, c_int, c_void_p]

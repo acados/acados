@@ -2445,6 +2445,7 @@ int {{ model.name }}_acados_update_params({{ model.name }}_solver_capsule* capsu
     {% elif solver_options.integrator_type == "DISCRETE" %}
         capsule->discr_dyn_phi_fun[stage].set_param(capsule->discr_dyn_phi_fun+stage, p);
         capsule->discr_dyn_phi_fun_jac_ut_xt[stage].set_param(capsule->discr_dyn_phi_fun_jac_ut_xt+stage, p);
+        capsule->discr_dyn_phi_params_jac[stage].set_param(capsule->discr_dyn_phi_params_jac+stage, p);
     {%- if solver_options.hessian_approx == "EXACT" %}
         capsule->discr_dyn_phi_fun_jac_ut_xt_hess[stage].set_param(capsule->discr_dyn_phi_fun_jac_ut_xt_hess+stage, p);
     {%- endif %}
@@ -2595,6 +2596,7 @@ int {{ model.name }}_acados_update_params_sparse({{ model.name }}_solver_capsule
     {% elif solver_options.integrator_type == "DISCRETE" %}
         capsule->discr_dyn_phi_fun[stage].set_param_sparse(capsule->discr_dyn_phi_fun+stage, n_update, idx, p);
         capsule->discr_dyn_phi_fun_jac_ut_xt[stage].set_param_sparse(capsule->discr_dyn_phi_fun_jac_ut_xt+stage, n_update, idx, p);
+        capsule->discr_dyn_phi_params_jac[stage].set_param_sparse(capsule->discr_dyn_phi_params_jac+stage, n_update, idx, p);
     {%- if solver_options.hessian_approx == "EXACT" %}
         capsule->discr_dyn_phi_fun_jac_ut_xt_hess[stage].set_param_sparse(capsule->discr_dyn_phi_fun_jac_ut_xt_hess+stage, n_update, idx, p);
     {% endif %}

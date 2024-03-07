@@ -420,6 +420,13 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True):
         min_eig_proj_hess = np.zeros(np_test)
         min_eig_P = np.zeros(np_test)
         min_abs_eig_P = np.zeros(np_test)
+    else:
+        min_eig_full = None
+        min_abs_eig_full = None
+        min_abs_eig_proj_hess = None
+        min_eig_proj_hess = None
+        min_eig_P = None
+        min_abs_eig_P = None
 
     pi = np.zeros(np_test)
     for i, p in enumerate(p_test):
@@ -443,8 +450,7 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True):
             min_eig_full[i], min_abs_eig_full[i], min_abs_eig_proj_hess[i], min_eig_proj_hess[i], min_eig_P[i], min_abs_eig_P[i] = evaluate_hessian_eigenvalues(sensitivity_solver)
 
         # Calculate the policy gradient
-        _, sens_u_ = sensitivity_solver.eval_solution_sensitivity(0, "params_global")
-
+        sens_x_, sens_u_ = sensitivity_solver.eval_solution_sensitivity(0, "params_global")
         sens_u[i] = sens_u_.item()
 
     # Compare to numerical gradients

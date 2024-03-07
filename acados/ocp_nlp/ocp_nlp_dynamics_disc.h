@@ -101,6 +101,7 @@ int ocp_nlp_dynamics_disc_precompute(void *config_, void *dims, void *model_, vo
 
 typedef struct
 {
+    struct blasfeo_dmat params_jac;  // jacobian of the dynamics wrt the parameters
     struct blasfeo_dvec fun;
     struct blasfeo_dvec adj;
     struct blasfeo_dvec *ux;     // pointer to ux in nlp_out at current stage
@@ -108,8 +109,6 @@ typedef struct
     struct blasfeo_dvec *pi;     // pointer to pi in nlp_out at current stage
     struct blasfeo_dmat *BAbt;   // pointer to BAbt in qp_in
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
-
-    // TODO(params_sens) add memory for jacobian wrt. p
 } ocp_nlp_dynamics_disc_memory;
 
 //
@@ -128,6 +127,8 @@ void ocp_nlp_dynamics_disc_memory_set_ux1_ptr(struct blasfeo_dvec *ux1, void *me
 void ocp_nlp_dynamics_disc_memory_set_pi_ptr(struct blasfeo_dvec *pi, void *memory);
 //
 void ocp_nlp_dynamics_disc_memory_set_BAbt_ptr(struct blasfeo_dmat *BAbt, void *memory);
+//
+void ocp_nlp_dynamics_disc_memory_get_params_grad(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset);
 
 
 
@@ -177,6 +178,8 @@ void ocp_nlp_dynamics_disc_initialize(void *config_, void *dims, void *model_, v
 void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
 //
 void ocp_nlp_dynamics_disc_compute_fun(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
+//
+void ocp_nlp_dynamics_disc_compute_params_jac(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
 
 // TODO(params_sens):
 // step 1: evaluate jacobian of dynamics wrt all parameters

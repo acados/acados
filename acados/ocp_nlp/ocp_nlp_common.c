@@ -3041,7 +3041,6 @@ void ocp_nlp_res_get_inf_norm(ocp_nlp_res *res, double *out)
 void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
-    // extract dims
     int N = dims->N;
 
     double* tmp_cost = NULL;
@@ -3073,3 +3072,15 @@ void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in
     // printf("\ncomputed total cost: %e\n", total_cost);
 }
 
+
+
+void ocp_nlp_params_jac_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+{
+    int N = dims->N;
+
+    for (int i = 0; i < N; i++)
+    {
+        config->dynamics[i]->compute_params_jac(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
+                    opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
+    }
+}

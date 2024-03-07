@@ -94,11 +94,14 @@ typedef struct
     void (*memory_set_z_alg_ptr)(struct blasfeo_dvec *vec, void *memory_);
     void (*memory_get)(void *config, void *dims, void *mem, const char *field, void* value);
     void (*memory_set)(void *config, void *dims, void *mem, const char *field, void* value);
+    void (*memory_get_params_grad)(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset);
     /* workspace */
     acados_size_t (*workspace_calculate_size)(void *config, void *dims, void *opts);
     void (*initialize)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*update_qp_matrices)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*compute_fun)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
+    void (*compute_params_jac)(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
+
     int (*precompute)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
 // TODO(params_sens):
 // void update_params_jacobian(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);

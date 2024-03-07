@@ -998,6 +998,7 @@ int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_
 
 
 
+
 void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *mem_, void *work_,
                                  char *field, int stage, int index, void *sens_nlp_out_)
 {
@@ -1009,6 +1010,7 @@ void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *
     ocp_nlp_sqp_opts *opts = opts_;
     ocp_nlp_sqp_memory *mem = mem_;
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    // ocp_nlp_opts *nlp_opts = opts->nlp_opts;
     ocp_nlp_out *sens_nlp_out = sens_nlp_out_;
 
     ocp_nlp_sqp_workspace *work = work_;
@@ -1019,6 +1021,7 @@ void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *
     d_ocp_qp_set_rhs_zero(work->tmp_qp_in);
 
     double one = 1.0;
+
 
     if ((!strcmp("ex", field)) && (stage==0))
     {
@@ -1033,16 +1036,20 @@ void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *
     }
     else if (!strcmp("params_global", field))
     {
-        // TODO get gradient wrt p from all modules
-        printf("\nerror: field %s at stage %d not available in ocp_nlp_sqp_eval_param_sens\n", field, stage);
-        exit(1);
+        int N = dims->N;
+        for (int i = 0; i < N; i++)
+        {
+            config->dynamics[i]->memory_get_params_grad(config->dynamics[i], dims->dynamics[i], opts, nlp_mem->dynamics[i], index, &work->tmp_qp_in->b[i], 0);
+        }
 
+        // print_ocp_qp_in(work->tmp_qp_in);
     }
     else
     {
         printf("\nerror: field %s at stage %d not available in ocp_nlp_sqp_eval_param_sens\n", field, stage);
         exit(1);
     }
+
 
 //        d_ocp_qp_print(work->tmp_qp_in->dim, work->tmp_qp_in);
     config->qp_solver->eval_sens(config->qp_solver, dims->qp_solver, work->tmp_qp_in, work->tmp_qp_out,

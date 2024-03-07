@@ -302,11 +302,13 @@ acados_size_t ocp_nlp_dynamics_disc_memory_calculate_size(void *config_, void *d
     int nx = dims->nx;
     int nu = dims->nu;
     int nx1 = dims->nx1;
+    int np = dims->np;
 
     acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_dynamics_disc_memory);
 
+    size += 1 * blasfeo_memsize_dmat(nx1, np);        // params_jac
     size += 1 * blasfeo_memsize_dvec(nu + nx + nx1);  // adj
     size += 1 * blasfeo_memsize_dvec(nx1);            // fun
 
@@ -329,6 +331,7 @@ void *ocp_nlp_dynamics_disc_memory_assign(void *config_, void *dims_, void *opts
     int nx = dims->nx;
     int nu = dims->nu;
     int nx1 = dims->nx1;
+    int np = dims->np;
 
     // struct
     ocp_nlp_dynamics_disc_memory *memory = (ocp_nlp_dynamics_disc_memory *) c_ptr;
@@ -337,6 +340,8 @@ void *ocp_nlp_dynamics_disc_memory_assign(void *config_, void *dims_, void *opts
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
 
+    // params_jac
+    assign_and_advance_blasfeo_dmat_mem(nx1, np, &memory->params_jac, &c_ptr);
     // adj
     assign_and_advance_blasfeo_dvec_mem(nu + nx + nx1, &memory->adj, &c_ptr);
     // fun
@@ -779,6 +784,67 @@ void ocp_nlp_dynamics_disc_compute_fun(void *config_, void *dims_, void *model_,
     return;
 }
 
+void ocp_nlp_dynamics_disc_compute_params_jac(void *config_, void *dims_, void *model_, void *opts_, void *mem_, void *work_)
+{
+    // ocp_nlp_dynamics_disc_cast_workspace(config_, dims_, opts_, work_);
+
+    // ocp_nlp_dynamics_config *config = config_;
+    ocp_nlp_dynamics_disc_dims *dims = dims_;
+    // ocp_nlp_dynamics_disc_opts *opts = opts_;
+    // ocp_nlp_dynamics_disc_workspace *work = work_;
+    ocp_nlp_dynamics_disc_memory *memory = mem_;
+    ocp_nlp_dynamics_disc_model *model = model_;
+
+    int nu = dims->nu;
+
+    ext_fun_arg_t ext_fun_type_in[3];
+    void *ext_fun_in[3];
+    ext_fun_arg_t ext_fun_type_out[1];
+    void *ext_fun_out[1];
+
+    struct blasfeo_dvec *ux = memory->ux;
+
+    // pass state and control to integrator
+    struct blasfeo_dvec_args x_in;  // input x of external fun;
+    x_in.x = ux;
+    x_in.xi = nu;
+
+    struct blasfeo_dvec_args u_in;  // input u of external fun;
+    u_in.x = ux;
+    u_in.xi = 0;
+
+    // TODO(params_sens) maybe not use BLASFEO_DMAT as ouput?
+	ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+	ext_fun_in[0] = &x_in;
+	ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
+	ext_fun_in[1] = &u_in;
+
+	ext_fun_type_out[0] = BLASFEO_DMAT;
+	ext_fun_out[0] = &memory->params_jac;  // jac: nx1 x np
+
+	// call external function
+	model->disc_dyn_params_jac->evaluate(model->disc_dyn_params_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+
+    return;
+}
+
+
+void ocp_nlp_dynamics_disc_memory_get_params_grad(void *config_, void *dims_, void *opts_, void *memory_, int index, struct blasfeo_dvec *out, int offset)
+{
+    // ocp_nlp_dynamics_config *config = config_;
+    ocp_nlp_dynamics_disc_dims *dims = dims_;
+    // ocp_nlp_dynamics_disc_opts *opts = opts_;
+    ocp_nlp_dynamics_disc_memory *memory = memory_;
+
+    int nx1 = dims->nx1;
+    int np = dims->np;
+
+    blasfeo_dcolex(nx1, &memory->params_jac, 0, index, out, offset);
+    // blasfeo_dvecsc(nx1, -1., out, offset);
+
+    printf("extracted col\n");
+    blasfeo_print_dvec(nx1, out, offset);
+}
 
 
 int ocp_nlp_dynamics_disc_precompute(void *config_, void *dims, void *model_, void *opts_,
@@ -819,10 +885,12 @@ void ocp_nlp_dynamics_disc_config_initialize_default(void *config_)
     config->memory_set_sim_guess_ptr = &ocp_nlp_dynamics_disc_memory_set_sim_guess_ptr;
     config->memory_set_z_alg_ptr = &ocp_nlp_dynamics_disc_memory_set_z_alg_ptr;
     config->memory_get = &ocp_nlp_dynamics_disc_memory_get;
+    config->memory_get_params_grad = &ocp_nlp_dynamics_disc_memory_get_params_grad;
     config->workspace_calculate_size = &ocp_nlp_dynamics_disc_workspace_calculate_size;
     config->initialize = &ocp_nlp_dynamics_disc_initialize;
     config->update_qp_matrices = &ocp_nlp_dynamics_disc_update_qp_matrices;
     config->compute_fun = &ocp_nlp_dynamics_disc_compute_fun;
+    config->compute_params_jac = &ocp_nlp_dynamics_disc_compute_params_jac;
     config->precompute = &ocp_nlp_dynamics_disc_precompute;
     config->config_initialize_default = &ocp_nlp_dynamics_disc_config_initialize_default;
 

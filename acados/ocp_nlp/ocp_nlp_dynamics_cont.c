@@ -965,6 +965,12 @@ int ocp_nlp_dynamics_cont_precompute(void *config_, void *dims_, void *model_, v
 }
 
 
+void ocp_nlp_dynamics_compute_params_jac(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_)
+{
+    printf("\nerror: : ocp_nlp_dynamics_compute_params_jacnot implemented yet\n");
+    exit(1);
+}
+
 
 void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
 {
@@ -1003,6 +1009,7 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
     config->compute_fun = &ocp_nlp_dynamics_cont_compute_fun;
     config->precompute = &ocp_nlp_dynamics_cont_precompute;
     config->config_initialize_default = &ocp_nlp_dynamics_cont_config_initialize_default;
+    config->compute_params_jac = &ocp_nlp_dynamics_compute_params_jac;
 
     return;
 }
