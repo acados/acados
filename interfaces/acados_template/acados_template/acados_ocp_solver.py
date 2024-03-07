@@ -1011,6 +1011,8 @@ class AcadosOcpSolver:
                   'stat_n',
                   'residuals',
                   'alpha',
+                  'res_eq_all',
+                  'res_stat_all',
                 ]
         field = field_.encode('utf-8')
 
@@ -1062,6 +1064,26 @@ class AcadosOcpSolver:
 
         elif field_ == 'residuals':
             return self.get_residuals()
+
+        elif field_ == 'res_eq_all':
+            full_stats = self.get_stats('statistics')
+            if self.solver_options['nlp_solver_type'] == 'SQP':
+                return full_stats[2, :]
+            elif self.solver_options['nlp_solver_type'] == 'SQP_RTI':
+                if self.solver_options['rti_log_residuals'] == 1:
+                    return full_stats[4, :]
+                else:
+                    raise Exception("res_eq_all is not available for SQP_RTI if rti_log_residuals is not enabled.")
+
+        elif field_ == 'res_stat_all':
+            full_stats = self.get_stats('statistics')
+            if self.solver_options['nlp_solver_type'] == 'SQP':
+                return full_stats[1, :]
+            elif self.solver_options['nlp_solver_type'] == 'SQP_RTI':
+                if self.solver_options['rti_log_residuals'] == 1:
+                    return full_stats[3, :]
+                else:
+                    raise Exception("res_stat_all is not available for SQP_RTI if rti_log_residuals is not enabled.")
 
         else:
             raise Exception(f'AcadosOcpSolver.get_stats(): \'{field}\' is not a valid argument.'
