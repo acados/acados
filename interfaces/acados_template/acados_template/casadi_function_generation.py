@@ -155,6 +155,9 @@ def generate_c_code_discrete_dynamics( model, opts ):
     # generate hessian
     hess_ux = ca.jacobian(adj_ux, ux)
 
+    # generate jacobian of lagrange gradient wrt p
+    jac_lag_p = ca.jacobian((lam.T @ jac_ux).T, p)
+
     # change directory
     cwd = os.getcwd()
     model_dir = os.path.abspath(os.path.join(opts["code_export_directory"], f'{model_name}_model'))
@@ -174,7 +177,7 @@ def generate_c_code_discrete_dynamics( model, opts ):
     phi_fun_jac_ut_xt_hess.generate(fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_dyn_disc_phi_params_jac'
-    phi_fun_jac_ut_xt_hess = ca.Function(fun_name, [x, u, p], [jac_p])
+    phi_fun_jac_ut_xt_hess = ca.Function(fun_name, [x, u, lam, p], [jac_p, jac_lag_p])
     phi_fun_jac_ut_xt_hess.generate(fun_name, casadi_codegen_opts)
 
     os.chdir(cwd)

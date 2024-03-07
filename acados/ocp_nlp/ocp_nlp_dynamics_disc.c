@@ -309,6 +309,7 @@ acados_size_t ocp_nlp_dynamics_disc_memory_calculate_size(void *config_, void *d
     size += sizeof(ocp_nlp_dynamics_disc_memory);
 
     size += 1 * blasfeo_memsize_dmat(nx1, np);        // params_jac
+    size += 1 * blasfeo_memsize_dmat(nu + nx, np);    // params_lag_jac
     size += 1 * blasfeo_memsize_dvec(nu + nx + nx1);  // adj
     size += 1 * blasfeo_memsize_dvec(nx1);            // fun
 
@@ -342,6 +343,8 @@ void *ocp_nlp_dynamics_disc_memory_assign(void *config_, void *dims_, void *opts
 
     // params_jac
     assign_and_advance_blasfeo_dmat_mem(nx1, np, &memory->params_jac, &c_ptr);
+    // params_lag_jac
+    assign_and_advance_blasfeo_dmat_mem(nx + nu, np, &memory->params_lag_jac, &c_ptr);
     // adj
     assign_and_advance_blasfeo_dvec_mem(nu + nx + nx1, &memory->adj, &c_ptr);
     // fun
@@ -797,14 +800,13 @@ void ocp_nlp_dynamics_disc_compute_params_jac(void *config_, void *dims_, void *
 
     int nu = dims->nu;
 
-    ext_fun_arg_t ext_fun_type_in[3];
-    void *ext_fun_in[3];
-    ext_fun_arg_t ext_fun_type_out[1];
-    void *ext_fun_out[1];
+    ext_fun_arg_t ext_fun_type_in[4];
+    void *ext_fun_in[4];
+    ext_fun_arg_t ext_fun_type_out[2];
+    void *ext_fun_out[2];
 
     struct blasfeo_dvec *ux = memory->ux;
 
-    // pass state and control to integrator
     struct blasfeo_dvec_args x_in;  // input x of external fun;
     x_in.x = ux;
     x_in.xi = nu;
@@ -813,14 +815,24 @@ void ocp_nlp_dynamics_disc_compute_params_jac(void *config_, void *dims_, void *
     u_in.x = ux;
     u_in.xi = 0;
 
+    struct blasfeo_dvec_args pi_in;  // input pi of external fun;
+    pi_in.x = memory->pi;
+    pi_in.xi = 0;
+
     // TODO(params_sens) maybe not use BLASFEO_DMAT as ouput?
 	ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
 	ext_fun_in[0] = &x_in;
 	ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
 	ext_fun_in[1] = &u_in;
 
+	ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
+	ext_fun_in[2] = &pi_in;
+
 	ext_fun_type_out[0] = BLASFEO_DMAT;
 	ext_fun_out[0] = &memory->params_jac;  // jac: nx1 x np
+
+	ext_fun_type_out[1] = BLASFEO_DMAT;
+	ext_fun_out[1] = &memory->params_lag_jac;  // jac: nxnu x np
 
 	// call external function
 	model->disc_dyn_params_jac->evaluate(model->disc_dyn_params_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
@@ -840,10 +852,9 @@ void ocp_nlp_dynamics_disc_memory_get_params_grad(void *config_, void *dims_, vo
     int np = dims->np;
 
     blasfeo_dcolex(nx1, &memory->params_jac, 0, index, out, offset);
-    // blasfeo_dvecsc(nx1, -1., out, offset);
 
-    printf("extracted col\n");
-    blasfeo_print_dvec(nx1, out, offset);
+    // printf("extracted col\n");
+    // blasfeo_print_dvec(nx1, out, offset);
 }
 
 

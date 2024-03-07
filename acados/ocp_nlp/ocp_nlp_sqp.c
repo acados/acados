@@ -1039,7 +1039,8 @@ void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *
         int N = dims->N;
         for (int i = 0; i < N; i++)
         {
-            config->dynamics[i]->memory_get_params_grad(config->dynamics[i], dims->dynamics[i], opts, nlp_mem->dynamics[i], index, &work->tmp_qp_in->b[i], 0);
+            config->dynamics[i]->memory_get_params_grad(config->dynamics[i], dims->dynamics[i], opts,
+                                    nlp_mem->dynamics[i], index, &work->tmp_qp_in->b[i], 0);
         }
 
         // print_ocp_qp_in(work->tmp_qp_in);

@@ -102,6 +102,7 @@ int ocp_nlp_dynamics_disc_precompute(void *config_, void *dims, void *model_, vo
 typedef struct
 {
     struct blasfeo_dmat params_jac;  // jacobian of the dynamics wrt the parameters
+    struct blasfeo_dmat params_lag_jac;  // jacobian of the lagrange gradient contribution of the dynamics wrt the parameters
     struct blasfeo_dvec fun;
     struct blasfeo_dvec adj;
     struct blasfeo_dvec *ux;     // pointer to ux in nlp_out at current stage

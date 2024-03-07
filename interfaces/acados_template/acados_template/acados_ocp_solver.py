@@ -737,7 +737,7 @@ class AcadosOcpSolver:
                 sens_u.append(np.zeros((nu, ngrad)))
 
         for k in range(ngrad):
-            self.eval_param_sens(index=k, stage=0, field=field)
+            self.eval_param_sens(index=k, field=field)
 
             for n, s in enumerate(output_stages_):
                 sens_x[n][:, k] = self.get(s, "sens_x")
