@@ -2278,6 +2278,8 @@ void ocp_nlp_zero_order_qp_update(ocp_nlp_config *config,
         // copy ineq function value into QP
         struct blasfeo_dvec *ineq_fun = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
         blasfeo_dveccp(2 * ni[i], ineq_fun, 0, mem->qp_in->d + i, 0);
+        // copy into nlp_mem
+        blasfeo_dveccp(2 * ni[i], ineq_fun, 0, mem->ineq_fun + i, 0);
     }
 
 #if defined(ACADOS_WITH_OPENMP)
@@ -2291,6 +2293,7 @@ void ocp_nlp_zero_order_qp_update(ocp_nlp_config *config,
 
         struct blasfeo_dvec *dyn_fun = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
         blasfeo_dveccp(nx[i + 1], dyn_fun, 0, mem->qp_in->b + i, 0);
+        blasfeo_dveccp(nx[i + 1], dyn_fun, 0, mem->dyn_fun + i, 0);
     }
 
     // add gradient correction
@@ -2327,6 +2330,8 @@ void ocp_nlp_level_c_update(ocp_nlp_config *config,
         // copy ineq function value into QP
         struct blasfeo_dvec *ineq_fun = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
         blasfeo_dveccp(2 * ni[i], ineq_fun, 0, mem->qp_in->d + i, 0);
+        // copy into nlp_mem
+        blasfeo_dveccp(2 * ni[i], ineq_fun, 0, mem->ineq_fun + i, 0);
     }
 
 #if defined(ACADOS_WITH_OPENMP)
@@ -2341,6 +2346,7 @@ void ocp_nlp_level_c_update(ocp_nlp_config *config,
 
         struct blasfeo_dvec *dyn_fun = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
         blasfeo_dveccp(nx[i + 1], dyn_fun, 0, mem->qp_in->b + i, 0);
+        blasfeo_dveccp(nx[i + 1], dyn_fun, 0, mem->dyn_fun + i, 0);
 
         // add adjoint contribution to gradient
         struct blasfeo_dvec *dyn_adj = config->dynamics[i]->memory_get_adj_ptr(mem->dynamics[i]);
@@ -3084,8 +3090,8 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
     // res_stat
     for (int i = 0; i <= N; i++)
     {
-        blasfeo_daxpy(nv[i], -1.0, mem->ineq_adj + i, 0, mem->cost_grad + i, 0, res->res_stat + i,
-                      0);
+        blasfeo_daxpy(nv[i], -1.0, mem->ineq_adj + i, 0, mem->cost_grad + i, 0,
+                      res->res_stat + i, 0);
         blasfeo_daxpy(nu[i] + nx[i], -1.0, mem->dyn_adj + i, 0, res->res_stat + i, 0,
                       res->res_stat + i, 0);
         blasfeo_dvecnrm_inf(nv[i], res->res_stat + i, 0, &tmp_res);
