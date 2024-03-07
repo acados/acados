@@ -393,7 +393,7 @@ static void ocp_nlp_sqp_rti_cast_workspace(
 
 
 // utility functions
-static void reset_sub_timers(ocp_nlp_sqp_rti_memory *mem)
+static void reset_stats_and_sub_timers(ocp_nlp_sqp_rti_memory *mem)
 {
     mem->time_lin = 0.0;
     mem->time_reg = 0.0;
@@ -419,7 +419,7 @@ static void ocp_nlp_sqp_rti_preparation_step(ocp_nlp_config *config, ocp_nlp_dim
 
     ocp_nlp_workspace *nlp_work = work->nlp_work;
 
-    reset_sub_timers(mem);
+    reset_stats_and_sub_timers(mem);
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
     int num_threads_bkp = omp_get_num_threads();
@@ -560,7 +560,6 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
 
     if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
     {
-        //   print_ocp_qp_in(mem->qp_in);
 #ifndef ACADOS_SILENT
         printf("\nSQP_RTI: QP solver returned error status %d QP iteration %d.\n",
                 qp_status, qp_iter);
@@ -617,6 +616,61 @@ static void copy_ocp_nlp_out(ocp_nlp_dims *dims, ocp_nlp_out *from, ocp_nlp_out 
 }
 
 
+static void as_rti_sanity_checks(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_sqp_rti_opts *opts)
+{
+    // sanity checks
+    if (dims->nx[0] != dims->nx[1])
+    {
+        printf("dimensions nx[0] != nx[1], cannot perform AS-RTI!\n");
+        exit(1);
+    }
+    if (opts->as_rti_level == LEVEL_C)
+    {
+        int ng_ineq, ng_qp;
+        // does not work for nonlinear constraints yet
+        for (int k = 0; k < dims->N; k++)
+        {
+            config->constraints[k]->dims_get(config->constraints[k], dims->constraints[k], "ng", &ng_ineq);
+            config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, k, "ng", &ng_qp);
+            if (ng_ineq != ng_qp)
+            {
+                printf("AS-RTI with LEVEL_C not implemented for nonlinear inequality constraints.");
+                printf("Got ng_ineq = %d != %d = ng_qp at stage %d \n\n", ng_ineq, ng_qp, k);
+                exit(1);
+            }
+        }
+    }
+}
+
+static void as_rti_advance_problem(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_sqp_rti_opts *opts, ocp_nlp_memory *nlp_mem, ocp_nlp_workspace *nlp_work)
+{
+    ocp_nlp_opts *nlp_opts = opts->nlp_opts;
+    // setup advanced problem
+    if (opts->as_rti_advancement_strategy == SHIFT_ADVANCE)
+    {
+        // tmp_nxu_double = x at stage 1
+        blasfeo_unpack_dvec(dims->nx[1], nlp_out->ux+1, dims->nu[1], nlp_work->tmp_nxu_double, 1);
+    }
+    else if (opts->as_rti_advancement_strategy == SIMULATE_ADVANCE)
+    {
+        // dyn_fun = phi(x_0, u_0) - x_1
+        config->dynamics[0]->compute_fun(config->dynamics[0], dims->dynamics[0], nlp_in->dynamics[0],
+                            nlp_opts->dynamics[0], nlp_mem->dynamics[0], nlp_work->dynamics[0]);
+        struct blasfeo_dvec *dyn_fun = config->dynamics[0]->memory_get_fun_ptr(nlp_mem->dynamics[0]);
+        // dyn_fun += x_1
+        blasfeo_daxpy(dims->nx[0], +1.0, nlp_out->ux+1, dims->nu[1], dyn_fun, 0, dyn_fun, 0);
+        // tmp_nxu_double = phi(x0, u0)
+        blasfeo_unpack_dvec(dims->nx[1], dyn_fun, 0, nlp_work->tmp_nxu_double, 1);
+    }
+    if (opts->as_rti_advancement_strategy != NO_ADVANCE)
+    {
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", nlp_work->tmp_nxu_double);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", nlp_work->tmp_nxu_double);
+    }
+    // printf("advanced x value\n");
+    // blasfeo_print_exp_tran_dvec(dims->nx[1], nlp_out->ux+1, dims->nu[1]);
+}
+
 
 static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
     ocp_nlp_out *nlp_out, ocp_nlp_sqp_rti_opts *opts, ocp_nlp_sqp_rti_memory *mem, ocp_nlp_sqp_rti_workspace *work)
@@ -629,7 +683,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
     ocp_nlp_workspace *nlp_work = work->nlp_work;
     ocp_nlp_out *tmp_nlp_out = nlp_work->tmp_nlp_out;
 
-    reset_sub_timers(mem);
+    reset_stats_and_sub_timers(mem);
 
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
@@ -648,55 +702,11 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
 
     if (!mem->is_first_call)
     {
-        // setup advanced problem
-        if (opts->as_rti_advancement_strategy == SHIFT_ADVANCE)
-        {
-            // tmp_nxu_double = x at stage 1
-            blasfeo_unpack_dvec(dims->nx[1], nlp_out->ux+1, dims->nu[1], nlp_work->tmp_nxu_double, 1);
-        }
-        else if (opts->as_rti_advancement_strategy == SIMULATE_ADVANCE)
-        {
-            // dyn_fun = phi(x_0, u_0) - x_1
-            config->dynamics[0]->compute_fun(config->dynamics[0], dims->dynamics[0], nlp_in->dynamics[0],
-                                nlp_opts->dynamics[0], nlp_mem->dynamics[0], nlp_work->dynamics[0]);
-            struct blasfeo_dvec *dyn_fun = config->dynamics[0]->memory_get_fun_ptr(nlp_mem->dynamics[0]);
-            // dyn_fun += x_1
-            blasfeo_daxpy(dims->nx[0], +1.0, nlp_out->ux+1, dims->nu[1], dyn_fun, 0, dyn_fun, 0);
-            // tmp_nxu_double = phi(x0, u0)
-            blasfeo_unpack_dvec(dims->nx[1], dyn_fun, 0, nlp_work->tmp_nxu_double, 1);
-        }
-        if (opts->as_rti_advancement_strategy != NO_ADVANCE)
-        {
-            ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", nlp_work->tmp_nxu_double);
-            ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", nlp_work->tmp_nxu_double);
-        }
-        // printf("advanced x value\n");
-        // blasfeo_print_exp_tran_dvec(dims->nx[1], nlp_out->ux+1, dims->nu[1]);
+        as_rti_advance_problem(config, dims, nlp_in, nlp_out, opts, nlp_mem, nlp_work);
     }
     else
     {
-        // sanity checks
-        if (dims->nx[0] != dims->nx[1])
-        {
-            printf("dimensions nx[0] != nx[1], cannot perform AS-RTI!\n");
-            exit(1);
-        }
-        if (opts->as_rti_level == LEVEL_C)
-        {
-            int ng_ineq, ng_qp;
-            // does not work for nonlinear constraints yet
-            for (int k = 0; k < dims->N; k++)
-            {
-                config->constraints[k]->dims_get(config->constraints[k], dims->constraints[k], "ng", &ng_ineq);
-                config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, k, "ng", &ng_qp);
-                if (ng_ineq != ng_qp)
-                {
-                    printf("AS-RTI with LEVEL_C not implemented for nonlinear inequality constraints.");
-                    printf("Got ng_ineq = %d != %d = ng_qp at stage %d \n\n", ng_ineq, ng_qp, k);
-                    exit(1);
-                }
-            }
-        }
+        as_rti_sanity_checks(config, dims, opts);
     }
 
     // if AS_RTI-A and not first call!
