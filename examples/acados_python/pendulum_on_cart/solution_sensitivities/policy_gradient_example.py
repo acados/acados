@@ -350,7 +350,6 @@ def main_augmented(param_M_as_state: bool, idxp: int, qp_solver_ric_alg: int, ei
             min_eig_full[i], min_abs_eig_full[i], min_abs_eig_proj_hess[i], min_eig_proj_hess[i], min_eig_P[i], min_abs_eig_P[i] = evaluate_hessian_eigenvalues(sensitivity_solver)
 
         # Calculate the policy gradient
-        sensitivity_solver.eval_param_sens(idxp)
         _, sens_u_ = sensitivity_solver.eval_solution_sensitivity(0, "initial_state")
         sens_u[i] = sens_u_[:, idxp]
 
