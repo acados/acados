@@ -471,6 +471,30 @@ void ocp_nlp_dynamics_disc_memory_get(void *config_, void *dims_, void *mem_, co
 }
 
 
+void ocp_nlp_dynamics_disc_memory_get_params_grad(void *config_, void *dims_, void *opts_, void *memory_,
+                                                        int index, struct blasfeo_dvec *out, int offset)
+{
+    ocp_nlp_dynamics_disc_dims *dims = dims_;
+    ocp_nlp_dynamics_disc_memory *memory = memory_;
+
+    int nx1 = dims->nx1;
+
+    blasfeo_dcolex(nx1, &memory->params_jac, 0, index, out, offset);
+}
+
+
+void ocp_nlp_dynamics_disc_memory_get_params_lag_grad(void *config_, void *dims_, void *opts_, void *memory_,
+                                                        int index, struct blasfeo_dvec *out, int offset)
+{
+    ocp_nlp_dynamics_disc_dims *dims = dims_;
+    ocp_nlp_dynamics_disc_memory *memory = memory_;
+
+    int nx = dims->nx;
+    int nu = dims->nu;
+
+    blasfeo_dcolex(nx + nu, &memory->params_lag_jac, 0, index, out, offset);
+}
+
 
 /************************************************
  * workspace
@@ -825,30 +849,6 @@ void ocp_nlp_dynamics_disc_compute_params_jac(void *config_, void *dims_, void *
     return;
 }
 
-
-void ocp_nlp_dynamics_disc_memory_get_params_grad(void *config_, void *dims_, void *opts_, void *memory_,
-                                                        int index, struct blasfeo_dvec *out, int offset)
-{
-    ocp_nlp_dynamics_disc_dims *dims = dims_;
-    ocp_nlp_dynamics_disc_memory *memory = memory_;
-
-    int nx1 = dims->nx1;
-
-    blasfeo_dcolex(nx1, &memory->params_jac, 0, index, out, offset);
-}
-
-
-void ocp_nlp_dynamics_disc_memory_get_params_lag_grad(void *config_, void *dims_, void *opts_, void *memory_,
-                                                        int index, struct blasfeo_dvec *out, int offset)
-{
-    ocp_nlp_dynamics_disc_dims *dims = dims_;
-    ocp_nlp_dynamics_disc_memory *memory = memory_;
-
-    int nx = dims->nx;
-    int nu = dims->nu;
-
-    blasfeo_dcolex(nx + nu, &memory->params_lag_jac, 0, index, out, offset);
-}
 
 int ocp_nlp_dynamics_disc_precompute(void *config_, void *dims, void *model_, void *opts_,
                                         void *mem_, void *work_)

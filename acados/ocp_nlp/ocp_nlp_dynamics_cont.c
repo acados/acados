@@ -571,6 +571,19 @@ void ocp_nlp_dynamics_cont_memory_get(void *config_, void *dims_, void *mem_, co
 }
 
 
+void ocp_nlp_dynamics_cont_memory_get_params_grad(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset)
+{
+    printf("\nerror: ocp_nlp_dynamics_cont_memory_params_grad: not implemented\n");
+    exit(1);
+}
+
+
+void ocp_nlp_dynamics_cont_memory_get_params_lag_grad(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset)
+{
+    printf("\nerror: ocp_nlp_dynamics_cont_memory_params_lag_grad: not implemented\n");
+    exit(1);
+}
+
 
 /************************************************
  * workspace
@@ -1003,6 +1016,8 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
     config->memory_set_sim_guess_ptr = &ocp_nlp_dynamics_cont_memory_set_sim_guess_ptr;
     config->memory_set_z_alg_ptr = &ocp_nlp_dynamics_cont_memory_set_z_alg_ptr;
     config->memory_get = &ocp_nlp_dynamics_cont_memory_get;
+    config->memory_get_params_grad = &ocp_nlp_dynamics_cont_memory_get_params_grad;
+    config->memory_get_params_lag_grad = &ocp_nlp_dynamics_cont_memory_get_params_lag_grad;
     config->workspace_calculate_size = &ocp_nlp_dynamics_cont_workspace_calculate_size;
     config->initialize = &ocp_nlp_dynamics_cont_initialize;
     config->update_qp_matrices = &ocp_nlp_dynamics_cont_update_qp_matrices;
