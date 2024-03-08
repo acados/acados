@@ -117,7 +117,7 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_,
     opts->rti_phase = 0;
     opts->as_rti_level = LEVEL_A;
     opts->as_rti_advancement_strategy = SIMULATE_ADVANCE;
-    opts->as_rti_iter = 1;
+    opts->as_rti_iter = 0;
     opts->rti_log_residuals = 0;
 
     return;
@@ -682,6 +682,10 @@ static void as_rti_sanity_checks(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp
                 exit(1);
             }
         }
+    }
+    if (opts->as_rti_iter < 1)
+    {
+        printf("\n\nAS-RTI: as_rti_iter < 1: no advanced step iteration will be performed!\n\n");
     }
 }
 
