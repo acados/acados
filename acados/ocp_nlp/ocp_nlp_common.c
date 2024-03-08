@@ -2314,7 +2314,7 @@ void ocp_nlp_level_c_update(ocp_nlp_config *config,
     ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
     int N = dims->N;
-    // int *nv = dims->nv;
+    int *nv = dims->nv;
     int *nx = dims->nx;
     int *nu = dims->nu;
     int *ni = dims->ni;
@@ -2333,6 +2333,19 @@ void ocp_nlp_level_c_update(ocp_nlp_config *config,
         // copy into nlp_mem
         blasfeo_dveccp(2 * ni[i], ineq_fun, 0, mem->ineq_fun + i, 0);
     }
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (int i=0; i<=N; i++)
+    {
+        // nlp mem: cost_grad
+        config->cost[i]->compute_gradient(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i], mem->cost[i], work->cost[i]);
+        struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get_grad_ptr(mem->cost[i]);
+        blasfeo_dveccp(nv[i], cost_grad, 0, mem->cost_grad + i, 0);
+        blasfeo_dveccp(nv[i], mem->cost_grad + i, 0, mem->qp_in->rqz + i, 0);
+    }
+
 
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
@@ -2360,27 +2373,13 @@ void ocp_nlp_level_c_update(ocp_nlp_config *config,
         // DEBUG:
         // printf("\ndyn_adj i %d\n", i);
         // blasfeo_print_exp_tran_dvec(nu[i] + nx[i], dyn_adj, 0);
-        // printf("pi\n");
-        // blasfeo_print_exp_tran_dvec(nx[i], out->pi+i, 0);
-
         // blasfeo_dgemv_n(nu[i] + nx[i], nx[i+1], 1.0, mem->qp_in->BAbt+i, 0, 0, out->pi+i, 0, 0.0, &work->tmp_nxu, 0, &work->tmp_nxu, 0);
         // printf("C * lam\n");
         // blasfeo_print_exp_tran_dvec(nu[i] + nx[i], &work->tmp_nxu, 0);
     }
 
     // TODO:
-    // - evaluate cost gradient exactly
     // - adjoint call for inequalities as for dynamics
-
-    // add gradient correction
-    // rqz += Hess * last_step = RQ * qp_out
-    for (int i = 0; i <= N; i++)
-    {
-        // NOTE: only lower triagonal of RSQ is stored
-        blasfeo_dsymv_l_mn(nx[i]+nu[i], nx[i]+nu[i], 1.0, mem->qp_in->RSQrq+i, 0, 0,
-                        mem->qp_out->ux+i, 0, 1.0, mem->qp_in->rqz+i, 0, mem->qp_in->rqz+i, 0);
-        // TODO: fix for ns > 0.
-    }
 }
 
 

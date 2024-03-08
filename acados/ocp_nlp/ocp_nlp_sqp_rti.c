@@ -726,6 +726,18 @@ static void level_c_prepare_residual_computation(ocp_nlp_config *config,
     int *nu = dims->nu;
     int *ni = dims->ni;
 
+
+    // evaluate constraint adjoint
+    for (int i=0; i <= N; i++)
+    {
+        // constraints: evaluate function and adjoint
+        config->constraints[i]->update_qp_matrices(config->constraints[i], dims->constraints[i], in->constraints[i],
+                                         opts->constraints[i], mem->constraints[i], work->constraints[i]);
+        struct blasfeo_dvec *ineq_adj =
+            config->constraints[i]->memory_get_adj_ptr(mem->constraints[i]);
+        blasfeo_dveccp(nv[i], ineq_adj, 0, mem->ineq_adj + i, 0);
+    }
+
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
@@ -992,7 +1004,6 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
 
             // update variables
             ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, alpha);
-
         }
     }
     else if (opts->as_rti_level == LEVEL_C && !mem->is_first_call)
