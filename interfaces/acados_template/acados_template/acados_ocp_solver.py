@@ -824,10 +824,13 @@ class AcadosOcpSolver:
             raise Exception('AcadosOcpSolver.eval_param_sens(): index must be Integer.')
 
         if field == "ex":
-            nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
+            if not stage == 0:
+                raise Exception('AcadosOcpSolver.eval_param_sens(): only stage == 0 is supported.')
+            nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage, "x".encode('utf-8'))
 
             if index < 0 or index > nx:
                 raise Exception(f'AcadosOcpSolver.eval_param_sens(): index must be in [0, nx-1], got: {index}.')
+
         elif field == "params_global":
             nparam = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p".encode('utf-8'))
 
