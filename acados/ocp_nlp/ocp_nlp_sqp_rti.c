@@ -435,6 +435,69 @@ static void rti_store_residuals_in_stats(ocp_nlp_sqp_rti_opts *opts, ocp_nlp_sqp
         mem->stat[mem->stat_n * mem->sqp_iter+2+m_offset] = nlp_res->inf_norm_res_ineq;
         mem->stat[mem->stat_n * mem->sqp_iter+3+m_offset] = nlp_res->inf_norm_res_comp;
     }
+    // printf("storting residuals in line %d\n", mem->sqp_iter);
+}
+
+
+
+
+static void prepare_full_residual_computation(ocp_nlp_config *config,
+    ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
+    ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+{
+    int N = dims->N;
+    int *nv = dims->nv;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ni = dims->ni;
+
+    for (int i=0; i < N; i++)
+    {
+        // dynamics: evaluate function and adjoint
+        config->dynamics[i]->compute_fun_and_adjoint(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
+                                         opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
+    }
+
+    for (int i=0; i <= N; i++)
+    {
+        // constraints: evaluate function and adjoint
+        config->constraints[i]->update_qp_matrices(config->constraints[i], dims->constraints[i], in->constraints[i],
+                                         opts->constraints[i], mem->constraints[i], work->constraints[i]);
+        struct blasfeo_dvec *ineq_adj =
+            config->constraints[i]->memory_get_adj_ptr(mem->constraints[i]);
+        blasfeo_dveccp(nv[i], ineq_adj, 0, mem->ineq_adj + i, 0);
+    }
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (int i=0; i <= N; i++)
+    {
+        // nlp mem: cost_grad
+        config->cost[i]->compute_gradient(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i], mem->cost[i], work->cost[i]);
+        struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get_grad_ptr(mem->cost[i]);
+        blasfeo_dveccp(nv[i], cost_grad, 0, mem->cost_grad + i, 0);
+
+        // nlp mem: dyn_adj
+        if (i < N)
+        {
+            struct blasfeo_dvec *dyn_adj
+                = config->dynamics[i]->memory_get_adj_ptr(mem->dynamics[i]);
+            blasfeo_dveccp(nu[i] + nx[i], dyn_adj, 0, mem->dyn_adj + i, 0);
+        }
+        else
+        {
+            blasfeo_dvecse(nu[N] + nx[N], 0.0, mem->dyn_adj + N, 0);
+        }
+        if (i > 0)
+        {
+            // TODO: this could be simplified by not copying pi in the dynamics module.
+            struct blasfeo_dvec *dyn_adj
+                = config->dynamics[i-1]->memory_get_adj_ptr(mem->dynamics[i-1]);
+            blasfeo_daxpy(nx[i], 1.0, dyn_adj, nu[i-1]+nx[i-1], mem->dyn_adj+i, nu[i],
+                mem->dyn_adj+i, nu[i]);
+        }
+    }
 }
 
 
@@ -614,8 +677,6 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
         return;
     }
 
-    mem->sqp_iter += 1;
-
     // globalization
     acados_tic(&timer1);
     // TODO: not clear if line search should be called with sqp_iter==0 in RTI;
@@ -624,8 +685,14 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
 
     // update variables
     ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, alpha);
-
     mem->status = ACADOS_SUCCESS;
+
+    if (opts->rti_log_residuals)
+    {
+        prepare_full_residual_computation(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+        ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_mem->nlp_res, nlp_mem);
+        rti_store_residuals_in_stats(opts, mem);
+    }
 
 }
 
@@ -776,66 +843,6 @@ static void level_c_prepare_residual_computation(ocp_nlp_config *config,
 }
 
 
-static void level_b_prepare_residual_computation(ocp_nlp_config *config,
-    ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
-    ocp_nlp_memory *mem, ocp_nlp_workspace *work)
-{
-    int N = dims->N;
-    int *nv = dims->nv;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
-    int *ni = dims->ni;
-
-    for (int i=0; i < N; i++)
-    {
-        // dynamics: evaluate function and adjoint
-        config->dynamics[i]->compute_fun_and_adjoint(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
-                                         opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
-    }
-
-    for (int i=0; i <= N; i++)
-    {
-        // constraints: evaluate function and adjoint
-        config->constraints[i]->update_qp_matrices(config->constraints[i], dims->constraints[i], in->constraints[i],
-                                         opts->constraints[i], mem->constraints[i], work->constraints[i]);
-        struct blasfeo_dvec *ineq_adj =
-            config->constraints[i]->memory_get_adj_ptr(mem->constraints[i]);
-        blasfeo_dveccp(nv[i], ineq_adj, 0, mem->ineq_adj + i, 0);
-    }
-
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp parallel for
-#endif
-    for (int i=0; i <= N; i++)
-    {
-        // nlp mem: cost_grad
-        config->cost[i]->compute_gradient(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i], mem->cost[i], work->cost[i]);
-        struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get_grad_ptr(mem->cost[i]);
-        blasfeo_dveccp(nv[i], cost_grad, 0, mem->cost_grad + i, 0);
-
-        // nlp mem: dyn_adj
-        if (i < N)
-        {
-            struct blasfeo_dvec *dyn_adj
-                = config->dynamics[i]->memory_get_adj_ptr(mem->dynamics[i]);
-            blasfeo_dveccp(nu[i] + nx[i], dyn_adj, 0, mem->dyn_adj + i, 0);
-        }
-        else
-        {
-            blasfeo_dvecse(nu[N] + nx[N], 0.0, mem->dyn_adj + N, 0);
-        }
-        if (i > 0)
-        {
-            // TODO: this could be simplified by not copying pi in the dynamics module.
-            struct blasfeo_dvec *dyn_adj
-                = config->dynamics[i-1]->memory_get_adj_ptr(mem->dynamics[i-1]);
-            blasfeo_daxpy(nx[i], 1.0, dyn_adj, nu[i-1]+nx[i-1], mem->dyn_adj+i, nu[i],
-                mem->dyn_adj+i, nu[i]);
-        }
-    }
-}
-
-
 
 static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
     ocp_nlp_out *nlp_out, ocp_nlp_sqp_rti_opts *opts, ocp_nlp_sqp_rti_memory *mem, ocp_nlp_sqp_rti_workspace *work)
@@ -947,7 +954,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             if (opts->rti_log_residuals)
             {
                 // evaluate additional functions and compute residuals
-                level_b_prepare_residual_computation(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+                prepare_full_residual_computation(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
                 ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_mem->nlp_res, nlp_mem);
                 rti_store_residuals_in_stats(opts, mem);
             }
