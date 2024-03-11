@@ -449,7 +449,7 @@ static void prepare_full_residual_computation(ocp_nlp_config *config,
     int *nv = dims->nv;
     int *nx = dims->nx;
     int *nu = dims->nu;
-    int *ni = dims->ni;
+    // int *ni = dims->ni;
 
     for (int i=0; i < N; i++)
     {
@@ -795,7 +795,7 @@ static void level_c_prepare_residual_computation(ocp_nlp_config *config,
     int *nv = dims->nv;
     int *nx = dims->nx;
     int *nu = dims->nu;
-    int *ni = dims->ni;
+    // int *ni = dims->ni;
 
 
     // evaluate constraint adjoint
@@ -935,7 +935,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
         // globalization
         acados_tic(&timer1);
         // TODO: not clear if line search should be called with sqp_iter==0 in RTI;
-        double alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, 1);
+        alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, 1);
         mem->time_glob += acados_toc(&timer1);
 
         // update variables
