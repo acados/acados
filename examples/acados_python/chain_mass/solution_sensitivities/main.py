@@ -36,9 +36,12 @@ def get_chain_params():
     params["perturb_scale"] = 1e-2
 
     params["m"] = np.random.normal(params["m_nom"], params["perturb_scale"] * params["m_nom"], params["n_mass"])
-    params["D"] = np.random.normal(params["D_nom"], params["perturb_scale"] * params["m_nom"], params["n_mass"])
-    params["L"] = np.random.normal(params["L_nom"], params["perturb_scale"] * params["m_nom"], params["n_mass"])
-    params["C"] = np.random.normal(params["C_nom"], params["perturb_scale"] * params["m_nom"], params["n_mass"])
+    # params["D"] = np.ones((params["n_mass"], 3)) * params["D_nom"]
+    # params["L"] = np.ones((params["n_mass"], 3)) * params["L_nom"]
+    # params["C"] = np.ones((params["n_mass"], 3)) * params["C_nom"]
+    params["D"] = np.random.normal(params["D_nom"], params["perturb_scale"] * params["m_nom"], (params["n_mass"], 3))
+    params["L"] = np.random.normal(params["L_nom"], params["perturb_scale"] * params["m_nom"], (params["n_mass"], 3))
+    params["C"] = np.random.normal(params["C_nom"], params["perturb_scale"] * params["m_nom"], (params["n_mass"], 3))
 
     params["save_results"] = True
     params["show_plots"] = True
@@ -78,7 +81,9 @@ def export_chain_mass_model(
         else:
             dist = xpos[i * 3 : (i + 1) * 3] - xpos[(i - 1) * 3 : i * 3]
 
-        F = D[i] / m[i] * (1 - L[i] / norm_2(dist)) * dist
+        F = ca.SX.zeros(3, 1)
+        for j in range(3):
+            F[j] = D[i, j] / m[i] * (1 - L[i, j] / norm_2(dist)) * dist[j]
         # F = scale * dist
 
         # mass on the right
@@ -96,7 +101,8 @@ def export_chain_mass_model(
         else:
             vel = xvel[i * 3 : (i + 1) * 3] - xvel[(i - 1) * 3 : i * 3]
 
-        F = C[i] * vel
+        F = ca.SX.zeros(3, 1)
+        F[j] = C[i, j] * vel[j]
 
         # mass on the right
         if i < M:
