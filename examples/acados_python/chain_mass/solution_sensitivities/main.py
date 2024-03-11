@@ -32,11 +32,13 @@ def get_chain_params():
     params["m_nom"] = 0.033  # mass of the balls
     params["D_nom"] = 1.0  # spring constant
     params["L_nom"] = 0.033  # rest length of spring
+    params["C_nom"] = 0.1  # damping constant
     params["perturb_scale"] = 1e-2
 
     params["m"] = np.random.normal(params["m_nom"], params["perturb_scale"] * params["m_nom"], params["n_mass"])
     params["D"] = np.random.normal(params["D_nom"], params["perturb_scale"] * params["m_nom"], params["n_mass"])
     params["L"] = np.random.normal(params["L_nom"], params["perturb_scale"] * params["m_nom"], params["n_mass"])
+    params["C"] = np.random.normal(params["C_nom"], params["perturb_scale"] * params["m_nom"], params["n_mass"])
 
     params["save_results"] = True
     params["show_plots"] = True
@@ -47,7 +49,9 @@ def get_chain_params():
     return params
 
 
-def export_chain_mass_model(n_mass: int, m: np.ndarray, D: np.ndarray, L: np.ndarray, disturbance=False) -> AcadosModel:
+def export_chain_mass_model(
+    n_mass: int, m: np.ndarray, D: np.ndarray, L: np.ndarray, C: np.ndarray, disturbance=False
+) -> AcadosModel:
     """Export chain mass model for acados."""
     x0 = np.array([0, 0, 0])  # fix mass (at wall)
 
@@ -85,22 +89,22 @@ def export_chain_mass_model(n_mass: int, m: np.ndarray, D: np.ndarray, L: np.nda
         if i > 0:
             f[(i - 1) * 3 : i * 3] += F
 
-    # # Damping force
-    # for i in range(M):
-    #     if i == 0:
-    #         vel = xvel[i * 3 : (i + 1) * 3]
-    #     else:
-    #         vel = xvel[i * 3 : (i + 1) * 3] - xvel[(i - 1) * 3 : i * 3]
+    # Damping force
+    for i in range(M):
+        if i == 0:
+            vel = xvel[i * 3 : (i + 1) * 3]
+        else:
+            vel = xvel[i * 3 : (i + 1) * 3] - xvel[(i - 1) * 3 : i * 3]
 
-    #     F = C[i] * vel
+        F = C[i] * vel
 
-    #     # mass on the right
-    #     if i < M:
-    #         f[i * 3 : (i + 1) * 3] -= F
+        # mass on the right
+        if i < M:
+            f[i * 3 : (i + 1) * 3] -= F
 
-    #     # mass on the left
-    #     if i > 0:
-    #         f[(i - 1) * 3 : i * 3] += F
+        # mass on the left
+        if i > 0:
+            f[(i - 1) * 3 : i * 3] += F
 
     x = vertcat(xpos, xvel)
 
@@ -130,9 +134,9 @@ def export_chain_mass_model(n_mass: int, m: np.ndarray, D: np.ndarray, L: np.nda
     return model
 
 
-def compute_steady_state(n_mass, m, D, L, xPosFirstMass, xEndRef, disturbance=False):
+def compute_steady_state(n_mass, m, D, L, C, xPosFirstMass, xEndRef, disturbance=False):
     """Compute steady state for chain mass model."""
-    model = export_chain_mass_model(n_mass, m, D, L, disturbance=disturbance)
+    model = export_chain_mass_model(n_mass, m, D, L, C, disturbance=disturbance)
     nx = model.x.shape[0]
     M = int((nx / 3 - 1) / 2)
 
@@ -183,7 +187,7 @@ def sampleFromEllipsoid(w, Z):
     return y
 
 
-def export_chain_mass_integrator(n_mass, m, D, L, disturbance=False) -> AcadosSimSolver:
+def export_chain_mass_integrator(n_mass, m, D, L, C, disturbance=False) -> AcadosSimSolver:
     """Export chain mass integrator for acados."""
     sim = AcadosSim()
     # simulation options
@@ -191,7 +195,7 @@ def export_chain_mass_integrator(n_mass, m, D, L, disturbance=False) -> AcadosSi
 
     # export model
     M = n_mass - 2  # number of intermediate masses
-    model = export_chain_mass_model(n_mass, m, D, L, disturbance=disturbance)
+    model = export_chain_mass_model(n_mass, m, D, L, C, disturbance=disturbance)
 
     # set model
     sim.model = model
@@ -233,6 +237,7 @@ def main(_chain_params: dict):
     m = _chain_params["m"]
     D = _chain_params["D"]
     L = _chain_params["L"]
+    C = _chain_params["C"]
     perturb_scale = _chain_params["perturb_scale"]
 
     nlp_iter = _chain_params["nlp_iter"]
@@ -247,7 +252,7 @@ def main(_chain_params: dict):
     W = perturb_scale * np.eye(nparam)
 
     # export model
-    model = export_chain_mass_model(n_mass, m, D, L, disturbance=True)
+    model = export_chain_mass_model(n_mass, m, D, L, C, disturbance=True)
 
     # set model
     ocp.model = model
@@ -265,7 +270,7 @@ def main(_chain_params: dict):
     xEndRef[0] = np.sum(L) * 6
     pos0_x = np.linspace(xPosFirstMass[0], xEndRef[0], n_mass)
 
-    xrest = compute_steady_state(n_mass, m, D, L, xPosFirstMass, xEndRef, disturbance=False)
+    xrest = compute_steady_state(n_mass, m, D, L, C, xPosFirstMass, xEndRef, disturbance=False)
 
     x0 = xrest
 
@@ -355,7 +360,7 @@ def main(_chain_params: dict):
     acados_ocp_solver = AcadosOcpSolver(ocp, json_file="acados_ocp_" + model.name + ".json")
 
     # acados_integrator = AcadosSimSolver(ocp, json_file = 'acados_ocp_' + model.name + '.json')
-    acados_integrator = export_chain_mass_integrator(n_mass, m, D, L, disturbance=True)
+    acados_integrator = export_chain_mass_integrator(n_mass, m, D, L, C, disturbance=True)
 
     # %% get initial state from xrest
     xcurrent = x0.reshape((nx,))
