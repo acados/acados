@@ -29,10 +29,14 @@ def get_chain_params():
     params["u_init"] = np.array([-1, 1, 1])
     params["with_wall"] = True
     params["yPosWall"] = -0.05  # Dimitris: - 0.1;
-    params["m"] = 0.033  # mass of the balls
-    params["D"] = 1.0  # spring constant
-    params["L"] = 0.033  # rest length of spring
+    params["m_nom"] = 0.033  # mass of the balls
+    params["D_nom"] = 1.0  # spring constant
+    params["L_nom"] = 0.033  # rest length of spring
     params["perturb_scale"] = 1e-2
+
+    params["m"] = np.random.normal(params["m_nom"], params["perturb_scale"] * params["m_nom"], params["n_mass"])
+    params["D"] = np.random.normal(params["D_nom"], params["perturb_scale"] * params["m_nom"], params["n_mass"])
+    params["L"] = np.random.normal(params["L_nom"], params["perturb_scale"] * params["m_nom"], params["n_mass"])
 
     params["save_results"] = True
     params["show_plots"] = True
@@ -43,7 +47,7 @@ def get_chain_params():
     return params
 
 
-def export_chain_mass_model(n_mass, m, D, L, disturbance=False) -> AcadosModel:
+def export_chain_mass_model(n_mass: int, m: np.ndarray, D: np.ndarray, L: np.ndarray, disturbance=False) -> AcadosModel:
     """Export chain mass model for acados."""
     x0 = np.array([0, 0, 0])  # fix mass (at wall)
 
@@ -59,17 +63,19 @@ def export_chain_mass_model(n_mass, m, D, L, disturbance=False) -> AcadosModel:
 
     f = SX.zeros(3 * M, 1)  # force on intermediate masses
 
+    # Gravity force
     for i in range(M):
         f[3 * i + 2] = -9.81
 
+    # Spring force
     for i in range(M + 1):
         if i == 0:
             dist = xpos[i * 3 : (i + 1) * 3] - x0
         else:
             dist = xpos[i * 3 : (i + 1) * 3] - xpos[(i - 1) * 3 : i * 3]
 
-        scale = D / m * (1 - L / norm_2(dist))
-        F = scale * dist
+        F = D[i] / m[i] * (1 - L[i] / norm_2(dist)) * dist
+        # F = scale * dist
 
         # mass on the right
         if i < M:
@@ -78,29 +84,6 @@ def export_chain_mass_model(n_mass, m, D, L, disturbance=False) -> AcadosModel:
         # mass on the left
         if i > 0:
             f[(i - 1) * 3 : i * 3] += F
-
-    # Gravity force
-    # for i in range(M):
-    #     f[3 * i + 2] = -9.81
-
-    # # Spring force
-    # for i in range(M + 1):
-    #     if i == 0:
-    #         dist = xpos[i * 3 : (i + 1) * 3] - x0
-    #     else:
-    #         dist = xpos[i * 3 : (i + 1) * 3] - xpos[(i - 1) * 3 : i * 3]
-
-    #     for j in range(3):
-    #         F = D[i, j] / m[i] * (1 - L[i, j] / norm_2(dist[j])) * dist[j]
-    #     # F = scale * dist
-
-    #     # mass on the right
-    #     if i < M:
-    #         f[i * 3 : (i + 1) * 3] -= F
-
-    #     # mass on the left
-    #     if i > 0:
-    #         f[(i - 1) * 3 : i * 3] += F
 
     # # Damping force
     # for i in range(M):
@@ -278,7 +261,8 @@ def main(_chain_params: dict):
     # initial state
     xPosFirstMass = np.zeros((3, 1))
     xEndRef = np.zeros((3, 1))
-    xEndRef[0] = L * (M + 1) * 6
+    # xEndRef[0] = L * (M + 1) * 6
+    xEndRef[0] = np.sum(L) * 6
     pos0_x = np.linspace(xPosFirstMass[0], xEndRef[0], n_mass)
 
     xrest = compute_steady_state(n_mass, m, D, L, xPosFirstMass, xEndRef, disturbance=False)
