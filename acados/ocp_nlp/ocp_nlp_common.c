@@ -2262,7 +2262,7 @@ void ocp_nlp_zero_order_qp_update(ocp_nlp_config *config,
     ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
     int N = dims->N;
-    int *nv = dims->nv;
+    // int *nv = dims->nv;
     int *nx = dims->nx;
     int *nu = dims->nu;
     int *ni = dims->ni;
