@@ -771,12 +771,13 @@ void ocp_nlp_cost_conl_compute_gradient(void *config_, void *dims_, void *model_
         conl_fun_jac_hess_type_out[4] = BLASFEO_DMAT;
         conl_fun_jac_hess_out[4] = &work->W;             // outer hessian: ny x ny
 
+        // NOTE: could be done more efficiently by generating a function that does not evalutate hessian
         // evaluate external function
         model->conl_cost_fun_jac_hess->evaluate(model->conl_cost_fun_jac_hess, conl_fun_jac_hess_type_in,
                                                 conl_fun_jac_hess_in, conl_fun_jac_hess_type_out, conl_fun_jac_hess_out);
 
         // hessian of outer loss function
-        blasfeo_dpotrf_l(ny, &work->W, 0, 0, &memory->W_chol, 0, 0);
+        // blasfeo_dpotrf_l(ny, &work->W, 0, 0, &memory->W_chol, 0, 0);
 
         if (nz > 0)
         {
