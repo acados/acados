@@ -379,6 +379,10 @@ typedef struct ocp_nlp_workspace
     void **cost;         // cost_workspace
     void **constraints;  // constraints_workspace
 
+    // temp QP in & out (to be used as workspace in param sens)
+    ocp_qp_in *tmp_qp_in;
+    ocp_qp_out *tmp_qp_out;
+
     // for globalization: -> move to module?!
     ocp_nlp_out *tmp_nlp_out;
     ocp_nlp_out *weight_merit_fun;
@@ -435,6 +439,11 @@ void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
 
 void ocp_nlp_params_jac_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
+
+void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
+                        ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
+                        char *field, int stage, int index, ocp_nlp_out *sens_nlp_out);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
