@@ -101,6 +101,7 @@ class AcadosOcpOptions:
         self.__custom_templates = []
         self.__custom_update_copy = True
         self.__as_rti_iter = 1
+        self.__as_rti_level = 0
 
     @property
     def qp_solver(self):
@@ -415,6 +416,21 @@ class AcadosOcpOptions:
         Default: 1
         """
         return self.__as_rti_iter
+
+
+    @property
+    def as_rti_level(self):
+        """
+        Level of the advanced-step real-time iteration.
+
+        LEVEL-A: 0
+        LEVEL-B: 1
+        LEVEL-C: 2
+        LEVEL-D: 3
+
+        Default: 0
+        """
+        return self.__as_rti_level
 
     @property
     def tol(self):
@@ -905,6 +921,14 @@ class AcadosOcpOptions:
             self.__as_rti_iter = as_rti_iter
         else:
             raise Exception('Invalid as_rti_iter value. as_rti_iter must be a nonnegative int.')
+
+    @as_rti_level.setter
+    def as_rti_level(self, as_rti_level):
+        if as_rti_level in [0, 1, 2, 3]:
+            self.__as_rti_level = as_rti_level
+        else:
+            raise Exception('Invalid as_rti_level value must be in [0, 1, 2, 3].')
+
 
     @qp_solver_ric_alg.setter
     def qp_solver_ric_alg(self, qp_solver_ric_alg):
