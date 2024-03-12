@@ -688,8 +688,75 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
 void ocp_nlp_cost_external_compute_gradient(void *config_, void *dims_, void *model_, void *opts_,
                                  void *memory_, void *work_)
 {
-    printf("\nocp_nlp_cost_external_compute_gradient not implemented.\n\n");
-    exit(1);
+    ocp_nlp_cost_external_dims *dims = dims_;
+    ocp_nlp_cost_external_model *model = model_;
+    ocp_nlp_cost_external_opts *opts = opts_;
+    ocp_nlp_cost_external_memory *memory = memory_;
+    ocp_nlp_cost_external_workspace *work = work_;
+
+    ocp_nlp_cost_external_cast_workspace(config_, dims, opts_, work_);
+
+    int nx = dims->nx;
+    int nz = dims->nz;
+    int nu = dims->nu;
+    int ns = dims->ns;
+
+    /* specify input types and pointers for external cost function */
+    ext_fun_arg_t ext_fun_type_in[3];
+    void *ext_fun_in[3];
+    ext_fun_arg_t ext_fun_type_out[2];
+    void *ext_fun_out[2];
+
+    // INPUT
+    struct blasfeo_dvec_args u_in;  // input u
+    u_in.x = memory->ux;
+    u_in.xi = 0;
+    struct blasfeo_dvec_args x_in;  // input x
+    x_in.x = memory->ux;
+    x_in.xi = nu;
+
+    ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+    ext_fun_in[0] = &x_in;
+    ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
+    ext_fun_in[1] = &u_in;
+    ext_fun_type_in[2] = BLASFEO_DVEC;
+    ext_fun_in[2] = memory->z_alg;
+
+    // OUTPUT
+    ext_fun_type_out[0] = COLMAJ;
+    ext_fun_out[0] = &memory->fun;  // fun: scalar
+
+    ext_fun_type_out[1] = BLASFEO_DVEC;
+    ext_fun_out[1] = &work->tmp_nunxnz;  // tmp_nunxnz: nu+nx+nz
+
+    // evaluate external function
+    model->ext_cost_fun_jac->evaluate(model->ext_cost_fun_jac, ext_fun_type_in,
+                                        ext_fun_in, ext_fun_type_out, ext_fun_out);
+
+    // gradient
+    blasfeo_dveccp(nu+nx, &work->tmp_nunxnz, 0, &memory->grad, 0);
+    if (nz > 0)
+    {
+        blasfeo_dgemv_n(nu+nx, nz, 1.0, memory->dzdux_tran, 0, 0, &work->tmp_nunxnz, nu+nx, 1., &memory->grad, 0, &memory->grad, 0);
+    }
+
+    // slack update gradient
+    blasfeo_dveccp(2*ns, &model->z, 0, &memory->grad, nu+nx);
+    blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
+
+    // slack update function value
+    // tmp_2ns = 2 * z + Z .* slack
+    // blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);
+    // blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &work->tmp_2ns, 0);
+    // fun += .5 * (tmp_2ns .* slack)
+    // memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->ux, nu+nx);
+
+    // scale
+    if (model->scaling!=1.0)
+    {
+        blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
+        // memory->fun *= model->scaling;
+    }
 }
 
 
