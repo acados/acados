@@ -1497,7 +1497,6 @@ class AcadosOcpSolver:
             - qp_tau_min: for HPIPM QP solvers: minimum value of barrier parameter in HPIPM
             - qp_mu0: for HPIPM QP solvers: initial value for complementarity slackness
             - warm_start_first_qp: indicates if first QP in SQP is warm_started
-            - rti_phase: phase of the real-time iteration algorithm (0: preparation+feedback, 1: feedback, 2: preparation, 3: advanced step preparation)
         """
         int_fields = ['print_level', 'rti_phase', 'initialize_t_slacks', 'qp_warm_start',
                       'line_search_use_sufficient_descent', 'full_step_dual', 'globalization_use_SOC', 'warm_start_first_qp', "as_rti_level"]
@@ -1530,9 +1529,9 @@ class AcadosOcpSolver:
 
 
         if field_ == 'rti_phase':
-            if value_ < 0 or value_ > 3:
+            if value_ < 0 or value_ > 2:
                 raise Exception('AcadosOcpSolver.options_set(): argument \'rti_phase\' can '
-                    'take only values 0, 1, 2, 3 for SQP-RTI-type solvers')
+                    'take only values 0, 1, 2 for SQP-RTI-type solvers')
             if self.solver_options['nlp_solver_type'] != 'SQP_RTI' and value_ > 0:
                 raise Exception('AcadosOcpSolver.options_set(): argument \'rti_phase\' can '
                     'take only value 0 for SQP-type solvers')
