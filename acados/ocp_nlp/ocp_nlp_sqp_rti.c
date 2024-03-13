@@ -1237,9 +1237,14 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     {
         ocp_nlp_sqp_rti_preparation_advanced_step(config, dims, nlp_in, nlp_out, opts, mem, work);
     }
-    else
+    else if (rti_phase == PREPARATION_AND_FEEDBACK && opts->as_rti_level != STANDARD_RTI)
     {
-        // rti_phas == PREPARATION_AND_FEEDBACK
+        printf("ocp_nlp_sqp_rti: rti_phase == PREPARATION_AND_FEEDBACK not supported with AS-RTI (opts->as_rti_level != STANDARD_RTI).\n\n");
+        exit(1);
+    }
+    else if (rti_phase == PREPARATION_AND_FEEDBACK)
+    {
+        // rti_phase == PREPARATION_AND_FEEDBACK
         ocp_nlp_sqp_rti_preparation_step(config, dims, nlp_in, nlp_out, opts, mem, work);
         ocp_nlp_sqp_rti_feedback_step(config, dims, nlp_in, nlp_out, opts, mem, work);
     }
