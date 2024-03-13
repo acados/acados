@@ -184,21 +184,16 @@ def export_parametric_ocp(
     ocp.model = export_pendulum_ode_model_with_mass_as_param(dt=dt)
 
     ocp.dims.N = N_horizon
-    nu = ocp.model.u.rows()
-    nx = ocp.model.x.rows()
 
     Q_mat = 2 * np.diag([1e3, 1e3, 1e-2, 1e-2])
     R_mat = 2 * np.diag([1e-1])
 
-    ocp.cost.cost_type = "NONLINEAR_LS"
-    ocp.cost.cost_type_e = "NONLINEAR_LS"
-    ocp.cost.W = scipylinalg.block_diag(Q_mat, R_mat)
-    ocp.cost.W_e = Q_mat
+    ocp.cost.cost_type = "EXTERNAL"
+    ocp.cost.cost_type_e = "EXTERNAL"
 
-    ocp.model.cost_y_expr = vertcat(ocp.model.x, ocp.model.u)
-    ocp.model.cost_y_expr_e = ocp.model.x
-    ocp.cost.yref = np.zeros((nx + nu,))
-    ocp.cost.yref_e = np.zeros((nx,))
+    # NOTE here we make the cost parametric
+    ocp.model.cost_expr_ext_cost = ocp.model.x.T @ Q_mat @ ocp.model.x + ocp.model.p * ocp.model.u.T @ R_mat @ ocp.model.u + ocp.model.p**2
+    ocp.model.cost_expr_ext_cost_e = ocp.model.x.T @ Q_mat @ ocp.model.x
 
     ocp.constraints.lbu = np.array([-Fmax])
     ocp.constraints.ubu = np.array([+Fmax])
