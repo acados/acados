@@ -3109,6 +3109,14 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
                         char *field, int stage, int index, ocp_nlp_out *sens_nlp_out)
 {
 
+    int i;
+
+    int N = dims->N;
+    int *nv = dims->nv;
+    int *ni = dims->ni;
+    int *nu = dims->nu;
+    int *nx = dims->nx;
+
     ocp_qp_in *tmp_qp_in = work->tmp_qp_in;
     ocp_qp_out *tmp_qp_out = work->tmp_qp_out;
     d_ocp_qp_copy_all(mem->qp_in, tmp_qp_in);
@@ -3128,15 +3136,20 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
     }
     else if (!strcmp("params_global", field))
     {
-        int N = dims->N;
-        for (int i = 0; i < N; i++)
+        for (i = 0; i < N; i++)
         {
             config->dynamics[i]->memory_get_params_grad(config->dynamics[i], dims->dynamics[i], opts,
                                     mem->dynamics[i], index, &tmp_qp_in->b[i], 0);
             config->dynamics[i]->memory_get_params_lag_grad(config->dynamics[i], dims->dynamics[i], opts,
                         mem->dynamics[i], index, &tmp_qp_in->rqz[i], 0);
+            config->cost[i]->memory_get_params_grad(config->cost[i], dims->cost[i], opts,
+                        mem->cost[i], index, &work->tmp_nxu, 0);
+            blasfeo_dvecad(nu[i] + nx[i], 1., &work->tmp_nxu, 0, &tmp_qp_in->rqz[i], 0);
         }
-        // print_ocp_qp_in(tmp_qp_in);
+
+        config->cost[N]->memory_get_params_grad(config->cost[N], dims->cost[N], opts,
+                        mem->cost[N], index, &work->tmp_nxu, 0);
+        blasfeo_dvecad(nu[N] + nx[N], 1., &work->tmp_nxu, 0, &tmp_qp_in->rqz[N], 0);
     }
     else
     {
@@ -3151,12 +3164,6 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
     // d_ocp_qp_sol_print(tmp_qp_out->dim, tmp_qp_out);
 
     /* copy tmp_qp_out into sens_nlp_out */
-    int i;
-
-    int N = dims->N;
-    int *nv = dims->nv;
-    int *nx = dims->nx;
-    int *ni = dims->ni;
 
     for (i = 0; i <= N; i++)
     {

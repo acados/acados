@@ -479,6 +479,17 @@ void ocp_nlp_cost_external_memory_set_dzdux_tran_ptr(struct blasfeo_dmat *dzdux_
 }
 
 
+void ocp_nlp_cost_external_memory_get_params_grad(void *config, void *dims_, void *opts, void *memory_, int index, struct blasfeo_dvec *out, int offset)
+{
+    ocp_nlp_cost_external_dims *dims = dims_;
+    ocp_nlp_cost_external_memory *memory = memory_;
+
+    int nx = dims->nx;
+    int nu = dims->nu;
+
+    blasfeo_dcolex(nx + nu, &memory->cost_grad_params_jac, 0, index, out, offset);
+}
+
 
 /************************************************
  * workspace
@@ -854,6 +865,7 @@ void ocp_nlp_cost_external_config_initialize_default(void *config_)
     config->memory_set_dzdux_tran_ptr = &ocp_nlp_cost_external_memory_set_dzdux_tran_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_cost_external_memory_set_RSQrq_ptr;
     config->memory_set_Z_ptr = &ocp_nlp_cost_external_memory_set_Z_ptr;
+    config->memory_get_params_grad = &ocp_nlp_cost_external_memory_get_params_grad;
     config->workspace_calculate_size = &ocp_nlp_cost_external_workspace_calculate_size;
     config->initialize = &ocp_nlp_cost_external_initialize;
     config->update_qp_matrices = &ocp_nlp_cost_external_update_qp_matrices;

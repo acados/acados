@@ -144,6 +144,9 @@ void ocp_nlp_cost_external_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memo
 void ocp_nlp_cost_external_memory_set_z_alg_ptr(struct blasfeo_dvec *z_alg, void *memory_);
 //
 void ocp_nlp_cost_external_memory_set_dzdux_tran_ptr(struct blasfeo_dmat *dzdux_tran, void *memory_);
+//
+void ocp_nlp_cost_external_memory_get_params_grad(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset);
+
 
 /************************************************
  * workspace
