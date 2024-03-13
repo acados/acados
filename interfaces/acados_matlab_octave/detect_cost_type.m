@@ -170,7 +170,6 @@ function model = detect_cost_type(model, stage_type)
                 error('Cost mayer term cannot depend on control input u!');
             end
             model.cost_W_e = W;
-            model.cost_outer_hess_is_diag_e = int16(isdiag(W));
             model.cost_y_ref_e = y_ref;
         elseif strcmp(stage_type, 'path')
             model.cost_type = 'linear_ls';
@@ -179,7 +178,6 @@ function model = detect_cost_type(model, stage_type)
             model.cost_Vu = Vu;
             model.cost_Vz = Vz;
             model.cost_W = W;
-            model.cost_outer_hess_is_diag = int16(isdiag(W));
             model.cost_y_ref = y_ref;
         elseif strcmp(stage_type, 'initial')
             model.cost_type_0 = 'linear_ls';
@@ -188,7 +186,6 @@ function model = detect_cost_type(model, stage_type)
             model.cost_Vu_0 = Vu;
             model.cost_Vz_0 = Vz;
             model.cost_W_0 = W;
-            model.cost_outer_hess_is_diag_0 = int16(isdiag(W));
             model.cost_y_ref_0 = y_ref;
         end
         fprintf('\n\nreformulated cost term in linear least squares form with:')

@@ -521,23 +521,12 @@ def generate_c_code_nls_cost(ocp: AcadosOcp, stage_type ):
         y_expr = model.cost_y_expr
         outer_hess = ocp.cost.W
 
-    outer_hess_is_diag = ca.sparsify(ca.DM(outer_hess)).sparsity().is_diag()
-
     # checks on time dependency
     if any(ca.which_depends(y_expr, model.t)):
         if ocp.solver_options.cost_discretization == "EULER":
             raise Exception("NLS y_expr depends on time t. This is only supported with cost_discretization=='INTEGRATOR'")
         if stage_type == 'terminal':
             raise Exception("NLS cost_y_expr_e depends on time t. Time dependency is not supported on terminal shooting node.")
-
-    if stage_type == 'terminal' and ocp.cost.outer_hess_is_diag_e is None:
-        ocp.cost.outer_hess_is_diag_e = outer_hess_is_diag
-
-    elif stage_type == 'initial' and ocp.cost.outer_hess_is_diag_0 is None:
-        ocp.cost.outer_hess_is_diag_0 = outer_hess_is_diag
-
-    elif stage_type == 'path' and ocp.cost.outer_hess_is_diag is None:
-        ocp.cost.outer_hess_is_diag = outer_hess_is_diag
 
     # change directory
     cwd = os.getcwd()
@@ -656,15 +645,6 @@ def generate_c_code_conl_cost(ocp: AcadosOcp, stage_type: str):
     outer_hess_expr = outer_hess_fun(inner_expr, t, p)
     outer_hess_is_diag = outer_hess_expr.sparsity().is_diag()
 
-    if stage_type == 'terminal' and ocp.cost.outer_hess_is_diag_e is None:
-        ocp.cost.outer_hess_is_diag_e = outer_hess_is_diag
-
-    elif stage_type == 'initial' and ocp.cost.outer_hess_is_diag_0 is None:
-        ocp.cost.outer_hess_is_diag_0 = outer_hess_is_diag
-
-    elif stage_type == 'path' and ocp.cost.outer_hess_is_diag is None:
-        ocp.cost.outer_hess_is_diag = outer_hess_is_diag
-
     Jt_ux_expr = ca.jacobian(inner_expr, ca.vertcat(u, x)).T
     Jt_z_expr = ca.jacobian(inner_expr, z).T
 
@@ -676,7 +656,7 @@ def generate_c_code_conl_cost(ocp: AcadosOcp, stage_type: str):
     cost_fun_jac_hess = ca.Function(
         fun_name_cost_fun_jac_hess,
         [x, u, z, yref, t, p],
-        [cost_expr, outer_loss_grad_fun(inner_expr, t, p), Jt_ux_expr, Jt_z_expr, outer_hess_expr]
+        [cost_expr, outer_loss_grad_fun(inner_expr, t, p), Jt_ux_expr, Jt_z_expr, outer_hess_expr, outer_hess_is_diag]
     )
 
     # change directory

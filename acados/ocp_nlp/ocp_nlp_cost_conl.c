@@ -182,7 +182,6 @@ void *ocp_nlp_cost_conl_model_assign(void *config_, void *dims_, void *raw_memor
     // default initialization
     model->scaling = 1.0;
     model->t = 0.0;
-    model->outer_hess_is_diag = 0;
 
     // assert
     assert((char *) raw_memory + ocp_nlp_cost_conl_model_calculate_size(config_, dims) >= c_ptr);
@@ -258,11 +257,6 @@ int ocp_nlp_cost_conl_model_set(void *config_, void *dims_, void *model_,
     {
         double *scaling_ptr = (double *) value_;
         model->scaling = *scaling_ptr;
-    }
-    else if (!strcmp(field, "outer_hess_is_diag"))
-    {
-        int *outer_hess_is_diag_ptr = (int *) value_;
-        model->outer_hess_is_diag = *outer_hess_is_diag_ptr;
     }
     else
     {
@@ -434,6 +428,14 @@ struct blasfeo_dvec *ocp_nlp_cost_conl_memory_get_W_chol_diag_ptr(void *memory_)
     return &memory->W_chol_diag;
 }
 
+
+double *ocp_nlp_cost_conl_get_outer_hess_is_diag_ptr(void *memory_, void *model_)
+{
+    ocp_nlp_cost_conl_memory *memory = memory_;
+    // ocp_nlp_cost_conl_model *model = model_;
+
+    return &memory->outer_hess_is_diag;
+}
 
 
 struct blasfeo_dvec *ocp_nlp_cost_conl_memory_get_grad_ptr(void *memory_)
@@ -641,13 +643,12 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
     int nu = dims->nu;
     int ny = dims->ny;
     int ns = dims->ns;
-
     if (opts->integrator_cost == 0)
     {
         ext_fun_arg_t conl_fun_jac_hess_type_in[5];
         void *conl_fun_jac_hess_in[5];
-        ext_fun_arg_t conl_fun_jac_hess_type_out[5];
-        void *conl_fun_jac_hess_out[5];
+        ext_fun_arg_t conl_fun_jac_hess_type_out[6];
+        void *conl_fun_jac_hess_out[6];
 
         // INPUT
         struct blasfeo_dvec_args x_in;  // input x
@@ -682,6 +683,8 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
         conl_fun_jac_hess_out[3] = &work->Jt_z;          // inner Jacobian wrt z, transposed, nz x ny
         conl_fun_jac_hess_type_out[4] = BLASFEO_DMAT;
         conl_fun_jac_hess_out[4] = &work->W;             // outer hessian: ny x ny
+        conl_fun_jac_hess_type_out[5] = COLMAJ;
+        conl_fun_jac_hess_out[5] = &memory->outer_hess_is_diag;   // flag indicates if outer hess is diag
 
         // evaluate external function
         model->conl_cost_fun_jac_hess->evaluate(model->conl_cost_fun_jac_hess, conl_fun_jac_hess_type_in,
@@ -689,7 +692,7 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
 
         // factorize hessian of outer loss function
         // TODO: benchmark whether sparse factorization is faster
-        if (model->outer_hess_is_diag)
+        if (memory->outer_hess_is_diag)
         {
             // store only diagonal element of W_chol
             for (int i = 0; i < ny; i++)
@@ -713,7 +716,7 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
                             0.0, &memory->grad, 0, &memory->grad, 0);
 
 
-            if (model->outer_hess_is_diag)
+            if (memory->outer_hess_is_diag)
             {
                 // tmp_nv_ny = Jt_ux_tilde * W_chol_diag
                 blasfeo_dgemm_nd(nu + nx, ny, 1.0, &work->Jt_ux_tilde, 0, 0, &memory->W_chol_diag, 0, 0., &work->Jt_ux_tilde, 0, 0, &work->tmp_nv_ny, 0, 0);
@@ -732,7 +735,7 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims_, void *mode
                             0.0, &memory->grad, 0, &memory->grad, 0);
 
 
-            if (model->outer_hess_is_diag)
+            if (memory->outer_hess_is_diag)
             {
                 // tmp_nv_ny = Jt_ux * W_chol_diag
                 blasfeo_dgemm_nd(nu+nx, ny, 1.0, &work->Jt_ux, 0, 0, &memory->W_chol_diag, 0, 0., &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0);
@@ -859,6 +862,7 @@ void ocp_nlp_cost_conl_config_initialize_default(void *config_)
     config->memory_get_fun_ptr = &ocp_nlp_cost_conl_memory_get_fun_ptr;
     config->memory_get_grad_ptr = &ocp_nlp_cost_conl_memory_get_grad_ptr;
     config->memory_get_W_chol_ptr = &ocp_nlp_cost_conl_memory_get_W_chol_ptr;
+    config->get_outer_hess_is_diag_ptr = &ocp_nlp_cost_conl_get_outer_hess_is_diag_ptr;
     config->memory_get_W_chol_diag_ptr = &ocp_nlp_cost_conl_memory_get_W_chol_diag_ptr;
     config->model_get_y_ref_ptr = &ocp_nlp_cost_conl_model_get_y_ref_ptr;
     config->memory_set_ux_ptr = &ocp_nlp_cost_conl_memory_set_ux_ptr;

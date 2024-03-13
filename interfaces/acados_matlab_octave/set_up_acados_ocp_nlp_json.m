@@ -430,7 +430,6 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
 
     if strcmp(model.cost_type, 'nonlinear_ls') || strcmp(model.cost_type, 'linear_ls')
         ocp_json.cost.W = model.cost_W;
-        ocp_json.cost.outer_hess_is_diag = model.cost_outer_hess_is_diag;
         if isfield(model, 'cost_y_ref')
             ocp_json.cost.yref = model.cost_y_ref;
         else
@@ -448,7 +447,6 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     end
     if strcmp(model.cost_type_0, 'nonlinear_ls') || strcmp(model.cost_type_0, 'linear_ls')
         ocp_json.cost.W_0 = model.cost_W_0;
-        ocp_json.cost.outer_hess_is_diag_0 = model.cost_outer_hess_is_diag_0;
 
         if isfield(model, 'cost_y_ref_0')
             ocp_json.cost.yref_0 = model.cost_y_ref_0;
@@ -465,7 +463,6 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     if strcmp(model.cost_type_e, 'nonlinear_ls') || strcmp(model.cost_type_e, 'linear_ls')
         if isfield(model, 'cost_W_e')
             ocp_json.cost.W_e = model.cost_W_e;
-            ocp_json.cost.outer_hess_is_diag_e = model.cost_outer_hess_is_diag_e;
 
         end
         if isfield(model, 'cost_y_ref_e')

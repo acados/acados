@@ -71,7 +71,6 @@ typedef struct
     external_function_generic *nls_y_fun;  // evaluation nls function
     external_function_generic *conl_cost_fun_jac_hess;
     external_function_generic *conl_cost_fun;
-    int outer_hess_is_diag;
 
 } irk_model;
 
@@ -166,6 +165,7 @@ typedef struct
     double time_la;
 
     double *cost_fun;
+    double *outer_hess_is_diag;
     struct blasfeo_dmat *W_chol;  // cholesky factor of weight matrix
     struct blasfeo_dvec *W_chol_diag;
     struct blasfeo_dvec *y_ref;  // y_ref for NLS cost

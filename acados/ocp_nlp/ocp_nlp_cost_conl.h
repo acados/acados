@@ -95,7 +95,6 @@ typedef struct
     struct blasfeo_dvec z;              // gradient of slacks as vector
     double scaling;
     double t; // time (always zero) to match signature of external function wrt cost integration
-    int outer_hess_is_diag;
 } ocp_nlp_cost_conl_model;
 
 //
@@ -146,6 +145,7 @@ typedef struct
     struct blasfeo_dvec W_chol_diag;   // cholesky factor of hessian of outer loss function if Hessian is diagonal
         // NOTE: could be in work, but needed for compatibility with NLS and cost integration
     double fun;                         ///< value of the cost function
+    double outer_hess_is_diag;
 } ocp_nlp_cost_conl_memory;
 
 //

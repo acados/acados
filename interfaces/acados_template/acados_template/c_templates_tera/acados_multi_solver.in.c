@@ -909,14 +909,10 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
 
 {%- if cost[0].cost_type_0 == "NONLINEAR_LS" %}
-    tmp_int = {{ cost[0].outer_hess_is_diag_0 }};
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "outer_hess_is_diag", &tmp_int);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "nls_y_fun", &capsule->cost_y_0_fun);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "nls_y_fun_jac", &capsule->cost_y_0_fun_jac_ut_xt);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "nls_y_hess", &capsule->cost_y_0_hess);
 {%- elif cost[0].cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
-    tmp_int = {{ cost[0].outer_hess_is_diag_0 }};
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "outer_hess_is_diag", &tmp_int);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "conl_cost_fun", &capsule->conl_cost_0_fun);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "conl_cost_fun_jac_hess", &capsule->conl_cost_0_fun_jac_hess);
 {%- elif cost[0].cost_type_0 == "EXTERNAL" %}
@@ -927,13 +923,9 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
 {%- if mocp_opts.cost_discretization[0] == "INTEGRATOR" %}
   {%- if cost[0].cost_type_0 == "NONLINEAR_LS" %}
-    tmp_int = {{ cost[0].outer_hess_is_diag_0 }};
-    ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, 0, "outer_hess_is_diag", &tmp_int);
     ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, 0, "nls_y_fun_jac", &capsule->cost_y_0_fun_jac_ut_xt);
     ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, 0, "nls_y_fun", &capsule->cost_y_0_fun);
   {%- elif cost[0].cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
-    tmp_int = {{ cost[0].outer_hess_is_diag_0 }};
-    ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, 0, "outer_hess_is_diag", &tmp_int);
     ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, 0, "conl_cost_fun", &capsule->conl_cost_0_fun);
     ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, 0, "conl_cost_fun_jac_hess", &capsule->conl_cost_0_fun_jac_hess);
   {%- endif %}
@@ -1243,8 +1235,6 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     {
         i_fun = i - {{ cost_start_idx[jj] }};
 
-        tmp_int = {{ cost[jj].outer_hess_is_diag }};
-        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "outer_hess_is_diag", &tmp_int);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_y_fun", &capsule->cost_y_fun_{{ jj }}[i_fun]);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_y_fun_jac", &capsule->cost_y_fun_jac_ut_xt_{{ jj }}[i_fun]);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_y_hess", &capsule->cost_y_hess_{{ jj }}[i_fun]);
@@ -1253,9 +1243,6 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     for (int i = {{ cost_start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
     {
         i_fun = i - {{ cost_start_idx[jj] }};
-
-        tmp_int = {{ cost[jj].outer_hess_is_diag }};
-        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "outer_hess_is_diag", &tmp_int);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "conl_cost_fun", &capsule->conl_cost_fun_{{ jj }}[i_fun]);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "conl_cost_fun_jac_hess", &capsule->conl_cost_fun_jac_hess_{{ jj }}[i_fun]);
     }
@@ -1276,13 +1263,9 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     {
         i_fun = i - {{ cost_start_idx[jj] }};
   {%- if cost[jj].cost_type == "NONLINEAR_LS" %}
-        tmp_int = {{ cost[jj].outer_hess_is_diag }};
-        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "outer_hess_is_diag", &tmp_int);
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_y_fun_jac", &capsule->cost_y_fun_jac_ut_xt_{{ jj }}[i_fun]);
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_y_fun", &capsule->cost_y_fun_{{ jj }}[i_fun]);
   {%- elif cost[jj].cost_type == "CONVEX_OVER_NONLINEAR" %}
-        tmp_int = {{ cost[jj].outer_hess_is_diag }};
-        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "outer_hess_is_diag", &tmp_int);
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "conl_cost_fun", &capsule->conl_cost_fun_{{ jj }}[i_fun]);
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "conl_cost_fun_jac_hess", &capsule->conl_cost_fun_jac_hess_{{ jj }}[i_fun]);
   {%- endif %}
@@ -1795,15 +1778,11 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
 
 {%- if cost_e.cost_type_e == "NONLINEAR_LS" %}
-    tmp_int = {{ cost_e.outer_hess_is_diag_e }};
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "outer_hess_is_diag", &tmp_int);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "nls_y_fun", &capsule->cost_y_e_fun);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "nls_y_fun_jac", &capsule->cost_y_e_fun_jac_ut_xt);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "nls_y_hess", &capsule->cost_y_e_hess);
 
 {%- elif cost_e.cost_type_e == "CONVEX_OVER_NONLINEAR" %}
-    tmp_int = {{ cost_e.outer_hess_is_diag_e }};
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "outer_hess_is_diag", &tmp_int);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "conl_cost_fun", &capsule->conl_cost_e_fun);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "conl_cost_fun_jac_hess", &capsule->conl_cost_e_fun_jac_hess);
 

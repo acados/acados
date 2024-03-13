@@ -233,6 +233,22 @@ int ocp_nlp_cost_nls_model_set(void *config_, void *dims_, void *model_,
         double *W_col_maj = (double *) value_;
         blasfeo_pack_dmat(ny, ny, W_col_maj, ny, &model->W, 0, 0);
         model->W_changed = 1;
+        model->outer_hess_is_diag = 1;
+        double tmp;
+        for (int i = 0; i < ny; i++)
+        {
+            for (int j = 0; j < ny; j++)
+            {
+                if (j!=i)
+                {
+                    tmp = BLASFEO_DMATEL(&model->W, i, j);
+                    if (tmp != 0.0)
+                    {
+                        model->outer_hess_is_diag = 0;
+                    }
+                }
+            }
+        }
     }
     else if (!strcmp(field, "y_ref") || !strcmp(field, "yref"))
     {
@@ -287,11 +303,6 @@ int ocp_nlp_cost_nls_model_set(void *config_, void *dims_, void *model_,
     {
         double *scaling_ptr = (double *) value_;
         model->scaling = *scaling_ptr;
-    }
-    else if (!strcmp(field, "outer_hess_is_diag"))
-    {
-        int *outer_hess_is_diag_ptr = (int *) value_;
-        model->outer_hess_is_diag = *outer_hess_is_diag_ptr;
     }
     else
     {
@@ -493,6 +504,16 @@ struct blasfeo_dvec *ocp_nlp_cost_nls_memory_get_W_chol_diag_ptr(void *memory_)
 
     return &memory->W_chol_diag;
 }
+
+
+double *ocp_nlp_cost_nls_get_outer_hess_is_diag_ptr(void *memory_, void *model_)
+{
+    ocp_nlp_cost_nls_memory *memory = memory_;
+    ocp_nlp_cost_nls_model *model = model_;
+
+    return &model->outer_hess_is_diag;
+}
+
 
 
 
@@ -1025,6 +1046,7 @@ void ocp_nlp_cost_nls_config_initialize_default(void *config_)
     config->memory_get_grad_ptr = &ocp_nlp_cost_nls_memory_get_grad_ptr;
     config->memory_get_W_chol_ptr = &ocp_nlp_cost_nls_memory_get_W_chol_ptr;
     config->memory_get_W_chol_diag_ptr = &ocp_nlp_cost_nls_memory_get_W_chol_diag_ptr;
+    config->get_outer_hess_is_diag_ptr = &ocp_nlp_cost_nls_get_outer_hess_is_diag_ptr;
     config->model_get_y_ref_ptr = &ocp_nlp_cost_nls_model_get_y_ref_ptr;
     config->memory_set_ux_ptr = &ocp_nlp_cost_nls_memory_set_ux_ptr;
     config->memory_set_tmp_ux_ptr = &ocp_nlp_cost_nls_memory_set_tmp_ux_ptr;
