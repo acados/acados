@@ -2099,6 +2099,10 @@ void {{ name }}_acados_create_6_set_opts({{ name }}_solver_capsule* capsule)
     double eps_sufficient_descent = {{ solver_options.eps_sufficient_descent }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "eps_sufficient_descent", &eps_sufficient_descent);
 {%- endif -%}
+
+    int with_solution_sens_wrt_params = {{ solver_options.with_solution_sens_wrt_params }};
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "with_solution_sens_wrt_params", &with_solution_sens_wrt_params);
+
     int full_step_dual = {{ solver_options.full_step_dual }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "full_step_dual", &full_step_dual);
 

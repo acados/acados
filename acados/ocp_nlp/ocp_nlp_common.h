@@ -280,6 +280,7 @@ typedef struct ocp_nlp_opts
     double alpha_min;
     double alpha_reduction;
     double eps_sufficient_descent;
+    int with_solution_sens_wrt_params;
 } ocp_nlp_opts;
 
 //

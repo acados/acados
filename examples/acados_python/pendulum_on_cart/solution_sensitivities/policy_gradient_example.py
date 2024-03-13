@@ -218,6 +218,7 @@ def export_parametric_ocp(
         ocp.solver_options.nlp_solver_max_iter = 1
         ocp.solver_options.qp_solver_iter_max = 200
         ocp.solver_options.tol = 1e-10
+        ocp.solver_options.with_solution_sens_wrt_params = True
     else:
         ocp.solver_options.nlp_solver_max_iter = 400
         ocp.solver_options.tol = 1e-8
