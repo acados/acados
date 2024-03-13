@@ -144,6 +144,7 @@ typedef struct {{ model.name }}_solver_capsule
     external_function_param_{{ cost.cost_ext_fun_type }} *ext_cost_fun;
     external_function_param_{{ cost.cost_ext_fun_type }} *ext_cost_fun_jac;
     external_function_param_{{ cost.cost_ext_fun_type }} *ext_cost_fun_jac_hess;
+    external_function_param_{{ cost.cost_ext_fun_type }} *ext_cost_params_jac;
 {% endif %}
 
 {% if cost.cost_type_0 == "NONLINEAR_LS" %}
@@ -157,6 +158,7 @@ typedef struct {{ model.name }}_solver_capsule
     external_function_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_fun;
     external_function_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_fun_jac;
     external_function_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_fun_jac_hess;
+    external_function_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_params_jac;
 {%- endif %}
 
 {% if cost.cost_type_e == "NONLINEAR_LS" %}
@@ -170,6 +172,7 @@ typedef struct {{ model.name }}_solver_capsule
     external_function_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_fun;
     external_function_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_fun_jac;
     external_function_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_fun_jac_hess;
+    external_function_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_params_jac;
 {%- endif %}
 
     // constraints

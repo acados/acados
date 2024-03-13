@@ -236,6 +236,7 @@ OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_conl_cost_0_fun_jac_hess.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_0_fun.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_0_fun_jac.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_0_fun_jac_hess.c
+OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_0_params_jac.c
 	{%- else %}
 OCP_SRC+= {{ model.name }}_cost/{{ cost.cost_source_ext_cost_0 }}
 	{%- endif %}
@@ -252,6 +253,7 @@ OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_conl_cost_fun_jac_hess.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_fun.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_fun_jac.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_fun_jac_hess.c
+OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_params_jac.c
 	{%- elif cost.cost_source_ext_cost != cost.cost_source_ext_cost_0 %}
 OCP_SRC+= {{ model.name }}_cost/{{ cost.cost_source_ext_cost }}
 	{%- endif %}
@@ -268,6 +270,7 @@ OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_conl_cost_e_fun_jac_hess.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_fun.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_fun_jac.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_fun_jac_hess.c
+OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_params_jac.c
 	{%- elif cost.cost_source_ext_cost_e != cost.cost_source_ext_cost_0 %}
 OCP_SRC+= {{ model.name }}_cost/{{ cost.cost_source_ext_cost_e }}
 	{%- endif %}

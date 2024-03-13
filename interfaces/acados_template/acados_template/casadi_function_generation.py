@@ -126,7 +126,6 @@ def ocp_generate_external_functions(ocp: AcadosOcp):
 ################
 
 def generate_c_code_discrete_dynamics( model, opts ):
-    # TODO(params_sens) generate jacobian wrt p
 
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
@@ -177,8 +176,8 @@ def generate_c_code_discrete_dynamics( model, opts ):
     phi_fun_jac_ut_xt_hess.generate(fun_name, casadi_codegen_opts)
 
     fun_name = model_name + '_dyn_disc_phi_params_jac'
-    phi_fun_jac_ut_xt_hess = ca.Function(fun_name, [x, u, lam, p], [jac_p, jac_lag_p])
-    phi_fun_jac_ut_xt_hess.generate(fun_name, casadi_codegen_opts)
+    phi_params_jac_jac_lag = ca.Function(fun_name, [x, u, lam, p], [jac_p, jac_lag_p])
+    phi_params_jac_jac_lag.generate(fun_name, casadi_codegen_opts)
 
     os.chdir(cwd)
     return
@@ -425,7 +424,6 @@ def generate_c_code_gnsf( model, opts ):
 ################
 
 def generate_c_code_external_cost(ocp: AcadosOcp, stage_type, opts):
-    # TODO(params_sens) generate jacobian wrt p
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
     model = ocp.model
@@ -439,6 +437,7 @@ def generate_c_code_external_cost(ocp: AcadosOcp, stage_type, opts):
         suffix_name = "_cost_ext_cost_e_fun"
         suffix_name_hess = "_cost_ext_cost_e_fun_jac_hess"
         suffix_name_jac = "_cost_ext_cost_e_fun_jac"
+        suffix_name_param = "_cost_ext_cost_e_params_jac"
         ext_cost = model.cost_expr_ext_cost_e
         custom_hess = model.cost_expr_ext_cost_custom_hess_e
         # Last stage cannot depend on u and z
@@ -449,6 +448,7 @@ def generate_c_code_external_cost(ocp: AcadosOcp, stage_type, opts):
         suffix_name = "_cost_ext_cost_fun"
         suffix_name_hess = "_cost_ext_cost_fun_jac_hess"
         suffix_name_jac = "_cost_ext_cost_fun_jac"
+        suffix_name_param = "_cost_ext_cost_params_jac"
         ext_cost = model.cost_expr_ext_cost
         custom_hess = model.cost_expr_ext_cost_custom_hess
 
@@ -456,6 +456,7 @@ def generate_c_code_external_cost(ocp: AcadosOcp, stage_type, opts):
         suffix_name = "_cost_ext_cost_0_fun"
         suffix_name_hess = "_cost_ext_cost_0_fun_jac_hess"
         suffix_name_jac = "_cost_ext_cost_0_fun_jac"
+        suffix_name_param = "_cost_ext_cost_0_params_jac"
         ext_cost = model.cost_expr_ext_cost_0
         custom_hess = model.cost_expr_ext_cost_custom_hess_0
 
@@ -465,9 +466,12 @@ def generate_c_code_external_cost(ocp: AcadosOcp, stage_type, opts):
     fun_name = model.name + suffix_name
     fun_name_hess = model.name + suffix_name_hess
     fun_name_jac = model.name + suffix_name_jac
+    fun_name_param = model.name + suffix_name_param
 
     # generate expression for full gradient and Hessian
     hess_uxz, grad_uxz = ca.hessian(ext_cost, ca.vertcat(u, x, z))
+
+    jac_p = ca.jacobian(ext_cost, p)
 
     hess_ux = hess_uxz[:nunx, :nunx]
     hess_z = hess_uxz[nunx:, nunx:]
@@ -485,6 +489,10 @@ def generate_c_code_external_cost(ocp: AcadosOcp, stage_type, opts):
         fun_name_jac, [x, u, z, p], [ext_cost, grad_uxz]
     )
 
+    ext_cost_params_jac = ca.Function(
+        fun_name_param, [x, u, p], [jac_p]
+    )
+
     # change directory
     cwd = os.getcwd()
     cost_dir = os.path.abspath(os.path.join(opts["code_export_directory"], f'{model.name}_cost'))
@@ -495,6 +503,7 @@ def generate_c_code_external_cost(ocp: AcadosOcp, stage_type, opts):
     ext_cost_fun.generate(fun_name, casadi_codegen_opts)
     ext_cost_fun_jac_hess.generate(fun_name_hess, casadi_codegen_opts)
     ext_cost_fun_jac.generate(fun_name_jac, casadi_codegen_opts)
+    ext_cost_params_jac.generate(fun_name_param, casadi_codegen_opts)
 
     os.chdir(cwd)
     return

@@ -621,7 +621,6 @@ void {{ model.name }}_acados_create_3_create_and_set_functions({{ model.name }}_
     external_function_param_{{ cost.cost_ext_fun_type_0 }}_create(&capsule->ext_cost_0_fun, {{ dims.np }});
     {%- endif %}
 
-    // external cost
     {%- if cost.cost_ext_fun_type_0 == "casadi" %}
     MAP_CASADI_FNC(ext_cost_0_fun_jac, {{ model.name }}_cost_ext_cost_0_fun_jac);
     {%- else %}
@@ -629,12 +628,18 @@ void {{ model.name }}_acados_create_3_create_and_set_functions({{ model.name }}_
     external_function_param_{{ cost.cost_ext_fun_type_0 }}_create(&capsule->ext_cost_0_fun_jac, {{ dims.np }});
     {%- endif %}
 
-    // external cost
     {%- if cost.cost_ext_fun_type_0 == "casadi" %}
     MAP_CASADI_FNC(ext_cost_0_fun_jac_hess, {{ model.name }}_cost_ext_cost_0_fun_jac_hess);
     {%- else %}
     capsule->ext_cost_0_fun_jac_hess.fun = &{{ cost.cost_function_ext_cost_0 }};
     external_function_param_{{ cost.cost_ext_fun_type_0 }}_create(&capsule->ext_cost_0_fun_jac_hess, {{ dims.np }});
+    {%- endif %}
+
+    {%- if cost.cost_ext_fun_type_0 == "casadi" %}
+    MAP_CASADI_FNC(ext_cost_0_params_jac, {{ model.name }}_cost_ext_cost_0_params_jac);
+    {%- else %}
+    capsule->ext_cost_0_params_jac.fun = &{{ cost.cost_function_ext_cost_0 }};
+    external_function_param_{{ cost.cost_ext_fun_type_0 }}_create(&capsule->ext_cost_0_params_jac, {{ dims.np }});
     {%- endif %}
 {%- endif %}
 
@@ -705,6 +710,17 @@ void {{ model.name }}_acados_create_3_create_and_set_functions({{ model.name }}_
         external_function_param_{{ cost.cost_ext_fun_type }}_create(&capsule->ext_cost_fun_jac_hess[i], {{ dims.np }});
         {%- endif %}
     }
+
+    capsule->ext_cost_params_jac = (external_function_param_{{ cost.cost_ext_fun_type }} *) malloc(sizeof(external_function_param_{{ cost.cost_ext_fun_type }})*(N-1));
+    for (int i = 0; i < N-1; i++)
+    {
+        {%- if cost.cost_ext_fun_type == "casadi" %}
+        MAP_CASADI_FNC(ext_cost_params_jac[i], {{ model.name }}_cost_ext_cost_params_jac);
+        {%- else %}
+        capsule->ext_cost_params_jac[i].fun = &{{ cost.cost_function_ext_cost }};
+        external_function_param_{{ cost.cost_ext_fun_type }}_create(&capsule->ext_cost_params_jac[i], {{ dims.np }});
+        {%- endif %}
+    }
 {%- endif %}
 
 {%- if cost.cost_type_e == "NONLINEAR_LS" %}
@@ -741,6 +757,14 @@ void {{ model.name }}_acados_create_3_create_and_set_functions({{ model.name }}_
     {%- else %}
     capsule->ext_cost_e_fun_jac_hess.fun = &{{ cost.cost_function_ext_cost_e }};
     external_function_param_{{ cost.cost_ext_fun_type_e }}_create(&capsule->ext_cost_e_fun_jac_hess, {{ dims.np }});
+    {%- endif %}
+
+    // external cost - jacobian wrt params
+    {%- if cost.cost_ext_fun_type_e == "casadi" %}
+    MAP_CASADI_FNC(ext_cost_e_params_jac, {{ model.name }}_cost_ext_cost_e_params_jac);
+    {%- else %}
+    capsule->ext_cost_e_params_jac.fun = &{{ cost.cost_function_ext_cost_e }};
+    external_function_param_{{ cost.cost_ext_fun_type_e }}_create(&capsule->ext_cost_e_params_jac, {{ dims.np }});
     {%- endif %}
 {%- endif %}
 
