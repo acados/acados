@@ -51,7 +51,7 @@ for integrator = {'irk_gnsf', 'irk', 'erk'}
     FD_epsilon = 1e-6;
     
     %% model
-    model = linear_mass_spring_model;
+    model = linear_mass_spring_model();
     
     model_name = ['lin_mass_' method];
     nx = model.nx;

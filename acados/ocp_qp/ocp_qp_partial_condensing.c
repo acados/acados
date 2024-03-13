@@ -483,7 +483,6 @@ int ocp_qp_partial_condensing(void *qp_in_, void *pcond_qp_in_, void *opts_, voi
 //exit(1);
 
     // convert to partially condensed qp structure
-    // TODO only if N2<N
     d_part_cond_qp_cond(mem->red_qp, pcond_qp_in, opts->hpipm_pcond_opts, mem->hpipm_pcond_work);
 
     // stop timer
@@ -492,9 +491,34 @@ int ocp_qp_partial_condensing(void *qp_in_, void *pcond_qp_in_, void *opts_, voi
     return ACADOS_SUCCESS;
 }
 
+int ocp_qp_partial_condensing_condense_lhs(void *qp_in_, void *pcond_qp_in_, void *opts_, void *mem_, void *work)
+{
+    ocp_qp_in *qp_in = qp_in_;
+    ocp_qp_in *pcond_qp_in = pcond_qp_in_;
+    ocp_qp_partial_condensing_opts *opts = opts_;
+    ocp_qp_partial_condensing_memory *mem = mem_;
+
+    acados_timer timer;
+
+    assert(opts->N2 == opts->N2_bkp);
+
+    // save pointers to ocp_qp_in in memory (needed for expansion)
+    mem->ptr_qp_in = qp_in;
+    mem->ptr_pcond_qp_in = pcond_qp_in;
+
+    acados_tic(&timer);
+
+    d_ocp_qp_reduce_eq_dof_lhs(qp_in, mem->red_qp, opts->hpipm_red_opts, mem->hpipm_red_work);
+    d_part_cond_qp_cond_lhs(mem->red_qp, pcond_qp_in, opts->hpipm_pcond_opts, mem->hpipm_pcond_work);
+
+    mem->time_qp_xcond = acados_toc(&timer);
+
+    return ACADOS_SUCCESS;
+}
 
 
-int ocp_qp_partial_condensing_rhs(void *qp_in_, void *pcond_qp_in_, void *opts_, void *mem_, void *work)
+
+int ocp_qp_partial_condensing_condense_rhs(void *qp_in_, void *pcond_qp_in_, void *opts_, void *mem_, void *work)
 {
     ocp_qp_in *qp_in = qp_in_;
     ocp_qp_in *pcond_qp_in = pcond_qp_in_;
@@ -513,14 +537,13 @@ int ocp_qp_partial_condensing_rhs(void *qp_in_, void *pcond_qp_in_, void *opts_,
     mem->ptr_pcond_qp_in = pcond_qp_in;
 
     // reduce eq constr DOF
-    d_ocp_qp_reduce_eq_dof(qp_in, mem->red_qp, opts->hpipm_red_opts, mem->hpipm_red_work);
+    d_ocp_qp_reduce_eq_dof_rhs(qp_in, mem->red_qp, opts->hpipm_red_opts, mem->hpipm_red_work);
 
     // convert to partially condensed qp structure
-    // TODO only if N2<N
     d_part_cond_qp_cond_rhs(mem->red_qp, pcond_qp_in, opts->hpipm_pcond_opts, mem->hpipm_pcond_work);
 
     // stop timer
-    mem->time_qp_xcond = acados_toc(&timer);
+    mem->time_qp_xcond += acados_toc(&timer);
 
     return ACADOS_SUCCESS;
 }
@@ -574,7 +597,8 @@ void ocp_qp_partial_condensing_config_initialize_default(void *config_)
     config->memory_get = &ocp_qp_partial_condensing_memory_get;
     config->workspace_calculate_size = &ocp_qp_partial_condensing_workspace_calculate_size;
     config->condensing = &ocp_qp_partial_condensing;
-    config->condensing_rhs = &ocp_qp_partial_condensing_rhs;
+    config->condense_lhs = &ocp_qp_partial_condensing_condense_lhs;
+    config->condense_rhs = &ocp_qp_partial_condensing_condense_rhs;
     config->expansion = &ocp_qp_partial_expansion;
 
     return;

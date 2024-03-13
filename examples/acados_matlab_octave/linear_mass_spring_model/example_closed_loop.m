@@ -69,7 +69,7 @@ ocp_cost_type = 'linear_ls';
 
 %% setup problem
 % linear mass-spring system
-model = linear_mass_spring_model;
+model = linear_mass_spring_model();
 % dims
 T = 10.0; % horizon length time
 nx = model.nx; % number of states

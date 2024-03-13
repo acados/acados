@@ -78,7 +78,7 @@ cost_type = 'linear_ls'; % linear_ls, ext_cost
 
 
 %% create model entries
-model = pendulum_on_cart_model;
+model = pendulum_on_cart_model();
 
 h = 0.01;
 T = ocp_N*h; % horizon length time

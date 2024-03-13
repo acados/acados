@@ -395,6 +395,7 @@ int main() {
     }
 
 	ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts);
+    ocp_nlp_precompute(solver, nlp_in, nlp_out);
 
 	// NLP solution
     acados_timer timer;

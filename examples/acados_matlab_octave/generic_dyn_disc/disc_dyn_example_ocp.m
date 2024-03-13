@@ -60,7 +60,7 @@ dyn_type = 'discrete';
 cost_type = 'ext_cost';
 
 %% create model entries
-model = linear_mass_spring_model;
+model = linear_mass_spring_model();
 
 % dims
 T = 10.0; % horizon length time

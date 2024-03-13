@@ -386,10 +386,12 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
 
 acados_size_t ocp_nlp_cost_ls_opts_calculate_size(void *config_, void *dims_)
 {
+    // ocp_nlp_cost_config *config = config_;
+
     acados_size_t size = 0;
 
-    // size += sizeof(ocp_nlp_cost_ls_opts);
-    // make_int_multiple_of(8, &size);
+    size += sizeof(ocp_nlp_cost_ls_opts);
+    make_int_multiple_of(8, &size);
 
     return size;
 }
@@ -398,13 +400,15 @@ acados_size_t ocp_nlp_cost_ls_opts_calculate_size(void *config_, void *dims_)
 
 void *ocp_nlp_cost_ls_opts_assign(void *config_, void *dims_, void *raw_memory)
 {
-    // char *c_ptr = (char *) raw_memory;
-    // ocp_nlp_cost_ls_opts *opts = (ocp_nlp_cost_ls_opts *) c_ptr;
-    // c_ptr += sizeof(ocp_nlp_cost_ls_opts);
-    // assert((char *) raw_memory +
-    //     ocp_nlp_cost_ls_opts_calculate_size(config_, dims_) >= c_ptr);
+    // ocp_nlp_cost_config *config = config_;
 
-    void *opts = raw_memory;
+    char *c_ptr = (char *) raw_memory;
+
+    ocp_nlp_cost_ls_opts *opts = (ocp_nlp_cost_ls_opts *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_cost_ls_opts);
+
+    assert((char *) raw_memory + ocp_nlp_cost_ls_opts_calculate_size(config_, dims_) >= c_ptr);
+
     return opts;
 }
 
@@ -413,7 +417,8 @@ void *ocp_nlp_cost_ls_opts_assign(void *config_, void *dims_, void *raw_memory)
 void ocp_nlp_cost_ls_opts_initialize_default(void *config_,
     void *dims_, void *opts_)
 {
-    // ocp_nlp_cost_ls_opts *opts = opts_;
+    ocp_nlp_cost_ls_opts *opts = opts_;
+    opts->compute_hess = 1;
 
     return;
 }
@@ -432,11 +437,16 @@ void ocp_nlp_cost_ls_opts_update(void *config_, void *dims_, void *opts_)
 void ocp_nlp_cost_ls_opts_set(void *config_, void *opts_, const char *field, void* value)
 {
     // ocp_nlp_cost_config *config = config_;
-    // ocp_nlp_cost_ls_opts *opts = opts_;
+    ocp_nlp_cost_ls_opts *opts = opts_;
 
     if (!strcmp(field, "exact_hess"))
     {
         // do nothing: the exact hessian is always computed
+    }
+    else if (!strcmp(field, "compute_hess"))
+    {
+        int* int_ptr = value;
+        opts->compute_hess = *int_ptr;
     }
     else
     {
@@ -562,15 +572,6 @@ void ocp_nlp_cost_ls_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_)
     ocp_nlp_cost_ls_memory *memory = memory_;
 
     memory->ux = ux;
-}
-
-
-
-void ocp_nlp_cost_ls_memory_set_tmp_ux_ptr(struct blasfeo_dvec *tmp_ux, void *memory_)
-{
-    ocp_nlp_cost_ls_memory *memory = memory_;
-
-    memory->tmp_ux = tmp_ux;
 }
 
 
@@ -766,6 +767,7 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
     int ns = dims->ns;
 
     struct blasfeo_dmat *Cyt = &model->Cyt;
+    ocp_nlp_cost_ls_opts *opts = opts_;
 
     if (nz > 0)
     { // eliminate algebraic variables and update Cyt and y_ref
@@ -786,9 +788,12 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
                            &work->Cyt_tilde, 0, 0, &work->tmp_nv_ny, 0, 0);
 
         // add hessian of the cost contribution
-        // RSQrq += scaling * tmp_nv_ny * tmp_nv_ny^T
-        blasfeo_dsyrk_ln(nu + nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny,
-                         0, 0, 1.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
+        if (opts->compute_hess)
+        {
+            // RSQrq += scaling * tmp_nv_ny * tmp_nv_ny^T
+            blasfeo_dsyrk_ln(nu + nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny,
+                                0, 0, 1.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
+        }
 
         // compute gradient, function
         // res = \tilde{V}_x * x + \tilde{V}_u * u - \tilde{y}_ref
@@ -800,8 +805,11 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
     }
     else // nz == 0
     {
-        // add hessian of the cost contribution
-        blasfeo_dgead(nx + nu, nx + nu, 1.0, &memory->hess, 0, 0, memory->RSQrq, 0, 0);
+        if (opts->compute_hess)
+        {
+            // add hessian of the cost contribution
+            blasfeo_dgead(nx + nu, nx + nu, 1.0, &memory->hess, 0, 0, memory->RSQrq, 0, 0);
+        }
 
         // compute gradient, function
         // res = Cyt * ux - y_ref
@@ -824,8 +832,10 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
     blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
 
     // slack update function value
+    // tmp_2ns = 2 * z + Z .* slack
     blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);
     blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &work->tmp_2ns, 0);
+    // fun += .5 * (tmp_2ns .* slack)
     memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->ux, nu+nx);
 
     // scale
@@ -856,6 +866,8 @@ void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims_, void *model_, void 
     int ny = dims->ny;
     int ns = dims->ns;
 
+    struct blasfeo_dvec *ux = memory->ux;
+
     // TODO should this overwrite memory->{res,fun,...} (as now) or not ????
     if (nz > 0)
     {
@@ -884,7 +896,7 @@ void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims_, void *model_, void 
     else
     {
         // res = Cy * ux - yref
-        blasfeo_dgemv_t(nu+nx, ny, 1.0, &model->Cyt, 0, 0, memory->tmp_ux, 0, -1.0,
+        blasfeo_dgemv_t(nu+nx, ny, 1.0, &model->Cyt, 0, 0, ux, 0, -1.0,
                         &model->y_ref, 0, &memory->res, 0);
     }
 
@@ -901,8 +913,8 @@ void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims_, void *model_, void 
 
     // slack update function value
     blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);
-    blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->tmp_ux, nu+nx, &work->tmp_2ns, 0);
-    memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->tmp_ux, nu+nx);
+    blasfeo_dvecmulacc(2*ns, &model->Z, 0, ux, nu+nx, &work->tmp_2ns, 0);
+    memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, ux, nu+nx);
 
     // scale
     if (model->scaling!=1.0)
@@ -937,7 +949,6 @@ void ocp_nlp_cost_ls_config_initialize_default(void *config_)
     config->memory_get_fun_ptr = &ocp_nlp_cost_ls_memory_get_fun_ptr;
     config->memory_get_grad_ptr = &ocp_nlp_cost_ls_memory_get_grad_ptr;
     config->memory_set_ux_ptr = &ocp_nlp_cost_ls_memory_set_ux_ptr;
-    config->memory_set_tmp_ux_ptr = &ocp_nlp_cost_ls_memory_set_tmp_ux_ptr;
     config->memory_set_z_alg_ptr = &ocp_nlp_cost_ls_memory_set_z_alg_ptr;
     config->memory_set_dzdux_tran_ptr = &ocp_nlp_cost_ls_memory_set_dzdux_tran_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_cost_ls_memory_set_RSQrq_ptr;

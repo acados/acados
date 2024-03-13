@@ -87,7 +87,7 @@ for i = 1:3
     %% create model entries
     switch i
         case 1
-            model = pendulum_on_cart_model;
+            model = pendulum_on_cart_model();
             theta = model.sym_x(2);
             omega = model.sym_x(4);
             model.sym_z = [];

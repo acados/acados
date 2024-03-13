@@ -448,18 +448,6 @@ void ocp_nlp_cost_external_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memo
 }
 
 
-
-void ocp_nlp_cost_external_memory_set_tmp_ux_ptr(struct blasfeo_dvec *tmp_ux, void *memory_)
-{
-    ocp_nlp_cost_external_memory *memory = memory_;
-
-    memory->tmp_ux = tmp_ux;
-
-    return;
-}
-
-
-
 void ocp_nlp_cost_external_memory_set_z_alg_ptr(struct blasfeo_dvec *z_alg, void *memory_)
 {
     ocp_nlp_cost_external_memory *memory = memory_;
@@ -675,8 +663,10 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
     blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
 
     // slack update function value
+    // tmp_2ns = 2 * z + Z .* slack
     blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);
     blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &work->tmp_2ns, 0);
+    // fun += .5 * (tmp_2ns .* slack)
     memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->ux, nu+nx);
 
     // scale
@@ -698,8 +688,6 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
 void ocp_nlp_cost_external_compute_fun(void *config_, void *dims_, void *model_,
                                        void *opts_, void *memory_, void *work_)
 {
-//    printf("\nerror: ocp_external_cost_nls_compute_fun: not implemented yet\n");
-//    exit(1);
 
     ocp_nlp_cost_external_dims *dims = dims_;
     ocp_nlp_cost_external_model *model = model_;
@@ -708,6 +696,8 @@ void ocp_nlp_cost_external_compute_fun(void *config_, void *dims_, void *model_,
     ocp_nlp_cost_external_workspace *work = work_;
 
     ocp_nlp_cost_external_cast_workspace(config_, dims, opts_, work_);
+
+    struct blasfeo_dvec *ux = memory->ux;
 
     int nx = dims->nx;
     int nu = dims->nu;
@@ -721,11 +711,11 @@ void ocp_nlp_cost_external_compute_fun(void *config_, void *dims_, void *model_,
 
     // INPUT
     struct blasfeo_dvec_args u_in;  // input u
-    u_in.x = memory->tmp_ux;
+    u_in.x = ux;
     u_in.xi = 0;
 
     struct blasfeo_dvec_args x_in;  // input x
-    x_in.x = memory->tmp_ux;
+    x_in.x = ux;
     x_in.xi = nu;
 
     ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
@@ -749,8 +739,8 @@ void ocp_nlp_cost_external_compute_fun(void *config_, void *dims_, void *model_,
 
     // slack update function value
     blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);
-    blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->tmp_ux, nu+nx, &work->tmp_2ns, 0);
-    memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->tmp_ux, nu+nx);
+    blasfeo_dvecmulacc(2*ns, &model->Z, 0, ux, nu+nx, &work->tmp_2ns, 0);
+    memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, ux, nu+nx);
 
     // scale
     if(model->scaling!=1.0)
@@ -786,7 +776,6 @@ void ocp_nlp_cost_external_config_initialize_default(void *config_)
     config->memory_get_fun_ptr = &ocp_nlp_cost_external_memory_get_fun_ptr;
     config->memory_get_grad_ptr = &ocp_nlp_cost_external_memory_get_grad_ptr;
     config->memory_set_ux_ptr = &ocp_nlp_cost_external_memory_set_ux_ptr;
-    config->memory_set_tmp_ux_ptr = &ocp_nlp_cost_external_memory_set_tmp_ux_ptr;
     config->memory_set_z_alg_ptr = &ocp_nlp_cost_external_memory_set_z_alg_ptr;
     config->memory_set_dzdux_tran_ptr = &ocp_nlp_cost_external_memory_set_dzdux_tran_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_cost_external_memory_set_RSQrq_ptr;

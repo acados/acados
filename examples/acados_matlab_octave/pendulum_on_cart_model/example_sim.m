@@ -57,7 +57,7 @@ x0 = [0; 1e-1; 0; 0e0];
 u = 0;
 
 %% model
-model = pendulum_on_cart_model;
+model = pendulum_on_cart_model();
 
 nx = model.nx;
 nu = model.nu;

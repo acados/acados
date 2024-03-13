@@ -136,7 +136,7 @@ int main()
 		blasfeo_print_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], RSQrq+ii, 0, 0);
 
 	// regularization
-	config->regularize_hessian(config, dims, opts, memory);
+	config->regularize(config, dims, opts, memory);
 
 	printf("\nafter regularization\n\n");
 	for(ii=0; ii<=N; ii++)

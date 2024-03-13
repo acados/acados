@@ -82,6 +82,7 @@ class AcadosOcpOptions:
         self.__exact_hess_cost = 1
         self.__exact_hess_dyn = 1
         self.__exact_hess_constr = 1
+        self.__fixed_hess = 0
         self.__ext_cost_num_hess = 0
         self.__alpha_min = 0.05
         self.__alpha_reduction = 0.7
@@ -597,6 +598,17 @@ class AcadosOcpOptions:
         return self.__exact_hess_dyn
 
     @property
+    def fixed_hess(self):
+        """
+        Indicates if the hessian is fixed (1) or not (0).\n
+        If fixed, the hessian is computed only once and not updated in the SQP loop.
+        This can safely be set to 1 if there are no slacked constraints, cost module is 'LINEAR_LS' with Gauss-Newton Hessian,
+        and the weighting matrix 'W' is not updated after solver creation.
+        Default: 0
+        """
+        return self.__fixed_hess
+
+    @property
     def ext_cost_num_hess(self):
         """
         Determines if custom hessian approximation for cost contribution is used (> 0).\n
@@ -1032,6 +1044,13 @@ class AcadosOcpOptions:
             self.__exact_hess_dyn = exact_hess_dyn
         else:
             raise Exception('Invalid exact_hess_dyn value. exact_hess_dyn takes one of the values 0, 1.')
+
+    @fixed_hess.setter
+    def fixed_hess(self, fixed_hess):
+        if fixed_hess in [0, 1]:
+            self.__fixed_hess = fixed_hess
+        else:
+            raise Exception('Invalid fixed_hess value. fixed_hess takes one of the values 0, 1.')
 
     @ext_cost_num_hess.setter
     def ext_cost_num_hess(self, ext_cost_num_hess):

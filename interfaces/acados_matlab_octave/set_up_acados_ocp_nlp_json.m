@@ -134,6 +134,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     ocp_json.solver_options.exact_hess_dyn = obj.opts_struct.exact_hess_dyn;
     ocp_json.solver_options.exact_hess_cost = obj.opts_struct.exact_hess_cost;
     ocp_json.solver_options.exact_hess_constr = obj.opts_struct.exact_hess_constr;
+    ocp_json.solver_options.fixed_hess = obj.opts_struct.fixed_hess;
 
     ocp_json.solver_options.ext_fun_compile_flags = obj.opts_struct.ext_fun_compile_flags;
 
@@ -484,6 +485,19 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts)
     end
     if isfield(model, 'cost_zu')
         ocp_json.cost.zu = model.cost_zu;
+    end
+
+    if isfield(model, 'cost_Zl_0')
+        ocp_json.cost.Zl_0 = diag(model.cost_Zl_0);
+    end
+    if isfield(model, 'cost_Zu_0')
+        ocp_json.cost.Zu_0 = diag(model.cost_Zu_0);
+    end
+    if isfield(model, 'cost_zl_0')
+        ocp_json.cost.zl_0 = model.cost_zl_0;
+    end
+    if isfield(model, 'cost_zu_0')
+        ocp_json.cost.zu_0 = model.cost_zu_0;
     end
 
 

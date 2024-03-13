@@ -440,10 +440,11 @@ acados_size_t sim_erk_workspace_calculate_size(void *config_, void *dims_, void 
 
 
 
-static void *sim_erk_cast_workspace(void *config_, void *dims_, void *opts_, void *raw_memory)
+static void *sim_erk_cast_workspace(void *config_, void *dims_, void *opts_, void *raw_memory, void *mem_)
 {
     sim_opts *opts = opts_;
     sim_erk_dims *dims = (sim_erk_dims *) dims_;
+    sim_erk_memory *mem = mem_;
 
     int ns = opts->ns;
 
@@ -478,7 +479,6 @@ static void *sim_erk_cast_workspace(void *config_, void *dims_, void *opts_, voi
         //assign_and_advance_double((num_steps + 1) * nX, &workspace->out_forw_traj, &c_ptr);
         work->out_forw_traj = d_ptr;
         d_ptr += (num_steps+1)*nX;
-        
     }
     else
     {
@@ -518,7 +518,7 @@ static void *sim_erk_cast_workspace(void *config_, void *dims_, void *opts_, voi
     // update c_ptr
     c_ptr = (char *) d_ptr;
 
-    assert((char *) raw_memory + sim_erk_workspace_calculate_size(config_, dims, opts_) >= c_ptr);
+    assert((char *) raw_memory + mem->workspace_size >= c_ptr);
 
     return (void *) work;
 }
@@ -530,6 +530,8 @@ static void *sim_erk_cast_workspace(void *config_, void *dims_, void *opts_, voi
 int sim_erk_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_,
                        void *work_)
 {
+    sim_erk_memory *mem = mem_;
+    mem->workspace_size = sim_erk_workspace_calculate_size(config_, in->dims, opts_);
     return ACADOS_SUCCESS;
 }
 
@@ -555,7 +557,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     void *dims_ = in->dims;
     sim_erk_dims *dims = (sim_erk_dims *) dims_;
 
-    sim_erk_workspace *work = sim_erk_cast_workspace(config, dims, opts, work_);
+    sim_erk_workspace *work = sim_erk_cast_workspace(config, dims, opts, work_, mem_);
 
     int i, j, s, istep;
     double a = 0, b = 0;  // temp values of A_mat and b_vec
@@ -616,6 +618,39 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     ext_fun_arg_t ext_fun_type_out[3];
     void *ext_fun_out[3];
 
+    ext_fun_arg_t expl_vde_type_in[4];
+    void *expl_vde_in[4];
+    ext_fun_arg_t expl_vde_type_out[3];
+    void *expl_vde_out[3];
+
+    int nx_squared_plus_nx = nx * nx + nx;
+    int nx_times_nu = nx * nu;
+
+    if (opts->sens_forw)
+    {  // simulation + forward sensitivities
+        expl_vde_type_in[0] = COLMAJ;
+        expl_vde_in[0] = rhs_forw_in;  // x: nx
+        expl_vde_type_in[1] = COLMAJ;
+        expl_vde_in[1] = rhs_forw_in + nx;  // Sx: nx*nx
+        expl_vde_type_in[2] = COLMAJ;
+        expl_vde_in[2] = rhs_forw_in + nx_squared_plus_nx;  // Su: nx*nu
+        expl_vde_type_in[3] = COLMAJ;
+        expl_vde_in[3] = rhs_forw_in + nx_squared_plus_nx + nx_times_nu;  // u: nu
+
+        expl_vde_type_out[0] = COLMAJ;
+        expl_vde_type_out[1] = COLMAJ;
+        expl_vde_type_out[2] = COLMAJ;
+    }
+    else
+    {
+        expl_vde_type_in[0] = COLMAJ;
+        expl_vde_in[0] = rhs_forw_in;  // x: nx
+        expl_vde_type_in[1] = COLMAJ;
+        expl_vde_in[1] = rhs_forw_in + nx;  // u: nu
+
+        expl_vde_type_out[0] = COLMAJ;
+    }
+
     erk_model *model = in->model;
 
     double timing_ad = 0.0;
@@ -660,43 +695,23 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             acados_tic(&timer_ad);
             if (opts->sens_forw)
             {  // simulation + forward sensitivities
-                ext_fun_type_in[0] = COLMAJ;
-                ext_fun_in[0] = rhs_forw_in + 0;  // x: nx
-                ext_fun_type_in[1] = COLMAJ;
-                ext_fun_in[1] = rhs_forw_in + nx;  // Sx: nx*nx
-                ext_fun_type_in[2] = COLMAJ;
-                ext_fun_in[2] = rhs_forw_in + nx + nx * nx;  // Su: nx*nu
-                ext_fun_type_in[3] = COLMAJ;
-                ext_fun_in[3] = rhs_forw_in + nx + nx * nx + nx * nu;  // u: nu
-
-                ext_fun_type_out[0] = COLMAJ;
-                ext_fun_out[0] = K_traj + s * nX + 0;  // fun: nx
-                ext_fun_type_out[1] = COLMAJ;
-                ext_fun_out[1] = K_traj + s * nX + nx;  // Sx: nx*nx
-                ext_fun_type_out[2] = COLMAJ;
-                ext_fun_out[2] = K_traj + s * nX + nx + nx * nx;  // Su: nx*nu
-
                 // forward VDE evaluation
-                model->expl_vde_for->evaluate(model->expl_vde_for, ext_fun_type_in, ext_fun_in,
-                                              ext_fun_type_out, ext_fun_out);
+                expl_vde_out[0] = K_traj + s * nX;  // fun: nx
+                expl_vde_out[1] = K_traj + s * nX + nx;  // Sx: nx*nx
+                expl_vde_out[2] = K_traj + s * nX + nx_squared_plus_nx;  // Su: nx*nu
+                model->expl_vde_for->evaluate(model->expl_vde_for, expl_vde_type_in, expl_vde_in,
+                                              expl_vde_type_out, expl_vde_out);
             }
             else
             {  // simulation only
-                ext_fun_type_in[0] = COLMAJ;
-                ext_fun_in[0] = rhs_forw_in + 0;  // x: nx
-                ext_fun_type_in[1] = COLMAJ;
-                ext_fun_in[1] = rhs_forw_in + nx;  // u: nu
-
-                ext_fun_type_out[0] = COLMAJ;
-                ext_fun_out[0] = K_traj + s * nX + 0;  // fun: nx
-
                 if (model->expl_ode_fun == 0)
                 {
                     printf("sim ERK: expl_ode_fun is not provided. Exiting.\n");
                     exit(1);
                 }
-                model->expl_ode_fun->evaluate(model->expl_ode_fun, ext_fun_type_in, ext_fun_in,
-                                              ext_fun_type_out, ext_fun_out);  // ODE evaluation
+                expl_vde_out[0] = K_traj + s * nX;  // fun: nx
+                model->expl_ode_fun->evaluate(model->expl_ode_fun, expl_vde_type_in, expl_vde_in,
+                                              expl_vde_type_out, expl_vde_out);  // ODE evaluation
             }
             timing_ad += acados_toc(&timer_ad);
         }
@@ -736,8 +751,6 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             for (i = 0; i < nhess; i++)
                 adj_tmp[nx + nu + i] = 0.0;
         }
-
-        //        printf("\nnForw=%d nAdj=%d\n", nForw, nAdj);
 
         for (i = 0; i < nu; i++)
             rhs_adj_in[nForw + nx + i] = u[i];
@@ -783,20 +796,12 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     }
                 }
 
-                // TODO(oj): fix this whole file or write from scratch, not really readable :/
                 acados_tic(&timer_ad);
                 if (!opts->sens_hess)
                 {
                     ext_fun_type_in[0] = COLMAJ;
                     ext_fun_in[0] = rhs_adj_in + 0;  // x: nx
-//                    ext_fun_type_in[1] = COLMAJ;
-//                    ext_fun_in[1] = rhs_adj_in + nx;  // Sx: nx*nx
-//                    ext_fun_type_in[2] = COLMAJ;
-//                    ext_fun_in[2] = rhs_adj_in + nx + nx * nx;  // Su: nx*nu
-//                    ext_fun_type_in[3] = COLMAJ;
-//                    ext_fun_in[3] = rhs_adj_in + nx + nx * nx + nx * nu;  // lam: nx
-//                    ext_fun_type_in[4] = COLMAJ;
-//                    ext_fun_in[4] = rhs_adj_in + nx + nx * nx + nx * nu + nx;  // u: nu
+
                     ext_fun_type_in[1] = COLMAJ;
                     ext_fun_in[1] = rhs_adj_in + nx;  // lam: nx
                     ext_fun_type_in[2] = COLMAJ;
@@ -804,8 +809,6 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
                     ext_fun_type_out[0] = COLMAJ;
                     ext_fun_out[0] = adj_traj + s * nAdj + 0;  // adj: nx+nu
-//                    ext_fun_type_out[1] = COLMAJ;
-//                    ext_fun_out[1] = adj_traj + s * nAdj + nx + nu;  // hess: (nx+nu)*(nx+nu)
 
                     if (model->expl_vde_adj == 0)
                     {
@@ -823,31 +826,19 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     ext_fun_type_in[1] = COLMAJ;
                     ext_fun_in[1] = rhs_adj_in + nx;  // Sx: nx*nx
                     ext_fun_type_in[2] = COLMAJ;
-                    ext_fun_in[2] = rhs_adj_in + nx + nx * nx;  // Su: nx*nu
+                    ext_fun_in[2] = rhs_adj_in + nx_squared_plus_nx;  // Su: nx*nu
                     ext_fun_type_in[3] = COLMAJ;
-                    ext_fun_in[3] = rhs_adj_in + nx + nx * nx + nx * nu;  // lam: nx
+                    ext_fun_in[3] = rhs_adj_in + nx_squared_plus_nx + nx_times_nu;  // lam: nx
                     ext_fun_type_in[4] = COLMAJ;
-                    ext_fun_in[4] = rhs_adj_in + nx + nx * nx + nx * nu + nx;  // u: nu
+                    ext_fun_in[4] = rhs_adj_in + nx_squared_plus_nx + nx_times_nu + nx;  // u: nu
 
                     ext_fun_type_out[0] = COLMAJ;
                     ext_fun_out[0] = adj_traj + s * nAdj + 0;  // adj: nx+nu
                     ext_fun_type_out[1] = COLMAJ;
                     ext_fun_out[1] = adj_traj + s * nAdj + nx + nu;  // hess: (nx+nu)*(nx+nu)
 
-//printf("\nin\n");
-//d_print_mat(1, nx, ext_fun_in[0], 1);
-//d_print_mat(nx, nx, ext_fun_in[1], nx);
-//d_print_mat(nx, nu, ext_fun_in[2], nx);
-//d_print_mat(1, nx, ext_fun_in[3], 1);
-//d_print_mat(1, nu, ext_fun_in[4], 1);
-
                     model->expl_ode_hes->evaluate(model->expl_ode_hes, ext_fun_type_in, ext_fun_in,
                             ext_fun_type_out, ext_fun_out);
-
-//printf("\nout\n");
-//d_print_mat(1, nx+nu, ext_fun_out[0], 1);
-//d_print_mat(1, (nx+nu)*(nu+nx+1)/2, ext_fun_out[1], nu+nx);
-
                 }
                 timing_ad += acados_toc(&timer_ad);
             }
@@ -872,8 +863,8 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 for (int i = j; i < nx + nu; i++)
                 {
                     S_hess_out[i + (nf) *j] = adj_tmp[nx + nu + count_upper];
-                    S_hess_out[j + (nf) *i] = adj_tmp[nx + nu + count_upper];
                     // copy to upper part
+                    S_hess_out[j + (nf) *i] = adj_tmp[nx + nu + count_upper];
                     count_upper++;
                 }
             }
@@ -889,8 +880,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     mem->time_ad = out->info->ADtime;
     mem->time_la = out->info->LAtime;
 
-    // return
-    return 0;  // success
+    return 0;
 }
 
 

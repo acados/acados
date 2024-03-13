@@ -60,7 +60,7 @@ for integrator = {'irk_gnsf', 'irk'}
     u = 3.5;
     
     %% model
-    model = pendulum_dae_model;
+    model = pendulum_dae_model();
     % disp('state')
     % disp(model.sym_x)
     

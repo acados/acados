@@ -70,9 +70,11 @@ function model = detect_cost_type(model, stage_type)
     elseif strcmp(stage_type, 'path')
         expr_cost = model.cost_expr_ext_cost;
         disp('Structure detection for path cost');
+    elseif strcmp(stage_type, 'initial')
+        expr_cost = model.cost_expr_ext_cost_0;
+        disp('Structure detection for initial cost term');
     end
     cost_fun = Function('cost_fun', {x, u, z}, {expr_cost});
-
 
     if expr_cost.is_quadratic(x) && expr_cost.is_quadratic(u) && expr_cost.is_quadratic(z) ...
             && ~any(expr_cost.which_depends(p))

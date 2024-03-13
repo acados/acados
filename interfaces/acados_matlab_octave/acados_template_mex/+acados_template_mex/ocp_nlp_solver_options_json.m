@@ -66,6 +66,7 @@ classdef ocp_nlp_solver_options_json < handle
         exact_hess_cost
         exact_hess_constr
         exact_hess_dyn
+        fixed_hess
         ext_cost_num_hess
         alpha_min
         alpha_reduction
@@ -102,7 +103,7 @@ classdef ocp_nlp_solver_options_json < handle
             obj.nlp_solver_step_length = 1.0;
             obj.rti_phase = 0;
             obj.qp_solver_iter_max = [];
-            obj.reg_epsilon = 1e-4
+            obj.reg_epsilon = 1e-4;
             obj.print_level = 0;
             obj.time_steps = [];
             obj.initialize_t_slacks = 0;
@@ -111,6 +112,7 @@ classdef ocp_nlp_solver_options_json < handle
             obj.exact_hess_cost = 1;
             obj.exact_hess_constr = 1;
             obj.exact_hess_dyn = 1;
+            obj.fixed_hess = 0;
             obj.ext_cost_num_hess = 0;
             obj.alpha_min = 0.05;
             obj.alpha_reduction = 0.7;

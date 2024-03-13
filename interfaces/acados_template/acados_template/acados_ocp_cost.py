@@ -43,15 +43,15 @@ class AcadosOcpCost:
 
     In case of LINEAR_LS:
     stage cost is
-    :math:`l(x,u,z) = || V_x \, x + V_u \, u + V_z \, z - y_\\text{ref}||^2_W`,
+    :math:`l(x,u,z) = 0.5 \cdot || V_x \, x + V_u \, u + V_z \, z - y_\\text{ref}||^2_W`,
     terminal cost is
-    :math:`m(x) = || V^e_x \, x - y_\\text{ref}^e||^2_{W^e}`
+    :math:`m(x) = 0.5 \cdot || V^e_x \, x - y_\\text{ref}^e||^2_{W^e}`
 
     In case of NONLINEAR_LS:
     stage cost is
-    :math:`l(x,u,z,p) = || y(x,u,z,p) - y_\\text{ref}||^2_W`,
+    :math:`l(x,u,z,p) = 0.5 \cdot || y(x,u,z,p) - y_\\text{ref}||^2_W`,
     terminal cost is
-    :math:`m(x,p) = || y^e(x,p) - y_\\text{ref}^e||^2_{W^e}`
+    :math:`m(x,p) = 0.5 \cdot || y^e(x,p) - y_\\text{ref}^e||^2_{W^e}`
 
     In case of CONVEX_OVER_NONLINEAR:
     stage cost is
