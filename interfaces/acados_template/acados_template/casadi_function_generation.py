@@ -471,7 +471,7 @@ def generate_c_code_external_cost(ocp: AcadosOcp, stage_type, opts):
     # generate expression for full gradient and Hessian
     hess_uxz, grad_uxz = ca.hessian(ext_cost, ca.vertcat(u, x, z))
 
-    jac_p = ca.jacobian(ext_cost, p)
+    jac_p = ca.jacobian(grad_uxz, p)
 
     hess_ux = hess_uxz[:nunx, :nunx]
     hess_z = hess_uxz[nunx:, nunx:]

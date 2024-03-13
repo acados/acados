@@ -1125,6 +1125,7 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "ext_cost_fun", &capsule->ext_cost_0_fun);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "ext_cost_fun_jac", &capsule->ext_cost_0_fun_jac);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "ext_cost_fun_jac_hess", &capsule->ext_cost_0_fun_jac_hess);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "ext_cost_params_jac", &capsule->ext_cost_0_params_jac);
 {%- endif %}
 
 {%- if cost.cost_type == "NONLINEAR_LS" %}
@@ -1146,6 +1147,7 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "ext_cost_fun", &capsule->ext_cost_fun[i-1]);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "ext_cost_fun_jac", &capsule->ext_cost_fun_jac[i-1]);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "ext_cost_fun_jac_hess", &capsule->ext_cost_fun_jac_hess[i-1]);
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "ext_cost_params_jac", &capsule->ext_cost_params_jac[i-1]);
     }
 {%- endif %}
 
@@ -1163,6 +1165,7 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "ext_cost_fun", &capsule->ext_cost_e_fun);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "ext_cost_fun_jac", &capsule->ext_cost_e_fun_jac);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "ext_cost_fun_jac_hess", &capsule->ext_cost_e_fun_jac_hess);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "ext_cost_params_jac", &capsule->ext_cost_e_params_jac);
 {%- endif %}
 
 
@@ -2833,6 +2836,7 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
     external_function_param_{{ cost.cost_ext_fun_type_0 }}_free(&capsule->ext_cost_0_fun);
     external_function_param_{{ cost.cost_ext_fun_type_0 }}_free(&capsule->ext_cost_0_fun_jac);
     external_function_param_{{ cost.cost_ext_fun_type_0 }}_free(&capsule->ext_cost_0_fun_jac_hess);
+    external_function_param_{{ cost.cost_ext_fun_type_0 }}_free(&capsule->ext_cost_0_params_jac);
 {%- endif %}
 {%- if cost.cost_type == "NONLINEAR_LS" %}
     for (int i = 0; i < N - 1; i++)
@@ -2858,10 +2862,12 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
         external_function_param_{{ cost.cost_ext_fun_type }}_free(&capsule->ext_cost_fun[i]);
         external_function_param_{{ cost.cost_ext_fun_type }}_free(&capsule->ext_cost_fun_jac[i]);
         external_function_param_{{ cost.cost_ext_fun_type }}_free(&capsule->ext_cost_fun_jac_hess[i]);
+        external_function_param_{{ cost.cost_ext_fun_type }}_free(&capsule->ext_cost_params_jac[i]);
     }
     free(capsule->ext_cost_fun);
     free(capsule->ext_cost_fun_jac);
     free(capsule->ext_cost_fun_jac_hess);
+    free(capsule->ext_cost_params_jac);
 {%- endif %}
 {%- if cost.cost_type_e == "NONLINEAR_LS" %}
     external_function_param_casadi_free(&capsule->cost_y_e_fun);

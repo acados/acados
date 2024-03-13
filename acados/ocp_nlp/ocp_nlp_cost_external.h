@@ -75,8 +75,7 @@ typedef struct
     external_function_generic *ext_cost_fun;  // function
     external_function_generic *ext_cost_fun_jac_hess;  // function, gradient and hessian
     external_function_generic *ext_cost_fun_jac;  // function, gradient
-    // TODO(params_sens)
-    // external_function_generic *ext_cost_jac_params; // cost gradient wrt. params
+    external_function_generic *ext_cost_params_jac;  // jacobian of cost gradient wrt params
     struct blasfeo_dvec Z;
     struct blasfeo_dvec z;
     struct blasfeo_dmat numerical_hessian;  // custom hessian approximation
@@ -117,7 +116,7 @@ void ocp_nlp_cost_external_opts_set(void *config, void *opts, const char *field,
 
 typedef struct
 {
-    struct blasfeo_dvec params_grad;    // gradient of cost function wrt parameters
+    struct blasfeo_dmat cost_grad_params_jac;    // jacobian of gradient of cost function wrt parameters
     struct blasfeo_dvec grad;    // gradient of cost function
     struct blasfeo_dvec *ux;     // pointer to ux in nlp_out
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
