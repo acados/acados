@@ -690,7 +690,7 @@ void ocp_nlp_cost_external_compute_gradient(void *config_, void *dims_, void *mo
 {
     ocp_nlp_cost_external_dims *dims = dims_;
     ocp_nlp_cost_external_model *model = model_;
-    ocp_nlp_cost_external_opts *opts = opts_;
+    // ocp_nlp_cost_external_opts *opts = opts_;
     ocp_nlp_cost_external_memory *memory = memory_;
     ocp_nlp_cost_external_workspace *work = work_;
 
