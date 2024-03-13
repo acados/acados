@@ -1977,19 +1977,19 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
         if (cost_integration)
         {
             // set pointers to cost function & gradient in integrator
-            double *cost_fun = config->cost[i]->memory_get_fun_ptr(mem->cost[i]);
-            struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get_grad_ptr(mem->cost[i]);
-            struct blasfeo_dvec *y_ref = config->cost[i]->model_get_y_ref_ptr(in->cost[i]);
-            struct blasfeo_dmat *W_chol = config->cost[i]->memory_get_W_chol_ptr(mem->cost[i]);
-            struct blasfeo_dmat *W_chol_diag = config->cost[i]->memory_get_W_chol_diag_ptr(mem->cost[i]);
-            int *outer_hess_is_diag = config->cost[i]->get_outer_hess_is_diag_ptr(mem->cost[i], in->cost[i]);
+            double *cost_fun = config->cost[i]->memory_get_fun_ptr(nlp_mem->cost[i]);
+            struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get_grad_ptr(nlp_mem->cost[i]);
+            struct blasfeo_dvec *y_ref = config->cost[i]->model_get_y_ref_ptr(nlp_in->cost[i]);
+            struct blasfeo_dmat *W_chol = config->cost[i]->memory_get_W_chol_ptr(nlp_mem->cost[i]);
+            struct blasfeo_dvec *W_chol_diag = config->cost[i]->memory_get_W_chol_diag_ptr(nlp_mem->cost[i]);
+            double *outer_hess_is_diag = config->cost[i]->get_outer_hess_is_diag_ptr(nlp_mem->cost[i], nlp_in->cost[i]);
 
-            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], mem->dynamics[i], "cost_grad", cost_grad);
-            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], mem->dynamics[i], "cost_fun", cost_fun);
-            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], mem->dynamics[i], "y_ref", y_ref);
-            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], mem->dynamics[i], "W_chol", W_chol);
-            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], mem->dynamics[i], "W_chol_diag", W_chol_diag);
-            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], mem->dynamics[i], "outer_hess_is_diag", outer_hess_is_diag);
+            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "cost_grad", cost_grad);
+            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "cost_fun", cost_fun);
+            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "y_ref", y_ref);
+            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "W_chol", W_chol);
+            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "W_chol_diag", W_chol_diag);
+            config->dynamics[i]->memory_set(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], "outer_hess_is_diag", outer_hess_is_diag);
         }
     }
 

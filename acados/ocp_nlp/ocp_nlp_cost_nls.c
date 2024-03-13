@@ -508,7 +508,7 @@ struct blasfeo_dvec *ocp_nlp_cost_nls_memory_get_W_chol_diag_ptr(void *memory_)
 
 double *ocp_nlp_cost_nls_get_outer_hess_is_diag_ptr(void *memory_, void *model_)
 {
-    ocp_nlp_cost_nls_memory *memory = memory_;
+    // ocp_nlp_cost_nls_memory *memory = memory_;
     ocp_nlp_cost_nls_model *model = model_;
 
     return &model->outer_hess_is_diag;
