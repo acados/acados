@@ -210,10 +210,10 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_,
         else if (!strcmp(field, "as_rti_level"))
         {
             int* as_rti_level = (int *) value;
-            if (*as_rti_level < LEVEL_A || *as_rti_level > LEVEL_D)
+            if (*as_rti_level < LEVEL_A || *as_rti_level > STANDARD_RTI)
             {
                 printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for as_rti_level field.\n");
-                printf("possible values are: 0, 1, 2, 3, got %d.\n", *as_rti_level);
+                printf("possible values are: 0, 1, 2, 3, 4, got %d.\n", *as_rti_level);
                 exit(1);
             }
             opts->as_rti_level = *as_rti_level;
