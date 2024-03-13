@@ -52,7 +52,22 @@ def get_chain_params():
     return params
 
 
-def export_chain_mass_model(n_mass: int, disturbance=False) -> Tuple[AcadosModel, DMStruct]:
+# def export_erk4_integrator(model: AcadosModel, Ts: float) -> AcadosSimSolver:
+def export_discrete_erk4_integrator_step(f_expl, x, u, p, h, n_stages: int = 2) -> ca.SX:
+    dt = h / n_stages
+    ode = ca.Function("f", [x, u, p], [f_expl])
+    xnext = x
+    for j in range(n_stages):
+        k1 = ode(xnext, u, p)
+        k2 = ode(xnext + dt / 2 * k1, u, p)
+        k3 = ode(xnext + dt / 2 * k2, u, p)
+        k4 = ode(xnext + dt * k3, u, p)
+        xnext = xnext + dt / 6 * (k1 + 2 * k2 + 2 * k3 + k4)
+
+    return xnext
+
+
+def export_chain_mass_model(n_mass: int, Ts=0.2, disturbance=False) -> Tuple[AcadosModel, DMStruct]:
     """Export chain mass model for acados."""
     x0 = np.array([0, 0, 0])  # fix mass (at wall)
 
@@ -141,11 +156,13 @@ def export_chain_mass_model(n_mass: int, disturbance=False) -> Tuple[AcadosModel
 
     f_expl = vertcat(xvel, u, f)
     f_impl = xdot - f_expl
+    f_disc = export_discrete_erk4_integrator_step(f_expl, x, u, p, Ts)
 
     model = AcadosModel()
 
     model.f_impl_expr = f_impl
     model.f_expl_expr = f_expl
+    model.disc_dyn_expr = f_disc
     model.x = x
     model.xdot = xdot
     model.u = u
@@ -408,7 +425,8 @@ def main(_chain_params: dict):
     # solver options
     ocp.solver_options.qp_solver = "PARTIAL_CONDENSING_HPIPM"  # FULL_CONDENSING_QPOASES
     ocp.solver_options.hessian_approx = "GAUSS_NEWTON"
-    ocp.solver_options.integrator_type = "IRK"
+    # ocp.solver_options.integrator_type = "IRK"
+    ocp.solver_options.integrator_type = "DISCRETE"
     ocp.solver_options.nlp_solver_type = "SQP"  # SQP_RTI
     ocp.solver_options.nlp_solver_max_iter = nlp_iter
 
