@@ -358,11 +358,13 @@ acados_size_t ocp_nlp_cost_external_memory_calculate_size(void *config_, void *d
     int nx = dims->nx;
     int nu = dims->nu;
     int ns = dims->ns;
+    int np = dims->np;
 
     acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_cost_external_memory);
 
+    size += 1 * blasfeo_memsize_dvec(np);  // params_grad
     size += 1 * blasfeo_memsize_dvec(nu + nx + 2 * ns);  // grad
 
     size += 64;  // blasfeo_mem align
@@ -384,6 +386,7 @@ void *ocp_nlp_cost_external_memory_assign(void *config_, void *dims_, void *opts
     int nx = dims->nx;
     int nu = dims->nu;
     int ns = dims->ns;
+    int np = dims->np;
 
     // struct
     ocp_nlp_cost_external_memory *memory = (ocp_nlp_cost_external_memory *) c_ptr;
@@ -392,6 +395,8 @@ void *ocp_nlp_cost_external_memory_assign(void *config_, void *dims_, void *opts
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
 
+    // params_grad
+    assign_and_advance_blasfeo_dvec_mem(np, &memory->params_grad, &c_ptr);
     // grad
     assign_and_advance_blasfeo_dvec_mem(nu + nx + 2 * ns, &memory->grad, &c_ptr);
 
@@ -755,6 +760,67 @@ void ocp_nlp_cost_external_compute_fun(void *config_, void *dims_, void *model_,
     return;
 }
 
+void ocp_nlp_cost_external_compute_params_jac(void *config_, void *dims_, void *model_,
+                                       void *opts_, void *memory_, void *work_)
+{
+    printf("eval cost gradient wrt params\n");
+    ocp_nlp_cost_external_dims *dims = dims_;
+    ocp_nlp_cost_external_model *model = model_;
+    // ocp_nlp_cost_external_opts *opts = opts_;
+    ocp_nlp_cost_external_memory *memory = memory_;
+    // ocp_nlp_cost_external_workspace *work = work_;
+
+    ocp_nlp_cost_external_cast_workspace(config_, dims, opts_, work_);
+
+    struct blasfeo_dvec *ux = memory->ux;
+
+    int nu = dims->nu;
+    int np = dims->np;
+
+    /* specify input types and pointers for external cost function */
+    ext_fun_arg_t ext_fun_type_in[3];
+    void *ext_fun_in[3];
+    ext_fun_arg_t ext_fun_type_out[1];
+    void *ext_fun_out[1];
+
+    // INPUT
+    struct blasfeo_dvec_args u_in;  // input u
+    u_in.x = ux;
+    u_in.xi = 0;
+
+    struct blasfeo_dvec_args x_in;  // input x
+    x_in.x = ux;
+    x_in.xi = nu;
+
+    ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+    ext_fun_in[0] = &x_in;
+    ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
+    ext_fun_in[1] = &u_in;
+    ext_fun_type_in[2] = BLASFEO_DVEC;
+    ext_fun_in[2] = memory->z_alg;
+
+    // OUTPUT
+    ext_fun_type_out[0] = BLASFEO_DVEC;
+    ext_fun_out[0] = &memory->params_grad;
+
+    // evaluate external function
+    if (model->ext_cost_fun == 0)
+    {
+        printf("ocp_nlp_cost_external_compute_fun: ext_cost_fun is not provided. Exiting.\n");
+        exit(1);
+    }
+    model->ext_cost_fun->evaluate(model->ext_cost_fun, ext_fun_type_in, ext_fun_in,
+                                  ext_fun_type_out, ext_fun_out);
+
+    // scale
+    if(model->scaling != 1.0)
+    {
+        blasfeo_dvecsc(np, model->scaling, &memory->params_grad, 0);
+    }
+
+    return;
+}
+
 
 
 /* config */
@@ -788,6 +854,7 @@ void ocp_nlp_cost_external_config_initialize_default(void *config_)
     config->initialize = &ocp_nlp_cost_external_initialize;
     config->update_qp_matrices = &ocp_nlp_cost_external_update_qp_matrices;
     config->compute_fun = &ocp_nlp_cost_external_compute_fun;
+    config->compute_params_jac = &ocp_nlp_cost_external_compute_params_jac;
     config->config_initialize_default = &ocp_nlp_cost_external_config_initialize_default;
     config->precompute = &ocp_nlp_cost_external_precompute;
 

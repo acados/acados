@@ -490,7 +490,7 @@ def generate_c_code_external_cost(ocp: AcadosOcp, stage_type, opts):
     )
 
     ext_cost_params_jac = ca.Function(
-        fun_name_param, [x, u, p], [jac_p]
+        fun_name_param, [x, u, z, p], [jac_p]
     )
 
     # change directory

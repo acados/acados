@@ -942,6 +942,12 @@ void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims_, void *model_,
 }
 
 
+void ocp_nlp_cost_nls_compute_params_jac(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_)
+{
+    printf("ocp_nlp_cost_nls_compute_params_jac: not implemented.\n");
+    exit(1);
+}
+
 
 void ocp_nlp_cost_nls_config_initialize_default(void *config_)
 {
@@ -974,6 +980,7 @@ void ocp_nlp_cost_nls_config_initialize_default(void *config_)
     config->initialize = &ocp_nlp_cost_nls_initialize;
     config->update_qp_matrices = &ocp_nlp_cost_nls_update_qp_matrices;
     config->compute_fun = &ocp_nlp_cost_nls_compute_fun;
+    config->compute_params_jac = &ocp_nlp_cost_nls_compute_params_jac;
     config->config_initialize_default = &ocp_nlp_cost_nls_config_initialize_default;
     config->precompute = &ocp_nlp_cost_nls_precompute;
 

@@ -117,6 +117,7 @@ void ocp_nlp_cost_external_opts_set(void *config, void *opts, const char *field,
 
 typedef struct
 {
+    struct blasfeo_dvec params_grad;    // gradient of cost function wrt parameters
     struct blasfeo_dvec grad;    // gradient of cost function
     struct blasfeo_dvec *ux;     // pointer to ux in nlp_out
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
@@ -178,9 +179,9 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims, void *m
 //
 void ocp_nlp_cost_external_compute_fun(void *config_, void *dims, void *model_,
                                        void *opts_, void *memory_, void *work_);
-
-// TODO(params_sens)
-// void ocp_nlp_cost_external_update_params_sens(...)
+//
+void ocp_nlp_cost_external_compute_params_jac(void *config_, void *dims, void *model_,
+                                       void *opts_, void *memory_, void *work_);
 
 #ifdef __cplusplus
 } /* extern "C" */
