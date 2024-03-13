@@ -262,8 +262,13 @@ def export_chain_mass_integrator(n_mass, p_, disturbance=True) -> AcadosSimSolve
     # set prediction horizon
     sim.solver_options.T = Ts
 
-    # acados_ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp_' + model.name + '.json')
-    acados_integrator = AcadosSimSolver(sim, json_file="acados_ocp_" + model.name + ".json")
+    json_file = "acados_sim_" + model.name + ".json"
+
+    # Check if json_file exists
+    if os.path.exists(json_file):
+        acados_integrator = AcadosSimSolver(sim, json_file=json_file, build=False, generate=False)
+    else:
+        acados_integrator = AcadosSimSolver(sim, json_file=json_file, build=True, generate=True)
 
     return acados_integrator
 
@@ -279,12 +284,13 @@ def main(_chain_params: dict):
     Ts = _chain_params["Ts"]
     Tsim = _chain_params["Tsim"]
     N = _chain_params["N"]
+    ocp.dims.N = N
     u_init = _chain_params["u_init"]
     with_wall = _chain_params["with_wall"]
     yPosWall = _chain_params["yPosWall"]
 
     perturb_scale = _chain_params["perturb_scale"]
-    W = perturb_scale * np.eye(M)
+    W = perturb_scale * np.eye(3)
 
     m = [np.random.normal(_chain_params["m"], 0.1 * _chain_params["m"]) for _ in range(n_mass - 1)]
     D = [np.random.normal(_chain_params["D"], 0.1 * _chain_params["D"], 3) for _ in range(n_mass - 1)]
@@ -293,7 +299,6 @@ def main(_chain_params: dict):
 
     nlp_iter = _chain_params["nlp_iter"]
     nlp_tol = _chain_params["nlp_tol"]
-    save_results = _chain_params["save_results"]
     show_plots = _chain_params["show_plots"]
     seed = _chain_params["seed"]
 
@@ -303,7 +308,7 @@ def main(_chain_params: dict):
     # w = perturb_scale * np.eye(nparam)
 
     # export model
-    model, p = export_chain_mass_model(n_mass, disturbance=True)
+    model, p = export_chain_mass_model(n_mass, Ts=Ts, disturbance=True)
 
     # Inermediate masses
     for i_mass in range(n_mass - 1):
@@ -323,7 +328,6 @@ def main(_chain_params: dict):
     nx = model.x.size()[0]
     nu = model.u.size()[0]
     ny = nx + nu
-    ny_e = nx
     Tf = N * Ts
 
     # initial state
@@ -338,23 +342,6 @@ def main(_chain_params: dict):
     xrest = compute_steady_state(model, p, xPosFirstMass, xEndRef)
 
     x0 = xrest
-
-    if True:
-        pos = np.zeros((n_mass, 3))
-        pos[0, :] = xPosFirstMass.T
-        for i in range(1, n_mass):
-            j = i - 1
-            pos[i, :] = x0[j * 3 : (j + 1) * 3].T
-
-        plt.figure()
-        plt.plot(pos[:, 0], pos[:, 2], "o-")
-        plt.xlabel("x")
-        plt.ylabel("z")
-        plt.title("Initial state")
-        plt.grid(True)
-        plt.show()
-
-        print(f"x0 = {x0}")
 
     # set dimensions
     ocp.dims.N = N
@@ -420,13 +407,11 @@ def main(_chain_params: dict):
         ocp.cost.zl = L1_pen * np.ones((nbx,))
         ocp.cost.zu = L1_pen * np.ones((nbx,))
 
-    # ERK4 integrator
-
     # solver options
     ocp.solver_options.qp_solver = "PARTIAL_CONDENSING_HPIPM"  # FULL_CONDENSING_QPOASES
     ocp.solver_options.hessian_approx = "GAUSS_NEWTON"
-    # ocp.solver_options.integrator_type = "IRK"
-    ocp.solver_options.integrator_type = "DISCRETE"
+    ocp.solver_options.integrator_type = "IRK"
+    # ocp.solver_options.integrator_type = "DISCRETE"
     ocp.solver_options.nlp_solver_type = "SQP"  # SQP_RTI
     ocp.solver_options.nlp_solver_max_iter = nlp_iter
 
@@ -440,7 +425,15 @@ def main(_chain_params: dict):
     # set prediction horizon
     ocp.solver_options.tf = Tf
 
-    acados_ocp_solver = AcadosOcpSolver(ocp, json_file="acados_ocp_" + model.name + ".json")
+    json_file = "acados_ocp_" + model.name + ".json"
+
+    # Check if json_file exists
+    if os.path.exists(json_file):
+        acados_ocp_solver = AcadosOcpSolver(ocp, json_file=json_file, build=False, generate=True)
+    else:
+        acados_ocp_solver = AcadosOcpSolver(ocp, json_file=json_file)
+
+    # exit(0)
 
     # acados_integrator = AcadosSimSolver(ocp, json_file = 'acados_ocp_' + model.name + '.json')
     acados_integrator = export_chain_mass_integrator(n_mass, p)
@@ -489,7 +482,8 @@ def main(_chain_params: dict):
         acados_integrator.set("x", xcurrent)
         acados_integrator.set("u", simU[i, :])
 
-        p["w"] = sampleFromEllipsoid(np.zeros((W.shape[0],)), W)
+        for i_mass in range(n_mass - 2):
+            p["w", i_mass] = sampleFromEllipsoid(np.zeros(3), W)
 
         acados_integrator.set("p", p.cat.full().flatten())
 
