@@ -192,7 +192,7 @@ def export_parametric_ocp(
     ocp.cost.cost_type_e = "EXTERNAL"
 
     # NOTE here we make the cost parametric
-    ocp.model.cost_expr_ext_cost = ocp.model.x.T @ Q_mat @ ocp.model.x + ocp.model.p * ocp.model.u.T @ R_mat @ ocp.model.u + ocp.model.p**2
+    ocp.model.cost_expr_ext_cost = ocp.model.p * ocp.model.x.T @ Q_mat @ ocp.model.x + ocp.model.u.T @ R_mat @ ocp.model.u
     ocp.model.cost_expr_ext_cost_e = ocp.model.x.T @ Q_mat @ ocp.model.x
 
     ocp.constraints.lbu = np.array([-Fmax])
@@ -382,7 +382,7 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True):
 
     p_nominal = 1.0
     x0 = np.array([0.0, np.pi / 2, 0.0, 0.0])
-    delta_p = 0.005
+    delta_p = 0.002
     p_test = np.arange(p_nominal - 0.5, p_nominal + 0.5, delta_p)
 
     np_test = p_test.shape[0]
