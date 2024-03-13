@@ -58,7 +58,6 @@ typedef enum
     PREPARATION_AND_FEEDBACK, // = 0,
     PREPARATION, // = 1,
     FEEDBACK, // = 2,
-    PREPARATION_ADVANCED_STEP, // = 3,
 } rti_phase_t;
 
 typedef enum
@@ -74,6 +73,7 @@ typedef enum
     LEVEL_B, // 1
     LEVEL_C, // 2
     LEVEL_D, // 3
+    STANDARD_RTI, // 4
 } as_rti_level_t;
 
 typedef struct

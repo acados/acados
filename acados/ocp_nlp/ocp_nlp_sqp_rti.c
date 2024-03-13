@@ -115,7 +115,7 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_,
     opts->ext_qp_res = 0;
     opts->warm_start_first_qp = false;
     opts->rti_phase = 0;
-    opts->as_rti_level = LEVEL_A;
+    opts->as_rti_level = STANDARD_RTI;
     opts->as_rti_advancement_strategy = SIMULATE_ADVANCE;
     opts->as_rti_iter = 0;
     opts->rti_log_residuals = 0;
@@ -189,10 +189,10 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_,
         else if (!strcmp(field, "rti_phase"))
         {
             int* rti_phase = (int *) value;
-            if (*rti_phase < 0 || *rti_phase > 3)
+            if (*rti_phase < 0 || *rti_phase > 2)
             {
                 printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for rti_phase field.\n");
-                printf("possible values are: 0, 1, 2, 3, got %d.\n", *rti_phase);
+                printf("possible values are: 0, 1, 2, got %d.\n", *rti_phase);
                 exit(1);
             }
             opts->rti_phase = *rti_phase;
@@ -1225,24 +1225,23 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     int rti_phase = opts->rti_phase;
 
-    switch(rti_phase)
+    if (rti_phase == FEEDBACK)
     {
-        case PREPARATION_AND_FEEDBACK:
-            ocp_nlp_sqp_rti_preparation_step(config, dims, nlp_in, nlp_out, opts, mem, work);
-            ocp_nlp_sqp_rti_feedback_step(config, dims, nlp_in, nlp_out, opts, mem, work);
-            break;
-
-        case PREPARATION:
-            ocp_nlp_sqp_rti_preparation_step(config, dims, nlp_in, nlp_out, opts, mem, work);
-            break;
-
-        case FEEDBACK:
-            ocp_nlp_sqp_rti_feedback_step(config, dims, nlp_in, nlp_out, opts, mem, work);
-            break;
-
-        case PREPARATION_ADVANCED_STEP:
-            ocp_nlp_sqp_rti_preparation_advanced_step(config, dims, nlp_in, nlp_out, opts, mem, work);
-            break;
+        ocp_nlp_sqp_rti_feedback_step(config, dims, nlp_in, nlp_out, opts, mem, work);
+    }
+    else if (rti_phase == PREPARATION && opts->as_rti_level == STANDARD_RTI)
+    {
+        ocp_nlp_sqp_rti_preparation_step(config, dims, nlp_in, nlp_out, opts, mem, work);
+    }
+    else if (rti_phase == PREPARATION)
+    {
+        ocp_nlp_sqp_rti_preparation_advanced_step(config, dims, nlp_in, nlp_out, opts, mem, work);
+    }
+    else
+    {
+        // rti_phas == PREPARATION_AND_FEEDBACK
+        ocp_nlp_sqp_rti_preparation_step(config, dims, nlp_in, nlp_out, opts, mem, work);
+        ocp_nlp_sqp_rti_feedback_step(config, dims, nlp_in, nlp_out, opts, mem, work);
     }
     mem->time_tot = acados_toc(&timer);
 

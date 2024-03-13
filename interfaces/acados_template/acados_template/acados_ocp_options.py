@@ -101,7 +101,7 @@ class AcadosOcpOptions:
         self.__custom_templates = []
         self.__custom_update_copy = True
         self.__as_rti_iter = 1
-        self.__as_rti_level = 0
+        self.__as_rti_level = 4
 
     @property
     def qp_solver(self):
@@ -427,8 +427,9 @@ class AcadosOcpOptions:
         LEVEL-B: 1
         LEVEL-C: 2
         LEVEL-D: 3
+        STANDARD_RTI: 4
 
-        Default: 0
+        Default: 4
         """
         return self.__as_rti_level
 
@@ -924,10 +925,10 @@ class AcadosOcpOptions:
 
     @as_rti_level.setter
     def as_rti_level(self, as_rti_level):
-        if as_rti_level in [0, 1, 2, 3]:
+        if as_rti_level in [0, 1, 2, 3, 4]:
             self.__as_rti_level = as_rti_level
         else:
-            raise Exception('Invalid as_rti_level value must be in [0, 1, 2, 3].')
+            raise Exception('Invalid as_rti_level value must be in [0, 1, 2, 3, 4].')
 
 
     @qp_solver_ric_alg.setter

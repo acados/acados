@@ -131,7 +131,7 @@ classdef ocp_nlp_solver_options_json < handle
             obj.ext_fun_compile_flags = '-O2';
             obj.cost_discretization = 'EULER';
             obj.as_rti_iter = 1;
-            obj.as_rti_level = 0;
+            obj.as_rti_level = 4;
             obj.rti_log_residuals = 0;
 
         end
