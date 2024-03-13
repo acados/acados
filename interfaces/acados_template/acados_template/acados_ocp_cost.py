@@ -217,7 +217,7 @@ class AcadosOcpCost:
         if outer_hess_is_diag_0 == 0 or outer_hess_is_diag_0 == 1:
             self.__outer_hess_is_diag_0 = outer_hess_is_diag_0
         else:
-            raise Exception('Invalid phi_hess_diag_0 value, expected bool or int in [0, 1].')
+            raise Exception('Invalid outer_hess_is_diag_0 value, expected bool or int in [0, 1].')
 
     # Lagrange term
     @property
