@@ -56,32 +56,33 @@ def mocp_generate_external_functions(mocp: AcadosMultiphaseOcp):
 def ocp_generate_external_functions(ocp: AcadosOcp):
     model = ocp.model
 
-    if ocp.solver_options.hessian_approx == 'EXACT':
-        opts = dict(generate_hess=1)
-    else:
-        opts = dict(generate_hess=0)
-
     # create code_export_dir, model_dir
     code_export_dir = ocp.code_export_directory
-    opts['code_export_directory'] = code_export_dir
     model_dir = os.path.join(code_export_dir, model.name + '_model')
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
 
+    # options for code generation
+    code_gen_opts = dict()
+
+    code_gen_opts['generate_hess'] = ocp.solver_options.hessian_approx == 'EXACT'
+    code_gen_opts['with_solution_sens_wrt_params'] = ocp.solver_options.with_solution_sens_wrt_params
+    code_gen_opts['code_export_directory'] = code_export_dir
+
     check_casadi_version()
     if ocp.model.dyn_ext_fun_type == 'casadi':
         if ocp.solver_options.integrator_type == 'ERK':
-            generate_c_code_explicit_ode(model, opts)
+            generate_c_code_explicit_ode(model, code_gen_opts)
         elif ocp.solver_options.integrator_type == 'IRK':
-            generate_c_code_implicit_ode(model, opts)
+            generate_c_code_implicit_ode(model, code_gen_opts)
         elif ocp.solver_options.integrator_type == 'LIFTED_IRK':
             if model.t != []:
                 raise NotImplementedError("LIFTED_IRK with time-varying dynamics not implemented yet.")
-            generate_c_code_implicit_ode(model, opts)
+            generate_c_code_implicit_ode(model, code_gen_opts)
         elif ocp.solver_options.integrator_type == 'GNSF':
-            generate_c_code_gnsf(model, opts)
+            generate_c_code_gnsf(model, code_gen_opts)
         elif ocp.solver_options.integrator_type == 'DISCRETE':
-            generate_c_code_discrete_dynamics(model, opts)
+            generate_c_code_discrete_dynamics(model, code_gen_opts)
         else:
             raise Exception("ocp_generate_external_functions: unknown integrator type.")
     else:
@@ -89,34 +90,34 @@ def ocp_generate_external_functions(ocp: AcadosOcp):
         shutil.copyfile(model.dyn_generic_source, target_location)
 
     if ocp.dims.nh_0 > 0 or ocp.dims.nphi_0:
-        generate_c_code_constraint(ocp, opts, 'initial')
+        generate_c_code_constraint(ocp, code_gen_opts, 'initial')
 
     if ocp.dims.nphi > 0 or ocp.dims.nh > 0:
-        generate_c_code_constraint(ocp, opts, 'path')
+        generate_c_code_constraint(ocp, code_gen_opts, 'path')
 
     if ocp.dims.nphi_e > 0 or ocp.dims.nh_e > 0:
-        generate_c_code_constraint(ocp, opts, 'terminal')
+        generate_c_code_constraint(ocp, code_gen_opts, 'terminal')
 
     if ocp.cost.cost_type_0 == 'NONLINEAR_LS':
         generate_c_code_nls_cost(ocp, 'initial')
     elif ocp.cost.cost_type_0 == 'CONVEX_OVER_NONLINEAR':
         generate_c_code_conl_cost(ocp, 'initial')
     elif ocp.cost.cost_type_0 == 'EXTERNAL':
-        generate_c_code_external_cost(ocp, 'initial', opts)
+        generate_c_code_external_cost(ocp, 'initial', code_gen_opts)
 
     if ocp.cost.cost_type == 'NONLINEAR_LS':
         generate_c_code_nls_cost(ocp, 'path')
     elif ocp.cost.cost_type == 'CONVEX_OVER_NONLINEAR':
         generate_c_code_conl_cost(ocp, 'path')
     elif ocp.cost.cost_type == 'EXTERNAL':
-        generate_c_code_external_cost(ocp, 'path', opts)
+        generate_c_code_external_cost(ocp, 'path', code_gen_opts)
 
     if ocp.cost.cost_type_e == 'NONLINEAR_LS':
         generate_c_code_nls_cost(ocp, 'terminal')
     elif ocp.cost.cost_type_e == 'CONVEX_OVER_NONLINEAR':
         generate_c_code_conl_cost(ocp, 'terminal')
     elif ocp.cost.cost_type_e == 'EXTERNAL':
-        generate_c_code_external_cost(ocp, 'terminal', opts)
+        generate_c_code_external_cost(ocp, 'terminal', code_gen_opts)
 
 
 
@@ -125,7 +126,7 @@ def ocp_generate_external_functions(ocp: AcadosOcp):
 # Dynamics
 ################
 
-def generate_c_code_discrete_dynamics( model, opts ):
+def generate_c_code_discrete_dynamics(model: AcadosModel, opts):
 
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
@@ -175,16 +176,17 @@ def generate_c_code_discrete_dynamics( model, opts ):
     phi_fun_jac_ut_xt_hess = ca.Function(fun_name, [x, u, lam, p], [phi, jac_ux.T, hess_ux])
     phi_fun_jac_ut_xt_hess.generate(fun_name, casadi_codegen_opts)
 
-    fun_name = model_name + '_dyn_disc_phi_params_jac'
-    phi_params_jac_jac_lag = ca.Function(fun_name, [x, u, lam, p], [jac_p, jac_lag_p])
-    phi_params_jac_jac_lag.generate(fun_name, casadi_codegen_opts)
+    if opts["with_solution_sens_wrt_params"]:
+        fun_name = model_name + '_dyn_disc_phi_params_jac'
+        phi_params_jac_jac_lag = ca.Function(fun_name, [x, u, lam, p], [jac_p, jac_lag_p])
+        phi_params_jac_jac_lag.generate(fun_name, casadi_codegen_opts)
 
     os.chdir(cwd)
     return
 
 
 
-def generate_c_code_explicit_ode( model, opts ):
+def generate_c_code_explicit_ode(model: AcadosModel, opts):
 
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
@@ -259,7 +261,7 @@ def generate_c_code_explicit_ode( model, opts ):
     return
 
 
-def generate_c_code_implicit_ode( model, opts ):
+def generate_c_code_implicit_ode(model: AcadosModel, opts):
 
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
@@ -338,7 +340,7 @@ def generate_c_code_implicit_ode( model, opts ):
     return
 
 
-def generate_c_code_gnsf( model, opts ):
+def generate_c_code_gnsf(model: AcadosModel, opts):
 
     casadi_codegen_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
@@ -471,8 +473,6 @@ def generate_c_code_external_cost(ocp: AcadosOcp, stage_type, opts):
     # generate expression for full gradient and Hessian
     hess_uxz, grad_uxz = ca.hessian(ext_cost, ca.vertcat(u, x, z))
 
-    jac_p = ca.jacobian(grad_uxz, p)
-
     hess_ux = hess_uxz[:nunx, :nunx]
     hess_z = hess_uxz[nunx:, nunx:]
     hess_z_ux = hess_uxz[nunx:, :nunx]
@@ -489,9 +489,9 @@ def generate_c_code_external_cost(ocp: AcadosOcp, stage_type, opts):
         fun_name_jac, [x, u, z, p], [ext_cost, grad_uxz]
     )
 
-    ext_cost_params_jac = ca.Function(
-        fun_name_param, [x, u, z, p], [jac_p]
-    )
+    if opts["with_solution_sens_wrt_params"]:
+        jac_p = ca.jacobian(grad_uxz, p)
+        ext_cost_params_jac = ca.Function(fun_name_param, [x, u, z, p], [jac_p])
 
     # change directory
     cwd = os.getcwd()
@@ -503,7 +503,9 @@ def generate_c_code_external_cost(ocp: AcadosOcp, stage_type, opts):
     ext_cost_fun.generate(fun_name, casadi_codegen_opts)
     ext_cost_fun_jac_hess.generate(fun_name_hess, casadi_codegen_opts)
     ext_cost_fun_jac.generate(fun_name_jac, casadi_codegen_opts)
-    ext_cost_params_jac.generate(fun_name_param, casadi_codegen_opts)
+
+    if opts["with_solution_sens_wrt_params"]:
+        ext_cost_params_jac.generate(fun_name_param, casadi_codegen_opts)
 
     os.chdir(cwd)
     return

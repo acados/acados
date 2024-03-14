@@ -216,7 +216,9 @@ set(MODEL_SRC
 {%- elif solver_options.integrator_type == "DISCRETE" %}
     {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun.c
     {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun_jac.c
+    {% if solver_options.with_solution_sens_wrt_params %}
     {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_params_jac.c
+    {% endif %}
 		{%- if hessian_approx == "EXACT" %}
     {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun_jac_hess.c
 		{%- endif %}
@@ -276,7 +278,9 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_0_fun.c
         {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_0_fun_jac.c
         {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_0_fun_jac_hess.c
+        {% if solver_options.with_solution_sens_wrt_params %}
         {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_0_params_jac.c
+        {% endif %}
     {%- else %}
         {{ model.name }}_cost/{{ cost.cost_source_ext_cost_0 }}
     {%- endif %}
@@ -293,7 +297,9 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_fun.c
         {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_fun_jac.c
         {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_fun_jac_hess.c
+        {% if solver_options.with_solution_sens_wrt_params %}
         {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_params_jac.c
+        {% endif %}
     {%- elif cost.cost_source_ext_cost != cost.cost_source_ext_cost_0 %}
         {{ model.name }}_cost/{{ cost.cost_source_ext_cost }}
     {%- endif %}
@@ -310,7 +316,9 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_fun.c
         {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_fun_jac.c
         {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_fun_jac_hess.c
+        {% if solver_options.with_solution_sens_wrt_params %}
         {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_params_jac.c
+        {% endif %}
     {%- elif cost.cost_source_ext_cost_e != cost.cost_source_ext_cost_0 %}
         {{ model.name }}_cost/{{ cost.cost_source_ext_cost_e }}
     {%- endif %}

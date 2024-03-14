@@ -98,12 +98,14 @@ const int *{{ model.name }}_cost_ext_cost_0_fun_jac_sparsity_out(int);
 int {{ model.name }}_cost_ext_cost_0_fun_jac_n_in(void);
 int {{ model.name }}_cost_ext_cost_0_fun_jac_n_out(void);
 
+{% if solver_options.with_solution_sens_wrt_params %}
 int {{ model.name }}_cost_ext_cost_0_params_jac(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_cost_ext_cost_0_params_jac_work(int *, int *, int *, int *);
 const int *{{ model.name }}_cost_ext_cost_0_params_jac_sparsity_in(int);
 const int *{{ model.name }}_cost_ext_cost_0_params_jac_sparsity_out(int);
 int {{ model.name }}_cost_ext_cost_0_params_jac_n_in(void);
 int {{ model.name }}_cost_ext_cost_0_params_jac_n_out(void);
+{% endif %}
     {%- else %}
 int {{ cost.cost_function_ext_cost_0 }}(void **, void **, void *);
     {%- endif %}
@@ -170,12 +172,14 @@ const int *{{ model.name }}_cost_ext_cost_fun_jac_sparsity_out(int);
 int {{ model.name }}_cost_ext_cost_fun_jac_n_in(void);
 int {{ model.name }}_cost_ext_cost_fun_jac_n_out(void);
 
+{% if solver_options.with_solution_sens_wrt_params %}
 int {{ model.name }}_cost_ext_cost_params_jac(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_cost_ext_cost_params_jac_work(int *, int *, int *, int *);
 const int *{{ model.name }}_cost_ext_cost_params_jac_sparsity_in(int);
 const int *{{ model.name }}_cost_ext_cost_params_jac_sparsity_out(int);
 int {{ model.name }}_cost_ext_cost_params_jac_n_in(void);
 int {{ model.name }}_cost_ext_cost_params_jac_n_out(void);
+{% endif %}
     {%- else %}
 int {{ cost.cost_function_ext_cost }}(void **, void **, void *);
     {%- endif %}
@@ -240,12 +244,14 @@ const int *{{ model.name }}_cost_ext_cost_e_fun_jac_sparsity_out(int);
 int {{ model.name }}_cost_ext_cost_e_fun_jac_n_in(void);
 int {{ model.name }}_cost_ext_cost_e_fun_jac_n_out(void);
 
+{% if solver_options.with_solution_sens_wrt_params %}
 int {{ model.name }}_cost_ext_cost_e_params_jac(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_cost_ext_cost_e_params_jac_work(int *, int *, int *, int *);
 const int *{{ model.name }}_cost_ext_cost_e_params_jac_sparsity_in(int);
 const int *{{ model.name }}_cost_ext_cost_e_params_jac_sparsity_out(int);
 int {{ model.name }}_cost_ext_cost_e_params_jac_n_in(void);
 int {{ model.name }}_cost_ext_cost_e_params_jac_n_out(void);
+{% endif %}
     {%- else %}
 int {{ cost.cost_function_ext_cost_e }}(void **, void **, void *);
     {%- endif %}
