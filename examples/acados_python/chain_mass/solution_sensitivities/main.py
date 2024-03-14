@@ -12,6 +12,8 @@ from casadi.tools.structure3 import DMStruct
 import matplotlib.pyplot as plt
 from acados_template import AcadosModel, AcadosSim, AcadosSimSolver, AcadosOcp, AcadosOcpSolver
 
+import tqdm
+
 from typing import Tuple
 from plot_utils import (
     plot_chain_control_traj,
@@ -269,13 +271,14 @@ def export_parametric_sim(chain_params_: dict, p_: DMStruct, disturbance: bool =
 
 def export_parametric_ocp(
     chain_params_: dict,
+    qp_solver_ric_alg: int = 0,
     qp_solver: str = "PARTIAL_CONDENSING_HPIPM",
     hessian_approx: str = "GAUSS_NEWTON",
     integrator_type: str = "IRK",
     nlp_solver_type: str = "SQP",
     nlp_iter: int = 50,
     nlp_tol: float = 1e-5,
-) -> AcadosOcp:
+) -> Tuple[AcadosOcp, DMStruct]:
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
@@ -395,13 +398,20 @@ def export_parametric_ocp(
     ocp.solver_options.hessian_approx = hessian_approx
     ocp.solver_options.integrator_type = integrator_type
     ocp.solver_options.nlp_solver_type = nlp_solver_type
-    ocp.solver_options.nlp_solver_max_iter = nlp_iter
-
     ocp.solver_options.sim_method_num_stages = 2
     ocp.solver_options.sim_method_num_steps = 2
+    ocp.solver_options.qp_solver_ric_alg = qp_solver_ric_alg
     ocp.solver_options.qp_solver_cond_N = ocp.dims.N
-    ocp.solver_options.qp_tol = nlp_tol
-    ocp.solver_options.tol = nlp_tol
+
+    if hessian_approx == "EXACT":
+        ocp.solver_options.nlp_solver_step_length = 0.0
+        ocp.solver_options.nlp_solver_max_iter = 1
+        ocp.solver_options.qp_solver_iter_max = 200
+        ocp.solver_options.tol = 1e-10
+    else:
+        ocp.solver_options.nlp_solver_max_iter = 400
+        ocp.solver_options.tol = 1e-8
+
     # ocp.solver_options.nlp_solver_tol_eq = 1e-9
 
     # set prediction horizon
@@ -519,5 +529,82 @@ def main_simulation(chain_params_: dict):
         plt.show()
 
 
+def main_parametric(
+    qp_solver_ric_alg: int = 0, eigen_analysis: bool = False, chain_params_: dict = get_chain_params()
+) -> None:
+    ocp, parameter_values = export_parametric_ocp(chain_params_=chain_params_, qp_solver_ric_alg=qp_solver_ric_alg)
+
+    ocp_json_file = "acados_ocp_" + ocp.model.name + ".json"
+
+    # Check if json_file exists
+    if os.path.exists(ocp_json_file):
+        acados_ocp_solver = AcadosOcpSolver(ocp, json_file=ocp_json_file, build=False, generate=False)
+    else:
+        acados_ocp_solver = AcadosOcpSolver(ocp, json_file=ocp_json_file)
+
+    sensitivity_ocp, _ = export_parametric_ocp(
+        chain_params_=chain_params_, qp_solver_ric_alg=qp_solver_ric_alg, hessian_approx="EXACT", integrator_type="DISCRETE"
+    )
+
+    ocp_json_file = "acados_sensitivity_ocp_" + sensitivity_ocp.model.name + ".json"
+    # Check if json_file exists
+    if os.path.exists(ocp_json_file):
+        sensitivity_solver = AcadosOcpSolver(sensitivity_ocp, json_file=ocp_json_file, build=False, generate=False)
+    else:
+        sensitivity_solver = AcadosOcpSolver(sensitivity_ocp, json_file=ocp_json_file)
+
+    M = chain_params_["n_mass"] - 2
+    xEndRef = np.zeros((3, 1))
+    xEndRef[0] = chain_params_["L"] * (M + 1) * 6
+    pos0_x = np.linspace(chain_params_["xPosFirstMass"][0], xEndRef[0], M + 2)
+    x0 = np.zeros((ocp.dims.nx, 1))
+    x0[: 3 * (M + 1) : 3] = pos0_x[1:].reshape((M + 1, 1))
+
+    np_test = 50
+    D_var = np.linspace(0.5 * chain_params_["D"], 1.5 * chain_params_["D"], np_test)
+    delta_p = D_var[1] - D_var[0]
+
+    sens_u = []
+    pi = np.zeros(np_test)
+    for i in tqdm.tqdm(range(np_test), desc="Sensitivity analysis"):
+        parameter_values["D", -1, 0] = D_var[i]
+
+        for stage in range(ocp.dims.N + 1):
+            acados_ocp_solver.set(stage, "p", parameter_values.cat.full().flatten())
+            sensitivity_solver.set(stage, "p", parameter_values.cat.full().flatten())
+
+        pi[i] = acados_ocp_solver.solve_for_x0(x0)[0]
+        acados_ocp_solver.store_iterate(filename="iterate.json", overwrite=True, verbose=False)
+        sensitivity_solver.load_iterate(filename="iterate.json", verbose=False)
+        sensitivity_solver.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
+
+        residuals = sensitivity_solver.get_stats("residuals")
+        print(f"residuals sensitivity_solver {residuals} status {sensitivity_solver.status}")
+
+        if sensitivity_solver.status not in [0, 2]:
+            print(f"warning; status = {sensitivity_solver.status}")
+            breakpoint()
+
+        # Calculate the policy gradient
+        sens_x_, sens_u_ = sensitivity_solver.eval_solution_sensitivity(0, "params_global")
+
+        # Check if sens_u contains NaN
+        if np.isnan(sens_u_).any():
+            print(f"warning; NaN in sens_u_ at i = {i}")
+            breakpoint()
+
+        sens_u.append(sens_u_)
+        # sens_u[i] = sens_u_.item()
+
+    # Compare to numerical gradients
+    np_grad = np.gradient(pi, delta_p)
+    pi_reconstructed_np_grad = np.cumsum(np_grad) * delta_p + pi[0]
+    pi_reconstructed_np_grad += pi[0] - pi_reconstructed_np_grad[0]
+
+    pi_reconstructed_acados = np.cumsum(sens_u) * delta_p + pi[0]
+    pi_reconstructed_acados += pi[0] - pi_reconstructed_acados[0]
+
+
 if __name__ == "__main__":
-    main_simulation(chain_params_=get_chain_params())
+    # main_simulation(chain_params_=get_chain_params())
+    main_parametric(qp_solver_ric_alg=0, eigen_analysis=False)
