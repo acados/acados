@@ -837,14 +837,23 @@ class AcadosOcpSolver:
                         stat[8][jj], stat[9][jj], stat[10][jj], stat[11][jj]))
             print('\n')
         elif self.solver_options['nlp_solver_type'] == 'SQP_RTI':
-            print('\niter\tqp_stat\tqp_iter')
-            if stat.shape[0]>3:
-                print('\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp')
+            header = '\niter\tqp_stat\tqp_iter'
+            if self.solver_options['nlp_solver_ext_qp_res'] == 1:
+                header += '\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp'
+            if self.solver_options['rti_log_residuals'] == 1:
+                header += '\tres_stat\tres_eq\tres_ineq\tres_comp'
+            print(header)
             for jj in range(stat.shape[1]):
-                print('{:d}\t{:d}\t{:d}'.format( int(stat[0][jj]), int(stat[1][jj]), int(stat[2][jj])))
-                if stat.shape[0]>3:
-                    print('\t{:e}\t{:e}\t{:e}\t{:e}'.format( \
-                         stat[3][jj], stat[4][jj], stat[5][jj], stat[6][jj]))
+                line = '{:d}\t{:d}\t{:d}'.format( int(stat[0][jj]), int(stat[1][jj]), int(stat[2][jj]))
+                offset = 2
+                if self.solver_options['nlp_solver_ext_qp_res'] == 1:
+                    line += '\t{:e}\t{:e}\t{:e}\t{:e}'.format( \
+                         stat[offset+1][jj], stat[offset+2][jj], stat[offset+3][jj], stat[offset+4][jj])
+                    offset += 4
+                if self.solver_options['rti_log_residuals'] == 1:
+                    line += '\t{:e}\t{:e}\t{:e}\t{:e}'.format( \
+                         stat[offset+1][jj], stat[offset+2][jj], stat[offset+3][jj], stat[offset+4][jj])
+                print(line)
             print('\n')
 
         return
@@ -1002,6 +1011,8 @@ class AcadosOcpSolver:
                   'stat_n',
                   'residuals',
                   'alpha',
+                  'res_eq_all',
+                  'res_stat_all',
                 ]
         field = field_.encode('utf-8')
 
@@ -1054,16 +1065,25 @@ class AcadosOcpSolver:
         elif field_ == 'residuals':
             return self.get_residuals()
 
-        elif field_ == 'residuals':
-            if self.acados_ocp.solver_options.nlp_solver_type == 'SQP':
-                full_stats = self.get_stats('statistics')
-                if self.status != 2:
-                    out = (full_stats.T)[-1][1:5]
-                else: # when exiting with max_iter, residuals are computed for second last iterate only
-                    out = (full_stats.T)[-2][1:5]
-            else:
-                Exception("residuals are not computed for SQP_RTI")
+        elif field_ == 'res_eq_all':
+            full_stats = self.get_stats('statistics')
+            if self.solver_options['nlp_solver_type'] == 'SQP':
+                return full_stats[2, :]
+            elif self.solver_options['nlp_solver_type'] == 'SQP_RTI':
+                if self.solver_options['rti_log_residuals'] == 1:
+                    return full_stats[4, :]
+                else:
+                    raise Exception("res_eq_all is not available for SQP_RTI if rti_log_residuals is not enabled.")
 
+        elif field_ == 'res_stat_all':
+            full_stats = self.get_stats('statistics')
+            if self.solver_options['nlp_solver_type'] == 'SQP':
+                return full_stats[1, :]
+            elif self.solver_options['nlp_solver_type'] == 'SQP_RTI':
+                if self.solver_options['rti_log_residuals'] == 1:
+                    return full_stats[3, :]
+                else:
+                    raise Exception("res_stat_all is not available for SQP_RTI if rti_log_residuals is not enabled.")
 
         else:
             raise Exception(f'AcadosOcpSolver.get_stats(): \'{field}\' is not a valid argument.'
@@ -1479,7 +1499,7 @@ class AcadosOcpSolver:
             - warm_start_first_qp: indicates if first QP in SQP is warm_started
         """
         int_fields = ['print_level', 'rti_phase', 'initialize_t_slacks', 'qp_warm_start',
-                      'line_search_use_sufficient_descent', 'full_step_dual', 'globalization_use_SOC', 'warm_start_first_qp']
+                      'line_search_use_sufficient_descent', 'full_step_dual', 'globalization_use_SOC', 'warm_start_first_qp', "as_rti_level"]
         double_fields = ['step_length', 'tol_eq', 'tol_stat', 'tol_ineq', 'tol_comp', 'alpha_min', 'alpha_reduction',
                          'eps_sufficient_descent', 'qp_tol_stat', 'qp_tol_eq', 'qp_tol_ineq', 'qp_tol_comp', 'qp_tau_min', 'qp_mu0']
         string_fields = ['globalization']
