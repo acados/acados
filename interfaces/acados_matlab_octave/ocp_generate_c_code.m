@@ -207,6 +207,8 @@ function ocp_generate_c_code(obj)
             if this_dims(1) == 1 && length(property_dim_names) ~= 1 % matrix with 1 row
                 cost.(fields{i}) = {cost.(fields{i})};
             end
+        elseif strcmp(cost_layout.(fields{i}){1}, 'int')
+            cost.(fields{i}) = cost.(fields{i}){1};
         end
     end
     obj.acados_ocp_nlp_json.cost = cost;

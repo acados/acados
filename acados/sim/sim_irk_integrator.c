@@ -36,6 +36,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
+
 // acados
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
@@ -45,6 +47,7 @@
 
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo/include/blasfeo_common.h"
 
 
 /************************************************
@@ -468,6 +471,14 @@ int sim_irk_memory_set(void *config_, void *dims_, void *mem_, const char *field
     else if (!strcmp(field, "W_chol"))
     {
         mem->W_chol = value;
+    }
+    else if (!strcmp(field, "W_chol_diag"))
+    {
+        mem->W_chol_diag = value;
+    }
+    else if (!strcmp(field, "outer_hess_is_diag"))
+    {
+        mem->outer_hess_is_diag = value;
     }
     else if (!strcmp(field, "y_ref"))
     {
@@ -1362,12 +1373,25 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     // transpose
                     blasfeo_dgetr(ny, nx+nu, J_y_tilde, 0, 0, tmp_nux_ny, 0, 0);
 
-                    // tmp_nux_ny2 = W_chol * J_y_tilde (ny * (nx+nu))
-                    blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, mem->W_chol, 0, 0, tmp_nux_ny, 0, 0,
-                                       tmp_nux_ny2, 0, 0);
 
-                    // tmp_ny = W_chol * nls_res
-                    blasfeo_dtrmv_lnn(ny, mem->W_chol, 0, 0, nls_res, 0, tmp_ny, 0);
+                    if (*mem->outer_hess_is_diag)
+                    {
+                        // tmp_nv_ny = W_chol_diag * Cyt_tilde
+                        blasfeo_dgemm_nd(nu+nx, ny, 1.0, tmp_nux_ny, 0, 0, mem->W_chol_diag, 0, 0., tmp_nux_ny2, 0, 0, tmp_nux_ny2, 0, 0);
+
+
+                        // tmp_ny = W_chol_diag * nls_res (componentwise)
+                        blasfeo_dvecmul(ny, mem->W_chol_diag, 0, nls_res, 0, tmp_ny, 0);
+                    }
+                    else
+                    {
+                        // tmp_nux_ny2 = W_chol * J_y_tilde (ny * (nx+nu))
+                        blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, mem->W_chol, 0, 0, tmp_nux_ny, 0, 0,
+                                        tmp_nux_ny2, 0, 0);
+
+                        // tmp_ny = W_chol * nls_res
+                        blasfeo_dtrmv_lnn(ny, mem->W_chol, 0, 0, nls_res, 0, tmp_ny, 0);
+                    }
 
                     // cost_grad += b * tmp_ny^T * tmp_ny_nux = b * tmp_ny_nux^T * tmp_ny
                     blasfeo_dgemv_n(nx+nu, ny, b_vec[ii]/num_steps, tmp_nux_ny2, 0, 0, tmp_ny, 0,
@@ -1388,8 +1412,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 // prepare function
                 ext_fun_arg_t conl_fun_jac_hess_type_in[5];
                 void *conl_fun_jac_hess_in[5];
-                ext_fun_arg_t conl_fun_jac_hess_type_out[5];
-                void *conl_fun_jac_hess_out[5];
+                ext_fun_arg_t conl_fun_jac_hess_type_out[6];
+                void *conl_fun_jac_hess_out[6];
 
                 // inputs
                 conl_fun_jac_hess_type_in[0] = BLASFEO_DVEC;
@@ -1415,6 +1439,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 conl_fun_jac_hess_out[3] = workspace->Jt_z; // inner Jacobian wrt z, transposed, nz x ny
                 conl_fun_jac_hess_type_out[4] = BLASFEO_DMAT;
                 conl_fun_jac_hess_out[4] = workspace->W;    // outer hessian: ny x ny
+                conl_fun_jac_hess_type_out[5] = COLMAJ;
+                conl_fun_jac_hess_out[5] = mem->outer_hess_is_diag;   // flag indicates if outer hess is diag
 
                 for (int ii = 0; ii < ns; ii++)
                 {
@@ -1436,10 +1462,22 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     // evaluate external function
                     model->conl_cost_fun_jac_hess->evaluate(model->conl_cost_fun_jac_hess, conl_fun_jac_hess_type_in,
                                                 conl_fun_jac_hess_in, conl_fun_jac_hess_type_out, conl_fun_jac_hess_out);
-                    // hessian of outer loss function
-                    blasfeo_dpotrf_l(ny, workspace->W, 0, 0, mem->W_chol, 0, 0);
 
+                    // factorize hessian of outer loss function
+                    if (*mem->outer_hess_is_diag)
+                    {
+                        // store only diagonal element of W_chol
+                        for (int i = 0; i < ny; i++)
+                        {
+                            BLASFEO_DVECEL(mem->W_chol_diag, i) = sqrt(BLASFEO_DMATEL(workspace->W, i, i));
+                        }
+                    }
+                    else
+                    {
+                        blasfeo_dpotrf_l(ny, workspace->W, 0, 0, mem->W_chol, 0, 0);
+                    }
                     if (nz > 0) // TODO: test this!
+                    // TODO use diag hess also here
                     {
                         // // Jt_ux_tilde = workspace->tmp_nux_ny + dzdux_tran*Jt_z
                         // blasfeo_dgemm_nn(nu + nx, ny, nz, 1.0, memory->dzdux_tran, 0, 0,
@@ -1470,9 +1508,18 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                         // transpose
                         blasfeo_dgetr(ny, nx+nu, J_y_tilde, 0, 0, tmp_nux_ny, 0, 0);
 
-                        // tmp_nux_ny2 = W_chol * J_y_tilde (ny * (nx+nu))
-                        blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, mem->W_chol, 0, 0, tmp_nux_ny, 0, 0,
-                                        tmp_nux_ny2, 0, 0);
+
+                        if (*mem->outer_hess_is_diag)
+                        {
+                            // tmp_nux_ny2 = W_chol_diag * J_y_tilde (ny * (nx+nu))
+                            blasfeo_dgemm_nd(nu+nx, ny, 1.0, tmp_nux_ny, 0, 0, mem->W_chol_diag, 0, 0., tmp_nux_ny2, 0, 0, tmp_nux_ny2, 0, 0);
+                        }
+                        else
+                        {
+                            // tmp_nux_ny2 = W_chol * J_y_tilde (ny * (nx+nu))
+                            blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, mem->W_chol, 0, 0, tmp_nux_ny, 0, 0,
+                                            tmp_nux_ny2, 0, 0);
+                        }
 
                         // cost_grad += b * J_y_tilde^T * tmp_ny
                         blasfeo_dgemv_t(ny, nx+nu, b_vec[ii]/num_steps, J_y_tilde, 0, 0, tmp_ny, 0,
@@ -1534,8 +1581,15 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 // nls_res = nls_res - y_ref
                 blasfeo_daxpy(ny, -1.0, mem->y_ref, 0, nls_res, 0, nls_res, 0);
 
-                // tmp_ny = W_chol * nls_res
-                blasfeo_dtrmv_lnn(ny, mem->W_chol, 0, 0, nls_res, 0, tmp_ny, 0);
+                if (*mem->outer_hess_is_diag)
+                {
+                    // tmp_ny = W_chol_diag * nls_res (componentwise)
+                    blasfeo_dvecmul(ny, mem->W_chol_diag, 0, nls_res, 0, tmp_ny, 0);
+                }
+                else {
+                    // tmp_ny = W_chol * nls_res
+                    blasfeo_dtrmv_lnn(ny, mem->W_chol, 0, 0, nls_res, 0, tmp_ny, 0);
+                }
 
                 // cost function value
                 // NOTE: slack contribution and scaling done in cost module

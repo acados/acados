@@ -328,6 +328,7 @@ class AcadosOcpSolver:
             ocp_generate_external_functions(acados_ocp)
             ocp_formulation_json_dump(acados_ocp, json_file, simulink_opts=simulink_opts)
             ocp_render_templates(acados_ocp, json_file, cmake_builder=cmake_builder, simulink_opts=simulink_opts)
+
         elif isinstance(acados_ocp, AcadosMultiphaseOcp):
             mocp_generate_external_functions(acados_ocp)
             mocp_formulation_json_dump(acados_ocp, json_file)

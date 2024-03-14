@@ -74,6 +74,8 @@ typedef struct
     struct blasfeo_dvec *(*memory_get_grad_ptr)(void *memory);
     struct blasfeo_dvec *(*model_get_y_ref_ptr)(void *memory);
     struct blasfeo_dmat *(*memory_get_W_chol_ptr)(void *memory_);
+    struct blasfeo_dvec *(*memory_get_W_chol_diag_ptr)(void *memory_);
+    double *(*get_outer_hess_is_diag_ptr)(void *memory_, void *model_);
     void (*memory_set_ux_ptr)(struct blasfeo_dvec *ux, void *memory);
     void (*memory_set_z_alg_ptr)(struct blasfeo_dvec *z_alg, void *memory);
     void (*memory_set_dzdux_tran_ptr)(struct blasfeo_dmat *dzdux, void *memory);

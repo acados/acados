@@ -519,6 +519,13 @@
                 "ny"
             ]
         ],
+        "W_e": [
+            "ndarray",
+            [
+                "ny_e",
+                "ny_e"
+            ]
+        ],
         "Zl": [
             "ndarray",
             [
@@ -541,13 +548,6 @@
             "ndarray",
             [
                 "ns"
-            ]
-        ],
-        "W_e": [
-            "ndarray",
-            [
-                "ny_e",
-                "ny_e"
             ]
         ],
         "yref_0": [

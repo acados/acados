@@ -509,14 +509,17 @@ def generate_c_code_nls_cost(ocp: AcadosOcp, stage_type ):
         u = symbol('u', 0, 0)
         t = symbol('t', 0, 0)
         y_expr = model.cost_y_expr_e
+        outer_hess = ocp.cost.W_e
 
     elif stage_type == 'initial':
         middle_name = '_cost_y_0'
         y_expr = model.cost_y_expr_0
+        outer_hess = ocp.cost.W_0
 
     elif stage_type == 'path':
         middle_name = '_cost_y'
         y_expr = model.cost_y_expr
+        outer_hess = ocp.cost.W
 
     # checks on time dependency
     if any(ca.which_depends(y_expr, model.t)):
@@ -639,6 +642,10 @@ def generate_c_code_conl_cost(ocp: AcadosOcp, stage_type: str):
         hess = custom_hess
 
     outer_hess_fun = ca.Function('outer_hess', [res_expr, t, p], [hess])
+    outer_hess_expr = outer_hess_fun(inner_expr, t, p)
+    outer_hess_is_diag = outer_hess_expr.sparsity().is_diag()
+    if casadi_length(res_expr) <= 4:
+        outer_hess_is_diag = 0
 
     Jt_ux_expr = ca.jacobian(inner_expr, ca.vertcat(u, x)).T
     Jt_z_expr = ca.jacobian(inner_expr, z).T
@@ -651,7 +658,7 @@ def generate_c_code_conl_cost(ocp: AcadosOcp, stage_type: str):
     cost_fun_jac_hess = ca.Function(
         fun_name_cost_fun_jac_hess,
         [x, u, z, yref, t, p],
-        [cost_expr, outer_loss_grad_fun(inner_expr, t, p), Jt_ux_expr, Jt_z_expr, outer_hess_fun(inner_expr, t, p)]
+        [cost_expr, outer_loss_grad_fun(inner_expr, t, p), Jt_ux_expr, Jt_z_expr, outer_hess_expr, outer_hess_is_diag]
     )
 
     # change directory

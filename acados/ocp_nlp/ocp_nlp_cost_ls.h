@@ -47,6 +47,8 @@
 extern "C" {
 #endif
 
+#include <math.h>
+
 // blasfeo
 #include "blasfeo/include/blasfeo_common.h"
 
@@ -109,6 +111,7 @@ typedef struct
     struct blasfeo_dvec Z;              ///< diagonal Hessian of slacks as vector (lower and upper)
     struct blasfeo_dvec z;              ///< gradient of slacks as vector (lower and upper)
     double scaling;
+    double outer_hess_is_diag;
     int W_changed;                      ///< flag indicating whether W has changed and needs to be refactorized
     int Cyt_or_scaling_changed;         ///< flag indicating whether Cyt or scaling has changed and Hessian needs to be recomputed
 } ocp_nlp_cost_ls_model;
@@ -159,6 +162,7 @@ typedef struct
 {
     struct blasfeo_dmat hess;           ///< hessian of cost function
     struct blasfeo_dmat W_chol;         ///< cholesky factor of weight matrix
+    struct blasfeo_dvec W_chol_diag;    ///< W_chol_diag
     struct blasfeo_dvec res;            ///< ls residual r(x)
     struct blasfeo_dvec grad;           ///< gradient of cost function
     struct blasfeo_dvec *ux;            ///< pointer to ux in nlp_out

@@ -148,7 +148,6 @@ typedef struct
     struct blasfeo_dvec *nls_res;
     // only for cost_propagation with CONVEX_OVER_NONLINEAR
     struct blasfeo_dmat *W;
-    struct blasfeo_dmat *W_chol;
     struct blasfeo_dmat *tmp_nv_ny;
     struct blasfeo_dmat *Jt_z;
 
@@ -166,7 +165,9 @@ typedef struct
     double time_la;
 
     double *cost_fun;
+    double *outer_hess_is_diag;
     struct blasfeo_dmat *W_chol;  // cholesky factor of weight matrix
+    struct blasfeo_dvec *W_chol_diag;
     struct blasfeo_dvec *y_ref;  // y_ref for NLS cost
     struct blasfeo_dvec *cost_grad;
     struct blasfeo_dmat *cost_hess;
