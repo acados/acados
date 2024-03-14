@@ -429,7 +429,7 @@ def main(_chain_params: dict):
 
     # Check if json_file exists
     if os.path.exists(json_file):
-        acados_ocp_solver = AcadosOcpSolver(ocp, json_file=json_file, build=False, generate=True)
+        acados_ocp_solver = AcadosOcpSolver(ocp, json_file=json_file, build=False, generate=False)
     else:
         acados_ocp_solver = AcadosOcpSolver(ocp, json_file=json_file)
 
@@ -486,6 +486,9 @@ def main(_chain_params: dict):
             p["w", i_mass] = sampleFromEllipsoid(np.zeros(3), W)
 
         acados_integrator.set("p", p.cat.full().flatten())
+
+        for stage in range(acados_ocp_solver.acados_ocp.dims.N + 1):
+            acados_ocp_solver.set(stage, "p", p.cat.full().flatten())
 
         status = acados_integrator.solve()
         if status != 0:
