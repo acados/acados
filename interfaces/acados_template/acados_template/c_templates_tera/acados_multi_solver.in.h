@@ -129,7 +129,9 @@ typedef struct {{ name }}_solver_capsule
     external_function_param_{{ cost[jj].cost_ext_fun_type }} *ext_cost_fun_{{ jj }};
     external_function_param_{{ cost[jj].cost_ext_fun_type }} *ext_cost_fun_jac_{{ jj }};
     external_function_param_{{ cost[jj].cost_ext_fun_type }} *ext_cost_fun_jac_hess_{{ jj }};
+    {% if solver_options.with_solution_sens_wrt_params %}
     external_function_param_{{ cost[jj].cost_ext_fun_type }} *ext_cost_params_jac_{{ jj }};
+    {% endif %}
 {% endif %}
 	{%- endfor %}{# for jj in range(end=n_phases) #}
 
@@ -145,7 +147,9 @@ typedef struct {{ name }}_solver_capsule
     external_function_param_{{ cost_0.cost_ext_fun_type_0 }} ext_cost_0_fun;
     external_function_param_{{ cost_0.cost_ext_fun_type_0 }} ext_cost_0_fun_jac;
     external_function_param_{{ cost_0.cost_ext_fun_type_0 }} ext_cost_0_fun_jac_hess;
+    {% if solver_options.with_solution_sens_wrt_params %}
     external_function_param_{{ cost_0.cost_ext_fun_type_0 }} ext_cost_0_params_jac;
+    {% endif %}
 {%- endif %}
 
 
@@ -170,7 +174,9 @@ typedef struct {{ name }}_solver_capsule
     external_function_param_{{ cost_e.cost_ext_fun_type_e }} ext_cost_e_fun;
     external_function_param_{{ cost_e.cost_ext_fun_type_e }} ext_cost_e_fun_jac;
     external_function_param_{{ cost_e.cost_ext_fun_type_e }} ext_cost_e_fun_jac_hess;
+    {% if solver_options.with_solution_sens_wrt_params %}
     external_function_param_{{ cost_e.cost_ext_fun_type_e }} ext_cost_e_params_jac;
+    {% endif %}
 {%- endif %}
 
 
