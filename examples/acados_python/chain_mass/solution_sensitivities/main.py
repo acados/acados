@@ -32,6 +32,7 @@ def get_chain_params():
     params["u_init"] = np.array([-1, 1, 1])
     params["with_wall"] = True
     params["yPosWall"] = -0.05  # Dimitris: - 0.1;
+    params["xPosFirstMass"] = np.zeros(3)
     params["m"] = 0.033  # mass of the balls
     params["D"] = 1.0  # spring constant
     params["L"] = 0.033  # rest length of spring
@@ -236,11 +237,12 @@ def sampleFromEllipsoid(w, Z):
     return y
 
 
-def export_chain_mass_integrator(n_mass, p_, disturbance=True) -> AcadosSimSolver:
+def export_parametric_sim(chain_params_: dict, p_: DMStruct, disturbance: bool = True) -> AcadosSim:
     """Export chain mass integrator for acados."""
     sim = AcadosSim()
     # simulation options
-    Ts = 0.2
+    n_mass = chain_params_["n_mass"]
+    Ts = chain_params_["Ts"]
 
     # export model
     model, _ = export_chain_mass_model(n_mass, disturbance=disturbance)
@@ -262,65 +264,32 @@ def export_chain_mass_integrator(n_mass, p_, disturbance=True) -> AcadosSimSolve
     # set prediction horizon
     sim.solver_options.T = Ts
 
-    json_file = "acados_sim_" + model.name + ".json"
-
-    # Check if json_file exists
-    if os.path.exists(json_file):
-        acados_integrator = AcadosSimSolver(sim, json_file=json_file, build=False, generate=False)
-    else:
-        acados_integrator = AcadosSimSolver(sim, json_file=json_file, build=True, generate=True)
-
-    return acados_integrator
+    return sim
 
 
-def main(_chain_params: dict):
-    """Main function."""
+def export_parametric_ocp(
+    chain_params_: dict,
+    qp_solver: str = "PARTIAL_CONDENSING_HPIPM",
+    hessian_approx: str = "GAUSS_NEWTON",
+    integrator_type: str = "IRK",
+    nlp_solver_type: str = "SQP",
+    nlp_iter: int = 50,
+    nlp_tol: float = 1e-5,
+) -> AcadosOcp:
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
     # chain parameters
-    n_mass = _chain_params["n_mass"]
-    M = _chain_params["n_mass"] - 2  # number of intermediate masses
-    Ts = _chain_params["Ts"]
-    Tsim = _chain_params["Tsim"]
-    N = _chain_params["N"]
-    ocp.dims.N = N
-    u_init = _chain_params["u_init"]
-    with_wall = _chain_params["with_wall"]
-    yPosWall = _chain_params["yPosWall"]
-
-    perturb_scale = _chain_params["perturb_scale"]
-    W = perturb_scale * np.eye(3)
-
-    m = [np.random.normal(_chain_params["m"], 0.1 * _chain_params["m"]) for _ in range(n_mass - 1)]
-    D = [np.random.normal(_chain_params["D"], 0.1 * _chain_params["D"], 3) for _ in range(n_mass - 1)]
-    L = [np.random.normal(_chain_params["L"], 0.1 * _chain_params["L"], 3) for _ in range(n_mass - 1)]
-    C = [np.random.normal(_chain_params["C"], 0.1 * _chain_params["C"], 3) for _ in range(n_mass - 1)]
-
-    nlp_iter = _chain_params["nlp_iter"]
-    nlp_tol = _chain_params["nlp_tol"]
-    show_plots = _chain_params["show_plots"]
-    seed = _chain_params["seed"]
-
-    np.random.seed(seed)
-
-    # nparam = 3 * M
-    # w = perturb_scale * np.eye(nparam)
+    n_mass = chain_params_["n_mass"]
+    M = chain_params_["n_mass"] - 2  # number of intermediate masses
+    Ts = chain_params_["Ts"]
+    ocp.dims.N = chain_params_["N"]
+    with_wall = chain_params_["with_wall"]
+    yPosWall = chain_params_["yPosWall"]
+    xPosFirstMass = chain_params_["xPosFirstMass"]
 
     # export model
     model, p = export_chain_mass_model(n_mass, Ts=Ts, disturbance=True)
-
-    # Inermediate masses
-    for i_mass in range(n_mass - 1):
-        p["m", i_mass] = m[i_mass]
-    for i_mass in range(n_mass - 2):
-        p["w", i_mass] = np.zeros(3)
-
-    # Links
-    for i_link in range(n_mass - 1):
-        p["D", i_link] = D[i_link]
-        p["L", i_link] = L[i_link]
-        p["C", i_link] = C[i_link]
 
     # set model
     ocp.model = model
@@ -328,13 +297,12 @@ def main(_chain_params: dict):
     nx = model.x.size()[0]
     nu = model.u.size()[0]
     ny = nx + nu
-    Tf = N * Ts
+    Tf = ocp.dims.N * Ts
 
     # initial state
-    xPosFirstMass = np.zeros((3, 1))
 
     xEndRef = np.zeros((3, 1))
-    xEndRef[0] = _chain_params["L"] * (M + 1) * 6
+    xEndRef[0] = chain_params_["L"] * (M + 1) * 6
     xEndRef[2] = 1.0
     # xEndRef[0] = M * chain_params["L"]
 
@@ -342,9 +310,6 @@ def main(_chain_params: dict):
     xrest = compute_steady_state(model, p, xPosFirstMass, xEndRef)
 
     x0 = xrest
-
-    # set dimensions
-    ocp.dims.N = N
 
     # set cost module
     ocp.cost.cost_type = "LINEAR_LS"
@@ -384,7 +349,25 @@ def main(_chain_params: dict):
     ocp.constraints.x0 = x0.reshape((nx,))
     ocp.constraints.idxbu = np.array(range(nu))
 
-    # disturbances
+    # parameters
+    np.random.seed(chain_params_["seed"])
+    m = [np.random.normal(chain_params_["m"], 0.1 * chain_params_["m"]) for _ in range(n_mass - 1)]
+    D = [np.random.normal(chain_params_["D"], 0.1 * chain_params_["D"], 3) for _ in range(n_mass - 1)]
+    L = [np.random.normal(chain_params_["L"], 0.1 * chain_params_["L"], 3) for _ in range(n_mass - 1)]
+    C = [np.random.normal(chain_params_["C"], 0.1 * chain_params_["C"], 3) for _ in range(n_mass - 1)]
+
+    # Inermediate masses
+    for i_mass in range(n_mass - 1):
+        p["m", i_mass] = m[i_mass]
+    for i_mass in range(n_mass - 2):
+        p["w", i_mass] = np.zeros(3)
+
+    # Links
+    for i_link in range(n_mass - 1):
+        p["D", i_link] = D[i_link]
+        p["L", i_link] = L[i_link]
+        p["C", i_link] = C[i_link]
+
     ocp.parameter_values = p.cat.full().flatten()
 
     # wall constraint
@@ -408,16 +391,15 @@ def main(_chain_params: dict):
         ocp.cost.zu = L1_pen * np.ones((nbx,))
 
     # solver options
-    ocp.solver_options.qp_solver = "PARTIAL_CONDENSING_HPIPM"  # FULL_CONDENSING_QPOASES
-    ocp.solver_options.hessian_approx = "GAUSS_NEWTON"
-    ocp.solver_options.integrator_type = "IRK"
-    # ocp.solver_options.integrator_type = "DISCRETE"
-    ocp.solver_options.nlp_solver_type = "SQP"  # SQP_RTI
+    ocp.solver_options.qp_solver = qp_solver
+    ocp.solver_options.hessian_approx = hessian_approx
+    ocp.solver_options.integrator_type = integrator_type
+    ocp.solver_options.nlp_solver_type = nlp_solver_type
     ocp.solver_options.nlp_solver_max_iter = nlp_iter
 
     ocp.solver_options.sim_method_num_stages = 2
     ocp.solver_options.sim_method_num_steps = 2
-    ocp.solver_options.qp_solver_cond_N = N
+    ocp.solver_options.qp_solver_cond_N = ocp.dims.N
     ocp.solver_options.qp_tol = nlp_tol
     ocp.solver_options.tol = nlp_tol
     # ocp.solver_options.nlp_solver_tol_eq = 1e-9
@@ -425,34 +407,54 @@ def main(_chain_params: dict):
     # set prediction horizon
     ocp.solver_options.tf = Tf
 
-    json_file = "acados_ocp_" + model.name + ".json"
+    return ocp, p
+
+
+def main_simulation(chain_params_: dict):
+    """Main simulation function."""
+
+    ocp, parameter_values = export_parametric_ocp(chain_params_=chain_params_)
+
+    ocp_json_file = "acados_ocp_" + ocp.model.name + ".json"
 
     # Check if json_file exists
-    if os.path.exists(json_file):
-        acados_ocp_solver = AcadosOcpSolver(ocp, json_file=json_file, build=False, generate=False)
+    if os.path.exists(ocp_json_file):
+        acados_ocp_solver = AcadosOcpSolver(ocp, json_file=ocp_json_file, build=False, generate=False)
     else:
-        acados_ocp_solver = AcadosOcpSolver(ocp, json_file=json_file)
+        acados_ocp_solver = AcadosOcpSolver(ocp, json_file=ocp_json_file)
 
-    # exit(0)
+    sim = export_parametric_sim(chain_params_=chain_params_, p_=parameter_values)
 
-    # acados_integrator = AcadosSimSolver(ocp, json_file = 'acados_ocp_' + model.name + '.json')
-    acados_integrator = export_chain_mass_integrator(n_mass, p)
+    sim_json_file = "acados_sim_" + sim.model.name + ".json"
+
+    # Check if json_file exists
+    if os.path.exists(sim_json_file):
+        acados_sim_solver = AcadosSimSolver(sim, json_file=sim_json_file, build=False, generate=False)
+    else:
+        acados_sim_solver = AcadosSimSolver(sim, json_file=sim_json_file, build=True, generate=True)
 
     # %% get initial state from xrest
-    xcurrent = x0.reshape((nx,))
+    xcurrent = ocp.constraints.lbx_0.reshape((ocp.dims.nx,))
     for i in range(5):
-        acados_integrator.set("x", xcurrent)
-        acados_integrator.set("u", u_init)
+        acados_sim_solver.set("x", xcurrent)
+        acados_sim_solver.set("u", chain_params_["u_init"])
 
-        status = acados_integrator.solve()
+        status = acados_sim_solver.solve()
         if status != 0:
             raise Exception("acados integrator returned status {}. Exiting.".format(status))
 
         # update state
-        xcurrent = acados_integrator.get("x")
+        xcurrent = acados_sim_solver.get("x")
 
     print(f"Initial state: {xcurrent}")
 
+    Tsim = chain_params_["Tsim"]
+    W = chain_params_["perturb_scale"] * np.eye(3)
+    Ts = acados_sim_solver.acados_sim.solver_options.T
+    nx = acados_sim_solver.acados_sim.model.x.size()[0]
+    nu = acados_sim_solver.acados_sim.model.u.size()[0]
+    n_mass = chain_params_["n_mass"]
+    M = n_mass - 2
     # %% actual simulation
     N_sim = int(np.floor(Tsim / Ts))
     simX = np.ndarray((N_sim + 1, nx))
@@ -479,45 +481,43 @@ def main(_chain_params: dict):
         print("control at time", i, ":", simU[i, :])
 
         # simulate system
-        acados_integrator.set("x", xcurrent)
-        acados_integrator.set("u", simU[i, :])
+        acados_sim_solver.set("x", xcurrent)
+        acados_sim_solver.set("u", simU[i, :])
 
         for i_mass in range(n_mass - 2):
-            p["w", i_mass] = sampleFromEllipsoid(np.zeros(3), W)
+            parameter_values["w", i_mass] = sampleFromEllipsoid(np.zeros(3), W)
 
-        acados_integrator.set("p", p.cat.full().flatten())
+        acados_sim_solver.set("p", parameter_values.cat.full().flatten())
 
         for stage in range(acados_ocp_solver.acados_ocp.dims.N + 1):
-            acados_ocp_solver.set(stage, "p", p.cat.full().flatten())
+            acados_ocp_solver.set(stage, "p", parameter_values.cat.full().flatten())
 
-        status = acados_integrator.solve()
+        status = acados_sim_solver.solve()
         if status != 0:
             raise Exception("acados integrator returned status {}. Exiting.".format(status))
 
         # update state
-        xcurrent = acados_integrator.get("x")
+        xcurrent = acados_sim_solver.get("x")
         simX[i + 1, :] = xcurrent
 
         # xOcpPredict = acados_ocp_solver.get(1, "x")
         # print("model mismatch = ", str(np.max(xOcpPredict - xcurrent)))
         yPos = xcurrent[range(1, 3 * M + 1, 3)]
-        wall_dist[i] = np.min(yPos - yPosWall)
+        wall_dist[i] = np.min(yPos - chain_params_["yPosWall"])
         print("time i = ", str(i), " dist2wall ", str(wall_dist[i]))
 
     print("dist2wall (minimum over simulation) ", str(np.min(wall_dist)))
 
-    if os.environ.get("ACADOS_ON_CI") is None and show_plots:
+    if os.environ.get("ACADOS_ON_CI") is None and chain_params_["show_plots"]:
         plot_chain_control_traj(simU)
-        plot_chain_position_traj(simX, yPosWall=yPosWall)
+        plot_chain_position_traj(simX, yPosWall=chain_params_["yPosWall"])
         plot_chain_velocity_traj(simX)
 
-        animate_chain_position(simX, xPosFirstMass, yPosWall=yPosWall)
+        animate_chain_position(simX, chain_params_["xPosFirstMass"], yPosWall=chain_params_["yPosWall"])
         # animate_chain_position_3D(simX, xPosFirstMass)
 
         plt.show()
 
 
 if __name__ == "__main__":
-    chain_params = get_chain_params()
-
-    main(chain_params)
+    main_simulation(chain_params_=get_chain_params())
