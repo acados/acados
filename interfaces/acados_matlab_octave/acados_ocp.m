@@ -232,7 +232,7 @@ classdef acados_ocp < handle
 
 
         function eval_param_sens(obj, field, stage, index)
-            ocp.t_ocp.eval_param_sens(field, stage, index);
+            obj.t_ocp.eval_param_sens(field, stage, index);
         end
 
         function value = get_cost(obj)

@@ -96,6 +96,10 @@ classdef {{ model.name }}_mex_solver < handle
             value = ocp_get_cost(obj.C_ocp);
         end
 
+        function eval_param_sens(obj, field, stage, index)
+            ocp_eval_param_sens(obj.C_ocp, field, stage, index);
+        end
+
         % get -- borrowed from MEX interface
         function value = get(varargin)
             % usage:
