@@ -299,6 +299,31 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
         double *W_col_maj = (double *) value_;
         blasfeo_pack_dmat(ny, ny, W_col_maj, ny, &model->W, 0, 0);
         model->W_changed = 1;
+        if (ny > 4)
+        {
+            // detect if outer hess is diag
+            model->outer_hess_is_diag = 1.0;
+            double tmp;
+            for (int i = 0; i < ny; i++)
+            {
+                for (int j = 0; j < ny; j++)
+                {
+                    if (j!=i)
+                    {
+                        tmp = BLASFEO_DMATEL(&model->W, i, j);
+                        if (tmp != 0.0)
+                        {
+                            model->outer_hess_is_diag = 0.0;
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            // use BLASFEO matrices for small ny.
+            model->outer_hess_is_diag = 0.0;
+        }
     }
     else if (!strcmp(field, "Cyt"))
     {
@@ -485,6 +510,7 @@ acados_size_t ocp_nlp_cost_ls_memory_calculate_size(void *config_,
     size += 1 * blasfeo_memsize_dmat(ny, ny);            // W_chol
     size += 1 * blasfeo_memsize_dvec(ny);                // res
     size += 1 * blasfeo_memsize_dvec(nu + nx + 2 * ns);  // grad
+    size += 1 * blasfeo_memsize_dvec(ny);                // W_chol_diag
 
     size += 1 * 64;  // blasfeo_mem align
 
@@ -517,6 +543,8 @@ void *ocp_nlp_cost_ls_memory_assign(void *config_, void *dims_, void *opts_,
     assign_and_advance_blasfeo_dmat_mem(nu + nx, nu + nx, &memory->hess, &c_ptr);
     // W_chol
     assign_and_advance_blasfeo_dmat_mem(ny, ny, &memory->W_chol, &c_ptr);
+    // W_chol_diag
+    assign_and_advance_blasfeo_dvec_mem(ny, &memory->W_chol_diag, &c_ptr);
     // res
     assign_and_advance_blasfeo_dvec_mem(ny, &memory->res, &c_ptr);
     // grad
@@ -684,7 +712,7 @@ static void ocp_nlp_cost_ls_cast_workspace(void *config_,
 
 
 
-static void ocp_nlp_cost_ls_update_hessian(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_)
+static void ocp_nlp_cost_ls_update_W_factorization(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_)
 {
     ocp_nlp_cost_ls_dims *dims = dims_;
     ocp_nlp_cost_ls_model *model = model_;
@@ -700,14 +728,34 @@ static void ocp_nlp_cost_ls_update_hessian(void *config_, void *dims_, void *mod
     // refactorize Hessian only if W has changed
     if (model->W_changed)
     {
-        blasfeo_dpotrf_l(ny, &model->W, 0, 0, &memory->W_chol, 0, 0);
+        if (model->outer_hess_is_diag)
+        {
+            // store only diagonal element of W_chol
+            for (int i = 0; i < ny; i++)
+            {
+                BLASFEO_DVECEL(&memory->W_chol_diag, i) = sqrt(BLASFEO_DMATEL(&model->W, i, i));
+            }
+        }
+        else
+        {
+            blasfeo_dpotrf_l(ny, &model->W, 0, 0, &memory->W_chol, 0, 0);
+        }
         model->W_changed = 0;
         model->Cyt_or_scaling_changed = 1; // execute lower part
     }
     if (model->Cyt_or_scaling_changed)
     {
-        blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0, &model->Cyt,
-                            0, 0, &work->tmp_nv_ny, 0, 0);
+        if (model->outer_hess_is_diag)
+        {
+            // tmp_nv_ny = W_chol_diag * Cyt
+            blasfeo_dgemm_nd(nu + nx, ny, 1.0, &model->Cyt, 0, 0, &memory->W_chol_diag, 0, 0., &model->Cyt, 0, 0, &work->tmp_nv_ny, 0, 0);
+        }
+        else
+        {
+            // tmp_nv_ny = W_chol * Cyt
+            blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0,
+                            &model->Cyt, 0, 0, &work->tmp_nv_ny, 0, 0);
+        }
 
         // hess = scaling * tmp_nv_ny * tmp_nv_ny^T
         blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0,
@@ -724,7 +772,7 @@ void ocp_nlp_cost_ls_precompute(void *config_, void *dims_, void *model_, void *
 {
     ocp_nlp_cost_ls_model *model = model_;
     model->W_changed = 1;
-    ocp_nlp_cost_ls_update_hessian(config_, dims_, model_, opts_, memory_, work_);
+    ocp_nlp_cost_ls_update_W_factorization(config_, dims_, model_, opts_, memory_, work_);
     return;
 }
 
@@ -738,7 +786,7 @@ void ocp_nlp_cost_ls_initialize(void *config_, void *dims_, void *model_,
     ocp_nlp_cost_ls_memory *memory = memory_;
 
     ocp_nlp_cost_ls_cast_workspace(config_, dims_, opts_, work_);
-    ocp_nlp_cost_ls_update_hessian(config_, dims_, model_, opts_, memory_, work_);
+    ocp_nlp_cost_ls_update_W_factorization(config_, dims_, model_, opts_, memory_, work_);
 
     int ns = dims->ns;
     // mem->Z = scaling * model->Z
@@ -784,8 +832,17 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
                 0, 0, &work->tmp_nz, 0, 1.0, &model->y_ref, 0, &work->y_ref_tilde, 0);
 
         // tmp_nv_ny = W_chol * Cyt_tilde
-        blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0,
-                           &work->Cyt_tilde, 0, 0, &work->tmp_nv_ny, 0, 0);
+        if (model->outer_hess_is_diag)
+        {
+            // tmp_nv_ny = W_chol_diag * Cyt_tilde
+            blasfeo_dgemm_nd(nu + nx, ny, 1.0, &work->Cyt_tilde, 0, 0, &memory->W_chol_diag, 0, 0., &work->Cyt_tilde, 0, 0, &work->tmp_nv_ny, 0, 0);
+        }
+        else
+        {
+            // tmp_nv_ny = W_chol * Cyt_tilde
+            blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0,
+                            &work->Cyt_tilde, 0, 0, &work->tmp_nv_ny, 0, 0);
+        }
 
         // add hessian of the cost contribution
         if (opts->compute_hess)
@@ -908,7 +965,16 @@ void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims_, void *model_, void 
     }
 
     // tmp_ny = W_chol^T * res
-    blasfeo_dtrmv_ltn(ny, &memory->W_chol, 0, 0, &memory->res, 0, &work->tmp_ny, 0);
+    if (model->outer_hess_is_diag)
+    {
+        // tmp_ny = W_chol_diag * nls_res (componentwise)
+        blasfeo_dvecmul(ny, &memory->W_chol_diag, 0, &memory->res, 0, &work->tmp_ny, 0);
+    }
+    else
+    {
+        // tmp_ny = W_chol * nls_res
+        blasfeo_dtrmv_ltn(ny, &memory->W_chol, 0, 0, &memory->res, 0, &work->tmp_ny, 0);
+    }
     // fun = .5 * tmp_ny^T * tmp_ny
     memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &work->tmp_ny, 0);
 
