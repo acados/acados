@@ -30,7 +30,7 @@
 %
 
 %% test of native matlab interface
-clear all
+clear VARIABLES
 
 addpath('../linear_mass_spring_model/');
 
