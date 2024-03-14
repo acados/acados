@@ -63,26 +63,46 @@ sym_u = F;
 sin_theta = sin(theta);
 cos_theta = cos(theta);
 denominator = M + m - m*cos_theta.^2;
-expr_f_expl = vertcat(v, ...
-                      dtheta, ...
-                      (- l*m*sin_theta*dtheta.^2 + F + g*m*cos_theta*sin_theta)/denominator, ...
-                      (- l*m*cos_theta*sin_theta*dtheta.^2 + F*cos_theta + g*m*sin_theta + M*g*sin_theta)/(l*denominator));
-expr_f_impl = expr_f_expl - sym_xdot;
+dyn_expr_f_expl = vertcat(v, ...
+						 dtheta, ...
+                         (- l*m*sin_theta*dtheta.^2 + F + g*m*cos_theta*sin_theta)/denominator, ...
+                         (- l*m*cos_theta*sin_theta*dtheta.^2 + F*cos_theta + g*m*sin_theta + M*g*sin_theta)/(l*denominator));
+dyn_expr_f_impl = dyn_expr_f_expl - sym_xdot;
 
 %% constraints
-expr_h = sym_u;
+constr_expr_h_0 = sym_u;
+constr_expr_h = sym_u;
 
 %% cost
+% generic cost
 W_x = diag([1e3, 1e3, 1e-2, 1e-2]);
 W_u = 1e-2;
-expr_ext_cost_e = 0.5 * sym_x'* W_x * sym_x;
-expr_ext_cost = expr_ext_cost_e + 0.5 * sym_u' * W_u * sym_u;
-% nonlinear least sqares
-cost_expr_y = vertcat(sym_x, sym_u);
-W = blkdiag(W_x, W_u);
-model.cost_expr_y_e = sym_x;
-model.W_e = W_x;
+cost_expr_ext_cost_e = 0.5 * sym_x'* W_x * sym_x;
+cost_expr_ext_cost = cost_expr_ext_cost_e + 0.5 * sym_u' * W_u * sym_u;
+cost_expr_ext_cost_0 = 0.5 * sym_u' * W_u * sym_u;
 
+% nonlinear least sqares
+cost_expr_y_0 = sym_u;
+cost_W_0 = W_u;
+cost_expr_y = vertcat(sym_x, sym_u);
+cost_W = blkdiag(W_x, W_u);
+cost_expr_y_e = sym_x;
+cost_W_e = W_x;
+
+% linear least squares
+ny_0 = nu; % number of outputs in initial cost term
+cost_Vx_0 = zeros(ny_0,nx);
+cost_Vu_0 = eye(nu);
+cost_y_ref_0 = zeros(ny_0, 1);
+
+ny = nx+nu; % number of outputs in lagrange term
+cost_Vx = [eye(nx); zeros(nu,nx)]; % state-to-output matrix in lagrange term
+cost_Vu = [zeros(nx, nu); eye(nu)]; % input-to-output matrix in lagrange term
+cost_y_ref = zeros(ny, 1); % output reference in lagrange term
+    
+ny_e = nx; % number of outputs in terminal cost term
+cost_Vx_e = eye(ny_e, nx);
+cost_y_ref_e = zeros(ny_e, 1);
 
 
 %% populate structure
@@ -91,13 +111,31 @@ model.nu = nu;
 model.sym_x = sym_x;
 model.sym_xdot = sym_xdot;
 model.sym_u = sym_u;
-model.expr_f_expl = expr_f_expl;
-model.expr_f_impl = expr_f_impl;
-model.expr_h = expr_h;
-model.expr_ext_cost = expr_ext_cost;
-model.expr_ext_cost_e = expr_ext_cost_e;
 
+model.dyn_expr_f_expl = dyn_expr_f_expl;
+model.dyn_expr_f_impl = dyn_expr_f_impl;
+
+model.constr_expr_h_0 = constr_expr_h_0;
+model.constr_expr_h = constr_expr_h;
+
+model.cost_expr_ext_cost_0 = cost_expr_ext_cost_0;
+model.cost_expr_ext_cost = cost_expr_ext_cost;
+model.cost_expr_ext_cost_e = cost_expr_ext_cost_e;
+
+model.cost_expr_y_0 = cost_expr_y_0;
+model.cost_W_0 = cost_W_0;
 model.cost_expr_y = cost_expr_y;
-model.W = W;
+model.cost_W = cost_W;
+model.cost_expr_y_e = cost_expr_y_e;
+model.cost_W_e = cost_W_e;
+
+model.cost_Vx_0 = cost_Vx_0;
+model.cost_Vu_0 = cost_Vu_0;
+model.cost_y_ref_0 = cost_y_ref_0;
+model.cost_Vx = cost_Vx;
+model.cost_Vu = cost_Vu;
+model.cost_y_ref = cost_y_ref;
+model.cost_Vx_e = cost_Vx_e;
+model.cost_y_ref_e = cost_y_ref_e;
 
 end

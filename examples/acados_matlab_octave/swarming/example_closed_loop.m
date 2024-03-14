@@ -150,6 +150,9 @@ end
 % Constraints
 ocp_model.set('constr_x0', x0);
 
+ocp_model.set('constr_expr_h_0', model.expr_h);
+ocp_model.set('constr_lh_0', lh);
+ocp_model.set('constr_uh_0', uh);
 ocp_model.set('constr_expr_h', model.expr_h);
 ocp_model.set('constr_lh', lh);
 ocp_model.set('constr_uh', uh);
@@ -199,8 +202,6 @@ ocp_opts.opts_struct
 
 % Create ocp
 ocp = acados_ocp(ocp_model, ocp_opts);
-ocp
-ocp.C_ocp
 
 %% Acados simulation model
 
@@ -371,11 +372,12 @@ ylabel('Simulation time [ms]','fontsize',fontsize);
 ylim([0 Inf]);
 
 
-if status == 0
+if any(status)== 0
 	fprintf('\nsuccess!\n\n');
 else
-	fprintf('\nsolution failed!\n\n');
+	fprintf('\nsolution failed in some steps!\n\n');
 end
 
-waitforbuttonpress;
-return;
+if is_octave
+    waitforbuttonpress;
+end

@@ -31,7 +31,8 @@
 import casadi.*
 
 %% test of native matlab interface
-clear all
+clear all; clc;
+check_acados_requirements()
 
 model_path = fullfile(pwd,'..','pendulum_on_cart_model');
 addpath(model_path)
@@ -71,11 +72,16 @@ ocp_model.set('sym_xdot', model.sym_xdot);
 ocp_model.set('sym_p', params);
 
 % cost
+ocp_model.set('cost_type_0', 'ext_cost');
 ocp_model.set('cost_type', 'ext_cost');
 ocp_model.set('cost_type_e', 'ext_cost');
 
 generic_or_casadi = 0; % 0=generic, 1=casadi, 2=mixed
 if (generic_or_casadi == 0)
+    % Generic initial cost
+    ocp_model.set('cost_ext_fun_type_0', 'generic');
+    ocp_model.set('cost_source_ext_cost_0', 'generic_ext_cost.c');
+    ocp_model.set('cost_function_ext_cost_0', 'ext_cost');
     % Generic stage cost
     ocp_model.set('cost_ext_fun_type', 'generic');    
     ocp_model.set('cost_source_ext_cost', 'generic_ext_cost.c');
@@ -85,37 +91,46 @@ if (generic_or_casadi == 0)
     ocp_model.set('cost_source_ext_cost_e', 'generic_ext_cost.c');
     ocp_model.set('cost_function_ext_cost_e', 'ext_costN');
 elseif (generic_or_casadi == 1)
+    % Casadi initial cost
+    ocp_model.set('cost_ext_fun_type_0', 'casadi');
+    ocp_model.set('cost_expr_ext_cost_0', model.cost_expr_ext_cost_0);
     % Casadi stage cost
     ocp_model.set('cost_ext_fun_type', 'casadi');
-    ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
+    ocp_model.set('cost_expr_ext_cost', model.cost_expr_ext_cost);
     % Casadi terminal cost
     ocp_model.set('cost_ext_fun_type_e', 'casadi');
-    ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
+    ocp_model.set('cost_expr_ext_cost_e', model.cost_expr_ext_cost_e);
 elseif (generic_or_casadi == 2)
+    % Casadi initial cost
+    ocp_model.set('cost_ext_fun_type_0', 'casadi');
+    ocp_model.set('cost_expr_ext_cost_0', model.cost_expr_ext_cost_0);
     % Generic stage cost
     ocp_model.set('cost_ext_fun_type', 'generic');    
     ocp_model.set('cost_source_ext_cost', 'generic_ext_cost.c');
     ocp_model.set('cost_function_ext_cost', 'ext_cost');
     % Casadi terminal cost
     ocp_model.set('cost_ext_fun_type_e', 'casadi');
-    ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);    
+    ocp_model.set('cost_expr_ext_cost_e', model.cost_expr_ext_cost_e);    
 end
 
 % dynamics
 if (strcmp(sim_method, 'erk'))
     ocp_model.set('dyn_type', 'explicit');
-    ocp_model.set('dyn_expr_f', model.expr_f_expl);
+    ocp_model.set('dyn_expr_f', model.dyn_expr_f_expl);
 else % irk irk_gnsf
     ocp_model.set('dyn_type', 'implicit');
-    ocp_model.set('dyn_expr_f', model.expr_f_impl);
+    ocp_model.set('dyn_expr_f', model.dyn_expr_f_impl);
 end
 
 % constraints
 ocp_model.set('constr_type', 'auto');
-ocp_model.set('constr_expr_h', model.expr_h);
+ocp_model.set('constr_expr_h_0', model.constr_expr_h_0);
+ocp_model.set('constr_expr_h', model.constr_expr_h);
 U_max = 80;
-ocp_model.set('constr_lh', -U_max); % lower bound on h
-ocp_model.set('constr_uh', U_max);  % upper bound on h
+ocp_model.set('constr_lh_0', -U_max); % lower bound on h
+ocp_model.set('constr_uh_0', U_max);  % upper bound on h
+ocp_model.set('constr_lh', -U_max);
+ocp_model.set('constr_uh', U_max);
 
 ocp_model.set('constr_x0', x0);
 % ... see ocp_model.model_struct to see what other fields can be set
@@ -127,6 +142,7 @@ ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('sim_method', sim_method);
 ocp_opts.set('qp_solver', qp_solver);
 ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
+ocp_opts.set('parameter_values', zeros(size(params))); % initialize to zero, change later
 % ... see ocp_opts.opts_struct to see what other fields can be set
 
 %% create ocp solver

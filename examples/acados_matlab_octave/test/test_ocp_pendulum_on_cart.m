@@ -144,26 +144,26 @@ for itest = 1:3
         ocp_model.set('cost_y_ref', yr);
         ocp_model.set('cost_y_ref_e', yr_e);
     else % if (strcmp(cost_type, 'ext_cost'))
-        ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
-        ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
+        ocp_model.set('cost_expr_ext_cost', model.cost_expr_ext_cost);
+        ocp_model.set('cost_expr_ext_cost_e', model.cost_expr_ext_cost_e);
     end
     % dynamics
     if (strcmp(sim_method, 'erk'))
         ocp_model.set('dyn_type', 'explicit');
-        ocp_model.set('dyn_expr_f', model.expr_f_expl);
+        ocp_model.set('dyn_expr_f', model.dyn_expr_f_expl);
     else % irk irk_gnsf
         ocp_model.set('dyn_type', 'implicit');
-        ocp_model.set('dyn_expr_f', model.expr_f_impl);
+        ocp_model.set('dyn_expr_f', model.dyn_expr_f_impl);
     end
 
     %% constraints
     ocp_model.set('constr_x0', x0);
     if itest == 1
         ng = 0;
-        ocp_model.set('constr_expr_h', model.expr_h);
+        ocp_model.set('constr_expr_h', model.constr_expr_h);
         ocp_model.set('constr_lh', lbu);
         ocp_model.set('constr_uh', ubu);
-        ocp_model.set('constr_expr_h_0', model.expr_h);
+        ocp_model.set('constr_expr_h_0', model.constr_expr_h);
         ocp_model.set('constr_lh_0', lbu);
         ocp_model.set('constr_uh_0', ubu);
     elseif itest == 2
@@ -180,7 +180,10 @@ for itest = 1:3
     elseif itest == 3
         ng = 0;
         ocp_model.set('constr_type', 'auto');
-        ocp_model.set('constr_expr_h', model.expr_h);
+        ocp_model.set('constr_expr_h_0', model.constr_expr_h);
+        ocp_model.set('constr_lh_0', lbu);
+        ocp_model.set('constr_uh_0', ubu);
+        ocp_model.set('constr_expr_h', model.constr_expr_h);
         ocp_model.set('constr_lh', lbu);
         ocp_model.set('constr_uh', ubu);
 %         ocp_model.set('constr_type_e', 'auto');

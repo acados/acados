@@ -30,7 +30,7 @@
 %
 
 %% test of native matlab interface
-clear all
+clear all; clc;
 
 addpath('../pendulum_on_cart_model')
 
@@ -114,35 +114,27 @@ switch integrator
 end
 
 %% cost
+ocp_model.set('cost_type_0', cost_type);
 ocp_model.set('cost_type', cost_type);
 ocp_model.set('cost_type_e', cost_type);
 if strcmp( cost_type, 'linear_ls' )
-    ny = nu+nx; % number of outputs in lagrange term
-    % input-to-output matrix in lagrange term
-    Vu = zeros(ny, nu);
-    Vu(1:nu,:) = eye(nu);
-    % state-to-output matrix in lagrange term
-    Vx = zeros(ny, nx);
-    Vx(nu+1:end, :) = eye(nx);
-    W = diag([1e-2, 1e3, 1e3, 1e-2, 1e-2]);
+    ocp_model.set('cost_Vu_0', model.cost_Vu_0);
+    ocp_model.set('cost_Vx_0', model.cost_Vx_0);
+    ocp_model.set('cost_W_0', model.cost_W_0);
+    ocp_model.set('cost_y_ref_0', model.cost_y_ref_0);
 
-    % terminal cost term
-    ny_e = nx; % number of outputs in terminal cost term
-    Vx_e = eye(ny_e, nx);
-    W_e = W(nu+1:nu+nx, nu+1:nu+nx); % weight matrix in mayer term
-    y_ref = zeros(ny, 1); % output reference in lagrange term
-    y_ref_e = zeros(ny_e, 1); % output reference in mayer term
+    ocp_model.set('cost_Vu', model.cost_Vu);
+    ocp_model.set('cost_Vx', model.cost_Vx);
+    ocp_model.set('cost_W', model.cost_W);
+    ocp_model.set('cost_y_ref', model.cost_y_ref);
 
-    ocp_model.set('cost_Vu', Vu);
-    ocp_model.set('cost_Vx', Vx);
-    ocp_model.set('cost_Vx_e', Vx_e);
-    ocp_model.set('cost_W', W);
-    ocp_model.set('cost_W_e', W_e);
-    ocp_model.set('cost_y_ref', y_ref);
-    ocp_model.set('cost_y_ref_e', y_ref_e);
+    ocp_model.set('cost_Vx_e', model.cost_Vx_e);
+    ocp_model.set('cost_W_e', model.cost_W_e);
+    ocp_model.set('cost_y_ref_e', model.cost_y_ref_e);
 else % external, auto
-    ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
-    ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
+    ocp_model.set('cost_expr_ext_cost_0', model.cost_expr_ext_cost_0);
+    ocp_model.set('cost_expr_ext_cost', model.cost_expr_ext_cost);
+    ocp_model.set('cost_expr_ext_cost_e', model.cost_expr_ext_cost_e);
 end
 
 %% constraints
@@ -150,6 +142,9 @@ constraint_formulation_nonlinear = 0;
 lbu = -80*ones(nu, 1);
 ubu =  80*ones(nu, 1);
 if constraint_formulation_nonlinear % formulate constraint via h
+    ocp_model.set('constr_expr_h_0', model.expr_h_0);
+    ocp_model.set('constr_lh_0', lbu);
+    ocp_model.set('constr_uh_0', ubu);
     ocp_model.set('constr_expr_h', model.expr_h);
     ocp_model.set('constr_lh', lbu);
     ocp_model.set('constr_uh', ubu);
@@ -182,16 +177,16 @@ end
 % dynamics
 if (strcmp(sim_method, 'erk'))
     ocp_model.set('dyn_type', 'explicit');
-    ocp_model.set('dyn_expr_f', model.expr_f_expl);
+    ocp_model.set('dyn_expr_f', model.dyn_expr_f_expl);
 elseif (strcmp(sim_method, 'irk') || strcmp(sim_method, 'irk_gnsf'))
     ocp_model.set('dyn_type', 'implicit');
-    ocp_model.set('dyn_expr_f', model.expr_f_impl);
+    ocp_model.set('dyn_expr_f', model.dyn_expr_f_impl);
 elseif strcmp(sim_method, 'discrete')
     ocp_model.set('dyn_type', 'discrete');
     % build explicit euler discrete integrator
     import casadi.*
     expl_ode_fun = Function([model_name,'_expl_ode_fun'], ...
-            {model.sym_x, model.sym_u}, {model.expr_f_expl});
+            {model.sym_x, model.sym_u}, {model.dyn_expr_f_expl});
     dyn_expr_phi = model.sym_x + T/N * expl_ode_fun(model.sym_x, model.sym_u);
     ocp_model.set('dyn_expr_phi', dyn_expr_phi)
     if ~all(time_steps == T/N)
@@ -200,6 +195,7 @@ elseif strcmp(sim_method, 'discrete')
     end
 end
 
+% initial state
 x0 = [0; pi; 0; 0];
 ocp_model.set('constr_x0', x0);
 
@@ -237,6 +233,7 @@ ocp_opts.set('exact_hess_constr', 1);
 %% create ocp solver
 ocp = acados_ocp(ocp_model, ocp_opts);
 
+% state and input initial guess
 x_traj_init = zeros(nx, N+1);
 x_traj_init(2, :) = linspace(pi, 0, N+1); % initialize theta
 
@@ -260,7 +257,7 @@ for i=1:n_executions
     % set trajectory initialization
     ocp.set('init_x', x_traj_init);
     ocp.set('init_u', u_traj_init);
-    ocp.set('init_pi', zeros(nx, N))
+    ocp.set('init_pi', zeros(nx, N)); % multipliers for dynamics equality constraints
 
     % solve
     ocp.solve();
@@ -268,7 +265,7 @@ for i=1:n_executions
     utraj = ocp.get('u');
     xtraj = ocp.get('x');
 
-    %% evaluation
+    % evaluation
     status = ocp.get('status');
     sqp_iter = ocp.get('sqp_iter');
     time_tot(i) = ocp.get('time_tot');
@@ -296,60 +293,15 @@ cost_val_ocp = ocp.get_cost();
 
 %% get QP matrices:
 % See https://docs.acados.org/problem_formulation
+%        |----- dynamics -----|------ cost --------|---------------------------- constraints ------------------------|        
+fields = {'qp_A','qp_B','qp_b','qp_R','qp_Q','qp_r','qp_C','qp_D','qp_lg','qp_ug','qp_lbx','qp_ubx','qp_lbu','qp_ubu'};
 % either stage wise
-for stage = [0, N-1]
-    % Note loop over field doesnt work because stupid matlab diff between
-    % chars and strings
-    % dynamics
-    field = 'qp_A';
-    disp(strcat(field, " at stage ", num2str(stage), " = "));
-    ocp.get(field, stage)
-    field = 'qp_B';
-    disp(strcat(field, " at stage ", num2str(stage), " = "));
-    ocp.get(field, stage)
-    field = 'qp_b';
-    disp(strcat(field, " at stage ", num2str(stage), " = "));
-    ocp.get(field, stage)
-
-    % cost
-    field = 'qp_R';
-    disp(strcat(field, " at stage ", num2str(stage), " = "));
-    ocp.get(field, stage)
-    field = 'qp_Q';
-    disp(strcat(field, " at stage ", num2str(stage), " = "));
-    ocp.get(field, stage)
-    field = 'qp_r';
-    disp(strcat(field, " at stage ", num2str(stage), " = "));
-    ocp.get(field, stage)
-
-    % constraints
-    field = 'qp_C';
-    disp(strcat(field, " at stage ", num2str(stage), " = "));
-    ocp.get(field, stage)
-    field = 'qp_D';
-    disp(strcat(field, " at stage ", num2str(stage), " = "));
-    ocp.get(field, stage)
-
-    field = 'qp_lg';
-    disp(strcat(field, " at stage ", num2str(stage), " = "));
-    ocp.get(field, stage)
-    field = 'qp_ug';
-    disp(strcat(field, " at stage ", num2str(stage), " = "));
-    ocp.get(field, stage)
-
-    field = 'qp_lbx';
-    disp(strcat(field, " at stage ", num2str(stage), " = "));
-    ocp.get(field, stage)
-    field = 'qp_ubx';
-    disp(strcat(field, " at stage ", num2str(stage), " = "));
-    ocp.get(field, stage)
-
-    field = 'qp_lbu';
-    disp(strcat(field, " at stage ", num2str(stage), " = "));
-    ocp.get(field, stage)
-    field = 'qp_ubu';
-    disp(strcat(field, " at stage ", num2str(stage), " = "));
-    ocp.get(field, stage)
+for stage = [0,N-1]
+    for k = 1:length(fields)
+        field = fields{k};
+        disp(strcat(field, " at stage ", num2str(stage), " = "));
+        ocp.get(field, stage)
+    end
 end
 
 stage = N;

@@ -30,14 +30,14 @@
 %
 
 %% test of native matlab interface
-clear all
-
+clear all; clc;
+check_acados_requirements()
 addpath('../linear_mass_spring_model/');
 
 %% arguments
 N = 20;
 tol = 1e-8;
-shooting_nodes = [ linspace(0,10,N+1) ];
+shooting_nodes = linspace(0,10,N+1);
 
 model_name = 'lin_mass';
 
@@ -70,6 +70,8 @@ nu = model.nu;
 % constraints
 x0 = zeros(nx, 1); x0(1)=2.5; x0(2)=2.5;
 
+lh_0 = -0.5 * ones(nu, 1);
+uh_0 = 0.5 * ones(nu, 1);
 lh = - [ 0.5 * ones(nu, 1); 4.0 * ones(nx, 1)];
 uh = + [ 0.5 * ones(nu, 1); 4.0 * ones(nx, 1)];
 lh_e = -4.0 * ones(nx, 1);
@@ -94,8 +96,10 @@ if isfield(model, 'sym_xdot')
 end
 
 % cost
+ocp_model.set('cost_type_0', cost_type);
 ocp_model.set('cost_type', cost_type);
 ocp_model.set('cost_type_e', cost_type);
+
 % dynamics
 ocp_model.set('dyn_type', 'discrete');
 
@@ -108,10 +112,14 @@ if (casadi_dynamics == 0)
     ocp_model.set('dyn_disc_fun_jac_hess', 'disc_dyn_fun_jac_hess'); % only needed for exact hessian
 else
     % dynamics expression
-    ocp_model.set('dyn_expr_phi', model.expr_phi);
+    ocp_model.set('dyn_expr_phi', model.dyn_expr_phi);
 end
 
 if (casadi_cost == 0)
+    % Generic initial cost
+    ocp_model.set('cost_ext_fun_type_0', 'generic');
+    ocp_model.set('cost_source_ext_cost_0', 'generic_ext_cost.c');
+    ocp_model.set('cost_function_ext_cost_0', 'ext_cost');
     % Generic stage cost
     ocp_model.set('cost_ext_fun_type', 'generic');    
     ocp_model.set('cost_source_ext_cost', 'generic_ext_cost.c');
@@ -122,16 +130,20 @@ if (casadi_cost == 0)
     ocp_model.set('cost_function_ext_cost_e', 'ext_costN');
 else
     % cost expression
-    ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
-    ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
+    ocp_model.set('cost_expr_ext_cost_0', model.cost_expr_ext_cost_0);
+    ocp_model.set('cost_expr_ext_cost', model.cost_expr_ext_cost);
+    ocp_model.set('cost_expr_ext_cost_e', model.cost_expr_ext_cost_e);
 end
 
 % constraints
 ocp_model.set('constr_x0', x0);
-ocp_model.set('constr_expr_h', model.expr_h);
+ocp_model.set('constr_expr_h_0', model.constr_expr_h_0);
+ocp_model.set('constr_lh_0', lh_0);
+ocp_model.set('constr_uh_0', uh_0);
+ocp_model.set('constr_expr_h', model.constr_expr_h);
 ocp_model.set('constr_lh', lh);
 ocp_model.set('constr_uh', uh);
-ocp_model.set('constr_expr_h_e', model.expr_h_e);
+ocp_model.set('constr_expr_h_e', model.constr_expr_h_e);
 ocp_model.set('constr_lh_e', lh_e);
 ocp_model.set('constr_uh_e', uh_e);
 
@@ -263,5 +275,4 @@ if any(abs(cost_native_mex - cost_template_mex) > tol_check)
          ' differ too much. Should be < tol = ' num2str(tol_check)]);
 end
 
-clear all
 cd ..

@@ -30,15 +30,8 @@
 %
 
 %% test of native matlab interface
-clear all
-
-
-% check that env.sh has been run
-env_run = getenv('ENV_RUN');
-if (~strcmp(env_run, 'true'))
-	error('env.sh has not been sourced! Before executing this example, run: source env.sh');
-end
-
+clear all; clc;
+check_acados_requirements()
 
 %% arguments
 compile_interface = 'auto';
@@ -72,12 +65,8 @@ sim_method_num_steps = 3;
 %cost_type = 'nonlinear_ls';
 cost_type = 'auto';
 
-
-
 %% create model entries
 model = linear_mass_spring_model();
-
-
 
 % dims
 T = 10.0; % horizon length time
@@ -108,6 +97,7 @@ else
 	nh = nu+nx;
 	nh_e = nx;
 end
+
 % cost
 Vu = zeros(ny, nu); for ii=1:nu Vu(ii,ii)=1.0; end % input-to-output matrix in lagrange term
 Vx = zeros(ny, nx); for ii=1:nx Vx(nu+ii,ii)=1.0; end % state-to-output matrix in lagrange term
@@ -116,6 +106,7 @@ W = eye(ny); for ii=1:nu W(ii,ii)=2.0; end % weight matrix in lagrange term
 W_e = eye(ny_e); % weight matrix in mayer term
 yr = zeros(ny, 1); % output reference in lagrange term
 yr_e = zeros(ny_e, 1); % output reference in mayer term
+
 % constraints
 x0 = zeros(nx, 1); x0(1)=2.5; x0(2)=2.5;
 if (ng>0)
@@ -140,9 +131,6 @@ else
 	ubu =  0.5*ones(nbu, 1);
 end
 
-
-
-
 %% acados ocp model
 ocp_model = acados_ocp_model();
 ocp_model.set('name', model_name);
@@ -156,39 +144,49 @@ end
 if isfield(model, 'sym_xdot')
 	ocp_model.set('sym_xdot', model.sym_xdot);
 end
+
 % cost
+ocp_model.set('cost_type_0', cost_type);
 ocp_model.set('cost_type', cost_type);
 ocp_model.set('cost_type_e', cost_type);
 if (strcmp(cost_type, 'linear_ls'))
+    ocp_model.set('cost_Vu_0', Vu);
 	ocp_model.set('cost_Vu', Vu);
+    ocp_model.set('cost_Vx_0', Vx);
 	ocp_model.set('cost_Vx', Vx);
 	ocp_model.set('cost_Vx_e', Vx_e);
+    ocp_model.set('cost_W_0', W);
 	ocp_model.set('cost_W', W);
 	ocp_model.set('cost_W_e', W_e);
+    ocp_model.set('cost_y_ref_0', yr);
 	ocp_model.set('cost_y_ref', yr);
 	ocp_model.set('cost_y_ref_e', yr_e);
 elseif (strcmp(cost_type, 'nonlinear_ls'))
-	ocp_model.set('cost_expr_y', model.expr_y);
-	ocp_model.set('cost_expr_y_e', model.expr_y_e);
+    ocp_model.set('cost_expr_y_0', model.cost_expr_y);
+	ocp_model.set('cost_expr_y', model.cost_expr_y);
+	ocp_model.set('cost_expr_y_e', model.cost_expr_y_e);
 	ocp_model.set('cost_W', W);
 	ocp_model.set('cost_W_e', W_e);
 	ocp_model.set('cost_y_ref', yr);
 	ocp_model.set('cost_y_ref_e', yr_e);
 else % if (strcmp(cost_type, 'ext_cost'))
-	ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
-	ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
+    ocp_model.set('cost_expr_ext_cost_0', model.cost_expr_ext_cost);
+	ocp_model.set('cost_expr_ext_cost', model.cost_expr_ext_cost);
+	ocp_model.set('cost_expr_ext_cost_e', model.cost_expr_ext_cost_e);
 end
+
 % dynamics
 if (strcmp(dyn_type, 'explicit'))
 	ocp_model.set('dyn_type', 'explicit');
-	ocp_model.set('dyn_expr_f', model.expr_f_expl);
+	ocp_model.set('dyn_expr_f', model.dyn_expr_f_expl);
 elseif (strcmp(dyn_type, 'implicit'))
 	ocp_model.set('dyn_type', 'implicit');
-	ocp_model.set('dyn_expr_f', model.expr_f_impl);
+	ocp_model.set('dyn_expr_f', model.dyn_expr_f_impl);
 else
 	ocp_model.set('dyn_type', 'discrete');
-	ocp_model.set('dyn_expr_phi', model.expr_phi);
+	ocp_model.set('dyn_expr_phi', model.dyn_expr_phi);
 end
+
 % constraints
 ocp_model.set('constr_x0', x0);
 if (ng>0)
@@ -200,10 +198,13 @@ if (ng>0)
 	ocp_model.set('constr_lg_e', lg_e);
 	ocp_model.set('constr_ug_e', ug_e);
 elseif (nh>0)
-	ocp_model.set('constr_expr_h', model.expr_h);
+    ocp_model.set('constr_expr_h_0', model.constr_expr_h_0);
+	ocp_model.set('constr_lh_0', lh);
+	ocp_model.set('constr_uh_0', uh);
+	ocp_model.set('constr_expr_h', model.constr_expr_h);
 	ocp_model.set('constr_lh', lh);
 	ocp_model.set('constr_uh', uh);
-	ocp_model.set('constr_expr_h_e', model.expr_h_e);
+	ocp_model.set('constr_expr_h_e', model.constr_expr_h_e);
 	ocp_model.set('constr_lh_e', lh_e);
 	ocp_model.set('constr_uh_e', uh_e);
 else
@@ -215,9 +216,7 @@ else
 	ocp_model.set('constr_ubu', ubu);
 end
 
-ocp_model.model_struct
-
-
+% ocp_model.model_struct
 
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
@@ -247,10 +246,6 @@ end
 %% acados ocp
 % create ocp
 ocp = acados_ocp(ocp_model, ocp_opts);
-ocp
-ocp.C_ocp
-
-
 
 % set trajectory initialization
 x_traj_init = zeros(nx, N+1);
@@ -258,23 +253,19 @@ u_traj_init = zeros(nu, N);
 ocp.set('init_x', x_traj_init);
 ocp.set('init_u', u_traj_init);
 
-
 % solve
 tic;
 ocp.solve();
 time_ext = toc
-
 
 %x0(1) = 1.5;
 %ocp.set('constr_x0', x0);
 
 % if not set, the trajectory is initialized with the previous solution
 
-
 % get solution
 u = ocp.get('u');
 x = ocp.get('x');
-
 
 % get info
 status = ocp.get('status');

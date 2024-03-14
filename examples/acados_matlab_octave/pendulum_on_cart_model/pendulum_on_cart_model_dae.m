@@ -81,9 +81,9 @@ model.sym_x = sym_x;
 model.sym_xdot = sym_xdot;
 model.sym_z = sym_z;
 model.sym_u = sym_u;
-model.expr_f_impl = expr_f_impl;
-model.expr_h = expr_h;
-model.expr_ext_cost = expr_ext_cost;
-model.expr_ext_cost_e = expr_ext_cost_e;
+model.dyn_expr_f_impl = expr_f_impl;
+model.constr_expr_h = expr_h;
+model.cost_expr_ext_cost = expr_ext_cost;
+model.cost_expr_ext_cost_e = expr_ext_cost_e;
 
 end

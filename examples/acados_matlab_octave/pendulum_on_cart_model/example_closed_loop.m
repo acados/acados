@@ -157,17 +157,17 @@ if (strcmp(cost_type, 'linear_ls'))
 	ocp_model.set('cost_y_ref', yr);
 	ocp_model.set('cost_y_ref_e', yr_e);
 elseif (strcmp(cost_type, 'ext_cost'))
-	ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
-	ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
+	ocp_model.set('cost_expr_ext_cost', model.cost_expr_ext_cost);
+	ocp_model.set('cost_expr_ext_cost_e', model.cost_expr_ext_cost_e);
 end
 
 % dynamics
 if (strcmp(ocp_sim_method, 'erk'))
 	ocp_model.set('dyn_type', 'explicit');
-	ocp_model.set('dyn_expr_f', model.expr_f_expl);
+	ocp_model.set('dyn_expr_f', model.dyn_expr_f_expl);
 else % irk
 	ocp_model.set('dyn_type', 'implicit');
-	ocp_model.set('dyn_expr_f', model.expr_f_impl);
+	ocp_model.set('dyn_expr_f', model.dyn_expr_f_impl);
 end
 % constraints
 ocp_model.set('constr_x0', x0);
@@ -180,6 +180,9 @@ if (ng>0)
 	ocp_model.set('constr_lg_e', lg_e);
 	ocp_model.set('constr_ug_e', ug_e);
 elseif (nh>0)
+	ocp_model.set('constr_expr_h_0', model.expr_h);
+	ocp_model.set('constr_lh_0', lbu);
+	ocp_model.set('constr_uh_0', ubu);
 	ocp_model.set('constr_expr_h', model.expr_h);
 	ocp_model.set('constr_lh', lbu);
 	ocp_model.set('constr_uh', ubu);
@@ -248,10 +251,10 @@ end
 sim_model.set('T', T/ocp_N);
 if (strcmp(sim_method, 'erk'))
 	sim_model.set('dyn_type', 'explicit');
-	sim_model.set('dyn_expr_f', model.expr_f_expl);
+	sim_model.set('dyn_expr_f', model.dyn_expr_f_expl);
 else % irk
 	sim_model.set('dyn_type', 'implicit');
-	sim_model.set('dyn_expr_f', model.expr_f_impl);
+	sim_model.set('dyn_expr_f', model.dyn_expr_f_impl);
 end
 
 %sim_model.model_struct

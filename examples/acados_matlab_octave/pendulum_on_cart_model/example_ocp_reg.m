@@ -30,7 +30,7 @@
 %
 
 %% test of native matlab interface
-clear VARIABLES
+clear all
 
 % check that env.sh has been run
 env_run = getenv('ENV_RUN');
@@ -164,10 +164,10 @@ ocp_model.set('cost_type_e', cost_type);
 % dynamics
 if (strcmp(sim_method, 'erk'))
     ocp_model.set('dyn_type', 'explicit');
-    ocp_model.set('dyn_expr_f', model.expr_f_expl);
+    ocp_model.set('dyn_expr_f', model.dyn_expr_f_expl);
 else % irk irk_gnsf
     ocp_model.set('dyn_type', 'implicit');
-    ocp_model.set('dyn_expr_f', model.expr_f_impl);
+    ocp_model.set('dyn_expr_f', model.dyn_expr_f_impl);
 end
 % constraints
 ocp_model.set('constr_x0', x0);
@@ -180,7 +180,10 @@ if (ng>0)
     ocp_model.set('constr_lg_e', lg_e);
     ocp_model.set('constr_ug_e', ug_e);
 elseif (nh>0)
-    ocp_model.set('constr_expr_h', model.expr_h);
+    ocp_model.set('constr_expr_h_0', model.constr_expr_h);
+    ocp_model.set('constr_lh_0', lbu);
+    ocp_model.set('constr_uh_0', ubu);
+    ocp_model.set('constr_expr_h', model.constr_expr_h);
     ocp_model.set('constr_lh', lbu);
     ocp_model.set('constr_uh', ubu);
 %    ocp_model.set('constr_expr_h_e', model.expr_h_e);
