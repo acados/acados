@@ -306,6 +306,10 @@ int main() {
                 case INVALID_QP_SOLVER:
                     printf("\nInvalid QP solver\n\n");
 
+                default:
+                    printf("\nQP solver not implemented in example\n\n");
+
+
             }
 
 //            ocp_qp_full_condensing_dims *xcond_dims = qp_dims->xcond_dims;

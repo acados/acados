@@ -440,12 +440,8 @@ acados_size_t sim_erk_workspace_calculate_size(void *config_, void *dims_, void 
 
 
 
-static void *sim_erk_cast_workspace(void *config_, void *dims_, void *opts_, void *raw_memory, void *mem_)
+static void *sim_erk_cast_workspace(void *config_, sim_erk_dims *dims, sim_opts *opts, void *raw_memory, sim_erk_memory *mem)
 {
-    sim_opts *opts = opts_;
-    sim_erk_dims *dims = (sim_erk_dims *) dims_;
-    sim_erk_memory *mem = mem_;
-
     int ns = opts->ns;
 
     int nx = dims->nx;

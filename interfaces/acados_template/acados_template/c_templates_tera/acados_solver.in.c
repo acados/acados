@@ -2126,6 +2126,16 @@ void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* 
 
     int initialize_t_slacks = {{ solver_options.initialize_t_slacks }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "initialize_t_slacks", &initialize_t_slacks);
+
+{%- elif solver_options.nlp_solver_type == "SQP_RTI" %}
+    int as_rti_iter = {{ solver_options.as_rti_iter }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "as_rti_iter", &as_rti_iter);
+
+    int as_rti_level = {{ solver_options.as_rti_level }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "as_rti_level", &as_rti_level);
+
+    int rti_log_residuals = {{ solver_options.rti_log_residuals }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "rti_log_residuals", &rti_log_residuals);
 {%- endif %}
 
     int qp_solver_iter_max = {{ solver_options.qp_solver_iter_max }};

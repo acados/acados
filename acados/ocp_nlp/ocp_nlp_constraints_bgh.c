@@ -1479,13 +1479,20 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
     // nlp_mem: ineq_adj
     if (opts->compute_adj)
     {
+        // adj = zeros(nu+nx+2*ns)
         blasfeo_dvecse(nu+nx+2*ns, 0.0, &memory->adj, 0);
+        // tmp_ni = - lam_lower + lam_upper
         blasfeo_daxpy(nb+ng+nh, -1.0, memory->lam, nb+ng+nh, memory->lam, 0, &work->tmp_ni, 0);
+        // adj[idxb] += tmp_ni[:nb]
         blasfeo_dvecad_sp(nb, 1.0, &work->tmp_ni, 0, model->idxb, &memory->adj, 0);
+        // adj += DCt * tmp_ni[nb:]
         blasfeo_dgemv_n(nu+nx, ng+nh, 1.0, memory->DCt, 0, 0, &work->tmp_ni, nb, 1.0, &memory->adj, 0, &memory->adj, 0);
         // soft
+        // adj[nu+nx:nu+nx+ns] = lam[idxs]
         blasfeo_dvecex_sp(ns, 1.0, model->idxs, memory->lam, 0, &memory->adj, nu+nx);
+        // adj[nu+nx+ns : nu+nx+2*ns] = lam[idxs + nb+ng+nh]
         blasfeo_dvecex_sp(ns, 1.0, model->idxs, memory->lam, nb+ng+nh, &memory->adj, nu+nx+ns);
+        // adj[nu+nx: ] += lam[2*nb+2*ng+2*nh :]
         blasfeo_daxpy(2*ns, 1.0, memory->lam, 2*nb+2*ng+2*nh, &memory->adj, nu+nx, &memory->adj, nu+nx);
     }
 
