@@ -750,6 +750,18 @@ static void as_rti_sanity_checks(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp
             }
         }
     }
+    if (opts->as_rti_level == LEVEL_B)
+    {
+        for (int k = 0; k <= dims->N; k++)
+        {
+            if (dims->ns[k] > 0)
+            {
+                printf("\n\nAS-RTI with LEVEL_B not implemented for soft constraints yet.\n");
+                printf("Got ns[%d] = %d. Exiting\n", k, dims->ns[k]);
+                exit(1);
+            }
+        }
+    }
     if (opts->as_rti_iter < 1)
     {
         printf("\n\nAS-RTI: as_rti_iter < 1: no advanced step iteration will be performed!\n\n");
