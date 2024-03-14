@@ -65,6 +65,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     ocp_nlp_dims *nlp_dims = {{ model.name }}_acados_get_nlp_dims(acados_ocp_capsule);
     ocp_nlp_in *nlp_in = {{ model.name }}_acados_get_nlp_in(acados_ocp_capsule);
     ocp_nlp_out *nlp_out = {{ model.name }}_acados_get_nlp_out(acados_ocp_capsule);
+    ocp_nlp_out *sens_out = {{ model.name }}_acados_get_sens_out(acados_ocp_capsule);
     ocp_nlp_solver *nlp_solver = {{ model.name }}_acados_get_nlp_solver(acados_ocp_capsule);
     void *nlp_opts = {{ model.name }}_acados_get_nlp_opts(acados_ocp_capsule);
 
@@ -137,11 +138,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     l_ptr[0] = (long long) nlp_solver;
     mxSetField(plhs[0], 0, "solver", solver_mat);
 
-    // TODO: sens_out not actually implemented in templates..
     // sens_out
     mxArray *sens_out_mat = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
     l_ptr = mxGetData(sens_out_mat);
-    l_ptr[0] = (long long) 1;
+    l_ptr[0] = (long long) sens_out;
     mxSetField(plhs[0], 0, "sens_out", sens_out_mat);
 
     // capsule
