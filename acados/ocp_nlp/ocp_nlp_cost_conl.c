@@ -787,8 +787,8 @@ void ocp_nlp_cost_conl_compute_gradient(void *config_, void *dims_, void *model_
     {
         ext_fun_arg_t conl_fun_jac_hess_type_in[5];
         void *conl_fun_jac_hess_in[5];
-        ext_fun_arg_t conl_fun_jac_hess_type_out[5];
-        void *conl_fun_jac_hess_out[5];
+        ext_fun_arg_t conl_fun_jac_hess_type_out[6];
+        void *conl_fun_jac_hess_out[6];
 
         // INPUT
         struct blasfeo_dvec_args x_in;  // input x
@@ -823,6 +823,8 @@ void ocp_nlp_cost_conl_compute_gradient(void *config_, void *dims_, void *model_
         conl_fun_jac_hess_out[3] = &work->Jt_z;          // inner Jacobian wrt z, transposed, nz x ny
         conl_fun_jac_hess_type_out[4] = BLASFEO_DMAT;
         conl_fun_jac_hess_out[4] = &work->W;             // outer hessian: ny x ny
+        conl_fun_jac_hess_type_out[5] = COLMAJ;
+        conl_fun_jac_hess_out[5] = &memory->outer_hess_is_diag;   // flag indicates if outer hess is diag
 
         // NOTE: could be done more efficiently by generating a function that does not evalutate hessian
         // evaluate external function
