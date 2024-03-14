@@ -644,6 +644,8 @@ def generate_c_code_conl_cost(ocp: AcadosOcp, stage_type: str):
     outer_hess_fun = ca.Function('outer_hess', [res_expr, t, p], [hess])
     outer_hess_expr = outer_hess_fun(inner_expr, t, p)
     outer_hess_is_diag = outer_hess_expr.sparsity().is_diag()
+    if casadi_length(res_expr) <= 4:
+        outer_hess_is_diag = 0
 
     Jt_ux_expr = ca.jacobian(inner_expr, ca.vertcat(u, x)).T
     Jt_z_expr = ca.jacobian(inner_expr, z).T

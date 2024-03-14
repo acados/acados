@@ -233,21 +233,30 @@ int ocp_nlp_cost_nls_model_set(void *config_, void *dims_, void *model_,
         double *W_col_maj = (double *) value_;
         blasfeo_pack_dmat(ny, ny, W_col_maj, ny, &model->W, 0, 0);
         model->W_changed = 1;
-        model->outer_hess_is_diag = 1.0;
-        double tmp;
-        for (int i = 0; i < ny; i++)
+        if (ny > 4)
         {
-            for (int j = 0; j < ny; j++)
+            // detect if outer hess is diag
+            model->outer_hess_is_diag = 1.0;
+            double tmp;
+            for (int i = 0; i < ny; i++)
             {
-                if (j!=i)
+                for (int j = 0; j < ny; j++)
                 {
-                    tmp = BLASFEO_DMATEL(&model->W, i, j);
-                    if (tmp != 0.0)
+                    if (j!=i)
                     {
-                        model->outer_hess_is_diag = 0.0;
+                        tmp = BLASFEO_DMATEL(&model->W, i, j);
+                        if (tmp != 0.0)
+                        {
+                            model->outer_hess_is_diag = 0.0;
+                        }
                     }
                 }
             }
+        }
+        else
+        {
+            // use BLASFEO matrices for small ny.
+            model->outer_hess_is_diag = 0.0;
         }
     }
     else if (!strcmp(field, "y_ref") || !strcmp(field, "yref"))
