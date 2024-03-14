@@ -215,7 +215,7 @@ ocp_opts.set('qp_solver', qp_solver);
 ocp_opts.set('qp_solver_cond_ric_alg', qp_solver_cond_ric_alg);
 ocp_opts.set('qp_solver_warm_start', qp_solver_warm_start);
 ocp_opts.set('qp_solver_iter_max', qp_solver_max_iter);
-if (contains(qp_solver, 'partial_condensing'))
+if (~isempty(strfind(qp_solver, 'partial_condensing')))
 	ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
 end
 if (strcmp(qp_solver, 'partial_condensing_hpipm'))
