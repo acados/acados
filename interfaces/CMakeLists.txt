@@ -234,6 +234,10 @@ add_test(NAME python_custom_update_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/custom_update
         python example_custom_rti_loop.py)
 
+add_test(NAME python_as_rti_example
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/as_rti
+        python as_rti_closed_loop_example.py)
+
 add_test(NAME python_fast_zoro_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/zoRO_example
         python pendulum_on_cart/minimal_example_zoro.py)
