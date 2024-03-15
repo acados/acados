@@ -70,6 +70,8 @@ class ZoroDescription:
     idx_uh_t: list = field(default_factory=list)
     idx_lh_e_t: list = field(default_factory=list)
     idx_uh_e_t: list = field(default_factory=list)
+    # Inputs:
+    # P_0: bool:
 
 def process_zoro_description(zoro_description: ZoroDescription):
     zoro_description.nw, _ = zoro_description.W_mat.shape
