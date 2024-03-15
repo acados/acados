@@ -177,7 +177,7 @@ def export_chain_mass_model(n_mass: int, Ts=0.2, disturbance=False) -> Tuple[Aca
     return model, p_map
 
 
-def compute_steady_state(model, p, xPosFirstMass, xEndRef):
+def compute_steady_state(model: AcadosModel, p, xPosFirstMass, xEndRef):
     """Compute steady state for chain mass model."""
 
     p_ = p(0)
@@ -306,13 +306,38 @@ def export_parametric_ocp(
 
     xEndRef = np.zeros((3, 1))
     xEndRef[0] = chain_params_["L"] * (M + 1) * 6
-    xEndRef[2] = 1.0
+    xEndRef[2] = 0.0
     # xEndRef[0] = M * chain_params["L"]
+
+    # parameters
+    np.random.seed(chain_params_["seed"])
+    m = [np.random.normal(chain_params_["m"], 0.1 * chain_params_["m"]) for _ in range(n_mass - 1)]
+    D = [np.random.normal(chain_params_["D"], 0.1 * chain_params_["D"], 3) for _ in range(n_mass - 1)]
+    L = [np.random.normal(chain_params_["L"], 0.1 * chain_params_["L"], 3) for _ in range(n_mass - 1)]
+    C = [np.random.normal(chain_params_["C"], 0.1 * chain_params_["C"], 3) for _ in range(n_mass - 1)]
+
+    # Inermediate masses
+    for i_mass in range(n_mass - 1):
+        p["m", i_mass] = m[i_mass]
+    for i_mass in range(n_mass - 2):
+        p["w", i_mass] = np.zeros(3)
+
+    # Links
+    for i_link in range(n_mass - 1):
+        p["D", i_link] = D[i_link]
+        p["L", i_link] = L[i_link]
+        p["C", i_link] = C[i_link]
 
     # xrest = compute_steady_state(n_mass, p, xPosFirstMass, xEndRef, disturbance=True)
     xrest = compute_steady_state(model, p, xPosFirstMass, xEndRef)
 
     x0 = xrest
+
+    plt.figure()
+    plt.plot(x0[::3], x0[2::3], "o")
+    plt.grid(True)
+    plt.show()
+
 
     # set cost module
     ocp.cost.cost_type = "LINEAR_LS"
@@ -351,25 +376,6 @@ def export_parametric_ocp(
     ocp.constraints.ubu = umax
     ocp.constraints.x0 = x0.reshape((nx,))
     ocp.constraints.idxbu = np.array(range(nu))
-
-    # parameters
-    np.random.seed(chain_params_["seed"])
-    m = [np.random.normal(chain_params_["m"], 0.1 * chain_params_["m"]) for _ in range(n_mass - 1)]
-    D = [np.random.normal(chain_params_["D"], 0.1 * chain_params_["D"], 3) for _ in range(n_mass - 1)]
-    L = [np.random.normal(chain_params_["L"], 0.1 * chain_params_["L"], 3) for _ in range(n_mass - 1)]
-    C = [np.random.normal(chain_params_["C"], 0.1 * chain_params_["C"], 3) for _ in range(n_mass - 1)]
-
-    # Inermediate masses
-    for i_mass in range(n_mass - 1):
-        p["m", i_mass] = m[i_mass]
-    for i_mass in range(n_mass - 2):
-        p["w", i_mass] = np.zeros(3)
-
-    # Links
-    for i_link in range(n_mass - 1):
-        p["D", i_link] = D[i_link]
-        p["L", i_link] = L[i_link]
-        p["C", i_link] = C[i_link]
 
     ocp.parameter_values = p.cat.full().flatten()
 
@@ -426,6 +432,9 @@ def main_simulation(chain_params_: dict):
     ocp, parameter_values = export_parametric_ocp(chain_params_=chain_params_)
 
     ocp_json_file = "acados_ocp_" + ocp.model.name + ".json"
+
+    ocp.solver_options.with_solution_sens_wrt_params = False
+
 
     # Check if json_file exists
     if os.path.exists(ocp_json_file):
@@ -606,5 +615,5 @@ def main_parametric(
 
 
 if __name__ == "__main__":
-    # main_simulation(chain_params_=get_chain_params())
-    main_parametric(qp_solver_ric_alg=0, eigen_analysis=False)
+    main_simulation(chain_params_=get_chain_params())
+    # main_parametric(qp_solver_ric_alg=0, eigen_analysis=False)
