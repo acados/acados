@@ -71,7 +71,17 @@ class ZoroDescription:
     idx_lh_e_t: list = field(default_factory=list)
     idx_uh_e_t: list = field(default_factory=list)
     # Inputs:
-    # P_0: bool:
+    input_P0_diag: bool = True
+    """Determines if diag(P0) is an input to the custom update function"""
+    input_W_diag: bool = False
+    """Determines if diag(W) is an input to the custom update function"""
+    input_W_gp_diag: bool = False
+    """
+    Determines if the concatenation of diag(W_{gp}^k) is an input to the custom update function
+
+    In case this is used W_k = W + W_{gp}^k.
+    """
+
 
 def process_zoro_description(zoro_description: ZoroDescription):
     zoro_description.nw, _ = zoro_description.W_mat.shape
