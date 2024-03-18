@@ -67,6 +67,15 @@ real_t acados_toc(acados_timer* t)
 
     return (real_t) duration / 1e9;
 }
+#elif defined(_DS1104)
+
+void acados_tic(acados_timer* t)
+{
+    ds1104_tic_start();
+    t->time = ds1104_tic_read();
+}
+
+real_t acados_toc(acados_timer* t) { return ds1104_tic_read() - t->time; }
 
 #elif defined(__MABX2__)
 

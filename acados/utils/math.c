@@ -49,6 +49,18 @@ int isnan(double x)
 }
 #endif
 
+#if defined(_DS1104)
+double fmax(double a, double b)
+{
+    return a > b ? a : b;
+}
+
+int isnan(double x)
+{
+    return x != x;
+}
+#endif
+
 void dgemm_nn_3l(int m, int n, int k, double *A, int lda, double *B, int ldb, double *C, int ldc)
 {
     int ii, jj, kk;

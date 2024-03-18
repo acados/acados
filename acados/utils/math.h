@@ -41,6 +41,10 @@ extern "C" {
 double fmax(double a, double b);
 int isnan(double x);
 #endif
+#if defined(_DS1104)
+double fmax(double a, double b);
+int isnan(double x);
+#endif
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))

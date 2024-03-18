@@ -72,6 +72,15 @@ typedef struct acados_timer_
     double time;
 } acados_timer;
 
+#elif defined(_DS1104)
+
+#include <brtenv.h>
+
+typedef struct acados_timer_
+{
+    double time;
+} acados_timer;
+
 #else
 
 /* Use POSIX clock_gettime() for timing on non-Windows machines. */
