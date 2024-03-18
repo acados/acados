@@ -485,8 +485,6 @@ def main_simulation(chain_params_: dict):
 
 
     for i in range(5):
-
-
         acados_sim_solver.set("x", xcurrent)
         acados_sim_solver.set("u", chain_params_["u_init"])
 
@@ -599,7 +597,7 @@ def main_parametric(
 ) -> None:
 
 
-    ocp, parameter_values = export_parametric_ocp(chain_params_=chain_params_, qp_solver_ric_alg=qp_solver_ric_alg, cost_type="EXTERNAL")
+    ocp, parameter_values = export_parametric_ocp(chain_params_=chain_params_, qp_solver_ric_alg=qp_solver_ric_alg, integrator_type="DISCRETE", cost_type="EXTERNAL")
 
 
     ocp_json_file = "acados_ocp_" + ocp.model.name + ".json"
@@ -632,8 +630,9 @@ def main_parametric(
 
     np_test = 100
 
-    
+
     p_label = "L_2_0"
+    # p_label = "D_2_0"
 
     p_idx = find_idx_for_labels(define_param_struct_symSX(chain_params_["n_mass"], disturbance=True).cat, p_label)[0]
 
@@ -654,6 +653,8 @@ def main_parametric(
 
         print(f"ocp_solver status {acados_ocp_solver.status}")
 
+        for stage in range(ocp.dims.N + 1):
+            sensitivity_solver.set(stage, "p", parameter_values.cat.full().flatten())
         sensitivity_solver.load_iterate(filename="iterate.json", verbose=False)
         sensitivity_solver.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
 
@@ -684,13 +685,22 @@ def main_parametric(
 
     plt.figure()
     for col in range(3):
-        plt.subplot(3, 1, col + 1)
+        plt.subplot(4, 1, col + 1)
         plt.plot(p_var, pi[:, col], label=f"pi_{col}")
         plt.plot(p_var, pi_reconstructed_np_grad[:, col], label=f"pi_reconstructed_np_grad_{col}", linestyle="--")
         plt.plot(p_var, pi_reconstructed_acados[:, col], label=f"pi_reconstructed_acados_{col}", linestyle=":")
         plt.ylabel(f"pi_{col}")
         plt.grid(True)
         plt.legend()
+
+    for col in range(3):
+        plt.subplot(4, 1, 4)
+        plt.plot(p_var, np.abs(sens_u[:, col] - np_grad[:, col]), label=f"pi_{col}", linestyle="--")
+
+    plt.ylabel(f"abs difference")
+    plt.grid(True)
+    plt.legend()
+    plt.yscale('log')
     plt.xlabel(p_label)
     plt.show()
 
