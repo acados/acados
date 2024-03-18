@@ -10,7 +10,6 @@ def plot_furuta_pendulum(t_sim, X_sim, U_sim, u_max, plt_show=True):
     fig, axes = plt.subplots(nrows=nx+nu, ncols=1, sharex=True)
 
     labels_x = [r'$\theta_1$', r'$\theta_2$', r'$\dot{\theta}_1$', r'$\dot{\theta}_2$']
-    labesl_u = [r'$\tau_1$']
 
     for i, (ax, l) in enumerate(zip(axes, labels_x)):
         ax.plot(t_sim, X_sim[:, i], label=l)

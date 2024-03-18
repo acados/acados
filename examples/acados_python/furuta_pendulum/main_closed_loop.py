@@ -62,7 +62,7 @@ def setup(x0, umax, dt_0, N_horizon, Tf, RTI=False):
 
     ocp.model.cost_y_expr = vertcat(model.x, model.u)
     ocp.model.cost_y_expr_e = model.x
-    ocp.cost.yref  = np.zeros((ny, ))
+    ocp.cost.yref = np.zeros((ny, ))
     ocp.cost.yref_e = np.zeros((ny_e, ))
 
     # set constraints
