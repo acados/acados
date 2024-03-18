@@ -71,8 +71,11 @@ class ZoroDescription:
     idx_lh_e_t: list = field(default_factory=list)
     idx_uh_e_t: list = field(default_factory=list)
     # Inputs:
-    input_P0_diag: bool = True
+    input_P0_diag: bool = False
     """Determines if diag(P0) is an input to the custom update function"""
+    input_P0: bool = True
+    """Determines if diag(P0) is an input to the custom update function"""
+
     input_W_diag: bool = False
     """Determines if diag(W) is an input to the custom update function"""
     input_W_gp_diag: bool = False
@@ -101,4 +104,7 @@ def process_zoro_description(zoro_description: ZoroDescription):
     zoro_description.nuh_t = len(zoro_description.idx_uh_t)
     zoro_description.nlh_e_t = len(zoro_description.idx_lh_e_t)
     zoro_description.nuh_e_t = len(zoro_description.idx_uh_e_t)
+
+    if zoro_description.input_P0_diag and zoro_description.input_P0:
+        raise Exception("Only one of input_P0_diag and input_P0 can be True")
     return zoro_description

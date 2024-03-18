@@ -535,6 +535,7 @@ static void compute_next_P_matrix(struct blasfeo_dmat* P_mat, struct blasfeo_dma
 static void reset_P0_matrix(ocp_nlp_dims *nlp_dims, struct blasfeo_dmat* P_mat, double* data)
 {
     const int nx = nlp_dims->nx[0];
+{%- if zoro_description.input_P0_diag %}
     for (int i = 0; i < nx; ++i)
     {
         if (data[i] < 0)
@@ -545,6 +546,9 @@ static void reset_P0_matrix(ocp_nlp_dims *nlp_dims, struct blasfeo_dmat* P_mat, 
 
         blasfeo_dgein1(data[i], P_mat, i, i);
     }
+{%- elif zoro_description.input_P0 %}
+    blasfeo_pack_dmat(nx, nx, data, nx, P_mat, 0, 0);
+{% endif %}
 }
 
 
@@ -561,6 +565,8 @@ static void reset_process_noise_matrix(ocp_nlp_dims *nlp_dims, struct blasfeo_dm
     int offset = 0;
 {%- if zoro_description.input_P0_diag %}
     offset += nx;  // P0_diag
+{%- elif zoro_description.input_P0 %}
+    offset += nx*nx;  // P0_diag
 {% endif %}
     for (int i = 0; i < nw; ++i)
     {
@@ -575,6 +581,8 @@ static void reset_process_noise_matrix(ocp_nlp_dims *nlp_dims, struct blasfeo_dm
 {% endif %}
 
 
+
+{%- if zoro_description.input_W_gp_diag %}
 
 /**
  * @brief Computes the adjusted GWG based on the uncertainties provided by the Gaussian Process.
@@ -591,6 +599,8 @@ static void compute_GWG_gaussian_process(ocp_nlp_solver* solver, custom_memory* 
     int W_gp_diag_offset = 0;
 {%- if zoro_description.input_P0_diag %}
     W_gp_diag_offset += nx;  // P0_diag
+{%- elif zoro_description.input_P0 %}
+    W_gp_diag_offset += nx*nx;  // P0_diag
 {% endif %}
 {%- if zoro_description.input_W_diag %}
     W_gp_diag_offset += nw;  // W_diag
@@ -614,6 +624,8 @@ static void compute_GWG_gaussian_process(ocp_nlp_solver* solver, custom_memory* 
     blasfeo_dgemm_nt(nx, nx, nw, 1.0, &custom_mem->temp_GW_mat, 0, 0, &custom_mem->unc_jac_G_mat, 0, 0, 0.0,
                     &custom_mem->GWG_mat, 0, 0, &custom_mem->GWG_mat, 0, 0);
 }
+{% endif %}
+
 
 
 static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, custom_memory *custom_mem, double* data, int data_len)
@@ -911,7 +923,7 @@ int custom_update_function({{ model.name }}_solver_capsule* capsule, double* dat
     ocp_nlp_solver *nlp_solver = {{ model.name }}_acados_get_nlp_solver(capsule);
     void *nlp_opts = {{ model.name }}_acados_get_nlp_opts(capsule);
 
-{%- if zoro_description.input_P0_diag %}
+{%- if zoro_description.input_P0_diag or zoro_description.input_P0 %}
     if (data_len > 0)
     {
         reset_P0_matrix(nlp_dims, &custom_mem->uncertainty_matrix_buffer[0], data);
