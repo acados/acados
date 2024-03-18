@@ -12,7 +12,6 @@ from casadi.tools.structure3 import DMStruct
 import matplotlib.pyplot as plt
 from acados_template import AcadosModel, AcadosSim, AcadosSimSolver, AcadosOcp, AcadosOcpSolver
 
-import tqdm
 
 from typing import Tuple
 from plot_utils import (
@@ -42,11 +41,6 @@ def get_chain_params():
     params["C"] = 0.1  # damping constant
     params["perturb_scale"] = 1e-2
 
-    # params["m"] = np.random.normal(params["m_nom"], params["perturb_scale"] * params["m_nom"], params["n_mass"])
-    # params["D"] = np.random.normal(params["D_nom"], params["perturb_scale"] * params["m_nom"], (params["n_mass"], 3))
-    # params["L"] = np.random.normal(params["L_nom"], params["perturb_scale"] * params["m_nom"], (params["n_mass"], 3))
-    # params["C"] = np.random.normal(params["C_nom"], params["perturb_scale"] * params["m_nom"], (params["n_mass"], 3))
-
     params["save_results"] = True
     params["show_plots"] = True
     params["nlp_iter"] = 50
@@ -70,6 +64,21 @@ def export_discrete_erk4_integrator_step(f_expl, x, u, p, h, n_stages: int = 2) 
 
     return xnext
 
+def define_param_struct_symSX(n_mass: int, disturbance: bool = True) -> DMStruct:
+    """Define parameter struct."""
+    n_link = n_mass - 1
+
+    param_entries = [
+        entry("m", shape=1, repeat=n_link),
+        entry("D", shape=3, repeat=n_link),
+        entry("L", shape=3, repeat=n_link),
+        entry("C", shape=3, repeat=n_link),
+    ]
+
+    if disturbance:
+        param_entries.append(entry("w", shape=3, repeat=n_mass - 2))
+
+    return struct_symSX(param_entries)
 
 def export_chain_mass_model(n_mass: int, Ts=0.2, disturbance=False) -> Tuple[AcadosModel, DMStruct]:
     """Export chain mass model for acados."""
@@ -87,19 +96,8 @@ def export_chain_mass_model(n_mass: int, Ts=0.2, disturbance=False) -> Tuple[Aca
 
     f = SX.zeros(3 * M, 1)  # force on intermediate masses
 
-    n_link = n_mass - 1
+    p = define_param_struct_symSX(n_mass, disturbance=disturbance)
 
-    param_enries = [
-        entry("m", shape=1, repeat=n_link),
-        entry("D", shape=3, repeat=n_link),
-        entry("L", shape=3, repeat=n_link),
-        entry("C", shape=3, repeat=n_link),
-    ]
-
-    if disturbance:
-        param_enries.append(entry("w", shape=3, repeat=n_mass - 2))
-
-    p = struct_symSX(param_enries)
 
     # Gravity force
     for i in range(M):
@@ -277,6 +275,7 @@ def export_parametric_ocp(
     hessian_approx: str = "GAUSS_NEWTON",
     integrator_type: str = "IRK",
     nlp_solver_type: str = "SQP",
+    cost_type: str = "LINEAR_LS",
     nlp_iter: int = 50,
     nlp_tol: float = 1e-5,
 ) -> Tuple[AcadosOcp, DMStruct]:
@@ -341,34 +340,47 @@ def export_parametric_ocp(
 
 
     # set cost module
-    ocp.cost.cost_type = "LINEAR_LS"
-    ocp.cost.cost_type_e = "LINEAR_LS"
+    ocp.cost.cost_type = cost_type
+    ocp.cost.cost_type_e = cost_type
 
-    Q = 2 * np.diagflat(np.ones((nx, 1)))
-    q_diag = np.ones((nx, 1))
     strong_penalty = M + 1
+    Q_mat = 2 * np.diagflat(np.ones((nx, 1)))
+    R_mat = 2 * np.diagflat(1e-2 * np.ones((nu, 1)))
+    q_diag = np.ones((nx, 1))
     q_diag[3 * M] = strong_penalty
     q_diag[3 * M + 1] = strong_penalty
     q_diag[3 * M + 2] = strong_penalty
-    Q = 2 * np.diagflat(q_diag)
+    Q_mat = 2 * np.diagflat(q_diag)
 
-    R = 2 * np.diagflat(1e-2 * np.ones((nu, 1)))
+    if ocp.cost.cost_type == "LINEAR_LS":
 
-    ocp.cost.W = scipy.linalg.block_diag(Q, R)
-    ocp.cost.W_e = Q
+        yref = np.vstack((xrest, np.zeros((nu, 1)))).flatten()
 
-    ocp.cost.Vx = np.zeros((ny, nx))
-    ocp.cost.Vx[:nx, :nx] = np.eye(nx)
+        ocp.cost.W = scipy.linalg.block_diag(Q_mat, R_mat)
+        ocp.cost.W_e = Q_mat
 
-    Vu = np.zeros((ny, nu))
-    Vu[nx : nx + nu, :] = np.eye(nu)
-    ocp.cost.Vu = Vu
+        ocp.cost.Vx = np.zeros((ny, nx))
+        ocp.cost.Vx[:nx, :nx] = np.eye(nx)
 
-    ocp.cost.Vx_e = np.eye(nx)
+        Vu = np.zeros((ny, nu))
+        Vu[nx : nx + nu, :] = np.eye(nu)
+        ocp.cost.Vu = Vu
 
-    yref = np.vstack((xrest, np.zeros((nu, 1)))).flatten()
-    ocp.cost.yref = yref
-    ocp.cost.yref_e = xrest.flatten()
+        ocp.cost.Vx_e = np.eye(nx)
+
+        ocp.cost.yref = yref
+        ocp.cost.yref_e = xrest.flatten()
+    else:
+        ocp.cost.cost_type = "EXTERNAL"
+        ocp.cost.cost_type_e = "EXTERNAL"
+
+        x_e = ocp.model.x - xrest
+        u_e = ocp.model.u - np.zeros((nu, 1))
+
+        ocp.model.cost_expr_ext_cost = 0.5 * (x_e.T @ Q_mat @ x_e + u_e.T @ R_mat @ u_e)
+        ocp.model.cost_expr_ext_cost_e = 0.5 * (x_e.T @ Q_mat @ x_e)
+
+        ocp.model.cost_y_expr = vertcat(x_e, u_e)
 
     # set constraints
     umax = 1 * np.ones((nu,))
@@ -381,7 +393,8 @@ def export_parametric_ocp(
     ocp.parameter_values = p.cat.full().flatten()
 
     # wall constraint
-    if with_wall:
+    if False:
+    # if with_wall:
         nbx = M + 1
         Jbx = np.zeros((nbx, nx))
         for i in range(nbx):
@@ -416,6 +429,7 @@ def export_parametric_ocp(
         ocp.solver_options.tol = 1e-10
         ocp.solver_options.qp_solver_ric_alg = qp_solver_ric_alg
         ocp.solver_options.qp_solver_cond_N = ocp.dims.N
+        ocp.solver_options.with_solution_sens_wrt_params = True
     else:
         ocp.solver_options.nlp_solver_max_iter = nlp_iter
         ocp.solver_options.qp_solver_cond_N = ocp.dims.N
@@ -435,7 +449,7 @@ def export_parametric_ocp(
 def main_simulation(chain_params_: dict):
     """Main simulation function."""
 
-    ocp, parameter_values = export_parametric_ocp(chain_params_=chain_params_)
+    ocp, parameter_values = export_parametric_ocp(chain_params_=chain_params_, cost_type="EXTERNAL")
 
     ocp_json_file = "acados_ocp_" + ocp.model.name + ".json"
 
@@ -485,19 +499,18 @@ def main_simulation(chain_params_: dict):
 
     print(f"Initial state: {xcurrent}")
 
-    pos = np.zeros((chain_params_["n_mass"], 3))
-    pos[1:, :] = xcurrent[:3*(chain_params_["n_mass"]-1)].reshape((chain_params_["n_mass"]-1, 3))
+    # pos = np.zeros((chain_params_["n_mass"], 3))
+    # pos[1:, :] = xcurrent[:3*(chain_params_["n_mass"]-1)].reshape((chain_params_["n_mass"]-1, 3))
 
 
-    vel = np.zeros((chain_params_["n_mass"], 3))
-    vel[1:-1, :] = xcurrent[3*(chain_params_["n_mass"]-1):].reshape((chain_params_["n_mass"]-2, 3))
-    vel[-1, :] = chain_params_["u_init"]
+    # vel = np.zeros((chain_params_["n_mass"], 3))
+    # vel[1:-1, :] = xcurrent[3*(chain_params_["n_mass"]-1):].reshape((chain_params_["n_mass"]-2, 3))
+    # vel[-1, :] = chain_params_["u_init"]
 
-
-    plt.figure()
-    plt.plot(pos[:, 0], pos[:, 2], "o")
-    plt.grid(True)
-    plt.show()
+    # plt.figure()
+    # plt.plot(pos[:, 0], pos[:, 2], "o")
+    # plt.grid(True)
+    # plt.show()
 
     Tsim = chain_params_["Tsim"]
     W = chain_params_["perturb_scale"] * np.eye(3)
@@ -577,37 +590,38 @@ def main_simulation(chain_params_: dict):
 
         plt.show()
 
+def find_idx_for_labels(sub_vars, sub_label) -> np.ndarray:
+    return [i for i, label in enumerate(sub_vars.str().strip("[]").split(", ")) if sub_label in label]
+
 
 def main_parametric(
     qp_solver_ric_alg: int = 0, eigen_analysis: bool = False, chain_params_: dict = get_chain_params()
 ) -> None:
 
-    chain_params_["n_mass"] = 3
 
-    ocp, parameter_values = export_parametric_ocp(chain_params_=chain_params_, qp_solver_ric_alg=qp_solver_ric_alg)
+    ocp, parameter_values = export_parametric_ocp(chain_params_=chain_params_, qp_solver_ric_alg=qp_solver_ric_alg, cost_type="EXTERNAL")
 
 
     ocp_json_file = "acados_ocp_" + ocp.model.name + ".json"
 
     # Check if json_file exists
     if os.path.exists(ocp_json_file):
-    # if False:
         acados_ocp_solver = AcadosOcpSolver(ocp, json_file=ocp_json_file, build=False, generate=False)
     else:
         acados_ocp_solver = AcadosOcpSolver(ocp, json_file=ocp_json_file)
 
     sensitivity_ocp, _ = export_parametric_ocp(
-        chain_params_=chain_params_, qp_solver_ric_alg=qp_solver_ric_alg, hessian_approx="EXACT", integrator_type="DISCRETE"
+        chain_params_=chain_params_, qp_solver_ric_alg=qp_solver_ric_alg, hessian_approx="EXACT", integrator_type="DISCRETE", cost_type="EXTERNAL"
     )
     sensitivity_ocp.model.name = f"{ocp.model.name}_sensitivity"
 
     ocp_json_file = "acados_sensitivity_ocp_" + sensitivity_ocp.model.name + ".json"
     # # Check if json_file exists
     if os.path.exists(ocp_json_file):
-    # if False:
         sensitivity_solver = AcadosOcpSolver(sensitivity_ocp, json_file=ocp_json_file, build=False, generate=False)
     else:
         sensitivity_solver = AcadosOcpSolver(sensitivity_ocp, json_file=ocp_json_file)
+
 
     M = chain_params_["n_mass"] - 2
     xEndRef = np.zeros((3, 1))
@@ -616,20 +630,26 @@ def main_parametric(
     x0 = np.zeros((ocp.dims.nx, 1))
     x0[: 3 * (M + 1) : 3] = pos0_x[1:].reshape((M + 1, 1))
 
-    np_test = 50
-    D_var = np.linspace(0.5 * chain_params_["D"], 1.5 * chain_params_["D"], np_test)
-    delta_p = D_var[1] - D_var[0]
+    np_test = 100
+
+    
+    p_label = "L_2_0"
+
+    p_idx = find_idx_for_labels(define_param_struct_symSX(chain_params_["n_mass"], disturbance=True).cat, p_label)[0]
+
+    p_var = np.linspace(0.5 * parameter_values.cat[p_idx], 1.5 * parameter_values.cat[p_idx], np_test).flatten()
+
+    delta_p = p_var[1] - p_var[0]
 
     sens_u = []
-    pi = np.zeros(np_test)
-    for i in tqdm.tqdm(range(np_test), desc="Sensitivity analysis"):
-        parameter_values["D", -1, 0] = D_var[i]
+    pi = []
+    for i in range(np_test):
+        parameter_values.cat[p_idx] = p_var[i]
 
         for stage in range(ocp.dims.N + 1):
             acados_ocp_solver.set(stage, "p", parameter_values.cat.full().flatten())
-            # sensitivity_solver.set(stage, "p", parameter_values.cat.full().flatten())
 
-        pi[i] = acados_ocp_solver.solve_for_x0(x0)[0]
+        pi.append(acados_ocp_solver.solve_for_x0(x0))
         acados_ocp_solver.store_iterate(filename="iterate.json", overwrite=True, verbose=False)
 
         print(f"ocp_solver status {acados_ocp_solver.status}")
@@ -647,25 +667,32 @@ def main_parametric(
         #     breakpoint()
 
         # Calculate the policy gradient
-        sens_x_, sens_u_ = sensitivity_solver.eval_solution_sensitivity(0, "params_global")
+        _, sens_u_ = sensitivity_solver.eval_solution_sensitivity(0, "params_global")
 
-        print(f"sens_x_ = {sens_x_}, sens_u_ = {sens_u_}")
+        sens_u.append(sens_u_[:, p_idx])
 
-        # Check if sens_u contains NaN
-        # if np.isnan(sens_u_).any():
-        #     print(f"warning; NaN in sens_u_ at i = {i}")
-        #     breakpoint()
-
-        # sens_u.append(sens_u_)
-        # sens_u[i] = sens_u_.item()
+    pi = np.vstack(pi)
+    sens_u = np.vstack(sens_u)
 
     # Compare to numerical gradients
-    np_grad = np.gradient(pi, delta_p)
-    pi_reconstructed_np_grad = np.cumsum(np_grad) * delta_p + pi[0]
-    pi_reconstructed_np_grad += pi[0] - pi_reconstructed_np_grad[0]
+    np_grad = np.gradient(pi, p_var, axis=0)
+    pi_reconstructed_np_grad = np.cumsum(np_grad, axis=0) * delta_p + pi[0, :]
+    pi_reconstructed_np_grad += pi[0, :] - pi_reconstructed_np_grad[0, :]
 
-    pi_reconstructed_acados = np.cumsum(sens_u) * delta_p + pi[0]
-    pi_reconstructed_acados += pi[0] - pi_reconstructed_acados[0]
+    pi_reconstructed_acados = np.cumsum(sens_u, axis=0) * delta_p + pi[0, :]
+    pi_reconstructed_acados += pi[0, :] - pi_reconstructed_acados[0, :]
+
+    plt.figure()
+    for col in range(3):
+        plt.subplot(3, 1, col + 1)
+        plt.plot(p_var, pi[:, col], label=f"pi_{col}")
+        plt.plot(p_var, pi_reconstructed_np_grad[:, col], label=f"pi_reconstructed_np_grad_{col}", linestyle="--")
+        plt.plot(p_var, pi_reconstructed_acados[:, col], label=f"pi_reconstructed_acados_{col}", linestyle=":")
+        plt.ylabel(f"pi_{col}")
+        plt.grid(True)
+        plt.legend()
+    plt.xlabel(p_label)
+    plt.show()
 
 
 if __name__ == "__main__":
