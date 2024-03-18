@@ -32,6 +32,7 @@ def get_chain_params():
     params["Tsim"] = 5
     params["N"] = 40
     params["u_init"] = np.array([-1, 1, 1])
+    # params["u_init"] = np.array([0, 0, 0])
     params["with_wall"] = True
     params["yPosWall"] = -0.05  # Dimitris: - 0.1;
     params["xPosFirstMass"] = np.zeros(3)
@@ -311,10 +312,10 @@ def export_parametric_ocp(
 
     # parameters
     np.random.seed(chain_params_["seed"])
-    m = [np.random.normal(chain_params_["m"], 0.1 * chain_params_["m"]) for _ in range(n_mass - 1)]
-    D = [np.random.normal(chain_params_["D"], 0.1 * chain_params_["D"], 3) for _ in range(n_mass - 1)]
-    L = [np.random.normal(chain_params_["L"], 0.1 * chain_params_["L"], 3) for _ in range(n_mass - 1)]
-    C = [np.random.normal(chain_params_["C"], 0.1 * chain_params_["C"], 3) for _ in range(n_mass - 1)]
+    m = [np.random.normal(chain_params_["m"], 0.0 * chain_params_["m"]) for _ in range(n_mass - 1)]
+    D = [np.random.normal(chain_params_["D"], 0.0 * chain_params_["D"], 3) for _ in range(n_mass - 1)]
+    L = [np.random.normal(chain_params_["L"], 0.0 * chain_params_["L"], 3) for _ in range(n_mass - 1)]
+    C = [np.random.normal(chain_params_["C"], 0.0 * chain_params_["C"], 3) for _ in range(n_mass - 1)]
 
     # Inermediate masses
     for i_mass in range(n_mass - 1):
@@ -333,10 +334,10 @@ def export_parametric_ocp(
 
     x0 = xrest
 
-    plt.figure()
-    plt.plot(x0[::3], x0[2::3], "o")
-    plt.grid(True)
-    plt.show()
+    # plt.figure()
+    # plt.plot(x0[::3], x0[2::3], "o")
+    # plt.grid(True)
+    # plt.show()
 
 
     # set cost module
@@ -406,17 +407,22 @@ def export_parametric_ocp(
     ocp.solver_options.nlp_solver_type = nlp_solver_type
     ocp.solver_options.sim_method_num_stages = 2
     ocp.solver_options.sim_method_num_steps = 2
-    ocp.solver_options.qp_solver_ric_alg = qp_solver_ric_alg
-    ocp.solver_options.qp_solver_cond_N = ocp.dims.N
+    ocp.solver_options.nlp_solver_max_iter = nlp_iter
 
     if hessian_approx == "EXACT":
         ocp.solver_options.nlp_solver_step_length = 0.0
         ocp.solver_options.nlp_solver_max_iter = 1
         ocp.solver_options.qp_solver_iter_max = 200
         ocp.solver_options.tol = 1e-10
+        ocp.solver_options.qp_solver_ric_alg = qp_solver_ric_alg
+        ocp.solver_options.qp_solver_cond_N = ocp.dims.N
     else:
-        ocp.solver_options.nlp_solver_max_iter = 400
-        ocp.solver_options.tol = 1e-8
+        ocp.solver_options.nlp_solver_max_iter = nlp_iter
+        ocp.solver_options.qp_solver_cond_N = ocp.dims.N
+        ocp.solver_options.qp_tol = nlp_tol
+        ocp.solver_options.tol = nlp_tol
+
+        # ocp.solver_options.tol = 1e-8
 
     # ocp.solver_options.nlp_solver_tol_eq = 1e-9
 
@@ -437,24 +443,36 @@ def main_simulation(chain_params_: dict):
 
 
     # Check if json_file exists
-    if os.path.exists(ocp_json_file):
-        acados_ocp_solver = AcadosOcpSolver(ocp, json_file=ocp_json_file, build=False, generate=False)
-    else:
-        acados_ocp_solver = AcadosOcpSolver(ocp, json_file=ocp_json_file)
+    # if os.path.exists(ocp_json_file):
+    #     acados_ocp_solver = AcadosOcpSolver(ocp, json_file=ocp_json_file, build=False, generate=False)
+    # else:
+    acados_ocp_solver = AcadosOcpSolver(ocp, json_file=ocp_json_file)
 
     sim = export_parametric_sim(chain_params_=chain_params_, p_=parameter_values)
 
     sim_json_file = "acados_sim_" + sim.model.name + ".json"
 
     # Check if json_file exists
-    if os.path.exists(sim_json_file):
-        acados_sim_solver = AcadosSimSolver(sim, json_file=sim_json_file, build=False, generate=False)
-    else:
-        acados_sim_solver = AcadosSimSolver(sim, json_file=sim_json_file, build=True, generate=True)
+    # if os.path.exists(sim_json_file):
+    #     acados_sim_solver = AcadosSimSolver(sim, json_file=sim_json_file, build=False, generate=False)
+    # else:
+    acados_sim_solver = AcadosSimSolver(sim, json_file=sim_json_file, build=True, generate=True)
 
     # %% get initial state from xrest
     xcurrent = ocp.constraints.lbx_0.reshape((ocp.dims.nx,))
+
+    pos = np.zeros((chain_params_["n_mass"], 3))
+    pos[1:, :] = xcurrent[:3*(chain_params_["n_mass"]-1)].reshape((chain_params_["n_mass"]-1, 3))
+
+
+    vel = np.zeros((chain_params_["n_mass"], 3))
+    vel[1:-1, :] = xcurrent[3*(chain_params_["n_mass"]-1):].reshape((chain_params_["n_mass"]-2, 3))
+    vel[-1, :] = chain_params_["u_init"]
+
+
     for i in range(5):
+
+
         acados_sim_solver.set("x", xcurrent)
         acados_sim_solver.set("u", chain_params_["u_init"])
 
@@ -466,6 +484,20 @@ def main_simulation(chain_params_: dict):
         xcurrent = acados_sim_solver.get("x")
 
     print(f"Initial state: {xcurrent}")
+
+    pos = np.zeros((chain_params_["n_mass"], 3))
+    pos[1:, :] = xcurrent[:3*(chain_params_["n_mass"]-1)].reshape((chain_params_["n_mass"]-1, 3))
+
+
+    vel = np.zeros((chain_params_["n_mass"], 3))
+    vel[1:-1, :] = xcurrent[3*(chain_params_["n_mass"]-1):].reshape((chain_params_["n_mass"]-2, 3))
+    vel[-1, :] = chain_params_["u_init"]
+
+
+    plt.figure()
+    plt.plot(pos[:, 0], pos[:, 2], "o")
+    plt.grid(True)
+    plt.show()
 
     Tsim = chain_params_["Tsim"]
     W = chain_params_["perturb_scale"] * np.eye(3)
@@ -484,6 +516,12 @@ def main_simulation(chain_params_: dict):
 
     simX[0, :] = xcurrent
 
+    for stage in range(acados_ocp_solver.acados_ocp.dims.N + 1):
+        acados_ocp_solver.set(stage, "x", xcurrent)
+        acados_ocp_solver.set(stage, "x", xcurrent)
+
+    status = acados_ocp_solver.solve()
+
     # closed loop
     for i in range(N_sim):
         # solve ocp
@@ -491,6 +529,8 @@ def main_simulation(chain_params_: dict):
         acados_ocp_solver.set(0, "ubx", xcurrent)
 
         status = acados_ocp_solver.solve()
+
+
         timings[i] = acados_ocp_solver.get_stats("time_tot")
 
         if status != 0:
@@ -541,12 +581,17 @@ def main_simulation(chain_params_: dict):
 def main_parametric(
     qp_solver_ric_alg: int = 0, eigen_analysis: bool = False, chain_params_: dict = get_chain_params()
 ) -> None:
+
+    chain_params_["n_mass"] = 3
+
     ocp, parameter_values = export_parametric_ocp(chain_params_=chain_params_, qp_solver_ric_alg=qp_solver_ric_alg)
+
 
     ocp_json_file = "acados_ocp_" + ocp.model.name + ".json"
 
     # Check if json_file exists
     if os.path.exists(ocp_json_file):
+    # if False:
         acados_ocp_solver = AcadosOcpSolver(ocp, json_file=ocp_json_file, build=False, generate=False)
     else:
         acados_ocp_solver = AcadosOcpSolver(ocp, json_file=ocp_json_file)
@@ -554,10 +599,12 @@ def main_parametric(
     sensitivity_ocp, _ = export_parametric_ocp(
         chain_params_=chain_params_, qp_solver_ric_alg=qp_solver_ric_alg, hessian_approx="EXACT", integrator_type="DISCRETE"
     )
+    sensitivity_ocp.model.name = f"{ocp.model.name}_sensitivity"
 
     ocp_json_file = "acados_sensitivity_ocp_" + sensitivity_ocp.model.name + ".json"
-    # Check if json_file exists
+    # # Check if json_file exists
     if os.path.exists(ocp_json_file):
+    # if False:
         sensitivity_solver = AcadosOcpSolver(sensitivity_ocp, json_file=ocp_json_file, build=False, generate=False)
     else:
         sensitivity_solver = AcadosOcpSolver(sensitivity_ocp, json_file=ocp_json_file)
@@ -580,29 +627,36 @@ def main_parametric(
 
         for stage in range(ocp.dims.N + 1):
             acados_ocp_solver.set(stage, "p", parameter_values.cat.full().flatten())
-            sensitivity_solver.set(stage, "p", parameter_values.cat.full().flatten())
+            # sensitivity_solver.set(stage, "p", parameter_values.cat.full().flatten())
 
         pi[i] = acados_ocp_solver.solve_for_x0(x0)[0]
         acados_ocp_solver.store_iterate(filename="iterate.json", overwrite=True, verbose=False)
+
+        print(f"ocp_solver status {acados_ocp_solver.status}")
+
         sensitivity_solver.load_iterate(filename="iterate.json", verbose=False)
         sensitivity_solver.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
 
-        residuals = sensitivity_solver.get_stats("residuals")
-        print(f"residuals sensitivity_solver {residuals} status {sensitivity_solver.status}")
+        print(f"sensitivity_solver status {sensitivity_solver.status}")
 
-        if sensitivity_solver.status not in [0, 2]:
-            print(f"warning; status = {sensitivity_solver.status}")
-            breakpoint()
+        # residuals = sensitivity_solver.get_stats("residuals")
+        # print(f"residuals sensitivity_solver {residuals} status {sensitivity_solver.status}")
+
+        # if sensitivity_solver.status not in [0, 2]:
+        #     print(f"warning; status = {sensitivity_solver.status}")
+        #     breakpoint()
 
         # Calculate the policy gradient
         sens_x_, sens_u_ = sensitivity_solver.eval_solution_sensitivity(0, "params_global")
 
-        # Check if sens_u contains NaN
-        if np.isnan(sens_u_).any():
-            print(f"warning; NaN in sens_u_ at i = {i}")
-            breakpoint()
+        print(f"sens_x_ = {sens_x_}, sens_u_ = {sens_u_}")
 
-        sens_u.append(sens_u_)
+        # Check if sens_u contains NaN
+        # if np.isnan(sens_u_).any():
+        #     print(f"warning; NaN in sens_u_ at i = {i}")
+        #     breakpoint()
+
+        # sens_u.append(sens_u_)
         # sens_u[i] = sens_u_.item()
 
     # Compare to numerical gradients
@@ -615,5 +669,5 @@ def main_parametric(
 
 
 if __name__ == "__main__":
-    main_simulation(chain_params_=get_chain_params())
-    # main_parametric(qp_solver_ric_alg=0, eigen_analysis=False)
+    # main_simulation(chain_params_=get_chain_params())
+    main_parametric(qp_solver_ric_alg=0, eigen_analysis=False)
