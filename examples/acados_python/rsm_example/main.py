@@ -171,9 +171,9 @@ def create_ocp_solver(tol = 1e-3):
     model = export_rsm_model()
     ocp.model = model
 
-    nx = model.x.size()[0]
-    nu = model.u.size()[0]
-    nz = model.z.size()[0]
+    nx = model.x.rows()
+    nu = model.u.rows()
+    nz = model.z.rows()
     ny = nu + nx
     ny_e = nx
     Tf = N*Ts
@@ -305,9 +305,9 @@ def main():
     if USE_PLANT:
         plant = setup_acados_integrator(acados_solver.acados_ocp)
 
-    simX = np.ndarray((Nsim, nx))
-    simU = np.ndarray((Nsim, nu))
-    simY = np.ndarray((Nsim, nu+nx))
+    simX = np.zeros((Nsim, nx))
+    simU = np.zeros((Nsim, nu))
+    simY = np.zeros((Nsim, nu+nx))
     times_prep = np.zeros(Nsim)
     times_feed = np.zeros(Nsim)
 

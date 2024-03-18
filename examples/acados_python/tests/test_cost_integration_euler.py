@@ -52,8 +52,8 @@ def solve_ocp(cost_discretization, cost_variant):
     model = export_pendulum_ode_model()
     ocp.model = model
 
-    nx = model.x.size()[0]
-    nu = model.u.size()[0]
+    nx = model.x.rows()
+    nu = model.u.rows()
     ny = nx + nu
     ny_e = nx
 
@@ -130,8 +130,8 @@ def solve_ocp(cost_discretization, cost_variant):
     ocp_solver.options_set('qp_tau_min', 1e-10)
     ocp_solver.options_set('qp_mu0', 1e0)
 
-    simX = np.ndarray((N + 1, nx))
-    simU = np.ndarray((N, nu))
+    simX = np.zeros((N + 1, nx))
+    simU = np.zeros((N, nu))
 
     print(80*'-')
     print(f'solve OCP with cost variant {cost_variant} discretization {cost_discretization} N = {N} and Tf = {Tf} s:')

@@ -29,27 +29,18 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-
-import sys
-sys.path.insert(0, '../common')
-
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver
-from pendulum_model import export_pendulum_ode_model
-from utils import plot_pendulum
+from acados_template import AcadosOcp, AcadosOcpSolver
+from utils import plot_furuta_pendulum
+from furuta_model import get_furuta_model
+from integrator_experiment import setup_acados_integrator
 import numpy as np
 import scipy.linalg
 from casadi import vertcat
 
-
-REAL_TIME_ALGORITHMS = ["RTI", "AS-RTI-A", "AS-RTI-B", "AS-RTI-C", "AS-RTI-D"]
-ALGORITHMS = ["SQP"] + REAL_TIME_ALGORITHMS
-
-def setup(x0, Fmax, N_horizon, Tf, algorithm, as_rti_iter=1):
-    # create ocp object to formulate the OCP
+def setup(x0, umax, dt_0, N_horizon, Tf, RTI=False):
     ocp = AcadosOcp()
 
-    # set model
-    model = export_pendulum_ode_model()
+    model = get_furuta_model()
     ocp.model = model
 
     nx = model.x.rows()
@@ -63,93 +54,85 @@ def setup(x0, Fmax, N_horizon, Tf, algorithm, as_rti_iter=1):
     ocp.cost.cost_type = 'NONLINEAR_LS'
     ocp.cost.cost_type_e = 'NONLINEAR_LS'
 
-    Q_mat = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
-    R_mat = 2*np.diag([1e-2])
+    Q_mat = np.diag([50., 500., 1., 1.])
+    R_mat = np.diag([1e3])
 
     ocp.cost.W = scipy.linalg.block_diag(Q_mat, R_mat)
     ocp.cost.W_e = Q_mat
 
     ocp.model.cost_y_expr = vertcat(model.x, model.u)
     ocp.model.cost_y_expr_e = model.x
-    ocp.cost.yref  = np.zeros((ny, ))
+    ocp.cost.yref = np.zeros((ny, ))
     ocp.cost.yref_e = np.zeros((ny_e, ))
 
     # set constraints
-    ocp.constraints.lbu = np.array([-Fmax])
-    ocp.constraints.ubu = np.array([+Fmax])
+    ocp.constraints.lbu = np.array([-umax])
+    ocp.constraints.ubu = np.array([+umax])
+    ocp.constraints.idxbu = np.array([0])
 
     ocp.constraints.x0 = x0
-    ocp.constraints.idxbu = np.array([0])
 
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
-    ocp.solver_options.integrator_type = 'IRK'
-    ocp.solver_options.sim_method_newton_iter = 10
+    ocp.solver_options.integrator_type = 'ERK'
 
-    ocp.translate_nls_cost_to_conl()
+    # NOTE we use a nonuniform grid!
+    ocp.solver_options.time_steps = np.array([dt_0] + [(Tf-dt_0)/(N_horizon-1)]*(N_horizon-1))
+    ocp.solver_options.sim_method_num_steps = np.array([1] + [2]*(N_horizon-1))
+    ocp.solver_options.levenberg_marquardt = 1e-6
+    ocp.solver_options.nlp_solver_max_iter = 10
 
-    if algorithm in REAL_TIME_ALGORITHMS:
-        ocp.solver_options.nlp_solver_type = 'SQP_RTI'
-    else:
-        ocp.solver_options.nlp_solver_type = 'SQP'
-
-    if algorithm == "AS-RTI-A":
-        ocp.solver_options.as_rti_iter = as_rti_iter
-        ocp.solver_options.as_rti_level = 0
-    elif algorithm == "AS-RTI-B":
-        ocp.solver_options.as_rti_iter = as_rti_iter
-        ocp.solver_options.as_rti_level = 1
-    elif algorithm == "AS-RTI-C":
-        ocp.solver_options.as_rti_iter = as_rti_iter
-        ocp.solver_options.as_rti_level = 2
-    elif algorithm == "AS-RTI-D":
-        ocp.solver_options.as_rti_iter = as_rti_iter
-        ocp.solver_options.as_rti_level = 3
-
+    ocp.solver_options.nlp_solver_type = 'SQP_RTI' if RTI else 'SQP'
     ocp.solver_options.qp_solver_cond_N = N_horizon
 
-    # set prediction horizon
     ocp.solver_options.tf = Tf
 
     solver_json = 'acados_ocp_' + model.name + '.json'
-    acados_ocp_solver = AcadosOcpSolver(ocp, json_file = solver_json)
+    ocp_solver = AcadosOcpSolver(ocp, json_file = solver_json)
 
-    # create an integrator with the same settings as used in the OCP solver.
-    acados_integrator = AcadosSimSolver(ocp, json_file = solver_json)
+    # setup plant simulator
+    integrator = setup_acados_integrator(model, dt_0, num_stages=2, num_steps=2, integrator_type="IRK",
+                            newton_iter=20, newton_tol=1e-10)
 
-    return acados_ocp_solver, acados_integrator
+    return ocp_solver, integrator
 
 
-def main(algorithm='RTI', as_rti_iter=1):
+def main(use_RTI=False):
 
     x0 = np.array([0.0, np.pi, 0.0, 0.0])
-    Fmax = 80
+    umax = .45
 
-    Tf = .8
-    N_horizon = 40
+    Tf = .350       # total prediction time
+    N_horizon = 8   # number of shooting intervals
+    dt_0 = 0.025    # sampling time = length of first shooting interval
 
-    ocp_solver, integrator = setup(x0, Fmax, N_horizon, Tf, algorithm, as_rti_iter)
+    ocp_solver, integrator = setup(x0, umax, dt_0, N_horizon, Tf, use_RTI)
 
     nx = ocp_solver.acados_ocp.dims.nx
     nu = ocp_solver.acados_ocp.dims.nu
 
-    Nsim = 100
+    Nsim = 50
     simX = np.zeros((Nsim+1, nx))
     simU = np.zeros((Nsim, nu))
 
     simX[0,:] = x0
 
-    if algorithm != "SQP":
+    if use_RTI:
         t_preparation = np.zeros((Nsim))
         t_feedback = np.zeros((Nsim))
 
     else:
         t = np.zeros((Nsim))
 
+    # do some initial iterations to start with a good initial guess
+    num_iter_initial = 10
+    for _ in range(num_iter_initial):
+        ocp_solver.solve_for_x0(x0_bar = x0, fail_on_nonzero_status=False)
+
     # closed loop
     for i in range(Nsim):
 
-        if algorithm != "SQP":
+        if use_RTI:
             # preparation phase
             ocp_solver.options_set('rti_phase', 1)
             status = ocp_solver.solve()
@@ -168,7 +151,7 @@ def main(algorithm='RTI', as_rti_iter=1):
 
         else:
             # solve ocp and get next control input
-            simU[i,:] = ocp_solver.solve_for_x0(x0_bar = simX[i, :])
+            simU[i,:] = ocp_solver.solve_for_x0(x0_bar = simX[i, :], fail_on_nonzero_status=False)
 
             t[i] = ocp_solver.get_stats('time_tot')
 
@@ -176,7 +159,7 @@ def main(algorithm='RTI', as_rti_iter=1):
         simX[i+1, :] = integrator.simulate(x=simX[i, :], u=simU[i,:])
 
     # evaluate timings
-    if algorithm != "SQP":
+    if use_RTI:
         # scale to milliseconds
         t_preparation *= 1000
         t_feedback *= 1000
@@ -190,13 +173,12 @@ def main(algorithm='RTI', as_rti_iter=1):
         print(f'Computation time in ms: min {np.min(t):.3f} median {np.median(t):.3f} max {np.max(t):.3f}')
 
     # plot results
-    plot_pendulum(np.linspace(0, (Tf/N_horizon)*Nsim, Nsim+1), Fmax, simU, simX, title=algorithm)
+    plot_furuta_pendulum(np.linspace(0, (Tf/N_horizon)*Nsim, Nsim+1),simX, simU, umax, plt_show=True)
 
     ocp_solver = None
 
 
 if __name__ == '__main__':
-    main(algorithm="AS-RTI-D", as_rti_iter=1)
+    main(use_RTI=False)
+    main(use_RTI=True)
 
-    for algorithm in ["SQP", "RTI", "AS-RTI-A", "AS-RTI-B", "AS-RTI-C", "AS-RTI-D"]:
-        main(algorithm=algorithm, as_rti_iter=1)

@@ -44,8 +44,8 @@ def setup(x0, Fmax, N_horizon, Tf, RTI=False):
     model = export_pendulum_ode_model()
     ocp.model = model
 
-    nx = model.x.size()[0]
-    nu = model.u.size()[0]
+    nx = model.x.rows()
+    nu = model.u.rows()
     ny = nx + nu
     ny_e = nx
 
@@ -111,8 +111,8 @@ def main(use_RTI=False):
     nu = ocp_solver.acados_ocp.dims.nu
 
     Nsim = 100
-    simX = np.ndarray((Nsim+1, nx))
-    simU = np.ndarray((Nsim, nu))
+    simX = np.zeros((Nsim+1, nx))
+    simU = np.zeros((Nsim, nu))
 
     simX[0,:] = x0
 

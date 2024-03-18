@@ -60,8 +60,8 @@ def main(discretization='shooting_nodes'):
         ocp.gnsf_model = gnsf_dict
 
     Tf = 1.0
-    nx = model.x.size()[0]
-    nu = model.u.size()[0]
+    nx = model.x.rows()
+    nu = model.u.rows()
     ny = nx + nu
     ny_e = nx
     N = 15
@@ -146,8 +146,8 @@ def main(discretization='shooting_nodes'):
     # ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
 
-    simX = np.ndarray((N+1, nx))
-    simU = np.ndarray((N, nu))
+    simX = np.zeros((N+1, nx))
+    simU = np.zeros((N, nu))
 
     # change options after creating ocp_solver
     ocp_solver.options_set("step_length", 0.99999)

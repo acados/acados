@@ -55,8 +55,8 @@ def export_chain_mass_integrator(n_mass, m, D, L):
     # set model
     sim.model = model
 
-    nx = model.x.size()[0]
-    nu = model.u.size()[0]
+    nx = model.x.rows()
+    nu = model.u.rows()
     ny = nx + nu
     ny_e = nx
 
