@@ -50,8 +50,8 @@ def main():
     ocp.model = model
 
     Tf = 1.0
-    nx = model.x.size()[0]
-    nu = model.u.size()[0]
+    nx = model.x.rows()
+    nu = model.u.rows()
     ny = nx + nu
     ny_e = nx
     N = 20
@@ -145,8 +145,8 @@ def main():
     ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json', simulink_opts=simulink_opts)
 
     Nsim = 100
-    simX = np.ndarray((Nsim+1, nx))
-    simU = np.ndarray((Nsim, nu))
+    simX = np.zeros((Nsim+1, nx))
+    simU = np.zeros((Nsim, nu))
     simX[0,:] = x_init
 
     # zoro parameters

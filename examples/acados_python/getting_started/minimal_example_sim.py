@@ -45,8 +45,8 @@ def main():
     sim.model = model
 
     Tf = 0.1
-    nx = model.x.size()[0]
-    nu = model.u.size()[0]
+    nx = model.x.rows()
+    nu = model.u.rows()
     N = 200
 
     # set simulation time

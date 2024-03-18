@@ -28,7 +28,6 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import os
 import matplotlib.pyplot as plt
 import numpy as np
 from acados_template import latexify_plot
@@ -97,6 +96,3 @@ def plot_pendulum(shooting_nodes, u_max, U, X_true, X_est=None, Y_measured=None,
 
     plt.subplots_adjust(left=None, bottom=None, right=None, top=None, hspace=0.4)
 
-    # avoid plotting when running on Travis
-    if os.environ.get('ACADOS_ON_CI') is None and plt_show:
-        plt.show()

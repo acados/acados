@@ -20,8 +20,8 @@ def create_ocp_solver_description() -> AcadosOcp:
 
     model = export_robot_model()
     ocp.model = model
-    nx = model.x.size()[0]
-    nu = model.u.size()[0]
+    nx = model.x.rows()
+    nu = model.u.rows()
     ny = nx + nu
 
     # set dimensions
@@ -86,11 +86,11 @@ def closed_loop_simulation():
 
     # prepare simulation
     Nsim = 100
-    nx = ocp.model.x.size()[0]
-    nu = ocp.model.u.size()[0]
+    nx = ocp.model.x.rows()
+    nu = ocp.model.u.rows()
 
-    simX = np.ndarray((Nsim + 1, nx))
-    simU = np.ndarray((Nsim, nu))
+    simX = np.zeros((Nsim + 1, nx))
+    simU = np.zeros((Nsim, nu))
 
     xcurrent = X0
     simX[0, :] = xcurrent

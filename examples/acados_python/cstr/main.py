@@ -55,8 +55,8 @@ def simulate(
     nx = X_ref.shape[1]
     nu = U_ref.shape[1]
 
-    X = np.ndarray((Nsim + 1, nx))
-    U = np.ndarray((Nsim, nu))
+    X = np.zeros((Nsim + 1, nx))
+    U = np.zeros((Nsim, nu))
     timings_solver = np.zeros((Nsim))
     timings_integrator = np.zeros((Nsim))
 

@@ -54,7 +54,7 @@ def formulate_ocp(cost_version: str) -> AcadosOcp:
 
     if cost_version in ['EXTERNAL_Z','NLS_Z', 'LS_Z', 'CONL_Z']:
         model = export_augmented_pendulum_model()
-        nz = model.z.size()[0]
+        nz = model.z.rows()
     else:
         model = export_pendulum_ode_model()
 
@@ -255,8 +255,8 @@ def main(cost_version: str, formulation_type='ocp', integrator_type='IRK', plot=
             ocp_solver.cost_set(i, "ext_cost_num_hess", np.diag([0.02, 2000, 2000, 0.02, 0.02, ]))
         ocp_solver.cost_set(N, "ext_cost_num_hess", np.diag([2000, 2000, 0.02, 0.02, ]))
 
-    simX = np.ndarray((N+1, NX))
-    simU = np.ndarray((N, NU))
+    simX = np.zeros((N+1, NX))
+    simU = np.zeros((N, NU))
 
     status = ocp_solver.solve()
 

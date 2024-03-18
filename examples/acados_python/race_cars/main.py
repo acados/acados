@@ -55,14 +55,14 @@ sref_N = 3  # reference for final reference progress
 constraint, model, acados_solver = acados_settings(Tf, N, track)
 
 # dimensions
-nx = model.x.size()[0]
-nu = model.u.size()[0]
+nx = model.x.rows()
+nu = model.u.rows()
 ny = nx + nu
 Nsim = int(T * N / Tf)
 
 # initialize data structs
-simX = np.ndarray((Nsim, nx))
-simU = np.ndarray((Nsim, nu))
+simX = np.zeros((Nsim, nx))
+simU = np.zeros((Nsim, nu))
 s0 = model.x0[0]
 tcomp_sum = 0
 tcomp_max = 0

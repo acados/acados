@@ -51,8 +51,8 @@ Fmax = 80
 # ocp model and solver
 model = export_pendulum_ode_model()
 
-nx = model.x.size()[0]
-nu = model.u.size()[0]
+nx = model.x.rows()
+nu = model.u.rows()
 
 Q_ocp = np.diag([1e3, 1e3, 1e-2, 1e-2])
 R_ocp = 1e-2 *np.eye(1)
@@ -62,8 +62,8 @@ acados_solver_ocp = export_ocp_solver(model, N, h, Q_ocp, R_ocp, Fmax)
 # mhe model and solver
 model_mhe = export_mhe_ode_model()
 
-nx = model_mhe.x.size()[0]
-nw = model_mhe.u.size()[0]
+nx = model_mhe.x.rows()
+nw = model_mhe.u.rows()
 ny = nx
 
 Q0_mhe = 100*np.eye((nx))
@@ -78,9 +78,9 @@ acados_solver_mhe = export_mhe_solver(model_mhe, N, h, Q_mhe, Q0_mhe, R_mhe)
 v_stds = [0.1, 0.01, 0.01, 0.01]
 v_stds = [0, 0, 0, 0]
 
-simX = np.ndarray((N+1, nx))
-simU = np.ndarray((N, nu))
-simY = np.ndarray((N+1, nx))
+simX = np.zeros((N+1, nx))
+simU = np.zeros((N, nu))
+simY = np.zeros((N+1, nx))
 
 simXest = np.zeros((N+1, nx))
 simWest = np.zeros((N, nx))

@@ -45,8 +45,8 @@ model = export_augmented_pendulum_model()
 sim.model = model
 
 Tf = 0.1
-nx = model.x.size()[0]
-nu = model.u.size()[0]
+nx = model.x.rows()
+nu = model.u.rows()
 N = 200
 
 # set simulation time
@@ -69,7 +69,7 @@ sim.solver_options.sim_method_jac_reuse = True
 # create
 acados_integrator = AcadosSimSolver(sim)
 
-simX = np.ndarray((N+1, nx))
+simX = np.zeros((N+1, nx))
 x0 = np.array([0.0, np.pi+1, 0.0, 0.0])
 
 u0_val = 2.0

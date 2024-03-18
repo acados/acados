@@ -33,10 +33,10 @@ import numpy as np
 from acados_template import latexify_plot
 
 
-def plot_pendulum(shooting_nodes, u_max, U, X_true, X_est=None, Y_measured=None, latexify=False, plt_show=True, X_true_label=None):
+def plot_pendulum(t, u_max, U, X_true, X_est=None, Y_measured=None, latexify=False, plt_show=True, X_true_label=None):
     """
     Params:
-        shooting_nodes: time values of the discretization
+        t: time values of the discretization
         u_max: maximum absolute value of u
         U: arrray with shape (N_sim-1, nu) or (N_sim, nu)
         X_true: arrray with shape (N_sim, nx)
@@ -53,10 +53,9 @@ def plot_pendulum(shooting_nodes, u_max, U, X_true, X_est=None, Y_measured=None,
     N_sim = X_true.shape[0]
     nx = X_true.shape[1]
 
-    Tf = shooting_nodes[N_sim-1]
-    t = shooting_nodes
-
+    Tf = t[N_sim-1]
     Ts = t[1] - t[0]
+
     if WITH_ESTIMATION:
         N_mhe = N_sim - X_est.shape[0]
         t_mhe = np.linspace(N_mhe * Ts, Tf, N_sim-N_mhe)
@@ -75,7 +74,6 @@ def plot_pendulum(shooting_nodes, u_max, U, X_true, X_est=None, Y_measured=None,
     plt.ylim([-1.2*u_max, 1.2*u_max])
     plt.xlim(t[0], t[-1])
     plt.grid()
-
 
     states_lables = ['$x$', r'$\theta$', '$v$', r'$\dot{\theta}$']
 

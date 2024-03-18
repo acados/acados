@@ -42,9 +42,9 @@ def export_mhe_solver_with_param(model, N, h, Q, Q0, R, use_cython=False):
 
     ocp_mhe.model = model
 
-    nx_augmented = model.x.size()[0]
-    nu = model.u.size()[0]
-    nparam = model.p.size()[0]
+    nx_augmented = model.x.rows()
+    nu = model.u.rows()
+    nparam = model.p.rows()
     nx = nx_augmented-1
 
     ny = R.shape[0] + Q.shape[0]                    # h(x), w

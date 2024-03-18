@@ -83,7 +83,7 @@ def main():
     sim.model = model
 
     deltaT = 1.0
-    nx = model.x.size()[0]
+    nx = model.x.rows()
 
     # set simulation time
     sim.solver_options.T = deltaT

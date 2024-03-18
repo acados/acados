@@ -249,8 +249,8 @@ def run_simulation(qp_solver="FULL_CONDENSING_HPIPM", show_plots=False, verbose=
     ocp.model = model
 
     # model dims
-    nx = model.x.size()[0]
-    nu = model.u.size()[0]
+    nx = model.x.rows()
+    nu = model.u.rows()
     ny = nu + nx
     ny_e = nx
     Tf = N * Ts
@@ -416,10 +416,10 @@ def run_simulation(qp_solver="FULL_CONDENSING_HPIPM", show_plots=False, verbose=
     # closed loop simulation
     Nsim = 20
 
-    simX = np.ndarray((Nsim, nx))
-    simU = np.ndarray((Nsim, nu))
-    simXR = np.ndarray((Nsim + 1, nx))
-    simXRN = np.ndarray((Nsim, nx))
+    simX = np.zeros((Nsim, nx))
+    simU = np.zeros((Nsim, nu))
+    simXR = np.zeros((Nsim + 1, nx))
+    simXRN = np.zeros((Nsim, nx))
 
     print("=========================================")
     print("Mode = ", FORMULATION)

@@ -51,8 +51,8 @@ x = model.x
 u = model.u
 
 Tf = 1.0
-nx = x.size()[0]
-nu = u.size()[0]
+nx = x.rows()
+nu = u.rows()
 ny = nx + nu
 ny_e = nx
 N = 20
@@ -155,8 +155,8 @@ for i in range(N):
         ocp_solver.set_params_sparse(i, np.array(range(n_param)), np.zeros(n_param))
         ocp_solver.set_params_sparse(i, np.ascontiguousarray([0, 1]), np.array([1.0, 1.0]))
 
-simX = np.ndarray((N+1, nx))
-simU = np.ndarray((N, nu))
+simX = np.zeros((N+1, nx))
+simU = np.zeros((N, nu))
 
 status = ocp_solver.solve()
 

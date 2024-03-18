@@ -76,8 +76,8 @@ def main(use_cython=True):
     # N - maximum number of bangs
     N = 7
     Tf = N
-    nx = model.x.size()[0]
-    nu = model.u.size()[0]
+    nx = model.x.rows()
+    nu = model.u.rows()
 
     # set dimensions
     ocp.dims.N = N

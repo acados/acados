@@ -56,8 +56,8 @@ def create_ocp_solver():
 
     ocp.model = model
 
-    nx = model.x.size()[0]
-    nu = model.u.size()[0]
+    nx = model.x.rows()
+    nu = model.u.rows()
     ny = nx + nu
     ny_e = nx
 
@@ -138,10 +138,10 @@ def main():
     nu = acados_ocp_solver.acados_ocp.dims.nu
 
     Nsim = 100
-    simX = np.ndarray((Nsim+1, nx))
-    simU = np.ndarray((Nsim, nu))
-    sens_u = np.ndarray((nu, nx))
-    sens_x = np.ndarray((nx, nx))
+    simX = np.zeros((Nsim+1, nx))
+    simU = np.zeros((Nsim, nu))
+    sens_u = np.zeros((nu, nx))
+    sens_x = np.zeros((nx, nx))
 
     xcurrent = X0
     simX[0,:] = xcurrent

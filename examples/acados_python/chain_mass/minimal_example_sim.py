@@ -64,8 +64,8 @@ model = export_chain_mass_model(n_mass, m, D, L)
 sim.model = model
 
 Tf = 0.1
-nx = model.x.size()[0]
-nu = model.u.size()[0]
+nx = model.x.rows()
+nu = model.u.rows()
 N = 200
 
 # set simulation time
@@ -79,7 +79,7 @@ sim.solver_options.newton_iter = 3 # for implicit integrator
 # create
 acados_integrator = AcadosSimSolver(sim)
 
-simX = np.ndarray((N+1, nx))
+simX = np.zeros((N+1, nx))
 
 # position of last mass
 xPosFirstMass = np.zeros((3,1))
