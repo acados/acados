@@ -1116,9 +1116,9 @@ class AcadosOcpSolver:
             - alpha: step sizes of SQP iterations
         """
 
-        if field == "time_solution_sens_lin":
+        if field_ == "time_solution_sens_lin":
             return self.time_solution_sens_lin
-        elif field == "time_solution_sens_solve":
+        elif field_ == "time_solution_sens_solve":
             return self.time_solution_sens_solve
 
         double_fields = ['time_tot',
