@@ -850,6 +850,76 @@ void ocp_nlp_dynamics_disc_compute_params_jac(void *config_, void *dims_, void *
 }
 
 
+void ocp_nlp_dynamics_disc_compute_fun_and_adjoint(void *config_, void *dims_, void *model_, void *opts_,
+                                              void *mem_, void *work_)
+{
+    /* TODO: this is inefficient! Generate a separate function for discrete dynamics to compute fun and adj! */
+    ocp_nlp_dynamics_disc_cast_workspace(config_, dims_, opts_, work_);
+
+    // ocp_nlp_dynamics_config *config = config_;
+    ocp_nlp_dynamics_disc_dims *dims = dims_;
+    ocp_nlp_dynamics_disc_opts *opts = opts_;
+    ocp_nlp_dynamics_disc_workspace *work = work_;
+    ocp_nlp_dynamics_disc_memory *memory = mem_;
+    ocp_nlp_dynamics_disc_model *model = model_;
+
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int nx1 = dims->nx1;
+    int nu1 = dims->nu1;
+
+    ext_fun_arg_t ext_fun_type_in[3];
+    void *ext_fun_in[3];
+    ext_fun_arg_t ext_fun_type_out[3];
+    void *ext_fun_out[3];
+
+    // pass state and control to integrator
+    struct blasfeo_dvec_args x_in;  // input x of external fun;
+    x_in.x = memory->ux;
+    x_in.xi = nu;
+
+    struct blasfeo_dvec_args u_in;  // input u of external fun;
+    u_in.x = memory->ux;
+    u_in.xi = 0;
+
+    struct blasfeo_dvec_args fun_out;
+    fun_out.x = &memory->fun;
+    fun_out.xi = 0;
+
+    struct blasfeo_dmat_args jac_out;
+    jac_out.A = &work->tmp_nv_nv;
+    jac_out.ai = 0;
+    jac_out.aj = 0;
+
+
+    ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+    ext_fun_in[0] = &x_in;
+    ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
+    ext_fun_in[1] = &u_in;
+
+    ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
+    ext_fun_out[0] = &fun_out;  // fun: nx1
+    ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
+    ext_fun_out[1] = &jac_out;  // jac': (nu+nx) * nx1
+
+    // call external function
+    model->disc_dyn_fun_jac->evaluate(model->disc_dyn_fun_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+
+    // fun
+    blasfeo_daxpy(nx1, -1.0, memory->ux1, nu1, &memory->fun, 0, &memory->fun, 0);
+
+    // adj TODO if not computed by the external function
+    if (opts->compute_adj)
+    {
+        blasfeo_dgemv_n(nu+nx, nx1, -1.0, &work->tmp_nv_nv, 0, 0, memory->pi, 0, 0.0, &memory->adj, 0, &memory->adj, 0);
+        blasfeo_dveccp(nx1, memory->pi, 0, &memory->adj, nu + nx);
+    }
+
+    return;
+}
+
+
+
 int ocp_nlp_dynamics_disc_precompute(void *config_, void *dims, void *model_, void *opts_,
                                         void *mem_, void *work_)
 {
@@ -895,6 +965,7 @@ void ocp_nlp_dynamics_disc_config_initialize_default(void *config_)
     config->update_qp_matrices = &ocp_nlp_dynamics_disc_update_qp_matrices;
     config->compute_fun = &ocp_nlp_dynamics_disc_compute_fun;
     config->compute_params_jac = &ocp_nlp_dynamics_disc_compute_params_jac;
+    config->compute_fun_and_adjoint = &ocp_nlp_dynamics_disc_compute_fun_and_adjoint;
     config->precompute = &ocp_nlp_dynamics_disc_precompute;
     config->config_initialize_default = &ocp_nlp_dynamics_disc_config_initialize_default;
 

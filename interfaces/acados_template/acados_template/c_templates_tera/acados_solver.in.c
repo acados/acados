@@ -813,6 +813,8 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
     ocp_nlp_config* nlp_config = capsule->nlp_config;
     ocp_nlp_dims* nlp_dims = capsule->nlp_dims;
 
+    int tmp_int = 0;
+
     /************************************************
     *  nlp_in
     ************************************************/
@@ -1171,7 +1173,6 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "nls_y_hess", &capsule->cost_y_e_hess);
 
 {%- elif cost.cost_type_e == "CONVEX_OVER_NONLINEAR" %}
-
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "conl_cost_fun", &capsule->conl_cost_e_fun);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "conl_cost_fun_jac_hess", &capsule->conl_cost_e_fun_jac_hess);
 
@@ -2189,6 +2190,16 @@ void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* 
 
     int initialize_t_slacks = {{ solver_options.initialize_t_slacks }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "initialize_t_slacks", &initialize_t_slacks);
+
+{%- elif solver_options.nlp_solver_type == "SQP_RTI" %}
+    int as_rti_iter = {{ solver_options.as_rti_iter }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "as_rti_iter", &as_rti_iter);
+
+    int as_rti_level = {{ solver_options.as_rti_level }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "as_rti_level", &as_rti_level);
+
+    int rti_log_residuals = {{ solver_options.rti_log_residuals }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "rti_log_residuals", &rti_log_residuals);
 {%- endif %}
 
     int qp_solver_iter_max = {{ solver_options.qp_solver_iter_max }};

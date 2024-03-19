@@ -149,26 +149,26 @@ if (strcmp(cost_type, 'linear_ls'))
 	ocp_model.set('cost_y_ref', yr);
 	ocp_model.set('cost_y_ref_e', yr_e);
 elseif (strcmp(cost_type, 'nonlinear_ls'))
-	ocp_model.set('cost_expr_y', model.expr_y);
-	ocp_model.set('cost_expr_y_e', model.expr_y_e);
+	ocp_model.set('cost_expr_y', model.cost_expr_y);
+	ocp_model.set('cost_expr_y_e', model.cost_expr_y_e);
 	ocp_model.set('cost_W', W);
 	ocp_model.set('cost_W_e', W_e);
 	ocp_model.set('cost_y_ref', yr);
 	ocp_model.set('cost_y_ref_e', yr_e);
 else % if (strcmp(cost_type, 'ext_cost'))
-	ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
-	ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
+	ocp_model.set('cost_expr_ext_cost', model.cost_expr_ext_cost);
+	ocp_model.set('cost_expr_ext_cost_e', model.cost_expr_ext_cost_e);
 end
 % dynamics
 if (strcmp(dyn_type, 'explicit'))
 	ocp_model.set('dyn_type', 'explicit');
-	ocp_model.set('dyn_expr_f', model.expr_f_expl);
+	ocp_model.set('dyn_expr_f', model.dyn_expr_f_expl);
 elseif (strcmp(dyn_type, 'implicit'))
 	ocp_model.set('dyn_type', 'implicit');
-	ocp_model.set('dyn_expr_f', model.expr_f_impl);
+	ocp_model.set('dyn_expr_f', model.dyn_expr_f_impl);
 else
 	ocp_model.set('dyn_type', 'discrete');
-	ocp_model.set('dyn_expr_phi', model.expr_phi);
+	ocp_model.set('dyn_expr_phi', model.dyn_expr_phi);
 end
 % constraints
 ocp_model.set('constr_x0', x0);
@@ -181,10 +181,10 @@ if (ng>0)
 	ocp_model.set('constr_lg_e', lg_e);
 	ocp_model.set('constr_ug_e', ug_e);
 elseif (nh>0)
-	ocp_model.set('constr_expr_h', model.expr_h);
+	ocp_model.set('constr_expr_h', model.constr_expr_h);
 	ocp_model.set('constr_lh', lh);
 	ocp_model.set('constr_uh', uh);
-	ocp_model.set('constr_expr_h_e', model.expr_h_e);
+	ocp_model.set('constr_expr_h_e', model.constr_expr_h_e);
 	ocp_model.set('constr_lh_e', lh_e);
 	ocp_model.set('constr_uh_e', uh_e);
 else

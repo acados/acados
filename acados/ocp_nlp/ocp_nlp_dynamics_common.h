@@ -103,10 +103,8 @@ typedef struct
     void (*compute_fun)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*compute_params_jac)(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
 
+    void (*compute_fun_and_adjoint)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     int (*precompute)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
-// TODO(params_sens):
-// void update_params_jacobian(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
-// void get_params_grad(void *config, void *dims, void *mem, int *index);
 } ocp_nlp_dynamics_config;
 
 //

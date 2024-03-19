@@ -78,7 +78,7 @@ function model = detect_cost_type(model, stage_type)
 
     if expr_cost.is_quadratic(x) && expr_cost.is_quadratic(u) && expr_cost.is_quadratic(z) ...
             && ~any(expr_cost.which_depends(p))
-        
+
         if expr_cost.is_zero()
             fprintf('Cost function is zero -> Reformulating as linear_ls cost.\n');
             cost_type = 'linear_ls';

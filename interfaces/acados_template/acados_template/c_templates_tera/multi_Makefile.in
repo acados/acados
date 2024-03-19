@@ -72,7 +72,7 @@
 
 {# acados linking libraries and flags #}
 {%- if acados_link_libs and os and os == "pc" %}
-	{%- set link_libs = acados_link_libs.qpoases ~ " " ~ acados_link_libs.hpmpc ~ " " ~ acados_link_libs.osqp -%}
+	{%- set link_libs = acados_link_libs.qpoases ~ " " ~ acados_link_libs.hpmpc ~ " " ~ acados_link_libs.osqp ~ " " ~ acados_link_libs.daqp -%}
 	{%- set openmp_flag = acados_link_libs.openmp %}
 {%- else %}
 	{%- set openmp_flag = " " %}

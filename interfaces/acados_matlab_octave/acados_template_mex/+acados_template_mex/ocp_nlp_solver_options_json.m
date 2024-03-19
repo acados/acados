@@ -70,6 +70,9 @@ classdef ocp_nlp_solver_options_json < handle
         ext_cost_num_hess
         alpha_min
         alpha_reduction
+        as_rti_iter
+        as_rti_level
+        rti_log_residuals
         globalization
         collocation_type
         line_search_use_sufficient_descent
@@ -129,6 +132,9 @@ classdef ocp_nlp_solver_options_json < handle
             obj.ext_fun_compile_flags = '-O2';
             obj.cost_discretization = 'EULER';
             obj.with_solution_sens_wrt_params = 0;
+            obj.as_rti_iter = 1;
+            obj.as_rti_level = 4;
+            obj.rti_log_residuals = 0;
 
         end
         function s = struct(self)

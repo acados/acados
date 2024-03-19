@@ -157,6 +157,9 @@ end
 % Constraints
 ocp_model.set('constr_x0', x0);
 
+ocp_model.set('constr_expr_h_0', model.expr_h);
+ocp_model.set('constr_lh_0', lh);
+ocp_model.set('constr_uh_0', uh);
 ocp_model.set('constr_expr_h', model.expr_h);
 ocp_model.set('constr_lh', lh);
 ocp_model.set('constr_uh', uh);
@@ -208,8 +211,6 @@ ocp_opts.opts_struct
 
 % Create ocp
 ocp = acados_ocp(ocp_model, ocp_opts);
-ocp
-ocp.C_ocp
 
 % Set trajectory initialization
 step_mat = repmat((0:1:nb_steps),3*N,1);

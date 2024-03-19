@@ -30,7 +30,7 @@
 %
 
 %% minimal example of acados integrator matlab interface
-clear all
+clear all; clc;
 
 addpath('../pendulum_on_cart_model')
 
@@ -66,14 +66,14 @@ end
 % explit integrator (erk) take explicit ODE expression
 if (strcmp(method, 'erk'))
 	sim_model.set('dyn_type', 'explicit');
-	sim_model.set('dyn_expr_f', model.expr_f_expl);
+	sim_model.set('dyn_expr_f', model.dyn_expr_f_expl);
 else % implicit integrators (irk irk_gnsf) take implicit ODE expression
 	sim_model.set('dyn_type', 'implicit');
-	sim_model.set('dyn_expr_f', model.expr_f_impl);
+	sim_model.set('dyn_expr_f', model.dyn_expr_f_impl);
 	sim_model.set('sym_xdot', model.sym_xdot);
 end
 
-%% acados sim opts
+%% acados sim options
 sim_opts = acados_sim_opts();
 
 sim_opts.set('compile_interface', compile_interface);

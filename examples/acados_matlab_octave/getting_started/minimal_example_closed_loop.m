@@ -30,7 +30,7 @@
 %
 
 %% test of native matlab interface
-clear all
+clear all; clc;
 
 model_path = fullfile(pwd,'..','pendulum_on_cart_model');
 addpath(model_path)
@@ -70,44 +70,51 @@ model = pendulum_on_cart_model();
 nx = model.nx;
 nu = model.nu;
 
-%% model to create the solver
+%% acados ocp model
 ocp_model = acados_ocp_model();
 model_name = 'pendulum';
-
-%% acados ocp model
 ocp_model.set('name', model_name);
 ocp_model.set('T', T);
+
 % symbolics
 ocp_model.set('sym_x', model.sym_x);
 ocp_model.set('sym_u', model.sym_u);
 ocp_model.set('sym_xdot', model.sym_xdot);
 
 % nonlinear-least squares cost
+ocp_model.set('cost_type_0', 'nonlinear_ls');
 ocp_model.set('cost_type', 'nonlinear_ls');
 ocp_model.set('cost_type_e', 'nonlinear_ls');
 
+ocp_model.set('cost_expr_y_0', model.cost_expr_y_0);
+ocp_model.set('cost_W_0', model.cost_W_0);
 ocp_model.set('cost_expr_y', model.cost_expr_y);
+ocp_model.set('cost_W', model.cost_W);
 ocp_model.set('cost_expr_y_e', model.cost_expr_y_e);
+ocp_model.set('cost_W_e', model.cost_W_e);
 
-W_x = diag([1e2, 1e2, 1e-2, 1e-2]);
-W_u = 1e-3;
-W = blkdiag(W_x, W_u);
-ocp_model.set('cost_W', W);
-ocp_model.set('cost_W_e', model.W_e);
+% intiialize reference to zero, change later
+ocp_model.set('cost_y_ref_0', zeros(size(model.cost_expr_y_0)));
+ocp_model.set('cost_y_ref', zeros(size(model.cost_expr_y)));
+ocp_model.set('cost_y_ref_e', zeros(size(model.cost_expr_y_e)));
 
 % dynamics
 ocp_model.set('dyn_type', 'explicit');
-ocp_model.set('dyn_expr_f', model.expr_f_expl);
+ocp_model.set('dyn_expr_f', model.dyn_expr_f_expl);
 
 % constraints
 ocp_model.set('constr_type', 'auto');
-ocp_model.set('constr_expr_h', model.expr_h);
+ocp_model.set('constr_expr_h_0', model.constr_expr_h_0);
+ocp_model.set('constr_expr_h', model.constr_expr_h);
 U_max = 80;
-ocp_model.set('constr_lh', -U_max); % lower bound on h
-ocp_model.set('constr_uh', U_max);  % upper bound on h
+ocp_model.set('constr_lh_0', -U_max); % lower bound on h
+ocp_model.set('constr_uh_0', U_max);  % upper bound on h
+ocp_model.set('constr_lh', -U_max);
+ocp_model.set('constr_uh', U_max);
+
 ocp_model.set('constr_x0', x0);
 
-%% acados ocp set opts
+%% acados ocp options
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('param_scheme_N', N);
 ocp_opts.set('shooting_nodes', shooting_nodes);
@@ -127,18 +134,17 @@ ocp = acados_ocp(ocp_model, ocp_opts);
 x_traj_init = zeros(nx, N+1);
 u_traj_init = zeros(nu, N);
 
-
 %% plant: create acados integrator
 % acados sim model
 sim_model = acados_sim_model();
 sim_model.set('name', [model_name '_plant']);
-sim_model.set('T', h);
+sim_model.set('T', h);  % simulate one time step
 
 sim_model.set('sym_x', model.sym_x);
 sim_model.set('sym_u', model.sym_u);
 sim_model.set('sym_xdot', model.sym_xdot);
 sim_model.set('dyn_type', 'implicit');
-sim_model.set('dyn_expr_f', model.expr_f_impl);
+sim_model.set('dyn_expr_f', model.dyn_expr_f_impl);
 
 % acados sim opts
 sim_opts = acados_sim_opts();
@@ -148,9 +154,10 @@ sim_opts.set('num_steps', plant_sim_method_num_steps);
 
 sim = acados_sim(sim_model, sim_opts);
 
-%% Simulation
+%% simulation
 N_sim = 150;
 
+% preallocate memory
 x_sim = zeros(nx, N_sim+1);
 u_sim = zeros(nu, N_sim);
 
@@ -159,6 +166,8 @@ x_sim(:,1) = x0;
 % time-variant reference: move the cart with constant velocity while
 % keeping the pendulum in upwards position
 v_mean = 1;
+
+yref_0 = zeros(nu, 1);
 yref = zeros(nx+nu, 1);
 yref_e = zeros(nx, 1);
 
@@ -174,11 +183,11 @@ for i=1:N_sim
     t = (i-1)*h;
     p_ref = (t + shooting_nodes)*v_mean;
 
-    for k=0:N-1
-        yref(1) = p_ref(k+1);
-        ocp.set('cost_y_ref', yref, k);
+    for k=1:N-1 % intermediate stages
+        yref(1) = p_ref(k);
+        ocp.set('cost_y_ref', yref, k); % last argument is the stage
     end
-    yref_e(1) = p_ref(k+1);
+    yref_e(1) = p_ref(k+1); % terminal stage
     ocp.set('cost_y_ref_e', yref_e, N);
 
     % solve
@@ -188,11 +197,11 @@ for i=1:N_sim
     u0 = ocp.get('u', 0);
     status = ocp.get('status'); % 0 - success
 
-    % set initial state
+    % set initial state for the simulation
     sim.set('x', x0);
     sim.set('u', u0);
 
-    % solve
+    % simulate one step
     sim_status = sim.solve();
     if sim_status ~= 0
         disp(['acados integrator returned error status ', num2str(sim_status)])
@@ -204,7 +213,7 @@ for i=1:N_sim
 end
 
 
-%% Plots
+%% plots
 ts = linspace(0, N_sim*h, N_sim+1);
 figure; hold on;
 States = {'p', 'theta', 'v', 'dtheta'};

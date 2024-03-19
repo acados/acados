@@ -95,6 +95,7 @@ typedef struct
     struct blasfeo_dvec z;              // gradient of slacks as vector
     double scaling;
     double t; // time (always zero) to match signature of external function wrt cost integration
+    double outer_hess_is_diag;    // flag indicating if outer_hess_is_diag; Note: double for compatibility with CONL cost
     int W_changed;                      ///< flag indicating whether W has changed and needs to be refactorized
 } ocp_nlp_cost_nls_model;
 
@@ -137,6 +138,7 @@ void ocp_nlp_cost_nls_opts_set(void *config, void *opts, const char *field, void
 typedef struct
 {
     struct blasfeo_dmat W_chol;  // cholesky factor of weight matrix
+    struct blasfeo_dvec W_chol_diag;  // cholesky factor of weight matrix if the Hessian is diagonal
     struct blasfeo_dmat Jt;      // jacobian of nls fun
     struct blasfeo_dvec res;     // nls residual r(x)
     struct blasfeo_dvec grad;    // gradient of cost function
@@ -158,6 +160,8 @@ double *ocp_nlp_cost_nls_memory_get_fun_ptr(void *memory_);
 struct blasfeo_dvec *ocp_nlp_cost_nls_memory_get_grad_ptr(void *memory_);
 //
 struct blasfeo_dmat *ocp_nlp_cost_nls_memory_get_W_chol_ptr(void *memory_);
+//
+struct blasfeo_dvec *ocp_nlp_cost_nls_memory_get_W_chol_diag_ptr(void *memory_);
 //
 void ocp_nlp_cost_nls_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, void *memory);
 //

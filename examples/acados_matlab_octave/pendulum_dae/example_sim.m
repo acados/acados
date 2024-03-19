@@ -29,7 +29,7 @@
 
 %
 
-clear all
+clear all; clc;
 
 % check that env.sh has been run
 env_run = getenv('ENV_RUN');

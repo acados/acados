@@ -29,6 +29,7 @@
 
 %
 
+
 classdef acados_ocp_model < handle
 
     properties
@@ -412,18 +413,18 @@ classdef acados_ocp_model < handle
             else
 
                 if (strcmp(field, 'name'))
-                    obj.model_struct.name = value;                    
+                    obj.model_struct.name = value;
                 elseif (strcmp(field, 'T'))
                     obj.model_struct.T = value;
                 else
                     disp(['acados_ocp_model: set: wrong field: ', field]);
                     keyboard;
                 end
-            end    
+            end
         end
 
     end % methods
-    
+
 
 
 
