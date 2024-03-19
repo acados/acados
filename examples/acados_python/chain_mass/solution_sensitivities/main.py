@@ -19,6 +19,7 @@ from plot_utils import (
     plot_chain_position_traj,
     plot_chain_velocity_traj,
     animate_chain_position,
+    plot_timings
 )
 
 
@@ -363,8 +364,6 @@ def export_parametric_ocp(
     q_diag[3 * M + 2] = strong_penalty
     Q_mat = 2 * np.diagflat(q_diag)
 
-
-
     if ocp.cost.cost_type == "LINEAR_LS":
 
         yref = np.vstack((xrest, np.zeros((nu, 1)))).flatten()
@@ -545,7 +544,7 @@ def main_simulation(chain_params_: dict):
     simU = np.ndarray((N_sim, nu))
     wall_dist = np.zeros((N_sim,))
 
-    timings = np.zeros((N_sim,))
+    timings_solve = np.zeros((N_sim,))
 
     simX[0, :] = xcurrent
 
@@ -564,7 +563,7 @@ def main_simulation(chain_params_: dict):
         status = acados_ocp_solver.solve()
 
 
-        timings[i] = acados_ocp_solver.get_stats("time_tot")
+        timings_solve[i] = acados_ocp_solver.get_stats("time_tot")
 
         if status != 0:
             raise Exception("acados acados_ocp_solver returned status {} in time step {}. Exiting.".format(status, i))
@@ -600,7 +599,7 @@ def main_simulation(chain_params_: dict):
 
     print("dist2wall (minimum over simulation) ", str(np.min(wall_dist)))
 
-    if os.environ.get("ACADOS_ON_CI") is None and chain_params_["show_plots"]:
+    if chain_params_["show_plots"]:
         plot_chain_control_traj(simU)
         plot_chain_position_traj(simX, yPosWall=chain_params_["yPosWall"])
         plot_chain_velocity_traj(simX)
@@ -618,9 +617,7 @@ def main_parametric(
     qp_solver_ric_alg: int = 0, eigen_analysis: bool = False, chain_params_: dict = get_chain_params()
 ) -> None:
 
-
     ocp, parameter_values = export_parametric_ocp(chain_params_=chain_params_, qp_solver_ric_alg=qp_solver_ric_alg, integrator_type="DISCRETE", cost_type="EXTERNAL")
-
 
     ocp_json_file = "acados_ocp_" + ocp.model.name + ".json"
 
@@ -642,7 +639,6 @@ def main_parametric(
     else:
         sensitivity_solver = AcadosOcpSolver(sensitivity_ocp, json_file=ocp_json_file)
 
-
     M = chain_params_["n_mass"] - 2
     xEndRef = np.zeros((3, 1))
     xEndRef[0] = chain_params_["L"] * (M + 1) * 6
@@ -651,7 +647,6 @@ def main_parametric(
     x0[: 3 * (M + 1) : 3] = pos0_x[1:].reshape((M + 1, 1))
 
     np_test = 100
-
 
     # p_label = "L_2_0"
     # p_label = "D_2_0"
@@ -665,22 +660,30 @@ def main_parametric(
 
     sens_u = []
     pi = []
+
+    timings_solve_ocp_solver = np.zeros((np_test))
+    timings_lin_and_factorize = np.zeros((np_test))
+    timings_lin_params = np.zeros((np_test))
+    timings_solve_params = np.zeros((np_test))
+
     for i in range(np_test):
         parameter_values.cat[p_idx] = p_var[i]
 
+        p_val = parameter_values.cat.full().flatten()
         for stage in range(ocp.dims.N + 1):
-            acados_ocp_solver.set(stage, "p", parameter_values.cat.full().flatten())
+            acados_ocp_solver.set(stage, "p", p_val)
+            sensitivity_solver.set(stage, "p", p_val)
 
         pi.append(acados_ocp_solver.solve_for_x0(x0))
-        acados_ocp_solver.store_iterate(filename="iterate.json", overwrite=True, verbose=False)
-
         print(f"ocp_solver status {acados_ocp_solver.status}")
 
-        for stage in range(ocp.dims.N + 1):
-            sensitivity_solver.set(stage, "p", parameter_values.cat.full().flatten())
+        timings_solve_ocp_solver[i] = acados_ocp_solver.get_stats("time_tot")
+
+        acados_ocp_solver.store_iterate(filename="iterate.json", overwrite=True, verbose=False)
         sensitivity_solver.load_iterate(filename="iterate.json", verbose=False)
         sensitivity_solver.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
 
+        timings_lin_and_factorize[i] = sensitivity_solver.get_stats("time_tot")
         print(f"sensitivity_solver status {sensitivity_solver.status}")
 
         # residuals = sensitivity_solver.get_stats("residuals")
@@ -692,9 +695,20 @@ def main_parametric(
 
         # Calculate the policy gradient
         _, sens_u_ = sensitivity_solver.eval_solution_sensitivity(0, "params_global")
+        timings_lin_params[i] = sensitivity_solver.get_stats("time_solution_sens_lin")
+        timings_solve_params[i] = sensitivity_solver.get_stats("time_solution_sens_solve")
 
         sens_u.append(sens_u_[:, p_idx])
 
+    timing_results = {
+        'NLP solve': timings_solve_ocp_solver,
+        'prepare \& factorize exact Hessian QP': timings_lin_and_factorize,
+        'eval rhs': timings_lin_params,
+        'solve': timings_solve_params,
+        }
+
+    # TODO add timings of numpy implementation here
+    timing_results_other = timing_results.copy()
     pi = np.vstack(pi)
     sens_u = np.vstack(sens_u)
 
@@ -725,6 +739,9 @@ def main_parametric(
     plt.legend()
     plt.yscale('log')
     plt.xlabel(p_label)
+
+    plot_timings([timing_results, timing_results_other], timing_results.keys(), ['acados', 'numpy'], figure_filename=None)
+
     plt.show()
 
 
