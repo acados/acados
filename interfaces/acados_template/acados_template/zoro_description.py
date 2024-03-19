@@ -107,4 +107,22 @@ def process_zoro_description(zoro_description: ZoroDescription):
 
     if zoro_description.input_P0_diag and zoro_description.input_P0:
         raise Exception("Only one of input_P0_diag and input_P0 can be True")
+
+    # Print input note:
+    print(f"\nThe input (data) of the generated custom update function consists of the concatenation of:")
+    i_input = 1
+    if zoro_description.input_P0_diag:
+        print(f"{i_input}) diag(P0)")
+        i_input += 1
+    if zoro_description.input_P0:
+        print(f"{i_input}) P0; full matrix in column-major format")
+        i_input += 1
+    if zoro_description.input_W_diag:
+        print(f"{i_input}) diag(W)")
+        i_input += 1
+    if zoro_description.input_W_gp_diag:
+        print(f"{i_input}) concatenation of diag(W_gp^k) for i=0,...,N-1")
+        i_input += 1
+    print("\n")
+
     return zoro_description
