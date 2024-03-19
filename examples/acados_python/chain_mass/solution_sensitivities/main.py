@@ -68,11 +68,15 @@ def define_param_struct_symSX(n_mass: int, disturbance: bool = True) -> DMStruct
     """Define parameter struct."""
     n_link = n_mass - 1
 
+    nx, nu = define_nx_nu(n_mass)
+
     param_entries = [
         entry("m", shape=1, repeat=n_link),
         entry("D", shape=3, repeat=n_link),
         entry("L", shape=3, repeat=n_link),
         entry("C", shape=3, repeat=n_link),
+        entry("Q", shape=(nx, nx)),
+        entry("R", shape=(nu, nu)),
     ]
 
     if disturbance:
@@ -80,14 +84,21 @@ def define_param_struct_symSX(n_mass: int, disturbance: bool = True) -> DMStruct
 
     return struct_symSX(param_entries)
 
+def define_nx_nu(n_mass: int) -> Tuple[int, int]:
+    """Define number of states and control inputs."""
+    M = n_mass - 2  # number of intermediate masses
+    nx = (2 * M + 1) * 3  # differential states
+    nu = 3  # control inputs
+
+    return nx, nu
+
 def export_chain_mass_model(n_mass: int, Ts=0.2, disturbance=False) -> Tuple[AcadosModel, DMStruct]:
     """Export chain mass model for acados."""
     x0 = np.array([0, 0, 0])  # fix mass (at wall)
 
     M = n_mass - 2  # number of intermediate massesu
 
-    nx = (2 * M + 1) * 3  # differential states
-    nu = 3  # control inputs
+    nx, nu = define_nx_nu(n_mass)
 
     xpos = SX.sym("xpos", (M + 1) * 3, 1)  # position of fix mass eliminated
     xvel = SX.sym("xvel", M * 3, 1)
@@ -352,6 +363,8 @@ def export_parametric_ocp(
     q_diag[3 * M + 2] = strong_penalty
     Q_mat = 2 * np.diagflat(q_diag)
 
+
+
     if ocp.cost.cost_type == "LINEAR_LS":
 
         yref = np.vstack((xrest, np.zeros((nu, 1)))).flatten()
@@ -377,10 +390,20 @@ def export_parametric_ocp(
         x_e = ocp.model.x - xrest
         u_e = ocp.model.u - np.zeros((nu, 1))
 
-        ocp.model.cost_expr_ext_cost = 0.5 * (x_e.T @ Q_mat @ x_e + u_e.T @ R_mat @ u_e)
-        ocp.model.cost_expr_ext_cost_e = 0.5 * (x_e.T @ Q_mat @ x_e)
+        idx = find_idx_for_labels(define_param_struct_symSX(chain_params_["n_mass"], disturbance=True).cat, "Q")
+        Q_sym = ca.reshape(ocp.model.p[idx], (nx, nx))
+        p["Q"] = Q_mat
+
+        idx = find_idx_for_labels(define_param_struct_symSX(chain_params_["n_mass"], disturbance=True).cat, "R")
+        R_sym = ca.reshape(ocp.model.p[idx], (nu, nu))
+        p["R"] = R_mat
+
+        ocp.model.cost_expr_ext_cost = 0.5 * (x_e.T @ Q_sym @ x_e + u_e.T @ R_sym @ u_e)
+        ocp.model.cost_expr_ext_cost_e = 0.5 * (x_e.T @ Q_sym @ x_e)
 
         ocp.model.cost_y_expr = vertcat(x_e, u_e)
+
+    ocp.parameter_values = p.cat.full().flatten()
 
     # set constraints
     umax = 1 * np.ones((nu,))
@@ -390,7 +413,6 @@ def export_parametric_ocp(
     ocp.constraints.x0 = x0.reshape((nx,))
     ocp.constraints.idxbu = np.array(range(nu))
 
-    ocp.parameter_values = p.cat.full().flatten()
 
     # wall constraint
     if False:
@@ -631,8 +653,9 @@ def main_parametric(
     np_test = 100
 
 
-    p_label = "L_2_0"
+    # p_label = "L_2_0"
     # p_label = "D_2_0"
+    p_label = "C_2_0"
 
     p_idx = find_idx_for_labels(define_param_struct_symSX(chain_params_["n_mass"], disturbance=True).cat, p_label)[0]
 
