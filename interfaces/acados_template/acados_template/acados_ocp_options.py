@@ -93,6 +93,7 @@ class AcadosOcpOptions:
         self.__eps_sufficient_descent = 1e-4
         self.__hpipm_mode = 'BALANCE'
         self.__with_solution_sens_wrt_params = False
+        self.__with_value_sens_wrt_params = False
         # TODO: move those out? they are more about generation than about the acados OCP solver.
         self.__ext_fun_compile_flags = '-O2'
         self.__model_external_shared_lib_dir = None
@@ -666,13 +667,20 @@ class AcadosOcpOptions:
         """
         return self.__cost_discretization
 
-
     @property
     def with_solution_sens_wrt_params(self):
         """
-        Flag indicating whether solution sensitivities wrt. parameters should be computed.
+        Flag indicating whether solution sensitivities wrt. parameters can be computed.
         """
         return self.__with_solution_sens_wrt_params
+
+
+    @property
+    def with_value_sens_wrt_params(self):
+        """
+        Flag indicating whether value function sensitivities wrt. parameters can be computed.
+        """
+        return self.__with_value_sens_wrt_params
 
     @qp_solver.setter
     def qp_solver(self, qp_solver):
@@ -719,6 +727,13 @@ class AcadosOcpOptions:
             self.__with_solution_sens_wrt_params = with_solution_sens_wrt_params
         else:
             raise Exception('Invalid with_solution_sens_wrt_params value. Expected bool.')
+
+    @with_value_sens_wrt_params.setter
+    def with_value_sens_wrt_params(self, with_value_sens_wrt_params):
+        if isinstance(with_value_sens_wrt_params, bool):
+            self.__with_value_sens_wrt_params = with_value_sens_wrt_params
+        else:
+            raise Exception('Invalid with_value_sens_wrt_params value. Expected bool.')
 
     @ext_fun_compile_flags.setter
     def ext_fun_compile_flags(self, ext_fun_compile_flags):

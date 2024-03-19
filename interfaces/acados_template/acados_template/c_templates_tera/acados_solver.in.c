@@ -576,7 +576,7 @@ void {{ model.name }}_acados_create_3_create_and_set_functions({{ model.name }}_
     }
 
     capsule->discr_dyn_phi_params_jac = (external_function_param_{{ model.dyn_ext_fun_type }} *) malloc(sizeof(external_function_param_{{ model.dyn_ext_fun_type }})*N);
-    {% if solver_options.with_solution_sens_wrt_params %}
+  {% if solver_options.with_solution_sens_wrt_params %}
     for (int i = 0; i < N; i++)
     {
         {%- if model.dyn_ext_fun_type == "casadi" %}
@@ -586,7 +586,7 @@ void {{ model.name }}_acados_create_3_create_and_set_functions({{ model.name }}_
         external_function_param_{{ model.dyn_ext_fun_type }}_create(&capsule->discr_dyn_phi_params_jac[i], {{ dims.np }});
         {%- endif %}
     }
-    {% endif %}
+  {% endif %}
   {%- if solver_options.hessian_approx == "EXACT" %}
     capsule->discr_dyn_phi_fun_jac_ut_xt_hess = (external_function_param_{{ model.dyn_ext_fun_type }} *) malloc(sizeof(external_function_param_{{ model.dyn_ext_fun_type }})*N);
     for (int i = 0; i < N; i++)

@@ -1123,6 +1123,7 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->eps_sufficient_descent = 1e-4; // Leineweber1999: MUSCOD-I eps_T = 1e-4 (p.89); Note: eps_T = 0.1 originally proposed by Powell 1978 (Leineweber 1999, p. 53)
 
     opts->with_solution_sens_wrt_params = 0;
+    opts->with_value_sens_wrt_params = 0;
 
     return;
 }
@@ -1323,6 +1324,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         {
             int* with_solution_sens_wrt_params = (int *) value;
             opts->with_solution_sens_wrt_params = *with_solution_sens_wrt_params;
+        }
+        else if (!strcmp(field, "with_value_sens_wrt_params"))
+        {
+            int* with_value_sens_wrt_params = (int *) value;
+            opts->with_value_sens_wrt_params = *with_value_sens_wrt_params;
         }
         else
         {

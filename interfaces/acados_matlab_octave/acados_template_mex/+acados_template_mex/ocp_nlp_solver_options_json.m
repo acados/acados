@@ -86,6 +86,7 @@ classdef ocp_nlp_solver_options_json < handle
         ext_fun_compile_flags
         cost_discretization
         with_solution_sens_wrt_params
+        with_value_sens_wrt_params
 
     end
     methods
@@ -132,6 +133,7 @@ classdef ocp_nlp_solver_options_json < handle
             obj.ext_fun_compile_flags = '-O2';
             obj.cost_discretization = 'EULER';
             obj.with_solution_sens_wrt_params = 0;
+            obj.with_value_sens_wrt_params = 0;
             obj.as_rti_iter = 1;
             obj.as_rti_level = 4;
             obj.rti_log_residuals = 0;
