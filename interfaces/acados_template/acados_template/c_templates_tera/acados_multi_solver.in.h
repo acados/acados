@@ -130,7 +130,7 @@ typedef struct {{ name }}_solver_capsule
     external_function_param_{{ cost[jj].cost_ext_fun_type }} *ext_cost_fun_jac_{{ jj }};
     external_function_param_{{ cost[jj].cost_ext_fun_type }} *ext_cost_fun_jac_hess_{{ jj }};
     {% if solver_options.with_solution_sens_wrt_params %}
-    external_function_param_{{ cost[jj].cost_ext_fun_type }} *ext_cost_params_jac_{{ jj }};
+    external_function_param_{{ cost[jj].cost_ext_fun_type }} *ext_cost_hess_xu_p_{{ jj }};
     {% endif %}
 {% endif %}
 	{%- endfor %}{# for jj in range(end=n_phases) #}

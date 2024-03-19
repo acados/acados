@@ -126,6 +126,7 @@ typedef struct {{ model.name }}_solver_capsule
     external_function_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_fun;
     external_function_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_fun_jac_ut_xt;
     external_function_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_params_jac;
+    external_function_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_adj_p;
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_fun_jac_ut_xt_hess;
 {%- endif %}
@@ -144,7 +145,8 @@ typedef struct {{ model.name }}_solver_capsule
     external_function_param_{{ cost.cost_ext_fun_type }} *ext_cost_fun;
     external_function_param_{{ cost.cost_ext_fun_type }} *ext_cost_fun_jac;
     external_function_param_{{ cost.cost_ext_fun_type }} *ext_cost_fun_jac_hess;
-    external_function_param_{{ cost.cost_ext_fun_type }} *ext_cost_params_jac;
+    external_function_param_{{ cost.cost_ext_fun_type }} *ext_cost_hess_xu_p;
+    // external_function_param_{{ cost.cost_ext_fun_type }} *ext_cost_params_jac_p;
 {% endif %}
 
 {% if cost.cost_type_0 == "NONLINEAR_LS" %}
@@ -158,7 +160,7 @@ typedef struct {{ model.name }}_solver_capsule
     external_function_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_fun;
     external_function_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_fun_jac;
     external_function_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_fun_jac_hess;
-    external_function_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_params_jac;
+    external_function_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_hess_xu_p;
 {%- endif %}
 
 {% if cost.cost_type_e == "NONLINEAR_LS" %}
@@ -172,7 +174,7 @@ typedef struct {{ model.name }}_solver_capsule
     external_function_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_fun;
     external_function_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_fun_jac;
     external_function_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_fun_jac_hess;
-    external_function_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_params_jac;
+    external_function_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_hess_xu_p;
 {%- endif %}
 
     // constraints

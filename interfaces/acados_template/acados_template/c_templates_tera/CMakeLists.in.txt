@@ -279,7 +279,7 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_0_fun_jac.c
         {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_0_fun_jac_hess.c
         {% if solver_options.with_solution_sens_wrt_params %}
-        {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_0_params_jac.c
+        {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_0_hess_xu_p.c
         {% endif %}
     {%- else %}
         {{ model.name }}_cost/{{ cost.cost_source_ext_cost_0 }}
@@ -298,7 +298,7 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_fun_jac.c
         {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_fun_jac_hess.c
         {% if solver_options.with_solution_sens_wrt_params %}
-        {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_params_jac.c
+        {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_hess_xu_p.c
         {% endif %}
     {%- elif cost.cost_source_ext_cost != cost.cost_source_ext_cost_0 %}
         {{ model.name }}_cost/{{ cost.cost_source_ext_cost }}
@@ -317,7 +317,7 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_fun_jac.c
         {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_fun_jac_hess.c
         {% if solver_options.with_solution_sens_wrt_params %}
-        {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_params_jac.c
+        {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_hess_xu_p.c
         {% endif %}
     {%- elif cost.cost_source_ext_cost_e != cost.cost_source_ext_cost_0 %}
         {{ model.name }}_cost/{{ cost.cost_source_ext_cost_e }}

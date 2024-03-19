@@ -446,7 +446,7 @@ def generate_c_code_external_cost(ocp: AcadosOcp, stage_type, opts):
         suffix_name = "_cost_ext_cost_e_fun"
         suffix_name_hess = "_cost_ext_cost_e_fun_jac_hess"
         suffix_name_jac = "_cost_ext_cost_e_fun_jac"
-        suffix_name_param_sens = "_cost_ext_cost_e_params_jac"
+        suffix_name_param_sens = "_cost_ext_cost_e_hess_xu_p"
         suffix_name_value_sens = "_cost_ext_cost_e_value_jac_p"
         ext_cost = model.cost_expr_ext_cost_e
         custom_hess = model.cost_expr_ext_cost_custom_hess_e
@@ -458,7 +458,7 @@ def generate_c_code_external_cost(ocp: AcadosOcp, stage_type, opts):
         suffix_name = "_cost_ext_cost_fun"
         suffix_name_hess = "_cost_ext_cost_fun_jac_hess"
         suffix_name_jac = "_cost_ext_cost_fun_jac"
-        suffix_name_param_sens = "_cost_ext_cost_params_jac"
+        suffix_name_param_sens = "_cost_ext_cost_hess_xu_p"
         suffix_name_value_sens = "_cost_ext_cost_value_jac_p"
         ext_cost = model.cost_expr_ext_cost
         custom_hess = model.cost_expr_ext_cost_custom_hess
@@ -467,7 +467,7 @@ def generate_c_code_external_cost(ocp: AcadosOcp, stage_type, opts):
         suffix_name = "_cost_ext_cost_0_fun"
         suffix_name_hess = "_cost_ext_cost_0_fun_jac_hess"
         suffix_name_jac = "_cost_ext_cost_0_fun_jac"
-        suffix_name_param_sens = "_cost_ext_cost_0_params_jac"
+        suffix_name_param_sens = "_cost_ext_cost_0_hess_xu_p"
         suffix_name_value_sens = "_cost_ext_cost_0_value_jac_p"
         ext_cost = model.cost_expr_ext_cost_0
         custom_hess = model.cost_expr_ext_cost_custom_hess_0
@@ -479,7 +479,7 @@ def generate_c_code_external_cost(ocp: AcadosOcp, stage_type, opts):
     fun_name_hess = model.name + suffix_name_hess
     fun_name_jac = model.name + suffix_name_jac
     fun_name_param = model.name + suffix_name_param_sens
-    fan_name_value_sens = model.name + suffix_name_value_sens
+    fun_name_value_sens = model.name + suffix_name_value_sens
 
     # generate expression for full gradient and Hessian
     hess_uxz, grad_uxz = ca.hessian(ext_cost, ca.vertcat(u, x, z))
@@ -513,13 +513,13 @@ def generate_c_code_external_cost(ocp: AcadosOcp, stage_type, opts):
 
     if opts["with_solution_sens_wrt_params"]:
         jac_p = ca.jacobian(grad_uxz, p)
-        ext_cost_params_jac = ca.Function(fun_name_param, [x, u, z, p], [jac_p])
-        ext_cost_params_jac.generate(fun_name_param, casadi_codegen_opts)
+        ext_cost_hess_xu_p = ca.Function(fun_name_param, [x, u, z, p], [jac_p])
+        ext_cost_hess_xu_p.generate(fun_name_param, casadi_codegen_opts)
 
     if opts["with_value_sens_wrt_params"]:
         grad_p = ca.jacobian(ext_cost, p)
-        ext_cost_params_jac = ca.Function(fan_name_value_sens, [x, u, z, p], [grad_p])
-        ext_cost_params_jac.generate(fan_name_value_sens, casadi_codegen_opts)
+        ext_cost_params_jac_p = ca.Function(fun_name_value_sens, [x, u, z, p], [grad_p])
+        ext_cost_params_jac_p.generate(fun_name_value_sens, casadi_codegen_opts)
 
     os.chdir(cwd)
     return

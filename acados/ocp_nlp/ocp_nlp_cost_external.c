@@ -208,9 +208,9 @@ int ocp_nlp_cost_external_model_set(void *config_, void *dims_, void *model_,
     {
         model->ext_cost_fun_jac = (external_function_generic *) value_;
     }
-    else if (!strcmp(field, "ext_cost_params_jac"))
+    else if (!strcmp(field, "ext_cost_hess_xu_p"))
     {
-        model->ext_cost_params_jac = (external_function_generic *) value_;
+        model->ext_cost_hess_xu_p = (external_function_generic *) value_;
     }
     else if (!strcmp(field, "ext_cost_num_hess"))
     {
@@ -895,12 +895,12 @@ void ocp_nlp_cost_external_compute_params_jac(void *config_, void *dims_, void *
     ext_fun_out[0] = &memory->cost_grad_params_jac;
 
     // evaluate external function
-    if (model->ext_cost_params_jac == 0)
+    if (model->ext_cost_hess_xu_p == 0)
     {
-        printf("ocp_nlp_cost_external_compute_params_jac: ext_cost_params_jac is not provided. Exiting.\n");
+        printf("ocp_nlp_cost_external_compute_params_jac: ext_cost_hess_xu_p is not provided. Exiting.\n");
         exit(1);
     }
-    model->ext_cost_params_jac->evaluate(model->ext_cost_params_jac, ext_fun_type_in, ext_fun_in,
+    model->ext_cost_hess_xu_p->evaluate(model->ext_cost_hess_xu_p, ext_fun_type_in, ext_fun_in,
                                   ext_fun_type_out, ext_fun_out);
 
     // scale
