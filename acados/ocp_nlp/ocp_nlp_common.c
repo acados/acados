@@ -494,14 +494,14 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
     }
     else if (!strcmp(field, "np"))
     {
-        // TODO(params_sens) implement np for constraints
-        // nlp opt var
+        // nlp opt var -- TODO: not really an opt var, but we need to set it here
+        // -> rename function to ocp_nlp_dims_set_common?
         for (int i = 0; i <= N; i++)
         {
             // set np
             dims->np[i] = int_array[i];
         }
-        // // cost
+        // cost
         for (int i = 0; i <= N; i++)
         {
             config->cost[i]->dims_set(config->cost[i], dims->cost[i], "np", &int_array[i]);
@@ -511,6 +511,7 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
         {
             config->dynamics[i]->dims_set(config->dynamics[i], dims->dynamics[i], "np", &int_array[i]);
         }
+        // TODO(params_sens) implement np for constraints
         // // constraints
         // for (int i = 0; i <= N; i++)
         // {
