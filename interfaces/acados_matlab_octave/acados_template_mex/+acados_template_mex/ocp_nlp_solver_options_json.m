@@ -82,6 +82,7 @@ classdef ocp_nlp_solver_options_json < handle
         nlp_solver_ext_qp_res
         ext_fun_compile_flags
         cost_discretization
+        with_solution_sens_wrt_params
 
     end
     methods
@@ -127,6 +128,7 @@ classdef ocp_nlp_solver_options_json < handle
             obj.nlp_solver_ext_qp_res = 0;
             obj.ext_fun_compile_flags = '-O2';
             obj.cost_discretization = 'EULER';
+            obj.with_solution_sens_wrt_params = 0;
 
         end
         function s = struct(self)
