@@ -267,6 +267,7 @@ ocp_nlp_dims* {{ name }}_acados_create_2_create_and_set_dimensions({{ name }}_so
     nu[i] = {{ phases_dims[0].nu }};
     nz[i] = {{ phases_dims[0].nz }};
     ns[i] = {{ phases_dims[0].ns_0 }};
+    np[i] = {{ phases_dims[0].np }};
     // cost
     ny[i] = {{ phases_dims[0].ny_0 }};
     // constraints
@@ -291,6 +292,7 @@ ocp_nlp_dims* {{ name }}_acados_create_2_create_and_set_dimensions({{ name }}_so
     nu[i] = {{ 0 }};
     nz[i] = {{ dims_e.nz }};
     ns[i] = {{ dims_e.ns_e }};
+    np[i] = {{ dims_e.np }};
     // cost
     ny[i] = {{ dims_e.ny_e }};
     // constraints
