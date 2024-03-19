@@ -46,8 +46,8 @@ model = export_pendulum_ode_model()
 ocp.model = model
 
 Tf = 1.0
-nx = model.x.size()[0]
-nu = model.u.size()[0]
+nx = model.x.rows()
+nu = model.u.rows()
 ny = nx + nu
 ny_e = nx
 N = 20
@@ -102,8 +102,8 @@ cmake_builder = ocp_get_default_cmake_builder()
 
 ocp_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json', cmake_builder=cmake_builder)
 
-simX = np.ndarray((N+1, nx))
-simU = np.ndarray((N, nu))
+simX = np.zeros((N+1, nx))
+simU = np.zeros((N, nu))
 
 status = ocp_solver.solve()
 

@@ -151,8 +151,8 @@ model = export_pendulum_ode_model()
 ocp.model = model
 
 Tf = 1.0
-nx = model.x.size()[0]
-nu = model.u.size()[0]
+nx = model.x.rows()
+nu = model.u.rows()
 ny = nx + nu
 ny_e = nx
 N = 20
@@ -277,8 +277,8 @@ for i in range(N):
     ocp_solver.set(i, "u", u_init[i])
 
 # solve ocp
-simX = np.ndarray((N+1, nx))
-simU = np.ndarray((N, nu))
+simX = np.zeros((N+1, nx))
+simU = np.zeros((N, nu))
 
 status = ocp_solver.solve()
 

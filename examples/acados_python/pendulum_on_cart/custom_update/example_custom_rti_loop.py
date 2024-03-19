@@ -46,8 +46,8 @@ def main(use_cython=False):
     ocp.model = model
 
     Tf = 1.0
-    nx = model.x.size()[0]
-    nu = model.u.size()[0]
+    nx = model.x.rows()
+    nu = model.u.rows()
     ny = nx + nu
     ny_e = nx
     N = 20
@@ -106,8 +106,8 @@ def main(use_cython=False):
     else:
         ocp_solver = AcadosOcpSolver(ocp, json_file = solver_json)
 
-    simX = np.ndarray((N+1, nx))
-    simU = np.ndarray((N, nu))
+    simX = np.zeros((N+1, nx))
+    simU = np.zeros((N, nu))
 
 
     # call SQP_RTI solver in the loop:

@@ -53,8 +53,8 @@ def solve_ocp(cost_variant, num_stages):
     ocp = AcadosOcp()
     ocp.model = model
 
-    nx = model.x.size()[0]
-    nu = model.u.size()[0]
+    nx = model.x.rows()
+    nu = model.u.rows()
     ny = nx + nu
     ny_e = nx
 
@@ -137,8 +137,8 @@ def solve_ocp(cost_variant, num_stages):
     ocp_solver.options_set('qp_tau_min', 1e-10)
     ocp_solver.options_set('qp_mu0', 1e0)
 
-    simX = np.ndarray((N + 1, nx+1))
-    simU = np.ndarray((N, nu))
+    simX = np.zeros((N + 1, nx+1))
+    simU = np.zeros((N, nu))
 
     print(80*'-')
     print(f'solve original code with N = {N} and Tf = {Tf} s:')

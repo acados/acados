@@ -44,8 +44,8 @@ model = export_pendulum_ode_model()
 sim.model = model
 
 Tf = 0.1
-nx = model.x.size()[0]
-nu = model.u.size()[0]
+nx = model.x.rows()
+nu = model.u.rows()
 N = 200
 
 # set simulation time
@@ -105,7 +105,7 @@ if sim.solver_options.integrator_type == "GNSF" and not DETECT_GNSF:
 cmake_builder = sim_get_default_cmake_builder()
 acados_integrator = AcadosSimSolver(sim, cmake_builder=cmake_builder)
 
-simX = np.ndarray((N+1, nx))
+simX = np.zeros((N+1, nx))
 x0 = np.array([0.0, np.pi+1, 0.0, 0.0])
 u0 = np.array([0.0])
 acados_integrator.set("u", u0)

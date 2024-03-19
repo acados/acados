@@ -58,8 +58,8 @@ ocp = AcadosOcp()
 model = export_pendulum_ode_model()
 ocp.model = model
 
-nx = model.x.size()[0]
-nu = model.u.size()[0]
+nx = model.x.rows()
+nu = model.u.rows()
 ny = nx + nu
 ny_e = nx
 
@@ -122,8 +122,8 @@ ocp_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json')
 # --------------------------------------------------------------------------------
 # 0) solve the problem defined here (original from code export), analog to 'minimal_example_ocp.py'
 
-simX0 = np.ndarray((N0 + 1, nx))
-simU0 = np.ndarray((N0, nu))
+simX0 = np.zeros((N0 + 1, nx))
+simU0 = np.zeros((N0, nu))
 
 print(80*'-')
 print(f'solve original code with N = {N0} and Tf = {Tf_01} s:')
@@ -151,8 +151,8 @@ dt1 = Tf_01 / N12
 new_time_steps1 = np.tile(dt1, (N12,))  # Matlab's equivalent to repmat
 time1 = np.hstack([0, np.cumsum(new_time_steps1)])
 
-simX1 = np.ndarray((N12 + 1, nx))
-simU1 = np.ndarray((N12, nu))
+simX1 = np.zeros((N12 + 1, nx))
+simU1 = np.zeros((N12, nu))
 
 ocp_solver.set_new_time_steps(new_time_steps1)
 print(80*'-')
@@ -187,8 +187,8 @@ dt2 = Tf_2 / N12
 new_time_steps2 = np.tile(dt2, (N12,))  # Matlab's equivalent to repmat
 time2 = np.hstack([0, np.cumsum(new_time_steps2)])
 
-simX2 = np.ndarray((N12 + 1, nx))
-simU2 = np.ndarray((N12, nu))
+simX2 = np.zeros((N12 + 1, nx))
+simU2 = np.zeros((N12, nu))
 
 ocp_solver.set_new_time_steps(new_time_steps2)
 print(80*'-')

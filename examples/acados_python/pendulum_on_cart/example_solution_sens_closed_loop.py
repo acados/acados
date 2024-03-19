@@ -52,8 +52,8 @@ def create_ocp_solver():
 
     ocp.model = model
 
-    nx = model.x.size()[0]
-    nu = model.u.size()[0]
+    nx = model.x.rows()
+    nu = model.u.rows()
     ny = nx + nu
     ny_e = nx
 
@@ -138,6 +138,10 @@ def main():
     simX = np.zeros((Nsim+1, nx))
     simU = np.zeros((Nsim, nu))
     sens_u = np.zeros((nu, nx))
+<<<<<<< HEAD
+=======
+    sens_x = np.zeros((nx, nx))
+>>>>>>> master
 
     xcurrent = X0
     simX[0,:] = xcurrent

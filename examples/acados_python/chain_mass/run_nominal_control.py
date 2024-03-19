@@ -90,8 +90,8 @@ def run_nominal_control(chain_params):
     # set model
     ocp.model = model
 
-    nx = model.x.size()[0]
-    nu = model.u.size()[0]
+    nx = model.x.rows()
+    nu = model.u.rows()
     ny = nx + nu
     ny_e = nx
     Tf = N * Ts
@@ -210,8 +210,8 @@ def run_nominal_control(chain_params):
 
     #%% actual simulation
     N_sim = int(np.floor(Tsim/Ts))
-    simX = np.ndarray((N_sim+1, nx))
-    simU = np.ndarray((N_sim, nu))
+    simX = np.zeros((N_sim+1, nx))
+    simU = np.zeros((N_sim, nu))
     wall_dist = np.zeros((N_sim,))
 
     timings = np.zeros((N_sim,))

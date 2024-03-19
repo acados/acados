@@ -41,8 +41,8 @@ def export_ocp_solver(model, N, h, Q, R, Fmax=80, use_cython=False):
     ocp.model = model
 
     Tf = N*h
-    nx = model.x.size()[0]
-    nu = model.u.size()[0]
+    nx = model.x.rows()
+    nu = model.u.rows()
     ny = nx + nu
     ny_e = nx
 

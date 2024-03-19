@@ -59,8 +59,8 @@ def acados_settings(Tf, N, track_file):
     model_ac.con_h_expr = constraint.expr
 
     # set dimensions
-    nx = model.x.size()[0]
-    nu = model.u.size()[0]
+    nx = model.x.rows()
+    nu = model.u.rows()
     ny = nx + nu
     ny_e = nx
 

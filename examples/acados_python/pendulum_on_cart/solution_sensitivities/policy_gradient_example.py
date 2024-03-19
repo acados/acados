@@ -125,8 +125,8 @@ def export_parameter_augmented_ocp(
 
     # set dimensions
     ocp.dims.N = N_horizon
-    nu = ocp.model.u.size()[0]
-    nx = ocp.model.x.size()[0]
+    nu = ocp.model.u.rows()
+    nx = ocp.model.x.rows()
 
     # set cost
     Q_mat = 2 * np.diag([1e3, 1e3, 1e-2, 1e-2])
@@ -353,8 +353,8 @@ def main_augmented(param_M_as_state: bool, idxp: int, qp_solver_ric_alg: int, ei
         # if i < 1:
         #     nx = max(x0.shape)
         #     nu = 1
-        #     simX = np.ndarray((N_horizon+1, nx))
-        #     simU = np.ndarray((N_horizon, nu))
+        #     simX = np.zeros((N_horizon+1, nx))
+        #     simU = np.zeros((N_horizon, nu))
         #     for i in range(N_horizon):
         #         simX[i, :] = acados_ocp_solver.get(i, "x")
         #         simU[i, :] = acados_ocp_solver.get(i, "u")

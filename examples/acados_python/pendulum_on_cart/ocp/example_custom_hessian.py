@@ -46,8 +46,8 @@ model = export_pendulum_ode_model()
 ocp.model = model
 
 Tf = 2.
-nx = model.x.size()[0]
-nu = model.u.size()[0]
+nx = model.x.rows()
+nu = model.u.rows()
 ny = nx + nu
 ny_e = nx
 N = 40
@@ -115,8 +115,8 @@ ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 ocp_solver.options_set("line_search_use_sufficient_descent", 0)
 ocp_solver.options_set("full_step_dual", 1)
 
-simX = np.ndarray((N+1, nx))
-simU = np.ndarray((N, nu))
+simX = np.zeros((N+1, nx))
+simU = np.zeros((N, nu))
 
 for i, tau in enumerate(np.linspace(0, 1, N+1)):
     ocp_solver.set(i, 'x', x0*(1-tau) + tau*xf)

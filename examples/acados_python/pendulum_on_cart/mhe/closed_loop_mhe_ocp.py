@@ -69,8 +69,8 @@ W = np.diag(w_stds_plant)
 # ocp model and solver
 model = export_pendulum_ode_model()
 
-nx = model.x.size()[0]
-nu = model.u.size()[0]
+nx = model.x.rows()
+nu = model.u.rows()
 
 Q_ocp = np.diag([1e3, 1e3, 1e-2, 1e-2])
 R_ocp = 1 * np.eye(1)
@@ -80,7 +80,7 @@ acados_solver_ocp = export_ocp_solver(model, N_ocp, Ts, Q_ocp, R_ocp, Fmax=u_max
 # mhe model and solver
 model_mhe = export_mhe_ode_model()
 
-nw = model_mhe.u.size()[0]
+nw = model_mhe.u.rows()
 ny = nx
 
 # inverse covariances, R_mhe has to be scaled with h

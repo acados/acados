@@ -44,9 +44,9 @@ def export_mhe_solver(model, N, h, Q, Q0, R):
     x = ocp_mhe.model.x
     u = ocp_mhe.model.u
 
-    nx = x.size()[0]
-    nu = u.size()[0]
-    nparam = model.p.size()[0]
+    nx = x.rows()
+    nu = u.rows()
+    nparam = model.p.rows()
 
     ny_0 = 3*nx     # h(x), w and arrival cost
     ny = 2*nx     # h(x), w

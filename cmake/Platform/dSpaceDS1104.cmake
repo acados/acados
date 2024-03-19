@@ -26,55 +26,28 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.;
-
-import sys
-import numpy as np
-import scipy.linalg
-
-from acados_template import AcadosSim, AcadosOcpSolver, AcadosSimSolver
-
-from export_disturbed_chain_mass_model import export_disturbed_chain_mass_model
-
-from plot_utils import *
-from utils import *
-import matplotlib.pyplot as plt
-
-# create ocp object to formulate the simulation problem
-sim = AcadosSim()
+#
 
 
-def export_chain_mass_integrator(n_mass, m, D, L):
 
-    # simulation options
-    Ts = 0.2
+# The dSpace compiler only works with the prefixes/suffixes below!
 
-    # export model
-    M = n_mass - 2 # number of intermediate masses
-    model = export_disturbed_chain_mass_model(n_mass, m, D, L)
+set(CMAKE_IMPORT_LIBRARY_PREFIX "")
+set(CMAKE_SHARED_LIBRARY_PREFIX "")
+set(CMAKE_SHARED_MODULE_PREFIX  "")
+set(CMAKE_STATIC_LIBRARY_PREFIX "")
 
-    # set model
-    sim.model = model
+set(CMAKE_EXECUTABLE_SUFFIX     ".exe")
+set(CMAKE_IMPORT_LIBRARY_SUFFIX ".lib")
+set(CMAKE_SHARED_LIBRARY_SUFFIX ".lib")
+set(CMAKE_SHARED_MODULE_SUFFIX  ".lib")
+set(CMAKE_STATIC_LIBRARY_SUFFIX ".lib")
 
-    nx = model.x.rows()
-    nu = model.u.rows()
-    ny = nx + nu
-    ny_e = nx
+set(CMAKE_C_FLAGS "\"-J${DSPACE_RTLIB}\"")
 
-    # disturbances
-    nparam = 3*M
-    sim.parameter_values = np.zeros((nparam,))
+set(CMAKE_INCLUDE_FLAG_C "-J")
+set(CMAKE_INCLUDE_FLAG_CXX "-J")
 
-    # solver options
-    sim.solver_options.integrator_type = 'IRK'
-
-    sim.solver_options.num_stages = 2
-    sim.solver_options.num_steps = 2
-    # sim.solver_options.nlp_solver_tol_eq = 1e-9
-
-    # set prediction horizon
-    sim.solver_options.T = Ts
-
-    # acados_ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp_' + model.name + '.json')
-    acados_integrator = AcadosSimSolver(sim, json_file = 'acados_ocp_' + model.name + '.json')
-
-    return acados_integrator
+add_definitions(-D_DS1104)
+remove_definitions(-DLINUX)
+remove_definitions(-D__LINUX__)

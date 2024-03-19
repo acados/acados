@@ -45,8 +45,8 @@ def main():
     ocp.model = model
 
     Tf = 1.0
-    nx = model.x.size()[0]
-    nu = model.u.size()[0]
+    nx = model.x.rows()
+    nu = model.u.rows()
     N = 20
 
     # set dimensions
@@ -89,8 +89,8 @@ def main():
     # create solver
     ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json', simulink_opts=simulink_opts)
 
-    simX = np.ndarray((N+1, nx))
-    simU = np.ndarray((N, nu))
+    simX = np.zeros((N+1, nx))
+    simU = np.zeros((N, nu))
 
     status = ocp_solver.solve()
     ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
