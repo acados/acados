@@ -34,6 +34,8 @@ import json
 import os
 import shutil
 import sys
+import time
+
 from copy import deepcopy
 from ctypes import (POINTER, byref, c_char_p, c_double, c_int, c_int64,
                     c_void_p, cast)
@@ -487,6 +489,8 @@ class AcadosOcpSolver:
         self.__get_pointers_solver()
 
         self.status = 0
+        self.time_solution_sens_solve = 0.0
+        self.time_solution_sens_lin = 0.0
 
         # gettable fields
         self.__qp_dynamics_fields = ['A', 'B', 'b']
@@ -704,6 +708,8 @@ class AcadosOcpSolver:
             OR positive definiteness of the reduced Hessian if the classic Riccati recursion is used (compare: `solver_options.qp_solver_ric_alg`), \n
 
         (4) the solution of at least one QP in advance to evaluation of the sensitivities as the factorization is reused.
+
+        .. note:: Timing of the sensitivities computation consists of time_solution_sens_lin, time_solution_sens_solve.
         """
 
         if not (self.acados_ocp.solver_options.qp_solver == 'FULL_CONDENSING_HPIPM' or
@@ -746,8 +752,10 @@ class AcadosOcpSolver:
             field = "params_global"
 
             # compute jacobians wrt params in all modules
+            t0 = time.time()
             self.__acados_lib.ocp_nlp_eval_params_jac.argtypes = [c_void_p, c_void_p, c_void_p]
             self.__acados_lib.ocp_nlp_eval_params_jac(self.nlp_solver, self.nlp_in, self.nlp_out)
+            self.time_solution_sens_lin = time.time() - t0
 
         else:
             raise Exception(f"AcadosOcpSolver.eval_solution_sensitivity(): Unknown field: {with_respect_to=}")
@@ -760,17 +768,21 @@ class AcadosOcpSolver:
 
             if s < N:
                 nu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "u".encode('utf-8'))
-
                 sens_u.append(np.zeros((nu, ngrad)))
 
         # set input and output types
         self.__acados_lib.ocp_nlp_eval_param_sens.argtypes = [c_void_p, c_char_p, c_int, c_int, c_void_p]
         self.__acados_lib.ocp_nlp_eval_param_sens.restype = None
 
+        self.time_solution_sens_solve = 0.0
         for k in range(ngrad):
             # evaluate sensitivity
             self.__acados_lib.ocp_nlp_eval_param_sens(self.nlp_solver, field.encode('utf-8'), 0, k, self.sens_out)
 
+            # get timing
+            self.time_solution_sens_solve += self.get_stats("time_solution_sensitivities")
+
+            # extract sensitivities
             for n, s in enumerate(stages_):
                 sens_x[n][:, k] = self.get(s, "sens_x")
 
@@ -1091,6 +1103,8 @@ class AcadosOcpSolver:
             - time_qp_solver_call: CPU time inside qp solver (without converting the QP)
             - time_qp_xcond: time_glob: CPU time globalization
             - time_solution_sensitivities: CPU time for previous call to eval_param_sens
+            - time_solution_sens_lin: CPU time for linearization in eval_param_sens
+            - time_solution_sens_solve: CPU time for solving in eval_solution_sensitivity
             - time_reg: CPU time regularization
             - sqp_iter: number of SQP iterations
             - qp_stat: status of QP solver
@@ -1101,6 +1115,11 @@ class AcadosOcpSolver:
             - residuals: residuals of last iterate
             - alpha: step sizes of SQP iterations
         """
+
+        if field == "time_solution_sens_lin":
+            return self.time_solution_sens_lin
+        elif field == "time_solution_sens_solve":
+            return self.time_solution_sens_solve
 
         double_fields = ['time_tot',
                   'time_lin',
@@ -1126,8 +1145,8 @@ class AcadosOcpSolver:
                   'res_eq_all',
                   'res_stat_all',
                 ]
-        field = field_.encode('utf-8')
 
+        field = field_.encode('utf-8')
 
         if field_ in ['sqp_iter', 'stat_m', 'stat_n']:
             out = c_int(0)
