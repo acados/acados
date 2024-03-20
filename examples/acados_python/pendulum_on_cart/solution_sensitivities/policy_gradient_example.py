@@ -469,7 +469,7 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True):
 
 def plot_cost_gradient_results(p_test, cost_values, acados_cost_grad, np_cost_grad, cost_reconstructed_np_grad):
     latexify_plot()
-    _, ax = plt.subplots(nrows=2, ncols=1, sharex=True, figsize=(9,9))
+    _, ax = plt.subplots(nrows=4, ncols=1, sharex=True, figsize=(9,9))
 
     ax[0].plot(p_test, cost_values, label='cost acados', color='k')
     ax[0].plot(p_test, cost_reconstructed_np_grad, "--", label='reconstructed from finite diff')
@@ -483,6 +483,21 @@ def plot_cost_gradient_results(p_test, cost_values, acados_cost_grad, np_cost_gr
     ax[1].set_yscale("log")
     ax[1].grid(True)
     ax[1].legend()
+
+    # plot differences
+    isub = 2
+    ax[isub].plot(p_test, np.abs(acados_cost_grad - np_cost_grad), "--", label='acados vs. finite diff')
+    ax[isub].set_ylabel(r"difference $\partial_p$ cost")
+    ax[isub].set_yscale("log")
+    ax[isub].grid(True)
+    ax[isub].legend()
+
+    isub += 1
+    ax[isub].plot(p_test, np.abs(acados_cost_grad - np_cost_grad) / np.abs(np_cost_grad), "--", label='acados vs. finite diff')
+    ax[isub].set_ylabel(r"rel. diff. $\partial_p$ cost")
+    ax[isub].set_yscale("log")
+    ax[isub].grid(True)
+    ax[isub].legend()
 
     ax[-1].set_xlabel(f"mass")
     ax[-1].set_xlim([p_test[0], p_test[-1]])
