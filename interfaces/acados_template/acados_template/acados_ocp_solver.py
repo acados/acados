@@ -687,7 +687,7 @@ class AcadosOcpSolver:
             self.__get_pointers_solver()
 
 
-    def get_optimal_value_gradient(self, with_respect_to: str = "initital_state"):
+    def get_optimal_value_gradient(self, with_respect_to: str = "initital_state") -> np.ndarray:
         """
         Returns the gradient of the optimal value function w.r.t. the current initial state.
         Disclaimer: This function only returns reasonable values if the solver has converged for the current problem instance.

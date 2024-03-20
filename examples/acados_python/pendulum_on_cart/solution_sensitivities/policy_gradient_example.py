@@ -453,6 +453,10 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True):
     cost_reconstructed_np_grad = np.cumsum(np_cost_grad) * delta_p + cost_values[0]
     plot_cost_gradient_results(p_test, cost_values, sens_cost, np_cost_grad, cost_reconstructed_np_grad)
 
+
+    # test
+    assert np.allclose(sens_u, np_grad, atol=1e2)
+
     # Compare to numerical gradients
     np_grad = np.gradient(pi, delta_p)
     pi_reconstructed_np_grad = np.cumsum(np_grad) * delta_p + pi[0]

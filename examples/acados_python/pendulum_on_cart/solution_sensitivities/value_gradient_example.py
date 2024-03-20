@@ -70,11 +70,13 @@ def main():
             acados_ocp_solver.set(n, 'p', p)
         pi[i] = acados_ocp_solver.solve_for_x0(x0)[0]
         cost_values[i] = acados_ocp_solver.get_cost()
-        sens_cost[i] = acados_ocp_solver.get_optimal_value_gradient("params_global")
+        sens_cost[i] = acados_ocp_solver.get_optimal_value_gradient("params_global").item()
 
     # evaluate cost gradient
     np_cost_grad = np.gradient(cost_values, delta_p)
     cost_reconstructed_np_grad = np.cumsum(np_cost_grad) * delta_p + cost_values[0]
+
+    assert np.allclose(sens_cost, np_cost_grad, atol=1e2, rtol=1e-2)
     plot_cost_gradient_results(p_test, cost_values, sens_cost, np_cost_grad, cost_reconstructed_np_grad)
 
 
