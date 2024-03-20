@@ -587,6 +587,20 @@ void {{ model.name }}_acados_create_3_create_and_set_functions({{ model.name }}_
         {%- endif %}
     }
   {% endif %}
+
+    capsule->discr_dyn_phi_adj_p = (external_function_param_{{ model.dyn_ext_fun_type }} *) malloc(sizeof(external_function_param_{{ model.dyn_ext_fun_type }})*N);
+  {% if solver_options.with_value_sens_wrt_params %}
+    for (int i = 0; i < N; i++)
+    {
+        {%- if model.dyn_ext_fun_type == "casadi" %}
+        MAP_CASADI_FNC(discr_dyn_phi_adj_p[i], {{ model.name }}_dyn_disc_phi_params_jac);
+        {%- else %}
+        capsule->discr_dyn_phi_adj_p[i].fun = &{{ model.dyn_disc_params_jac }};
+        external_function_param_{{ model.dyn_ext_fun_type }}_create(&capsule->discr_dyn_phi_adj_p[i], {{ dims.np }});
+        {%- endif %}
+    }
+  {% endif %}
+
   {%- if solver_options.hessian_approx == "EXACT" %}
     capsule->discr_dyn_phi_fun_jac_ut_xt_hess = (external_function_param_{{ model.dyn_ext_fun_type }} *) malloc(sizeof(external_function_param_{{ model.dyn_ext_fun_type }})*N);
     for (int i = 0; i < N; i++)
@@ -896,6 +910,10 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
         {% if solver_options.with_solution_sens_wrt_params %}
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "disc_dyn_params_jac",
                                    &capsule->discr_dyn_phi_params_jac[i]);
+        {% endif %}
+        {% if solver_options.with_value_sens_wrt_params %}
+        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "disc_dyn_adj_p",
+                                   &capsule->discr_dyn_phi_adj_p[i]);
         {% endif %}
         {%- if solver_options.hessian_approx == "EXACT" %}
         ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "disc_dyn_fun_jac_hess",
@@ -2019,6 +2037,9 @@ void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* 
     int with_solution_sens_wrt_params = {{ solver_options.with_solution_sens_wrt_params }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "with_solution_sens_wrt_params", &with_solution_sens_wrt_params);
 
+    int with_value_sens_wrt_params = {{ solver_options.with_value_sens_wrt_params }};
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "with_value_sens_wrt_params", &with_value_sens_wrt_params);
+
     int full_step_dual = {{ solver_options.full_step_dual }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "full_step_dual", &full_step_dual);
 
@@ -2506,6 +2527,9 @@ int {{ model.name }}_acados_update_params({{ model.name }}_solver_capsule* capsu
         {% if solver_options.with_solution_sens_wrt_params %}
         capsule->discr_dyn_phi_params_jac[stage].set_param(capsule->discr_dyn_phi_params_jac+stage, p);
         {% endif %}
+        {% if solver_options.with_solution_sens_wrt_params %}
+        capsule->discr_dyn_phi_adj_p[stage].set_param(capsule->discr_dyn_phi_adj_p+stage, p);
+        {% endif %}
     {%- if solver_options.hessian_approx == "EXACT" %}
         capsule->discr_dyn_phi_fun_jac_ut_xt_hess[stage].set_param(capsule->discr_dyn_phi_fun_jac_ut_xt_hess+stage, p);
     {%- endif %}
@@ -2658,6 +2682,9 @@ int {{ model.name }}_acados_update_params_sparse({{ model.name }}_solver_capsule
         capsule->discr_dyn_phi_fun_jac_ut_xt[stage].set_param_sparse(capsule->discr_dyn_phi_fun_jac_ut_xt+stage, n_update, idx, p);
         {% if solver_options.with_solution_sens_wrt_params %}
         capsule->discr_dyn_phi_params_jac[stage].set_param_sparse(capsule->discr_dyn_phi_params_jac+stage, n_update, idx, p);
+        {% endif %}
+        {% if solver_options.with_value_sens_wrt_params %}
+        capsule->discr_dyn_phi_adj_p[stage].set_param_sparse(capsule->discr_dyn_phi_adj_p+stage, n_update, idx, p);
         {% endif %}
     {%- if solver_options.hessian_approx == "EXACT" %}
         capsule->discr_dyn_phi_fun_jac_ut_xt_hess[stage].set_param_sparse(capsule->discr_dyn_phi_fun_jac_ut_xt_hess+stage, n_update, idx, p);
@@ -2849,6 +2876,9 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
         {% if solver_options.with_solution_sens_wrt_params %}
         external_function_param_{{ model.dyn_ext_fun_type }}_free(&capsule->discr_dyn_phi_params_jac[i]);
         {% endif %}
+        {% if solver_options.with_value_sens_wrt_params %}
+        external_function_param_{{ model.dyn_ext_fun_type }}_free(&capsule->discr_dyn_phi_adj_p[i]);
+        {% endif %}
     {%- if solver_options.hessian_approx == "EXACT" %}
         external_function_param_{{ model.dyn_ext_fun_type }}_free(&capsule->discr_dyn_phi_fun_jac_ut_xt_hess[i]);
     {%- endif %}
@@ -2856,6 +2886,7 @@ int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
     free(capsule->discr_dyn_phi_fun);
     free(capsule->discr_dyn_phi_fun_jac_ut_xt);
     free(capsule->discr_dyn_phi_params_jac);
+    free(capsule->discr_dyn_phi_adj_p);
     {%- if solver_options.hessian_approx == "EXACT" %}
     free(capsule->discr_dyn_phi_fun_jac_ut_xt_hess);
     {%- endif %}
