@@ -444,12 +444,14 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True):
 
         # Calculate the policy gradient
         sens_x_, sens_u_ = sensitivity_solver.eval_solution_sensitivity(0, "params_global")
+
+        sens_cost[i] = sensitivity_solver.get_optimal_value_gradient("params_global")
         sens_u[i] = sens_u_.item()
 
     # evaluate cost gradient
     np_cost_grad = np.gradient(cost_values, delta_p)
     cost_reconstructed_np_grad = np.cumsum(np_cost_grad) * delta_p + cost_values[0]
-    plot_cost_gradient_results(p_test, cost_values, np_cost_grad, cost_reconstructed_np_grad)
+    plot_cost_gradient_results(p_test, cost_values, sens_cost, np_cost_grad, cost_reconstructed_np_grad)
 
     # Compare to numerical gradients
     np_grad = np.gradient(pi, delta_p)
@@ -465,7 +467,7 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True):
                  eigen_analysis, qp_solver_ric_alg, parameter_name="mass")
 
 
-def plot_cost_gradient_results(p_test, cost_values, np_cost_grad, cost_reconstructed_np_grad):
+def plot_cost_gradient_results(p_test, cost_values, acados_cost_grad, np_cost_grad, cost_reconstructed_np_grad):
     latexify_plot()
     _, ax = plt.subplots(nrows=2, ncols=1, sharex=True, figsize=(9,9))
 
@@ -476,6 +478,7 @@ def plot_cost_gradient_results(p_test, cost_values, np_cost_grad, cost_reconstru
     ax[0].legend()
 
     ax[1].plot(p_test, np_cost_grad, "--", label='finite diff')
+    ax[1].plot(p_test, acados_cost_grad, "--", label='acados')
     ax[1].set_ylabel(r"$\partial_p$ cost")
     ax[1].set_yscale("log")
     ax[1].grid(True)
