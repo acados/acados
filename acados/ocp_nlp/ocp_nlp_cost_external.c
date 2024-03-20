@@ -918,7 +918,6 @@ void ocp_nlp_cost_external_compute_params_jac(void *config_, void *dims_, void *
 
 void ocp_nlp_cost_external_eval_grad_p(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_, struct blasfeo_dvec *out)
 {
-    printf("ocp_nlp_cost_external_eval_grad_p\n");
     ocp_nlp_cost_external_dims *dims = dims_;
     ocp_nlp_cost_external_model *model = model_;
     ocp_nlp_cost_external_memory *memory = memory_;
@@ -967,8 +966,6 @@ void ocp_nlp_cost_external_eval_grad_p(void *config_, void *dims_, void *model_,
     {
         blasfeo_dvecsc(np, model->scaling, out, 0);
     }
-
-    printf("ocp_nlp_cost_external_eval_grad_p - done\n");
 
     return;
 }
