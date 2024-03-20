@@ -219,6 +219,7 @@ def export_parametric_ocp(
         ocp.solver_options.qp_solver_iter_max = 200
         ocp.solver_options.tol = 1e-10
         ocp.solver_options.with_solution_sens_wrt_params = True
+        ocp.solver_options.with_value_sens_wrt_params = True
     else:
         ocp.solver_options.nlp_solver_max_iter = 400
         ocp.solver_options.tol = 1e-8
@@ -336,7 +337,7 @@ def main_augmented(param_M_as_state: bool, idxp: int, qp_solver_ric_alg: int, ei
         sensitivity_solver.load_iterate(filename='iterate.json', verbose=False)
         sensitivity_solver.solve_for_x0(x, fail_on_nonzero_status=False, print_stats_on_failure=False)
         residuals = sensitivity_solver.get_stats("residuals")
-        print(f"residuals sensitivity_solver {residuals} status {sensitivity_solver.status}")
+        # print(f"residuals sensitivity_solver {residuals} status {sensitivity_solver.status}")
 
         if sensitivity_solver.status not in [0, 2]:
             print(f"warning")
@@ -400,6 +401,8 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True):
     sensitivity_solver = AcadosOcpSolver(ocp, json_file="sensitivity_solver.json")
 
     sens_u = np.zeros(np_test)
+    sens_cost = np.zeros(np_test)
+    cost_values = np.zeros(np_test)
 
     if eigen_analysis:
         min_eig_full = np.zeros(np_test)
@@ -423,13 +426,14 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True):
             acados_ocp_solver.set(n, 'p', p)
             sensitivity_solver.set(n, 'p', p)
         pi[i] = acados_ocp_solver.solve_for_x0(x0)[0]
+        cost_values[i] = acados_ocp_solver.get_cost()
 
         acados_ocp_solver.store_iterate(filename='iterate.json', overwrite=True, verbose=False)
 
         sensitivity_solver.load_iterate(filename='iterate.json', verbose=False)
         sensitivity_solver.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
         residuals = sensitivity_solver.get_stats("residuals")
-        print(f"residuals sensitivity_solver {residuals} status {sensitivity_solver.status}")
+        # print(f"residuals sensitivity_solver {residuals} status {sensitivity_solver.status}")
 
         if sensitivity_solver.status not in [0, 2]:
             print(f"warning")
@@ -440,7 +444,14 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True):
 
         # Calculate the policy gradient
         sens_x_, sens_u_ = sensitivity_solver.eval_solution_sensitivity(0, "params_global")
+
+        sens_cost[i] = sensitivity_solver.get_optimal_value_gradient("params_global")
         sens_u[i] = sens_u_.item()
+
+    # evaluate cost gradient
+    np_cost_grad = np.gradient(cost_values, delta_p)
+    cost_reconstructed_np_grad = np.cumsum(np_cost_grad) * delta_p + cost_values[0]
+    plot_cost_gradient_results(p_test, cost_values, sens_cost, np_cost_grad, cost_reconstructed_np_grad)
 
     # Compare to numerical gradients
     np_grad = np.gradient(pi, delta_p)
@@ -455,6 +466,52 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True):
                  min_eig_full, min_eig_proj_hess, min_eig_P,
                  min_abs_eig_full, min_abs_eig_proj_hess, min_abs_eig_P,
                  eigen_analysis, qp_solver_ric_alg, parameter_name="mass")
+
+    # test: check median since derivative cannot be compared at active set changes
+    assert np.median(np.abs(sens_u - np_grad)) <= 1e-2
+    assert np.median(np.abs(sens_cost - np_cost_grad)) <= 1e-1
+
+
+def plot_cost_gradient_results(p_test, cost_values, acados_cost_grad, np_cost_grad, cost_reconstructed_np_grad):
+    latexify_plot()
+    _, ax = plt.subplots(nrows=4, ncols=1, sharex=True, figsize=(9,9))
+
+    ax[0].plot(p_test, cost_values, label='cost acados', color='k')
+    ax[0].plot(p_test, cost_reconstructed_np_grad, "--", label='reconstructed from finite diff')
+    ax[0].set_ylabel(r"cost")
+    ax[0].grid(True)
+    ax[0].legend()
+
+    ax[1].plot(p_test, np_cost_grad, "--", label='finite diff')
+    ax[1].plot(p_test, acados_cost_grad, "--", label='acados')
+    ax[1].set_ylabel(r"$\partial_p$ cost")
+    ax[1].set_yscale("log")
+    ax[1].grid(True)
+    ax[1].legend()
+
+    # plot differences
+    isub = 2
+    ax[isub].plot(p_test, np.abs(acados_cost_grad - np_cost_grad), "--", label='acados vs. finite diff')
+    ax[isub].set_ylabel(r"difference $\partial_p$ cost")
+    ax[isub].set_yscale("log")
+    ax[isub].grid(True)
+    ax[isub].legend()
+
+    isub += 1
+    ax[isub].plot(p_test, np.abs(acados_cost_grad - np_cost_grad) / np.abs(np_cost_grad), "--", label='acados vs. finite diff')
+    ax[isub].set_ylabel(r"rel. diff. $\partial_p$ cost")
+    ax[isub].set_yscale("log")
+    ax[isub].grid(True)
+    ax[isub].legend()
+
+    ax[-1].set_xlabel(f"mass")
+    ax[-1].set_xlim([p_test[0], p_test[-1]])
+
+    fig_filename = f"cost_gradient.pdf"
+    plt.savefig(fig_filename)
+    print(f"stored figure as {fig_filename}")
+    plt.show()
+
 
 
 def plot_results(p_test, pi, pi_reconstructed_acados, pi_reconstructed_np_grad, sens_u, np_grad,

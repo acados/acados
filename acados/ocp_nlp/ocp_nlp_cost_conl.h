@@ -200,6 +200,9 @@ void ocp_nlp_cost_conl_update_qp_matrices(void *config_, void *dims, void *model
 void ocp_nlp_cost_conl_compute_fun(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_);
 //
 void ocp_nlp_cost_conl_compute_params_jac(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_);
+//
+void ocp_nlp_cost_conl_eval_grad_p(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_, struct blasfeo_dvec *out);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

@@ -618,6 +618,10 @@ void ocp_nlp_dynamics_disc_model_set(void *config_, void *dims_, void *model_, c
     {
         model->disc_dyn_params_jac = (external_function_generic *) value;
     }
+    else if (!strcmp(field, "disc_dyn_adj_p"))
+    {
+        model->disc_dyn_adj_p = (external_function_generic *) value;
+    }
     else
     {
         printf("\nerror: field %s not available in ocp_nlp_dynamics_disc_model_set\n", field);
@@ -919,11 +923,59 @@ void ocp_nlp_dynamics_disc_compute_fun_and_adjoint(void *config_, void *dims_, v
 }
 
 
-
 int ocp_nlp_dynamics_disc_precompute(void *config_, void *dims, void *model_, void *opts_,
                                         void *mem_, void *work_)
 {
     return ACADOS_SUCCESS;
+}
+
+void ocp_nlp_dynamics_disc_eval_adj_p(void* config_, void *dims_, void *model_, void *opts_, void *mem_, struct blasfeo_dvec *out)
+{
+    ocp_nlp_dynamics_disc_dims *dims = dims_;
+    ocp_nlp_dynamics_disc_memory *memory = mem_;
+    ocp_nlp_dynamics_disc_model *model = model_;
+
+    int nu = dims->nu;
+
+    ext_fun_arg_t ext_fun_type_in[3];
+    void *ext_fun_in[3];
+    ext_fun_arg_t ext_fun_type_out[1];
+    void *ext_fun_out[1];
+
+    struct blasfeo_dvec *ux = memory->ux;
+
+    struct blasfeo_dvec_args x_in;  // input x of external fun;
+    x_in.x = ux;
+    x_in.xi = nu;
+
+    struct blasfeo_dvec_args u_in;  // input u of external fun;
+    u_in.x = ux;
+    u_in.xi = 0;
+
+    struct blasfeo_dvec_args pi_in; // input pi of external fun;
+    pi_in.x = memory->pi;
+    pi_in.xi = 0;
+
+	ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+	ext_fun_in[0] = &x_in;
+	ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
+	ext_fun_in[1] = &u_in;
+
+	ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
+	ext_fun_in[2] = &pi_in;
+
+	ext_fun_type_out[0] = BLASFEO_DVEC;
+	ext_fun_out[0] = out;
+
+	// call external function
+    if (model->disc_dyn_adj_p == NULL)
+    {
+        printf("ocp_nlp_dynamics_dics_eval_adj_p - model->disc_dyn_adj_p is NULL\n");
+        exit(1);
+    }
+	model->disc_dyn_adj_p->evaluate(model->disc_dyn_adj_p, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+
+    return;
 }
 
 
@@ -966,6 +1018,7 @@ void ocp_nlp_dynamics_disc_config_initialize_default(void *config_)
     config->compute_fun = &ocp_nlp_dynamics_disc_compute_fun;
     config->compute_params_jac = &ocp_nlp_dynamics_disc_compute_params_jac;
     config->compute_fun_and_adjoint = &ocp_nlp_dynamics_disc_compute_fun_and_adjoint;
+    config->eval_lagrange_grad_p = &ocp_nlp_dynamics_disc_eval_adj_p;
     config->precompute = &ocp_nlp_dynamics_disc_precompute;
     config->config_initialize_default = &ocp_nlp_dynamics_disc_config_initialize_default;
 

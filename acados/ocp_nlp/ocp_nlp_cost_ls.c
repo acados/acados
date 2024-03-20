@@ -1010,6 +1010,12 @@ void ocp_nlp_cost_ls_compute_params_jac(void *config_, void *dims, void *model_,
     exit(1);
 }
 
+void ocp_nlp_cost_ls_eval_grad_p(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_, struct blasfeo_dvec *out)
+{
+    printf("ocp_nlp_cost_ls_eval_grad_p: not implemented.\n");
+    exit(1);
+}
+
 
 void ocp_nlp_cost_ls_config_initialize_default(void *config_)
 {
@@ -1042,6 +1048,7 @@ void ocp_nlp_cost_ls_config_initialize_default(void *config_)
     config->compute_fun = &ocp_nlp_cost_ls_compute_fun;
     config->compute_params_jac = &ocp_nlp_cost_ls_compute_params_jac;
     config->compute_gradient = &ocp_nlp_cost_ls_compute_gradient;
+    config->eval_grad_p = &ocp_nlp_cost_ls_eval_grad_p;
     config->config_initialize_default = &ocp_nlp_cost_ls_config_initialize_default;
     config->precompute = &ocp_nlp_cost_ls_precompute;
 

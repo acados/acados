@@ -134,7 +134,6 @@ void ocp_nlp_dynamics_disc_memory_get_params_grad(void *config, void *dims, void
 void ocp_nlp_dynamics_disc_memory_get_params_lag_grad(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset);
 
 
-
 /************************************************
  * workspace
  ************************************************/
@@ -158,6 +157,7 @@ typedef struct
     external_function_generic *disc_dyn_fun_jac;
     external_function_generic *disc_dyn_fun_jac_hess;
     external_function_generic *disc_dyn_params_jac;
+    external_function_generic *disc_dyn_adj_p;
 } ocp_nlp_dynamics_disc_model;
 
 //
@@ -183,13 +183,8 @@ void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims, void *m
 void ocp_nlp_dynamics_disc_compute_fun(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
 //
 void ocp_nlp_dynamics_disc_compute_params_jac(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
-
-// TODO(params_sens):
-// step 1: evaluate jacobian of dynamics wrt all parameters
-// void ocp_nlp_dynamics_disc_update_params_jacobian(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
-//  step 2: get params gradient for a given parameter component (index)
-// void ocp_nlp_dynamics_disc_get_params_grad(void *config, void *dims, void *mem, int *index);
-
+//
+void ocp_nlp_dynamics_disc_eval_adj_p(void* config_, void *dims_, void *model_, void *opts_, void *mem_, struct blasfeo_dvec *out);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -687,13 +687,51 @@ class AcadosOcpSolver:
             self.__get_pointers_solver()
 
 
+    def get_optimal_value_gradient(self, with_respect_to: str = "initial_state") -> np.ndarray:
+        """
+        Returns the gradient of the optimal value function w.r.t. the current initial state.
+        Disclaimer: This function only returns reasonable values if the solver has converged for the current problem instance.
+
+        :param with_respect_to: string in ["initial_state", "params_global"]
+
+        """
+
+        if with_respect_to == "initial_state":
+            if not self.acados_ocp.constraints.has_x0:
+                raise Exception("OCP does not have an initial state constraint.")
+
+            nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
+            nbu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "lbu".encode('utf-8'))
+
+            lam = self.get(0, 'lam')
+            nlam_non_slack = lam.shape[0]//2 - self.acados_ocp.dims.ns_0
+            grad = lam[nbu:nbu+nx] - lam[nlam_non_slack+nbu : nlam_non_slack+nbu+nx]
+
+        elif with_respect_to == "params_global":
+            nparam = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p".encode('utf-8'))
+
+            field = "params_global".encode('utf-8')
+            t0 = time.time()
+            grad = np.zeros((nparam,))
+            grad_p = np.ascontiguousarray(grad, dtype=np.float64)
+            c_grad_p = cast(grad_p.ctypes.data, POINTER(c_double))
+            self.__acados_lib.ocp_nlp_eval_lagrange_grad_p.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_double)]
+            self.__acados_lib.ocp_nlp_eval_lagrange_grad_p(self.nlp_solver, self.nlp_in, field, c_grad_p)
+            self.time_value_grad = time.time() - t0
+
+        else:
+            raise Exception(f"AcadosOcpSolver.eval_solution_sensitivity(): Unknown field: {with_respect_to=}")
+        return grad
+
+
+
     def eval_solution_sensitivity(self, stages: Union[int, List[int]], with_respect_to: str) \
                 -> Tuple[Union[List[np.ndarray], np.ndarray], Union[List[np.ndarray], np.ndarray]]:
         """
         Evaluate the sensitivity of the current solution x_i, u_i with respect to the initial state or the parameters for all stages i in `stages`.
 
             :param stages: stages for which the sensitivities are returned, int or list of int
-            :param with_respect_to: string in ["initital_state", "params_global"]
+            :param with_respect_to: string in ["initial_state", "params_global"]
             :returns: a tuple (sens_x, sens_u) with the solution sensitivities.
                     If stages is a list, sens_x is a list of the same length. For sens_u, the list has length len(stages) or len(stages)-1 depending on whether N is included or not.
                     If stages is a scalar, sens_x and sens_u are np.ndarrays of shape (nx[stages], ngrad) and (nu[stages], ngrad).
@@ -1240,24 +1278,6 @@ class AcadosOcpSolver:
         self.__acados_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
 
         return out[0]
-
-
-    def get_optimal_value_gradient(self):
-        """
-        Returns the gradient of the optimal value function w.r.t. the current initial state.
-        Disclaimer: This function only returns reasonable values if the solver has converged for the current problem instance.
-        """
-        if not self.acados_ocp.constraints.has_x0:
-            raise Exception("OCP does not have an initial state constraint.")
-
-        nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
-        nbu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "lbu".encode('utf-8'))
-
-        lam = self.get(0, 'lam')
-        nlam_non_slack = lam.shape[0]//2 - self.acados_ocp.dims.ns_0
-        grad = lam[nbu:nbu+nx] - lam[nlam_non_slack+nbu : nlam_non_slack+nbu+nx]
-
-        return grad
 
 
     def get_residuals(self, recompute=False):
