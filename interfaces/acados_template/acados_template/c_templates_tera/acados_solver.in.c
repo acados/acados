@@ -593,7 +593,7 @@ void {{ model.name }}_acados_create_3_create_and_set_functions({{ model.name }}_
     for (int i = 0; i < N; i++)
     {
         {%- if model.dyn_ext_fun_type == "casadi" %}
-        MAP_CASADI_FNC(discr_dyn_phi_adj_p[i], {{ model.name }}_dyn_disc_phi_params_jac);
+        MAP_CASADI_FNC(discr_dyn_phi_adj_p[i], {{ model.name }}_dyn_disc_phi_adj_p);
         {%- else %}
         capsule->discr_dyn_phi_adj_p[i].fun = &{{ model.dyn_disc_params_jac }};
         external_function_param_{{ model.dyn_ext_fun_type }}_create(&capsule->discr_dyn_phi_adj_p[i], {{ dims.np }});
