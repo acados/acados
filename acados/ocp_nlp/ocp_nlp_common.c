@@ -3361,12 +3361,15 @@ void ocp_nlp_common_eval_adj_p(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
     }
     else if (!strcmp("params_global", field))
     {
+        // initialize to zero
+        blasfeo_dvecse(np[0], 0., &work->out_np, 0);
+
         // TODO openmp?
         for (i = 0; i < N; i++)
         {
             // dynamics contribution
-            // config->dynamics[i]->eval_lagrange_grad_p(config->dynamics[i], dims->dynamics[i], in->dynamics[i], opts,
-            //                         mem->dynamics[i], &work->tmp_np);
+            config->dynamics[i]->eval_lagrange_grad_p(config->dynamics[i], dims->dynamics[i], in->dynamics[i], opts,
+                                    mem->dynamics[i], &work->tmp_np);
             blasfeo_dvecad(np[i], 1., &work->tmp_np, 0, &work->out_np, 0);
 
             // subtract pi next
@@ -3382,6 +3385,7 @@ void ocp_nlp_common_eval_adj_p(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
                                     mem->cost[N], work->cost[N], &work->tmp_np);
         blasfeo_dvecad(np[N], 1., &work->tmp_np, 0, &work->out_np, 0);
 
+        blasfeo_unpack_dvec(np[0], &work->out_np, 0, lagr_grad_wrt_params, 1);
     }
     else
     {
