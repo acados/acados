@@ -940,8 +940,8 @@ void ocp_nlp_dynamics_disc_eval_adj_p(void* config_, void *dims_, void *model_, 
 
     int nu = dims->nu;
 
-    ext_fun_arg_t ext_fun_type_in[4];
-    void *ext_fun_in[4];
+    ext_fun_arg_t ext_fun_type_in[3];
+    void *ext_fun_in[3];
     ext_fun_arg_t ext_fun_type_out[1];
     void *ext_fun_out[1];
 
@@ -971,6 +971,11 @@ void ocp_nlp_dynamics_disc_eval_adj_p(void* config_, void *dims_, void *model_, 
 	ext_fun_out[0] = out;
 
 	// call external function
+    if (model->disc_dyn_adj_p == NULL)
+    {
+        printf("ocp_nlp_dynamics_dics_eval_adj_p - model->disc_dyn_adj_p is NULL\n");
+        exit(1);
+    }
 	model->disc_dyn_adj_p->evaluate(model->disc_dyn_adj_p, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
     printf("ocp_nlp_dynamics_disc_eval_adj_p - done\n");
