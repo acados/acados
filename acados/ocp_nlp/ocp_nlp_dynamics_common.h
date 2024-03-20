@@ -103,7 +103,7 @@ typedef struct
     void (*compute_fun)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*compute_params_jac)(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
 
-    void (*eval_lagrange_grad_p)(void *config, void *dims, void *opts, void *memory, struct blasfeo_dvec *out);
+    void (*eval_lagrange_grad_p)(void *config, void *dims, void *model, void *opts, void *memory, struct blasfeo_dvec *out);
     void (*compute_fun_and_adjoint)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     int (*precompute)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
 } ocp_nlp_dynamics_config;

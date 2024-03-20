@@ -929,9 +929,49 @@ int ocp_nlp_dynamics_disc_precompute(void *config_, void *dims, void *model_, vo
     return ACADOS_SUCCESS;
 }
 
-void ocp_nlp_dynamics_dics_eval_adj_p(void* config_, void *dims_, void *opts_, void *mem_, struct blasfeo_dvec *out)
+void ocp_nlp_dynamics_dics_eval_adj_p(void* config_, void *dims_, void *model_, void *opts_, void *mem_, struct blasfeo_dvec *out)
 {
-    // TODO eval external function
+
+    ocp_nlp_dynamics_disc_dims *dims = dims_;
+    ocp_nlp_dynamics_disc_memory *memory = mem_;
+    ocp_nlp_dynamics_disc_model *model = model_;
+
+    int nu = dims->nu;
+
+    ext_fun_arg_t ext_fun_type_in[4];
+    void *ext_fun_in[4];
+    ext_fun_arg_t ext_fun_type_out[1];
+    void *ext_fun_out[1];
+
+    struct blasfeo_dvec *ux = memory->ux;
+
+    struct blasfeo_dvec_args x_in;  // input x of external fun;
+    x_in.x = ux;
+    x_in.xi = nu;
+
+    struct blasfeo_dvec_args u_in;  // input u of external fun;
+    u_in.x = ux;
+    u_in.xi = 0;
+
+    struct blasfeo_dvec_args pi_in; // input pi of external fun;
+    pi_in.x = memory->pi;
+    pi_in.xi = 0;
+
+	ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+	ext_fun_in[0] = &x_in;
+	ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
+	ext_fun_in[1] = &u_in;
+
+	ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
+	ext_fun_in[2] = &pi_in;
+
+	ext_fun_type_out[1] = BLASFEO_DVEC;
+	ext_fun_out[1] = out;
+
+	// call external function
+	model->disc_dyn_adj_p->evaluate(model->disc_dyn_adj_p, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+
+    return;
 }
 
 

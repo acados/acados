@@ -1066,7 +1066,7 @@ void ocp_nlp_dynamics_cont_compute_params_jac(void *config_, void *dims, void *m
     exit(1);
 }
 
-void ocp_nlp_dynamics_cont_eval_adj_p(void* config_, void *dims_, void *opts_, void *mem_, struct blasfeo_dvec *out)
+void ocp_nlp_dynamics_cont_eval_adj_p(void* config_, void *dims_, void *model_, void *opts_, void *mem_, struct blasfeo_dvec *out)
 {
     printf("\nerror: ocp_nlp_dynamics_dics_eval_adj_p not implemented\n");
     exit(1);

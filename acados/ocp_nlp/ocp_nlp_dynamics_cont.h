@@ -201,7 +201,7 @@ int ocp_nlp_dynamics_cont_precompute(void *config_, void *dims, void *model_, vo
 //
 void ocp_nlp_dynamics_cont_compute_params_jac(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
 //
-void ocp_nlp_dynamics_cont_eval_adj_p(void* config_, void *dims_, void *opts_, void *mem_, struct blasfeo_dvec *out);
+void ocp_nlp_dynamics_cont_eval_adj_p(void* config_, void *dims_, void *model_, void *opts_, void *mem_, struct blasfeo_dvec *out);
 
 #ifdef __cplusplus
 } /* extern "C" */
