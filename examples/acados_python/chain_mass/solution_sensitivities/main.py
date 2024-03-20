@@ -617,12 +617,13 @@ def main_parametric(
     qp_solver_ric_alg: int = 0, eigen_analysis: bool = False, chain_params_: dict = get_chain_params()
 ) -> None:
 
+    generate_code = True
     ocp, parameter_values = export_parametric_ocp(chain_params_=chain_params_, qp_solver_ric_alg=qp_solver_ric_alg, integrator_type="DISCRETE", cost_type="EXTERNAL")
 
     ocp_json_file = "acados_ocp_" + ocp.model.name + ".json"
 
     # Check if json_file exists
-    if os.path.exists(ocp_json_file):
+    if not generate_code and os.path.exists(ocp_json_file):
         acados_ocp_solver = AcadosOcpSolver(ocp, json_file=ocp_json_file, build=False, generate=False)
     else:
         acados_ocp_solver = AcadosOcpSolver(ocp, json_file=ocp_json_file)
@@ -634,7 +635,7 @@ def main_parametric(
 
     ocp_json_file = "acados_sensitivity_ocp_" + sensitivity_ocp.model.name + ".json"
     # # Check if json_file exists
-    if os.path.exists(ocp_json_file):
+    if not generate_code and os.path.exists(ocp_json_file):
         sensitivity_solver = AcadosOcpSolver(sensitivity_ocp, json_file=ocp_json_file, build=False, generate=False)
     else:
         sensitivity_solver = AcadosOcpSolver(sensitivity_ocp, json_file=ocp_json_file)
