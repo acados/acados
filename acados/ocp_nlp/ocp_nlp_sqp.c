@@ -1013,9 +1013,6 @@ void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *
 void ocp_nlp_sqp_eval_adj_p(void *config_, void *dims_, void *nlp_in_, void *opts_, void *mem_, void *work_,
                                  char *field, void *lagr_grad_wrt_params)
 {
-    acados_timer timer0;
-    acados_tic(&timer0);
-
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_config *config = config_;
     ocp_nlp_sqp_opts *opts = opts_;
@@ -1029,8 +1026,6 @@ void ocp_nlp_sqp_eval_adj_p(void *config_, void *dims_, void *nlp_in_, void *opt
 
     ocp_nlp_common_eval_adj_p(config, dims, nlp_in, opts->nlp_opts, nlp_mem, nlp_work,
                                  field, lagr_grad_wrt_params);
-
-    mem->time_solution_sensitivities = acados_toc(&timer0);
 
     return;
 }

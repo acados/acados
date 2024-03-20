@@ -710,10 +710,14 @@ class AcadosOcpSolver:
         elif with_respect_to == "params_global":
             nparam = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p".encode('utf-8'))
 
-            ngrad = nparam
-            field = "params_global"
-
-            # TODO
+            field = "params_global".encode('utf-8')
+            t0 = time.time()
+            grad_p_ = np.zeros((nparam,))
+            grad_p = np.ascontiguousarray(grad_p_, dtype=np.float64)
+            c_grad_p = cast(grad_p.ctypes.data, POINTER(c_double))
+            self.__acados_lib.ocp_nlp_eval_lagrange_grad_p.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_double)]
+            self.__acados_lib.ocp_nlp_eval_lagrange_grad_p(self.nlp_solver, self.nlp_in, field, c_grad_p)
+            self.time_value_grad = time.time() - t0
 
         else:
             raise Exception(f"AcadosOcpSolver.eval_solution_sensitivity(): Unknown field: {with_respect_to=}")

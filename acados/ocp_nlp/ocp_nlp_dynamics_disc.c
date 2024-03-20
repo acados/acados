@@ -932,6 +932,8 @@ int ocp_nlp_dynamics_disc_precompute(void *config_, void *dims, void *model_, vo
 void ocp_nlp_dynamics_dics_eval_adj_p(void* config_, void *dims_, void *model_, void *opts_, void *mem_, struct blasfeo_dvec *out)
 {
 
+    printf("ocp_nlp_dynamics_dics_eval_adj_p\n");
+
     ocp_nlp_dynamics_disc_dims *dims = dims_;
     ocp_nlp_dynamics_disc_memory *memory = mem_;
     ocp_nlp_dynamics_disc_model *model = model_;
@@ -965,11 +967,13 @@ void ocp_nlp_dynamics_dics_eval_adj_p(void* config_, void *dims_, void *model_, 
 	ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
 	ext_fun_in[2] = &pi_in;
 
-	ext_fun_type_out[1] = BLASFEO_DVEC;
-	ext_fun_out[1] = out;
+	ext_fun_type_out[0] = BLASFEO_DVEC;
+	ext_fun_out[0] = out;
 
 	// call external function
 	model->disc_dyn_adj_p->evaluate(model->disc_dyn_adj_p, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+
+    printf("ocp_nlp_dynamics_dics_eval_adj_p - done\n");
 
     return;
 }
