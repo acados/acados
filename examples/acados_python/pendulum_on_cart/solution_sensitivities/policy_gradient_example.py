@@ -337,7 +337,7 @@ def main_augmented(param_M_as_state: bool, idxp: int, qp_solver_ric_alg: int, ei
         sensitivity_solver.load_iterate(filename='iterate.json', verbose=False)
         sensitivity_solver.solve_for_x0(x, fail_on_nonzero_status=False, print_stats_on_failure=False)
         residuals = sensitivity_solver.get_stats("residuals")
-        print(f"residuals sensitivity_solver {residuals} status {sensitivity_solver.status}")
+        # print(f"residuals sensitivity_solver {residuals} status {sensitivity_solver.status}")
 
         if sensitivity_solver.status not in [0, 2]:
             print(f"warning")
@@ -433,7 +433,7 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True):
         sensitivity_solver.load_iterate(filename='iterate.json', verbose=False)
         sensitivity_solver.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
         residuals = sensitivity_solver.get_stats("residuals")
-        print(f"residuals sensitivity_solver {residuals} status {sensitivity_solver.status}")
+        # print(f"residuals sensitivity_solver {residuals} status {sensitivity_solver.status}")
 
         if sensitivity_solver.status not in [0, 2]:
             print(f"warning")
@@ -453,10 +453,6 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True):
     cost_reconstructed_np_grad = np.cumsum(np_cost_grad) * delta_p + cost_values[0]
     plot_cost_gradient_results(p_test, cost_values, sens_cost, np_cost_grad, cost_reconstructed_np_grad)
 
-
-    # test
-    assert np.allclose(sens_u, np_grad, atol=1e2)
-
     # Compare to numerical gradients
     np_grad = np.gradient(pi, delta_p)
     pi_reconstructed_np_grad = np.cumsum(np_grad) * delta_p + pi[0]
@@ -465,10 +461,15 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True):
     pi_reconstructed_acados = np.cumsum(sens_u) * delta_p + pi[0]
     pi_reconstructed_acados += pi[0] - pi_reconstructed_acados[0]
 
+
     plot_results(p_test, pi, pi_reconstructed_acados, pi_reconstructed_np_grad, sens_u, np_grad,
                  min_eig_full, min_eig_proj_hess, min_eig_P,
                  min_abs_eig_full, min_abs_eig_proj_hess, min_abs_eig_P,
                  eigen_analysis, qp_solver_ric_alg, parameter_name="mass")
+
+    # test: check median since derivative cannot be compared at active set changes
+    assert np.median(np.abs(sens_u - np_grad)) <= 1e-2
+    assert np.median(np.abs(sens_cost - np_cost_grad)) <= 1e-1
 
 
 def plot_cost_gradient_results(p_test, cost_values, acados_cost_grad, np_cost_grad, cost_reconstructed_np_grad):
