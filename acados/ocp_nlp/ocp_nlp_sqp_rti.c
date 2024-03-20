@@ -1322,6 +1322,30 @@ void ocp_nlp_sqp_rti_eval_param_sens(void *config_, void *dims_, void *opts_,
 }
 
 
+void ocp_nlp_sqp_rti_eval_adj_p(void *config_, void *dims_, void *nlp_in_, void *opts_,
+    void *mem_, void *work_, char *field, void *lagr_grad_wrt_params)
+{
+    acados_timer timer0;
+    acados_tic(&timer0);
+
+    ocp_nlp_dims *dims = dims_;
+    ocp_nlp_config *config = config_;
+    ocp_nlp_sqp_rti_opts *opts = opts_;
+    ocp_nlp_sqp_rti_memory *mem = mem_;
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    ocp_nlp_in *nlp_in = nlp_in_;
+
+    ocp_nlp_sqp_rti_workspace *work = work_;
+    // ocp_nlp_sqp_rti_cast_workspace(config, dims, opts, mem, work);
+    ocp_nlp_workspace *nlp_work = work->nlp_work;
+
+    ocp_nlp_common_eval_adj_p(config, dims, nlp_in, opts->nlp_opts, nlp_mem, nlp_work, field, lagr_grad_wrt_params);
+
+    mem->time_solution_sensitivities = acados_toc(&timer0);
+
+    return;
+}
+
 
 void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_,
     const char *field, void *return_value_)
@@ -1551,6 +1575,7 @@ void ocp_nlp_sqp_rti_config_initialize_default(void *config_)
     config->evaluate = &ocp_nlp_sqp_rti;
     config->memory_reset_qp_solver = &ocp_nlp_sqp_rti_memory_reset_qp_solver;
     config->eval_param_sens = &ocp_nlp_sqp_rti_eval_param_sens;
+    config->eval_lagrangian_param_sens = &ocp_nlp_sqp_rti_eval_adj_p;
     config->config_initialize_default = &ocp_nlp_sqp_rti_config_initialize_default;
     config->precompute = &ocp_nlp_sqp_rti_precompute;
     config->get = &ocp_nlp_sqp_rti_get;

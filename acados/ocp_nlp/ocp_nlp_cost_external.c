@@ -212,6 +212,10 @@ int ocp_nlp_cost_external_model_set(void *config_, void *dims_, void *model_,
     {
         model->ext_cost_hess_xu_p = (external_function_generic *) value_;
     }
+    else if (!strcmp(field, "ext_cost_jac_p")) // TODO rename!!!!!!!!!!
+    {
+        model->ext_cost_grad_p = (external_function_generic *) value_;
+    }
     else if (!strcmp(field, "ext_cost_num_hess"))
     {
         double *numerical_hessian = (double *) value_;
@@ -912,6 +916,10 @@ void ocp_nlp_cost_external_compute_params_jac(void *config_, void *dims_, void *
     return;
 }
 
+void ocp_nlp_cost_external_eval_grad_p(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_, struct blasfeo_dvec *out)
+{
+    // TODO implement
+}
 
 
 /* config */
@@ -948,6 +956,7 @@ void ocp_nlp_cost_external_config_initialize_default(void *config_)
     config->compute_fun = &ocp_nlp_cost_external_compute_fun;
     config->compute_params_jac = &ocp_nlp_cost_external_compute_params_jac;
     config->compute_gradient = &ocp_nlp_cost_external_compute_gradient;
+    config->eval_grad_p = &ocp_nlp_cost_external_eval_grad_p;
     config->config_initialize_default = &ocp_nlp_cost_external_config_initialize_default;
     config->precompute = &ocp_nlp_cost_external_precompute;
 

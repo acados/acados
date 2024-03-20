@@ -199,7 +199,9 @@ void ocp_nlp_dynamics_cont_compute_fun_and_adjoint(void *config_, void *dims, vo
 //
 int ocp_nlp_dynamics_cont_precompute(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
 //
-void ocp_nlp_dynamics_compute_params_jac(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
+void ocp_nlp_dynamics_cont_compute_params_jac(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
+//
+void ocp_nlp_dynamics_cont_eval_adj_p(void* config_, void *dims_, void *opts_, void *mem_, struct blasfeo_dvec *out);
 
 #ifdef __cplusplus
 } /* extern "C" */
