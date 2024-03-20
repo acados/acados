@@ -927,8 +927,8 @@ void ocp_nlp_cost_external_eval_grad_p(void *config_, void *dims_, void *model_,
     struct blasfeo_dvec *ux = memory->ux;
 
     int nu = dims->nu;
-    int nx = dims->nx;
-    int nz = dims->nz;
+    // int nx = dims->nx;
+    // int nz = dims->nz;
     int np = dims->np;
 
     /* specify input types and pointers for external cost function */

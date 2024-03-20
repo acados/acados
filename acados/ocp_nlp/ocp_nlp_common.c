@@ -3350,8 +3350,8 @@ void ocp_nlp_common_eval_adj_p(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
 {
     int i;
     int N = dims->N;
-    int *nu = dims->nu;
-    int *nx = dims->nx;
+    // int *nu = dims->nu;
+    // int *nx = dims->nx;
     int *np = dims->np;
 
     if (!strcmp("params_stage", field))
@@ -3371,8 +3371,6 @@ void ocp_nlp_common_eval_adj_p(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
             config->dynamics[i]->eval_lagrange_grad_p(config->dynamics[i], dims->dynamics[i], in->dynamics[i], opts,
                                     mem->dynamics[i], &work->tmp_np);
             blasfeo_dvecad(np[i], 1., &work->tmp_np, 0, &work->out_np, 0);
-
-            // subtract pi next
 
             // cost contribution
             config->cost[i]->eval_grad_p(config->cost[i], dims->cost[i], in->cost[i], opts,
