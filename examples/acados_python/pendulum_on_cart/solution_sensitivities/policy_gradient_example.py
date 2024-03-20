@@ -219,6 +219,7 @@ def export_parametric_ocp(
         ocp.solver_options.qp_solver_iter_max = 200
         ocp.solver_options.tol = 1e-10
         ocp.solver_options.with_solution_sens_wrt_params = True
+        ocp.solver_options.with_value_sens_wrt_params = True
     else:
         ocp.solver_options.nlp_solver_max_iter = 400
         ocp.solver_options.tol = 1e-8
@@ -400,6 +401,8 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True):
     sensitivity_solver = AcadosOcpSolver(ocp, json_file="sensitivity_solver.json")
 
     sens_u = np.zeros(np_test)
+    sens_cost = np.zeros(np_test)
+    cost_values = np.zeros(np_test)
 
     if eigen_analysis:
         min_eig_full = np.zeros(np_test)
@@ -423,6 +426,7 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True):
             acados_ocp_solver.set(n, 'p', p)
             sensitivity_solver.set(n, 'p', p)
         pi[i] = acados_ocp_solver.solve_for_x0(x0)[0]
+        cost_values[i] = acados_ocp_solver.get_cost()
 
         acados_ocp_solver.store_iterate(filename='iterate.json', overwrite=True, verbose=False)
 
@@ -442,6 +446,11 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True):
         sens_x_, sens_u_ = sensitivity_solver.eval_solution_sensitivity(0, "params_global")
         sens_u[i] = sens_u_.item()
 
+    # evaluate cost gradient
+    np_cost_grad = np.gradient(cost_values, delta_p)
+    cost_reconstructed_np_grad = np.cumsum(np_cost_grad) * delta_p + cost_values[0]
+    plot_cost_gradient_results(p_test, cost_values, np_cost_grad, cost_reconstructed_np_grad)
+
     # Compare to numerical gradients
     np_grad = np.gradient(pi, delta_p)
     pi_reconstructed_np_grad = np.cumsum(np_grad) * delta_p + pi[0]
@@ -450,11 +459,36 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True):
     pi_reconstructed_acados = np.cumsum(sens_u) * delta_p + pi[0]
     pi_reconstructed_acados += pi[0] - pi_reconstructed_acados[0]
 
-
     plot_results(p_test, pi, pi_reconstructed_acados, pi_reconstructed_np_grad, sens_u, np_grad,
                  min_eig_full, min_eig_proj_hess, min_eig_P,
                  min_abs_eig_full, min_abs_eig_proj_hess, min_abs_eig_P,
                  eigen_analysis, qp_solver_ric_alg, parameter_name="mass")
+
+
+def plot_cost_gradient_results(p_test, cost_values, np_cost_grad, cost_reconstructed_np_grad):
+    latexify_plot()
+    _, ax = plt.subplots(nrows=2, ncols=1, sharex=True, figsize=(9,9))
+
+    ax[0].plot(p_test, cost_values, label='cost acados', color='k')
+    ax[0].plot(p_test, cost_reconstructed_np_grad, "--", label='reconstructed from finite diff')
+    ax[0].set_ylabel(r"cost")
+    ax[0].grid(True)
+    ax[0].legend()
+
+    ax[1].plot(p_test, np_cost_grad, "--", label='finite diff')
+    ax[1].set_ylabel(r"$\partial_p$ cost")
+    ax[1].set_yscale("log")
+    ax[1].grid(True)
+    ax[1].legend()
+
+    ax[-1].set_xlabel(f"mass")
+    ax[-1].set_xlim([p_test[0], p_test[-1]])
+
+    fig_filename = f"cost_gradient.pdf"
+    plt.savefig(fig_filename)
+    print(f"stored figure as {fig_filename}")
+    plt.show()
+
 
 
 def plot_results(p_test, pi, pi_reconstructed_acados, pi_reconstructed_np_grad, sens_u, np_grad,
