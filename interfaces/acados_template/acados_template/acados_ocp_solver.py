@@ -687,12 +687,12 @@ class AcadosOcpSolver:
             self.__get_pointers_solver()
 
 
-    def get_optimal_value_gradient(self, with_respect_to: str = "initital_state") -> np.ndarray:
+    def get_optimal_value_gradient(self, with_respect_to: str = "initial_state") -> np.ndarray:
         """
         Returns the gradient of the optimal value function w.r.t. the current initial state.
         Disclaimer: This function only returns reasonable values if the solver has converged for the current problem instance.
 
-        :param with_respect_to: string in ["initital_state", "params_global"]
+        :param with_respect_to: string in ["initial_state", "params_global"]
 
         """
 
@@ -731,7 +731,7 @@ class AcadosOcpSolver:
         Evaluate the sensitivity of the current solution x_i, u_i with respect to the initial state or the parameters for all stages i in `stages`.
 
             :param stages: stages for which the sensitivities are returned, int or list of int
-            :param with_respect_to: string in ["initital_state", "params_global"]
+            :param with_respect_to: string in ["initial_state", "params_global"]
             :returns: a tuple (sens_x, sens_u) with the solution sensitivities.
                     If stages is a list, sens_x is a list of the same length. For sens_u, the list has length len(stages) or len(stages)-1 depending on whether N is included or not.
                     If stages is a scalar, sens_x and sens_u are np.ndarrays of shape (nx[stages], ngrad) and (nu[stages], ngrad).
