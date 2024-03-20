@@ -65,6 +65,8 @@ void *ocp_nlp_dynamics_disc_dims_assign(void *config_, void *raw_memory)
     ocp_nlp_dynamics_disc_dims *dims = (ocp_nlp_dynamics_disc_dims *) c_ptr;
     c_ptr += sizeof(ocp_nlp_dynamics_disc_dims);
 
+    dims->np = 0;
+
     assert((char *) raw_memory + ocp_nlp_dynamics_disc_dims_calculate_size(config_) >= c_ptr);
 
     return dims;

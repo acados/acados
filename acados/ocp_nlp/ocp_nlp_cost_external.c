@@ -65,6 +65,11 @@ void *ocp_nlp_cost_external_dims_assign(void *config_, void *raw_memory)
     ocp_nlp_cost_external_dims *dims = (ocp_nlp_cost_external_dims *) c_ptr;
     c_ptr += sizeof(ocp_nlp_cost_external_dims);
 
+    dims->np = 0;
+    dims->nz = 0;
+    dims->ns = 0;
+    dims->nu = 0;
+
     assert((char *) raw_memory + ocp_nlp_cost_external_dims_calculate_size(config_) >= c_ptr);
 
     return dims;
