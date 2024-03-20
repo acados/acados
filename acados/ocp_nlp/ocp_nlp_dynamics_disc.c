@@ -614,9 +614,9 @@ void ocp_nlp_dynamics_disc_model_set(void *config_, void *dims_, void *model_, c
     {
         model->disc_dyn_fun_jac_hess = (external_function_generic *) value;
     }
-    else if (!strcmp(field, "disc_dyn_params_jac"))
+    else if (!strcmp(field, "disc_dyn_phi_jac_p_hess_xu_p"))
     {
-        model->disc_dyn_params_jac = (external_function_generic *) value;
+        model->disc_dyn_phi_jac_p_hess_xu_p = (external_function_generic *) value;
     }
     else if (!strcmp(field, "disc_dyn_adj_p"))
     {
@@ -848,7 +848,7 @@ void ocp_nlp_dynamics_disc_compute_params_jac(void *config_, void *dims_, void *
 	ext_fun_out[1] = &memory->params_lag_jac;  // jac: nxnu x np
 
 	// call external function
-	model->disc_dyn_params_jac->evaluate(model->disc_dyn_params_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+	model->disc_dyn_phi_jac_p_hess_xu_p->evaluate(model->disc_dyn_phi_jac_p_hess_xu_p, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
     return;
 }

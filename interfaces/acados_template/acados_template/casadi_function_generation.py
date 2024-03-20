@@ -178,10 +178,10 @@ def generate_c_code_discrete_dynamics(model: AcadosModel, opts):
     phi_fun_jac_ut_xt_hess.generate(fun_name, casadi_codegen_opts)
 
     if opts["with_solution_sens_wrt_params"]:
-        # TOOD: rename to phi_hess_xu_p? and use adjoint casadi mode jtimes.
-        fun_name = model_name + '_dyn_disc_phi_params_jac'
-        phi_params_jac_jac_lag = ca.Function(fun_name, [x, u, lam, p], [jac_p, jac_lag_p])
-        phi_params_jac_jac_lag.generate(fun_name, casadi_codegen_opts)
+        # TOOD: use adjoint casadi mode jtimes.
+        fun_name = model_name + '_dyn_disc_phi_jac_p_hess_xu_p'
+        phi_jac_p_hess_xu_p = ca.Function(fun_name, [x, u, lam, p], [jac_p, jac_lag_p])
+        phi_jac_p_hess_xu_p.generate(fun_name, casadi_codegen_opts)
 
     if opts["with_value_sens_wrt_params"]:
         adj_p = ca.jtimes(phi, p, lam, True)

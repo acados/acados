@@ -217,7 +217,7 @@ set(MODEL_SRC
     {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun.c
     {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun_jac.c
     {% if solver_options.with_solution_sens_wrt_params %}
-    {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_params_jac.c
+    {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_jac_p_hess_xu_p.c
     {% endif %}
     {% if solver_options.with_value_sens_wrt_params %}
     {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_adj_p.c

@@ -125,7 +125,7 @@ typedef struct {{ model.name }}_solver_capsule
 {% elif solver_options.integrator_type == "DISCRETE" %}
     external_function_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_fun;
     external_function_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_fun_jac_ut_xt;
-    external_function_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_params_jac;
+    external_function_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_jac_p_hess_xu_p;
     external_function_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_adj_p;
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_fun_jac_ut_xt_hess;
