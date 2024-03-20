@@ -687,6 +687,40 @@ class AcadosOcpSolver:
             self.__get_pointers_solver()
 
 
+    def get_optimal_value_gradient(self, with_respect_to: str = "initital_state"):
+        """
+        Returns the gradient of the optimal value function w.r.t. the current initial state.
+        Disclaimer: This function only returns reasonable values if the solver has converged for the current problem instance.
+
+        :param with_respect_to: string in ["initital_state", "params_global"]
+
+        """
+
+        if with_respect_to == "initial_state":
+            if not self.acados_ocp.constraints.has_x0:
+                raise Exception("OCP does not have an initial state constraint.")
+
+            nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
+            nbu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "lbu".encode('utf-8'))
+
+            lam = self.get(0, 'lam')
+            nlam_non_slack = lam.shape[0]//2 - self.acados_ocp.dims.ns_0
+            grad = lam[nbu:nbu+nx] - lam[nlam_non_slack+nbu : nlam_non_slack+nbu+nx]
+
+        elif with_respect_to == "params_global":
+            nparam = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p".encode('utf-8'))
+
+            ngrad = nparam
+            field = "params_global"
+
+            # TODO
+
+        else:
+            raise Exception(f"AcadosOcpSolver.eval_solution_sensitivity(): Unknown field: {with_respect_to=}")
+        return grad
+
+
+
     def eval_solution_sensitivity(self, stages: Union[int, List[int]], with_respect_to: str) \
                 -> Tuple[Union[List[np.ndarray], np.ndarray], Union[List[np.ndarray], np.ndarray]]:
         """
@@ -1240,24 +1274,6 @@ class AcadosOcpSolver:
         self.__acados_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
 
         return out[0]
-
-
-    def get_optimal_value_gradient(self):
-        """
-        Returns the gradient of the optimal value function w.r.t. the current initial state.
-        Disclaimer: This function only returns reasonable values if the solver has converged for the current problem instance.
-        """
-        if not self.acados_ocp.constraints.has_x0:
-            raise Exception("OCP does not have an initial state constraint.")
-
-        nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
-        nbu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "lbu".encode('utf-8'))
-
-        lam = self.get(0, 'lam')
-        nlam_non_slack = lam.shape[0]//2 - self.acados_ocp.dims.ns_0
-        grad = lam[nbu:nbu+nx] - lam[nlam_non_slack+nbu : nlam_non_slack+nbu+nx]
-
-        return grad
 
 
     def get_residuals(self, recompute=False):
