@@ -712,8 +712,8 @@ class AcadosOcpSolver:
 
             field = "params_global".encode('utf-8')
             t0 = time.time()
-            grad_p_ = np.zeros((nparam,))
-            grad_p = np.ascontiguousarray(grad_p_, dtype=np.float64)
+            grad = np.zeros((nparam,))
+            grad_p = np.ascontiguousarray(grad, dtype=np.float64)
             c_grad_p = cast(grad_p.ctypes.data, POINTER(c_double))
             self.__acados_lib.ocp_nlp_eval_lagrange_grad_p.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_double)]
             self.__acados_lib.ocp_nlp_eval_lagrange_grad_p(self.nlp_solver, self.nlp_in, field, c_grad_p)
