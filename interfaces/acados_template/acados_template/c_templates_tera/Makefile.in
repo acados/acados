@@ -267,7 +267,7 @@ OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_fun_jac_hess.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_hess_xu_p.c
 {% endif %}
 {% if solver_options.with_value_sens_wrt_params %}
-OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_jac_p.c
+OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_jac_p.c
 {% endif %}
 	{%- elif cost.cost_source_ext_cost != cost.cost_source_ext_cost_0 %}
 OCP_SRC+= {{ model.name }}_cost/{{ cost.cost_source_ext_cost }}
