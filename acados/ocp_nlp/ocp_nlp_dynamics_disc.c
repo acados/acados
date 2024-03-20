@@ -72,46 +72,19 @@ void *ocp_nlp_dynamics_disc_dims_assign(void *config_, void *raw_memory)
     return dims;
 }
 
-// setters
-static void ocp_nlp_dynamics_disc_set_nx(void *config_, void *dims_, int *nx)
-{
-    ocp_nlp_dynamics_disc_dims *dims = (ocp_nlp_dynamics_disc_dims *) dims_;
-    dims->nx = *nx;
-}
 
-static void ocp_nlp_dynamics_disc_set_nx1(void *config_, void *dims_, int *nx1)
-{
-    ocp_nlp_dynamics_disc_dims *dims = (ocp_nlp_dynamics_disc_dims *) dims_;
-    dims->nx1 = *nx1;
-}
-
-static void ocp_nlp_dynamics_disc_set_nu(void *config_, void *dims_, int *nu)
-{
-    ocp_nlp_dynamics_disc_dims *dims = (ocp_nlp_dynamics_disc_dims *) dims_;
-    dims->nu = *nu;
-}
-
-static void ocp_nlp_dynamics_disc_set_nu1(void *config_, void *dims_, int *nu1)
-{
-    ocp_nlp_dynamics_disc_dims *dims = (ocp_nlp_dynamics_disc_dims *) dims_;
-    dims->nu1 = *nu1;
-}
-
-static void ocp_nlp_dynamics_disc_set_np(void *config_, void *dims_, int *np)
-{
-    ocp_nlp_dynamics_disc_dims *dims = (ocp_nlp_dynamics_disc_dims *) dims_;
-    dims->np = *np;
-}
 
 void ocp_nlp_dynamics_disc_dims_set(void *config_, void *dims_, const char *dim, int* value)
 {
+    ocp_nlp_dynamics_disc_dims *dims = (ocp_nlp_dynamics_disc_dims *) dims_;
+
     if (!strcmp(dim, "nx"))
     {
-        ocp_nlp_dynamics_disc_set_nx(config_, dims_, value);
+        dims->nx = *value;
     }
     else if (!strcmp(dim, "nx1"))
     {
-        ocp_nlp_dynamics_disc_set_nx1(config_, dims_, value);
+        dims->nx1 = *value;
     }
     else if (!strcmp(dim, "nz"))
     {
@@ -123,15 +96,15 @@ void ocp_nlp_dynamics_disc_dims_set(void *config_, void *dims_, const char *dim,
     }
     else if (!strcmp(dim, "nu"))
     {
-        ocp_nlp_dynamics_disc_set_nu(config_, dims_, value);
+        dims->nu = *value;
     }
     else if (!strcmp(dim, "nu1"))
     {
-        ocp_nlp_dynamics_disc_set_nu1(config_, dims_, value);
+        dims->nu1 = *value;
     }
     else if (!strcmp(dim, "np"))
     {
-        ocp_nlp_dynamics_disc_set_np(config_, dims_, value);
+        dims->np = *value;
     }
     else
     {
