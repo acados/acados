@@ -511,7 +511,7 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
         {
             config->dynamics[i]->dims_set(config->dynamics[i], dims->dynamics[i], "np", &int_array[i]);
         }
-        // TODO(params_sens) implement np for constraints
+        // TODO: implement np for constraints
         // // constraints
         // for (int i = 0; i <= N; i++)
         // {
@@ -3276,7 +3276,6 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
                         ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
                         char *field, int stage, int index, ocp_nlp_out *sens_nlp_out)
 {
-
     int i;
 
     int N = dims->N;
@@ -3376,6 +3375,8 @@ void ocp_nlp_common_eval_adj_p(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
             config->cost[i]->eval_grad_p(config->cost[i], dims->cost[i], in->cost[i], opts,
                                     mem->cost[i], work->cost[i], &work->tmp_np);
             blasfeo_dvecad(np[i], 1., &work->tmp_np, 0, &work->out_np, 0);
+
+            // TODO: add support for inequality constraints
         }
 
         // terminal cost contribution
