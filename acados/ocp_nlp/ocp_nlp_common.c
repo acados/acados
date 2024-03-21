@@ -3356,7 +3356,7 @@ void ocp_nlp_common_eval_adj_p(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
 
     if (!strcmp("params_stage", field))
     {
-        printf("\nerror: field %s not available in ocp_nlp_sqp_eval_param_sens\n", field);
+        printf("\nerror: field %s not available in ocp_nlp_common_eval_adj_p\n", field);
         exit(1);
     }
     else if (!strcmp("params_global", field))
