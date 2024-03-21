@@ -33,7 +33,7 @@ import sys
 sys.path.insert(0, '../common')
 
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, latexify_plot
-from casadi import SX, vertcat, cos, sin
+import casadi as ca
 import numpy as np
 import scipy.linalg as scipylinalg
 import matplotlib.pyplot as plt
@@ -58,37 +58,37 @@ def export_parameter_augmented_pendulum_ode_model(param_M_as_state=True) -> Acad
     l = 0.8  # length of the rod [m]
 
     # set up states
-    p = SX.sym("p")
-    theta = SX.sym("theta")
-    v = SX.sym("v")
-    omega = SX.sym("omega")
+    p = ca.SX.sym("p")
+    theta = ca.SX.sym("theta")
+    v = ca.SX.sym("v")
+    omega = ca.SX.sym("omega")
 
     # controls
-    F = SX.sym("F")
-    u = vertcat(F)
+    F = ca.SX.sym("F")
+    u = ca.vertcat(F)
 
     # xdot
-    p_dot = SX.sym("p_dot")
-    theta_dot = SX.sym("theta_dot")
-    v_dot = SX.sym("v_dot")
-    omega_dot = SX.sym("omega_dot")
-    M_dot = SX.sym("M_dot")
+    p_dot = ca.SX.sym("p_dot")
+    theta_dot = ca.SX.sym("theta_dot")
+    v_dot = ca.SX.sym("v_dot")
+    omega_dot = ca.SX.sym("omega_dot")
+    M_dot = ca.SX.sym("M_dot")
 
     nx_original = 4
     if param_M_as_state:
-        M = SX.sym("M")  # mass of the cart [kg]
-        x = vertcat(p, theta, v, omega, M)
-        xdot = vertcat(p_dot, theta_dot, v_dot, omega_dot, M_dot)
+        M = ca.SX.sym("M")  # mass of the cart [kg]
+        x = ca.vertcat(p, theta, v, omega, M)
+        xdot = ca.vertcat(p_dot, theta_dot, v_dot, omega_dot, M_dot)
     else:
         M = 1.0  # mass of the cart [kg]
-        x = vertcat(p, theta, v, omega)
-        xdot = vertcat(p_dot, theta_dot, v_dot, omega_dot)
+        x = ca.vertcat(p, theta, v, omega)
+        xdot = ca.vertcat(p_dot, theta_dot, v_dot, omega_dot)
 
     # dynamics
-    cos_theta = cos(theta)
-    sin_theta = sin(theta)
+    cos_theta = ca.cos(theta)
+    sin_theta = ca.sin(theta)
     denominator = M + m - m * cos_theta * cos_theta
-    f_expl = vertcat(
+    f_expl = ca.vertcat(
         v,
         omega,
         (-m * l * sin_theta * omega * omega + m * g * cos_theta * sin_theta + F) / denominator,
@@ -96,7 +96,7 @@ def export_parameter_augmented_pendulum_ode_model(param_M_as_state=True) -> Acad
     )
 
     if param_M_as_state:
-        f_expl = vertcat(f_expl, 0)
+        f_expl = ca.vertcat(f_expl, 0)
 
     model = AcadosModel()
 
@@ -137,7 +137,7 @@ def export_parameter_augmented_ocp(
     ocp.cost.W = scipylinalg.block_diag(Q_mat, R_mat)
     ocp.cost.W_e = Q_mat
 
-    ocp.model.cost_y_expr = vertcat(ocp.model.x[:nx_original], ocp.model.u)
+    ocp.model.cost_y_expr = ca.vertcat(ocp.model.x[:nx_original], ocp.model.u)
     ocp.model.cost_y_expr_e = ocp.model.x[:nx_original]
     ocp.cost.yref = np.zeros((nx_original + nu,))
     ocp.cost.yref_e = np.zeros((nx_original,))
@@ -192,8 +192,8 @@ def export_parametric_ocp(
     ocp.cost.cost_type_e = "EXTERNAL"
 
     # NOTE here we make the cost parametric
-    ocp.model.cost_expr_ext_cost = ocp.model.p * ocp.model.x.T @ Q_mat @ ocp.model.x + ocp.model.u.T @ R_mat @ ocp.model.u
-    ocp.model.cost_expr_ext_cost_e = ocp.model.x.T @ Q_mat @ ocp.model.x
+    ocp.model.cost_expr_ext_cost = ca.exp(ocp.model.p) * ocp.model.x.T @ Q_mat @ ocp.model.x + ocp.model.u.T @ R_mat @ ocp.model.u
+    ocp.model.cost_expr_ext_cost_e = ca.exp(ocp.model.p) * ocp.model.x.T @ Q_mat @ ocp.model.x
 
     ocp.constraints.lbu = np.array([-Fmax])
     ocp.constraints.ubu = np.array([+Fmax])
