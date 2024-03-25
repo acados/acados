@@ -1011,7 +1011,7 @@ void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *
 
 
 void ocp_nlp_sqp_eval_adj_p(void *config_, void *dims_, void *nlp_in_, void *opts_, void *mem_, void *work_,
-                                 char *field, void *lagr_grad_wrt_params)
+                                 const char *field, void *lagr_grad_wrt_params)
 {
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_config *config = config_;

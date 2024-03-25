@@ -150,14 +150,10 @@ def generate_c_code_discrete_dynamics(model: AcadosModel, opts):
     # generate jacobians
     ux = ca.vertcat(u,x)
     jac_ux = ca.jacobian(phi, ux)
-    jac_p = ca.jacobian(phi, p)
     # generate adjoint
     adj_ux = ca.jtimes(phi, ux, lam, True)
     # generate hessian
     hess_ux = ca.jacobian(adj_ux, ux)
-
-    # generate jacobian of lagrange gradient wrt p
-    jac_lag_p = ca.jacobian((lam.T @ jac_ux).T, p)
 
     # change directory
     cwd = os.getcwd()
@@ -178,10 +174,13 @@ def generate_c_code_discrete_dynamics(model: AcadosModel, opts):
     phi_fun_jac_ut_xt_hess.generate(fun_name, casadi_codegen_opts)
 
     if opts["with_solution_sens_wrt_params"]:
-        # TOOD: rename to phi_hess_xu_p? and use adjoint casadi mode jtimes.
-        fun_name = model_name + '_dyn_disc_phi_params_jac'
-        phi_params_jac_jac_lag = ca.Function(fun_name, [x, u, lam, p], [jac_p, jac_lag_p])
-        phi_params_jac_jac_lag.generate(fun_name, casadi_codegen_opts)
+        # generate jacobian of lagrange gradient wrt p
+        jac_p = ca.jacobian(phi, p)
+        # hess_xu_p_old = ca.jacobian((lam.T @ jac_ux).T, p)
+        hess_xu_p = ca.jacobian(adj_ux, p) # using adjoint
+        fun_name = model_name + '_dyn_disc_phi_jac_p_hess_xu_p'
+        phi_jac_p_hess_xu_p = ca.Function(fun_name, [x, u, lam, p], [jac_p, hess_xu_p])
+        phi_jac_p_hess_xu_p.generate(fun_name, casadi_codegen_opts)
 
     if opts["with_value_sens_wrt_params"]:
         adj_p = ca.jtimes(phi, p, lam, True)
@@ -448,7 +447,7 @@ def generate_c_code_external_cost(ocp: AcadosOcp, stage_type, opts):
         suffix_name_hess = "_cost_ext_cost_e_fun_jac_hess"
         suffix_name_jac = "_cost_ext_cost_e_fun_jac"
         suffix_name_param_sens = "_cost_ext_cost_e_hess_xu_p"
-        suffix_name_value_sens = "_cost_ext_cost_e_jac_p"
+        suffix_name_value_sens = "_cost_ext_cost_e_grad_p"
         ext_cost = model.cost_expr_ext_cost_e
         custom_hess = model.cost_expr_ext_cost_custom_hess_e
         # Last stage cannot depend on u and z
@@ -460,7 +459,7 @@ def generate_c_code_external_cost(ocp: AcadosOcp, stage_type, opts):
         suffix_name_hess = "_cost_ext_cost_fun_jac_hess"
         suffix_name_jac = "_cost_ext_cost_fun_jac"
         suffix_name_param_sens = "_cost_ext_cost_hess_xu_p"
-        suffix_name_value_sens = "_cost_ext_cost_jac_p"
+        suffix_name_value_sens = "_cost_ext_cost_grad_p"
         ext_cost = model.cost_expr_ext_cost
         custom_hess = model.cost_expr_ext_cost_custom_hess
 
@@ -469,7 +468,7 @@ def generate_c_code_external_cost(ocp: AcadosOcp, stage_type, opts):
         suffix_name_hess = "_cost_ext_cost_0_fun_jac_hess"
         suffix_name_jac = "_cost_ext_cost_0_fun_jac"
         suffix_name_param_sens = "_cost_ext_cost_0_hess_xu_p"
-        suffix_name_value_sens = "_cost_ext_cost_0_jac_p"
+        suffix_name_value_sens = "_cost_ext_cost_0_grad_p"
         ext_cost = model.cost_expr_ext_cost_0
         custom_hess = model.cost_expr_ext_cost_custom_hess_0
 
@@ -513,14 +512,14 @@ def generate_c_code_external_cost(ocp: AcadosOcp, stage_type, opts):
     ext_cost_fun_jac.generate(fun_name_jac, casadi_codegen_opts)
 
     if opts["with_solution_sens_wrt_params"]:
-        jac_p = ca.jacobian(grad_uxz, p)
-        ext_cost_hess_xu_p = ca.Function(fun_name_param, [x, u, z, p], [jac_p])
+        hess_xu_p = ca.jacobian(grad_uxz, p)
+        ext_cost_hess_xu_p = ca.Function(fun_name_param, [x, u, z, p], [hess_xu_p])
         ext_cost_hess_xu_p.generate(fun_name_param, casadi_codegen_opts)
 
     if opts["with_value_sens_wrt_params"]:
         grad_p = ca.jacobian(ext_cost, p)
-        ext_cost_jac_p = ca.Function(fun_name_value_sens, [x, u, z, p], [grad_p])
-        ext_cost_jac_p.generate(fun_name_value_sens, casadi_codegen_opts)
+        ext_cost_grad_p = ca.Function(fun_name_value_sens, [x, u, z, p], [grad_p])
+        ext_cost_grad_p.generate(fun_name_value_sens, casadi_codegen_opts)
 
     os.chdir(cwd)
     return

@@ -80,6 +80,7 @@ typedef struct
     int compute_adj;
     int compute_hess;
     int cost_computation;
+    int with_solution_sens_wrt_params;
 } ocp_nlp_dynamics_disc_opts;
 
 //
@@ -156,7 +157,7 @@ typedef struct
     external_function_generic *disc_dyn_fun;
     external_function_generic *disc_dyn_fun_jac;
     external_function_generic *disc_dyn_fun_jac_hess;
-    external_function_generic *disc_dyn_params_jac;
+    external_function_generic *disc_dyn_phi_jac_p_hess_xu_p;
     external_function_generic *disc_dyn_adj_p;
 } ocp_nlp_dynamics_disc_model;
 

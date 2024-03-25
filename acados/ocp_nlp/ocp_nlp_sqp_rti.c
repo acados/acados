@@ -1323,7 +1323,7 @@ void ocp_nlp_sqp_rti_eval_param_sens(void *config_, void *dims_, void *opts_,
 
 
 void ocp_nlp_sqp_rti_eval_adj_p(void *config_, void *dims_, void *nlp_in_, void *opts_,
-    void *mem_, void *work_, char *field, void *lagr_grad_wrt_params)
+    void *mem_, void *work_, const char *field, void *lagr_grad_wrt_params)
 {
     acados_timer timer0;
     acados_tic(&timer0);

@@ -1,3 +1,34 @@
+#
+# Copyright (c) The acados authors.
+#
+# This file is part of acados.
+#
+# The 2-Clause BSD License
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.;
+#
+
+
 """
 Test for solution sensitivities with many parameters.
 """
@@ -5,13 +36,12 @@ Test for solution sensitivities with many parameters.
 import os
 import scipy
 import numpy as np
-from casadi import SX, norm_2, vertcat
 import casadi as ca
-from casadi.tools import struct_symSX, struct_SX, entry
+from casadi import SX, norm_2, vertcat
+from casadi.tools import struct_symSX, entry
 from casadi.tools.structure3 import DMStruct
 import matplotlib.pyplot as plt
 from acados_template import AcadosModel, AcadosSim, AcadosSimSolver, AcadosOcp, AcadosOcpSolver
-
 
 from typing import Tuple
 from plot_utils import (
@@ -27,7 +57,7 @@ def get_chain_params():
     """Get chain parameters."""
     params = {}
 
-    params["n_mass"] = 5
+    params["n_mass"] = 3
     params["Ts"] = 0.2
     params["Tsim"] = 5
     params["N"] = 40
@@ -614,7 +644,7 @@ def find_idx_for_labels(sub_vars, sub_label) -> np.ndarray:
 
 
 def main_parametric(
-    qp_solver_ric_alg: int = 0, eigen_analysis: bool = False, chain_params_: dict = get_chain_params()
+    qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_params()
 ) -> None:
 
     generate_code = True
@@ -651,7 +681,7 @@ def main_parametric(
 
     # p_label = "L_2_0"
     # p_label = "D_2_0"
-    p_label = "C_2_0"
+    p_label = f"C_{M}_0"
 
     p_idx = find_idx_for_labels(define_param_struct_symSX(chain_params_["n_mass"], disturbance=True).cat, p_label)[0]
 
@@ -708,8 +738,6 @@ def main_parametric(
         'solve': timings_solve_params,
         }
 
-    # TODO add timings of numpy implementation here
-    timing_results_other = timing_results.copy()
     pi = np.vstack(pi)
     sens_u = np.vstack(sens_u)
 
@@ -741,11 +769,11 @@ def main_parametric(
     plt.yscale('log')
     plt.xlabel(p_label)
 
-    plot_timings([timing_results, timing_results_other], timing_results.keys(), ['acados', 'numpy'], figure_filename=None)
+    plot_timings([timing_results], timing_results.keys(), ['acados'], figure_filename=None)
 
     plt.show()
 
 
 if __name__ == "__main__":
     # main_simulation(chain_params_=get_chain_params())
-    main_parametric(qp_solver_ric_alg=0, eigen_analysis=False)
+    main_parametric(qp_solver_ric_alg=0)

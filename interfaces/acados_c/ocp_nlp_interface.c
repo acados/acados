@@ -1072,7 +1072,7 @@ void ocp_nlp_eval_param_sens(ocp_nlp_solver *solver, char *field, int stage, int
     return;
 }
 
-void ocp_nlp_eval_lagrange_grad_p(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, char *field, double *out)
+void ocp_nlp_eval_lagrange_grad_p(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, const char *field, double *out)
 {
     solver->config->eval_lagrangian_param_sens(solver->config, solver->dims, nlp_in, solver->opts, solver->mem, solver->work, field, out);
 }

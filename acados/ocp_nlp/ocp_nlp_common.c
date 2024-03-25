@@ -511,7 +511,7 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
         {
             config->dynamics[i]->dims_set(config->dynamics[i], dims->dynamics[i], "np", &int_array[i]);
         }
-        // TODO(params_sens) implement np for constraints
+        // TODO: implement np for constraints
         // // constraints
         // for (int i = 0; i <= N; i++)
         // {
@@ -1322,8 +1322,21 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         }
         else if (!strcmp(field, "with_solution_sens_wrt_params"))
         {
+            int N = config->N;
+
             int* with_solution_sens_wrt_params = (int *) value;
             opts->with_solution_sens_wrt_params = *with_solution_sens_wrt_params;
+            // cost
+            for (int i=0; i<=N; i++)
+                config->cost[i]->opts_set(config->cost[i], opts->cost[i], "with_solution_sens_wrt_params", value);
+            // dynamics
+            for (int i=0; i<N; i++)
+                config->dynamics[i]->opts_set(config->dynamics[i], opts->dynamics[i],
+                                               "with_solution_sens_wrt_params", value);
+            // constraints
+            for (int i=0; i<=N; i++)
+                config->constraints[i]->opts_set(config->constraints[i], opts->constraints[i],
+                                                  "with_solution_sens_wrt_params", value);
         }
         else if (!strcmp(field, "with_value_sens_wrt_params"))
         {
@@ -3260,6 +3273,9 @@ void ocp_nlp_params_jac_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_
 {
     int N = dims->N;
 
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
     for (int i = 0; i < N; i++)
     {
         config->dynamics[i]->compute_params_jac(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
@@ -3276,7 +3292,6 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
                         ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
                         char *field, int stage, int index, ocp_nlp_out *sens_nlp_out)
 {
-
     int i;
 
     int N = dims->N;
@@ -3346,7 +3361,7 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
 void ocp_nlp_common_eval_adj_p(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
                         ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
-                        char *field, void *lagr_grad_wrt_params)
+                        const char *field, void *lagr_grad_wrt_params)
 {
     int i;
     int N = dims->N;
@@ -3356,7 +3371,7 @@ void ocp_nlp_common_eval_adj_p(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
 
     if (!strcmp("params_stage", field))
     {
-        printf("\nerror: field %s not available in ocp_nlp_sqp_eval_param_sens\n", field);
+        printf("\nerror: field %s not available in ocp_nlp_common_eval_adj_p\n", field);
         exit(1);
     }
     else if (!strcmp("params_global", field))
@@ -3376,6 +3391,8 @@ void ocp_nlp_common_eval_adj_p(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
             config->cost[i]->eval_grad_p(config->cost[i], dims->cost[i], in->cost[i], opts,
                                     mem->cost[i], work->cost[i], &work->tmp_np);
             blasfeo_dvecad(np[i], 1., &work->tmp_np, 0, &work->out_np, 0);
+
+            // TODO: add support for inequality constraints
         }
 
         // terminal cost contribution
