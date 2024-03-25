@@ -687,10 +687,18 @@ class AcadosOcpSolver:
             self.__get_pointers_solver()
 
 
+    # TODO: rename to get_and_eval_? since we now perform computations in this function.
     def get_optimal_value_gradient(self, with_respect_to: str = "initial_state") -> np.ndarray:
         """
-        Returns the gradient of the optimal value function w.r.t. the current initial state.
+        Returns the gradient of the optimal value function w.r.t. what is specified in `with_respect_to`.
+
         Disclaimer: This function only returns reasonable values if the solver has converged for the current problem instance.
+
+        Notes:
+        - for field `initial_state`, the gradient is the Lagrange multiplier of the initial state constraint.
+        The gradient computation consist of adding the Lagrange multipliers correspondin to the upper and lower bound of the initial state.
+
+        - for field `params_global`, the gradient of the Lagrange function w.r.t. the global parameters is computed in acados.
 
         :param with_respect_to: string in ["initial_state", "params_global"]
 
@@ -720,8 +728,10 @@ class AcadosOcpSolver:
             self.time_value_grad = time.time() - t0
 
         else:
-            raise Exception(f"AcadosOcpSolver.eval_solution_sensitivity(): Unknown field: {with_respect_to=}")
+            raise Exception(f"AcadosOcpSolver.get_optimal_value_gradient(): Unknown field: {with_respect_to=}")
         return grad
+
+
 
 
 
@@ -916,11 +926,9 @@ class AcadosOcpSolver:
         """
 
         out_fields = ['x', 'u', 'z', 'pi', 'lam', 't', 'sl', 'su']
-        # mem_fields = ['sl', 'su']
-        sens_fields = ['sens_u', "sens_x"]
+        sens_fields = ['sens_u', 'sens_x']
         all_fields = out_fields + sens_fields
 
-        field = field_
 
         if (field_ not in all_fields):
             raise Exception(f'AcadosOcpSolver.get(stage={stage_}, field={field_}): \'{field_}\' is an invalid argument.\
@@ -935,9 +943,9 @@ class AcadosOcpSolver:
         if stage_ == self.N and field_ == 'pi':
             raise Exception(f'AcadosOcpSolver.get(stage={stage_}, field={field_}): field \'{field_}\' does not exist at final stage {stage_}.')
 
+        field = field_
         if field_ in sens_fields:
             field = field_.replace('sens_', '')
-
         field = field.encode('utf-8')
 
         self.__acados_lib.ocp_nlp_dims_get_from_attr.argtypes = \
@@ -955,11 +963,6 @@ class AcadosOcpSolver:
                 [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
             self.__acados_lib.ocp_nlp_out_get(self.nlp_config, \
                 self.nlp_dims, self.nlp_out, stage_, field, out_data)
-        # elif field_ in mem_fields:
-        #     self.__acados_lib.ocp_nlp_get_at_stage.argtypes = \
-        #         [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
-        #     self.__acados_lib.ocp_nlp_get_at_stage(self.nlp_config, \
-        #         self.nlp_dims, self.nlp_solver, stage_, field, out_data)
         elif field_ in sens_fields:
             self.__acados_lib.ocp_nlp_out_get.argtypes = \
                 [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
@@ -1124,6 +1127,8 @@ class AcadosOcpSolver:
             (field, stage) = key.split('_')
             self.set(int(stage), field, np.array(solution[key]))
 
+    def get_status(self) -> int:
+        return self.status
 
     def get_stats(self, field_: str) -> Union[int, float, np.ndarray]:
         """
@@ -1320,7 +1325,7 @@ class AcadosOcpSolver:
 
 
     # Note: this function should not be used anymore, better use cost_set, constraints_set
-    def set(self, stage_: int, field_: str, value_):
+    def set(self, stage_: int, field_: str, value_: np.ndarray):
         """
         Set numerical data inside the solver.
 
