@@ -446,6 +446,36 @@ static void ocp_nlp_sqp_cast_workspace(ocp_nlp_config *config, ocp_nlp_dims *dim
 
 
 /* Helper functions */
+
+
+#if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
+static void ocp_nlp_sqp_dump_qp_in_to_file(ocp_qp_in *qp_in, int sqp_iter, int soc)
+{
+    char filename[100];
+    if (soc > 0)
+        sprintf(filename, "soc_qp_in_%d.txt", sqp_iter);
+    else
+        sprintf(filename, "qp_in_%d.txt", sqp_iter);
+    FILE *out_file = fopen(filename, "w");
+    print_ocp_qp_in_to_file(out_file, qp_in);
+    fclose(out_file);
+}
+
+
+static void ocp_nlp_sqp_dump_qp_out_to_file(ocp_qp_out *qp_out, int sqp_iter, int soc)
+{
+    char filename[100];
+    if (soc > 0)
+        sprintf(filename, "soc_qp_out_%d.txt", sqp_iter);
+    else
+        sprintf(filename, "qp_out_%d.txt", sqp_iter);
+    FILE *out_file = fopen(filename, "w");
+    print_ocp_qp_out_to_file(out_file, qp_out);
+    fclose(out_file);
+}
+#endif
+
+
 static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
             ocp_nlp_out *nlp_out, ocp_nlp_sqp_opts *opts, ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_workspace *work, int sqp_iter)
 {
@@ -471,7 +501,7 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
     double alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1, sqp_iter);
     if (alpha >= 1.0)
     {
-        return false;
+        return false; // do_line_search;
     }
 
     // Second Order Correction (SOC): following Nocedal2006: p.557, eq. (18.51) -- (18.56)
@@ -562,14 +592,7 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
     }
 
 #if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
-    if (1) // DEBUG printing
-    {
-        char filename[100];
-        sprintf(filename, "qp_in_%d_SOC.txt", sqp_iter);
-        FILE *out_file = fopen(filename, "w");
-        print_ocp_qp_in_to_file(out_file, qp_in);
-        fclose(out_file);
-    }
+    ocp_nlp_sqp_dump_qp_in_to_file(qp_in, sqp_iter, 1);
 #endif
 
     // solve QP
@@ -607,15 +630,9 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
         printf("\n\nSQP: SOC ocp_qp_out at iteration %d\n", sqp_iter);
         print_ocp_qp_out(qp_out);
     }
+
 #if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
-    if (1) // DEBUG printing
-    {
-        char filename[100];
-        sprintf(filename, "qp_out_%d_SOC.txt", sqp_iter);
-        FILE *out_file = fopen(filename, "w");
-        print_ocp_qp_out_to_file(out_file, qp_out);
-        fclose(out_file);
-    }
+        ocp_nlp_sqp_dump_qp_out_to_file(qp_out, sqp_iter, 1);
 #endif
 
     // exit conditions on QP status
@@ -703,11 +720,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     omp_set_num_threads(opts->nlp_opts->num_threads);
 #endif
 
-    //
     if (opts->initialize_t_slacks > 0)
         ocp_nlp_initialize_t_slacks(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
-    // initialize QP
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
     // main sqp loop
@@ -807,14 +822,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
 #if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
-        if (1) // DEBUG printing
-        {
-            char filename[100];
-            sprintf(filename, "qp_in_%d.txt", sqp_iter);
-            FILE *out_file = fopen(filename, "w");
-            print_ocp_qp_in_to_file(out_file, qp_in);
-            fclose(out_file);
-        }
+        ocp_nlp_sqp_dump_qp_in_to_file(qp_in, sqp_iter, 0);
 #endif
         // solve qp
         acados_tic(&timer1);
@@ -847,17 +855,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
 #if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
-        if (1) // DEBUG printing
-        {
-            char filename[100];
-            sprintf(filename, "qp_out_%d.txt", sqp_iter);
-            FILE *out_file = fopen(filename, "w");
-            print_ocp_qp_out_to_file(out_file, qp_out);
-            fclose(out_file);
-        }
+        ocp_nlp_sqp_dump_qp_out_to_file(qp_out, sqp_iter, 0);
 #endif
 
-        // TODO move into QP solver memory ???
         qp_info *qp_info_;
         ocp_qp_out_get(qp_out, "qp_info", &qp_info_);
         qp_iter = qp_info_->num_iter;
@@ -898,7 +898,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // restore number of threads
             omp_set_num_threads(num_threads_bkp);
 #endif
-
             if (nlp_opts->print_level > 1)
             {
                 printf("\n Failed to solve the following QP:\n");
