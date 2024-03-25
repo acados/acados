@@ -3260,6 +3260,9 @@ void ocp_nlp_params_jac_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_
 {
     int N = dims->N;
 
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
     for (int i = 0; i < N; i++)
     {
         config->dynamics[i]->compute_params_jac(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
