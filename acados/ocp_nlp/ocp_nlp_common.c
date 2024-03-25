@@ -1322,8 +1322,21 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         }
         else if (!strcmp(field, "with_solution_sens_wrt_params"))
         {
+            int N = config->N;
+
             int* with_solution_sens_wrt_params = (int *) value;
             opts->with_solution_sens_wrt_params = *with_solution_sens_wrt_params;
+            // cost
+            for (int i=0; i<=N; i++)
+                config->cost[i]->opts_set(config->cost[i], opts->cost[i], "with_solution_sens_wrt_params", value);
+            // dynamics
+            for (int i=0; i<N; i++)
+                config->dynamics[i]->opts_set(config->dynamics[i], opts->dynamics[i],
+                                               "with_solution_sens_wrt_params", value);
+            // constraints
+            for (int i=0; i<=N; i++)
+                config->constraints[i]->opts_set(config->constraints[i], opts->constraints[i],
+                                                  "with_solution_sens_wrt_params", value);
         }
         else if (!strcmp(field, "with_value_sens_wrt_params"))
         {

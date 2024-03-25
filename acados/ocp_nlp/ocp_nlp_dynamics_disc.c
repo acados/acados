@@ -226,6 +226,11 @@ void ocp_nlp_dynamics_disc_opts_set(void *config_, void *opts_, const char *fiel
         int *int_ptr = value;
         opts->compute_hess = *int_ptr;
     }
+    else if(!strcmp(field, "with_solution_sens_wrt_params"))
+    {
+        int *int_ptr = value;
+        opts->with_solution_sens_wrt_params = *int_ptr;
+    }
     else
     {
         printf("\nerror: field %s not available in ocp_nlp_dynamics_disc_opts_set\n", field);
@@ -271,7 +276,7 @@ acados_size_t ocp_nlp_dynamics_disc_memory_calculate_size(void *config_, void *d
 {
     // ocp_nlp_dynamics_config *config = config_;
     ocp_nlp_dynamics_disc_dims *dims = dims_;
-    // ocp_nlp_dynamics_disc_opts *opts = opts_;
+    ocp_nlp_dynamics_disc_opts *opts = opts_;
 
     // extract dims
     int nx = dims->nx;
@@ -283,8 +288,11 @@ acados_size_t ocp_nlp_dynamics_disc_memory_calculate_size(void *config_, void *d
 
     size += sizeof(ocp_nlp_dynamics_disc_memory);
 
-    size += 1 * blasfeo_memsize_dmat(nx1, np);        // params_jac
-    size += 1 * blasfeo_memsize_dmat(nu + nx, np);    // params_lag_jac
+    if (opts->with_solution_sens_wrt_params)
+    {
+        size += 1 * blasfeo_memsize_dmat(nx1, np);        // params_jac
+        size += 1 * blasfeo_memsize_dmat(nu + nx, np);    // params_lag_jac
+    }
     size += 1 * blasfeo_memsize_dvec(nu + nx + nx1);  // adj
     size += 1 * blasfeo_memsize_dvec(nx1);            // fun
 
@@ -299,7 +307,7 @@ void *ocp_nlp_dynamics_disc_memory_assign(void *config_, void *dims_, void *opts
 {
     // ocp_nlp_dynamics_config *config = config_;
     ocp_nlp_dynamics_disc_dims *dims = dims_;
-    // ocp_nlp_dynamics_disc_opts *opts = opts_;
+    ocp_nlp_dynamics_disc_opts *opts = opts_;
 
     char *c_ptr = (char *) raw_memory;
 
@@ -316,10 +324,13 @@ void *ocp_nlp_dynamics_disc_memory_assign(void *config_, void *dims_, void *opts
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
 
-    // params_jac
-    assign_and_advance_blasfeo_dmat_mem(nx1, np, &memory->params_jac, &c_ptr);
-    // params_lag_jac
-    assign_and_advance_blasfeo_dmat_mem(nx + nu, np, &memory->params_lag_jac, &c_ptr);
+    if (opts->with_solution_sens_wrt_params)
+    {
+        // params_jac
+        assign_and_advance_blasfeo_dmat_mem(nx1, np, &memory->params_jac, &c_ptr);
+        // params_lag_jac
+        assign_and_advance_blasfeo_dmat_mem(nx + nu, np, &memory->params_lag_jac, &c_ptr);
+    }
     // adj
     assign_and_advance_blasfeo_dvec_mem(nu + nx + nx1, &memory->adj, &c_ptr);
     // fun

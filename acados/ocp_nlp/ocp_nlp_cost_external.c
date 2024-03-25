@@ -314,6 +314,7 @@ void ocp_nlp_cost_external_opts_initialize_default(void *config_, void *dims_, v
     ocp_nlp_cost_external_opts *opts = opts_;
 
     opts->use_numerical_hessian = 0;
+    opts->with_solution_sens_wrt_params = 0;
 
     return;
 }
@@ -346,6 +347,11 @@ void ocp_nlp_cost_external_opts_set(void *config_, void *opts_, const char *fiel
         int *opt_val = (int *) value;
         opts->use_numerical_hessian = *opt_val;
     }
+    else if(!strcmp(field, "with_solution_sens_wrt_params"))
+    {
+        int *opt_val = (int *) value;
+        opts->with_solution_sens_wrt_params = *opt_val;
+    }
     else
     {
         printf("\nerror: field %s not available in ocp_nlp_cost_external_opts_set\n", field);
@@ -366,7 +372,7 @@ acados_size_t ocp_nlp_cost_external_memory_calculate_size(void *config_, void *d
 {
     // ocp_nlp_cost_config *config = config_;
     ocp_nlp_cost_external_dims *dims = dims_;
-    // ocp_nlp_cost_external_opts *opts = opts_;
+    ocp_nlp_cost_external_opts *opts = opts_;
 
     int nx = dims->nx;
     int nu = dims->nu;
@@ -378,7 +384,10 @@ acados_size_t ocp_nlp_cost_external_memory_calculate_size(void *config_, void *d
 
     size += sizeof(ocp_nlp_cost_external_memory);
 
-    size += 1 * blasfeo_memsize_dmat(nu + nx + nz, np);  // cost_grad_params_jac
+    if (opts->with_solution_sens_wrt_params)
+    {
+        size += 1 * blasfeo_memsize_dmat(nu + nx + nz, np);  // cost_grad_params_jac
+    }
     size += 1 * blasfeo_memsize_dvec(nu + nx + 2 * ns);  // grad
 
     size += 64;  // blasfeo_mem align
@@ -392,7 +401,7 @@ void *ocp_nlp_cost_external_memory_assign(void *config_, void *dims_, void *opts
 {
     // ocp_nlp_cost_config *config = config_;
     ocp_nlp_cost_external_dims *dims = dims_;
-    // ocp_nlp_cost_external_opts *opts = opts_;
+    ocp_nlp_cost_external_opts *opts = opts_;
 
     char *c_ptr = (char *) raw_memory;
 
@@ -409,8 +418,10 @@ void *ocp_nlp_cost_external_memory_assign(void *config_, void *dims_, void *opts
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
 
-    // params_grad
-    assign_and_advance_blasfeo_dmat_mem(nu + nx, np, &memory->cost_grad_params_jac, &c_ptr);
+    if (opts->with_solution_sens_wrt_params)
+    {
+        assign_and_advance_blasfeo_dmat_mem(nu + nx, np, &memory->cost_grad_params_jac, &c_ptr);
+    }
     // grad
     assign_and_advance_blasfeo_dvec_mem(nu + nx + 2 * ns, &memory->grad, &c_ptr);
 
