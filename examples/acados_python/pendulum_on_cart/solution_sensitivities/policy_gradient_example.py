@@ -137,7 +137,7 @@ def evaluate_hessian_eigenvalues(acados_solver: AcadosOcpSolver):
 
 
 
-def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True):
+def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=False):
     """
     Evaluate policy and calculate its gradient for the pendulum on a cart with a parametric model.
     """
@@ -153,12 +153,23 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True):
     Fmax = 80.0
 
     ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, qp_solver_ric_alg=1)
-    acados_ocp_solver = AcadosOcpSolver(ocp, json_file="parameter_augmented_acados_ocp.json")
+    if use_cython:
+        AcadosOcpSolver.generate(ocp, json_file="parameter_augmented_acados_ocp.json")
+        AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
+        acados_ocp_solver = AcadosOcpSolver.create_cython_solver("parameter_augmented_acados_ocp.json")
+    else:
+        acados_ocp_solver = AcadosOcpSolver(ocp, json_file="parameter_augmented_acados_ocp.json")
 
     # create sensitivity solver
     ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, hessian_approx='EXACT', qp_solver_ric_alg=qp_solver_ric_alg)
     ocp.model.name = 'sensitivity_solver'
-    sensitivity_solver = AcadosOcpSolver(ocp, json_file="sensitivity_solver.json")
+    ocp.code_export_directory = f'c_generated_code_{ocp.model.name}'
+    if use_cython:
+        AcadosOcpSolver.generate(ocp, json_file=f"{ocp.model.name}.json")
+        AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
+        sensitivity_solver = AcadosOcpSolver.create_cython_solver(f"{ocp.model.name}.json")
+    else:
+        sensitivity_solver = AcadosOcpSolver(ocp, json_file=f"{ocp.model.name}.json")
 
     sens_u = np.zeros(np_test)
     sens_cost = np.zeros(np_test)
@@ -181,10 +192,11 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True):
 
     pi = np.zeros(np_test)
     for i, p in enumerate(p_test):
+        p_val = np.array([p])
 
         for n in range(N_horizon+1):
-            acados_ocp_solver.set(n, 'p', p)
-            sensitivity_solver.set(n, 'p', p)
+            acados_ocp_solver.set(n, 'p', p_val)
+            sensitivity_solver.set(n, 'p', p_val)
         pi[i] = acados_ocp_solver.solve_for_x0(x0)[0]
         cost_values[i] = acados_ocp_solver.get_cost()
 
@@ -195,7 +207,7 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True):
         residuals = sensitivity_solver.get_stats("residuals")
         # print(f"residuals sensitivity_solver {residuals} status {sensitivity_solver.status}")
 
-        if sensitivity_solver.status not in [0, 2]:
+        if sensitivity_solver.get_status() not in [0, 2]:
             print(f"warning")
             breakpoint()
 
@@ -335,4 +347,4 @@ def plot_results(p_test, pi, pi_reconstructed_acados, pi_reconstructed_np_grad, 
 
 
 if __name__ == "__main__":
-    main_parametric(qp_solver_ric_alg=0, eigen_analysis=False)
+    main_parametric(qp_solver_ric_alg=0, eigen_analysis=False, use_cython=True)
