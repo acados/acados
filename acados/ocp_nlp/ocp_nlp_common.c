@@ -3361,7 +3361,7 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
 void ocp_nlp_common_eval_adj_p(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
                         ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
-                        char *field, void *lagr_grad_wrt_params)
+                        const char *field, void *lagr_grad_wrt_params)
 {
     int i;
     int N = dims->N;

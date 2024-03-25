@@ -157,7 +157,7 @@ int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_
                 void *opts_, void *mem_, void *work_);
 //
 void ocp_nlp_sqp_eval_adj_p(void *config_, void *dims_, void *nlp_in_, void *opts_, void *mem_, void *work_,
-                                 char *field, void *lagr_grad_wrt_params);
+                            const char *field, void *lagr_grad_wrt_params);
 
 #ifdef __cplusplus
 } /* extern "C" */
