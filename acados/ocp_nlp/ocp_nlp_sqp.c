@@ -498,8 +498,8 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
     // NOTE: the "and" is interpreted as an "or" in the current implementation
 
     // preliminary line search
-    double alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1, sqp_iter);
-    if (alpha >= 1.0)
+    mem->alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1, sqp_iter);
+    if (mem->alpha >= 1.0)
     {
         return false; // do_line_search;
     }
@@ -509,7 +509,7 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
     // Section 18.8 TRUST-REGION SQP METHODS
     //   - just no trust region radius here.
     if (nlp_opts->print_level > 0)
-        printf("ocp_nlp_sqp: performing SOC, since alpha %e in prelim. line search\n\n", alpha);
+        printf("ocp_nlp_sqp: performing SOC, since alpha %e in prelim. line search\n\n", mem->alpha);
     int *nb = qp_in->dim->nb;
     int *ng = qp_in->dim->ng;
     int *nx = dims->nx;
@@ -711,7 +711,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     int ii;
     int qp_status = 0;
     int qp_iter = 0;
-    double alpha = 0.0;
+    mem->alpha = 0.0;
 
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
@@ -786,7 +786,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             {
                 printf("%i\t%e\t%e\t%e\t%e\t%d\t%d\t%e\n", sqp_iter, nlp_res->inf_norm_res_stat,
                     nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_ineq, nlp_res->inf_norm_res_comp,
-                    qp_status, qp_iter, alpha);
+                    qp_status, qp_iter, mem->alpha);
                 printf("\n\n");
             }
 
@@ -929,13 +929,13 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         if (do_line_search)
         {
-            alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, sqp_iter);
+            mem->alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, sqp_iter);
         }
         mem->time_glob += acados_toc(&timer1);
-        mem->stat[mem->stat_n*(sqp_iter+1)+6] = alpha;
+        mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
 
         // update variables
-        ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, alpha);
+        ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha);
 
         if (nlp_opts->print_level > 0)
         {
@@ -945,7 +945,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             }
             printf("%i\t%e\t%e\t%e\t%e\t%d\t%d\t%e\n", sqp_iter, nlp_res->inf_norm_res_stat,
                 nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_ineq, nlp_res->inf_norm_res_comp,
-                qp_status, qp_iter, alpha);
+                qp_status, qp_iter, mem->alpha);
         }
     }  // end SQP loop
 
