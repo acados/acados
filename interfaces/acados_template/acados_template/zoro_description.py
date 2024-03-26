@@ -70,6 +70,21 @@ class ZoroDescription:
     idx_uh_t: list = field(default_factory=list)
     idx_lh_e_t: list = field(default_factory=list)
     idx_uh_e_t: list = field(default_factory=list)
+    # Inputs:
+    input_P0_diag: bool = False
+    """Determines if diag(P0) is an input to the custom update function"""
+    input_P0: bool = True
+    """Determines if diag(P0) is an input to the custom update function"""
+
+    input_W_diag: bool = False
+    """Determines if diag(W) is an input to the custom update function"""
+    input_W_gp_diag: bool = False
+    """
+    Determines if the concatenation of diag(W_{gp}^k) is an input to the custom update function
+
+    In case this is used W_k = W + W_{gp}^k.
+    """
+
 
 def process_zoro_description(zoro_description: ZoroDescription):
     zoro_description.nw, _ = zoro_description.W_mat.shape
@@ -89,4 +104,25 @@ def process_zoro_description(zoro_description: ZoroDescription):
     zoro_description.nuh_t = len(zoro_description.idx_uh_t)
     zoro_description.nlh_e_t = len(zoro_description.idx_lh_e_t)
     zoro_description.nuh_e_t = len(zoro_description.idx_uh_e_t)
+
+    if zoro_description.input_P0_diag and zoro_description.input_P0:
+        raise Exception("Only one of input_P0_diag and input_P0 can be True")
+
+    # Print input note:
+    print(f"\nThe input (data) of the generated custom update function consists of the concatenation of:")
+    i_input = 1
+    if zoro_description.input_P0_diag:
+        print(f"{i_input}) diag(P0)")
+        i_input += 1
+    if zoro_description.input_P0:
+        print(f"{i_input}) P0; full matrix in column-major format")
+        i_input += 1
+    if zoro_description.input_W_diag:
+        print(f"{i_input}) diag(W)")
+        i_input += 1
+    if zoro_description.input_W_gp_diag:
+        print(f"{i_input}) concatenation of diag(W_gp^k) for i=0,...,N-1")
+        i_input += 1
+    print("\n")
+
     return zoro_description
