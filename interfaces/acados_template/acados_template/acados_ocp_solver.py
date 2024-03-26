@@ -1269,8 +1269,11 @@ class AcadosOcpSolver:
         Set numerical data in the cost module of the solver.
 
             :param stage: integer corresponding to shooting node
-            :param field: string, e.g. 'yref', 'W', 'ext_cost_num_hess', 'zl', 'zu', 'Zl', 'Zu'
+            :param field: string, e.g. 'yref', 'W', 'ext_cost_num_hess', 'zl', 'zu', 'Zl', 'Zu', 'scaling'
             :param value: of appropriate size
+
+        Note: by default the cost is scaled with the time step, and the terminal cost term scaled with 1.
+        This can be overwritten by setting the 'scaling' field.
         """
         # cast value_ to avoid conversion issues
         if isinstance(value_, (float, int)):
