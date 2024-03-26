@@ -255,6 +255,11 @@ def main(cost_version: str, formulation_type='ocp', integrator_type='IRK', plot=
             ocp_solver.cost_set(i, "ext_cost_num_hess", np.diag([0.02, 2000, 2000, 0.02, 0.02, ]))
         ocp_solver.cost_set(N, "ext_cost_num_hess", np.diag([2000, 2000, 0.02, 0.02, ]))
 
+    # test set cost scaling
+    if formulation_type == 'ocp':
+        for i in range(N):
+            ocp_solver.cost_set(i, "scaling", ocp.solver_options.time_steps[i])
+
     simX = np.zeros((N+1, NX))
     simU = np.zeros((N, NU))
 
