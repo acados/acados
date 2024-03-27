@@ -138,6 +138,8 @@ Z_e = 1e2;
 z = 0e2;
 z_e = 0e2;
 
+use_soft_h0_constraint = 1;
+
 %% constraints
 % constants
 dbeta_min = -8.0;
@@ -201,9 +203,16 @@ end
 ocp_model.set('cost_W', W);
 ocp_model.set('cost_W_e', W_e);
 ocp_model.set('cost_Z', Z);
-ocp_model.set('cost_Z_e', Z_e);
 ocp_model.set('cost_z', z);
+ocp_model.set('cost_Z_e', Z_e);
 ocp_model.set('cost_z_e', z_e);
+if use_soft_h0_constraint
+	ocp_model.set('cost_Zl_0', Z);
+	ocp_model.set('cost_zl_0', z);
+	ocp_model.set('cost_Zu_0', Z);
+	ocp_model.set('cost_zu_0', z);
+    ocp_model.set('constr_Jsh_0', Jsh);
+end
 %% dynamics
 if (strcmp(sim_method, 'erk'))
 	ocp_model.set('dyn_type', 'explicit');
@@ -221,6 +230,12 @@ ocp_model.set('constr_Jbu', Jbu);
 ocp_model.set('constr_lbu', lbu);
 ocp_model.set('constr_ubu', ubu);
 % nonlinear constraints
+if use_soft_h0_constraint
+	ocp_model.set('constr_expr_h_0', model.expr_h);
+	ocp_model.set('constr_lh_0', lh);
+	ocp_model.set('constr_uh_0', uh);
+end
+%
 ocp_model.set('constr_expr_h', model.expr_h);
 ocp_model.set('constr_lh', lh);
 ocp_model.set('constr_uh', uh);
@@ -232,8 +247,6 @@ ocp_model.set('constr_Jsh', Jsh);
 ocp_model.set('constr_Jsh_e', Jsh_e);
 % (dummy) initial state constr
 ocp_model.set('constr_x0', zeros(nx,1));
-
-ocp_model.model_struct
 
 
 

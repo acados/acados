@@ -340,6 +340,8 @@ classdef acados_ocp_model < handle
     %                obj.model_struct.constr_ush = value;
                 elseif (strcmp(field, 'constr_Jsh_e'))
                     obj.model_struct.constr_Jsh_e = value;
+                elseif (strcmp(field, 'constr_Jsh_0'))
+                    obj.model_struct.constr_Jsh_0 = value;
     %            elseif (strcmp(field, 'constr_lsh_e'))
     %                obj.model_struct.constr_lsh_e = value;
     %            elseif (strcmp(field, 'constr_ush_e'))
