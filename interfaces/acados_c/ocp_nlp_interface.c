@@ -917,6 +917,10 @@ void ocp_nlp_cost_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims,
         dims_out[0] = dims->nx[stage] + dims->nu[stage];
         dims_out[1] = dims->nx[stage] + dims->nu[stage];
     }
+    else if (!strcmp(field, "scaling"))
+    {
+        dims_out[0] = 1;
+    }
     else
     {
         printf("\nerror: ocp_nlp_cost_dims_get_from_attr: field %s not available\n", field);

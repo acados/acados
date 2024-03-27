@@ -779,7 +779,7 @@ cdef class AcadosOcpSolverCython:
         Set numerical data in the cost module of the solver.
 
             :param stage: integer corresponding to shooting node
-            :param field: string, e.g. 'yref', 'W', 'ext_cost_num_hess'
+            :param field: string, e.g. 'yref', 'W', 'ext_cost_num_hess', 'scaling'
             :param value: of appropriate size
         """
         if not isinstance(value_, np.ndarray):
