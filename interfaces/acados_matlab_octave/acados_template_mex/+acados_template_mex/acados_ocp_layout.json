@@ -364,6 +364,12 @@
                 "nsh"
             ]
         ],
+        "idxsh_0": [
+            "ndarray",
+            [
+                "nsh_0"
+            ]
+        ],
         "lsh_e": [
             "ndarray",
             [
