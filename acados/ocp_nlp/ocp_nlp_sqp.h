@@ -104,6 +104,7 @@ typedef struct
     double time_sim_la;
     double time_sim_ad;
     double time_solution_sensitivities;
+    double alpha;
 
     // statistics
     double *stat;
@@ -159,6 +160,8 @@ void ocp_nlp_sqp_config_initialize_default(void *config_);
 //
 int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_);
+//
+void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, void *return_value_);
 
 #ifdef __cplusplus
 } /* extern "C" */
