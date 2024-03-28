@@ -642,11 +642,6 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
         printf("\nQP solver returned error status %d in SQP iteration %d for SOC QP in QP iteration %d.\n",
             qp_status, sqp_iter, qp_iter);
 #endif
-#if defined(ACADOS_WITH_OPENMP)
-        // restore number of threads
-        omp_set_num_threads(num_threads_bkp);
-#endif
-
         if (nlp_opts->print_level > 1)
         {
             printf("\nFailed to solve the following QP:\n");
@@ -923,6 +918,10 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
         if (mem->status == ACADOS_QP_FAILURE)
         {
+#if defined(ACADOS_WITH_OPENMP)
+            // restore number of threads
+            omp_set_num_threads(num_threads_bkp);
+#endif
             mem->time_tot = acados_toc(&timer0);
             return mem->status;
         }
