@@ -88,6 +88,8 @@ typedef struct ocp_nlp_config
     int (*evaluate)(void *config, void *dims, void *nlp_in, void *nlp_out, void *opts_, void *mem, void *work);
     void (*eval_param_sens)(void *config, void *dims, void *opts_, void *mem, void *work,
                             char *field, int stage, int index, void *sens_nlp_out);
+    void (*eval_lagrangian_param_sens)(void *config, void *dims, void *nlp_in, void *opts_, void *mem, void *work,
+                            const char *field, void *lagrangian_param_sens);
     // prepare memory
     int (*precompute)(void *config, void *dims, void *nlp_in, void *nlp_out, void *opts_, void *mem, void *work);
     void (*memory_reset_qp_solver)(void *config, void *dims, void *nlp_in, void *nlp_out, void *opts_, void *mem, void *work);
@@ -132,6 +134,7 @@ typedef struct ocp_nlp_dims
     int *ni;  // number of two-sided inequality constraints: nb+ng+nh+ns
     int *nz;  // number of algebraic variables
     int *ns;  // number of slack variables
+    int *np;  // number of parameters
     int N;    // number of shooting nodes
 
     void *raw_memory; // Pointer to allocated memory, to be used for freeing
@@ -279,6 +282,9 @@ typedef struct ocp_nlp_opts
     double alpha_min;
     double alpha_reduction;
     double eps_sufficient_descent;
+    int with_solution_sens_wrt_params;
+    int with_value_sens_wrt_params;
+
 } ocp_nlp_opts;
 
 //
@@ -378,12 +384,19 @@ typedef struct ocp_nlp_workspace
     void **cost;         // cost_workspace
     void **constraints;  // constraints_workspace
 
+    // temp QP in & out (to be used as workspace in param sens)
+    ocp_qp_in *tmp_qp_in;
+    ocp_qp_out *tmp_qp_out;
+
     // for globalization: -> move to module?!
     ocp_nlp_out *tmp_nlp_out;
     ocp_nlp_out *weight_merit_fun;
     struct blasfeo_dvec tmp_nxu;
     struct blasfeo_dvec tmp_ni;
     struct blasfeo_dvec dxnext_dy;
+    // optimal value gradient wrt params
+    struct blasfeo_dvec tmp_np;
+    struct blasfeo_dvec out_np;
     // AS-RTI
     double *tmp_nxu_double;
 
@@ -443,7 +456,15 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out,
 void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
 
+void ocp_nlp_params_jac_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
 
+void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
+                        ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
+                        char *field, int stage, int index, ocp_nlp_out *sens_nlp_out);
+//
+void ocp_nlp_common_eval_adj_p(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+                        ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
+                        const char *field, void *lagr_grad_wrt_params);
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

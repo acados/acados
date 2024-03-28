@@ -92,6 +92,10 @@ void sim_erk_dims_set(void *config_, void *dims_, const char *field, const int *
             exit(1);
         }
     }
+    else if (!strcmp(field, "np"))
+    {
+        // np dimension not needed
+    }
     else
     {
         printf("\nerror: sim_erk_dims_set: dim type not available: %s\n", field);

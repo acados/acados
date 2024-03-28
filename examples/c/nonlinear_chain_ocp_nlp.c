@@ -1245,7 +1245,7 @@ int main()
 
 			default:
 				printf("\ninvalid dynamics module\n\n");
-				exit(1);	
+				exit(1);
 		}
 	}
 

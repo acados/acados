@@ -133,10 +133,6 @@ typedef struct
 {
     ocp_nlp_workspace *nlp_work;
 
-    // temp QP in & out (to be used as workspace in param sens)
-    ocp_qp_in *tmp_qp_in;
-    ocp_qp_out *tmp_qp_out;
-
     // qp residuals
     ocp_qp_res *qp_res;
     ocp_qp_res_ws *qp_res_ws;
@@ -160,6 +156,9 @@ void ocp_nlp_sqp_config_initialize_default(void *config_);
 //
 int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_);
+//
+void ocp_nlp_sqp_eval_adj_p(void *config_, void *dims_, void *nlp_in_, void *opts_, void *mem_, void *work_,
+                            const char *field, void *lagr_grad_wrt_params);
 //
 void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, void *return_value_);
 

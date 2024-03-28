@@ -259,14 +259,15 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True)
         acados_ocp_solver_exact.load_iterate(filename='iterate.json', verbose=False)
         acados_ocp_solver_exact.set(0, 'u', u0+1e-7)
         acados_ocp_solver_exact.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
-        acados_ocp_solver_exact.eval_param_sens(index=idxp)
+
+        sens_x_, sens_u_ = acados_ocp_solver_exact.eval_solution_sensitivity(0, with_respect_to="initial_state")
+        du0_dp_values[i] = sens_u_[0, idxp]
 
         exact_hessian_status[i] = acados_ocp_solver_exact.get_stats('qp_stat')[-1]
 
         residuals = acados_ocp_solver_exact.get_stats("residuals")
         print(f"residuals sensitivity_solver {residuals}")
 
-        du0_dp_values[i] = acados_ocp_solver_exact.get(0, "sens_u")
 
         # solve with casadi and compare hessians
         nlp_sol = casadi_solver(p=x0, lbg=lbg, ubg=ubg)

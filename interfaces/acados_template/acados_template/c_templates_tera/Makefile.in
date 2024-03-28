@@ -181,6 +181,12 @@ MODEL_SRC+= {{ model.name }}_model/{{ model.name }}_gnsf_get_matrices_fun.c
 {%- elif solver_options.integrator_type == "DISCRETE" %}
 MODEL_SRC+= {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun.c
 MODEL_SRC+= {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun_jac.c
+{% if solver_options.with_solution_sens_wrt_params %}
+MODEL_SRC+= {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_jac_p_hess_xu_p.c
+{% endif %}
+{% if solver_options.with_value_sens_wrt_params %}
+MODEL_SRC+= {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_adj_p.c
+{% endif %}
 		{%- if hessian_approx == "EXACT" %}
 MODEL_SRC+= {{ model.name }}_model/{{ model.name }}_dyn_disc_phi_fun_jac_hess.c
 		{%- endif %}
@@ -235,6 +241,12 @@ OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_conl_cost_0_fun_jac_hess.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_0_fun.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_0_fun_jac.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_0_fun_jac_hess.c
+{% if solver_options.with_solution_sens_wrt_params %}
+OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_0_hess_xu_p.c
+{% endif %}
+{% if solver_options.with_value_sens_wrt_params %}
+OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_0_grad_p.c
+{% endif %}
 	{%- else %}
 OCP_SRC+= {{ model.name }}_cost/{{ cost.cost_source_ext_cost_0 }}
 	{%- endif %}
@@ -251,6 +263,12 @@ OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_conl_cost_fun_jac_hess.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_fun.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_fun_jac.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_fun_jac_hess.c
+{% if solver_options.with_solution_sens_wrt_params %}
+OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_hess_xu_p.c
+{% endif %}
+{% if solver_options.with_value_sens_wrt_params %}
+OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_grad_p.c
+{% endif %}
 	{%- elif cost.cost_source_ext_cost != cost.cost_source_ext_cost_0 %}
 OCP_SRC+= {{ model.name }}_cost/{{ cost.cost_source_ext_cost }}
 	{%- endif %}
@@ -267,6 +285,12 @@ OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_conl_cost_e_fun_jac_hess.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_fun.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_fun_jac.c
 OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_fun_jac_hess.c
+{% if solver_options.with_solution_sens_wrt_params %}
+OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_hess_xu_p.c
+{% endif %}
+{% if solver_options.with_value_sens_wrt_params %}
+OCP_SRC+= {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_grad_p.c
+{% endif %}
 	{%- elif cost.cost_source_ext_cost_e != cost.cost_source_ext_cost_0 %}
 OCP_SRC+= {{ model.name }}_cost/{{ cost.cost_source_ext_cost_e }}
 	{%- endif %}

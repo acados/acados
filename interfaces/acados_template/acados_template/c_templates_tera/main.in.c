@@ -48,6 +48,7 @@
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 
 #define NX     {{ name | upper }}_NX
+#define NP     {{ name | upper }}_NP
 #define NU     {{ name | upper }}_NU
 #define NBX0   {{ name | upper }}_NBX0
 

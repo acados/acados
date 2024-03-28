@@ -33,160 +33,65 @@ import sys
 sys.path.insert(0, '../common')
 
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, latexify_plot
-from casadi import SX, vertcat, cos, sin
+import casadi as ca
 import numpy as np
-import scipy.linalg as scipylinalg
 import matplotlib.pyplot as plt
 from utils import plot_pendulum
+from pendulum_model import export_pendulum_ode_model_with_mass_as_param
 
 
 
-def export_parameter_augmented_pendulum_ode_model(param_M_as_state=True) -> AcadosModel:
-    """
-    Augment the normal state vector with cart mass M.
-
-    Return:
-        AcadosModel: model of the augmented state cart
-        nx_original: number of states before augmentating model with parameters
-    """
-    model_name = "parameter_augmented_pendulum_ode"
-
-    # constants
-    m = 0.1  # mass of the ball [kg]
-    g = 9.81  # gravity constant [m/s^2]
-    l = 0.8  # length of the rod [m]
-
-    # set up states
-    p = SX.sym("p")
-    theta = SX.sym("theta")
-    v = SX.sym("v")
-    omega = SX.sym("omega")
-
-    # controls
-    F = SX.sym("F")
-    u = vertcat(F)
-
-    # xdot
-    p_dot = SX.sym("p_dot")
-    theta_dot = SX.sym("theta_dot")
-    v_dot = SX.sym("v_dot")
-    omega_dot = SX.sym("omega_dot")
-    M_dot = SX.sym("M_dot")
-
-    nx_original = 4
-    if param_M_as_state:
-        M = SX.sym("M")  # mass of the cart [kg]
-        x = vertcat(p, theta, v, omega, M)
-        xdot = vertcat(p_dot, theta_dot, v_dot, omega_dot, M_dot)
-    else:
-        M = 1.0  # mass of the cart [kg]
-        x = vertcat(p, theta, v, omega)
-        xdot = vertcat(p_dot, theta_dot, v_dot, omega_dot)
-
-    # dynamics
-    cos_theta = cos(theta)
-    sin_theta = sin(theta)
-    denominator = M + m - m * cos_theta * cos_theta
-    f_expl = vertcat(
-        v,
-        omega,
-        (-m * l * sin_theta * omega * omega + m * g * cos_theta * sin_theta + F) / denominator,
-        (-m * l * cos_theta * sin_theta * omega * omega + F * cos_theta + (M + m) * g * sin_theta) / (l * denominator),
-    )
-
-    if param_M_as_state:
-        f_expl = vertcat(f_expl, 0)
-
-    # algebraic variables
-    # z = None
-
-    # parameters
-    param = []
-
-    f_impl = xdot - f_expl
-
-    model = AcadosModel()
-
-    model.f_impl_expr = f_impl
-    model.f_expl_expr = f_expl
-    model.x = x
-    model.xdot = xdot
-    model.u = u
-    # model.z = z
-    model.p = param
-    model.name = model_name
-
-    return model, nx_original
-
-
-def export_parameter_augmented_ocp(
-    x0=np.array([0.0, np.pi / 6, 0.0, 0.0, 1.0]), N_horizon=50, T_horizon=2.0, Fmax=80.0,
-    hessian_approx = "GAUSS_NEWTON", param_M_as_state=True, qp_solver_ric_alg=1
+def export_parametric_ocp(
+    x0=np.array([0.0, np.pi / 6, 0.0, 0.0]), N_horizon=50, T_horizon=2.0, Fmax=80.0,
+    hessian_approx = "GAUSS_NEWTON", qp_solver_ric_alg=1
 ) -> AcadosOcp:
-    """
-    OCP with augmented state vector (p, theta, v, omega, M).
-    """
-    # create ocp object to formulate the OCP
+
     ocp = AcadosOcp()
+    dt = T_horizon/N_horizon
+    ocp.model = export_pendulum_ode_model_with_mass_as_param(dt=dt)
 
-    # set model
-    ocp.model, nx_original = export_parameter_augmented_pendulum_ode_model(param_M_as_state=param_M_as_state)
-
-    # set dimensions
     ocp.dims.N = N_horizon
-    nu = ocp.model.u.rows()
-    nx = ocp.model.x.rows()
 
-    # set cost
     Q_mat = 2 * np.diag([1e3, 1e3, 1e-2, 1e-2])
     R_mat = 2 * np.diag([1e-1])
 
-    # We use the NONLINEAR_LS cost type and GAUSS_NEWTON Hessian approximation - One can also use the external cost module to specify generic cost.
-    ocp.cost.cost_type = "NONLINEAR_LS"
-    ocp.cost.cost_type_e = "NONLINEAR_LS"
-    ocp.cost.W = scipylinalg.block_diag(Q_mat, R_mat)
-    ocp.cost.W_e = Q_mat
+    ocp.cost.cost_type = "EXTERNAL"
+    ocp.cost.cost_type_e = "EXTERNAL"
 
-    ocp.model.cost_y_expr = vertcat(ocp.model.x[:nx_original], ocp.model.u)
-    ocp.model.cost_y_expr_e = ocp.model.x[:nx_original]
-    ocp.cost.yref = np.zeros((nx_original + nu,))
-    ocp.cost.yref_e = np.zeros((nx_original,))
+    # NOTE here we make the cost parametric
+    ocp.model.cost_expr_ext_cost = ca.exp(ocp.model.p) * ocp.model.x.T @ Q_mat @ ocp.model.x + ocp.model.u.T @ R_mat @ ocp.model.u
+    ocp.model.cost_expr_ext_cost_e = ca.exp(ocp.model.p) * ocp.model.x.T @ Q_mat @ ocp.model.x
 
-    # set constraints
     ocp.constraints.lbu = np.array([-Fmax])
     ocp.constraints.ubu = np.array([+Fmax])
     ocp.constraints.idxbu = np.array([0])
 
-    ocp.constraints.x0 = x0[:nx]
+    ocp.constraints.x0 = x0
 
-    # set options
-    ocp.solver_options.qp_solver = "PARTIAL_CONDENSING_HPIPM"  # FULL_CONDENSING_QPOASES
-    # PARTIAL_CONDENSING_HPIPM, FULL_CONDENSING_QPOASES, FULL_CONDENSING_HPIPM,
-    # PARTIAL_CONDENSING_QPDUNES, PARTIAL_CONDENSING_OSQP, FULL_CONDENSING_DAQP
-    ocp.solver_options.integrator_type = "IRK"  # "DISCRETE"
-    # ocp.solver_options.print_level = 1
-    ocp.solver_options.nlp_solver_type = "SQP"  # SQP_RTI, SQP
+    # set mass to one
+    ocp.parameter_values = np.ones((1,))
+
+    ocp.solver_options.qp_solver = "PARTIAL_CONDENSING_HPIPM"
+    ocp.solver_options.integrator_type = "DISCRETE"
+    ocp.solver_options.nlp_solver_type = "SQP"
     ocp.solver_options.qp_solver_cond_N = N_horizon
 
-    # set prediction horizon
     ocp.solver_options.tf = T_horizon
 
     ocp.solver_options.qp_solver_ric_alg = qp_solver_ric_alg
-    ocp.solver_options.hessian_approx = hessian_approx  # 'GAUSS_NEWTON', 'EXACT'
+    ocp.solver_options.hessian_approx = hessian_approx
     if hessian_approx == 'EXACT':
         ocp.solver_options.nlp_solver_step_length = 0.0
         ocp.solver_options.nlp_solver_max_iter = 1
         ocp.solver_options.qp_solver_iter_max = 200
         ocp.solver_options.tol = 1e-10
-        # ocp.solver_options.hpipm_mode = 'SPEED_ABS'
+        ocp.solver_options.with_solution_sens_wrt_params = True
+        ocp.solver_options.with_value_sens_wrt_params = True
     else:
         ocp.solver_options.nlp_solver_max_iter = 400
         ocp.solver_options.tol = 1e-8
 
     return ocp
-
-
-
 
 def evaluate_hessian_eigenvalues(acados_solver: AcadosOcpSolver):
     offset = 0
@@ -231,48 +136,44 @@ def evaluate_hessian_eigenvalues(acados_solver: AcadosOcpSolver):
     return min_eigv_total, min_abs_eigv, min_abs_eig_proj_hess, min_eig_proj_hess, min_eig_P, min_abs_eig_P
 
 
-def main(param_M_as_state: bool, idxp: int, qp_solver_ric_alg: int, eigen_analysis=True):
+
+def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=False):
     """
-    Evaluate policy and calculate its gradient for the pendulum on a cart with an augmented state formulation for
-    varying M.
+    Evaluate policy and calculate its gradient for the pendulum on a cart with a parametric model.
     """
 
     p_nominal = 1.0
-    x0 = np.array([0.0, np.pi / 2, 0.0, 0.0, p_nominal])
-    if idxp == 4:
-        # vary M
-        parameter_name = 'M'
-        delta_p = 0.005
-        p_test = np.arange(p_nominal - 0.5, p_nominal + 0.5, delta_p)
-        x0_augmented = [np.array(x0[:-1].tolist() + [p]) for p in p_test]
-
-    elif idxp == 1:
-        # vary theta instead
-        parameter_name = r'$\theta$'
-        delta_p = np.pi/100
-        p_test = np.arange(0.0, np.pi/5, delta_p)
-        x0_augmented = [np.array([x0[0]] + [p] + x0[2:].tolist()) for p in p_test]
-
-    if not param_M_as_state:
-        x0_augmented = [x[:-1] for x in x0_augmented]
-
-    if idxp == 4 and not param_M_as_state:
-        raise Exception(f"can only get sensitivities wrt {idxp=} if param_M_as_state==True.")
+    x0 = np.array([0.0, np.pi / 2, 0.0, 0.0])
+    delta_p = 0.002
+    p_test = np.arange(p_nominal - 0.5, p_nominal + 0.5, delta_p)
 
     np_test = p_test.shape[0]
-    N_horizon=50
-    T_horizon=2.0
-    Fmax=80.0
+    N_horizon = 50
+    T_horizon = 2.0
+    Fmax = 80.0
 
-    ocp = export_parameter_augmented_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, param_M_as_state=param_M_as_state, qp_solver_ric_alg=1)
-    acados_ocp_solver = AcadosOcpSolver(ocp, json_file="parameter_augmented_acados_ocp.json")
+    ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, qp_solver_ric_alg=1)
+    if use_cython:
+        AcadosOcpSolver.generate(ocp, json_file="parameter_augmented_acados_ocp.json")
+        AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
+        acados_ocp_solver = AcadosOcpSolver.create_cython_solver("parameter_augmented_acados_ocp.json")
+    else:
+        acados_ocp_solver = AcadosOcpSolver(ocp, json_file="parameter_augmented_acados_ocp.json")
 
     # create sensitivity solver
-    ocp = export_parameter_augmented_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, hessian_approx='EXACT', param_M_as_state=param_M_as_state, qp_solver_ric_alg=qp_solver_ric_alg)
+    ocp = export_parametric_ocp(x0=x0, N_horizon=N_horizon, T_horizon=T_horizon, Fmax=Fmax, hessian_approx='EXACT', qp_solver_ric_alg=qp_solver_ric_alg)
     ocp.model.name = 'sensitivity_solver'
-    sensitivity_solver = AcadosOcpSolver(ocp, json_file="sensitivity_solver.json")
+    ocp.code_export_directory = f'c_generated_code_{ocp.model.name}'
+    if use_cython:
+        AcadosOcpSolver.generate(ocp, json_file=f"{ocp.model.name}.json")
+        AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
+        sensitivity_solver = AcadosOcpSolver.create_cython_solver(f"{ocp.model.name}.json")
+    else:
+        sensitivity_solver = AcadosOcpSolver(ocp, json_file=f"{ocp.model.name}.json")
 
     sens_u = np.zeros(np_test)
+    sens_cost = np.zeros(np_test)
+    cost_values = np.zeros(np_test)
 
     if eigen_analysis:
         min_eig_full = np.zeros(np_test)
@@ -281,19 +182,32 @@ def main(param_M_as_state: bool, idxp: int, qp_solver_ric_alg: int, eigen_analys
         min_eig_proj_hess = np.zeros(np_test)
         min_eig_P = np.zeros(np_test)
         min_abs_eig_P = np.zeros(np_test)
+    else:
+        min_eig_full = None
+        min_abs_eig_full = None
+        min_abs_eig_proj_hess = None
+        min_eig_proj_hess = None
+        min_eig_P = None
+        min_abs_eig_P = None
 
     pi = np.zeros(np_test)
-    for i, x in enumerate(x0_augmented):
-        # Evaluate the policy
-        pi[i] = acados_ocp_solver.solve_for_x0(x)[0]
-        # acados_ocp_solver.print_statistics()
+    for i, p in enumerate(p_test):
+        p_val = np.array([p])
+
+        for n in range(N_horizon+1):
+            acados_ocp_solver.set(n, 'p', p_val)
+            sensitivity_solver.set(n, 'p', p_val)
+        pi[i] = acados_ocp_solver.solve_for_x0(x0)[0]
+        cost_values[i] = acados_ocp_solver.get_cost()
+
         acados_ocp_solver.store_iterate(filename='iterate.json', overwrite=True, verbose=False)
 
         sensitivity_solver.load_iterate(filename='iterate.json', verbose=False)
-        sensitivity_solver.solve_for_x0(x, fail_on_nonzero_status=False, print_stats_on_failure=False)
+        sensitivity_solver.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
         residuals = sensitivity_solver.get_stats("residuals")
-        print(f"residuals sensitivity_solver {residuals} status {sensitivity_solver.status}")
-        if sensitivity_solver.status not in [0, 2]:
+        # print(f"residuals sensitivity_solver {residuals} status {sensitivity_solver.status}")
+
+        if sensitivity_solver.get_status() not in [0, 2]:
             print(f"warning")
             breakpoint()
 
@@ -301,37 +215,91 @@ def main(param_M_as_state: bool, idxp: int, qp_solver_ric_alg: int, eigen_analys
             min_eig_full[i], min_abs_eig_full[i], min_abs_eig_proj_hess[i], min_eig_proj_hess[i], min_eig_P[i], min_abs_eig_P[i] = evaluate_hessian_eigenvalues(sensitivity_solver)
 
         # Calculate the policy gradient
-        sensitivity_solver.eval_param_sens(idxp)
-        sens_u[i] = sensitivity_solver.get(0, "sens_u")[0]
+        sens_x_, sens_u_ = sensitivity_solver.eval_solution_sensitivity(0, "params_global")
 
-        # plot solution
-        # if i < 0:
-        #     nx = max(x0.shape)
-        #     nu = 1
-        #     simX = np.zeros((N_horizon+1, nx))
-        #     simU = np.zeros((N_horizon, nu))
-        #     for i in range(N_horizon):
-        #         simX[i, :] = acados_ocp_solver.get(i, "x")
-        #         simU[i, :] = acados_ocp_solver.get(i, "u")
-        #     simX[N_horizon, :] = acados_ocp_solver.get(N_horizon, "x")
-        #     plot_pendulum(np.linspace(0, T_horizon, N_horizon+1), Fmax, simU, simX, states_lables = ['$x$', r'$\theta$', '$v$', r'$\dot{\theta}$', 'mass'])
+        sens_cost[i] = sensitivity_solver.get_optimal_value_gradient("params_global")
+        sens_u[i] = sens_u_.item()
+
+    # evaluate cost gradient
+    np_cost_grad = np.gradient(cost_values, delta_p)
+    cost_reconstructed_np_grad = np.cumsum(np_cost_grad) * delta_p + cost_values[0]
+    plot_cost_gradient_results(p_test, cost_values, sens_cost, np_cost_grad, cost_reconstructed_np_grad)
 
     # Compare to numerical gradients
     np_grad = np.gradient(pi, delta_p)
-    central_diff = (pi[2:] - pi[:-2]) / (p_test[2:] - p_test[:-2])
-
     pi_reconstructed_np_grad = np.cumsum(np_grad) * delta_p + pi[0]
     pi_reconstructed_np_grad += pi[0] - pi_reconstructed_np_grad[0]
 
+    pi_reconstructed_acados = np.cumsum(sens_u) * delta_p + pi[0]
+    pi_reconstructed_acados += pi[0] - pi_reconstructed_acados[0]
+
+
+    plot_results(p_test, pi, pi_reconstructed_acados, pi_reconstructed_np_grad, sens_u, np_grad,
+                 min_eig_full, min_eig_proj_hess, min_eig_P,
+                 min_abs_eig_full, min_abs_eig_proj_hess, min_abs_eig_P,
+                 eigen_analysis, qp_solver_ric_alg, parameter_name="mass")
+
+    # test: check median since derivative cannot be compared at active set changes
+    assert np.median(np.abs(sens_u - np_grad)) <= 1e-2
+    assert np.median(np.abs(sens_cost - np_cost_grad)) <= 1e-1
+
+
+def plot_cost_gradient_results(p_test, cost_values, acados_cost_grad, np_cost_grad, cost_reconstructed_np_grad):
     latexify_plot()
-    nsub = 3
-    if eigen_analysis:
-        nsub +=2
+    _, ax = plt.subplots(nrows=4, ncols=1, sharex=True, figsize=(9,9))
+
+    ax[0].plot(p_test, cost_values, label='cost acados', color='k')
+    ax[0].plot(p_test, cost_reconstructed_np_grad, "--", label='reconstructed from finite diff')
+    ax[0].set_ylabel(r"cost")
+    ax[0].grid(True)
+    ax[0].legend()
+
+    ax[1].plot(p_test, np_cost_grad, "--", label='finite diff')
+    ax[1].plot(p_test, acados_cost_grad, "--", label='acados')
+    ax[1].set_ylabel(r"$\partial_p$ cost")
+    ax[1].set_yscale("log")
+    ax[1].grid(True)
+    ax[1].legend()
+
+    # plot differences
+    isub = 2
+    ax[isub].plot(p_test, np.abs(acados_cost_grad - np_cost_grad), "--", label='acados vs. finite diff')
+    ax[isub].set_ylabel(r"difference $\partial_p$ cost")
+    ax[isub].set_yscale("log")
+    ax[isub].grid(True)
+    ax[isub].legend()
+
+    isub += 1
+    ax[isub].plot(p_test, np.abs(acados_cost_grad - np_cost_grad) / np.abs(np_cost_grad), "--", label='acados vs. finite diff')
+    ax[isub].set_ylabel(r"rel. diff. $\partial_p$ cost")
+    ax[isub].set_yscale("log")
+    ax[isub].grid(True)
+    ax[isub].legend()
+
+    ax[-1].set_xlabel(f"mass")
+    ax[-1].set_xlim([p_test[0], p_test[-1]])
+
+    fig_filename = f"cost_gradient.pdf"
+    plt.savefig(fig_filename)
+    print(f"stored figure as {fig_filename}")
+    plt.show()
+
+
+
+def plot_results(p_test, pi, pi_reconstructed_acados, pi_reconstructed_np_grad, sens_u, np_grad,
+                 min_eig_full=None, min_eig_proj_hess=None, min_eig_P=None,
+                 min_abs_eig_full=None, min_abs_eig_proj_hess=None, min_abs_eig_P=None,
+                 eigen_analysis=False, qp_solver_ric_alg=1, parameter_name=""):
+    latexify_plot()
+
+    nsub = 5 if eigen_analysis else 3
 
     _, ax = plt.subplots(nrows=nsub, ncols=1, sharex=True, figsize=(9,9))
+
     isub = 0
-    ax[isub].plot(p_test, pi, label='$p$ acados')
-    ax[isub].plot(p_test, pi_reconstructed_np_grad, "--", label='$p$ reconstructed from finite diff')
+    ax[isub].plot(p_test, pi, label='acados', color='k')
+    ax[isub].plot(p_test, pi_reconstructed_acados, "--", label='reconstructed from acados')
+    ax[isub].plot(p_test, pi_reconstructed_np_grad, "--", label='reconstructed from finite diff')
     ax[isub].set_ylabel(r"$u$")
     ax[isub].legend()
     ax[isub].set_title(f'qp_solver_ric_alg {qp_solver_ric_alg}')
@@ -339,16 +307,13 @@ def main(param_M_as_state: bool, idxp: int, qp_solver_ric_alg: int, eigen_analys
 
     isub += 1
     ax[isub].plot(p_test, sens_u, label="acados")
-    ax[isub].plot(p_test, np_grad, "--", label="np.grad")
+    ax[isub].plot(p_test, np_grad, "--", label="finite diff")
     ax[isub].legend()
     ax[isub].set_xlim([p_test[0], p_test[-1]])
     ax[isub].grid(True)
     ax[isub].set_ylabel(r"$\partial_p u$")
 
     isub += 1
-    # ax[isub].plot(p_test, np.abs(sens_u))
-    # ax[isub].plot(p_test, np.abs(np_grad), "--")
-    # ax[isub].plot(p_test[1:-1], np.abs(central_diff), "-.")
     ax[isub].plot(p_test, np.abs(sens_u- np_grad), "--", label='acados - finite diff')
     ax[isub].legend()
     ax[isub].set_ylabel(r"diff $\partial_p u$")
@@ -375,7 +340,6 @@ def main(param_M_as_state: bool, idxp: int, qp_solver_ric_alg: int, eigen_analys
 
     ax[-1].set_xlabel(f"{parameter_name}")
 
-
     fig_filename = f"solution_sens_{qp_solver_ric_alg}.pdf"
     plt.savefig(fig_filename)
     print(f"stored figure as {fig_filename}")
@@ -383,5 +347,4 @@ def main(param_M_as_state: bool, idxp: int, qp_solver_ric_alg: int, eigen_analys
 
 
 if __name__ == "__main__":
-    # main(param_M_as_state=False, idxp=1)
-    main(param_M_as_state=True, idxp=4, qp_solver_ric_alg=0)
+    main_parametric(qp_solver_ric_alg=0, eigen_analysis=False, use_cython=True)
