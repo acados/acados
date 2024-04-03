@@ -4,6 +4,7 @@
 - [x] Sanity check for unconstrained OCP, HPIPM no condensing (OJ)
 
 2. Globalization:
+- [ ] Check feasibility of initial iterate and make it feasible if necessary
 - [ ] Merit function only with objective
 - [ ] Line search
 - [ ] Regularization with Levenberg-Marquardt term
