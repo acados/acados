@@ -136,7 +136,8 @@ if(ACADOS_WITH_OSQP)
 endif()
 
 if(ACADOS_WITH_CLARABEL)
-    target_link_libraries(acados INTERFACE libclarabel_c_shared)
+    target_link_libraries(acados PUBLIC libclarabel_c_shared)
+    # target_link_libraries(acados INTERFACE libclarabel_c)
 
     target_compile_definitions(acados PUBLIC ACADOS_WITH_CLARABEL)
 endif()
