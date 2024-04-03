@@ -1,7 +1,7 @@
 ## TODO List for DDP solver in acados:
 
 1. Miscellaneous:
-- [ ] Sanity check for unconstrained OCP, HPIPM no condensing (OJ)
+- [x] Sanity check for unconstrained OCP, HPIPM no condensing (OJ)
 
 2. Globalization:
 - [ ] Merit function only with objective
@@ -17,3 +17,4 @@
 4. Testing and ideally same OR better results as python Implementation
 - [ ] Add QP problem, then SQP and DDP with full step should be equivalent (D)
 - [ ] add test in CI https://github.com/FreyJo/acados/blob/8f5ee7cf4c8d5a688c83f5c705fd5bbbf733f9ec/interfaces/CMakeLists.txt
+- [ ] swingup example (OJ)
