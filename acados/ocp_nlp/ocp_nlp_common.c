@@ -151,7 +151,7 @@ static acados_size_t ocp_nlp_dims_calculate_size_self(int N)
     size += sizeof(ocp_nlp_dims);
 
     // nlp sizes
-    size += 6 * (N + 1) * sizeof(int);  // nv, nx, nu, ni, nz, ns
+    size += 7 * (N + 1) * sizeof(int);  // nv, nx, nu, ni, nz, ns, np
 
     // dynamics
     size += N * sizeof(void *);
@@ -241,6 +241,8 @@ static ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
     assign_and_advance_int(N + 1, &dims->nz, &c_ptr);
     // ns
     assign_and_advance_int(N + 1, &dims->ns, &c_ptr);
+    // np
+    assign_and_advance_int(N + 1, &dims->np, &c_ptr);
 
     // intermediate align
     align_char_to(8, &c_ptr);
@@ -282,6 +284,9 @@ static ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
     // ns
     for(int i=0; i<=N; i++)
         dims->ns[i] = 0;
+    // np
+    for(int i=0; i<=N; i++)
+        dims->np[i] = 0;
     // TODO initialize dims to zero by default also in modules !!!!!!!
 
     // assert
@@ -341,7 +346,7 @@ ocp_nlp_dims *ocp_nlp_dims_assign(void *config_, void *raw_memory)
 void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
                                     const void* value_array)
 {
-    // to set dimension nx, nu, nz, ns (number of slacks = number of soft constraints)
+    // to set dimension nx, nu, nz, ns (number of slacks = number of soft constraints), np
     ocp_nlp_config *config = config_;
     ocp_nlp_dims *dims = dims_;
 
@@ -486,6 +491,33 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
             config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "ns",
                                         &int_array[i]);
         }
+    }
+    else if (!strcmp(field, "np"))
+    {
+        // nlp opt var -- TODO: not really an opt var, but we need to set it here
+        // -> rename function to ocp_nlp_dims_set_common?
+        for (int i = 0; i <= N; i++)
+        {
+            // set np
+            dims->np[i] = int_array[i];
+        }
+        // cost
+        for (int i = 0; i <= N; i++)
+        {
+            config->cost[i]->dims_set(config->cost[i], dims->cost[i], "np", &int_array[i]);
+        }
+        // dynamics
+        for (int i = 0; i < N; i++)
+        {
+            config->dynamics[i]->dims_set(config->dynamics[i], dims->dynamics[i], "np", &int_array[i]);
+        }
+        // TODO: implement np for constraints
+        // // constraints
+        // for (int i = 0; i <= N; i++)
+        // {
+        //     config->constraints[i]->dims_set(config->constraints[i], dims->constraints[i], "np", &int_array[i]);
+        // }
+
     }
     else
     {
@@ -1090,6 +1122,9 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->globalization_use_SOC = 0;
     opts->eps_sufficient_descent = 1e-4; // Leineweber1999: MUSCOD-I eps_T = 1e-4 (p.89); Note: eps_T = 0.1 originally proposed by Powell 1978 (Leineweber 1999, p. 53)
 
+    opts->with_solution_sens_wrt_params = 0;
+    opts->with_value_sens_wrt_params = 0;
+
     return;
 }
 
@@ -1284,6 +1319,29 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         {
             int* fixed_hess = (int *) value;
             opts->fixed_hess = *fixed_hess;
+        }
+        else if (!strcmp(field, "with_solution_sens_wrt_params"))
+        {
+            int N = config->N;
+
+            int* with_solution_sens_wrt_params = (int *) value;
+            opts->with_solution_sens_wrt_params = *with_solution_sens_wrt_params;
+            // cost
+            for (int i=0; i<=N; i++)
+                config->cost[i]->opts_set(config->cost[i], opts->cost[i], "with_solution_sens_wrt_params", value);
+            // dynamics
+            for (int i=0; i<N; i++)
+                config->dynamics[i]->opts_set(config->dynamics[i], opts->dynamics[i],
+                                               "with_solution_sens_wrt_params", value);
+            // constraints
+            for (int i=0; i<=N; i++)
+                config->constraints[i]->opts_set(config->constraints[i], opts->constraints[i],
+                                                  "with_solution_sens_wrt_params", value);
+        }
+        else if (!strcmp(field, "with_value_sens_wrt_params"))
+        {
+            int* with_value_sens_wrt_params = (int *) value;
+            opts->with_value_sens_wrt_params = *with_value_sens_wrt_params;
         }
         else
         {
@@ -1624,6 +1682,7 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
     int *nx = dims->nx;
     int *nu = dims->nu;
     int *ni = dims->ni;
+    int *np = dims->np;
     // int *nz = dims->nz;
 
     acados_size_t size = 0;
@@ -1637,19 +1696,31 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
     // weight_merit_fun
     size += ocp_nlp_out_calculate_size(config, dims);
 
+    // tmp_qp_in
+    size += ocp_qp_in_calculate_size(dims->qp_solver->orig_dims);
+
+    // tmp_qp_out
+    size += ocp_qp_out_calculate_size(dims->qp_solver->orig_dims);
+
     // blasfeo_dvec
     int nxu_max = 0;
     int nx_max = 0;
     int ni_max = 0;
+    int np_max = 0;
+
     for (int i = 0; i <= N; i++)
     {
         nx_max = nx_max > nx[i] ? nx_max : nx[i];
         nxu_max = nxu_max > (nx[i]+nu[i]) ? nxu_max : (nx[i]+nu[i]);
         ni_max = ni_max > ni[i] ? ni_max : ni[i];
+        np_max = np_max > np[i] ? np_max : np[i];
     }
     size += 1 * blasfeo_memsize_dvec(nx_max);
     size += 1 * blasfeo_memsize_dvec(nxu_max);
     size += 1 * blasfeo_memsize_dvec(ni_max);
+
+    size += 1 * blasfeo_memsize_dvec(np_max); //  tmp_nparam;
+    size += 1 * blasfeo_memsize_dvec(np_max); //  out_nparam;
 
     // array of pointers
     // cost
@@ -1772,14 +1843,18 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
     int *nu = dims->nu;
     int *ni = dims->ni;
     // int *nz = dims->nz;
+    int *np = dims->np;
     int nxu_max = 0;
     int nx_max = 0;
     int ni_max = 0;
+    int np_max = 0;
+
     for (int i = 0; i <= N; i++)
     {
         nx_max = nx_max > nx[i] ? nx_max : nx[i];
         nxu_max = nxu_max > (nx[i]+nu[i]) ? nxu_max : (nx[i]+nu[i]);
         ni_max = ni_max > ni[i] ? ni_max : ni[i];
+        np_max = np_max > np[i] ? np_max : np[i];
     }
 
     char *c_ptr = (char *) raw_memory;
@@ -1805,6 +1880,14 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
     work->tmp_nlp_out = ocp_nlp_out_assign(config, dims, c_ptr);
     c_ptr += ocp_nlp_out_calculate_size(config, dims);
 
+    // tmp qp in
+    work->tmp_qp_in = ocp_qp_in_assign(dims->qp_solver->orig_dims, c_ptr);
+    c_ptr += ocp_qp_in_calculate_size(dims->qp_solver->orig_dims);
+
+    // tmp qp out
+    work->tmp_qp_out = ocp_qp_out_assign(dims->qp_solver->orig_dims, c_ptr);
+    c_ptr += ocp_qp_out_calculate_size(dims->qp_solver->orig_dims);
+
     // weight_merit_fun
     work->weight_merit_fun = ocp_nlp_out_assign(config, dims, c_ptr);
     c_ptr += ocp_nlp_out_calculate_size(config, dims);
@@ -1817,6 +1900,8 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
     assign_and_advance_blasfeo_dvec_mem(nxu_max, &work->tmp_nxu, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(ni_max, &work->tmp_ni, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx_max, &work->dxnext_dy, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(np_max, &work->tmp_np, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(np_max, &work->out_np, &c_ptr);
 
     if (opts->reuse_workspace)
     {
@@ -2358,7 +2443,7 @@ void ocp_nlp_level_c_update(ocp_nlp_config *config,
     {
         // dynamics
         // config->dynamics[i]->update_qp_matrices(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
-        config->dynamics[i]->compute_fun_and_adjoint(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
+        config->dynamics[i]->compute_fun_and_adj(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
                                          opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
 
         struct blasfeo_dvec *dyn_fun = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
@@ -3151,7 +3236,6 @@ void ocp_nlp_res_get_inf_norm(ocp_nlp_res *res, double *out)
 void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
-    // extract dims
     int N = dims->N;
 
     double* tmp_cost = NULL;
@@ -3181,4 +3265,146 @@ void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in
     mem->cost_value = total_cost;
 
     // printf("\ncomputed total cost: %e\n", total_cost);
+}
+
+
+
+void ocp_nlp_params_jac_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+{
+    int N = dims->N;
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (int i = 0; i < N; i++)
+    {
+        config->dynamics[i]->compute_jac_hess_p(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
+                    opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
+        config->cost[i]->compute_jac_p(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i], mem->cost[i], work->cost[i]);
+    }
+
+    config->cost[N]->compute_jac_p(config->cost[N], dims->cost[N], in->cost[N], opts->cost[N], mem->cost[N], work->cost[N]);
+
+}
+
+
+void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
+                        ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
+                        char *field, int stage, int index, ocp_nlp_out *sens_nlp_out)
+{
+    int i;
+
+    int N = dims->N;
+    int *nv = dims->nv;
+    int *ni = dims->ni;
+    int *nu = dims->nu;
+    int *nx = dims->nx;
+
+    ocp_qp_in *tmp_qp_in = work->tmp_qp_in;
+    ocp_qp_out *tmp_qp_out = work->tmp_qp_out;
+    d_ocp_qp_copy_all(mem->qp_in, tmp_qp_in);
+    d_ocp_qp_set_rhs_zero(tmp_qp_in);
+
+    if ((!strcmp("ex", field)) && (stage==0))
+    {
+        double one = 1.0;
+        d_ocp_qp_set_el("lbx", stage, index, &one, tmp_qp_in);
+        d_ocp_qp_set_el("ubx", stage, index, &one, tmp_qp_in);
+    }
+    else if (!strcmp("params_stage", field))
+    {
+        printf("\nerror: field %s at stage %d not available in ocp_nlp_sqp_eval_param_sens\n", field, stage);
+        exit(1);
+
+    }
+    else if (!strcmp("params_global", field))
+    {
+        for (i = 0; i < N; i++)
+        {
+            config->dynamics[i]->memory_get_params_grad(config->dynamics[i], dims->dynamics[i], opts,
+                                    mem->dynamics[i], index, &tmp_qp_in->b[i], 0);
+            config->dynamics[i]->memory_get_params_lag_grad(config->dynamics[i], dims->dynamics[i], opts,
+                        mem->dynamics[i], index, &tmp_qp_in->rqz[i], 0);
+            config->cost[i]->memory_get_params_grad(config->cost[i], dims->cost[i], opts,
+                        mem->cost[i], index, &work->tmp_nxu, 0);
+            blasfeo_dvecad(nu[i] + nx[i], 1., &work->tmp_nxu, 0, &tmp_qp_in->rqz[i], 0);
+        }
+
+        config->cost[N]->memory_get_params_grad(config->cost[N], dims->cost[N], opts,
+                        mem->cost[N], index, &work->tmp_nxu, 0);
+        blasfeo_dvecad(nu[N] + nx[N], 1., &work->tmp_nxu, 0, &tmp_qp_in->rqz[N], 0);
+    }
+    else
+    {
+        printf("\nerror: field %s at stage %d not available in ocp_nlp_sqp_eval_param_sens\n", field, stage);
+        exit(1);
+    }
+
+    // d_ocp_qp_print(tmp_qp_in->dim, tmp_qp_in);
+    config->qp_solver->eval_sens(config->qp_solver, dims->qp_solver, tmp_qp_in, tmp_qp_out,
+                            opts->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
+    // d_ocp_qp_sol_print(tmp_qp_out->dim, tmp_qp_out);
+
+    /* copy tmp_qp_out into sens_nlp_out */
+    for (i = 0; i <= N; i++)
+    {
+        blasfeo_dveccp(nv[i], tmp_qp_out->ux + i, 0, sens_nlp_out->ux + i, 0);
+
+        if (i < N)
+            blasfeo_dveccp(nx[i + 1], tmp_qp_out->pi + i, 0, sens_nlp_out->pi + i, 0);
+
+        blasfeo_dveccp(2 * ni[i], tmp_qp_out->lam + i, 0, sens_nlp_out->lam + i, 0);
+        blasfeo_dveccp(2 * ni[i], tmp_qp_out->t + i, 0, sens_nlp_out->t + i, 0);
+    }
+}
+
+
+void ocp_nlp_common_eval_adj_p(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+                        ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
+                        const char *field, void *lagr_grad_wrt_params)
+{
+    int i;
+    int N = dims->N;
+    // int *nu = dims->nu;
+    // int *nx = dims->nx;
+    int *np = dims->np;
+
+    if (!strcmp("params_stage", field))
+    {
+        printf("\nerror: field %s not available in ocp_nlp_common_eval_adj_p\n", field);
+        exit(1);
+    }
+    else if (!strcmp("params_global", field))
+    {
+        // initialize to zero
+        blasfeo_dvecse(np[0], 0., &work->out_np, 0);
+
+        // TODO openmp?
+        for (i = 0; i < N; i++)
+        {
+            // dynamics contribution
+            config->dynamics[i]->compute_adj_p(config->dynamics[i], dims->dynamics[i], in->dynamics[i], opts,
+                                    mem->dynamics[i], &work->tmp_np);
+            blasfeo_dvecad(np[i], 1., &work->tmp_np, 0, &work->out_np, 0);
+
+            // cost contribution
+            config->cost[i]->eval_grad_p(config->cost[i], dims->cost[i], in->cost[i], opts,
+                                    mem->cost[i], work->cost[i], &work->tmp_np);
+            blasfeo_dvecad(np[i], 1., &work->tmp_np, 0, &work->out_np, 0);
+
+            // TODO: add support for inequality constraints
+        }
+
+        // terminal cost contribution
+        config->cost[N]->eval_grad_p(config->cost[N], dims->cost[N], in->cost[N], opts,
+                                    mem->cost[N], work->cost[N], &work->tmp_np);
+        blasfeo_dvecad(np[N], 1., &work->tmp_np, 0, &work->out_np, 0);
+
+        blasfeo_unpack_dvec(np[0], &work->out_np, 0, lagr_grad_wrt_params, 1);
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_sqp_eval_param_sens\n", field);
+        exit(1);
+    }
 }

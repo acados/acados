@@ -54,6 +54,7 @@ typedef struct
     int nz;  // number of algebraic variables
     int nu;  // number of inputs
     int ns;  // number of slacks
+    int np; // number of parameters
 } ocp_nlp_cost_external_dims;
 
 //
@@ -74,6 +75,8 @@ typedef struct
     external_function_generic *ext_cost_fun;  // function
     external_function_generic *ext_cost_fun_jac_hess;  // function, gradient and hessian
     external_function_generic *ext_cost_fun_jac;  // function, gradient
+    external_function_generic *ext_cost_hess_xu_p;  // jacobian of cost gradient wrt params
+    external_function_generic *ext_cost_grad_p; // gradient of the cost wrt paraams
     struct blasfeo_dvec Z;
     struct blasfeo_dvec z;
     struct blasfeo_dmat numerical_hessian;  // custom hessian approximation
@@ -94,6 +97,7 @@ void *ocp_nlp_cost_external_model_assign(void *config, void *dims, void *raw_mem
 typedef struct
 {
     int use_numerical_hessian;  // > 0 indicating custom hessian is used instead of CasADi evaluation
+    int with_solution_sens_wrt_params;
 } ocp_nlp_cost_external_opts;
 
 //
@@ -108,13 +112,13 @@ void ocp_nlp_cost_external_opts_update(void *config, void *dims, void *opts);
 void ocp_nlp_cost_external_opts_set(void *config, void *opts, const char *field, void *value);
 
 
-
 /************************************************
  * memory
  ************************************************/
 
 typedef struct
 {
+    struct blasfeo_dmat cost_grad_params_jac;    // jacobian of gradient of cost function wrt parameters
     struct blasfeo_dvec grad;    // gradient of cost function
     struct blasfeo_dvec *ux;     // pointer to ux in nlp_out
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
@@ -142,6 +146,9 @@ void ocp_nlp_cost_external_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memo
 void ocp_nlp_cost_external_memory_set_z_alg_ptr(struct blasfeo_dvec *z_alg, void *memory_);
 //
 void ocp_nlp_cost_external_memory_set_dzdux_tran_ptr(struct blasfeo_dmat *dzdux_tran, void *memory_);
+//
+void ocp_nlp_cost_external_memory_get_params_grad(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset);
+
 
 /************************************************
  * workspace
@@ -177,8 +184,13 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims, void *m
 void ocp_nlp_cost_external_compute_fun(void *config_, void *dims, void *model_,
                                        void *opts_, void *memory_, void *work_);
 //
+void ocp_nlp_cost_external_compute_jac_p(void *config_, void *dims, void *model_,
+                                       void *opts_, void *memory_, void *work_);
+
 void ocp_nlp_cost_external_compute_gradient(void *config_, void *dims, void *model_,
                                        void *opts_, void *memory_, void *work_);
+
+void ocp_nlp_cost_external_eval_grad_p(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_, struct blasfeo_dvec *out);
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

@@ -32,10 +32,9 @@
 import sys
 sys.path.insert(0, '../common')
 
-from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver, AcadosSimSolver, latexify_plot, casadi_length
+from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver, latexify_plot, casadi_length
 from pendulum_model import export_pendulum_ode_model, export_linearized_pendulum, export_pendulum_ode_model_with_discrete_rk4, export_linearized_pendulum_ode_model_with_discrete_rk4
 
-from utils import plot_pendulum
 import numpy as np
 import scipy.linalg
 import matplotlib.pyplot as plt
@@ -76,7 +75,6 @@ def create_ocp_description(hessian_approx, linearized_dynamics=False, discrete=F
 
     # set cost module
     Q = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
-    # R = 2*np.diag([1e0])
     R = 5*np.diag([1e-4])
     W = scipy.linalg.block_diag(Q, R)
     y_expr = ca.vertcat(model.x, model.u**2)
@@ -100,14 +98,10 @@ def create_ocp_description(hessian_approx, linearized_dynamics=False, discrete=F
         ocp.model.cost_expr_ext_cost_e = 0.5* model.x.T @ Q @ model.x
 
     # set constraints
-    # ocp.constraints.lbu = np.array([-FMAX])
-    # ocp.constraints.ubu = np.array([+FMAX])
-    # ocp.constraints.idxbu = np.array([0])
     ocp.constraints.x0 = X0
 
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
     ocp.solver_options.hessian_approx = hessian_approx
-    # ocp.solver_options.integrator_type = 'DISCRETE'
     ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI
     ocp.solver_options.sim_method_num_steps = 5
     ocp.solver_options.tol = 1e-6
@@ -119,7 +113,6 @@ def create_ocp_description(hessian_approx, linearized_dynamics=False, discrete=F
 
     ocp.solver_options.qp_solver_iter_max = 500
     ocp.solver_options.nlp_solver_max_iter = 1000
-    # ocp.solver_options.globalization = 'MERIT_BACKTRACKING'
     if hessian_approx == 'EXACT':
         ocp.solver_options.nlp_solver_step_length = 0.5
         ocp.solver_options.nlp_solver_max_iter = 1
@@ -259,14 +252,15 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True)
         acados_ocp_solver_exact.load_iterate(filename='iterate.json', verbose=False)
         acados_ocp_solver_exact.set(0, 'u', u0+1e-7)
         acados_ocp_solver_exact.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
-        acados_ocp_solver_exact.eval_param_sens(index=idxp)
+
+        sens_x_, sens_u_ = acados_ocp_solver_exact.eval_solution_sensitivity(0, with_respect_to="initial_state")
+        du0_dp_values[i] = sens_u_[0, idxp]
 
         exact_hessian_status[i] = acados_ocp_solver_exact.get_stats('qp_stat')[-1]
 
         residuals = acados_ocp_solver_exact.get_stats("residuals")
         print(f"residuals sensitivity_solver {residuals}")
 
-        du0_dp_values[i] = acados_ocp_solver_exact.get(0, "sens_u")
 
         # solve with casadi and compare hessians
         nlp_sol = casadi_solver(p=x0, lbg=lbg, ubg=ubg)
@@ -305,11 +299,6 @@ def sensitivity_experiment(linearized_dynamics=False, discrete=False, show=True)
     axes[isub].grid()
     axes[isub].legend()
     axes[isub].set_ylabel(r'$\partial_p u_0$')
-
-    # isub += 1
-    # axes[isub].plot(p_vals, exact_hessian_status)
-    # axes[isub].set_ylabel("QP status")
-    # axes[isub].grid()
 
     isub += 1
     axes[isub].plot(p_vals, min_eigv_vals, label='full hess')
@@ -406,7 +395,7 @@ def run_hessian_comparison(linearized_dynamics=False, discrete=False):
     acados_ocp_solver_exact.load_iterate(filename='iterate.json')
     acados_ocp_solver_exact.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
 
-    _, _, _ = compare_hessian(casadi_hess, acados_ocp_solver_exact)
+    _ = compare_hessian(casadi_hess, acados_ocp_solver_exact)
 
 def compare_hessian(casadi_hess, acados_solver: AcadosOcpSolver):
     offset = 0
@@ -455,4 +444,4 @@ def compare_hessian(casadi_hess, acados_solver: AcadosOcpSolver):
 
 if __name__ == "__main__":
     sensitivity_experiment(linearized_dynamics=False, discrete=True)
-    # run_hessian_comparison(linearized_dynamics=False, discrete=True)
+    run_hessian_comparison(linearized_dynamics=False, discrete=True)

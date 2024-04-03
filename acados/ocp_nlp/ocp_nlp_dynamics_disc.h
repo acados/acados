@@ -59,6 +59,8 @@ typedef struct
     int nu;   // number of inputs at the current stage
     int nx1;  // number of states at the next stage
     int nu1;  // number of inputes at the next stage
+    int np;   // number of parameters
+
 } ocp_nlp_dynamics_disc_dims;
 
 //
@@ -78,6 +80,7 @@ typedef struct
     int compute_adj;
     int compute_hess;
     int cost_computation;
+    int with_solution_sens_wrt_params;
 } ocp_nlp_dynamics_disc_opts;
 
 //
@@ -99,6 +102,8 @@ int ocp_nlp_dynamics_disc_precompute(void *config_, void *dims, void *model_, vo
 
 typedef struct
 {
+    struct blasfeo_dmat params_jac;  // jacobian of the dynamics wrt the parameters
+    struct blasfeo_dmat params_lag_jac;  // jacobian of the lagrange gradient contribution of the dynamics wrt the parameters
     struct blasfeo_dvec fun;
     struct blasfeo_dvec adj;
     struct blasfeo_dvec *ux;     // pointer to ux in nlp_out at current stage
@@ -124,7 +129,10 @@ void ocp_nlp_dynamics_disc_memory_set_ux1_ptr(struct blasfeo_dvec *ux1, void *me
 void ocp_nlp_dynamics_disc_memory_set_pi_ptr(struct blasfeo_dvec *pi, void *memory);
 //
 void ocp_nlp_dynamics_disc_memory_set_BAbt_ptr(struct blasfeo_dmat *BAbt, void *memory);
-
+//
+void ocp_nlp_dynamics_disc_memory_get_params_grad(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset);
+//
+void ocp_nlp_dynamics_disc_memory_get_params_lag_grad(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset);
 
 
 /************************************************
@@ -149,6 +157,8 @@ typedef struct
     external_function_generic *disc_dyn_fun;
     external_function_generic *disc_dyn_fun_jac;
     external_function_generic *disc_dyn_fun_jac_hess;
+    external_function_generic *disc_dyn_phi_jac_p_hess_xu_p;
+    external_function_generic *disc_dyn_adj_p;
 } ocp_nlp_dynamics_disc_model;
 
 //
@@ -172,8 +182,10 @@ void ocp_nlp_dynamics_disc_initialize(void *config_, void *dims, void *model_, v
 void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
 //
 void ocp_nlp_dynamics_disc_compute_fun(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
-
-
+//
+void ocp_nlp_dynamics_disc_compute_jac_hess_p(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
+//
+void ocp_nlp_dynamics_disc_compute_adj_p(void* config_, void *dims_, void *model_, void *opts_, void *mem_, struct blasfeo_dvec *out);
 
 #ifdef __cplusplus
 } /* extern "C" */

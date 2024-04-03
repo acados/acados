@@ -95,6 +95,10 @@ void sim_lifted_irk_dims_set(void *config_, void *dims_, const char *field, cons
     {
         dims->nz = *value;
     }
+    else if (!strcmp(field, "np"))
+    {
+        // np dimension not needed
+    }
     else
     {
         printf("\nerror: sim_lifted_irk_dims_set: field not available: %s\n", field);

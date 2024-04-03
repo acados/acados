@@ -192,6 +192,24 @@ const int *{{ model.name }}_dyn_disc_phi_fun_jac_sparsity_out(int);
 int {{ model.name }}_dyn_disc_phi_fun_jac_n_in(void);
 int {{ model.name }}_dyn_disc_phi_fun_jac_n_out(void);
 
+{% if solver_options.with_solution_sens_wrt_params %}
+int {{ model.name }}_dyn_disc_phi_jac_p_hess_xu_p(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ model.name }}_dyn_disc_phi_jac_p_hess_xu_p_work(int *, int *, int *, int *);
+const int *{{ model.name }}_dyn_disc_phi_jac_p_hess_xu_p_sparsity_in(int);
+const int *{{ model.name }}_dyn_disc_phi_jac_p_hess_xu_p_sparsity_out(int);
+int {{ model.name }}_dyn_disc_phi_jac_p_hess_xu_p_n_in(void);
+int {{ model.name }}_dyn_disc_phi_jac_p_hess_xu_p_n_out(void);
+{% endif %}
+
+{% if solver_options.with_value_sens_wrt_params %}
+int {{ model.name }}_dyn_disc_phi_adj_p(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ model.name }}_dyn_disc_phi_adj_p_work(int *, int *, int *, int *);
+const int *{{ model.name }}_dyn_disc_phi_adj_p_sparsity_in(int);
+const int *{{ model.name }}_dyn_disc_phi_adj_p_sparsity_out(int);
+int {{ model.name }}_dyn_disc_phi_adj_p_n_in(void);
+int {{ model.name }}_dyn_disc_phi_adj_p_n_out(void);
+{% endif %}
+
 {%- if hessian_approx == "EXACT" %}
 int {{ model.name }}_dyn_disc_phi_fun_jac_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_dyn_disc_phi_fun_jac_hess_work(int *, int *, int *, int *);
@@ -205,6 +223,9 @@ int {{ model.name }}_dyn_disc_phi_fun_jac_hess_n_out(void);
 int {{ model.dyn_disc_fun_jac_hess }}(void **, void **, void *);
   {% endif %}
 int {{ model.dyn_disc_fun_jac }}(void **, void **, void *);
+{% if solver_options.with_solution_sens_wrt_params %}
+int {{ model.dyn_disc_params_jac }}(void **, void **, void *);
+{% endif %}
 int {{ model.dyn_disc_fun }}(void **, void **, void *);
 {% endif %}
 

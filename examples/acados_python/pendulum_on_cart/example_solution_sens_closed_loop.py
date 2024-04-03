@@ -32,13 +32,12 @@
 import sys
 sys.path.insert(0, 'common')
 
-from acados_template import AcadosOcp, AcadosSim, AcadosOcpSolver, AcadosSimSolver, latexify_plot
-from pendulum_model import export_pendulum_ode_model, export_linearized_pendulum, export_pendulum_ode_model_with_discrete_rk4
+from acados_template import AcadosOcp, AcadosSim, AcadosOcpSolver, AcadosSimSolver
+from pendulum_model import export_pendulum_ode_model, export_linearized_pendulum
 
 from utils import plot_pendulum
 import numpy as np
 import scipy.linalg
-import matplotlib.pyplot as plt
 
 X0 = np.array([1.0, np.pi/6, 0.0, 0.0])
 FMAX = 80
@@ -46,13 +45,10 @@ T_HORIZON = 2.0
 N = 40
 
 def create_ocp_solver():
-    # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
     # set model
     model = export_linearized_pendulum(0*X0, np.array([0.]))
-    # model = export_linearized_pendulum(X0, np.array([1.]))
-    # model = export_pendulum_ode_model_with_discrete_rk4(dT=T_HORIZON/N)
 
     ocp.model = model
 
@@ -130,9 +126,10 @@ def create_integrator():
     return acados_integrator
 
 def main():
+
     acados_ocp_solver = create_ocp_solver()
     acados_integrator = create_integrator()
-    print("Please check the documentation fo eval_param_sens for the requirements on exact solution sensitivities with acados.")
+    print("Please check the documentation fo eval_solution_sensitivities() for the requirements on exact solution sensitivities with acados.")
 
     nx = acados_ocp_solver.acados_ocp.dims.nx
     nu = acados_ocp_solver.acados_ocp.dims.nu
@@ -141,7 +138,6 @@ def main():
     simX = np.zeros((Nsim+1, nx))
     simU = np.zeros((Nsim, nu))
     sens_u = np.zeros((nu, nx))
-    sens_x = np.zeros((nx, nx))
 
     xcurrent = X0
     simX[0,:] = xcurrent
@@ -167,10 +163,8 @@ def main():
             u_lin = simU[i,:]
             x_lin = xcurrent
 
-            for index in range(nx):
-                acados_ocp_solver.eval_param_sens(index)
-                sens_u[:, index] = acados_ocp_solver.get(0, "sens_u")
-                sens_x[:, index] = acados_ocp_solver.get(0, "sens_x")
+            _, sens_u = acados_ocp_solver.eval_solution_sensitivity(0, with_respect_to="initial_state")
+
         else:
             # use linear feedback
             # print("using solution sensitivities as feedback")
@@ -183,7 +177,6 @@ def main():
             # for debugging: compute difference of linear feedback wrt real optimal u
             # u_exact = acados_ocp_solver.solve_for_x0(xcurrent)
             # print(f"difference u_lin wrt u_exact {u_exact-simU[i,:]=}")
-
 
         # simulate system
         acados_integrator.set("x", xcurrent)

@@ -125,6 +125,12 @@ typedef struct {{ model.name }}_solver_capsule
 {% elif solver_options.integrator_type == "DISCRETE" %}
     external_function_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_fun;
     external_function_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_fun_jac_ut_xt;
+{% if solver_options.with_solution_sens_wrt_params %}
+    external_function_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_jac_p_hess_xu_p;
+{%- endif %}
+{% if solver_options.with_value_sens_wrt_params %}
+    external_function_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_adj_p;
+{%- endif %}
 {%- if solver_options.hessian_approx == "EXACT" %}
     external_function_param_{{ model.dyn_ext_fun_type }} *discr_dyn_phi_fun_jac_ut_xt_hess;
 {%- endif %}
@@ -143,6 +149,12 @@ typedef struct {{ model.name }}_solver_capsule
     external_function_param_{{ cost.cost_ext_fun_type }} *ext_cost_fun;
     external_function_param_{{ cost.cost_ext_fun_type }} *ext_cost_fun_jac;
     external_function_param_{{ cost.cost_ext_fun_type }} *ext_cost_fun_jac_hess;
+{% if solver_options.with_solution_sens_wrt_params %}
+    external_function_param_{{ cost.cost_ext_fun_type }} *ext_cost_hess_xu_p;
+{%- endif %}
+{% if solver_options.with_value_sens_wrt_params %}
+    external_function_param_{{ cost.cost_ext_fun_type }} *ext_cost_grad_p;
+{%- endif %}
 {% endif %}
 
 {% if cost.cost_type_0 == "NONLINEAR_LS" %}
@@ -156,6 +168,12 @@ typedef struct {{ model.name }}_solver_capsule
     external_function_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_fun;
     external_function_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_fun_jac;
     external_function_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_fun_jac_hess;
+{% if solver_options.with_solution_sens_wrt_params %}
+    external_function_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_hess_xu_p;
+{%- endif %}
+{% if solver_options.with_value_sens_wrt_params %}
+    external_function_param_{{ cost.cost_ext_fun_type_0 }} ext_cost_0_grad_p;
+{%- endif %}
 {%- endif %}
 
 {% if cost.cost_type_e == "NONLINEAR_LS" %}
@@ -169,6 +187,12 @@ typedef struct {{ model.name }}_solver_capsule
     external_function_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_fun;
     external_function_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_fun_jac;
     external_function_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_fun_jac_hess;
+{% if solver_options.with_solution_sens_wrt_params %}
+    external_function_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_hess_xu_p;
+{%- endif %}
+{% if solver_options.with_value_sens_wrt_params %}
+    external_function_param_{{ cost.cost_ext_fun_type_e }} ext_cost_e_grad_p;
+{%- endif %}
 {%- endif %}
 
     // constraints

@@ -28,25 +28,38 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 
 import numpy as np
-import matplotlib
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.animation as animation
+from acados_template import latexify_plot
 
 
-def get_latex_plot_params():
-    params = {'backend': 'ps',
-            'text.latex.preamble': r"\usepackage{gensymb} \usepackage{amsmath}",
-            'axes.labelsize': 12,
-            'axes.titlesize': 12,
-            'legend.fontsize': 12,
-            'xtick.labelsize': 12,
-            'ytick.labelsize': 12,
-            'text.usetex': True,
-            'font.family': 'serif'
-    }
+latexify_plot()
 
-    return params
+
+def plot_timings(results_list, keys, labels, figure_filename=None):
+    num_entries = len(labels)
+    if num_entries != len(results_list):
+        raise ValueError("Number of labels and result files do not match")
+
+    width = 0.8
+    fig, ax = plt.subplots()
+    bottom = np.zeros(num_entries)
+
+    for i, k in enumerate(keys):
+        vals = [np.mean(res_dict[k]) for res_dict in results_list]
+        plt.bar(labels, vals, width, label=k, bottom=bottom)
+        bottom += vals
+
+    plt.xticks(rotation=10)
+    plt.grid(axis="y")
+    plt.ylabel("Time [s]")
+    # tight layout
+    plt.tight_layout()
+    ax.legend()
+    if figure_filename is not None:
+        plt.savefig(figure_filename)
+        print(f"Saved figure to {figure_filename}")
+    plt.show()
 
 
 def plot_chain_position_traj(simX, yPosWall=None):
@@ -146,14 +159,14 @@ def plot_chain_position(x, xPosFirstMass):
     plt.xlabel('mass index ')
     plt.ylabel('mass position ')
     plt.grid(True)
-    
+
     plt.subplot(3,1,2)
     plt.plot(pos_y)
     plt.title('y position')
     plt.xlabel('mass index ')
     plt.ylabel('mass position ')
     plt.grid(True)
-    
+
     plt.subplot(3,1,3)
     plt.plot(pos_z)
     plt.title('z position')
@@ -188,7 +201,7 @@ def plot_chain_position_3D(X, xPosFirstMass, XNames=None):
             x = x.flatten()
         if len(xPosFirstMass.shape) > 1:
             xPosFirstMass = xPosFirstMass.flatten()
-        
+
         nx = x.shape[0]
         M = int((nx/3 -1)/2)
         pos = x[:3*(M+1)]
@@ -196,9 +209,9 @@ def plot_chain_position_3D(X, xPosFirstMass, XNames=None):
         pos_x = pos[::3]
         pos_y = pos[1::3]
         pos_z = pos[2::3]
-        
+
         ax.plot(pos_x, pos_y, pos_z, '.-', label=XNames[i])
-        
+
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     ax.set_zlabel('z')
@@ -206,24 +219,24 @@ def plot_chain_position_3D(X, xPosFirstMass, XNames=None):
 
 
 def get_plot_lims(a):
-    
+
     a_min = np.amin(a)
     a_max = np.amax(a)
     # make sure limits are not equal to each other
     eps = 1e-12
     if np.abs(a_min - a_max) < eps:
-        a_min -= 1e-3 
-        a_max += 1e-3 
+        a_min -= 1e-3
+        a_max += 1e-3
 
     return (a_min, a_max)
-    
+
 
 def animate_chain_position(simX, xPosFirstMass, Ts=0.1, yPosWall=None):
     '''
     Creates animation of the chain, where simX contains the state trajectory.
     dt defines the time gap (in seconds) between two succesive entries.
     '''
-    
+
     # chain positions
     Nsim = simX.shape[0]
     nx = simX.shape[1]
@@ -236,14 +249,14 @@ def animate_chain_position(simX, xPosFirstMass, Ts=0.1, yPosWall=None):
 
 
     # limits in all three dimensions
-    
+
     # ylim_x = (np.amin( pos_x), np.amax( pos_x))
     # ylim_y = (np.amin( pos_y), np.amax( pos_y))
     # ylim_z = (np.amin( pos_z), np.amax( pos_z))
     # eps = 1e-12
     # if np.abs(ylim_x[0] - ylim_x[1]) < eps:
-    #     ylim_x[0] += 1e-3 
-    #     ylim_x[0] += 1e-3 
+    #     ylim_x[0] += 1e-3
+    #     ylim_x[0] += 1e-3
 
     ylim_x = get_plot_lims(pos_x)
     ylim_y = get_plot_lims(pos_y)
@@ -251,7 +264,7 @@ def animate_chain_position(simX, xPosFirstMass, Ts=0.1, yPosWall=None):
         ylim_y = (min(ylim_y[0], yPosWall) - 0.1, ylim_y[1])
     ylim_z = get_plot_lims(pos_z)
 
-    fig = plt.figure()    
+    fig = plt.figure()
     ax1 = fig.add_subplot(311, autoscale_on=False, xlim=(0,M+2), ylim=ylim_x)
     plt.grid(True)
     ax2 = fig.add_subplot(312, autoscale_on=False, xlim=(0,M+2), ylim=ylim_y)
@@ -263,29 +276,22 @@ def animate_chain_position(simX, xPosFirstMass, Ts=0.1, yPosWall=None):
     ax2.set_ylabel('y')
     ax3.set_ylabel('z')
 
-    # ax.set_aspect('equal')
-    # ax.axis('off')
-
     # create empty plot
     line1, = ax1.plot([], [], '.-')
     line2, = ax2.plot([], [], '.-')
     line3, = ax3.plot([], [], '.-')
-    
+
     lines = [line1, line2, line3]
-    
+
     if yPosWall is not None:
         ax2.plot(yPosWall*np.ones((Nsim,)))
-    
-        
+
+
     def init():
         # placeholder for data
         lines = [line1, line2, line3]
         for line in lines:
             line.set_data([],[])
-
-        # lines[0].set_data(list(range(M+2)), pos_x[0,:])
-        # lines[1].set_data(list(range(M+2)), pos_y[0,:])
-        # lines[2].set_data(list(range(M+2)), pos_z[0,:])
         return lines
 
 
@@ -309,7 +315,7 @@ def animate_chain_position_3D(simX, xPosFirstMass, Ts=0.1):
     Create 3D animation of the chain, where simX contains the state trajectory.
     dt defines the time gap (in seconds) between two succesive entries.
     '''
-    
+
     # chain positions
     Nsim = simX.shape[0]
     nx = simX.shape[1]
@@ -327,7 +333,7 @@ def animate_chain_position_3D(simX, xPosFirstMass, Ts=0.1):
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d', autoscale_on=False, xlim=xlim, ylim=ylim, zlim=zlim)
-    
+
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     ax.set_zlabel('z')
@@ -339,13 +345,6 @@ def animate_chain_position_3D(simX, xPosFirstMass, Ts=0.1):
     # line, = ax.plot([], [], [], '.-')
     line, = ax.plot(pos_x[0,:], pos_y[1,:], pos_z[2,:], '.-')
 
-    def init():
-        # placeholder for data
-        # line.set_data([], [])
-        # line.set_3d_properties([])
-        return line,
-
-
     def animate(i):
 
         line.set_data(pos_x[i,:], pos_y[i,:])
@@ -355,7 +354,7 @@ def animate_chain_position_3D(simX, xPosFirstMass, Ts=0.1):
 
     ani = animation.FuncAnimation(fig, animate, Nsim,
                                   interval=Ts*1000, repeat_delay=500,
-                                  blit=True,)# init_func=init)
+                                  blit=True,)
     plt.show()
     return ani
-    
+

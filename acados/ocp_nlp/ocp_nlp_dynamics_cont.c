@@ -182,6 +182,10 @@ void ocp_nlp_dynamics_cont_dims_get(void *config_, void *dims_, const char *fiel
     {
         *value = dims->nx1;
     }
+    else if (!strcmp(field, "np"))
+    {
+        // np dimension not needed
+    }
     else
     {
         // get GNSF dims from integrator module
@@ -309,6 +313,12 @@ void ocp_nlp_dynamics_cont_opts_set(void *config_, void *opts_, const char *fiel
         }
         config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_adj", &tmp_bool);
         config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_hess", &tmp_bool);
+    }
+    else if(!strcmp(field, "with_solution_sens_wrt_params"))
+    {
+        // Not implemented yet
+        // int *int_ptr = value;
+        // opts->with_solution_sens_wrt_params = *int_ptr;
     }
     else
     {
@@ -566,6 +576,19 @@ void ocp_nlp_dynamics_cont_memory_get(void *config_, void *dims_, void *mem_, co
 
 }
 
+
+void ocp_nlp_dynamics_cont_memory_get_params_grad(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset)
+{
+    printf("\nerror: ocp_nlp_dynamics_cont_memory_params_grad: not implemented\n");
+    exit(1);
+}
+
+
+void ocp_nlp_dynamics_cont_memory_get_params_lag_grad(void *config, void *dims, void *opts, void *memory, int index, struct blasfeo_dvec *out, int offset)
+{
+    printf("\nerror: ocp_nlp_dynamics_cont_memory_params_lag_grad: not implemented\n");
+    exit(1);
+}
 
 
 /************************************************
@@ -935,7 +958,7 @@ void ocp_nlp_dynamics_cont_compute_fun(void *config_, void *dims_, void *model_,
 
 
 
-void ocp_nlp_dynamics_cont_compute_fun_and_adjoint(void *config_, void *dims_, void *model_, void *opts_, void *mem_, void *work_)
+void ocp_nlp_dynamics_cont_compute_fun_and_adj(void *config_, void *dims_, void *model_, void *opts_, void *mem_, void *work_)
 {
     ocp_nlp_dynamics_cont_cast_workspace(config_, dims_, opts_, work_, mem_);
 
@@ -1043,6 +1066,18 @@ int ocp_nlp_dynamics_cont_precompute(void *config_, void *dims_, void *model_, v
 }
 
 
+void ocp_nlp_dynamics_cont_compute_jac_hess_p(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_)
+{
+    printf("\nerror: ocp_nlp_dynamics_compute_jac_hess_p not implemented yet\n");
+    exit(1);
+}
+
+void ocp_nlp_dynamics_cont_compute_adj_p(void* config_, void *dims_, void *model_, void *opts_, void *mem_, struct blasfeo_dvec *out)
+{
+    printf("\nerror: ocp_nlp_dynamics_cont_compute_adj_p not implemented\n");
+    exit(1);
+}
+
 
 void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
 {
@@ -1075,13 +1110,17 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
     config->memory_set_sim_guess_ptr = &ocp_nlp_dynamics_cont_memory_set_sim_guess_ptr;
     config->memory_set_z_alg_ptr = &ocp_nlp_dynamics_cont_memory_set_z_alg_ptr;
     config->memory_get = &ocp_nlp_dynamics_cont_memory_get;
+    config->memory_get_params_grad = &ocp_nlp_dynamics_cont_memory_get_params_grad;
+    config->memory_get_params_lag_grad = &ocp_nlp_dynamics_cont_memory_get_params_lag_grad;
     config->workspace_calculate_size = &ocp_nlp_dynamics_cont_workspace_calculate_size;
     config->initialize = &ocp_nlp_dynamics_cont_initialize;
     config->update_qp_matrices = &ocp_nlp_dynamics_cont_update_qp_matrices;
     config->compute_fun = &ocp_nlp_dynamics_cont_compute_fun;
-    config->compute_fun_and_adjoint = &ocp_nlp_dynamics_cont_compute_fun_and_adjoint;
+    config->compute_fun_and_adj = &ocp_nlp_dynamics_cont_compute_fun_and_adj;
+    config->compute_adj_p = &ocp_nlp_dynamics_cont_compute_adj_p;
     config->precompute = &ocp_nlp_dynamics_cont_precompute;
     config->config_initialize_default = &ocp_nlp_dynamics_cont_config_initialize_default;
+    config->compute_jac_hess_p = &ocp_nlp_dynamics_cont_compute_jac_hess_p;
 
     return;
 }

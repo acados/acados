@@ -967,6 +967,12 @@ void ocp_nlp_constraints_bgh_opts_set(void *config_, void *opts_, char *field, v
         int *compute_hess = value;
         opts->compute_hess = *compute_hess;
     }
+    else if(!strcmp(field, "with_solution_sens_wrt_params"))
+    {
+        // do nothing for now
+        // int *with_solution_sens_wrt_params = value;
+        // opts->with_solution_sens_wrt_params = *with_solution_sens_wrt_params;
+    }
     else
     {
         printf("\nerror: field %s not available in ocp_nlp_constraints_bgh_opts_set\n", field);

@@ -61,9 +61,6 @@ def export_pendulum_ode_model() -> AcadosModel:
 
     xdot = vertcat(x1_dot, theta_dot, v1_dot, dtheta_dot)
 
-    # algebraic variables
-    # z = None
-
     # parameters
     p = []
 

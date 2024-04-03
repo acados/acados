@@ -149,6 +149,10 @@ void ocp_nlp_cost_ls_dims_set(void *config_, void *dims_, const char *field, int
     {
         ocp_nlp_cost_ls_set_ns(config_, dims_, value);
     }
+    else if (!strcmp(field, "np"))
+    {
+        // np dimension not needed
+    }
     else
     {
         printf("\nerror: dimension type not available in module\n");
@@ -472,6 +476,12 @@ void ocp_nlp_cost_ls_opts_set(void *config_, void *opts_, const char *field, voi
     {
         int* int_ptr = value;
         opts->compute_hess = *int_ptr;
+    }
+    else if(!strcmp(field, "with_solution_sens_wrt_params"))
+    {
+        // not implemented yet
+        // int *opt_val = (int *) value;
+        // opts->with_solution_sens_wrt_params = *opt_val;
     }
     else
     {
@@ -1000,6 +1010,18 @@ void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims_, void *model_, void 
 }
 
 
+void ocp_nlp_cost_ls_compute_jac_p(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_)
+{
+    printf("ocp_nlp_cost_ls_compute_jac_p: not implemented.\n");
+    exit(1);
+}
+
+void ocp_nlp_cost_ls_eval_grad_p(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_, struct blasfeo_dvec *out)
+{
+    printf("ocp_nlp_cost_ls_eval_grad_p: not implemented.\n");
+    exit(1);
+}
+
 
 void ocp_nlp_cost_ls_config_initialize_default(void *config_)
 {
@@ -1030,7 +1052,9 @@ void ocp_nlp_cost_ls_config_initialize_default(void *config_)
     config->initialize = &ocp_nlp_cost_ls_initialize;
     config->update_qp_matrices = &ocp_nlp_cost_ls_update_qp_matrices;
     config->compute_fun = &ocp_nlp_cost_ls_compute_fun;
+    config->compute_jac_p = &ocp_nlp_cost_ls_compute_jac_p;
     config->compute_gradient = &ocp_nlp_cost_ls_compute_gradient;
+    config->eval_grad_p = &ocp_nlp_cost_ls_eval_grad_p;
     config->config_initialize_default = &ocp_nlp_cost_ls_config_initialize_default;
     config->precompute = &ocp_nlp_cost_ls_precompute;
 

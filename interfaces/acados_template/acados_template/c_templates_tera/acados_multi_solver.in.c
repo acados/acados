@@ -210,7 +210,7 @@ ocp_nlp_dims* {{ name }}_acados_create_2_create_and_set_dimensions({{ name }}_so
     /************************************************
     *  dimensions
     ************************************************/
-    #define NINTNP1MEMS 17
+    #define NINTNP1MEMS 18
     int* intNp1mem = (int*)malloc( (N+1)*sizeof(int)*NINTNP1MEMS );
 
     int* nx    = intNp1mem + (N+1)*0;
@@ -230,6 +230,7 @@ ocp_nlp_dims* {{ name }}_acados_create_2_create_and_set_dimensions({{ name }}_so
     int* ny    = intNp1mem + (N+1)*14;
     int* nr    = intNp1mem + (N+1)*15;
     int* nbxe  = intNp1mem + (N+1)*16;
+    int* np    = intNp1mem + (N+1)*17;
 
 {% for jj in range(end=n_phases) %}{# phases loop !#}
     for (i = {{ start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
@@ -239,6 +240,7 @@ ocp_nlp_dims* {{ name }}_acados_create_2_create_and_set_dimensions({{ name }}_so
         nu[i] = {{ phases_dims[jj].nu }};
         nz[i] = {{ phases_dims[jj].nz }};
         ns[i] = {{ phases_dims[jj].ns }};
+        np[i] = {{ phases_dims[jj].np }};
         // cost
         ny[i] = {{ phases_dims[jj].ny }};
         // constraints
@@ -265,6 +267,7 @@ ocp_nlp_dims* {{ name }}_acados_create_2_create_and_set_dimensions({{ name }}_so
     nu[i] = {{ phases_dims[0].nu }};
     nz[i] = {{ phases_dims[0].nz }};
     ns[i] = {{ phases_dims[0].ns_0 }};
+    np[i] = {{ phases_dims[0].np }};
     // cost
     ny[i] = {{ phases_dims[0].ny_0 }};
     // constraints
@@ -289,6 +292,7 @@ ocp_nlp_dims* {{ name }}_acados_create_2_create_and_set_dimensions({{ name }}_so
     nu[i] = {{ 0 }};
     nz[i] = {{ dims_e.nz }};
     ns[i] = {{ dims_e.ns_e }};
+    np[i] = {{ dims_e.np }};
     // cost
     ny[i] = {{ dims_e.ny_e }};
     // constraints
@@ -313,6 +317,7 @@ ocp_nlp_dims* {{ name }}_acados_create_2_create_and_set_dimensions({{ name }}_so
     ocp_nlp_dims_set_opt_vars(nlp_config, nlp_dims, "nu", nu);
     ocp_nlp_dims_set_opt_vars(nlp_config, nlp_dims, "nz", nz);
     ocp_nlp_dims_set_opt_vars(nlp_config, nlp_dims, "ns", ns);
+    ocp_nlp_dims_set_opt_vars(nlp_config, nlp_dims, "np", np);
 
     for (int i = 0; i <= N; i++)
     {
@@ -2097,6 +2102,13 @@ void {{ name }}_acados_create_6_set_opts({{ name }}_solver_capsule* capsule)
     double eps_sufficient_descent = {{ solver_options.eps_sufficient_descent }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "eps_sufficient_descent", &eps_sufficient_descent);
 {%- endif -%}
+
+    int with_solution_sens_wrt_params = {{ solver_options.with_solution_sens_wrt_params }};
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "with_solution_sens_wrt_params", &with_solution_sens_wrt_params);
+
+    int with_value_sens_wrt_params = {{ solver_options.with_value_sens_wrt_params }};
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "with_value_sens_wrt_params", &with_value_sens_wrt_params);
+
     int full_step_dual = {{ solver_options.full_step_dual }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "full_step_dual", &full_step_dual);
 

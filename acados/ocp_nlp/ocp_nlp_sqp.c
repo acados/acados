@@ -386,12 +386,6 @@ acados_size_t ocp_nlp_sqp_workspace_calculate_size(void *config_, void *dims_, v
     // nlp
     size += ocp_nlp_workspace_calculate_size(config, dims, nlp_opts);
 
-    // tmp qp in
-    size += ocp_qp_in_calculate_size(dims->qp_solver->orig_dims);
-
-    // tmp qp out
-    size += ocp_qp_out_calculate_size(dims->qp_solver->orig_dims);
-
     if (opts->ext_qp_res)
     {
         // qp res
@@ -419,14 +413,6 @@ static void ocp_nlp_sqp_cast_workspace(ocp_nlp_config *config, ocp_nlp_dims *dim
     // nlp
     work->nlp_work = ocp_nlp_workspace_assign(config, dims, nlp_opts, nlp_mem, c_ptr);
     c_ptr += ocp_nlp_workspace_calculate_size(config, dims, nlp_opts);
-
-    // tmp qp in
-    work->tmp_qp_in = ocp_qp_in_assign(dims->qp_solver->orig_dims, c_ptr);
-    c_ptr += ocp_qp_in_calculate_size(dims->qp_solver->orig_dims);
-
-    // tmp qp out
-    work->tmp_qp_out = ocp_qp_out_assign(dims->qp_solver->orig_dims, c_ptr);
-    c_ptr += ocp_qp_out_calculate_size(dims->qp_solver->orig_dims);
 
     if (opts->ext_qp_res)
     {
@@ -1013,6 +999,7 @@ int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_
 
 
 
+
 void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *mem_, void *work_,
                                  char *field, int stage, int index, void *sens_nlp_out_)
 {
@@ -1027,62 +1014,36 @@ void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *
     ocp_nlp_out *sens_nlp_out = sens_nlp_out_;
 
     ocp_nlp_sqp_workspace *work = work_;
-    // ocp_nlp_sqp_cast_workspace(config, dims, opts, mem, work);
     ocp_nlp_workspace *nlp_work = work->nlp_work;
 
-    d_ocp_qp_copy_all(nlp_mem->qp_in, work->tmp_qp_in);
-    d_ocp_qp_set_rhs_zero(work->tmp_qp_in);
+    ocp_nlp_common_eval_param_sens(config, dims, opts->nlp_opts, nlp_mem, nlp_work,
+                                 field, stage, index, sens_nlp_out);
 
-    double one = 1.0;
-
-    if ((!strcmp("ex", field)) && (stage==0))
-    {
-        d_ocp_qp_set_el("lbx", stage, index, &one, work->tmp_qp_in);
-        d_ocp_qp_set_el("ubx", stage, index, &one, work->tmp_qp_in);
-
-//        d_ocp_qp_print(work->tmp_qp_in->dim, work->tmp_qp_in);
-
-        config->qp_solver->eval_sens(config->qp_solver, dims->qp_solver, work->tmp_qp_in, work->tmp_qp_out,
-                               opts->nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
-
-//        d_ocp_qp_sol_print(work->tmp_qp_out->dim, work->tmp_qp_out);
-//        exit(1);
-
-        /* copy tmp_qp_out into sens_nlp_out */
-
-        int i;
-
-        int N = dims->N;
-        int *nv = dims->nv;
-        int *nx = dims->nx;
-        // int *nu = dims->nu;
-        int *ni = dims->ni;
-        // int *nz = dims->nz;
-
-        for (i = 0; i <= N; i++)
-        {
-            blasfeo_dveccp(nv[i], work->tmp_qp_out->ux + i, 0, sens_nlp_out->ux + i, 0);
-
-            if (i < N)
-                blasfeo_dveccp(nx[i + 1], work->tmp_qp_out->pi + i, 0, sens_nlp_out->pi + i, 0);
-
-            blasfeo_dveccp(2 * ni[i], work->tmp_qp_out->lam + i, 0, sens_nlp_out->lam + i, 0);
-
-            blasfeo_dveccp(2 * ni[i], work->tmp_qp_out->t + i, 0, sens_nlp_out->t + i, 0);
-
-        }
-
-    }
-    else
-    {
-        printf("\nerror: field %s at stage %d not available in ocp_nlp_sqp_eval_param_sens\n", field, stage);
-        exit(1);
-    }
     mem->time_solution_sensitivities = acados_toc(&timer0);
 
     return;
 }
 
+
+void ocp_nlp_sqp_eval_adj_p(void *config_, void *dims_, void *nlp_in_, void *opts_, void *mem_, void *work_,
+                                 const char *field, void *lagr_grad_wrt_params)
+{
+    ocp_nlp_dims *dims = dims_;
+    ocp_nlp_config *config = config_;
+    ocp_nlp_sqp_opts *opts = opts_;
+    ocp_nlp_sqp_memory *mem = mem_;
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+
+    ocp_nlp_in *nlp_in = nlp_in_;
+
+    ocp_nlp_sqp_workspace *work = work_;
+    ocp_nlp_workspace *nlp_work = work->nlp_work;
+
+    ocp_nlp_common_eval_adj_p(config, dims, nlp_in, opts->nlp_opts, nlp_mem, nlp_work,
+                                 field, lagr_grad_wrt_params);
+
+    return;
+}
 
 
 void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, void *return_value_)
@@ -1315,6 +1276,7 @@ void ocp_nlp_sqp_config_initialize_default(void *config_)
     config->evaluate = &ocp_nlp_sqp;
     config->memory_reset_qp_solver = &ocp_nlp_sqp_memory_reset_qp_solver;
     config->eval_param_sens = &ocp_nlp_sqp_eval_param_sens;
+    config->eval_lagrangian_param_sens = &ocp_nlp_sqp_eval_adj_p;
     config->config_initialize_default = &ocp_nlp_sqp_config_initialize_default;
     config->precompute = &ocp_nlp_sqp_precompute;
     config->get = &ocp_nlp_sqp_get;
