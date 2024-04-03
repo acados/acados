@@ -29,13 +29,11 @@
 #
 
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel
-# from pendulum_model import export_pendulum_ode_model
 import numpy as np
-# from utils import plot_pendulum
 import casadi as cs
 import scipy.linalg
 
-def main():
+def create_acados_solver_and_solve_problem(method='SQP'):
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
@@ -61,7 +59,6 @@ def main():
     model.disc_dyn_expr = A @ x + B @ u
     model.x = x
     model.u = u
-    # model.p = p
     model.name = "LinearModel"
     ocp.model = model
 
@@ -96,54 +93,41 @@ def main():
     ocp.solver_options.hessian_approx = 'EXACT' # 'GAUSS_NEWTON', 'EXACT'
     ocp.solver_options.integrator_type = 'DISCRETE'
     # ocp.solver_options.print_level = 1
-    ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
+    ocp.solver_options.nlp_solver_type = method # SQP_RTI, SQP
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
 
-    ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_sqp_ocp.json')
+    json_name = 'acados_' + method + '_ocp.json'
+    ocp_solver = AcadosOcpSolver(ocp, json_file = json_name)
 
-    simX_sqp = np.ndarray((N+1, nx))
-    simU_sqp = np.ndarray((N, nu))
+    sol_X = np.ndarray((N+1, nx))
+    sol_U = np.ndarray((N, nu))
 
     status = ocp_solver.solve()
-    ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
+    ocp_solver.print_statistics() 
     
     if status != 0:
         raise Exception(f'acados returned status {status}.')
 
     # get solution
     for i in range(N):
-        simX_sqp[i,:] = ocp_solver.get(i, "x")
-        simU_sqp[i,:] = ocp_solver.get(i, "u")
-    simX_sqp[N,:] = ocp_solver.get(N, "x")
+        sol_X[i,:] = ocp_solver.get(i, "x")
+        sol_U[i,:] = ocp_solver.get(i, "u")
+    sol_X[N,:] = ocp_solver.get(N, "x")
 
-    print("Solution x: ", simX_sqp)
-    print("Solution u: ", simU_sqp)
+    print("Solution x: ", sol_X)
+    print("Solution u: ", sol_U)
 
-    ###########################################################################
-    # Change options to DDP
-    ###########################################################################
-    simX_ddp = np.ndarray((N+1, nx))
-    simU_ddp = np.ndarray((N, nu))
-    ocp.solver_options.nlp_solver_type = 'DDP'
+    return sol_X, sol_U
 
-    ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ddp_ocp.json')
-
-    status = ocp_solver.solve()
-    ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
+def main():
     
-    if status != 0:
-        raise Exception(f'acados returned status {status}.')
+    sol_X_sqp, sol_U_sqp = create_acados_solver_and_solve_problem(method='SQP')
+    sol_X_ddp, sol_U_ddp = create_acados_solver_and_solve_problem(method='DDP')
 
-    # get solution
-    for i in range(N):
-        simX_ddp[i,:] = ocp_solver.get(i, "x")
-        simU_ddp[i,:] = ocp_solver.get(i, "u")
-    simX_ddp[N,:] = ocp_solver.get(N, "x")
-
-    assert np.allclose(simX_ddp, simX_sqp), "x of ddp and sqp do not coincide"
-    assert np.allclose(simU_ddp, simU_sqp), "u of ddp and sqp do not coincide"
+    assert np.allclose(sol_X_ddp, sol_X_sqp), "x of ddp and sqp do not coincide"
+    assert np.allclose(sol_U_ddp, sol_U_sqp), "u of ddp and sqp do not coincide"
 
     print("Experiment was succesful!")
 
