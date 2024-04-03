@@ -498,8 +498,13 @@ class AcadosOcpSolver:
         self.__qp_constraint_fields = ['C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu']
         self.__qp_pc_hpipm_fields = ['P', 'K', 'Lr', 'p']
 
+        # set arg and res types
         self.__acados_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
         self.__acados_lib.ocp_nlp_dims_get_from_attr.restype = c_int
+        self.__acados_lib.ocp_nlp_eval_params_jac.argtypes = [c_void_p, c_void_p, c_void_p]
+        self.__acados_lib.ocp_nlp_eval_param_sens.argtypes = [c_void_p, c_char_p, c_int, c_int, c_void_p]
+        self.__acados_lib.ocp_nlp_eval_param_sens.restype = None
+        self.__acados_lib.ocp_nlp_eval_lagrange_grad_p.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_double)]
 
         return
 
@@ -723,15 +728,12 @@ class AcadosOcpSolver:
             grad = np.zeros((nparam,))
             grad_p = np.ascontiguousarray(grad, dtype=np.float64)
             c_grad_p = cast(grad_p.ctypes.data, POINTER(c_double))
-            self.__acados_lib.ocp_nlp_eval_lagrange_grad_p.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_double)]
             self.__acados_lib.ocp_nlp_eval_lagrange_grad_p(self.nlp_solver, self.nlp_in, field, c_grad_p)
             self.time_value_grad = time.time() - t0
 
         else:
             raise Exception(f"AcadosOcpSolver.get_optimal_value_gradient(): Unknown field: {with_respect_to=}")
         return grad
-
-
 
 
 
@@ -801,7 +803,6 @@ class AcadosOcpSolver:
 
             # compute jacobians wrt params in all modules
             t0 = time.time()
-            self.__acados_lib.ocp_nlp_eval_params_jac.argtypes = [c_void_p, c_void_p, c_void_p]
             self.__acados_lib.ocp_nlp_eval_params_jac(self.nlp_solver, self.nlp_in, self.nlp_out)
             self.time_solution_sens_lin = time.time() - t0
 
@@ -818,9 +819,6 @@ class AcadosOcpSolver:
                 nu = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, s, "u".encode('utf-8'))
                 sens_u.append(np.zeros((nu, ngrad)))
 
-        # set input and output types
-        self.__acados_lib.ocp_nlp_eval_param_sens.argtypes = [c_void_p, c_char_p, c_int, c_int, c_void_p]
-        self.__acados_lib.ocp_nlp_eval_param_sens.restype = None
 
         self.time_solution_sens_solve = 0.0
         for k in range(ngrad):
