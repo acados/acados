@@ -125,4 +125,4 @@ def main_parametric(qp_solver_ric_alg: int, eigen_analysis=True, use_cython=Fals
 
 
 if __name__ == "__main__":
-    main_parametric(qp_solver_ric_alg=0, eigen_analysis=True, use_cython=False)
+    main_parametric(qp_solver_ric_alg=0, eigen_analysis=False, use_cython=True)
