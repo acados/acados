@@ -2443,7 +2443,7 @@ void ocp_nlp_level_c_update(ocp_nlp_config *config,
     {
         // dynamics
         // config->dynamics[i]->update_qp_matrices(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
-        config->dynamics[i]->compute_fun_and_adjoint(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
+        config->dynamics[i]->compute_fun_and_adj(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
                                          opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
 
         struct blasfeo_dvec *dyn_fun = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
@@ -3383,7 +3383,7 @@ void ocp_nlp_common_eval_adj_p(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
         for (i = 0; i < N; i++)
         {
             // dynamics contribution
-            config->dynamics[i]->eval_lagrange_grad_p(config->dynamics[i], dims->dynamics[i], in->dynamics[i], opts,
+            config->dynamics[i]->compute_adj_p(config->dynamics[i], dims->dynamics[i], in->dynamics[i], opts,
                                     mem->dynamics[i], &work->tmp_np);
             blasfeo_dvecad(np[i], 1., &work->tmp_np, 0, &work->out_np, 0);
 

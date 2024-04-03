@@ -958,7 +958,7 @@ void ocp_nlp_dynamics_cont_compute_fun(void *config_, void *dims_, void *model_,
 
 
 
-void ocp_nlp_dynamics_cont_compute_fun_and_adjoint(void *config_, void *dims_, void *model_, void *opts_, void *mem_, void *work_)
+void ocp_nlp_dynamics_cont_compute_fun_and_adj(void *config_, void *dims_, void *model_, void *opts_, void *mem_, void *work_)
 {
     ocp_nlp_dynamics_cont_cast_workspace(config_, dims_, opts_, work_, mem_);
 
@@ -1072,9 +1072,9 @@ void ocp_nlp_dynamics_cont_compute_params_jac(void *config_, void *dims, void *m
     exit(1);
 }
 
-void ocp_nlp_dynamics_cont_eval_adj_p(void* config_, void *dims_, void *model_, void *opts_, void *mem_, struct blasfeo_dvec *out)
+void ocp_nlp_dynamics_cont_compute_adj_p(void* config_, void *dims_, void *model_, void *opts_, void *mem_, struct blasfeo_dvec *out)
 {
-    printf("\nerror: ocp_nlp_dynamics_cont_eval_adj_p not implemented\n");
+    printf("\nerror: ocp_nlp_dynamics_cont_compute_adj_p not implemented\n");
     exit(1);
 }
 
@@ -1116,8 +1116,8 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
     config->initialize = &ocp_nlp_dynamics_cont_initialize;
     config->update_qp_matrices = &ocp_nlp_dynamics_cont_update_qp_matrices;
     config->compute_fun = &ocp_nlp_dynamics_cont_compute_fun;
-    config->compute_fun_and_adjoint = &ocp_nlp_dynamics_cont_compute_fun_and_adjoint;
-    config->eval_lagrange_grad_p = &ocp_nlp_dynamics_cont_eval_adj_p;
+    config->compute_fun_and_adj = &ocp_nlp_dynamics_cont_compute_fun_and_adj;
+    config->compute_adj_p = &ocp_nlp_dynamics_cont_compute_adj_p;
     config->precompute = &ocp_nlp_dynamics_cont_precompute;
     config->config_initialize_default = &ocp_nlp_dynamics_cont_config_initialize_default;
     config->compute_params_jac = &ocp_nlp_dynamics_cont_compute_params_jac;

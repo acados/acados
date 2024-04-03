@@ -840,7 +840,7 @@ void ocp_nlp_dynamics_disc_compute_params_jac(void *config_, void *dims_, void *
 }
 
 
-void ocp_nlp_dynamics_disc_compute_fun_and_adjoint(void *config_, void *dims_, void *model_, void *opts_,
+void ocp_nlp_dynamics_disc_compute_fun_and_adj(void *config_, void *dims_, void *model_, void *opts_,
                                               void *mem_, void *work_)
 {
     /* TODO: this is inefficient! Generate a separate function for discrete dynamics to compute fun and adj! */
@@ -915,7 +915,7 @@ int ocp_nlp_dynamics_disc_precompute(void *config_, void *dims, void *model_, vo
     return ACADOS_SUCCESS;
 }
 
-void ocp_nlp_dynamics_disc_eval_adj_p(void* config_, void *dims_, void *model_, void *opts_, void *mem_, struct blasfeo_dvec *out)
+void ocp_nlp_dynamics_disc_compute_adj_p(void* config_, void *dims_, void *model_, void *opts_, void *mem_, struct blasfeo_dvec *out)
 {
     ocp_nlp_dynamics_disc_dims *dims = dims_;
     ocp_nlp_dynamics_disc_memory *memory = mem_;
@@ -1003,8 +1003,8 @@ void ocp_nlp_dynamics_disc_config_initialize_default(void *config_)
     config->update_qp_matrices = &ocp_nlp_dynamics_disc_update_qp_matrices;
     config->compute_fun = &ocp_nlp_dynamics_disc_compute_fun;
     config->compute_params_jac = &ocp_nlp_dynamics_disc_compute_params_jac;
-    config->compute_fun_and_adjoint = &ocp_nlp_dynamics_disc_compute_fun_and_adjoint;
-    config->eval_lagrange_grad_p = &ocp_nlp_dynamics_disc_eval_adj_p;
+    config->compute_fun_and_adj = &ocp_nlp_dynamics_disc_compute_fun_and_adj;
+    config->compute_adj_p = &ocp_nlp_dynamics_disc_compute_adj_p;
     config->precompute = &ocp_nlp_dynamics_disc_precompute;
     config->config_initialize_default = &ocp_nlp_dynamics_disc_config_initialize_default;
 

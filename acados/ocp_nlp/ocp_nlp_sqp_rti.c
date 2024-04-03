@@ -440,7 +440,7 @@ static void prepare_full_residual_computation(ocp_nlp_config *config,
     for (int i=0; i < N; i++)
     {
         // dynamics: evaluate function and adjoint
-        config->dynamics[i]->compute_fun_and_adjoint(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
+        config->dynamics[i]->compute_fun_and_adj(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
                                          opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
     }
 
