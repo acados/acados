@@ -909,8 +909,6 @@ int ocp_nlp_ddp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_
             exit(1);
         }
     }
-    config->qp_solver
-
 
     return ocp_nlp_precompute_common(config, dims, nlp_in, nlp_out, opts->nlp_opts, nlp_mem, nlp_work);
 }
