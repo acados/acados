@@ -16,6 +16,6 @@
 - [ ] Weights for constraints in objective per N
 
 4. Testing and ideally same OR better results as python Implementation
-- [ ] Add QP problem, then SQP and DDP with full step should be equivalent (D)
+- [x] Add QP problem, then SQP and DDP with full step should be equivalent (D)
 - [ ] add test in CI https://github.com/FreyJo/acados/blob/8f5ee7cf4c8d5a688c83f5c705fd5bbbf733f9ec/interfaces/CMakeLists.txt
 - [ ] swingup example (OJ)
