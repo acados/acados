@@ -988,7 +988,7 @@ class AcadosOcpSolver:
         """
         stat = self.get_stats("statistics")
 
-        if self.solver_options['nlp_solver_type'] == 'SQP':
+        if self.solver_options['nlp_solver_type'] in ['SQP', 'DDP']:
             print('\niter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp_stat\tqp_iter\talpha')
             if stat.shape[0]>8:
                 print('\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp')

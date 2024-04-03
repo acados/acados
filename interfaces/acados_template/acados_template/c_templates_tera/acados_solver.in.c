@@ -2231,7 +2231,7 @@ void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* 
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_hpipm_mode", "{{ solver_options.hpipm_mode }}");
 {%- endif %}
 
-{% if solver_options.nlp_solver_type == "SQP" %}
+{% if solver_options.nlp_solver_type == "SQP" or solver_options.nlp_solver_type == "DDP" %}
     // set SQP specific options
     double nlp_solver_tol_stat = {{ solver_options.nlp_solver_tol_stat }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tol_stat", &nlp_solver_tol_stat);
@@ -3122,8 +3122,7 @@ void {{ model.name }}_acados_print_stats({{ model.name }}_solver_capsule* capsul
         printf("\t\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp");
     printf("\n");
 
-{%- if solver_options.nlp_solver_type == "SQP" %}
-
+{% if solver_options.nlp_solver_type == "SQP" or solver_options.nlp_solver_type == "DDP" %}
     for (int i = 0; i < nrow; i++)
     {
         for (int j = 0; j < stat_n + 1; j++)
