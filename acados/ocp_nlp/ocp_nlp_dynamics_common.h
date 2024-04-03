@@ -101,7 +101,7 @@ typedef struct
     void (*initialize)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*update_qp_matrices)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*compute_fun)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
-    void (*compute_params_jac)(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
+    void (*compute_jac_hess_p)(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
 
     void (*compute_adj_p)(void *config, void *dims, void *model, void *opts, void *memory, struct blasfeo_dvec *out);
     void (*compute_fun_and_adj)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);

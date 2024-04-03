@@ -91,7 +91,7 @@ typedef struct
     // computes the cost function value (intended for globalization)
     void (*compute_fun)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     // computes the cost jacobian wrt parameters (intended for solution sensitivities)
-    void (*compute_params_jac)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
+    void (*compute_jac_p)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*eval_grad_p)(void *config_, void *dim, void* model, void *opts, void *mem, void *work, struct blasfeo_dvec *out);
     void (*compute_gradient)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*config_initialize_default)(void *config);

@@ -183,7 +183,7 @@ void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims, void *m
 //
 void ocp_nlp_dynamics_disc_compute_fun(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
 //
-void ocp_nlp_dynamics_disc_compute_params_jac(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
+void ocp_nlp_dynamics_disc_compute_jac_hess_p(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
 //
 void ocp_nlp_dynamics_disc_compute_adj_p(void* config_, void *dims_, void *model_, void *opts_, void *mem_, struct blasfeo_dvec *out);
 

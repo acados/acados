@@ -957,10 +957,10 @@ void ocp_nlp_cost_conl_compute_fun(void *config_, void *dims_, void *model_,
     return;
 }
 
-void ocp_nlp_cost_conl_compute_params_jac(void *config_, void *dims, void *model_,
+void ocp_nlp_cost_conl_compute_jac_p(void *config_, void *dims, void *model_,
                                        void *opts_, void *memory_, void *work_)
 {
-    printf("ocp_nlp_cost_conl_compute_params_jac: not implemented.\n");
+    printf("ocp_nlp_cost_conl_compute_jac_p: not implemented.\n");
     exit(1);
 }
 
@@ -1003,7 +1003,7 @@ void ocp_nlp_cost_conl_config_initialize_default(void *config_)
     config->initialize = &ocp_nlp_cost_conl_initialize;
     config->update_qp_matrices = &ocp_nlp_cost_conl_update_qp_matrices;
     config->compute_fun = &ocp_nlp_cost_conl_compute_fun;
-    config->compute_params_jac = &ocp_nlp_cost_conl_compute_params_jac;
+    config->compute_jac_p = &ocp_nlp_cost_conl_compute_jac_p;
     config->compute_gradient = &ocp_nlp_cost_conl_compute_gradient;
     config->eval_grad_p = &ocp_nlp_cost_conl_eval_grad_p;
     config->config_initialize_default = &ocp_nlp_cost_conl_config_initialize_default;

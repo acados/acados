@@ -184,7 +184,7 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims, void *m
 void ocp_nlp_cost_external_compute_fun(void *config_, void *dims, void *model_,
                                        void *opts_, void *memory_, void *work_);
 //
-void ocp_nlp_cost_external_compute_params_jac(void *config_, void *dims, void *model_,
+void ocp_nlp_cost_external_compute_jac_p(void *config_, void *dims, void *model_,
                                        void *opts_, void *memory_, void *work_);
 
 void ocp_nlp_cost_external_compute_gradient(void *config_, void *dims, void *model_,

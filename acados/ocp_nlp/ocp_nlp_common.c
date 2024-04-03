@@ -3278,12 +3278,12 @@ void ocp_nlp_params_jac_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_
 #endif
     for (int i = 0; i < N; i++)
     {
-        config->dynamics[i]->compute_params_jac(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
+        config->dynamics[i]->compute_jac_hess_p(config->dynamics[i], dims->dynamics[i], in->dynamics[i],
                     opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
-        config->cost[i]->compute_params_jac(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i], mem->cost[i], work->cost[i]);
+        config->cost[i]->compute_jac_p(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i], mem->cost[i], work->cost[i]);
     }
 
-    config->cost[N]->compute_params_jac(config->cost[N], dims->cost[N], in->cost[N], opts->cost[N], mem->cost[N], work->cost[N]);
+    config->cost[N]->compute_jac_p(config->cost[N], dims->cost[N], in->cost[N], opts->cost[N], mem->cost[N], work->cost[N]);
 
 }
 
