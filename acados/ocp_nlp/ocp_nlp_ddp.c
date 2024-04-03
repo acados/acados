@@ -888,6 +888,30 @@ int ocp_nlp_ddp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_
     ocp_nlp_ddp_cast_workspace(config, dims, opts, mem, work);
     ocp_nlp_workspace *nlp_work = work->nlp_work;
 
+    // sanity checks
+    int N = dims->N;
+    int nbx;
+    int i = 0;
+    config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i],
+                    "nbx", &nbx);
+    if (nbx > dims->ni[0])
+    {
+        printf("ocp_nlp_precompute: nbx_0 > ni[0] not supported, got %d > %d\n", nbx, dims->ni[0]);
+        exit(1);
+    }
+
+    for (i = 1; i < N+1; i++)
+    {
+        if (dims->ni[i] > 0)
+        {
+            printf("ocp_nlp_ddp: only initial state constraints are supported.");
+            printf("Got ni[%d] = %d.\n", i, dims->ni[i]);
+            exit(1);
+        }
+    }
+    config->qp_solver
+
+
     return ocp_nlp_precompute_common(config, dims, nlp_in, nlp_out, opts->nlp_opts, nlp_mem, nlp_work);
 }
 
