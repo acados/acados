@@ -32,14 +32,17 @@
 import sys
 sys.path.insert(0, '../common')
 
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, latexify_plot
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel
 import casadi as ca
 import numpy as np
 import scipy.linalg as scipylinalg
-import matplotlib.pyplot as plt
-from utils import plot_pendulum
-from pendulum_model import export_pendulum_ode_model_with_mass_as_param
-from policy_gradient_example import evaluate_hessian_eigenvalues, plot_results
+from sensitivity_utils import evaluate_hessian_eigenvalues, plot_results
+
+"""
+    This example computes solution sensitivities with respect to parameters using state augmentation.
+    If the parameters enter only via the cost and the dynamics, this approach is not recommended.
+    Instead use the solution sensitivities provided by the acados OCP solver, cf. `policy_gradient_example.py`.
+"""
 
 def export_parameter_augmented_pendulum_ode_model(param_M_as_state=True) -> AcadosModel:
     """
@@ -116,10 +119,7 @@ def export_parameter_augmented_ocp(
     """
     OCP with augmented state vector (p, theta, v, omega, M).
     """
-    # create ocp object to formulate the OCP
     ocp = AcadosOcp()
-
-    # set model
     ocp.model, nx_original = export_parameter_augmented_pendulum_ode_model(param_M_as_state=param_M_as_state)
 
     # set dimensions
@@ -165,7 +165,6 @@ def export_parameter_augmented_ocp(
         ocp.solver_options.nlp_solver_max_iter = 1
         ocp.solver_options.qp_solver_iter_max = 200
         ocp.solver_options.tol = 1e-10
-        # ocp.solver_options.hpipm_mode = 'SPEED_ABS'
     else:
         ocp.solver_options.nlp_solver_max_iter = 400
         ocp.solver_options.tol = 1e-8
@@ -232,16 +231,16 @@ def main_augmented(param_M_as_state: bool, idxp: int, qp_solver_ric_alg: int, ei
         min_eig_P = None
         min_abs_eig_P = None
 
-    pi = np.zeros(np_test)
+    u_opt = np.zeros(np_test)
     for i, x in enumerate(x0_augmented):
         # Evaluate the policy
-        pi[i] = acados_ocp_solver.solve_for_x0(x)[0]
+        u_opt[i] = acados_ocp_solver.solve_for_x0(x).item()
         # acados_ocp_solver.print_statistics()
         acados_ocp_solver.store_iterate(filename='iterate.json', overwrite=True, verbose=False)
 
         sensitivity_solver.load_iterate(filename='iterate.json', verbose=False)
         sensitivity_solver.solve_for_x0(x, fail_on_nonzero_status=False, print_stats_on_failure=False)
-        residuals = sensitivity_solver.get_stats("residuals")
+        # residuals = sensitivity_solver.get_stats("residuals")
         # print(f"residuals sensitivity_solver {residuals} status {sensitivity_solver.status}")
 
         if sensitivity_solver.status not in [0, 2]:
@@ -255,32 +254,19 @@ def main_augmented(param_M_as_state: bool, idxp: int, qp_solver_ric_alg: int, ei
         _, sens_u_ = sensitivity_solver.eval_solution_sensitivity(0, "initial_state")
         sens_u[i] = sens_u_[:, idxp]
 
-        # plot solution
-        # if i < 1:
-        #     nx = max(x0.shape)
-        #     nu = 1
-        #     simX = np.zeros((N_horizon+1, nx))
-        #     simU = np.zeros((N_horizon, nu))
-        #     for i in range(N_horizon):
-        #         simX[i, :] = acados_ocp_solver.get(i, "x")
-        #         simU[i, :] = acados_ocp_solver.get(i, "u")
-        #     simX[N_horizon, :] = acados_ocp_solver.get(N_horizon, "x")
-        #     plot_pendulum(np.linspace(0, T_horizon, N_horizon+1), Fmax, simU, simX, states_lables = ['$x$', r'$\theta$', '$v$', r'$\dot{\theta}$', 'mass'])
-
     # Compare to numerical gradients
-    np_grad = np.gradient(pi, delta_p)
+    np_grad = np.gradient(u_opt, delta_p)
 
-    pi_reconstructed_np_grad = np.cumsum(np_grad) * delta_p + pi[0]
-    pi_reconstructed_np_grad += pi[0] - pi_reconstructed_np_grad[0]
+    u_opt_reconstructed_np_grad = np.cumsum(np_grad) * delta_p + u_opt[0]
+    u_opt_reconstructed_np_grad += u_opt[0] - u_opt_reconstructed_np_grad[0]
 
-    pi_reconstructed_acados = np.cumsum(sens_u) * delta_p + pi[0]
-    pi_reconstructed_acados += pi[0] - pi_reconstructed_acados[0]
+    u_opt_reconstructed_acados = np.cumsum(sens_u) * delta_p + u_opt[0]
+    u_opt_reconstructed_acados += u_opt[0] - u_opt_reconstructed_acados[0]
 
-    plot_results(p_test, pi, pi_reconstructed_acados, pi_reconstructed_np_grad, sens_u, np_grad,
+    plot_results(p_test, u_opt, u_opt_reconstructed_acados, u_opt_reconstructed_np_grad, sens_u, np_grad,
                  min_eig_full, min_eig_proj_hess, min_eig_P,
                  min_abs_eig_full, min_abs_eig_proj_hess, min_abs_eig_P,
                  eigen_analysis, qp_solver_ric_alg, parameter_name)
-
 
 
 if __name__ == "__main__":

@@ -76,6 +76,7 @@ cdef class AcadosOcpSolverCython:
 
         self.solver_created = False
 
+        # TODO make N, model_name, status, etc. properties
         self.N = N
         self.model_name = model_name
         self.nlp_solver_type = nlp_solver_type

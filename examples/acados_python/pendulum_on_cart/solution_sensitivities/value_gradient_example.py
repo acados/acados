@@ -29,16 +29,9 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import sys
-sys.path.insert(0, '../common')
-
-from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, latexify_plot
+from acados_template import AcadosOcpSolver
 import numpy as np
-import matplotlib.pyplot as plt
-from utils import plot_pendulum
-
-from policy_gradient_example import export_parametric_ocp, plot_cost_gradient_results
-
+from sensitivity_utils import export_parametric_ocp, plot_cost_gradient_results
 
 
 def main():
@@ -60,8 +53,8 @@ def main():
     ocp.solver_options.with_value_sens_wrt_params = True
     acados_ocp_solver = AcadosOcpSolver(ocp)
 
-    sens_cost = np.zeros(np_test)
-    cost_values = np.zeros(np_test)
+    optimal_value_grad = np.zeros(np_test)
+    optimal_value = np.zeros(np_test)
 
     pi = np.zeros(np_test)
     for i, p in enumerate(p_test):
@@ -69,15 +62,16 @@ def main():
         for n in range(N_horizon+1):
             acados_ocp_solver.set(n, 'p', p)
         pi[i] = acados_ocp_solver.solve_for_x0(x0)[0]
-        cost_values[i] = acados_ocp_solver.get_cost()
-        sens_cost[i] = acados_ocp_solver.get_optimal_value_gradient("params_global").item()
+        optimal_value[i] = acados_ocp_solver.get_cost()
+        optimal_value_grad[i] = acados_ocp_solver.get_optimal_value_gradient("params_global").item()
 
     # evaluate cost gradient
-    np_cost_grad = np.gradient(cost_values, delta_p)
-    cost_reconstructed_np_grad = np.cumsum(np_cost_grad) * delta_p + cost_values[0]
+    optimal_value_grad_via_fd = np.gradient(optimal_value, delta_p)
+    cost_reconstructed_np_grad = np.cumsum(optimal_value_grad_via_fd) * delta_p + optimal_value[0]
 
-    plot_cost_gradient_results(p_test, cost_values, sens_cost, np_cost_grad, cost_reconstructed_np_grad)
-    assert np.allclose(sens_cost, np_cost_grad, atol=5e2, rtol=1e-2)
+    plot_cost_gradient_results(p_test, optimal_value, optimal_value_grad, optimal_value_grad_via_fd, cost_reconstructed_np_grad)
+    assert np.median(np.abs(optimal_value_grad - optimal_value_grad_via_fd)) <= 1e-1
+
 
 
 if __name__ == "__main__":
