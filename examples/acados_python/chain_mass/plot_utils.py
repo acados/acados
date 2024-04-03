@@ -276,9 +276,6 @@ def animate_chain_position(simX, xPosFirstMass, Ts=0.1, yPosWall=None):
     ax2.set_ylabel('y')
     ax3.set_ylabel('z')
 
-    # ax.set_aspect('equal')
-    # ax.axis('off')
-
     # create empty plot
     line1, = ax1.plot([], [], '.-')
     line2, = ax2.plot([], [], '.-')
@@ -295,10 +292,6 @@ def animate_chain_position(simX, xPosFirstMass, Ts=0.1, yPosWall=None):
         lines = [line1, line2, line3]
         for line in lines:
             line.set_data([],[])
-
-        # lines[0].set_data(list(range(M+2)), pos_x[0,:])
-        # lines[1].set_data(list(range(M+2)), pos_y[0,:])
-        # lines[2].set_data(list(range(M+2)), pos_z[0,:])
         return lines
 
 
@@ -352,13 +345,6 @@ def animate_chain_position_3D(simX, xPosFirstMass, Ts=0.1):
     # line, = ax.plot([], [], [], '.-')
     line, = ax.plot(pos_x[0,:], pos_y[1,:], pos_z[2,:], '.-')
 
-    def init():
-        # placeholder for data
-        # line.set_data([], [])
-        # line.set_3d_properties([])
-        return line,
-
-
     def animate(i):
 
         line.set_data(pos_x[i,:], pos_y[i,:])
@@ -368,7 +354,7 @@ def animate_chain_position_3D(simX, xPosFirstMass, Ts=0.1):
 
     ani = animation.FuncAnimation(fig, animate, Nsim,
                                   interval=Ts*1000, repeat_delay=500,
-                                  blit=True,)# init_func=init)
+                                  blit=True,)
     plt.show()
     return ani
 

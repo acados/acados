@@ -30,7 +30,7 @@
 
 # authors: Florian Messerer, Jonathan Frey
 
-import sys, os
+import os
 import numpy as np
 
 from acados_template import AcadosSim, AcadosSimSolver
@@ -56,7 +56,7 @@ m = chain_params["m"]
 D = chain_params["D"]
 L = chain_params["L"]
 
-# export model 
+# export model
 model = export_chain_mass_model(n_mass, m, D, L)
 
 
@@ -89,7 +89,6 @@ xEndRef[0] = L * (M+1) * 6
 pos0_x = np.linspace(xPosFirstMass[0], xEndRef[0], n_mass)
 x0 = np.zeros((nx, 1))
 x0[:3*(M+1):3] = pos0_x[1:].reshape((M+1,1))
-    
 
 u0 = np.zeros((nu, 1))
 acados_integrator.set("u", u0)

@@ -42,7 +42,6 @@
 
 
 
-import os
 import numpy as np
 import scipy.linalg
 
@@ -52,7 +51,7 @@ from export_disturbed_chain_mass_model import export_disturbed_chain_mass_model
 from export_chain_mass_integrator import export_chain_mass_integrator
 
 from plot_utils import *
-from utils import sampleFromEllipsoid, compute_steady_state
+from utils import sampleFromEllipsoid, compute_steady_state, get_chain_params
 import matplotlib.pyplot as plt
 
 def run_nominal_control(chain_params):
@@ -75,7 +74,6 @@ def run_nominal_control(chain_params):
 
     nlp_iter = chain_params["nlp_iter"]
     nlp_tol = chain_params["nlp_tol"]
-    save_results = chain_params["save_results"]
     show_plots = chain_params["show_plots"]
     seed = chain_params["seed"]
 
@@ -93,18 +91,13 @@ def run_nominal_control(chain_params):
     nx = model.x.rows()
     nu = model.u.rows()
     ny = nx + nu
-    ny_e = nx
     Tf = N * Ts
 
     # initial state
     xPosFirstMass = np.zeros((3,1))
     xEndRef = np.zeros((3,1))
     xEndRef[0] = L * (M+1) * 6
-    pos0_x = np.linspace(xPosFirstMass[0], xEndRef[0], n_mass)
-
     xrest = compute_steady_state(n_mass, m, D, L, xPosFirstMass, xEndRef)
-
-    x0 = xrest
 
     # set dimensions
     ocp.dims.N = N
@@ -135,7 +128,6 @@ def run_nominal_control(chain_params):
 
     ocp.cost.Vx_e = np.eye(nx)
 
-    # import pdb; pdb.set_trace()
     yref = np.vstack((xrest, np.zeros((nu,1)))).flatten()
     ocp.cost.yref = yref
     ocp.cost.yref_e = xrest.flatten()
@@ -145,7 +137,7 @@ def run_nominal_control(chain_params):
 
     ocp.constraints.lbu = -umax
     ocp.constraints.ubu = umax
-    ocp.constraints.x0 = x0.reshape((nx,))
+    ocp.constraints.x0 = xrest.reshape((nx,))
     ocp.constraints.idxbu = np.array(range(nu))
 
     # disturbances
@@ -172,7 +164,6 @@ def run_nominal_control(chain_params):
         ocp.cost.zl = L1_pen * np.ones((nbx,))
         ocp.cost.zu = L1_pen * np.ones((nbx,))
 
-
     # solver options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
@@ -195,18 +186,10 @@ def run_nominal_control(chain_params):
     # acados_integrator = AcadosSimSolver(ocp, json_file = 'acados_ocp_' + model.name + '.json')
     acados_integrator = export_chain_mass_integrator(n_mass, m, D, L)
 
-    #%% get initial state from xrest
-    xcurrent = x0.reshape((nx,))
+    #%% get some initial state (different from xrest) from xrest and u_init
+    xcurrent = xrest.reshape((nx,))
     for i in range(5):
-        acados_integrator.set("x", xcurrent)
-        acados_integrator.set("u", u_init)
-
-        status = acados_integrator.solve()
-        if status != 0:
-            raise Exception('acados integrator returned status {}. Exiting.'.format(status))
-
-        # update state
-        xcurrent = acados_integrator.get("x")
+        xcurrent = acados_integrator.simulate(x=xcurrent, u=u_init)
 
     #%% actual simulation
     N_sim = int(np.floor(Tsim/Ts))
@@ -222,31 +205,14 @@ def run_nominal_control(chain_params):
     for i in range(N_sim):
 
         # solve ocp
-        acados_ocp_solver.set(0, "lbx", xcurrent)
-        acados_ocp_solver.set(0, "ubx", xcurrent)
-
-        status = acados_ocp_solver.solve()
+        simU[i,:] = acados_ocp_solver.solve_for_x0(x0_bar=xcurrent)
         timings[i] = acados_ocp_solver.get_stats("time_tot")
 
-        if status != 0:
-            raise Exception('acados acados_ocp_solver returned status {} in time step {}. Exiting.'.format(status, i))
-
-        simU[i,:] = acados_ocp_solver.get(0, "u")
         print("control at time", i, ":", simU[i,:])
 
         # simulate system
-        acados_integrator.set("x", xcurrent)
-        acados_integrator.set("u", simU[i,:])
-
         pertubation = sampleFromEllipsoid(np.zeros((nparam,)), W)
-        acados_integrator.set("p", pertubation)
-
-        status = acados_integrator.solve()
-        if status != 0:
-            raise Exception('acados integrator returned status {}. Exiting.'.format(status))
-
-        # update state
-        xcurrent = acados_integrator.get("x")
+        xcurrent = acados_integrator.simulate(x=xcurrent, u=simU[i, :], p=pertubation)
         simX[i+1,:] = xcurrent
 
         # xOcpPredict = acados_ocp_solver.get(1, "x")
@@ -258,7 +224,8 @@ def run_nominal_control(chain_params):
     print("dist2wall (minimum over simulation) ", str(np.min(wall_dist)))
 
     #%% plot results
-    if os.environ.get('ACADOS_ON_CI') is None and show_plots:
+    # TODO cleanup these plots
+    if show_plots:
         plot_chain_control_traj(simU)
         plot_chain_position_traj(simX, yPosWall=yPosWall)
         plot_chain_velocity_traj(simX)
@@ -268,3 +235,12 @@ def run_nominal_control(chain_params):
 
         plt.show()
 
+
+
+if __name__ == '__main__':
+
+    chain_params = get_chain_params()
+
+    for n_mass in range(3, 4):
+        chain_params["n_mass"] = n_mass
+        run_nominal_control(chain_params)

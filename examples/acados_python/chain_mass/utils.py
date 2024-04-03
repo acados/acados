@@ -42,11 +42,12 @@ def get_chain_params():
     params["u_init"] = np.array([-1, 1, 1])
     params["with_wall"] = True
     params["yPosWall"] = -0.05 # Dimitris: - 0.1;
+    params["xPosFirstMass"] = np.zeros(3)
     params["m"] = 0.033 # mass of the balls
     params["D"] = 1.0 # spring constant
     params["L"] = 0.033 # rest length of spring
+    params["C"] = 0.1  # damping constant
     params["perturb_scale"] = 1e-2
-
     params["save_results"] = True
     params["show_plots"] = True
     params["nlp_iter"] = 50
