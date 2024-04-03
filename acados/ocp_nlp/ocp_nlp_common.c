@@ -524,57 +524,6 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
         printf("error: dims type not available in module ocp_nlp: %s", field);
         exit(1);
     }
-
-
-#if 0
-    /* set ocp_nlp submodule dimensions */
-    if (strcmp(field, "ns"))  //  dynamics do not contain slack/soft constraints
-    {
-        for (int i = 0; i < N; i++)
-        {
-            config->dynamics[i]->dims_set(config->dynamics[i],
-                                          dims->dynamics[i], field, &int_array[i]);
-        }
-    }
-
-    if (!strcmp(field, "nu"))
-    {
-        for (int i = 0; i < N; i++)
-        {
-            config->dynamics[i]->dims_set(config->dynamics[i],
-                                           dims->dynamics[i], "nu1", &int_array[i+1]);
-        }
-    }
-    if (!strcmp(field, "nx"))
-    {
-        for (int i = 0; i < N; i++)
-        {
-            config->dynamics[i]->dims_set(config->dynamics[i],
-                                           dims->dynamics[i], "nx1", &int_array[i+1]);
-        }
-    }
-
-    for (int i = 0; i <= N; i++)  // cost
-    {
-        config->cost[i]->dims_set(config->cost[i],
-                                  dims->cost[i], field, &int_array[i]);
-    }
-
-    for (int i = 0; i <= N; i++)  // constraints
-    {
-        config->constraints[i]->dims_set(config->constraints[i], dims->constraints[i],
-                                             field, &int_array[i]);
-    }
-
-    if (strcmp(field, "nz"))  //  qp_solver does not contain nz
-    {
-        for (int i = 0; i <= N; i++)  // qp_solver
-        {
-            config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field,
-                                        &int_array[i]);
-        }
-    }
-#endif
 }
 
 
