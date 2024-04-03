@@ -3233,6 +3233,31 @@ void ocp_nlp_res_get_inf_norm(ocp_nlp_res *res, double *out)
 }
 
 
+
+void copy_ocp_nlp_out(ocp_nlp_dims *dims, ocp_nlp_out *from, ocp_nlp_out *to)
+{
+    // extract dims
+    int N = dims->N;
+    int *nv = dims->nv;
+    int *nx = dims->nx;
+    // int *nu = dims->nu;
+    int *ni = dims->ni;
+    int *nz = dims->nz;
+    for (int i = 0; i <= N; i++)
+    {
+        blasfeo_dveccp(nv[i], from->ux+i, 0, to->ux+i, 0);
+        blasfeo_dveccp(nz[i], from->z+i, 0, to->z+i, 0);
+        blasfeo_dveccp(2*ni[i], from->lam+i, 0, to->lam+i, 0);
+        blasfeo_dveccp(2*ni[i], from->t+i, 0, to->t+i, 0);
+    }
+
+    for (int i = 0; i < N; i++)
+        blasfeo_dveccp(nx[i+1], from->pi+i, 0, to->pi+i, 0);
+
+    return;
+}
+
+
 void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
