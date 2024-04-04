@@ -872,6 +872,7 @@ class AcadosOcp:
         upper_bound: Optional[float],
         lower_bound: Optional[float],
         residual_name: str = "new_residual",
+        constraint_type: str = "path",
     ) -> None:
         """
         Formulate a constraint as an L2 penalty and add it to the current cost.
@@ -884,21 +885,40 @@ class AcadosOcp:
 
         # compute violation expression
         violation_expr = 0.0
+        y_ref_new = np.zeros(1)
         if upper_bound is not None:
             violation_expr = ca.fmax(violation_expr, (constr_expr - upper_bound))
         if lower_bound is not None:
             violation_expr = ca.fmax(violation_expr, (lower_bound - constr_expr))
 
         # add penalty as cost
-        self.cost.yref = np.concatenate((self.cost.yref, np.zeros(1)))
-        self.model.cost_y_expr = ca.vertcat(self.model.cost_y_expr, violation_expr)
-        if self.cost.cost_type == "NONLINEAR_LS":
-            self.cost.W = block_diag(self.cost.W, weight)
-        elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
-            new_residual = casadi_symbol(residual_name, constr_expr.shape)
-            self.model.cost_r_in_psi_expr = ca.vertcat(self.model.cost_r_in_psi_expr, new_residual)
-            self.model.cost_psi_expr += .5 * weight * new_residual**2
-
+        if constraint_type == "path":
+            self.cost.yref = np.concatenate((self.cost.yref, y_ref_new))
+            self.model.cost_y_expr = ca.vertcat(self.model.cost_y_expr, violation_expr)
+            if self.cost.cost_type == "NONLINEAR_LS":
+                self.cost.W = block_diag(self.cost.W, weight)
+            elif self.cost.cost_type == "CONVEX_OVER_NONLINEAR":
+                new_residual = casadi_symbol(residual_name, constr_expr.shape)
+                self.model.cost_r_in_psi_expr = ca.vertcat(self.model.cost_r_in_psi_expr, new_residual)
+                self.model.cost_psi_expr += .5 * weight * new_residual**2
+        elif constraint_type == "initial":
+            self.cost.yref_0 = np.concatenate((self.cost.yref_0, y_ref_new))
+            self.model.cost_y_expr_0 = ca.vertcat(self.model.cost_y_expr_0, violation_expr)
+            if self.cost.cost_type_0 == "NONLINEAR_LS":
+                self.cost.W_0 = block_diag(self.cost.W_0, weight)
+            elif self.cost.cost_type_0 == "CONVEX_OVER_NONLINEAR":
+                new_residual = casadi_symbol(residual_name, constr_expr.shape)
+                self.model.cost_r_in_psi_expr_0 = ca.vertcat(self.model.cost_r_in_psi_expr_0, new_residual)
+                self.model.cost_psi_expr_0 += .5 * weight * new_residual**2
+        elif constraint_type == "terminal":
+            self.cost.yref_e = np.concatenate((self.cost.yref_e, y_ref_new))
+            self.model.cost_y_expr_e = ca.vertcat(self.model.cost_y_expr_e, violation_expr)
+            if self.cost.cost_type_e == "NONLINEAR_LS":
+                self.cost.W_e = block_diag(self.cost.W_e, weight)
+            elif self.cost.cost_type_e == "CONVEX_OVER_NONLINEAR":
+                new_residual = casadi_symbol(residual_name, constr_expr.shape)
+                self.model.cost_r_in_psi_expr_e = ca.vertcat(self.model.cost_r_in_psi_expr_e, new_residual)
+                self.model.cost_psi_expr_e += .5 * weight * new_residual**2
         return
 
 
