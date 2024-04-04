@@ -139,9 +139,6 @@ def main():
     # reference jump
     xs2 = np.array([0.7, 337, 0.75])
     us2 = np.array([305, 0.1])
-    # Njump = int(Nsim/4)
-    # X_ref[Njump:3*Njump,:] = xs2
-    # U_ref[Njump:3*Njump,:] = us2
     Njump = int(Nsim / 3)
     X_ref[Njump : 2 * Njump, :] = xs2
     U_ref[Njump : 2 * Njump, :] = us2
@@ -220,10 +217,6 @@ def main():
             f"{label}:\n min: {np.min(timings_solver):.3f} ms, mean: {np.mean(timings_solver):.3f} ms, max: {np.max(timings_solver):.3f} ms\n"
         )
 
-    # print(f"U:\n {U}")
-    # print(f"X:\n {X}")
-    # import pdb; pdb.set_trace()
-
     # plot results
     plot_cstr(
         dt_plant,
@@ -234,7 +227,8 @@ def main():
         mpc_params.umin,
         mpc_params.umax,
         labels_all,
-    )  # , fig_filename='cstr_acados_RTI.pdf')
+    # , fig_filename='cstr_acados_RTI.pdf',
+    )
 
 
 if __name__ == "__main__":
