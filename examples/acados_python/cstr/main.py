@@ -112,6 +112,9 @@ def simulate(
 
 
 def main():
+    with_nmpc = True
+    with_linear_mpc = True
+    with_nmpc_rti = True
 
     Tsim = 25
     dt_plant = 0.25  # [min]
@@ -161,60 +164,65 @@ def main():
     labels_all.append(label)
 
     # simulation with NMPC controller
-    label = "NMPC"
-    print(f"\n\nRunning simulation with {label}\n\n")
-    ocp_solver = setup_acados_ocp_solver(model, mpc_params, cstr_params=cstr_params)
+    if with_nmpc:
+        label = "NMPC"
+        print(f"\n\nRunning simulation with {label}\n\n")
+        ocp_solver = setup_acados_ocp_solver(model, mpc_params, cstr_params=cstr_params)
 
-    X, U, timings_solver, _ = simulate(
-        ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref
-    )
-    X_all.append(X)
-    U_all.append(U)
-    timings_solver_all.append(timings_solver)
-    labels_all.append(label)
-    ocp_solver = None
+        X, U, timings_solver, _ = simulate(
+            ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref
+        )
+        X_all.append(X)
+        U_all.append(U)
+        timings_solver_all.append(timings_solver)
+        labels_all.append(label)
+        ocp_solver = None
 
     # simulation with LMPC controller
-    label = "LMPC"
-    print(f"\n\nRunning simulation with {label}\n\n")
-    mpc_params.linear_mpc = True
-    ocp_solver = setup_acados_ocp_solver(
-        linearized_model, mpc_params, cstr_params=cstr_params, use_rti=True
-    )
-    mpc_params.linear_mpc = False
+    if with_linear_mpc:
+        label = "LMPC"
+        print(f"\n\nRunning simulation with {label}\n\n")
+        mpc_params.linear_mpc = True
+        ocp_solver = setup_acados_ocp_solver(
+            linearized_model, mpc_params, cstr_params=cstr_params, use_rti=True
+        )
+        mpc_params.linear_mpc = False
 
-    X, U, timings_solver, _ = simulate(
-        ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref
-    )
-    X_all.append(X)
-    U_all.append(U)
-    timings_solver_all.append(timings_solver)
-    labels_all.append(label)
-    ocp_solver = None
+        X, U, timings_solver, _ = simulate(
+            ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref
+        )
+        X_all.append(X)
+        U_all.append(U)
+        timings_solver_all.append(timings_solver)
+        labels_all.append(label)
+        ocp_solver = None
 
     # simulation with NMPC RTI controller
-    label = "NMPC-RTI"
-    print(f"\n\nRunning simulation with {label}\n\n")
-    ocp_solver = setup_acados_ocp_solver(
-        model, mpc_params, cstr_params=cstr_params, use_rti=True
-    )
+    if with_nmpc_rti:
+        label = "NMPC-RTI"
+        print(f"\n\nRunning simulation with {label}\n\n")
+        ocp_solver = setup_acados_ocp_solver(
+            model, mpc_params, cstr_params=cstr_params, use_rti=True
+        )
 
-    X, U, timings_solver, _ = simulate(
-        ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref
-    )
-    X_all.append(X)
-    U_all.append(U)
-    timings_solver_all.append(timings_solver)
-    labels_all.append(label)
-    ocp_solver = None
+        X, U, timings_solver, _ = simulate(
+            ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref
+        )
+        X_all.append(X)
+        U_all.append(U)
+        timings_solver_all.append(timings_solver)
+        labels_all.append(label)
+        ocp_solver = None
 
     # Evaluation
-    print("\nTiming evaluation:\n------------------")
+    max_label_length = max([len(l) for l in labels_all])
+    print(f"\n{'Timings in ms':{max_label_length}}  | {'miniumum':<8} | {'mean':<8} | {'maximum':<8} \n------------------")
+
     for i in range(len(labels_all)):
         label = labels_all[i]
-        timings_solver = timings_solver_all[i] * 1e3
+        timings_solver = timings_solver_all[i] * 1e3  # scale to milliseconds
         print(
-            f"{label}:\n min: {np.min(timings_solver):.3f} ms, mean: {np.mean(timings_solver):.3f} ms, max: {np.max(timings_solver):.3f} ms\n"
+            f"{label:{max_label_length}}   {f'{np.min(timings_solver):.3f}':>10} {f'{np.mean(timings_solver):.3f}':>10} {f'{np.max(timings_solver):.3f}':>10}"
         )
 
     # plot results
