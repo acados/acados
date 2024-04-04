@@ -185,6 +185,14 @@ configure_package_config_file(${PROJECT_SOURCE_DIR}/cmake/acadosConfig.cmake.in
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/acadosConfig.cmake
         DESTINATION cmake)
 
+install(
+  FILES ${PROJECT_SOURCE_DIR}/cmake/FindEigen3.cmake
+        ${PROJECT_SOURCE_DIR}/cmake/FindFortranLibs.cmake
+        ${PROJECT_SOURCE_DIR}/cmake/FindMatlab.cmake
+        ${PROJECT_SOURCE_DIR}/cmake/FindNumPy.cmake
+        ${PROJECT_SOURCE_DIR}/cmake/FindOpenBLAS.cmake
+  DESTINATION cmake)
+
 # set_target_properties(acados
 #     PROPERTIES SOVERSION ${PACKAGE_SO_VERSION})
 # export(TARGETS acados FILE ${PROJECT_BINARY_DIR}/acadosConfig.cmake)
