@@ -176,7 +176,7 @@ install(EXPORT acadosTargets DESTINATION cmake)
 configure_package_config_file(${PROJECT_SOURCE_DIR}/cmake/acadosConfig.cmake.in
                               ${CMAKE_CURRENT_BINARY_DIR}/cmake/acadosConfig.cmake
                               INSTALL_DESTINATION cmake
-                              PATH_VARS ACADOS_WITH_HPMPC 
+                              PATH_VARS ACADOS_WITH_HPMPC
                                         ACADOS_WITH_QORE
                                         ACADOS_WITH_QPOASES
                                         ACADOS_WITH_DAQP
@@ -190,8 +190,6 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/acadosConfig.cmake
 install(
   FILES ${PROJECT_SOURCE_DIR}/cmake/FindEigen3.cmake
         ${PROJECT_SOURCE_DIR}/cmake/FindFortranLibs.cmake
-        ${PROJECT_SOURCE_DIR}/cmake/FindMatlab.cmake
-        ${PROJECT_SOURCE_DIR}/cmake/FindNumPy.cmake
         ${PROJECT_SOURCE_DIR}/cmake/FindOpenBLAS.cmake
   DESTINATION cmake)
 
