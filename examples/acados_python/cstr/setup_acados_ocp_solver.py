@@ -70,7 +70,10 @@ class MpcCSTRParameters:
 
 
 def setup_acados_ocp_solver(
-    model, mpc_params: MpcCSTRParameters, cstr_params, use_rti=False
+    model, mpc_params: MpcCSTRParameters,
+    cstr_params,
+    use_rti=False,
+    reference_profile=None,
 ):
 
     ocp = AcadosOcp()
@@ -100,6 +103,11 @@ def setup_acados_ocp_solver(
 
     ocp.model.cost_y_expr = vertcat(x, u)
     ocp.model.cost_y_expr_e = x
+    if reference_profile is not None:
+        ocp.model.cost_y_expr -= reference_profile
+        ocp.model.cost_y_expr_e -= reference_profile[:nx]
+        ocp.parameter_values = np.concatenate((ocp.parameter_values, np.array([0.0])))
+    ocp.solver_options.cost_discretization = "INTEGRATOR"
 
     ocp.cost.yref = np.zeros((nx + nu,))
     ocp.cost.yref_e = np.zeros((nx,))

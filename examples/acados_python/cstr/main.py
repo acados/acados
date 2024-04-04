@@ -39,6 +39,7 @@ from setup_acados_ocp_solver import (
 )
 from setup_acados_integrator import setup_acados_integrator, AcadosSimSolver
 import numpy as np
+import casadi as ca
 from cstr_utils import plot_cstr
 from typing import Optional
 
@@ -50,6 +51,7 @@ def simulate(
     Nsim: int,
     X_ref: np.ndarray,
     U_ref: np.ndarray,
+    with_reference_profile: bool = False,
 ):
 
     nx = X_ref.shape[1]
@@ -69,43 +71,24 @@ def simulate(
         if controller is None:
             U[i, :] = U_ref[i, :]
         else:
-            # set initial state
-            controller.set(0, "lbx", xcurrent)
-            controller.set(0, "ubx", xcurrent)
-
-            yref = np.concatenate((X_ref[i, :], U_ref[i, :]))
-            for stage in range(controller.acados_ocp.dims.N):
-                controller.set(stage, "yref", yref)
-            controller.set(controller.acados_ocp.dims.N, "yref", X_ref[i, :])
+            if with_reference_profile:
+                t0 = i * plant.acados_sim.solver_options.T
+                for stage, dt in enumerate(controller.acados_ocp.solver_options.shooting_nodes):
+                    t = t0 + dt
+                    controller.set_params_sparse(stage, np.array([1]), np.array([t]))
+            else:
+                yref = np.concatenate((X_ref[i, :], U_ref[i, :]))
+                for stage in range(controller.acados_ocp.dims.N):
+                    controller.set(stage, "yref", yref)
+                controller.set(controller.acados_ocp.dims.N, "yref", X_ref[i, :])
 
             # solve ocp
-            status = controller.solve()
-
-            if status != 0:
-                controller.print_statistics()
-                raise Exception(
-                    f"acados controller returned status {status} in simulation step {i}. Exiting."
-                )
-
-            U[i, :] = controller.get(0, "u")
+            U[i, :] = controller.solve_for_x0(xcurrent)
             timings_solver[i] = controller.get_stats("time_tot")
 
         # simulate system
-        plant.set("x", xcurrent)
-        plant.set("u", U[i, :])
-
-        if plant.acados_sim.solver_options.integrator_type == "IRK":
-            plant.set("xdot", np.zeros((nx,)))
-
-        status = plant.solve()
-        if status != 0:
-            raise Exception(
-                f"acados integrator returned status {status} in simulation step {i}. Exiting."
-            )
-
+        xcurrent = plant.simulate(x=xcurrent, u=U[i, :], xdot=np.zeros((nx,)))
         timings_integrator[i] = plant.get("time_tot")
-        # update state
-        xcurrent = plant.get("x")
         X[i + 1, :] = xcurrent
 
     return X, U, timings_solver, timings_integrator
@@ -113,6 +96,7 @@ def simulate(
 
 def main():
     with_nmpc = True
+    with_timevar_ref_nmpc = True
     with_linear_mpc = True
     with_nmpc_rti = True
 
@@ -171,6 +155,32 @@ def main():
 
         X, U, timings_solver, _ = simulate(
             ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref
+        )
+        X_all.append(X)
+        U_all.append(U)
+        timings_solver_all.append(timings_solver)
+        labels_all.append(label)
+        ocp_solver = None
+
+    # simulation with time varying reference NMPC controller
+    if with_timevar_ref_nmpc:
+        label = "NMPC with time-varying reference"
+        ocp_model = setup_cstr_model(cstr_params)
+        ocp_model.t = ca.SX.sym("t")
+        t0 = ca.SX.sym("t0")
+        ocp_model.p = ca.vertcat(ocp_model.p, t0)
+        t = t0 + ocp_model.t
+
+        tjump1 = Njump * dt_plant
+        tjump2 = 2 * Njump * dt_plant
+        reference_profile = ca.if_else(t < tjump1, ca.vertcat(xs, us), ca.vertcat(xs2, us2))
+        reference_profile = ca.if_else(t < tjump2, reference_profile, ca.vertcat(xs, us))
+        print(f"\n\nRunning simulation with {label}\n\n")
+
+        ocp_solver = setup_acados_ocp_solver(ocp_model, mpc_params, cstr_params=cstr_params, reference_profile=reference_profile)
+
+        X, U, timings_solver, _ = simulate(
+            ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref, with_reference_profile=True
         )
         X_all.append(X)
         U_all.append(U)
