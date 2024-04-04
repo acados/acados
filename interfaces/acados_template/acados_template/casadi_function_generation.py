@@ -541,7 +541,6 @@ def generate_c_code_nls_cost(ocp: AcadosOcp, stage_type ):
     if stage_type == 'terminal':
         middle_name = '_cost_y_e'
         u = symbol('u', 0, 0)
-        t = symbol('t', 0, 0)
         y_expr = model.cost_y_expr_e
         outer_hess = ocp.cost.W_e
 
@@ -554,13 +553,6 @@ def generate_c_code_nls_cost(ocp: AcadosOcp, stage_type ):
         middle_name = '_cost_y'
         y_expr = model.cost_y_expr
         outer_hess = ocp.cost.W
-
-    # checks on time dependency
-    if any(ca.which_depends(y_expr, model.t)):
-        if ocp.solver_options.cost_discretization == "EULER":
-            raise Exception("NLS y_expr depends on time t. This is only supported with cost_discretization=='INTEGRATOR'")
-        if stage_type == 'terminal':
-            raise Exception("NLS cost_y_expr_e depends on time t. Time dependency is not supported on terminal shooting node.")
 
     # change directory
     cwd = os.getcwd()
@@ -615,7 +607,6 @@ def generate_c_code_conl_cost(ocp: AcadosOcp, stage_type: str):
 
     if stage_type == 'terminal':
         u = symbol('u', 0, 0)
-        t = symbol('t', 0, 0)
 
         yref = model.cost_r_in_psi_expr_e
         inner_expr = model.cost_y_expr_e - yref
@@ -652,13 +643,6 @@ def generate_c_code_conl_cost(ocp: AcadosOcp, stage_type: str):
         suffix_name_fun_jac_hess = '_conl_cost_fun_jac_hess'
 
         custom_hess = model.cost_conl_custom_outer_hess
-
-    # checks on time dependency
-    if any(ca.which_depends(inner_expr, model.t)):
-        if ocp.solver_options.cost_discretization == "EULER":
-            raise Exception("CONL inner_expr depends on time t. This is only supported with cost_discretization=='INTEGRATOR'")
-        if stage_type == 'terminal':
-            raise Exception("CONL cost_y_expr depends on time t. Time dependency is not supported on terminal shooting node.")
 
     # set up function names
     fun_name_cost_fun = model.name + suffix_name_fun
