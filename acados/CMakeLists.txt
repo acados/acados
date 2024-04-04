@@ -72,12 +72,12 @@ add_library(acados ${ACADOS_SRC})
 target_include_directories(acados
     PUBLIC
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}> # to be able to include "acados/header.h"
-        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/QPSOLVER_DENSE/include>
-        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/QPSOLVER_DENSE/source>
-        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/KKTPACK_DENSE/include>
-        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/KKTPACK_DENSE/source>
-        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/QPCORE/include>
-        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore>
+        $<$<BOOL:${ACADOS_WITH_QORE}>:$<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/QPSOLVER_DENSE/include>>
+        $<$<BOOL:${ACADOS_WITH_QORE}>:$<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/QPSOLVER_DENSE/source>>
+        $<$<BOOL:${ACADOS_WITH_QORE}>:$<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/KKTPACK_DENSE/include>>
+        $<$<BOOL:${ACADOS_WITH_QORE}>:$<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/KKTPACK_DENSE/source>>
+        $<$<BOOL:${ACADOS_WITH_QORE}>:$<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/QPCORE/include>>
+        $<$<BOOL:${ACADOS_WITH_QORE}>:$<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore>>
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/hpipm/include>
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}>
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/interfaces>
