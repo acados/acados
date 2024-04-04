@@ -688,30 +688,6 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
  * AS-RTI functionality
 ****************************/
 
-static void copy_ocp_nlp_out(ocp_nlp_dims *dims, ocp_nlp_out *from, ocp_nlp_out *to)
-{
-    // extract dims
-    int N = dims->N;
-    int *nv = dims->nv;
-    int *nx = dims->nx;
-    // int *nu = dims->nu;
-    int *ni = dims->ni;
-    int *nz = dims->nz;
-    for (int i = 0; i <= N; i++)
-    {
-        blasfeo_dveccp(nv[i], from->ux+i, 0, to->ux+i, 0);
-        blasfeo_dveccp(nz[i], from->z+i, 0, to->z+i, 0);
-        blasfeo_dveccp(2*ni[i], from->lam+i, 0, to->lam+i, 0);
-        blasfeo_dveccp(2*ni[i], from->t+i, 0, to->t+i, 0);
-    }
-
-    for (int i = 0; i < N; i++)
-        blasfeo_dveccp(nx[i+1], from->pi+i, 0, to->pi+i, 0);
-
-    return;
-}
-
-
 static void as_rti_sanity_checks(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_sqp_rti_opts *opts)
 {
     // sanity checks

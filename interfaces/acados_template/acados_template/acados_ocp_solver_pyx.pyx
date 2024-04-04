@@ -515,7 +515,7 @@ cdef class AcadosOcpSolverCython:
             # append timestamp
             if os.path.isfile(filename):
                 filename = filename[:-5]
-                filename += datetime.utcnow().strftime('%Y-%m-%d-%H:%M:%S.%f') + '.json'
+                filename += datetime.now().strftime('%Y-%m-%d-%H:%M:%S.%f') + '.json'
 
         # get iterate:
         solution = dict()

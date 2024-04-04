@@ -277,7 +277,6 @@ void ocp_qp_partial_condensing_opts_update(void *dims_, void *opts_)
 
 void ocp_qp_partial_condensing_opts_set(void *opts_, const char *field, void* value)
 {
-
     ocp_qp_partial_condensing_opts *opts = opts_;
 
     if(!strcmp(field, "N"))
@@ -303,7 +302,6 @@ void ocp_qp_partial_condensing_opts_set(void *opts_, const char *field, void* va
     }
 
     return;
-
 }
 
 

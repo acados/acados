@@ -524,57 +524,6 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
         printf("error: dims type not available in module ocp_nlp: %s", field);
         exit(1);
     }
-
-
-#if 0
-    /* set ocp_nlp submodule dimensions */
-    if (strcmp(field, "ns"))  //  dynamics do not contain slack/soft constraints
-    {
-        for (int i = 0; i < N; i++)
-        {
-            config->dynamics[i]->dims_set(config->dynamics[i],
-                                          dims->dynamics[i], field, &int_array[i]);
-        }
-    }
-
-    if (!strcmp(field, "nu"))
-    {
-        for (int i = 0; i < N; i++)
-        {
-            config->dynamics[i]->dims_set(config->dynamics[i],
-                                           dims->dynamics[i], "nu1", &int_array[i+1]);
-        }
-    }
-    if (!strcmp(field, "nx"))
-    {
-        for (int i = 0; i < N; i++)
-        {
-            config->dynamics[i]->dims_set(config->dynamics[i],
-                                           dims->dynamics[i], "nx1", &int_array[i+1]);
-        }
-    }
-
-    for (int i = 0; i <= N; i++)  // cost
-    {
-        config->cost[i]->dims_set(config->cost[i],
-                                  dims->cost[i], field, &int_array[i]);
-    }
-
-    for (int i = 0; i <= N; i++)  // constraints
-    {
-        config->constraints[i]->dims_set(config->constraints[i], dims->constraints[i],
-                                             field, &int_array[i]);
-    }
-
-    if (strcmp(field, "nz"))  //  qp_solver does not contain nz
-    {
-        for (int i = 0; i <= N; i++)  // qp_solver
-        {
-            config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field,
-                                        &int_array[i]);
-        }
-    }
-#endif
 }
 
 
@@ -3229,6 +3178,31 @@ void ocp_nlp_res_get_inf_norm(ocp_nlp_res *res, double *out)
     norm = (res->inf_norm_res_ineq > norm) ? res->inf_norm_res_ineq : norm;
     norm = (res->inf_norm_res_comp > norm) ? res->inf_norm_res_comp : norm;
     *out = norm;
+    return;
+}
+
+
+
+void copy_ocp_nlp_out(ocp_nlp_dims *dims, ocp_nlp_out *from, ocp_nlp_out *to)
+{
+    // extract dims
+    int N = dims->N;
+    int *nv = dims->nv;
+    int *nx = dims->nx;
+    // int *nu = dims->nu;
+    int *ni = dims->ni;
+    int *nz = dims->nz;
+    for (int i = 0; i <= N; i++)
+    {
+        blasfeo_dveccp(nv[i], from->ux+i, 0, to->ux+i, 0);
+        blasfeo_dveccp(nz[i], from->z+i, 0, to->z+i, 0);
+        blasfeo_dveccp(2*ni[i], from->lam+i, 0, to->lam+i, 0);
+        blasfeo_dveccp(2*ni[i], from->t+i, 0, to->t+i, 0);
+    }
+
+    for (int i = 0; i < N; i++)
+        blasfeo_dveccp(nx[i+1], from->pi+i, 0, to->pi+i, 0);
+
     return;
 }
 
