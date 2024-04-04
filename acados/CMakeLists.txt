@@ -69,15 +69,8 @@ endif()
 # Define acados library
 add_library(acados ${ACADOS_SRC})
 
-target_include_directories(acados
-    PUBLIC
+target_include_directories(acados PUBLIC
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}> # to be able to include "acados/header.h"
-        $<$<BOOL:${ACADOS_WITH_QORE}>:$<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/QPSOLVER_DENSE/include>>
-        $<$<BOOL:${ACADOS_WITH_QORE}>:$<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/QPSOLVER_DENSE/source>>
-        $<$<BOOL:${ACADOS_WITH_QORE}>:$<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/KKTPACK_DENSE/include>>
-        $<$<BOOL:${ACADOS_WITH_QORE}>:$<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/KKTPACK_DENSE/source>>
-        $<$<BOOL:${ACADOS_WITH_QORE}>:$<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/QPCORE/include>>
-        $<$<BOOL:${ACADOS_WITH_QORE}>:$<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore>>
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/hpipm/include>
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}>
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/interfaces>
@@ -101,6 +94,15 @@ if(ACADOS_WITH_QORE)
     target_link_libraries(acados PUBLIC qore)
 
     target_compile_definitions(acados PUBLIC ACADOS_WITH_QORE)
+
+    target_include_directories(acados PUBLIC
+        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/QPSOLVER_DENSE/include>
+        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/QPSOLVER_DENSE/source>
+        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/KKTPACK_DENSE/include>
+        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/KKTPACK_DENSE/source>
+        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/QPCORE/include>
+        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore>
+    )
 endif()
 
 if(ACADOS_WITH_QPOASES)
@@ -174,7 +176,7 @@ install(EXPORT acadosTargets DESTINATION cmake)
 configure_package_config_file(${PROJECT_SOURCE_DIR}/cmake/acadosConfig.cmake.in
                               ${CMAKE_CURRENT_BINARY_DIR}/cmake/acadosConfig.cmake
                               INSTALL_DESTINATION cmake
-                              PATH_VARS ACADOS_WITH_HPMPC 
+                              PATH_VARS ACADOS_WITH_HPMPC
                                         ACADOS_WITH_QORE
                                         ACADOS_WITH_QPOASES
                                         ACADOS_WITH_DAQP
@@ -188,8 +190,6 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/acadosConfig.cmake
 install(
   FILES ${PROJECT_SOURCE_DIR}/cmake/FindEigen3.cmake
         ${PROJECT_SOURCE_DIR}/cmake/FindFortranLibs.cmake
-        ${PROJECT_SOURCE_DIR}/cmake/FindMatlab.cmake
-        ${PROJECT_SOURCE_DIR}/cmake/FindNumPy.cmake
         ${PROJECT_SOURCE_DIR}/cmake/FindOpenBLAS.cmake
   DESTINATION cmake)
 
