@@ -17,5 +17,6 @@
 
 4. Testing and ideally same OR better results as python Implementation
 - [x] Add QP problem, then SQP and DDP with full step should be equivalent (D)
+- [] Add NL_LS problem with linear dynamics, then SQP and DDP with full step using GN Hessian should be equivalent (D)
 - [ ] add test in CI https://github.com/FreyJo/acados/blob/8f5ee7cf4c8d5a688c83f5c705fd5bbbf733f9ec/interfaces/CMakeLists.txt
 - [x] swingup example (OJ)

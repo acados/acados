@@ -31,11 +31,15 @@
 from acados_template import AcadosOcp, AcadosOcpSolver
 from chen_allgoewer_system_model import export_chen_allgoewer_model
 import numpy as np
-import pickle
 from utils import plot_trajectory
 from matplotlib import pyplot as plt
 
 def main():
+
+    # The flag denotes, if the problem should be transformed into a feasibility
+    # problem, or if the unconstrained OCP should be solved.
+    SOLVE_FEASIBILITY_PROBLEM = True
+
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
@@ -61,14 +65,29 @@ def main():
     tau = 100
     # the 'EXTERNAL' cost type can be used to define general cost terms
     # NOTE: This leads to additional (exact) hessian contributions when using GAUSS_NEWTON hessian.
-    ocp.cost.cost_type = 'EXTERNAL'
-    ocp.cost.cost_type_e = 'EXTERNAL'
-    tau_beta = tau * np.fmax(0, model.u-u_max)**2 + tau * np.fmin(0, model.u + u_max)**2
-    ocp.model.cost_expr_ext_cost = 0.5 * model.x.T @ Q_mat @ model.x + 0.5 * model.u.T @ R_mat @ model.u + tau_beta
-    ocp.model.cost_expr_ext_cost_e = 0.5 * model.x.T @ P_mat @ model.x
+    
+    if not SOLVE_FEASIBILITY_PROBLEM:
+        ocp.cost.cost_type = 'EXTERNAL'
+        ocp.cost.cost_type_e = 'EXTERNAL'
+        tau_beta = tau * np.fmax(0, model.u-u_max)**2 + tau * np.fmin(0, model.u + u_max)**2
+        ocp.model.cost_expr_ext_cost = 0.5 * model.x.T @ Q_mat @ model.x + 0.5 * model.u.T @ R_mat @ model.u + tau_beta
+        ocp.model.cost_expr_ext_cost_e = 0.5 * model.x.T @ P_mat @ model.x
 
     # set constraints
     ocp.constraints.x0 = np.array([0.42, 0.45])
+
+    if SOLVE_FEASIBILITY_PROBLEM:
+        # Path constraints on control
+        u_max = 1.5
+        ocp.constraints.lbu = np.array([-u_max])
+        ocp.constraints.ubu = np.array([+u_max])
+        ocp.constraints.idxbu = np.array([0])
+
+        # Terminal constraints
+        ocp.constraints.lbx_e = np.array([0.0, 0.03])
+        ocp.constraints.ubx_e = np.array([0.0, 0.03])
+        ocp.constraints.idxbx_e = np.arange(nx)
+
 
     # set options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
@@ -81,6 +100,9 @@ def main():
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
+
+    if SOLVE_FEASIBILITY_PROBLEM:
+        ocp.translate_to_feasibility_problem()
 
     ocp_solver = AcadosOcpSolver(ocp, json_file = 'chen_allgoewer_acados.json')
 
@@ -99,7 +121,6 @@ def main():
 
     # Solve the problem
     status = ocp_solver.solve()
-    # ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
 
     if status != 0:
         raise Exception(f'acados returned status {status}.')
