@@ -54,5 +54,5 @@ if(NOT FORTRAN_LIBRARY)
 endif()
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(FORTRANLIBS FOUND_VAR FORTRANLIBS_FOUND
+find_package_handle_standard_args(FortranLibs FOUND_VAR FORTRANLIBS_FOUND
                                               REQUIRED_VARS FORTRAN_LIBRARY)
