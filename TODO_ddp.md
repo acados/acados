@@ -12,7 +12,7 @@
 
 3. Feasibility Problem Translation:
 - [ ] Parse rockit problems to acados directly in feasibility form (D)
-- [ ] Parse acados problems to feasibility problem, i.e., move constraints into objective (OJ)
+- [x] Parse acados problems to feasibility problem, i.e., move constraints into objective (OJ)
 - [ ] Weights for constraints in objective per N
 
 4. Testing and ideally same OR better results as python Implementation
