@@ -780,7 +780,7 @@ class AcadosOcp:
                     raise Exception(f'with_value_sens_wrt_params is only implemented if constraints depend not on parameters. Got parameter dependency for {horizon_type} constraint.')
 
         if opts.nlp_solver_type == "DDP":
-            if opts.qp_solver != "PARTIAL_CONDENSING_HPIPM" and opts.qp_solver_cond_N != dims.N:
+            if opts.qp_solver != "PARTIAL_CONDENSING_HPIPM" or opts.qp_solver_cond_N != dims.N:
                 raise Exception('DDP solver only supported for PARTIAL_CONDENSING_HPIPM with qp_solver_cond_N == N.')
             if any([dims.nbu, dims.nbx, dims.ng, dims.nh, dims.nphi]):
                 raise Exception('DDP only supports initial state constraints, got path constraints.')
