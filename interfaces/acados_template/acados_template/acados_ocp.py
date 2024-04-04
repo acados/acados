@@ -1033,7 +1033,7 @@ class AcadosOcp:
         return
 
 
-    def translate_to_feasibility_problem(self):
+    def translate_to_feasibility_problem(self, keep_x0=False):
         """
         Translate an OCP to a feasibility problem by setting the cost to zero and removing the terminal cost.
         This removes all cost terms and formulates all constraints as L2 penalties.
@@ -1079,10 +1079,27 @@ class AcadosOcp:
                 self.formulate_constraint_as_L2_penalty(constr_expr[i], weight=1.0, upper_bound=upper_bound[i], lower_bound=lower_bound[i], constraint_type="terminal")
 
         new_constraints = AcadosOcpConstraints()
-        if constraints.has_x0:
-            new_constraints.x0 = constraints.lbx_0
+        if keep_x0:
+            if constraints.has_x0:
+                new_constraints.x0 = constraints.lbx_0
+            else:
+                raise NotImplementedError("translate_to_feasibility_problem: only implemented for problems with x0 constraints.")
         else:
-            raise NotImplementedError("translate_to_feasibility_problem: only implemented for problems with x0 constraints.")
+            cost.cost_type_0 = "NONLINEAR_LS"
+            model.cost_y_expr_0 = ca.SX.zeros((0, 0))
+            cost.W_0 = np.zeros((0, 0))
+            cost.yref_0 = np.zeros((0,))
+
+            expr_bound_list_0 = [
+                (model.x[constraints.idxbx_0], constraints.lbx_0, constraints.ubx_0),
+                (model.u[constraints.idxbu], constraints.lbu, constraints.ubu),
+                (model.con_h_expr_0, constraints.lh_0, constraints.uh_0),
+            ]
+
+            for constr_expr, lower_bound, upper_bound in expr_bound_list_0:
+                for i in range(casadi_length(constr_expr)):
+                    self.formulate_constraint_as_L2_penalty(constr_expr[i], weight=1.0, upper_bound=upper_bound[i], lower_bound=lower_bound[i], constraint_type="initial")
+
         self.constraints = new_constraints
 
         return
