@@ -326,17 +326,21 @@ class AcadosSimSolver:
         self.gettable_scalars = ['CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
 
 
-    def simulate(self, x=None, u=None, z=None, p=None):
+    def simulate(self, x=None, u=None, z=None, xdot=None, p=None):
         """
-        Simulate the system forward for the given x, u, z, p and return x_next.
+        Simulate the system forward for the given x, u, p and return x_next.
+        The values xdot, z are used as initial guesses for implicit integrators, if provided.
         Wrapper around `solve()` taking care of setting/getting inputs/outputs.
         """
         if x is not None:
             self.set('x', x)
         if u is not None:
             self.set('u', u)
-        if z is not None:
-            self.set('z', z)
+        if self.acados_sim.solver_options.integrator_type == "IRK":
+            if z is not None:
+                self.set('z', z)
+            if xdot is not None:
+                self.set('xdot', xdot)
         if p is not None:
             self.set('p', p)
 
