@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 #
 # Copyright (c) The acados authors.
 #
@@ -28,33 +29,43 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+from copy import deepcopy
+import casadi as ca
+
 from .acados_model import AcadosModel
-from .acados_dims import AcadosOcpDims, AcadosSimDims
-
 from .acados_ocp import AcadosOcp
+from .utils import casadi_length
 
-from .acados_ocp_cost import AcadosOcpCost
-from .acados_ocp_constraints import AcadosOcpConstraints
-from .acados_ocp_options import AcadosOcpOptions
-from .acados_ocp_batch_solver import AcadosOcpBatchSolver
+def create_model_with_cost_state(ocp: AcadosOcp) -> AcadosModel:
 
-from .acados_sim import AcadosSim, AcadosSimOpts
-from .acados_multiphase_ocp import AcadosMultiphaseOcp
+    model = deepcopy(ocp.model)
+    symbol = model.get_casadi_symbol()
+    cost_state = symbol("cost_state")
+    cost_state_dot = symbol("cost_state_dot")
 
-from .acados_ocp_solver import AcadosOcpSolver
-from .acados_sim_solver import AcadosSimSolver
-from .acados_sim_batch_solver import AcadosSimBatchSolver
-from .utils import print_casadi_expression, get_acados_path, get_python_interface_path, \
-    get_tera_exec_path, get_tera, check_casadi_version, acados_dae_model_json_dump, \
-    casadi_length, make_object_json_dumpable, J_to_idx, get_default_simulink_opts, \
-    is_empty, get_simulink_default_opts
+    if ocp.cost.cost_type == "LINEAR_LS":
+        y = ocp.cost.Vx @ model.x + ocp.cost.Vu @ model.u
+        if casadi_length(model.z) > 0:
+            ocp.cost.Vz @ model.z
+        residual = y - ocp.cost.yref
+        cost_dot = 0.5*(residual.T @ ocp.cost.W @ residual)
 
-from .builders import ocp_get_default_cmake_builder, sim_get_default_cmake_builder
+    elif ocp.cost.cost_type == "NONLINEAR_LS":
+        residual = model.cost_y_expr - ocp.cost.yref
+        cost_dot = 0.5*(residual.T @ ocp.cost.W @ residual)
 
-from .plot_utils import latexify_plot
+    elif ocp.cost.cost_type == "EXTERNAL":
+        cost_dot = model.cost_expr_ext_cost
 
-from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty, huber_loss
+    elif ocp.cost.cost_type == "CONVEX_OVER_NONLINEAR":
+        cost_dot = ca.substitute(model.cost_psi_expr, model.cost_r_in_psi_expr, model.cost_y_expr)
 
-from .mpc_utils import create_model_with_cost_state
+    else:
+        raise Exception("create_model_with_cost_state: Unknown cost type.")
 
-from .zoro_description import ZoroDescription
+    model.x = ca.vertcat(model.x, cost_state)
+    model.xdot = ca.vertcat(model.xdot, cost_state_dot)
+    model.f_expl_expr = ca.vertcat(model.f_expl_expr, cost_dot)
+    model.f_impl_expr = ca.vertcat(model.f_impl_expr, cost_state_dot-cost_dot)
+
+    return model, ocp.parameter_values
