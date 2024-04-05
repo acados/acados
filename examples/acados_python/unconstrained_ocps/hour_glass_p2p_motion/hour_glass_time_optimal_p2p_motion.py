@@ -39,7 +39,7 @@ def main():
 
     # The flag denotes, if the problem should be transformed into a feasibility
     # problem, or if the unconstrained OCP should be solved.
-    SOLVE_FEASIBILITY_PROBLEM = False
+    SOLVE_FEASIBILITY_PROBLEM = True
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -123,8 +123,8 @@ def main():
     # set prediction horizon
     ocp.solver_options.tf = Tf
 
-    # if SOLVE_FEASIBILITY_PROBLEM:
-    #     ocp.translate_to_feasibility_problem()
+    if SOLVE_FEASIBILITY_PROBLEM:
+        ocp.translate_to_feasibility_problem()
 
     ocp_solver = AcadosOcpSolver(ocp, json_file = 'hour_glass_acados.json')
 
