@@ -243,6 +243,9 @@ class AcadosSimSolver:
         model_name = acados_sim.model.name
         self.model_name = model_name
 
+
+        self.T = acados_sim.solver_options.T
+
         code_export_dir = os.path.abspath(acados_sim.code_export_directory)
 
         # reuse existing json and casadi functions, when creating integrator from ocp
@@ -460,6 +463,9 @@ class AcadosSimSolver:
             if value_shape != tuple(dims):
                 raise Exception(f'AcadosSimSolver.set(): mismatching dimension' \
                     f' for field "{field_}" with dimension {tuple(dims)} (you have {value_shape}).')
+
+            if field_ == 'T':
+                self.T = value_
 
         # set
         if field_ in ['xdot', 'z']:
