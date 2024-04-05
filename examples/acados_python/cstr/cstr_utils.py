@@ -50,11 +50,6 @@ def plot_cstr(
     x_min=None,
     x_max=None,
 ):
-    """
-    Params:
-
-    """
-
     nx = X_list[0].shape[1]
     nu = U_list[0].shape[1]
 
@@ -65,7 +60,7 @@ def plot_cstr(
     states_lables = ["$c$ [kmol/m$^3$]", "$T$ [K]", "$h$ [m]"]
     controls_lables = ["$T_c$ [K]", "$F$ [m$^3$/min]"]
 
-    fig, axes = plt.subplots(ncols=2, nrows=nx)
+    fig, axes = plt.subplots(ncols=2, nrows=nx, figsize=(10, 7))
 
     for i in range(nx):
         for X, label in zip(X_list, labels_list):
@@ -118,7 +113,7 @@ def plot_cstr(
         axes[i, 1].set_xlim(ts[0], ts[-1])
         axes[i, 1].set_ylim(bottom=0.98 * u_min[i], top=1.02 * u_max[i])
 
-    axes[1, 1].legend(bbox_to_anchor=(0.5, -1.25), loc="lower center")
+    axes[1, 1].legend(bbox_to_anchor=(0.5, -1.7), loc="lower center")
     axes[-1, 0].set_xlabel("$t$ [min]")
     axes[1, 1].set_xlabel("$t$ [min]")
 
@@ -128,7 +123,6 @@ def plot_cstr(
         left=None, bottom=None, right=None, top=None, hspace=0.3, wspace=0.4
     )
     if fig_filename is not None:
-        # TODO: legend covers x label :O
         plt.savefig(
             fig_filename, bbox_inches="tight", transparent=True, pad_inches=0.05
         )
