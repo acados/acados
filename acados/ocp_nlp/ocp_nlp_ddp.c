@@ -461,7 +461,9 @@ static void ocp_nlp_ddp_cast_workspace(ocp_nlp_config *config, ocp_nlp_dims *dim
 }
 
 
-/* Helper functions */
+/******************************************************************************
+Helper functions 
+******************************************************************************/
 
 static void ocp_nlp_ddp_reset_timers(ocp_nlp_ddp_memory *mem)
 {
@@ -476,9 +478,9 @@ static void ocp_nlp_ddp_reset_timers(ocp_nlp_ddp_memory *mem)
     mem->time_sim_ad = 0.0;
 }
 
-
-static void ocp_nlp_ddp_compute_trial_iterate(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
-            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_ddp_memory *ddp_mem, ocp_nlp_workspace *work, double alpha)
+static void ocp_nlp_ddp_compute_trial_iterate(ocp_nlp_config *config, ocp_nlp_dims *dims,
+            ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_ddp_memory *ddp_mem,
+            ocp_nlp_workspace *work, double alpha)
 {
     /* computes trial iterate in tmp_nlp_out */
     int N = dims->N;
@@ -664,7 +666,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // main ddp loop
     int ddp_iter = 0;
 
-    for (; ddp_iter < opts->max_iter; ddp_iter++)
+    for (; ddp_iter < opts->max_iter+1; ddp_iter++)
     {
         // linearize NLP and update QP matrices
         acados_tic(&timer1);
@@ -728,14 +730,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->status = ACADOS_SUCCESS;
             mem->ddp_iter = ddp_iter;
             mem->time_tot = acados_toc(&timer0);
-
-            if (nlp_opts->print_level > 0)
-            {
-                printf("%i\t%e\t%e\t%e\t%e\t%d\t%d\t%e\n", ddp_iter, nlp_res->inf_norm_res_stat,
-                    nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_ineq, nlp_res->inf_norm_res_comp,
-                    qp_status, qp_iter, mem->alpha);
-                printf("\n\n");
-            }
 
             return mem->status;
         }
@@ -868,16 +862,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // TODO: line search?
         copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
 
-        // if (nlp_opts->print_level > 0)
-        // {
-        //     if (ddp_iter%10 == 0)
-        //     {
-        //         printf("# it\tstat\t\teq\t\tineq\t\tcomp\t\tqp_stat\tqp_iter\talpha\n");
-        //     }
-        //     printf("%i\t%e\t%e\t%e\t%e\t%d\t%d\t%e\n", ddp_iter, nlp_res->inf_norm_res_stat,
-        //         nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_ineq, nlp_res->inf_norm_res_comp,
-        //         qp_status, qp_iter, mem->alpha);
-        // }
     }  // end DDP loop
 
     if (nlp_opts->print_level > 0)
