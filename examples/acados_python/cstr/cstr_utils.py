@@ -60,7 +60,7 @@ def plot_cstr(
     states_lables = ["$c$ [kmol/m$^3$]", "$T$ [K]", "$h$ [m]"]
     controls_lables = ["$T_c$ [K]", "$F$ [m$^3$/min]"]
 
-    fig, axes = plt.subplots(ncols=2, nrows=nx)
+    fig, axes = plt.subplots(ncols=2, nrows=nx, figsize=(10, 7))
 
     for i in range(nx):
         for X, label in zip(X_list, labels_list):

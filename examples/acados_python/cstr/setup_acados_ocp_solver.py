@@ -74,6 +74,7 @@ def setup_acados_ocp_solver(
     cstr_params,
     use_rti=False,
     reference_profile=None,
+    cost_integration=False
 ):
 
     ocp = AcadosOcp()
@@ -107,7 +108,8 @@ def setup_acados_ocp_solver(
         ocp.model.cost_y_expr -= reference_profile
         ocp.model.cost_y_expr_e -= reference_profile[:nx]
         ocp.parameter_values = np.concatenate((ocp.parameter_values, np.array([0.0])))
-    ocp.solver_options.cost_discretization = "INTEGRATOR"
+    if cost_integration:
+        ocp.solver_options.cost_discretization = "INTEGRATOR"
 
     ocp.cost.yref = np.zeros((nx + nu,))
     ocp.cost.yref_e = np.zeros((nx,))

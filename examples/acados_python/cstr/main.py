@@ -177,7 +177,7 @@ def main():
         reference_profile = ca.if_else(t < tjump2, reference_profile, ca.vertcat(xs, us))
         print(f"\n\nRunning simulation with {label}\n\n")
 
-        ocp_solver = setup_acados_ocp_solver(ocp_model, mpc_params, cstr_params=cstr_params, reference_profile=reference_profile)
+        ocp_solver = setup_acados_ocp_solver(ocp_model, mpc_params, cstr_params=cstr_params, reference_profile=reference_profile, cost_integration=True)
 
         X, U, timings_solver, _ = simulate(
             ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref, with_reference_profile=True
@@ -245,7 +245,7 @@ def main():
         mpc_params.umin,
         mpc_params.umax,
         labels_all,
-    # , fig_filename='cstr_acados_RTI.pdf',
+        fig_filename='cstr_acados_RTI.pdf',
     )
 
 
