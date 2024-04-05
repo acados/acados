@@ -63,7 +63,7 @@ def main():
     P_mat = np.array([[10.0, 0], [0, 10.0]])
 
     x0 = 0.0
-    y0 = 0.0 
+    y0 = 0.0
     theta0 = np.pi/2
 
     xf = 0.0
@@ -76,7 +76,6 @@ def main():
 
     # the 'EXTERNAL' cost type can be used to define general cost terms
     # NOTE: This leads to additional (exact) hessian contributions when using GAUSS_NEWTON hessian.
-    
     if not SOLVE_FEASIBILITY_PROBLEM:
         ocp.cost.cost_type_e = 'EXTERNAL'
         ocp.model.cost_expr_ext_cost_e = model.x[0]
@@ -118,7 +117,7 @@ def main():
     ocp.solver_options.integrator_type = 'ERK'
     ocp.solver_options.sim_method_num_steps = M
     ocp.solver_options.print_level = 1
-    ocp.solver_options.nlp_solver_type = 'SQP'
+    ocp.solver_options.nlp_solver_type = 'DDP'
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
