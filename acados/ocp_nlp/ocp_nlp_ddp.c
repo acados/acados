@@ -569,11 +569,53 @@ static void ocp_nlp_ddp_compute_trial_iterate(ocp_nlp_config *config, ocp_nlp_di
     }
 }
 
+/************************************************
+ * output functions
+ ************************************************/
+static void print_iteration_header(){
+    printf("%6s | %11s | %10s | %10s | %10s | %10s | %10s | %10s | %10s\n",
+    "iter.",
+    "objective",
+    "infeas.",
+    "statio.",
+    "alpha",
+    "||d||_inf",
+    "reg.",
+    "qp_status",
+    "qp_iter");
+}
+
+static void print_iteration(double obj,
+                     int iter_count,
+                     double infeas,
+                     double stationarity,
+                     double alpha,
+                     double step_norm,
+                     double reg_param,
+                     int qp_status,
+                     int qp_iter)
+{
+    if (iter_count % 10 == 0){
+        print_iteration_header();
+    }
+    printf("%6i | %11.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10i | %10i\n",
+    iter_count,
+    obj,
+    infeas,
+    stationarity,
+    alpha,
+    step_norm,
+    reg_param,
+    qp_status,
+    qp_iter);
+}
+
 
 /************************************************
  * functions
  ************************************************/
 
+// MAIN OPTIMIZATION ROUTINE
 int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_)
 {
@@ -641,12 +683,14 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         // update QP rhs for DDP (step prim var, abs dual var)
-        // NOTE: The ddp version does not exist!
+        // NOTE: The ddp version of approximate does not exist!
         ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
         // compute nlp residuals
         ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);
         ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
+        // calculate objective function here??
+        ocp_nlp_cost_compute(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
         if (nlp_opts->print_level > ddp_iter + 1)
         {
@@ -662,6 +706,14 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->stat[mem->stat_n*ddp_iter+2] = nlp_res->inf_norm_res_ineq;
             mem->stat[mem->stat_n*ddp_iter+3] = nlp_res->inf_norm_res_comp;
         }
+
+        // Output
+        if (nlp_opts->print_level > 0)
+        {
+            print_iteration(nlp_mem->cost_value, ddp_iter, nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_stat, mem->alpha, 0.0, 0.0, qp_status, qp_iter);
+        }
+
+
 
         // exit conditions on residuals
         if ((nlp_res->inf_norm_res_stat < opts->tol_stat) &
@@ -816,16 +868,16 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // TODO: line search?
         copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
 
-        if (nlp_opts->print_level > 0)
-        {
-            if (ddp_iter%10 == 0)
-            {
-                printf("# it\tstat\t\teq\t\tineq\t\tcomp\t\tqp_stat\tqp_iter\talpha\n");
-            }
-            printf("%i\t%e\t%e\t%e\t%e\t%d\t%d\t%e\n", ddp_iter, nlp_res->inf_norm_res_stat,
-                nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_ineq, nlp_res->inf_norm_res_comp,
-                qp_status, qp_iter, mem->alpha);
-        }
+        // if (nlp_opts->print_level > 0)
+        // {
+        //     if (ddp_iter%10 == 0)
+        //     {
+        //         printf("# it\tstat\t\teq\t\tineq\t\tcomp\t\tqp_stat\tqp_iter\talpha\n");
+        //     }
+        //     printf("%i\t%e\t%e\t%e\t%e\t%d\t%d\t%e\n", ddp_iter, nlp_res->inf_norm_res_stat,
+        //         nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_ineq, nlp_res->inf_norm_res_comp,
+        //         qp_status, qp_iter, mem->alpha);
+        // }
     }  // end DDP loop
 
     if (nlp_opts->print_level > 0)
