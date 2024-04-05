@@ -67,6 +67,10 @@ typedef struct
     int rti_phase;       // only phase 0 at the moment
     int initialize_t_slacks;  // 0-false or 1-true
 
+    // Regularization
+    double nls_regularization_lam;
+    double mu_min;
+
 } ocp_nlp_ddp_opts;
 
 //
@@ -114,9 +118,13 @@ typedef struct
     int status;
     int ddp_iter;
 
-    // ddp spefic memory
+    // ddp specific memory
     double *tmp_nu_times_nx;
     struct blasfeo_dmat K_mat;
+
+    // regularization for Levenberg-Marquardt
+    double mu;
+    double mu_bar;
 
 } ocp_nlp_ddp_memory;
 

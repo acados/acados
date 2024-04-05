@@ -126,6 +126,10 @@ void ocp_nlp_ddp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->rti_phase = 0;
     opts->initialize_t_slacks = 0;
 
+    opts->mu_min = 1e-16;
+    opts->nls_regularization_lam = 5.0;
+
+
     // overwrite default submodules opts
 
     // qp tolerance
@@ -617,6 +621,18 @@ static void print_iteration(double obj,
  * functions
  ************************************************/
 
+static void update_mu(double step_size, ocp_nlp_ddp_opts *opts, ocp_nlp_ddp_memory *ddp_mem)
+{
+        if (step_size == 1.0){
+            double mu_tmp = ddp_mem->mu;
+            ddp_mem->mu = fmax(opts->mu_min, ddp_mem->mu_bar/(opts->nls_regularization_lam));
+            ddp_mem->mu_bar = mu_tmp;
+            printf("New mu is: %f\n", ddp_mem->mu);
+        } else {
+            ddp_mem->mu = fmin(opts->nls_regularization_lam * ddp_mem->mu, 1.0);
+        }
+}
+
 // MAIN OPTIMIZATION ROUTINE
 int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_)
@@ -650,6 +666,8 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     int qp_status = 0;
     int qp_iter = 0;
     mem->alpha = 0.0;
+    mem->mu = 1.0;
+    mem->mu_bar = 1.0;
 
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
@@ -684,6 +702,14 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->time_sim_ad += tmp_time;
         }
 
+        // calculate objective function first because hessian evaluation uses the
+        // Levenberg-Marquardt term
+        ocp_nlp_cost_compute(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+
+        // Prepare the regularization here....
+        double reg_param = 2*nlp_mem->cost_value*mem->mu;
+        nlp_opts->levenberg_marquardt = reg_param;
+
         // update QP rhs for DDP (step prim var, abs dual var)
         // NOTE: The ddp version of approximate does not exist!
         ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
@@ -691,8 +717,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // compute nlp residuals
         ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);
         ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
-        // calculate objective function here??
-        ocp_nlp_cost_compute(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
         if (nlp_opts->print_level > ddp_iter + 1)
         {
@@ -712,11 +736,11 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // Output
         if (nlp_opts->print_level > 0)
         {
-            print_iteration(nlp_mem->cost_value, ddp_iter, nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_stat, mem->alpha, 0.0, 0.0, qp_status, qp_iter);
+            print_iteration(nlp_mem->cost_value, ddp_iter, nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_stat, mem->alpha, 0.0, reg_param, qp_status, qp_iter);
         }
 
 
-
+        // Termination
         // exit conditions on residuals
         if ((nlp_res->inf_norm_res_stat < opts->tol_stat) &
             (nlp_res->inf_norm_res_eq < opts->tol_eq) &
@@ -762,7 +786,9 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                                          "warm_start", &tmp_int);
         }
 
+        // ####################################################################
         // solve qp
+        // ####################################################################
         acados_tic(&timer1);
         qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver, qp_in, qp_out,
                                         opts->nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
@@ -845,6 +871,9 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
             return mem->status;
         }
+        // ####################################################################
+        // end solve qp ---> move to function
+        // ####################################################################
 
         /* globalization */
         // NOTE on timings: currently all within globalization is accounted for within time_glob.
@@ -858,9 +887,8 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         // update variables
         ocp_nlp_ddp_compute_trial_iterate(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, mem->alpha);
-
-        // TODO: line search?
         copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
+        update_mu(mem->alpha, opts, mem);
 
     }  // end DDP loop
 
@@ -948,8 +976,6 @@ int ocp_nlp_ddp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_
 
     return ocp_nlp_precompute_common(config, dims, nlp_in, nlp_out, opts->nlp_opts, nlp_mem, nlp_work);
 }
-
-
 
 
 void ocp_nlp_ddp_eval_param_sens(void *config_, void *dims_, void *opts_, void *mem_, void *work_,
