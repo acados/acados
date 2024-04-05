@@ -251,6 +251,12 @@ def render_template(in_file, out_file, output_dir, json_path, template_glob=None
     os.chdir(cwd)
 
 
+def casadi_expr_to_string(expr) -> str:
+    string = ''
+    for ii in range(casadi_length(expr)):
+        string += f"{expr[ii,:]}\n"
+    return string
+
 ## Conversion functions
 def make_object_json_dumpable(input):
     if isinstance(input, (np.ndarray)):
@@ -258,6 +264,8 @@ def make_object_json_dumpable(input):
     elif isinstance(input, (SX)):
         try:
             return input.serialize()
+            # for more readable json output:
+            # return casadi_expr_to_string(input)
         except: # for older CasADi versions
             return ''
     elif isinstance(input, (MX)):
