@@ -33,14 +33,14 @@ import numpy as np
 
 from acados_template import AcadosSimSolver, AcadosOcpSolver
 
-from zoro_ocp_solver import MpcCSTRParameters, DistCSTRParameters, setup_acados_ocp_solver
+from zoro_ocp_solver import MpcCstrParameters, DistCstrParameters, setup_acados_ocp_solver
 
 # same as in normal cstr model
 local_path = os.path.dirname(os.path.abspath(__file__))
 cstr_source_dir = os.path.join(local_path, '..', '..', 'cstr')
 sys.path.append(cstr_source_dir)
 
-from cstr_model import CSTRParameters, setup_cstr_model
+from cstr_model import CstrParameters, setup_cstr_model
 from setup_acados_integrator import setup_acados_integrator
 from cstr_utils import plot_cstr
 
@@ -174,9 +174,9 @@ def main():
     X_ref = np.tile(xs, Nsim + 1).T
     U_ref = np.tile(us, Nsim).T
 
-    cstr_params = CSTRParameters()
-    dist_params = DistCSTRParameters()
-    mpc_params = MpcCSTRParameters(xs=cstr_params.xs, us=cstr_params.us)
+    cstr_params = CstrParameters()
+    dist_params = DistCstrParameters()
+    mpc_params = MpcCstrParameters(xs=cstr_params.xs, us=cstr_params.us)
     model = setup_cstr_model(cstr_params)
     plant_model = setup_cstr_model(cstr_params)
 

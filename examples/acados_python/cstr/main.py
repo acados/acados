@@ -31,9 +31,9 @@
 
 # authors: Katrin Baumgaertner, Jonathan Frey
 
-from cstr_model import CSTRParameters, setup_cstr_model, setup_linearized_model
+from cstr_model import CstrParameters, setup_cstr_model, setup_linearized_model
 from setup_acados_ocp_solver import (
-    MpcCSTRParameters,
+    MpcCstrParameters,
     setup_acados_ocp_solver,
     AcadosOcpSolver,
 )
@@ -103,8 +103,8 @@ def main():
     Tsim = 25
     dt_plant = 0.25  # [min]
 
-    cstr_params = CSTRParameters()
-    mpc_params = MpcCSTRParameters(xs=cstr_params.xs, us=cstr_params.us)
+    cstr_params = CstrParameters()
+    mpc_params = MpcCstrParameters(xs=cstr_params.xs, us=cstr_params.us)
     model = setup_cstr_model(cstr_params)
     linearized_model = setup_linearized_model(model, cstr_params, mpc_params)
     plant_model = setup_cstr_model(cstr_params)

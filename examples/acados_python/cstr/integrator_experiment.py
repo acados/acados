@@ -31,8 +31,8 @@
 
 # authors: Katrin Baumgaertner, Jonathan Frey
 
-from cstr_model import CSTRParameters, setup_cstr_model
-from setup_acados_ocp_solver import MpcCSTRParameters
+from cstr_model import CstrParameters, setup_cstr_model
+from setup_acados_ocp_solver import MpcCstrParameters
 from setup_acados_integrator import setup_acados_integrator
 from setup_acados_ocp_solver import setup_acados_ocp_solver
 import numpy as np
@@ -50,8 +50,8 @@ def main():
     Tsim = 25
     dt_plant = 0.25  # [min]
 
-    cstr_params = CSTRParameters()
-    mpc_params = MpcCSTRParameters(xs=cstr_params.xs, us=cstr_params.us)
+    cstr_params = CstrParameters()
+    mpc_params = MpcCstrParameters(xs=cstr_params.xs, us=cstr_params.us)
     model = setup_cstr_model(cstr_params)
 
     Nsim = int(Tsim / dt_plant)
@@ -79,7 +79,7 @@ def main():
 
     # compute exact solution
     print("\n\nRunning simulation with reference input\n\n")
-    mpc_params = MpcCSTRParameters(xs=cstr_params.xs, us=cstr_params.us)
+    mpc_params = MpcCstrParameters(xs=cstr_params.xs, us=cstr_params.us)
     ocp_solver = setup_acados_ocp_solver(model, mpc_params, cstr_params=cstr_params)
 
     integrator = setup_acados_integrator(

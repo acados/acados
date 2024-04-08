@@ -39,7 +39,7 @@ from casadi import vertcat
 
 
 @dataclass
-class MpcCSTRParameters:
+class MpcCstrParameters:
     umin: np.ndarray  # lower bound on u
     umax: np.ndarray  # upper bound on u
     Q: np.ndarray
@@ -70,7 +70,7 @@ class MpcCSTRParameters:
 
 
 def setup_acados_ocp_solver(
-    model, mpc_params: MpcCSTRParameters,
+    model, mpc_params: MpcCstrParameters,
     cstr_params,
     use_rti=False,
     reference_profile=None,
