@@ -34,39 +34,25 @@
 from acados_template import AcadosOcp, AcadosOcpSolver
 from scipy.linalg import block_diag
 import numpy as np
-from dataclasses import dataclass
 from casadi import vertcat
 
 
-@dataclass
 class MpcCstrParameters:
-    umin: np.ndarray  # lower bound on u
-    umax: np.ndarray  # upper bound on u
-    Q: np.ndarray
-    R: np.ndarray
-    Tf: float = 0.25 * 15  # horizon length
-    N: int = 15
-    dt: float = 0.25
-    linear_mpc: bool = False
-
-    # NOTE: computed with setup_linearized_model()
-    P: np.ndarray = np.array(
-        [
+    def __init__(self, xs: np.ndarray, us: np.ndarray, dt: float = 0.25, linear_mpc: bool = False, N: int = 16, Tf: float = 4.0):
+        self.umin = np.array([0.95, 0.85]) * us
+        self.umax = np.array([1.05, 1.15]) * us
+        self.Q = np.diag(1.0 / xs**2)
+        self.R = np.diag(1.0 / us**2)
+        self.Tf = Tf
+        self.N = N
+        self.dt = dt
+        self.linear_mpc = linear_mpc
+        # NOTE: computed with compute_lqr_gain() from cstr_utils.py
+        self.P = np.array([
             [5.92981953e-01, -8.40033347e-04, -1.54536980e-02],
             [-8.40033347e-04, 7.75225208e-06, 2.30677411e-05],
             [-1.54536980e-02, 2.30677411e-05, 2.59450075e00],
-        ]
-    )
-
-    def __init__(self, xs, us, dt=0.25, linear_mpc=False, N=16, Tf=4):
-        self.Q = np.diag(1.0 / xs**2)
-        self.R = np.diag(1.0 / us**2)
-        # from slide
-        # self.umin = np.array([0.975, 0.75]) * us
-        # self.umax = np.array([1.025, 1.25]) * us
-        # from figure code
-        self.umin = np.array([0.95, 0.85]) * us
-        self.umax = np.array([1.05, 1.15]) * us
+        ])
 
 
 def setup_acados_ocp_solver(
