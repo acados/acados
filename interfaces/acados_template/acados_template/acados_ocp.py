@@ -1176,3 +1176,13 @@ class AcadosOcp:
             self.constraints.ug = ca.vertcat(self.constraints.ug, ug)
 
         return
+
+
+    def augment_with_t0_param(self) -> None:
+        """Add a parameter t0 to the model and set it to 0.0."""
+        if self.model.t0 is not None:
+            raise Exception("Parameter t0 is already present in the model.")
+        self.model.t0 = ca.SX.sym("t0")
+        self.model.p = ca.vertcat(self.model.p, self.model.t0)
+        self.parameter_values = np.append(self.parameter_values, [0.0])
+        return

@@ -222,6 +222,8 @@ class AcadosModel():
         """
         Number of original control inputs (before polynomial control augmentation); Default: :code:`None`
         """
+        self.t0 = None
+        """CasADi variable representing the start time of an interval; Default: :code:`None`"""
         self.__x_labels = None
         self.__u_labels = None
         self.__t_label = "t"
