@@ -222,6 +222,44 @@ class AcadosModel():
         """
         Number of original control inputs (before polynomial control augmentation); Default: :code:`None`
         """
+        self.__xlabels = None
+        self.__ulabels = None
+        self.__time_label = "t"
+
+    @property
+    def xlabels(self):
+        """Contains list of labels for the states. Default: :code:`None`"""
+        if self.__xlabels is None:
+            return [f"x{i}" for i in range(self.x.size()[0])]
+        else:
+            return self.__xlabels
+
+    @xlabels.setter
+    def xlabels(self, xlabels):
+        self.__xlabels = xlabels
+
+
+    @property
+    def ulabels(self):
+        """Contains list of labels for the controls. Default: :code:`None`"""
+        if self.__ulabels is None:
+            return [f"x{i}" for i in range(self.x.size()[0])]
+        else:
+            return self.__ulabels
+
+    @ulabels.setter
+    def ulabels(self, ulabels):
+        self.__ulabels = ulabels
+
+    @property
+    def time_label(self):
+        """Label for the time variable. Default: :code:'t'"""
+        return self.__time_label
+
+    @time_label.setter
+    def time_label(self, time_label):
+        self.__time_label = time_label
+
 
     def get_casadi_symbol(self):
         if isinstance(self.x, MX):
