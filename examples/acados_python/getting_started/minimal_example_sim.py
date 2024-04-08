@@ -87,7 +87,7 @@ def main():
     print("S_forw, sensitivities of simulation result wrt x,u:\n", S_forw)
 
     # plot results
-    plot_pendulum(np.linspace(0, N*Tf, N+1), 10, np.repeat(u0, N), simX, latexify=False)
+    plot_pendulum(np.linspace(0, N*Tf, N+1), 10, np.repeat(u0, N), simX, latexify=False, time_label=model.time_label, xlabels=model.xlabels, ulabels=model.ulabels)
 
 
 if __name__ == "__main__":
