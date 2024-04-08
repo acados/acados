@@ -130,7 +130,6 @@ def setup_acados_ocp_solver(
 
     ocp.solver_options.levenberg_marquardt = 1e-5
     # ocp.solver_options.tol = 1e-3
-    ocp.solver_options.line_search_use_sufficient_descent
 
     # create
     ocp_solver = AcadosOcpSolver(ocp, json_file="acados_ocp.json")
