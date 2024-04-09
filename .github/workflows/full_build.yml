@@ -87,6 +87,16 @@ jobs:
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/lib" >> $GITHUB_ENV
 #         echo "OCTAVE_PATH=$OCTAVE_PATH:$(pwd)/interfaces/acados_matlab_octave:$(pwd)/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
 #         echo "MATLABPATH=$MATLABPATH:$(pwd)/interfaces/acados_matlab_octave:$(pwd)/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
+  
+  - uses: actions/upload-artifact@v4
+    with:
+      name: core shared objects
+      path: ${{runner.workspace}}/lib/
+      overwrite: true
+      compression-level: 6
+
+# Upload build shared libraries
+
 
 # ''''    # test interfaces
 #     - name: Install Casadi MATLAB
