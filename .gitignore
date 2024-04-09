@@ -100,7 +100,6 @@ c_generated_code
 *.swp
 build/
 include/
-lib/
 local/
 *.local
 *.dat
