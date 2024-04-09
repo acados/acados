@@ -89,15 +89,17 @@ jobs:
 #       echo "artifactPath=${{runner.workspace}}/lib/" >> $GITHUB_ENV
 #         echo "OCTAVE_PATH=$OCTAVE_PATH:$(pwd)/interfaces/acados_matlab_octave:$(pwd)/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
 #         echo "MATLABPATH=$MATLABPATH:$(pwd)/interfaces/acados_matlab_octave:$(pwd)/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
-  
+    - name: store shared libs
+      uses: actions/upload-artifact@v4
+      with:
+        if-no-files-found: error
+        path: "${{runner.workspace}}/lib"
+
   store_shared_obj:
     needs: core_build
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/upload-artifact@v4
-      with:
-        if-no-files-found: error
-        path: "${{runner.workspace}}/lib"
+
 
 # Upload  shared libraries
 
