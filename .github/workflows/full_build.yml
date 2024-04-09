@@ -93,12 +93,9 @@ jobs:
     needs: core_build
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/upload-artifact@main
+    - uses: actions/upload-artifact@4
       with:
-        name: core shared objects
-        path: home/runner/work/acados/lib/
-        overwrite: false
-        compression-level: 0
+        path: /home/runner/work/acados/lib/
 
 # Upload  shared libraries
 
