@@ -97,8 +97,12 @@ jobs:
   install_python_interface:
     needs: core_build
     runs-on: ubuntu-20.04
-    
+
     steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+
     - name: Install Python interface
       #working-directory: ${{runner.workspace}}/acados
       shell: bash
@@ -109,6 +113,10 @@ jobs:
     runs-on: ubuntu-20.04
     
     steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+        
     - name: Run CMake tests (ctest)
       working-directory: ${{runner.workspace}}/build
       shell: bash
