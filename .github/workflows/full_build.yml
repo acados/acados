@@ -104,6 +104,19 @@ jobs:
       shell: bash
       run: ${{runner.workspace}}/.github/linux/install_python.sh
 
+  install_python_interface:
+    needs: core_build
+    runs-on: ubuntu-20.04
+    
+    steps:
+    - name: Run CMake tests (ctest)
+      working-directory: ${{runner.workspace}}/build
+      shell: bash
+      # Execute tests defined by the CMake configuration.
+      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+      run: |
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+        ./../acados/.github/linux/run_tests.sh
 
 # Upload  shared libraries
 
@@ -134,17 +147,6 @@ jobs:
 #         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./build" >> $GITHUB_ENV
 #         echo "ENV_RUN=true" >> $GITHUB_ENV
 #         echo "LD_RUN_PATH=$LD_RUN_PATH:$(pwd)/c_generated_code" >> $GITHUB_ENV
-
-
-
-#     - name: Run CMake tests (ctest)
-#       working-directory: ${{runner.workspace}}/build
-#       shell: bash
-#       # Execute tests defined by the CMake configuration.
-#       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-#       run: |
-#         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-#         ./../acados/.github/linux/run_tests.sh
 
 #     - name: Install MATLAB
 #       uses: matlab-actions/setup-matlab@v1
