@@ -62,24 +62,27 @@ def main():
         ocp.cost.cost_type = 'EXTERNAL'
         ocp.cost.cost_type_e = 'EXTERNAL'
         ocp.model.cost_expr_ext_cost = model.x.T @ model.x + model.u.T @ model.u
-        ocp.model.cost_expr_ext_cost_e = model.x.T @ model.x
+        ocp.model.cost_expr_ext_cost_e = model.x[0]* model.x[0]
 
     # set constraints
     ocp.constraints.x0 = np.array([0.0, 1.0])
 
-    if SOLVE_FEASIBILITY_PROBLEM:
-        # Path constraints on control
-        u_max = 1.0
-        ocp.constraints.lbu = np.array([-u_max])
-        ocp.constraints.ubu = np.array([+u_max])
-        ocp.constraints.idxbu = np.array([0])
+    # if SOLVE_FEASIBILITY_PROBLEM:
+    #     # Path constraints on control
+    #     u_max = 1.0
+    #     # ocp.constraints.lbu = np.array([-u_max])
+    #     # ocp.constraints.ubu = np.array([+u_max])
+    #     # ocp.constraints.idxbu = np.array([0])
 
-        # Path constraint on x1
-        x_min = -0.25
-        ocp.constraints.lbx = np.array([x_min])
-        ocp.constraints.ubx = np.array([100.0])
-        # ocp.constraints.ubx = np.array([1e8])
-        ocp.constraints.idxbx = np.array([0])
+    #     # Path constraint on x1
+    #     x_min = -0.25
+    #     # ocp.constraints.lbx = np.array([x_min])
+    #     # ocp.constraints.ubx = np.array([1e12])
+    #     # ocp.constraints.idxbx = np.array([0])
+
+    #     # ocp.constraints.lbx_e = np.array([x_min])
+    #     # ocp.constraints.ubx_e  = np.array([1e12])
+    #     # ocp.constraints.idxbx_e = np.array([0])
 
     # set options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
@@ -89,7 +92,7 @@ def main():
     ocp.solver_options.sim_method_num_steps = 1
     ocp.solver_options.print_level = 1
     ocp.solver_options.nlp_solver_type = 'DDP' # SQP_RTI, SQP
-    ocp.solver_options.nlp_solver_max_iter = 1
+    ocp.solver_options.nlp_solver_max_iter = 100
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
@@ -97,17 +100,31 @@ def main():
     if SOLVE_FEASIBILITY_PROBLEM:
         ocp.translate_to_feasibility_problem()
 
-    ocp_solver = AcadosOcpSolver(ocp, json_file = 'chen_allgoewer_acados.json')
 
+    ocp_solver = AcadosOcpSolver(ocp, json_file = 'rockit_hello_world.json')
+
+    # Acados multiplies all stages with the time step
+    for i in range(N):
+        ocp_solver.cost_set(i, "scaling", 1.0)
     sol_X = np.zeros((N+1, nx))
     sol_U = np.zeros((N, nu))
 
     # Load and set the initial guess
-    with open('chen_allgoewer_initial_guess.npy', 'rb') as f:
+    # X_init = np.zeros((nx, N+1))
+    # x1s = (1/N)*np.ones((1,N+1))
+    # X_init[0,:] = x1s
+
+    # U_init = np.zeros((nu, N))
+    # us = 1.0/N*np.ones((1, N))
+    # U_init[0,:] = us
+
+    with open('rockit_hello_world_initial_guess.npy', 'rb') as f:
         X_init = np.load(f)
         U_init = np.load(f)
 
     for i in range(N):
+        print("current i is: ",i )
+        print(X_init[:,i])
         ocp_solver.set(i, "x", X_init[:,i])
         ocp_solver.set(i, "u", U_init[:,i])
     ocp_solver.set(N, "x", X_init[:,N])
