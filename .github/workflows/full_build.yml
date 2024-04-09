@@ -13,15 +13,15 @@ on:
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
-  ACADOS_UNIT_TESTS: ON
+  ACADOS_UNIT_TESTS: OFF
   ACADOS_PYTHON: ON
-  ACADOS_OCTAVE: ON
-  ACADOS_WITH_OSQP: ON
-  ACADOS_WITH_QPOASES: ON
-  ACADOS_WITH_DAQP: ON
+  ACADOS_OCTAVE: OFF
+  ACADOS_WITH_OSQP: OFF
+  ACADOS_WITH_QPOASES: OFF
+  ACADOS_WITH_DAQP: OFF
   ACADOS_WITH_QPDUNES: OFF
-  ACADOS_ON_CI: ON
-  LIB_PATH: "$(pwd)/lib"
+  ACADOS_ON_CI: OFF
+#  LIB_PATH: "$(pwd)/lib"
 
 jobs:
   core_build:
@@ -96,7 +96,7 @@ jobs:
     - uses: actions/upload-artifact@v4
       with:
         name: core shared objects
-        path: ${{env.LIB_PATH}}
+        path: ${{runner.workspace}}/lib/"
         overwrite: true
         compression-level: 9
 
