@@ -92,7 +92,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
-        path: "acados/lib"
+        path: ./acados/lib
 
 #  store_shared_obj:
 #    needs: core_build
