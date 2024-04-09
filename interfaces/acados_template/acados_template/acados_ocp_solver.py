@@ -1736,8 +1736,9 @@ class AcadosOcpSolver:
             raise Exception(f'param_values_ and idx_values_ must be of the same size.' +
                  f' Got sizes idx {param_values_.shape[0]}, param_values {len(idx_values_)}.')
 
-        if any(idx_values_ >= self.acados_ocp.dims.np):
-            raise Exception(f'idx_values_ contains value >= np = {self.acados_ocp.dims.np}')
+        p_dimension = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, "p".encode('utf-8'))
+        if any(idx_values_ >= p_dimension):
+            raise Exception(f'idx_values_ contains value >= np = {p_dimension} for stage {stage_}.')
 
         stage = c_int(stage_)
         n_update = c_int(len(param_values_))
