@@ -95,7 +95,8 @@ jobs:
     steps:
     - uses: actions/upload-artifact@v4
       with:
-        path: /home/runner/work/acados/lib/
+        if-no-files-found: error
+        path: {{ github.workspace }}/lib/
 
 # Upload  shared libraries
 
