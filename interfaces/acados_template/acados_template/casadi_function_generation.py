@@ -574,10 +574,14 @@ def generate_c_code_nls_cost(ocp: AcadosOcp, stage_type ):
     dy_dz = ca.jacobian(y_expr, z)
     ny = casadi_length(y_expr)
 
+    # Check if dimension is 0, otherwise Casadi will crash
     y = symbol('y', ny, 1)
-
-    y_adj = ca.jtimes(y_expr, ca.vertcat(u, x), y, True)
-    y_hess = ca.jacobian(y_adj, ca.vertcat(u, x))
+    if ny == 0:
+        y_adj = 0
+        y_hess = 0
+    else:
+        y_adj = ca.jtimes(y_expr, ca.vertcat(u, x), y, True)
+        y_hess = ca.jacobian(y_adj, ca.vertcat(u, x))
 
     ## generate C code
     suffix_name = '_fun'
