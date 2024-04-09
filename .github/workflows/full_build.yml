@@ -86,7 +86,7 @@ jobs:
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/lib" >> $GITHUB_ENV
 #        echo "OCTAVE_PATH=$OCTAVE_PATH:$(pwd)/interfaces/acados_matlab_octave:$(pwd)/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
 #        echo "MATLABPATH=$MATLABPATH:$(pwd)/interfaces/acados_matlab_octave:$(pwd)/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
-    - name: store shared libs
+    - name: Store shared libs
       uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
@@ -97,11 +97,11 @@ jobs:
     install_python_interface:
     needs: core_build
     runs-on: ubuntu-20.04
-
+    steps:
     - name: Install Python interface
-        working-directory: ${{runner.workspace}}/acados
-        shell: bash
-        run: ./.github/linux/install_python.sh
+      working-directory: ${{runner.workspace}}/acados
+      shell: bash
+      run: ./.github/linux/install_python.sh
 
 
 
