@@ -92,12 +92,10 @@ jobs:
     needs: core_build
     runs-on: ubuntu-20.04
     steps:
-    - run:|
-      echo "artifactPath=${{runner.workspace}}/lib/" >> $GITHUB_ENV
     - uses: actions/upload-artifact@v4
       with:
         name: core shared objects
-        path: ${{env.artifactPath}}
+        path: ${{env.LD_LIBRARY_PATH}}
         overwrite: true
         compression-level: 6
 
