@@ -95,10 +95,10 @@ jobs:
         if-no-files-found: error
         path: "${{runner.workspace}}/lib"
 
-  store_shared_obj:
-    needs: core_build
-    runs-on: ubuntu-20.04
-    steps:
+#  store_shared_obj:
+#    needs: core_build
+#    runs-on: ubuntu-20.04
+#    steps:
 
 
 # Upload  shared libraries
