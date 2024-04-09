@@ -92,7 +92,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
-        path: ./acados/lib/libacados.so
+        path: ${{runner.workspace}}/acados/lib/libacados.so
 
 #  store_shared_obj:
 #    needs: core_build
