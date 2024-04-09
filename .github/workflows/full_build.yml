@@ -93,7 +93,7 @@ jobs:
     needs: core_build
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v3
       with:
         name: core shared objects
         path: ${{runner.workspace}}/bin/
