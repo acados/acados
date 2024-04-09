@@ -21,7 +21,6 @@ env:
   ACADOS_WITH_DAQP: OFF
   ACADOS_WITH_QPDUNES: OFF
   ACADOS_ON_CI: ON
-#  LIB_PATH: "$(pwd)/lib"
 
 jobs:
   core_build:
@@ -93,7 +92,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
-        path: "${{runner.workspace}}/lib"
+        path: "acados/lib"
 
 #  store_shared_obj:
 #    needs: core_build
