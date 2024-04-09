@@ -20,7 +20,7 @@ env:
   ACADOS_WITH_QPOASES: OFF
   ACADOS_WITH_DAQP: OFF
   ACADOS_WITH_QPDUNES: OFF
-  ACADOS_ON_CI: OFF
+  ACADOS_ON_CI: ON
 #  LIB_PATH: "$(pwd)/lib"
 
 jobs:
@@ -96,9 +96,9 @@ jobs:
     - uses: actions/upload-artifact@v4
       with:
         name: core shared objects
-        path: ${{runner.workspace}}/lib/"
+        path: ${{runner.workspace}}/lib/
         overwrite: true
-        compression-level: 9
+        compression-level: 0
 
 # Upload  shared libraries
 
