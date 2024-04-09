@@ -14,7 +14,7 @@ env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
   ACADOS_UNIT_TESTS: OFF
-  ACADOS_PYTHON: OFF
+  ACADOS_PYTHON: ON
   ACADOS_OCTAVE: OFF
   ACADOS_WITH_OSQP: OFF
   ACADOS_WITH_QPOASES: OFF
@@ -84,20 +84,25 @@ jobs:
         echo "ACADOS_SOURCE_DIR=$(pwd)" >> $GITHUB_ENV
         echo "ACADOS_INSTALL_DIR=$(pwd)" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/lib" >> $GITHUB_ENV
-#        echo "${{runner.workspace}}/lib" >> $GITHUB_ENV
-#       echo "artifactPath=${{runner.workspace}}/lib/" >> $GITHUB_ENV
-#         echo "OCTAVE_PATH=$OCTAVE_PATH:$(pwd)/interfaces/acados_matlab_octave:$(pwd)/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
-#         echo "MATLABPATH=$MATLABPATH:$(pwd)/interfaces/acados_matlab_octave:$(pwd)/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
+#        echo "OCTAVE_PATH=$OCTAVE_PATH:$(pwd)/interfaces/acados_matlab_octave:$(pwd)/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
+#        echo "MATLABPATH=$MATLABPATH:$(pwd)/interfaces/acados_matlab_octave:$(pwd)/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
     - name: store shared libs
       uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
         path: ${{runner.workspace}}/acados/lib/
+        compression: 9
+        overwrite: true
 
-#  store_shared_obj:
-#    needs: core_build
-#    runs-on: ubuntu-20.04
-#    steps:
+    install_python_interface:
+    needs: core_build
+    runs-on: ubuntu-20.04
+
+    - name: Install Python interface
+        working-directory: ${{runner.workspace}}/acados
+        shell: bash
+        run: ./.github/linux/install_python.sh
+
 
 
 # Upload  shared libraries
@@ -130,10 +135,7 @@ jobs:
 #         echo "ENV_RUN=true" >> $GITHUB_ENV
 #         echo "LD_RUN_PATH=$LD_RUN_PATH:$(pwd)/c_generated_code" >> $GITHUB_ENV
 
-#     - name: Install Python interface
-#       working-directory: ${{runner.workspace}}/acados
-#       shell: bash
-#       run: ./.github/linux/install_python.sh
+
 
 #     - name: Run CMake tests (ctest)
 #       working-directory: ${{runner.workspace}}/build
