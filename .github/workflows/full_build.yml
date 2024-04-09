@@ -102,7 +102,7 @@ jobs:
     - name: Install Python interface
       #working-directory: ${{runner.workspace}}/acados
       shell: bash
-      run: ${{runner.workspace}}/acados/.github/linux/install_python.sh
+      run: ${{runner.workspace}}/.github/linux/install_python.sh
 
 
 # Upload  shared libraries
