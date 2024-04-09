@@ -21,8 +21,7 @@ env:
   ACADOS_WITH_DAQP: ON
   ACADOS_WITH_QPDUNES: OFF
   ACADOS_ON_CI: ON
-  LIB_PATH: ${{runner.workspace}}/lib
-
+  LIB_PATH: $(pwd)/lib
 
 jobs:
   core_build:
