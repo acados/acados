@@ -21,6 +21,7 @@ env:
   ACADOS_WITH_DAQP: ON
   ACADOS_WITH_QPDUNES: OFF
   ACADOS_ON_CI: ON
+  LIB_PATH: ${{runner.workspace}}/lib
 
 
 jobs:
@@ -96,7 +97,7 @@ jobs:
     - uses: actions/upload-artifact@v4
       with:
         name: core shared objects
-        path: ${{runner.workspace}}/lib/libacados.so
+        path: ${{env.LIB_PATH}}
         overwrite: true
         compression-level: 9
 
