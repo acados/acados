@@ -94,15 +94,15 @@ jobs:
         compression: 9
         overwrite: true
 
-    install_python_interface:
+  install_python_interface:
     needs: core_build
     runs-on: ubuntu-20.04
+    
     steps:
     - name: Install Python interface
       working-directory: ${{runner.workspace}}/acados
       shell: bash
       run: ./.github/linux/install_python.sh
-
 
 
 # Upload  shared libraries
