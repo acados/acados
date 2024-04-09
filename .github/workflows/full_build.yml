@@ -88,13 +88,13 @@ jobs:
 #         echo "OCTAVE_PATH=$OCTAVE_PATH:$(pwd)/interfaces/acados_matlab_octave:$(pwd)/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
 #         echo "MATLABPATH=$MATLABPATH:$(pwd)/interfaces/acados_matlab_octave:$(pwd)/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
   
-  upload_obj:
+  store_shared_obj:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/upload-artifact@v4
       with:
         name: core shared objects
-        path: ${{runner.workspace}}/lib/
+        path: ${{runner.workspace}}/lib
         overwrite: true
         compression-level: 6
 
