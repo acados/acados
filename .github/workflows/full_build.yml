@@ -92,7 +92,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
-        path: ${{runner.workspace}}/lib/
+        path: ${{runner.workspace}}/acados/lib/
         compression-level: 9 #TODO test time difference
         overwrite: true
     
