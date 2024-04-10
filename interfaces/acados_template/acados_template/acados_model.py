@@ -97,13 +97,13 @@ class AcadosModel():
         self.dyn_ext_fun_type = 'casadi'
         """type of external functions for dynamics module; 'casadi' or 'generic'; Default: 'casadi'"""
         self.dyn_generic_source = None
-        """name of source file for discrete dyanamics; Default: :code:`None`"""
+        """name of source file for discrete dynamics; Default: :code:`None`"""
         self.dyn_disc_fun_jac_hess = None
-        """name of function discrete dyanamics + jacobian and hessian; Default: :code:`None`"""
+        """name of function discrete dynamics + jacobian and hessian; Default: :code:`None`"""
         self.dyn_disc_fun_jac = None
-        """name of function discrete dyanamics + jacobian; Default: :code:`None`"""
+        """name of function discrete dynamics + jacobian; Default: :code:`None`"""
         self.dyn_disc_fun = None
-        """name of function discrete dyanamics; Default: :code:`None`"""
+        """name of function discrete dynamics; Default: :code:`None`"""
 
         # for GNSF models
         self.gnsf = {'nontrivial_f_LO': 1, 'purely_linear': 0}
@@ -222,6 +222,44 @@ class AcadosModel():
         """
         Number of original control inputs (before polynomial control augmentation); Default: :code:`None`
         """
+        self.__x_labels = None
+        self.__u_labels = None
+        self.__t_label = "t"
+
+    @property
+    def xlabels(self):
+        """Contains list of labels for the states. Default: :code:`None`"""
+        if self.__x_labels is None:
+            return [f"x{i}" for i in range(self.x.size()[0])]
+        else:
+            return self.__x_labels
+
+    @xlabels.setter
+    def xlabels(self, xlabels):
+        self.__x_labels = xlabels
+
+
+    @property
+    def ulabels(self):
+        """Contains list of labels for the controls. Default: :code:`None`"""
+        if self.__u_labels is None:
+            return [f"x{i}" for i in range(self.x.size()[0])]
+        else:
+            return self.__u_labels
+
+    @ulabels.setter
+    def ulabels(self, ulabels):
+        self.__u_labels = ulabels
+
+    @property
+    def t_label(self):
+        """Label for the time variable. Default: :code:'t'"""
+        return self.__t_label
+
+    @t_label.setter
+    def t_label(self, t_label):
+        self.__t_label = t_label
+
 
     def get_casadi_symbol(self):
         if isinstance(self.x, MX):

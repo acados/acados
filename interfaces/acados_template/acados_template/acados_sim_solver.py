@@ -239,7 +239,6 @@ class AcadosSimSolver:
     def __init__(self, acados_sim: AcadosSim, json_file='acados_sim.json', generate=True, build=True, cmake_builder: CMakeBuilder = None, verbose: bool = True):
 
         self.solver_created = False
-        self.acados_sim = acados_sim
         model_name = acados_sim.model.name
         self.model_name = model_name
 
@@ -253,6 +252,11 @@ class AcadosSimSolver:
             print("Warning: An AcadosSimSolver is created from an AcadosOcp description.",
                   "This only works if you created an AcadosOcpSolver before with the same description."
                   "Otherwise it leads to undefined behavior. Using an AcadosSim description is recommended.")
+            self.T = acados_sim.solver_options.Tsim
+        else:
+            self.T = acados_sim.solver_options.T
+
+        self.acados_sim = acados_sim
 
         if build:
             self.build(code_export_dir, cmake_builder=cmake_builder, verbose=verbose)
@@ -460,6 +464,9 @@ class AcadosSimSolver:
             if value_shape != tuple(dims):
                 raise Exception(f'AcadosSimSolver.set(): mismatching dimension' \
                     f' for field "{field_}" with dimension {tuple(dims)} (you have {value_shape}).')
+
+            if field_ == 'T':
+                self.T = value_
 
         # set
         if field_ in ['xdot', 'z']:

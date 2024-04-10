@@ -172,7 +172,8 @@ def main(use_RTI=False):
         print(f'Computation time in ms: min {np.min(t):.3f} median {np.median(t):.3f} max {np.max(t):.3f}')
 
     # plot results
-    plot_pendulum(np.linspace(0, (Tf/N_horizon)*Nsim, Nsim+1), Fmax, simU, simX)
+    model = ocp_solver.acados_ocp.model
+    plot_pendulum(np.linspace(0, (Tf/N_horizon)*Nsim, Nsim+1), Fmax, simU, simX, latexify=False, time_label=model.t_label, xlabels=model.x_labels, ulabels=model.u_labels)
 
     ocp_solver = None
 
