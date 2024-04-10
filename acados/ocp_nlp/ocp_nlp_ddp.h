@@ -125,6 +125,7 @@ typedef struct
     // regularization for Levenberg-Marquardt
     double mu;
     double mu_bar;
+    double step_norm;
 
 } ocp_nlp_ddp_memory;
 
