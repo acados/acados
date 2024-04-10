@@ -285,9 +285,6 @@ typedef struct ocp_nlp_opts
     int with_solution_sens_wrt_params;
     int with_value_sens_wrt_params;
 
-    // Regularization
-    double nls_regularization_lam;
-
 } ocp_nlp_opts;
 
 //

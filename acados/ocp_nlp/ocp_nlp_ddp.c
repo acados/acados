@@ -668,6 +668,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->alpha = 0.0;
     mem->mu = 1.0;
     mem->mu_bar = 1.0;
+    mem->step_norm = 0.0;
 
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
@@ -683,9 +684,25 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     // main ddp loop
     int ddp_iter = 0;
+    double reg_param_memory;
+    double reg_param;
 
     for (; ddp_iter < opts->max_iter+1; ddp_iter++)
     {
+        // This needs to happen before the matrices are evaluated due to regularization!
+        // calculate objective function first because hessian evaluation uses the
+        // Levenberg-Marquardt term
+        ocp_nlp_cost_compute(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+
+        // Prepare the regularization here....
+        if (ddp_iter == 0){
+            reg_param_memory = 0.0;
+        } else {
+            reg_param_memory = reg_param;
+        }
+        reg_param = 2*nlp_mem->cost_value*mem->mu;
+        nlp_opts->levenberg_marquardt = reg_param;
+
         // linearize NLP and update QP matrices
         acados_tic(&timer1);
         ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
@@ -702,13 +719,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->time_sim_ad += tmp_time;
         }
 
-        // calculate objective function first because hessian evaluation uses the
-        // Levenberg-Marquardt term
-        ocp_nlp_cost_compute(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-
-        // Prepare the regularization here....
-        double reg_param = 2*nlp_mem->cost_value*mem->mu;
-        nlp_opts->levenberg_marquardt = reg_param;
 
         // update QP rhs for DDP (step prim var, abs dual var)
         // NOTE: The ddp version of approximate does not exist!
@@ -720,7 +730,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         if (nlp_opts->print_level > ddp_iter + 1)
         {
-            printf("\n\nDDP: ocp_qp_in at iteration %d\n", ddp_iter);
+            printf("\n\nDDP: ocp_qp_in at iteration %d\n", ddp_iter + 1);
             print_ocp_qp_in(qp_in);
         }
 
@@ -736,16 +746,14 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // Output
         if (nlp_opts->print_level > 0)
         {
-            print_iteration(nlp_mem->cost_value, ddp_iter, nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_stat, mem->alpha, 0.0, reg_param, qp_status, qp_iter);
+            print_iteration(nlp_mem->cost_value, ddp_iter, nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_stat, mem->alpha, mem->step_norm, reg_param_memory, qp_status, qp_iter);
         }
-
 
         // Termination
         // exit conditions on residuals
         if ((nlp_res->inf_norm_res_stat < opts->tol_stat) &
             (nlp_res->inf_norm_res_eq < opts->tol_eq) &
-            (nlp_res->inf_norm_res_ineq < opts->tol_ineq) &
-            (nlp_res->inf_norm_res_comp < opts->tol_comp))
+            (nlp_res->inf_norm_res_ineq < opts->tol_ineq)) // we do not need the complementarity condition
         {
 #if defined(ACADOS_WITH_OPENMP)
             // restore number of threads
@@ -759,7 +767,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
         // check for nans
         else if (isnan(nlp_res->inf_norm_res_stat) || isnan(nlp_res->inf_norm_res_eq) ||
-             isnan(nlp_res->inf_norm_res_ineq) || isnan(nlp_res->inf_norm_res_comp))
+             isnan(nlp_res->inf_norm_res_ineq))
         {
 #if defined(ACADOS_WITH_OPENMP)
             // restore number of threads
@@ -788,7 +796,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         // ####################################################################
         // solve qp
-        // ####################################################################
+        // ####################################################################        
         acados_tic(&timer1);
         qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver, qp_in, qp_out,
                                         opts->nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
@@ -814,7 +822,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         if (nlp_opts->print_level > ddp_iter + 1)
         {
-            printf("\n\nDDP: ocp_qp_out at iteration %d\n", ddp_iter);
+            printf("\n\nDDP: ocp_qp_out at iteration %d\n", ddp_iter + 1);
             print_ocp_qp_out(qp_out);
         }
 
@@ -884,6 +892,17 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         mem->alpha = nlp_opts->step_length;
         mem->time_glob += acados_toc(&timer1);
         mem->stat[mem->stat_n*(ddp_iter+1)+6] = mem->alpha;
+
+        // Calculate step norm
+        // res_comp
+        mem->step_norm = 0.0;
+        double tmp_norm = 0.0;
+        for (int i = 0; i <= N; i++)
+        {
+            int sum = dims->nx[i]+dims->nu[i];
+            blasfeo_dvecnrm_inf(sum, &qp_out->ux[i], 0, &tmp_norm);
+            mem->step_norm = tmp_norm > mem->step_norm ? tmp_norm : mem->step_norm;
+        }
 
         // update variables
         ocp_nlp_ddp_compute_trial_iterate(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, mem->alpha);
