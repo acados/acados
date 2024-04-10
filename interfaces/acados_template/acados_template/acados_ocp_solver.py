@@ -719,7 +719,7 @@ class AcadosOcpSolver:
 
             return grad_p
         else:
-            raise NotImplementedError("")
+            raise NotImplementedError(f"with_respect_to {with_respect_to} not implemented.")
 
 
 
