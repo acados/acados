@@ -116,12 +116,12 @@ jobs:
       with:
         path: ${{runner.workspace}}/build/
 
-    - name: Install Python interface
-      working-directory: ${{runner.workspace}}/acados
-      shell: bash
-      run: |
-        echo "ENV_RUN=true" >> $GITHUB_ENV
-        ./.github/linux/install_python.sh
+#    - name: Install Python interface
+#      working-directory: ${{runner.workspace}}/acados
+#      shell: bash
+#      run: |
+#        echo "ENV_RUN=true" >> $GITHUB_ENV
+#        ./.github/linux/install_python.sh
 
     - name: Run CMake tests (ctest)
 
@@ -132,10 +132,7 @@ jobs:
       run: |
         echo "ENV_RUN=true" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-        ./.github/linux/run_tests.sh
-
-# Upload  shared libraries
-
+        ${{runner.workspace}}/build/artifact/.github/linux/run_tests.sh
 
 # ''''    # test interfaces
 #     - name: Install Casadi MATLAB
