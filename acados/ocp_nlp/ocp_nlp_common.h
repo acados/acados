@@ -461,6 +461,7 @@ typedef struct ocp_nlp_workspace
     struct blasfeo_dvec dxnext_dy;
 
     // optimal value gradient wrt params
+    struct blasfeo_dmat *tmp_nvninx_np_global;
     struct blasfeo_dvec tmp_np_global;
     // AS-RTI
     double *tmp_nv_double;
