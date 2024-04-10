@@ -92,16 +92,16 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
-        path: ${{runner.workspace}}/acados/lib/
-        compression: 9
+        path: ${{runner.workspace}}/lib/
+        compression-level: 9 #TODO test time difference
         overwrite: true
     
     - name: Store build scripts (/build)
       uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
-        path: ${{runner.workspace}}/acados/build/
-        compression: 9
+        path: ${{runner.workspace}}/build/
+        compression-level: 9
         overwrite: true
 
   install_python_interface:
