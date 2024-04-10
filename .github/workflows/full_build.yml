@@ -107,7 +107,7 @@ jobs:
       working-directory: ${{runner.workspace}}/acados
       shell: bash
       run: |
-        lfind src
+        echo "ENV_RUN=true" >> $GITHUB_ENV
         ./.github/linux/install_python.sh
 
   run_cmake_tests:
