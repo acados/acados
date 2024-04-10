@@ -1572,10 +1572,8 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     // z_alg
     for (int i=0; i<=N; i++)
     {
-        blasfeo_create_dvec(nz[i], mem->z_alg+i, c_ptr);
-        c_ptr += blasfeo_memsize_dvec(nz[i]);
+        assign_and_advance_blasfeo_dvec_mem(nz[i], mem->z_alg + i, &c_ptr);
     }
-
     // cost_grad
     for (int i = 0; i <= N; i++)
     {
