@@ -47,25 +47,28 @@ def plot_pendulum(t, u_max, U, X_true, latexify=False, plt_show=True, time_label
         latexify_plot()
 
     nx = X_true.shape[1]
-    fig, axes = plt.subplots(nx+1, 1)
+    fig, axes = plt.subplots(nx+1, 1, sharex=True)
+
     for i in range(nx):
         axes[i].plot(t, X_true[:, i])
+        axes[i].grid()
         if xlabels is not None:
             axes[i].set_ylabel(xlabels[i])
-        axes[i].set_xlabel(time_label)
-        axes[i].grid()
-        axes[i].set_xlim(t[0], t[-1])
+        else:
+            axes[i].set_ylabel(f'$x_{i}$')
 
     axes[-1].step(t, np.append([U[0]], U))
+
     if ulabels is not None:
         axes[-1].set_ylabel(ulabels[0])
     else:
         axes[-1].set_ylabel('$u$')
-    axes[-1].set_xlabel(time_label)
+
     axes[-1].hlines(u_max, t[0], t[-1], linestyles='dashed', alpha=0.7)
     axes[-1].hlines(-u_max, t[0], t[-1], linestyles='dashed', alpha=0.7)
     axes[-1].set_ylim([-1.2*u_max, 1.2*u_max])
     axes[-1].set_xlim(t[0], t[-1])
+    axes[-1].set_xlabel(time_label)
     axes[-1].grid()
 
     plt.subplots_adjust(left=None, bottom=None, right=None, top=None, hspace=0.4)
