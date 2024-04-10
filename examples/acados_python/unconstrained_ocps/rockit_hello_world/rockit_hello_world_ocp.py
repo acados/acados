@@ -67,22 +67,22 @@ def main():
     # set constraints
     ocp.constraints.x0 = np.array([0.0, 1.0])
 
-    # if SOLVE_FEASIBILITY_PROBLEM:
-    #     # Path constraints on control
-    #     u_max = 1.0
-    #     # ocp.constraints.lbu = np.array([-u_max])
-    #     # ocp.constraints.ubu = np.array([+u_max])
-    #     # ocp.constraints.idxbu = np.array([0])
+    if SOLVE_FEASIBILITY_PROBLEM:
+        # Path constraints on control
+        u_max = 1.0
+        ocp.constraints.lbu = np.array([-u_max])
+        ocp.constraints.ubu = np.array([+u_max])
+        ocp.constraints.idxbu = np.array([0])
 
-    #     # Path constraint on x1
-    #     x_min = -0.25
-    #     # ocp.constraints.lbx = np.array([x_min])
-    #     # ocp.constraints.ubx = np.array([1e12])
-    #     # ocp.constraints.idxbx = np.array([0])
+        # Path constraint on x1
+        x_min = -0.25
+        ocp.constraints.lbx = np.array([x_min])
+        ocp.constraints.ubx = np.array([1e12])
+        ocp.constraints.idxbx = np.array([0])
 
-    #     # ocp.constraints.lbx_e = np.array([x_min])
-    #     # ocp.constraints.ubx_e  = np.array([1e12])
-    #     # ocp.constraints.idxbx_e = np.array([0])
+        ocp.constraints.lbx_e = np.array([x_min])
+        ocp.constraints.ubx_e  = np.array([1e12])
+        ocp.constraints.idxbx_e = np.array([0])
 
     # set options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
@@ -123,8 +123,8 @@ def main():
         U_init = np.load(f)
 
     for i in range(N):
-        print("current i is: ",i )
-        print(X_init[:,i])
+        # print("current i is: ",i )
+        # print(X_init[:,i])
         ocp_solver.set(i, "x", X_init[:,i])
         ocp_solver.set(i, "u", U_init[:,i])
     ocp_solver.set(N, "x", X_init[:,N])

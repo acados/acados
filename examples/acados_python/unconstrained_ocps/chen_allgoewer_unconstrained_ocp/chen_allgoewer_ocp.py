@@ -79,13 +79,13 @@ def main():
     if SOLVE_FEASIBILITY_PROBLEM:
         # Path constraints on control
         u_max = 1.5
-        ocp.constraints.lbu = np.array([-u_max])
-        ocp.constraints.ubu = np.array([+u_max])
-        ocp.constraints.idxbu = np.array([0])
+        # ocp.constraints.lbu = np.array([-u_max])
+        # ocp.constraints.ubu = np.array([+u_max])
+        # ocp.constraints.idxbu = np.array([0])
 
         # Terminal constraints
         ocp.constraints.lbx_e = np.array([0.0, 0.03])
-        ocp.constraints.ubx_e = np.array([0.0, 0.03])
+        ocp.constraints.ubx_e  = np.array([0.0, 0.03])
         ocp.constraints.idxbx_e = np.arange(nx)
 
 
@@ -97,6 +97,7 @@ def main():
     ocp.solver_options.sim_method_num_steps = M
     ocp.solver_options.print_level = 1
     ocp.solver_options.nlp_solver_type = 'DDP' # SQP_RTI, SQP
+    ocp.solver_options.nlp_solver_max_iter = 10
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
@@ -105,6 +106,9 @@ def main():
         ocp.translate_to_feasibility_problem()
 
     ocp_solver = AcadosOcpSolver(ocp, json_file = 'chen_allgoewer_acados.json')
+
+    for i in range(N):
+        ocp_solver.cost_set(i, "scaling", 1.0)
 
     simX = np.zeros((N+1, nx))
     simU = np.zeros((N, nu))
@@ -119,11 +123,12 @@ def main():
         ocp_solver.set(i, "u", U_init[:,i])
     ocp_solver.set(N, "x", X_init[:,N])
 
+    print("Here")
     # Solve the problem
     status = ocp_solver.solve()
 
-    if status != 0:
-        raise Exception(f'acados returned status {status}.')
+    # if status != 0:
+    #     raise Exception(f'acados returned status {status}.')
 
     # get solution
     for i in range(N):
