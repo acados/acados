@@ -2,6 +2,7 @@
 
 1. Miscellaneous:
 - [x] Sanity check for unconstrained OCP, HPIPM no condensing (OJ)
+- [] Check iteration counter and statistics size, if they are correctly implemented
 
 2. Globalization:
 - [ ] Check feasibility of initial iterate and make it feasible if necessary
@@ -13,6 +14,7 @@
 3. Feasibility Problem Translation:
 - [ ] Parse rockit problems to acados directly in feasibility form (D)
 - [x] Parse acados problems to feasibility problem, i.e., move constraints into objective (OJ)
+- [] Check parser such that all combinations of constraints: bx, bu, bxe, NL constraints are correctly parsed and no errors are thrown
 - [ ] Weights for constraints in objective per N
 
 4. Testing and ideally same OR better results as python Implementation
