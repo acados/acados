@@ -109,12 +109,16 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
+    - name: Display structure before download
+      run: ls -R
+
     - uses: actions/checkout@v2
       with:
         submodules: 'recursive'
     - uses: actions/download-artifact@v4
       with:
         path: ${{runner.workspace}}/build
+
     - name: Display structure of downloaded files
       run: ls -R
 
