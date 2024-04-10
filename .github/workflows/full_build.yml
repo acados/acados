@@ -100,7 +100,7 @@ jobs:
     - name: Store build scripts (/build)
       uses: actions/upload-artifact@v4
       with:
-      name: build
+        name: build
         if-no-files-found: error
         path: ${{runner.workspace}}/build/
         compression-level: 9
