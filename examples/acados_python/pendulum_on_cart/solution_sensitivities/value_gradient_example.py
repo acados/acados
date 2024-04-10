@@ -63,7 +63,7 @@ def main():
             acados_ocp_solver.set(n, 'p', p)
         pi[i] = acados_ocp_solver.solve_for_x0(x0)[0]
         optimal_value[i] = acados_ocp_solver.get_cost()
-        optimal_value_grad[i] = acados_ocp_solver.get_optimal_value_gradient("params_global").item()
+        optimal_value_grad[i] = acados_ocp_solver.eval_and_get_optimal_value_gradient("params_global").item()
 
     # evaluate cost gradient
     optimal_value_grad_via_fd = np.gradient(optimal_value, delta_p)
