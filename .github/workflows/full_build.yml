@@ -102,7 +102,7 @@ jobs:
       with:
         name: build
         if-no-files-found: error
-        path: ${{runner.workspace}}/acados/build/
+        path: ${{runner.workspace}}/build/
         compression-level: 6
         overwrite: true
 
