@@ -692,8 +692,7 @@ class AcadosOcpSolver:
             self.__get_pointers_solver()
 
 
-    # TODO: rename to get_and_eval_? since we now perform computations in this function.
-    def get_optimal_value_gradient(self, with_respect_to: str = "initial_state") -> np.ndarray:
+    def eval_and_get_optimal_value_gradient(self, with_respect_to: str = "initial_state") -> np.ndarray:
         """
         Returns the gradient of the optimal value function w.r.t. what is specified in `with_respect_to`.
 
@@ -732,9 +731,13 @@ class AcadosOcpSolver:
             self.time_value_grad = time.time() - t0
 
         else:
-            raise Exception(f"AcadosOcpSolver.get_optimal_value_gradient(): Unknown field: {with_respect_to=}")
+            raise Exception(f"AcadosOcpSolver.eval_and_get_optimal_value_gradient(): Unknown field: {with_respect_to=}")
         return grad
 
+
+    def get_optimal_value_gradient(self, with_respect_to: str = "initial_state") -> np.ndarray:
+        print("Deprecation warning: get_optimal_value_gradient() is deprecated and has been renamed to eval_and_get_optimal_value_gradient().")
+        return self.eval_and_get_optimal_value_gradient(with_respect_to)
 
 
     def eval_solution_sensitivity(self, stages: Union[int, List[int]], with_respect_to: str) \

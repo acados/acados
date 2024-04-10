@@ -1572,10 +1572,8 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     // z_alg
     for (int i=0; i<=N; i++)
     {
-        blasfeo_create_dvec(nz[i], mem->z_alg+i, c_ptr);
-        c_ptr += blasfeo_memsize_dvec(nz[i]);
+        assign_and_advance_blasfeo_dvec_mem(nz[i], mem->z_alg + i, &c_ptr);
     }
-
     // cost_grad
     for (int i = 0; i <= N; i++)
     {
@@ -3333,9 +3331,9 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
 }
 
 
-void ocp_nlp_common_eval_adj_p(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+void ocp_nlp_common_eval_lagr_grad_p(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
                         ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
-                        const char *field, void *lagr_grad_wrt_params)
+                        const char *field, void *grad_p)
 {
     int i;
     int N = dims->N;
@@ -3345,7 +3343,7 @@ void ocp_nlp_common_eval_adj_p(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
 
     if (!strcmp("params_stage", field))
     {
-        printf("\nerror: field %s not available in ocp_nlp_common_eval_adj_p\n", field);
+        printf("\nerror: field %s not available in ocp_nlp_common_eval_lagr_grad_p\n", field);
         exit(1);
     }
     else if (!strcmp("params_global", field))
@@ -3353,7 +3351,6 @@ void ocp_nlp_common_eval_adj_p(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
         // initialize to zero
         blasfeo_dvecse(np[0], 0., &work->out_np, 0);
 
-        // TODO openmp?
         for (i = 0; i < N; i++)
         {
             // dynamics contribution
@@ -3374,7 +3371,7 @@ void ocp_nlp_common_eval_adj_p(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
                                     mem->cost[N], work->cost[N], &work->tmp_np);
         blasfeo_dvecad(np[N], 1., &work->tmp_np, 0, &work->out_np, 0);
 
-        blasfeo_unpack_dvec(np[0], &work->out_np, 0, lagr_grad_wrt_params, 1);
+        blasfeo_unpack_dvec(np[0], &work->out_np, 0, grad_p, 1);
     }
     else
     {

@@ -956,7 +956,7 @@ void ocp_nlp_dynamics_disc_compute_adj_p(void* config_, void *dims_, void *model
 	// call external function
     if (model->disc_dyn_adj_p == NULL)
     {
-        printf("ocp_nlp_dynamics_dics_eval_adj_p - model->disc_dyn_adj_p is NULL\n");
+        printf("ocp_nlp_dynamics_disc_compute_adj_p - model->disc_dyn_adj_p is NULL\n");
         exit(1);
     }
 	model->disc_dyn_adj_p->evaluate(model->disc_dyn_adj_p, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);

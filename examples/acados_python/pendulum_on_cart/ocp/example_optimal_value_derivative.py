@@ -113,7 +113,7 @@ def main():
         x0[1] = theta
         _ = ocp_solver.solve_for_x0(x0)
         optimal_value_fun[k] = ocp_solver.get_cost()
-        optimal_value_grad[k] = ocp_solver.get_optimal_value_gradient()[1]
+        optimal_value_grad[k] = ocp_solver.eval_and_get_optimal_value_gradient()[1]
 
     cd_optimal_value_grad = (optimal_value_fun[2:]-optimal_value_fun[:-2])/(thetas[2:]-thetas[:-2])
 
