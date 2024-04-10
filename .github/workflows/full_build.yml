@@ -114,7 +114,7 @@ jobs:
         submodules: 'recursive'
     - uses: actions/download-artifact@v4
       with:
-        path: ${{runner.workspace}}/build/
+        path: ${{runner.workspace}}/build/artifact
 
 #    - name: Install Python interface
 #      working-directory: ${{runner.workspace}}/acados
