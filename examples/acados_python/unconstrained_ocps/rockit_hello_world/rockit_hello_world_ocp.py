@@ -39,6 +39,7 @@ def main():
     # The flag denotes, if the problem should be transformed into a feasibility
     # problem, or if the unconstrained OCP should be solved.
     SOLVE_FEASIBILITY_PROBLEM = True
+    DYNAMICALLY_FEASIBLE_INITIAL_GUESS = False
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -109,22 +110,22 @@ def main():
     sol_X = np.zeros((N+1, nx))
     sol_U = np.zeros((N, nu))
 
-    # Load and set the initial guess
-    X_init = np.zeros((nx, N+1))
-    x1s = (1/N)*np.ones((1,N+1))
-    X_init[0,:] = x1s
+    if DYNAMICALLY_FEASIBLE_INITIAL_GUESS:
+        # Load the initial guess
+        with open('rockit_hello_world_initial_guess.npy', 'rb') as f:
+            X_init = np.load(f)
+            U_init = np.load(f)
+    else:
+        X_init = np.zeros((nx, N+1))
+        x1s = (1/N)*np.ones((1,N+1))
+        X_init[0,:] = x1s
 
-    U_init = np.zeros((nu, N))
-    us = np.linspace(0, 1.0/N, N)
-    U_init[0,:] = us
+        U_init = np.zeros((nu, N))
+        us = np.linspace(0, 1.0/N, N)
+        U_init[0,:] = us
 
-    # with open('rockit_hello_world_initial_guess.npy', 'rb') as f:
-    #     X_init = np.load(f)
-    #     U_init = np.load(f)
-
+    # Set initial guess
     for i in range(N):
-        # print("current i is: ",i )
-        # print(X_init[:,i])
         ocp_solver.set(i, "x", X_init[:,i])
         ocp_solver.set(i, "u", U_init[:,i])
     ocp_solver.set(N, "x", X_init[:,N])
