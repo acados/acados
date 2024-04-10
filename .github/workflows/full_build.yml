@@ -126,12 +126,12 @@ jobs:
     - name: Display structure of downloaded files
       run: ls -R
 
-#    - name: Install Python interface
-#      working-directory: ${{runner.workspace}}/acados
-#      shell: bash
-#      run: |
-#        echo "ENV_RUN=true" >> $GITHUB_ENV
-#        ./.github/linux/install_python.sh
+    - name: Install Python interface
+      working-directory: ${{runner.workspace}}/acados
+      shell: bash
+      run: |
+        echo "ENV_RUN=true" >> $GITHUB_ENV
+        ./.github/linux/install_python.sh''
 
     - name: Run CMake tests (ctest)
 
