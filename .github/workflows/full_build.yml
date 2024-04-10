@@ -93,8 +93,8 @@ jobs:
       with:
         name: lib
         if-no-files-found: error
-        path: ${{runner.workspace}}/lib/
-        compression-level: 9 #TODO test time difference
+        path: ${{runner.workspace}}/acados/lib/
+        compression-level: 6 #TODO test time difference
         overwrite: true
     
     - name: Store build scripts (/build)
@@ -102,8 +102,8 @@ jobs:
       with:
         name: build
         if-no-files-found: error
-        path: ${{runner.workspace}}/build/
-        compression-level: 9
+        path: ${{runner.workspace}}/acados/build/
+        compression-level: 6
         overwrite: true
 
   install_python_interface:
