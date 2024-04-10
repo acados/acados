@@ -111,7 +111,7 @@ jobs:
       with:
         name: include
         if-no-files-found: error
-        path: ${{runner.workspace}}/include
+        path: ${{runner.workspace}}/acados/include
         compression-level: 6
         overwrite: true
 
