@@ -307,6 +307,17 @@ class AcadosModel():
         return
 
 
+    def substitute(self, var: Union[ca.SX, ca.MX], expr_new: Union[ca.SX, ca.MX]) -> None:
+        """
+        Substitutes the variables var with expr_new in all symbolic CasADi expressions within AcadosModel
+        """
+        for attr, value in self.__dict__.items():
+            if isinstance(value, (ca.SX, ca.MX)):
+                new = ca.substitute(value, var, expr_new)
+                setattr(self, attr, new)
+        return
+
+
     def augment_model_with_polynomial_control(self, degree: int) -> None:
         """
         Augment the model with polynomial control.
@@ -342,14 +353,7 @@ class AcadosModel():
 
         evaluate_polynomial_u_fun = ca.Function("evaluate_polynomial_u", [u_coeff, t], [u_new])
 
-        if self.f_impl_expr is not None:
-            self.f_impl_expr = ca.substitute(self.f_impl_expr, u_old, u_new)
-        if self.f_expl_expr is not None:
-            self.f_expl_expr = ca.substitute(self.f_expl_expr, u_old, u_new)
-        if self.cost_y_expr is not None:
-            self.cost_y_expr = ca.substitute(self.cost_y_expr, u_old, u_new)
-        if self.cost_y_expr_0 is not None:
-            self.cost_y_expr_0 = ca.substitute(self.cost_y_expr_0, u_old, u_new)
+        self.substitute(u_old, u_new)
 
         self.u = u_coeff
         self.nu_original = nu_original
