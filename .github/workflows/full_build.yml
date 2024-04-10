@@ -131,7 +131,7 @@ jobs:
 
     - uses: actions/download-artifact@v4
       with:
-        path: ${{runner.workspace}}
+        path: ${{runner.workspace}}/acados
 
     - name: Display structure of downloaded files
       run: ls -R
