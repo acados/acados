@@ -3353,7 +3353,6 @@ void ocp_nlp_common_eval_lagr_grad_p(ocp_nlp_config *config, ocp_nlp_dims *dims,
         // initialize to zero
         blasfeo_dvecse(np[0], 0., &work->out_np, 0);
 
-        // TODO openmp?
         for (i = 0; i < N; i++)
         {
             // dynamics contribution
