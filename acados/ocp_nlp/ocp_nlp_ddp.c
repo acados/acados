@@ -682,16 +682,21 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
+    ///////////////////////////////////////////////////////////////////////////
     // main ddp loop
+    ///////////////////////////////////////////////////////////////////////////
     int ddp_iter = 0;
     double reg_param_memory;
     double reg_param;
+    bool infeasible_initial_guess = true;
 
     for (; ddp_iter < opts->max_iter+1; ddp_iter++)
     {
+        ///////////////////////////////////////////////////////////////////////
         // This needs to happen before the matrices are evaluated due to regularization!
         // calculate objective function first because hessian evaluation uses the
         // Levenberg-Marquardt term
+        ///////////////////////////////////////////////////////////////////////
         ocp_nlp_cost_compute(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
         // Prepare the regularization here....
@@ -703,6 +708,9 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         reg_param = 2*nlp_mem->cost_value*mem->mu;
         nlp_opts->levenberg_marquardt = reg_param;
 
+        ///////////////////////////////////////////////////////////////////////
+        // Prepare the QP data
+        ///////////////////////////////////////////////////////////////////////
         // linearize NLP and update QP matrices
         acados_tic(&timer1);
         ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
@@ -728,11 +736,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);
         ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
 
-        if (nlp_opts->print_level > ddp_iter + 1)
-        {
-            printf("\n\nDDP: ocp_qp_in at iteration %d\n", ddp_iter + 1);
-            print_ocp_qp_in(qp_in);
-        }
 
         // save statistics
         if (ddp_iter < mem->stat_m)
@@ -743,13 +746,26 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->stat[mem->stat_n*ddp_iter+3] = nlp_res->inf_norm_res_comp;
         }
 
+        // Check if initial guess was infeasible
+        if ((infeasible_initial_guess == true) & (nlp_res->inf_norm_res_eq > opts->tol_eq))
+        {
+            printf("Initial guess was infeasible!\n");
+            ddp_iter = -1;
+        } else {
+            infeasible_initial_guess = false;
+        }
+
+        ///////////////////////////////////////////////////////////////////////
         // Output
+        ///////////////////////////////////////////////////////////////////////
         if (nlp_opts->print_level > 0)
         {
             print_iteration(nlp_mem->cost_value, ddp_iter, nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_stat, mem->alpha, mem->step_norm, reg_param_memory, qp_status, qp_iter);
         }
 
+        ///////////////////////////////////////////////////////////////////////
         // Termination
+        ///////////////////////////////////////////////////////////////////////
         // exit conditions on residuals
         if ((nlp_res->inf_norm_res_stat < opts->tol_stat) &
             (nlp_res->inf_norm_res_eq < opts->tol_eq) &
@@ -780,12 +796,19 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             return mem->status;
         }
 
+        ///////////////////////////////////////////////////////////////////////
         // regularize Hessian
+        ///////////////////////////////////////////////////////////////////////
         acados_tic(&timer1);
         config->regularize->regularize(config->regularize, dims->regularize,
                                                opts->nlp_opts->regularize, nlp_mem->regularize_mem);
         mem->time_reg += acados_toc(&timer1);
 
+
+        ///////////////////////////////////////////////////////////////////////
+        // solve qp
+        ///////////////////////////////////////////////////////////////////////
+        
         // (typically) no warm start at first iteration
         if (ddp_iter == 0 && !opts->warm_start_first_qp)
         {
@@ -793,10 +816,14 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             config->qp_solver->opts_set(config->qp_solver, opts->nlp_opts->qp_solver_opts,
                                          "warm_start", &tmp_int);
         }
+        // Show input to QP
+        // if (nlp_opts->print_level > ddp_iter + 1)
+        if (nlp_opts->print_level > 1)
+        {
+            printf("\n\nDDP: ocp_qp_in at iteration %d\n", ddp_iter + 1);
+            print_ocp_qp_in(qp_in);
+        }
 
-        // ####################################################################
-        // solve qp
-        // ####################################################################        
         acados_tic(&timer1);
         qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver, qp_in, qp_out,
                                         opts->nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
@@ -820,7 +847,8 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                                         "warm_start", &opts->qp_warm_start);
         }
 
-        if (nlp_opts->print_level > ddp_iter + 1)
+        // if (nlp_opts->print_level > ddp_iter + 1)
+        if (nlp_opts->print_level > 1)
         {
             printf("\n\nDDP: ocp_qp_out at iteration %d\n", ddp_iter + 1);
             print_ocp_qp_out(qp_out);
@@ -879,20 +907,9 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
             return mem->status;
         }
-        // ####################################################################
+        ///////////////////////////////////////////////////////////////////////
         // end solve qp ---> move to function
-        // ####################################################################
-
-        /* globalization */
-        // NOTE on timings: currently all within globalization is accounted for within time_glob.
-        //   QP solver times could be also attributed there alternatively. Cleanest would be to save them seperately.
-        acados_tic(&timer1);
-        // TODO?
-        // mem->alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, ddp_iter);
-        mem->alpha = nlp_opts->step_length;
-        mem->time_glob += acados_toc(&timer1);
-        mem->stat[mem->stat_n*(ddp_iter+1)+6] = mem->alpha;
-
+        ///////////////////////////////////////////////////////////////////////
         // Calculate step norm
         // res_comp
         mem->step_norm = 0.0;
@@ -904,10 +921,32 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->step_norm = tmp_norm > mem->step_norm ? tmp_norm : mem->step_norm;
         }
 
-        // update variables
-        ocp_nlp_ddp_compute_trial_iterate(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, mem->alpha);
-        copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
-        update_mu(mem->alpha, opts, mem);
+        ///////////////////////////////////////////////////////////////////////
+        /* globalization */
+        ///////////////////////////////////////////////////////////////////////
+        if (infeasible_initial_guess == true){
+            // Accept the forward simulation to get feasible initial guess
+            ocp_nlp_ddp_compute_trial_iterate(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, mem->alpha);
+            copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
+            infeasible_initial_guess = false;
+        }
+        else 
+        {
+            // Do the globalization here.....
+            // NOTE on timings: currently all within globalization is accounted for within time_glob.
+            //   QP solver times could be also attributed there alternatively. Cleanest would be to save them seperately.
+            acados_tic(&timer1);
+            // TODO?
+            // mem->alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, ddp_iter);
+            mem->alpha = nlp_opts->step_length;
+            mem->time_glob += acados_toc(&timer1);
+            mem->stat[mem->stat_n*(ddp_iter+1)+6] = mem->alpha;
+
+            // update variables
+            ocp_nlp_ddp_compute_trial_iterate(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, mem->alpha);
+            copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
+            update_mu(mem->alpha, opts, mem);
+        }
 
     }  // end DDP loop
 
@@ -915,7 +954,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         printf("\n\n");
 
     // ocp_nlp_out_print(dims, nlp_out);
-
     // maximum number of iterations reached
 #if defined(ACADOS_WITH_OPENMP)
     // restore number of threads

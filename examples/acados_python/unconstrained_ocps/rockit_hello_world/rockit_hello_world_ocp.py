@@ -110,17 +110,17 @@ def main():
     sol_U = np.zeros((N, nu))
 
     # Load and set the initial guess
-    # X_init = np.zeros((nx, N+1))
-    # x1s = (1/N)*np.ones((1,N+1))
-    # X_init[0,:] = x1s
+    X_init = np.zeros((nx, N+1))
+    x1s = (1/N)*np.ones((1,N+1))
+    X_init[0,:] = x1s
 
-    # U_init = np.zeros((nu, N))
-    # us = 1.0/N*np.ones((1, N))
-    # U_init[0,:] = us
+    U_init = np.zeros((nu, N))
+    us = np.linspace(0, 1.0/N, N)
+    U_init[0,:] = us
 
-    with open('rockit_hello_world_initial_guess.npy', 'rb') as f:
-        X_init = np.load(f)
-        U_init = np.load(f)
+    # with open('rockit_hello_world_initial_guess.npy', 'rb') as f:
+    #     X_init = np.load(f)
+    #     U_init = np.load(f)
 
     for i in range(N):
         # print("current i is: ",i )
