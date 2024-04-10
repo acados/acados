@@ -327,10 +327,7 @@ class AcadosOcp:
         if constraints.has_x0 and dims.nbx_0 != dims.nx:
             raise Exception(f"x0 should have shape nx = {dims.nx}.")
 
-        if all(constraints.lbx_0 == constraints.ubx_0) and dims.nbx_0 == dims.nx \
-            and dims.nbxe_0 is None \
-            and (constraints.idxbxe_0.shape == constraints.idxbx_0.shape)\
-                and all(constraints.idxbxe_0 == constraints.idxbx_0):
+        if constraints.has_x0:
             # case: x0 was set: nbx0 are all equalities.
             dims.nbxe_0 = dims.nbx_0
         elif constraints.idxbxe_0 is not None:
