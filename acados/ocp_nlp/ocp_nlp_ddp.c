@@ -897,13 +897,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // exit conditions on QP status
         if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
         {
-            if (nlp_opts->print_level > 0)
-            {
-                printf("%i\t%e\t%e\t%e\t%e.\n", ddp_iter, nlp_res->inf_norm_res_stat,
-                    nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_ineq,
-                    nlp_res->inf_norm_res_comp );
-                printf("\n\n");
-            }
             // increment ddp_iter to return full statistics and improve output below.
             ddp_iter++;
 
@@ -931,7 +924,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         // Compute the optimal QP objective function value
         nlp_mem->qp_cost_value = ocp_nlp_ddp_compute_qp_objective_value(dims, qp_in, qp_out,nlp_work, nlp_mem);
-
 
         // Calculate step norm
         // res_comp
@@ -965,16 +957,18 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             if (opts->nlp_opts->globalization == FIXED_STEP){
                 // Set the given step length
                 mem->alpha = nlp_opts->step_length;
-                mem->stat[mem->stat_n*(ddp_iter+1)+6] = mem->alpha;
 
                 // update variables
                 ocp_nlp_ddp_compute_trial_iterate(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, mem->alpha);
-                copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
-                update_mu(mem->alpha, opts, mem);
             } else {
                 // ELSE do backtracking line search on objective function
                 ocp_nlp_ddp_backtracking_line_search(config, dims, nlp_in, nlp_out, mem, work, opts);
             }
+            
+            mem->stat[mem->stat_n*(ddp_iter+1)+6] = mem->alpha;
+            // Copy new iterate to nlp_out
+            copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
+            update_mu(mem->alpha, opts, mem);
             mem->time_glob += acados_toc(&timer1);
         }
     }  // end DDP loop
@@ -1026,7 +1020,6 @@ double ocp_nlp_ddp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_
     qp_cost += blasfeo_ddot(nx, &qp_out->ux[i], nu, &nlp_work->tmp_nlp_out->ux[i], nu);
     // Calculate g.T d
     qp_cost += blasfeo_ddot(nx, &qp_out->ux[i], nu, &qp_in->rqz[i], 0);
-    // printf("pred: %f\n", -qp_cost);
     return qp_cost;
 
 }
@@ -1092,9 +1085,9 @@ void ocp_nlp_ddp_backtracking_line_search(void *config_, void *dims_, void *nlp_
         {
             // IF step accepted: update x
             // reset evaluation point to SQP iterate
-            copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
+            // copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
             mem->alpha = alpha;
-            update_mu(alpha, opts, mem);
+            // update_mu(alpha, opts, mem);
             return;
         } else {
             // Reduce step size 
