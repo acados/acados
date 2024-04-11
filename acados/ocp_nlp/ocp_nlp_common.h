@@ -356,6 +356,7 @@ typedef struct ocp_nlp_memory
     struct blasfeo_dvec *dyn_adj;
 
     double cost_value;
+    double qp_cost_value;
     int compute_hess;
 
     bool *set_sim_guess; // indicate if there is new explicitly provided guess for integration variables
