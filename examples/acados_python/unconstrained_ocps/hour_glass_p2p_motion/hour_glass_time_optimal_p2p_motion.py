@@ -118,6 +118,7 @@ def main():
     ocp.solver_options.sim_method_num_steps = M
     ocp.solver_options.print_level = 1
     ocp.solver_options.nlp_solver_type = 'DDP'
+    ocp.solver_options.globalization = 'MERIT_BACKTRACKING'
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
@@ -127,6 +128,8 @@ def main():
 
     ocp_solver = AcadosOcpSolver(ocp, json_file = 'hour_glass_acados.json')
 
+    for i in range(N):
+        ocp_solver.cost_set(i, "scaling", 1.0)
     sol_X = np.zeros((N+1, nx))
     sol_U = np.zeros((N, nu))
 
@@ -196,7 +199,7 @@ def plot_trajectory(list_X_sol: list, labels: list):
 
     #Plot x and y coordinates
     for i in range(len(list_X_sol)):
-        plt.plot(list_X_sol[i][1,:], list_X_sol[i][2,:], label = labels[i])
+        plt.plot(list_X_sol[i][1,:], list_X_sol[i][2,:], label = labels[i], marker='o', markersize=4)
     plt.xlabel('x [m]')
     plt.ylabel('y [m]')
     plt.legend()
