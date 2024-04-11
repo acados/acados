@@ -153,7 +153,7 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: |
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-        ./../github/linux/run_tests.sh
+        ./../../github/linux/run_tests.sh
 
 # ''''    # test interfaces
 #     - name: Install Casadi MATLAB
