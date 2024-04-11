@@ -82,7 +82,7 @@ jobs:
         echo "ACADOS_SOURCE_DIR=$(pwd)" >> $GITHUB_ENV
         echo "ACADOS_INSTALL_DIR=$(pwd)" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/lib" >> $GITHUB_ENV
-        echo "CM_BUILD_PATH=$CM_BUILD_PATH:$(pwd)/build" >> $GITHUB_ENV
+#TODO remoe        echo "CM_BUILD_PATH=$CM_BUILD_PATH:$(pwd)/build" >> $GITHUB_ENV
 #        echo "OCTAVE_PATH=$OCTAVE_PATH:$(pwd)/interfaces/acados_matlab_octave:$(pwd)/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
 #        echo "MATLABPATH=$MATLABPATH:$(pwd)/interfaces/acados_matlab_octave:$(pwd)/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
 
@@ -126,9 +126,6 @@ jobs:
       with:
         submodules: 'recursive'
     
-    - name: Display structure before download
-      working-directory: ${{runner.workspace}}
-      run: ls -R
 
     - uses: actions/download-artifact@v4
       with:
@@ -155,7 +152,7 @@ jobs:
       run: |
         echo "ENV_RUN=true" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${{runner.workspace}}/acados/lib" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${{runner.workspace}}/acados/lib/" >> $GITHUB_ENV
         ${{runner.workspace}}/acados/.github/linux/run_tests.sh
 
 # ''''    # test interfaces
