@@ -937,8 +937,8 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         {
             nux = dims->nu[i] + dims->nx[i];
             // printf("Current QP cost: %f\n", qp_cost);
-            blasfeo_print_dmat(nux, nux, &qp_in->RSQrq[i], 0, 0);
-            blasfeo_print_dvec(nux, &qp_out->ux[i], 0);
+            // blasfeo_print_dmat(nux, nux, &qp_in->RSQrq[i], 0, 0);
+            // blasfeo_print_dvec(nux, &qp_out->ux[i], 0);
             // Calculate 0.5* d.T H d
             blasfeo_dsymv_l(nux, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], 0, 0.0, &qp_out->ux[i], 0, &nlp_work->tmp_nlp_out->ux[i],0);
             qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &nlp_work->tmp_nlp_out->ux[i], 0);
@@ -948,14 +948,14 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
         int nx = dims->nx[N];
         int nu = dims->nu[N];
-        blasfeo_print_dmat(nx, nx, &qp_in->RSQrq[N], 0, 0);
-        blasfeo_print_dvec(nx, &qp_out->ux[N], 0);
+        // blasfeo_print_dmat(nx, nx, &qp_in->RSQrq[N], 0, 0);
+        // blasfeo_print_dvec(nx, &qp_out->ux[N], 0);
         // Calculate 0.5* d.T H d
         blasfeo_dsymv_l(nx, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], nu, 0.0, &qp_out->ux[i], nu, &nlp_work->tmp_nlp_out->ux[i],nu);
         qp_cost += blasfeo_ddot(nx, &qp_out->ux[i], nu, &nlp_work->tmp_nlp_out->ux[i], nu);
         // Calculate g.T d
         qp_cost += blasfeo_ddot(nx, &qp_out->ux[i], nu, &qp_in->rqz[i], 0);
-        printf("pred: %f\n", -qp_cost);
+        // printf("pred: %f\n", -qp_cost);
         nlp_mem->qp_cost_value = qp_cost;
 
 
@@ -989,8 +989,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 // NOTE on timings: currently all within globalization is accounted for within time_glob.
                 //   QP solver times could be also attributed there alternatively. Cleanest would be to save them seperately.
                 acados_tic(&timer1);
-                // TODO?
-                // mem->alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, ddp_iter);
                 mem->alpha = nlp_opts->step_length;
                 mem->time_glob += acados_toc(&timer1);
                 mem->stat[mem->stat_n*(ddp_iter+1)+6] = mem->alpha;
@@ -1084,20 +1082,21 @@ void ocp_nlp_ddp_backtracking_line_search(void *config_, void *dims_, void *nlp_
             trial_cost += *tmp_fun;
         }
         ///////////////////////////////////////////////////////////////////////
-        negative_ared = nlp_mem->cost_value - trial_cost;
+        negative_ared = trial_cost - nlp_mem->cost_value;
+        printf("Negative ared is %f\n", negative_ared);
         // Check Armijo sufficient decrease condition
         if (negative_ared <= fmin(-opts->linesearch_eta*alpha* fmax(pred, 0) + 1e-18, 0))
         {
             // IF step accepted: update x
             // reset evaluation point to SQP iterate
             copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
+            mem->alpha = alpha;
             update_mu(alpha, opts, mem);
-
+            return;
         } else {
             // Reduce step size 
             alpha *= opts->linesearch_step_size_reduction_factor;
         }
-
 
         // IF step size below value, raise error for the moment
         if (alpha < opts->linesearch_minimum_step_size){
