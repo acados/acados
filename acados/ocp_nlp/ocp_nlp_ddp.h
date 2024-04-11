@@ -71,6 +71,11 @@ typedef struct
     double nls_regularization_lam;
     double mu_min;
 
+    // Line search
+    double linesearch_eta;
+    double linesearch_minimum_step_size;
+    double linesearch_step_size_reduction_factor;
+
 } ocp_nlp_ddp_opts;
 
 //
@@ -174,6 +179,9 @@ void ocp_nlp_ddp_eval_adj_p(void *config_, void *dims_, void *nlp_in_, void *opt
                             const char *field, void *lagr_grad_wrt_params);
 //
 void ocp_nlp_ddp_get(void *config_, void *dims_, void *mem_, const char *field, void *return_value_);
+
+void ocp_nlp_ddp_backtracking_line_search(void *config, void *dims, void *nlp_in, void *nlp_out,
+                void *args, void *mem, void *work_);
 
 #ifdef __cplusplus
 } /* extern "C" */

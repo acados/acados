@@ -39,7 +39,7 @@ def main():
     # The flag denotes, if the problem should be transformed into a feasibility
     # problem, or if the unconstrained OCP should be solved.
     SOLVE_FEASIBILITY_PROBLEM = True
-    DYNAMICALLY_FEASIBLE_INITIAL_GUESS = False
+    DYNAMICALLY_FEASIBLE_INITIAL_GUESS = True
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -94,6 +94,7 @@ def main():
     ocp.solver_options.print_level = 1
     ocp.solver_options.nlp_solver_type = 'DDP' # SQP_RTI, SQP
     ocp.solver_options.nlp_solver_max_iter = 100
+    ocp.solver_options.globalization = 'FIXED_STEP'
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
