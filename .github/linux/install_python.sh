@@ -36,6 +36,7 @@ sudo pip3 install virtualenv;
 # create virtualenv
 virtualenv --python=python3 acadosenv;
 # source virtualenv
+ls
 source acadosenv/bin/activate;
 which python;
 
