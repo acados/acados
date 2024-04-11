@@ -710,6 +710,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     double reg_param_memory;
     double reg_param;
     bool infeasible_initial_guess = true;
+    bool evaluate_cost = true;
 
     for (; ddp_iter < opts->max_iter+1; ddp_iter++)
     {
@@ -718,7 +719,9 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // calculate objective function first because hessian evaluation uses the
         // Levenberg-Marquardt term
         ///////////////////////////////////////////////////////////////////////
-        ocp_nlp_cost_compute(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+        if (evaluate_cost){
+            ocp_nlp_cost_compute(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+        }
 
         // Prepare the regularization here....
         if (ddp_iter == 0){
@@ -963,8 +966,9 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             } else {
                 // ELSE do backtracking line search on objective function
                 ocp_nlp_ddp_backtracking_line_search(config, dims, nlp_in, nlp_out, mem, work, opts);
+                evaluate_cost = false; // since the cost was already evaluated in the line search
             }
-            
+
             mem->stat[mem->stat_n*(ddp_iter+1)+6] = mem->alpha;
             // Copy new iterate to nlp_out
             copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
@@ -1087,6 +1091,7 @@ void ocp_nlp_ddp_backtracking_line_search(void *config_, void *dims_, void *nlp_
             // reset evaluation point to SQP iterate
             // copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
             mem->alpha = alpha;
+            nlp_mem->cost_value = trial_cost;
             // update_mu(alpha, opts, mem);
             return;
         } else {
