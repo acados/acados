@@ -748,7 +748,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->time_sim_ad += tmp_time;
         }
 
-
         // update QP rhs for DDP (step prim var, abs dual var)
         // NOTE: The ddp version of approximate does not exist!
         ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
@@ -799,6 +798,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->status = ACADOS_SUCCESS;
             mem->ddp_iter = ddp_iter;
             mem->time_tot = acados_toc(&timer0);
+            printf("Optimal Solution found!\n");
 
             return mem->status;
         }
@@ -929,39 +929,10 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             return mem->status;
         }
 
-        // Compute the QP objective function value
-        double qp_cost = 0.0;
-        int i;
-        int nux;
-        for (i = 0; i < N; i++)
-        {
-            nux = dims->nu[i] + dims->nx[i];
-            // printf("Current QP cost: %f\n", qp_cost);
-            // blasfeo_print_dmat(nux, nux, &qp_in->RSQrq[i], 0, 0);
-            // blasfeo_print_dvec(nux, &qp_out->ux[i], 0);
-            // Calculate 0.5* d.T H d
-            blasfeo_dsymv_l(nux, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], 0, 0.0, &qp_out->ux[i], 0, &nlp_work->tmp_nlp_out->ux[i],0);
-            qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &nlp_work->tmp_nlp_out->ux[i], 0);
-            // printf("Current QP cost: %f\n", qp_cost);
-            // Calculate g.T d
-            qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
-        }
-        int nx = dims->nx[N];
-        int nu = dims->nu[N];
-        // blasfeo_print_dmat(nx, nx, &qp_in->RSQrq[N], 0, 0);
-        // blasfeo_print_dvec(nx, &qp_out->ux[N], 0);
-        // Calculate 0.5* d.T H d
-        blasfeo_dsymv_l(nx, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], nu, 0.0, &qp_out->ux[i], nu, &nlp_work->tmp_nlp_out->ux[i],nu);
-        qp_cost += blasfeo_ddot(nx, &qp_out->ux[i], nu, &nlp_work->tmp_nlp_out->ux[i], nu);
-        // Calculate g.T d
-        qp_cost += blasfeo_ddot(nx, &qp_out->ux[i], nu, &qp_in->rqz[i], 0);
-        // printf("pred: %f\n", -qp_cost);
-        nlp_mem->qp_cost_value = qp_cost;
+        // Compute the optimal QP objective function value
+        nlp_mem->qp_cost_value = ocp_nlp_ddp_compute_qp_objective_value(dims, qp_in, qp_out,nlp_work, nlp_mem);
 
 
-        ///////////////////////////////////////////////////////////////////////
-        // end solve qp ---> move to function
-        ///////////////////////////////////////////////////////////////////////
         // Calculate step norm
         // res_comp
         mem->step_norm = 0.0;
@@ -972,6 +943,9 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             blasfeo_dvecnrm_inf(sum, &qp_out->ux[i], 0, &tmp_norm);
             mem->step_norm = tmp_norm > mem->step_norm ? tmp_norm : mem->step_norm;
         }
+        ///////////////////////////////////////////////////////////////////////
+        // end solve qp ---> move to function
+        ///////////////////////////////////////////////////////////////////////
 
         ///////////////////////////////////////////////////////////////////////
         /* globalization */
@@ -984,13 +958,13 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
         else 
         {
-            // Do the globalization here.....
+            // Do the globalization here: Either fixed step or Armijo line search
+            acados_tic(&timer1);
+            // NOTE on timings: currently all within globalization is accounted for within time_glob.
+            //   QP solver times could be also attributed there alternatively. Cleanest would be to save them seperately.
             if (opts->nlp_opts->globalization == FIXED_STEP){
-                // NOTE on timings: currently all within globalization is accounted for within time_glob.
-                //   QP solver times could be also attributed there alternatively. Cleanest would be to save them seperately.
-                acados_tic(&timer1);
+                // Set the given step length
                 mem->alpha = nlp_opts->step_length;
-                mem->time_glob += acados_toc(&timer1);
                 mem->stat[mem->stat_n*(ddp_iter+1)+6] = mem->alpha;
 
                 // update variables
@@ -1001,10 +975,8 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 // ELSE do backtracking line search on objective function
                 ocp_nlp_ddp_backtracking_line_search(config, dims, nlp_in, nlp_out, mem, work, opts);
             }
-
-
+            mem->time_glob += acados_toc(&timer1);
         }
-
     }  // end DDP loop
 
     if (nlp_opts->print_level > 0)
@@ -1026,6 +998,37 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 #endif
 
     return mem->status;
+}
+
+double ocp_nlp_ddp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
+                ocp_nlp_workspace *nlp_work, ocp_nlp_memory *nlp_mem){
+
+    // Compute the QP objective function value
+    double qp_cost = 0.0;
+    int i;
+    int N = dims->N;
+    int nux;
+    // Sum over stages 0 to N-1
+    for (i = 0; i < N; i++)
+    {
+        nux = dims->nu[i] + dims->nx[i];
+        // Calculate 0.5* d.T H d
+        blasfeo_dsymv_l(nux, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], 0, 0.0, &qp_out->ux[i], 0, &nlp_work->tmp_nlp_out->ux[i],0);
+        qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &nlp_work->tmp_nlp_out->ux[i], 0);
+        // Calculate g.T d
+        qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
+    }
+    int nx = dims->nx[N];
+    int nu = dims->nu[N];
+    // For terminal stage N:
+    // Calculate 0.5* d.T H d
+    blasfeo_dsymv_l(nx, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], nu, 0.0, &qp_out->ux[i], nu, &nlp_work->tmp_nlp_out->ux[i],nu);
+    qp_cost += blasfeo_ddot(nx, &qp_out->ux[i], nu, &nlp_work->tmp_nlp_out->ux[i], nu);
+    // Calculate g.T d
+    qp_cost += blasfeo_ddot(nx, &qp_out->ux[i], nu, &qp_in->rqz[i], 0);
+    // printf("pred: %f\n", -qp_cost);
+    return qp_cost;
+
 }
 
 void ocp_nlp_ddp_backtracking_line_search(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,

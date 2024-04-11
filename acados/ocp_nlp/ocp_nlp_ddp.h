@@ -92,7 +92,6 @@ void ocp_nlp_ddp_opts_set(void *config_, void *opts_, const char *field, void* v
 void ocp_nlp_ddp_opts_set_at_stage(void *config_, void *opts_, size_t stage, const char *field, void* value);
 
 
-
 /************************************************
  * memory
  ************************************************/
@@ -182,6 +181,9 @@ void ocp_nlp_ddp_get(void *config_, void *dims_, void *mem_, const char *field, 
 
 void ocp_nlp_ddp_backtracking_line_search(void *config, void *dims, void *nlp_in, void *nlp_out,
                 void *args, void *mem, void *work_);
+
+double ocp_nlp_ddp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
+                ocp_nlp_workspace *nlp_work, ocp_nlp_memory *nlp_mem);
 
 #ifdef __cplusplus
 } /* extern "C" */
