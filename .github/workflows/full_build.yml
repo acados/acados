@@ -153,6 +153,7 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: |
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/lib" >> $GITHUB_ENV
         ${{runner.workspace}}/acados/.github/linux/run_tests.sh
 
 # ''''    # test interfaces
