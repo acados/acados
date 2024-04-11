@@ -94,7 +94,7 @@ jobs:
         name: lib
         if-no-files-found: error
         path: ${{runner.workspace}}/acados/lib/
-        compression-level: 6 #TODO test time difference
+        compression-level: 0 #TODO test time difference
         overwrite: true
     
     - name: Store build scripts (/build)
@@ -103,8 +103,9 @@ jobs:
         name: build
         if-no-files-found: error
         path: ${{runner.workspace}}/build/
-        compression-level: 6
+        compression-level: 0
         overwrite: true
+      #TODO exclude unnecessary objs
 
     - name: Store include directory (/include)
       uses: actions/upload-artifact@v4
@@ -112,7 +113,7 @@ jobs:
         name: include
         if-no-files-found: error
         path: ${{runner.workspace}}/acados/include/
-        compression-level: 6
+        compression-level: 0
         overwrite: true
 
   install_python_interface:
