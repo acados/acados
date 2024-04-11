@@ -154,7 +154,7 @@ jobs:
       run: |
         echo "ENV_RUN=true" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/lib" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${{runner.workspace}}/acados/lib" >> $GITHUB_ENV
         ${{runner.workspace}}/acados/.github/linux/run_tests.sh
 
 # ''''    # test interfaces
