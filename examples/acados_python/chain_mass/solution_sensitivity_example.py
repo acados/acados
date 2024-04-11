@@ -180,7 +180,7 @@ def export_chain_mass_model(n_mass: int, Ts: float = 0.2, disturbance: bool = Fa
     model.x = x
     model.xdot = xdot
     model.u = u
-    model.p = p.cat
+    model.p_global = p.cat
     model.name = model_name
 
     p_map = p(0)
@@ -223,7 +223,7 @@ def compute_parametric_steady_state(
     g += [model.u]  # don't actuate controlled mass
 
     # misuse IPOPT as nonlinear equation solver
-    nlp = {"x": ca.vertcat(*w), "f": 0, "g": ca.vertcat(*g), "p": model.p}
+    nlp = {"x": ca.vertcat(*w), "f": 0, "g": ca.vertcat(*g), "p": model.p_global}
 
     solver = ca.nlpsol("solver", "ipopt", nlp)
     sol = solver(x0=w0, lbg=0, ubg=0, p=p_.cat)
@@ -302,13 +302,13 @@ def export_parametric_ocp(
     u_e = ocp.model.u - np.zeros((nu, 1))
 
     idx = find_idx_for_labels(define_param_struct_symSX(chain_params_["n_mass"], disturbance=True).cat, "Q")
-    Q_sym = ca.reshape(ocp.model.p[idx], (nx, nx))
+    Q_sym = ca.reshape(ocp.model.p_global[idx], (nx, nx))
     q_diag = np.ones((nx, 1))
     q_diag[3 * M : 3 * M + 3] = M + 1
     p["Q"] = 2 * np.diagflat(q_diag)
 
     idx = find_idx_for_labels(define_param_struct_symSX(chain_params_["n_mass"], disturbance=True).cat, "R")
-    R_sym = ca.reshape(ocp.model.p[idx], (nu, nu))
+    R_sym = ca.reshape(ocp.model.p_global[idx], (nu, nu))
     p["R"] = 2 * np.diagflat(1e-2 * np.ones((nu, 1)))
 
     ocp.model.cost_expr_ext_cost = 0.5 * (x_e.T @ Q_sym @ x_e + u_e.T @ R_sym @ u_e)
@@ -316,7 +316,7 @@ def export_parametric_ocp(
 
     ocp.model.cost_y_expr = vertcat(x_e, u_e)
 
-    ocp.parameter_values = p.cat.full().flatten()
+    ocp.p_global_values = p.cat.full().flatten()
 
     # set constraints
     umax = 1 * np.ones((nu,))
@@ -409,14 +409,14 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
     timings_lin_params = np.zeros((np_test))
     timings_solve_params = np.zeros((np_test))
     timings_store_load = np.zeros((np_test))
+    timings_solve_params_adj = np.zeros((np_test))
 
     for i in range(np_test):
         parameter_values.cat[p_idx] = p_var[i]
 
         p_val = parameter_values.cat.full().flatten()
-        for stage in range(ocp.solver_options.N_horizon + 1):
-            ocp_solver.set(stage, "p", p_val)
-            sensitivity_solver.set(stage, "p", p_val)
+        ocp_solver.set_p_global_and_precompute_dependencies(p_val)
+        sensitivity_solver.set_p_global_and_precompute_dependencies(p_val)
 
         u_opt.append(ocp_solver.solve_for_x0(x0))
         print(f"ocp_solver status {ocp_solver.status}")
