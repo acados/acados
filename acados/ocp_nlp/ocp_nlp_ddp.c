@@ -126,8 +126,9 @@ void ocp_nlp_ddp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->rti_phase = 0;
     opts->initialize_t_slacks = 0;
 
-    opts->mu_min = 1e-16;
-    opts->nls_regularization_lam = 5.0;
+    opts->adaptive_levenberg_marquardt_mu_min = 1e-16;
+    opts->adaptive_levenberg_marquardt_lam = 5.0;
+    opts->with_adaptive_levenberg_marquardt = false;
 
     opts->linesearch_eta = 1e-6;
     opts->linesearch_minimum_step_size = 1e-17;
@@ -259,6 +260,23 @@ void ocp_nlp_ddp_opts_set(void *config_, void *opts_, const char *field, void* v
                 exit(1);
             }
             opts->initialize_t_slacks = *initialize_t_slacks;
+        }
+        // newly added options for DDP
+        else if (!strcmp(field, "with_adaptive_levenberg_marquardt"))
+        {
+            bool* with_adaptive_levenberg_marquardt = (bool *) value;
+            printf("with adaptive lm is: %s", *with_adaptive_levenberg_marquardt?"true":"false");
+            opts->with_adaptive_levenberg_marquardt = *with_adaptive_levenberg_marquardt;
+        }
+        else if (!strcmp(field, "adaptive_levenberg_marquardt_lam"))
+        {
+            double* adaptive_levenberg_marquardt_lam = (double *) value;
+            opts->adaptive_levenberg_marquardt_lam = *adaptive_levenberg_marquardt_lam;
+        }
+        else if (!strcmp(field, "adaptive_levenberg_marquardt_mu_min"))
+        {
+            double* adaptive_levenberg_marquardt_mu_min = (double *) value;
+            opts->adaptive_levenberg_marquardt_mu_min = *adaptive_levenberg_marquardt_mu_min;
         }
         else
         {
@@ -646,11 +664,11 @@ static void update_mu(double step_size, ocp_nlp_ddp_opts *opts, ocp_nlp_ddp_memo
 {
         if (step_size == 1.0){
             double mu_tmp = ddp_mem->mu;
-            ddp_mem->mu = fmax(opts->mu_min, ddp_mem->mu_bar/(opts->nls_regularization_lam));
+            ddp_mem->mu = fmax(opts->adaptive_levenberg_marquardt_mu_min, ddp_mem->mu_bar/(opts->adaptive_levenberg_marquardt_lam));
             ddp_mem->mu_bar = mu_tmp;
             printf("New mu is: %f\n", ddp_mem->mu);
         } else {
-            ddp_mem->mu = fmin(opts->nls_regularization_lam * ddp_mem->mu, 1.0);
+            ddp_mem->mu = fmin(opts->adaptive_levenberg_marquardt_lam * ddp_mem->mu, 1.0);
         }
 }
 
@@ -724,13 +742,15 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         // Prepare the regularization here....
-        if (ddp_iter == 0){
-            reg_param_memory = 0.0;
-        } else {
-            reg_param_memory = reg_param;
+        if (opts->with_adaptive_levenberg_marquardt){
+            if (ddp_iter == 0){
+                reg_param_memory = 0.0;
+            } else {
+                reg_param_memory = reg_param;
+            }
+            reg_param = 2*nlp_mem->cost_value*mem->mu;
+            nlp_opts->levenberg_marquardt = reg_param;
         }
-        reg_param = 2*nlp_mem->cost_value*mem->mu;
-        nlp_opts->levenberg_marquardt = reg_param;
 
         ///////////////////////////////////////////////////////////////////////
         // Prepare the QP data
@@ -972,7 +992,9 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->stat[mem->stat_n*(ddp_iter+1)+6] = mem->alpha;
             // Copy new iterate to nlp_out
             copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
+            if (opts->with_adaptive_levenberg_marquardt){
             update_mu(mem->alpha, opts, mem);
+            }
             mem->time_glob += acados_toc(&timer1);
         }
     }  // end DDP loop
@@ -1092,7 +1114,6 @@ void ocp_nlp_ddp_backtracking_line_search(void *config_, void *dims_, void *nlp_
             // copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
             mem->alpha = alpha;
             nlp_mem->cost_value = trial_cost;
-            // update_mu(alpha, opts, mem);
             return;
         } else {
             // Reduce step size 
@@ -1427,7 +1448,6 @@ void ocp_nlp_ddp_work_get(void *config_, void *dims_, void *work_,
         exit(1);
     }
 }
-
 
 void ocp_nlp_ddp_config_initialize_default(void *config_)
 {

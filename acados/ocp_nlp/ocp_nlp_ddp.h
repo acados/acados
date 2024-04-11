@@ -67,14 +67,15 @@ typedef struct
     int rti_phase;       // only phase 0 at the moment
     int initialize_t_slacks;  // 0-false or 1-true
 
-    // Regularization
-    double nls_regularization_lam;
-    double mu_min;
-
     // Line search
     double linesearch_eta;
     double linesearch_minimum_step_size;
     double linesearch_step_size_reduction_factor;
+
+    // Flag for usage of adaptive levenberg marquardt strategy
+    bool with_adaptive_levenberg_marquardt;
+    double adaptive_levenberg_marquardt_lam;
+    double adaptive_levenberg_marquardt_mu_min;
 
 } ocp_nlp_ddp_opts;
 

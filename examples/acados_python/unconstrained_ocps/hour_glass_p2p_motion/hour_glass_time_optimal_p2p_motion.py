@@ -117,8 +117,11 @@ def main():
     ocp.solver_options.integrator_type = 'ERK'
     ocp.solver_options.sim_method_num_steps = M
     ocp.solver_options.print_level = 1
+
+    # DDP options
     ocp.solver_options.nlp_solver_type = 'DDP'
     ocp.solver_options.globalization = 'MERIT_BACKTRACKING'
+    ocp.solver_options.with_adaptive_levenberg_marquardt = True
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
