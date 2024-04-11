@@ -142,6 +142,7 @@ jobs:
         echo "ACADOS_SOURCE_DIR=$(pwd)" >> $GITHUB_ENV
         echo "ACADOS_INSTALL_DIR=$(pwd)" >> $GITHUB_ENV
         ${{runner.workspace}}/acados/.github/linux/install_python.sh''
+
     - name: Run CMake tests (ctest)
 
       working-directory: ${{runner.workspace}}/acados/build
