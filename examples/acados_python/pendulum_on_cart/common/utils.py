@@ -96,3 +96,6 @@ def plot_pendulum(shooting_nodes, u_max, U, X_true, X_est=None, Y_measured=None,
 
     plt.subplots_adjust(left=None, bottom=None, right=None, top=None, hspace=0.4)
 
+    if plt_show:
+        plt.show()
+    return
