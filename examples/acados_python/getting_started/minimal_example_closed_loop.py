@@ -173,7 +173,7 @@ def main(use_RTI=False):
 
     # plot results
     model = ocp_solver.acados_ocp.model
-    plot_pendulum(np.linspace(0, (Tf/N_horizon)*Nsim, Nsim+1), Fmax, simU, simX, latexify=False, time_label=model.t_label, xlabels=model.x_labels, ulabels=model.u_labels)
+    plot_pendulum(np.linspace(0, (Tf/N_horizon)*Nsim, Nsim+1), Fmax, simU, simX, latexify=False, time_label=model.t_label, x_labels=model.x_labels, u_labels=model.u_labels)
 
     ocp_solver = None
 

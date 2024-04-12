@@ -33,7 +33,7 @@ import numpy as np
 from acados_template import latexify_plot
 
 
-def plot_pendulum(t, u_max, U, X_true, latexify=False, plt_show=True, time_label='$t$', xlabels=None, ulabels=None):
+def plot_pendulum(t, u_max, U, X_true, latexify=False, plt_show=True, time_label='$t$', x_labels=None, u_labels=None):
     """
     Params:
         t: time values of the discretization
@@ -52,15 +52,15 @@ def plot_pendulum(t, u_max, U, X_true, latexify=False, plt_show=True, time_label
     for i in range(nx):
         axes[i].plot(t, X_true[:, i])
         axes[i].grid()
-        if xlabels is not None:
-            axes[i].set_ylabel(xlabels[i])
+        if x_labels is not None:
+            axes[i].set_ylabel(x_labels[i])
         else:
             axes[i].set_ylabel(f'$x_{i}$')
 
     axes[-1].step(t, np.append([U[0]], U))
 
-    if ulabels is not None:
-        axes[-1].set_ylabel(ulabels[0])
+    if u_labels is not None:
+        axes[-1].set_ylabel(u_labels[0])
     else:
         axes[-1].set_ylabel('$u$')
 
