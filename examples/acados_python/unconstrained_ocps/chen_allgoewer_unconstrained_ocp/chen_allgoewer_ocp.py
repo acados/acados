@@ -112,8 +112,8 @@ def main():
     for i in range(N):
         ocp_solver.cost_set(i, "scaling", 1.0)
 
-    simX = np.zeros((N+1, nx))
-    simU = np.zeros((N, nu))
+    sol_X = np.zeros((N+1, nx))
+    sol_U = np.zeros((N, nu))
 
     # Load and set the initial guess
     with open('chen_allgoewer_initial_guess.npy', 'rb') as f:
@@ -131,13 +131,17 @@ def main():
     if status != 0:
         raise Exception(f'acados returned status {status}.')
 
+    iter = ocp_solver.get_stats('ddp_iter')
+    assert iter == 4, "DDP Solver should converge within 4 iterations!"
+
+
     # get solution
     for i in range(N):
-        simX[i,:] = ocp_solver.get(i, "x")
-        simU[i,:] = ocp_solver.get(i, "u")
-    simX[N,:] = ocp_solver.get(N, "x")
+        sol_X[i,:] = ocp_solver.get(i, "x")
+        sol_U[i,:] = ocp_solver.get(i, "u")
+    sol_X[N,:] = ocp_solver.get(N, "x")
 
-    plot_trajectory([X_init, simX.T], ["Initial guess", "Solution"])
+    plot_trajectory([X_init, sol_X.T], ["Initial guess", "Solution"])
 
 
 if __name__ == '__main__':

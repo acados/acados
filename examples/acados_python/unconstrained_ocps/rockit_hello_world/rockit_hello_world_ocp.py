@@ -135,6 +135,9 @@ def main():
     # Solve the problem
     status = ocp_solver.solve()
 
+    iter = ocp_solver.get_stats('ddp_iter')
+    assert iter == 6, "DDP Solver should converge within 6 iterations!"
+
     if status != 0:
         raise Exception(f'acados returned status {status}.')
 

@@ -265,7 +265,6 @@ void ocp_nlp_ddp_opts_set(void *config_, void *opts_, const char *field, void* v
         else if (!strcmp(field, "with_adaptive_levenberg_marquardt"))
         {
             bool* with_adaptive_levenberg_marquardt = (bool *) value;
-            printf("with adaptive lm is: %s", *with_adaptive_levenberg_marquardt?"true":"false");
             opts->with_adaptive_levenberg_marquardt = *with_adaptive_levenberg_marquardt;
         }
         else if (!strcmp(field, "adaptive_levenberg_marquardt_lam"))
@@ -776,7 +775,6 @@ static void update_mu(double step_size, ocp_nlp_ddp_opts *opts, ocp_nlp_ddp_memo
             double mu_tmp = ddp_mem->mu;
             ddp_mem->mu = fmax(opts->adaptive_levenberg_marquardt_mu_min, ddp_mem->mu_bar/(opts->adaptive_levenberg_marquardt_lam));
             ddp_mem->mu_bar = mu_tmp;
-            printf("New mu is: %f\n", ddp_mem->mu);
         } else {
             ddp_mem->mu = fmin(opts->adaptive_levenberg_marquardt_lam * ddp_mem->mu, 1.0);
         }
@@ -838,11 +836,10 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     double reg_param_memory;
     double reg_param;
     bool infeasible_initial_guess = true;
-    bool evaluate_cost = true;
-    
-    double time_step;
-    for (int i=0; i<N; i++){
-        printf("Current time step is: %f\n", nlp_in->Ts[i]);
+    bool evaluate_cost = true;    
+    double time_step = nlp_in->Ts[0];
+    if (nlp_opts->print_level > 0){
+        printf("'with_adaptive_levenberg_marquardt' option is set to: %s\n", opts->with_adaptive_levenberg_marquardt?"true":"false");
     }
 
     for (; ddp_iter < opts->max_iter+1; ddp_iter++)
@@ -863,9 +860,8 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             } else {
                 reg_param_memory = reg_param;
             }
-            time_step = nlp_in->Ts[0];
             reg_param = 2*nlp_mem->cost_value*mem->mu;
-            nlp_opts->levenberg_marquardt = (1/time_step)*reg_param; // For the moment like this..
+            nlp_opts->levenberg_marquardt = (1/time_step)*reg_param; // For the moment divided by time step such that scaling in Levenberg-Marquardt is turned off!
         }
 
         ///////////////////////////////////////////////////////////////////////
@@ -908,7 +904,9 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // Check if initial guess was infeasible
         if ((infeasible_initial_guess == true) & (nlp_res->inf_norm_res_eq > opts->tol_eq))
         {
-            printf("Initial guess was infeasible!\n");
+            if (nlp_opts->print_level > 0){
+                printf("Initial guess was infeasible!\n");
+            }
             ddp_iter = -1;
         } else {
             infeasible_initial_guess = false;
@@ -1146,7 +1144,6 @@ void ocp_nlp_ddp_backtracking_line_search(void *config_, void *dims_, void *nlp_
     // double qp_cost = compute_qp_cost
     int N = dims->N;
     double pred = -nlp_mem->qp_cost_value;
-    printf("Predicted reduction is: %f\n", pred);
     double alpha = 1.0;
     double trial_cost;
     double negative_ared;
@@ -1177,9 +1174,8 @@ void ocp_nlp_ddp_backtracking_line_search(void *config_, void *dims_, void *nlp_
             tmp_fun = config->cost[i]->memory_get_fun_ptr(nlp_mem->cost[i]);
             trial_cost += *tmp_fun;
         }
-        ///////////////////////////////////////////////////////////////////////
+
         negative_ared = trial_cost - nlp_mem->cost_value;
-        printf("Negative ared is %f\n", negative_ared);
         // Check Armijo sufficient decrease condition
         if (negative_ared <= fmin(-opts->linesearch_eta*alpha* fmax(pred, 0) + 1e-18, 0))
         {

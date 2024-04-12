@@ -90,9 +90,9 @@ def create_acados_solver_and_solve_problem(method='SQP'):
     # set options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' 
     ocp.solver_options.qp_solver_cond_N = N
-    ocp.solver_options.hessian_approx = 'EXACT' # 'GAUSS_NEWTON', 'EXACT'
+    ocp.solver_options.hessian_approx = 'EXACT'
     ocp.solver_options.integrator_type = 'DISCRETE'
-    # ocp.solver_options.print_level = 1
+    ocp.solver_options.print_level = 1
     ocp.solver_options.nlp_solver_type = method # SQP_RTI, SQP
 
     # set prediction horizon
@@ -105,7 +105,13 @@ def create_acados_solver_and_solve_problem(method='SQP'):
     sol_U = np.ndarray((N, nu))
 
     status = ocp_solver.solve()
-    ocp_solver.print_statistics() 
+    if method == "SQP":
+        iter = ocp_solver.get_stats('sqp_iter')
+    elif method == "DDP":
+        iter = ocp_solver.get_stats('ddp_iter')
+    else:
+        raise RuntimeError("Wrong method!")
+    assert iter == 1, "DDP Solver should converge within 1 iteration!"
     
     if status != 0:
         raise Exception(f'acados returned status {status}.')

@@ -1176,6 +1176,7 @@ class AcadosOcpSolver:
         ]
         fields = double_fields + [
                   'sqp_iter',
+                  'ddp_iter',
                   'qp_stat',
                   'qp_iter',
                   'statistics',
@@ -1189,7 +1190,7 @@ class AcadosOcpSolver:
 
         field = field_.encode('utf-8')
 
-        if field_ in ['sqp_iter', 'stat_m', 'stat_n']:
+        if field_ in ['ddp_iter', 'sqp_iter', 'stat_m', 'stat_n']:
             out = c_int(0)
             self.__acados_lib.ocp_nlp_get.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
             self.__acados_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, byref(out))
