@@ -227,29 +227,29 @@ class AcadosModel():
         self.__t_label = "t"
 
     @property
-    def xlabels(self):
+    def x_labels(self):
         """Contains list of labels for the states. Default: :code:`None`"""
         if self.__x_labels is None:
             return [f"x{i}" for i in range(self.x.size()[0])]
         else:
             return self.__x_labels
 
-    @xlabels.setter
-    def xlabels(self, xlabels):
-        self.__x_labels = xlabels
+    @x_labels.setter
+    def x_labels(self, x_labels):
+        self.__x_labels = x_labels
 
 
     @property
-    def ulabels(self):
+    def u_labels(self):
         """Contains list of labels for the controls. Default: :code:`None`"""
         if self.__u_labels is None:
             return [f"x{i}" for i in range(self.x.size()[0])]
         else:
             return self.__u_labels
 
-    @ulabels.setter
-    def ulabels(self, ulabels):
-        self.__u_labels = ulabels
+    @u_labels.setter
+    def u_labels(self, u_labels):
+        self.__u_labels = u_labels
 
     @property
     def t_label(self):
