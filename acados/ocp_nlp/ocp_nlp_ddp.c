@@ -559,7 +559,7 @@ static void ocp_nlp_ddp_compute_trial_iterate(ocp_nlp_config *config, ocp_nlp_di
         blasfeo_daxpby(nx[i+1], 1.0, tmp_vec, 0, 1.0, out->ux+i+1, nu[i+1], tmp_nlp_out->ux+i+1, nu[i+1]);
     }
 
-    for (int i = 0; i < N+1; i++)
+    for (i = 0; i < N+1; i++)
     {
         // update dual variables
         if (opts->full_step_dual)
