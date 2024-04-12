@@ -837,8 +837,8 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // main ddp loop
     ///////////////////////////////////////////////////////////////////////////
     int ddp_iter = 0;
-    double reg_param_memory;
-    double reg_param;
+    double reg_param_memory = 0.0;
+    double reg_param = 0.0;
     bool infeasible_initial_guess = true;
     bool evaluate_cost = true;    
     double time_step = nlp_in->Ts[0];
@@ -897,12 +897,12 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
 
         // save statistics
-        if (ddp_iter < mem->stat_m)
+        if ((ddp_iter < mem->stat_m) & (ddp_iter >= 0))
         {
             mem->stat[mem->stat_n*ddp_iter+0] = nlp_res->inf_norm_res_stat;
             mem->stat[mem->stat_n*ddp_iter+1] = nlp_res->inf_norm_res_eq;
-            mem->stat[mem->stat_n*ddp_iter+2] = nlp_res->inf_norm_res_ineq;
-            mem->stat[mem->stat_n*ddp_iter+3] = nlp_res->inf_norm_res_comp;
+            mem->stat[mem->stat_n*ddp_iter+2] = nlp_mem->cost_value;
+            mem->stat[mem->stat_n*ddp_iter+3] = reg_param_memory;
         }
 
         // Check if initial guess was infeasible

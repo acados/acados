@@ -991,7 +991,7 @@ class AcadosOcpSolver:
         """
         stat = self.get_stats("statistics")
 
-        if self.solver_options['nlp_solver_type'] in ['SQP', 'DDP']:
+        if self.solver_options['nlp_solver_type'] in 'SQP':
             print('\niter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp_stat\tqp_iter\talpha')
             if stat.shape[0]>8:
                 print('\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp')
@@ -1020,6 +1020,32 @@ class AcadosOcpSolver:
                     line += '\t{:e}\t{:e}\t{:e}\t{:e}'.format( \
                          stat[offset+1][jj], stat[offset+2][jj], stat[offset+3][jj], stat[offset+4][jj])
                 print(line)
+            print('\n')
+        elif self.solver_options['nlp_solver_type'] == 'DDP':
+            for jj in range(stat.shape[1]):
+                if jj % 10 == 0:
+                    # print('\niter\tres_stat\tres_eq\t\tqp_stat\tqp_iter\talpha')
+                    print(("{iter:>6} | {obj:^10} | {inf:^10} | {stat:^10} | "
+                   "{alpha:^10} | {gamma:^10} | {qp_status:^10} | {qp_iter:^10}").format(
+                        obj='objective',
+                        iter='iter.',
+                        inf='infeas.',
+                        stat='statio.',
+                        alpha='alpha', 
+                        gamma='reg.',
+                        qp_status='qp_status',
+                        qp_iter='qp_iter.'))
+                # print(f'{int(stat[0][jj]):d}\t{stat[1][jj]:e}\t{stat[2][jj]:e}\t{int(stat[5][jj]):d}\t{int(stat[6][jj]):d}\t{stat[7][jj]:e}\t')
+                print(("{iter:>6} | {obj:^10.4e} | {inf:^10.4e} | {stat:^10.4e} | "
+                   "{alpha:^10.4e} | {gamma:^10.4e} | {qp_status:^10} | {qp_iter:^10}").format(
+                     iter=int(stat[0][jj]),
+                     stat=stat[1][jj],
+                     inf=stat[2][jj],
+                     obj=stat[3][jj],
+                     gamma=stat[4][jj],     
+                     qp_status=int(stat[5][jj]),
+                     qp_iter=int(stat[6][jj]),
+                     alpha=stat[7][jj]))
             print('\n')
 
         return
