@@ -33,17 +33,15 @@ from typing import Union
 import numpy as np
 from copy import deepcopy
 
-import os
+import os, json
 
 from .acados_model import AcadosModel
+from .acados_dims import AcadosOcpDims
 from .acados_ocp_cost import AcadosOcpCost
 from .acados_ocp_constraints import AcadosOcpConstraints
-from .acados_dims import AcadosOcpDims
 from .acados_ocp_options import AcadosOcpOptions, INTEGRATOR_TYPES, COLLOCATION_TYPES, COST_DISCRETIZATION_TYPES
-
 from .acados_ocp import AcadosOcp
-
-from .utils import get_acados_path, format_class_dict, get_shared_lib_ext
+from .utils import make_object_json_dumpable, get_acados_path, format_class_dict, get_shared_lib_ext, render_template
 
 
 def find_non_default_fields_of_obj(obj: Union[AcadosOcpCost, AcadosOcpConstraints, AcadosOcpOptions], stage_type='all') -> list:
@@ -171,6 +169,10 @@ class AcadosMultiphaseOcp:
         self.code_export_directory = 'c_generated_code'
         """Path to where code will be exported. Default: `c_generated_code`."""
 
+        self.simulink_opts = None
+        """Options to configure Simulink S-function blocks, mainly to activate possible Inputs and Outputs."""
+
+
     @property
     def parameter_values(self):
         """:math:`p` - list of initial values for parameter vector.
@@ -215,12 +217,10 @@ class AcadosMultiphaseOcp:
 
     def make_consistent(self) -> None:
 
-        opts = self.solver_options
-
         self.N_horizon = sum(self.N_list)
 
         # check options
-        self.mocp_opts.make_consistent(opts, n_phases=self.n_phases)
+        self.mocp_opts.make_consistent(self.solver_options, n_phases=self.n_phases)
 
         # check phases formulation objects are distinct
         warning = "\nNOTE: this can happen if set_phase() is called with the same ocp object for multiple phases."
@@ -248,7 +248,6 @@ class AcadosMultiphaseOcp:
             model_name_list = [self.model[i].name for i in range(self.n_phases)]
             print(f"new model names are {model_name_list}")
 
-
         for i in range(self.n_phases):
 
             # create dummy ocp
@@ -259,7 +258,7 @@ class AcadosMultiphaseOcp:
             ocp.constraints = self.constraints[i]
             ocp.cost = self.cost[i]
             ocp.parameter_values = self.parameter_values[i]
-            ocp.solver_options = opts
+            ocp.solver_options = self.solver_options
 
             # set phase dependent options
             ocp.solver_options.integrator_type = self.mocp_opts.integrator_type[i]
@@ -318,3 +317,87 @@ class AcadosMultiphaseOcp:
         del ocp_dict['solver_options']['cost_discretization']
 
         return ocp_dict
+
+
+    def dump_to_json(self, json_file: str) -> None:
+        ocp_nlp_dict = self.to_dict()
+        with open(json_file, 'w') as f:
+            json.dump(ocp_nlp_dict, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
+        return
+
+
+    def __get_template_list(self, cmake_builder=None) -> list:
+        """
+        returns a list of tuples in the form:
+        (input_filename, output_filname)
+        or
+        (input_filename, output_filname, output_directory)
+        """
+        name = self.name
+        template_list = []
+
+        template_list.append(('main_multi.in.c', f'main_{name}.c'))
+        template_list.append(('acados_multi_solver.in.h', f'acados_solver_{name}.h'))
+        template_list.append(('acados_multi_solver.in.c', f'acados_solver_{name}.c'))
+        # template_list.append(('acados_solver.in.pxd', f'acados_solver.pxd'))
+        if cmake_builder is not None:
+            raise NotImplementedError('CMake not yet supported for multiphase OCPs.')
+            template_list.append(('CMakeLists.in.txt', 'CMakeLists.txt'))
+        else:
+            template_list.append(('multi_Makefile.in', 'Makefile'))
+
+        # Simulink
+        if self.simulink_opts is not None:
+            raise NotImplementedError('Simulink not yet supported for multiphase OCPs.')
+
+        return template_list
+
+
+    def render_templates(self, json_file: str, cmake_builder=None):
+
+        # model templates
+        for i, dummy_ocp in enumerate(self.dummy_ocp_list):
+            # this is the only option that can vary and influence external functions to be generated
+            dummy_ocp.solver_options.integrator_type = self.mocp_opts.integrator_type[i]
+
+            template_list = dummy_ocp._get_external_function_header_templates()
+            # dump dummy_ocp
+            tmp_json_file = 'tmp_ocp.json'
+            dummy_ocp.dump_to_json(json_file=tmp_json_file)
+            tmp_json_path = os.path.abspath(tmp_json_file)
+
+            # renter templates
+            for tup in template_list:
+                output_dir = self.code_export_directory if len(tup) <= 2 else tup[2]
+                render_template(tup[0], tup[1], output_dir, tmp_json_path)
+
+        print("rendered model templates successfully")
+
+        # check json file
+        json_path = os.path.abspath(json_file)
+        if not os.path.exists(json_path):
+            raise Exception(f'Path "{json_path}" not found!')
+
+        # solver templates
+        template_list = self.__get_template_list(cmake_builder=cmake_builder)
+
+        # Render templates
+        for tup in template_list:
+            output_dir = self.code_export_directory if len(tup) <= 2 else tup[2]
+            render_template(tup[0], tup[1], output_dir, json_path)
+
+        # # Custom templates
+        # acados_template_path = os.path.dirname(os.path.abspath(__file__))
+        # custom_template_glob = os.path.join(acados_template_path, 'custom_update_templates', '*')
+        # for tup in ocp.solver_options.custom_templates:
+        #     render_template(tup[0], tup[1], ocp.code_export_directory, json_path, template_glob=custom_template_glob)
+        print("\nmocp_render_templates: rendered solver templates successfully!\n")
+
+        return
+
+
+    def generate_external_functions(self):
+        for i in range(self.n_phases):
+            # this is the only option that can vary and influence external functions to be generated
+            self.dummy_ocp_list[i].solver_options.integrator_type = self.mocp_opts.integrator_type[i]
+            self.dummy_ocp_list[i].generate_external_functions()

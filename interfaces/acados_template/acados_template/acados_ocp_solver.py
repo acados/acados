@@ -36,7 +36,6 @@ import shutil
 import sys
 import time
 
-from copy import deepcopy
 from ctypes import (POINTER, byref, c_char_p, c_double, c_int,
                     c_void_p, cast)
 if os.name == 'nt':
@@ -45,234 +44,16 @@ if os.name == 'nt':
 else:
     from ctypes import CDLL as DllLoader
 from datetime import datetime
-from typing import Union, Optional, List, Tuple
+from typing import Union, List, Tuple
 
 import numpy as np
 import scipy.linalg
-
-from .acados_ocp import AcadosOcp
-from .acados_model import AcadosModel
-from .acados_ocp_cost import AcadosOcpCost
-from .acados_ocp_constraints import AcadosOcpConstraints
-from .acados_dims import AcadosOcpDims
-from .acados_ocp_options import AcadosOcpOptions
-
 from .builders import CMakeBuilder
-
-from .casadi_function_generation import ocp_generate_external_functions, mocp_generate_external_functions
-
-from .gnsf.detect_gnsf_structure import detect_gnsf_structure
-from .utils import (format_class_dict,
-                    get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_python_interface_path,
-                    make_object_json_dumpable, render_template,
-                    set_up_imported_gnsf_model, verbose_system_call)
-from .zoro_description import ZoroDescription
-
+from .acados_ocp import AcadosOcp
 from .acados_multiphase_ocp import AcadosMultiphaseOcp
-
-
-def get_simulink_default_opts():
-    python_interface_path = get_python_interface_path()
-    abs_path = os.path.join(python_interface_path, 'simulink_default_opts.json')
-    with open(abs_path , 'r') as f:
-        simulink_default_opts = json.load(f)
-    return simulink_default_opts
-
-
-def ocp_formulation_json_dump(ocp: AcadosOcp, json_file: str, simulink_opts: Optional[dict]=None) -> None:
-    ocp_nlp_dict = ocp.to_dict()
-    # TODO: move simulink_opts to class AcadosOcp
-    if simulink_opts is not None:
-        ocp_nlp_dict['simulink_opts'] = simulink_opts
-
-    with open(json_file, 'w') as f:
-        json.dump(ocp_nlp_dict, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
-    return
-
-def mocp_formulation_json_dump(ocp: AcadosMultiphaseOcp, json_file: str) -> None:
-    ocp_nlp_dict = ocp.to_dict()
-    with open(json_file, 'w') as f:
-        json.dump(ocp_nlp_dict, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
-    return
-
-
-def ocp_get_default_cmake_builder() -> CMakeBuilder:
-    """
-    If :py:class:`~acados_template.acados_ocp_solver.AcadosOcpSolver` is used with `CMake` this function returns a good first setting.
-    :return: default :py:class:`~acados_template.builders.CMakeBuilder`
-    """
-    cmake_builder = CMakeBuilder()
-    cmake_builder.options_on = ['BUILD_ACADOS_OCP_SOLVER_LIB']
-    return cmake_builder
-
-
-
-def ocp_render_templates(ocp: AcadosOcp, json_file: str, cmake_builder=None, simulink_opts=None):
-
-    # check json file
-    json_path = os.path.abspath(json_file)
-    if not os.path.exists(json_path):
-        raise Exception(f'Path "{json_path}" not found!')
-
-    template_list = __ocp_get_template_list(ocp, cmake_builder=cmake_builder, simulink_opts=simulink_opts)
-
-    # Render templates
-    for tup in template_list:
-        if len(tup) > 2:
-            output_dir = tup[2]
-        else:
-            output_dir = ocp.code_export_directory
-        render_template(tup[0], tup[1], output_dir, json_path)
-
-    # Custom templates
-    acados_template_path = os.path.dirname(os.path.abspath(__file__))
-    custom_template_glob = os.path.join(acados_template_path, 'custom_update_templates', '*')
-    for tup in ocp.solver_options.custom_templates:
-        render_template(tup[0], tup[1], ocp.code_export_directory, json_path, template_glob=custom_template_glob)
-
-    return
-
-
-
-def __mocp_get_template_list(ocp: AcadosMultiphaseOcp, cmake_builder=None, simulink_opts=None) -> list:
-    """
-    returns a list of tuples in the form:
-    (input_filename, output_filname)
-    or
-    (input_filename, output_filname, output_directory)
-    """
-    name = ocp.name
-    template_list = []
-
-    template_list.append(('main_multi.in.c', f'main_{name}.c'))
-    template_list.append(('acados_multi_solver.in.h', f'acados_solver_{name}.h'))
-    template_list.append(('acados_multi_solver.in.c', f'acados_solver_{name}.c'))
-    # template_list.append(('acados_solver.in.pxd', f'acados_solver.pxd'))
-    if cmake_builder is not None:
-        raise NotImplementedError('CMake not yet supported for multiphase OCPs.')
-        template_list.append(('CMakeLists.in.txt', 'CMakeLists.txt'))
-    else:
-        template_list.append(('multi_Makefile.in', 'Makefile'))
-
-    # Simulink
-    if simulink_opts is not None:
-        raise NotImplementedError('Simulink not yet supported for multiphase OCPs.')
-
-    return template_list
-
-
-def mocp_render_templates(ocp: AcadosMultiphaseOcp, json_file: str, cmake_builder=None, simulink_opts=None):
-
-    # model templates
-    for i, dummy_ocp in enumerate(ocp.dummy_ocp_list):
-        # this is the only option that can vary and influence external functions to be generated
-        dummy_ocp.solver_options.integrator_type = ocp.mocp_opts.integrator_type[i]
-        template_list = __ocp_get_external_function_header_templates(dummy_ocp)
-        # dump dummy_ocp
-        tmp_json_file = 'tmp_ocp.json'
-        ocp_formulation_json_dump(dummy_ocp, json_file=tmp_json_file)
-        tmp_json_path = os.path.abspath(tmp_json_file)
-
-        # renter templates
-        for tup in template_list:
-            if len(tup) > 2:
-                output_dir = tup[2]
-            else:
-                output_dir = ocp.code_export_directory
-            render_template(tup[0], tup[1], output_dir, tmp_json_path)
-
-    print("rendered model templates successfully")
-
-    # check json file
-    json_path = os.path.abspath(json_file)
-    if not os.path.exists(json_path):
-        raise Exception(f'Path "{json_path}" not found!')
-
-    # solver templates
-    template_list = __mocp_get_template_list(ocp, cmake_builder=cmake_builder, simulink_opts=simulink_opts)
-
-    # Render templates
-    for tup in template_list:
-        if len(tup) > 2:
-            output_dir = tup[2]
-        else:
-            output_dir = ocp.code_export_directory
-        render_template(tup[0], tup[1], output_dir, json_path)
-
-    # # Custom templates
-    # acados_template_path = os.path.dirname(os.path.abspath(__file__))
-    # custom_template_glob = os.path.join(acados_template_path, 'custom_update_templates', '*')
-    # for tup in ocp.solver_options.custom_templates:
-    #     render_template(tup[0], tup[1], ocp.code_export_directory, json_path, template_glob=custom_template_glob)
-    print("\nmocp_render_templates: rendered solver templates successfully!\n")
-
-
-    return
-
-
-def __ocp_get_template_list(ocp: AcadosOcp, cmake_builder=None, simulink_opts=None) -> list:
-    """
-    returns a list of tuples in the form:
-    (input_filename, output_filname)
-    or
-    (input_filename, output_filname, output_directory)
-    """
-    name = ocp.model.name
-    template_list = []
-
-    template_list.append(('main.in.c', f'main_{name}.c'))
-    template_list.append(('acados_solver.in.c', f'acados_solver_{name}.c'))
-    template_list.append(('acados_solver.in.h', f'acados_solver_{name}.h'))
-    template_list.append(('acados_solver.in.pxd', f'acados_solver.pxd'))
-    if cmake_builder is not None:
-        template_list.append(('CMakeLists.in.txt', 'CMakeLists.txt'))
-    else:
-        template_list.append(('Makefile.in', 'Makefile'))
-
-    # sim
-    template_list.append(('acados_sim_solver.in.c', f'acados_sim_solver_{name}.c'))
-    template_list.append(('acados_sim_solver.in.h', f'acados_sim_solver_{name}.h'))
-    template_list.append(('main_sim.in.c', f'main_sim_{name}.c'))
-
-    # model
-    template_list += __ocp_get_external_function_header_templates(ocp)
-
-    # Simulink
-    if simulink_opts is not None:
-        template_file = os.path.join('matlab_templates', 'acados_solver_sfun.in.c')
-        template_list.append((template_file, f'acados_solver_sfunction_{name}.c'))
-        template_file = os.path.join('matlab_templates', 'make_sfun.in.m')
-        template_list.append((template_file, f'make_sfun_{name}.m'))
-        template_file = os.path.join('matlab_templates', 'acados_sim_solver_sfun.in.c')
-        template_list.append((template_file, f'acados_sim_solver_sfunction_{name}.c'))
-        template_file = os.path.join('matlab_templates', 'make_sfun_sim.in.m')
-        template_list.append((template_file, f'make_sfun_sim_{name}.m'))
-
-    return template_list
-
-
-def __ocp_get_external_function_header_templates(ocp: AcadosOcp) -> list:
-    dims = ocp.dims
-    cost = ocp.cost
-    code_export_directory = ocp.code_export_directory
-    name = ocp.model.name
-    template_list = []
-
-    # dynamics
-    model_dir = os.path.join(code_export_directory, f'{name}_model')
-    template_list.append(('model.in.h', f'{name}_model.h', model_dir))
-    # constraints
-    if any(np.array([dims.nh, dims.nh_e, dims.nh_0, dims.nphi, dims.nphi_e, dims.nphi_0]) > 0):
-        constraints_dir = os.path.join(code_export_directory, f'{name}_constraints')
-        template_list.append(('constraints.in.h', f'{name}_constraints.h', constraints_dir))
-    # cost
-    if any([cost.cost_type != 'LINEAR_LS', cost.cost_type_0 != 'LINEAR_LS', cost.cost_type_e != 'LINEAR_LS']):
-        cost_dir = os.path.join(code_export_directory, f'{name}_cost')
-        template_list.append(('cost.in.h', f'{name}_cost.h', cost_dir))
-
-    return template_list
-
-
+from .gnsf.detect_gnsf_structure import detect_gnsf_structure
+from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_python_interface_path,
+                    make_object_json_dumpable, set_up_imported_gnsf_model, verbose_system_call)
 
 
 class AcadosOcpSolver:
@@ -281,7 +62,6 @@ class AcadosOcpSolver:
 
         :param acados_ocp: type :py:class:`~acados_template.acados_ocp.AcadosOcp` or :py:class:`~acados_template.acados_multiphase_ocp.AcadosMultiphaseOcp` - description of the OCP for acados
         :param json_file: name for the json file used to render the templated code - default: acados_ocp_nlp.json
-        :param simulink_opts: Options to configure Simulink S-function blocks, mainly to activate possible Inputs and Outputs
     """
     if os.name == 'nt':
         dlclose = DllLoader('kernel32', use_last_error=True).FreeLibrary
@@ -305,6 +85,7 @@ class AcadosOcpSolver:
                    `MS Visual Studio`); default: `None`
         """
         acados_ocp.code_export_directory = os.path.abspath(acados_ocp.code_export_directory)
+        acados_ocp.simulink_opts = simulink_opts
 
         # add kwargs to acados_ocp
         acados_ocp.json_file = json_file
@@ -326,15 +107,9 @@ class AcadosOcpSolver:
         acados_ocp.solver_options.Tsim = acados_ocp.solver_options.time_steps[0]
 
         # generate code (external functions and templated code)
-        if isinstance(acados_ocp, AcadosOcp):
-            ocp_generate_external_functions(acados_ocp)
-            ocp_formulation_json_dump(acados_ocp, json_file, simulink_opts=simulink_opts)
-            ocp_render_templates(acados_ocp, json_file, cmake_builder=cmake_builder, simulink_opts=simulink_opts)
-
-        elif isinstance(acados_ocp, AcadosMultiphaseOcp):
-            mocp_generate_external_functions(acados_ocp)
-            mocp_formulation_json_dump(acados_ocp, json_file)
-            mocp_render_templates(acados_ocp, json_file, cmake_builder=cmake_builder, simulink_opts=simulink_opts)
+        acados_ocp.generate_external_functions()
+        acados_ocp.dump_to_json(json_file)
+        acados_ocp.render_templates(json_file, cmake_builder=cmake_builder)
 
         # copy custom update function
         if acados_ocp.solver_options.custom_update_filename != "" and acados_ocp.solver_options.custom_update_copy:

@@ -40,12 +40,14 @@ from .acados_ocp_options import AcadosOcpOptions
 from .acados_sim import AcadosSim, AcadosSimOpts
 from .acados_multiphase_ocp import AcadosMultiphaseOcp
 
-from .acados_ocp_solver import AcadosOcpSolver, get_simulink_default_opts, ocp_get_default_cmake_builder
+from .acados_ocp_solver import AcadosOcpSolver
 from .acados_sim_solver import AcadosSimSolver, sim_get_default_cmake_builder
 from .utils import print_casadi_expression, get_acados_path, get_python_interface_path, \
     get_tera_exec_path, get_tera, check_casadi_version, acados_dae_model_json_dump, \
     casadi_length, make_object_json_dumpable, J_to_idx, get_default_simulink_opts, \
-    is_empty
+    is_empty, get_simulink_default_opts
+
+from .builders import get_default_cmake_builder
 
 from .plot_utils import latexify_plot
 
