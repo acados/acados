@@ -84,9 +84,9 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True):
         breakpoint()
 
     # adjoint direction for one stage
-    seed_xstage = np.ones((1, nx))
+    seed_xstage = np.ones((nx, 1))
     seed_xstage[0, 0] = -8
-    seed_ustage = np.ones((1, nu))
+    seed_ustage = np.ones((nu, 1))
     seed_ustage[0, 0] = 42
 
     # test different settings forward vs. adjoint
@@ -99,7 +99,7 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True):
         # Calculate the policy gradient
         sens_x_forw, sens_u_forw = sensitivity_solver.eval_solution_sensitivity(stages, "params_global")
 
-        adj_p_ref = sum([seed_x[k] @ sens_x_forw[k] + seed_u[k] @ sens_u_forw[k] for k in range(len(stages))])
+        adj_p_ref = sum([seed_x[k].T @ sens_x_forw[k] + seed_u[k].T @ sens_u_forw[k] for k in range(len(stages))])
 
         # compute adjoint solution sensitivity
         adj_p = sensitivity_solver.eval_adjoint_solution_sensitivity(stages=stages,
@@ -122,20 +122,20 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True):
     if not np.allclose(adj_p, adj_p_ref, atol=1e-7):
         raise Exception("adj_p and adj_p_ref should match.")
     else:
-        print("Success: adj_p and adj_p_ref match!")
+        print("Success: adj_p and adj_p_ref match! Tested list vs. single stage API.")
 
     # test multiple adjoint seeds at once
+    seed_x_mat = np.eye(nx)
+    seed_u_mat = np.zeros((nu, nx))
     adj_p_mat = sensitivity_solver.eval_adjoint_solution_sensitivity(stages=1,
-                                            seed_x=np.eye(nx),
-                                            seed_u=np.zeros((nx, nu)))
+                                            seed_x=seed_x_mat,
+                                            seed_u=seed_u_mat)
     print(f"{adj_p_mat=}")
 
     for i in range(nx):
-        seed_x = np.zeros((1, nx))
-        seed_x[0, i] = 1.0
         adj_p_vec = sensitivity_solver.eval_adjoint_solution_sensitivity(stages=1,
-                                            seed_x=seed_x,
-                                            seed_u=np.zeros((1, nu)))
+                                            seed_x=seed_x_mat[:, [i]],
+                                            seed_u=seed_u_mat[:, [i]])
         print(f"{adj_p_vec=} {adj_p_mat[i, :]=}")
         if not np.allclose(adj_p_vec, adj_p_mat[i, :], atol=1e-7):
             raise Exception(f"adj_p_vec and adj_p_mat[{i}, :] should match.")
