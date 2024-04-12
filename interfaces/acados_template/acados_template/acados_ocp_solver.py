@@ -1031,7 +1031,7 @@ class AcadosOcpSolver:
                         iter='iter.',
                         inf='infeas.',
                         stat='statio.',
-                        alpha='alpha', 
+                        alpha='alpha',
                         gamma='reg.',
                         qp_status='qp_status',
                         qp_iter='qp_iter.'))
@@ -1042,7 +1042,7 @@ class AcadosOcpSolver:
                      stat=stat[1][jj],
                      inf=stat[2][jj],
                      obj=stat[3][jj],
-                     gamma=stat[4][jj],     
+                     gamma=stat[4][jj],
                      qp_status=int(stat[5][jj]),
                      qp_iter=int(stat[6][jj]),
                      alpha=stat[7][jj]))

@@ -1142,5 +1142,4 @@ class AcadosOcp:
 
         self.constraints = new_constraints
 
-
         return
