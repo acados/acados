@@ -239,7 +239,6 @@ class AcadosSimSolver:
     def __init__(self, acados_sim: AcadosSim, json_file='acados_sim.json', generate=True, build=True, cmake_builder: CMakeBuilder = None, verbose: bool = True):
 
         self.solver_created = False
-        self.acados_sim = acados_sim
         model_name = acados_sim.model.name
         self.model_name = model_name
 
@@ -253,6 +252,11 @@ class AcadosSimSolver:
             print("Warning: An AcadosSimSolver is created from an AcadosOcp description.",
                   "This only works if you created an AcadosOcpSolver before with the same description."
                   "Otherwise it leads to undefined behavior. Using an AcadosSim description is recommended.")
+            self.T = acados_sim.solver_options.Tsim
+        else:
+            self.T = acados_sim.solver_options.T
+
+        self.acados_sim = acados_sim
 
         if build:
             self.build(code_export_dir, cmake_builder=cmake_builder, verbose=verbose)
@@ -326,17 +330,21 @@ class AcadosSimSolver:
         self.gettable_scalars = ['CPUtime', 'time_tot', 'ADtime', 'time_ad', 'LAtime', 'time_la']
 
 
-    def simulate(self, x=None, u=None, z=None, p=None):
+    def simulate(self, x=None, u=None, z=None, xdot=None, p=None):
         """
-        Simulate the system forward for the given x, u, z, p and return x_next.
+        Simulate the system forward for the given x, u, p and return x_next.
+        The values xdot, z are used as initial guesses for implicit integrators, if provided.
         Wrapper around `solve()` taking care of setting/getting inputs/outputs.
         """
         if x is not None:
             self.set('x', x)
         if u is not None:
             self.set('u', u)
-        if z is not None:
-            self.set('z', z)
+        if self.acados_sim.solver_options.integrator_type == "IRK":
+            if z is not None:
+                self.set('z', z)
+            if xdot is not None:
+                self.set('xdot', xdot)
         if p is not None:
             self.set('p', p)
 
@@ -456,6 +464,9 @@ class AcadosSimSolver:
             if value_shape != tuple(dims):
                 raise Exception(f'AcadosSimSolver.set(): mismatching dimension' \
                     f' for field "{field_}" with dimension {tuple(dims)} (you have {value_shape}).')
+
+            if field_ == 'T':
+                self.T = value_
 
         # set
         if field_ in ['xdot', 'z']:

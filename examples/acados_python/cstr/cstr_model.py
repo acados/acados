@@ -39,7 +39,7 @@ from cstr_utils import compute_lqr_gain
 
 
 @dataclass
-class CSTRParameters:
+class CstrParameters:
     # nominal parameter values
     F0: float = 0.1  # m^3/min
     T0: float = 350.0  # K
@@ -57,7 +57,7 @@ class CSTRParameters:
     us: np.ndarray = np.array([300, 0.1])
 
 
-def setup_cstr_model(params: CSTRParameters):
+def setup_cstr_model(params: CstrParameters):
 
     model_name = "cstr_ode"
 

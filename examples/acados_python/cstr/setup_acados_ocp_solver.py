@@ -34,43 +34,33 @@
 from acados_template import AcadosOcp, AcadosOcpSolver
 from scipy.linalg import block_diag
 import numpy as np
-from dataclasses import dataclass
 from casadi import vertcat
 
 
-@dataclass
-class MpcCSTRParameters:
-    umin: np.ndarray  # lower bound on u
-    umax: np.ndarray  # upper bound on u
-    Q: np.ndarray
-    R: np.ndarray
-    Tf: float = 0.25 * 15  # horizon length
-    N: int = 15
-    dt: float = 0.25
-    linear_mpc: bool = False
-
-    # NOTE: computed with setup_linearized_model()
-    P: np.ndarray = np.array(
-        [
+class MpcCstrParameters:
+    def __init__(self, xs: np.ndarray, us: np.ndarray, dt: float = 0.25, linear_mpc: bool = False, N: int = 16, Tf: float = 4.0):
+        self.umin = np.array([0.95, 0.85]) * us
+        self.umax = np.array([1.05, 1.15]) * us
+        self.Q = np.diag(1.0 / xs**2)
+        self.R = np.diag(1.0 / us**2)
+        self.Tf = Tf
+        self.N = N
+        self.dt = dt
+        self.linear_mpc = linear_mpc
+        # NOTE: computed with compute_lqr_gain() from cstr_utils.py
+        self.P = np.array([
             [5.92981953e-01, -8.40033347e-04, -1.54536980e-02],
             [-8.40033347e-04, 7.75225208e-06, 2.30677411e-05],
             [-1.54536980e-02, 2.30677411e-05, 2.59450075e00],
-        ]
-    )
-
-    def __init__(self, xs, us, dt=0.25, linear_mpc=False, N=16, Tf=4):
-        self.Q = np.diag(1.0 / xs**2)
-        self.R = np.diag(1.0 / us**2)
-        # from slide
-        # self.umin = np.array([0.975, 0.75]) * us
-        # self.umax = np.array([1.025, 1.25]) * us
-        # from figure code
-        self.umin = np.array([0.95, 0.85]) * us
-        self.umax = np.array([1.05, 1.15]) * us
+        ])
 
 
 def setup_acados_ocp_solver(
-    model, mpc_params: MpcCSTRParameters, cstr_params, use_rti=False
+    model, mpc_params: MpcCstrParameters,
+    cstr_params,
+    use_rti=False,
+    reference_profile=None,
+    cost_integration=False
 ):
 
     ocp = AcadosOcp()
@@ -100,6 +90,12 @@ def setup_acados_ocp_solver(
 
     ocp.model.cost_y_expr = vertcat(x, u)
     ocp.model.cost_y_expr_e = x
+    if reference_profile is not None:
+        ocp.model.cost_y_expr -= reference_profile
+        ocp.model.cost_y_expr_e -= reference_profile[:nx]
+        ocp.parameter_values = np.concatenate((ocp.parameter_values, np.array([0.0])))
+    if cost_integration:
+        ocp.solver_options.cost_discretization = "INTEGRATOR"
 
     ocp.cost.yref = np.zeros((nx + nu,))
     ocp.cost.yref_e = np.zeros((nx,))
@@ -134,7 +130,6 @@ def setup_acados_ocp_solver(
 
     ocp.solver_options.levenberg_marquardt = 1e-5
     # ocp.solver_options.tol = 1e-3
-    ocp.solver_options.line_search_use_sufficient_descent
 
     # create
     ocp_solver = AcadosOcpSolver(ocp, json_file="acados_ocp.json")

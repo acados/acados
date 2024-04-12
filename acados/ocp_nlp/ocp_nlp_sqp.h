@@ -157,8 +157,8 @@ void ocp_nlp_sqp_config_initialize_default(void *config_);
 int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_);
 //
-void ocp_nlp_sqp_eval_adj_p(void *config_, void *dims_, void *nlp_in_, void *opts_, void *mem_, void *work_,
-                            const char *field, void *lagr_grad_wrt_params);
+void ocp_nlp_sqp_eval_lagr_grad_p(void *config_, void *dims_, void *nlp_in_, void *opts_, void *mem_, void *work_,
+                            const char *field, void *grad_p);
 //
 void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, void *return_value_);
 

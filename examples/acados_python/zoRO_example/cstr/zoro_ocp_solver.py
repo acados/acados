@@ -36,7 +36,7 @@ from casadi import vertcat
 
 
 @dataclass
-class MpcCSTRParameters:
+class MpcCstrParameters:
     umin: np.ndarray  # lower bound on u
     umax: np.ndarray  # upper bound on u
     Q: np.ndarray
@@ -68,7 +68,7 @@ class MpcCSTRParameters:
 
 
 @dataclass
-class DistCSTRParameters:
+class DistCstrParameters:
     W_mat: np.ndarray = np.diag([0.0001, 0.03, 0.00025])
     c_exceed_ratio: float = 0.25
     t_exceed_ratio: float = 0.25
@@ -76,8 +76,8 @@ class DistCSTRParameters:
 
 
 def setup_acados_ocp_solver(
-    model, mpc_params: MpcCSTRParameters, cstr_params, \
-        dist_params: DistCSTRParameters, use_rti=False
+    model, mpc_params: MpcCstrParameters, cstr_params, \
+        dist_params: DistCstrParameters, use_rti=False
 ):
 
     ocp = AcadosOcp()

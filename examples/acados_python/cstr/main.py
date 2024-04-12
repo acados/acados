@@ -31,14 +31,15 @@
 
 # authors: Katrin Baumgaertner, Jonathan Frey
 
-from cstr_model import CSTRParameters, setup_cstr_model, setup_linearized_model
+from cstr_model import CstrParameters, setup_cstr_model, setup_linearized_model
 from setup_acados_ocp_solver import (
-    MpcCSTRParameters,
+    MpcCstrParameters,
     setup_acados_ocp_solver,
     AcadosOcpSolver,
 )
 from setup_acados_integrator import setup_acados_integrator, AcadosSimSolver
 import numpy as np
+import casadi as ca
 from cstr_utils import plot_cstr
 from typing import Optional
 
@@ -50,6 +51,7 @@ def simulate(
     Nsim: int,
     X_ref: np.ndarray,
     U_ref: np.ndarray,
+    with_reference_profile: bool = False,
 ):
 
     nx = X_ref.shape[1]
@@ -69,55 +71,40 @@ def simulate(
         if controller is None:
             U[i, :] = U_ref[i, :]
         else:
-            # set initial state
-            controller.set(0, "lbx", xcurrent)
-            controller.set(0, "ubx", xcurrent)
-
-            yref = np.concatenate((X_ref[i, :], U_ref[i, :]))
-            for stage in range(controller.acados_ocp.dims.N):
-                controller.set(stage, "yref", yref)
-            controller.set(controller.acados_ocp.dims.N, "yref", X_ref[i, :])
+            if with_reference_profile:
+                t0 = i * plant.acados_sim.solver_options.T
+                for stage, dt in enumerate(controller.acados_ocp.solver_options.shooting_nodes):
+                    t = t0 + dt
+                    controller.set_params_sparse(stage, np.array([1]), np.array([t]))
+            else:
+                yref = np.concatenate((X_ref[i, :], U_ref[i, :]))
+                for stage in range(controller.acados_ocp.dims.N):
+                    controller.set(stage, "yref", yref)
+                controller.set(controller.acados_ocp.dims.N, "yref", X_ref[i, :])
 
             # solve ocp
-            status = controller.solve()
-
-            if status != 0:
-                controller.print_statistics()
-                raise Exception(
-                    f"acados controller returned status {status} in simulation step {i}. Exiting."
-                )
-
-            U[i, :] = controller.get(0, "u")
+            U[i, :] = controller.solve_for_x0(xcurrent)
             timings_solver[i] = controller.get_stats("time_tot")
 
         # simulate system
-        plant.set("x", xcurrent)
-        plant.set("u", U[i, :])
-
-        if plant.acados_sim.solver_options.integrator_type == "IRK":
-            plant.set("xdot", np.zeros((nx,)))
-
-        status = plant.solve()
-        if status != 0:
-            raise Exception(
-                f"acados integrator returned status {status} in simulation step {i}. Exiting."
-            )
-
+        xcurrent = plant.simulate(x=xcurrent, u=U[i, :], xdot=np.zeros((nx,)))
         timings_integrator[i] = plant.get("time_tot")
-        # update state
-        xcurrent = plant.get("x")
         X[i + 1, :] = xcurrent
 
     return X, U, timings_solver, timings_integrator
 
 
 def main():
+    with_nmpc = True
+    with_timevar_ref_nmpc = True
+    with_linear_mpc = True
+    with_nmpc_rti = True
 
     Tsim = 25
     dt_plant = 0.25  # [min]
 
-    cstr_params = CSTRParameters()
-    mpc_params = MpcCSTRParameters(xs=cstr_params.xs, us=cstr_params.us)
+    cstr_params = CstrParameters()
+    mpc_params = MpcCstrParameters(xs=cstr_params.xs, us=cstr_params.us)
     model = setup_cstr_model(cstr_params)
     linearized_model = setup_linearized_model(model, cstr_params, mpc_params)
     plant_model = setup_cstr_model(cstr_params)
@@ -139,9 +126,6 @@ def main():
     # reference jump
     xs2 = np.array([0.7, 337, 0.75])
     us2 = np.array([305, 0.1])
-    # Njump = int(Nsim/4)
-    # X_ref[Njump:3*Njump,:] = xs2
-    # U_ref[Njump:3*Njump,:] = us2
     Njump = int(Nsim / 3)
     X_ref[Njump : 2 * Njump, :] = xs2
     U_ref[Njump : 2 * Njump, :] = us2
@@ -164,65 +148,92 @@ def main():
     labels_all.append(label)
 
     # simulation with NMPC controller
-    label = "NMPC"
-    print(f"\n\nRunning simulation with {label}\n\n")
-    ocp_solver = setup_acados_ocp_solver(model, mpc_params, cstr_params=cstr_params)
+    if with_nmpc:
+        label = "NMPC"
+        print(f"\n\nRunning simulation with {label}\n\n")
+        ocp_solver = setup_acados_ocp_solver(model, mpc_params, cstr_params=cstr_params)
 
-    X, U, timings_solver, _ = simulate(
-        ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref
-    )
-    X_all.append(X)
-    U_all.append(U)
-    timings_solver_all.append(timings_solver)
-    labels_all.append(label)
-    ocp_solver = None
+        X, U, timings_solver, _ = simulate(
+            ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref
+        )
+        X_all.append(X)
+        U_all.append(U)
+        timings_solver_all.append(timings_solver)
+        labels_all.append(label)
+        ocp_solver = None
+
+    # simulation with time varying reference NMPC controller
+    if with_timevar_ref_nmpc:
+        label = "NMPC with time-varying reference"
+        ocp_model = setup_cstr_model(cstr_params)
+        ocp_model.t = ca.SX.sym("t")
+        t0 = ca.SX.sym("t0")
+        ocp_model.p = ca.vertcat(ocp_model.p, t0)
+        t = t0 + ocp_model.t
+
+        tjump1 = Njump * dt_plant
+        tjump2 = 2 * Njump * dt_plant
+        reference_profile = ca.if_else(t < tjump1, ca.vertcat(xs, us), ca.vertcat(xs2, us2))
+        reference_profile = ca.if_else(t < tjump2, reference_profile, ca.vertcat(xs, us))
+        print(f"\n\nRunning simulation with {label}\n\n")
+
+        ocp_solver = setup_acados_ocp_solver(ocp_model, mpc_params, cstr_params=cstr_params, reference_profile=reference_profile, cost_integration=True)
+
+        X, U, timings_solver, _ = simulate(
+            ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref, with_reference_profile=True
+        )
+        X_all.append(X)
+        U_all.append(U)
+        timings_solver_all.append(timings_solver)
+        labels_all.append(label)
+        ocp_solver = None
 
     # simulation with LMPC controller
-    label = "LMPC"
-    print(f"\n\nRunning simulation with {label}\n\n")
-    mpc_params.linear_mpc = True
-    ocp_solver = setup_acados_ocp_solver(
-        linearized_model, mpc_params, cstr_params=cstr_params, use_rti=True
-    )
-    mpc_params.linear_mpc = False
+    if with_linear_mpc:
+        label = "LMPC"
+        print(f"\n\nRunning simulation with {label}\n\n")
+        mpc_params.linear_mpc = True
+        ocp_solver = setup_acados_ocp_solver(
+            linearized_model, mpc_params, cstr_params=cstr_params, use_rti=True
+        )
+        mpc_params.linear_mpc = False
 
-    X, U, timings_solver, _ = simulate(
-        ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref
-    )
-    X_all.append(X)
-    U_all.append(U)
-    timings_solver_all.append(timings_solver)
-    labels_all.append(label)
-    ocp_solver = None
+        X, U, timings_solver, _ = simulate(
+            ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref
+        )
+        X_all.append(X)
+        U_all.append(U)
+        timings_solver_all.append(timings_solver)
+        labels_all.append(label)
+        ocp_solver = None
 
     # simulation with NMPC RTI controller
-    label = "NMPC-RTI"
-    print(f"\n\nRunning simulation with {label}\n\n")
-    ocp_solver = setup_acados_ocp_solver(
-        model, mpc_params, cstr_params=cstr_params, use_rti=True
-    )
-
-    X, U, timings_solver, _ = simulate(
-        ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref
-    )
-    X_all.append(X)
-    U_all.append(U)
-    timings_solver_all.append(timings_solver)
-    labels_all.append(label)
-    ocp_solver = None
-
-    # Evaluation
-    print("\nTiming evaluation:\n------------------")
-    for i in range(len(labels_all)):
-        label = labels_all[i]
-        timings_solver = timings_solver_all[i] * 1e3
-        print(
-            f"{label}:\n min: {np.min(timings_solver):.3f} ms, mean: {np.mean(timings_solver):.3f} ms, max: {np.max(timings_solver):.3f} ms\n"
+    if with_nmpc_rti:
+        label = "NMPC-RTI"
+        print(f"\n\nRunning simulation with {label}\n\n")
+        ocp_solver = setup_acados_ocp_solver(
+            model, mpc_params, cstr_params=cstr_params, use_rti=True
         )
 
-    # print(f"U:\n {U}")
-    # print(f"X:\n {X}")
-    # import pdb; pdb.set_trace()
+        X, U, timings_solver, _ = simulate(
+            ocp_solver, integrator, x0, Nsim, X_ref=X_ref, U_ref=U_ref
+        )
+        X_all.append(X)
+        U_all.append(U)
+        timings_solver_all.append(timings_solver)
+        labels_all.append(label)
+        ocp_solver = None
+
+    # Evaluation
+    max_label_length = max([len(l) for l in labels_all])
+    print(f"\n{'Timings in ms':{max_label_length}}  | {'miniumum':<8} | {'mean':<8} | {'maximum':<8} \n------------------")
+
+    for i in range(len(labels_all)):
+        label = labels_all[i]
+        timings_solver = timings_solver_all[i] * 1e3  # scale to milliseconds
+        print(
+            f"{label:{max_label_length}}   {f'{np.min(timings_solver):.3f}':>10} {f'{np.mean(timings_solver):.3f}':>10} {f'{np.max(timings_solver):.3f}':>10}"
+        )
 
     # plot results
     plot_cstr(
@@ -234,7 +245,8 @@ def main():
         mpc_params.umin,
         mpc_params.umax,
         labels_all,
-    )  # , fig_filename='cstr_acados_RTI.pdf')
+        fig_filename='cstr_acados_RTI.pdf',
+    )
 
 
 if __name__ == "__main__":

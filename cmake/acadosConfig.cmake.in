@@ -42,44 +42,46 @@ set(CMAKE_MODULE_PATH_save "${CMAKE_MODULE_PATH}")
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_LIST_DIR}/../") # for *Config.cmake
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")     # for FindOpenBLAS, FindFortranLibs
 
+include(CMakeFindDependencyMacro)
+
 # Find the enabled external modules
-find_package(blasfeo)
-find_package(hpipm)
+find_dependency(blasfeo)
+find_dependency(hpipm)
 
 if (ACADOS_WITH_OPENMP)
-    find_package(OpenMP)
+    find_dependency(OpenMP)
 endif()
 
 if(ACADOS_WITH_QPOASES)
-    find_package(qpOASES_e)
+    find_dependency(qpOASES_e)
 endif()
 
 if(ACADOS_WITH_HPMPC)
-    find_package(hpmpc)
+    find_dependency(hpmpc)
 endif()
 
 if(ACADOS_WITH_QPDUNES)
-    find_package(qpdunes)
+    find_dependency(qpdunes)
 endif()
 
 if(ACADOS_WITH_QORE)
-    find_package(qore)
+    find_dependency(qore)
 endif()
 
 if(ACADOS_WITH_OOQP)
-    find_package(ooqp)
-endif()
+    find_dependency(ooqp)
 
-find_package(OpenBLAS)
-if (NOT TARGET openblas)
-    add_library(openblas UNKNOWN IMPORTED)
-    set_property(TARGET openblas PROPERTY IMPORTED_LOCATION ${OpenBLAS_LIB})
-endif()
+    find_dependency(OpenBLAS)
+    if (NOT TARGET openblas)
+        add_library(openblas UNKNOWN IMPORTED)
+        set_property(TARGET openblas PROPERTY IMPORTED_LOCATION ${OpenBLAS_LIB})
+    endif()
 
-find_package(FortranLibs)
-if (NOT TARGET gfortran)
-    add_library(gfortran UNKNOWN IMPORTED)
-    set_property(TARGET gfortran PROPERTY IMPORTED_LOCATION ${FORTRAN_LIBRARY})
+    find_dependency(FortranLibs)
+    if (NOT TARGET gfortran)
+        add_library(gfortran UNKNOWN IMPORTED)
+        set_property(TARGET gfortran PROPERTY IMPORTED_LOCATION ${FORTRAN_LIBRARY})
+    endif()
 endif()
 
 include("${CMAKE_CURRENT_LIST_DIR}/acadosTargets.cmake")
