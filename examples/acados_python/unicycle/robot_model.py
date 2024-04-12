@@ -5,7 +5,7 @@ from casadi import SX, vertcat, sin, cos
 # http://users.isr.ist.utl.pt/~jag/publications/08-JETC-RCarona-vcontrol.pdf
 
 def export_robot_model() -> AcadosModel:
-    model_name = "unicycle_ode"
+    model_name = "unicycle"
 
     # set up states & controls
     x = SX.sym("x")
@@ -29,12 +29,6 @@ def export_robot_model() -> AcadosModel:
 
     xdot = vertcat(x_dot, y_dot, v_dot, theta_dot, theta_ddot)
 
-    # algebraic variables
-    # z = None
-
-    # parameters
-    p = []
-
     # dynamics
     f_expl = vertcat(v * cos(theta), v * sin(theta), F, theta_d, T)
 
@@ -47,8 +41,10 @@ def export_robot_model() -> AcadosModel:
     model.x = x
     model.xdot = xdot
     model.u = u
-    # model.z = z
-    model.p = p
     model.name = model_name
+
+    model.t_label = "$t$ [s]"
+    model.x_labels = ["$x$", "$y$", "$v$", "$\\theta$", "$\\dot{\\theta}$"]
+    model.u_labels = ["$F$", "$T$"]
 
     return model
