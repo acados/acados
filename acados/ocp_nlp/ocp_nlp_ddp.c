@@ -641,7 +641,13 @@ static void print_iteration(double obj,
  * termination criterion
  ************************************************/
 static bool check_termination(int ddp_iter, acados_timer timer0, ocp_nlp_res *nlp_res, ocp_nlp_ddp_memory *mem, ocp_nlp_ddp_opts *opts){
-        
+
+#if defined(ACADOS_WITH_OPENMP)
+    // backup number of threads
+    int num_threads_bkp = omp_get_num_threads();
+    // set number of threads
+    omp_set_num_threads(opts->nlp_opts->num_threads);
+#endif    
         // We do not need to check for the complementarity condition and for the
         // inequalities since we have an unconstrainted OCP
     if (nlp_res->inf_norm_res_eq < opts->tol_eq){ // Check that iterate must be dynamically feasible
