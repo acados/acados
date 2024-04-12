@@ -79,9 +79,9 @@ def main():
     if SOLVE_FEASIBILITY_PROBLEM:
         # Path constraints on control
         u_max = 1.5
-        # ocp.constraints.lbu = np.array([-u_max])
-        # ocp.constraints.ubu = np.array([+u_max])
-        # ocp.constraints.idxbu = np.array([0])
+        ocp.constraints.lbu = np.array([-u_max])
+        ocp.constraints.ubu = np.array([+u_max])
+        ocp.constraints.idxbu = np.array([0])
 
         # Terminal constraints
         ocp.constraints.lbx_e = np.array([0.0, 0.03])
@@ -92,12 +92,14 @@ def main():
     # set options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     ocp.solver_options.qp_solver_cond_N = N
-    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON' # 'GAUSS_NEWTON', 'EXACT'
+    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = 'ERK'
     ocp.solver_options.sim_method_num_steps = M
     ocp.solver_options.print_level = 1
-    ocp.solver_options.nlp_solver_type = 'DDP' # SQP_RTI, SQP
+    ocp.solver_options.nlp_solver_type = 'DDP'
     ocp.solver_options.nlp_solver_max_iter = 10
+    ocp.solver_options.globalization = 'MERIT_BACKTRACKING'
+    ocp.solver_options.with_adaptive_levenberg_marquardt = True
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
@@ -123,12 +125,11 @@ def main():
         ocp_solver.set(i, "u", U_init[:,i])
     ocp_solver.set(N, "x", X_init[:,N])
 
-    print("Here")
     # Solve the problem
     status = ocp_solver.solve()
 
-    # if status != 0:
-    #     raise Exception(f'acados returned status {status}.')
+    if status != 0:
+        raise Exception(f'acados returned status {status}.')
 
     # get solution
     for i in range(N):

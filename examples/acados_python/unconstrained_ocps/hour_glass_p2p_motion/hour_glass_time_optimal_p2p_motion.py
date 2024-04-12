@@ -99,7 +99,6 @@ def main():
     ocp.constraints.idxbx_e = np.array([1,2,3])
 
     # Convex over Nonlinear Constraints
-    # convex_over_nonlinear = (5*(model.x[1]+3)) / (cs.sqrt(1+15*(model.x[2]-5)**2))
     r = cs.SX.sym('r', 1, 1)
     ocp.model.con_phi_expr = r**2
     ocp.model.con_r_in_phi = r
@@ -146,12 +145,11 @@ def main():
         ocp_solver.set(i, "u", U_init[:,i])
     ocp_solver.set(N, "x", X_init[:,N])
 
-    # Solve the problem\
-    # try:
+    # Solve the problem
     status = ocp_solver.solve()
 
-    # if status != 0:
-    #     raise Exception(f'acados returned status {status}.')
+    if status != 0:
+        raise Exception(f'acados returned status {status}.')
 
     # get solution
     for i in range(N):
@@ -170,10 +168,6 @@ def plot_trajectory(list_X_sol: list, labels: list):
     #Final states 
     xf = 0
     yf = 11
-    #Distance between initial and final position (length of the reference path)
-    # L = np.sqrt((xf-x0)**2+(yf-y0)**2)
-    #Distance between tires
-    # l = 1
     #Number of control intervals
     N = 20
 

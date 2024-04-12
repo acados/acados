@@ -88,13 +88,14 @@ def main():
     # set options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     ocp.solver_options.qp_solver_cond_N = N
-    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON' # 'GAUSS_NEWTON', 'EXACT'
+    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = 'ERK'
     ocp.solver_options.sim_method_num_steps = 1
     ocp.solver_options.print_level = 1
-    ocp.solver_options.nlp_solver_type = 'DDP' # SQP_RTI, SQP
+    ocp.solver_options.nlp_solver_type = 'DDP'
     ocp.solver_options.nlp_solver_max_iter = 100
-    ocp.solver_options.globalization = 'FIXED_STEP'
+    ocp.solver_options.globalization = 'MERIT_BACKTRACKING'
+    ocp.solver_options.with_adaptive_levenberg_marquardt = True
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
@@ -134,17 +135,14 @@ def main():
     # Solve the problem
     status = ocp_solver.solve()
 
-    # if status != 0:
-    #     raise Exception(f'acados returned status {status}.')
+    if status != 0:
+        raise Exception(f'acados returned status {status}.')
 
     # get solution
     for i in range(N):
         sol_X[i,:] = ocp_solver.get(i, "x")
         sol_U[i,:] = ocp_solver.get(i, "u")
     sol_X[N,:] = ocp_solver.get(N, "x")
-
-    # plot_trajectory([X_init, simX.T], ["Initial guess", "Solution"])
-
 
 if __name__ == '__main__':
     main()
