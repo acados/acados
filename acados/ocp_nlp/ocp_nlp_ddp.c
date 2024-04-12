@@ -487,7 +487,7 @@ static void ocp_nlp_ddp_cast_workspace(ocp_nlp_config *config, ocp_nlp_dims *dim
 
 
 /******************************************************************************
-Helper functions 
+Helper functions
 ******************************************************************************/
 
 static void ocp_nlp_ddp_reset_timers(ocp_nlp_ddp_memory *mem)
@@ -647,7 +647,7 @@ static bool check_termination(int ddp_iter, acados_timer timer0, ocp_nlp_res *nl
     int num_threads_bkp = omp_get_num_threads();
     // set number of threads
     omp_set_num_threads(opts->nlp_opts->num_threads);
-#endif    
+#endif
         // We do not need to check for the complementarity condition and for the
         // inequalities since we have an unconstrainted OCP
     if (nlp_res->inf_norm_res_eq < opts->tol_eq){ // Check that iterate must be dynamically feasible
@@ -679,7 +679,7 @@ static bool check_termination(int ddp_iter, acados_timer timer0, ocp_nlp_res *nl
             printf("Optimal Solution found! Convergend to Converged To Zero Residual Solution.\n");
         }
 
-        return true;                
+        return true;
         }
     }
 
@@ -755,33 +755,19 @@ static bool check_termination(int ddp_iter, acados_timer timer0, ocp_nlp_res *nl
 /************************************************
  * functions
  ************************************************/
-static void ocp_nlp_set_primal_variable_pointers_in_submodules(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
-                                                       ocp_nlp_out *nlp_out, ocp_nlp_memory *nlp_mem)
-{
-    int N = dims->N;
-    for (int i = 0; i < N; i++)
-    {
-        config->dynamics[i]->memory_set_ux_ptr(nlp_out->ux+i, nlp_mem->dynamics[i]);
-        config->dynamics[i]->memory_set_ux1_ptr(nlp_out->ux+i+1, nlp_mem->dynamics[i]);
-    }
-    for (int i = 0; i <= N; i++)
-    {
-        config->cost[i]->memory_set_ux_ptr(nlp_out->ux+i, nlp_mem->cost[i]);
-        config->constraints[i]->memory_set_ux_ptr(nlp_out->ux+i, nlp_mem->constraints[i]);
-    }
-    return;
-}
-
 
 static void update_mu(double step_size, ocp_nlp_ddp_opts *opts, ocp_nlp_ddp_memory *ddp_mem)
 {
-        if (step_size == 1.0){
-            double mu_tmp = ddp_mem->mu;
-            ddp_mem->mu = fmax(opts->adaptive_levenberg_marquardt_mu_min, ddp_mem->mu_bar/(opts->adaptive_levenberg_marquardt_lam));
-            ddp_mem->mu_bar = mu_tmp;
-        } else {
-            ddp_mem->mu = fmin(opts->adaptive_levenberg_marquardt_lam * ddp_mem->mu, 1.0);
-        }
+    if (step_size == 1.0)
+    {
+        double mu_tmp = ddp_mem->mu;
+        ddp_mem->mu = fmax(opts->adaptive_levenberg_marquardt_mu_min, ddp_mem->mu_bar/(opts->adaptive_levenberg_marquardt_lam));
+        ddp_mem->mu_bar = mu_tmp;
+    }
+    else
+    {
+        ddp_mem->mu = fmin(opts->adaptive_levenberg_marquardt_lam * ddp_mem->mu, 1.0);
+    }
 }
 
 // MAIN OPTIMIZATION ROUTINE
@@ -840,7 +826,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     double reg_param_memory = 0.0;
     double reg_param = 0.0;
     bool infeasible_initial_guess = true;
-    bool evaluate_cost = true;    
+    bool evaluate_cost = true;
     double time_step = nlp_in->Ts[0];
     if (nlp_opts->print_level > 0){
         printf("'with_adaptive_levenberg_marquardt' option is set to: %s\n", opts->with_adaptive_levenberg_marquardt?"true":"false");
@@ -930,7 +916,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         if (check_termination(ddp_iter, timer0, nlp_res, mem, opts)){
             return mem->status;
         }
-        
+
         ///////////////////////////////////////////////////////////////////////
         // regularize Hessian
         ///////////////////////////////////////////////////////////////////////
@@ -943,7 +929,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         ///////////////////////////////////////////////////////////////////////
         // solve qp
         ///////////////////////////////////////////////////////////////////////
-        
+
         // (typically) no warm start at first iteration
         if (ddp_iter == 0 && !opts->warm_start_first_qp)
         {
@@ -1056,13 +1042,14 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         ///////////////////////////////////////////////////////////////////////
         /* globalization */
         ///////////////////////////////////////////////////////////////////////
-        if (infeasible_initial_guess == true){
+        if (infeasible_initial_guess)
+        {
             // Accept the forward simulation to get feasible initial guess
             ocp_nlp_ddp_compute_trial_iterate(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, mem->alpha);
             copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
             infeasible_initial_guess = false;
         }
-        else 
+        else
         {
             // Do the globalization here: Either fixed step or Armijo line search
             acados_tic(&timer1);
@@ -1127,8 +1114,8 @@ double ocp_nlp_ddp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_
 }
 
 void ocp_nlp_ddp_backtracking_line_search(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
-                void *mem_, void *work_, void *opts_) {
-    
+                void *mem_, void *work_, void *opts_)
+{
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_config *config = config_;
 
@@ -1155,7 +1142,7 @@ void ocp_nlp_ddp_backtracking_line_search(void *config_, void *dims_, void *nlp_
     {
         // Do the DDP forward sweep to get the trial iterate
         ocp_nlp_ddp_compute_trial_iterate(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, alpha);
-        
+
         ///////////////////////////////////////////////////////////////////////
         // Evaluate cost function at trial iterate
         // set evaluation point to tmp_nlp_out
@@ -1189,13 +1176,16 @@ void ocp_nlp_ddp_backtracking_line_search(void *config_, void *dims_, void *nlp_
             mem->alpha = alpha;
             nlp_mem->cost_value = trial_cost;
             return;
-        } else {
-            // Reduce step size 
+        }
+        else
+        {
+            // Reduce step size
             alpha *= opts->linesearch_step_size_reduction_factor;
         }
 
         // IF step size below value, raise error for the moment
-        if (alpha < opts->linesearch_minimum_step_size){
+        if (alpha < opts->linesearch_minimum_step_size)
+        {
             printf("Step size gets too small...Terminating.\n");
             exit(1);
         }
