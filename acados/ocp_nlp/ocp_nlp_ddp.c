@@ -745,9 +745,7 @@ static bool check_termination(int ddp_iter, acados_timer timer0, ocp_nlp_res *nl
             printf("Stopped: Maximum Iterations Reached.\n");
         }
 
-// #ifndef ACADOS_SILENT
-//     printf("\n ocp_nlp_ddp: maximum iterations reached\n");
-// #endif
+        return true;
     }
 
     return false;
