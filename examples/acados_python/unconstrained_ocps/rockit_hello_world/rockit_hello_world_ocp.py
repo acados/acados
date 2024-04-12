@@ -106,7 +106,7 @@ def main():
 
     ocp_solver = AcadosOcpSolver(ocp, json_file = 'rockit_hello_world.json')
 
-    # Acados multiplies all stages with the time step
+    # acados multiplies all stage costs with the time step by default
     for i in range(N):
         ocp_solver.cost_set(i, "scaling", 1.0)
     sol_X = np.zeros((N+1, nx))

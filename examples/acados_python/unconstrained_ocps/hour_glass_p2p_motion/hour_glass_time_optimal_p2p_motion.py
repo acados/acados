@@ -33,7 +33,7 @@ from time_optimal_simple_bicycle_model import export_time_optimal_simple_bicycle
 import numpy as np
 # from utils import plot_trajectory
 from matplotlib import pyplot as plt
-import casadi as cs
+import casadi as ca
 
 def main():
 
@@ -57,10 +57,10 @@ def main():
     # set dimensions
     ocp.dims.N = N
 
-    # set cost
-    Q_mat = np.array([[0.5, 0], [0, 0.5]])
-    R_mat = np.array([[0.8]])
-    P_mat = np.array([[10.0, 0], [0, 10.0]])
+    # # set cost
+    # Q_mat = np.array([[0.5, 0], [0, 0.5]])
+    # R_mat = np.array([[0.8]])
+    # P_mat = np.array([[10.0, 0], [0, 10.0]])
 
     x0 = 0.0
     y0 = 0.0
@@ -99,10 +99,10 @@ def main():
     ocp.constraints.idxbx_e = np.array([1,2,3])
 
     # Convex over Nonlinear Constraints
-    r = cs.SX.sym('r', 1, 1)
+    r = ca.SX.sym('r', 1, 1)
     ocp.model.con_phi_expr = r**2
     ocp.model.con_r_in_phi = r
-    ocp.model.con_r_expr = (5*(model.x[1]+3)) / (cs.sqrt(1+15*(model.x[2]-5)**2))
+    ocp.model.con_r_expr = (5*(model.x[1]+3)) / (ca.sqrt(1+15*(model.x[2]-5)**2))
 
     ocp.constraints.lphi = np.array([0])
     ocp.constraints.uphi = np.array([1])
@@ -165,24 +165,24 @@ def main():
 
 def plot_trajectory(list_X_sol: list, labels: list):
 
-    #Initial states
+    # Initial states
     x0 = 0
-    y0 = 0 
-    #Final states 
+    y0 = 0
+    # Final states
     xf = 0
     yf = 11
-    #Number of control intervals
+    # Number of control intervals
     N = 20
 
-    #Plot the x and y solutions + tunnel shape
+    # Plot the x and y solutions + tunnel shape
     plt.figure()
     plt.title('TUNNEL N=' +str(N)+' Start: (' + str("{:.2f}".format(x0)) + ',' + str("{:.2f}".format(y0)) + ') End: (' + str("{:.2f}".format(xf)) + ',' + str("{:.2f}".format(yf)) + ')')
     plt.axis([-8, 5, -1 , 11])
 
-    #Plot the tunnel
-    y_co = np.linspace(y0, yf, 1000) #Points along the path
-    r = np.sqrt(1+15*(y_co-5)**2)/5    #Distance between the path and the tunnel walls
-    plt.plot(-3+r,y_co, 'r-')   
+    # Plot the tunnel
+    y_co = np.linspace(y0, yf, 1000) # Points along the path
+    r = np.sqrt(1+15*(y_co-5)**2)/5    # Distance between the path and the tunnel walls
+    plt.plot(-3+r,y_co, 'r-')
     plt.plot(-3-r,y_co, 'r-')
     for i in range(len(y_co)):
         plt.hlines(y= y_co[i], xmin=-3-r[i], xmax=-3+r[i], color='r')
@@ -197,7 +197,7 @@ def plot_trajectory(list_X_sol: list, labels: list):
     plt.plot(-3+rf2*np.cos(angle),y0-rf2*np.sin(angle), 'r-')
     plt.plot(-3-rf2*np.cos(angle),y0-rf2*np.sin(angle), 'r-')
 
-    #Plot x and y coordinates
+    # Plot x and y coordinates
     for i in range(len(list_X_sol)):
         plt.plot(list_X_sol[i][1,:], list_X_sol[i][2,:], label = labels[i], marker='o', markersize=4)
     plt.xlabel('x [m]')

@@ -29,7 +29,7 @@
 #
 
 from acados_template import AcadosModel
-from casadi import SX, vertcat, sin, cos
+from casadi import SX, vertcat
 
 def export_rockit_hello_world_model() -> AcadosModel:
 

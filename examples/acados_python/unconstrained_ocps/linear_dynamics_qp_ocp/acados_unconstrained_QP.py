@@ -30,7 +30,7 @@
 
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel
 import numpy as np
-import casadi as cs
+import casadi as ca
 import scipy.linalg
 
 def create_acados_solver_and_solve_problem(method='SQP'):
@@ -44,15 +44,11 @@ def create_acados_solver_and_solve_problem(method='SQP'):
     nu = 2
     ny = nx + nu
     ny_e = nx
-    x = cs.SX.sym('x', nx)
-    u = cs.SX.sym('u', nu)
+    x = ca.SX.sym('x', nx)
+    u = ca.SX.sym('u', nu)
 
     A = np.eye(nx)*0.9
     B = np.tril(np.ones((nx, nu)))
-
-    # Initial guess
-    x_init = np.outer(np.linspace(1, 0, N+1), [2, 0])
-    u_init = np.zeros((N, nu))
 
     # set model
     model = AcadosModel()
@@ -78,7 +74,7 @@ def create_acados_solver_and_solve_problem(method='SQP'):
     Vu[ny-1,0] = 1.0
     ocp.cost.Vu = Vu
     ocp.cost.Vx_e = np.eye(nx)
-    
+
     ocp.cost.yref = np.zeros((ny, ))
     ocp.cost.yref_e = np.zeros((ny_e, ))
     ocp.cost.W = scipy.linalg.block_diag(Q_mat, R_mat)
@@ -88,7 +84,7 @@ def create_acados_solver_and_solve_problem(method='SQP'):
     ocp.constraints.x0 = np.array([2.0, 0.0])
 
     # set options
-    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' 
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     ocp.solver_options.qp_solver_cond_N = N
     ocp.solver_options.hessian_approx = 'EXACT'
     ocp.solver_options.integrator_type = 'DISCRETE'
@@ -112,7 +108,7 @@ def create_acados_solver_and_solve_problem(method='SQP'):
     else:
         raise RuntimeError("Wrong method!")
     assert iter == 1, "DDP Solver should converge within 1 iteration!"
-    
+
     if status != 0:
         raise Exception(f'acados returned status {status}.')
 
@@ -128,12 +124,11 @@ def create_acados_solver_and_solve_problem(method='SQP'):
     return sol_X, sol_U
 
 def main():
-    
     sol_X_sqp, sol_U_sqp = create_acados_solver_and_solve_problem(method='SQP')
     sol_X_ddp, sol_U_ddp = create_acados_solver_and_solve_problem(method='DDP')
 
-    assert np.allclose(sol_X_ddp, sol_X_sqp), "x of ddp and sqp do not coincide"
-    assert np.allclose(sol_U_ddp, sol_U_sqp), "u of ddp and sqp do not coincide"
+    assert np.allclose(sol_X_ddp, sol_X_sqp), "solution x of ddp and sqp do not coincide"
+    assert np.allclose(sol_U_ddp, sol_U_sqp), "solution u of ddp and sqp do not coincide"
 
     print("Experiment was succesful!")
 

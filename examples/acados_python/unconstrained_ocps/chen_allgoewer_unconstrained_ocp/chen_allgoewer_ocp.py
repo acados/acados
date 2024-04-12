@@ -32,7 +32,6 @@ from acados_template import AcadosOcp, AcadosOcpSolver
 from chen_allgoewer_system_model import export_chen_allgoewer_model
 import numpy as np
 from utils import plot_trajectory
-from matplotlib import pyplot as plt
 
 def main():
 
@@ -65,7 +64,7 @@ def main():
     tau = 100
     # the 'EXTERNAL' cost type can be used to define general cost terms
     # NOTE: This leads to additional (exact) hessian contributions when using GAUSS_NEWTON hessian.
-    
+
     if not SOLVE_FEASIBILITY_PROBLEM:
         ocp.cost.cost_type = 'EXTERNAL'
         ocp.cost.cost_type_e = 'EXTERNAL'
