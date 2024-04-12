@@ -124,5 +124,24 @@ def main(qp_solver_ric_alg: int, use_cython=False, generate_solvers=True):
     else:
         print("Success: adj_p and adj_p_ref match!")
 
+    # test multiple adjoint seeds at once
+    adj_p_mat = sensitivity_solver.eval_adjoint_solution_sensitivity(stages=1,
+                                            seed_x=np.eye(nx),
+                                            seed_u=np.zeros((nx, nu)))
+    print(f"{adj_p_mat=}")
+
+    for i in range(nx):
+        seed_x = np.zeros((1, nx))
+        seed_x[0, i] = 1.0
+        adj_p_vec = sensitivity_solver.eval_adjoint_solution_sensitivity(stages=1,
+                                            seed_x=seed_x,
+                                            seed_u=np.zeros((1, nu)))
+        print(f"{adj_p_vec=} {adj_p_mat[i, :]=}")
+        if not np.allclose(adj_p_vec, adj_p_mat[i, :], atol=1e-7):
+            raise Exception(f"adj_p_vec and adj_p_mat[{i}, :] should match.")
+        else:
+            print(f"Success: adj_p_vec and adj_p_mat[{i}, :] match!")
+
+
 if __name__ == "__main__":
     main(qp_solver_ric_alg=0, use_cython=False, generate_solvers=True)
