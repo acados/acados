@@ -68,8 +68,11 @@ def main():
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON' # 'GAUSS_NEWTON', 'EXACT'
     ocp.solver_options.integrator_type = 'ERK'
-    # ocp.solver_options.print_level = 1
+    ocp.solver_options.print_level = 1
     ocp.solver_options.nlp_solver_type = 'DDP' # SQP_RTI, SQP
+    ocp.solver_options.nlp_solver_max_iter = 100
+    ocp.solver_options.globalization = 'MERIT_BACKTRACKING'
+    ocp.solver_options.with_adaptive_levenberg_marquardt = True
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
@@ -78,11 +81,13 @@ def main():
 
     ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
+    for i in range(N):
+        ocp_solver.cost_set(i, "scaling", 1.0)
     simX = np.zeros((N+1, nx))
     simU = np.zeros((N, nu))
 
     status = ocp_solver.solve()
-    ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
+    # ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
 
     if status != 0:
         raise Exception(f'acados returned status {status}.')
