@@ -37,7 +37,7 @@ import sys
 import time
 
 from copy import deepcopy
-from ctypes import (POINTER, byref, c_char_p, c_double, c_int, c_int64,
+from ctypes import (POINTER, byref, c_char_p, c_double, c_int,
                     c_void_p, cast)
 if os.name == 'nt':
     from ctypes import wintypes
