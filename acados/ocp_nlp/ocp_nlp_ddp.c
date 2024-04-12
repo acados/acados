@@ -134,7 +134,6 @@ void ocp_nlp_ddp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->linesearch_minimum_step_size = 1e-17;
     opts->linesearch_step_size_reduction_factor = 0.5;
 
-
     // overwrite default submodules opts
 
     // qp tolerance
@@ -729,6 +728,11 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     double reg_param;
     bool infeasible_initial_guess = true;
     bool evaluate_cost = true;
+    
+    double time_step;
+    for (int i=0; i<N; i++){
+        printf("Current time step is: %f\n", nlp_in->Ts[i]);
+    }
 
     for (; ddp_iter < opts->max_iter+1; ddp_iter++)
     {
@@ -748,8 +752,9 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             } else {
                 reg_param_memory = reg_param;
             }
+            time_step = nlp_in->Ts[0];
             reg_param = 2*nlp_mem->cost_value*mem->mu;
-            nlp_opts->levenberg_marquardt = reg_param;
+            nlp_opts->levenberg_marquardt = (1/time_step)*reg_param; // For the moment like this..
         }
 
         ///////////////////////////////////////////////////////////////////////
