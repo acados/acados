@@ -58,19 +58,19 @@ def main():
     ocp.constraints.ubu = np.array([+Fmax])
     ocp.constraints.idxbu = np.array([0])
 
-    ocp.constraints.x0 = np.array([0.0, 0.05* np.pi, 0.0, 0.0])
+    ocp.constraints.x0 = np.array([0.0, .3* np.pi, 0.0, 0.0])
 
     ocp.constraints.lbx_e = np.array([0.0, 0.0, 0.0, 0.0])
     ocp.constraints.ubx_e = np.array([0.0, 0.0, 0.0, 0.0])
     ocp.constraints.idxbx_e = np.arange(nx)
 
     # set options
-    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # 'FULL_CONDENSING_QPOASES', 'PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM'
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON' # 'GAUSS_NEWTON', 'EXACT'
-    ocp.solver_options.integrator_type = 'ERK'
+    ocp.solver_options.integrator_type = 'IRK'
     ocp.solver_options.print_level = 1
     ocp.solver_options.nlp_solver_type = 'DDP' # SQP_RTI, SQP
-    ocp.solver_options.nlp_solver_max_iter = 100
+    ocp.solver_options.nlp_solver_max_iter = 1000
     ocp.solver_options.globalization = 'MERIT_BACKTRACKING'
     ocp.solver_options.with_adaptive_levenberg_marquardt = True
 
@@ -87,7 +87,7 @@ def main():
     simU = np.zeros((N, nu))
 
     status = ocp_solver.solve()
-    # ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
+    ocp_solver.print_statistics()
 
     if status != 0:
         raise Exception(f'acados returned status {status}.')
