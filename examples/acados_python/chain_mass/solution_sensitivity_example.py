@@ -412,6 +412,7 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
     timings_lin_params = np.zeros((np_test))
     timings_solve_params = np.zeros((np_test))
     timings_store_load = np.zeros((np_test))
+    timings_lin_exact_hessian_qp = np.zeros((np_test))
     timings_solve_params_adj = np.zeros((np_test))
 
     for i in range(np_test):
@@ -440,7 +441,8 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
 
         sensitivity_solver.solve_for_x0(x0, fail_on_nonzero_status=False, print_stats_on_failure=False)
 
-        timings_lin_and_factorize[i] = sensitivity_solver.get_stats("time_tot")
+        timings_lin_exact_hessian_qp[i] = sensitivity_solver.get_stats("time_lin")
+        timings_lin_and_factorize[i] = sensitivity_solver.get_stats("time_tot") - timings_lin_exact_hessian_qp[i]
         print(f"sensitivity_solver status {sensitivity_solver.status}")
 
         # Calculate the policy gradient
@@ -462,18 +464,20 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
         sens_u.append(sens_u_[:, p_idx])
 
     timing_results_forward = {
-        "NLP solve": timings_solve_ocp_solver,
-        "prepare \& factorize exact Hessian QP": timings_lin_and_factorize,
-        "eval rhs": timings_lin_params,
-        "solve": timings_solve_params,
-        "store \& load": timings_store_load,
+        "NLP solve": timings_solve_ocp_solver * 1e3,
+        'prepare exact Hessian QP': timings_lin_exact_hessian_qp * 1e3,
+        'factorize exact Hessian QP': timings_lin_and_factorize * 1e3,
+        "eval rhs": timings_lin_params * 1e3,
+        "solve": timings_solve_params * 1e3,
+        "store \& load": timings_store_load * 1e3,
     }
     timing_results_adjoint = {
-        'NLP solve': timings_solve_ocp_solver,
-        'prepare \& factorize exact Hessian QP': timings_lin_and_factorize,
-        'eval rhs': timings_lin_params,
-        'solve': timings_solve_params_adj,
-        "store \& load": timings_store_load,
+        'NLP solve': timings_solve_ocp_solver * 1e3,
+        'prepare exact Hessian QP': timings_lin_exact_hessian_qp * 1e3,
+        'factorize exact Hessian QP': timings_lin_and_factorize * 1e3,
+        'eval rhs': timings_lin_params * 1e3,
+        'solve': timings_solve_params_adj * 1e3,
+        "store \& load": timings_store_load * 1e3,
     }
 
     print("\nMedian timings [ms]")
