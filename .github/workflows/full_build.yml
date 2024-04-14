@@ -93,7 +93,7 @@ jobs:
       with:
         name: lib
         if-no-files-found: error
-        path: ${{runner.workspace}}/acados/lib/
+        path: ${{github.workspace}}/acados/lib/
         compression-level: 0 #TODO test time difference
         overwrite: true
     
@@ -102,7 +102,7 @@ jobs:
       with:
         name: build
         if-no-files-found: error
-        path: ${{runner.workspace}}/acados/build/
+        path: ${{github.workspace}}/acados/build/
         compression-level: 0
         overwrite: true
       #TODO exclude unnecessary objs
@@ -112,7 +112,7 @@ jobs:
       with:
         name: include
         if-no-files-found: error
-        path: ${{runner.workspace}}/acados/include/
+        path: ${{github.workspace}}/acados/include/
         compression-level: 0
         overwrite: true
 
