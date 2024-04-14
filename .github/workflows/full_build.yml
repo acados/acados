@@ -153,7 +153,7 @@ jobs:
         echo "ENV_RUN=true" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${{runner.workspace}}/acados/lib/" >> $GITHUB_ENV
-        ./../acados/.github/linux/run_tests.sh
+        ./.github/linux/run_tests.sh
 
 # ''''    # test interfaces
 #     - name: Install Casadi MATLAB
