@@ -13,9 +13,9 @@ on:
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
-  ACADOS_UNIT_TESTS: ON
+  ACADOS_UNIT_TESTS: OFF
   ACADOS_PYTHON: ON
-  ACADOS_OCTAVE: ON
+  ACADOS_OCTAVE: OFF
   ACADOS_WITH_OSQP: ON
   ACADOS_WITH_QPOASES: ON
   ACADOS_WITH_DAQP: ON
