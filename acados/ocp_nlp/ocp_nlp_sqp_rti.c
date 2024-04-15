@@ -1343,7 +1343,7 @@ void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_,
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_sqp_rti_memory *mem = mem_;
 
-    if (!strcmp("sqp_iter", field))
+    if (!strcmp("sqp_iter", field) || !strcmp("nlp_iter", field))
     {
         int *value = return_value_;
         *value = mem->sqp_iter;
