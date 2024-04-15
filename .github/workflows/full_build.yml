@@ -142,7 +142,6 @@ jobs:
         echo "LD_LIBRARY_PATH=${{runner.workspace}}/acados/lib" >> $GITHUB_ENV
         ${{runner.workspace}}/acados/.github/linux/install_python.sh''
 
-#        echo "ENV_RUN=true" >> $GITHUB_ENV
     - name: Run CMake tests (ctest)
 
       working-directory: ${{runner.workspace}}/acados/build
@@ -169,24 +168,25 @@ jobs:
       working-directory: ${{runner.workspace}}/acados/external
       shell: bash
       run: |
-        sudo chmod +x ./../.github/linux/install_casadi_matlab.sh
-        ./../.github/linux/install_casadi_matlab.sh
+        echo "ENV_RUN=true" >> $GITHUB_ENV
         echo "MATLABPATH=${{runner.workspace}}/acados/interfaces/acados_matlab_octave:${{runner.workspace}}/acados/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
         echo "MATLABPATH=$MATLABPATH:${{runner.workspace}}/acados/external/casadi-matlab" >> $GITHUB_ENV
         echo "ACADOS_INSTALL_DIR=${{runner.workspace}}/acados" >> $GITHUB_ENV
-        echo "ENV_RUN=true" >> $GITHUB_ENV
+        sudo chmod +x ./../.github/linux/install_casadi_matlab.sh
+        ./../.github/linux/install_casadi_matlab.sh
 
     - name: Prepare Octave
       working-directory: ${{runner.workspace}}/acados/external
       shell: bash
       run: |
+        echo "ENV_RUN=true" >> $GITHUB_ENV
+        echo "OCTAVE_PATH=${{runner.workspace}}/acados/interfaces/acados_matlab_octave:${{runner.workspace}}/acados/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
+        echo "OCTAVE_PATH=$OCTAVE_PATH:${{runner.workspace}}/acados/external/casadi-octave" >> $GITHUB_ENV
         sudo apt-get update
         sudo apt-get install liboctave-dev -y --fix-missing
         octave --version
         ./../.github/linux/install_casadi_octave.sh
-        echo "OCTAVE_PATH=${{runner.workspace}}/acados/interfaces/acados_matlab_octave:${{runner.workspace}}/acados/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
-        echo "OCTAVE_PATH=$OCTAVE_PATH:${{runner.workspace}}/acados/external/casadi-octave" >> $GITHUB_ENV
-        echo "ENV_RUN=true" >> $GITHUB_ENV
+
         
     - name: Display structure of downloaded files
       shell: bash
