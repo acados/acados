@@ -179,8 +179,8 @@ jobs:
         sudo chmod +x ${{runner.workspace}}/acados/.github/linux/install_casadi_matlab.sh
         ${{runner.workspace}}/acados/.github/linux/install_casadi_matlab.sh
         echo "ENV_RUN=true" >> $GITHUB_ENV
-        echo "MATLABPATH=${{runner.workspace}}/acados/interfaces/acados_matlab_octave" >> $GITHUB_ENV
-        echo "MATLABPATH=$MATLABPATH:${{runner.workspace}}/acados/external/casadi-matlab" >> $GITHUB_ENV
+#        echo "MATLABPATH=${{runner.workspace}}/acados/interfaces/acados_matlab_octave" >> $GITHUB_ENV
+        echo "MATLABPATH=$MATLABPATH:${{runner.workspace}}/acados/interfaces/acados_matlab_octave:${{runner.workspace}}/acados/interfaces/acados_matlab_octave/acados_template_mex:${{runner.workspace}}/acados/external/casadi-matlab" >> $GITHUB_ENV
         echo "ACADOS_INSTALL_DIR=${{runner.workspace}}/acados" >> $GITHUB_ENV
 
     - name: Prepare Octave
@@ -192,8 +192,8 @@ jobs:
         octave --version
         ${{runner.workspace}}/acados/.github/linux/install_casadi_octave.sh
         echo "ENV_RUN=true" >> $GITHUB_ENV
-        echo "OCTAVE_PATH=${{runner.workspace}}/acados/interfaces/acados_matlab_octave:${{runner.workspace}}/acados/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
-        echo "OCTAVE_PATH=$OCTAVE_PATH:${{runner.workspace}}/acados/external/casadi-octave" >> $GITHUB_ENV
+#        echo "OCTAVE_PATH=${{runner.workspace}}/acados/interfaces/acados_matlab_octave:${{runner.workspace}}/acados/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
+        echo "OCTAVE_PATH=$OCTAVE_PATH:${{runner.workspace}}/acados/interfaces/acados_matlab_octave:${{runner.workspace}}/acados/interfaces/acados_matlab_octave/acados_template_mex:${{runner.workspace}}/acados/external/casadi-octave" >> $GITHUB_ENV
 
         
     - name: Display structure of downloaded files
