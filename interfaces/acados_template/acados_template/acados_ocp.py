@@ -1211,6 +1211,8 @@ class AcadosOcp:
         Translate an OCP to a feasibility problem by setting the cost to zero and removing the terminal cost.
         This removes all cost terms and formulates all constraints as L2 penalties.
 
+        # Note: all weights are set to 1.0 for now, add options!
+
         Experimental!
         """
         model = self.model
