@@ -104,7 +104,7 @@ jobs:
         if-no-files-found: error
         path: |
           ${{runner.workspace}}/acados/build/
-          !${{runner.workspace}}/acados//build/acados/CMakeFiles/acados.dir
+          !${{runner.workspace}}/**/*.dir
         compression-level: 0
         overwrite: true
       #TODO exclude unnecessary objs
