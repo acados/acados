@@ -33,7 +33,7 @@ import sys
 sys.path.insert(0, '../common')
 
 import json
-from acados_template import AcadosOcp, AcadosOcpSolver, get_default_cmake_builder
+from acados_template import AcadosOcp, AcadosOcpSolver, ocp_get_default_cmake_builder
 from pendulum_model import export_pendulum_ode_model, export_pendulum_ode_model_with_discrete_rk4
 import numpy as np
 import scipy.linalg
@@ -151,7 +151,7 @@ if __name__ == "__main__":
 
     if build_system == 'cmake':
         print("\nusing the CMake build system")
-        cmake_builder = get_default_cmake_builder()
+        cmake_builder = ocp_get_default_cmake_builder()
         ocp_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json', cmake_builder=cmake_builder)
     elif build_system == 'make':
         print("\nusing the make build system")

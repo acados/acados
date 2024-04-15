@@ -32,7 +32,7 @@
 import sys
 sys.path.insert(0, '../common')
 
-from acados_template import AcadosOcp, AcadosOcpSolver, get_default_cmake_builder
+from acados_template import AcadosOcp, AcadosOcpSolver, ocp_get_default_cmake_builder
 from pendulum_model import export_pendulum_ode_model
 import numpy as np
 import scipy.linalg
@@ -98,7 +98,7 @@ ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
 ocp.solver_options.tf = Tf
 
 # use the CMake build pipeline
-cmake_builder = get_default_cmake_builder()
+cmake_builder = ocp_get_default_cmake_builder()
 
 ocp_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json', cmake_builder=cmake_builder)
 
