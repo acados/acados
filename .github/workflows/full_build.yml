@@ -131,19 +131,16 @@ jobs:
       with:
         path: ${{runner.workspace}}/acados
 
-    # - name: Display structure of downloaded files
-    #   run: ls -R
-
     - name: Install Python interface
       working-directory: ${{runner.workspace}}/acados
       shell: bash
       run: |
-#        echo "ENV_RUN=true" >> $GITHUB_ENV
         echo "ACADOS_SOURCE_DIR=$(pwd)" >> $GITHUB_ENV
         echo "ACADOS_INSTALL_DIR=$(pwd)" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=$(pwd)/lib" >> $GITHUB_ENV
         ${{runner.workspace}}/acados/.github/linux/install_python.sh''
 
+#        echo "ENV_RUN=true" >> $GITHUB_ENV
     - name: Run CMake tests (ctest)
 
       working-directory: ${{runner.workspace}}/acados/build
@@ -162,7 +159,6 @@ jobs:
       with:
         submodules: 'recursive'
     
-
     - uses: actions/download-artifact@v4
       with:
         path: ${{runner.workspace}}/acados
