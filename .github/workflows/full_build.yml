@@ -225,4 +225,3 @@ jobs:
     #   if: always()
     #   with:
     #     command: cd examples/acados_python/zoRO_example/pendulum_on_cart; run_simulink
-''''
