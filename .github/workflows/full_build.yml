@@ -145,6 +145,10 @@ jobs:
         echo "LD_LIBRARY_PATH=${{runner.workspace}}/acados/lib" >> $GITHUB_ENV
         ${{runner.workspace}}/acados/.github/linux/install_python.sh''
 
+    - name: Display structure of downloaded files
+      shell: bash
+      run: ls -R
+
     - name: Run CMake tests (ctest)
 
       working-directory: ${{runner.workspace}}/acados/build
