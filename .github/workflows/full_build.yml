@@ -82,12 +82,15 @@ jobs:
 #        echo "ACADOS_SOURCE_DIR=$(pwd)" >> $GITHUB_ENV
 #        echo "ACADOS_INSTALL_DIR=$(pwd)" >> $GITHUB_ENV
 #        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/lib" >> $GITHUB_ENV
-#TODO        echo "CM_BUILD_PATH=$CM_BUILD_PATH:$(pwd)/build" >> $GITHUB_ENV
+#TODO    echo "CM_BUILD_PATH=$CM_BUILD_PATH:$(pwd)/build" >> $GITHUB_ENV
 #        echo "OCTAVE_PATH=$OCTAVE_PATH:$(pwd)/interfaces/acados_matlab_octave:$(pwd)/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
 #        echo "MATLABPATH=$MATLABPATH:$(pwd)/interfaces/acados_matlab_octave:$(pwd)/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
 
 
-    
+    - name: Display structure of generated files
+      shell: bash
+      run: ls -R
+
     - name: Store shared libs (/lib)
       uses: actions/upload-artifact@v4
       with:
@@ -169,7 +172,7 @@ jobs:
       shell: bash
       run: |
         echo "ENV_RUN=true" >> $GITHUB_ENV
-        echo "MATLABPATH=${{runner.workspace}}/acados/interfaces/acados_matlab_octave:${{runner.workspace}}/acados/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
+        echo "MATLABPATH=${{runner.workspace}}/acados/interfaces/acados_matlab_octave" >> $GITHUB_ENV
         echo "MATLABPATH=$MATLABPATH:${{runner.workspace}}/acados/external/casadi-matlab" >> $GITHUB_ENV
         echo "ACADOS_INSTALL_DIR=${{runner.workspace}}/acados" >> $GITHUB_ENV
         sudo chmod +x ./../.github/linux/install_casadi_matlab.sh
