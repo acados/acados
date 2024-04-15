@@ -112,6 +112,14 @@ def check_casadi_version():
         print(msg)
 
 
+def get_simulink_default_opts():
+    python_interface_path = get_python_interface_path()
+    abs_path = os.path.join(python_interface_path, 'simulink_default_opts.json')
+    with open(abs_path , 'r') as f:
+        simulink_default_opts = json.load(f)
+    return simulink_default_opts
+
+
 def is_column(x):
     if isinstance(x, np.ndarray):
         if x.ndim == 1:
@@ -232,8 +240,6 @@ def get_tera():
     os.chmod(tera_path, 0o755)
     print("Successfully downloaded t_renderer.")
     return tera_path
-
-
 
 
 def render_template(in_file, out_file, output_dir, json_path, template_glob=None):

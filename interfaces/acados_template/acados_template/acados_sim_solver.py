@@ -78,15 +78,6 @@ def sim_formulation_json_dump(acados_sim: AcadosSim, json_file='acados_sim.json'
         json.dump(sim_json, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
 
 
-def sim_get_default_cmake_builder() -> CMakeBuilder:
-    """
-    If :py:class:`~acados_template.acados_sim_solver.AcadosSimSolver` is used with `CMake` this function returns a good first setting.
-    :return: default :py:class:`~acados_template.builders.CMakeBuilder`
-    """
-    cmake_builder = CMakeBuilder()
-    cmake_builder.options_on = ['BUILD_ACADOS_SIM_SOLVER_LIB']
-    return cmake_builder
-
 
 def sim_render_templates(json_file, model_name: str, code_export_dir, cmake_options: CMakeBuilder = None):
     # setting up loader and environment

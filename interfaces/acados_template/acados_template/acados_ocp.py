@@ -36,7 +36,8 @@ from scipy.linalg import block_diag
 from copy import deepcopy
 
 import casadi as ca
-import os
+import os, shutil
+import json
 
 from .acados_model import AcadosModel
 from .acados_ocp_cost import AcadosOcpCost
@@ -44,12 +45,17 @@ from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_dims import AcadosOcpDims
 from .acados_ocp_options import AcadosOcpOptions
 
-from .utils import (get_acados_path, format_class_dict,
-                    get_shared_lib_ext, is_column, is_empty, casadi_length, check_if_square)
+from .utils import (get_acados_path, format_class_dict, make_object_json_dumpable, render_template,
+                    get_shared_lib_ext, is_column, is_empty, casadi_length, check_if_square,
+                    check_casadi_version)
 from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty
 
 from .zoro_description import ZoroDescription, process_zoro_description
-
+from .casadi_function_generation import (
+    generate_c_code_conl_cost, generate_c_code_nls_cost, generate_c_code_external_cost,
+    generate_c_code_explicit_ode, generate_c_code_implicit_ode, generate_c_code_discrete_dynamics, generate_c_code_gnsf,
+    generate_c_code_constraint
+)
 
 class AcadosOcp:
     """
@@ -103,10 +109,13 @@ class AcadosOcp:
 
         self.__parameter_values = np.array([])
         self.__problem_class = 'OCP'
-        self.__name = None # set in make_consistent to model.name
 
         self.code_export_directory = 'c_generated_code'
         """Path to where code will be exported. Default: `c_generated_code`."""
+
+        self.simulink_opts = None
+        """Options to configure Simulink S-function blocks, mainly to activate possible Inputs and Outputs."""
+
 
     @property
     def parameter_values(self):
@@ -814,6 +823,146 @@ class AcadosOcp:
                 self.zoro_description = process_zoro_description(self.zoro_description)
 
         return
+
+
+    def _get_external_function_header_templates(self, ) -> list:
+        dims = self.dims
+        name = self.model.name
+        template_list = []
+
+        # dynamics
+        model_dir = os.path.join(self.code_export_directory, f'{name}_model')
+        template_list.append(('model.in.h', f'{name}_model.h', model_dir))
+        # constraints
+        if any(np.array([dims.nh, dims.nh_e, dims.nh_0, dims.nphi, dims.nphi_e, dims.nphi_0]) > 0):
+            constraints_dir = os.path.join(self.code_export_directory, f'{name}_constraints')
+            template_list.append(('constraints.in.h', f'{name}_constraints.h', constraints_dir))
+        # cost
+        if any([self.cost.cost_type != 'LINEAR_LS', self.cost.cost_type_0 != 'LINEAR_LS', self.cost.cost_type_e != 'LINEAR_LS']):
+            cost_dir = os.path.join(self.code_export_directory, f'{name}_cost')
+            template_list.append(('cost.in.h', f'{name}_cost.h', cost_dir))
+
+        return template_list
+
+
+    def __get_template_list(self, cmake_builder=None) -> list:
+        """
+        returns a list of tuples in the form:
+        (input_filename, output_filname)
+        or
+        (input_filename, output_filname, output_directory)
+        """
+        name = self.model.name
+        template_list = []
+
+        template_list.append(('main.in.c', f'main_{name}.c'))
+        template_list.append(('acados_solver.in.c', f'acados_solver_{name}.c'))
+        template_list.append(('acados_solver.in.h', f'acados_solver_{name}.h'))
+        template_list.append(('acados_solver.in.pxd', f'acados_solver.pxd'))
+        if cmake_builder is not None:
+            template_list.append(('CMakeLists.in.txt', 'CMakeLists.txt'))
+        else:
+            template_list.append(('Makefile.in', 'Makefile'))
+
+        # sim
+        template_list.append(('acados_sim_solver.in.c', f'acados_sim_solver_{name}.c'))
+        template_list.append(('acados_sim_solver.in.h', f'acados_sim_solver_{name}.h'))
+        template_list.append(('main_sim.in.c', f'main_sim_{name}.c'))
+
+        # model
+        template_list += self._get_external_function_header_templates()
+
+        # Simulink
+        if self.simulink_opts is not None:
+            template_file = os.path.join('matlab_templates', 'acados_solver_sfun.in.c')
+            template_list.append((template_file, f'acados_solver_sfunction_{name}.c'))
+            template_file = os.path.join('matlab_templates', 'make_sfun.in.m')
+            template_list.append((template_file, f'make_sfun_{name}.m'))
+            template_file = os.path.join('matlab_templates', 'acados_sim_solver_sfun.in.c')
+            template_list.append((template_file, f'acados_sim_solver_sfunction_{name}.c'))
+            template_file = os.path.join('matlab_templates', 'make_sfun_sim.in.m')
+            template_list.append((template_file, f'make_sfun_sim_{name}.m'))
+
+        return template_list
+
+
+    def render_templates(self, json_file: str, cmake_builder=None):
+
+        # check json file
+        json_path = os.path.abspath(json_file)
+        if not os.path.exists(json_path):
+            raise Exception(f'Path "{json_path}" not found!')
+
+        template_list = self.__get_template_list(cmake_builder=cmake_builder)
+
+        # Render templates
+        for tup in template_list:
+            output_dir = self.code_export_directory if len(tup) <= 2 else tup[2]
+            render_template(tup[0], tup[1], output_dir, json_path)
+
+        # Custom templates
+        acados_template_path = os.path.dirname(os.path.abspath(__file__))
+        custom_template_glob = os.path.join(acados_template_path, 'custom_update_templates', '*')
+        for tup in self.solver_options.custom_templates:
+            render_template(tup[0], tup[1], self.code_export_directory, json_path, template_glob=custom_template_glob)
+        return
+
+
+    def dump_to_json(self, json_file: str) -> None:
+        with open(json_file, 'w') as f:
+            json.dump(self.to_dict(), f, default=make_object_json_dumpable, indent=4, sort_keys=True)
+        return
+
+
+    def generate_external_functions(self):
+        model = self.model
+        constraints = self.constraints
+
+        # options for code generation
+        code_gen_opts = dict()
+        code_gen_opts['generate_hess'] = self.solver_options.hessian_approx == 'EXACT'
+        code_gen_opts['with_solution_sens_wrt_params'] = self.solver_options.with_solution_sens_wrt_params
+        code_gen_opts['with_value_sens_wrt_params'] = self.solver_options.with_value_sens_wrt_params
+        code_gen_opts['code_export_directory'] = self.code_export_directory
+
+        # create code_export_dir, model_dir
+        model_dir = os.path.join(code_gen_opts['code_export_directory'], model.name + '_model')
+        if not os.path.exists(model_dir):
+            os.makedirs(model_dir)
+
+        check_casadi_version()
+        if self.model.dyn_ext_fun_type == 'casadi':
+            if self.solver_options.integrator_type == 'ERK':
+                generate_c_code_explicit_ode(model, code_gen_opts)
+            elif self.solver_options.integrator_type == 'IRK':
+                generate_c_code_implicit_ode(model, code_gen_opts)
+            elif self.solver_options.integrator_type == 'LIFTED_IRK':
+                if model.t != []:
+                    raise NotImplementedError("LIFTED_IRK with time-varying dynamics not implemented yet.")
+                generate_c_code_implicit_ode(model, code_gen_opts)
+            elif self.solver_options.integrator_type == 'GNSF':
+                generate_c_code_gnsf(model, code_gen_opts)
+            elif self.solver_options.integrator_type == 'DISCRETE':
+                generate_c_code_discrete_dynamics(model, code_gen_opts)
+            else:
+                raise Exception("ocp_generate_external_functions: unknown integrator type.")
+        else:
+            target_location = os.path.join(code_gen_opts['code_export_directory'], model_dir, model.dyn_generic_source)
+            shutil.copyfile(model.dyn_generic_source, target_location)
+
+        stage_types = ['initial', 'path', 'terminal']
+
+        for attr_nh, attr_nphi, stage_type in zip(['nh_0', 'nh', 'nh_e'], ['nphi_0', 'nphi', 'nphi_e'], stage_types):
+            if getattr(self.dims, attr_nh) > 0 or getattr(self.dims, attr_nphi) > 0:
+                generate_c_code_constraint(model, constraints, stage_type, code_gen_opts)
+
+        for attr, stage_type in zip(['cost_type_0', 'cost_type', 'cost_type_e'], stage_types):
+            if getattr(self.cost, attr) == 'NONLINEAR_LS':
+                generate_c_code_nls_cost(model, stage_type, code_gen_opts)
+            elif getattr(self.cost, attr) == 'CONVEX_OVER_NONLINEAR':
+                generate_c_code_conl_cost(model, stage_type, code_gen_opts)
+            elif getattr(self.cost, attr) == 'EXTERNAL':
+                generate_c_code_external_cost(model, stage_type, code_gen_opts)
 
 
     def remove_x0_elimination(self) -> None:
