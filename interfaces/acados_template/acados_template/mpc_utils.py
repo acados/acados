@@ -30,6 +30,7 @@
 #
 
 from copy import deepcopy
+from typing import Tuple
 import casadi as ca
 import numpy as np
 
@@ -37,7 +38,7 @@ from .acados_model import AcadosModel
 from .acados_ocp import AcadosOcp
 from .utils import casadi_length
 
-def create_model_with_cost_state(ocp: AcadosOcp) -> (AcadosModel, np.ndarray):
+def create_model_with_cost_state(ocp: AcadosOcp) -> Tuple[AcadosModel, np.ndarray]:
 
     model = deepcopy(ocp.model)
     symbol = model.get_casadi_symbol()
