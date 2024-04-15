@@ -1095,12 +1095,10 @@ class AcadosOcp:
             casadi_symbol = ca.SX.sym
             casadi_zeros = ca.SX.zeros
 
-
         # if (upper_bound is None or lower_bound is None):
         #     raise NotImplementedError("only symmetric Huber for now")
         if upper_bound is None and lower_bound is None:
             raise ValueError("Either upper or lower bound must be provided.")
-
 
         if self.cost.cost_type != "CONVEX_OVER_NONLINEAR":
             raise Exception("Huber penalty is only supported for CONVEX_OVER_NONLINEAR cost type.")
