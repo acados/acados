@@ -102,7 +102,9 @@ jobs:
       with:
         name: build
         if-no-files-found: error
-        path: ${{runner.workspace}}/acados/build/
+        path: |
+          ${{runner.workspace}}/acados/build/
+          ! **/acados.dir
         compression-level: 0
         overwrite: true
       #TODO exclude unnecessary objs
@@ -169,8 +171,8 @@ jobs:
       run: |
         sudo chmod +x ./../.github/linux/install_casadi_matlab.sh
         ./../.github/linux/install_casadi_matlab.sh
-        echo "MATLABPATH=$MATLABPATH:$(pwd)/casadi-matlab" >> $GITHUB_ENV
-        echo "ACADOS_INSTALL_DIR=../$(pwd)" >> $GITHUB_ENV
+        echo "MATLABPATH=$MATLABPATH:${{runner.workspace}}/acados/external/casadi-matlab" >> $GITHUB_ENV
+        echo "ACADOS_INSTALL_DIR=${{runner.workspace}}/acados" >> $GITHUB_ENV
 
     - name: Prepare Octave
       working-directory: ${{runner.workspace}}/acados/external
@@ -180,16 +182,16 @@ jobs:
         sudo apt-get install liboctave-dev -y --fix-missing
         octave --version
         ./../.github/linux/install_casadi_octave.sh
-        echo "OCTAVE_PATH=$OCTAVE_PATH:$(pwd)/casadi-octave" >> $GITHUB_ENV
+        echo "OCTAVE_PATH=$OCTAVE_PATH:${{runner.workspace}}/acados/external/casadi-octave" >> $GITHUB_ENV
 
     - name: Display structure of downloaded files
-      run: ls -R
+        run: ls -R
 
     - name: Export Paths MEX tests
       working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
       shell: bash
       run: |
-        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./build" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${{runner.workspace}}/acados/build" >> $GITHUB_ENV
         echo "ENV_RUN=true" >> $GITHUB_ENV
         echo "LD_RUN_PATH=$LD_RUN_PATH:$(pwd)/c_generated_code" >> $GITHUB_ENV
 
