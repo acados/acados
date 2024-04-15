@@ -184,8 +184,8 @@ jobs:
         ./../.github/linux/install_casadi_octave.sh
         echo "OCTAVE_PATH=$OCTAVE_PATH:${{runner.workspace}}/acados/external/casadi-octave" >> $GITHUB_ENV
 
-    - name: Display structure of downloaded files
-        run: ls -R
+    # - name: Display structure of downloaded files
+    #     run: ls -R
 
     - name: Export Paths MEX tests
       working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
