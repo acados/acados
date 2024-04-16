@@ -3,6 +3,7 @@
         "u0": 1,
         "utraj": 0,
         "xtraj": 0,
+        "ztraj": 0,
         "solver_status": 1,
         "cost_value": 0,
         "KKT_residual": 1,

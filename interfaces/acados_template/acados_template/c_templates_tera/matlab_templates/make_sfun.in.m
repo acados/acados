@@ -382,6 +382,12 @@ output_note = strcat(output_note, num2str(i_out), ') xtraj, state concatenated f
 sfun_output_names = [sfun_output_names; 'xtraj [{{ dims.nx * (dims.N + 1) }}]'];
 {%- endif %}
 
+{%- if simulink_opts.outputs.ztraj == 1 %}
+i_out = i_out + 1;
+output_note = strcat(output_note, num2str(i_out), ') ztraj, algebraic states concatenated for nodes 0 to N-1, size [{{ dims.nz * dims.N }}]\n ');
+sfun_output_names = [sfun_output_names; 'ztraj [{{ dims.nz * dims.N }}]'];
+{%- endif %}
+
 {%- if simulink_opts.outputs.solver_status == 1 %}
 i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') acados solver status (0 = SUCCESS)\n ');
