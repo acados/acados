@@ -179,6 +179,8 @@ jobs:
         echo "MATLABPATH=$MATLABPATH:${{runner.workspace}}/acados/interfaces/acados_matlab_octave:${{runner.workspace}}/acados/interfaces/acados_matlab_octave/acados_template_mex:${{runner.workspace}}/acados/external/casadi-matlab" >> $GITHUB_ENV
         echo "ACADOS_INSTALL_DIR=${{runner.workspace}}/acados" >> $GITHUB_ENV
         echo "ACADOS_SOURCE_DIR=${{runner.workspace}}/acados" >> $GITHUB_ENV
+        cmake --build . --config $BUILD_TYPE
+        make install -j4
 
 #     echo "MATLABPATH=${{runner.workspace}}/acados/interfaces/acados_matlab_octave" >> $GITHUB_ENV
     
