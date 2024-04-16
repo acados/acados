@@ -204,10 +204,10 @@ jobs:
       working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
       shell: bash
       run: |
-        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${{runner.workspace}}/acados/build" >> $GITHUB_ENV
-        echo "ENV_RUN=true" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${{runner.workspace}}/acados/build:${{runner.workspace}}/acados/lib:${{runner.workspace}}/acados/include" >> $GITHUB_ENV
         echo "LD_RUN_PATH=$LD_RUN_PATH:${{runner.workspace}}/acados/c_generated_code" >> $GITHUB_ENV
-#    printenv | more
+#echo "ENV_RUN=true" >> $GITHUB_ENV    
+#printenv | more
     - name: Install MATLAB
       uses: matlab-actions/setup-matlab@v1
       if: always()
