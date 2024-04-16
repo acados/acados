@@ -185,7 +185,7 @@ jobs:
 #     echo "MATLABPATH=${{runner.workspace}}/acados/interfaces/acados_matlab_octave" >> $GITHUB_ENV
     
     - name: Prepare Octave
-      working-directory: ${{runner.workspace}}/acados/external
+      working-directory: ${{runner.workspace}}/acados
       shell: bash
       run: |
         sudo apt-get update
