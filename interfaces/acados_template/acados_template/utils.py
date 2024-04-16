@@ -150,7 +150,7 @@ def is_empty(x):
             return True
         else:
             return False
-    elif x == None:
+    elif x is None:
         return True
     elif isinstance(x, (set, list)):
         if len(x)==0:
