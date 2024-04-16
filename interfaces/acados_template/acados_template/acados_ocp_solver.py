@@ -72,6 +72,11 @@ class AcadosOcpSolver:
         dlclose.argtypes = [c_void_p]
         winmode = None
 
+    @property
+    def acados_lib_uses_omp(self,):
+        """`acados_lib_uses_omp` - flag indicating whether the acados library has been compiled with openMP."""
+        return self.__acados_lib_uses_omp
+
     @classmethod
     def generate(cls, acados_ocp: Union[AcadosOcp, AcadosMultiphaseOcp], json_file: str, simulink_opts=None, cmake_builder: CMakeBuilder = None):
         """
@@ -315,7 +320,6 @@ class AcadosOcpSolver:
         getattr(self.shared_lib, f"{self.name}_acados_get_nlp_solver").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{self.name}_acados_get_nlp_solver").restype = c_void_p
         self.nlp_solver = getattr(self.shared_lib, f"{self.name}_acados_get_nlp_solver")(self.capsule)
-
 
 
     def solve_for_x0(self, x0_bar, fail_on_nonzero_status=True, print_stats_on_failure=True):
