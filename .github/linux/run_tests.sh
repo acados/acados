@@ -30,10 +30,8 @@
 #
 
 # source virtualenv
-ls -R
 source ./../acadosenv/bin/activate;
 which python;
-
 
 # run tests
 ctest -C $BUILD_TYPE --output-on-failure; # use -V for full output # --output-on-failure for less
