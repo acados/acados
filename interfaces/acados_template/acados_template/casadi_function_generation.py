@@ -67,9 +67,9 @@ def generate_c_code_discrete_dynamics(model: AcadosModel, opts):
         print('Warning: generate_c_code_discrete_dynamics: got nx != nx1, this only works for a single shooting interval.')
 
     lam = symbol('lam', nx1, 1)
+    ux = ca.vertcat(u, x)
 
     # generate jacobians
-    ux = ca.vertcat(u,x)
     jac_ux = ca.jacobian(phi, ux)
     # generate adjoint
     adj_ux = ca.jtimes(phi, ux, lam, True)

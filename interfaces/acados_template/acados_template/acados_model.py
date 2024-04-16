@@ -289,6 +289,7 @@ class AcadosModel():
         # nu
         if is_empty(self.u):
             dims.nu = 0
+            self.u = casadi_symbol('u', 0, 1)
         else:
             dims.nu = casadi_length(self.u)
 
