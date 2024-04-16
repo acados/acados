@@ -37,6 +37,7 @@ _CASADI_GITHUB_RELEASES="https://github.com/casadi/casadi/releases/download/${CA
 
 CASADI_MATLAB_URL="${_CASADI_GITHUB_RELEASES}/casadi-linux-matlab${MATLAB_VERSION}-v${CASADI_VERSION}.tar.gz";
 
+echo $PATH
 wget -O casadi-linux-matlab.tar.gz "${CASADI_MATLAB_URL}";
 mkdir -p casadi-matlab;
 tar -xf casadi-linux-matlab.tar.gz -C casadi-matlab;
