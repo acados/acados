@@ -208,7 +208,7 @@ jobs:
       uses: matlab-actions/setup-matlab@v1
       if: always()
       with:
-      # MATLAB release to set up (R2020a or later)
+      # MATLAB release to set up (R2020a or later) TODO fix depreciaton warning
         release: R2020a
 
     - name: Matlab test native MEX
