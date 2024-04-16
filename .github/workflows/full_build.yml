@@ -205,7 +205,7 @@ jobs:
       working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
       shell: bash
       run: |
-        echo "LD_LIBRARY_PATH=${{runner.workspace}}/acados/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${{runner.workspace}}/acados/lib" >> $GITHUB_ENV
         echo "ENV_RUN=true" >> $GITHUB_ENV
         echo "LD_RUN_PATH=$LD_RUN_PATH:$(pwd)/c_generated_code" >> $GITHUB_ENV
 
