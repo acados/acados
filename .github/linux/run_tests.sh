@@ -33,8 +33,7 @@
 ls -R
 source ./../acadosenv/bin/activate;
 which python;
-printenv
-printenv | less
+
 printenv | more
 
 # run tests
