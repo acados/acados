@@ -74,7 +74,7 @@ jobs:
       run: |
         cmake --build . --config $BUILD_TYPE
         make install -j4
-
+        echo "BLASFEO_SRC_DIR" >> $GITHUB_ENV
 #    - name: Export Paths Lib
 #      working-directory: ${{runner.workspace}}/acados
 #      shell: bash
