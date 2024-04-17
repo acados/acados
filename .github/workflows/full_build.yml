@@ -53,7 +53,7 @@ jobs:
       run: cmake -E make_directory ${{runner.workspace}}/acados/build
 
 
-    - name: Install Eigen (C test dependency)
+    - name: Install Eigen (ctest dependency)
       working-directory: ${{runner.workspace}}/acados
       shell: bash
       # TODO: cache
@@ -229,7 +229,12 @@ jobs:
         echo "ENV_RUN=true" >> $GITHUB_ENV
         echo "OCTAVE_PATH=$OCTAVE_PATH:${{runner.workspace}}/acados/interfaces/acados_matlab_octave:${{runner.workspace}}/acados/interfaces/acados_matlab_octave/acados_template_mex:${{runner.workspace}}/acados/external/casadi-octave" >> $GITHUB_ENV
 
-    
+    - name: Install Eigen (ctest dependency)
+      working-directory: ${{runner.workspace}}/acados
+      shell: bash
+      # TODO: cache
+      run: ./ci/shared/install_eigen.sh
+
     - name: Run CMake Octave tests (ctest)
       working-directory: ${{runner.workspace}}/acados/build
       shell: bash
