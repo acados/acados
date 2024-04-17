@@ -15,13 +15,14 @@ env:
   BUILD_TYPE: Release
   ACADOS_UNIT_TESTS: OFF
   ACADOS_PYTHON: ON
-  ACADOS_OCTAVE: OFF
+  ACADOS_OCTAVE: ON
   ACADOS_WITH_OSQP: ON
   ACADOS_WITH_QPOASES: ON
   ACADOS_WITH_DAQP: ON
   ACADOS_WITH_QPDUNES: OFF
   ACADOS_ON_CI: ON
 
+#
 jobs:
   core_build:
     # The CMake configure and build commands are platform agnostic and should work equally
@@ -66,7 +67,7 @@ jobs:
       # Note the current convention is to use the -S and -B options here to specify source
       # and build directories, but this is only available with CMake 3.13 and higher.
       # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP  -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=$ACADOS_PYTHON -DACADOS_UNIT_TESTS=$ACADOS_UNIT_TESTS -DACADOS_OCTAVE=$ACADOS_OCTAVE
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP  -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=$ACADOS_PYTHON -DACADOS_UNIT_TESTS=$ACADOS_UNIT_TESTS -DACADOS_OCTAVE=OFF
 
     - name: Build & Install
       working-directory: ${{runner.workspace}}/acados/build
@@ -148,7 +149,7 @@ jobs:
     #   shell: bash
     #   run: ls -R
 
-    - name: Run CMake tests (ctest)
+    - name: Run CMake python tests (ctest)
 
       working-directory: ${{runner.workspace}}/acados/build
       shell: bash
@@ -187,7 +188,7 @@ jobs:
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${{runner.workspace}}/acados/build:${{runner.workspace}}/acados/lib" >> $GITHUB_ENV
         echo "ENV_RUN=true" >> $GITHUB_ENV
         echo "LD_RUN_PATH=$LD_RUN_PATH:${{runner.workspace}}/acados/c_generated_code" >> $GITHUB_ENV
-        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP  -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=$ACADOS_PYTHON -DACADOS_UNIT_TESTS=$ACADOS_UNIT_TESTS -DACADOS_OCTAVE=$ACADOS_OCTAVE
+        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP  -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_UNIT_TESTS=$ACADOS_UNIT_TESTS -DACADOS_OCTAVE=$ACADOS_OCTAVE
 #printenv | more
     - name: Install MATLAB
       uses: matlab-actions/setup-matlab@v1
@@ -219,6 +220,13 @@ jobs:
         echo "ENV_RUN=true" >> $GITHUB_ENV
         echo "OCTAVE_PATH=$OCTAVE_PATH:${{runner.workspace}}/acados/interfaces/acados_matlab_octave:${{runner.workspace}}/acados/interfaces/acados_matlab_octave/acados_template_mex:${{runner.workspace}}/acados/external/casadi-octave" >> $GITHUB_ENV
 
+    
+    - name: Run CMake Octave tests (ctest)
+      working-directory: ${{runner.workspace}}/acados/build
+      shell: bash
+      # Execute tests defined by the CMake configuration. 
+      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+      run: ${{runner.workspace}}/acados/.github/linux/run_tests.sh
 
     # - name: Export Paths Simulink zoRO test
     #   working-directory: ${{runner.workspace}}/acados/examples/acados_python/zoRO_example/pendulum_on_cart
