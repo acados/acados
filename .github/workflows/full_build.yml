@@ -254,7 +254,8 @@ jobs:
         echo "LD_RUN_PATH=${{runner.workspace}}/acados/examples/acados_matlab_octave/test/c_generated_code" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=${{runner.workspace}}/acados/lib:${{runner.workspace}}/acados/build" >> $GITHUB_ENV
         echo "OCTAVE_PATH=$OCTAVE_PATH:${{runner.workspace}}/acados/interfaces/acados_matlab_octave:${{runner.workspace}}/acados/interfaces/acados_matlab_octave/acados_template_mex:${{runner.workspace}}/acados/external/casadi-octave" >> $GITHUB_ENV
-    
+        echo "ENV_RUN=true" >> $GITHUB_ENV
+        
     #        echo "ENV_RUN=true" >> $GITHUB_ENV
 
     # - name: Install Eigen (ctest dependency) # TODO remove
