@@ -249,7 +249,6 @@ jobs:
         sudo apt-get install liboctave-dev -y --fix-missing
         octave --version
         ${{runner.workspace}}/acados/.github/linux/install_casadi_octave.sh
-        echo "ENV_RUN=true" >> $GITHUB_ENV
         echo "OCTAVE_PATH=$OCTAVE_PATH:${{runner.workspace}}/acados/interfaces/acados_matlab_octave:${{runner.workspace}}/acados/interfaces/acados_matlab_octave/acados_template_mex:${{runner.workspace}}/acados/external/casadi-octave" >> $GITHUB_ENV
 
     # - name: Install Eigen (ctest dependency) # TODO remove
