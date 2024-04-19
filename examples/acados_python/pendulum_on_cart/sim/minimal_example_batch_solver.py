@@ -1,0 +1,112 @@
+# -*- coding: future_fstrings -*-
+#
+# Copyright (c) The acados authors.
+#
+# This file is part of acados.
+#
+# The 2-Clause BSD License
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.;
+#
+
+import sys
+sys.path.insert(0, '../common')
+
+from acados_template import AcadosSim, AcadosSimSolver, AcadosSimSolverBatch
+from pendulum_model import export_pendulum_ode_model
+import numpy as np
+import time
+
+
+def setup_integrator(build=True, generate=True, with_parallel_batch_solve=False):
+    sim = AcadosSim()
+
+    model = export_pendulum_ode_model()
+    sim.model = model
+
+    Tf = 0.1
+
+    sim.solver_options.T = Tf
+    sim.solver_options.integrator_type = 'IRK'
+    sim.solver_options.num_stages = 5
+    sim.solver_options.num_steps = 10
+    sim.solver_options.newton_iter = 10 # for implicit integrator
+    sim.solver_options.collocation_type = "GAUSS_RADAU_IIA"
+
+    sim.solver_options.with_parallel_batch_solve = with_parallel_batch_solve
+
+    return AcadosSimSolver(sim, build=build, generate=generate, verbose=False)
+
+
+def main_sequential(x0, u0, N_sim):
+
+    nx = x0.shape[0]
+    simX = np.zeros((N_sim+1, nx))
+
+    integrator = setup_integrator()
+
+    simX[0,:] = x0
+
+    for i in range(N_sim):
+        simX[i+1,:] = integrator.simulate(x=simX[i, :], u=u0, xdot=np.zeros((nx,)))
+
+    return simX
+
+
+def main_batch(Xinit, u0, with_parallel_batch_solve=True):
+
+    N_batch = Xinit.shape[0] - 1
+
+    integrators = []
+    for n in range(N_batch):
+        integrator = setup_integrator(build=n==0, generate=n==0, with_parallel_batch_solve=True)
+        integrator.set("u", u0)
+        integrator.set("x", Xinit[n])
+        integrators.append(integrator)
+
+    batch_integrator = AcadosSimSolverBatch(integrators)
+
+    t0 = time.time()
+    batch_integrator.solve()
+    t_elapsed = time.time() - t0
+    t_elapsed *= 1000
+
+    print("parallel:  " if with_parallel_batch_solve else "sequential:", f"{t_elapsed:.3f}ms")
+
+    for n in range(N_batch):
+        x = batch_integrator.sim_solvers[n].get("x")
+        assert np.linalg.norm(x-Xinit[n+1]) < 1e-10
+
+    return simX, u0
+
+
+if __name__ == "__main__":
+
+    N_batch = 256
+    x0 = np.array([0.0, np.pi+1, 0.0, 0.0])
+    u0 = np.array([0.0])
+
+    simX = main_sequential(x0=x0, u0=u0, N_sim=N_batch)
+    main_batch(Xinit=simX, u0=u0, with_parallel_batch_solve=False)
+    main_batch(Xinit=simX, u0=u0, with_parallel_batch_solve=True)
+
