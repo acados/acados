@@ -863,6 +863,11 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
         copy_ocp_nlp_out(dims, tmp_nlp_out, nlp_out);
         // perform QP solve (implemented as feedback)
         // similar to  ocp_nlp_sqp_rti_feedback_step
+        if (opts->rti_log_residuals)
+        {
+            // NOTE: redo all residual computations after loading iterate from tmp to undo changes to memory in modules
+            prepare_full_residual_computation(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+        }
 
         // update QP rhs for SQP (step prim var, abs dual var)
         acados_tic(&timer1);
