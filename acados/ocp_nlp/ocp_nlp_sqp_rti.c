@@ -906,6 +906,14 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
         mem->time_reg += acados_toc(&timer1);
 
+        if (nlp_opts->print_level > 0)
+        {
+            printf("\n------- qp_in AS-RTI-A preparation --------\n");
+            print_ocp_qp_in(nlp_mem->qp_in);
+            printf("\n------- qp_out AS-RTI-A preparation --------\n");
+            print_ocp_qp_out(nlp_mem->qp_out);
+        }
+
         // globalization
         acados_tic(&timer1);
         // TODO: not clear if line search should be called with sqp_iter==0 in RTI;
