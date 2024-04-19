@@ -1,24 +1,54 @@
 from .acados_sim_solver import AcadosSimSolver
+from .acados_sim import AcadosSim
 from typing import List
 from ctypes import (POINTER, c_int, c_void_p)
 
+
 class AcadosSimSolverBatch():
+    """
+    Batch Integrator for parallel integration.
 
-    def __init__(self, sim_solvers: List[AcadosSimSolver]):
+        :param sim: type :py:class:`~acados_template.acados_sim.AcadosSim`
+        :param N_batch: batch size, positive integer
+        :param json_file: Default: 'acados_sim.json'
+        :verbose: bool, default: True
+    """
 
-        self.sim_solvers = sim_solvers
-        self.N_batch = len(sim_solvers)
-        self.shared_lib = sim_solvers[0].shared_lib
-        self.model_name = sim_solvers[0].model_name
-        self.sim_solvers_pointer = (c_void_p * self.N_batch)()
+    __sim_solvers : List[AcadosSimSolver]
+
+    def __init__(self, sim: AcadosSim, N_batch: int, json_file: str = 'acados_sim.json', verbose: bool=True):
+
+        if not isinstance(N_batch, int) or N_batch <= 0:
+            raise Exception("AcadosSimSolverBatch: argument N_batch should be a positive integer.")
+
+        self.__N_batch = N_batch
+        self.__sim_solvers = [AcadosSimSolver(sim, json_file=json_file, build=n==0, generate=n==0, verbose=verbose) for n in range(self.N_batch)]
+
+        self.__shared_lib = self.sim_solvers[0].shared_lib
+        self.__model_name = self.sim_solvers[0].model_name
+        self.__sim_solvers_pointer = (c_void_p * self.N_batch)()
 
         for i in range(self.N_batch):
-            self.sim_solvers_pointer[i] = self.sim_solvers[i].capsule
+            self.__sim_solvers_pointer[i] = self.sim_solvers[i].capsule
 
-        getattr(self.shared_lib, f"{self.model_name}_acados_sim_solve").argtypes = [POINTER(c_void_p), c_int]
-        getattr(self.shared_lib, f"{self.model_name}_acados_sim_solve").restype = c_void_p
+        getattr(self.__shared_lib, f"{self.__model_name}_acados_sim_batch_solve").argtypes = [POINTER(c_void_p), c_int]
+        getattr(self.__shared_lib, f"{self.__model_name}_acados_sim_batch_solve").restype = c_void_p
 
 
     def solve(self):
-        getattr(self.shared_lib, f"{self.model_name}_acados_sim_batch_solve")(self.sim_solvers_pointer, self.N_batch)
+        """
+        Solve the simulation problem with current input for all `N_batch` integrators.
+        """
+        getattr(self.__shared_lib, f"{self.__model_name}_acados_sim_batch_solve")(self.__sim_solvers_pointer, self.__N_batch)
+
+
+    @property
+    def sim_solvers(self):
+        """List of AcadosSimSolvers."""
+        return self.__sim_solvers
+
+    @property
+    def N_batch(self):
+        """Batch size."""
+        return self.__N_batch
 

@@ -38,24 +38,19 @@ import numpy as np
 import time
 
 
-def setup_integrator(build=True, generate=True, with_parallel_batch_solve=False):
+def setup_integrator(with_parallel_batch_solve=False):
+
     sim = AcadosSim()
-
-    model = export_pendulum_ode_model()
-    sim.model = model
-
-    Tf = 0.1
-
-    sim.solver_options.T = Tf
+    sim.model = export_pendulum_ode_model()
+    sim.solver_options.T = 0.2
     sim.solver_options.integrator_type = 'IRK'
     sim.solver_options.num_stages = 5
     sim.solver_options.num_steps = 10
     sim.solver_options.newton_iter = 10 # for implicit integrator
     sim.solver_options.collocation_type = "GAUSS_RADAU_IIA"
-
     sim.solver_options.with_parallel_batch_solve = with_parallel_batch_solve
 
-    return AcadosSimSolver(sim, build=build, generate=generate, verbose=False)
+    return sim
 
 
 def main_sequential(x0, u0, N_sim):
@@ -63,7 +58,8 @@ def main_sequential(x0, u0, N_sim):
     nx = x0.shape[0]
     simX = np.zeros((N_sim+1, nx))
 
-    integrator = setup_integrator()
+    sim = setup_integrator()
+    integrator = AcadosSimSolver(sim, verbose=False)
 
     simX[0,:] = x0
 
@@ -76,15 +72,12 @@ def main_sequential(x0, u0, N_sim):
 def main_batch(Xinit, u0, with_parallel_batch_solve=True):
 
     N_batch = Xinit.shape[0] - 1
+    sim = setup_integrator(with_parallel_batch_solve)
+    batch_integrator = AcadosSimSolverBatch(sim, N_batch, verbose=False)
 
-    integrators = []
     for n in range(N_batch):
-        integrator = setup_integrator(build=n==0, generate=n==0, with_parallel_batch_solve=True)
-        integrator.set("u", u0)
-        integrator.set("x", Xinit[n])
-        integrators.append(integrator)
-
-    batch_integrator = AcadosSimSolverBatch(integrators)
+        batch_integrator.sim_solvers[n].set("u", u0)
+        batch_integrator.sim_solvers[n].set("x", Xinit[n])
 
     t0 = time.time()
     batch_integrator.solve()
@@ -107,6 +100,7 @@ if __name__ == "__main__":
     u0 = np.array([0.0])
 
     simX = main_sequential(x0=x0, u0=u0, N_sim=N_batch)
+
     main_batch(Xinit=simX, u0=u0, with_parallel_batch_solve=False)
     main_batch(Xinit=simX, u0=u0, with_parallel_batch_solve=True)
 
