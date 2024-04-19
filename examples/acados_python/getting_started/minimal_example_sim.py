@@ -36,18 +36,13 @@ import numpy as np
 
 
 def main():
+
     sim = AcadosSim()
-
-    # export model
-    model = export_pendulum_ode_model()
-
-    # set model_name
-    sim.model = model
+    sim.model = export_pendulum_ode_model()
 
     Tf = 0.1
-    nx = model.x.rows()
-    nu = model.u.rows()
-    N = 200
+    nx = sim.model.x.rows()
+    N_sim = 200
 
     # set simulation time
     sim.solver_options.T = Tf
@@ -61,33 +56,22 @@ def main():
     # create
     acados_integrator = AcadosSimSolver(sim)
 
-    simX = np.zeros((N+1, nx))
     x0 = np.array([0.0, np.pi+1, 0.0, 0.0])
     u0 = np.array([0.0])
-    acados_integrator.set("u", u0)
+    xdot_init = np.zeros((nx,))
 
+    simX = np.zeros((N_sim+1, nx))
     simX[0,:] = x0
 
-    for i in range(N):
-        # set initial state
-        acados_integrator.set("x", simX[i,:])
-        # initialize IRK
-        if sim.solver_options.integrator_type == 'IRK':
-            acados_integrator.set("xdot", np.zeros((nx,)))
-
-        # solve
-        status = acados_integrator.solve()
-        # get solution
-        simX[i+1,:] = acados_integrator.get("x")
-
-        if status != 0:
-            raise Exception(f'acados returned status {status}.')
+    for i in range(N_sim):
+        # Note that xdot is only used if an IRK integrator is used
+        simX[i+1,:] = acados_integrator.simulate(x=simX[i,:], u=u0, xdot=xdot_init)
 
     S_forw = acados_integrator.get("S_forw")
     print("S_forw, sensitivities of simulation result wrt x,u:\n", S_forw)
 
-    # plot results
-    plot_pendulum(np.linspace(0, N*Tf, N+1), 10, np.repeat(u0, N), simX, latexify=False, time_label=model.t_label, x_labels=model.x_labels, u_labels=model.u_labels)
+    plot_pendulum(np.linspace(0, N_sim*Tf, N_sim+1), 10, np.repeat(u0, N_sim), simX,
+                  latexify=False, time_label=sim.model.t_label, x_labels=sim.model.x_labels, u_labels=sim.model.u_labels)
 
 
 if __name__ == "__main__":
