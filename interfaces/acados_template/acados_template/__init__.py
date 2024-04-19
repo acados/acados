@@ -42,6 +42,7 @@ from .acados_multiphase_ocp import AcadosMultiphaseOcp
 
 from .acados_ocp_solver import AcadosOcpSolver
 from .acados_sim_solver import AcadosSimSolver
+from .acados_sim_solver_batch import AcadosSimSolverBatch
 from .utils import print_casadi_expression, get_acados_path, get_python_interface_path, \
     get_tera_exec_path, get_tera, check_casadi_version, acados_dae_model_json_dump, \
     casadi_length, make_object_json_dumpable, J_to_idx, get_default_simulink_opts, \

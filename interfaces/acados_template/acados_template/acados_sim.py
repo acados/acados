@@ -57,6 +57,7 @@ class AcadosSimOpts:
         self.__output_z = True
         self.__sim_method_jac_reuse = 0
         self.__ext_fun_compile_flags = '-O2'
+        self.__with_parallel_batch_solve: bool = False
 
     @property
     def integrator_type(self):
@@ -138,6 +139,15 @@ class AcadosSimOpts:
         Default: '-O2'.
         """
         return self.__ext_fun_compile_flags
+
+    @property
+    def with_parallel_batch_solve(self):
+        """
+        Flag indicating whether the sim solver should be compiled with openmp.
+        Default: False.
+        """
+        return self.__with_parallel_batch_solve
+
 
     @ext_fun_compile_flags.setter
     def ext_fun_compile_flags(self, ext_fun_compile_flags):
@@ -237,6 +247,13 @@ class AcadosSimOpts:
             self.__sim_method_jac_reuse = sim_method_jac_reuse
         else:
             raise Exception('Invalid sim_method_jac_reuse value. sim_method_jac_reuse must be 0 or 1.')
+
+    @with_parallel_batch_solve.setter
+    def with_parallel_batch_solve(self, with_parallel_batch_solve):
+        if with_parallel_batch_solve in (True, False):
+            self.__with_parallel_batch_solve = with_parallel_batch_solve
+        else:
+            raise Exception('Invalid with_parallel_batch_solve value. with_parallel_batch_solve must be a Boolean.')
 
 class AcadosSim:
     """
