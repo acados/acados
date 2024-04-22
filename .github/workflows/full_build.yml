@@ -13,7 +13,6 @@ on:
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
-  ACADOS_UNIT_TESTS: OFF
   ACADOS_PYTHON: ON
   ACADOS_OCTAVE: ON
   ACADOS_WITH_OSQP: ON
@@ -67,7 +66,7 @@ jobs:
       # Note the current convention is to use the -S and -B options here to specify source
       # and build directories, but this is only available with CMake 3.13 and higher.
       # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP  -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=$ACADOS_PYTHON -DACADOS_UNIT_TESTS=$ACADOS_UNIT_TESTS -DACADOS_OCTAVE=OFF
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP  -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=$ACADOS_PYTHON -DACADOS_OCTAVE=OFF -j6
 
     - name: Build & Install
       working-directory: ${{runner.workspace}}/acados/build
@@ -205,7 +204,7 @@ jobs:
       # Note the current convention is to use the -S and -B options here to specify source
       # and build directories, but this is only available with CMake 3.13 and higher.
       # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP  -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_UNIT_TESTS=$ACADOS_UNIT_TESTS -DACADOS_OCTAVE=OFF
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP  -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_UNIT_TESTS=$ACADOS_UNIT_TESTS -DACADOS_OCTAVE=OFF -j6
     #TODO identify which cmake config are prereq for octave tests
 
     - name: Matlab test native MEX
@@ -259,7 +258,7 @@ jobs:
       # Note the current convention is to use the -S and -B options here to specify source
       # and build directories, but this is only available with CMake 3.13 and higher.
       # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP  -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_UNIT_TESTS=$ACADOS_UNIT_TESTS -DACADOS_OCTAVE=$ACADOS_OCTAVE
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP  -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_OCTAVE=$ACADOS_OCTAVE
 
 
     - name: Run CMake Octave tests (ctest)
