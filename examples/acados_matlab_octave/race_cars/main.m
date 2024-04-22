@@ -46,11 +46,11 @@ track_file = 'LMS_Track.txt';
 %% Solver parameters
 compile_interface = 'auto';
 codgen_model = 'true';
-nlp_solver = 'sqp_rti'; % sqp, sqp_rti
+nlp_solver = 'sqp'; % sqp, sqp_rti
 qp_solver = 'partial_condensing_hpipm';
     % full_condensing_hpipm, partial_condensing_hpipm, full_condensing_qpoases
 nlp_solver_exact_hessian = 'false'; % false=gauss_newton, true=exact    
-qp_solver_cond_N = 5; % for partial condensing
+qp_solver_cond_N = 50; % for partial condensing
 regularize_method = 'no_regularize';
 %regularize_method = 'project';
 %regularize_method = 'mirror';
@@ -252,7 +252,7 @@ for i = 1:Nsim
 
     ocp.solve();
     status = ocp.get('status'); % 0 - success
-    if status ~= 0
+    if status ~= 0 && status ~= 2
         % borrowed from acados/utils/types.h
         %statuses = {
         %    0: 'ACADOS_SUCCESS',
