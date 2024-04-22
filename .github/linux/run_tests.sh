@@ -33,5 +33,6 @@
 source ./../acadosenv/bin/activate;
 which python;
 
+echo echo "The first fruit is: $1"
 # run tests
-ctest -C $BUILD_TYPE --output-on-failure -j 3 --parallel 3 --schedule-random; # use -V for full output # --output-on-failure for less #-j specify num. of parallel tests
+ctest -C $BUILD_TYPE --output-on-failure -j 2 --schedule-random; # use -V for full output # --output-on-failure for less #-j specify num. of parallel tests
