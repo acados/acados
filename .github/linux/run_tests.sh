@@ -34,4 +34,4 @@ source ./../acadosenv/bin/activate;
 which python;
 
 # run tests
-ctest -C $BUILD_TYPE --output-on-failure -j 4 --parallel 4; # use -V for full output # --output-on-failure for less #-j specify num. of parallel tests
+ctest -C $BUILD_TYPE --output-on-failure -j 2 --parallel 2; # use -V for full output # --output-on-failure for less #-j specify num. of parallel tests
