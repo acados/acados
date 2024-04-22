@@ -1548,6 +1548,17 @@ void ocp_nlp_sqp_rti_work_get(void *config_, void *dims_, void *work_,
     }
 }
 
+
+void ocp_nlp_sqp_rti_terminate(void *config_, void *mem_, void *work_)
+{
+    ocp_nlp_config *config = config_;
+    ocp_nlp_sqp_rti_memory *mem = mem_;
+    ocp_nlp_sqp_rti_workspace *work = work_;
+
+    config->qp_solver->terminate(config->qp_solver, mem->nlp_mem->qp_solver_mem, work->nlp_work->qp_work);
+}
+
+
 void ocp_nlp_sqp_rti_config_initialize_default(void *config_)
 {
     ocp_nlp_config *config = (ocp_nlp_config *) config_;
@@ -1570,6 +1581,7 @@ void ocp_nlp_sqp_rti_config_initialize_default(void *config_)
     config->get = &ocp_nlp_sqp_rti_get;
     config->opts_get = &ocp_nlp_sqp_rti_opts_get;
     config->work_get = &ocp_nlp_sqp_rti_work_get;
+    config->terminate = &ocp_nlp_sqp_rti_terminate;
 
     return;
 }

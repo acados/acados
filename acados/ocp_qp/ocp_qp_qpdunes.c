@@ -928,6 +928,11 @@ void ocp_qp_qpdunes_solver_get(void *config_, void *qp_in_, void *qp_out_, void 
 }
 
 
+void ocp_qp_qpdunes_terminate(void *config_, void *mem_, void *work_)
+{
+    return;
+}
+
 void ocp_qp_qpdunes_config_initialize_default(void *config_)
 {
     qp_solver_config *config = config_;
@@ -950,5 +955,6 @@ void ocp_qp_qpdunes_config_initialize_default(void *config_)
     config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & ocp_qp_qpdunes;
     config->eval_sens = &ocp_qp_qpdunes_eval_sens;
     config->solver_get = &ocp_qp_qpdunes_solver_get;
+    config->terminate = &ocp_qp_qpdunes_terminate;
     return;
 }
