@@ -309,4 +309,7 @@ add_test(NAME python_race_cars
 add_test(NAME python_rsm_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/rsm_example
         python main.py)
+
+# Force serial execution for tests in the same folder  
+set_tests_properties(python_pendulum_ocp_example python_pendulum_sim_example python_pendulum_closed_loop_example PROPERTIES RUN_SERIAL TRUE)
 endif()
