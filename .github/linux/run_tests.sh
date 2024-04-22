@@ -36,3 +36,6 @@ which python;
 echo echo "number of parallel jobs: $1"
 # run tests
 ctest -C $BUILD_TYPE --output-on-failure -j $1 --parallel $1; # use -V for full output # --output-on-failure for less #-j specify num. of parallel tests
+
+#maximum number of cores limited to 4 for public repositories
+#https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#standard-github-hosted-runners-for-public-repositories

@@ -89,6 +89,12 @@ if(ACADOS_MATLAB OR ACADOS_OCTAVE)
         add_test(NAME octave_test_generic_ext_cost_disc_dyn
                 COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/generic_dyn_disc
                 octave --no-gui --no-window-system ./run_generic_disc_dyn_example.m)
+
+# Force serial execution for tests in the same directory  
+# Directory pendulum_on_cart/ocp
+set_tests_properties(octave_test_dim_check octave_test_sim_forw octave_test_sim_adj octave_test_sim_hess octave_test_sim_dae octave_test_ocp_pendulum octave_test_ocp_wtnx6 octave_test_ocp_pendulum_dae octave_test_ocp_mass_spring octave_test_ocp_simple_dae octave_test_qpDUNES octave_test_target_selector PROPERTIES RUN_SERIAL TRUE)
+
+
 endif()
 
 
