@@ -154,7 +154,7 @@ jobs:
       shell: bash
       # Execute tests defined by the CMake configuration. 
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ${{runner.workspace}}/acados/.github/linux/run_tests.sh 2
+      run: ${{runner.workspace}}/acados/.github/linux/run_tests.sh 8
 
   setup_MATLAB_interface:
     needs: core_build
