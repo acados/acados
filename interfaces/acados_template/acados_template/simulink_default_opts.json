@@ -41,7 +41,8 @@
         "cost_W_e": 0,
         "reset_solver": 0,
         "x_init": 0,
-        "u_init": 0
+        "u_init": 0,
+        "rti_phase": 0
     },
     "samplingtime": "t0"
 }
