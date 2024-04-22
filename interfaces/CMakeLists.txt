@@ -91,7 +91,6 @@ if(ACADOS_MATLAB OR ACADOS_OCTAVE)
                 octave --no-gui --no-window-system ./run_generic_disc_dyn_example.m)
 endif()
 
-python_solution_sensitivities_and_exact_hess python_value_function_gradient python_policy_gradient
 
 ### PYTHON ###
 if(ACADOS_PYTHON)
