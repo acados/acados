@@ -206,14 +206,7 @@ jobs:
       # and build directories, but this is only available with CMake 3.13 and higher.
       # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
       run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP  -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_UNIT_TESTS=$ACADOS_UNIT_TESTS -DACADOS_OCTAVE=OFF
-    #TODO identify which cmake config breaks build
-    
-    # - name: Build & Install # TODO removoe
-    #   working-directory: ${{runner.workspace}}/acados/build
-    #   shell: bash
-    #   run: |
-    #     cmake --build . --config $BUILD_TYPE
-    #     make install -j4
+    #TODO identify which cmake config are prereq for octave tests
 
     - name: Matlab test native MEX
       uses: matlab-actions/run-command@v1
@@ -236,7 +229,6 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: 'recursive'
-    
 
     - uses: actions/download-artifact@v4
       with:
@@ -258,21 +250,6 @@ jobs:
         echo "ENV_RUN=true" >> $GITHUB_ENV
 
     #        echo "ENV_RUN=true" >> $GITHUB_ENV
-
-    # - name: Install Eigen (ctest dependency) # TODO remove
-    #   working-directory: ${{runner.workspace}}/acados
-    #   shell: bash
-    #   # TODO: cache
-    #   run: ./ci/shared/install_eigen.sh
-    
-    # - name: Install Python interface
-    #   working-directory: ${{runner.workspace}}/acados
-    #   shell: bash
-    #   run: |
-    #     echo "ACADOS_SOURCE_DIR=${{runner.workspace}}/acados" >> $GITHUB_ENV
-    #     echo "ACADOS_INSTALL_DIR=${{runner.workspace}}/acados" >> $GITHUB_ENV
-    #     echo "LD_LIBRARY_PATH=${{runner.workspace}}/acados/lib" >> $GITHUB_ENV
-    #     ${{runner.workspace}}/acados/.github/linux/install_python.sh''
     
     - name: Configure CMake
       # Use a bash shell so we can use the same syntax for environment variable
