@@ -324,4 +324,6 @@ set_tests_properties(python_pendulum_mhe_example_minimal python_pendulum_mhe_exa
 set_tests_properties(python_solution_sensitivities_and_exact_hess python_value_function_gradient python_policy_gradient PROPERTIES RUN_SERIAL TRUE)
 # Directory time_varying
 set_tests_properties(python_time_varying_irk test_polynomial_controls_and_penalties py_mocp_qp_test PROPERTIES RUN_SERIAL TRUE)
+# Directory zoRO_example
+set_tests_properties(python_fast_zoro_example python_zoro_diff_drive_example PROPERTIES RUN_SERIAL TRUE)
 endif()
