@@ -210,7 +210,7 @@ if(ACADOS_WITH_QPDUNES)
         add_test(NAME python_qpDUNES_test
                 COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
                 python example_sqp_qpDUNES.py)
-endif()python_policy_gradient
+endif()
 
 # OSQP test
 if(ACADOS_WITH_OSQP)
