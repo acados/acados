@@ -208,13 +208,13 @@ jobs:
     #TODO identify which cmake config are prereq for octave tests
 
     - name: Matlab test native MEX
-      uses: matlab-actions/run-command@v1
+      uses: matlab-actions/run-command@v2
       if: always()
       with:
         command: cd examples/acados_matlab_octave/test; run_matlab_tests
 
     - name: Run Simulink test
-      uses: matlab-actions/run-command@v1
+      uses: matlab-actions/run-command@v2
       if: always()
       with:
         command: cd examples/acados_matlab_octave/test; simulink_test
