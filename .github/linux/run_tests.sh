@@ -35,4 +35,4 @@ which python;
 
 echo echo "number of parallel jobs: $1"
 # run tests
-ctest -C $BUILD_TYPE --output-on-failure; # use -V for full output # --output-on-failure for less #-j specify num. of parallel tests
+ctest -C $BUILD_TYPE --output-on-failure -j $1; # use -V for full output # --output-on-failure for less #-j specify num. of parallel tests
