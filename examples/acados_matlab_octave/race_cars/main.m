@@ -129,18 +129,16 @@ ocp_model.set('constr_uh', [...
 %ocp_model.set('constr_uh_e', 0);
 
 % Configure constraint slack variables
-nsh = 2;
-Jsh = zeros(nh, nsh);
-Jsh(1,1) = 1;
-Jsh(3,2) = 1;
+nsh = nh;
+Jsh = eye(nh);
 ocp_model.set('constr_Jsh', Jsh);
 % Set cost on slack
 % L1 slack (linear term)
 ocp_model.set('cost_zl', 100 * ones(nsh,1));
 ocp_model.set('cost_zu', 100 * ones(nsh,1));
 % L2 slack (squared term)
-ocp_model.set('cost_Zl', 0 * ones(nsh,nsh));
-ocp_model.set('cost_Zu', 0 * ones(nsh,nsh));
+ocp_model.set('cost_Zl', eye(nsh,nsh));
+ocp_model.set('cost_Zu', eye(nsh,nsh));
 
 % set intial condition
 ocp_model.set('constr_x0', model.x0);
