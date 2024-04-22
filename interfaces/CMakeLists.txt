@@ -91,7 +91,7 @@ if(ACADOS_MATLAB OR ACADOS_OCTAVE)
                 octave --no-gui --no-window-system ./run_generic_disc_dyn_example.m)
 endif()
 
-
+python_solution_sensitivities_and_exact_hess python_value_function_gradient python_policy_gradient
 
 ### PYTHON ###
 if(ACADOS_PYTHON)
@@ -312,4 +312,7 @@ add_test(NAME python_rsm_example
 
 # Force serial execution for tests in the same folder  
 set_tests_properties(python_pendulum_ocp_example python_pendulum_sim_example python_pendulum_closed_loop_example PROPERTIES RUN_SERIAL TRUE)
+set_tests_properties(python_test_cython_vs_ctypes python_test_reset python_test_ocp python_test_cost_integration_euler python_test_cost_integration_value python_armijo_test python_OSQP_test python_pendulum_soft_constraints_example python_pendulum_parametric_nonlinear_constraint_h_test python_test_sim_dae PROPERTIES RUN_SERIAL TRUE)
+set_tests_properties(python_chain_ocp python_chain_sim PROPERTIES RUN_SERIAL TRUE)
+set_tests_properties(pendulum_optimal_value_gradient python_pendulum_ocp_IRK python_pendulum_ocp_ERK python_pendulum_ocp_GNSF python_example_ocp_dynamics_formulations_cmake  PROPERTIES RUN_SERIAL TRUE)
 endif()
