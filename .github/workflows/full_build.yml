@@ -193,11 +193,11 @@ jobs:
       if: always()
       with:
       # MATLAB release to set up (R2020a or later) TODO fix depreciaton warning
-        release: R2020a
+        release: R2021a
         cache: true
     
     - name: Configure CMake
-      # Use a bash shell so we can use the same syntax for environment variable
+      # Use a bash shell so we can use the same syntax for environment
       # access regardless of the host operating system
       shell: bash
       working-directory: ${{runner.workspace}}/acados/build
