@@ -188,10 +188,10 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/acadosConfig.cmake
         DESTINATION cmake)
 
 install(
-        FILES ${PROJECT_SOURCE_DIR}/cmake/FindEigen3.cmake
+  FILES ${PROJECT_SOURCE_DIR}/cmake/FindEigen3.cmake
         ${PROJECT_SOURCE_DIR}/cmake/FindFortranLibs.cmake
         ${PROJECT_SOURCE_DIR}/cmake/FindOpenBLAS.cmake
-        DESTINATION cmake)
+  DESTINATION cmake)
 
 # set_target_properties(acados
 #     PROPERTIES SOVERSION ${PACKAGE_SO_VERSION})
