@@ -71,6 +71,7 @@ endif()
 
 if(ACADOS_WITH_OOQP)
     find_dependency(ooqp)
+    
     find_dependency(OpenBLAS)
     if (NOT TARGET openblas)
         add_library(openblas UNKNOWN IMPORTED)
