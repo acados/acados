@@ -193,7 +193,7 @@ jobs:
       if: always()
       with:
       # MATLAB release to set up (R2020a or later) TODO fix depreciaton warning
-        release: R2021a
+        release: R2022a
         cache: true
     
     - name: Configure CMake
