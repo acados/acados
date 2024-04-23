@@ -34,7 +34,6 @@ Test for solution sensitivities with many parameters.
 """
 
 import os
-import scipy
 import numpy as np
 import casadi as ca
 from casadi import SX, norm_2, vertcat
@@ -47,11 +46,12 @@ from typing import Tuple
 from plot_utils import plot_timings
 
 
-def export_discrete_erk4_integrator_step(f_expl, x, u, p, h, n_stages: int = 2) -> ca.SX:
+def export_discrete_erk4_integrator_step(f_expl: SX, x: SX, u: SX, p: struct_symSX, h: float, n_stages: int = 2) -> ca.SX:
+    """Define ERK4 integrator for continuous dynamics."""
     dt = h / n_stages
     ode = ca.Function("f", [x, u, p], [f_expl])
     xnext = x
-    for j in range(n_stages):
+    for _ in range(n_stages):
         k1 = ode(xnext, u, p)
         k2 = ode(xnext + dt / 2 * k1, u, p)
         k3 = ode(xnext + dt / 2 * k2, u, p)
@@ -59,6 +59,7 @@ def export_discrete_erk4_integrator_step(f_expl, x, u, p, h, n_stages: int = 2) 
         xnext = xnext + dt / 6 * (k1 + 2 * k2 + 2 * k3 + k4)
 
     return xnext
+
 
 def define_param_struct_symSX(n_mass: int, disturbance: bool = True) -> DMStruct:
     """Define parameter struct."""
@@ -80,6 +81,7 @@ def define_param_struct_symSX(n_mass: int, disturbance: bool = True) -> DMStruct
 
     return struct_symSX(param_entries)
 
+
 def define_nx_nu(n_mass: int) -> Tuple[int, int]:
     """Define number of states and control inputs."""
     M = n_mass - 2  # number of intermediate masses
@@ -88,7 +90,13 @@ def define_nx_nu(n_mass: int) -> Tuple[int, int]:
 
     return nx, nu
 
-def export_chain_mass_model(n_mass: int, Ts=0.2, disturbance=False) -> Tuple[AcadosModel, DMStruct]:
+
+def find_idx_for_labels(sub_vars: SX, sub_label: str) -> list[int]:
+    """Return a list of indices where sub_label is part of the variable label."""
+    return [i for i, label in enumerate(sub_vars.str().strip("[]").split(", ")) if sub_label in label]
+
+
+def export_chain_mass_model(n_mass: int, Ts: float = 0.2, disturbance: bool = False) -> Tuple[AcadosModel, DMStruct]:
     """Export chain mass model for acados."""
     x0 = np.array([0, 0, 0])  # fix mass (at wall)
 
@@ -96,13 +104,13 @@ def export_chain_mass_model(n_mass: int, Ts=0.2, disturbance=False) -> Tuple[Aca
 
     nx, nu = define_nx_nu(n_mass)
 
-    xpos = SX.sym("xpos", (M + 1) * 3, 1)  # position of fix mass eliminated
+    xpos = SX.sym("xpos", (M + 1) * 3, 1)  # position of fixed mass eliminated
     xvel = SX.sym("xvel", M * 3, 1)
     u = SX.sym("u", nu, 1)
     xdot = SX.sym("xdot", nx, 1)
 
     f = SX.zeros(3 * M, 1)  # force on intermediate masses
-    p = define_param_struct_symSX(n_mass, disturbance=disturbance)
+    p = define_param_struct_symSX(n_mass=n_mass, disturbance=disturbance)
 
     # Gravity force
     for i in range(M):
@@ -179,7 +187,9 @@ def export_chain_mass_model(n_mass: int, Ts=0.2, disturbance=False) -> Tuple[Aca
     return model, p_map
 
 
-def compute_steady_state(model: AcadosModel, p, xPosFirstMass, xEndRef):
+def compute_parametric_steady_state(
+    model: AcadosModel, p: DMStruct, xPosFirstMass: np.ndarray, xEndRef: np.ndarray
+) -> np.ndarray:
     """Compute steady state for chain mass model."""
     # TODO reuse/adapt the compute_steady_state function in utils.py
 
@@ -217,10 +227,9 @@ def compute_steady_state(model: AcadosModel, p, xPosFirstMass, xEndRef):
     solver = ca.nlpsol("solver", "ipopt", nlp)
     sol = solver(x0=w0, lbg=0, ubg=0, p=p_.cat)
 
-    wrest = sol["x"].full()
-    xrest = wrest[:nx]
+    x_ss = sol["x"].full()[:nx]
 
-    return xrest
+    return x_ss
 
 
 def export_parametric_ocp(
@@ -230,107 +239,81 @@ def export_parametric_ocp(
     hessian_approx: str = "GAUSS_NEWTON",
     integrator_type: str = "IRK",
     nlp_solver_type: str = "SQP",
-    cost_type: str = "LINEAR_LS",
     nlp_iter: int = 50,
     nlp_tol: float = 1e-5,
+    random_scale: dict = {"m": 0.0, "D": 0.0, "L": 0.0, "C": 0.0},
 ) -> Tuple[AcadosOcp, DMStruct]:
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
-
-    # chain parameters
-    n_mass = chain_params_["n_mass"]
-    M = chain_params_["n_mass"] - 2  # number of intermediate masses
-    Ts = chain_params_["Ts"]
     ocp.dims.N = chain_params_["N"]
-    xPosFirstMass = chain_params_["xPosFirstMass"]
 
     # export model
-    model, p = export_chain_mass_model(n_mass, Ts=Ts, disturbance=True)
-
-    # set model
-    ocp.model = model
-
-    nx = model.x.size()[0]
-    nu = model.u.size()[0]
-    ny = nx + nu
-    Tf = ocp.dims.N * Ts
-
-    # initial state
-    xEndRef = np.zeros((3, 1))
-    xEndRef[0] = chain_params_["L"] * (M + 1) * 6
-    xEndRef[2] = 0.0
+    ocp.model, p = export_chain_mass_model(n_mass=chain_params_["n_mass"], Ts=chain_params_["Ts"], disturbance=True)
 
     # parameters
     np.random.seed(chain_params_["seed"])
-    m = [np.random.normal(chain_params_["m"], 0.0 * chain_params_["m"]) for _ in range(n_mass - 1)]
-    D = [np.random.normal(chain_params_["D"], 0.0 * chain_params_["D"], 3) for _ in range(n_mass - 1)]
-    L = [np.random.normal(chain_params_["L"], 0.0 * chain_params_["L"], 3) for _ in range(n_mass - 1)]
-    C = [np.random.normal(chain_params_["C"], 0.0 * chain_params_["C"], 3) for _ in range(n_mass - 1)]
+    m = [
+        np.random.normal(chain_params_["m"], random_scale["m"] * chain_params_["m"])
+        for _ in range(chain_params_["n_mass"] - 1)
+    ]
+    D = [
+        np.random.normal(chain_params_["D"], random_scale["D"] * chain_params_["D"], 3)
+        for _ in range(chain_params_["n_mass"] - 1)
+    ]
+    L = [
+        np.random.normal(chain_params_["L"], random_scale["L"] * chain_params_["L"], 3)
+        for _ in range(chain_params_["n_mass"] - 1)
+    ]
+    C = [
+        np.random.normal(chain_params_["C"], random_scale["C"] * chain_params_["C"], 3)
+        for _ in range(chain_params_["n_mass"] - 1)
+    ]
 
     # Inermediate masses
-    for i_mass in range(n_mass - 1):
+    for i_mass in range(chain_params_["n_mass"] - 1):
         p["m", i_mass] = m[i_mass]
-    for i_mass in range(n_mass - 2):
+    for i_mass in range(chain_params_["n_mass"] - 2):
         p["w", i_mass] = np.zeros(3)
 
     # Links
-    for i_link in range(n_mass - 1):
+    for i_link in range(chain_params_["n_mass"] - 1):
         p["D", i_link] = D[i_link]
         p["L", i_link] = L[i_link]
         p["C", i_link] = C[i_link]
 
-    xrest = compute_steady_state(model, p, xPosFirstMass, xEndRef)
-    x0 = xrest
+    # initial state
+    x_ss = compute_parametric_steady_state(
+        model=ocp.model,
+        p=p,
+        xPosFirstMass=chain_params_["xPosFirstMass"],
+        xEndRef=np.array([chain_params_["L"] * (chain_params_["n_mass"] - 1) * 6, 0.0, 0.0]),
+    )
+    x0 = x_ss
 
-    ocp.cost.cost_type = cost_type
-    ocp.cost.cost_type_e = cost_type
+    nx = ocp.model.x.rows()
+    nu = ocp.model.u.rows()
 
-    strong_penalty = M + 1
-    Q_mat = 2 * np.diagflat(np.ones((nx, 1)))
-    R_mat = 2 * np.diagflat(1e-2 * np.ones((nu, 1)))
+    M = chain_params_["n_mass"] - 2  # number of intermediate masses
+    ocp.cost.cost_type = "EXTERNAL"
+    ocp.cost.cost_type_e = "EXTERNAL"
+
+    x_e = ocp.model.x - x_ss
+    u_e = ocp.model.u - np.zeros((nu, 1))
+
+    idx = find_idx_for_labels(define_param_struct_symSX(chain_params_["n_mass"], disturbance=True).cat, "Q")
+    Q_sym = ca.reshape(ocp.model.p[idx], (nx, nx))
     q_diag = np.ones((nx, 1))
-    q_diag[3 * M] = strong_penalty
-    q_diag[3 * M + 1] = strong_penalty
-    q_diag[3 * M + 2] = strong_penalty
-    Q_mat = 2 * np.diagflat(q_diag)
+    q_diag[3 * M : 3 * M + 3] = M + 1
+    p["Q"] = 2 * np.diagflat(q_diag)
 
-    if ocp.cost.cost_type == "LINEAR_LS":
+    idx = find_idx_for_labels(define_param_struct_symSX(chain_params_["n_mass"], disturbance=True).cat, "R")
+    R_sym = ca.reshape(ocp.model.p[idx], (nu, nu))
+    p["R"] = 2 * np.diagflat(1e-2 * np.ones((nu, 1)))
 
-        yref = np.vstack((xrest, np.zeros((nu, 1)))).flatten()
+    ocp.model.cost_expr_ext_cost = 0.5 * (x_e.T @ Q_sym @ x_e + u_e.T @ R_sym @ u_e)
+    ocp.model.cost_expr_ext_cost_e = 0.5 * (x_e.T @ Q_sym @ x_e)
 
-        ocp.cost.W = scipy.linalg.block_diag(Q_mat, R_mat)
-        ocp.cost.W_e = Q_mat
-
-        ocp.cost.Vx = np.zeros((ny, nx))
-        ocp.cost.Vx[:nx, :nx] = np.eye(nx)
-
-        Vu = np.zeros((ny, nu))
-        Vu[nx : nx + nu, :] = np.eye(nu)
-        ocp.cost.Vu = Vu
-
-        ocp.cost.Vx_e = np.eye(nx)
-
-        ocp.cost.yref = yref
-        ocp.cost.yref_e = xrest.flatten()
-    else:
-        ocp.cost.cost_type = "EXTERNAL"
-        ocp.cost.cost_type_e = "EXTERNAL"
-
-        x_e = ocp.model.x - xrest
-        u_e = ocp.model.u - np.zeros((nu, 1))
-
-        idx = find_idx_for_labels(define_param_struct_symSX(chain_params_["n_mass"], disturbance=True).cat, "Q")
-        Q_sym = ca.reshape(ocp.model.p[idx], (nx, nx))
-        p["Q"] = Q_mat
-
-        idx = find_idx_for_labels(define_param_struct_symSX(chain_params_["n_mass"], disturbance=True).cat, "R")
-        R_sym = ca.reshape(ocp.model.p[idx], (nu, nu))
-        p["R"] = R_mat
-
-        ocp.model.cost_expr_ext_cost = 0.5 * (x_e.T @ Q_sym @ x_e + u_e.T @ R_sym @ u_e)
-        ocp.model.cost_expr_ext_cost_e = 0.5 * (x_e.T @ Q_sym @ x_e)
-
-        ocp.model.cost_y_expr = vertcat(x_e, u_e)
+    ocp.model.cost_y_expr = vertcat(x_e, u_e)
 
     ocp.parameter_values = p.cat.full().flatten()
 
@@ -365,19 +348,15 @@ def export_parametric_ocp(
         ocp.solver_options.qp_tol = nlp_tol
         ocp.solver_options.tol = nlp_tol
 
-    ocp.solver_options.tf = Tf
+    ocp.solver_options.tf = ocp.dims.N * chain_params_["Ts"]
 
     return ocp, p
 
 
-def find_idx_for_labels(sub_vars, sub_label) -> np.ndarray:
-    return [i for i, label in enumerate(sub_vars.str().strip("[]").split(", ")) if sub_label in label]
-
-
-def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_params()) -> None:
-
-    generate_code = True
-    ocp, parameter_values = export_parametric_ocp(chain_params_=chain_params_, qp_solver_ric_alg=qp_solver_ric_alg, integrator_type="DISCRETE", cost_type="EXTERNAL")
+def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_params(), generate_code: bool = True) -> None:
+    ocp, parameter_values = export_parametric_ocp(
+        chain_params_=chain_params_, qp_solver_ric_alg=qp_solver_ric_alg, integrator_type="DISCRETE",
+    )
 
     ocp_json_file = "acados_ocp_" + ocp.model.name + ".json"
 
@@ -388,7 +367,10 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
         ocp_solver = AcadosOcpSolver(ocp, json_file=ocp_json_file)
 
     sensitivity_ocp, _ = export_parametric_ocp(
-        chain_params_=chain_params_, qp_solver_ric_alg=qp_solver_ric_alg, hessian_approx="EXACT", integrator_type="DISCRETE", cost_type="EXTERNAL"
+        chain_params_=chain_params_,
+        qp_solver_ric_alg=qp_solver_ric_alg,
+        hessian_approx="EXACT",
+        integrator_type="DISCRETE",
     )
     sensitivity_ocp.model.name = f"{ocp.model.name}_sensitivity"
 
@@ -454,11 +436,11 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
         sens_u.append(sens_u_[:, p_idx])
 
     timing_results = {
-        'NLP solve': timings_solve_ocp_solver,
-        'prepare \& factorize exact Hessian QP': timings_lin_and_factorize,
-        'eval rhs': timings_lin_params,
-        'solve': timings_solve_params,
-        }
+        "NLP solve": timings_solve_ocp_solver,
+        "prepare \& factorize exact Hessian QP": timings_lin_and_factorize,
+        "eval rhs": timings_lin_params,
+        "solve": timings_solve_params,
+    }
 
     u_opt = np.vstack(u_opt)
     sens_u = np.vstack(sens_u)
@@ -476,7 +458,9 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
         plt.subplot(4, 1, col + 1)
         plt.plot(p_var, u_opt[:, col], label=f"$u^*_{col}$")
         plt.plot(p_var, u_opt_reconstructed_fd[:, col], label=f"$u^*_{col}$, reconstructed with fd gradients", linestyle="--")
-        plt.plot(p_var, u_opt_reconstructed_acados[:, col], label=f"$u^*_{col}$, reconstructed with acados gradients", linestyle=":")
+        plt.plot(
+            p_var, u_opt_reconstructed_acados[:, col], label=f"$u^*_{col}$, reconstructed with acados gradients", linestyle=":"
+        )
         plt.ylabel(f"$u^*_{col}$")
         plt.grid(True)
         plt.legend()
@@ -486,20 +470,19 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
         plt.subplot(4, 1, 4)
         plt.plot(p_var, np.abs(sens_u[:, col] - sens_u_fd[:, col]), label=f"$u^*_{col}$", linestyle="--")
 
-    plt.ylabel(f"abs difference")
+    plt.ylabel("abs difference")
     plt.grid(True)
     plt.legend()
-    plt.yscale('log')
+    plt.yscale("log")
     plt.xlabel(p_label)
     plt.xlim(p_var[0], p_var[-1])
 
-    plot_timings([timing_results], timing_results.keys(), ['acados'], figure_filename=None)
+    plot_timings([timing_results], timing_results.keys(), ["acados"], figure_filename=None)
 
     plt.show()
 
 
 if __name__ == "__main__":
-
     chain_params = get_chain_params()
     chain_params["n_mass"] = 3
-    main_parametric(qp_solver_ric_alg=0, chain_params_=chain_params)
+    main_parametric(qp_solver_ric_alg=0, chain_params_=chain_params, generate_code=True)
