@@ -189,11 +189,11 @@ jobs:
         echo "LD_RUN_PATH=$LD_RUN_PATH:${{runner.workspace}}/acados/c_generated_code" >> $GITHUB_ENV
   
     - name: Install MATLAB
-      uses: matlab-actions/setup-matlab@v2
+      uses: matlab-actions/setup-matlab@v1
       if: always()
       with:
       # MATLAB release to set up (R2020a or later) TODO fix depreciaton warning
-        release: R2022a
+        release: R2021a
         cache: true
     
     - name: Configure CMake
@@ -208,13 +208,13 @@ jobs:
     #TODO identify which cmake config are prereq for octave tests
 
     - name: Matlab test native MEX
-      uses: matlab-actions/run-command@v2
+      uses: matlab-actions/run-command@v1
       if: always()
       with:
         command: cd examples/acados_matlab_octave/test; run_matlab_tests
 
     - name: Run Simulink test
-      uses: matlab-actions/run-command@v2
+      uses: matlab-actions/run-command@v1
       if: always()
       with:
         command: cd examples/acados_matlab_octave/test; simulink_test
@@ -247,8 +247,6 @@ jobs:
         echo "LD_LIBRARY_PATH=${{runner.workspace}}/acados/lib:${{runner.workspace}}/acados/build" >> $GITHUB_ENV
         echo "OCTAVE_PATH=$OCTAVE_PATH:${{runner.workspace}}/acados/interfaces/acados_matlab_octave:${{runner.workspace}}/acados/interfaces/acados_matlab_octave/acados_template_mex:${{runner.workspace}}/acados/external/casadi-octave" >> $GITHUB_ENV
         echo "ENV_RUN=true" >> $GITHUB_ENV
-
-    #        echo "ENV_RUN=true" >> $GITHUB_ENV
     
     - name: Configure CMake
       # Use a bash shell so we can use the same syntax for environment variable
