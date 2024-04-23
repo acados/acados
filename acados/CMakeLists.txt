@@ -187,11 +187,11 @@ configure_package_config_file(${PROJECT_SOURCE_DIR}/cmake/acadosConfig.cmake.in
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/acadosConfig.cmake
         DESTINATION cmake)
 
-install(
-  FILES ${PROJECT_SOURCE_DIR}/cmake/FindEigen3.cmake
-        ${PROJECT_SOURCE_DIR}/cmake/FindFortranLibs.cmake
-        ${PROJECT_SOURCE_DIR}/cmake/FindOpenBLAS.cmake
-  DESTINATION cmake)
+
+# Install your custom Find files
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/cmake/
+        DESTINATION cmake
+        FILES_MATCHING PATTERN "Find*.cmake")
 
 # set_target_properties(acados
 #     PROPERTIES SOVERSION ${PACKAGE_SO_VERSION})
