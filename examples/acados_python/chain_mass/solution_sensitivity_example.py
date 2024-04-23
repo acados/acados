@@ -239,7 +239,6 @@ def export_parametric_ocp(
     hessian_approx: str = "GAUSS_NEWTON",
     integrator_type: str = "IRK",
     nlp_solver_type: str = "SQP",
-    cost_type: str = "LINEAR_LS",
     nlp_iter: int = 50,
     nlp_tol: float = 1e-5,
     random_scale: dict = {"m": 0.0, "D": 0.0, "L": 0.0, "C": 0.0},
@@ -291,11 +290,8 @@ def export_parametric_ocp(
     )
     x0 = x_ss
 
-    ocp.cost.cost_type = cost_type
-    ocp.cost.cost_type_e = cost_type
-
-    nx = ocp.model.x.size()[0]
-    nu = ocp.model.u.size()[0]
+    nx = ocp.model.x.rows()
+    nu = ocp.model.u.rows()
 
     M = chain_params_["n_mass"] - 2  # number of intermediate masses
     ocp.cost.cost_type = "EXTERNAL"
@@ -359,7 +355,7 @@ def export_parametric_ocp(
 
 def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_params(), generate_code: bool = True) -> None:
     ocp, parameter_values = export_parametric_ocp(
-        chain_params_=chain_params_, qp_solver_ric_alg=qp_solver_ric_alg, integrator_type="DISCRETE", cost_type="EXTERNAL"
+        chain_params_=chain_params_, qp_solver_ric_alg=qp_solver_ric_alg, integrator_type="DISCRETE",
     )
 
     ocp_json_file = "acados_ocp_" + ocp.model.name + ".json"
@@ -375,7 +371,6 @@ def main_parametric(qp_solver_ric_alg: int = 0, chain_params_: dict = get_chain_
         qp_solver_ric_alg=qp_solver_ric_alg,
         hessian_approx="EXACT",
         integrator_type="DISCRETE",
-        cost_type="EXTERNAL",
     )
     sensitivity_ocp.model.name = f"{ocp.model.name}_sensitivity"
 
