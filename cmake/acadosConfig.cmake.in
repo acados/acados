@@ -36,6 +36,7 @@ set(ACADOS_WITH_QPOASES @ACADOS_WITH_QPOASES@)
 set(ACADOS_WITH_QPDUNES @ACADOS_WITH_QPDUNES@)
 set(ACADOS_WITH_OSQP @ACADOS_WITH_OSQP@)
 set(ACADOS_WITH_OOQP @ACADOS_WITH_OOQP@)
+set(ACADOS_WITH_DAQP @ACADOS_WITH_DAQP@)
 
 # Add acados CMake folder to CMake prefix and module path
 set(CMAKE_MODULE_PATH_save "${CMAKE_MODULE_PATH}")
@@ -82,6 +83,14 @@ if(ACADOS_WITH_OOQP)
         add_library(gfortran UNKNOWN IMPORTED)
         set_property(TARGET gfortran PROPERTY IMPORTED_LOCATION ${FORTRAN_LIBRARY})
     endif()
+endif()
+
+if(ACADOS_WITH_DAQP)
+    find_package(daqp)
+endif()
+
+if(ACADOS_WITH_OSQP)
+    find_package(osqp)
 endif()
 
 include("${CMAKE_CURRENT_LIST_DIR}/acadosTargets.cmake")
