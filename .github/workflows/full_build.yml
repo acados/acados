@@ -193,7 +193,8 @@ jobs:
       if: always()
       with:
       # MATLAB release to set up (R2020a or later) TODO fix depreciaton warning
-        release: R2021a Simulink_Test
+        release: R2021a
+        products: Simulink_Test
         cache: true
     
     - name: Configure CMake
