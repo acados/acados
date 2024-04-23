@@ -816,7 +816,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
   {%- elif simulink_opts.inputs.rti_phase %}{# SPLIT RTI PHASE#}
     {% if solver_options.nlp_solver_type != "SQP_RTI" %}
     rti_phase input only supported for nlp_solver_type == "SQP_RTI"!
-    {% elif solver_options.custom_update_filename != "" %}
+    {% elif custom_update_filename != "" %}
     rti_phase input only supported for custom_update_filename == ""!
     {% else %}
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "rti_phase", &rti_phase);
