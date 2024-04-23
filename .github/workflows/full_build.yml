@@ -415,7 +415,7 @@ jobs:
       if: always()
       with:
       # MATLAB release to set up (R2020a or later)
-        release: R2020a
+        release: R2021a
         cache: true
 
     - name: Matlab test native MEX
