@@ -39,7 +39,7 @@ virtualenv --python=python3 acadosenv;
 source acadosenv/bin/activate;
 which python;
 
-pip cache purge
+#pip cache purge
 pip install interfaces/acados_template
 
 # install tera
