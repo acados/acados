@@ -30,7 +30,7 @@
 #
 
 # source virtualenv
-source ../acados/acadosenv/bin/activate;
+source ./../acadosenv/bin/activate;
 which python;
 
 # run tests
