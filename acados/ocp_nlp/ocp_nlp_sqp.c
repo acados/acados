@@ -1025,8 +1025,8 @@ void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *
 }
 
 
-void ocp_nlp_sqp_eval_adj_p(void *config_, void *dims_, void *nlp_in_, void *opts_, void *mem_, void *work_,
-                                 const char *field, void *lagr_grad_wrt_params)
+void ocp_nlp_sqp_eval_lagr_grad_p(void *config_, void *dims_, void *nlp_in_, void *opts_, void *mem_, void *work_,
+                                 const char *field, void *grad_p)
 {
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_config *config = config_;
@@ -1039,8 +1039,8 @@ void ocp_nlp_sqp_eval_adj_p(void *config_, void *dims_, void *nlp_in_, void *opt
     ocp_nlp_sqp_workspace *work = work_;
     ocp_nlp_workspace *nlp_work = work->nlp_work;
 
-    ocp_nlp_common_eval_adj_p(config, dims, nlp_in, opts->nlp_opts, nlp_mem, nlp_work,
-                                 field, lagr_grad_wrt_params);
+    ocp_nlp_common_eval_lagr_grad_p(config, dims, nlp_in, opts->nlp_opts, nlp_mem, nlp_work,
+                                 field, grad_p);
 
     return;
 }
@@ -1276,7 +1276,7 @@ void ocp_nlp_sqp_config_initialize_default(void *config_)
     config->evaluate = &ocp_nlp_sqp;
     config->memory_reset_qp_solver = &ocp_nlp_sqp_memory_reset_qp_solver;
     config->eval_param_sens = &ocp_nlp_sqp_eval_param_sens;
-    config->eval_lagrangian_param_sens = &ocp_nlp_sqp_eval_adj_p;
+    config->eval_lagr_grad_p = &ocp_nlp_sqp_eval_lagr_grad_p;
     config->config_initialize_default = &ocp_nlp_sqp_config_initialize_default;
     config->precompute = &ocp_nlp_sqp_precompute;
     config->get = &ocp_nlp_sqp_get;

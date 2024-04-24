@@ -39,7 +39,21 @@ from subprocess import DEVNULL, STDOUT, call
 import numpy as np
 from casadi import DM, MX, SX, CasadiMeta, Function
 
-ALLOWED_CASADI_VERSIONS = ('3.6.4', '3.6.3', '3.6.2', '3.6.1', '3.5.6', '3.5.5', '3.5.4', '3.5.3', '3.5.2', '3.5.1', '3.4.5', '3.4.0')
+ALLOWED_CASADI_VERSIONS = (
+    '3.4.0'
+    '3.4.5',
+    '3.5.1',
+    '3.5.2',
+    '3.5.3',
+    '3.5.4',
+    '3.5.6',
+    '3.5.5',
+    '3.6.0',
+    '3.6.1',
+    '3.6.2',
+    '3.6.3',
+    '3.6.4',
+)
 
 TERA_VERSION = "0.0.34"
 
@@ -96,6 +110,14 @@ def check_casadi_version():
         msg += 'please consider changing your CasADi version.\n'
         msg += 'Version {} currently in use.'.format(casadi_version)
         print(msg)
+
+
+def get_simulink_default_opts():
+    python_interface_path = get_python_interface_path()
+    abs_path = os.path.join(python_interface_path, 'simulink_default_opts.json')
+    with open(abs_path , 'r') as f:
+        simulink_default_opts = json.load(f)
+    return simulink_default_opts
 
 
 def is_column(x):
@@ -218,8 +240,6 @@ def get_tera():
     os.chmod(tera_path, 0o755)
     print("Successfully downloaded t_renderer.")
     return tera_path
-
-
 
 
 def render_template(in_file, out_file, output_dir, json_path, template_glob=None):

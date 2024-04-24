@@ -46,11 +46,11 @@ track_file = 'LMS_Track.txt';
 %% Solver parameters
 compile_interface = 'auto';
 codgen_model = 'true';
-nlp_solver = 'sqp_rti'; % sqp, sqp_rti
+nlp_solver = 'sqp'; % sqp, sqp_rti
 qp_solver = 'partial_condensing_hpipm';
     % full_condensing_hpipm, partial_condensing_hpipm, full_condensing_qpoases
 nlp_solver_exact_hessian = 'false'; % false=gauss_newton, true=exact    
-qp_solver_cond_N = 5; % for partial condensing
+qp_solver_cond_N = 50; % for partial condensing
 regularize_method = 'no_regularize';
 %regularize_method = 'project';
 %regularize_method = 'mirror';
@@ -129,18 +129,16 @@ ocp_model.set('constr_uh', [...
 %ocp_model.set('constr_uh_e', 0);
 
 % Configure constraint slack variables
-nsh = 2;
-Jsh = zeros(nh, nsh);
-Jsh(1,1) = 1;
-Jsh(3,2) = 1;
+nsh = nh;
+Jsh = eye(nh);
 ocp_model.set('constr_Jsh', Jsh);
 % Set cost on slack
 % L1 slack (linear term)
 ocp_model.set('cost_zl', 100 * ones(nsh,1));
 ocp_model.set('cost_zu', 100 * ones(nsh,1));
 % L2 slack (squared term)
-ocp_model.set('cost_Zl', 0 * ones(nsh,nsh));
-ocp_model.set('cost_Zu', 0 * ones(nsh,nsh));
+ocp_model.set('cost_Zl', eye(nsh,nsh));
+ocp_model.set('cost_Zu', eye(nsh,nsh));
 
 % set intial condition
 ocp_model.set('constr_x0', model.x0);
@@ -252,7 +250,7 @@ for i = 1:Nsim
 
     ocp.solve();
     status = ocp.get('status'); % 0 - success
-    if status ~= 0
+    if status ~= 0 && status ~= 2
         % borrowed from acados/utils/types.h
         %statuses = {
         %    0: 'ACADOS_SUCCESS',

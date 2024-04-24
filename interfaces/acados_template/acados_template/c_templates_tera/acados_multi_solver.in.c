@@ -2670,8 +2670,130 @@ int {{ name }}_acados_update_params({{ name }}_solver_capsule* capsule, int stag
 int {{ name }}_acados_update_params_sparse({{ name }}_solver_capsule * capsule, int stage, int *idx, double *p, int n_update)
 {
     int solver_status = 0;
-    printf("\n{{ name }}_acados_update_params_sparse not implemented\n");
-    exit(1);
+    const int N = capsule->nlp_solver_plan->N;
+    int i_fun, i_cost_fun;
+
+    {%- for jj in range(end=n_phases) %}{# phases loop !#}
+    if (stage >= {{ start_idx[jj] }} && stage < {{ end_idx[jj] }})
+    {
+        i_fun = stage - {{ start_idx[jj] }};
+        i_cost_fun = stage - {{ cost_start_idx[jj] }};
+    {%- if mocp_opts.integrator_type[jj] == "IRK" %}
+        capsule->impl_dae_fun_{{ jj }}[i_fun].set_param_sparse(capsule->impl_dae_fun_{{ jj }}+i_fun, n_update, idx, p);
+        capsule->impl_dae_fun_jac_x_xdot_z_{{ jj }}[i_fun].set_param_sparse(capsule->impl_dae_fun_jac_x_xdot_z_{{ jj }}+i_fun, n_update, idx, p);
+        capsule->impl_dae_jac_x_xdot_u_z_{{ jj }}[i_fun].set_param_sparse(capsule->impl_dae_jac_x_xdot_u_z_{{ jj }}+i_fun, n_update, idx, p);
+
+        {%- if solver_options.hessian_approx == "EXACT" %}
+        capsule->impl_dae_hess_{{ jj }}[i_fun].set_param_sparse(capsule->impl_dae_hess_{{ jj }}+i_fun, n_update, idx, p);
+        {%- endif %}
+    {%- elif mocp_opts.integrator_type[jj] == "LIFTED_IRK" %}
+        capsule->impl_dae_fun_{{ jj }}[i_fun].set_param_sparse(capsule->impl_dae_fun_{{ jj }}+i_fun, n_update, idx, p);
+        capsule->impl_dae_fun_jac_x_xdot_u_{{ jj }}[i_fun].set_param_sparse(capsule->impl_dae_fun_jac_x_xdot_u_{{ jj }}+i_fun, n_update, idx, p);
+    {%- elif mocp_opts.integrator_type[jj] == "ERK" %}
+        capsule->forw_vde_casadi_{{ jj }}[i_fun].set_param_sparse(capsule->forw_vde_casadi_{{ jj }}+i_fun, n_update, idx, p);
+        capsule->expl_ode_fun_{{ jj }}[i_fun].set_param_sparse(capsule->expl_ode_fun_{{ jj }}+i_fun, n_update, idx, p);
+
+        {%- if solver_options.hessian_approx == "EXACT" %}
+        capsule->hess_vde_casadi_{{ jj }}[i_fun].set_param_sparse(capsule->hess_vde_casadi_{{ jj }}+i_fun, n_update, idx, p);
+        {%- endif %}
+    {%- elif mocp_opts.integrator_type[jj] == "GNSF" %}
+    {% if model.gnsf.purely_linear != 1 %}
+        capsule->gnsf_phi_fun_{{ jj }}[i_fun].set_param_sparse(capsule->gnsf_phi_fun_{{ jj }}+i_fun, n_update, idx, p);
+        capsule->gnsf_phi_fun_jac_y_{{ jj }}[i_fun].set_param_sparse(capsule->gnsf_phi_fun_jac_y_{{ jj }}+i_fun, n_update, idx, p);
+        capsule->gnsf_phi_jac_y_uhat_{{ jj }}[i_fun].set_param_sparse(capsule->gnsf_phi_jac_y_uhat_{{ jj }}+i_fun, n_update, idx, p);
+        {% if model.gnsf.nontrivial_f_LO == 1 %}
+            capsule->gnsf_f_lo_jac_x1_x1dot_u_z_{{ jj }}[i_fun].set_param_sparse(capsule->gnsf_f_lo_jac_x1_x1dot_u_z_{{ jj }}+i_fun, n_update, idx, p);
+        {%- endif %}
+    {%- endif %}
+    {% elif mocp_opts.integrator_type[jj] == "DISCRETE" %}
+        capsule->discr_dyn_phi_fun_{{ jj }}[i_fun].set_param_sparse(capsule->discr_dyn_phi_fun_{{ jj }}+i_fun, n_update, idx, p);
+        capsule->discr_dyn_phi_fun_jac_ut_xt_{{ jj }}[i_fun].set_param_sparse(capsule->discr_dyn_phi_fun_jac_ut_xt_{{ jj }}+i_fun, n_update, idx, p);
+    {%- if solver_options.hessian_approx == "EXACT" %}
+        capsule->discr_dyn_phi_fun_jac_ut_xt_hess_{{ jj }}[i_fun].set_param_sparse(capsule->discr_dyn_phi_fun_jac_ut_xt_hess_{{ jj }}+i_fun, n_update, idx, p);
+    {%- endif %}
+    {%- endif %}{# integrator_type #}
+        if (stage > 0)
+        {
+          {%- if constraints[jj].constr_type == "BGP" %}
+            capsule->phi_constraint_{{ jj }}[i_cost_fun].set_param_sparse(capsule->phi_constraint_{{ jj }}+i_cost_fun, n_update, idx, p);
+          {%- elif constraints[jj].constr_type == "BGH" and phases_dims[jj].nh > 0 %}
+            capsule->nl_constr_h_fun_jac_{{ jj }}[i_cost_fun].set_param_sparse(capsule->nl_constr_h_fun_jac_{{ jj }}+i_cost_fun, n_update, idx, p);
+            capsule->nl_constr_h_fun_{{ jj }}[i_cost_fun].set_param_sparse(capsule->nl_constr_h_fun_{{ jj }}+i_cost_fun, n_update, idx, p);
+          {%- if solver_options.hessian_approx == "EXACT" %}
+            capsule->nl_constr_h_fun_jac_hess_{{ jj }}[i_cost_fun].set_param_sparse(capsule->nl_constr_h_fun_jac_hess_{{ jj }}+i_cost_fun, n_update, idx, p);
+          {%- endif %}
+          {%- endif %}
+
+          {%- if cost[jj].cost_type == "NONLINEAR_LS" %}
+            capsule->cost_y_fun_{{ jj }}[i_cost_fun].set_param_sparse(capsule->cost_y_fun_{{ jj }}+i_cost_fun, n_update, idx, p);
+            capsule->cost_y_fun_jac_ut_xt_{{ jj }}[i_cost_fun].set_param_sparse(capsule->cost_y_fun_jac_ut_xt_{{ jj }}+i_cost_fun, n_update, idx, p);
+            capsule->cost_y_hess_{{ jj }}[i_cost_fun].set_param_sparse(capsule->cost_y_hess_{{ jj }}+i_cost_fun, n_update, idx, p);
+          {%- elif cost[jj].cost_type == "CONVEX_OVER_NONLINEAR" %}
+            capsule->conl_cost_fun_{{ jj }}[i_cost_fun].set_param_sparse(capsule->conl_cost_fun_{{ jj }}+i_cost_fun, n_update, idx, p);
+            capsule->conl_cost_fun_jac_hess_{{ jj }}[i_cost_fun].set_param_sparse(capsule->conl_cost_fun_jac_hess_{{ jj }}+i_cost_fun, n_update, idx, p);
+          {%- elif cost[jj].cost_type == "EXTERNAL" %}
+            capsule->ext_cost_fun_{{ jj }}[i_cost_fun].set_param_sparse(capsule->ext_cost_fun_{{ jj }}+i_cost_fun, n_update, idx, p);
+            capsule->ext_cost_fun_jac_{{ jj }}[i_cost_fun].set_param_sparse(capsule->ext_cost_fun_jac_{{ jj }}+i_cost_fun, n_update, idx, p);
+            capsule->ext_cost_fun_jac_hess_{{ jj }}[i_cost_fun].set_param_sparse(capsule->ext_cost_fun_jac_hess_{{ jj }}+i_cost_fun, n_update, idx, p);
+          {%- endif %}
+        }
+    }
+    {%- endfor %}{# for jj in range(end=n_phases) #}
+
+    if (stage == 0)
+    {
+        // constraints
+        {%- if constraints_0.constr_type_0 == "BGP" %}
+        capsule->phi_0_constraint.set_param_sparse(&capsule->phi_0_constraint, n_update, idx, p);
+        {%- elif constraints_0.constr_type_0 == "BGH" and dims_0.nh_0 > 0 %}
+        capsule->nl_constr_h_0_fun_jac.set_param_sparse(&capsule->nl_constr_h_0_fun_jac, n_update, idx, p);
+        capsule->nl_constr_h_0_fun.set_param_sparse(&capsule->nl_constr_h_0_fun, n_update, idx, p);
+        {%- if solver_options.hessian_approx == "EXACT" %}
+        capsule->nl_constr_h_0_fun_jac_hess.set_param_sparse(&capsule->nl_constr_h_0_fun_jac_hess, n_update, idx, p);
+        {%- endif %}
+        {%- endif %}
+        // cost
+        {%- if cost[0].cost_type_0 == "NONLINEAR_LS" %}
+        capsule->cost_y_0_fun.set_param_sparse(&capsule->cost_y_0_fun, n_update, idx, p);
+        capsule->cost_y_0_fun_jac_ut_xt.set_param_sparse(&capsule->cost_y_0_fun_jac_ut_xt, n_update, idx, p);
+        capsule->cost_y_0_hess.set_param_sparse(&capsule->cost_y_0_hess, n_update, idx, p);
+        {%- elif cost[0].cost_type_0 == "CONVEX_OVER_NONLINEAR" %}
+        capsule->conl_cost_0_fun.set_param_sparse(&capsule->conl_cost_0_fun, n_update, idx, p);
+        capsule->conl_cost_0_fun_jac_hess.set_param_sparse(&capsule->conl_cost_0_fun_jac_hess, n_update, idx, p);
+        {%- elif cost[0].cost_type_0 == "EXTERNAL" %}
+        capsule->ext_cost_0_fun.set_param_sparse(&capsule->ext_cost_0_fun, n_update, idx, p);
+        capsule->ext_cost_0_fun_jac.set_param_sparse(&capsule->ext_cost_0_fun_jac, n_update, idx, p);
+        capsule->ext_cost_0_fun_jac_hess.set_param_sparse(&capsule->ext_cost_0_fun_jac_hess, n_update, idx, p);
+        {%- endif %}
+    }
+
+    if (stage == N)
+    {
+        // terminal shooting node has no dynamics
+        // cost
+      {%- if cost_e.cost_type_e == "NONLINEAR_LS" %}
+        capsule->cost_y_e_fun.set_param_sparse(&capsule->cost_y_e_fun, n_update, idx, p);
+        capsule->cost_y_e_fun_jac_ut_xt.set_param_sparse(&capsule->cost_y_e_fun_jac_ut_xt, n_update, idx, p);
+        capsule->cost_y_e_hess.set_param_sparse(&capsule->cost_y_e_hess, n_update, idx, p);
+      {%- elif cost_e.cost_type_e == "CONVEX_OVER_NONLINEAR" %}
+        capsule->conl_cost_e_fun.set_param_sparse(&capsule->conl_cost_e_fun, n_update, idx, p);
+        capsule->conl_cost_e_fun_jac_hess.set_param_sparse(&capsule->conl_cost_e_fun_jac_hess, n_update, idx, p);
+      {%- elif cost_e.cost_type_e == "EXTERNAL" %}
+        capsule->ext_cost_e_fun.set_param_sparse(&capsule->ext_cost_e_fun, n_update, idx, p);
+        capsule->ext_cost_e_fun_jac.set_param_sparse(&capsule->ext_cost_e_fun_jac, n_update, idx, p);
+        capsule->ext_cost_e_fun_jac_hess.set_param_sparse(&capsule->ext_cost_e_fun_jac_hess, n_update, idx, p);
+      {%- endif %}
+        // constraints
+      {%- if constraints_e.constr_type_e == "BGP" %}
+        capsule->phi_e_constraint.set_param_sparse(&capsule->phi_e_constraint, n_update, idx, p);
+      {%- elif constraints_e.constr_type_e == "BGH" and dims_e.nh_e > 0 %}
+        capsule->nl_constr_h_e_fun_jac.set_param_sparse(&capsule->nl_constr_h_e_fun_jac, n_update, idx, p);
+        capsule->nl_constr_h_e_fun.set_param_sparse(&capsule->nl_constr_h_e_fun, n_update, idx, p);
+      {%- if solver_options.hessian_approx == "EXACT" %}
+        capsule->nl_constr_h_e_fun_jac_hess.set_param_sparse(&capsule->nl_constr_h_e_fun_jac_hess, n_update, idx, p);
+      {%- endif %}
+      {%- endif %}
+    }
 }
 
 

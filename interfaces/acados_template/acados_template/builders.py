@@ -119,3 +119,24 @@ class CMakeBuilder:
         except Exception as e:
             print("Execution failed:", e, file=sys.stderr)
             exit(1)
+
+
+
+def ocp_get_default_cmake_builder() -> CMakeBuilder:
+    """
+    If :py:class:`~acados_template.acados_ocp_solver.AcadosOcpSolver` is used with `CMake` this function returns a good first setting.
+    :return: default :py:class:`~acados_template.builders.CMakeBuilder`
+    """
+    cmake_builder = CMakeBuilder()
+    cmake_builder.options_on = ['BUILD_ACADOS_OCP_SOLVER_LIB']
+    return cmake_builder
+
+
+def sim_get_default_cmake_builder() -> CMakeBuilder:
+    """
+    If :py:class:`~acados_template.acados_sim_solver.AcadosSimSolver` is used with `CMake` this function returns a good first setting.
+    :return: default :py:class:`~acados_template.builders.CMakeBuilder`
+    """
+    cmake_builder = CMakeBuilder()
+    cmake_builder.options_on = ['BUILD_ACADOS_SIM_SOLVER_LIB']
+    return cmake_builder

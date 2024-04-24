@@ -97,7 +97,7 @@ def main():
         simU[i,:] = ocp_solver.get(i, "u")
     simX[N,:] = ocp_solver.get(N, "x")
 
-    plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
+    plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=True, time_label=model.t_label, x_labels=model.x_labels, u_labels=model.u_labels)
 
 
 if __name__ == '__main__':
