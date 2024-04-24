@@ -1,5 +1,6 @@
 clear all
 addpath(fullfile('..','getting_started'));
+addpath(fullfile(getenv('MATLABPATH'), 'simulink', 'include'))  
 
 % extensive_example_ocp;
 
