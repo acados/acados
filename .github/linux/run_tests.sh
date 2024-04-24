@@ -36,4 +36,4 @@ which python;
 # run tests
 ctest -C $BUILD_TYPE --output-on-failure -j 4 --parallel 4; # use -V for full output # --output-on-failure for less
 
-# -j maximum number of runners limited to 4 on public repositories with linux based workflows 
+# -j number of runners limited to 4 on public repositories with linux based workflows 
