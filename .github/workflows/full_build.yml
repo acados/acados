@@ -146,7 +146,7 @@ jobs:
 
     - uses: actions/checkout@v2
       with:
-        submodules: 'recursive'
+        submodules: 'false'
     
     - uses: actions/download-artifact@v4
       with:
@@ -210,7 +210,7 @@ jobs:
 
     - uses: actions/checkout@v2
       with:
-        submodules: 'recursive'
+        submodules: 'false'
 
     - uses: actions/download-artifact@v4
       with:
@@ -229,8 +229,7 @@ jobs:
         echo "LD_RUN_PATH=${{runner.workspace}}/acados/examples/acados_matlab_octave/test/c_generated_code" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=${{runner.workspace}}/acados/lib:${{runner.workspace}}/acados/build" >> $GITHUB_ENV
         echo "OCTAVE_PATH=$OCTAVE_PATH:${{runner.workspace}}/acados/interfaces/acados_matlab_octave:${{runner.workspace}}/acados/interfaces/acados_matlab_octave/acados_template_mex:${{runner.workspace}}/acados/external/casadi-octave" >> $GITHUB_ENV
-        
-  #TODO remove repeated env setup echo "ENV_RUN=true" >> $GITHUB_ENV?
+        echo "ENV_RUN=true" >> $GITHUB_ENV
     
     - name: Configure CMake
       # Use a bash shell so we can use the same syntax for environment variable
