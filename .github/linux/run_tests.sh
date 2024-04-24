@@ -36,5 +36,4 @@ which python;
 # run tests
 ctest -C $BUILD_TYPE --output-on-failure -j 4 --parallel 4; # use -V for full output # --output-on-failure for less
 
-# -j maximum number of cores limited to 4
-# https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#standard-github-hosted-runners-for-public-repositories
+# -j maximum number of runners limited to 4 on public repositories with linux based workflows 
