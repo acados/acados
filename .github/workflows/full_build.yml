@@ -94,6 +94,7 @@ jobs:
           !${{runner.workspace}}/**/*.dir
         compression-level: 0
         overwrite: true
+        # exclude object files in .dir directories
 
     - name: Store include directory (/include)
       uses: actions/upload-artifact@v4
@@ -190,7 +191,7 @@ jobs:
     # TODO identify which cmake config are prereq for octave tests
 
     - name: Matlab test native MEX
-      uses: matlab-actions/run-command@v2
+      uses: matlab-actions/run-command@v1
       if: always()
       with:
         command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; run_matlab_tests #cd examples/acados_matlab_octave/test;
