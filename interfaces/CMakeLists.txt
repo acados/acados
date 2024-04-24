@@ -90,7 +90,7 @@ if(ACADOS_MATLAB OR ACADOS_OCTAVE)
                 COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/generic_dyn_disc
                 octave --no-gui --no-window-system ./run_generic_disc_dyn_example.m)
 
-# Force serial execution for tests in the same directory  
+# Force serial execution for tests in the same directory
 # Directory test
 set_tests_properties(octave_test_dim_check octave_test_sim_forw octave_test_sim_adj octave_test_sim_hess octave_test_sim_dae octave_test_ocp_pendulum octave_test_ocp_wtnx6 octave_test_ocp_pendulum_dae octave_test_ocp_mass_spring octave_test_ocp_simple_dae octave_test_target_selector PROPERTIES RUN_SERIAL TRUE)
 
@@ -315,7 +315,7 @@ add_test(NAME python_rsm_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/rsm_example
         python main.py)
 
-# Force serial execution for tests in the same directory  
+# Force serial execution for tests in the same directory
 # Directory pendulum_on_cart/ocp
 set_tests_properties(python_pendulum_ocp_example_reuse_code python_pendulum_ocp_example python_pendulum_sim_example python_pendulum_closed_loop_example PROPERTIES RUN_SERIAL TRUE)
 # Directory pendulum_on_cart/sim
