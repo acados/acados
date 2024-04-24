@@ -212,13 +212,13 @@ jobs:
       uses: matlab-actions/run-command@v2
       if: always()
       with:
-        command: cd examples/acados_matlab_octave/test; run_matlab_tests
+        command: ${{runner.workspace}}/acados/examples/acados_matlab_octave/test/run_matlab_tests #cd examples/acados_matlab_octave/test;
 
     - name: Run Simulink test
       uses: matlab-actions/run-command@v2
       if: always()
       with:
-        command: cd examples/acados_matlab_octave/test; simulink_test
+        command: ${{runner.workspace}}/acados/examples/acados_matlab_octave/test/simulink_test
 
   setup_octave_interface:
     needs: core_build
