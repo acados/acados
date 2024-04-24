@@ -210,17 +210,17 @@ jobs:
 
     - name: Matlab test native MEX
       uses: matlab-actions/run-command@v1
-      working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
+      #working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
       if: always()
       with:
-        command: run_matlab_tests #cd examples/acados_matlab_octave/test;
+        command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; run_matlab_tests #cd examples/acados_matlab_octave/test;
 
     - name: Run Simulink test
       uses: matlab-actions/run-command@v1
-      working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
+      #working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
       if: always()
       with:
-        command: simulink_test
+        command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; simulink_test
 
   setup_octave_interface:
     needs: core_build
