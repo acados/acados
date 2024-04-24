@@ -33,9 +33,8 @@
 source ./../acadosenv/bin/activate;
 which python;
 
-echo echo "number of parallel jobs: $1"
 # run tests
-ctest -C $BUILD_TYPE --output-on-failure -j 6 --parallel 6; # use -V for full output # --output-on-failure for less #-j specify num. of parallel tests
+ctest -C $BUILD_TYPE --output-on-failure -j 4 --parallel 4; # use -V for full output # --output-on-failure for less
 
-#maximum number of cores limited to 4 for public repositories
-#https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#standard-github-hosted-runners-for-public-repositories
+# -j maximum number of cores limited to 4
+# https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#standard-github-hosted-runners-for-public-repositories

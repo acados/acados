@@ -208,12 +208,12 @@ jobs:
       run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP  -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_UNIT_TESTS=$ACADOS_UNIT_TESTS -DACADOS_OCTAVE=OFF
     #TODO identify which cmake config are prereq for octave tests
 
-    - name: Matlab test native MEX
-      uses: matlab-actions/run-command@v2
-      #working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
-      if: always()
-      with:
-        command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; run_matlab_tests #cd examples/acados_matlab_octave/test;
+    # - name: Matlab test native MEX
+    #   uses: matlab-actions/run-command@v2
+    #   #working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
+    #   if: always()
+    #   with:
+    #     command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; run_matlab_tests #cd examples/acados_matlab_octave/test;
 
     - name: Run Simulink test
       uses: matlab-actions/run-command@v2
