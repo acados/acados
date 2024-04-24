@@ -74,21 +74,6 @@ jobs:
       run: |
         cmake --build . --config $BUILD_TYPE
         make install -j4
-#    - name: Export Paths Lib
-#      working-directory: ${{runner.workspace}}/acados
-#      shell: bash
-#      run: |
-#        echo "ACADOS_SOURCE_DIR=$(pwd)" >> $GITHUB_ENV
-#        echo "ACADOS_INSTALL_DIR=$(pwd)" >> $GITHUB_ENV
-#        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/lib" >> $GITHUB_ENV
-#TODO    echo "CM_BUILD_PATH=$CM_BUILD_PATH:$(pwd)/build" >> $GITHUB_ENV
-#        echo "OCTAVE_PATH=$OCTAVE_PATH:$(pwd)/interfaces/acados_matlab_octave:$(pwd)/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
-#        echo "MATLABPATH=$MATLABPATH:$(pwd)/interfaces/acados_matlab_octave:$(pwd)/interfaces/acados_matlab_octave/acados_template_mex" >> $GITHUB_ENV
-
-
-    # - name: Display structure of generated files
-    #   shell: bash
-    #   run: ls -R
 
     - name: Store shared libs (/lib)
       uses: actions/upload-artifact@v4
@@ -109,7 +94,6 @@ jobs:
           !${{runner.workspace}}/**/*.dir
         compression-level: 0
         overwrite: true
-      #TODO exclude unnecessary objs
 
     - name: Store include directory (/include)
       uses: actions/upload-artifact@v4
@@ -136,6 +120,7 @@ jobs:
         path: ${{runner.workspace}}/acados
 
     - name: Install Python interface
+      # TODO cache
       working-directory: ${{runner.workspace}}/acados
       shell: bash
       run: |
@@ -143,10 +128,6 @@ jobs:
         echo "ACADOS_INSTALL_DIR=${{runner.workspace}}/acados" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=${{runner.workspace}}/acados/lib" >> $GITHUB_ENV
         ${{runner.workspace}}/acados/.github/linux/install_python.sh''
-
-    # - name: Display structure of downloaded files
-    #   shell: bash
-    #   run: ls -R
 
     - name: Run CMake python tests (ctest)
 
@@ -189,13 +170,13 @@ jobs:
         echo "LD_RUN_PATH=$LD_RUN_PATH:${{runner.workspace}}/acados/examples/acados_matlab_octave/test/c_generated_code" >> $GITHUB_ENV
   
     - name: Install MATLAB
-      uses: matlab-actions/setup-matlab@v2
+    # TODO cache
+      uses: matlab-actions/setup-matlab@v1
       if: always()
       with:
-      # MATLAB release to set up (R2020a or later) TODO fix depreciaton warning
-        #release: R2021a
-        #products: Simulink_Test
-        cache: false
+        # MATLAB release to set up (R2020a or later) TODO fix depreciaton warning
+        release: R2021a
+        #cache: false
     
     - name: Configure CMake
       # Use a bash shell so we can use the same syntax for environment
@@ -206,18 +187,16 @@ jobs:
       # and build directories, but this is only available with CMake 3.13 and higher.
       # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
       run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP  -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_UNIT_TESTS=$ACADOS_UNIT_TESTS -DACADOS_OCTAVE=OFF
-    #TODO identify which cmake config are prereq for octave tests
+    # TODO identify which cmake config are prereq for octave tests
 
-    # - name: Matlab test native MEX
-    #   uses: matlab-actions/run-command@v2
-    #   #working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
-    #   if: always()
-    #   with:
-    #     command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; run_matlab_tests #cd examples/acados_matlab_octave/test;
+    - name: Matlab test native MEX
+      uses: matlab-actions/run-command@v2
+      if: always()
+      with:
+        command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; run_matlab_tests #cd examples/acados_matlab_octave/test;
 
     - name: Run Simulink test
-      uses: matlab-actions/run-command@v2
-      #working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
+      uses: matlab-actions/run-command@v1
       if: always()
       with:
         command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; simulink_test
@@ -250,6 +229,7 @@ jobs:
         echo "LD_LIBRARY_PATH=${{runner.workspace}}/acados/lib:${{runner.workspace}}/acados/build" >> $GITHUB_ENV
         echo "OCTAVE_PATH=$OCTAVE_PATH:${{runner.workspace}}/acados/interfaces/acados_matlab_octave:${{runner.workspace}}/acados/interfaces/acados_matlab_octave/acados_template_mex:${{runner.workspace}}/acados/external/casadi-octave" >> $GITHUB_ENV
         echo "ENV_RUN=true" >> $GITHUB_ENV
+  #TODO remove repeated env setup ?
     
     - name: Configure CMake
       # Use a bash shell so we can use the same syntax for environment variable
