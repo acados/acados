@@ -159,9 +159,8 @@ jobs:
         sudo chmod +x ${{runner.workspace}}/acados/.github/linux/install_casadi_matlab.sh
         ${{runner.workspace}}/acados/.github/linux/install_casadi_matlab.sh
         echo "MATLABPATH=$MATLABPATH:${{runner.workspace}}/acados/interfaces/acados_matlab_octave:${{runner.workspace}}/acados/interfaces/acados_matlab_octave/acados_template_mex:${{runner.workspace}}/acados/external/casadi-matlab" >> $GITHUB_ENV
-
-#        echo "ACADOS_INSTALL_DIR=${{runner.workspace}}/acados" >> $GITHUB_ENV
-#        echo "ACADOS_SOURCE_DIR=${{runner.workspace}}/acados" >> $GITHUB_ENV
+        echo "ACADOS_INSTALL_DIR=${{runner.workspace}}/acados" >> $GITHUB_ENV
+        echo "ACADOS_SOURCE_DIR=${{runner.workspace}}/acados" >> $GITHUB_ENV
 
     - name: Export Paths MEX tests
       working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
@@ -177,8 +176,8 @@ jobs:
       if: always()
       with:
         # MATLAB release to set up (R2020a or later) TODO fix depreciaton warning
-        release: R2021a
-        #cache: false
+        release: R2020a
+        # cache: false
     
     - name: Configure CMake
       # Use a bash shell so we can use the same syntax for environment
@@ -230,8 +229,8 @@ jobs:
         echo "LD_RUN_PATH=${{runner.workspace}}/acados/examples/acados_matlab_octave/test/c_generated_code" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=${{runner.workspace}}/acados/lib:${{runner.workspace}}/acados/build" >> $GITHUB_ENV
         echo "OCTAVE_PATH=$OCTAVE_PATH:${{runner.workspace}}/acados/interfaces/acados_matlab_octave:${{runner.workspace}}/acados/interfaces/acados_matlab_octave/acados_template_mex:${{runner.workspace}}/acados/external/casadi-octave" >> $GITHUB_ENV
-        echo "ENV_RUN=true" >> $GITHUB_ENV
-  #TODO remove repeated env setup ?
+        
+  #TODO remove repeated env setup echo "ENV_RUN=true" >> $GITHUB_ENV?
     
     - name: Configure CMake
       # Use a bash shell so we can use the same syntax for environment variable
