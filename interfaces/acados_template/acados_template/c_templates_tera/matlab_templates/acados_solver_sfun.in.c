@@ -172,6 +172,10 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
 
+  {%- if simulink_opts.inputs.rti_phase -%}  {#- rti_phase #}
+    {%- set n_inputs = n_inputs + 1 -%}
+  {%- endif -%}
+
     // specify the number of input ports
     if ( !ssSetNumInputPorts(S, {{ n_inputs }}) )
         return;
@@ -337,6 +341,12 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- set i_input = i_input + 1 %}
     // u_init
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nu * (dims.N) }});
+  {%- endif -%}
+
+  {%- if simulink_opts.inputs.rti_phase -%}  {#- rti_phase #}
+    {%- set i_input = i_input + 1 %}
+    // rti_phase
+    ssSetInputPortVectorDimension(S, {{ i_input }}, 1);
   {%- endif -%}
 
     /* specify dimension information for the OUTPUT ports */
@@ -784,15 +794,38 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     }
   {%- endif %}
 
+  {%- if simulink_opts.inputs.rti_phase %}  {#- rti_phase #}
+    {%- set i_input = i_input + 1 %}
+    in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+    double rti_phase_double = (double)(*in_sign[0]);
+    int rti_phase = (int) rti_phase_double;
+
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "rti_phase", &rti_phase);
+  {%- endif %}
+
+
     /* call solver */
-  {%- if custom_update_filename == "" %}
+  {%- if custom_update_filename == "" and not simulink_opts.inputs.rti_phase %}
     int rti_phase = 0;
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "rti_phase", &rti_phase);
     int acados_status = {{ model.name }}_acados_solve(capsule);
     // get time
     ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_tot", (void *) buffer);
     tmp_cpu_time = buffer[0];
-  {%- elif solver_options.nlp_solver_type == "SQP_RTI" %}
+
+  {%- elif simulink_opts.inputs.rti_phase %}{# SPLIT RTI PHASE#}
+    {% if solver_options.nlp_solver_type != "SQP_RTI" %}
+    rti_phase input only supported for nlp_solver_type == "SQP_RTI"!
+    {% elif custom_update_filename != "" %}
+    rti_phase input only supported for custom_update_filename == ""!
+    {% else %}
+    ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "rti_phase", &rti_phase);
+    int acados_status = {{ model.name }}_acados_solve(capsule);
+    // get time
+    ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_tot", (void *) buffer);
+    tmp_cpu_time = buffer[0];
+    {%- endif %}
+  {%- elif solver_options.nlp_solver_type == "SQP_RTI" %}{# if custom_update_filename != "" #}
     // preparation
     int rti_phase = 1;
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "rti_phase", &rti_phase);
