@@ -114,7 +114,6 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: 'recursive'
-    
 
     - uses: actions/download-artifact@v4
       with:
@@ -200,63 +199,6 @@ jobs:
       if: always()
       with:
         command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; simulink_test
-
-# setup_simulink_interface:
-#     needs: core_build
-#     runs-on: ubuntu-20.04
-
-#     steps:
-
-#     - uses: actions/checkout@v2
-#       with:
-#         submodules: 'recursive'
-    
-#     - uses: actions/download-artifact@v4
-#       with:
-#         path: ${{runner.workspace}}/acados
-
-#     - name: Install Casadi MATLAB
-#       working-directory: ${{runner.workspace}}/acados/external
-#       shell: bash
-#       run: |     
-#         sudo chmod +x ${{runner.workspace}}/acados/.github/linux/install_casadi_matlab.sh
-#         ${{runner.workspace}}/acados/.github/linux/install_casadi_matlab.sh
-#         echo "MATLABPATH=$MATLABPATH:${{runner.workspace}}/acados/interfaces/acados_matlab_octave:${{runner.workspace}}/acados/interfaces/acados_matlab_octave/acados_template_mex:${{runner.workspace}}/acados/external/casadi-matlab" >> $GITHUB_ENV
-#         echo "ACADOS_INSTALL_DIR=${{runner.workspace}}/acados" >> $GITHUB_ENV
-#         echo "ACADOS_SOURCE_DIR=${{runner.workspace}}/acados" >> $GITHUB_ENV
-
-#     - name: Export Paths MEX tests
-#       working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
-#       shell: bash
-#       run: |
-#         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${{runner.workspace}}/acados/build:${{runner.workspace}}/acados/lib" >> $GITHUB_ENV
-#         echo "ENV_RUN=true" >> $GITHUB_ENV
-#         echo "LD_RUN_PATH=$LD_RUN_PATH:${{runner.workspace}}/acados/examples/acados_matlab_octave/test/c_generated_code" >> $GITHUB_ENV
-  
-#     - name: Install MATLAB
-#     # TODO cache, upgrade to setup-matlab@v2
-#       uses: matlab-actions/setup-matlab@v1
-#       if: always()
-#       with:
-#         # MATLAB release to set up (R2020a or later) TODO fix depreciaton warning
-#         release: R2020a
-#         # cache: false
-    
-#     - name: Configure CMake
-#       # Use a bash shell so we can use the same syntax for environment
-#       # access regardless of the host operating system
-#       shell: bash
-#       working-directory: ${{runner.workspace}}/acados/build
-#       # Note the current convention is to use the -S and -B options here to specify source
-#       # and build directories, but this is only available with CMake 3.13 and higher.
-#       # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-#       run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP  -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_UNIT_TESTS=$ACADOS_UNIT_TESTS -DACADOS_OCTAVE=OFF
-
-#     - name: Run Simulink test
-#       uses: matlab-actions/run-command@v1
-#       if: always()
-#       with:
-#         command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; simulink_test
 
   setup_octave_interface:
     needs: core_build
