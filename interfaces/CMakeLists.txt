@@ -316,7 +316,7 @@ add_test(NAME python_rsm_example
         python main.py)
 
 # Force serial execution for all the below specified tests despite multiple CPU aviliablity (conflicting object file naming)
-# TODO use unique object file names to allow full parallization, and remove forced serialization section below
+# TODO use unique object file names to allow full parallization, and remove  forced serialization section below
 # Directory getting_started
 set_tests_properties( python_pendulum_ocp_example python_pendulum_sim_example python_pendulum_closed_loop_example PROPERTIES RUN_SERIAL TRUE)
 # Directory pendulum_on_cart/sim
@@ -338,4 +338,5 @@ set_tests_properties(python_pendulum_ocp_example_reuse_code python_nonuniform_di
 if(ACADOS_WITH_QPDUNES)
         # Directory pendulum_on_cart/ocp
 set_tests_properties(python_qpDUNES_test PROPERTIES RUN_SERIAL TRUE)
+endif()
 endif()
