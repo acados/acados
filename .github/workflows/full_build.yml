@@ -5,9 +5,9 @@ on:
     branches-ignore:
       - 'doc*'
       - 'wip*'
-  # pull_request:
-  #   branches:
-  #     - '*' TODO uncomment
+  pull_request:
+    branches:
+      - '*'
 
 
 env:
@@ -198,12 +198,12 @@ jobs:
         ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
 
     - name: Install MATLAB
-    # TODO cache
-      uses: matlab-actions/setup-matlab@v2
+    # TODO cache https://github.com/matlab-actions/setup-matlab/issues/108
+      uses: matlab-actions/setup-matlab@v1
       if: always()
       with:
       # MATLAB release to set up (R2020a or later) TODO fix deprecation warning
-        release: R2021a
+        release: R2020a
         cache: false
 
     - name: Configure CMake
