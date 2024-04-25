@@ -66,17 +66,17 @@ jobs:
         compression-level: 0 #TODO test time difference
         overwrite: true
 
-    # - name: Store build scripts (/build)
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: build
-    #     if-no-files-found: error
-    #     path: |
-    #       ${{runner.workspace}}/acados/build/
-    #       !${{runner.workspace}}/**/*.dir
-    #     compression-level: 0
-    #     overwrite: true
-    #     # exclude object files in .dir directories
+    - name: Store build scripts (/build)
+      uses: actions/upload-artifact@v4
+      with:
+        name: build
+        if-no-files-found: error
+        path: |
+          ${{runner.workspace}}/acados/build/
+          !${{runner.workspace}}/**/*.dir
+        compression-level: 0
+        overwrite: true
+        # exclude object files in .dir directories
 
     - name: Store include directory (/include)
       uses: actions/upload-artifact@v4
@@ -105,11 +105,12 @@ jobs:
       working-directory: ${{runner.workspace}}/acados
       shell: bash
       run: |
-        echo "ACADOS_SOURCE_DIR=${{runner.workspace}}/acados" >> $GITHUB_ENV
-        echo "ACADOS_INSTALL_DIR=${{runner.workspace}}/acados" >> $GITHUB_ENV
-        echo "LD_LIBRARY_PATH=${{runner.workspace}}/acados/lib" >> $GITHUB_ENV
+        ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
         ${{runner.workspace}}/acados/.github/linux/install_python.sh''
 
+# echo "ACADOS_SOURCE_DIR=${{runner.workspace}}/acados" >> $GITHUB_ENV
+# echo "ACADOS_INSTALL_DIR=${{runner.workspace}}/acados" >> $GITHUB_ENV
+# echo "LD_LIBRARY_PATH=${{runner.workspace}}/acados/lib" >> $GITHUB_ENV
     - name: Run CMake python tests (ctest)
 
       working-directory: ${{runner.workspace}}/acados/build
