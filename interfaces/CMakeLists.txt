@@ -211,7 +211,7 @@ add_test(NAME python_multiphase_nonlinear_constraints
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/multiphase_nonlinear_constraints
         python main.py)
 
-# qpDUNES example TODO couple with pendulum examples
+# qpDUNES example
 if(ACADOS_WITH_QPDUNES)
         add_test(NAME python_qpDUNES_test
                 COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
