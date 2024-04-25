@@ -211,6 +211,11 @@ add_test(NAME python_multiphase_nonlinear_constraints
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/multiphase_nonlinear_constraints
         python main.py)
 
+# qpDUNES example TODO couple with pendulum examples
+if(ACADOS_WITH_QPDUNES)
+        add_test(NAME python_qpDUNES_test
+                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
+                python example_sqp_qpDUNES.py)
 endif()
 
 # OSQP test
@@ -310,30 +315,23 @@ add_test(NAME python_rsm_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/rsm_example
         python main.py)
 
-        # qpDUNES example TODO couple with pendulum examples
-if(ACADOS_WITH_QPDUNES)
-        add_test(NAME python_qpDUNES_test
-                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
-                python example_sqp_qpDUNES.py)
-                set_tests_properties(python_qpDUNES_test RESOURCE_LOCK cpu_cartim)
-
-# Force serial execution for tests in the same directory
-# Directory pendulum_on_cart/ocp
-set_tests_properties(python_pendulum_ocp_example_reuse_code python_pendulum_ocp_example python_pendulum_sim_example python_pendulum_closed_loop_example PROPERTIES RESOURCE_LOCK cpu_pendulum)
-# Directory pendulum_on_cart/sim
-set_tests_properties(python_pendulum_sim_example_cmake python_pendulum_ext_sim_example PROPERTIES RESOURCE_LOCK cpu_cartim)
-# Directory acados_python/tests
-set_tests_properties(python_test_cython_vs_ctypes python_test_reset python_test_ocp python_test_cost_integration_euler python_test_cost_integration_value python_armijo_test python_OSQP_test python_pendulum_soft_constraints_example python_pendulum_parametric_nonlinear_constraint_h_test python_test_sim_dae PROPERTIES RESOURCE_LOCK cpu_tests)
-# Directory acados_python/chain_mass
-set_tests_properties(python_chain_ocp python_chain_sim PROPERTIES RESOURCE_LOCK cpu_chain)
-# Directory pendulum_on_cart/ocp
-set_tests_properties(python_nonuniform_discretization_ocp_example python_nonuniform_discretization_ocp_example python_rti_loop_ocp_example python_render_simulink_wrapper python_constraints_expression_example pendulum_optimal_value_gradient python_pendulum_ocp_IRK python_pendulum_ocp_ERK python_pendulum_ocp_GNSF python_example_ocp_dynamics_formulations_cmake PROPERTIES RESOURCE_LOCK cpu_cartOcp)
-# Directory pendulum_on_cart/mhe
-set_tests_properties(python_pendulum_mhe_example_minimal python_pendulum_mhe_example_noisy_param python_pendulum_mhe_example_param python_pendulum_mhe_ocp_closed_loop_example PROPERTIES RESOURCE_LOCK cpu_mhe)
-# Directory  pendulum_on_cart/solution_sensitivities
-set_tests_properties(python_solution_sensitivities_and_exact_hess python_value_function_gradient python_policy_gradient PROPERTIES RESOURCE_LOCK cpu_sensitv)
-# Directory time_varying
-set_tests_properties(python_time_varying_irk test_polynomial_controls_and_penalties py_mocp_qp_test PROPERTIES RESOURCE_LOCK cpu_vary)
-# Directory zoRO_example
-set_tests_properties(python_fast_zoro_example python_zoro_diff_drive_example PROPERTIES RESOURCE_LOCK cpu_zoro)
+# # Force serial execution for tests in the same directory
+# # Directory pendulum_on_cart/ocp
+# set_tests_properties(python_pendulum_ocp_example_reuse_code python_pendulum_ocp_example python_pendulum_sim_example python_pendulum_closed_loop_example PROPERTIES RUN_SERIAL TRUE)
+# # Directory pendulum_on_cart/sim
+# set_tests_properties(python_pendulum_sim_example_cmake python_pendulum_ext_sim_example PROPERTIES RUN_SERIAL TRUE)
+# # Directory acados_python/tests
+# set_tests_properties(python_test_cython_vs_ctypes python_test_reset python_test_ocp python_test_cost_integration_euler python_test_cost_integration_value python_armijo_test python_OSQP_test python_pendulum_soft_constraints_example python_pendulum_parametric_nonlinear_constraint_h_test python_test_sim_dae PROPERTIES RUN_SERIAL TRUE)
+# # Directory acados_python/chain_mass
+# set_tests_properties(python_chain_ocp python_chain_sim PROPERTIES RUN_SERIAL TRUE)
+# # Directory pendulum_on_cart/ocp
+# set_tests_properties(python_nonuniform_discretization_ocp_example python_nonuniform_discretization_ocp_example python_rti_loop_ocp_example python_render_simulink_wrapper python_constraints_expression_example pendulum_optimal_value_gradient python_pendulum_ocp_IRK python_pendulum_ocp_ERK python_pendulum_ocp_GNSF python_example_ocp_dynamics_formulations_cmake PROPERTIES RUN_SERIAL TRUE)
+# # Directory pendulum_on_cart/mhe
+# set_tests_properties(python_pendulum_mhe_example_minimal python_pendulum_mhe_example_noisy_param python_pendulum_mhe_example_param python_pendulum_mhe_ocp_closed_loop_example PROPERTIES RUN_SERIAL TRUE)
+# # Directory  pendulum_on_cart/solution_sensitivities
+# set_tests_properties(python_solution_sensitivities_and_exact_hess python_value_function_gradient python_policy_gradient PROPERTIES RUN_SERIAL TRUE)
+# # Directory time_varying
+# set_tests_properties(python_time_varying_irk test_polynomial_controls_and_penalties py_mocp_qp_test PROPERTIES RUN_SERIAL TRUE)
+# # Directory zoRO_example
+# set_tests_properties(python_fast_zoro_example python_zoro_diff_drive_example PROPERTIES RUN_SERIAL TRUE)
 endif()
