@@ -5,9 +5,9 @@ on:
     branches-ignore:
       - 'doc*'
       - 'wip*'
-  pull_request:
-    branches:
-      - '*'
+  # pull_request:
+  #   branches:
+  #     - '*'
 
 
 env:
@@ -199,12 +199,13 @@ jobs:
 
     - name: Install MATLAB
     # TODO cache https://github.com/matlab-actions/setup-matlab/issues/108
-      uses: matlab-actions/setup-matlab@v1
+      uses: matlab-actions/setup-matlab@v2
       if: always()
       with:
       # MATLAB release to set up (R2020a or later) TODO fix deprecation warning
-        release: R2020a
-        cache: false
+        release: R2021a
+        products: Simulink Simulink_Test
+        cache: true
 
     - name: Configure CMake
       shell: bash
@@ -212,7 +213,7 @@ jobs:
       run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP  -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_OCTAVE=OFF
 
     - name: Run Simulink test
-      uses: matlab-actions/run-command@v1
+      uses: matlab-actions/run-command@v2
       if: always()
       with:
         command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; simulink_test
