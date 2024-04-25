@@ -259,13 +259,15 @@ add_test(NAME python_zoro_diff_drive_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/zoRO_example
         python diff_drive/main.py)
 
-# CMake test
+# Sim
 add_test(NAME python_pendulum_sim_example_cmake
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/sim
         python minimal_example_sim_cmake.py)
 add_test(NAME python_pendulum_ext_sim_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/sim
-        python extensive_example_sim.py)
+        python extensive_example_sim.py
+        )
+set_tests_properties(python_pendulum_ext_sim_example DEPENDS python_pendulum_sim_example_cmake)
 
 add_test(NAME cython_pendulum_closed_loop_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart
@@ -319,8 +321,6 @@ add_test(NAME python_rsm_example
 # TODO use unique object file names to allow full parallization, and remove  forced serialization section below
 # Directory getting_started
 set_tests_properties( python_pendulum_ocp_example python_pendulum_sim_example python_pendulum_closed_loop_example PROPERTIES RUN_SERIAL TRUE)
-# Directory pendulum_on_cart/sim
-set_tests_properties(python_pendulum_sim_example_cmake python_pendulum_ext_sim_example PROPERTIES RUN_SERIAL TRUE)
 # Directory acados_python/tests
 set_tests_properties(python_test_cython_vs_ctypes python_test_reset python_test_ocp python_test_cost_integration_euler python_test_cost_integration_value python_armijo_test python_OSQP_test python_pendulum_soft_constraints_example python_pendulum_parametric_nonlinear_constraint_h_test python_test_sim_dae PROPERTIES RUN_SERIAL TRUE)
 # Directory acados_python/chain_mass
