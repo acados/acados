@@ -90,8 +90,6 @@ def main_batch(Xinit, u0, with_parallel_batch_solve=True):
         x = batch_integrator.sim_solvers[n].get("x")
         assert np.linalg.norm(x-Xinit[n+1]) < 1e-10
 
-    return simX, u0
-
 
 if __name__ == "__main__":
 
