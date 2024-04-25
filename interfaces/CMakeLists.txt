@@ -254,7 +254,7 @@ add_test(NAME python_as_rti_example
 add_test(NAME python_fast_zoro_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/zoRO_example
         python pendulum_on_cart/minimal_example_zoro.py)
-set_tests_properties(python_fast_zoro_example DEPENDS python_zoro_diff_drive_example)
+set_tests_properties(python_fast_zoro_example PROPERTIES DEPENDS python_zoro_diff_drive_example)
 
 add_test(NAME python_zoro_diff_drive_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/zoRO_example
@@ -268,7 +268,7 @@ add_test(NAME python_pendulum_ext_sim_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/sim
         python extensive_example_sim.py
         )
-set_tests_properties(python_pendulum_ext_sim_example DEPENDS python_pendulum_sim_example_cmake)
+set_tests_properties(python_pendulum_ext_sim_example PROPERTIES DEPENDS python_pendulum_sim_example_cmake)
 
 add_test(NAME cython_pendulum_closed_loop_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart
