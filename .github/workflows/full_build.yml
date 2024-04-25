@@ -38,12 +38,6 @@ jobs:
       working-directory: ${{runner.workspace}}
       run: cmake -E make_directory ${{runner.workspace}}/acados/build
 
-    - name: Install Eigen (ctest dependency)
-      working-directory: ${{runner.workspace}}/acados
-      shell: bash
-      # TODO: cache
-      run: ./ci/shared/install_eigen.sh
-
     - name: Configure CMake
       shell: bash
       working-directory: ${{runner.workspace}}/acados/build
