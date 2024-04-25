@@ -105,6 +105,7 @@ jobs:
       working-directory: ${{runner.workspace}}/acados
       shell: bash
       run: |
+        sudo chmod +x ${{runner.workspace}}/acados/.github/linux/export_paths.sh
         ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
         ${{runner.workspace}}/acados/.github/linux/install_python.sh''
 
