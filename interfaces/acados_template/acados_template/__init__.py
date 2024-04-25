@@ -36,6 +36,7 @@ from .acados_ocp import AcadosOcp
 from .acados_ocp_cost import AcadosOcpCost
 from .acados_ocp_constraints import AcadosOcpConstraints
 from .acados_ocp_options import AcadosOcpOptions
+from .acados_ocp_solver_batch import AcadosOcpSolverBatch
 
 from .acados_sim import AcadosSim, AcadosSimOpts
 from .acados_multiphase_ocp import AcadosMultiphaseOcp
