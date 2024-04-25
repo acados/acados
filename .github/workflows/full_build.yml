@@ -113,9 +113,6 @@ jobs:
       shell: bash
       run: ${{runner.workspace}}/acados/.github/linux/install_python.sh''
 
-# echo "ACADOS_SOURCE_DIR=${{runner.workspace}}/acados" >> $GITHUB_ENV
-# echo "ACADOS_INSTALL_DIR=${{runner.workspace}}/acados" >> $GITHUB_ENV
-# echo "LD_LIBRARY_PATH=${{runner.workspace}}/acados/lib" >> $GITHUB_ENV
     - name: Run CMake python tests (ctest)
 
       working-directory: ${{runner.workspace}}/acados/build
@@ -152,14 +149,6 @@ jobs:
       run: |
         sudo chmod +x ${{runner.workspace}}/acados/.github/linux/export_paths.sh
         ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
-
-    # - name: Export Paths MEX tests
-    #   working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
-    #   shell: bash
-    #   run: |
-    #     echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${{runner.workspace}}/acados/build:${{runner.workspace}}/acados/lib" >> $GITHUB_ENV
-    #     echo "ENV_RUN=true" >> $GITHUB_ENV
-    #     echo "LD_RUN_PATH=$LD_RUN_PATH:${{runner.workspace}}/acados/examples/acados_matlab_octave/test/c_generated_code" >> $GITHUB_ENV
 
     - name: Install MATLAB
     # TODO cache
@@ -200,17 +189,6 @@ jobs:
       run: |
         sudo chmod +x ${{runner.workspace}}/acados/.github/linux/install_casadi_matlab.sh
         ${{runner.workspace}}/acados/.github/linux/install_casadi_matlab.sh
-  # echo "MATLABPATH=$MATLABPATH:${{runner.workspace}}/acados/interfaces/acados_matlab_octave:${{runner.workspace}}/acados/interfaces/acados_matlab_octave/acados_template_mex:${{runner.workspace}}/acados/external/casadi-matlab" >> $GITHUB_ENV
-  # echo "ACADOS_INSTALL_DIR=${{runner.workspace}}/acados" >> $GITHUB_ENV
-  # echo "ACADOS_SOURCE_DIR=${{runner.workspace}}/acados" >> $GITHUB_ENV
-
-    # - name: Export Paths MEX tests
-    #   working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
-    #   shell: bash
-    #   run: |
-    #     echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${{runner.workspace}}/acados/build:${{runner.workspace}}/acados/lib" >> $GITHUB_ENV
-    #     echo "ENV_RUN=true" >> $GITHUB_ENV
-    #     echo "LD_RUN_PATH=$LD_RUN_PATH:${{runner.workspace}}/acados/examples/acados_matlab_octave/test/c_generated_code" >> $GITHUB_ENV
 
     - name: Export Paths
       working-directory: ${{runner.workspace}}/acados
@@ -231,7 +209,7 @@ jobs:
     - name: Configure CMake
       shell: bash
       working-directory: ${{runner.workspace}}/acados/build
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP  -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_UNIT_TESTS=$ACADOS_UNIT_TESTS -DACADOS_OCTAVE=OFF
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP  -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_OCTAVE=OFF
 
     - name: Run Simulink test
       uses: matlab-actions/run-command@v1
@@ -261,12 +239,6 @@ jobs:
         sudo apt-get install liboctave-dev -y --fix-missing
         octave --version
         ${{runner.workspace}}/acados/.github/linux/install_casadi_octave.sh
-  # echo "ACADOS_INSTALL_DIR=${{runner.workspace}}/acados" >> $GITHUB_ENV
-  # echo "ACADOS_SOURCE_DIR=${{runner.workspace}}/acados" >> $GITHUB_ENV
-  # echo "LD_RUN_PATH=${{runner.workspace}}/acados/examples/acados_matlab_octave/test/c_generated_code" >> $GITHUB_ENV
-  # echo "LD_LIBRARY_PATH=${{runner.workspace}}/acados/lib:${{runner.workspace}}/acados/build" >> $GITHUB_ENV
-  # echo "OCTAVE_PATH=$OCTAVE_PATH:${{runner.workspace}}/acados/interfaces/acados_matlab_octave:${{runner.workspace}}/acados/interfaces/acados_matlab_octave/acados_template_mex:${{runner.workspace}}/acados/external/casadi-octave" >> $GITHUB_ENV
-  # echo "ENV_RUN=true" >> $GITHUB_ENV
 
     - name: Export Paths
       working-directory: ${{runner.workspace}}/acados
@@ -275,12 +247,10 @@ jobs:
         sudo chmod +x ${{runner.workspace}}/acados/.github/linux/export_paths.sh
         ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
 
-
     - name: Configure CMake
       shell: bash
       working-directory: ${{runner.workspace}}/acados/build
       run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP  -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_OCTAVE=$ACADOS_OCTAVE
-
 
     - name: Run CMake Octave tests (ctest)
       working-directory: ${{runner.workspace}}/acados/build

@@ -211,11 +211,6 @@ add_test(NAME python_multiphase_nonlinear_constraints
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/multiphase_nonlinear_constraints
         python main.py)
 
-# qpDUNES example TODO couple with pendulum examples
-if(ACADOS_WITH_QPDUNES)
-        add_test(NAME python_qpDUNES_test
-                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
-                python example_sqp_qpDUNES.py)
 endif()
 
 # OSQP test
@@ -315,9 +310,15 @@ add_test(NAME python_rsm_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/rsm_example
         python main.py)
 
+        # qpDUNES example TODO couple with pendulum examples
+if(ACADOS_WITH_QPDUNES)
+        add_test(NAME python_qpDUNES_test
+                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
+                python example_sqp_qpDUNES.py)
+
 # Force serial execution for tests in the same directory
 # Directory pendulum_on_cart/ocp
-set_tests_properties(python_pendulum_ocp_example_reuse_code python_pendulum_ocp_example python_pendulum_sim_example python_pendulum_closed_loop_example PROPERTIES RUN_SERIAL TRUE)
+set_tests_properties(python_pendulum_ocp_example_reuse_code python_pendulum_ocp_example python_pendulum_sim_example python_pendulum_closed_loop_example PROPERTIES RESOURCE_LOCK cpu_pendulum)
 # Directory pendulum_on_cart/sim
 set_tests_properties(python_pendulum_sim_example_cmake python_pendulum_ext_sim_example PROPERTIES RUN_SERIAL TRUE)
 # Directory acados_python/tests
