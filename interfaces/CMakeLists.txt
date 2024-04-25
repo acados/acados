@@ -254,6 +254,7 @@ add_test(NAME python_as_rti_example
 add_test(NAME python_fast_zoro_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/zoRO_example
         python pendulum_on_cart/minimal_example_zoro.py)
+set_tests_properties(python_fast_zoro_example DEPENDS python_zoro_diff_drive_example)
 
 add_test(NAME python_zoro_diff_drive_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/zoRO_example
@@ -329,7 +330,6 @@ set_tests_properties(python_solution_sensitivities_and_exact_hess python_value_f
 # Directory time_varying
 set_tests_properties(python_time_varying_irk test_polynomial_controls_and_penalties py_mocp_qp_test PROPERTIES RUN_SERIAL TRUE)
 # Directory zoRO_example
-set_tests_properties(python_fast_zoro_example python_zoro_diff_drive_example PROPERTIES RUN_SERIAL TRUE)
 # Directory pendulum_on_cart/ocp
 set_tests_properties(python_pendulum_ocp_example_reuse_code python_nonuniform_discretization_ocp_example python_nonuniform_discretization_ocp_example python_rti_loop_ocp_example python_render_simulink_wrapper python_constraints_expression_example pendulum_optimal_value_gradient python_pendulum_ocp_IRK python_pendulum_ocp_ERK python_pendulum_ocp_GNSF python_example_ocp_dynamics_formulations_cmake PROPERTIES RUN_SERIAL TRUE)
 if(ACADOS_WITH_QPDUNES)
