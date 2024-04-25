@@ -315,6 +315,7 @@ if(ACADOS_WITH_QPDUNES)
         add_test(NAME python_qpDUNES_test
                 COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
                 python example_sqp_qpDUNES.py)
+                set_tests_properties(python_qpDUNES_test RESOURCE_LOCK cpu_cartim)
 
 # Force serial execution for tests in the same directory
 # Directory pendulum_on_cart/ocp
