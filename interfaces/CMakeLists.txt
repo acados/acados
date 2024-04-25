@@ -286,9 +286,6 @@ add_test(NAME python_pendulum_ocp_IRK
 add_test(NAME python_pendulum_ocp_ERK
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
         python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=ERK)
-# add_test(NAME python_pendulum_ocp_DISCRETE
-#         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
-#         python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=DISCRETE)
 add_test(NAME python_pendulum_ocp_GNSF
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
         python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=GNSF)
