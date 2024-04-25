@@ -21,7 +21,6 @@ env:
   ACADOS_WITH_QPDUNES: OFF
   ACADOS_ON_CI: ON
 
-#
 jobs:
   core_build:
     # The CMake configure and build commands are platform agnostic and should work equally
