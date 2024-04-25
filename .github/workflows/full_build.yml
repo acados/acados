@@ -5,9 +5,9 @@ on:
     branches-ignore:
       - 'doc*'
       - 'wip*'
-  pull_request:
-    branches:
-      - '*'
+  # pull_request:
+  #   branches:
+  #     - '*' TODO uncomment
 
 
 env:
@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         submodules: 'recursive'
 
@@ -92,7 +92,7 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         submodules: 'recursive'
 
@@ -116,14 +116,17 @@ jobs:
       shell: bash
       # Execute tests defined by the CMake configuration.
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ${{runner.workspace}}/acados/.github/linux/run_tests.sh
+      run: |
+        source acadosenv/bin/activate;
+        which python;
+        ctest -C $BUILD_TYPE --output-on-failure -j 4 --parallel 4;
 
   MATLAB_interface:
     needs: core_build
     runs-on: ubuntu-20.04
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         submodules: 'recursive'
 
@@ -174,7 +177,7 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         submodules: 'recursive'
 
@@ -226,7 +229,7 @@ jobs:
 
     steps:
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         submodules: 'recursive'
 
@@ -260,7 +263,7 @@ jobs:
       shell: bash
       # Execute tests defined by the CMake configuration.
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ${{runner.workspace}}/acados/.github/linux/run_tests.sh
+      run: ctest -C $BUILD_TYPE --output-on-failure -j 4 --parallel 4;
 
     # - name: Export Paths Simulink zoRO test
     #   working-directory: ${{runner.workspace}}/acados/examples/acados_python/zoRO_example/pendulum_on_cart
