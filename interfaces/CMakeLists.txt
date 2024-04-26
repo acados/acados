@@ -92,9 +92,24 @@ if(ACADOS_MATLAB OR ACADOS_OCTAVE)
 
 # Force serial execution for tests in the same directory
 # Directory test
-set_tests_properties(octave_test_dim_check octave_test_sim_forw octave_test_sim_adj octave_test_sim_hess octave_test_sim_dae octave_test_ocp_pendulum octave_test_ocp_wtnx6 octave_test_ocp_pendulum_dae octave_test_ocp_mass_spring octave_test_ocp_simple_dae octave_test_target_selector PROPERTIES RUN_SERIAL TRUE)
-
-
+set_tests_properties(octave_test_target_selector PROPERTIES DEPENDS octave_test_generic_ext_cost_disc_dyn)
+set_tests_properties(octave_test_generic_ext_cost_disc_dyn PROPERTIES DEPENDS octave_test_dim_check)
+set_tests_properties(octave_test_dim_check PROPERTIES DEPENDS octave_test_sim_forw)
+set_tests_properties(octave_test_sim_forw PROPERTIES DEPENDS octave_test_sim_adj)
+set_tests_properties(octave_test_sim_adj PROPERTIES DEPENDS octave_test_sim_hess)
+set_tests_properties(octave_test_sim_hess PROPERTIES DEPENDS octave_test_sim_dae)
+set_tests_properties(octave_test_sim_dae PROPERTIES DEPENDS octave_test_ocp_pendulum)
+set_tests_properties(octave_test_ocp_pendulum PROPERTIES DEPENDS octave_test_ocp_wtnx6)
+set_tests_properties(octave_test_ocp_wtnx6 PROPERTIES DEPENDS octave_test_ocp_pendulum_dae)
+set_tests_properties(octave_test_ocp_pendulum_dae PROPERTIES DEPENDS octave_test_ocp_mass_spring)
+set_tests_properties(octave_test_ocp_mass_spring PROPERTIES DEPENDS octave_test_ocp_simple_dae )
+set_tests_properties(octave_test_ocp_simple_dae PROPERTIES DEPENDS octave_test_target_selector)
+if(ACADOS_WITH_OSQP)
+        set_tests_properties(octave_test_target_selector PROPERTIES DEPENDS octave_test_OSQP)
+endif()
+if(ACADOS_WITH_QPDUNES)
+        set_tests_properties(octave_test_OSQP PROPERTIES DEPENDS octave_test_qpDUNES)
+endif()
 endif()
 
 
@@ -267,7 +282,6 @@ add_test(NAME python_pendulum_ext_sim_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/sim
         python extensive_example_sim.py
         )
-set_tests_properties(python_pendulum_ext_sim_example PROPERTIES DEPENDS python_pendulum_sim_example_cmake)
 
 add_test(NAME cython_pendulum_closed_loop_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart
@@ -333,12 +347,12 @@ set_tests_properties(python_armijo_test PROPERTIES DEPENDS python_OSQP_test)
 set_tests_properties(python_OSQP_test PROPERTIES DEPENDS python_pendulum_soft_constraints_example)
 set_tests_properties(python_pendulum_soft_constraints_example PROPERTIES DEPENDS python_pendulum_parametric_nonlinear_constraint_h_test)
 set_tests_properties(python_pendulum_parametric_nonlinear_constraint_h_test PROPERTIES DEPENDS python_test_sim_dae)
-if(ACADOS_WITH_OSQP)
-        set_tests_properties(python_test_sim_dae PROPERTIES DEPENDS python_OSQP_test)
-endif()
 
 # Directory acados_python/chain_mass
 set_tests_properties(python_chain_ocp PROPERTIES DEPENDS python_chain_sim)
+
+# Directory pendulum_on_cart/sim
+set_tests_properties(python_pendulum_ext_sim_example PROPERTIES DEPENDS python_pendulum_sim_example_cmake)
 
 # Directory pendulum_on_cart/mhe
 set_tests_properties(python_pendulum_mhe_example_minimal PROPERTIES DEPENDS python_pendulum_mhe_example_noisy_param)

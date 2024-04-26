@@ -106,7 +106,6 @@ jobs:
       run: ${{runner.workspace}}/acados/.github/linux/install_python.sh''
 
     - name: Run CMake python tests (ctest)
-
       working-directory: ${{runner.workspace}}/acados/build
       shell: bash
       # Execute tests defined by the CMake configuration.
