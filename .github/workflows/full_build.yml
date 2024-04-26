@@ -91,7 +91,6 @@ jobs:
       working-directory: ${{runner.workspace}}/acados
       shell: bash
       run: |
-        sudo chmod +x ${{runner.workspace}}/acados/.github/linux/export_paths.sh
         ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
 
     - name: Install Python interface
@@ -123,14 +122,12 @@ jobs:
       working-directory: ${{runner.workspace}}/acados/external
       shell: bash
       run: |
-        sudo chmod +x ${{runner.workspace}}/acados/.github/linux/install_casadi_matlab.sh
         ${{runner.workspace}}/acados/.github/linux/install_casadi_matlab.sh
 
     - name: Export Paths
       working-directory: ${{runner.workspace}}/acados
       shell: bash
       run: |
-        sudo chmod +x ${{runner.workspace}}/acados/.github/linux/export_paths.sh
         ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
 
     - name: Install MATLAB
@@ -168,14 +165,12 @@ jobs:
       working-directory: ${{runner.workspace}}/acados/external
       shell: bash
       run: |
-        sudo chmod +x ${{runner.workspace}}/acados/.github/linux/install_casadi_matlab.sh
         ${{runner.workspace}}/acados/.github/linux/install_casadi_matlab.sh
 
     - name: Export Paths
       working-directory: ${{runner.workspace}}/acados
       shell: bash
       run: |
-        sudo chmod +x ${{runner.workspace}}/acados/.github/linux/export_paths.sh
         ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
 
     - name: Install MATLAB
@@ -224,7 +219,6 @@ jobs:
       working-directory: ${{runner.workspace}}/acados
       shell: bash
       run: |
-        sudo chmod +x ${{runner.workspace}}/acados/.github/linux/export_paths.sh
         ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
 
     - name: Configure CMake
