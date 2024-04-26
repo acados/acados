@@ -5,9 +5,9 @@ on:
     branches-ignore:
       - 'doc*'
       - 'wip*'
-  # pull_request:
-  #   branches:
-  #     - '*'
+  pull_request:
+    branches:
+      - '*'
 
 
 env:
@@ -56,7 +56,7 @@ jobs:
         name: lib
         if-no-files-found: error
         path: ${{runner.workspace}}/acados/lib/
-        compression-level: 0 #TODO test time difference
+        compression-level: 0
         overwrite: true
 
     - name: Store build scripts (/build)
@@ -101,7 +101,6 @@ jobs:
         ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
 
     - name: Install Python interface
-      # TODO cache
       working-directory: ${{runner.workspace}}/acados
       shell: bash
       run: ${{runner.workspace}}/acados/.github/linux/install_python.sh''

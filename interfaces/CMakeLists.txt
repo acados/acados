@@ -333,6 +333,9 @@ set_tests_properties(python_armijo_test PROPERTIES DEPENDS python_OSQP_test)
 set_tests_properties(python_OSQP_test PROPERTIES DEPENDS python_pendulum_soft_constraints_example)
 set_tests_properties(python_pendulum_soft_constraints_example PROPERTIES DEPENDS python_pendulum_parametric_nonlinear_constraint_h_test)
 set_tests_properties(python_pendulum_parametric_nonlinear_constraint_h_test PROPERTIES DEPENDS python_test_sim_dae)
+if(ACADOS_WITH_OSQP)
+        set_tests_properties(python_test_sim_dae PROPERTIES DEPENDS python_OSQP_test)
+endif()
 
 # Directory acados_python/chain_mass
 set_tests_properties(python_chain_ocp PROPERTIES DEPENDS python_chain_sim)

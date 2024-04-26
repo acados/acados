@@ -5,10 +5,9 @@ on:
     branches-ignore:
       - 'doc*'
       - 'wip*'
-  # pull_request:
-  #   branches:
-  #     - '*'
-
+  pull_request:
+    branches:
+      - '*'
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
