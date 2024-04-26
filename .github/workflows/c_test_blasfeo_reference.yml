@@ -93,4 +93,3 @@ jobs:
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
         run: ctest -C $BUILD_TYPE --output-on-failure -j 4 --parallel 4;
 
-
