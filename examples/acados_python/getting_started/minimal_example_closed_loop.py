@@ -82,6 +82,8 @@ def setup(x0, Fmax, N_horizon, Tf, RTI=False):
         ocp.solver_options.nlp_solver_type = 'SQP_RTI'
     else:
         ocp.solver_options.nlp_solver_type = 'SQP'
+        ocp.solver_options.globalization = 'MERIT_BACKTRACKING' # turns on globalization
+        ocp.solver_options.nlp_solver_max_iter = 150
 
     ocp.solver_options.qp_solver_cond_N = N_horizon
 

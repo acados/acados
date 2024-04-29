@@ -56,10 +56,6 @@ sym_xdot = SX.sym('xdot', nx, 1);
 sym_u = F;
 
 %% dynamics
-%expr_f_expl = vertcat(v, ...
-%                      dtheta, ...
-%                      (- l*m*sin(theta)*dtheta.^2 + F + g*m*cos(theta)*sin(theta))/(M + m - m*cos(theta).^2), ...
-%                      (- l*m*cos(theta)*sin(theta)*dtheta.^2 + F*cos(theta) + g*m*sin(theta) + M*g*sin(theta))/(l*(M + m - m*cos(theta).^2)));
 sin_theta = sin(theta);
 cos_theta = cos(theta);
 denominator = M + m - m*cos_theta.^2;
@@ -83,7 +79,6 @@ W = blkdiag(W_x, W_u);
 model.cost_expr_y_e = sym_x;
 model.W_e = W_x;
 
-
 sym_p = M;
 
 %% populate structure
@@ -93,13 +88,13 @@ model.sym_x = sym_x;
 model.sym_xdot = sym_xdot;
 model.sym_u = sym_u;
 model.sym_p = sym_p;
-model.expr_f_expl = expr_f_expl;
-model.expr_f_impl = expr_f_impl;
-model.expr_h = expr_h;
-model.expr_ext_cost = expr_ext_cost;
-model.expr_ext_cost_e = expr_ext_cost_e;
+model.dyn_expr_f_expl = expr_f_expl;
+model.dyn_expr_f_impl = expr_f_impl;
+model.constr_expr_h = expr_h;
+model.constr_expr_ext_cost = expr_ext_cost;
+model.constr_expr_ext_cost_e = expr_ext_cost_e;
 
 model.cost_expr_y = cost_expr_y;
-model.W = W;
+model.cost_W = W;
 
 end

@@ -46,8 +46,11 @@ def main():
     nu = model.u.rows()
     N = 20
 
-    # set dimensions
+    # set number of shooting intervals
     ocp.dims.N = N
+
+    # set prediction horizon
+    ocp.solver_options.tf = Tf
 
     # set cost
     Q_mat = 2*np.diag([1e3, 1e3, 1e-2, 1e-2])
@@ -76,9 +79,7 @@ def main():
     ocp.solver_options.integrator_type = 'IRK'
     # ocp.solver_options.print_level = 1
     ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
-
-    # set prediction horizon
-    ocp.solver_options.tf = Tf
+    ocp.solver_options.globalization = 'MERIT_BACKTRACKING' # turns on globalization
 
     ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
