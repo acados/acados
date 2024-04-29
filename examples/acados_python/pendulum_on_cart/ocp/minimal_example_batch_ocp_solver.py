@@ -40,7 +40,7 @@ import scipy
 import casadi as ca
 
 
-def setup_ocp(with_parallel_batch_solve=False, tol=1e-7):
+def setup_ocp(num_threads_in_batch_solve=1, tol=1e-7):
 
     ocp = AcadosOcp()
 
@@ -82,7 +82,7 @@ def setup_ocp(with_parallel_batch_solve=False, tol=1e-7):
     ocp.solver_options.nlp_solver_tol_eq = tol
     ocp.solver_options.nlp_solver_tol_ineq = tol
     ocp.solver_options.nlp_solver_tol_comp = tol
-    ocp.solver_options.with_parallel_batch_solve = with_parallel_batch_solve
+    ocp.solver_options.num_threads_in_batch_solve = num_threads_in_batch_solve
 
     ocp.solver_options.tf = Tf
 
@@ -108,10 +108,10 @@ def main_sequential(x0, N_sim, tol):
     return simX, simU
 
 
-def main_batch(Xinit, simU, tol, with_parallel_batch_solve=True):
+def main_batch(Xinit, simU, tol, num_threads_in_batch_solve=1):
 
     N_batch = Xinit.shape[0] - 1
-    ocp = setup_ocp(with_parallel_batch_solve, tol)
+    ocp = setup_ocp(num_threads_in_batch_solve, tol)
     batch_solver = AcadosOcpBatchSolver(ocp, N_batch, verbose=False)
 
     for n in range(N_batch):
@@ -127,7 +127,7 @@ def main_batch(Xinit, simU, tol, with_parallel_batch_solve=True):
     t_elapsed = time.time() - t0
     t_elapsed *= 1000
 
-    print("parallel:  " if with_parallel_batch_solve else "sequential:", f"{t_elapsed:.3f}ms")
+    print("parallel:  " if num_threads_in_batch_solve else "sequential:", f"{t_elapsed:.3f}ms")
 
     for n in range(N_batch):
         u = batch_solver.ocp_solvers[n].get(0, "u")
@@ -145,6 +145,6 @@ if __name__ == "__main__":
 
     simX, simU = main_sequential(x0=x0, N_sim=N_batch, tol=tol)
 
-    main_batch(Xinit=simX, simU=simU, tol=tol, with_parallel_batch_solve=False)
-    main_batch(Xinit=simX, simU=simU, tol=tol, with_parallel_batch_solve=True)
+    main_batch(Xinit=simX, simU=simU, tol=tol, num_threads_in_batch_solve=1)
+    main_batch(Xinit=simX, simU=simU, tol=tol, num_threads_in_batch_solve=4)
 

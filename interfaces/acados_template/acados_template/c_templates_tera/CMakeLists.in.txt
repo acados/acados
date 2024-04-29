@@ -383,7 +383,7 @@ set(CMAKE_C_FLAGS "-fPIC -std=c99 {{ openmp_flag }}
 {%- if qp_solver == "PARTIAL_CONDENSING_QPDUNES" -%}
     -DACADOS_WITH_QPDUNES
 {%- endif -%}
-{%- if solver_options.with_parallel_batch_solve -%}
+{%- if solver_options.num_threads_in_batch_solve > 1 -%}
     -fopenmp
 {%- endif -%}
 ")

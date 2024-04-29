@@ -38,7 +38,7 @@ import numpy as np
 import time
 
 
-def setup_integrator(with_parallel_batch_solve=False):
+def setup_integrator(num_threads_in_batch_solve=1):
 
     sim = AcadosSim()
     sim.model = export_pendulum_ode_model()
@@ -48,7 +48,7 @@ def setup_integrator(with_parallel_batch_solve=False):
     sim.solver_options.num_steps = 10
     sim.solver_options.newton_iter = 10 # for implicit integrator
     sim.solver_options.collocation_type = "GAUSS_RADAU_IIA"
-    sim.solver_options.with_parallel_batch_solve = with_parallel_batch_solve
+    sim.solver_options.num_threads_in_batch_solve = num_threads_in_batch_solve
 
     return sim
 
@@ -69,10 +69,10 @@ def main_sequential(x0, u0, N_sim):
     return simX
 
 
-def main_batch(Xinit, u0, with_parallel_batch_solve=True):
+def main_batch(Xinit, u0, num_threads_in_batch_solve=1):
 
     N_batch = Xinit.shape[0] - 1
-    sim = setup_integrator(with_parallel_batch_solve)
+    sim = setup_integrator(num_threads_in_batch_solve)
     batch_integrator = AcadosSimBatchSolver(sim, N_batch, verbose=False)
 
     for n in range(N_batch):
@@ -84,7 +84,7 @@ def main_batch(Xinit, u0, with_parallel_batch_solve=True):
     t_elapsed = time.time() - t0
     t_elapsed *= 1000
 
-    print("parallel:  " if with_parallel_batch_solve else "sequential:", f"{t_elapsed:.3f}ms")
+    print("parallel:  " if num_threads_in_batch_solve else "sequential:", f"{t_elapsed:.3f}ms")
 
     for n in range(N_batch):
         x = batch_integrator.sim_solvers[n].get("x")
@@ -99,6 +99,6 @@ if __name__ == "__main__":
 
     simX = main_sequential(x0=x0, u0=u0, N_sim=N_batch)
 
-    main_batch(Xinit=simX, u0=u0, with_parallel_batch_solve=False)
-    main_batch(Xinit=simX, u0=u0, with_parallel_batch_solve=True)
+    main_batch(Xinit=simX, u0=u0, num_threads_in_batch_solve=1)
+    main_batch(Xinit=simX, u0=u0, num_threads_in_batch_solve=4)
 
