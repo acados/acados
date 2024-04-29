@@ -230,11 +230,11 @@ class AcadosOcpSolver:
 
         # find out if acados was compiled with OpenMP
         try:
-            self.__acados_lib_uses_omp = getattr(self.__acados_lib, 'omp_get_thread_num') is not None
+            self.acados_lib_uses_omp = getattr(self.__acados_lib, 'omp_get_thread_num') is not None
         except AttributeError as e:
-            self.__acados_lib_uses_omp = False
+            self.acados_lib_uses_omp = False
         if verbose:
-            if self.__acados_lib_uses_omp:
+            if self.acados_lib_uses_omp:
                 print('acados was compiled with OpenMP.')
             else:
                 print('acados was compiled without OpenMP.')
