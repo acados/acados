@@ -78,11 +78,11 @@ class ZoroDescription:
 
     input_W_diag: bool = False
     """Determines if diag(W) is an input to the custom update function"""
-    input_W_gp_diag: bool = False
+    input_W_add_diag: bool = False
     """
-    Determines if the concatenation of diag(W_{gp}^k) is an input to the custom update function
+    Determines if the concatenation of diag(W_{add}^k) is an input to the custom update function
 
-    In case this is used W_k = W + W_{gp}^k.
+    In case this is used W_k = W + W_{add}^k.
     """
 
 
@@ -120,7 +120,7 @@ def process_zoro_description(zoro_description: ZoroDescription):
     if zoro_description.input_W_diag:
         print(f"{i_input}) diag(W)")
         i_input += 1
-    if zoro_description.input_W_gp_diag:
+    if zoro_description.input_W_add_diag:
         print(f"{i_input}) concatenation of diag(W_gp^k) for i=0,...,N-1")
         i_input += 1
     print("\n")

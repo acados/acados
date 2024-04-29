@@ -52,8 +52,8 @@ typedef struct custom_memory
     struct blasfeo_dmat unc_jac_G_mat;                   // shape = (nx, nw)
     struct blasfeo_dmat temp_GW_mat;                     // shape = (nx, nw)
     struct blasfeo_dmat GWG_mat;                         // shape = (nx, nx)
-    // NOTE: Covariance matrix of the additive GP disturbance (used if input_W_gp_diag)
-    struct blasfeo_dmat W_gp_mat;  // shape = (nw, nw)
+    // NOTE: Covariance matrix of the additive noise (used if input_W_add_diag)
+    struct blasfeo_dmat W_stage_mat;  // shape = (nw, nw)
     // sensitivity matrices
     struct blasfeo_dmat A_mat;                           // shape = (nx, nx)
     struct blasfeo_dmat B_mat;                           // shape = (nx, nu)
@@ -193,8 +193,8 @@ static int custom_memory_calculate_size(ocp_nlp_config *nlp_config, ocp_nlp_dims
     size += blasfeo_memsize_dmat(nh_e, nx);         // Ch_e_mat
     size += 2 * blasfeo_memsize_dmat(ngh_me_max, nx);           // temp_CaDK_mat, temp_CaDKmP_mat
     size += blasfeo_memsize_dmat(ngh_me_max, ngh_me_max);       // temp_beta_mat
-    // NOTE: Covariance matrix of the additive GP disturbance (used if input_W_gp_diag)
-    size += blasfeo_memsize_dmat(nw, nw);  // W_gp_mat
+    // NOTE: Covariance matrix of the additive noise (used if input_W_add_diag)
+    size += blasfeo_memsize_dmat(nw, nw);  // W_stage_mat
 
     /* blasfeo mem: vec */
     /* Arrays */
@@ -255,8 +255,8 @@ static custom_memory *custom_memory_assign(ocp_nlp_config *nlp_config, ocp_nlp_d
     assign_and_advance_blasfeo_dmat_mem(nx, nw, &mem->unc_jac_G_mat, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx, nw, &mem->temp_GW_mat, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx, nx, &mem->GWG_mat, &c_ptr);
-    // NOTE: Covariance matrix of the additive GP disturbance (used if input_W_gp_diag)
-    assign_and_advance_blasfeo_dmat_mem(nw, nw, &mem->W_gp_mat, &c_ptr);
+    // NOTE: Covariance matrix of the additive noise disturbance (used if input_W_add_diag)
+    assign_and_advance_blasfeo_dmat_mem(nw, nw, &mem->W_stage_mat, &c_ptr);
     // System Dynamics
     assign_and_advance_blasfeo_dmat_mem(nx, nx, &mem->A_mat, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx, nu, &mem->B_mat, &c_ptr);
@@ -431,9 +431,9 @@ static void custom_val_init_function(ocp_nlp_dims *nlp_dims, ocp_nlp_in *nlp_in,
                         &custom_mem->GWG_mat, 0, 0, &custom_mem->GWG_mat, 0, 0);
 {%- endif %}
 
-{%- if zoro_description.input_W_gp_diag %}
-    // NOTE: Initialize Gaussian Process covariance matrix to 0.
-    blasfeo_dgese(nw, nw, 0.0, &custom_mem->W_gp_mat, 0, 0);
+{%- if zoro_description.input_W_add_diag %}
+    // NOTE: Initialize additive covariance matrix to 0.
+    blasfeo_dgese(nw, nw, 0.0, &custom_mem->W_stage_mat, 0, 0);
 {%- endif %}
 
     /* Initialize the uncertainty_matrix_buffer[0] */
@@ -582,12 +582,12 @@ static void reset_process_noise_matrix(ocp_nlp_dims *nlp_dims, struct blasfeo_dm
 
 
 
-{%- if zoro_description.input_W_gp_diag %}
+{%- if zoro_description.input_W_add_diag %}
 
 /**
- * @brief Computes the adjusted GWG based on the uncertainties provided by the Gaussian Process.
+ * @brief Computes the adjusted GWG based on the uncertainties given W + stagewise varying part.
  */
-static void compute_GWG_gaussian_process(ocp_nlp_solver* solver, custom_memory* custom_mem, double* data, const int current_stage)
+static void compute_GWG_stagewise_varying(ocp_nlp_solver* solver, custom_memory* custom_mem, double* data, const int current_stage)
 {
     ocp_nlp_dims* nlp_dims = solver->dims;
 
@@ -595,32 +595,32 @@ static void compute_GWG_gaussian_process(ocp_nlp_solver* solver, custom_memory* 
     const int nx = nlp_dims->nx[0];
     const int nw = {{ zoro_description.nw }};
 
-    // NOTE: update GP covariance terms for current stage
-    int W_gp_diag_offset = 0;
+    // NOTE: update noise covariance terms for current stage
+    int W_diag_offset = 0;
 {%- if zoro_description.input_P0_diag %}
-    W_gp_diag_offset += nx;  // P0_diag
+    W_diag_offset += nx;  // P0_diag
 {%- elif zoro_description.input_P0 %}
-    W_gp_diag_offset += nx*nx;  // P0_diag
+    W_diag_offset += nx*nx;  // P0_diag
 {% endif %}
 {%- if zoro_description.input_W_diag %}
-    W_gp_diag_offset += nw;  // W_diag
+    W_diag_offset += nw;  // W_diag
 {% endif %}
 
     for (int i = 0; i < nw; ++i)
     {
-        blasfeo_dgein1(data[W_gp_diag_offset + nw * current_stage + i], &custom_mem->W_gp_mat, i, i);
+        blasfeo_dgein1(data[W_diag_offset + nw * current_stage + i], &custom_mem->W_stage_mat, i, i);
     }
-    //   blasfeo_print_exp_dmat(nw, nw, &custom_mem->W_gp_mat, 0, 0);
+    //   blasfeo_print_exp_dmat(nw, nw, &custom_mem->W_stage_mat, 0, 0);
 
-    // NOTE: Combine covariances of process noise W and of GP.
-    blasfeo_dgead(nw, nw, 1.0, &custom_mem->W_mat, 0, 0, &custom_mem->W_gp_mat, 0, 0);
-    //   blasfeo_print_exp_dmat(nw, nw, &custom_mem->W_gp_mat, 0, 0);
+    // NOTE: Combine constant W part with additive one
+    blasfeo_dgead(nw, nw, 1.0, &custom_mem->W_mat, 0, 0, &custom_mem->W_stage_mat, 0, 0);
+    //   blasfeo_print_exp_dmat(nw, nw, &custom_mem->W_stage_mat, 0, 0);
 
-    // NOTE: Compute G@W_gp@G^T term coming from GP
-    // temp_GW_mat = unc_jac_G_mat * W_gp_mat
-    blasfeo_dgemm_nn(nx, nw, nw, 1.0, &custom_mem->unc_jac_G_mat, 0, 0, &custom_mem->W_gp_mat, 0, 0, 0.0,
+    // NOTE: Compute G@W@G^T term with W_stage_mat
+    // temp_GW_mat = unc_jac_G_mat * W_stage_mat
+    blasfeo_dgemm_nn(nx, nw, nw, 1.0, &custom_mem->unc_jac_G_mat, 0, 0, &custom_mem->W_stage_mat, 0, 0, 0.0,
                     &custom_mem->temp_GW_mat, 0, 0, &custom_mem->temp_GW_mat, 0, 0);
-    // GWG_mat = temp_GW_gp_mat * unc_jac_G_mat^T
+    // GWG_mat = temp_GW_stage_mat * unc_jac_G_mat^T
     blasfeo_dgemm_nt(nx, nx, nw, 1.0, &custom_mem->temp_GW_mat, 0, 0, &custom_mem->unc_jac_G_mat, 0, 0, 0.0,
                     &custom_mem->GWG_mat, 0, 0, &custom_mem->GWG_mat, 0, 0);
 }
@@ -686,8 +686,8 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
         ocp_nlp_get_at_stage(nlp_config, nlp_dims, solver, ii, "B", custom_mem->d_B_mat);
         blasfeo_pack_dmat(nx, nu, custom_mem->d_B_mat, nx, &custom_mem->B_mat, 0, 0);
 
-{% if zoro_description.input_W_gp_diag %}
-        compute_GWG_gaussian_process(solver, custom_mem, data, ii);
+{% if zoro_description.input_W_add_diag %}
+        compute_GWG_stagewise_varying(solver, custom_mem, data, ii);
 {% endif %}
 
         compute_next_P_matrix(&(custom_mem->uncertainty_matrix_buffer[ii]),
@@ -821,8 +821,8 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
     ocp_nlp_get_at_stage(nlp_config, nlp_dims, solver, N-1, "B", custom_mem->d_B_mat);
     blasfeo_pack_dmat(nx, nu, custom_mem->d_B_mat, nx, &custom_mem->B_mat, 0, 0);
 
-{% if zoro_description.input_W_gp_diag %}
-    compute_GWG_gaussian_process(solver, custom_mem, data, N - 1);
+{% if zoro_description.input_W_add_diag %}
+    compute_GWG_stagewise_varying(solver, custom_mem, data, N - 1);
 {%- endif %}
 
     // AK_mat = -B*K + A
@@ -934,7 +934,7 @@ int custom_update_function({{ model.name }}_solver_capsule* capsule, double* dat
     reset_process_noise_matrix(nlp_dims, &custom_mem->W_mat, data);
 {%- endif %}
 
-{%- if zoro_description.input_W_diag and not zoro_description.input_W_gp_diag %}
+{%- if zoro_description.input_W_diag and not zoro_description.input_W_add_diag %}
     // compute GWG with updated W
     blasfeo_dgemm_nn(nx, nw, nw, 1.0, &custom_mem->unc_jac_G_mat, 0, 0,
                         &custom_mem->W_mat, 0, 0, 0.0,
