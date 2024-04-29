@@ -9,7 +9,6 @@ on:
     branches:
       - '*'
 
-
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
@@ -92,5 +91,5 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: |
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-        ./../acados/.github/linux/run_tests.sh
+        ctest -C $BUILD_TYPE --output-on-failure -j 4 --parallel 4;
 

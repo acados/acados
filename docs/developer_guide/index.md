@@ -125,3 +125,5 @@ The sign convention used is that all dual variables are nonnegative, even the on
 ### Constraint slacks
 If `v` has been set correctly, the constraint slack `t` can be computed using the auxiliary function `dense_qp_compute_t()`.
 
+### Adding tests
+In addition to specifying new tests using `add_test()` to the `interface/CMakeLists.txt`, please ensure that `set_tests_properties()` is also used to force serial execution for tests contained in the same directory.

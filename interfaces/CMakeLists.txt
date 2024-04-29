@@ -89,8 +89,28 @@ if(ACADOS_MATLAB OR ACADOS_OCTAVE)
         add_test(NAME octave_test_generic_ext_cost_disc_dyn
                 COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/generic_dyn_disc
                 octave --no-gui --no-window-system ./run_generic_disc_dyn_example.m)
-endif()
 
+# Force serial execution for tests in the same directory
+# Directory test
+set_tests_properties(octave_test_target_selector PROPERTIES DEPENDS octave_test_generic_ext_cost_disc_dyn)
+set_tests_properties(octave_test_generic_ext_cost_disc_dyn PROPERTIES DEPENDS octave_test_dim_check)
+set_tests_properties(octave_test_dim_check PROPERTIES DEPENDS octave_test_sim_forw)
+set_tests_properties(octave_test_sim_forw PROPERTIES DEPENDS octave_test_sim_adj)
+set_tests_properties(octave_test_sim_adj PROPERTIES DEPENDS octave_test_sim_hess)
+set_tests_properties(octave_test_sim_hess PROPERTIES DEPENDS octave_test_sim_dae)
+set_tests_properties(octave_test_sim_dae PROPERTIES DEPENDS octave_test_ocp_pendulum)
+set_tests_properties(octave_test_ocp_pendulum PROPERTIES DEPENDS octave_test_ocp_wtnx6)
+set_tests_properties(octave_test_ocp_wtnx6 PROPERTIES DEPENDS octave_test_ocp_pendulum_dae)
+set_tests_properties(octave_test_ocp_pendulum_dae PROPERTIES DEPENDS octave_test_ocp_mass_spring)
+set_tests_properties(octave_test_ocp_mass_spring PROPERTIES DEPENDS octave_test_ocp_simple_dae )
+set_tests_properties(octave_test_ocp_simple_dae PROPERTIES DEPENDS octave_test_target_selector)
+if(ACADOS_WITH_OSQP)
+        set_tests_properties(octave_test_target_selector PROPERTIES DEPENDS octave_test_OSQP)
+endif()
+if(ACADOS_WITH_QPDUNES)
+        set_tests_properties(octave_test_OSQP PROPERTIES DEPENDS octave_test_qpDUNES)
+endif()
+endif()
 
 
 ### PYTHON ###
@@ -254,13 +274,14 @@ add_test(NAME python_zoro_diff_drive_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/zoRO_example
         python diff_drive/main.py)
 
-# CMake test
+# Sim
 add_test(NAME python_pendulum_sim_example_cmake
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/sim
         python minimal_example_sim_cmake.py)
 add_test(NAME python_pendulum_ext_sim_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/sim
-        python extensive_example_sim.py)
+        python extensive_example_sim.py
+        )
 
 add_test(NAME cython_pendulum_closed_loop_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart
@@ -279,9 +300,6 @@ add_test(NAME python_pendulum_ocp_IRK
 add_test(NAME python_pendulum_ocp_ERK
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
         python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=ERK)
-# add_test(NAME python_pendulum_ocp_DISCRETE
-#         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
-#         python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=DISCRETE)
 add_test(NAME python_pendulum_ocp_GNSF
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
         python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=GNSF)
@@ -309,4 +327,57 @@ add_test(NAME python_race_cars
 add_test(NAME python_rsm_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/rsm_example
         python main.py)
+
+# Force serial execution for all the below specified tests despite multiple CPU aviliablity (conflicting object file naming)
+# TODO use unique object file names to allow full parallization, and remove  forced serialization section below
+# Directory zoRO_example
+set_tests_properties(python_fast_zoro_example PROPERTIES DEPENDS python_zoro_diff_drive_example)
+
+# Directory getting_started
+set_tests_properties( python_pendulum_sim_example PROPERTIES DEPENDS python_pendulum_ocp_example)
+set_tests_properties( python_pendulum_closed_loop_example PROPERTIES DEPENDS  python_pendulum_sim_example)
+
+# Directory acados_python/tests
+set_tests_properties(python_test_cython_vs_ctypes PROPERTIES DEPENDS python_test_reset)
+set_tests_properties(python_test_reset PROPERTIES DEPENDS python_test_ocp)
+set_tests_properties(python_test_ocp PROPERTIES DEPENDS python_test_cost_integration_euler)
+set_tests_properties(python_test_cost_integration_euler PROPERTIES DEPENDS python_test_cost_integration_value)
+set_tests_properties(python_test_cost_integration_value PROPERTIES DEPENDS python_armijo_test)
+set_tests_properties(python_armijo_test PROPERTIES DEPENDS python_OSQP_test)
+set_tests_properties(python_OSQP_test PROPERTIES DEPENDS python_pendulum_soft_constraints_example)
+set_tests_properties(python_pendulum_soft_constraints_example PROPERTIES DEPENDS python_pendulum_parametric_nonlinear_constraint_h_test)
+set_tests_properties(python_pendulum_parametric_nonlinear_constraint_h_test PROPERTIES DEPENDS python_test_sim_dae)
+
+# Directory acados_python/chain_mass
+set_tests_properties(python_chain_ocp PROPERTIES DEPENDS python_chain_sim)
+
+# Directory pendulum_on_cart/sim
+set_tests_properties(python_pendulum_ext_sim_example PROPERTIES DEPENDS python_pendulum_sim_example_cmake)
+
+# Directory pendulum_on_cart/mhe
+set_tests_properties(python_pendulum_mhe_example_minimal PROPERTIES DEPENDS python_pendulum_mhe_example_noisy_param)
+set_tests_properties(python_pendulum_mhe_example_noisy_param PROPERTIES DEPENDS python_pendulum_mhe_example_param)
+set_tests_properties(python_pendulum_mhe_example_param PROPERTIES DEPENDS python_pendulum_mhe_ocp_closed_loop_example)
+
+# Directory  pendulum_on_cart/solution_sensitivities
+set_tests_properties(python_solution_sensitivities_and_exact_hess PROPERTIES DEPENDS python_value_function_gradient)
+set_tests_properties(python_value_function_gradient PROPERTIES DEPENDS python_policy_gradient)
+
+# Directory time_varying
+set_tests_properties(python_time_varying_irk PROPERTIES DEPENDS test_polynomial_controls_and_penalties)
+set_tests_properties(test_polynomial_controls_and_penalties PROPERTIES DEPENDS py_mocp_qp_test)
+
+# Directory pendulum_on_cart/ocp
+set_tests_properties(python_pendulum_ocp_example_reuse_code PROPERTIES DEPENDS python_nonuniform_discretization_ocp_example)
+set_tests_properties(python_nonuniform_discretization_ocp_example PROPERTIES DEPENDS python_rti_loop_ocp_example)
+set_tests_properties(python_rti_loop_ocp_example PROPERTIES DEPENDS python_render_simulink_wrapper)
+set_tests_properties(python_render_simulink_wrapper PROPERTIES DEPENDS python_constraints_expression_example)
+set_tests_properties(python_constraints_expression_example PROPERTIES DEPENDS pendulum_optimal_value_gradient)
+set_tests_properties(pendulum_optimal_value_gradient PROPERTIES DEPENDS python_pendulum_ocp_IRK)
+set_tests_properties(python_pendulum_ocp_IRK PROPERTIES DEPENDS python_pendulum_ocp_ERK)
+set_tests_properties(python_pendulum_ocp_ERK PROPERTIES DEPENDS python_pendulum_ocp_GNSF)
+set_tests_properties(python_pendulum_ocp_GNSF PROPERTIES DEPENDS python_example_ocp_dynamics_formulations_cmake)
+if(ACADOS_WITH_QPDUNES)
+        set_tests_properties(python_example_ocp_dynamics_formulations_cmake PROPERTIES DEPENDS python_qpDUNES_test)
+endif()
 endif()
