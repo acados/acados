@@ -46,7 +46,7 @@
 typedef struct custom_memory
 {
     // covariance matrics
-    struct blasfeo_dmat *uncertainty_matrix_buffer;      // shape = (N+1, nx, nx)
+    struct blasfeo_dmat *uncertainty_matrix_buffer;      // shape = (N+1) * (nx, nx)
     // covariance matrix of the additive disturbance
     struct blasfeo_dmat W_mat;                           // shape = (nw, nw)
     struct blasfeo_dmat unc_jac_G_mat;                   // shape = (nx, nw)
@@ -129,6 +129,10 @@ typedef struct custom_memory
     int *idxbx;                                          // shape = (nbx,)
     int *idxbu;                                          // shape = (nbu,)
     int *idxbx_e;                                        // shape = (nbx_e,)
+
+    int offset_W_diag;
+    int offset_W_add_diag;
+    int offset_P_out;
 
     void *raw_memory; // Pointer to allocated memory, to be used for freeing
 } custom_memory;
@@ -317,6 +321,25 @@ static custom_memory *custom_memory_assign(ocp_nlp_config *nlp_config, ocp_nlp_d
     assign_and_advance_int(nbx, &mem->idxbx, &c_ptr);
     assign_and_advance_int(nbu, &mem->idxbu, &c_ptr);
     assign_and_advance_int(nbx_e, &mem->idxbx_e, &c_ptr);
+
+    // compute input and output data offsets:
+    mem->offset_W_diag = 0;
+{%- if zoro_description.input_P0_diag %}
+    mem->offset_W_diag += nx;  // P0_diag
+{%- elif zoro_description.input_P0 %}
+    mem->offset_W_diag += nx*nx;  // P0_diag
+{% endif %}
+
+    mem->offset_W_add_diag = mem->offset_W_diag;
+{%- if zoro_description.input_W_diag %}
+    mem->offset_W_add_diag += nw;  // W_diag
+{% endif %}
+
+    mem->offset_P_out += mem->offset_W_add_diag;
+{%- if zoro_description.output_P_matrices %}
+    mem->offset_P_out += N * nw;
+{% endif %}
+
 
     assert((char *) raw_memory + custom_memory_calculate_size(nlp_config, nlp_dims) >= c_ptr);
     mem->raw_memory = raw_memory;
@@ -558,24 +581,19 @@ static void reset_P0_matrix(ocp_nlp_dims *nlp_dims, struct blasfeo_dmat* P_mat, 
  *
  * We update the process noise matrix W using the elements from the data buffer.
 */
-static void reset_process_noise_matrix(ocp_nlp_dims *nlp_dims, struct blasfeo_dmat* W_mat, double* data)
+static void reset_process_noise_matrix(custom_memory* custom_mem, ocp_nlp_dims *nlp_dims, struct blasfeo_dmat* W_mat, double* data)
 {
     const int nx = nlp_dims->nx[0];
     const int nw = {{ zoro_description.nw }};
-    int offset = 0;
-{%- if zoro_description.input_P0_diag %}
-    offset += nx;  // P0_diag
-{%- elif zoro_description.input_P0 %}
-    offset += nx*nx;  // P0_diag
-{% endif %}
+
     for (int i = 0; i < nw; ++i)
     {
-        if (data[offset + i] < 0)
+        if (data[custom_mem->offset_W_diag + i] < 0)
         {
             printf("skipping W_diag[%d] = %f\n", i, data[i]);
             continue;
         }
-        blasfeo_dgein1(data[offset + i], W_mat, i, i);
+        blasfeo_dgein1(data[custom_mem->offset_W_diag + i], W_mat, i, i);
     }
 }
 {% endif %}
@@ -596,19 +614,9 @@ static void compute_GWG_stagewise_varying(ocp_nlp_solver* solver, custom_memory*
     const int nw = {{ zoro_description.nw }};
 
     // NOTE: update noise covariance terms for current stage
-    int W_diag_offset = 0;
-{%- if zoro_description.input_P0_diag %}
-    W_diag_offset += nx;  // P0_diag
-{%- elif zoro_description.input_P0 %}
-    W_diag_offset += nx*nx;  // P0_diag
-{% endif %}
-{%- if zoro_description.input_W_diag %}
-    W_diag_offset += nw;  // W_diag
-{% endif %}
-
     for (int i = 0; i < nw; ++i)
     {
-        blasfeo_dgein1(data[W_diag_offset + nw * current_stage + i], &custom_mem->W_stage_mat, i, i);
+        blasfeo_dgein1(data[custom_mem->offset_W_add_diag + nw * current_stage + i], &custom_mem->W_stage_mat, i, i);
     }
     //   blasfeo_print_exp_dmat(nw, nw, &custom_mem->W_stage_mat, 0, 0);
 
@@ -923,6 +931,11 @@ int custom_update_function({{ model.name }}_solver_capsule* capsule, double* dat
     ocp_nlp_solver *nlp_solver = {{ model.name }}_acados_get_nlp_solver(capsule);
     void *nlp_opts = {{ model.name }}_acados_get_nlp_opts(capsule);
 
+    int N = nlp_dims->N;
+    int nx = {{ dims.nx }};
+    int nw = {{ zoro_description.nw }};
+
+
 {%- if zoro_description.input_P0_diag or zoro_description.input_P0 %}
     if (data_len > 0)
     {
@@ -931,7 +944,7 @@ int custom_update_function({{ model.name }}_solver_capsule* capsule, double* dat
 {%- endif %}
 
 {%- if zoro_description.input_W_diag %}
-    reset_process_noise_matrix(nlp_dims, &custom_mem->W_mat, data);
+    reset_process_noise_matrix(custom_mem, nlp_dims, &custom_mem->W_mat, data);
 {%- endif %}
 
 {%- if zoro_description.input_W_diag and not zoro_description.input_W_add_diag %}
@@ -945,6 +958,15 @@ int custom_update_function({{ model.name }}_solver_capsule* capsule, double* dat
                         &custom_mem->GWG_mat, 0, 0, &custom_mem->GWG_mat, 0, 0);
 {%- endif %}
     uncertainty_propagate_and_update(nlp_solver, nlp_in, nlp_out, custom_mem, data, data_len);
+
+
+{%- if zoro_description.output_P_matrices %}
+    for (int i = 0; i < N+1; ++i)
+    {
+        blasfeo_unpack_dmat(nx, nx, &custom_mem->uncertainty_matrix_buffer[i], 0, 0,
+                    &data[custom_mem->offset_P_out + i * nx * nx], nx);
+    }
+{%- endif %}
 
     return 1;
 }

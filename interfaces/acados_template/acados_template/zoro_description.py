@@ -85,6 +85,10 @@ class ZoroDescription:
     In case this is used W_k = W + W_{add}^k.
     """
 
+    # Outputs:
+    output_P_matrices: bool = False
+    """Determines if the matrices P_k are outputs of the custom update function"""
+
 
 def process_zoro_description(zoro_description: ZoroDescription):
     zoro_description.nw, _ = zoro_description.W_mat.shape
@@ -109,20 +113,23 @@ def process_zoro_description(zoro_description: ZoroDescription):
         raise Exception("Only one of input_P0_diag and input_P0 can be True")
 
     # Print input note:
-    print(f"\nThe input (data) of the generated custom update function consists of the concatenation of:")
-    i_input = 1
+    print(f"\nThe data of the generated custom update function consists of the concatenation of:")
+    i_component = 1
     if zoro_description.input_P0_diag:
-        print(f"{i_input}) diag(P0)")
-        i_input += 1
+        print(f"{i_component}) input: diag(P0)")
+        i_component += 1
     if zoro_description.input_P0:
-        print(f"{i_input}) P0; full matrix in column-major format")
-        i_input += 1
+        print(f"{i_component}) input: P0; full matrix in column-major format")
+        i_component += 1
     if zoro_description.input_W_diag:
-        print(f"{i_input}) diag(W)")
-        i_input += 1
+        print(f"{i_component}) input: diag(W)")
+        i_component += 1
     if zoro_description.input_W_add_diag:
-        print(f"{i_input}) concatenation of diag(W_gp^k) for i=0,...,N-1")
-        i_input += 1
+        print(f"{i_component}) input: concatenation of diag(W_gp^k) for i=0,...,N-1")
+        i_component += 1
+    if zoro_description.output_P_matrices:
+        print(f"{i_component}) output: concatenation of colmaj(P^k) for i=0,...,N")
+        i_component += 1
     print("\n")
 
     return zoro_description
