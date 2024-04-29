@@ -4,7 +4,7 @@ from typing import List
 from ctypes import (POINTER, c_int, c_void_p)
 
 
-class AcadosSimSolverBatch():
+class AcadosSimBatchSolver():
     """
     Batch Integrator for parallel integration.
 
@@ -19,7 +19,7 @@ class AcadosSimSolverBatch():
     def __init__(self, sim: AcadosSim, N_batch: int, json_file: str = 'acados_sim.json', verbose: bool=True):
 
         if not isinstance(N_batch, int) or N_batch <= 0:
-            raise Exception("AcadosSimSolverBatch: argument N_batch should be a positive integer.")
+            raise Exception("AcadosSimBatchSolver: argument N_batch should be a positive integer.")
 
         self.__N_batch = N_batch
         self.__sim_solvers = [AcadosSimSolver(sim, json_file=json_file, build=n==0, generate=n==0, verbose=verbose) for n in range(self.N_batch)]

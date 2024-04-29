@@ -32,7 +32,7 @@
 import sys
 sys.path.insert(0, '../common')
 
-from acados_template import AcadosOcp,  AcadosOcpSolver, AcadosOcpSolverBatch
+from acados_template import AcadosOcp,  AcadosOcpSolver, AcadosOcpBatchSolver
 from pendulum_model import export_pendulum_ode_model
 import numpy as np
 import time
@@ -112,7 +112,7 @@ def main_batch(Xinit, simU, tol, with_parallel_batch_solve=True):
 
     N_batch = Xinit.shape[0] - 1
     ocp = setup_ocp(with_parallel_batch_solve, tol)
-    batch_solver = AcadosOcpSolverBatch(ocp, N_batch, verbose=False)
+    batch_solver = AcadosOcpBatchSolver(ocp, N_batch, verbose=False)
 
     for n in range(N_batch):
         batch_solver.ocp_solvers[n].constraints_set(0, "lbx", Xinit[n])

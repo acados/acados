@@ -4,7 +4,7 @@ from typing import List
 from ctypes import (POINTER, c_int, c_void_p)
 
 
-class AcadosOcpSolverBatch():
+class AcadosOcpBatchSolver():
     """
     Batch Integrator for parallel integration.
 
@@ -19,7 +19,7 @@ class AcadosOcpSolverBatch():
     def __init__(self, ocp: AcadosOcp, N_batch: int, json_file: str = 'acados_ocp.json', verbose: bool=True):
 
         if not isinstance(N_batch, int) or N_batch <= 0:
-            raise Exception("AcadosOcpSolverBatch: argument N_batch should be a positive integer.")
+            raise Exception("AcadosOcpBatchSolver: argument N_batch should be a positive integer.")
 
         self.__N_batch = N_batch
         self.__ocp_solvers = [AcadosOcpSolver(ocp, json_file=json_file, build=n==0, generate=n==0, verbose=verbose) for n in range(self.N_batch)]

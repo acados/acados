@@ -32,7 +32,7 @@
 import sys
 sys.path.insert(0, '../common')
 
-from acados_template import AcadosSim, AcadosSimSolver, AcadosSimSolverBatch
+from acados_template import AcadosSim, AcadosSimSolver, AcadosSimBatchSolver
 from pendulum_model import export_pendulum_ode_model
 import numpy as np
 import time
@@ -73,7 +73,7 @@ def main_batch(Xinit, u0, with_parallel_batch_solve=True):
 
     N_batch = Xinit.shape[0] - 1
     sim = setup_integrator(with_parallel_batch_solve)
-    batch_integrator = AcadosSimSolverBatch(sim, N_batch, verbose=False)
+    batch_integrator = AcadosSimBatchSolver(sim, N_batch, verbose=False)
 
     for n in range(N_batch):
         batch_integrator.sim_solvers[n].set("u", u0)
