@@ -40,13 +40,10 @@ import numpy as np
 
 def main(build=True, generate=True, use_cmake=True, use_cython=False):
     sim = AcadosSim()
-
-    model = export_pendulum_ode_model()
-    sim.model = model
+    sim.model = export_pendulum_ode_model()
 
     Tf = 0.1
-    nx = model.x.rows()
-    nu = model.u.rows()
+    nx = sim.model.x.rows()
     N = 200
 
     # set simulation time
@@ -58,14 +55,9 @@ def main(build=True, generate=True, use_cmake=True, use_cython=False):
     sim.solver_options.newton_iter = 3 # for implicit integrator
     sim.solver_options.collocation_type = "GAUSS_RADAU_IIA"
 
-    if use_cmake:
-        # use the CMake build pipeline
-        cmake_builder = sim_get_default_cmake_builder()
-    else:
-        cmake_builder = None
+    cmake_builder = sim_get_default_cmake_builder() if use_cmake else None
 
     # create
-    # acados_integrator = AcadosSimSolver(sim, cmake_builder=cmake_builder)
     if use_cython:
         AcadosSimSolver.generate(sim, json_file='acados_sim.json')
         AcadosSimSolver.build(sim.code_export_directory, with_cython=True)
@@ -73,27 +65,18 @@ def main(build=True, generate=True, use_cmake=True, use_cython=False):
     else:
         acados_integrator = AcadosSimSolver(sim, cmake_builder=cmake_builder, generate=generate, build=build)
 
-    simX = np.zeros((N+1, nx))
     x0 = np.array([0.0, np.pi+1, 0.0, 0.0])
     u0 = np.array([0.0])
-    acados_integrator.set("u", u0)
 
+    simX = np.zeros((N+1, nx))
     simX[0,:] = x0
 
     for i in range(N):
-        # set initial state
-        acados_integrator.set("x", simX[i,:])
         # initialize IRK
         if sim.solver_options.integrator_type == 'IRK':
             acados_integrator.set("xdot", np.zeros((nx,)))
 
-        # solve
-        status = acados_integrator.solve()
-        # get solution
-        simX[i+1,:] = acados_integrator.get("x")
-
-    if status != 0:
-        raise Exception(f'acados returned status {status}.')
+        simX[i+1,:] = acados_integrator.simulate(x=simX[i, :], u=u0)
 
     S_forw = acados_integrator.get("S_forw")
     print("S_forw, sensitivities of simulaition result wrt x,u:\n", S_forw)

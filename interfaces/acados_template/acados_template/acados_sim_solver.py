@@ -55,7 +55,6 @@ from .casadi_function_generation import (generate_c_code_explicit_ode,
 from .gnsf.detect_gnsf_structure import detect_gnsf_structure
 from .utils import (check_casadi_version, format_class_dict,
                     get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir,
-                    get_python_interface_path,
                     make_object_json_dumpable,
                     render_template, set_up_imported_gnsf_model,
                     verbose_system_call)

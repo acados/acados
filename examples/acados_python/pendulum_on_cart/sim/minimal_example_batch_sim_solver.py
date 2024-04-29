@@ -29,50 +29,79 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from acados_template import AcadosSim, AcadosSimSolver
+import sys
+sys.path.insert(0, '../common')
+
+from acados_template import AcadosSim, AcadosSimSolver, AcadosSimBatchSolver
 from pendulum_model import export_pendulum_ode_model
-from utils import plot_pendulum
 import numpy as np
+import time
 
 
-def main():
+def setup_integrator(num_threads_in_batch_solve=1):
 
     sim = AcadosSim()
     sim.model = export_pendulum_ode_model()
-
-    Tf = 0.1
-    nx = sim.model.x.rows()
-    N_sim = 200
-
-    # set simulation time
-    sim.solver_options.T = Tf
-    # set options
+    sim.solver_options.T = 0.2
     sim.solver_options.integrator_type = 'IRK'
-    sim.solver_options.num_stages = 3
-    sim.solver_options.num_steps = 3
-    sim.solver_options.newton_iter = 3 # for implicit integrator
+    sim.solver_options.num_stages = 5
+    sim.solver_options.num_steps = 10
+    sim.solver_options.newton_iter = 10 # for implicit integrator
     sim.solver_options.collocation_type = "GAUSS_RADAU_IIA"
+    sim.solver_options.num_threads_in_batch_solve = num_threads_in_batch_solve
 
-    # create
-    acados_integrator = AcadosSimSolver(sim)
+    return sim
 
-    x0 = np.array([0.0, np.pi+1, 0.0, 0.0])
-    u0 = np.array([0.0])
-    xdot_init = np.zeros((nx,))
 
+def main_sequential(x0, u0, N_sim):
+
+    nx = x0.shape[0]
     simX = np.zeros((N_sim+1, nx))
+
+    sim = setup_integrator()
+    integrator = AcadosSimSolver(sim, verbose=False)
+
     simX[0,:] = x0
 
+    t0 = time.time()
     for i in range(N_sim):
-        # Note that xdot is only used if an IRK integrator is used
-        simX[i+1,:] = acados_integrator.simulate(x=simX[i,:], u=u0, xdot=xdot_init)
+        simX[i+1,:] = integrator.simulate(x=simX[i, :], u=u0, xdot=np.zeros((nx,)))
 
-    S_forw = acados_integrator.get("S_forw")
-    print("S_forw, sensitivities of simulation result wrt x,u:\n", S_forw)
+    t_elapsed = 1e3 * (time.time() - t0)
+    print("main_sequential:", f"{t_elapsed:.3f}ms")
 
-    plot_pendulum(np.linspace(0, N_sim*Tf, N_sim+1), 10, np.repeat(u0, N_sim), simX,
-                  latexify=False, time_label=sim.model.t_label, x_labels=sim.model.x_labels, u_labels=sim.model.u_labels)
+    return simX
+
+
+def main_batch(Xinit, u0, num_threads_in_batch_solve=1):
+
+    N_batch = Xinit.shape[0] - 1
+    sim = setup_integrator(num_threads_in_batch_solve)
+    batch_integrator = AcadosSimBatchSolver(sim, N_batch, verbose=False)
+
+    for n in range(N_batch):
+        batch_integrator.sim_solvers[n].set("u", u0)
+        batch_integrator.sim_solvers[n].set("x", Xinit[n])
+
+    t0 = time.time()
+    batch_integrator.solve()
+    t_elapsed = 1e3 * (time.time() - t0)
+
+    print(f"main_batch: with {num_threads_in_batch_solve} threads, timing: {t_elapsed:.3f}ms")
+
+    for n in range(N_batch):
+        x = batch_integrator.sim_solvers[n].get("x")
+        assert np.linalg.norm(x-Xinit[n+1]) < 1e-10
 
 
 if __name__ == "__main__":
-    main()
+
+    N_batch = 256
+    x0 = np.array([0.0, np.pi+1, 0.0, 0.0])
+    u0 = np.array([0.0])
+
+    simX = main_sequential(x0=x0, u0=u0, N_sim=N_batch)
+
+    main_batch(Xinit=simX, u0=u0, num_threads_in_batch_solve=1)
+    main_batch(Xinit=simX, u0=u0, num_threads_in_batch_solve=4)
+

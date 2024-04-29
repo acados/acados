@@ -87,6 +87,7 @@ classdef ocp_nlp_solver_options_json < handle
         cost_discretization
         with_solution_sens_wrt_params
         with_value_sens_wrt_params
+        num_threads_in_batch_solve
 
     end
     methods
@@ -137,6 +138,7 @@ classdef ocp_nlp_solver_options_json < handle
             obj.as_rti_iter = 1;
             obj.as_rti_level = 4;
             obj.rti_log_residuals = 0;
+            obj.num_threads_in_batch_solve = 1;
 
         end
         function s = struct(self)
