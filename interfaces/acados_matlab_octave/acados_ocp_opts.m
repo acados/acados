@@ -98,6 +98,8 @@ classdef acados_ocp_opts < handle
             obj.opts_struct.exact_hess_constr = 1;
             obj.opts_struct.fixed_hess = 0;
             obj.opts_struct.ext_fun_compile_flags = '-O2';
+            obj.opts_struct.num_threads_in_batch_solve = 1;
+
 
             obj.opts_struct.output_dir = fullfile(pwd, 'build');
             % if ismac()

@@ -62,6 +62,7 @@ classdef acados_sim_opts < handle
             obj.opts_struct.output_dir = fullfile(pwd, 'build');
             obj.opts_struct.ext_fun_compile_flags = '-O2';
             obj.opts_struct.parameter_values = [];
+            obj.opts.num_threads_in_batch_solve = 1;
         end
 
 
