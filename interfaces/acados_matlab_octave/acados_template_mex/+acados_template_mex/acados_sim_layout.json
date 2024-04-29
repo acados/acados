@@ -18,7 +18,7 @@
             "int"
         ],
         "nx": [
-            "int" 
+            "int"
         ],
         "nz": [
             "int"
@@ -48,6 +48,9 @@
         ],
         "ext_fun_compile_flags": [
             "str"
+        ],
+        "num_threads_in_batch_solve": [
+            "int"
         ]
     }
 }
