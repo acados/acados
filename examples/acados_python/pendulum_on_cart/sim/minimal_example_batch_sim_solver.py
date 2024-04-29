@@ -63,8 +63,12 @@ def main_sequential(x0, u0, N_sim):
 
     simX[0,:] = x0
 
+    t0 = time.time()
     for i in range(N_sim):
         simX[i+1,:] = integrator.simulate(x=simX[i, :], u=u0, xdot=np.zeros((nx,)))
+
+    t_elapsed = 1e3 * (time.time() - t0)
+    print("main_sequential:", f"{t_elapsed:.3f}ms")
 
     return simX
 
@@ -81,10 +85,9 @@ def main_batch(Xinit, u0, num_threads_in_batch_solve=1):
 
     t0 = time.time()
     batch_integrator.solve()
-    t_elapsed = time.time() - t0
-    t_elapsed *= 1000
+    t_elapsed = 1e3 * (time.time() - t0)
 
-    print("parallel:  " if num_threads_in_batch_solve else "sequential:", f"{t_elapsed:.3f}ms")
+    print(f"main_batch: with {num_threads_in_batch_solve} threads, timing: {t_elapsed:.3f}ms")
 
     for n in range(N_batch):
         x = batch_integrator.sim_solvers[n].get("x")

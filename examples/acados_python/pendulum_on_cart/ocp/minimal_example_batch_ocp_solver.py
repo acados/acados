@@ -101,9 +101,13 @@ def main_sequential(x0, N_sim, tol):
     simX = np.zeros((N_sim+1, nx))
     simX[0,:] = x0
 
+    t0 = time.time()
     for i in range(N_sim):
         simU[i,:] = solver.solve_for_x0(x0_bar=simX[i, :])
         simX[i+1,:] = solver.get(1, "x")
+
+    t_elapsed = 1e3 * (time.time() - t0)
+    print("main_sequential:", f"{t_elapsed:.3f}ms")
 
     return simX, simU
 
@@ -124,16 +128,15 @@ def main_batch(Xinit, simU, tol, num_threads_in_batch_solve=1):
 
     t0 = time.time()
     batch_solver.solve()
-    t_elapsed = time.time() - t0
-    t_elapsed *= 1000
+    t_elapsed = 1e3 * (time.time() - t0)
 
-    print("parallel:  " if num_threads_in_batch_solve else "sequential:", f"{t_elapsed:.3f}ms")
+    print(f"main_batch: with {num_threads_in_batch_solve} threads, timing: {t_elapsed:.3f}ms")
 
     for n in range(N_batch):
         u = batch_solver.ocp_solvers[n].get(0, "u")
+
         if not np.linalg.norm(u-simU[n]) < tol*10:
-            print(np.linalg.norm(u-simU[n]))
-            breakpoint()
+            raise Exception(f"solution should match sequential call up to {tol*10} got error {np.linalg.norm(u-simU[n])} for {n}th batch solve")
 
 
 if __name__ == "__main__":
