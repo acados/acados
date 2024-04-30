@@ -38,6 +38,15 @@ import numpy as np
 import time
 
 
+"""
+This example shows how the AcadosSimBatchSolver can be used to parallelize mulitple integrators.
+
+If you want to use the batch solver, make sure to compile acados with openmp and num_threads set to 1,
+i.e. with the flags -DACADOS_WITH_OPENMP=ON -DACADOS_NUM_THREADS=1
+The number of threads for the batch solver is then set via the option `num_threads_in_batch_solve`, see below.
+"""
+
+
 def setup_integrator(num_threads_in_batch_solve=1):
 
     sim = AcadosSim()

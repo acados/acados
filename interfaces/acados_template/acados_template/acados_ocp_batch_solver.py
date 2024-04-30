@@ -35,8 +35,10 @@ class AcadosOcpBatchSolver():
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_solve").restype = c_void_p
 
         if self.ocp_solvers[0].acados_lib_uses_omp:
-            print("Warning: The acados shared library is already compiled with OpenMP, which allows to parallelize within a single OCP solver call.")
-            print("It is not recommended to use the AcadosOcpBatchSolver, which allows calling multiple OCP solvers in parallel, while also parallelizing each solver individually.")
+            print("Note: Please make sure that the acados shared library is compiled with the number of threads set to 1, i.e. with the flags -DACADOS_WITH_OPENMP=ON -DACADOS_NUM_THREADS=1.")
+        else:
+            print("Warning: Please compile the acados shared library with openmp and the number of threads set to 1, i.e. with the flags -DACADOS_WITH_OPENMP=ON -DACADOS_NUM_THREADS=1.")
+
 
     def solve(self):
         """
