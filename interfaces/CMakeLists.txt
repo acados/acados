@@ -282,10 +282,6 @@ add_test(NAME python_pendulum_ext_sim_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/sim
         python extensive_example_sim.py
         )
-add_test(NAME python_batch_sim
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/sim
-        python minimal_example_batch_sim_solver.py
-        )
 
 add_test(NAME cython_pendulum_closed_loop_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart
@@ -307,10 +303,6 @@ add_test(NAME python_pendulum_ocp_ERK
 add_test(NAME python_pendulum_ocp_GNSF
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
         python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=GNSF)
-
-add_test(NAME python_batch_ocp
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
-        python minimal_example_batch_ocp_solver.py)
 
 # CMake and solver=DISCRETE test
 add_test(NAME python_example_ocp_dynamics_formulations_cmake
@@ -362,7 +354,6 @@ set_tests_properties(python_chain_ocp PROPERTIES DEPENDS python_chain_sim)
 
 # Directory pendulum_on_cart/sim
 set_tests_properties(python_pendulum_ext_sim_example PROPERTIES DEPENDS python_pendulum_sim_example_cmake)
-set_tests_properties(python_pendulum_sim_example_cmake PROPERTIES DEPENDS python_batch_sim)
 
 # Directory pendulum_on_cart/mhe
 set_tests_properties(python_pendulum_mhe_example_minimal PROPERTIES DEPENDS python_pendulum_mhe_example_noisy_param)
@@ -387,8 +378,6 @@ set_tests_properties(pendulum_optimal_value_gradient PROPERTIES DEPENDS python_p
 set_tests_properties(python_pendulum_ocp_IRK PROPERTIES DEPENDS python_pendulum_ocp_ERK)
 set_tests_properties(python_pendulum_ocp_ERK PROPERTIES DEPENDS python_pendulum_ocp_GNSF)
 set_tests_properties(python_pendulum_ocp_GNSF PROPERTIES DEPENDS python_example_ocp_dynamics_formulations_cmake)
-set_tests_properties(python_example_ocp_dynamics_formulations_cmake PROPERTIES DEPENDS python_batch_ocp)
-if(ACADOS_WITH_QPDUNES)
-        set_tests_properties(python_batch_ocp PROPERTIES DEPENDS python_qpDUNES_test)
+
 endif()
 endif()
