@@ -35,9 +35,13 @@ class AcadosOcpBatchSolver():
         getattr(self.__shared_lib, f"{self.__name}_acados_batch_solve").restype = c_void_p
 
         if self.ocp_solvers[0].acados_lib_uses_omp:
-            print("Note: Please make sure that the acados shared library is compiled with the number of threads set to 1, i.e. with the flags -DACADOS_WITH_OPENMP=ON -DACADOS_NUM_THREADS=1.")
+            msg = "Note: Please make sure that the acados shared library is compiled with the number of threads set to 1,\n"
         else:
-            print("Warning: Please compile the acados shared library with openmp and the number of threads set to 1, i.e. with the flags -DACADOS_WITH_OPENMP=ON -DACADOS_NUM_THREADS=1.")
+            msg = "Warning: Please compile the acados shared library with openmp and the number of threads set to 1,\n"
+
+        msg += "i.e. with the flags -DACADOS_WITH_OPENMP=ON -DACADOS_NUM_THREADS=1.\n" + \
+                   "See https://github.com/acados/acados/pull/1089 for more details."
+        print(msg)
 
 
     def solve(self):
