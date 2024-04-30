@@ -380,4 +380,3 @@ set_tests_properties(python_pendulum_ocp_ERK PROPERTIES DEPENDS python_pendulum_
 set_tests_properties(python_pendulum_ocp_GNSF PROPERTIES DEPENDS python_example_ocp_dynamics_formulations_cmake)
 
 endif()
-endif()
