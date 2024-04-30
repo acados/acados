@@ -336,7 +336,7 @@ static custom_memory *custom_memory_assign(ocp_nlp_config *nlp_config, ocp_nlp_d
 {% endif %}
 
     mem->offset_P_out += mem->offset_W_add_diag;
-{%- if zoro_description.output_P_matrices %}
+{%- if zoro_description.input_W_add_diag %}
     mem->offset_P_out += N * nw;
 {% endif %}
 
