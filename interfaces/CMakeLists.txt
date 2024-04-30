@@ -379,4 +379,8 @@ set_tests_properties(python_pendulum_ocp_IRK PROPERTIES DEPENDS python_pendulum_
 set_tests_properties(python_pendulum_ocp_ERK PROPERTIES DEPENDS python_pendulum_ocp_GNSF)
 set_tests_properties(python_pendulum_ocp_GNSF PROPERTIES DEPENDS python_example_ocp_dynamics_formulations_cmake)
 
+if(ACADOS_WITH_QPDUNES)
+        set_tests_properties(python_example_ocp_dynamics_formulations_cmake PROPERTIES DEPENDS python_qpDUNES_test)
+endif()
+
 endif()
