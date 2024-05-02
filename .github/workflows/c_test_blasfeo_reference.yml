@@ -56,7 +56,7 @@ jobs:
       working-directory: ${{runner.workspace}}/acados
       shell: bash
       # TODO: cache
-      run: ./ci/shared/install_eigen.sh
+      run: ./.github/linux/install_eigen.sh
 
 
     - name: Configure CMake
