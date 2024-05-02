@@ -31,359 +31,356 @@
 
 # MATLAB / OCTAVE
 if(ACADOS_MATLAB OR ACADOS_OCTAVE)
-        add_test(NAME octave_test_dim_check
-                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
-                octave --no-gui --no-window-system ./run_test_dim_check.m)
+    add_test(NAME octave_test_dim_check
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+        octave --no-gui --no-window-system ./run_test_dim_check.m)
 
-        # SIM
-        add_test(NAME octave_test_sim_forw
-                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
-                octave --no-gui --no-window-system ./run_test_sim_forw.m)
+    # SIM
+    add_test(NAME octave_test_sim_forw
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+        octave --no-gui --no-window-system ./run_test_sim_forw.m)
 
-        add_test(NAME octave_test_sim_adj
-                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
-                octave --no-gui --no-window-system ./run_test_sim_adj.m)
+    add_test(NAME octave_test_sim_adj
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+        octave --no-gui --no-window-system ./run_test_sim_adj.m)
 
-        add_test(NAME octave_test_sim_hess
-                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
-                octave --no-gui --no-window-system ./run_test_sim_hess.m)
+    add_test(NAME octave_test_sim_hess
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+        octave --no-gui --no-window-system ./run_test_sim_hess.m)
 
-        add_test(NAME octave_test_sim_dae
-                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
-                octave --no-gui --no-window-system ./run_test_sim_dae.m)
+    add_test(NAME octave_test_sim_dae
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+        octave --no-gui --no-window-system ./run_test_sim_dae.m)
 
-        # OCP
-        add_test(NAME octave_test_ocp_pendulum
-                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
-                octave --no-gui --no-window-system ./run_test_ocp_pendulum.m)
-        add_test(NAME octave_test_ocp_wtnx6
-                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
-                octave --no-gui --no-window-system ./run_test_ocp_wtnx6.m)
-        add_test(NAME octave_test_ocp_pendulum_dae
-                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
-                octave --no-gui --no-window-system ./run_test_ocp_pendulum_dae.m)
-        add_test(NAME octave_test_ocp_mass_spring
-                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
-                octave --no-gui --no-window-system ./run_test_ocp_mass_spring.m)
-        add_test(NAME octave_test_ocp_simple_dae
-                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
-                octave --no-gui --no-window-system ./run_test_ocp_simple_dae.m)
+    # OCP
+    add_test(NAME octave_test_ocp_pendulum
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+        octave --no-gui --no-window-system ./run_test_ocp_pendulum.m)
+    add_test(NAME octave_test_ocp_wtnx6
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+        octave --no-gui --no-window-system ./run_test_ocp_wtnx6.m)
+    add_test(NAME octave_test_ocp_pendulum_dae
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+        octave --no-gui --no-window-system ./run_test_ocp_pendulum_dae.m)
+    add_test(NAME octave_test_ocp_mass_spring
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+        octave --no-gui --no-window-system ./run_test_ocp_mass_spring.m)
+    add_test(NAME octave_test_ocp_simple_dae
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+        octave --no-gui --no-window-system ./run_test_ocp_simple_dae.m)
 
-        # OSQP
-        if(ACADOS_WITH_OSQP)
-                add_test(NAME octave_test_OSQP
-                        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
-                        octave --no-gui --no-window-system ./test_ocp_OSQP.m)
-        endif()
+    # OSQP
+    if(ACADOS_WITH_OSQP)
+        add_test(NAME octave_test_OSQP
+            COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+            octave --no-gui --no-window-system ./test_ocp_OSQP.m)
+    endif()
 
-        # qpDUNES
-        if(ACADOS_WITH_QPDUNES)
-        add_test(NAME octave_test_qpDUNES
-                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
-                octave --no-gui --no-window-system ./test_ocp_qpdunes.m)
-        endif()
-        #
-        add_test(NAME octave_test_target_selector
-                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
-                octave --no-gui --no-window-system ./test_target_selector.m)
-        add_test(NAME octave_test_generic_ext_cost_disc_dyn
-                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/generic_dyn_disc
-                octave --no-gui --no-window-system ./run_generic_disc_dyn_example.m)
+    # qpDUNES
+    if(ACADOS_WITH_QPDUNES)
+    add_test(NAME octave_test_qpDUNES
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+        octave --no-gui --no-window-system ./test_ocp_qpdunes.m)
+    endif()
+    #
+    add_test(NAME octave_test_target_selector
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
+        octave --no-gui --no-window-system ./test_target_selector.m)
+    add_test(NAME octave_test_generic_ext_cost_disc_dyn
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/generic_dyn_disc
+        octave --no-gui --no-window-system ./run_generic_disc_dyn_example.m)
 
-# Force serial execution for tests in the same directory
-# Directory test
-set_tests_properties(octave_test_target_selector PROPERTIES DEPENDS octave_test_generic_ext_cost_disc_dyn)
-set_tests_properties(octave_test_generic_ext_cost_disc_dyn PROPERTIES DEPENDS octave_test_dim_check)
-set_tests_properties(octave_test_dim_check PROPERTIES DEPENDS octave_test_sim_forw)
-set_tests_properties(octave_test_sim_forw PROPERTIES DEPENDS octave_test_sim_adj)
-set_tests_properties(octave_test_sim_adj PROPERTIES DEPENDS octave_test_sim_hess)
-set_tests_properties(octave_test_sim_hess PROPERTIES DEPENDS octave_test_sim_dae)
-set_tests_properties(octave_test_sim_dae PROPERTIES DEPENDS octave_test_ocp_pendulum)
-set_tests_properties(octave_test_ocp_pendulum PROPERTIES DEPENDS octave_test_ocp_wtnx6)
-set_tests_properties(octave_test_ocp_wtnx6 PROPERTIES DEPENDS octave_test_ocp_pendulum_dae)
-set_tests_properties(octave_test_ocp_pendulum_dae PROPERTIES DEPENDS octave_test_ocp_mass_spring)
-set_tests_properties(octave_test_ocp_mass_spring PROPERTIES DEPENDS octave_test_ocp_simple_dae )
-set_tests_properties(octave_test_ocp_simple_dae PROPERTIES DEPENDS octave_test_target_selector)
-if(ACADOS_WITH_OSQP)
+    # Force serial execution for tests in the same directory
+    # Directory test
+    set_tests_properties(octave_test_target_selector PROPERTIES DEPENDS octave_test_generic_ext_cost_disc_dyn)
+    set_tests_properties(octave_test_generic_ext_cost_disc_dyn PROPERTIES DEPENDS octave_test_dim_check)
+    set_tests_properties(octave_test_dim_check PROPERTIES DEPENDS octave_test_sim_forw)
+    set_tests_properties(octave_test_sim_forw PROPERTIES DEPENDS octave_test_sim_adj)
+    set_tests_properties(octave_test_sim_adj PROPERTIES DEPENDS octave_test_sim_hess)
+    set_tests_properties(octave_test_sim_hess PROPERTIES DEPENDS octave_test_sim_dae)
+    set_tests_properties(octave_test_sim_dae PROPERTIES DEPENDS octave_test_ocp_pendulum)
+    set_tests_properties(octave_test_ocp_pendulum PROPERTIES DEPENDS octave_test_ocp_wtnx6)
+    set_tests_properties(octave_test_ocp_wtnx6 PROPERTIES DEPENDS octave_test_ocp_pendulum_dae)
+    set_tests_properties(octave_test_ocp_pendulum_dae PROPERTIES DEPENDS octave_test_ocp_mass_spring)
+    set_tests_properties(octave_test_ocp_mass_spring PROPERTIES DEPENDS octave_test_ocp_simple_dae )
+    set_tests_properties(octave_test_ocp_simple_dae PROPERTIES DEPENDS octave_test_target_selector)
+    if(ACADOS_WITH_OSQP)
         set_tests_properties(octave_test_target_selector PROPERTIES DEPENDS octave_test_OSQP)
-endif()
-if(ACADOS_WITH_QPDUNES)
+    endif()
+    if(ACADOS_WITH_QPDUNES)
         set_tests_properties(octave_test_OSQP PROPERTIES DEPENDS octave_test_qpDUNES)
-endif()
+    endif()
 endif()
 
 
 ### PYTHON ###
 if(ACADOS_PYTHON)
-
-# Minimal examples
-add_test(NAME python_pendulum_closed_loop_example
+    # Minimal examples
+    add_test(NAME python_pendulum_closed_loop_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started
         python minimal_example_closed_loop.py)
-add_test(NAME python_pendulum_sim_example
+    add_test(NAME python_pendulum_sim_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started
         python minimal_example_sim.py)
-add_test(NAME python_pendulum_ocp_example
+    add_test(NAME python_pendulum_ocp_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/getting_started
         python minimal_example_ocp.py)
 
-add_test(NAME python_test_generic_impl_dyn
+    add_test(NAME python_test_generic_impl_dyn
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/generic_impl_dyn
         python minimal_example_ocp_generic_impl_dyn.py)
-add_test(NAME python_test_reset
+    add_test(NAME python_test_reset
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
         python reset_test.py)
-add_test(NAME python_test_reset_timing
+    add_test(NAME python_test_reset_timing
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/timing_example
         python reset_timing.py)
-add_test(NAME python_test_cython_vs_ctypes
+    add_test(NAME python_test_cython_vs_ctypes
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
         python test_cython_ctypes.py)
-add_test(NAME python_test_ocp
+    add_test(NAME python_test_ocp
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
         python main_test.py)
 
-add_test(NAME python_test_cost_integration_euler
+    add_test(NAME python_test_cost_integration_euler
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
         python test_cost_integration_euler.py)
 
-add_test(NAME python_test_cost_integration_value
+    add_test(NAME python_test_cost_integration_value
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
         python test_cost_integration_value.py)
 
-add_test(NAME python_pendulum_ocp_example_reuse_code
+    add_test(NAME python_pendulum_ocp_example_reuse_code
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
         python minimal_example_ocp_reuse_code.py)
 
-add_test(NAME python_solution_sensitivities_and_exact_hess
+    add_test(NAME python_solution_sensitivities_and_exact_hess
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/solution_sensitivities
         python test_solution_sens_and_exact_hess.py)
 
-add_test(NAME python_value_function_gradient
+    add_test(NAME python_value_function_gradient
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/solution_sensitivities
         python value_gradient_example.py)
 
-add_test(NAME python_policy_gradient
+    add_test(NAME python_policy_gradient
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/solution_sensitivities
         python policy_gradient_example.py)
 
-add_test(NAME python_time_varying_irk
+    add_test(NAME python_time_varying_irk
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/time_varying
         python test_time_varying_irk.py)
 
-add_test(NAME test_polynomial_controls_and_penalties
+    add_test(NAME test_polynomial_controls_and_penalties
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/time_varying
         python test_polynomial_controls_and_penalties.py)
 
-add_test(NAME py_mocp_qp_test
+    add_test(NAME py_mocp_qp_test
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/time_varying
         python test_mocp_qp.py)
 
-
-# CMake test
-add_test(NAME python_pendulum_ocp_example_cmake
+    add_test(NAME python_pendulum_ocp_example_cmake
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
         python minimal_example_ocp_cmake.py)
-add_test(NAME python_nonuniform_discretization_ocp_example
+    add_test(NAME python_nonuniform_discretization_ocp_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
         python nonuniform_discretization_example.py)
-add_test(NAME python_rti_loop_ocp_example
+    add_test(NAME python_rti_loop_ocp_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
         python example_sqp_rti_loop.py)
-# Python Simulink
-add_test(NAME python_render_simulink_wrapper
+    # Python Simulink
+    add_test(NAME python_render_simulink_wrapper
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
         python simulink_example.py)
-add_test(NAME python_constraints_expression_example
+    add_test(NAME python_constraints_expression_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
         python ocp_example_h_init_contraints.py)
 
-add_test(NAME python_chain_ocp
+    add_test(NAME python_chain_ocp
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/chain_mass
         python main.py)
 
-add_test(NAME python_chain_sim
+    add_test(NAME python_chain_sim
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/chain_mass
         python minimal_example_sim.py)
 
-# Marathos test problem with different globalization options
-add_test(NAME python_marathos_test_problem_globalization
+    # Marathos test problem with different globalization options
+    add_test(NAME python_marathos_test_problem_globalization
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/non_ocp_nlp
         python marathos_test_problem.py)
 
-# Simple OCP with Marathos effect
-add_test(NAME python_OCP_marathos_test_problem_globalization
+    # Simple OCP with Marathos effect
+    add_test(NAME python_OCP_marathos_test_problem_globalization
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/linear_mass_model
         python linear_mass_test_problem.py)
 
-# Armijo test problem
-add_test(NAME python_armijo_test
+    # Armijo test problem
+    add_test(NAME python_armijo_test
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
         python armijo_test.py)
 
-# Multiphase nonlinear constraint test problem
-add_test(NAME python_multiphase_nonlinear_constraints
+    # Multiphase nonlinear constraint test problem
+    add_test(NAME python_multiphase_nonlinear_constraints
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/multiphase_nonlinear_constraints
         python main.py)
 
-# qpDUNES example
-if(ACADOS_WITH_QPDUNES)
-        add_test(NAME python_qpDUNES_test
-                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
-                python example_sqp_qpDUNES.py)
-endif()
+    # qpDUNES example
+    if(ACADOS_WITH_QPDUNES)
+    add_test(NAME python_qpDUNES_test
+            COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
+            python example_sqp_qpDUNES.py)
+    endif()
 
-# OSQP test
-if(ACADOS_WITH_OSQP)
-        add_test(NAME python_OSQP_test
-                COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
-                python test_osqp.py)
-endif()
+    # OSQP test
+    if(ACADOS_WITH_OSQP)
+    add_test(NAME python_OSQP_test
+            COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
+            python test_osqp.py)
+    endif()
 
-# MHE examples
-add_test(NAME python_pendulum_mhe_example_minimal
+    # MHE examples
+    add_test(NAME python_pendulum_mhe_example_minimal
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/mhe
         python minimal_example_mhe.py)
-add_test(NAME python_pendulum_mhe_example_noisy_param
+    add_test(NAME python_pendulum_mhe_example_noisy_param
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/mhe
         python minimal_example_mhe_with_noisy_param.py)
-add_test(NAME python_pendulum_mhe_example_param
+    add_test(NAME python_pendulum_mhe_example_param
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/mhe
         python minimal_example_mhe_with_param.py)
-add_test(NAME python_pendulum_mhe_ocp_closed_loop_example
+    add_test(NAME python_pendulum_mhe_ocp_closed_loop_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/mhe
         python closed_loop_mhe_ocp.py)
 
-add_test(NAME python_pendulum_ocp_cost_example
+    add_test(NAME python_pendulum_ocp_cost_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
         python ocp_example_cost_formulations.py)
 
-add_test(NAME python_custom_update_example
+    add_test(NAME python_custom_update_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/custom_update
         python example_custom_rti_loop.py)
 
-add_test(NAME python_as_rti_example
+    add_test(NAME python_as_rti_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/as_rti
         python as_rti_closed_loop_example.py)
 
-add_test(NAME python_fast_zoro_example
+    add_test(NAME python_fast_zoro_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/zoRO_example
         python pendulum_on_cart/minimal_example_zoro.py)
 
-add_test(NAME python_zoro_diff_drive_example
+    add_test(NAME python_zoro_diff_drive_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/zoRO_example
         python diff_drive/main.py)
 
-# Sim
-add_test(NAME python_pendulum_sim_example_cmake
+    # Sim
+    add_test(NAME python_pendulum_sim_example_cmake
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/sim
         python minimal_example_sim_cmake.py)
-add_test(NAME python_pendulum_ext_sim_example
+    add_test(NAME python_pendulum_ext_sim_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/sim
         python extensive_example_sim.py
-        )
+    )
 
-add_test(NAME cython_pendulum_closed_loop_example
+    add_test(NAME cython_pendulum_closed_loop_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart
         python cython_example_closed_loop.py)
-add_test(NAME py_time_optimal_cython_ctypes
+    add_test(NAME py_time_optimal_cython_ctypes
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/crane
         python time_optimal_example.py)
-add_test(NAME pendulum_optimal_value_gradient
+    add_test(NAME pendulum_optimal_value_gradient
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
         python example_optimal_value_derivative.py)
 
-# example_ocp_dynamics_formulations all versions
-add_test(NAME python_pendulum_ocp_IRK
+    # example_ocp_dynamics_formulations all versions
+    add_test(NAME python_pendulum_ocp_IRK
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
         python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=IRK)
-add_test(NAME python_pendulum_ocp_ERK
+    add_test(NAME python_pendulum_ocp_ERK
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
         python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=ERK)
-add_test(NAME python_pendulum_ocp_GNSF
+    add_test(NAME python_pendulum_ocp_GNSF
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
         python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE=GNSF)
 
-# CMake and solver=DISCRETE test
-add_test(NAME python_example_ocp_dynamics_formulations_cmake
+    # CMake and solver=DISCRETE test
+    add_test(NAME python_example_ocp_dynamics_formulations_cmake
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
         python example_ocp_dynamics_formulations.py --INTEGRATOR_TYPE DISCRETE --BUILD_SYSTEM cmake)
 
-add_test(NAME python_pendulum_soft_constraints_example
+    add_test(NAME python_pendulum_soft_constraints_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
         python soft_constraint_test.py)
-add_test(NAME python_pendulum_parametric_nonlinear_constraint_h_test
+    add_test(NAME python_pendulum_parametric_nonlinear_constraint_h_test
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
         python test_parametric_nonlinear_constraint_h.py)
-add_test(NAME python_test_sim_dae
+    add_test(NAME python_test_sim_dae
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
         python test_sim_dae.py)
 
-add_test(NAME python_pmsm_example
+    add_test(NAME python_pmsm_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pmsm_example
         python main.py)
-add_test(NAME python_race_cars
+    add_test(NAME python_race_cars
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/race_cars
         python main.py)
-add_test(NAME python_rsm_example
+    add_test(NAME python_rsm_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/rsm_example
         python main.py)
 
-# Force serial execution for all the below specified tests despite multiple CPU aviliablity (conflicting object file naming)
-# TODO use unique object file names to allow full parallization, and remove  forced serialization section below
-# Directory zoRO_example
-set_tests_properties(python_fast_zoro_example PROPERTIES DEPENDS python_zoro_diff_drive_example)
+    # Force serial execution for all the below specified tests despite multiple CPU aviliablity (conflicting object file naming)
+    # TODO use unique object file names to allow full parallization, and remove  forced serialization section below
+    # Directory zoRO_example
+    set_tests_properties(python_fast_zoro_example PROPERTIES DEPENDS python_zoro_diff_drive_example)
 
-# Directory getting_started
-set_tests_properties(python_pendulum_sim_example PROPERTIES DEPENDS python_pendulum_ocp_example)
-set_tests_properties(python_pendulum_closed_loop_example PROPERTIES DEPENDS python_pendulum_sim_example)
+    # Directory getting_started
+    set_tests_properties(python_pendulum_sim_example PROPERTIES DEPENDS python_pendulum_ocp_example)
+    set_tests_properties(python_pendulum_closed_loop_example PROPERTIES DEPENDS python_pendulum_sim_example)
 
-# Directory acados_python/tests
-set_tests_properties(python_test_cython_vs_ctypes PROPERTIES DEPENDS python_test_reset)
-set_tests_properties(python_test_reset PROPERTIES DEPENDS python_test_ocp)
-set_tests_properties(python_test_ocp PROPERTIES DEPENDS python_test_cost_integration_euler)
-set_tests_properties(python_test_cost_integration_euler PROPERTIES DEPENDS python_test_cost_integration_value)
-set_tests_properties(python_test_cost_integration_value PROPERTIES DEPENDS python_armijo_test)
-set_tests_properties(python_armijo_test PROPERTIES DEPENDS python_pendulum_soft_constraints_example)
-set_tests_properties(python_pendulum_soft_constraints_example PROPERTIES DEPENDS python_pendulum_parametric_nonlinear_constraint_h_test)
-set_tests_properties(python_pendulum_parametric_nonlinear_constraint_h_test PROPERTIES DEPENDS python_test_sim_dae)
+    # Directory acados_python/tests
+    set_tests_properties(python_test_cython_vs_ctypes PROPERTIES DEPENDS python_test_reset)
+    set_tests_properties(python_test_reset PROPERTIES DEPENDS python_test_ocp)
+    set_tests_properties(python_test_ocp PROPERTIES DEPENDS python_test_cost_integration_euler)
+    set_tests_properties(python_test_cost_integration_euler PROPERTIES DEPENDS python_test_cost_integration_value)
+    set_tests_properties(python_test_cost_integration_value PROPERTIES DEPENDS python_armijo_test)
+    set_tests_properties(python_armijo_test PROPERTIES DEPENDS python_pendulum_soft_constraints_example)
+    set_tests_properties(python_pendulum_soft_constraints_example PROPERTIES DEPENDS python_pendulum_parametric_nonlinear_constraint_h_test)
+    set_tests_properties(python_pendulum_parametric_nonlinear_constraint_h_test PROPERTIES DEPENDS python_test_sim_dae)
 
-if(ACADOS_WITH_OSQP)
+    if(ACADOS_WITH_OSQP)
         set_tests_properties(python_test_sim_dae PROPERTIES DEPENDS python_OSQP_test)
-endif()
+    endif()
 
-# Directory acados_python/chain_mass
-set_tests_properties(python_chain_ocp PROPERTIES DEPENDS python_chain_sim)
+    # Directory acados_python/chain_mass
+    set_tests_properties(python_chain_ocp PROPERTIES DEPENDS python_chain_sim)
 
-# Directory pendulum_on_cart/sim
-set_tests_properties(python_pendulum_ext_sim_example PROPERTIES DEPENDS python_pendulum_sim_example_cmake)
+    # Directory pendulum_on_cart/sim
+    set_tests_properties(python_pendulum_ext_sim_example PROPERTIES DEPENDS python_pendulum_sim_example_cmake)
 
-# Directory pendulum_on_cart/mhe
-set_tests_properties(python_pendulum_mhe_example_minimal PROPERTIES DEPENDS python_pendulum_mhe_example_noisy_param)
-set_tests_properties(python_pendulum_mhe_example_noisy_param PROPERTIES DEPENDS python_pendulum_mhe_example_param)
-set_tests_properties(python_pendulum_mhe_example_param PROPERTIES DEPENDS python_pendulum_mhe_ocp_closed_loop_example)
+    # Directory pendulum_on_cart/mhe
+    set_tests_properties(python_pendulum_mhe_example_minimal PROPERTIES DEPENDS python_pendulum_mhe_example_noisy_param)
+    set_tests_properties(python_pendulum_mhe_example_noisy_param PROPERTIES DEPENDS python_pendulum_mhe_example_param)
+    set_tests_properties(python_pendulum_mhe_example_param PROPERTIES DEPENDS python_pendulum_mhe_ocp_closed_loop_example)
 
-# Directory  pendulum_on_cart/solution_sensitivities
-set_tests_properties(python_solution_sensitivities_and_exact_hess PROPERTIES DEPENDS python_value_function_gradient)
-set_tests_properties(python_value_function_gradient PROPERTIES DEPENDS python_policy_gradient)
+    # Directory  pendulum_on_cart/solution_sensitivities
+    set_tests_properties(python_solution_sensitivities_and_exact_hess PROPERTIES DEPENDS python_value_function_gradient)
+    set_tests_properties(python_value_function_gradient PROPERTIES DEPENDS python_policy_gradient)
 
-# Directory time_varying
-set_tests_properties(python_time_varying_irk PROPERTIES DEPENDS test_polynomial_controls_and_penalties)
-set_tests_properties(test_polynomial_controls_and_penalties PROPERTIES DEPENDS py_mocp_qp_test)
+    # Directory time_varying
+    set_tests_properties(python_time_varying_irk PROPERTIES DEPENDS test_polynomial_controls_and_penalties)
+    set_tests_properties(test_polynomial_controls_and_penalties PROPERTIES DEPENDS py_mocp_qp_test)
 
-# Directory pendulum_on_cart/ocp
-set_tests_properties(python_pendulum_ocp_example_reuse_code PROPERTIES DEPENDS python_nonuniform_discretization_ocp_example)
-set_tests_properties(python_nonuniform_discretization_ocp_example PROPERTIES DEPENDS python_rti_loop_ocp_example)
-set_tests_properties(python_rti_loop_ocp_example PROPERTIES DEPENDS python_render_simulink_wrapper)
-set_tests_properties(python_render_simulink_wrapper PROPERTIES DEPENDS python_constraints_expression_example)
-set_tests_properties(python_constraints_expression_example PROPERTIES DEPENDS pendulum_optimal_value_gradient)
-set_tests_properties(pendulum_optimal_value_gradient PROPERTIES DEPENDS python_pendulum_ocp_IRK)
-set_tests_properties(python_pendulum_ocp_IRK PROPERTIES DEPENDS python_pendulum_ocp_ERK)
-set_tests_properties(python_pendulum_ocp_ERK PROPERTIES DEPENDS python_pendulum_ocp_GNSF)
-set_tests_properties(python_pendulum_ocp_GNSF PROPERTIES DEPENDS python_example_ocp_dynamics_formulations_cmake)
+    # Directory pendulum_on_cart/ocp
+    set_tests_properties(python_pendulum_ocp_example_reuse_code PROPERTIES DEPENDS python_nonuniform_discretization_ocp_example)
+    set_tests_properties(python_nonuniform_discretization_ocp_example PROPERTIES DEPENDS python_rti_loop_ocp_example)
+    set_tests_properties(python_rti_loop_ocp_example PROPERTIES DEPENDS python_render_simulink_wrapper)
+    set_tests_properties(python_render_simulink_wrapper PROPERTIES DEPENDS python_constraints_expression_example)
+    set_tests_properties(python_constraints_expression_example PROPERTIES DEPENDS pendulum_optimal_value_gradient)
+    set_tests_properties(pendulum_optimal_value_gradient PROPERTIES DEPENDS python_pendulum_ocp_IRK)
+    set_tests_properties(python_pendulum_ocp_IRK PROPERTIES DEPENDS python_pendulum_ocp_ERK)
+    set_tests_properties(python_pendulum_ocp_ERK PROPERTIES DEPENDS python_pendulum_ocp_GNSF)
+    set_tests_properties(python_pendulum_ocp_GNSF PROPERTIES DEPENDS python_example_ocp_dynamics_formulations_cmake)
 
-if(ACADOS_WITH_QPDUNES)
-        set_tests_properties(python_example_ocp_dynamics_formulations_cmake PROPERTIES DEPENDS python_qpDUNES_test)
-endif()
+    if(ACADOS_WITH_QPDUNES)
+    set_tests_properties(python_example_ocp_dynamics_formulations_cmake PROPERTIES DEPENDS python_qpDUNES_test)
+    endif()
 
 endif()
