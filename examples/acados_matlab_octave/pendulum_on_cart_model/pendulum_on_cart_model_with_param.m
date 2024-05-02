@@ -77,7 +77,7 @@ expr_ext_cost = expr_ext_cost_e + sym_u' * W_u * sym_u;
 cost_expr_y = vertcat(sym_x, sym_u);
 W = blkdiag(W_x, W_u);
 model.cost_expr_y_e = sym_x;
-model.W_e = W_x;
+model.cost_W_e = W_x;
 
 sym_p = M;
 
@@ -91,10 +91,14 @@ model.sym_p = sym_p;
 model.dyn_expr_f_expl = expr_f_expl;
 model.dyn_expr_f_impl = expr_f_impl;
 model.constr_expr_h = expr_h;
-model.constr_expr_ext_cost = expr_ext_cost;
-model.constr_expr_ext_cost_e = expr_ext_cost_e;
+model.constr_expr_h_0 = expr_h;
+
+model.cost_expr_ext_cost = expr_ext_cost;
+model.cost_expr_ext_cost_e = expr_ext_cost_e;
 
 model.cost_expr_y = cost_expr_y;
+model.cost_expr_y_0 = cost_expr_y;
 model.cost_W = W;
+model.cost_W_0 = W;
 
 end
