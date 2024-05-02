@@ -29,8 +29,8 @@
 #
 
 
-# MATLAB / OCTAVE
-if(ACADOS_MATLAB OR ACADOS_OCTAVE)
+# OCTAVE
+if(ACADOS_OCTAVE)
     add_test(NAME octave_test_dim_check
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
         octave --no-gui --no-window-system ./run_test_dim_check.m)
