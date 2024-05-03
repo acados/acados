@@ -52,7 +52,7 @@ from .builders import CMakeBuilder
 from .acados_ocp import AcadosOcp
 from .acados_multiphase_ocp import AcadosMultiphaseOcp
 from .gnsf.detect_gnsf_structure import detect_gnsf_structure
-from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_python_interface_path,
+from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir,
                     make_object_json_dumpable, set_up_imported_gnsf_model, verbose_system_call)
 
 
@@ -235,11 +235,11 @@ class AcadosOcpSolver:
 
         # find out if acados was compiled with OpenMP
         try:
-            self.acados_lib_uses_omp = getattr(self.__acados_lib, 'omp_get_thread_num') is not None
+            self.__acados_lib_uses_omp = getattr(self.__acados_lib, 'omp_get_thread_num') is not None
         except AttributeError as e:
-            self.acados_lib_uses_omp = False
+            self.__acados_lib_uses_omp = False
         if verbose:
-            if self.acados_lib_uses_omp:
+            if self.__acados_lib_uses_omp:
                 print('acados was compiled with OpenMP.')
             else:
                 print('acados was compiled without OpenMP.')
