@@ -189,7 +189,7 @@ add_test(NAME py_ddp_chen_allgoewer
 
 add_test(NAME py_hour_glass_p2p_motion
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/unconstrained_ocps/hour_glass_p2p_motion
-        python hour_glass_time_optimal_p2p_motion_ocp.py)
+        python hour_glass_time_optimal_p2p_motion.py)
 
 add_test(NAME py_ddp_rockit_hello_world
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/unconstrained_ocps/rockit_hello_world
