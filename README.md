@@ -5,18 +5,17 @@
 <!-- [![codecov](https://codecov.io/gh/acados/acados/branch/master/graph/badge.svg)](https://codecov.io/gh/acados/acados) -->
 
 Fast and embedded solvers for nonlinear optimal control.
+`acados` is written in `C` and offers interfaces to the programming languages `Python`, `MATLAB` and `Octave`.
 
 ## General
-- `acados` offers fast
-  - fast SQP-type solvers for Nonlinear Programming (NLP) formulations with an Optimal Control Problem (OCP) structure
-  - efficient integration methods to solve initial value problems
-    - with ODE or index-1 DAE
-    - efficient first and second-order sensitivity propagation of the results
-<!-- Sequential Quadratic Programming (SQP) -->
-- `acados` offers interfaces to the programming languages `C`, `Python`, `MATLAB` and `Octave`
+- `acados` implements
+  1. fast SQP-type solvers for Nonlinear Programming (NLP) formulations with an Optimal Control Problem (OCP) structure
+  2. efficient integration methods, also called *integrators* to solve initial value problems with dynamic systems given as an ODE or index-1 DAE.
+  These integrators can efficiently compute first and second-order sensitivities of the results.
 
 ## Documentation
 - Documentation can be found on [docs.acados.org](https://docs.acados.org/)
+- An overview on the interfaces can be found at [docs.acados.org/interfaces](https://docs.acados.org/interfaces)
 
 ## Forum
 - Forum: If you have any `acados`-related question, feel free to post on our forum [discourse.acados.org](https://discourse.acados.org/).
@@ -27,9 +26,3 @@ Fast and embedded solvers for nonlinear optimal control.
 ## Installation
 Instructions can be found on
 [docs.acados.org/installation](https://docs.acados.org/installation)
-
-## `acados` interfaces
-`acados` written in `C` and offers interfaces to the programming languages `C`, `Python`, `MATLAB` and `Octave`.
-
-An overview can be found at:
-[docs.acados.org/interfaces](https://docs.acados.org/interfaces)
