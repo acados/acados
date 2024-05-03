@@ -43,14 +43,8 @@ extern "C" {
 #include "acados/sim/sim_common.h"
 
 #include "blasfeo/include/blasfeo_common.h"
-// #include "blasfeo/include/blasfeo_d_aux.h"
-// #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
-// #include "blasfeo/include/blasfeo_d_blas.h"
-// #include "blasfeo/include/blasfeo_d_kernel.h"
-// #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
-// #include "blasfeo/include/blasfeo_target.h"
 
-/* 
+/*
 GNSF - Generalized Nonlinear Static Feedback Model
 has the following form
 https://github.com/acados/acados/files/3359595/gnsf_structure_blo.pdf

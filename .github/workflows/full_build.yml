@@ -137,6 +137,7 @@ jobs:
         release: R2021a
         cache: true
 
+    # just needed for blasfeo_target.h
     - name: Configure CMake
       shell: bash
       working-directory: ${{runner.workspace}}/acados/build
@@ -181,6 +182,7 @@ jobs:
         products: Simulink Simulink_Test
         cache: true
 
+    # just needed for blasfeo_target.h
     - name: Configure CMake
       shell: bash
       working-directory: ${{runner.workspace}}/acados/build
