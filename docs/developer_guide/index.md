@@ -1,16 +1,14 @@
 # Developer Guide
-
 This page contains additional information for people who want to extend `acados`.
 
-## Contributions
-are handled via Pull Requests (PR) on Github
+## Contributing
+Contributions are handled via pull requests on Github
 - Fork the project
 - Push your changes to your fork
 - Open a pull request https://github.com/acados/acados
 - Describe what you changed and why.
 - Rather make minimal changes
 - Rather more commits than less
-
 
 ## Memory management in `acados`
 The following are guidelines on how memory should be assigned for an `acados` structure `astruct`.
@@ -23,7 +21,6 @@ Thus, it should end with:
 ```
     make_int_multiple_of(8, &size);
 ```
-
 
 ### `astruct_assign()`
 Should assign its members in the following order:
@@ -46,7 +43,6 @@ Should assign its members in the following order:
 ```
 
 - Align to 8 bytes, since `astruct` might contain `int`s and the pointers were assigned.
-
 
 - Assign "substructures", i.e. structures that `astruct` has pointers to:
 ```
@@ -71,7 +67,6 @@ Should assign its members in the following order:
 ```
 
 - Align to 8 bytes, can be skipped if no pointers have been assigned
-
 
 - Assign integers
 ```

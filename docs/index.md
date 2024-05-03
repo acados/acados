@@ -22,7 +22,6 @@
 
 ```
 
-
 Fast and embedded solvers for nonlinear optimal control.
 
 - `acados` source code is hosted on [Github](https://github.com/acados/acados).
@@ -31,7 +30,7 @@ Contributions via pull requests are welcome!
 - `acados` is mainly developed by the [syscop group around Prof. Moritz Diehl, the Systems Control and Optimization Laboratory, at the University of Freiburg.](https://www.syscop.de/).
 
 
-# About `acados`
+## About `acados`
 
 `acados` is a software package for the efficient solution of optimal control and estimation problems.
 <!-- It is the successor of the [`ACADO`](https://acado.github.io/) software package developed at KU Leuven and University of Freiburg by the team of Prof. Moritz Diehl. -->
@@ -47,82 +46,25 @@ The back-end of acados uses the high-performance linear algebra package [`BLASFE
 `MATLAB`, `Octave` and `Python` interfaces can be used to conveniently describe optimal control problems and generate self-contained C code that can be readily deployed on embedded platforms.
 
 
-# Citing
-If you are using `acados` in your scientific work, please cite the original journal publication.
+## Problem Formulation
+
+Since `acados` mainly aims on providing SQP type methods for optimal control, it naturally needs optimal control structured nonlinear programming formulations (OCP NLP) and quadratic programming (QP) formulations to tackle the subproblems within SQP.
+
+### Optimal control structured NLP (OCP NLP)
+
+The problem formulation targeted by `acados` OCP solver is stated here:
+[https://github.com/acados/acados/blob/master/docs/problem_formulation/problem_formulation_ocp_mex.pdf](https://github.com/acados/acados/blob/master/docs/problem_formulation/problem_formulation_ocp_mex.pdf)
 
 
-```latex
-@Article{Verschueren2021,
-  Title                    = {acados -- a modular open-source framework for fast embedded optimal control},
-  Author                   = {Robin Verschueren and Gianluca Frison and Dimitris Kouzoupis and Jonathan Frey and Niels van Duijkeren and Andrea Zanelli and Branimir Novoselnik and Thivaharan Albin and Rien Quirynen and Moritz Diehl},
-  Journal                  = {Mathematical Programming Computation},
-  Year                     = {2021},
-}
-```
+### QP formulations (dense and OCP structured)
 
-## Publications on advanced `acados` features:
-If you are using some of the following advanced features of `acados`, please additionally cite the corresponding publications.
+`acados` relies on `HPIPM` for reformulating QP problems via (partial) condensing and expansion routines.
+In order to use them efficiently, we use the flexible QP formulations from `HPIPM`.
+Those are the optimal control structured quadratic programming formulation (OCP QP) and the
+dense QP formulation.
 
-### Fast integrators with sensitivity propagation for use in CasADi
-This paper demonstrates the efficiency of `acados` integrators, compared with integrators available in CasADi.
-Additionally it describes the [`casados-integrator`](https://github.com/FreyJo/casados-integrators) a wrapper which allows using the `acados` integrators within a `CasADi` NLP solver, like IPOPT.
+Both problem formulations are documented in the [`HPIPM guide`](https://github.com/giaf/hpipm/blob/master/doc/guide.pdf).
 
-```latex
-@InProceedings{Frey2023,
-  Title                    = {Fast integrators with sensitivity propagation for use in {C}as{AD}i},
-  Author                   = {Frey, Jonathan and De Schutter, Jochem and Diehl, Moritz},
-  Booktitle                = ECC,
-  Year                     = {2023},
-}
-```
-
-### Gauss-Newton Runge-Kutta (GNRK) integrators for efficient discretization of OCPs with long horizons and least-squares costs
-
-The GNRK integration scheme can be used by setting the option `cost_discretization = 'INTEGRATOR'`.
-This paper additionally demonstrates the effectiveness of using nonuniform discretization grids, and in particular in combination with GNRK.
-```latex
-@InProceedings{Frey2023b,
-  Title                    = {{G}auss-{N}ewton {R}unge-{K}utta Integration for Efficient Discretization of Optimal Control Problems with Long Horizons and Least-Squares Costs},
-  Author                   = {Jonathan Frey and Katrin Baumgärtner and Moritz Diehl},
-  Booktitle                = {accepted for ECC 2024},
-  Url                      = {https://arxiv.org/abs/2310.00618}
-}
-```
-
-### Efficient Zero-Order Robust Optimization (zoRO) for Real-Time Model Predictive Control with acados
-```latex
-@InProceedings{Frey2024,
-  Title                    = {Efficient Zero-Order Robust Optimization for Real-Time Model Predictive Control with acados},
-  Author                   = {Jonathan Frey and Yunfan Gao and Florian Messerer and Amon Lahr and Melanie N Zeilinger and Moritz Diehl},
-  Booktitle                = ECC,
-  Year                     = {2024},
-}
-```
-
-### Structure exploiting implicit Runge-Kutta method: GNSF
-The GNSF IRK integrator be used by setting the option `integrator_tpye = 'GNSF'`.
-```latex
-@InProceedings{Frey2019,
-  Title                    = {Detecting and Exploiting {G}eneralized {N}onlinear {S}tatic {F}eedback
-Structures in {DAE} Systems for {MPC}},
-  Author                   = {Jonathan Frey and Rien Quirynen and Dimitris Kouzoupis and Gianluca Frison and
-Jens Geisler and Axel Schild and Moritz Diehl},
-  Booktitle                = ECC,
-  Year                     = {2019},
-}
-```
-
-
-
-<!-- ## First acados publication in Proceedings of the IFAC Conference
-```latex
-@inproceedings{Verschueren2018,
-    booktitle = {Proceedings of the IFAC Conference on Nonlinear Model Predictive Control (NMPC)},
-    title = {Towards a modular software package for embedded optimization},
-    year = {2018},
-    author = {Robin Verschueren and Gianluca Frison and Dimitris Kouzoupis and Niels van Duijkeren and Andrea Zanelli and Rien Quirynen and Moritz Diehl},
-}
-``` -->
 
 # Documentation page overview
 
@@ -130,16 +72,13 @@ Jens Geisler and Axel Schild and Moritz Diehl},
 Documentation latest build: |today|
 ```
 
-
 ```eval_rst
 .. toctree::
     :maxdepth: 2
 
     Home<self>
-    problem_formulation/index
+    citing/index
     installation/index
-    examples/index
-    embedded_workflow/index
     list_of_projects/index
     developer_guide/index
 ```
@@ -154,4 +93,5 @@ Documentation latest build: |today|
     python_interface/index
     matlab_octave_interface/index
     c_interface/index
+    embedded_workflow/index
 ```
