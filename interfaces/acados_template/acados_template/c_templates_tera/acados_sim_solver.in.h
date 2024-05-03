@@ -80,6 +80,7 @@ typedef struct {{ model.name }}_sim_solver_capsule
 
 ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_sim_create({{ model.name }}_sim_solver_capsule *capsule);
 ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_sim_solve({{ model.name }}_sim_solver_capsule *capsule);
+ACADOS_SYMBOL_EXPORT void {{ model.name }}_acados_sim_batch_solve({{ model.name }}_sim_solver_capsule **capsules, int N_batch);
 ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_sim_free({{ model.name }}_sim_solver_capsule *capsule);
 ACADOS_SYMBOL_EXPORT int {{ model.name }}_acados_sim_update_params({{ model.name }}_sim_solver_capsule *capsule, double *value, int np);
 

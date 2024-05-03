@@ -291,7 +291,7 @@ cdef class AcadosOcpSolverCython:
             self.time_value_grad = time.time() - t0
 
         else:
-            raise Exception(f"AcadosOcpSolver.eval_and_get_optimal_value_gradient(): Unknown field: {with_respect_to=}")
+            raise Exception(f"AcadosOcpSolver.eval_and_get_optimal_value_gradient(): Unknown field: with_respect_to = {with_respect_to}")
         return grad
 
 
@@ -368,7 +368,7 @@ cdef class AcadosOcpSolverCython:
             self.time_solution_sens_lin = time.time() - t0
 
         else:
-            raise Exception(f"AcadosOcpSolver.eval_solution_sensitivity(): Unknown field: {with_respect_to=}")
+            raise Exception(f"AcadosOcpSolver.eval_solution_sensitivity(): Unknown field: with_respect_to = {with_respect_to}")
 
         # initialize jacobians with zeros
         for s in stages_:

@@ -2880,6 +2880,26 @@ int {{ model.name }}_acados_solve({{ model.name }}_solver_capsule* capsule)
 }
 
 
+void {{ model.name }}_acados_batch_solve({{ model.name }}_solver_capsule ** capsules, int N_batch)
+{
+{% if solver_options.num_threads_in_batch_solve > 1 %}
+    int num_threads_bkp = omp_get_num_threads();
+    omp_set_num_threads({{ solver_options.num_threads_in_batch_solve }});
+
+    #pragma omp parallel for
+{%- endif %}
+    for (int i = 0; i < N_batch; i++)
+    {
+        ocp_nlp_solve(capsules[i]->nlp_solver, capsules[i]->nlp_in, capsules[i]->nlp_out);
+    }
+
+{% if solver_options.num_threads_in_batch_solve > 1 %}
+    omp_set_num_threads( num_threads_bkp );
+{%- endif %}
+    return;
+}
+
+
 int {{ model.name }}_acados_free({{ model.name }}_solver_capsule* capsule)
 {
     // before destroying, keep some info

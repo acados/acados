@@ -901,6 +901,9 @@
         ],
         "model_external_shared_lib_name": [
             "str"
+        ],
+        "num_threads_in_batch_solve": [
+            "int"
         ]
     }
 }

@@ -33,7 +33,7 @@ import os
 import numpy as np
 from .acados_model import AcadosModel
 from .acados_dims import AcadosSimDims
-from .utils import get_acados_path, get_shared_lib_ext, casadi_length, is_empty, is_column
+from .utils import get_acados_path, get_shared_lib_ext
 
 class AcadosSimOpts:
     """
@@ -57,6 +57,7 @@ class AcadosSimOpts:
         self.__output_z = True
         self.__sim_method_jac_reuse = 0
         self.__ext_fun_compile_flags = '-O2'
+        self.__num_threads_in_batch_solve: int = 1
 
     @property
     def integrator_type(self):
@@ -138,6 +139,16 @@ class AcadosSimOpts:
         Default: '-O2'.
         """
         return self.__ext_fun_compile_flags
+
+    @property
+    def num_threads_in_batch_solve(self):
+        """
+        Integer indicating how many threads should be used within the batch solve.
+        If more than one thread should be used, the sim solver is compiled with openmp.
+        Default: 1.
+        """
+        return self.__num_threads_in_batch_solve
+
 
     @ext_fun_compile_flags.setter
     def ext_fun_compile_flags(self, ext_fun_compile_flags):
@@ -237,6 +248,13 @@ class AcadosSimOpts:
             self.__sim_method_jac_reuse = sim_method_jac_reuse
         else:
             raise Exception('Invalid sim_method_jac_reuse value. sim_method_jac_reuse must be 0 or 1.')
+
+    @num_threads_in_batch_solve.setter
+    def num_threads_in_batch_solve(self, num_threads_in_batch_solve):
+        if isinstance(num_threads_in_batch_solve, int) and num_threads_in_batch_solve > 0:
+            self.__num_threads_in_batch_solve = num_threads_in_batch_solve
+        else:
+            raise Exception('Invalid num_threads_in_batch_solve value. num_threads_in_batch_solve must be a positive integer.')
 
 class AcadosSim:
     """

@@ -3,6 +3,7 @@
         "u0": 1,
         "utraj": 0,
         "xtraj": 0,
+        "ztraj": 0,
         "solver_status": 1,
         "cost_value": 0,
         "KKT_residual": 1,
@@ -40,7 +41,8 @@
         "cost_W_e": 0,
         "reset_solver": 0,
         "x_init": 0,
-        "u_init": 0
+        "u_init": 0,
+        "rti_phase": 0
     },
     "samplingtime": "t0"
 }

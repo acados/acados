@@ -94,6 +94,7 @@ class AcadosOcpOptions:
         self.__hpipm_mode = 'BALANCE'
         self.__with_solution_sens_wrt_params = False
         self.__with_value_sens_wrt_params = False
+        self.__num_threads_in_batch_solve: int = 1
         # TODO: move those out? they are more about generation than about the acados OCP solver.
         self.__ext_fun_compile_flags = '-O2'
         self.__model_external_shared_lib_dir = None
@@ -714,6 +715,16 @@ class AcadosOcpOptions:
         """
         return self.__with_value_sens_wrt_params
 
+    @property
+    def num_threads_in_batch_solve(self):
+        """
+        Integer indicating how many threads should be used within the batch solve.
+        If more than one thread should be used, the solver is compiled with openmp.
+        Default: 1.
+        """
+        return self.__num_threads_in_batch_solve
+
+
     @qp_solver.setter
     def qp_solver(self, qp_solver):
         qp_solvers = ('PARTIAL_CONDENSING_HPIPM', \
@@ -725,6 +736,7 @@ class AcadosOcpOptions:
         else:
             raise Exception('Invalid qp_solver value. Possible values are:\n\n' \
                     + ',\n'.join(qp_solvers) + '.\n\nYou have: ' + qp_solver + '.\n\n')
+
 
     @regularize_method.setter
     def regularize_method(self, regularize_method):
@@ -1203,6 +1215,13 @@ class AcadosOcpOptions:
             self.__ext_cost_num_hess = ext_cost_num_hess
         else:
             raise Exception('Invalid ext_cost_num_hess value. ext_cost_num_hess takes one of the values 0, 1.')
+
+    @num_threads_in_batch_solve.setter
+    def num_threads_in_batch_solve(self, num_threads_in_batch_solve):
+        if isinstance(num_threads_in_batch_solve, int) and num_threads_in_batch_solve > 0:
+            self.__num_threads_in_batch_solve = num_threads_in_batch_solve
+        else:
+            raise Exception('Invalid num_threads_in_batch_solve value. num_threads_in_batch_solve must be a positive integer.')
 
     def set(self, attr, value):
         setattr(self, attr, value)

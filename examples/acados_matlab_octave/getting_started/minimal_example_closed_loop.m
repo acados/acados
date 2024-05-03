@@ -66,7 +66,7 @@ plant_sim_method_num_stages = 3;
 plant_sim_method_num_steps = 3;
 
 %% model dynamics
-model = pendulum_on_cart_model();
+model = pendulum_on_cart_model_with_param();
 nx = model.nx;
 nu = model.nu;
 
@@ -79,6 +79,7 @@ ocp_model.set('T', T);
 % symbolics
 ocp_model.set('sym_x', model.sym_x);
 ocp_model.set('sym_u', model.sym_u);
+ocp_model.set('sym_p', model.sym_p);
 ocp_model.set('sym_xdot', model.sym_xdot);
 
 % nonlinear-least squares cost
@@ -126,13 +127,16 @@ ocp_opts.set('sim_method_num_steps', model_sim_method_num_steps);
 
 ocp_opts.set('qp_solver', qp_solver);
 ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
+ocp_opts.set('globalization', 'merit_backtracking') % turns on globalization
 % ... see ocp_opts.opts_struct to see what other fields can be set
 
 %% create ocp solver
 ocp = acados_ocp(ocp_model, ocp_opts);
 
-x_traj_init = zeros(nx, N+1);
-u_traj_init = zeros(nu, N);
+% set parameter for all stages
+for i = 0:N
+    ocp.set('p', 1.);
+end
 
 %% plant: create acados integrator
 % acados sim model
@@ -142,6 +146,7 @@ sim_model.set('T', h);  % simulate one time step
 
 sim_model.set('sym_x', model.sym_x);
 sim_model.set('sym_u', model.sym_u);
+sim_model.set('sym_p', model.sym_p);
 sim_model.set('sym_xdot', model.sym_xdot);
 sim_model.set('dyn_type', 'implicit');
 sim_model.set('dyn_expr_f', model.dyn_expr_f_impl);
@@ -153,6 +158,9 @@ sim_opts.set('num_stages', plant_sim_method_num_stages);
 sim_opts.set('num_steps', plant_sim_method_num_steps);
 
 sim = acados_sim(sim_model, sim_opts);
+
+% set parameter
+sim.set('p', 1.05);
 
 %% simulation
 N_sim = 150;

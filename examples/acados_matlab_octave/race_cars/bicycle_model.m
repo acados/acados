@@ -38,7 +38,7 @@ import casadi.*
 model = struct();
 constraint = struct();
 
-model_name = 'bicycle_model';
+model_name = 'Spatialbicycle_model';
 
 % load track parameters
 [s0, ~, ~, ~, kapparef] = getTrack(track);

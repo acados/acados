@@ -354,6 +354,12 @@ sfun_input_names = [sfun_input_names; 'u_init [{{ dims.nu * (dims.N) }}]'];
 i_in = i_in + 1;
 {%- endif %}
 
+{%- if simulink_opts.inputs.rti_phase %}  {#- rti_phase #}
+input_note = strcat(input_note, num2str(i_in), ') rti_phase, size [1]\n ');
+sfun_input_names = [sfun_input_names; 'rti_phase [1]'];
+i_in = i_in + 1;
+{%- endif %}
+
 fprintf(input_note)
 
 disp(' ')
@@ -380,6 +386,12 @@ sfun_output_names = [sfun_output_names; 'utraj [{{ dims.nu * dims.N }}]'];
 i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') xtraj, state concatenated for nodes 0 to N, size [{{ dims.nx * (dims.N + 1) }}]\n ');
 sfun_output_names = [sfun_output_names; 'xtraj [{{ dims.nx * (dims.N + 1) }}]'];
+{%- endif %}
+
+{%- if simulink_opts.outputs.ztraj == 1 %}
+i_out = i_out + 1;
+output_note = strcat(output_note, num2str(i_out), ') ztraj, algebraic states concatenated for nodes 0 to N-1, size [{{ dims.nz * dims.N }}]\n ');
+sfun_output_names = [sfun_output_names; 'ztraj [{{ dims.nz * dims.N }}]'];
 {%- endif %}
 
 {%- if simulink_opts.outputs.solver_status == 1 %}
