@@ -25,10 +25,10 @@
 
 Fast and embedded solvers for nonlinear optimal control.
 
-- `acados` __source code__ is hosted on [Github](https://github.com/acados/acados).
-Contributions via Pull requests are welcome!
-- `acados` has a discourse based [__forum__](https://discourse.acados.org/).
-- `acados` is mainly developed by the group around Prof. Moritz Diehl, the Systems Control and Optimization Laboratory (__syscop__), at the University of Freiburg. [More infos on the syscop web page](https://www.syscop.de/).
+- `acados` source code is hosted on [Github](https://github.com/acados/acados).
+Contributions via pull requests are welcome!
+- `acados` has a discourse based [forum](https://discourse.acados.org/).
+- `acados` is mainly developed by the [syscop group around Prof. Moritz Diehl, the Systems Control and Optimization Laboratory, at the University of Freiburg.](https://www.syscop.de/).
 
 
 # About `acados`
@@ -38,31 +38,32 @@ Contributions via Pull requests are welcome!
 It provides a collection of computationally efficient building blocks tailored to optimal control and estimation problems.
 Among others, it implements:
 - modules for the integration of ordinary differential equations (ODE) and differential-algebraic equations (DAE),
-- interfaces to state-of-the-art QP solvers like [`HPIPM`](https://github.com/giaf/hpipm), `qpOASES`, [`DAQP`](https://github.com/darnstrom/daqp) and [`OSQP`](https://github.com/oxfordcontrol/osqp),
+- interfaces to state-of-the-art QP solvers like [`HPIPM`](https://github.com/giaf/hpipm), `qpOASES`, [`DAQP`](https://github.com/darnstrom/daqp) and [`OSQP`](https://github.com/oxfordcontrol/osqp)
 - (partial) condensing routines
 - nonlinear programming solvers for optimal control structured problems
 - real-time algorithms, such as the real-time iteration (RTI) and Advanced-Step Real-time iteration (AS-RTI) algorithms
+
 The back-end of acados uses the high-performance linear algebra package [`BLASFEO`](https://github.com/giaf/blasfeo), in order to boost computational efficiency for small to medium scale matrices typical of embedded optimization applications.
 `MATLAB`, `Octave` and `Python` interfaces can be used to conveniently describe optimal control problems and generate self-contained C code that can be readily deployed on embedded platforms.
 
 
 # Citing
+If you are using `acados` in your scientific work, please cite the original journal publication.
 
-### First journal publication on the `acados` software framework:
+
 ```latex
 @Article{Verschueren2021,
   Title                    = {acados -- a modular open-source framework for fast embedded optimal control},
   Author                   = {Robin Verschueren and Gianluca Frison and Dimitris Kouzoupis and Jonathan Frey and Niels van Duijkeren and Andrea Zanelli and Branimir Novoselnik and Thivaharan Albin and Rien Quirynen and Moritz Diehl},
   Journal                  = {Mathematical Programming Computation},
   Year                     = {2021},
-  ISSN                     = {1867-2957},
 }
 ```
 
 ## Publications on advanced `acados` features:
+If you are using some of the following advanced features of `acados`, please additionally cite the corresponding publications.
 
-
-### Fast integrators with sensitivity propagation for use
+### Fast integrators with sensitivity propagation for use in CasADi
 This paper demonstrates the efficiency of `acados` integrators, compared with integrators available in CasADi.
 Additionally it describes the [`casados-integrator`](https://github.com/FreyJo/casados-integrators) a wrapper which allows using the `acados` integrators within a `CasADi` NLP solver, like IPOPT.
 
@@ -146,7 +147,6 @@ Documentation latest build: |today|
     algorithm_overview/index
     installation/index
     examples/index
-    faq/index
     embedded_workflow/index
     list_of_projects/index
     developer_guide/index
@@ -154,7 +154,7 @@ Documentation latest build: |today|
 ```eval_rst
 .. toctree::
     :maxdepth: 2
-    :caption: Contents
+    :caption: Interfaces
 
     interfaces/index
     python_interface/index
