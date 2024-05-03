@@ -77,6 +77,7 @@ typedef struct
     bool with_adaptive_levenberg_marquardt;
     double adaptive_levenberg_marquardt_lam;
     double adaptive_levenberg_marquardt_mu_min;
+    double adaptive_levenberg_marquardt_mu0;
 
 } ocp_nlp_ddp_opts;
 

@@ -277,6 +277,11 @@ void ocp_nlp_ddp_opts_set(void *config_, void *opts_, const char *field, void* v
             double* adaptive_levenberg_marquardt_mu_min = (double *) value;
             opts->adaptive_levenberg_marquardt_mu_min = *adaptive_levenberg_marquardt_mu_min;
         }
+        else if (!strcmp(field, "adaptive_levenberg_marquardt_mu0"))
+        {
+            double* adaptive_levenberg_marquardt_mu0 = (double *) value;
+            opts->adaptive_levenberg_marquardt_mu0 = *adaptive_levenberg_marquardt_mu0;
+        }
         else
         {
             ocp_nlp_opts_set(config, nlp_opts, field, value);
@@ -803,8 +808,8 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     int qp_status = 0;
     int qp_iter = 0;
     mem->alpha = 0.0;
-    mem->mu = 1e-3;
-    mem->mu_bar = mem->mu;
+    mem->mu = opts->adaptive_levenberg_marquardt_mu0;
+    mem->mu_bar = opts->adaptive_levenberg_marquardt_mu0;
     mem->step_norm = 0.0;
 
 #if defined(ACADOS_WITH_OPENMP)
@@ -836,12 +841,12 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         ///////////////////////////////////////////////////////////////////////
         // This needs to happen before the matrices are evaluated due to regularization!
         // calculate objective function first because hessian evaluation uses the
-        // Levenberg-Marquardt term
+        // Levenberg-Marquardt term and the objective function value is used in the
+        // regularization.
         ///////////////////////////////////////////////////////////////////////
         if (evaluate_cost){
             ocp_nlp_cost_compute(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
         }
-
         // Prepare the regularization here....
         if (opts->with_adaptive_levenberg_marquardt){
             if (ddp_iter == 0){
@@ -1044,6 +1049,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         if (infeasible_initial_guess)
         {
             // Accept the forward simulation to get feasible initial guess
+            mem->alpha = 1.0; //Not sure if this is needed? Otherwise alpha will be zero and not used
             ocp_nlp_ddp_compute_trial_iterate(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, mem->alpha);
             copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
             infeasible_initial_guess = false;
