@@ -331,6 +331,9 @@ class AcadosOcpSolver:
         getattr(self.shared_lib, f"{self.name}_acados_free").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{self.name}_acados_free").restype = c_int
 
+        getattr(self.shared_lib, f"{self.name}_acados_free_capsule").argtypes = [c_void_p]
+        getattr(self.shared_lib, f"{self.name}_acados_free_capsule").restype = c_int
+
         getattr(self.shared_lib, f"{self.name}_acados_update_params_sparse").argtypes = [c_void_p, c_int, POINTER(c_int), POINTER(c_double), c_int]
         getattr(self.shared_lib, f"{self.name}_acados_update_params_sparse").restype = c_int
 
@@ -1502,12 +1505,7 @@ class AcadosOcpSolver:
 
     def __del__(self):
         if self.solver_created:
-            getattr(self.shared_lib, f"{self.name}_acados_free").argtypes = [c_void_p]
-            getattr(self.shared_lib, f"{self.name}_acados_free").restype = c_int
             getattr(self.shared_lib, f"{self.name}_acados_free")(self.capsule)
-
-            getattr(self.shared_lib, f"{self.name}_acados_free_capsule").argtypes = [c_void_p]
-            getattr(self.shared_lib, f"{self.name}_acados_free_capsule").restype = c_int
             getattr(self.shared_lib, f"{self.name}_acados_free_capsule")(self.capsule)
 
             try:
