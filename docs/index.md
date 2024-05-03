@@ -133,24 +133,18 @@ Documentation latest build: |today|
 
 ```eval_rst
 .. toctree::
+    :maxdepth: 2
 
     Home<self>
-```
-
-
-```eval_rst
-.. toctree::
-    :maxdepth: 2
-    :caption: Contents
-
     problem_formulation/index
-    algorithm_overview/index
     installation/index
     examples/index
     embedded_workflow/index
     list_of_projects/index
     developer_guide/index
 ```
+
+
 ```eval_rst
 .. toctree::
     :maxdepth: 2
