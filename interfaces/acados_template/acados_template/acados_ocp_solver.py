@@ -310,8 +310,6 @@ class AcadosOcpSolver:
 
         self.__acados_lib.ocp_nlp_get_at_stage.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
 
-        getattr(self.shared_lib, f'{self.name}_acados_update_qp_solver_cond_N').argtypes = [c_void_p, c_int]
-        getattr(self.shared_lib, f'{self.name}_acados_update_qp_solver_cond_N').restype = c_int
 
         getattr(self.shared_lib, f"{self.name}_acados_solve").argtypes = [c_void_p]
         getattr(self.shared_lib, f"{self.name}_acados_solve").restype = c_int
@@ -340,6 +338,10 @@ class AcadosOcpSolver:
         getattr(self.shared_lib, f"{self.name}_acados_update_params").argtypes = [c_void_p, c_int, POINTER(c_double), c_int]
         getattr(self.shared_lib, f"{self.name}_acados_update_params").restype = c_int
 
+        # these do not work for multi phase OCPs
+        if isinstance(self.acados_ocp, AcadosOcp):
+            getattr(self.shared_lib, f'{self.name}_acados_update_qp_solver_cond_N').argtypes = [c_void_p, c_int]
+            getattr(self.shared_lib, f'{self.name}_acados_update_qp_solver_cond_N').restype = c_int
         return
 
     def __get_pointers_solver(self):
@@ -610,13 +612,11 @@ class AcadosOcpSolver:
 
         if with_respect_to == "initial_state":
             nx = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "x".encode('utf-8'))
-
             ngrad = nx
             field = "ex"
 
         elif with_respect_to == "params_global":
             nparam = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, 0, "p".encode('utf-8'))
-
             ngrad = nparam
             field = "params_global"
 
@@ -756,22 +756,16 @@ class AcadosOcpSolver:
         if stage_ == self.N and field_ == 'pi':
             raise Exception(f'AcadosOcpSolver.get(stage={stage_}, field={field_}): field \'{field_}\' does not exist at final stage {stage_}.')
 
-        if field_ in sens_fields:
-            field_ = field_.replace('sens_', '')
-        field = field_.encode('utf-8')
+        field = field_.replace('sens_', '') if field_ in sens_fields else field_
+        field = field.encode('utf-8')
 
-        dims = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, \
-            self.nlp_dims, self.nlp_out, stage_, field)
+        dims = self.__acados_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, field)
 
         out = np.ascontiguousarray(np.zeros((dims,)), dtype=np.float64)
         out_data = cast(out.ctypes.data, POINTER(c_double))
 
-        if (field_ in out_fields):
-            self.__acados_lib.ocp_nlp_out_get(self.nlp_config, \
-                self.nlp_dims, self.nlp_out, stage_, field, out_data)
-        elif field_ in sens_fields:
-            self.__acados_lib.ocp_nlp_out_get(self.nlp_config, \
-                self.nlp_dims, self.sens_out, stage_, field, out_data)
+        out_pointer = self.nlp_out if field_ in out_fields else self.sens_out
+        self.__acados_lib.ocp_nlp_out_get(self.nlp_config, self.nlp_dims, out_pointer, stage_, field, out_data)
 
         return out
 
