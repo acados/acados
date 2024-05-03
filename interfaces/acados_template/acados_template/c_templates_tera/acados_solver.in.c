@@ -2326,6 +2326,9 @@ void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* 
     double adaptive_levenberg_marquardt_mu_min = {{ solver_options.adaptive_levenberg_marquardt_mu_min }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "adaptive_levenberg_marquardt_mu_min", &adaptive_levenberg_marquardt_mu_min);
 
+    double adaptive_levenberg_marquardt_mu0 = {{ solver_options.adaptive_levenberg_marquardt_mu0 }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "adaptive_levenberg_marquardt_mu0", &adaptive_levenberg_marquardt_mu0);
+
 {%- endif %}
 
 }

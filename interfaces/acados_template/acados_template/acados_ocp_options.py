@@ -108,6 +108,7 @@ class AcadosOcpOptions:
         self.__with_adaptive_levenberg_marquardt = False
         self.__adaptive_levenberg_marquardt_lam = 5.0
         self.__adaptive_levenberg_marquardt_mu_min = 1e-16
+        self.__adaptive_levenberg_marquardt_mu0 = 1e-3
 
     @property
     def qp_solver(self):
@@ -464,11 +465,21 @@ class AcadosOcpOptions:
     def adaptive_levenberg_marquardt_mu_min(self):
         """
         So far: Only relevant for DDP
-        Flag defining the value of lambda in the adaptive levenberg_marquardt.
-        Must be > 1.
+        Flag defining the value of mu_min in the adaptive levenberg_marquardt.
+        Must be > 0.
         type: float
         """
         return self.__adaptive_levenberg_marquardt_mu_min
+    
+    @property
+    def adaptive_levenberg_marquardt_mu0(self):
+        """
+        So far: Only relevant for DDP
+        Flag defining the value of mu0 in the adaptive levenberg_marquardt.
+        Must be > 0.
+        type: float
+        """
+        return self.__adaptive_levenberg_marquardt_mu0
 
     @property
     def tol(self):
@@ -1011,6 +1022,13 @@ class AcadosOcpOptions:
             self.__adaptive_levenberg_marquardt_mu_min = adaptive_levenberg_marquardt_mu_min
         else:
             raise Exception('Invalid adaptive_levenberg_marquardt_mu_min value. adaptive_levenberg_marquardt_mu_min must be a positive float.')
+
+    @adaptive_levenberg_marquardt_mu0.setter
+    def adaptive_levenberg_marquardt_mu0(self, adaptive_levenberg_marquardt_mu0):
+        if isinstance(adaptive_levenberg_marquardt_mu0, float) and adaptive_levenberg_marquardt_mu0 >= 0.0:
+            self.__adaptive_levenberg_marquardt_mu0 = adaptive_levenberg_marquardt_mu0
+        else:
+            raise Exception('Invalid adaptive_levenberg_marquardt_mu0 value. adaptive_levenberg_marquardt_mu0 must be a positive float.')
 
     @as_rti_iter.setter
     def as_rti_iter(self, as_rti_iter):
