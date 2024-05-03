@@ -146,17 +146,11 @@ def is_empty(x):
     if isinstance(x, (MX, SX, DM)):
         return x.is_empty()
     elif isinstance(x, np.ndarray):
-        if np.prod(x.shape) == 0:
-            return True
-        else:
-            return False
+        return True if np.prod(x.shape) == 0 else False
     elif x is None:
         return True
     elif isinstance(x, (set, list)):
-        if len(x)==0:
-            return True
-        else:
-            return False
+        return True if len(x) == 0 else False
     else:
         raise Exception("is_empty expects one of the following types: casadi.MX, casadi.SX, "
                         + "None, numpy array empty list, set. Got: " + str(type(x)))
@@ -267,7 +261,7 @@ def render_template(in_file, out_file, output_dir, json_path, template_glob=None
         os_cmd = os_cmd.replace('\'', '\"')
 
     status = os.system(os_cmd)
-    if (status != 0):
+    if status != 0:
         raise Exception(f'Rendering of {in_file} failed!\n\nAttempted to execute OS command:\n{os_cmd}\n\n')
 
     os.chdir(cwd)
@@ -382,16 +376,6 @@ def acados_dae_model_json_dump(model):
 def set_up_imported_gnsf_model(acados_ocp):
 
     gnsf = acados_ocp.gnsf_model
-
-    # check CasADi version
-    # dump_casadi_version = gnsf['casadi_version']
-    # casadi_version = CasadiMeta.version()
-
-    # if not casadi_version == dump_casadi_version:
-    #     print("WARNING: GNSF model was dumped with another CasADi version.\n"
-    #             + "This might yield errors. Please use the same version for compatibility, serialize version: "
-    #             + dump_casadi_version + " current Python CasADi verison: " + casadi_version)
-    #     input("Press any key to attempt to continue...")
 
     # load model
     phi_fun = Function.deserialize(gnsf['phi_fun'])
