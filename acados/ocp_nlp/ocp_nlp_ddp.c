@@ -803,8 +803,8 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     int qp_status = 0;
     int qp_iter = 0;
     mem->alpha = 0.0;
-    mem->mu = 1.0;
-    mem->mu_bar = 1.0;
+    mem->mu = 1e-3;
+    mem->mu_bar = mem->mu;
     mem->step_norm = 0.0;
 
 #if defined(ACADOS_WITH_OPENMP)
@@ -827,7 +827,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     double reg_param = 0.0;
     bool infeasible_initial_guess = true;
     bool evaluate_cost = true;
-    double time_step = nlp_in->Ts[0];
     if (nlp_opts->print_level > 0){
         printf("'with_adaptive_levenberg_marquardt' option is set to: %s\n", opts->with_adaptive_levenberg_marquardt?"true":"false");
     }
@@ -851,7 +850,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 reg_param_memory = reg_param;
             }
             reg_param = 2*nlp_mem->cost_value*mem->mu;
-            nlp_opts->levenberg_marquardt = (1/time_step)*reg_param; // For the moment divided by time step such that scaling in Levenberg-Marquardt is turned off!
+            nlp_opts->levenberg_marquardt = reg_param; // For the moment divided by time step such that scaling in Levenberg-Marquardt is turned off!
         }
 
         ///////////////////////////////////////////////////////////////////////
@@ -1072,6 +1071,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
             if (opts->with_adaptive_levenberg_marquardt){
             update_mu(mem->alpha, opts, mem);
+
             }
             mem->time_glob += acados_toc(&timer1);
         }
@@ -1184,9 +1184,8 @@ void ocp_nlp_ddp_backtracking_line_search(void *config_, void *dims_, void *nlp_
         }
 
         // IF step size below value, raise error for the moment
-        if (alpha < opts->linesearch_minimum_step_size)
-        {
-            printf("Step size gets too small...Terminating.\n");
+        if (alpha < opts->linesearch_minimum_step_size){
+            printf("Linesearch: Step size gets too small. Terminating.\n");
             exit(1);
         }
     }
