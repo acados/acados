@@ -55,4 +55,6 @@ from .plot_utils import latexify_plot
 
 from .penalty_utils import symmetric_huber_penalty, one_sided_huber_penalty, huber_loss
 
+from .mpc_utils import create_model_with_cost_state
+
 from .zoro_description import ZoroDescription

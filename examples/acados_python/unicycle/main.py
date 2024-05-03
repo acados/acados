@@ -8,6 +8,7 @@ X0 = np.array([0.0, 0.0, 0.0, 0.0, 0.0])  # Intital state
 F_max = 10  # Define the max force allowed
 T_horizon = 2.0  # Define the prediction horizon
 
+
 def create_ocp_solver_description() -> AcadosOcp:
     N_horizon = 50  # Define the number of discretization steps
 
@@ -56,9 +57,9 @@ def create_ocp_solver_description() -> AcadosOcp:
 
     # set options
     ocp.solver_options.qp_solver = "PARTIAL_CONDENSING_HPIPM"  # FULL_CONDENSING_QPOASES
-    ocp.solver_options.hessian_approx = "GAUSS_NEWTON"  # 'GAUSS_NEWTON', 'EXACT'
+    ocp.solver_options.hessian_approx = "GAUSS_NEWTON"
     ocp.solver_options.integrator_type = "IRK"
-    ocp.solver_options.nlp_solver_type = "SQP"  # SQP_RTI, SQP
+    ocp.solver_options.nlp_solver_type = "SQP"
 
     # set prediction horizon
     ocp.solver_options.tf = T_horizon
@@ -67,7 +68,6 @@ def create_ocp_solver_description() -> AcadosOcp:
 
 
 def closed_loop_simulation():
-
 
     # create solvers
     ocp = create_ocp_solver_description()
