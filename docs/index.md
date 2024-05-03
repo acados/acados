@@ -32,13 +32,14 @@ Contributions via pull requests are welcome!
 
 ## About `acados`
 
-`acados` is a software package for the efficient solution of optimal control and estimation problems.
-<!-- It is the successor of the [`ACADO`](https://acado.github.io/) software package developed at KU Leuven and University of Freiburg by the team of Prof. Moritz Diehl. -->
-It provides a collection of computationally efficient building blocks tailored to optimal control and estimation problems.
-Among others, it implements:
+`acados` is a software package providing fast and embedded solvers for nonlinear optimal control.
+Problems can be conveniently formulated using the `CasADi` symbolic framework and the high-level `acados` interfaces.
+
+`acados` provides a collection of computationally efficient building blocks tailored to optimal control structured problems, most prominently optimal control problems (OCP) and moving horizon estimation (MHE) problems.
+Among others, `acados` implements:
 - modules for the integration of ordinary differential equations (ODE) and differential-algebraic equations (DAE),
 - interfaces to state-of-the-art QP solvers like [`HPIPM`](https://github.com/giaf/hpipm), `qpOASES`, [`DAQP`](https://github.com/darnstrom/daqp) and [`OSQP`](https://github.com/oxfordcontrol/osqp)
-- (partial) condensing routines
+- (partial) condensing routines, provided by `HPIPM`
 - nonlinear programming solvers for optimal control structured problems
 - real-time algorithms, such as the real-time iteration (RTI) and Advanced-Step Real-time iteration (AS-RTI) algorithms
 
