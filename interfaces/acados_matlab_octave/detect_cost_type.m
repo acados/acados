@@ -60,7 +60,6 @@ function model = detect_cost_type(model, stage_type)
     nx = length(x);
     nu = length(u);
     nz = length(z);
-    np = length(p);
 
     disp('--------------------------------------------------------------');
     if strcmp(stage_type, 'terminal')
@@ -73,7 +72,6 @@ function model = detect_cost_type(model, stage_type)
         expr_cost = model.cost_expr_ext_cost_0;
         disp('Structure detection for initial cost term');
     end
-    cost_fun = Function('cost_fun', {x, u, z, p}, {expr_cost});
 
     if expr_cost.is_quadratic(x) && expr_cost.is_quadratic(u) && expr_cost.is_quadratic(z) ...
             && ~any(expr_cost.which_depends(p))
@@ -84,6 +82,7 @@ function model = detect_cost_type(model, stage_type)
             ny = 0;
             Vx = []; Vu = []; Vz = []; W = []; y_ref = []; sym_y = [];
         else
+            cost_fun = Function('cost_fun', {x, u, z}, {expr_cost});
             dummy = SX.sym('dummy', 1, 1);
 
             fprintf('Cost function is quadratic -> Reformulating as linear_ls cost.\n');
@@ -145,10 +144,9 @@ function model = detect_cost_type(model, stage_type)
                 x0 = rand(nx,1);
                 u0 = rand(nu,1);
                 z0 = rand(nz,1);
-                p0 = rand(np,1);
 
                 val1 = full(lls_cost_fun(x0, u0, z0));
-                val2 = full(cost_fun(x0, u0, z0, p0));
+                val2 = full(cost_fun(x0, u0, z0));
                 diff_eval = abs(val1-val2);
                 rel_error = diff_eval / max(abs(val1), abs(val2));
                 if rel_error > rel_err_tol
