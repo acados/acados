@@ -60,9 +60,7 @@ function model = detect_cost_type(model, stage_type)
     nx = length(x);
     nu = length(u);
     nz = length(z);
-%     np = length(p);
 
-    % z = model.sym_z;
     disp('--------------------------------------------------------------');
     if strcmp(stage_type, 'terminal')
         expr_cost = model.cost_expr_ext_cost_e;
@@ -74,7 +72,6 @@ function model = detect_cost_type(model, stage_type)
         expr_cost = model.cost_expr_ext_cost_0;
         disp('Structure detection for initial cost term');
     end
-    cost_fun = Function('cost_fun', {x, u, z}, {expr_cost});
 
     if expr_cost.is_quadratic(x) && expr_cost.is_quadratic(u) && expr_cost.is_quadratic(z) ...
             && ~any(expr_cost.which_depends(p))
@@ -85,6 +82,7 @@ function model = detect_cost_type(model, stage_type)
             ny = 0;
             Vx = []; Vu = []; Vz = []; W = []; y_ref = []; sym_y = [];
         else
+            cost_fun = Function('cost_fun', {x, u, z}, {expr_cost});
             dummy = SX.sym('dummy', 1, 1);
 
             fprintf('Cost function is quadratic -> Reformulating as linear_ls cost.\n');
