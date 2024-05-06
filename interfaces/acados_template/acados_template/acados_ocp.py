@@ -1206,23 +1206,23 @@ class AcadosOcp:
 
         return
 
+
     def translate_to_feasibility_problem(self, keep_x0=False):
         """
-        Translate an OCP to a feasibility problem by setting the cost to zero and removing the terminal cost.
-        This removes all cost terms and formulates all constraints as L2 penalties.
+        Translate an OCP to a feasibility problem by removing all cost term and then formulating all constraints as L2 penalties.
 
-        # Note: all weights are set to 1.0 for now, add options!
-
-        Experimental!
+        Note: all weights are set to 1.0 for now.
+        Options to specify weights should be implemented later for advanced use cases.
         """
         model = self.model
         cost = self.cost
         constraints = self.constraints
+        new_constraints = AcadosOcpConstraints()
 
         # set cost to zero
         cost.cost_type = "NONLINEAR_LS"
         cost.cost_type_e = "NONLINEAR_LS"
-        # cost.cost_type_0 = None
+        # cost.cost_type_0 = "NONLINEAR_LS"
 
         model.cost_y_expr = ca.SX.zeros((0, 0))
         model.cost_y_expr_e = ca.SX.zeros((0, 0))
@@ -1232,7 +1232,7 @@ class AcadosOcp:
         cost.W_e = np.zeros((0, 0))
         cost.W_0 = None
 
-        # formulate path constraints as L2 penalties
+        # formulate **path** constraints as L2 penalties
         expr_bound_list = [
             (model.x[constraints.idxbx], constraints.lbx, constraints.ubx),
             (model.u[constraints.idxbu], constraints.lbu, constraints.ubu),
@@ -1240,9 +1240,9 @@ class AcadosOcp:
         ]
 
         if casadi_length(model.con_phi_expr) > 0:
-            phi_fun = ca.Function('phi_fun', [model.con_r_in_phi], [model.con_phi_expr])
-            phi_o_r_expr = phi_fun(model.con_r_expr)
+            phi_o_r_expr = ca.substitute(model.con_phi_expr, model.con_r_in_phi, model.con_r_expr)
             expr_bound_list.append((phi_o_r_expr, constraints.lphi, constraints.uphi))
+            # NOTE: for now, we don't exploit convex over nonlinear structure of phi
 
         for constr_expr, lower_bound, upper_bound in expr_bound_list:
             for i in range(casadi_length(constr_expr)):
@@ -1253,11 +1253,16 @@ class AcadosOcp:
         model.con_r_expr = None
         model.con_r_in_phi = None
 
-        # formulate terminal constraints as L2 penalties
+        # formulate **terminal** constraints as L2 penalties
         expr_bound_list_e = [
             (model.x[constraints.idxbx_e], constraints.lbx_e, constraints.ubx_e),
             (model.con_h_expr_e, constraints.lh_e, constraints.uh_e),
         ]
+
+        if casadi_length(model.con_phi_expr_e) > 0:
+            phi_o_r_expr_e = ca.substitute(model.con_phi_expr_e, model.con_r_in_phi_e, model.con_r_expr_e)
+            expr_bound_list_e.append((phi_o_r_expr_e, constraints.lphi_e, constraints.uphi_e))
+            # NOTE: for now, we don't exploit convex over nonlinear structure of phi
 
         for constr_expr, lower_bound, upper_bound in expr_bound_list_e:
             for i in range(casadi_length(constr_expr)):
@@ -1265,29 +1270,35 @@ class AcadosOcp:
 
         model.con_h_expr_e = None
 
-        # delete constraint fromulation from constraints object
-        new_constraints = AcadosOcpConstraints()
+
+        # formulate **initial** constraints as L2 penalties
+        expr_bound_list_0 = [
+            (model.u[constraints.idxbu], constraints.lbu, constraints.ubu),
+            (model.con_h_expr_0, constraints.lh_0, constraints.uh_0),
+        ]
         if keep_x0:
             if constraints.has_x0:
                 new_constraints.x0 = constraints.lbx_0
             else:
-                raise NotImplementedError("translate_to_feasibility_problem: only implemented for problems with x0 constraints.")
+                raise NotImplementedError("translate_to_feasibility_problem: keep_x0 not defined for problems without x0 constraints.")
         else:
-            cost.cost_type_0 = "NONLINEAR_LS"
-            model.cost_y_expr_0 = ca.SX.zeros((0, 0))
-            cost.W_0 = np.zeros((0, 0))
-            cost.yref_0 = np.zeros((0,))
+            expr_bound_list_0.append((model.x[constraints.idxbx_0], constraints.lbx_0, constraints.ubx_0))
 
-            expr_bound_list_0 = [
-                (model.x[constraints.idxbx_0], constraints.lbx_0, constraints.ubx_0),
-                (model.u[constraints.idxbu], constraints.lbu, constraints.ubu),
-                (model.con_h_expr_0, constraints.lh_0, constraints.uh_0),
-            ]
+        if casadi_length(model.con_phi_expr_0) > 0:
+            phi_o_r_expr_0 = ca.substitute(model.con_phi_expr_0, model.con_r_in_phi_0, model.con_r_expr_0)
+            expr_bound_list_0.append((phi_o_r_expr_0, constraints.lphi_0, constraints.uphi_0))
+            # NOTE: for now, we don't exploit convex over nonlinear structure of phi
 
-            for constr_expr, lower_bound, upper_bound in expr_bound_list_0:
-                for i in range(casadi_length(constr_expr)):
-                    self.formulate_constraint_as_L2_penalty(constr_expr[i], weight=1.0, upper_bound=upper_bound[i], lower_bound=lower_bound[i], constraint_type="initial")
+        cost.cost_type_0 = "NONLINEAR_LS"
+        model.cost_y_expr_0 = ca.SX.zeros((0, 0))
+        cost.W_0 = np.zeros((0, 0))
+        cost.yref_0 = np.zeros((0,))
 
+        for constr_expr, lower_bound, upper_bound in expr_bound_list_0:
+            for i in range(casadi_length(constr_expr)):
+                self.formulate_constraint_as_L2_penalty(constr_expr[i], weight=1.0, upper_bound=upper_bound[i], lower_bound=lower_bound[i], constraint_type="initial")
+
+        # delete constraint fromulation from constraints object
         self.constraints = new_constraints
 
     def augment_with_t0_param(self) -> None:
