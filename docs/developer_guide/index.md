@@ -1,16 +1,14 @@
 # Developer Guide
-
 This page contains additional information for people who want to extend `acados`.
 
-## Contributions
-are handled via Pull Requests (PR) on Github
+## Contributing
+Contributions are handled via pull requests on Github
 - Fork the project
 - Push your changes to your fork
 - Open a pull request https://github.com/acados/acados
 - Describe what you changed and why.
 - Rather make minimal changes
 - Rather more commits than less
-
 
 ## Memory management in `acados`
 The following are guidelines on how memory should be assigned for an `acados` structure `astruct`.
@@ -23,7 +21,6 @@ Thus, it should end with:
 ```
     make_int_multiple_of(8, &size);
 ```
-
 
 ### `astruct_assign()`
 Should assign its members in the following order:
@@ -46,7 +43,6 @@ Should assign its members in the following order:
 ```
 
 - Align to 8 bytes, since `astruct` might contain `int`s and the pointers were assigned.
-
 
 - Assign "substructures", i.e. structures that `astruct` has pointers to:
 ```
@@ -72,7 +68,6 @@ Should assign its members in the following order:
 
 - Align to 8 bytes, can be skipped if no pointers have been assigned
 
-
 - Assign integers
 ```
     assign_and_advance_int(n_integers, &as_instance->ints, &c_ptr);
@@ -95,6 +90,32 @@ Should assign its members in the following order:
 
 - Align c_ptr to 8 byte here for nested assigns, see "substructures"
    - relevant if no `blasfeo_mems` are in `astruct`
+
+
+## Regularization within SQP / SQP-RTI
+The Hessian of the QP is computed in the `ocp_nlp_sqp`, `ocp_nlp_sqp_rti` module respectively.
+
+The following steps are carried out:
+
+- `ocp_nlp_approximate_qp_matrices()`
+  - sets all Hessian blocks to 0.0
+  - for `i in range(N+1)`
+    - if `i<N:`
+      - add to the diagonal of the Hessian of block `i` the term `in->Ts[i] * opts->levenberg_marquardt`
+      - add the contribution of the dynamics module (can be turned off via `exact_hess_dyn`)
+    - if `i==N:`
+      -  add to the diagonal of the Hessian of block `N` the term `opts->levenberg_marquardt`.
+  - add the cost contribution to the Hessian
+    - Gauss-Newton Hessian (available in least-squares case)
+    - or exact Hessian (always used with `EXTERNAL` cost module) if no "custom hessian" is set (see `cost_expr_ext_cost_custom_hess`, `cost_expr_ext_cost_custom_hess_0`, `cost_expr_ext_cost_custom_hess_e`)
+  - add the inequality constraints contribution to the Hessian (can be turned off via `exact_hess_constr`)
+
+- call the regularization module (`regularize`, see [`regularize_method`](https://docs.acados.org/python_interface/index.html?highlight=regularize#acados_template.acados_ocp_options.AcadosOcpOptions.regularize_method))
+
+<!-- TODO: change this to have a seperate levenberg_marquardt term on the terminal stage (instead of 1 replacing Ts).
++ add the option to provide a vector that is added on diagonal, i.e. make levenberg_marquardt a vector of size nx+nu. -->
+
+
 
 ## Dense QP solution: Populating `dense_qp_out`
 After solving a dense QP, the solution should be stored in the `dense_qp_out` structure that is passed as an argument to the function `dense_qp_XXX` (where `XXX` is the name of the solver).

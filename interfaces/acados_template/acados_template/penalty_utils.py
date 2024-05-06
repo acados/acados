@@ -29,10 +29,14 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from typing import Optional
+from typing import Optional, Tuple
 import casadi as ca
 
-def huber_loss(var: ca.SX, delta: float, tau: float):
+def huber_loss(var: ca.SX, delta: float, tau: float) -> Tuple[ca.SX, ca.SX, ca.SX, ca.SX]:
+    """
+    Huber loss function.
+    Return the loss, gradient, hessian and the XGN Hessian
+    """
     loss = (tau / delta) * ca.if_else(
         ca.fabs(var) < delta, 0.5 * var**2, delta * (ca.fabs(var) - 0.5 * delta)
     )

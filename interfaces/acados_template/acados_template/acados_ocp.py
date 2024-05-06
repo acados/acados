@@ -321,7 +321,7 @@ class AcadosOcp:
         supports_cost_integration = lambda type : type in ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']
         if opts.cost_discretization == 'INTEGRATOR' and \
             any([not supports_cost_integration(cost) for cost in [cost.cost_type_0, cost.cost_type, cost.cost_type_e]]):
-            raise Exception('cost_discretization == INTEGRATOR only works with NONLINEAR_LS costs.')
+            raise Exception('cost_discretization == INTEGRATOR only works with cost in ["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs.')
 
         ## constraints
         # initial
@@ -1126,12 +1126,10 @@ class AcadosOcp:
             casadi_symbol = ca.SX.sym
             casadi_zeros = ca.SX.zeros
 
-
         # if (upper_bound is None or lower_bound is None):
         #     raise NotImplementedError("only symmetric Huber for now")
         if upper_bound is None and lower_bound is None:
             raise ValueError("Either upper or lower bound must be provided.")
-
 
         if self.cost.cost_type != "CONVEX_OVER_NONLINEAR":
             raise Exception("Huber penalty is only supported for CONVEX_OVER_NONLINEAR cost type.")
@@ -1207,7 +1205,6 @@ class AcadosOcp:
             self.constraints.ug = ca.vertcat(self.constraints.ug, ug)
 
         return
-
 
     def translate_to_feasibility_problem(self, keep_x0=False):
         """
@@ -1291,4 +1288,11 @@ class AcadosOcp:
 
         self.constraints = new_constraints
 
+    def augment_with_t0_param(self) -> None:
+        """Add a parameter t0 to the model and set it to 0.0."""
+        if self.model.t0 is not None:
+            raise Exception("Parameter t0 is already present in the model.")
+        self.model.t0 = ca.SX.sym("t0")
+        self.model.p = ca.vertcat(self.model.p, self.model.t0)
+        self.parameter_values = np.append(self.parameter_values, [0.0])
         return
