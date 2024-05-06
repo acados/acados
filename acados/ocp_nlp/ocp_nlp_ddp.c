@@ -645,118 +645,71 @@ static void print_iteration(double obj,
 /************************************************
  * termination criterion
  ************************************************/
-static bool check_termination(int ddp_iter, acados_timer timer0, ocp_nlp_res *nlp_res, ocp_nlp_ddp_memory *mem, ocp_nlp_ddp_opts *opts)
+static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_memory *mem, ocp_nlp_ddp_opts *opts)
 {
-#if defined(ACADOS_WITH_OPENMP)
-    // backup number of threads
-    int num_threads_bkp = omp_get_num_threads();
-    // set number of threads
-    omp_set_num_threads(opts->nlp_opts->num_threads);
-#endif
+    // check for nans
+    if (isnan(nlp_res->inf_norm_res_stat) || isnan(nlp_res->inf_norm_res_eq) ||
+            isnan(nlp_res->inf_norm_res_ineq))
+    {
+        mem->status = ACADOS_NAN_DETECTED;
+        if (opts->nlp_opts->print_level > 0)
+        {
+            printf("Stopped: NaN detected in iterate.\n");
+        }
+        return true;
+    }
+
     // We do not need to check for the complementarity condition and for the
     // inequalities since we have an unconstrainted OCP
     if (nlp_res->inf_norm_res_eq < opts->tol_eq)
     { // Check that iterate must be dynamically feasible
         if (nlp_res->inf_norm_res_stat < opts->tol_stat)
         {// Check Stationarity
-#if defined(ACADOS_WITH_OPENMP)
-            // restore number of threads
-            omp_set_num_threads(num_threads_bkp);
-#endif
             mem->status = ACADOS_SUCCESS;
-            mem->ddp_iter = ddp_iter;
-            mem->time_tot = acados_toc(&timer0);
-            if (opts->nlp_opts->print_level > 0){
+            if (opts->nlp_opts->print_level > 0)
+            {
                 printf("Optimal Solution found! Convergend to KKT point.\n");
             }
-
             return true;
         }
 
         // Check for zero-residual solution of a least-squares problem
-        if (opts->with_adaptive_levenberg_marquardt & (mem->nlp_mem->cost_value < opts->tol_zero_res))
+        if (opts->with_adaptive_levenberg_marquardt && (mem->nlp_mem->cost_value < opts->tol_zero_res))
         {
-#if defined(ACADOS_WITH_OPENMP)
-            // restore number of threads
-            omp_set_num_threads(num_threads_bkp);
-#endif
             mem->status = ACADOS_SUCCESS;
-            mem->ddp_iter = ddp_iter;
-            mem->time_tot = acados_toc(&timer0);
             if (opts->nlp_opts->print_level > 0)
             {
                 printf("Optimal Solution found! Convergend to Converged To Zero Residual Solution.\n");
             }
-
             return true;
         }
     }
 
-    // check for nans
-    if (isnan(nlp_res->inf_norm_res_stat) || isnan(nlp_res->inf_norm_res_eq) ||
-            isnan(nlp_res->inf_norm_res_ineq))
-    {
-#if defined(ACADOS_WITH_OPENMP)
-        // restore number of threads
-        omp_set_num_threads(num_threads_bkp);
-#endif
-        mem->status = ACADOS_NAN_DETECTED;
-        mem->ddp_iter = ddp_iter;
-        mem->time_tot = acados_toc(&timer0);
-        if (opts->nlp_opts->print_level > 0){
-            printf("Stopped: NaN detected in iterate.\n");
-        }
-
-        return true;
-    }
-
     // Check for small step
-    if ((ddp_iter > 0) & (mem->step_norm < opts->tol_eq))
+    if ((ddp_iter > 0) && (mem->step_norm < opts->tol_eq))
     {
-        if (nlp_res->inf_norm_res_eq < opts->tol_eq)
+        if (opts->nlp_opts->print_level > 0)
         {
-#if defined(ACADOS_WITH_OPENMP)
-            // restore number of threads
-            omp_set_num_threads(num_threads_bkp);
-#endif
-            mem->status = ACADOS_MINSTEP;
-            mem->ddp_iter = ddp_iter;
-            mem->time_tot = acados_toc(&timer0);
-            if (opts->nlp_opts->print_level > 0){
-                printf("Stopped: Converged To Feasible Point. Step size is zero.\n");
+            if (nlp_res->inf_norm_res_eq < opts->tol_eq)
+            {
+                printf("Stopped: Converged To Feasible Point. Step size is < tol_eq.\n");
+            }
+            else
+            {
+                printf("Stopped: Converged To Infeasible Point. Step size is < tol_eq.\n");
             }
         }
-        else
-        {
-#if defined(ACADOS_WITH_OPENMP)
-            // restore number of threads
-            omp_set_num_threads(num_threads_bkp);
-#endif
-            mem->status = ACADOS_MINSTEP;
-            mem->ddp_iter = ddp_iter;
-            mem->time_tot = acados_toc(&timer0);
-            if (opts->nlp_opts->print_level > 0){
-                printf("Stopped: Converged To Infeasible Point. Step size is zero.\n");
-            }
-
-        }
+        mem->status = ACADOS_MINSTEP;
         return true;
     }
 
     // Check for maximum iterations
     if (ddp_iter >= opts->max_iter)
     {
-#if defined(ACADOS_WITH_OPENMP)
-        // restore number of threads
-        omp_set_num_threads(num_threads_bkp);
-#endif
         mem->status = ACADOS_MAXITER;
-        mem->ddp_iter = ddp_iter;
-        mem->time_tot = acados_toc(&timer0);
         if (opts->nlp_opts->print_level > 0){
             printf("Stopped: Maximum Iterations Reached.\n");
         }
-
         return true;
     }
 
@@ -773,7 +726,8 @@ static void update_mu(double step_size, ocp_nlp_ddp_opts *opts, ocp_nlp_ddp_memo
     if (step_size == 1.0)
     {
         double mu_tmp = ddp_mem->mu;
-        ddp_mem->mu = fmax(opts->adaptive_levenberg_marquardt_mu_min, ddp_mem->mu_bar/(opts->adaptive_levenberg_marquardt_lam));
+        ddp_mem->mu = fmax(opts->adaptive_levenberg_marquardt_mu_min,
+                           ddp_mem->mu_bar/(opts->adaptive_levenberg_marquardt_lam));
         ddp_mem->mu_bar = mu_tmp;
     }
     else
@@ -831,9 +785,9 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
-    ///////////////////////////////////////////////////////////////////////////
-    // main ddp loop
-    ///////////////////////////////////////////////////////////////////////////
+    /************************************************
+     * main ddp loop
+     ************************************************/
     int ddp_iter = 0;
     double reg_param_memory = 0.0;
     double reg_param = 0.0;
@@ -856,7 +810,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         {
             ocp_nlp_cost_compute(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
         }
-        // Prepare the regularization here....
+        // Prepare the regularization here...
         if (opts->with_adaptive_levenberg_marquardt)
         {
             if (ddp_iter == 0)
@@ -906,7 +860,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         // Check if initial guess was infeasible
-        if ((infeasible_initial_guess == true) & (nlp_res->inf_norm_res_eq > opts->tol_eq))
+        if ((infeasible_initial_guess == true) && (nlp_res->inf_norm_res_eq > opts->tol_eq))
         {
             if (nlp_opts->print_level > 0)
             {
@@ -926,8 +880,14 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         // Termination
-        if (check_termination(ddp_iter, timer0, nlp_res, mem, opts))
+        if (check_termination(ddp_iter, nlp_res, mem, opts))
         {
+#if defined(ACADOS_WITH_OPENMP)
+            // restore number of threads
+            omp_set_num_threads(num_threads_bkp);
+#endif
+            mem->ddp_iter = ddp_iter;
+            mem->time_tot = acados_toc(&timer0);
             return mem->status;
         }
 
