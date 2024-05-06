@@ -32,7 +32,6 @@ from acados_template import AcadosOcp, AcadosOcpSolver
 from rockit_hello_world_model import export_rockit_hello_world_model
 import numpy as np
 # from utils import plot_trajectory
-from matplotlib import pyplot as plt
 
 def main():
 
