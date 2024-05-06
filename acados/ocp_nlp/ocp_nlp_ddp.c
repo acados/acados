@@ -244,7 +244,8 @@ void ocp_nlp_ddp_opts_set(void *config_, void *opts_, const char *field, void* v
         else if (!strcmp(field, "rti_phase"))
         {
             int* rti_phase = (int *) value;
-            if (*rti_phase < 0 || *rti_phase > 0) {
+            if (*rti_phase < 0 || *rti_phase > 0)
+            {
                 printf("\nerror: ocp_nlp_ddp_opts_set: invalid value for rti_phase field.");
                 printf("possible values are: 0\n");
                 exit(1);
@@ -491,10 +492,9 @@ static void ocp_nlp_ddp_cast_workspace(ocp_nlp_config *config, ocp_nlp_dims *dim
 }
 
 
-/******************************************************************************
-Helper functions
-******************************************************************************/
-
+/************************************************
+ * Helper functions
+ ************************************************/
 static void ocp_nlp_ddp_reset_timers(ocp_nlp_ddp_memory *mem)
 {
     mem->time_qp_sol = 0.0;
@@ -645,46 +645,50 @@ static void print_iteration(double obj,
 /************************************************
  * termination criterion
  ************************************************/
-static bool check_termination(int ddp_iter, acados_timer timer0, ocp_nlp_res *nlp_res, ocp_nlp_ddp_memory *mem, ocp_nlp_ddp_opts *opts){
-
+static bool check_termination(int ddp_iter, acados_timer timer0, ocp_nlp_res *nlp_res, ocp_nlp_ddp_memory *mem, ocp_nlp_ddp_opts *opts)
+{
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
     int num_threads_bkp = omp_get_num_threads();
     // set number of threads
     omp_set_num_threads(opts->nlp_opts->num_threads);
 #endif
-        // We do not need to check for the complementarity condition and for the
-        // inequalities since we have an unconstrainted OCP
-    if (nlp_res->inf_norm_res_eq < opts->tol_eq){ // Check that iterate must be dynamically feasible
-        if (nlp_res->inf_norm_res_stat < opts->tol_stat){// Check Stationarity
+    // We do not need to check for the complementarity condition and for the
+    // inequalities since we have an unconstrainted OCP
+    if (nlp_res->inf_norm_res_eq < opts->tol_eq)
+    { // Check that iterate must be dynamically feasible
+        if (nlp_res->inf_norm_res_stat < opts->tol_stat)
+        {// Check Stationarity
 #if defined(ACADOS_WITH_OPENMP)
-        // restore number of threads
-        omp_set_num_threads(num_threads_bkp);
+            // restore number of threads
+            omp_set_num_threads(num_threads_bkp);
 #endif
-        mem->status = ACADOS_SUCCESS;
-        mem->ddp_iter = ddp_iter;
-        mem->time_tot = acados_toc(&timer0);
-        if (opts->nlp_opts->print_level > 0){
-            printf("Optimal Solution found! Convergend to KKT point.\n");
-        }
+            mem->status = ACADOS_SUCCESS;
+            mem->ddp_iter = ddp_iter;
+            mem->time_tot = acados_toc(&timer0);
+            if (opts->nlp_opts->print_level > 0){
+                printf("Optimal Solution found! Convergend to KKT point.\n");
+            }
 
-        return true;
+            return true;
         }
 
         // Check for zero-residual solution of a least-squares problem
-        if (opts->with_adaptive_levenberg_marquardt & (mem->nlp_mem->cost_value < opts->tol_zero_res)){
+        if (opts->with_adaptive_levenberg_marquardt & (mem->nlp_mem->cost_value < opts->tol_zero_res))
+        {
 #if defined(ACADOS_WITH_OPENMP)
-        // restore number of threads
-        omp_set_num_threads(num_threads_bkp);
+            // restore number of threads
+            omp_set_num_threads(num_threads_bkp);
 #endif
-        mem->status = ACADOS_SUCCESS;
-        mem->ddp_iter = ddp_iter;
-        mem->time_tot = acados_toc(&timer0);
-        if (opts->nlp_opts->print_level > 0){
-            printf("Optimal Solution found! Convergend to Converged To Zero Residual Solution.\n");
-        }
+            mem->status = ACADOS_SUCCESS;
+            mem->ddp_iter = ddp_iter;
+            mem->time_tot = acados_toc(&timer0);
+            if (opts->nlp_opts->print_level > 0)
+            {
+                printf("Optimal Solution found! Convergend to Converged To Zero Residual Solution.\n");
+            }
 
-        return true;
+            return true;
         }
     }
 
@@ -707,11 +711,13 @@ static bool check_termination(int ddp_iter, acados_timer timer0, ocp_nlp_res *nl
     }
 
     // Check for small step
-    if ((ddp_iter > 0) & (mem->step_norm < opts->tol_eq)){
-        if (nlp_res->inf_norm_res_eq < opts->tol_eq){
+    if ((ddp_iter > 0) & (mem->step_norm < opts->tol_eq))
+    {
+        if (nlp_res->inf_norm_res_eq < opts->tol_eq)
+        {
 #if defined(ACADOS_WITH_OPENMP)
-        // restore number of threads
-        omp_set_num_threads(num_threads_bkp);
+            // restore number of threads
+            omp_set_num_threads(num_threads_bkp);
 #endif
             mem->status = ACADOS_MINSTEP;
             mem->ddp_iter = ddp_iter;
@@ -719,12 +725,12 @@ static bool check_termination(int ddp_iter, acados_timer timer0, ocp_nlp_res *nl
             if (opts->nlp_opts->print_level > 0){
                 printf("Stopped: Converged To Feasible Point. Step size is zero.\n");
             }
-
-            return true;
-        } else {
+        }
+        else
+        {
 #if defined(ACADOS_WITH_OPENMP)
-        // restore number of threads
-        omp_set_num_threads(num_threads_bkp);
+            // restore number of threads
+            omp_set_num_threads(num_threads_bkp);
 #endif
             mem->status = ACADOS_MINSTEP;
             mem->ddp_iter = ddp_iter;
@@ -733,15 +739,16 @@ static bool check_termination(int ddp_iter, acados_timer timer0, ocp_nlp_res *nl
                 printf("Stopped: Converged To Infeasible Point. Step size is zero.\n");
             }
 
-            return true;
         }
+        return true;
     }
 
     // Check for maximum iterations
-    if (ddp_iter >= opts->max_iter){
+    if (ddp_iter >= opts->max_iter)
+    {
 #if defined(ACADOS_WITH_OPENMP)
-    // restore number of threads
-    omp_set_num_threads(num_threads_bkp);
+        // restore number of threads
+        omp_set_num_threads(num_threads_bkp);
 #endif
         mem->status = ACADOS_MAXITER;
         mem->ddp_iter = ddp_iter;
@@ -832,7 +839,8 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     double reg_param = 0.0;
     bool infeasible_initial_guess = true;
     bool evaluate_cost = true;
-    if (nlp_opts->print_level > 0){
+    if (nlp_opts->print_level > 0)
+    {
         printf("'with_adaptive_levenberg_marquardt' option is set to: %s\n", opts->with_adaptive_levenberg_marquardt?"true":"false");
     }
 
@@ -844,23 +852,26 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // Levenberg-Marquardt term and the objective function value is used in the
         // regularization.
         ///////////////////////////////////////////////////////////////////////
-        if (evaluate_cost){
+        if (evaluate_cost)
+        {
             ocp_nlp_cost_compute(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
         }
         // Prepare the regularization here....
-        if (opts->with_adaptive_levenberg_marquardt){
-            if (ddp_iter == 0){
+        if (opts->with_adaptive_levenberg_marquardt)
+        {
+            if (ddp_iter == 0)
+            {
                 reg_param_memory = 0.0;
-            } else {
+            }
+            else
+            {
                 reg_param_memory = reg_param;
             }
             reg_param = 2*nlp_mem->cost_value*mem->mu;
             nlp_opts->levenberg_marquardt = reg_param; // For the moment divided by time step such that scaling in Levenberg-Marquardt is turned off!
         }
 
-        ///////////////////////////////////////////////////////////////////////
-        // Prepare the QP data
-        ///////////////////////////////////////////////////////////////////////
+        /* Prepare the QP data */
         // linearize NLP and update QP matrices
         acados_tic(&timer1);
         ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
@@ -885,7 +896,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);
         ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
 
-
         // save statistics
         if ((ddp_iter < mem->stat_m) & (ddp_iter >= 0))
         {
@@ -898,42 +908,37 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // Check if initial guess was infeasible
         if ((infeasible_initial_guess == true) & (nlp_res->inf_norm_res_eq > opts->tol_eq))
         {
-            if (nlp_opts->print_level > 0){
+            if (nlp_opts->print_level > 0)
+            {
                 printf("Initial guess was infeasible!\n");
             }
             ddp_iter = -1;
-        } else {
+        }
+        else
+        {
             infeasible_initial_guess = false;
         }
 
-        ///////////////////////////////////////////////////////////////////////
         // Output
-        ///////////////////////////////////////////////////////////////////////
         if (nlp_opts->print_level > 0)
         {
             print_iteration(nlp_mem->cost_value, ddp_iter, nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_stat, mem->alpha, mem->step_norm, reg_param_memory, qp_status, qp_iter);
         }
 
-        ///////////////////////////////////////////////////////////////////////
         // Termination
-        ///////////////////////////////////////////////////////////////////////
-        if (check_termination(ddp_iter, timer0, nlp_res, mem, opts)){
+        if (check_termination(ddp_iter, timer0, nlp_res, mem, opts))
+        {
             return mem->status;
         }
 
-        ///////////////////////////////////////////////////////////////////////
         // regularize Hessian
-        ///////////////////////////////////////////////////////////////////////
         acados_tic(&timer1);
         config->regularize->regularize(config->regularize, dims->regularize,
                                                opts->nlp_opts->regularize, nlp_mem->regularize_mem);
         mem->time_reg += acados_toc(&timer1);
 
 
-        ///////////////////////////////////////////////////////////////////////
-        // solve qp
-        ///////////////////////////////////////////////////////////////////////
-
+        /* solve QP */
         // (typically) no warm start at first iteration
         if (ddp_iter == 0 && !opts->warm_start_first_qp)
         {
@@ -1039,13 +1044,9 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             blasfeo_dvecnrm_inf(sum, &qp_out->ux[i], 0, &tmp_norm);
             mem->step_norm = tmp_norm > mem->step_norm ? tmp_norm : mem->step_norm;
         }
-        ///////////////////////////////////////////////////////////////////////
-        // end solve qp ---> move to function
-        ///////////////////////////////////////////////////////////////////////
+        /* end solve QP */
 
-        ///////////////////////////////////////////////////////////////////////
         /* globalization */
-        ///////////////////////////////////////////////////////////////////////
         if (infeasible_initial_guess)
         {
             // Accept the forward simulation to get feasible initial guess
@@ -1061,33 +1062,38 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             acados_tic(&timer1);
             // NOTE on timings: currently all within globalization is accounted for within time_glob.
             //   QP solver times could be also attributed there alternatively. Cleanest would be to save them seperately.
-            if (opts->nlp_opts->globalization == FIXED_STEP){
+            if (opts->nlp_opts->globalization == FIXED_STEP)
+            {
                 // Set the given step length
                 mem->alpha = nlp_opts->step_length;
 
                 // update variables
                 ocp_nlp_ddp_compute_trial_iterate(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, mem->alpha);
-            } else {
-                // ELSE do backtracking line search on objective function
+            }
+            else
+            {
+                // do backtracking line search on objective function
                 linesearch_success = ocp_nlp_ddp_backtracking_line_search(config, dims, nlp_in, nlp_out, mem, work, opts);
                 evaluate_cost = false; // since the cost was already evaluated in the line search
             }
 
             mem->stat[mem->stat_n*(ddp_iter+1)+6] = mem->alpha;
             // Copy new iterate to nlp_out
-            if (linesearch_success == 0){
+            if (linesearch_success == 0)
+            {
                 // in case line search fails, we do not want to copy trial iterates!
                 copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
             }
-            if (opts->with_adaptive_levenberg_marquardt){
-            update_mu(mem->alpha, opts, mem);
-
+            if (opts->with_adaptive_levenberg_marquardt)
+            {
+                update_mu(mem->alpha, opts, mem);
             }
             mem->time_glob += acados_toc(&timer1);
         }
     }  // end DDP loop
 
-    if (nlp_opts->print_level > 0){
+    if (nlp_opts->print_level > 0)
+    {
         printf("Warning: The solver should never reach this part of the function!\n");
     }
     return mem->status;
@@ -1193,10 +1199,9 @@ int ocp_nlp_ddp_backtracking_line_search(void *config_, void *dims_, void *nlp_i
             alpha *= opts->linesearch_step_size_reduction_factor;
         }
 
-        // IF step size below value, raise error for the moment
-        if (alpha < opts->linesearch_minimum_step_size){
+        if (alpha < opts->linesearch_minimum_step_size)
+        {
             printf("Linesearch: Step size gets too small. Increasing regularization.\n");
-            // exit(1);
             mem->alpha = 0.0; // set to zero such that regularization is increased
             return 1;
         }
@@ -1317,7 +1322,7 @@ void ocp_nlp_ddp_get(void *config_, void *dims_, void *mem_, const char *field, 
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_ddp_memory *mem = mem_;
 
-    if (!strcmp("ddp_iter", field) || !strcmp("sqp_iter", field))
+    if (!strcmp("ddp_iter", field) || !strcmp("nlp_iter", field))
     {
         int *value = return_value_;
         *value = mem->ddp_iter;
