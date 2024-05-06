@@ -32,6 +32,6 @@ function check_casadi_version()
     import casadi.*
     casadi_version = CasadiMeta.version();
     if ~(strcmp(casadi_version(1:3),'3.4') || strcmp(casadi_version(1:3),'3.5') || strcmp(casadi_version(1:3),'3.6'))
-        warning('Tested CasADi versions are 3.4 and 3.5, you are using: %s.', casadi_version);
+        warning('Tested CasADi versions are 3.4, 3.5 and 3.6 you are using: %s.', casadi_version);
     end
 end

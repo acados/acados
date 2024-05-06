@@ -33,7 +33,7 @@
 function model = detect_gnsf_structure(model, transcribe_opts)
 
 %% Description
-% This function takes a CasADi implicit ODE or index-1 DAE model "model" 
+% This function takes a CasADi implicit ODE or index-1 DAE model "model"
 % consisting of a CasADi expression f_impl in the symbolic CasADi
 % variables x, xdot, u, z, (and possibly parameters p), which are also part
 % of the model, as well as a model name.
