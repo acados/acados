@@ -1010,7 +1010,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         if (infeasible_initial_guess)
         {
             // Accept the forward simulation to get feasible initial guess
-            mem->alpha = 1.0; //Not sure if this is needed? Otherwise alpha will be zero and not used
+            mem->alpha = 1.0;  // full step to obtain feasible initial gues
             ocp_nlp_ddp_compute_trial_iterate(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, mem->alpha);
             copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
             infeasible_initial_guess = false;
