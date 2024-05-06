@@ -1056,6 +1056,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
         else
         {
+            int linesearch_success = 0;
             // Do the globalization here: Either fixed step or Armijo line search
             acados_tic(&timer1);
             // NOTE on timings: currently all within globalization is accounted for within time_glob.
@@ -1068,13 +1069,16 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 ocp_nlp_ddp_compute_trial_iterate(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, mem->alpha);
             } else {
                 // ELSE do backtracking line search on objective function
-                ocp_nlp_ddp_backtracking_line_search(config, dims, nlp_in, nlp_out, mem, work, opts);
+                linesearch_success = ocp_nlp_ddp_backtracking_line_search(config, dims, nlp_in, nlp_out, mem, work, opts);
                 evaluate_cost = false; // since the cost was already evaluated in the line search
             }
 
             mem->stat[mem->stat_n*(ddp_iter+1)+6] = mem->alpha;
             // Copy new iterate to nlp_out
-            copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
+            if (linesearch_success == 0){
+                // in case line search fails, we do not want to copy trial iterates!
+                copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
+            }
             if (opts->with_adaptive_levenberg_marquardt){
             update_mu(mem->alpha, opts, mem);
 
@@ -1119,7 +1123,7 @@ double ocp_nlp_ddp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_
 
 }
 
-void ocp_nlp_ddp_backtracking_line_search(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
+int ocp_nlp_ddp_backtracking_line_search(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *mem_, void *work_, void *opts_)
 {
     ocp_nlp_dims *dims = dims_;
@@ -1181,7 +1185,7 @@ void ocp_nlp_ddp_backtracking_line_search(void *config_, void *dims_, void *nlp_
             // copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
             mem->alpha = alpha;
             nlp_mem->cost_value = trial_cost;
-            return;
+            return 0;
         }
         else
         {
@@ -1191,8 +1195,10 @@ void ocp_nlp_ddp_backtracking_line_search(void *config_, void *dims_, void *nlp_
 
         // IF step size below value, raise error for the moment
         if (alpha < opts->linesearch_minimum_step_size){
-            printf("Linesearch: Step size gets too small. Terminating.\n");
-            exit(1);
+            printf("Linesearch: Step size gets too small. Increasing regularization.\n");
+            // exit(1);
+            mem->alpha = 0.0; // set to zero such that regularization is increased
+            return 1;
         }
     }
 }

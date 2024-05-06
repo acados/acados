@@ -182,7 +182,7 @@ void ocp_nlp_ddp_eval_lagr_grad_p(void *config_, void *dims_, void *nlp_in_, voi
 //
 void ocp_nlp_ddp_get(void *config_, void *dims_, void *mem_, const char *field, void *return_value_);
 
-void ocp_nlp_ddp_backtracking_line_search(void *config, void *dims, void *nlp_in, void *nlp_out,
+int ocp_nlp_ddp_backtracking_line_search(void *config, void *dims, void *nlp_in, void *nlp_out,
                 void *args, void *mem, void *work_);
 
 double ocp_nlp_ddp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,

@@ -67,7 +67,7 @@ def main():
     # set options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # 'FULL_CONDENSING_QPOASES', 'PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM'
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON' # 'GAUSS_NEWTON', 'EXACT'
-    ocp.solver_options.integrator_type = 'IRK'
+    ocp.solver_options.integrator_type = 'ERK'
     ocp.solver_options.print_level = 1
     ocp.solver_options.nlp_solver_type = 'DDP' # SQP_RTI, SQP
     ocp.solver_options.nlp_solver_max_iter = 1000
@@ -87,7 +87,7 @@ def main():
     simU = np.zeros((N, nu))
 
     status = ocp_solver.solve()
-    ocp_solver.print_statistics()
+    # ocp_solver.print_statistics()
 
     if status != 0:
         raise Exception(f'acados returned status {status}.')
