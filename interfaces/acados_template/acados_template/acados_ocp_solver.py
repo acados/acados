@@ -1002,11 +1002,8 @@ class AcadosOcpSolver:
         ]
         fields = double_fields + [
                   'sqp_iter',
-<<<<<<< HEAD
                   'ddp_iter',
-=======
                   'nlp_iter',
->>>>>>> master
                   'qp_stat',
                   'qp_iter',
                   'statistics',
