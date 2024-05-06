@@ -9,7 +9,7 @@ function check_acados_requirements(varargin)
         case 1
             force=varargin{1};
         otherwise
-            error('function called with %d parameters, was expecting max 1',nargin);       
+            error('function called with %d parameters, was expecting max 1', nargin);
     end
 
 
@@ -19,7 +19,7 @@ function check_acados_requirements(varargin)
         error('env.sh has not been sourced! Before executing this example, run: source env.sh');
     end
     acados_dir = getenv('ACADOS_INSTALL_DIR');
-    
+
     if ~is_casadi_available
         % offer to install CasADi
         message = ['\nDear acados user, we could not import CasADi',...
@@ -31,71 +31,68 @@ function check_acados_requirements(varargin)
         else
             In = 'Y';
         end
-        
-        if strcmpi( In, 'n') 
+
+        if strcmpi( In, 'n')
             error('Please set up CasADi yourself and try again.');
+        end
+        % download CasADi
+        CasADi_version = '3.5.5'; % TODO: update automatic download to later CasADi version.
+        url = strcat('https://github.com/casadi/casadi/releases/download/',...
+                CasADi_version, '/');
+        external_folder = fullfile(acados_dir, 'external');
+        if ~is_octave
+            destination = fullfile(external_folder, 'casadi-matlab');
         else
-            % download CasADi
-            CasADi_version = '3.5.5';
-            url = strcat('https://github.com/casadi/casadi/releases/download/',...
-                   CasADi_version, '/');
-            external_folder = fullfile(acados_dir, 'external');
-            if ~is_octave
-                destination = fullfile(external_folder, 'casadi-matlab');
+            destination = fullfile(external_folder, 'casadi-octave');
+            fprintf(['\nWe cannot automatically set up CasADi for Octave.\n',...
+                    'Please download the dedicated Casadi version from https://web.casadi.org/get/\n',...
+                    '\nand unpack it into <acados_root_dir>/external/casadi-octave.\n\n']);
+            error('exiting');
+        end
+
+        if ismac
+            if ~verLessThan('matlab', '8.5')
+                filename = strcat('casadi-osx-matlabR2015a-v', CasADi_version, '.tar.gz');
+            elseif ~verLessThan('matlab', '8.4')
+                filename = strcat('casadi-osx-matlabR2014b-v', CasADi_version, '.tar.gz');
+            elseif ~verLessThan('matlab', '8.3')
+                filename = strcat('casadi-osx-matlabR2014a-v', CasADi_version, '.tar.gz');
+            end
+        elseif isunix
+            if verLessThan('matlab', '8.4')
+                filename = strcat('casadi-linux-matlabR2014a-v', CasADi_version, '.tar.gz');
+            else % R2014b or later
+                filename = strcat('casadi-linux-matlabR2014b-v', CasADi_version, '.tar.gz');
+            end
+
+        elseif ispc
+            if ~verLessThan('matlab', '9.0')
+                filename = strcat('casadi-windows-matlabR2016a-v', CasADi_version,'.zip');
+            elseif ~verLessThan('matlab', '8.4')
+                filename = strcat('casadi-windows-matlabR2014b-v', CasADi_version,'.zip');
+            elseif ~verLessThan('matlab', '8.3')
+                filename = strcat('casadi-windows-matlabR2014a-v', CasADi_version,'.zip');
+            end
+
+        end
+
+        try
+            disp(['trying to download and unpack: ', url,filename])
+            file = websave(destination, [url,filename]);
+            [~,~,ending] = fileparts(file);
+
+            % unpack
+            if strcmp(ending, '.zip')
+                unzip(file, destination)
             else
-                filename = strcat('casadi-linux-octave-5.2.0-v', CasADi_version, '.tar.gz');
-                destination = fullfile(external_folder, 'casadi-octave');
-                fprintf(['\nWe cannot set up CasADi for Octave.\n',...
-                        'Please download\n', [url,filename],...
-                        '\nand unpack it into <acados_root_dir>/external/casadi-octave.\n\n']);
-                error('exiting');
+                untar(file, destination)
             end
 
-
-            if ismac
-                if ~verLessThan('matlab', '8.5')
-                    filename = strcat('casadi-osx-matlabR2015a-v', CasADi_version, '.tar.gz');
-                elseif ~verLessThan('matlab', '8.4')
-                    filename = strcat('casadi-osx-matlabR2014b-v', CasADi_version, '.tar.gz');
-                elseif ~verLessThan('matlab', '8.3')
-                    filename = strcat('casadi-osx-matlabR2014a-v', CasADi_version, '.tar.gz');
-                end
-            elseif isunix
-                if verLessThan('matlab', '8.4')
-                    filename = strcat('casadi-linux-matlabR2014a-v', CasADi_version, '.tar.gz');
-                else % R2014b or later
-                    filename = strcat('casadi-linux-matlabR2014b-v', CasADi_version, '.tar.gz');
-                end
-
-            elseif ispc
-                if ~verLessThan('matlab', '9.0')
-                    filename = strcat('casadi-windows-matlabR2016a-v', CasADi_version,'.zip');
-                elseif ~verLessThan('matlab', '8.4')
-                    filename = strcat('casadi-windows-matlabR2014b-v', CasADi_version,'.zip');
-                elseif ~verLessThan('matlab', '8.3')
-                    filename = strcat('casadi-windows-matlabR2014a-v', CasADi_version,'.zip');
-                end
-
-            end
-
-            try
-                disp(['trying to download and unpack: ', url,filename])
-                file = websave(destination, [url,filename]);
-                [~,~,ending] = fileparts(file);
-
-                % unpack
-                if strcmp(ending, '.zip')
-                    unzip(file, destination)
-                else
-                    untar(file, destination)
-                end
-
-                addpath(destination)
-            catch
-                error(['Sorry, we could not set up CasADi for your system, please try manually\n.',...
-                    'Instructions can be found on https://web.casadi.org/get/\n',...
-                    'We recommend using CasADi version', CasADi_version]);
-            end
+            addpath(destination)
+        catch
+            error(['Sorry, we could not set up CasADi for your system, please try manually\n.',...
+                'Instructions can be found on https://web.casadi.org/get/\n',...
+                'We recommend using CasADi version', CasADi_version]);
         end
         if ~is_casadi_available
                 error(['Sorry, we could not set up CasADi for your system, please try manually\n.',...
