@@ -30,14 +30,14 @@ Additionally it describes the [`casados-integrator`](https://github.com/FreyJo/c
 ```
 
 
-### Advanced-Step Real-time Iterations
-Advanced-Step Real-time Iterations provide an extension to the classic real-time iteration algorithm, which allows to performs additional Multi-Level Iterations in the preparation phase, such as inexact or zero-order SQP iterations on a problem with a predicted state estimate.
+### Advanced-Step Real-Time Iterations (AS-RTI)
+Advanced-step real-time iterations provide an extension to the classic real-time iteration algorithm, which allows to performs additional multi-level iterations in the preparation phase, such as inexact or zero-order SQP iterations on a problem with a predicted state estimate.
 
 This feature can be used by setting the options `as_rti_level` and `as_rti_level`.
 
 ```latex
 @Misc{Frey2024a,
-  Title                    = {Advanced-Step Real-time Iterations with Four Levels -- New Error Bounds and Fast Implementation in acados},
+  Title                    = {Advanced-Step Real-Time Iterations with Four Levels -- New Error Bounds and Fast Implementation in acados},
   Author                   = {Jonathan Frey and Armin Nurkanovic and Moritz Diehl},
   Year                     = {2024},
   Eprint                   = {2403.07101},
