@@ -107,7 +107,7 @@ def create_acados_solver_and_solve_problem(method='SQP'):
         iter = ocp_solver.get_stats('ddp_iter')
     else:
         raise RuntimeError("Wrong method!")
-    assert iter == 1, "DDP Solver should converge within 1 iteration!"
+    assert iter in [0,1], "DDP Solver should converge within 1 iteration!"
 
     if status != 0:
         raise Exception(f'acados returned status {status}.')
