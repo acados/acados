@@ -958,7 +958,7 @@ class AcadosOcpSolver:
         """
         Get the information of the last solver call.
 
-            :param field: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg', 'sqp_iter', 'residuals', 'qp_iter', 'alpha']
+            :param field: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg', 'sqp_iter', 'sqp_iter', 'residuals', 'qp_iter', 'alpha']
 
         Available fileds:
             - time_tot: total CPU time previous call
@@ -974,6 +974,7 @@ class AcadosOcpSolver:
             - time_solution_sens_solve: CPU time for solving in eval_solution_sensitivity
             - time_reg: CPU time regularization
             - sqp_iter: number of SQP iterations
+            - nlp_iter: number of NLP solver iterations (DDP or SQP)
             - qp_stat: status of QP solver
             - qp_iter: vector of QP iterations for last SQP call
             - statistics: table with info about last iteration
@@ -1028,10 +1029,10 @@ class AcadosOcpSolver:
             return out.value
 
         elif field_ == 'statistics':
-            sqp_iter = self.get_stats("sqp_iter")
+            nlp_iter = self.get_stats("nlp_iter")
             stat_m = self.get_stats("stat_m")
             stat_n = self.get_stats("stat_n")
-            min_size = min([stat_m, sqp_iter+1])
+            min_size = min([stat_m, nlp_iter+1])
             out = np.ascontiguousarray(np.zeros((stat_n+1, min_size)), dtype=np.float64)
             out_data = cast(out.ctypes.data, POINTER(c_double))
             self.__acados_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
