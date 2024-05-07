@@ -49,17 +49,12 @@
 ocp_qp_xcond_solver_dims *create_ocp_qp_dims_mass_spring(ocp_qp_xcond_solver_config *config, int N, int nx_, int nu_, int nb_, int ng_, int ngN);
 ocp_qp_in *create_ocp_qp_in_mass_spring(ocp_qp_dims *dims);
 // soft constraints
-// TODO
-ocp_qp_dims *create_ocp_qp_dims_mass_spring_soft_constr(int N, int nx_, int nu_, int nb_, int ng_, int ngN);
+ocp_qp_xcond_solver_dims *create_ocp_qp_dims_mass_spring_soft_constr(ocp_qp_xcond_solver_config *config, int N, int nx_, int nu_, int nb_, int ng_, int ngN);
 ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(ocp_qp_dims *dims);
-
-// #ifndef ACADOS_WITH_QPDUNES
-#define ELIMINATE_X0
-// #endif
 
 #define GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
 
-// #define SOFT_CONSTRAINTS
+//#define SOFT_CONSTRAINTS
 
 #define NREP 1
 
@@ -100,7 +95,7 @@ int main() {
     int num_N2_values = 3;
     int N2_values[3] = {15,10,5};
 
-    int ii_max = 8;
+    int ii_max = 9;
 
     #ifndef ACADOS_WITH_HPMPC
     ii_max--;
@@ -171,8 +166,7 @@ int main() {
 
         // dims
 #ifdef SOFT_CONSTRAINTS
-        // TODO
-        ocp_qp_dims *qp_dims = create_ocp_qp_dims_mass_spring_soft_constr(N, nx_, nu_, nb_, ng_, ngN);
+        ocp_qp_xcond_solver_dims *qp_dims = create_ocp_qp_dims_mass_spring_soft_constr(config, N, nx_, nu_, nb_, ng_, ngN);
 #else
         ocp_qp_xcond_solver_dims *qp_dims = create_ocp_qp_dims_mass_spring(config, N, nx_, nu_, nb_, ng_, ngN);
 #endif

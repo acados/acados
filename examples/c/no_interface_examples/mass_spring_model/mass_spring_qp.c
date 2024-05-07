@@ -137,11 +137,7 @@ ocp_qp_xcond_solver_dims *create_ocp_qp_dims_mass_spring(ocp_qp_xcond_solver_con
     int nbx_ = nb_ - nu_ > 0 ? nb_ - nu_ : 0;
 
     int nx[N+1];
-#if defined(ELIMINATE_X0)
-    nx[0] = 0;
-#else
     nx[0] = nx_;
-#endif
     for (int ii = 1; ii <= N; ii++) {
         nx[ii] = nx_;
     }
@@ -160,20 +156,11 @@ ocp_qp_xcond_solver_dims *create_ocp_qp_dims_mass_spring(ocp_qp_xcond_solver_con
     nbu[N] = 0;
 
     int nbx[N+1];
-#if defined(ELIMINATE_X0)
-    nbx[0] = 0;
-#else
     nbx[0] = nx_;
-#endif
     for (int ii = 1; ii <= N; ii++)
     {
         nbx[ii] = nbx_;
     }
-
-    // int nb[N+1];
-    // for (int ii = 0; ii <= N; ii++) {
-    //     nb[ii] = nbu[ii]+nbx[ii];
-    // }
 
     int ng[N+1];
     for (int ii = 0; ii < N; ii++) {
@@ -187,11 +174,7 @@ ocp_qp_xcond_solver_dims *create_ocp_qp_dims_mass_spring(ocp_qp_xcond_solver_con
     }
 
     int nbxe[N+1];
-#if defined(ELIMINATE_X0)
-    nbxe[0] = 0;
-#else
     nbxe[0] = nx_;
-#endif
     for (int ii = 1; ii <= N; ii++)
     {
         nbxe[ii] = 0;
@@ -205,14 +188,14 @@ ocp_qp_xcond_solver_dims *create_ocp_qp_dims_mass_spring(ocp_qp_xcond_solver_con
 
     for (int ii=0; ii<=N; ii++)
     {
-		config->dims_set(config, dims, ii, "nx", &nx[ii]);
-		config->dims_set(config, dims, ii, "nu", &nu[ii]);
-		config->dims_set(config, dims, ii, "nbx", &nbx[ii]);
-		config->dims_set(config, dims, ii, "nbu", &nbu[ii]);
-		config->dims_set(config, dims, ii, "ng", &ng[ii]);
-		config->dims_set(config, dims, ii, "ns", &ns[ii]);
+        config->dims_set(config, dims, ii, "nx", &nx[ii]);
+        config->dims_set(config, dims, ii, "nu", &nu[ii]);
+        config->dims_set(config, dims, ii, "nbx", &nbx[ii]);
+        config->dims_set(config, dims, ii, "nbu", &nbu[ii]);
+        config->dims_set(config, dims, ii, "ng", &ng[ii]);
+        config->dims_set(config, dims, ii, "ns", &ns[ii]);
     }
-	config->dims_set(config, dims, 0, "nbxe", &nbxe[0]);
+    config->dims_set(config, dims, 0, "nbxe", &nbxe[0]);
 
 //d_ocp_qp_dim_print(dims->orig_dims);
 
@@ -272,20 +255,6 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(ocp_qp_dims *dims)
 //    d_print_mat(nx_, 1, b, nx_);
 //    d_print_mat(nx_, 1, x0, nx_);
 
-#if defined(ELIMINATE_X0)
-    // compute b0 = b + A*x0
-    double *b0;
-    d_zeros(&b0, nx_, 1);
-    dcopy_3l(nx_, b, 1, b0, 1);
-    dgemv_n_3l(nx_, nx_, A, nx_, x0, b0);
-    //    d_print_mat(nx_, 1, b, nx_);
-    //    d_print_mat(nx_, 1, b0, nx_);
-
-    // then A0 is a matrix of size 0x0
-    double *A0;
-    d_zeros(&A0, 0, 0);
-#endif
-
     /************************************************
     * box constraints
     ************************************************/
@@ -300,13 +269,6 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(ocp_qp_dims *dims)
     d_zeros(&ub0, nb[0], 1);
     int *idxbxe0;
     int_zeros(&idxbxe0, nx[0], 1);
-#if defined(ELIMINATE_X0)
-    for (int jj = 0; jj < nb[0]; jj++) {
-        lb0[jj] = -0.5;  // umin
-        ub0[jj] = +0.5;  // umin
-        idxb0[jj] = jj;
-    }
-#else
     jj_end = nu[0] < nb[0] ? nu[0] : nb[0];
     for (int jj = 0; jj < jj_end; jj++) {
         lb0[jj] = -0.5;  // umin
@@ -318,9 +280,8 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(ocp_qp_dims *dims)
         ub0[jj] = x0[jj-jj_end];  // initial state
         idxb0[jj] = jj;
     }
-#endif
-	for(int jj=0; jj<nx[0]; jj++)
-		idxbxe0[jj] = jj;
+    for(int jj=0; jj<nx[0]; jj++)
+        idxbxe0[jj] = jj;
 
     int *idxb1;
     int_zeros(&idxb1, nb[1], 1);
@@ -418,24 +379,6 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(ocp_qp_dims *dims)
     d_zeros(&r, nu_, 1);
     for (int ii = 0; ii < nu_; ii++) r[ii] = 0.2;
 
-#if defined(ELIMINATE_X0)
-    // Q0 and q0 are matrices of size 0
-    double *Q0;
-    d_zeros(&Q0, 0, 0);
-    double *q0;
-    d_zeros(&q0, 0, 1);
-
-    // compute r0 = r + S*x0
-    double *r0;
-    d_zeros(&r0, nu_, 1);
-    dcopy_3l(nu_, r, 1, r0, 1);
-    dgemv_n_3l(nu_, nx_, S, nu_, x0, r0);
-
-    // then S0 is a matrix of size nux0
-    double *S0;
-    d_zeros(&S0, nu_, 0);
-#endif
-
     /************************************************
     * problem data
     ************************************************/
@@ -456,21 +399,12 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(ocp_qp_dims *dims)
     double *hlg[N+1];
     double *hug[N+1];
 
-#if defined(ELIMINATE_X0)
-    hA[0] = A0;
-    hb[0] = b0;
-    hQ[0] = Q0;
-    hS[0] = S0;
-    hq[0] = q0;
-    hr[0] = r0;
-#else
     hA[0] = A;
     hb[0] = b;
     hQ[0] = Q;
     hS[0] = S;
     hq[0] = q;
     hr[0] = r;
-#endif
     hB[0] = B;
     hR[0] = R;
     hlb[0] = lb0;
@@ -510,39 +444,39 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(ocp_qp_dims *dims)
     ocp_qp_in *qp_in = ocp_qp_in_create(dims);
 
 //    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, NULL, NULL, NULL, NULL, NULL, NULL, NULL, qp_in);
-	int ii;
-	for(ii=0; ii<N; ii++)
-	{
-		d_ocp_qp_set_A(ii, hA[ii], qp_in);
-		d_ocp_qp_set_B(ii, hB[ii], qp_in);
-		d_ocp_qp_set_b(ii, hb[ii], qp_in);
-		d_ocp_qp_set_R(ii, hR[ii], qp_in);
-		d_ocp_qp_set_S(ii, hS[ii], qp_in);
-		d_ocp_qp_set_Q(ii, hQ[ii], qp_in);
-		d_ocp_qp_set_r(ii, hr[ii], qp_in);
-		d_ocp_qp_set_q(ii, hq[ii], qp_in);
-		d_ocp_qp_set_idxb(ii, hidxb[ii], qp_in);
-		d_ocp_qp_set_lb(ii, hlb[ii], qp_in);
-		d_ocp_qp_set_ub(ii, hub[ii], qp_in);
-		d_ocp_qp_set_C(ii, hC[ii], qp_in);
-		d_ocp_qp_set_D(ii, hD[ii], qp_in);
-		d_ocp_qp_set_lg(ii, hlg[ii], qp_in);
-		d_ocp_qp_set_ug(ii, hug[ii], qp_in);
-	}
-	d_ocp_qp_set_R(ii, hR[ii], qp_in);
-	d_ocp_qp_set_S(ii, hS[ii], qp_in);
-	d_ocp_qp_set_Q(ii, hQ[ii], qp_in);
-	d_ocp_qp_set_r(ii, hr[ii], qp_in);
-	d_ocp_qp_set_q(ii, hq[ii], qp_in);
-	d_ocp_qp_set_idxb(ii, hidxb[ii], qp_in);
-	d_ocp_qp_set_lb(ii, hlb[ii], qp_in);
-	d_ocp_qp_set_ub(ii, hub[ii], qp_in);
-	d_ocp_qp_set_C(ii, hC[ii], qp_in);
-	d_ocp_qp_set_D(ii, hD[ii], qp_in);
-	d_ocp_qp_set_lg(ii, hlg[ii], qp_in);
-	d_ocp_qp_set_ug(ii, hug[ii], qp_in);
-	//
-	d_ocp_qp_set_idxbxe(0, idxbxe0, qp_in);
+    int ii;
+    for(ii=0; ii<N; ii++)
+    {
+        d_ocp_qp_set_A(ii, hA[ii], qp_in);
+        d_ocp_qp_set_B(ii, hB[ii], qp_in);
+        d_ocp_qp_set_b(ii, hb[ii], qp_in);
+        d_ocp_qp_set_R(ii, hR[ii], qp_in);
+        d_ocp_qp_set_S(ii, hS[ii], qp_in);
+        d_ocp_qp_set_Q(ii, hQ[ii], qp_in);
+        d_ocp_qp_set_r(ii, hr[ii], qp_in);
+        d_ocp_qp_set_q(ii, hq[ii], qp_in);
+        d_ocp_qp_set_idxb(ii, hidxb[ii], qp_in);
+        d_ocp_qp_set_lb(ii, hlb[ii], qp_in);
+        d_ocp_qp_set_ub(ii, hub[ii], qp_in);
+        d_ocp_qp_set_C(ii, hC[ii], qp_in);
+        d_ocp_qp_set_D(ii, hD[ii], qp_in);
+        d_ocp_qp_set_lg(ii, hlg[ii], qp_in);
+        d_ocp_qp_set_ug(ii, hug[ii], qp_in);
+    }
+    d_ocp_qp_set_R(ii, hR[ii], qp_in);
+    d_ocp_qp_set_S(ii, hS[ii], qp_in);
+    d_ocp_qp_set_Q(ii, hQ[ii], qp_in);
+    d_ocp_qp_set_r(ii, hr[ii], qp_in);
+    d_ocp_qp_set_q(ii, hq[ii], qp_in);
+    d_ocp_qp_set_idxb(ii, hidxb[ii], qp_in);
+    d_ocp_qp_set_lb(ii, hlb[ii], qp_in);
+    d_ocp_qp_set_ub(ii, hub[ii], qp_in);
+    d_ocp_qp_set_C(ii, hC[ii], qp_in);
+    d_ocp_qp_set_D(ii, hD[ii], qp_in);
+    d_ocp_qp_set_lg(ii, hlg[ii], qp_in);
+    d_ocp_qp_set_ug(ii, hug[ii], qp_in);
+    //
+    d_ocp_qp_set_idxbxe(0, idxbxe0, qp_in);
 
     // free objective
     free(Q);
@@ -551,23 +485,11 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(ocp_qp_dims *dims)
     free(q);
     free(r);
 
-#if defined(ELIMINATE_X0)
-    free(Q0);
-    free(q0);
-    free(r0);
-    free(S0);
-#endif
-
     // free dynamics
     free(A);
     free(B);
     free(b);
     free(x0);
-
-#if defined(ELIMINATE_X0)
-    free(b0);
-    free(A0);
-#endif
 
     // free constraints
     free(C);
@@ -594,18 +516,14 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(ocp_qp_dims *dims)
 
 
 
-ocp_qp_dims *create_ocp_qp_dims_mass_spring_soft_constr(int N, int nx_, int nu_, int nb_, int ng_, int ngN)
+ocp_qp_xcond_solver_dims *create_ocp_qp_dims_mass_spring_soft_constr(ocp_qp_xcond_solver_config *config, int N, int nx_, int nu_, int nb_, int ng_, int ngN)
 {
 
     int nbu_ = nu_<nb_ ? nu_ : nb_;
     int nbx_ = nb_ - nu_ > 0 ? nb_ - nu_ : 0;
 
     int nx[N+1];
-#if defined(ELIMINATE_X0)
-    nx[0] = 0;
-#else
     nx[0] = nx_;
-#endif
     for (int ii = 1; ii <= N; ii++) {
         nx[ii] = nx_;
     }
@@ -624,19 +542,10 @@ ocp_qp_dims *create_ocp_qp_dims_mass_spring_soft_constr(int N, int nx_, int nu_,
     nbu[N] = 0;
 
     int nbx[N+1];
-#if defined(ELIMINATE_X0)
-    nbx[0] = 0;
-#else
     nbx[0] = nx_;
-#endif
     for (int ii = 1; ii <= N; ii++)
     {
         nbx[ii] = nbx_;
-    }
-
-    int nb[N+1];
-    for (int ii = 0; ii <= N; ii++) {
-        nb[ii] = nbu[ii]+nbx[ii];
     }
 
     int ng[N+1];
@@ -646,31 +555,36 @@ ocp_qp_dims *create_ocp_qp_dims_mass_spring_soft_constr(int N, int nx_, int nu_,
     ng[N] = ngN;
 
     int ns[N+1];
-    for (int ii = 0; ii <= N; ii++) {
+    ns[0] = ng[0];
+    for (int ii = 1; ii <= N; ii++) {
         ns[ii] = nbx[ii]+ng[ii];
     }
 
+    int nbxe[N+1];
+    nbxe[0] = nx_;
+    for (int ii = 1; ii <= N; ii++)
+    {
+        nbxe[ii] = 0;
+    }
 
 
     // dims
-    int dims_size = ocp_qp_dims_calculate_size(N);
+    int dims_size = ocp_qp_xcond_solver_dims_calculate_size(config, N);
     void *dims_mem = malloc(dims_size);
-    ocp_qp_dims *dims = ocp_qp_dims_assign(N, dims_mem);
+    ocp_qp_xcond_solver_dims *dims = ocp_qp_xcond_solver_dims_assign(config, N, dims_mem);
 
-    dims->N = N;
     for (int ii=0; ii<=N; ii++)
     {
-        dims->nx[ii] = nx[ii];
-        dims->nu[ii] = nu[ii];
-        dims->nb[ii] = nb[ii];
-        dims->ng[ii] = ng[ii];
-        dims->ns[ii] = ns[ii];
-        dims->nsbx[ii] = nbx[ii];
-        dims->nsbu[ii] = 0;
-        dims->nsg[ii] = ng[ii];
-        dims->nbu[ii] = nbu[ii];
-        dims->nbx[ii] = nbx[ii];
+        config->dims_set(config, dims, ii, "nx", &nx[ii]);
+        config->dims_set(config, dims, ii, "nu", &nu[ii]);
+        config->dims_set(config, dims, ii, "nbx", &nbx[ii]);
+        config->dims_set(config, dims, ii, "nbu", &nbu[ii]);
+        config->dims_set(config, dims, ii, "ng", &ng[ii]);
+        config->dims_set(config, dims, ii, "ns", &ns[ii]);
     }
+    config->dims_set(config, dims, 0, "nbxe", &nbxe[0]);
+
+//d_ocp_qp_dim_print(dims->orig_dims);
 
     return dims;
 
@@ -718,7 +632,7 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(ocp_qp_dims *dims)
     mass_spring_system(Ts, nx_, nu_, A, B, b);
 
     // TODO(dimitris): @giaf, why do we overwrite b here?
-    for (int jj = 0; jj < nx_; jj++) b[jj] = 0.0;
+    for (int jj = 0; jj < nx_; jj++) b[jj] = 0.1;
 
     // initial state
     for (int jj = 0; jj < nx_; jj++) x0[jj] = 0;
@@ -729,20 +643,6 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(ocp_qp_dims *dims)
 //    d_print_mat(nx_, nu_, B, nx_);
 //    d_print_mat(nx_, 1, b, nx_);
 //    d_print_mat(nx_, 1, x0, nx_);
-
-#if defined(ELIMINATE_X0)
-    // compute b0 = b + A*x0
-    double *b0;
-    d_zeros(&b0, nx_, 1);
-    dcopy_3l(nx_, b, 1, b0, 1);
-    dgemv_n_3l(nx_, nx_, A, nx_, x0, b0);
-    //    d_print_mat(nx_, 1, b, nx_);
-    //    d_print_mat(nx_, 1, b0, nx_);
-
-    // then A0 is a matrix of size 0x0
-    double *A0;
-    d_zeros(&A0, 0, 0);
-#endif
 
     /************************************************
     * box constraints
@@ -756,13 +656,8 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(ocp_qp_dims *dims)
     d_zeros(&lb0, nb[0], 1);
     double *ub0;
     d_zeros(&ub0, nb[0], 1);
-#if defined(ELIMINATE_X0)
-    for (int jj = 0; jj < nb[0]; jj++) {
-        lb0[jj] = -0.5;  // umin
-        ub0[jj] = +0.5;  // umin
-        idxb0[jj] = jj;
-    }
-#else
+    int *idxbxe0;
+    int_zeros(&idxbxe0, nx[0], 1);
     jj_end = nu[0] < nb[0] ? nu[0] : nb[0];
     for (int jj = 0; jj < jj_end; jj++) {
         lb0[jj] = -0.5;  // umin
@@ -774,7 +669,8 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(ocp_qp_dims *dims)
         ub0[jj] = x0[jj-jj_end];  // initial state
         idxb0[jj] = jj;
     }
-#endif
+    for(int jj=0; jj<nx[0]; jj++)
+        idxbxe0[jj] = jj;
 
     int *idxb1;
     int_zeros(&idxb1, nb[1], 1);
@@ -867,7 +763,7 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(ocp_qp_dims *dims)
         zu0[ii] = 1e2;
     int *idxs0; int_zeros(&idxs0, ns[0], 1);
     for(ii=0; ii<ns[0]; ii++)
-        idxs0[ii] = nu[0]+ii;
+        idxs0[ii] = nu[0]+nx[0]+ii;
     double *d_ls0; d_zeros(&d_ls0, ns[0], 1);
     for(ii=0; ii<ns[0]; ii++)
         d_ls0[ii] = 0.0;
@@ -925,7 +821,7 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(ocp_qp_dims *dims)
 
     double *Q;
     d_zeros(&Q, nx_, nx_);
-    for (int ii = 0; ii < nx_; ii++) Q[ii * (nx_ + 1)] = 0.0;
+    for (int ii = 0; ii < nx_; ii++) Q[ii * (nx_ + 1)] = 1.0;
 
     double *R;
     d_zeros(&R, nu_, nu_);
@@ -936,29 +832,11 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(ocp_qp_dims *dims)
 
     double *q;
     d_zeros(&q, nx_, 1);
-    for (int ii = 0; ii < nx_; ii++) q[ii] = 0.0;
+    for (int ii = 0; ii < nx_; ii++) q[ii] = 0.1;
 
     double *r;
     d_zeros(&r, nu_, 1);
-    for (int ii = 0; ii < nu_; ii++) r[ii] = 0.0;
-
-#if defined(ELIMINATE_X0)
-    // Q0 and q0 are matrices of size 0
-    double *Q0;
-    d_zeros(&Q0, 0, 0);
-    double *q0;
-    d_zeros(&q0, 0, 1);
-
-    // compute r0 = r + S*x0
-    double *r0;
-    d_zeros(&r0, nu_, 1);
-    dcopy_3l(nu_, r, 1, r0, 1);
-    dgemv_n_3l(nu_, nx_, S, nu_, x0, r0);
-
-    // then S0 is a matrix of size nux0
-    double *S0;
-    d_zeros(&S0, nu_, 0);
-#endif
+    for (int ii = 0; ii < nu_; ii++) r[ii] = 0.2;
 
     /************************************************
     * problem data
@@ -985,21 +863,12 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(ocp_qp_dims *dims)
     double *hzu[N+1];
     int *hidxs[N+1];
 
-#if defined(ELIMINATE_X0)
-    hA[0] = A0;
-    hb[0] = b0;
-    hQ[0] = Q0;
-    hS[0] = S0;
-    hq[0] = q0;
-    hr[0] = r0;
-#else
     hA[0] = A;
     hb[0] = b;
     hQ[0] = Q;
     hS[0] = S;
     hq[0] = q;
     hr[0] = r;
-#endif
     hB[0] = B;
     hR[0] = R;
     hlb[0] = lb0;
@@ -1054,46 +923,48 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(ocp_qp_dims *dims)
     ocp_qp_in *qp_in = ocp_qp_in_create(dims);
 
 //    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, hZl, hZu, hzl, hzu, hidxs, hd_ls, hd_us, qp_in);
-	for(ii=0; ii<N; ii++)
-	{
-		d_ocp_qp_set_A(ii, hA[ii], qp_in);
-		d_ocp_qp_set_B(ii, hB[ii], qp_in);
-		d_ocp_qp_set_b(ii, hb[ii], qp_in);
-		d_ocp_qp_set_R(ii, hR[ii], qp_in);
-		d_ocp_qp_set_S(ii, hS[ii], qp_in);
-		d_ocp_qp_set_Q(ii, hQ[ii], qp_in);
-		d_ocp_qp_set_r(ii, hr[ii], qp_in);
-		d_ocp_qp_set_q(ii, hq[ii], qp_in);
-		d_ocp_qp_set_idxb(ii, hidxb[ii], qp_in);
-		d_ocp_qp_set_lb(ii, hlb[ii], qp_in);
-		d_ocp_qp_set_ub(ii, hub[ii], qp_in);
-		d_ocp_qp_set_C(ii, hC[ii], qp_in);
-		d_ocp_qp_set_D(ii, hD[ii], qp_in);
-		d_ocp_qp_set_lg(ii, hlg[ii], qp_in);
-		d_ocp_qp_set_ug(ii, hug[ii], qp_in);
-		d_ocp_qp_set_Zl(ii, hZl[ii], qp_in);
-		d_ocp_qp_set_Zu(ii, hZu[ii], qp_in);
-		d_ocp_qp_set_zl(ii, hzl[ii], qp_in);
-		d_ocp_qp_set_zu(ii, hzu[ii], qp_in);
-		d_ocp_qp_set_idxb(ii, hidxs[ii], qp_in);
-	}
-	d_ocp_qp_set_R(ii, hR[ii], qp_in);
-	d_ocp_qp_set_S(ii, hS[ii], qp_in);
-	d_ocp_qp_set_Q(ii, hQ[ii], qp_in);
-	d_ocp_qp_set_r(ii, hr[ii], qp_in);
-	d_ocp_qp_set_q(ii, hq[ii], qp_in);
-	d_ocp_qp_set_idxb(ii, hidxb[ii], qp_in);
-	d_ocp_qp_set_lb(ii, hlb[ii], qp_in);
-	d_ocp_qp_set_ub(ii, hub[ii], qp_in);
-	d_ocp_qp_set_C(ii, hC[ii], qp_in);
-	d_ocp_qp_set_D(ii, hD[ii], qp_in);
-	d_ocp_qp_set_lg(ii, hlg[ii], qp_in);
-	d_ocp_qp_set_ug(ii, hug[ii], qp_in);
-	d_ocp_qp_set_Zl(ii, hZl[ii], qp_in);
-	d_ocp_qp_set_Zu(ii, hZu[ii], qp_in);
-	d_ocp_qp_set_zl(ii, hzl[ii], qp_in);
-	d_ocp_qp_set_zu(ii, hzu[ii], qp_in);
-	d_ocp_qp_set_idxb(ii, hidxs[ii], qp_in);
+    for(ii=0; ii<N; ii++)
+    {
+        d_ocp_qp_set_A(ii, hA[ii], qp_in);
+        d_ocp_qp_set_B(ii, hB[ii], qp_in);
+        d_ocp_qp_set_b(ii, hb[ii], qp_in);
+        d_ocp_qp_set_R(ii, hR[ii], qp_in);
+        d_ocp_qp_set_S(ii, hS[ii], qp_in);
+        d_ocp_qp_set_Q(ii, hQ[ii], qp_in);
+        d_ocp_qp_set_r(ii, hr[ii], qp_in);
+        d_ocp_qp_set_q(ii, hq[ii], qp_in);
+        d_ocp_qp_set_idxb(ii, hidxb[ii], qp_in);
+        d_ocp_qp_set_lb(ii, hlb[ii], qp_in);
+        d_ocp_qp_set_ub(ii, hub[ii], qp_in);
+        d_ocp_qp_set_C(ii, hC[ii], qp_in);
+        d_ocp_qp_set_D(ii, hD[ii], qp_in);
+        d_ocp_qp_set_lg(ii, hlg[ii], qp_in);
+        d_ocp_qp_set_ug(ii, hug[ii], qp_in);
+        d_ocp_qp_set_Zl(ii, hZl[ii], qp_in);
+        d_ocp_qp_set_Zu(ii, hZu[ii], qp_in);
+        d_ocp_qp_set_zl(ii, hzl[ii], qp_in);
+        d_ocp_qp_set_zu(ii, hzu[ii], qp_in);
+        d_ocp_qp_set_idxs(ii, hidxs[ii], qp_in);
+    }
+    d_ocp_qp_set_R(ii, hR[ii], qp_in);
+    d_ocp_qp_set_S(ii, hS[ii], qp_in);
+    d_ocp_qp_set_Q(ii, hQ[ii], qp_in);
+    d_ocp_qp_set_r(ii, hr[ii], qp_in);
+    d_ocp_qp_set_q(ii, hq[ii], qp_in);
+    d_ocp_qp_set_idxb(ii, hidxb[ii], qp_in);
+    d_ocp_qp_set_lb(ii, hlb[ii], qp_in);
+    d_ocp_qp_set_ub(ii, hub[ii], qp_in);
+    d_ocp_qp_set_C(ii, hC[ii], qp_in);
+    d_ocp_qp_set_D(ii, hD[ii], qp_in);
+    d_ocp_qp_set_lg(ii, hlg[ii], qp_in);
+    d_ocp_qp_set_ug(ii, hug[ii], qp_in);
+    d_ocp_qp_set_Zl(ii, hZl[ii], qp_in);
+    d_ocp_qp_set_Zu(ii, hZu[ii], qp_in);
+    d_ocp_qp_set_zl(ii, hzl[ii], qp_in);
+    d_ocp_qp_set_zu(ii, hzu[ii], qp_in);
+    d_ocp_qp_set_idxs(ii, hidxs[ii], qp_in);
+    //
+    d_ocp_qp_set_idxbxe(0, idxbxe0, qp_in);
 
     // free objective
     free(Q);
@@ -1102,23 +973,11 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(ocp_qp_dims *dims)
     free(q);
     free(r);
 
-#if defined(ELIMINATE_X0)
-    free(Q0);
-    free(q0);
-    free(r0);
-    free(S0);
-#endif
-
     // free dynamics
     free(A);
     free(B);
     free(b);
     free(x0);
-
-#if defined(ELIMINATE_X0)
-    free(b0);
-    free(A0);
-#endif
 
     // free constraints
     free(C);
@@ -1138,6 +997,7 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(ocp_qp_dims *dims)
     free(ub0);
     free(ub1);
     free(ubN);
+    free(idxbxe0);
 
     d_free(Zl0);
     d_free(Zu0);
