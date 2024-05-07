@@ -107,8 +107,6 @@ void ocp_nlp_ddp_opts_initialize_default(void *config_, void *dims_, void *opts_
 
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
 
-    // int ii;
-
     // this first !!!
     ocp_nlp_opts_initialize_default(config, dims, nlp_opts);
 
@@ -323,7 +321,6 @@ acados_size_t ocp_nlp_ddp_memory_calculate_size(void *config_, void *dims_, void
     int N = dims->N;
     int *nx = dims->nx;
     int *nu = dims->nu;
-    // int *nz = dims->nz;
 
     acados_size_t size = 0;
 
@@ -378,7 +375,6 @@ void *ocp_nlp_ddp_memory_assign(void *config_, void *dims_, void *opts_, void *r
     int N = dims->N;
     int *nx = dims->nx;
     int *nu = dims->nu;
-    // int *nz = dims->nz;
 
     // initial align
     align_char_to(8, &c_ptr);
@@ -777,6 +773,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // backup number of threads
     int num_threads_bkp = omp_get_num_threads();
     // set number of threads
+    // approximate_qp_matrices is parallelized
     omp_set_num_threads(opts->nlp_opts->num_threads);
 #endif
 
@@ -1062,25 +1059,15 @@ double ocp_nlp_ddp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_
     double qp_cost = 0.0;
     int i;
     int N = dims->N;
-    int nux;
-    // Sum over stages 0 to N-1
-    for (i = 0; i < N; i++)
+    // Sum over stages 0 to N
+    for (i = 0; i <= N; i++)
     {
-        nux = dims->nu[i] + dims->nx[i];
         // Calculate 0.5* d.T H d
-        blasfeo_dsymv_l(nux, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], 0, 0.0, &qp_out->ux[i], 0, &nlp_work->tmp_nlp_out->ux[i], 0);
-        qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &nlp_work->tmp_nlp_out->ux[i], 0);
+        blasfeo_dsymv_l(dims->nv[i], 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], 0, 0.0, &qp_out->ux[i], 0, &nlp_work->tmp_nlp_out->ux[i], 0);
+        qp_cost += blasfeo_ddot(dims->nv[i], &qp_out->ux[i], 0, &nlp_work->tmp_nlp_out->ux[i], 0);
         // Calculate g.T d
-        qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
+        qp_cost += blasfeo_ddot(dims->nv[i], &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
     }
-    int nx = dims->nx[N];
-    int nu = dims->nu[N];
-    // For terminal stage N:
-    // Calculate 0.5* d.T H d
-    blasfeo_dsymv_l(nx, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], nu, 0.0, &qp_out->ux[i], nu, &nlp_work->tmp_nlp_out->ux[i], nu);
-    qp_cost += blasfeo_ddot(nx, &qp_out->ux[i], nu, &nlp_work->tmp_nlp_out->ux[i], nu);
-    // Calculate g.T d
-    qp_cost += blasfeo_ddot(nx, &qp_out->ux[i], nu, &qp_in->rqz[i], 0);
     return qp_cost;
 
 }
@@ -1111,6 +1098,10 @@ int ocp_nlp_ddp_backtracking_line_search(void *config_, void *dims_, void *nlp_i
     double alpha = 1.0;
     double trial_cost;
     double negative_ared;
+    double *tmp_fun;
+
+    int i;
+
     while (true)
     {
         // Do the DDP forward sweep to get the trial iterate
@@ -1124,7 +1115,7 @@ int ocp_nlp_ddp_backtracking_line_search(void *config_, void *dims_, void *nlp_i
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
-        for (int i=0; i<=N; i++)
+        for (i=0; i<=N; i++)
         {
             // cost
             config->cost[i]->compute_fun(config->cost[i], dims->cost[i], nlp_in->cost[i], nlp_opts->cost[i],
@@ -1132,8 +1123,7 @@ int ocp_nlp_ddp_backtracking_line_search(void *config_, void *dims_, void *nlp_i
         }
         ocp_nlp_set_primal_variable_pointers_in_submodules(config, dims, nlp_in, nlp_out, nlp_mem);
         trial_cost = 0.0;
-        double *tmp_fun;
-        for(int i=0; i<=N; i++)
+        for(i=0; i<=N; i++)
         {
             tmp_fun = config->cost[i]->memory_get_fun_ptr(nlp_mem->cost[i]);
             trial_cost += *tmp_fun;
@@ -1452,7 +1442,6 @@ void ocp_nlp_ddp_get(void *config_, void *dims_, void *mem_, const char *field, 
 void ocp_nlp_ddp_opts_get(void *config_, void *dims_, void *opts_,
                           const char *field, void *return_value_)
 {
-    // ocp_nlp_config *config = config_;
     ocp_nlp_ddp_opts *opts = opts_;
 
     if (!strcmp("nlp_opts", field))
@@ -1471,7 +1460,6 @@ void ocp_nlp_ddp_opts_get(void *config_, void *dims_, void *opts_,
 void ocp_nlp_ddp_work_get(void *config_, void *dims_, void *work_,
                           const char *field, void *return_value_)
 {
-    // ocp_nlp_config *config = config_;
     ocp_nlp_ddp_workspace *work = work_;
 
     if (!strcmp("nlp_work", field))
