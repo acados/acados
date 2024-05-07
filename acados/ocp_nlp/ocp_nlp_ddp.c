@@ -1012,7 +1012,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
         else
         {
-            int linesearch_success = 0;
+            int linesearch_success = 1;
             // Do the globalization here: Either fixed step or Armijo line search
             acados_tic(&timer1);
             // NOTE on timings: currently all within globalization is accounted for within time_glob.
@@ -1034,7 +1034,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
             mem->stat[mem->stat_n*(ddp_iter+1)+6] = mem->alpha;
             // Copy new iterate to nlp_out
-            if (linesearch_success == 0)
+            if (linesearch_success == 1)
             {
                 // in case line search fails, we do not want to copy trial iterates!
                 copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
@@ -1148,7 +1148,7 @@ int ocp_nlp_ddp_backtracking_line_search(void *config_, void *dims_, void *nlp_i
             // copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
             mem->alpha = alpha;
             nlp_mem->cost_value = trial_cost;
-            return 0;
+            return 1;
         }
         else
         {
@@ -1160,7 +1160,7 @@ int ocp_nlp_ddp_backtracking_line_search(void *config_, void *dims_, void *nlp_i
         {
             printf("Linesearch: Step size gets too small. Increasing regularization.\n");
             mem->alpha = 0.0; // set to zero such that regularization is increased
-            return 1;
+            return 0;
         }
     }
 }
