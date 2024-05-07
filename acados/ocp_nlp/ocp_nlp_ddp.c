@@ -1025,7 +1025,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 // update variables
                 ocp_nlp_ddp_compute_trial_iterate(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, mem->alpha);
             }
-            else
+            else if (nlp_opts->globalization == MERIT_BACKTRACKING)
             {
                 // do backtracking line search on objective function
                 linesearch_success = ocp_nlp_ddp_backtracking_line_search(config, dims, nlp_in, nlp_out, mem, work, opts);
@@ -1068,7 +1068,7 @@ double ocp_nlp_ddp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_
     {
         nux = dims->nu[i] + dims->nx[i];
         // Calculate 0.5* d.T H d
-        blasfeo_dsymv_l(nux, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], 0, 0.0, &qp_out->ux[i], 0, &nlp_work->tmp_nlp_out->ux[i],0);
+        blasfeo_dsymv_l(nux, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], 0, 0.0, &qp_out->ux[i], 0, &nlp_work->tmp_nlp_out->ux[i], 0);
         qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &nlp_work->tmp_nlp_out->ux[i], 0);
         // Calculate g.T d
         qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
@@ -1077,13 +1077,14 @@ double ocp_nlp_ddp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_
     int nu = dims->nu[N];
     // For terminal stage N:
     // Calculate 0.5* d.T H d
-    blasfeo_dsymv_l(nx, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], nu, 0.0, &qp_out->ux[i], nu, &nlp_work->tmp_nlp_out->ux[i],nu);
+    blasfeo_dsymv_l(nx, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], nu, 0.0, &qp_out->ux[i], nu, &nlp_work->tmp_nlp_out->ux[i], nu);
     qp_cost += blasfeo_ddot(nx, &qp_out->ux[i], nu, &nlp_work->tmp_nlp_out->ux[i], nu);
     // Calculate g.T d
     qp_cost += blasfeo_ddot(nx, &qp_out->ux[i], nu, &qp_in->rqz[i], 0);
     return qp_cost;
 
 }
+
 
 int ocp_nlp_ddp_backtracking_line_search(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *mem_, void *work_, void *opts_)
