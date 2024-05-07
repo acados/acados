@@ -33,7 +33,7 @@ import numpy as np
 import casadi as ca
 import scipy.linalg
 
-def create_acados_solver_and_solve_problem(method='SQP'):
+def create_acados_solver_and_solve_problem(method="SQP"):
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
@@ -44,8 +44,8 @@ def create_acados_solver_and_solve_problem(method='SQP'):
     nu = 2
     ny = nx + nu
     ny_e = nx
-    x = ca.SX.sym('x', nx)
-    u = ca.SX.sym('u', nu)
+    x = ca.SX.sym("x", nx)
+    u = ca.SX.sym("u", nu)
 
     A = np.eye(nx)*0.9
     B = np.tril(np.ones((nx, nu)))
@@ -62,8 +62,8 @@ def create_acados_solver_and_solve_problem(method='SQP'):
     ocp.dims.N = N
 
     # set cost
-    ocp.cost.cost_type = 'LINEAR_LS'
-    ocp.cost.cost_type_e = 'LINEAR_LS'
+    ocp.cost.cost_type = "LINEAR_LS"
+    ocp.cost.cost_type_e = "LINEAR_LS"
     Q_mat = 0.05*np.diag([1e3, 1e-2])
     R_mat = 0.05*np.diag([1.0, 1.0])
 
@@ -84,33 +84,29 @@ def create_acados_solver_and_solve_problem(method='SQP'):
     ocp.constraints.x0 = np.array([2.0, 0.0])
 
     # set options
-    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+    ocp.solver_options.qp_solver = "PARTIAL_CONDENSING_HPIPM"
     ocp.solver_options.qp_solver_cond_N = N
-    ocp.solver_options.hessian_approx = 'EXACT'
-    ocp.solver_options.integrator_type = 'DISCRETE'
+    ocp.solver_options.hessian_approx = "EXACT"
+    ocp.solver_options.integrator_type = "DISCRETE"
     ocp.solver_options.print_level = 1
     ocp.solver_options.nlp_solver_type = method # SQP_RTI, SQP
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
 
-    json_name = 'acados_' + method + '_ocp.json'
+    json_name = "acados_" + method + "_ocp.json"
     ocp_solver = AcadosOcpSolver(ocp, json_file = json_name)
 
-    sol_X = np.ndarray((N+1, nx))
-    sol_U = np.ndarray((N, nu))
+    sol_X = np.zeros((N+1, nx))
+    sol_U = np.zeros((N, nu))
 
     status = ocp_solver.solve()
-    if method == "SQP":
-        iter = ocp_solver.get_stats('sqp_iter')
-    elif method == "DDP":
-        iter = ocp_solver.get_stats('ddp_iter')
-    else:
-        raise RuntimeError("Wrong method!")
-    assert iter in [0,1], "DDP Solver should converge within 1 iteration!"
+    iter = ocp_solver.get_stats("nlp_iter")
+
+    assert iter in [0,1], "Solver should converge within 1 iteration!"
 
     if status != 0:
-        raise Exception(f'acados returned status {status}.')
+        raise Exception(f"acados returned status {status}.")
 
     # get solution
     for i in range(N):
@@ -124,13 +120,13 @@ def create_acados_solver_and_solve_problem(method='SQP'):
     return sol_X, sol_U
 
 def main():
-    sol_X_sqp, sol_U_sqp = create_acados_solver_and_solve_problem(method='SQP')
-    sol_X_ddp, sol_U_ddp = create_acados_solver_and_solve_problem(method='DDP')
+    sol_X_sqp, sol_U_sqp = create_acados_solver_and_solve_problem(method="SQP")
+    sol_X_ddp, sol_U_ddp = create_acados_solver_and_solve_problem(method="DDP")
 
     assert np.allclose(sol_X_ddp, sol_X_sqp), "solution x of ddp and sqp do not coincide"
     assert np.allclose(sol_U_ddp, sol_U_sqp), "solution u of ddp and sqp do not coincide"
 
     print("Experiment was succesful!")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

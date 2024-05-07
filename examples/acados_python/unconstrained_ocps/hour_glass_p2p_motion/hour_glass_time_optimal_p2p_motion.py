@@ -57,11 +57,6 @@ def main():
     # set dimensions
     ocp.dims.N = N
 
-    # # set cost
-    # Q_mat = np.array([[0.5, 0], [0, 0.5]])
-    # R_mat = np.array([[0.8]])
-    # P_mat = np.array([[10.0, 0], [0, 10.0]])
-
     x0 = 0.0
     y0 = 0.0
     theta0 = np.pi/2
@@ -148,7 +143,7 @@ def main():
     # Solve the problem
     status = ocp_solver.solve()
 
-    iter = ocp_solver.get_stats('ddp_iter')
+    iter = ocp_solver.get_stats('nlp_iter')
     assert iter <= 14, "DDP Solver should converge within 14 iterations!"
 
     if status != 0:

@@ -130,7 +130,7 @@ def main():
     if status != 0:
         raise Exception(f'acados returned status {status}.')
 
-    iter = ocp_solver.get_stats('ddp_iter')
+    iter = ocp_solver.get_stats('nlp_iter')
     assert iter == 4, "DDP Solver should converge within 4 iterations!"
 
 
