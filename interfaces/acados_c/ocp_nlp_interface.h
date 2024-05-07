@@ -54,6 +54,7 @@ typedef enum
 {
     SQP,
     SQP_RTI,
+    DDP,
     INVALID_NLP_SOLVER,
 } ocp_nlp_solver_t;
 

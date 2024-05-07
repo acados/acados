@@ -818,6 +818,32 @@ class AcadosOcpSolver:
                          stat[offset+1][jj], stat[offset+2][jj], stat[offset+3][jj], stat[offset+4][jj])
                 print(line)
             print('\n')
+        elif self.solver_options['nlp_solver_type'] == 'DDP':
+            for jj in range(stat.shape[1]):
+                if jj % 10 == 0:
+                    # print('\niter\tres_stat\tres_eq\t\tqp_stat\tqp_iter\talpha')
+                    print(("{iter:>6} | {obj:^10} | {inf:^10} | {stat:^10} | "
+                   "{alpha:^10} | {gamma:^10} | {qp_status:^10} | {qp_iter:^10}").format(
+                        obj='objective',
+                        iter='iter.',
+                        inf='res_eq',
+                        stat='res_stat',
+                        alpha='alpha',
+                        gamma='LM_reg.',
+                        qp_status='qp_status',
+                        qp_iter='qp_iter.'))
+                # print(f'{int(stat[0][jj]):d}\t{stat[1][jj]:e}\t{stat[2][jj]:e}\t{int(stat[5][jj]):d}\t{int(stat[6][jj]):d}\t{stat[7][jj]:e}\t')
+                print(("{iter:>6} | {obj:^10.4e} | {inf:^10.4e} | {stat:^10.4e} | "
+                   "{alpha:^10.4e} | {gamma:^10.4e} | {qp_status:^10} | {qp_iter:^10}").format(
+                     iter=int(stat[0][jj]),
+                     stat=stat[1][jj],
+                     inf=stat[2][jj],
+                     obj=stat[3][jj],
+                     gamma=stat[4][jj],
+                     qp_status=int(stat[5][jj]),
+                     qp_iter=int(stat[6][jj]),
+                     alpha=stat[7][jj]))
+            print('\n')
 
         return
 
@@ -932,7 +958,7 @@ class AcadosOcpSolver:
         """
         Get the information of the last solver call.
 
-            :param field: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg', 'sqp_iter', 'residuals', 'qp_iter', 'alpha']
+            :param field: string in ['statistics', 'time_tot', 'time_lin', 'time_sim', 'time_sim_ad', 'time_sim_la', 'time_qp', 'time_qp_solver_call', 'time_reg', 'sqp_iter', 'sqp_iter', 'residuals', 'qp_iter', 'alpha']
 
         Available fileds:
             - time_tot: total CPU time previous call
@@ -948,6 +974,7 @@ class AcadosOcpSolver:
             - time_solution_sens_solve: CPU time for solving in eval_solution_sensitivity
             - time_reg: CPU time regularization
             - sqp_iter: number of SQP iterations
+            - nlp_iter: number of NLP solver iterations (DDP or SQP)
             - qp_stat: status of QP solver
             - qp_iter: vector of QP iterations for last SQP call
             - statistics: table with info about last iteration
@@ -976,6 +1003,7 @@ class AcadosOcpSolver:
         ]
         fields = double_fields + [
                   'sqp_iter',
+                  'ddp_iter',
                   'nlp_iter',
                   'qp_stat',
                   'qp_iter',
@@ -990,7 +1018,7 @@ class AcadosOcpSolver:
 
         field = field_.encode('utf-8')
 
-        if field_ in ['sqp_iter', 'nlp_iter', 'stat_m', 'stat_n']:
+        if field_ in ['ddp_iter', 'sqp_iter', 'nlp_iter', 'stat_m', 'stat_n']:
             out = c_int(0)
             self.__acados_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, byref(out))
             return out.value
@@ -1001,10 +1029,10 @@ class AcadosOcpSolver:
             return out.value
 
         elif field_ == 'statistics':
-            sqp_iter = self.get_stats("sqp_iter")
+            nlp_iter = self.get_stats("nlp_iter")
             stat_m = self.get_stats("stat_m")
             stat_n = self.get_stats("stat_n")
-            min_size = min([stat_m, sqp_iter+1])
+            min_size = min([stat_m, nlp_iter+1])
             out = np.ascontiguousarray(np.zeros((stat_n+1, min_size)), dtype=np.float64)
             out_data = cast(out.ctypes.data, POINTER(c_double))
             self.__acados_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)

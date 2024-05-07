@@ -1960,7 +1960,7 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
  * functions
  ************************************************/
 
-static void ocp_nlp_set_primal_variable_pointers_in_submodules(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
+void ocp_nlp_set_primal_variable_pointers_in_submodules(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
                                                        ocp_nlp_out *nlp_out, ocp_nlp_memory *nlp_mem)
 {
     int N = dims->N;
@@ -2209,7 +2209,6 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
 #endif
     for (int i=0; i <= N; i++)
     {
-
         // nlp mem: cost_grad
         struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get_grad_ptr(mem->cost[i]);
         blasfeo_dveccp(nv[i], cost_grad, 0, mem->cost_grad + i, 0);
