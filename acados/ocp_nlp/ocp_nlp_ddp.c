@@ -800,18 +800,10 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     for (; ddp_iter < opts->max_iter+1; ddp_iter++)
     {
-        ///////////////////////////////////////////////////////////////////////
-        // This needs to happen before the matrices are evaluated due to regularization!
-        // calculate objective function first because hessian evaluation uses the
-        // Levenberg-Marquardt term and the objective function value is used in the
-        // regularization.
-
-        //TODO: Cost is evaluated in ocp_nlp_approximate_qp_matrices. So, we would 
-        // not need would to evaluate it again. We could avoid some function
-        // evaluations here. 
-        ///////////////////////////////////////////////////////////////////////
         if (evaluate_cost)
         {
+            // TODO: Cost is evaluated in ocp_nlp_approximate_qp_matrices.
+            // Avoiding cost separately could be avoided, when moving levenberg_marquadt out of ocp_nlp_aproximate_qp_matrices
             ocp_nlp_cost_compute(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
         }
         // Prepare the regularization here...
