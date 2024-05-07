@@ -31,7 +31,6 @@
 from acados_template import AcadosOcp, AcadosOcpSolver
 from rockit_hello_world_model import export_rockit_hello_world_model
 import numpy as np
-# from utils import plot_trajectory
 
 def main():
 
@@ -101,7 +100,6 @@ def main():
 
     if SOLVE_FEASIBILITY_PROBLEM:
         ocp.translate_to_feasibility_problem()
-
 
     ocp_solver = AcadosOcpSolver(ocp, json_file = 'rockit_hello_world.json')
 

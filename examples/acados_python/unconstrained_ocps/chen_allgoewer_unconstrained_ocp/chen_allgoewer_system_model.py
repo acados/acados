@@ -29,7 +29,7 @@
 #
 
 from acados_template import AcadosModel
-from casadi import SX, vertcat, sin, cos
+from casadi import SX, vertcat
 
 def export_chen_allgoewer_model() -> AcadosModel:
 
@@ -47,8 +47,8 @@ def export_chen_allgoewer_model() -> AcadosModel:
     u = SX.sym('u')
 
     # xdot
-    x1_dot      = SX.sym('x1_dot')
-    x2_dot      = SX.sym('x2_dot')
+    x1_dot = SX.sym('x1_dot')
+    x2_dot = SX.sym('x2_dot')
 
     xdot = vertcat(x1_dot, x2_dot)
 

@@ -31,7 +31,6 @@
 from acados_template import AcadosOcp, AcadosOcpSolver
 from time_optimal_simple_bicycle_model import export_time_optimal_simple_bicycle
 import numpy as np
-# from utils import plot_trajectory
 from matplotlib import pyplot as plt
 import casadi as ca
 
@@ -66,7 +65,6 @@ def main():
     thetaf = np.pi/2
 
     v_max = 1.0
-    a_max = 1.0
     delta_max = np.pi/6
 
     # the 'EXTERNAL' cost type can be used to define general cost terms
@@ -187,10 +185,13 @@ def plot_trajectory(list_X_sol: list, labels: list):
     for i in range(500):
         plt.hlines(y= yf+rf1*np.sin(angle[i]), xmin=-3-rf1*np.cos(angle[i]), xmax=-3+rf1*np.cos(angle[i]), color='r')
         plt.hlines(y= y0-rf2*np.sin(angle[i]), xmin=-3-rf2*np.cos(angle[i]), xmax=-3+rf2*np.cos(angle[i]), color='r')
-    plt.plot(-3+rf1*np.cos(angle),yf+rf1*np.sin(angle), 'r-')
-    plt.plot(-3-rf1*np.cos(angle),yf+rf1*np.sin(angle), 'r-')
-    plt.plot(-3+rf2*np.cos(angle),y0-rf2*np.sin(angle), 'r-')
-    plt.plot(-3-rf2*np.cos(angle),y0-rf2*np.sin(angle), 'r-')
+
+    cos_angle = np.cos(angle)
+    sin_angle = np.sin(angle)
+    plt.plot(-3+rf1*cos_angle,yf+rf1*sin_angle, 'r-')
+    plt.plot(-3-rf1*cos_angle,yf+rf1*sin_angle, 'r-')
+    plt.plot(-3+rf2*cos_angle,y0-rf2*sin_angle, 'r-')
+    plt.plot(-3-rf2*cos_angle,y0-rf2*sin_angle, 'r-')
 
     # Plot x and y coordinates
     for i in range(len(list_X_sol)):
