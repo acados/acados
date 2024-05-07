@@ -805,6 +805,10 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // calculate objective function first because hessian evaluation uses the
         // Levenberg-Marquardt term and the objective function value is used in the
         // regularization.
+
+        //TODO: Cost is evaluated in ocp_nlp_approximate_qp_matrices. So, we would 
+        // not need would to evaluate it again. We could avoid some function
+        // evaluations here. 
         ///////////////////////////////////////////////////////////////////////
         if (evaluate_cost)
         {
@@ -866,7 +870,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             {
                 printf("Initial guess was infeasible!\n");
             }
-            ddp_iter = -1;
         }
         else
         {
