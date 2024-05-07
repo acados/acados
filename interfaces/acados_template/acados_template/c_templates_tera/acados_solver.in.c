@@ -3175,7 +3175,7 @@ void {{ model.name }}_acados_print_stats({{ model.name }}_solver_capsule* capsul
         }
         printf("\n");
     }
-{%- solver_options.nlp_solver_type == "DDP" %}
+{%- elif solver_options.nlp_solver_type == "DDP" %}
     printf("{{ model.name }}_acados_print_stats: not implemented for DDP\n");
 {%- elif solver_options.nlp_solver_type == "SQP_RTI" %}
     printf("iter\tqp_stat\tqp_iter\n");
