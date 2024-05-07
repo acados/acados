@@ -889,7 +889,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // regularize Hessian
         acados_tic(&timer1);
         config->regularize->regularize(config->regularize, dims->regularize,
-                                               opts->nlp_opts->regularize, nlp_mem->regularize_mem);
+                                               nlp_opts->regularize, nlp_mem->regularize_mem);
         mem->time_reg += acados_toc(&timer1);
 
 
@@ -898,7 +898,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         if (ddp_iter == 0 && !opts->warm_start_first_qp)
         {
             int tmp_int = 0;
-            config->qp_solver->opts_set(config->qp_solver, opts->nlp_opts->qp_solver_opts,
+            config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts,
                                          "warm_start", &tmp_int);
         }
         // Show input to QP
@@ -911,7 +911,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         acados_tic(&timer1);
         qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver, qp_in, qp_out,
-                                        opts->nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
+                                        nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
         mem->time_qp_sol += acados_toc(&timer1);
 
         qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);
@@ -922,13 +922,13 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // compute correct dual solution in case of Hessian regularization
         acados_tic(&timer1);
         config->regularize->correct_dual_sol(config->regularize, dims->regularize,
-                                             opts->nlp_opts->regularize, nlp_mem->regularize_mem);
+                                             nlp_opts->regularize, nlp_mem->regularize_mem);
         mem->time_reg += acados_toc(&timer1);
 
         // restore default warm start
         if (ddp_iter==0)
         {
-            config->qp_solver->opts_set(config->qp_solver, opts->nlp_opts->qp_solver_opts,
+            config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts,
                                         "warm_start", &opts->qp_warm_start);
         }
 
@@ -1017,7 +1017,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             acados_tic(&timer1);
             // NOTE on timings: currently all within globalization is accounted for within time_glob.
             //   QP solver times could be also attributed there alternatively. Cleanest would be to save them seperately.
-            if (opts->nlp_opts->globalization == FIXED_STEP)
+            if (nlp_opts->globalization == FIXED_STEP)
             {
                 // Set the given step length
                 mem->alpha = nlp_opts->step_length;
@@ -1053,6 +1053,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     }
     return mem->status;
 }
+
 
 double ocp_nlp_ddp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
                 ocp_nlp_workspace *nlp_work, ocp_nlp_memory *nlp_mem){
