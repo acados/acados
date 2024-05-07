@@ -608,11 +608,11 @@ static void print_iteration_header(){
     printf("%6s | %11s | %10s | %10s | %10s | %10s | %10s | %10s | %10s\n",
     "iter.",
     "objective",
-    "infeas.",
-    "statio.",
+    "res_eq",
+    "res_stat",
     "alpha",
-    "||d||_inf",
-    "reg.",
+    "step_norm",
+    "LM_reg.",
     "qp_status",
     "qp_iter");
 }

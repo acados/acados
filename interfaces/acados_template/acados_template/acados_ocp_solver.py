@@ -826,10 +826,10 @@ class AcadosOcpSolver:
                    "{alpha:^10} | {gamma:^10} | {qp_status:^10} | {qp_iter:^10}").format(
                         obj='objective',
                         iter='iter.',
-                        inf='infeas.',
-                        stat='statio.',
+                        inf='res_eq',
+                        stat='res_stat',
                         alpha='alpha',
-                        gamma='reg.',
+                        gamma='LM_reg.',
                         qp_status='qp_status',
                         qp_iter='qp_iter.'))
                 # print(f'{int(stat[0][jj]):d}\t{stat[1][jj]:e}\t{stat[2][jj]:e}\t{int(stat[5][jj]):d}\t{int(stat[6][jj]):d}\t{stat[7][jj]:e}\t')
