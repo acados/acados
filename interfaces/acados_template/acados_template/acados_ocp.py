@@ -1088,6 +1088,10 @@ class AcadosOcp:
                 new_residual = casadi_symbol(residual_name, constr_expr.shape)
                 self.model.cost_r_in_psi_expr = ca.vertcat(self.model.cost_r_in_psi_expr, new_residual)
                 self.model.cost_psi_expr += .5 * weight * new_residual**2
+            elif self.cost.cost_type == "EXTERNAL":
+                self.model.cost_expr_ext_cost += .5 * weight * violation_expr**2
+            else:
+                raise NotImplementedError(f"formulate_constraint_as_L2_penalty not implemented for path cost with cost_type {self.cost.cost_type}.")
         elif constraint_type == "initial":
             self.cost.yref_0 = np.concatenate((self.cost.yref_0, y_ref_new))
             self.model.cost_y_expr_0 = ca.vertcat(self.model.cost_y_expr_0, violation_expr)
@@ -1097,6 +1101,10 @@ class AcadosOcp:
                 new_residual = casadi_symbol(residual_name, constr_expr.shape)
                 self.model.cost_r_in_psi_expr_0 = ca.vertcat(self.model.cost_r_in_psi_expr_0, new_residual)
                 self.model.cost_psi_expr_0 += .5 * weight * new_residual**2
+            elif self.cost.cost_type_0 == "EXTERNAL":
+                self.model.cost_expr_ext_cost_0 += .5 * weight * violation_expr**2
+            else:
+                raise NotImplementedError(f"formulate_constraint_as_L2_penalty not implemented for initial cost with cost_type_0 {self.cost.cost_type_0}.")
         elif constraint_type == "terminal":
             self.cost.yref_e = np.concatenate((self.cost.yref_e, y_ref_new))
             self.model.cost_y_expr_e = ca.vertcat(self.model.cost_y_expr_e, violation_expr)
@@ -1106,6 +1114,10 @@ class AcadosOcp:
                 new_residual = casadi_symbol(residual_name, constr_expr.shape)
                 self.model.cost_r_in_psi_expr_e = ca.vertcat(self.model.cost_r_in_psi_expr_e, new_residual)
                 self.model.cost_psi_expr_e += .5 * weight * new_residual**2
+            elif self.cost.cost_type_e == "EXTERNAL":
+                self.model.cost_expr_ext_cost_e += .5 * weight * violation_expr**2
+            else:
+                raise NotImplementedError(f"formulate_constraint_as_L2_penalty not implemented for terminal cost with cost_type_e {self.cost.cost_type_e}.")
         return
 
 
