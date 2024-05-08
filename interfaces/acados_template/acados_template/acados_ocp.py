@@ -152,19 +152,7 @@ class AcadosOcp:
         ## cost
         # initial stage - if not set, copy fields from path constraints
         if cost.cost_type_0 is None:
-            cost.cost_type_0 = cost.cost_type
-            cost.W_0 = cost.W
-            cost.Vx_0 = cost.Vx
-            cost.Vu_0 = cost.Vu
-            cost.Vz_0 = cost.Vz
-            cost.yref_0 = cost.yref
-            cost.cost_ext_fun_type_0 = cost.cost_ext_fun_type
-            model.cost_y_expr_0 = model.cost_y_expr
-            model.cost_expr_ext_cost_0 = model.cost_expr_ext_cost
-            model.cost_expr_ext_cost_custom_hess_0 = model.cost_expr_ext_cost_custom_hess
-
-            model.cost_psi_expr_0 = model.cost_psi_expr
-            model.cost_r_in_psi_expr_0 = model.cost_r_in_psi_expr
+            self.copy_path_cost_to_stage_0()
 
         if cost.cost_type_0 == 'LINEAR_LS':
             check_if_square(cost.W_0, 'W_0')
@@ -996,6 +984,26 @@ class AcadosOcp:
         return ocp_dict
 
 
+    def copy_path_cost_to_stage_0(self):
+        """Set all cost definitions at stage 0 to the corresponding path cost definitions."""
+        cost = self.cost
+        model = self.model
+
+        cost.cost_type_0 = cost.cost_type
+        cost.W_0 = cost.W
+        cost.Vx_0 = cost.Vx
+        cost.Vu_0 = cost.Vu
+        cost.Vz_0 = cost.Vz
+        cost.yref_0 = cost.yref
+        cost.cost_ext_fun_type_0 = cost.cost_ext_fun_type
+
+        model.cost_y_expr_0 = model.cost_y_expr
+        model.cost_expr_ext_cost_0 = model.cost_expr_ext_cost
+        model.cost_expr_ext_cost_custom_hess_0 = model.cost_expr_ext_cost_custom_hess
+        model.cost_psi_expr_0 = model.cost_psi_expr
+        model.cost_r_in_psi_expr_0 = model.cost_r_in_psi_expr
+        return
+
     def translate_nls_cost_to_conl(self):
         """
         Translates a NONLINEAR_LS cost to a CONVEX_OVER_NONLINEAR cost.
@@ -1207,7 +1215,7 @@ class AcadosOcp:
         return
 
 
-    def translate_to_feasibility_problem(self, keep_x0=False):
+    def translate_to_feasibility_problem(self, keep_x0=False, keep_cost=False) -> None:
         """
         Translate an OCP to a feasibility problem by removing all cost term and then formulating all constraints as L2 penalties.
 
@@ -1219,18 +1227,23 @@ class AcadosOcp:
         constraints = self.constraints
         new_constraints = AcadosOcpConstraints()
 
-        # set cost to zero
-        cost.cost_type = "NONLINEAR_LS"
-        cost.cost_type_e = "NONLINEAR_LS"
-        # cost.cost_type_0 = "NONLINEAR_LS"
+        if keep_cost:
+            # initial stage - if not set, copy fields from path constraints
+            if cost.cost_type_0 is None:
+                self.copy_path_cost_to_stage_0()
+        else:
+            # set cost to zero
+            cost.cost_type = "NONLINEAR_LS"
+            cost.cost_type_e = "NONLINEAR_LS"
+            # cost.cost_type_0 = "NONLINEAR_LS"
 
-        model.cost_y_expr = ca.SX.zeros((0, 0))
-        model.cost_y_expr_e = ca.SX.zeros((0, 0))
-        # model.cost_y_expr_0 = None
+            model.cost_y_expr = ca.SX.zeros((0, 0))
+            model.cost_y_expr_e = ca.SX.zeros((0, 0))
+            # model.cost_y_expr_0 = None
 
-        cost.W = np.zeros((0, 0))
-        cost.W_e = np.zeros((0, 0))
-        cost.W_0 = None
+            cost.W = np.zeros((0, 0))
+            cost.W_e = np.zeros((0, 0))
+            cost.W_0 = None
 
         # formulate **path** constraints as L2 penalties
         expr_bound_list = [
