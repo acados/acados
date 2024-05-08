@@ -1249,6 +1249,10 @@ class AcadosOcp:
             cost.cost_type_e = "NONLINEAR_LS"
             # cost.cost_type_0 = "NONLINEAR_LS"
 
+            cost.yref = np.array([])
+            cost.yref_0 = np.array([])
+            cost.yref_e = np.array([])
+
             model.cost_y_expr = ca.SX.zeros((0, 0))
             model.cost_y_expr_e = ca.SX.zeros((0, 0))
             # model.cost_y_expr_0 = None
