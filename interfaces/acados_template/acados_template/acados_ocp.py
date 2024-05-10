@@ -1298,7 +1298,9 @@ class AcadosOcp:
                 self.formulate_constraint_as_L2_penalty(constr_expr[i], weight=1.0, upper_bound=upper_bound[i], lower_bound=lower_bound[i], constraint_type="terminal")
 
         model.con_h_expr_e = None
-
+        model.con_phi_expr_e = None
+        model.con_r_expr_e = None
+        model.con_r_in_phi_e = None
 
         # formulate **initial** constraints as L2 penalties
         expr_bound_list_0 = [
@@ -1321,6 +1323,11 @@ class AcadosOcp:
         for constr_expr, lower_bound, upper_bound in expr_bound_list_0:
             for i in range(casadi_length(constr_expr)):
                 self.formulate_constraint_as_L2_penalty(constr_expr[i], weight=1.0, upper_bound=upper_bound[i], lower_bound=lower_bound[i], constraint_type="initial")
+
+        model.con_h_expr_0 = None
+        model.con_phi_expr_0 = None
+        model.con_r_expr_0 = None
+        model.con_r_in_phi_0 = None
 
         # delete constraint fromulation from constraints object
         self.constraints = new_constraints
