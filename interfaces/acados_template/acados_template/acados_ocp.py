@@ -1247,7 +1247,7 @@ class AcadosOcp:
             # set cost to zero
             cost.cost_type = "NONLINEAR_LS"
             cost.cost_type_e = "NONLINEAR_LS"
-            # cost.cost_type_0 = "NONLINEAR_LS"
+            cost.cost_type_0 = "NONLINEAR_LS"
 
             cost.yref = np.array([])
             cost.yref_0 = np.array([])
@@ -1255,11 +1255,11 @@ class AcadosOcp:
 
             model.cost_y_expr = ca.SX.zeros((0, 0))
             model.cost_y_expr_e = ca.SX.zeros((0, 0))
-            # model.cost_y_expr_0 = None
+            model.cost_y_expr_0 = ca.SX.zeros((0, 0))
 
             cost.W = np.zeros((0, 0))
             cost.W_e = np.zeros((0, 0))
-            cost.W_0 = None
+            cost.W_0 = np.zeros((0, 0))
 
         # formulate **path** constraints as L2 penalties
         expr_bound_list = [
@@ -1317,11 +1317,6 @@ class AcadosOcp:
             phi_o_r_expr_0 = ca.substitute(model.con_phi_expr_0, model.con_r_in_phi_0, model.con_r_expr_0)
             expr_bound_list_0.append((phi_o_r_expr_0, constraints.lphi_0, constraints.uphi_0))
             # NOTE: for now, we don't exploit convex over nonlinear structure of phi
-
-        cost.cost_type_0 = "NONLINEAR_LS"
-        model.cost_y_expr_0 = ca.SX.zeros((0, 0))
-        cost.W_0 = np.zeros((0, 0))
-        cost.yref_0 = np.zeros((0,))
 
         for constr_expr, lower_bound, upper_bound in expr_bound_list_0:
             for i in range(casadi_length(constr_expr)):
