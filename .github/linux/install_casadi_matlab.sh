@@ -31,7 +31,7 @@
 
 # CASADI_VERSION='3.5.3'; # Latest version with Octave 4.2.2 binaries
 CASADI_VERSION='3.6.5';
-MATLAB_VERSION='R2018b';
+MATLAB_VERSION='2018b';
 
 _CASADI_GITHUB_RELEASES="https://github.com/casadi/casadi/releases/download/${CASADI_VERSION}";
 
