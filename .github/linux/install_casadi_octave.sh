@@ -36,7 +36,6 @@ OCTAVE_VERSION='7.3.0';
 _CASADI_GITHUB_RELEASES="https://github.com/casadi/casadi/releases/download/${CASADI_VERSION}";
 
 CASADI_OCTAVE_URL="${_CASADI_GITHUB_RELEASES}/casadi-${CASADI_VERSION}-linux64-octave${OCTAVE_VERSION}.zip";
-#CASADI_OCTAVE_URL=https://github.com/casadi/casadi/releases/download/3.6.5/casadi-3.6.5-linux64-octave7.3.0.zip;
 
 wget -O casadi-linux-octave.zip "${CASADI_OCTAVE_URL}";
 mkdir -p casadi-octave;
