@@ -31,12 +31,12 @@
 
 # CASADI_VERSION='3.5.3'; # Latest version with Octave 4.2.2 binaries
 CASADI_VERSION='3.6.5';
-OCTAVE_VERSION='6.2.0';
+OCTAVE_VERSION='7.3.0';
 
 _CASADI_GITHUB_RELEASES="https://github.com/casadi/casadi/releases/download/${CASADI_VERSION}";
 
-#CASADI_OCTAVE_URL="${_CASADI_GITHUB_RELEASES}/casadi-linux-octave-${OCTAVE_VERSION}-v${CASADI_VERSION}.tar.gz";
-CASADI_OCTAVE_URL=https://github.com/casadi/casadi/releases/download/3.6.5/casadi-3.6.5-linux64-octave7.3.0.zip;
+CASADI_OCTAVE_URL="${_CASADI_GITHUB_RELEASES}/casadi${OCTAVE_VERSION}-linux64-octave${OCTAVE_VERSION}.zip";
+#CASADI_OCTAVE_URL=https://github.com/casadi/casadi/releases/download/3.6.5/casadi-3.6.5-linux64-octave7.3.0.zip;
 
 wget -O casadi-linux-octave.zip "${CASADI_OCTAVE_URL}";
 mkdir -p casadi-octave;
