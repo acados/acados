@@ -152,19 +152,7 @@ class AcadosOcp:
         ## cost
         # initial stage - if not set, copy fields from path constraints
         if cost.cost_type_0 is None:
-            cost.cost_type_0 = cost.cost_type
-            cost.W_0 = cost.W
-            cost.Vx_0 = cost.Vx
-            cost.Vu_0 = cost.Vu
-            cost.Vz_0 = cost.Vz
-            cost.yref_0 = cost.yref
-            cost.cost_ext_fun_type_0 = cost.cost_ext_fun_type
-            model.cost_y_expr_0 = model.cost_y_expr
-            model.cost_expr_ext_cost_0 = model.cost_expr_ext_cost
-            model.cost_expr_ext_cost_custom_hess_0 = model.cost_expr_ext_cost_custom_hess
-
-            model.cost_psi_expr_0 = model.cost_psi_expr
-            model.cost_r_in_psi_expr_0 = model.cost_r_in_psi_expr
+            self.copy_path_cost_to_stage_0()
 
         if cost.cost_type_0 == 'LINEAR_LS':
             check_if_square(cost.W_0, 'W_0')
@@ -996,6 +984,26 @@ class AcadosOcp:
         return ocp_dict
 
 
+    def copy_path_cost_to_stage_0(self):
+        """Set all cost definitions at stage 0 to the corresponding path cost definitions."""
+        cost = self.cost
+        model = self.model
+
+        cost.cost_type_0 = cost.cost_type
+        cost.W_0 = cost.W
+        cost.Vx_0 = cost.Vx
+        cost.Vu_0 = cost.Vu
+        cost.Vz_0 = cost.Vz
+        cost.yref_0 = cost.yref
+        cost.cost_ext_fun_type_0 = cost.cost_ext_fun_type
+
+        model.cost_y_expr_0 = model.cost_y_expr
+        model.cost_expr_ext_cost_0 = model.cost_expr_ext_cost
+        model.cost_expr_ext_cost_custom_hess_0 = model.cost_expr_ext_cost_custom_hess
+        model.cost_psi_expr_0 = model.cost_psi_expr
+        model.cost_r_in_psi_expr_0 = model.cost_r_in_psi_expr
+        return
+
     def translate_nls_cost_to_conl(self):
         """
         Translates a NONLINEAR_LS cost to a CONVEX_OVER_NONLINEAR cost.
@@ -1080,6 +1088,10 @@ class AcadosOcp:
                 new_residual = casadi_symbol(residual_name, constr_expr.shape)
                 self.model.cost_r_in_psi_expr = ca.vertcat(self.model.cost_r_in_psi_expr, new_residual)
                 self.model.cost_psi_expr += .5 * weight * new_residual**2
+            elif self.cost.cost_type == "EXTERNAL":
+                self.model.cost_expr_ext_cost += .5 * weight * violation_expr**2
+            else:
+                raise NotImplementedError(f"formulate_constraint_as_L2_penalty not implemented for path cost with cost_type {self.cost.cost_type}.")
         elif constraint_type == "initial":
             self.cost.yref_0 = np.concatenate((self.cost.yref_0, y_ref_new))
             self.model.cost_y_expr_0 = ca.vertcat(self.model.cost_y_expr_0, violation_expr)
@@ -1089,6 +1101,10 @@ class AcadosOcp:
                 new_residual = casadi_symbol(residual_name, constr_expr.shape)
                 self.model.cost_r_in_psi_expr_0 = ca.vertcat(self.model.cost_r_in_psi_expr_0, new_residual)
                 self.model.cost_psi_expr_0 += .5 * weight * new_residual**2
+            elif self.cost.cost_type_0 == "EXTERNAL":
+                self.model.cost_expr_ext_cost_0 += .5 * weight * violation_expr**2
+            else:
+                raise NotImplementedError(f"formulate_constraint_as_L2_penalty not implemented for initial cost with cost_type_0 {self.cost.cost_type_0}.")
         elif constraint_type == "terminal":
             self.cost.yref_e = np.concatenate((self.cost.yref_e, y_ref_new))
             self.model.cost_y_expr_e = ca.vertcat(self.model.cost_y_expr_e, violation_expr)
@@ -1098,6 +1114,10 @@ class AcadosOcp:
                 new_residual = casadi_symbol(residual_name, constr_expr.shape)
                 self.model.cost_r_in_psi_expr_e = ca.vertcat(self.model.cost_r_in_psi_expr_e, new_residual)
                 self.model.cost_psi_expr_e += .5 * weight * new_residual**2
+            elif self.cost.cost_type_e == "EXTERNAL":
+                self.model.cost_expr_ext_cost_e += .5 * weight * violation_expr**2
+            else:
+                raise NotImplementedError(f"formulate_constraint_as_L2_penalty not implemented for terminal cost with cost_type_e {self.cost.cost_type_e}.")
         return
 
 
@@ -1207,7 +1227,7 @@ class AcadosOcp:
         return
 
 
-    def translate_to_feasibility_problem(self, keep_x0=False):
+    def translate_to_feasibility_problem(self, keep_x0=False, keep_cost=False) -> None:
         """
         Translate an OCP to a feasibility problem by removing all cost term and then formulating all constraints as L2 penalties.
 
@@ -1219,18 +1239,27 @@ class AcadosOcp:
         constraints = self.constraints
         new_constraints = AcadosOcpConstraints()
 
-        # set cost to zero
-        cost.cost_type = "NONLINEAR_LS"
-        cost.cost_type_e = "NONLINEAR_LS"
-        # cost.cost_type_0 = "NONLINEAR_LS"
+        if keep_cost:
+            # initial stage - if not set, copy fields from path constraints
+            if cost.cost_type_0 is None:
+                self.copy_path_cost_to_stage_0()
+        else:
+            # set cost to zero
+            cost.cost_type = "NONLINEAR_LS"
+            cost.cost_type_e = "NONLINEAR_LS"
+            cost.cost_type_0 = "NONLINEAR_LS"
 
-        model.cost_y_expr = ca.SX.zeros((0, 0))
-        model.cost_y_expr_e = ca.SX.zeros((0, 0))
-        # model.cost_y_expr_0 = None
+            cost.yref = np.array([])
+            cost.yref_0 = np.array([])
+            cost.yref_e = np.array([])
 
-        cost.W = np.zeros((0, 0))
-        cost.W_e = np.zeros((0, 0))
-        cost.W_0 = None
+            model.cost_y_expr = ca.SX.zeros((0, 0))
+            model.cost_y_expr_e = ca.SX.zeros((0, 0))
+            model.cost_y_expr_0 = ca.SX.zeros((0, 0))
+
+            cost.W = np.zeros((0, 0))
+            cost.W_e = np.zeros((0, 0))
+            cost.W_0 = np.zeros((0, 0))
 
         # formulate **path** constraints as L2 penalties
         expr_bound_list = [
@@ -1269,7 +1298,9 @@ class AcadosOcp:
                 self.formulate_constraint_as_L2_penalty(constr_expr[i], weight=1.0, upper_bound=upper_bound[i], lower_bound=lower_bound[i], constraint_type="terminal")
 
         model.con_h_expr_e = None
-
+        model.con_phi_expr_e = None
+        model.con_r_expr_e = None
+        model.con_r_in_phi_e = None
 
         # formulate **initial** constraints as L2 penalties
         expr_bound_list_0 = [
@@ -1289,14 +1320,14 @@ class AcadosOcp:
             expr_bound_list_0.append((phi_o_r_expr_0, constraints.lphi_0, constraints.uphi_0))
             # NOTE: for now, we don't exploit convex over nonlinear structure of phi
 
-        cost.cost_type_0 = "NONLINEAR_LS"
-        model.cost_y_expr_0 = ca.SX.zeros((0, 0))
-        cost.W_0 = np.zeros((0, 0))
-        cost.yref_0 = np.zeros((0,))
-
         for constr_expr, lower_bound, upper_bound in expr_bound_list_0:
             for i in range(casadi_length(constr_expr)):
                 self.formulate_constraint_as_L2_penalty(constr_expr[i], weight=1.0, upper_bound=upper_bound[i], lower_bound=lower_bound[i], constraint_type="initial")
+
+        model.con_h_expr_0 = None
+        model.con_phi_expr_0 = None
+        model.con_r_expr_0 = None
+        model.con_r_in_phi_0 = None
 
         # delete constraint fromulation from constraints object
         self.constraints = new_constraints
