@@ -35,7 +35,7 @@ MATLAB_VERSION='R2018b';
 
 _CASADI_GITHUB_RELEASES="https://github.com/casadi/casadi/releases/download/${CASADI_VERSION}";
 
-CASADI_MATLAB_URL="${_CASADI_GITHUB_RELEASES}/casadi${MATLAB_VERSION}-linux64-matlab${MATLAB_VERSION}.zip";
+CASADI_MATLAB_URL="${_CASADI_GITHUB_RELEASES}/casadi-${CASADI_VERSION}-linux64-matlab${MATLAB_VERSION}.zip";
 
 wget -O casadi-linux-matlab.zip "${CASADI_MATLAB_URL}";
 mkdir -p casadi-matlab;
