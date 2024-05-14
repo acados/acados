@@ -94,27 +94,28 @@ def setup_acados_integrator(model, dt, integrator_setting: IntegratorSetting):
 
 
 def simulate(
-        integrator: AcadosSimSolver, x0, u_trajectory
+        integrator: AcadosSimSolver, x0, u_trajectory, n_runs=1
 ):
     Nsim = u_trajectory.shape[1]
-    x_trajectory = np.zeros((integrator.acados_sim.dims.nx, Nsim + 1))
-    timings = np.zeros((Nsim + 1,))
+    nx = integrator.acados_sim.dims.nx
+    x_trajectory = np.zeros((nx, Nsim + 1))
+    timings = 1e30 * np.ones((Nsim, n_runs))
     x_trajectory[:, 0] = x0
-    for i in range(Nsim):
-        x_trajectory[:, i + 1] = integrator.simulate(x_trajectory[:, i], u_trajectory[:, i])
-        timings[i] = integrator.get('time_tot')
+
+    for j in range(n_runs):
+        for i in range(Nsim):
+            x_trajectory[:, i + 1] = integrator.simulate(x_trajectory[:, i], u_trajectory[:, i], xdot=np.zeros((nx,)))
+            timings[i, j] = integrator.get('time_tot')
+    timings = np.mean(timings, axis=1)
     return x_trajectory, timings
 
 
 def run_experiment(settings: list[IntegratorSetting]):
-    Tsim = DT
     dt_plant = DT
 
     model = get_furuta_model()
-
-    Nsim = int(Tsim / dt_plant)
-    if not (Tsim / dt_plant).is_integer():
-        print("WARNING: Tsim / dt_plant should be an integer!")
+    Nsim = 1
+    n_runs = 20
 
     ref_setting = IntegratorSetting(
         num_stages=8,
@@ -148,7 +149,7 @@ def run_experiment(settings: list[IntegratorSetting]):
             setting
         )
 
-        x_traj, timings_integrator = simulate(integrator, X0, u_trajectory)
+        x_traj, timings_integrator = simulate(integrator, X0, u_trajectory, n_runs=n_runs)
         err_x = np.max(np.abs(x_traj - X_exact))
 
         # store results
@@ -196,25 +197,25 @@ def plot_results(settings: list[IntegratorSetting], results: list[dict]):
     plt.xlabel("mean computation time [ms]")
 
     legend_elements = \
-    [
-        Line2D([0], [0], color='k', lw=0, marker='o', label=f"{integrator_type}", fillstyle=fillstyles[i])
-        for i, integrator_type in enumerate(integrator_type_vals)
-    ] + \
-    [
-        Line2D(
-            [0],
-            [0],
-            marker=markers[j],
-            lw=0,
-            color="k",
-            label=f"{num_steps} steps",
-        )
-        for j, num_steps in enumerate(num_steps_vals)
-    ] + \
-    [
-        Line2D([0], [0], color=colors[i], lw=4, label=f"order {order}")
-        for i, order in enumerate(order_vals)
-    ]
+        [
+            Line2D([0], [0], color='k', lw=0, marker='o', label=f"{integrator_type}", fillstyle=fillstyles[i])
+            for i, integrator_type in enumerate(integrator_type_vals)
+        ] + \
+        [
+            Line2D(
+                [0],
+                [0],
+                marker=markers[j],
+                lw=0,
+                color="k",
+                label=f"{num_steps} steps",
+            )
+            for j, num_steps in enumerate(num_steps_vals)
+        ] + \
+        [
+            Line2D([0], [0], color=colors[i], lw=4, label=f"order {order}")
+            for i, order in enumerate(order_vals)
+        ]
 
     plt.legend(handles=legend_elements, ncol=2)
 
@@ -236,15 +237,15 @@ def main():
     for integrator_type in ["ERK", "IRK"]:
         if integrator_type == "ERK":
             num_stages_vals = [1, 2, 4]
-            num_steps_vals = [1, 2, 5, 10, 50, 100]
+            num_steps_vals = [1, 2, 5, 10, 20]
         elif integrator_type == "IRK":
             num_stages_vals = [1, 2, 3, 4]
-            num_steps_vals = [1, 2, 5, 10, 50]
+            num_steps_vals = [1, 2, 5, 10, 20]
         for num_stages in num_stages_vals:
             for num_steps in num_steps_vals:
                 settings.append(IntegratorSetting(num_stages=num_stages, num_steps=num_steps, integrator_type=integrator_type, newton_iter=newton_iter, newton_tol=newton_tol))
 
-    # run_experiment(settings)
+    run_experiment(settings)
 
     results = []
     for setting in settings:
