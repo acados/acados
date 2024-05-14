@@ -578,6 +578,12 @@ void ocp_qp_hpmpc_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts
 
 
 
+void ocp_qp_hpmpc_terminate(void *config_, void *mem_, void *work_)
+{
+    return;
+}
+
+
 void ocp_qp_hpmpc_config_initialize_default(void *config_)
 {
     qp_solver_config *config = config_;
@@ -600,6 +606,7 @@ void ocp_qp_hpmpc_config_initialize_default(void *config_)
     config->eval_sens = &ocp_qp_hpmpc_eval_sens;
     config->memory_reset = &ocp_qp_hpmpc_memory_reset;
     config->solver_get = &ocp_qp_hpmpc_solver_get;
+    config->terminate = &ocp_qp_hpmpc_terminate;
 
 
     return;

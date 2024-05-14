@@ -1043,8 +1043,9 @@ ocp_nlp_solver *ocp_nlp_solver_create(ocp_nlp_config *config, ocp_nlp_dims *dims
 }
 
 
-void ocp_nlp_solver_destroy(void *solver)
+void ocp_nlp_solver_destroy(ocp_nlp_solver *solver)
 {
+    solver->config->terminate(solver->config, solver->mem, solver->work);
     free(solver);
 }
 

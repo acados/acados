@@ -1260,6 +1260,17 @@ void ocp_nlp_sqp_work_get(void *config_, void *dims_, void *work_,
 }
 
 
+
+void ocp_nlp_sqp_terminate(void *config_, void *mem_, void *work_)
+{
+    ocp_nlp_config *config = config_;
+    ocp_nlp_sqp_memory *mem = mem_;
+    ocp_nlp_sqp_workspace *work = work_;
+
+    config->qp_solver->terminate(config->qp_solver, mem->nlp_mem->qp_solver_mem, work->nlp_work->qp_work);
+}
+
+
 void ocp_nlp_sqp_config_initialize_default(void *config_)
 {
     ocp_nlp_config *config = (ocp_nlp_config *) config_;
@@ -1282,6 +1293,7 @@ void ocp_nlp_sqp_config_initialize_default(void *config_)
     config->get = &ocp_nlp_sqp_get;
     config->opts_get = &ocp_nlp_sqp_opts_get;
     config->work_get = &ocp_nlp_sqp_work_get;
+    config->terminate = &ocp_nlp_sqp_terminate;
 
     return;
 }

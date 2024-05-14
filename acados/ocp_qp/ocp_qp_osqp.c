@@ -1063,7 +1063,7 @@ static int osqp_init_data(OSQPData *data, OSQPSettings *settings, OSQPWorkspace 
     }
 
     // Initialize linear system solver structure
-    // NOTE: mallocs
+    // NOTE: mallocs, memory is freed in ocp_qp_osqp_terminate
     if(init_linsys_solver(&(work->linsys_solver), work->data->P, work->data->A, work->settings->sigma,
                                              work->rho_vec, work->settings->linsys_solver, 0)){
         c_eprint("Failed to initialize %s linear system solver",
@@ -1308,6 +1308,15 @@ static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out, ocp_qp_osqp_mem
 }
 
 
+void ocp_qp_osqp_terminate(void *config_, void *mem_, void *work_)
+{
+    ocp_qp_osqp_memory *mem = (ocp_qp_osqp_memory *) mem_;
+    OSQPWorkspace *work = mem->osqp_work;
+    work->linsys_solver->free(work->linsys_solver);
+}
+
+
+
 
 int ocp_qp_osqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, void *work_)
 {
@@ -1423,6 +1432,7 @@ void ocp_qp_osqp_config_initialize_default(void *config_)
     config->memory_get = &ocp_qp_osqp_memory_get;
     config->workspace_calculate_size = &ocp_qp_osqp_workspace_calculate_size;
     config->evaluate = &ocp_qp_osqp;
+    config->terminate = &ocp_qp_osqp_terminate;
     config->eval_sens = &ocp_qp_osqp_eval_sens;
     config->memory_reset = &ocp_qp_osqp_memory_reset;
     config->solver_get = &ocp_qp_osqp_solver_get;

@@ -759,6 +759,15 @@ void dense_qp_daqp_solver_get(void *config_, void *qp_in_, void *qp_out_, void *
 }
 
 
+
+void dense_qp_daqp_terminate(void *config_, void *mem_, void *work_)
+{
+    return;
+}
+
+
+
+
 void dense_qp_daqp_config_initialize_default(void *config_)
 {
     qp_solver_config *config = config_;
@@ -780,6 +789,7 @@ void dense_qp_daqp_config_initialize_default(void *config_)
     config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & dense_qp_daqp;
     config->memory_reset = &dense_qp_daqp_memory_reset;
     config->solver_get = &dense_qp_daqp_solver_get;
+    config->terminate = &dense_qp_daqp_terminate;
 
     return;
 }

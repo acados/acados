@@ -1474,6 +1474,17 @@ void ocp_nlp_ddp_work_get(void *config_, void *dims_, void *work_,
     }
 }
 
+
+void ocp_nlp_ddp_terminate(void *config_, void *mem_, void *work_)
+{
+    ocp_nlp_config *config = config_;
+    ocp_nlp_ddp_memory *mem = mem_;
+    ocp_nlp_ddp_workspace *work = work_;
+
+    config->qp_solver->terminate(config->qp_solver, mem->nlp_mem->qp_solver_mem, work->nlp_work->qp_work);
+}
+
+
 void ocp_nlp_ddp_config_initialize_default(void *config_)
 {
     ocp_nlp_config *config = (ocp_nlp_config *) config_;
@@ -1496,6 +1507,7 @@ void ocp_nlp_ddp_config_initialize_default(void *config_)
     config->get = &ocp_nlp_ddp_get;
     config->opts_get = &ocp_nlp_ddp_opts_get;
     config->work_get = &ocp_nlp_ddp_work_get;
+    config->terminate = &ocp_nlp_ddp_terminate;
 
     return;
 }

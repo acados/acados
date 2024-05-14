@@ -633,6 +633,12 @@ void dense_qp_ooqp_solver_get(void *config_, void *qp_in_, void *qp_out_, void *
     exit(1);
 }
 
+
+void dense_qp_ooqp_terminate(void *config_, void *mem_, void *work_)
+{
+    return;
+}
+
 void dense_qp_ooqp_config_initialize_default(void *config_)
 {
     qp_solver_config *config = config_;
@@ -654,4 +660,5 @@ void dense_qp_ooqp_config_initialize_default(void *config_)
     config->eval_sens = &dense_qp_ooqp_eval_sens;
     config->memory_reset = &dense_qp_ooqp_memory_reset;
     config->solver_get = &dense_qp_ooqp_solver_get;
+    config->terminate = &dense_qp_ooqp_terminate;
 }
