@@ -30,7 +30,7 @@
 #
 
 import numpy as np
-from .utils import J_to_idx, print_J_to_idx_note, J_to_idx_slack, check_if_one_dim_np_array
+from .utils import J_to_idx, print_J_to_idx_note, J_to_idx_slack, check_if_nparray_and_flatten
 
 class AcadosOcpConstraints:
     """
@@ -945,98 +945,98 @@ class AcadosOcpConstraints:
                 + 'Should be 2 dimensional numpy array.')
 
     @lg.setter
-    def lg(self, lg):
-        check_if_one_dim_np_array(lg, 'lg')
-        self.__lg = lg
+    def lg(self, value):
+        value = check_if_nparray_and_flatten(value, 'lg')
+        self.__lg = value
 
     @ug.setter
-    def ug(self, ug):
-        check_if_one_dim_np_array(ug, 'ug')
-        self.__ug = ug
+    def ug(self, value):
+        value = check_if_nparray_and_flatten(value, 'ug')
+        self.__ug = value
 
     @lg_e.setter
-    def lg_e(self, lg_e):
-        check_if_one_dim_np_array(lg_e, 'lg_e')
-        self.__lg_e = lg_e
+    def lg_e(self, value):
+        value = check_if_nparray_and_flatten(value, 'lg_e')
+        self.__lg_e = value
 
     @ug_e.setter
-    def ug_e(self, ug_e):
-        check_if_one_dim_np_array(ug_e, 'ug_e')
-        self.__ug_e = ug_e
+    def ug_e(self, value):
+        value = check_if_nparray_and_flatten(value, 'ug_e')
+        self.__ug_e = value
 
     # nonlinear constraints
     @lh.setter
-    def lh(self, lh):
-        check_if_one_dim_np_array(lh, 'lh')
-        self.__lh = lh
+    def lh(self, value):
+        value = check_if_nparray_and_flatten(value, 'lh')
+        self.__lh = value
 
     @uh.setter
-    def uh(self, uh):
-        check_if_one_dim_np_array(uh, 'uh')
-        self.__uh = uh
+    def uh(self, value):
+        value = check_if_nparray_and_flatten(value, 'uh')
+        self.__uh = value
 
     @lh_e.setter
-    def lh_e(self, lh_e):
-        check_if_one_dim_np_array(lh_e, 'lh_e')
-        self.__lh_e = lh_e
+    def lh_e(self, value):
+        value = check_if_nparray_and_flatten(value, 'lh_e')
+        self.__lh_e = value
 
     @uh_e.setter
-    def uh_e(self, uh_e):
-        check_if_one_dim_np_array(uh_e, 'uh_e')
-        self.__uh_e = uh_e
+    def uh_e(self, value):
+        value = check_if_nparray_and_flatten(value, 'uh_e')
+        self.__uh_e = value
 
     @lh_0.setter
-    def lh_0(self, lh_0):
-        check_if_one_dim_np_array(lh_0, 'lh_0')
-        self.__lh_0 = lh_0
+    def lh_0(self, value):
+        value = check_if_nparray_and_flatten(value, 'lh_0')
+        self.__lh_0 = value
 
     @uh_0.setter
-    def uh_0(self, uh_0):
-        check_if_one_dim_np_array(uh_0, 'uh_0')
-        self.__uh_0 = uh_0
+    def uh_0(self, value):
+        value = check_if_nparray_and_flatten(value, 'uh_0')
+        self.__uh_0 = value
 
     # convex-over-nonlinear constraints
     @lphi.setter
-    def lphi(self, lphi):
-        check_if_one_dim_np_array(lphi, 'lphi')
-        self.__lphi = lphi
+    def lphi(self, value):
+        value = check_if_nparray_and_flatten(value, 'lphi')
+        self.__lphi = value
 
     @uphi.setter
-    def uphi(self, uphi):
-        check_if_one_dim_np_array(uphi, 'uphi')
-        self.__uphi = uphi
+    def uphi(self, value):
+        value = check_if_nparray_and_flatten(value, 'uphi')
+        self.__uphi = value
 
     @lphi_e.setter
-    def lphi_e(self, lphi_e):
-        check_if_one_dim_np_array(lphi_e, 'lphi_e')
-        self.__lphi_e = lphi_e
+    def lphi_e(self, value):
+        value = check_if_nparray_and_flatten(value, 'lphi_e')
+        self.__lphi_e = value
 
     @uphi_e.setter
-    def uphi_e(self, uphi_e):
-        check_if_one_dim_np_array(uphi_e, 'uphi_e')
-        self.__uphi_e = uphi_e
+    def uphi_e(self, value):
+        value = check_if_nparray_and_flatten(value, 'uphi_e')
+        self.__uphi_e = value
 
     @lphi_0.setter
-    def lphi_0(self, lphi_0):
-        check_if_one_dim_np_array(lphi_0, 'lphi_0')
-        self.__lphi_0 = lphi_0
+    def lphi_0(self, value):
+        value = check_if_nparray_and_flatten(value, 'lphi_0')
+        self.__lphi_0 = value
 
     @uphi_0.setter
-    def uphi_0(self, uphi_0):
-        check_if_one_dim_np_array(uphi_0, 'uphi_0')
-        self.__uphi_0 = uphi_0
+    def uphi_0(self, value):
+        value = check_if_nparray_and_flatten(value, 'uphi_0')
+        self.__uphi_0 = value
 
     # SLACK bounds
     # soft bounds on x
     @lsbx.setter
-    def lsbx(self, lsbx):
-        check_if_one_dim_np_array(lsbx, 'lsbx')
-        self.__lsbx = lsbx
+    def lsbx(self, value):
+        value = check_if_nparray_and_flatten(value, 'lsbx')
+        self.__lsbx = value
 
     @usbx.setter
-    def usbx(self, usbx):
-        check_if_one_dim_np_array(usbx, 'usbx')
-        self.__usbx = usbx
+    def usbx(self, value):
+        value = check_if_nparray_and_flatten(value, 'usbx')
+        self.__usbx = value
 
     @idxsbx.setter
     def idxsbx(self, idxsbx):
@@ -1054,14 +1054,14 @@ class AcadosOcpConstraints:
 
     # soft bounds on u
     @lsbu.setter
-    def lsbu(self, lsbu):
-        check_if_one_dim_np_array(lsbu, 'lsbu')
-        self.__lsbu = lsbu
+    def lsbu(self, value):
+        value = check_if_nparray_and_flatten(value, 'lsbu')
+        self.__lsbu = value
 
     @usbu.setter
-    def usbu(self, usbu):
-        check_if_one_dim_np_array(usbu, 'usbu')
-        self.__usbu = usbu
+    def usbu(self, value):
+        value = check_if_nparray_and_flatten(value, 'usbu')
+        self.__usbu = value
 
     @idxsbu.setter
     def idxsbu(self, idxsbu):
@@ -1079,14 +1079,14 @@ class AcadosOcpConstraints:
 
     # soft bounds on x at shooting node N
     @lsbx_e.setter
-    def lsbx_e(self, lsbx_e):
-        check_if_one_dim_np_array(lsbx_e, 'lsbx_e')
-        self.__lsbx_e = lsbx_e
+    def lsbx_e(self, value):
+        value = check_if_nparray_and_flatten(value, 'lsbx_e')
+        self.__lsbx_e = value
 
     @usbx_e.setter
-    def usbx_e(self, usbx_e):
-        check_if_one_dim_np_array(usbx_e, 'usbx_e')
-        self.__usbx_e = usbx_e
+    def usbx_e(self, value):
+        value = check_if_nparray_and_flatten(value, 'usbx_e')
+        self.__usbx_e = value
 
     @idxsbx_e.setter
     def idxsbx_e(self, idxsbx_e):
@@ -1105,19 +1105,19 @@ class AcadosOcpConstraints:
 
     # soft bounds on general linear constraints
     @lsg.setter
-    def lsg(self, lsg):
-        check_if_one_dim_np_array(lsg, 'lsg')
-        self.__lsg = lsg
+    def lsg(self, value):
+        value = check_if_nparray_and_flatten(value, 'lsg')
+        self.__lsg = value
 
     @usg.setter
-    def usg(self, usg):
-        check_if_one_dim_np_array(usg, 'usg')
-        self.__usg = usg
+    def usg(self, value):
+        value = check_if_nparray_and_flatten(value, 'usg')
+        self.__usg = value
 
     @idxsg.setter
-    def idxsg(self, idxsg):
-        check_if_one_dim_np_array(idxsg, 'idxsg')
-        self.__idxsg = idxsg
+    def idxsg(self, value):
+        value = check_if_nparray_and_flatten(value, 'idxsg')
+        self.__idxsg = value
 
     @Jsg.setter
     def Jsg(self, Jsg):
@@ -1129,19 +1129,19 @@ class AcadosOcpConstraints:
 
     # soft bounds on nonlinear constraints
     @lsh.setter
-    def lsh(self, lsh):
-        check_if_one_dim_np_array(lsh, 'lsh')
-        self.__lsh = lsh
+    def lsh(self, value):
+        value = check_if_nparray_and_flatten(value, 'lsh')
+        self.__lsh = value
 
     @ush.setter
-    def ush(self, ush):
-        check_if_one_dim_np_array(ush, 'ush')
-        self.__ush = ush
+    def ush(self, value):
+        value = check_if_nparray_and_flatten(value, 'ush')
+        self.__ush = value
 
     @idxsh.setter
-    def idxsh(self, idxsh):
-        check_if_one_dim_np_array(idxsh, 'idxsh')
-        self.__idxsh = idxsh
+    def idxsh(self, value):
+        value = check_if_nparray_and_flatten(value, 'idxsh')
+        self.__idxsh = value
 
 
     @Jsh.setter
@@ -1153,19 +1153,19 @@ class AcadosOcpConstraints:
 
     # soft bounds on convex-over-nonlinear constraints
     @lsphi.setter
-    def lsphi(self, lsphi):
-        check_if_one_dim_np_array(lsphi, 'lsphi')
-        self.__lsphi = lsphi
+    def lsphi(self, value):
+        value = check_if_nparray_and_flatten(value, 'lsphi')
+        self.__lsphi = value
 
     @usphi.setter
-    def usphi(self, usphi):
-        check_if_one_dim_np_array(usphi, 'usphi')
-        self.__usphi = usphi
+    def usphi(self, value):
+        value = check_if_nparray_and_flatten(value, 'usphi')
+        self.__usphi = value
 
     @idxsphi.setter
-    def idxsphi(self, idxsphi):
-        check_if_one_dim_np_array(idxsphi, 'idxsphi')
-        self.__idxsphi = idxsphi
+    def idxsphi(self, value):
+        value = check_if_nparray_and_flatten(value, 'idxsphi')
+        self.__idxsphi = value
 
     @Jsphi.setter
     def Jsphi(self, Jsphi):
@@ -1176,19 +1176,19 @@ class AcadosOcpConstraints:
 
     # soft bounds on general linear constraints at shooting node N
     @lsg_e.setter
-    def lsg_e(self, lsg_e):
-        check_if_one_dim_np_array(lsg_e, 'lsg_e')
-        self.__lsg_e = lsg_e
+    def lsg_e(self, value):
+        value = check_if_nparray_and_flatten(value, 'lsg_e')
+        self.__lsg_e = value
 
     @usg_e.setter
-    def usg_e(self, usg_e):
-        check_if_one_dim_np_array(usg_e, 'usg_e')
-        self.__usg_e = usg_e
+    def usg_e(self, value):
+        value = check_if_nparray_and_flatten(value, 'usg_e')
+        self.__usg_e = value
 
     @idxsg_e.setter
-    def idxsg_e(self, idxsg_e):
-        check_if_one_dim_np_array(idxsg_e, 'idxsg_e')
-        self.__idxsg_e = idxsg_e
+    def idxsg_e(self, value):
+        value = check_if_nparray_and_flatten(value, 'idxsg_e')
+        self.__idxsg_e = value
 
     @Jsg_e.setter
     def Jsg_e(self, Jsg_e):
@@ -1199,19 +1199,19 @@ class AcadosOcpConstraints:
 
     # soft bounds on nonlinear constraints at shooting node N
     @lsh_e.setter
-    def lsh_e(self, lsh_e):
-        check_if_one_dim_np_array(lsh_e, 'lsh_e')
-        self.__lsh_e = lsh_e
+    def lsh_e(self, value):
+        value = check_if_nparray_and_flatten(value, 'lsh_e')
+        self.__lsh_e = value
 
     @ush_e.setter
-    def ush_e(self, ush_e):
-        check_if_one_dim_np_array(ush_e, 'ush_e')
-        self.__ush_e = ush_e
+    def ush_e(self, value):
+        value = check_if_nparray_and_flatten(value, 'ush_e')
+        self.__ush_e = value
 
     @idxsh_e.setter
-    def idxsh_e(self, idxsh_e):
-        check_if_one_dim_np_array(idxsh_e, 'idxsh_e')
-        self.__idxsh_e = idxsh_e
+    def idxsh_e(self, value):
+        value = check_if_nparray_and_flatten(value, 'idxsh_e')
+        self.__idxsh_e = value
 
     @Jsh_e.setter
     def Jsh_e(self, Jsh_e):
@@ -1223,19 +1223,19 @@ class AcadosOcpConstraints:
 
     # soft bounds on convex-over-nonlinear constraints at shooting node N
     @lsphi_e.setter
-    def lsphi_e(self, lsphi_e):
-        check_if_one_dim_np_array(lsphi_e, 'lsphi_e')
-        self.__lsphi_e = lsphi_e
+    def lsphi_e(self, value):
+        value = check_if_nparray_and_flatten(value, 'lsphi_e')
+        self.__lsphi_e = value
 
     @usphi_e.setter
-    def usphi_e(self, usphi_e):
-        check_if_one_dim_np_array(usphi_e, 'usphi_e')
-        self.__usphi_e = usphi_e
+    def usphi_e(self, value):
+        value = check_if_nparray_and_flatten(value, 'usphi_e')
+        self.__usphi_e = value
 
     @idxsphi_e.setter
-    def idxsphi_e(self, idxsphi_e):
-        check_if_one_dim_np_array(idxsphi_e, 'idxsphi_e')
-        self.__idxsphi_e = idxsphi_e
+    def idxsphi_e(self, value):
+        value = check_if_nparray_and_flatten(value, 'idxsphi_e')
+        self.__idxsphi_e = value
 
     @Jsphi_e.setter
     def Jsphi_e(self, Jsphi_e):
@@ -1246,19 +1246,19 @@ class AcadosOcpConstraints:
 
     # soft constraints at shooting node 0
     @lsh_0.setter
-    def lsh_0(self, lsh_0):
-        check_if_one_dim_np_array(lsh_0, 'lsh_0')
-        self.__lsh_0 = lsh_0
+    def lsh_0(self, value):
+        value = check_if_nparray_and_flatten(value, 'lsh_0')
+        self.__lsh_0 = value
 
     @ush_0.setter
-    def ush_0(self, ush_0):
-        check_if_one_dim_np_array(ush_0, 'ush_0')
-        self.__ush_0 = ush_0
+    def ush_0(self, value):
+        value = check_if_nparray_and_flatten(value, 'ush_0')
+        self.__ush_0 = value
 
     @idxsh_0.setter
-    def idxsh_0(self, idxsh_0):
-        check_if_one_dim_np_array(idxsh_0, 'idxsh_0')
-        self.__idxsh_0 = idxsh_0
+    def idxsh_0(self, value):
+        value = check_if_nparray_and_flatten(value, 'idxsh_0')
+        self.__idxsh_0 = value
 
     @Jsh_0.setter
     def Jsh_0(self, Jsh_0):
@@ -1268,19 +1268,19 @@ class AcadosOcpConstraints:
             raise Exception('Invalid Jsh_0 value, expected numpy array.')
 
     @lsphi_0.setter
-    def lsphi_0(self, lsphi_0):
-        check_if_one_dim_np_array(lsphi_0, 'lsphi_0')
-        self.__lsphi_0 = lsphi_0
+    def lsphi_0(self, value):
+        value = check_if_nparray_and_flatten(value, 'lsphi_0')
+        self.__lsphi_0 = value
 
     @usphi_0.setter
-    def usphi_0(self, usphi_0):
-        check_if_one_dim_np_array(usphi_0, 'usphi_0')
-        self.__usphi_0 = usphi_0
+    def usphi_0(self, value):
+        value = check_if_nparray_and_flatten(value, 'usphi_0')
+        self.__usphi_0 = value
 
     @idxsphi_0.setter
-    def idxsphi_0(self, idxsphi_0):
-        check_if_one_dim_np_array(idxsphi_0, 'idxsphi_0')
-        self.__idxsphi_0 = idxsphi_0
+    def idxsphi_0(self, value):
+        value = check_if_nparray_and_flatten(value, 'idxsphi_0')
+        self.__idxsphi_0 = value
 
     @Jsphi_0.setter
     def Jsphi_0(self, Jsphi_0):

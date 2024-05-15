@@ -349,12 +349,10 @@ def J_to_idx_slack(J):
     return idx
 
 
-def check_if_one_dim_np_array(val, name):
+def check_if_nparray_and_flatten(val, name):
     if not isinstance(val, np.ndarray):
         raise Exception(f"{name} must be a numpy array, got {type(val)}")
-    if len(val.shape) != 1:
-        raise Exception(f"{name} must be a 1D numpy array, got shape {val.shape}")
-    return
+    return val.reshape(-1)
 
 
 def print_J_to_idx_note():
