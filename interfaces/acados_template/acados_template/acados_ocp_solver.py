@@ -52,8 +52,9 @@ from .builders import CMakeBuilder
 from .acados_ocp import AcadosOcp
 from .acados_multiphase_ocp import AcadosMultiphaseOcp
 from .gnsf.detect_gnsf_structure import detect_gnsf_structure
-from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir,
-                    make_object_json_dumpable, set_up_imported_gnsf_model, verbose_system_call)
+from .utils import (get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir, get_shared_lib,
+                    make_object_json_dumpable, set_up_imported_gnsf_model, verbose_system_call,
+                    acados_lib_is_compiled_with_openmp)
 
 
 class AcadosOcpSolver:
@@ -227,31 +228,16 @@ class AcadosOcpSolver:
         # or [https://python.hotexamples.com/examples/_ctypes/-/dlclose/python-dlclose-function-examples.html]
         libacados_name = f'{lib_prefix}acados{lib_ext}'
         libacados_filepath = os.path.join(acados_lib_path, '..', lib_dir, libacados_name)
-        if self.winmode is not None:
-            self.__acados_lib = DllLoader(libacados_filepath, winmode=self.winmode)
-        else:
-            # for compatibility with older python versions
-            self.__acados_lib = DllLoader(libacados_filepath)
+        self.__acados_lib = get_shared_lib(libacados_filepath, self.winmode)
 
         # find out if acados was compiled with OpenMP
-        try:
-            self.__acados_lib_uses_omp = getattr(self.__acados_lib, 'omp_get_thread_num') is not None
-        except AttributeError as e:
-            self.__acados_lib_uses_omp = False
-        if verbose:
-            if self.__acados_lib_uses_omp:
-                print('acados was compiled with OpenMP.')
-            else:
-                print('acados was compiled without OpenMP.')
+        self.__acados_lib_uses_omp = acados_lib_is_compiled_with_openmp(self.__acados_lib, verbose)
+
         libacados_ocp_solver_name = f'{lib_prefix}acados_ocp_solver_{self.name}{lib_ext}'
         self.shared_lib_name = os.path.join(code_export_directory, libacados_ocp_solver_name)
 
         # get shared_lib
-        if self.winmode is not None:
-            self.shared_lib = DllLoader(self.shared_lib_name, winmode=self.winmode)
-        else:
-            # for compatibility with older python versions
-            self.shared_lib = DllLoader(self.shared_lib_name)
+        self.shared_lib = get_shared_lib(self.shared_lib_name, self.winmode)
 
         # create capsule
         getattr(self.shared_lib, f"{self.name}_acados_create_capsule").restype = c_void_p
