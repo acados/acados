@@ -165,6 +165,11 @@ class AcadosSimSolver:
         dlclose.argtypes = [c_void_p]
         winmode = None
 
+    @property
+    def acados_lib_uses_omp(self,):
+        """`acados_lib_uses_omp` - flag indicating whether the acados library has been compiled with openMP."""
+        return self.__acados_lib_uses_omp
+
     @classmethod
     def generate(cls, acados_sim: AcadosSim, json_file='acados_sim.json', cmake_builder: CMakeBuilder = None):
         """

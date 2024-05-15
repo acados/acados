@@ -34,7 +34,7 @@ class AcadosSimBatchSolver():
         getattr(self.__shared_lib, f"{self.__model_name}_acados_sim_batch_solve").argtypes = [POINTER(c_void_p), c_int]
         getattr(self.__shared_lib, f"{self.__model_name}_acados_sim_batch_solve").restype = c_void_p
 
-        if not self.ocp_solvers[0].acados_lib_uses_omp:
+        if not self.sim_solvers[0].acados_lib_uses_omp:
             print("Warning: Please compile the acados shared library with openmp and the number of threads set to 1, i.e. with the flags -DACADOS_WITH_OPENMP=ON -DACADOS_NUM_THREADS=1.")
 
 
