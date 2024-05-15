@@ -30,7 +30,7 @@
 #
 
 import numpy as np
-from .utils import J_to_idx, print_J_to_idx_note, J_to_idx_slack
+from .utils import J_to_idx, print_J_to_idx_note, J_to_idx_slack, check_if_one_dim_np_array
 
 class AcadosOcpConstraints:
     """
@@ -935,20 +935,6 @@ class AcadosOcpConstraints:
             raise Exception('Invalid constraint C value.' \
                 + 'Should be 2 dimensional numpy array.')
 
-    @lg.setter
-    def lg(self, lg):
-        if isinstance(lg, np.ndarray):
-            self.__lg = lg
-        else:
-            raise Exception('Invalid lg value.')
-
-    @ug.setter
-    def ug(self, ug):
-        if isinstance(ug, np.ndarray):
-            self.__ug = ug
-        else:
-            raise Exception('Invalid ug value.')
-
     # polytopic constraints at shooting node N
     @C_e.setter
     def C_e(self, C_e):
@@ -958,125 +944,99 @@ class AcadosOcpConstraints:
             raise Exception('Invalid constraint C_e value.' \
                 + 'Should be 2 dimensional numpy array.')
 
+    @lg.setter
+    def lg(self, lg):
+        check_if_one_dim_np_array(lg, 'lg')
+        self.__lg = lg
+
+    @ug.setter
+    def ug(self, ug):
+        check_if_one_dim_np_array(ug, 'ug')
+        self.__ug = ug
+
     @lg_e.setter
     def lg_e(self, lg_e):
-        if isinstance(lg_e, np.ndarray):
-            self.__lg_e = lg_e
-        else:
-            raise Exception('Invalid lg_e value.')
+        check_if_one_dim_np_array(lg_e, 'lg_e')
+        self.__lg_e = lg_e
 
     @ug_e.setter
     def ug_e(self, ug_e):
-        if isinstance(ug_e, np.ndarray):
-            self.__ug_e = ug_e
-        else:
-            raise Exception('Invalid ug_e value.')
+        check_if_one_dim_np_array(ug_e, 'ug_e')
+        self.__ug_e = ug_e
 
     # nonlinear constraints
     @lh.setter
     def lh(self, lh):
-        if isinstance(lh, np.ndarray):
-            self.__lh = lh
-        else:
-            raise Exception('Invalid lh value.')
+        check_if_one_dim_np_array(lh, 'lh')
+        self.__lh = lh
 
     @uh.setter
     def uh(self, uh):
-        if isinstance(uh, np.ndarray):
-            self.__uh = uh
-        else:
-            raise Exception('Invalid uh value.')
+        check_if_one_dim_np_array(uh, 'uh')
+        self.__uh = uh
 
-
-    # nonlinear constraints at initial shooting node
-    @lh_0.setter
-    def lh_0(self, lh_0):
-        if isinstance(lh_0, np.ndarray):
-            self.__lh_0 = lh_0
-        else:
-            raise Exception('Invalid lh_0 value.')
-
-    @uh_0.setter
-    def uh_0(self, uh_0):
-        if isinstance(uh_0, np.ndarray):
-            self.__uh_0 = uh_0
-        else:
-            raise Exception('Invalid uh_0 value.')
-
-    @lphi_0.setter
-    def lphi_0(self, lphi_0):
-        if isinstance(lphi_0, np.ndarray):
-            self.__lphi_0 = lphi_0
-        else:
-            raise Exception('Invalid lphi_0 value.')
-
-    @uphi_0.setter
-    def uphi_0(self, uphi_0):
-        if isinstance(uphi_0, np.ndarray):
-            self.__uphi_0 = uphi_0
-        else:
-            raise Exception('Invalid uphi_0 value.')
-
-    # nonlinear constraints at shooting node N
     @lh_e.setter
     def lh_e(self, lh_e):
-        if isinstance(lh_e, np.ndarray):
-            self.__lh_e = lh_e
-        else:
-            raise Exception('Invalid lh_e value.')
+        check_if_one_dim_np_array(lh_e, 'lh_e')
+        self.__lh_e = lh_e
 
     @uh_e.setter
     def uh_e(self, uh_e):
-        if isinstance(uh_e, np.ndarray):
-            self.__uh_e = uh_e
-        else:
-            raise Exception('Invalid uh_e value.')
+        check_if_one_dim_np_array(uh_e, 'uh_e')
+        self.__uh_e = uh_e
+
+    @lh_0.setter
+    def lh_0(self, lh_0):
+        check_if_one_dim_np_array(lh_0, 'lh_0')
+        self.__lh_0 = lh_0
+
+    @uh_0.setter
+    def uh_0(self, uh_0):
+        check_if_one_dim_np_array(uh_0, 'uh_0')
+        self.__uh_0 = uh_0
 
     # convex-over-nonlinear constraints
     @lphi.setter
     def lphi(self, lphi):
-        if isinstance(lphi, np.ndarray):
-            self.__lphi = lphi
-        else:
-            raise Exception('Invalid lphi value.')
+        check_if_one_dim_np_array(lphi, 'lphi')
+        self.__lphi = lphi
 
     @uphi.setter
     def uphi(self, uphi):
-        if isinstance(uphi, np.ndarray):
-            self.__uphi = uphi
-        else:
-            raise Exception('Invalid uphi value.')
+        check_if_one_dim_np_array(uphi, 'uphi')
+        self.__uphi = uphi
 
-    # convex-over-nonlinear constraints at shooting node N
     @lphi_e.setter
     def lphi_e(self, lphi_e):
-        if isinstance(lphi_e, np.ndarray):
-            self.__lphi_e = lphi_e
-        else:
-            raise Exception('Invalid lphi_e value.')
+        check_if_one_dim_np_array(lphi_e, 'lphi_e')
+        self.__lphi_e = lphi_e
 
     @uphi_e.setter
     def uphi_e(self, uphi_e):
-        if isinstance(uphi_e, np.ndarray):
-            self.__uphi_e = uphi_e
-        else:
-            raise Exception('Invalid uphi_e value.')
+        check_if_one_dim_np_array(uphi_e, 'uphi_e')
+        self.__uphi_e = uphi_e
+
+    @lphi_0.setter
+    def lphi_0(self, lphi_0):
+        check_if_one_dim_np_array(lphi_0, 'lphi_0')
+        self.__lphi_0 = lphi_0
+
+    @uphi_0.setter
+    def uphi_0(self, uphi_0):
+        check_if_one_dim_np_array(uphi_0, 'uphi_0')
+        self.__uphi_0 = uphi_0
 
     # SLACK bounds
     # soft bounds on x
     @lsbx.setter
     def lsbx(self, lsbx):
-        if isinstance(lsbx, np.ndarray):
-            self.__lsbx = lsbx
-        else:
-            raise Exception('Invalid lsbx value.')
+        check_if_one_dim_np_array(lsbx, 'lsbx')
+        self.__lsbx = lsbx
 
     @usbx.setter
     def usbx(self, usbx):
-        if isinstance(usbx, np.ndarray):
-            self.__usbx = usbx
-        else:
-            raise Exception('Invalid usbx value.')
+        check_if_one_dim_np_array(usbx, 'usbx')
+        self.__usbx = usbx
 
     @idxsbx.setter
     def idxsbx(self, idxsbx):
@@ -1095,17 +1055,13 @@ class AcadosOcpConstraints:
     # soft bounds on u
     @lsbu.setter
     def lsbu(self, lsbu):
-        if isinstance(lsbu, np.ndarray):
-            self.__lsbu = lsbu
-        else:
-            raise Exception('Invalid lsbu value.')
+        check_if_one_dim_np_array(lsbu, 'lsbu')
+        self.__lsbu = lsbu
 
     @usbu.setter
     def usbu(self, usbu):
-        if isinstance(usbu, np.ndarray):
-            self.__usbu = usbu
-        else:
-            raise Exception('Invalid usbu value.')
+        check_if_one_dim_np_array(usbu, 'usbu')
+        self.__usbu = usbu
 
     @idxsbu.setter
     def idxsbu(self, idxsbu):
@@ -1124,17 +1080,13 @@ class AcadosOcpConstraints:
     # soft bounds on x at shooting node N
     @lsbx_e.setter
     def lsbx_e(self, lsbx_e):
-        if isinstance(lsbx_e, np.ndarray):
-            self.__lsbx_e = lsbx_e
-        else:
-            raise Exception('Invalid lsbx_e value.')
+        check_if_one_dim_np_array(lsbx_e, 'lsbx_e')
+        self.__lsbx_e = lsbx_e
 
     @usbx_e.setter
     def usbx_e(self, usbx_e):
-        if isinstance(usbx_e, np.ndarray):
-            self.__usbx_e = usbx_e
-        else:
-            raise Exception('Invalid usbx_e value.')
+        check_if_one_dim_np_array(usbx_e, 'usbx_e')
+        self.__usbx_e = usbx_e
 
     @idxsbx_e.setter
     def idxsbx_e(self, idxsbx_e):
@@ -1154,24 +1106,18 @@ class AcadosOcpConstraints:
     # soft bounds on general linear constraints
     @lsg.setter
     def lsg(self, lsg):
-        if isinstance(lsg, np.ndarray):
-            self.__lsg = lsg
-        else:
-            raise Exception('Invalid lsg value.')
+        check_if_one_dim_np_array(lsg, 'lsg')
+        self.__lsg = lsg
 
     @usg.setter
     def usg(self, usg):
-        if isinstance(usg, np.ndarray):
-            self.__usg = usg
-        else:
-            raise Exception('Invalid usg value.')
+        check_if_one_dim_np_array(usg, 'usg')
+        self.__usg = usg
 
     @idxsg.setter
     def idxsg(self, idxsg):
-        if isinstance(idxsg, np.ndarray):
-            self.__idxsg = idxsg
-        else:
-            raise Exception('Invalid idxsg value.')
+        check_if_one_dim_np_array(idxsg, 'idxsg')
+        self.__idxsg = idxsg
 
     @Jsg.setter
     def Jsg(self, Jsg):
@@ -1184,24 +1130,18 @@ class AcadosOcpConstraints:
     # soft bounds on nonlinear constraints
     @lsh.setter
     def lsh(self, lsh):
-        if isinstance(lsh, np.ndarray):
-            self.__lsh = lsh
-        else:
-            raise Exception('Invalid lsh value.')
+        check_if_one_dim_np_array(lsh, 'lsh')
+        self.__lsh = lsh
 
     @ush.setter
     def ush(self, ush):
-        if isinstance(ush, np.ndarray):
-            self.__ush = ush
-        else:
-            raise Exception('Invalid ush value.')
+        check_if_one_dim_np_array(ush, 'ush')
+        self.__ush = ush
 
     @idxsh.setter
     def idxsh(self, idxsh):
-        if isinstance(idxsh, np.ndarray):
-            self.__idxsh = idxsh
-        else:
-            raise Exception('Invalid idxsh value.')
+        check_if_one_dim_np_array(idxsh, 'idxsh')
+        self.__idxsh = idxsh
 
 
     @Jsh.setter
@@ -1214,24 +1154,18 @@ class AcadosOcpConstraints:
     # soft bounds on convex-over-nonlinear constraints
     @lsphi.setter
     def lsphi(self, lsphi):
-        if isinstance(lsphi, np.ndarray):
-            self.__lsphi = lsphi
-        else:
-            raise Exception('Invalid lsphi value.')
+        check_if_one_dim_np_array(lsphi, 'lsphi')
+        self.__lsphi = lsphi
 
     @usphi.setter
     def usphi(self, usphi):
-        if isinstance(usphi, np.ndarray):
-            self.__usphi = usphi
-        else:
-            raise Exception('Invalid usphi value.')
+        check_if_one_dim_np_array(usphi, 'usphi')
+        self.__usphi = usphi
 
     @idxsphi.setter
     def idxsphi(self, idxsphi):
-        if isinstance(idxsphi, np.ndarray):
-            self.__idxsphi = idxsphi
-        else:
-            raise Exception('Invalid idxsphi value.')
+        check_if_one_dim_np_array(idxsphi, 'idxsphi')
+        self.__idxsphi = idxsphi
 
     @Jsphi.setter
     def Jsphi(self, Jsphi):
@@ -1243,24 +1177,18 @@ class AcadosOcpConstraints:
     # soft bounds on general linear constraints at shooting node N
     @lsg_e.setter
     def lsg_e(self, lsg_e):
-        if isinstance(lsg_e, np.ndarray):
-            self.__lsg_e = lsg_e
-        else:
-            raise Exception('Invalid lsg_e value.')
+        check_if_one_dim_np_array(lsg_e, 'lsg_e')
+        self.__lsg_e = lsg_e
 
     @usg_e.setter
     def usg_e(self, usg_e):
-        if isinstance(usg_e, np.ndarray):
-            self.__usg_e = usg_e
-        else:
-            raise Exception('Invalid usg_e value.')
+        check_if_one_dim_np_array(usg_e, 'usg_e')
+        self.__usg_e = usg_e
 
     @idxsg_e.setter
     def idxsg_e(self, idxsg_e):
-        if isinstance(idxsg_e, np.ndarray):
-            self.__idxsg_e = idxsg_e
-        else:
-            raise Exception('Invalid idxsg_e value.')
+        check_if_one_dim_np_array(idxsg_e, 'idxsg_e')
+        self.__idxsg_e = idxsg_e
 
     @Jsg_e.setter
     def Jsg_e(self, Jsg_e):
@@ -1272,24 +1200,18 @@ class AcadosOcpConstraints:
     # soft bounds on nonlinear constraints at shooting node N
     @lsh_e.setter
     def lsh_e(self, lsh_e):
-        if isinstance(lsh_e, np.ndarray):
-            self.__lsh_e = lsh_e
-        else:
-            raise Exception('Invalid lsh_e value.')
+        check_if_one_dim_np_array(lsh_e, 'lsh_e')
+        self.__lsh_e = lsh_e
 
     @ush_e.setter
     def ush_e(self, ush_e):
-        if isinstance(ush_e, np.ndarray):
-            self.__ush_e = ush_e
-        else:
-            raise Exception('Invalid ush_e value.')
+        check_if_one_dim_np_array(ush_e, 'ush_e')
+        self.__ush_e = ush_e
 
     @idxsh_e.setter
     def idxsh_e(self, idxsh_e):
-        if isinstance(idxsh_e, np.ndarray):
-            self.__idxsh_e = idxsh_e
-        else:
-            raise Exception('Invalid idxsh_e value.')
+        check_if_one_dim_np_array(idxsh_e, 'idxsh_e')
+        self.__idxsh_e = idxsh_e
 
     @Jsh_e.setter
     def Jsh_e(self, Jsh_e):
@@ -1302,24 +1224,18 @@ class AcadosOcpConstraints:
     # soft bounds on convex-over-nonlinear constraints at shooting node N
     @lsphi_e.setter
     def lsphi_e(self, lsphi_e):
-        if isinstance(lsphi_e, np.ndarray):
-            self.__lsphi_e = lsphi_e
-        else:
-            raise Exception('Invalid lsphi_e value.')
+        check_if_one_dim_np_array(lsphi_e, 'lsphi_e')
+        self.__lsphi_e = lsphi_e
 
     @usphi_e.setter
     def usphi_e(self, usphi_e):
-        if isinstance(usphi_e, np.ndarray):
-            self.__usphi_e = usphi_e
-        else:
-            raise Exception('Invalid usphi_e value.')
+        check_if_one_dim_np_array(usphi_e, 'usphi_e')
+        self.__usphi_e = usphi_e
 
     @idxsphi_e.setter
     def idxsphi_e(self, idxsphi_e):
-        if isinstance(idxsphi_e, np.ndarray):
-            self.__idxsphi_e = idxsphi_e
-        else:
-            raise Exception('Invalid idxsphi_e value.')
+        check_if_one_dim_np_array(idxsphi_e, 'idxsphi_e')
+        self.__idxsphi_e = idxsphi_e
 
     @Jsphi_e.setter
     def Jsphi_e(self, Jsphi_e):
@@ -1331,24 +1247,18 @@ class AcadosOcpConstraints:
     # soft constraints at shooting node 0
     @lsh_0.setter
     def lsh_0(self, lsh_0):
-        if isinstance(lsh_0, np.ndarray):
-            self.__lsh_0 = lsh_0
-        else:
-            raise Exception('Invalid lsh_0 value.')
+        check_if_one_dim_np_array(lsh_0, 'lsh_0')
+        self.__lsh_0 = lsh_0
 
     @ush_0.setter
     def ush_0(self, ush_0):
-        if isinstance(ush_0, np.ndarray):
-            self.__ush_0 = ush_0
-        else:
-            raise Exception('Invalid ush_0 value.')
+        check_if_one_dim_np_array(ush_0, 'ush_0')
+        self.__ush_0 = ush_0
 
     @idxsh_0.setter
     def idxsh_0(self, idxsh_0):
-        if isinstance(idxsh_0, np.ndarray):
-            self.__idxsh_0 = idxsh_0
-        else:
-            raise Exception('Invalid idxsh_0 value.')
+        check_if_one_dim_np_array(idxsh_0, 'idxsh_0')
+        self.__idxsh_0 = idxsh_0
 
     @Jsh_0.setter
     def Jsh_0(self, Jsh_0):
@@ -1359,24 +1269,18 @@ class AcadosOcpConstraints:
 
     @lsphi_0.setter
     def lsphi_0(self, lsphi_0):
-        if isinstance(lsphi_0, np.ndarray):
-            self.__lsphi_0 = lsphi_0
-        else:
-            raise Exception('Invalid lsphi_0 value.')
+        check_if_one_dim_np_array(lsphi_0, 'lsphi_0')
+        self.__lsphi_0 = lsphi_0
 
     @usphi_0.setter
     def usphi_0(self, usphi_0):
-        if isinstance(usphi_0, np.ndarray):
-            self.__usphi_0 = usphi_0
-        else:
-            raise Exception('Invalid usphi_0 value.')
+        check_if_one_dim_np_array(usphi_0, 'usphi_0')
+        self.__usphi_0 = usphi_0
 
     @idxsphi_0.setter
     def idxsphi_0(self, idxsphi_0):
-        if isinstance(idxsphi_0, np.ndarray):
-            self.__idxsphi_0 = idxsphi_0
-        else:
-            raise Exception('Invalid idxsphi_0 value.')
+        check_if_one_dim_np_array(idxsphi_0, 'idxsphi_0')
+        self.__idxsphi_0 = idxsphi_0
 
     @Jsphi_0.setter
     def Jsphi_0(self, Jsphi_0):

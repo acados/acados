@@ -349,6 +349,14 @@ def J_to_idx_slack(J):
     return idx
 
 
+def check_if_one_dim_np_array(val, name):
+    if not isinstance(val, np.ndarray):
+        raise Exception(f"{name} must be a numpy array, got {type(val)}")
+    if len(val.shape) != 1:
+        raise Exception(f"{name} must be a 1D numpy array, got shape {val.shape}")
+    return
+
+
 def print_J_to_idx_note():
     print("NOTE: J* matrix is converted to zero based vector idx* vector, which is returned here.")
 
