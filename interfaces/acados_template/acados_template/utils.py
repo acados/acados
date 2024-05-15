@@ -349,6 +349,12 @@ def J_to_idx_slack(J):
     return idx
 
 
+def check_if_nparray_and_flatten(val, name):
+    if not isinstance(val, np.ndarray):
+        raise Exception(f"{name} must be a numpy array, got {type(val)}")
+    return val.reshape(-1)
+
+
 def print_J_to_idx_note():
     print("NOTE: J* matrix is converted to zero based vector idx* vector, which is returned here.")
 
