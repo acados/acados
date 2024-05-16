@@ -36,9 +36,14 @@ import numpy as np
 
 from .acados_model import AcadosModel
 from .acados_ocp import AcadosOcp
-from .utils import casadi_length
+from .utils import casadi_length, is_empty
 
 def create_model_with_cost_state(ocp: AcadosOcp) -> Tuple[AcadosModel, np.ndarray]:
+    """
+    Creates a new AcadosModel with an extra state `cost_state`, which has the dynamics of the cost function and slack penalties corresponding to the intermediate shooting nodes.
+
+    Returns the augmented model and the parameter values of the given AcadosOcp.
+    """
 
     model = deepcopy(ocp.model)
     symbol = model.get_casadi_symbol()
@@ -64,6 +69,46 @@ def create_model_with_cost_state(ocp: AcadosOcp) -> Tuple[AcadosModel, np.ndarra
 
     else:
         raise Exception("create_model_with_cost_state: Unknown cost type.")
+
+    i_slack = 0
+    # TODO: add when they are added to ocp formulation
+    # for ibx in ocp.constraints.idxsbx_0:
+    # ocp.constraints.idxsg
+    for ibu in ocp.constraints.idxsbu:
+        iu = ocp.constraints.idxbu[ibu]
+        lower_violation = ca.fmax(ocp.constraints.lbu[ibu] - model.u[iu], 0)
+        upper_violation = ca.fmax(model.u[iu] - ocp.constraints.ubu[ibu], 0)
+        cost_dot += ocp.cost.zl[i_slack] * lower_violation + ocp.cost.Zl[i_slack] * lower_violation ** 2
+        cost_dot += ocp.cost.zu[i_slack] * upper_violation + ocp.cost.Zu[i_slack] * upper_violation ** 2
+        i_slack += 1
+
+    for ibx in ocp.constraints.idxsbx:
+        ix = ocp.constraints.idxbx[ibx]
+        lower_violation = ca.fmax(ocp.constraints.lbx[ibx] - model.x[ix], 0)
+        upper_violation = ca.fmax(model.x[ix] - ocp.constraints.ubx[ibx], 0)
+        cost_dot += ocp.cost.zl[i_slack] * lower_violation + ocp.cost.Zl[i_slack] * lower_violation ** 2
+        cost_dot += ocp.cost.zu[i_slack] * upper_violation + ocp.cost.Zu[i_slack] * upper_violation ** 2
+        i_slack += 1
+
+
+    if not is_empty(ocp.constraints.C):
+        g = ocp.constraints.C @ ocp.model.x + ocp.constraints.D @ ocp.model.u
+        for ig in ocp.constraints.idxsg:
+            lower_violation = ca.fmax(ocp.constraints.lg[ig] - g[ig], 0)
+            upper_violation = ca.fmax(g[ig] - ocp.constraints.ug[ig], 0)
+            cost_dot += ocp.cost.zl[i_slack] * lower_violation + ocp.cost.Zl[i_slack] * lower_violation ** 2
+            cost_dot += ocp.cost.zu[i_slack] * upper_violation + ocp.cost.Zu[i_slack] * upper_violation ** 2
+            i_slack += 1
+
+    for ih in ocp.constraints.idxsh:
+        lower_violation = ca.fmax(ocp.constraints.lh[ih] - ocp.model.con_h_expr[ih], 0)
+        upper_violation = ca.fmax(ocp.model.con_h_expr[ih] - ocp.constraints.uh[ih], 0)
+        cost_dot += ocp.cost.zl[i_slack] * lower_violation + ocp.cost.Zl[i_slack] * lower_violation ** 2
+        cost_dot += ocp.cost.zu[i_slack] * upper_violation + ocp.cost.Zu[i_slack] * upper_violation ** 2
+        i_slack += 1
+
+    if not is_empty(ocp.constraints.idxsphi):
+        raise NotImplementedError(f"Not implemented for nontrivial ocp.constraints.idxsphi = {ocp.constraints.idxsphi}")
 
     model.x = ca.vertcat(model.x, cost_state)
     model.xdot = ca.vertcat(model.xdot, cost_state_dot)
