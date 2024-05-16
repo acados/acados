@@ -33,7 +33,28 @@ import matplotlib.pyplot as plt
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel, AcadosSimSolver, AcadosSim
 import numpy as np
 from casadi import SX, vertcat
-import os
+
+
+def plot_crane_trajectories(ts, simX, simU):
+
+    state_labels = ['$p_1$', '$v_1$', '$p_2$', '$v_2$']
+    fig, axes = plt.subplots(nrows=len(state_labels)+1, ncols=1, sharex=True)
+
+    for i, l in enumerate(state_labels):
+        axes[i].plot(ts, simX[:, i])
+        axes[i].grid(True)
+        axes[i].set_ylabel(l)
+
+    axes[0].set_title('time optimal solution')
+
+    axes[-1].step(ts, np.hstack((simU[:, 0], simU[-1, 0])), '-', where='post')
+    axes[-1].grid(True)
+    axes[-1].set_ylabel('a')
+    axes[-1].set_xlabel('t')
+    axes[-1].set_xlim(ts[0], ts[-1])
+
+    plt.show()
+
 
 def main(use_cython=True):
     # (very) simple crane model
@@ -41,6 +62,7 @@ def main(use_cython=True):
     k = 0.9
     a_max = 10
     dt_max = 2.0
+    dt_min = 1e-3
 
     # states
     p1 = SX.sym('p1')
@@ -65,8 +87,6 @@ def main(use_cython=True):
     model.u = u
     model.name = 'crane_time_opt'
 
-    # create ocp object to formulate the OCP
-
     x0 = np.array([2.0, 0.0, 2.0, 0.0])
     xf = np.array([0.0, 0.0, 0.0, 0.0])
 
@@ -89,7 +109,7 @@ def main(use_cython=True):
     ocp.model.cost_expr_ext_cost = dt
     ocp.model.cost_expr_ext_cost_e = 0
 
-    ocp.constraints.lbu = np.array([-a_max, 0.0])
+    ocp.constraints.lbu = np.array([-a_max, dt_min])
     ocp.constraints.ubu = np.array([+a_max, dt_max])
     ocp.constraints.idxbu = np.array([0, 1])
 
@@ -112,7 +132,6 @@ def main(use_cython=True):
     ocp.solver_options.levenberg_marquardt = 0.1
     ocp.solver_options.sim_method_num_steps = 15
     ocp.solver_options.qp_solver_iter_max = 100
-    ocp.code_export_directory = 'c_generated_code'
     ocp.solver_options.hessian_approx = 'EXACT'
     ocp.solver_options.exact_hess_constr = 0
     ocp.solver_options.exact_hess_dyn = 0
@@ -191,7 +210,7 @@ def main(use_cython=True):
         # set simulation time
         acados_integrator.set("T", dts_fine[i])
 
-        for j in range(Ns_fine[i]):
+        for _ in range(Ns_fine[i]):
             acados_integrator.set("x", simX_fine[k,:])
             status = acados_integrator.solve()
             if status != 0:
@@ -203,28 +222,8 @@ def main(use_cython=True):
 
             k += 1
 
-    # visualize
-    if not os.environ.get('ACADOS_ON_CI'):
-        plt.figure()
+    plot_crane_trajectories(ts_fine, simX_fine, simU_fine)
 
-        state_labels = ['p1', 'v1', 'p2', 'v2']
-
-        for i,l in enumerate(state_labels):
-            plt.subplot(5, 1, i+1)
-
-            plt.plot(ts_fine, simX_fine[:, i], label='time optimal solution')
-            plt.grid(True)
-            plt.ylabel(l)
-            if i ==0:
-                plt.legend(loc=1)
-
-        plt.subplot(5, 1, 5)
-        plt.step(ts_fine, np.hstack((simU_fine[:, 0], simU_fine[-1, 0])), '-', where='post')
-        plt.grid(True)
-        plt.ylabel('a')
-        plt.xlabel('t')
-
-        plt.show()
 
 if __name__ == "__main__":
     for use_cython in [True, False]:
