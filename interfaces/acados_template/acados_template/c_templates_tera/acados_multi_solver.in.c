@@ -1152,6 +1152,7 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     double* uphi;
 
     // general slack related
+    double* zlumem;
     double* Zl;
     double* Zu;
     double* zl;
@@ -1372,7 +1373,7 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
 
 {%- if phases_dims[jj].ns > 0 %}
-    // double* zlumem = calloc(4*{{ phases_dims[jj].ns }}, sizeof(double));
+    zlumem = calloc(4*{{ phases_dims[jj].ns }}, sizeof(double));
     Zl = zlumem+{{ phases_dims[jj].ns }}*0;
     Zu = zlumem+{{ phases_dims[jj].ns }}*1;
     zl = zlumem+{{ phases_dims[jj].ns }}*2;
