@@ -40,7 +40,11 @@ from .utils import casadi_length, is_empty
 
 def create_model_with_cost_state(ocp: AcadosOcp) -> Tuple[AcadosModel, np.ndarray]:
     """
-    Creates a new AcadosModel with an extra state `cost_state`, which has the dynamics of the cost function and slack penalties corresponding to the intermediate shooting nodes.
+    Creates a new AcadosModel with an extra state `cost_state`,
+    which has the dynamics of the cost function and slack penalties corresponding to the intermediate shooting nodes.
+
+    Note: In contrast cost_discretization='INTEGRATOR', this allows to integrate also the slack penalties.
+    Since l1 slack penalties are nondifferentiable, an accurate cost integration with the model created by this function should use many integrator steps, when slack penalties are part of the OCP formulation.
 
     Returns the augmented model and the parameter values of the given AcadosOcp.
     """
@@ -71,9 +75,6 @@ def create_model_with_cost_state(ocp: AcadosOcp) -> Tuple[AcadosModel, np.ndarra
         raise Exception("create_model_with_cost_state: Unknown cost type.")
 
     i_slack = 0
-    # TODO: add when they are added to ocp formulation
-    # for ibx in ocp.constraints.idxsbx_0:
-    # ocp.constraints.idxsg
     for ibu in ocp.constraints.idxsbu:
         iu = ocp.constraints.idxbu[ibu]
         lower_violation = ca.fmax(ocp.constraints.lbu[ibu] - model.u[iu], 0)
