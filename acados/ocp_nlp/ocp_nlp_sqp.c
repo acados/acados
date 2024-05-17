@@ -935,27 +935,35 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // Anderson acceleration
         if (nlp_opts->with_anderson_acceleration)
         {
+            // convert qp_out to delta primal-dual step
+            ocp_nlp_convert_primaldelta_absdual_step_to_delta_step(config, dims, nlp_out, qp_out);
             if (sqp_iter == 0)
             {
-                // TODO: create delta primal-dual step and store in anderson_step, prev_qp_step
+                // store in anderson_step, prev_qp_step
+                ocp_qp_out_copy(qp_out, nlp_mem->anderson_step);
                 // update variables
                 ocp_nlp_update_variables_sqp_delta_primal_dual(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, nlp_mem->anderson_step);
             }
             else
             {
-                // TODO:
-                // - create delta primal-dual step
-                // - compute d_{k+1} - d_k: qp_step - prev_qp_step
-                // - compute gamma
-                // - compute anderson step
-                // - update variables
-                // - store: anderson, iterate, prev. qp step
+                // tmp_qp_out = d_{k+1} - d_k: qp_step - prev_qp_step
+                ocp_qp_out_axpy(-1.0, nlp_mem->prev_qp_out, qp_out, nlp_work->tmp_qp_out);
+                // compute gamma
+                double gamma = ocp_nlp_sqp_compute_anderson_gamma(qp_out, nlp_work->tmp_qp_out);
+                // update anderson step
+                ocp_qp_out_sc(-gamma, nlp_mem->anderson_step);
+                ocp_qp_out_add(-gamma*mem->alpha, nlp_mem->prev_qp_out, nlp_mem->anderson_step);
+                ocp_qp_out_add(mem->alpha+gamma*mem->alpha, qp_out, nlp_mem->anderson_step);
+                // update variables
+                ocp_nlp_update_variables_sqp_delta_primal_dual(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, nlp_mem->anderson_step);
             }
+            // store prev qp step
+            ocp_qp_out_copy(qp_out, nlp_mem->prev_qp_out);
         }
         else
         {
             // update variables
-            ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, nlp_mem->qp_out);
+            ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha);
         }
 
         if (nlp_opts->print_level > 0)
