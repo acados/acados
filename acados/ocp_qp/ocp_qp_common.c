@@ -158,6 +158,11 @@ void ocp_qp_dims_get(void *config_, void *dims, int stage, const char *field, in
     return;
 }
 
+static int ocp_qp_dims_get_ni(ocp_qp_dims *dims, int stage)
+{
+    return dims->nbu[stage] + dims->nbx[stage] + dims->ng[stage];
+}
+
 
 
 /************************************************
@@ -276,6 +281,118 @@ void ocp_qp_out_copy(ocp_qp_out* from, ocp_qp_out* to)
     d_ocp_qp_sol_copy_all(from, to);
 }
 
+
+void ocp_qp_out_axpy(double alpha, ocp_qp_out* x, ocp_qp_out* y, ocp_qp_out* z)
+{
+    ocp_qp_dims *dims = x->dim;
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
+    int ni_stage;
+    for (int i = 0; i <= N; i++)
+    {
+        ni_stage = ocp_qp_dims_get_ni(dims, i);
+        blasfeo_daxpy(nx[i]+nu[i]+2*ns[i], alpha, x->ux+i, 0, y->ux+i, 0, z->ux+i, 0);
+        blasfeo_daxpy(2*ni_stage, alpha, x->lam+i, 0, y->lam+i, 0, z->lam+i, 0);
+        if (i < N)
+        {
+            blasfeo_daxpy(nx[i+1], alpha, x->pi+i, 0, y->pi+i, 0, z->pi+i, 0);
+        }
+        blasfeo_daxpy(2*ni_stage, alpha, x->t+i, 0, y->t+i, 0, z->t+i, 0);
+    }
+}
+
+
+double ocp_qp_out_ddot(ocp_qp_out *x, ocp_qp_out *y)
+{
+    ocp_qp_dims *dims = x->dim;
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
+    int ni_stage;
+    double out = 0.0;
+    for (int i = 0; i <= N; i++)
+    {
+        ni_stage = ocp_qp_dims_get_ni(dims, i);
+        out += blasfeo_ddot(nx[i]+nu[i]+2*ns[i], x->ux+i, 0, y->ux+i, 0);
+        out += blasfeo_ddot(2*ni_stage, x->lam+i, 0, y->lam+i, 0);
+        if (i < N)
+        {
+            out += blasfeo_ddot(nx[i+1], x->pi+i, 0, y->pi+i, 0);
+        }
+        out += blasfeo_ddot(2*ni_stage, x->t+i, 0, y->t+i, 0);
+    }
+    return out;
+}
+
+
+void ocp_qp_out_set_to_zero(ocp_qp_out* x)
+{
+    ocp_qp_dims *dims = x->dim;
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
+    int ni_stage;
+    for (int i = 0; i <= N; i++)
+    {
+        ni_stage = ocp_qp_dims_get_ni(dims, i);
+        blasfeo_dvecse(nx[i]+nu[i]+2*ns[i], 0.0, x->ux+i, 0);
+        blasfeo_dvecse(2*ni_stage, 0.0, x->lam+i, 0);
+        if (i < N)
+        {
+            blasfeo_dvecse(nx[i+1], 0.0, x->pi+i, 0);
+        }
+        blasfeo_dvecse(2*ni_stage, 0.0, x->t+i, 0);
+    }
+}
+
+
+void ocp_qp_out_sc(double alpha, ocp_qp_out* x)
+{
+    ocp_qp_dims *dims = x->dim;
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
+    int ni_stage;
+    for (int i = 0; i <= N; i++)
+    {
+        ni_stage = ocp_qp_dims_get_ni(dims, i);
+        blasfeo_dvecsc(nx[i]+nu[i]+2*ns[i], alpha, x->ux+i, 0);
+        blasfeo_dvecsc(2*ni_stage, alpha, x->lam+i, 0);
+        if (i < N)
+        {
+            blasfeo_dvecsc(nx[i+1], alpha, x->pi+i, 0);
+        }
+        blasfeo_dvecsc(2*ni_stage, alpha, x->t+i, 0);
+    }
+}
+
+
+// y += alpha * x
+void ocp_qp_out_add(double alpha, ocp_qp_out* x, ocp_qp_out* y)
+{
+    ocp_qp_dims *dims = x->dim;
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
+    int ni_stage;
+    for (int i = 0; i <= N; i++)
+    {
+        ni_stage = ocp_qp_dims_get_ni(dims, i);
+        blasfeo_dvecad(nx[i]+nu[i]+2*ns[i], alpha, x->ux+i, 0, y->ux+i, 0);
+        blasfeo_dvecad(2*ni_stage, alpha, x->lam+i, 0, y->lam+i, 0);
+        if (i < N)
+        {
+            blasfeo_dvecad(nx[i+1], alpha, x->pi+i, 0, y->pi+i, 0);
+        }
+        blasfeo_dvecad(2*ni_stage, alpha, x->t+i, 0, y->t+i, 0);
+    }
+}
 
 
 

@@ -156,6 +156,13 @@ ocp_qp_out *ocp_qp_out_assign(ocp_qp_dims *dims, void *raw_memory);
 double ocp_qp_out_compute_primal_nrm_inf(ocp_qp_out* qp_out);
 //
 void ocp_qp_out_copy(ocp_qp_out* from, ocp_qp_out* to);
+//
+void ocp_qp_out_axpy(double alpha, ocp_qp_out* x, ocp_qp_out* y, ocp_qp_out* z);
+//
+void ocp_qp_out_set_to_zero(ocp_qp_out* qp_out);
+void ocp_qp_out_add(double alpha, ocp_qp_out* x, ocp_qp_out* y);
+void ocp_qp_out_sc(double alpha, ocp_qp_out* x);
+
 
 /* res */
 //
