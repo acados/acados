@@ -1024,6 +1024,15 @@ class AcadosOcpSolver:
             self.__acados_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
             return out
 
+        elif field_ == 'primal_step_norm':
+            nlp_iter = self.get_stats("nlp_iter")
+            stat_m = self.get_stats("stat_m")
+            min_size = min([stat_m, nlp_iter+1])
+            out = np.ascontiguousarray(np.zeros((min_size,)), dtype=np.float64)
+            out_data = cast(out.ctypes.data, POINTER(c_double))
+            self.__acados_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data)
+            return out
+
         elif field_ == 'qp_stat':
             full_stats = self.get_stats('statistics')
             if self.solver_options['nlp_solver_type'] == 'SQP':

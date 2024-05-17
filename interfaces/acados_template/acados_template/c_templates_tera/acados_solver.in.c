@@ -2226,6 +2226,11 @@ void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* 
     int nlp_solver_ext_qp_res = {{ solver_options.nlp_solver_ext_qp_res }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "ext_qp_res", &nlp_solver_ext_qp_res);
 
+{%- if solver_options.nlp_solver_type == "SQP" %}
+    int log_primal_step_norm = {{ solver_options.log_primal_step_norm }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "log_primal_step_norm", &log_primal_step_norm);
+{%- endif %}
+
 {%- if solver_options.qp_solver is containing("HPIPM") %}
     // set HPIPM mode: should be done before setting other QP solver options
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_hpipm_mode", "{{ solver_options.hpipm_mode }}");

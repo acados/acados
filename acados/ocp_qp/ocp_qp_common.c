@@ -252,6 +252,24 @@ ocp_qp_out *ocp_qp_out_assign(ocp_qp_dims *dims, void *raw_memory)
 }
 
 
+double ocp_qp_out_compute_primal_nrm_inf(ocp_qp_out* qp_out)
+{
+    double res = 0;
+    double res_stage = 0;
+    ocp_qp_dims *dims = qp_out->dim;
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ns = dims->ns;
+
+    for (int i = 0; i <= N; i++)
+    {
+        blasfeo_dvecnrm_inf(nx[i]+nu[i]+2*ns[i], qp_out->ux+i, 0, &res_stage);
+        res += res_stage;
+    }
+    return res;
+}
+
 
 
 /************************************************
