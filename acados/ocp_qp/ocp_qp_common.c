@@ -271,6 +271,13 @@ double ocp_qp_out_compute_primal_nrm_inf(ocp_qp_out* qp_out)
 }
 
 
+void ocp_qp_out_copy(ocp_qp_out* from, ocp_qp_out* to)
+{
+    d_ocp_qp_sol_copy_all(from, to);
+}
+
+
+
 
 /************************************************
  * res

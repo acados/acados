@@ -154,6 +154,8 @@ acados_size_t ocp_qp_out_calculate_size(ocp_qp_dims *dims);
 ocp_qp_out *ocp_qp_out_assign(ocp_qp_dims *dims, void *raw_memory);
 //
 double ocp_qp_out_compute_primal_nrm_inf(ocp_qp_out* qp_out);
+//
+void ocp_qp_out_copy(ocp_qp_out* from, ocp_qp_out* to);
 
 /* res */
 //
