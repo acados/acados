@@ -1381,13 +1381,18 @@ acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims
 
     acados_size_t size = sizeof(ocp_nlp_memory);
 
-    // qp in
+    // qp_in
     size += ocp_qp_in_calculate_size(dims->qp_solver->orig_dims);
 
-    // qp out
+    // qp_out
     size += ocp_qp_out_calculate_size(dims->qp_solver->orig_dims);
 
-    // qp solver
+    if (opts->with_anderson_acceleration)
+    {
+        size += 2*ocp_qp_out_calculate_size(dims->qp_solver->orig_dims); // prev_qp_out, anderson_step
+    }
+
+    // qp_solver
     size += qp_solver->memory_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
     // regularization
@@ -1500,6 +1505,14 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     // qp out
     mem->qp_out = ocp_qp_out_assign(dims->qp_solver->orig_dims, c_ptr);
     c_ptr += ocp_qp_out_calculate_size(dims->qp_solver->orig_dims);
+
+    if (opts->with_anderson_acceleration)
+    {
+        mem->prev_qp_out = ocp_qp_out_assign(dims->qp_solver->orig_dims, c_ptr);
+        c_ptr += ocp_qp_out_calculate_size(dims->qp_solver->orig_dims);
+        mem->anderson_step = ocp_qp_out_assign(dims->qp_solver->orig_dims, c_ptr);
+        c_ptr += ocp_qp_out_calculate_size(dims->qp_solver->orig_dims);
+    }
 
     // QP solver
     mem->qp_solver_mem = qp_solver->memory_assign(qp_solver, dims->qp_solver, opts->qp_solver_opts, c_ptr);

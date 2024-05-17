@@ -395,10 +395,10 @@ acados_size_t ocp_nlp_sqp_workspace_calculate_size(void *config_, void *dims_, v
 
     if (opts->ext_qp_res)
     {
-        // qp res
+        // qp_res
         size += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
 
-        // qp res ws
+        // qp_res_ws
         size += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
     }
 
@@ -423,11 +423,11 @@ static void ocp_nlp_sqp_cast_workspace(ocp_nlp_config *config, ocp_nlp_dims *dim
 
     if (opts->ext_qp_res)
     {
-        // qp res
+        // qp_res
         work->qp_res = ocp_qp_res_assign(dims->qp_solver->orig_dims, c_ptr);
         c_ptr += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
 
-        // qp res ws
+        // qp_res_ws
         work->qp_res_ws = ocp_qp_res_workspace_assign(dims->qp_solver->orig_dims, c_ptr);
         c_ptr += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
     }

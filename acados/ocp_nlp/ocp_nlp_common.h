@@ -287,6 +287,7 @@ typedef struct ocp_nlp_opts
     double eps_sufficient_descent;
     int with_solution_sens_wrt_params;
     int with_value_sens_wrt_params;
+    int with_anderson_acceleration;  // 0-false or 1-true
 
 } ocp_nlp_opts;
 
@@ -348,6 +349,11 @@ typedef struct ocp_nlp_memory
     // qp in & out
     ocp_qp_in *qp_in;
     ocp_qp_out *qp_out;
+
+    // for Anderson acceleration
+    ocp_qp_out *prev_qp_out;
+    ocp_qp_out *anderson_step;
+
     // QP stuff not entering the qp_in struct
     struct blasfeo_dmat *dzduxt; // dzdux transposed
     struct blasfeo_dvec *z_alg; // z_alg, output algebraic variables
