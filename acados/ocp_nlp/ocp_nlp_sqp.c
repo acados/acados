@@ -950,10 +950,13 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 ocp_qp_out_axpy(-1.0, nlp_mem->prev_qp_out, qp_out, nlp_work->tmp_qp_out);
                 // compute gamma
                 double gamma = ocp_nlp_sqp_compute_anderson_gamma(qp_out, nlp_work->tmp_qp_out);
-                // update anderson step
+                /* update anderson_step */
+                // anderson_step *= -gamma
                 ocp_qp_out_sc(-gamma, nlp_mem->anderson_step);
-                ocp_qp_out_add(-gamma*mem->alpha, nlp_mem->prev_qp_out, nlp_mem->anderson_step);
-                ocp_qp_out_add(mem->alpha+gamma*mem->alpha, qp_out, nlp_mem->anderson_step);
+                // anderson_step += alpha * gamma * prev_qp_out
+                ocp_qp_out_add(gamma*mem->alpha, nlp_mem->prev_qp_out, nlp_mem->anderson_step);
+                // anderson_step += (alpha - alpha * gamma) * qp_out
+                ocp_qp_out_add(mem->alpha-gamma*mem->alpha, qp_out, nlp_mem->anderson_step);
                 // update variables
                 ocp_nlp_update_variables_sqp_delta_primal_dual(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, nlp_mem->anderson_step);
             }
