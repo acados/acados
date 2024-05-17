@@ -168,7 +168,7 @@ void ocp_qp_out_axpy(double alpha, ocp_qp_out* x, ocp_qp_out* y, ocp_qp_out* z);
 void ocp_qp_out_set_to_zero(ocp_qp_out* qp_out);
 void ocp_qp_out_add(double alpha, ocp_qp_out* x, ocp_qp_out* y);
 void ocp_qp_out_sc(double alpha, ocp_qp_out* x);
-
+double ocp_qp_out_ddot(ocp_qp_out *x, ocp_qp_out *y);
 
 /* res */
 //
