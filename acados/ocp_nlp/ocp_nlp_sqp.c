@@ -932,6 +932,31 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
         // update variables
         ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha);
+        // Anderson acceleration
+        if (nlp_opts->with_anderson_acceleration)
+        {
+            if (sqp_iter == 0)
+            {
+                // TODO: create delta primal-dual step and store in anderson_step, prev_qp_step
+                // update variables
+                ocp_nlp_update_variables_sqp_delta_primal_dual(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, nlp_mem->anderson_step);
+            }
+            else
+            {
+                // TODO:
+                // - create delta primal-dual step
+                // - compute d_{k+1} - d_k: qp_step - prev_qp_step
+                // - compute gamma
+                // - compute anderson step
+                // - update variables
+                // - store: anderson, iterate, prev. qp step
+            }
+        }
+        else
+        {
+            // update variables
+            ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, nlp_mem->qp_out);
+        }
 
         if (nlp_opts->print_level > 0)
         {
