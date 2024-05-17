@@ -1492,6 +1492,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             int* with_value_sens_wrt_params = (int *) value;
             opts->with_value_sens_wrt_params = *with_value_sens_wrt_params;
         }
+        else if (!strcmp(field, "with_anderson_acceleration"))
+        {
+            int* with_anderson_acceleration = (int *) value;
+            opts->with_anderson_acceleration = *with_anderson_acceleration;
+        }
         else
         {
             printf("\nerror: ocp_nlp_opts_set: wrong field: %s\n", field);
@@ -1568,13 +1573,18 @@ acados_size_t ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims
 
     acados_size_t size = sizeof(ocp_nlp_memory);
 
-    // qp in
+    // qp_in
     size += ocp_qp_in_calculate_size(dims->qp_solver->orig_dims);
 
-    // qp out
+    // qp_out
     size += ocp_qp_out_calculate_size(dims->qp_solver->orig_dims);
 
-    // qp solver
+    if (opts->with_anderson_acceleration)
+    {
+        size += 2*ocp_qp_out_calculate_size(dims->qp_solver->orig_dims); // prev_qp_out, anderson_step
+    }
+
+    // qp_solver
     size += qp_solver->memory_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
     // relaxed qp solver memory in sqp_with_feasible_qp.c
@@ -1742,6 +1752,14 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     // qp out
     mem->qp_out = ocp_qp_out_assign(dims->qp_solver->orig_dims, c_ptr);
     c_ptr += ocp_qp_out_calculate_size(dims->qp_solver->orig_dims);
+
+    if (opts->with_anderson_acceleration)
+    {
+        mem->prev_qp_out = ocp_qp_out_assign(dims->qp_solver->orig_dims, c_ptr);
+        c_ptr += ocp_qp_out_calculate_size(dims->qp_solver->orig_dims);
+        mem->anderson_step = ocp_qp_out_assign(dims->qp_solver->orig_dims, c_ptr);
+        c_ptr += ocp_qp_out_calculate_size(dims->qp_solver->orig_dims);
+    }
 
     // QP solver
     mem->qp_solver_mem = qp_solver->memory_assign(qp_solver, dims->qp_solver, opts->qp_solver_opts, c_ptr);
@@ -3147,6 +3165,74 @@ void ocp_nlp_initialize_qp_from_nlp(ocp_nlp_config *config, ocp_nlp_dims *dims, 
     // compute t
     ocp_qp_compute_t(qp_in, qp_out);
 }
+
+
+
+void ocp_nlp_convert_primaldelta_absdual_step_to_delta_step(ocp_nlp_config *config, ocp_nlp_dims *dims,
+        ocp_nlp_out *out, ocp_qp_out *step)
+{
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *ni = dims->ni;
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (int i = 0; i <= N; i++)
+    {
+        // for all x in delta format: convert as x_step = x_step - x_iterate
+        // dual variables
+        blasfeo_dvecad(2*ni[i], -1.0, out->lam+i, 0, step->lam+i, 0);
+        if (i < N)
+        {
+            blasfeo_dvecad(nx[i+1], -1.0, out->pi+i, 0, step->pi+i, 0);
+        }
+
+        // slack values
+        blasfeo_dvecad(2*ni[i], -1.0, out->t+i, 0, step->t+i, 0);
+    }
+}
+
+
+void ocp_nlp_update_variables_sqp_delta_primal_dual(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work, double alpha, ocp_qp_out *step)
+{
+    int N = dims->N;
+    int *nv = dims->nv;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ni = dims->ni;
+    int *nz = dims->nz;
+
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (int i = 0; i <= N; i++)
+    {
+        // step in primal variables
+        blasfeo_daxpy(nv[i], alpha, step->ux+i, 0, out->ux+i, 0, out->ux+i, 0);
+
+        // update duals with alpha step
+        blasfeo_daxpy(2*ni[i], alpha, step->lam+i, 0, out->lam+i, 0, out->lam+i, 0);
+        if (i < N)
+        {
+            blasfeo_daxpy(nx[i+1], alpha, step->pi+i, 0, out->pi+i, 0, out->pi+i, 0);
+        }
+
+        // update slack values
+        blasfeo_daxpy(2*ni[i], alpha, step->t+i, 0, out->t+i, 0, out->t+i, 0);
+
+        // linear update of algebraic variables using state and input sensitivity
+        if (i < N)
+        {
+            // out->z = mem->z_alg + alpha * dzdux * qp_out->ux
+            blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0,
+                    step->ux+i, 0, 1.0, mem->z_alg+i, 0, out->z+i, 0);
+        }
+    }
+}
+
 
 
 int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
