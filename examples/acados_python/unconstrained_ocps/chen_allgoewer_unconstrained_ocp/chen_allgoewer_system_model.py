@@ -1,4 +1,3 @@
-#!/bin/bash
 #
 # Copyright (c) The acados authors.
 #
@@ -29,14 +28,44 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-# CASADI_VERSION='3.5.3'; # Latest version with Octave 4.2.2 binaries
-CASADI_VERSION='3.6.5';
-MATLAB_VERSION='2018b';
+from acados_template import AcadosModel
+from casadi import SX, vertcat
 
-_CASADI_GITHUB_RELEASES="https://github.com/casadi/casadi/releases/download/${CASADI_VERSION}";
+def export_chen_allgoewer_model() -> AcadosModel:
 
-CASADI_MATLAB_URL="${_CASADI_GITHUB_RELEASES}/casadi-${CASADI_VERSION}-linux64-matlab${MATLAB_VERSION}.zip";
+    model_name = 'chen_allgoewer_ode'
 
-wget -O casadi-linux-matlab.zip "${CASADI_MATLAB_URL}";
-mkdir -p casadi-matlab;
-unzip casadi-linux-matlab.zip -d ./casadi-matlab;
+    # constants
+    mu = 0.7
+
+    # set up states & controls
+    x1 = SX.sym('x1')
+    x2 = SX.sym('x2')
+
+    x = vertcat(x1, x2)
+
+    u = SX.sym('u')
+
+    # xdot
+    x1_dot = SX.sym('x1_dot')
+    x2_dot = SX.sym('x2_dot')
+
+    xdot = vertcat(x1_dot, x2_dot)
+
+    # dynamics
+    f_expl = vertcat(x2 + u*(mu + (1-mu)*x2),
+                     x1 + u*(mu-4*(1-mu)*x2))
+
+    f_impl = xdot - f_expl
+
+    model = AcadosModel()
+
+    model.f_impl_expr = f_impl
+    model.f_expl_expr = f_expl
+    model.x = x
+    model.xdot = xdot
+    model.u = u
+    model.name = model_name
+
+    return model
+

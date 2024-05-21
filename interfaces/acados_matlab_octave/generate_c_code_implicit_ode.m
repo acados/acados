@@ -139,10 +139,10 @@ end
 
 
 %% generate jacobians
-jac_x       = jacobian(f_impl, x);
-jac_xdot    = jacobian(f_impl, xdot);
-jac_u       = jacobian(f_impl, u);
-jac_z       = jacobian(f_impl, z);
+jac_x = jacobian(f_impl, x);
+jac_xdot = jacobian(f_impl, xdot);
+jac_u = jacobian(f_impl, u);
+jac_z = jacobian(f_impl, z);
 
 
 %% generate hessian
@@ -187,7 +187,7 @@ impl_dae_fun_jac_x_xdot_u.generate([model_name,'_impl_dae_fun_jac_x_xdot_u'], ca
 if strcmp(generate_hess, 'true')
     % hessian computed as forward over adjoint !!!
     ADJ = jtimes(f_impl, x_xdot_z_u, multiplier, true);
-    HESS = jacobian(ADJ, x_xdot_z_u);
+    HESS = jacobian(ADJ, x_xdot_z_u, struct('symmetric', isSX));
 
     %HESS_multiplied = multiply_mat' * HESS * multiply_mat;
 

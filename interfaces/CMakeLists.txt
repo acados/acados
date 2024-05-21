@@ -178,7 +178,26 @@ if(ACADOS_PYTHON)
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/time_varying
         python test_mocp_qp.py)
 
-    add_test(NAME python_pendulum_ocp_example_cmake
+# Tests for DDP
+add_test(NAME py_ddp_solve_qp
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/unconstrained_ocps/linear_dynamics_qp_ocp
+        python acados_unconstrained_QP.py)
+
+add_test(NAME py_ddp_chen_allgoewer
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/unconstrained_ocps/chen_allgoewer_unconstrained_ocp
+        python chen_allgoewer_ocp.py)
+
+add_test(NAME py_hour_glass_p2p_motion
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/unconstrained_ocps/hour_glass_p2p_motion
+        python hour_glass_time_optimal_p2p_motion.py)
+
+add_test(NAME py_ddp_rockit_hello_world
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/unconstrained_ocps/rockit_hello_world
+        python rockit_hello_world_ocp.py)
+
+
+# CMake test
+add_test(NAME python_pendulum_ocp_example_cmake
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_on_cart/ocp
         python minimal_example_ocp_cmake.py)
     add_test(NAME python_nonuniform_discretization_ocp_example

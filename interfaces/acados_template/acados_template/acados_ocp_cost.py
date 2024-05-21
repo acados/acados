@@ -164,6 +164,8 @@ class AcadosOcpCost:
     def W_0(self, W_0):
         if isinstance(W_0, np.ndarray) and len(W_0.shape) == 2:
             self.__W_0 = W_0
+        elif W_0 is None:
+            self.__W_0 = W_0
         else:
             raise Exception('Invalid cost W_0 value. ' \
                 + 'Should be 2 dimensional numpy array.')

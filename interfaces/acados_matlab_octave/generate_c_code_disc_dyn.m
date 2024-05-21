@@ -43,7 +43,7 @@ is_template = false;
 
 if isa(model, 'acados_template_mex.acados_model_json')
     is_template = true;
-    
+
     % names without sym
     x = model.x;
     nx = length(x);
@@ -53,14 +53,14 @@ if isa(model, 'acados_template_mex.acados_model_json')
     else
         isSX = false;
     end
-    
+
     % u
     u = model.u;
     nu = length(u);
     % p
     p = model.p;
     np = length(p);
-    
+
 else
     % x
     x = model.sym_x;
@@ -78,9 +78,9 @@ else
         nu = length(u);
     else
         if isSX
-            u = SX.sym('u',0, 0);
+            u = SX.sym('u', 0, 0);
         else
-            u = MX.sym('u',0, 0);
+            u = MX.sym('u', 0, 0);
         end
         nu = 0;
     end
@@ -91,9 +91,9 @@ else
         np = length(p);
     else
         if isSX
-            p = SX.sym('p',0, 0);
+            p = SX.sym('p', 0, 0);
         else
-            p = MX.sym('p',0, 0);
+            p = MX.sym('p', 0, 0);
         end
         np = 0;
     end
@@ -132,7 +132,7 @@ if strcmp(model.dyn_ext_fun_type, 'casadi')
     % generate adjoint
     adj_ux = jtimes(phi, [u; x], lam, true);
     % generate hessian
-    hess_ux = jacobian(adj_ux, [u; x]);
+    hess_ux = jacobian(adj_ux, [u; x], struct('symmetric', isSX));
     % Set up functions
     phi_fun = Function([model_name,'_dyn_disc_phi_fun'], {x, u, p}, {phi});
     phi_fun_jac_ut_xt = Function([model_name,'_dyn_disc_phi_fun_jac'], {x, u, p}, {phi, jac_ux'});

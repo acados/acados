@@ -1,4 +1,3 @@
-#!/bin/bash
 #
 # Copyright (c) The acados authors.
 #
@@ -29,14 +28,54 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-# CASADI_VERSION='3.5.3'; # Latest version with Octave 4.2.2 binaries
-CASADI_VERSION='3.6.5';
-MATLAB_VERSION='2018b';
+from acados_template import AcadosModel
+from casadi import SX, vertcat, sin, cos, tan
 
-_CASADI_GITHUB_RELEASES="https://github.com/casadi/casadi/releases/download/${CASADI_VERSION}";
+def export_time_optimal_simple_bicycle() -> AcadosModel:
 
-CASADI_MATLAB_URL="${_CASADI_GITHUB_RELEASES}/casadi-${CASADI_VERSION}-linux64-matlab${MATLAB_VERSION}.zip";
+    model_name = 'time_optimal_simple_bicycle'
 
-wget -O casadi-linux-matlab.zip "${CASADI_MATLAB_URL}";
-mkdir -p casadi-matlab;
-unzip casadi-linux-matlab.zip -d ./casadi-matlab;
+    # constants
+    l = 1.0
+
+    # set up states & controls
+    T = SX.sym('T')
+    x = SX.sym('x')
+    y = SX.sym('y')
+    theta = SX.sym('theta')
+
+    states = vertcat(T, x, y, theta)
+
+    delta = SX.sym('delta')
+    v = SX.sym('v')
+
+    controls = vertcat(delta, v)
+
+    # xdot
+    T_dot = SX.sym('T_dot')
+    x_dot = SX.sym('x_dot')
+    y_dot = SX.sym('y_dot')
+    theta_dot = SX.sym('theta_dot')
+
+    states_dot = vertcat(T_dot, x_dot, y_dot, theta_dot)
+
+    # dynamics
+    f_expl = vertcat(0,
+                     T*v*cos(theta),
+                     T*v*sin(theta),
+                     T*v/l*tan(delta)
+                    )
+
+    f_impl = states_dot - f_expl
+
+    model = AcadosModel()
+
+    model.f_impl_expr = f_impl
+    model.f_expl_expr = f_expl
+    model.x = states
+    model.xdot = states_dot
+    model.u = controls
+    model.name = model_name
+
+    return model
+

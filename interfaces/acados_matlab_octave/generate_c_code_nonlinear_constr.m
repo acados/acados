@@ -100,11 +100,13 @@ if isfield(model, 'constr_expr_h')
     jac_ux = jacobian(h, [u; x]);
     jac_z  = jacobian(h, z);
     % generate hessian
-    adj_ux = jtimes(h, [u; x], lam_h, true);
-    hess_ux = jacobian(adj_ux, [u; x]);
+    ux = [u; x];
+    adj_ux = jtimes(h, ux, lam_h, true);
+    % see https://github.com/casadi/casadi/issues/3703
+    hess_ux = jacobian(adj_ux, ux, struct('symmetric', isSX));
 
     adj_z = jtimes(h, z, lam_h, true);
-    hess_z = jacobian(adj_z, z);
+    hess_z = jacobian(adj_z, z, struct('symmetric', isSX));
 
     % Set up functions
     h_fun = Function([model_name,'_constr_h_fun'], {x, u, z, p}, {h});
@@ -131,11 +133,11 @@ if isfield(model, 'constr_expr_h_0')
     jac_z_0  = jacobian(h_0, z);
 
     % generate hessian
-    adj_ux_0 = jtimes(h_0, x, lam_h_0, true);
-    hess_ux_0 = jacobian(adj_ux_0, [u; x]);
+    adj_ux_0 = jtimes(h_0, [u; x], lam_h_0, true);
+    hess_ux_0 = jacobian(adj_ux_0, [u; x], struct('symmetric', isSX));
 
     adj_z_0 = jtimes(h_0, z, lam_h_0, true);
-    hess_z_0 = jacobian(adj_z_0, z);
+    hess_z_0 = jacobian(adj_z_0, z, struct('symmetric', isSX));
 
     % Set up functions
     h_0_fun = Function([model_name,'_constr_h_0_fun'], {x, u, z, p}, {h_0});
@@ -159,10 +161,10 @@ if isfield(model, 'constr_expr_h_e')
     end
     % generate jacobians
     jac_x_e = jacobian(h_e, x);
-    % generate adjoint (TODO output also adjoint when hessian is computed ?????)
+    % generate adjoint
     adj_ux_e = jtimes(h_e, x, lam_h_e, true);
     % generate hessian
-    hess_ux_e = jacobian(adj_ux_e, x);
+    hess_ux_e = jacobian(adj_ux_e, x, struct('symmetric', isSX));
     % Set up functions
     h_e_fun = Function([model_name,'_constr_h_e_fun'], {x, p}, {h_e});
     h_e_fun_jac_uxt_zt = Function([model_name,'_constr_h_e_fun_jac_uxt_zt'], {x, p}, {h_e, jac_x_e'});

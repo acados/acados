@@ -105,6 +105,11 @@ class AcadosOcpOptions:
         self.__custom_update_copy = True
         self.__as_rti_iter = 1
         self.__as_rti_level = 4
+        self.__with_adaptive_levenberg_marquardt = False
+        self.__adaptive_levenberg_marquardt_lam = 5.0
+        self.__adaptive_levenberg_marquardt_mu_min = 1e-16
+        self.__adaptive_levenberg_marquardt_mu0 = 1e-3
+        self.__log_primal_step_norm : bool = False
 
     @property
     def qp_solver(self):
@@ -223,7 +228,7 @@ class AcadosOcpOptions:
     @property
     def nlp_solver_type(self):
         """NLP solver.
-        String in ('SQP', 'SQP_RTI').
+        String in ('SQP', 'SQP_RTI', 'DDP').
         Default: 'SQP_RTI'.
         """
         return self.__nlp_solver_type
@@ -437,6 +442,56 @@ class AcadosOcpOptions:
         return self.__as_rti_level
 
     @property
+    def with_adaptive_levenberg_marquardt(self):
+        """
+        So far: Only relevant for DDP
+        Flag indicating whether adaptive levenberg marquardt should be used.
+        This is useful for NLS or LS problem where the residual goes to zero since
+        quadratic local convergence can be achieved.
+        type: bool
+        """
+        return self.__with_adaptive_levenberg_marquardt
+
+    @property
+    def adaptive_levenberg_marquardt_lam(self):
+        """
+        So far: Only relevant for DDP
+        Flag defining the value of lambda in the adaptive levenberg_marquardt.
+        Must be > 1.
+        type: float
+        """
+        return self.__adaptive_levenberg_marquardt_lam
+
+    @property
+    def adaptive_levenberg_marquardt_mu_min(self):
+        """
+        So far: Only relevant for DDP
+        Flag defining the value of mu_min in the adaptive levenberg_marquardt.
+        Must be > 0.
+        type: float
+        """
+        return self.__adaptive_levenberg_marquardt_mu_min
+
+    @property
+    def adaptive_levenberg_marquardt_mu0(self):
+        """
+        So far: Only relevant for DDP
+        Flag defining the value of mu0 in the adaptive levenberg_marquardt.
+        Must be > 0.
+        type: float
+        """
+        return self.__adaptive_levenberg_marquardt_mu0
+
+    @property
+    def log_primal_step_norm(self,):
+        """
+        Flag indicating whether the max norm of the primal steps should be logged.
+        This is implemented only for solver type `SQP`.
+        Default: False
+        """
+        return self.__log_primal_step_norm
+
+    @property
     def tol(self):
         """
         NLP solver tolerance. Sets or gets the max of :py:attr:`nlp_solver_tol_eq`,
@@ -537,7 +592,6 @@ class AcadosOcpOptions:
         Default: 0.
         """
         return self.__nlp_solver_ext_qp_res
-
 
     @property
     def rti_log_residuals(self):
@@ -674,7 +728,6 @@ class AcadosOcpOptions:
         Flag indicating whether solution sensitivities wrt. parameters can be computed.
         """
         return self.__with_solution_sens_wrt_params
-
 
     @property
     def with_value_sens_wrt_params(self):
@@ -923,7 +976,7 @@ class AcadosOcpOptions:
 
     @nlp_solver_type.setter
     def nlp_solver_type(self, nlp_solver_type):
-        nlp_solver_types = ('SQP', 'SQP_RTI')
+        nlp_solver_types = ('SQP', 'SQP_RTI', 'DDP')
         if nlp_solver_type in nlp_solver_types:
             self.__nlp_solver_type = nlp_solver_type
         else:
@@ -958,6 +1011,41 @@ class AcadosOcpOptions:
             self.__qp_solver_iter_max = qp_solver_iter_max
         else:
             raise Exception('Invalid qp_solver_iter_max value. qp_solver_iter_max must be a positive int.')
+
+    @with_adaptive_levenberg_marquardt.setter
+    def with_adaptive_levenberg_marquardt(self, with_adaptive_levenberg_marquardt):
+        if isinstance(with_adaptive_levenberg_marquardt, bool):
+            self.__with_adaptive_levenberg_marquardt = with_adaptive_levenberg_marquardt
+        else:
+            raise Exception('Invalid with_adaptive_levenberg_marquardt value. Expected bool.')
+
+    @adaptive_levenberg_marquardt_lam.setter
+    def adaptive_levenberg_marquardt_lam(self, adaptive_levenberg_marquardt_lam):
+        if isinstance(adaptive_levenberg_marquardt_lam, float) and adaptive_levenberg_marquardt_lam >= 1.0:
+            self.__adaptive_levenberg_marquardt_lam = adaptive_levenberg_marquardt_lam
+        else:
+            raise Exception('Invalid adaptive_levenberg_marquardt_lam value. adaptive_levenberg_marquardt_lam must be a float greater 1.0.')
+
+    @adaptive_levenberg_marquardt_mu_min.setter
+    def adaptive_levenberg_marquardt_mu_min(self, adaptive_levenberg_marquardt_mu_min):
+        if isinstance(adaptive_levenberg_marquardt_mu_min, float) and adaptive_levenberg_marquardt_mu_min >= 0.0:
+            self.__adaptive_levenberg_marquardt_mu_min = adaptive_levenberg_marquardt_mu_min
+        else:
+            raise Exception('Invalid adaptive_levenberg_marquardt_mu_min value. adaptive_levenberg_marquardt_mu_min must be a positive float.')
+
+    @adaptive_levenberg_marquardt_mu0.setter
+    def adaptive_levenberg_marquardt_mu0(self, adaptive_levenberg_marquardt_mu0):
+        if isinstance(adaptive_levenberg_marquardt_mu0, float) and adaptive_levenberg_marquardt_mu0 >= 0.0:
+            self.__adaptive_levenberg_marquardt_mu0 = adaptive_levenberg_marquardt_mu0
+        else:
+            raise Exception('Invalid adaptive_levenberg_marquardt_mu0 value. adaptive_levenberg_marquardt_mu0 must be a positive float.')
+
+    @log_primal_step_norm.setter
+    def log_primal_step_norm(self, val):
+        if isinstance(val, bool):
+            self.__log_primal_step_norm = val
+        else:
+            raise Exception('Invalid log_primal_step_norm value. Expected bool.')
 
     @as_rti_iter.setter
     def as_rti_iter(self, as_rti_iter):

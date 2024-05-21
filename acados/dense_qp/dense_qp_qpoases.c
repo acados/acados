@@ -786,6 +786,12 @@ void dense_qp_qpoases_solver_get(void *config_, void *qp_in_, void *qp_out_, voi
 }
 
 
+
+void dense_qp_qpoases_terminate(void *config_, void *mem_, void *work_)
+{
+    return;
+}
+
 void dense_qp_qpoases_config_initialize_default(void *config_)
 {
     qp_solver_config *config = config_;
@@ -808,6 +814,7 @@ void dense_qp_qpoases_config_initialize_default(void *config_)
     config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & dense_qp_qpoases;
     config->memory_reset = &dense_qp_qpoases_memory_reset;
     config->solver_get = &dense_qp_qpoases_solver_get;
+    config->terminate = &dense_qp_qpoases_terminate;
 
     return;
 }

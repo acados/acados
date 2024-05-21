@@ -664,6 +664,18 @@ void ocp_qp_xcond_solver_eval_sens(void *config_, ocp_qp_xcond_solver_dims *dims
 }
 
 
+void ocp_qp_xcond_solver_terminate(void *config_, void *mem_, void *work_)
+{
+    ocp_qp_xcond_solver_config *config = config_;
+    qp_solver_config *qp_solver = config->qp_solver;
+
+    ocp_qp_xcond_solver_memory *memory = mem_;
+    ocp_qp_xcond_solver_workspace *work = work_;
+
+    qp_solver->terminate(config->qp_solver, memory->solver_memory, work->qp_solver_work);
+}
+
+
 
 void ocp_qp_xcond_solver_config_initialize_default(void *config_)
 {
@@ -688,6 +700,7 @@ void ocp_qp_xcond_solver_config_initialize_default(void *config_)
     config->condense_lhs = &ocp_qp_xcond_condense_lhs;
     config->condense_rhs_and_solve = &ocp_qp_xcond_condense_rhs_and_solve;
     config->eval_sens = &ocp_qp_xcond_solver_eval_sens;
+    config->terminate = &ocp_qp_xcond_solver_terminate;
 
     return;
 }

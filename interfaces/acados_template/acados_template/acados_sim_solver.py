@@ -57,7 +57,8 @@ from .utils import (check_casadi_version, format_class_dict,
                     get_shared_lib_ext, get_shared_lib_prefix, get_shared_lib_dir,
                     make_object_json_dumpable,
                     render_template, set_up_imported_gnsf_model,
-                    verbose_system_call)
+                    verbose_system_call, acados_lib_is_compiled_with_openmp,
+                    get_shared_lib)
 
 
 def sim_formulation_json_dump(acados_sim: AcadosSim, json_file='acados_sim.json'):
@@ -165,6 +166,10 @@ class AcadosSimSolver:
         dlclose.argtypes = [c_void_p]
         winmode = None
 
+    @property
+    def acados_lib_uses_omp(self,):
+        """`acados_lib_uses_omp` - flag indicating whether the acados library has been compiled with openMP."""
+        return self.__acados_lib_uses_omp
 
     @classmethod
     def generate(cls, acados_sim: AcadosSim, json_file='acados_sim.json', cmake_builder: CMakeBuilder = None):
@@ -263,23 +268,14 @@ class AcadosSimSolver:
         # or [https://python.hotexamples.com/examples/_ctypes/-/dlclose/python-dlclose-function-examples.html]
         libacados_name = f'{lib_prefix}acados{lib_ext}'
         libacados_filepath = os.path.join(acados_sim.acados_lib_path, '..', lib_dir, libacados_name)
-        self.__acados_lib = DllLoader(libacados_filepath, winmode=self.winmode)
+        self.__acados_lib = get_shared_lib(libacados_filepath, self.winmode)
 
         # find out if acados was compiled with OpenMP
-        try:
-            self.__acados_lib_uses_omp = getattr(self.__acados_lib, 'omp_get_thread_num') is not None
-        except AttributeError as e:
-            self.__acados_lib_uses_omp = False
-        if verbose:
-            if self.__acados_lib_uses_omp:
-                print('acados was compiled with OpenMP.')
-            else:
-                print('acados was compiled without OpenMP.')
+        self.__acados_lib_uses_omp = acados_lib_is_compiled_with_openmp(self.__acados_lib, verbose)
+
         libacados_sim_solver_name = f'{lib_prefix}acados_sim_solver_{self.model_name}{lib_ext}'
         self.shared_lib_name = os.path.join(code_export_dir, libacados_sim_solver_name)
-
-        # get shared_lib
-        self.shared_lib = DllLoader(self.shared_lib_name, winmode=self.winmode)
+        self.shared_lib = get_shared_lib(self.shared_lib_name, winmode=self.winmode)
 
         # create capsule
         getattr(self.shared_lib, f"{model_name}_acados_sim_solver_create_capsule").restype = c_void_p

@@ -99,6 +99,8 @@ typedef struct ocp_nlp_config
     void (*get)(void *config_, void *dims, void *mem_, const char *field, void *return_value_);
     void (*opts_get)(void *config_, void *dims, void *opts_, const char *field, void *return_value_);
     void (*work_get)(void *config_, void *dims, void *work_, const char *field, void *return_value_);
+    //
+    void (*terminate)(void *config, void *mem, void *work);
     // config structs of submodules
     ocp_qp_xcond_solver_config *qp_solver; // TODO rename xcond_solver
     ocp_nlp_dynamics_config **dynamics;
@@ -273,6 +275,7 @@ typedef struct ocp_nlp_opts
     int num_threads;
     int print_level;
     int fixed_hess;
+    int log_primal_step_norm; // compute and log the max norm of the primal steps
 
     // TODO: move to separate struct?
     ocp_nlp_globalization_t globalization;
@@ -356,6 +359,7 @@ typedef struct ocp_nlp_memory
     struct blasfeo_dvec *dyn_adj;
 
     double cost_value;
+    double qp_cost_value;
     int compute_hess;
 
     bool *set_sim_guess; // indicate if there is new explicitly provided guess for integration variables
@@ -419,6 +423,9 @@ void ocp_nlp_alias_memory_to_submodules(ocp_nlp_config *config, ocp_nlp_dims *di
 //
 void ocp_nlp_initialize_submodules(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
+//
+void ocp_nlp_set_primal_variable_pointers_in_submodules(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
+                                                       ocp_nlp_out *nlp_out, ocp_nlp_memory *nlp_mem);
 //
 void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
              ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);

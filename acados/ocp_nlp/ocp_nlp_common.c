@@ -1036,7 +1036,7 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->print_level = 0;
     opts->step_length = 1.0;
     opts->levenberg_marquardt = 0.0;
-
+    opts->log_primal_step_norm = 0;
 
     /* submodules opts */
     // qp solver
@@ -1253,6 +1253,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             for (int i=0; i<=N; i++)
                 config->constraints[i]->opts_set(config->constraints[i], opts->constraints[i],
                                                   "compute_hess", value);
+        }
+        else if (!strcmp(field, "log_primal_step_norm"))
+        {
+            int* log_primal_step_norm = (int *) value;
+            opts->log_primal_step_norm = *log_primal_step_norm;
         }
         else if (!strcmp(field, "print_level"))
         {
@@ -1960,7 +1965,7 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
  * functions
  ************************************************/
 
-static void ocp_nlp_set_primal_variable_pointers_in_submodules(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
+void ocp_nlp_set_primal_variable_pointers_in_submodules(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
                                                        ocp_nlp_out *nlp_out, ocp_nlp_memory *nlp_mem)
 {
     int N = dims->N;
@@ -2209,7 +2214,6 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
 #endif
     for (int i=0; i <= N; i++)
     {
-
         // nlp mem: cost_grad
         struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get_grad_ptr(mem->cost[i]);
         blasfeo_dveccp(nv[i], cost_grad, 0, mem->cost_grad + i, 0);
@@ -2750,8 +2754,7 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
             {
                 for (j=0; j<nx[i+1]; j++)
                 {
-                    // tmp0 = fabs(BLASFEO_DVECEL(out->pi+i, j));
-                    tmp0 = fabs(BLASFEO_DVECEL(qp_out->pi+i, j));
+                    BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j) = fabs(BLASFEO_DVECEL(qp_out->pi+i, j));
                 }
             }
 

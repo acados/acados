@@ -35,7 +35,11 @@ import shutil
 import sys
 import urllib.request
 from subprocess import DEVNULL, STDOUT, call
-
+if os.name == 'nt':
+    from ctypes import wintypes
+    from ctypes import WinDLL as DllLoader
+else:
+    from ctypes import CDLL as DllLoader
 import numpy as np
 from casadi import DM, MX, SX, CasadiMeta, Function
 
@@ -97,6 +101,29 @@ def get_tera_exec_path():
         if os.name == 'nt':
             TERA_PATH += '.exe'
     return TERA_PATH
+
+
+def acados_lib_is_compiled_with_openmp(acados_lib: DllLoader, verbose: bool) -> bool:
+    # find out if acados was compiled with OpenMP
+    try:
+        acados_lib_uses_omp = getattr(acados_lib, 'omp_get_thread_num') is not None
+    except AttributeError as e:
+        acados_lib_uses_omp = False
+    if verbose:
+        if acados_lib_uses_omp:
+            print('acados was compiled with OpenMP.')
+        else:
+            print('acados was compiled without OpenMP.')
+    return acados_lib_uses_omp
+
+
+def get_shared_lib(shared_lib_name: str, winmode = None) -> DllLoader:
+    if winmode is not None:
+        shared_lib = DllLoader(shared_lib_name, winmode=winmode)
+    else:
+        # for compatibility with older python versions
+        shared_lib = DllLoader(shared_lib_name)
+    return shared_lib
 
 
 def check_casadi_version():
@@ -267,6 +294,12 @@ def render_template(in_file, out_file, output_dir, json_path, template_glob=None
     os.chdir(cwd)
 
 
+def casadi_expr_to_string(expr) -> str:
+    string = ''
+    for ii in range(casadi_length(expr)):
+        string += f"{expr[ii,:]}\n"
+    return string
+
 ## Conversion functions
 def make_object_json_dumpable(input):
     if isinstance(input, (np.ndarray)):
@@ -274,6 +307,8 @@ def make_object_json_dumpable(input):
     elif isinstance(input, (SX)):
         try:
             return input.serialize()
+            # for more readable json output:
+            # return casadi_expr_to_string(input)
         except: # for older CasADi versions
             return ''
     elif isinstance(input, (MX)):
@@ -339,6 +374,12 @@ def J_to_idx_slack(J):
     if not i_idx == ncol:
             raise Exception('J_to_idx_slack: J must contain a 1 in every column!')
     return idx
+
+
+def check_if_nparray_and_flatten(val, name):
+    if not isinstance(val, np.ndarray):
+        raise Exception(f"{name} must be a numpy array, got {type(val)}")
+    return val.reshape(-1)
 
 
 def print_J_to_idx_note():

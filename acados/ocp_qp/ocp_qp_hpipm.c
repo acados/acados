@@ -415,6 +415,12 @@ void ocp_qp_hpipm_eval_sens(void *config_, void *param_qp_in_, void *sens_qp_out
 }
 
 
+void ocp_qp_hpipm_terminate(void *config_, void *mem_, void *work_)
+{
+    return;
+}
+
+
 
 void ocp_qp_hpipm_config_initialize_default(void *config_)
 {
@@ -434,6 +440,7 @@ void ocp_qp_hpipm_config_initialize_default(void *config_)
     config->solver_get = &ocp_qp_hpipm_solver_get;
     config->memory_reset = &ocp_qp_hpipm_memory_reset;
     config->eval_sens = &ocp_qp_hpipm_eval_sens;
+    config->terminate = &ocp_qp_hpipm_terminate;
 
     return;
 }

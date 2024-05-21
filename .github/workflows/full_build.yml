@@ -21,7 +21,7 @@ env:
 
 jobs:
   core_build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
     - uses: actions/checkout@v4
@@ -76,7 +76,7 @@ jobs:
 
   python_interface:
     needs: core_build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
     - uses: actions/checkout@v4
@@ -107,7 +107,7 @@ jobs:
 
   MATLAB_interface:
     needs: core_build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
     - uses: actions/checkout@v4
@@ -151,7 +151,7 @@ jobs:
 
   simulink_interface:
     needs: core_build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
     - uses: actions/checkout@v4
@@ -196,7 +196,7 @@ jobs:
 
   octave_interface:
     needs: core_build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
 

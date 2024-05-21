@@ -289,11 +289,6 @@ acados_size_t ocp_nlp_sqp_memory_calculate_size(void *config_, void *dims_, void
     ocp_nlp_sqp_opts *opts = opts_;
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
 
-    // int N = dims->N;
-    // int *nx = dims->nx;
-    // int *nu = dims->nu;
-    // int *nz = dims->nz;
-
     acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_sqp_memory);
@@ -301,6 +296,11 @@ acados_size_t ocp_nlp_sqp_memory_calculate_size(void *config_, void *dims_, void
     // nlp mem
     size += ocp_nlp_memory_calculate_size(config, dims, nlp_opts);
 
+    // primal step norm
+    if (opts->nlp_opts->log_primal_step_norm)
+    {
+        size += opts->max_iter*sizeof(double);
+    }
     // stat
     int stat_m = opts->max_iter+1;
     int stat_n = 7;
@@ -347,6 +347,13 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
     // nlp mem
     mem->nlp_mem = ocp_nlp_memory_assign(config, dims, nlp_opts, c_ptr);
     c_ptr += ocp_nlp_memory_calculate_size(config, dims, nlp_opts);
+
+    // primal step norm
+    if (opts->nlp_opts->log_primal_step_norm)
+    {
+        mem->primal_step_norm = (double *) c_ptr;
+        c_ptr += opts->max_iter*sizeof(double);
+    }
 
     // stat
     mem->stat = (double *) c_ptr;
@@ -791,14 +798,14 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // regularize Hessian
         acados_tic(&timer1);
         config->regularize->regularize(config->regularize, dims->regularize,
-                                               opts->nlp_opts->regularize, nlp_mem->regularize_mem);
+                                               nlp_opts->regularize, nlp_mem->regularize_mem);
         mem->time_reg += acados_toc(&timer1);
 
         // (typically) no warm start at first iteration
         if (sqp_iter == 0 && !opts->warm_start_first_qp)
         {
             int tmp_int = 0;
-            config->qp_solver->opts_set(config->qp_solver, opts->nlp_opts->qp_solver_opts,
+            config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts,
                                          "warm_start", &tmp_int);
         }
 
@@ -808,7 +815,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // solve qp
         acados_tic(&timer1);
         qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver, qp_in, qp_out,
-                                        opts->nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
+                                        nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
         mem->time_qp_sol += acados_toc(&timer1);
 
         qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);
@@ -819,13 +826,13 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // compute correct dual solution in case of Hessian regularization
         acados_tic(&timer1);
         config->regularize->correct_dual_sol(config->regularize, dims->regularize,
-                                             opts->nlp_opts->regularize, nlp_mem->regularize_mem);
+                                             nlp_opts->regularize, nlp_mem->regularize_mem);
         mem->time_reg += acados_toc(&timer1);
 
         // restore default warm start
         if (sqp_iter==0)
         {
-            config->qp_solver->opts_set(config->qp_solver, opts->nlp_opts->qp_solver_opts,
+            config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts,
                                         "warm_start", &opts->qp_warm_start);
         }
 
@@ -898,7 +905,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         //   QP solver times could be also attributed there alternatively. Cleanest would be to save them seperately.
         acados_tic(&timer1);
         bool do_line_search = true;
-        if (opts->nlp_opts->globalization_use_SOC && opts->nlp_opts->globalization == MERIT_BACKTRACKING)
+        if (nlp_opts->globalization_use_SOC && nlp_opts->globalization == MERIT_BACKTRACKING)
         {
             do_line_search = ocp_nlp_soc_line_search(config, dims, nlp_in, nlp_out, opts, mem, work, sqp_iter);
         }
@@ -919,6 +926,10 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         mem->time_glob += acados_toc(&timer1);
         mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
 
+        if (opts->nlp_opts->log_primal_step_norm)
+        {
+            mem->primal_step_norm[sqp_iter] = ocp_qp_out_compute_primal_nrm_inf(nlp_mem->qp_out);
+        }
         // update variables
         ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha);
 
@@ -1052,6 +1063,7 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_sqp_memory *mem = mem_;
 
+
     if (!strcmp("sqp_iter", field) || !strcmp("nlp_iter", field))
     {
         int *value = return_value_;
@@ -1122,6 +1134,23 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
         double **value = return_value_;
         *value = mem->stat;
     }
+    else if (!strcmp("primal_step_norm", field))
+    {
+        if (mem->primal_step_norm == NULL)
+        {
+            printf("\nerror: options log_primal_step_norm was not set\n");
+            exit(1);
+        }
+        else
+        {
+            double *value = return_value_;
+            for (int ii=0; ii<mem->sqp_iter; ii++)
+            {
+                value[ii] = mem->primal_step_norm[ii];
+            }
+        }
+    }
+
     else if (!strcmp("statistics", field))
     {
         int n_row = mem->stat_m<mem->sqp_iter+1 ? mem->stat_m : mem->sqp_iter+1;
@@ -1260,6 +1289,17 @@ void ocp_nlp_sqp_work_get(void *config_, void *dims_, void *work_,
 }
 
 
+
+void ocp_nlp_sqp_terminate(void *config_, void *mem_, void *work_)
+{
+    ocp_nlp_config *config = config_;
+    ocp_nlp_sqp_memory *mem = mem_;
+    ocp_nlp_sqp_workspace *work = work_;
+
+    config->qp_solver->terminate(config->qp_solver, mem->nlp_mem->qp_solver_mem, work->nlp_work->qp_work);
+}
+
+
 void ocp_nlp_sqp_config_initialize_default(void *config_)
 {
     ocp_nlp_config *config = (ocp_nlp_config *) config_;
@@ -1282,6 +1322,7 @@ void ocp_nlp_sqp_config_initialize_default(void *config_)
     config->get = &ocp_nlp_sqp_get;
     config->opts_get = &ocp_nlp_sqp_opts_get;
     config->work_get = &ocp_nlp_sqp_work_get;
+    config->terminate = &ocp_nlp_sqp_terminate;
 
     return;
 }

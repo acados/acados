@@ -1152,6 +1152,7 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     double* uphi;
 
     // general slack related
+    double* zlumem;
     double* Zl;
     double* Zu;
     double* zl;
@@ -1290,7 +1291,6 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
     for (int i = {{ cost_start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
     {
-        i_fun = i - {{ cost_start_idx[jj] }};
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "yref", yref);
     }
     free(yref);
@@ -1307,7 +1307,6 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
     for (int i = {{ cost_start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
     {
-        i_fun = i - {{ cost_start_idx[jj] }};
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "W", W);
     }
     free(W);
@@ -1325,7 +1324,6 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     {%- endfor %}
     for (int i = {{ cost_start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
     {
-        i_fun = i - {{ cost_start_idx[jj] }};
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Vx", Vx);
     }
     free(Vx);
@@ -1343,7 +1341,6 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
     for (int i = {{ cost_start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
     {
-        i_fun = i - {{ cost_start_idx[jj] }};
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Vu", Vu);
     }
     free(Vu);
@@ -1362,7 +1359,6 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
     for (int i = {{ cost_start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
     {
-        i_fun = i - {{ cost_start_idx[jj] }};
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Vz", Vz);
     }
     free(Vz);
@@ -1372,7 +1368,7 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
 
 {%- if phases_dims[jj].ns > 0 %}
-    // double* zlumem = calloc(4*{{ phases_dims[jj].ns }}, sizeof(double));
+    zlumem = calloc(4*{{ phases_dims[jj].ns }}, sizeof(double));
     Zl = zlumem+{{ phases_dims[jj].ns }}*0;
     Zu = zlumem+{{ phases_dims[jj].ns }}*1;
     zl = zlumem+{{ phases_dims[jj].ns }}*2;
@@ -1404,7 +1400,6 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
     for (int i = {{ cost_start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
     {
-        i_fun = i - {{ cost_start_idx[jj] }};
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Zl", Zl);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Zu", Zu);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "zl", zl);
@@ -1444,7 +1439,6 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
     for (int i = {{ cost_start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
     {
-        i_fun = i - {{ cost_start_idx[jj] }};
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "idxsbx", idxsbx);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lsbx", lsbx);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "usbx", usbx);
@@ -1557,7 +1551,6 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
     for (int i = {{ cost_start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
     {
-        i_fun = i - {{ cost_start_idx[jj] }};
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "idxsh", idxsh);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lsh", lsh);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "ush", ush);
@@ -1586,7 +1579,6 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
     for (int i = {{ cost_start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
     {
-        i_fun = i - {{ cost_start_idx[jj] }};
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "idxsphi", idxsphi);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lsphi", lsphi);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "usphi", usphi);
@@ -1615,7 +1607,6 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
     for (int i = {{ cost_start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
     {
-        i_fun = i - {{ cost_start_idx[jj] }};
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "idxbx", idxbx);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lbx", lbx);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "ubx", ubx);

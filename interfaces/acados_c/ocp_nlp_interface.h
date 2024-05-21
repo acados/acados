@@ -54,6 +54,7 @@ typedef enum
 {
     SQP,
     SQP_RTI,
+    DDP,
     INVALID_NLP_SOLVER,
 } ocp_nlp_solver_t;
 
@@ -341,7 +342,7 @@ ACADOS_SYMBOL_EXPORT ocp_nlp_solver *ocp_nlp_solver_create(ocp_nlp_config *confi
 /// Destructor of the solver.
 ///
 /// \param solver The solver struct.
-ACADOS_SYMBOL_EXPORT void ocp_nlp_solver_destroy(void *solver);
+ACADOS_SYMBOL_EXPORT void ocp_nlp_solver_destroy(ocp_nlp_solver *solver);
 
 /// Solves the optimal control problem. Call ocp_nlp_precompute before
 /// calling this functions (TBC).
