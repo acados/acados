@@ -275,6 +275,7 @@ typedef struct ocp_nlp_opts
     int num_threads;
     int print_level;
     int fixed_hess;
+    int log_primal_step_norm; // compute and log the max norm of the primal steps
 
     // TODO: move to separate struct?
     ocp_nlp_globalization_t globalization;

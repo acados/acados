@@ -62,6 +62,7 @@ typedef struct
     double tol_comp;     // exit tolerance on complementarity condition
     int max_iter;
     int ext_qp_res;      // compute external QP residuals (i.e. at SQP level) at each SQP iteration (for debugging)
+    int log_primal_step_norm; // compute and log the max norm of the primal steps
     int qp_warm_start;   // qp_warm_start in all but the first sqp iterations
     bool warm_start_first_qp; // to set qp_warm_start in first iteration
     int rti_phase;       // only phase 0 at the moment
@@ -105,6 +106,8 @@ typedef struct
     double time_sim_ad;
     double time_solution_sensitivities;
     double alpha;
+
+    double *primal_step_norm;
 
     // statistics
     double *stat;

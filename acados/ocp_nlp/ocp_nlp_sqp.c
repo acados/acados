@@ -289,11 +289,6 @@ acados_size_t ocp_nlp_sqp_memory_calculate_size(void *config_, void *dims_, void
     ocp_nlp_sqp_opts *opts = opts_;
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
 
-    // int N = dims->N;
-    // int *nx = dims->nx;
-    // int *nu = dims->nu;
-    // int *nz = dims->nz;
-
     acados_size_t size = 0;
 
     size += sizeof(ocp_nlp_sqp_memory);
@@ -301,6 +296,11 @@ acados_size_t ocp_nlp_sqp_memory_calculate_size(void *config_, void *dims_, void
     // nlp mem
     size += ocp_nlp_memory_calculate_size(config, dims, nlp_opts);
 
+    // primal step norm
+    if (opts->nlp_opts->log_primal_step_norm)
+    {
+        size += opts->max_iter*sizeof(double);
+    }
     // stat
     int stat_m = opts->max_iter+1;
     int stat_n = 7;
@@ -347,6 +347,13 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
     // nlp mem
     mem->nlp_mem = ocp_nlp_memory_assign(config, dims, nlp_opts, c_ptr);
     c_ptr += ocp_nlp_memory_calculate_size(config, dims, nlp_opts);
+
+    // primal step norm
+    if (opts->nlp_opts->log_primal_step_norm)
+    {
+        mem->primal_step_norm = (double *) c_ptr;
+        c_ptr += opts->max_iter*sizeof(double);
+    }
 
     // stat
     mem->stat = (double *) c_ptr;
@@ -919,6 +926,10 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         mem->time_glob += acados_toc(&timer1);
         mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
 
+        if (opts->nlp_opts->log_primal_step_norm)
+        {
+            mem->primal_step_norm[sqp_iter] = ocp_qp_out_compute_primal_nrm_inf(nlp_mem->qp_out);
+        }
         // update variables
         ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha);
 
@@ -1052,6 +1063,7 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_sqp_memory *mem = mem_;
 
+
     if (!strcmp("sqp_iter", field) || !strcmp("nlp_iter", field))
     {
         int *value = return_value_;
@@ -1122,6 +1134,23 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
         double **value = return_value_;
         *value = mem->stat;
     }
+    else if (!strcmp("primal_step_norm", field))
+    {
+        if (mem->primal_step_norm == NULL)
+        {
+            printf("\nerror: options log_primal_step_norm was not set\n");
+            exit(1);
+        }
+        else
+        {
+            double *value = return_value_;
+            for (int ii=0; ii<mem->sqp_iter; ii++)
+            {
+                value[ii] = mem->primal_step_norm[ii];
+            }
+        }
+    }
+
     else if (!strcmp("statistics", field))
     {
         int n_row = mem->stat_m<mem->sqp_iter+1 ? mem->stat_m : mem->sqp_iter+1;

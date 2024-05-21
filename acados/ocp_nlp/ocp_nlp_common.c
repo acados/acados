@@ -1036,7 +1036,7 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->print_level = 0;
     opts->step_length = 1.0;
     opts->levenberg_marquardt = 0.0;
-
+    opts->log_primal_step_norm = 0;
 
     /* submodules opts */
     // qp solver
@@ -1253,6 +1253,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             for (int i=0; i<=N; i++)
                 config->constraints[i]->opts_set(config->constraints[i], opts->constraints[i],
                                                   "compute_hess", value);
+        }
+        else if (!strcmp(field, "log_primal_step_norm"))
+        {
+            int* log_primal_step_norm = (int *) value;
+            opts->log_primal_step_norm = *log_primal_step_norm;
         }
         else if (!strcmp(field, "print_level"))
         {
