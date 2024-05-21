@@ -132,7 +132,7 @@ if strcmp(model.dyn_ext_fun_type, 'casadi')
     % generate adjoint
     adj_ux = jtimes(phi, [u; x], lam, true);
     % generate hessian
-    hess_ux = jacobian(adj_ux, [u; x]);
+    hess_ux = jacobian(adj_ux, [u; x], struct('symmetric', true));
     % Set up functions
     phi_fun = Function([model_name,'_dyn_disc_phi_fun'], {x, u, p}, {phi});
     phi_fun_jac_ut_xt = Function([model_name,'_dyn_disc_phi_fun_jac'], {x, u, p}, {phi, jac_ux'});

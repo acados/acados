@@ -187,7 +187,7 @@ impl_dae_fun_jac_x_xdot_u.generate([model_name,'_impl_dae_fun_jac_x_xdot_u'], ca
 if strcmp(generate_hess, 'true')
     % hessian computed as forward over adjoint !!!
     ADJ = jtimes(f_impl, x_xdot_z_u, multiplier, true);
-    HESS = jacobian(ADJ, x_xdot_z_u);
+    HESS = jacobian(ADJ, x_xdot_z_u, struct('symmetric', true));
 
     %HESS_multiplied = multiply_mat' * HESS * multiply_mat;
 

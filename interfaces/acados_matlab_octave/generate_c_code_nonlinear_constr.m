@@ -101,10 +101,10 @@ if isfield(model, 'constr_expr_h')
     jac_z  = jacobian(h, z);
     % generate hessian
     adj_ux = jtimes(h, [u; x], lam_h, true);
-    hess_ux = jacobian(adj_ux, [u; x]);
+    hess_ux = jacobian(adj_ux, [u; x], struct('symmetric', true));
 
     adj_z = jtimes(h, z, lam_h, true);
-    hess_z = jacobian(adj_z, z);
+    hess_z = jacobian(adj_z, z, struct('symmetric', true));
 
     % Set up functions
     h_fun = Function([model_name,'_constr_h_fun'], {x, u, z, p}, {h});
