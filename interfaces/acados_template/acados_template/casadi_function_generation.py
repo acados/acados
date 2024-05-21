@@ -143,8 +143,8 @@ def generate_c_code_explicit_ode(model: AcadosModel, opts):
     ## Set up functions
     expl_ode_fun = ca.Function(fun_name, [x, u, p], [f_expl])
 
-    vdeX = ca.jtimes(f_expl,x,Sx)
-    vdeP = ca.jacobian(f_expl,u) + ca.jtimes(f_expl,x,Sp)
+    vdeX = ca.jtimes(f_expl, x, Sx)
+    vdeP = ca.jacobian(f_expl, u) + ca.jtimes(f_expl, x, Sp)
 
     fun_name = model_name + '_expl_vde_forw'
 
@@ -208,10 +208,10 @@ def generate_c_code_implicit_ode(model: AcadosModel, opts):
     nz = casadi_length(z)
 
     # generate jacobians
-    jac_x       = ca.jacobian(f_impl, x)
-    jac_xdot    = ca.jacobian(f_impl, xdot)
-    jac_u       = ca.jacobian(f_impl, u)
-    jac_z       = ca.jacobian(f_impl, z)
+    jac_x = ca.jacobian(f_impl, x)
+    jac_xdot = ca.jacobian(f_impl, xdot)
+    jac_u = ca.jacobian(f_impl, u)
+    jac_z = ca.jacobian(f_impl, z)
 
     # Set up functions
     p = model.p
