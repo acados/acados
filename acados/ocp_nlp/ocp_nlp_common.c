@@ -2749,8 +2749,7 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
             {
                 for (j=0; j<nx[i+1]; j++)
                 {
-                    // tmp0 = fabs(BLASFEO_DVECEL(out->pi+i, j));
-                    tmp0 = fabs(BLASFEO_DVECEL(qp_out->pi+i, j));
+                    BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j) = fabs(BLASFEO_DVECEL(qp_out->pi+i, j));
                 }
             }
 
