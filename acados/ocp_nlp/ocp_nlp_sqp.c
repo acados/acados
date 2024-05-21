@@ -926,12 +926,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         mem->time_glob += acados_toc(&timer1);
         mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
 
-        if (opts->nlp_opts->log_primal_step_norm)
-        {
-            mem->primal_step_norm[sqp_iter] = ocp_qp_out_compute_primal_nrm_inf(nlp_mem->qp_out);
-        }
-        // update variables
-        ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha);
         // Anderson acceleration
         if (nlp_opts->with_anderson_acceleration)
         {
@@ -962,9 +956,17 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             }
             // store prev qp step
             ocp_qp_out_copy(qp_out, nlp_mem->prev_qp_out);
+            if (opts->nlp_opts->log_primal_step_norm)
+            {
+                mem->primal_step_norm[sqp_iter] = ocp_qp_out_compute_primal_nrm_inf(nlp_mem->anderson_step);
+            }
         }
         else
         {
+            if (opts->nlp_opts->log_primal_step_norm)
+            {
+                mem->primal_step_norm[sqp_iter] = ocp_qp_out_compute_primal_nrm_inf(nlp_mem->qp_out);
+            }
             // update variables
             ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha);
         }
