@@ -643,8 +643,6 @@ void ocp_qp_compute_t(ocp_qp_in *qp_in, ocp_qp_out *qp_out)
     struct blasfeo_dvec *ux = qp_out->ux;
     struct blasfeo_dvec *t = qp_out->t;
 
-    int nx_i, nu_i, nb_i, ng_i;
-
     for (ii = 0; ii <= N; ii++)
     {
         // compute slacks for bounds
