@@ -862,6 +862,8 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(ocp_qp_dims *dims)
     double *hzl[N+1];
     double *hzu[N+1];
     int *hidxs[N+1];
+    double *hlls[N+1];
+    double *hlus[N+1];
 
     hA[0] = A;
     hb[0] = b;
@@ -883,6 +885,8 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(ocp_qp_dims *dims)
     hzl[0] = zl0;
     hzu[0] = zu0;
     hidxs[0] = idxs0;
+    hlls[0] = d_ls0;
+    hlus[0] = d_us0;
     for (int ii = 1; ii < N; ii++) {
         hA[ii] = A;
         hB[ii] = B;
@@ -904,6 +908,8 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(ocp_qp_dims *dims)
         hzl[ii] = zl1;
         hzu[ii] = zu1;
         hidxs[ii] = idxs1;
+		hlls[ii] = d_ls1;
+		hlus[ii] = d_us1;
     }
     hQ[N] = Q;  // or maybe initialize to the solution of the DARE???
     hq[N] = q;  // or maybe initialize to the solution of the DARE???
@@ -918,6 +924,8 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(ocp_qp_dims *dims)
     hzl[N] = zlN;
     hzu[N] = zuN;
     hidxs[N] = idxsN;
+	hlls[N] = d_lsN;
+	hlus[N] = d_usN;
 
 
     ocp_qp_in *qp_in = ocp_qp_in_create(dims);
@@ -945,6 +953,8 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(ocp_qp_dims *dims)
         d_ocp_qp_set_zl(ii, hzl[ii], qp_in);
         d_ocp_qp_set_zu(ii, hzu[ii], qp_in);
         d_ocp_qp_set_idxs(ii, hidxs[ii], qp_in);
+        d_ocp_qp_set_lls(ii, hlls[ii], qp_in);
+        d_ocp_qp_set_lus(ii, hlus[ii], qp_in);
     }
     d_ocp_qp_set_R(ii, hR[ii], qp_in);
     d_ocp_qp_set_S(ii, hS[ii], qp_in);
@@ -963,6 +973,8 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(ocp_qp_dims *dims)
     d_ocp_qp_set_zl(ii, hzl[ii], qp_in);
     d_ocp_qp_set_zu(ii, hzu[ii], qp_in);
     d_ocp_qp_set_idxs(ii, hidxs[ii], qp_in);
+    d_ocp_qp_set_lls(ii, hlls[ii], qp_in);
+    d_ocp_qp_set_lus(ii, hlus[ii], qp_in);
     //
     d_ocp_qp_set_idxbxe(0, idxbxe0, qp_in);
 
