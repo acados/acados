@@ -74,7 +74,7 @@ def generate_c_code_discrete_dynamics(model: AcadosModel, opts):
     # generate adjoint
     adj_ux = ca.jtimes(phi, ux, lam, True)
     # generate hessian
-    hess_ux = ca.jacobian(adj_ux, ux)
+    hess_ux = ca.jacobian(adj_ux, ux, {"symmetric": True})
 
     # change directory
     cwd = os.getcwd()
@@ -235,7 +235,7 @@ def generate_c_code_implicit_ode(model: AcadosModel, opts):
         symbol = get_casadi_symbol(x)
         multiplier = symbol('multiplier', nx + nz)
         ADJ = ca.jtimes(f_impl, x_xdot_z_u, multiplier, True)
-        HESS = ca.jacobian(ADJ, x_xdot_z_u)
+        HESS = ca.jacobian(ADJ, x_xdot_z_u, {"symmetric": True})
         fun_name = model_name + '_impl_dae_hess'
         impl_dae_hess = ca.Function(fun_name, [x, xdot, u, z, multiplier, t, p], [HESS])
 
@@ -487,7 +487,7 @@ def generate_c_code_nls_cost(model: AcadosModel, stage_type, opts):
         y_hess = 0
     else:
         y_adj = ca.jtimes(y_expr, ca.vertcat(u, x), y, True)
-        y_hess = ca.jacobian(y_adj, ca.vertcat(u, x))
+        y_hess = ca.jacobian(y_adj, ca.vertcat(u, x), {"symmetric": True})
 
     ## generate C code
     suffix_name = '_fun'
@@ -695,10 +695,10 @@ def generate_c_code_constraint(model: AcadosModel, constraints: AcadosOcpConstra
             # adjoint
             adj_ux = ca.jtimes(con_h_expr, ca.vertcat(u, x), lam_h, True)
             # hessian
-            hess_ux = ca.jacobian(adj_ux, ca.vertcat(u, x))
+            hess_ux = ca.jacobian(adj_ux, ca.vertcat(u, x), {"symmetric": True})
 
             adj_z = ca.jtimes(con_h_expr, z, lam_h, True)
-            hess_z = ca.jacobian(adj_z, z)
+            hess_z = ca.jacobian(adj_z, z, {"symmetric": True})
 
             # set up functions
             constraint_fun_jac_tran_hess = \
