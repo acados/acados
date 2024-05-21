@@ -43,6 +43,11 @@ def get_casadi_symbol(x):
     else:
         raise TypeError("Expected casadi SX or MX.")
 
+def is_casadi_SX(x):
+    if isinstance(x, ca.SX):
+        return True
+    return False
+
 
 ################
 # Dynamics
@@ -74,7 +79,7 @@ def generate_c_code_discrete_dynamics(model: AcadosModel, opts):
     # generate adjoint
     adj_ux = ca.jtimes(phi, ux, lam, True)
     # generate hessian
-    hess_ux = ca.jacobian(adj_ux, ux, {"symmetric": True})
+    hess_ux = ca.jacobian(adj_ux, ux, {"symmetric": is_casadi_SX(x)})
 
     # change directory
     cwd = os.getcwd()
@@ -235,7 +240,7 @@ def generate_c_code_implicit_ode(model: AcadosModel, opts):
         symbol = get_casadi_symbol(x)
         multiplier = symbol('multiplier', nx + nz)
         ADJ = ca.jtimes(f_impl, x_xdot_z_u, multiplier, True)
-        HESS = ca.jacobian(ADJ, x_xdot_z_u, {"symmetric": True})
+        HESS = ca.jacobian(ADJ, x_xdot_z_u, {"symmetric": is_casadi_SX(x)})
         fun_name = model_name + '_impl_dae_hess'
         impl_dae_hess = ca.Function(fun_name, [x, xdot, u, z, multiplier, t, p], [HESS])
 
@@ -487,7 +492,7 @@ def generate_c_code_nls_cost(model: AcadosModel, stage_type, opts):
         y_hess = 0
     else:
         y_adj = ca.jtimes(y_expr, ca.vertcat(u, x), y, True)
-        y_hess = ca.jacobian(y_adj, ca.vertcat(u, x), {"symmetric": True})
+        y_hess = ca.jacobian(y_adj, ca.vertcat(u, x), {"symmetric": is_casadi_SX(x)})
 
     ## generate C code
     suffix_name = '_fun'
@@ -695,10 +700,10 @@ def generate_c_code_constraint(model: AcadosModel, constraints: AcadosOcpConstra
             # adjoint
             adj_ux = ca.jtimes(con_h_expr, ca.vertcat(u, x), lam_h, True)
             # hessian
-            hess_ux = ca.jacobian(adj_ux, ca.vertcat(u, x), {"symmetric": True})
+            hess_ux = ca.jacobian(adj_ux, ca.vertcat(u, x), {"symmetric": is_casadi_SX(x)})
 
             adj_z = ca.jtimes(con_h_expr, z, lam_h, True)
-            hess_z = ca.jacobian(adj_z, z, {"symmetric": True})
+            hess_z = ca.jacobian(adj_z, z, {"symmetric": is_casadi_SX(x)})
 
             # set up functions
             constraint_fun_jac_tran_hess = \
