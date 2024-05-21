@@ -133,7 +133,7 @@ if isfield(model, 'constr_expr_h_0')
     jac_z_0  = jacobian(h_0, z);
 
     % generate hessian
-    adj_ux_0 = jtimes(h_0, x, lam_h_0, true);
+    adj_ux_0 = jtimes(h_0, [u; x], lam_h_0, true);
     hess_ux_0 = jacobian(adj_ux_0, [u; x], struct('symmetric', isSX));
 
     adj_z_0 = jtimes(h_0, z, lam_h_0, true);
