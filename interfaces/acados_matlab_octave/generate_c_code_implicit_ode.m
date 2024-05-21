@@ -139,10 +139,10 @@ end
 
 
 %% generate jacobians
-jac_x       = jacobian(f_impl, x);
-jac_xdot    = jacobian(f_impl, xdot);
-jac_u       = jacobian(f_impl, u);
-jac_z       = jacobian(f_impl, z);
+jac_x = jacobian(f_impl, x);
+jac_xdot = jacobian(f_impl, xdot);
+jac_u = jacobian(f_impl, u);
+jac_z = jacobian(f_impl, z);
 
 
 %% generate hessian
