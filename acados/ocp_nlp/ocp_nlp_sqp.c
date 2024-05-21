@@ -299,7 +299,7 @@ acados_size_t ocp_nlp_sqp_memory_calculate_size(void *config_, void *dims_, void
     // primal step norm
     if (opts->nlp_opts->log_primal_step_norm)
     {
-        size += opts->max_iter;
+        size += opts->max_iter*sizeof(double);
     }
     // stat
     int stat_m = opts->max_iter+1;
