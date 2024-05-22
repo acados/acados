@@ -634,6 +634,7 @@ void ocp_qp_compute_t(ocp_qp_in *qp_in, ocp_qp_out *qp_out)
     int *nu = qp_in->dim->nu;
     int *nb = qp_in->dim->nb;
     int *ng = qp_in->dim->ng;
+    int *ns = qp_in->dim->ns;
 
     struct blasfeo_dmat *DCt = qp_in->DCt;
     struct blasfeo_dvec *d = qp_in->d;
@@ -642,25 +643,31 @@ void ocp_qp_compute_t(ocp_qp_in *qp_in, ocp_qp_out *qp_out)
     struct blasfeo_dvec *ux = qp_out->ux;
     struct blasfeo_dvec *t = qp_out->t;
 
-    int nx_i, nu_i, nb_i, ng_i;
-
     for (ii = 0; ii <= N; ii++)
     {
-        nx_i = nx[ii];
-        nu_i = nu[ii];
-        nb_i = nb[ii];
-        ng_i = ng[ii];
-
         // compute slacks for bounds
-        blasfeo_dvecex_sp(nb_i, 1.0, idxb[ii], ux + ii, 0, t+ii, nb_i + ng_i);
-        blasfeo_daxpby(nb_i, 1.0, t + ii, nb_i + ng_i, -1.0, d + ii, 0, t + ii, 0);
-        blasfeo_daxpby(nb_i, -1.0, t + ii, nb_i + ng_i, -1.0, d + ii, nb_i + ng_i, t + ii,
-            nb_i + ng_i);
+        blasfeo_dvecex_sp(nb[ii], 1.0, idxb[ii], ux + ii, 0, t+ii, nb[ii] + ng[ii]);
+        blasfeo_daxpby(nb[ii], 1.0, t + ii, nb[ii] + ng[ii], -1.0, d + ii, 0, t + ii, 0);
+        blasfeo_daxpby(nb[ii], -1.0, t + ii, nb[ii] + ng[ii], -1.0, d + ii, nb[ii] + ng[ii], t + ii,
+            nb[ii] + ng[ii]);
 
         // compute slacks for general constraints
-        blasfeo_dgemv_t(nu_i + nx_i, ng_i, 1.0, DCt + ii, 0, 0, ux + ii, 0, -1.0, d + ii, nb_i,
-                        t + ii, nb_i);
-        blasfeo_dgemv_t(nu_i + nx_i, ng_i, -1.0, DCt + ii, 0, 0, ux + ii, 0, -1.0, d + ii,
-                        2 * nb_i + ng_i, t + ii, 2 * nb_i + ng_i);
+        blasfeo_dgemv_t(nu[ii] + nx[ii], ng[ii], 1.0, DCt + ii, 0, 0, ux + ii, 0, -1.0, d + ii, nb[ii],
+                        t + ii, nb[ii]);
+        blasfeo_dgemv_t(nu[ii] + nx[ii], ng[ii], -1.0, DCt + ii, 0, 0, ux + ii, 0, -1.0, d + ii,
+                        2 * nb[ii] + ng[ii], t + ii, 2 * nb[ii] + ng[ii]);
+
+        // compute slacks for soft constraints
+        for(int jj=0; jj<nb[ii]+ng[ii]; jj++)
+        {
+            int idx = qp_in->idxs_rev[ii][jj];
+            if(idx!=-1)
+            {
+                BLASFEO_DVECEL(t+ii, jj) += BLASFEO_DVECEL(ux+ii, nu[ii]+nx[ii]+idx);
+                BLASFEO_DVECEL(t+ii, nb[ii]+ng[ii]+jj) += BLASFEO_DVECEL(ux+ii, nu[ii]+nx[ii]+ns[ii]+idx);
+            }
+        }
+
+        blasfeo_dveccp(2*ns[ii], qp_out->ux+ii, nu[ii]+nx[ii], qp_out->t+ii, 2*nb[ii]+2*ng[ii]);
     }
 }

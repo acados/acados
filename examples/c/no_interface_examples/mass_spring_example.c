@@ -49,17 +49,12 @@
 ocp_qp_xcond_solver_dims *create_ocp_qp_dims_mass_spring(ocp_qp_xcond_solver_config *config, int N, int nx_, int nu_, int nb_, int ng_, int ngN);
 ocp_qp_in *create_ocp_qp_in_mass_spring(ocp_qp_dims *dims);
 // soft constraints
-// TODO
-ocp_qp_dims *create_ocp_qp_dims_mass_spring_soft_constr(int N, int nx_, int nu_, int nb_, int ng_, int ngN);
+ocp_qp_xcond_solver_dims *create_ocp_qp_dims_mass_spring_soft_constr(ocp_qp_xcond_solver_config *config, int N, int nx_, int nu_, int nb_, int ng_, int ngN);
 ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(ocp_qp_dims *dims);
-
-// #ifndef ACADOS_WITH_QPDUNES
-#define ELIMINATE_X0
-// #endif
 
 #define GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
 
-// #define SOFT_CONSTRAINTS
+#define SOFT_CONSTRAINTS
 
 #define NREP 1
 
@@ -82,12 +77,11 @@ int main() {
                    // at most nx_/2 for the mass-spring system test problem)
 
     int N = 15;    // horizon length
-    int nb_ = 11;  // number of box constrained inputs and states
+    int nb_ = nx_+nu_; //11;  // number of box constrained inputs and states
     int ng_ = 0;   // 4;  // number of general constraints
 
     #ifdef GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
-    int num_of_stages_equal_to_zero = 4;  // number of states to be enforced to zero at last stage
-    int ngN = num_of_stages_equal_to_zero;
+    int ngN = nx_/2;  // number of states to be enforced to zero at last stage
     #else
     int ngN = 0;
     #endif
@@ -100,7 +94,9 @@ int main() {
     int num_N2_values = 3;
     int N2_values[3] = {15,10,5};
 
-    int ii_max = 8;
+    int acados_return = 0;
+
+    int ii_max = 9;
 
     #ifndef ACADOS_WITH_HPMPC
     ii_max--;
@@ -171,8 +167,7 @@ int main() {
 
         // dims
 #ifdef SOFT_CONSTRAINTS
-        // TODO
-        ocp_qp_dims *qp_dims = create_ocp_qp_dims_mass_spring_soft_constr(N, nx_, nu_, nb_, ng_, ngN);
+        ocp_qp_xcond_solver_dims *qp_dims = create_ocp_qp_dims_mass_spring_soft_constr(config, N, nx_, nu_, nb_, ng_, ngN);
 #else
         ocp_qp_xcond_solver_dims *qp_dims = create_ocp_qp_dims_mass_spring(config, N, nx_, nu_, nb_, ng_, ngN);
 #endif
@@ -319,8 +314,6 @@ int main() {
 //            printf("\nafter solver create\n");
 //            exit(1);
 
-            int acados_return = 0;
-
             qp_info *info = (qp_info *) qp_out->misc;
             qp_info min_info;
 
@@ -329,7 +322,9 @@ int main() {
             // run QP solver NREP times and record min timings
             for (int rep = 0; rep < NREP; rep++)
             {
-                acados_return += ocp_qp_solve(qp_solver, qp_in, qp_out);
+                int qp_return = ocp_qp_solve(qp_solver, qp_in, qp_out);
+                acados_return += qp_return;
+                //printf("\nqp return %d\n", qp_return);
 
                 if (rep == 0)
                 {
@@ -386,5 +381,12 @@ int main() {
         ocp_qp_out_free(qp_out);
     }
 
-    printf("\nsuccess!\n\n");
+    if(acados_return==0)
+    {
+        printf("\nsuccess!\n\n");
+    }
+    else
+    {
+        printf("\nsome issued happened, acados_return = %d\n\n", acados_return);
+    }
 }
