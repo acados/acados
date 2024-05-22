@@ -89,6 +89,7 @@ classdef ocp_nlp_solver_options_json < handle
         with_value_sens_wrt_params
         num_threads_in_batch_solve
         log_primal_step_norm
+        with_anderson_acceleration
 
     end
     methods
@@ -141,6 +142,7 @@ classdef ocp_nlp_solver_options_json < handle
             obj.rti_log_residuals = 0;
             obj.num_threads_in_batch_solve = 1;
             obj.log_primal_step_norm = 0;
+            obj.with_anderson_acceleration = 0;
 
         end
         function s = struct(self)
