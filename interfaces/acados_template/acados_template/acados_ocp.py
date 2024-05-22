@@ -1261,12 +1261,11 @@ class AcadosOcp:
             cost.W_e = np.zeros((0, 0))
             cost.W_0 = np.zeros((0, 0))
 
-        # formulate **path** constraints as L2 penalties
-        expr_bound_list = [
-            (model.x[constraints.idxbx], constraints.lbx, constraints.ubx),
-            (model.u[constraints.idxbu], constraints.lbu, constraints.ubu),
-            (model.con_h_expr, constraints.lh, constraints.uh),
-        ]
+        expr_bound_list = \
+            [(model.x[constraints.idxbx], constraints.lbx, constraints.ubx)] + \
+            [(model.u[constraints.idxbu], constraints.lbu, constraints.ubu)] if casadi_length(model.u) > 0 else [] + \
+            [(model.con_h_expr, constraints.lh, constraints.uh)]
+
 
         if casadi_length(model.con_phi_expr) > 0:
             phi_o_r_expr = ca.substitute(model.con_phi_expr, model.con_r_in_phi, model.con_r_expr)
@@ -1302,11 +1301,10 @@ class AcadosOcp:
         model.con_r_expr_e = None
         model.con_r_in_phi_e = None
 
-        # formulate **initial** constraints as L2 penalties
-        expr_bound_list_0 = [
-            (model.u[constraints.idxbu], constraints.lbu, constraints.ubu),
-            (model.con_h_expr_0, constraints.lh_0, constraints.uh_0),
-        ]
+        expr_bound_list_0 = \
+            [(model.u[constraints.idxbu], constraints.lbu, constraints.ubu)] if casadi_length(model.u) > 0 else [] + \
+            [(model.con_h_expr_0, constraints.lh_0, constraints.uh_0)]
+
         if keep_x0:
             if constraints.has_x0:
                 new_constraints.x0 = constraints.lbx_0
