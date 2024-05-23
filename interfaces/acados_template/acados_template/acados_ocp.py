@@ -1234,6 +1234,8 @@ class AcadosOcp:
         Note: all weights are set to 1.0 for now.
         Options to specify weights should be implemented later for advanced use cases.
         """
+
+        self.model.make_consistent(self.dims) # sets the correct MX/SX defaults
         model = self.model
         cost = self.cost
         constraints = self.constraints
@@ -1261,7 +1263,6 @@ class AcadosOcp:
             cost.W_e = np.zeros((0, 0))
             cost.W_0 = np.zeros((0, 0))
 
-        # formulate **path** constraints as L2 penalties
         expr_bound_list = [
             (model.x[constraints.idxbx], constraints.lbx, constraints.ubx),
             (model.u[constraints.idxbu], constraints.lbu, constraints.ubu),
@@ -1302,11 +1303,11 @@ class AcadosOcp:
         model.con_r_expr_e = None
         model.con_r_in_phi_e = None
 
-        # formulate **initial** constraints as L2 penalties
         expr_bound_list_0 = [
             (model.u[constraints.idxbu], constraints.lbu, constraints.ubu),
             (model.con_h_expr_0, constraints.lh_0, constraints.uh_0),
         ]
+
         if keep_x0:
             if constraints.has_x0:
                 new_constraints.x0 = constraints.lbx_0
