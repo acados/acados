@@ -39,6 +39,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+{%- if solver_options.num_threads_in_batch_solve > 1 %}
+// openmp
+#include <omp.h>
+{%- endif %}
+
 // acados
 #include "acados_c/external_function_interface.h"
 #include "acados_c/sim_interface.h"
