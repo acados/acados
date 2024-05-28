@@ -446,18 +446,19 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_osqp
 
     int ii, jj, kk;
 
-    c_int row_offset_dyn = 0, row_offset_con = 0, row_offset_bnd = 0, row_offset_slk = 0;
+    c_int row_offset_dyn = 0;
+    c_int row_offset_con = 0;
+    c_int row_offset_slk = 0;
 
-    c_int con_start = 0, bnd_start = 0, slk_start = 0;
+    c_int con_start = 0;
+    c_int slk_start = 0;
     for (kk = 0; kk <= N; kk++)
     {
         con_start += kk < N ? nx[kk + 1] : 0;
-        bnd_start += ng[kk];
-        slk_start += nb[kk];
+        slk_start += nb[kk]+ng[kk]; // +ns[kk]
     }
 
-    bnd_start += con_start;
-    slk_start += bnd_start;
+    slk_start += con_start;
 
     // CSC format: A_i are row indices and A_p are column pointers
     c_int nn = 0, col = 0;
@@ -480,23 +481,24 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_osqp
                 }
             }
 
-            // write column from D
-            for (ii = 0; ii < ng[kk]; ii++)
-            {
-                mem->A_i[nn] = con_start + row_offset_con + ii;
-                nn++;
-            }
-
             // write bound on u
             for (ii = 0; ii < nb[kk]; ii++)
             {
                 if (in->idxb[kk][ii] == jj)
                 {
-                    mem->A_i[nn] = bnd_start + row_offset_bnd + ii;
+                    mem->A_i[nn] = con_start + row_offset_con + ii;
                     nn++;
                     break;
                 }
             }
+
+            // write column from D
+            for (ii = 0; ii < ng[kk]; ii++)
+            {
+                mem->A_i[nn] = con_start + row_offset_con + nb[kk] + ii;
+                nn++;
+            }
+
         }
 
         // state variables
@@ -522,22 +524,22 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_osqp
                 }
             }
 
-            // write column from C
-            for (ii = 0; ii < ng[kk]; ii++)
-            {
-                mem->A_i[nn] = con_start + row_offset_con + ii;
-                nn++;
-            }
-
             // write bound on x
             for (ii = 0; ii < nb[kk]; ii++)
             {
                 if (in->idxb[kk][ii] == nu[kk] + jj)
                 {
-                    mem->A_i[nn] = bnd_start + row_offset_bnd + ii;
+                    mem->A_i[nn] = con_start + row_offset_con + ii;
                     nn++;
                     break;
                 }
+            }
+
+            // write column from C
+            for (ii = 0; ii < ng[kk]; ii++)
+            {
+                mem->A_i[nn] = con_start + row_offset_con + nb[kk] + ii;
+                nn++;
             }
         }
 
@@ -548,18 +550,9 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_osqp
             col++;
 
             // soft constraint
-            for(ii=0; ii<nb[kk]; ii++)
+            for(ii=0; ii<nb[kk]+ng[kk]; ii++)
             {
                 if(in->idxs_rev[kk][ii]==jj)
-                {
-                    mem->A_i[nn] = bnd_start + row_offset_bnd + ii;
-                    nn++;
-                    // no break, there could possibly be multiple
-                }
-            }
-            for(ii=0; ii<ng[kk]; ii++)
-            {
-                if(in->idxs_rev[kk][nb[kk]+ii]==jj)
                 {
                     mem->A_i[nn] = con_start + row_offset_con + ii;
                     nn++;
@@ -579,18 +572,9 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_osqp
             col++;
 
             // soft constraint
-            for(ii=0; ii<nb[kk]; ii++)
+            for(ii=0; ii<nb[kk]+ng[kk]; ii++)
             {
                 if(in->idxs_rev[kk][ii]==jj)
-                {
-                    mem->A_i[nn] = bnd_start + row_offset_bnd + ii;
-                    nn++;
-                    // no break, there could possibly be multiple
-                }
-            }
-            for(ii=0; ii<ng[kk]; ii++)
-            {
-                if(in->idxs_rev[kk][nb[kk]+ii]==jj)
                 {
                     mem->A_i[nn] = con_start + row_offset_con + ii;
                     nn++;
@@ -603,8 +587,7 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_osqp
             nn++;
         }
 
-        row_offset_bnd += nb[kk];
-        row_offset_con += ng[kk];
+        row_offset_con += nb[kk]+ng[kk];
         row_offset_dyn += kk < N ? nx[kk + 1] : 0;
         row_offset_slk += 2*ns[kk];
     }
@@ -645,10 +628,6 @@ static void update_constraints_matrix_data(const ocp_qp_in *in, ocp_qp_osqp_memo
                 nn += nx[kk+1];
             }
 
-            // write column from D
-            blasfeo_unpack_dmat(1, ng[kk], in->DCt+kk, jj, 0, mem->A_x+nn, 1);
-            nn += ng[kk];
-
             // write bound on u
             for (ii = 0; ii < dims->nb[kk]; ii++)
             {
@@ -659,6 +638,11 @@ static void update_constraints_matrix_data(const ocp_qp_in *in, ocp_qp_osqp_memo
                     break;
                 }
             }
+
+            // write column from D
+            blasfeo_unpack_dmat(1, ng[kk], in->DCt+kk, jj, 0, mem->A_x+nn, 1);
+            nn += ng[kk];
+
         }
 
         // state variables
@@ -678,10 +662,6 @@ static void update_constraints_matrix_data(const ocp_qp_in *in, ocp_qp_osqp_memo
                 nn += nx[kk+1];
             }
 
-            // write column from C
-            blasfeo_unpack_dmat(1, ng[kk], in->DCt+kk, nu[kk]+jj, 0, mem->A_x+nn, 1);
-            nn += ng[kk];
-
             // write bound on x
             for (ii = 0; ii < dims->nb[kk]; ii++)
             {
@@ -692,6 +672,11 @@ static void update_constraints_matrix_data(const ocp_qp_in *in, ocp_qp_osqp_memo
                     break;
                 }
             }
+
+            // write column from C
+            blasfeo_unpack_dmat(1, ng[kk], in->DCt+kk, nu[kk]+jj, 0, mem->A_x+nn, 1);
+            nn += ng[kk];
+
         }
 
         // slack variables on lower inequalities
@@ -699,18 +684,9 @@ static void update_constraints_matrix_data(const ocp_qp_in *in, ocp_qp_osqp_memo
         {
 
             // soft constraint
-            for(ii=0; ii<nb[kk]; ii++)
+            for(ii=0; ii<nb[kk]+ng[kk]; ii++)
             {
                 if(in->idxs_rev[kk][ii]==jj)
-                {
-                    mem->A_x[nn] = 1.0;
-                    nn++;
-                    // no break, there could possibly be multiple
-                }
-            }
-            for(ii=0; ii<ng[kk]; ii++)
-            {
-                if(in->idxs_rev[kk][nb[kk]+ii]==jj)
                 {
                     mem->A_x[nn] = 1.0;
                     nn++;
@@ -728,18 +704,9 @@ static void update_constraints_matrix_data(const ocp_qp_in *in, ocp_qp_osqp_memo
         {
 
             // soft constraint
-            for(ii=0; ii<nb[kk]; ii++)
+            for(ii=0; ii<nb[kk]+ng[kk]; ii++)
             {
                 if(in->idxs_rev[kk][ii]==jj)
-                {
-                    mem->A_x[nn] = -1.0;
-                    nn++;
-                    // no break, there could possibly be multiple
-                }
-            }
-            for(ii=0; ii<ng[kk]; ii++)
-            {
-                if(in->idxs_rev[kk][nb[kk]+ii]==jj)
                 {
                     mem->A_x[nn] = -1.0;
                     nn++;
@@ -788,34 +755,19 @@ static void update_bounds(const ocp_qp_in *in, ocp_qp_osqp_memory *mem)
         nn += nx[kk + 1];
     }
 
-    // write lg and ug
+    // write lb lg and ub ug
     for (kk = 0; kk <= N; kk++)
     {
-        // unpack lg to l
-        blasfeo_unpack_dvec(ng[kk], in->d + kk, nb[kk], &mem->l[nn], 1);
+        // unpack lb lg to l
+        blasfeo_unpack_dvec(nb[kk]+ng[kk], in->d + kk, 0, &mem->l[nn], 1);
 
-        // unpack ug to u and flip signs because in HPIPM the signs are flipped for upper bounds
-        for (ii = 0; ii < ng[kk]; ii++)
-        {
-            mem->u[nn + ii] = -BLASFEO_DVECEL(&in->d[kk], ii + 2 * nb[kk] + ng[kk]);
-        }
-
-        nn += ng[kk];
-    }
-
-    // write lb and ub
-    for (kk = 0; kk <= N; kk++)
-    {
-        // unpack lb to l
-        blasfeo_unpack_dvec(nb[kk], in->d + kk, 0, &mem->l[nn], 1);
-
-        // unpack ub to u and flip signs because in HPIPM the signs are flipped for upper bounds
-        for (ii = 0; ii < nb[kk]; ii++)
+        // unpack ub ug to u and flip signs because in HPIPM the signs are flipped for upper bounds
+        for (ii = 0; ii < nb[kk] + ng[kk]; ii++)
         {
             mem->u[nn + ii] = -BLASFEO_DVECEL(&in->d[kk], ii + nb[kk] + ng[kk]);
         }
 
-        nn += nb[kk];
+        nn += nb[kk] + ng[kk];
     }
 
     // write ls and us
@@ -1527,17 +1479,15 @@ static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out, ocp_qp_osqp_mem
 
     int ii, kk, nn, mm;
 
-    c_int con_start = 0, bnd_start = 0, slk_start = 0;
+    c_int con_start = 0;
+    c_int slk_start = 0;
     for (kk = 0; kk <= N; kk++)
     {
         con_start += kk < N ? nx[kk + 1] : 0;
-        bnd_start += ng[kk];
-        slk_start += nb[kk];
+        slk_start += nb[kk] + ng[kk]; // + ns[kk];
     }
 
-    bnd_start += con_start;
-    slk_start += bnd_start;
-    //printf("\nstart con bnd slk %d %d %d\n", con_start, bnd_start, slk_start);
+    slk_start += con_start;
 
     OSQPSolution *sol = mem->osqp_work->solution;
 
@@ -1563,9 +1513,9 @@ static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out, ocp_qp_osqp_mem
     {
         blasfeo_dvecse(2*nb[kk]+2*ng[kk]+2*ns[kk], 0.0, out->lam+kk, 0);
 
-        for (ii = 0; ii < nb[kk]; ii++)
+        for (ii = 0; ii < nb[kk]+ng[kk]; ii++)
         {
-            double lam = sol->y[bnd_start + nn + ii];
+            double lam = sol->y[con_start + nn + ii];
             if (lam <= 0)
                 //out->lam[kk].pa[ii] = -lam;
                 BLASFEO_DVECEL(out->lam+kk, ii) = -lam;
@@ -1573,19 +1523,7 @@ static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out, ocp_qp_osqp_mem
                 //out->lam[kk].pa[nb[kk] + ng[kk] + ii] = lam;
                 BLASFEO_DVECEL(out->lam+kk, nb[kk] + ng[kk] + ii) = lam;
         }
-        nn += nb[kk];
-
-        for (ii = 0; ii < ng[kk]; ii++)
-        {
-            double lam = sol->y[con_start + mm + ii];
-            if (lam <= 0)
-                //out->lam[kk].pa[nb[kk] + ii] = -lam;
-                BLASFEO_DVECEL(out->lam+kk, nb[kk] + ii) = -lam;
-            else
-                //out->lam[kk].pa[2 * nb[kk] + ng[kk] + ii] = lam;
-                BLASFEO_DVECEL(out->lam+kk, 2*nb[kk] + ng[kk] + ii) = lam;
-        }
-        mm += ng[kk];
+        nn += nb[kk]+ng[kk];
 
         blasfeo_dgemv_d(2*ns[kk], 1.0, in->Z+kk, 0, out->ux+kk, nu[kk]+nx[kk], 1.0, in->rqz+kk, nu[kk]+nx[kk], out->lam+kk, 2*nb[kk]+2*ng[kk]);
         for(ii=0; ii<nb[kk]+ng[kk]; ii++)
