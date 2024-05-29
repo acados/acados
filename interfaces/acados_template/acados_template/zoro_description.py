@@ -74,7 +74,7 @@ class ZoroDescription:
     input_P0_diag: bool = False
     """Determines if diag(P0) is an input to the custom update function"""
     input_P0: bool = True
-    """Determines if diag(P0) is an input to the custom update function"""
+    """Determines if P0 is an input to the custom update function, specified in column-major format"""
 
     input_W_diag: bool = False
     """Determines if diag(W) is an input to the custom update function"""
