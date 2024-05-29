@@ -222,7 +222,7 @@ def main_multiphase_ocp():
     # plot solution
     t_grid_2_plot = t_grid_phases[2] - 1.0
 
-    fig, ax = plt.subplots(3, 1, sharex=True)
+    fig, ax = plt.subplots(3, 1, sharex=True, figsize=(9, 5.2))
 
     p_traj_0 = [x[0] for x in x_traj_phases[0]]
     ax[0].plot(t_grid_phases[0], p_traj_0, color='C0', label='phase 1')
@@ -245,6 +245,18 @@ def main_multiphase_ocp():
 
     ax[0].set_xlim([0, T_HORIZON])
     ax[0].legend()
+    ax[-1].set_xlabel("time $t$")
+
+    fig.align_ylabels()
+    plt.tight_layout()
+
+    fig_filename = 'mocp_transition_example.pdf'
+    if fig_filename is not None:
+        plt.savefig(
+            fig_filename, bbox_inches="tight", transparent=True, pad_inches=0.05
+        )
+        print(f"\nstored figure in {fig_filename}")
+
 
 
 def main_standard_ocp():
