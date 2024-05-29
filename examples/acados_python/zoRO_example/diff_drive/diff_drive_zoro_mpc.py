@@ -36,7 +36,7 @@ from diff_drive_model import export_diff_drive_model, RobotState
 from mpc_parameters import MPCParam
 
 class ZoroMPCSolver:
-    def __init__(self, cfg: MPCParam) -> None:
+    def __init__(self, cfg: MPCParam, output_P_matrices: bool = False) -> None:
         # import model
         self.cfg = cfg
         self.model = export_diff_drive_model(cfg)
@@ -134,6 +134,7 @@ class ZoroMPCSolver:
         zoro_description.idx_uh_t = []
         zoro_description.idx_lh_e_t = list(range(0, cfg.num_obs))
         zoro_description.idx_uh_e_t = []
+        zoro_description.output_P_matrices = output_P_matrices
 
         ## dummy linear constraints for testing
         # self.ocp.constraints.C = np.array([[1., 0., 0., 0., 0.0], [0., 1., 0., 0., 0.]])
@@ -214,10 +215,17 @@ class ZoroMPCSolver:
             self.rti_phase1_t += self.acados_ocp_solver.get_stats("time_tot")
             self.acados_integrator_time += self.acados_ocp_solver.get_stats("time_sim")
 
-            if self.cfg.use_custom_update:
+            if self.cfg.use_custom_update and not self.ocp.zoro_description.output_P_matrices:
                 t_start = process_time()
-                self.acados_ocp_solver.custom_update([self.cfg.P0_mat.flatten()])
+                self.acados_ocp_solver.custom_update(self.cfg.P0_mat.flatten())
                 self.propagation_t += process_time() - t_start
+            elif self.cfg.use_custom_update and self.ocp.zoro_description.output_P_matrices:
+                t_start = process_time()
+                input_custom_update = np.ascontiguousarray(np.concatenate((self.cfg.P0_mat.flatten(), self.P_mats[:,:,:].flatten())))
+                self.acados_ocp_solver.custom_update(input_custom_update)
+                self.P_mats = input_custom_update[self.cfg.nx**2:].reshape((self.cfg.n_hrzn+1, self.cfg.nx, self.cfg.nx))
+                self.propagation_t += process_time() - t_start
+                self.acados_ocp_solver.print_statistics()
             else:
                 t_start = process_time()
                 self.propagate_and_update(obs_position=obs_position, obs_radius=obs_radius, p0_mat=self.cfg.P0_mat)

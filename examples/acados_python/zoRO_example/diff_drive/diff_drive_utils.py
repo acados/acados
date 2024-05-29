@@ -129,7 +129,14 @@ def plot_timing_comparison(timings_list, label_list):
     plt.show()
 
 
-def plot_trajectory(cfg:MPCParam, traj_ref:np.ndarray, traj_zo:np.ndarray):
+def ellipsoid_surface_2D(P, n=100):
+    lam, V = np.linalg.eig(P)
+    phi = np.linspace(0, 2 * np.pi, n)
+    a = (V @ np.diag(np.sqrt(lam))) @ np.vstack([np.cos(phi), np.sin(phi)])
+    return a
+
+
+def plot_trajectory(cfg: MPCParam, traj_ref:np.ndarray, traj_zo:np.ndarray, P_matrices=None):
 
     fig = plt.figure(1)
     ax = fig.add_subplot(1,1,1)
@@ -142,6 +149,15 @@ def plot_trajectory(cfg:MPCParam, traj_ref:np.ndarray, traj_zo:np.ndarray):
     # ax.set_title("Robot Trajectory")
     ax.plot(traj_zo[:, 0], traj_zo[:, 1], c='b', alpha=0.5, label='zoRO trajectory')
     ax.plot(traj_ref[:, 0], traj_ref[:, 1], c='m', linestyle='dotted', label='Reference trajectory')
+
+    # plot ellipsoids
+    if P_matrices is not None:
+        P_surf = [traj_zo[k,:2].reshape((2,1)) + ellipsoid_surface_2D(P_mat[:2,:2]) for k, P_mat in enumerate(P_matrices)]
+        for p in P_surf:
+            ax.plot(p[0, :], p[1,:], color='C1', alpha=0.6)
+    # add legend artist for ellipsoids
+    ax.plot(0, 0, color='C1', alpha=0.6, label='Uncertainty ellipsoids')
+
     ax.set_xlabel("x [m]")
     ax.set_ylabel("y [m]")
     ax.set_xticks(np.arange(-2., 9., 2.))
@@ -150,8 +166,6 @@ def plot_trajectory(cfg:MPCParam, traj_ref:np.ndarray, traj_zo:np.ndarray):
     ax.set_aspect("equal")
     ax.legend()
     plt.tight_layout()
-    # ax.grid()
-
     if not os.path.exists("figures"):
         os.makedirs("figures")
 
