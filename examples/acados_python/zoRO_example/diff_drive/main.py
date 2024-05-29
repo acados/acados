@@ -172,9 +172,8 @@ def solve_single_zoro_problem_visualize_uncertainty():
     x_e = np.array([1.0, cfg_path._v_s_e])
     path_tracking_solver.solve(x_init=x_init, x_e=x_e)
 
-    # closed loop mpc
+    # zoro solution
     x0 = path_tracking_solver.x_robot_ref[70,:]
-
     x_ref_interp, u_ref_interp = path_tracking_solver.interpolate_reference_trajectory(robot_state=x0)
     u_opt, status = zoroMPC.solve(x_current=x0, y_ref = np.hstack((x_ref_interp, u_ref_interp)),
                     obs_position=cfg_zo.obs_pos.flatten(), obs_radius=cfg_zo.obs_radius)
