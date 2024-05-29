@@ -348,9 +348,9 @@ def J_to_idx(J):
         this_idx = np.nonzero(J[i,:])[0]
         if len(this_idx) != 1:
             raise Exception('Invalid J matrix structure detected, ' \
-                'must contain one nonzero element per row.')
+                'must contain exactly one nonzero element per row.')
         if this_idx.size > 0 and J[i,this_idx[0]] != 1:
-            raise Exception('J matrices can only contain 1s.')
+            raise Exception('J matrices can only contain 1 and 0 entries.')
         idx[i] = this_idx[0]
     return idx
 
