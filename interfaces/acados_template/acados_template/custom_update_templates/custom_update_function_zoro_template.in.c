@@ -814,8 +814,6 @@ static void uncertainty_propagate_and_update(ocp_nlp_solver *solver, ocp_nlp_in 
         {%- for it in zoro_description.idx_uh_t %}
         custom_mem->d_uh_tightened[{{it}}] = custom_mem->d_uh[{{it}}]
                         - backoff_scaling_gamma * sqrt(blasfeo_dgeex1(&custom_mem->temp_beta_mat, {{it}}, {{it}}));
-
-        // TODO: make sure uh > lh?
         {%- endfor %}
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii+1, "uh", custom_mem->d_uh_tightened);
     {%- endif %}
