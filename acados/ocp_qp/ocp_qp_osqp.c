@@ -91,7 +91,7 @@ static void print_csc_as_dns(csc *M)
         for (j = 0; j < M->n; j++)
         {
             if(A[j * (M->m) + i]==1e30)
-                printf("         ");
+                printf("  *      ");
             else
                 printf("%8.4f ", A[j * (M->m) + i]);
         }
@@ -262,6 +262,7 @@ static int acados_osqp_num_constr(ocp_qp_dims *dims)
     {
         m += nb[ii];   // box constraints
         m += ng[ii];   // general constraints
+        m += ns[ii];   // replicated box/general softed constraint
         m += 2*ns[ii]; // slacks nonnegativity constraints
     }
 
@@ -315,6 +316,7 @@ static int acados_osqp_nnzmax_A(const ocp_qp_dims *dims)
         nnz += nb[ii];           // eye of box constraints
         nnz += ng[ii] * nx[ii];  // C
         nnz += ng[ii] * nu[ii];  // D
+        nnz += ns[ii] * (nu[ii] + nx[ii]);  // replicated box/general softed constraint at worst case
         nnz += (nb[ii] + ng[ii]) * 2 * ns[ii]; // soft constraints at worst case, when idxs_rev encoding is used. Typically just 2*ns
         nnz += 2 * ns[ii];       // eye of slacks nonnegativity constraints
     }
@@ -446,23 +448,34 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_osqp
 
     int ii, jj, kk;
 
-    c_int row_offset_dyn = 0, row_offset_con = 0, row_offset_bnd = 0, row_offset_slk = 0;
+    c_int row_offset_dyn = 0;
+    c_int row_offset_con = 0;
+    c_int row_offset_slk = 0;
 
-    c_int con_start = 0, bnd_start = 0, slk_start = 0;
+    c_int con_start = 0;
+    c_int slk_start = 0;
     for (kk = 0; kk <= N; kk++)
     {
         con_start += kk < N ? nx[kk + 1] : 0;
-        bnd_start += ng[kk];
-        slk_start += nb[kk];
+        slk_start += nb[kk]+ng[kk]+ns[kk];
     }
 
-    bnd_start += con_start;
-    slk_start += bnd_start;
+    slk_start += con_start;
 
     // CSC format: A_i are row indices and A_p are column pointers
     c_int nn = 0, col = 0;
     for (kk = 0; kk <= N; kk++)
     {
+
+        // compute number of softed box and general constraints
+        int nsb = 0;
+        for (ii=0; ii<nb[kk]; ii++)
+        {
+            if (in->idxs_rev[kk][ii]>=0)
+            {
+                nsb++;
+            }
+        }
 
         // control variables
         for (jj = 0; jj < nu[kk]; jj++)
@@ -480,23 +493,58 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_osqp
                 }
             }
 
-            // write column from D
-            for (ii = 0; ii < ng[kk]; ii++)
-            {
-                mem->A_i[nn] = con_start + row_offset_con + ii;
-                nn++;
-            }
-
             // write bound on u
             for (ii = 0; ii < nb[kk]; ii++)
             {
                 if (in->idxb[kk][ii] == jj)
                 {
-                    mem->A_i[nn] = bnd_start + row_offset_bnd + ii;
+                    mem->A_i[nn] = con_start + row_offset_con + ii;
                     nn++;
                     break;
                 }
             }
+            int idxbu = ii;
+
+            // write column from D
+            for (ii = 0; ii < ng[kk]; ii++)
+            {
+                mem->A_i[nn] = con_start + row_offset_con + nb[kk] + ii;
+                nn++;
+            }
+
+            // replicated softed bound on u
+            if (idxbu<nb[kk]) // bounded input
+            {
+                if (in->idxs_rev[kk][idxbu]>=0) // softed bounded input
+                {
+                    // compute position in "packed" soft constraints, i.e. it is the itmp-th one
+                    int itmp = 0;
+                    for (ii=0; ii<idxbu; ii++)
+                    {
+                        if (in->idxs_rev[kk][ii]>=0)
+                        {
+                            itmp++;
+                        }
+                    }
+                    mem->A_i[nn] = con_start + row_offset_con + nb[kk] + ng[kk] + itmp;
+                    nn++;
+                }
+            }
+
+            // replicated softed D
+            {
+            int itmp = 0;
+            for (ii = 0; ii < ng[kk]; ii++)
+            {
+                if (in->idxs_rev[kk][nb[kk]+ii]>=0) // softed
+                {
+                    mem->A_i[nn] = con_start + row_offset_con + nb[kk] + ng[kk] + nsb + itmp;
+                    nn++;
+                    itmp++;
+                }
+            }
+            }
+
         }
 
         // state variables
@@ -522,44 +570,70 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_osqp
                 }
             }
 
-            // write column from C
-            for (ii = 0; ii < ng[kk]; ii++)
-            {
-                mem->A_i[nn] = con_start + row_offset_con + ii;
-                nn++;
-            }
-
             // write bound on x
             for (ii = 0; ii < nb[kk]; ii++)
             {
                 if (in->idxb[kk][ii] == nu[kk] + jj)
                 {
-                    mem->A_i[nn] = bnd_start + row_offset_bnd + ii;
+                    mem->A_i[nn] = con_start + row_offset_con + ii;
                     nn++;
                     break;
                 }
             }
+            int idxbx = ii;
+
+            // write column from C
+            for (ii = 0; ii < ng[kk]; ii++)
+            {
+                mem->A_i[nn] = con_start + row_offset_con + nb[kk] + ii;
+                nn++;
+            }
+
+            // replicated softed bound on x
+            if (idxbx<nb[kk]) // bounded input
+            {
+                if (in->idxs_rev[kk][idxbx]>=0) // softed bounded input
+                {
+                    // compute position in "packed" soft constraints, i.e. it is the itmp-th one
+                    int itmp = 0;
+                    for (ii=0; ii<idxbx; ii++)
+                    {
+                        if (in->idxs_rev[kk][ii]>=0)
+                        {
+                            itmp++;
+                        }
+                    }
+                    mem->A_i[nn] = con_start + row_offset_con + nb[kk] + ng[kk] + itmp;
+                    nn++;
+                }
+            }
+
+            // replicated softed C
+            {
+            int itmp = 0;
+            for (ii = 0; ii < ng[kk]; ii++)
+            {
+                if (in->idxs_rev[kk][nb[kk]+ii]>=0) // softed
+                {
+                    mem->A_i[nn] = con_start + row_offset_con + nb[kk] + ng[kk] + nsb + itmp;
+                    nn++;
+                    itmp++;
+                }
+            }
+            }
+
         }
 
-        // slack variables on lower inequalities
+        // slack variables on lower inequalities (original)
         for (jj = 0; jj < ns[kk]; jj++)
         {
             mem->A_p[col] = nn;
             col++;
 
             // soft constraint
-            for(ii=0; ii<nb[kk]; ii++)
+            for(ii=0; ii<nb[kk]+ng[kk]; ii++)
             {
                 if(in->idxs_rev[kk][ii]==jj)
-                {
-                    mem->A_i[nn] = bnd_start + row_offset_bnd + ii;
-                    nn++;
-                    // no break, there could possibly be multiple
-                }
-            }
-            for(ii=0; ii<ng[kk]; ii++)
-            {
-                if(in->idxs_rev[kk][nb[kk]+ii]==jj)
                 {
                     mem->A_i[nn] = con_start + row_offset_con + ii;
                     nn++;
@@ -572,29 +646,25 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_osqp
             nn++;
         }
 
-        // slack variables on upper inequalities
+        // slack variables on upper inequalities (replicated)
         for (jj = 0; jj < ns[kk]; jj++)
         {
             mem->A_p[col] = nn;
             col++;
 
             // soft constraint
-            for(ii=0; ii<nb[kk]; ii++)
+            int itmp = 0;
+            for(ii=0; ii<nb[kk]+ng[kk]; ii++)
             {
                 if(in->idxs_rev[kk][ii]==jj)
                 {
-                    mem->A_i[nn] = bnd_start + row_offset_bnd + ii;
+                    mem->A_i[nn] = con_start + row_offset_con + nb[kk] + ng[kk] + itmp;
                     nn++;
                     // no break, there could possibly be multiple
                 }
-            }
-            for(ii=0; ii<ng[kk]; ii++)
-            {
-                if(in->idxs_rev[kk][nb[kk]+ii]==jj)
+                if(in->idxs_rev[kk][ii]>=0)
                 {
-                    mem->A_i[nn] = con_start + row_offset_con + ii;
-                    nn++;
-                    // no break, there could possibly be multiple
+                itmp++;
                 }
             }
 
@@ -603,8 +673,7 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_osqp
             nn++;
         }
 
-        row_offset_bnd += nb[kk];
-        row_offset_con += ng[kk];
+        row_offset_con += nb[kk]+ng[kk]+ns[kk];
         row_offset_dyn += kk < N ? nx[kk + 1] : 0;
         row_offset_slk += 2*ns[kk];
     }
@@ -645,10 +714,6 @@ static void update_constraints_matrix_data(const ocp_qp_in *in, ocp_qp_osqp_memo
                 nn += nx[kk+1];
             }
 
-            // write column from D
-            blasfeo_unpack_dmat(1, ng[kk], in->DCt+kk, jj, 0, mem->A_x+nn, 1);
-            nn += ng[kk];
-
             // write bound on u
             for (ii = 0; ii < dims->nb[kk]; ii++)
             {
@@ -659,6 +724,32 @@ static void update_constraints_matrix_data(const ocp_qp_in *in, ocp_qp_osqp_memo
                     break;
                 }
             }
+            int idxbu = ii;
+
+            // write column from D
+            blasfeo_unpack_dmat(1, ng[kk], in->DCt+kk, jj, 0, mem->A_x+nn, 1);
+            nn += ng[kk];
+
+            // replicated softed bound on u
+            if (idxbu<nb[kk]) // bounded input
+            {
+                if (in->idxs_rev[kk][idxbu]>=0) // softed bounded input
+                {
+                    mem->A_x[nn] = 1.0;
+                    nn++;
+                }
+            }
+
+            // replicated softed D
+            for (ii = 0; ii < ng[kk]; ii++)
+            {
+                if (in->idxs_rev[kk][nb[kk]+ii]>=0) // softed
+                {
+                    mem->A_x[nn] = BLASFEO_DMATEL(in->DCt+kk, jj, ii);
+                    nn++;
+                }
+            }
+
         }
 
         // state variables
@@ -678,10 +769,6 @@ static void update_constraints_matrix_data(const ocp_qp_in *in, ocp_qp_osqp_memo
                 nn += nx[kk+1];
             }
 
-            // write column from C
-            blasfeo_unpack_dmat(1, ng[kk], in->DCt+kk, nu[kk]+jj, 0, mem->A_x+nn, 1);
-            nn += ng[kk];
-
             // write bound on x
             for (ii = 0; ii < dims->nb[kk]; ii++)
             {
@@ -692,25 +779,42 @@ static void update_constraints_matrix_data(const ocp_qp_in *in, ocp_qp_osqp_memo
                     break;
                 }
             }
+            int idxbx = ii;
+
+            // write column from C
+            blasfeo_unpack_dmat(1, ng[kk], in->DCt+kk, nu[kk]+jj, 0, mem->A_x+nn, 1);
+            nn += ng[kk];
+
+            // replicated softed bound on x
+            if (idxbx<nb[kk]) // bounded input
+            {
+                if (in->idxs_rev[kk][idxbx]>=0) // softed bounded input
+                {
+                    mem->A_x[nn] = 1.0;
+                    nn++;
+                }
+            }
+
+            // replicated softed C
+            for (ii = 0; ii < ng[kk]; ii++)
+            {
+                if (in->idxs_rev[kk][nb[kk]+ii]>=0) // softed
+                {
+                    mem->A_x[nn] = BLASFEO_DMATEL(in->DCt+kk, nu[kk]+jj, ii);
+                    nn++;
+                }
+            }
+
         }
 
-        // slack variables on lower inequalities
+        // slack variables on lower inequalities (original)
         for (jj = 0; jj < ns[kk]; jj++)
         {
 
             // soft constraint
-            for(ii=0; ii<nb[kk]; ii++)
+            for(ii=0; ii<nb[kk]+ng[kk]; ii++)
             {
                 if(in->idxs_rev[kk][ii]==jj)
-                {
-                    mem->A_x[nn] = 1.0;
-                    nn++;
-                    // no break, there could possibly be multiple
-                }
-            }
-            for(ii=0; ii<ng[kk]; ii++)
-            {
-                if(in->idxs_rev[kk][nb[kk]+ii]==jj)
                 {
                     mem->A_x[nn] = 1.0;
                     nn++;
@@ -723,23 +827,14 @@ static void update_constraints_matrix_data(const ocp_qp_in *in, ocp_qp_osqp_memo
             nn++;
         }
 
-        // slack variables on upper inequalities
+        // slack variables on upper inequalities (replicated)
         for (jj = 0; jj < ns[kk]; jj++)
         {
 
             // soft constraint
-            for(ii=0; ii<nb[kk]; ii++)
+            for(ii=0; ii<nb[kk]+ng[kk]; ii++)
             {
                 if(in->idxs_rev[kk][ii]==jj)
-                {
-                    mem->A_x[nn] = -1.0;
-                    nn++;
-                    // no break, there could possibly be multiple
-                }
-            }
-            for(ii=0; ii<ng[kk]; ii++)
-            {
-                if(in->idxs_rev[kk][nb[kk]+ii]==jj)
                 {
                     mem->A_x[nn] = -1.0;
                     nn++;
@@ -751,7 +846,6 @@ static void update_constraints_matrix_data(const ocp_qp_in *in, ocp_qp_osqp_memo
             mem->A_x[nn] = 1.0;
             nn++;
         }
-
 
     }
 
@@ -788,34 +882,35 @@ static void update_bounds(const ocp_qp_in *in, ocp_qp_osqp_memory *mem)
         nn += nx[kk + 1];
     }
 
-    // write lg and ug
+    // write lb lg and ub ug
     for (kk = 0; kk <= N; kk++)
     {
-        // unpack lg to l
-        blasfeo_unpack_dvec(ng[kk], in->d + kk, nb[kk], &mem->l[nn], 1);
-
-        // unpack ug to u and flip signs because in HPIPM the signs are flipped for upper bounds
-        for (ii = 0; ii < ng[kk]; ii++)
+        // unpack lb lg to l
+        blasfeo_unpack_dvec(nb[kk]+ng[kk], in->d + kk, 0, &mem->l[nn], 1);
+        // set replicated to -inf
+        for (ii=0; ii<ns[kk]; ii++)
         {
-            mem->u[nn + ii] = -BLASFEO_DVECEL(&in->d[kk], ii + 2 * nb[kk] + ng[kk]);
+            mem->l[nn+nb[kk]+ng[kk]+ii] = -OSQP_INF;
         }
 
-        nn += ng[kk];
-    }
-
-    // write lb and ub
-    for (kk = 0; kk <= N; kk++)
-    {
-        // unpack lb to l
-        blasfeo_unpack_dvec(nb[kk], in->d + kk, 0, &mem->l[nn], 1);
-
-        // unpack ub to u and flip signs because in HPIPM the signs are flipped for upper bounds
-        for (ii = 0; ii < nb[kk]; ii++)
+        // unpack ub ug to u and flip signs because in HPIPM the signs are flipped for upper bounds
+        // keep in original place if not softed; set to inf and replicated under if softed
+        int itmp = 0;
+        for (ii = 0; ii < nb[kk] + ng[kk]; ii++)
         {
-            mem->u[nn + ii] = -BLASFEO_DVECEL(&in->d[kk], ii + nb[kk] + ng[kk]);
+            if(in->idxs_rev[kk][ii]==-1) // not softed
+            {
+                mem->u[nn + ii] = -BLASFEO_DVECEL(&in->d[kk], nb[kk]+ng[kk]+ii);
+            }
+            else
+            {
+                mem->u[nn + ii] = OSQP_INF;
+                mem->u[nn + nb[kk]+ng[kk]+itmp] = -BLASFEO_DVECEL(&in->d[kk], nb[kk]+ng[kk]+ii);
+                itmp++;
+            }
         }
 
-        nn += nb[kk];
+        nn += nb[kk] + ng[kk] + ns[kk];
     }
 
     // write ls and us
@@ -855,6 +950,7 @@ static void ocp_qp_osqp_update_memory(const ocp_qp_in *in, const ocp_qp_osqp_opt
     //print_csc_as_dns(mem->osqp_data->P);
     //printf("\nA\n");
     //print_csc_as_dns(mem->osqp_data->A);
+    //exit(1);
 }
 
 
@@ -1525,19 +1621,17 @@ static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out, ocp_qp_osqp_mem
     int *ng = dims->ng;
     int *ns = dims->ns;
 
-    int ii, kk, nn, mm;
+    int ii, kk, nn;
 
-    c_int con_start = 0, bnd_start = 0, slk_start = 0;
+    c_int con_start = 0;
+    c_int slk_start = 0;
     for (kk = 0; kk <= N; kk++)
     {
         con_start += kk < N ? nx[kk + 1] : 0;
-        bnd_start += ng[kk];
-        slk_start += nb[kk];
+        slk_start += nb[kk] + ng[kk] + ns[kk];
     }
 
-    bnd_start += con_start;
-    slk_start += bnd_start;
-    //printf("\nstart con bnd slk %d %d %d\n", con_start, bnd_start, slk_start);
+    slk_start += con_start;
 
     OSQPSolution *sol = mem->osqp_work->solution;
 
@@ -1558,45 +1652,42 @@ static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out, ocp_qp_osqp_mem
     }
 
     nn = 0;
-    mm = 0;
     for (kk = 0; kk <= N; kk++)
     {
-        blasfeo_dvecse(2*nb[kk]+2*ng[kk]+2*ns[kk], 0.0, out->lam+kk, 0);
+        //blasfeo_dvecse(2*nb[kk]+2*ng[kk]+2*ns[kk], 0.0, out->lam+kk, 0);
+        blasfeo_dvecse(2*nb[kk]+2*ng[kk], 0.0, out->lam+kk, 0);
 
-        for (ii = 0; ii < nb[kk]; ii++)
+        int itmp = 0;
+        for (ii = 0; ii < nb[kk]+ng[kk]; ii++)
         {
-            double lam = sol->y[bnd_start + nn + ii];
-            if (lam <= 0)
-                //out->lam[kk].pa[ii] = -lam;
-                BLASFEO_DVECEL(out->lam+kk, ii) = -lam;
-            else
-                //out->lam[kk].pa[nb[kk] + ng[kk] + ii] = lam;
-                BLASFEO_DVECEL(out->lam+kk, nb[kk] + ng[kk] + ii) = lam;
-        }
-        nn += nb[kk];
-
-        for (ii = 0; ii < ng[kk]; ii++)
-        {
-            double lam = sol->y[con_start + mm + ii];
-            if (lam <= 0)
-                //out->lam[kk].pa[nb[kk] + ii] = -lam;
-                BLASFEO_DVECEL(out->lam+kk, nb[kk] + ii) = -lam;
-            else
-                //out->lam[kk].pa[2 * nb[kk] + ng[kk] + ii] = lam;
-                BLASFEO_DVECEL(out->lam+kk, 2*nb[kk] + ng[kk] + ii) = lam;
-        }
-        mm += ng[kk];
-
-        blasfeo_dgemv_d(2*ns[kk], 1.0, in->Z+kk, 0, out->ux+kk, nu[kk]+nx[kk], 1.0, in->rqz+kk, nu[kk]+nx[kk], out->lam+kk, 2*nb[kk]+2*ng[kk]);
-        for(ii=0; ii<nb[kk]+ng[kk]; ii++)
-        {
-            int idx = in->idxs_rev[kk][ii];
-            if(idx!=-1)
+            if(in->idxs_rev[kk][ii]==-1) // not softed: two sided
             {
-                BLASFEO_DVECEL(out->lam+kk, 2*nb[kk]+2*ng[kk]+idx) -= BLASFEO_DVECEL(out->lam+kk, ii);
-                BLASFEO_DVECEL(out->lam+kk, 2*nb[kk]+2*ng[kk]+ns[kk]+idx) -= BLASFEO_DVECEL(out->lam+kk, nb[kk]+ng[kk]+ii);
+                double lam = sol->y[con_start+nn+ii];
+                if (lam <= 0)
+                {
+                    BLASFEO_DVECEL(out->lam+kk, ii) = -lam;
+                }
+                else
+                {
+                    BLASFEO_DVECEL(out->lam+kk, nb[kk]+ng[kk] + ii) = lam;
+                }
+            }
+            else // softed: replicated one sided
+            {
+                BLASFEO_DVECEL(out->lam+kk, ii) = -sol->y[con_start+nn+ii];
+                BLASFEO_DVECEL(out->lam+kk, nb[kk]+ng[kk] + ii) = sol->y[con_start+nn+nb[kk]+ng[kk]+itmp];
+                itmp++;
             }
         }
+        nn += nb[kk]+ng[kk]+ns[kk];
+    }
+
+    nn = 0;
+    for (kk = 0; kk <= N; kk++)
+    {
+        blasfeo_pack_dvec(2*ns[kk], &sol->y[slk_start+nn], 1, out->lam+kk, 2*nb[kk]+2*ng[kk]);
+        blasfeo_dvecsc(2*ns[kk], -1.0, out->lam+kk, 2*nb[kk]+2*ng[kk]);
+        nn += 2*ns[kk];
     }
 }
 
@@ -1616,27 +1707,7 @@ int ocp_qp_osqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *m
     ocp_qp_in *qp_in = qp_in_;
     ocp_qp_out *qp_out = qp_out_;
 
-    int N = qp_in->dim->N;
-    int *nb = qp_in->dim->nb;
-    int *ng = qp_in->dim->ng;
-    int *ns = qp_in->dim->ns;
-
     // print_ocp_qp_dims(qp_in->dim);
-
-    #if 1
-    for (int ii = 0; ii <= N; ii++)
-    {
-        for (int jj=0; jj<2*ns[ii]; jj++)
-        {
-            if (BLASFEO_DVECEL(qp_in->d+ii, 2*nb[ii]+2*ng[ii]+jj)!=0.0)
-            {
-                printf("\nOSQP interface can not handle lls!=0 and lus!=0 yet: what about implementing it? :)\n");
-                exit(1);
-            }
-        }
-    }
-    #endif
-
     // print_ocp_qp_in(qp_in);
 
     qp_info *info = (qp_info *) qp_out->misc;
