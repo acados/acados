@@ -147,6 +147,48 @@ def run_closed_loop_simulation(use_custom_update: bool, n_executions: int = 1):
     del zoroMPC
 
 
+
+def solve_single_zoro_problem_visualize_uncertainty():
+    cfg_zo = MPCParam()
+    cfg_zo.use_custom_update = True
+    cfg_zo.zoRO_iter = 20
+    zoroMPC = ZoroMPCSolver(cfg_zo, output_P_matrices=True)
+
+    # Reference trajectory
+    spline_control_points = np.array([[-2.0, 2.0],
+                               [0.0, 0.0],
+                               [2.0, 0.0],
+                               [4.0, 0.0],
+                               [6.0, 0.0],
+                               [8.0, 2.0],
+                               [8.0, 4.0],
+                               [8.0, 6.0],
+                               [8.0, 8.0]])
+    spline_seg_length = np.array([0.0, np.pi, 2.0, 2.0, 2.0, np.pi, 2.0, 2.0, 2.0])
+    track_spline = TrackSpline(spline_control_points, spline_seg_length)
+    cfg_path = PathTrackingParam()
+    path_tracking_solver = NominalPathTrackingSolver(track_spline, cfg_path=cfg_path, cfg_traj=cfg_zo)
+    x_init = np.array([0.0, cfg_path._v_s_0])
+    x_e = np.array([1.0, cfg_path._v_s_e])
+    path_tracking_solver.solve(x_init=x_init, x_e=x_e)
+
+    # zoro solution
+    x0 = path_tracking_solver.x_robot_ref[70,:]
+    x_ref_interp, u_ref_interp = path_tracking_solver.interpolate_reference_trajectory(robot_state=x0)
+    u_opt, status = zoroMPC.solve(x_current=x0, y_ref = np.hstack((x_ref_interp, u_ref_interp)),
+                    obs_position=cfg_zo.obs_pos.flatten(), obs_radius=cfg_zo.obs_radius)
+
+    # get solution
+    x_opt = np.zeros((cfg_zo.n_hrzn+1, cfg_zo.nx))
+    for i in range(cfg_zo.n_hrzn+1):
+        x_opt[i, :] = zoroMPC.acados_ocp_solver.get(i, "x")
+
+    print(f"x_opt = {x_opt}")
+    print(f"status = {status}")
+    plot_trajectory(cfg_zo, x_ref_interp, x_opt,
+                    P_matrices=zoroMPC.ocp.zoro_description.backoff_scaling_gamma**2 * zoroMPC.P_mats)
+
+
 def plot_result_trajectory(n_executions: int, use_custom_update=True):
     results_filename = get_results_filename(use_custom_update, n_executions)
     results = load_results(results_filename)
@@ -191,3 +233,5 @@ if __name__ == "__main__":
 
     # plot_result_trajectory(n_executions=n_executions, use_custom_update=True)
     # timing_comparison()
+
+    solve_single_zoro_problem_visualize_uncertainty()
