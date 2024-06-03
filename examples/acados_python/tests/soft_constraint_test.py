@@ -40,8 +40,10 @@ import scipy.linalg
 import itertools
 
 SOFT_CONSTRAINT_TYPES = ['bx', 'h']
-TOL = 1E-6
+SOLVER_TOL = 1e-7
 N = 20
+TOL_CLOSED_LOOP_TEST = 5e-5
+PLOT_RESULT = False
 
 QP_SOLVERS = ('PARTIAL_CONDENSING_HPIPM', \
                 'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_HPIPM', \
@@ -135,7 +137,7 @@ def run_closed_loop_experiment(soft_constr_type='bx', verbose=False, qp_solver='
     ocp.solver_options.integrator_type = 'ERK'
     ocp.solver_options.tf = Tf
     ocp.solver_options.nlp_solver_type = 'SQP'
-    ocp.solver_options.tol = 1e-1 * TOL
+    ocp.solver_options.tol = SOLVER_TOL
     ocp.solver_options.nlp_solver_ext_qp_res = 1
 
     ocp.solver_options.qp_solver_warm_start = 0
@@ -191,9 +193,9 @@ def run_closed_loop_experiment(soft_constr_type='bx', verbose=False, qp_solver='
     su = acados_ocp_solver.get(1, "su")
     print("sl", sl, "su", su)
 
-    # plot results
-    dt = Tf / N
-    plot_pendulum(np.linspace(0, Nsim*dt, Nsim+1), Fmax, simU, simX, latexify=False)
+    if PLOT_RESULT:
+        dt = Tf / N
+        plot_pendulum(np.linspace(0, Nsim*dt, Nsim+1), Fmax, simU, simX, latexify=False)
 
     # store results
     np.savetxt(f'test_results/simX_soft_formulation_{soft_constr_type}_{qp_solver}', simX)
@@ -229,13 +231,13 @@ def main():
 
         print(f"soft constraint example: formulation {soft_constr_type} with {qp_solver} deviates from reference by {error_xu}")
 
-        if error_xu > TOL:
-            raise Exception(f"soft constraint example: formulations should return same solution up to {TOL:.2e}, got error_x {error_x}, error_u {error_u} for {soft_constr_type}, {qp_solver}")
+        if error_xu > TOL_CLOSED_LOOP_TEST:
+            raise Exception(f"soft constraint example: formulations should return same solution up to {TOL_CLOSED_LOOP_TEST:.2e}, got error_x {error_x}, error_u {error_u} for {soft_constr_type}, {qp_solver}")
 
         if any(sqp_iter != sqp_iter_ref):
             raise Exception(f"all formulations should take the same number of SQP iterations.")
 
-    print(f"soft constraint example: SUCCESS, got same solutions for equivalent formulations up to tolerance {TOL:.2e}")
+    print(f"soft constraint example: SUCCESS, got same solutions for equivalent formulations up to tolerance {TOL_CLOSED_LOOP_TEST:.2e}")
 
 
 
