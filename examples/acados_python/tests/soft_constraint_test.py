@@ -45,7 +45,7 @@ N = 20
 
 QP_SOLVERS = ('PARTIAL_CONDENSING_HPIPM', \
                 'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_HPIPM', \
-                'FULL_CONDENSING_DAQP'
+                'FULL_CONDENSING_DAQP', 'PARTIAL_CONDENSING_OSQP'
                 )
 # no soft constraint support:
 # 'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP', \
@@ -139,7 +139,7 @@ def run_closed_loop_experiment(soft_constr_type='bx', verbose=False, qp_solver='
     ocp.solver_options.nlp_solver_ext_qp_res = 1
 
     ocp.solver_options.qp_solver_warm_start = 0
-    ocp.solver_options.qp_solver_iter_max = 200
+    ocp.solver_options.qp_solver_iter_max = 1000
 
     json_filename = 'pendulum_soft_constraints.json'
     acados_ocp_solver = AcadosOcpSolver(ocp, json_file = json_filename)
@@ -205,7 +205,6 @@ def run_closed_loop_experiment(soft_constr_type='bx', verbose=False, qp_solver='
     del acados_ocp_solver
 
 def main():
-    # import pdb; pdb.set_trace()
     for (soft_constr_type, qp_solver) in itertools.product(SOFT_CONSTRAINT_TYPES, QP_SOLVERS):
         run_closed_loop_experiment(soft_constr_type=soft_constr_type, qp_solver=qp_solver)
 
