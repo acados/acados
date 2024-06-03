@@ -291,6 +291,3 @@ plot(t, cost_sim)
 legend('the cost curve')
 ylabel('cost')
 xlabel('time [s]')
-
-%% go embedded to generate templated C code
-% ocp.generate_c_code;
