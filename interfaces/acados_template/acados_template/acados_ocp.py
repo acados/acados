@@ -1226,8 +1226,15 @@ class AcadosOcp:
 
         return
 
+    def get_casadi_symbol(self, x):
+        if isinstance(x, ca.MX):
+            return ca.MX.sym
+        elif isinstance(x, ca.SX):
+            return ca.SX.sym
+        else:
+            raise TypeError("Expected casadi SX or MX.")
 
-    def translate_to_feasibility_problem(self, keep_x0=False, keep_cost=False) -> None:
+    def translate_to_feasibility_problem(self, keep_x0=False, keep_cost=False, parametric_x0=False) -> None:
         """
         Translate an OCP to a feasibility problem by removing all cost term and then formulating all constraints as L2 penalties.
 
@@ -1304,18 +1311,44 @@ class AcadosOcp:
         model.con_r_expr_e = None
         model.con_r_in_phi_e = None
 
+        # Convert initial conditions to l2 penalty
+        if parametric_x0:
+            symbol = self.get_casadi_symbol(self.model.x)
+            param_lbx0 = symbol('x0', len(constraints.idxbx_0))
+            if keep_x0:
+                param_ubx0 = []
+            else:
+                param_ubx0 = symbol('x0', len(constraints.idxbx_0))
+            model.p = ca.vertcat(model.p, param_lbx0, param_ubx0)
+
+            # Set parameters
+            if keep_x0:
+                self.parameter_values = constraints.lbx_0
+            else:
+                self.parameter_values = np.concatenate((constraints.lbx_0, constraints.ubx_0))
+
+
         expr_bound_list_0 = [
             (model.u[constraints.idxbu], constraints.lbu, constraints.ubu),
             (model.con_h_expr_0, constraints.lh_0, constraints.uh_0),
         ]
 
+
+
         if keep_x0:
             if constraints.has_x0:
-                new_constraints.x0 = constraints.lbx_0
+                if parametric_x0 and constraints.has_x0:
+                    # define parameter
+                    new_constraints.x0 = param_lbx0
+                else:
+                    new_constraints.x0 = constraints.lbx_0
             else:
                 raise NotImplementedError("translate_to_feasibility_problem: keep_x0 not defined for problems without x0 constraints.")
         else:
-            expr_bound_list_0.append((model.x[constraints.idxbx_0], constraints.lbx_0, constraints.ubx_0))
+            if parametric_x0 and constraints.has_x0:
+                expr_bound_list_0.append((model.x[constraints.idxbx_0], param_lbx0, param_ubx0))
+            else:
+                expr_bound_list_0.append((model.x[constraints.idxbx_0], constraints.lbx_0, constraints.ubx_0))
 
         if casadi_length(model.con_phi_expr_0) > 0:
             phi_o_r_expr_0 = ca.substitute(model.con_phi_expr_0, model.con_r_in_phi_0, model.con_r_expr_0)
