@@ -124,10 +124,10 @@ def run_closed_loop_experiment(soft_constr_type='bx', verbose=False, qp_solver='
     else:
         raise Exception(f"soft_constr_type must be 'bx', or 'h', got {soft_constr_type}.")
 
-    ocp.cost.zl = 200*np.ones((1,))
-    ocp.cost.Zl = 1*np.ones((1,))
-    ocp.cost.zu = 200*np.ones((1,))
-    ocp.cost.Zu = 1*np.ones((1,))
+    ocp.cost.zl = 50*np.ones((1,))
+    ocp.cost.Zl = 10*np.ones((1,))
+    ocp.cost.zu = 50*np.ones((1,))
+    ocp.cost.Zu = 10*np.ones((1,))
 
     # set options
     ocp.solver_options.qp_solver = qp_solver
@@ -166,7 +166,7 @@ def run_closed_loop_experiment(soft_constr_type='bx', verbose=False, qp_solver='
 
         if status != 0:
             acados_ocp_solver.print_statistics()
-            raise Exception('acados acados_ocp_solver returned status {}. Exiting.'.format(status))
+            raise Exception(f'acados acados_ocp_solver returned status {status} in closed-loop problem {i}. Exiting.')
 
         qp_iter[i] = np.sum(acados_ocp_solver.get_stats('qp_iter'))
         sqp_iter[i] = acados_ocp_solver.get_stats('sqp_iter')
@@ -179,7 +179,7 @@ def run_closed_loop_experiment(soft_constr_type='bx', verbose=False, qp_solver='
 
         status = acados_integrator.solve()
         if status != 0:
-            raise Exception('acados integrator returned status {}. Exiting.'.format(status))
+            raise Exception(f'acados integrator returned status {status} in closed-loop problem {i}. Exiting.')
 
         # update state
         xcurrent = acados_integrator.get("x")
