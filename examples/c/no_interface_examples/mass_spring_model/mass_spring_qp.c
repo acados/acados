@@ -57,7 +57,8 @@
 * masses. The system is sampled with sampling time Ts.
 ******************************************************************************************/
 
-static void mass_spring_system(double Ts, int nx, int nu, double *A, double *B, double *b) {
+static void mass_spring_system(double Ts, int nx, int nu, double *A, double *B, double *b)
+{
 
     int nx2 = nx * nx;
 

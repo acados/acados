@@ -668,6 +668,6 @@ void ocp_qp_compute_t(ocp_qp_in *qp_in, ocp_qp_out *qp_out)
             }
         }
 
-        blasfeo_dveccp(2*ns[ii], qp_out->ux+ii, nu[ii]+nx[ii], qp_out->t+ii, 2*nb[ii]+2*ng[ii]);
+        blasfeo_daxpy(2*ns[ii], -1.0, qp_in->d+ii, 2*nb[ii]+2*ng[ii], qp_out->ux+ii, nu[ii]+nx[ii], qp_out->t+ii, 2*nb[ii]+2*ng[ii]);
     }
 }
