@@ -104,7 +104,7 @@ def main():
     ocp.solver_options.tf = Tf
 
     if SOLVE_FEASIBILITY_PROBLEM:
-        ocp.translate_to_feasibility_problem()
+        ocp.translate_to_feasibility_problem(parametric_x0=True)
 
     ocp_solver = AcadosOcpSolver(ocp, json_file = 'chen_allgoewer_acados.json')
 
@@ -119,12 +119,12 @@ def main():
         X_init = np.load(f)
         U_init = np.load(f)
 
+    # Solve first problem
     for i in range(N):
         ocp_solver.set(i, "x", X_init[:,i])
         ocp_solver.set(i, "u", U_init[:,i])
     ocp_solver.set(N, "x", X_init[:,N])
 
-    # Solve the problem
     status = ocp_solver.solve()
 
     if status != 0:
@@ -132,7 +132,6 @@ def main():
 
     iter = ocp_solver.get_stats('nlp_iter')
     assert iter == 4, "DDP Solver should converge within 4 iterations!"
-
 
     # get solution
     for i in range(N):
@@ -142,6 +141,32 @@ def main():
 
     plot_trajectory([X_init, sol_X.T], ["Initial guess", "Solution"])
 
+    # Solve second problem
+    sol_X2 = np.zeros((N+1, nx))
+    sol_U2 = np.zeros((N, nu))
+
+    for i in range(N):
+        ocp_solver.set(i, "x", X_init[:,i])
+        ocp_solver.set(i, "u", U_init[:,i])
+    ocp_solver.set(N, "x", X_init[:,N])
+
+    ocp_solver.set(0, 'p', np.concatenate((np.array([0.42, 0.5]),np.array([0.42, 0.5]))))
+
+    status = ocp_solver.solve()
+
+    if status != 0:
+        raise Exception(f'acados returned status {status}.')
+
+    iter = ocp_solver.get_stats('nlp_iter')
+    assert iter == 4, "DDP Solver should converge within 4 iterations!"
+
+    # get solution
+    for i in range(N):
+        sol_X[i,:] = ocp_solver.get(i, "x")
+        sol_U[i,:] = ocp_solver.get(i, "u")
+    sol_X[N,:] = ocp_solver.get(N, "x")
+
+    plot_trajectory([X_init, sol_X.T], ["Initial guess", "Solution"])
 
 if __name__ == '__main__':
     main()
