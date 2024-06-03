@@ -1255,9 +1255,10 @@ class AcadosOcp:
             cost.yref_0 = np.array([])
             cost.yref_e = np.array([])
 
-            model.cost_y_expr = ca.SX.zeros((0, 0))
-            model.cost_y_expr_e = ca.SX.zeros((0, 0))
-            model.cost_y_expr_0 = ca.SX.zeros((0, 0))
+            zeros = model.get_casadi_zeros()
+            model.cost_y_expr = zeros((0, 0))
+            model.cost_y_expr_e = zeros((0, 0))
+            model.cost_y_expr_0 = zeros((0, 0))
 
             cost.W = np.zeros((0, 0))
             cost.W_e = np.zeros((0, 0))

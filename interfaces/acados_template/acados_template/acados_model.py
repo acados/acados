@@ -270,6 +270,14 @@ class AcadosModel():
             return SX.sym
         else:
             raise Exception(f"model.x must be casadi.SX or casadi.MX, got {type(self.x)}")
+        
+    def get_casadi_zeros(self):
+        if isinstance(self.x, MX):
+            return MX.zeros
+        elif isinstance(self.x, SX):
+            return SX.zeros
+        else:
+            raise Exception(f"model.x must be casadi.SX or casadi.MX, got {type(self.x)}")
 
     def make_consistent(self, dims: Union[AcadosOcpDims, AcadosSimDims]) -> None:
 
