@@ -139,7 +139,7 @@ def run_closed_loop_experiment(soft_constr_type='bx', verbose=False, qp_solver='
     ocp.solver_options.nlp_solver_ext_qp_res = 1
 
     ocp.solver_options.qp_solver_warm_start = 0
-    ocp.solver_options.qp_solver_iter_max = 1000
+    ocp.solver_options.qp_solver_iter_max = 10000
 
     json_filename = 'pendulum_soft_constraints.json'
     acados_ocp_solver = AcadosOcpSolver(ocp, json_file = json_filename)
