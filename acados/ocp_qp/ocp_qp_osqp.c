@@ -467,7 +467,7 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_osqp
     for (kk = 0; kk <= N; kk++)
     {
 
-        // compute number of softed box and general constraints
+        // compute number of softed box constraints
         int nsb = 0;
         for (ii=0; ii<nb[kk]; ii++)
         {
@@ -533,16 +533,16 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_osqp
 
             // replicated softed D
             {
-            int itmp = 0;
-            for (ii = 0; ii < ng[kk]; ii++)
-            {
-                if (in->idxs_rev[kk][nb[kk]+ii]>=0) // softed
+                int itmp = 0;
+                for (ii = 0; ii < ng[kk]; ii++)
                 {
-                    mem->A_i[nn] = con_start + row_offset_con + nb[kk] + ng[kk] + nsb + itmp;
-                    nn++;
-                    itmp++;
+                    if (in->idxs_rev[kk][nb[kk]+ii]>=0) // softed
+                    {
+                        mem->A_i[nn] = con_start + row_offset_con + nb[kk] + ng[kk] + nsb + itmp;
+                        nn++;
+                        itmp++;
+                    }
                 }
-            }
             }
 
         }
@@ -610,16 +610,16 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_osqp
 
             // replicated softed C
             {
-            int itmp = 0;
-            for (ii = 0; ii < ng[kk]; ii++)
-            {
-                if (in->idxs_rev[kk][nb[kk]+ii]>=0) // softed
+                int itmp = 0;
+                for (ii = 0; ii < ng[kk]; ii++)
                 {
-                    mem->A_i[nn] = con_start + row_offset_con + nb[kk] + ng[kk] + nsb + itmp;
-                    nn++;
-                    itmp++;
+                    if (in->idxs_rev[kk][nb[kk]+ii]>=0) // softed
+                    {
+                        mem->A_i[nn] = con_start + row_offset_con + nb[kk] + ng[kk] + nsb + itmp;
+                        nn++;
+                        itmp++;
+                    }
                 }
-            }
             }
 
         }
@@ -664,7 +664,7 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_osqp
                 }
                 if(in->idxs_rev[kk][ii]>=0)
                 {
-                itmp++;
+                    itmp++;
                 }
             }
 
