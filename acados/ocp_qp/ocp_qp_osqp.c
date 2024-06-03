@@ -70,7 +70,7 @@ static void print_csc_as_dns(csc *M)
 
     // Initialize matrix of zeros
     c_float *A = (c_float *)c_calloc(M->m * M->n, sizeof(c_float));
-    for(c_int ii=0; ii<M->m*M->n; ii++)
+    for (c_int ii=0; ii<M->m*M->n; ii++)
         A[ii] = 1e30;
 
     // Allocate elements
@@ -90,7 +90,7 @@ static void print_csc_as_dns(csc *M)
     {
         for (j = 0; j < M->n; j++)
         {
-            if(A[j * (M->m) + i]==1e30)
+            if (A[j * (M->m) + i]==1e30)
                 printf("  *      ");
             else
                 printf("%8.4f ", A[j * (M->m) + i]);
@@ -631,9 +631,9 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_osqp
             col++;
 
             // soft constraint
-            for(ii=0; ii<nb[kk]+ng[kk]; ii++)
+            for (ii=0; ii<nb[kk]+ng[kk]; ii++)
             {
-                if(in->idxs_rev[kk][ii]==jj)
+                if (in->idxs_rev[kk][ii]==jj)
                 {
                     mem->A_i[nn] = con_start + row_offset_con + ii;
                     nn++;
@@ -654,15 +654,15 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_osqp
 
             // soft constraint
             int itmp = 0;
-            for(ii=0; ii<nb[kk]+ng[kk]; ii++)
+            for (ii=0; ii<nb[kk]+ng[kk]; ii++)
             {
-                if(in->idxs_rev[kk][ii]==jj)
+                if (in->idxs_rev[kk][ii]==jj)
                 {
                     mem->A_i[nn] = con_start + row_offset_con + nb[kk] + ng[kk] + itmp;
                     nn++;
                     // no break, there could possibly be multiple
                 }
-                if(in->idxs_rev[kk][ii]>=0)
+                if (in->idxs_rev[kk][ii]>=0)
                 {
                     itmp++;
                 }
@@ -812,9 +812,9 @@ static void update_constraints_matrix_data(const ocp_qp_in *in, ocp_qp_osqp_memo
         {
 
             // soft constraint
-            for(ii=0; ii<nb[kk]+ng[kk]; ii++)
+            for (ii=0; ii<nb[kk]+ng[kk]; ii++)
             {
-                if(in->idxs_rev[kk][ii]==jj)
+                if (in->idxs_rev[kk][ii]==jj)
                 {
                     mem->A_x[nn] = 1.0;
                     nn++;
@@ -832,9 +832,9 @@ static void update_constraints_matrix_data(const ocp_qp_in *in, ocp_qp_osqp_memo
         {
 
             // soft constraint
-            for(ii=0; ii<nb[kk]+ng[kk]; ii++)
+            for (ii=0; ii<nb[kk]+ng[kk]; ii++)
             {
-                if(in->idxs_rev[kk][ii]==jj)
+                if (in->idxs_rev[kk][ii]==jj)
                 {
                     mem->A_x[nn] = -1.0;
                     nn++;
@@ -898,7 +898,7 @@ static void update_bounds(const ocp_qp_in *in, ocp_qp_osqp_memory *mem)
         int itmp = 0;
         for (ii = 0; ii < nb[kk] + ng[kk]; ii++)
         {
-            if(in->idxs_rev[kk][ii]==-1) // not softed
+            if (in->idxs_rev[kk][ii]==-1) // not softed
             {
                 mem->u[nn + ii] = -BLASFEO_DVECEL(&in->d[kk], nb[kk]+ng[kk]+ii);
             }
@@ -1422,7 +1422,7 @@ static int osqp_init_data(OSQPData *data, OSQPSettings *settings, OSQPWorkspace 
 
     // Initialize linear system solver structure
     // NOTE: mallocs, memory is freed in ocp_qp_osqp_terminate
-    if(init_linsys_solver(&(work->linsys_solver), work->data->P, work->data->A, work->settings->sigma,
+    if (init_linsys_solver(&(work->linsys_solver), work->data->P, work->data->A, work->settings->sigma,
                                              work->rho_vec, work->settings->linsys_solver, 0)){
         c_eprint("Failed to initialize %s linear system solver",
                  LINSYS_SOLVER_NAME[work->settings->linsys_solver]);
@@ -1559,12 +1559,12 @@ void ocp_qp_osqp_memory_get(void *config_, void *mem_, const char *field, void* 
     // qp_solver_config *config = config_;
     ocp_qp_osqp_memory *mem = mem_;
 
-    if(!strcmp(field, "time_qp_solver_call"))
+    if (!strcmp(field, "time_qp_solver_call"))
     {
         double *tmp_ptr = value;
         *tmp_ptr = mem->time_qp_solver_call;
     }
-    else if(!strcmp(field, "iter"))
+    else if (!strcmp(field, "iter"))
     {
         int *tmp_ptr = value;
         *tmp_ptr = mem->iter;
@@ -1660,7 +1660,7 @@ static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out, ocp_qp_osqp_mem
         int itmp = 0;
         for (ii = 0; ii < nb[kk]+ng[kk]; ii++)
         {
-            if(in->idxs_rev[kk][ii]==-1) // not softed: two sided
+            if (in->idxs_rev[kk][ii]==-1) // not softed: two sided
             {
                 double lam = sol->y[con_start+nn+ii];
                 if (lam <= 0)
