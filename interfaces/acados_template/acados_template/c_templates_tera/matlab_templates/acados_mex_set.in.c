@@ -110,7 +110,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         if (s0 > N)
         {
             sprintf(buffer, "ocp_set: N < specified stage = %d\n", s0);
-            mexErrMsgTxt(buffer);            
+            mexErrMsgTxt(buffer);
         }
         se = s0 + 1;
     }
