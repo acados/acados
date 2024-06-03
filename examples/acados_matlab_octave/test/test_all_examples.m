@@ -35,6 +35,7 @@ start_dir = pwd;
 
 % list the examples you would like to test
 targets = {
+%     '../control_rates/main.m';
 %     '../generic_dyn_disc/disc_dyn_example_ocp.m';
 %     '../generic_external_cost/external_cost_example_ocp.m';
 %     '../getting_started/extensive_example_ocp.m';
@@ -54,12 +55,12 @@ targets = {
 %     '../pendulum_on_cart_model/example_closed_loop.m';
 %     '../pendulum_on_cart_model/example_ocp.m';
 %     '../pendulum_on_cart_model/example_ocp_custom_hess.m';
-%     '../pendulum_on_cart_model/example_ocp_param_sens.m';  % Unable to resolve the name ocp.t_ocp.eval_param_sens.
+%     '../pendulum_on_cart_model/example_ocp_param_sens.m';
 %     '../pendulum_on_cart_model/example_ocp_reg.m';
 %     '../pendulum_on_cart_model/example_sim.m';
-%     '../pendulum_on_cart_model/example_solution_sens_closed_loop.m';  % Unable to resolve the name ocp.t_ocp.eval_param_sens.
+%     '../pendulum_on_cart_model/example_solution_sens_closed_loop.m';
 %     '../pendulum_on_cart_model/experiment_dae_formulation.m';
-%     '../race_cars/main.m';  % acados returns status 4
+%     '../race_cars/main.m';
 %     '../simple_dae_model/example_ocp.m';
 %     '../swarming/example_closed_loop.m';
 %     '../swarming/example_ocp.m';
@@ -68,20 +69,20 @@ targets = {
 %     '../wind_turbine_nx6/example_ocp.m';
 %     '../wind_turbine_nx6/example_sim.m';
 
-%     './test_checks.m';  % SHOULD FAIL, DOES
-%     './test_mhe_lorentz.m';  % OK
-%     './test_ocp_OSQP.m';  % CRASH - solver not installed
-%     './test_ocp_linear_mass_spring.m';  % OK 
-%     './test_ocp_pendulum_dae.m';  % OK
-%     './test_ocp_pendulum_on_cart.m';  % CRASH - solver not installed
-%     './test_ocp_qpdunes.m';  % CRASH - solver not installed
-%     './test_ocp_simple_dae.m';  % OK
-%     './test_ocp_wtnx6.m';  % FAIL - when not in installation folder?
-%     './test_sens_adj.m';  % OK
-%     './test_sens_forw.m';  % OK
-%     './test_sens_hess.m';  % OK
-%     './test_sim_dae.m';  % OK
-%     './test_target_selector.m'  % OK
+%     './test_checks.m';
+%     './test_mhe_lorentz.m';
+%     './test_ocp_OSQP.m';
+%     './test_ocp_linear_mass_spring.m';
+%     './test_ocp_pendulum_dae.m';
+%     './test_ocp_pendulum_on_cart.m';
+%     './test_ocp_qpdunes.m';
+%     './test_ocp_simple_dae.m';
+%     './test_ocp_wtnx6.m';
+%     './test_sens_adj.m';
+%     './test_sens_forw.m';
+%     './test_sens_hess.m';
+%     './test_sim_dae.m';
+%     './test_target_selector.m'
 };
 
 test_ok = zeros(1,length(targets));  % keep track of test results
