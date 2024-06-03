@@ -124,9 +124,9 @@ def run_closed_loop_experiment(soft_constr_type='bx', verbose=False, qp_solver='
     else:
         raise Exception(f"soft_constr_type must be 'bx', or 'h', got {soft_constr_type}.")
 
-    ocp.cost.zl = 2000*np.ones((1,))
+    ocp.cost.zl = 200*np.ones((1,))
     ocp.cost.Zl = 1*np.ones((1,))
-    ocp.cost.zu = 2000*np.ones((1,))
+    ocp.cost.zu = 200*np.ones((1,))
     ocp.cost.Zu = 1*np.ones((1,))
 
     # set options
