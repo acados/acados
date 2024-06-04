@@ -1333,14 +1333,13 @@ class AcadosOcp:
 
         # Define initial condition expression
         if keep_x0:
-            if constraints.has_x0:
-                if parametric_x0:
-                    # define parameter
-                    new_constraints.x0 = param_lbx0
-                else:
-                    new_constraints.x0 = constraints.lbx_0
-            else:
+            if not constraints.has_x0:
                 raise NotImplementedError("translate_to_feasibility_problem: keep_x0 not defined for problems without x0 constraints.")
+            if parametric_x0:
+                # define parameter
+                new_constraints.x0 = param_lbx0
+            else:
+                new_constraints.x0 = constraints.lbx_0
         else:
             if parametric_x0:
                 expr_bound_list_0.append((model.x[constraints.idxbx_0], param_lbx0, param_ubx0))
