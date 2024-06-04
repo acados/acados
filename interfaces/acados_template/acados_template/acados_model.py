@@ -320,6 +320,10 @@ class AcadosModel():
 
 
     def augment_model_with_polynomial_control(self, degree: int) -> None:
+        print("Deprecation warning: augment_model_with_polynomial_control() is deprecated and has been renamed to reformulate_with_polynomial_control().")
+        self.reformulate_with_polynomial_control()
+
+    def reformulate_with_polynomial_control(self, degree: int) -> None:
         """
         Augment the model with polynomial control.
 
