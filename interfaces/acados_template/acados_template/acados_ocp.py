@@ -1226,12 +1226,19 @@ class AcadosOcp:
 
         return
 
-    def translate_to_feasibility_problem(self, keep_x0=False, keep_cost=False, parametric_x0=False) -> None:
+    def translate_to_feasibility_problem(self,
+                                        keep_x0: bool=False,
+                                        keep_cost: bool=False,
+                                        parametric_x0: bool=False) -> None:
         """
         Translate an OCP to a feasibility problem by removing all cost term and then formulating all constraints as L2 penalties.
 
         Note: all weights are set to 1.0 for now.
         Options to specify weights should be implemented later for advanced use cases.
+
+        :param keep_x0: if True, x0 constraint is kept as a constraint
+        :param keep_cost: if True, cost is not removed before formulating constraints as penalties
+        :param parametric_x0: if True, replace the value of the initial state constraint with a parameter that is append to the model parameters.
         """
 
         self.model.make_consistent(self.dims) # sets the correct MX/SX defaults
@@ -1309,7 +1316,7 @@ class AcadosOcp:
             (model.u[constraints.idxbu], constraints.lbu, constraints.ubu),
             (model.con_h_expr_0, constraints.lh_0, constraints.uh_0),
         ]
-        
+
         # Define parameter symbols and values
         if parametric_x0:
             symbol = model.get_casadi_symbol()
@@ -1320,7 +1327,7 @@ class AcadosOcp:
             else:
                 param_ubx0 = symbol('ubx0', len(constraints.idxbx_0))
                 new_params = np.concatenate((constraints.lbx_0, constraints.ubx_0))
-            
+
             model.p = ca.vertcat(model.p, param_lbx0, param_ubx0)
             self.parameter_values = np.concatenate((self.parameter_values, new_params))
 
