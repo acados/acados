@@ -99,7 +99,7 @@ def create_ocp_formulation_without_opts(cost_type, degree_u_polynom, explicit_sy
 
     ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
-    evaluate_polynomial_u_fun = model.augment_model_with_polynomial_control(degree_u_polynom)
+    evaluate_polynomial_u_fun = model.reformulate_with_polynomial_control(degree_u_polynom)
 
     return ocp, evaluate_polynomial_u_fun
 
