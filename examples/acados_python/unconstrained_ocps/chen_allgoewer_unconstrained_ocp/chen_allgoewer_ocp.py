@@ -33,7 +33,7 @@ from chen_allgoewer_system_model import export_chen_allgoewer_model
 import numpy as np
 from utils import plot_trajectory
 
-def main():
+def main(plot_solution = False):
 
     # The flag denotes, if the problem should be transformed into a feasibility
     # problem, or if the unconstrained OCP should be solved.
@@ -119,7 +119,6 @@ def main():
         X_init = np.load(f)
         U_init = np.load(f)
 
-    wanted = False
     initial_conditions = [np.array([0.42, 0.45]), np.array([0.42, 0.5])]
     for initial_condition in initial_conditions:
 
@@ -147,8 +146,8 @@ def main():
 
         assert np.allclose(sol_X[0,:].squeeze(), initial_condition), "Initial condition does not coincide with parameter!"
 
-        if wanted:
+        if plot_solution:
             plot_trajectory([X_init, sol_X.T], ["Initial guess", "Solution"])
 
 if __name__ == '__main__':
-    main()
+    main(plot_solution = False)
