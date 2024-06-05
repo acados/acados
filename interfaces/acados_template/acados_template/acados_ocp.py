@@ -1331,8 +1331,7 @@ class AcadosOcp:
             if not constraints.has_x0:
                 raise NotImplementedError("translate_to_feasibility_problem: keep_x0 not defined for problems without x0 constraints.")
             if parametric_x0:
-                # define parameter
-                new_constraints.x0 = param_x0
+                raise NotImplementedError("translate_to_feasibility_problem: parametric_x0 cannot be chosen together with keep_x0. x0 can be updated manually without a parameter.")
             else:
                 new_constraints.x0 = constraints.lbx_0
         else:
