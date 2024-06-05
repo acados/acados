@@ -1238,7 +1238,7 @@ class AcadosOcp:
 
         :param keep_x0: if True, x0 constraint is kept as a constraint
         :param keep_cost: if True, cost is not removed before formulating constraints as penalties
-        :param parametric_x0: if True, replace the value of the initial state constraint with a parameter that is append to the model parameters.
+        :param parametric_x0: if True, replace the value of the initial state constraint with a parameter that is appended to the model parameters.
         """
 
         self.model.make_consistent(self.dims) # sets the correct MX/SX defaults
@@ -1320,15 +1320,10 @@ class AcadosOcp:
         # Define parameter symbols and values
         if parametric_x0:
             symbol = model.get_casadi_symbol()
-            param_lbx0 = symbol('lbx0', len(constraints.idxbx_0))
-            if keep_x0:
-                param_ubx0 = []
-                new_params = constraints.lbx_0
-            else:
-                param_ubx0 = symbol('ubx0', len(constraints.idxbx_0))
-                new_params = np.concatenate((constraints.lbx_0, constraints.ubx_0))
+            param_x0 = symbol('lbx0', len(constraints.idxbx_0))
+            new_params = constraints.lbx_0
 
-            model.p = ca.vertcat(model.p, param_lbx0, param_ubx0)
+            model.p = ca.vertcat(model.p, param_x0)
             self.parameter_values = np.concatenate((self.parameter_values, new_params))
 
         # Define initial condition expression
@@ -1337,12 +1332,12 @@ class AcadosOcp:
                 raise NotImplementedError("translate_to_feasibility_problem: keep_x0 not defined for problems without x0 constraints.")
             if parametric_x0:
                 # define parameter
-                new_constraints.x0 = param_lbx0
+                new_constraints.x0 = param_x0
             else:
                 new_constraints.x0 = constraints.lbx_0
         else:
             if parametric_x0:
-                expr_bound_list_0.append((model.x[constraints.idxbx_0], param_lbx0, param_ubx0))
+                expr_bound_list_0.append((model.x[constraints.idxbx_0], param_x0, param_x0))
             else:
                 expr_bound_list_0.append((model.x[constraints.idxbx_0], constraints.lbx_0, constraints.ubx_0))
 

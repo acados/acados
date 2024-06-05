@@ -128,7 +128,7 @@ def main(plot_solution = False):
             ocp_solver.set(i, "u", U_init[:,i])
         ocp_solver.set(N, "x", X_init[:,N])
 
-        ocp_solver.set(0, 'p', np.concatenate((initial_condition,initial_condition)))
+        ocp_solver.set(0, 'p', initial_condition)
 
         status = ocp_solver.solve()
 
