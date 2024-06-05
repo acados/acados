@@ -33,7 +33,7 @@ from chen_allgoewer_system_model import export_chen_allgoewer_model
 import numpy as np
 from utils import plot_trajectory
 
-def main():
+def main(plot_solution = False):
 
     # The flag denotes, if the problem should be transformed into a feasibility
     # problem, or if the unconstrained OCP should be solved.
@@ -43,7 +43,7 @@ def main():
     ocp = AcadosOcp()
 
     # set model
-    model = export_chen_allgoewer_model()
+    model = export_chen_allgoewer_model(use_SX=False)
     ocp.model = model
 
     Tf = 5.0
@@ -104,7 +104,7 @@ def main():
     ocp.solver_options.tf = Tf
 
     if SOLVE_FEASIBILITY_PROBLEM:
-        ocp.translate_to_feasibility_problem()
+        ocp.translate_to_feasibility_problem(parametric_x0=True)
 
     ocp_solver = AcadosOcpSolver(ocp, json_file = 'chen_allgoewer_acados.json')
 
@@ -119,29 +119,35 @@ def main():
         X_init = np.load(f)
         U_init = np.load(f)
 
-    for i in range(N):
-        ocp_solver.set(i, "x", X_init[:,i])
-        ocp_solver.set(i, "u", U_init[:,i])
-    ocp_solver.set(N, "x", X_init[:,N])
+    initial_conditions = [np.array([0.42, 0.45]), np.array([0.42, 0.5])]
+    for initial_condition in initial_conditions:
 
-    # Solve the problem
-    status = ocp_solver.solve()
+        # Initial guess
+        for i in range(N):
+            ocp_solver.set(i, "x", X_init[:,i])
+            ocp_solver.set(i, "u", U_init[:,i])
+        ocp_solver.set(N, "x", X_init[:,N])
 
-    if status != 0:
-        raise Exception(f'acados returned status {status}.')
+        ocp_solver.set(0, 'p', initial_condition)
 
-    iter = ocp_solver.get_stats('nlp_iter')
-    assert iter == 4, "DDP Solver should converge within 4 iterations!"
+        status = ocp_solver.solve()
 
+        if status != 0:
+            raise Exception(f'acados returned status {status}.')
 
-    # get solution
-    for i in range(N):
-        sol_X[i,:] = ocp_solver.get(i, "x")
-        sol_U[i,:] = ocp_solver.get(i, "u")
-    sol_X[N,:] = ocp_solver.get(N, "x")
+        iter = ocp_solver.get_stats('nlp_iter')
+        assert iter == 4, "DDP Solver should converge within 4 iterations!"
 
-    plot_trajectory([X_init, sol_X.T], ["Initial guess", "Solution"])
+        # get solution
+        for i in range(N):
+            sol_X[i,:] = ocp_solver.get(i, "x")
+            sol_U[i,:] = ocp_solver.get(i, "u")
+        sol_X[N,:] = ocp_solver.get(N, "x")
 
+        assert np.allclose(sol_X[0,:].squeeze(), initial_condition), "Initial condition does not coincide with parameter!"
+
+        if plot_solution:
+            plot_trajectory([X_init, sol_X.T], ["Initial guess", "Solution"])
 
 if __name__ == '__main__':
-    main()
+    main(plot_solution = False)

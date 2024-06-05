@@ -29,9 +29,9 @@
 #
 
 from acados_template import AcadosModel
-from casadi import SX, vertcat
+from casadi import SX, MX, vertcat
 
-def export_chen_allgoewer_model() -> AcadosModel:
+def export_chen_allgoewer_model(use_SX=True) -> AcadosModel:
 
     model_name = 'chen_allgoewer_ode'
 
@@ -39,17 +39,24 @@ def export_chen_allgoewer_model() -> AcadosModel:
     mu = 0.7
 
     # set up states & controls
-    x1 = SX.sym('x1')
-    x2 = SX.sym('x2')
+    if use_SX:
+        x1 = SX.sym('x1')
+        x2 = SX.sym('x2')
+
+        u = SX.sym('u')
+        # xdot
+        x1_dot = SX.sym('x1_dot')
+        x2_dot = SX.sym('x2_dot')
+    else:
+        x1 = MX.sym('x1')
+        x2 = MX.sym('x2')
+
+        u = MX.sym('u')
+        # xdot
+        x1_dot = MX.sym('x1_dot')
+        x2_dot = MX.sym('x2_dot')
 
     x = vertcat(x1, x2)
-
-    u = SX.sym('u')
-
-    # xdot
-    x1_dot = SX.sym('x1_dot')
-    x2_dot = SX.sym('x2_dot')
-
     xdot = vertcat(x1_dot, x2_dot)
 
     # dynamics

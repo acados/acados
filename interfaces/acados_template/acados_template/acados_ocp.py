@@ -1226,13 +1226,19 @@ class AcadosOcp:
 
         return
 
-
-    def translate_to_feasibility_problem(self, keep_x0=False, keep_cost=False) -> None:
+    def translate_to_feasibility_problem(self,
+                                        keep_x0: bool=False,
+                                        keep_cost: bool=False,
+                                        parametric_x0: bool=False) -> None:
         """
         Translate an OCP to a feasibility problem by removing all cost term and then formulating all constraints as L2 penalties.
 
         Note: all weights are set to 1.0 for now.
         Options to specify weights should be implemented later for advanced use cases.
+
+        :param keep_x0: if True, x0 constraint is kept as a constraint
+        :param keep_cost: if True, cost is not removed before formulating constraints as penalties
+        :param parametric_x0: if True, replace the value of the initial state constraint with a parameter that is appended to the model parameters.
         """
 
         self.model.make_consistent(self.dims) # sets the correct MX/SX defaults
@@ -1255,9 +1261,10 @@ class AcadosOcp:
             cost.yref_0 = np.array([])
             cost.yref_e = np.array([])
 
-            model.cost_y_expr = ca.SX.zeros((0, 0))
-            model.cost_y_expr_e = ca.SX.zeros((0, 0))
-            model.cost_y_expr_0 = ca.SX.zeros((0, 0))
+            zeros = model.get_casadi_zeros()
+            model.cost_y_expr = zeros((0, 0))
+            model.cost_y_expr_e = zeros((0, 0))
+            model.cost_y_expr_0 = zeros((0, 0))
 
             cost.W = np.zeros((0, 0))
             cost.W_e = np.zeros((0, 0))
@@ -1303,16 +1310,27 @@ class AcadosOcp:
         model.con_r_expr_e = None
         model.con_r_in_phi_e = None
 
+        # Convert initial conditions to l2 penalty
+        # Expressions for control constraints on u
         expr_bound_list_0 = [
             (model.u[constraints.idxbu], constraints.lbu, constraints.ubu),
             (model.con_h_expr_0, constraints.lh_0, constraints.uh_0),
         ]
 
+        # initial state constraint
+        if (keep_x0 or parametric_x0) and not constraints.has_x0:
+            raise NotImplementedError("translate_to_feasibility_problem: options keep_x0, parametric_x0 not defined for problems without x0 constraints.")
+        if parametric_x0 and keep_x0:
+            raise NotImplementedError("translate_to_feasibility_problem: parametric_x0 and keep cannot both be True.")
         if keep_x0:
-            if constraints.has_x0:
-                new_constraints.x0 = constraints.lbx_0
-            else:
-                raise NotImplementedError("translate_to_feasibility_problem: keep_x0 not defined for problems without x0 constraints.")
+            new_constraints.x0 = constraints.lbx_0
+        elif parametric_x0:
+            symbol = model.get_casadi_symbol()
+            param_x0 = symbol('param_x0', len(constraints.idxbx_0))
+            new_params = constraints.lbx_0
+            model.p = ca.vertcat(model.p, param_x0)
+            self.parameter_values = np.concatenate((self.parameter_values, new_params))
+            expr_bound_list_0.append((model.x[constraints.idxbx_0], param_x0, param_x0))
         else:
             expr_bound_list_0.append((model.x[constraints.idxbx_0], constraints.lbx_0, constraints.ubx_0))
 
