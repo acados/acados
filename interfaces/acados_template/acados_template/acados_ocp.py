@@ -1317,28 +1317,22 @@ class AcadosOcp:
             (model.con_h_expr_0, constraints.lh_0, constraints.uh_0),
         ]
 
-        # Define parameter symbols and values
-        if parametric_x0:
+        # initial state constraint
+        if (keep_x0 or parametric_x0) and not constraints.has_x0:
+            raise NotImplementedError("translate_to_feasibility_problem: options keep_x0, parametric_x0 not defined for problems without x0 constraints.")
+        if parametric_x0 and keep_x0:
+            raise NotImplementedError("translate_to_feasibility_problem: parametric_x0 and keep cannot both be True.")
+        if keep_x0:
+            new_constraints.x0 = constraints.lbx_0
+        elif parametric_x0:
             symbol = model.get_casadi_symbol()
-            param_x0 = symbol('lbx0', len(constraints.idxbx_0))
+            param_x0 = symbol('param_x0', len(constraints.idxbx_0))
             new_params = constraints.lbx_0
-
             model.p = ca.vertcat(model.p, param_x0)
             self.parameter_values = np.concatenate((self.parameter_values, new_params))
-
-        # Define initial condition expression
-        if keep_x0:
-            if not constraints.has_x0:
-                raise NotImplementedError("translate_to_feasibility_problem: keep_x0 not defined for problems without x0 constraints.")
-            if parametric_x0:
-                raise NotImplementedError("translate_to_feasibility_problem: parametric_x0 cannot be chosen together with keep_x0. x0 can be updated manually without a parameter.")
-            else:
-                new_constraints.x0 = constraints.lbx_0
+            expr_bound_list_0.append((model.x[constraints.idxbx_0], param_x0, param_x0))
         else:
-            if parametric_x0:
-                expr_bound_list_0.append((model.x[constraints.idxbx_0], param_x0, param_x0))
-            else:
-                expr_bound_list_0.append((model.x[constraints.idxbx_0], constraints.lbx_0, constraints.ubx_0))
+            expr_bound_list_0.append((model.x[constraints.idxbx_0], constraints.lbx_0, constraints.ubx_0))
 
         if casadi_length(model.con_phi_expr_0) > 0:
             phi_o_r_expr_0 = ca.substitute(model.con_phi_expr_0, model.con_r_in_phi_0, model.con_r_expr_0)
