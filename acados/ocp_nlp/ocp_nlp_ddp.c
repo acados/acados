@@ -812,6 +812,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             }
             else
             {
+                update_mu(mem->alpha, opts, mem);
                 reg_param_memory = reg_param;
             }
             reg_param = 2*nlp_mem->cost_value*mem->mu;
@@ -1035,10 +1036,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             {
                 // in case line search fails, we do not want to copy trial iterates!
                 copy_ocp_nlp_out(dims, work->nlp_work->tmp_nlp_out, nlp_out);
-            }
-            if (opts->with_adaptive_levenberg_marquardt)
-            {
-                update_mu(mem->alpha, opts, mem);
             }
             mem->time_glob += acados_toc(&timer1);
         }
