@@ -258,6 +258,11 @@ class AcadosOcpSolver:
         self.time_solution_sens_solve = 0.0
         self.time_solution_sens_lin = 0.0
 
+        # store nlp_solver_max_iter value
+        # (needed to raise a warning whenever max_iter is set to a higher value,
+        # since that could cause memory violations when writing to stats)
+        self.__nlp_solver_max_iter = self.solver_options['nlp_solver_max_iter']
+
         # gettable fields
         self.__qp_dynamics_fields = ['A', 'B', 'b']
         self.__qp_cost_fields = ['Q', 'R', 'S', 'q', 'r']
@@ -1426,7 +1431,7 @@ class AcadosOcpSolver:
             - warm_start_first_qp: indicates if first QP in SQP is warm_started
         """
         int_fields = ['print_level', 'rti_phase', 'initialize_t_slacks', 'qp_warm_start',
-                      'line_search_use_sufficient_descent', 'full_step_dual', 'globalization_use_SOC', 'warm_start_first_qp', "as_rti_level"]
+                      'line_search_use_sufficient_descent', 'full_step_dual', 'globalization_use_SOC', 'warm_start_first_qp', "as_rti_level", "max_iter"]
         double_fields = ['step_length', 'tol_eq', 'tol_stat', 'tol_ineq', 'tol_comp', 'alpha_min', 'alpha_reduction',
                          'eps_sufficient_descent', 'qp_tol_stat', 'qp_tol_eq', 'qp_tol_ineq', 'qp_tol_comp', 'qp_tau_min', 'qp_mu0']
         string_fields = ['globalization']
@@ -1454,6 +1459,11 @@ class AcadosOcpSolver:
             raise Exception(f'AcadosOcpSolver.options_set() does not support field \'{field_}\'.\n'\
                 f' Possible values are {fields}.')
 
+
+        if field_ == 'max_iter' and value_ > self.__nlp_solver_max_iter:
+            print('Warning: AcadosOcpSolver.options_set() cannot increase nlp_solver_max_iter' \
+                    f' above initial value {self.__nlp_solver_max_iter} (you have {value_})')
+            return
 
         if field_ == 'rti_phase':
             if value_ < 0 or value_ > 2:
