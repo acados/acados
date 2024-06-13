@@ -2157,7 +2157,35 @@ void ocp_nlp_initialize_t_slacks(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp
     return;
 }
 
-
+void ocp_nlp_add_levenberg_marquardt_term(ocp_nlp_config *config, ocp_nlp_dims *dims,
+    ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem,
+    ocp_nlp_workspace *work)
+{
+    // Only add the Levenberg-Marquardt term when it is bigger than zero
+    if (opts->levenberg_marquardt > 0.0)
+    {
+        int N = dims->N;
+        int *nx = dims->nx;
+        int *nu = dims->nu;
+        for (int i = 0; i <= N; i++)
+        {
+            if (i < N)
+            {
+                // Levenberg Marquardt term: Ts[i] * levenberg_marquardt * eye()
+                if (mem->compute_hess && opts->levenberg_marquardt > 0.0)
+                    blasfeo_ddiare(nu[i] + nx[i], in->Ts[i] * opts->levenberg_marquardt,
+                                mem->qp_in->RSQrq+i, 0, 0);
+            }
+            else
+            {
+                // Levenberg Marquardt term: 1.0 * levenberg_marquardt * eye()
+                if (mem->compute_hess && opts->levenberg_marquardt > 0.0)
+                    blasfeo_ddiare(nu[i] + nx[i], opts->levenberg_marquardt,
+                                mem->qp_in->RSQrq+i, 0, 0);
+            }
+        }
+    } // else: do nothing
+}
 
 void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
     ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem,
@@ -2182,22 +2210,22 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
         if (i < N)
         {
-            // Levenberg Marquardt term: Ts[i] * levenberg_marquardt * eye()
-            if (mem->compute_hess && opts->levenberg_marquardt > 0.0)
-                blasfeo_ddiare(nu[i] + nx[i], in->Ts[i] * opts->levenberg_marquardt,
-                               mem->qp_in->RSQrq+i, 0, 0);
+            // // Levenberg Marquardt term: Ts[i] * levenberg_marquardt * eye()
+            // if (mem->compute_hess && opts->levenberg_marquardt > 0.0)
+            //     blasfeo_ddiare(nu[i] + nx[i], in->Ts[i] * opts->levenberg_marquardt,
+            //                    mem->qp_in->RSQrq+i, 0, 0);
 
             // dynamics
             config->dynamics[i]->update_qp_matrices(config->dynamics[i], dims->dynamics[i],
                     in->dynamics[i], opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
         }
-        else
-        {
-            // Levenberg Marquardt term: 1.0 * levenberg_marquardt * eye()
-            if (mem->compute_hess && opts->levenberg_marquardt > 0.0)
-                blasfeo_ddiare(nu[i] + nx[i], opts->levenberg_marquardt,
-                               mem->qp_in->RSQrq+i, 0, 0);
-        }
+        // else
+        // {
+        //     // Levenberg Marquardt term: 1.0 * levenberg_marquardt * eye()
+        //     if (mem->compute_hess && opts->levenberg_marquardt > 0.0)
+        //         blasfeo_ddiare(nu[i] + nx[i], opts->levenberg_marquardt,
+        //                        mem->qp_in->RSQrq+i, 0, 0);
+        // }
 
         // cost
         config->cost[i]->update_qp_matrices(config->cost[i], dims->cost[i], in->cost[i],
@@ -3207,6 +3235,23 @@ void copy_ocp_nlp_out(ocp_nlp_dims *dims, ocp_nlp_out *from, ocp_nlp_out *to)
     return;
 }
 
+void ocp_nlp_get_cost_value(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+{
+    int N = dims->N;
+
+    double* tmp_cost = NULL;
+    double total_cost = 0.0;
+    
+    for (int i = 0; i <= N; i++)
+    {
+        config->cost[i]->compute_fun(config->cost[i], dims->cost[i], in->cost[i],
+                    opts->cost[i], mem->cost[i], work->cost[i]);
+        tmp_cost = config->cost[i]->memory_get_fun_ptr(mem->cost[i]);
+        total_cost += *tmp_cost;
+    }
+    mem->cost_value = total_cost;
+}
 
 void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)

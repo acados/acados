@@ -670,15 +670,15 @@ static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_me
         }
 
         // Check for zero-residual solution of a least-squares problem
-        if (opts->with_adaptive_levenberg_marquardt && (mem->nlp_mem->cost_value < opts->tol_zero_res))
-        {
-            mem->status = ACADOS_SUCCESS;
-            if (opts->nlp_opts->print_level > 0)
-            {
-                printf("Optimal Solution found! Convergend to Converged To Zero Residual Solution.\n");
-            }
-            return true;
-        }
+        // if (opts->with_adaptive_levenberg_marquardt && (mem->nlp_mem->cost_value < opts->tol_zero_res))
+        // {
+        //     mem->status = ACADOS_SUCCESS;
+        //     if (opts->nlp_opts->print_level > 0)
+        //     {
+        //         printf("Optimal Solution found! Convergend to Converged To Zero Residual Solution.\n");
+        //     }
+        //     return true;
+        // }
     }
 
     // Check for small step
@@ -789,7 +789,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     double reg_param_memory = 0.0;
     double reg_param = 0.0;
     bool infeasible_initial_guess = true;
-    bool evaluate_cost = true;
+    // bool evaluate_cost = true;
     if (nlp_opts->print_level > 0)
     {
         printf("'with_adaptive_levenberg_marquardt' option is set to: %s\n", opts->with_adaptive_levenberg_marquardt?"true":"false");
@@ -797,13 +797,20 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     for (; ddp_iter < opts->max_iter+1; ddp_iter++)
     {
-        if (evaluate_cost)
-        {
-            // TODO: Cost is evaluated in ocp_nlp_approximate_qp_matrices.
-            // Avoiding cost separately could be avoided, when moving levenberg_marquadt out of ocp_nlp_aproximate_qp_matrices
-            ocp_nlp_cost_compute(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-        }
-        // Prepare the regularization here...
+        // if (evaluate_cost)
+        // {
+        //     // TODO: Cost is evaluated in ocp_nlp_approximate_qp_matrices.
+        //     // Avoiding cost separately could be avoided, when moving levenberg_marquadt out of ocp_nlp_aproximate_qp_matrices
+        //     ocp_nlp_cost_compute(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+        // }
+
+        /* Prepare the QP data */
+        // linearize NLP and update QP matrices
+        acados_tic(&timer1);
+        ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+        ocp_nlp_get_cost_value(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work); // adds up parts of cost function
+
+        // Prepare the regularization here and add Levenberg-Marquardt term to Hessian
         if (opts->with_adaptive_levenberg_marquardt)
         {
             if (ddp_iter == 0)
@@ -818,11 +825,8 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             reg_param = 2*nlp_mem->cost_value*mem->mu;
             nlp_opts->levenberg_marquardt = reg_param; // For the moment divided by time step such that scaling in Levenberg-Marquardt is turned off!
         }
+        ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
-        /* Prepare the QP data */
-        // linearize NLP and update QP matrices
-        acados_tic(&timer1);
-        ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
         mem->time_lin += acados_toc(&timer1);
 
         // get timings from integrator
@@ -1027,7 +1031,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             {
                 // do backtracking line search on objective function
                 linesearch_success = ocp_nlp_ddp_backtracking_line_search(config, dims, nlp_in, nlp_out, mem, work, opts);
-                evaluate_cost = false; // since the cost was already evaluated in the line search
+                // evaluate_cost = false; // since the cost was already evaluated in the line search
             }
 
             mem->stat[mem->stat_n*(ddp_iter+1)+6] = mem->alpha;
