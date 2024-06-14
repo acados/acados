@@ -1004,8 +1004,6 @@ void *ocp_nlp_opts_assign(void *config_, void *dims_, void *raw_memory)
     return opts;
 }
 
-
-
 void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
     ocp_nlp_dims *dims = dims_;
@@ -1073,6 +1071,11 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
 
     opts->with_solution_sens_wrt_params = 0;
     opts->with_value_sens_wrt_params = 0;
+
+    // adaptive Levenberg-Marquardt options
+    opts->adaptive_levenberg_marquardt_mu_min = 1e-16;
+    opts->adaptive_levenberg_marquardt_lam = 5.0;
+    opts->with_adaptive_levenberg_marquardt = false;
 
     return;
 }
@@ -1217,6 +1220,27 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         {
             double* levenberg_marquardt = (double *) value;
             opts->levenberg_marquardt = *levenberg_marquardt;
+        }
+        // newly added options for DDP
+        else if (!strcmp(field, "with_adaptive_levenberg_marquardt"))
+        {
+            bool* with_adaptive_levenberg_marquardt = (bool *) value;
+            opts->with_adaptive_levenberg_marquardt = *with_adaptive_levenberg_marquardt;
+        }
+        else if (!strcmp(field, "adaptive_levenberg_marquardt_lam"))
+        {
+            double* adaptive_levenberg_marquardt_lam = (double *) value;
+            opts->adaptive_levenberg_marquardt_lam = *adaptive_levenberg_marquardt_lam;
+        }
+        else if (!strcmp(field, "adaptive_levenberg_marquardt_mu_min"))
+        {
+            double* adaptive_levenberg_marquardt_mu_min = (double *) value;
+            opts->adaptive_levenberg_marquardt_mu_min = *adaptive_levenberg_marquardt_mu_min;
+        }
+        else if (!strcmp(field, "adaptive_levenberg_marquardt_mu0"))
+        {
+            double* adaptive_levenberg_marquardt_mu0 = (double *) value;
+            opts->adaptive_levenberg_marquardt_mu0 = *adaptive_levenberg_marquardt_mu0;
         }
         else if (!strcmp(field, "exact_hess"))
         {
@@ -2157,10 +2181,39 @@ void ocp_nlp_initialize_t_slacks(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp
     return;
 }
 
-void ocp_nlp_add_levenberg_marquardt_term(ocp_nlp_config *config, ocp_nlp_dims *dims,
+static void adaptive_levenberg_marquardt_update_mu(double iter, double step_size, ocp_nlp_opts *opts, ocp_nlp_memory *mem)
+{
+    if (iter == 0)
+    {
+        mem->adaptive_levenberg_marquardt_mu = opts->adaptive_levenberg_marquardt_mu0;
+        mem->adaptive_levenberg_marquardt_mu_bar = opts->adaptive_levenberg_marquardt_mu0;
+    }
+    else
+    {
+        if (step_size == 1.0)
+        {
+            double mu_tmp = mem->adaptive_levenberg_marquardt_mu;
+            mem->adaptive_levenberg_marquardt_mu = fmax(opts->adaptive_levenberg_marquardt_mu_min,
+                            mem->adaptive_levenberg_marquardt_mu_bar/(opts->adaptive_levenberg_marquardt_lam));
+            mem->adaptive_levenberg_marquardt_mu_bar = mu_tmp;
+        }
+        else
+        {
+            mem->adaptive_levenberg_marquardt_mu = fmin(opts->adaptive_levenberg_marquardt_lam * mem->adaptive_levenberg_marquardt_mu, 1.0);
+        }
+    }
+}
+
+void ocp_nlp_add_levenberg_marquardt_term(double alpha, int iter, ocp_nlp_config *config, ocp_nlp_dims *dims,
     ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem,
     ocp_nlp_workspace *work)
 {
+    if (opts->with_adaptive_levenberg_marquardt)
+    {
+        adaptive_levenberg_marquardt_update_mu(iter, alpha, opts, mem);
+        double reg_param = 2*mem->cost_value*mem->adaptive_levenberg_marquardt_mu;
+        opts->levenberg_marquardt = reg_param; 
+    }
     // Only add the Levenberg-Marquardt term when it is bigger than zero
     if (opts->levenberg_marquardt > 0.0)
     {
