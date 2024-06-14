@@ -670,15 +670,15 @@ static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_me
         }
 
         // Check for zero-residual solution of a least-squares problem
-        // if (opts->with_adaptive_levenberg_marquardt && (mem->nlp_mem->cost_value < opts->tol_zero_res))
-        // {
-        //     mem->status = ACADOS_SUCCESS;
-        //     if (opts->nlp_opts->print_level > 0)
-        //     {
-        //         printf("Optimal Solution found! Convergend to Converged To Zero Residual Solution.\n");
-        //     }
-        //     return true;
-        // }
+        if (opts->with_adaptive_levenberg_marquardt && (mem->nlp_mem->cost_value < opts->tol_zero_res))
+        {
+            mem->status = ACADOS_SUCCESS;
+            if (opts->nlp_opts->print_level > 0)
+            {
+                printf("Optimal Solution found! Convergend to Converged To Zero Residual Solution.\n");
+            }
+            return true;
+        }
     }
 
     // Check for small step
