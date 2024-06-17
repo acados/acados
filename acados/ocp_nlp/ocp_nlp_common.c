@@ -3280,23 +3280,22 @@ void copy_ocp_nlp_out(ocp_nlp_dims *dims, ocp_nlp_out *from, ocp_nlp_out *to)
     return;
 }
 
-void ocp_nlp_get_cost_value(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+void ocp_nlp_get_cost_value_from_submodules(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
     int N = dims->N;
 
     double* tmp_cost = NULL;
     double total_cost = 0.0;
-    
+
     for (int i = 0; i <= N; i++)
     {
-        config->cost[i]->compute_fun(config->cost[i], dims->cost[i], in->cost[i],
-                    opts->cost[i], mem->cost[i], work->cost[i]);
         tmp_cost = config->cost[i]->memory_get_fun_ptr(mem->cost[i]);
         total_cost += *tmp_cost;
     }
     mem->cost_value = total_cost;
 }
+
 
 void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
