@@ -37,36 +37,36 @@ clearvars; clc; close all;
 targets = {
     '../generic_dyn_disc/disc_dyn_example_ocp.m';
     '../generic_external_cost/external_cost_example_ocp.m';
-    %'../getting_started/extensive_example_ocp.m';
-    %'../getting_started/minimal_example_closed_loop.m';
+    '../getting_started/extensive_example_ocp.m';
+    '../getting_started/minimal_example_closed_loop.m';
     '../getting_started/minimal_example_sim.m';
-    %'../getting_started/simulink_example.m';
-    %'../getting_started/simulink_example_advanced.m';
-        %'../linear_mass_spring_model/example_closed_loop.m';
+    '../getting_started/simulink_example.m';
+    '../getting_started/simulink_example_advanced.m';
+        '../linear_mass_spring_model/example_closed_loop.m';
         '../linear_mass_spring_model/example_ocp.m';
-        %'../linear_mass_spring_model/example_sim.m';
+        '../linear_mass_spring_model/example_sim.m';
         '../linear_mpc/example_closed_loop.m';
         '../lorentz/example_mhe.m';
-        %'../masses_chain_model/example_closed_loop.m';
+        '../masses_chain_model/example_closed_loop.m';
         '../masses_chain_model/example_ocp.m';
-        %'../pendulum_dae/example_closed_loop.m';  % error while reshaping cost.Vz_0
+        '../pendulum_dae/example_closed_loop.m';  % error while reshaping cost.Vz_0
         '../pendulum_dae/example_sim.m';
-        %'../pendulum_on_cart_model/example_closed_loop.m';
+        '../pendulum_on_cart_model/example_closed_loop.m';
         '../pendulum_on_cart_model/example_ocp.m';
-        %'../pendulum_on_cart_model/example_ocp_custom_hess.m';
-        %'../pendulum_on_cart_model/example_ocp_param_sens.m';  % Unable to resolve the name ocp.t_ocp.eval_param_sens.
-        %'../pendulum_on_cart_model/example_ocp_reg.m';
-        %'../pendulum_on_cart_model/example_sim.m';
-        %'../pendulum_on_cart_model/example_solution_sens_closed_loop.m';  % Unable to resolve the name ocp.t_ocp.eval_param_sens.
+        '../pendulum_on_cart_model/example_ocp_custom_hess.m';
+        '../pendulum_on_cart_model/example_ocp_param_sens.m';  % Unable to resolve the name ocp.t_ocp.eval_param_sens.
+        '../pendulum_on_cart_model/example_ocp_reg.m';
+        '../pendulum_on_cart_model/example_sim.m';
+        '../pendulum_on_cart_model/example_solution_sens_closed_loop.m';  % Unable to resolve the name ocp.t_ocp.eval_param_sens.
         '../pendulum_on_cart_model/experiment_dae_formulation.m';
         '../race_cars/main.m';  % acados returns status 4
         '../simple_dae_model/example_ocp.m';
-        %'../swarming/example_closed_loop.m';
+        '../swarming/example_closed_loop.m';
         '../swarming/example_ocp.m';
-        %'../swarming/example_sim.m';
-        %'../wind_turbine_nx6/example_closed_loop.m';
+        '../swarming/example_sim.m';
+        '../wind_turbine_nx6/example_closed_loop.m';
         '../wind_turbine_nx6/example_ocp.m';
-        %'../wind_turbine_nx6/example_sim.m';
+        '../wind_turbine_nx6/example_sim.m';
 %
 %         './test_checks.m';  % SHOULD FAIL, DOES
 %         './test_mstart_dirhe_lorentz.m';  % OK
@@ -121,6 +121,7 @@ for idx = 1:length(targets)
 end
 
 clc;
+fail = false
 disp('Succesful tests: ')
 for idx = 1:length(targets)
     if pass(idx)
@@ -133,6 +134,9 @@ for idx = 1:length(targets)
     if ~pass(idx)
         disp(targets{idx})
         disp(['    message: ',messages{idx}])
+        fail = true;
     end
+if fail==true;
+    error('Test failure');
 end
 clearvars
