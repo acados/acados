@@ -1107,7 +1107,6 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             // linearize NLP
             ocp_nlp_approximate_qp_matrices(config, dims, nlp_in,
                 nlp_out, nlp_opts, nlp_mem, nlp_work);
-            ocp_nlp_get_cost_value_from_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work); // adds up parts of cost function
             ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in,
                 nlp_out, nlp_opts, nlp_mem, nlp_work);
             mem->time_lin += acados_toc(&timer1);

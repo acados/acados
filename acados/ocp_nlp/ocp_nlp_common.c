@@ -2213,7 +2213,7 @@ void ocp_nlp_add_levenberg_marquardt_term(double alpha, int iter, ocp_nlp_config
         ocp_nlp_get_cost_value_from_submodules(config, dims, in, out, opts, mem, work);
         adaptive_levenberg_marquardt_update_mu(iter, alpha, opts, mem);
         double reg_param = 2*mem->cost_value*mem->adaptive_levenberg_marquardt_mu;
-        opts->levenberg_marquardt = reg_param; 
+        opts->levenberg_marquardt = reg_param;
     }
     // Only add the Levenberg-Marquardt term when it is bigger than zero
     if (opts->levenberg_marquardt > 0.0)
