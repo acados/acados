@@ -2208,19 +2208,19 @@ static void adaptive_levenberg_marquardt_update_mu(double iter, double step_size
     }
 }
 
-void ocp_nlp_add_levenberg_marquardt_term(double alpha, int iter, ocp_nlp_config *config, ocp_nlp_dims *dims,
+void ocp_nlp_add_levenberg_marquardt_term(ocp_nlp_config *config, ocp_nlp_dims *dims,
     ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem,
-    ocp_nlp_workspace *work)
+    ocp_nlp_workspace *work, double alpha, int iter)
 {
     if (opts->with_adaptive_levenberg_marquardt)
     {
         ocp_nlp_get_cost_value_from_submodules(config, dims, in, out, opts, mem, work);
         adaptive_levenberg_marquardt_update_mu(iter, alpha, opts, mem);
         double reg_param = 2*mem->cost_value*mem->adaptive_levenberg_marquardt_mu;
-        opts->levenberg_marquardt = reg_param; 
+        opts->levenberg_marquardt = reg_param;
     }
     // Only add the Levenberg-Marquardt term when it is bigger than zero
-    if (opts->levenberg_marquardt > 0.0)
+    if (mem->compute_hess && opts->levenberg_marquardt > 0.0)
     {
         int N = dims->N;
         int *nx = dims->nx;
@@ -2230,15 +2230,13 @@ void ocp_nlp_add_levenberg_marquardt_term(double alpha, int iter, ocp_nlp_config
             if (i < N)
             {
                 // Levenberg Marquardt term: Ts[i] * levenberg_marquardt * eye()
-                if (mem->compute_hess && opts->levenberg_marquardt > 0.0)
-                    blasfeo_ddiare(nu[i] + nx[i], in->Ts[i] * opts->levenberg_marquardt,
+                blasfeo_ddiare(nu[i] + nx[i], in->Ts[i] * opts->levenberg_marquardt,
                                 mem->qp_in->RSQrq+i, 0, 0);
             }
             else
             {
                 // Levenberg Marquardt term: 1.0 * levenberg_marquardt * eye()
-                if (mem->compute_hess && opts->levenberg_marquardt > 0.0)
-                    blasfeo_ddiare(nu[i] + nx[i], opts->levenberg_marquardt,
+                blasfeo_ddiare(nu[i] + nx[i], opts->levenberg_marquardt,
                                 mem->qp_in->RSQrq+i, 0, 0);
             }
         }
