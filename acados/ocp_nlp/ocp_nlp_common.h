@@ -260,6 +260,7 @@ typedef enum
 {
     FIXED_STEP,
     MERIT_BACKTRACKING,
+    FUNNEL_METHOD
 } ocp_nlp_globalization_t;
 
 typedef struct ocp_nlp_opts

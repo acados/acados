@@ -1209,6 +1209,10 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             {
                 opts->globalization = MERIT_BACKTRACKING;
             }
+            else if (!strcmp(globalization, "funnel_method"))
+            {
+                opts->globalization = FUNNEL_METHOD;
+            }
             else
             {
                 printf("\nerror: ocp_nlp_opts_set: not supported value for globalization, got: %s\n",

@@ -888,7 +888,7 @@ class AcadosOcpOptions:
 
     @globalization.setter
     def globalization(self, globalization):
-        globalization_types = ('MERIT_BACKTRACKING', 'FIXED_STEP')
+        globalization_types = ('FUNNEL_METHOD', 'MERIT_BACKTRACKING', 'FIXED_STEP')
         if globalization in globalization_types:
             self.__globalization = globalization
         else:
