@@ -125,10 +125,6 @@ void ocp_nlp_ddp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->rti_phase = 0;
     opts->initialize_t_slacks = 0;
 
-    // opts->adaptive_levenberg_marquardt_mu_min = 1e-16;
-    // opts->adaptive_levenberg_marquardt_lam = 5.0;
-    // opts->with_adaptive_levenberg_marquardt = false;
-
     opts->linesearch_eta = 1e-6;
     opts->linesearch_minimum_step_size = 1e-17;
     opts->linesearch_step_size_reduction_factor = 0.5;
@@ -260,27 +256,6 @@ void ocp_nlp_ddp_opts_set(void *config_, void *opts_, const char *field, void* v
             }
             opts->initialize_t_slacks = *initialize_t_slacks;
         }
-        // // newly added options for DDP
-        // else if (!strcmp(field, "with_adaptive_levenberg_marquardt"))
-        // {
-        //     bool* with_adaptive_levenberg_marquardt = (bool *) value;
-        //     opts->with_adaptive_levenberg_marquardt = *with_adaptive_levenberg_marquardt;
-        // }
-        // else if (!strcmp(field, "adaptive_levenberg_marquardt_lam"))
-        // {
-        //     double* adaptive_levenberg_marquardt_lam = (double *) value;
-        //     opts->adaptive_levenberg_marquardt_lam = *adaptive_levenberg_marquardt_lam;
-        // }
-        // else if (!strcmp(field, "adaptive_levenberg_marquardt_mu_min"))
-        // {
-        //     double* adaptive_levenberg_marquardt_mu_min = (double *) value;
-        //     opts->adaptive_levenberg_marquardt_mu_min = *adaptive_levenberg_marquardt_mu_min;
-        // }
-        // else if (!strcmp(field, "adaptive_levenberg_marquardt_mu0"))
-        // {
-        //     double* adaptive_levenberg_marquardt_mu0 = (double *) value;
-        //     opts->adaptive_levenberg_marquardt_mu0 = *adaptive_levenberg_marquardt_mu0;
-        // }
         else
         {
             ocp_nlp_opts_set(config, nlp_opts, field, value);
@@ -304,8 +279,6 @@ void ocp_nlp_ddp_opts_set_at_stage(void *config_, void *opts_, size_t stage, con
     return;
 
 }
-
-
 
 /************************************************
  * memory
@@ -717,21 +690,6 @@ static bool check_termination(int ddp_iter, ocp_nlp_res *nlp_res, ocp_nlp_ddp_me
  * functions
  ************************************************/
 
-// static void update_mu(double step_size, ocp_nlp_ddp_opts *opts, ocp_nlp_ddp_memory *ddp_mem)
-// {
-//     if (step_size == 1.0)
-//     {
-//         double mu_tmp = ddp_mem->mu;
-//         ddp_mem->mu = fmax(opts->adaptive_levenberg_marquardt_mu_min,
-//                            ddp_mem->mu_bar/(opts->adaptive_levenberg_marquardt_lam));
-//         ddp_mem->mu_bar = mu_tmp;
-//     }
-//     else
-//     {
-//         ddp_mem->mu = fmin(opts->adaptive_levenberg_marquardt_lam * ddp_mem->mu, 1.0);
-//     }
-// }
-
 // MAIN OPTIMIZATION ROUTINE
 int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_)
@@ -765,8 +723,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     int qp_status = 0;
     int qp_iter = 0;
     mem->alpha = 0.0;
-    // mem->mu = opts->adaptive_levenberg_marquardt_mu0;
-    // mem->mu_bar = opts->adaptive_levenberg_marquardt_mu0;
     mem->step_norm = 0.0;
 
 #if defined(ACADOS_WITH_OPENMP)
@@ -787,7 +743,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
      ************************************************/
     int ddp_iter = 0;
     double reg_param_memory = 0.0;
-    // double reg_param = 0.0;
     bool infeasible_initial_guess = true;
     // bool evaluate_cost = true;
     if (nlp_opts->print_level > 0)
@@ -797,13 +752,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     for (; ddp_iter < opts->max_iter+1; ddp_iter++)
     {
-        // if (evaluate_cost)
-        // {
-        //     // TODO: Cost is evaluated in ocp_nlp_approximate_qp_matrices.
-        //     // Avoiding cost separately could be avoided, when moving levenberg_marquadt out of ocp_nlp_aproximate_qp_matrices
-        //     ocp_nlp_cost_compute(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-        // }
-
         /* Prepare the QP data */
         // linearize NLP, update QP matrices, and add Levenberg-Marquardt term
         acados_tic(&timer1);
@@ -811,22 +759,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         ocp_nlp_get_cost_value(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work); // adds up parts of cost function
         ocp_nlp_add_levenberg_marquardt_term(mem->alpha, ddp_iter, config, dims,
                                              nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-
-        // // Prepare the regularization here and add Levenberg-Marquardt term to Hessian
-        // if (opts->with_adaptive_levenberg_marquardt)
-        // {
-        //     if (ddp_iter == 0)
-        //     {
-        //         reg_param_memory = 0.0;
-        //     }
-        //     else
-        //     {
-        //         update_mu(mem->alpha, opts, mem);
-        //         reg_param_memory = reg_param;
-        //     }
-        //     reg_param = 2*nlp_mem->cost_value*mem->mu;
-        //     nlp_opts->levenberg_marquardt = reg_param; // For the moment divided by time step such that scaling in Levenberg-Marquardt is turned off!
-        // }
 
         mem->time_lin += acados_toc(&timer1);
 
@@ -1052,7 +984,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     }
     return mem->status;
 }
-
 
 double ocp_nlp_ddp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
                 ocp_nlp_workspace *nlp_work, ocp_nlp_memory *nlp_mem){
