@@ -57,6 +57,7 @@ ALLOWED_CASADI_VERSIONS = (
     '3.6.2',
     '3.6.3',
     '3.6.4',
+    '3.6.5',
 )
 
 TERA_VERSION = "0.0.34"
