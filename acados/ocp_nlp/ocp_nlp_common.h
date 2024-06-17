@@ -277,6 +277,12 @@ typedef struct ocp_nlp_opts
     int fixed_hess;
     int log_primal_step_norm; // compute and log the max norm of the primal steps
 
+    // Flag for usage of adaptive levenberg marquardt strategy
+    bool with_adaptive_levenberg_marquardt;
+    double adaptive_levenberg_marquardt_lam;
+    double adaptive_levenberg_marquardt_mu_min;
+    double adaptive_levenberg_marquardt_mu0;
+
     // TODO: move to separate struct?
     ocp_nlp_globalization_t globalization;
     int full_step_dual;
@@ -361,6 +367,9 @@ typedef struct ocp_nlp_memory
     double cost_value;
     double qp_cost_value;
     int compute_hess;
+
+    double adaptive_levenberg_marquardt_mu;
+    double adaptive_levenberg_marquardt_mu_bar;
 
     bool *set_sim_guess; // indicate if there is new explicitly provided guess for integration variables
     struct blasfeo_dvec *sim_guess;
@@ -465,6 +474,9 @@ void copy_ocp_nlp_out(ocp_nlp_dims *dims, ocp_nlp_out *from, ocp_nlp_out *to);
 //
 void ocp_nlp_cost_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
+//
+void ocp_nlp_get_cost_value_from_submodules(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
 
 void ocp_nlp_params_jac_compute(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
 
@@ -475,6 +487,11 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
 void ocp_nlp_common_eval_lagr_grad_p(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
                         ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
                         const char *field, void *grad_p);
+//
+void ocp_nlp_add_levenberg_marquardt_term(ocp_nlp_config *config, ocp_nlp_dims *dims,
+    ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem,
+    ocp_nlp_workspace *work, double alpha, int iter);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

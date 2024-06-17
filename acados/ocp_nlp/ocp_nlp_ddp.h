@@ -73,12 +73,6 @@ typedef struct
     double linesearch_minimum_step_size;
     double linesearch_step_size_reduction_factor;
 
-    // Flag for usage of adaptive levenberg marquardt strategy
-    bool with_adaptive_levenberg_marquardt;
-    double adaptive_levenberg_marquardt_lam;
-    double adaptive_levenberg_marquardt_mu_min;
-    double adaptive_levenberg_marquardt_mu0;
-
 } ocp_nlp_ddp_opts;
 
 //
