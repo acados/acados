@@ -49,7 +49,7 @@ targets = {
     '../lorentz/example_mhe.m';
     %'../masses_chain_model/example_closed_loop.m';
     '../masses_chain_model/example_ocp.m';
-    %'../pendulum_dae/example_closed_loop.m';  % error QP solver returned error status 3
+    '../pendulum_dae/example_closed_loop.m';
     '../pendulum_dae/example_sim.m';
     %'../pendulum_on_cart_model/example_closed_loop.m';
     '../pendulum_on_cart_model/example_ocp.m';
