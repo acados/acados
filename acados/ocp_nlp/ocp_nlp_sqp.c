@@ -395,10 +395,10 @@ acados_size_t ocp_nlp_sqp_workspace_calculate_size(void *config_, void *dims_, v
 
     if (opts->ext_qp_res)
     {
-        // qp res
+        // qp_res
         size += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
 
-        // qp res ws
+        // qp_res_ws
         size += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
     }
 
@@ -423,11 +423,11 @@ static void ocp_nlp_sqp_cast_workspace(ocp_nlp_config *config, ocp_nlp_dims *dim
 
     if (opts->ext_qp_res)
     {
-        // qp res
+        // qp_res
         work->qp_res = ocp_qp_res_assign(dims->qp_solver->orig_dims, c_ptr);
         c_ptr += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
 
-        // qp res ws
+        // qp_res_ws
         work->qp_res_ws = ocp_qp_res_workspace_assign(dims->qp_solver->orig_dims, c_ptr);
         c_ptr += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
     }
@@ -926,12 +926,50 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         mem->time_glob += acados_toc(&timer1);
         mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
 
-        if (opts->nlp_opts->log_primal_step_norm)
+        // Anderson acceleration
+        if (nlp_opts->with_anderson_acceleration)
         {
-            mem->primal_step_norm[sqp_iter] = ocp_qp_out_compute_primal_nrm_inf(nlp_mem->qp_out);
+            // convert qp_out to delta primal-dual step
+            ocp_nlp_convert_primaldelta_absdual_step_to_delta_step(config, dims, nlp_out, qp_out);
+            if (sqp_iter == 0)
+            {
+                // store in anderson_step, prev_qp_step
+                ocp_qp_out_copy(qp_out, nlp_mem->anderson_step);
+                // update variables
+                ocp_nlp_update_variables_sqp_delta_primal_dual(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, nlp_mem->anderson_step);
+            }
+            else
+            {
+                // tmp_qp_out = d_{k+1} - d_k: qp_step - prev_qp_step
+                ocp_qp_out_axpy(-1.0, nlp_mem->prev_qp_out, qp_out, nlp_work->tmp_qp_out);
+                // compute gamma
+                double gamma = ocp_nlp_sqp_compute_anderson_gamma(qp_out, nlp_work->tmp_qp_out);
+                /* update anderson_step */
+                // anderson_step *= -gamma
+                ocp_qp_out_sc(-gamma, nlp_mem->anderson_step);
+                // anderson_step += alpha * gamma * prev_qp_out
+                ocp_qp_out_add(gamma*mem->alpha, nlp_mem->prev_qp_out, nlp_mem->anderson_step);
+                // anderson_step += (alpha - alpha * gamma) * qp_out
+                ocp_qp_out_add(mem->alpha-gamma*mem->alpha, qp_out, nlp_mem->anderson_step);
+                // update variables
+                ocp_nlp_update_variables_sqp_delta_primal_dual(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, nlp_mem->anderson_step);
+            }
+            // store prev qp step
+            ocp_qp_out_copy(qp_out, nlp_mem->prev_qp_out);
+            if (opts->nlp_opts->log_primal_step_norm)
+            {
+                mem->primal_step_norm[sqp_iter] = ocp_qp_out_compute_primal_nrm_inf(nlp_mem->anderson_step);
+            }
         }
-        // update variables
-        ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha);
+        else
+        {
+            if (opts->nlp_opts->log_primal_step_norm)
+            {
+                mem->primal_step_norm[sqp_iter] = ocp_qp_out_compute_primal_nrm_inf(nlp_mem->qp_out);
+            }
+            // update variables
+            ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha);
+        }
 
         if (nlp_opts->print_level > 0)
         {

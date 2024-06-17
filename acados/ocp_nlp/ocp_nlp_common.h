@@ -287,6 +287,7 @@ typedef struct ocp_nlp_opts
     double eps_sufficient_descent;
     int with_solution_sens_wrt_params;
     int with_value_sens_wrt_params;
+    int with_anderson_acceleration;  // 0-false or 1-true
 
 } ocp_nlp_opts;
 
@@ -348,6 +349,11 @@ typedef struct ocp_nlp_memory
     // qp in & out
     ocp_qp_in *qp_in;
     ocp_qp_out *qp_out;
+
+    // for Anderson acceleration
+    ocp_qp_out *prev_qp_out;
+    ocp_qp_out *anderson_step;
+
     // QP stuff not entering the qp_in struct
     struct blasfeo_dmat *dzduxt; // dzdux transposed
     struct blasfeo_dvec *z_alg; // z_alg, output algebraic variables
@@ -444,6 +450,11 @@ void ocp_nlp_level_c_update(ocp_nlp_config *config,
 void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work, double alpha);
 //
+void ocp_nlp_convert_primaldelta_absdual_step_to_delta_step(ocp_nlp_config *config, ocp_nlp_dims *dims,
+        ocp_nlp_out *out, ocp_qp_out *step);
+//
+double ocp_nlp_sqp_compute_anderson_gamma(ocp_qp_out *new_qp_step, ocp_qp_out *new_minus_old_qp_step);
+//
 int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
 //
@@ -475,6 +486,10 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
 void ocp_nlp_common_eval_lagr_grad_p(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
                         ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
                         const char *field, void *grad_p);
+//
+void ocp_nlp_update_variables_sqp_delta_primal_dual(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work, double alpha, ocp_qp_out *step);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
