@@ -842,6 +842,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             print_ocp_qp_in(qp_in);
         }
 
+        //solve qp
         acados_tic(&timer1);
         qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver, qp_in, qp_out,
                                         nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);

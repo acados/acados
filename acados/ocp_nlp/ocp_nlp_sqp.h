@@ -117,6 +117,8 @@ typedef struct
     int status;
     int sqp_iter;
 
+    double step_norm;
+
 } ocp_nlp_sqp_memory;
 
 //

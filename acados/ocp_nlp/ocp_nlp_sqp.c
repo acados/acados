@@ -665,9 +665,116 @@ static void ocp_nlp_sqp_reset_timers(ocp_nlp_sqp_memory *mem)
 
 
 /************************************************
+ * output functions
+ ************************************************/
+static void print_iteration_header(){
+    printf("%6s | %11s | %10s | %10s | %10s | %10s | %10s | %10s | %10s | %10s\n",
+    "iter.",
+    "objective",
+    "res_eq",
+    "res_stat",
+    "res_comp",
+    "alpha",
+    "step_norm",
+    "LM_reg.",
+    "qp_status",
+    "qp_iter");
+}
+
+static void print_iteration(double obj,
+                     int iter_count,
+                     double infeas,
+                     double stationarity,
+                     double complementarity,
+                     double alpha,
+                     double step_norm,
+                     double reg_param,
+                     int qp_status,
+                     int qp_iter)
+{
+    if ((iter_count % 10 == 0) | (iter_count == -1)){
+        print_iteration_header();
+    }
+    printf("%6i | %11.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10i | %10i\n",
+    iter_count,
+    obj,
+    infeas,
+    stationarity,
+    complementarity,
+    alpha,
+    step_norm,
+    reg_param,
+    qp_status,
+    qp_iter);
+}
+
+/************************************************
+ * termination criterion
+ ************************************************/
+static bool check_termination(int n_iter, ocp_nlp_res *nlp_res, ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts)
+{
+    // check for nans
+    if (isnan(nlp_res->inf_norm_res_stat) || isnan(nlp_res->inf_norm_res_eq) ||
+            isnan(nlp_res->inf_norm_res_ineq) || isnan(nlp_res->inf_norm_res_comp))
+    {
+        mem->status = ACADOS_NAN_DETECTED;
+        if (opts->nlp_opts->print_level > 0)
+        {
+            printf("Stopped: NaN detected in iterate.\n");
+        }
+        return true;
+    }
+
+    // We do not need to check for the complementarity condition and for the
+    if ((nlp_res->inf_norm_res_stat < opts->tol_stat) &&
+        (nlp_res->inf_norm_res_eq < opts->tol_eq) &&
+        (nlp_res->inf_norm_res_ineq < opts->tol_ineq) &&
+        (nlp_res->inf_norm_res_comp < opts->tol_comp))
+    {// Check Stationarity
+            mem->status = ACADOS_SUCCESS;
+            if (opts->nlp_opts->print_level > 0)
+            {
+                printf("Optimal Solution found! Converged to KKT point.\n");
+            }
+            return true;
+    }
+
+    // Check for small step
+    if ((n_iter > 0) && (mem->step_norm < opts->tol_eq))
+    {
+        if (opts->nlp_opts->print_level > 0)
+        {
+            if (nlp_res->inf_norm_res_eq < opts->tol_eq)
+            {
+                printf("Stopped: Converged To Feasible Point. Step size is < tol_eq.\n");
+            }
+            else
+            {
+                printf("Stopped: Converged To Infeasible Point. Step size is < tol_eq.\n");
+            }
+        }
+        mem->status = ACADOS_MINSTEP;
+        return true;
+    }
+
+    // Check for maximum iterations
+    if (n_iter >= opts->max_iter)
+    {
+        mem->status = ACADOS_MAXITER;
+        if (opts->nlp_opts->print_level > 0){
+            printf("Stopped: Maximum Iterations Reached.\n");
+        }
+        return true;
+    }
+
+    return false;
+}
+
+/************************************************
  * functions
  ************************************************/
 
+// MAIN OPTIMIZATION ROUTINE
 int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_)
 {
@@ -713,11 +820,15 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
-    // main sqp loop
+    /************************************************
+     * main sqp loop
+     ************************************************/
     int sqp_iter = 0;
+    double reg_param_memory = 0.0;
 
     for (; sqp_iter < opts->max_iter; sqp_iter++)
     {
+        /* Prepare the QP data */
         // linearize NLP and update QP matrices
         acados_tic(&timer1);
         ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
@@ -743,12 +854,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);
         ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
 
-        if (nlp_opts->print_level > sqp_iter + 1)
-        {
-            printf("\n\nSQP: ocp_qp_in at iteration %d\n", sqp_iter);
-            print_ocp_qp_in(qp_in);
-        }
-
         // save statistics
         if (sqp_iter < mem->stat_m)
         {
@@ -758,42 +863,22 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->stat[mem->stat_n*sqp_iter+3] = nlp_res->inf_norm_res_comp;
         }
 
-        // exit conditions on residuals
-        if ((nlp_res->inf_norm_res_stat < opts->tol_stat) &
-            (nlp_res->inf_norm_res_eq < opts->tol_eq) &
-            (nlp_res->inf_norm_res_ineq < opts->tol_ineq) &
-            (nlp_res->inf_norm_res_comp < opts->tol_comp))
+        // Output
+        if (nlp_opts->print_level > 0)
         {
-#if defined(ACADOS_WITH_OPENMP)
-            // restore number of threads
-            omp_set_num_threads(num_threads_bkp);
-#endif
-            mem->status = ACADOS_SUCCESS;
-            mem->sqp_iter = sqp_iter;
-            mem->time_tot = acados_toc(&timer0);
-
-            if (nlp_opts->print_level > 0)
-            {
-                printf("%i\t%e\t%e\t%e\t%e\t%d\t%d\t%e\n", sqp_iter, nlp_res->inf_norm_res_stat,
-                    nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_ineq, nlp_res->inf_norm_res_comp,
-                    qp_status, qp_iter, mem->alpha);
-                printf("\n\n");
-            }
-
-            return mem->status;
+            print_iteration(nlp_mem->cost_value, sqp_iter, nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_stat, nlp_res->inf_norm_res_comp, mem->alpha, mem->step_norm, reg_param_memory, qp_status, qp_iter);
         }
-        // check for nans
-        else if (isnan(nlp_res->inf_norm_res_stat) || isnan(nlp_res->inf_norm_res_eq) ||
-             isnan(nlp_res->inf_norm_res_ineq) || isnan(nlp_res->inf_norm_res_comp))
+        reg_param_memory = nlp_opts->levenberg_marquardt;
+
+        // Termination
+        if (check_termination(sqp_iter, nlp_res, mem, opts))
         {
 #if defined(ACADOS_WITH_OPENMP)
             // restore number of threads
             omp_set_num_threads(num_threads_bkp);
 #endif
-            mem->status = ACADOS_NAN_DETECTED;
             mem->sqp_iter = sqp_iter;
             mem->time_tot = acados_toc(&timer0);
-
             return mem->status;
         }
 
@@ -803,12 +888,20 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                                                nlp_opts->regularize, nlp_mem->regularize_mem);
         mem->time_reg += acados_toc(&timer1);
 
+        /* solve QP */
         // (typically) no warm start at first iteration
         if (sqp_iter == 0 && !opts->warm_start_first_qp)
         {
             int tmp_int = 0;
             config->qp_solver->opts_set(config->qp_solver, nlp_opts->qp_solver_opts,
                                          "warm_start", &tmp_int);
+        }
+        // Show input to QP
+        // TODO: Should this really be > sqp_iter + 1? Or only > 1?
+        if (nlp_opts->print_level > sqp_iter + 1)
+        {
+            printf("\n\nSQP: ocp_qp_in at iteration %d\n", sqp_iter);
+            print_ocp_qp_in(qp_in);
         }
 
 #if defined(ACADOS_DEBUG_SQP_PRINT_QPS_TO_FILE)
@@ -901,6 +994,19 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
             return mem->status;
         }
+        // Maybe compute the optimal QP objective function value here??
+
+        // Calculate step norm
+        // res_comp
+        mem->step_norm = 0.0;
+        double tmp_norm = 0.0;
+        for (int i = 0; i <= N; i++)
+        {
+            int sum = dims->nx[i]+dims->nu[i];
+            blasfeo_dvecnrm_inf(sum, &qp_out->ux[i], 0, &tmp_norm);
+            mem->step_norm = tmp_norm > mem->step_norm ? tmp_norm : mem->step_norm;
+        }
+        /* end solve QP */
 
         /* globalization */
         // NOTE on timings: currently all within globalization is accounted for within time_glob.
@@ -935,37 +1041,12 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // update variables
         ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha);
 
-        if (nlp_opts->print_level > 0)
-        {
-            if (sqp_iter%10 == 0)
-            {
-                printf("# it\tstat\t\teq\t\tineq\t\tcomp\t\tqp_stat\tqp_iter\talpha\n");
-            }
-            printf("%i\t%e\t%e\t%e\t%e\t%d\t%d\t%e\n", sqp_iter, nlp_res->inf_norm_res_stat,
-                nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_ineq, nlp_res->inf_norm_res_comp,
-                qp_status, qp_iter, mem->alpha);
-        }
     }  // end SQP loop
 
     if (nlp_opts->print_level > 0)
-        printf("\n\n");
-
-    // ocp_nlp_out_print(dims, nlp_out);
-
-    // maximum number of iterations reached
-#if defined(ACADOS_WITH_OPENMP)
-    // restore number of threads
-    omp_set_num_threads(num_threads_bkp);
-#endif
-
-    mem->status = ACADOS_MAXITER;
-    mem->sqp_iter = sqp_iter;
-    mem->time_tot = acados_toc(&timer0);
-
-#ifndef ACADOS_SILENT
-    printf("\n ocp_nlp_sqp: maximum iterations reached\n");
-#endif
-
+    {
+        printf("Warning: The solver should never reach this part of the function!\n");
+    }
     return mem->status;
 }
 
