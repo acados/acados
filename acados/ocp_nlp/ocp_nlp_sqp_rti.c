@@ -517,6 +517,9 @@ static void ocp_nlp_sqp_rti_preparation_step(ocp_nlp_config *config, ocp_nlp_dim
     acados_tic(&timer1);
     ocp_nlp_approximate_qp_matrices(config, dims, nlp_in,
         nlp_out, nlp_opts, nlp_mem, nlp_work);
+    // ocp_nlp_get_cost_value(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work); // adds up parts of cost function
+    ocp_nlp_add_levenberg_marquardt_term(1.0, 0, config, dims,
+                                        nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
     mem->time_lin += acados_toc(&timer1);
 
     if (opts->rti_phase == PREPARATION)
