@@ -42,31 +42,31 @@ targets = {
     '../getting_started/minimal_example_sim.m';
     '../getting_started/simulink_example.m';
     '../getting_started/simulink_example_advanced.m';
-        '../linear_mass_spring_model/example_closed_loop.m';
-        '../linear_mass_spring_model/example_ocp.m';
-        '../linear_mass_spring_model/example_sim.m';
-        '../linear_mpc/example_closed_loop.m';
-        '../lorentz/example_mhe.m';
-        '../masses_chain_model/example_closed_loop.m';
-        '../masses_chain_model/example_ocp.m';
-        '../pendulum_dae/example_closed_loop.m';  % error while reshaping cost.Vz_0
-        '../pendulum_dae/example_sim.m';
-        '../pendulum_on_cart_model/example_closed_loop.m';
-        '../pendulum_on_cart_model/example_ocp.m';
-        '../pendulum_on_cart_model/example_ocp_custom_hess.m';
-        '../pendulum_on_cart_model/example_ocp_param_sens.m';  % Unable to resolve the name ocp.t_ocp.eval_param_sens.
-        '../pendulum_on_cart_model/example_ocp_reg.m';
-        '../pendulum_on_cart_model/example_sim.m';
-        '../pendulum_on_cart_model/example_solution_sens_closed_loop.m';  % Unable to resolve the name ocp.t_ocp.eval_param_sens.
-        '../pendulum_on_cart_model/experiment_dae_formulation.m';
-        '../race_cars/main.m';  % acados returns status 4
-        '../simple_dae_model/example_ocp.m';
-        '../swarming/example_closed_loop.m';
-        '../swarming/example_ocp.m';
-        '../swarming/example_sim.m';
-        '../wind_turbine_nx6/example_closed_loop.m';
-        '../wind_turbine_nx6/example_ocp.m';
-        '../wind_turbine_nx6/example_sim.m';
+    '../linear_mass_spring_model/example_closed_loop.m';
+    '../linear_mass_spring_model/example_ocp.m';
+    '../linear_mass_spring_model/example_sim.m';
+    '../linear_mpc/example_closed_loop.m';
+    '../lorentz/example_mhe.m';
+    '../masses_chain_model/example_closed_loop.m';
+    '../masses_chain_model/example_ocp.m';
+    '../pendulum_dae/example_closed_loop.m';  % error QP solver returned error status 3
+    '../pendulum_dae/example_sim.m';
+    '../pendulum_on_cart_model/example_closed_loop.m';
+    '../pendulum_on_cart_model/example_ocp.m';
+    '../pendulum_on_cart_model/example_ocp_custom_hess.m';
+    '../pendulum_on_cart_model/example_ocp_param_sens.m';
+    '../pendulum_on_cart_model/example_ocp_reg.m';
+    '../pendulum_on_cart_model/example_sim.m';
+    '../pendulum_on_cart_model/example_solution_sens_closed_loop.m';
+    '../pendulum_on_cart_model/experiment_dae_formulation.m';
+    '../race_cars/main.m';
+    '../simple_dae_model/example_ocp.m';
+    '../swarming/example_closed_loop.m';
+    '../swarming/example_ocp.m';
+    '../swarming/example_sim.m';
+    '../wind_turbine_nx6/example_closed_loop.m';
+    '../wind_turbine_nx6/example_ocp.m';
+    '../wind_turbine_nx6/example_sim.m';
 %
 %         './test_checks.m';  % SHOULD FAIL, DOES
 %         './test_mstart_dirhe_lorentz.m';  % OK
@@ -87,7 +87,9 @@ targets = {
 pass = zeros(1, length(targets));  % keep track of test results
 messages = cell(1, length(targets));  % and error messages
 setenv("TEST_DIR", pwd)
+%setenv("TEST_PASS", pwd)
 for idx = 1:length(targets)
+    setenv("TEST_MESSAGE", "")
     [dir, file, extension] = fileparts(targets{idx});
 
     testpath = getenv("TEST_DIR");
@@ -97,9 +99,10 @@ for idx = 1:length(targets)
     try
         run(targets{idx});
         test_val = true;
-        message = "";
+        %message = "";
     catch exception
-        message = exception.message;
+        %message = exception.message;
+        setenv("TEST_MESSAGE", exception.message)
         warning(exception.message);
         clear exception
         test_val = false;
@@ -110,10 +113,9 @@ for idx = 1:length(targets)
     load(strcat(testpath, "/test_workspace.mat"));
     %pause(3)
     disp(['test', targets{idx},' success'])
-    pass(idx) = test_val;  % save the status
-    messages{idx} = message;
+    %pass(idx) = test_val;  % save the status
+    messages(idx) = getenv("TEST_MESSAGE");
     if contains(targets{idx},'simulink'); bdclose('all'); end
-    disp("Debug path")
     delete(strcat(testpath, "/test_workspace.mat"));
     % delete generated code to avoid failure in examples using similar names
     rmdir(strcat(testpath, "/", dir, "/c_generated_code"), 's')
@@ -124,16 +126,16 @@ clc;
 fail = false;
 disp('Succesful tests: ')
 for idx = 1:length(targets)
-    if pass(idx)
+    if strcmp(messages(idx),"")
         disp(targets{idx})
     end
 end
 disp(' ')
 disp('Failed tests: ')
 for idx = 1:length(targets)
-    if ~pass(idx)
+    if ~strcmp(messages(idx),"")
         disp(targets{idx})
-        disp(['    message: ',messages{idx}])
+        disp(['message: ',messages(idx)])
         fail = true;
     end
 end
