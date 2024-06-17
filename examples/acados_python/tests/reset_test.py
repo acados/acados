@@ -133,8 +133,8 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
     # set NaNs as input to test reset() -> NOT RECOMMENDED!!!
     # ocp_solver.options_set('print_level', 2)
     for i in range(N):
-        ocp_solver.set(i, 'x', np.NaN * np.ones((nx,)))
-        ocp_solver.set(i, 'u', np.NaN * np.ones((nu,)))
+        ocp_solver.set(i, 'x', np.nan * np.ones((nx,)))
+        ocp_solver.set(i, 'u', np.nan * np.ones((nu,)))
     status = ocp_solver.solve()
     ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
     if status == 0:
