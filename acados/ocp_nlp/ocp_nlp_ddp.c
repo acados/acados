@@ -756,8 +756,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // linearize NLP, update QP matrices, and add Levenberg-Marquardt term
         acados_tic(&timer1);
         ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-        ocp_nlp_add_levenberg_marquardt_term(mem->alpha, ddp_iter, config, dims,
-                                             nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+        ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, ddp_iter);
 
         mem->time_lin += acados_toc(&timer1);
 

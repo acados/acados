@@ -2204,9 +2204,9 @@ static void adaptive_levenberg_marquardt_update_mu(double iter, double step_size
     }
 }
 
-void ocp_nlp_add_levenberg_marquardt_term(double alpha, int iter, ocp_nlp_config *config, ocp_nlp_dims *dims,
+void ocp_nlp_add_levenberg_marquardt_term(ocp_nlp_config *config, ocp_nlp_dims *dims,
     ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem,
-    ocp_nlp_workspace *work)
+    ocp_nlp_workspace *work, double alpha, int iter)
 {
     if (opts->with_adaptive_levenberg_marquardt)
     {
