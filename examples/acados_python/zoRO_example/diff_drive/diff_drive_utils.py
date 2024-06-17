@@ -136,7 +136,7 @@ def ellipsoid_surface_2D(P, n=100):
     return a
 
 
-def plot_trajectory(cfg: MPCParam, traj_ref:np.ndarray, traj_zo:np.ndarray, P_matrices=None):
+def plot_trajectory(cfg: MPCParam, traj_ref:np.ndarray, traj_zo:np.ndarray, P_matrices=None, closed_loop=True):
 
     fig = plt.figure(1)
     ax = fig.add_subplot(1,1,1)
@@ -160,12 +160,14 @@ def plot_trajectory(cfg: MPCParam, traj_ref:np.ndarray, traj_zo:np.ndarray, P_ma
 
     ax.set_xlabel("x [m]")
     ax.set_ylabel("y [m]")
-    ax.set_xticks(np.arange(-2., 9., 2.))
-    ax.set_yticks(np.arange(0., 5., 2.))
-    ax.set_ylim([-.5, 3.6])
+    if closed_loop:
+        ax.set_xticks(np.arange(-2., 9., 2.))
+        ax.set_yticks(np.arange(0., 5., 2.))
+        ax.set_ylim([-.5, 3.6])
     ax.set_aspect("equal")
     ax.legend()
     plt.tight_layout()
+    plt.grid()
     if not os.path.exists("figures"):
         os.makedirs("figures")
 

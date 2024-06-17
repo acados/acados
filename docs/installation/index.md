@@ -14,10 +14,11 @@ git submodule update --recursive --init
 ```
 
 ### Build and install `acados`
-Both a CMake and a Makefile based build system is supported at the moment.
+A CMake and a Makefile based build system is available in acados.
+Note that only the `CMake` build system is tested using CI and is thus recommended.
 Please choose one and proceed with the corresponding paragraph.
 
-#### **CMake**
+#### **CMake** (recommended)
 Install `acados` as follows:
 ```
 mkdir -p build

@@ -186,7 +186,7 @@ def solve_single_zoro_problem_visualize_uncertainty():
     print(f"x_opt = {x_opt}")
     print(f"status = {status}")
     plot_trajectory(cfg_zo, x_ref_interp, x_opt,
-                    P_matrices=zoroMPC.ocp.zoro_description.backoff_scaling_gamma**2 * zoroMPC.P_mats)
+                    P_matrices=zoroMPC.ocp.zoro_description.backoff_scaling_gamma**2 * zoroMPC.P_mats, closed_loop=False)
 
 
 def plot_result_trajectory(n_executions: int, use_custom_update=True):
