@@ -121,7 +121,7 @@ for idx = 1:length(targets)
 end
 
 clc;
-fail = false
+fail = false;
 disp('Succesful tests: ')
 for idx = 1:length(targets)
     if pass(idx)
@@ -136,6 +136,7 @@ for idx = 1:length(targets)
         disp(['    message: ',messages{idx}])
         fail = true;
     end
+end
 if fail==true;
     error('Test failure');
 end
