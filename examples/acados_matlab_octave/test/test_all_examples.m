@@ -114,7 +114,7 @@ for idx = 1:length(targets)
     %pause(3)
     disp(['test', targets{idx},' success'])
     %pass(idx) = test_val;  % save the status
-    messages(idx) = getenv("TEST_MESSAGE");
+    messages{idx} = getenv("TEST_MESSAGE");
     if contains(targets{idx},'simulink'); bdclose('all'); end
     delete(strcat(testpath, "/test_workspace.mat"));
     % delete generated code to avoid failure in examples using similar names
@@ -126,16 +126,16 @@ clc;
 fail = false;
 disp('Succesful tests: ')
 for idx = 1:length(targets)
-    if strcmp(messages(idx),"")
+    if strcmp(messages{idx},"")
         disp(targets{idx})
     end
 end
 disp(' ')
 disp('Failed tests: ')
 for idx = 1:length(targets)
-    if ~strcmp(messages(idx),"")
+    if ~strcmp(messages{idx},"")
         disp(targets{idx})
-        disp(['message: ',messages(idx)])
+        disp(['message: ',messages{idx}])
         fail = true;
     end
 end
