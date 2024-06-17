@@ -105,10 +105,9 @@ jobs:
         source ${{runner.workspace}}/acados/acadosenv/bin/activate
         ctest -C $BUILD_TYPE --output-on-failure -j 4 --parallel 4;
 
-  MATLAB_interface:
+  MATLAB_test:
     needs: core_build
     runs-on: ubuntu-22.04
-
     steps:
     - uses: actions/checkout@v4
       with:
@@ -134,8 +133,8 @@ jobs:
       uses: matlab-actions/setup-matlab@v2
       if: always()
       with:
-        release: R2021a
-        cache: true
+          release: R2021a
+          cache: true
 
     # just needed for blasfeo_target.h
     - name: Configure CMake
@@ -143,13 +142,74 @@ jobs:
       working-directory: ${{runner.workspace}}/acados/build
       run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_OCTAVE=OFF
 
+    - name: Configure MATLAB worskpace
+      shell: bash
+      working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
+      run: |
+        cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
+        source env.sh
+
     - name: Matlab test native MEX
       uses: matlab-actions/run-command@v2
       if: always()
       with:
-        command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; run_matlab_tests
+        command: |
+            cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; run_matlab_tests
 
-  simulink_interface:
+  # run selected matlab examples
+  MATLAB_examples:
+    needs: core_build
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+
+    - uses: actions/download-artifact@v4
+      with:
+        path: ${{runner.workspace}}/acados
+
+    - name: Install Casadi MATLAB
+      working-directory: ${{runner.workspace}}/acados/external
+      shell: bash
+      run: |
+        ${{runner.workspace}}/acados/.github/linux/install_casadi_matlab.sh
+
+    - name: Export Paths
+      working-directory: ${{runner.workspace}}/acados
+      shell: bash
+      run: |
+        ${{runner.workspace}}/acados/.github/linux/export_paths.sh'' ${{runner.workspace}}
+
+    - name: Install MATLAB
+      uses: matlab-actions/setup-matlab@v2
+      if: always()
+      with:
+          release: R2021a
+          products: Simulink Simulink_Test
+          cache: true
+
+    # just needed for blasfeo_target.h
+    - name: Configure CMake
+      shell: bash
+      working-directory: ${{runner.workspace}}/acados/build
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_OCTAVE=OFF
+
+    - name: Configure MATLAB worskpace
+      shell: bash
+      working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
+      run: |
+        cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
+        source env.sh
+
+    - name: Matlab test native MEX
+      uses: matlab-actions/run-command@v2
+      if: always()
+      with:
+        command: |
+              cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; test_all_examples;
+
+  simulink_test:
     needs: core_build
     runs-on: ubuntu-22.04
 
@@ -194,7 +254,7 @@ jobs:
       with:
         command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; simulink_test
 
-  octave_interface:
+  octave_test:
     needs: core_build
     runs-on: ubuntu-22.04
 

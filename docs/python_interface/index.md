@@ -117,7 +117,7 @@ The cython based wrapper is called [`AcadosOcpSolverCython`](#acados_template.ac
 .. automodule:: acados_template.acados_ocp_solver
     :members:
     :private-members:
-    :exclude-members: make_ocp_dims_consistent, get_ocp_nlp_layout
+    :exclude-members: make_ocp_dims_consistent
 ```
 
 
@@ -186,7 +186,7 @@ The interface to interact with the acados integrator in C is based on ctypes.
 .. automodule:: acados_template.acados_sim_solver
     :members:
     :private-members:
-    :exclude-members: make_ocp_dims_consistent, get_ocp_nlp_layout
+    :exclude-members: make_ocp_dims_consistent
 ```
 
 ## Builders

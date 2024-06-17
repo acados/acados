@@ -67,7 +67,7 @@ qp_solver_ric_alg = 0; % HPIPM specific
 ocp_sim_method = 'irk'; % irk, irk_gnsf
 ocp_sim_method_num_stages = 4 * ones(ocp_N, 1); % scalar or vector of size ocp_N;
 ocp_sim_method_num_steps = 1; % scalar or vector of size ocp_N;
-ocp_sim_method_newton_iter = 3 * ones(ocp_N, 1); % scalar or vector of size ocp_N;
+ocp_sim_method_newton_iter = 3;
 cost_type = 'linear_ls'; % linear_ls, ext_cost
 
 %% model
@@ -229,6 +229,7 @@ ocp_opts.opts_struct
 
 %% acados ocp
 ocp = acados_ocp(ocp_model, ocp_opts);
+
 ocp_model.set('name', model_name);
 
 
