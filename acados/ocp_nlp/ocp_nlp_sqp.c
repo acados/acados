@@ -721,6 +721,10 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // linearize NLP and update QP matrices
         acados_tic(&timer1);
         ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+        ocp_nlp_get_cost_value(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work); // adds up parts of cost function
+        ocp_nlp_add_levenberg_marquardt_term(mem->alpha, sqp_iter, config, dims,
+                                             nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+
         mem->time_lin += acados_toc(&timer1);
 
         // get timings from integrator
