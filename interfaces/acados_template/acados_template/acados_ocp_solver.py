@@ -1456,7 +1456,7 @@ class AcadosOcpSolver:
 
 
         if field_ == 'max_iter' and value_ > self.__solver_options['nlp_solver_max_iter']:
-            print('Warning: AcadosOcpSolver.options_set() cannot increase nlp_solver_max_iter' \
+            raise Exception('AcadosOcpSolver.options_set() cannot increase nlp_solver_max_iter' \
                     f' above initial value {self.__nlp_solver_max_iter} (you have {value_})')
             return
 
