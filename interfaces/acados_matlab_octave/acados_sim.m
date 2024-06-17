@@ -103,7 +103,7 @@ classdef acados_sim < handle
 
             % templated MEX
             return_dir = pwd();
-            obj.code_gen_dir = obj.acados_sim_json.code_export_directory; 
+            obj.code_gen_dir = obj.acados_sim_json.code_export_directory;
             cd(obj.code_gen_dir)
 
             mex_sim_solver = str2func(sprintf('%s_mex_sim_solver', obj.model_struct.name));
