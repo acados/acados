@@ -2216,7 +2216,7 @@ void ocp_nlp_add_levenberg_marquardt_term(double alpha, int iter, ocp_nlp_config
         opts->levenberg_marquardt = reg_param;
     }
     // Only add the Levenberg-Marquardt term when it is bigger than zero
-    if (opts->levenberg_marquardt > 0.0)
+    if (mem->compute_hess && opts->levenberg_marquardt > 0.0)
     {
         int N = dims->N;
         int *nx = dims->nx;
@@ -2226,15 +2226,13 @@ void ocp_nlp_add_levenberg_marquardt_term(double alpha, int iter, ocp_nlp_config
             if (i < N)
             {
                 // Levenberg Marquardt term: Ts[i] * levenberg_marquardt * eye()
-                if (mem->compute_hess && opts->levenberg_marquardt > 0.0)
-                    blasfeo_ddiare(nu[i] + nx[i], in->Ts[i] * opts->levenberg_marquardt,
+                blasfeo_ddiare(nu[i] + nx[i], in->Ts[i] * opts->levenberg_marquardt,
                                 mem->qp_in->RSQrq+i, 0, 0);
             }
             else
             {
                 // Levenberg Marquardt term: 1.0 * levenberg_marquardt * eye()
-                if (mem->compute_hess && opts->levenberg_marquardt > 0.0)
-                    blasfeo_ddiare(nu[i] + nx[i], opts->levenberg_marquardt,
+                blasfeo_ddiare(nu[i] + nx[i], opts->levenberg_marquardt,
                                 mem->qp_in->RSQrq+i, 0, 0);
             }
         }
