@@ -68,20 +68,20 @@ targets = {
     '../wind_turbine_nx6/example_ocp.m';
     %'../wind_turbine_nx6/example_sim.m';
 %
-%         './test_checks.m';  % SHOULD FAIL, DOES
-%         './test_mstart_dirhe_lorentz.m';  % OK
-%         './test_ocp_OSQP.m';  % CRASH - solver not installed
-%         './test_ocp_linear_mass_spring.m';  % OK
-%         './test_ocp_pendulum_dae.m';  % OK
-%         './test_ocp_pendulum_on_cart.m';  % CRASH - solver not installed
-%         './test_ocp_qpdunes.m';  % CRASH - solver not installed
-%         './test_ocp_simple_dae.m';  % OK
-%         './test_ocp_wtnx6.m';  % FAIL - when not in installation folder?
-%         './test_sens_adj.m';  % OK
-%         './test_sens_forw.m';  % OK
-%         './test_sens_hess.m';  % OK
-%         './test_sim_dae.m';  % OK
-%         './test_target_selector.m'  % OK
+%     './test_checks.m';
+%     './test_mhe_lorentz.m';
+%     './test_ocp_OSQP.m';
+%     './test_ocp_linear_mass_spring.m';
+%     './test_ocp_pendulum_dae.m';
+%     './test_ocp_pendulum_on_cart.m';
+%     './test_ocp_qpdunes.m';
+%     './test_ocp_simple_dae.m';
+%     './test_ocp_wtnx6.m';
+%     './test_sens_adj.m';
+%     './test_sens_forw.m';
+%     './test_sens_hess.m';
+%     './test_sim_dae.m';
+%     './test_target_selector.m'
 };
 
 pass = zeros(1, length(targets));  % keep track of test results
