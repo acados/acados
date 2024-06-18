@@ -864,6 +864,8 @@ static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
                                                   double trial_merit,
                                                   double pred_merit)
 {
+    printf("Current funnel width: %f\n",mem->funnel_width);
+    printf("Current trial_infeasibility: %f\n", trial_infeasibility);
     bool accept_step = false;
     if(is_iterate_inside_of_funnel(mem, opts, trial_infeasibility))
     {
@@ -932,6 +934,63 @@ static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
     return accept_step;
 }
 
+static void ocp_nlp_sqp_compute_trial_iterate(ocp_nlp_config *config, ocp_nlp_dims *dims,
+            ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_sqp_memory *sqp_mem,
+            ocp_nlp_workspace *work, double alpha)
+{
+    /* computes trial iterate in tmp_nlp_out */
+    int N = dims->N;
+    int *nv = dims->nv;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ni = dims->ni;
+    int *nz = dims->nz;
+
+    ocp_nlp_memory *mem = sqp_mem->nlp_mem;
+    ocp_nlp_out *tmp_nlp_out = work->tmp_nlp_out;
+
+    // Update primal, dual variables and slacks
+    int i = 0;
+    for (i = 0; i < N+1; i++)
+    {
+        // update primal variables
+        blasfeo_daxpy(nv[i], alpha, mem->qp_out->ux+i, 0, out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
+
+        // update dual variables
+        if (opts->full_step_dual)
+        {
+            blasfeo_dveccp(2*ni[i], mem->qp_out->lam+i, 0, tmp_nlp_out->lam+i, 0);
+            if (i < N)
+            {
+                blasfeo_dveccp(nx[i+1], mem->qp_out->pi+i, 0, tmp_nlp_out->pi+i, 0);
+            }
+        }
+        else
+        {
+            // update duals with alpha step
+            blasfeo_dvecsc(2*ni[i], 1.0-alpha, tmp_nlp_out->lam+i, 0);
+            blasfeo_daxpy(2*ni[i], alpha, mem->qp_out->lam+i, 0, tmp_nlp_out->lam+i, 0, tmp_nlp_out->lam+i, 0);
+            if (i < N)
+            {
+                blasfeo_dvecsc(nx[i+1], 1.0-alpha, tmp_nlp_out->pi+i, 0);
+                blasfeo_daxpy(nx[i+1], alpha, mem->qp_out->pi+i, 0, tmp_nlp_out->pi+i, 0, tmp_nlp_out->pi+i, 0);
+            }
+        }
+
+        // // update slack values
+        // blasfeo_dvecsc(2*ni[i], 1.0-alpha, tmp_nlp_out->t+i, 0);
+        // blasfeo_daxpy(2*ni[i], alpha, mem->qp_out->t+i, 0, tmp_nlp_out->t+i, 0, tmp_nlp_out->t+i, 0);
+
+        // linear update of algebraic variables using state and input sensitivity
+        if (i < N)
+        {
+            // tmp_nlp_out->z = mem->z_alg + alpha * dzdux * qp_out->ux
+            blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0,
+                    mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, tmp_nlp_out->z+i, 0);
+        }
+    }
+}
+
 static int ocp_nlp_sqp_backtracking_line_search(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *mem_, void *work_, void *opts_)
 {
@@ -965,8 +1024,8 @@ static int ocp_nlp_sqp_backtracking_line_search(void *config_, void *dims_, void
 
     while (true)
     {
-        // Do the SQP forward sweep to get the trial iterate
-        // ocp_nlp_sqp_compute_trial_iterate(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, alpha);
+        // Calculate trial iterate: trial_iterate = current_iterate + alpha * direction
+        ocp_nlp_sqp_compute_trial_iterate(config, dims, nlp_in, nlp_out, nlp_opts, mem, nlp_work, alpha);
 
         ///////////////////////////////////////////////////////////////////////
         // Evaluate cost function at trial iterate
@@ -1169,6 +1228,13 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     /************************************************
      * main sqp loop
      ************************************************/
+    if (nlp_opts->globalization == FUNNEL_METHOD)
+    {
+        printf("Funnel method was found.");
+    } else
+    {
+        printf("Funnel method was NOT found.");
+    }
     int sqp_iter = 0;
     double reg_param_memory = 0.0;
     if (nlp_opts->print_level > 0)
