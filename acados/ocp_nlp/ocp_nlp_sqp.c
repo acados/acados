@@ -668,10 +668,11 @@ static void ocp_nlp_sqp_reset_timers(ocp_nlp_sqp_memory *mem)
  * output functions
  ************************************************/
 static void print_iteration_header(){
-    printf("%6s | %11s | %10s | %10s | %10s | %10s | %10s | %10s | %10s | %10s\n",
+    printf("%6s | %11s | %10s | %10s | %10s | %10s | %10s | %10s | %10s | %10s | %10s\n",
     "iter.",
     "objective",
     "res_eq",
+    "res_ineq",
     "res_stat",
     "res_comp",
     "alpha",
@@ -683,7 +684,8 @@ static void print_iteration_header(){
 
 static void print_iteration(double obj,
                      int iter_count,
-                     double infeas,
+                     double infeas_eq,
+                     double infeas_ineq,
                      double stationarity,
                      double complementarity,
                      double alpha,
@@ -695,10 +697,11 @@ static void print_iteration(double obj,
     if ((iter_count % 10 == 0) | (iter_count == -1)){
         print_iteration_header();
     }
-    printf("%6i | %11.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10i | %10i\n",
+    printf("%6i | %11.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10i | %10i\n",
     iter_count,
     obj,
-    infeas,
+    infeas_eq,
+    infeas_ineq,
     stationarity,
     complementarity,
     alpha,
@@ -825,8 +828,12 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
      ************************************************/
     int sqp_iter = 0;
     double reg_param_memory = 0.0;
+    if (nlp_opts->print_level > 0)
+    {
+        printf("'with_adaptive_levenberg_marquardt' option is set to: %s\n", opts->nlp_opts->with_adaptive_levenberg_marquardt?"true":"false");
+    }
 
-    for (; sqp_iter < opts->max_iter; sqp_iter++)
+    for (; sqp_iter < opts->max_iter+1; sqp_iter++)
     {
         /* Prepare the QP data */
         // linearize NLP and update QP matrices
@@ -866,7 +873,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // Output
         if (nlp_opts->print_level > 0)
         {
-            print_iteration(nlp_mem->cost_value, sqp_iter, nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_stat, nlp_res->inf_norm_res_comp, mem->alpha, mem->step_norm, reg_param_memory, qp_status, qp_iter);
+            print_iteration(nlp_mem->cost_value, sqp_iter, nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_ineq, nlp_res->inf_norm_res_stat, nlp_res->inf_norm_res_comp, mem->alpha, mem->step_norm, reg_param_memory, qp_status, qp_iter);
         }
         reg_param_memory = nlp_opts->levenberg_marquardt;
 
