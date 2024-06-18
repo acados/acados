@@ -68,6 +68,20 @@ typedef struct
     int rti_phase;       // only phase 0 at the moment
     int initialize_t_slacks;  // 0-false or 1-true
 
+    //opts for funnel globalization
+    // Line search
+    double linesearch_eta;
+    double linesearch_minimum_step_size;
+    double linesearch_step_size_reduction_factor;
+
+    // funnel
+    double funnel_initial_increase_factor; // for initialization of initial funnel width
+    double funnel_initial_upper_bound; // for initialization of initial funnel width
+    double funnel_sufficient_decrease_factor; // multiplication factor for funnel suff. decrease factor
+    double funnel_kappa; // parameter for reduction of funnel
+    double funnel_fraction_switching_condition; // parameter in switching condition
+    double funnel_penalty_parameter; // penalty parameter for penalty phase
+
 } ocp_nlp_sqp_opts;
 
 //
@@ -119,6 +133,12 @@ typedef struct
 
     double step_norm;
 
+    double funnel_width;
+    char funnel_type_iter;
+    bool funnel_penalty_mode;
+    double l1_infeasibility;
+    double funnel_penalty_parameter;
+
 } ocp_nlp_sqp_memory;
 
 //
@@ -166,6 +186,11 @@ void ocp_nlp_sqp_eval_lagr_grad_p(void *config_, void *dims_, void *nlp_in_, voi
                             const char *field, void *grad_p);
 //
 void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, void *return_value_);
+//
+double ocp_nlp_sqp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
+                ocp_nlp_workspace *nlp_work, ocp_nlp_memory *nlp_mem);
+
+double get_l1_infeasibility(void *config_, void *dims_, void *mem_);
 
 #ifdef __cplusplus
 } /* extern "C" */

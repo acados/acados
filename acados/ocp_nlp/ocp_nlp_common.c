@@ -1225,7 +1225,7 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             double* levenberg_marquardt = (double *) value;
             opts->levenberg_marquardt = *levenberg_marquardt;
         }
-        // newly added options for DDP
+        // newly added options for DDP and SQP
         else if (!strcmp(field, "with_adaptive_levenberg_marquardt"))
         {
             bool* with_adaptive_levenberg_marquardt = (bool *) value;
@@ -3243,7 +3243,6 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
     //        res->inf_norm_res_ineq, res->inf_norm_res_comp);
 }
 
-
 void ocp_nlp_res_get_inf_norm(ocp_nlp_res *res, double *out)
 {
     double norm = res->inf_norm_res_stat;
@@ -3253,7 +3252,6 @@ void ocp_nlp_res_get_inf_norm(ocp_nlp_res *res, double *out)
     *out = norm;
     return;
 }
-
 
 
 void copy_ocp_nlp_out(ocp_nlp_dims *dims, ocp_nlp_out *from, ocp_nlp_out *to)
