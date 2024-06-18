@@ -2076,6 +2076,8 @@ void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* 
 
     double eps_sufficient_descent = {{ solver_options.eps_sufficient_descent }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "eps_sufficient_descent", &eps_sufficient_descent);
+{%- elif solver_options.globalization == "FUNNEL_METHOD" %}
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization", "funnel_method");
 {%- endif -%}
 
     int with_solution_sens_wrt_params = {{ solver_options.with_solution_sens_wrt_params }};
