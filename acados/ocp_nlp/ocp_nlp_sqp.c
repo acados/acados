@@ -131,7 +131,7 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->linesearch_minimum_step_size = 1e-17;
     opts->linesearch_step_size_reduction_factor = 0.5;
 
-    opts->funnel_initial_increase_factor = 10.0;
+    opts->funnel_initial_increase_factor = 15.0;
     opts->funnel_initial_upper_bound = 1.0;
     opts->funnel_sufficient_decrease_factor = 0.9;
     opts->funnel_kappa = 0.9;
@@ -585,7 +585,8 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
         // blasfeo_print_exp_dvec(2*nb[ii]+2*ng[ii], qp_in->d+ii, 0);
     }
 
-    if (nlp_opts->print_level > sqp_iter + 1)
+    // if (nlp_opts->print_level > sqp_iter + 1)
+    if (nlp_opts->print_level > 2)
     {
         printf("\n\nSQP: SOC ocp_qp_in at iteration %d\n", sqp_iter);
         print_ocp_qp_in(qp_in);
@@ -625,7 +626,8 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
             ocp_qp_res_compute_nrm_inf(work->qp_res, mem->stat+(mem->stat_n*(sqp_iter+1)+7));
     }
 
-    if (nlp_opts->print_level > sqp_iter + 1)
+    // if (nlp_opts->print_level > sqp_iter + 1)
+    if (nlp_opts->print_level > 2)
     {
         printf("\n\nSQP: SOC ocp_qp_out at iteration %d\n", sqp_iter);
         print_ocp_qp_out(qp_out);
@@ -645,7 +647,8 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
         if (nlp_opts->print_level > 1)
         {
             printf("\nFailed to solve the following QP:\n");
-            if (nlp_opts->print_level > sqp_iter + 1)
+            // if (nlp_opts->print_level > sqp_iter + 1)
+            if (nlp_opts->print_level > 2)
                 print_ocp_qp_in(qp_in);
         }
 
@@ -675,7 +678,7 @@ static void ocp_nlp_sqp_reset_timers(ocp_nlp_sqp_memory *mem)
  * output functions
  ************************************************/
 static void print_iteration_header(){
-    printf("%6s | %11s | %10s | %10s | %10s | %10s | %10s | %10s | %10s | %10s | %10s\n",
+    printf("%6s | %11s | %10s | %10s | %10s | %10s | %10s | %10s | %10s | %15s | %10s | %10s | %10s\n",
     "iter.",
     "objective",
     "res_eq",
@@ -685,8 +688,10 @@ static void print_iteration_header(){
     "alpha",
     "step_norm",
     "LM_reg.",
+    "funnel width",
     "qp_status",
-    "qp_iter");
+    "qp_iter",
+    "iter. type");
 }
 
 static void print_iteration(double obj,
@@ -698,13 +703,15 @@ static void print_iteration(double obj,
                      double alpha,
                      double step_norm,
                      double reg_param,
+                     double funnel_width,
                      int qp_status,
-                     int qp_iter)
+                     int qp_iter,
+                     char iter_type)
 {
     if ((iter_count % 10 == 0) | (iter_count == -1)){
         print_iteration_header();
     }
-    printf("%6i | %11.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10i | %10i\n",
+    printf("%6i | %11.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %15.4e | %10i | %10i | %10c\n",
     iter_count,
     obj,
     infeas_eq,
@@ -714,8 +721,10 @@ static void print_iteration(double obj,
     alpha,
     step_norm,
     reg_param,
+    funnel_width,
     qp_status,
-    qp_iter);
+    qp_iter,
+    iter_type);
 }
 
 /************************************************
@@ -828,7 +837,7 @@ static bool is_funnel_sufficient_decrease_satisfied(ocp_nlp_sqp_memory *mem, ocp
 
 static bool is_switching_condition_satisfied(ocp_nlp_sqp_opts *opts, double pred_optimality, double step_size, double pred_infeasibility)
 {
-    if (step_size * pred_infeasibility >= opts->funnel_fraction_switching_condition * pred_infeasibility * pred_infeasibility)
+    if (step_size * pred_optimality >= opts->funnel_fraction_switching_condition * pred_infeasibility * pred_infeasibility)
     {
         return true;
     }
@@ -864,8 +873,6 @@ static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
                                                   double trial_merit,
                                                   double pred_merit)
 {
-    printf("Current funnel width: %f\n",mem->funnel_width);
-    printf("Current trial_infeasibility: %f\n", trial_infeasibility);
     bool accept_step = false;
     if(is_iterate_inside_of_funnel(mem, opts, trial_infeasibility))
     {
@@ -880,7 +887,7 @@ static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
                 {
                     debug_output(opts->nlp_opts, "f-type step: Armijo condition satisfied\n"); //debugging output
                     accept_step = true;
-                    mem->funnel_type_iter = 'f';
+                    mem->funnel_iter_type = 'f';
                 }
                 else
                 {
@@ -890,22 +897,22 @@ static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
             }
             else if (is_funnel_sufficient_decrease_satisfied(mem, opts, trial_infeasibility))
             {
-                debug_output(opts->nlp_opts, "Switching condition IS satisfied!\n"); //debugging output
+                debug_output(opts->nlp_opts, "Switching condition is NOT satisfied!\n"); //debugging output
                 debug_output(opts->nlp_opts, "h-type step: funnel suff. decrease satisfied!\n"); //debugging output
                 accept_step = true;
-                mem->funnel_type_iter = 'h';
+                mem->funnel_iter_type = 'h';
                 decrease_funnel(mem, opts, current_infeasibility, trial_infeasibility);
             }
             else
             {
-                debug_output(opts->nlp_opts, "Switching condition IS satisfied!\n"); //debugging output
+                debug_output(opts->nlp_opts, "Switching condition is NOT satisfied!\n"); //debugging output
                 debug_output(opts->nlp_opts, "Entered penalty check!\n"); //debugging output
                 //TODO move to function and test more
                 if (trial_merit <= current_merit + opts->linesearch_eta * alpha * pred_merit)
                 {
                     debug_output(opts->nlp_opts, "Penalty Function accepted\n");
                     accept_step = true;
-                    mem->funnel_type_iter = 'b';
+                    mem->funnel_iter_type = 'b';
                     mem->funnel_penalty_mode = true;
                 }
             }
@@ -917,7 +924,7 @@ static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
             {
                 debug_output(opts->nlp_opts, "p-type step: accepted iterate\n");
                 accept_step = true;
-                mem->funnel_type_iter = 'p';
+                mem->funnel_iter_type = 'p';
 
                 if (is_funnel_sufficient_decrease_satisfied(mem, opts, trial_infeasibility))
                 {
@@ -1072,29 +1079,6 @@ static int ocp_nlp_sqp_backtracking_line_search(void *config_, void *dims_, void
             tmp_fun = config->cost[i]->memory_get_fun_ptr(nlp_mem->cost[i]);
             trial_cost += *tmp_fun;
         }
-        // double dyn_infeasibility = 0.0;
-        // for(int i=0; i<N; i++)
-        // {
-        //     tmp_fun_vec = config->dynamics[i]->memory_get_fun_ptr(nlp_mem->dynamics[i]);
-        //     for(int j=0; j<nx[i+1]; j++)
-        //     {
-        //         dyn_infeasibility += fabs(BLASFEO_DVECEL(tmp_fun_vec, j));
-        //     }
-        // }
-
-        // double constr_infeasibility = 0.0;
-        // for(int i=0; i<=N; i++)
-        // {
-        //     tmp_fun_vec = config->constraints[i]->memory_get_fun_ptr(nlp_mem->constraints[i]);
-        //     for (int j=0; j<2*ni[i]; j++)
-        //     {
-        //         tmp = BLASFEO_DVECEL(tmp_fun_vec, j);
-        //         if (tmp > 0.0)
-        //         {
-        //             constr_infeasibility += tmp;
-        //         }
-        //     }
-        // }
         trial_infeasibility = get_l1_infeasibility(config, dims, mem);
 
         ///////////////////////////////////////////////////////////////////////
@@ -1212,6 +1196,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     int qp_status = 0;
     int qp_iter = 0;
     mem->alpha = 0.0;
+    mem->funnel_iter_type = '-';
 
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
@@ -1285,7 +1270,11 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // Output
         if (nlp_opts->print_level > 0)
         {
-            print_iteration(nlp_mem->cost_value, sqp_iter, nlp_res->inf_norm_res_eq, nlp_res->inf_norm_res_ineq, nlp_res->inf_norm_res_stat, nlp_res->inf_norm_res_comp, mem->alpha, mem->step_norm, reg_param_memory, qp_status, qp_iter);
+            print_iteration(nlp_mem->cost_value, sqp_iter, nlp_res->inf_norm_res_eq,
+                            nlp_res->inf_norm_res_ineq, nlp_res->inf_norm_res_stat,
+                            nlp_res->inf_norm_res_comp, mem->alpha, mem->step_norm,
+                            reg_param_memory, mem->funnel_width, qp_status,
+                            qp_iter, mem->funnel_iter_type);
         }
         reg_param_memory = nlp_opts->levenberg_marquardt;
 
@@ -1322,7 +1311,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
         // Show input to QP
         // TODO: Should this really be > sqp_iter + 1? Or only > 1?
-        if (nlp_opts->print_level > sqp_iter + 1)
+        // if (nlp_opts->print_level > sqp_iter + 1)
+        if (nlp_opts->print_level > 2)
         {
             printf("\n\nSQP: ocp_qp_in at iteration %d\n", sqp_iter);
             print_ocp_qp_in(qp_in);
@@ -1355,7 +1345,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                                         "warm_start", &opts->qp_warm_start);
         }
 
-        if (nlp_opts->print_level > sqp_iter + 1)
+        // if (nlp_opts->print_level > sqp_iter + 1)
+        if (nlp_opts->print_level > 2)
         {
             printf("\n\nSQP: ocp_qp_out at iteration %d\n", sqp_iter);
             print_ocp_qp_out(qp_out);
