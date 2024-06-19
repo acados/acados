@@ -806,9 +806,9 @@ static void initialize_funnel(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts, d
                             opts->funnel_initial_increase_factor*initial_infeasibility);
 }
 
-static void decrease_funnel(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts, double new_infeasibility, double old_infeasibility)
+static void decrease_funnel(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts, double trial_infeasibility, double current_infeasibility)
 {
-    mem->funnel_width = (1-opts->funnel_kappa) * new_infeasibility + opts->funnel_kappa * mem->funnel_width;
+    mem->funnel_width = (1-opts->funnel_kappa) * trial_infeasibility + opts->funnel_kappa * mem->funnel_width;
 }
 
 static bool is_iterate_inside_of_funnel(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts, double infeasibility)
@@ -901,7 +901,7 @@ static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
                 debug_output(opts->nlp_opts, "h-type step: funnel suff. decrease satisfied!\n"); //debugging output
                 accept_step = true;
                 mem->funnel_iter_type = 'h';
-                decrease_funnel(mem, opts, current_infeasibility, trial_infeasibility);
+                decrease_funnel(mem, opts, trial_infeasibility, current_infeasibility);
             }
             else
             {
