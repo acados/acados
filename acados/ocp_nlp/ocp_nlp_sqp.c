@@ -873,8 +873,6 @@ static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
                                                   double trial_merit,
                                                   double pred_merit)
 {
-    printf("trial f.: %f, trial inf.: %f\n", trial_objective, trial_infeasibility);
-    printf("current f.: %f, current inf.: %f\n", current_objective, current_infeasibility);
     bool accept_step = false;
     if(is_iterate_inside_of_funnel(mem, opts, trial_infeasibility))
     {
@@ -921,8 +919,6 @@ static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
         }
         else
         {
-            printf("trial merit: %f, pred_merit: %f\n", trial_merit, pred_merit);
-            printf("current merit: %f\n", current_merit);
             debug_output(opts->nlp_opts, "Penalty mode active\n");
             if (trial_merit <= current_merit + opts->linesearch_eta * alpha * pred_merit)
             {
