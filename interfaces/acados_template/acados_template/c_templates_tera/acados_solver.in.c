@@ -2792,6 +2792,7 @@ int {{ model.name }}_acados_update_params_sparse({{ model.name }}_solver_capsule
         if (stage == 0)
         {
         {%- if constraints.constr_type_0 == "BGP" %}
+            capsule->phi_0_constraint_fun.set_param_sparse(&capsule->phi_0_constraint_fun, n_update, idx, p);
             capsule->phi_0_constraint_fun_jac_hess.set_param_sparse(&capsule->phi_0_constraint_fun_jac_hess, n_update, idx, p);
         {%- elif constraints.constr_type_0 == "BGH" and dims.nh_0 > 0 %}
             capsule->nl_constr_h_0_fun_jac.set_param_sparse(&capsule->nl_constr_h_0_fun_jac, n_update, idx, p);
@@ -2804,7 +2805,8 @@ int {{ model.name }}_acados_update_params_sparse({{ model.name }}_solver_capsule
         else
         {
         {%- if constraints.constr_type == "BGP" %}
-            capsule->phi_constraint[stage-1].set_param_sparse(capsule->phi_constraint+stage-1, n_update, idx, p);
+            capsule->phi_constraint_fun[stage-1].set_param_sparse(capsule->phi_constraint_fun+stage-1, n_update, idx, p);
+            capsule->phi_constraint_fun_jac_hess[stage-1].set_param_sparse(capsule->phi_constraint_fun_jac_hess+stage-1, n_update, idx, p);
         {%- elif constraints.constr_type == "BGH" and dims.nh > 0 %}
             capsule->nl_constr_h_fun_jac[stage-1].set_param_sparse(capsule->nl_constr_h_fun_jac+stage-1, n_update, idx, p);
             capsule->nl_constr_h_fun[stage-1].set_param_sparse(capsule->nl_constr_h_fun+stage-1, n_update, idx, p);
@@ -2883,6 +2885,7 @@ int {{ model.name }}_acados_update_params_sparse({{ model.name }}_solver_capsule
     {%- endif %}
         // constraints
     {%- if constraints.constr_type_e == "BGP" %}
+        capsule->phi_e_constraint_fun.set_param_sparse(&capsule->phi_e_constraint_fun, n_update, idx, p);
         capsule->phi_e_constraint_fun_jac_hess.set_param_sparse(&capsule->phi_e_constraint_fun_jac_hess, n_update, idx, p);
     {%- elif constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
         capsule->nl_constr_h_e_fun_jac.set_param_sparse(&capsule->nl_constr_h_e_fun_jac, n_update, idx, p);

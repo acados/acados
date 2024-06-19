@@ -68,7 +68,7 @@ int {{ model.name }}_phi_e_constraint_fun_jac_hess_n_out(void);
 {% endif %}
 
 {% if dims.nphi_0 > 0 %}
-int {{ model.name }}_phi_0_constraint_fun_jac_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ model.name }}_phi_0_constraint_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_phi_0_constraint_fun_work(int *, int *, int *, int *);
 const int *{{ model.name }}_phi_0_constraint_fun_sparsity_in(int);
 const int *{{ model.name }}_phi_0_constraint_fun_sparsity_out(int);
