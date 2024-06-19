@@ -236,13 +236,16 @@ add_library(${MODEL_OBJ} OBJECT ${MODEL_SRC} )
 if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMPLE})
     set(OCP_SRC
 {%- if constr_type == "BGP" and dims_nphi > 0 %}
-        {{ model.name }}_constraints/{{ model.name }}_phi_constraint.c
+        {{ model.name }}_constraints/{{ model.name }}_phi_constraint_fun.c
+        {{ model.name }}_constraints/{{ model.name }}_phi_constraint_fun_jac_hess.c
 {%- endif %}
 {%- if constr_type_e == "BGP" and dims_nphi_e > 0 %}
-        {{ model.name }}_constraints/{{ model.name }}_phi_e_constraint.c
+        {{ model.name }}_constraints/{{ model.name }}_phi_e_constraint_fun.c
+        {{ model.name }}_constraints/{{ model.name }}_phi_e_constraint_fun_jac_hess.c
 {%- endif %}
 {%- if constr_type_0 == "BGP" and dims_nphi_0 > 0 %}
-        {{ model.name }}_constraints/{{ model.name }}_phi_0_constraint.c
+        {{ model.name }}_constraints/{{ model.name }}_phi_0_constraint_fun.c
+        {{ model.name }}_constraints/{{ model.name }}_phi_0_constraint_fun_jac_hess.c
 {%- endif %}
 
 {%- if constr_type == "BGH" and dims_nh > 0 %}
