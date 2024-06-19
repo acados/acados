@@ -873,6 +873,8 @@ static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
                                                   double trial_merit,
                                                   double pred_merit)
 {
+    printf("trial f.: %f, trial inf.: %f\n", trial_objective, trial_infeasibility);
+    printf("current f.: %f, current inf.: %f\n", current_objective, current_infeasibility);
     bool accept_step = false;
     if(is_iterate_inside_of_funnel(mem, opts, trial_infeasibility))
     {
@@ -919,6 +921,8 @@ static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
         }
         else
         {
+            printf("trial merit: %f, pred_merit: %f\n", trial_merit, pred_merit);
+            printf("current merit: %f\n", current_merit);
             debug_output(opts->nlp_opts, "Penalty mode active\n");
             if (trial_merit <= current_merit + opts->linesearch_eta * alpha * pred_merit)
             {
@@ -1082,20 +1086,19 @@ static int ocp_nlp_sqp_backtracking_line_search(void *config_, void *dims_, void
         trial_infeasibility = get_l1_infeasibility(config, dims, mem);
 
         ///////////////////////////////////////////////////////////////////////
-        // Evaluate constraints at trial point
-        double current_infeasibility = mem->l1_infeasibility;
-        double current_merit = mem->funnel_penalty_parameter*trial_cost + trial_infeasibility;
-        double trial_merit = mem->funnel_penalty_parameter*nlp_mem->cost_value + mem->l1_infeasibility;
-
-        ///////////////////////////////////////////////////////////////////////
         // Evaluate merit function at trial point
+        double current_infeasibility = mem->l1_infeasibility;
+        double current_cost = nlp_mem->cost_value;
+        double trial_merit = mem->funnel_penalty_parameter*trial_cost + trial_infeasibility;
+        double current_merit = mem->funnel_penalty_parameter*current_cost + current_infeasibility;
+        pred_merit = mem->funnel_penalty_parameter * pred + current_infeasibility;
         ared = nlp_mem->cost_value - trial_cost;
 
         // Funnel globalization
         accept_step = is_trial_iterate_acceptable_to_funnel(mem, opts,
                                                             pred, ared,
                                                             alpha, current_infeasibility,
-                                                            trial_infeasibility, nlp_mem->cost_value,
+                                                            trial_infeasibility, current_cost,
                                                             trial_cost, current_merit, trial_merit,
                                                             pred_merit);
 
