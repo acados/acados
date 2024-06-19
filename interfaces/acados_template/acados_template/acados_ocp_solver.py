@@ -552,7 +552,8 @@ class AcadosOcpSolver:
             :param stages: stages for which the sensitivities are returned, int or list of int
             :param with_respect_to: string in ["initial_state", "params_global"]
             :returns: a tuple (sens_x, sens_u) with the solution sensitivities.
-                    If stages is a list, sens_x is a list of the same length. For sens_u, the list has length len(stages) or len(stages)-1 depending on whether N is included or not.
+                    If stages is a list, sens_x is a list of the same length.
+                    For sens_u, the list has length len(stages) or len(stages)-1 depending on whether N is included or not.
                     If stages is a scalar, sens_x and sens_u are np.ndarrays of shape (nx[stages], ngrad) and (nu[stages], ngrad).
 
         .. note::  Correct computation of sensitivities requires \n
@@ -567,20 +568,25 @@ class AcadosOcpSolver:
         (4) the solution of at least one QP in advance to evaluation of the sensitivities as the factorization is reused.
 
         .. note:: Timing of the sensitivities computation consists of time_solution_sens_lin, time_solution_sens_solve.
-        """
+        .. note:: Solution sensitivities with respect to parameters are currently implemented assuming the parameter vector p is global within the OCP, i.e. p=p_i with i=0, ..., N.
+        .. note:: Solution sensitivities with respect to parameters are currently implemented only for parametric discrete dynamics and parametric external costs (in particular, parametric constraints are not covered).
+   """
 
         if not (self.acados_ocp.solver_options.qp_solver == 'FULL_CONDENSING_HPIPM' or
                 self.acados_ocp.solver_options.qp_solver == 'PARTIAL_CONDENSING_HPIPM'):
             raise Exception("Parametric sensitivities are only available with HPIPM as QP solver.")
 
         if not (
-           (self.acados_ocp.solver_options.hessian_approx == 'EXACT' or
-           (self.acados_ocp.cost.cost_type == 'LINEAR_LS' and
-            self.acados_ocp.cost.cost_type_0 == 'LINEAR_LS' and
-            self.acados_ocp.cost.cost_type_e == 'LINEAR_LS'))
-            and
+            self.acados_ocp.solver_options.hessian_approx == 'EXACT' and
             self.acados_ocp.solver_options.regularize_method == 'NO_REGULARIZE' and
-            self.acados_ocp.solver_options.levenberg_marquardt == 0
+            self.acados_ocp.solver_options.levenberg_marquardt == 0 and
+            self.acados_ocp.solver_options.exact_hess_constr == 1 and
+            self.acados_ocp.solver_options.exact_hess_cost == 1 and
+            self.acados_ocp.solver_options.exact_hess_dyn == 1 and
+            self.acados_ocp.solver_options.fixed_hess == 0 and
+            self.acados_ocp.model.cost_expr_ext_cost_custom_hess_0 is None and
+            self.acados_ocp.model.cost_expr_ext_cost_custom_hess is None and
+            self.acados_ocp.model.cost_expr_ext_cost_custom_hess_e is None
         ):
             raise Exception("Parametric sensitivities are only correct if an exact Hessian is used!")
 

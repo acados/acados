@@ -29,46 +29,45 @@
 
 %
 
-clear; clc; close all;
-p = path;  % save current path for loading later
-start_dir = pwd;
+clearvars; clc; close all;
+
 
 % list the examples you would like to test
+
 targets = {
-%     '../control_rates/main.m';
-%     '../generic_dyn_disc/disc_dyn_example_ocp.m';
-%     '../generic_external_cost/external_cost_example_ocp.m';
-%     '../getting_started/extensive_example_ocp.m';
+    '../generic_dyn_disc/disc_dyn_example_ocp.m';
+    '../generic_external_cost/external_cost_example_ocp.m';
+    '../getting_started/extensive_example_ocp.m';
 %     '../getting_started/minimal_example_closed_loop.m';
-%     '../getting_started/minimal_example_sim.m';
+    '../getting_started/minimal_example_sim.m';
 %     '../getting_started/simulink_example.m';
 %     '../getting_started/simulink_example_advanced.m';
 %     '../linear_mass_spring_model/example_closed_loop.m';
-%     '../linear_mass_spring_model/example_ocp.m';
+    '../linear_mass_spring_model/example_ocp.m';
 %     '../linear_mass_spring_model/example_sim.m';
-%     '../linear_mpc/example_closed_loop.m';
-%     '../lorentz/example_mhe.m';
+    '../linear_mpc/example_closed_loop.m';
+    '../lorentz/example_mhe.m';
 %     '../masses_chain_model/example_closed_loop.m';
-%     '../masses_chain_model/example_ocp.m';
-%     '../pendulum_dae/example_closed_loop.m';  % error while reshaping cost.Vz_0
-%     '../pendulum_dae/example_sim.m';
+    '../masses_chain_model/example_ocp.m';
+    '../pendulum_dae/example_closed_loop.m';
+    '../pendulum_dae/example_sim.m';
 %     '../pendulum_on_cart_model/example_closed_loop.m';
-%     '../pendulum_on_cart_model/example_ocp.m';
+    '../pendulum_on_cart_model/example_ocp.m';
 %     '../pendulum_on_cart_model/example_ocp_custom_hess.m';
 %     '../pendulum_on_cart_model/example_ocp_param_sens.m';
 %     '../pendulum_on_cart_model/example_ocp_reg.m';
 %     '../pendulum_on_cart_model/example_sim.m';
 %     '../pendulum_on_cart_model/example_solution_sens_closed_loop.m';
 %     '../pendulum_on_cart_model/experiment_dae_formulation.m';
-%     '../race_cars/main.m';
-%     '../simple_dae_model/example_ocp.m';
+    '../race_cars/main.m';
+    '../simple_dae_model/example_ocp.m';
 %     '../swarming/example_closed_loop.m';
-%     '../swarming/example_ocp.m';
+    '../swarming/example_ocp.m';
 %     '../swarming/example_sim.m';
 %     '../wind_turbine_nx6/example_closed_loop.m';
-%     '../wind_turbine_nx6/example_ocp.m';
+    '../wind_turbine_nx6/example_ocp.m';
 %     '../wind_turbine_nx6/example_sim.m';
-
+%
 %     './test_checks.m';
 %     './test_mhe_lorentz.m';
 %     './test_ocp_OSQP.m';
@@ -85,49 +84,57 @@ targets = {
 %     './test_target_selector.m'
 };
 
-test_ok = zeros(1,length(targets));  % keep track of test results
-test_messages = cell(1,length(targets));  % and error messages
+pass = zeros(1, length(targets));  % keep track of test results
+messages = cell(1, length(targets));  % and error messages
+setenv("TEST_DIR", pwd)
+for idx = 1:length(targets)
+    setenv("TEST_MESSAGE", "")
+    [dir, file, extension] = fileparts(targets{idx});
 
-for test_number = 1:length(targets)
-    [target_dir,target_file,target_extension] = fileparts(targets{test_number});
-    cd(target_dir)
-    save test_workspace.mat  % due to "clear all" in the examples
+    testpath = getenv("TEST_DIR");
+    save(strcat(testpath, "/test_workspace.mat"))
+    setenv("LD_RUN_PATH", strcat(testpath, "/", dir, "/c_generated_code"))
+
     try
-        run([target_file,target_extension])
-        clear; close all; clc;  % clean up after a succesful test
-        load test_workspace.mat
-        if contains(target_file,'simulink'); bdclose('all'); end
-        test_ok(test_number) = 1;  % save the result
-        disp(['testing ',targets{test_number},' succesful'])
-        pause(3)  % wait a bit before moving on
+        run(targets{idx});
+        test_val = true;
     catch exception
-        clearvars -except exception;  % keep the caught error
-        close all; clc;
-        load test_workspace.mat
-        if contains(target_file,'simulink'); bdclose('all'); end
-        warning(['testing ',targets{test_number},' failed'])
-        test_messages{test_number} = exception.message;  % keep the message
-        clear exception;  % forget error before the next test
-        pause(3)  % wait a bit before moving on
+        setenv("TEST_MESSAGE", exception.message)
+        warning(exception.message);
+        clear exception
+        test_val = false;
     end
-    delete test_workspace.mat  % clean up the example folder
-    cd(start_dir)  % go back to the starting folder
-    path(p);  % restore the saved path
+
+    % use absolute path, since current directory depends on point of failure
+    testpath = getenv("TEST_DIR");
+    load(strcat(testpath, "/test_workspace.mat"));
+    disp(['test', targets{idx},' success'])
+    messages{idx} = getenv("TEST_MESSAGE");
+    if contains(targets{idx},'simulink'); bdclose('all'); end
+    delete(strcat(testpath, "/test_workspace.mat"));
+    % delete generated code to avoid failure in examples using similar names
+    rmdir(strcat(testpath, "/", dir, "/c_generated_code"), 's')
+    close all; clc;
 end
 
-% print out test results
 clc;
+fail = false;
 disp('Succesful tests: ')
-for test_number = 1:length(targets)
-    if test_ok(test_number)
-        disp(targets{test_number})
+for idx = 1:length(targets)
+    if strcmp(messages{idx},"")
+        disp(targets{idx})
     end
 end
 disp(' ')
 disp('Failed tests: ')
-for test_number = 1:length(targets)
-    if ~test_ok(test_number)
-        disp(targets{test_number})
-        disp(['    message: ',test_messages{test_number}])
+for idx = 1:length(targets)
+    if ~strcmp(messages{idx},"")
+        disp(targets{idx})
+        disp(['message: ',messages{idx}])
+        fail = true;
     end
 end
+if fail==true
+    error('Test failure');
+end
+clearvars

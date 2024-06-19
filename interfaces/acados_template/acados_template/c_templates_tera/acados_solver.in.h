@@ -197,7 +197,8 @@ typedef struct {{ model.name }}_solver_capsule
 
     // constraints
 {%- if constraints.constr_type == "BGP" %}
-    external_function_param_casadi *phi_constraint;
+    external_function_param_casadi *phi_constraint_fun_jac_hess;
+    external_function_param_casadi *phi_constraint_fun;
 {% elif constraints.constr_type == "BGH" and dims.nh > 0 %}
     external_function_param_casadi *nl_constr_h_fun_jac;
     external_function_param_casadi *nl_constr_h_fun;
@@ -208,7 +209,8 @@ typedef struct {{ model.name }}_solver_capsule
 
 
 {% if constraints.constr_type_0 == "BGP" %}
-    external_function_param_casadi phi_0_constraint;
+    external_function_param_casadi phi_0_constraint_fun_jac_hess;
+    external_function_param_casadi phi_0_constraint_fun;
 {% elif constraints.constr_type_0 == "BGH" and dims.nh_0 > 0 %}
     external_function_param_casadi nl_constr_h_0_fun_jac;
     external_function_param_casadi nl_constr_h_0_fun;
@@ -219,7 +221,8 @@ typedef struct {{ model.name }}_solver_capsule
 
 
 {% if constraints.constr_type_e == "BGP" %}
-    external_function_param_casadi phi_e_constraint;
+    external_function_param_casadi phi_e_constraint_fun_jac_hess;
+    external_function_param_casadi phi_e_constraint_fun;
 {% elif constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
     external_function_param_casadi nl_constr_h_e_fun_jac;
     external_function_param_casadi nl_constr_h_e_fun;

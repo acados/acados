@@ -1225,7 +1225,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             double* levenberg_marquardt = (double *) value;
             opts->levenberg_marquardt = *levenberg_marquardt;
         }
+<<<<<<< HEAD
         // newly added options for DDP and SQP
+=======
+        // newly added options for DDP
+>>>>>>> katrin_acados/fix_conl_constraints
         else if (!strcmp(field, "with_adaptive_levenberg_marquardt"))
         {
             bool* with_adaptive_levenberg_marquardt = (bool *) value;
@@ -2230,8 +2234,12 @@ void ocp_nlp_add_levenberg_marquardt_term(ocp_nlp_config *config, ocp_nlp_dims *
             if (i < N)
             {
                 // Levenberg Marquardt term: Ts[i] * levenberg_marquardt * eye()
+<<<<<<< HEAD
                 // blasfeo_ddiare(nu[i] + nx[i], in->Ts[i] * opts->levenberg_marquardt,
                 blasfeo_ddiare(nu[i] + nx[i], opts->levenberg_marquardt,
+=======
+                blasfeo_ddiare(nu[i] + nx[i], in->Ts[i] * opts->levenberg_marquardt,
+>>>>>>> katrin_acados/fix_conl_constraints
                                 mem->qp_in->RSQrq+i, 0, 0);
             }
             else
