@@ -10,7 +10,7 @@ Fast and embedded solvers for nonlinear optimal control.
 ## General
 - `acados` implements
   1. fast SQP-type solvers for Nonlinear Programming (NLP) formulations with an Optimal Control Problem (OCP) structure
-  2. efficient integration methods, also called *integrators* to solve initial value problems with dynamic systems given as an ODE or index-1 DAE.
+  2. efficient integration methods, also called *integrators*, to solve initial value problems with dynamic systems given as an ODE or index-1 DAE.
   These integrators can efficiently compute first and second-order sensitivities of the results.
 
 ## Documentation
