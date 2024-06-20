@@ -2214,7 +2214,6 @@ void ocp_nlp_add_levenberg_marquardt_term(ocp_nlp_config *config, ocp_nlp_dims *
 {
     if (opts->with_adaptive_levenberg_marquardt)
     {
-        ocp_nlp_get_cost_value_from_submodules(config, dims, in, out, opts, mem, work);
         adaptive_levenberg_marquardt_update_mu(iter, alpha, opts, mem);
         double reg_param = 2*mem->cost_value*mem->adaptive_levenberg_marquardt_mu;
         opts->levenberg_marquardt = reg_param;

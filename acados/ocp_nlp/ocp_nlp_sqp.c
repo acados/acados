@@ -793,11 +793,18 @@ static bool check_termination(int n_iter, ocp_nlp_res *nlp_res, ocp_nlp_sqp_memo
 /************************************************
  * funnel functions
  ************************************************/
-static void debug_output(ocp_nlp_opts *opts, char* message)
+static void debug_output(ocp_nlp_opts *opts, char* message, int print_level)
 {
-    if (opts->print_level > 1)
+    if (opts->print_level > print_level)
     {
         printf("%s", message); //debugging output
+    }
+}
+static void debug_output_double(ocp_nlp_opts *opts, char* message, double value, int print_level)
+{
+    if (opts->print_level > print_level)
+    {
+        printf("%s: %f\n", message, value); //debugging output
     }
 }
 
@@ -876,43 +883,46 @@ static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
                                                   double pred_merit)
 {
     bool accept_step = false;
+    debug_output_double(opts->nlp_opts, "current objective", current_objective, 2); //debugging output
+    debug_output_double(opts->nlp_opts, "trial objective", trial_objective, 2); //debugging output
+    debug_output_double(opts->nlp_opts, "pred", pred, 2); //debugging output
     if(is_iterate_inside_of_funnel(mem, opts, trial_infeasibility))
     {
-        debug_output(opts->nlp_opts, "Trial iterate is INSIDE of funnel\n"); //debugging output
+        debug_output(opts->nlp_opts, "Trial iterate is INSIDE of funnel\n", 1); //debugging output
         if (!mem->funnel_penalty_mode)
         {
-            debug_output(opts->nlp_opts, "Penalty Mode not active!\n"); //debugging output
+            debug_output(opts->nlp_opts, "Penalty Mode not active!\n", 1); //debugging output
             if (is_switching_condition_satisfied(opts, pred, alpha, current_infeasibility))
             {
-                debug_output(opts->nlp_opts, "Switching condition IS satisfied!\n"); //debugging output
+                debug_output(opts->nlp_opts, "Switching condition IS satisfied!\n", 1); //debugging output
                 if (is_f_type_armijo_condition_satisfied(opts, -ared, pred, alpha))
                 {
-                    debug_output(opts->nlp_opts, "f-type step: Armijo condition satisfied\n"); //debugging output
+                    debug_output(opts->nlp_opts, "f-type step: Armijo condition satisfied\n", 1); //debugging output
                     accept_step = true;
                     mem->funnel_iter_type = 'f';
                 }
                 else
                 {
-                    debug_output(opts->nlp_opts, "f-type step: Armijo condition NOT satisfied\n"); //debugging output
+                    debug_output(opts->nlp_opts, "f-type step: Armijo condition NOT satisfied\n", 1); //debugging output
                 }
 
             }
             else if (is_funnel_sufficient_decrease_satisfied(mem, opts, trial_infeasibility))
             {
-                debug_output(opts->nlp_opts, "Switching condition is NOT satisfied!\n"); //debugging output
-                debug_output(opts->nlp_opts, "h-type step: funnel suff. decrease satisfied!\n"); //debugging output
+                debug_output(opts->nlp_opts, "Switching condition is NOT satisfied!\n", 1); //debugging output
+                debug_output(opts->nlp_opts, "h-type step: funnel suff. decrease satisfied!\n", 1); //debugging output
                 accept_step = true;
                 mem->funnel_iter_type = 'h';
                 decrease_funnel(mem, opts, trial_infeasibility, current_infeasibility);
             }
             else
             {
-                debug_output(opts->nlp_opts, "Switching condition is NOT satisfied!\n"); //debugging output
-                debug_output(opts->nlp_opts, "Entered penalty check!\n"); //debugging output
+                debug_output(opts->nlp_opts, "Switching condition is NOT satisfied!\n", 1); //debugging output
+                debug_output(opts->nlp_opts, "Entered penalty check!\n", 1); //debugging output
                 //TODO move to function and test more
                 if (trial_merit <= current_merit + opts->linesearch_eta * alpha * pred_merit)
                 {
-                    debug_output(opts->nlp_opts, "Penalty Function accepted\n");
+                    debug_output(opts->nlp_opts, "Penalty Function accepted\n", 1);
                     accept_step = true;
                     mem->funnel_iter_type = 'b';
                     mem->funnel_penalty_mode = true;
@@ -921,10 +931,10 @@ static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
         }
         else
         {
-            debug_output(opts->nlp_opts, "Penalty mode active\n");
+            debug_output(opts->nlp_opts, "Penalty mode active\n", 1);
             if (trial_merit <= current_merit + opts->linesearch_eta * alpha * pred_merit)
             {
-                debug_output(opts->nlp_opts, "p-type step: accepted iterate\n");
+                debug_output(opts->nlp_opts, "p-type step: accepted iterate\n", 1);
                 accept_step = true;
                 mem->funnel_iter_type = 'p';
 
@@ -938,7 +948,7 @@ static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
     }
     else
     {
-        debug_output(opts->nlp_opts, "Trial iterate is NOT INSIDE of funnel\n");
+        debug_output(opts->nlp_opts, "Trial iterate is NOT INSIDE of funnel\n", 1);
     }
     return accept_step;
 }
@@ -1224,6 +1234,10 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // linearize NLP and update QP matrices
         acados_tic(&timer1);
         ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+        if (nlp_opts->with_adaptive_levenberg_marquardt || nlp_opts->globalization != FIXED_STEP)
+        {
+            ocp_nlp_get_cost_value_from_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+        }
         ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, sqp_iter);
 
         mem->time_lin += acados_toc(&timer1);
