@@ -173,7 +173,8 @@ OCP_SRC+= {{ model[jj].name }}_constraints/{{ model[jj].name }}_constr_h_fun.c
 OCP_SRC+= {{ model[jj].name }}_constraints/{{ model[jj].name }}_constr_h_fun_jac_uxt_zt_hess.c
 	{%- endif %}
 {%- elif constraints[jj].constr_type == "BGP" and phases_dims[jj].nphi > 0 %}
-OCP_SRC+= {{ model[jj].name }}_constraints/{{ model[jj].name }}_phi_constraint.c
+OCP_SRC+= {{ model[jj].name }}_constraints/{{ model[jj].name }}_phi_constraint_fun.c
+OCP_SRC+= {{ model[jj].name }}_constraints/{{ model[jj].name }}_phi_constraint_fun_jac_hess.c
 {%- endif %}
 
 {% endfor %}
@@ -210,7 +211,8 @@ OCP_SRC+= {{ model_0.name }}_constraints/{{ model_0.name }}_constr_h_0_fun.c
 OCP_SRC+= {{ model_0.name }}_constraints/{{ model_0.name }}_constr_h_0_fun_jac_uxt_zt_hess.c
 	{%- endif %}
 {%- elif constraints_0.constr_type_0 == "BGP" and dims_0.nphi_0 > 0 %}
-OCP_SRC+= {{ model_0.name }}_constraints/{{ model_0.name }}_phi_0_constraint.c
+OCP_SRC+= {{ model_0.name }}_constraints/{{ model_0.name }}_phi_0_constraint_fun.c
+OCP_SRC+= {{ model_0.name }}_constraints/{{ model_0.name }}_phi_0_constraint_fun_jac_hess.c
 {%- endif %}
 
 
@@ -223,7 +225,8 @@ OCP_SRC+= {{ model_e.name }}_constraints/{{ model_e.name }}_constr_h_e_fun.c
 OCP_SRC+= {{ model_e.name }}_constraints/{{ model_e.name }}_constr_h_e_fun_jac_uxt_zt_hess.c
 	{%- endif %}
 {%- elif constraints_e.constr_type_e == "BGP" and dims_e.nphi_e > 0 %}
-OCP_SRC+= {{ model_e.name }}_constraints/{{ model_e.name }}_phi_e_constraint.c
+OCP_SRC+= {{ model_e.name }}_constraints/{{ model_e.name }}_phi_e_constraint_fun.c
+OCP_SRC+= {{ model_e.name }}_constraints/{{ model_e.name }}_phi_e_constraint_fun_jac_hess.c
 {%- endif %}
 
 {%- if cost_e.cost_type_e == "NONLINEAR_LS" %}
