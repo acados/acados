@@ -468,4 +468,4 @@ fprintf(output_note)
 % end
 % ---
 % It can be used by copying it in sfunction/Mask/Edit mask/Icon drawing commands
-%   (you can access it wirth ctrl+M on the s-function)
+%   (you can access it with ctrl+M on the s-function)
