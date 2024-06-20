@@ -18,7 +18,7 @@ Fast and embedded solvers for nonlinear optimal control.
 - An overview of the interfaces can be found at [docs.acados.org/interfaces](https://docs.acados.org/interfaces)
 
 ## Forum
-- If you have any `acados`-related question, feel free to post on our forum at [discourse.acados.org](https://discourse.acados.org/)
+- If you have any `acados`-related questions, feel free to post on our forum at [discourse.acados.org](https://discourse.acados.org/)
 
 ## Citing
 - References can be found at [docs.acados.org/citing](https://docs.acados.org/citing)
