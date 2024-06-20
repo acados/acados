@@ -760,11 +760,11 @@ static bool check_termination(int n_iter, ocp_nlp_res *nlp_res, ocp_nlp_sqp_memo
     }
 
     // Check for small step
-    if ((n_iter > 0) && (mem->step_norm < opts->tol_eq))
+    if ((n_iter > 0) && (mem->step_norm < 1e-12))
     {
         if (opts->nlp_opts->print_level > 0)
         {
-            if (nlp_res->inf_norm_res_eq < opts->tol_eq)
+            if (nlp_res->inf_norm_res_eq < opts->tol_eq && nlp_res->inf_norm_res_ineq < opts->tol_ineq)
             {
                 printf("Stopped: Converged To Feasible Point. Step size is < tol_eq.\n");
             }
