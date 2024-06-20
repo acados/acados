@@ -81,6 +81,7 @@ typedef struct
     double funnel_kappa; // parameter for reduction of funnel
     double funnel_fraction_switching_condition; // parameter in switching condition
     double funnel_penalty_parameter; // penalty parameter for penalty phase
+    bool funnel_type_switching_condition;
 
 } ocp_nlp_sqp_opts;
 
@@ -188,7 +189,7 @@ void ocp_nlp_sqp_eval_lagr_grad_p(void *config_, void *dims_, void *nlp_in_, voi
 void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, void *return_value_);
 //
 double ocp_nlp_sqp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
-                ocp_nlp_workspace *nlp_work, ocp_nlp_memory *nlp_mem);
+                ocp_nlp_workspace *nlp_work, ocp_nlp_memory *nlp_mem, ocp_nlp_sqp_opts *opts);
 
 double get_l1_infeasibility(void *config_, void *dims_, void *mem_);
 

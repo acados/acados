@@ -135,8 +135,9 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->funnel_initial_upper_bound = 1.0;
     opts->funnel_sufficient_decrease_factor = 0.9;
     opts->funnel_kappa = 0.9;
-    opts->funnel_fraction_switching_condition = 0.99;
+    opts->funnel_fraction_switching_condition = 1e-3;//0.99;
     opts->funnel_penalty_parameter = 1.0;
+    opts->funnel_type_switching_condition = false; // use ipopt/gould type of switching
 
     // overwrite default submodules opts
     // qp tolerance
@@ -837,7 +838,8 @@ static bool is_funnel_sufficient_decrease_satisfied(ocp_nlp_sqp_memory *mem, ocp
 
 static bool is_switching_condition_satisfied(ocp_nlp_sqp_opts *opts, double pred_optimality, double step_size, double pred_infeasibility)
 {
-    if (step_size * pred_optimality >= opts->funnel_fraction_switching_condition * pred_infeasibility * pred_infeasibility)
+    // if (step_size * pred_optimality >= opts->funnel_fraction_switching_condition * pred_infeasibility * pred_infeasibility)
+    if (step_size * pred_optimality >= opts->funnel_fraction_switching_condition * pred_infeasibility)
     {
         return true;
     }
@@ -1212,20 +1214,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     /************************************************
      * main sqp loop
      ************************************************/
-    if (nlp_opts->globalization == FUNNEL_METHOD)
-    {
-        printf("Funnel method was found.");
-    } else
-    {
-        printf("Funnel method was NOT found.");
-    }
     int sqp_iter = 0;
     double reg_param_memory = 0.0;
     double funnel_width_memory = 0.0;
-    if (nlp_opts->print_level > 0)
-    {
-        printf("'with_adaptive_levenberg_marquardt' option is set to: %s\n", opts->nlp_opts->with_adaptive_levenberg_marquardt?"true":"false");
-    }
 
     for (; sqp_iter < opts->max_iter+1; sqp_iter++)
     {
@@ -1411,7 +1402,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             return mem->status;
         }
         // Compute the optimal QP objective function value
-        nlp_mem->qp_cost_value = ocp_nlp_sqp_compute_qp_objective_value(dims, qp_in, qp_out,nlp_work, nlp_mem);
+        nlp_mem->qp_cost_value = ocp_nlp_sqp_compute_qp_objective_value(dims, qp_in, qp_out,nlp_work, nlp_mem, opts);
 
         // Calculate step norm
         // res_comp
@@ -1483,7 +1474,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 }
 
 double ocp_nlp_sqp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
-                ocp_nlp_workspace *nlp_work, ocp_nlp_memory *nlp_mem){
+                ocp_nlp_workspace *nlp_work, ocp_nlp_memory *nlp_mem, ocp_nlp_sqp_opts *opts){
 
     // Compute the QP objective function value
     double qp_cost = 0.0;
@@ -1493,9 +1484,12 @@ double ocp_nlp_sqp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_
     for (i = 0; i <= N; i++)
     {
         nux = dims->nx[i] + dims->nu[i];
-        // Calculate 0.5* d.T H d
-        blasfeo_dsymv_l(nux, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], 0, 0.0, &qp_out->ux[i], 0, &nlp_work->tmp_nlp_out->ux[i], 0);
-        qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &nlp_work->tmp_nlp_out->ux[i], 0);
+        if (opts->funnel_type_switching_condition)
+        {
+            // Calculate 0.5* d.T H d
+            blasfeo_dsymv_l(nux, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], 0, 0.0, &qp_out->ux[i], 0, &nlp_work->tmp_nlp_out->ux[i], 0);
+            qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &nlp_work->tmp_nlp_out->ux[i], 0);
+        }
         // Calculate g.T d
         qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
     }
