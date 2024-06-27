@@ -587,7 +587,7 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
     }
 
     // if (nlp_opts->print_level > sqp_iter + 1)
-    if (nlp_opts->print_level > 2)
+    if (nlp_opts->print_level > 5)
     {
         printf("\n\nSQP: SOC ocp_qp_in at iteration %d\n", sqp_iter);
         print_ocp_qp_in(qp_in);
@@ -628,7 +628,7 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
     }
 
     // if (nlp_opts->print_level > sqp_iter + 1)
-    if (nlp_opts->print_level > 2)
+    if (nlp_opts->print_level > 5)
     {
         printf("\n\nSQP: SOC ocp_qp_out at iteration %d\n", sqp_iter);
         print_ocp_qp_out(qp_out);
@@ -649,7 +649,7 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
         {
             printf("\nFailed to solve the following QP:\n");
             // if (nlp_opts->print_level > sqp_iter + 1)
-            if (nlp_opts->print_level > 2)
+            if (nlp_opts->print_level > 5)
                 print_ocp_qp_in(qp_in);
         }
 
@@ -884,7 +884,9 @@ static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
 {
     bool accept_step = false;
     debug_output_double(opts->nlp_opts, "current objective", current_objective, 2); //debugging output
+    debug_output_double(opts->nlp_opts, "current infeasibility", current_infeasibility, 2); //debugging output
     debug_output_double(opts->nlp_opts, "trial objective", trial_objective, 2); //debugging output
+    debug_output_double(opts->nlp_opts, "trial infeasibility", trial_infeasibility, 2); //debugging output
     debug_output_double(opts->nlp_opts, "pred", pred, 2); //debugging output
     if(is_iterate_inside_of_funnel(mem, opts, trial_infeasibility))
     {
@@ -996,9 +998,9 @@ static void ocp_nlp_sqp_compute_trial_iterate(ocp_nlp_config *config, ocp_nlp_di
             }
         }
 
-        // // update slack values
-        // blasfeo_dvecsc(2*ni[i], 1.0-alpha, tmp_nlp_out->t+i, 0);
-        // blasfeo_daxpy(2*ni[i], alpha, mem->qp_out->t+i, 0, tmp_nlp_out->t+i, 0, tmp_nlp_out->t+i, 0);
+        // update slack values
+        blasfeo_dvecsc(2*ni[i], 1.0-alpha, tmp_nlp_out->t+i, 0);
+        blasfeo_daxpy(2*ni[i], alpha, mem->qp_out->t+i, 0, tmp_nlp_out->t+i, 0, tmp_nlp_out->t+i, 0);
 
         // linear update of algebraic variables using state and input sensitivity
         if (i < N)
@@ -1173,6 +1175,50 @@ double get_l1_infeasibility(void *config_, void *dims_, void *mem_)
     return dyn_l1_infeasibility + constraint_l1_infeasibility;
 }
 
+static double get_l_inf_infeasibility(void *config_, void *dims_, void *mem_)
+{
+    ocp_nlp_dims *dims = dims_;
+    ocp_nlp_config *config = config_;
+    ocp_nlp_sqp_memory *mem = mem_;
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+
+    // evaluate the objective of the QP (as predicted reduction)
+    // double qp_cost = compute_qp_cost
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *ni = dims->ni;
+
+    // compute current l1 infeasibility
+    double tmp;
+    struct blasfeo_dvec *tmp_fun_vec;
+    double dyn_l1_infeasibility = 0.0;
+    for(int i=0; i<N; i++)
+    {
+        tmp_fun_vec = config->dynamics[i]->memory_get_fun_ptr(nlp_mem->dynamics[i]);
+        for(int j=0; j<nx[i+1]; j++)
+        {
+            dyn_l1_infeasibility = fmax(dyn_l1_infeasibility, fabs(BLASFEO_DVECEL(tmp_fun_vec, j)));
+        }
+    }
+
+    double constraint_l1_infeasibility = 0.0;
+    for(int i=0; i<=N; i++)
+    {
+        tmp_fun_vec = config->constraints[i]->memory_get_fun_ptr(nlp_mem->constraints[i]);
+        // printf("self l inf feasibility\n");
+        // blasfeo_print_dvec(2*ni[i], tmp_fun_vec, 0);
+        for (int j=0; j<2*ni[i]; j++)
+        {
+            tmp = BLASFEO_DVECEL(tmp_fun_vec, j);
+            if (tmp > 0.0)
+            {
+                // printf("%.5e", tmp);
+                constraint_l1_infeasibility = fmax(constraint_l1_infeasibility, tmp);
+            }
+        }
+    }
+    return fmax(dyn_l1_infeasibility, constraint_l1_infeasibility);
+}
 
 // MAIN OPTIMIZATION ROUTINE
 int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
@@ -1260,8 +1306,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);
         ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
 
-        mem->l1_infeasibility = get_l1_infeasibility(config, dims, mem);      
-
+        mem->l1_infeasibility = get_l1_infeasibility(config, dims, mem);
 
         // save statistics
         if (sqp_iter < mem->stat_m)
@@ -1318,7 +1363,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // Show input to QP
         // TODO: Should this really be > sqp_iter + 1? Or only > 1?
         // if (nlp_opts->print_level > sqp_iter + 1)
-        if (nlp_opts->print_level > 2)
+        if (nlp_opts->print_level > 5)
         {
             printf("\n\nSQP: ocp_qp_in at iteration %d\n", sqp_iter);
             print_ocp_qp_in(qp_in);
@@ -1352,7 +1397,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         // if (nlp_opts->print_level > sqp_iter + 1)
-        if (nlp_opts->print_level > 2)
+        if (nlp_opts->print_level > 5)
         {
             printf("\n\nSQP: ocp_qp_out at iteration %d\n", sqp_iter);
             print_ocp_qp_out(qp_out);
@@ -1402,7 +1447,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // restore number of threads
             omp_set_num_threads(num_threads_bkp);
 #endif
-            if (nlp_opts->print_level > 1)
+            if (nlp_opts->print_level > 5)
             {
                 printf("\n Failed to solve the following QP:\n");
                 if (nlp_opts->print_level)

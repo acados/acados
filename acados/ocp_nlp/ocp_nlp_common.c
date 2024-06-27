@@ -2367,7 +2367,6 @@ void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config,
     }
 }
 
-
 // zero order update QP: Update all constraint evaluations in QP
 void ocp_nlp_zero_order_qp_update(ocp_nlp_config *config,
     ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
@@ -3237,10 +3236,6 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
         blasfeo_dvecse(1, tmp_res, &res->tmp, i);
     }
     blasfeo_dvecnrm_inf(N+1, &res->tmp, 0, &res->inf_norm_res_comp);
-
-
-    // printf("computed residuals stat: %e, eq: %e, ineq: %e, comp: %e\n", res->inf_norm_res_stat, res->inf_norm_res_eq,
-    //        res->inf_norm_res_ineq, res->inf_norm_res_comp);
 }
 
 void ocp_nlp_res_get_inf_norm(ocp_nlp_res *res, double *out)
