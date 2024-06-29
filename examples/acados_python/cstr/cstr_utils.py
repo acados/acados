@@ -57,7 +57,7 @@ def plot_cstr(
 
     ts = dt * np.arange(0, Nsim + 1)
 
-    states_lables = ["$c$ [kmol/m$^3$]", "$T$ [K]", "$h$ [m]"]
+    x_labels = ["$c$ [kmol/m$^3$]", "$T$ [K]", "$h$ [m]"]
     controls_lables = ["$T_c$ [K]", "$F$ [m$^3$/min]"]
 
     fig, axes = plt.subplots(ncols=2, nrows=nx, figsize=(10, 7))
@@ -75,7 +75,7 @@ def plot_cstr(
             linestyle="dotted",
             color="k",
         )
-        axes[i, 0].set_ylabel(states_lables[i])
+        axes[i, 0].set_ylabel(x_labels[i])
         axes[i, 0].grid()
         axes[i, 0].set_xlim(ts[0], ts[-1])
 
