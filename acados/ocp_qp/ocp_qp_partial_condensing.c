@@ -302,6 +302,15 @@ void ocp_qp_partial_condensing_opts_set(void *opts_, const char *field, void* va
         int *tmp_ptr = value;
         opts->ric_alg = *tmp_ptr;
     }
+    else if(!strcmp(field, "block_size"))
+    {
+        int *tmp_ptr = value;
+        for (int i = 0; i < opts->N2+1; i++)
+        {
+            opts->block_size[i] = tmp_ptr[i];
+        }
+        opts->block_size_was_set = true;
+    }
     // TODO dual_sol ???
     else
     {
@@ -326,10 +335,40 @@ acados_size_t ocp_qp_partial_condensing_memory_calculate_size(void *dims_, void 
     // populate dimensions of reduced qp
     d_ocp_qp_dim_reduce_eq_dof(dims->orig_dims, dims->red_dims);
 
-    // populate dimensions of new ocp_qp based on actual N2
+    // populate dimensions from options: N2, block_size
     dims->pcond_dims->N = opts->N2;
-    // TODO(all): user-defined block size
-    d_part_cond_qp_compute_block_size(dims->red_dims->N, opts->N2, dims->block_size);
+    if (opts->block_size_was_set)
+    {
+        for (int i=0; i<opts->N2+1; i++)
+        {
+            dims->block_size[i] = opts->block_size[i];
+        }
+        // check consistency N and sum(block_size)
+        int tmp_sum = 0;
+        for (int i = 0; i<opts->N2+1; i++)
+        {
+            tmp_sum += dims->block_size[i];
+        }
+        if (tmp_sum != dims->orig_dims->N)
+        {
+            printf("partial condensing: sum of block_size should match N, got %d != N = %d\n", tmp_sum, dims->orig_dims->N);
+            exit(1);
+        }
+    }
+    else
+    {
+        d_part_cond_qp_compute_block_size(dims->red_dims->N, opts->N2, dims->block_size);
+    }
+
+    // printf("using block_size:\n");
+    // int tmp_sum = 0;
+    // for (int i = 0; i<opts->N2+1; i++)
+    // {
+    //     tmp_sum += dims->block_size[i];
+    //     printf("%d\t", dims->block_size[i]);
+    // }
+    // printf("\ntotal %d\n", tmp_sum);
+
     d_part_cond_qp_compute_dim(dims->red_dims, dims->block_size, dims->pcond_dims);
 
     acados_size_t size = 0;

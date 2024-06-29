@@ -62,6 +62,7 @@ class AcadosOcpOptions:
         self.__qp_solver_tol_comp = None
         self.__qp_solver_iter_max = 50
         self.__qp_solver_cond_N = None
+        self.__qp_solver_cond_block_size = None
         self.__qp_solver_warm_start = 0
         self.__qp_solver_cond_ric_alg = 1
         self.__qp_solver_ric_alg = 1
@@ -368,6 +369,15 @@ class AcadosOcpOptions:
         """QP solver: New horizon after partial condensing.
         Set to N by default -> no condensing."""
         return self.__qp_solver_cond_N
+
+    @property
+    def qp_solver_cond_block_size(self):
+        """QP solver: list of integers of length qp_solver_cond_N + 1
+        Denotes how many blocks of the original OCP are lumped together into one in partial condensing.
+        Default: None -> compute even block size distribution based on qp_solver_cond_N
+        """
+        return self.__qp_solver_cond_block_size
+
 
     @property
     def qp_solver_warm_start(self):
@@ -1083,6 +1093,15 @@ class AcadosOcpOptions:
             self.__qp_solver_cond_N = qp_solver_cond_N
         else:
             raise Exception('Invalid qp_solver_cond_N value. qp_solver_cond_N must be a positive int.')
+
+    @qp_solver_cond_block_size.setter
+    def qp_solver_cond_block_size(self, qp_solver_cond_block_size):
+        if not isinstance(qp_solver_cond_block_size, list):
+            raise Exception('Invalid qp_solver_cond_block_size value. qp_solver_cond_block_size must be a list of nonnegative integers.')
+        for i in qp_solver_cond_block_size:
+            if not isinstance(i, int) or not i >= 0:
+                raise Exception('Invalid qp_solver_cond_block_size value. qp_solver_cond_block_size must be a list of nonnegative integers.')
+        self.__qp_solver_cond_block_size = qp_solver_cond_block_size
 
     @qp_solver_warm_start.setter
     def qp_solver_warm_start(self, qp_solver_warm_start):

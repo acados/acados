@@ -806,6 +806,12 @@ class AcadosOcp:
         if opts.qp_solver_cond_N is None:
             opts.qp_solver_cond_N = dims.N
 
+        if opts.qp_solver_cond_block_size is not None:
+            if sum(opts.qp_solver_cond_block_size) != dims.N:
+                raise Exception(f'sum(qp_solver_cond_block_size) = {sum(opts.qp_solver_cond_block_size)} != N = {dims.N}.')
+            if len(opts.qp_solver_cond_block_size) != opts.qp_solver_cond_N+1:
+                raise Exception(f'qp_solver_cond_block_size = {opts.qp_solver_cond_block_size} should have length qp_solver_cond_N+1 = {opts.qp_solver_cond_N+1}.')
+
         if opts.nlp_solver_type == "DDP":
             if opts.qp_solver != "PARTIAL_CONDENSING_HPIPM" or opts.qp_solver_cond_N != dims.N:
                 raise Exception(f'DDP solver only supported for PARTIAL_CONDENSING_HPIPM with qp_solver_cond_N == N, got qp solver {opts.qp_solver} and qp_solver_cond_N {opts.qp_solver_cond_N}, N {dims.N}.')
