@@ -13,7 +13,7 @@ If you are using `acados` in your scientific work, please cite the original jour
 We highly appreciate if you share your `acados` success stories with the world, and mention them on the [List of projects that feature `acados`](../list_of_projects/index.md).
 Please submit a PR, make a forum post, or contact the developers if you want to showcase your project there!
 
-## Publications on advanced `acados` features:
+## Publications on advanced `acados` features
 If you are using some of the following advanced features of `acados`, please additionally cite the corresponding publications.
 
 ### Fast integrators with sensitivity propagation for use in CasADi

@@ -6,7 +6,7 @@ Contributions are handled via pull requests on Github
 - Fork the project
 - Push your changes to your fork
 - Open a pull request https://github.com/acados/acados
-- Describe what you changed and why.
+- Describe what you changed and why
 - Rather make minimal changes
 - Rather more commits than less
 

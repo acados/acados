@@ -39,8 +39,6 @@ In addition to a `MEX` wrapper it contains all the `C` code that is needed for e
 These templates can be found in [`<acados_root>/interfaces/acados_template/acados_template/c_templates_tera`](https://github.com/acados/acados/tree/master/interfaces/acados_template/acados_template/c_templates_tera).
 
 ## Options documentation
-A table and explanation of various options of the native `MEX` interface can be found in [this spreadsheet](https://docs.google.com/spreadsheets/d/1rVRycLnCyaWJLwnV47u30Vokp7vRu68og3OhlDbSjDU/edit?usp=sharing) (thanks to [@EnricaSo](https://github.com/EnricaSo)).
-
 For the template based part of the `Matlab` interface, we refer to [the docstring based documentation of the Python interface](../python_interface/index.md).
 
 ## Simulink
@@ -81,7 +79,7 @@ To use the mask command just copy-paste it in the "icon drawing commands" field,
 To create external function for your problem, we suggest to use `CasADi` from the folder `<acados_root_folder>/external`.
 Depending on the environment you want to use to generate `CasADi` functions from, proceed with the corresponding paragraph (Matlab, Octave).
 
-Any CasADi version between 3.4.0 and 3.6.3 should work.
+Any CasADi version between 3.4.0 and 3.6.5 should work.
 If you don't have CasADi yet, you can install it as described below.
 
 ### **Matlab**
