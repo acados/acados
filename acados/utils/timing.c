@@ -32,7 +32,7 @@
 #include "acados/utils/timing.h"
 
 
-#if (defined _WIN32 || defined _WIN64) && !(defined __MINGW32__ || defined __MINGW64__)
+#if (defined _WIN32 || defined _WIN64)
 
 void acados_tic(acados_timer* t)
 {
