@@ -439,7 +439,8 @@ void {{ name }}_acados_create_3_create_and_set_functions({{ name }}_solver_capsu
     {% endif %}
 {%- elif constraints[0].constr_type_0 == "BGP" %}
     // convex-over-nonlinear constraint
-    MAP_CASADI_FNC(phi_0_constraint, {{ model[0].name }}_phi_0_constraint, {{ phases_dims[0].np }});
+    MAP_CASADI_FNC(phi_0_constraint_fun, {{ model[0].name }}_phi_0_constraint_fun, {{ phases_dims[0].np }});
+    MAP_CASADI_FNC(phi_0_constraint_fun_jac_hess, {{ model[0].name }}_phi_0_constraint_fun_jac_hess, {{ phases_dims[0].np }});
 {%- endif %}
 
 
@@ -504,11 +505,13 @@ void {{ name }}_acados_create_3_create_and_set_functions({{ name }}_solver_capsu
     }
     {% endif %}
 {% elif constraints[jj].constr_type == "BGP" %}
-    capsule->phi_constraint_{{ jj }} = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*n_cost_path);
+    capsule->phi_constraint_fun_{{ jj }} = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*n_cost_path);
+    capsule->phi_constraint_fun_jac_hess_{{ jj }} = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*n_cost_path);
     for (int i = 0; i < n_cost_path; i++)
     {
         // convex-over-nonlinear constraint
-        MAP_CASADI_FNC(phi_constraint_{{ jj }}[i], {{ model[jj].name }}_phi_constraint, {{ phases_dims[jj].np }});
+        MAP_CASADI_FNC(phi_constraint_fun_{{ jj }}[i], {{ model[jj].name }}_phi_constraint_fun, {{ phases_dims[jj].np }});
+        MAP_CASADI_FNC(phi_constraint_fun_jac_hess_{{ jj }}[i], {{ model[jj].name }}_phi_constraint_fun_jac_hess, {{ phases_dims[jj].np }});
     }
 {%- endif %}
 
@@ -731,7 +734,8 @@ void {{ name }}_acados_create_3_create_and_set_functions({{ name }}_solver_capsu
     {% endif %}
 {%- elif constraints_e.constr_type_e == "BGP" %}
     // convex-over-nonlinear constraint
-    MAP_CASADI_FNC(phi_e_constraint, {{ model_e.name }}_phi_e_constraint, {{ dims_e.np }});
+    MAP_CASADI_FNC(phi_e_constraint_fun, {{ model_e.name }}_phi_e_constraint_fun, {{ dims_e.np }});
+    MAP_CASADI_FNC(phi_e_constraint_fun_jac_hess, {{ model_e.name }}_phi_e_constraint_fun_jac_hess, {{ dims_e.np }});
 {%- endif %}
 
 {%- if cost_e.cost_type_e == "NONLINEAR_LS" %}
@@ -1060,7 +1064,9 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lphi", lphi_0);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "uphi", uphi_0);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0,
-                                  "nl_constr_phi_o_r_fun_phi_jac_ux_z_phi_hess_r_jac_ux", &capsule->phi_0_constraint);
+                                  "nl_constr_phi_o_r_fun", &capsule->phi_0_constraint_fun);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0,
+                                  "nl_constr_phi_o_r_fun_phi_jac_ux_z_phi_hess_r_jac_ux", &capsule->phi_0_constraint_fun_jac_hess);
     free(luphi_0);
 {% endif %}
 
@@ -1718,8 +1724,9 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
     for (int i = {{ cost_start_idx[jj] }}; i < {{ end_idx[jj] }}; i++)
     {
         i_fun = i - {{ cost_start_idx[jj] }};
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "nl_constr_phi_o_r_fun", &capsule->phi_constraint_fun[i_fun]);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i,
-                                      "nl_constr_phi_o_r_fun_phi_jac_ux_z_phi_hess_r_jac_ux", &capsule->phi_constraint[i_fun]);
+                                      "nl_constr_phi_o_r_fun_phi_jac_ux_z_phi_hess_r_jac_ux", &capsule->phi_constraint_fun_jac_hess[i_fun]);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lphi", lphi);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "uphi", uphi);
     }
@@ -2033,8 +2040,9 @@ void {{ name }}_acados_create_5_set_nlp_in({{ name }}_solver_capsule* capsule, i
 
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lphi", lphi_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "uphi", uphi_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_phi_o_r_fun", &capsule->phi_e_constraint_fun);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N,
-                                  "nl_constr_phi_o_r_fun_phi_jac_ux_z_phi_hess_r_jac_ux", &capsule->phi_e_constraint);
+                                  "nl_constr_phi_o_r_fun_phi_jac_ux_z_phi_hess_r_jac_ux", &capsule->phi_e_constraint_fun_jac_hess);
     free(luphi_e);
 {% endif %}
 }
@@ -2568,7 +2576,8 @@ int {{ name }}_acados_update_params({{ name }}_solver_capsule* capsule, int stag
         if (stage > 0)
         {
           {%- if constraints[jj].constr_type == "BGP" %}
-            capsule->phi_constraint_{{ jj }}[i_cost_fun].set_param(capsule->phi_constraint_{{ jj }}+i_cost_fun, p);
+            capsule->phi_constraint_fun_{{ jj }}[i_cost_fun].set_param(capsule->phi_constraint_fun_{{ jj }}+i_cost_fun, p);
+            capsule->phi_constraint_fun_jac_hess_{{ jj }}[i_cost_fun].set_param(capsule->phi_constraint_fun_jac_hess_{{ jj }}+i_cost_fun, p);
           {%- elif constraints[jj].constr_type == "BGH" and phases_dims[jj].nh > 0 %}
             capsule->nl_constr_h_fun_jac_{{ jj }}[i_cost_fun].set_param(capsule->nl_constr_h_fun_jac_{{ jj }}+i_cost_fun, p);
             capsule->nl_constr_h_fun_{{ jj }}[i_cost_fun].set_param(capsule->nl_constr_h_fun_{{ jj }}+i_cost_fun, p);
@@ -2597,7 +2606,8 @@ int {{ name }}_acados_update_params({{ name }}_solver_capsule* capsule, int stag
     {
         // constraints
         {%- if constraints_0.constr_type_0 == "BGP" %}
-        capsule->phi_0_constraint.set_param(&capsule->phi_0_constraint, p);
+        capsule->phi_0_constraint_fun.set_param(&capsule->phi_0_constraint_fun, p);
+        capsule->phi_0_constraint_fun_jac_hess.set_param(&capsule->phi_0_constraint_fun_jac_hess, p);
         {%- elif constraints_0.constr_type_0 == "BGH" and dims_0.nh_0 > 0 %}
         capsule->nl_constr_h_0_fun_jac.set_param(&capsule->nl_constr_h_0_fun_jac, p);
         capsule->nl_constr_h_0_fun.set_param(&capsule->nl_constr_h_0_fun, p);
@@ -2644,7 +2654,8 @@ int {{ name }}_acados_update_params({{ name }}_solver_capsule* capsule, int stag
       {%- endif %}
         // constraints
       {%- if constraints_e.constr_type_e == "BGP" %}
-        capsule->phi_e_constraint.set_param(&capsule->phi_e_constraint, p);
+        capsule->phi_e_constraint_fun.set_param(&capsule->phi_e_constraint_fun, p);
+        capsule->phi_e_constraint_fun_jac_hess.set_param(&capsule->phi_e_constraint_fun_jac_hess, p);
       {%- elif constraints_e.constr_type_e == "BGH" and dims_e.nh_e > 0 %}
         capsule->nl_constr_h_e_fun_jac.set_param(&capsule->nl_constr_h_e_fun_jac, p);
         capsule->nl_constr_h_e_fun.set_param(&capsule->nl_constr_h_e_fun, p);
@@ -2706,7 +2717,8 @@ int {{ name }}_acados_update_params_sparse({{ name }}_solver_capsule * capsule, 
         if (stage > 0)
         {
           {%- if constraints[jj].constr_type == "BGP" %}
-            capsule->phi_constraint_{{ jj }}[i_cost_fun].set_param_sparse(capsule->phi_constraint_{{ jj }}+i_cost_fun, n_update, idx, p);
+            capsule->phi_constraint_fun_{{ jj }}[i_cost_fun].set_param_sparse(capsule->phi_constraint_fun_{{ jj }}+i_cost_fun, n_update, idx, p);
+            capsule->phi_constraint_fun_jac_hess_{{ jj }}[i_cost_fun].set_param_sparse(capsule->phi_constraint_fun_jac_hess_{{ jj }}+i_cost_fun, n_update, idx, p);
           {%- elif constraints[jj].constr_type == "BGH" and phases_dims[jj].nh > 0 %}
             capsule->nl_constr_h_fun_jac_{{ jj }}[i_cost_fun].set_param_sparse(capsule->nl_constr_h_fun_jac_{{ jj }}+i_cost_fun, n_update, idx, p);
             capsule->nl_constr_h_fun_{{ jj }}[i_cost_fun].set_param_sparse(capsule->nl_constr_h_fun_{{ jj }}+i_cost_fun, n_update, idx, p);
@@ -2735,7 +2747,8 @@ int {{ name }}_acados_update_params_sparse({{ name }}_solver_capsule * capsule, 
     {
         // constraints
         {%- if constraints_0.constr_type_0 == "BGP" %}
-        capsule->phi_0_constraint.set_param_sparse(&capsule->phi_0_constraint, n_update, idx, p);
+        capsule->phi_0_constraint_fun.set_param_sparse(&capsule->phi_0_constraint_fun, n_update, idx, p);
+        capsule->phi_0_constraint_fun_jac_hess.set_param_sparse(&capsule->phi_0_constraint_fun_jac_hess, n_update, idx, p);
         {%- elif constraints_0.constr_type_0 == "BGH" and dims_0.nh_0 > 0 %}
         capsule->nl_constr_h_0_fun_jac.set_param_sparse(&capsule->nl_constr_h_0_fun_jac, n_update, idx, p);
         capsule->nl_constr_h_0_fun.set_param_sparse(&capsule->nl_constr_h_0_fun, n_update, idx, p);
@@ -2776,7 +2789,8 @@ int {{ name }}_acados_update_params_sparse({{ name }}_solver_capsule * capsule, 
       {%- endif %}
         // constraints
       {%- if constraints_e.constr_type_e == "BGP" %}
-        capsule->phi_e_constraint.set_param_sparse(&capsule->phi_e_constraint, n_update, idx, p);
+        capsule->phi_e_constraint_fun.set_param_sparse(&capsule->phi_e_constraint_fun, n_update, idx, p);
+        capsule->phi_e_constraint_fun_jac_hess.set_param_sparse(&capsule->phi_e_constraint_fun_jac_hess, n_update, idx, p);
       {%- elif constraints_e.constr_type_e == "BGH" and dims_e.nh_e > 0 %}
         capsule->nl_constr_h_e_fun_jac.set_param_sparse(&capsule->nl_constr_h_e_fun_jac, n_update, idx, p);
         capsule->nl_constr_h_e_fun.set_param_sparse(&capsule->nl_constr_h_e_fun, n_update, idx, p);
@@ -2893,7 +2907,8 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
     external_function_param_casadi_free(&capsule->nl_constr_h_0_fun_jac_hess);
 {%- endif %}
 {%- elif constraints_0.constr_type_0 == "BGP" and dims_0.nphi_0 > 0 %}
-    external_function_param_casadi_free(&capsule->phi_0_constraint);
+    external_function_param_casadi_free(&capsule->phi_0_constraint_fun);
+    external_function_param_casadi_free(&capsule->phi_0_constraint_fun_jac_hess);
 {%- endif %}
 
 
@@ -3031,9 +3046,11 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
 {%- elif constraints[jj].constr_type == "BGP" and phases_dims[jj].nphi > 0 %}
     for (int i_fun = 0; i_fun < {{ end_idx[jj] - cost_start_idx[jj] }}; i_fun++)
     {
-        external_function_param_casadi_free(&capsule->phi_constraint_{{ jj }}[i_fun]);
+        external_function_param_casadi_free(&capsule->phi_constraint_fun_{{ jj }}[i_fun]);
+        external_function_param_casadi_free(&capsule->phi_constraint_fun_jac_hess_{{ jj }}[i_fun]);
     }
-    free(capsule->phi_constraint_{{ jj }});
+    free(capsule->phi_constraint_fun_{{ jj }});
+    free(capsule->phi_constraint_fun_jac_hess_{{ jj }});
 {%- endif %}
     {%- endfor %}{# for jj in range(end=n_phases) #}
 
@@ -3046,7 +3063,8 @@ int {{ name }}_acados_free({{ name }}_solver_capsule* capsule)
     external_function_param_casadi_free(&capsule->nl_constr_h_e_fun_jac_hess);
 {%- endif %}
 {%- elif constraints_e.constr_type_e == "BGP" and dims_e.nphi_e > 0 %}
-    external_function_param_casadi_free(&capsule->phi_e_constraint);
+    external_function_param_casadi_free(&capsule->phi_e_constraint_fun);
+    external_function_param_casadi_free(&capsule->phi_e_constraint_fun_jac_hess);
 {%- endif %}
 
 {%- if cost_e.cost_type_e == "NONLINEAR_LS" %}

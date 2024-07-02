@@ -724,15 +724,15 @@ def generate_c_code_constraint(model: AcadosModel, constraints: AcadosOcpConstra
 
     else: # BGP constraint
         if stage_type == 'terminal':
-            fun_name = model.name + '_phi_e_constraint'
+            fun_name_prefix = model.name + '_phi_e_constraint'
             r = model.con_r_in_phi_e
             con_r_expr = model.con_r_expr_e
         elif stage_type == 'initial':
-            fun_name = model.name + '_phi_0_constraint'
+            fun_name_prefix = model.name + '_phi_0_constraint'
             r = model.con_r_in_phi_0
             con_r_expr = model.con_r_expr_0
         elif stage_type == 'path':
-            fun_name = model.name + '_phi_constraint'
+            fun_name_prefix = model.name + '_phi_constraint'
             r = model.con_r_in_phi
             con_r_expr = model.con_r_expr
 
@@ -749,15 +749,20 @@ def generate_c_code_constraint(model: AcadosModel, constraints: AcadosOcpConstra
         r_jac_u = ca.jacobian(con_r_expr, u)
         r_jac_x = ca.jacobian(con_r_expr, x)
 
-        constraint_phi = \
-            ca.Function(fun_name, [x, u, z, p], \
+        fun_jac_hess_name = fun_name_prefix + '_fun_jac_hess'
+        constraint_phi_fun_jac_hess = \
+            ca.Function(fun_jac_hess_name, [x, u, z, p], \
                 [con_phi_expr_x_u_z, \
                 ca.vertcat(ca.transpose(phi_jac_u), ca.transpose(phi_jac_x)), \
                 ca.transpose(phi_jac_z), \
                 hess,
                 ca.vertcat(ca.transpose(r_jac_u), ca.transpose(r_jac_x))])
 
-        constraint_phi.generate(fun_name, casadi_codegen_opts)
+        constraint_phi_fun_jac_hess.generate(fun_jac_hess_name, casadi_codegen_opts)
+
+        fun_name = fun_name_prefix + '_fun'
+        constraint_phi_fun = ca.Function(fun_name, [x, u, z, p], [con_phi_expr_x_u_z])
+        constraint_phi_fun.generate(fun_name, casadi_codegen_opts)
 
     # change directory back
     os.chdir(cwd)
