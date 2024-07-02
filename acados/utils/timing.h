@@ -38,7 +38,7 @@
 extern "C" {
 #endif
 
-#if (defined _WIN32 || defined _WIN64) && !(defined __MINGW32__ || defined __MINGW64__)
+#if (defined _WIN32 || defined _WIN64)
 
 /* Use Windows QueryPerformanceCounter for timing. */
 #include <Windows.h>
