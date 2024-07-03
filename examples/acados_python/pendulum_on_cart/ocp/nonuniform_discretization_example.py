@@ -125,7 +125,13 @@ def main(discretization='shooting_nodes'):
     ocp.constraints.idxbu = np.array([0])
 
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
-    ocp.solver_options.hpipm_mode = 'ROBUST'
+    # partial condensing settings
+    qp_solver_cond_N = 8
+    ocp.solver_options.qp_solver_cond_N = qp_solver_cond_N
+    ocp.solver_options.qp_solver_cond_block_size = (qp_solver_cond_N-1) * [1] + [N-((qp_solver_cond_N-1))] + [0]
+
+
+    # ocp.solver_options.hpipm_mode = 'ROBUST'
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = integrator_type
     ocp.solver_options.print_level = 0
@@ -165,6 +171,7 @@ def main(discretization='shooting_nodes'):
     if status not in [0, 2]:
         ocp_solver.store_iterate()
         ocp_solver.dump_last_qp_to_json()
+        ocp_solver.print_statistics()
         raise Exception(f'acados returned status {status}.')
 
     # get primal solution
