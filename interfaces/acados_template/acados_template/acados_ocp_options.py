@@ -374,6 +374,7 @@ class AcadosOcpOptions:
     def qp_solver_cond_block_size(self):
         """QP solver: list of integers of length qp_solver_cond_N + 1
         Denotes how many blocks of the original OCP are lumped together into one in partial condensing.
+        Note that the last entry is the number of blocks that are condensed into the terminal cost of the partially condensed QP.
         Default: None -> compute even block size distribution based on qp_solver_cond_N
         """
         return self.__qp_solver_cond_block_size
