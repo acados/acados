@@ -64,6 +64,8 @@ typedef struct ocp_qp_partial_condensing_opts_
     int N2;
     int N2_bkp;
 //    int expand_dual_sol; // 0 primal sol only, 1 primal + dual sol
+    int *block_size;
+    bool block_size_was_set;
     int ric_alg;
     int mem_qp_in; // allocate qp_in in memory
 } ocp_qp_partial_condensing_opts;

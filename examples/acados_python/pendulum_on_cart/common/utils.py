@@ -33,7 +33,7 @@ import numpy as np
 from acados_template import latexify_plot
 
 def plot_pendulum(shooting_nodes, u_max, U, X_true, X_est=None, Y_measured=None, latexify=True, plt_show=True, X_true_label=None,
-    states_lables = ['$x$', r'$\theta$', '$v$', r'$\dot{\theta}$'],
+    time_label='$t$', x_labels=['$x$', r'$\theta$', '$v$', r'$\dot{\theta}$'],
     title = None
                   ):
     """
@@ -72,7 +72,7 @@ def plot_pendulum(shooting_nodes, u_max, U, X_true, X_est=None, Y_measured=None,
     if title is not None:
         plt.title(title)
     plt.ylabel('$u$')
-    plt.xlabel('$t$')
+    plt.xlabel(time_label)
     plt.hlines(u_max, t[0], t[-1], linestyles='dashed', alpha=0.7)
     plt.hlines(-u_max, t[0], t[-1], linestyles='dashed', alpha=0.7)
     plt.ylim([-1.2*u_max, 1.2*u_max])
@@ -89,7 +89,7 @@ def plot_pendulum(shooting_nodes, u_max, U, X_true, X_est=None, Y_measured=None,
             plt.plot(t_mhe, X_est[:, i], '--', label='estimated')
             plt.plot(t, Y_measured[:, i], 'x', label='measured')
 
-        plt.ylabel(states_lables[i])
+        plt.ylabel(x_labels[i])
         plt.xlabel('$t$')
         plt.grid()
         plt.legend(loc=1)

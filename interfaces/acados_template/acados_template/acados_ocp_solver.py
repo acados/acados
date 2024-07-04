@@ -1430,6 +1430,7 @@ class AcadosOcpSolver:
             - qp_tau_min: for HPIPM QP solvers: minimum value of barrier parameter in HPIPM
             - qp_mu0: for HPIPM QP solvers: initial value for complementarity slackness
             - warm_start_first_qp: indicates if first QP in SQP is warm_started
+            - rti_phase: 0: PREPARATION_AND_FEEDBACK, 1: PREPARATION, 2: FEEDBACK
         """
         int_fields = ['print_level', 'rti_phase', 'initialize_t_slacks', 'qp_warm_start',
                       'line_search_use_sufficient_descent', 'full_step_dual', 'globalization_use_SOC', 'warm_start_first_qp', "as_rti_level", "max_iter"]
