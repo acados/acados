@@ -1326,9 +1326,6 @@ void ocp_nlp_sqp_rti_eval_param_sens(void *config_, void *dims_, void *opts_,
 void ocp_nlp_sqp_rti_eval_lagr_grad_p(void *config_, void *dims_, void *nlp_in_, void *opts_,
     void *mem_, void *work_, const char *field, void *grad_p)
 {
-    acados_timer timer0;
-    acados_tic(&timer0);
-
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_config *config = config_;
     ocp_nlp_sqp_rti_opts *opts = opts_;
@@ -1341,8 +1338,6 @@ void ocp_nlp_sqp_rti_eval_lagr_grad_p(void *config_, void *dims_, void *nlp_in_,
     ocp_nlp_workspace *nlp_work = work->nlp_work;
 
     ocp_nlp_common_eval_lagr_grad_p(config, dims, nlp_in, opts->nlp_opts, nlp_mem, nlp_work, field, grad_p);
-
-    mem->time_solution_sensitivities = acados_toc(&timer0);
 
     return;
 }
