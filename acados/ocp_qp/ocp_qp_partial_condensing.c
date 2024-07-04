@@ -361,7 +361,7 @@ acados_size_t ocp_qp_partial_condensing_memory_calculate_size(void *dims_, void 
     }
 
     // printf("using block_size:\n");
-    // int tmp_sum = 0;
+    // tmp_sum = 0;
     // for (int i = 0; i<opts->N2+1; i++)
     // {
     //     tmp_sum += dims->block_size[i];
