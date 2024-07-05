@@ -855,6 +855,21 @@ void ocp_nlp_qp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "nbu", &dims_out[0]);
         dims_out[1] = 1;
     }
+    else if (!strcmp(field, "pcond_R"))
+    {
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "pcond_nu", &dims_out[0]);
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "pcond_nu", &dims_out[1]);
+    }
+    else if (!strcmp(field, "pcond_Q"))
+    {
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "pcond_nx", &dims_out[0]);
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "pcond_nx", &dims_out[1]);
+    }
+    else if (!strcmp(field, "pcond_S"))
+    {
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "pcond_nu", &dims_out[0]);
+        config->qp_solver->dims_get(config->qp_solver, dims->qp_solver, stage, "pcond_nx", &dims_out[1]);
+    }
     else
     {
         printf("\nerror: ocp_nlp_qp_dims_get_from_attr: field %s not available\n", field);
@@ -1264,6 +1279,24 @@ void ocp_nlp_get_at_stage(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_so
             size2 = dims->nu[stage];
         }
         xcond_solver_config->solver_get(xcond_solver_config, nlp_mem->qp_in, nlp_mem->qp_out, nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, field, stage, value, size1, size2);
+    }
+    else if (!strcmp(field, "pcond_Q"))
+    {
+        ocp_qp_in *pcond_qp_in;
+        ocp_nlp_get(config, solver, "qp_xcond_in", &pcond_qp_in);
+        d_ocp_qp_get_Q(stage, pcond_qp_in, value);
+    }
+    else if (!strcmp(field, "pcond_R"))
+    {
+        ocp_qp_in *pcond_qp_in;
+        ocp_nlp_get(config, solver, "qp_xcond_in", &pcond_qp_in);
+        d_ocp_qp_get_R(stage, pcond_qp_in, value);
+    }
+    else if (!strcmp(field, "pcond_S"))
+    {
+        ocp_qp_in *pcond_qp_in;
+        ocp_nlp_get(config, solver, "qp_xcond_in", &pcond_qp_in);
+        d_ocp_qp_get_S(stage, pcond_qp_in, value);
     }
     else
     {
