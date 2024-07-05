@@ -80,7 +80,7 @@ typedef struct
     double funnel_sufficient_decrease_factor; // multiplication factor for funnel suff. decrease factor
     double funnel_kappa; // parameter for reduction of funnel
     double funnel_fraction_switching_condition; // parameter in switching condition
-    double funnel_penalty_parameter; // penalty parameter for penalty phase
+    double funnel_initial_penalty_parameter; // initial penalty parameter for penalty phase
     bool funnel_type_switching_condition;
 
 } ocp_nlp_sqp_opts;

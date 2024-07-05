@@ -136,7 +136,7 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->funnel_sufficient_decrease_factor = 0.9;
     opts->funnel_kappa = 0.9;
     opts->funnel_fraction_switching_condition = 1e-3;//0.99;
-    opts->funnel_penalty_parameter = 1.0;
+    opts->funnel_initial_penalty_parameter = 1.0;
     opts->funnel_type_switching_condition = false; // use ipopt/gould type of switching
 
     // overwrite default submodules opts
@@ -263,6 +263,66 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
                 exit(1);
             }
             opts->initialize_t_slacks = *initialize_t_slacks;
+        }
+        else if (!strcmp(field, "funnel_initial_increase_factor"))
+        {
+            double* funnel_initial_increase_factor = (double *) value;
+            if (*funnel_initial_increase_factor <= 1.0)
+            {
+                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_initial_increase_factor field, need double > 1, got %f.", *funnel_initial_increase_factor);
+                exit(1);
+            }
+            opts->funnel_initial_increase_factor = *funnel_initial_increase_factor;
+        }
+        else if (!strcmp(field, "funnel_initial_upper_bound"))
+        {
+            double* funnel_initial_upper_bound = (double *) value;
+            if (*funnel_initial_upper_bound <= 0.0)
+            {
+                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_initial_upper_bound field, need double > 0, got %f.", *funnel_initial_upper_bound);
+                exit(1);
+            }
+            opts->funnel_initial_upper_bound = *funnel_initial_upper_bound;
+        }
+        else if (!strcmp(field, "funnel_sufficient_decrease_factor"))
+        {
+            double* funnel_sufficient_decrease_factor = (double *) value;
+            if (*funnel_sufficient_decrease_factor <= 0.0 || *funnel_sufficient_decrease_factor >= 1.0)
+            {
+                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_sufficient_decrease_factor field, need double in (0,1), got %f.", *funnel_sufficient_decrease_factor);
+                exit(1);
+            }
+            opts->funnel_sufficient_decrease_factor = *funnel_sufficient_decrease_factor;
+        }
+        else if (!strcmp(field, "funnel_kappa"))
+        {
+            double* funnel_kappa = (double *) value;
+            if (*funnel_kappa <= 0.0 || *funnel_kappa >= 1.0)
+            {
+                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_kappa field, need double in (0,1), got %f.", *funnel_kappa);
+                exit(1);
+            }
+            opts->funnel_kappa = *funnel_kappa;
+        }
+        else if (!strcmp(field, "funnel_fraction_switching_condition"))
+        {
+            double* funnel_fraction_switching_condition = (double *) value;
+            if (*funnel_fraction_switching_condition <= 0.0 || *funnel_fraction_switching_condition >= 1.0)
+            {
+                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_fraction_switching_condition field, need double in (0,1), got %f.", *funnel_fraction_switching_condition);
+                exit(1);
+            }
+            opts->funnel_fraction_switching_condition = *funnel_fraction_switching_condition;
+        }
+        else if (!strcmp(field, "funnel_initial_penalty_parameter"))
+        {
+            double* funnel_initial_penalty_parameter = (double *) value;
+            if (*funnel_initial_penalty_parameter < 0.0 || *funnel_initial_penalty_parameter > 1.0)
+            {
+                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_initial_penalty_parameter field, need double in [0,1], got %f.", *funnel_initial_penalty_parameter);
+                exit(1);
+            }
+            opts->funnel_initial_penalty_parameter = *funnel_initial_penalty_parameter;
         }
         else
         {
@@ -814,6 +874,11 @@ static void initialize_funnel(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts, d
                             opts->funnel_initial_increase_factor*initial_infeasibility);
 }
 
+static void initialize_funnel_penalty_parameter(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts)
+{
+    mem->funnel_penalty_parameter = opts->funnel_initial_penalty_parameter;
+}
+
 static void decrease_funnel(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts, double trial_infeasibility, double current_infeasibility)
 {
     mem->funnel_width = (1-opts->funnel_kappa) * trial_infeasibility + opts->funnel_kappa * mem->funnel_width;
@@ -1273,6 +1338,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     int sqp_iter = 0;
     double reg_param_memory = 0.0;
     double funnel_width_memory = 0.0;
+    initialize_funnel_penalty_parameter(mem, opts);
 
     for (; sqp_iter <= opts->max_iter; sqp_iter++) // <= needed such that after last iteration KKT residuals are checked before max_iter is thrown.
     {

@@ -36,7 +36,6 @@ INTEGRATOR_TYPES = ('ERK', 'IRK', 'GNSF', 'DISCRETE', 'LIFTED_IRK')
 COLLOCATION_TYPES = ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA')
 COST_DISCRETIZATION_TYPES = ('EULER', 'INTEGRATOR')
 
-
 class AcadosOcpOptions:
     """
     class containing the description of the solver options
@@ -84,6 +83,12 @@ class AcadosOcpOptions:
         self.__exact_hess_dyn = 1
         self.__exact_hess_constr = 1
         self.__fixed_hess = 0
+        self.__funnel_initial_increase_factor = 15.0
+        self.__funnel_initial_upper_bound = 1.0
+        self.__funnel_sufficient_decrease_factor = 0.9
+        self.__funnel_kappa = 0.9
+        self.__funnel_fraction_switching_condition = 1e-3
+        self.__funnel_initial_penalty_parameter = 1.0
         self.__ext_cost_num_hess = 0
         self.__alpha_min = 0.05
         self.__alpha_reduction = 0.7
@@ -236,7 +241,7 @@ class AcadosOcpOptions:
     @property
     def globalization(self):
         """Globalization type.
-        String in ('FIXED_STEP', 'MERIT_BACKTRACKING').
+        String in ('FIXED_STEP', 'MERIT_BACKTRACKING', 'FUNNEL_METHOD').
         Default: 'FIXED_STEP'.
 
         .. note:: preliminary implementation.
@@ -578,6 +583,50 @@ class AcadosOcpOptions:
         default: 0.
         """
         return self.__full_step_dual
+    
+    @property
+    def funnel_initial_increase_factor(self):
+        """
+        Increase factor for initialization of funnel width. 
+        Initial funnel is max(funnel_initial_upper_bound, funnel_initial_increase_factor * initial_infeasibility)
+        """
+        return self.__funnel_initial_increase_factor
+    
+    @property
+    def funnel_initial_upper_bound(self):
+        """
+        Initial upper bound for funnel width. 
+        Initial funnel is max(funnel_initial_upper_bound, funnel_initial_increase_factor * initial_infeasibility)
+        """
+        return self.__funnel_initial_upper_bound
+    
+    @property
+    def funnel_sufficient_decrease_factor(self):
+        """
+        Sufficient decrease factor for infeasibility in h iteration.
+        """
+        return self.__funnel_sufficient_decrease_factor
+    
+    @property
+    def funnel_kappa(self):
+        """
+        Sufficient decrease factor for infeasibility in h iteration.
+        """
+        return self.__funnel_kappa
+    
+    @property
+    def funnel_fraction_switching_condition(self):
+        """
+        Multiplication factor in switching condition.
+        """
+        return self.__funnel_fraction_switching_condition
+    
+    @property
+    def funnel_initial_penalty_parameter(self):
+        """
+        Initialization.
+        """
+        return self.__funnel_initial_penalty_parameter
 
     @property
     def nlp_solver_tol_ineq(self):
@@ -927,6 +976,48 @@ class AcadosOcpOptions:
             self.__full_step_dual = full_step_dual
         else:
             raise Exception(f'Invalid value for full_step_dual. Possible values are 0, 1, got {full_step_dual}')
+
+    @funnel_initial_increase_factor.setter
+    def funnel_initial_increase_factor(self, funnel_initial_increase_factor):
+        if funnel_initial_increase_factor > 1.0:
+            self.__funnel_initial_increase_factor = funnel_initial_increase_factor
+        else:
+            raise Exception(f'Invalid value for funnel_initial_increase_factor. Should be > 1, got {funnel_initial_increase_factor}')
+    
+    @funnel_initial_upper_bound.setter
+    def funnel_initial_upper_bound(self, funnel_initial_upper_bound):
+        if funnel_initial_upper_bound > 0.0:
+            self.__funnel_initial_upper_bound = funnel_initial_upper_bound
+        else:
+             raise Exception(f'Invalid value for funnel_initial_upper_bound. Should be > 0, got {funnel_initial_upper_bound}')
+
+    @funnel_sufficient_decrease_factor.setter
+    def funnel_sufficient_decrease_factor(self, funnel_sufficient_decrease_factor):
+        if funnel_sufficient_decrease_factor > 0.0 and funnel_sufficient_decrease_factor < 1.0:
+            self.__funnel_sufficient_decrease_factor = funnel_sufficient_decrease_factor
+        else:
+            raise Exception(f'Invalid value for funnel_sufficient_decrease_factor. Should be in (0,1), got {funnel_sufficient_decrease_factor}')
+    
+    @funnel_kappa.setter
+    def funnel_kappa(self, funnel_kappa):
+        if funnel_kappa > 0.0 and funnel_kappa < 1.0:
+            self.__funnel_kappa = funnel_kappa
+        else:
+            raise Exception(f'Invalid value for funnel_kappa. Should be in (0,1), got {funnel_kappa}')
+    
+    @funnel_fraction_switching_condition.setter
+    def funnel_fraction_switching_condition(self, funnel_fraction_switching_condition):
+        if funnel_fraction_switching_condition > 0.0 and funnel_fraction_switching_condition < 1.0:
+            self.__funnel_fraction_switching_condition = funnel_fraction_switching_condition
+        else:
+            raise Exception(f'Invalid value for funnel_fraction_switching_condition. Should be in (0,1), got {funnel_fraction_switching_condition}')
+
+    @funnel_initial_penalty_parameter.setter
+    def funnel_initial_penalty_parameter(self, funnel_initial_penalty_parameter):
+        if funnel_initial_penalty_parameter >= 0.0 and funnel_initial_penalty_parameter <= 1.0:
+            self.__funnel_initial_penalty_parameter = funnel_initial_penalty_parameter
+        else:
+            raise Exception(f'Invalid value for funnel_initial_penalty_parameter. Should be in [0,1], got {funnel_initial_penalty_parameter}')
 
     @eps_sufficient_descent.setter
     def eps_sufficient_descent(self, eps_sufficient_descent):
