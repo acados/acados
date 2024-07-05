@@ -32,7 +32,7 @@
 import sys, json, os
 sys.path.insert(0, '../common')
 
-from acados_template import AcadosOcp, AcadosOcpSolver, acados_dae_model_json_dump, get_acados_path
+from acados_template import AcadosOcp, AcadosOcpSolver, acados_dae_model_json_dump, get_acados_path, get_simulink_default_opts
 from pendulum_model import export_pendulum_ode_model
 import numpy as np
 import scipy.linalg
@@ -141,10 +141,7 @@ def main(discretization='shooting_nodes'):
     ocp.solver_options.initialize_t_slacks = 1
 
     # Set additional options for Simulink interface:
-    acados_path = get_acados_path()
-    json_path = os.path.join(acados_path, 'interfaces/acados_template/acados_template')
-    with open(json_path + '/simulink_default_opts.json', 'r') as f:
-        simulink_opts = json.load(f)
+    simulink_opts = get_simulink_default_opts()
     ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json', simulink_opts = simulink_opts, verbose=False)
 
     # ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
