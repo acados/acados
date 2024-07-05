@@ -87,7 +87,7 @@ def main():
     ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
     ocp.solver_options.globalization = 'MERIT_BACKTRACKING' # turns on globalization
 
-    ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
+    ocp_solver = AcadosOcpSolver(ocp)
 
     simX = np.zeros((N+1, nx))
     simU = np.zeros((N, nu))

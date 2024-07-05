@@ -68,7 +68,7 @@ acados_size_t ocp_qp_partial_condensing_dims_calculate_size(void *config_, int N
     size += sizeof(ocp_qp_dims);
     size += d_ocp_qp_dim_memsize(N);  // worst-case size of new QP
 
-    // block size
+    // block_size
     size += (N + 1) * sizeof(int);
 
     size += 2*8;
@@ -110,7 +110,7 @@ void *ocp_qp_partial_condensing_dims_assign(void *config_, int N, void *raw_memo
     d_ocp_qp_dim_create(N, dims->pcond_dims, c_ptr);
     c_ptr += d_ocp_qp_dim_memsize(N);
 
-    // block size
+    // block_size
     assign_and_advance_int(N + 1, &dims->block_size, &c_ptr);
 
     align_char_to(8, &c_ptr);
@@ -169,16 +169,19 @@ acados_size_t ocp_qp_partial_condensing_opts_calculate_size(void *dims_)
     // populate dimensions of reduced qp
     d_ocp_qp_dim_reduce_eq_dof(dims->orig_dims, dims->red_dims);
 
-    // (temporarely) populate dimensions of new ocp_qp based on N2==N
+    // (temporarily) populate dimensions of new ocp_qp based on N2==N
+    // TODO: needed?
     size_t N2 = N;
     dims->pcond_dims->N = N2;
-    // TODO(all): user-defined block size
     d_part_cond_qp_compute_block_size(dims->red_dims->N, N2, dims->block_size);
     d_part_cond_qp_compute_dim(dims->red_dims, dims->block_size, dims->pcond_dims);
 
     acados_size_t size = 0;
 
     size += sizeof(ocp_qp_partial_condensing_opts);
+
+    // block_size
+    size += (N + 1) * sizeof(int);
 
     // hpipm_pcond_opts
     size += sizeof(struct d_part_cond_qp_arg);
@@ -187,7 +190,7 @@ acados_size_t ocp_qp_partial_condensing_opts_calculate_size(void *dims_)
     size += sizeof(struct d_ocp_qp_reduce_eq_dof_arg);
     size += d_ocp_qp_reduce_eq_dof_arg_memsize();
 
-    size += 2*8;
+    size += 3*8;
     make_int_multiple_of(8, &size);
 
     return size;
@@ -224,6 +227,11 @@ void *ocp_qp_partial_condensing_opts_assign(void *dims_, void *raw_memory)
     // hpipm_red_opts
     d_ocp_qp_reduce_eq_dof_arg_create(opts->hpipm_red_opts, c_ptr);
     c_ptr += opts->hpipm_red_opts->memsize;
+
+    // block_size
+    assign_and_advance_int(N + 1, &opts->block_size, &c_ptr);
+    align_char_to(8, &c_ptr);
+    opts->block_size_was_set = false;
 
     assert((char *) raw_memory + ocp_qp_partial_condensing_opts_calculate_size(dims) >= c_ptr);
 
@@ -294,6 +302,15 @@ void ocp_qp_partial_condensing_opts_set(void *opts_, const char *field, void* va
         int *tmp_ptr = value;
         opts->ric_alg = *tmp_ptr;
     }
+    else if(!strcmp(field, "block_size"))
+    {
+        int *tmp_ptr = value;
+        for (int i = 0; i < opts->N2+1; i++)
+        {
+            opts->block_size[i] = tmp_ptr[i];
+        }
+        opts->block_size_was_set = true;
+    }
     // TODO dual_sol ???
     else
     {
@@ -318,10 +335,40 @@ acados_size_t ocp_qp_partial_condensing_memory_calculate_size(void *dims_, void 
     // populate dimensions of reduced qp
     d_ocp_qp_dim_reduce_eq_dof(dims->orig_dims, dims->red_dims);
 
-    // populate dimensions of new ocp_qp based on actual N2
+    // populate dimensions from options: N2, block_size
     dims->pcond_dims->N = opts->N2;
-    // TODO(all): user-defined block size
-    d_part_cond_qp_compute_block_size(dims->red_dims->N, opts->N2, dims->block_size);
+    if (opts->block_size_was_set)
+    {
+        for (int i=0; i<opts->N2+1; i++)
+        {
+            dims->block_size[i] = opts->block_size[i];
+        }
+        // check consistency N and sum(block_size)
+        int tmp_sum = 0;
+        for (int i = 0; i<opts->N2+1; i++)
+        {
+            tmp_sum += dims->block_size[i];
+        }
+        if (tmp_sum != dims->orig_dims->N)
+        {
+            printf("partial condensing: sum of block_size should match N, got %d != N = %d\n", tmp_sum, dims->orig_dims->N);
+            exit(1);
+        }
+    }
+    else
+    {
+        d_part_cond_qp_compute_block_size(dims->red_dims->N, opts->N2, dims->block_size);
+    }
+
+    // printf("using block_size:\n");
+    // tmp_sum = 0;
+    // for (int i = 0; i<opts->N2+1; i++)
+    // {
+    //     tmp_sum += dims->block_size[i];
+    //     printf("%d\t", dims->block_size[i]);
+    // }
+    // printf("\ntotal %d\n", tmp_sum);
+
     d_part_cond_qp_compute_dim(dims->red_dims, dims->block_size, dims->pcond_dims);
 
     acados_size_t size = 0;

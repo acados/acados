@@ -88,7 +88,7 @@ def export_pendulum_ode_model() -> AcadosModel:
 
 
 def plot_open_loop_trajectory_pwpol_u(shooting_nodes, X_traj: np.ndarray, U_fine_traj: list, plt_show=True, u_max=None, title=None,
-    states_lables = ['$x$', r'$\theta$', '$v$', r'$\dot{\theta}$'],
+    x_labels = ['$x$', r'$\theta$', '$v$', r'$\dot{\theta}$'],
     idxpx=None, idxpu=None
                   ):
 
@@ -123,7 +123,7 @@ def plot_open_loop_trajectory_pwpol_u(shooting_nodes, X_traj: np.ndarray, U_fine
     for isub, ix in enumerate(idxpx):
         axes[isub+nxpu].plot(t, X_traj[:, ix])
 
-        axes[isub+nxpu].set_ylabel(states_lables[ix])
+        axes[isub+nxpu].set_ylabel(x_labels[ix])
         axes[isub+nxpu].grid()
 
     axes[-1].set_xlabel('$t$')
