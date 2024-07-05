@@ -91,6 +91,7 @@ classdef ocp_nlp_solver_options_json < handle
         log_primal_step_norm
         with_adaptive_levenberg_marquardt
         adaptive_levenberg_marquardt_lam
+        adaptive_levenberg_marquardt_mu_min
 
     end
     methods
@@ -145,6 +146,7 @@ classdef ocp_nlp_solver_options_json < handle
             obj.log_primal_step_norm = 0;
             obj.with_adaptive_levenberg_marquardt = 0;
             obj.adaptive_levenberg_marquardt_lam = 5.0;
+            obj.adaptive_levenberg_marquardt_mu_min = 1e-16;
 
         end
         function s = struct(self)
