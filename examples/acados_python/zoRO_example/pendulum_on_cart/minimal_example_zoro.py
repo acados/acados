@@ -31,7 +31,7 @@ import os
 
 import numpy as np
 import scipy.linalg
-from acados_template import AcadosOcp, AcadosOcpSolver, ZoroDescription, get_default_simulink_opts
+from acados_template import AcadosOcp, AcadosOcpSolver, ZoroDescription, get_simulink_default_opts
 
 # same as in normal pendulum model
 local_path = os.path.dirname(os.path.abspath(__file__))
@@ -136,7 +136,7 @@ def main():
     ocp.zoro_description = zoro_description
 
     # to export Simulink block
-    simulink_opts = get_default_simulink_opts()
+    simulink_opts = get_simulink_default_opts()
     simulink_opts['inputs']['lbx'] = 0
     simulink_opts['inputs']['ubx'] = 0
     simulink_opts['inputs']['lbx_e'] = 0

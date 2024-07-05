@@ -743,17 +743,28 @@ class AcadosOcpConstraints:
 
     @property
     def x0(self):
-        """:math:`x_0 \\in \mathbb{R}^{n_x}` - initial state --
-        Translated internally to :py:attr:`idxbx_0`, :py:attr:`lbx_0`, :py:attr:`ubx_0`, :py:attr:`idxbxe_0` """
-        print("x0 is converted to lbx_0, ubx_0, idxbx_0")
-        print("idxbx_0: ", self.__idxbx_0)
-        print("lbx_0: ", self.__lbx_0)
-        print("ubx_0: ", self.__ubx_0)
-        print("idxbxe_0: ", self.__idxbxe_0)
-        return None
+        """
+        :math:`x_0 \\in \mathbb{R}^{n_x}` - initial state --
+        Translated internally to :py:attr:`idxbx_0`, :py:attr:`lbx_0`, :py:attr:`ubx_0`, :py:attr:`idxbxe_0`
+        """
+        if self.has_x0:
+            return self.lbx_0
+        else:
+            print("x0 is not set. You can set it or specify lbx_0, ubx_0, idxbx_0, idxbxe_0 to implement general bounds on x0.")
+            print("")
+            print("idxbx_0: ", self.__idxbx_0)
+            print("lbx_0: ", self.__lbx_0)
+            print("ubx_0: ", self.__ubx_0)
+            print("idxbxe_0: ", self.__idxbxe_0)
+            return None
 
     @property
     def has_x0(self):
+        """
+        Internal variable to check if x0 is set.
+        Cannot be set from outside.
+        :bool: True if x0 is set, False otherwise.
+        """
         return self.__has_x0
 
     # SETTERS
