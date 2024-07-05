@@ -1274,7 +1274,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     double reg_param_memory = 0.0;
     double funnel_width_memory = 0.0;
 
-    for (; sqp_iter < opts->max_iter+1; sqp_iter++)
+    for (; sqp_iter <= opts->max_iter; sqp_iter++) // <= needed such that after last iteration KKT residuals are checked before max_iter is thrown.
     {
         /* Prepare the QP data */
         // linearize NLP and update QP matrices
