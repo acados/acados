@@ -387,7 +387,7 @@ Additionally, bounds on $u$ and general linear constraints are also enforced on 
 \subsection{Initial State}\label{sec:constraints:initial}
 %
 Note: An initial state is not required.
-For example for moving horizon estimation (MHE) problems it should not be set.
+For example, for moving horizon estimation (MHE) problems it should not be set.
 
 Two possibilities exist to define the initial states equation~\eqref{eq:constraints:initial}: a simple syntax and an extended syntax.
 
@@ -424,14 +424,14 @@ The options for the extended syntax are found in table~\ref{tab:constraints:exte
 %
 Table~\ref{tab:constraints:path} shows the options for defining the path constraints equations~(\ref{eq:constraints:path:lower_bounds:start} ~-~\ref{eq:constraints:path:upper_bounds:end}).
 The matrices $ J_{\star} $ are translated into arrays of integers \texttt{idx}$\star$, see Python documentation.
-These matrices described as follows:
+These matrices are described as follows:
 \begin{itemize}
-    \item $J\ind{sh}$ maps lower slack vectors $s\ind{l,h}(t)$ and upper slack vectors $s\ind{u,h}(t)$ onto the non-linear constraint expressions $h(x,u,p)$.
-    \item $J\ind{bx}$, $J\ind{bu}$ map $x(t)$ and $u(t)$ onto its bounds vectors $\underline{x}$, $\bar{x}$ and $\underline{u}$, $\bar{u}$, respectively.
+    \item $J\ind{sh}$ maps lower slack vectors $s\ind{l,h}(t)$ and upper slack vectors $s\ind{u,h}(t)$ onto the nonlinear constraint expressions $h(x,u,p)$.
+    \item $J\ind{bx}$, $J\ind{bu}$ map $x(t)$ and $u(t)$ onto their bounds vectors $\underline{x}$, $\bar{x}$ and $\underline{u}$, $\bar{u}$, respectively.
     \item $J\ind{sx}$, $J\ind{su}$ map lower slack vectors $s\ind{l,bx}(t)$, $s\ind{l,bu}(t)$ and upper slack vectors $s\ind{u,bx}(t)$, $s\ind{u,bu}(t)$ onto $x(t)$ and $u(t)$, respectively.
-    \item $J\ind{sg}$ map lower slack vectors $s\ind{l,g}(t)$ and upper slack vectors $s\ind{u,g}(t)$ onto lower and upper equality bounds $\underline{g}$, $\bar{g}$, respectively.
-    \item $C$, $D$ map $x(t)$ and $u(t)$ onto lower and upper inequality bounds $\underline{g}$, $\bar{g}$ (polytopic constraints)
-    \item $J\ind{sh}\initial$ maps lower slack vectors $s\ind{l,h}\initial$ and upper slack vectors $s\ind{u,h}\initial$ onto the non-linear initial constraint expressions $h\initial(x(0),u(0),p)$.
+    \item $J\ind{sg}$ maps lower slack vectors $s\ind{l,g}(t)$ and upper slack vectors $s\ind{u,g}(t)$ onto lower and upper equality bounds $\underline{g}$, $\bar{g}$, respectively.
+    \item $C$, $D$ map $x(t)$ and $u(t)$ onto lower and upper inequality bounds $\underline{g}$, $\bar{g}$ (polytopic constraints).
+    \item $J\ind{sh}\initial$ maps lower slack vectors $s\ind{l,h}\initial$ and upper slack vectors $s\ind{u,h}\initial$ onto the nonlinear initial constraint expressions $h\initial(x(0),u(0),p)$.
 \end{itemize}
 %
 \begin{table}[ht!]
@@ -460,8 +460,7 @@ These matrices described as follows:
         $ J\ind{sbu} $ & \code{constr\_Jsbu} & double, \textbf{SPUME}  & \optional \\
         $ J\ind{sg} $ & \code{constr\_Jsg} & double, \textbf{SPUME} & \optional  \\
         $ J\ind{sh} $ & \code{constr\_Jsh} & double, \textbf{SPUME}  & \optional  \\
-        % TODO: Jsh_0
-        % $ J\ind{sh}\initial $ & \code{constr\_Jsh\_0} & double, \textbf{SPUME}  & \optional  \\
+        $ J\ind{sh}\initial $ & \code{constr\_Jsh\_0} & double, \textbf{SPUME}  & \optional  \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -473,11 +472,11 @@ These matrices described as follows:
 Table~\ref{tab:constraints:terminal} shows the options for defining the terminal constraints equations~(\ref{eq:constraints:terminal:lower_bounds:start} ~-~\ref{eq:constraints:terminal:upper_bounds:end}).
 Here, matrices
 \begin{itemize}
-    \item $J\ind{sh}\terminal$, maps lower slack vectors $s\ind{l,h}\terminal(t)$ and upper slack vectors $s\ind{u,h}\terminal(t)$ onto non-linear terminal constraint expressions $h\terminal(x(T), p)$.
+    \item $J\ind{sh}\terminal$ maps lower slack vectors $s\ind{l,h}\terminal(t)$ and upper slack vectors $s\ind{u,h}\terminal(t)$ onto nonlinear terminal constraint expressions $h\terminal(x(T), p)$.
     \item $J\ind{bx}\terminal$ maps $x(T)$ onto its bounds vectors $\underline{x}\terminal$ and $\bar{x}\terminal$.
     \item $J\ind{sbx}\terminal$ maps lower slack vectors $s\ind{l,bx}\terminal$ and upper slack vectors $s\ind{u,bx}\terminal$ onto $x(T)$.
-    \item $J\ind{sg}\terminal$ map lower slack vectors $s\ind{l,g}\terminal(t)$ and upper slack vectors $s\ind{u,g}\terminal(t)$ onto lower and upper equality bounds $\underline{g}\terminal$, $\bar{g}\terminal$, respectively.
-    \item $C\terminal$ maps $x(T)$ onto lower and upper inequality bounds $\underline{g}\terminal$, $\bar{g}\terminal$ (polytopic constraints)
+    \item $J\ind{sg}\terminal$ maps lower slack vectors $s\ind{l,g}\terminal(t)$ and upper slack vectors $s\ind{u,g}\terminal(t)$ onto lower and upper equality bounds $\underline{g}\terminal$, $\bar{g}\terminal$, respectively.
+    \item $C\terminal$ maps $x(T)$ onto lower and upper inequality bounds $\underline{g}\terminal$, $\bar{g}\terminal$ (polytopic constraints).
 \end{itemize}
 %
 \begin{table}[ht!]
@@ -490,12 +489,12 @@ Here, matrices
         $\underline{x}\terminal $    & \code{constr\_lbx\_e}     & double  & \optional   \\
         $\bar{x}\terminal $         & \code{constr\_ubx\_e}     & double   & \optional  \\ [1em]
         $ C\terminal $ & \code{constr\_C\_e}    & double   & \optional   \\
-        $\underline{g}\terminal $    & \code{constr\_lg}     & double   & \optional   \\
-        $\bar{g}\terminal $         & \code{constr\_ug}     & double   & \optional  \\ [1em]
+        $\underline{g}\terminal $    & \code{constr\_lg\_e}     & double   & \optional   \\
+        $\bar{g}\terminal $         & \code{constr\_ug\_e}     & double   & \optional  \\ [1em]
         $ h\terminal $ & \code{constr\_expr\_h\_e}    & \casadi~expression   & \optional  \\
         $\underline{h}\terminal $    & \code{constr\_lh\_e}     & double   & \optional   \\
         $\bar{h}\terminal $         & \code{constr\_uh\_e}     & double  & \optional   \\ [1em]
-        $ J\ind{sbx}\terminal $ & \code{constr\_Jsbx} & double, \textbf{SPUME}   & \optional \\
+        $ J\ind{sbx}\terminal $ & \code{constr\_Jsbx\_e} & double, \textbf{SPUME}   & \optional \\
         $ J\ind{sg}\terminal $ & \code{constr\_Jsg\_e} & double, \textbf{SPUME} & \optional  \\
         $ J\ind{sh}\terminal $ & \code{constr\_Jsh\_e} & double, \textbf{SPUME}  & \optional  \\
         \bottomrule
@@ -546,7 +545,7 @@ These options are set in \matlab{} via \code{ocp\_opts.set(<stringid>, <value>)}
 Furthermore, the struct \code{ocp\_opts.opts\_struct} and \href{https://github.com/acados/acados/blob/master/interfaces/acados_matlab_octave/acados_ocp_opts.m}{\code{acados\_ocp\_opts.m}} can be used as a reference for what other fields are available.
 \\
 Note that some options of the solver can be modified after creation using the routine: \code{set(<stringid>, <value>)}.
-Some options can only be set before the solver is created, especially options that influence the memory requirements of OCP solver, such as the modules used in the formulation, the QP solver, etc.
+Some options can only be set before the solver is created, especially options that influence the memory requirements of the OCP solver, such as the modules used in the formulation, the QP solver, etc.
 
 %
 %\begin{landscape}
