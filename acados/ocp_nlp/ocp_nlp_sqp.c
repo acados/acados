@@ -118,6 +118,7 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->tol_eq   = 1e-8;
     opts->tol_ineq = 1e-8;
     opts->tol_comp = 1e-8;
+    opts->tol_unbounded = -1e20;
 
     opts->ext_qp_res = 0;
 
@@ -834,6 +835,16 @@ static bool check_termination(int n_iter, ocp_nlp_res *nlp_res, ocp_nlp_sqp_memo
             }
         }
         mem->status = ACADOS_MINSTEP;
+        return true;
+    }
+
+    // Check for unbounded problem
+    if (mem->nlp_mem->cost_value <= opts->tol_unbounded)
+    {
+        mem->status = ACADOS_UNBOUNDED;
+        if (opts->nlp_opts->print_level > 0){
+            printf("Stopped: Problem seems to be unbounded.\n");
+        }
         return true;
     }
 
