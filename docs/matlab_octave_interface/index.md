@@ -11,8 +11,14 @@ Detailed instructions for a manual installation can be found in the last section
 
 The problem formulation is stated in [this PDF](https://github.com/acados/acados/tree/master/docs/problem_formulation/problem_formulation_ocp_mex.pdf).
 
+
+## Export environment variables
+In order to run the examples, some environment variables need to be exported.
+Instead of running the scripts below, you can modify an `rc` file, like `.bashrc` when launching MATLAB from bash,
+[`.matlab7rc.sh`](https://discourse.acados.org/t/matlab-mex-more-elegant-way-to-setup-env-sh/62/4) or `startup.m` to always have those environment variables defined when starting `Matlab`.
+
 ### Linux / macOS
-To run the examples, navigate into the folder of the example you want to run and execute the following command:
+Navigate into the folder of the example you want to run and execute the following command:
 ```
 source env.sh # Which can be found in the folder of one of the examples
 ```
