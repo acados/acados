@@ -233,7 +233,6 @@ typedef struct ocp_nlp_out
     struct blasfeo_dvec *z;  // algebraic variables
     struct blasfeo_dvec *pi;  // multipliers for dynamics
     struct blasfeo_dvec *lam;  // inequality multipliers
-    struct blasfeo_dvec *t;  // slack variables corresponding to evaluation of all inequalities (at the solution)
 
     // NOTE: the inequalities are internally organized in the following order:
     // [ lbu lbx lg lh lphi ubu ubx ug uh uphi; lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]

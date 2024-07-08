@@ -464,10 +464,6 @@ void ocp_nlp_out_print(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out)
         blasfeo_print_tran_dvec(2 * ni[ii], &nlp_out->lam[ii], 0);
     }
 
-// printf("t =\n");
-// for (ii=0; ii<=N; ii++)
-//        blasfeo_print_exp_tran_dvec(2*nb[ii]+2*ng[ii], &nlp_out->t[ii], 0);
-
 #else
 
     for (ii = 0; ii < N + 1; ii++)

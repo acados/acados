@@ -545,10 +545,6 @@ static void ocp_nlp_ddp_compute_trial_iterate(ocp_nlp_config *config, ocp_nlp_di
             }
         }
 
-        // // update slack values
-        // blasfeo_dvecsc(2*ni[i], 1.0-alpha, tmp_nlp_out->t+i, 0);
-        // blasfeo_daxpy(2*ni[i], alpha, mem->qp_out->t+i, 0, tmp_nlp_out->t+i, 0, tmp_nlp_out->t+i, 0);
-
         // linear update of algebraic variables using state and input sensitivity
         if (i < N)
         {
