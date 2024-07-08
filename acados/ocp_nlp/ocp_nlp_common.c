@@ -2154,32 +2154,6 @@ void ocp_nlp_initialize_submodules(ocp_nlp_config *config, ocp_nlp_dims *dims, o
 }
 
 
-void ocp_nlp_initialize_t_slacks(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
-         ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
-{
-    struct blasfeo_dvec *ineq_fun;
-    int N = dims->N;
-    int *ni = dims->ni;
-    // int *ns = dims->ns;
-    // int *nx = dims->nx;
-    // int *nu = dims->nu;
-
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp parallel for
-#endif
-    for (int i = 0; i <= N; i++)
-    {
-        // evaluate inequalities
-        config->constraints[i]->compute_fun(config->constraints[i], dims->constraints[i],
-                                             in->constraints[i], opts->constraints[i],
-                                             mem->constraints[i], work->constraints[i]);
-        ineq_fun = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
-        // t = -ineq_fun
-        blasfeo_dveccpsc(2 * ni[i], -1.0, ineq_fun, 0, out->t + i, 0);
-    }
-
-    return;
-}
 
 static void adaptive_levenberg_marquardt_update_mu(double iter, double step_size, ocp_nlp_opts *opts, ocp_nlp_memory *mem)
 {

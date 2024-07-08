@@ -123,7 +123,6 @@ void ocp_nlp_ddp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->qp_warm_start = 0;
     opts->warm_start_first_qp = false;
     opts->rti_phase = 0;
-    opts->initialize_t_slacks = 0;
 
     opts->linesearch_eta = 1e-6;
     opts->linesearch_minimum_step_size = 1e-17;
@@ -245,16 +244,6 @@ void ocp_nlp_ddp_opts_set(void *config_, void *opts_, const char *field, void* v
                 exit(1);
             }
             opts->rti_phase = *rti_phase;
-        }
-        else if (!strcmp(field, "initialize_t_slacks"))
-        {
-            int* initialize_t_slacks = (int *) value;
-            if (*initialize_t_slacks != 0 && *initialize_t_slacks != 1)
-            {
-                printf("\nerror: ocp_nlp_ddp_opts_set: invalid value for initialize_t_slacks field, need int 0 or 1, got %d.", *initialize_t_slacks);
-                exit(1);
-            }
-            opts->initialize_t_slacks = *initialize_t_slacks;
         }
         else
         {
@@ -732,9 +721,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // approximate_qp_matrices is parallelized
     omp_set_num_threads(opts->nlp_opts->num_threads);
 #endif
-
-    if (opts->initialize_t_slacks > 0)
-        ocp_nlp_initialize_t_slacks(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 

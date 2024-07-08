@@ -60,7 +60,6 @@ classdef ocp_nlp_solver_options_json < handle
         qp_solver_tol_comp
         qp_solver_warm_start
         print_level
-        initialize_t_slacks
         levenberg_marquardt
         regularize_method
         exact_hess_cost
@@ -113,7 +112,6 @@ classdef ocp_nlp_solver_options_json < handle
             obj.reg_epsilon = 1e-4;
             obj.print_level = 0;
             obj.time_steps = [];
-            obj.initialize_t_slacks = 0;
             obj.levenberg_marquardt = 0.0;
             obj.regularize_method = 'NO_REGULARIZE';
             obj.exact_hess_cost = 1;

@@ -122,7 +122,6 @@ def solve_marathos_problem_with_setting(setting):
     ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
     ocp.solver_options.globalization = globalization
     ocp.solver_options.alpha_min = 1e-2
-    # ocp.solver_options.__initialize_t_slacks = 0
     # ocp.solver_options.regularize_method = 'CONVEXIFY'
     ocp.solver_options.levenberg_marquardt = 1e-1
     # ocp.solver_options.print_level = 2

@@ -142,7 +142,6 @@ def main(discretization='shooting_nodes'):
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
-    ocp.solver_options.initialize_t_slacks = 1
 
     # Set additional options for Simulink interface:
     simulink_opts = get_simulink_default_opts()

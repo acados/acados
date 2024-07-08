@@ -875,9 +875,6 @@
         "print_level": [
             "int"
         ],
-        "initialize_t_slacks": [
-            "int"
-        ],
         "exact_hess_cost": [
             "int"
         ],

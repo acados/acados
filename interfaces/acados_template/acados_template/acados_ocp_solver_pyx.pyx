@@ -874,7 +874,7 @@ cdef class AcadosOcpSolverCython:
         """
         Set options of the solver.
 
-            :param field: string, e.g. 'print_level', 'rti_phase', 'initialize_t_slacks', 'step_length', 'alpha_min', 'alpha_reduction', 'qp_warm_start', 'line_search_use_sufficient_descent', 'full_step_dual', 'globalization_use_SOC', 'qp_tol_stat', 'qp_tol_eq', 'qp_tol_ineq', 'qp_tol_comp', 'qp_tau_min', 'qp_mu0'
+            :param field: string, e.g. 'print_level', 'rti_phase', 'step_length', 'alpha_min', 'alpha_reduction', 'qp_warm_start', 'line_search_use_sufficient_descent', 'full_step_dual', 'globalization_use_SOC', 'qp_tol_stat', 'qp_tol_eq', 'qp_tol_ineq', 'qp_tol_comp', 'qp_tau_min', 'qp_mu0'
 
             :param value: of type int, float, string
 
@@ -886,7 +886,7 @@ cdef class AcadosOcpSolverCython:
             - qp_mu0: for HPIPM QP solvers: initial value for complementarity slackness
             - warm_start_first_qp: indicates if first QP in SQP is warm_started
         """
-        int_fields = ['print_level', 'rti_phase', 'initialize_t_slacks', 'qp_warm_start', 'line_search_use_sufficient_descent', 'full_step_dual', 'globalization_use_SOC', 'warm_start_first_qp']
+        int_fields = ['print_level', 'rti_phase', 'qp_warm_start', 'line_search_use_sufficient_descent', 'full_step_dual', 'globalization_use_SOC', 'warm_start_first_qp']
         double_fields = ['step_length', 'tol_eq', 'tol_stat', 'tol_ineq', 'tol_comp', 'alpha_min', 'alpha_reduction', 'eps_sufficient_descent',
         'qp_tol_stat', 'qp_tol_eq', 'qp_tol_ineq', 'qp_tol_comp', 'qp_tau_min', 'qp_mu0']
         string_fields = ['globalization']
