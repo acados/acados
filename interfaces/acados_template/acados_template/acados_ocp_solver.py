@@ -509,7 +509,6 @@ class AcadosOcpSolver:
         - for field `params_global`, the gradient of the Lagrange function w.r.t. the global parameters is computed in acados.
 
         :param with_respect_to: string in ["initial_state", "params_global"]
-
         """
 
         if with_respect_to == "initial_state":
@@ -570,7 +569,7 @@ class AcadosOcpSolver:
         .. note:: Timing of the sensitivities computation consists of time_solution_sens_lin, time_solution_sens_solve.
         .. note:: Solution sensitivities with respect to parameters are currently implemented assuming the parameter vector p is global within the OCP, i.e. p=p_i with i=0, ..., N.
         .. note:: Solution sensitivities with respect to parameters are currently implemented only for parametric discrete dynamics and parametric external costs (in particular, parametric constraints are not covered).
-   """
+        """
 
         if not (self.acados_ocp.solver_options.qp_solver == 'FULL_CONDENSING_HPIPM' or
                 self.acados_ocp.solver_options.qp_solver == 'PARTIAL_CONDENSING_HPIPM'):
@@ -1090,7 +1089,7 @@ class AcadosOcpSolver:
                     + f'\n Possible values are {fields}.')
 
 
-    def get_cost(self):
+    def get_cost(self) -> float:
         """
         Returns the cost value of the current solution.
         """
@@ -1220,7 +1219,7 @@ class AcadosOcpSolver:
         return
 
 
-    def cost_set(self, stage_: int, field_: str, value_, api='warn'):
+    def cost_set(self, stage_: int, field_: str, value_, api='warn') -> None:
         """
         Set numerical data in the cost module of the solver.
 
