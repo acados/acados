@@ -965,8 +965,8 @@ class AcadosOcpSolver:
             - time_solution_sens_lin: CPU time for linearization in eval_param_sens
             - time_solution_sens_solve: CPU time for solving in eval_solution_sensitivity
             - time_reg: CPU time regularization
-            - time_preparation: CPU time for last preparation phase, relevant for (AS-)RTI
-            - time_feedback: CPU time for last feedback phase, relevant for (AS-)RTI
+            - time_preparation: CPU time for last preparation phase, relevant for (AS-)RTI, zero otherwise
+            - time_feedback: CPU time for last feedback phase, relevant for (AS-)RTI, otherwise returns total compuation time.
             - sqp_iter: number of SQP iterations
             - nlp_iter: number of NLP solver iterations (DDP or SQP)
             - qp_stat: status of QP solver
