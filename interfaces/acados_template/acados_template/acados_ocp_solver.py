@@ -263,6 +263,7 @@ class AcadosOcpSolver:
         self.__qp_cost_fields = ['Q', 'R', 'S', 'q', 'r']
         self.__qp_constraint_fields = ['C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu']
         self.__qp_pc_hpipm_fields = ['P', 'K', 'Lr', 'p']
+        self.__qp_pc_fields = ['pcond_Q', 'pcond_R', 'pcond_S']
 
         # set arg and res types
         self.__acados_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
@@ -509,7 +510,6 @@ class AcadosOcpSolver:
         - for field `params_global`, the gradient of the Lagrange function w.r.t. the global parameters is computed in acados.
 
         :param with_respect_to: string in ["initial_state", "params_global"]
-
         """
 
         if with_respect_to == "initial_state":
@@ -570,7 +570,7 @@ class AcadosOcpSolver:
         .. note:: Timing of the sensitivities computation consists of time_solution_sens_lin, time_solution_sens_solve.
         .. note:: Solution sensitivities with respect to parameters are currently implemented assuming the parameter vector p is global within the OCP, i.e. p=p_i with i=0, ..., N.
         .. note:: Solution sensitivities with respect to parameters are currently implemented only for parametric discrete dynamics and parametric external costs (in particular, parametric constraints are not covered).
-   """
+        """
 
         if not (self.acados_ocp.solver_options.qp_solver == 'FULL_CONDENSING_HPIPM' or
                 self.acados_ocp.solver_options.qp_solver == 'PARTIAL_CONDENSING_HPIPM'):
@@ -965,6 +965,8 @@ class AcadosOcpSolver:
             - time_solution_sens_lin: CPU time for linearization in eval_param_sens
             - time_solution_sens_solve: CPU time for solving in eval_solution_sensitivity
             - time_reg: CPU time regularization
+            - time_preparation: CPU time for last preparation phase, relevant for (AS-)RTI, zero otherwise
+            - time_feedback: CPU time for last feedback phase, relevant for (AS-)RTI, otherwise returns total compuation time.
             - sqp_iter: number of SQP iterations
             - nlp_iter: number of NLP solver iterations (DDP or SQP)
             - qp_stat: status of QP solver
@@ -991,7 +993,9 @@ class AcadosOcpSolver:
                   'time_qp_xcond',
                   'time_glob',
                   'time_solution_sensitivities',
-                  'time_reg'
+                  'time_reg',
+                  'time_preparation',
+                  'time_feedback',
         ]
         fields = double_fields + [
                   'sqp_iter',
@@ -1086,7 +1090,7 @@ class AcadosOcpSolver:
                     + f'\n Possible values are {fields}.')
 
 
-    def get_cost(self):
+    def get_cost(self) -> float:
         """
         Returns the cost value of the current solution.
         """
@@ -1216,7 +1220,7 @@ class AcadosOcpSolver:
         return
 
 
-    def cost_set(self, stage_: int, field_: str, value_, api='warn'):
+    def cost_set(self, stage_: int, field_: str, value_, api='warn') -> None:
         """
         Set numerical data in the cost module of the solver.
 
@@ -1374,7 +1378,10 @@ class AcadosOcpSolver:
             :param stage: integer corresponding to shooting node
             :param field: string in ['A', 'B', 'b', 'Q', 'R', 'S', 'q', 'r', 'C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu']
 
-        Note: additional supported fields are ['P', 'K', 'Lr'], which can be extracted form QP solver PARTIAL_CONDENSING_HPIPM.
+        Note:
+        - additional supported fields are ['P', 'K', 'Lr'], which can be extracted form QP solver PARTIAL_CONDENSING_HPIPM.
+        - for PARTIAL_CONDENSING_* QP solvers, the following additional fields are available:
+            ['pcond_Q', 'pcond_R', 'pcond_S']
         """
         # idx* should be added too..
         if not isinstance(stage_, int):
@@ -1383,13 +1390,15 @@ class AcadosOcpSolver:
             raise Exception("stage should be <= self.N")
         if field_ in self.__qp_dynamics_fields and stage_ >= self.N:
             raise ValueError(f"dynamics field {field_} not available at terminal stage")
-        if field_ not in self.__qp_dynamics_fields + self.__qp_cost_fields + self.__qp_constraint_fields + self.__qp_pc_hpipm_fields:
+        if field_ not in self.__qp_dynamics_fields + self.__qp_cost_fields + self.__qp_constraint_fields + self.__qp_pc_hpipm_fields + self.__qp_pc_fields:
             raise Exception(f"field {field_} not supported.")
         if field_ in self.__qp_pc_hpipm_fields:
             if self.acados_ocp.solver_options.qp_solver != "PARTIAL_CONDENSING_HPIPM" or self.acados_ocp.solver_options.qp_solver_cond_N != self.acados_ocp.dims.N:
                 raise Exception(f"field {field_} only works for PARTIAL_CONDENSING_HPIPM QP solver with qp_solver_cond_N == N.")
             if field_ in ["P", "K", "p"] and stage_ == 0 and self.acados_ocp.dims.nbxe_0 > 0:
                 raise Exception(f"getting field {field_} at stage 0 only works without x0 elimination (see nbxe_0).")
+        if field_ in self.__qp_pc_fields and not self.acados_ocp.solver_options.qp_solver.startswith("PARTIAL_CONDENSING"):
+            raise Exception(f"field {field_} only works for PARTIAL_CONDENSING QP solvers.")
 
         field = field_.encode('utf-8')
         stage = c_int(stage_)
@@ -1430,6 +1439,7 @@ class AcadosOcpSolver:
             - qp_tau_min: for HPIPM QP solvers: minimum value of barrier parameter in HPIPM
             - qp_mu0: for HPIPM QP solvers: initial value for complementarity slackness
             - warm_start_first_qp: indicates if first QP in SQP is warm_started
+            - rti_phase: 0: PREPARATION_AND_FEEDBACK, 1: PREPARATION, 2: FEEDBACK
         """
         int_fields = ['print_level', 'rti_phase', 'initialize_t_slacks', 'qp_warm_start',
                       'line_search_use_sufficient_descent', 'full_step_dual', 'globalization_use_SOC', 'warm_start_first_qp', "as_rti_level", "max_iter"]

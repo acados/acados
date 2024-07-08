@@ -1219,14 +1219,17 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     if (rti_phase == FEEDBACK)
     {
         ocp_nlp_sqp_rti_feedback_step(config, dims, nlp_in, nlp_out, opts, mem, work);
+        mem->time_feedback = acados_toc(&timer);
     }
     else if (rti_phase == PREPARATION && opts->as_rti_level == STANDARD_RTI)
     {
         ocp_nlp_sqp_rti_preparation_step(config, dims, nlp_in, nlp_out, opts, mem, work);
+        mem->time_preparation = acados_toc(&timer);
     }
     else if (rti_phase == PREPARATION)
     {
         ocp_nlp_sqp_rti_preparation_advanced_step(config, dims, nlp_in, nlp_out, opts, mem, work);
+        mem->time_preparation = acados_toc(&timer);
     }
     else if (rti_phase == PREPARATION_AND_FEEDBACK && opts->as_rti_level != STANDARD_RTI)
     {
@@ -1237,7 +1240,12 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     {
         // rti_phase == PREPARATION_AND_FEEDBACK
         ocp_nlp_sqp_rti_preparation_step(config, dims, nlp_in, nlp_out, opts, mem, work);
+        mem->time_preparation = acados_toc(&timer);
+
+        acados_timer timer_feedback;
+        acados_tic(&timer_feedback);
         ocp_nlp_sqp_rti_feedback_step(config, dims, nlp_in, nlp_out, opts, mem, work);
+        mem->time_feedback = acados_toc(&timer_feedback);
     }
     mem->time_tot = acados_toc(&timer);
 
@@ -1318,9 +1326,6 @@ void ocp_nlp_sqp_rti_eval_param_sens(void *config_, void *dims_, void *opts_,
 void ocp_nlp_sqp_rti_eval_lagr_grad_p(void *config_, void *dims_, void *nlp_in_, void *opts_,
     void *mem_, void *work_, const char *field, void *grad_p)
 {
-    acados_timer timer0;
-    acados_tic(&timer0);
-
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_config *config = config_;
     ocp_nlp_sqp_rti_opts *opts = opts_;
@@ -1333,8 +1338,6 @@ void ocp_nlp_sqp_rti_eval_lagr_grad_p(void *config_, void *dims_, void *nlp_in_,
     ocp_nlp_workspace *nlp_work = work->nlp_work;
 
     ocp_nlp_common_eval_lagr_grad_p(config, dims, nlp_in, opts->nlp_opts, nlp_mem, nlp_work, field, grad_p);
-
-    mem->time_solution_sensitivities = acados_toc(&timer0);
 
     return;
 }
@@ -1404,6 +1407,16 @@ void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_,
             config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], field, &tmp);
             *ptr += tmp;
         }
+    }
+    else if (!strcmp("time_preparation", field))
+    {
+        double *value = return_value_;
+        *value = mem->time_preparation;
+    }
+    else if (!strcmp("time_feedback", field))
+    {
+        double *value = return_value_;
+        *value = mem->time_feedback;
     }
     else if (!strcmp("time_solution_sensitivities", field))
     {

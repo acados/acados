@@ -1792,6 +1792,16 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
         double *value = return_value_;
         *value = mem->time_sim_ad;
     }
+    else if (!strcmp("time_preparation", field))
+    {
+        double *value = return_value_;
+        *value = 0.0;
+    }
+    else if (!strcmp("time_feedback", field))
+    {
+        double *value = return_value_;
+        *value = mem->time_tot;
+    }
     else if (!strcmp("stat", field))
     {
         double **value = return_value_;

@@ -31,7 +31,7 @@
 import sys
 sys.path.insert(0, '../common')
 
-from acados_template import AcadosOcp, AcadosOcpSolver, get_default_simulink_opts
+from acados_template import AcadosOcp, AcadosOcpSolver, get_simulink_default_opts
 from pendulum_model import export_pendulum_ode_model
 import numpy as np
 # from utils import plot_pendulum
@@ -84,7 +84,7 @@ def main():
     ocp.solver_options.tf = Tf
 
     # to generate Simulink wrapper for solver
-    simulink_opts = get_default_simulink_opts() # modify those options, if you like.
+    simulink_opts = get_simulink_default_opts() # modify those options, if you like.
 
     # create solver
     ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json', simulink_opts=simulink_opts)

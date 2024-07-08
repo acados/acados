@@ -2249,6 +2249,15 @@ void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* 
     qp_solver_cond_N = N;
     {%- endif %}
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_cond_N", &qp_solver_cond_N);
+
+    {%- if solver_options.qp_solver_cond_block_size -%}
+    int* qp_solver_cond_block_size = malloc((qp_solver_cond_N+1) * sizeof(int));
+    {%- for i in range(end=solver_options.qp_solver_cond_N+1) %}
+    qp_solver_cond_block_size[{{ i }}] = {{ solver_options.qp_solver_cond_block_size[i] }};
+    {%- endfor %}
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_cond_block_size", qp_solver_cond_block_size);
+    free(qp_solver_cond_block_size);
+    {%- endif %}
 {%- endif %}
 
 {%- if solver_options.regularize_method == "PROJECT" or solver_options.regularize_method == "MIRROR" or solver_options.regularize_method == "CONVEXIFY" %}
