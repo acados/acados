@@ -434,7 +434,7 @@ cdef class AcadosOcpSolverCython:
         Get the last solution of the solver:
 
             :param stage: integer corresponding to shooting node
-            :param field: string in ['x', 'u', 'z', 'pi', 'lam', 't', 'sl', 'su',]
+            :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su',]
 
             .. note:: regarding lam, t: \n
                     the inequalities are internally organized in the following order: \n
@@ -448,7 +448,7 @@ cdef class AcadosOcpSolverCython:
                       su: slack variables of soft upper inequality constraints \n
         """
 
-        out_fields = ['x', 'u', 'z', 'pi', 'lam', 't', 'sl', 'su']
+        out_fields = ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su']
         sens_fields = ['sens_u', 'sens_x']
         all_fields = out_fields + sens_fields
 
@@ -527,7 +527,6 @@ cdef class AcadosOcpSolverCython:
             solution['u_'+i_string] = self.get(i,'u')
             solution['z_'+i_string] = self.get(i,'z')
             solution['lam_'+i_string] = self.get(i,'lam')
-            solution['t_'+i_string] = self.get(i, 't')
             solution['sl_'+i_string] = self.get(i, 'sl')
             solution['su_'+i_string] = self.get(i, 'su')
             if i < self.N:
@@ -710,12 +709,11 @@ cdef class AcadosOcpSolverCython:
 
     # Note: this function should not be used anymore, better use cost_set, constraints_set
     def set(self, int stage, str field_, value_):
-
         """
         Set numerical data inside the solver.
 
             :param stage: integer corresponding to shooting node
-            :param field: string in ['x', 'u', 'pi', 'lam', 't', 'p']
+            :param field: string in ['x', 'u', 'pi', 'lam', 'p']
 
             .. note:: regarding lam, t: \n
                     the inequalities are internally organized in the following order: \n
@@ -732,7 +730,7 @@ cdef class AcadosOcpSolverCython:
             raise Exception(f"set: value must be numpy array, got {type(value_)}.")
         cost_fields = ['y_ref', 'yref']
         constraints_fields = ['lbx', 'ubx', 'lbu', 'ubu']
-        out_fields = ['x', 'u', 'pi', 'lam', 't', 'z', 'sl', 'su']
+        out_fields = ['x', 'u', 'pi', 'lam', 'z', 'sl', 'su']
         mem_fields = ['xdot_guess', 'z_guess']
 
         field = field_.encode('utf-8')
