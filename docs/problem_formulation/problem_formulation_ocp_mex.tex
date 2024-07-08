@@ -101,15 +101,15 @@
     % constraints
     &&&\mathComment{Initial values, see section \ref{sec:constraints:initial}}\nonumber\\
     &\,\,\,\quad \text{s.t.}    &&\underline{x}_0 \leq J_{\textrm{bx},0} \, x(0) \leq \bar{x}_0 , && \label{eq:constraints:initial}\\[1ex]
-    &&&\mathComment{Nonlinear constraints on initial shooting node} \nonumber\\
-    &&&\underline{h}\initial \leq h\initial(x(0), u(0), p) + J_{\textrm{sh}}\initial \, s\lowerh\initial, &&\label{eq:constraints:path:lower_bounds:start}\\
+    &&&\mathComment{Nonlinear constraints on the initial shooting node} \nonumber\\
+    &&&\underline{h}\initial \leq h\initial(x(0), u(0), z(0), p) + J_{\textrm{sh}}\initial \, s\lowerh\initial, &&\label{eq:constraints:path:lower_bounds:start}\\
     &&& h\initial(x(0), u(0), p) - J\ind{sh}\initial\, s\ind{u,h}\initial \leq \bar{h}\initial, &&\label{eq:constraints:path:upper_bounds:start}\\
     &&&\mathComment{Dynamics, see section \ref{sec:dynamics}}\nonumber\\
     %% dynamics
     &&& f\ind{impl}(x(t), \dot{x}(t), u(t), z(t),p ) = 0, &&\quad t \in [0,\,T), \label{eq:dynamics}\\[1ex]
     &&&\mathComment{Path constraints with lower bounds, see section \ref{sec:constraints:path}}\nonumber\\
     %% path constraints with lower slack
-    &&&\underline{h} \leq h(x(t), u(t), p) + J_{\textrm{sh}} \, s\lowerh(t), &&\quad t \in (0,\,T),\\
+    &&&\underline{h} \leq h(x(t), u(t), z(t), p) + J_{\textrm{sh}} \, s\lowerh(t), &&\quad t \in (0,\,T),\\
     &&&\underline{x} \leq J_{\textrm{bx}} \, x(t) + J_{\textrm{sbx}} \,s\lowerbx(t), &&\quad t \in (0,\,T),\\
     &&&\underline{u} \leq J_{\textrm{bu}} \,u(t) + J_{\textrm{sbu}} \,s\lowerbu(t), &&\quad t \in [0,\,T),\\
     &&&\underline{g} \leq C\,x(t) + D\,u(t) + J_{\textrm{sg}} \,s\lowerg(t), &&\quad t \in [0,\,T), \\
@@ -220,6 +220,8 @@ There are different \acados~modules to model the cost functions in equation~\eqr
 to define which one is used set \code{cost\_type} for $l$, \code{cost\_type\_e} for $m$.
 
 Setting the slack penalties in equation~\eqref{eq:cost} is done in the same way for all cost modules, see table~\ref{tab:cost:slack} for an overview.
+
+Slack penalties for the initial node can be set through the appropriate fields \code{cost\_xx\_0}.
 %
 \begin{table}[ht!]
     \centering
@@ -227,6 +229,10 @@ Setting the slack penalties in equation~\eqref{eq:cost} is done in the same way 
     \begin{tabular}{cccc}
         \toprule
         Term  & String id & Data type & Required \\ \midrule
+        $ Z\Lower\initial $ & \code{cost\_Zl\_0} & double, \textbf{DIAG} & \optional   \\
+        $ Z\upper\initial $ & \code{cost\_Zu\_0} & double, \textbf{DIAG} & \optional   \\
+        $ z\Lower\initial $ & \code{cost\_zl\_0} & double  & \optional   \\
+        $ z\upper\initial $ & \code{cost\_zu\_0} & double  & \optional   \\ [1em]
         $ Z\Lower $          & \code{cost\_Zl}    & double, \textbf{DIAG}  & \optional \\
         $ Z\upper $          & \code{cost\_Zu}    & double, \textbf{DIAG}  & \optional   \\
         $ z\Lower $          & \code{cost\_zl}    & double  & \optional   \\
@@ -238,11 +244,13 @@ Setting the slack penalties in equation~\eqref{eq:cost} is done in the same way 
         \bottomrule
     \end{tabular}
 \end{table}
-%
+
 Moreover, you can specify \code{cost\_Z}, to set $ Z\Lower$, $Z\upper$ to the same values, i.e., use a symmetric L2 slack penalty.
 Similarly, \code{cost\_z}, \code{cost\_Z\_e}, \code{cost\_z\_e} can be used to set symmetric slack L1 penalties, respectively penalties for the terminal slack variables.
 
-Note, that the dimensions of the slack variables $s\Lower(t)$, $s\Lower\terminal(t)$, $s\upper(t)$ and $s\upper\terminal(t)$ are determined by \acados{} from the associated matrices ($Z\Lower$, $Z\upper$,  $J\ind{sh}$, $J\ind{sg}$, $J\ind{sbu}$, $J\ind{sbx}$ etc.).
+Note that the dimensions of the slack variables $s\Lower(t)$, $s\Lower\terminal(t)$, $s\upper(t)$ and $s\upper\terminal(t)$ are determined by \acados{} from the associated matrices ($Z\Lower$, $Z\upper$,  $J\ind{sh}$, $J\ind{sg}$, $J\ind{sbu}$, $J\ind{sbx}$ etc.).
+
+Note that all cost terms, except for the terminal one, are weighted with the corresponding time step. If the time steps are $\Delta t_0,\dots, \Delta t_N$, the total cost is given by $c_\text{total} = \Delta t_0 \cdot c_0(x_0, u_0, p_0, z_0) + \dots + \Delta t_{N-1} \cdot c_{N-1}(x_0, u_0, p_0, z_0) + c_N(x_N, p_N)$. This means the Lagrange cost term is given in continuous time, which allows for a seamless OCP discretization with a nonuniform time grid.
 %
 \subsection{Cost module: \code{auto}}\label{sec:cost:auto}
 %
@@ -295,6 +303,8 @@ m(x, u, z) &= \frac{1}{2} \norm{ \underbrace{V_x\terminal x}_{\displaystyle y\te
 \end{align}
 where matrix $ V\terminal_x \in \mathbb{R}^{n_{y\terminal} \times n_x}$ maps $x$ onto $y\terminal$ and $W\terminal \in \mathbb{R}^{n_{y\terminal} \times n_{y\terminal}}$ is the weighing matrix. The vector $y\terminal_\textrm{ref} \in \mathbb{R}^{n_{y\terminal}}$ is the reference.
 
+Additionally, a different cost for the initial node can be set using the same form as \eqref{eq:cost:linear_ls:l} and the appropriate fields \code{cost\_(...)\_0}.
+
 See table~\ref{tab:cost:linear_ls} for the available options of this cost module.
 %
 \begin{table}[ht!]
@@ -303,6 +313,11 @@ See table~\ref{tab:cost:linear_ls} for the available options of this cost module
     \begin{tabular}{cccc}
         \toprule
         Term & String identifier & Data type & Required \\ \midrule
+        $ V_x\initial $ & \code{cost\_Vx\_0}    & double & \optional   \\
+        $ V_u\initial $ & \code{cost\_Vu\_0}    & double & \optional   \\
+        $ V_z\initial $ & \code{cost\_Vz\_0}    & double & \optional  \\
+        $ W\initial $ & \code{cost\_W\_0}    & double & \optional  \\
+        $ y\ind{ref}\initial $ & \code{cost\_y\_ref\_0}    & double & \optional   \\ [1em]
         $ V_x $ & \code{cost\_Vx}    & double & \mandatory   \\
         $ V_u $ & \code{cost\_Vu}    & double & \mandatory   \\
         $ V_z $ & \code{cost\_Vz}    & double & \mandatory  \\
@@ -320,7 +335,7 @@ See table~\ref{tab:cost:linear_ls} for the available options of this cost module
 In order to activate the \code{nonlinear least squares} cost module, set \code{cost\_type} to \code{nonlinear\_ls}.
 
 The \code{nonlinear least squares} cost function has the same basic form as eqns.~(\ref{eq:cost:linear_ls:l}~-~\ref{eq:cost:linear_ls:m}) of the \code{linear least squares} cost module.
-The only difference is that $ y $ and $ y\terminal $ are defined by means of \casadi{} expressions, instead of via matrices $ V_x $, $ V_u $, $ V_z $ and $ V_x\terminal $.
+The only difference is that $ y $ and $ y\terminal $ are defined by means of \casadi{} expressions, instead of via matrices $ V_x $, $ V_u $, $ V_z $ and $ V_x\terminal $. The same note about the initial node applies to this cost module as well.
 %
 See table~\ref{tab:cost:nonlinear_ls} for the available options of this cost module.
 %
@@ -330,6 +345,9 @@ See table~\ref{tab:cost:nonlinear_ls} for the available options of this cost mod
     \begin{tabular}{cccc}
         \toprule
         Term & String identifier & Data type & Required \\ \midrule
+        $ y\initial $ & \code{cost\_expr\_y\_0}    & \casadi~expression  & \optional   \\
+        $ W\initial $ & \code{cost\_W\_0}    & double  & \optional   \\
+        $ y\ind{ref}\initial $ & \code{cost\_y\_ref\_0}    & double & \optional    \\ [1em]
         $ y $ & \code{cost\_expr\_y}    & \casadi~expression  & \mandatory   \\
         $ W $ & \code{cost\_W}    & double  & \mandatory   \\
         $ y\ind{ref} $ & \code{cost\_y\_ref}    & double & \mandatory    \\ [1em]
@@ -343,10 +361,13 @@ See table~\ref{tab:cost:nonlinear_ls} for the available options of this cost mod
 %\newpage
 \section{Constraints}\label{sec:constraints}
 %
-This section is about how to define the constraints equations \eqref{eq:constraints:initial} and (\ref{eq:constraints:path:lower_bounds:start} - \ref{eq:constraints:terminal:upper_bounds:end}).
+This section is about how to define the constraints equations (\ref{eq:constraints:initial} - \ref{eq:constraints:terminal:upper_bounds:end}).
 
 The \matlab{} interface supports the constraint module \code{bgh}, which is able to handle simple \textbf{b}ounds (on $ x $ and $ u $), \textbf{g}eneral linear constraints and general nonlinear constraints.
 Meanwhile, the \python{} interface also supports the \acados{} constraint module \code{bgp}, which can handle convex-over-nonlinear constraints in a dedicated fashion.
+
+Additionally, bounds on $u$ and general linear constraints are also enforced on the initial node by default. On the other hand, bounds on $x$ and nonlinear constraints are fully split and have to be explicitly stated with \code{\_0} correspondence to be enforced on the initial node.
+
 %The constraint type can be set using the identifier \str{constr\_type} and \str{constr\_type\_e} for the path constraints and terminal constraints, respectively. The string identifier options are found in table~\ref{tab:constr_type}. The default setting is \str{bgh}.
 %\begin{table}[ht!]
 %\centering
@@ -366,7 +387,7 @@ Meanwhile, the \python{} interface also supports the \acados{} constraint module
 \subsection{Initial State}\label{sec:constraints:initial}
 %
 Note: An initial state is not required.
-For example for moving horizon estimation (MHE) problems it should not be set.
+For example, for moving horizon estimation (MHE) problems it should not be set.
 
 Two possibilities exist to define the initial states equation~\eqref{eq:constraints:initial}: a simple syntax and an extended syntax.
 
@@ -403,14 +424,14 @@ The options for the extended syntax are found in table~\ref{tab:constraints:exte
 %
 Table~\ref{tab:constraints:path} shows the options for defining the path constraints equations~(\ref{eq:constraints:path:lower_bounds:start} ~-~\ref{eq:constraints:path:upper_bounds:end}).
 The matrices $ J_{\star} $ are translated into arrays of integers \texttt{idx}$\star$, see Python documentation.
-These matrices described as follows:
+These matrices are described as follows:
 \begin{itemize}
-    \item $J\ind{sh}$ maps lower slack vectors $s\ind{l,h}(t)$ and upper slack vectors $s\ind{u,h}(t)$ onto the non-linear constraint expressions $h(x,u,p)$.
-    \item $J\ind{bx}$, $J\ind{bu}$ map $x(t)$ and $u(t)$ onto its bounds vectors $\underline{x}$, $\bar{x}$ and $\underline{u}$, $\bar{u}$, respectively.
+    \item $J\ind{sh}$ maps lower slack vectors $s\ind{l,h}(t)$ and upper slack vectors $s\ind{u,h}(t)$ onto the nonlinear constraint expressions $h(x,u,p)$.
+    \item $J\ind{bx}$, $J\ind{bu}$ map $x(t)$ and $u(t)$ onto their bounds vectors $\underline{x}$, $\bar{x}$ and $\underline{u}$, $\bar{u}$, respectively.
     \item $J\ind{sx}$, $J\ind{su}$ map lower slack vectors $s\ind{l,bx}(t)$, $s\ind{l,bu}(t)$ and upper slack vectors $s\ind{u,bx}(t)$, $s\ind{u,bu}(t)$ onto $x(t)$ and $u(t)$, respectively.
-    \item $J\ind{sg}$ map lower slack vectors $s\ind{l,g}(t)$ and upper slack vectors $s\ind{u,g}(t)$ onto lower and upper equality bounds $\underline{g}$, $\bar{g}$, respectively.
-    \item $C$, $D$ map $x(t)$ and $u(t)$ onto lower and upper inequality bounds $\underline{g}$, $\bar{g}$ (polytopic constraints)
-    \item $J\ind{sh}\initial$ maps lower slack vectors $s\ind{l,h}\initial$ and upper slack vectors $s\ind{u,h}\initial$ onto the non-linear initial constraint expressions $h\initial(x(0),u(0),p)$.
+    \item $J\ind{sg}$ maps lower slack vectors $s\ind{l,g}(t)$ and upper slack vectors $s\ind{u,g}(t)$ onto lower and upper equality bounds $\underline{g}$, $\bar{g}$, respectively.
+    \item $C$, $D$ map $x(t)$ and $u(t)$ onto lower and upper inequality bounds $\underline{g}$, $\bar{g}$ (polytopic constraints).
+    \item $J\ind{sh}\initial$ maps lower slack vectors $s\ind{l,h}\initial$ and upper slack vectors $s\ind{u,h}\initial$ onto the nonlinear initial constraint expressions $h\initial(x(0),u(0),p)$.
 \end{itemize}
 %
 \begin{table}[ht!]
@@ -439,8 +460,7 @@ These matrices described as follows:
         $ J\ind{sbu} $ & \code{constr\_Jsbu} & double, \textbf{SPUME}  & \optional \\
         $ J\ind{sg} $ & \code{constr\_Jsg} & double, \textbf{SPUME} & \optional  \\
         $ J\ind{sh} $ & \code{constr\_Jsh} & double, \textbf{SPUME}  & \optional  \\
-        % TODO: Jsh_0
-        % $ J\ind{sh}\initial $ & \code{constr\_Jsh\_0} & double, \textbf{SPUME}  & \optional  \\
+        $ J\ind{sh}\initial $ & \code{constr\_Jsh\_0} & double, \textbf{SPUME}  & \optional  \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -452,11 +472,11 @@ These matrices described as follows:
 Table~\ref{tab:constraints:terminal} shows the options for defining the terminal constraints equations~(\ref{eq:constraints:terminal:lower_bounds:start} ~-~\ref{eq:constraints:terminal:upper_bounds:end}).
 Here, matrices
 \begin{itemize}
-    \item $J\ind{sh}\terminal$, maps lower slack vectors $s\ind{l,h}\terminal(t)$ and upper slack vectors $s\ind{u,h}\terminal(t)$ onto non-linear terminal constraint expressions $h\terminal(x(T), p)$.
+    \item $J\ind{sh}\terminal$ maps lower slack vectors $s\ind{l,h}\terminal(t)$ and upper slack vectors $s\ind{u,h}\terminal(t)$ onto nonlinear terminal constraint expressions $h\terminal(x(T), p)$.
     \item $J\ind{bx}\terminal$ maps $x(T)$ onto its bounds vectors $\underline{x}\terminal$ and $\bar{x}\terminal$.
     \item $J\ind{sbx}\terminal$ maps lower slack vectors $s\ind{l,bx}\terminal$ and upper slack vectors $s\ind{u,bx}\terminal$ onto $x(T)$.
-    \item $J\ind{sg}\terminal$ map lower slack vectors $s\ind{l,g}\terminal(t)$ and upper slack vectors $s\ind{u,g}\terminal(t)$ onto lower and upper equality bounds $\underline{g}\terminal$, $\bar{g}\terminal$, respectively.
-    \item $C\terminal$ maps $x(T)$ onto lower and upper inequality bounds $\underline{g}\terminal$, $\bar{g}\terminal$ (polytopic constraints)
+    \item $J\ind{sg}\terminal$ maps lower slack vectors $s\ind{l,g}\terminal(t)$ and upper slack vectors $s\ind{u,g}\terminal(t)$ onto lower and upper equality bounds $\underline{g}\terminal$, $\bar{g}\terminal$, respectively.
+    \item $C\terminal$ maps $x(T)$ onto lower and upper inequality bounds $\underline{g}\terminal$, $\bar{g}\terminal$ (polytopic constraints).
 \end{itemize}
 %
 \begin{table}[ht!]
@@ -469,12 +489,12 @@ Here, matrices
         $\underline{x}\terminal $    & \code{constr\_lbx\_e}     & double  & \optional   \\
         $\bar{x}\terminal $         & \code{constr\_ubx\_e}     & double   & \optional  \\ [1em]
         $ C\terminal $ & \code{constr\_C\_e}    & double   & \optional   \\
-        $\underline{g}\terminal $    & \code{constr\_lg}     & double   & \optional   \\
-        $\bar{g}\terminal $         & \code{constr\_ug}     & double   & \optional  \\ [1em]
+        $\underline{g}\terminal $    & \code{constr\_lg\_e}     & double   & \optional   \\
+        $\bar{g}\terminal $         & \code{constr\_ug\_e}     & double   & \optional  \\ [1em]
         $ h\terminal $ & \code{constr\_expr\_h\_e}    & \casadi~expression   & \optional  \\
         $\underline{h}\terminal $    & \code{constr\_lh\_e}     & double   & \optional   \\
         $\bar{h}\terminal $         & \code{constr\_uh\_e}     & double  & \optional   \\ [1em]
-        $ J\ind{sbx}\terminal $ & \code{constr\_Jsbx} & double, \textbf{SPUME}   & \optional \\
+        $ J\ind{sbx}\terminal $ & \code{constr\_Jsbx\_e} & double, \textbf{SPUME}   & \optional \\
         $ J\ind{sg}\terminal $ & \code{constr\_Jsg\_e} & double, \textbf{SPUME} & \optional  \\
         $ J\ind{sh}\terminal $ & \code{constr\_Jsh\_e} & double, \textbf{SPUME}  & \optional  \\
         \bottomrule
@@ -525,7 +545,7 @@ These options are set in \matlab{} via \code{ocp\_opts.set(<stringid>, <value>)}
 Furthermore, the struct \code{ocp\_opts.opts\_struct} and \href{https://github.com/acados/acados/blob/master/interfaces/acados_matlab_octave/acados_ocp_opts.m}{\code{acados\_ocp\_opts.m}} can be used as a reference for what other fields are available.
 \\
 Note that some options of the solver can be modified after creation using the routine: \code{set(<stringid>, <value>)}.
-Some options can only be set before the solver is created, especially options that influence the memory requirements of OCP solver, such as the modules used in the formulation, the QP solver, etc.
+Some options can only be set before the solver is created, especially options that influence the memory requirements of the OCP solver, such as the modules used in the formulation, the QP solver, etc.
 
 %
 %\begin{landscape}
@@ -628,11 +648,12 @@ Some options can only be set before the solver is created, especially options th
     \begin{tabular}{cc}
         \toprule
         String identifier & Description \\\midrule
-        \code{no\_regularize}* & don‘t regularize \\
+        \code{no\_regularize}* & don't regularize \\
         \code{mirror} & \href{https://cdn.syscop.de/publications/Verschueren2017.pdf}{see Verschueren2017} \\
         \code{project} & \href{https://cdn.syscop.de/publications/Verschueren2017.pdf}{see Verschueren2017} \\
         \code{project\_reduc\_hess} & preliminary \\
-        \code{convexify} & \href{https://cdn.syscop.de/publications/Verschueren2017.pdf}{see Verschueren2017} \\
+        \code{convexify} & \href{https://cdn.syscop.de/publications/Verschueren2017.pdf}{see Verschueren2017}, preliminary \\
+        &does not work in combination with nonlinear constraints \\
         \bottomrule
         \multicolumn{2}{r}{\footnotesize * default}
     \end{tabular}

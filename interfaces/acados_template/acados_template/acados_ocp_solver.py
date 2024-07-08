@@ -944,6 +944,18 @@ class AcadosOcpSolver:
             self.set(int(stage), field, np.array(solution[key]))
 
     def get_status(self) -> int:
+        """
+        Returns the status of the last solver call.
+
+        Status codes:
+        0 - Success
+        1 - Failure
+        2 - Maximum number of iterations reached
+        3 - Minimum step size reached
+        4 - QP solver failed
+
+        See `return_values` in https://github.com/acados/acados/blob/master/acados/utils/types.h
+        """
         return self.status
 
     def get_stats(self, field_: str) -> Union[int, float, np.ndarray]:
