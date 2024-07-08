@@ -462,7 +462,6 @@ for i = 0:N-1
     % test setters
     ocp.set('sl', sl, i);
     ocp.set('su', su, i);
-    t = ocp.get('t', i);
 end
 sl = ocp.get('sl', N);
 su = ocp.get('su', N);
