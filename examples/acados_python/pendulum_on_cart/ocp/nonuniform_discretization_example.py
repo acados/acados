@@ -38,6 +38,10 @@ import numpy as np
 import scipy.linalg
 from utils import plot_pendulum
 
+import matplotlib.pyplot as plt
+
+import casadi as ca
+
 TOL = 1e-7
 
 def main(discretization='shooting_nodes'):
@@ -144,9 +148,6 @@ def main(discretization='shooting_nodes'):
     simulink_opts = get_simulink_default_opts()
     ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json', simulink_opts = simulink_opts, verbose=False)
 
-    # ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
-
-
     simX = np.zeros((N+1, nx))
     simU = np.zeros((N, nu))
 
@@ -174,6 +175,35 @@ def main(discretization='shooting_nodes'):
         simX[i,:] = ocp_solver.get(i, "x")
         simU[i,:] = ocp_solver.get(i, "u")
     simX[N,:] = ocp_solver.get(N, "x")
+
+    # get condensed Hessian
+    pcond_H = []
+    pcond_Q = []
+    pcond_R = []
+    pcond_S = []
+    for i in range(ocp.solver_options.qp_solver_cond_N+1):
+        pcond_Q.append(ocp_solver.get_from_qp_in(i, "pcond_Q"))
+        pcond_R.append(ocp_solver.get_from_qp_in(i, "pcond_R"))
+        pcond_S.append(ocp_solver.get_from_qp_in(i, "pcond_S"))
+
+        pcond_RSQ = ca.blockcat(pcond_Q[-1], pcond_S[-1].T, pcond_S[-1], pcond_R[-1]).full()
+        # copy lower triangular part to upper triangular part
+        pcond_RSQ = np.tril(pcond_RSQ) + np.tril(pcond_RSQ, -1).T
+        pcond_H.append(pcond_RSQ)
+
+    # pcond_H = ocp_solver.get_from_qp_in(ocp.solver_options.qp_solver_cond_N, "pcond_H")
+    # print("pcond_H", pcond_H)
+    # pcond_H_mat = scipy.linalg.block_diag(*pcond_H)
+    # plt.spy(pcond_H_mat)
+    # plt.show()
+
+    # check dimensions of partially condensed matrices
+    assert pcond_Q[0].shape == (0, 0)
+    for i in range(1, ocp.solver_options.qp_solver_cond_N+1):
+        assert pcond_Q[i].shape == (nx, nx)
+    for i in range(ocp.solver_options.qp_solver_cond_N+1):
+        block_size = ocp.solver_options.qp_solver_cond_block_size[i]
+        assert pcond_R[i].shape == (nu*block_size, nu*block_size)
 
     print("inequality multipliers at stage 1")
     print(ocp_solver.get(1, "lam")) # inequality multipliers at stage 1

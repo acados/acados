@@ -263,6 +263,7 @@ class AcadosOcpSolver:
         self.__qp_cost_fields = ['Q', 'R', 'S', 'q', 'r']
         self.__qp_constraint_fields = ['C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu']
         self.__qp_pc_hpipm_fields = ['P', 'K', 'Lr', 'p']
+        self.__qp_pc_fields = ['pcond_Q', 'pcond_R', 'pcond_S']
 
         # set arg and res types
         self.__acados_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
@@ -1374,7 +1375,10 @@ class AcadosOcpSolver:
             :param stage: integer corresponding to shooting node
             :param field: string in ['A', 'B', 'b', 'Q', 'R', 'S', 'q', 'r', 'C', 'D', 'lg', 'ug', 'lbx', 'ubx', 'lbu', 'ubu']
 
-        Note: additional supported fields are ['P', 'K', 'Lr'], which can be extracted form QP solver PARTIAL_CONDENSING_HPIPM.
+        Note:
+        - additional supported fields are ['P', 'K', 'Lr'], which can be extracted form QP solver PARTIAL_CONDENSING_HPIPM.
+        - for PARTIAL_CONDENSING_* QP solvers, the following additional fields are available:
+            ['pcond_Q', 'pcond_R', 'pcond_S']
         """
         # idx* should be added too..
         if not isinstance(stage_, int):
@@ -1383,13 +1387,15 @@ class AcadosOcpSolver:
             raise Exception("stage should be <= self.N")
         if field_ in self.__qp_dynamics_fields and stage_ >= self.N:
             raise ValueError(f"dynamics field {field_} not available at terminal stage")
-        if field_ not in self.__qp_dynamics_fields + self.__qp_cost_fields + self.__qp_constraint_fields + self.__qp_pc_hpipm_fields:
+        if field_ not in self.__qp_dynamics_fields + self.__qp_cost_fields + self.__qp_constraint_fields + self.__qp_pc_hpipm_fields + self.__qp_pc_fields:
             raise Exception(f"field {field_} not supported.")
         if field_ in self.__qp_pc_hpipm_fields:
             if self.acados_ocp.solver_options.qp_solver != "PARTIAL_CONDENSING_HPIPM" or self.acados_ocp.solver_options.qp_solver_cond_N != self.acados_ocp.dims.N:
                 raise Exception(f"field {field_} only works for PARTIAL_CONDENSING_HPIPM QP solver with qp_solver_cond_N == N.")
             if field_ in ["P", "K", "p"] and stage_ == 0 and self.acados_ocp.dims.nbxe_0 > 0:
                 raise Exception(f"getting field {field_} at stage 0 only works without x0 elimination (see nbxe_0).")
+        if field_ in self.__qp_pc_fields and not self.acados_ocp.solver_options.qp_solver.startswith("PARTIAL_CONDENSING"):
+            raise Exception(f"field {field_} only works for PARTIAL_CONDENSING QP solvers.")
 
         field = field_.encode('utf-8')
         stage = c_int(stage_)
