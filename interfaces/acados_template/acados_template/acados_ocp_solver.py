@@ -510,7 +510,6 @@ class AcadosOcpSolver:
         - for field `params_global`, the gradient of the Lagrange function w.r.t. the global parameters is computed in acados.
 
         :param with_respect_to: string in ["initial_state", "params_global"]
-
         """
 
         if with_respect_to == "initial_state":
@@ -571,7 +570,7 @@ class AcadosOcpSolver:
         .. note:: Timing of the sensitivities computation consists of time_solution_sens_lin, time_solution_sens_solve.
         .. note:: Solution sensitivities with respect to parameters are currently implemented assuming the parameter vector p is global within the OCP, i.e. p=p_i with i=0, ..., N.
         .. note:: Solution sensitivities with respect to parameters are currently implemented only for parametric discrete dynamics and parametric external costs (in particular, parametric constraints are not covered).
-   """
+        """
 
         if not (self.acados_ocp.solver_options.qp_solver == 'FULL_CONDENSING_HPIPM' or
                 self.acados_ocp.solver_options.qp_solver == 'PARTIAL_CONDENSING_HPIPM'):
@@ -966,6 +965,8 @@ class AcadosOcpSolver:
             - time_solution_sens_lin: CPU time for linearization in eval_param_sens
             - time_solution_sens_solve: CPU time for solving in eval_solution_sensitivity
             - time_reg: CPU time regularization
+            - time_preparation: CPU time for last preparation phase, relevant for (AS-)RTI, zero otherwise
+            - time_feedback: CPU time for last feedback phase, relevant for (AS-)RTI, otherwise returns total compuation time.
             - sqp_iter: number of SQP iterations
             - nlp_iter: number of NLP solver iterations (DDP or SQP)
             - qp_stat: status of QP solver
@@ -992,7 +993,9 @@ class AcadosOcpSolver:
                   'time_qp_xcond',
                   'time_glob',
                   'time_solution_sensitivities',
-                  'time_reg'
+                  'time_reg',
+                  'time_preparation',
+                  'time_feedback',
         ]
         fields = double_fields + [
                   'sqp_iter',
@@ -1087,7 +1090,7 @@ class AcadosOcpSolver:
                     + f'\n Possible values are {fields}.')
 
 
-    def get_cost(self):
+    def get_cost(self) -> float:
         """
         Returns the cost value of the current solution.
         """
@@ -1217,7 +1220,7 @@ class AcadosOcpSolver:
         return
 
 
-    def cost_set(self, stage_: int, field_: str, value_, api='warn'):
+    def cost_set(self, stage_: int, field_: str, value_, api='warn') -> None:
         """
         Set numerical data in the cost module of the solver.
 
