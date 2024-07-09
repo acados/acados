@@ -118,7 +118,7 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->tol_eq   = 1e-8;
     opts->tol_ineq = 1e-8;
     opts->tol_comp = 1e-8;
-    opts->tol_unbounded = -1e20;
+    opts->tol_unbounded = -1e10;
 
     opts->ext_qp_res = 0;
 
@@ -138,6 +138,8 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->funnel_kappa = 0.9;
     opts->funnel_fraction_switching_condition = 1e-3;//0.99;
     opts->funnel_initial_penalty_parameter = 1.0;
+    opts->funnel_penalty_contraction = 0.5;
+    opts->funnel_penalty_eta = 1e-6;
     opts->funnel_type_switching_condition = false; // use ipopt/gould type of switching
 
     // overwrite default submodules opts
@@ -740,7 +742,7 @@ static void ocp_nlp_sqp_reset_timers(ocp_nlp_sqp_memory *mem)
  * output functions
  ************************************************/
 static void print_iteration_header(){
-    printf("%6s | %11s | %10s | %10s | %10s | %10s | %10s | %10s | %10s | %12s | %10s | %10s | %10s\n",
+    printf("%6s | %11s | %10s | %10s | %10s | %10s | %10s | %10s | %10s | %12s | %10s | %10s | %10s | %10s\n",
     "iter.",
     "objective",
     "res_eq",
@@ -751,6 +753,7 @@ static void print_iteration_header(){
     "step_norm",
     "LM_reg.",
     "funnel width",
+    "penalty",
     "qp_status",
     "qp_iter",
     "iter. type");
@@ -766,6 +769,7 @@ static void print_iteration(double obj,
                      double step_norm,
                      double reg_param,
                      double funnel_width,
+                     double penalty_parameter,
                      int qp_status,
                      int qp_iter,
                      char iter_type)
@@ -773,7 +777,7 @@ static void print_iteration(double obj,
     if ((iter_count % 10 == 0) | (iter_count == -1)){
         print_iteration_header();
     }
-    printf("%6i | %11.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %12.4e | %10i | %10i | %10c\n",
+    printf("%6i | %11.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %12.4e | %10.4e | %10i | %10i | %10c\n",
     iter_count,
     obj,
     infeas_eq,
@@ -784,6 +788,7 @@ static void print_iteration(double obj,
     step_norm,
     reg_param,
     funnel_width,
+    penalty_parameter,
     qp_status,
     qp_iter,
     iter_type);
@@ -888,6 +893,18 @@ static void initialize_funnel(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts, d
 static void initialize_funnel_penalty_parameter(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts)
 {
     mem->funnel_penalty_parameter = opts->funnel_initial_penalty_parameter;
+}
+
+static void update_funnel_penalty_parameter(ocp_nlp_sqp_memory *mem,
+                                            ocp_nlp_sqp_opts *opts,
+                                            double pred_f, double pred_h)
+{
+    if (mem->funnel_penalty_parameter * pred_f + pred_h < opts->funnel_penalty_eta * pred_h)
+    {
+        mem->funnel_penalty_parameter = fmin(opts->funnel_penalty_contraction * mem->funnel_penalty_parameter,
+                                             ((1-opts->funnel_penalty_eta) * pred_h) / (-pred_f));
+    }
+    // else: do not decrease penalty parameter
 }
 
 static void decrease_funnel(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts, double trial_infeasibility, double current_infeasibility)
@@ -1117,6 +1134,9 @@ static int ocp_nlp_sqp_backtracking_line_search(void *config_, void *dims_, void
     double ared;
     bool accept_step;
 
+    // do the penalty parameter update here .... might be changed later
+    update_funnel_penalty_parameter(mem, opts, pred, mem->l1_infeasibility);
+
     int i;
 
     while (true)
@@ -1169,7 +1189,7 @@ static int ocp_nlp_sqp_backtracking_line_search(void *config_, void *dims_, void
             tmp_fun = config->cost[i]->memory_get_fun_ptr(nlp_mem->cost[i]);
             trial_cost += *tmp_fun;
         }
-        trial_infeasibility = get_l1_infeasibility(config, dims, mem);
+        trial_infeasibility = get_l1_infeasibility(config, dims, mem, nlp_out);
 
         ///////////////////////////////////////////////////////////////////////
         // Evaluate merit function at trial point
@@ -1209,12 +1229,13 @@ static int ocp_nlp_sqp_backtracking_line_search(void *config_, void *dims_, void
 /************************************************
  * functions
  ************************************************/
-double get_l1_infeasibility(void *config_, void *dims_, void *mem_)
+double get_l1_infeasibility(void *config_, void *dims_, void *mem_, void *_out)
 {
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_config *config = config_;
     ocp_nlp_sqp_memory *mem = mem_;
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    ocp_nlp_out *out = _out;
 
     // evaluate the objective of the QP (as predicted reduction)
     // double qp_cost = compute_qp_cost
@@ -1239,6 +1260,7 @@ double get_l1_infeasibility(void *config_, void *dims_, void *mem_)
     for(int i=0; i<=N; i++)
     {
         tmp_fun_vec = config->constraints[i]->memory_get_fun_ptr(nlp_mem->constraints[i]);
+        // tmp_fun_vec = out->t+i;
         for (int j=0; j<2*ni[i]; j++)
         {
             tmp = BLASFEO_DVECEL(tmp_fun_vec, j);
@@ -1349,6 +1371,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     int sqp_iter = 0;
     double reg_param_memory = 0.0;
     double funnel_width_memory = 0.0;
+    double funnel_penalty_param_memory = opts->funnel_initial_penalty_parameter;
     initialize_funnel_penalty_parameter(mem, opts);
 
     for (; sqp_iter <= opts->max_iter; sqp_iter++) // <= needed such that after last iteration KKT residuals are checked before max_iter is thrown.
@@ -1383,7 +1406,14 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);
         ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
 
-        mem->l1_infeasibility = get_l1_infeasibility(config, dims, mem);
+        mem->l1_infeasibility = get_l1_infeasibility(config, dims, mem, nlp_out);
+        printf("Current l1 infeasibility: %10.4e\n", mem->l1_infeasibility);
+        // initialize funnel if FUNNEL_METHOD used
+        if (sqp_iter == 0 && nlp_opts->globalization == FUNNEL_METHOD){
+            initialize_funnel(mem, opts, mem->l1_infeasibility);
+        }
+        funnel_width_memory = mem->funnel_width;
+        funnel_penalty_param_memory = mem->funnel_penalty_parameter;
 
         // save statistics
         if (sqp_iter < mem->stat_m)
@@ -1400,7 +1430,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             print_iteration(nlp_mem->cost_value, sqp_iter, nlp_res->inf_norm_res_eq,
                             nlp_res->inf_norm_res_ineq, nlp_res->inf_norm_res_stat,
                             nlp_res->inf_norm_res_comp, mem->alpha, mem->step_norm,
-                            reg_param_memory, funnel_width_memory, qp_status,
+                            reg_param_memory, funnel_width_memory, funnel_penalty_param_memory, qp_status,
                             qp_iter, mem->funnel_iter_type);
         }
         reg_param_memory = nlp_opts->levenberg_marquardt;
@@ -1417,11 +1447,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             return mem->status;
         }
 
-        // initialize funnel if FUNNEL_METHOD used
-        if (sqp_iter == 0 && nlp_opts->globalization == FUNNEL_METHOD){
-            initialize_funnel(mem, opts, mem->l1_infeasibility);
-        }
-        funnel_width_memory = mem->funnel_width;
 
         // regularize Hessian
         acados_tic(&timer1);
