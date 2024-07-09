@@ -96,7 +96,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             sprintf(buffer, "\nocp_get: invalid stage index, got %d\n", stage);
             mexErrMsgTxt(buffer);
         }
-        else if (stage == N && strcmp(field, "x") && strcmp(field, "lam") && strcmp(field, "t") && strcmp(field, "sens_x") && strcmp(field, "sl") && strcmp(field, "su") && strcmp(field, "qp_Q") && strcmp(field, "qp_R") && strcmp(field, "qp_S") && strcmp(field, "qp_q") )
+        else if (stage == N && strcmp(field, "x") && strcmp(field, "lam") && strcmp(field, "sens_x") && strcmp(field, "sl") && strcmp(field, "su") && strcmp(field, "qp_Q") && strcmp(field, "qp_R") && strcmp(field, "qp_S") && strcmp(field, "qp_q") )
         {
             sprintf(buffer, "\nocp_get: invalid stage index, got stage = %d = N, field = %s, only x, lam, t, slacks available at this stage\n", stage, field);
             mexErrMsgTxt(buffer);
@@ -150,26 +150,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
     }
     else if (!strcmp(field, "sl") || !strcmp(field, "su"))
-    {
-        if (nrhs==2)
-        {
-            sprintf(buffer, "\nocp_get: values %s can only be accessed stagewise\n", field);
-            mexErrMsgTxt(buffer);
-        }
-        else if (nrhs==3)
-        {
-            length = ocp_nlp_dims_get_from_attr(config, dims, out, stage, field);
-            plhs[0] = mxCreateNumericMatrix(length, 1, mxDOUBLE_CLASS, mxREAL);
-            double *value = mxGetPr( plhs[0] );
-            ocp_nlp_out_get(config, dims, out, stage, field, value);
-        }
-        else
-        {
-            sprintf(buffer, "\nocp_get: wrong nrhs: %d\n", nrhs);
-            mexErrMsgTxt(buffer);
-        }
-    }
-    else if (!strcmp(field, "t"))
     {
         if (nrhs==2)
         {

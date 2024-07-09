@@ -165,7 +165,6 @@ classdef {{ model.name }}_mex_solver < handle
             for i=0:obj.N
                 solution.(['x_' num2str(i)]) = obj.get('x', i);
                 solution.(['lam_' num2str(i)]) = obj.get('lam', i);
-                solution.(['t_' num2str(i)]) = obj.get('t', i);
                 solution.(['sl_' num2str(i)]) = obj.get('sl', i);
                 solution.(['su_' num2str(i)]) = obj.get('su', i);
             end

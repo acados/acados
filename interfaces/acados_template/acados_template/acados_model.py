@@ -66,13 +66,13 @@ class AcadosModel():
         """CasADi variable describing parameters of the DAE; Default: :code:`[]`"""
         self.t = []
         """
-        CasADi variable representing time t in functions; Default: :code:`[]
+        CasADi variable representing time t in functions; Default: :code:`[]`
         NOTE:
         - For integrators, the start time has to be explicitly set via :py:attr:`acados_template.AcadosSimSolver.set`('t0').
         - For OCPs, the start time is set to 0. on each stage.
         The time dependency can be used within cost formulations and is relevant when cost integration is used.
         Start times of shooting intervals can be added using parameters.
-        `"""
+        """
 
         ## dynamics
         self.f_impl_expr = None

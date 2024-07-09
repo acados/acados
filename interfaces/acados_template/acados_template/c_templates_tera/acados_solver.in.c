@@ -2277,9 +2277,6 @@ void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* 
     int nlp_solver_max_iter = {{ solver_options.nlp_solver_max_iter }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "max_iter", &nlp_solver_max_iter);
 
-    int initialize_t_slacks = {{ solver_options.initialize_t_slacks }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "initialize_t_slacks", &initialize_t_slacks);
-
 {%- elif solver_options.nlp_solver_type == "SQP_RTI" %}
     int as_rti_iter = {{ solver_options.as_rti_iter }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "as_rti_iter", &as_rti_iter);
@@ -2531,7 +2528,6 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int 
         ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "sl", buffer);
         ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "su", buffer);
         ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "lam", buffer);
-        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "t", buffer);
         ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "z", buffer);
         if (i<N)
         {

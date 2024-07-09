@@ -282,7 +282,6 @@ end
 for i = 0:N-1
     sl = ocp.get('sl', i);
     su = ocp.get('su', i);
-    t = ocp.get('t', i);
 end
 sl = ocp.get('sl', N);
 su = ocp.get('su', N);
@@ -293,7 +292,7 @@ cost_val_ocp = ocp.get_cost();
 
 %% get QP matrices:
 % See https://docs.acados.org/problem_formulation
-%        |----- dynamics -----|------ cost --------|---------------------------- constraints ------------------------|        
+%        |----- dynamics -----|------ cost --------|---------------------------- constraints ------------------------|
 fields = {'qp_A','qp_B','qp_b','qp_R','qp_Q','qp_r','qp_C','qp_D','qp_lg','qp_ug','qp_lbx','qp_ubx','qp_lbu','qp_ubu'};
 % either stage wise
 for stage = [0,N-1]
