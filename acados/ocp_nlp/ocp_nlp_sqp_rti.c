@@ -1097,12 +1097,6 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
         // perform k full SQP iterations
         for (; mem->sqp_iter < opts->as_rti_iter; mem->sqp_iter++)
         {
-            if (opts->rti_log_residuals)
-            {
-                // TODO: evaluate what is needed!!
-                ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_mem->nlp_res, nlp_mem);
-                rti_store_residuals_in_stats(opts, mem);
-            }
             acados_tic(&timer1);
             // linearize NLP
             ocp_nlp_approximate_qp_matrices(config, dims, nlp_in,
@@ -1111,6 +1105,13 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in,
                 nlp_out, nlp_opts, nlp_mem, nlp_work);
             mem->time_lin += acados_toc(&timer1);
+
+            if (opts->rti_log_residuals)
+            {
+                ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_mem->nlp_res, nlp_mem);
+                rti_store_residuals_in_stats(opts, mem);
+            }
+
             // full regularization
             acados_tic(&timer1);
             config->regularize->regularize(config->regularize,
