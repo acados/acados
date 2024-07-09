@@ -779,19 +779,19 @@ acados_size_t ocp_nlp_out_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *d
 
     acados_size_t size = sizeof(ocp_nlp_out);
 
-    size += 4 * (N + 1) * sizeof(struct blasfeo_dvec);  // ux, lam, t, z
+    size += 3 * (N + 1) * sizeof(struct blasfeo_dvec);  // ux, lam, z
     size += 1 * N * sizeof(struct blasfeo_dvec);        // pi
 
     for (int i = 0; i < N; i++)
     {
         size += 1 * blasfeo_memsize_dvec(nv[i]);      // ux
         size += 1 * blasfeo_memsize_dvec(nz[i]);      // z
-        size += 2 * blasfeo_memsize_dvec(2 * ni[i]);  // lam, t
+        size += 1 * blasfeo_memsize_dvec(2 * ni[i]);  // lam
         size += 1 * blasfeo_memsize_dvec(nx[i + 1]);  // pi
     }
     size += 1 * blasfeo_memsize_dvec(nv[N]);      // ux
     size += 1 * blasfeo_memsize_dvec(nz[N]);     // z
-    size += 2 * blasfeo_memsize_dvec(2 * ni[N]);  // lam, t
+    size += 1 * blasfeo_memsize_dvec(2 * ni[N]);  // lam
 
     size += 8;   // initial align
     size += 8;   // blasfeo_struct align
