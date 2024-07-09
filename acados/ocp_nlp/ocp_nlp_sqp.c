@@ -125,7 +125,6 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->qp_warm_start = 0;
     opts->warm_start_first_qp = false;
     opts->rti_phase = 0;
-    opts->initialize_t_slacks = 0;
 
     // funnel method opts
     opts->linesearch_eta = 1e-6;
@@ -256,16 +255,6 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
                 exit(1);
             }
             opts->rti_phase = *rti_phase;
-        }
-        else if (!strcmp(field, "initialize_t_slacks"))
-        {
-            int* initialize_t_slacks = (int *) value;
-            if (*initialize_t_slacks != 0 && *initialize_t_slacks != 1)
-            {
-                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for initialize_t_slacks field, need int 0 or 1, got %d.", *initialize_t_slacks);
-                exit(1);
-            }
-            opts->initialize_t_slacks = *initialize_t_slacks;
         }
         else if (!strcmp(field, "funnel_initial_increase_factor"))
         {
@@ -1091,10 +1080,6 @@ static void ocp_nlp_sqp_compute_trial_iterate(ocp_nlp_config *config, ocp_nlp_di
             }
         }
 
-        // update slack values
-        blasfeo_dvecsc(2*ni[i], 1.0-alpha, tmp_nlp_out->t+i, 0);
-        blasfeo_daxpy(2*ni[i], alpha, mem->qp_out->t+i, 0, tmp_nlp_out->t+i, 0, tmp_nlp_out->t+i, 0);
-
         // linear update of algebraic variables using state and input sensitivity
         if (i < N)
         {
@@ -1189,7 +1174,7 @@ static int ocp_nlp_sqp_backtracking_line_search(void *config_, void *dims_, void
             tmp_fun = config->cost[i]->memory_get_fun_ptr(nlp_mem->cost[i]);
             trial_cost += *tmp_fun;
         }
-        trial_infeasibility = get_l1_infeasibility(config, dims, mem, nlp_out);
+        trial_infeasibility = get_l1_infeasibility(config, dims, mem);
 
         ///////////////////////////////////////////////////////////////////////
         // Evaluate merit function at trial point
@@ -1229,13 +1214,12 @@ static int ocp_nlp_sqp_backtracking_line_search(void *config_, void *dims_, void
 /************************************************
  * functions
  ************************************************/
-double get_l1_infeasibility(void *config_, void *dims_, void *mem_, void *_out)
+double get_l1_infeasibility(void *config_, void *dims_, void *mem_)
 {
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_config *config = config_;
     ocp_nlp_sqp_memory *mem = mem_;
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-    ocp_nlp_out *out = _out;
 
     // evaluate the objective of the QP (as predicted reduction)
     // double qp_cost = compute_qp_cost
@@ -1360,9 +1344,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     omp_set_num_threads(opts->nlp_opts->num_threads);
 #endif
 
-    if (opts->initialize_t_slacks > 0)
-        ocp_nlp_initialize_t_slacks(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-
     ocp_nlp_initialize_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
     /************************************************
@@ -1406,7 +1387,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);
         ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
 
-        mem->l1_infeasibility = get_l1_infeasibility(config, dims, mem, nlp_out);
+        mem->l1_infeasibility = get_l1_infeasibility(config, dims, mem);
         printf("Current l1 infeasibility: %10.4e\n", mem->l1_infeasibility);
         // initialize funnel if FUNNEL_METHOD used
         if (sqp_iter == 0 && nlp_opts->globalization == FUNNEL_METHOD){

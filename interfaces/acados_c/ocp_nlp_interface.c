@@ -528,11 +528,6 @@ void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
         double *double_values = value;
         blasfeo_pack_dvec(2*dims->ni[stage], double_values, 1, &out->lam[stage], 0);
     }
-    else if (!strcmp(field, "t"))
-    {
-        double *double_values = value;
-        blasfeo_pack_dvec(2*dims->ni[stage], double_values, 1, &out->t[stage], 0);
-    }
     else if (!strcmp(field, "z"))
     {
         double *double_values = value;
@@ -587,11 +582,6 @@ void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
         double *double_values = value;
         blasfeo_unpack_dvec(2*dims->ni[stage], &out->lam[stage], 0, double_values, 1);
     }
-    else if (!strcmp(field, "t"))
-    {
-        double *double_values = value;
-        blasfeo_unpack_dvec(2*dims->ni[stage], &out->t[stage], 0, double_values, 1);
-    }
     else if ((!strcmp(field, "kkt_norm_inf")) || (!strcmp(field, "kkt_norm")))
     {
         double *double_values = value;
@@ -632,7 +622,7 @@ int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
     {
         return dims->np[stage];
     }
-    else if (!strcmp(field, "lam") || !strcmp(field, "t"))
+    else if (!strcmp(field, "lam"))
     {
         return 2*dims->ni[stage];
     }

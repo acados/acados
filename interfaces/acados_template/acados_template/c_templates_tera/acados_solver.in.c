@@ -2295,9 +2295,6 @@ void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* 
     int nlp_solver_max_iter = {{ solver_options.nlp_solver_max_iter }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "max_iter", &nlp_solver_max_iter);
 
-    int initialize_t_slacks = {{ solver_options.initialize_t_slacks }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "initialize_t_slacks", &initialize_t_slacks);
-
     // set options for adaptive Levenberg-Marquardt Update
     bool with_adaptive_levenberg_marquardt = {{ solver_options.with_adaptive_levenberg_marquardt }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "with_adaptive_levenberg_marquardt", &with_adaptive_levenberg_marquardt);
@@ -2545,7 +2542,6 @@ int {{ model.name }}_acados_reset({{ model.name }}_solver_capsule* capsule, int 
         ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "sl", buffer);
         ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "su", buffer);
         ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "lam", buffer);
-        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "t", buffer);
         ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "z", buffer);
         if (i<N)
         {

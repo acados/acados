@@ -779,19 +779,19 @@ acados_size_t ocp_nlp_out_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *d
 
     acados_size_t size = sizeof(ocp_nlp_out);
 
-    size += 4 * (N + 1) * sizeof(struct blasfeo_dvec);  // ux, lam, t, z
+    size += 3 * (N + 1) * sizeof(struct blasfeo_dvec);  // ux, lam, z
     size += 1 * N * sizeof(struct blasfeo_dvec);        // pi
 
     for (int i = 0; i < N; i++)
     {
         size += 1 * blasfeo_memsize_dvec(nv[i]);      // ux
         size += 1 * blasfeo_memsize_dvec(nz[i]);      // z
-        size += 2 * blasfeo_memsize_dvec(2 * ni[i]);  // lam, t
+        size += 1 * blasfeo_memsize_dvec(2 * ni[i]);  // lam
         size += 1 * blasfeo_memsize_dvec(nx[i + 1]);  // pi
     }
     size += 1 * blasfeo_memsize_dvec(nv[N]);      // ux
     size += 1 * blasfeo_memsize_dvec(nz[N]);     // z
-    size += 2 * blasfeo_memsize_dvec(2 * ni[N]);  // lam, t
+    size += 1 * blasfeo_memsize_dvec(2 * ni[N]);  // lam
 
     size += 8;   // initial align
     size += 8;   // blasfeo_struct align
@@ -834,8 +834,6 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void
     assign_and_advance_blasfeo_dvec_structs(N, &out->pi, &c_ptr);
     // lam
     assign_and_advance_blasfeo_dvec_structs(N + 1, &out->lam, &c_ptr);
-    // t
-    assign_and_advance_blasfeo_dvec_structs(N + 1, &out->t, &c_ptr);
 
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
@@ -861,11 +859,6 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void
     {
         assign_and_advance_blasfeo_dvec_mem(2 * ni[i], out->lam + i, &c_ptr);
     }
-    // t
-    for (int i = 0; i <= N; ++i)
-    {
-        assign_and_advance_blasfeo_dvec_mem(2 * ni[i], out->t + i, &c_ptr);
-    }
 
     // zero solution
     for(int i=0; i<N; i++)
@@ -874,12 +867,10 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void
         blasfeo_dvecse(nz[i], 0.0, out->z+i, 0);
         blasfeo_dvecse(nx[i+1], 0.0, out->pi+i, 0);
         blasfeo_dvecse(2*ni[i], 0.0, out->lam+i, 0);
-        blasfeo_dvecse(2*ni[i], 0.0, out->t+i, 0);
     }
     blasfeo_dvecse(nv[N], 0.0, out->ux+N, 0);
     blasfeo_dvecse(nz[N], 0.0, out->z+N, 0);
     blasfeo_dvecse(2*ni[N], 0.0, out->lam+N, 0);
-    blasfeo_dvecse(2*ni[N], 0.0, out->t+N, 0);
 
     assert((char *) raw_memory + ocp_nlp_out_calculate_size(config, dims) >= c_ptr);
 
@@ -2158,32 +2149,6 @@ void ocp_nlp_initialize_submodules(ocp_nlp_config *config, ocp_nlp_dims *dims, o
 }
 
 
-void ocp_nlp_initialize_t_slacks(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
-         ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
-{
-    struct blasfeo_dvec *ineq_fun;
-    int N = dims->N;
-    int *ni = dims->ni;
-    // int *ns = dims->ns;
-    // int *nx = dims->nx;
-    // int *nu = dims->nu;
-
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp parallel for
-#endif
-    for (int i = 0; i <= N; i++)
-    {
-        // evaluate inequalities
-        config->constraints[i]->compute_fun(config->constraints[i], dims->constraints[i],
-                                             in->constraints[i], opts->constraints[i],
-                                             mem->constraints[i], work->constraints[i]);
-        ineq_fun = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
-        // t = -ineq_fun
-        blasfeo_dveccpsc(2 * ni[i], -1.0, ineq_fun, 0, out->t + i, 0);
-    }
-
-    return;
-}
 
 static void adaptive_levenberg_marquardt_update_mu(double iter, double step_size, ocp_nlp_opts *opts, ocp_nlp_memory *mem)
 {
@@ -3011,10 +2976,6 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
             }
         }
 
-        // update slack values
-        blasfeo_dvecsc(2*ni[i], 1.0-alpha, out->t+i, 0);
-        blasfeo_daxpy(2*ni[i], alpha, mem->qp_out->t+i, 0, out->t+i, 0, out->t+i, 0);
-
         // linear update of algebraic variables using state and input sensitivity
         if (i < N)
         {
@@ -3195,6 +3156,7 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
     int *ni = dims->ni;
 
     double tmp_res;
+    double tmp;
 
     // res_stat
     for (int i = 0; i <= N; i++)
@@ -3221,17 +3183,21 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
     res->inf_norm_res_ineq = 0.0;
     for (int i = 0; i <= N; i++)
     {
-        blasfeo_daxpy(2 * ni[i], 1.0, out->t + i, 0, mem->ineq_fun + i, 0, res->res_ineq + i, 0);
-        blasfeo_dvecnrm_inf(2 * ni[i], res->res_ineq + i, 0, &tmp_res);
-        blasfeo_dvecse(1, tmp_res, &res->tmp, i);
+        for (int j=0; j<2*ni[i]; j++)
+        {
+            tmp = BLASFEO_DVECEL(mem->ineq_fun+i, j);
+            if (tmp > res->inf_norm_res_ineq)
+            {
+                res->inf_norm_res_ineq = tmp;
+            }
+        }
     }
-    blasfeo_dvecnrm_inf(N+1, &res->tmp, 0, &res->inf_norm_res_ineq);
 
     // res_comp
     res->inf_norm_res_comp = 0.0;
     for (int i = 0; i <= N; i++)
     {
-        blasfeo_dvecmul(2 * ni[i], out->lam + i, 0, out->t + i, 0, res->res_comp + i, 0);
+        blasfeo_dvecmul(2 * ni[i], out->lam + i, 0, mem->ineq_fun+i, 0, res->res_comp + i, 0);
         blasfeo_dvecnrm_inf(2 * ni[i], res->res_comp + i, 0, &tmp_res);
         blasfeo_dvecse(1, tmp_res, &res->tmp, i);
     }
@@ -3263,7 +3229,6 @@ void copy_ocp_nlp_out(ocp_nlp_dims *dims, ocp_nlp_out *from, ocp_nlp_out *to)
         blasfeo_dveccp(nv[i], from->ux+i, 0, to->ux+i, 0);
         blasfeo_dveccp(nz[i], from->z+i, 0, to->z+i, 0);
         blasfeo_dveccp(2*ni[i], from->lam+i, 0, to->lam+i, 0);
-        blasfeo_dveccp(2*ni[i], from->t+i, 0, to->t+i, 0);
     }
 
     for (int i = 0; i < N; i++)
@@ -3410,7 +3375,6 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
             blasfeo_dveccp(nx[i + 1], tmp_qp_out->pi + i, 0, sens_nlp_out->pi + i, 0);
 
         blasfeo_dveccp(2 * ni[i], tmp_qp_out->lam + i, 0, sens_nlp_out->lam + i, 0);
-        blasfeo_dveccp(2 * ni[i], tmp_qp_out->t + i, 0, sens_nlp_out->t + i, 0);
     }
 }
 

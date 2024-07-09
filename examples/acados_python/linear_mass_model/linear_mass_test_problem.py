@@ -165,7 +165,6 @@ def solve_marathos_ocp(setting):
     ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
     ocp.solver_options.globalization = globalization
     ocp.solver_options.alpha_min = 0.01
-    # ocp.solver_options.__initialize_t_slacks = 0
     # ocp.solver_options.levenberg_marquardt = 1e-2
     ocp.solver_options.qp_solver_cond_N = 0
     ocp.solver_options.print_level = 1

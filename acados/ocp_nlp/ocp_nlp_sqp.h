@@ -67,7 +67,6 @@ typedef struct
     int qp_warm_start;   // qp_warm_start in all but the first sqp iterations
     bool warm_start_first_qp; // to set qp_warm_start in first iteration
     int rti_phase;       // only phase 0 at the moment
-    int initialize_t_slacks;  // 0-false or 1-true
 
     //opts for funnel globalization
     // Line search
@@ -194,7 +193,7 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
 double ocp_nlp_sqp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
                 ocp_nlp_workspace *nlp_work, ocp_nlp_memory *nlp_mem, ocp_nlp_sqp_opts *opts);
 
-double get_l1_infeasibility(void *config_, void *dims_, void *mem_, void *_out);
+double get_l1_infeasibility(void *config_, void *dims_, void *mem_);
 
 #ifdef __cplusplus
 } /* extern "C" */

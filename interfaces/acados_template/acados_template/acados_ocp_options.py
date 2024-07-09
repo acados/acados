@@ -74,7 +74,6 @@ class AcadosOcpOptions:
         self.__rti_log_residuals = 0
         self.__Tsim = None
         self.__print_level = 0
-        self.__initialize_t_slacks = 0
         self.__cost_discretization = 'EULER'
         self.__regularize_method = 'NO_REGULARIZE'
         self.__reg_epsilon = 1e-4

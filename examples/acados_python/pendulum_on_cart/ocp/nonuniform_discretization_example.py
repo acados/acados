@@ -142,7 +142,6 @@ def main(discretization='shooting_nodes'):
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
-    ocp.solver_options.initialize_t_slacks = 1
 
     # Set additional options for Simulink interface:
     simulink_opts = get_simulink_default_opts()
@@ -207,14 +206,11 @@ def main(discretization='shooting_nodes'):
 
     print("inequality multipliers at stage 1")
     print(ocp_solver.get(1, "lam")) # inequality multipliers at stage 1
-    print("slack values at stage 1")
-    print(ocp_solver.get(1, "t")) # slack values at stage 1
     print("multipliers of dynamic conditions between stage 1 and 2")
     print(ocp_solver.get(1, "pi")) # multipliers of dynamic conditions between stage 1 and 2
 
-    # initialize ineq multipliers and slacks at stage 1
+    # initialize ineq multipliers at stage 1
     ocp_solver.set(1, "lam", np.zeros(2,))
-    ocp_solver.set(1, "t", np.zeros(2,))
 
     ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
 

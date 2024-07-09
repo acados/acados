@@ -523,19 +523,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             ocp_nlp_out_set(config, dims, out, s0, "lam", value);
         }
     }
-    else if (!strcmp(field, "init_t")||!strcmp(field, "t"))
-    {
-        if (nrhs==min_nrhs)
-        {
-            MEX_SETTER_NO_ALL_STAGES_SUPPORT(fun_name, field)
-        }
-        else //(nrhs==min_nrhs+1)
-        {
-            acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, s0, "t");
-            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-            ocp_nlp_out_set(config, dims, out, s0, "t", value);
-        }
-    }
     else if (!strcmp(field, "init_sl")||!strcmp(field, "sl"))
     {
         if (nrhs==min_nrhs)

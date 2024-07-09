@@ -233,7 +233,6 @@ typedef struct ocp_nlp_out
     struct blasfeo_dvec *z;  // algebraic variables
     struct blasfeo_dvec *pi;  // multipliers for dynamics
     struct blasfeo_dvec *lam;  // inequality multipliers
-    struct blasfeo_dvec *t;  // slack variables corresponding to evaluation of all inequalities (at the solution)
 
     // NOTE: the inequalities are internally organized in the following order:
     // [ lbu lbx lg lh lphi ubu ubx ug uh uphi; lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
@@ -463,9 +462,6 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
 //
 double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
           ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
-//
-void ocp_nlp_initialize_t_slacks(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
-            ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
 //
 void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out,
                          ocp_nlp_res *res, ocp_nlp_memory *mem);
