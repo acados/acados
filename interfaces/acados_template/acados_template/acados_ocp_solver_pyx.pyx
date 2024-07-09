@@ -436,7 +436,7 @@ cdef class AcadosOcpSolverCython:
             :param stage: integer corresponding to shooting node
             :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su',]
 
-            .. note:: regarding lam, t: \n
+            .. note:: regarding lam: \n
                     the inequalities are internally organized in the following order: \n
                     [ lbu lbx lg lh lphi ubu ubx ug uh uphi; \n
                       lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
@@ -715,7 +715,7 @@ cdef class AcadosOcpSolverCython:
             :param stage: integer corresponding to shooting node
             :param field: string in ['x', 'u', 'pi', 'lam', 'p']
 
-            .. note:: regarding lam, t: \n
+            .. note:: regarding lam: \n
                     the inequalities are internally organized in the following order: \n
                     [ lbu lbx lg lh lphi ubu ubx ug uh uphi; \n
                       lsbu lsbx lsg lsh lsphi usbu usbx usg ush usphi]
