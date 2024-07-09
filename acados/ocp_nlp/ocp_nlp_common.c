@@ -3180,7 +3180,6 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
     res->inf_norm_res_ineq = 0.0;
     for (int i = 0; i <= N; i++)
     {
-        // TODO: do we need to get the ineq_fun value before this? or is it always done?
         for (int j=0; j<2*ni[i]; j++)
         {
             tmp = BLASFEO_DVECEL(mem->ineq_fun+i, j);
