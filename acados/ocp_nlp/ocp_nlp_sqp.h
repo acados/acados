@@ -67,6 +67,7 @@ typedef struct
     int qp_warm_start;   // qp_warm_start in all but the first sqp iterations
     bool warm_start_first_qp; // to set qp_warm_start in first iteration
     int rti_phase;       // only phase 0 at the moment
+    bool eval_data_after_last_iteration; // if convergence should be checked after last iterations or only throw max_iter reached
 
     //opts for funnel globalization
     // Line search

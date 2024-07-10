@@ -2100,6 +2100,25 @@ void {{ name }}_acados_create_6_set_opts({{ name }}_solver_capsule* capsule)
 
     double eps_sufficient_descent = {{ solver_options.eps_sufficient_descent }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "eps_sufficient_descent", &eps_sufficient_descent);
+
+{%- elif solver_options.globalization == "FUNNEL_METHOD" %}
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization", "funnel_method");
+
+    double funnel_initial_increase_factor = {{ solver_options.funnel_initial_increase_factor }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "funnel_initial_increase_factor", &funnel_initial_increase_factor);
+
+    double funnel_initial_upper_bound = {{ solver_options.funnel_initial_upper_bound }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "funnel_initial_upper_bound", &funnel_initial_upper_bound);
+
+    double funnel_sufficient_decrease_factor = {{ solver_options.funnel_sufficient_decrease_factor }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "funnel_sufficient_decrease_factor", &funnel_sufficient_decrease_factor);
+
+    double funnel_kappa = {{ solver_options.funnel_kappa }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "funnel_kappa", &funnel_kappa);
+
+    double funnel_initial_penalty_parameter = {{ solver_options.funnel_initial_penalty_parameter }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "funnel_initial_penalty_parameter", &funnel_initial_penalty_parameter);
+
 {%- endif -%}
 
     int with_solution_sens_wrt_params = {{ solver_options.with_solution_sens_wrt_params }};
@@ -2174,6 +2193,9 @@ void {{ name }}_acados_create_6_set_opts({{ name }}_solver_capsule* capsule)
 
     int nlp_solver_max_iter = {{ solver_options.nlp_solver_max_iter }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "max_iter", &nlp_solver_max_iter);
+
+    double eval_data_after_last_iteration = {{ solver_options.eval_data_after_last_iteration }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "eval_data_after_last_iteration", &eval_data_after_last_iteration);
 
 {%- elif solver_options.nlp_solver_type == "SQP_RTI" %}
     int as_rti_iter = {{ solver_options.as_rti_iter }};

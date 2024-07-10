@@ -125,6 +125,7 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->qp_warm_start = 0;
     opts->warm_start_first_qp = false;
     opts->rti_phase = 0;
+    opts->eval_data_after_last_iteration = true;
 
     // funnel method opts
     opts->linesearch_eta = 1e-6;
@@ -255,6 +256,11 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
                 exit(1);
             }
             opts->rti_phase = *rti_phase;
+        }
+        else if (!strcmp(field, "eval_data_after_last_iteration"))
+        {
+            bool* eval_data_after_last_iteration = (bool *) value;
+            opts->eval_data_after_last_iteration = *eval_data_after_last_iteration;
         }
         else if (!strcmp(field, "funnel_initial_increase_factor"))
         {
@@ -1309,38 +1315,49 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     double funnel_width_memory = 0.0;
     double funnel_penalty_param_memory = opts->funnel_initial_penalty_parameter;
     initialize_funnel_penalty_parameter(mem, opts);
+    if (nlp_opts->globalization == FUNNEL_METHOD)
+    {
+        printf("Note: The funnel globalization is still under development.\n");
+        printf("If you encouter problems or bugs, please report to the acados developers!\n");
+    }
 
     for (; sqp_iter <= opts->max_iter; sqp_iter++) // <= needed such that after last iteration KKT residuals are checked before max_iter is thrown.
     {
-        /* Prepare the QP data */
-        // linearize NLP and update QP matrices
-        acados_tic(&timer1);
-        ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-        if (nlp_opts->with_adaptive_levenberg_marquardt || nlp_opts->globalization != FIXED_STEP)
+        // We always evaluate the residuals until the last iteration
+        // If the option "eval_data_after_last_iteration" is set, then we will also
+        // evaluate the data after the last iteration was performed
+        if (sqp_iter != opts->max_iter || opts->eval_data_after_last_iteration)
         {
-            ocp_nlp_get_cost_value_from_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+            /* Prepare the QP data */
+            // linearize NLP and update QP matrices
+            acados_tic(&timer1);
+            ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+            if (nlp_opts->with_adaptive_levenberg_marquardt || nlp_opts->globalization != FIXED_STEP)
+            {
+                ocp_nlp_get_cost_value_from_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+            }
+            ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, sqp_iter);
+
+            mem->time_lin += acados_toc(&timer1);
+
+            // get timings from integrator
+            for (ii=0; ii<N; ii++)
+            {
+                config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim", &tmp_time);
+                mem->time_sim += tmp_time;
+                config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim_la", &tmp_time);
+                mem->time_sim_la += tmp_time;
+                config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim_ad", &tmp_time);
+                mem->time_sim_ad += tmp_time;
+            }
+
+            // update QP rhs for SQP (step prim var, abs dual var)
+            ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+
+            // compute nlp residuals
+            ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);
+            ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
         }
-        ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, sqp_iter);
-
-        mem->time_lin += acados_toc(&timer1);
-
-        // get timings from integrator
-        for (ii=0; ii<N; ii++)
-        {
-            config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim", &tmp_time);
-            mem->time_sim += tmp_time;
-            config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim_la", &tmp_time);
-            mem->time_sim_la += tmp_time;
-            config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim_ad", &tmp_time);
-            mem->time_sim_ad += tmp_time;
-        }
-
-        // update QP rhs for SQP (step prim var, abs dual var)
-        ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-
-        // compute nlp residuals
-        ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);
-        ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
 
         // initialize funnel if FUNNEL_METHOD used
         if (sqp_iter == 0 && nlp_opts->globalization == FUNNEL_METHOD){
