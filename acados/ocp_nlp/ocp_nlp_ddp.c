@@ -123,6 +123,7 @@ void ocp_nlp_ddp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->qp_warm_start = 0;
     opts->warm_start_first_qp = false;
     opts->rti_phase = 0;
+    opts->eval_data_after_last_iteration = true;
 
     opts->linesearch_eta = 1e-6;
     opts->linesearch_minimum_step_size = 1e-17;
@@ -244,6 +245,11 @@ void ocp_nlp_ddp_opts_set(void *config_, void *opts_, const char *field, void* v
                 exit(1);
             }
             opts->rti_phase = *rti_phase;
+        }
+        else if (!strcmp(field, "eval_data_after_last_iteration"))
+        {
+            bool* eval_data_after_last_iteration = (bool *) value;
+            opts->eval_data_after_last_iteration = *eval_data_after_last_iteration;
         }
         else
         {
@@ -732,38 +738,44 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         printf("'with_adaptive_levenberg_marquardt' option is set to: %s\n", opts->nlp_opts->with_adaptive_levenberg_marquardt?"true":"false");
     }
 
-    for (; ddp_iter < opts->max_iter+1; ddp_iter++)
+    for (; ddp_iter <= opts->max_iter; ddp_iter++)
     {
-        /* Prepare the QP data */
-        // linearize NLP, update QP matrices, and add Levenberg-Marquardt term
-        acados_tic(&timer1);
-        ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-        if (nlp_opts->with_adaptive_levenberg_marquardt || nlp_opts->globalization != FIXED_STEP)
+        // We always evaluate the residuals until the last iteration
+        // If the option "eval_data_after_last_iteration" is set, then we will also
+        // evaluate the data after the last iteration was performed
+        if (ddp_iter != opts->max_iter || opts->eval_data_after_last_iteration)
         {
-            ocp_nlp_get_cost_value_from_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+            /* Prepare the QP data */
+            // linearize NLP, update QP matrices, and add Levenberg-Marquardt term
+            acados_tic(&timer1);
+            ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+            if (nlp_opts->with_adaptive_levenberg_marquardt || nlp_opts->globalization != FIXED_STEP)
+            {
+                ocp_nlp_get_cost_value_from_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+            }
+            ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, ddp_iter);
+
+            mem->time_lin += acados_toc(&timer1);
+
+            // get timings from integrator
+            for (ii=0; ii<N; ii++)
+            {
+                config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim", &tmp_time);
+                mem->time_sim += tmp_time;
+                config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim_la", &tmp_time);
+                mem->time_sim_la += tmp_time;
+                config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim_ad", &tmp_time);
+                mem->time_sim_ad += tmp_time;
+            }
+
+            // update QP rhs for DDP (step prim var, abs dual var)
+            // NOTE: The ddp version of approximate does not exist!
+            ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+
+            // compute nlp residuals
+            ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);
+            ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
         }
-        ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, ddp_iter);
-
-        mem->time_lin += acados_toc(&timer1);
-
-        // get timings from integrator
-        for (ii=0; ii<N; ii++)
-        {
-            config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim", &tmp_time);
-            mem->time_sim += tmp_time;
-            config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim_la", &tmp_time);
-            mem->time_sim_la += tmp_time;
-            config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim_ad", &tmp_time);
-            mem->time_sim_ad += tmp_time;
-        }
-
-        // update QP rhs for DDP (step prim var, abs dual var)
-        // NOTE: The ddp version of approximate does not exist!
-        ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-
-        // compute nlp residuals
-        ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);
-        ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
 
         // save statistics
         if ((ddp_iter < mem->stat_m) & (ddp_iter >= 0))

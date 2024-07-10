@@ -2308,7 +2308,7 @@ void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* 
     double adaptive_levenberg_marquardt_mu0 = {{ solver_options.adaptive_levenberg_marquardt_mu0 }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "adaptive_levenberg_marquardt_mu0", &adaptive_levenberg_marquardt_mu0);
 
-    double eval_data_after_last_iteration = {{ solver_options.eval_data_after_last_iteration }};
+    bool eval_data_after_last_iteration = {{ solver_options.eval_data_after_last_iteration }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "eval_data_after_last_iteration", &eval_data_after_last_iteration);
 
 {%- elif solver_options.nlp_solver_type == "SQP_RTI" %}

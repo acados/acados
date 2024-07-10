@@ -2194,7 +2194,7 @@ void {{ name }}_acados_create_6_set_opts({{ name }}_solver_capsule* capsule)
     int nlp_solver_max_iter = {{ solver_options.nlp_solver_max_iter }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "max_iter", &nlp_solver_max_iter);
 
-    double eval_data_after_last_iteration = {{ solver_options.eval_data_after_last_iteration }};
+    bool eval_data_after_last_iteration = {{ solver_options.eval_data_after_last_iteration }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "eval_data_after_last_iteration", &eval_data_after_last_iteration);
 
 {%- elif solver_options.nlp_solver_type == "SQP_RTI" %}

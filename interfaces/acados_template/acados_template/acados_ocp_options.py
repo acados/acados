@@ -1044,7 +1044,7 @@ class AcadosOcpOptions:
 
     @eval_data_after_last_iteration.setter
     def eval_data_after_last_iteration(self, eval_data_after_last_iteration):
-        if type(eval_data_after_last_iteration) == bool:
+        if isinstance(eval_data_after_last_iteration, bool):
             self.__eval_data_after_last_iteration = eval_data_after_last_iteration
         else:
             raise Exception(f'Invalid datatype for eval_data_after_last_iteration. Should be bool, got {type(eval_data_after_last_iteration)}')
