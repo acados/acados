@@ -1257,51 +1257,6 @@ double get_l1_infeasibility(void *config_, void *dims_, void *mem_)
     return dyn_l1_infeasibility + constraint_l1_infeasibility;
 }
 
-static double get_l_inf_infeasibility(void *config_, void *dims_, void *mem_)
-{
-    ocp_nlp_dims *dims = dims_;
-    ocp_nlp_config *config = config_;
-    ocp_nlp_sqp_memory *mem = mem_;
-    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-
-    // evaluate the objective of the QP (as predicted reduction)
-    // double qp_cost = compute_qp_cost
-    int N = dims->N;
-    int *nx = dims->nx;
-    int *ni = dims->ni;
-
-    // compute current l1 infeasibility
-    double tmp;
-    struct blasfeo_dvec *tmp_fun_vec;
-    double dyn_l1_infeasibility = 0.0;
-    for(int i=0; i<N; i++)
-    {
-        tmp_fun_vec = config->dynamics[i]->memory_get_fun_ptr(nlp_mem->dynamics[i]);
-        for(int j=0; j<nx[i+1]; j++)
-        {
-            dyn_l1_infeasibility = fmax(dyn_l1_infeasibility, fabs(BLASFEO_DVECEL(tmp_fun_vec, j)));
-        }
-    }
-
-    double constraint_l1_infeasibility = 0.0;
-    for(int i=0; i<=N; i++)
-    {
-        tmp_fun_vec = config->constraints[i]->memory_get_fun_ptr(nlp_mem->constraints[i]);
-        // printf("self l inf feasibility\n");
-        // blasfeo_print_dvec(2*ni[i], tmp_fun_vec, 0);
-        for (int j=0; j<2*ni[i]; j++)
-        {
-            tmp = BLASFEO_DVECEL(tmp_fun_vec, j);
-            if (tmp > 0.0)
-            {
-                // printf("%.5e", tmp);
-                constraint_l1_infeasibility = fmax(constraint_l1_infeasibility, tmp);
-            }
-        }
-    }
-    return fmax(dyn_l1_infeasibility, constraint_l1_infeasibility);
-}
-
 // MAIN OPTIMIZATION ROUTINE
 int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_)
@@ -1387,8 +1342,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);
         ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
 
-        mem->l1_infeasibility = get_l1_infeasibility(config, dims, mem);
-        printf("Current l1 infeasibility: %10.4e\n", mem->l1_infeasibility);
         // initialize funnel if FUNNEL_METHOD used
         if (sqp_iter == 0 && nlp_opts->globalization == FUNNEL_METHOD){
             initialize_funnel(mem, opts, mem->l1_infeasibility);
