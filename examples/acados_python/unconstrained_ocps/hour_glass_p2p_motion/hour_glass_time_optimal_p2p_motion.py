@@ -38,7 +38,7 @@ def main():
 
     # The flag denotes, if the problem should be transformed into a feasibility
     # problem, or if the unconstrained OCP should be solved.
-    SOLVE_FEASIBILITY_PROBLEM = False
+    SOLVE_FEASIBILITY_PROBLEM = True
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -92,37 +92,33 @@ def main():
     ocp.constraints.idxbx_e = np.array([1,2,3])
 
     # Convex over Nonlinear Constraints
-    # r = ca.SX.sym('r', 1, 1)
-    # ocp.model.con_phi_expr = r**2
-    # ocp.model.con_r_in_phi = r
-    # ocp.model.con_r_expr = (5*(model.x[1]+3)) / (ca.sqrt(1+15*(model.x[2]-5)**2))
+    r = ca.SX.sym('r', 1, 1)
+    ocp.model.con_phi_expr = r**2
+    ocp.model.con_r_in_phi = r
+    ocp.model.con_r_expr = (5*(model.x[1]+3)) / (ca.sqrt(1+15*(model.x[2]-5)**2))
 
-    # ocp.constraints.lphi = np.array([0])
-    # ocp.constraints.uphi = np.array([1])
+    ocp.constraints.lphi = np.array([0])
+    ocp.constraints.uphi = np.array([1])
 
-    ocp.model.con_h_expr = ((5*(model.x[1]+3)) / (ca.sqrt(1+15*(model.x[2]-5)**2)))**2
-    ocp.constraints.lh = np.array([-1])
-    ocp.constraints.uh = np.array([1])
+    # ocp.model.con_h_expr = ((5*(model.x[1]+3)) / (ca.sqrt(1+15*(model.x[2]-5)**2)))**2
+    # ocp.constraints.lh = np.array([-1])
+    # ocp.constraints.uh = np.array([1])
 
     ###########################################################################
     # set solver options
     ###########################################################################
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     ocp.solver_options.qp_solver_cond_N = N
-    # ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
-    ocp.solver_options.hessian_approx = 'EXACT'
+    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = 'ERK'
     ocp.solver_options.sim_method_num_steps = M
     ocp.solver_options.print_level = 1
 
     # DDP options
-    # ocp.solver_options.nlp_solver_type = 'DDP'
-    # ocp.solver_options.globalization = 'MERIT_BACKTRACKING'
+    ocp.solver_options.nlp_solver_type = 'DDP'
+    ocp.solver_options.globalization = 'MERIT_BACKTRACKING'
     ocp.solver_options.nlp_solver_max_iter = 15
-    ocp.solver_options.nlp_solver_type = 'SQP'
-    ocp.solver_options.globalization = 'FUNNEL_METHOD'
-    ocp.solver_options.with_adaptive_levenberg_marquardt = False
-    ocp.solver_options.regularize_method = 'PROJECT'
+    ocp.solver_options.with_adaptive_levenberg_marquardt = True
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
@@ -150,8 +146,8 @@ def main():
     # Solve the problem
     status = ocp_solver.solve()
 
-    # iter = ocp_solver.get_stats('nlp_iter')
-    # assert iter <= 14, "DDP Solver should converge within 14 iterations!"
+    iter = ocp_solver.get_stats('nlp_iter')
+    assert iter <= 14, "DDP Solver should converge within 14 iterations!"
 
     # if status != 0:
     #     raise Exception(f'acados returned status {status}.')
