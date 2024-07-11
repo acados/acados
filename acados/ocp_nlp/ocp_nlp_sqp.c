@@ -1242,7 +1242,7 @@ double get_l1_infeasibility(void *config_, void *dims_, void *mem_)
     for(i=0; i<N; i++)
     {
         tmp_fun_vec = config->dynamics[i]->memory_get_fun_ptr(nlp_mem->dynamics[i]);
-        for(int j=0; j<nx[i+1]; j++)
+        for(j=0; j<nx[i+1]; j++)
         {
             dyn_l1_infeasibility += fabs(BLASFEO_DVECEL(tmp_fun_vec, j));
         }
