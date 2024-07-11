@@ -42,7 +42,7 @@ INITIALIZE = True
 PLOT = False
 OBSTACLE_POWER = 2
 
-# an OCP to test Marathos effect an second order correction
+# an OCP to test Maratos effect an second order correction
 
 def main():
     # run test cases
@@ -61,10 +61,10 @@ def main():
             # skip some equivalent settings
             pass
         else:
-            solve_marathos_ocp(setting)
+            solve_maratos_ocp(setting)
 
 
-def solve_marathos_ocp(setting):
+def solve_maratos_ocp(setting):
 
     globalization = setting['globalization']
     line_search_use_sufficient_descent = setting['line_search_use_sufficient_descent']
@@ -208,7 +208,7 @@ def solve_marathos_ocp(setting):
 
 
     # print summary
-    print(f"solved Marathos test problem with settings {setting}")
+    print(f"solved Maratos test problem with settings {setting}")
     print(f"cost function value = {ocp_solver.get_cost()} after {sqp_iter} SQP iterations")
     # print(f"alphas: {alphas[:iter]}")
     # print(f"total number of QP iterations: {sum(qp_iters[:iter])}")
