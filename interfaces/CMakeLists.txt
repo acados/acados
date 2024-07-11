@@ -227,6 +227,11 @@ add_test(NAME python_pendulum_ocp_example_cmake
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/non_ocp_nlp
         python maratos_test_problem.py)
 
+    # Convex test problem where full step SQP does not converge, but globalized SQP does
+    add_test(NAME python_convex_test_problem_globalization
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/non_ocp_nlp
+        python convex_problem_globalization_necessary.py)
+
     # Simple OCP with Maratos effect
     add_test(NAME python_OCP_maratos_test_problem_globalization
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/linear_mass_model
