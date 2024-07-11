@@ -1177,7 +1177,7 @@ static int ocp_nlp_sqp_backtracking_line_search(void *config_, void *dims_, void
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
-        for (int i=0; i<N; i++)
+        for (i=0; i<N; i++)
         {
             // dynamics: Note has to be first, because cost_integration might be used.
             config->dynamics[i]->compute_fun(config->dynamics[i], dims->dynamics[i], nlp_in->dynamics[i],
@@ -1196,7 +1196,7 @@ static int ocp_nlp_sqp_backtracking_line_search(void *config_, void *dims_, void
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
-        for (int i=0; i<=N; i++)
+        for (i=0; i<=N; i++)
         {
             // constr
             config->constraints[i]->compute_fun(config->constraints[i], dims->constraints[i],
