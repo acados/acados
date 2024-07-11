@@ -77,7 +77,7 @@
 %
 \section{Problem Formulation}\label{sec:problem}
 %
-\acados{} can handle the following optimization problem
+\acados{} can handle continuous-time optimal control problems (OCP) of the following form:
 %
 \begin{align}
 % cost
@@ -147,15 +147,13 @@ with
 \item slacks for path constraints $ s\Lower(t) = (s\lowerbu, s\lowerbx, s\lowerg, s\lowerh) \in \R^{\ns} $ and $ s\upper(t) = (s\upperbu, s\upperbx, s\upperg, s\upperh) \in \R^{\ns} $
 \item slacks for terminal constraints $ s\Lower\terminal(t) = (s\lowerbx\terminal, s\lowerg\terminal, s\lowerh\terminal) \in \R^{\ns\terminal} $ and $ s\upper\terminal(t) = (s\upperbx\terminal, s\upperg\terminal, s\upperh\terminal) \in \R^{\ns\terminal} $
 \end{itemize}
+
+While the user specifies the OCP in continuous time, the problem is internally discretize using the \textbf{multiple shooting} approach and a piecewise constant control parametrization.
+In particular, the algebraic variables returned by \acados{} are associated with the beginning of a shooting interval.
+Thus, there are no algebraic variables available at the terminal node.
+
 %
-Some of the following restrictions may apply to matrices in the formulation:
-\begin{center}
-    \begin{tabular}{ll}
-        \textbf{DIAG} & diagonal\\
-        \textbf{SPUM} & horizontal slice of a permuted unit matrix\\
-        \textbf{SPUME} & like \textbf{SPUM}, but with empty rows intertwined
-    \end{tabular}
-\end{center}
+
 %
 \paragraph{Document Purpose.}
 This document describes the \matlab{} interface of \acados.
@@ -165,7 +163,18 @@ The documentation is not exhaustive and does not contain a full description for 
 
 You can find examples in the directory \code{<acados>/examples/acados\_matlab\_octave}.
 The source code of the \acados{} \matlab{} interface is found in: \code{<acados>/interfaces/acados\_matlab\_octave} and should serve as a more extensive, complete and up-to-date documentation about the possibilities.
-%
+
+\paragraph{Abbreviations.}
+Some of the following restrictions may apply to matrices in the formulation:
+\begin{center}
+	\begin{tabular}{ll}
+		\textbf{DIAG} & diagonal\\
+		\textbf{SPUM} & horizontal slice of a permuted unit matrix\\
+		\textbf{SPUME} & like \textbf{SPUM}, but with empty rows intertwined
+	\end{tabular}
+\end{center}
+
+
 \section{Dynamics}\label{sec:dynamics}
 %
 The system dynamics term is used to connect state trajectories from adjacent shooting nodes by means of equality constraints.
@@ -173,11 +182,11 @@ The system dynamics term is used to connect state trajectories from adjacent sho
 The system dynamics equation~\eqref{eq:dynamics} is replaced with a discrete-time dynamic system.
 The dynamics can be formulated in different ways in \acados:
 As implicit equations in continuous time~\eqref{eq:dynamics:implicit}, or as explicit equations in continuous time~\eqref{eq:dynamics:explicit} or directly as discrete-time dynamics \eqref{eq:dynamics:discrete}.
-This section and Table~\ref{tab:dynamics} summarizes the options.
+This section and Table~\ref{tab:dynamics} summarize these options.
 %
 \subsection{Implicit Dynamics}\label{sec:dynamics:implicit}
 %
-The most general way to provide a continuous time ODE in \acados\ is to define the function $ f\ind{impl}: \mathbb{R}^{\nx}\times\mathbb{R}^{\nx}\times\mathbb{R}^{\nuu}\times\mathbb{R}^{\nz}\times\mathbb{R}^{\np} \rightarrow \mathbb{R}^{\nx+\nz}$ which is fully implicit DAE formulation describing the system as:
+The most general way to provide a continuous-time ODE in \acados\ is to define the function $ f\ind{impl}: \mathbb{R}^{\nx}\times\mathbb{R}^{\nx}\times\mathbb{R}^{\nuu}\times\mathbb{R}^{\nz}\times\mathbb{R}^{\np} \rightarrow \mathbb{R}^{\nx+\nz}$ which is fully implicit DAE formulation describing the system as:
 \begin{equation}
     f\ind{impl}(x, \dot{x}, u, z, p) = 0.\label{eq:dynamics:implicit}
 \end{equation}
@@ -250,7 +259,9 @@ Similarly, \code{cost\_z}, \code{cost\_Z\_e}, \code{cost\_z\_e} can be used to s
 
 Note that the dimensions of the slack variables $s\Lower(t)$, $s\Lower\terminal(t)$, $s\upper(t)$ and $s\upper\terminal(t)$ are determined by \acados{} from the associated matrices ($Z\Lower$, $Z\upper$,  $J\ind{sh}$, $J\ind{sg}$, $J\ind{sbu}$, $J\ind{sbx}$ etc.).
 
-Note that all cost terms, except for the terminal one, are weighted with the corresponding time step. If the time steps are $\Delta t_0,\dots, \Delta t_N$, the total cost is given by $c_\text{total} = \Delta t_0 \cdot c_0(x_0, u_0, p_0, z_0) + \dots + \Delta t_{N-1} \cdot c_{N-1}(x_0, u_0, p_0, z_0) + c_N(x_N, p_N)$. This means the Lagrange cost term is given in continuous time, which allows for a seamless OCP discretization with a nonuniform time grid.
+Note that all cost terms, except for the terminal one, are weighted with the corresponding time step.
+If the time steps are $\Delta t_0,\dots, \Delta t_{N-1}$, the total cost is given by $c_\text{total} = \Delta t_0 \cdot l(x_0, u_0, p_0, z_0) + \dots + \Delta t_{N-1} \cdot l(x_{N-1}, u_{N-1}, p_{N-1}, z_{N-1}) + m(x_N, p_N)$.
+This means the Lagrange cost term is given in continuous time and then integrated using the explicit Euler method, which allows for a seamless OCP discretization with a nonuniform time grid.
 %
 \subsection{Cost module: \code{auto}}\label{sec:cost:auto}
 %
@@ -295,13 +306,15 @@ The Lagrange cost term has the form
 \begin{align}
 l(x, u, z) &= \frac{1}{2} \norm{ \underbrace{V_x\, x + V_u\, u + V_z\, z}_{\displaystyle y} - y\ind{ref}}_W^2 \label{eq:cost:linear_ls:l}
 \end{align}
-where matrices $ V_x \in \mathbb{R}^{n_y \times n_x}$, $V_u \in \mathbb{R}^{n_y \times n_u}$ are $V_z \in \mathbb{R}^{n_y \times n_z}$ map $x$, $u$ and $z$ onto $y$, respectively and $W \in \mathbb{R}^{n_y \times n_y}$ is the weighing matrix. The vector $y\ind{ref} \in \mathbb{R}^{n_y}$ is the reference.
+where matrices $ V_x \in \mathbb{R}^{n_y \times n_x}$, $V_u \in \mathbb{R}^{n_y \times n_u}$ are $V_z \in \mathbb{R}^{n_y \times n_z}$ map $x$, $u$ and $z$ onto $y$, respectively and $W \in \mathbb{R}^{n_y \times n_y}$ is the weighting matrix.
+The vector $y\ind{ref} \in \mathbb{R}^{n_y}$ is the reference.
 
 Similarly, the Mayer cost term has the form
 \begin{align}
 m(x, u, z) &= \frac{1}{2} \norm{ \underbrace{V_x\terminal x}_{\displaystyle y\terminal} - y\ind{ref}\terminal}_{W\terminal}^2 \label{eq:cost:linear_ls:m}
 \end{align}
-where matrix $ V\terminal_x \in \mathbb{R}^{n_{y\terminal} \times n_x}$ maps $x$ onto $y\terminal$ and $W\terminal \in \mathbb{R}^{n_{y\terminal} \times n_{y\terminal}}$ is the weighing matrix. The vector $y\terminal_\textrm{ref} \in \mathbb{R}^{n_{y\terminal}}$ is the reference.
+where matrix $ V\terminal_x \in \mathbb{R}^{n_{y\terminal} \times n_x}$ maps $x$ onto $y\terminal$ and $W\terminal \in \mathbb{R}^{n_{y\terminal} \times n_{y\terminal}}$ is the weighting matrix.
+The vector $y\terminal_\textrm{ref} \in \mathbb{R}^{n_{y\terminal}}$ is the reference.
 
 Additionally, a different cost for the initial node can be set using the same form as \eqref{eq:cost:linear_ls:l} and the appropriate fields \code{cost\_(...)\_0}.
 
