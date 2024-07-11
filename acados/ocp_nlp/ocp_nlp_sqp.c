@@ -976,6 +976,11 @@ static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
     debug_output_double(opts->nlp_opts, "trial objective", trial_objective, 2); //debugging output
     debug_output_double(opts->nlp_opts, "trial infeasibility", trial_infeasibility, 2); //debugging output
     debug_output_double(opts->nlp_opts, "pred", pred, 2); //debugging output
+    if(is_iterate_inside_of_funnel(mem, opts, current_infeasibility))
+    {
+        printf("Current infeasibility not in funnel! Weird\n");
+    }
+
     if(is_iterate_inside_of_funnel(mem, opts, trial_infeasibility))
     {
         debug_output(opts->nlp_opts, "Trial iterate is INSIDE of funnel\n", 1); //debugging output
@@ -1359,6 +1364,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // compute nlp residuals
             ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);
             ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
+
+            mem->l1_infeasibility = get_l1_infeasibility(config, dims, mem);
         }
 
         // initialize funnel if FUNNEL_METHOD used
