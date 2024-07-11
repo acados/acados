@@ -736,57 +736,90 @@ static void ocp_nlp_sqp_reset_timers(ocp_nlp_sqp_memory *mem)
 /************************************************
  * output functions
  ************************************************/
-static void print_iteration_header(){
-    printf("%6s | %11s | %10s | %10s | %10s | %10s | %10s | %10s | %10s | %12s | %10s | %10s | %10s | %10s\n",
-    "iter.",
-    "objective",
-    "res_eq",
-    "res_ineq",
-    "res_stat",
-    "res_comp",
-    "alpha",
-    "step_norm",
-    "LM_reg.",
-    "funnel width",
-    "penalty",
-    "qp_status",
-    "qp_iter",
-    "iter. type");
+static void print_iteration_header(ocp_nlp_opts* opts){
+    if(opts->globalization == FUNNEL_METHOD)
+    {
+        printf("%6s | %11s | %10s | %10s | %10s | %10s | %10s | %10s | %10s | %12s | %10s | %10s | %10s | %10s\n",
+        "iter.",
+        "objective",
+        "res_eq",
+        "res_ineq",
+        "res_stat",
+        "res_comp",
+        "alpha",
+        "step_norm",
+        "LM_reg.",
+        "funnel width",
+        "penalty",
+        "qp_status",
+        "qp_iter",
+        "iter. type");
+    }
+    else
+    {
+        printf("%6s | %10s | %10s | %10s | %10s | %10s | %10s | %10s | %10s\n",
+        "iter.",
+        "res_eq",
+        "res_ineq",
+        "res_stat",
+        "res_comp",
+        "alpha",
+        "LM_reg.",
+        "qp_status",
+        "qp_iter");
+    }
 }
 
-static void print_iteration(double obj,
-                     int iter_count,
-                     double infeas_eq,
-                     double infeas_ineq,
-                     double stationarity,
-                     double complementarity,
-                     double alpha,
-                     double step_norm,
-                     double reg_param,
-                     double funnel_width,
-                     double penalty_parameter,
-                     int qp_status,
-                     int qp_iter,
-                     char iter_type)
+static void print_iteration(ocp_nlp_opts* opts,
+                    double obj,
+                    int iter_count,
+                    double infeas_eq,
+                    double infeas_ineq,
+                    double stationarity,
+                    double complementarity,
+                    double alpha,
+                    double step_norm,
+                    double reg_param,
+                    double funnel_width,
+                    double penalty_parameter,
+                    int qp_status,
+                    int qp_iter,
+                    char iter_type)
 {
-    if ((iter_count % 10 == 0) | (iter_count == -1)){
-        print_iteration_header();
+    if ((iter_count % 10 == 0)){
+        print_iteration_header(opts);
     }
-    printf("%6i | %11.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %12.4e | %10.4e | %10i | %10i | %10c\n",
-    iter_count,
-    obj,
-    infeas_eq,
-    infeas_ineq,
-    stationarity,
-    complementarity,
-    alpha,
-    step_norm,
-    reg_param,
-    funnel_width,
-    penalty_parameter,
-    qp_status,
-    qp_iter,
-    iter_type);
+    if (opts->globalization == FUNNEL_METHOD)
+    {
+        printf("%6i | %11.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %12.4e | %10.4e | %10i | %10i | %10c\n",
+        iter_count,
+        obj,
+        infeas_eq,
+        infeas_ineq,
+        stationarity,
+        complementarity,
+        alpha,
+        step_norm,
+        reg_param,
+        funnel_width,
+        penalty_parameter,
+        qp_status,
+        qp_iter,
+        iter_type);
+    }
+    else
+    {
+        printf("%6i | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10i | %10i\n",
+        iter_count,
+        infeas_eq,
+        infeas_ineq,
+        stationarity,
+        complementarity,
+        alpha,
+        reg_param,
+        qp_status,
+        qp_iter);
+    }
 }
 
 /************************************************
@@ -1383,7 +1416,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // Output
         if (nlp_opts->print_level > 0)
         {
-            print_iteration(nlp_mem->cost_value, sqp_iter, nlp_res->inf_norm_res_eq,
+            print_iteration(nlp_opts, nlp_mem->cost_value, sqp_iter, nlp_res->inf_norm_res_eq,
                             nlp_res->inf_norm_res_ineq, nlp_res->inf_norm_res_stat,
                             nlp_res->inf_norm_res_comp, mem->alpha, mem->step_norm,
                             reg_param_memory, funnel_width_memory, funnel_penalty_param_memory, qp_status,

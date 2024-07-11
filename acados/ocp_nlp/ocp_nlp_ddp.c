@@ -587,7 +587,7 @@ static void print_iteration(double obj,
                      int qp_status,
                      int qp_iter)
 {
-    if ((iter_count % 10 == 0) | (iter_count == -1)){
+    if ((iter_count % 10 == 0)){
         print_iteration_header();
     }
     printf("%6i | %11.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10i | %10i\n",
