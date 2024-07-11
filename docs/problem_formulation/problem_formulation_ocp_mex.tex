@@ -148,7 +148,7 @@ with
 \item slacks for terminal constraints $ s\Lower\terminal(t) = (s\lowerbx\terminal, s\lowerg\terminal, s\lowerh\terminal) \in \R^{\ns\terminal} $ and $ s\upper\terminal(t) = (s\upperbx\terminal, s\upperg\terminal, s\upperh\terminal) \in \R^{\ns\terminal} $
 \end{itemize}
 
-While the user specifies the OCP in continuous time, the problem is internally discretize using the \textbf{multiple shooting} approach and a piecewise constant control parametrization.
+While the user specifies the OCP in continuous time, the problem is internally discretized using the \textbf{multiple shooting} approach and a piecewise constant control parametrization.
 In particular, the algebraic variables returned by \acados{} are associated with the beginning of a shooting interval.
 Thus, there are no algebraic variables available at the terminal node.
 
