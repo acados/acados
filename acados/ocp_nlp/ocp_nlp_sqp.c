@@ -1232,12 +1232,14 @@ double get_l1_infeasibility(void *config_, void *dims_, void *mem_)
     int N = dims->N;
     int *nx = dims->nx;
     int *ni = dims->ni;
+    int i;
+    int j;
 
     // compute current l1 infeasibility
     double tmp;
     struct blasfeo_dvec *tmp_fun_vec;
     double dyn_l1_infeasibility = 0.0;
-    for(int i=0; i<N; i++)
+    for(i=0; i<N; i++)
     {
         tmp_fun_vec = config->dynamics[i]->memory_get_fun_ptr(nlp_mem->dynamics[i]);
         for(int j=0; j<nx[i+1]; j++)
@@ -1247,11 +1249,11 @@ double get_l1_infeasibility(void *config_, void *dims_, void *mem_)
     }
 
     double constraint_l1_infeasibility = 0.0;
-    for(int i=0; i<=N; i++)
+    for(i=0; i<=N; i++)
     {
         tmp_fun_vec = config->constraints[i]->memory_get_fun_ptr(nlp_mem->constraints[i]);
         // tmp_fun_vec = out->t+i;
-        for (int j=0; j<2*ni[i]; j++)
+        for (j=0; j<2*ni[i]; j++)
         {
             tmp = BLASFEO_DVECEL(tmp_fun_vec, j);
             if (tmp > 0.0)
