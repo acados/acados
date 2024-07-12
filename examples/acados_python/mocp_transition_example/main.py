@@ -40,7 +40,7 @@ latexify_plot()
 X0 = np.array([2.0, 0.0])
 PENALTY_X = 1e0
 T_HORIZON = 1.0
-N_HORIZON = 20
+N_HORIZON = 25
 
 L2_COST_V = 1e-1
 L2_COST_P = 1e0
@@ -171,9 +171,7 @@ def formulate_single_integrator_ocp() -> AcadosOcp:
     return ocp
 
 
-def main_multiphase_ocp():
-
-    N_list = [10, 1, 15]
+def create_multiphase_ocp_solver(N_list, t_horizon_1, name=None):
     ocp = AcadosMultiphaseOcp(N_list=N_list)
 
     phase_0 = formulate_double_integrator_ocp()
@@ -199,11 +197,18 @@ def main_multiphase_ocp():
 
     # the time step for the transition stage is set to 1 to correct for the scaling of the stage cost with the time step
     ocp.solver_options.tf = T_HORIZON + 1.0
-    T_HORIZON_1 = 0.4 * T_HORIZON
-    T_HORIZON_2 = T_HORIZON - T_HORIZON_1
-    ocp.solver_options.time_steps = np.array(N_list[0] * [T_HORIZON_1/N_list[0]] + [1.0] + N_list[2] * [T_HORIZON_2/N_list[2]] )
+    t_horizon_2 = T_HORIZON - t_horizon_1
+    ocp.solver_options.time_steps = np.array(N_list[0] * [t_horizon_1/N_list[0]] + [1.0] + N_list[2] * [t_horizon_2/N_list[2]] )
 
+    if name is not None:
+        ocp.name = name
     acados_ocp_solver = AcadosOcpSolver(ocp, verbose=False)
+    return acados_ocp_solver, ocp
+
+
+def main_multiphase_ocp():
+    N_list = [10, 1, 15]
+    acados_ocp_solver, ocp = create_multiphase_ocp_solver(N_list, 0.4*T_HORIZON)
     acados_ocp_solver.solve_for_x0(X0)
 
     n_phases = len(N_list)
@@ -222,7 +227,7 @@ def main_multiphase_ocp():
     # plot solution
     t_grid_2_plot = t_grid_phases[2] - 1.0
 
-    fig, ax = plt.subplots(3, 1, sharex=True, figsize=(9, 5.2))
+    fig, ax = plt.subplots(3, 1, sharex=True, figsize=(7, 5.2))
 
     p_traj_0 = [x[0] for x in x_traj_phases[0]]
     ax[0].plot(t_grid_phases[0], p_traj_0, color='C0', label='phase 1')
@@ -286,7 +291,62 @@ def main_standard_ocp():
     ax[-1].set_xlabel('$t$ [s]')
 
 
+def cost_to_go_experiment():
+    solver_list = []
+    solver_labels = []
+
+    ocp = formulate_double_integrator_ocp()
+    ocp.solver_options.tf = T_HORIZON
+    ocp.solver_options.nlp_solver_type = 'SQP'
+
+    standard_ocp_solver = AcadosOcpSolver(ocp, verbose=False)
+    solver_list.append(standard_ocp_solver)
+    solver_labels.append('standard OCP')
+
+    N_list = [15, 1, 10]
+    t_horizon_1 = 0.6 * T_HORIZON
+    mocp_solver, ocp = create_multiphase_ocp_solver(N_list, t_horizon_1, name='mocp2')
+    solver_list.append(mocp_solver)
+    solver_labels.append(f'MOCP $N_1={N_list[0]}$ $T_1={t_horizon_1}$')
+
+    N_list = [10, 1, 15]
+    t_horizon_1 = 0.4 * T_HORIZON
+    mocp_solver, ocp = create_multiphase_ocp_solver(N_list, t_horizon_1, name='mocp')
+    solver_list.append(mocp_solver)
+    solver_labels.append(f'MOCP $N_1={N_list[0]}$ $T_1={t_horizon_1}$')
+
+    N_list = [5, 1, 20]
+    t_horizon_1 = 0.2 * T_HORIZON
+    mocp_solver, ocp = create_multiphase_ocp_solver(N_list, t_horizon_1, name='mocp1')
+    solver_list.append(mocp_solver)
+    solver_labels.append(f'MOCP $N_1={N_list[0]}$ $T_1={t_horizon_1}$')
+
+    n_plot_points = 100
+    p0_vals = np.linspace(0, 20.0, n_plot_points)
+    cost_vals = np.zeros((len(solver_list), n_plot_points))
+    for j, p0 in enumerate(p0_vals):
+        x0 = np.array([p0, 0.])
+
+        for i, solver in enumerate(solver_list):
+            solver.solve_for_x0(x0)
+            cost_vals[i, j] = solver.get_cost()
+
+    # plot cost values
+    fig, ax = plt.subplots(1, 1, figsize=(6, 5.2))
+    linestyles = ['-', '-.',  '-.',  '-.']
+    for i, label in enumerate(solver_labels):
+        ax.plot(p0_vals, cost_vals[i, :], label=label, color=f'C{i+2}', linestyle=linestyles[i])
+    ax.set_xlabel('$p_0$')
+    ax.set_ylabel('cost-to-go $V([p_0, 0])$')
+    ax.grid()
+    ax.set_xlim([p0_vals[0], p0_vals[-1]])
+    ax.legend()
+    ax.set_ylim([-10, 300])
+    plt.savefig('cost_to_go.pdf', bbox_inches="tight", transparent=True, pad_inches=0.05)
+
+
 if __name__ == "__main__":
     main_multiphase_ocp()
     main_standard_ocp()
+    # cost_to_go_experiment()
     plt.show()
