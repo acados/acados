@@ -354,6 +354,12 @@ sfun_input_names = [sfun_input_names; 'u_init [{{ dims.nu * (dims.N) }}]'];
 i_in = i_in + 1;
 {%- endif %}
 
+{%- if simulink_opts.inputs.pi_init %}  {#- pi_init #}
+input_note = strcat(input_note, num2str(i_in), ') initialization of pi for shooting nodes 0 to N-1, size [{{ dims.nx * (dims.N) }}]\n ');
+sfun_input_names = [sfun_input_names; 'pi_init [{{ dims.nx * (dims.N) }}]'];
+i_in = i_in + 1;
+{%- endif %}
+
 {%- if simulink_opts.inputs.rti_phase %}  {#- rti_phase #}
 input_note = strcat(input_note, num2str(i_in), ') rti_phase, size [1]\n ');
 sfun_input_names = [sfun_input_names; 'rti_phase [1]'];
