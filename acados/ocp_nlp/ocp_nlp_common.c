@@ -2194,8 +2194,7 @@ void ocp_nlp_add_levenberg_marquardt_term(ocp_nlp_config *config, ocp_nlp_dims *
             if (i < N)
             {
                 // Levenberg Marquardt term: Ts[i] * levenberg_marquardt * eye()
-                // blasfeo_ddiare(nu[i] + nx[i], in->Ts[i] * opts->levenberg_marquardt,
-                blasfeo_ddiare(nu[i] + nx[i], opts->levenberg_marquardt,
+                blasfeo_ddiare(nu[i] + nx[i], in->Ts[i] * opts->levenberg_marquardt,
                                 mem->qp_in->RSQrq+i, 0, 0);
             }
             else
