@@ -38,10 +38,18 @@ import scipy.linalg
 from utils import plot_pendulum
 from casadi import vertcat
 
+RESET_SCENARIOS = ["NaNs", "infeasible_QP"]
 
 def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_num_hess=0,
-         integrator_type='ERK'):
+         integrator_type='ERK', reset_scenarios=RESET_SCENARIOS):
     print(f"using: cost_type {cost_type}, integrator_type {integrator_type}")
+
+    for reset_scenario in reset_scenarios:
+        if reset_scenario not in RESET_SCENARIOS:
+            raise Exception(f"Unknown reset_scenario: {reset_scenario}. Possible values are {RESET_SCENARIOS}")
+    if len(reset_scenarios) == 0:
+        raise Exception("No reset scenarios given")
+
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
@@ -130,54 +138,62 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
 
     ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
 
-    # set NaNs as input to test reset() -> NOT RECOMMENDED!!!
     # ocp_solver.options_set('print_level', 2)
-    for i in range(N):
-        ocp_solver.set(i, 'x', np.nan * np.ones((nx,)))
-        ocp_solver.set(i, 'u', np.nan * np.ones((nu,)))
-    status = ocp_solver.solve()
-    ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
-    if status == 0:
-        raise Exception(f'acados returned status {status}, although NaNs were given.')
-    else:
-        print(f'acados returned status {status}, which is expected, since NaNs were given.')
-
-    # RESET
-    ocp_solver.reset()
-    for i in range(N):
-        ocp_solver.set(i, 'x', x0)
-
-    if cost_type == 'EXTERNAL':
-        # NOTE: hessian is wrt [u,x]
-        if ext_cost_use_num_hess:
+    for reset_scenario in RESET_SCENARIOS:
+        if reset_scenario == "NaNs":
+            # set NaNs as input to test reset() -> NOT RECOMMENDED!!!
             for i in range(N):
-                ocp_solver.cost_set(i, "ext_cost_num_hess", np.diag([0.04, 4000, 4000, 0.04, 0.04, ]))
-            ocp_solver.cost_set(N, "ext_cost_num_hess", np.diag([4000, 4000, 0.04, 0.04, ]))
+                ocp_solver.set(i, 'x', np.nan * np.ones((nx,)))
+                ocp_solver.set(i, 'u', np.nan * np.ones((nu,)))
+        elif reset_scenario == "infeasible_QP":
+            # set bounds such that QP is infeasible
+            ocp_solver.constraints_set(0, 'lbu', 1)
+            ocp_solver.constraints_set(0, 'ubu', -1)
 
-    simX = np.zeros((N+1, nx))
-    simU = np.zeros((N, nu))
+        status = ocp_solver.solve()
+        ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
+        if status == 0:
+            raise Exception(f'acados returned status {status}, although NaNs were given.')
+        else:
+            print(f'acados returned status {status}, which is expected, since formulation is subject to {reset_scenario}.')
 
-    status = ocp_solver.solve()
+        # RESET
+        ocp_solver.reset()
+        if reset_scenario == "infeasible_QP":
+            ocp_solver.constraints_set(0, 'lbu', -Fmax)
+            ocp_solver.constraints_set(0, 'ubu', Fmax)
 
-    ocp_solver.print_statistics()
-    if status != 0:
-        raise Exception(f'acados returned status {status} for cost_type {cost_type}\n'
-                        f'integrator_type = {integrator_type}.')
+        if cost_type == 'EXTERNAL':
+            # NOTE: hessian is wrt [u,x]
+            if ext_cost_use_num_hess:
+                for i in range(N):
+                    ocp_solver.cost_set(i, "ext_cost_num_hess", np.diag([0.04, 4000, 4000, 0.04, 0.04, ]))
+                ocp_solver.cost_set(N, "ext_cost_num_hess", np.diag([4000, 4000, 0.04, 0.04, ]))
 
-    # get solution
-    for i in range(N):
-        simX[i,:] = ocp_solver.get(i, "x")
-        simU[i,:] = ocp_solver.get(i, "u")
-    simX[N,:] = ocp_solver.get(N, "x")
+        simX = np.zeros((N+1, nx))
+        simU = np.zeros((N, nu))
 
+        status = ocp_solver.solve()
+
+        ocp_solver.print_statistics()
+        if status != 0:
+            raise Exception(f'acados returned status {status} for cost_type {cost_type}\n'
+                            f'integrator_type = {integrator_type} after testing reset with {reset_scenario}.')
+
+        # get solution
+        for i in range(N):
+            simX[i,:] = ocp_solver.get(i, "x")
+            simU[i,:] = ocp_solver.get(i, "u")
+        simX[N,:] = ocp_solver.get(N, "x")
 
 if __name__ == '__main__':
-    # for integrator_type in ['ERK', 'IRK']:
-    # ['LIFTED_IRK']
     for integrator_type in ['GNSF', 'ERK', 'IRK']:
         for cost_type in ['EXTERNAL', 'LS', 'NONLINEAR_LS']:
-            # for cost_type in ['EXTERNAL', 'LS', 'NONLINEAR_LS']:
             hessian_approximation = 'GAUSS_NEWTON' # 'GAUSS_NEWTON, EXACT
             ext_cost_use_num_hess = 1
             main(cost_type=cost_type, hessian_approximation=hessian_approximation,
-                ext_cost_use_num_hess=ext_cost_use_num_hess, integrator_type=integrator_type)
+                ext_cost_use_num_hess=ext_cost_use_num_hess, integrator_type=integrator_type,
+                reset_scenarios=RESET_SCENARIOS)
+
+    # main(cost_type='EXTERNAL', hessian_approximation='GAUSS_NEWTON',
+            # ext_cost_use_num_hess=0, integrator_type="ERK", reset_scenarios=["infeasible_QP"])
