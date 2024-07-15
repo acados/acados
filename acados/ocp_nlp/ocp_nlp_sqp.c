@@ -896,15 +896,15 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         if (nlp_opts->globalization_use_SOC && nlp_opts->globalization == MERIT_BACKTRACKING)
         {
             do_line_search = ocp_nlp_soc_line_search(config, dims, nlp_in, nlp_out, opts, mem, work, sqp_iter);
-        }
-        if (mem->status == ACADOS_QP_FAILURE)
-        {
+            if (mem->status == ACADOS_QP_FAILURE)
+            {
 #if defined(ACADOS_WITH_OPENMP)
-            // restore number of threads
-            omp_set_num_threads(num_threads_bkp);
+                // restore number of threads
+                omp_set_num_threads(num_threads_bkp);
 #endif
-            mem->time_tot = acados_toc(&timer0);
-            return mem->status;
+                mem->time_tot = acados_toc(&timer0);
+                return mem->status;
+            }
         }
 
         if (do_line_search)
