@@ -644,8 +644,7 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
         // blasfeo_print_exp_dvec(2*nb[ii]+2*ng[ii], qp_in->d+ii, 0);
     }
 
-    // if (nlp_opts->print_level > sqp_iter + 1)
-    if (nlp_opts->print_level > 5)
+    if (nlp_opts->print_level > sqp_iter + 1)
     {
         printf("\n\nSQP: SOC ocp_qp_in at iteration %d\n", sqp_iter);
         print_ocp_qp_in(qp_in);
@@ -685,8 +684,7 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
             ocp_qp_res_compute_nrm_inf(work->qp_res, mem->stat+(mem->stat_n*(sqp_iter+1)+7));
     }
 
-    // if (nlp_opts->print_level > sqp_iter + 1)
-    if (nlp_opts->print_level > 5)
+    if (nlp_opts->print_level > sqp_iter + 1)
     {
         printf("\n\nSQP: SOC ocp_qp_out at iteration %d\n", sqp_iter);
         print_ocp_qp_out(qp_out);
@@ -706,8 +704,7 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
         if (nlp_opts->print_level > 1)
         {
             printf("\nFailed to solve the following QP:\n");
-            // if (nlp_opts->print_level > sqp_iter + 1)
-            if (nlp_opts->print_level > 5)
+            if (nlp_opts->print_level > sqp_iter + 1)
                 print_ocp_qp_in(qp_in);
         }
 
@@ -1453,8 +1450,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
         // Show input to QP
         // TODO: Should this really be > sqp_iter + 1? Or only > 1?
-        // if (nlp_opts->print_level > sqp_iter + 1)
-        if (nlp_opts->print_level > 5)
+        if (nlp_opts->print_level > sqp_iter + 1)
         {
             printf("\n\nSQP: ocp_qp_in at iteration %d\n", sqp_iter);
             print_ocp_qp_in(qp_in);
@@ -1487,8 +1483,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                                         "warm_start", &opts->qp_warm_start);
         }
 
-        // if (nlp_opts->print_level > sqp_iter + 1)
-        if (nlp_opts->print_level > 5)
+        if (nlp_opts->print_level > sqp_iter + 1)
         {
             printf("\n\nSQP: ocp_qp_out at iteration %d\n", sqp_iter);
             print_ocp_qp_out(qp_out);
@@ -1538,7 +1533,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // restore number of threads
             omp_set_num_threads(num_threads_bkp);
 #endif
-            if (nlp_opts->print_level > 5)
+            if (nlp_opts->print_level > 1)
             {
                 printf("\n Failed to solve the following QP:\n");
                 if (nlp_opts->print_level)
