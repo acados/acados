@@ -229,7 +229,7 @@ def solve_maratos_problem_with_setting(setting):
                     raise Exception(f"Expected 12 SQP iterations when using globalized SQP with SOC on Maratos problem, got {iter}")
         elif globalization == 'FUNNEL_METHOD':
             if iter > 12:
-                    raise Exception(f"Expected less than 15 SQP iterations when using Funnel Method SQP, got {iter}")
+                    raise Exception(f"Expected not more than 12 SQP iterations when using Funnel Method SQP, got {iter}")
 
     except Exception as inst:
         if FOR_LOOPING and globalization == "MERIT_BACKTRACKING":
