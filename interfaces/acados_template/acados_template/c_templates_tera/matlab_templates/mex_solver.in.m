@@ -217,6 +217,10 @@ classdef {{ model.name }}_mex_solver < handle
             end
         end
 
+        function [] = reset(obj)
+            acados_mex_reset_{{ model.name }}(obj.C_ocp);
+        end
+
 
         % print
         function print(varargin)
