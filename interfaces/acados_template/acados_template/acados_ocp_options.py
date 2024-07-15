@@ -82,7 +82,7 @@ class AcadosOcpOptions:
         self.__exact_hess_cost = 1
         self.__exact_hess_dyn = 1
         self.__exact_hess_constr = 1
-        self.__eval_data_after_last_iteration = True
+        self.__eval_residual_at_max_iter = True
         self.__fixed_hess = 0
         self.__funnel_initial_increase_factor = 15.0
         self.__funnel_initial_upper_bound = 1.0
@@ -633,7 +633,7 @@ class AcadosOcpOptions:
         return self.__funnel_fraction_switching_condition
     
     @property
-    def eval_data_after_last_iteration(self):
+    def eval_residual_at_max_iter(self):
         """
         Determines, if the problem data is again evaluated after the last iteration 
         has been performed.
@@ -642,7 +642,7 @@ class AcadosOcpOptions:
         If no, after the last iteration, the solver will terminate with max iterations
         reached, and convergence will not be checked at the last iterate.
         """
-        return self.__eval_data_after_last_iteration
+        return self.__eval_residual_at_max_iter
 
     @property
     def funnel_initial_penalty_parameter(self):
@@ -728,6 +728,9 @@ class AcadosOcpOptions:
         Verbosity of printing.
         Type: int >= 0
         Default: 0
+        Level 1: print iteration log
+        Level 2: print high level debug output in funnel globalization
+        Level 3: print more detailed debug output in funnel, including objective values and infeasibilities
         """
         return self.__print_level
 
@@ -1042,12 +1045,12 @@ class AcadosOcpOptions:
         else:
             raise Exception(f'Invalid value for funnel_initial_penalty_parameter. Should be in [0,1], got {funnel_initial_penalty_parameter}')
 
-    @eval_data_after_last_iteration.setter
-    def eval_data_after_last_iteration(self, eval_data_after_last_iteration):
-        if isinstance(eval_data_after_last_iteration, bool):
-            self.__eval_data_after_last_iteration = eval_data_after_last_iteration
+    @eval_residual_at_max_iter.setter
+    def eval_residual_at_max_iter(self, eval_residual_at_max_iter):
+        if isinstance(eval_residual_at_max_iter, bool):
+            self.__eval_residual_at_max_iter = eval_residual_at_max_iter
         else:
-            raise Exception(f'Invalid datatype for eval_data_after_last_iteration. Should be bool, got {type(eval_data_after_last_iteration)}')
+            raise Exception(f'Invalid datatype for eval_residual_at_max_iter. Should be bool, got {type(eval_residual_at_max_iter)}')
 
     @eps_sufficient_descent.setter
     def eps_sufficient_descent(self, eps_sufficient_descent):
