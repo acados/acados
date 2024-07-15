@@ -92,7 +92,7 @@ classdef ocp_nlp_solver_options_json < handle
         adaptive_levenberg_marquardt_lam
         adaptive_levenberg_marquardt_mu_min
         adaptive_levenberg_marquardt_mu0
-        eval_data_after_last_iteration
+        eval_residual_at_max_iter
 
     end
     methods
@@ -148,7 +148,7 @@ classdef ocp_nlp_solver_options_json < handle
             obj.adaptive_levenberg_marquardt_lam = 5.0;
             obj.adaptive_levenberg_marquardt_mu_min = 1e-16;
             obj.adaptive_levenberg_marquardt_mu0 = 1e-3;
-            obj.eval_data_after_last_iteration = 1;
+            obj.eval_residual_at_max_iter = 1;
 
         end
         function s = struct(self)
