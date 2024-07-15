@@ -123,7 +123,7 @@ void ocp_nlp_ddp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->qp_warm_start = 0;
     opts->warm_start_first_qp = false;
     opts->rti_phase = 0;
-    opts->eval_data_after_last_iteration = true;
+    opts->eval_residual_at_max_iter = true;
 
     opts->linesearch_eta = 1e-6;
     opts->linesearch_minimum_step_size = 1e-17;
@@ -246,10 +246,10 @@ void ocp_nlp_ddp_opts_set(void *config_, void *opts_, const char *field, void* v
             }
             opts->rti_phase = *rti_phase;
         }
-        else if (!strcmp(field, "eval_data_after_last_iteration"))
+        else if (!strcmp(field, "eval_residual_at_max_iter"))
         {
-            bool* eval_data_after_last_iteration = (bool *) value;
-            opts->eval_data_after_last_iteration = *eval_data_after_last_iteration;
+            bool* eval_residual_at_max_iter = (bool *) value;
+            opts->eval_residual_at_max_iter = *eval_residual_at_max_iter;
         }
         else
         {
@@ -741,9 +741,9 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     for (; ddp_iter <= opts->max_iter; ddp_iter++)
     {
         // We always evaluate the residuals until the last iteration
-        // If the option "eval_data_after_last_iteration" is set, then we will also
+        // If the option "eval_residual_at_max_iter" is set, then we will also
         // evaluate the data after the last iteration was performed
-        if (ddp_iter != opts->max_iter || opts->eval_data_after_last_iteration)
+        if (ddp_iter != opts->max_iter || opts->eval_residual_at_max_iter)
         {
             /* Prepare the QP data */
             // linearize NLP, update QP matrices, and add Levenberg-Marquardt term
