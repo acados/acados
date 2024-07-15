@@ -84,8 +84,8 @@ class AcadosOcpOptions:
         self.__exact_hess_constr = 1
         self.__eval_residual_at_max_iter = True
         self.__fixed_hess = 0
-        self.__funnel_initial_increase_factor = 15.0
-        self.__funnel_initial_upper_bound = 1.0
+        self.__funnel_initialization_increase_factor = 15.0
+        self.__funnel_initialization_upper_bound = 1.0
         self.__funnel_sufficient_decrease_factor = 0.9
         self.__funnel_kappa = 0.9
         self.__funnel_fraction_switching_condition = 1e-3
@@ -596,20 +596,20 @@ class AcadosOcpOptions:
         return self.__full_step_dual
     
     @property
-    def funnel_initial_increase_factor(self):
+    def funnel_initialization_increase_factor(self):
         """
         Increase factor for initialization of funnel width. 
-        Initial funnel is max(funnel_initial_upper_bound, funnel_initial_increase_factor * initial_infeasibility)
+        Initial funnel is max(funnel_initialization_upper_bound, funnel_initialization_increase_factor * initial_infeasibility)
         """
-        return self.__funnel_initial_increase_factor
+        return self.__funnel_initialization_increase_factor
     
     @property
-    def funnel_initial_upper_bound(self):
+    def funnel_initialization_upper_bound(self):
         """
         Initial upper bound for funnel width. 
-        Initial funnel is max(funnel_initial_upper_bound, funnel_initial_increase_factor * initial_infeasibility)
+        Initial funnel is max(funnel_initialization_upper_bound, funnel_initialization_increase_factor * initial_infeasibility)
         """
-        return self.__funnel_initial_upper_bound
+        return self.__funnel_initialization_upper_bound
     
     @property
     def funnel_sufficient_decrease_factor(self):
@@ -1003,19 +1003,19 @@ class AcadosOcpOptions:
         else:
             raise Exception(f'Invalid value for full_step_dual. Possible values are 0, 1, got {full_step_dual}')
 
-    @funnel_initial_increase_factor.setter
-    def funnel_initial_increase_factor(self, funnel_initial_increase_factor):
-        if funnel_initial_increase_factor > 1.0:
-            self.__funnel_initial_increase_factor = funnel_initial_increase_factor
+    @funnel_initialization_increase_factor.setter
+    def funnel_initialization_increase_factor(self, funnel_initialization_increase_factor):
+        if funnel_initialization_increase_factor > 1.0:
+            self.__funnel_initialization_increase_factor = funnel_initialization_increase_factor
         else:
-            raise Exception(f'Invalid value for funnel_initial_increase_factor. Should be > 1, got {funnel_initial_increase_factor}')
+            raise Exception(f'Invalid value for funnel_initialization_increase_factor. Should be > 1, got {funnel_initialization_increase_factor}')
     
-    @funnel_initial_upper_bound.setter
-    def funnel_initial_upper_bound(self, funnel_initial_upper_bound):
-        if funnel_initial_upper_bound > 0.0:
-            self.__funnel_initial_upper_bound = funnel_initial_upper_bound
+    @funnel_initialization_upper_bound.setter
+    def funnel_initialization_upper_bound(self, funnel_initialization_upper_bound):
+        if funnel_initialization_upper_bound > 0.0:
+            self.__funnel_initialization_upper_bound = funnel_initialization_upper_bound
         else:
-             raise Exception(f'Invalid value for funnel_initial_upper_bound. Should be > 0, got {funnel_initial_upper_bound}')
+             raise Exception(f'Invalid value for funnel_initialization_upper_bound. Should be > 0, got {funnel_initialization_upper_bound}')
 
     @funnel_sufficient_decrease_factor.setter
     def funnel_sufficient_decrease_factor(self, funnel_sufficient_decrease_factor):

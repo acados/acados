@@ -2089,11 +2089,11 @@ void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* 
 {%- elif solver_options.globalization == "FUNNEL_METHOD" %}
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization", "funnel_method");
 
-    double funnel_initial_increase_factor = {{ solver_options.funnel_initial_increase_factor }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "funnel_initial_increase_factor", &funnel_initial_increase_factor);
+    double funnel_initialization_increase_factor = {{ solver_options.funnel_initialization_increase_factor }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "funnel_initialization_increase_factor", &funnel_initialization_increase_factor);
 
-    double funnel_initial_upper_bound = {{ solver_options.funnel_initial_upper_bound }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "funnel_initial_upper_bound", &funnel_initial_upper_bound);
+    double funnel_initialization_upper_bound = {{ solver_options.funnel_initialization_upper_bound }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "funnel_initialization_upper_bound", &funnel_initialization_upper_bound);
 
     double funnel_sufficient_decrease_factor = {{ solver_options.funnel_sufficient_decrease_factor }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "funnel_sufficient_decrease_factor", &funnel_sufficient_decrease_factor);

@@ -76,8 +76,8 @@ typedef struct
     double linesearch_step_size_reduction_factor;
 
     // funnel
-    double funnel_initial_increase_factor; // for initialization of initial funnel width
-    double funnel_initial_upper_bound; // for initialization of initial funnel width
+    double funnel_initialization_increase_factor; // for multiplication with initial infeasibility
+    double funnel_initialization_upper_bound; // for initialization of initial funnel width
     double funnel_sufficient_decrease_factor; // multiplication factor for funnel suff. decrease factor
     double funnel_kappa; // parameter for reduction of funnel
     double funnel_fraction_switching_condition; // parameter in switching condition

@@ -128,8 +128,8 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->eval_residual_at_max_iter = true;
 
     // funnel method opts
-    opts->funnel_initial_increase_factor = 15.0;
-    opts->funnel_initial_upper_bound = 1.0;
+    opts->funnel_initialization_increase_factor = 15.0;
+    opts->funnel_initialization_upper_bound = 1.0;
     opts->funnel_sufficient_decrease_factor = 0.9;
     opts->funnel_kappa = 0.9;
     opts->funnel_fraction_switching_condition = 1e-3;
@@ -258,25 +258,25 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
             bool* eval_residual_at_max_iter = (bool *) value;
             opts->eval_residual_at_max_iter = *eval_residual_at_max_iter;
         }
-        else if (!strcmp(field, "funnel_initial_increase_factor"))
+        else if (!strcmp(field, "funnel_initialization_increase_factor"))
         {
-            double* funnel_initial_increase_factor = (double *) value;
-            if (*funnel_initial_increase_factor <= 1.0)
+            double* funnel_initialization_increase_factor = (double *) value;
+            if (*funnel_initialization_increase_factor <= 1.0)
             {
-                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_initial_increase_factor field, need double > 1, got %f.", *funnel_initial_increase_factor);
+                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_initialization_increase_factor field, need double > 1, got %f.", *funnel_initialization_increase_factor);
                 exit(1);
             }
-            opts->funnel_initial_increase_factor = *funnel_initial_increase_factor;
+            opts->funnel_initialization_increase_factor = *funnel_initialization_increase_factor;
         }
-        else if (!strcmp(field, "funnel_initial_upper_bound"))
+        else if (!strcmp(field, "funnel_initialization_upper_bound"))
         {
-            double* funnel_initial_upper_bound = (double *) value;
-            if (*funnel_initial_upper_bound <= 0.0)
+            double* funnel_initialization_upper_bound = (double *) value;
+            if (*funnel_initialization_upper_bound <= 0.0)
             {
-                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_initial_upper_bound field, need double > 0, got %f.", *funnel_initial_upper_bound);
+                printf("\nerror: ocp_nlp_sqp_opts_set: invalid value for funnel_initialization_upper_bound field, need double > 0, got %f.", *funnel_initialization_upper_bound);
                 exit(1);
             }
-            opts->funnel_initial_upper_bound = *funnel_initial_upper_bound;
+            opts->funnel_initialization_upper_bound = *funnel_initialization_upper_bound;
         }
         else if (!strcmp(field, "funnel_sufficient_decrease_factor"))
         {
@@ -907,8 +907,8 @@ static void debug_output_double(ocp_nlp_opts *opts, char* message, double value,
 
 static void initialize_funnel_width(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts, double initial_infeasibility)
 {
-    mem->funnel_width = fmax(opts->funnel_initial_upper_bound,
-                            opts->funnel_initial_increase_factor*initial_infeasibility);
+    mem->funnel_width = fmax(opts->funnel_initialization_upper_bound,
+                            opts->funnel_initialization_increase_factor*initial_infeasibility);
 }
 
 static void initialize_funnel_penalty_parameter(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts)
