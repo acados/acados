@@ -125,7 +125,7 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->qp_warm_start = 0;
     opts->warm_start_first_qp = false;
     opts->rti_phase = 0;
-    opts->eval_data_after_last_iteration = true;
+    opts->eval_residual_at_max_iter = true;
 
     // funnel method opts
     opts->linesearch_eta = 1e-6;
@@ -257,10 +257,10 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
             }
             opts->rti_phase = *rti_phase;
         }
-        else if (!strcmp(field, "eval_data_after_last_iteration"))
+        else if (!strcmp(field, "eval_residual_at_max_iter"))
         {
-            bool* eval_data_after_last_iteration = (bool *) value;
-            opts->eval_data_after_last_iteration = *eval_data_after_last_iteration;
+            bool* eval_residual_at_max_iter = (bool *) value;
+            opts->eval_residual_at_max_iter = *eval_residual_at_max_iter;
         }
         else if (!strcmp(field, "funnel_initial_increase_factor"))
         {
@@ -912,7 +912,7 @@ static void debug_output_double(ocp_nlp_opts *opts, char* message, double value,
     }
 }
 
-static void initialize_funnel(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts, double initial_infeasibility)
+static void initialize_funnel_width(ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts, double initial_infeasibility)
 {
     mem->funnel_width = fmax(opts->funnel_initial_upper_bound,
                             opts->funnel_initial_increase_factor*initial_infeasibility);
@@ -1360,9 +1360,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     for (; sqp_iter <= opts->max_iter; sqp_iter++) // <= needed such that after last iteration KKT residuals are checked before max_iter is thrown.
     {
         // We always evaluate the residuals until the last iteration
-        // If the option "eval_data_after_last_iteration" is set, then we will also
+        // If the option "eval_residual_at_max_iter" is set, then we will also
         // evaluate the data after the last iteration was performed
-        if (sqp_iter != opts->max_iter || opts->eval_data_after_last_iteration)
+        if (sqp_iter != opts->max_iter || opts->eval_residual_at_max_iter)
         {
             /* Prepare the QP data */
             // linearize NLP and update QP matrices
@@ -1399,7 +1399,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         // initialize funnel if FUNNEL_METHOD used
         if (sqp_iter == 0 && nlp_opts->globalization == FUNNEL_METHOD){
-            initialize_funnel(mem, opts, mem->l1_infeasibility);
+            initialize_funnel_width(mem, opts, mem->l1_infeasibility);
         }
         funnel_width_memory = mem->funnel_width;
         funnel_penalty_param_memory = mem->funnel_penalty_parameter;
