@@ -145,15 +145,17 @@ def main(cost_type='NONLINEAR_LS', hessian_approximation='EXACT', ext_cost_use_n
             for i in range(N):
                 ocp_solver.set(i, 'x', np.nan * np.ones((nx,)))
                 ocp_solver.set(i, 'u', np.nan * np.ones((nu,)))
+            expected_status = 1
         elif reset_scenario == "infeasible_QP":
             # set bounds such that QP is infeasible
             ocp_solver.constraints_set(0, 'lbu', 1)
             ocp_solver.constraints_set(0, 'ubu', -1)
+            expected_status = 4
 
         status = ocp_solver.solve()
         ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
-        if status == 0:
-            raise Exception(f'acados returned status {status}, although NaNs were given.')
+        if status != expected_status:
+            raise Exception(f'acados returned status {status}, although formulation is subject to {reset_scenario}.')
         else:
             print(f'acados returned status {status}, which is expected, since formulation is subject to {reset_scenario}.')
 
