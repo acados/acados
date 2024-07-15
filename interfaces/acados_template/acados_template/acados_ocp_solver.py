@@ -947,11 +947,12 @@ class AcadosOcpSolver:
         Returns the status of the last solver call.
 
         Status codes:
-        0 - Success
-        1 - Failure
-        2 - Maximum number of iterations reached
-        3 - Minimum step size reached
-        4 - QP solver failed
+        0 - Success (ACADOS_SUCCESS)
+        1 - NaN detected (ACADOS_NAN_DETECTED)
+        2 - Maximum number of iterations reached (ACADOS_MAXITER)
+        3 - Minimum step size reached (ACADOS_MINSTEP)
+        4 - QP solver failed (ACADOS_QP_FAILURE)
+        5 - Solver created (ACADOS_READY)
 
         See `return_values` in https://github.com/acados/acados/blob/master/acados/utils/types.h
         """
