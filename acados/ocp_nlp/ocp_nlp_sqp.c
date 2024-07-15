@@ -761,9 +761,9 @@ static void print_iteration_header(ocp_nlp_opts* opts){
         "res_stat",
         "res_comp",
         "alpha",
-        "LM_reg.",
         "qp_status",
-        "qp_iter");
+        "qp_iter",
+        "LM_reg.");
     }
 }
 
@@ -806,16 +806,16 @@ static void print_iteration(ocp_nlp_opts* opts,
     }
     else
     {
-        printf("%6i | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10i | %10i\n",
+        printf("%6i | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10i | %10i | %10.4e\n",
         iter_count,
         infeas_eq,
         infeas_ineq,
         stationarity,
         complementarity,
         alpha,
-        reg_param,
         qp_status,
-        qp_iter);
+        qp_iter,
+        reg_param);
     }
 }
 
