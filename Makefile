@@ -137,13 +137,13 @@ endif
 ifeq ($(ACADOS_WITH_QORE), 1)
 STATIC_DEPS += qore_static
 CLEAN_DEPS += qore_clean
-LINK_FLAG_QPDUNES = -lqore
+LINK_FLAG_QORE = -lqore
 endif
 ifeq ($(ACADOS_WITH_OSQP), 1)
 STATIC_DEPS += osqp_static
 SHARED_DEPS += osqp_shared
 CLEAN_DEPS += osqp_clean
-LINK_FLAG_QPDUNES = -losqp
+LINK_FLAG_OSQP = -losqp
 endif
 
 ifeq ($(ACADOS_WITH_OPENMP), 1)
