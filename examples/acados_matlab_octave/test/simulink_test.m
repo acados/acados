@@ -51,18 +51,49 @@ disp('successfully ran simulink_model_advanced_closed_loop');
 
 cd ..
 
+%% reference
+% uncomment to store
 % simulink_u_traj_ref = out_sim.logsout{1}.Values.Data
 % save('simulink_u_traj_ref.mat', 'simulink_u_traj_ref')
 load('simulink_u_traj_ref.mat')
 
-err_vs_ref = norm(simulink_u_traj_ref - out_sim.logsout{1}.Values.Data);
+
+%% evaluate output
+u_signal = out_sim.logsout.getElement('u');
+uvals = u_signal.Values.Data;
+
+
+fprintf('\nTest results on SIMULINK simulation.\n')
+
+% compare u trajectory
+err_vs_ref = norm(simulink_u_traj_ref - uvals);
 TOL = 1e-8;
-disp(['Simulink: Norm of control traj. wrt. reference solution is: ',...
+disp(['Norm of control traj. wrt. reference solution is: ',...
     num2str(err_vs_ref, '%e'), ' test TOL = ', num2str(TOL)]);
 
 if err_vs_ref > TOL
     quit(1)
 end
 
+% sanity check on cost values
+cost_signal = out_sim.logsout.getElement('cost_val');
+cost_vals = cost_signal.Values.Data;
+
+if ~issorted(cost_vals,'strictdescend')
+    disp('cost_values should be monotonically decreasing for this example.');
+    quit(1)
+else
+    disp('cost_values are monotonically decreasing.');
+end
+
+% sanity check on status values
+status_signal = out_sim.logsout.getElement('ocp_solver_status');
+status_vals = status_signal.Values.Data;
+if any(status_vals)
+    disp('OCP solver status should be always zero on this example');
+    quit(1)
+else
+    disp('OCP solver status is always zero.');
+end
 
 
