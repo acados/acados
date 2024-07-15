@@ -845,6 +845,14 @@ class AcadosOcp:
             else:
                 opts.eps_sufficient_descent = 1e-6
 
+        if opts.eval_residual_at_max_iter == None:
+            if opts.globalization == 'FUNNEL_METHOD':
+                opts.eval_residual_at_max_iter = True
+            elif opts.globalization == 'MERIT_BACKTRACKING':
+                opts.eval_residual_at_max_iter = True
+            else:
+                opts.eval_residual_at_max_iter = False
+
         # zoRO
         if self.zoro_description is not None:
             if not isinstance(self.zoro_description, ZoroDescription):

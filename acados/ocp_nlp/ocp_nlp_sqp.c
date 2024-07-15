@@ -725,6 +725,47 @@ static void ocp_nlp_sqp_reset_timers(ocp_nlp_sqp_memory *mem)
     mem->time_sim_ad = 0.0;
 }
 
+static double get_l1_infeasibility(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_sqp_memory *mem)
+{
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+
+    // evaluate the objective of the QP (as predicted reduction)
+    // double qp_cost = compute_qp_cost
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *ni = dims->ni;
+    int i;
+    int j;
+
+    // compute current l1 infeasibility
+    double tmp;
+    struct blasfeo_dvec *tmp_fun_vec;
+    double dyn_l1_infeasibility = 0.0;
+    for(i=0; i<N; i++)
+    {
+        tmp_fun_vec = config->dynamics[i]->memory_get_fun_ptr(nlp_mem->dynamics[i]);
+        for(j=0; j<nx[i+1]; j++)
+        {
+            dyn_l1_infeasibility += fabs(BLASFEO_DVECEL(tmp_fun_vec, j));
+        }
+    }
+
+    double constraint_l1_infeasibility = 0.0;
+    for(i=0; i<=N; i++)
+    {
+        tmp_fun_vec = config->constraints[i]->memory_get_fun_ptr(nlp_mem->constraints[i]);
+        // tmp_fun_vec = out->t+i;
+        for (j=0; j<2*ni[i]; j++)
+        {
+            tmp = BLASFEO_DVECEL(tmp_fun_vec, j);
+            if (tmp > 0.0)
+            {
+                constraint_l1_infeasibility += tmp;
+            }
+        }
+    }
+    return dyn_l1_infeasibility + constraint_l1_infeasibility;
+}
 
 /************************************************
  * output functions
@@ -1247,50 +1288,6 @@ static int ocp_nlp_sqp_backtracking_line_search(void *config_, void *dims_, void
 /************************************************
  * functions
  ************************************************/
-double get_l1_infeasibility(void *config_, void *dims_, void *mem_)
-{
-    ocp_nlp_dims *dims = dims_;
-    ocp_nlp_config *config = config_;
-    ocp_nlp_sqp_memory *mem = mem_;
-    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-
-    // evaluate the objective of the QP (as predicted reduction)
-    // double qp_cost = compute_qp_cost
-    int N = dims->N;
-    int *nx = dims->nx;
-    int *ni = dims->ni;
-    int i;
-    int j;
-
-    // compute current l1 infeasibility
-    double tmp;
-    struct blasfeo_dvec *tmp_fun_vec;
-    double dyn_l1_infeasibility = 0.0;
-    for(i=0; i<N; i++)
-    {
-        tmp_fun_vec = config->dynamics[i]->memory_get_fun_ptr(nlp_mem->dynamics[i]);
-        for(j=0; j<nx[i+1]; j++)
-        {
-            dyn_l1_infeasibility += fabs(BLASFEO_DVECEL(tmp_fun_vec, j));
-        }
-    }
-
-    double constraint_l1_infeasibility = 0.0;
-    for(i=0; i<=N; i++)
-    {
-        tmp_fun_vec = config->constraints[i]->memory_get_fun_ptr(nlp_mem->constraints[i]);
-        // tmp_fun_vec = out->t+i;
-        for (j=0; j<2*ni[i]; j++)
-        {
-            tmp = BLASFEO_DVECEL(tmp_fun_vec, j);
-            if (tmp > 0.0)
-            {
-                constraint_l1_infeasibility += tmp;
-            }
-        }
-    }
-    return dyn_l1_infeasibility + constraint_l1_infeasibility;
-}
 
 // MAIN OPTIMIZATION ROUTINE
 int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,

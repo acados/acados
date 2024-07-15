@@ -82,7 +82,7 @@ class AcadosOcpOptions:
         self.__exact_hess_cost = 1
         self.__exact_hess_dyn = 1
         self.__exact_hess_constr = 1
-        self.__eval_residual_at_max_iter = True
+        self.__eval_residual_at_max_iter = None
         self.__fixed_hess = 0
         self.__funnel_initialization_increase_factor = 15.0
         self.__funnel_initialization_upper_bound = 1.0
@@ -91,12 +91,12 @@ class AcadosOcpOptions:
         self.__funnel_fraction_switching_condition = 1e-3
         self.__funnel_initial_penalty_parameter = 1.0
         self.__ext_cost_num_hess = 0
-        self.__alpha_min = None#0.05
-        self.__alpha_reduction = None#0.7
+        self.__alpha_min = None
+        self.__alpha_reduction = None
         self.__line_search_use_sufficient_descent = 0
         self.__globalization_use_SOC = 0
         self.__full_step_dual = 0
-        self.__eps_sufficient_descent = None#1e-4
+        self.__eps_sufficient_descent = None
         self.__hpipm_mode = 'BALANCE'
         self.__with_solution_sens_wrt_params = False
         self.__with_value_sens_wrt_params = False
