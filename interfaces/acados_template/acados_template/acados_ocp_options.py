@@ -91,12 +91,12 @@ class AcadosOcpOptions:
         self.__funnel_fraction_switching_condition = 1e-3
         self.__funnel_initial_penalty_parameter = 1.0
         self.__ext_cost_num_hess = 0
-        self.__alpha_min = 0.05
-        self.__alpha_reduction = 0.7
+        self.__alpha_min = None#0.05
+        self.__alpha_reduction = None#0.7
         self.__line_search_use_sufficient_descent = 0
         self.__globalization_use_SOC = 0
         self.__full_step_dual = 0
-        self.__eps_sufficient_descent = 1e-4
+        self.__eps_sufficient_descent = None#1e-4
         self.__hpipm_mode = 'BALANCE'
         self.__with_solution_sens_wrt_params = False
         self.__with_value_sens_wrt_params = False

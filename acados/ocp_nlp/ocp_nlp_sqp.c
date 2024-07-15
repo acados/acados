@@ -128,15 +128,11 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->eval_residual_at_max_iter = true;
 
     // funnel method opts
-    opts->linesearch_eta = 1e-6;
-    opts->linesearch_minimum_step_size = 1e-17;
-    opts->linesearch_step_size_reduction_factor = 0.5;
-
     opts->funnel_initial_increase_factor = 15.0;
     opts->funnel_initial_upper_bound = 1.0;
     opts->funnel_sufficient_decrease_factor = 0.9;
     opts->funnel_kappa = 0.9;
-    opts->funnel_fraction_switching_condition = 1e-3;//0.99;
+    opts->funnel_fraction_switching_condition = 1e-3;
     opts->funnel_initial_penalty_parameter = 1.0;
     opts->funnel_penalty_contraction = 0.5;
     opts->funnel_penalty_eta = 1e-6;
@@ -979,7 +975,7 @@ static bool is_f_type_armijo_condition_satisfied(ocp_nlp_sqp_opts *opts,
                                                     double pred,
                                                     double alpha)
 {
-    if (negative_ared <= fmin(-opts->linesearch_eta * alpha * fmax(pred, 0) + 1e-18, 0))
+    if (negative_ared <= fmin(-opts->nlp_opts->eps_sufficient_descent * alpha * fmax(pred, 0) + 1e-18, 0))
     {
         return true;
     }
@@ -1041,7 +1037,7 @@ static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
                 debug_output(opts->nlp_opts, "Switching condition is NOT satisfied!\n", 1); // high-level debugging output
                 debug_output(opts->nlp_opts, "Entered penalty check!\n", 1); // high-level debugging output
                 //TODO move to function and test more
-                if (trial_merit <= current_merit + opts->linesearch_eta * alpha * pred_merit)
+                if (trial_merit <= current_merit + opts->nlp_opts->eps_sufficient_descent * alpha * pred_merit)
                 {
                     debug_output(opts->nlp_opts, "Penalty Function accepted\n", 1);
                     accept_step = true;
@@ -1053,7 +1049,7 @@ static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
         else
         {
             debug_output(opts->nlp_opts, "Penalty mode active\n", 1); // high-level debugging output
-            if (trial_merit <= current_merit + opts->linesearch_eta * alpha * pred_merit)
+            if (trial_merit <= current_merit + opts->nlp_opts->eps_sufficient_descent * alpha * pred_merit)
             {
                 debug_output(opts->nlp_opts, "p-type step: accepted iterate\n", 1); // high-level debugging output
                 accept_step = true;
@@ -1237,13 +1233,13 @@ static int ocp_nlp_sqp_backtracking_line_search(void *config_, void *dims_, void
             return 1;
         }
 
-        if (alpha < opts->linesearch_minimum_step_size)
+        if (alpha < opts->nlp_opts->alpha_min)
         {
             printf("Linesearch: Step size gets too small. Should enter penalty phase. \n");
             exit(1);
         }
 
-        alpha *= opts->linesearch_step_size_reduction_factor;
+        alpha *= opts->nlp_opts->alpha_reduction;
 
     }
 }

@@ -820,6 +820,31 @@ class AcadosOcp:
             if  any([dims.ng_e, dims.nphi_e, dims.nh_e]):
                 raise Exception('DDP only supports initial state constraints, got terminal constraints.')
 
+        # Set default parameters for globalization
+        if opts.alpha_min == None:
+            if opts.globalization == 'FUNNEL_METHOD':
+                opts.alpha_min = 1e-17
+            elif opts.globalization == 'MERIT_BACKTRACKING':
+                opts.alpha_min = 0.05
+            else:
+                opts.alpha_min = 1e-17
+
+        if opts.alpha_reduction == None:
+            if opts.globalization == 'FUNNEL_METHOD':
+                opts.alpha_reduction = 0.5
+            elif opts.globalization == 'MERIT_BACKTRACKING':
+                opts.alpha_reduction = 0.7
+            else:
+                opts.alpha_reduction = 0.5
+
+        if opts.eps_sufficient_descent == None:
+            if opts.globalization == 'FUNNEL_METHOD':
+                opts.eps_sufficient_descent = 1e-6
+            elif opts.globalization == 'MERIT_BACKTRACKING':
+                opts.eps_sufficient_descent = 1e-4
+            else:
+                opts.eps_sufficient_descent = 1e-6
+
         # zoRO
         if self.zoro_description is not None:
             if not isinstance(self.zoro_description, ZoroDescription):
