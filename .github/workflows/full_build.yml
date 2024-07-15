@@ -254,6 +254,13 @@ jobs:
       with:
         command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; simulink_test
 
+    - name: Run Simulink initialization test
+      uses: matlab-actions/run-command@v2
+      if: always()
+      with:
+        command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; simulink_init_test
+
+
   octave_test:
     needs: core_build
     runs-on: ubuntu-22.04
