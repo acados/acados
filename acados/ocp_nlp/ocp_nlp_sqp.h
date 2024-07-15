@@ -70,11 +70,6 @@ typedef struct
     bool eval_residual_at_max_iter; // if convergence should be checked after last iterations or only throw max_iter reached
 
     //opts for funnel globalization
-    // Line search
-    double linesearch_eta;
-    double linesearch_minimum_step_size;
-    double linesearch_step_size_reduction_factor;
-
     // funnel
     double funnel_initialization_increase_factor; // for multiplication with initial infeasibility
     double funnel_initialization_upper_bound; // for initialization of initial funnel width
