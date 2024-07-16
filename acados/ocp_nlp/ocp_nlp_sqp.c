@@ -1038,45 +1038,45 @@ static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
                                                   double pred_merit)
 {
     bool accept_step = false;
-    debug_output_double(opts->nlp_opts, "current objective", current_objective, 2); //detailed debugging output
-    debug_output_double(opts->nlp_opts, "current infeasibility", current_infeasibility, 2); //detailed debugging output
-    debug_output_double(opts->nlp_opts, "trial objective", trial_objective, 2); //detailed debugging output
-    debug_output_double(opts->nlp_opts, "trial infeasibility", trial_infeasibility, 2); //detailed debugging output
-    debug_output_double(opts->nlp_opts, "pred", pred, 2); //detailed debugging output
+    debug_output_double(opts->nlp_opts, "current objective", current_objective, 2);
+    debug_output_double(opts->nlp_opts, "current infeasibility", current_infeasibility, 2); 
+    debug_output_double(opts->nlp_opts, "trial objective", trial_objective, 2); 
+    debug_output_double(opts->nlp_opts, "trial infeasibility", trial_infeasibility, 2); 
+    debug_output_double(opts->nlp_opts, "pred", pred, 2); 
 
     if(is_iterate_inside_of_funnel(mem, opts, trial_infeasibility))
     {
-        debug_output(opts->nlp_opts, "Trial iterate is INSIDE of funnel\n", 1); //high-level debugging output
+        debug_output(opts->nlp_opts, "Trial iterate is INSIDE of funnel\n", 1);
         if (!mem->funnel_penalty_mode)
         {
-            debug_output(opts->nlp_opts, "Penalty Mode not active!\n", 1); //high-level debugging output
+            debug_output(opts->nlp_opts, "Penalty Mode not active!\n", 1);
             if (is_switching_condition_satisfied(opts, pred, alpha, current_infeasibility))
             {
-                debug_output(opts->nlp_opts, "Switching condition IS satisfied!\n", 1); //high-level debugging output
+                debug_output(opts->nlp_opts, "Switching condition IS satisfied!\n", 1);
                 if (is_f_type_armijo_condition_satisfied(opts, -ared, pred, alpha))
                 {
-                    debug_output(opts->nlp_opts, "f-type step: Armijo condition satisfied\n", 1); //high-level debugging output
+                    debug_output(opts->nlp_opts, "f-type step: Armijo condition satisfied\n", 1);
                     accept_step = true;
                     mem->funnel_iter_type = 'f';
                 }
                 else
                 {
-                    debug_output(opts->nlp_opts, "f-type step: Armijo condition NOT satisfied\n", 1); //high-level debugging output
+                    debug_output(opts->nlp_opts, "f-type step: Armijo condition NOT satisfied\n", 1);
                 }
 
             }
             else if (is_funnel_sufficient_decrease_satisfied(mem, opts, trial_infeasibility))
             {
-                debug_output(opts->nlp_opts, "Switching condition is NOT satisfied!\n", 1); //high-level debugging output
-                debug_output(opts->nlp_opts, "h-type step: funnel suff. decrease satisfied!\n", 1); //high-level debugging output
+                debug_output(opts->nlp_opts, "Switching condition is NOT satisfied!\n", 1);
+                debug_output(opts->nlp_opts, "h-type step: funnel suff. decrease satisfied!\n", 1);
                 accept_step = true;
                 mem->funnel_iter_type = 'h';
                 decrease_funnel(mem, opts, trial_infeasibility, current_infeasibility);
             }
             else
             {
-                debug_output(opts->nlp_opts, "Switching condition is NOT satisfied!\n", 1); // high-level debugging output
-                debug_output(opts->nlp_opts, "Entered penalty check!\n", 1); // high-level debugging output
+                debug_output(opts->nlp_opts, "Switching condition is NOT satisfied!\n", 1);
+                debug_output(opts->nlp_opts, "Entered penalty check!\n", 1);
                 //TODO move to function and test more
                 if (trial_merit <= current_merit + opts->nlp_opts->eps_sufficient_descent * alpha * pred_merit)
                 {
@@ -1089,10 +1089,10 @@ static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
         }
         else
         {
-            debug_output(opts->nlp_opts, "Penalty mode active\n", 1); // high-level debugging output
+            debug_output(opts->nlp_opts, "Penalty mode active\n", 1);
             if (trial_merit <= current_merit + opts->nlp_opts->eps_sufficient_descent * alpha * pred_merit)
             {
-                debug_output(opts->nlp_opts, "p-type step: accepted iterate\n", 1); // high-level debugging output
+                debug_output(opts->nlp_opts, "p-type step: accepted iterate\n", 1);
                 accept_step = true;
                 mem->funnel_iter_type = 'p';
 
@@ -1106,7 +1106,7 @@ static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
     }
     else
     {
-        debug_output(opts->nlp_opts, "Trial iterate is NOT INSIDE of funnel\n", 1); // high-level debugging output
+        debug_output(opts->nlp_opts, "Trial iterate is NOT INSIDE of funnel\n", 1);
     }
     return accept_step;
 }
