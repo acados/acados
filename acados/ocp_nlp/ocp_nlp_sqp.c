@@ -736,8 +736,6 @@ static double get_l1_infeasibility(ocp_nlp_config *config, ocp_nlp_dims *dims, o
 {
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
 
-    // evaluate the objective of the QP (as predicted reduction)
-    // double qp_cost = compute_qp_cost
     int N = dims->N;
     int *nx = dims->nx;
     int *ni = dims->ni;
