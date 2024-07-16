@@ -50,6 +50,7 @@ ocp = acados_ocp(ocp_model, ocp_opts, simulink_opts);
 % solver initial guess
 x_traj_init = rand(nx, N+1);
 u_traj_init = rand(nu, N);
+pi_traj_init = rand(nx, N);
 
 %% call ocp solver
 % update initial state
@@ -58,17 +59,27 @@ ocp.set('constr_x0', x0);
 % set trajectory initialization
 ocp.set('init_x', x_traj_init); % states
 ocp.set('init_u', u_traj_init); % inputs
-ocp.set('init_pi', zeros(nx, N)); % multipliers for dynamics equality constraints
+ocp.set('init_pi', pi_traj_init); % multipliers for dynamics equality constraints
 
 % solve
 ocp.solve();
 % get solution
 utraj = ocp.get('u');
 xtraj = ocp.get('x');
+pi_traj = ocp.get('pi');
+
+if norm(pi_traj_init - pi_traj) > 1e-10
+    disp('pi initialization in MEX failed')
+end
+if norm(utraj - u_traj_init) > 1e-10
+    disp('u initialization in MEX failed')
+end
+if norm(xtraj - x_traj_init) > 1e-10
+    disp('x initialization in MEX failed')
+end
 
 status = ocp.get('status'); % 0 - success
 ocp.print('stat')
-% keyboard
 
 %% simulink test
 cd c_generated_code
@@ -90,17 +101,17 @@ if any(kkt_signal.Values.data > 1e-6)
 end
 
 sqp_iter_signal = out_sim.logsout.getElement('sqp_iter');
-disp('checking SQP iter, QP should take 1 SQP iter.')
-if any(sqp_iter_signal.Values.Data ~= 1)
+disp('checking SQP iter, we set max iter to 0, so expect 0.')
+if any(sqp_iter_signal.Values.Data ~= 0)
     disp('failed');
-    % quit(1);
+    quit(1);
 end
 
 status_signal = out_sim.logsout.getElement('status');
 disp('checking status.')
-if any(status_signal.Values.Data)
+if any(status_signal.Values.Data ~= 2)
     disp('failed');
-    % quit(1);
+    quit(1);
 end
 
 utraj_signal = out_sim.logsout.getElement('utraj');
@@ -108,7 +119,7 @@ u_simulink = utraj_signal.Values.Data(1, :);
 disp('checking u values.')
 if any((u_simulink(:) - utraj(:)) > 1e-8)
     disp('failed');
-    % quit(1);
+    quit(1);
 end
 
 xtraj_signal = out_sim.logsout.getElement('xtraj');
@@ -116,6 +127,6 @@ x_simulink = xtraj_signal.Values.Data(1, :);
 disp('checking x values.')
 if any((x_simulink(:) - xtraj(:)) > 1e-8)
     disp('failed');
-    % quit(1);
+    quit(1);
 end
 

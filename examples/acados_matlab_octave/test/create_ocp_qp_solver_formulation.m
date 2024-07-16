@@ -86,6 +86,7 @@ simulink_opts.inputs.reset_solver = 0;
 simulink_opts.outputs.u0 = 0;
 simulink_opts.outputs.utraj = 1;
 simulink_opts.outputs.xtraj = 1;
+simulink_opts.outputs.pi_traj = 1;
 
 simulink_opts.outputs.solver_status = 1;
 simulink_opts.outputs.CPU_time = 0;
