@@ -95,7 +95,7 @@ class AcadosOcpOptions:
         self.__alpha_reduction = None
         self.__line_search_use_sufficient_descent = 0
         self.__globalization_use_SOC = 0
-        self.__full_step_dual = 0
+        self.__full_step_dual = None
         self.__eps_sufficient_descent = None
         self.__hpipm_mode = 'BALANCE'
         self.__with_solution_sens_wrt_params = False
@@ -591,7 +591,8 @@ class AcadosOcpOptions:
         """
         Determines if dual variables are updated with full steps (alpha=1.0) when primal variables are updated with smaller step.
         Type: int; 0 or 1;
-        default: 0.
+        default for funnel globalization: 1
+        default else: 0.
         """
         return self.__full_step_dual
     

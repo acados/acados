@@ -853,6 +853,13 @@ class AcadosOcp:
             else:
                 opts.eval_residual_at_max_iter = False
 
+        if opts.full_step_dual == None:
+            if opts.globalization == 'FUNNEL_METHOD':
+                opts.full_step_dual = 1
+            else:
+                opts.full_step_dual = 0
+
+
         # zoRO
         if self.zoro_description is not None:
             if not isinstance(self.zoro_description, ZoroDescription):
