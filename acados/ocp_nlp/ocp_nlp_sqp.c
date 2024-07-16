@@ -233,6 +233,13 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
             // TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
             config->qp_solver->opts_set(config->qp_solver, opts->nlp_opts->qp_solver_opts, "tol_comp", value);
         }
+        else if (!strcmp(field, "tol_min_step_norm"))
+        {
+            double* tol_min_step_norm = (double *) value;
+            opts->tol_min_step_norm = *tol_min_step_norm;
+            // TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
+            config->qp_solver->opts_set(config->qp_solver, opts->nlp_opts->qp_solver_opts, "tol_min_step_norm", value);
+        }
         else if (!strcmp(field, "ext_qp_res"))
         {
             int* ext_qp_res = (int *) value;
@@ -888,7 +895,7 @@ static bool check_termination(int n_iter, ocp_nlp_res *nlp_res, ocp_nlp_sqp_memo
     }
 
     // check for small step
-    if (opts->nlp_opts->terminate_after_small_step && (n_iter > 0) && (mem->step_norm < 1e-12))
+    if (opts->nlp_opts->terminate_after_small_step && (n_iter > 0) && (mem->step_norm < opts->tol_min_step_norm))
     {
         if (opts->nlp_opts->print_level > 0)
         {

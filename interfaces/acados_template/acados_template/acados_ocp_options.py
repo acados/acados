@@ -69,6 +69,7 @@ class AcadosOcpOptions:
         self.__nlp_solver_tol_eq = 1e-6
         self.__nlp_solver_tol_ineq = 1e-6
         self.__nlp_solver_tol_comp = 1e-6
+        self.__nlp_solver_tol_min_step_norm = 1e-12
         self.__nlp_solver_max_iter = 100
         self.__nlp_solver_ext_qp_res = 0
         self.__nlp_solver_terminate_after_small_step = None
@@ -543,6 +544,11 @@ class AcadosOcpOptions:
     def nlp_solver_tol_eq(self):
         """NLP solver equality tolerance"""
         return self.__nlp_solver_tol_eq
+
+    @property
+    def nlp_solver_tol_min_step_norm(self):
+        """NLP solver equality tolerance"""
+        return self.__nlp_solver_tol_min_step_norm
 
     @property
     def alpha_min(self):
@@ -1309,6 +1315,13 @@ class AcadosOcpOptions:
             self.__nlp_solver_tol_ineq = nlp_solver_tol_ineq
         else:
             raise Exception('Invalid nlp_solver_tol_ineq value. nlp_solver_tol_ineq must be a positive float.')
+
+    @nlp_solver_tol_min_step_norm.setter
+    def nlp_solver_tol_min_step_norm(self, nlp_solver_tol_min_step_norm):
+        if isinstance(nlp_solver_tol_min_step_norm, float) and nlp_solver_tol_min_step_norm > 0:
+            self.__nlp_solver_tol_min_step_norm = nlp_solver_tol_min_step_norm
+        else:
+            raise Exception('Invalid nlp_solver_tol_min_step_norm value. nlp_solver_tol_min_step_norm must be a positive float.')
 
     @nlp_solver_ext_qp_res.setter
     def nlp_solver_ext_qp_res(self, nlp_solver_ext_qp_res):
