@@ -595,48 +595,48 @@ class AcadosOcpOptions:
         default else: 0.
         """
         return self.__full_step_dual
-    
+
     @property
     def funnel_initialization_increase_factor(self):
         """
-        Increase factor for initialization of funnel width. 
+        Increase factor for initialization of funnel width.
         Initial funnel is max(funnel_initialization_upper_bound, funnel_initialization_increase_factor * initial_infeasibility)
         """
         return self.__funnel_initialization_increase_factor
-    
+
     @property
     def funnel_initialization_upper_bound(self):
         """
-        Initial upper bound for funnel width. 
+        Initial upper bound for funnel width.
         Initial funnel is max(funnel_initialization_upper_bound, funnel_initialization_increase_factor * initial_infeasibility)
         """
         return self.__funnel_initialization_upper_bound
-    
+
     @property
     def funnel_sufficient_decrease_factor(self):
         """
         Sufficient decrease factor for infeasibility in h iteration.
         """
         return self.__funnel_sufficient_decrease_factor
-    
+
     @property
     def funnel_kappa(self):
         """
         Sufficient decrease factor for infeasibility in h iteration.
         """
         return self.__funnel_kappa
-    
+
     @property
     def funnel_fraction_switching_condition(self):
         """
         Multiplication factor in switching condition.
         """
         return self.__funnel_fraction_switching_condition
-    
+
     @property
     def eval_residual_at_max_iter(self):
         """
-        Determines, if the problem data is again evaluated after the last iteration 
+        Determines, if the problem data is again evaluated after the last iteration
         has been performed.
         If yes, the data is evaluated at the new iterate and
         it is checked, and convergence will be checked. 
@@ -1010,7 +1010,7 @@ class AcadosOcpOptions:
             self.__funnel_initialization_increase_factor = funnel_initialization_increase_factor
         else:
             raise Exception(f'Invalid value for funnel_initialization_increase_factor. Should be > 1, got {funnel_initialization_increase_factor}')
-    
+
     @funnel_initialization_upper_bound.setter
     def funnel_initialization_upper_bound(self, funnel_initialization_upper_bound):
         if funnel_initialization_upper_bound > 0.0:
@@ -1024,14 +1024,14 @@ class AcadosOcpOptions:
             self.__funnel_sufficient_decrease_factor = funnel_sufficient_decrease_factor
         else:
             raise Exception(f'Invalid value for funnel_sufficient_decrease_factor. Should be in (0,1), got {funnel_sufficient_decrease_factor}')
-    
+
     @funnel_kappa.setter
     def funnel_kappa(self, funnel_kappa):
         if funnel_kappa > 0.0 and funnel_kappa < 1.0:
             self.__funnel_kappa = funnel_kappa
         else:
             raise Exception(f'Invalid value for funnel_kappa. Should be in (0,1), got {funnel_kappa}')
-    
+
     @funnel_fraction_switching_condition.setter
     def funnel_fraction_switching_condition(self, funnel_fraction_switching_condition):
         if funnel_fraction_switching_condition > 0.0 and funnel_fraction_switching_condition < 1.0:
