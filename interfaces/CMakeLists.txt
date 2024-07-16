@@ -232,6 +232,10 @@ add_test(NAME python_pendulum_ocp_example_cmake
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/convex_problem_globalization_needed
         python convex_problem_globalization_necessary.py)
 
+    add_test(NAME python_max_iter_termination_test
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/max_iter_test
+        python max_iter_test.py)
+        
     # Simple OCP with Maratos effect
     add_test(NAME python_OCP_maratos_test_problem_globalization
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/linear_mass_model
