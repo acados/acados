@@ -115,17 +115,17 @@ def create_acados_solver_and_solve_problem(globalization='FIXED_STEP', eval_data
     return status, sol_X, sol_U
 
 def main():
-    funnel_status,  funnel_X, funnel_U = create_acados_solver_and_solve_problem(globalization='FUNNEL_L1PEN_LINESEARCH')
+    funnel_status, funnel_X, funnel_U = create_acados_solver_and_solve_problem(globalization='FUNNEL_L1PEN_LINESEARCH')
     assert funnel_status == 0, "Funnel could not find solution after 1 iteration!"
     print("Funnel finds solution")
 
-    full_step_no_eval,  fs_no_eval_X, fs_no_eval_U = create_acados_solver_and_solve_problem()
+    full_step_no_eval, fs_no_eval_X, fs_no_eval_U = create_acados_solver_and_solve_problem()
     assert np.allclose(funnel_X, fs_no_eval_X), "Funnel and max iter SQP version did not terminate at same X."
     assert np.allclose(funnel_U, fs_no_eval_U), "Funnel and max iter SQP version did not terminate at same U."
     assert full_step_no_eval == 2, "Full step SQP did not terminate with max iter!"
     print("Full step exits with max iter even though being at solution (as planned)")
 
-    full_step_eval,  fs_X, fs_U = create_acados_solver_and_solve_problem(eval_data_and_res=True)
+    full_step_eval, fs_X, fs_U = create_acados_solver_and_solve_problem(eval_data_and_res=True)
     assert full_step_eval == 0, "Full step SQP did not find solution after 1 iteration!"
     assert np.allclose(funnel_X, fs_X), "Funnel and full step SQP version did not terminate at same X."
     assert np.allclose(funnel_U, fs_U), "Funnel and full step SQP version did not terminate at same U."
