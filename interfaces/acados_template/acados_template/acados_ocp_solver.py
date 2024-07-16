@@ -953,6 +953,7 @@ class AcadosOcpSolver:
         3 - Minimum step size reached (ACADOS_MINSTEP)
         4 - QP solver failed (ACADOS_QP_FAILURE)
         5 - Solver created (ACADOS_READY)
+        6 - Problem unbounded (ACADOS_UNBOUNDED)
 
         See `return_values` in https://github.com/acados/acados/blob/master/acados/utils/types.h
         """
