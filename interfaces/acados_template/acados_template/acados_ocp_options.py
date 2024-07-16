@@ -622,14 +622,15 @@ class AcadosOcpOptions:
     @property
     def funnel_sufficient_decrease_factor(self):
         """
-        Sufficient decrease factor for infeasibility in h iteration.
+        Sufficient decrease factor for infeasibility in h iteration:
+        trial_infeasibility <= kappa * funnel_width
         """
         return self.__funnel_sufficient_decrease_factor
 
     @property
     def funnel_kappa(self):
         """
-        Sufficient decrease factor for infeasibility in h iteration.
+        Interpolation factor for convex combination in funnel decrease function.
         """
         return self.__funnel_kappa
 
