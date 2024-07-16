@@ -71,6 +71,7 @@ class AcadosOcpOptions:
         self.__nlp_solver_tol_comp = 1e-6
         self.__nlp_solver_max_iter = 100
         self.__nlp_solver_ext_qp_res = 0
+        self.__nlp_solver_terminate_after_small_step = None
         self.__rti_log_residuals = 0
         self.__Tsim = None
         self.__print_level = 0
@@ -699,6 +700,11 @@ class AcadosOcpOptions:
         Default: 100
         """
         return self.__nlp_solver_max_iter
+    
+    @property
+    def nlp_solver_terminate_after_small_step(self):
+        """NLP solver terminates if step size goes below a given minimum"""
+        return self.__nlp_solver_terminate_after_small_step
 
     @property
     def time_steps(self):
@@ -1332,6 +1338,13 @@ class AcadosOcpOptions:
             self.__nlp_solver_max_iter = nlp_solver_max_iter
         else:
             raise Exception('Invalid nlp_solver_max_iter value. nlp_solver_max_iter must be a positive int.')
+        
+    @nlp_solver_terminate_after_small_step.setter
+    def nlp_solver_terminate_after_small_step(self, nlp_solver_terminate_after_small_step):
+        if isinstance(nlp_solver_terminate_after_small_step, bool):
+            self.__nlp_solver_terminate_after_small_step = nlp_solver_terminate_after_small_step
+        else:
+            raise Exception('Invalid nlp_solver_terminate_after_small_step value. nlp_solver_terminate_after_small_step must be a bool.')
 
     @print_level.setter
     def print_level(self, print_level):

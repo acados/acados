@@ -293,6 +293,7 @@ typedef struct ocp_nlp_opts
     double eps_sufficient_descent;
     int with_solution_sens_wrt_params;
     int with_value_sens_wrt_params;
+    bool terminate_after_small_step; // lets the solver terminate, if a small step was found, i.e., when no progress seems to be done anymore
 
 } ocp_nlp_opts;
 

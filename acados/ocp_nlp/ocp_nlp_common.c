@@ -1059,6 +1059,7 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->line_search_use_sufficient_descent = 0;
     opts->globalization_use_SOC = 0;
     opts->eps_sufficient_descent = 1e-4; // Leineweber1999: MUSCOD-I eps_T = 1e-4 (p.89); Note: eps_T = 0.1 originally proposed by Powell 1978 (Leineweber 1999, p. 53)
+    opts->terminate_after_small_step = false;
 
     opts->with_solution_sens_wrt_params = 0;
     opts->with_value_sens_wrt_params = 0;
@@ -1236,6 +1237,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         {
             double* adaptive_levenberg_marquardt_mu0 = (double *) value;
             opts->adaptive_levenberg_marquardt_mu0 = *adaptive_levenberg_marquardt_mu0;
+        }
+        else if (!strcmp(field, "terminate_after_small_step"))
+        {
+            double* terminate_after_small_step = (double *) value;
+            opts->terminate_after_small_step = *terminate_after_small_step;
         }
         else if (!strcmp(field, "exact_hess"))
         {

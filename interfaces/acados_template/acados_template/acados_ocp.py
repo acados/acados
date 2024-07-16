@@ -853,6 +853,16 @@ class AcadosOcp:
             else:
                 opts.full_step_dual = 0
 
+        # sanity check for Funnel globalization and SQP
+        if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH' and opts.nlp_solver_type != 'SQP':
+            raise Exception('FUNNEL_L1PEN_LINESEARCH only supports SQP.')
+
+        # termination
+        if opts.nlp_solver_terminate_after_small_step == None:
+            if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
+                opts.nlp_solver_terminate_after_small_step = True
+            else:
+                opts.nlp_solver_terminate_after_small_step = False
 
         # zoRO
         if self.zoro_description is not None:

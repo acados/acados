@@ -2271,6 +2271,9 @@ void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* 
 {%- if solver_options.nlp_solver_type == "SQP" %}
     int log_primal_step_norm = {{ solver_options.log_primal_step_norm }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "log_primal_step_norm", &log_primal_step_norm);
+
+    bool nlp_solver_terminate_after_small_step = {{ solver_options.{{ solver_options.nlp_solver_terminate_after_small_step }};}};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "terminate_after_small_step", &nlp_solver_terminate_after_small_step);
 {%- endif %}
 
 {%- if solver_options.qp_solver is containing("HPIPM") %}
