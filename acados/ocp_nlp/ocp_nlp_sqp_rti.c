@@ -672,7 +672,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     mem->time_glob += acados_toc(&timer1);
 
     // update variables
-    ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, alpha);
+    ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, alpha);
     mem->status = ACADOS_SUCCESS;
 
     if (opts->rti_log_residuals)
@@ -928,7 +928,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
         mem->time_glob += acados_toc(&timer1);
 
         // update variables
-        ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, alpha);
+        ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, alpha);
     }
     else if (opts->as_rti_level == LEVEL_B && !mem->is_first_call)
     {
@@ -1003,7 +1003,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             mem->time_glob += acados_toc(&timer1);
 
             // update variables
-            ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, alpha);
+            ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, alpha);
         }
     }
     else if (opts->as_rti_level == LEVEL_C && !mem->is_first_call)
@@ -1081,7 +1081,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             mem->time_glob += acados_toc(&timer1);
 
             // update variables
-            ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, alpha);
+            ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, alpha);
 
             // norm = 0.0;
             // for (int kk = 0; kk < dims->N; kk++)
@@ -1160,7 +1160,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             mem->time_glob += acados_toc(&timer1);
 
             // update variables
-            ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, alpha);
+            ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, alpha);
         }
     }
 
