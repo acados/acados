@@ -58,12 +58,11 @@ def solve_problem_with_setting(setting):
     ocp.solver_options.tol = TOL
     ocp.solver_options.nlp_solver_type = 'SQP'
     ocp.solver_options.globalization = globalization
-    SQP_max_iter = 100
     ocp.solver_options.qp_solver_iter_max = 400
     ocp.solver_options.regularize_method = 'MIRROR'
     ocp.solver_options.qp_tol = 5e-7
 
-    ocp.solver_options.nlp_solver_max_iter = SQP_max_iter
+    ocp.solver_options.nlp_solver_max_iter = 100
     ocp_solver = AcadosOcpSolver(ocp, json_file=f'{model.name}.json')
 
     # initialize solver
