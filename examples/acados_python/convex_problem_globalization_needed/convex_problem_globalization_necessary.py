@@ -13,7 +13,7 @@ TOL = 1e-6
 
 def main():
     # run test cases
-    params = {'globalization': ['FIXED_STEP', 'FUNNEL_METHOD', 'MERIT_BACKTRACKING']}
+    params = {'globalization': ['FIXED_STEP', 'FUNNEL_L1PEN_LINESEARCH', 'MERIT_BACKTRACKING']}
 
     keys, values = zip(*params.items())
     for combination in product(*values):
@@ -83,7 +83,7 @@ def solve_problem_with_setting(setting):
     exact_solution = np.array([0])
     sol_err = max(np.abs(solution - exact_solution ))
 
-    if globalization in ['FUNNEL_METHOD', 'MERIT_BACKTRACKING']:
+    if globalization in ['FUNNEL_L1PEN_LINESEARCH', 'MERIT_BACKTRACKING']:
         assert status == 0, f'{globalization} did not converge. Algorithm should converge!'
         assert sol_err <= TOL*1e1, f"numerical solutions do not match to analytical solution with tolerance {TOL}"
     else:

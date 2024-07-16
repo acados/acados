@@ -115,7 +115,7 @@ def create_acados_solver_and_solve_problem(globalization='FIXED_STEP', eval_data
     return status, sol_X, sol_U
 
 def main():
-    funnel_status,  funnel_X, funnel_U = create_acados_solver_and_solve_problem(globalization='FUNNEL_METHOD')
+    funnel_status,  funnel_X, funnel_U = create_acados_solver_and_solve_problem(globalization='FUNNEL_L1PEN_LINESEARCH')
     assert funnel_status == 0, "Funnel could not find solution after 1 iteration!"
     print("Funnel finds solution")
 

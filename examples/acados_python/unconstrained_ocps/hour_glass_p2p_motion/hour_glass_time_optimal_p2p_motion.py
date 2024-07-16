@@ -66,7 +66,7 @@ def create_sqp_opts(Tf, N, M, globalized:bool = True):
     # DDP options
     solver_options.nlp_solver_type = 'SQP'
     if globalized:
-        solver_options.globalization = 'FUNNEL_METHOD'
+        solver_options.globalization = 'FUNNEL_L1PEN_LINESEARCH'
     else:
         solver_options.globalization = 'FIXED_STEP'
     solver_options.nlp_solver_max_iter = 200

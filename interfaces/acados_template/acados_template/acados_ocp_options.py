@@ -242,7 +242,7 @@ class AcadosOcpOptions:
     @property
     def globalization(self):
         """Globalization type.
-        String in ('FIXED_STEP', 'MERIT_BACKTRACKING', 'FUNNEL_METHOD').
+        String in ('FIXED_STEP', 'MERIT_BACKTRACKING', 'FUNNEL_L1PEN_LINESEARCH').
         Default: 'FIXED_STEP'.
 
         .. note:: preliminary implementation.
@@ -964,7 +964,7 @@ class AcadosOcpOptions:
 
     @globalization.setter
     def globalization(self, globalization):
-        globalization_types = ('FUNNEL_METHOD', 'MERIT_BACKTRACKING', 'FIXED_STEP')
+        globalization_types = ('FUNNEL_L1PEN_LINESEARCH', 'MERIT_BACKTRACKING', 'FIXED_STEP')
         if globalization in globalization_types:
             self.__globalization = globalization
         else:

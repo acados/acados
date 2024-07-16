@@ -46,7 +46,7 @@ TOL = 1e-6
 
 def main():
     # run test cases
-    params = {'globalization': ['MERIT_BACKTRACKING', 'FIXED_STEP', 'FUNNEL_METHOD'],
+    params = {'globalization': ['MERIT_BACKTRACKING', 'FIXED_STEP', 'FUNNEL_L1PEN_LINESEARCH'],
               'line_search_use_sufficient_descent' : [0, 1],
               'globalization_use_SOC' : [0, 1] }
 
@@ -57,7 +57,7 @@ def main():
           (setting['globalization_use_SOC'] or setting['line_search_use_sufficient_descent']):
             # skip some equivalent settings
             pass
-        elif setting['globalization'] == 'FUNNEL_METHOD' and \
+        elif setting['globalization'] == 'FUNNEL_L1PEN_LINESEARCH' and \
           (setting['globalization_use_SOC'] or setting['line_search_use_sufficient_descent']):
             # skip some equivalent settings
             pass
@@ -121,7 +121,7 @@ def solve_maratos_problem_with_setting(setting):
     # PARTIAL_CONDENSING_QPDUNES, PARTIAL_CONDENSING_OSQP
     ocp.solver_options.hessian_approx = 'EXACT'
     ocp.solver_options.integrator_type = 'DISCRETE'
-    if globalization == 'FUNNEL_METHOD':
+    if globalization == 'FUNNEL_L1PEN_LINESEARCH':
         ocp.solver_options.print_level = 1
     ocp.solver_options.tol = TOL
     ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
@@ -227,7 +227,7 @@ def solve_maratos_problem_with_setting(setting):
             else:
                 if iter != 12:
                     raise Exception(f"Expected 12 SQP iterations when using globalized SQP with SOC on Maratos problem, got {iter}")
-        elif globalization == 'FUNNEL_METHOD':
+        elif globalization == 'FUNNEL_L1PEN_LINESEARCH':
             if iter > 12:
                     raise Exception(f"Expected not more than 12 SQP iterations when using Funnel Method SQP, got {iter}")
 

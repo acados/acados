@@ -771,7 +771,7 @@ static double get_l1_infeasibility(ocp_nlp_config *config, ocp_nlp_dims *dims, o
  * output functions
  ************************************************/
 static void print_iteration_header(ocp_nlp_opts* opts){
-    if(opts->globalization == FUNNEL_METHOD)
+    if(opts->globalization == FUNNEL_L1PEN_LINESEARCH)
     {
         printf("%6s | %11s | %10s | %10s | %10s | %10s | %10s | %10s | %10s | %12s | %10s | %10s | %10s | %10s\n",
         "iter.",
@@ -823,7 +823,7 @@ static void print_iteration(ocp_nlp_opts* opts,
     if ((iter_count % 10 == 0)){
         print_iteration_header(opts);
     }
-    if (opts->globalization == FUNNEL_METHOD)
+    if (opts->globalization == FUNNEL_L1PEN_LINESEARCH)
     {
         printf("%6i | %11.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %12.4e | %10.4e | %10i | %10i | %10c\n",
         iter_count,
@@ -1290,7 +1290,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     double funnel_width_memory = 0.0;
     double funnel_penalty_param_memory = opts->funnel_initial_penalty_parameter;
     initialize_funnel_penalty_parameter(mem, opts);
-    if (nlp_opts->globalization == FUNNEL_METHOD)
+    if (nlp_opts->globalization == FUNNEL_L1PEN_LINESEARCH)
     {
         printf("Note: The funnel globalization is still under development.\n");
         printf("If you encouter problems or bugs, please report to the acados developers!\n");
@@ -1336,8 +1336,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->l1_infeasibility = get_l1_infeasibility(config, dims, mem);
         }
 
-        // initialize funnel if FUNNEL_METHOD used
-        if (sqp_iter == 0 && nlp_opts->globalization == FUNNEL_METHOD){
+        // initialize funnel if FUNNEL_L1PEN_LINESEARCH used
+        if (sqp_iter == 0 && nlp_opts->globalization == FUNNEL_L1PEN_LINESEARCH){
             initialize_funnel_width(mem, opts, mem->l1_infeasibility);
         }
         funnel_width_memory = mem->funnel_width;
@@ -1506,7 +1506,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // NOTE on timings: currently all within globalization is accounted for within time_glob.
         //   QP solver times could be also attributed there alternatively. Cleanest would be to save them seperately.
         acados_tic(&timer1);
-        if (nlp_opts->globalization == FUNNEL_METHOD)
+        if (nlp_opts->globalization == FUNNEL_L1PEN_LINESEARCH)
         {
             bool linesearch_success = 1;
             linesearch_success = ocp_nlp_sqp_backtracking_line_search(config, dims, nlp_in, nlp_out, mem, work, opts);

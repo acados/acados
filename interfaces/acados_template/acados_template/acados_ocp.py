@@ -822,7 +822,7 @@ class AcadosOcp:
 
         # Set default parameters for globalization
         if opts.alpha_min == None:
-            if opts.globalization == 'FUNNEL_METHOD':
+            if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
                 opts.alpha_min = 1e-17
             elif opts.globalization == 'MERIT_BACKTRACKING':
                 opts.alpha_min = 0.05
@@ -830,7 +830,7 @@ class AcadosOcp:
                 opts.alpha_min = 1e-17
 
         if opts.alpha_reduction == None:
-            if opts.globalization == 'FUNNEL_METHOD':
+            if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
                 opts.alpha_reduction = 0.5
             elif opts.globalization == 'MERIT_BACKTRACKING':
                 opts.alpha_reduction = 0.7
@@ -838,7 +838,7 @@ class AcadosOcp:
                 opts.alpha_reduction = 0.5
 
         if opts.eps_sufficient_descent == None:
-            if opts.globalization == 'FUNNEL_METHOD':
+            if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
                 opts.eps_sufficient_descent = 1e-6
             elif opts.globalization == 'MERIT_BACKTRACKING':
                 opts.eps_sufficient_descent = 1e-4
@@ -846,7 +846,7 @@ class AcadosOcp:
                 opts.eps_sufficient_descent = 1e-6
 
         if opts.eval_residual_at_max_iter == None:
-            if opts.globalization == 'FUNNEL_METHOD':
+            if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
                 opts.eval_residual_at_max_iter = True
             elif opts.globalization == 'MERIT_BACKTRACKING':
                 opts.eval_residual_at_max_iter = True
@@ -854,7 +854,7 @@ class AcadosOcp:
                 opts.eval_residual_at_max_iter = False
 
         if opts.full_step_dual == None:
-            if opts.globalization == 'FUNNEL_METHOD':
+            if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
                 opts.full_step_dual = 1
             else:
                 opts.full_step_dual = 0

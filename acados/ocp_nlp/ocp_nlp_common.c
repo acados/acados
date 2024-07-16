@@ -1200,9 +1200,9 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
             {
                 opts->globalization = MERIT_BACKTRACKING;
             }
-            else if (!strcmp(globalization, "funnel_method"))
+            else if (!strcmp(globalization, "funnel_l1pen_linesearch"))
             {
-                opts->globalization = FUNNEL_METHOD;
+                opts->globalization = FUNNEL_L1PEN_LINESEARCH;
             }
             else
             {
