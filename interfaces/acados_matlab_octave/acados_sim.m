@@ -37,7 +37,7 @@ classdef acados_sim < handle
         % matlab objects
         model_struct
         opts_struct
-        acados_sim_json
+        sim
         code_gen_dir
     end % properties
 
@@ -98,12 +98,12 @@ classdef acados_sim < handle
 
 
             % create template sim
-            obj.acados_sim_json = set_up_acados_sim_json(obj);
+            obj.sim = setup_sim(obj);
             sim_generate_c_code(obj);
 
             % templated MEX
             return_dir = pwd();
-            obj.code_gen_dir = obj.acados_sim_json.code_export_directory;
+            obj.code_gen_dir = obj.sim.code_export_directory;
             cd(obj.code_gen_dir)
 
             mex_sim_solver = str2func(sprintf('%s_mex_sim_solver', obj.model_struct.name));

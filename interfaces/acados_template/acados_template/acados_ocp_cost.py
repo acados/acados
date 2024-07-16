@@ -67,11 +67,14 @@ class AcadosOcpCost:
         self.__Vu_0 = None
         self.__Vz_0 = None
         self.__yref_0 = None
-        self.__cost_ext_fun_type_0 = 'casadi'
         self.__Zl_0 = None
         self.__Zu_0 = None
         self.__zl_0 = None
         self.__zu_0 = None
+        self.__cost_ext_fun_type_0 = 'casadi'
+        self.__cost_source_ext_cost_0 = None # TODO add property, only required for generic
+        self.__cost_function_ext_cost_0 = None # TODO add property, only required for generic
+
         # Lagrange term
         self.__cost_type   = 'LINEAR_LS'  # cost type
         self.__W           = np.zeros((0,0))
@@ -84,6 +87,9 @@ class AcadosOcpCost:
         self.__zl          = np.array([])
         self.__zu          = np.array([])
         self.__cost_ext_fun_type = 'casadi'
+        self.__cost_source_ext_cost = None # TODO add property, only required for generic
+        self.__cost_function_ext_cost = None # TODO add property, only required for generic
+
         # Mayer term
         self.__cost_type_e = 'LINEAR_LS'
         self.__W_e         = np.zeros((0,0))
@@ -94,6 +100,9 @@ class AcadosOcpCost:
         self.__zl_e        = np.array([])
         self.__zu_e        = np.array([])
         self.__cost_ext_fun_type_e = 'casadi'
+        self.__cost_source_ext_cost_e = None # TODO add property, only required for generic
+        self.__cost_function_ext_cost_e = None # TODO add property, only required for generic
+
 
     # initial stage
     @property

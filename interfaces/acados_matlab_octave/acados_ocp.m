@@ -38,7 +38,7 @@ classdef acados_ocp < handle
         code_gen_dir
         model_struct
         opts_struct
-        acados_ocp_nlp_json
+        ocp
         cost_ext_fun_type
         cost_ext_fun_type_e
         cost_ext_fun_type_0
@@ -199,12 +199,12 @@ classdef acados_ocp < handle
             if nargin < 3
                 simulink_opts = get_acados_simulink_opts();
             end
-            obj.acados_ocp_nlp_json = set_up_acados_ocp_nlp_json(obj, simulink_opts);
+            obj.ocp = setup_ocp(obj, simulink_opts);
             ocp_generate_c_code(obj);
 
             % templated MEX
             return_dir = pwd();
-            obj.code_gen_dir = obj.acados_ocp_nlp_json.code_export_directory;
+            obj.code_gen_dir = obj.ocp.code_export_directory;
             cd(obj.code_gen_dir)
 
             mex_solver_name = sprintf('%s_mex_solver', obj.model_struct.name);

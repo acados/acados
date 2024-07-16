@@ -29,7 +29,6 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from typing import Optional
 
 class AcadosSimDims:
     """
@@ -104,8 +103,8 @@ class AcadosOcpDims:
         self.__np = 0
         # cost
         self.__ny = 0
-        self.__ny_e = 0
         self.__ny_0 = 0
+        self.__ny_e = 0
         # bounds
         self.__nbu = 0
         self.__nbx = 0
@@ -129,13 +128,13 @@ class AcadosOcpDims:
         self.__nsbx_e = 0
         self.__nsbu = 0
         self.__nsh = 0
-        self.__nsh_e = 0
         self.__nsh_0 = 0
+        self.__nsh_e = 0
         self.__nsphi = 0
-        self.__nsphi_e = 0
         self.__nsphi_0 = 0
-        self.__ns_0 = 0
+        self.__nsphi_e = 0
         self.__ns = 0
+        self.__ns_0 = 0
         self.__ns_e = 0
         self.__nsg = 0
         self.__nsg_e = 0

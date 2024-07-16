@@ -64,25 +64,25 @@ class AcadosOcpConstraints:
         self.__D       = np.zeros((0,0))
         self.__C       = np.zeros((0,0))
         # polytopic constraints at shooting node N
-        self.__C_e     = np.zeros((0,0))
         self.__lg_e    = np.array([])
         self.__ug_e    = np.array([])
+        self.__C_e     = np.zeros((0,0))
+        # nonlinear constraints at initial shooting node
+        self.__lh_0    = np.array([])
+        self.__uh_0    = np.array([])
         # nonlinear constraints
         self.__lh      = np.array([])
         self.__uh      = np.array([])
-        # nonlinear constraints at initial shooting node
-        self.__uh_0    = np.array([])
-        self.__lh_0    = np.array([])
         # nonlinear constraints at shooting node N
-        self.__uh_e    = np.array([])
         self.__lh_e    = np.array([])
+        self.__uh_e    = np.array([])
         # convex-over-nonlinear constraints
+        self.__lphi_0 = np.array([])
+        self.__uphi_0 = np.array([])
         self.__lphi    = np.array([])
         self.__uphi    = np.array([])
-        self.__uphi_e = np.array([])
         self.__lphi_e = np.array([])
-        self.__uphi_0 = np.array([])
-        self.__lphi_0 = np.array([])
+        self.__uphi_e = np.array([])
         # SLACK BOUNDS
         # soft bounds on x
         self.__lsbx   = np.array([])
@@ -100,34 +100,34 @@ class AcadosOcpConstraints:
         self.__lsg    = np.array([])
         self.__usg    = np.array([])
         self.__idxsg  = np.array([])
-        # soft bounds on nonlinear constraints
-        self.__lsh    = np.array([])
-        self.__ush    = np.array([])
-        self.__idxsh  = np.array([])
-        # soft bounds on nonlinear constraints
-        self.__lsphi  = np.array([])
-        self.__usphi  = np.array([])
-        self.__idxsphi  = np.array([])
         # soft bounds on general linear constraints at shooting node N
         self.__lsg_e    = np.array([])
         self.__usg_e    = np.array([])
         self.__idxsg_e  = np.array([])
-        # soft bounds on nonlinear constraints at shooting node N
-        self.__lsh_e    = np.array([])
-        self.__ush_e    = np.array([])
-        self.__idxsh_e  = np.array([])
-        # soft bounds on nonlinear constraints at shooting node N
-        self.__lsphi_e    = np.array([])
-        self.__usphi_e    = np.array([])
-        self.__idxsphi_e  = np.array([])
         # soft bounds on nonlinear constraints at shooting node 0
         self.__lsh_0    = np.array([])
         self.__ush_0    = np.array([])
         self.__idxsh_0  = np.array([])
-        # soft bounds on nonlinear constraints at shooting node 0
+        # soft bounds on nonlinear constraints
+        self.__lsh    = np.array([])
+        self.__ush    = np.array([])
+        self.__idxsh  = np.array([])
+        # soft bounds on nonlinear constraints at shooting node N
+        self.__lsh_e    = np.array([])
+        self.__ush_e    = np.array([])
+        self.__idxsh_e  = np.array([])
+        # soft bounds on convex-over-nonlinear constraint (BGP) at shooting node 0
         self.__lsphi_0    = np.array([])
         self.__usphi_0    = np.array([])
         self.__idxsphi_0  = np.array([])
+        # soft bounds on convex-over-nonlinear constraint (BGP)
+        self.__lsphi  = np.array([])
+        self.__usphi  = np.array([])
+        self.__idxsphi  = np.array([])
+        # soft bounds on convex-over-nonlinear constraint (BGP) at shooting node N
+        self.__lsphi_e    = np.array([])
+        self.__usphi_e    = np.array([])
+        self.__idxsphi_e  = np.array([])
 
 
     # types

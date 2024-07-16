@@ -64,8 +64,8 @@ if strcmp(cost_type,'linear_ls')
     ocp_model.set('cost_W', model.W);
     ocp_model.set('cost_y_ref', model.y_ref);
 
-    ocp_model.set('cost_Vx_e', model.Vx_e);    
-    ocp_model.set('cost_W_e', model.W_e);    
+    ocp_model.set('cost_Vx_e', model.Vx_e);
+    ocp_model.set('cost_W_e', model.W_e);
     ocp_model.set('cost_y_ref_e', model.y_ref_e);
 else
     ocp_model.set('cost_expr_ext_cost_0', model.cost_expr_ext_cost_0);
@@ -118,7 +118,7 @@ for i = 1 : nsim
     else
         ocp.set('p', xr);  % set as the parameter
     end
-    
+
     % solve the ocp
     ocp.solve();
 

@@ -51,9 +51,7 @@ class AcadosModel():
     def __init__(self):
         ## common for OCP and Integrator
         self.name = None
-        """
-        The model name is used for code generation. Type: string. Default: :code:`None`
-        """
+        """The model name is used for code generation. Type: string. Default: :code:`None`"""
         self.x = None
         """CasADi variable describing the state of the system; Default: :code:`None`"""
         self.xdot = None
@@ -97,13 +95,20 @@ class AcadosModel():
         self.dyn_ext_fun_type = 'casadi'
         """type of external functions for dynamics module; 'casadi' or 'generic'; Default: 'casadi'"""
         self.dyn_generic_source = None
-        """name of source file for discrete dynamics; Default: :code:`None`"""
+        """name of source file for discrete dynamics, only relevant if :code:`dyn_ext_fun_type` is :code:`'generic'`; Default: :code:`None`"""
         self.dyn_disc_fun_jac_hess = None
-        """name of function discrete dynamics + jacobian and hessian; Default: :code:`None`"""
+        """name of function discrete dynamics + jacobian and hessian, only relevant if :code:`dyn_ext_fun_type` is :code:`'generic'`; Default: :code:`None`"""
         self.dyn_disc_fun_jac = None
-        """name of function discrete dynamics + jacobian; Default: :code:`None`"""
+        """name of function discrete dynamics + jacobian, only relevant if :code:`dyn_ext_fun_type` is :code:`'generic'`; Default: :code:`None`"""
         self.dyn_disc_fun = None
-        """name of function discrete dynamics; Default: :code:`None`"""
+        """name of function discrete dynamics, only relevant if :code:`dyn_ext_fun_type` is :code:`'generic'`; Default: :code:`None`"""
+
+        self.dyn_impl_dae_fun_jac = None
+        """name of source files for implicit DAE function value and jacobian, only relevant if :code:`dyn_ext_fun_type` is :code:`'generic'`; Default: :code:`None`"""
+        self.dyn_impl_dae_jac = None
+        """name of source files for implicit DAE jacobian, only relevant if :code:`dyn_ext_fun_type` is :code:`'generic'`; Default: :code:`None`"""
+        self.dyn_impl_dae_fun = None
+        """name of source files for implicit DAE function value, only relevant if :code:`dyn_ext_fun_type` is :code:`'generic'`; Default: :code:`None`"""
 
         # for GNSF models
         self.gnsf = {'nontrivial_f_LO': 1, 'purely_linear': 0}
@@ -218,11 +223,11 @@ class AcadosModel():
         CasADi expression for the custom hessian of the outer loss function (only for convex-over-nonlinear cost), terminal; Default: :code:`None`
         Used if :py:attr:`acados_template.acados_ocp_options.AcadosOcpOptions.cost_type_e` is 'CONVEX_OVER_NONLINEAR'.
         """
-        self.nu_original = None
+        self.nu_original = None # TODO: remove? only used by benchmark
         """
         Number of original control inputs (before polynomial control augmentation); Default: :code:`None`
         """
-        self.t0 = None
+        self.t0 = None # TODO: remove? only used by benchmark
         """CasADi variable representing the start time of an interval; Default: :code:`None`"""
         self.__x_labels = None
         self.__u_labels = None

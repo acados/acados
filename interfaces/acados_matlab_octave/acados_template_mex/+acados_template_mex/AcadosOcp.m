@@ -29,7 +29,7 @@
 
 %
 
-classdef acados_ocp_nlp_json < handle
+classdef AcadosOcp < handle
     properties
         dims
         cost
@@ -48,12 +48,12 @@ classdef acados_ocp_nlp_json < handle
         name
     end
     methods
-        function obj = acados_ocp_nlp_json(simulink_opts)
-            obj.dims = acados_template_mex.ocp_nlp_dims_json();
-            obj.cost = acados_template_mex.ocp_nlp_cost_json();
-            obj.constraints = acados_template_mex.ocp_nlp_constraints_json();
-            obj.solver_options = acados_template_mex.ocp_nlp_solver_options_json();
-            obj.model = acados_template_mex.acados_model_json();
+        function obj = AcadosOcp(simulink_opts)
+            obj.dims = acados_template_mex.AcadosOcpDims();
+            obj.cost = acados_template_mex.AcadosOcpCost();
+            obj.constraints = acados_template_mex.AcadosOcpConstraints();
+            obj.solver_options = acados_template_mex.AcadosOcpOptions();
+            obj.model = acados_template_mex.AcadosModel();
             obj.acados_include_path = [];
             obj.acados_lib_path = [];
             obj.parameter_values = [];
@@ -68,6 +68,7 @@ classdef acados_ocp_nlp_json < handle
             end
             % obj.code_export_directory;
         end
+
         function s = struct(self)
             if exist('properties')
                 publicProperties = eval('properties(self)');

@@ -1401,6 +1401,8 @@ class AcadosOcp:
 
     def augment_with_t0_param(self) -> None:
         """Add a parameter t0 to the model and set it to 0.0."""
+        # TODO only needed in benchmark for problems with time-varying references.
+        # maybe remove this function and model.t0 from acados (and move to benchmark)
         if self.model.t0 is not None:
             raise Exception("Parameter t0 is already present in the model.")
         self.model.t0 = ca.SX.sym("t0")
