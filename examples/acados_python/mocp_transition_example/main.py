@@ -32,7 +32,7 @@
 import numpy as np
 import casadi as ca
 
-from acados_template import AcadosModel, AcadosOcp, AcadosMultiphaseOcp, AcadosOcpSolver, casadi_length, is_empty, latexify_plot
+from acados_template import AcadosModel, AcadosOcp, AcadosMultiphaseOcp, AcadosOcpSolver, casadi_length, latexify_plot, ocp_get_default_cmake_builder
 import matplotlib.pyplot as plt
 
 latexify_plot()
@@ -171,7 +171,7 @@ def formulate_single_integrator_ocp() -> AcadosOcp:
     return ocp
 
 
-def create_multiphase_ocp_solver(N_list, t_horizon_1, name=None):
+def create_multiphase_ocp_solver(N_list, t_horizon_1, name=None, use_cmake=False):
     ocp = AcadosMultiphaseOcp(N_list=N_list)
 
     phase_0 = formulate_double_integrator_ocp()
@@ -202,14 +202,17 @@ def create_multiphase_ocp_solver(N_list, t_horizon_1, name=None):
 
     if name is not None:
         ocp.name = name
-    acados_ocp_solver = AcadosOcpSolver(ocp, verbose=False)
+
+    cmake_builder = ocp_get_default_cmake_builder() if use_cmake else None
+    acados_ocp_solver = AcadosOcpSolver(ocp, verbose=False, cmake_builder=cmake_builder)
     return acados_ocp_solver, ocp
 
 
-def main_multiphase_ocp():
+def main_multiphase_ocp(use_cmake=False):
     N_list = [10, 1, 15]
-    acados_ocp_solver, ocp = create_multiphase_ocp_solver(N_list, 0.4*T_HORIZON)
+    acados_ocp_solver, ocp = create_multiphase_ocp_solver(N_list, 0.4*T_HORIZON, use_cmake=use_cmake)
     acados_ocp_solver.solve_for_x0(X0)
+    acados_ocp_solver.print_statistics()
 
     n_phases = len(N_list)
 
@@ -346,7 +349,9 @@ def cost_to_go_experiment():
 
 
 if __name__ == "__main__":
-    main_multiphase_ocp()
+
+    for use_cmake in [False, True]:
+        main_multiphase_ocp(use_cmake)
     main_standard_ocp()
     # cost_to_go_experiment()
     plt.show()
