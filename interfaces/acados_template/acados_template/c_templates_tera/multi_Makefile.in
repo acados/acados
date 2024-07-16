@@ -244,7 +244,7 @@ OCP_SRC+= {{ model_e.name }}_cost/{{ model_e.name }}_cost_ext_cost_e_fun_jac_hes
 {% if solver_options.with_solution_sens_wrt_params %}
 OCP_SRC+= {{ model_e.name }}_cost/{{ model_e.name }}_cost_ext_cost_e_hess_xu_p.c
 {% endif %}
-	{%- elif cost.cost_source_ext_cost_e != cost.cost_source_ext_cost_0 %}
+	{%- else %}
 OCP_SRC+= {{ model_e.name }}_cost/{{ cost.cost_source_ext_cost_e }}
 	{%- endif %}
 {%- endif %}
