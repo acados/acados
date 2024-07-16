@@ -50,7 +50,7 @@ ocp = acados_ocp(ocp_model, ocp_opts, simulink_opts);
 % solver initial guess
 x_traj_init = rand(nx, N+1);
 u_traj_init = rand(nu, N);
-pi_traj_init = rand(nx, N);
+pi_init = rand(nx, N);
 
 %% call ocp solver
 % update initial state
@@ -59,16 +59,16 @@ ocp.set('constr_x0', x0);
 % set trajectory initialization
 ocp.set('init_x', x_traj_init); % states
 ocp.set('init_u', u_traj_init); % inputs
-ocp.set('init_pi', pi_traj_init); % multipliers for dynamics equality constraints
+ocp.set('init_pi', pi_init); % multipliers for dynamics equality constraints
 
 % solve
 ocp.solve();
 % get solution
 utraj = ocp.get('u');
 xtraj = ocp.get('x');
-pi_traj = ocp.get('pi');
+pi_all = ocp.get('pi');
 
-if norm(pi_traj_init - pi_traj) > 1e-10
+if norm(pi_init - pi_all) > 1e-10
     disp('pi initialization in MEX failed')
 end
 if norm(utraj - u_traj_init) > 1e-10
@@ -130,3 +130,10 @@ if any((x_simulink(:) - xtraj(:)) > 1e-8)
     quit(1);
 end
 
+pi_signal = out_sim.logsout.getElement('pi_all');
+pi_simulink = pi_signal.Values.Data(1, :);
+disp('checking x values.')
+if any((pi_simulink(:) - pi_init(:)) > 1e-8)
+    disp('failed');
+    quit(1);
+end
