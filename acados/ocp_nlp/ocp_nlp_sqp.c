@@ -1271,6 +1271,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     int qp_iter = 0;
     mem->alpha = 0.0;
     mem->funnel_iter_type = '-';
+    mem->status = ACADOS_SUCCESS;
 
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads

@@ -194,6 +194,7 @@ ocp_opts.set('ext_fun_compile_flags', '');
 %% acados ocp
 ocp = acados_ocp(ocp_model, ocp_opts);
 
+ocp.reset();
 ocp.solve();
 
 stat = ocp.get('stat');

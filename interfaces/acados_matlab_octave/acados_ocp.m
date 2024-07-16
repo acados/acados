@@ -261,6 +261,9 @@ classdef acados_ocp < handle
             obj.t_ocp.print(varargin{:});
         end
 
+        function reset(obj)
+            obj.t_ocp.reset();
+        end
 
         % function delete(obj)
         %     Use default implementation.

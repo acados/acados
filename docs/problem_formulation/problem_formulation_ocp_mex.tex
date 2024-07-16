@@ -77,7 +77,7 @@
 %
 \section{Problem Formulation}\label{sec:problem}
 %
-\acados{} can handle the following optimization problem
+\acados{} can handle continuous-time optimal control problems (OCP) of the following form:
 %
 \begin{align}
 % cost
@@ -103,10 +103,10 @@
     &\,\,\,\quad \text{s.t.}    &&\underline{x}_0 \leq J_{\textrm{bx},0} \, x(0) \leq \bar{x}_0 , && \label{eq:constraints:initial}\\[1ex]
     &&&\mathComment{Nonlinear constraints on the initial shooting node} \nonumber\\
     &&&\underline{h}\initial \leq h\initial(x(0), u(0), z(0), p) + J_{\textrm{sh}}\initial \, s\lowerh\initial, &&\label{eq:constraints:path:lower_bounds:start}\\
-    &&& h\initial(x(0), u(0), p) - J\ind{sh}\initial\, s\ind{u,h}\initial \leq \bar{h}\initial, &&\label{eq:constraints:path:upper_bounds:start}\\
+    &&& h\initial(x(0), u(0),  z(0), p) - J\ind{sh}\initial\, s\ind{u,h}\initial \leq \bar{h}\initial, &&\label{eq:constraints:path:upper_bounds:start}\\
     &&&\mathComment{Dynamics, see section \ref{sec:dynamics}}\nonumber\\
     %% dynamics
-    &&& f\ind{impl}(x(t), \dot{x}(t), u(t), z(t),p ) = 0, &&\quad t \in [0,\,T), \label{eq:dynamics}\\[1ex]
+    &&& f\ind{impl}(x(t), \dot{x}(t), u(t), z(t), p) = 0, &&\quad t \in [0,\,T), \label{eq:dynamics}\\[1ex]
     &&&\mathComment{Path constraints with lower bounds, see section \ref{sec:constraints:path}}\nonumber\\
     %% path constraints with lower slack
     &&&\underline{h} \leq h(x(t), u(t), z(t), p) + J_{\textrm{sh}} \, s\lowerh(t), &&\quad t \in (0,\,T),\\
@@ -117,7 +117,7 @@
     &&& s\lowerh\initial \geq 0, && \label{eq:constraints:path:lower_bounds:end}\\[1ex]
     &&&\mathComment{Path constraints with upper bounds, see section \ref{sec:constraints:path}}\nonumber\\
     %% path constraints with upper slack
-    &&& h(x(t), u(t), p) - J_{\textrm{sh}} \, s\upperh(t) \leq \bar{h}, &&\quad t \in (0,\,T),\\
+    &&& h(x(t), u(t), z(t), p) - J_{\textrm{sh}} \, s\upperh(t) \leq \bar{h}, &&\quad t \in (0,\,T),\\
     &&& J_{\textrm{bx}} x(t) - J_{\textrm{sbx}}\, s\upperbx(t) \leq \bar{x}, &&\quad t \in (0,\,T),\\
     &&& J_{\textrm{bu}} u(t) - J_{\textrm{sbu}}\, s\upperbu(t)\leq \bar{u}, &&\quad t \in [0,\,T),\\
     &&& Cx(t) + Du(t) - J_{\textrm{sg}}\, s\upperg \leq \bar{g}, &&\quad t \in [0,\,T), \\
@@ -147,25 +147,34 @@ with
 \item slacks for path constraints $ s\Lower(t) = (s\lowerbu, s\lowerbx, s\lowerg, s\lowerh) \in \R^{\ns} $ and $ s\upper(t) = (s\upperbu, s\upperbx, s\upperg, s\upperh) \in \R^{\ns} $
 \item slacks for terminal constraints $ s\Lower\terminal(t) = (s\lowerbx\terminal, s\lowerg\terminal, s\lowerh\terminal) \in \R^{\ns\terminal} $ and $ s\upper\terminal(t) = (s\upperbx\terminal, s\upperg\terminal, s\upperh\terminal) \in \R^{\ns\terminal} $
 \end{itemize}
+
+While the user specifies the OCP in continuous time, the problem is internally discretized using the \textbf{multiple shooting} approach and a piecewise constant control parametrization.
+In particular, the algebraic variables returned by \acados{} are associated with the beginning of a shooting interval.
+Thus, there are no algebraic variables available at the terminal node.
+
 %
-Some of the following restrictions may apply to matrices in the formulation:
-\begin{center}
-    \begin{tabular}{ll}
-        \textbf{DIAG} & diagonal\\
-        \textbf{SPUM} & horizontal slice of a permuted unit matrix\\
-        \textbf{SPUME} & like \textbf{SPUM}, but with empty rows intertwined
-    \end{tabular}
-\end{center}
+
 %
-\paragraph{Document Purpose}
-This document is only associated to the \matlab{} interface of \acados.
+\paragraph{Document Purpose.}
+This document describes the \matlab{} interface of \acados.
 Here, the focus is to give a mathematical overview of the problem formulation and possible options to model it within \acados.
 The problem formulation and the possibilities of \acados{} are similar in the \python{} interface, however, some of the string identifiers are different.
 The documentation is not exhaustive and does not contain a full description for the \matlab{} interface.
 
 You can find examples in the directory \code{<acados>/examples/acados\_matlab\_octave}.
 The source code of the \acados{} \matlab{} interface is found in: \code{<acados>/interfaces/acados\_matlab\_octave} and should serve as a more extensive, complete and up-to-date documentation about the possibilities.
-%
+
+\paragraph{Abbreviations.}
+Some of the following restrictions may apply to matrices in the formulation:
+\begin{center}
+	\begin{tabular}{ll}
+		\textbf{DIAG} & diagonal\\
+		\textbf{SPUM} & horizontal slice of a permuted unit matrix\\
+		\textbf{SPUME} & like \textbf{SPUM}, but with empty rows intertwined
+	\end{tabular}
+\end{center}
+
+
 \section{Dynamics}\label{sec:dynamics}
 %
 The system dynamics term is used to connect state trajectories from adjacent shooting nodes by means of equality constraints.
@@ -173,11 +182,11 @@ The system dynamics term is used to connect state trajectories from adjacent sho
 The system dynamics equation~\eqref{eq:dynamics} is replaced with a discrete-time dynamic system.
 The dynamics can be formulated in different ways in \acados:
 As implicit equations in continuous time~\eqref{eq:dynamics:implicit}, or as explicit equations in continuous time~\eqref{eq:dynamics:explicit} or directly as discrete-time dynamics \eqref{eq:dynamics:discrete}.
-This section and table~\ref{tab:dynamics} summarizes the options.
+This section and Table~\ref{tab:dynamics} summarize these options.
 %
 \subsection{Implicit Dynamics}\label{sec:dynamics:implicit}
 %
-The most general way to provide a continuous time ODE in \acados\ is to define the function $ f\ind{impl}: \mathbb{R}^{\nx}\times\mathbb{R}^{\nx}\times\mathbb{R}^{\nuu}\times\mathbb{R}^{\nz}\times\mathbb{R}^{\np} \rightarrow \mathbb{R}^{\nx+\nz}$ which is fully implicit DAE formulation describing the system as:
+The most general way to provide a continuous-time ODE in \acados\ is to define the function $ f\ind{impl}: \mathbb{R}^{\nx}\times\mathbb{R}^{\nx}\times\mathbb{R}^{\nuu}\times\mathbb{R}^{\nz}\times\mathbb{R}^{\np} \rightarrow \mathbb{R}^{\nx+\nz}$ which is fully implicit DAE formulation describing the system as:
 \begin{equation}
     f\ind{impl}(x, \dot{x}, u, z, p) = 0.\label{eq:dynamics:implicit}
 \end{equation}
@@ -219,7 +228,7 @@ There are different \acados~modules to model the cost functions in equation~\eqr
 \end{itemize}
 to define which one is used set \code{cost\_type} for $l$, \code{cost\_type\_e} for $m$.
 
-Setting the slack penalties in equation~\eqref{eq:cost} is done in the same way for all cost modules, see table~\ref{tab:cost:slack} for an overview.
+Setting the slack penalties in equation~\eqref{eq:cost} is done in the same way for all cost modules, see Table~\ref{tab:cost:slack} for an overview.
 
 Slack penalties for the initial node can be set through the appropriate fields \code{cost\_xx\_0}.
 %
@@ -250,7 +259,9 @@ Similarly, \code{cost\_z}, \code{cost\_Z\_e}, \code{cost\_z\_e} can be used to s
 
 Note that the dimensions of the slack variables $s\Lower(t)$, $s\Lower\terminal(t)$, $s\upper(t)$ and $s\upper\terminal(t)$ are determined by \acados{} from the associated matrices ($Z\Lower$, $Z\upper$,  $J\ind{sh}$, $J\ind{sg}$, $J\ind{sbu}$, $J\ind{sbx}$ etc.).
 
-Note that all cost terms, except for the terminal one, are weighted with the corresponding time step. If the time steps are $\Delta t_0,\dots, \Delta t_N$, the total cost is given by $c_\text{total} = \Delta t_0 \cdot c_0(x_0, u_0, p_0, z_0) + \dots + \Delta t_{N-1} \cdot c_{N-1}(x_0, u_0, p_0, z_0) + c_N(x_N, p_N)$. This means the Lagrange cost term is given in continuous time, which allows for a seamless OCP discretization with a nonuniform time grid.
+Note that all cost terms, except for the terminal one, are weighted with the corresponding time step.
+If the time steps are $\Delta t_0,\dots, \Delta t_{N-1}$, the total cost is given by $c_\text{total} = \Delta t_0 \cdot l(x_0, u_0, p_0, z_0) + \dots + \Delta t_{N-1} \cdot l(x_{N-1}, u_{N-1}, p_{N-1}, z_{N-1}) + m(x_N, p_N)$.
+This means the Lagrange cost term is given in continuous time and then integrated using the explicit Euler method, which allows for a seamless OCP discretization with a nonuniform time grid.
 %
 \subsection{Cost module: \code{auto}}\label{sec:cost:auto}
 %
@@ -275,7 +286,7 @@ Table~\ref{tab:cost:auto} shows the available options.
 \subsection{Cost module: \code{external}}\label{sec:cost:external}
 %
 Set \code{cost\_type} to \code{ext\_cost}. % TODO: rename to 'external'?!
-See table~\ref{tab:cost:external} for the available options.
+See Table~\ref{tab:cost:external} for the available options.
 \begin{table}[ht!]
     \centering
     \caption{Cost module \code{external} options} \label{tab:cost:external}
@@ -295,17 +306,19 @@ The Lagrange cost term has the form
 \begin{align}
 l(x, u, z) &= \frac{1}{2} \norm{ \underbrace{V_x\, x + V_u\, u + V_z\, z}_{\displaystyle y} - y\ind{ref}}_W^2 \label{eq:cost:linear_ls:l}
 \end{align}
-where matrices $ V_x \in \mathbb{R}^{n_y \times n_x}$, $V_u \in \mathbb{R}^{n_y \times n_u}$ are $V_z \in \mathbb{R}^{n_y \times n_z}$ map $x$, $u$ and $z$ onto $y$, respectively and $W \in \mathbb{R}^{n_y \times n_y}$ is the weighing matrix. The vector $y\ind{ref} \in \mathbb{R}^{n_y}$ is the reference.
+where matrices $ V_x \in \mathbb{R}^{n_y \times n_x}$, $V_u \in \mathbb{R}^{n_y \times n_u}$ are $V_z \in \mathbb{R}^{n_y \times n_z}$ map $x$, $u$ and $z$ onto $y$, respectively and $W \in \mathbb{R}^{n_y \times n_y}$ is the weighting matrix.
+The vector $y\ind{ref} \in \mathbb{R}^{n_y}$ is the reference.
 
 Similarly, the Mayer cost term has the form
 \begin{align}
 m(x, u, z) &= \frac{1}{2} \norm{ \underbrace{V_x\terminal x}_{\displaystyle y\terminal} - y\ind{ref}\terminal}_{W\terminal}^2 \label{eq:cost:linear_ls:m}
 \end{align}
-where matrix $ V\terminal_x \in \mathbb{R}^{n_{y\terminal} \times n_x}$ maps $x$ onto $y\terminal$ and $W\terminal \in \mathbb{R}^{n_{y\terminal} \times n_{y\terminal}}$ is the weighing matrix. The vector $y\terminal_\textrm{ref} \in \mathbb{R}^{n_{y\terminal}}$ is the reference.
+where matrix $ V\terminal_x \in \mathbb{R}^{n_{y\terminal} \times n_x}$ maps $x$ onto $y\terminal$ and $W\terminal \in \mathbb{R}^{n_{y\terminal} \times n_{y\terminal}}$ is the weighting matrix.
+The vector $y\terminal_\textrm{ref} \in \mathbb{R}^{n_{y\terminal}}$ is the reference.
 
 Additionally, a different cost for the initial node can be set using the same form as \eqref{eq:cost:linear_ls:l} and the appropriate fields \code{cost\_(...)\_0}.
 
-See table~\ref{tab:cost:linear_ls} for the available options of this cost module.
+See Table~\ref{tab:cost:linear_ls} for the available options of this cost module.
 %
 \begin{table}[ht!]
     \centering
@@ -337,7 +350,7 @@ In order to activate the \code{nonlinear least squares} cost module, set \code{c
 The \code{nonlinear least squares} cost function has the same basic form as eqns.~(\ref{eq:cost:linear_ls:l}~-~\ref{eq:cost:linear_ls:m}) of the \code{linear least squares} cost module.
 The only difference is that $ y $ and $ y\terminal $ are defined by means of \casadi{} expressions, instead of via matrices $ V_x $, $ V_u $, $ V_z $ and $ V_x\terminal $. The same note about the initial node applies to this cost module as well.
 %
-See table~\ref{tab:cost:nonlinear_ls} for the available options of this cost module.
+See Table~\ref{tab:cost:nonlinear_ls} for the available options of this cost module.
 %
 \begin{table}[ht!]
     \centering
@@ -368,7 +381,7 @@ Meanwhile, the \python{} interface also supports the \acados{} constraint module
 
 Additionally, bounds on $u$ and general linear constraints are also enforced on the initial node by default. On the other hand, bounds on $x$ and nonlinear constraints are fully split and have to be explicitly stated with \code{\_0} correspondence to be enforced on the initial node.
 
-%The constraint type can be set using the identifier \str{constr\_type} and \str{constr\_type\_e} for the path constraints and terminal constraints, respectively. The string identifier options are found in table~\ref{tab:constr_type}. The default setting is \str{bgh}.
+%The constraint type can be set using the identifier \str{constr\_type} and \str{constr\_type\_e} for the path constraints and terminal constraints, respectively. The string identifier options are found in Table~\ref{tab:constr_type}. The default setting is \str{bgh}.
 %\begin{table}[ht!]
 %\centering
 %\caption{Constraint type string identifier}\label{tab:constr_type}
@@ -386,13 +399,14 @@ Additionally, bounds on $u$ and general linear constraints are also enforced on 
 %
 \subsection{Initial State}\label{sec:constraints:initial}
 %
-Note: An initial state is not required.
+Note: An initial state constraint is not required.
 For example, for moving horizon estimation (MHE) problems it should not be set.
 
-Two possibilities exist to define the initial states equation~\eqref{eq:constraints:initial}: a simple syntax and an extended syntax.
+Two possibilities exist to define the initial state constraint~\eqref{eq:constraints:initial}: a simple syntax and an extended syntax.
 
-\paragraph{Simple syntax}
-defines the full initial state $x(0)=\bar{x}_0$. The options are found in table~\ref{tab:constraints:simplesyntax}.
+\paragraph{Simple syntax.}
+Via the simple syntax the full initial state is defined, $x(0)=\bar{x}_0$.
+The corresponding options are found in Table~\ref{tab:constraints:simplesyntax}.
 \begin{table}[ht!]
     \centering
     \caption{Simple syntax for setting the initial state} \label{tab:constraints:simplesyntax}
@@ -404,9 +418,9 @@ defines the full initial state $x(0)=\bar{x}_0$. The options are found in table~
     \end{tabular}
 \end{table}
 %
-\paragraph{Extended syntax}
-allows to define upper and lower bounds on a subset of states.
-The options for the extended syntax are found in table~\ref{tab:constraints:extendedsyntax}.
+\paragraph{Extended syntax.}
+The extended syntax allows to define upper and lower bounds on a subset of states.
+The options for the extended syntax are found in Table~\ref{tab:constraints:extendedsyntax}.
 \begin{table}[ht!]
     \centering
     \caption{Extended syntax for setting the initial state} \label{tab:constraints:extendedsyntax}
@@ -503,13 +517,13 @@ Here, matrices
 %
 % \section{External links}\label{sec:external_links}
 % % outdated and removed
-% A table sheet with additional info is found here:\newline
+% A Table sheet with additional info is found here:\newline
 % \url{https://docs.google.com/spreadsheets/d/1rVRycLnCyaWJLwnV47u30Vokp7vRu68og3OhlDbSjDU/edit?usp=sharing}
 %
 \section{Model}\label{sec:model}
 %
 A model instance is created using \code{ocp\_model = acados\_ocp\_model()}. It contains all model definitions for simulation and for usage in the OCP solver.
-See table~\ref{tab:model:options} for the available options.
+See Table~\ref{tab:model:options} for the available options.
 Furthermore, see \code{ocp\_model.model\_struct} or \href{https://github.com/acados/acados/blob/master/interfaces/acados_matlab_octave/acados_ocp_model.m}{\code{acados\_ocp\_model.m}} to see what other fields can be set via direct access.
 %
 \begin{table}
@@ -528,7 +542,7 @@ Furthermore, see \code{ocp\_model.model\_struct} or \href{https://github.com/aca
         \code{sym\_z} & \casadi{} expr. & algebraic state $z$ in implicit dynamics eq.~\eqref{eq:dynamics} & \optional, only with IRK \\
         \code{sym\_p} & \casadi{} expr. & parameters $p$ of the problem formulation in sec.~\ref{sec:problem} & \optional \\
         \multicolumn{4}{c}{$\vdots$}\\
-        \multicolumn{4}{c}{Additionally, options from tables \ref{tab:dynamics}, \ref{tab:cost:slack}, \ref{tab:cost:auto}, \ref{tab:cost:external}, \ref{tab:cost:linear_ls}, \ref{tab:cost:nonlinear_ls}, %\ref{tab:constr_type},
+        \multicolumn{4}{c}{Additionally, options from Tables \ref{tab:dynamics}, \ref{tab:cost:slack}, \ref{tab:cost:auto}, \ref{tab:cost:external}, \ref{tab:cost:linear_ls}, \ref{tab:cost:nonlinear_ls}, %\ref{tab:constr_type},
         \ref{tab:constraints:simplesyntax}, \ref{tab:constraints:extendedsyntax}, \ref{tab:constraints:path} and \ref{tab:constraints:terminal}, apply here.}\\
         \multicolumn{4}{c}{$\vdots$}\\
         \bottomrule
@@ -591,7 +605,7 @@ Some options can only be set before the solver is created, especially options th
         \midrule
         
         \multicolumn{4}{l}{\emph{QP solver}} \\
-        \code{qp\_solver} & string & $\longrightarrow$ & Defines the quadratic programming solver and condensing strategy. See table~\ref{tab:solver_options:qp_solver_option}\\
+        \code{qp\_solver} & string & $\longrightarrow$ & Defines the quadratic programming solver and condensing strategy. See Table~\ref{tab:solver_options:qp_solver_option}\\
 
         \code{qp\_solver\_iter\_max} & int & $50$ & maximum number of iterations per QP solver call\\
         \code{qp\_solver\_cond\_N} & int & $N$ & new horizon after partial condensing, set to \code{param\_scheme\_N} by default\\
@@ -608,7 +622,7 @@ Some options can only be set before the solver is created, especially options th
         \midrule
         \multicolumn{4}{l}{\emph{Hessian approximation}} \\
         {\code{nlp\_solver\_\-exact\_hessian}} & string & \str{false} & use exact hessian calculation: (\str{})in (\str{true}, \str{false}), use exact \\
-        \code{regularize\_method} & string & $\longrightarrow$ & Defines the hessian regularization method. See table~\ref{tab:solver_options:regularize_method}\\
+        \code{regularize\_method} & string & $\longrightarrow$ & Defines the hessian regularization method. See Table~\ref{tab:solver_options:regularize_method}\\
         \code{levenberg\_marquardt} & double & $0.0$ & in case of a singular hessian, setting this $>0$ can help convergence \\
         \code{exact\_hess\_dyn} & int & $1$ & in ($0$, $1$), compute and use hessian in dynamics, only if \str{nlp\_\-solver\_\-exact\_\-hessian} = \str{true} \\
         \code{exact\_hess\_cost} & int & $1$ & in ($0$, $1$), only if \str{nlp\_solver\_exact\_hessian} = \str{true} \\
