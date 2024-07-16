@@ -334,7 +334,7 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {% if solver_options.with_value_sens_wrt_params %}
         {{ model.name }}_cost/{{ model.name }}_cost_ext_cost_e_grad_p.c
         {% endif %}
-    {%- elif cost.cost_source_ext_cost_e != cost.cost_source_ext_cost_0 %}
+    {%- else %}
         {{ model.name }}_cost/{{ cost.cost_source_ext_cost_e }}
     {%- endif %}
 {%- endif %}
