@@ -69,8 +69,7 @@ typedef struct
     int rti_phase;       // only phase 0 at the moment
     bool eval_residual_at_max_iter; // if convergence should be checked after last iterations or only throw max_iter reached
 
-    //opts for funnel globalization
-    // funnel
+    // Funnel globalization related options
     double funnel_initialization_increase_factor; // for multiplication with initial infeasibility
     double funnel_initialization_upper_bound; // for initialization of initial funnel width
     double funnel_sufficient_decrease_factor; // multiplication factor for funnel suff. decrease factor

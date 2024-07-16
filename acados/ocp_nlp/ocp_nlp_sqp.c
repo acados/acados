@@ -1560,8 +1560,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 }
 
 double ocp_nlp_sqp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
-                ocp_nlp_workspace *nlp_work, ocp_nlp_memory *nlp_mem, ocp_nlp_sqp_opts *opts){
-
+                ocp_nlp_workspace *nlp_work, ocp_nlp_memory *nlp_mem, ocp_nlp_sqp_opts *opts)
+{
     // Compute the QP objective function value
     double qp_cost = 0.0;
     int i, nux;
