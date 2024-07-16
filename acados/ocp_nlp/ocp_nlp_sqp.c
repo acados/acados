@@ -1129,8 +1129,6 @@ static int ocp_nlp_sqp_backtracking_line_search(void *config_, void *dims_, void
     ocp_nlp_in *nlp_in = nlp_in_;
     ocp_nlp_out *nlp_out = nlp_out_;
 
-    // evaluate the objective of the QP (as predicted reduction)
-    // double qp_cost = compute_qp_cost
     int N = dims->N;
     double pred = -nlp_mem->qp_cost_value;
     double pred_merit = 0.0; // Calculate this here
