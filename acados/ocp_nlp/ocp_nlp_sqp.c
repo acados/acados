@@ -125,7 +125,7 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->qp_warm_start = 0;
     opts->warm_start_first_qp = false;
     opts->rti_phase = 0;
-    opts->eval_residual_at_max_iter = true;
+    opts->eval_residual_at_max_iter = false;
 
     // funnel method opts
     opts->funnel_initialization_increase_factor = 15.0;
