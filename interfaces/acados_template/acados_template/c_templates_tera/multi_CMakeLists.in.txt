@@ -147,7 +147,7 @@ set(MODEL_SRC
     {{ model[jj].name }}_model/{{ model[jj].name }}_gnsf_phi_fun.c
     {{ model[jj].name }}_model/{{ model[jj].name }}_gnsf_phi_fun_jac_y.c
     {{ model[jj].name }}_model/{{ model[jj].name }}_gnsf_phi_jac_y_uhat.c
-		{% if model[jj].gnsf.nontrivial_f_LO == 1 %}
+		{%- if model[jj].gnsf.nontrivial_f_LO == 1 %}
     {{ model[jj].name }}_model/{{ model[jj].name }}_gnsf_f_lo_fun_jac_x1k1uz.c
 		{%- endif %}
 	{%- endif %}
@@ -155,12 +155,12 @@ set(MODEL_SRC
 {%- elif mocp_opts.integrator_type[jj] == "DISCRETE" %}
     {{ model[jj].name }}_model/{{ model[jj].name }}_dyn_disc_phi_fun.c
     {{ model[jj].name }}_model/{{ model[jj].name }}_dyn_disc_phi_fun_jac.c
-    {% if solver_options.with_solution_sens_wrt_params %}
+    {%- if solver_options.with_solution_sens_wrt_params %}
     {{ model[jj].name }}_model/{{ model[jj].name }}_dyn_disc_phi_jac_p_hess_xu_p.c
-    {% endif %}
-    {% if solver_options.with_value_sens_wrt_params %}
+    {%- endif %}
+    {%- if solver_options.with_value_sens_wrt_params %}
     {{ model[jj].name }}_model/{{ model[jj].name }}_dyn_disc_phi_adj_p.c
-    {% endif %}
+    {%- endif %}
 		{%- if hessian_approx == "EXACT" %}
     {{ model[jj].name }}_model/{{ model[jj].name }}_dyn_disc_phi_fun_jac_hess.c
 		{%- endif %}
@@ -200,12 +200,12 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {{ model[jj].name }}_cost/{{ model[jj].name }}_cost_ext_cost_fun.c
         {{ model[jj].name }}_cost/{{ model[jj].name }}_cost_ext_cost_fun_jac.c
         {{ model[jj].name }}_cost/{{ model[jj].name }}_cost_ext_cost_fun_jac_hess.c
-        {% if solver_options.with_solution_sens_wrt_params %}
+        {%- if solver_options.with_solution_sens_wrt_params %}
         {{ model[jj].name }}_cost/{{ model[jj].name }}_cost_ext_cost_hess_xu_p.c
-        {% endif %}
-        {% if solver_options.with_value_sens_wrt_params %}
+        {%- endif %}
+        {%- if solver_options.with_value_sens_wrt_params %}
         {{ model[jj].name }}_cost/{{ model[jj].name }}_cost_ext_cost_grad_p.c
-        {% endif %}
+        {%- endif %}
     {%- elif cost[jj].cost_source_ext_cost != cost[jj].cost_source_ext_cost_0 %}
         {{ model[jj].name }}_cost/{{ cost[jj].cost_source_ext_cost }}
     {%- endif %}
@@ -245,12 +245,12 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {{ model_0.name }}_cost/{{ model_0.name }}_cost_ext_cost_0_fun.c
         {{ model_0.name }}_cost/{{ model_0.name }}_cost_ext_cost_0_fun_jac.c
         {{ model_0.name }}_cost/{{ model_0.name }}_cost_ext_cost_0_fun_jac_hess.c
-        {% if solver_options.with_solution_sens_wrt_params %}
+        {%- if solver_options.with_solution_sens_wrt_params %}
         {{ model_0.name }}_cost/{{ model_0.name }}_cost_ext_cost_0_hess_xu_p.c
-        {% endif %}
-        {% if solver_options.with_value_sens_wrt_params %}
+        {%- endif %}
+        {%- if solver_options.with_value_sens_wrt_params %}
         {{ model_0.name }}_cost/{{ model_0.name }}_cost_ext_cost_0_grad_p.c
-        {% endif %}
+        {%- endif %}
     {%- else %}
         {{ model_0.name }}_cost/{{ cost_0.cost_source_ext_cost_0 }}
     {%- endif %}
@@ -267,12 +267,12 @@ if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMP
         {{ model_e.name }}_cost/{{ model_e.name }}_cost_ext_cost_e_fun.c
         {{ model_e.name }}_cost/{{ model_e.name }}_cost_ext_cost_e_fun_jac.c
         {{ model_e.name }}_cost/{{ model_e.name }}_cost_ext_cost_e_fun_jac_hess.c
-        {% if solver_options.with_solution_sens_wrt_params %}
+        {%- if solver_options.with_solution_sens_wrt_params %}
         {{ model_e.name }}_cost/{{ model_e.name }}_cost_ext_cost_e_hess_xu_p.c
-        {% endif %}
-        {% if solver_options.with_value_sens_wrt_params %}
+        {%- endif %}
+        {%- if solver_options.with_value_sens_wrt_params %}
         {{ model_e.name }}_cost/{{ model_e.name }}_cost_ext_cost_e_grad_p.c
-        {% endif %}
+        {%- endif %}
     {%- else %}
         {{ model_e.name }}_cost/{{ cost_e.cost_source_ext_cost_e }}
     {%- endif %}
@@ -341,14 +341,6 @@ else()
 endif()
 
 # the targets
-
-# bundled_shared_lib
-if(${BUILD_ACADOS_SOLVER_LIB})
-    set(LIB_ACADOS_SOLVER acados_solver_{{ name }})
-    add_library(${LIB_ACADOS_SOLVER} SHARED $<TARGET_OBJECTS:${MODEL_OBJ}> $<TARGET_OBJECTS:${OCP_OBJ}>
-    )
-    install(TARGETS ${LIB_ACADOS_SOLVER} DESTINATION ${CMAKE_INSTALL_PREFIX})
-endif(${BUILD_ACADOS_SOLVER_LIB})
 
 # ocp_shared_lib
 if(${BUILD_ACADOS_OCP_SOLVER_LIB})
