@@ -824,26 +824,20 @@ class AcadosOcp:
         if opts.alpha_min == None:
             if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
                 opts.alpha_min = 1e-17
-            elif opts.globalization == 'MERIT_BACKTRACKING':
-                opts.alpha_min = 0.05
             else:
                 opts.alpha_min = 1e-17
 
         if opts.alpha_reduction == None:
             if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
                 opts.alpha_reduction = 0.5
-            elif opts.globalization == 'MERIT_BACKTRACKING':
-                opts.alpha_reduction = 0.7
             else:
-                opts.alpha_reduction = 0.5
+                opts.alpha_reduction = 0.7
 
         if opts.eps_sufficient_descent == None:
             if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
                 opts.eps_sufficient_descent = 1e-6
-            elif opts.globalization == 'MERIT_BACKTRACKING':
-                opts.eps_sufficient_descent = 1e-4
             else:
-                opts.eps_sufficient_descent = 1e-6
+                opts.eps_sufficient_descent = 1e-4
 
         if opts.eval_residual_at_max_iter == None:
             if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
