@@ -341,8 +341,7 @@ class AcadosMultiphaseOcp:
         template_list.append(('acados_multi_solver.in.c', f'acados_solver_{name}.c'))
         # template_list.append(('acados_solver.in.pxd', f'acados_solver.pxd'))
         if cmake_builder is not None:
-            raise NotImplementedError('CMake not yet supported for multiphase OCPs.')
-            template_list.append(('CMakeLists.in.txt', 'CMakeLists.txt'))
+            template_list.append(('multi_CMakeLists.in.txt', 'CMakeLists.txt'))
         else:
             template_list.append(('multi_Makefile.in', 'Makefile'))
 
