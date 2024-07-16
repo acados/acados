@@ -400,6 +400,12 @@ output_note = strcat(output_note, num2str(i_out), ') ztraj, algebraic states con
 sfun_output_names = [sfun_output_names; 'ztraj [{{ dims.nz * dims.N }}]'];
 {%- endif %}
 
+{%- if simulink_opts.outputs.pi_all == 1 %}
+i_out = i_out + 1;
+output_note = strcat(output_note, num2str(i_out), ') pi_all, equality Lagrange multipliers concatenated for nodes 0 to N-1, size [{{ dims.nx * dims.N }}]\n ');
+sfun_output_names = [sfun_output_names; 'pi_all [{{ dims.nx * dims.N }}]'];
+{%- endif %}
+
 {%- if simulink_opts.outputs.solver_status == 1 %}
 i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') acados solver status (0 = SUCCESS)\n ');
