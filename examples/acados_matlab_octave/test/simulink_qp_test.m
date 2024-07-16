@@ -39,9 +39,6 @@ N = 20; % number of discretization steps
 nx = 3;
 nu = 3;
 [ocp_model, ocp_opts, simulink_opts, x0] = create_ocp_qp_solver_formulation(N);
-% NOTE: here we don't perform iterations and just test initialization
-% functionality
-ocp_opts.set('nlp_solver_max_iter', 0);
 
 
 %% create ocp solver
@@ -49,7 +46,7 @@ ocp = acados_ocp(ocp_model, ocp_opts, simulink_opts);
 
 % solver initial guess
 x_traj_init = rand(nx, N+1);
-u_traj_init = rand(nu, N);
+u_traj_init = zeros(nu, N);
 
 %% call ocp solver
 % update initial state
@@ -68,7 +65,6 @@ xtraj = ocp.get('x');
 
 status = ocp.get('status'); % 0 - success
 ocp.print('stat')
-% keyboard
 
 %% simulink test
 cd c_generated_code
@@ -80,27 +76,27 @@ out_sim = sim('initialization_test_simulink', 'SaveOutput', 'on');
 disp('successfully ran simulink_model_advanced_closed_loop');
 
 %% Evaluation
-fprintf('\nTest results on SIMULINK initialization.\n')
+fprintf('\nTest results on SIMULINK simulation.\n')
 
 disp('checking KKT residual')
 kkt_signal = out_sim.logsout.getElement('KKT_residual');
 if any(kkt_signal.Values.data > 1e-6)
     disp('failed');
-    % quit(1);
+    quit(1);
 end
 
 sqp_iter_signal = out_sim.logsout.getElement('sqp_iter');
 disp('checking SQP iter, QP should take 1 SQP iter.')
 if any(sqp_iter_signal.Values.Data ~= 1)
     disp('failed');
-    % quit(1);
+    quit(1);
 end
 
 status_signal = out_sim.logsout.getElement('status');
 disp('checking status.')
 if any(status_signal.Values.Data)
     disp('failed');
-    % quit(1);
+    quit(1);
 end
 
 utraj_signal = out_sim.logsout.getElement('utraj');
@@ -108,7 +104,7 @@ u_simulink = utraj_signal.Values.Data(1, :);
 disp('checking u values.')
 if any((u_simulink(:) - utraj(:)) > 1e-8)
     disp('failed');
-    % quit(1);
+    quit(1);
 end
 
 xtraj_signal = out_sim.logsout.getElement('xtraj');
@@ -116,6 +112,6 @@ x_simulink = xtraj_signal.Values.Data(1, :);
 disp('checking x values.')
 if any((x_simulink(:) - xtraj(:)) > 1e-8)
     disp('failed');
-    % quit(1);
+    quit(1);
 end
 
