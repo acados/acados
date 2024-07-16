@@ -545,7 +545,14 @@ class AcadosOcpOptions:
 
     @property
     def alpha_min(self):
-        """Minimal step size for globalization MERIT_BACKTRACKING, default: 0.05."""
+        """Minimal step size for globalization.
+
+        default: None.
+
+        If None is given:
+        - in case of FUNNEL_L1PEN_LINESEARCH, value is set to 1e-17.
+        - in case of MERIT_BACKTRACKING, value is set to 0.05.
+        """
         return self.__alpha_min
 
     @property
@@ -638,10 +645,9 @@ class AcadosOcpOptions:
         """
         Determines, if the problem data is again evaluated after the last iteration
         has been performed.
-        If yes, the data is evaluated at the new iterate and
-        it is checked, and convergence will be checked. 
-        If no, after the last iteration, the solver will terminate with max iterations
-        reached, and convergence will not be checked at the last iterate.
+        If True, the residuals are evaluated at the last iterate and convergence will be checked.
+        If False, after the last iteration, the solver will terminate with max iterations
+        status, although the final iterate might fulfill the convergence criteria.
         """
         return self.__eval_residual_at_max_iter
 
@@ -649,6 +655,9 @@ class AcadosOcpOptions:
     def funnel_initial_penalty_parameter(self):
         """
         Initialization.
+
+        Type: float
+        Default: 1.0
         """
         return self.__funnel_initial_penalty_parameter
 
