@@ -873,12 +873,12 @@ static bool check_termination(int n_iter, ocp_nlp_res *nlp_res, ocp_nlp_sqp_memo
         return true;
     }
 
-    // We do not need to check for the complementarity condition and for the
+    // check stationarity: KKT point
     if ((nlp_res->inf_norm_res_stat < opts->tol_stat) &&
         (nlp_res->inf_norm_res_eq < opts->tol_eq) &&
         (nlp_res->inf_norm_res_ineq < opts->tol_ineq) &&
         (nlp_res->inf_norm_res_comp < opts->tol_comp))
-    {// Check Stationarity
+    {
             mem->status = ACADOS_SUCCESS;
             if (opts->nlp_opts->print_level > 0)
             {
@@ -887,7 +887,7 @@ static bool check_termination(int n_iter, ocp_nlp_res *nlp_res, ocp_nlp_sqp_memo
             return true;
     }
 
-    // Check for small step
+    // check for small step
     if ((n_iter > 0) && (mem->step_norm < 1e-12))
     {
         if (opts->nlp_opts->print_level > 0)
@@ -905,7 +905,7 @@ static bool check_termination(int n_iter, ocp_nlp_res *nlp_res, ocp_nlp_sqp_memo
         return true;
     }
 
-    // Check for unbounded problem
+    // check for unbounded problem
     if (mem->nlp_mem->cost_value <= opts->tol_unbounded)
     {
         mem->status = ACADOS_UNBOUNDED;
@@ -915,7 +915,7 @@ static bool check_termination(int n_iter, ocp_nlp_res *nlp_res, ocp_nlp_sqp_memo
         return true;
     }
 
-    // Check for maximum iterations
+    // check for maximum iterations
     if (n_iter >= opts->max_iter)
     {
         mem->status = ACADOS_MAXITER;
