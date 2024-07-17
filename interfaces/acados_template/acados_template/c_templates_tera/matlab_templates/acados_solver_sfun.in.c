@@ -144,12 +144,6 @@ static void mdlInitializeSizes (SimStruct *S)
   {%- if dims.nh_e > 0 and simulink_opts.inputs.uh_e -%}  {#- uh_e #}
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
-
-  {%- for key, val in simulink_opts.inputs -%}
-    {%- if val != 0 and val != 1 -%}
-      {{ throw(message = "simulink_opts.inputs must be 0 or 1, got val") }}
-    {%- endif -%}
-  {%- endfor -%}
   {%- if dims.ny_0 > 0 and simulink_opts.inputs.cost_W_0 %}  {#- cost_W_0 #}
     {%- set n_inputs = n_inputs + 1 %}
   {%- endif -%}
