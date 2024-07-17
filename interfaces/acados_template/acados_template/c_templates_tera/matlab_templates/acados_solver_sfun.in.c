@@ -164,6 +164,10 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
 
+  {%- if simulink_opts.inputs.ignore_inits -%}  {#- ignore_inits #}
+    {%- set n_inputs = n_inputs + 1 -%}
+  {%- endif -%}
+
   {%- if simulink_opts.inputs.x_init -%}  {#- x_init #}
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
@@ -332,6 +336,12 @@ static void mdlInitializeSizes (SimStruct *S)
   {%- if simulink_opts.inputs.reset_solver -%}  {#- reset_solver #}
     {%- set i_input = i_input + 1 %}
     // reset_solver
+    ssSetInputPortVectorDimension(S, {{ i_input }}, 1);
+  {%- endif -%}
+
+  {%- if simulink_opts.inputs.ignore_inits -%}  {#- ignore_inits #}
+    {%- set i_input = i_input + 1 %}
+    // ignore_inits
     ssSetInputPortVectorDimension(S, {{ i_input }}, 1);
   {%- endif -%}
 
@@ -786,41 +796,53 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     }
   {%- endif %}
 
-  {%- if simulink_opts.inputs.x_init %}  {#- x_init #}
-    // x_init
+    int ignore_inits = 0;
+  {%- if simulink_opts.inputs.ignore_inits %}  {#- ignore_inits #}
+    // ignore_inits
     {%- set i_input = i_input + 1 %}
     in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
-    for (int ii = 0; ii < {{ dims.N + 1 }}; ii++)
-    {
-        for (int jj = 0; jj < {{ dims.nx }}; jj++)
-            buffer[jj] = (double)(*in_sign[(ii)*{{ dims.nx }}+jj]);
-        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, ii, "x", (void *) buffer);
-    }
+    ignore_inits = (int)(*in_sign[0]);
   {%- endif %}
+    // ssPrintf("ignore_inits = %d\n", ignore_inits);
 
-  {%- if simulink_opts.inputs.u_init %}  {#- u_init #}
-    // u_init
-    {%- set i_input = i_input + 1 %}
-    in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
-    for (int ii = 0; ii < N; ii++)
+    if (ignore_inits == 0)
     {
-        for (int jj = 0; jj < {{ dims.nu }}; jj++)
-            buffer[jj] = (double)(*in_sign[(ii)*{{ dims.nu }}+jj]);
-        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, ii, "u", (void *) buffer);
-    }
-  {%- endif %}
+      {%- if simulink_opts.inputs.x_init %}  {#- x_init #}
+        // x_init
+        {%- set i_input = i_input + 1 %}
+        in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+        for (int ii = 0; ii < {{ dims.N + 1 }}; ii++)
+        {
+            for (int jj = 0; jj < {{ dims.nx }}; jj++)
+                buffer[jj] = (double)(*in_sign[(ii)*{{ dims.nx }}+jj]);
+            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, ii, "x", (void *) buffer);
+        }
+      {%- endif %}
 
-  {%- if simulink_opts.inputs.pi_init %}  {#- pi_init #}
-    // pi_init
-    {%- set i_input = i_input + 1 %}
-    in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
-    for (int ii = 0; ii < N; ii++)
-    {
-        for (int jj = 0; jj < {{ dims.nx }}; jj++)
-            buffer[jj] = (double)(*in_sign[(ii)*{{ dims.nx }}+jj]);
-        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, ii, "pi", (void *) buffer);
+      {%- if simulink_opts.inputs.u_init %}  {#- u_init #}
+        // u_init
+        {%- set i_input = i_input + 1 %}
+        in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+        for (int ii = 0; ii < N; ii++)
+        {
+            for (int jj = 0; jj < {{ dims.nu }}; jj++)
+                buffer[jj] = (double)(*in_sign[(ii)*{{ dims.nu }}+jj]);
+            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, ii, "u", (void *) buffer);
+        }
+      {%- endif %}
+
+      {%- if simulink_opts.inputs.pi_init %}  {#- pi_init #}
+        // pi_init
+        {%- set i_input = i_input + 1 %}
+        in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+        for (int ii = 0; ii < N; ii++)
+        {
+            for (int jj = 0; jj < {{ dims.nx }}; jj++)
+                buffer[jj] = (double)(*in_sign[(ii)*{{ dims.nx }}+jj]);
+            ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, ii, "pi", (void *) buffer);
+        }
+      {%- endif %}
     }
-  {%- endif %}
 
   {%- if simulink_opts.inputs.rti_phase %}  {#- rti_phase #}
     {%- set i_input = i_input + 1 %}
@@ -830,7 +852,6 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "rti_phase", &rti_phase);
   {%- endif %}
-
 
     /* call solver */
   {%- if custom_update_filename == "" and not simulink_opts.inputs.rti_phase %}

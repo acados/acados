@@ -337,8 +337,14 @@ i_in = i_in + 1;
 {%- endif %}
 
 {%- if simulink_opts.inputs.reset_solver %}  {#- reset_solver #}
-input_note = strcat(input_note, num2str(i_in), ') reset_solver determines if iterate is set to all zeros before other initializations (x_init, u_init) are set and before solver is called, size [1]\n ');
+input_note = strcat(input_note, num2str(i_in), ') reset_solver determines if iterate is set to all zeros before other initializations (x_init, u_init, pi_init) are set and before solver is called, size [1]\n ');
 sfun_input_names = [sfun_input_names; 'reset_solver [1]'];
+i_in = i_in + 1;
+{%- endif %}
+
+{%- if simulink_opts.inputs.ignore_inits %}  {#- ignore_inits #}
+input_note = strcat(input_note, num2str(i_in), ') ignore_inits determines if initialization (x_init, u_init) are set (ignore_inits == 0) or ignored (otherwise), ignoring corresponds to internal warm start, size [1]\n ');
+sfun_input_names = [sfun_input_names; 'ignore_inits [1]'];
 i_in = i_in + 1;
 {%- endif %}
 
