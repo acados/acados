@@ -873,12 +873,12 @@ static bool check_termination(int n_iter, ocp_nlp_res *nlp_res, ocp_nlp_sqp_memo
         (nlp_res->inf_norm_res_ineq < opts->tol_ineq) &&
         (nlp_res->inf_norm_res_comp < opts->tol_comp))
     {
-            mem->status = ACADOS_SUCCESS;
-            if (opts->nlp_opts->print_level > 0)
-            {
-                printf("Optimal Solution found! Converged to KKT point.\n");
-            }
-            return true;
+        mem->status = ACADOS_SUCCESS;
+        if (opts->nlp_opts->print_level > 0)
+        {
+            printf("Optimal Solution found! Converged to KKT point.\n");
+        }
+        return true;
     }
 
     // check for small step
