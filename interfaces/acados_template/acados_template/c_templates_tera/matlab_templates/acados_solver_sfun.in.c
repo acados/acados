@@ -525,7 +525,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // local buffer
     {%- set buffer_size = buffer_sizes | sort | last %}
     real_t buffer[{{ buffer_size }}];
-    double tmp_cpu_time;
+    double tmp_double;
 
     /* go through inputs */
     {%- set i_input = -1 %}
@@ -854,7 +854,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     int acados_status = {{ model.name }}_acados_solve(capsule);
     // get time
     ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_tot", (void *) buffer);
-    tmp_cpu_time = buffer[0];
+    tmp_double = buffer[0];
 
   {%- elif simulink_opts.inputs.rti_phase %}{# SPLIT RTI PHASE#}
     {% if solver_options.nlp_solver_type != "SQP_RTI" %}
@@ -866,7 +866,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     int acados_status = {{ model.name }}_acados_solve(capsule);
     // get time
     ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_tot", (void *) buffer);
-    tmp_cpu_time = buffer[0];
+    tmp_double = buffer[0];
     {%- endif %}
   {%- elif solver_options.nlp_solver_type == "SQP_RTI" %}{# if custom_update_filename != "" #}
     // preparation
@@ -876,7 +876,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     // preparation time
     ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_tot", (void *) buffer);
-    tmp_cpu_time = buffer[0];
+    tmp_double = buffer[0];
 
     // call custom update function
     int data_len = 0;
@@ -889,7 +889,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     acados_status = {{ model.name }}_acados_solve(capsule);
     // feedback time
     ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_tot", (void *) buffer);
-    tmp_cpu_time += buffer[0];
+    tmp_double += buffer[0];
   {%- else -%}
     Simulink block with custom solver template only works with SQP_RTI!
   {%- endif %}
@@ -983,7 +983,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
   {%- if simulink_opts.outputs.CPU_time == 1 %}
     {%- set i_output = i_output + 1 %}
     out_cpu_time = ssGetOutputPortRealSignal(S, {{ i_output }});
-    out_cpu_time[0] = tmp_cpu_time;
+    out_cpu_time[0] = tmp_double;
   {%- endif -%}
 
   {%- if simulink_opts.outputs.CPU_time_sim == 1 %}
