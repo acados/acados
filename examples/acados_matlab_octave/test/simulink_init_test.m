@@ -85,55 +85,91 @@ ocp.print('stat')
 cd c_generated_code
 make_sfun; % ocp solver
 cd ..;
+n_sim = 3;
 
-%% Run Simulink example block
-out_sim = sim('initialization_test_simulink', 'SaveOutput', 'on');
-disp('successfully ran simulink_model_advanced_closed_loop');
+%% Test Simulink example block
+for itest = [1, 2, 3, 4]
+    if itest == 1
+        % always reinitialize
+        reset_value = 0;
+        ignore_inits_value = 0;
+    elseif itest == 2
+        % always reset
+        reset_value = 1;
+        ignore_inits_value = 0;
+    elseif itest == 3
+        % dont reset and dont initialize
+        reset_value = 0;
+        ignore_inits_value = 1;
+    elseif itest == 4
+        % always reset and initialize
+        reset_value = 1;
+        ignore_inits_value = 1;
+    end
 
-%% Evaluation
-fprintf('\nTest results on SIMULINK initialization.\n')
+    if (itest == 1 || itest == 2)
+        u_expected = u_traj_init;
+        x_expected = x_traj_init;
+        pi_expected = pi_init;
+    elseif (itest == 3)
+        u_expected = 0 * u_traj_init;
+        % Note: first solver call is initialized with x0 for whole horizon.
+        x_expected = repmat(x0, 1, N+1);
+        pi_expected = 0 * pi_init;
+    elseif (itest == 4)
+        u_expected = 0 * u_traj_init;
+        pi_expected = 0 * pi_init;
+        x_expected = 0 * x_traj_init;
+    end
 
-disp('checking KKT residual')
-kkt_signal = out_sim.logsout.getElement('KKT_residual');
-if any(kkt_signal.Values.data > 1e-6)
-    disp('failed');
-    % quit(1);
-end
+    out_sim = sim('initialization_test_simulink', 'SaveOutput', 'on');
+    fprintf('\nSuccessfully ran simulink block with reset_value %d ignore_inits_value %d.\n\n', reset_value, ignore_inits_value);
 
-sqp_iter_signal = out_sim.logsout.getElement('sqp_iter');
-disp('checking SQP iter, we set max iter to 0, so expect 0.')
-if any(sqp_iter_signal.Values.Data ~= 0)
-    disp('failed');
-    quit(1);
-end
+    % Evaluation
+    fprintf('\nTest results on SIMULINK simulation.\n')
 
-status_signal = out_sim.logsout.getElement('status');
-disp('checking status.')
-if any(status_signal.Values.Data ~= 2)
-    disp('failed');
-    quit(1);
-end
+    disp('checking KKT residual, should be zero just because not evaluated')
+    kkt_signal = out_sim.logsout.getElement('KKT_residual');
+    if any(kkt_signal.Values.data > 1e-6)
+        disp('failed');
+        quit(1);
+    end
 
-utraj_signal = out_sim.logsout.getElement('utraj');
-u_simulink = utraj_signal.Values.Data(1, :);
-disp('checking u values.')
-if any((u_simulink(:) - utraj(:)) > 1e-8)
-    disp('failed');
-    quit(1);
-end
+    sqp_iter_signal = out_sim.logsout.getElement('sqp_iter');
+    disp('checking SQP iter, we set max iter to 0, so expect 0.')
+    if any(sqp_iter_signal.Values.Data ~= 0)
+        disp('failed');
+        quit(1);
+    end
 
-xtraj_signal = out_sim.logsout.getElement('xtraj');
-x_simulink = xtraj_signal.Values.Data(1, :);
-disp('checking x values.')
-if any((x_simulink(:) - xtraj(:)) > 1e-8)
-    disp('failed');
-    quit(1);
-end
+    status_signal = out_sim.logsout.getElement('status');
+    disp('checking status, should be 2 (max iter).')
+    if any(status_signal.Values.Data ~= 2)
+        disp('failed');
+        quit(1);
+    end
 
-pi_signal = out_sim.logsout.getElement('pi_all');
-pi_simulink = pi_signal.Values.Data(1, :);
-disp('checking x values.')
-if any((pi_simulink(:) - pi_init(:)) > 1e-8)
-    disp('failed');
-    quit(1);
+    utraj_signal = out_sim.logsout.getElement('utraj');
+    u_simulink = utraj_signal.Values.Data(1, :);
+    disp('checking u values.')
+    if any(abs(u_simulink(:) - u_expected(:)) > 1e-8)
+        disp('failed');
+        quit(1);
+    end
+
+    xtraj_signal = out_sim.logsout.getElement('xtraj');
+    x_simulink = xtraj_signal.Values.Data(1, :);
+    disp('checking x values, should match initialization.')
+    if any(abs(x_simulink(:) - x_expected(:)) > 1e-8)
+        disp('failed');
+        quit(1);
+    end
+
+    pi_signal = out_sim.logsout.getElement('pi_all');
+    pi_simulink = pi_signal.Values.Data(1, :);
+    disp('checking pi values, should match initialization.')
+    if any(abs(pi_simulink(:) - pi_expected(:)) > 1e-8)
+        disp('failed');
+        quit(1);
+    end
 end

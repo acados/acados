@@ -69,6 +69,7 @@ ocp_opts.set('sim_method', sim_method);
 %% Simulink opts
 simulink_opts = get_acados_simulink_opts;
 
+% inputs
 simulink_opts.inputs.y_ref = 0;
 simulink_opts.inputs.y_ref_0 = 0;
 simulink_opts.inputs.y_ref_e = 0;
@@ -81,8 +82,10 @@ simulink_opts.inputs.x_init = 1;
 simulink_opts.inputs.u_init = 1;
 simulink_opts.inputs.pi_init = 1;
 
-simulink_opts.inputs.reset_solver = 0;
+simulink_opts.inputs.reset_solver = 1;
+simulink_opts.inputs.ignore_inits = 1;
 
+% outputs
 simulink_opts.outputs.u0 = 0;
 simulink_opts.outputs.utraj = 1;
 simulink_opts.outputs.xtraj = 1;

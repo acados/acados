@@ -72,23 +72,79 @@ cd c_generated_code
 make_sfun; % ocp solver
 cd ..;
 
-%% Run Simulink example block
+n_sim = 3;
+
+
+%% Test Simulink example block
+for itest = [1, 2, 3]
+    if itest == 1
+        % always reinitialize
+        reset_value = 0;
+        ignore_inits_value = 0;
+    elseif itest == 2
+        % always reset and initialize
+        reset_value = 1;
+        ignore_inits_value = 0;
+    elseif itest == 3
+        % always reset
+        reset_value = 1;
+        ignore_inits_value = 1;
+    end
+    out_sim = sim('initialization_test_simulink', 'SaveOutput', 'on');
+    fprintf('\nSuccessfully ran simulink block with reset_value %d ignore_inits_value %d.\n\n', reset_value, ignore_inits_value);
+
+    % Evaluation
+    fprintf('\nTest results on SIMULINK simulation.\n')
+
+    disp('checking KKT residual')
+    kkt_signal = out_sim.logsout.getElement('KKT_residual');
+    if any(kkt_signal.Values.data > 1e-6)
+        disp('failed');
+        quit(1);
+    end
+
+    sqp_iter_signal = out_sim.logsout.getElement('sqp_iter');
+    sqp_iter_simulink = sqp_iter_signal.Values.Data;
+    disp('checking SQP iter, QP should take 1 SQP iter.')
+    if any(sqp_iter_simulink ~= 1)
+        disp('failed');
+        quit(1);
+    end
+
+    status_signal = out_sim.logsout.getElement('status');
+    disp('checking status.')
+    if any(status_signal.Values.Data)
+        disp('failed');
+        quit(1);
+    end
+
+    utraj_signal = out_sim.logsout.getElement('utraj');
+    u_simulink = utraj_signal.Values.Data(1, :);
+    disp('checking u values.')
+    if any(abs(u_simulink(:) - utraj(:)) > 1e-8)
+        disp('failed');
+        quit(1);
+    end
+
+    xtraj_signal = out_sim.logsout.getElement('xtraj');
+    x_simulink = xtraj_signal.Values.Data(1, :);
+    disp('checking x values.')
+    if any(abs(x_simulink(:) - xtraj(:)) > 1e-8)
+        disp('failed');
+        quit(1);
+    end
+end
+%% Run with different initialization
+% always reset and ignore initializations
+reset_value = 1;
+ignore_inits_value = 1;
 out_sim = sim('initialization_test_simulink', 'SaveOutput', 'on');
 disp('successfully ran simulink_model_advanced_closed_loop');
 
-%% Evaluation
-fprintf('\nTest results on SIMULINK simulation.\n')
-
-disp('checking KKT residual')
-kkt_signal = out_sim.logsout.getElement('KKT_residual');
-if any(kkt_signal.Values.data > 1e-6)
-    disp('failed');
-    quit(1);
-end
-
 sqp_iter_signal = out_sim.logsout.getElement('sqp_iter');
+sqp_iter_simulink = sqp_iter_signal.Values.Data;
 disp('checking SQP iter, QP should take 1 SQP iter.')
-if any(sqp_iter_signal.Values.Data ~= 1)
+if any(sqp_iter_simulink ~= 1)
     disp('failed');
     quit(1);
 end
@@ -100,19 +156,31 @@ if any(status_signal.Values.Data)
     quit(1);
 end
 
-utraj_signal = out_sim.logsout.getElement('utraj');
-u_simulink = utraj_signal.Values.Data(1, :);
-disp('checking u values.')
-if any((u_simulink(:) - utraj(:)) > 1e-8)
+%% Run with different initialization
+% dont reset and ignore initializations -> only in first instance an SQP
+% iteration is needed
+reset_value = 0;
+ignore_inits_value = 1;
+out_sim = sim('initialization_test_simulink', 'SaveOutput', 'on');
+disp('successfully ran simulink_model_advanced_closed_loop');
+
+sqp_iter_signal = out_sim.logsout.getElement('sqp_iter');
+sqp_iter_simulink = sqp_iter_signal.Values.Data;
+disp('checking SQP iter, got')
+disp(sqp_iter_simulink)
+
+fprintf('should require one SQP iteration in first instance.\n')
+if sqp_iter_simulink(1) ~= 1
+    disp('failed');
+end
+fprintf('should require 0 SQP iterations if initialized at solution.\n')
+if any(sqp_iter_simulink(2:n_sim))
+    disp('failed');
+end
+
+status_signal = out_sim.logsout.getElement('status');
+disp('checking status.')
+if any(status_signal.Values.Data)
     disp('failed');
     quit(1);
 end
-
-xtraj_signal = out_sim.logsout.getElement('xtraj');
-x_simulink = xtraj_signal.Values.Data(1, :);
-disp('checking x values.')
-if any((x_simulink(:) - xtraj(:)) > 1e-8)
-    disp('failed');
-    quit(1);
-end
-
