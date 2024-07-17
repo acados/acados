@@ -1567,20 +1567,32 @@ double ocp_nlp_sqp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_
 {
     // Compute the QP objective function value
     double qp_cost = 0.0;
-    int i, nux;
+    int i, nux, ns;
     int N = dims->N;
     // Sum over stages 0 to N
     for (i = 0; i <= N; i++)
     {
         nux = dims->nx[i] + dims->nu[i];
+        ns = dims->ns[i];
         if (opts->funnel_type_switching_condition)
         {
             // Calculate 0.5* d.T H d
             blasfeo_dsymv_l(nux, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], 0, 0.0, &qp_out->ux[i], 0, &nlp_work->tmp_nlp_out->ux[i], 0);
             qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &nlp_work->tmp_nlp_out->ux[i], 0);
+
+            // slack QP objective value
+            // tmp_2ns = 2 * z + Z .* slack;
+            // Do we need (2*ns, 2.0, ....) or 1.0?
+            // blasfeo_dveccpsc(2*ns, 1.0, &qp_out->ux[i], nux, &nlp_work->tmp_nlp_out->ux[i], nux); // needed?
+            blasfeo_dvecmulacc(2*ns, &qp_in->Z[i], nux, &qp_out->ux[i], nux, &nlp_work->tmp_nlp_out->ux[i], nux);
+            // qp_cost += .5 * (tmp_2ns .* slack,)
+            qp_cost += 0.5 * blasfeo_ddot(2*ns, &nlp_work->tmp_nlp_out->ux[i], 0, &qp_out->ux[i], nux);
         }
         // Calculate g.T d
         qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
+
+        // Calculate gradient of slacks
+        qp_cost += blasfeo_ddot(2 * ns, &qp_out->ux[i], nux, &qp_in->rqz[i], nux);
     }
     return qp_cost;
 }
