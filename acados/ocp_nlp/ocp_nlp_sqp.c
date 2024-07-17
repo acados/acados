@@ -795,16 +795,7 @@ static void print_iteration_header(ocp_nlp_opts* opts){
     }
     else
     {
-        printf("%6s | %10s | %10s | %10s | %10s | %10s | %10s | %10s | %10s\n",
-        "iter.",
-        "res_eq",
-        "res_ineq",
-        "res_stat",
-        "res_comp",
-        "alpha",
-        "qp_status",
-        "qp_iter",
-        "LM_reg.");
+        printf("# it\tstat\t\teq\t\tineq\t\tcomp\t\tqp_stat\tqp_iter\talpha\n");
     }
 }
 
@@ -847,16 +838,15 @@ static void print_iteration(ocp_nlp_opts* opts,
     }
     else
     {
-        printf("%6i | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10i | %10i | %10.4e\n",
+        printf("%i\t%e\t%e\t%e\t%e\t%d\t%d\t%e\n",
         iter_count,
         infeas_eq,
         infeas_ineq,
         stationarity,
         complementarity,
-        alpha,
         qp_status,
         qp_iter,
-        reg_param);
+        alpha);
     }
 }
 
@@ -1497,7 +1487,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             nlp_mem->qp_cost_value = ocp_nlp_sqp_compute_qp_objective_value(dims, qp_in, qp_out,nlp_work, nlp_mem, opts);
         }
 
-        if (nlp_opts->terminate_after_small_step)
+        if (nlp_opts->terminate_after_small_step || nlp_opts->log_primal_step_norm)
         {
             // Calculate step norm
             mem->step_norm = 0.0;
