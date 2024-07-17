@@ -570,7 +570,16 @@ class AcadosOcpOptions:
 
     @property
     def alpha_reduction(self):
-        """Step size reduction factor for globalization MERIT_BACKTRACKING, default: 0.7."""
+        """Step size reduction factor for globalization MERIT_BACKTRACKING, 
+        
+        Type: float
+        Default: None.
+
+        If None is given:
+        - in case of FUNNEL_L1PEN_LINESEARCH, value is set to 0.5.
+        - in case of MERIT_BACKTRACKING, value is set to 0.7.
+        default: 0.7.
+        """
         return self.__alpha_reduction
 
     @property
@@ -586,9 +595,9 @@ class AcadosOcpOptions:
     def eps_sufficient_descent(self):
         """
         Factor for sufficient descent (Armijo) conditon, see also line_search_use_sufficient_descent.
+        
         Type: float,
-
-        default: None.
+        Default: None.
 
         If None is given:
         - in case of FUNNEL_L1PEN_LINESEARCH, value is set to 1e-6.
@@ -610,6 +619,7 @@ class AcadosOcpOptions:
     def full_step_dual(self):
         """
         Determines if dual variables are updated with full steps (alpha=1.0) when primal variables are updated with smaller step.
+        
         Type: int; 0 or 1;
         default for funnel globalization: 1
         default else: 0.
@@ -621,6 +631,9 @@ class AcadosOcpOptions:
         """
         Increase factor for initialization of funnel width.
         Initial funnel is max(funnel_initialization_upper_bound, funnel_initialization_increase_factor * initial_infeasibility)
+        
+        Type: float
+        Default: 15.0
         """
         return self.__funnel_initialization_increase_factor
 
@@ -629,6 +642,9 @@ class AcadosOcpOptions:
         """
         Initial upper bound for funnel width.
         Initial funnel is max(funnel_initialization_upper_bound, funnel_initialization_increase_factor * initial_infeasibility)
+        
+        Type: float
+        Default: 1.0
         """
         return self.__funnel_initialization_upper_bound
 
@@ -637,6 +653,9 @@ class AcadosOcpOptions:
         """
         Sufficient decrease factor for infeasibility in h iteration:
         trial_infeasibility <= kappa * funnel_width
+        
+        Type: float
+        Default: 0.9
         """
         return self.__funnel_sufficient_decrease_factor
 
@@ -644,6 +663,9 @@ class AcadosOcpOptions:
     def funnel_kappa(self):
         """
         Interpolation factor for convex combination in funnel decrease function.
+        
+        Type: float
+        Default: 0.9
         """
         return self.__funnel_kappa
 
@@ -651,6 +673,9 @@ class AcadosOcpOptions:
     def funnel_fraction_switching_condition(self):
         """
         Multiplication factor in switching condition.
+
+        Type: float
+        Default: 1e-3
         """
         return self.__funnel_fraction_switching_condition
 
@@ -662,6 +687,13 @@ class AcadosOcpOptions:
         If True, the residuals are evaluated at the last iterate and convergence will be checked.
         If False, after the last iteration, the solver will terminate with max iterations
         status, although the final iterate might fulfill the convergence criteria.
+
+        Type: bool
+        Default: None
+
+        If None is given:
+        if globalization == FUNNEL_L1PEN_LINESEARCH: true
+        else: false
         """
         return self.__eval_residual_at_max_iter
 
@@ -715,7 +747,14 @@ class AcadosOcpOptions:
     
     @property
     def nlp_solver_terminate_after_small_step(self):
-        """NLP solver terminates if step size goes below a given minimum"""
+        """NLP solver terminates if step size goes below a given minimum
+        Type: bool
+        Default: None
+
+        if None:
+        in case FUNNEL_L1PEN_LINESEARCH: True
+        else: False
+        """
         return self.__nlp_solver_terminate_after_small_step
 
     @property
@@ -755,8 +794,10 @@ class AcadosOcpOptions:
     def print_level(self):
         """
         Verbosity of printing.
+        
         Type: int >= 0
         Default: 0
+
         Level 1: print iteration log
         Level 2: print high level debug output in funnel globalization
         Level 3: print more detailed debug output in funnel, including objective values and infeasibilities
