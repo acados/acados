@@ -222,7 +222,7 @@ i_in = i_in + 1;
 {%- endif %}
 
 {%- if dims.ny_0 > 0 and simulink_opts.inputs.y_ref_0 %}
-input_note = strcat(input_note, num2str(i_in), ') y_ref_0, size [{{ dims.ny_0 }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') y_ref_0 - size [{{ dims.ny_0 }}]\n ');
 sfun_input_names = [sfun_input_names; 'y_ref_0 [{{ dims.ny_0 }}]'];
 i_in = i_in + 1;
 {%- endif %}
@@ -235,7 +235,7 @@ i_in = i_in + 1;
 {%- endif %}
 
 {%- if dims.ny_e > 0 and dims.N > 0 and simulink_opts.inputs.y_ref_e %}
-input_note = strcat(input_note, num2str(i_in), ') y_ref_e, size [{{ dims.ny_e }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') y_ref_e - size [{{ dims.ny_e }}]\n ');
 sfun_input_names = [sfun_input_names; 'y_ref_e [{{ dims.ny_e }}]'];
 i_in = i_in + 1;
 {%- endif %}
@@ -337,20 +337,32 @@ i_in = i_in + 1;
 {%- endif %}
 
 {%- if simulink_opts.inputs.reset_solver %}  {#- reset_solver #}
-input_note = strcat(input_note, num2str(i_in), ') reset_solver determines if iterate is set to all zeros before other initializations (x_init, u_init) are set and before solver is called, size [1]\n ');
+input_note = strcat(input_note, num2str(i_in), ') reset_solver - determines if iterate is set to all zeros before other initializations (x_init, u_init, pi_init) are set and before solver is called, size [1]\n ');
 sfun_input_names = [sfun_input_names; 'reset_solver [1]'];
 i_in = i_in + 1;
 {%- endif %}
 
+{%- if simulink_opts.inputs.ignore_inits %}  {#- ignore_inits #}
+input_note = strcat(input_note, num2str(i_in), ') ignore_inits - determines if initialization (x_init, u_init) are set (ignore_inits == 0) or ignored (otherwise), ignoring corresponds to internal warm start, size [1]\n ');
+sfun_input_names = [sfun_input_names; 'ignore_inits [1]'];
+i_in = i_in + 1;
+{%- endif %}
+
 {%- if simulink_opts.inputs.x_init %}  {#- x_init #}
-input_note = strcat(input_note, num2str(i_in), ') initialization of x for all shooting nodes, size [{{ dims.nx * (dims.N+1) }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') x_init - initialization of x for all shooting nodes, size [{{ dims.nx * (dims.N+1) }}]\n ');
 sfun_input_names = [sfun_input_names; 'x_init [{{ dims.nx * (dims.N+1) }}]'];
 i_in = i_in + 1;
 {%- endif %}
 
 {%- if simulink_opts.inputs.u_init %}  {#- u_init #}
-input_note = strcat(input_note, num2str(i_in), ') initialization of u for shooting nodes 0 to N-1, size [{{ dims.nu * (dims.N) }}]\n ');
+input_note = strcat(input_note, num2str(i_in), ') u_init - initialization of u for shooting nodes 0 to N-1, size [{{ dims.nu * (dims.N) }}]\n ');
 sfun_input_names = [sfun_input_names; 'u_init [{{ dims.nu * (dims.N) }}]'];
+i_in = i_in + 1;
+{%- endif %}
+
+{%- if simulink_opts.inputs.pi_init %}  {#- pi_init #}
+input_note = strcat(input_note, num2str(i_in), ') pi_init - initialization of pi for shooting nodes 0 to N-1, size [{{ dims.nx * (dims.N) }}]\n ');
+sfun_input_names = [sfun_input_names; 'pi_init [{{ dims.nx * (dims.N) }}]'];
 i_in = i_in + 1;
 {%- endif %}
 
@@ -392,6 +404,12 @@ sfun_output_names = [sfun_output_names; 'xtraj [{{ dims.nx * (dims.N + 1) }}]'];
 i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') ztraj, algebraic states concatenated for nodes 0 to N-1, size [{{ dims.nz * dims.N }}]\n ');
 sfun_output_names = [sfun_output_names; 'ztraj [{{ dims.nz * dims.N }}]'];
+{%- endif %}
+
+{%- if simulink_opts.outputs.pi_all == 1 %}
+i_out = i_out + 1;
+output_note = strcat(output_note, num2str(i_out), ') pi_all, equality Lagrange multipliers concatenated for nodes 0 to N-1, size [{{ dims.nx * dims.N }}]\n ');
+sfun_output_names = [sfun_output_names; 'pi_all [{{ dims.nx * dims.N }}]'];
 {%- endif %}
 
 {%- if simulink_opts.outputs.solver_status == 1 %}

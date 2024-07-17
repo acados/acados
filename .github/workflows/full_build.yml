@@ -248,11 +248,24 @@ jobs:
       working-directory: ${{runner.workspace}}/acados/build
       run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_OCTAVE=OFF
 
-    - name: Run Simulink test
+    - name: Run Simulink closed-loop test
       uses: matlab-actions/run-command@v2
       if: always()
       with:
         command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; simulink_test
+
+    - name: Run Simulink initialization test
+      uses: matlab-actions/run-command@v2
+      if: always()
+      with:
+        command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; simulink_init_test
+
+    - name: Run Simulink QP test
+      uses: matlab-actions/run-command@v2
+      if: always()
+      with:
+        command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; simulink_qp_test
+
 
   octave_test:
     needs: core_build
