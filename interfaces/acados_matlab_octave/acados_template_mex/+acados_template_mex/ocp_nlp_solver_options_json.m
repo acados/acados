@@ -50,6 +50,8 @@ classdef ocp_nlp_solver_options_json < handle
         nlp_solver_tol_comp
         nlp_solver_step_length
         nlp_solver_warm_start_first_qp
+        nlp_solver_terminate_after_small_step
+        nlp_solver_tol_min_step_norm
         rti_phase
         qp_solver_cond_N
         qp_solver_iter_max
@@ -149,6 +151,8 @@ classdef ocp_nlp_solver_options_json < handle
             obj.adaptive_levenberg_marquardt_mu_min = 1e-16;
             obj.adaptive_levenberg_marquardt_mu0 = 1e-3;
             obj.eval_residual_at_max_iter = 1;
+            obj.nlp_solver_terminate_after_small_step = 0;
+            obj.nlp_solver_tol_min_step_norm = 1e-12;
 
         end
         function s = struct(self)
