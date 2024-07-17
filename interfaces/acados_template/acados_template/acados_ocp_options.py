@@ -547,7 +547,8 @@ class AcadosOcpOptions:
 
     @property
     def nlp_solver_tol_min_step_norm(self):
-        """NLP solver equality tolerance"""
+        """NLP solver tolerance for minimal step norm. Solver terminates if 
+        step norm is below given value (if termination checks for this)"""
         return self.__nlp_solver_tol_min_step_norm
 
     @property
