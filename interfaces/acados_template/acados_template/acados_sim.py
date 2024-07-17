@@ -44,7 +44,7 @@ class AcadosSimOpts:
         self.__collocation_type = 'GAUSS_LEGENDRE'
         self.__Tsim = None
         # ints
-        self.__sim_method_num_stages = 1
+        self.__sim_method_num_stages = 4
         self.__sim_method_num_steps = 1
         self.__sim_method_newton_iter = 3
         # doubles
