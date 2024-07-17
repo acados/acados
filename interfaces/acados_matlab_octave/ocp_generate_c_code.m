@@ -55,28 +55,36 @@ function ocp_generate_c_code(obj)
             fullfile(pwd, 'c_generated_code', [obj.model_struct.name '_model']));
     end
 
+    stage_types = {'initial', 'path', 'terminal'};
+
     % cost
-    if (strcmp(obj.model_struct.cost_type, 'nonlinear_ls') || ...
-        strcmp(obj.model_struct.cost_type_0, 'nonlinear_ls') || strcmp(obj.model_struct.cost_type_e, 'nonlinear_ls'))
-        generate_c_code_nonlinear_least_squares( obj.model_struct, obj.opts_struct,...
-              fullfile(pwd, 'c_generated_code', [obj.model_struct.name '_cost']) );
-    elseif (strcmp(obj.model_struct.cost_type, 'ext_cost') || ...
-            strcmp(obj.model_struct.cost_type_0, 'ext_cost') || strcmp(obj.model_struct.cost_type_e, 'ext_cost'))
-            generate_c_code_ext_cost( obj.model_struct, obj.opts_struct,...
-              fullfile(pwd, 'c_generated_code', [obj.model_struct.name '_cost']) );
+    cost = obj.ocp.cost;
+    cost_types = {cost.cost_type_0, cost.cost_type, cost.cost_type_e};
+    cost_ext_fun_types = {cost.cost_ext_fun_type_0, cost.cost_ext_fun_type, cost.cost_ext_fun_type_e};
+    cost_dir = fullfile(pwd, 'c_generated_code', [obj.model_struct.name '_cost']);
+
+    for i = 1:3
+        if strcmp(cost_types{i}, 'NONLINEAR_LS')
+            generate_c_code_nonlinear_least_squares( obj.model_struct, obj.opts_struct,...
+              cost_dir, stage_types{i} );
+
+        elseif strcmp(cost_types{i}, 'CONVEX_OVER_NONLINEAR')
+            % TODO
+            error("Convex-over-nonlinear cost is not implemented yet.")
+
+        elseif strcmp(cost_types{i}, 'EXTERNAL')
+            if strcmp(cost_ext_fun_types{i}, 'casadi')
+                generate_c_code_ext_cost( obj.model_struct, obj.opts_struct,...
+                cost_dir, stage_types{i} );
+            elseif strcmp(cost_ext_fun_types{i}, 'generic')
+                setup_generic_cost(cost, cost_dir, stage_types{i})
+            else
+                error('Unknown value for cost_ext_fun_types %s', cost_ext_fun_types{i});
+            end
+        end
     end
-    if (strcmp(obj.ocp.cost.cost_ext_fun_type_0, 'generic'))
-        copyfile(fullfile(pwd, obj.ocp.cost.cost_source_ext_cost_0), ...
-            fullfile(pwd, 'c_generated_code', [obj.model_struct.name '_cost']));
-    end
-    if (strcmp(obj.ocp.cost.cost_ext_fun_type, 'generic'))
-        copyfile(fullfile(pwd, obj.ocp.cost.cost_source_ext_cost), ...
-            fullfile(pwd, 'c_generated_code', [obj.model_struct.name '_cost']));
-    end
-    if (strcmp(obj.ocp.cost.cost_ext_fun_type_e, 'generic'))
-        copyfile(fullfile(pwd, obj.ocp.cost.cost_source_ext_cost_e), ...
-            fullfile(pwd, 'c_generated_code', [obj.model_struct.name '_cost']));
-    end
+
+
     % constraints
     if ((strcmp(obj.model_struct.constr_type, 'bgh') && obj.model_struct.dim_nh > 0) || ...
         (strcmp(obj.model_struct.constr_type_0, 'bgh') && obj.model_struct.dim_nh_0 > 0) || ...
@@ -242,10 +250,11 @@ function ocp_generate_c_code(obj)
     opts.sim_method_num_stages = reshape(num2cell(opts.sim_method_num_stages), [1, dims.N]);
     opts.sim_method_num_steps = reshape(num2cell(opts.sim_method_num_steps), [1, dims.N]);
     opts.sim_method_jac_reuse = reshape(num2cell(opts.sim_method_jac_reuse), [1, dims.N]);
+
     obj.ocp.solver_options = opts;
 
     % parameter values
-    obj.ocp.parameter_values = reshape(num2cell(obj.ocp.parameter_values), [ 1, dims.np]);
+    obj.ocp.parameter_values = reshape(num2cell(obj.ocp.parameter_values), [1, dims.np]);
 
     %% dump JSON file
     % if is_octave()
@@ -279,4 +288,23 @@ function ocp_generate_c_code(obj)
     %% render templated code
     acados_template_mex.render_acados_templates(obj.ocp.json_file)
     acados_template_mex.compile_ocp_shared_lib(obj.ocp.code_export_directory)
+end
+
+
+function setup_generic_cost(cost, target_dir, stage_type)
+
+    if strcmp(stage_type, 'initial')
+        cost_source_ext_cost = cost.cost_source_ext_cost_0;
+    elseif strcmp(stage_type, 'path')
+        cost_source_ext_cost = cost.cost_source_ext_cost;
+    elseif strcmp(stage_type, 'terminal')
+        cost_source_ext_cost = cost.cost_source_ext_cost_e;
+    else
+        error('Unknown stage_type.')
+    end
+
+    if ~exist(target_dir, 'dir')
+        mkdir(target_dir);
+    end
+    copyfile(fullfile(pwd, cost_source_ext_cost), target_dir);
 end

@@ -30,7 +30,7 @@
 %
 
 
-function generate_c_code_nonlinear_least_squares( model, opts, target_dir )
+function generate_c_code_nonlinear_least_squares( model, opts, target_dir, stage_type )
 
 %% import casadi
 import casadi.*
@@ -76,7 +76,7 @@ if nargin > 2
     chdir(target_dir)
 end
 
-if isfield(model, 'cost_expr_y_0')
+if strcmp(stage_type, 'initial')
     fun = model.cost_expr_y_0;
     if all(size(fun) == 0)
         error('empty cost_expr_y_0 is not allowed.\nPlease use SX.zeros(1) or %s',...
@@ -104,9 +104,8 @@ if isfield(model, 'cost_expr_y_0')
     y_0_fun.generate([model_name,'_cost_y_0_fun'], casadi_opts);
     y_0_fun_jac_ut_xt.generate([model_name,'_cost_y_0_fun_jac_ut_xt'], casadi_opts);
     y_0_hess.generate([model_name,'_cost_y_0_hess'], casadi_opts);
-end
 
-if isfield(model, 'cost_expr_y')
+elseif strcmp(stage_type, 'path')
     fun = model.cost_expr_y;
     if all(size(fun) == 0)
         error('empty cost_expr_y is not allowed.\nPlease use SX.zeros(1) or %s',...
@@ -135,9 +134,7 @@ if isfield(model, 'cost_expr_y')
     y_fun.generate([model_name,'_cost_y_fun'], casadi_opts);
     y_fun_jac_ut_xt.generate([model_name,'_cost_y_fun_jac_ut_xt'], casadi_opts);
     y_hess.generate([model_name,'_cost_y_hess'], casadi_opts);
-end
-
-if isfield(model, 'cost_expr_y_e')
+elseif strcmp(stage_type, 'terminal')
     fun = model.cost_expr_y_e;
     if all(size(fun) == 0)
         error('empty cost_expr_y_e is not allowed.\nPlease use SX.zeros(1) or %s',...

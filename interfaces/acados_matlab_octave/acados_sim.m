@@ -96,7 +96,6 @@ classdef acados_sim < handle
             % detect dimensions & sanity checks
             obj.model_struct = detect_dims_sim(obj.model_struct,obj.opts_struct);
 
-
             % create template sim
             obj.sim = setup_sim(obj);
             sim_generate_c_code(obj);
