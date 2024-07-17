@@ -1131,6 +1131,9 @@ static int ocp_nlp_sqp_backtracking_line_search(void *config_, void *dims_, void
     double trial_infeasibility = 0.0;
     double ared;
     bool accept_step;
+    double current_infeasibility = mem->l1_infeasibility;
+    double current_cost = nlp_mem->cost_value;
+    double current_merit = mem->funnel_penalty_parameter*current_cost + current_infeasibility;
 
     // do the penalty parameter update here .... might be changed later
     update_funnel_penalty_parameter(mem, opts, pred, mem->l1_infeasibility);
@@ -1192,10 +1195,7 @@ static int ocp_nlp_sqp_backtracking_line_search(void *config_, void *dims_, void
 
         ///////////////////////////////////////////////////////////////////////
         // Evaluate merit function at trial point
-        double current_infeasibility = mem->l1_infeasibility;
-        double current_cost = nlp_mem->cost_value;
         double trial_merit = mem->funnel_penalty_parameter*trial_cost + trial_infeasibility;
-        double current_merit = mem->funnel_penalty_parameter*current_cost + current_infeasibility;
         pred_merit = mem->funnel_penalty_parameter * pred + current_infeasibility;
         ared = nlp_mem->cost_value - trial_cost;
 
@@ -1211,6 +1211,7 @@ static int ocp_nlp_sqp_backtracking_line_search(void *config_, void *dims_, void
         {
             mem->alpha = alpha;
             nlp_mem->cost_value = trial_cost;
+            mem->l1_infeasibility = trial_infeasibility;
             return 1;
         }
 
@@ -1325,7 +1326,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);
             ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
 
-            if (nlp_opts->globalization == FUNNEL_L1PEN_LINESEARCH)
+            if (nlp_opts->globalization == FUNNEL_L1PEN_LINESEARCH && sqp_iter == 0)
             {
                 mem->l1_infeasibility = get_l1_infeasibility(config, dims, mem);
             }
