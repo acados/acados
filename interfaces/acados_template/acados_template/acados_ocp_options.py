@@ -584,9 +584,14 @@ class AcadosOcpOptions:
     @property
     def eps_sufficient_descent(self):
         """
-        Factor for sufficient descent (Armijo) conditon, see line_search_use_sufficient_descent.
+        Factor for sufficient descent (Armijo) conditon, see also line_search_use_sufficient_descent.
         Type: float,
-        default: 1e-4.
+
+        default: None.
+
+        If None is given:
+        - in case of FUNNEL_L1PEN_LINESEARCH, value is set to 1e-6.
+        - in case of MERIT_BACKTRACKING, value is set to 1e-4.
         """
         return self.__eps_sufficient_descent
 
