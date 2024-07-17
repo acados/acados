@@ -119,6 +119,7 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->tol_ineq = 1e-8;
     opts->tol_comp = 1e-8;
     opts->tol_unbounded = -1e10;
+    opts->tol_min_step_norm = 1e-12;
 
     opts->ext_qp_res = 0;
 
@@ -237,8 +238,6 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
         {
             double* tol_min_step_norm = (double *) value;
             opts->tol_min_step_norm = *tol_min_step_norm;
-            // TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
-            config->qp_solver->opts_set(config->qp_solver, opts->nlp_opts->qp_solver_opts, "tol_min_step_norm", value);
         }
         else if (!strcmp(field, "ext_qp_res"))
         {
