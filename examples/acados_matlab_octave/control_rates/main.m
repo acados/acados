@@ -143,8 +143,8 @@ ocp_model.set('cost_y_ref', y_ref);
 ocp_model.set('cost_y_ref_e', y_ref_e);
 
 % constraint
-ocp_model.set('dyn_type', dyn_type);            
-ocp_model.set('dyn_expr_f', model.expr_f_expl); 
+ocp_model.set('dyn_type', dyn_type);
+ocp_model.set('dyn_expr_f', model.expr_f_expl);
 ocp_model.set('constr_x0', x0);                 % dynamic
 ocp_model.set('constr_type', constr_type);
 ocp_model.set('constr_Jbx', Jbx);
