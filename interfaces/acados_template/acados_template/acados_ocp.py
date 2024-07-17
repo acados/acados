@@ -825,7 +825,7 @@ class AcadosOcp:
             if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
                 opts.alpha_min = 1e-17
             else:
-                opts.alpha_min = 1e-17
+                opts.alpha_min = 0.05
 
         if opts.alpha_reduction == None:
             if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
