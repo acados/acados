@@ -1325,7 +1325,10 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);
             ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
 
-            mem->l1_infeasibility = get_l1_infeasibility(config, dims, mem);
+            if (nlp_opts->globalization == FUNNEL_L1PEN_LINESEARCH)
+            {
+                mem->l1_infeasibility = get_l1_infeasibility(config, dims, mem);
+            }
         }
 
         // initialize funnel if FUNNEL_L1PEN_LINESEARCH used
