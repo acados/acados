@@ -28,17 +28,61 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from acados_template import AcadosOcp, AcadosOcpSolver
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosOcpOptions
 from time_optimal_simple_bicycle_model import export_time_optimal_simple_bicycle
 import numpy as np
 from matplotlib import pyplot as plt
 import casadi as ca
 
-def main():
+def create_ddp_opts(Tf, N, M):
+    solver_options = AcadosOcpOptions()
+    solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+    solver_options.qp_solver_cond_N = N
+    solver_options.hessian_approx = 'GAUSS_NEWTON'
+    solver_options.integrator_type = 'ERK'
+    solver_options.sim_method_num_steps = M
+    solver_options.print_level = 1
+
+    # DDP options
+    solver_options.nlp_solver_type = 'DDP'
+    solver_options.globalization = 'MERIT_BACKTRACKING'
+    solver_options.nlp_solver_max_iter = 200
+    solver_options.with_adaptive_levenberg_marquardt = True
+
+    # set prediction horizon
+    solver_options.tf = Tf
+
+    return solver_options
+
+def create_sqp_opts(Tf, N, M, globalized:bool = True):
+    solver_options = AcadosOcpOptions()
+    solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+    solver_options.qp_solver_cond_N = N
+    solver_options.hessian_approx = 'EXACT'
+    solver_options.integrator_type = 'ERK'
+    solver_options.sim_method_num_steps = M
+    solver_options.print_level = 1
+
+    # DDP options
+    solver_options.nlp_solver_type = 'SQP'
+    if globalized:
+        solver_options.globalization = 'FUNNEL_L1PEN_LINESEARCH'
+    else:
+        solver_options.globalization = 'FIXED_STEP'
+    solver_options.nlp_solver_max_iter = 200
+    solver_options.with_adaptive_levenberg_marquardt = False
+    solver_options.regularize_method = 'PROJECT'
+
+    # set prediction horizon
+    solver_options.tf = Tf
+
+    return solver_options
+
+def solve_acados_ocp(solve_feasibility_problem: bool, acados_opts: AcadosOcpOptions, plotting: bool=False):
 
     # The flag denotes, if the problem should be transformed into a feasibility
     # problem, or if the unconstrained OCP should be solved.
-    SOLVE_FEASIBILITY_PROBLEM = True
+    SOLVE_FEASIBILITY_PROBLEM = solve_feasibility_problem
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -92,31 +136,23 @@ def main():
     ocp.constraints.idxbx_e = np.array([1,2,3])
 
     # Convex over Nonlinear Constraints
-    r = ca.SX.sym('r', 1, 1)
-    ocp.model.con_phi_expr = r**2
-    ocp.model.con_r_in_phi = r
-    ocp.model.con_r_expr = (5*(model.x[1]+3)) / (ca.sqrt(1+15*(model.x[2]-5)**2))
+    # r = ca.SX.sym('r', 1, 1)
+    # ocp.model.con_phi_expr = r**2
+    # ocp.model.con_r_in_phi = r
+    # ocp.model.con_r_expr = (5*(model.x[1]+3)) / (ca.sqrt(1+15*(model.x[2]-5)**2))
 
-    ocp.constraints.lphi = np.array([0])
-    ocp.constraints.uphi = np.array([1])
+    # ocp.constraints.lphi = np.array([0])
+    # ocp.constraints.uphi = np.array([1])
+
+    # Otherwise exact Hessian does not exist so far.
+    ocp.model.con_h_expr = ((5*(model.x[1]+3)) / (ca.sqrt(1+15*(model.x[2]-5)**2)))**2
+    ocp.constraints.lh = np.array([-1])
+    ocp.constraints.uh = np.array([1])
 
     ###########################################################################
     # set solver options
     ###########################################################################
-    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-    ocp.solver_options.qp_solver_cond_N = N
-    ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
-    ocp.solver_options.integrator_type = 'ERK'
-    ocp.solver_options.sim_method_num_steps = M
-    ocp.solver_options.print_level = 1
-
-    # DDP options
-    ocp.solver_options.nlp_solver_type = 'DDP'
-    ocp.solver_options.globalization = 'MERIT_BACKTRACKING'
-    ocp.solver_options.with_adaptive_levenberg_marquardt = True
-
-    # set prediction horizon
-    ocp.solver_options.tf = Tf
+    ocp.solver_options = acados_opts
 
     if SOLVE_FEASIBILITY_PROBLEM:
         ocp.translate_to_feasibility_problem()
@@ -142,7 +178,6 @@ def main():
     status = ocp_solver.solve()
 
     iter = ocp_solver.get_stats('nlp_iter')
-    assert iter <= 14, "DDP Solver should converge within 14 iterations!"
 
     if status != 0:
         raise Exception(f'acados returned status {status}.')
@@ -153,7 +188,10 @@ def main():
         sol_U[i,:] = ocp_solver.get(i, "u")
     sol_X[N,:] = ocp_solver.get(N, "x")
 
-    plot_trajectory([X_init, sol_X.T], ["Initial guess", "Solution"])
+    if plotting:
+        plot_trajectory([X_init, sol_X.T], ["Initial guess", "Solution"])
+
+    return iter
 
 
 def plot_trajectory(list_X_sol: list, labels: list):
@@ -201,6 +239,24 @@ def plot_trajectory(list_X_sol: list, labels: list):
     plt.legend()
     plt.show()
 
+def main():
+    N = 20
+    M = 2 
+    Tf = 1.0
+
+    # # Test DDP here
+    ddp_opts = create_ddp_opts(Tf, N, M)
+    ddp_iter = solve_acados_ocp(True, ddp_opts)
+    assert ddp_iter <= 14, "DDP Solver should converge within 14 iterations!"
+
+    # Compare SQP full step with SQP funnel
+    sqp_funnel_opts = create_sqp_opts(Tf, N, M, globalized=True)
+    sqp_full_step_opts = create_sqp_opts(Tf, N, M, globalized=False)
+
+    sqp_funnel_iter = solve_acados_ocp(False, sqp_funnel_opts)
+    sqp_full_step_iter = solve_acados_ocp(False, sqp_full_step_opts)
+
+    assert sqp_full_step_iter == sqp_funnel_iter, "Funnel should only take full steps!"
 
 if __name__ == '__main__':
     main()

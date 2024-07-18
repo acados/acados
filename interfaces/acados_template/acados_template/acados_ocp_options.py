@@ -36,7 +36,6 @@ INTEGRATOR_TYPES = ('ERK', 'IRK', 'GNSF', 'DISCRETE', 'LIFTED_IRK')
 COLLOCATION_TYPES = ('GAUSS_RADAU_IIA', 'GAUSS_LEGENDRE', 'EXPLICIT_RUNGE_KUTTA')
 COST_DISCRETIZATION_TYPES = ('EULER', 'INTEGRATOR')
 
-
 class AcadosOcpOptions:
     """
     class containing the description of the solver options
@@ -70,6 +69,7 @@ class AcadosOcpOptions:
         self.__nlp_solver_tol_eq = 1e-6
         self.__nlp_solver_tol_ineq = 1e-6
         self.__nlp_solver_tol_comp = 1e-6
+        self.__nlp_solver_tol_min_step_norm = None
         self.__nlp_solver_max_iter = 100
         self.__nlp_solver_ext_qp_res = 0
         self.__rti_log_residuals = 0
@@ -83,14 +83,21 @@ class AcadosOcpOptions:
         self.__exact_hess_cost = 1
         self.__exact_hess_dyn = 1
         self.__exact_hess_constr = 1
+        self.__eval_residual_at_max_iter = None
         self.__fixed_hess = 0
+        self.__funnel_initialization_increase_factor = 15.0
+        self.__funnel_initialization_upper_bound = 1.0
+        self.__funnel_sufficient_decrease_factor = 0.9
+        self.__funnel_kappa = 0.9
+        self.__funnel_fraction_switching_condition = 1e-3
+        self.__funnel_initial_penalty_parameter = 1.0
         self.__ext_cost_num_hess = 0
-        self.__alpha_min = 0.05
-        self.__alpha_reduction = 0.7
+        self.__alpha_min = None
+        self.__alpha_reduction = None
         self.__line_search_use_sufficient_descent = 0
         self.__globalization_use_SOC = 0
-        self.__full_step_dual = 0
-        self.__eps_sufficient_descent = 1e-4
+        self.__full_step_dual = None
+        self.__eps_sufficient_descent = None
         self.__hpipm_mode = 'BALANCE'
         self.__with_solution_sens_wrt_params = False
         self.__with_value_sens_wrt_params = False
@@ -236,7 +243,7 @@ class AcadosOcpOptions:
     @property
     def globalization(self):
         """Globalization type.
-        String in ('FIXED_STEP', 'MERIT_BACKTRACKING').
+        String in ('FIXED_STEP', 'MERIT_BACKTRACKING', 'FUNNEL_L1PEN_LINESEARCH').
         Default: 'FIXED_STEP'.
 
         .. note:: preliminary implementation.
@@ -538,8 +545,31 @@ class AcadosOcpOptions:
         return self.__nlp_solver_tol_eq
 
     @property
+    def nlp_solver_tol_min_step_norm(self):
+        """
+        NLP solver tolerance for minimal step norm. Solver terminates if
+        step norm is below given value. If value is 0.0, then the solver does not
+        test for the small step.
+         
+        Type: float
+        Default: None
+
+        If None:
+        in case of FUNNEL_L1PEN_LINESEARCH: 1e-12
+        otherwise: 0.0
+         """
+        return self.__nlp_solver_tol_min_step_norm
+
+    @property
     def alpha_min(self):
-        """Minimal step size for globalization MERIT_BACKTRACKING, default: 0.05."""
+        """Minimal step size for globalization.
+
+        default: None.
+
+        If None is given:
+        - in case of FUNNEL_L1PEN_LINESEARCH, value is set to 1e-17.
+        - in case of MERIT_BACKTRACKING, value is set to 0.05.
+        """
         return self.__alpha_min
 
     @property
@@ -549,7 +579,16 @@ class AcadosOcpOptions:
 
     @property
     def alpha_reduction(self):
-        """Step size reduction factor for globalization MERIT_BACKTRACKING, default: 0.7."""
+        """Step size reduction factor for globalization MERIT_BACKTRACKING,
+
+        Type: float
+        Default: None.
+
+        If None is given:
+        - in case of FUNNEL_L1PEN_LINESEARCH, value is set to 0.5.
+        - in case of MERIT_BACKTRACKING, value is set to 0.7.
+        default: 0.7.
+        """
         return self.__alpha_reduction
 
     @property
@@ -564,9 +603,14 @@ class AcadosOcpOptions:
     @property
     def eps_sufficient_descent(self):
         """
-        Factor for sufficient descent (Armijo) conditon, see line_search_use_sufficient_descent.
+        Factor for sufficient descent (Armijo) conditon, see also line_search_use_sufficient_descent.
+
         Type: float,
-        default: 1e-4.
+        Default: None.
+
+        If None is given:
+        - in case of FUNNEL_L1PEN_LINESEARCH, value is set to 1e-6.
+        - in case of MERIT_BACKTRACKING, value is set to 1e-4.
         """
         return self.__eps_sufficient_descent
 
@@ -584,10 +628,93 @@ class AcadosOcpOptions:
     def full_step_dual(self):
         """
         Determines if dual variables are updated with full steps (alpha=1.0) when primal variables are updated with smaller step.
+
         Type: int; 0 or 1;
-        default: 0.
+        default for funnel globalization: 1
+        default else: 0.
         """
         return self.__full_step_dual
+
+    @property
+    def funnel_initialization_increase_factor(self):
+        """
+        Increase factor for initialization of funnel width.
+        Initial funnel is max(funnel_initialization_upper_bound, funnel_initialization_increase_factor * initial_infeasibility)
+
+        Type: float
+        Default: 15.0
+        """
+        return self.__funnel_initialization_increase_factor
+
+    @property
+    def funnel_initialization_upper_bound(self):
+        """
+        Initial upper bound for funnel width.
+        Initial funnel is max(funnel_initialization_upper_bound, funnel_initialization_increase_factor * initial_infeasibility)
+
+        Type: float
+        Default: 1.0
+        """
+        return self.__funnel_initialization_upper_bound
+
+    @property
+    def funnel_sufficient_decrease_factor(self):
+        """
+        Sufficient decrease factor for infeasibility in h iteration:
+        trial_infeasibility <= kappa * funnel_width
+
+        Type: float
+        Default: 0.9
+        """
+        return self.__funnel_sufficient_decrease_factor
+
+    @property
+    def funnel_kappa(self):
+        """
+        Interpolation factor for convex combination in funnel decrease function.
+
+        Type: float
+        Default: 0.9
+        """
+        return self.__funnel_kappa
+
+    @property
+    def funnel_fraction_switching_condition(self):
+        """
+        Multiplication factor in switching condition.
+
+        Type: float
+        Default: 1e-3
+        """
+        return self.__funnel_fraction_switching_condition
+
+    @property
+    def eval_residual_at_max_iter(self):
+        """
+        Determines, if the problem data is again evaluated after the last iteration
+        has been performed.
+        If True, the residuals are evaluated at the last iterate and convergence will be checked.
+        If False, after the last iteration, the solver will terminate with max iterations
+        status, although the final iterate might fulfill the convergence criteria.
+
+        Type: bool
+        Default: None
+
+        If None is given:
+        if globalization == FUNNEL_L1PEN_LINESEARCH: true
+        else: false
+        """
+        return self.__eval_residual_at_max_iter
+
+    @property
+    def funnel_initial_penalty_parameter(self):
+        """
+        Initialization.
+
+        Type: float
+        Default: 1.0
+        """
+        return self.__funnel_initial_penalty_parameter
 
     @property
     def nlp_solver_tol_ineq(self):
@@ -622,7 +749,7 @@ class AcadosOcpOptions:
     def nlp_solver_max_iter(self):
         """
         NLP solver maximum number of iterations.
-        Type: int > 0
+        Type: int >= 0
         Default: 100
         """
         return self.__nlp_solver_max_iter
@@ -664,8 +791,14 @@ class AcadosOcpOptions:
     def print_level(self):
         """
         Verbosity of printing.
+
         Type: int >= 0
         Default: 0
+
+        Level 1: print iteration log
+        Level 2: print high level debug output in funnel globalization
+        Level 3: print more detailed debug output in funnel, including objective values and infeasibilities
+        Level 4: print QP inputs and outputs. Please specify with max_iter how many QPs should be printed
         """
         return self.__print_level
 
@@ -898,7 +1031,7 @@ class AcadosOcpOptions:
 
     @globalization.setter
     def globalization(self, globalization):
-        globalization_types = ('MERIT_BACKTRACKING', 'FIXED_STEP')
+        globalization_types = ('FUNNEL_L1PEN_LINESEARCH', 'MERIT_BACKTRACKING', 'FIXED_STEP')
         if globalization in globalization_types:
             self.__globalization = globalization
         else:
@@ -937,6 +1070,55 @@ class AcadosOcpOptions:
             self.__full_step_dual = full_step_dual
         else:
             raise Exception(f'Invalid value for full_step_dual. Possible values are 0, 1, got {full_step_dual}')
+
+    @funnel_initialization_increase_factor.setter
+    def funnel_initialization_increase_factor(self, funnel_initialization_increase_factor):
+        if funnel_initialization_increase_factor > 1.0:
+            self.__funnel_initialization_increase_factor = funnel_initialization_increase_factor
+        else:
+            raise Exception(f'Invalid value for funnel_initialization_increase_factor. Should be > 1, got {funnel_initialization_increase_factor}')
+
+    @funnel_initialization_upper_bound.setter
+    def funnel_initialization_upper_bound(self, funnel_initialization_upper_bound):
+        if funnel_initialization_upper_bound > 0.0:
+            self.__funnel_initialization_upper_bound = funnel_initialization_upper_bound
+        else:
+             raise Exception(f'Invalid value for funnel_initialization_upper_bound. Should be > 0, got {funnel_initialization_upper_bound}')
+
+    @funnel_sufficient_decrease_factor.setter
+    def funnel_sufficient_decrease_factor(self, funnel_sufficient_decrease_factor):
+        if funnel_sufficient_decrease_factor > 0.0 and funnel_sufficient_decrease_factor < 1.0:
+            self.__funnel_sufficient_decrease_factor = funnel_sufficient_decrease_factor
+        else:
+            raise Exception(f'Invalid value for funnel_sufficient_decrease_factor. Should be in (0,1), got {funnel_sufficient_decrease_factor}')
+
+    @funnel_kappa.setter
+    def funnel_kappa(self, funnel_kappa):
+        if funnel_kappa > 0.0 and funnel_kappa < 1.0:
+            self.__funnel_kappa = funnel_kappa
+        else:
+            raise Exception(f'Invalid value for funnel_kappa. Should be in (0,1), got {funnel_kappa}')
+
+    @funnel_fraction_switching_condition.setter
+    def funnel_fraction_switching_condition(self, funnel_fraction_switching_condition):
+        if funnel_fraction_switching_condition > 0.0 and funnel_fraction_switching_condition < 1.0:
+            self.__funnel_fraction_switching_condition = funnel_fraction_switching_condition
+        else:
+            raise Exception(f'Invalid value for funnel_fraction_switching_condition. Should be in (0,1), got {funnel_fraction_switching_condition}')
+
+    @funnel_initial_penalty_parameter.setter
+    def funnel_initial_penalty_parameter(self, funnel_initial_penalty_parameter):
+        if funnel_initial_penalty_parameter >= 0.0 and funnel_initial_penalty_parameter <= 1.0:
+            self.__funnel_initial_penalty_parameter = funnel_initial_penalty_parameter
+        else:
+            raise Exception(f'Invalid value for funnel_initial_penalty_parameter. Should be in [0,1], got {funnel_initial_penalty_parameter}')
+
+    @eval_residual_at_max_iter.setter
+    def eval_residual_at_max_iter(self, eval_residual_at_max_iter):
+        if isinstance(eval_residual_at_max_iter, bool):
+            self.__eval_residual_at_max_iter = eval_residual_at_max_iter
+        else:
+            raise Exception(f'Invalid datatype for eval_residual_at_max_iter. Should be bool, got {type(eval_residual_at_max_iter)}')
 
     @eps_sufficient_descent.setter
     def eps_sufficient_descent(self, eps_sufficient_descent):
@@ -1179,6 +1361,13 @@ class AcadosOcpOptions:
         else:
             raise Exception('Invalid nlp_solver_tol_ineq value. nlp_solver_tol_ineq must be a positive float.')
 
+    @nlp_solver_tol_min_step_norm.setter
+    def nlp_solver_tol_min_step_norm(self, nlp_solver_tol_min_step_norm):
+        if isinstance(nlp_solver_tol_min_step_norm, float) and nlp_solver_tol_min_step_norm >= 0.0:
+            self.__nlp_solver_tol_min_step_norm = nlp_solver_tol_min_step_norm
+        else:
+            raise Exception('Invalid nlp_solver_tol_min_step_norm value. nlp_solver_tol_min_step_norm must be a positive float.')
+
     @nlp_solver_ext_qp_res.setter
     def nlp_solver_ext_qp_res(self, nlp_solver_ext_qp_res):
         if nlp_solver_ext_qp_res in [0, 1]:
@@ -1203,10 +1392,10 @@ class AcadosOcpOptions:
     @nlp_solver_max_iter.setter
     def nlp_solver_max_iter(self, nlp_solver_max_iter):
 
-        if isinstance(nlp_solver_max_iter, int) and nlp_solver_max_iter > 0:
+        if isinstance(nlp_solver_max_iter, int) and nlp_solver_max_iter >= 0:
             self.__nlp_solver_max_iter = nlp_solver_max_iter
         else:
-            raise Exception('Invalid nlp_solver_max_iter value. nlp_solver_max_iter must be a positive int.')
+            raise Exception('Invalid nlp_solver_max_iter value. nlp_solver_max_iter must be a nonnegative int.')
 
     @print_level.setter
     def print_level(self, print_level):

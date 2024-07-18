@@ -820,6 +820,48 @@ class AcadosOcp:
             if  any([dims.ng_e, dims.nphi_e, dims.nh_e]):
                 raise Exception('DDP only supports initial state constraints, got terminal constraints.')
 
+        # Set default parameters for globalization
+        if opts.alpha_min == None:
+            if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
+                opts.alpha_min = 1e-17
+            else:
+                opts.alpha_min = 0.05
+
+        if opts.alpha_reduction == None:
+            if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
+                opts.alpha_reduction = 0.5
+            else:
+                opts.alpha_reduction = 0.7
+
+        if opts.eps_sufficient_descent == None:
+            if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
+                opts.eps_sufficient_descent = 1e-6
+            else:
+                opts.eps_sufficient_descent = 1e-4
+
+        if opts.eval_residual_at_max_iter == None:
+            if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
+                opts.eval_residual_at_max_iter = True
+            else:
+                opts.eval_residual_at_max_iter = False
+
+        if opts.full_step_dual == None:
+            if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
+                opts.full_step_dual = 1
+            else:
+                opts.full_step_dual = 0
+
+        # sanity check for Funnel globalization and SQP
+        if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH' and opts.nlp_solver_type != 'SQP':
+            raise Exception('FUNNEL_L1PEN_LINESEARCH only supports SQP.')
+
+        # termination
+        if opts.nlp_solver_tol_min_step_norm == None:
+            if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
+                opts.nlp_solver_tol_min_step_norm = 1e-12
+            else:
+                opts.nlp_solver_tol_min_step_norm = 0.0
+
         # zoRO
         if self.zoro_description is not None:
             if not isinstance(self.zoro_description, ZoroDescription):

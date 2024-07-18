@@ -33,7 +33,7 @@ import numpy as np
 from casadi import *
 from matplotlib import pyplot as plt
 from itertools import product
-# Simplest NLP with Marathos effect
+# Simplest NLP with Maratos effect
 #
 # min x_1
 #
@@ -46,7 +46,7 @@ TOL = 1e-6
 
 def main():
     # run test cases
-    params = {'globalization': ['MERIT_BACKTRACKING', 'FIXED_STEP'],
+    params = {'globalization': ['MERIT_BACKTRACKING', 'FIXED_STEP', 'FUNNEL_L1PEN_LINESEARCH'],
               'line_search_use_sufficient_descent' : [0, 1],
               'globalization_use_SOC' : [0, 1] }
 
@@ -57,11 +57,15 @@ def main():
           (setting['globalization_use_SOC'] or setting['line_search_use_sufficient_descent']):
             # skip some equivalent settings
             pass
+        elif setting['globalization'] == 'FUNNEL_L1PEN_LINESEARCH' and \
+          (setting['globalization_use_SOC'] or setting['line_search_use_sufficient_descent']):
+            # skip some equivalent settings
+            pass
         else:
-            solve_marathos_problem_with_setting(setting)
+            solve_maratos_problem_with_setting(setting)
 
 
-def solve_marathos_problem_with_setting(setting):
+def solve_maratos_problem_with_setting(setting):
 
     globalization = setting['globalization']
     line_search_use_sufficient_descent = setting['line_search_use_sufficient_descent']
@@ -81,7 +85,7 @@ def solve_marathos_problem_with_setting(setting):
     model.x = x
     model.u = SX.sym('u', 0, 0) # [] / None doesnt work
     model.p = []
-    model.name = f'marathos_problem'
+    model.name = f'maratos_problem'
     ocp.model = model
 
     # discretization
@@ -117,14 +121,13 @@ def solve_marathos_problem_with_setting(setting):
     # PARTIAL_CONDENSING_QPDUNES, PARTIAL_CONDENSING_OSQP
     ocp.solver_options.hessian_approx = 'EXACT'
     ocp.solver_options.integrator_type = 'DISCRETE'
-    # ocp.solver_options.print_level = 1
+    if globalization == 'FUNNEL_L1PEN_LINESEARCH':
+        ocp.solver_options.print_level = 1
     ocp.solver_options.tol = TOL
     ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
     ocp.solver_options.globalization = globalization
     ocp.solver_options.alpha_min = 1e-2
-    # ocp.solver_options.regularize_method = 'CONVEXIFY'
     ocp.solver_options.levenberg_marquardt = 1e-1
-    # ocp.solver_options.print_level = 2
     SQP_max_iter = 300
     ocp.solver_options.qp_solver_iter_max = 400
     ocp.solver_options.regularize_method = 'MIRROR'
@@ -181,7 +184,7 @@ def solve_marathos_problem_with_setting(setting):
     solution = ocp_solver.get(0, "x")
 
     # print summary
-    print(f"solved Marathos test problem with settings {setting}")
+    print(f"solved Maratos test problem with settings {setting}")
     print(f"cost function value = {ocp_solver.get_cost()} after {iter} SQP iterations")
     print(f"alphas: {alphas[:iter]}")
     print(f"total number of QP iterations: {sum(qp_iters[:iter])}")
@@ -202,17 +205,17 @@ def solve_marathos_problem_with_setting(setting):
         if globalization == 'FIXED_STEP':
             # import pdb; pdb.set_trace()
             if max_infeasibility < 5.0:
-                raise Exception(f"Expected max_infeasibility > 5.0 when using full step SQP on Marathos problem")
+                raise Exception(f"Expected max_infeasibility > 5.0 when using full step SQP on Maratos problem")
             if iter != 10:
-                raise Exception(f"Expected 10 SQP iterations when using full step SQP on Marathos problem, got {iter}")
+                raise Exception(f"Expected 10 SQP iterations when using full step SQP on Maratos problem, got {iter}")
             if any(alphas[:iter] != 1.0):
-                raise Exception(f"Expected all alphas = 1.0 when using full step SQP on Marathos problem")
+                raise Exception(f"Expected all alphas = 1.0 when using full step SQP on Maratos problem")
         elif globalization == 'MERIT_BACKTRACKING':
             if max_infeasibility > 0.5:
-                raise Exception(f"Expected max_infeasibility < 0.5 when using globalized SQP on Marathos problem")
+                raise Exception(f"Expected max_infeasibility < 0.5 when using globalized SQP on Maratos problem")
             if globalization_use_SOC == 0:
                 if FOR_LOOPING and iter != 57:
-                    raise Exception(f"Expected 57 SQP iterations when using globalized SQP without SOC on Marathos problem, got {iter}")
+                    raise Exception(f"Expected 57 SQP iterations when using globalized SQP without SOC on Maratos problem, got {iter}")
             elif line_search_use_sufficient_descent == 1:
                 if iter not in range(29, 37):
                     # NOTE: got 29 locally and 36 on Github actions.
@@ -220,10 +223,14 @@ def solve_marathos_problem_with_setting(setting):
                     # This leads to very different behavior, since the merit gradient is so different.
                     # Github actions:  merit_grad = -1.669330e+00, merit_grad_cost = -1.737950e-01, merit_grad_dyn = 0.000000e+00, merit_grad_ineq = -1.495535e+00
                     # Jonathan Laptop: merit_grad = -1.737950e-01, merit_grad_cost = -1.737950e-01, merit_grad_dyn = 0.000000e+00, merit_grad_ineq = 0.000000e+00
-                    raise Exception(f"Expected SQP iterations in range(29, 37) when using globalized SQP with SOC on Marathos problem, got {iter}")
+                    raise Exception(f"Expected SQP iterations in range(29, 37) when using globalized SQP with SOC on Maratos problem, got {iter}")
             else:
                 if iter != 12:
-                    raise Exception(f"Expected 12 SQP iterations when using globalized SQP with SOC on Marathos problem, got {iter}")
+                    raise Exception(f"Expected 12 SQP iterations when using globalized SQP with SOC on Maratos problem, got {iter}")
+        elif globalization == 'FUNNEL_L1PEN_LINESEARCH':
+            if iter > 12:
+                    raise Exception(f"Expected not more than 12 SQP iterations when using Funnel Method SQP, got {iter}")
+
     except Exception as inst:
         if FOR_LOOPING and globalization == "MERIT_BACKTRACKING":
             print("\nAcados globalized OCP solver behaves different when for looping due to different merit function weights.",
@@ -245,7 +252,7 @@ def solve_marathos_problem_with_setting(setting):
         plt.plot(1 * np.cos(ts)+0,1 * np.sin(ts)-0, 'r')
         plt.axis('square')
         plt.legend()
-        plt.title(f"Marathos problem with N = {N}, x formulation, SOC {globalization_use_SOC}")
+        plt.title(f"Maratos problem with N = {N}, x formulation, SOC {globalization_use_SOC}")
         plt.show()
 
     print(f"\n\n----------------------\n")

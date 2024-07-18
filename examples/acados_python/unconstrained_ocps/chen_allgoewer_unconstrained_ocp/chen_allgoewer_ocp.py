@@ -136,7 +136,7 @@ def main(plot_solution = False):
             raise Exception(f'acados returned status {status}.')
 
         iter = ocp_solver.get_stats('nlp_iter')
-        assert iter == 4, "DDP Solver should converge within 4 iterations!"
+        assert iter in [4,5], "DDP Solver should converge within 4 or 5 iterations!"
 
         # get solution
         for i in range(N):

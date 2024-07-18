@@ -50,6 +50,7 @@ classdef ocp_nlp_solver_options_json < handle
         nlp_solver_tol_comp
         nlp_solver_step_length
         nlp_solver_warm_start_first_qp
+        nlp_solver_tol_min_step_norm
         rti_phase
         qp_solver_cond_N
         qp_solver_iter_max
@@ -88,6 +89,11 @@ classdef ocp_nlp_solver_options_json < handle
         with_value_sens_wrt_params
         num_threads_in_batch_solve
         log_primal_step_norm
+        with_adaptive_levenberg_marquardt
+        adaptive_levenberg_marquardt_lam
+        adaptive_levenberg_marquardt_mu_min
+        adaptive_levenberg_marquardt_mu0
+        eval_residual_at_max_iter
 
     end
     methods
@@ -139,6 +145,12 @@ classdef ocp_nlp_solver_options_json < handle
             obj.rti_log_residuals = 0;
             obj.num_threads_in_batch_solve = 1;
             obj.log_primal_step_norm = 0;
+            obj.with_adaptive_levenberg_marquardt = 0;
+            obj.adaptive_levenberg_marquardt_lam = 5.0;
+            obj.adaptive_levenberg_marquardt_mu_min = 1e-16;
+            obj.adaptive_levenberg_marquardt_mu0 = 1e-3;
+            obj.eval_residual_at_max_iter = 0;
+            obj.nlp_solver_tol_min_step_norm = 1e-12;
 
         end
         function s = struct(self)

@@ -672,7 +672,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     mem->time_glob += acados_toc(&timer1);
 
     // update variables
-    ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, alpha);
+    ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, alpha);
     mem->status = ACADOS_SUCCESS;
 
     if (opts->rti_log_residuals)
@@ -738,8 +738,8 @@ static void as_rti_advance_problem(ocp_nlp_config *config, ocp_nlp_dims *dims, o
     // setup advanced problem
     if (opts->as_rti_advancement_strategy == SHIFT_ADVANCE)
     {
-        // tmp_nxu_double = x at stage 1
-        blasfeo_unpack_dvec(dims->nx[1], nlp_out->ux+1, dims->nu[1], nlp_work->tmp_nxu_double, 1);
+        // tmp_nv_double = x at stage 1
+        blasfeo_unpack_dvec(dims->nx[1], nlp_out->ux+1, dims->nu[1], nlp_work->tmp_nv_double, 1);
     }
     else if (opts->as_rti_advancement_strategy == SIMULATE_ADVANCE)
     {
@@ -749,13 +749,13 @@ static void as_rti_advance_problem(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         struct blasfeo_dvec *dyn_fun = config->dynamics[0]->memory_get_fun_ptr(nlp_mem->dynamics[0]);
         // dyn_fun += x_1
         blasfeo_daxpy(dims->nx[0], +1.0, nlp_out->ux+1, dims->nu[1], dyn_fun, 0, dyn_fun, 0);
-        // tmp_nxu_double = phi(x0, u0)
-        blasfeo_unpack_dvec(dims->nx[1], dyn_fun, 0, nlp_work->tmp_nxu_double, 1);
+        // tmp_nv_double = phi(x0, u0)
+        blasfeo_unpack_dvec(dims->nx[1], dyn_fun, 0, nlp_work->tmp_nv_double, 1);
     }
     if (opts->as_rti_advancement_strategy != NO_ADVANCE)
     {
-        ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", nlp_work->tmp_nxu_double);
-        ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", nlp_work->tmp_nxu_double);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", nlp_work->tmp_nv_double);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", nlp_work->tmp_nv_double);
     }
     // printf("advanced x value\n");
     // blasfeo_print_exp_tran_dvec(dims->nx[1], nlp_out->ux+1, dims->nu[1]);
@@ -928,7 +928,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
         mem->time_glob += acados_toc(&timer1);
 
         // update variables
-        ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, alpha);
+        ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, alpha);
     }
     else if (opts->as_rti_level == LEVEL_B && !mem->is_first_call)
     {
@@ -1003,7 +1003,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             mem->time_glob += acados_toc(&timer1);
 
             // update variables
-            ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, alpha);
+            ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, alpha);
         }
     }
     else if (opts->as_rti_level == LEVEL_C && !mem->is_first_call)
@@ -1081,7 +1081,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             mem->time_glob += acados_toc(&timer1);
 
             // update variables
-            ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, alpha);
+            ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, alpha);
 
             // norm = 0.0;
             // for (int kk = 0; kk < dims->N; kk++)
@@ -1160,7 +1160,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             mem->time_glob += acados_toc(&timer1);
 
             // update variables
-            ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, alpha);
+            ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, alpha);
         }
     }
 

@@ -123,6 +123,7 @@ void ocp_nlp_ddp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->qp_warm_start = 0;
     opts->warm_start_first_qp = false;
     opts->rti_phase = 0;
+    opts->eval_residual_at_max_iter = false;
 
     opts->linesearch_eta = 1e-6;
     opts->linesearch_minimum_step_size = 1e-17;
@@ -244,6 +245,11 @@ void ocp_nlp_ddp_opts_set(void *config_, void *opts_, const char *field, void* v
                 exit(1);
             }
             opts->rti_phase = *rti_phase;
+        }
+        else if (!strcmp(field, "eval_residual_at_max_iter"))
+        {
+            bool* eval_residual_at_max_iter = (bool *) value;
+            opts->eval_residual_at_max_iter = *eval_residual_at_max_iter;
         }
         else
         {
@@ -499,15 +505,15 @@ static void ocp_nlp_ddp_compute_trial_iterate(ocp_nlp_config *config, ocp_nlp_di
         xcond_solver_config->solver_get(xcond_solver_config, mem->qp_in, mem->qp_out, opts->qp_solver_opts, mem->qp_solver_mem, "K", i, ddp_mem->tmp_nu_times_nx, nu[i], nx[i]);
         blasfeo_pack_dmat(nu[i], nx[i], ddp_mem->tmp_nu_times_nx, nu[i], &ddp_mem->K_mat, 0, 0);
 
-        // get k = tmp_nxu;
-        xcond_solver_config->solver_get(xcond_solver_config, mem->qp_in, mem->qp_out, opts->qp_solver_opts, mem->qp_solver_mem, "k", i, work->tmp_nxu_double, nu[i], 1);
-        blasfeo_pack_dvec(nu[i], work->tmp_nxu_double, 1, &work->tmp_nxu, 0);
+        // get k = tmp_nv;
+        xcond_solver_config->solver_get(xcond_solver_config, mem->qp_in, mem->qp_out, opts->qp_solver_opts, mem->qp_solver_mem, "k", i, work->tmp_nv_double, nu[i], 1);
+        blasfeo_pack_dvec(nu[i], work->tmp_nv_double, 1, &work->tmp_nv, 0);
 
         // compute delta_u = alpha * k_i + K_i * (x_i - \bar{x}_i)
-        // tmp_nxu[nu:] = (x_i - \bar{x}_i)
-        blasfeo_daxpby(nx[i], -1.0, out->ux+i, nu[i], 1.0, tmp_nlp_out->ux+i, nu[i], &work->tmp_nxu, nu[i]);
-        blasfeo_dgemv_n(nu[i], nx[i], 1.0, &ddp_mem->K_mat, 0, 0, &work->tmp_nxu, nu[i], alpha, &work->tmp_nxu, 0, &work->tmp_nxu, 0);
-        blasfeo_daxpby(nu[i], 1.0, out->ux+i, 0, 1.0, &work->tmp_nxu, 0, tmp_nlp_out->ux+i, 0);
+        // tmp_nv[nu:] = (x_i - \bar{x}_i)
+        blasfeo_daxpby(nx[i], -1.0, out->ux+i, nu[i], 1.0, tmp_nlp_out->ux+i, nu[i], &work->tmp_nv, nu[i]);
+        blasfeo_dgemv_n(nu[i], nx[i], 1.0, &ddp_mem->K_mat, 0, 0, &work->tmp_nv, nu[i], alpha, &work->tmp_nv, 0, &work->tmp_nv, 0);
+        blasfeo_daxpby(nu[i], 1.0, out->ux+i, 0, 1.0, &work->tmp_nv, 0, tmp_nlp_out->ux+i, 0);
 
         // evalutate dynamics
         // x_{i+1} = f_dyn_i(x_i, u_i)
@@ -581,7 +587,7 @@ static void print_iteration(double obj,
                      int qp_status,
                      int qp_iter)
 {
-    if ((iter_count % 10 == 0) | (iter_count == -1)){
+    if ((iter_count % 10 == 0)){
         print_iteration_header();
     }
     printf("%6i | %11.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10.4e | %10i | %10i\n",
@@ -732,34 +738,44 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         printf("'with_adaptive_levenberg_marquardt' option is set to: %s\n", opts->nlp_opts->with_adaptive_levenberg_marquardt?"true":"false");
     }
 
-    for (; ddp_iter < opts->max_iter+1; ddp_iter++)
+    for (; ddp_iter <= opts->max_iter; ddp_iter++)
     {
-        /* Prepare the QP data */
-        // linearize NLP, update QP matrices, and add Levenberg-Marquardt term
-        acados_tic(&timer1);
-        ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-        ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, ddp_iter);
-
-        mem->time_lin += acados_toc(&timer1);
-
-        // get timings from integrator
-        for (ii=0; ii<N; ii++)
+        // We always evaluate the residuals until the last iteration
+        // If the option "eval_residual_at_max_iter" is set, then we will also
+        // evaluate the data after the last iteration was performed
+        if (ddp_iter != opts->max_iter || opts->eval_residual_at_max_iter)
         {
-            config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim", &tmp_time);
-            mem->time_sim += tmp_time;
-            config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim_la", &tmp_time);
-            mem->time_sim_la += tmp_time;
-            config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim_ad", &tmp_time);
-            mem->time_sim_ad += tmp_time;
+            /* Prepare the QP data */
+            // linearize NLP, update QP matrices, and add Levenberg-Marquardt term
+            acados_tic(&timer1);
+            ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+            if (nlp_opts->with_adaptive_levenberg_marquardt || nlp_opts->globalization != FIXED_STEP)
+            {
+                ocp_nlp_get_cost_value_from_submodules(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+            }
+            ocp_nlp_add_levenberg_marquardt_term(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->alpha, ddp_iter);
+
+            mem->time_lin += acados_toc(&timer1);
+
+            // get timings from integrator
+            for (ii=0; ii<N; ii++)
+            {
+                config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim", &tmp_time);
+                mem->time_sim += tmp_time;
+                config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim_la", &tmp_time);
+                mem->time_sim_la += tmp_time;
+                config->dynamics[ii]->memory_get(config->dynamics[ii], dims->dynamics[ii], mem->nlp_mem->dynamics[ii], "time_sim_ad", &tmp_time);
+                mem->time_sim_ad += tmp_time;
+            }
+
+            // update QP rhs for DDP (step prim var, abs dual var)
+            // NOTE: The ddp version of approximate does not exist!
+            ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+
+            // compute nlp residuals
+            ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);
+            ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
         }
-
-        // update QP rhs for DDP (step prim var, abs dual var)
-        // NOTE: The ddp version of approximate does not exist!
-        ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
-
-        // compute nlp residuals
-        ocp_nlp_res_compute(dims, nlp_in, nlp_out, nlp_res, nlp_mem);
-        ocp_nlp_res_get_inf_norm(nlp_res, &nlp_out->inf_norm_res);
 
         // save statistics
         if ((ddp_iter < mem->stat_m) & (ddp_iter >= 0))
@@ -824,6 +840,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             print_ocp_qp_in(qp_in);
         }
 
+        // solve qp
         acados_tic(&timer1);
         qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver, qp_in, qp_out,
                                         nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);

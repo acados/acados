@@ -2086,6 +2086,24 @@ void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* 
 
     double eps_sufficient_descent = {{ solver_options.eps_sufficient_descent }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "eps_sufficient_descent", &eps_sufficient_descent);
+{%- elif solver_options.globalization == "FUNNEL_L1PEN_LINESEARCH" %}
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization", "funnel_l1pen_linesearch");
+
+    double funnel_initialization_increase_factor = {{ solver_options.funnel_initialization_increase_factor }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "funnel_initialization_increase_factor", &funnel_initialization_increase_factor);
+
+    double funnel_initialization_upper_bound = {{ solver_options.funnel_initialization_upper_bound }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "funnel_initialization_upper_bound", &funnel_initialization_upper_bound);
+
+    double funnel_sufficient_decrease_factor = {{ solver_options.funnel_sufficient_decrease_factor }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "funnel_sufficient_decrease_factor", &funnel_sufficient_decrease_factor);
+
+    double funnel_kappa = {{ solver_options.funnel_kappa }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "funnel_kappa", &funnel_kappa);
+
+    double funnel_initial_penalty_parameter = {{ solver_options.funnel_initial_penalty_parameter }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "funnel_initial_penalty_parameter", &funnel_initial_penalty_parameter);
+
 {%- endif -%}
 
     int with_solution_sens_wrt_params = {{ solver_options.with_solution_sens_wrt_params }};
@@ -2253,6 +2271,9 @@ void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* 
 {%- if solver_options.nlp_solver_type == "SQP" %}
     int log_primal_step_norm = {{ solver_options.log_primal_step_norm }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "log_primal_step_norm", &log_primal_step_norm);
+
+    double nlp_solver_tol_min_step_norm = {{ solver_options.nlp_solver_tol_min_step_norm }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tol_min_step_norm", &nlp_solver_tol_min_step_norm);
 {%- endif %}
 
 {%- if solver_options.qp_solver is containing("HPIPM") %}
@@ -2276,6 +2297,22 @@ void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* 
 
     int nlp_solver_max_iter = {{ solver_options.nlp_solver_max_iter }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "max_iter", &nlp_solver_max_iter);
+
+    // set options for adaptive Levenberg-Marquardt Update
+    bool with_adaptive_levenberg_marquardt = {{ solver_options.with_adaptive_levenberg_marquardt }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "with_adaptive_levenberg_marquardt", &with_adaptive_levenberg_marquardt);
+
+    double adaptive_levenberg_marquardt_lam = {{ solver_options.adaptive_levenberg_marquardt_lam }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "adaptive_levenberg_marquardt_lam", &adaptive_levenberg_marquardt_lam);
+
+    double adaptive_levenberg_marquardt_mu_min = {{ solver_options.adaptive_levenberg_marquardt_mu_min }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "adaptive_levenberg_marquardt_mu_min", &adaptive_levenberg_marquardt_mu_min);
+
+    double adaptive_levenberg_marquardt_mu0 = {{ solver_options.adaptive_levenberg_marquardt_mu0 }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "adaptive_levenberg_marquardt_mu0", &adaptive_levenberg_marquardt_mu0);
+
+    bool eval_residual_at_max_iter = {{ solver_options.eval_residual_at_max_iter }};
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "eval_residual_at_max_iter", &eval_residual_at_max_iter);
 
 {%- elif solver_options.nlp_solver_type == "SQP_RTI" %}
     int as_rti_iter = {{ solver_options.as_rti_iter }};
@@ -2340,23 +2377,6 @@ void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* 
 {%- if cost.cost_type_e == "EXTERNAL" %}
     ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, N, "cost_numerical_hessian", &ext_cost_num_hess);
 {%- endif %}
-
-{% if solver_options.nlp_solver_type == "DDP" %}
-    // set SQP specific options
-    bool with_adaptive_levenberg_marquardt = {{ solver_options.with_adaptive_levenberg_marquardt }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "with_adaptive_levenberg_marquardt", &with_adaptive_levenberg_marquardt);
-
-    double adaptive_levenberg_marquardt_lam = {{ solver_options.adaptive_levenberg_marquardt_lam }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "adaptive_levenberg_marquardt_lam", &adaptive_levenberg_marquardt_lam);
-
-    double adaptive_levenberg_marquardt_mu_min = {{ solver_options.adaptive_levenberg_marquardt_mu_min }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "adaptive_levenberg_marquardt_mu_min", &adaptive_levenberg_marquardt_mu_min);
-
-    double adaptive_levenberg_marquardt_mu0 = {{ solver_options.adaptive_levenberg_marquardt_mu0 }};
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "adaptive_levenberg_marquardt_mu0", &adaptive_levenberg_marquardt_mu0);
-
-{%- endif %}
-
 }
 
 

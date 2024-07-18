@@ -259,6 +259,7 @@ typedef enum
 {
     FIXED_STEP,
     MERIT_BACKTRACKING,
+    FUNNEL_L1PEN_LINESEARCH
 } ocp_nlp_globalization_t;
 
 typedef struct ocp_nlp_opts
@@ -403,14 +404,14 @@ typedef struct ocp_nlp_workspace
     // for globalization: -> move to module?!
     ocp_nlp_out *tmp_nlp_out;
     ocp_nlp_out *weight_merit_fun;
-    struct blasfeo_dvec tmp_nxu;
+    struct blasfeo_dvec tmp_nv;
     struct blasfeo_dvec tmp_ni;
     struct blasfeo_dvec dxnext_dy;
     // optimal value gradient wrt params
     struct blasfeo_dvec tmp_np;
     struct blasfeo_dvec out_np;
     // AS-RTI
-    double *tmp_nxu_double;
+    double *tmp_nv_double;
 
 } ocp_nlp_workspace;
 
@@ -450,7 +451,8 @@ void ocp_nlp_level_c_update(ocp_nlp_config *config,
     ocp_nlp_memory *mem, ocp_nlp_workspace *work);
 //
 void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
-           ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work, double alpha);
+            ocp_nlp_out *out_start, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
+            ocp_nlp_out *out_destination, double alpha);
 //
 int ocp_nlp_precompute_common(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
