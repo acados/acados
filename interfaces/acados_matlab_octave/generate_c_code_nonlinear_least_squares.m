@@ -41,6 +41,7 @@ check_casadi_version();
 x = model.x;
 u = model.u;
 z = model.z;
+p = model.p;
 
 % check type
 if isa(x(1), 'casadi.SX')

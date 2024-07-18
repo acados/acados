@@ -257,13 +257,13 @@ function ocp = setup_ocp(obj, simulink_opts)
     ocp.constraints.idxbxe_0 = model.constr_idxbxe_0;
 
     if isfield(model, 'constr_expr_h_0') && ocp.dims.nh_0 > 0
-        ocp.model.con_h_expr_0 = model.constr_expr_h_0
+        ocp.model.con_h_expr_0 = model.constr_expr_h_0;
     end
     if isfield(model, 'constr_expr_h') && ocp.dims.nh > 0
-        ocp.model.con_h_expr = model.constr_expr_h
+        ocp.model.con_h_expr = model.constr_expr_h;
     end
     if isfield(model, 'constr_expr_h_e') && ocp.dims.nh_e > 0
-        ocp.model.con_h_expr_e = model.constr_expr_h_e
+        ocp.model.con_h_expr_e = model.constr_expr_h_e;
     end
     % path
     if ocp.dims.nbx > 0
@@ -431,13 +431,13 @@ function ocp = setup_ocp(obj, simulink_opts)
 
     %% Cost
     if strcmp(model.cost_type, 'ext_cost') && strcmp(model.cost_ext_fun_type, 'casadi')
-        ocp.model.cost_expr_ext_cost = model.cost_expr_ext_cost
+        ocp.model.cost_expr_ext_cost = model.cost_expr_ext_cost;
     end
     if strcmp(model.cost_type_0, 'ext_cost') && strcmp(model.cost_ext_fun_type_0, 'casadi')
-        ocp.model.cost_expr_ext_cost_0 = model.cost_expr_ext_cost_0
+        ocp.model.cost_expr_ext_cost_0 = model.cost_expr_ext_cost_0;
     end
     if strcmp(model.cost_type_e, 'ext_cost') && strcmp(model.cost_ext_fun_type_e, 'casadi')
-        ocp.model.cost_expr_ext_cost_e = model.cost_expr_ext_cost_e
+        ocp.model.cost_expr_ext_cost_e = model.cost_expr_ext_cost_e;
     end
 
     if strcmp(model.cost_ext_fun_type, 'generic')
@@ -509,17 +509,17 @@ function ocp = setup_ocp(obj, simulink_opts)
 
     if strcmp(model.cost_type, 'nonlinear_ls')
         if isfield(model, 'cost_expr_y')
-            ocp.model.cost_y_expr = model.cost_expr_y
+            ocp.model.cost_y_expr = model.cost_expr_y;
         end
     end
     if strcmp(model.cost_type_0, 'nonlinear_ls')
         if isfield(model, 'cost_expr_y_0')
-            ocp.model.cost_y_expr_0 = model.cost_expr_y_0
+            ocp.model.cost_y_expr_0 = model.cost_expr_y_0;
         end
     end
     if strcmp(model.cost_type_e, 'nonlinear_ls')
         if isfield(model, 'cost_expr_y_e')
-            ocp.model.cost_y_expr_e = model.cost_expr_y_e
+            ocp.model.cost_y_expr_e = model.cost_expr_y_e;
         end
     end
 
