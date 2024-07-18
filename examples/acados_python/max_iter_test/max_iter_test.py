@@ -33,7 +33,7 @@ import numpy as np
 import casadi as ca
 import scipy.linalg
 
-def create_acados_solver_and_solve_problem(globalization='FIXED_STEP', solver_type='SQP', eval_data_and_res=None):
+def create_acados_solver_and_solve_problem(globalization='FIXED_STEP', solver_type='SQP', eval_residual_at_max_iter=None):
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
 
@@ -91,8 +91,8 @@ def create_acados_solver_and_solve_problem(globalization='FIXED_STEP', solver_ty
     ocp.solver_options.globalization = globalization
     ocp.solver_options.nlp_solver_max_iter = 1
     ocp.solver_options.print_level = 1
-    if eval_data_and_res != None:
-        ocp.solver_options.eval_residual_at_max_iter = eval_data_and_res
+    if eval_residual_at_max_iter != None:
+        ocp.solver_options.eval_residual_at_max_iter = eval_residual_at_max_iter
     ocp.solver_options.nlp_solver_type = solver_type
 
     # set prediction horizon
@@ -126,27 +126,27 @@ def main():
     assert full_step_no_eval == 2, "Full step SQP did not terminate with max iter!"
     print("Full step exits with max iter even though being at solution (as planned)")
 
-    full_step_eval, fs_X, fs_U = create_acados_solver_and_solve_problem(eval_data_and_res=True)
+    full_step_eval, fs_X, fs_U = create_acados_solver_and_solve_problem(eval_residual_at_max_iter=True)
     assert full_step_eval == 0, "Full step SQP did not find solution after 1 iteration!"
     assert np.allclose(funnel_X, fs_X), "Funnel and full step SQP version did not terminate at same X."
     assert np.allclose(funnel_U, fs_U), "Funnel and full step SQP version did not terminate at same U."
     print("Full step finds solution")
 
-    merit_status, sol_X_sqp, sol_U_sqp = create_acados_solver_and_solve_problem(globalization='MERIT_BACKTRACKING')
+    merit_status, sol_X_sqp, sol_U_sqp = create_acados_solver_and_solve_problem(globalization='MERIT_BACKTRACKING', eval_residual_at_max_iter=True)
     assert merit_status == 0, "Merit function could not find solution after 1 iteration!"
     assert np.allclose(funnel_X, sol_X_sqp), "Funnel and merit function SQP version did not terminate at same X."
     assert np.allclose(funnel_U, sol_U_sqp), "Funnel and merit function SQP version did not terminate at same U."
     print("Merit function finds solution")
 
     # Do the test with DDP as well
-    funnel_status, ddp_X, ddp_U = create_acados_solver_and_solve_problem(globalization='MERIT_BACKTRACKING', solver_type='DDP')
+    funnel_status, ddp_X, ddp_U = create_acados_solver_and_solve_problem(globalization='MERIT_BACKTRACKING', solver_type='DDP', eval_residual_at_max_iter=True)
     assert funnel_status == 0, "DDP MERIT_BACKTRACKING could not find solution after 1 iteration!"
     assert np.allclose(ddp_X, sol_X_sqp), "Funnel and DDP did not terminate at same X."
     assert np.allclose(ddp_U, sol_U_sqp), "Funnel and DDP did not terminate at same U."
     print("DDP merit backtracking finds solution")
 
     # Do the test with DDP as well
-    funnel_status, no_eval_ddp_X, no_eval_ddp_U = create_acados_solver_and_solve_problem(globalization='MERIT_BACKTRACKING', solver_type='DDP', eval_data_and_res=False)
+    funnel_status, no_eval_ddp_X, no_eval_ddp_U = create_acados_solver_and_solve_problem(globalization='MERIT_BACKTRACKING', solver_type='DDP', eval_residual_at_max_iter=False)
     assert funnel_status == 2, "DDP MERIT_BACKTRACKING without eval last iteration could not find solution after 1 iteration!"
     assert np.allclose(no_eval_ddp_X, sol_X_sqp), "Funnel and DDP without eval last iteration did not terminate at same X."
     assert np.allclose(no_eval_ddp_U, sol_U_sqp), "Funnel and DDP without eval last iteration did not terminate at same U."
