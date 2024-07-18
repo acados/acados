@@ -1044,10 +1044,9 @@ static void external_function_param_casadi_set_param(void *self, double *p)
     external_function_param_casadi *fun = self;
 
     // set value for all parameters
-    for (int ii = 0; ii < fun->np; ii++)
-    {
-        fun->args[fun->in_num-1][ii] = p[ii];
-    }
+    int idx_arg_p = fun->args_num-1;
+    d_cvt_colmaj_to_casadi(p, (double *) fun->args[idx_arg_p],
+                                       (int *) fun->casadi_sparsity_in(idx_arg_p), fun->args_dense[idx_arg_p]);
     return;
 }
 
@@ -1055,11 +1054,21 @@ static void external_function_param_casadi_set_param(void *self, double *p)
 static void external_function_param_casadi_set_param_sparse(void *self, int n_update,
                                                             int *idx, double *p)
 {
+    // TODO: fix!!!
     external_function_param_casadi *fun = self;
 
-    for (int ii = 0; ii < n_update; ii++)
+    int idx_arg_p = fun->args_num-1;
+
+    if (fun->args_dense[idx_arg_p])
     {
-        fun->args[fun->in_num-1][idx[ii]] = p[ii];
+        for (int ii = 0; ii < n_update; ii++)
+        {
+            fun->args[idx_arg_p][idx[ii]] = p[ii];
+        }
+    }
+    else
+    {
+        printf("sparse update not implemented yet\n");
     }
 
     return;
