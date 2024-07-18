@@ -54,7 +54,7 @@ classdef acados_sim < handle
             addpath(obj.opts_struct.output_dir);
 
             % check model consistency
-            obj.model_struct = create_consistent_empty_fields(obj.model_struct, obj.opts_struct);
+            obj.model_struct = create_consistent_empty_fields(obj.model_struct);
             % detect GNSF structure
             if (strcmp(obj.opts_struct.method, 'irk_gnsf'))
                 if (strcmp(obj.opts_struct.gnsf_detect_struct, 'true'))

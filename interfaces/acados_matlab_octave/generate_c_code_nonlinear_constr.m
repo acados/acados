@@ -40,6 +40,8 @@ check_casadi_version();
 %% load model
 x = model.sym_x;
 u = model.sym_u;
+p = model.sym_p;
+z = model.sym_z;
 
 if isa(x(1), 'casadi.SX')
     isSX = true;
@@ -47,36 +49,11 @@ else
     isSX = false;
 end
 
-z = model.sym_z;
-
-% if ~isempty(model, 'sym_z')
-%     z = model.sym_z;
-% else
-%     if isSX
-%         z = SX.sym('z',0, 0);
-%     else
-%         z = MX.sym('z',0, 0);
-%     end
-% end
-
-p = model.sym_p;
-
-% if ~isempty(model, 'sym_p')
-%     p = model.sym_p;
-% else
-%     if isSX
-%         p = SX.sym('p',0, 0);
-%     else
-%         p = MX.sym('p',0, 0);
-%     end
-% end
-
 model_name = model.name;
 
 % cd to target folder
 return_dir = pwd;
 chdir(target_dir)
-
 
 if isfield(model, 'constr_expr_h')
     h = model.constr_expr_h;

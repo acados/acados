@@ -49,16 +49,6 @@ else
     isSX = false;
 end
 
-if isfield(model, 'p')
-    p = model.p;
-else
-    if isSX
-        p = SX.sym('p',0, 0);
-    else
-        p = MX.sym('p',0, 0);
-    end
-end
-
 model_name = model.name;
 
 % cd to target folder

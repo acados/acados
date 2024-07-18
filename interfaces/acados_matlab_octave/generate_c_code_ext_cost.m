@@ -37,34 +37,14 @@ casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double')
 check_casadi_version();
 
 % cd to target folder
-if nargin > 2
-    original_dir = pwd;
-    chdir(target_dir)
-end
+original_dir = pwd;
+chdir(target_dir)
 
 %% load model
 x = model.x;
 u = model.u;
 z = model.z;
-
-% check type
-if isa(x(1), 'casadi.SX')
-    isSX = true;
-else
-    isSX = false;
-end
-
 p = model.p;
-
-% if ~isempty(model.p)
-%     p = model.p;
-% else
-%     if isSX
-%         p = SX.sym('p',0, 0);
-%     else
-%         p = MX.sym('p',0, 0);
-%     end
-% end
 
 model_name = model.name;
 
