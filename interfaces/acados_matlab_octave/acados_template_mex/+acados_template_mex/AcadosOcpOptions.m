@@ -91,10 +91,6 @@ classdef AcadosOcpOptions < handle
         adaptive_levenberg_marquardt_mu_min
         adaptive_levenberg_marquardt_mu0
         log_primal_step_norm
-        with_adaptive_levenberg_marquardt
-        adaptive_levenberg_marquardt_lam
-        adaptive_levenberg_marquardt_mu_min
-        adaptive_levenberg_marquardt_mu0
         eval_residual_at_max_iter
 
         ext_fun_compile_flags
