@@ -867,7 +867,17 @@ static bool check_termination(int n_iter, ocp_nlp_res *nlp_res, ocp_nlp_sqp_memo
         return true;
     }
 
-    // check stationarity: KKT point
+    // check for maximum iterations
+    if (!opts->eval_residual_at_max_iter && n_iter >= opts->max_iter)
+    {
+        mem->status = ACADOS_MAXITER;
+        if (opts->nlp_opts->print_level > 0){
+            printf("Stopped: Maximum Iterations Reached.\n");
+        }
+        return true;
+    }
+
+    // check if solved to tolerance
     if ((nlp_res->inf_norm_res_stat < opts->tol_stat) &&
         (nlp_res->inf_norm_res_eq < opts->tol_eq) &&
         (nlp_res->inf_norm_res_ineq < opts->tol_ineq) &&
