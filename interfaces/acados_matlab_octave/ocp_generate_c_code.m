@@ -58,7 +58,7 @@ function ocp_generate_c_code(obj)
         generate_c_code_explicit_ode(obj.ocp.model, code_gen_opts, model_dir);
     elseif (strcmp(solver_opts.integrator_type, 'IRK')) && strcmp(obj.ocp.model.dyn_ext_fun_type, 'casadi')
         generate_c_code_implicit_ode(obj.ocp.model, code_gen_opts, model_dir);
-    elseif (strcmp(solver_opts.integrator_type, 'IRK_GNSF'))
+    elseif (strcmp(solver_opts.integrator_type, 'GNSF'))
         generate_c_code_gnsf(obj.ocp.model, code_gen_opts, model_dir);
     elseif (strcmp(solver_opts.integrator_type, 'DISCRETE')) && strcmp(obj.ocp.model.dyn_ext_fun_type, 'casadi')
         generate_c_code_disc_dyn(obj.ocp.model, code_gen_opts, model_dir);
