@@ -145,7 +145,8 @@ for itest = [1, 2, 3, 4]
     status_signal = out_sim.logsout.getElement('status');
     disp('checking status, should be 2 (max iter).')
     if any(status_signal.Values.Data ~= 2)
-        disp('failed');
+        disp('failed. got status values:');
+        disp(status_signal.Values.Data);
         quit(1);
     end
 

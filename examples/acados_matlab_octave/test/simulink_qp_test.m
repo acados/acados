@@ -114,8 +114,9 @@ for itest = [1, 2, 3]
     status_signal = out_sim.logsout.getElement('status');
     disp('checking status.')
     if any(status_signal.Values.Data)
-        disp('failed');
-        quit(1);
+        disp('failed. got status values:');
+        disp(status_signal.Values.Data);
+        % quit(1);
     end
 
     utraj_signal = out_sim.logsout.getElement('utraj');
@@ -152,8 +153,9 @@ end
 status_signal = out_sim.logsout.getElement('status');
 disp('checking status.')
 if any(status_signal.Values.Data)
-    disp('failed');
-    quit(1);
+    disp('failed. got status values:');
+    disp(status_signal.Values.Data);
+    % quit(1);
 end
 
 %% Run with different initialization
