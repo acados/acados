@@ -150,7 +150,7 @@ classdef ocp_nlp_solver_options_json < handle
             obj.adaptive_levenberg_marquardt_lam = 5.0;
             obj.adaptive_levenberg_marquardt_mu_min = 1e-16;
             obj.adaptive_levenberg_marquardt_mu0 = 1e-3;
-            obj.eval_residual_at_max_iter = 1;
+            obj.eval_residual_at_max_iter = 0;
             obj.nlp_solver_terminate_after_small_step = 0;
             obj.nlp_solver_tol_min_step_norm = 1e-12;
 
