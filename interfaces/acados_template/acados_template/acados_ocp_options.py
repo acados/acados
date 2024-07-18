@@ -740,7 +740,7 @@ class AcadosOcpOptions:
     def nlp_solver_max_iter(self):
         """
         NLP solver maximum number of iterations.
-        Type: int > 0
+        Type: int >= 0
         Default: 100
         """
         return self.__nlp_solver_max_iter
@@ -1395,10 +1395,10 @@ class AcadosOcpOptions:
     @nlp_solver_max_iter.setter
     def nlp_solver_max_iter(self, nlp_solver_max_iter):
 
-        if isinstance(nlp_solver_max_iter, int) and nlp_solver_max_iter > 0:
+        if isinstance(nlp_solver_max_iter, int) and nlp_solver_max_iter >= 0:
             self.__nlp_solver_max_iter = nlp_solver_max_iter
         else:
-            raise Exception('Invalid nlp_solver_max_iter value. nlp_solver_max_iter must be a positive int.')
+            raise Exception('Invalid nlp_solver_max_iter value. nlp_solver_max_iter must be a nonnegative int.')
 
     @nlp_solver_terminate_after_small_step.setter
     def nlp_solver_terminate_after_small_step(self, nlp_solver_terminate_after_small_step):
