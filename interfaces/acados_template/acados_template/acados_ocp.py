@@ -842,8 +842,6 @@ class AcadosOcp:
         if opts.eval_residual_at_max_iter == None:
             if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
                 opts.eval_residual_at_max_iter = True
-            elif opts.globalization == 'MERIT_BACKTRACKING':
-                opts.eval_residual_at_max_iter = True
             else:
                 opts.eval_residual_at_max_iter = False
 
