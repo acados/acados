@@ -738,8 +738,8 @@ static void as_rti_advance_problem(ocp_nlp_config *config, ocp_nlp_dims *dims, o
     // setup advanced problem
     if (opts->as_rti_advancement_strategy == SHIFT_ADVANCE)
     {
-        // tmp_nxu_double = x at stage 1
-        blasfeo_unpack_dvec(dims->nx[1], nlp_out->ux+1, dims->nu[1], nlp_work->tmp_nxu_double, 1);
+        // tmp_nv_double = x at stage 1
+        blasfeo_unpack_dvec(dims->nx[1], nlp_out->ux+1, dims->nu[1], nlp_work->tmp_nv_double, 1);
     }
     else if (opts->as_rti_advancement_strategy == SIMULATE_ADVANCE)
     {
@@ -749,13 +749,13 @@ static void as_rti_advance_problem(ocp_nlp_config *config, ocp_nlp_dims *dims, o
         struct blasfeo_dvec *dyn_fun = config->dynamics[0]->memory_get_fun_ptr(nlp_mem->dynamics[0]);
         // dyn_fun += x_1
         blasfeo_daxpy(dims->nx[0], +1.0, nlp_out->ux+1, dims->nu[1], dyn_fun, 0, dyn_fun, 0);
-        // tmp_nxu_double = phi(x0, u0)
-        blasfeo_unpack_dvec(dims->nx[1], dyn_fun, 0, nlp_work->tmp_nxu_double, 1);
+        // tmp_nv_double = phi(x0, u0)
+        blasfeo_unpack_dvec(dims->nx[1], dyn_fun, 0, nlp_work->tmp_nv_double, 1);
     }
     if (opts->as_rti_advancement_strategy != NO_ADVANCE)
     {
-        ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", nlp_work->tmp_nxu_double);
-        ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", nlp_work->tmp_nxu_double);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", nlp_work->tmp_nv_double);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", nlp_work->tmp_nv_double);
     }
     // printf("advanced x value\n");
     // blasfeo_print_exp_tran_dvec(dims->nx[1], nlp_out->ux+1, dims->nu[1]);

@@ -505,15 +505,15 @@ static void ocp_nlp_ddp_compute_trial_iterate(ocp_nlp_config *config, ocp_nlp_di
         xcond_solver_config->solver_get(xcond_solver_config, mem->qp_in, mem->qp_out, opts->qp_solver_opts, mem->qp_solver_mem, "K", i, ddp_mem->tmp_nu_times_nx, nu[i], nx[i]);
         blasfeo_pack_dmat(nu[i], nx[i], ddp_mem->tmp_nu_times_nx, nu[i], &ddp_mem->K_mat, 0, 0);
 
-        // get k = tmp_nxu;
-        xcond_solver_config->solver_get(xcond_solver_config, mem->qp_in, mem->qp_out, opts->qp_solver_opts, mem->qp_solver_mem, "k", i, work->tmp_nxu_double, nu[i], 1);
-        blasfeo_pack_dvec(nu[i], work->tmp_nxu_double, 1, &work->tmp_nxu, 0);
+        // get k = tmp_nv;
+        xcond_solver_config->solver_get(xcond_solver_config, mem->qp_in, mem->qp_out, opts->qp_solver_opts, mem->qp_solver_mem, "k", i, work->tmp_nv_double, nu[i], 1);
+        blasfeo_pack_dvec(nu[i], work->tmp_nv_double, 1, &work->tmp_nv, 0);
 
         // compute delta_u = alpha * k_i + K_i * (x_i - \bar{x}_i)
-        // tmp_nxu[nu:] = (x_i - \bar{x}_i)
-        blasfeo_daxpby(nx[i], -1.0, out->ux+i, nu[i], 1.0, tmp_nlp_out->ux+i, nu[i], &work->tmp_nxu, nu[i]);
-        blasfeo_dgemv_n(nu[i], nx[i], 1.0, &ddp_mem->K_mat, 0, 0, &work->tmp_nxu, nu[i], alpha, &work->tmp_nxu, 0, &work->tmp_nxu, 0);
-        blasfeo_daxpby(nu[i], 1.0, out->ux+i, 0, 1.0, &work->tmp_nxu, 0, tmp_nlp_out->ux+i, 0);
+        // tmp_nv[nu:] = (x_i - \bar{x}_i)
+        blasfeo_daxpby(nx[i], -1.0, out->ux+i, nu[i], 1.0, tmp_nlp_out->ux+i, nu[i], &work->tmp_nv, nu[i]);
+        blasfeo_dgemv_n(nu[i], nx[i], 1.0, &ddp_mem->K_mat, 0, 0, &work->tmp_nv, nu[i], alpha, &work->tmp_nv, 0, &work->tmp_nv, 0);
+        blasfeo_daxpby(nu[i], 1.0, out->ux+i, 0, 1.0, &work->tmp_nv, 0, tmp_nlp_out->ux+i, 0);
 
         // evalutate dynamics
         // x_{i+1} = f_dyn_i(x_i, u_i)

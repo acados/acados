@@ -405,14 +405,14 @@ typedef struct ocp_nlp_workspace
     // for globalization: -> move to module?!
     ocp_nlp_out *tmp_nlp_out;
     ocp_nlp_out *weight_merit_fun;
-    struct blasfeo_dvec tmp_nxu;
+    struct blasfeo_dvec tmp_nv;
     struct blasfeo_dvec tmp_ni;
     struct blasfeo_dvec dxnext_dy;
     // optimal value gradient wrt params
     struct blasfeo_dvec tmp_np;
     struct blasfeo_dvec out_np;
     // AS-RTI
-    double *tmp_nxu_double;
+    double *tmp_nv_double;
 
 } ocp_nlp_workspace;
 

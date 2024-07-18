@@ -1657,9 +1657,12 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
 
     int N = dims->N;
     int *nx = dims->nx;
-    int *nu = dims->nu;
+    // int *nu = dims->nu;
     int *ni = dims->ni;
     int *np = dims->np;
+    // int *ns = dims->ns;
+    int *nv = dims->nv;
+
     // int *nz = dims->nz;
 
     acados_size_t size = 0;
@@ -1680,7 +1683,7 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
     size += ocp_qp_out_calculate_size(dims->qp_solver->orig_dims);
 
     // blasfeo_dvec
-    int nxu_max = 0;
+    int nv_max = 0;
     int nx_max = 0;
     int ni_max = 0;
     int np_max = 0;
@@ -1688,12 +1691,12 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
     for (int i = 0; i <= N; i++)
     {
         nx_max = nx_max > nx[i] ? nx_max : nx[i];
-        nxu_max = nxu_max > (nx[i]+nu[i]) ? nxu_max : (nx[i]+nu[i]);
+        nv_max = nv_max > nv[i] ? nv_max : nv[i];
         ni_max = ni_max > ni[i] ? ni_max : ni[i];
         np_max = np_max > np[i] ? np_max : np[i];
     }
     size += 1 * blasfeo_memsize_dvec(nx_max);
-    size += 1 * blasfeo_memsize_dvec(nxu_max);
+    size += 1 * blasfeo_memsize_dvec(nv_max);
     size += 1 * blasfeo_memsize_dvec(ni_max);
 
     size += 1 * blasfeo_memsize_dvec(np_max); //  tmp_nparam;
@@ -1708,7 +1711,7 @@ acados_size_t ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_d
     size += (N+1)*sizeof(void *);
 
     // doubles
-    size += nxu_max * sizeof(double); // tmp_nxu_double
+    size += nv_max * sizeof(double); // tmp_nv_double
 
     // module workspace
     if (opts->reuse_workspace)
@@ -1816,12 +1819,13 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
 
     int N = dims->N;
     int *nx = dims->nx;
-    // int *nv = dims->nv;
-    int *nu = dims->nu;
+    int *nv = dims->nv;
+    // int *ns = dims->ns;
+    // int *nu = dims->nu;
     int *ni = dims->ni;
     // int *nz = dims->nz;
     int *np = dims->np;
-    int nxu_max = 0;
+    int nv_max = 0;
     int nx_max = 0;
     int ni_max = 0;
     int np_max = 0;
@@ -1829,7 +1833,7 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
     for (int i = 0; i <= N; i++)
     {
         nx_max = nx_max > nx[i] ? nx_max : nx[i];
-        nxu_max = nxu_max > (nx[i]+nu[i]) ? nxu_max : (nx[i]+nu[i]);
+        nv_max = nv_max > nv[i] ? nv_max : nv[i];
         ni_max = ni_max > ni[i] ? ni_max : ni[i];
         np_max = np_max > np[i] ? np_max : np[i];
     }
@@ -1869,12 +1873,12 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
     work->weight_merit_fun = ocp_nlp_out_assign(config, dims, c_ptr);
     c_ptr += ocp_nlp_out_calculate_size(config, dims);
 
-    assign_and_advance_double(nxu_max, &work->tmp_nxu_double, &c_ptr);
+    assign_and_advance_double(nv_max, &work->tmp_nv_double, &c_ptr);
     // align for blasfeo mem
     align_char_to(64, &c_ptr);
 
     // blasfeo_dvec
-    assign_and_advance_blasfeo_dvec_mem(nxu_max, &work->tmp_nxu, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(nv_max, &work->tmp_nv, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(ni_max, &work->tmp_ni, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx_max, &work->dxnext_dy, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(np_max, &work->tmp_np, &c_ptr);
@@ -2454,9 +2458,9 @@ void ocp_nlp_level_c_update(ocp_nlp_config *config,
         // DEBUG:
         // printf("\ndyn_adj i %d\n", i);
         // blasfeo_print_exp_tran_dvec(nu[i] + nx[i], dyn_adj, 0);
-        // blasfeo_dgemv_n(nu[i] + nx[i], nx[i+1], 1.0, mem->qp_in->BAbt+i, 0, 0, out->pi+i, 0, 0.0, &work->tmp_nxu, 0, &work->tmp_nxu, 0);
+        // blasfeo_dgemv_n(nu[i] + nx[i], nx[i+1], 1.0, mem->qp_in->BAbt+i, 0, 0, out->pi+i, 0, 0.0, &work->tmp_nv, 0, &work->tmp_nv, 0);
         // printf("C * lam\n");
-        // blasfeo_print_exp_tran_dvec(nu[i] + nx[i], &work->tmp_nxu, 0);
+        // blasfeo_print_exp_tran_dvec(nu[i] + nx[i], &work->tmp_nv, 0);
     }
 
     // TODO:
@@ -2484,7 +2488,7 @@ double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims
 
     // NOTE: step is in: mem->qp_out->ux
     struct blasfeo_dvec *tmp_vec; // size nv
-    struct blasfeo_dvec tmp_vec_nxu = work->tmp_nxu;  // size nxu
+    struct blasfeo_dvec tmp_vec_nxu = work->tmp_nv;  // size nxu
     struct blasfeo_dvec dxnext_dy = work->dxnext_dy;  // size nx
 
     // cost
@@ -3358,13 +3362,13 @@ void ocp_nlp_common_eval_param_sens(ocp_nlp_config *config, ocp_nlp_dims *dims,
             config->dynamics[i]->memory_get_params_lag_grad(config->dynamics[i], dims->dynamics[i], opts,
                         mem->dynamics[i], index, &tmp_qp_in->rqz[i], 0);
             config->cost[i]->memory_get_params_grad(config->cost[i], dims->cost[i], opts,
-                        mem->cost[i], index, &work->tmp_nxu, 0);
-            blasfeo_dvecad(nu[i] + nx[i], 1., &work->tmp_nxu, 0, &tmp_qp_in->rqz[i], 0);
+                        mem->cost[i], index, &work->tmp_nv, 0);
+            blasfeo_dvecad(nu[i] + nx[i], 1., &work->tmp_nv, 0, &tmp_qp_in->rqz[i], 0);
         }
 
         config->cost[N]->memory_get_params_grad(config->cost[N], dims->cost[N], opts,
-                        mem->cost[N], index, &work->tmp_nxu, 0);
-        blasfeo_dvecad(nu[N] + nx[N], 1., &work->tmp_nxu, 0, &tmp_qp_in->rqz[N], 0);
+                        mem->cost[N], index, &work->tmp_nv, 0);
+        blasfeo_dvecad(nu[N] + nx[N], 1., &work->tmp_nv, 0, &tmp_qp_in->rqz[N], 0);
     }
     else
     {
