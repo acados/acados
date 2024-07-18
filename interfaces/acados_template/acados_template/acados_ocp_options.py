@@ -547,7 +547,7 @@ class AcadosOcpOptions:
 
     @property
     def nlp_solver_tol_min_step_norm(self):
-        """NLP solver tolerance for minimal step norm. Solver terminates if 
+        """NLP solver tolerance for minimal step norm. Solver terminates if
         step norm is below given value (if termination checks for this)"""
         return self.__nlp_solver_tol_min_step_norm
 
@@ -570,8 +570,8 @@ class AcadosOcpOptions:
 
     @property
     def alpha_reduction(self):
-        """Step size reduction factor for globalization MERIT_BACKTRACKING, 
-        
+        """Step size reduction factor for globalization MERIT_BACKTRACKING,
+
         Type: float
         Default: None.
 
@@ -595,7 +595,7 @@ class AcadosOcpOptions:
     def eps_sufficient_descent(self):
         """
         Factor for sufficient descent (Armijo) conditon, see also line_search_use_sufficient_descent.
-        
+
         Type: float,
         Default: None.
 
@@ -619,7 +619,7 @@ class AcadosOcpOptions:
     def full_step_dual(self):
         """
         Determines if dual variables are updated with full steps (alpha=1.0) when primal variables are updated with smaller step.
-        
+
         Type: int; 0 or 1;
         default for funnel globalization: 1
         default else: 0.
@@ -631,7 +631,7 @@ class AcadosOcpOptions:
         """
         Increase factor for initialization of funnel width.
         Initial funnel is max(funnel_initialization_upper_bound, funnel_initialization_increase_factor * initial_infeasibility)
-        
+
         Type: float
         Default: 15.0
         """
@@ -642,7 +642,7 @@ class AcadosOcpOptions:
         """
         Initial upper bound for funnel width.
         Initial funnel is max(funnel_initialization_upper_bound, funnel_initialization_increase_factor * initial_infeasibility)
-        
+
         Type: float
         Default: 1.0
         """
@@ -653,7 +653,7 @@ class AcadosOcpOptions:
         """
         Sufficient decrease factor for infeasibility in h iteration:
         trial_infeasibility <= kappa * funnel_width
-        
+
         Type: float
         Default: 0.9
         """
@@ -663,7 +663,7 @@ class AcadosOcpOptions:
     def funnel_kappa(self):
         """
         Interpolation factor for convex combination in funnel decrease function.
-        
+
         Type: float
         Default: 0.9
         """
@@ -744,7 +744,7 @@ class AcadosOcpOptions:
         Default: 100
         """
         return self.__nlp_solver_max_iter
-    
+
     @property
     def nlp_solver_terminate_after_small_step(self):
         """NLP solver terminates if step size goes below a given minimum
@@ -794,7 +794,7 @@ class AcadosOcpOptions:
     def print_level(self):
         """
         Verbosity of printing.
-        
+
         Type: int >= 0
         Default: 0
 
@@ -1399,7 +1399,7 @@ class AcadosOcpOptions:
             self.__nlp_solver_max_iter = nlp_solver_max_iter
         else:
             raise Exception('Invalid nlp_solver_max_iter value. nlp_solver_max_iter must be a positive int.')
-        
+
     @nlp_solver_terminate_after_small_step.setter
     def nlp_solver_terminate_after_small_step(self, nlp_solver_terminate_after_small_step):
         if isinstance(nlp_solver_terminate_after_small_step, bool):
