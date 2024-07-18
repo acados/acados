@@ -30,98 +30,37 @@
 %
 
 
-function generate_c_code_explicit_ode( model, opts )
+function generate_c_code_explicit_ode( model, opts, model_dir )
 
-%% import casadi
 import casadi.*
 
 casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
 check_casadi_version();
 
-if nargin > 1
-    if isfield(opts, 'sens_hess')
-        generate_hess = opts.sens_hess;
-    else
-        generate_hess = 'false';
-%        if opts.print_info
-%        disp('generate_hess option was not set - default is false')
-%        end
-    end
-else
-    generate_hess = 'false';
-end
-generate_hess = 'true'; % TODO remove when not needed any more !!!
-
 
 %% load model
-% x
-is_template = false;
-if isa(model, 'acados_template_mex.AcadosModel')
-    is_template = true;
-    % names without sym
-    x = model.x;
-    nx = length(x);
-    % check type
-    if isa(x(1), 'casadi.SX')
-        isSX = true;
-    else
-        isSX = false;
-    end
-    % u
-    u = model.u;
-    nu = length(u);
-    % p
-    p = model.p;
-    np = length(p);
 
+x = model.x;
+u = model.u;
+p = model.p;
+nx = length(x);
+nu = length(u);
+np = length(p);
 
+% check type
+if isa(x(1), 'casadi.SX')
+    isSX = true;
 else
-    x = model.sym_x;
-    nx = length(x);
-    % check type
-    if isa(x(1), 'casadi.SX')
-        isSX = true;
-    else
-        isSX = false;
-    end
-    % u
-    if isfield(model, 'sym_u')
-        u = model.sym_u;
-        nu = length(u);
-    else
-        if isSX
-            u = SX.sym('u',0, 0);
-        else
-            u = MX.sym('u',0, 0);
-        end
-        nu = 0;
-    end
-    % p
-    if isfield(model, 'sym_p')
-        p = model.sym_p;
-        np = length(p);
-    else
-        if isSX
-            p = SX.sym('p',0, 0);
-        else
-            p = MX.sym('p',0, 0);
-        end
-        np = 0;
-    end
+    isSX = false;
 end
 
 model_name = model.name;
 
-if isfield(model, 'dyn_expr_f')
-    f_expl = model.dyn_expr_f;
-    model_name = [model_name, '_dyn'];
-elseif isfield(model, 'expr_f')
-    f_expl = model.expr_f;
-else
-    f_expl = model.f_expl_expr;
+if isempty(model.f_expl_expr)
+    error("Field `f_expl_expr` is required for integrator type ERK.")
 end
 
-
+f_expl = model.f_expl_expr;
 
 %% set up functions to be exported
 if isSX
@@ -137,10 +76,10 @@ else
     vdeX = MX.zeros(nx, nx);
     vdeU = MX.zeros(nx, nu) + jacobian(f_expl, u);
 end
+
 expl_ode_fun = Function([model_name,'_expl_ode_fun'], {x, u, p}, {f_expl});
 
 vdeX = vdeX + jtimes(f_expl, x, Sx);
-
 vdeU = vdeU + jtimes(f_expl, x, Su);
 
 expl_vde_for = Function([model_name,'_expl_vde_forw'], {x, Sx, Su, u, p}, {f_expl, vdeX, vdeU});
@@ -160,31 +99,19 @@ for j = 1:nx+nu
     end
 end
 
-if is_template
-    return_dir = pwd;
-    if ~exist( fullfile(pwd,'c_generated_code'), 'dir')
-        mkdir('c_generated_code');
-    end
-    cd 'c_generated_code'
-    model_dir = [model_name, '_model'];
-    if ~exist(fullfile(pwd, model_dir), 'dir')
-        mkdir(model_dir);
-    end
-    cd(model_dir)
-end
-
 expl_ode_hes = Function([model_name,'_expl_ode_hess'], {x, Sx, Su, lambdaX, u, p}, {adj, hess2});
 
-%% generate C code
+%% generate C code in model_dir
+return_dir = pwd;
+cd(model_dir)
+
 expl_ode_fun.generate([model_name,'_expl_ode_fun'], casadi_opts);
 expl_vde_for.generate([model_name,'_expl_vde_forw'], casadi_opts);
 expl_vde_adj.generate([model_name,'_expl_vde_adj'], casadi_opts);
-if strcmp(generate_hess, 'true')
+if opts.generate_hess
     expl_ode_hes.generate([model_name,'_expl_ode_hess'], casadi_opts);
 end
 
-if is_template
-    cd(return_dir);
-end
+cd(return_dir);
 
 end

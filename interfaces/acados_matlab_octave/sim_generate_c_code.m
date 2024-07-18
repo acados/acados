@@ -35,25 +35,25 @@ function sim_generate_c_code(obj)
         mkdir(fullfile(pwd, 'c_generated_code'))
     end
 
+    model_dir = setup_target_dir(obj.model_struct.name, '_model');
+
+    % TODO: where do we get this option from?
+    code_gen_opts = struct('generate_hess', false);
     %% generate C code for CasADi functions / copy external functions
     % dynamics
     if (strcmp(obj.model_struct.dyn_type, 'explicit'))
-        generate_c_code_explicit_ode(obj.sim.model);
+        generate_c_code_explicit_ode(obj.sim.model, code_gen_opts, model_dir);
     elseif (strcmp(obj.model_struct.dyn_type, 'implicit'))
         if (strcmp(obj.opts_struct.method, 'irk'))
-            opts.sens_hess = 'true';
-            generate_c_code_implicit_ode(...
-                obj.sim.model, opts);
+            generate_c_code_implicit_ode(obj.sim.model, code_gen_opts, model_dir);
         elseif (strcmp(obj.opts_struct.method, 'irk_gnsf'))
-            generate_c_code_gnsf(...
-                obj.sim.model);
+            generate_c_code_gnsf(obj.sim.model, code_gen_opts, model_dir);
         end
     elseif (strcmp(obj.model_struct.dyn_type, 'discrete'))
-        generate_c_code_disc_dyn(obj.sim.model);
+        generate_c_code_disc_dyn(obj.sim.model, code_gen_opts, model_dir);
     end
     if strcmp(obj.sim.model.dyn_ext_fun_type, 'generic')
-        copyfile( fullfile(pwd, obj.sim.model.dyn_generic_source),...
-            fullfile(pwd, 'c_generated_code', [obj.model_struct.name '_model']));
+        copyfile( fullfile(pwd, obj.sim.model.dyn_generic_source), model_dir);
     end
 
 
@@ -142,4 +142,11 @@ function sim_generate_c_code(obj)
     %% render templated code
     acados_template_mex.render_acados_sim_templates(obj.sim.json_file)
     acados_template_mex.compile_sim_shared_lib(obj.sim.code_export_directory)
+end
+
+function target_dir = setup_target_dir(name, postfix)
+    target_dir = fullfile(pwd, 'c_generated_code', [name postfix]);
+    if ~exist(target_dir, 'dir')
+        mkdir(target_dir);
+    end
 end

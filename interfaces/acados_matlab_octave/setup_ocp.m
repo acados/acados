@@ -221,21 +221,6 @@ function ocp = setup_ocp(obj, simulink_opts)
     end
 
     ocp.cost.cost_ext_fun_type = model.cost_ext_fun_type;
-    if strcmp(model.cost_ext_fun_type, 'generic')
-        ocp.cost.cost_source_ext_cost = model.cost_source_ext_cost;
-        ocp.cost.cost_function_ext_cost = model.cost_function_ext_cost;
-    end
-    ocp.cost.cost_ext_fun_type_0 = model.cost_ext_fun_type_0;
-    if strcmp(model.cost_ext_fun_type_0, 'generic')
-        ocp.cost.cost_source_ext_cost_0 = model.cost_source_ext_cost_0;
-        ocp.cost.cost_function_ext_cost_0 = model.cost_function_ext_cost_0;
-    end
-    ocp.cost.cost_ext_fun_type_e = model.cost_ext_fun_type_e;
-    if strcmp(model.cost_ext_fun_type_e, 'generic')
-        ocp.cost.cost_source_ext_cost_e = model.cost_source_ext_cost_e;
-        ocp.cost.cost_function_ext_cost_e = model.cost_function_ext_cost_e;
-    end
-
     ocp.constraints.constr_type = upper(model.constr_type);
     ocp.constraints.constr_type_0 = upper(model.constr_type_0);
     ocp.constraints.constr_type_e = upper(model.constr_type_e);
@@ -437,12 +422,48 @@ function ocp = setup_ocp(obj, simulink_opts)
 
 
     %% Cost
+    if strcmp(model.cost_type, 'ext_cost') && strcmp(model.cost_ext_fun_type, 'casadi')
+        ocp.model.cost_expr_ext_cost = model.cost_expr_ext_cost
+    end
+    if strcmp(model.cost_type_0, 'ext_cost') && strcmp(model.cost_ext_fun_type_0, 'casadi')
+        ocp.model.cost_expr_ext_cost_0 = model.cost_expr_ext_cost_0
+    end
+    if strcmp(model.cost_type_e, 'ext_cost') && strcmp(model.cost_ext_fun_type_e, 'casadi')
+        ocp.model.cost_expr_ext_cost_e = model.cost_expr_ext_cost_e
+    end
+
+    if strcmp(model.cost_ext_fun_type, 'generic')
+        ocp.cost.cost_source_ext_cost = model.cost_source_ext_cost;
+        ocp.cost.cost_function_ext_cost = model.cost_function_ext_cost;
+    end
+    ocp.cost.cost_ext_fun_type_0 = model.cost_ext_fun_type_0;
+    if strcmp(model.cost_ext_fun_type_0, 'generic')
+        ocp.cost.cost_source_ext_cost_0 = model.cost_source_ext_cost_0;
+        ocp.cost.cost_function_ext_cost_0 = model.cost_function_ext_cost_0;
+    end
+    ocp.cost.cost_ext_fun_type_e = model.cost_ext_fun_type_e;
+    if strcmp(model.cost_ext_fun_type_e, 'generic')
+        ocp.cost.cost_source_ext_cost_e = model.cost_source_ext_cost_e;
+        ocp.cost.cost_function_ext_cost_e = model.cost_function_ext_cost_e;
+    end
     if strcmp(model.cost_type, 'linear_ls')
         ocp.cost.Vu = model.cost_Vu;
         ocp.cost.Vx = model.cost_Vx;
         if isfield(model, 'cost_Vz')
             ocp.cost.Vz = model.cost_Vz;
         end
+    end
+    if strcmp(model.cost_type_0, 'linear_ls')
+        ocp.cost.Vu_0 = model.cost_Vu_0;
+        ocp.cost.Vx_0 = model.cost_Vx_0;
+        if isfield(model, 'cost_Vz_0')
+            ocp.cost.Vz_0 = model.cost_Vz_0;
+        end
+    end
+
+    % terminal cost might be empty
+    if isfield(model, 'cost_Vx_e')
+        ocp.cost.Vx_e = model.cost_Vx_e;
     end
 
     if strcmp(model.cost_type, 'nonlinear_ls') || strcmp(model.cost_type, 'linear_ls')
@@ -455,13 +476,6 @@ function ocp = setup_ocp(obj, simulink_opts)
         end
     end
 
-    if strcmp(model.cost_type_0, 'linear_ls')
-        ocp.cost.Vu_0 = model.cost_Vu_0;
-        ocp.cost.Vx_0 = model.cost_Vx_0;
-        if isfield(model, 'cost_Vz_0')
-            ocp.cost.Vz_0 = model.cost_Vz_0;
-        end
-    end
     if strcmp(model.cost_type_0, 'nonlinear_ls') || strcmp(model.cost_type_0, 'linear_ls')
         ocp.cost.W_0 = model.cost_W_0;
 
@@ -473,20 +487,31 @@ function ocp = setup_ocp(obj, simulink_opts)
         end
     end
 
-    if isfield(model, 'cost_Vx_e')
-        ocp.cost.Vx_e = model.cost_Vx_e;
-    end
-
     if strcmp(model.cost_type_e, 'nonlinear_ls') || strcmp(model.cost_type_e, 'linear_ls')
         if isfield(model, 'cost_W_e')
             ocp.cost.W_e = model.cost_W_e;
-
         end
         if isfield(model, 'cost_y_ref_e')
             ocp.cost.yref_e = model.cost_y_ref_e;
         else
 			warning(['cost_y_ref_e not defined for ocp json.' 10 'Using zeros(ny_e,1) by default.']);
             ocp.cost.yref_e = zeros(model.dim_ny_e,1);
+        end
+    end
+
+    if strcmp(model.cost_type, 'nonlinear_ls')
+        if isfield(model, 'cost_expr_y')
+            ocp.model.cost_y_expr = model.cost_expr_y
+        end
+    end
+    if strcmp(model.cost_type_0, 'nonlinear_ls')
+        if isfield(model, 'cost_expr_y_0')
+            ocp.model.cost_y_expr_0 = model.cost_expr_y_0
+        end
+    end
+    if strcmp(model.cost_type_e, 'nonlinear_ls')
+        if isfield(model, 'cost_expr_y_e')
+            ocp.model.cost_y_expr_e = model.cost_expr_y_e
         end
     end
 

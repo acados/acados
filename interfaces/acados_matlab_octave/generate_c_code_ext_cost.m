@@ -29,9 +29,8 @@
 
 
 
-function generate_c_code_ext_cost( model, opts, target_dir, stage_type )
+function generate_c_code_ext_cost( model, target_dir, stage_type )
 
-%% import casadi
 import casadi.*
 
 casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
@@ -40,28 +39,23 @@ check_casadi_version();
 % cd to target folder
 if nargin > 2
     original_dir = pwd;
-    if ~exist(target_dir, 'dir')
-        mkdir(target_dir);
-    end
     chdir(target_dir)
 end
 
 %% load model
-% x
-x = model.sym_x;
+x = model.x;
+u = model.u;
+z = model.z;
+
 % check type
 if isa(x(1), 'casadi.SX')
     isSX = true;
 else
     isSX = false;
 end
-% u
-u = model.sym_u;
-% z
-z = model.sym_z;
-% p
-if isfield(model, 'sym_p')
-    p = model.sym_p;
+
+if isfield(model, 'p')
+    p = model.p;
 else
     if isSX
         p = SX.sym('p',0, 0);
@@ -71,8 +65,9 @@ else
 end
 
 model_name = model.name;
+
 if strcmp(stage_type, "initial")
-    if ~isfield(model, 'cost_expr_ext_cost_0')
+    if isempty(model.cost_expr_ext_cost_0)
         error('Field `cost_expr_ext_cost_0` is required for cost_type_0 == EXTERNAL.')
     end
 
@@ -94,7 +89,7 @@ if strcmp(stage_type, "initial")
     ext_cost_0_fun_jac_hess.generate([model_name,'_cost_ext_cost_0_fun_jac_hess'], casadi_opts);
 
 elseif strcmp(stage_type, "path")
-    if ~isfield(model, 'cost_expr_ext_cost')
+    if isempty(model.cost_expr_ext_cost)
         error('Field `cost_expr_ext_cost` is required for cost_type == EXTERNAL.')
     end
     ext_cost = model.cost_expr_ext_cost;
@@ -116,7 +111,7 @@ elseif strcmp(stage_type, "path")
     ext_cost_fun_jac.generate([model_name,'_cost_ext_cost_fun_jac'], casadi_opts);
 
 elseif strcmp(stage_type, "terminal")
-    if ~isfield(model, 'cost_expr_ext_cost_e')
+    if isempty(model.cost_expr_ext_cost_e)
         error('Field `cost_expr_ext_cost_e` is required for cost_type_e == EXTERNAL.')
     end
     ext_cost_e = model.cost_expr_ext_cost_e;

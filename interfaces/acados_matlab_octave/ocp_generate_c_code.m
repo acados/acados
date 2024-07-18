@@ -34,39 +34,43 @@ function ocp_generate_c_code(obj)
     if ~exist(fullfile(pwd,'c_generated_code'), 'dir')
         mkdir(fullfile(pwd, 'c_generated_code'))
     end
+
     %% generate C code for CasADi functions / copy external functions
+    cost = obj.ocp.cost;
+    solver_opts = obj.ocp.solver_options;
+
+    % options for code generation
+    code_gen_opts = struct();
+    code_gen_opts.generate_hess = strcmp(solver_opts.hessian_approx, 'EXACT');
+    code_gen_opts.with_solution_sens_wrt_params = solver_opts.with_solution_sens_wrt_params;
+    code_gen_opts.with_value_sens_wrt_params = solver_opts.with_value_sens_wrt_params;
+
     % dynamics
-    if (strcmp(obj.model_struct.dyn_type, 'explicit'))
-        generate_c_code_explicit_ode(obj.ocp.model);
-    elseif (strcmp(obj.model_struct.dyn_type, 'implicit'))
-        if (strcmp(obj.opts_struct.sim_method, 'irk'))
-            opts.sens_hess = 'true';
-            generate_c_code_implicit_ode(...
-                obj.ocp.model, opts);
-        elseif (strcmp(obj.opts_struct.sim_method, 'irk_gnsf'))
-            generate_c_code_gnsf(...
-                obj.ocp.model);
-        end
-    elseif (strcmp(obj.model_struct.dyn_type, 'discrete'))
-        generate_c_code_disc_dyn(obj.ocp.model);
+    model_dir = setup_target_dir(obj.ocp.name, '_model');
+
+    if (strcmp(solver_opts.integrator_type, 'ERK'))
+        generate_c_code_explicit_ode(obj.ocp.model, code_gen_opts, model_dir);
+    elseif (strcmp(solver_opts.integrator_type, 'IRK')) && strcmp(obj.ocp.model.dyn_ext_fun_type, 'casadi')
+        generate_c_code_implicit_ode(obj.ocp.model, code_gen_opts, model_dir);
+    elseif (strcmp(solver_opts.integrator_type, 'IRK_GNSF'))
+        generate_c_code_gnsf(obj.ocp.model, code_gen_opts, model_dir);
+    elseif (strcmp(solver_opts.integrator_type, 'DISCRETE')) && strcmp(obj.ocp.model.dyn_ext_fun_type, 'casadi')
+        generate_c_code_disc_dyn(obj.ocp.model, code_gen_opts, model_dir);
     end
     if strcmp(obj.ocp.model.dyn_ext_fun_type, 'generic')
-        copyfile( fullfile(pwd, obj.ocp.model.dyn_generic_source),...
-            fullfile(pwd, 'c_generated_code', [obj.model_struct.name '_model']));
+        copyfile( fullfile(pwd, obj.ocp.model.dyn_generic_source), model_dir);
     end
 
     stage_types = {'initial', 'path', 'terminal'};
 
     % cost
-    cost = obj.ocp.cost;
     cost_types = {cost.cost_type_0, cost.cost_type, cost.cost_type_e};
     cost_ext_fun_types = {cost.cost_ext_fun_type_0, cost.cost_ext_fun_type, cost.cost_ext_fun_type_e};
-    cost_dir = fullfile(pwd, 'c_generated_code', [obj.model_struct.name '_cost']);
+    cost_dir = setup_target_dir(obj.ocp.name, '_cost');
 
     for i = 1:3
         if strcmp(cost_types{i}, 'NONLINEAR_LS')
-            generate_c_code_nonlinear_least_squares( obj.model_struct, obj.opts_struct,...
-              cost_dir, stage_types{i} );
+            generate_c_code_nonlinear_least_squares( obj.ocp.model, cost_dir, stage_types{i} );
 
         elseif strcmp(cost_types{i}, 'CONVEX_OVER_NONLINEAR')
             % TODO
@@ -74,8 +78,7 @@ function ocp_generate_c_code(obj)
 
         elseif strcmp(cost_types{i}, 'EXTERNAL')
             if strcmp(cost_ext_fun_types{i}, 'casadi')
-                generate_c_code_ext_cost( obj.model_struct, obj.opts_struct,...
-                cost_dir, stage_types{i} );
+                generate_c_code_ext_cost( obj.ocp.model, cost_dir, stage_types{i} );
             elseif strcmp(cost_ext_fun_types{i}, 'generic')
                 setup_generic_cost(cost, cost_dir, stage_types{i})
             else
@@ -303,8 +306,13 @@ function setup_generic_cost(cost, target_dir, stage_type)
         error('Unknown stage_type.')
     end
 
+    copyfile(fullfile(pwd, cost_source_ext_cost), target_dir);
+end
+
+
+function target_dir = setup_target_dir(name, postfix)
+    target_dir = fullfile(pwd, 'c_generated_code', [name postfix]);
     if ~exist(target_dir, 'dir')
         mkdir(target_dir);
     end
-    copyfile(fullfile(pwd, cost_source_ext_cost), target_dir);
 end

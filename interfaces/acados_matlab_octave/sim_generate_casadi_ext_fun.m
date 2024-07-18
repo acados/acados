@@ -33,11 +33,13 @@ function sim_generate_casadi_ext_fun(model_struct, opts_struct)
 
 model_name = model_struct.name;
 
+model_dir = setup_target_dir(model_name, '_model');
+
 c_files = {};
 if (strcmp(opts_struct.method, 'erk'))
     % generate c for function and derivatives using casadi
     if (strcmp(opts_struct.codgen_model, 'true'))
-        generate_c_code_explicit_ode(model_struct, opts_struct);
+        generate_c_code_explicit_ode(model_struct, opts_struct, model_dir);
     end
     % compile the code in a shared library
     c_files{end+1} = [model_name, '_dyn_expl_ode_fun.c'];
@@ -47,7 +49,7 @@ if (strcmp(opts_struct.method, 'erk'))
 elseif (strcmp(opts_struct.method, 'irk'))
     % generate c for function and derivatives using casadi
     if (strcmp(opts_struct.codgen_model, 'true'))
-        generate_c_code_implicit_ode(model_struct, opts_struct);
+        generate_c_code_implicit_ode(model_struct, opts_struct, model_dir);
     end
     % compile the code in a shared library
     c_files{end+1} = [model_name, '_dyn_impl_dae_fun.c'];
@@ -60,7 +62,7 @@ elseif (strcmp(opts_struct.method, 'irk'))
 elseif (strcmp(opts_struct.method, 'irk_gnsf'))
     % generate c for function and derivatives using casadi
     if (strcmp(opts_struct.codgen_model, 'true'))
-        generate_c_code_gnsf(model_struct); %, opts_struct);
+        generate_c_code_gnsf(model_struct, opts_struct, model_dir);
     end
     % compile the code in a shared library
     c_files{end+1} = [model_name, '_dyn_gnsf_get_matrices_fun.c'];
@@ -146,3 +148,11 @@ end
 
 end
 
+
+
+function target_dir = setup_target_dir(name, postfix)
+    target_dir = fullfile(pwd, 'c_generated_code', [name postfix]);
+    if ~exist(target_dir, 'dir')
+        mkdir(target_dir);
+    end
+end

@@ -27,129 +27,67 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-%
 
 
-function generate_c_code_disc_dyn( model, opts )
 
-%% import casadi
+function generate_c_code_disc_dyn( model, opts, model_dir )
+
 import casadi.*
 
 casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
 check_casadi_version();
 
 %% load model
-is_template = false;
+x = model.x;
+u = model.u;
+p = model.p;
+nx = length(x);
+nu = length(u);
+np = length(p);
 
-if isa(model, 'acados_template_mex.AcadosModel')
-    is_template = true;
-
-    % names without sym
-    x = model.x;
-    nx = length(x);
-    % check type
-    if isa(x(1), 'casadi.SX')
-        isSX = true;
-    else
-        isSX = false;
-    end
-
-    % u
-    u = model.u;
-    nu = length(u);
-    % p
-    p = model.p;
-    np = length(p);
-
+% check type
+if isa(x(1), 'casadi.SX')
+    isSX = true;
 else
-    % x
-    x = model.sym_x;
-    nx = length(x);
-    % check type
-    if isa(x(1), 'casadi.SX')
-        isSX = true;
-    else
-        isSX = false;
-    end
-
-    % u
-    if isfield(model, 'sym_u')
-        u = model.sym_u;
-        nu = length(u);
-    else
-        if isSX
-            u = SX.sym('u', 0, 0);
-        else
-            u = MX.sym('u', 0, 0);
-        end
-        nu = 0;
-    end
-
-    % p
-    if isfield(model, 'sym_p')
-        p = model.sym_p;
-        np = length(p);
-    else
-        if isSX
-            p = SX.sym('p', 0, 0);
-        else
-            p = MX.sym('p', 0, 0);
-        end
-        np = 0;
-    end
+    isSX = false;
 end
 
 model_name = model.name;
 
-if is_template
-    if ~exist( fullfile(pwd,'c_generated_code'), 'dir')
-        mkdir('c_generated_code');
-    end
-    cd 'c_generated_code'
-    model_dir = [model_name, '_model'];
-    if ~exist(fullfile(pwd, model_dir), 'dir')
-        mkdir(model_dir);
-    end
-    cd(model_dir)
+return_dir = pwd;
+cd(model_dir)
+
+if isempty(model.disc_dyn_expr)
+    error('Field `disc_dyn_expr` is required for discrete dynamics.')
 end
+phi = model.disc_dyn_expr;
 
-if strcmp(model.dyn_ext_fun_type, 'casadi')
-    if isfield(model, 'dyn_expr_phi')
-        phi = model.dyn_expr_phi;
-    elseif isfield(model, 'f_phi_expr')
-        phi = model.f_phi_expr;
-    elseif isa(model, 'acados_template_mex.AcadosModel')
-        phi = model.disc_dyn_expr
-    else
-        error('no discrete dynamics expression provided')
-    end
+% assume nx1 = nx !!!
+% multipliers for hessian
+if isSX
+    lam = SX.sym('lam', nx, 1);
+else
+    lam = MX.sym('lam', nx, 1);
+end
+% generate jacobians
+jac_ux = jacobian(phi, [u; x]);
+% generate adjoint
+adj_ux = jtimes(phi, [u; x], lam, true);
+% generate hessian
+hess_ux = jacobian(adj_ux, [u; x], struct('symmetric', isSX));
+% Set up functions
+phi_fun = Function([model_name,'_dyn_disc_phi_fun'], {x, u, p}, {phi});
+phi_fun_jac_ut_xt = Function([model_name,'_dyn_disc_phi_fun_jac'], {x, u, p}, {phi, jac_ux'});
+phi_fun_jac_ut_xt_hess = Function([model_name,'_dyn_disc_phi_fun_jac_hess'], {x, u, lam, p}, {phi, jac_ux', hess_ux});
 
-    % assume nx1 = nx !!!
-    % multipliers for hessian
-    if isSX
-        lam = SX.sym('lam', nx, 1);
-    else
-        lam = MX.sym('lam', nx, 1);
-    end
-    % generate jacobians
-    jac_ux = jacobian(phi, [u; x]);
-    % generate adjoint
-    adj_ux = jtimes(phi, [u; x], lam, true);
-    % generate hessian
-    hess_ux = jacobian(adj_ux, [u; x], struct('symmetric', isSX));
-    % Set up functions
-    phi_fun = Function([model_name,'_dyn_disc_phi_fun'], {x, u, p}, {phi});
-    phi_fun_jac_ut_xt = Function([model_name,'_dyn_disc_phi_fun_jac'], {x, u, p}, {phi, jac_ux'});
-    phi_fun_jac_ut_xt_hess = Function([model_name,'_dyn_disc_phi_fun_jac_hess'], {x, u, lam, p}, {phi, jac_ux', hess_ux});
+% generate C code
+phi_fun.generate([model_name,'_dyn_disc_phi_fun'], casadi_opts);
+phi_fun_jac_ut_xt.generate([model_name,'_dyn_disc_phi_fun_jac'], casadi_opts);
 
-    % generate C code
-    phi_fun.generate([model_name,'_dyn_disc_phi_fun'], casadi_opts);
-    phi_fun_jac_ut_xt.generate([model_name,'_dyn_disc_phi_fun_jac'], casadi_opts);
+if code_gen_opts.generate_hess
     phi_fun_jac_ut_xt_hess.generate([model_name,'_dyn_disc_phi_fun_jac_hess'], casadi_opts);
 end
 
-if is_template
-    cd '../..'
-end
+cd(return_dir);
 
 end

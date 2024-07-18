@@ -30,120 +30,44 @@
 %
 
 
-function generate_c_code_implicit_ode( model, opts )
+function generate_c_code_implicit_ode( model, opts, model_dir )
 
-%% import casadi
 import casadi.*
 
 casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
 check_casadi_version();
 
-if nargin > 1
-    if isfield(opts, 'sens_hess')
-        generate_hess = opts.sens_hess;
-    elseif isfield(opts, 'nlp_solver_exact_hessian')
-        generate_hess = opts.nlp_solver_exact_hessian;
-%        if opts.print_info
-%        disp('generate_hess option was not set - default is false')
-%        end
-    else
-        generate_hess = 'false';
-    end
-else
-    generate_hess = 'false';
-end
-
-
 %% load model
-% x
-is_template = false;
-if isa(model, 'acados_template_mex.AcadosModel')
-    is_template = true;
-    % names without sym
-    x = model.x;
-    nx = length(x);
-    % check type
-    if isa(x(1), 'casadi.SX')
-        isSX = true;
-    else
-        isSX = false;
-    end
-    % u
-    u = model.u;
-    nu = length(u);
-    % p
-    p = model.p;
-    np = length(p);
-    % xdot
-    xdot = model.xdot;
-    % z
-    z = model.z;
+x = model.x;
+u = model.u;
+p = model.p;
+xdot = model.xdot;
+z = model.z;
 
-else
-    x = model.sym_x;
-    nx = length(x);
-    % check type
-    if isa(x(1), 'casadi.SX')
-        isSX = true;
-    else
-        isSX = false;
-    end
-    % xdot
-    xdot = model.sym_xdot;
-    % u
-    if isfield(model, 'sym_u')
-        u = model.sym_u;
-        nu = length(u);
-    else
-        if isSX
-            u = SX.sym('u',0, 0);
-        else
-            u = MX.sym('u',0, 0);
-        end
-        nu = 0;
-    end
-    % z
-    if isfield(model, 'sym_z')
-        z = model.sym_z;
-    else
-        if isSX
-            z = SX.sym('z',0, 0);
-        else
-            z = MX.sym('z',0, 0);
-        end
-    end
-    % p
-    if isfield(model, 'sym_p')
-        p = model.sym_p;
-    else
-        if isSX
-            p = SX.sym('p',0, 0);
-        else
-            p = MX.sym('p',0, 0);
-        end
-    end
-end
+nx = length(x);
+nu = length(u);
 nz = length(z);
 np = length(p);
 
-model_name = model.name;
-
-if isfield(model, 'dyn_expr_f')
-    f_impl = model.dyn_expr_f;
-    model_name = [model_name, '_dyn'];
-elseif isfield(model, 'expr_f')
-    f_impl = model.expr_f;
+% check type
+if isa(x(1), 'casadi.SX')
+    isSX = true;
 else
-    f_impl = model.f_impl_expr;
+    isSX = false;
 end
 
+model_name = model.name;
+
+if isempty(model.f_impl_expr)
+    error("Field `f_impl_expr` is required for integrator type IRK.")
+end
+f_impl = model.f_impl_expr;
 
 %% generate jacobians
 jac_x = jacobian(f_impl, x);
 jac_xdot = jacobian(f_impl, xdot);
 jac_u = jacobian(f_impl, u);
 jac_z = jacobian(f_impl, z);
-
 
 %% generate hessian
 x_xdot_z_u = [x; xdot; z; u];
@@ -158,33 +82,21 @@ else
 %    HESS = MX.zeros( length(x_xdot_z_u), length(x_xdot_z_u));
 end
 
-
-
 %% Set up functions
 impl_dae_fun = Function([model_name,'_impl_dae_fun'], {x, xdot, u, z, p}, {f_impl});
 impl_dae_fun_jac_x_xdot_z = Function([model_name,'_impl_dae_fun_jac_x_xdot_z'], {x, xdot, u, z, p}, {f_impl, jac_x, jac_xdot, jac_z});
 impl_dae_jac_x_xdot_u_z = Function([model_name,'_impl_dae_jac_x_xdot_u_z'], {x, xdot, u, z, p}, {jac_x, jac_xdot, jac_u, jac_z});
 impl_dae_fun_jac_x_xdot_u = Function([model_name,'_impl_dae_fun_jac_x_xdot_u'], {x, xdot, u, z, p}, {f_impl, jac_x, jac_xdot, jac_u});
 
+%% generate C code in model_dir
+return_dir = pwd;
+cd(model_dir)
 
-if is_template
-    if ~exist(fullfile(pwd,'c_generated_code'), 'dir')
-        mkdir('c_generated_code');
-    end
-    cd 'c_generated_code'
-    model_dir = [model_name, '_model'];
-    if ~exist(fullfile(pwd, model_dir), 'dir')
-        mkdir(model_dir);
-    end
-    cd(model_dir)
-end
-
-%% generate C code
 impl_dae_fun.generate([model_name,'_impl_dae_fun'], casadi_opts);
 impl_dae_fun_jac_x_xdot_z.generate([model_name,'_impl_dae_fun_jac_x_xdot_z'], casadi_opts);
 impl_dae_jac_x_xdot_u_z.generate([model_name,'_impl_dae_jac_x_xdot_u_z'], casadi_opts);
 impl_dae_fun_jac_x_xdot_u.generate([model_name,'_impl_dae_fun_jac_x_xdot_u'], casadi_opts);
-if strcmp(generate_hess, 'true')
+if opts.generate_hess
     % hessian computed as forward over adjoint !!!
     ADJ = jtimes(f_impl, x_xdot_z_u, multiplier, true);
     HESS = jacobian(ADJ, x_xdot_z_u, struct('symmetric', isSX));
@@ -203,10 +115,6 @@ if strcmp(generate_hess, 'true')
     impl_dae_hess.generate([model_name,'_impl_dae_hess'], casadi_opts);
 end
 
-if is_template
-    cd '../..'
-end
-
-% keyboard
+cd(return_dir);
 
 end
