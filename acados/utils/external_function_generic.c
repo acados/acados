@@ -1121,7 +1121,6 @@ acados_size_t external_function_param_casadi_calculate_size(external_function_pa
     size += fun->args_size_tot * sizeof(double);  // args
     size += fun->res_size_tot * sizeof(double);   // res
     size += fun->w_size * sizeof(double);         // w
-    size += fun->np * sizeof(double);             // p
 
     size += 8;  // initial align
     size += 8;  // align to double
