@@ -1576,9 +1576,10 @@ double ocp_nlp_sqp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_
         ns = dims->ns[i];
         if (opts->funnel_type_switching_condition)
         {
-            // Calculate 0.5* d.T H d
-            blasfeo_dsymv_l(nux, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], 0, 0.0, &qp_out->ux[i], 0, &nlp_work->tmp_nlp_out->ux[i], 0);
-            qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &nlp_work->tmp_nlp_out->ux[i], 0);
+            // Calculate 0.5 * d.T H d
+            blasfeo_dsymv_l(nux, 0.5, &qp_in->RSQrq[i], 0, 0, &qp_out->ux[i], 0,
+                            0.0, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
+            qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
 
             // slack QP objective value
             // tmp_2ns = 2 * z + Z .* slack;
