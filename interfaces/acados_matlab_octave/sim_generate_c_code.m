@@ -37,8 +37,7 @@ function sim_generate_c_code(obj)
 
     model_dir = setup_target_dir(obj.model_struct.name, '_model');
 
-    % TODO: where do we get this option from?
-    code_gen_opts = struct('generate_hess', false);
+    code_gen_opts = struct('generate_hess', strcmp(obj.opts_struct.sens_hess, 'true'));
     %% generate C code for CasADi functions / copy external functions
     % dynamics
     if (strcmp(obj.model_struct.dyn_type, 'explicit'))
