@@ -45,7 +45,6 @@ u = model.u;
 p = model.p;
 nx = length(x);
 nu = length(u);
-np = length(p);
 
 % check type
 if isa(x(1), 'casadi.SX')

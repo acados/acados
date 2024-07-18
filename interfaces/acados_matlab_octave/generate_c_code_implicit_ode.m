@@ -45,9 +45,7 @@ xdot = model.xdot;
 z = model.z;
 
 nx = length(x);
-nu = length(u);
 nz = length(z);
-np = length(p);
 
 % check type
 if isa(x(1), 'casadi.SX')

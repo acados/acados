@@ -42,8 +42,7 @@ x = model.x;
 u = model.u;
 p = model.p;
 nx = length(x);
-nu = length(u);
-np = length(p);
+
 
 % check type
 if isa(x(1), 'casadi.SX')
@@ -84,7 +83,7 @@ phi_fun_jac_ut_xt_hess = Function([model_name,'_dyn_disc_phi_fun_jac_hess'], {x,
 phi_fun.generate([model_name,'_dyn_disc_phi_fun'], casadi_opts);
 phi_fun_jac_ut_xt.generate([model_name,'_dyn_disc_phi_fun_jac'], casadi_opts);
 
-if code_gen_opts.generate_hess
+if opts.generate_hess
     phi_fun_jac_ut_xt_hess.generate([model_name,'_dyn_disc_phi_fun_jac_hess'], casadi_opts);
 end
 

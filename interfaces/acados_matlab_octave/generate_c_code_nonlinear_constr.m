@@ -39,41 +39,32 @@ casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double')
 check_casadi_version();
 
 %% load model
-% x
 x = model.sym_x;
-nx = length(x);
 % check type
 if isa(x(1), 'casadi.SX')
     isSX = true;
 else
     isSX = false;
 end
-% u
 u = model.sym_u;
-nu = length(u);
-% z
 if isfield(model, 'sym_z')
     z = model.sym_z;
-    nz = length(z);
 else
     if isSX
         z = SX.sym('z',0, 0);
     else
         z = MX.sym('z',0, 0);
     end
-    nz = 0;
 end
 % p
 if isfield(model, 'sym_p')
     p = model.sym_p;
-    np = length(p);
 else
     if isSX
         p = SX.sym('p',0, 0);
     else
         p = MX.sym('p',0, 0);
     end
-    np = 0;
 end
 
 model_name = model.name;
