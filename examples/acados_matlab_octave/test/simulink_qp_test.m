@@ -155,7 +155,7 @@ disp('checking status.')
 if any(status_signal.Values.Data)
     disp('failed. got status values:');
     disp(status_signal.Values.Data);
-    % quit(1);
+    quit(1);
 end
 
 %% Run with different initialization
@@ -174,10 +174,12 @@ disp(sqp_iter_simulink)
 fprintf('should require one SQP iteration in first instance.\n')
 if sqp_iter_simulink(1) ~= 1
     disp('failed');
+    quit(1);
 end
 fprintf('should require 0 SQP iterations if initialized at solution.\n')
 if any(sqp_iter_simulink(2:n_sim))
     disp('failed');
+    quit(1);
 end
 
 status_signal = out_sim.logsout.getElement('status');
