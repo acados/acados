@@ -315,6 +315,9 @@ function setup_generic_cost(cost, target_dir, stage_type)
         error('Unknown stage_type.')
     end
 
+    if ~exist(target_dir, 'dir')
+        mkdir(target_dir);
+    end
     copyfile(fullfile(pwd, cost_source_ext_cost), target_dir);
 end
 
