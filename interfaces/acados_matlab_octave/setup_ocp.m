@@ -618,7 +618,6 @@ function ocp = setup_ocp(obj, simulink_opts)
     ocp.model.z = model.sym_z;
     ocp.model.xdot = model.sym_xdot;
     ocp.model.p = model.sym_p;
-
 end
 
 

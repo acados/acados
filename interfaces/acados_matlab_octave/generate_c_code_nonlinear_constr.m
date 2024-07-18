@@ -32,7 +32,6 @@
 
 function generate_c_code_nonlinear_constr( model, opts, target_dir )
 
-%% import casadi
 import casadi.*
 
 casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
@@ -40,43 +39,44 @@ check_casadi_version();
 
 %% load model
 x = model.sym_x;
-% check type
+u = model.sym_u;
+
 if isa(x(1), 'casadi.SX')
     isSX = true;
 else
     isSX = false;
 end
-u = model.sym_u;
-if isfield(model, 'sym_z')
-    z = model.sym_z;
-else
-    if isSX
-        z = SX.sym('z',0, 0);
-    else
-        z = MX.sym('z',0, 0);
-    end
-end
-% p
-if isfield(model, 'sym_p')
-    p = model.sym_p;
-else
-    if isSX
-        p = SX.sym('p',0, 0);
-    else
-        p = MX.sym('p',0, 0);
-    end
-end
+
+z = model.sym_z;
+
+% if ~isempty(model, 'sym_z')
+%     z = model.sym_z;
+% else
+%     if isSX
+%         z = SX.sym('z',0, 0);
+%     else
+%         z = MX.sym('z',0, 0);
+%     end
+% end
+
+p = model.sym_p;
+
+% if ~isempty(model, 'sym_p')
+%     p = model.sym_p;
+% else
+%     if isSX
+%         p = SX.sym('p',0, 0);
+%     else
+%         p = MX.sym('p',0, 0);
+%     end
+% end
 
 model_name = model.name;
 
 % cd to target folder
-if nargin > 2
-    original_dir = pwd;
-    if ~exist(target_dir, 'dir')
-        mkdir(target_dir);
-    end
-    chdir(target_dir)
-end
+return_dir = pwd;
+chdir(target_dir)
+
 
 if isfield(model, 'constr_expr_h')
     h = model.constr_expr_h;
@@ -166,9 +166,6 @@ if isfield(model, 'constr_expr_h_e')
     h_e_fun_jac_uxt_zt_hess.generate([model_name,'_constr_h_e_fun_jac_uxt_zt_hess'], casadi_opts);
 end
 
-if nargin > 2
-    chdir(original_dir)
-end
-
+chdir(return_dir)
 
 end

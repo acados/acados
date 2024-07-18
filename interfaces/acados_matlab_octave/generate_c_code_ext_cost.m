@@ -54,15 +54,17 @@ else
     isSX = false;
 end
 
-if isfield(model, 'p')
-    p = model.p;
-else
-    if isSX
-        p = SX.sym('p',0, 0);
-    else
-        p = MX.sym('p',0, 0);
-    end
-end
+p = model.p;
+
+% if ~isempty(model.p)
+%     p = model.p;
+% else
+%     if isSX
+%         p = SX.sym('p',0, 0);
+%     else
+%         p = MX.sym('p',0, 0);
+%     end
+% end
 
 model_name = model.name;
 
@@ -83,6 +85,7 @@ if strcmp(stage_type, "initial")
     else
         ext_cost_0_fun_jac_hess = Function([model_name,'_cost_ext_cost_0_fun_jac_hess'], {x, u, z, p}, {ext_cost_0, grad, full_hess});
     end
+
     % generate C code
     ext_cost_0_fun.generate([model_name,'_cost_ext_cost_0_fun'], casadi_opts);
     ext_cost_0_fun_jac.generate([model_name,'_cost_ext_cost_0_fun_jac'], casadi_opts);
