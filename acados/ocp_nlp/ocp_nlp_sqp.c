@@ -1581,13 +1581,12 @@ double ocp_nlp_sqp_compute_qp_objective_value(ocp_nlp_dims *dims, ocp_qp_in *qp_
                             0.0, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
             qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &nlp_work->tmp_nv, 0);
 
-            // slack QP objective value
-            // tmp_2ns = 2 * z + Z .* slack;
-            // Do we need (2*ns, 2.0, ....) or 1.0?
-            // blasfeo_dveccpsc(2*ns, 1.0, &qp_out->ux[i], nux, &nlp_work->tmp_nlp_out->ux[i], nux); // needed?
-            blasfeo_dvecmulacc(2*ns, &qp_in->Z[i], nux, &qp_out->ux[i], nux, &nlp_work->tmp_nlp_out->ux[i], nux);
-            // qp_cost += .5 * (tmp_2ns .* slack,)
-            qp_cost += 0.5 * blasfeo_ddot(2*ns, &nlp_work->tmp_nlp_out->ux[i], 0, &qp_out->ux[i], nux);
+            // slack QP objective value, compare to computation in cost modules;
+            // tmp_nv = 2 * z + Z .* slack;
+            blasfeo_dveccpsc(2*ns, 2.0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
+            blasfeo_dvecmulacc(2*ns, &qp_in->Z[i], 0, &qp_out->ux[i], nux, &nlp_work->tmp_nv, 0);
+            // qp_cost += .5 * (tmp_nv .* slack)
+            qp_cost += 0.5 * blasfeo_ddot(2*ns, &nlp_work->tmp_nv, 0, &qp_out->ux[i], nux);
         }
         // Calculate g.T d
         qp_cost += blasfeo_ddot(nux, &qp_out->ux[i], 0, &qp_in->rqz[i], 0);
