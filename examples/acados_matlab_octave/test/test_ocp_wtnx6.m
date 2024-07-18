@@ -366,7 +366,6 @@ x_traj_init = repmat(x0_ref, 1, ocp_N+1);
 u_traj_init = repmat(u0_ref, 1, ocp_N);
 pi_traj_init = zeros(nx, ocp_N);
 
-
 for ii=1:n_sim
 
 %    fprintf('\nsimulation step %d\n', ii);
