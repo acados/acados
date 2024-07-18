@@ -1054,8 +1054,6 @@ static void external_function_param_casadi_set_param(void *self, double *p)
 static void external_function_param_casadi_set_param_sparse(void *self, int n_update,
                                                             int *idx_p_update, double *p)
 {
-    // TODO: fix!!!
-    // TODO: assert p is vector!!!
     external_function_param_casadi *fun = self;
 
     int idx_arg_p = fun->args_num-1;
@@ -1069,40 +1067,8 @@ static void external_function_param_casadi_set_param_sparse(void *self, int n_up
     }
     else
     {
-        int *sparsity = fun->casadi_sparsity_in(idx_arg_p);
-        int nrow = sparsity[0];
-        int ncol = sparsity[1];
-        int *idxcol = sparsity + 2;
-        int *row = sparsity + ncol + 3;
-
-        int i_idx = 0;
-        int ip;
-        int ip_prev = -1;
-        int nnz_p = casadi_nnz(sparsity);
-        int jj = 0;
-        double *out = fun->args[idx_arg_p]
-        for (int ii = 0; ii < n_update; ii++)
-        {
-            ip = idx_p_update[ii];
-            if (ip < ip_prev)
-            {
-                printf("external_function_param_casadi_set_param_sparse: idx_p_update must be in ascending order\n");
-                exit(1);
-            }
-            while (jj < nnz_p)
-            {
-                if (row[jj] == ip)
-                {
-                    out[jj] = p[ii];
-                    jj++;
-                    break;
-                }
-                else
-                {
-                    jj++;
-                }
-            }
-        }
+        printf("\nexternal_function_param_casadi_set_param_sparse: sparse parameter update for sparse parameter vector not supported!\n");
+        exit(1);
     }
 
     return;
