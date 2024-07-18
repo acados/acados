@@ -38,6 +38,8 @@ function ocp_generate_c_code(obj)
     %% generate C code for CasADi functions / copy external functions
     cost = obj.ocp.cost;
     solver_opts = obj.ocp.solver_options;
+    constraints = obj.ocp.constraints;
+    dims = obj.ocp.dims;
 
     % options for code generation
     code_gen_opts = struct();
@@ -46,7 +48,11 @@ function ocp_generate_c_code(obj)
     code_gen_opts.with_value_sens_wrt_params = solver_opts.with_value_sens_wrt_params;
 
     % dynamics
-    model_dir = setup_target_dir(obj.ocp.name, '_model');
+    model_dir = fullfile(pwd, 'c_generated_code', [obj.ocp.name '_model']);
+    % model dir is always need, other dirs are  only created if necessary
+    if ~exist(model_dir, 'dir')
+        mkdir(model_dir);
+    end
 
     if (strcmp(solver_opts.integrator_type, 'ERK'))
         generate_c_code_explicit_ode(obj.ocp.model, code_gen_opts, model_dir);
@@ -66,7 +72,7 @@ function ocp_generate_c_code(obj)
     % cost
     cost_types = {cost.cost_type_0, cost.cost_type, cost.cost_type_e};
     cost_ext_fun_types = {cost.cost_ext_fun_type_0, cost.cost_ext_fun_type, cost.cost_ext_fun_type_e};
-    cost_dir = setup_target_dir(obj.ocp.name, '_cost');
+    cost_dir = fullfile(pwd, 'c_generated_code', [obj.ocp.name '_cost']);
 
     for i = 1:3
         if strcmp(cost_types{i}, 'NONLINEAR_LS')
@@ -89,11 +95,14 @@ function ocp_generate_c_code(obj)
 
 
     % constraints
-    if ((strcmp(obj.model_struct.constr_type, 'bgh') && obj.model_struct.dim_nh > 0) || ...
-        (strcmp(obj.model_struct.constr_type_0, 'bgh') && obj.model_struct.dim_nh_0 > 0) || ...
-        (strcmp(obj.model_struct.constr_type_e, 'bgh') && obj.model_struct.dim_nh_e > 0))
-        generate_c_code_nonlinear_constr( obj.model_struct, obj.opts_struct,...
-              fullfile(pwd, 'c_generated_code', [obj.model_struct.name '_constraints']) );
+    constraints_types = {constraints.constr_type_0, constraints.constr_type, constraints.constr_type_e};
+    constraints_dims = {dims.nh_0, dims.nh, dims.nh_e};
+    constraints_dir = fullfile(pwd, 'c_generated_code', [obj.ocp.name '_constraints']);
+
+    for i = 1:3
+        if strcmp(constraints_types{i}, 'BGH') && constraints_dims{i} > 0
+            generate_c_code_nonlinear_constr( obj.ocp.model, constraints_dir, stage_types{i} );
+        end
     end
 
     % set include and lib path
@@ -309,10 +318,3 @@ function setup_generic_cost(cost, target_dir, stage_type)
     copyfile(fullfile(pwd, cost_source_ext_cost), target_dir);
 end
 
-
-function target_dir = setup_target_dir(name, postfix)
-    target_dir = fullfile(pwd, 'c_generated_code', [name postfix]);
-    if ~exist(target_dir, 'dir')
-        mkdir(target_dir);
-    end
-end

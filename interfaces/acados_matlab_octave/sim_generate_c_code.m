@@ -30,12 +30,15 @@
 %
 
 function sim_generate_c_code(obj)
-    %% create folder
+    %% create folders
     if ~exist(fullfile(pwd,'c_generated_code'), 'dir')
         mkdir(fullfile(pwd, 'c_generated_code'))
     end
 
-    model_dir = setup_target_dir(obj.model_struct.name, '_model');
+    model_dir = fullfile(pwd, 'c_generated_code', [obj.ocp.name '_model']);
+    if ~exist(model_dir, 'dir')
+        mkdir(model_dir);
+    end
 
     code_gen_opts = struct('generate_hess', strcmp(obj.opts_struct.sens_hess, 'true'));
     %% generate C code for CasADi functions / copy external functions
@@ -143,9 +146,3 @@ function sim_generate_c_code(obj)
     acados_template_mex.compile_sim_shared_lib(obj.sim.code_export_directory)
 end
 
-function target_dir = setup_target_dir(name, postfix)
-    target_dir = fullfile(pwd, 'c_generated_code', [name postfix]);
-    if ~exist(target_dir, 'dir')
-        mkdir(target_dir);
-    end
-end

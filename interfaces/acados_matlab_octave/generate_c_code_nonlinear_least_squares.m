@@ -52,10 +52,12 @@ end
 model_name = model.name;
 
 % cd to target folder
-if nargin > 2
-    original_dir = pwd;
-    chdir(target_dir)
+original_dir = pwd;
+if ~exist(target_dir, 'dir')
+    mkdir(target_dir);
 end
+chdir(target_dir)
+
 
 if strcmp(stage_type, 'initial')
 
@@ -151,9 +153,7 @@ elseif strcmp(stage_type, 'terminal')
     y_e_hess.generate([model_name,'_cost_y_e_hess'], casadi_opts);
 end
 
-if nargin > 2
-    chdir(original_dir)
-end
+chdir(original_dir)
 
 end
 

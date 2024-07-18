@@ -30,7 +30,7 @@
 %
 
 
-function generate_c_code_nonlinear_constr( model, opts, target_dir )
+function generate_c_code_nonlinear_constr( model, target_dir, stage_type )
 
 import casadi.*
 
@@ -38,10 +38,10 @@ casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double')
 check_casadi_version();
 
 %% load model
-x = model.sym_x;
-u = model.sym_u;
-p = model.sym_p;
-z = model.sym_z;
+x = model.x;
+u = model.u;
+p = model.p;
+z = model.z;
 
 if isa(x(1), 'casadi.SX')
     isSX = true;
@@ -53,10 +53,48 @@ model_name = model.name;
 
 % cd to target folder
 return_dir = pwd;
+if ~exist(target_dir, 'dir')
+    mkdir(target_dir);
+end
 chdir(target_dir)
+disp(pwd);
 
-if isfield(model, 'constr_expr_h')
-    h = model.constr_expr_h;
+if strcmp(stage_type, 'initial')
+
+    h_0 = model.con_h_expr_0;
+
+    % multipliers for hessian
+    nh_0 = length(h_0);
+    if isSX
+        lam_h_0 = SX.sym('lam_h', nh_0, 1);
+    else
+        lam_h_0 = MX.sym('lam_h', nh_0, 1);
+    end
+    % generate jacobians
+    jac_ux_0 = jacobian(h_0, [u; x]);
+    jac_z_0  = jacobian(h_0, z);
+
+    % generate hessian
+    adj_ux_0 = jtimes(h_0, [u; x], lam_h_0, true);
+    hess_ux_0 = jacobian(adj_ux_0, [u; x], struct('symmetric', isSX));
+
+    adj_z_0 = jtimes(h_0, z, lam_h_0, true);
+    hess_z_0 = jacobian(adj_z_0, z, struct('symmetric', isSX));
+
+    % Set up functions
+    h_0_fun = Function([model_name,'_constr_h_0_fun'], {x, u, z, p}, {h_0});
+    h_0_fun_jac_uxt_zt = Function([model_name,'_constr_h_0_fun_jac_uxt_zt'], {x, u, z, p}, {h_0, jac_ux_0', jac_z_0'});
+    h_0_fun_jac_uxt_zt_hess = Function([model_name,'_constr_h_0_fun_jac_uxt_zt_hess'], {x, u, lam_h_0, z, p}, {h_0, jac_ux_0', hess_ux_0, jac_z_0', hess_z_0});
+    % generate C code
+    h_0_fun.generate([model_name,'_constr_h_0_fun'], casadi_opts);
+    h_0_fun_jac_uxt_zt.generate([model_name,'_constr_h_0_fun_jac_uxt_zt'], casadi_opts);
+    h_0_fun_jac_uxt_zt_hess.generate([model_name,'_constr_h_0_fun_jac_uxt_zt_hess'], casadi_opts);
+
+
+elseif strcmp(stage_type, 'path')
+
+    h = model.con_h_expr;
+
     % multipliers for hessian
     nh = length(h);
     if isSX
@@ -85,41 +123,10 @@ if isfield(model, 'constr_expr_h')
     h_fun.generate([model_name,'_constr_h_fun'], casadi_opts);
     h_fun_jac_uxt_zt.generate([model_name,'_constr_h_fun_jac_uxt_zt'], casadi_opts);
     h_fun_jac_uxt_zt_hess.generate([model_name,'_constr_h_fun_jac_uxt_zt_hess'], casadi_opts);
-end
 
-if isfield(model, 'constr_expr_h_0')
-    h_0 = model.constr_expr_h_0;
-    % multipliers for hessian
-    nh_0 = length(h_0);
-    if isSX
-        lam_h_0 = SX.sym('lam_h', nh_0, 1);
-    else
-        lam_h_0 = MX.sym('lam_h', nh_0, 1);
-    end
-    % generate jacobians
-    jac_ux_0 = jacobian(h_0, [u; x]);
-    jac_z_0  = jacobian(h_0, z);
-
-    % generate hessian
-    adj_ux_0 = jtimes(h_0, [u; x], lam_h_0, true);
-    hess_ux_0 = jacobian(adj_ux_0, [u; x], struct('symmetric', isSX));
-
-    adj_z_0 = jtimes(h_0, z, lam_h_0, true);
-    hess_z_0 = jacobian(adj_z_0, z, struct('symmetric', isSX));
-
-    % Set up functions
-    h_0_fun = Function([model_name,'_constr_h_0_fun'], {x, u, z, p}, {h_0});
-    h_0_fun_jac_uxt_zt = Function([model_name,'_constr_h_0_fun_jac_uxt_zt'], {x, u, z, p}, {h_0, jac_ux_0', jac_z_0'});
-    h_0_fun_jac_uxt_zt_hess = Function([model_name,'_constr_h_0_fun_jac_uxt_zt_hess'], {x, u, lam_h_0, z, p}, {h_0, jac_ux_0', hess_ux_0, jac_z_0', hess_z_0});
-    % generate C code
-    h_0_fun.generate([model_name,'_constr_h_0_fun'], casadi_opts);
-    h_0_fun_jac_uxt_zt.generate([model_name,'_constr_h_0_fun_jac_uxt_zt'], casadi_opts);
-    h_0_fun_jac_uxt_zt_hess.generate([model_name,'_constr_h_0_fun_jac_uxt_zt_hess'], casadi_opts);
-end
-
-if isfield(model, 'constr_expr_h_e')
+elseif strcmp(stage_type, 'terminal')
     % NOTE: terminal node has no u, z
-    h_e = model.constr_expr_h_e;
+    h_e = model.con_h_expr_e;
     % multipliers for hessian
     nh_e = length(h_e);
     if isSX

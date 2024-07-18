@@ -38,6 +38,9 @@ check_casadi_version();
 
 % cd to target folder
 original_dir = pwd;
+if ~exist(target_dir, 'dir')
+    mkdir(target_dir);
+end
 chdir(target_dir)
 
 %% load model
@@ -119,9 +122,8 @@ else
     error("Unknown stage type.")
 end
 
-if nargin > 2
-    chdir(original_dir)
-end
+chdir(original_dir)
+
 
 end
 

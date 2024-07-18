@@ -256,7 +256,15 @@ function ocp = setup_ocp(obj, simulink_opts)
     end
     ocp.constraints.idxbxe_0 = model.constr_idxbxe_0;
 
-
+    if isfield(model, 'constr_expr_h_0') && ocp.dims.nh_0 > 0
+        ocp.model.con_h_expr_0 = model.constr_expr_h_0
+    end
+    if isfield(model, 'constr_expr_h') && ocp.dims.nh > 0
+        ocp.model.con_h_expr = model.constr_expr_h
+    end
+    if isfield(model, 'constr_expr_h_e') && ocp.dims.nh_e > 0
+        ocp.model.con_h_expr_e = model.constr_expr_h_e
+    end
     % path
     if ocp.dims.nbx > 0
         ocp.constraints.idxbx = J_to_idx( model.constr_Jbx );
