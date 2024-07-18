@@ -1302,8 +1302,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     for (; sqp_iter <= opts->max_iter; sqp_iter++) // <= needed such that after last iteration KKT residuals are checked before max_iter is thrown.
     {
         // We always evaluate the residuals until the last iteration
-        // If the option "eval_residual_at_max_iter" is set, then we will also
-        // evaluate the data after the last iteration was performed
+        // If the option "eval_residual_at_max_iter" is set, we also
+        // evaluate the residuals after the last iteration.
         if (sqp_iter != opts->max_iter || opts->eval_residual_at_max_iter)
         {
             /* Prepare the QP data */
