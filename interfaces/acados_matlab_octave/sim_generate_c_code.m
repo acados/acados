@@ -35,7 +35,7 @@ function sim_generate_c_code(obj)
         mkdir(fullfile(pwd, 'c_generated_code'))
     end
 
-    model_dir = fullfile(pwd, 'c_generated_code', [obj.ocp.name '_model']);
+    model_dir = fullfile(pwd, 'c_generated_code', [obj.sim.model.name '_model']);
     if ~exist(model_dir, 'dir')
         mkdir(model_dir);
     end
