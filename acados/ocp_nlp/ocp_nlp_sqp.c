@@ -1495,7 +1495,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         // Calculate optimal QP objective and step norm (needed for globalization)
-        if (nlp_opts->globalization == FUNNEL_L1PEN_LINESEARCH)
+        if (nlp_opts->globalization == FUNNEL_L1PEN_LINESEARCH || opts->log_primal_step_norm)
         {
             // Compute the optimal QP objective function value
             nlp_mem->qp_cost_value = ocp_nlp_sqp_compute_qp_objective_value(dims, qp_in, qp_out,nlp_work, nlp_mem, opts);
@@ -1503,15 +1503,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         if (opts->tol_min_step_norm > 0.0 || nlp_opts->log_primal_step_norm)
         {
-            // Calculate step norm
-            mem->step_norm = 0.0;
-            double tmp_norm = 0.0;
-            for (int i = 0; i <= N; i++)
-            {
-                int sum = dims->nx[i]+dims->nu[i];
-                blasfeo_dvecnrm_inf(sum, &qp_out->ux[i], 0, &tmp_norm);
-                mem->step_norm = tmp_norm > mem->step_norm ? tmp_norm : mem->step_norm;
-            }
+            mem->step_norm = ocp_qp_out_compute_primal_nrm_inf(nlp_mem->qp_out);
         }
         /* end solve QP */
 
@@ -1557,7 +1549,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
             if (opts->nlp_opts->log_primal_step_norm)
             {
-                mem->primal_step_norm[sqp_iter] = ocp_qp_out_compute_primal_nrm_inf(nlp_mem->qp_out);
+                mem->primal_step_norm[sqp_iter] = nlp_mem->qp_cost_value;
             }
             // update variables
             ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, nlp_out, mem->alpha);
