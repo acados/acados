@@ -69,12 +69,10 @@ classdef {{ model.name }}_mex_solver < handle
             disp("done.");
         end
 
-        % solve
         function solve(obj)
             acados_mex_solve_{{ model.name }}(obj.C_ocp);
         end
 
-        % set
         function set(varargin)
             obj = varargin{1};
             field = varargin{2};
@@ -86,6 +84,27 @@ classdef {{ model.name }}_mex_solver < handle
                 acados_mex_set_{{ model.name }}(obj.cost_ext_fun_type, obj.cost_ext_fun_type_e, obj.C_ocp, field, value);
             elseif nargin==4
                 stage = varargin{4};
+                acados_mex_set_{{ model.name }}(obj.cost_ext_fun_type, obj.cost_ext_fun_type_e, obj.C_ocp, field, value, stage);
+            else
+                disp('acados_ocp.set: wrong number of input arguments (2 or 3 allowed)');
+            end
+        end
+
+
+        function set_params_sparse(varargin)
+            obj = varargin{1};
+            idx_values = varargin{2};
+            param_values = varargin{2};
+            value = [idx_values(:)', param_values(:)'];
+            field = 'params_sparse';
+
+            if ~isa(field, 'char')
+                error('field must be a char vector, use '' ''');
+            end
+            if nargin==2
+                acados_mex_set_{{ model.name }}(obj.cost_ext_fun_type, obj.cost_ext_fun_type_e, obj.C_ocp, field, value);
+            elseif nargin==3
+                stage = varargin{3};
                 acados_mex_set_{{ model.name }}(obj.cost_ext_fun_type, obj.cost_ext_fun_type_e, obj.C_ocp, field, value, stage);
             else
                 disp('acados_ocp.set: wrong number of input arguments (2 or 3 allowed)');

@@ -564,6 +564,28 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             {{ model.name }}_acados_update_params(capsule, stage, value, matlab_size);
         }
     }
+    else if (!strcmp(field, "params_sparse"))
+    {
+        MEX_DIM_CHECK_MAT(fun_name, field, nrow, ncol, nrow, 2);
+
+        // create int index vector
+        int idx_tmp[{{ dims.np }}];
+        for (int ip = 0; ip<nrow; ip++)
+            idx_tmp[ip] = (int) value[ip];
+
+        if (nrhs==min_nrhs) // all stages
+        {
+            for (int ii=0; ii<=N; ii++)
+            {
+                {{ model.name }}_acados_update_params_sparse(capsule, ii, idx_tmp, value+nrow, nrow);
+            }
+        }
+        else if (nrhs==min_nrhs+1) // one stage
+        {
+            int stage = mxGetScalar( prhs[5] );
+                {{ model.name }}_acados_update_params_sparse(capsule, stage, idx_tmp, value+nrow, nrow);
+        }
+    }
     else if (!strcmp(field, "nlp_solver_max_iter"))
     {
         acados_size = 1;
