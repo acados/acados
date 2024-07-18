@@ -892,7 +892,7 @@ static bool check_termination(int n_iter, ocp_nlp_res *nlp_res, ocp_nlp_sqp_memo
     }
 
     // check for small step
-    if (opts->nlp_opts->terminate_after_small_step && (n_iter > 0) && (mem->step_norm < opts->tol_min_step_norm))
+    if (opts->tol_min_step_norm > 0.0 && (n_iter > 0) && (mem->step_norm < opts->tol_min_step_norm))
     {
         if (opts->nlp_opts->print_level > 0)
         {
@@ -1501,7 +1501,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             nlp_mem->qp_cost_value = ocp_nlp_sqp_compute_qp_objective_value(dims, qp_in, qp_out,nlp_work, nlp_mem, opts);
         }
 
-        if (nlp_opts->terminate_after_small_step || nlp_opts->log_primal_step_norm)
+        if (opts->tol_min_step_norm > 0.0 || nlp_opts->log_primal_step_norm)
         {
             // Calculate step norm
             mem->step_norm = 0.0;

@@ -856,11 +856,11 @@ class AcadosOcp:
             raise Exception('FUNNEL_L1PEN_LINESEARCH only supports SQP.')
 
         # termination
-        if opts.nlp_solver_terminate_after_small_step == None:
+        if opts.nlp_solver_tol_min_step_norm == None:
             if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
-                opts.nlp_solver_terminate_after_small_step = True
+                opts.nlp_solver_tol_min_step_norm = 1e-12
             else:
-                opts.nlp_solver_terminate_after_small_step = False
+                opts.nlp_solver_tol_min_step_norm = 0.0
 
         # zoRO
         if self.zoro_description is not None:
