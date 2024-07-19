@@ -151,7 +151,7 @@ else:
 
 for i in range(N):
     ## Two equivalent ways to set parameters
-    if i < N/2:
+    if i < 3:
         # set all parameters
         ocp_solver.set(i, "p", p_0)
     else:
@@ -173,6 +173,15 @@ for i in range(N):
     simU[i,:] = ocp_solver.get(i, "u")
 simX[N,:] = ocp_solver.get(N, "x")
 
-ocp_solver.print_statistics() # encapsulates: stat = ocp_solver.get_stats("statistics")
+ocp_solver.print_statistics()
+
+
+if np.any(simU > Fmax) or np.any(simU < -Fmax):
+    raise Exception(f"control bounds should be respected by solution, got u: {simU}")
+
+if not np.allclose(np.max(simU), Fmax):
+    raise Exception(f"control should go to bounds, got u: {simU}")
+if not np.allclose(np.min(simU), -Fmax):
+    raise Exception(f"control should go to bounds, got u: {simU}")
 
 plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
