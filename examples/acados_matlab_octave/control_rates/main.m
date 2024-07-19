@@ -52,7 +52,6 @@ nlp_solver_tol_ineq = 10e-6;
 nlp_solver_tol_comp = 10e-6;
 nlp_solver_ext_qp_res = 0;               % for debugging
 nlp_solver_step_length = 1.0;
-rti_phase = 0;                           % for sqp_rti
 
 % QP solver
 qp_solver = 'partial_condensing_hpipm';
@@ -65,7 +64,7 @@ qp_solver_warm_start = 1;
 
 % Globalization
 globalization = 'fixed_step';
-% alpha_min = 0.05;                      % for merit_backtracking 
+% alpha_min = 0.05;                      % for merit_backtracking
 % alpha_reduction = 0.7;
 
 % Hessian approximation
@@ -179,7 +178,6 @@ ocp_opts.set('nlp_solver_tol_ineq', nlp_solver_tol_ineq);
 ocp_opts.set('nlp_solver_tol_comp', nlp_solver_tol_comp);
 ocp_opts.set('nlp_solver_ext_qp_res', nlp_solver_ext_qp_res);
 ocp_opts.set('nlp_solver_step_length', nlp_solver_step_length);
-ocp_opts.set('rti_phase', rti_phase);
 
 % QP solver
 ocp_opts.set('qp_solver', qp_solver);
@@ -238,7 +236,7 @@ x1ref = 0.4.*(-(0.5./(1+exp(t./0.1-0.8))) + (1./(1+exp(t./0.1-30))) - 0.4);
 fprintf('Simulation started.  It might take a while...\n')
 tic;
 for i = 1:N_sim
-    
+
     % update reference (full preview)
     t_ref = (i-1:i+param_scheme_N).*h;
     x1_ref = x1ref_FUN(t_ref);
@@ -266,7 +264,7 @@ for i = 1:N_sim
     % update initial state
     x0 = ocp.get('x', 1);
     ocp.set('constr_x0', x0);
-    
+
 end
 tElapsed = toc
 fprintf('Simulation finished!\n')

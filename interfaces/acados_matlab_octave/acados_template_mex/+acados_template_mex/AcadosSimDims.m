@@ -27,49 +27,51 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-%
 
-classdef acados_model_json < handle
+% TODO this class is not used yet!
+classdef AcadosSimDims < handle
     properties
-        dyn_ext_fun_type
-        dyn_generic_source
-        dyn_disc_fun_jac_hess
-        dyn_disc_fun_jac
-        dyn_disc_fun
-        dyn_impl_dae_fun
-        dyn_impl_dae_fun_jac
-        dyn_impl_dae_jac
-        f_impl_expr
-        f_expl_expr
-        f_phi_expr
-        x
-        xdot
-        u
-        z
-        name
-        p
-        gnsf
+
+        nx     % number of states
+        nu     % number of inputs
+        nz     % number of algebraic variables
+        np     % number of parameters
+
+        % gnsf
+        % TODO these dimensions are not part of the corresponding python class (?)
+        gnsf_nx1
+        gnsf_nz1
+        gnsf_nout
+        gnsf_ny
+        gnsf_nuhat
     end
+
     methods
-        function obj = acados_model_json()
-            obj.dyn_ext_fun_type = 'casadi';
-            obj.dyn_generic_source = [];
-            obj.dyn_disc_fun_jac_hess = [];
-            obj.dyn_disc_fun_jac = [];
-            obj.dyn_disc_fun = [];
-            obj.dyn_impl_dae_fun = [];
-            obj.dyn_impl_dae_fun_jac = [];
-            obj.dyn_impl_dae_jac = [];
-            obj.f_impl_expr = [];
-            obj.f_expl_expr = [];
-            obj.f_phi_expr = [];
-            obj.x = [];
-            obj.xdot = [];
-            obj.u = [];
-            obj.z = [];
-            obj.name = [];
-            obj.p = [];
-            obj.gnsf = struct('nontrivial_f_LO', 1, 'purely_linear', 0);
+        function obj = AcadosSimDims()
+
+            obj.nx    = [];
+            obj.nu    = [];
+            obj.nz    = 0;
+            obj.np    = 0;
+
+            obj.gnsf_nx1 = 0;
+            obj.gnsf_nz1 = 0;
+            obj.gnsf_nout = 0;
+            obj.gnsf_ny = 0;
+            obj.gnsf_nuhat = 0;
+        end
+
+        function s = struct(self)
+            if exist('properties')
+                publicProperties = eval('properties(self)');
+            else
+                publicProperties = fieldnames(self);
+            end
+            s = struct();
+            for fi = 1:numel(publicProperties)
+                s.(publicProperties{fi}) = self.(publicProperties{fi});
+            end
         end
     end
 end
+

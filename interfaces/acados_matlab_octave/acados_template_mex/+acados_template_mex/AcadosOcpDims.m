@@ -27,108 +27,125 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-%
 
-classdef ocp_nlp_dims_json < handle
+classdef AcadosOcpDims < handle
     properties
+        N      % prediction horizon
+
+        % model
         nx     % number of states
-        nz     % number of algebraic variables
         nu     % number of inputs
+        nz     % number of algebraic variables
         np     % number of parameters
-        ns_0
-        ny_0
+
+        % cost
         ny     % number of residuals in Lagrange term
+        ny_0
         ny_e   % number of residuals in Mayer term
+
+        % bounds
+        nbu    % number of input bounds
+        nbx    % number of state bounds
         nbx_0   % number of state bounds on x0
-        npd    % number of positive definite constraints
-        npd_e  % number of positive definite constraints at t=T
+        nbx_e  % number of state bounds at t=T
+
+        % nonlinear constraints
         nh     % number of nonlinear constraints
         nh_0   % number of nonlinear constraints at t=0
         nh_e   % number of nonlinear constraints at t=T
-        nbx    % number of state bounds
-        nbx_e  % number of state bounds at t=T
-        nbu    % number of input bounds
-        nsbx   % number of soft state bounds
-        nsbu   % number of soft state bounds
-        nsbx_e % number of state bounds at t=T
-        ns     % total number of soft bounds
-        ns_e   % total number of soft bounds at t=T
-        nsh    % number of soft bounds on nonlinear constraints
-        nsh_e  % number of soft bounds on nonlinear constraints at t=T
-        nsh_0
-        ng     % number of general linear constraints
-        ng_e   % number of general linear constraints at t=T
-        nsg     % number of soft general linear constraints
-        nsg_e   % number of soft general linear constraints at t=T
-        N      % prediction horizon
-        % Declare convex over nonlinear stuff that should be implemented in MEX
-        % TODO..
-        nphi
-        nphi_e
-        nphi_0
-        nsphi
-        nsphi_e
-        nsphi_0
         nr %
         nr_e %
         nr_0
+        nphi
+        nphi_e
+        nphi_0
+
+        % general linear constraints
+        ng     % number of general linear constraints
+        ng_e   % number of general linear constraints at t=T
+
+        % soft constraints
+        nsbx   % number of soft state bounds
+        nsbx_e % number of state bounds at t=T
+        nsh    % number of soft bounds on nonlinear constraints
+        nsh_0
+        nsh_e  % number of soft bounds on nonlinear constraints at t=T
+        nsphi
+        nsphi_0
+        nsphi_e
+        nsbu   % number of soft state bounds
+        ns     % total number of soft bounds
+        ns_0   %
+        ns_e   % total number of soft bounds at t=T
+        nsg     % number of soft general linear constraints
+        nsg_e   % number of soft general linear constraints at t=T
+        % equalities within x bounds
         nbxe_0
+
         % gnsf
+        % TODO these dimensions are not part of the corresponding python class (?)
         gnsf_nx1
         gnsf_nz1
         gnsf_nout
         gnsf_ny
         gnsf_nuhat
     end
+
     methods
-        function obj = ocp_nlp_dims_json()
+        function obj = AcadosOcpDims()
+            obj.N     = [];
+
             obj.nx    = [];
-            obj.nz    = 0;
             obj.nu    = [];
+            obj.nz    = 0;
             obj.np    = 0;
+
             obj.ny    = [];
-            obj.ny_e   = [];
             obj.ny_0 = [];
-            obj.ns_0 = 0;
-            obj.npd   = 0;
-            obj.npd_e  = 0;
+            obj.ny_e   = [];
+
+            obj.nbu   = 0;
+            obj.nbx   = 0;
+            obj.nbx_0  = 0;
+            obj.nbx_e  = 0;
+
             obj.nh    = 0;
             obj.nh_0   = 0;
             obj.nh_e   = 0;
-            obj.nbx   = 0;
-            obj.nbu   = 0;
-            obj.nbx_e  = 0;
-            obj.nsbx  = 0;
-            obj.nsbu  = 0;
-            obj.nsbx_e = 0;
-            obj.ns    = 0;
-            obj.ns_e   = 0;
-            obj.ns_0   = 0;
-            obj.nsh   = 0;
-            obj.nsh_e  = 0;
-            obj.nsh_0  = 0;
-            obj.nsg   = 0;
-            obj.nsg_e  = 0;
+
+            obj.nr = 0;
+            obj.nr_0 = 0;
+            obj.nr_e = 0;
+            obj.nphi = 0;
+            obj.nphi_0 = 0;
+            obj.nphi_e = 0;
             obj.ng    = 0;
             obj.ng_e   = 0;
-            obj.nphi = 0;
-            obj.nphi_e = 0;
-            obj.nphi_0 = 0;
+
+            obj.nsbx  = 0;
+            obj.nsbx_e = 0;
+            obj.nsbu  = 0;
+            obj.nsh   = 0;
+            obj.nsh_0  = 0;
+            obj.nsh_e  = 0;
             obj.nsphi = 0;
-            obj.nsphi_e = 0;
             obj.nsphi_0 = 0;
-            obj.nr = 0;
-            obj.nr_e = 0;
-            obj.nr_0 = 0;
-            obj.N     = [];
+            obj.nsphi_e = 0;
+            obj.ns    = 0;
+            obj.ns_0 = 0;
+            obj.ns_e   = 0;
+            obj.nsg   = 0;
+            obj.nsg_e  = 0;
+
             obj.nbxe_0 = 0;
-            %
+
             obj.gnsf_nx1 = 0;
             obj.gnsf_nz1 = 0;
             obj.gnsf_nout = 0;
             obj.gnsf_ny = 0;
             obj.gnsf_nuhat = 0;
         end
+
         function s = struct(self)
             if exist('properties')
                 publicProperties = eval('properties(self)');

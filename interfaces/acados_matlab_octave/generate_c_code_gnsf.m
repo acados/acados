@@ -39,7 +39,7 @@ casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double')
 check_casadi_version();
 
 is_template = false;
-if isa(model, 'acados_template_mex.acados_model_json')
+if isa(model, 'acados_template_mex.AcadosModel')
     is_template = true;
 end
 

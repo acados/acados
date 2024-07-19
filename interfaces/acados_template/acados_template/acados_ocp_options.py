@@ -41,13 +41,20 @@ class AcadosOcpOptions:
     class containing the description of the solver options
     """
     def __init__(self):
-        self.__qp_solver = 'PARTIAL_CONDENSING_HPIPM'
         self.__hessian_approx = 'GAUSS_NEWTON'
         self.__integrator_type = 'ERK'
         self.__tf = None
         self.__nlp_solver_type = 'SQP_RTI'
-        self.__globalization = 'FIXED_STEP'
         self.__nlp_solver_step_length = 1.0
+        self.__nlp_solver_tol_stat = 1e-6
+        self.__nlp_solver_tol_eq = 1e-6
+        self.__nlp_solver_tol_ineq = 1e-6
+        self.__nlp_solver_tol_comp = 1e-6
+        self.__nlp_solver_max_iter = 100
+        self.__nlp_solver_ext_qp_res = 0
+        self.__nlp_solver_warm_start_first_qp = False
+        self.__nlp_solver_tol_min_step_norm = None
+        self.__globalization = 'FIXED_STEP'
         self.__levenberg_marquardt = 0.0
         self.__collocation_type = 'GAUSS_LEGENDRE'
         self.__sim_method_num_stages = 4
@@ -55,6 +62,9 @@ class AcadosOcpOptions:
         self.__sim_method_newton_iter = 3
         self.__sim_method_newton_tol = 0.0
         self.__sim_method_jac_reuse = 0
+        self.__time_steps = None
+        self.__Tsim = None
+        self.__qp_solver = 'PARTIAL_CONDENSING_HPIPM'
         self.__qp_solver_tol_stat = None
         self.__qp_solver_tol_eq = None
         self.__qp_solver_tol_ineq = None
@@ -65,20 +75,11 @@ class AcadosOcpOptions:
         self.__qp_solver_warm_start = 0
         self.__qp_solver_cond_ric_alg = 1
         self.__qp_solver_ric_alg = 1
-        self.__nlp_solver_tol_stat = 1e-6
-        self.__nlp_solver_tol_eq = 1e-6
-        self.__nlp_solver_tol_ineq = 1e-6
-        self.__nlp_solver_tol_comp = 1e-6
-        self.__nlp_solver_tol_min_step_norm = None
-        self.__nlp_solver_max_iter = 100
-        self.__nlp_solver_ext_qp_res = 0
         self.__rti_log_residuals = 0
-        self.__Tsim = None
         self.__print_level = 0
         self.__cost_discretization = 'EULER'
         self.__regularize_method = 'NO_REGULARIZE'
         self.__reg_epsilon = 1e-4
-        self.__time_steps = None
         self.__shooting_nodes = None
         self.__exact_hess_cost = 1
         self.__exact_hess_dyn = 1
@@ -101,7 +102,13 @@ class AcadosOcpOptions:
         self.__hpipm_mode = 'BALANCE'
         self.__with_solution_sens_wrt_params = False
         self.__with_value_sens_wrt_params = False
-        self.__num_threads_in_batch_solve: int = 1
+        self.__as_rti_iter = 1
+        self.__as_rti_level = 4
+        self.__with_adaptive_levenberg_marquardt = False
+        self.__adaptive_levenberg_marquardt_lam = 5.0
+        self.__adaptive_levenberg_marquardt_mu_min = 1e-16
+        self.__adaptive_levenberg_marquardt_mu0 = 1e-3
+        self.__log_primal_step_norm : bool = False
         # TODO: move those out? they are more about generation than about the acados OCP solver.
         self.__ext_fun_compile_flags = '-O2'
         self.__model_external_shared_lib_dir = None
@@ -110,13 +117,7 @@ class AcadosOcpOptions:
         self.__custom_update_header_filename = ''
         self.__custom_templates = []
         self.__custom_update_copy = True
-        self.__as_rti_iter = 1
-        self.__as_rti_level = 4
-        self.__with_adaptive_levenberg_marquardt = False
-        self.__adaptive_levenberg_marquardt_lam = 5.0
-        self.__adaptive_levenberg_marquardt_mu_min = 1e-16
-        self.__adaptive_levenberg_marquardt_mu0 = 1e-3
-        self.__log_primal_step_norm : bool = False
+        self.__num_threads_in_batch_solve: int = 1
 
     @property
     def qp_solver(self):
@@ -283,6 +284,15 @@ class AcadosOcpOptions:
         Default: 1.0.
         """
         return self.__nlp_solver_step_length
+
+    @property
+    def nlp_solver_warm_start_first_qp(self):
+        """
+        Flag indicating whether the first QP in an NLP solve should be warm started.
+        Type: int.
+        Default: 0.
+        """
+        return self.__nlp_solver_warm_start_first_qp
 
     @property
     def levenberg_marquardt(self):
@@ -1185,10 +1195,17 @@ class AcadosOcpOptions:
 
     @nlp_solver_step_length.setter
     def nlp_solver_step_length(self, nlp_solver_step_length):
-        if isinstance(nlp_solver_step_length, float) and nlp_solver_step_length >= 0:
+        if isinstance(nlp_solver_step_length, float) and nlp_solver_step_length >= 0.:
             self.__nlp_solver_step_length = nlp_solver_step_length
         else:
             raise Exception('Invalid nlp_solver_step_length value. nlp_solver_step_length must be a positive float.')
+
+    @nlp_solver_warm_start_first_qp.setter
+    def nlp_solver_warm_start_first_qp(self, nlp_solver_warm_start_first_qp):
+        if isinstance(nlp_solver_warm_start_first_qp, bool):
+            self.__nlp_solver_warm_start_first_qp = nlp_solver_warm_start_first_qp
+        else:
+            raise Exception('Invalid nlp_solver_warm_start_first_qp value. Expected bool.')
 
     @levenberg_marquardt.setter
     def levenberg_marquardt(self, levenberg_marquardt):

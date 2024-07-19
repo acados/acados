@@ -62,7 +62,6 @@ classdef acados_ocp_opts < handle
             obj.opts_struct.nlp_solver_tol_comp = 1e-6;
             obj.opts_struct.nlp_solver_ext_qp_res = 0; % compute QP residuals at each NLP iteration
             obj.opts_struct.nlp_solver_step_length = 1.0; % fixed step length in SQP algorithm
-            obj.opts_struct.rti_phase = 0; % RTI phase: (1) preparation, (2) feedback, (0) both
             obj.opts_struct.qp_solver = 'partial_condensing_hpipm';
             % globalization
             obj.opts_struct.globalization = 'fixed_step';
@@ -154,8 +153,6 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.nlp_solver_ext_qp_res = value;
             elseif (strcmp(field, 'nlp_solver_step_length'))
                 obj.opts_struct.nlp_solver_step_length = value;
-            elseif (strcmp(field, 'rti_phase'))
-                obj.opts_struct.rti_phase = value;
             elseif (strcmp(field, 'nlp_solver_warm_start_first_qp'))
                 obj.opts_struct.nlp_solver_warm_start_first_qp = value;
             elseif (strcmp(field, 'qp_solver'))
