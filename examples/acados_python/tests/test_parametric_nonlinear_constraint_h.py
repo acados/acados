@@ -120,6 +120,10 @@ ocp.constraints.lh = np.array([-Fmax])
 ocp.constraints.uh = np.array([+Fmax])
 ocp.model.con_h_expr = model.u / constraint_quotient
 
+ocp.constraints.lh_0 = np.array([-Fmax])
+ocp.constraints.uh_0 = np.array([+Fmax])
+ocp.model.con_h_expr_0 = model.u / constraint_quotient
+
 p_0 = np.zeros(n_param)
 p_0[0] = 1.0
 p_0[1] = 1.0
