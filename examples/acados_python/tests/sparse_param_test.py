@@ -29,11 +29,10 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-import sys, json
-sys.path.insert(0, '../common')
+import sys
+sys.path.insert(0, '../pendulum_on_cart/common')
 
 from acados_template import AcadosSim, AcadosSimSolver, AcadosModel, sim_get_default_cmake_builder
-from pendulum_model import export_pendulum_ode_model
 from utils import plot_pendulum
 
 import casadi as ca
@@ -41,7 +40,6 @@ import numpy as np
 
 
 def export_pendulum_ode_model() -> AcadosModel:
-
     model_name = 'pendulum'
 
     # constants
@@ -70,6 +68,7 @@ def export_pendulum_ode_model() -> AcadosModel:
     xdot = ca.vertcat(x1_dot, theta_dot, v1_dot, dtheta_dot)
 
     # parameters
+    # NOTE: such sparse parameter formulations are not recommended to use in acados!
     p = ca.SX.zeros(1000, 1)
     p[-1] = ca.SX.sym('p')
     m_cart = p[-1]
@@ -187,6 +186,9 @@ def sparse_param_test():
 
     if status != 0:
         raise Exception(f'acados returned status {status}.')
+
+    if not np.allclose(S_adj, np.array([1., 0.32978441, 1.1, 1.0644604, 0.03091267])):
+        raise Exception("adjoint sensitivities should match reference solution.")
 
     # plot results
     plot_pendulum(np.linspace(0, N*Tf, N+1), 10, np.zeros((N, nu)), simX, latexify=False)
