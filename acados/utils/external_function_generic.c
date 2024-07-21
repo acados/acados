@@ -762,7 +762,6 @@ acados_size_t external_function_casadi_calculate_size(external_function_casadi *
     // casadi wrapper as evaluate
     fun->evaluate = &external_function_casadi_wrapper;
 
-    // loop index
     int ii;
 
     fun->casadi_work(&fun->args_num, &fun->res_num, &fun->iw_size, &fun->w_size);
@@ -808,7 +807,6 @@ acados_size_t external_function_casadi_calculate_size(external_function_casadi *
 
 void external_function_casadi_assign(external_function_casadi *fun, void *raw_memory)
 {
-    // loop index
     int ii;
 
     // save initial pointer to external memory
@@ -871,7 +869,6 @@ void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void *
     // cast into external casadi function
     external_function_casadi *fun = self;
 
-    // loop index
     int ii;
 
     // in as args
@@ -1081,7 +1078,6 @@ static void external_function_param_casadi_set_param_sparse(void *self, int n_up
 
 acados_size_t external_function_param_casadi_calculate_size(external_function_param_casadi *fun, int np)
 {
-    // loop index
     int ii;
 
     // casadi wrapper as evaluate function
@@ -1138,7 +1134,6 @@ acados_size_t external_function_param_casadi_calculate_size(external_function_pa
 
 void external_function_param_casadi_assign(external_function_param_casadi *fun, void *raw_memory)
 {
-    // loop index
     int ii;
 
     // save initial pointer to external memory
@@ -1201,8 +1196,6 @@ void external_function_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, 
 {
     // cast into external casadi function
     external_function_param_casadi *fun = self;
-
-    // loop index
     int ii;
 
     // in as args
