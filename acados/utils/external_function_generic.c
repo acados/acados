@@ -1046,10 +1046,11 @@ static void external_function_param_casadi_set_param(void *self, double *p)
     external_function_param_casadi *fun = self;
 
     // set value for all parameters
-    int idx_arg_p = fun->args_num-1;
-    int* sparsity = (int *) fun->casadi_sparsity_in(idx_arg_p);
-    d_cvt_colmaj_to_casadi(p, (double *) fun->args[idx_arg_p],
-                            sparsity, fun->args_dense[idx_arg_p]);
+    int idx_in_p = fun->in_num-1;
+    int* sparsity = (int *) fun->casadi_sparsity_in(idx_in_p);
+    d_cvt_colmaj_to_casadi(p, (double *) fun->args[idx_in_p],
+                            sparsity, fun->args_dense[idx_in_p]);
+
     return;
 }
 
@@ -1059,13 +1060,13 @@ static void external_function_param_casadi_set_param_sparse(void *self, int n_up
 {
     external_function_param_casadi *fun = self;
 
-    int idx_arg_p = fun->args_num-1;
+    int idx_in_p = fun->in_num-1;
 
-    if (fun->args_dense[idx_arg_p])
+    if (fun->args_dense[idx_in_p])
     {
         for (int ii = 0; ii < n_update; ii++)
         {
-            fun->args[idx_arg_p][idx_p_update[ii]] = p[ii];
+            fun->args[idx_in_p][idx_p_update[ii]] = p[ii];
         }
     }
     else
