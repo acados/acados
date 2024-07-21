@@ -284,6 +284,8 @@ static void d_cvt_colmaj_to_casadi(double *in, double *out, int *sparsity_out, i
 {
     int ii, jj, idx;
 
+    if (sparsity_out == NULL)
+        return;
     int nrow = sparsity_out[0];
     int ncol = sparsity_out[1];
 
@@ -1045,8 +1047,9 @@ static void external_function_param_casadi_set_param(void *self, double *p)
 
     // set value for all parameters
     int idx_arg_p = fun->args_num-1;
+    int* sparsity = (int *) fun->casadi_sparsity_in(idx_arg_p);
     d_cvt_colmaj_to_casadi(p, (double *) fun->args[idx_arg_p],
-                                       (int *) fun->casadi_sparsity_in(idx_arg_p), fun->args_dense[idx_arg_p]);
+                            sparsity, fun->args_dense[idx_arg_p]);
     return;
 }
 
