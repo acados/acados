@@ -2037,10 +2037,7 @@ void {{ model.name }}_acados_create_5_set_nlp_in({{ model.name }}_solver_capsule
 }
 
 
-/**
- * Internal function for {{ model.name }}_acados_create: step 6
- */
-void {{ model.name }}_acados_create_6_set_opts({{ model.name }}_solver_capsule* capsule)
+static void {{ model.name }}_acados_create_3_set_opts({{ model.name }}_solver_capsule* capsule)
 {
     const int N = capsule->nlp_solver_plan->N;
     ocp_nlp_config* nlp_config = capsule->nlp_config;
@@ -2460,20 +2457,23 @@ int {{ model.name }}_acados_create_with_discretization({{ model.name }}_solver_c
     {{ model.name }}_acados_create_1_set_plan(capsule->nlp_solver_plan, N);
     capsule->nlp_config = ocp_nlp_config_create(*capsule->nlp_solver_plan);
 
-    // 3) create and set dimensions
+    // 2) create and set dimensions
     capsule->nlp_dims = {{ model.name }}_acados_create_2_create_and_set_dimensions(capsule);
-    {{ model.name }}_acados_create_3_create_and_set_functions(capsule);
 
-    // 4) set default parameters in functions
+    // 3) create and set nlp_opts
+    capsule->nlp_opts = ocp_nlp_solver_opts_create(capsule->nlp_config, capsule->nlp_dims);
+    {{ model.name }}_acados_create_3_set_opts(capsule);
+
+    // 4) create solver
+    capsule->nlp_solver = ocp_nlp_solver_create(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_opts);
+
+    // 5) set default parameters in functions
+    {{ model.name }}_acados_create_3_create_and_set_functions(capsule);
     {{ model.name }}_acados_create_4_set_default_parameters(capsule);
 
     // 5) create and set nlp_in
     capsule->nlp_in = ocp_nlp_in_create(capsule->nlp_config, capsule->nlp_dims);
     {{ model.name }}_acados_create_5_set_nlp_in(capsule, N, new_time_steps);
-
-    // 6) create and set nlp_opts
-    capsule->nlp_opts = ocp_nlp_solver_opts_create(capsule->nlp_config, capsule->nlp_dims);
-    {{ model.name }}_acados_create_6_set_opts(capsule);
 
     // 7) create and set nlp_out
     // 7.1) nlp_out
@@ -2481,10 +2481,6 @@ int {{ model.name }}_acados_create_with_discretization({{ model.name }}_solver_c
     // 7.2) sens_out
     capsule->sens_out = ocp_nlp_out_create(capsule->nlp_config, capsule->nlp_dims);
     {{ model.name }}_acados_create_7_set_nlp_out(capsule);
-
-    // 8) create solver
-    capsule->nlp_solver = ocp_nlp_solver_create(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_opts);
-    //{{ model.name }}_acados_create_8_create_solver(capsule);
 
     // 9) do precomputations
     int status = {{ model.name }}_acados_create_9_precompute(capsule);
