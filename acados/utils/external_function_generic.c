@@ -35,11 +35,6 @@
 #include "acados/utils/external_function_generic.h"
 #include "acados/utils/mem.h"
 
-/************************************************
- * generic external function
- ************************************************/
-
-
 
 /************************************************
  * generic external parametric function
@@ -125,7 +120,6 @@ void external_function_param_generic_wrapper(void *self, ext_fun_arg_t *type_in,
     // cast into external generic function
     external_function_param_generic *fun = self;
 
-    // call casadi function
     fun->fun(in, out, fun->p);
 
     return;
@@ -1241,6 +1235,81 @@ void external_function_param_casadi_get_nparam(void *self, int *np)
 
 
 /************************************************
+ * generic external parametric function
+ ************************************************/
+
+acados_size_t external_function_external_param_generic_struct_size()
+{
+    return sizeof(external_function_external_param_generic);
+}
+
+
+
+void external_function_external_param_generic_set_fun(external_function_external_param_generic *fun, void *value)
+{
+    fun->fun = value;
+    return;
+}
+
+
+static void external_function_external_param_generic_set_param_pointer(void *self, double *p)
+{
+    external_function_external_param_generic *fun = self;
+
+    fun->p = p;
+    fun->param_mem_is_set = true;
+
+    return;
+}
+
+
+acados_size_t external_function_external_param_generic_calculate_size(external_function_external_param_generic *fun, int np)
+{
+    // wrapper as evaluate function
+    fun->evaluate = &external_function_external_param_generic_wrapper;
+
+    // set param function
+    fun->set_param_pointer = &external_function_external_param_generic_set_param_pointer;
+
+    // set number of parameters
+    fun->param_mem_is_set = false;
+
+    acados_size_t size = 0;
+
+    make_int_multiple_of(8, &size);
+
+    return size;
+}
+
+
+
+void external_function_external_param_generic_assign(external_function_external_param_generic *fun, void *raw_memory)
+{
+    // save initial pointer to external memory
+    fun->ptr_ext_mem = raw_memory;
+
+    // char pointer for byte advances
+    // char *c_ptr = raw_memory;
+    // assert((char *) raw_memory + external_function_external_param_generic_calculate_size(fun, fun->np) >= c_ptr);
+
+    return;
+}
+
+
+
+void external_function_external_param_generic_wrapper(void *self, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
+{
+    // cast into external generic function
+    external_function_external_param_generic *fun = self;
+
+    fun->fun(in, out, fun->p);
+
+    return;
+}
+
+
+
+/************************************************
  * external_function_external_param_casadi
  ************************************************/
 
@@ -1296,7 +1365,6 @@ static void external_function_external_param_casadi_set_param_pointer(void *self
 {
     external_function_external_param_casadi *fun = self;
 
-    // set value for all parameters
     int idx_in_p = fun->in_num-1;
     if (!fun->args_dense[idx_in_p])
     {

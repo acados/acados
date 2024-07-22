@@ -91,6 +91,16 @@ void external_function_external_param_casadi_create(external_function_external_p
 //
 void external_function_external_param_casadi_free(external_function_external_param_casadi *fun);
 
+/************************************************
+ * external_function_external_param_generic
+ ************************************************/
+
+//
+void external_function_external_param_generic_create(external_function_external_param_generic *fun, int np);
+//
+void external_function_external_param_generic_free(external_function_external_param_generic *fun);
+
+
 
 
 
