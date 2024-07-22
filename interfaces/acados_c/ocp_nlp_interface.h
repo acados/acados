@@ -193,8 +193,12 @@ ACADOS_SYMBOL_EXPORT void ocp_nlp_in_destroy(void *in);
 ACADOS_SYMBOL_EXPORT void ocp_nlp_in_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
         const char *field, void *value);
 
+
+ACADOS_SYMBOL_EXPORT void ocp_nlp_in_set_params_sparse(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
+        int *idx, double *p, int n_update);
+
 ///
-void ocp_nlp_in_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
+ACADOS_SYMBOL_EXPORT void ocp_nlp_in_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
         const char *field, void *value);
 
 /// Sets the function pointers to the dynamics functions for the given stage.

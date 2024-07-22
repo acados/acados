@@ -396,12 +396,10 @@ void ocp_nlp_in_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, 
     else if (!strcmp(field, "parameter_values"))
     {
         double *parameter_values = value;
-        printf("setting parameter values at stage %d\n", stage);
         for (int ii = 0; ii < dims->np[stage]; ii++)
         {
             in->parameter_values[stage][ii] = parameter_values[ii];
         }
-        printf("done setting parameter values at stage %d\n", stage);
     }
     else
     {
@@ -410,6 +408,19 @@ void ocp_nlp_in_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, 
     }
     return;
 }
+
+
+void ocp_nlp_in_set_params_sparse(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
+        int *idx, double *p, int n_update)
+{
+    for (int ii = 0; ii < n_update; ii++)
+    {
+        in->parameter_values[stage][idx[ii]] = p[ii];
+    }
+
+    return;
+}
+
 
 
 
