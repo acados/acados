@@ -216,9 +216,9 @@ void external_function_param_casadi_free_array(int size, external_function_param
 
 // external_function_external_param
 
-void external_function_external_param_casadi_create(external_function_external_param_casadi *fun, int np)
+void external_function_external_param_casadi_create(external_function_external_param_casadi *fun)
 {
-    acados_size_t fun_size = external_function_external_param_casadi_calculate_size(fun, np);
+    acados_size_t fun_size = external_function_external_param_casadi_calculate_size(fun);
     void *fun_mem = acados_malloc(1, fun_size);
     assert(fun_mem != 0);
     external_function_external_param_casadi_assign(fun, fun_mem);
@@ -237,9 +237,9 @@ void external_function_external_param_casadi_free(external_function_external_par
 
 // external_function_external_param
 
-void external_function_external_param_generic_create(external_function_external_param_generic *fun, int np)
+void external_function_external_param_generic_create(external_function_external_param_generic *fun)
 {
-    acados_size_t fun_size = external_function_external_param_generic_calculate_size(fun, np);
+    acados_size_t fun_size = external_function_external_param_generic_calculate_size(fun);
     void *fun_mem = acados_malloc(1, fun_size);
     assert(fun_mem != 0);
     external_function_external_param_generic_assign(fun, fun_mem);

@@ -1263,7 +1263,7 @@ static void external_function_external_param_generic_set_param_pointer(void *sel
 }
 
 
-acados_size_t external_function_external_param_generic_calculate_size(external_function_external_param_generic *fun, int np)
+acados_size_t external_function_external_param_generic_calculate_size(external_function_external_param_generic *fun)
 {
     // wrapper as evaluate function
     fun->evaluate = &external_function_external_param_generic_wrapper;
@@ -1378,7 +1378,7 @@ static void external_function_external_param_casadi_set_param_pointer(void *self
 }
 
 
-acados_size_t external_function_external_param_casadi_calculate_size(external_function_external_param_casadi *fun, int np)
+acados_size_t external_function_external_param_casadi_calculate_size(external_function_external_param_casadi *fun)
 {
     int ii;
 
@@ -1387,9 +1387,6 @@ acados_size_t external_function_external_param_casadi_calculate_size(external_fu
 
     // set param function
     fun->set_param_pointer = &external_function_external_param_casadi_set_param_pointer;
-
-    // set number of parameters
-    fun->np = np;
 
     fun->casadi_work(&fun->args_num, &fun->res_num, &fun->iw_size, &fun->w_size);
 

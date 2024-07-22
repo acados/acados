@@ -87,7 +87,7 @@ void external_function_param_casadi_free_array(int size, external_function_param
  ************************************************/
 
 //
-void external_function_external_param_casadi_create(external_function_external_param_casadi *fun, int np);
+void external_function_external_param_casadi_create(external_function_external_param_casadi *fun);
 //
 void external_function_external_param_casadi_free(external_function_external_param_casadi *fun);
 
@@ -96,7 +96,7 @@ void external_function_external_param_casadi_free(external_function_external_par
  ************************************************/
 
 //
-void external_function_external_param_generic_create(external_function_external_param_generic *fun, int np);
+void external_function_external_param_generic_create(external_function_external_param_generic *fun);
 //
 void external_function_external_param_generic_free(external_function_external_param_generic *fun);
 
