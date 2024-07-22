@@ -138,7 +138,7 @@ void external_function_param_generic_get_nparam(void *self, int *np)
     // cast into external generic function
     external_function_param_generic *fun = self;
 
-	*np = fun->np;
+    *np = fun->np;
 
     return;
 }
@@ -1301,7 +1301,7 @@ void external_function_param_casadi_get_nparam(void *self, int *np)
     // cast into external casadi function
     external_function_param_casadi *fun = self;
 
-	*np = fun->np;
+    *np = fun->np;
 
     return;
 }
