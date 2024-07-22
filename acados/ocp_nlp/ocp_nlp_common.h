@@ -199,6 +199,9 @@ typedef struct ocp_nlp_in
     /// Timesteps.
     double *Ts;
 
+    /// Parameter values.
+    double **parameter_values;
+
     /// Pointers to cost functions (TBC).
     void **cost;
 
@@ -214,11 +217,7 @@ typedef struct ocp_nlp_in
 } ocp_nlp_in;
 
 //
-acados_size_t ocp_nlp_in_calculate_size_self(int N);
-//
 acados_size_t ocp_nlp_in_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims);
-//
-ocp_nlp_in *ocp_nlp_in_assign_self(int N, void *raw_memory);
 //
 ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *raw_memory);
 
