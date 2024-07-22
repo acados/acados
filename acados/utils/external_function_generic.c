@@ -735,6 +735,45 @@ static int d_cvt_casadi_to_ext_fun_arg(ext_fun_arg_t type, double *in, int *spar
     return 0;
 }
 
+static int d_cvt_ext_fun_arg_to_casadi(ext_fun_arg_t type, void *in, double *out, int *sparsity, int is_dense)
+{
+    switch (type)
+    {
+        case COLMAJ:
+            d_cvt_colmaj_to_casadi(in, out, sparsity, is_dense);
+            break;
+
+        case BLASFEO_DMAT:
+            d_cvt_dmat_to_casadi(in, out, sparsity, is_dense);
+            break;
+
+        case BLASFEO_DVEC:
+            d_cvt_dvec_to_casadi(in, out, sparsity, is_dense);
+            break;
+
+        case COLMAJ_ARGS:
+            d_cvt_colmaj_args_to_casadi(in, out, sparsity, is_dense);
+            break;
+
+        case BLASFEO_DMAT_ARGS:
+            d_cvt_dmat_args_to_casadi(in, out, sparsity, is_dense);
+            break;
+
+        case BLASFEO_DVEC_ARGS:
+            d_cvt_dvec_args_to_casadi(in, out, sparsity, is_dense);
+            break;
+
+        case IGNORE_ARGUMENT:
+            // do nothing
+            break;
+
+        default:
+            return 1;
+    }
+    return 0;
+}
+
+
 
 
 /************************************************
@@ -913,52 +952,12 @@ void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void *
     // in as args
     for (ii = 0; ii < fun->in_num; ii++)
     {
-        switch (type_in[ii])
+        status = d_cvt_ext_fun_arg_to_casadi(type_in[ii], in[ii], (double *) fun->args[ii],
+                                    (int *) fun->casadi_sparsity_in(ii), fun->args_dense[ii]);
+        if (status)
         {
-            case COLMAJ:
-                d_cvt_colmaj_to_casadi(in[ii], (double *) fun->args[ii],
-                                       (int *) fun->casadi_sparsity_in(ii),
-                                       fun->args_dense[ii]);
-                break;
-
-            case BLASFEO_DMAT:
-                d_cvt_dmat_to_casadi(in[ii], (double *) fun->args[ii],
-                                     (int *) fun->casadi_sparsity_in(ii),
-                                     fun->args_dense[ii]);
-                break;
-
-            case BLASFEO_DVEC:
-                d_cvt_dvec_to_casadi(in[ii], (double *) fun->args[ii],
-                                     (int *) fun->casadi_sparsity_in(ii),
-                                     fun->args_dense[ii]);
-                break;
-
-            case COLMAJ_ARGS:
-                d_cvt_colmaj_args_to_casadi(in[ii], (double *) fun->args[ii],
-                                            (int *) fun->casadi_sparsity_in(ii),
-                                            fun->args_dense[ii]);
-                break;
-
-            case BLASFEO_DMAT_ARGS:
-                d_cvt_dmat_args_to_casadi(in[ii], (double *) fun->args[ii],
-                                          (int *) fun->casadi_sparsity_in(ii),
-                                          fun->args_dense[ii]);
-                break;
-
-            case BLASFEO_DVEC_ARGS:
-                d_cvt_dvec_args_to_casadi(in[ii], (double *) fun->args[ii],
-                                          (int *) fun->casadi_sparsity_in(ii),
-                                          fun->args_dense[ii]);
-                break;
-
-            case IGNORE_ARGUMENT:
-                // do nothing
-                break;
-
-            default:
-                printf("\ntype in %d\n", type_in[ii]);
-                printf("\nUnknown external function argument type for argument %i\n\n", ii);
-                exit(1);
+            printf("\nexternal_function_casadi_wrapper: Unknown external function argument type %d for output %d\n\n", type_out[ii], ii);
+            exit(1);
         }
     }
 
@@ -1200,44 +1199,12 @@ void external_function_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, 
     // skip last argument (that is the parameters vector)
     for (ii = 0; ii < fun->in_num - 1; ii++)
     {
-        switch (type_in[ii])
+        status = d_cvt_ext_fun_arg_to_casadi(type_in[ii], in[ii], (double *) fun->args[ii],
+                                    (int *) fun->casadi_sparsity_in(ii), fun->args_dense[ii]);
+        if (status)
         {
-            case COLMAJ:
-                d_cvt_colmaj_to_casadi(in[ii], (double *) fun->args[ii],
-                                       (int *) fun->casadi_sparsity_in(ii), fun->args_dense[ii]);
-                break;
-
-            case BLASFEO_DMAT:
-                d_cvt_dmat_to_casadi(in[ii], (double *) fun->args[ii],
-                                     (int *) fun->casadi_sparsity_in(ii), fun->args_dense[ii]);
-                break;
-
-            case BLASFEO_DVEC:
-                d_cvt_dvec_to_casadi(in[ii], (double *) fun->args[ii],
-                                     (int *) fun->casadi_sparsity_in(ii), fun->args_dense[ii]);
-                break;
-            case COLMAJ_ARGS:
-                d_cvt_colmaj_args_to_casadi(in[ii], (double *) fun->args[ii],
-                                            (int *) fun->casadi_sparsity_in(ii), fun->args_dense[ii]);
-                break;
-
-            case BLASFEO_DMAT_ARGS:
-                d_cvt_dmat_args_to_casadi(in[ii], (double *) fun->args[ii],
-                                          (int *) fun->casadi_sparsity_in(ii), fun->args_dense[ii]);
-                break;
-
-            case BLASFEO_DVEC_ARGS:
-                d_cvt_dvec_args_to_casadi(in[ii], (double *) fun->args[ii],
-                                          (int *) fun->casadi_sparsity_in(ii), fun->args_dense[ii]);
-                break;
-
-            case IGNORE_ARGUMENT:
-                // do nothing
-                break;
-
-            default:
-                printf("\nexternal_function_param_casadi_wrapper: Unknown external function argument type %d for input %d\n\n", type_in[ii], ii);
-                exit(1);
+            printf("\nexternal_function_casadi_wrapper: Unknown external function argument type %d for output %d\n\n", type_out[ii], ii);
+            exit(1);
         }
     }
     // parameters are last argument and set via external_function_param_casadi_set_param
