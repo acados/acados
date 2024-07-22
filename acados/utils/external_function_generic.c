@@ -284,8 +284,6 @@ static void d_cvt_colmaj_to_casadi(double *in, double *out, int *sparsity_out, i
 {
     int ii, jj, idx;
 
-    if (sparsity_out == NULL)
-        return;
     int nrow = sparsity_out[0];
     int ncol = sparsity_out[1];
 
