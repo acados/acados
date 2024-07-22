@@ -70,7 +70,7 @@ def main():
     y_param = p[1:nx+nu+1]
     ocp.model.p = p
 
-    # defeine cost with parametric reference
+    # define cost with parametric reference
     ocp.cost.cost_type = 'EXTERNAL'
     ocp.cost.cost_type_e = 'EXTERNAL'
 
