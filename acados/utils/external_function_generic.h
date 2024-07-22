@@ -92,7 +92,7 @@ typedef struct
 {
     // public members for core (have to be before private ones)
     void (*evaluate)(void *, ext_fun_arg_t *, void **, ext_fun_arg_t *, void **);
-	// public members for interfaces
+    // public members for interfaces
     void (*get_nparam)(void *, int *);
     void (*set_param)(void *, double *);
     void (*set_param_sparse)(void *, int n_update, int *idx, double *);
@@ -184,7 +184,7 @@ typedef struct
 {
     // public members for core (have to be the same as in the prototype, and before the private ones)
     void (*evaluate)(void *, ext_fun_arg_t *, void **, ext_fun_arg_t *, void **);
-	// public members for interfaces
+    // public members for interfaces
     void (*get_nparam)(void *, int *);
     void (*set_param)(void *, double *);
     void (*set_param_sparse)(void *, int n_update, int *idx, double *);
@@ -248,7 +248,7 @@ typedef struct
 {
     // public members for core (have to be the same as in the prototype, and before the private ones)
     void (*evaluate)(void *, ext_fun_arg_t *, void **, ext_fun_arg_t *, void **);
-	// public members for interfaces
+    // public members for interfaces
     void (*set_param_pointer)(void *, double *);
     // private members
     void *ptr_ext_mem;  // pointer to external memory
