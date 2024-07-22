@@ -343,6 +343,10 @@ add_test(NAME python_pendulum_ocp_example_cmake
     add_test(NAME python_test_sim_dae
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
         python test_sim_dae.py)
+    add_test(NAME python_sparse_param_test
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
+        python sparse_param_test.py)
+
 
     add_test(NAME python_pmsm_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pmsm_example
@@ -372,9 +376,10 @@ add_test(NAME python_pendulum_ocp_example_cmake
     set_tests_properties(python_armijo_test PROPERTIES DEPENDS python_pendulum_soft_constraints_example)
     set_tests_properties(python_pendulum_soft_constraints_example PROPERTIES DEPENDS python_pendulum_parametric_nonlinear_constraint_h_test)
     set_tests_properties(python_pendulum_parametric_nonlinear_constraint_h_test PROPERTIES DEPENDS python_test_sim_dae)
+    set_tests_properties(python_test_sim_dae PROPERTIES DEPENDS python_sparse_param_test)
 
     if(ACADOS_WITH_OSQP)
-        set_tests_properties(python_test_sim_dae PROPERTIES DEPENDS python_OSQP_test)
+        set_tests_properties(python_sparse_param_test PROPERTIES DEPENDS python_OSQP_test)
     endif()
 
     # Directory acados_python/chain_mass
