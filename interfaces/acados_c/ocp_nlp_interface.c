@@ -393,6 +393,16 @@ void ocp_nlp_in_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, 
         double *Ts_value = value;
         in->Ts[stage] = Ts_value[0];
     }
+    else if (!strcmp(field, "parameter_values"))
+    {
+        double *parameter_values = value;
+        printf("setting parameter values at stage %d\n", stage);
+        for (int ii = 0; ii < dims->np[stage]; ii++)
+        {
+            in->parameter_values[stage][ii] = parameter_values[ii];
+        }
+        printf("done setting parameter values at stage %d\n", stage);
+    }
     else
     {
         printf("\nerror: ocp_nlp_in_set: field %s not available\n", field);
@@ -403,21 +413,26 @@ void ocp_nlp_in_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, 
 
 
 
-// void ocp_nlp_in_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
-//         const char *field, void *value)
-// {
-//     if (!strcmp(field, "Ts"))
-//     {
-//         double *Ts_value = value;
-//         Ts_value[0] = in->Ts[stage];
-//     }
-//     else
-//     {
-//         printf("\nerror: ocp_nlp_in_get: field %s not available\n", field);
-//         exit(1);
-//     }
-//     return;
-// }
+void ocp_nlp_in_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
+        const char *field, void *value)
+{
+    if (!strcmp(field, "Ts"))
+    {
+        double *Ts_value = value;
+        Ts_value[0] = in->Ts[stage];
+    }
+    else if (!strcmp(field, "parameter_pointer"))
+    {
+        double **ptr = value;
+        ptr[0] = in->parameter_values[stage];
+    }
+    else
+    {
+        printf("\nerror: ocp_nlp_in_get: field %s not available\n", field);
+        exit(1);
+    }
+    return;
+}
 
 
 int ocp_nlp_dynamics_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,

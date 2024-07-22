@@ -719,6 +719,10 @@ static ocp_nlp_in *ocp_nlp_in_assign_self(ocp_nlp_dims *dims, void *raw_memory)
     for (int i = 0; i <= N; i++)
     {
         assign_and_advance_double(dims->np[i], &in->parameter_values[i], &c_ptr);
+        for (int ip = 0; ip < dims->np[i]; ip++)
+        {
+            in->parameter_values[i][ip] = 0.0;
+        }
     }
 
     // dynamics
