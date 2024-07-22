@@ -452,6 +452,7 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
     }
 {%- endif %}
 
+    ocp_nlp_in_get(config, dims, in, 0, "parameter_pointer", &parameter_ptr);
 
 {%- if cost.cost_type_0 == "NONLINEAR_LS" %}
     // nonlinear least squares function
@@ -471,6 +472,7 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
     {%- else %}
     capsule->ext_cost_0_fun.fun = &{{ cost.cost_function_ext_cost_0 }};
     external_function_external_param_{{ cost.cost_ext_fun_type_0 }}_create(&capsule->ext_cost_0_fun, {{ dims.np }});
+    capsule->ext_cost_0_fun.set_param_pointer(&capsule->ext_cost_0_fun, parameter_ptr);
     {%- endif %}
 
     {%- if cost.cost_ext_fun_type_0 == "casadi" %}
@@ -478,6 +480,7 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
     {%- else %}
     capsule->ext_cost_0_fun_jac.fun = &{{ cost.cost_function_ext_cost_0 }};
     external_function_external_param_{{ cost.cost_ext_fun_type_0 }}_create(&capsule->ext_cost_0_fun_jac, {{ dims.np }});
+    capsule->ext_cost_0_fun_jac.set_param_pointer(&capsule->ext_cost_0_fun_jac, parameter_ptr);
     {%- endif %}
 
     {%- if cost.cost_ext_fun_type_0 == "casadi" %}
@@ -485,24 +488,15 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
     {%- else %}
     capsule->ext_cost_0_fun_jac_hess.fun = &{{ cost.cost_function_ext_cost_0 }};
     external_function_external_param_{{ cost.cost_ext_fun_type_0 }}_create(&capsule->ext_cost_0_fun_jac_hess, {{ dims.np }});
+    capsule->ext_cost_0_fun_jac_hess.set_param_pointer(&capsule->ext_cost_0_fun_jac_hess, parameter_ptr);
     {%- endif %}
 
     {% if solver_options.with_solution_sens_wrt_params %}
-    {%- if cost.cost_ext_fun_type_0 == "casadi" %}
     MAP_CASADI_FNC(ext_cost_0_hess_xu_p, {{ model.name }}_cost_ext_cost_0_hess_xu_p, 0);
-    {%- else %}
-    capsule->ext_cost_0_hess_xu_p.fun = &{{ cost.cost_function_ext_cost_0 }};
-    external_function_external_param_{{ cost.cost_ext_fun_type_0 }}_create(&capsule->ext_cost_0_hess_xu_p, {{ dims.np }});
-    {%- endif %}
     {%- endif %}
 
     {% if solver_options.with_value_sens_wrt_params %}
-    {%- if cost.cost_ext_fun_type_0 == "casadi" %}
     MAP_CASADI_FNC(ext_cost_0_grad_p, {{ model.name }}_cost_ext_cost_0_grad_p, 0);
-    {%- else %}
-    capsule->ext_cost_0_grad_p.fun = &{{ cost.cost_function_ext_cost_0 }};
-    external_function_external_param_{{ cost.cost_ext_fun_type_0 }}_create(&capsule->ext_cost_0_grad_p, {{ dims.np }});
-    {%- endif %}
     {%- endif %}
 {%- endif %}
 
@@ -536,6 +530,8 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
     {%- else %}
         capsule->impl_dae_fun[i].fun = &{{ model.dyn_impl_dae_fun }};
         external_function_external_param_{{ model.dyn_ext_fun_type }}_create(&capsule->impl_dae_fun[i], {{ dims.np }});
+        ocp_nlp_in_get(config, dims, in, i+1, "parameter_pointer", &parameter_ptr);
+        capsule->impl_dae_fun[i].set_param_pointer(&capsule->impl_dae_fun[i], parameter_ptr);
     {%- endif %}
     }
 
@@ -546,6 +542,8 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
     {%- else %}
         capsule->impl_dae_fun_jac_x_xdot_z[i].fun = &{{ model.dyn_impl_dae_fun_jac }};
         external_function_external_param_{{ model.dyn_ext_fun_type }}_create(&capsule->impl_dae_fun_jac_x_xdot_z[i], {{ dims.np }});
+        ocp_nlp_in_get(config, dims, in, i+1, "parameter_pointer", &parameter_ptr);
+        capsule->impl_dae_fun_jac_x_xdot_z[i].set_param_pointer(&capsule->impl_dae_fun_jac_x_xdot_z[i], parameter_ptr);
     {%- endif %}
     }
 
@@ -556,23 +554,25 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
     {%- else %}
         capsule->impl_dae_jac_x_xdot_u_z[i].fun = &{{ model.dyn_impl_dae_jac }};
         external_function_external_param_{{ model.dyn_ext_fun_type }}_create(&capsule->impl_dae_jac_x_xdot_u_z[i], {{ dims.np }});
+        ocp_nlp_in_get(config, dims, in, i+1, "parameter_pointer", &parameter_ptr);
+        capsule->impl_dae_jac_x_xdot_u_z[i].set_param_pointer(&capsule->impl_dae_jac_x_xdot_u_z[i], parameter_ptr);
     {%- endif %}
     }
 
     {%- if solver_options.hessian_approx == "EXACT" %}
-    capsule->impl_dae_hess = (external_function_external_param_{{ model.dyn_ext_fun_type }} *) malloc(sizeof(external_function_external_param_{{ model.dyn_ext_fun_type }})*N);
+    capsule->impl_dae_hess = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*N);
     for (int i = 0; i < N; i++) {
         MAP_CASADI_FNC(impl_dae_hess[i], {{ model.name }}_impl_dae_hess, i);
     }
     {%- endif %}
 {% elif solver_options.integrator_type == "LIFTED_IRK" %}
     // external functions (implicit model)
-    capsule->impl_dae_fun = (external_function_external_param_{{ model.dyn_ext_fun_type }} *) malloc(sizeof(external_function_external_param_{{ model.dyn_ext_fun_type }})*N);
+    capsule->impl_dae_fun = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*N);
     for (int i = 0; i < N; i++) {
         MAP_CASADI_FNC(impl_dae_fun[i], {{ model.name }}_impl_dae_fun, i);
     }
 
-    capsule->impl_dae_fun_jac_x_xdot_u = (external_function_external_param_{{ model.dyn_ext_fun_type }} *) malloc(sizeof(external_function_external_param_{{ model.dyn_ext_fun_type }})*N);
+    capsule->impl_dae_fun_jac_x_xdot_u = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*N);
     for (int i = 0; i < N; i++) {
         MAP_CASADI_FNC(impl_dae_fun_jac_x_xdot_u[i], {{ model.name }}_impl_dae_fun_jac_x_xdot_u, i);
     }
@@ -615,6 +615,8 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
         {%- else %}
         capsule->discr_dyn_phi_fun[i].fun = &{{ model.dyn_disc_fun }};
         external_function_external_param_{{ model.dyn_ext_fun_type }}_create(&capsule->discr_dyn_phi_fun[i], {{ dims.np }});
+        ocp_nlp_in_get(config, dims, in, i, "parameter_pointer", &parameter_ptr);
+        capsule->discr_dyn_phi_fun[i].set_param_pointer(&capsule->discr_dyn_phi_fun[i], parameter_ptr);
         {%- endif %}
     }
 
@@ -626,6 +628,8 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
         {%- else %}
         capsule->discr_dyn_phi_fun_jac_ut_xt[i].fun = &{{ model.dyn_disc_fun_jac }};
         external_function_external_param_{{ model.dyn_ext_fun_type }}_create(&capsule->discr_dyn_phi_fun_jac_ut_xt[i], {{ dims.np }});
+        ocp_nlp_in_get(config, dims, in, i, "parameter_pointer", &parameter_ptr);
+        capsule->discr_dyn_phi_fun_jac_ut_xt[i].set_param_pointer(&capsule->discr_dyn_phi_fun_jac_ut_xt[i], parameter_ptr);
         {%- endif %}
     }
 
@@ -638,20 +642,17 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
         {%- else %}
         capsule->discr_dyn_phi_jac_p_hess_xu_p[i].fun = &{{ model.dyn_disc_params_jac }};
         external_function_external_param_{{ model.dyn_ext_fun_type }}_create(&capsule->discr_dyn_phi_jac_p_hess_xu_p[i], {{ dims.np }});
+        ocp_nlp_in_get(config, dims, in, i, "parameter_pointer", &parameter_ptr);
+        capsule->discr_dyn_phi_jac_p_hess_xu_p[i].set_param_pointer(&capsule->discr_dyn_phi_jac_p_hess_xu_p[i], parameter_ptr);
         {%- endif %}
     }
   {% endif %}
 
   {% if solver_options.with_value_sens_wrt_params %}
-    capsule->discr_dyn_phi_adj_p = (external_function_external_param_{{ model.dyn_ext_fun_type }} *) malloc(sizeof(external_function_external_param_{{ model.dyn_ext_fun_type }})*N);
+    capsule->discr_dyn_phi_adj_p = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*N);
     for (int i = 0; i < N; i++)
     {
-        {%- if model.dyn_ext_fun_type == "casadi" %}
         MAP_CASADI_FNC(discr_dyn_phi_adj_p[i], {{ model.name }}_dyn_disc_phi_adj_p, i);
-        {%- else %}
-        capsule->discr_dyn_phi_adj_p[i].fun = &{{ model.dyn_disc_params_jac }};
-        external_function_external_param_{{ model.dyn_ext_fun_type }}_create(&capsule->discr_dyn_phi_adj_p[i], {{ dims.np }});
-        {%- endif %}
     }
   {% endif %}
 
@@ -664,6 +665,8 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
         {%- else %}
         capsule->discr_dyn_phi_fun_jac_ut_xt_hess[i].fun = &{{ model.dyn_disc_fun_jac_hess }};
         external_function_external_param_{{ model.dyn_ext_fun_type }}_create(&capsule->discr_dyn_phi_fun_jac_ut_xt_hess[i], {{ dims.np }});
+        ocp_nlp_in_get(config, dims, in, i, "parameter_pointer", &parameter_ptr);
+        capsule->discr_dyn_phi_fun_jac_ut_xt_hess[i].set_param_pointer(&capsule->discr_dyn_phi_fun_jac_ut_xt_hess[i], parameter_ptr);
         {%- endif %}
     }
   {%- endif %}
@@ -714,6 +717,8 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
         {%- else %}
         capsule->ext_cost_fun[i].fun = &{{ cost.cost_function_ext_cost }};
         external_function_external_param_{{ cost.cost_ext_fun_type }}_create(&capsule->ext_cost_fun[i], {{ dims.np }});
+        ocp_nlp_in_get(config, dims, in, i+1, "parameter_pointer", &parameter_ptr);
+        capsule->ext_cost_fun[i].set_param_pointer(&capsule->ext_cost_fun[i], parameter_ptr);
         {%- endif %}
     }
 
@@ -725,6 +730,8 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
         {%- else %}
         capsule->ext_cost_fun_jac[i].fun = &{{ cost.cost_function_ext_cost }};
         external_function_external_param_{{ cost.cost_ext_fun_type }}_create(&capsule->ext_cost_fun_jac[i], {{ dims.np }});
+        ocp_nlp_in_get(config, dims, in, i+1, "parameter_pointer", &parameter_ptr);
+        capsule->ext_cost_fun_jac[i].set_param_pointer(&capsule->ext_cost_fun_jac[i], parameter_ptr);
         {%- endif %}
     }
 
@@ -736,32 +743,24 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
         {%- else %}
         capsule->ext_cost_fun_jac_hess[i].fun = &{{ cost.cost_function_ext_cost }};
         external_function_external_param_{{ cost.cost_ext_fun_type }}_create(&capsule->ext_cost_fun_jac_hess[i], {{ dims.np }});
+        ocp_nlp_in_get(config, dims, in, i+1, "parameter_pointer", &parameter_ptr);
+        capsule->ext_cost_fun_jac_hess[i].set_param_pointer(&capsule->ext_cost_fun_jac_hess[i], parameter_ptr);
         {%- endif %}
     }
 
     {% if solver_options.with_solution_sens_wrt_params %}
-    capsule->ext_cost_hess_xu_p = (external_function_external_param_{{ cost.cost_ext_fun_type }} *) malloc(sizeof(external_function_external_param_{{ cost.cost_ext_fun_type }})*(N-1));
+    capsule->ext_cost_hess_xu_p = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*(N-1));
     for (int i = 0; i < N-1; i++)
     {
-        {%- if cost.cost_ext_fun_type == "casadi" %}
         MAP_CASADI_FNC(ext_cost_hess_xu_p[i], {{ model.name }}_cost_ext_cost_hess_xu_p, i+1);
-        {%- else %}
-        capsule->ext_cost_hess_xu_p[i].fun = &{{ cost.cost_function_ext_cost }};
-        external_function_external_param_{{ cost.cost_ext_fun_type }}_create(&capsule->ext_cost_hess_xu_p[i], {{ dims.np }});
-        {%- endif %}
     }
     {%- endif %}
 
     {% if solver_options.with_value_sens_wrt_params %}
-    capsule->ext_cost_grad_p = (external_function_external_param_{{ cost.cost_ext_fun_type }} *) malloc(sizeof(external_function_external_param_{{ cost.cost_ext_fun_type }})*(N-1));
+    capsule->ext_cost_grad_p = (external_function_external_param_casadi *) malloc(sizeof(external_function_external_param_casadi)*(N-1));
     for (int i = 0; i < N-1; i++)
     {
-        {%- if cost.cost_ext_fun_type == "casadi" %}
         MAP_CASADI_FNC(ext_cost_grad_p[i], {{ model.name }}_cost_ext_cost_grad_p, i+1);
-        {%- else %}
-        capsule->ext_cost_grad_p[i].fun = &{{ cost.cost_function_ext_cost }};
-        external_function_external_param_{{ cost.cost_ext_fun_type }}_create(&capsule->ext_cost_grad_p[i], {{ dims.np }});
-        {%- endif %}
     }
     {%- endif %}
 {%- endif %}
@@ -799,6 +798,8 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
     {%- else %}
     capsule->ext_cost_e_fun.fun = &{{ cost.cost_function_ext_cost_e }};
     external_function_external_param_{{ cost.cost_ext_fun_type_e }}_create(&capsule->ext_cost_e_fun, {{ dims.np }});
+    ocp_nlp_in_get(config, dims, in, N, "parameter_pointer", &parameter_ptr);
+    capsule->ext_cost_e_fun.set_param_pointer(&capsule->ext_cost_e_fun, parameter_ptr);
     {%- endif %}
 
     // external cost - jacobian
@@ -807,6 +808,8 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
     {%- else %}
     capsule->ext_cost_e_fun_jac.fun = &{{ cost.cost_function_ext_cost_e }};
     external_function_external_param_{{ cost.cost_ext_fun_type_e }}_create(&capsule->ext_cost_e_fun_jac, {{ dims.np }});
+    ocp_nlp_in_get(config, dims, in, N, "parameter_pointer", &parameter_ptr);
+    capsule->ext_cost_e_fun_jac.set_param_pointer(&capsule->ext_cost_e_fun_jac, parameter_ptr);
     {%- endif %}
 
     // external cost - hessian
@@ -815,25 +818,17 @@ void {{ model.name }}_acados_create_setup_functions({{ model.name }}_solver_caps
     {%- else %}
     capsule->ext_cost_e_fun_jac_hess.fun = &{{ cost.cost_function_ext_cost_e }};
     external_function_external_param_{{ cost.cost_ext_fun_type_e }}_create(&capsule->ext_cost_e_fun_jac_hess, {{ dims.np }});
+    ocp_nlp_in_get(config, dims, in, N, "parameter_pointer", &parameter_ptr);
+    capsule->ext_cost_e_fun_jac_hess.set_param_pointer(&capsule->ext_cost_e_fun_jac_hess, parameter_ptr);
     {%- endif %}
 
     // external cost - jacobian wrt params
     {% if solver_options.with_solution_sens_wrt_params %}
-    {%- if cost.cost_ext_fun_type_e == "casadi"%}
     MAP_CASADI_FNC(ext_cost_e_hess_xu_p, {{ model.name }}_cost_ext_cost_e_hess_xu_p, N);
-    {%- else %}
-    capsule->ext_cost_e_hess_xu_p.fun = &{{ cost.cost_function_ext_cost_e }};
-    external_function_external_param_{{ cost.cost_ext_fun_type_e }}_create(&capsule->ext_cost_e_hess_xu_p, {{ dims.np }});
-    {%- endif %}
     {% endif %}
 
     {% if solver_options.with_value_sens_wrt_params %}
-    {%- if cost.cost_ext_fun_type_e == "casadi" %}
     MAP_CASADI_FNC(ext_cost_e_grad_p, {{ model.name }}_cost_ext_cost_e_grad_p, N);
-    {%- else %}
-    capsule->ext_cost_e_grad_p.fun = &{{ cost.cost_function_ext_cost_e }};
-    external_function_external_param_{{ cost.cost_ext_fun_type_e }}_create(&capsule->ext_cost_e_grad_p, {{ dims.np }});
-    {%- endif %}
     {%- endif %}
 {%- endif %}
 
