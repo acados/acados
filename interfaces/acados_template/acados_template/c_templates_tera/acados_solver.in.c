@@ -2346,7 +2346,7 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
 /**
  * Internal function for {{ model.name }}_acados_create: step 7
  */
-void {{ model.name }}_acados_setup_nlp_out({{ model.name }}_solver_capsule* capsule)
+void {{ model.name }}_acados_set_nlp_out({{ model.name }}_solver_capsule* capsule)
 {
     const int N = capsule->nlp_solver_plan->N;
     ocp_nlp_config* nlp_config = capsule->nlp_config;
@@ -2446,7 +2446,7 @@ int {{ model.name }}_acados_create_with_discretization({{ model.name }}_solver_c
     capsule->nlp_out = ocp_nlp_out_create(capsule->nlp_config, capsule->nlp_dims);
     // 7.2) sens_out
     capsule->sens_out = ocp_nlp_out_create(capsule->nlp_config, capsule->nlp_dims);
-    {{ model.name }}_acados_setup_nlp_out(capsule);
+    {{ model.name }}_acados_set_nlp_out(capsule);
 
     // 8) do precomputations
     int status = {{ model.name }}_acados_create_precompute(capsule);
