@@ -1043,10 +1043,10 @@ static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
 {
     bool accept_step = false;
     debug_output_double(opts->nlp_opts, "current objective", current_objective, 2);
-    debug_output_double(opts->nlp_opts, "current infeasibility", current_infeasibility, 2); 
-    debug_output_double(opts->nlp_opts, "trial objective", trial_objective, 2); 
-    debug_output_double(opts->nlp_opts, "trial infeasibility", trial_infeasibility, 2); 
-    debug_output_double(opts->nlp_opts, "pred", pred, 2); 
+    debug_output_double(opts->nlp_opts, "current infeasibility", current_infeasibility, 2);
+    debug_output_double(opts->nlp_opts, "trial objective", trial_objective, 2);
+    debug_output_double(opts->nlp_opts, "trial infeasibility", trial_infeasibility, 2);
+    debug_output_double(opts->nlp_opts, "pred", pred, 2);
 
     if(is_iterate_inside_of_funnel(mem, opts, trial_infeasibility))
     {
