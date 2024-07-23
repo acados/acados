@@ -1115,23 +1115,12 @@ static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
     return accept_step;
 }
 
-static int ocp_nlp_sqp_funnel_backtracking_line_search(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
-                void *mem_, void *work_, void *opts_)
+static int ocp_nlp_sqp_funnel_backtracking_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
+                ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_workspace *work, ocp_nlp_sqp_opts *opts)
 {
-    ocp_nlp_dims *dims = dims_;
-    ocp_nlp_config *config = config_;
-
-    ocp_nlp_sqp_opts *opts = opts_;
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
-
-    ocp_nlp_sqp_workspace *work = work_;
     ocp_nlp_workspace *nlp_work = work->nlp_work;
-
-    ocp_nlp_sqp_memory *mem = mem_;
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-
-    ocp_nlp_in *nlp_in = nlp_in_;
-    ocp_nlp_out *nlp_out = nlp_out_;
 
     int N = dims->N;
     double pred = -nlp_mem->qp_cost_value;
