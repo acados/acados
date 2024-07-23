@@ -74,7 +74,7 @@ T_del = 0.02               # time between steps in seconds
 N = 50                     # number of shooting nodes
 Tf = N * T_del * 1
 
-Tsim = 40
+Tsim = 45
 Nsim = int(Tsim * N / Tf)
 
 
@@ -95,7 +95,6 @@ init_zeta = np.array([0.05, 0, 0,       # s,  n,  b
                       0, 0, 0,          # vx, vy, vz
                       U_HOV, U_HOV, U_HOV, U_HOV ])     # ohm1, ohm2, ohm3, ohm4
 
-# init_zeta = np.array([0.05, -1.14574e-20, -4.71437e-08, 1, 0, 0, 0, 0.2, -2.32704e-18, -4.71437e-06, 0, 0, 0, 0, 0, -4.71406e-06])
 rob_rad = 0.04                           # radius of the drone sphere
 
 obst_constr = ([-12.5, -0.75, 1, np.pi/2,
@@ -112,10 +111,10 @@ n_controls = 4
 ROLL_TRIM  = 0
 PITCH_TRIM = 0
 
-# Weights & refeerence
+# Weights
 V_XYZ_REF = 0.00
-S_REF = 0.25
-S_MAX = 6
+S_REF = 0.1875
+S_MAX = 5.9
                                           # State weights on
 Q = np.diag([1, 1e-1, 1e-1,               # frenet position
              1e-5, 1e-5, 1e-5, 1e-5,      # quaternion
@@ -138,7 +137,7 @@ R = np.diag([1e-5, 1e-5, 1e-5, 1e-5])
 Tstart_offset = 0
 f_plot = 10
 refresh_ms = 10
-sphere_scale = 1 #TODO make dependant on map size. (10000/ 20 obst)
+sphere_scale = 20000 #TODO make dependant on map size. (10000/ 20 obst)
 z_const = 0.1
 
 

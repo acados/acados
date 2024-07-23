@@ -40,6 +40,8 @@ from matplotlib.patches import Circle, Ellipse
 from common import *
 from sys_dynamics import SysDyn
 import matplotlib as mpl
+import warnings
+warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
 text_usetex = True if shutil.which('latex') else False
 params = {
@@ -75,7 +77,7 @@ def animOptVars(traj_samples, traj_ST, traj_U):
     # Contains discretization (times, mpc_stages) 3x (mpc_iter/freq)
     traj_samples = traj_samples[:, ::f_plot]
 
-    zetaC_hat = np.zeros((3, dim_st[1], dim_st[2]))
+    zetaC_hat = np.zeros((3, dim_st[1], dim_st[2]), dtype=object)
     zetaC_hat = zetaC_hat[:, :, ::f_plot]
 
     zetaEul = np.zeros((3, dim_st[1], dim_st[2]))
@@ -121,14 +123,15 @@ def animOptVars(traj_samples, traj_ST, traj_U):
         # update State plot
         time_text.set_text(f'time = {traj_samples[0, iter]:.2f} s' )
 
+        # xAx.set_data(zetaC_hat[0, 0, : iter], traj_samples[0, :iter +1])
+        # yAx.set_data(zetaC_hat[1, 0, : iter], traj_samples[0, :iter +1])
+        # zAx.set_data(zetaC_hat[2, 0, : iter], traj_samples[0, :iter +1])
 
-        xAx.set_data(zetaC_hat[0, 0, : iter], traj_samples[0, :iter +1] )
-        yAx.set_data(zetaC_hat[1, 0, : iter], traj_samples[0, :iter +1] )
-        zAx.set_data(zetaC_hat[2, 0, : iter], traj_samples[0, :iter +1] )
+        # phiAx.set_data(zetaCEul[0, 0, : iter], traj_samples[0, :iter +1])
+        # thtAx.set_data(zetaCEul[1, 0, : iter], traj_samples[0, :iter +1])
+        # psiAx.set_data(zetaCEul[2, 0, : iter], traj_samples[0, :iter +1])
 
-        phiAx.set_data(zetaCEul[0, 0, : iter], traj_samples[0, :iter +1] )
-        thtAx.set_data(zetaCEul[1, 0, : iter], traj_samples[0, :iter +1] )
-        psiAx.set_data(zetaCEul[2, 0, : iter], traj_samples[0, :iter +1] )
+        drone._offsets3d = (float(zetaC_hat[0, 0, iter]), float(zetaC_hat[1, 0, iter]), zetaC_hat[2, 0, iter:iter+1])
 
         horizon.set_data(zetaC_hat[0: 2, 1:, iter])
         horizon.set_3d_properties(zetaC_hat[2, 1:, iter])
@@ -159,7 +162,7 @@ def animOptVars(traj_samples, traj_ST, traj_U):
     fig = pyplot.figure(figsize=(15, 10))
 
     # plot state on right (merge top and bottom right. i.e subplots 2, 3, 5, 6, 8, 9)
-    ax3d = fig.add_subplot(3, 3, (5, 9), projection='3d')
+    ax3d = fig.add_subplot(2, 3, (2, 6), projection='3d')
     ax3d.azim = -25
     ax3d.elev = 15
     fig.add_axes(ax3d)
@@ -183,16 +186,16 @@ def animOptVars(traj_samples, traj_ST, traj_U):
     ax3d.set_ylim3d(bottom = cage_y[0], top = cage_y[1])
     ax3d.set_zlim3d(bottom = cage_z[0], top = cage_z[1])
 
-    # multiple circles around agv
+    # Single s[here a]
     drone = [ None, None, None ]
-    drone = ax3d.scatter(x_i[0], y_i[0], z_i[0], s = np.pi * rob_rad**2 * sphere_scale, c='cornflowerblue', alpha=0.01)
+    drone = ax3d.scatter(x_i[0], y_i[0], z_i[0], s = np.pi * rob_rad**2 * sphere_scale, c='lightcoral', alpha=0.45)
 
     ax3d.set_xlabel('X (m)')
     ax3d.set_ylabel('Y (m)')
     ax3d.set_zlabel('Z (m)')
 
     # State zeta_frenet at (1,1) top left
-    zetaF = fig.add_subplot(3, 3, 1)
+    zetaF = fig.add_subplot(2, 3, 1)
     zetaF.set_ylim( np.amin(np.ravel(traj_ST[0 : 3, 0, :-2])) - 0.2,
                     np.amax(np.ravel(traj_ST[0 : 3, 0, :-2])) + 0.2)
     zetaF.set_xlim(0, np.amax(traj_samples[0, :]) + 0.2)
@@ -205,37 +208,37 @@ def animOptVars(traj_samples, traj_ST, traj_U):
     zetaF.grid()
     zetaF.legend(loc='upper right')
 
-    # State zeta_cartesian at (1,2) top left
-    zetaC = fig.add_subplot(3, 3, 2)
+    # # State zeta_cartesian at (1,2) top left
+    # zetaC = fig.add_subplot(2, 2, 2)
 
-    zetaC.set_ylim(np.amin(np.ravel(zetaC_hat[:, 0, :])) - 1,
-                    np.amax(np.ravel(zetaC_hat[:, 0, :])) + 1)
-    zetaC.set_ylabel("$\\hat{p}^{c}$")
+    # zetaC.set_ylim(np.amin(np.ravel(zetaC_hat[:, 0, :])) - 1,
+    #                 np.amax(np.ravel(zetaC_hat[:, 0, :])) + 1)
+    # zetaC.set_ylabel("$\\hat{p}^{c}$")
 
-    zetaC.set_xlim(0, np.amax(traj_samples[0, :]) + 0.2)
-    zetaC.set_xlabel('time (s)')
+    # zetaC.set_xlim(0, np.amax(traj_samples[0, :]) + 0.2)
+    # zetaC.set_xlabel('time (s)')
 
-    xAx = zetaC.stairs([], [0], baseline=None,label="$x$ ($m$)", color="teal" )
-    yAx = zetaC.stairs([], [0], baseline=None,label="$y$ ($m$)", color="lightcoral")
-    zAx = zetaC.stairs([], [0], baseline=None,label="$z$ ($m$)", color="plum")
-    zetaC.grid()
-    zetaC.legend(loc='upper right')
+    # xAx = zetaC.stairs([], [0], baseline=None,label="$x$ ($m$)", color="teal" )
+    # yAx = zetaC.stairs([], [0], baseline=None,label="$y$ ($m$)", color="lightcoral")
+    # zAx = zetaC.stairs([], [0], baseline=None,label="$z$ ($m$)", color="plum")
+    # zetaC.grid()
+    # zetaC.legend(loc='upper right')
 
-    # State zeta_u at (2, 1) mid left
-    zetaEu = fig.add_subplot(3, 3, 4)
+    # # State zeta_u at (2, 1) mid left
+    # zetaEu = fig.add_subplot(2, 2, 4)
 
-    zetaEu.set_ylim(np.amin(np.ravel(traj_ST[3:7, :-2])) - 0.2,
-               np.amax(np.ravel(traj_ST[3:7, :-2])) + 0.2)
-    zetaEu.set_xlim(0, np.amax(traj_samples[0, :]) + 0.2)
-    zetaEu.set_xlabel('time (s)')
-    zetaEu.set_ylabel('$\\zeta^{u}$')
-    phiAx = zetaEu.stairs([], [0], baseline=None,label="$\\phi^{\\circ}$)", color="teal" )
-    thtAx = zetaEu.stairs([], [0], baseline=None,label="$\\theta^{\\circ}$)", color="lightcoral")
-    psiAx = zetaEu.stairs([], [0], baseline=None,label="$\\psi^{\\circ}$)", color="plum" )
-    zetaEu.legend(loc='upper right')
+    # zetaEu.set_ylim(np.amin(np.ravel(traj_ST[3:7, :-2])) - 0.2,
+    #            np.amax(np.ravel(traj_ST[3:7, :-2])) + 0.2)
+    # zetaEu.set_xlim(0, np.amax(traj_samples[0, :]) + 0.2)
+    # zetaEu.set_xlabel('time (s)')
+    # zetaEu.set_ylabel('$\\zeta^{u}$')
+    # phiAx = zetaEu.stairs([], [0], baseline=None,label="$\\phi^{\\circ}$)", color="teal" )
+    # thtAx = zetaEu.stairs([], [0], baseline=None,label="$\\theta^{\\circ}$)", color="lightcoral")
+    # psiAx = zetaEu.stairs([], [0], baseline=None,label="$\\psi^{\\circ}$)", color="plum" )
+    # zetaEu.legend(loc='upper right')
 
-    # plot control u at (1,3) bottom right
-    u = fig.add_subplot(3, 3, 7)
+    # plot control u at (1,3) bottom left
+    u = fig.add_subplot(2, 3, 4)
     ohm1 = u.stairs([], [0], baseline=None,label="$\\ohm_{1}$ ($rad s^{-1}$)", color="lightcoral" )
     ohm2 = u.stairs([], [0], baseline=None,label="$\\ohm_{2}$ ($rad s^{-1}$)", color="plum")
     ohm3 = u.stairs([], [0], baseline=None,label="$\\ohm_{3}$ ($rad s^{-1}$)", color="darkseagreen" )
