@@ -1227,7 +1227,7 @@ static int ocp_nlp_sqp_backtracking_line_search(void *config_, void *dims_, void
 
         if (alpha < opts->nlp_opts->alpha_min)
         {
-            printf("Linesearch: Step size gets too small. Should enter penalty phase. \n");
+            printf("Linesearch: Step size gets too small. alpha = %e < alpha_min = %e Should enter penalty phase. \n", alpha, opts->nlp_opts->alpha_min);
             exit(1);
         }
 
