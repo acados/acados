@@ -2083,14 +2083,18 @@ void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule)
 
 {%- if solver_options.globalization == "FIXED_STEP" %}
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization", "fixed_step");
-{%- elif solver_options.globalization == "MERIT_BACKTRACKING" %}
-    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization", "merit_backtracking");
-
+{% else %}
     double alpha_min = {{ solver_options.alpha_min }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "alpha_min", &alpha_min);
 
     double alpha_reduction = {{ solver_options.alpha_reduction }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "alpha_reduction", &alpha_reduction);
+{%- endif -%}
+
+
+{# globalization specific options #}
+{%- if solver_options.globalization == "MERIT_BACKTRACKING" %}
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization", "merit_backtracking");
 
     int line_search_use_sufficient_descent = {{ solver_options.line_search_use_sufficient_descent }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "line_search_use_sufficient_descent", &line_search_use_sufficient_descent);
@@ -2100,7 +2104,6 @@ void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule)
 
     double eps_sufficient_descent = {{ solver_options.eps_sufficient_descent }};
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "eps_sufficient_descent", &eps_sufficient_descent);
-
 {%- elif solver_options.globalization == "FUNNEL_L1PEN_LINESEARCH" %}
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "globalization", "funnel_l1pen_linesearch");
 
@@ -2118,7 +2121,6 @@ void {{ name }}_acados_create_set_opts({{ name }}_solver_capsule* capsule)
 
     double funnel_initial_penalty_parameter = {{ solver_options.funnel_initial_penalty_parameter }};
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "funnel_initial_penalty_parameter", &funnel_initial_penalty_parameter);
-
 {%- endif -%}
 
     int with_solution_sens_wrt_params = {{ solver_options.with_solution_sens_wrt_params }};

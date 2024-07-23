@@ -1043,10 +1043,10 @@ static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
 {
     bool accept_step = false;
     debug_output_double(opts->nlp_opts, "current objective", current_objective, 2);
-    debug_output_double(opts->nlp_opts, "current infeasibility", current_infeasibility, 2); 
-    debug_output_double(opts->nlp_opts, "trial objective", trial_objective, 2); 
-    debug_output_double(opts->nlp_opts, "trial infeasibility", trial_infeasibility, 2); 
-    debug_output_double(opts->nlp_opts, "pred", pred, 2); 
+    debug_output_double(opts->nlp_opts, "current infeasibility", current_infeasibility, 2);
+    debug_output_double(opts->nlp_opts, "trial objective", trial_objective, 2);
+    debug_output_double(opts->nlp_opts, "trial infeasibility", trial_infeasibility, 2);
+    debug_output_double(opts->nlp_opts, "pred", pred, 2);
 
     if(is_iterate_inside_of_funnel(mem, opts, trial_infeasibility))
     {
@@ -1115,23 +1115,12 @@ static bool is_trial_iterate_acceptable_to_funnel(ocp_nlp_sqp_memory *mem,
     return accept_step;
 }
 
-static int ocp_nlp_sqp_backtracking_line_search(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
-                void *mem_, void *work_, void *opts_)
+static int ocp_nlp_sqp_funnel_backtracking_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
+                ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_workspace *work, ocp_nlp_sqp_opts *opts)
 {
-    ocp_nlp_dims *dims = dims_;
-    ocp_nlp_config *config = config_;
-
-    ocp_nlp_sqp_opts *opts = opts_;
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
-
-    ocp_nlp_sqp_workspace *work = work_;
     ocp_nlp_workspace *nlp_work = work->nlp_work;
-
-    ocp_nlp_sqp_memory *mem = mem_;
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-
-    ocp_nlp_in *nlp_in = nlp_in_;
-    ocp_nlp_out *nlp_out = nlp_out_;
 
     int N = dims->N;
     double pred = -nlp_mem->qp_cost_value;
@@ -1227,7 +1216,7 @@ static int ocp_nlp_sqp_backtracking_line_search(void *config_, void *dims_, void
 
         if (alpha < opts->nlp_opts->alpha_min)
         {
-            printf("Linesearch: Step size gets too small. Should enter penalty phase. \n");
+            printf("Linesearch: Step size gets too small. alpha = %e < alpha_min = %e Should enter penalty phase. \n", alpha, opts->nlp_opts->alpha_min);
             exit(1);
         }
 
@@ -1516,8 +1505,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         if (nlp_opts->globalization == FUNNEL_L1PEN_LINESEARCH)
         {
             bool linesearch_success = 1;
-            linesearch_success = ocp_nlp_sqp_backtracking_line_search(config, dims, nlp_in, nlp_out, mem, work, opts);
-             // Copy new iterate to nlp_out
+            linesearch_success = ocp_nlp_sqp_funnel_backtracking_line_search(config, dims, nlp_in, nlp_out, mem, work, opts);
+            // Copy new iterate to nlp_out
             if (linesearch_success)
             {
                 // in case line search fails, we do not want to copy trial iterates!
