@@ -393,6 +393,14 @@ void ocp_nlp_in_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, 
         double *Ts_value = value;
         in->Ts[stage] = Ts_value[0];
     }
+    else if (!strcmp(field, "parameter_values"))
+    {
+        double *parameter_values = value;
+        for (int ii = 0; ii < dims->np[stage]; ii++)
+        {
+            in->parameter_values[stage][ii] = parameter_values[ii];
+        }
+    }
     else
     {
         printf("\nerror: ocp_nlp_in_set: field %s not available\n", field);
@@ -402,22 +410,40 @@ void ocp_nlp_in_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, 
 }
 
 
+void ocp_nlp_in_set_params_sparse(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
+        int *idx, double *p, int n_update)
+{
+    for (int ii = 0; ii < n_update; ii++)
+    {
+        in->parameter_values[stage][idx[ii]] = p[ii];
+    }
 
-// void ocp_nlp_in_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
-//         const char *field, void *value)
-// {
-//     if (!strcmp(field, "Ts"))
-//     {
-//         double *Ts_value = value;
-//         Ts_value[0] = in->Ts[stage];
-//     }
-//     else
-//     {
-//         printf("\nerror: ocp_nlp_in_get: field %s not available\n", field);
-//         exit(1);
-//     }
-//     return;
-// }
+    return;
+}
+
+
+
+
+void ocp_nlp_in_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
+        const char *field, void *value)
+{
+    if (!strcmp(field, "Ts"))
+    {
+        double *Ts_value = value;
+        Ts_value[0] = in->Ts[stage];
+    }
+    else if (!strcmp(field, "parameter_pointer"))
+    {
+        double **ptr = value;
+        ptr[0] = in->parameter_values[stage];
+    }
+    else
+    {
+        printf("\nerror: ocp_nlp_in_get: field %s not available\n", field);
+        exit(1);
+    }
+    return;
+}
 
 
 int ocp_nlp_dynamics_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
@@ -451,6 +477,49 @@ int ocp_nlp_constraints_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
     return constr_config->model_set(constr_config, dims->constraints[stage],
             in->constraints[stage], field, value);
 }
+
+
+int ocp_nlp_dynamics_model_set_external_param_fun(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+        int stage, const char *field, void *ext_fun_)
+{
+    ocp_nlp_dynamics_config *dynamics_config = config->dynamics[stage];
+    external_function_external_param_generic * ext_fun = (external_function_external_param_generic *) ext_fun_;
+
+    ext_fun->set_param_pointer(ext_fun, in->parameter_values[stage]);
+
+    dynamics_config->model_set(dynamics_config, dims->dynamics[stage], in->dynamics[stage], field, ext_fun);
+
+    return ACADOS_SUCCESS;
+}
+
+
+
+int ocp_nlp_cost_model_set_external_param_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
+        ocp_nlp_in *in, int stage, const char *field, void *ext_fun_)
+{
+    ocp_nlp_cost_config *cost_config = config->cost[stage];
+    external_function_external_param_generic * ext_fun = (external_function_external_param_generic *) ext_fun_;
+
+    ext_fun->set_param_pointer(ext_fun, in->parameter_values[stage]);
+
+    return cost_config->model_set(cost_config, dims->cost[stage], in->cost[stage], field, ext_fun);
+
+}
+
+
+
+int ocp_nlp_constraints_model_set_external_param_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
+        ocp_nlp_in *in, int stage, const char *field, void *ext_fun_)
+{
+    ocp_nlp_constraints_config *constr_config = config->constraints[stage];
+    external_function_external_param_generic * ext_fun = (external_function_external_param_generic *) ext_fun_;
+
+    ext_fun->set_param_pointer(ext_fun, in->parameter_values[stage]);
+
+    return constr_config->model_set(constr_config, dims->constraints[stage],
+            in->constraints[stage], field, ext_fun);
+}
+
 
 
 void ocp_nlp_constraints_model_get(ocp_nlp_config *config, ocp_nlp_dims *dims,

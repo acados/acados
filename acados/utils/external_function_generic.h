@@ -92,7 +92,7 @@ typedef struct
 {
     // public members for core (have to be before private ones)
     void (*evaluate)(void *, ext_fun_arg_t *, void **, ext_fun_arg_t *, void **);
-	// public members for interfaces
+    // public members for interfaces
     void (*get_nparam)(void *, int *);
     void (*set_param)(void *, double *);
     void (*set_param_sparse)(void *, int n_update, int *idx, double *);
@@ -184,7 +184,7 @@ typedef struct
 {
     // public members for core (have to be the same as in the prototype, and before the private ones)
     void (*evaluate)(void *, ext_fun_arg_t *, void **, ext_fun_arg_t *, void **);
-	// public members for interfaces
+    // public members for interfaces
     void (*get_nparam)(void *, int *);
     void (*set_param)(void *, double *);
     void (*set_param_sparse)(void *, int n_update, int *idx, double *);
@@ -238,6 +238,103 @@ void external_function_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, 
                                             ext_fun_arg_t *type_out, void **out);
 //
 void external_function_param_casadi_get_nparam(void *self, int *np);
+
+
+/************************************************
+ * external_function_external_param_casadi
+ ************************************************/
+
+typedef struct
+{
+    // public members for core (have to be the same as in the prototype, and before the private ones)
+    void (*evaluate)(void *, ext_fun_arg_t *, void **, ext_fun_arg_t *, void **);
+    // public members for interfaces
+    void (*set_param_pointer)(void *, double *);
+    // private members
+    void *ptr_ext_mem;  // pointer to external memory
+    int (*casadi_fun)(const double **, double **, int *, double *, void *);
+    int (*casadi_work)(int *, int *, int *, int *);
+    const int *(*casadi_sparsity_in)(int);
+    const int *(*casadi_sparsity_out)(int);
+    int (*casadi_n_in)(void);
+    int (*casadi_n_out)(void);
+    double **args;
+    double **res;
+    double *w;
+    int *iw;
+    int *args_size;     // size of args[i]
+    int *res_size;      // size of res[i]
+    int *args_dense;    // indicates if args[i] is dense
+    int *res_dense;     // indicates if res[i] is dense
+    int args_num;       // number of args arrays
+    int args_size_tot;  // total size of args arrays
+    int res_num;        // number of res arrays
+    int res_size_tot;   // total size of res arrays
+    int in_num;         // number of input arrays
+    int out_num;        // number of output arrays
+    int iw_size;        // number of ints for worksapce
+    int w_size;         // number of doubles for workspace
+
+    bool param_mem_is_set;  // indicates if param memory is set;
+} external_function_external_param_casadi;
+
+//
+acados_size_t external_function_external_param_casadi_struct_size();
+//
+void external_function_external_param_casadi_set_fun(external_function_external_param_casadi *fun, void *value);
+//
+void external_function_external_param_casadi_set_work(external_function_external_param_casadi *fun, void *value);
+//
+void external_function_external_param_casadi_set_sparsity_in(external_function_external_param_casadi *fun, void *value);
+//
+void external_function_external_param_casadi_set_sparsity_out(external_function_external_param_casadi *fun, void *value);
+//
+void external_function_external_param_casadi_set_n_in(external_function_external_param_casadi *fun, void *value);
+//
+void external_function_external_param_casadi_set_n_out(external_function_external_param_casadi *fun, void *value);
+//
+acados_size_t external_function_external_param_casadi_calculate_size(external_function_external_param_casadi *fun);
+//
+void external_function_external_param_casadi_assign(external_function_external_param_casadi *fun, void *mem);
+//
+void external_function_external_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void **in,
+                                            ext_fun_arg_t *type_out, void **out);
+
+
+
+/************************************************
+ * external_function_external_param_generic
+ ************************************************/
+
+// prototype of a parametric external function
+typedef struct
+{
+    // public members for core (have to be before private ones)
+    void (*evaluate)(void *, ext_fun_arg_t *, void **, ext_fun_arg_t *, void **);
+    // public members for interfaces
+    void (*set_param_pointer)(void *, double *);
+
+    // private members
+    void *ptr_ext_mem;  // pointer to external memory
+    int (*fun)(void **, void **, void *);
+    double *p;  // parameters
+    bool param_mem_is_set;
+
+} external_function_external_param_generic;
+
+//
+acados_size_t external_function_external_param_generic_struct_size();
+//
+void external_function_external_param_generic_set_fun(external_function_external_param_generic *fun, void *value);
+//
+acados_size_t external_function_external_param_generic_calculate_size(external_function_external_param_generic *fun);
+//
+void external_function_external_param_generic_assign(external_function_external_param_generic *fun, void *mem);
+//
+void external_function_external_param_generic_wrapper(void *self, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out);
+//
+void external_function_external_param_generic_set_param_ptr(void *self, double *p);
+
 
 #ifdef __cplusplus
 } /* extern "C" */

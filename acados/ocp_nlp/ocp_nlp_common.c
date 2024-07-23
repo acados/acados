@@ -633,11 +633,18 @@ void ocp_nlp_dims_set_dynamics(void *config_, void *dims_, int stage,
  * in
  ************************************************/
 
-acados_size_t ocp_nlp_in_calculate_size_self(int N)
+static acados_size_t ocp_nlp_in_calculate_size_self(ocp_nlp_dims *dims)
 {
+    int N = dims->N;
     acados_size_t size = sizeof(ocp_nlp_in);
 
     size += N * sizeof(double);  // Ts
+    // parameter values
+    for (int i = 0; i <= N; i++)
+    {
+        size += dims->np[i] * sizeof(double);
+    }
+    size += (N + 1) * sizeof(double *);
 
     size += N * sizeof(void *);  // dynamics
 
@@ -645,7 +652,7 @@ acados_size_t ocp_nlp_in_calculate_size_self(int N)
 
     size += (N + 1) * sizeof(void *);  // constraints
 
-    size += 3*8;  // aligns
+    size += 4*8;  // aligns
     return size;
 }
 
@@ -655,7 +662,7 @@ acados_size_t ocp_nlp_in_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *di
 {
     int N = dims->N;
 
-    acados_size_t size = ocp_nlp_in_calculate_size_self(N);
+    acados_size_t size = ocp_nlp_in_calculate_size_self(dims);
 
     // dynamics
     for (int i = 0; i < N; i++)
@@ -676,15 +683,17 @@ acados_size_t ocp_nlp_in_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *di
         size += config->constraints[i]->model_calculate_size(config->constraints[i],
                                                               dims->constraints[i]);
     }
-    //  make_int_multiple_of(64, &size);
+
+    make_int_multiple_of(8, &size);
 
     return size;
 }
 
 
 
-ocp_nlp_in *ocp_nlp_in_assign_self(int N, void *raw_memory)
+static ocp_nlp_in *ocp_nlp_in_assign_self(ocp_nlp_dims *dims, void *raw_memory)
 {
+    int N = dims->N;
     char *c_ptr = (char *) raw_memory;
 
     // initial align
@@ -697,8 +706,24 @@ ocp_nlp_in *ocp_nlp_in_assign_self(int N, void *raw_memory)
     // align
     align_char_to(8, &c_ptr);
 
+    // double pointers
+    assign_and_advance_double_ptrs(N+1, &in->parameter_values, &c_ptr);
+
+    align_char_to(8, &c_ptr);
+
+    // doubles
     // Ts
     assign_and_advance_double(N, &in->Ts, &c_ptr);
+
+    // parameter values
+    for (int i = 0; i <= N; i++)
+    {
+        assign_and_advance_double(dims->np[i], &in->parameter_values[i], &c_ptr);
+        for (int ip = 0; ip < dims->np[i]; ip++)
+        {
+            in->parameter_values[i][ip] = 0.0;
+        }
+    }
 
     // dynamics
     in->dynamics = (void **) c_ptr;
@@ -714,7 +739,7 @@ ocp_nlp_in *ocp_nlp_in_assign_self(int N, void *raw_memory)
 
     align_char_to(8, &c_ptr);
 
-    assert((char *) raw_memory + ocp_nlp_in_calculate_size_self(N) >= c_ptr);
+    assert((char *) raw_memory + ocp_nlp_in_calculate_size_self(dims) >= c_ptr);
 
     return in;
 }
@@ -728,8 +753,8 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *
     char *c_ptr = (char *) raw_memory;
 
     // struct
-    ocp_nlp_in *in = ocp_nlp_in_assign_self(N, c_ptr);
-    c_ptr += ocp_nlp_in_calculate_size_self(N);
+    ocp_nlp_in *in = ocp_nlp_in_assign_self(dims, c_ptr);
+    c_ptr += ocp_nlp_in_calculate_size_self(dims);
 
     // dynamics
     for (int i = 0; i < N; i++)
