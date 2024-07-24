@@ -2796,14 +2796,10 @@ int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *
         // copy out (current iterate) to work->tmp_nlp_out
         for (i = 0; i <= N; i++)
             blasfeo_dveccp(nv[i], out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
+        // NOTE: copying duals not needed, as they dont enter the merit function
 
-        // for (i = 0; i < N; i++)
-        //     blasfeo_dveccp(nx[i+1], out->pi+i, 0, work->tmp_nlp_out->pi+i, 0);
-
-        // for (i = 0; i <= N; i++)
-        //     blasfeo_dveccp(2*ni[i], out->lam+i, 0, work->tmp_nlp_out->lam+i, 0);
-
-            // linear update of algebraic variables using state and input sensitivity
+        // TODO: think about z here!
+        // linear update of algebraic variables using state and input sensitivity
     //        if (i < N)
     //        {
     //            blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0, mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out->z+i, 0);
@@ -2830,7 +2826,6 @@ int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *
         else
         {
             // update weights
-            // printf("merit fun: update weights, sqp_iter = %d\n", sqp_iter);
             for (i = 0; i < N; i++)
             {
                 for(j=0; j<nx[i+1]; j++)
