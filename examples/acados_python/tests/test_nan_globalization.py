@@ -38,7 +38,15 @@ import numpy as np
 import casadi as ca
 import scipy.linalg
 
-def main():
+from dataclasses import dataclass
+
+@dataclass
+class GlobalizationOptions:
+    globalization: str
+    alpha_min: float
+    use_SOC: bool
+
+def main(globalization_options: GlobalizationOptions):
     ocp = AcadosOcp()
 
     # set model
@@ -81,12 +89,12 @@ def main():
     ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
     # set options
-    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-    ocp.solver_options.globalization = 'MERIT_BACKTRACKING'
-    ocp.solver_options.alpha_min = 1e-5
-    ocp.solver_options.globalization_use_SOC = 0
-    ocp.solver_options.print_level = 2
+    ocp.solver_options.globalization = globalization_options.globalization
+    ocp.solver_options.alpha_min = globalization_options.alpha_min
+    ocp.solver_options.globalization_use_SOC = globalization_options.use_SOC
+    ocp.solver_options.print_level = 0
 
+    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = 'ERK'
     ocp.solver_options.nlp_solver_type = 'SQP'
@@ -108,8 +116,6 @@ def main():
     status = ocp_solver.solve()
 
     ocp_solver.print_statistics()
-    if status != 0:
-        raise Exception(f'acados returned status {status}.')
 
     # get solution
     for i in range(N):
@@ -119,7 +125,34 @@ def main():
 
     print("cost function value", ocp_solver.get_cost())
 
+    if globalization_options.globalization == "MERIT_BACKTRACKING" and globalization_options.use_SOC:
+        expected_status = 2
+    elif globalization_options.globalization == "MERIT_BACKTRACKING" and not globalization_options.use_SOC:
+        expected_status = 0
+    else:
+        print("Warning: no expected status defined for globalization options")
+        expected_status = 0
+
+    if status != expected_status:
+        raise Exception(f"Test failed: expected status {expected_status}, got {status} for setting {globalization_options}")
+
+    if (status != 1) and (np.isnan(simX).any() or np.isnan(simU).any()):
+        raise Exception(f"Test failed: Solver returned NaN, but not NaN status for setting {globalization_options}")
+
+    if any(simX[:, 0] > p_max):
+        raise Exception(f"Test failed: Position constraint violated for setting {globalization_options}")
+
+    print(f"Test passed: expected status {expected_status}, got {status} for setting {globalization_options}")
+
     plot_pendulum(np.linspace(0, Tf, N+1), Fmax, simU, simX, latexify=False)
+    ocp_solver = None
 
 if __name__ == "__main__":
-    main()
+    settings = [
+        GlobalizationOptions(globalization="MERIT_BACKTRACKING", alpha_min=1e-4, use_SOC=False),
+        GlobalizationOptions(globalization="MERIT_BACKTRACKING", alpha_min=1e-4, use_SOC=True),
+        # Funnel returns error: Step size gets too small. Should enter penalty phase.
+        # GlobalizationOptions(globalization="FUNNEL_L1PEN_LINESEARCH", alpha_min=1e-4, use_SOC=True),
+    ]
+    for setting in settings:
+        main(setting)
