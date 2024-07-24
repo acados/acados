@@ -396,7 +396,7 @@ typedef struct ocp_nlp_workspace
     void **cost;         // cost_workspace
     void **constraints;  // constraints_workspace
 
-    // temp QP in & out (to be used as workspace in param sens)
+    // temp QP in & out (to be used as workspace in param sens) and merit line search
     ocp_qp_in *tmp_qp_in;
     ocp_qp_out *tmp_qp_out;
 

@@ -575,6 +575,40 @@ static double ocp_nlp_get_violation_inf_norm(ocp_nlp_config *config, ocp_nlp_dim
 }
 
 
+static void copy_multipliers_nlp_to_qp(ocp_nlp_dims *dims, ocp_nlp_out *from, ocp_qp_out *to)
+{
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *ni = dims->ni;
+    for (int i = 0; i <= N; i++)
+    {
+        blasfeo_dveccp(2*ni[i], from->lam+i, 0, to->lam+i, 0);
+    }
+    for (int i = 0; i < N; i++)
+    {
+        blasfeo_dveccp(nx[i+1], from->pi+i, 0, to->pi+i, 0);
+    }
+    return;
+}
+
+
+static void copy_multipliers_qp_to_nlp(ocp_nlp_dims *dims, ocp_qp_out *from, ocp_nlp_out *to)
+{
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *ni = dims->ni;
+    for (int i = 0; i <= N; i++)
+    {
+        blasfeo_dveccp(2*ni[i], from->lam+i, 0, to->lam+i, 0);
+    }
+    for (int i = 0; i < N; i++)
+    {
+        blasfeo_dveccp(nx[i+1], from->pi+i, 0, to->pi+i, 0);
+    }
+    return;
+}
+
+
 static int ocp_nlp_line_search_merit_check_full_step(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work, int sqp_iter)
 {
@@ -598,6 +632,9 @@ static int ocp_nlp_line_search_merit_check_full_step(ocp_nlp_config *config, ocp
     }
     else
     {
+        // backup weights
+        copy_multipliers_nlp_to_qp(dims, work->weight_merit_fun, work->tmp_qp_out);
+        // update weights
         merit_backtracking_update_weights(dims, work->weight_merit_fun, qp_out);
     }
 
@@ -631,6 +668,12 @@ static int ocp_nlp_line_search_merit_check_full_step(ocp_nlp_config *config, ocp
     }
     else
     {
+        // trigger SOC
+        if (sqp_iter != 0)
+        {
+            // reset merit function weights;
+            copy_multipliers_qp_to_nlp(dims, work->tmp_qp_out, work->weight_merit_fun);
+        }
         return ACADOS_MINSTEP;
     }
 }
@@ -658,7 +701,7 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
     // NOTE: the "and" is interpreted as an "or" in the current implementation
 
     // preliminary line search
-    int line_search_status = ocp_nlp_line_search_merit_check_full_step(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, mem->sqp_iter);
+    int line_search_status = ocp_nlp_line_search_merit_check_full_step(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, sqp_iter);
 
     // return bool do_line_search;
     if (line_search_status == ACADOS_NAN_DETECTED)
