@@ -235,7 +235,7 @@ add_test(NAME python_pendulum_ocp_example_cmake
     add_test(NAME python_max_iter_termination_test
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/max_iter_test
         python max_iter_test.py)
-        
+
     # Simple OCP with Maratos effect
     add_test(NAME python_OCP_maratos_test_problem_globalization
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/linear_mass_model
@@ -245,6 +245,11 @@ add_test(NAME python_pendulum_ocp_example_cmake
     add_test(NAME python_armijo_test
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
         python armijo_test.py)
+
+    # Test NaN in globalization
+    add_test(NAME python_test_nan_globalization
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
+        python test_nan_globalization.py)
 
     # Multiphase nonlinear constraint test problem
     add_test(NAME python_multiphase_nonlinear_constraints
@@ -375,7 +380,8 @@ add_test(NAME python_pendulum_ocp_example_cmake
     set_tests_properties(python_test_cost_integration_value PROPERTIES DEPENDS python_armijo_test)
     set_tests_properties(python_armijo_test PROPERTIES DEPENDS python_pendulum_soft_constraints_example)
     set_tests_properties(python_pendulum_soft_constraints_example PROPERTIES DEPENDS python_pendulum_parametric_nonlinear_constraint_h_test)
-    set_tests_properties(python_pendulum_parametric_nonlinear_constraint_h_test PROPERTIES DEPENDS python_test_sim_dae)
+    set_tests_properties(python_pendulum_parametric_nonlinear_constraint_h_test PROPERTIES DEPENDS python_test_nan_globalization)
+    set_tests_properties(python_test_nan_globalization PROPERTIES DEPENDS python_test_sim_dae)
     set_tests_properties(python_test_sim_dae PROPERTIES DEPENDS python_sparse_param_test)
 
     if(ACADOS_WITH_OSQP)
