@@ -2772,9 +2772,9 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
 
 
-double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
-            int check_early_termination, int sqp_iter)
+            int check_early_termination, int sqp_iter, double *alpha_reference)
 {
     int i, j;
 
@@ -2895,11 +2895,13 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
                 {
                     // full step if merit and constraint violation improves
                     // TODO: check armijo in this case?
-                    return alpha;
+                    *alpha_reference = alpha;
+                    return;
                 }
                 else // this implies SOC will be done
                 {
-                    return reduction_factor * reduction_factor;
+                    *alpha_reference = reduction_factor * reduction_factor;
+                    return;
                 }
             }
 
@@ -2965,7 +2967,8 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
     // if (opts->globalization != FIXED_STEP)
     //     printf("alpha %f\n", alpha);
 
-    return alpha;
+    *alpha_reference = alpha;
+    return;
 }
 
 /*

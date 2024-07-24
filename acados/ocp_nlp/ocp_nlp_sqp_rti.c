@@ -668,7 +668,8 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     // globalization
     acados_tic(&timer1);
     // TODO: not clear if line search should be called with sqp_iter==0 in RTI;
-    double alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, 1);
+    double alpha;
+    ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, 1, &alpha);
     mem->time_glob += acados_toc(&timer1);
 
     // update variables
@@ -924,7 +925,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
         // globalization
         acados_tic(&timer1);
         // TODO: not clear if line search should be called with sqp_iter==0 in RTI;
-        alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, 1);
+        ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, 1, &alpha);
         mem->time_glob += acados_toc(&timer1);
 
         // update variables
@@ -999,7 +1000,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             // globalization
             acados_tic(&timer1);
             // TODO: not clear if line search should be called with sqp_iter==0 in RTI;
-            alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, 1);
+            ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, 1, &alpha);
             mem->time_glob += acados_toc(&timer1);
 
             // update variables
@@ -1077,7 +1078,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             // globalization
             acados_tic(&timer1);
             // TODO: not clear if line search should be called with sqp_iter==0 in RTI;
-            alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, 1);
+            ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, 1, &alpha);
             mem->time_glob += acados_toc(&timer1);
 
             // update variables
@@ -1156,7 +1157,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             // globalization
             acados_tic(&timer1);
             // TODO: not clear if line search should be called with sqp_iter==0 in RTI;
-            alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, 1);
+            ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, 1, &alpha);
             mem->time_glob += acados_toc(&timer1);
 
             // update variables

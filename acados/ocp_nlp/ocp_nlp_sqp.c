@@ -559,7 +559,7 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
     // NOTE: the "and" is interpreted as an "or" in the current implementation
 
     // preliminary line search
-    mem->alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1, sqp_iter);
+    ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1, sqp_iter, &mem->alpha);
     if (mem->alpha >= 1.0)
     {
         return false; // do_line_search;
@@ -1533,7 +1533,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
             if (do_line_search)
             {
-                mem->alpha = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, sqp_iter);
+                ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, sqp_iter, &mem->alpha);
             }
             mem->time_glob += acados_toc(&timer1);
             mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;
