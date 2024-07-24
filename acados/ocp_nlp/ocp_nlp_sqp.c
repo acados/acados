@@ -559,10 +559,17 @@ static bool ocp_nlp_soc_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, 
     // NOTE: the "and" is interpreted as an "or" in the current implementation
 
     // preliminary line search
-    ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1, sqp_iter, &mem->alpha);
+    int line_search_status = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1, sqp_iter, &mem->alpha);
+
+    // return bool do_line_search;
+    if (line_search_status == ACADOS_NAN_DETECTED)
+    {
+        // do line search but no SOC.
+        return true;
+    }
     if (mem->alpha >= 1.0)
     {
-        return false; // do_line_search;
+        return false;
     }
 
     // Second Order Correction (SOC): following Nocedal2006: p.557, eq. (18.51) -- (18.56)
@@ -1533,7 +1540,13 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
             if (do_line_search)
             {
-                ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, sqp_iter, &mem->alpha);
+                int line_search_status;
+                line_search_status = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, sqp_iter, &mem->alpha);
+                if (line_search_status == ACADOS_NAN_DETECTED)
+                {
+                    mem->status = ACADOS_NAN_DETECTED;
+                    return mem->status;
+                }
             }
             mem->time_glob += acados_toc(&timer1);
             mem->stat[mem->stat_n*(sqp_iter+1)+6] = mem->alpha;

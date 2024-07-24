@@ -2881,22 +2881,23 @@ int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *
                     printf("\npreliminary line_search: merit0 %e, merit1 %e; viol_current %e, viol_step %e\n", merit_fun0, merit_fun1, violation_current, violation_step);
                 }
 
-                // TODO: do nothing and continue with normal line search, i.e. step reduction
-                // if (isnan(merit_fun1) || isinf(merit_fun1))
-                // {
-                //     ;
-                // }
+                if (isnan(merit_fun1) || isinf(merit_fun1))
+                {
+                    // do nothing and continue with normal line search, i.e. step reduction
+                    return ACADOS_NAN_DETECTED;
+                }
                 if (merit_fun1 < merit_fun0 && violation_step < violation_current)
                 {
                     // full step if merit and constraint violation improves
                     // TODO: check armijo in this case?
                     *alpha_reference = alpha;
-                    return;
+                    return ACADOS_SUCCESS;
                 }
-                else // this implies SOC will be done
+                else
                 {
+                    // alpha < 0 implies SOC will be done
                     *alpha_reference = reduction_factor * reduction_factor;
-                    return;
+                    return ACADOS_SUCCESS;
                 }
             }
 
@@ -2950,7 +2951,8 @@ int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *
                 max_next_merit_fun_val = merit_fun0 + eps_sufficient_descent * dmerit_dy * alpha;
                 if ((merit_fun1 < max_next_merit_fun_val) && !isnan(merit_fun1) && !isinf(merit_fun1))
                 {
-                    break;
+                    *alpha_reference = alpha;
+                    return ACADOS_SUCCESS;
                 }
                 else
                 {
@@ -2959,11 +2961,16 @@ int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *
             }
         }
     }
-    // if (opts->globalization != FIXED_STEP)
-    //     printf("alpha %f\n", alpha);
 
     *alpha_reference = alpha;
-    return;
+    if (isnan(merit_fun1) || isinf(merit_fun1))
+    {
+        return ACADOS_NAN_DETECTED;
+    }
+    else
+    {
+        return ACADOS_MINSTEP;
+    }
 }
 
 /*
