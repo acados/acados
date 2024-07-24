@@ -2771,6 +2771,59 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
 }
 
 
+static void merit_backtracking_initialize_weights(ocp_nlp_dims *dims, ocp_nlp_out *weight_merit_fun, ocp_qp_out *qp_out)
+{
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *ni = dims->ni;
+    // equality merit weights = abs( eq multipliers of qp_sol )
+    for (int i = 0; i < N; i++)
+    {
+        for (int j=0; j<nx[i+1]; j++)
+        {
+            BLASFEO_DVECEL(weight_merit_fun->pi+i, j) = fabs(BLASFEO_DVECEL(qp_out->pi+i, j));
+        }
+    }
+
+    for (int i = 0; i <= N; i++)
+    {
+        blasfeo_dveccp(2*ni[i], qp_out->lam+i, 0, weight_merit_fun->lam+i, 0);
+    }
+}
+
+static void merit_backtracking_update_weights(ocp_nlp_dims *dims, ocp_nlp_out *weight_merit_fun, ocp_qp_out *qp_out)
+{
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *ni = dims->ni;
+    double tmp0, tmp1;
+
+    // update weights
+    for (int i = 0; i < N; i++)
+    {
+        for (int j=0; j<nx[i+1]; j++)
+        {
+            // abs(lambda) (LW)
+            tmp0 = fabs(BLASFEO_DVECEL(qp_out->pi+i, j));
+            // .5 * (abs(lambda) + sigma)
+            tmp1 = 0.5 * (tmp0 + BLASFEO_DVECEL(weight_merit_fun->pi+i, j));
+            BLASFEO_DVECEL(weight_merit_fun->pi+i, j) = tmp0 > tmp1 ? tmp0 : tmp1;
+        }
+    }
+    for (int i = 0; i <= N; i++)
+    {
+        for (int j=0; j<2*ni[i]; j++)
+        {
+            // mu (LW)
+            tmp0 = BLASFEO_DVECEL(qp_out->lam+i, j);
+            // .5 * (mu + tau)
+            tmp1 = 0.5 * (tmp0 + BLASFEO_DVECEL(weight_merit_fun->lam+i, j));
+            BLASFEO_DVECEL(weight_merit_fun->lam+i, j) = tmp0>tmp1 ? tmp0 : tmp1;
+        }
+    }
+}
+
+
 
 int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
@@ -2780,11 +2833,9 @@ int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *
 
     int N = dims->N;
     int *nv = dims->nv;
-    int *nx = dims->nx;
-    int *ni = dims->ni;
 
     double alpha = opts->step_length;
-    double tmp0, tmp1, merit_fun1;
+    double merit_fun1;
     ocp_qp_out *qp_out = mem->qp_out;
 
     if (opts->globalization == FIXED_STEP)
@@ -2801,6 +2852,7 @@ int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *
     /* MERIT_BACKTRACKING line search */
     // Following Leineweber1999, Section "3.5.1 Line Search Globalization"
     // TODO: check out more advanced step search Leineweber1995
+
     // copy out (current iterate) to work->tmp_nlp_out
     for (i = 0; i <= N; i++)
         blasfeo_dveccp(nv[i], out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
@@ -2816,46 +2868,11 @@ int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *
     /* modify/initialize merit function weights (Leineweber1999 M5.1, p.89) */
     if (sqp_iter==0)
     {
-        // initialize weights
-        // equality merit weights = abs( eq multipliers of qp_sol )
-        for (i = 0; i < N; i++)
-        {
-            for (j=0; j<nx[i+1]; j++)
-            {
-                BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j) = fabs(BLASFEO_DVECEL(qp_out->pi+i, j));
-            }
-        }
-
-        for (i = 0; i <= N; i++)
-        {
-            blasfeo_dveccp(2*ni[i], qp_out->lam+i, 0, work->weight_merit_fun->lam+i, 0);
-        }
+        merit_backtracking_initialize_weights(dims, work->weight_merit_fun, qp_out);
     }
     else
     {
-        // update weights
-        for (i = 0; i < N; i++)
-        {
-            for(j=0; j<nx[i+1]; j++)
-            {
-                // abs(lambda) (LW)
-                tmp0 = fabs(BLASFEO_DVECEL(qp_out->pi+i, j));
-                // .5 * (abs(lambda) + sigma)
-                tmp1 = 0.5 * (tmp0 + BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j));
-                BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j) = tmp0 > tmp1 ? tmp0 : tmp1;
-            }
-        }
-        for (i = 0; i <= N; i++)
-        {
-            for(j=0; j<2*ni[i]; j++)
-            {
-                // mu (LW)
-                tmp0 = BLASFEO_DVECEL(qp_out->lam+i, j);
-                // .5 * (mu + tau)
-                tmp1 = 0.5 * (tmp0 + BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j));
-                BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j) = tmp0>tmp1 ? tmp0 : tmp1;
-            }
-        }
+        merit_backtracking_update_weights(dims, work->weight_merit_fun, qp_out);
     }
 
     if (1) // (sqp_iter!=0) // TODO: why does Leineweber do full step in first SQP iter?
