@@ -159,9 +159,7 @@ class SysDyn():
         --> et : unit tangent vector (3x1)
         --> en : unit normal vector (3x1)
         --> eb : unit binormal vector (3x1)
-        <-- x : position (x) projection w.r.t reference curve
-        <-- y : position (y) projection w.r.t reference curve
-        <-- phi : heading (phi) projection w.r.t reference curve '''
+        <-- p_x, p_y, p_z : position (x, y, y) projection w.r.t reference curve '''
 
         len = s_list.shape[0]
 

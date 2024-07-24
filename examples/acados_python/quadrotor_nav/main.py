@@ -90,10 +90,7 @@ def plan_ocp( ocp_wrapper):
             break
 
         # Solve the OCP with updated state and controls
-        status =  ocp_wrapper.solve_and_sim()
-        if(status !=0):
-            fail = fail + 1
-            print("Optima not found")
+        ocp_wrapper.solve_and_sim()
 
         # cost = ocp_wrapper.get_cost()
 
@@ -114,9 +111,8 @@ def plan_ocp( ocp_wrapper):
     print(f'\nNumber of NLP failures {fail}')
     print(f'Max. solver time\t: {sqp_max_sec * 1000} ms')
     print(f'Avg. solver time\t: {sqp_avg_sec * 1000} ms')
-    print(f'Avg. n\t\t: {avg_n} m')
-    print(f'Avg. b\t\t: {avg_b} m')
-    # print(f'Avg. lateral deviation N\t: {lat_devN} m')
+    print(f'Avg. later deviation n\t\t: {avg_n} m')
+    print(f'Avg. vertical deviation b\t\t: {avg_b} m')
 
 
     return sample_traj, state_traj, control_traj
@@ -126,5 +122,5 @@ if __name__ == '__main__':
     custom_ocp = AcadosCustomOcp()
     custom_ocp.setup_acados_ocp()
     traj_sample, traj_ST, traj_U = plan_ocp(custom_ocp)
+    #  animated plot
     animOptVars(traj_sample, traj_ST, traj_U)
-    # plotOptVars(traj_sample[0, :], traj_ST[:, 0, :], traj_U)

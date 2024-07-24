@@ -30,32 +30,13 @@
 
 # reference : "Towards Time-optimal Tunnel-following for Quadrotors", Jon Arrizabalaga et al.
 
-import os
-import shutil
 import numpy as np
 from matplotlib import pyplot, animation
-import mpl_toolkits.mplot3d.art3d as art3d
-from matplotlib.patches import Circle, Ellipse
 
 from common import *
 from sys_dynamics import SysDyn
-import matplotlib as mpl
-import warnings
-warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
-
-text_usetex = True if shutil.which('latex') else False
-params = {
-        'text.latex.preamble': r"\usepackage{gensymb} \usepackage{amsmath}",
-        'axes.labelsize': 12,
-        'axes.titlesize': 12,
-        'legend.fontsize': 12,
-        'xtick.labelsize': 12,
-        'ytick.labelsize': 12,
-        'text.usetex': text_usetex,
-        'font.family': 'serif'
-}
-
-mpl.rcParams.update(params)
+from acados_template import latexify_plot
+latexify_plot()
 
 def animOptVars(traj_samples, traj_ST, traj_U):
     '''Plot data as animate matplotlib graph'''
@@ -77,7 +58,7 @@ def animOptVars(traj_samples, traj_ST, traj_U):
     # Contains discretization (times, mpc_stages) 3x (mpc_iter/freq)
     traj_samples = traj_samples[:, ::f_plot]
 
-    zetaC_hat = np.zeros((3, dim_st[1], dim_st[2]), dtype=object)
+    zetaC_hat = np.zeros((3, dim_st[1], dim_st[2]))
     zetaC_hat = zetaC_hat[:, :, ::f_plot]
 
     zetaEul = np.zeros((3, dim_st[1], dim_st[2]))

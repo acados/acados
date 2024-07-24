@@ -54,11 +54,8 @@ class AcadosCustomOcp:
         self.zeta_N = None
         self.u_N = None
 
-        # num of states that dont contribute to cost function
-        self.nxi = 0
-        self.lifted = False
 
-    def setup_acados_ocp(self, lifted = False):
+    def setup_acados_ocp(self):
         '''Formulate Acados OCP'''
 
         # create casadi symbolic expressions
@@ -86,19 +83,19 @@ class AcadosCustomOcp:
         self.zeta_N = ca.repmat(np.reshape(self.zeta_0, (self.nx,1)), 1, N+1)
         self.u_N = ca.repmat(U_REF, 1, N)
 
-        # continuity constraints (equality) : Initial value guess
+        # continuity constraints
         ocp.constraints.x0  = self.zeta_0
 
-          # formulate cost function
+        # formulate cost function
         ocp.cost.cost_type = "NONLINEAR_LS"
         ocp.model.cost_y_expr = ca.vertcat(model_ac.x, model_ac.u)
-        ocp.cost.yref = np.array([ 0.2, 0, 0,  # pf_ref
-                                   1, 0, 0, 0,  # q_ref
-                                   0, 0, 0,    # pfDot_ref
-                                   0, 0, 0,    # omg_ref
-                                   0, 0, 0,    # v_ref
-                                  U_HOV, U_HOV, U_HOV, U_HOV,  #ohm_ref
-                                  0, 0, 0, 0]) # ohmDot_ref
+        ocp.cost.yref = np.array([ 0.2, 0, 0,
+                                   1, 0, 0, 0,
+                                   0, 0, 0,
+                                   0, 0, 0,
+                                   0, 0, 0,
+                                  U_HOV, U_HOV, U_HOV, U_HOV,
+                                  0, 0, 0, 0])
         ocp.cost.W = scipy.linalg.block_diag(Q, R)
 
         ocp.cost.cost_type_e = "NONLINEAR_LS"
@@ -111,9 +108,9 @@ class AcadosCustomOcp:
                                      U_HOV, U_HOV, U_HOV, U_HOV])
         ocp.cost.W_e = Qn
 
-        # Formulate inquality constraints
+        # formulate inquality constraints
 
-        # Constrain AGV dynamics : acceleration, angular velocity (convex ?, Non-linear)
+        # constrain AGV dynamics : acceleration, angular velocity (convex ?, Non-linear)
         dyn_constr_eqn = []
         dyn_constr_eqn = ca.vertcat(dyn_constr_eqn , proj_constr)
         dyn_constr_len = dyn_constr_eqn.shape[0]
@@ -124,10 +121,10 @@ class AcadosCustomOcp:
         model_ac.con_h_expr = ineq_constr_eqn
         model_ac.con_h_expr_e = ineq_constr_eqn
 
-        # Inequality bounds
+        # inequality bounds
         nh = model_ac.con_h_expr.shape[0]
 
-        # # Constrain controls
+        # constrain controls
         # lbu = [0] * self.nu;      ubu = [0] * self.nu
 
         # # Control bounds ( Affects horizon quality before switch)
@@ -148,7 +145,7 @@ class AcadosCustomOcp:
         ocp.constraints.lh_e = lh
         ocp.constraints.uh_e = uh
 
-        # Configure itegrator and QP solver
+        # configure itegrator and QP solver
         ocp.solver_options.integrator_type = "ERK"
         ocp.solver_options.tf = Tf
         ocp.solver_options.sim_method_num_stages = 4
@@ -160,6 +157,7 @@ class AcadosCustomOcp:
         ocp.solver_options.qp_solver = "PARTIAL_CONDENSING_HPIPM"#"PARTIAL_CONDENSING_HPIPM" #"FULL_CONDENSING_HPIPM" #"PARTIAL_CONDENSING_HPIPM"
         ocp.solver_options.hessian_approx =  "GAUSS_NEWTON"#"EXACT",
         # ocp.solver_options.cost_discretization ="INTEGRATOR"
+        ocp.solver_options.qp_solver_cond_N = int(N/2)
         ocp.solver_options.nlp_solver_type = "SQP_RTI"
         ocp.solver_options.tol = 1e-3
         ocp.qp_solver_tol = 1e-3
@@ -177,34 +175,17 @@ class AcadosCustomOcp:
         '''Solve the OCP with multiple shooting, and forward simulate with RK4'''
 
         # Integrate ODE model to get CL estimate (no measurement noise)
-        u_0, status = self.solve_for_x0(x0_bar = self.zeta_0)
+        u_0 = self.solver.solve_for_x0(self.zeta_0)
         self.zeta_0 = self.integrator.simulate(x=self.zeta_0, u=u_0)
 
+        u_0 = self.solver.solve_for_x0(self.zeta_0)
         self.zeta_N = np.reshape(self.solver.get(0, "x"), (self.nx, 1))
         for i in range(1, N +1):
             zeta_i = np.reshape(self.solver.get(i, "x"), (self.nx, 1))
             self.zeta_N = np.concatenate((self.zeta_N, zeta_i), axis = 1)
 
         self.u_N[:, 0] = u_0
-        return status
-
-    # user expected to handle status, instead of raising exception
-    def solve_for_x0(self, x0_bar):
-        '''Wrapper around `solve()` which sets initial state constraint, solves the OCP, and returns u0.'''
-
-        self.solver.set(0, "lbx", x0_bar)
-        self.solver.set(0, "ubx", x0_bar)
-
-        status = self.solver.solve()
-
-        if status == 2:
-            print("Warning: acados_ocp_solver reached maximum iterations.")
-        elif status != 0:
-            pass
-            #raise Exception(f'acados acados_ocp_solver returned status {status}')
-
-        u0 = self.solver.get(0, "u")
-        return u0, status
+        # return status
 
     def cost_update_ref(self, zeta_0, u_ref):
 

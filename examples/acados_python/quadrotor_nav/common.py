@@ -56,15 +56,15 @@ length = len(s_ref)
 pathlength = s_ref[-1]
 
 # CrazyFlie 2.1 physical parameters
-g0  = 9.80665     # [m.s^2] accerelation of gravity
-mq  = 31e-3      # [kg] total mass (with Lighthouse deck)
-Ix = 1.395e-5   # [kg.m^2] Inertial moment around x-axis
-Iy = 1.395e-5   # [kg.m^2] Inertial moment around y-axis
-Iz = 2.173e-5   # [kg.m^2] Inertia moment around z-axis
-Cd  = 7.9379e-06 # [N/krpm^2] Drag coefficient
-Ct  = 3.25e-4    # [N/krpm^2] Thrust coefficient
-dq  = 92e-3      # [m] distance between motors' center
-l   = dq/2       # [m] distance between motors' center and the axis of rotation
+g0  = 9.80665       # [m.s^2] gravitational accerelation
+mq  = 31e-3         # [kg] total mass (with Lighthouse deck)
+Ix = 1.395e-5       # [kg.m^2] Inertial moment around x-axis
+Iy = 1.395e-5       # [kg.m^2] Inertial moment around y-axis
+Iz = 2.173e-5       # [kg.m^2] Inertia moment around z-axis
+Cd  = 7.9379e-06    # [N/krpm^2] Drag coefficient
+Ct  = 3.25e-4       # [N/krpm^2] Thrust coefficient
+dq  = 92e-3         # [m] distance between motors' center
+l   = dq/2          # [m] distance between motors' center and the axis of rotation
 
 SLEEP_SEC = 0.06
 INF = 1e5
@@ -77,14 +77,10 @@ Tf = N * T_del * 1
 Tsim = 45
 Nsim = int(Tsim * N / Tf)
 
-
-V_MAX = 0.5       ;   V_MIN = -0.5                    #  [m/s]
-W_MAX = np.pi/4   ;   W_MIN = -np.pi/4                #  [rad/s]
-
-U_MAX = 22      # [krpm]
-U_HOV = int(np.sqrt(.25 * 1e6* mq * g0 /Ct)) /1000    #[krpm]
+U_MAX = 22                                              # [krpm]
+U_HOV = int(np.sqrt(.25 * 1e6* mq * g0 /Ct)) /1000      #[krpm]
 U_REF = np.array([U_HOV, U_HOV, U_HOV, U_HOV])
-print(f"DEBUG hov KRPM {U_REF}")
+
 # State
 n_states = 20
 
@@ -95,24 +91,12 @@ init_zeta = np.array([0.05, 0, 0,       # s,  n,  b
                       0, 0, 0,          # vx, vy, vz
                       U_HOV, U_HOV, U_HOV, U_HOV ])     # ohm1, ohm2, ohm3, ohm4
 
-rob_rad = 0.04                           # radius of the drone sphere
-
-obst_constr = ([-12.5, -0.75, 1, np.pi/2,
-                -8, 10, np.pi/4, 0,
-                20, 20, 1, 0,
-                20, 20, 0.5, 0])
-
-obst_dim = 4
-N_obst_max = int(np.shape(obst_constr)[0]/obst_dim)
+rob_rad = 0.04                           # radius of the drone covering sphere
 
 # Control
 n_controls = 4
 
-ROLL_TRIM  = 0
-PITCH_TRIM = 0
-
-# Weights
-V_XYZ_REF = 0.00
+# Weights & Tracking reference
 S_REF = 0.1875
 S_MAX = 5.9
                                           # State weights on
@@ -133,7 +117,7 @@ Qn = np.diag([10, 1e-3, 1e-2,             # frenet position
 
 R = np.diag([1e-5, 1e-5, 1e-5, 1e-5])
 
-#  MatPlotLib parameters
+#  MatPlotLib animation settings
 Tstart_offset = 0
 f_plot = 10
 refresh_ms = 10
@@ -161,28 +145,6 @@ def quat2rpy(qoid):
 
     return [r_d, p_d, y_d]
 
-def eul2quat(eul):
-    ''' eul ->  [phi, theta, psi] in degrees
-        a.k.a roll, pitch, yaw
-        reference NMPC'''
-
-    phi = 0.5* eul[0] * np.pi / 180
-    th  = 0.5* eul[1] * np.pi / 180
-    psi = 0.5* eul[2] * np.pi / 180
-
-    qw =  ca.cos(phi) * ca.cos(th) * ca.cos(psi) + ca.sin(phi) * ca.sin(th) * ca.sin(psi)
-    qx = -ca.cos(psi) * ca.cos(th) * ca.cos(phi) + ca.sin(psi) * ca.sin(th) * ca.cos(phi)
-    qy = -ca.cos(psi) * ca.sin(th) * ca.cos(phi) - ca.sin(psi) * ca.cos(th) * ca.sin(phi)
-    qz = -ca.sin(psi) * ca.cos(th) * ca.cos(phi) + ca.cos(psi) * ca.sin(th) * ca.sin(phi)
-
-    if(qw < 0):
-      qw = -qw
-      qx = -qx
-      qy = -qy
-      qz = -qz
-
-    return [qw, qx, qy, qz]
-
 def get_norm_2(diff):
 
     norm = ca.sqrt(diff.T @ diff)
@@ -209,7 +171,7 @@ def get_norm_W(diff, W):
     return norm
 
 def InterpolLuT(s: Union[ca.MX, float]):
-    ''' bspline interpolation of curve x, y, zeta based on longitudinal progress (s)
+    ''' 3rd bspline interpolation of curve x, y, zeta based on longitudinal progress (s)
     <-- xref, yref, zref : position reference curve interpol function'''
 
     x_ref_curve = ca.interpolant("x_ref", "bspline", [s_ref], x_ref)
