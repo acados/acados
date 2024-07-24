@@ -2886,6 +2886,11 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
                     printf("\npreliminary line_search: merit0 %e, merit1 %e; viol_current %e, viol_step %e\n", merit_fun0, merit_fun1, violation_current, violation_step);
                 }
 
+                // TODO: do nothing and continue with normal line search, i.e. step reduction
+                // if (isnan(merit_fun1) || isinf(merit_fun1))
+                // {
+                //     ;
+                // }
                 if (merit_fun1 < merit_fun0 && violation_step < violation_current)
                 {
                     // full step if merit and constraint violation improves
@@ -2937,7 +2942,7 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
                 merit_fun1 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
                 if (opts->print_level > 1)
                 {
-                    printf("backtracking %d, merit_fun1 = %e, merit_fun0 %e\n", j, merit_fun1, merit_fun0);
+                    printf("backtracking %d alpha = %f, merit_fun1 = %e, merit_fun0 %e\n", j, alpha, merit_fun1, merit_fun0);
                 }
 
                 // if (merit_fun1 < merit_fun0 && merit_fun1 > max_next_merit_fun_val)
@@ -2946,7 +2951,7 @@ double ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
                 // }
 
                 max_next_merit_fun_val = merit_fun0 + eps_sufficient_descent * dmerit_dy * alpha;
-                if (merit_fun1 < max_next_merit_fun_val)
+                if ((merit_fun1 < max_next_merit_fun_val) && !isnan(merit_fun1) && !isinf(merit_fun1))
                 {
                     break;
                 }
