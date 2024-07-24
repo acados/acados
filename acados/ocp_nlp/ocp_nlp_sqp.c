@@ -658,6 +658,11 @@ static int ocp_nlp_line_search_merit_check_full_step(ocp_nlp_config *config, ocp
     if (isnan(merit_fun1) || isinf(merit_fun1))
     {
         // do nothing and continue with normal line search, i.e. step reduction
+        if (sqp_iter != 0)
+        {
+            // reset merit function weights;
+            copy_multipliers_qp_to_nlp(dims, work->tmp_qp_out, work->weight_merit_fun);
+        }
         return ACADOS_NAN_DETECTED;
     }
     if (merit_fun1 < merit_fun0 && violation_step < violation_current)
