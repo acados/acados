@@ -2632,46 +2632,6 @@ double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims
 
 
 
-static double ocp_nlp_get_violation(ocp_nlp_config *config, ocp_nlp_dims *dims,
-                                  ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
-                                  ocp_nlp_memory *mem, ocp_nlp_workspace *work)
-{
-    // computes constraint violation infinity norm
-    // assumes constraint functions are evaluated before, e.g. done in ocp_nlp_evaluate_merit_fun
-    int i, j;
-    int N = dims->N;
-    int *nx = dims->nx;
-    int *ni = dims->ni;
-    struct blasfeo_dvec *tmp_fun_vec;
-    double violation = 0.0;
-    double tmp;
-    for (i=0; i<N; i++)
-    {
-        tmp_fun_vec = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
-        for (j=0; j<nx[i+1]; j++)
-        {
-            tmp = fabs(BLASFEO_DVECEL(tmp_fun_vec, j));
-            violation = tmp > violation ? tmp : violation;
-        }
-    }
-
-    for (i=0; i<=N; i++)
-    {
-        tmp_fun_vec = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
-        for (j=0; j<2*ni[i]; j++)
-        {
-            // Note constraint violation corresponds to > 0
-            tmp = BLASFEO_DVECEL(tmp_fun_vec, j);
-            violation = tmp > violation ? tmp : violation;
-        }
-    }
-
-    return violation;
-}
-
-
-
-
 double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
                                   ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
                                   ocp_nlp_memory *mem, ocp_nlp_workspace *work)
@@ -2771,7 +2731,7 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
 }
 
 
-static void merit_backtracking_initialize_weights(ocp_nlp_dims *dims, ocp_nlp_out *weight_merit_fun, ocp_qp_out *qp_out)
+void merit_backtracking_initialize_weights(ocp_nlp_dims *dims, ocp_nlp_out *weight_merit_fun, ocp_qp_out *qp_out)
 {
     int N = dims->N;
     int *nx = dims->nx;
@@ -2791,7 +2751,7 @@ static void merit_backtracking_initialize_weights(ocp_nlp_dims *dims, ocp_nlp_ou
     }
 }
 
-static void merit_backtracking_update_weights(ocp_nlp_dims *dims, ocp_nlp_out *weight_merit_fun, ocp_qp_out *qp_out)
+void merit_backtracking_update_weights(ocp_nlp_dims *dims, ocp_nlp_out *weight_merit_fun, ocp_qp_out *qp_out)
 {
     int N = dims->N;
     int *nx = dims->nx;
@@ -2827,20 +2787,19 @@ static void merit_backtracking_update_weights(ocp_nlp_dims *dims, ocp_nlp_out *w
 
 int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
-            int check_early_termination, int sqp_iter, double *alpha_reference)
+            int sqp_iter, double *alpha_reference)
 {
     int i, j;
 
     int N = dims->N;
     int *nv = dims->nv;
 
-    double alpha = opts->step_length;
     double merit_fun1;
     ocp_qp_out *qp_out = mem->qp_out;
 
     if (opts->globalization == FIXED_STEP)
     {
-        *alpha_reference = alpha;
+        *alpha_reference = opts->step_length;
         return ACADOS_SUCCESS;
     }
     else if (opts->globalization != MERIT_BACKTRACKING)
@@ -2886,48 +2845,7 @@ int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *
     double max_next_merit_fun_val = merit_fun0;
     double eps_sufficient_descent = opts->eps_sufficient_descent;
     double dmerit_dy = 0.0;
-    alpha = 1.0;
-
-    // to avoid armijo evaluation and loop when checking if SOC should be done
-    if (check_early_termination)
-    {
-        // TMP:
-        // printf("tmp: merit_grad eval in early termination\n");
-        // dmerit_dy = ocp_nlp_compute_merit_gradient(config, dims, in, out, opts, mem, work);
-
-        // TODO(oj): should the merit weight update be undone in case of early termination?
-        double violation_current = ocp_nlp_get_violation(config, dims, in, out, opts, mem, work);
-
-        // tmp_nlp_out = out + alpha * qp_out
-        for (i = 0; i <= N; i++)
-            blasfeo_daxpy(nv[i], alpha, qp_out->ux+i, 0, out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
-        merit_fun1 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
-
-        double violation_step = ocp_nlp_get_violation(config, dims, in, out, opts, mem, work);
-        if (opts->print_level > 0)
-        {
-            printf("\npreliminary line_search: merit0 %e, merit1 %e; viol_current %e, viol_step %e\n", merit_fun0, merit_fun1, violation_current, violation_step);
-        }
-
-        if (isnan(merit_fun1) || isinf(merit_fun1))
-        {
-            // do nothing and continue with normal line search, i.e. step reduction
-            return ACADOS_NAN_DETECTED;
-        }
-        if (merit_fun1 < merit_fun0 && violation_step < violation_current)
-        {
-            // full step if merit and constraint violation improves
-            // TODO: check armijo in this case?
-            *alpha_reference = alpha;
-            return ACADOS_SUCCESS;
-        }
-        else
-        {
-            // alpha < 1.0 implies SOC will be done
-            *alpha_reference = reduction_factor * reduction_factor;
-            return ACADOS_SUCCESS;
-        }
-    }
+    double alpha = 1.0;
 
     /* actual Line Search*/
     if (opts->line_search_use_sufficient_descent)

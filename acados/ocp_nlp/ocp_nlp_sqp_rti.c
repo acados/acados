@@ -669,7 +669,7 @@ static void ocp_nlp_sqp_rti_feedback_step(ocp_nlp_config *config, ocp_nlp_dims *
     // globalization
     acados_tic(&timer1);
     // TODO: not clear if line search should be called with sqp_iter==0 in RTI;
-    line_search_status = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, 1, &alpha);
+    line_search_status = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1, &alpha);
     mem->time_glob += acados_toc(&timer1);
     if (line_search_status == ACADOS_NAN_DETECTED)
     {
@@ -930,7 +930,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
         // globalization
         acados_tic(&timer1);
         // TODO: not clear if line search should be called with sqp_iter==0 in RTI;
-        line_search_status = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, 1, &alpha);
+        line_search_status = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1, &alpha);
         mem->time_glob += acados_toc(&timer1);
         if (line_search_status == ACADOS_NAN_DETECTED)
         {
@@ -1010,7 +1010,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             // globalization
             acados_tic(&timer1);
             // TODO: not clear if line search should be called with sqp_iter==0 in RTI;
-            line_search_status = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, 1, &alpha);
+            line_search_status = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1, &alpha);
             mem->time_glob += acados_toc(&timer1);
             if (line_search_status == ACADOS_NAN_DETECTED)
             {
@@ -1093,7 +1093,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             // globalization
             acados_tic(&timer1);
             // TODO: not clear if line search should be called with sqp_iter==0 in RTI;
-            line_search_status = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, 1, &alpha);
+            line_search_status = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1, &alpha);
             mem->time_glob += acados_toc(&timer1);
             if (line_search_status == ACADOS_NAN_DETECTED)
             {
@@ -1177,7 +1177,7 @@ static void ocp_nlp_sqp_rti_preparation_advanced_step(ocp_nlp_config *config, oc
             // globalization
             acados_tic(&timer1);
             // TODO: not clear if line search should be called with sqp_iter==0 in RTI;
-            line_search_status = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 0, 1, &alpha);
+            line_search_status = ocp_nlp_line_search(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work, 1, &alpha);
             mem->time_glob += acados_toc(&timer1);
             if (line_search_status == ACADOS_NAN_DETECTED)
             {
