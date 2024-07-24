@@ -2895,7 +2895,7 @@ int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *
                 }
                 else
                 {
-                    // alpha < 0 implies SOC will be done
+                    // alpha < 1.0 implies SOC will be done
                     *alpha_reference = reduction_factor * reduction_factor;
                     return ACADOS_SUCCESS;
                 }
