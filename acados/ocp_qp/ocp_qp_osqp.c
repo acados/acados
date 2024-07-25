@@ -54,9 +54,6 @@
 
 
 
-#define OSQP_INF 1e8;
-
-
 
 /************************************************
  * helper functions
@@ -890,7 +887,7 @@ static void update_bounds(const ocp_qp_in *in, ocp_qp_osqp_memory *mem)
         // set replicated to -inf
         for (ii=0; ii<ns[kk]; ii++)
         {
-            mem->l[nn+nb[kk]+ng[kk]+ii] = -OSQP_INF;
+            mem->l[nn+nb[kk]+ng[kk]+ii] = -OSQP_INFTY;
         }
 
         // unpack ub ug to u and flip signs because in HPIPM the signs are flipped for upper bounds
@@ -904,7 +901,7 @@ static void update_bounds(const ocp_qp_in *in, ocp_qp_osqp_memory *mem)
             }
             else
             {
-                mem->u[nn + ii] = OSQP_INF;
+                mem->u[nn + ii] = OSQP_INFTY;
                 mem->u[nn + nb[kk]+ng[kk]+itmp] = -BLASFEO_DVECEL(&in->d[kk], nb[kk]+ng[kk]+ii);
                 itmp++;
             }
@@ -919,10 +916,10 @@ static void update_bounds(const ocp_qp_in *in, ocp_qp_osqp_memory *mem)
         // unpack ls and us to l
         blasfeo_unpack_dvec(2*ns[kk], in->d + kk, 2*nb[kk]+2*ng[kk], &mem->l[nn], 1);
 
-        // OSQP_INF at upper bound
+        // OSQP_INFTY at upper bound
         for (ii = 0; ii < 2*ns[kk]; ii++)
         {
-            mem->u[nn + ii] = OSQP_INF;
+            mem->u[nn + ii] = OSQP_INFTY;
         }
 
         nn += 2*ns[kk];
