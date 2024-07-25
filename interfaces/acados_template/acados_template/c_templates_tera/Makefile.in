@@ -139,7 +139,7 @@
 	{%- elif qp_solver == "FULL_CONDENSING_DAQP" %}
 		{%- set link_libs = "-ldaqp" %}
 	{%- elif qp_solver == "PARTIAL_CONDENSING_CLARABEL" %}
-		{%- set link_libs = "-lclarabel_c -lclarabel" %}
+		{%- set link_libs = "-lclarabel_c " %}
 	{%- else %}
 		{%- set link_libs = "" %}
 	{%- endif %}
