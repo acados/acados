@@ -43,6 +43,8 @@ classdef acados_ocp < handle
         cost_ext_fun_type_e
         cost_ext_fun_type_0
         dyn_ext_fun_type
+
+        qp_cost_fields = {'qp_Q', 'qp_R', 'qp_S', 'qp_q', 'qp_r'}
     end % properties
 
 
@@ -316,7 +318,39 @@ classdef acados_ocp < handle
                 eigvals = eig(hess_block);
                 result(n+1) = fun(eigvals);
             end
+        end
 
+        function dump_last_qp_to_json(obj, filename)
+            qp_data = struct();
+
+            lN = length(num2str(obj.ocp.dims.N+1));
+            n_fields = length(obj.qp_cost_fields);
+            for n=1:n_fields
+
+                field = obj.qp_cost_fields{n};
+                for i=0:obj.ocp.dims.N-1
+                    s_indx = sprintf(strcat('%0', lN, 'd'), i);
+                    key = strcat(field, '_', s_indx);
+                    val = obj.get(field, i);
+                    qp_data = setfield(qp_data, key, val);
+                end
+
+                if strcmp(field, 'qp_Q') || strcmp(field, 'qp_q')
+                    s_indx = sprintf(strcat('%0', lN, 'd'), i);
+                    key = strcat(field, '_', s_indx);
+                    val = obj.get(field, obj.ocp.dims.N);
+                    qp_data = setfield(qp_data, key, val);
+                end
+            end
+
+            % TODO remove empty
+            % save
+            json_string = savejson('', qp_data, 'ForceRootName', 0, struct('FloatFormat', '%.5f'));
+
+            fid = fopen(filename, 'w');
+            if fid == -1, error('Cannot create json file'); end
+            fwrite(fid, json_string, 'char');
+            fclose(fid);
         end
 
         % function delete(obj)
