@@ -244,7 +244,32 @@ classdef acados_ocp < handle
         end
 
         function value = get(obj, field, varargin)
-            value = obj.t_ocp.get(field, varargin{:});
+
+            if strcmp('hess_block', field)
+
+                if length(varargin) > 0
+                    n = varargin{1}
+                    Q = obj.get('qp_Q', n);
+                    R = obj.get('qp_R', n);
+                    S = obj.get('qp_S', n);
+
+                    value = [R, S; S', Q];
+                    return;
+                else
+                    value = cell(obj.ocp.dims.N, 1)
+                    for n=0:obj.ocp.dims.N
+                        Q = obj.get('qp_Q', n);
+                        R = obj.get('qp_R', n);
+                        S = obj.get('qp_S', n);
+
+                        value{n+1} = [R, S; S', Q];
+
+                    end
+                    return;
+                end
+            else
+                value = obj.t_ocp.get(field, varargin{:});
+            end
         end
 
         function [] = store_iterate(obj, varargin)
@@ -271,7 +296,7 @@ classdef acados_ocp < handle
             % type = 'max_ev': return maximum eigenvalue for each Hessian block.
             % type = 'condition_number': return condition number for each Hessian block.
 
-            result = zeros(obj.ocp.dims.N, 1);
+            result = zeros(obj.ocp.dims.N+1, 1);
 
             if strcmp(type, 'min_ev')
                 fun = @(x) min(x);
