@@ -88,7 +88,7 @@ endif()
 
 if(ACADOS_WITH_CLARABEL)
     set(CLARABEL_BUILD_EXAMPLES OFF CACHE BOOL "set Clarabel examples" FORCE)
-    set(CLARABEL_C_OUTPUT_DIR "${ACADOS_INSTALL_DIR}/build/external/Clarabel.cpp" CACHE STRING "Set Clarabel.cpp output dir" FORCE)
+    set(CLARABEL_C_OUTPUT_DIR "${CMAKE_INSTALL_PREFIX}/build/external/Clarabel.cpp" CACHE STRING "Set Clarabel.cpp output dir" FORCE)
     set(PROFILING OFF CACHE BOOL "Turn off profiling in CLARABEL")
     set(CTRLC OFF CACHE BOOL "Turn off CTRLC in CLARABEL")
     add_subdirectory(Clarabel.cpp)
