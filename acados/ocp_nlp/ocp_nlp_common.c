@@ -2632,46 +2632,6 @@ double ocp_nlp_compute_merit_gradient(ocp_nlp_config *config, ocp_nlp_dims *dims
 
 
 
-static double ocp_nlp_get_violation(ocp_nlp_config *config, ocp_nlp_dims *dims,
-                                  ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
-                                  ocp_nlp_memory *mem, ocp_nlp_workspace *work)
-{
-    // computes constraint violation infinity norm
-    // assumes constraint functions are evaluated before, e.g. done in ocp_nlp_evaluate_merit_fun
-    int i, j;
-    int N = dims->N;
-    int *nx = dims->nx;
-    int *ni = dims->ni;
-    struct blasfeo_dvec *tmp_fun_vec;
-    double violation = 0.0;
-    double tmp;
-    for (i=0; i<N; i++)
-    {
-        tmp_fun_vec = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
-        for (j=0; j<nx[i+1]; j++)
-        {
-            tmp = fabs(BLASFEO_DVECEL(tmp_fun_vec, j));
-            violation = tmp > violation ? tmp : violation;
-        }
-    }
-
-    for (i=0; i<=N; i++)
-    {
-        tmp_fun_vec = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
-        for (j=0; j<2*ni[i]; j++)
-        {
-            // Note constraint violation corresponds to > 0
-            tmp = BLASFEO_DVECEL(tmp_fun_vec, j);
-            violation = tmp > violation ? tmp : violation;
-        }
-    }
-
-    return violation;
-}
-
-
-
-
 double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
                                   ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts,
                                   ocp_nlp_memory *mem, ocp_nlp_workspace *work)
@@ -2771,194 +2731,178 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims,
 }
 
 
+void merit_backtracking_initialize_weights(ocp_nlp_dims *dims, ocp_nlp_out *weight_merit_fun, ocp_qp_out *qp_out)
+{
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *ni = dims->ni;
+    // equality merit weights = abs( eq multipliers of qp_sol )
+    for (int i = 0; i < N; i++)
+    {
+        for (int j=0; j<nx[i+1]; j++)
+        {
+            BLASFEO_DVECEL(weight_merit_fun->pi+i, j) = fabs(BLASFEO_DVECEL(qp_out->pi+i, j));
+        }
+    }
+
+    for (int i = 0; i <= N; i++)
+    {
+        blasfeo_dveccp(2*ni[i], qp_out->lam+i, 0, weight_merit_fun->lam+i, 0);
+    }
+}
+
+void merit_backtracking_update_weights(ocp_nlp_dims *dims, ocp_nlp_out *weight_merit_fun, ocp_qp_out *qp_out)
+{
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *ni = dims->ni;
+    double tmp0, tmp1;
+
+    // update weights
+    for (int i = 0; i < N; i++)
+    {
+        for (int j=0; j<nx[i+1]; j++)
+        {
+            // abs(lambda) (LW)
+            tmp0 = fabs(BLASFEO_DVECEL(qp_out->pi+i, j));
+            // .5 * (abs(lambda) + sigma)
+            tmp1 = 0.5 * (tmp0 + BLASFEO_DVECEL(weight_merit_fun->pi+i, j));
+            BLASFEO_DVECEL(weight_merit_fun->pi+i, j) = tmp0 > tmp1 ? tmp0 : tmp1;
+        }
+    }
+    for (int i = 0; i <= N; i++)
+    {
+        for (int j=0; j<2*ni[i]; j++)
+        {
+            // mu (LW)
+            tmp0 = BLASFEO_DVECEL(qp_out->lam+i, j);
+            // .5 * (mu + tau)
+            tmp1 = 0.5 * (tmp0 + BLASFEO_DVECEL(weight_merit_fun->lam+i, j));
+            BLASFEO_DVECEL(weight_merit_fun->lam+i, j) = tmp0>tmp1 ? tmp0 : tmp1;
+        }
+    }
+}
+
+
 
 int ocp_nlp_line_search(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
             ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work,
-            int check_early_termination, int sqp_iter, double *alpha_reference)
+            int sqp_iter, double *alpha_reference)
 {
     int i, j;
 
     int N = dims->N;
     int *nv = dims->nv;
-    int *nx = dims->nx;
-    int *ni = dims->ni;
 
-    double alpha = opts->step_length;
-    double tmp0, tmp1, merit_fun1;
+    double merit_fun1;
     ocp_qp_out *qp_out = mem->qp_out;
 
+    if (opts->globalization == FIXED_STEP)
+    {
+        *alpha_reference = opts->step_length;
+        return ACADOS_SUCCESS;
+    }
+    else if (opts->globalization != MERIT_BACKTRACKING)
+    {
+        printf("ocp_nlp_line_search: should only be called with globalization FIXED_STEP or MERIT_BACKTRACKING");
+        exit(1);
+    }
+
+    /* MERIT_BACKTRACKING line search */
     // Following Leineweber1999, Section "3.5.1 Line Search Globalization"
     // TODO: check out more advanced step search Leineweber1995
 
-    // TODO: check that z is updated in tmp_nlp_out?
-    if (opts->globalization == MERIT_BACKTRACKING)
+    // copy out (current iterate) to work->tmp_nlp_out
+    for (i = 0; i <= N; i++)
+        blasfeo_dveccp(nv[i], out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
+    // NOTE: copying duals not needed, as they dont enter the merit function
+
+    // TODO: think about z here!
+    // linear update of algebraic variables using state and input sensitivity
+    //    if (i < N)
+    //    {
+    //        blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0, mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out->z+i, 0);
+    //    }
+
+    /* modify/initialize merit function weights (Leineweber1999 M5.1, p.89) */
+    if (sqp_iter==0)
     {
-        // copy out (current iterate) to work->tmp_nlp_out
-        for (i = 0; i <= N; i++)
-            blasfeo_dveccp(nv[i], out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
-        // NOTE: copying duals not needed, as they dont enter the merit function
+        merit_backtracking_initialize_weights(dims, work->weight_merit_fun, qp_out);
+    }
+    else
+    {
+        merit_backtracking_update_weights(dims, work->weight_merit_fun, qp_out);
+    }
 
-        // TODO: think about z here!
-        // linear update of algebraic variables using state and input sensitivity
-    //        if (i < N)
-    //        {
-    //            blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0, mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out->z+i, 0);
-    //        }
+    // TODO: why does Leineweber do full step in first SQP iter?
+    // if (sqp_iter == 0)
+    // {
+    // }
 
-        /* modify/initialize merit function weights (Leineweber1999 M5.1, p.89) */
-        if (sqp_iter==0)
+    double merit_fun0 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
+
+    double reduction_factor = opts->alpha_reduction;
+    double max_next_merit_fun_val = merit_fun0;
+    double eps_sufficient_descent = opts->eps_sufficient_descent;
+    double dmerit_dy = 0.0;
+    double alpha = 1.0;
+
+    /* actual Line Search*/
+    if (opts->line_search_use_sufficient_descent)
+    {
+        // check Armijo-type sufficient descent condition Leinweber1999 (2.35);
+        dmerit_dy = ocp_nlp_compute_merit_gradient(config, dims, in, out, opts, mem, work);
+        if (dmerit_dy > 0.0)
         {
-            // initialize weights
-            // equality merit weights = abs( eq multipliers of qp_sol )
-            for (i = 0; i < N; i++)
+            if (dmerit_dy > 1e-6 && opts->print_level > 0)
             {
-                for (j=0; j<nx[i+1]; j++)
-                {
-                    BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j) = fabs(BLASFEO_DVECEL(qp_out->pi+i, j));
-                }
+                printf("\nacados line search: found dmerit_dy = %e > 0. Setting it to 0.0 instead\n", dmerit_dy);
             }
+            dmerit_dy = 0.0;
+        }
+    }
 
-            for (i = 0; i <= N; i++)
-            {
-                blasfeo_dveccp(2*ni[i], qp_out->lam+i, 0, work->weight_merit_fun->lam+i, 0);
-            }
+    // From Leineweber1999: eq (3.64) -> only relevant for adaptive integrators looking at Remark 3.2.
+    // "It is noteworthy that our practical implementation takes into account the potential nonsmoothness introduced by the fact that certain components of the penalty function - namely the continuity condition residuals - are evaluated only within integration tolerance."
+    // double sum_pi = 0.0;
+    // for (i = 0; i < N; i++)
+    // {
+    //     for (j = 0; j < dims->nx[i+1]; j++)
+    //         sum_pi += BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j);
+    // }
+    // double relaxed_val = 2.0 * 1e-6 * sum_pi;
+    // if (abs(merit_fun0 - merit_fun1) < relaxed_val)
+    // {
+    //     printf("\nexiting because of relaxed_val.");
+    //     break;
+    // }
+
+    for (j=0; alpha*reduction_factor > opts->alpha_min; j++)
+    {
+        // tmp_nlp_out = out + alpha * qp_out
+        for (i = 0; i <= N; i++)
+            blasfeo_daxpy(nv[i], alpha, qp_out->ux+i, 0, out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
+
+        merit_fun1 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
+        if (opts->print_level > 1)
+        {
+            printf("backtracking %d alpha = %f, merit_fun1 = %e, merit_fun0 %e\n", j, alpha, merit_fun1, merit_fun0);
+        }
+
+        // if (merit_fun1 < merit_fun0 && merit_fun1 > max_next_merit_fun_val)
+        // {
+        //     printf("\nalpha %f would be accepted without sufficient descent condition", alpha);
+        // }
+
+        max_next_merit_fun_val = merit_fun0 + eps_sufficient_descent * dmerit_dy * alpha;
+        if ((merit_fun1 < max_next_merit_fun_val) && !isnan(merit_fun1) && !isinf(merit_fun1))
+        {
+            *alpha_reference = alpha;
+            return ACADOS_SUCCESS;
         }
         else
         {
-            // update weights
-            for (i = 0; i < N; i++)
-            {
-                for(j=0; j<nx[i+1]; j++)
-                {
-                    // abs(lambda) (LW)
-                    tmp0 = fabs(BLASFEO_DVECEL(qp_out->pi+i, j));
-                    // .5 * (abs(lambda) + sigma)
-                    tmp1 = 0.5 * (tmp0 + BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j));
-                    BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j) = tmp0 > tmp1 ? tmp0 : tmp1;
-                }
-            }
-            for (i = 0; i <= N; i++)
-            {
-                for(j=0; j<2*ni[i]; j++)
-                {
-                    // mu (LW)
-                    tmp0 = BLASFEO_DVECEL(qp_out->lam+i, j);
-                    // .5 * (mu + tau)
-                    tmp1 = 0.5 * (tmp0 + BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j));
-                    BLASFEO_DVECEL(work->weight_merit_fun->lam+i, j) = tmp0>tmp1 ? tmp0 : tmp1;
-                }
-            }
-        }
-
-        if (1) // (sqp_iter!=0) // TODO: why does Leineweber do full step in first SQP iter?
-        {
-            double merit_fun0 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
-
-            double reduction_factor = opts->alpha_reduction;
-            double max_next_merit_fun_val = merit_fun0;
-            double eps_sufficient_descent = opts->eps_sufficient_descent;
-            double dmerit_dy = 0.0;
-            alpha = 1.0;
-
-            // to avoid armijo evaluation and loop when checking if SOC should be done
-            if (check_early_termination)
-            {
-                // TMP:
-                // printf("tmp: merit_grad eval in early termination\n");
-                // dmerit_dy = ocp_nlp_compute_merit_gradient(config, dims, in, out, opts, mem, work);
-
-                // TODO(oj): should the merit weight update be undone in case of early termination?
-                double violation_current = ocp_nlp_get_violation(config, dims, in, out, opts, mem, work);
-
-                // tmp_nlp_out = out + alpha * qp_out
-                for (i = 0; i <= N; i++)
-                    blasfeo_daxpy(nv[i], alpha, qp_out->ux+i, 0, out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
-                merit_fun1 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
-
-                double violation_step = ocp_nlp_get_violation(config, dims, in, out, opts, mem, work);
-                if (opts->print_level > 0)
-                {
-                    printf("\npreliminary line_search: merit0 %e, merit1 %e; viol_current %e, viol_step %e\n", merit_fun0, merit_fun1, violation_current, violation_step);
-                }
-
-                if (isnan(merit_fun1) || isinf(merit_fun1))
-                {
-                    // do nothing and continue with normal line search, i.e. step reduction
-                    return ACADOS_NAN_DETECTED;
-                }
-                if (merit_fun1 < merit_fun0 && violation_step < violation_current)
-                {
-                    // full step if merit and constraint violation improves
-                    // TODO: check armijo in this case?
-                    *alpha_reference = alpha;
-                    return ACADOS_SUCCESS;
-                }
-                else
-                {
-                    // alpha < 1.0 implies SOC will be done
-                    *alpha_reference = reduction_factor * reduction_factor;
-                    return ACADOS_SUCCESS;
-                }
-            }
-
-            /* actual Line Search*/
-            if (opts->line_search_use_sufficient_descent)
-            {
-                // check Armijo-type sufficient descent condition Leinweber1999 (2.35);
-                dmerit_dy = ocp_nlp_compute_merit_gradient(config, dims, in, out, opts, mem, work);
-                if (dmerit_dy > 0.0)
-                {
-                    if (dmerit_dy > 1e-6 && opts->print_level > 0)
-                    {
-                        printf("\nacados line search: found dmerit_dy = %e > 0. Setting it to 0.0 instead\n", dmerit_dy);
-                    }
-                    dmerit_dy = 0.0;
-                }
-            }
-
-            // From Leineweber1999: eq (3.64) -> only relevant for adaptive integrators looking at Remark 3.2.
-            // "It is noteworthy that our practical implementation takes into account the potential nonsmoothness introduced by the fact that certain components of the penalty function - namely the continuity condition residuals - are evaluated only within integration tolerance."
-            // double sum_pi = 0.0;
-            // for (i = 0; i < N; i++)
-            // {
-            //     for (j = 0; j < dims->nx[i+1]; j++)
-            //         sum_pi += BLASFEO_DVECEL(work->weight_merit_fun->pi+i, j);
-            // }
-            // double relaxed_val = 2.0 * 1e-6 * sum_pi;
-            // if (abs(merit_fun0 - merit_fun1) < relaxed_val)
-            // {
-            //     printf("\nexiting because of relaxed_val.");
-            //     break;
-            // }
-
-            for (j=0; alpha*reduction_factor > opts->alpha_min; j++)
-            {
-                // tmp_nlp_out = out + alpha * qp_out
-                for (i = 0; i <= N; i++)
-                    blasfeo_daxpy(nv[i], alpha, qp_out->ux+i, 0, out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
-
-                merit_fun1 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
-                if (opts->print_level > 1)
-                {
-                    printf("backtracking %d alpha = %f, merit_fun1 = %e, merit_fun0 %e\n", j, alpha, merit_fun1, merit_fun0);
-                }
-
-                // if (merit_fun1 < merit_fun0 && merit_fun1 > max_next_merit_fun_val)
-                // {
-                //     printf("\nalpha %f would be accepted without sufficient descent condition", alpha);
-                // }
-
-                max_next_merit_fun_val = merit_fun0 + eps_sufficient_descent * dmerit_dy * alpha;
-                if ((merit_fun1 < max_next_merit_fun_val) && !isnan(merit_fun1) && !isinf(merit_fun1))
-                {
-                    *alpha_reference = alpha;
-                    return ACADOS_SUCCESS;
-                }
-                else
-                {
-                    alpha *= reduction_factor;
-                }
-            }
+            alpha *= reduction_factor;
         }
     }
 
