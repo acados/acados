@@ -189,7 +189,7 @@ class AcadosCustomOcp:
 
     def cost_update_ref(self, zeta_0, u_ref):
 
-        s0 = zeta_0[0]
+        s0 = float(zeta_0[0])
         if s0 >= S_MAX:
             return True
 

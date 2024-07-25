@@ -66,13 +66,12 @@ Ct  = 3.25e-4       # [N/krpm^2] Thrust coefficient
 dq  = 92e-3         # [m] distance between motors' center
 l   = dq/2          # [m] distance between motors' center and the axis of rotation
 
-SLEEP_SEC = 0.06
 INF = 1e5
 
 # timing parameters
 T_del = 0.02               # time between steps in seconds
 N = 50                     # number of shooting nodes
-Tf = N * T_del * 1
+Tf = N * T_del
 
 Tsim = 45
 Nsim = int(Tsim * N / Tf)
@@ -124,11 +123,10 @@ refresh_ms = 10
 sphere_scale = 20000 #TODO make dependant on map size. (10000/ 20 obst)
 z_const = 0.1
 
-
 ''' Helper functions'''
 
 def DM2Arr(dm):
-    return np.array(dm.full())
+    return np.array(dm.full(), dtype=object)
 
 def quat2rpy(qoid):
     ''' qoid -> [qw, qx, qy, qz]

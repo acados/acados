@@ -45,7 +45,6 @@ def plan_ocp( ocp_wrapper):
     # dimensions
     nx = ocp_wrapper.nx
     nu = ocp_wrapper.nu
-    ns = ocp_wrapper.ns
 
     # initialize iteration variables
     t0 = 0
@@ -59,27 +58,24 @@ def plan_ocp( ocp_wrapper):
     zeta_0 = np.copy(ocp_wrapper.zeta_0)
     u_0 = np.copy(U_REF)
 
-    # ns x 2 (lower and upper bound))
-    Sl_0 = np.zeros((ns, 2))
-
     # Convert 1D array (nx,) to 3D (nx, 1, N+1)
     zeta_N = ca.repmat(np.reshape(zeta_0, (nx,1)), 1, N+1)
 
     # nx x N+1 x mpc_iter (to plot state during entire Horizon)
-    state_traj = ca.repmat(zeta_0, 1, N+1)
+    state_steps = ca.repmat(zeta_0, 1, N+1)
     # nu x mpc_iter
-    control_traj = ca.repmat(u_0, 1, 1)
-    # 3 x mpc_iter (iteration time, cost)
-    sample_traj = ca.repmat(np.array([0, 0]).T, 1)
+    control_steps = ca.repmat(u_0, 1, 1)
+    # 2 x mpc_iter (iteration time, cost)
+    misc_step = ca.repmat(np.array([0, 0]).T, 1)
 
     # Control loop entry point
 
     for i in range(Nsim):
         # Store previous iterate data for plots
         discr_step = ca.reshape(np.array([t0, cost]), 2, 1)
-        sample_traj = np.concatenate( (sample_traj, discr_step), axis = 1)
-        state_traj = np.dstack((state_traj, ocp_wrapper.zeta_N))
-        control_traj = np.concatenate((control_traj,
+        misc_step = np.concatenate( (misc_step, discr_step), axis = 1)
+        state_steps = np.dstack((state_steps, ocp_wrapper.zeta_N))
+        control_steps = np.concatenate((control_steps,
                                         np.reshape(ocp_wrapper.u_N[:, 0], (nu, 1))),
                                         axis = 1)
         t1 = time()
@@ -106,16 +102,16 @@ def plan_ocp( ocp_wrapper):
 
     sqp_max_sec = round(np.array(times).max(), 3)
     sqp_avg_sec = round(np.array(times).mean(), 3)
-    avg_n = round(np.abs(state_traj[1, 0, :]).mean(), 4)
-    avg_b = round(np.abs(state_traj[2, 0, :]).mean(), 4)
+    avg_n = round(np.abs(state_steps[1, 0, :]).mean(), 4)
+    avg_b = round(np.abs(state_steps[2, 0, :]).mean(), 4)
     print(f'\nNumber of NLP failures {fail}')
-    print(f'Max. solver time\t: {sqp_max_sec * 1000} ms')
-    print(f'Avg. solver time\t: {sqp_avg_sec * 1000} ms')
+    print(f'Max. solver time\t\t: {sqp_max_sec * 1000} ms')
+    print(f'Avg. solver time\t\t: {sqp_avg_sec * 1000} ms')
     print(f'Avg. later deviation n\t\t: {avg_n} m')
-    print(f'Avg. vertical deviation b\t\t: {avg_b} m')
+    print(f'Avg. vertical deviation b\t: {avg_b} m')
 
 
-    return sample_traj, state_traj, control_traj
+    return misc_step, state_steps, control_steps
 
 if __name__ == '__main__':
 
