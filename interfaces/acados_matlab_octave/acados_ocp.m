@@ -265,6 +265,35 @@ classdef acados_ocp < handle
             obj.t_ocp.reset();
         end
 
+        function result = qp_diagnostics(obj, type)
+            % Compute some diagnostic values for the last QP.
+            % type = 'min_ev': return minimum eigenvalue for each Hessian block.
+            % type = 'max_ev': return maximum eigenvalue for each Hessian block.
+            % type = 'condition_number': return condition number for each Hessian block.
+
+            result = zeros(obj.ocp.dims.N, 1);
+
+            if strcmp(type, 'min_ev')
+                fun = @(x) min(x);
+            elseif strcmp(type, 'max_ev')
+                fun = @(x) max(x);
+            elseif strcmp(type, 'condition_number')
+                fun = @(x) max(x)/min(x);
+            end
+
+            for n=0:obj.ocp.dims.N
+                Q = obj.get('qp_Q', n);
+                R = obj.get('qp_R', n);
+                S = obj.get('qp_S', n);
+
+                hess_block = [R, S; S', Q];
+
+                eigvals = eig(hess_block);
+                result(n+1) = fun(eigvals);
+            end
+
+        end
+
         % function delete(obj)
         %     Use default implementation.
         %     MATLAB destroys the property values after the destruction of the object.
