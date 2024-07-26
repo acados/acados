@@ -30,7 +30,7 @@
 #
 
 import numpy as np
-from .utils import J_to_idx, print_J_to_idx_note, J_to_idx_slack, check_if_nparray_and_flatten
+from .utils import J_to_idx, print_J_to_idx_note, J_to_idx_slack, check_if_nparray_and_flatten, check_if_2d_nparray
 
 class AcadosOcpConstraints:
     """
@@ -904,28 +904,19 @@ class AcadosOcpConstraints:
     # polytopic constraints
     @D.setter
     def D(self, D):
-        if isinstance(D, np.ndarray) and len(D.shape) == 2:
-            self.__D = D
-        else:
-            raise Exception('Invalid constraint D value.' \
-                + 'Should be 2 dimensional numpy array.')
+        check_if_2d_nparray(D, "D")
+        self.__D = D
 
     @C.setter
     def C(self, C):
-        if isinstance(C, np.ndarray) and len(C.shape) == 2:
-            self.__C = C
-        else:
-            raise Exception('Invalid constraint C value.' \
-                + 'Should be 2 dimensional numpy array.')
+        check_if_2d_nparray(C, "C")
+        self.__C = C
 
     # polytopic constraints at shooting node N
     @C_e.setter
     def C_e(self, C_e):
-        if isinstance(C_e, np.ndarray) and len(C_e.shape) == 2:
-            self.__C_e = C_e
-        else:
-            raise Exception('Invalid constraint C_e value.' \
-                + 'Should be 2 dimensional numpy array.')
+        check_if_2d_nparray(C_e, "C_e")
+        self.__C_e = C_e
 
     @lg.setter
     def lg(self, value):
