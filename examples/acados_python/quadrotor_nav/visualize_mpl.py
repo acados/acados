@@ -64,10 +64,20 @@ def animOptVars(misc_steps, traj_ST, traj_U):
     zetaEul = np.zeros((3, dim_st[1], dim_st[2]))
     zetaCEul = zetaEul[:, :, ::f_plot]
 
+    list_kap = []
+    list_tau = []
+    kap, tau, et, en, eb, kapBar, tauBar, _, _, _ = projFrenSerretBasis(zetaMx[0])
+    kap_fun, tau_fun, _, _, _ = evalFrenSerretBasis(zetaMx[0], kap, tau, et, en, eb)
+    # kapBar_fun, tauBar_fun = evalFrenSerretDerv(zetaMx[0], kapBar, tauBar)
+
     for k in range(N+1):
         s_i = traj_ST[0, k, :]
         n_i = traj_ST[1, k, :]
         b_i = traj_ST[2, k, :]
+
+        sDot_i = traj_ST[7, k, :]
+        nDot_i = traj_ST[8, k, :]
+        bDot_i = traj_ST[9, k, :]
 
         x_i, y_i, z_i = sysModel.Fren2CartT(zetaMx, s_i, n_i, b_i)
 
@@ -80,10 +90,11 @@ def animOptVars(misc_steps, traj_ST, traj_U):
         q3_i = traj_ST[5, k, :]
         q4_i = traj_ST[6, k, :]
 
-        # phi_i, tht_i, psi_i = quat2rpy([q1_i, q2_i, q3_i, q4_i])
-        # zetaCEul[0, k, : ] = np.ravel(phi_i)
-        # zetaCEul[1, k, : ] = np.ravel(tht_i)
-        # zetaCEul[2, k, : ] = np.ravel(psi_i)
+    for i in range((s_ref.shape[0])):
+       #et_fun1 = et_fun(s_ref[i]/2)
+       #print("\t", gam4(s_ref[i]))
+       list_kap.append(float(kap_fun(s_ref[i])))
+       list_tau.append(float(tau_fun(s_ref[i])))
 
     def init():
         time_text.set_text('')
@@ -106,14 +117,6 @@ def animOptVars(misc_steps, traj_ST, traj_U):
         # update simulation time
         time_text.set_text(f'time = {misc_steps[0, iter]:.2f} s' )
 
-        # # xAx.set_data(zetaC_hat[0, 0, : iter], misc_steps[0, :iter +1])
-        # # yAx.set_data(zetaC_hat[1, 0, : iter], misc_steps[0, :iter +1])
-        # # zAx.set_data(zetaC_hat[2, 0, : iter], misc_steps[0, :iter +1])
-
-        # # phiAx.set_data(zetaCEul[0, 0, : iter], misc_steps[0, :iter +1])
-        # # thtAx.set_data(zetaCEul[1, 0, : iter], misc_steps[0, :iter +1])
-        # # psiAx.set_data(zetaCEul[2, 0, : iter], misc_steps[0, :iter +1])
-        #print('type ',zetaC_hat[2, 0, iter:iter+1], type(zetaC_hat[2, 0, iter:iter+1]))
         drone[0]._offsets3d = (float(zetaC_hat[0, 0, iter]), float(zetaC_hat[1, 0, iter]), zetaC_hat[2, 0, iter:iter+1])
 
         horizon.set_data(zetaC_hat[0: 2, 1:, iter])
@@ -124,7 +127,11 @@ def animOptVars(misc_steps, traj_ST, traj_U):
         nAx.set_data(traj_ST[1,  0, : iter], misc_steps[0, :iter +1] )
         bAx.set_data(traj_ST[2,  0, : iter], misc_steps[0, :iter +1] )
 
-        # # Update control plot
+        sDotAx.set_data(traj_ST[7,  0, : iter], misc_steps[0, :iter +1] )
+        nDotAx.set_data(traj_ST[8,  0, : iter], misc_steps[0, :iter +1] )
+        bDotAx.set_data(traj_ST[9,  0, : iter], misc_steps[0, :iter +1] )
+
+        # Update control plot
         ohm1.set_data(traj_ST[-4, 0, :iter], misc_steps[0, :iter +1] )
         ohm2.set_data(traj_ST[-3, 0, :iter], misc_steps[0, :iter +1] )
         ohm3.set_data(traj_ST[-2, 0, :iter], misc_steps[0, :iter +1] )
@@ -144,7 +151,7 @@ def animOptVars(misc_steps, traj_ST, traj_U):
     fig = pyplot.figure(figsize=(15, 10))
 
     # plot state on right (merge top and bottom right. i.e subplots 2, 3, 5, 6)
-    ax3d = fig.add_subplot(2, 3, (2, 6), projection='3d')
+    ax3d = fig.add_subplot(3, 3, (5, 9), projection='3d')
     ax3d.azim = -25
     ax3d.elev = 15
     fig.add_axes(ax3d)
@@ -177,7 +184,7 @@ def animOptVars(misc_steps, traj_ST, traj_U):
     ax3d.set_zlabel('Z (m)')
 
     # State zeta_frenet at (1,1) top left
-    zetaF = fig.add_subplot(2, 3, 1)
+    zetaF = fig.add_subplot(3, 3, 1)
     zetaF.set_ylim( np.amin(np.ravel(traj_ST[0 : 3, 0, :-2])) - 0.2,
                     np.amax(np.ravel(traj_ST[0 : 3, 0, :-2])) + 0.2)
     zetaF.set_xlim(0, np.amax(misc_steps[0, :]) + 0.2)
@@ -190,37 +197,21 @@ def animOptVars(misc_steps, traj_ST, traj_U):
     zetaF.grid()
     zetaF.legend(loc='upper right')
 
-    # # State zeta_cartesian at (1,2) top left
-    # zetaC = fig.add_subplot(2, 2, 2)
+    zetaDotF = fig.add_subplot(3, 3, 4)
+    zetaDotF.set_ylim( np.amin(np.ravel(traj_ST[7 : 10, 0, :-2])) - 0.2,
+                    np.amax(np.ravel(traj_ST[7 : 10, 0, :-2])) + 0.2)
+    zetaDotF.set_xlim(0, np.amax(misc_steps[0, :]) + 0.2)
+    zetaDotF.set_xlabel('time (s)')
+    zetaDotF.set_ylabel("$\\dot{p}^{f}$")
+    sDotAx = zetaDotF.stairs([], [0], baseline=None,label="$\\dot{s}$ ($m s^{-1}$)", color="teal" )
+    nDotAx = zetaDotF.stairs([], [0], baseline=None,label="$\\dot{n}$ ($m s^{-1}$)", color="lightcoral")
+    bDotAx = zetaDotF.stairs([], [0], baseline=None,label="$\\dot{b}$ ($m s^{-1}$)", color="plum")
+    zetaDotF.grid()
+    zetaDotF.legend(loc='upper right')
 
-    # zetaC.set_ylim(np.amin(np.ravel(zetaC_hat[:, 0, :])) - 1,
-    #                 np.amax(np.ravel(zetaC_hat[:, 0, :])) + 1)
-    # zetaC.set_ylabel("$\\hat{p}^{c}$")
 
-    # zetaC.set_xlim(0, np.amax(misc_steps[0, :]) + 0.2)
-    # zetaC.set_xlabel('time (s)')
-
-    # xAx = zetaC.stairs([], [0], baseline=None,label="$x$ ($m$)", color="teal" )
-    # yAx = zetaC.stairs([], [0], baseline=None,label="$y$ ($m$)", color="lightcoral")
-    # zAx = zetaC.stairs([], [0], baseline=None,label="$z$ ($m$)", color="plum")
-    # zetaC.grid()
-    # zetaC.legend(loc='upper right')
-
-    # # State zeta_u at (2, 1) mid left
-    # zetaEu = fig.add_subplot(2, 2, 4)
-
-    # zetaEu.set_ylim(np.amin(np.ravel(traj_ST[3:7, :-2])) - 0.2,
-    #            np.amax(np.ravel(traj_ST[3:7, :-2])) + 0.2)
-    # zetaEu.set_xlim(0, np.amax(misc_steps[0, :]) + 0.2)
-    # zetaEu.set_xlabel('time (s)')
-    # zetaEu.set_ylabel('$\\zeta^{u}$')
-    # phiAx = zetaEu.stairs([], [0], baseline=None,label="$\\phi^{\\circ}$)", color="teal" )
-    # thtAx = zetaEu.stairs([], [0], baseline=None,label="$\\theta^{\\circ}$)", color="lightcoral")
-    # psiAx = zetaEu.stairs([], [0], baseline=None,label="$\\psi^{\\circ}$)", color="plum" )
-    # zetaEu.legend(loc='upper right')
-
-    # plot control u at (2,1) bottom left
-    u = fig.add_subplot(2, 3, 4)
+    # plot control u
+    u = fig.add_subplot(3, 3, 2)
     ohm1 = u.stairs([], [0], baseline=None,label="$\\Omega_{1}$ ($rad s^{-1}$)", color="lightcoral" )
     ohm2 = u.stairs([], [0], baseline=None,label="$\\Omega_{2}$ ($rad s^{-1}$)", color="plum")
     ohm3 = u.stairs([], [0], baseline=None,label="$\\Omega_{3}$ ($rad s^{-1}$)", color="darkseagreen" )
@@ -230,9 +221,21 @@ def animOptVars(misc_steps, traj_ST, traj_U):
                np.amax(np.ravel(traj_ST[-4:, 0, :-2])) + 0.02)
     u.set_xlim(0, np.amax(misc_steps[0, :]) + 0.2)
     u.set_xlabel('time (s)')
-    u.set_ylabel('u')
+    u.set_ylabel('$\\zeta^{u}$')
     u.grid()
     u.legend(ncol=2, loc='upper right')
+
+    # plot curve parametrization
+    param = fig.add_subplot(3, 3, 3)
+    tauAx = param.stairs(list_tau[:-1], s_ref, baseline=None,label="$\\tau$", color="coral" )
+    kapAx = param.stairs(list_kap[:-1], s_ref, baseline=None,label="$\\kappa$", color="teal")
+    param.set_xlim(0, np.amax(s_ref) + 0.2)
+    param.set_ylim(   ymin = np.amin(np.ravel(list_tau[:] + list_kap[:]))*1.10 ,
+                    ymax = np.amax(np.ravel(list_tau[:] + list_kap[:]))*1.10)
+    param.set_xlabel('$s\,$(m)')
+    param.legend(loc='upper right')
+    param.grid()
+
 
     fig.canvas.mpl_connect('button_press_event', onClick)
     anim = animation.FuncAnimation(fig=fig, func=animate,
@@ -243,4 +246,7 @@ def animOptVars(misc_steps, traj_ST, traj_U):
                                 blit=False)
 
     fig.tight_layout()
-    pyplot.show()
+
+    # avoid plotting when running on Travis
+    if os.environ.get("ACADOS_ON_CI") is None:
+        pyplot.show()

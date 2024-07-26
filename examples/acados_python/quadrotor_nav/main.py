@@ -81,8 +81,8 @@ def plan_ocp( ocp_wrapper):
         t1 = time()
 
         end = ocp_wrapper.cost_update_ref(zeta_N[:, 0], U_HOV)
-        if (end or fail >10) :
-            print("MPC exit !")
+        if (end) :
+            print("Track complete !")
             break
 
         # Solve the OCP with updated state and controls
@@ -104,7 +104,7 @@ def plan_ocp( ocp_wrapper):
     sqp_avg_sec = round(np.array(times).mean(), 3)
     avg_n = round(np.abs(state_steps[1, 0, :]).mean(), 4)
     avg_b = round(np.abs(state_steps[2, 0, :]).mean(), 4)
-    print(f'\nNumber of NLP failures {fail}')
+
     print(f'Max. solver time\t\t: {sqp_max_sec * 1000} ms')
     print(f'Avg. solver time\t\t: {sqp_avg_sec * 1000} ms')
     print(f'Avg. lateral deviation n\t: {avg_n} m')
