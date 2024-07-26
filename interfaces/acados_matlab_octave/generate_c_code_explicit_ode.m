@@ -37,9 +37,7 @@ import casadi.*
 casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
 check_casadi_version();
 
-
 %% load model
-
 x = model.x;
 u = model.u;
 p = model.p;

@@ -221,7 +221,7 @@ classdef acados_ocp < handle
             obj.t_ocp.solve();
         end
 
-
+        % TODO: remove this? does not seem to do anything
         function generate_c_code(obj, simulink_opts)
             if nargin < 2
                 warning("Code is generated with the default simulink options via the constructor of acados_ocp.")

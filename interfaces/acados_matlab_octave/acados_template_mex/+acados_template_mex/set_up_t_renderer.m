@@ -51,9 +51,7 @@ function set_up_t_renderer(t_renderer_location,varargin)
         end
     end
 
-    if ~exist(destination, 'dir')
-        [~,~] = mkdir(destination);
-    end
+    check_dir_and_create(destination);
 
     movefile(tmp_file, t_renderer_location);
 

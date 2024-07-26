@@ -152,7 +152,5 @@ end
 
 function target_dir = setup_target_dir(name, postfix)
     target_dir = fullfile(pwd, 'c_generated_code', [name postfix]);
-    if ~exist(target_dir, 'dir')
-        mkdir(target_dir);
-    end
+    check_dir_and_create(target_dir);
 end

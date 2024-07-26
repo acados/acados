@@ -31,9 +31,8 @@
 
 function ocp_generate_c_code(ocp)
     %% create folder
-    if ~exist(fullfile(pwd,'c_generated_code'), 'dir')
-        mkdir(fullfile(pwd, 'c_generated_code'))
-    end
+
+    check_dir_and_create(fullfile(pwd,'c_generated_code'));
 
     %% generate C code for CasADi functions / copy external functions
     cost = ocp.cost;
@@ -48,11 +47,9 @@ function ocp_generate_c_code(ocp)
     code_gen_opts.with_value_sens_wrt_params = solver_opts.with_value_sens_wrt_params;
 
     % dynamics
-    model_dir = fullfile(pwd, 'c_generated_code', [ocp.name '_model']);
     % model dir is always need, other dirs are  only created if necessary
-    if ~exist(model_dir, 'dir')
-        mkdir(model_dir);
-    end
+    model_dir = fullfile(pwd, 'c_generated_code', [ocp.name '_model']);
+    check_dir_and_create(model_dir);
 
     if (strcmp(solver_opts.integrator_type, 'ERK'))
         generate_c_code_explicit_ode(ocp.model, code_gen_opts, model_dir);
@@ -309,9 +306,7 @@ function setup_generic_cost(cost, target_dir, stage_type)
         error('Unknown stage_type.')
     end
 
-    if ~exist(target_dir, 'dir')
-        mkdir(target_dir);
-    end
+    check_dir_and_create(target_dir);
     copyfile(fullfile(pwd, cost_source_ext_cost), target_dir);
 end
 

@@ -53,9 +53,7 @@ model_name = model.name;
 
 % cd to target folder
 return_dir = pwd;
-if ~exist(target_dir, 'dir')
-    mkdir(target_dir);
-end
+check_dir_and_create(target_dir);
 chdir(target_dir)
 disp(pwd);
 

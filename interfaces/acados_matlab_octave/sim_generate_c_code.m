@@ -31,14 +31,10 @@
 
 function sim_generate_c_code(sim)
     %% create folders
-    if ~exist(fullfile(pwd,'c_generated_code'), 'dir')
-        mkdir(fullfile(pwd, 'c_generated_code'))
-    end
+    check_dir_and_create(fullfile(pwd,'c_generated_code'));
 
     model_dir = fullfile(pwd, 'c_generated_code', [sim.model.name '_model']);
-    if ~exist(model_dir, 'dir')
-        mkdir(model_dir);
-    end
+    check_dir_and_create(model_dir);
 
     code_gen_opts = struct('generate_hess', sim.sim_options.sens_hess);
     %% generate C code for CasADi functions / copy external functions
@@ -83,7 +79,6 @@ function sim_generate_c_code(sim)
     % end
 
     %% reshape opts
-    opts = sim.sim_options;
     opts_layout = acados_sim_layout.solver_options;
     fields = fieldnames(opts_layout);
     for i = 1:numel(fields)
@@ -95,19 +90,18 @@ function sim_generate_c_code(sim)
                 this_dims = [dims.(property_dim_names{1}), dims.(property_dim_names{2})];
             end
             try
-                opts.(fields{i}) = reshape(opts.(fields{i}), this_dims);
+                sim.sim_options.(fields{i}) = reshape(sim.sim_options.(fields{i}), this_dims);
             catch e
-                error(['error while reshaping opts.' fields{i} ...
+                error(['error while reshaping sim_options' fields{i} ...
                     ' to dimension ' num2str(this_dims), ', got ',...
-                    num2str( size(opts.(fields{i}) )) , 10,...
+                    num2str( size(sim.sim_options.(fields{i}) )) , 10,...
                     e.message ]);
             end
             if this_dims(1) == 1 && length(property_dim_names) ~= 1 % matrix with 1 row
-                opts.(fields{i}) = {opts.(fields{i})};
+                sim.sim_options.(fields{i}) = {sim.sim_options.(fields{i})};
             end
         end
     end
-    sim.sim_options = opts;
 
     % parameter values
     sim.parameter_values = reshape(num2cell(sim.parameter_values), [ 1, dims.np]);
