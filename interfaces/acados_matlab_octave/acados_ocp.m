@@ -44,7 +44,7 @@ classdef acados_ocp < handle
         cost_ext_fun_type_0
         dyn_ext_fun_type
 
-        qp_cost_fields = {'qp_Q', 'qp_R', 'qp_S', 'qp_q', 'qp_r'}
+        qp_cost_fields = {'qp_Q', 'qp_R', 'qp_S', 'qp_q', 'qp_r', 'qp_A', 'qp_B', 'qp_b', 'qp_C', 'qp_D', 'qp_lg', 'qp_ug', 'qp_lbx', 'qp_ubx', 'qp_lbu', 'qp_ubu'}
     end % properties
 
 
@@ -258,7 +258,7 @@ classdef acados_ocp < handle
                     value = [R, S; S', Q];
                     return;
                 else
-                    value = cell(obj.ocp.dims.N, 1)
+                    value = cell(obj.ocp.dims.N, 1);
                     for n=0:obj.ocp.dims.N
                         Q = obj.get('qp_Q', n);
                         R = obj.get('qp_R', n);
@@ -343,7 +343,6 @@ classdef acados_ocp < handle
                 end
             end
 
-            % TODO remove empty
             % save
             json_string = savejson('', qp_data, 'ForceRootName', 0, struct('FloatFormat', '%.5f'));
 
