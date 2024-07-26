@@ -351,6 +351,9 @@ add_test(NAME python_pendulum_ocp_example_cmake
     add_test(NAME python_pmsm_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pmsm_example
         python main.py)
+    add_test(NAME python_quadrotor_nav
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/quadrotor_nav
+        python main.py)
     add_test(NAME python_race_cars
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/race_cars
         python main.py)

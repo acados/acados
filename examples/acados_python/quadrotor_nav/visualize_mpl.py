@@ -114,7 +114,7 @@ def animOptVars(misc_steps, traj_ST, traj_U):
         # # thtAx.set_data(zetaCEul[1, 0, : iter], misc_steps[0, :iter +1])
         # # psiAx.set_data(zetaCEul[2, 0, : iter], misc_steps[0, :iter +1])
         #print('type ',zetaC_hat[2, 0, iter:iter+1], type(zetaC_hat[2, 0, iter:iter+1]))
-        #drone[0]._offsets3d = (float(zetaC_hat[0, 0, iter]), float(zetaC_hat[1, 0, iter]), zetaC_hat[2, 0, iter:])
+        drone[0]._offsets3d = (float(zetaC_hat[0, 0, iter]), float(zetaC_hat[1, 0, iter]), zetaC_hat[2, 0, iter:iter+1])
 
         horizon.set_data(zetaC_hat[0: 2, 1:, iter])
         horizon.set_3d_properties(zetaC_hat[2, 1:, iter])

@@ -107,7 +107,7 @@ def plan_ocp( ocp_wrapper):
     print(f'\nNumber of NLP failures {fail}')
     print(f'Max. solver time\t\t: {sqp_max_sec * 1000} ms')
     print(f'Avg. solver time\t\t: {sqp_avg_sec * 1000} ms')
-    print(f'Avg. later deviation n\t\t: {avg_n} m')
+    print(f'Avg. lateral deviation n\t\t: {avg_n} m')
     print(f'Avg. vertical deviation b\t: {avg_b} m')
 
 
