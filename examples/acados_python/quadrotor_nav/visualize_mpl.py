@@ -221,10 +221,10 @@ def animOptVars(misc_steps, traj_ST, traj_U):
 
     # plot control u at (2,1) bottom left
     u = fig.add_subplot(2, 3, 4)
-    ohm1 = u.stairs([], [0], baseline=None,label="$\\ohm_{1}$ ($rad s^{-1}$)", color="lightcoral" )
-    ohm2 = u.stairs([], [0], baseline=None,label="$\\ohm_{2}$ ($rad s^{-1}$)", color="plum")
-    ohm3 = u.stairs([], [0], baseline=None,label="$\\ohm_{3}$ ($rad s^{-1}$)", color="darkseagreen" )
-    ohm4 = u.stairs([], [0], baseline=None,label="$\\ohm_{4}$ ($rad s^{-1}$)", color="lightsteelblue")
+    ohm1 = u.stairs([], [0], baseline=None,label="$\\Omega_{1}$ ($rad s^{-1}$)", color="lightcoral" )
+    ohm2 = u.stairs([], [0], baseline=None,label="$\\Omega_{2}$ ($rad s^{-1}$)", color="plum")
+    ohm3 = u.stairs([], [0], baseline=None,label="$\\Omega_{3}$ ($rad s^{-1}$)", color="darkseagreen" )
+    ohm4 = u.stairs([], [0], baseline=None,label="$\\Omega_{4}$ ($rad s^{-1}$)", color="lightsteelblue")
 
     u.set_ylim(np.amin(np.ravel(traj_ST[-4:, 0, :-2])) - 0.02,
                np.amax(np.ravel(traj_ST[-4:, 0, :-2])) + 0.02)
