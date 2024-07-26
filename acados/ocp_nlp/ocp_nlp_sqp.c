@@ -860,8 +860,10 @@ static void print_iteration(ocp_nlp_opts* opts,
 /************************************************
  * termination criterion
  ************************************************/
-static bool check_termination(int n_iter, ocp_nlp_res *nlp_res, ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts)
+static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_res, ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts)
 {
+    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+
     // check for nans
     if (isnan(nlp_res->inf_norm_res_stat) || isnan(nlp_res->inf_norm_res_eq) ||
             isnan(nlp_res->inf_norm_res_ineq) || isnan(nlp_res->inf_norm_res_comp))
@@ -1365,8 +1367,16 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
         reg_param_memory = nlp_opts->levenberg_marquardt;
 
+
+        // regularize Hessian
+        // NOTE: this is done before termination, such that we can get the QP at the stationary point that is actually solved, if we exit with success.
+        acados_tic(&timer1);
+        config->regularize->regularize(config->regularize, dims->regularize,
+                                               nlp_opts->regularize, nlp_mem->regularize_mem);
+        mem->time_reg += acados_toc(&timer1);
+
         // Termination
-        if (check_termination(sqp_iter, nlp_res, mem, opts))
+        if (check_termination(sqp_iter, dims, nlp_res, mem, opts))
         {
 #if defined(ACADOS_WITH_OPENMP)
             // restore number of threads
@@ -1377,12 +1387,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             return mem->status;
         }
 
-
-        // regularize Hessian
-        acados_tic(&timer1);
-        config->regularize->regularize(config->regularize, dims->regularize,
-                                               nlp_opts->regularize, nlp_mem->regularize_mem);
-        mem->time_reg += acados_toc(&timer1);
 
         /* solve QP */
         // (typically) no warm start at first iteration
