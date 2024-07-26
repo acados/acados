@@ -121,6 +121,10 @@ classdef {{ model.name }}_mex_solver < handle
             else
                 disp('acados_ocp.get: wrong number of input arguments (1 or 2 allowed)');
             end
+
+            if strcmp('qp_Q', field) || strcmp('qp_R', field)
+                value = tril(value) + tril(value, -1)';
+            end
         end
 
 

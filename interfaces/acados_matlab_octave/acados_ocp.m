@@ -272,6 +272,10 @@ classdef acados_ocp < handle
             else
                 value = obj.t_ocp.get(field, varargin{:});
             end
+
+            if strcmp('qp_Q', field) || strcmp('qp_R', field)
+                value = tril(value) + tril(value, -1)';
+            end
         end
 
         function [] = store_iterate(obj, varargin)
