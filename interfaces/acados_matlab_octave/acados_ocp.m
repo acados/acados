@@ -200,7 +200,7 @@ classdef acados_ocp < handle
                 simulink_opts = get_acados_simulink_opts();
             end
             obj.ocp = setup_ocp(obj, simulink_opts);
-            ocp_generate_c_code(obj);
+            ocp_generate_c_code(obj.ocp);
 
             % templated MEX
             return_dir = pwd();

@@ -29,48 +29,46 @@
 
 %
 
-function sim_generate_c_code(obj)
+function sim_generate_c_code(sim)
     %% create folders
     if ~exist(fullfile(pwd,'c_generated_code'), 'dir')
         mkdir(fullfile(pwd, 'c_generated_code'))
     end
 
-    model_dir = fullfile(pwd, 'c_generated_code', [obj.sim.model.name '_model']);
+    model_dir = fullfile(pwd, 'c_generated_code', [sim.model.name '_model']);
     if ~exist(model_dir, 'dir')
         mkdir(model_dir);
     end
 
-    code_gen_opts = struct('generate_hess', strcmp(obj.opts_struct.sens_hess, 'true'));
+    code_gen_opts = struct('generate_hess', sim.sim_options.sens_hess);
     %% generate C code for CasADi functions / copy external functions
     % dynamics
-    if (strcmp(obj.model_struct.dyn_type, 'explicit'))
-        generate_c_code_explicit_ode(obj.sim.model, code_gen_opts, model_dir);
-    elseif (strcmp(obj.model_struct.dyn_type, 'implicit'))
-        if (strcmp(obj.opts_struct.method, 'irk'))
-            generate_c_code_implicit_ode(obj.sim.model, code_gen_opts, model_dir);
-        elseif (strcmp(obj.opts_struct.method, 'irk_gnsf'))
-            generate_c_code_gnsf(obj.sim.model, code_gen_opts, model_dir);
-        end
-    elseif (strcmp(obj.model_struct.dyn_type, 'discrete'))
-        generate_c_code_disc_dyn(obj.sim.model, code_gen_opts, model_dir);
+    if (strcmp(sim.sim_options.integrator_type, 'ERK'))
+        generate_c_code_explicit_ode(sim.model, code_gen_opts, model_dir);
+    elseif (strcmp(sim.sim_options.integrator_type, 'IRK'))
+        generate_c_code_implicit_ode(sim.model, code_gen_opts, model_dir);
+    elseif (strcmp(sim.sim_options.integrator_type, 'GNSF'))
+        generate_c_code_gnsf(sim.model, code_gen_opts, model_dir);
+    elseif (strcmp(sim.sim_options.integrator_type, 'DISCRETE'))
+        generate_c_code_disc_dyn(sim.model, code_gen_opts, model_dir);
     end
-    if strcmp(obj.sim.model.dyn_ext_fun_type, 'generic')
-        copyfile( fullfile(pwd, obj.sim.model.dyn_generic_source), model_dir);
+    if strcmp(sim.model.dyn_ext_fun_type, 'generic')
+        copyfile(fullfile(pwd, sim.model.dyn_generic_source), model_dir);
     end
 
 
     %% remove CasADi objects from model
-    model.name = obj.sim.model.name;
-    model.dyn_ext_fun_type = obj.sim.model.dyn_ext_fun_type;
-    model.dyn_generic_source = obj.sim.model.dyn_generic_source;
-    model.dyn_disc_fun_jac_hess = obj.sim.model.dyn_disc_fun_jac_hess;
-    model.dyn_disc_fun_jac = obj.sim.model.dyn_disc_fun_jac;
-    model.dyn_disc_fun = obj.sim.model.dyn_disc_fun;
-    model.gnsf.nontrivial_f_LO = obj.sim.model.gnsf.nontrivial_f_LO;
-    model.gnsf.purely_linear = obj.sim.model.gnsf.purely_linear;
-    obj.sim.model = model;
+    model.name = sim.model.name;
+    model.dyn_ext_fun_type = sim.model.dyn_ext_fun_type;
+    model.dyn_generic_source = sim.model.dyn_generic_source;
+    model.dyn_disc_fun_jac_hess = sim.model.dyn_disc_fun_jac_hess;
+    model.dyn_disc_fun_jac = sim.model.dyn_disc_fun_jac;
+    model.dyn_disc_fun = sim.model.dyn_disc_fun;
+    model.gnsf.nontrivial_f_LO = sim.model.gnsf.nontrivial_f_LO;
+    model.gnsf.purely_linear = sim.model.gnsf.purely_linear;
+    sim.model = model;
     %% post process numerical data (mostly cast scalars to 1-dimensional cells)
-    dims = obj.sim.dims;
+    dims = sim.dims;
 
     %% load JSON layout
     acados_folder = getenv('ACADOS_INSTALL_DIR');
@@ -85,7 +83,7 @@ function sim_generate_c_code(obj)
     % end
 
     %% reshape opts
-    opts = obj.sim.sim_options;
+    opts = sim.sim_options;
     opts_layout = acados_sim_layout.solver_options;
     fields = fieldnames(opts_layout);
     for i = 1:numel(fields)
@@ -109,18 +107,18 @@ function sim_generate_c_code(obj)
             end
         end
     end
-    obj.sim.sim_options = opts;
+    sim.sim_options = opts;
 
     % parameter values
-    obj.sim.parameter_values = reshape(num2cell(obj.sim.parameter_values), [ 1, dims.np]);
+    sim.parameter_values = reshape(num2cell(sim.parameter_values), [ 1, dims.np]);
 
     %% dump JSON file
     % if is_octave()
         % savejson does not work for classes!
         % -> consider making the sim properties structs directly.
-        sim_json_struct = obj.sim.struct();
-        sim_json_struct.dims = obj.sim.dims.struct();
-        sim_json_struct.solver_options = obj.sim.sim_options;
+        sim_json_struct = sim.struct();
+        sim_json_struct.dims = sim.dims.struct();
+        sim_json_struct.solver_options = sim.sim_options;
 
         % add compilation information to json
         libs = loadjson(fileread(fullfile(acados_folder, 'lib', 'link_libs.json')));
@@ -135,14 +133,14 @@ function sim_generate_c_code(obj)
 
         json_string = savejson('', sim_json_struct, 'ForceRootName', 0);
     % else % Matlab
-    %     json_string = jsonencode(obj.sim);
+    %     json_string = jsonencode(sim);
     % end
-    fid = fopen(obj.sim.json_file, 'w');
+    fid = fopen(sim.json_file, 'w');
     if fid == -1, error('Cannot create JSON file'); end
     fwrite(fid, json_string, 'char');
     fclose(fid);
     %% render templated code
-    acados_template_mex.render_acados_sim_templates(obj.sim.json_file)
-    acados_template_mex.compile_sim_shared_lib(obj.sim.code_export_directory)
+    acados_template_mex.render_acados_sim_templates(sim.json_file)
+    acados_template_mex.compile_sim_shared_lib(sim.code_export_directory)
 end
 

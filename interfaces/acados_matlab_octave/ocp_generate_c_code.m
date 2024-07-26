@@ -29,17 +29,17 @@
 
 %
 
-function ocp_generate_c_code(obj)
+function ocp_generate_c_code(ocp)
     %% create folder
     if ~exist(fullfile(pwd,'c_generated_code'), 'dir')
         mkdir(fullfile(pwd, 'c_generated_code'))
     end
 
     %% generate C code for CasADi functions / copy external functions
-    cost = obj.ocp.cost;
-    solver_opts = obj.ocp.solver_options;
-    constraints = obj.ocp.constraints;
-    dims = obj.ocp.dims;
+    cost = ocp.cost;
+    solver_opts = ocp.solver_options;
+    constraints = ocp.constraints;
+    dims = ocp.dims;
 
     % options for code generation
     code_gen_opts = struct();
@@ -48,23 +48,23 @@ function ocp_generate_c_code(obj)
     code_gen_opts.with_value_sens_wrt_params = solver_opts.with_value_sens_wrt_params;
 
     % dynamics
-    model_dir = fullfile(pwd, 'c_generated_code', [obj.ocp.name '_model']);
+    model_dir = fullfile(pwd, 'c_generated_code', [ocp.name '_model']);
     % model dir is always need, other dirs are  only created if necessary
     if ~exist(model_dir, 'dir')
         mkdir(model_dir);
     end
 
     if (strcmp(solver_opts.integrator_type, 'ERK'))
-        generate_c_code_explicit_ode(obj.ocp.model, code_gen_opts, model_dir);
-    elseif (strcmp(solver_opts.integrator_type, 'IRK')) && strcmp(obj.ocp.model.dyn_ext_fun_type, 'casadi')
-        generate_c_code_implicit_ode(obj.ocp.model, code_gen_opts, model_dir);
+        generate_c_code_explicit_ode(ocp.model, code_gen_opts, model_dir);
+    elseif (strcmp(solver_opts.integrator_type, 'IRK')) && strcmp(ocp.model.dyn_ext_fun_type, 'casadi')
+        generate_c_code_implicit_ode(ocp.model, code_gen_opts, model_dir);
     elseif (strcmp(solver_opts.integrator_type, 'GNSF'))
-        generate_c_code_gnsf(obj.ocp.model, code_gen_opts, model_dir);
-    elseif (strcmp(solver_opts.integrator_type, 'DISCRETE')) && strcmp(obj.ocp.model.dyn_ext_fun_type, 'casadi')
-        generate_c_code_disc_dyn(obj.ocp.model, code_gen_opts, model_dir);
+        generate_c_code_gnsf(ocp.model, code_gen_opts, model_dir);
+    elseif (strcmp(solver_opts.integrator_type, 'DISCRETE')) && strcmp(ocp.model.dyn_ext_fun_type, 'casadi')
+        generate_c_code_disc_dyn(ocp.model, code_gen_opts, model_dir);
     end
-    if strcmp(obj.ocp.model.dyn_ext_fun_type, 'generic')
-        copyfile( fullfile(pwd, obj.ocp.model.dyn_generic_source), model_dir);
+    if strcmp(ocp.model.dyn_ext_fun_type, 'generic')
+        copyfile( fullfile(pwd, ocp.model.dyn_generic_source), model_dir);
     end
 
     stage_types = {'initial', 'path', 'terminal'};
@@ -72,11 +72,11 @@ function ocp_generate_c_code(obj)
     % cost
     cost_types = {cost.cost_type_0, cost.cost_type, cost.cost_type_e};
     cost_ext_fun_types = {cost.cost_ext_fun_type_0, cost.cost_ext_fun_type, cost.cost_ext_fun_type_e};
-    cost_dir = fullfile(pwd, 'c_generated_code', [obj.ocp.name '_cost']);
+    cost_dir = fullfile(pwd, 'c_generated_code', [ocp.name '_cost']);
 
     for i = 1:3
         if strcmp(cost_types{i}, 'NONLINEAR_LS')
-            generate_c_code_nonlinear_least_squares( obj.ocp.model, cost_dir, stage_types{i} );
+            generate_c_code_nonlinear_least_squares( ocp.model, cost_dir, stage_types{i} );
 
         elseif strcmp(cost_types{i}, 'CONVEX_OVER_NONLINEAR')
             % TODO
@@ -84,7 +84,7 @@ function ocp_generate_c_code(obj)
 
         elseif strcmp(cost_types{i}, 'EXTERNAL')
             if strcmp(cost_ext_fun_types{i}, 'casadi')
-                generate_c_code_ext_cost( obj.ocp.model, cost_dir, stage_types{i} );
+                generate_c_code_ext_cost( ocp.model, cost_dir, stage_types{i} );
             elseif strcmp(cost_ext_fun_types{i}, 'generic')
                 setup_generic_cost(cost, cost_dir, stage_types{i})
             else
@@ -97,73 +97,69 @@ function ocp_generate_c_code(obj)
     % constraints
     constraints_types = {constraints.constr_type_0, constraints.constr_type, constraints.constr_type_e};
     constraints_dims = {dims.nh_0, dims.nh, dims.nh_e};
-    constraints_dir = fullfile(pwd, 'c_generated_code', [obj.ocp.name '_constraints']);
+    constraints_dir = fullfile(pwd, 'c_generated_code', [ocp.name '_constraints']);
 
     for i = 1:3
         if strcmp(constraints_types{i}, 'BGH') && constraints_dims{i} > 0
-            generate_c_code_nonlinear_constr( obj.ocp.model, constraints_dir, stage_types{i} );
+            generate_c_code_nonlinear_constr( ocp.model, constraints_dir, stage_types{i} );
         end
     end
 
     % set include and lib path
     acados_folder = getenv('ACADOS_INSTALL_DIR');
-    obj.ocp.acados_include_path = [acados_folder, '/include'];
-    obj.ocp.acados_lib_path = [acados_folder, '/lib'];
+    ocp.acados_include_path = [acados_folder, '/include'];
+    ocp.acados_lib_path = [acados_folder, '/lib'];
 
     %% remove CasADi objects from model
-    model.name = obj.ocp.model.name;
-    model.dyn_ext_fun_type = obj.ocp.model.dyn_ext_fun_type;
-    model.dyn_generic_source = obj.ocp.model.dyn_generic_source;
-    model.dyn_disc_fun_jac_hess = obj.ocp.model.dyn_disc_fun_jac_hess;
-    model.dyn_disc_fun_jac = obj.ocp.model.dyn_disc_fun_jac;
-    model.dyn_disc_fun = obj.ocp.model.dyn_disc_fun;
-    model.gnsf.nontrivial_f_LO = obj.ocp.model.gnsf.nontrivial_f_LO;
-    model.gnsf.purely_linear = obj.ocp.model.gnsf.purely_linear;
-    obj.ocp.model = model;
-    %% post process numerical data (mostly cast scalars to 1-dimensional cells)
-    dims = obj.ocp.dims;
+    model_without_expr = struct();
+    model_without_expr.name = ocp.model.name;
+    model_without_expr.dyn_ext_fun_type = ocp.model.dyn_ext_fun_type;
+    model_without_expr.dyn_generic_source = ocp.model.dyn_generic_source;
+    model_without_expr.dyn_disc_fun_jac_hess = ocp.model.dyn_disc_fun_jac_hess;
+    model_without_expr.dyn_disc_fun_jac = ocp.model.dyn_disc_fun_jac;
+    model_without_expr.dyn_disc_fun = ocp.model.dyn_disc_fun;
+    model_without_expr.gnsf.nontrivial_f_LO = ocp.model.gnsf.nontrivial_f_LO;
+    model_without_expr.gnsf.purely_linear = ocp.model.gnsf.purely_linear;
+    ocp.model = model_without_expr;
 
-    constr = obj.ocp.constraints;
-    props = fieldnames(constr);
+    %% post process numerical data (mostly cast scalars to 1-dimensional cells)
+    props = fieldnames(ocp.constraints);
     disable_last_warning();  % show warning for struct conversion only once
     for iprop = 1:length(props)
         this_prop = props{iprop};
         % add logic here if you want to work with select properties
-        this_prop_value = constr.(this_prop);
+        this_prop_value = ocp.constraints.(this_prop);
         % add logic here if you want to do something based on the property's value
         if all(size(this_prop_value) == [1 1])
-            constr.(this_prop) = num2cell(constr.(this_prop));
+            ocp.constraints.(this_prop) = num2cell(ocp.constraints.(this_prop));
         end
     end
-    obj.ocp.constraints = constr;
 
-    cost = obj.ocp.cost;
-    props = fieldnames(cost);
+    props = fieldnames(ocp.cost);
     for iprop = 1:length(props)
         this_prop = props{iprop};
         % add logic here if you want to work with select properties
-        this_prop_value = cost.(this_prop);
+        this_prop_value = ocp.cost.(this_prop);
         % add logic here if you want to do something based on the property's value
         if all(size(this_prop_value) == [1, 1])
-            cost.(this_prop) = num2cell(cost.(this_prop));
+            ocp.cost.(this_prop) = num2cell(ocp.cost.(this_prop));
         end
     end
 
     % for cost type not LINEAR_LS, fill matrices with zeros
-    if ~strcmp(cost.cost_type, 'LINEAR_LS')
-        cost.Vx_0 = zeros(dims.ny_0, dims.nx);
-        cost.Vu_0 = zeros(dims.ny_0, dims.nu);
-        cost.Vz_0 = zeros(dims.ny_0, dims.nz);
+    if ~strcmp(ocp.cost.cost_type, 'LINEAR_LS')
+        ocp.cost.Vx_0 = zeros(ocp.dims.ny_0, ocp.dims.nx);
+        ocp.cost.Vu_0 = zeros(ocp.dims.ny_0, ocp.dims.nu);
+        ocp.cost.Vz_0 = zeros(ocp.dims.ny_0, ocp.dims.nz);
     end
-    if ~strcmp(cost.cost_type, 'LINEAR_LS')
-        cost.Vx = zeros(dims.ny, dims.nx);
-        cost.Vu = zeros(dims.ny, dims.nu);
-        cost.Vz = zeros(dims.ny, dims.nz);
+    if ~strcmp(ocp.cost.cost_type, 'LINEAR_LS')
+        ocp.cost.Vx = zeros(ocp.dims.ny, ocp.dims.nx);
+        ocp.cost.Vu = zeros(ocp.dims.ny, ocp.dims.nu);
+        ocp.cost.Vz = zeros(ocp.dims.ny, ocp.dims.nz);
     end
-    if ~strcmp(cost.cost_type_e, 'LINEAR_LS')
-        cost.Vx_e = zeros(dims.ny_e, dims.nx);
+    if ~strcmp(ocp.cost.cost_type_e, 'LINEAR_LS')
+        ocp.cost.Vx_e = zeros(ocp.dims.ny_e, ocp.dims.nx);
     end
-    obj.ocp.cost = cost;
 
     %% load JSON layout
     acados_folder = getenv('ACADOS_INSTALL_DIR');
@@ -178,43 +174,41 @@ function ocp_generate_c_code(obj)
     % end
 
     %% reshape constraints
-    constr = obj.ocp.constraints;
     constr_layout = acados_layout.constraints;
     fields = fieldnames(constr_layout);
     for i = 1:numel(fields)
         if strcmp(constr_layout.(fields{i}){1}, 'ndarray')
             property_dim_names = constr_layout.(fields{i}){2};
             if length(property_dim_names) == 1 % vector
-                this_dims = [1, dims.(property_dim_names{1})];
+                this_dims = [1, ocp.dims.(property_dim_names{1})];
             else % matrix
-                this_dims = [dims.(property_dim_names{1}), dims.(property_dim_names{2})];
+                this_dims = [ocp.dims.(property_dim_names{1}), ocp.dims.(property_dim_names{2})];
             end
             try
-                constr.(fields{i}) = reshape(constr.(fields{i}), this_dims);
+                ocp.constraints.(fields{i}) = reshape(ocp.constraints.(fields{i}), this_dims);
             catch e
-                error(['error while reshaping constr.' fields{i} ...
+                error(['error while reshaping constraints' fields{i} ...
                     ' to dimension ' num2str(this_dims), ', got ',...
-                    num2str( size(constr.(fields{i}) )) , 10,...
+                    num2str( size(ocp.constraints.(fields{i}) )) , 10,...
                     e.message ]);
             end
             if this_dims(1) == 1 && length(property_dim_names) ~= 1 % matrix with 1 row
-                constr.(fields{i}) = {constr.(fields{i})};
+                ocp.constraints.(fields{i}) = {ocp.constraints.(fields{i})};
             end
         end
     end
-    obj.ocp.constraints = constr;
 
     %% reshape cost
-    cost = obj.ocp.cost;
+    cost = ocp.cost;
     cost_layout = acados_layout.cost;
     fields = fieldnames(cost_layout);
     for i = 1:numel(fields)
         if strcmp(cost_layout.(fields{i}){1}, 'ndarray')
             property_dim_names = cost_layout.(fields{i}){2};
             if length(property_dim_names) == 1 % vector
-                this_dims = [1, dims.(property_dim_names{1})];
+                this_dims = [1, ocp.dims.(property_dim_names{1})];
             else % matrix
-                this_dims = [dims.(property_dim_names{1}), dims.(property_dim_names{2})];
+                this_dims = [ocp.dims.(property_dim_names{1}), ocp.dims.(property_dim_names{2})];
             end
             try
                 cost.(fields{i}) = reshape(cost.(fields{i}), this_dims);
@@ -231,19 +225,19 @@ function ocp_generate_c_code(obj)
             cost.(fields{i}) = cost.(fields{i}){1};
         end
     end
-    obj.ocp.cost = cost;
+    ocp.cost = cost;
 
     %% reshape opts
-    opts = obj.ocp.solver_options;
+    opts = ocp.solver_options;
     opts_layout = acados_layout.solver_options;
     fields = fieldnames(opts_layout);
     for i = 1:numel(fields)
         if strcmp(opts_layout.(fields{i}){1}, 'ndarray')
             property_dim_names = opts_layout.(fields{i}){2};
             if length(property_dim_names) == 1 % vector
-                this_dims = [1, dims.(property_dim_names{1})];
+                this_dims = [1, ocp.dims.(property_dim_names{1})];
             else % matrix
-                this_dims = [dims.(property_dim_names{1}), dims.(property_dim_names{2})];
+                this_dims = [ocp.dims.(property_dim_names{1}), ocp.dims.(property_dim_names{2})];
             end
             try
                 opts.(fields{i}) = reshape(opts.(fields{i}), this_dims);
@@ -258,21 +252,21 @@ function ocp_generate_c_code(obj)
             end
         end
     end
-    opts.time_steps = reshape(num2cell(opts.time_steps), [1, dims.N]);
-    opts.sim_method_num_stages = reshape(num2cell(opts.sim_method_num_stages), [1, dims.N]);
-    opts.sim_method_num_steps = reshape(num2cell(opts.sim_method_num_steps), [1, dims.N]);
-    opts.sim_method_jac_reuse = reshape(num2cell(opts.sim_method_jac_reuse), [1, dims.N]);
+    opts.time_steps = reshape(num2cell(opts.time_steps), [1, ocp.dims.N]);
+    opts.sim_method_num_stages = reshape(num2cell(opts.sim_method_num_stages), [1, ocp.dims.N]);
+    opts.sim_method_num_steps = reshape(num2cell(opts.sim_method_num_steps), [1, ocp.dims.N]);
+    opts.sim_method_jac_reuse = reshape(num2cell(opts.sim_method_jac_reuse), [1, ocp.dims.N]);
 
-    obj.ocp.solver_options = opts;
+    ocp.solver_options = opts;
 
     % parameter values
-    obj.ocp.parameter_values = reshape(num2cell(obj.ocp.parameter_values), [1, dims.np]);
+    ocp.parameter_values = reshape(num2cell(ocp.parameter_values), [1, ocp.dims.np]);
 
     %% dump JSON file
     % if is_octave()
         % savejson does not work for classes!
         % -> consider making the ocp properties structs directly.
-        ocp_json_struct = orderfields(obj.ocp.struct());
+        ocp_json_struct = orderfields(ocp.struct());
         ocp_json_struct.dims = orderfields(ocp_json_struct.dims.struct());
         ocp_json_struct.cost = orderfields(ocp_json_struct.cost.struct());
         ocp_json_struct.constraints = orderfields(ocp_json_struct.constraints.struct());
@@ -291,15 +285,15 @@ function ocp_generate_c_code(obj)
 
         json_string = savejson('',ocp_json_struct, 'ForceRootName', 0);
     % else % Matlab
-    %     json_string = jsonencode(obj.ocp);
+    %     json_string = jsonencode(ocp);
     % end
-    fid = fopen(obj.ocp.json_file, 'w');
+    fid = fopen(ocp.json_file, 'w');
     if fid == -1, error('Cannot create JSON file'); end
     fwrite(fid, json_string, 'char');
     fclose(fid);
     %% render templated code
-    acados_template_mex.render_acados_templates(obj.ocp.json_file)
-    acados_template_mex.compile_ocp_shared_lib(obj.ocp.code_export_directory)
+    acados_template_mex.render_acados_templates(ocp.json_file)
+    acados_template_mex.compile_ocp_shared_lib(ocp.code_export_directory)
 end
 
 

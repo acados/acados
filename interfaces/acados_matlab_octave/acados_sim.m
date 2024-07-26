@@ -98,7 +98,7 @@ classdef acados_sim < handle
 
             % create template sim
             obj.sim = setup_sim(obj);
-            sim_generate_c_code(obj);
+            sim_generate_c_code(obj.sim);
 
             % templated MEX
             return_dir = pwd();
