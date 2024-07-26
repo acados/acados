@@ -40,6 +40,7 @@
 #include "acados/utils/math.h"
 
 #include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_d_blas.h"
 
 
@@ -276,7 +277,6 @@ void ocp_nlp_reg_mirror_regularize(void *config, ocp_nlp_reg_dims *dims, void *o
 
     int *nx = dims->nx;
     int *nu = dims->nu;
-    // int N = dims->N;
 
     for(ii=0; ii<=dims->N; ii++)
     {
@@ -287,7 +287,20 @@ void ocp_nlp_reg_mirror_regularize(void *config, ocp_nlp_reg_dims *dims, void *o
         blasfeo_unpack_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, mem->reg_hess, nu[ii]+nx[ii]);
         acados_mirror(nu[ii]+nx[ii], mem->reg_hess, mem->V, mem->d, mem->e, opts->epsilon);
         blasfeo_pack_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->reg_hess, nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0);
+
     }
+    printf("i=0, after regularize\n");
+    blasfeo_print_dmat(nu[0]+nx[0], nu[0]+nx[0], mem->RSQrq[0], 0, 0);
+
+    printf("eigenvalues\n");
+    blasfeo_unpack_dmat(nu[0]+nx[0], nu[0]+nx[0], mem->RSQrq[0], 0, 0, mem->reg_hess, nu[0]+nx[0]);
+    acados_eigen_decomposition(nu[0]+nx[0], mem->reg_hess, mem->V, mem->d, mem->e);
+
+    for (int i = 0; i < nu[0]+nx[0]; i++)
+    {
+        printf("%f\n", mem->d[i]);
+    }
+
 }
 
 
