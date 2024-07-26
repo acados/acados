@@ -296,21 +296,16 @@ classdef acados_ocp < handle
             obj.t_ocp.reset();
         end
 
-        function result = qp_diagnostics(obj, type)
+        function result = qp_diagnostics(obj)
             % Compute some diagnostic values for the last QP.
-            % type = 'min_ev': return minimum eigenvalue for each Hessian block.
-            % type = 'max_ev': return maximum eigenvalue for each Hessian block.
-            % type = 'condition_number': return condition number for each Hessian block.
+            % min_ev: minimum eigenvalue for each Hessian block.
+            % max_ev: maximum eigenvalue for each Hessian block.
+            % condition_number: condition number for each Hessian block.
 
-            result = zeros(obj.ocp.dims.N+1, 1);
-
-            if strcmp(type, 'min_ev')
-                fun = @(x) min(x);
-            elseif strcmp(type, 'max_ev')
-                fun = @(x) max(x);
-            elseif strcmp(type, 'condition_number')
-                fun = @(x) max(x)/min(x);
-            end
+            result = struct();
+            result.min_ev = zeros(obj.ocp.dims.N+1, 1);
+            result.max_ev = zeros(obj.ocp.dims.N+1, 1);
+            result.condition_number = zeros(obj.ocp.dims.N+1, 1);
 
             for n=0:obj.ocp.dims.N
                 Q = obj.get('qp_Q', n);
@@ -320,7 +315,9 @@ classdef acados_ocp < handle
                 hess_block = [R, S; S', Q];
 
                 eigvals = eig(hess_block);
-                result(n+1) = fun(eigvals);
+                result.min_ev(n+1) = min(eigvals);
+                result.max_ev(n+1) = max(eigvals);
+                result.condition_number(n+1) = max(eigvals) / min(eigvals);
             end
         end
 
