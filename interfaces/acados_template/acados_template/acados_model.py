@@ -287,11 +287,6 @@ class AcadosModel():
     def make_consistent(self, dims: Union[AcadosOcpDims, AcadosSimDims]) -> None:
 
         casadi_symbol = self.get_casadi_symbol()
-        if is_empty(self.p):
-            self.p = casadi_symbol('p', 0, 0)
-
-        if is_empty(self.z):
-            self.z = casadi_symbol('z', 0, 0)
 
         # nx
         if is_column(self.x):
@@ -306,17 +301,19 @@ class AcadosModel():
         else:
             dims.nu = casadi_length(self.u)
 
-        # nz
-        if is_empty(self.z):
-            dims.nz = 0
-        else:
-            dims.nz = casadi_length(self.z)
-
         # np
         if is_empty(self.p):
             dims.np = 0
+            self.p = casadi_symbol('p', 0, 0)
         else:
             dims.np = casadi_length(self.p)
+
+        # nz
+        if is_empty(self.z):
+            dims.nz = 0
+            self.z = casadi_symbol('z', 0, 0)
+        else:
+            dims.nz = casadi_length(self.z)
 
         return
 
@@ -335,6 +332,7 @@ class AcadosModel():
     def augment_model_with_polynomial_control(self, degree: int) -> None:
         print("Deprecation warning: augment_model_with_polynomial_control() is deprecated and has been renamed to reformulate_with_polynomial_control().")
         self.reformulate_with_polynomial_control(degree=degree)
+
 
     def reformulate_with_polynomial_control(self, degree: int) -> None:
         """
