@@ -113,7 +113,10 @@ for idx = 1:length(targets)
     if contains(targets{idx},'simulink'); bdclose('all'); end
     delete(strcat(testpath, "/test_workspace.mat"));
     % delete generated code to avoid failure in examples using similar names
-    rmdir(strcat(testpath, "/", dir, "/c_generated_code"), 's')
+    code_gen_dir = strcat(testpath, "/", dir, "/c_generated_code");
+    if exist(code_gen_dir, 'dir')
+        rmdir(code_gen_dir, 's')
+    end
     close all; clc;
 end
 

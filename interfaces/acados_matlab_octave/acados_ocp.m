@@ -58,7 +58,7 @@ classdef acados_ocp < handle
             addpath(obj.opts_struct.output_dir);
 
             % check model consistency
-            obj.model_struct = create_consistent_empty_fields(obj.model_struct, obj.opts_struct);
+            obj.model_struct = create_consistent_empty_fields(obj.model_struct);
 
             % detect GNSF structure
             if (strcmp(obj.opts_struct.sim_method, 'irk_gnsf'))
@@ -200,7 +200,7 @@ classdef acados_ocp < handle
                 simulink_opts = get_acados_simulink_opts();
             end
             obj.ocp = setup_ocp(obj, simulink_opts);
-            ocp_generate_c_code(obj);
+            ocp_generate_c_code(obj.ocp);
 
             % templated MEX
             return_dir = pwd();
@@ -221,7 +221,7 @@ classdef acados_ocp < handle
             obj.t_ocp.solve();
         end
 
-
+        % TODO: remove this? does not seem to do anything
         function generate_c_code(obj, simulink_opts)
             if nargin < 2
                 warning("Code is generated with the default simulink options via the constructor of acados_ocp.")

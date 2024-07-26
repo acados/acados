@@ -54,7 +54,7 @@ classdef acados_sim < handle
             addpath(obj.opts_struct.output_dir);
 
             % check model consistency
-            obj.model_struct = create_consistent_empty_fields(obj.model_struct, obj.opts_struct);
+            obj.model_struct = create_consistent_empty_fields(obj.model_struct);
             % detect GNSF structure
             if (strcmp(obj.opts_struct.method, 'irk_gnsf'))
                 if (strcmp(obj.opts_struct.gnsf_detect_struct, 'true'))
@@ -96,10 +96,9 @@ classdef acados_sim < handle
             % detect dimensions & sanity checks
             obj.model_struct = detect_dims_sim(obj.model_struct,obj.opts_struct);
 
-
             % create template sim
             obj.sim = setup_sim(obj);
-            sim_generate_c_code(obj);
+            sim_generate_c_code(obj.sim);
 
             % templated MEX
             return_dir = pwd();

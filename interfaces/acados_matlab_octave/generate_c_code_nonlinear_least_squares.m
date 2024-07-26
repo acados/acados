@@ -30,57 +30,43 @@
 %
 
 
-function generate_c_code_nonlinear_least_squares( model, opts, target_dir )
+function generate_c_code_nonlinear_least_squares( model, target_dir, stage_type )
 
-%% import casadi
 import casadi.*
 
 casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
 check_casadi_version();
 
 %% load model
-% x
-x = model.sym_x;
-nx = length(x);
+x = model.x;
+u = model.u;
+z = model.z;
+p = model.p;
+
 % check type
 if isa(x(1), 'casadi.SX')
     isSX = true;
 else
     isSX = false;
 end
-% u
-u = model.sym_u;
-nu = length(u);
-% p
-if isfield(model, 'sym_p')
-    p = model.sym_p;
-    np = length(p);
-else
-    if isSX
-        p = SX.sym('p',0, 0);
-    else
-        p = MX.sym('p',0, 0);
-    end
-    np = 0;
-end
-z = model.sym_z;
 
 model_name = model.name;
 
 % cd to target folder
-if nargin > 2
-    original_dir = pwd;
-    if ~exist(target_dir, 'dir')
-        mkdir(target_dir);
-    end
-    chdir(target_dir)
-end
+original_dir = pwd;
+check_dir_and_create(target_dir);
+chdir(target_dir)
 
-if isfield(model, 'cost_expr_y_0')
-    fun = model.cost_expr_y_0;
-    if all(size(fun) == 0)
-        error('empty cost_expr_y_0 is not allowed.\nPlease use SX.zeros(1) or %s',...
-              'linear least squares formulation for a zero cost term.');
+if strcmp(stage_type, 'initial')
+
+    if ~isempty(model.cost_y_expr_0)
+        fun = model.cost_y_expr_0;
+    elseif isempty(model.cost_y_expr_0) && ~isempty(model.cost_y_expr)
+        disp('path used')
+        fun = model.cost_y_expr;
+    else
+        error('empty cost_y_expr is not allowed.\nPlease use SX.zeros(1) or %s',...
+        'linear least squares formulation for a zero cost term.');
     end
     % generate jacobians
     jac_x = jacobian(fun, x);
@@ -104,12 +90,11 @@ if isfield(model, 'cost_expr_y_0')
     y_0_fun.generate([model_name,'_cost_y_0_fun'], casadi_opts);
     y_0_fun_jac_ut_xt.generate([model_name,'_cost_y_0_fun_jac_ut_xt'], casadi_opts);
     y_0_hess.generate([model_name,'_cost_y_0_hess'], casadi_opts);
-end
 
-if isfield(model, 'cost_expr_y')
-    fun = model.cost_expr_y;
-    if all(size(fun) == 0)
-        error('empty cost_expr_y is not allowed.\nPlease use SX.zeros(1) or %s',...
+elseif strcmp(stage_type, 'path')
+    fun = model.cost_y_expr;
+    if isempty(fun)
+        error('empty cost_y_expr is not allowed.\nPlease use SX.zeros(1) or %s',...
               'linear least squares formulation for a zero cost term.');
     end
     % generate jacobians
@@ -135,12 +120,10 @@ if isfield(model, 'cost_expr_y')
     y_fun.generate([model_name,'_cost_y_fun'], casadi_opts);
     y_fun_jac_ut_xt.generate([model_name,'_cost_y_fun_jac_ut_xt'], casadi_opts);
     y_hess.generate([model_name,'_cost_y_hess'], casadi_opts);
-end
-
-if isfield(model, 'cost_expr_y_e')
-    fun = model.cost_expr_y_e;
-    if all(size(fun) == 0)
-        error('empty cost_expr_y_e is not allowed.\nPlease use SX.zeros(1) or %s',...
+elseif strcmp(stage_type, 'terminal')
+    fun = model.cost_y_expr_e;
+    if isempty(fun)
+        error('empty cost_y_expr_e is not allowed.\nPlease use SX.zeros(1) or %s',...
               'linear least squares formulation for a zero cost term.');
     end
     % generate jacobians
@@ -168,9 +151,7 @@ if isfield(model, 'cost_expr_y_e')
     y_e_hess.generate([model_name,'_cost_y_e_hess'], casadi_opts);
 end
 
-if nargin > 2
-    chdir(original_dir)
-end
+chdir(original_dir)
 
 end
 

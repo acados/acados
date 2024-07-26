@@ -135,7 +135,7 @@ W(2, 2) =  0.0180;
 W(3, 3) =  0.01;
 W(4, 4) =  0.001;
 % weight matrix in mayer term
-W_e = zeros(ny_e, ny_e); 
+W_e = zeros(ny_e, ny_e);
 W_e(1, 1) =  1.5114;
 W_e(2, 1) = -0.0649;
 W_e(1, 2) = -0.0649;
@@ -365,7 +365,6 @@ time_qp_sol = zeros(n_sim, 1);
 x_traj_init = repmat(x0_ref, 1, ocp_N+1);
 u_traj_init = repmat(u0_ref, 1, ocp_N);
 pi_traj_init = zeros(nx, ocp_N);
-
 
 for ii=1:n_sim
 
