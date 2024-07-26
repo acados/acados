@@ -862,7 +862,7 @@ static void print_iteration(ocp_nlp_opts* opts,
  ************************************************/
 static bool check_termination(int n_iter, ocp_nlp_dims *dims, ocp_nlp_res *nlp_res, ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts)
 {
-    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+    // ocp_nlp_memory *nlp_mem = mem->nlp_mem;
 
     // check for nans
     if (isnan(nlp_res->inf_norm_res_stat) || isnan(nlp_res->inf_norm_res_eq) ||
