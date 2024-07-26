@@ -250,7 +250,7 @@ classdef acados_ocp < handle
             if strcmp('hess_block', field)
 
                 if length(varargin) > 0
-                    n = varargin{1}
+                    n = varargin{1};
                     Q = obj.get('qp_Q', n);
                     R = obj.get('qp_R', n);
                     S = obj.get('qp_S', n);
@@ -329,14 +329,14 @@ classdef acados_ocp < handle
 
                 field = obj.qp_cost_fields{n};
                 for i=0:obj.ocp.dims.N-1
-                    s_indx = sprintf(strcat('%0', lN, 'd'), i);
+                    s_indx = sprintf(strcat('%0', num2str(lN), 'd'), i);
                     key = strcat(field, '_', s_indx);
                     val = obj.get(field, i);
                     qp_data = setfield(qp_data, key, val);
                 end
 
                 if strcmp(field, 'qp_Q') || strcmp(field, 'qp_q')
-                    s_indx = sprintf(strcat('%0', lN, 'd'), i);
+                    s_indx = sprintf(strcat('%0', num2str(lN), 'd'), obj.ocp.dims.N);
                     key = strcat(field, '_', s_indx);
                     val = obj.get(field, obj.ocp.dims.N);
                     qp_data = setfield(qp_data, key, val);
