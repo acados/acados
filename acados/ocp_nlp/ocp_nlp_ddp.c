@@ -806,6 +806,12 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
         reg_param_memory = nlp_opts->levenberg_marquardt;
 
+        // regularize Hessian
+        acados_tic(&timer1);
+        config->regularize->regularize(config->regularize, dims->regularize,
+                                               nlp_opts->regularize, nlp_mem->regularize_mem);
+        mem->time_reg += acados_toc(&timer1);
+
         // Termination
         if (check_termination(ddp_iter, nlp_res, mem, opts))
         {
@@ -817,12 +823,6 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->time_tot = acados_toc(&timer0);
             return mem->status;
         }
-
-        // regularize Hessian
-        acados_tic(&timer1);
-        config->regularize->regularize(config->regularize, dims->regularize,
-                                               nlp_opts->regularize, nlp_mem->regularize_mem);
-        mem->time_reg += acados_toc(&timer1);
 
         /* solve QP */
         // (typically) no warm start at first iteration
