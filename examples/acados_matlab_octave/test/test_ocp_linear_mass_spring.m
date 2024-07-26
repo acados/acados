@@ -248,6 +248,9 @@ filename = 'qp.json';
 ocp.dump_last_qp_to_json('qp.json')
 delete(filename)
 
+% test qp_diagnostics
+qp_diagnostics_result = ocp.qp_diagnostics();
+
 
 % get solution
 u = ocp.get('u');
