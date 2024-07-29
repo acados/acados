@@ -29,178 +29,128 @@
 
 %
 
-function ocp = setup_ocp(obj, simulink_opts)
+function ocp = setup_ocp(obj, model_struct, opts_struct, simulink_opts)
 
-    model = obj.model_struct;
+    model = model_struct;
+
     % create
     ocp = acados_template_mex.AcadosOcp(simulink_opts);
 
     % general
-    ocp.dims.N = obj.opts_struct.param_scheme_N;
+    ocp.dims.N = opts_struct.param_scheme_N;
     ocp.solver_options.tf = model.T;
 
     ocp.code_export_directory = fullfile(pwd, 'c_generated_code');
 
-    if isfield(obj.opts_struct, 'Tsim')
-        ocp.solver_options.Tsim = obj.opts_struct.Tsim;
+    if isfield(opts_struct, 'Tsim')
+        ocp.solver_options.Tsim = opts_struct.Tsim;
     else
-        ocp.solver_options.Tsim = model.T / obj.opts_struct.param_scheme_N; % for templated integrator
+        ocp.solver_options.Tsim = model.T / opts_struct.param_scheme_N; % for templated integrator
     end
 
     ocp.model.name = model.name;
     ocp.name = model.name;
 
     % modules
-    ocp.solver_options.qp_solver = upper(obj.opts_struct.qp_solver);
-    ocp.solver_options.integrator_type = upper(obj.opts_struct.sim_method);
-    ocp.solver_options.nlp_solver_type = upper(obj.opts_struct.nlp_solver);
-    ocp.solver_options.collocation_type = upper(obj.opts_struct.collocation_type);
+    ocp.solver_options.qp_solver = upper(opts_struct.qp_solver);
+    ocp.solver_options.integrator_type = upper(opts_struct.sim_method);
+    ocp.solver_options.nlp_solver_type = upper(opts_struct.nlp_solver);
+    ocp.solver_options.collocation_type = upper(opts_struct.collocation_type);
 
-    if strcmp(obj.opts_struct.sim_method, 'irk_gnsf')
+    if strcmp(opts_struct.sim_method, 'irk_gnsf')
         ocp.solver_options.integrator_type = 'GNSF';
     end
 
-    N = obj.opts_struct.param_scheme_N;
+    N = opts_struct.param_scheme_N;
     % options
-    if length(obj.opts_struct.sim_method_num_steps) == N
-        ocp.solver_options.sim_method_num_steps = obj.opts_struct.sim_method_num_steps;
+    if length(opts_struct.sim_method_num_steps) == N
+        ocp.solver_options.sim_method_num_steps = opts_struct.sim_method_num_steps;
     else
-        ocp.solver_options.sim_method_num_steps = obj.opts_struct.sim_method_num_steps * ones(1, N);
+        ocp.solver_options.sim_method_num_steps = opts_struct.sim_method_num_steps * ones(1, N);
     end
-    if length(obj.opts_struct.sim_method_num_stages) == N
-        ocp.solver_options.sim_method_num_stages = obj.opts_struct.sim_method_num_stages;
+    if length(opts_struct.sim_method_num_stages) == N
+        ocp.solver_options.sim_method_num_stages = opts_struct.sim_method_num_stages;
     else
-        ocp.solver_options.sim_method_num_stages = obj.opts_struct.sim_method_num_stages * ones(1, N);
+        ocp.solver_options.sim_method_num_stages = opts_struct.sim_method_num_stages * ones(1, N);
     end
-    if length(obj.opts_struct.sim_method_jac_reuse) == N
-        ocp.solver_options.sim_method_jac_reuse = obj.opts_struct.sim_method_jac_reuse;
+    if length(opts_struct.sim_method_jac_reuse) == N
+        ocp.solver_options.sim_method_jac_reuse = opts_struct.sim_method_jac_reuse;
     else
-        ocp.solver_options.sim_method_jac_reuse = obj.opts_struct.sim_method_jac_reuse * ones(1, N);
+        ocp.solver_options.sim_method_jac_reuse = opts_struct.sim_method_jac_reuse * ones(1, N);
     end
 
-    ocp.solver_options.sim_method_newton_iter = obj.opts_struct.sim_method_newton_iter;
-    ocp.solver_options.nlp_solver_max_iter = obj.opts_struct.nlp_solver_max_iter;
-    ocp.solver_options.nlp_solver_tol_stat = obj.opts_struct.nlp_solver_tol_stat;
-    ocp.solver_options.nlp_solver_tol_eq = obj.opts_struct.nlp_solver_tol_eq;
-    ocp.solver_options.nlp_solver_tol_ineq = obj.opts_struct.nlp_solver_tol_ineq;
-    ocp.solver_options.nlp_solver_tol_comp = obj.opts_struct.nlp_solver_tol_comp;
-    ocp.solver_options.nlp_solver_ext_qp_res = obj.opts_struct.nlp_solver_ext_qp_res;
-    ocp.solver_options.nlp_solver_step_length = obj.opts_struct.nlp_solver_step_length;
-    ocp.solver_options.globalization = upper(obj.opts_struct.globalization);
-    ocp.solver_options.alpha_min = obj.opts_struct.alpha_min;
-    ocp.solver_options.alpha_reduction = obj.opts_struct.alpha_reduction;
-    ocp.solver_options.line_search_use_sufficient_descent = obj.opts_struct.line_search_use_sufficient_descent;
-    ocp.solver_options.globalization_use_SOC = obj.opts_struct.globalization_use_SOC;
-    ocp.solver_options.full_step_dual = obj.opts_struct.full_step_dual;
-    ocp.solver_options.eps_sufficient_descent = obj.opts_struct.eps_sufficient_descent;
-    ocp.solver_options.qp_solver_ric_alg = obj.opts_struct.qp_solver_ric_alg;
-    ocp.solver_options.qp_solver_cond_ric_alg = obj.opts_struct.qp_solver_cond_ric_alg;
-    if isfield(obj.opts_struct, 'qp_solver_cond_N')
-        ocp.solver_options.qp_solver_cond_N = obj.opts_struct.qp_solver_cond_N;
+    ocp.solver_options.sim_method_newton_iter = opts_struct.sim_method_newton_iter;
+    ocp.solver_options.nlp_solver_max_iter = opts_struct.nlp_solver_max_iter;
+    ocp.solver_options.nlp_solver_tol_stat = opts_struct.nlp_solver_tol_stat;
+    ocp.solver_options.nlp_solver_tol_eq = opts_struct.nlp_solver_tol_eq;
+    ocp.solver_options.nlp_solver_tol_ineq = opts_struct.nlp_solver_tol_ineq;
+    ocp.solver_options.nlp_solver_tol_comp = opts_struct.nlp_solver_tol_comp;
+    ocp.solver_options.nlp_solver_ext_qp_res = opts_struct.nlp_solver_ext_qp_res;
+    ocp.solver_options.nlp_solver_step_length = opts_struct.nlp_solver_step_length;
+    ocp.solver_options.globalization = upper(opts_struct.globalization);
+    ocp.solver_options.alpha_min = opts_struct.alpha_min;
+    ocp.solver_options.alpha_reduction = opts_struct.alpha_reduction;
+    ocp.solver_options.line_search_use_sufficient_descent = opts_struct.line_search_use_sufficient_descent;
+    ocp.solver_options.globalization_use_SOC = opts_struct.globalization_use_SOC;
+    ocp.solver_options.full_step_dual = opts_struct.full_step_dual;
+    ocp.solver_options.eps_sufficient_descent = opts_struct.eps_sufficient_descent;
+    ocp.solver_options.qp_solver_ric_alg = opts_struct.qp_solver_ric_alg;
+    ocp.solver_options.qp_solver_cond_ric_alg = opts_struct.qp_solver_cond_ric_alg;
+    if isfield(opts_struct, 'qp_solver_cond_N')
+        ocp.solver_options.qp_solver_cond_N = opts_struct.qp_solver_cond_N;
     else
-        ocp.solver_options.qp_solver_cond_N = obj.opts_struct.param_scheme_N;
+        ocp.solver_options.qp_solver_cond_N = opts_struct.param_scheme_N;
     end
-    ocp.solver_options.qp_solver_iter_max = obj.opts_struct.qp_solver_iter_max;
-    if isfield(obj.opts_struct, 'qp_solver_tol_stat')
-        ocp.solver_options.qp_solver_tol_stat = obj.opts_struct.qp_solver_tol_stat;
+    ocp.solver_options.qp_solver_iter_max = opts_struct.qp_solver_iter_max;
+    if isfield(opts_struct, 'qp_solver_tol_stat')
+        ocp.solver_options.qp_solver_tol_stat = opts_struct.qp_solver_tol_stat;
     end
-    if isfield(obj.opts_struct, 'reg_epsilon')
-        ocp.solver_options.reg_epsilon = obj.opts_struct.reg_epsilon;
+    if isfield(opts_struct, 'reg_epsilon')
+        ocp.solver_options.reg_epsilon = opts_struct.reg_epsilon;
     end
-    if isfield(obj.opts_struct, 'qp_solver_tol_eq')
-        ocp.solver_options.qp_solver_tol_eq = obj.opts_struct.qp_solver_tol_eq;
+    if isfield(opts_struct, 'qp_solver_tol_eq')
+        ocp.solver_options.qp_solver_tol_eq = opts_struct.qp_solver_tol_eq;
     end
-    if isfield(obj.opts_struct, 'qp_solver_tol_ineq')
-        ocp.solver_options.qp_solver_tol_ineq = obj.opts_struct.qp_solver_tol_ineq;
+    if isfield(opts_struct, 'qp_solver_tol_ineq')
+        ocp.solver_options.qp_solver_tol_ineq = opts_struct.qp_solver_tol_ineq;
     end
-    if isfield(obj.opts_struct, 'qp_solver_tol_comp')
-        ocp.solver_options.qp_solver_tol_comp = obj.opts_struct.qp_solver_tol_comp;
+    if isfield(opts_struct, 'qp_solver_tol_comp')
+        ocp.solver_options.qp_solver_tol_comp = opts_struct.qp_solver_tol_comp;
     end
-    if isfield(obj.opts_struct, 'qp_solver_warm_start')
-        ocp.solver_options.qp_solver_warm_start = obj.opts_struct.qp_solver_warm_start;
+    if isfield(opts_struct, 'qp_solver_warm_start')
+        ocp.solver_options.qp_solver_warm_start = opts_struct.qp_solver_warm_start;
     end
-    if isfield(obj.opts_struct, 'nlp_solver_warm_start_first_qp')
-        ocp.solver_options.nlp_solver_warm_start_first_qp = obj.opts_struct.nlp_solver_warm_start_first_qp;
+    if isfield(opts_struct, 'nlp_solver_warm_start_first_qp')
+        ocp.solver_options.nlp_solver_warm_start_first_qp = opts_struct.nlp_solver_warm_start_first_qp;
     end
-    ocp.solver_options.levenberg_marquardt = obj.opts_struct.levenberg_marquardt;
+    ocp.solver_options.levenberg_marquardt = opts_struct.levenberg_marquardt;
     %
-    if strcmp(obj.opts_struct.nlp_solver_exact_hessian, 'true')
+    if strcmp(opts_struct.nlp_solver_exact_hessian, 'true')
         ocp.solver_options.hessian_approx = 'EXACT';
     else
         ocp.solver_options.hessian_approx = 'GAUSS_NEWTON';
     end
-    ocp.solver_options.regularize_method = upper(obj.opts_struct.regularize_method);
+    ocp.solver_options.regularize_method = upper(opts_struct.regularize_method);
 
-    ocp.solver_options.exact_hess_dyn = obj.opts_struct.exact_hess_dyn;
-    ocp.solver_options.exact_hess_cost = obj.opts_struct.exact_hess_cost;
-    ocp.solver_options.exact_hess_constr = obj.opts_struct.exact_hess_constr;
-    ocp.solver_options.fixed_hess = obj.opts_struct.fixed_hess;
+    ocp.solver_options.exact_hess_dyn = opts_struct.exact_hess_dyn;
+    ocp.solver_options.exact_hess_cost = opts_struct.exact_hess_cost;
+    ocp.solver_options.exact_hess_constr = opts_struct.exact_hess_constr;
+    ocp.solver_options.fixed_hess = opts_struct.fixed_hess;
 
-    ocp.solver_options.ext_fun_compile_flags = obj.opts_struct.ext_fun_compile_flags;
+    ocp.solver_options.ext_fun_compile_flags = opts_struct.ext_fun_compile_flags;
 
-    ocp.solver_options.time_steps = obj.opts_struct.time_steps;
-    ocp.solver_options.print_level = obj.opts_struct.print_level;
+    ocp.solver_options.time_steps = opts_struct.time_steps;
+    ocp.solver_options.print_level = opts_struct.print_level;
 
-    %% dims
-    % path
-    ocp.dims.nx = model.dim_nx;
-    ocp.dims.nu = model.dim_nu;
-    ocp.dims.nz = model.dim_nz;
-    ocp.dims.np = model.dim_np;
-
-    if strcmp(model.cost_type, 'ext_cost')
-        ocp.dims.ny = 0;
+    % compile mex interface (without model dependency)
+    if strcmp(opts_struct.compile_interface, 'true')
+        ocp.solver_options.compile_interface = true;
+    elseif strcmp(opts_struct.compile_interface, 'false')
+        ocp.solver_options.compile_interface = false;
+    elseif strcmp(opts_struct.compile_interface, 'auto')
+        ocp.solver_options.compile_interface = [];
     else
-        ocp.dims.ny = model.dim_ny;
-    end
-    ocp.dims.nbx = model.dim_nbx;
-    ocp.dims.nbx_0 = model.dim_nbx_0;
-    ocp.dims.nbu = model.dim_nbu;
-    ocp.dims.ng = model.dim_ng;
-    ocp.dims.nh = model.dim_nh;
-    ocp.dims.nh_0 = model.dim_nh_0;
-    ocp.dims.nbxe_0 = model.dim_nbxe_0;
-    ocp.dims.ns = model.dim_ns;
-    ocp.dims.nsbx = model.dim_nsbx;
-    ocp.dims.nsbu = model.dim_nsbu;
-    ocp.dims.nsg = model.dim_nsg;
-    ocp.dims.ns_0 = model.dim_ns_0;
-    ocp.dims.nsh_0 = model.dim_nsh_0;
-    ocp.dims.nsphi_0 = model.dim_nsphi_0;
-
-    if isfield(model, 'dim_ny_0')
-        ocp.dims.ny_0 = model.dim_ny_0;
-    elseif strcmp(model.cost_type_0, 'ext_cost')
-        ocp.dims.ny_0 = 0;
-    end
-    % missing in MEX
-    % ocp.dims.nphi;
-    % ocp.dims.nphi_e;
-
-    if isfield(model, 'dim_nsh')
-        ocp.dims.nsh = model.dim_nsh;
-    end
-
-    % terminal
-    ocp.dims.nbx_e = model.dim_nbx_e;
-    ocp.dims.ng_e = model.dim_ng_e;
-    if isfield(model, 'dim_ny_e')
-        ocp.dims.ny_e = model.dim_ny_e;
-    elseif strcmp(model.cost_type_e, 'ext_cost')
-        ocp.dims.ny_e = 0;
-    end
-    ocp.dims.nh_e = model.dim_nh_e;
-    ocp.dims.ns_e = model.dim_ns_e;
-    ocp.dims.nsh_e = model.dim_nsh_e;
-    ocp.dims.nsg_e = model.dim_nsg_e;
-    ocp.dims.nsbx_e = model.dim_nsbx_e;
-
-    if isfield(model, 'dim_gnsf_nx1')
-        ocp.dims.gnsf_nx1 = model.dim_gnsf_nx1;
-        ocp.dims.gnsf_nz1 = model.dim_gnsf_nz1;
-        ocp.dims.gnsf_nout = model.dim_gnsf_nout;
-        ocp.dims.gnsf_ny = model.dim_gnsf_ny;
-        ocp.dims.gnsf_nuhat = model.dim_gnsf_nuhat;
+        error(['Unknown value for `compile_interface`' opts_struct.compile_interface]);
     end
 
     %% types
@@ -221,225 +171,105 @@ function ocp = setup_ocp(obj, simulink_opts)
     end
 
     ocp.cost.cost_ext_fun_type = model.cost_ext_fun_type;
+
     ocp.constraints.constr_type = upper(model.constr_type);
     ocp.constraints.constr_type_0 = upper(model.constr_type_0);
     ocp.constraints.constr_type_e = upper(model.constr_type_e);
 
     % parameters
-    if model.dim_np > 0
-        if isempty(obj.opts_struct.parameter_values)
-            warning(['opts_struct.parameter_values are not set.', ...
-                        10 'Using zeros(np,1) by default.' 10 'You can update them later using the solver object.']);
-            ocp.parameter_values = zeros(model.dim_np,1);
-        else
-            ocp.parameter_values = obj.opts_struct.parameter_values(:);
-        end
-    end
+    ocp.parameter_values = opts_struct.parameter_values;
 
     %% constraints
-    % initial
-    if isfield(model, 'constr_lbx_0')
-        ocp.constraints.lbx_0 = model.constr_lbx_0;
-    elseif ocp.dims.nbx_0 > 0
-        warning('missing: constr_lbx_0, using zeros of appropriate dimension.');
-        ocp.constraints.lbx_0 = zeros(ocp.dims.nbx_0, 1);
-    end
+    constraints_fields_map = struct(...
+        'constr_idxbxe_0', 'idxbxe_0', ...
+        'constr_lbx_0', 'lbx_0', ...
+        'constr_ubx_0', 'ubx_0', ...
+        'constr_Jbx_0', 'idxbx_0', ...
+        'constr_lh_0', 'lh_0', ...
+        'constr_uh_0', 'uh_0', ...
+        'constr_lsh_0', 'lsh_0', ...
+        'constr_ush_0', 'ush_0', ...
+        'constr_Jsh_0', 'idxsh_0', ...
+        'constr_lbx', 'lbx', ...
+        'constr_ubx', 'ubx', ...
+        'constr_Jbx', 'idxbx', ...
+        'constr_C', 'C', ...
+        'constr_D', 'D', ...
+        'constr_lg', 'lg', ...
+        'constr_ug', 'ug', ...
+        'constr_lh', 'lh', ...
+        'constr_uh', 'uh', ...
+        'constr_lsbx', 'lsbx', ...
+        'constr_usbx', 'usbx', ...
+        'constr_Jsbx', 'idxsbx', ...
+        'constr_lsbu', 'lsbu', ...
+        'constr_usbu', 'usbu', ...
+        'constr_Jsbu', 'idxsbu', ...
+        'constr_lsh', 'lsh', ...
+        'constr_ush', 'ush', ...
+        'constr_Jsh', 'idxsh', ...
+        'constr_lsg', 'lsg', ...
+        'constr_usg', 'usg', ...
+        'constr_Jsg', 'idxsg', ...
+        'constr_lbx_e', 'lbx_e', ...
+        'constr_ubx_e', 'ubx_e', ...
+        'constr_Jbx_e', 'idxbx_e', ...
+        'constr_C_e', 'C_e', ...
+        'constr_lg_e', 'lg_e', ...
+        'constr_ug_e', 'ug_e', ...
+        'constr_lh_e', 'lh_e', ...
+        'constr_uh_e', 'uh_e', ...
+        'constr_lsbx_e', 'lsbx_e', ...
+        'constr_usbx_e', 'usbx_e', ...
+        'constr_Jsbx_e', 'idxsbx_e', ...
+        'constr_lsg_e', 'lsg_e', ...
+        'constr_usg_e', 'usg_e', ...
+        'constr_Jsg_e', 'idxsg_e', ...
+        'constr_lsh_e', 'lsh_e', ...
+        'constr_ush_e', 'ush_e', ...
+        'constr_Jsh_e', 'idxsh_e' ...
+    );
+    fields = fieldnames(constraints_fields_map);
+    num_fields = length(fields);
+    for n=1:num_fields
+        old_field = fields{n};
+        if isfield(model, old_field)
+            new_field = constraints_fields_map.(old_field);
 
-    if isfield(model, 'constr_ubx_0')
-        ocp.constraints.ubx_0 = model.constr_ubx_0;
-    elseif ocp.dims.nbx_0 > 0
-        warning('missing: constr_ubx_0, using zeros of appropriate dimension.');
-        ocp.constraints.ubx_0 = zeros(ocp.dims.nbx_0, 1);
-    end
-    if isfield(model, 'constr_Jbx_0')
-        ocp.constraints.idxbx_0 = J_to_idx( model.constr_Jbx_0 );
-    end
-    ocp.constraints.idxbxe_0 = model.constr_idxbxe_0;
-
-    if isfield(model, 'constr_expr_h_0') && ocp.dims.nh_0 > 0
-        ocp.model.con_h_expr_0 = model.constr_expr_h_0;
-    end
-    if isfield(model, 'constr_expr_h') && ocp.dims.nh > 0
-        ocp.model.con_h_expr = model.constr_expr_h;
-    end
-    if isfield(model, 'constr_expr_h_e') && ocp.dims.nh_e > 0
-        ocp.model.con_h_expr_e = model.constr_expr_h_e;
-    end
-    % path
-    if ocp.dims.nbx > 0
-        ocp.constraints.idxbx = J_to_idx( model.constr_Jbx );
-        ocp.constraints.lbx = model.constr_lbx;
-        ocp.constraints.ubx = model.constr_ubx;
-    end
-
-    if ocp.dims.nbu > 0
-        ocp.constraints.idxbu = J_to_idx( model.constr_Jbu );
-        ocp.constraints.lbu = model.constr_lbu;
-        ocp.constraints.ubu = model.constr_ubu;
-    end
-
-    if ocp.dims.ng > 0
-        ocp.constraints.C = model.constr_C;
-        ocp.constraints.D = model.constr_D;
-        ocp.constraints.lg = model.constr_lg;
-        ocp.constraints.ug = model.constr_ug;
-    end
-
-    if ocp.dims.nh > 0
-        ocp.constraints.lh = model.constr_lh;
-        ocp.constraints.uh = model.constr_uh;
-    end
-
-    if ocp.dims.nsbx > 0
-        ocp.constraints.idxsbx = J_to_idx_slack(model.constr_Jsbx);
-        if isfield(model, 'constr_lsbx')
-            ocp.constraints.lsbx = model.constr_lsbx;
-        else
-            ocp.constraints.lsbx = zeros(ocp.dims.nsbx, 1);
-        end
-        if isfield(model, 'constr_usbx')
-            ocp.constraints.usbx = model.constr_usbx;
-        else
-            ocp.constraints.usbx = zeros(ocp.dims.nsbx, 1);
+            if strncmp(old_field, 'constr_J', 8)
+                ocp.constraints.(new_field) = J_to_idx(model.(old_field));
+            else
+                ocp.constraints.(new_field) = model.(old_field);
+            end
         end
     end
 
-
-    if ocp.dims.nsbu > 0
-        ocp.constraints.idxsbu = J_to_idx_slack(model.constr_Jsbu);
-        if isfield(model, 'constr_lsbu')
-            ocp.constraints.lsbu = model.constr_lsbu;
-        else
-            ocp.constraints.lsbu = zeros(ocp.dims.nsbu, 1);
-        end
-        if isfield(model, 'constr_usbu')
-            ocp.constraints.usbu = model.constr_usbu;
-        else
-            ocp.constraints.usbu = zeros(ocp.dims.nsbu, 1);
-        end
-    end
-
-    if ocp.dims.nsh > 0
-        ocp.constraints.idxsh = J_to_idx_slack(model.constr_Jsh);
-        if isfield(model, 'constr_lsh')
-            ocp.constraints.lsh = model.constr_lsh;
-        else
-            ocp.constraints.lsh = zeros(ocp.dims.nsh, 1);
-        end
-        if isfield(model, 'constr_ush')
-            ocp.constraints.ush = model.constr_ush;
-        else
-            ocp.constraints.ush = zeros(ocp.dims.nsh, 1);
+    model_fields_map = struct(...
+        'constr_expr_h_0', 'con_h_expr_0', ...
+        'constr_expr_h', 'con_h_expr', ...
+        'constr_expr_h_e', 'con_h_expr_e', ...
+        'sym_x', 'x', ...
+        'sym_xdot', 'xdot', ...
+        'sym_u', 'u', ...
+        'sym_p', 'p', ...
+        'sym_z', 'z', ...
+        'sym_t', 't', ...
+        'cost_expr_ext_cost_0', 'cost_expr_ext_cost_0', ...
+        'cost_expr_ext_cost', 'cost_expr_ext_cost', ...
+        'cost_expr_ext_cost_e', 'cost_expr_ext_cost_e'
+    );
+    fields = fieldnames(model_fields_map);
+    num_fields = length(fields);
+    for n=1:num_fields
+        old_field = fields{n};
+        if isfield(model, old_field)
+            new_field = model_fields_map.(old_field);
+            ocp.model.(new_field) = model.(old_field);
         end
     end
-
-    if ocp.dims.nsg > 0
-        ocp.constraints.idxsg = J_to_idx_slack(model.constr_Jsg);
-        if isfield(model, 'constr_lsg')
-            ocp.constraints.lsg = model.constr_lsg;
-        else
-            ocp.constraints.lsg = zeros(ocp.dims.nsg, 1);
-        end
-        if isfield(model, 'constr_usg')
-            ocp.constraints.usg = model.constr_usg;
-        else
-            ocp.constraints.usg = zeros(ocp.dims.nsg, 1);
-        end
-    end
-
-    % terminal
-    if ocp.dims.nbx_e > 0
-        ocp.constraints.idxbx_e = J_to_idx( model.constr_Jbx_e );
-        ocp.constraints.lbx_e = model.constr_lbx_e;
-        ocp.constraints.ubx_e = model.constr_ubx_e;
-    end
-
-    if ocp.dims.ng_e > 0
-        ocp.constraints.C_e = model.constr_C_e;
-        ocp.constraints.lg_e = model.constr_lg_e;
-        ocp.constraints.ug_e = model.constr_ug_e;
-    end
-
-    if ocp.dims.nh_e > 0
-        ocp.constraints.lh_e = model.constr_lh_e;
-        ocp.constraints.uh_e = model.constr_uh_e;
-    end
-
-    if ocp.dims.nh_0 > 0
-        ocp.constraints.lh_0 = model.constr_lh_0;
-        ocp.constraints.uh_0 = model.constr_uh_0;
-    end
-
-    if ocp.dims.nsbx_e > 0
-        ocp.constraints.idxsbx_e = J_to_idx_slack(model.constr_Jsbx_e);
-        if isfield(model, 'constr_lsbx_e')
-            ocp.constraints.lsbx_e = model.constr_lsbx_e;
-        else
-            ocp.constraints.lsbx_e = zeros(ocp.dims.nsbx_e, 1);
-        end
-        if isfield(model, 'constr_usbx_e')
-            ocp.constraints.usbx_e = model.constr_usbx_e;
-        else
-            ocp.constraints.usbx_e = zeros(ocp.dims.nsbx_e, 1);
-        end
-    end
-
-    if ocp.dims.nsg_e > 0
-        ocp.constraints.idxsg_e = J_to_idx_slack(model.constr_Jsg_e);
-        if isfield(model, 'constr_lsg_e')
-            ocp.constraints.lsg_e = model.constr_lsg_e;
-        else
-            ocp.constraints.lsg_e = zeros(ocp.dims.nsg_e, 1);
-        end
-        if isfield(model, 'constr_usg_e')
-            ocp.constraints.usg_e = model.constr_usg_e;
-        else
-            ocp.constraints.usg_e = zeros(ocp.dims.nsg_e, 1);
-        end
-    end
-
-
-    if ocp.dims.nsh_e > 0
-        ocp.constraints.idxsh_e = J_to_idx_slack(model.constr_Jsh_e);
-        if isfield(model, 'constr_lsh_e')
-            ocp.constraints.lsh_e = model.constr_lsh_e;
-        else
-            ocp.constraints.lsh_e = zeros(ocp.dims.nsh_e, 1);
-        end
-        if isfield(model, 'constr_ush_e')
-            ocp.constraints.ush_e = model.constr_ush_e;
-        else
-            ocp.constraints.ush_e = zeros(ocp.dims.nsh_e, 1);
-        end
-    end
-
-
-    if ocp.dims.nsh_0 > 0
-        ocp.constraints.idxsh_0 = J_to_idx_slack(model.constr_Jsh_0);
-        if isfield(model, 'constr_lsh_0')
-            ocp.constraints.lsh_0 = model.constr_lsh_0;
-        else
-            ocp.constraints.lsh_0 = zeros(ocp.dims.nsh_0, 1);
-        end
-        if isfield(model, 'constr_ush_0')
-            ocp.constraints.ush_0 = model.constr_ush_0;
-        else
-            ocp.constraints.ush_0 = zeros(ocp.dims.nsh_0, 1);
-        end
-    end
-
 
     %% Cost
-    if strcmp(model.cost_type, 'ext_cost') && strcmp(model.cost_ext_fun_type, 'casadi')
-        ocp.model.cost_expr_ext_cost = model.cost_expr_ext_cost;
-    end
-    if strcmp(model.cost_type_0, 'ext_cost') && strcmp(model.cost_ext_fun_type_0, 'casadi')
-        ocp.model.cost_expr_ext_cost_0 = model.cost_expr_ext_cost_0;
-    end
-    if strcmp(model.cost_type_e, 'ext_cost') && strcmp(model.cost_ext_fun_type_e, 'casadi')
-        ocp.model.cost_expr_ext_cost_e = model.cost_expr_ext_cost_e;
-    end
-
+    obj.dyn_ext_fun_type = model_struct.dyn_ext_fun_type;
     if strcmp(model.cost_ext_fun_type, 'generic')
         ocp.cost.cost_source_ext_cost = model.cost_source_ext_cost;
         ocp.cost.cost_function_ext_cost = model.cost_function_ext_cost;
@@ -564,15 +394,15 @@ function ocp = setup_ocp(obj, simulink_opts)
     end
 
     %% dynamics
-    if strcmp(obj.opts_struct.sim_method, 'erk')
+    if strcmp(opts_struct.sim_method, 'erk')
         ocp.model.f_expl_expr = model.dyn_expr_f;
-    elseif strcmp(obj.opts_struct.sim_method, 'irk')
+    elseif strcmp(opts_struct.sim_method, 'irk')
         if strcmp(model.dyn_ext_fun_type, 'casadi')
             ocp.model.f_impl_expr = model.dyn_expr_f;
         elseif strcmp(model.dyn_ext_fun_type, 'generic')
             ocp.model.dyn_generic_source = model.dyn_generic_source;
         end
-    elseif strcmp(obj.opts_struct.sim_method, 'discrete')
+    elseif strcmp(opts_struct.sim_method, 'discrete')
         ocp.model.dyn_ext_fun_type = model.dyn_ext_fun_type;
         if strcmp(model.dyn_ext_fun_type, 'casadi')
             ocp.model.disc_dyn_expr = model.dyn_expr_phi;
@@ -586,7 +416,7 @@ function ocp = setup_ocp(obj, simulink_opts)
             end
             ocp.model.dyn_disc_fun = model.dyn_disc_fun;
         end
-    elseif strcmp(obj.opts_struct.sim_method, 'irk_gnsf')
+    elseif strcmp(opts_struct.sim_method, 'irk_gnsf')
         ocp.model.gnsf.A = model.dyn_gnsf_A;
         ocp.model.gnsf.B = model.dyn_gnsf_B;
         ocp.model.gnsf.C = model.dyn_gnsf_C;
@@ -618,14 +448,8 @@ function ocp = setup_ocp(obj, simulink_opts)
         ocp.model.gnsf.y = model.sym_gnsf_y;
         ocp.model.gnsf.uhat = model.sym_gnsf_uhat;
     else
-        error(['integrator ', obj.opts_struct.sim_method, ' not support for templating backend.'])
+        error(['integrator ', opts_struct.sim_method, ' not support for templating backend.'])
     end
-
-    ocp.model.x = model.sym_x;
-    ocp.model.u = model.sym_u;
-    ocp.model.z = model.sym_z;
-    ocp.model.xdot = model.sym_xdot;
-    ocp.model.p = model.sym_p;
 end
 
 

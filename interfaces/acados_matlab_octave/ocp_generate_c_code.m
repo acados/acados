@@ -184,7 +184,7 @@ function ocp_generate_c_code(ocp)
             try
                 ocp.constraints.(fields{i}) = reshape(ocp.constraints.(fields{i}), this_dims);
             catch e
-                error(['error while reshaping constraints' fields{i} ...
+                error(['error while reshaping constraints.' fields{i} ...
                     ' to dimension ' num2str(this_dims), ', got ',...
                     num2str( size(ocp.constraints.(fields{i}) )) , 10,...
                     e.message ]);
@@ -196,7 +196,6 @@ function ocp_generate_c_code(ocp)
     end
 
     %% reshape cost
-    cost = ocp.cost;
     cost_layout = acados_layout.cost;
     fields = fieldnames(cost_layout);
     for i = 1:numel(fields)
@@ -208,21 +207,21 @@ function ocp_generate_c_code(ocp)
                 this_dims = [ocp.dims.(property_dim_names{1}), ocp.dims.(property_dim_names{2})];
             end
             try
-                cost.(fields{i}) = reshape(cost.(fields{i}), this_dims);
+                ocp.cost.(fields{i}) = reshape(ocp.cost.(fields{i}), this_dims);
             catch e
+                keyboard
                 error(['error while reshaping cost.' fields{i} ...
                     ' to dimension ' num2str(this_dims), ', got ',...
-                    num2str( size(cost.(fields{i}) )) , 10,...
+                    num2str( size(ocp.cost.(fields{i}) )) , 10,...
                     e.message ]);
             end
             if this_dims(1) == 1 && length(property_dim_names) ~= 1 % matrix with 1 row
-                cost.(fields{i}) = {cost.(fields{i})};
+                ocp.cost.(fields{i}) = {ocp.cost.(fields{i})};
             end
         elseif strcmp(cost_layout.(fields{i}){1}, 'int')
-            cost.(fields{i}) = cost.(fields{i}){1};
+            ocp.cost.(fields{i}) = ocp.cost.(fields{i}){1};
         end
     end
-    ocp.cost = cost;
 
     %% reshape opts
     opts = ocp.solver_options;
@@ -257,8 +256,14 @@ function ocp_generate_c_code(ocp)
     ocp.solver_options = opts;
 
     % parameter values
-    ocp.parameter_values = reshape(num2cell(ocp.parameter_values), [1, ocp.dims.np]);
-
+    try
+        ocp.parameter_values = reshape(num2cell(ocp.parameter_values), [1, ocp.dims.np]);
+    catch e
+        error(['error while reshaping parameter_values'  ...
+                ' to dimension ' num2str([1, ocp.dims.np]) ', got ',...
+                num2str(size(ocp.parameter_values)) , 10,...
+                e.message ]);
+    end
     %% dump JSON file
     % if is_octave()
         % savejson does not work for classes!

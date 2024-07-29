@@ -36,8 +36,6 @@ classdef acados_ocp < handle
         t_ocp
         % matlab objects
         code_gen_dir
-        model_struct
-        opts_struct
         ocp
         cost_ext_fun_type
         cost_ext_fun_type_e
@@ -51,103 +49,93 @@ classdef acados_ocp < handle
 
 
         function obj = acados_ocp(model, opts, simulink_opts)
-            obj.model_struct = model.model_struct;
-            obj.opts_struct = opts.opts_struct;
 
-            [~,~] = mkdir(obj.opts_struct.output_dir);
-            addpath(obj.opts_struct.output_dir);
+            if nargin < 3
+                simulink_opts = get_acados_simulink_opts();
+            end
+            % TODO where do we get these from
+            output_dir = opts.opts_struct.output_dir;
+            gnsf_transcription_opts = struct();
 
-            % check model consistency
-            obj.model_struct = create_consistent_empty_fields(obj.model_struct);
+            [~,~] = mkdir(output_dir);
+            addpath(output_dir);
+
+            obj.ocp = setup_ocp(obj, model.model_struct, opts.opts_struct, simulink_opts);
+            % detect dimensions & sanity checks
+            obj.ocp.model.make_consistent(obj.ocp.dims);
+            detect_dims_ocp(obj.ocp);
+
+            % % check model consistency (do after setup_ocp!)
+            % obj.model_struct = create_consistent_empty_fields(obj.model_struct);
 
             % detect GNSF structure
-            if (strcmp(obj.opts_struct.sim_method, 'irk_gnsf'))
-                if (strcmp(obj.opts_struct.gnsf_detect_struct, 'true'))
-                    obj.model_struct = detect_gnsf_structure(obj.model_struct);
-                    generate_get_gnsf_structure(obj.model_struct, obj.opts_struct);
+            if strcmp(obj.ocp.solver_options.integrator_type, 'GNSF')
+                if obj.ocp.dims.gnsf_nx1 + dims.gnsf_nx2 ~= ocp.dims.nx
+                    detect_gnsf_structure(obj.ocp.model, obj.ocp.dims, gnsf_transcription_opts);
                 else
-                    obj.model_struct = get_gnsf_structure(obj.model_struct);
+                    warning('No GNSF model detected, assuming all required fields are set.')
                 end
             end
-
-            % store ext_fun_type
-            obj.cost_ext_fun_type = obj.model_struct.cost_ext_fun_type;
-            obj.cost_ext_fun_type_e = obj.model_struct.cost_ext_fun_type_e;
-            obj.cost_ext_fun_type_0 = obj.model_struct.cost_ext_fun_type_0;
-            obj.dyn_ext_fun_type = obj.model_struct.dyn_ext_fun_type;
 
             % detect cost type
-            if (strcmp(obj.model_struct.cost_type, 'auto'))
-                obj.model_struct = detect_cost_type(obj.model_struct, 'path');
+            stage_types = {'initial', 'path', 'terminal'};
+            cost_types = {obj.ocp.cost.cost_type_0, obj.ocp.cost.cost_type, obj.ocp.cost.cost_type_e};
+
+            for n=1:3
+                if ~isempty(cost_types{n}) && strcmp(cost_types{n}, 'AUTO')
+                    detect_cost_type(obj.ocp.model, obj.ocp.cost, obj.ocp.dims, stage_types{n});
+                end
             end
-            if (strcmp(obj.model_struct.cost_type_0, 'auto'))
-                obj.model_struct = detect_cost_type(obj.model_struct, 'initial');
-            elseif isempty(obj.model_struct.cost_type_0)
-                % copy entries from path cost
-                obj.model_struct.cost_type_0 = obj.model_struct.cost_type;
-                if (strcmp(obj.model_struct.cost_type, 'linear_ls'))
-                    obj.model_struct.cost_Vx_0 = obj.model_struct.cost_Vx;
-                    obj.model_struct.cost_Vu_0 = obj.model_struct.cost_Vu;
-                    if isfield(obj.model_struct, 'cost_Vz')
-                        obj.model_struct.cost_Vz_0 = obj.model_struct.cost_Vz;
-                    end
-                elseif (strcmp(obj.model_struct.cost_type, 'nonlinear_ls'))
-                    obj.model_struct.cost_expr_y_0 = obj.model_struct.cost_expr_y;
-                elseif (strcmp(obj.model_struct.cost_type, 'ext_cost'))
-                    obj.model_struct.cost_ext_fun_type_0 = obj.model_struct.cost_ext_fun_type;
-                    if strcmp(obj.model_struct.cost_ext_fun_type_0, 'casadi')
-                        obj.model_struct.cost_expr_ext_cost_0 = obj.model_struct.cost_expr_ext_cost;
-                        if isfield(obj.model_struct, 'cost_expr_ext_cost_custom_hess')
-                            obj.model_struct.cost_expr_ext_cost_custom_hess_0 = obj.model_struct.cost_expr_ext_cost_custom_hess;
-                        end
+
+            % if initial is empty, copy path cost
+            if isempty(cost_types{1})
+                obj.ocp.cost.cost_type_0 = obj.ocp.cost.cost_type;
+                if (strcmp(obj.ocp.cost.cost_type, 'LINEAR_LS'))
+                    obj.ocp.cost.Vx_0 = obj.ocp.cost.Vx;
+                    obj.ocp.cost.Vu_0 = obj.ocp.cost.Vu;
+                    obj.ocp.cost.Vz_0 = obj.ocp.cost.Vz;
+                elseif (strcmp(obj.ocp.cost.cost_type, 'NONLINEAR_LS'))
+                    obj.model.cost_y_expr_0 = obj.model.cost_y_expr;
+                elseif (strcmp(obj.ocp.cost.cost_type, 'ext_cost'))
+                    obj.ocp.cost.cost_ext_fun_type_0 = obj.ocp.cost.cost_ext_fun_type;
+                    if strcmp(obj.ocp.cost.cost_ext_fun_type_0, 'casadi')
+                        obj.model.cost_expr_ext_cost_0 = obj.model.cost_expr_ext_cost;
+                        obj.model.cost_expr_ext_cost_custom_hess_0 = obj.model.cost_expr_ext_cost_custom_hess;
                     else % generic
-                        obj.model_struct.cost_source_ext_cost_0 = obj.model_struct.cost_source_ext_cost;
-                        obj.model_struct.cost_function_ext_cost_0 = obj.model_struct.cost_function_ext_cost;
+                        obj.ocp.cost.cost_source_ext_cost_0 = obj.ocp.cost.cost_source_ext_cost;
+                        obj.ocp.cost.cost_function_ext_cost_0 = obj.ocp.cost.cost_function_ext_cost;
                     end
                 end
-                if (strcmp(obj.model_struct.cost_type, 'linear_ls')) || (strcmp(obj.model_struct.cost_type, 'nonlinear_ls'))
-                    obj.model_struct.cost_W_0 = obj.model_struct.cost_W;
-                    if isfield(obj.model_struct,'cost_y_ref')
-                        obj.model_struct.cost_y_ref_0 = obj.model_struct.cost_y_ref;
-                    end
+                if (strcmp(obj.ocp.cost.cost_type, 'LINEAR_LS')) || (strcmp(obj.ocp.cost.cost_type, 'NONLINEAR_LS'))
+                    obj.ocp.cost.W_0 = obj.ocp.cost.W;
+                    obj.ocp.cost.yref_0 = obj.ocp.cost.yref;
+                    obj.ocp.dims.ny_0 = obj.ocp.dims.ny;
                 end
-            end
-            if (strcmp(obj.model_struct.cost_type_e, 'auto'))
-                obj.model_struct = detect_cost_type(obj.model_struct, 'terminal');
             end
 
             % detect constraint structure
-            if (strcmp(obj.model_struct.constr_type, 'auto'))
-                obj.model_struct = detect_constr(obj.model_struct, 0);
-            end
-            if (strcmp(obj.model_struct.constr_type_0, 'auto'))
-                obj.model_struct = detect_constr(obj.model_struct, 0, true);
-            end
-            if (strcmp(obj.model_struct.constr_type_e, 'auto'))
-                obj.model_struct = detect_constr(obj.model_struct, 1);
+            constraint_types = {obj.ocp.constraints.constr_type_0, obj.ocp.constraints.constr_type, obj.ocp.constraints.constr_type_e};
+            for n=1:3
+                if strcmp(constraint_types{n}, 'AUTO')
+                    detect_constr(obj.ocp.model, obj.ocp.constraints, obj.ocp.dims, stage_types{n});
+                end
             end
 
-            % detect dimensions & sanity checks
-            [obj.model_struct, obj.opts_struct] = detect_dims_ocp(obj.model_struct, obj.opts_struct);
 
             % check if path contains spaces
-            if ~isempty(strfind(obj.opts_struct.output_dir, ' '))
+            if ~isempty(strfind(output_dir, ' '))
                 error(strcat('acados_ocp: Path should not contain spaces, got: ',...
-                    obj.opts_struct.output_dir));
+                    output_dir));
             end
 
-            % compile mex interface (without model dependency)
-            if ( strcmp(obj.opts_struct.compile_interface, 'true') )
-                compile_interface = true;
-            elseif ( strcmp(obj.opts_struct.compile_interface, 'false') )
-                compile_interface = false;
-            elseif ( strcmp(obj.opts_struct.compile_interface, 'auto') )
+            % auto detect whether to compile the interface or not
+            if isempty(obj.ocp.solver_options.compile_interface)
                 % check if mex interface exists already
                 if is_octave()
-                    mex_exists = exist( fullfile(obj.opts_struct.output_dir,...
+                    mex_exists = exist( fullfile(output_dir,...
                         '/ocp_get.mex'), 'file');
                 else
-                    mex_exists = exist( fullfile(obj.opts_struct.output_dir,...
+                    mex_exists = exist( fullfile(output_dir,...
                         ['ocp_get.', mexext]), 'file');
                 end
                 % check if mex interface is linked against the same external libs as the core
@@ -161,45 +149,41 @@ classdef acados_ocp < handle
                     end
                     core_links = loadjson(fileread(json_filename));
 
-                    json_filename = fullfile(obj.opts_struct.output_dir, 'link_libs.json');
+                    json_filename = fullfile(output_dir, 'link_libs.json');
                     if ~exist(json_filename, 'file')
-                        compile_interface = true;
+                        obj.ocp.solver_options.compile_interface = true;
                     else
                         interface_links = loadjson(fileread(json_filename));
                         if isequal(core_links, interface_links)
-                            compile_interface = false;
+                            obj.ocp.solver_options.compile_interface = false;
                         else
-                            compile_interface = true;
+                            obj.ocp.solver_options.compile_interface = true;
                         end
                     end
                 else
-                    compile_interface = true;
+                    obj.ocp.solver_options.compile_interface = true;
                 end
-            else
-                error('acados_ocp: field compile_interface is %, supported values are: true, false, auto', ...
-                        obj.opts_struct.compile_interface);
             end
 
-            if ( compile_interface )
-                ocp_compile_interface(obj.opts_struct);
+            if obj.ocp.solver_options.compile_interface
+                ocp_compile_interface(output_dir);
                 disp('acados MEX interface compiled successfully')
             else
                 disp('found compiled acados MEX interface')
             end
 
+
             % check for unsupported options:
-            if strcmp(obj.opts_struct.qp_solver, "partial_condensing_osqp") || strcmp(obj.opts_struct.qp_solver, "partial_condensing_hpmpc") || strcmp(obj.opts_struct.qp_solver, "partial_condensing_qpdunes") || ...
-                strcmp(obj.opts_struct.qp_solver, "partial_condensing_ooqp")
-                if obj.model_struct.dim_ns > 0 || obj.model_struct.dim_ns_e > 0
-                    error(['selected QP solver ', obj.opts_struct.qp_solver, ' does not support soft constraints (yet).'])
+            if strcmp(obj.ocp.solver_options.nlp_solver_type, "PARTIAL_CONDENSING_OSQP") || ...
+                strcmp(obj.ocp.solver_options.nlp_solver_type, "PARTIAL_CONDENSING_HPMPC") || ...
+                strcmp(obj.ocp.solver_options.nlp_solver_type, "PARTIAL_CONDENSING_QPDUNES") || ...
+                strcmp(obj.ocp.solver_options.nlp_solver_type, "PARTIAL_CONDENSING_OOQP")
+                if obj.ocp.dims.ns > 0 || obj.ocp.dims.ns_e > 0
+                    error(['selected QP solver ', obj.ocp.solver_options.nlp_solver_type, ' does not support soft constraints (yet).'])
                 end
             end
 
             % generate templated solver
-            if nargin < 3
-                simulink_opts = get_acados_simulink_opts();
-            end
-            obj.ocp = setup_ocp(obj, simulink_opts);
             ocp_generate_c_code(obj.ocp);
 
             % templated MEX
@@ -207,7 +191,7 @@ classdef acados_ocp < handle
             obj.code_gen_dir = obj.ocp.code_export_directory;
             cd(obj.code_gen_dir)
 
-            mex_solver_name = sprintf('%s_mex_solver', obj.model_struct.name);
+            mex_solver_name = sprintf('%s_mex_solver', obj.ocp.model.name);
             mex_solver = str2func(mex_solver_name);
             obj.t_ocp = mex_solver();
             addpath(pwd());
