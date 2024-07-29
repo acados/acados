@@ -1031,6 +1031,12 @@ void ocp_nlp_constraints_bgp_memory_set_DCt_ptr(struct blasfeo_dmat *DCt, void *
 }
 
 
+void ocp_nlp_constraints_bgp_memory_set_dmask_ptr(struct blasfeo_dvec *dmask, void *memory_)
+{
+    ocp_nlp_constraints_bgp_memory *memory = memory_;
+    memory->dmask = dmask;
+}
+
 
 void ocp_nlp_constraints_bgp_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, void *memory_)
 {
@@ -1532,6 +1538,7 @@ void ocp_nlp_constraints_bgp_config_initialize_default(void *config_)
     config->memory_set_DCt_ptr = &ocp_nlp_constraints_bgp_memory_set_DCt_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_constraints_bgp_memory_set_RSQrq_ptr;
     config->memory_set_z_alg_ptr = &ocp_nlp_constraints_bgp_memory_set_z_alg_ptr;
+    config->memory_set_dmask_ptr = &ocp_nlp_constraints_bgp_memory_set_dmask_ptr;
     config->memory_set_dzdux_tran_ptr = &ocp_nlp_constraints_bgp_memory_set_dzduxt_ptr;
     config->memory_set_idxb_ptr = &ocp_nlp_constraints_bgp_memory_set_idxb_ptr;
     config->memory_set_idxs_rev_ptr = &ocp_nlp_constraints_bgp_memory_set_idxs_rev_ptr;
