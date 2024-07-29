@@ -171,7 +171,6 @@ function ocp = setup_ocp(obj, model_struct, opts_struct, simulink_opts)
     end
 
     ocp.cost.cost_ext_fun_type = model.cost_ext_fun_type;
-
     ocp.constraints.constr_type = upper(model.constr_type);
     ocp.constraints.constr_type_0 = upper(model.constr_type_0);
     ocp.constraints.constr_type_e = upper(model.constr_type_e);

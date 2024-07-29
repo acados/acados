@@ -47,7 +47,6 @@ classdef acados_ocp < handle
 
     methods
 
-
         function obj = acados_ocp(model, opts, simulink_opts)
 
             if nargin < 3
@@ -64,9 +63,6 @@ classdef acados_ocp < handle
             % detect dimensions & sanity checks
             obj.ocp.model.make_consistent(obj.ocp.dims);
             detect_dims_ocp(obj.ocp);
-
-            % % check model consistency (do after setup_ocp!)
-            % obj.model_struct = create_consistent_empty_fields(obj.model_struct);
 
             % detect GNSF structure
             if strcmp(obj.ocp.solver_options.integrator_type, 'GNSF')
