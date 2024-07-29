@@ -416,36 +416,36 @@ function ocp = setup_ocp(obj, model_struct, opts_struct, simulink_opts)
             ocp.model.dyn_disc_fun = model.dyn_disc_fun;
         end
     elseif strcmp(opts_struct.sim_method, 'irk_gnsf')
-        ocp.model.gnsf.A = model.dyn_gnsf_A;
-        ocp.model.gnsf.B = model.dyn_gnsf_B;
-        ocp.model.gnsf.C = model.dyn_gnsf_C;
-        ocp.model.gnsf.E = model.dyn_gnsf_E;
-        ocp.model.gnsf.c = model.dyn_gnsf_c;
-        ocp.model.gnsf.A_LO = model.dyn_gnsf_A_LO;
-        ocp.model.gnsf.B_LO = model.dyn_gnsf_B_LO;
-        ocp.model.gnsf.E_LO = model.dyn_gnsf_E_LO;
-        ocp.model.gnsf.c_LO = model.dyn_gnsf_c_LO;
+        ocp.model.dyn_gnsf_A = model.dyn_gnsf_A;
+        ocp.model.dyn_gnsf_B = model.dyn_gnsf_B;
+        ocp.model.dyn_gnsf_C = model.dyn_gnsf_C;
+        ocp.model.dyn_gnsf_E = model.dyn_gnsf_E;
+        ocp.model.dyn_gnsf_c = model.dyn_gnsf_c;
+        ocp.model.dyn_gnsf_A_LO = model.dyn_gnsf_A_LO;
+        ocp.model.dyn_gnsf_B_LO = model.dyn_gnsf_B_LO;
+        ocp.model.dyn_gnsf_E_LO = model.dyn_gnsf_E_LO;
+        ocp.model.dyn_gnsf_c_LO = model.dyn_gnsf_c_LO;
 
-        ocp.model.gnsf.L_x = model.dyn_gnsf_L_x;
-        ocp.model.gnsf.L_u = model.dyn_gnsf_L_u;
-        ocp.model.gnsf.L_xdot = model.dyn_gnsf_L_xdot;
-        ocp.model.gnsf.L_z = model.dyn_gnsf_L_z;
+        ocp.model.dyn_gnsf_L_x = model.dyn_gnsf_L_x;
+        ocp.model.dyn_gnsf_L_u = model.dyn_gnsf_L_u;
+        ocp.model.dyn_gnsf_L_xdot = model.dyn_gnsf_L_xdot;
+        ocp.model.dyn_gnsf_L_z = model.dyn_gnsf_L_z;
 
-        ocp.model.gnsf.expr_phi = model.dyn_gnsf_expr_phi;
-        ocp.model.gnsf.expr_f_lo = model.dyn_gnsf_expr_f_lo;
+        ocp.model.dyn_gnsf_expr_phi = model.dyn_gnsf_expr_phi;
+        ocp.model.dyn_gnsf_expr_f_lo = model.dyn_gnsf_expr_f_lo;
 
-        ocp.model.gnsf.ipiv_x = model.dyn_gnsf_ipiv_x;
-        ocp.model.gnsf.idx_perm_x = model.dyn_gnsf_idx_perm_x;
-        ocp.model.gnsf.ipiv_z = model.dyn_gnsf_ipiv_z;
-        ocp.model.gnsf.idx_perm_z = model.dyn_gnsf_idx_perm_z;
-        ocp.model.gnsf.ipiv_f = model.dyn_gnsf_ipiv_f;
-        ocp.model.gnsf.idx_perm_f = model.dyn_gnsf_idx_perm_f;
+        ocp.model.dyn_gnsf_ipiv_x = model.dyn_gnsf_ipiv_x;
+        ocp.model.dyn_gnsf_idx_perm_x = model.dyn_gnsf_idx_perm_x;
+        ocp.model.dyn_gnsf_ipiv_z = model.dyn_gnsf_ipiv_z;
+        ocp.model.dyn_gnsf_idx_perm_z = model.dyn_gnsf_idx_perm_z;
+        ocp.model.dyn_gnsf_ipiv_f = model.dyn_gnsf_ipiv_f;
+        ocp.model.dyn_gnsf_idx_perm_f = model.dyn_gnsf_idx_perm_f;
 
-        ocp.model.gnsf.nontrivial_f_LO = model.dyn_gnsf_nontrivial_f_LO;
-        ocp.model.gnsf.purely_linear = model.dyn_gnsf_purely_linear;
+        ocp.model.dyn_gnsf_nontrivial_f_LO = model.dyn_gnsf_nontrivial_f_LO;
+        ocp.model.dyn_gnsf_purely_linear = model.dyn_gnsf_purely_linear;
 
-        ocp.model.gnsf.y = model.sym_gnsf_y;
-        ocp.model.gnsf.uhat = model.sym_gnsf_uhat;
+        ocp.model.sym_gnsf_y = model.sym_gnsf_y;
+        ocp.model.sym_gnsf_uhat = model.sym_gnsf_uhat;
     else
         error(['integrator ', opts_struct.sim_method, ' not support for templating backend.'])
     end
