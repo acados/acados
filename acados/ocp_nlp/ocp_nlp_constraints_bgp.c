@@ -1507,6 +1507,27 @@ void ocp_nlp_constraints_bgp_update_qp_vectors(void *config_, void *dims_, void 
     // fun[2*ni : 2*(ni+ns)] = - slack + slack_bounds
     blasfeo_daxpy(2*ns, -1.0, memory->ux, nu+nx, &model->d, 2*nb+2*ng+2*nphi, &memory->fun, 2*nb+2*ng+2*nphi);
 
+    // Set dmask for QP: 0 means unconstrained.
+    for (int i = 0; i < nb+ng+nphi; i++)
+    {
+        if (BLASFEO_DVECEL(&model->d, i) == -ACADOS_INFTY)
+        {
+            // printf("found upper infinity bound\n");
+            BLASFEO_DVECEL(memory->dmask, i) = 0;
+        }
+    }
+    for (int i = nb+ng+nphi; i < 2*nb+ng+nphi; i++)
+    {
+        if (BLASFEO_DVECEL(&model->d, i) == ACADOS_INFTY)
+        {
+            // printf("found upper infinity bound\n");
+            BLASFEO_DVECEL(memory->dmask, i) = 0;
+        }
+    }
+    // printf("BGH mask\n");
+    // blasfeo_print_tran_dvec(2*(nb+ng+nphi), memory->dmask, 0);
+    // blasfeo_print_exp_tran_dvec(2*(nb+ng+nphi), &model->d, 0);
+
     return;
 }
 
