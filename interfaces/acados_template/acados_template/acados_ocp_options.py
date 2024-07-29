@@ -30,6 +30,7 @@
 #
 
 import numpy as np
+from .utils import check_if_nparray_and_flatten
 
 
 INTEGRATOR_TYPES = ('ERK', 'IRK', 'GNSF', 'DISCRETE', 'LIFTED_IRK')
@@ -1017,23 +1018,13 @@ class AcadosOcpOptions:
 
     @time_steps.setter
     def time_steps(self, time_steps):
-        if isinstance(time_steps, np.ndarray):
-            if len(time_steps.shape) == 1:
-                    self.__time_steps = time_steps
-            else:
-                raise Exception('Invalid time_steps, expected np.ndarray of shape (N,).')
-        else:
-            raise Exception('Invalid time_steps, expected np.ndarray.')
+        time_steps = check_if_nparray_and_flatten(time_steps, "time_steps")
+        self.__time_steps = time_steps
 
     @shooting_nodes.setter
     def shooting_nodes(self, shooting_nodes):
-        if isinstance(shooting_nodes, np.ndarray):
-            if len(shooting_nodes.shape) == 1:
-                self.__shooting_nodes = shooting_nodes
-            else:
-                raise Exception('Invalid shooting_nodes, expected np.ndarray of shape (N+1,).')
-        else:
-            raise Exception('Invalid shooting_nodes, expected np.ndarray.')
+        shooting_nodes = check_if_nparray_and_flatten(shooting_nodes, "shooting_nodes")
+        self.__shooting_nodes = shooting_nodes
 
     @Tsim.setter
     def Tsim(self, Tsim):

@@ -30,6 +30,7 @@
 #
 
 import numpy as np
+from .utils import check_if_nparray_and_flatten, check_if_2d_nparray
 
 class AcadosOcpCost:
     """
@@ -164,44 +165,28 @@ class AcadosOcpCost:
 
     @yref_0.setter
     def yref_0(self, yref_0):
-        if isinstance(yref_0, np.ndarray) and len(yref_0.shape) == 1:
-            self.__yref_0 = yref_0
-        else:
-            raise Exception('Invalid yref_0 value, expected 1-dimensional numpy array.')
+        yref_0 = check_if_nparray_and_flatten(yref_0, "yref_0")
+        self.__yref_0 = yref_0
 
     @W_0.setter
     def W_0(self, W_0):
-        if isinstance(W_0, np.ndarray) and len(W_0.shape) == 2:
-            self.__W_0 = W_0
-        elif W_0 is None:
-            self.__W_0 = W_0
-        else:
-            raise Exception('Invalid cost W_0 value. ' \
-                + 'Should be 2 dimensional numpy array.')
+        check_if_2d_nparray(W_0, "W_0")
+        self.__W_0 = W_0
 
     @Vx_0.setter
     def Vx_0(self, Vx_0):
-        if isinstance(Vx_0, np.ndarray) and len(Vx_0.shape) == 2:
-            self.__Vx_0 = Vx_0
-        else:
-            raise Exception('Invalid cost Vx_0 value. ' \
-                + 'Should be 2 dimensional numpy array.')
+        check_if_2d_nparray(Vx_0, "Vx_0")
+        self.__Vx_0 = Vx_0
 
     @Vu_0.setter
     def Vu_0(self, Vu_0):
-        if isinstance(Vu_0, np.ndarray) and len(Vu_0.shape) == 2:
-            self.__Vu_0 = Vu_0
-        else:
-            raise Exception('Invalid cost Vu_0 value. ' \
-                + 'Should be 2 dimensional numpy array.')
+        check_if_2d_nparray(Vu_0, "Vu_0")
+        self.__Vu_0 = Vu_0
 
     @Vz_0.setter
     def Vz_0(self, Vz_0):
-        if isinstance(Vz_0, np.ndarray) and len(Vz_0.shape) == 2:
-            self.__Vz_0 = Vz_0
-        else:
-            raise Exception('Invalid cost Vz_0 value. ' \
-                + 'Should be 2 dimensional numpy array.')
+        check_if_2d_nparray(Vz_0, "Vz_0")
+        self.__Vz_0 = Vz_0
 
     @cost_ext_fun_type_0.setter
     def cost_ext_fun_type_0(self, cost_ext_fun_type_0):
@@ -309,43 +294,29 @@ class AcadosOcpCost:
 
     @W.setter
     def W(self, W):
-        if isinstance(W, np.ndarray) and len(W.shape) == 2:
-            self.__W = W
-        else:
-            raise Exception('Invalid cost W value. ' \
-                + 'Should be 2 dimensional numpy array.')
+        check_if_2d_nparray(W, "W")
+        self.__W = W
 
 
     @Vx.setter
     def Vx(self, Vx):
-        if isinstance(Vx, np.ndarray) and len(Vx.shape) == 2:
-            self.__Vx = Vx
-        else:
-            raise Exception('Invalid cost Vx value. ' \
-                + 'Should be 2 dimensional numpy array.')
+        check_if_2d_nparray(Vx, "Vx")
+        self.__Vx = Vx
 
     @Vu.setter
     def Vu(self, Vu):
-        if isinstance(Vu, np.ndarray) and len(Vu.shape) == 2:
-            self.__Vu = Vu
-        else:
-            raise Exception('Invalid cost Vu value. ' \
-                + 'Should be 2 dimensional numpy array.')
+        check_if_2d_nparray(Vu, "Vu")
+        self.__Vu = Vu
 
     @Vz.setter
     def Vz(self, Vz):
-        if isinstance(Vz, np.ndarray) and len(Vz.shape) == 2:
-            self.__Vz = Vz
-        else:
-            raise Exception('Invalid cost Vz value. ' \
-                + 'Should be 2 dimensional numpy array.')
+        check_if_2d_nparray(Vz, "Vz")
+        self.__Vz = Vz
 
     @yref.setter
     def yref(self, yref):
-        if isinstance(yref, np.ndarray) and len(yref.shape) == 1:
-            self.__yref = yref
-        else:
-            raise Exception('Invalid yref value, expected 1-dimensional numpy array.')
+        yref = check_if_nparray_and_flatten(yref, "yref")
+        self.__yref = yref
 
     @Zl.setter
     def Zl(self, Zl):
@@ -488,82 +459,58 @@ class AcadosOcpCost:
 
     @W_e.setter
     def W_e(self, W_e):
-        if isinstance(W_e, np.ndarray) and len(W_e.shape) == 2:
-            self.__W_e = W_e
-        else:
-            raise Exception('Invalid cost W_e value. ' \
-                + 'Should be 2 dimensional numpy array.')
+        check_if_2d_nparray(W_e, "W_e")
+        self.__W_e = W_e
 
     @Vx_e.setter
     def Vx_e(self, Vx_e):
-        if isinstance(Vx_e, np.ndarray) and len(Vx_e.shape) == 2:
-            self.__Vx_e = Vx_e
-        else:
-            raise Exception('Invalid cost Vx_e value. ' \
-                + 'Should be 2 dimensional numpy array.')
+        check_if_2d_nparray(Vx_e, "Vx_e")
+        self.__Vx_e = Vx_e
 
     @yref_e.setter
     def yref_e(self, yref_e):
-        if isinstance(yref_e, np.ndarray) and len(yref_e.shape) == 1:
-            self.__yref_e = yref_e
-        else:
-            raise Exception('Invalid yref_e value, expected 1-dimensional numpy array.')
+        yref_e = check_if_nparray_and_flatten(yref_e, "yref_e")
+        self.__yref_e = yref_e
 
     @Zl_e.setter
     def Zl_e(self, Zl_e):
-        if isinstance(Zl_e, np.ndarray):
-            self.__Zl_e = Zl_e
-        else:
-            raise Exception('Invalid Zl_e value, expected numpy array.')
+        Zl_e = check_if_nparray_and_flatten(Zl_e, "Zl_e")
+        self.__Zl_e = Zl_e
 
     @Zu_e.setter
     def Zu_e(self, Zu_e):
-        if isinstance(Zu_e, np.ndarray):
-            self.__Zu_e = Zu_e
-        else:
-            raise Exception('Invalid Zu_e value, expected numpy array.')
+        Zu_e = check_if_nparray_and_flatten(Zu_e, "Zu_e")
+        self.__Zu_e = Zu_e
 
     @zl_e.setter
     def zl_e(self, zl_e):
-        if isinstance(zl_e, np.ndarray):
-            self.__zl_e = zl_e
-        else:
-            raise Exception('Invalid zl_e value, expected numpy array.')
+        zl_e = check_if_nparray_and_flatten(zl_e, "zl_e")
+        self.__zl_e = zl_e
 
     @zu_e.setter
     def zu_e(self, zu_e):
-        if isinstance(zu_e, np.ndarray):
-            self.__zu_e = zu_e
-        else:
-            raise Exception('Invalid zu_e value, expected numpy array.')
+        zu_e = check_if_nparray_and_flatten(zu_e, "zu_e")
+        self.__zu_e = zu_e
 
     @Zl_0.setter
     def Zl_0(self, Zl_0):
-        if isinstance(Zl_0, np.ndarray):
-            self.__Zl_0 = Zl_0
-        else:
-            raise Exception('Invalid Zl_0 value, expected numpy array.')
+        Zl_0 = check_if_nparray_and_flatten(Zl_0, "Zl_0")
+        self.__Zl_0 = Zl_0
 
     @Zu_0.setter
     def Zu_0(self, Zu_0):
-        if isinstance(Zu_0, np.ndarray):
-            self.__Zu_0 = Zu_0
-        else:
-            raise Exception('Invalid Zu_0 value, expected numpy array.')
+        Zu_0 = check_if_nparray_and_flatten(Zu_0, "Zu_0")
+        self.__Zu_0 = Zu_0
 
     @zl_0.setter
     def zl_0(self, zl_0):
-        if isinstance(zl_0, np.ndarray):
-            self.__zl_0 = zl_0
-        else:
-            raise Exception('Invalid zl_0 value, expected numpy array.')
+        zl_0 = check_if_nparray_and_flatten(zl_0, "zl_0")
+        self.__zl_0 = zl_0
 
     @zu_0.setter
     def zu_0(self, zu_0):
-        if isinstance(zu_0, np.ndarray):
-            self.__zu_0 = zu_0
-        else:
-            raise Exception('Invalid zu_0 value, expected numpy array.')
+        zu_0 = check_if_nparray_and_flatten(zu_0, "zu_0")
+        self.__zu_0 = zu_0
 
     @cost_ext_fun_type_e.setter
     def cost_ext_fun_type_e(self, cost_ext_fun_type_e):
