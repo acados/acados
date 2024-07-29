@@ -351,7 +351,9 @@ add_test(NAME python_pendulum_ocp_example_cmake
     add_test(NAME python_sparse_param_test
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
         python sparse_param_test.py)
-
+    add_test(NAME python_regularization_test
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
+        python regularization_test.py)
 
     add_test(NAME python_pmsm_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pmsm_example

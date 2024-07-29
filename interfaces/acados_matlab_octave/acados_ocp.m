@@ -43,6 +43,8 @@ classdef acados_ocp < handle
         cost_ext_fun_type_e
         cost_ext_fun_type_0
         dyn_ext_fun_type
+
+        qp_gettable_fields = {'qp_Q', 'qp_R', 'qp_S', 'qp_q', 'qp_r', 'qp_A', 'qp_B', 'qp_b', 'qp_C', 'qp_D', 'qp_lg', 'qp_ug', 'qp_lbx', 'qp_ubx', 'qp_lbu', 'qp_ubu'}
     end % properties
 
 
@@ -244,7 +246,47 @@ classdef acados_ocp < handle
         end
 
         function value = get(obj, field, varargin)
-            value = obj.t_ocp.get(field, varargin{:});
+
+            if strcmp('hess_block', field)
+
+                if length(varargin) > 0
+                    n = varargin{1};
+                    Q = obj.get('qp_Q', n);
+                    R = obj.get('qp_R', n);
+                    S = obj.get('qp_S', n);
+
+                    value = [R, S; S', Q];
+                    return;
+                else
+                    value = cell(obj.ocp.dims.N, 1);
+                    for n=0:obj.ocp.dims.N
+                        Q = obj.get('qp_Q', n);
+                        R = obj.get('qp_R', n);
+                        S = obj.get('qp_S', n);
+
+                        value{n+1} = [R, S; S', Q];
+
+                    end
+                    return;
+                end
+            else
+                value = obj.t_ocp.get(field, varargin{:});
+            end
+
+            % make symmetric (only lower triangular stored internally)
+            if strcmp('qp_Q', field) || strcmp('qp_R', field)
+                if iscell(value)
+                    for i=1:length(value)
+                        if length(value{i}) > 1
+                            value{i} = tril(value{i}) + tril(value{i}, -1)';
+                        end
+                    end
+                else
+                    if length(value) > 1
+                        value = tril(value) + tril(value, -1)';
+                    end
+                end
+            end
         end
 
         function [] = store_iterate(obj, varargin)
@@ -263,6 +305,66 @@ classdef acados_ocp < handle
 
         function reset(obj)
             obj.t_ocp.reset();
+        end
+
+        function result = qp_diagnostics(obj)
+            % Compute some diagnostic values for the last QP.
+            % min_ev: minimum eigenvalue for each Hessian block.
+            % max_ev: maximum eigenvalue for each Hessian block.
+            % condition_number: condition number for each Hessian block.
+
+            result = struct();
+            result.min_ev = zeros(obj.ocp.dims.N+1, 1);
+            result.max_ev = zeros(obj.ocp.dims.N+1, 1);
+            result.condition_number = zeros(obj.ocp.dims.N+1, 1);
+
+            for n=0:obj.ocp.dims.N
+                if n < obj.ocp.dims.N
+                    Q = obj.get('qp_Q', n);
+                    R = obj.get('qp_R', n);
+                    S = obj.get('qp_S', n);
+                    hess_block = [R, S; S', Q];
+                else
+                    hess_block = Q;
+                end
+
+                eigvals = eig(hess_block);
+                result.min_ev(n+1) = min(eigvals);
+                result.max_ev(n+1) = max(eigvals);
+                result.condition_number(n+1) = max(eigvals) / min(eigvals);
+            end
+        end
+
+        function dump_last_qp_to_json(obj, filename)
+            qp_data = struct();
+
+            lN = length(num2str(obj.ocp.dims.N+1));
+            n_fields = length(obj.qp_gettable_fields);
+            for n=1:n_fields
+
+                field = obj.qp_gettable_fields{n};
+                for i=0:obj.ocp.dims.N-1
+                    s_indx = sprintf(strcat('%0', num2str(lN), 'd'), i);
+                    key = strcat(field, '_', s_indx);
+                    val = obj.get(field, i);
+                    qp_data = setfield(qp_data, key, val);
+                end
+
+                if strcmp(field, 'qp_Q') || strcmp(field, 'qp_q')
+                    s_indx = sprintf(strcat('%0', num2str(lN), 'd'), obj.ocp.dims.N);
+                    key = strcat(field, '_', s_indx);
+                    val = obj.get(field, obj.ocp.dims.N);
+                    qp_data = setfield(qp_data, key, val);
+                end
+            end
+
+            % save
+            json_string = savejson('', qp_data, 'ForceRootName', 0, struct('FloatFormat', '%.5f'));
+
+            fid = fopen(filename, 'w');
+            if fid == -1, error('Cannot create json file'); end
+            fwrite(fid, json_string, 'char');
+            fclose(fid);
         end
 
         % function delete(obj)
