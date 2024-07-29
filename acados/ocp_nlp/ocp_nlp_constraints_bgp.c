@@ -629,11 +629,11 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     int nge = dims->nge;
     int nphie = dims->nphie;
 
-    if (!strcmp(field, "lb")) // TODO(fuck_lint) remove !!!
+    if (!strcmp(field, "lb"))
     {
         blasfeo_pack_dvec(nb, value, 1, &model->d, 0);
     }
-    else if (!strcmp(field, "ub")) // TODO(fuck_lint) remove !!!
+    else if (!strcmp(field, "ub"))
     {
         blasfeo_pack_dvec(nb, value, 1, &model->d, nb+ng+nphi);
     }
@@ -689,7 +689,7 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     {
         model->nl_constr_phi_o_r_fun = value;
     }
-    else if (!strcmp(field, "lphi")) // TODO(fuck_lint) remove
+    else if (!strcmp(field, "lphi"))
     {
         blasfeo_pack_dvec(nphi, value, 1, &model->d, nb+ng);
     }
