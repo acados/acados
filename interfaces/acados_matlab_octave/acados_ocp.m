@@ -277,7 +277,7 @@ classdef acados_ocp < handle
             if strcmp('qp_Q', field) || strcmp('qp_R', field)
                 if iscell(value)
                     for i=1:length(value)
-                        if lenth(value{i}) > 1
+                        if length(value{i}) > 1
                             value{i} = tril(value{i}) + tril(value{i}, -1)';
                         end
                     end

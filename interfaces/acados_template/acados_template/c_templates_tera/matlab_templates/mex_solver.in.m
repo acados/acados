@@ -122,8 +122,20 @@ classdef {{ model.name }}_mex_solver < handle
                 disp('acados_ocp.get: wrong number of input arguments (1 or 2 allowed)');
             end
 
+
+            % make symmetric (only lower triangular stored internally)
             if strcmp('qp_Q', field) || strcmp('qp_R', field)
-                value = tril(value) + tril(value, -1)';
+                if iscell(value)
+                    for i=1:length(value)
+                        if length(value{i}) > 1
+                            value{i} = tril(value{i}) + tril(value{i}, -1)';
+                        end
+                    end
+                else
+                    if length(value) > 1
+                        value = tril(value) + tril(value, -1)';
+                    end
+                end
             end
         end
 
