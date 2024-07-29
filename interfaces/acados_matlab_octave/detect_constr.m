@@ -226,8 +226,6 @@ function model = detect_constr(model, constraints, dims, stage_type)
             constraints.ubu = ubu;
             dims.nbu = length(lbu);
         end
-        end
-        end
         % g
         model.dim_ng = length(lg);
         if ~isempty(lg)
@@ -236,13 +234,6 @@ function model = detect_constr(model, constraints, dims, stage_type)
             constraints.lg = lg;
             constraints.ug = ug;
     end
-        % g
-        model.dim_ng = length(lg);
-        if ~isempty(lg)
-            model.constr_C = C;
-            model.constr_D = D;
-            constraints.lg = lg;
-            constraints.ug = ug;
 end
 
 % TODO directly detect idxbx, etc. instead of Jbx, etc.
