@@ -29,13 +29,13 @@
 
 %
 
-function sim = setup_sim(obj)
+function sim = setup_sim(model_struct, opts_struct)
     % create
     sim = acados_template_mex.AcadosSim();
 
     % aliases of frontend obj
-    model = obj.model_struct;
-    opts = obj.opts_struct;
+    model = model_struct;
+    opts = opts_struct;
 
     % file structures
     acados_folder = getenv('ACADOS_INSTALL_DIR');
@@ -50,23 +50,38 @@ function sim = setup_sim(obj)
     sim.code_export_directory = fullfile(pwd(), 'c_generated_code');
 
     % dimensions
-    sim.dims.nx = model.dim_nx;
-    sim.dims.nu = model.dim_nu;
-    sim.dims.nz = model.dim_nz;
-    sim.dims.np = model.dim_np;
-    if isfield(model, 'dim_gnsf_nx1')
-        sim.dims.gnsf_nx1 = model.dim_gnsf_nx1;
-        sim.dims.gnsf_nz1 = model.dim_gnsf_nz1;
-        sim.dims.gnsf_nout = model.dim_gnsf_nout;
-        sim.dims.gnsf_ny = model.dim_gnsf_ny;
-        sim.dims.gnsf_nuhat = model.dim_gnsf_nuhat;
+    dims_fields_map = struct(...
+        'dim_nx', 'nx', ...
+        'dim_nu', 'nu', ...
+        'dim_np', 'np', ...
+        'dim_nz', 'nz', ...
+        'dim_gnsf_nx1', 'gnsf_nx1', ...
+        'dim_gnsf_nx2', 'gnsf_nx2', ...
+        'dim_gnsf_nz1', 'gnsf_nz1', ...
+        'dim_gnsf_nz2', 'gnsf_nz2', ...
+        'dim_gnsf_ny', 'gnsf_ny', ...
+        'dim_gnsf_nuhat', 'gnsf_nuhat', ...
+        'dim_gnsf_nout', 'gnsf_nout'
+    );
+    fields = fieldnames(dims_fields_map);
+    num_fields = length(fields);
+    for n=1:num_fields
+        old_field = fields{n};
+        if isfield(model, old_field)
+            new_field = dims_fields_map.(old_field);
+            sim.dims.(new_field) = model.(old_field);
+        end
+    end
+
+    if isfield(model, 'parameter_values')
+        sim.parameter_values = opts.parameter_values(:);
     end
 
     % model dynamics
     sim.model.name = model.name;
     if strcmp(opts.method, 'erk')
         sim.model.f_expl_expr = model.dyn_expr_f;
-    elseif strcmp(opts.method, 'irk')
+    elseif strcmp(opts.method, 'irk') || strcmp(opts.method, 'irk_gnsf')
         if strcmp(model.ext_fun_type, 'casadi')
             sim.model.f_impl_expr = model.dyn_expr_f;
         elseif strcmp(model.ext_fun_type, 'generic')
@@ -87,45 +102,62 @@ function sim = setup_sim(obj)
             sim.model.dyn_disc_fun = model.dyn_disc_fun;
         end
     elseif strcmp(opts.method, 'irk_gnsf')
-        sim.model.gnsf.A = model.dyn_gnsf_A;
-        sim.model.gnsf.B = model.dyn_gnsf_B;
-        sim.model.gnsf.C = model.dyn_gnsf_C;
-        sim.model.gnsf.E = model.dyn_gnsf_E;
-        sim.model.gnsf.c = model.dyn_gnsf_c;
-        sim.model.gnsf.A_LO = model.dyn_gnsf_A_LO;
-        sim.model.gnsf.B_LO = model.dyn_gnsf_B_LO;
-        sim.model.gnsf.E_LO = model.dyn_gnsf_E_LO;
-        sim.model.gnsf.c_LO = model.dyn_gnsf_c_LO;
-
-        sim.model.gnsf.L_x = model.dyn_gnsf_L_x;
-        sim.model.gnsf.L_u = model.dyn_gnsf_L_u;
-        sim.model.gnsf.L_xdot = model.dyn_gnsf_L_xdot;
-        sim.model.gnsf.L_z = model.dyn_gnsf_L_z;
-
-        sim.model.gnsf.expr_phi = model.dyn_gnsf_expr_phi;
-        sim.model.gnsf.expr_f_lo = model.dyn_gnsf_expr_f_lo;
-
-        sim.model.gnsf.ipiv_x = model.dyn_gnsf_ipiv_x;
-        sim.model.gnsf.idx_perm_x = model.dyn_gnsf_idx_perm_x;
-        sim.model.gnsf.ipiv_z = model.dyn_gnsf_ipiv_z;
-        sim.model.gnsf.idx_perm_z = model.dyn_gnsf_idx_perm_z;
-        sim.model.gnsf.ipiv_f = model.dyn_gnsf_ipiv_f;
-        sim.model.gnsf.idx_perm_f = model.dyn_gnsf_idx_perm_f;
-
-        sim.model.gnsf.nontrivial_f_LO = model.dyn_gnsf_nontrivial_f_LO;
-        sim.model.gnsf.purely_linear = model.dyn_gnsf_purely_linear;
-
-        sim.model.gnsf.y = model.sym_gnsf_y;
-        sim.model.gnsf.uhat = model.sym_gnsf_uhat;
+        gnsf_fields_map = struct(...
+        'dyn_gnsf_A', 'dyn_gnsf_A', ...
+        'dyn_gnsf_B', 'dyn_gnsf_B', ...
+        'dyn_gnsf_C', 'dyn_gnsf_C', ...
+        'dyn_gnsf_E', 'dyn_gnsf_E', ...
+        'dyn_gnsf_c', 'dyn_gnsf_c', ...
+        'dyn_gnsf_A_LO', 'dyn_gnsf_A_LO', ...
+        'dyn_gnsf_B_LO', 'dyn_gnsf_B_LO', ...
+        'dyn_gnsf_E_LO', 'dyn_gnsf_E_LO', ...
+        'dyn_gnsf_c_LO', 'dyn_gnsf_c_LO', ...
+        'dyn_gnsf_L_x', 'dyn_gnsf_L_x', ...
+        'dyn_gnsf_L_u', 'dyn_gnsf_L_u', ...
+        'dyn_gnsf_L_xdot', 'dyn_gnsf_L_xdot', ...
+        'dyn_gnsf_L_z', 'dyn_gnsf_L_z', ...
+        'dyn_gnsf_expr_phi', 'dyn_gnsf_expr_phi', ...
+        'dyn_gnsf_expr_f_lo', 'dyn_gnsf_expr_f_lo', ...
+        'dyn_gnsf_ipiv_x', 'dyn_gnsf_ipiv_x', ...
+        'dyn_gnsf_idx_perm_x', 'dyn_gnsf_idx_perm_x', ...
+        'dyn_gnsf_ipiv_z', 'dyn_gnsf_ipiv_z', ...
+        'dyn_gnsf_idx_perm_z', 'dyn_gnsf_idx_perm_z', ...
+        'dyn_gnsf_ipiv_f', 'dyn_gnsf_ipiv_f', ...
+        'dyn_gnsf_idx_perm_f', 'dyn_gnsf_idx_perm_f', ...
+        'dyn_gnsf_nontrivial_f_LO', 'dyn_gnsf_nontrivial_f_LO', ...
+        'dyn_gnsf_purely_linear', 'dyn_gnsf_purely_linear', ...
+        'sym_gnsf_y', 'sym_gnsf_y', ...
+        'sym_gnsf_uhat', 'sym_gnsf_uhat' ...
+        );
+        fields = fieldnames(gnsf_fields_map);
+        num_fields = length(fields);
+        for n=1:num_fields
+            old_field = fields{n};
+            if isfield(model, old_field)
+                new_field = gnsf_fields_map.(old_field);
+                sim.model.(new_field) = model.(old_field);
+            end
+        end
     else
         error(['integrator ', opts.method, ' not support for templating backend.'])
     end
-
-    sim.model.x = model.sym_x;
-    sim.model.u = model.sym_u;
-    sim.model.z = model.sym_z;
-    sim.model.xdot = model.sym_xdot;
-    sim.model.p = model.sym_p;
+    model_fields_map = struct(...
+        'sym_x', 'x', ...
+        'sym_xdot', 'xdot', ...
+        'sym_u', 'u', ...
+        'sym_p', 'p', ...
+        'sym_z', 'z', ...
+        'sym_t', 't' ...
+    );
+    fields = fieldnames(model_fields_map);
+    num_fields = length(fields);
+    for n=1:num_fields
+        old_field = fields{n};
+        if isfield(model, old_field)
+            new_field = model_fields_map.(old_field);
+            sim.model.(new_field) = model.(old_field);
+        end
+    end
 
     % options
     if strcmp(upper(opts.method), 'IRK_GNSF')
@@ -147,16 +179,6 @@ function sim = setup_sim(obj)
     sim.sim_options.sim_method_jac_reuse = str2bool(opts.jac_reuse);
     sim.sim_options.ext_fun_compile_flags = opts.ext_fun_compile_flags;
 
-    % parameters
-    if model.dim_np > 0
-        if isempty(opts.parameter_values)
-            warning(['opts_struct.parameter_values are not set.', ...
-                        10 'Using zeros(np,1) by default.' 10 'You can update them later using set().']);
-            sim.parameter_values = zeros(model.dim_np,1);
-        else
-            sim.parameter_values = opts.parameter_values(:);
-        end
-    end
 end
 
 

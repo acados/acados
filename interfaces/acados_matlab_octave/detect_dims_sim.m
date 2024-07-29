@@ -30,41 +30,11 @@
 %
 
 function model  = detect_dims_sim(model, opts)
-
-    %% general
-    model.dim_nx = length(model.sym_x);
-
-    if isfield(model, 'sym_u')
-        model.dim_nu = length(model.sym_u);
-    else
-        model.dim_nu = 0;
-    end
-
-    if isfield(model, 'sym_z')
-        model.dim_nz = length(model.sym_z);
-    else
-        model.dim_nz = 0;
-    end
-
-    if isfield(model, 'sym_p')
-        model.dim_np = length(model.sym_p);
-    else
-        model.dim_np = 0;
-    end
-
-    if isfield(model, 'sym_xdot')
-        if numel(model.sym_xdot) ~= model.dim_nx
-            warning('sym_xdot is not of shape nx');
-        end
-    end
-
-    if ~isempty(opts.num_stages)
-        if(strcmp(opts.method,"erk"))
-            if(opts.num_stages == 1 || opts.num_stages == 2 || ...
-                opts.num_stages == 3 || opts.num_stages == 4)
-            else
-                error(['ERK: num_stages = ', num2str(opts.num_stages) ' not available. Only number of stages = {1,2,3,4} implemented!']);
-            end
+    if(strcmp(opts.integrator_type, "ERK"))
+        if(opts.sim_method_num_stages == 1 || opts.sim_method_num_stages == 2 || ...
+            opts.sim_method_num_stages == 3 || opts.sim_method_num_stages == 4)
+        else
+            error(['ERK: sim_method_num_stages = ', num2str(opts.sim_method_num_stages) ' not available. Only number of stages = {1,2,3,4} implemented!']);
         end
     end
 end

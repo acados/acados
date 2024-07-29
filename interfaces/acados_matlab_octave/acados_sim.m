@@ -35,8 +35,6 @@ classdef acados_sim < handle
         % templated solver
         t_sim
         % matlab objects
-        model_struct
-        opts_struct
         sim
         code_gen_dir
     end % properties
@@ -45,59 +43,68 @@ classdef acados_sim < handle
 
     methods
 
-
         function obj = acados_sim(model, opts)
-            obj.model_struct = model.model_struct;
-            obj.opts_struct = opts.opts_struct;
 
-            [~,~] = mkdir(obj.opts_struct.output_dir);
-            addpath(obj.opts_struct.output_dir);
+            % TODO where to get these from?
+            output_dir = opts.opts_struct.output_dir;
+            gnsf_transcription_opts = struct();
+
+            [~,~] = mkdir(opts.opts_struct.output_dir);
+            addpath(opts.opts_struct.output_dir);
 
             % check model consistency
-            obj.model_struct = create_consistent_empty_fields(obj.model_struct);
+            obj.sim = setup_sim(model.model_struct, opts.opts_struct);
+            obj.sim.model.make_consistent(obj.sim.dims);
+            % detect dimensions & sanity checks
+            detect_dims_sim(obj.sim.model, obj.sim.sim_options);
+
             % detect GNSF structure
-            if (strcmp(obj.opts_struct.method, 'irk_gnsf'))
-                if (strcmp(obj.opts_struct.gnsf_detect_struct, 'true'))
-                    obj.model_struct = detect_gnsf_structure(obj.model_struct);
-                    generate_get_gnsf_structure(obj.model_struct, obj.opts_struct);
+            if strcmp(obj.sim.sim_options.integrator_type, 'GNSF')
+                if obj.sim.dims.gnsf_nx1 + obj.sim.dims.gnsf_nx2 ~= obj.sim.dims.nx
+                    detect_gnsf_structure(obj.sim.model, obj.sim.dims, gnsf_transcription_opts);
                 else
-                    obj.model_struct = get_gnsf_structure(obj.model_struct);
+                    warning('No GNSF model detected, assuming all required fields are set.')
+                end
+            end
+
+            % parameters
+            if obj.sim.dims.np > 0
+                if isempty(sim.parameter_values)
+                    warning(['opts_struct.parameter_values are not set.', ...
+                                10 'Using zeros(np,1) by default.' 10 'You can update them later using set().']);
+                    sim.parameter_values = zeros(obj.sim.dims.np,1);
                 end
             end
 
             % check if path contains spaces
-            if ~isempty(strfind(obj.opts_struct.output_dir, ' '))
+            if ~isempty(strfind(output_dir, ' '))
                 error(strcat('acados_ocp: Path should not contain spaces, got: ',...
-                    obj.opts_struct.output_dir));
+                    output_dir));
             end
 
             %% compile mex without model dependency
             % check if mex interface exists already
-            if strcmp(obj.opts_struct.compile_interface, 'true')
+            if strcmp(opts.opts_struct.compile_interface, 'true')
                 compile_interface = true;
-            elseif strcmp(obj.opts_struct.compile_interface, 'false')
+            elseif strcmp(opts.opts_struct.compile_interface, 'false')
                 compile_interface = false;
-            elseif strcmp(obj.opts_struct.compile_interface, 'auto')
+            elseif strcmp(opts.opts_struct.compile_interface, 'auto')
                 if is_octave()
                     extension = '.mex';
                 else
                     extension = ['.' mexext];
                 end
-                compile_interface = ~exist(fullfile(obj.opts_struct.output_dir, ['/sim_create', extension]), 'file');
+                compile_interface = ~exist(fullfile(output_dir, ['/sim_create', extension]), 'file');
             else
-                obj.model_struct.cost_type
                 error('acados_sim: field compile_interface is , supported values are: true, false, auto');
             end
 
-            if ( compile_interface )
-                sim_compile_interface(obj.opts_struct);
+            if (compile_interface)
+                sim_compile_interface(output_dir);
             end
 
-            % detect dimensions & sanity checks
-            obj.model_struct = detect_dims_sim(obj.model_struct,obj.opts_struct);
 
             % create template sim
-            obj.sim = setup_sim(obj);
             sim_generate_c_code(obj.sim);
 
             % templated MEX
@@ -105,7 +112,7 @@ classdef acados_sim < handle
             obj.code_gen_dir = obj.sim.code_export_directory;
             cd(obj.code_gen_dir)
 
-            mex_sim_solver = str2func(sprintf('%s_mex_sim_solver', obj.model_struct.name));
+            mex_sim_solver = str2func(sprintf('%s_mex_sim_solver', obj.sim.model.name));
             obj.t_sim = mex_sim_solver();
             addpath(pwd());
 
@@ -130,7 +137,7 @@ classdef acados_sim < handle
 
         % function delete(obj)
         %     Use default implementation.
-        %     MATLAB destroys the property values after the destruction of the object. 
+        %     MATLAB destroys the property values after the destruction of the object.
         %     Because `t_sim` is the only referrence to the `mex_sim_solver` object, MATLAB also destroys the latter.
         % end
 

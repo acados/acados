@@ -54,7 +54,6 @@ classdef AcadosOcp < handle
             obj.constraints = acados_template_mex.AcadosOcpConstraints();
             obj.solver_options = acados_template_mex.AcadosOcpOptions();
             obj.model = acados_template_mex.AcadosModel();
-            obj.gnsf_model = [];
             obj.acados_include_path = [];
             obj.acados_lib_path = [];
             obj.parameter_values = [];
