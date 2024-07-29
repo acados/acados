@@ -103,7 +103,6 @@ classdef acados_sim < handle
                 sim_compile_interface(output_dir);
             end
 
-
             % create template sim
             sim_generate_c_code(obj.sim);
 

@@ -98,13 +98,13 @@ classdef AcadosOcpDims < handle
             obj.N     = [];
 
             obj.nx    = [];
-            obj.nu    = [];
+            obj.nu    = 0;
             obj.nz    = 0;
             obj.np    = 0;
 
-            obj.ny    = [];
-            obj.ny_0 = [];
-            obj.ny_e   = [];
+            obj.ny    = 0;
+            obj.ny_0 = 0;
+            obj.ny_e   = 0;
 
             obj.nbu   = 0;
             obj.nbx   = 0;

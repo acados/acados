@@ -81,7 +81,7 @@ function ocp_generate_c_code(ocp)
 
         elseif strcmp(cost_types{i}, 'EXTERNAL')
             if strcmp(cost_ext_fun_types{i}, 'casadi')
-                generate_c_code_ext_cost( ocp.model, cost_dir, stage_types{i} );
+                generate_c_code_ext_cost(ocp.model, cost_dir, stage_types{i});
             elseif strcmp(cost_ext_fun_types{i}, 'generic')
                 setup_generic_cost(cost, cost_dir, stage_types{i})
             else
@@ -143,21 +143,6 @@ function ocp_generate_c_code(ocp)
         end
     end
 
-    % for cost type not LINEAR_LS, fill matrices with zeros
-    if ~strcmp(ocp.cost.cost_type, 'LINEAR_LS')
-        ocp.cost.Vx_0 = zeros(ocp.dims.ny_0, ocp.dims.nx);
-        ocp.cost.Vu_0 = zeros(ocp.dims.ny_0, ocp.dims.nu);
-        ocp.cost.Vz_0 = zeros(ocp.dims.ny_0, ocp.dims.nz);
-    end
-    if ~strcmp(ocp.cost.cost_type, 'LINEAR_LS')
-        ocp.cost.Vx = zeros(ocp.dims.ny, ocp.dims.nx);
-        ocp.cost.Vu = zeros(ocp.dims.ny, ocp.dims.nu);
-        ocp.cost.Vz = zeros(ocp.dims.ny, ocp.dims.nz);
-    end
-    if ~strcmp(ocp.cost.cost_type_e, 'LINEAR_LS')
-        ocp.cost.Vx_e = zeros(ocp.dims.ny_e, ocp.dims.nx);
-    end
-
     %% load JSON layout
     acados_folder = getenv('ACADOS_INSTALL_DIR');
     json_layout_filename = fullfile(acados_folder, 'interfaces',...
@@ -206,17 +191,18 @@ function ocp_generate_c_code(ocp)
             else % matrix
                 this_dims = [ocp.dims.(property_dim_names{1}), ocp.dims.(property_dim_names{2})];
             end
-            try
-                ocp.cost.(fields{i}) = reshape(ocp.cost.(fields{i}), this_dims);
-            catch e
-                keyboard
-                error(['error while reshaping cost.' fields{i} ...
-                    ' to dimension ' num2str(this_dims), ', got ',...
-                    num2str( size(ocp.cost.(fields{i}) )) , 10,...
-                    e.message ]);
-            end
-            if this_dims(1) == 1 && length(property_dim_names) ~= 1 % matrix with 1 row
-                ocp.cost.(fields{i}) = {ocp.cost.(fields{i})};
+            if ~isempty(ocp.cost.(fields{i}))
+                try
+                    ocp.cost.(fields{i}) = reshape(ocp.cost.(fields{i}), this_dims);
+                catch e
+                    error(['error while reshaping cost.' fields{i} ...
+                        ' to dimension ' num2str(this_dims), ', got ',...
+                        num2str( size(ocp.cost.(fields{i}) )) , 10,...
+                        e.message ]);
+                end
+                if this_dims(1) == 1 && length(property_dim_names) ~= 1 % matrix with 1 row
+                    ocp.cost.(fields{i}) = {ocp.cost.(fields{i})};
+                end
             end
         elseif strcmp(cost_layout.(fields{i}){1}, 'int')
             ocp.cost.(fields{i}) = ocp.cost.(fields{i}){1};

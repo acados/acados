@@ -78,25 +78,26 @@ classdef acados_ocp < handle
             cost_types = {obj.ocp.cost.cost_type_0, obj.ocp.cost.cost_type, obj.ocp.cost.cost_type_e};
 
             for n=1:3
-                if ~isempty(cost_types{n}) && strcmp(cost_types{n}, 'AUTO')
+                if strcmp(cost_types{n}, 'AUTO')
                     detect_cost_type(obj.ocp.model, obj.ocp.cost, obj.ocp.dims, stage_types{n});
                 end
             end
 
             % if initial is empty, copy path cost
             if isempty(cost_types{1})
+                warning("cost_type_0 not set, using path cost");
                 obj.ocp.cost.cost_type_0 = obj.ocp.cost.cost_type;
                 if (strcmp(obj.ocp.cost.cost_type, 'LINEAR_LS'))
                     obj.ocp.cost.Vx_0 = obj.ocp.cost.Vx;
                     obj.ocp.cost.Vu_0 = obj.ocp.cost.Vu;
                     obj.ocp.cost.Vz_0 = obj.ocp.cost.Vz;
                 elseif (strcmp(obj.ocp.cost.cost_type, 'NONLINEAR_LS'))
-                    obj.model.cost_y_expr_0 = obj.model.cost_y_expr;
-                elseif (strcmp(obj.ocp.cost.cost_type, 'ext_cost'))
+                    obj.ocp.model.cost_y_expr_0 = obj.ocp.model.cost_y_expr;
+                elseif (strcmp(obj.ocp.cost.cost_type, 'EXTERNAL'))
                     obj.ocp.cost.cost_ext_fun_type_0 = obj.ocp.cost.cost_ext_fun_type;
                     if strcmp(obj.ocp.cost.cost_ext_fun_type_0, 'casadi')
-                        obj.model.cost_expr_ext_cost_0 = obj.model.cost_expr_ext_cost;
-                        obj.model.cost_expr_ext_cost_custom_hess_0 = obj.model.cost_expr_ext_cost_custom_hess;
+                        obj.ocp.model.cost_expr_ext_cost_0 = obj.ocp.model.cost_expr_ext_cost;
+                        obj.ocp.model.cost_expr_ext_cost_custom_hess_0 = obj.ocp.model.cost_expr_ext_cost_custom_hess;
                     else % generic
                         obj.ocp.cost.cost_source_ext_cost_0 = obj.ocp.cost.cost_source_ext_cost;
                         obj.ocp.cost.cost_function_ext_cost_0 = obj.ocp.cost.cost_function_ext_cost;
