@@ -821,31 +821,31 @@ class AcadosOcp:
                 raise Exception('DDP only supports initial state constraints, got terminal constraints.')
 
         # Set default parameters for globalization
-        if opts.alpha_min == None:
+        if opts.alpha_min is None:
             if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
                 opts.alpha_min = 1e-17
             else:
                 opts.alpha_min = 0.05
 
-        if opts.alpha_reduction == None:
+        if opts.alpha_reduction is None:
             if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
                 opts.alpha_reduction = 0.5
             else:
                 opts.alpha_reduction = 0.7
 
-        if opts.eps_sufficient_descent == None:
+        if opts.eps_sufficient_descent is None:
             if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
                 opts.eps_sufficient_descent = 1e-6
             else:
                 opts.eps_sufficient_descent = 1e-4
 
-        if opts.eval_residual_at_max_iter == None:
+        if opts.eval_residual_at_max_iter is None:
             if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
                 opts.eval_residual_at_max_iter = True
             else:
                 opts.eval_residual_at_max_iter = False
 
-        if opts.full_step_dual == None:
+        if opts.full_step_dual is None:
             if opts.globalization == 'FUNNEL_L1PEN_LINESEARCH':
                 opts.full_step_dual = 1
             else:
