@@ -63,6 +63,7 @@ classdef acados_ocp < handle
             % detect dimensions & sanity checks
             obj.ocp.model.make_consistent(obj.ocp.dims);
             detect_dims_ocp(obj.ocp);
+            obj.ocp.make_consistent()
 
             % detect GNSF structure
             if strcmp(obj.ocp.solver_options.integrator_type, 'GNSF')

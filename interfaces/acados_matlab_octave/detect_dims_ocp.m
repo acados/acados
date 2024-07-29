@@ -127,7 +127,7 @@ function [model, opts] = detect_dims_ocp(ocp, opts)
                 warning(['yref_e not defined provided.' 10 'Using zeros(ny_e,1) by default.']);
                 ocp.cost.yref_e = zeros(ny_e,1);
             end
-            if ny_e ~= length(model.cost_y_expr_e) || ny ~= size(cost.yref_e, 1)
+            if ny_e ~= length(model.cost_y_expr_e) || ny_e ~= size(cost.yref_e, 1)
                 error('inconsistent dimension ny_e, regarding W_e, cost_y_expr_e, yref_e.');
             end
         else
@@ -300,10 +300,10 @@ function [model, opts] = detect_dims_ocp(ocp, opts)
 
     ns = nsbx + nsbu + nsg + nsh + nsphi;
     wrong_field = '';
-    if ~isempty(cost.Zl) && ~all(size(cost.Zl) == [ns, ns])
+    if ~isempty(cost.Zl) && ~all(size(cost.Zl) == [ns, 1])
         wrong_field = 'Zl';
         dim = size(cost.Zl);
-    elseif ~isempty(cost.Zu) && ~all(size(cost.Zu) == [ns, ns])
+    elseif ~isempty(cost.Zu) && ~all(size(cost.Zu) == [ns, 1])
         wrong_field = 'Zu';
         dim = size(cost.Zu);
     elseif ~isempty(cost.zl) && ~all(size(cost.zl) == [ns, 1])
@@ -315,6 +315,7 @@ function [model, opts] = detect_dims_ocp(ocp, opts)
     end
 
     if ~strcmp(wrong_field, '')
+        keyboard
         error(['Inconsistent size for field ', wrong_field, ' with dimension ', num2str(dim),...
               '. Detected ns = ', num2str(ns), ' = nsbx + nsbu + nsg + nsh + nsphi.',...
               ' With nsbx = ', num2str(nsbx), ', nsbu = ', num2str(nsbu), ' nsg = ', num2str(nsg),...
@@ -342,10 +343,10 @@ function [model, opts] = detect_dims_ocp(ocp, opts)
 
     ns_0 = nsbu + nsg + nsh_0 + nsphi_0;
     wrong_field = '';
-    if ~isempty(cost.Zl_0) && ~all(size(cost.Zl_0) == [ns_0, ns_0])
+    if ~isempty(cost.Zl_0) && ~all(size(cost.Zl_0) == [ns_0, 1])
         wrong_field = 'Zl_0';
         dim = size(cost.Zl_0);
-    elseif ~isempty(cost.Zu_0) && ~all(size(cost.Zu_0) == [ns_0, ns_0])
+    elseif ~isempty(cost.Zu_0) && ~all(size(cost.Zu_0) == [ns_0, 1])
         wrong_field = 'Zu_0';
         dim = size(cost.Zu_0);
     elseif ~isempty(cost.zl_0) && ~all(size(cost.zl_0) == [ns_0, 1])
@@ -390,10 +391,10 @@ function [model, opts] = detect_dims_ocp(ocp, opts)
 
     ns_e = nsbx_e + nsg_e + nsh_e + nsphi_e;
     wrong_field = '';
-    if ~isempty(cost.Zl_e) && ~all(size(cost.Zl_e) == [ns_e, ns_e])
+    if ~isempty(cost.Zl_e) && ~all(size(cost.Zl_e) == [ns_e, 1])
         wrong_field = 'Zl_e';
         dim = size(cost.Zl_e);
-    elseif ~isempty(cost.Zu_e) && ~all(size(cost.Zu_e) == [ns_e, ns_e])
+    elseif ~isempty(cost.Zu_e) && ~all(size(cost.Zu_e) == [ns_e, 1])
         wrong_field = 'Zu_e';
         dim = size(cost.Zu_e);
     elseif ~isempty(cost.zl_e) && ~all(size(cost.zl_e) == [ns_e, 1])

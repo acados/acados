@@ -237,7 +237,7 @@ function ocp = setup_ocp(obj, model_struct, opts_struct, simulink_opts)
 
             if strncmp(old_field, 'constr_Jb', 9)
                 ocp.constraints.(new_field) = J_to_idx(model.(old_field));
-            elseif strncmp(old_field, 'constr_Jbs', 9)
+            elseif strncmp(old_field, 'constr_Js', 9)
                     ocp.constraints.(new_field) = J_to_idx_slack(model.(old_field));
             else
                 ocp.constraints.(new_field) = model.(old_field);
