@@ -1612,6 +1612,9 @@ void ocp_nlp_constraints_bgh_compute_fun(void *config_, void *dims_, void *model
     // fun[2*ni : 2*(ni+ns)] = - slack + slack_bounds
     blasfeo_daxpy(2*ns, -1.0, ux, nu+nx, &model->d, 2*nb+2*ng+2*nh, &memory->fun, 2*nb+2*ng+2*nh);
 
+    // fun = fun * mask
+    blasfeo_dvecmul(2*(nb+ng+nh), memory->dmask, 0, &memory->fun, 0, &memory->fun, 0);
+
     return;
 }
 
@@ -1667,6 +1670,9 @@ void ocp_nlp_constraints_bgh_update_qp_vectors(void *config_, void *dims_, void 
             BLASFEO_DVECEL(memory->dmask, i) = 0;
         }
     }
+
+    // fun = fun * mask
+    blasfeo_dvecmul(2*(nb+ng+nh), memory->dmask, 0, &memory->fun, 0, &memory->fun, 0);
 
     return;
 }
