@@ -807,6 +807,7 @@ int ocp_nlp_ddp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         reg_param_memory = nlp_opts->levenberg_marquardt;
 
         // regularize Hessian
+        // NOTE: this is done before termination, such that we can get the QP at the stationary point that is actually solved, if we exit with success.
         acados_tic(&timer1);
         config->regularize->regularize(config->regularize, dims->regularize,
                                                nlp_opts->regularize, nlp_mem->regularize_mem);
