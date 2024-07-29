@@ -190,9 +190,6 @@ if (ng>0)
 	ocp_model.set('constr_lg_e', lg_e);
 	ocp_model.set('constr_ug_e', ug_e);
 else
-%	ocp_model.set('constr_Jbx', Jbx);
-%	ocp_model.set('constr_lbx', lbx);
-%	ocp_model.set('constr_ubx', ubx);
 	ocp_model.set('constr_Jbu', Jbu);
 	ocp_model.set('constr_lbu', lbu);
 	ocp_model.set('constr_ubu', ubu);
@@ -307,13 +304,13 @@ for ii=1:N_sim
     end
 
 	ocp.solve();
-    ocp.print('stat');
 
     status = ocp.get('status');
     sqp_iter(ii) = ocp.get('sqp_iter');
     sqp_time(ii) = ocp.get('time_tot');
     if status ~= 0
-        keyboard
+        ocp.print('stat');
+        error('solver returned nonzero exit status.')
     end
 
 	% get solution for initialization of next NLP
