@@ -149,7 +149,7 @@ jobs:
         cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
         source env.sh
 
-    - name: Matlab test native MEX
+    - name: Run Matlab tests
       uses: matlab-actions/run-command@v2
       if: always()
       with:
@@ -202,7 +202,7 @@ jobs:
         cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
         source env.sh
 
-    - name: Matlab test native MEX
+    - name: Run Matlab examples
       uses: matlab-actions/run-command@v2
       if: always()
       with:
