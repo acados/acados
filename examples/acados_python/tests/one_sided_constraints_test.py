@@ -132,6 +132,16 @@ def main(constraint_variant='one_sided'):
         simU0[i, :] = ocp_solver.get(i, "u")
     simX0[N_horizon, :] = ocp_solver.get(N_horizon, "x")
 
+    lambdas = [ocp_solver.get(i, "lam") for i in range(1, N_horizon)]
+    for lam in lambdas:
+        assert np.all(lam >= 0)
+
+    # if unbounded constraint is defined properly, lambda should be zero
+    i_infty = 1
+    if constraint_variant == 'one_sided':
+        assert lam[i_infty] == 0
+    elif constraint_variant == 'one_sided_wrong_infty':
+        assert lam[i_infty] != 0
 
     if PLOT:
         plot_pendulum(np.linspace(0, Tf, N_horizon + 1), Fmax, simU0, simX0, latexify=False, plt_show=True, X_true_label=f'N={N_horizon}, Tf={Tf}')
