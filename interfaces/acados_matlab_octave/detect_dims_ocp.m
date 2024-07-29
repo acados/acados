@@ -42,18 +42,27 @@ function [model, opts] = detect_dims_ocp(ocp, opts)
     if strcmp(cost.cost_type_0, 'LINEAR_LS')
         if ~isempty(cost.W_0) && ~isempty(cost.Vx_0) && ~isempty(cost.Vu_0)
             ny = length(cost.W_0);
-            if ny ~= size(cost.Vx_0, 1) || ny ~= size(cost.Vu_0, 1)
-                error('inconsistent dimension ny, regarding W, Vx, Vu.');
+
+            if isempty(cost.yref_0)
+                warning(['yref_0 not defined provided.' 10 'Using zeros(ny_0,1) by default.']);
+                ocp.cost.yref_0 = zeros(ny,1);
+            end
+            if ny ~= size(cost.Vx_0, 1) || ny ~= size(cost.Vu_0, 1) || ny ~= size(cost.yref_0, 1)
+                error('inconsistent dimension ny, regarding W_0, Vx_0, Vu_0, yref_0.');
             end
         else
-            error('setting linear least square cost: need W, Vx, Vu, at least one missing.')
+            error('setting linear least square cost: need W_0, Vx_0, Vu_0, at least one missing.')
         end
         dims.ny_0 = ny;
     elseif strcmp(cost.cost_type_0, 'NONLINEAR_LS')
         if ~isempty(cost.W_0) && ~isempty(model.cost_y_expr_0)
             ny = length(cost.W_0);
-            if ny ~= length(model.cost_y_expr_0)
-                error('inconsistent dimension ny, regarding W, expr_y.');
+            if isempty(cost.yref_0)
+                warning(['yref_0 not defined provided.' 10 'Using zeros(ny_0,1) by default.']);
+                ocp.cost.yref_0 = zeros(ny,1);
+            end
+            if ny ~= length(model.cost_y_expr_0) || ny ~= size(cost.yref_0, 1)
+                error('inconsistent dimension ny_0, regarding W_0, cost_y_expr_0, yref_0.');
             end
         else
             error('setting nonlinear least square cost: need W_0, cost_y_expr_0, at least one missing.')
@@ -65,8 +74,13 @@ function [model, opts] = detect_dims_ocp(ocp, opts)
     if strcmp(cost.cost_type, 'LINEAR_LS')
         if ~isempty(cost.W) && ~isempty(cost.Vx) && ~isempty(cost.Vu)
             ny = length(cost.W);
-            if ny ~= size(cost.Vx, 1) || ny ~= size(cost.Vu, 1)
-                error('inconsistent dimension ny, regarding W, Vx, Vu.');
+            if isempty(cost.yref)
+                warning(['yref not defined provided.' 10 'Using zeros(ny,1) by default.']);
+                ocp.cost.yref = zeros(ny,1);
+            end
+            if ny ~= size(cost.Vx, 1) || ny ~= size(cost.Vu, 1) || ny ~= size(cost.yref, 1)
+                keyboard
+                error('inconsistent dimension ny, regarding W, Vx, Vu, yref.');
             end
         else
             error('setting linear least square cost: need W, Vx, Vu, at least one missing.')
@@ -75,8 +89,12 @@ function [model, opts] = detect_dims_ocp(ocp, opts)
     elseif strcmp(cost.cost_type, 'NONLINEAR_LS')
         if ~isempty(cost.W) && ~isempty(model.cost_y_expr)
             ny = length(cost.W);
-            if ny ~= length(model.cost_y_expr)
-                error('inconsistent dimension ny, regarding W, expr_y.');
+            if isempty(cost.yref)
+                warning(['yref not defined provided.' 10 'Using zeros(ny,1) by default.']);
+                ocp.cost.yref = zeros(ny,1);
+            end
+            if ny ~= length(model.cost_y_expr) || ny ~= size(cost.yref, 1)
+                error('inconsistent dimension ny, regarding W, cost_y_expr, yref.');
             end
         else
             error('setting nonlinear least square cost: need W, cost_y_expr, at least one missing.')
@@ -88,8 +106,12 @@ function [model, opts] = detect_dims_ocp(ocp, opts)
     if strcmp(cost.cost_type_e, 'LINEAR_LS')
         if ~isempty(cost.W_e) && ~isempty(cost.Vx_e)
             ny_e = length(cost.W_e);
-            if ny_e ~= size(cost.Vx_e, 1)
-                error('inconsistent dimension ny_e, regarding W_e, Vx_e.');
+            if isempty(cost.yref_e)
+                warning(['yref_e not defined provided.' 10 'Using zeros(ny_e,1) by default.']);
+                ocp.cost.yref_e = zeros(ny_e,1);
+            end
+            if ny_e ~= size(cost.Vx_e, 1) || ny_e ~= size(cost.yref_e, 1)
+                error('inconsistent dimension ny_e, regarding W_e, Vx_e, yref_e');
             end
         elseif ~~isempty(cost.W_e) && ~~isempty(cost.Vx_e)
             ny_e = 0;
@@ -101,8 +123,12 @@ function [model, opts] = detect_dims_ocp(ocp, opts)
     elseif strcmp(cost.cost_type_e, 'NONLINEAR_LS')
         if ~isempty(cost.W_e) && ~isempty(model.cost_y_expr_e)
             ny_e = length(cost.W_e);
-            if ny_e ~= length(model.cost_y_expr_e)
-                error('inconsistent dimension ny_e, regarding W_e, expr_y_e.');
+            if isempty(cost.yref_e)
+                warning(['yref_e not defined provided.' 10 'Using zeros(ny_e,1) by default.']);
+                ocp.cost.yref_e = zeros(ny_e,1);
+            end
+            if ny_e ~= length(model.cost_y_expr_e) || ny ~= size(cost.yref_e, 1)
+                error('inconsistent dimension ny_e, regarding W_e, cost_y_expr_e, yref_e.');
             end
         else
             error('setting nonlinear least square cost: need W_e, cost_y_expr_e, at least one missing.')

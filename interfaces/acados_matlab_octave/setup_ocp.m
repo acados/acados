@@ -235,8 +235,10 @@ function ocp = setup_ocp(obj, model_struct, opts_struct, simulink_opts)
         if isfield(model, old_field)
             new_field = constraints_fields_map.(old_field);
 
-            if strncmp(old_field, 'constr_J', 8)
+            if strncmp(old_field, 'constr_Jb', 9)
                 ocp.constraints.(new_field) = J_to_idx(model.(old_field));
+            elseif strncmp(old_field, 'constr_Jbs', 9)
+                    ocp.constraints.(new_field) = J_to_idx_slack(model.(old_field));
             else
                 ocp.constraints.(new_field) = model.(old_field);
             end
@@ -307,9 +309,6 @@ function ocp = setup_ocp(obj, model_struct, opts_struct, simulink_opts)
         ocp.cost.W = model.cost_W;
         if isfield(model, 'cost_y_ref')
             ocp.cost.yref = model.cost_y_ref;
-        else
-			warning(['cost_y_ref not defined for ocp json.' 10 'Using zeros(ny,1) by default.']);
-            ocp.cost.yref = zeros(model.dim_ny,1);
         end
     end
 
@@ -318,9 +317,6 @@ function ocp = setup_ocp(obj, model_struct, opts_struct, simulink_opts)
 
         if isfield(model, 'cost_y_ref_0')
             ocp.cost.yref_0 = model.cost_y_ref_0;
-        else
-			warning(['cost_y_ref_0 not defined for ocp json.' 10 'Using zeros(ny_0,1) by default.']);
-            ocp.cost.yref_0 = zeros(model.dim_ny_0,1);
         end
     end
 
@@ -330,9 +326,6 @@ function ocp = setup_ocp(obj, model_struct, opts_struct, simulink_opts)
         end
         if isfield(model, 'cost_y_ref_e')
             ocp.cost.yref_e = model.cost_y_ref_e;
-        else
-			warning(['cost_y_ref_e not defined for ocp json.' 10 'Using zeros(ny_e,1) by default.']);
-            ocp.cost.yref_e = zeros(model.dim_ny_e,1);
         end
     end
 
