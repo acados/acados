@@ -1510,7 +1510,7 @@ void ocp_nlp_constraints_bgp_update_qp_vectors(void *config_, void *dims_, void 
     // Set dmask for QP: 0 means unconstrained.
     for (int i = 0; i < nb+ng+nphi; i++)
     {
-        if (BLASFEO_DVECEL(&model->d, i) == -ACADOS_INFTY)
+        if (BLASFEO_DVECEL(&model->d, i) <= -ACADOS_INFTY)
         {
             // printf("found upper infinity bound\n");
             BLASFEO_DVECEL(memory->dmask, i) = 0;
@@ -1518,7 +1518,7 @@ void ocp_nlp_constraints_bgp_update_qp_vectors(void *config_, void *dims_, void 
     }
     for (int i = nb+ng+nphi; i < 2*nb+ng+nphi; i++)
     {
-        if (BLASFEO_DVECEL(&model->d, i) == ACADOS_INFTY)
+        if (BLASFEO_DVECEL(&model->d, i) >= ACADOS_INFTY)
         {
             // printf("found upper infinity bound\n");
             BLASFEO_DVECEL(memory->dmask, i) = 0;
