@@ -94,20 +94,20 @@ classdef {{ model.name }}_mex_solver < handle
         function set_params_sparse(varargin)
             obj = varargin{1};
             idx_values = varargin{2};
-            param_values = varargin{2};
-            value = [idx_values(:)', param_values(:)'];
+            param_values = varargin{3};
+            value = [idx_values(:), param_values(:)];
             field = 'params_sparse';
 
             if ~isa(field, 'char')
                 error('field must be a char vector, use '' ''');
             end
-            if nargin==2
+            if nargin==3
                 acados_mex_set_{{ model.name }}(obj.cost_ext_fun_type, obj.cost_ext_fun_type_e, obj.C_ocp, field, value);
-            elseif nargin==3
-                stage = varargin{3};
+            elseif nargin==4
+                stage = varargin{4};
                 acados_mex_set_{{ model.name }}(obj.cost_ext_fun_type, obj.cost_ext_fun_type_e, obj.C_ocp, field, value, stage);
             else
-                disp('acados_ocp.set: wrong number of input arguments (2 or 3 allowed)');
+                disp('acados_ocp.set_params_sparse: wrong number of input arguments (3 or 4 allowed)');
             end
         end
 
