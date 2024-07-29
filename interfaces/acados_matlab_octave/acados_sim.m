@@ -69,10 +69,10 @@ classdef acados_sim < handle
 
             % parameters
             if obj.sim.dims.np > 0
-                if isempty(sim.parameter_values)
+                if isempty(obj.sim.parameter_values)
                     warning(['opts_struct.parameter_values are not set.', ...
                                 10 'Using zeros(np,1) by default.' 10 'You can update them later using set().']);
-                    sim.parameter_values = zeros(obj.sim.dims.np,1);
+                    obj.sim.parameter_values = zeros(obj.sim.dims.np,1);
                 end
             end
 

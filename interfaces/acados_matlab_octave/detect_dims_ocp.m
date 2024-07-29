@@ -322,6 +322,15 @@ function [model, opts] = detect_dims_ocp(ocp, opts)
               ' nsh = ', num2str(nsh), ', nsphi = ', num2str(nsphi), '.'])
     end
 
+    constraints.lsbu = zeros(nsbu, 1);
+    constraints.usbu = zeros(nsbu, 1);
+    constraints.lsbx = zeros(nsbx, 1);
+    constraints.usbx = zeros(nsbx, 1);
+    constraints.lsh = zeros(nsh, 1);
+    constraints.ush = zeros(nsh, 1);
+    constraints.lsphi = zeros(nsphi, 1);
+    constraints.usphi = zeros(nsphi, 1);
+
     dims.ns = ns;
     dims.nsbx = nsbx;
     dims.nsbu = nsbu;
@@ -362,6 +371,12 @@ function [model, opts] = detect_dims_ocp(ocp, opts)
                 '. Detected ns_0 = ', num2str(ns_0), ' = nsbu + nsg + nsh_0 + nsphi_0.',...
                 ' With nsg = ', num2str(nsg), ' nsh_0 = ', num2str(nsh_0), ', nsphi_0 = ', num2str(nsphi_0), '.'])
     end
+
+    constraints.lsh_0 = zeros(nsh_0, 1);
+    constraints.ush_0 = zeros(nsh_0, 1);
+    constraints.lsphi_0 = zeros(nsphi_0, 1);
+    constraints.usphi_0 = zeros(nsphi_0, 1);
+
     dims.ns_0 = ns_0;
     dims.nsh_0 = nsh_0;
     dims.nsphi_0 = nsphi_0;
@@ -411,6 +426,14 @@ function [model, opts] = detect_dims_ocp(ocp, opts)
                 ' With nsbx_e = ', num2str(nsbx_e), ' nsg_e = ', num2str(nsg_e),...
                 ' nsh_e = ', num2str(nsh_e), ', nsphi_e = ', num2str(nsphi_e), '.'])
     end
+
+
+    constraints.lsbx_e = zeros(nsbx_e, 1);
+    constraints.usbx_e = zeros(nsbx_e, 1);
+    constraints.lsh_e = zeros(nsh_e, 1);
+    constraints.ush_e = zeros(nsh_e, 1);
+    constraints.lsphi_e = zeros(nsphi_e, 1);
+    constraints.usphi_e = zeros(nsphi_e, 1);
 
     dims.ns_e = ns_e;
     dims.nsbx_e = nsbx_e;
