@@ -551,6 +551,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "p"))
     {
+        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, {{ dims.np }})
         if (nrhs==min_nrhs) // all stages
         {
             for (int ii=0; ii<=N; ii++)
