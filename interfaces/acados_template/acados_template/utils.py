@@ -68,6 +68,7 @@ PLATFORM2TERA = {
     "win32": "windows"
 }
 
+ACADOS_INFTY = 1e10
 
 def check_if_square(mat: np.ndarray, name: str):
     if mat.shape[0] != mat.shape[1]:
