@@ -227,12 +227,13 @@ function model = detect_constr(model, constraints, dims, stage_type)
             dims.nbu = length(lbu);
         end
         % g
-        model.dim_ng = length(lg);
+        dims.ng = length(lg);
         if ~isempty(lg)
             model.constr_C = C;
             model.constr_D = D;
             constraints.lg = lg;
             constraints.ug = ug;
+        end
     end
 end
 

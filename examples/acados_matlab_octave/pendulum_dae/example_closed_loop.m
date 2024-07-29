@@ -198,8 +198,6 @@ else
 	ocp_model.set('constr_ubu', ubu);
 end
 
-ocp_model.model_struct
-
 
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
@@ -224,14 +222,9 @@ ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', ocp_sim_method_num_steps);
 ocp_opts.set('sim_method_newton_iter', ocp_sim_method_newton_iter);
 
-ocp_opts.opts_struct
-
-
 %% acados ocp
 ocp = acados_ocp(ocp_model, ocp_opts);
-
 ocp_model.set('name', model_name);
-
 
 %% acados sim model
 sim_model = acados_sim_model();
@@ -342,19 +335,19 @@ for ii=1:N_sim
         sim.set('z', z0);
     elseif (strcmp(sim_method, 'irk_gnsf'))
         import casadi.*
-        x01_gnsf = x0(sim.model_struct.dyn_gnsf_idx_perm_x(1:sim.model_struct.dim_gnsf_nx1));
-        x01_dot_gnsf = xdot0(sim.model_struct.dyn_gnsf_idx_perm_x(1:sim.model_struct.dim_gnsf_nx1));
-        z0_gnsf = z0(sim.model_struct.dyn_gnsf_idx_perm_z( 1:sim.model_struct.dim_gnsf_nz1 ));
-        y_in = sim.model_struct.dyn_gnsf_L_x * x01_gnsf ...
-                + sim.model_struct.dyn_gnsf_L_xdot * x01_dot_gnsf ...
-                + sim.model_struct.dyn_gnsf_L_z * z0_gnsf;
-        u_hat = sim.model_struct.dyn_gnsf_L_u * u_sim(:,ii);
+        x01_gnsf = x0(sim.sim.model.dyn_gnsf_idx_perm_x(1:sim.sim.dims.gnsf_nx1));
+        x01_dot_gnsf = xdot0(sim.sim.model.dyn_gnsf_idx_perm_x(1:sim.sim.dims.gnsf_nx1));
+        z0_gnsf = z0(sim.sim.model.dyn_gnsf_idx_perm_z( 1:sim.sim.dims.gnsf_nz1 ));
+        y_in = sim.sim.model.dyn_gnsf_L_x * x01_gnsf ...
+                + sim.sim.model.dyn_gnsf_L_xdot * x01_dot_gnsf ...
+                + sim.sim.model.dyn_gnsf_L_z * z0_gnsf;
+        u_hat = sim.sim.model.dyn_gnsf_L_u * u_sim(:,ii);
         phi_fun = Function([model_name,'_gnsf_phi_fun'],...
-                        {sim.model_struct.sym_gnsf_y, sim.model_struct.sym_gnsf_uhat},...
-                            {sim.model_struct.dyn_gnsf_expr_phi(:)}); % sim.model_struct.sym_p
+                        {sim.sim.model.sym_gnsf_y, sim.sim.model.sym_gnsf_uhat},...
+                            {sim.sim.model.dyn_gnsf_expr_phi(:)});
 
         phi_guess = full( phi_fun( y_in, u_hat ) );
-        n_out = sim.model_struct.dim_gnsf_nout;
+        n_out = sim.sim.dims.gnsf_nout;
         sim.set('phi_guess', zeros(n_out,1));
     end
 

@@ -83,7 +83,7 @@ if (generic_or_casadi == 0)
     ocp_model.set('cost_source_ext_cost_0', 'generic_ext_cost.c');
     ocp_model.set('cost_function_ext_cost_0', 'ext_cost');
     % Generic stage cost
-    ocp_model.set('cost_ext_fun_type', 'generic');    
+    ocp_model.set('cost_ext_fun_type', 'generic');
     ocp_model.set('cost_source_ext_cost', 'generic_ext_cost.c');
     ocp_model.set('cost_function_ext_cost', 'ext_cost');
     % Generic terminal cost
@@ -105,12 +105,12 @@ elseif (generic_or_casadi == 2)
     ocp_model.set('cost_ext_fun_type_0', 'casadi');
     ocp_model.set('cost_expr_ext_cost_0', model.cost_expr_ext_cost_0);
     % Generic stage cost
-    ocp_model.set('cost_ext_fun_type', 'generic');    
+    ocp_model.set('cost_ext_fun_type', 'generic');
     ocp_model.set('cost_source_ext_cost', 'generic_ext_cost.c');
     ocp_model.set('cost_function_ext_cost', 'ext_cost');
     % Casadi terminal cost
     ocp_model.set('cost_ext_fun_type_e', 'casadi');
-    ocp_model.set('cost_expr_ext_cost_e', model.cost_expr_ext_cost_e);    
+    ocp_model.set('cost_expr_ext_cost_e', model.cost_expr_ext_cost_e);
 end
 
 % dynamics
@@ -133,7 +133,6 @@ ocp_model.set('constr_lh', -U_max);
 ocp_model.set('constr_uh', U_max);
 
 ocp_model.set('constr_x0', x0);
-% ... see ocp_model.model_struct to see what other fields can be set
 
 %% acados ocp set opts
 ocp_opts = acados_ocp_opts();
@@ -143,7 +142,6 @@ ocp_opts.set('sim_method', sim_method);
 ocp_opts.set('qp_solver', qp_solver);
 ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
 ocp_opts.set('parameter_values', zeros(size(params))); % initialize to zero, change later
-% ... see ocp_opts.opts_struct to see what other fields can be set
 
 %% create ocp solver
 ocp = acados_ocp(ocp_model, ocp_opts);

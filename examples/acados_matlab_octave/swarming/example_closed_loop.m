@@ -160,10 +160,7 @@ ocp_model.set('constr_uh', uh);
 % ocp_model.set('constr_lh_e', lh_e);
 % ocp_model.set('constr_uh_e', uh_e);
 
-ocp_model.model_struct
-
 %% Acados ocp options
-
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_interface', compile_interface);
 ocp_opts.set('codgen_model', codgen_model);
@@ -196,9 +193,6 @@ if (strcmp(ocp_sim_method, 'irk_gnsf'))
 	ocp_opts.set('gnsf_detect_struct', gnsf_detect_struct);
 end
 
-ocp_opts.opts_struct
-
-%% Acados ocp
 
 % Create ocp
 ocp = acados_ocp(ocp_model, ocp_opts);
@@ -225,10 +219,6 @@ else % irk
 	sim_model.set('dyn_expr_f', model.expr_f_impl);
 end
 
-%sim_model.model_struct
-
-
-
 %% Acados simulation options
 sim_opts = acados_sim_opts();
 sim_opts.set('compile_interface', compile_interface);
@@ -240,10 +230,6 @@ sim_opts.set('sens_forw', sim_sens_forw);
 if (strcmp(sim_method, 'irk_gnsf'))
 	sim_opts.set('gnsf_detect_struct', gnsf_detect_struct);
 end
-
-%sim_opts.opts_struct
-
-
 
 %% Acados simulation
 

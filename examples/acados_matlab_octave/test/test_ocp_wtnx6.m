@@ -254,10 +254,6 @@ ocp_model.set('constr_Jsh_e', Jsh_e);
 
 % initial state dummy
 ocp_model.set('constr_x0', x0_ref);
-%
-ocp_model.model_struct;
-
-
 
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
@@ -291,10 +287,6 @@ ocp_opts.set('regularize_method', 'no_regularize');
 ocp_opts.set('ext_fun_compile_flags', '');
 
 ocp_opts.set('parameter_values', wind0_ref(:,1));
-
-ocp_opts.opts_struct;
-
-
 
 %% acados ocp
 % create ocp
@@ -335,10 +327,6 @@ sim_opts.set('num_stages', sim_num_stages);
 sim_opts.set('num_steps', sim_num_steps);
 sim_opts.set('method', sim_method);
 sim_opts.set('sens_forw', sim_sens_forw);
-
-%sim_opts.opts_struct
-
-
 
 %% acados sim
 % create sim

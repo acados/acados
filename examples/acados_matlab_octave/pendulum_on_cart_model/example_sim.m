@@ -119,7 +119,7 @@ x_sim(:,1) = x0;
 
 tic
 for ii=1:N_sim
-	
+
 	% set initial state
 	sim.set('x', x_sim(:,ii));
 	sim.set('u', u);
@@ -128,7 +128,7 @@ for ii=1:N_sim
     if (strcmp(method, 'irk'))
         sim.set('xdot', zeros(nx,1));
     elseif (strcmp(method, 'irk_gnsf'))
-        n_out = sim.model_struct.dim_gnsf_nout;
+        n_out = sim.sim.dims.gnsf_nout;
         sim.set('phi_guess', zeros(n_out,1));
     end
 

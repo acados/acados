@@ -79,10 +79,6 @@ else % irk irk_gnsf
 %	end
 end
 
-%sim_model.model_struct
-
-
-
 %% Acados simutation options
 sim_opts = acados_sim_opts();
 sim_opts.set('compile_interface', compile_interface);
@@ -94,8 +90,6 @@ sim_opts.set('sens_forw', sens_forw);
 if (strcmp(method, 'irk_gnsf'))
 	sim_opts.set('gnsf_detect_struct', gnsf_detect_struct);
 end
-
-%sim_opts.opts_struct
 
 %% Acados simulation
 
