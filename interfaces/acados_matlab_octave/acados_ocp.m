@@ -44,7 +44,7 @@ classdef acados_ocp < handle
         cost_ext_fun_type_0
         dyn_ext_fun_type
 
-        qp_cost_fields = {'qp_Q', 'qp_R', 'qp_S', 'qp_q', 'qp_r', 'qp_A', 'qp_B', 'qp_b', 'qp_C', 'qp_D', 'qp_lg', 'qp_ug', 'qp_lbx', 'qp_ubx', 'qp_lbu', 'qp_ubu'}
+        qp_gettable_fields = {'qp_Q', 'qp_R', 'qp_S', 'qp_q', 'qp_r', 'qp_A', 'qp_B', 'qp_b', 'qp_C', 'qp_D', 'qp_lg', 'qp_ug', 'qp_lbx', 'qp_ubx', 'qp_lbu', 'qp_ubu'}
     end % properties
 
 
@@ -277,10 +277,14 @@ classdef acados_ocp < handle
             if strcmp('qp_Q', field) || strcmp('qp_R', field)
                 if iscell(value)
                     for i=1:length(value)
-                        value{i} = tril(value{i}) + tril(value{i}, -1)';
+                        if lenth(value{i}) > 1
+                            value{i} = tril(value{i}) + tril(value{i}, -1)';
+                        end
                     end
                 else
-                    value = tril(value) + tril(value, -1)';
+                    if length(value) > 1
+                        value = tril(value) + tril(value, -1)';
+                    end
                 end
             end
         end
@@ -315,11 +319,14 @@ classdef acados_ocp < handle
             result.condition_number = zeros(obj.ocp.dims.N+1, 1);
 
             for n=0:obj.ocp.dims.N
-                Q = obj.get('qp_Q', n);
-                R = obj.get('qp_R', n);
-                S = obj.get('qp_S', n);
-
-                hess_block = [R, S; S', Q];
+                if n < obj.ocp.dims.N
+                    Q = obj.get('qp_Q', n);
+                    R = obj.get('qp_R', n);
+                    S = obj.get('qp_S', n);
+                    hess_block = [R, S; S', Q];
+                else
+                    hess_block = Q;
+                end
 
                 eigvals = eig(hess_block);
                 result.min_ev(n+1) = min(eigvals);
@@ -332,10 +339,10 @@ classdef acados_ocp < handle
             qp_data = struct();
 
             lN = length(num2str(obj.ocp.dims.N+1));
-            n_fields = length(obj.qp_cost_fields);
+            n_fields = length(obj.qp_gettable_fields);
             for n=1:n_fields
 
-                field = obj.qp_cost_fields{n};
+                field = obj.qp_gettable_fields{n};
                 for i=0:obj.ocp.dims.N-1
                     s_indx = sprintf(strcat('%0', num2str(lN), 'd'), i);
                     key = strcat(field, '_', s_indx);
