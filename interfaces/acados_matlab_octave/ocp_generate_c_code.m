@@ -115,8 +115,8 @@ function ocp_generate_c_code(ocp)
     model_without_expr.dyn_disc_fun_jac_hess = ocp.model.dyn_disc_fun_jac_hess;
     model_without_expr.dyn_disc_fun_jac = ocp.model.dyn_disc_fun_jac;
     model_without_expr.dyn_disc_fun = ocp.model.dyn_disc_fun;
-    model_without_expr.gnsf.nontrivial_f_LO = ocp.model.gnsf.nontrivial_f_LO;
-    model_without_expr.gnsf.purely_linear = ocp.model.gnsf.purely_linear;
+    model_without_expr.gnsf_nontrivial_f_LO = ocp.model.gnsf_nontrivial_f_LO;
+    model_without_expr.gnsf_purely_linear = ocp.model.gnsf_purely_linear;
     ocp.model = model_without_expr;
 
     %% post process numerical data (mostly cast scalars to 1-dimensional cells)
