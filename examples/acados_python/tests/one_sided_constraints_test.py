@@ -96,7 +96,7 @@ def main(constraint_variant='one_sided'):
         ocp.constraints.idxbx = np.array([0])
         expected_status = 0
     elif constraint_variant == 'one_sided_wrong_infty':
-        ocp.constraints.lbx = np.array([-2*ACADOS_INFTY])
+        ocp.constraints.lbx = np.array([-0.5*ACADOS_INFTY])
         ocp.constraints.ubx = np.array([+5.0])
         ocp.constraints.idxbx = np.array([0])
         # complementarity residual does not converge to tolerance if infty is too large
@@ -107,6 +107,7 @@ def main(constraint_variant='one_sided'):
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = 'ERK'
     ocp.solver_options.nlp_solver_type = 'SQP'
+    ocp.solver_options.tol = 1e-7
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
