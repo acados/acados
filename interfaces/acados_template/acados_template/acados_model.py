@@ -111,11 +111,11 @@ class AcadosModel():
         """name of source files for implicit DAE function value, only relevant if :code:`dyn_ext_fun_type` is :code:`'generic'`; Default: :code:`None`"""
 
         # for GNSF models
-        self.gnsf = {'nontrivial_f_LO': 1, 'purely_linear': 0}
-        """
-        dictionary containing information on GNSF structure needed when rendering templates.
-        Contains integers `nontrivial_f_LO`, `purely_linear`.
-        """
+        self.gnsf_nontrivial_f_LO = 1
+        """GNSF: Flag indicating whether GNSF stucture has nontrivial f."""
+        self.gnsf_purely_linear = 0
+        """GNSF: Flag indicating whether GNSF stucture is purely linear."""
+
 
         ### for OCP only.
         # NOTE: These could be moved to cost / constraints
