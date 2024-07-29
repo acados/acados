@@ -273,8 +273,15 @@ classdef acados_ocp < handle
                 value = obj.t_ocp.get(field, varargin{:});
             end
 
+            % make symmetric (only lower triangular stored internally)
             if strcmp('qp_Q', field) || strcmp('qp_R', field)
-                value = tril(value) + tril(value, -1)';
+                if iscell(value)
+                    for i=1:length(value)
+                        value{i} = tril(value{i}) + tril(value{i}, -1)';
+                    end
+                else
+                    value = tril(value) + tril(value, -1)';
+                end
             end
         end
 
