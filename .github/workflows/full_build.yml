@@ -272,6 +272,11 @@ jobs:
       with:
         command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; simulink_param_test
 
+    - name: Run Simulink sparse parameter test
+      uses: matlab-actions/run-command@v2
+      if: always()
+      with:
+        command: cd ${{runner.workspace}}/acados/examples/acados_matlab_octave/test; simulink_sparse_param_test
 
 
   octave_test:
