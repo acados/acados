@@ -178,7 +178,7 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
 
-{%- if "customizable_inputs" in simulink_opts %}
+{%- if simulink_opts.customizable_inputs %}
   {#- customizable inputs #}
   {%- for input_name, input_spec in simulink_opts.customizable_inputs -%}
     {%- if input_name is starting_with("sparse_parameter") -%}
@@ -375,7 +375,7 @@ static void mdlInitializeSizes (SimStruct *S)
   {%- endif -%}
 
 
-{%- if "customizable_inputs" in simulink_opts %}
+{%- if simulink_opts.customizable_inputs %}
   {#- customizable inputs #}
   {%- for input_name, input_spec in simulink_opts.customizable_inputs -%}
     {%- if input_name is starting_with("sparse_parameter") -%}
@@ -882,7 +882,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
   {%- endif %}
 
 
-{%- if "customizable_inputs" in simulink_opts %}
+{%- if simulink_opts.customizable_inputs %}
   {#- customizable inputs #}
   {%- for input_name, input_spec in simulink_opts.customizable_inputs -%}
     {%- if input_name is starting_with("sparse_parameter") %}

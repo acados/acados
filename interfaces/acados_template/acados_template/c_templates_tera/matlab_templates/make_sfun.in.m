@@ -373,7 +373,7 @@ sfun_input_names = [sfun_input_names; 'rti_phase [1]'];
 i_in = i_in + 1;
 {%- endif %}
 
-{%- if "customizable_inputs" in simulink_opts %}
+{%- if simulink_opts.customizable_inputs %}
 {#- customizable inputs #}
 {%- for input_name, input_spec in simulink_opts.customizable_inputs -%}
   {%- if input_name is starting_with("sparse_parameter_") %}
