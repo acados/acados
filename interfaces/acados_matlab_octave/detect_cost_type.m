@@ -199,11 +199,11 @@ function detect_cost_type(model, cost, dims, stage_type)
     else
         fprintf('\n\nCost function is not quadratic -> Using external cost\n\n');
         if strcmp(stage_type, 'terminal')
-            cost.cost_type_e = 'ext_cost';
+            cost.cost_type_e = 'EXTERNAL';
         elseif strcmp(stage_type, 'path')
-            cost.cost_type = 'ext_cost';
+            cost.cost_type = 'EXTERNAL';
         elseif strcmp(stage_type, 'initial')
-            cost.cost_type_0 = 'ext_cost';
+            cost.cost_type_0 = 'EXTERNAL';
         end
     end
     disp('--------------------------------------------------------------');
