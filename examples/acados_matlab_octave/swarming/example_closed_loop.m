@@ -287,7 +287,7 @@ for k = 1:nb_steps_sim
 	% Get solution for initialization of next NLP
 	x_traj = ocp.get('x');
 	u_traj = ocp.get('u');
-    
+
 	% Shift trajectory for initialization
 	x_traj_init = [x_traj(:,2:end), x_traj(:,end)];
 	u_traj_init = [u_traj(:,2:end), u_traj(:,end)];
@@ -321,7 +321,7 @@ u_history = u_history';
 pos_history = x_history(:,1:3*N);
 vel_history = x_history(:,(3*N+1):end);
 
-%% Plots 
+%% Plots
 
 % Plot trajectories of the agents
 figure;

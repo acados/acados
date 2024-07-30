@@ -1,5 +1,5 @@
 %
-% This file allows the control of a swarm of robots. The swarm is composed 
+% This file allows the control of a swarm of robots. The swarm is composed
 % by N agents with decoupled, linear dynamics. The goal is to achieve
 % coordinated motion from random position and velocities.
 %

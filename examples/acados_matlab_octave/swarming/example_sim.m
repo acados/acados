@@ -1,5 +1,5 @@
 %
-% This file allows the simulation of the dynamics of a swarm of robots. 
+% This file allows the simulation of the dynamics of a swarm of robots.
 % Here, the swarm is composed by N agents with decoupled, linear dynamics.
 %
 
@@ -28,7 +28,7 @@ S.u_ref = [1;0;0]; % reference direction of velocity for all agents
 S.v_ref = 6; % reference speed for all agents
 
 % Rename parameters
-N = S.N; 
+N = S.N;
 
 % Initial conditions
 x0 = [10*rand(3*N,1); 2*rand(3*N,1)]; % initial condition (3D positions ...
