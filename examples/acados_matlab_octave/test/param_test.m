@@ -93,12 +93,3 @@ for stage = [0, 8]
     end
 end
 disp('sparse parameter setter works properly');
-
-
-%
-% %% simulink test
-% cd c_generated_code
-% make_sfun; % ocp solver
-% cd ..;
-%
-% n_sim = 3;
