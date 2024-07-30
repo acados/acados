@@ -178,6 +178,17 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
 
+{%- if "customizable_inputs" in simulink_opts %}
+  {#- customizable inputs #}
+  {%- for input_name, input_spec in simulink_opts.customizable_inputs -%}
+    {%- if input_name is starting_with("sparse_parameter") -%}
+      {%- set_global n_inputs = n_inputs + 1 -%}
+    {%- else %}
+      {{ throw(message = "only kind of supported customizable input are sparse_parameter, sparse_parameter_stagewise") }}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+
     // specify the number of input ports
     if ( !ssSetNumInputPorts(S, {{ n_inputs }}) )
         return;
@@ -357,12 +368,30 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nx * (dims.N) }});
   {%- endif -%}
 
-
   {%- if simulink_opts.inputs.rti_phase -%}  {#- rti_phase #}
     {%- set i_input = i_input + 1 %}
     // rti_phase
     ssSetInputPortVectorDimension(S, {{ i_input }}, 1);
   {%- endif -%}
+
+
+{%- if "customizable_inputs" in simulink_opts %}
+  {#- customizable inputs #}
+  {%- for input_name, input_spec in simulink_opts.customizable_inputs -%}
+    {%- if input_name is starting_with("sparse_parameter") -%}
+      {% set param_length = input_spec.parameter_indices | length %}
+      {% set port_name = input_name | replace(from="sparse_parameter_", to="") %}
+      {% set stage_idx_0 = input_spec.stage_idx_0 %}
+      {% set stage_idx_e = input_spec.stage_idx_e %}
+      {%- set_global i_input = i_input + 1 %}
+    // {{ port_name }}
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ 1 + (stage_idx_e - stage_idx_0 + 1) * param_length }});
+    {%- else %}
+      {{ throw(message = "only kind of supported customizable input are sparse_parameter.") }}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+
 
     /* specify dimension information for the OUTPUT ports */
     {%- set i_output = -1 %}{# note here i_output is 0-based #}
@@ -530,6 +559,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     {%- set buffer_size = buffer_sizes | sort | last %}
     real_t buffer[{{ buffer_size }}];
     double tmp_double;
+    int buffer_offset;
 
     /* go through inputs */
     {%- set i_input = -1 %}
@@ -850,6 +880,45 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "rti_phase", &rti_phase);
   {%- endif %}
+
+
+{%- if "customizable_inputs" in simulink_opts %}
+  {#- customizable inputs #}
+  {%- for input_name, input_spec in simulink_opts.customizable_inputs -%}
+    {%- if input_name is starting_with("sparse_parameter") %}
+    // length of parameter_indices {{ input_spec.parameter_indices | length }}
+    {%- set_global i_input = i_input + 1 %}
+    {% set param_length = input_spec.parameter_indices | length %}
+    {% set port_name = input_name | replace(from="sparse_parameter_", to="") %}
+    {% set stage_idx_0 = input_spec.stage_idx_0 %}
+    {% set stage_idx_e = input_spec.stage_idx_e %}
+    // {{ port_name }}
+
+        in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+
+        tmp_double = (double)(*in_sign[0]); // decides if update is done.
+        if (tmp_double)
+        {
+            int idx[{{ param_length }}];
+            {% for item in input_spec.parameter_indices %}
+            idx[{{ loop.index0 }}] = {{ item }};
+            {%- endfor %}
+
+            // update for stages
+            for (int ii = {{ stage_idx_0 }}; ii < {{ stage_idx_e }}+1; ii++)
+            {
+                buffer_offset = 1 + (ii - {{ stage_idx_0 }}) * {{ param_length }};
+                // copy new parameter values to buffer
+                for (int jj = 0; jj < {{ param_length }}; jj++)
+                {
+                    buffer[jj] = (double)(*in_sign[jj + buffer_offset]);
+                }
+                {{ model.name }}_acados_update_params_sparse(capsule, ii, idx, buffer, {{ param_length }});
+            }
+        }
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
 
     /* call solver */
   {%- if custom_update_filename == "" and not simulink_opts.inputs.rti_phase %}
