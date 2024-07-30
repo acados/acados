@@ -440,6 +440,10 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- set i_output = i_output + 1 %}
     ssSetOutputPortVectorDimension(S, {{ i_output }}, 1 );
   {%- endif %}
+  {%- if simulink_opts.outputs.parameter_traj -%}  {#- parameter_traj #}
+    {%- set i_output = i_output + 1 %}
+    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.np * (dims.N + 1) }});
+  {%- endif -%}
 
     // specify the direct feedthrough status
     // should be set to 1 for all inputs used in mdlOutputs
@@ -896,7 +900,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     /* set outputs */
     // assign pointers to output signals
-    real_t *out_u0, *out_utraj, *out_xtraj, *out_ztraj, *out_pi_all, *out_status, *out_sqp_iter, *out_KKT_res, *out_KKT_residuals, *out_x1, *out_cpu_time, *out_cpu_time_sim, *out_cpu_time_qp, *out_cpu_time_lin, *out_cost_value;
+    real_t *out_u0, *out_utraj, *out_xtraj, *out_ztraj, *out_pi_all, *out_status, *out_sqp_iter, *out_KKT_res, *out_KKT_residuals, *out_x1, *out_cpu_time, *out_cpu_time_sim, *out_cpu_time_qp, *out_cpu_time_lin, *out_cost_value, *out_parameter_traj;
     int tmp_int;
 
     {%- set i_output = -1 -%}{# note here i_output is 0-based #}
@@ -1010,6 +1014,14 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // get sqp iter
     ocp_nlp_get(nlp_config, capsule->nlp_solver, "sqp_iter", (void *) &tmp_int);
     *out_sqp_iter = (real_t) tmp_int;
+  {%- endif %}
+
+  {% if simulink_opts.outputs.parameter_traj == 1 %}
+    {%- set i_output = i_output + 1 %}
+    out_parameter_traj = ssGetOutputPortRealSignal(S, {{ i_output }});
+    for (int ii = 0; ii < N+1; ii++)
+        ocp_nlp_in_get(nlp_config, nlp_dims, nlp_in, ii,
+                        "p", (void *) (out_parameter_traj + ii * {{ dims.np }}));
   {%- endif %}
 
 }
