@@ -86,10 +86,8 @@ if (strcmp(method, 'irk_gnsf'))
 	sim_opts.set('gnsf_detect_struct', 'true');
 end
 
-
 %% create integrator
 sim_solver = acados_sim(sim_model, sim_opts);
-
 
 %% simulate system in loop
 x_sim = zeros(nx, N_sim+1);
@@ -105,7 +103,7 @@ for ii=1:N_sim
     if (strcmp(method, 'irk'))
         sim_solver.set('xdot', zeros(nx,1));
     elseif (strcmp(method, 'irk_gnsf'))
-        n_out = sim_solver.sim_solver.dims.gnsf_nout;
+        n_out = sim_solver.sim.dims.gnsf_nout;
         sim_solver.set('phi_guess', zeros(n_out,1));
     end
 
