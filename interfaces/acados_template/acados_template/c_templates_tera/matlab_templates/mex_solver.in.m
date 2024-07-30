@@ -92,6 +92,10 @@ classdef {{ model.name }}_mex_solver < handle
 
 
         function set_params_sparse(varargin)
+            % usage:
+            % ocp.set_params_sparse(idx_values, param_values, Optional[stage])
+            % updates the parameters with indices idx_values (0 based) at stage with the new values new_p_values.
+            % if stage is not provided, sparse parameter update is performed for all stages.
             obj = varargin{1};
             idx_values = varargin{2};
             param_values = varargin{3};
