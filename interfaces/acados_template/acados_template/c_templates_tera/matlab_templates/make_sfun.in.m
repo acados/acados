@@ -184,6 +184,7 @@ try
 catch exception
     disp('make_sfun failed with the following exception:')
     disp(exception);
+    disp(exception.message );
     disp('Try adding -v to the mex command above to get more information.')
     keyboard
 end
