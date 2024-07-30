@@ -53,12 +53,13 @@ function ocp = setup_ocp(obj, model_struct, opts_struct, simulink_opts)
 
     % modules
     ocp.solver_options.qp_solver = upper(opts_struct.qp_solver);
-    ocp.solver_options.integrator_type = upper(opts_struct.sim_method);
     ocp.solver_options.nlp_solver_type = upper(opts_struct.nlp_solver);
     ocp.solver_options.collocation_type = upper(opts_struct.collocation_type);
 
     if strcmp(opts_struct.sim_method, 'irk_gnsf')
         ocp.solver_options.integrator_type = 'GNSF';
+    else
+        ocp.solver_options.integrator_type = upper(opts_struct.sim_method);
     end
 
     N = opts_struct.param_scheme_N;

@@ -67,7 +67,7 @@ classdef acados_ocp < handle
 
             % detect GNSF structure
             if strcmp(obj.ocp.solver_options.integrator_type, 'GNSF')
-                if obj.ocp.dims.gnsf_nx1 + dims.gnsf_nx2 ~= ocp.dims.nx
+                if obj.ocp.dims.gnsf_nx1 + obj.ocp.dims.gnsf_nx2 ~= obj.ocp.dims.nx
                     detect_gnsf_structure(obj.ocp.model, obj.ocp.dims, gnsf_transcription_opts);
                 else
                     warning('No GNSF model detected, assuming all required fields are set.')
