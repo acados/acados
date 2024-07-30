@@ -449,8 +449,9 @@ cdef class AcadosOcpSolverCython:
         """
 
         out_fields = ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su']
+        in_fields = ['p']
         sens_fields = ['sens_u', 'sens_x']
-        all_fields = out_fields + sens_fields
+        all_fields = out_fields + in_fields + sens_fields
 
         if field_ not in all_fields:
             raise Exception(f'AcadosOcpSolver.get(stage={stage}, field={field_}): \'{field_}\' is an invalid argument.\
@@ -478,6 +479,9 @@ cdef class AcadosOcpSolverCython:
         elif field_ in sens_fields:
             acados_solver_common.ocp_nlp_out_get(self.nlp_config, \
                 self.nlp_dims, self.sens_out, stage, field, <void *> out.data)
+        elif field_ in in_fields:
+            acados_solver_common.ocp_nlp_in_get(self.nlp_config, \
+                self.nlp_dims, self.nlp_in, stage, field, <void *> out.data)
 
         return out
 

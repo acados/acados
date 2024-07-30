@@ -367,6 +367,13 @@ classdef acados_ocp < handle
             fclose(fid);
         end
 
+        function set_params_sparse(obj, varargin)
+            % usage:
+            % ocp.set_params_sparse(idx_values, param_values, Optional[stage])
+            % updates the parameters with indices idx_values (0 based) at stage with the new values new_p_values.
+            % if stage is not provided, sparse parameter update is performed for all stages.
+            obj.t_ocp.set_params_sparse(varargin{:});
+        end
         % function delete(obj)
         %     Use default implementation.
         %     MATLAB destroys the property values after the destruction of the object.

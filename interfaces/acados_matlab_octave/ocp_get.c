@@ -96,9 +96,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             sprintf(buffer, "\nocp_get: invalid stage index, got %d\n", stage);
             mexErrMsgTxt(buffer);
         }
-        else if (stage == N && strcmp(field, "x") && strcmp(field, "lam") && strcmp(field, "sens_x") && strcmp(field, "sl") && strcmp(field, "su") && strcmp(field, "qp_Q") && strcmp(field, "qp_R") && strcmp(field, "qp_S") && strcmp(field, "qp_q") )
+        else if (stage == N && strcmp(field, "x") && strcmp(field, "lam") && strcmp(field, "p") && strcmp(field, "sens_x") && strcmp(field, "sl") && strcmp(field, "su") && strcmp(field, "qp_Q") && strcmp(field, "qp_R") && strcmp(field, "qp_S") && strcmp(field, "qp_q") )
         {
-            sprintf(buffer, "\nocp_get: invalid stage index, got stage = %d = N, field = %s, only x, lam, t, slacks available at this stage\n", stage, field);
+            sprintf(buffer, "\nocp_get: invalid stage index, got stage = %d = N, field = %s, only x, lam, p, slacks available at this stage\n", stage, field);
             mexErrMsgTxt(buffer);
         }
     }
@@ -215,7 +215,27 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             mexErrMsgTxt(buffer);
         }
     }
-        else if (!strcmp(field, "lam"))
+    else if (!strcmp(field, "p"))
+    {
+        if (nrhs==2)
+        {
+            sprintf(buffer, "\nocp_get: field p: only supported for a single shooting node.\n");
+            mexErrMsgTxt(buffer);
+        }
+        else if (nrhs==3)
+        {
+            int np = ocp_nlp_dims_get_from_attr(config, dims, out, stage, field);
+            plhs[0] = mxCreateNumericMatrix(np, 1, mxDOUBLE_CLASS, mxREAL);
+            double *p = mxGetPr( plhs[0] );
+            ocp_nlp_in_get(config, dims, in, stage, "p", p);
+        }
+        else
+        {
+            sprintf(buffer, "\nocp_get: wrong nrhs: %d\n", nrhs);
+            mexErrMsgTxt(buffer);
+        }
+    }
+    else if (!strcmp(field, "lam"))
     {
         if (nrhs==2)
         {

@@ -437,6 +437,14 @@ void ocp_nlp_in_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, 
         double **ptr = value;
         ptr[0] = in->parameter_values[stage];
     }
+    else if (!strcmp(field, "p"))
+    {
+        double *out = (double *) value;
+        for (int ii = 0; ii < dims->np[stage]; ii++)
+        {
+            out[ii] = in->parameter_values[stage][ii];
+        }
+    }
     else
     {
         printf("\nerror: ocp_nlp_in_get: field %s not available\n", field);

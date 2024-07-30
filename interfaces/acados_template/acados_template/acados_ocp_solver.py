@@ -271,6 +271,7 @@ class AcadosOcpSolver:
         self.__acados_lib.ocp_nlp_eval_params_jac.argtypes = [c_void_p, c_void_p, c_void_p]
         self.__acados_lib.ocp_nlp_eval_lagrange_grad_p.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_double)]
         self.__acados_lib.ocp_nlp_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+        self.__acados_lib.ocp_nlp_in_get.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
 
         self.__acados_lib.ocp_nlp_eval_param_sens.argtypes = [c_void_p, c_char_p, c_int, c_int, c_void_p]
         self.__acados_lib.ocp_nlp_eval_param_sens.restype = None
@@ -717,7 +718,7 @@ class AcadosOcpSolver:
         Get the last solution of the solver:
 
             :param stage: integer corresponding to shooting node
-            :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'sens_u', 'sens_x']
+            :param field: string in ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su', 'p', 'sens_u', 'sens_x']
 
             .. note:: regarding lam: \n
                     the inequalities are internally organized in the following order: \n
@@ -732,8 +733,9 @@ class AcadosOcpSolver:
         """
 
         out_fields = ['x', 'u', 'z', 'pi', 'lam', 'sl', 'su']
+        in_fields = ['p']
         sens_fields = ['sens_u', 'sens_x']
-        all_fields = out_fields + sens_fields
+        all_fields = out_fields + in_fields + sens_fields
 
         if (field_ not in all_fields):
             raise Exception(f'AcadosOcpSolver.get(stage={stage_}, field={field_}): \'{field_}\' is an invalid argument.\
@@ -756,8 +758,11 @@ class AcadosOcpSolver:
         out = np.ascontiguousarray(np.zeros((dims,)), dtype=np.float64)
         out_data = cast(out.ctypes.data, POINTER(c_double))
 
-        out_pointer = self.nlp_out if field_ in out_fields else self.sens_out
-        self.__acados_lib.ocp_nlp_out_get(self.nlp_config, self.nlp_dims, out_pointer, stage_, field, out_data)
+        if field_ in in_fields:
+            self.__acados_lib.ocp_nlp_in_get(self.nlp_config, self.nlp_dims, self.nlp_in, stage_, field, out_data)
+        else:
+            out_pointer = self.nlp_out if field_ in out_fields else self.sens_out
+            self.__acados_lib.ocp_nlp_out_get(self.nlp_config, self.nlp_dims, out_pointer, stage_, field, out_data)
 
         return out
 
