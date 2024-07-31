@@ -567,8 +567,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "params_sparse"))
     {
+{% if dims.np > 0 %}
         MEX_DIM_CHECK_MAT(fun_name, field, nrow, ncol, nrow, 2);
-
         // create int index vector
         int idx_tmp[{{ dims.np }}];
         for (int ip = 0; ip<nrow; ip++)
@@ -586,6 +586,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             int stage = mxGetScalar( prhs[5] );
                 {{ model.name }}_acados_update_params_sparse(capsule, stage, idx_tmp, value+nrow, nrow);
         }
+{% endif %}
     }
     else if (!strcmp(field, "nlp_solver_max_iter"))
     {
