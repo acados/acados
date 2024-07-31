@@ -81,7 +81,7 @@ html_context = {
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.mathjax', 'breathe', 'recommonmark', 'sphinx.ext.autodoc', 'sphinx.ext.graphviz']
+extensions = ['sphinx.ext.mathjax', 'breathe', 'recommonmark', 'sphinx.ext.autodoc', 'sphinx.ext.graphviz', "sphinx_rtd_dark_mode"]
 
 
 # Add any paths that contain templates here, relative to this directory.
@@ -108,6 +108,8 @@ cpp_id_attributes = ['ACADOS_SYMBOL_EXPORT']
 html_theme = 'sphinx_rtd_theme'
 # html_theme = 'alabaster'
 html_logo = "_static/acados_logo.png"
+
+html_theme = "sphinx_rtd_dark_mode"
 
 html_theme_options = {
     'canonical_url': '',
