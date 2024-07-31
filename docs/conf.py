@@ -90,14 +90,13 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+exclude_patterns = ['_build', 'README.md', 'Thumbs.db', '.DS_Store', '*env*', 'requirements.txt', 'memory_management.md']
 
 # -- GraphViz configuration --------------------------------------------------
 graphviz_output_format = 'svg'
 
 # -- Options for HTML output -------------------------------------------------
 
-exclude_patterns = ['_build', 'README.md', 'Thumbs.db', '.DS_Store', 'env', 'requirements.txt', 'memory_management.md']
 pygments_style = 'sphinx'
 todo_include_todos = True
 
