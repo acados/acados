@@ -84,11 +84,11 @@ end
 
 p_ref = zeros(np, N+1);
 p_ref(1:8, :) = 1;
-p_ref([42, 43], :) = 8;
+p_ref([43, 44], :) = 8;
 
 if any(any(p_ref ~= p_matlab))
     disp('Setting sparse parameters in Matlab does NOT work as expected.');
-    % quit(1);
+    quit(1);
 else
     disp('Setting sparse parameters in Matlab works as expected.');
 end
@@ -110,7 +110,7 @@ p_simulink = reshape(parameter_traj_out_signal.Values.Data(1, :), np, N+1);
 
 if any(any(p_simulink ~= p_matlab))
     disp('Setting sparse parameters in Simulink does NOT work as expected.');
-    % quit(1);
+    quit(1);
 else
     disp('Setting sparse parameters in Simulink works as expected.');
 end
