@@ -19,4 +19,9 @@ function simulink_opts = add_sparse_param_port_simulink(simulink_opts, idx_p, po
     end
     simulink_opts.customizable_inputs = setfield(simulink_opts.customizable_inputs, input_name, ...
             struct('parameter_indices', idx_p, 'stage_idx_0', stage_idx_0, 'stage_idx_e', stage_idx_e));
+
+    % NOTE: putting this logic before somehow does not work in Maltab...
+    if length(idx_p) == 1
+        simulink_opts.customizable_inputs.(input_name).parameter_indices = reshape(num2cell(idx_p), [1, 1]);
+    end
 end
