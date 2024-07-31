@@ -106,6 +106,7 @@ cpp_id_attributes = ['ACADOS_SYMBOL_EXPORT']
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
+html_theme = 'conestack'
 # html_theme = 'alabaster'
 html_logo = "_static/acados_logo.png"
 
