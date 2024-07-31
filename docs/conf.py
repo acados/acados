@@ -107,6 +107,7 @@ cpp_id_attributes = ['ACADOS_SYMBOL_EXPORT']
 #
 html_theme = 'sphinx_rtd_theme'
 # html_theme = 'alabaster'
+html_logo = "_static/acados_logo.png"
 
 html_theme_options = {
     'canonical_url': '',
