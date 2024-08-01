@@ -351,7 +351,9 @@ add_test(NAME python_pendulum_ocp_example_cmake
     add_test(NAME python_sparse_param_test
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
         python sparse_param_test.py)
-
+    add_test(NAME python_regularization_test
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
+        python regularization_test.py)
 
     add_test(NAME python_pmsm_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pmsm_example
@@ -384,7 +386,8 @@ add_test(NAME python_pendulum_ocp_example_cmake
     set_tests_properties(python_armijo_test PROPERTIES DEPENDS python_pendulum_soft_constraints_example)
     set_tests_properties(python_pendulum_soft_constraints_example PROPERTIES DEPENDS python_pendulum_parametric_nonlinear_constraint_h_test)
     set_tests_properties(python_pendulum_parametric_nonlinear_constraint_h_test PROPERTIES DEPENDS python_test_nan_globalization)
-    set_tests_properties(python_test_nan_globalization PROPERTIES DEPENDS python_test_sim_dae)
+    set_tests_properties(python_test_nan_globalization PROPERTIES DEPENDS python_regularization_test)
+    set_tests_properties(python_regularization_test PROPERTIES DEPENDS python_test_sim_dae)
     set_tests_properties(python_test_sim_dae PROPERTIES DEPENDS python_sparse_param_test)
 
     if(ACADOS_WITH_OSQP)

@@ -22,7 +22,7 @@ disp(pwd)
 
 disp('running tests')
 
-%% run all Octave tests
+%% run all tests
 test_names = ["run_test_dim_check",
 "run_test_ocp_mass_spring",
 % "run_test_ocp_pendulum",
@@ -33,7 +33,8 @@ test_names = ["run_test_dim_check",
 "run_test_sim_dae",
 % "run_test_sim_forw",
 "run_test_sim_hess",
-"run_test_mhe_lorentz"
+"run_test_mhe_lorentz",
+"param_test",
 ];
 
 for k = 1:length(test_names)

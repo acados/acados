@@ -69,12 +69,10 @@ classdef {{ model.name }}_mex_solver < handle
             disp("done.");
         end
 
-        % solve
         function solve(obj)
             acados_mex_solve_{{ model.name }}(obj.C_ocp);
         end
 
-        % set
         function set(varargin)
             obj = varargin{1};
             field = varargin{2};
@@ -89,6 +87,31 @@ classdef {{ model.name }}_mex_solver < handle
                 acados_mex_set_{{ model.name }}(obj.cost_ext_fun_type, obj.cost_ext_fun_type_e, obj.C_ocp, field, value, stage);
             else
                 disp('acados_ocp.set: wrong number of input arguments (2 or 3 allowed)');
+            end
+        end
+
+
+        function set_params_sparse(varargin)
+            % usage:
+            % ocp.set_params_sparse(idx_values, param_values, Optional[stage])
+            % updates the parameters with indices idx_values (0 based) at stage with the new values new_p_values.
+            % if stage is not provided, sparse parameter update is performed for all stages.
+            obj = varargin{1};
+            idx_values = varargin{2};
+            param_values = varargin{3};
+            value = [idx_values(:), param_values(:)];
+            field = 'params_sparse';
+
+            if ~isa(field, 'char')
+                error('field must be a char vector, use '' ''');
+            end
+            if nargin==3
+                acados_mex_set_{{ model.name }}(obj.cost_ext_fun_type, obj.cost_ext_fun_type_e, obj.C_ocp, field, value);
+            elseif nargin==4
+                stage = varargin{4};
+                acados_mex_set_{{ model.name }}(obj.cost_ext_fun_type, obj.cost_ext_fun_type_e, obj.C_ocp, field, value, stage);
+            else
+                disp('acados_ocp.set_params_sparse: wrong number of input arguments (3 or 4 allowed)');
             end
         end
 
@@ -120,6 +143,22 @@ classdef {{ model.name }}_mex_solver < handle
                 value = ocp_get(obj.C_ocp, field, stage);
             else
                 disp('acados_ocp.get: wrong number of input arguments (1 or 2 allowed)');
+            end
+
+
+            % make symmetric (only lower triangular stored internally)
+            if strcmp('qp_Q', field) || strcmp('qp_R', field)
+                if iscell(value)
+                    for i=1:length(value)
+                        if length(value{i}) > 1
+                            value{i} = tril(value{i}) + tril(value{i}, -1)';
+                        end
+                    end
+                else
+                    if length(value) > 1
+                        value = tril(value) + tril(value, -1)';
+                    end
+                end
             end
         end
 
