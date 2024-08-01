@@ -32,28 +32,28 @@
 classdef AcadosSimSolver < handle
 
     properties
-        % templated solver
-        t_sim
-        % matlab objects
-        sim
-        code_gen_dir
+        t_sim % templated solver
+        sim % Matlab class AcadosSim describing the initial value problem
     end % properties
 
 
 
     methods
 
-        function obj = AcadosSimSolver(model, opts)
+        function obj = AcadosSimSolver(sim, output_dir)
+
+            if nargin < 2
+                output_dir = fullfile(pwd, 'build');
+            end
 
             % TODO where to get these from?
-            output_dir = opts.opts_struct.output_dir;
             gnsf_transcription_opts = struct();
 
-            [~,~] = mkdir(opts.opts_struct.output_dir);
-            addpath(opts.opts_struct.output_dir);
+            [~,~] = mkdir(output_dir);
+            addpath(output_dir);
 
             % check model consistency
-            obj.sim = setup_sim(model.model_struct, opts.opts_struct);
+            obj.sim = sim;
             obj.sim.model.make_consistent(obj.sim.dims);
             % detect dimensions & sanity checks
             detect_dims_sim(obj.sim.model, obj.sim.sim_options);
@@ -84,22 +84,16 @@ classdef AcadosSimSolver < handle
 
             %% compile mex without model dependency
             % check if mex interface exists already
-            if strcmp(opts.opts_struct.compile_interface, 'true')
-                compile_interface = true;
-            elseif strcmp(opts.opts_struct.compile_interface, 'false')
-                compile_interface = false;
-            elseif strcmp(opts.opts_struct.compile_interface, 'auto')
+            if isempty(obj.sim.sim_options.compile_interface) % auto-detect
                 if is_octave()
                     extension = '.mex';
                 else
                     extension = ['.' mexext];
                 end
-                compile_interface = ~exist(fullfile(output_dir, ['/sim_create', extension]), 'file');
-            else
-                error('acados_sim: field compile_interface is , supported values are: true, false, auto');
+                obj.sim.sim_options.compile_interface = ~exist(fullfile(output_dir, ['/sim_create', extension]), 'file');
             end
 
-            if (compile_interface)
+            if obj.sim.sim_options.compile_interface
                 sim_compile_interface(output_dir);
             end
 
@@ -108,8 +102,7 @@ classdef AcadosSimSolver < handle
 
             % templated MEX
             return_dir = pwd();
-            obj.code_gen_dir = obj.sim.code_export_directory;
-            cd(obj.code_gen_dir)
+            cd(obj.sim.code_export_directory)
 
             mex_sim_solver = str2func(sprintf('%s_mex_sim_solver', obj.sim.model.name));
             obj.t_sim = mex_sim_solver();
