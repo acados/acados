@@ -34,6 +34,7 @@ classdef AcadosOcpSolver < handle
     properties
         t_ocp % templated solver
         ocp % Matlab class AcadosOcp describing the OCP formulation
+        qp_gettable_fields = {'qp_Q', 'qp_R', 'qp_S', 'qp_q', 'qp_r', 'qp_A', 'qp_B', 'qp_b', 'qp_C', 'qp_D', 'qp_lg', 'qp_ug', 'qp_lbx', 'qp_ubx', 'qp_lbu', 'qp_ubu'}
     end % properties
 
 
