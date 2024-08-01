@@ -44,52 +44,49 @@ np = 100;
 % functionality
 ocp_opts.set('nlp_solver_max_iter', 0);
 
+% deactivate ports.
+simulink_opts.inputs.lbx_0 = 0;
+simulink_opts.inputs.ubx_0 = 0;
+simulink_opts.inputs.lbx = 0;
+simulink_opts.inputs.ubx = 0;
+simulink_opts.inputs.reset_solver = 0;
+simulink_opts.inputs.x_init = 0;
+simulink_opts.inputs.u_init = 0;
+simulink_opts.inputs.pi_init = 0;
+simulink_opts.inputs.ignore_inits = 0;
+simulink_opts.outputs.pi_all = 0;
+simulink_opts.outputs.sqp_iter = 0;
+
+% parameter ports
+simulink_opts.inputs.parameter_traj = 1;
+simulink_opts.outputs.parameter_traj = 1;
+
 %% create ocp solver
 ocp_solver = acados_ocp(ocp_model, ocp_opts, simulink_opts);
 
-%% test parameter setters and getters;
-ocp_solver.set('p', zeros(np, 1));
+%% simulink test
+cd c_generated_code
+make_sfun; % ocp solver
+cd ..;
 
-p_values = {ones(np, 1), (1:np)'};
+n_sim = 3;
 
-for i_p = 1: length(p_values);
-    p_val = p_values{i_p};
-    ocp_solver.set('p', p_val, 0);
-    p = ocp_solver.get('p', 0);
+p_values = 1:(np*(N+1));
+out_sim = sim('parameter_test_simulink', 'SaveOutput', 'on');
 
-    if any(p~=p_val)
-        disp('simple parameter setter doesnt work properly');
-        exit(1);
-    end
+status_signal = out_sim.logsout.getElement('status');
+disp('checking status, should be 2 (max iter).')
+if any(status_signal.Values.Data ~= 2)
+    disp('failed. got status values:');
+    disp(status_signal.Values.Data);
+    quit(1);
 end
 
-for stage = 1:N
-    p = ocp_solver.get('p', stage);
-    if any(p)
-        disp('simple parameter setter doesnt work properly, parameter values should not change after setting at another stage');
-        exit(1);
-    end
+element_names = out_sim.logsout.getElementNames();
+parameter_traj_out_signal = out_sim.logsout.getElement('parameter_traj_out');
+if any(parameter_traj_out_signal.Values.Data(1,:) ~= p_values)
+    disp('Setting parameters in Simulink does NOT work as expected.');
+    quit(1);
 end
-disp('simple parameter setter works properly');
+disp('Setting parameters in Simulink works as expected.');
 
-
-%% test sparse parameter update
-for stage = [0, 8]
-    ocp_solver.set('p', 0 * p_val, stage);
-
-    idx_values = [0, 5, np-1];
-    new_p_values = [9, 42, 12];
-
-    ocp_solver.set_params_sparse(idx_values, new_p_values, stage);
-    p = ocp_solver.get('p', stage);
-
-    p_val = zeros(np, 1);
-    idx_values_matlab = idx_values + 1;
-    p_val(idx_values_matlab) = new_p_values;
-
-    if any(p~=p_val)
-        disp('sparse parameter update doesnt work properly.');
-        exit(1)
-    end
-end
-disp('sparse parameter setter works properly');
