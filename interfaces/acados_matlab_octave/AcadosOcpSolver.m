@@ -147,6 +147,16 @@ classdef AcadosOcpSolver < handle
             obj.t_ocp.solve();
         end
 
+        % TODO: remove this? does not seem to do anything
+        function generate_c_code(obj, simulink_opts)
+            if nargin < 2
+                warning("Code is generated with the default simulink options via the constructor of acados_ocp.")
+            else
+                error("If you want to provide simulink options, put it in the constructor of acados_ocp.")
+            end
+        end
+
+
         function eval_param_sens(obj, field, stage, index)
             obj.t_ocp.eval_param_sens(field, stage, index);
         end
