@@ -56,7 +56,7 @@ classdef AcadosOcpSolver < handle
             % detect dimensions & sanity checks
             obj.ocp = ocp;
             obj.ocp.model.make_consistent(obj.ocp.dims);
-            detect_dims_ocp(obj.ocp);
+            detect_dims_ocp(obj.ocp); % TODO: make part of make_consistent
             obj.ocp.make_consistent()
 
             % detect GNSF structure
@@ -79,6 +79,7 @@ classdef AcadosOcpSolver < handle
             end
 
             % if initial is empty, copy path cost
+            % TODO: move this to make_consistent? should happen way before?
             if isempty(cost_types{1})
                 warning("cost_type_0 not set, using path cost");
                 obj.ocp.cost.cost_type_0 = obj.ocp.cost.cost_type;
