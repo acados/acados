@@ -32,12 +32,9 @@
 classdef AcadosOcpSolver < handle
 
     properties
-        % templated solver
-        t_ocp
-        % matlab objects
-        ocp
+        t_ocp % templated solver
+        ocp % Matlab class AcadosOcp describing the OCP formulation
     end % properties
-
 
 
     methods
@@ -224,7 +221,47 @@ classdef AcadosOcpSolver < handle
         end
 
         function value = get(obj, field, varargin)
-            value = obj.t_ocp.get(field, varargin{:});
+
+            if strcmp('hess_block', field)
+
+                if length(varargin) > 0
+                    n = varargin{1};
+                    Q = obj.get('qp_Q', n);
+                    R = obj.get('qp_R', n);
+                    S = obj.get('qp_S', n);
+
+                    value = [R, S; S', Q];
+                    return;
+                else
+                    value = cell(obj.ocp.dims.N, 1);
+                    for n=0:obj.ocp.dims.N
+                        Q = obj.get('qp_Q', n);
+                        R = obj.get('qp_R', n);
+                        S = obj.get('qp_S', n);
+
+                        value{n+1} = [R, S; S', Q];
+
+                    end
+                    return;
+                end
+            else
+                value = obj.t_ocp.get(field, varargin{:});
+            end
+
+            % make symmetric (only lower triangular stored internally)
+            if strcmp('qp_Q', field) || strcmp('qp_R', field)
+                if iscell(value)
+                    for i=1:length(value)
+                        if length(value{i}) > 1
+                            value{i} = tril(value{i}) + tril(value{i}, -1)';
+                        end
+                    end
+                else
+                    if length(value) > 1
+                        value = tril(value) + tril(value, -1)';
+                    end
+                end
+            end
         end
 
         function [] = store_iterate(obj, varargin)
@@ -241,9 +278,82 @@ classdef AcadosOcpSolver < handle
             obj.t_ocp.print(varargin{:});
         end
 
+
         function reset(obj)
             obj.t_ocp.reset();
         end
+
+
+        function result = qp_diagnostics(obj)
+            % Compute some diagnostic values for the last QP.
+            % min_ev: minimum eigenvalue for each Hessian block.
+            % max_ev: maximum eigenvalue for each Hessian block.
+            % condition_number: condition number for each Hessian block.
+
+            result = struct();
+            result.min_ev = zeros(obj.ocp.dims.N+1, 1);
+            result.max_ev = zeros(obj.ocp.dims.N+1, 1);
+            result.condition_number = zeros(obj.ocp.dims.N+1, 1);
+
+            for n=0:obj.ocp.dims.N
+                if n < obj.ocp.dims.N
+                    Q = obj.get('qp_Q', n);
+                    R = obj.get('qp_R', n);
+                    S = obj.get('qp_S', n);
+                    hess_block = [R, S; S', Q];
+                else
+                    hess_block = Q;
+                end
+
+                eigvals = eig(hess_block);
+                result.min_ev(n+1) = min(eigvals);
+                result.max_ev(n+1) = max(eigvals);
+                result.condition_number(n+1) = max(eigvals) / min(eigvals);
+            end
+        end
+
+
+        function dump_last_qp_to_json(obj, filename)
+            qp_data = struct();
+
+            lN = length(num2str(obj.ocp.dims.N+1));
+            n_fields = length(obj.qp_gettable_fields);
+            for n=1:n_fields
+
+                field = obj.qp_gettable_fields{n};
+                for i=0:obj.ocp.dims.N-1
+                    s_indx = sprintf(strcat('%0', num2str(lN), 'd'), i);
+                    key = strcat(field, '_', s_indx);
+                    val = obj.get(field, i);
+                    qp_data = setfield(qp_data, key, val);
+                end
+
+                if strcmp(field, 'qp_Q') || strcmp(field, 'qp_q')
+                    s_indx = sprintf(strcat('%0', num2str(lN), 'd'), obj.ocp.dims.N);
+                    key = strcat(field, '_', s_indx);
+                    val = obj.get(field, obj.ocp.dims.N);
+                    qp_data = setfield(qp_data, key, val);
+                end
+            end
+
+            % save
+            json_string = savejson('', qp_data, 'ForceRootName', 0, struct('FloatFormat', '%.5f'));
+
+            fid = fopen(filename, 'w');
+            if fid == -1, error('Cannot create json file'); end
+            fwrite(fid, json_string, 'char');
+            fclose(fid);
+        end
+
+
+        function set_params_sparse(obj, varargin)
+            % usage:
+            % ocp.set_params_sparse(idx_values, param_values, Optional[stage])
+            % updates the parameters with indices idx_values (0 based) at stage with the new values new_p_values.
+            % if stage is not provided, sparse parameter update is performed for all stages.
+            obj.t_ocp.set_params_sparse(varargin{:});
+        end
+
 
         % function delete(obj)
         %     Use default implementation.

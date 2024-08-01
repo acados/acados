@@ -34,11 +34,8 @@ function solver = acados_ocp(model, opts, simulink_opts)
         simulink_opts = get_acados_simulink_opts();
     end
     output_dir = opts.opts_struct.output_dir;
-    % TODO where to get this?
-    gnsf_transcription_opts = struct();
 
     ocp = setup_ocp(model.model_struct, opts.opts_struct, simulink_opts);
-
     solver = AcadosOcpSolver(ocp, output_dir, simulink_opts);
 
 end
