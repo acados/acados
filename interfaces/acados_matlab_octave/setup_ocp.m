@@ -29,7 +29,7 @@
 
 %
 
-function ocp = setup_ocp(obj, model_struct, opts_struct, simulink_opts)
+function ocp = setup_ocp(model_struct, opts_struct, simulink_opts)
 
     model = model_struct;
 
@@ -64,21 +64,9 @@ function ocp = setup_ocp(obj, model_struct, opts_struct, simulink_opts)
 
     N = opts_struct.param_scheme_N;
     % options
-    if length(opts_struct.sim_method_num_steps) == N
-        ocp.solver_options.sim_method_num_steps = opts_struct.sim_method_num_steps;
-    else
-        ocp.solver_options.sim_method_num_steps = opts_struct.sim_method_num_steps * ones(1, N);
-    end
-    if length(opts_struct.sim_method_num_stages) == N
-        ocp.solver_options.sim_method_num_stages = opts_struct.sim_method_num_stages;
-    else
-        ocp.solver_options.sim_method_num_stages = opts_struct.sim_method_num_stages * ones(1, N);
-    end
-    if length(opts_struct.sim_method_jac_reuse) == N
-        ocp.solver_options.sim_method_jac_reuse = opts_struct.sim_method_jac_reuse;
-    else
-        ocp.solver_options.sim_method_jac_reuse = opts_struct.sim_method_jac_reuse * ones(1, N);
-    end
+    ocp.solver_options.sim_method_num_steps = opts_struct.sim_method_num_steps;
+    ocp.solver_options.sim_method_num_stages = opts_struct.sim_method_num_stages;
+    ocp.solver_options.sim_method_jac_reuse = opts_struct.sim_method_jac_reuse;
 
     ocp.solver_options.sim_method_newton_iter = opts_struct.sim_method_newton_iter;
     ocp.solver_options.nlp_solver_max_iter = opts_struct.nlp_solver_max_iter;
@@ -102,6 +90,7 @@ function ocp = setup_ocp(obj, model_struct, opts_struct, simulink_opts)
     else
         ocp.solver_options.qp_solver_cond_N = opts_struct.param_scheme_N;
     end
+
     ocp.solver_options.qp_solver_iter_max = opts_struct.qp_solver_iter_max;
     if isfield(opts_struct, 'qp_solver_tol_stat')
         ocp.solver_options.qp_solver_tol_stat = opts_struct.qp_solver_tol_stat;
@@ -274,7 +263,7 @@ function ocp = setup_ocp(obj, model_struct, opts_struct, simulink_opts)
     end
 
     %% Cost
-    obj.dyn_ext_fun_type = model_struct.dyn_ext_fun_type;
+    ocp.model.dyn_ext_fun_type = model_struct.dyn_ext_fun_type;
     if strcmp(model.cost_ext_fun_type, 'generic')
         ocp.cost.cost_source_ext_cost = model.cost_source_ext_cost;
         ocp.cost.cost_function_ext_cost = model.cost_function_ext_cost;

@@ -83,13 +83,13 @@ classdef AcadosOcp < handle
 
         function make_consistent(self)
             N = self.dims.N;
-            if ~length(self.solver_options.sim_method_num_steps) == N
+            if length(self.solver_options.sim_method_num_steps) ~= N
                 self.solver_options.sim_method_num_steps = self.solver_options.sim_method_num_steps * ones(1, N);
             end
-            if ~length(self.solver_options.sim_method_num_stages) == N
+            if length(self.solver_options.sim_method_num_stages) ~= N
                 self.solver_options.sim_method_num_stages = self.solver_options.sim_method_num_stages * ones(1, N);
             end
-            if ~length(self.solver_options.sim_method_jac_reuse) == N
+            if length(self.solver_options.sim_method_jac_reuse) ~= N
                 self.solver_options.sim_method_jac_reuse = self.solver_options.sim_method_jac_reuse * ones(1, N);
             end
         end
