@@ -29,7 +29,7 @@
 
 %
 
-classdef acados_sim < handle
+classdef AcadosSimSolver < handle
 
     properties
         % templated solver
@@ -43,7 +43,7 @@ classdef acados_sim < handle
 
     methods
 
-        function obj = acados_sim(model, opts)
+        function obj = AcadosSimSolver(model, opts)
 
             % TODO where to get these from?
             output_dir = opts.opts_struct.output_dir;
@@ -140,10 +140,6 @@ classdef acados_sim < handle
         %     Because `t_sim` is the only referrence to the `mex_sim_solver` object, MATLAB also destroys the latter.
         % end
 
-
     end % methods
-
-
-
 end % class
 
