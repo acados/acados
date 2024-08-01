@@ -139,7 +139,7 @@ def main(discretization='shooting_nodes'):
     ocp.solver_options.print_level = 0
     ocp.solver_options.nlp_solver_type = 'SQP' # SQP_RTI, SQP
     ocp.solver_options.nlp_solver_ext_qp_res = 1
-    # ocp.solver_options.hpipm_mode = "ROBUST"
+    ocp.solver_options.hpipm_mode = "ROBUST"
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
