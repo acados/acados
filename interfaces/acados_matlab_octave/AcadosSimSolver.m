@@ -54,11 +54,11 @@ classdef AcadosSimSolver < handle
             obj.sim.model.make_consistent(obj.sim.dims);
 
             % sanity checks
-            if(strcmp(opts.integrator_type, "ERK"))
-                if(opts.sim_method_num_stages == 1 || opts.sim_method_num_stages == 2 || ...
-                    opts.sim_method_num_stages == 3 || opts.sim_method_num_stages == 4)
+            if(strcmp(sim.sim_options.integrator_type, "ERK"))
+                if(sim.sim_options.sim_method_num_stages == 1 || sim.sim_options.sim_method_num_stages == 2 || ...
+                    sim.sim_options.sim_method_num_stages == 3 || sim.sim_options.sim_method_num_stages == 4)
                 else
-                    error(['ERK: sim_method_num_stages = ', num2str(opts.sim_method_num_stages) ' not available. Only number of stages = {1,2,3,4} implemented!']);
+                    error(['ERK: sim_method_num_stages = ', num2str(sim.sim_options.sim_method_num_stages) ' not available. Only number of stages = {1,2,3,4} implemented!']);
                 end
             end
 
@@ -84,7 +84,7 @@ classdef AcadosSimSolver < handle
             sim_generate_c_code(obj.sim);
 
             % compile mex sim interface if needed
-            obj._compile_mex_sim_interface_if_needed(output_dir)
+            obj.compile_mex_sim_interface_if_needed(output_dir)
 
             % templated MEX
             return_dir = pwd();
@@ -98,7 +98,31 @@ classdef AcadosSimSolver < handle
         end
 
 
-        function _compile_mex_sim_interface_if_needed(output_dir)
+        function set(obj, field, value)
+            obj.t_sim.set(field, value);
+        end
+
+
+        function status = solve(obj)
+            status = obj.t_sim.solve();
+        end
+
+
+        function value = get(obj, field)
+            value = obj.t_sim.get(field);
+        end
+
+
+        % function delete(obj)
+        %     Use default implementation.
+        %     MATLAB destroys the property values after the destruction of the object.
+        %     Because `t_sim` is the only referrence to the `mex_sim_solver` object, MATLAB also destroys the latter.
+        % end
+
+    end % methods
+
+    methods (Access = private)
+        function compile_mex_sim_interface_if_needed(obj, output_dir)
 
             [~,~] = mkdir(output_dir);
             addpath(output_dir);
@@ -124,28 +148,6 @@ classdef AcadosSimSolver < handle
                 sim_compile_interface(output_dir);
             end
         end
-
-        function set(obj, field, value)
-            obj.t_sim.set(field, value);
-        end
-
-
-        function status = solve(obj)
-            status = obj.t_sim.solve();
-        end
-
-
-        function value = get(obj, field)
-            value = obj.t_sim.get(field);
-        end
-
-
-        % function delete(obj)
-        %     Use default implementation.
-        %     MATLAB destroys the property values after the destruction of the object.
-        %     Because `t_sim` is the only referrence to the `mex_sim_solver` object, MATLAB also destroys the latter.
-        % end
-
-    end % methods
+    end
 end % class
 

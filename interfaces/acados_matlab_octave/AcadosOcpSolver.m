@@ -114,7 +114,7 @@ classdef AcadosOcpSolver < handle
                 end
             end
 
-            obj._compile_mex_interface_if_needed(output_dir)
+            obj.compile_mex_interface_if_needed(output_dir)
 
             % check for unsupported options:
             if strcmp(obj.ocp.solver_options.nlp_solver_type, "PARTIAL_CONDENSING_OSQP") || ...
@@ -141,63 +141,6 @@ classdef AcadosOcpSolver < handle
             cd(return_dir);
 
         end
-
-
-        function _compile_mex_interface_if_needed(obj, output_dir)
-
-            % check if path contains spaces
-            [~,~] = mkdir(output_dir);
-            addpath(output_dir);
-            if ~isempty(strfind(output_dir, ' '))
-                error(strcat('AcadosOcpSolver: Path should not contain spaces, got: ',...
-                    output_dir));
-            end
-
-            % auto detect whether to compile the interface or not
-            if isempty(obj.ocp.solver_options.compile_interface)
-                % check if mex interface exists already
-                if is_octave()
-                    mex_exists = exist( fullfile(output_dir,...
-                        '/ocp_get.mex'), 'file');
-                else
-                    mex_exists = exist( fullfile(output_dir,...
-                        ['ocp_get.', mexext]), 'file');
-                end
-                % check if mex interface is linked against the same external libs as the core
-                if mex_exists
-                    acados_folder = getenv('ACADOS_INSTALL_DIR');
-                    addpath(fullfile(acados_folder, 'external', 'jsonlab'));
-
-                    json_filename = fullfile(acados_folder, 'lib', 'link_libs.json');
-                    if ~exist(json_filename, 'file')
-                        error('File %s not found.\nPlease compile acados with the latest version, using cmake.', json_filename)
-                    end
-                    core_links = loadjson(fileread(json_filename));
-
-                    json_filename = fullfile(output_dir, 'link_libs.json');
-                    if ~exist(json_filename, 'file')
-                        obj.ocp.solver_options.compile_interface = true;
-                    else
-                        interface_links = loadjson(fileread(json_filename));
-                        if isequal(core_links, interface_links)
-                            obj.ocp.solver_options.compile_interface = false;
-                        else
-                            obj.ocp.solver_options.compile_interface = true;
-                        end
-                    end
-                else
-                    obj.ocp.solver_options.compile_interface = true;
-                end
-            end
-
-            if obj.ocp.solver_options.compile_interface
-                ocp_compile_interface(output_dir);
-                disp('acados MEX interface compiled successfully')
-            else
-                disp('found compiled acados MEX interface')
-            end
-        end
-
 
 
         function solve(obj)
@@ -359,6 +302,65 @@ classdef AcadosOcpSolver < handle
 
 
     end % methods
+
+    methods (Access = private)
+
+        function compile_mex_interface_if_needed(obj, output_dir)
+
+            % check if path contains spaces
+            [~,~] = mkdir(output_dir);
+            addpath(output_dir);
+            if ~isempty(strfind(output_dir, ' '))
+                error(strcat('AcadosOcpSolver: Path should not contain spaces, got: ',...
+                    output_dir));
+            end
+
+            % auto detect whether to compile the interface or not
+            if isempty(obj.ocp.solver_options.compile_interface)
+                % check if mex interface exists already
+                if is_octave()
+                    mex_exists = exist( fullfile(output_dir,...
+                        '/ocp_get.mex'), 'file');
+                else
+                    mex_exists = exist( fullfile(output_dir,...
+                        ['ocp_get.', mexext]), 'file');
+                end
+                % check if mex interface is linked against the same external libs as the core
+                if mex_exists
+                    acados_folder = getenv('ACADOS_INSTALL_DIR');
+                    addpath(fullfile(acados_folder, 'external', 'jsonlab'));
+
+                    json_filename = fullfile(acados_folder, 'lib', 'link_libs.json');
+                    if ~exist(json_filename, 'file')
+                        error('File %s not found.\nPlease compile acados with the latest version, using cmake.', json_filename)
+                    end
+                    core_links = loadjson(fileread(json_filename));
+
+                    json_filename = fullfile(output_dir, 'link_libs.json');
+                    if ~exist(json_filename, 'file')
+                        obj.ocp.solver_options.compile_interface = true;
+                    else
+                        interface_links = loadjson(fileread(json_filename));
+                        if isequal(core_links, interface_links)
+                            obj.ocp.solver_options.compile_interface = false;
+                        else
+                            obj.ocp.solver_options.compile_interface = true;
+                        end
+                    end
+                else
+                    obj.ocp.solver_options.compile_interface = true;
+                end
+            end
+
+            if obj.ocp.solver_options.compile_interface
+                ocp_compile_interface(output_dir);
+                disp('acados MEX interface compiled successfully')
+            else
+                disp('found compiled acados MEX interface')
+            end
+        end
+
+    end
 
 end % class
 
