@@ -49,14 +49,18 @@ classdef AcadosSimSolver < handle
             % TODO where to get these from?
             gnsf_transcription_opts = struct();
 
-            [~,~] = mkdir(output_dir);
-            addpath(output_dir);
-
             % check model consistency
             obj.sim = sim;
             obj.sim.model.make_consistent(obj.sim.dims);
-            % detect dimensions & sanity checks
-            detect_dims_sim(obj.sim.model, obj.sim.sim_options);
+
+            % sanity checks
+            if(strcmp(opts.integrator_type, "ERK"))
+                if(opts.sim_method_num_stages == 1 || opts.sim_method_num_stages == 2 || ...
+                    opts.sim_method_num_stages == 3 || opts.sim_method_num_stages == 4)
+                else
+                    error(['ERK: sim_method_num_stages = ', num2str(opts.sim_method_num_stages) ' not available. Only number of stages = {1,2,3,4} implemented!']);
+                end
+            end
 
             % detect GNSF structure
             if strcmp(obj.sim.sim_options.integrator_type, 'GNSF')
@@ -75,6 +79,29 @@ classdef AcadosSimSolver < handle
                     obj.sim.parameter_values = zeros(obj.sim.dims.np,1);
                 end
             end
+
+            % create template sim
+            sim_generate_c_code(obj.sim);
+
+            % compile mex sim interface if needed
+            obj._compile_mex_sim_interface_if_needed(output_dir)
+
+            % templated MEX
+            return_dir = pwd();
+            cd(obj.sim.code_export_directory)
+
+            mex_sim_solver = str2func(sprintf('%s_mex_sim_solver', obj.sim.model.name));
+            obj.t_sim = mex_sim_solver();
+            addpath(pwd());
+
+            cd(return_dir)
+        end
+
+
+        function _compile_mex_sim_interface_if_needed(output_dir)
+
+            [~,~] = mkdir(output_dir);
+            addpath(output_dir);
 
             % check if path contains spaces
             if ~isempty(strfind(output_dir, ' '))
@@ -96,21 +123,7 @@ classdef AcadosSimSolver < handle
             if obj.sim.sim_options.compile_interface
                 sim_compile_interface(output_dir);
             end
-
-            % create template sim
-            sim_generate_c_code(obj.sim);
-
-            % templated MEX
-            return_dir = pwd();
-            cd(obj.sim.code_export_directory)
-
-            mex_sim_solver = str2func(sprintf('%s_mex_sim_solver', obj.sim.model.name));
-            obj.t_sim = mex_sim_solver();
-            addpath(pwd());
-
-            cd(return_dir)
         end
-
 
         function set(obj, field, value)
             obj.t_sim.set(field, value);
