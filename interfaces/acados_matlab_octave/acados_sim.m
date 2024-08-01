@@ -33,4 +33,6 @@ function solver = acados_sim(model, opts)
     output_dir = opts.opts_struct.output_dir;
     sim = setup_sim(model.model_struct, opts.opts_struct);
     solver = AcadosSimSolver(sim, output_dir);
+    % warning('In acados v0.4.0, many changes to the MATLAB/Octave interface of acados have been introduced.', ...
+    % 'We recommend directly using the new AcadosSimSolver and to check the examples for the intended use.')
 end
