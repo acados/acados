@@ -60,6 +60,9 @@ simulink_opts.outputs.sqp_iter = 0;
 % parameter ports
 simulink_opts.inputs.parameter_traj = 0;
 simulink_opts.outputs.parameter_traj = 1;
+% define multiple ports for sparse parameter update:
+% Usage:
+% add_sparse_param_port_simulink(simulink_opts, idx_p, port_name, stage_idx_0, stage_idx_e)
 simulink_opts = add_sparse_param_port_simulink(simulink_opts, 0:7, 'first_8', 0, N);
 simulink_opts = add_sparse_param_port_simulink(simulink_opts, [42, 43], 'p4243', 0, N);
 simulink_opts = add_sparse_param_port_simulink(simulink_opts, 12, 'p12_stage3', 3, 3);
