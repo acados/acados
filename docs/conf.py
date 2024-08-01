@@ -116,7 +116,7 @@ html_theme_options = {
     "use_repository_button": True,
     "use_source_button": True,
     "use_issues_button": True,
-    "show_navbar_depth": 2,
+    "show_navbar_depth": 1,  # 2 looks nice, but only extends for real subpages, like C interface, which is not so relevant
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
