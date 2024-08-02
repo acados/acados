@@ -331,8 +331,9 @@ classdef acados_ocp < handle
                 eigvals = eig(hess_block);
                 result.min_ev(n+1) = min(eigvals);
                 result.max_ev(n+1) = max(eigvals);
-                result.condition_number(n+1) = max(eigvals) / min(eigvals);
+                result.condition_number_blockwise(n+1) = max(eigvals) / min(eigvals);
             end
+            result.condition_number_global = max(result.max_ev) / min(result.min_ev);
         end
 
         function dump_last_qp_to_json(obj, filename)
