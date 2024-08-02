@@ -82,8 +82,9 @@ classdef AcadosOcp < handle
         end
 
         function make_consistent(self)
-            N = self.dims.N;
+            self.model.make_consistent(self.dims);
 
+            N = self.dims.N;
 
             model = self.model;
             dims = self.dims;
@@ -562,6 +563,15 @@ classdef AcadosOcp < handle
             end
             if length(self.solver_options.sim_method_jac_reuse) ~= N
                 self.solver_options.sim_method_jac_reuse = self.solver_options.sim_method_jac_reuse * ones(1, N);
+            end
+
+            if strcmp(self.solver_options.nlp_solver_type, "PARTIAL_CONDENSING_OSQP") || ...
+                strcmp(self.solver_options.nlp_solver_type, "PARTIAL_CONDENSING_HPMPC") || ...
+                strcmp(self.solver_options.nlp_solver_type, "PARTIAL_CONDENSING_QPDUNES") || ...
+                strcmp(self.solver_options.nlp_solver_type, "PARTIAL_CONDENSING_OOQP")
+                if self.dims.ns > 0 || self.dims.ns_e > 0
+                    error(['selected QP solver ', self.solver_options.nlp_solver_type, ' does not support soft constraints (yet).'])
+                end
             end
         end
     end

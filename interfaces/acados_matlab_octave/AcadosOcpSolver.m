@@ -55,7 +55,6 @@ classdef AcadosOcpSolver < handle
 
             % detect dimensions & sanity checks
             obj.ocp = ocp;
-            obj.ocp.model.make_consistent(obj.ocp.dims);
             obj.ocp.make_consistent()
 
             % detect GNSF structure
@@ -115,16 +114,6 @@ classdef AcadosOcpSolver < handle
 
             obj.compile_mex_interface_if_needed(output_dir)
 
-            % check for unsupported options:
-            if strcmp(obj.ocp.solver_options.nlp_solver_type, "PARTIAL_CONDENSING_OSQP") || ...
-                strcmp(obj.ocp.solver_options.nlp_solver_type, "PARTIAL_CONDENSING_HPMPC") || ...
-                strcmp(obj.ocp.solver_options.nlp_solver_type, "PARTIAL_CONDENSING_QPDUNES") || ...
-                strcmp(obj.ocp.solver_options.nlp_solver_type, "PARTIAL_CONDENSING_OOQP")
-                if obj.ocp.dims.ns > 0 || obj.ocp.dims.ns_e > 0
-                    error(['selected QP solver ', obj.ocp.solver_options.nlp_solver_type, ' does not support soft constraints (yet).'])
-                end
-            end
-
             % generate templated solver
             ocp_generate_c_code(obj.ocp);
 
@@ -138,7 +127,6 @@ classdef AcadosOcpSolver < handle
             addpath(pwd());
 
             cd(return_dir);
-
         end
 
 
