@@ -92,6 +92,8 @@ classdef AcadosOcp < handle
             constraints = self.constraints;
             opts = self.solver_options;
 
+            self.detect_cost_and_constraints()
+
             %% cost
             % initial
             if strcmp(cost.cost_type_0, 'LINEAR_LS')
@@ -571,6 +573,54 @@ classdef AcadosOcp < handle
                 strcmp(self.solver_options.nlp_solver_type, "PARTIAL_CONDENSING_OOQP")
                 if self.dims.ns > 0 || self.dims.ns_e > 0
                     error(['selected QP solver ', self.solver_options.nlp_solver_type, ' does not support soft constraints (yet).'])
+                end
+            end
+        end
+
+        function [] = detect_cost_and_constraints(self)
+            % detect cost type
+            stage_types = {'initial', 'path', 'terminal'};
+            cost_types = {self.cost.cost_type_0, self.cost.cost_type, self.cost.cost_type_e};
+
+            for n=1:3
+                if strcmp(cost_types{n}, 'AUTO')
+                    detect_cost_type(self.model, self.cost, self.dims, stage_types{n});
+                end
+            end
+
+            % if initial is empty, copy path cost
+            % TODO: move this to make_consistent? should happen way before?
+            if isempty(cost_types{1})
+                warning("cost_type_0 not set, using path cost");
+                self.cost.cost_type_0 = self.cost.cost_type;
+                if (strcmp(self.cost.cost_type, 'LINEAR_LS'))
+                    self.cost.Vx_0 = self.cost.Vx;
+                    self.cost.Vu_0 = self.cost.Vu;
+                    self.cost.Vz_0 = self.cost.Vz;
+                elseif (strcmp(self.cost.cost_type, 'NONLINEAR_LS'))
+                    self.model.cost_y_expr_0 = self.model.cost_y_expr;
+                elseif (strcmp(self.cost.cost_type, 'EXTERNAL'))
+                    self.cost.cost_ext_fun_type_0 = self.cost.cost_ext_fun_type;
+                    if strcmp(self.cost.cost_ext_fun_type_0, 'casadi')
+                        self.model.cost_expr_ext_cost_0 = self.model.cost_expr_ext_cost;
+                        self.model.cost_expr_ext_cost_custom_hess_0 = self.model.cost_expr_ext_cost_custom_hess;
+                    else % generic
+                        self.cost.cost_source_ext_cost_0 = self.cost.cost_source_ext_cost;
+                        self.cost.cost_function_ext_cost_0 = self.cost.cost_function_ext_cost;
+                    end
+                end
+                if (strcmp(self.cost.cost_type, 'LINEAR_LS')) || (strcmp(self.cost.cost_type, 'NONLINEAR_LS'))
+                    self.cost.W_0 = self.cost.W;
+                    self.cost.yref_0 = self.cost.yref;
+                    self.dims.ny_0 = self.dims.ny;
+                end
+            end
+
+            % detect constraint structure
+            constraint_types = {self.constraints.constr_type_0, self.constraints.constr_type, self.constraints.constr_type_e};
+            for n=1:3
+                if strcmp(constraint_types{n}, 'AUTO')
+                    detect_constr(self.model, self.constraints, self.dims, stage_types{n});
                 end
             end
         end

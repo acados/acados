@@ -50,9 +50,6 @@ classdef AcadosOcpSolver < handle
                 output_dir = fullfile(pwd, 'build');
             end
 
-            % TODO where do we get these from
-            gnsf_transcription_opts = struct();
-
             % detect dimensions & sanity checks
             obj.ocp = ocp;
             obj.ocp.make_consistent()
@@ -60,55 +57,11 @@ classdef AcadosOcpSolver < handle
             % detect GNSF structure
             if strcmp(obj.ocp.solver_options.integrator_type, 'GNSF')
                 if obj.ocp.dims.gnsf_nx1 + obj.ocp.dims.gnsf_nx2 ~= obj.ocp.dims.nx
+                    % TODO: properly interface those.
+                    gnsf_transcription_opts = struct();
                     detect_gnsf_structure(obj.ocp.model, obj.ocp.dims, gnsf_transcription_opts);
                 else
                     warning('No GNSF model detected, assuming all required fields are set.')
-                end
-            end
-
-            % detect cost type
-            stage_types = {'initial', 'path', 'terminal'};
-            cost_types = {obj.ocp.cost.cost_type_0, obj.ocp.cost.cost_type, obj.ocp.cost.cost_type_e};
-
-            for n=1:3
-                if strcmp(cost_types{n}, 'AUTO')
-                    detect_cost_type(obj.ocp.model, obj.ocp.cost, obj.ocp.dims, stage_types{n});
-                end
-            end
-
-            % if initial is empty, copy path cost
-            % TODO: move this to make_consistent? should happen way before?
-            if isempty(cost_types{1})
-                warning("cost_type_0 not set, using path cost");
-                obj.ocp.cost.cost_type_0 = obj.ocp.cost.cost_type;
-                if (strcmp(obj.ocp.cost.cost_type, 'LINEAR_LS'))
-                    obj.ocp.cost.Vx_0 = obj.ocp.cost.Vx;
-                    obj.ocp.cost.Vu_0 = obj.ocp.cost.Vu;
-                    obj.ocp.cost.Vz_0 = obj.ocp.cost.Vz;
-                elseif (strcmp(obj.ocp.cost.cost_type, 'NONLINEAR_LS'))
-                    obj.ocp.model.cost_y_expr_0 = obj.ocp.model.cost_y_expr;
-                elseif (strcmp(obj.ocp.cost.cost_type, 'EXTERNAL'))
-                    obj.ocp.cost.cost_ext_fun_type_0 = obj.ocp.cost.cost_ext_fun_type;
-                    if strcmp(obj.ocp.cost.cost_ext_fun_type_0, 'casadi')
-                        obj.ocp.model.cost_expr_ext_cost_0 = obj.ocp.model.cost_expr_ext_cost;
-                        obj.ocp.model.cost_expr_ext_cost_custom_hess_0 = obj.ocp.model.cost_expr_ext_cost_custom_hess;
-                    else % generic
-                        obj.ocp.cost.cost_source_ext_cost_0 = obj.ocp.cost.cost_source_ext_cost;
-                        obj.ocp.cost.cost_function_ext_cost_0 = obj.ocp.cost.cost_function_ext_cost;
-                    end
-                end
-                if (strcmp(obj.ocp.cost.cost_type, 'LINEAR_LS')) || (strcmp(obj.ocp.cost.cost_type, 'NONLINEAR_LS'))
-                    obj.ocp.cost.W_0 = obj.ocp.cost.W;
-                    obj.ocp.cost.yref_0 = obj.ocp.cost.yref;
-                    obj.ocp.dims.ny_0 = obj.ocp.dims.ny;
-                end
-            end
-
-            % detect constraint structure
-            constraint_types = {obj.ocp.constraints.constr_type_0, obj.ocp.constraints.constr_type, obj.ocp.constraints.constr_type_e};
-            for n=1:3
-                if strcmp(constraint_types{n}, 'AUTO')
-                    detect_constr(obj.ocp.model, obj.ocp.constraints, obj.ocp.dims, stage_types{n});
                 end
             end
 
