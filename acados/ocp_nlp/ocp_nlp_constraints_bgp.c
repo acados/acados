@@ -1519,7 +1519,7 @@ void ocp_nlp_constraints_bgp_update_qp_vectors(void *config_, void *dims_, void 
             BLASFEO_DVECEL(memory->dmask, i) = 0;
         }
     }
-    for (int i = nb+ng+nphi; i < 2*nb+ng+nphi; i++)
+    for (int i = nb+ng+nphi; i < 2*(nb+ng+nphi); i++)
     {
         if (BLASFEO_DVECEL(&model->d, i) >= ACADOS_INFTY)
         {
