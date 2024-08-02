@@ -407,13 +407,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             ocp_qp_in *qp_in = qp_in_;
             int *nu = qp_in->dim->nu;
             int *nx = qp_in->dim->nx;
+            int cond_N = qp_in->dim->N;
 
-            mxArray *cell_array = mxCreateCellMatrix(N+1, 1);
+            mxArray *cell_array = mxCreateCellMatrix(cond_N+1, 1);
             plhs[0] = cell_array;
 
             mxArray *tmp_mat;
 
-            for (ii=0; ii<=N; ii++)
+            for (ii=0; ii<=cond_N; ii++)
             {
                 tmp_mat = mxCreateNumericMatrix(nu[ii]+nx[ii], nu[ii]+nx[ii], mxDOUBLE_CLASS, mxREAL);
                 double *mat_ptr = mxGetPr( tmp_mat );
