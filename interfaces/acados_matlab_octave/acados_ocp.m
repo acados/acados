@@ -265,16 +265,29 @@ classdef acados_ocp < handle
                         S = obj.get('qp_S', n);
 
                         value{n+1} = [R, S; S', Q];
-
                     end
                     return;
                 end
+            elseif strcmp('pc_hess_block', field)
+
+                    if ~strncmp(obj.ocp.solver_options.qp_solver, 'PARTIAL_CONDENSING', length('PARTIAL_CONDENSING'))
+                        error("Getting hessian block of partially condensed QP only works for PARTIAL_CONDENSING QP solvers");
+                    end
+                    if length(varargin) > 0
+                        n = varargin{1};
+                        all_blocks = obj.get('qp_solver_cond_H');
+                        value = all_blocks{n+1};
+                        return;
+                    else
+                        value = obj.get('qp_solver_cond_H');
+                        return;
+                    end
             else
                 value = obj.t_ocp.get(field, varargin{:});
             end
 
             % make symmetric (only lower triangular stored internally)
-            if strcmp('qp_Q', field) || strcmp('qp_R', field)
+            if strcmp('qp_Q', field) || strcmp('qp_R', field) || strcmp('qp_solver_cond_H', field)
                 if iscell(value)
                     for i=1:length(value)
                         if length(value{i}) > 1
@@ -307,31 +320,40 @@ classdef acados_ocp < handle
             obj.t_ocp.reset();
         end
 
-        function result = qp_diagnostics(obj)
+        function result = qp_diagnostics(obj, varargin)
             % Compute some diagnostic values for the last QP.
             % min_ev: minimum eigenvalue for each Hessian block.
             % max_ev: maximum eigenvalue for each Hessian block.
             % condition_number: condition number for each Hessian block.
 
-            result = struct();
-            result.min_ev = zeros(obj.ocp.dims.N+1, 1);
-            result.max_ev = zeros(obj.ocp.dims.N+1, 1);
-            result.condition_number = zeros(obj.ocp.dims.N+1, 1);
+            if length(varargin) > 0
+                partially_condensed_qp = varargin{1};
+            else
+                partially_condensed_qp = false;
+            end
 
-            for n=0:obj.ocp.dims.N
-                if n < obj.ocp.dims.N
-                    Q = obj.get('qp_Q', n);
-                    R = obj.get('qp_R', n);
-                    S = obj.get('qp_S', n);
-                    hess_block = [R, S; S', Q];
+            if partially_condensed_qp
+                num_blocks = obj.ocp.solver_options.qp_solver_cond_N + 1;
+            else
+                num_blocks = obj.ocp.dims.N + 1;
+            end
+            result = struct();
+            result.min_ev = zeros(num_blocks, 1);
+            result.max_ev = zeros(num_blocks, 1);
+            result.condition_number = zeros(num_blocks, 1);
+
+            for n=1:num_blocks
+                if partially_condensed_qp
+                    disp(['pc_hess_block', num2str(n-1)]);
+                    hess_block = obj.get('pc_hess_block', n-1);
                 else
-                    hess_block = Q;
+                    hess_block = obj.get('hess_block', n-1);
                 end
 
                 eigvals = eig(hess_block);
-                result.min_ev(n+1) = min(eigvals);
-                result.max_ev(n+1) = max(eigvals);
-                result.condition_number_blockwise(n+1) = max(eigvals) / min(eigvals);
+                result.min_ev(n) = min(eigvals);
+                result.max_ev(n) = max(eigvals);
+                result.condition_number_blockwise(n) = max(eigvals) / min(eigvals);
             end
             result.condition_number_global = max(result.max_ev) / min(result.min_ev);
         end
