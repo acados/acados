@@ -208,7 +208,7 @@ def plot_results(settings: list[IntegratorSetting], results: list[dict]):
                 marker=markers[j],
                 lw=0,
                 color="k",
-                label=f"{num_steps} steps",
+                label=f"{num_steps} steps" if num_steps > 1 else f"{num_steps} step",
             )
             for j, num_steps in enumerate(num_steps_vals)
         ] + \
