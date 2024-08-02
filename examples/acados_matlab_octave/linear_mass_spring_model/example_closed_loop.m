@@ -149,8 +149,6 @@ ocp_model.set('constr_Jbu', Jbu);
 ocp_model.set('constr_lbu', lbu);
 ocp_model.set('constr_ubu', ubu);
 
-ocp_model.model_struct
-
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_interface', compile_interface);
@@ -165,8 +163,6 @@ ocp_opts.set('sim_method', ocp_sim_method);
 ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', ocp_sim_method_num_steps);
 ocp_opts.set('regularize_method', 'no_regularize');
-
-ocp_opts.opts_struct
 
 %% acados ocp
 % create ocp
@@ -193,8 +189,6 @@ else % irk
 	sim_model.set('dyn_type', 'implicit');
 	sim_model.set('dyn_expr_f', model.dyn_expr_f_impl);
 end
-
-sim_model.model_struct
 
 %% acados sim opts
 sim_opts = acados_sim_opts();

@@ -93,7 +93,6 @@ for integrator = {'erk', 'irk'} %, 'irk_gnsf'}
 	sim_opts.set('sens_forw', sens_forw);
 	sim_opts.set('sens_adj', sens_adj);
 	sim_opts.set('sens_hess', sens_hess);
-	%sim_opts.opts_struct
 
 	%% acados sim
 	% create sim

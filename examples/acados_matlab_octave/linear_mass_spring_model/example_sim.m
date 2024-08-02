@@ -38,7 +38,7 @@ compile_interface = 'auto';
 codgen_model = 'true';
 %method = 'erk';
 method = 'irk';
-%method = 'irk_gnsf';
+method = 'irk_gnsf';
 gnsf_detect_struct = 'true';
 sens_forw = 'true';
 num_stages = 4;
@@ -68,12 +68,7 @@ else % irk irk_gnsf
 	if isfield(model, 'sym_u')
 		sim_model.set('sym_u', model.sym_u);
 	end
-%	if isfield(model, 'sym_z')
-%		sim_model.set('sym_z', model.sym_z);
-%	end
 end
-
-sim_model.model_struct
 
 %% acados sim opts
 sim_opts = acados_sim_opts();
@@ -86,8 +81,6 @@ sim_opts.set('sens_forw', sens_forw);
 if (strcmp(method, 'irk_gnsf'))
 	sim_opts.set('gnsf_detect_struct', gnsf_detect_struct);
 end
-
-sim_opts.opts_struct
 
 %% acados sim
 % create sim

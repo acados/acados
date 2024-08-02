@@ -216,8 +216,6 @@ else
 	ocp_model.set('constr_ubu', ubu);
 end
 
-% ocp_model.model_struct
-
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_interface', compile_interface);
@@ -240,8 +238,6 @@ if (strcmp(dyn_type, 'explicit') || strcmp(dyn_type, 'implicit'))
 	ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
 	ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
 end
-
-% ocp_opts.opts_struct
 
 %% acados ocp
 % create ocp

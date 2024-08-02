@@ -60,8 +60,8 @@ function sim_generate_c_code(sim)
     model.dyn_disc_fun_jac_hess = sim.model.dyn_disc_fun_jac_hess;
     model.dyn_disc_fun_jac = sim.model.dyn_disc_fun_jac;
     model.dyn_disc_fun = sim.model.dyn_disc_fun;
-    model.gnsf.nontrivial_f_LO = sim.model.gnsf.nontrivial_f_LO;
-    model.gnsf.purely_linear = sim.model.gnsf.purely_linear;
+    model.gnsf_nontrivial_f_LO = sim.model.gnsf_nontrivial_f_LO;
+    model.gnsf_purely_linear = sim.model.gnsf_purely_linear;
     sim.model = model;
     %% post process numerical data (mostly cast scalars to 1-dimensional cells)
     dims = sim.dims;

@@ -230,8 +230,8 @@ def detect_gnsf_structure(acados_ocp, transcribe_opts=None):
     # model['dyn_gnsf_ipiv_f'] = gnsf['ipiv_f']
 
     # # flags
-    # model['dyn_gnsf_nontrivial_f_LO'] = gnsf['nontrivial_f_LO']
-    # model['dyn_gnsf_purely_linear'] = gnsf['purely_linear']
+    acados_ocp.model.gnsf_nontrivial_f_LO = gnsf['nontrivial_f_LO']
+    acados_ocp.model.gnsf_purely_linear = gnsf['purely_linear']
 
     # # casadi expr
     # model['dyn_gnsf_expr_phi'] = gnsf['phi_expr']

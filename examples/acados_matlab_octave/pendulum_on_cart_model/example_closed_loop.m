@@ -198,10 +198,6 @@ else
 	ocp_model.set('constr_ubu', ubu);
 end
 
-ocp_model.model_struct
-
-
-
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_interface', compile_interface);
@@ -224,10 +220,6 @@ ocp_opts.set('qp_solver_iter_max', qp_solver_iter_max);
 ocp_opts.set('sim_method', ocp_sim_method);
 ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', ocp_sim_method_num_steps);
-
-ocp_opts.opts_struct
-
-
 
 %% acados ocp
 % create ocp
@@ -257,9 +249,6 @@ else % irk
 	sim_model.set('dyn_expr_f', model.dyn_expr_f_impl);
 end
 
-%sim_model.model_struct
-
-
 %% acados sim opts
 sim_opts = acados_sim_opts();
 sim_opts.set('compile_interface', compile_interface);
@@ -268,10 +257,6 @@ sim_opts.set('num_stages', sim_num_stages);
 sim_opts.set('num_steps', sim_num_steps);
 sim_opts.set('method', sim_method);
 sim_opts.set('sens_forw', sim_sens_forw);
-
-%sim_opts.opts_struct
-
-
 
 %% acados sim
 % create sim
@@ -310,7 +295,7 @@ for ii=1:N_sim
 	% use ocp.set to modify numerical data for a certain stage
 	some_stages = 1:10:ocp_N-1;
 	for i = some_stages
-        if strcmp( ocp.model_struct.cost_type, 'linear_ls')
+        if strcmp(ocp.ocp.cost.cost_type, 'LINEAR_LS')
             ocp.set('cost_Vx', Vx, i);
         end
 	end
@@ -318,19 +303,17 @@ for ii=1:N_sim
 	% solve OCP
 	ocp.solve();
 
-	if 1
-		status = ocp.get('status');
-		sqp_iter = ocp.get('sqp_iter');
-		time_tot = ocp.get('time_tot');
-		time_lin = ocp.get('time_lin');
-		time_qp_sol = ocp.get('time_qp_sol');
+	status = ocp.get('status');
+	sqp_iter = ocp.get('sqp_iter');
+	time_tot = ocp.get('time_tot');
+	time_lin = ocp.get('time_lin');
+	time_qp_sol = ocp.get('time_qp_sol');
 
-		fprintf('\nstatus = %d, sqp_iter = %d, time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n',...
-            status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
-        if status~=0
-            disp('acados ocp solver failed');
-            keyboard
-        end
+	fprintf('\nstatus = %d, sqp_iter = %d, time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n',...
+		status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
+	if status~=0
+		disp('acados ocp solver failed');
+		keyboard
 	end
 
 	% get solution for initialization of next NLP

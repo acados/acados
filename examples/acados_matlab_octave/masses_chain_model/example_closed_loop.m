@@ -173,10 +173,6 @@ else
 	ocp_model.set('constr_ubu', ubu);
 end
 
-%ocp_model.model_struct
-
-
-
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_interface', compile_interface);

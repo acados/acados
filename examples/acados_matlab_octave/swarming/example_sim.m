@@ -1,5 +1,5 @@
 %
-% This file allows the simulation of the dynamics of a swarm of robots. 
+% This file allows the simulation of the dynamics of a swarm of robots.
 % Here, the swarm is composed by N agents with decoupled, linear dynamics.
 %
 
@@ -28,7 +28,7 @@ S.u_ref = [1;0;0]; % reference direction of velocity for all agents
 S.v_ref = 6; % reference speed for all agents
 
 % Rename parameters
-N = S.N; 
+N = S.N;
 
 % Initial conditions
 x0 = [10*rand(3*N,1); 2*rand(3*N,1)]; % initial condition (3D positions ...
@@ -79,10 +79,6 @@ else % irk irk_gnsf
 %	end
 end
 
-%sim_model.model_struct
-
-
-
 %% Acados simutation options
 sim_opts = acados_sim_opts();
 sim_opts.set('compile_interface', compile_interface);
@@ -94,8 +90,6 @@ sim_opts.set('sens_forw', sens_forw);
 if (strcmp(method, 'irk_gnsf'))
 	sim_opts.set('gnsf_detect_struct', gnsf_detect_struct);
 end
-
-%sim_opts.opts_struct
 
 %% Acados simulation
 

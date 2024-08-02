@@ -29,7 +29,7 @@
 
 %
 
-function ocp_compile_interface(opts)
+function ocp_compile_interface(output_dir)
 
 % get acados folder
 acados_folder = getenv('ACADOS_INSTALL_DIR');
@@ -58,7 +58,7 @@ end
 %% check linking information of compiled acados
 % copy link_libs.json to build to check for consistency later
 link_libs_core_filename = fullfile(acados_folder, 'lib', 'link_libs.json');
-link_libs_interface_filename = fullfile(opts.output_dir, 'link_libs.json');
+link_libs_interface_filename = fullfile(output_dir, 'link_libs.json');
 copyfile(link_libs_core_filename, link_libs_interface_filename);
 addpath(fullfile(acados_folder, 'external', 'jsonlab'));
 link_libs = loadjson(link_libs_core_filename);
@@ -83,21 +83,21 @@ end
 
 %% compile mex
 if is_octave()
-    if ~exist(fullfile(opts.output_dir, 'cflags_octave.txt'), 'file')
-        diary(fullfile(opts.output_dir, 'cflags_octave.txt'));
+    if ~exist(fullfile(output_dir, 'cflags_octave.txt'), 'file')
+        diary(fullfile(output_dir, 'cflags_octave.txt'));
         diary on
         mkoctfile -p CFLAGS
         diary off
-        input_file = fopen(fullfile(opts.output_dir, 'cflags_octave.txt'), 'r');
+        input_file = fopen(fullfile(output_dir, 'cflags_octave.txt'), 'r');
         cflags_tmp = fscanf(input_file, '%[^\n]s');
         fclose(input_file);
         cflags_tmp = [cflags_tmp, ' -std=c99'];
-        input_file = fopen(fullfile(opts.output_dir, 'cflags_octave.txt'), 'w');
+        input_file = fopen(fullfile(output_dir, 'cflags_octave.txt'), 'w');
         fprintf(input_file, '%s', cflags_tmp);
         fclose(input_file);
     end
     % read cflags from file
-    input_file = fopen(fullfile(opts.output_dir, 'cflags_octave.txt'), 'r');
+    input_file = fopen(fullfile(output_dir, 'cflags_octave.txt'), 'r');
     cflags_tmp = fscanf(input_file, '%[^\n]s');
     fclose(input_file);
 
@@ -139,21 +139,21 @@ for ii=1:length(mex_files)
         % MSVC uses COMPFLAGS, COMPDEFINES
         % NOTE: empty linker flags do not work in Octave
         mex(mex_flags, FLAGS, LDFLAGS, COMPDEFINES, COMPFLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
-            acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', acados_lib_extra{:}, mex_files{ii}, '-outdir', opts.output_dir)
+            acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', acados_lib_extra{:}, mex_files{ii}, '-outdir', output_dir)
     end
 end
 
 if is_octave()
     octave_version = OCTAVE_VERSION();
     if octave_version < 5
-        movefile('*.o', opts.output_dir);
+        movefile('*.o', output_dir);
     end
 
-    %system(['mv -f *.mexa64 ', opts.output_dir])
+    %system(['mv -f *.mexa64 ', output_dir])
     for k=1:length(mex_names)
         clear(mex_names{k})
-    %    movefile([mex_names{k}, '.', mexext], opts.output_dir);
-        [status, message] = copyfile([mex_names{k}, '.', mexext], opts.output_dir);
+    %    movefile([mex_names{k}, '.', mexext], output_dir);
+        [status, message] = copyfile([mex_names{k}, '.', mexext], output_dir);
         delete([mex_names{k}, '.', mexext]);
     end
 end

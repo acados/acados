@@ -259,11 +259,6 @@ ocp_model.set('constr_Jsh_e', Jsh_e);
 
 ocp_model.set('constr_x0', x0_ref);
 
-
-ocp_model.model_struct
-
-
-
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_interface', compile_interface);
@@ -290,10 +285,6 @@ end
 ocp_opts.set('sim_method', ocp_sim_method);
 ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', ocp_sim_method_num_steps);
-
-ocp_opts.opts_struct
-
-
 
 %% acados ocp
 % create ocp
@@ -333,10 +324,6 @@ sim_opts.set('num_steps', sim_num_steps);
 sim_opts.set('method', sim_method);
 sim_opts.set('sens_forw', sim_sens_forw);
 ocp_opts.set('regularize_method', 'no_regularize');
-
-%sim_opts.opts_struct
-
-
 
 %% acados sim
 % create sim

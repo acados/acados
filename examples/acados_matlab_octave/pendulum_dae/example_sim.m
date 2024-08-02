@@ -129,7 +129,7 @@ z0 = zeros(nz, 1);
 
 tic
 for ii=1:N_sim
-	
+
 	% set initial state
 	sim.set('x', x_sim(:,ii));
 	sim.set('u', u);
@@ -142,16 +142,16 @@ for ii=1:N_sim
         sim.set('xdot', xdot0);
         sim.set('z', z0);
     elseif (strcmp(method, 'irk_gnsf'))
-        y_in = sim.model_struct.dyn_gnsf_L_x * x0 ...
-                + sim.model_struct.dyn_gnsf_L_xdot * xdot0 ...
-                + sim.model_struct.dyn_gnsf_L_z * z0;
-        u_hat = sim.model_struct.dyn_gnsf_L_u * u;
+        y_in = sim.sim.model.dyn_gnsf_L_x * x0 ...
+                + sim.sim.model.dyn_gnsf_L_xdot * xdot0 ...
+                + sim.sim.model.dyn_gnsf_L_z * z0;
+        u_hat = sim.sim.model.dyn_gnsf_L_u * u;
         phi_fun = Function([model_name,'_gnsf_phi_fun'],...
-                        {sim.model_struct.sym_gnsf_y, sim.model_struct.sym_gnsf_uhat},...
-                            {sim.model_struct.dyn_gnsf_expr_phi(:)}); % sim.model_struct.sym_p
+                        {sim.sim.model.sym_gnsf_y, sim.sim.model.sym_gnsf_uhat},...
+                            {sim.sim.model.dyn_gnsf_expr_phi(:)});
 
         phi_guess = full( phi_fun( y_in, u_hat ) );
-        n_out = sim.model_struct.dim_gnsf_nout;
+        n_out = sim.sim.dims.gnsf_nout;
         sim.set('phi_guess', zeros(n_out,1));
     end
 

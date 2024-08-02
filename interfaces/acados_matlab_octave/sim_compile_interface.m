@@ -29,78 +29,78 @@
 
 %
 
-function sim_compile_interface(opts)
+function sim_compile_interface(output_dir)
 
-% get acados folder
-acados_folder = getenv('ACADOS_INSTALL_DIR');
-mex_flags = getenv('ACADOS_MEX_FLAGS');
+    % get acados folder
+    acados_folder = getenv('ACADOS_INSTALL_DIR');
+    mex_flags = getenv('ACADOS_MEX_FLAGS');
 
-% set paths
-acados_mex_folder = fullfile(acados_folder, 'interfaces', 'acados_matlab_octave');
-acados_include = ['-I' acados_folder];
-acados_interfaces_include = ['-I' fullfile(acados_folder, 'interfaces')];
-acados_lib_path = ['-L' fullfile(acados_folder, 'lib')];
+    % set paths
+    acados_mex_folder = fullfile(acados_folder, 'interfaces', 'acados_matlab_octave');
+    acados_include = ['-I' acados_folder];
+    acados_interfaces_include = ['-I' fullfile(acados_folder, 'interfaces')];
+    acados_lib_path = ['-L' fullfile(acados_folder, 'lib')];
 
-mex_names = { ...
-    'sim_solve', ...
-    'sim_get', ...
-};
+    mex_names = { ...
+        'sim_solve', ...
+        'sim_get', ...
+    };
 
-mex_files = cell(length(mex_names), 1);
-for k=1:length(mex_names)
-    mex_files{k} = fullfile(acados_mex_folder, [mex_names{k}, '.c']);
-end
+    mex_files = cell(length(mex_names), 1);
+    for k=1:length(mex_names)
+        mex_files{k} = fullfile(acados_mex_folder, [mex_names{k}, '.c']);
+    end
 
 
-%% compile mex
-if is_octave()
-    if ~exist(fullfile(opts.output_dir, 'cflags_octave.txt'), 'file')
-        diary(fullfile(opts.output_dir, 'cflags_octave.txt'));
-        diary on
-        mkoctfile -p CFLAGS
-        diary off
-        input_file = fopen(fullfile(opts.output_dir, 'cflags_octave.txt'), 'r');
+    %% compile mex
+    if is_octave()
+        if ~exist(fullfile(output_dir, 'cflags_octave.txt'), 'file')
+            diary(fullfile(output_dir, 'cflags_octave.txt'));
+            diary on
+            mkoctfile -p CFLAGS
+            diary off
+            input_file = fopen(fullfile(output_dir, 'cflags_octave.txt'), 'r');
+            cflags_tmp = fscanf(input_file, '%[^\n]s');
+            fclose(input_file);
+            cflags_tmp = [cflags_tmp, ' -std=c99'];
+            input_file = fopen(fullfile(output_dir, 'cflags_octave.txt'), 'w');
+            fprintf(input_file, '%s', cflags_tmp);
+            fclose(input_file);
+        end
+        % read cflags from file
+        input_file = fopen(fullfile(output_dir, 'cflags_octave.txt'), 'r');
         cflags_tmp = fscanf(input_file, '%[^\n]s');
         fclose(input_file);
-        cflags_tmp = [cflags_tmp, ' -std=c99'];
-        input_file = fopen(fullfile(opts.output_dir, 'cflags_octave.txt'), 'w');
-        fprintf(input_file, '%s', cflags_tmp);
-        fclose(input_file);
+        setenv('CFLAGS', cflags_tmp);
     end
-    % read cflags from file
-    input_file = fopen(fullfile(opts.output_dir, 'cflags_octave.txt'), 'r');
-    cflags_tmp = fscanf(input_file, '%[^\n]s');
-    fclose(input_file);
-    setenv('CFLAGS', cflags_tmp);
-end
 
-for ii=1:length(mex_files)
-    disp(['compiling ', mex_files{ii}])
+    for ii=1:length(mex_files)
+        disp(['compiling ', mex_files{ii}])
+        if is_octave()
+    %        mkoctfile -p CFLAGS
+            mex(acados_include, acados_interfaces_include, acados_lib_path,...
+                '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
+        else
+            FLAGS = 'CFLAGS=$CFLAGS -std=c99';
+            mex(mex_flags, FLAGS, acados_include, acados_interfaces_include, acados_lib_path, ...
+                '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii}, '-outdir', output_dir)
+        end
+    end
+
+
     if is_octave()
-%        mkoctfile -p CFLAGS
-        mex(acados_include, acados_interfaces_include, acados_lib_path,...
-            '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
-    else
-        FLAGS = 'CFLAGS=$CFLAGS -std=c99';
-        mex(mex_flags, FLAGS, acados_include, acados_interfaces_include, acados_lib_path, ...
-             '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii}, '-outdir', opts.output_dir)
-    end
-end
+        octave_version = OCTAVE_VERSION();
+        if octave_version < 5
+            movefile('*.o', output_dir);
+        end
 
-
-if is_octave()
-    octave_version = OCTAVE_VERSION();
-    if octave_version < 5
-        movefile('*.o', opts.output_dir);
+        %system(['mv -f *.mexa64 ', output_dir])
+        for k=1:length(mex_names)
+            clear(mex_names{k})
+        %    [status, message] = movefile([mex_names{k}, '.', mexext], output_dir)
+            [status, message] = copyfile([mex_names{k}, '.', mexext], output_dir);
+            delete([mex_names{k}, '.', mexext]);
+        end
     end
-
-    %system(['mv -f *.mexa64 ', opts.output_dir])
-    for k=1:length(mex_names)
-        clear(mex_names{k})
-    %    [status, message] = movefile([mex_names{k}, '.', mexext], opts.output_dir)
-        [status, message] = copyfile([mex_names{k}, '.', mexext], opts.output_dir);
-        delete([mex_names{k}, '.', mexext]);
-    end
-end
 
 end
