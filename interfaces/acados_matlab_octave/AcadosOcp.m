@@ -49,11 +49,11 @@ classdef AcadosOcp < handle
     end
     methods
         function obj = AcadosOcp(simulink_opts)
-            obj.dims = acados_template_mex.AcadosOcpDims();
-            obj.cost = acados_template_mex.AcadosOcpCost();
-            obj.constraints = acados_template_mex.AcadosOcpConstraints();
-            obj.solver_options = acados_template_mex.AcadosOcpOptions();
-            obj.model = acados_template_mex.AcadosModel();
+            obj.dims = AcadosOcpDims();
+            obj.cost = AcadosOcpCost();
+            obj.constraints = AcadosOcpConstraints();
+            obj.solver_options = AcadosOcpOptions();
+            obj.model = AcadosModel();
             obj.acados_include_path = [];
             obj.acados_lib_path = [];
             obj.parameter_values = [];

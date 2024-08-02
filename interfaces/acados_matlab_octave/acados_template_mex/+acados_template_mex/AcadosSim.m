@@ -59,7 +59,7 @@ classdef AcadosSim < handle
             obj.code_export_directory = [];
 
             obj.dims = acados_template_mex.AcadosSimDims();
-            obj.model = acados_template_mex.AcadosModel();
+            obj.model = AcadosModel();
 
             % TODO move this to class AcadosSimOptions
             obj.sim_options = struct( ...
