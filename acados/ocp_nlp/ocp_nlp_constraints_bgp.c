@@ -1527,8 +1527,17 @@ void ocp_nlp_constraints_bgp_update_qp_vectors(void *config_, void *dims_, void 
             BLASFEO_DVECEL(memory->dmask, i) = 0;
         }
     }
+    for (int i = 2*(nb+ng+nphi); i < 2*(nb+ng+nphi+ns); i++)
+    {
+        if (BLASFEO_DVECEL(&model->d, i) <= -ACADOS_INFTY)
+        {
+            // printf("found lower infinity bound on slacks\n");
+            BLASFEO_DVECEL(memory->dmask, i) = 0;
+        }
+    }
+
     // fun = fun * mask
-    blasfeo_dvecmul(2*(nb+ng+nphi), memory->dmask, 0, &memory->fun, 0, &memory->fun, 0);
+    blasfeo_dvecmul(2*(nb+ng+nphi+ns), memory->dmask, 0, &memory->fun, 0, &memory->fun, 0);
 
     // printf("BGH mask\n");
     // blasfeo_print_tran_dvec(2*(nb+ng+nphi), memory->dmask, 0);
