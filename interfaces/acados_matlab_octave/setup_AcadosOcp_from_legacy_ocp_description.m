@@ -29,7 +29,7 @@
 
 %
 
-function ocp = setup_ocp(model_struct, opts_struct, simulink_opts)
+function ocp = setup_AcadosOcp_from_legacy_ocp_description(model_struct, opts_struct, simulink_opts)
 
     model = model_struct;
 

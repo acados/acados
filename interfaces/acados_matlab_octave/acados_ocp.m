@@ -35,7 +35,7 @@ function solver = acados_ocp(model, opts, simulink_opts)
     end
     output_dir = opts.opts_struct.output_dir;
 
-    ocp = setup_ocp(model.model_struct, opts.opts_struct, simulink_opts);
+    ocp = setup_AcadosOcp_from_legacy_ocp_description(model.model_struct, opts.opts_struct, simulink_opts);
     solver = AcadosOcpSolver(ocp, output_dir, simulink_opts);
 
 end
