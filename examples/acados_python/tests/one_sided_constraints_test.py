@@ -32,7 +32,7 @@ import sys
 
 sys.path.insert(0, '../pendulum_on_cart/common')
 
-from acados_template import AcadosOcp, AcadosOcpSolver
+from acados_template import AcadosOcp, AcadosOcpSolver, ACADOS_INFTY
 from pendulum_model import export_pendulum_ode_model
 import numpy as np
 import scipy.linalg
@@ -40,7 +40,7 @@ from utils import plot_pendulum
 
 PLOT = False
 
-def main(interface_type='ctypes'):
+def main(constraint_variant='one_sided'):
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -90,36 +90,32 @@ def main(interface_type='ctypes'):
 
     ocp.constraints.x0 = np.array([0.0, np.pi, 0.0, 0.0])
 
+    if constraint_variant == 'one_sided':
+        ocp.constraints.lbx = np.array([-ACADOS_INFTY])
+        ocp.constraints.ubx = np.array([+5.0])
+        ocp.constraints.idxbx = np.array([0])
+        expected_status = 0
+    elif constraint_variant == 'one_sided_wrong_infty':
+        ocp.constraints.lbx = np.array([-0.5*ACADOS_INFTY])
+        ocp.constraints.ubx = np.array([+5.0])
+        ocp.constraints.idxbx = np.array([0])
+        # complementarity residual does not converge to tolerance if infty is too large
+        expected_status = 2
+
     # set options
     ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = 'ERK'
     ocp.solver_options.nlp_solver_type = 'SQP'
+    ocp.solver_options.tol = 1e-7
 
     # set prediction horizon
     ocp.solver_options.tf = Tf
 
-    print(80*'-')
-    print('generate code and compile...')
-
-    if interface_type == 'cython':
-        AcadosOcpSolver.generate(ocp, json_file='acados_ocp.json')
-        AcadosOcpSolver.build(ocp.code_export_directory, with_cython=True)
-        ocp_solver = AcadosOcpSolver.create_cython_solver('acados_ocp.json')
-    elif interface_type == 'ctypes':
-        ocp_solver = AcadosOcpSolver(ocp, json_file='acados_ocp.json')
-    elif interface_type == 'cython_prebuilt':
-        from c_generated_code.acados_ocp_solver_pyx import AcadosOcpSolverCython
-        ocp_solver = AcadosOcpSolverCython(ocp.model.name, ocp.solver_options.nlp_solver_type, ocp.dims.N)
-
-
-    # test setting HPIPM options
-    ocp_solver.options_set('qp_tol_ineq', 1e-8)
-    ocp_solver.options_set('qp_tau_min', 1e-10)
-    ocp_solver.options_set('qp_mu0', 1e0)
+    # create solver
+    ocp_solver = AcadosOcpSolver(ocp)
 
     # solve the problem defined here (original from code export), analog to 'minimal_example_ocp.py'
-    nvariant = 0
     simX0 = np.zeros((N_horizon + 1, nx))
     simU0 = np.zeros((N_horizon, nu))
 
@@ -128,8 +124,8 @@ def main(interface_type='ctypes'):
     status = ocp_solver.solve()
     ocp_solver.print_statistics()
 
-    if status != 0:
-        raise Exception(f'acados returned status {status}.')
+    if status != expected_status:
+        raise Exception(f"expected status {expected_status}, got {status} for constraint_variant {constraint_variant}.")
 
     # get solution
     for i in range(N_horizon):
@@ -137,27 +133,22 @@ def main(interface_type='ctypes'):
         simU0[i, :] = ocp_solver.get(i, "u")
     simX0[N_horizon, :] = ocp_solver.get(N_horizon, "x")
 
-    ocp_solver.store_iterate(filename=f'final_iterate_{interface_type}_variant{nvariant}.json', overwrite=True)
+    lambdas = [ocp_solver.get(i, "lam") for i in range(1, N_horizon)]
+    for lam in lambdas:
+        assert np.all(lam >= 0)
 
-    if PLOT:# plot but don't halt
-        plot_pendulum(np.linspace(0, Tf, N_horizon + 1), Fmax, simU0, simX0, latexify=False, plt_show=False, X_true_label=f'original: N={N_horizon}, Tf={Tf}')
+    # if unbounded constraint is defined properly, lambda should be zero
+    i_infty = 1
+    if constraint_variant == 'one_sided':
+        assert lam[i_infty] == 0
+    elif constraint_variant == 'one_sided_wrong_infty':
+        assert lam[i_infty] != 0
 
+    if PLOT:
+        plot_pendulum(np.linspace(0, Tf, N_horizon + 1), Fmax, simU0, simX0, latexify=False, plt_show=True, X_true_label=f'N={N_horizon}, Tf={Tf}')
+
+    ocp_solver = None
 
 if __name__ == "__main__":
-    for interface_type in ['ctypes', 'cython', 'cython_prebuilt']:
-        main(interface_type=interface_type)
-
-    import json
-    # compare iterates
-    for nvariant in [0]:
-        iterate_filename = f'final_iterate_ctypes_variant{nvariant}.json'
-        with open(iterate_filename, 'r') as f:
-            iterate_ctypes = json.load(f)
-
-        for interface_type in ['cython', 'cython_prebuilt']:
-            iterate_filename = f'final_iterate_{interface_type}_variant{nvariant}.json'
-            with open(iterate_filename, 'r') as f:
-                iterate = json.load(f)
-
-            assert iterate.keys() == iterate_ctypes.keys()
-            assert(all ([iterate[k] == iterate_ctypes[k] for k in iterate]))
+    main(constraint_variant='one_sided')
+    main(constraint_variant='one_sided_wrong_infty')

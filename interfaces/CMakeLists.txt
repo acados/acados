@@ -354,6 +354,10 @@ add_test(NAME python_pendulum_ocp_example_cmake
     add_test(NAME python_regularization_test
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
         python regularization_test.py)
+    add_test(NAME python_one_sided_constraints_test
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
+        python one_sided_constraints_test.py)
+
 
     add_test(NAME python_pmsm_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pmsm_example
@@ -381,7 +385,8 @@ add_test(NAME python_pendulum_ocp_example_cmake
     set_tests_properties(python_test_cython_vs_ctypes PROPERTIES DEPENDS python_test_reset)
     set_tests_properties(python_test_reset PROPERTIES DEPENDS python_test_ocp)
     set_tests_properties(python_test_ocp PROPERTIES DEPENDS python_test_cost_integration_euler)
-    set_tests_properties(python_test_cost_integration_euler PROPERTIES DEPENDS python_test_cost_integration_value)
+    set_tests_properties(python_test_cost_integration_euler PROPERTIES DEPENDS python_one_sided_constraints_test)
+    set_tests_properties(python_one_sided_constraints_test PROPERTIES DEPENDS python_test_cost_integration_value)
     set_tests_properties(python_test_cost_integration_value PROPERTIES DEPENDS python_armijo_test)
     set_tests_properties(python_armijo_test PROPERTIES DEPENDS python_pendulum_soft_constraints_example)
     set_tests_properties(python_pendulum_soft_constraints_example PROPERTIES DEPENDS python_pendulum_parametric_nonlinear_constraint_h_test)
