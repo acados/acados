@@ -140,11 +140,12 @@ class AcadosOcpOptions:
     @property
     def custom_update_filename(self):
         """
-        Filename of the custom C function to update solver data and parameters in between solver calls
+        Filename of the custom C function to update solver data and parameters in between solver calls.
+        Compare also `AcadosOcpOptions.custom_update_header_filename`.
 
         This file has to implement the functions
         int custom_update_init_function([model.name]_solver_capsule* capsule);
-        int custom_update_function([model.name]_solver_capsule* capsule);
+        int custom_update_function([model.name]_solver_capsule* capsule, double* data, int data_len);
         int custom_update_terminate_function([model.name]_solver_capsule* capsule);
 
 
@@ -169,7 +170,7 @@ class AcadosOcpOptions:
     @property
     def custom_update_header_filename(self):
         """
-        Header filename of the custom C function to update solver data and parameters in between solver calls
+        Header filename of the custom C function to update solver data and parameters in between solver calls.
 
         This file has to declare the custom_update functions and look as follows:
 
@@ -268,7 +269,7 @@ class AcadosOcpOptions:
 
         - MIRROR: performs eigenvalue decomposition H = V^T D V and sets D_ii = max(eps, abs(D_ii))
         - PROJECT: performs eigenvalue decomposition H = V^T D V and sets D_ii = max(eps, D_ii)
-        - CONVEXIFY: Algorithm 6 from Verschueren2017, https://cdn.syscop.de/publications/Verschueren2017.pdf
+        - CONVEXIFY: Algorithm 6 from Verschueren2017, https://cdn.syscop.de/publications/Verschueren2017.pdf, does not support nonlinear constraints
         - PROJECT_REDUC_HESS: experimental
 
         Note: default eps = 1e-4
