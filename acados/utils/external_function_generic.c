@@ -1493,8 +1493,7 @@ void external_function_external_param_casadi_assign(external_function_external_p
 
     fun->param_mem_is_set = false;
 
-    assert((char *) raw_memory + external_function_external_param_casadi_calculate_size(fun, fun->np) >=
-           c_ptr);
+    assert((char *) raw_memory + external_function_external_param_casadi_calculate_size(fun) >= c_ptr);
 
     return;
 }
