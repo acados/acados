@@ -157,10 +157,10 @@ sim_opts.set('method', plant_sim_method);
 sim_opts.set('num_stages', plant_sim_method_num_stages);
 sim_opts.set('num_steps', plant_sim_method_num_steps);
 
-sim = acados_sim(sim_model, sim_opts);
+sim_solver = acados_sim(sim_model, sim_opts);
 
 % set parameter
-sim.set('p', 1.05);
+sim_solver.set('p', 1.05);
 
 %% simulation
 N_sim = 150;
@@ -206,17 +206,17 @@ for i=1:N_sim
     status = ocp_solver.get('status'); % 0 - success
 
     % set initial state for the simulation
-    sim.set('x', x0);
-    sim.set('u', u0);
+    sim_solver.set('x', x0);
+    sim_solver.set('u', u0);
 
     % simulate one step
-    sim_status = sim.solve();
+    sim_status = sim_solver.solve();
     if sim_status ~= 0
         disp(['acados integrator returned error status ', num2str(sim_status)])
     end
 
     % get simulated state
-    x_sim(:,i+1) = sim.get('xn');
+    x_sim(:,i+1) = sim_solver.get('xn');
     u_sim(:,i) = u0;
 end
 

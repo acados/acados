@@ -207,7 +207,7 @@ sim_opts.set('sens_forw', sim_sens_forw);
 
 %% acados sim
 % create sim
-sim = acados_sim(sim_model, sim_opts);
+sim_solver = acados_sim(sim_model, sim_opts);
 
 %% closed loop simulation
 n_sim = 100;
@@ -238,15 +238,15 @@ for ii=1:n_sim
 	u_sim(:,ii) = ocp_solver.get('u', 0);
 
 	% set initial state of sim
-	sim.set('x', x_sim(:,ii));
+	sim_solver.set('x', x_sim(:,ii));
 	% set input in sim
-	sim.set('u', u_sim(:,ii));
+	sim_solver.set('u', u_sim(:,ii));
 
 	% simulate state
-	sim.solve();
+	sim_solver.solve();
 
 	% get new state
-	x_sim(:,ii+1) = sim.get('xn');
+	x_sim(:,ii+1) = sim_solver.get('xn');
 end
 
 avg_time_solve = toc/n_sim

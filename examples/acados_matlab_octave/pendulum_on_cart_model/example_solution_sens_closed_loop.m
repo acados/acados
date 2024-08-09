@@ -153,7 +153,7 @@ sim_opts.set('method', plant_sim_method);
 sim_opts.set('num_stages', plant_sim_method_num_stages);
 sim_opts.set('num_steps', plant_sim_method_num_steps);
 
-sim = acados_sim(sim_model, sim_opts);
+sim_solver = acados_sim(sim_model, sim_opts);
 
 %% Simulation
 N_sim = 100;
@@ -192,14 +192,14 @@ for i=1:N_sim
     end
 
     % set initial state
-    sim.set('x', xcurrent);
-    sim.set('u', u0);
+    sim_solver.set('x', xcurrent);
+    sim_solver.set('u', u0);
 
     % solve
-    sim.solve();
+    sim_solver.solve();
 
     % get simulated state
-    x_sim(:,i+1) = sim.get('xn');
+    x_sim(:,i+1) = sim_solver.get('xn');
     u_sim(:,i) = u0;
 end
 

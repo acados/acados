@@ -28,7 +28,7 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 
 
-function [sim] = setup_integrator(model)
+function [sim_solver] = setup_integrator(model)
 
 model_name = 'lorentz_model_integrator';
 sim_model = acados_sim_model();
@@ -38,7 +38,7 @@ sim_model.set('T', model.h);
 sim_model.set('sym_x', model.sym_x);
 sim_model.set('sym_u', model.sym_u);
 
-% explit integrator (erk) 
+% explit integrator (erk)
 sim_model.set('dyn_type', 'explicit');
 sim_model.set('dyn_expr_f', model.f_expl_expr);
 
@@ -51,6 +51,6 @@ sim_opts.set('method', 'erk');
 sim_opts.set('sens_forw', 'true'); % generate forward sensitivities
 
 % create acados integrator
-sim = acados_sim(sim_model, sim_opts);
+sim_solver = acados_sim(sim_model, sim_opts);
 end
 

@@ -340,7 +340,7 @@ ocp_opts.set('regularize_method', 'no_regularize');
 
 %% acados sim
 % create sim
-sim = acados_sim(sim_model, sim_opts);
+sim_solver = acados_sim(sim_model, sim_opts);
 
 
 %% closed loop simulation
@@ -398,37 +398,37 @@ for ii=1:n_sim
     u_sim(:,ii) = ocp_solver.get('u', 0);
 
     % set initial state of sim
-    sim.set('x', x_sim(:,ii));
+    sim_solver.set('x', x_sim(:,ii));
     % set input in sim
-    sim.set('u', u_sim(:,ii));
+    sim_solver.set('u', u_sim(:,ii));
     % set parameter
-    sim.set('p', wind0_ref(:,ii));
+    sim_solver.set('p', wind0_ref(:,ii));
 
     % simulate state
-    sim.solve();
+    sim_solver.solve();
 
     % get new state
-    x_sim(:,ii+1) = sim.get('xn');
+    x_sim(:,ii+1) = sim_solver.get('xn');
 %    x_sim(:,ii+1) = x(:,2);
 
-%    (x(:,2) - sim.get('xn'))'
+%    (x(:,2) - sim_solver.get('xn'))'
 
     % simulate to initialize last stage
     % set initial state of sim
-%    sim.set('x', x(:,ocp_N+1));
+%    sim_solver.set('x', x(:,ocp_N+1));
     % set input in sim
-%    sim.set('u', zeros(nu, 1));
-%    sim.set('u', u(:,ocp_N));
+%    sim_solver.set('u', zeros(nu, 1));
+%    sim_solver.set('u', u(:,ocp_N));
     % set parameter
-%    sim.set('p', wind0_ref(:,ii+ocp_N));
+%    sim_solver.set('p', wind0_ref(:,ii+ocp_N));
 
     % simulate state
-%    sim.solve();
+%    sim_solver.solve();
 
     % shift trajectory for initialization
 %    x_traj_init = [x(:,2:ocp_N+1), zeros(nx, 1)];
     x_traj_init = [x(:,2:ocp_N+1), x(:,ocp_N+1)];
-%    x_traj_init = [x(:,2:ocp_N+1), sim.get('xn')];
+%    x_traj_init = [x(:,2:ocp_N+1), sim_solver.get('xn')];
 %    u_traj_init = [u(:,2:ocp_N), zeros(nu, 1)];
     u_traj_init = [u(:,2:ocp_N), u(:,ocp_N)];
     pi_traj_init = [pi(:,2:ocp_N), pi(:,ocp_N)];

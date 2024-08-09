@@ -86,12 +86,12 @@ sim_opts.set('sens_forw', sens_forw);
 
 %% acados sim
 % create sim
-sim = acados_sim(sim_model, sim_opts);
+sim_solver = acados_sim(sim_model, sim_opts);
 
 % Note: this does not work with gnsf, because it needs to be available
 % in the precomputation phase
-% 	sim.set('T', Ts);
+% 	sim_solver.set('T', Ts);
 
 %% test check, this should fail!
 % set initial state
-sim.set('x', zeros(nx+1, 1));
+sim_solver.set('x', zeros(nx+1, 1));

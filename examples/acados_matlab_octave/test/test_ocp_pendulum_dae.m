@@ -274,7 +274,7 @@ end
 
 %% acados sim
 % create integrator
-sim = acados_sim(sim_model, sim_opts);
+sim_solver = acados_sim(sim_model, sim_opts);
 
 %% closed loop simulation
 N_sim = 99;
@@ -344,33 +344,33 @@ for ii=1:N_sim
     u_sim(:,ii) = ocp_solver.get('u', 0); % get control input
     % initialize implicit integrator
     if (strcmp(sim_method, 'irk'))
-        sim.set('xdot', xdot0);
-        sim.set('z', z0);
+        sim_solver.set('xdot', xdot0);
+        sim_solver.set('z', z0);
     elseif (strcmp(sim_method, 'irk_gnsf'))
         import casadi.*
-        x01_gnsf = x0(sim.model_struct.dyn_gnsf_idx_perm_x(1:sim.model_struct.dim_gnsf_nx1));
-        x01_dot_gnsf = xdot0(sim.model_struct.dyn_gnsf_idx_perm_x(1:sim.model_struct.dim_gnsf_nx1));
-        z0_gnsf = z0(sim.model_struct.dyn_gnsf_idx_perm_z( 1:sim.model_struct.dim_gnsf_nz1 ));
-        y_in = sim.model_struct.dyn_gnsf_L_x * x01_gnsf ...
-                + sim.model_struct.dyn_gnsf_L_xdot * x01_dot_gnsf ...
-                + sim.model_struct.dyn_gnsf_L_z * z0_gnsf;
-        u_hat = sim.model_struct.dyn_gnsf_L_u * u_sim(:,ii);
+        x01_gnsf = x0(sim_solver.model_struct.dyn_gnsf_idx_perm_x(1:sim_solver.model_struct.dim_gnsf_nx1));
+        x01_dot_gnsf = xdot0(sim_solver.model_struct.dyn_gnsf_idx_perm_x(1:sim_solver.model_struct.dim_gnsf_nx1));
+        z0_gnsf = z0(sim_solver.model_struct.dyn_gnsf_idx_perm_z( 1:sim_solver.model_struct.dim_gnsf_nz1 ));
+        y_in = sim_solver.model_struct.dyn_gnsf_L_x * x01_gnsf ...
+                + sim_solver.model_struct.dyn_gnsf_L_xdot * x01_dot_gnsf ...
+                + sim_solver.model_struct.dyn_gnsf_L_z * z0_gnsf;
+        u_hat = sim_solver.model_struct.dyn_gnsf_L_u * u_sim(:,ii);
         phi_fun = Function([model_name,'_gnsf_phi_fun'],...
-                        {sim.model_struct.sym_gnsf_y, sim.model_struct.sym_gnsf_uhat},...
-                            {sim.model_struct.dyn_gnsf_expr_phi(:)}); % sim.model_struct.sym_p
+                        {sim_solver.model_struct.sym_gnsf_y, sim_solver.model_struct.sym_gnsf_uhat},...
+                            {sim_solver.model_struct.dyn_gnsf_expr_phi(:)}); % sim_solver.model_struct.sym_p
 
         phi_guess = full( phi_fun( y_in, u_hat ) );
-        n_out = sim.model_struct.dim_gnsf_nout;
-        sim.set('phi_guess', phi_guess(n_out,1));
+        n_out = sim_solver.model_struct.dim_gnsf_nout;
+        sim_solver.set('phi_guess', phi_guess(n_out,1));
     end
 
-	sim.set('x', x_sim(:,ii)); 	% set initial state
-	sim.set('u', u_sim(:,ii)); 	% set input
-	sim.solve();	% simulate state
+	sim_solver.set('x', x_sim(:,ii)); 	% set initial state
+	sim_solver.set('u', u_sim(:,ii)); 	% set input
+	sim_solver.solve();	% simulate state
 
 	% get simulated state
-	x_sim(:,ii+1) = sim.get('xn');
-    z_sim(:,ii) = sim.get('zn');
+	x_sim(:,ii+1) = sim_solver.get('xn');
+    z_sim(:,ii) = sim_solver.get('zn');
 
 
 end
@@ -422,7 +422,7 @@ yp = x_sim(2,:);
 check = abs(xp.^2 + yp.^2 - length_pendulum^2);
 tol_pendulum = 1e-10;
 
-dist2target = norm( sim.get('xn') - xtarget );
+dist2target = norm( sim_solver.get('xn') - xtarget );
 %requ_dist2target = 1e-4;
 requ_dist2target = 1e-3;
 

@@ -91,36 +91,36 @@ sim_opts.opts_struct
 
 %% acados sim
 % create sim
-sim = acados_sim(sim_model, sim_opts);
+sim_solver = acados_sim(sim_model, sim_opts);
 % (re)set numerical part of model
-%sim.set('T', 0.5);
+%sim_solver.set('T', 0.5);
 
 
 x0 = ones(nx, 1); %x0(1) = 2.0;
 tic;
-sim.set('x', x0);
+sim_solver.set('x', x0);
 time_set_x = toc
 
 u = ones(nu, 1);
-sim.set('u', u);
+sim_solver.set('u', u);
 
 % solve
 tic;
-sim.solve();
+sim_solver.solve();
 time_solve = toc
 
 
 % xn
-xn = sim.get('xn');
+xn = sim_solver.get('xn');
 xn
 % S_forw
-S_forw = sim.get('S_forw');
+S_forw = sim_solver.get('S_forw');
 S_forw
 % Sx
-Sx = sim.get('Sx');
+Sx = sim_solver.get('Sx');
 Sx
 % Su
-Su = sim.get('Su');
+Su = sim_solver.get('Su');
 Su
 
 

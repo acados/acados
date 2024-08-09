@@ -248,7 +248,7 @@ end
 %% Acados simulation
 
 % Create sim
-sim = acados_sim(sim_model, sim_opts);
+sim_solver = acados_sim(sim_model, sim_opts);
 
 
 %% Closed loop simulation
@@ -310,15 +310,15 @@ for k = 1:nb_steps_sim
 	u_history(:,k) = ocp_solver.get('u', 0);
 
 	% Set initial state of simulation
-	sim.set('x', x_history(:,k));
+	sim_solver.set('x', x_history(:,k));
 	% set input in sim
-	sim.set('u', u_history(:,k));
+	sim_solver.set('u', u_history(:,k));
 
 	% Simulate state
-	sim.solve();
+	sim_solver.solve();
 
 	% Get new state
-	x_history(:,k+1) = sim.get('xn');
+	x_history(:,k+1) = sim_solver.get('xn');
 
 end
 

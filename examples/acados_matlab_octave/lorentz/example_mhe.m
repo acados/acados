@@ -39,7 +39,7 @@ nx = model.nx;
 nu = model.nu;
 ny = model.ny;
 
-sim = setup_integrator(model);
+sim_solver = setup_integrator(model);
 estimator = setup_estimator(model);
 
 %% Simulation
@@ -62,13 +62,13 @@ x_sim(:,1) = x0;
 for n=1:N_sim
 	
 	% set initial state
-	sim.set('x', x_sim(:,n));
+	sim_solver.set('x', x_sim(:,n));
 
 	% solve
-	sim.solve();        
+	sim_solver.solve();        
 
 	% get simulated state
-	x_sim(:,n+1) = sim.get('xn');
+	x_sim(:,n+1) = sim_solver.get('xn');
     
     % unmodeled step change in x(4)
     if n == iter_step
