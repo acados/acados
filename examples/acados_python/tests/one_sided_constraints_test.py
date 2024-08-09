@@ -40,7 +40,8 @@ from utils import plot_pendulum
 
 PLOT = False
 
-def main(constraint_variant='one_sided'):
+def main(constraint_variant='one_sided',
+         qp_solver='PARTIAL_CONDENSING_HPIPM'):
 
     # create ocp object to formulate the OCP
     ocp = AcadosOcp()
@@ -99,11 +100,14 @@ def main(constraint_variant='one_sided'):
         ocp.constraints.lbx = np.array([-0.5*ACADOS_INFTY])
         ocp.constraints.ubx = np.array([+5.0])
         ocp.constraints.idxbx = np.array([0])
-        # complementarity residual does not converge to tolerance if infty is too large
-        expected_status = 2
+        if qp_solver == 'FULL_CONDENSING_DAQP':
+            expected_status = 0
+        elif qp_solver in ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM']:
+            # complementarity residual does not converge to tolerance if infty is not defined properly
+            expected_status = 2
 
     # set options
-    ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+    ocp.solver_options.qp_solver = qp_solver
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = 'ERK'
     ocp.solver_options.nlp_solver_type = 'SQP'
@@ -141,7 +145,8 @@ def main(constraint_variant='one_sided'):
     i_infty = 1
     if constraint_variant == 'one_sided':
         assert lam[i_infty] == 0
-    elif constraint_variant == 'one_sided_wrong_infty':
+    elif (constraint_variant == 'one_sided_wrong_infty' and
+        qp_solver in ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM']):
         assert lam[i_infty] != 0
 
     if PLOT:
@@ -150,5 +155,10 @@ def main(constraint_variant='one_sided'):
     ocp_solver = None
 
 if __name__ == "__main__":
-    main(constraint_variant='one_sided')
-    main(constraint_variant='one_sided_wrong_infty')
+    for qp_solver in ['FULL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_DAQP']:
+        for constraint_variant in ['one_sided', 'one_sided_wrong_infty']:
+            print(80*'-')
+            print(f'constraint_variant = {constraint_variant}, qp_solver = {qp_solver}')
+            main(constraint_variant=constraint_variant, qp_solver=qp_solver)
+
+    # main(constraint_variant='one_sided', qp_solver='PARTIAL_CONDENSING_HPIPM')
