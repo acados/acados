@@ -96,7 +96,7 @@ sim_opts.set('sens_forw', sens_forw);
 
 %% acados sim
 % create sim
-sim = acados_sim(sim_model, sim_opts);
+sim_solver = acados_sim(sim_model, sim_opts);
 
 % to avoid unstable behavior introduce a small pi-contorller for rotor speed tracking
 uctrl = 0.0;
@@ -118,14 +118,14 @@ for nn=1:nsim
 	u(2) = max(u(2) - uctrl, 0);
 
 	% update state, input, parameter
-	sim.set('x', x_sim(:,nn));
-	sim.set('u', u);
-	sim.set('p', Usim(nn,3));
+	sim_solver.set('x', x_sim(:,nn));
+	sim_solver.set('u', u);
+	sim_solver.set('p', Usim(nn,3));
 
 	% solve
-	sim.solve();
+	sim_solver.solve();
 
-	x_sim(:,nn+1) = sim.get('xn');
+	x_sim(:,nn+1) = sim_solver.get('xn');
 
 	% update PI contoller
 	ctrlErr = statesFAST(nn+1,1) - x_sim(1,nn+1);
@@ -139,9 +139,9 @@ time_solve = toc/nsim
 %statesFAST(1:nsim+1,:)'
 x_sim(:,1:nsim+1)
 
-%S_forw = sim.get('S_forw');
-%Sx = sim.get('Sx');
-%Su = sim.get('Su');
+%S_forw = sim_solver.get('S_forw');
+%Sx = sim_solver.get('Sx');
+%Su = sim_solver.get('Su');
 
 
 fprintf('\nsuccess!\n\n');

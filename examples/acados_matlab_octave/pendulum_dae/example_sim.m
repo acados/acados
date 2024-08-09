@@ -116,7 +116,7 @@ end
 
 %% acados sim
 % create integrator
-sim = acados_sim(sim_model, sim_opts);
+sim_solver = acados_sim(sim_model, sim_opts);
 
 N_sim = 100;
 
@@ -131,47 +131,47 @@ tic
 for ii=1:N_sim
 
 	% set initial state
-	sim.set('x', x_sim(:,ii));
-	sim.set('u', u);
+	sim_solver.set('x', x_sim(:,ii));
+	sim_solver.set('u', u);
 
 	% set adjoint seed
-	sim.set('seed_adj', ones(nx,1));
+	sim_solver.set('seed_adj', ones(nx,1));
 
     % initialize implicit integrator
     if (strcmp(method, 'irk'))
-        sim.set('xdot', xdot0);
-        sim.set('z', z0);
+        sim_solver.set('xdot', xdot0);
+        sim_solver.set('z', z0);
     elseif (strcmp(method, 'irk_gnsf'))
-        y_in = sim.sim.model.dyn_gnsf_L_x * x0 ...
-                + sim.sim.model.dyn_gnsf_L_xdot * xdot0 ...
-                + sim.sim.model.dyn_gnsf_L_z * z0;
-        u_hat = sim.sim.model.dyn_gnsf_L_u * u;
+        y_in = sim_solver.sim.model.dyn_gnsf_L_x * x0 ...
+                + sim_solver.sim.model.dyn_gnsf_L_xdot * xdot0 ...
+                + sim_solver.sim.model.dyn_gnsf_L_z * z0;
+        u_hat = sim_solver.sim.model.dyn_gnsf_L_u * u;
         phi_fun = Function([model_name,'_gnsf_phi_fun'],...
-                        {sim.sim.model.sym_gnsf_y, sim.sim.model.sym_gnsf_uhat},...
-                            {sim.sim.model.dyn_gnsf_expr_phi(:)});
+                        {sim_solver.sim.model.sym_gnsf_y, sim_solver.sim.model.sym_gnsf_uhat},...
+                            {sim_solver.sim.model.dyn_gnsf_expr_phi(:)});
 
         phi_guess = full( phi_fun( y_in, u_hat ) );
-        n_out = sim.sim.dims.gnsf_nout;
-        sim.set('phi_guess', zeros(n_out,1));
+        n_out = sim_solver.sim.dims.gnsf_nout;
+        sim_solver.set('phi_guess', zeros(n_out,1));
     end
 
 	% solve
-	sim.solve();
+	sim_solver.solve();
 
 	% get simulated state
-	x_sim(:,ii+1) = sim.get('xn');
+	x_sim(:,ii+1) = sim_solver.get('xn');
 
 	% forward sensitivities
-	S_forw = sim.get('S_forw');
-	Sx = sim.get('Sx');
-	Su = sim.get('Su');
+	S_forw = sim_solver.get('S_forw');
+	Sx = sim_solver.get('Sx');
+	Su = sim_solver.get('Su');
 
 end
 format short e
-xfinal = sim.get('xn')';
-S_adj = sim.get('S_adj')';
-z = sim.get('zn')'; % approximate value of algebraic variables at start of simulation
-S_alg = sim.get('S_algebraic'); % sensitivities of algebraic variables z
+xfinal = sim_solver.get('xn')';
+S_adj = sim_solver.get('S_adj')';
+z = sim_solver.get('zn')'; % approximate value of algebraic variables at start of simulation
+S_alg = sim_solver.get('S_algebraic'); % sensitivities of algebraic variables z
 
 simulation_time = toc
 

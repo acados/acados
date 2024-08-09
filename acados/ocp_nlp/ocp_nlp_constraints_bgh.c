@@ -1123,6 +1123,12 @@ void ocp_nlp_constraints_bgh_memory_set_z_alg_ptr(struct blasfeo_dvec *z_alg, vo
     memory->z_alg = z_alg;
 }
 
+void ocp_nlp_constraints_bgh_memory_set_dmask_ptr(struct blasfeo_dvec *dmask, void *memory_)
+{
+    ocp_nlp_constraints_bgh_memory *memory = memory_;
+
+    memory->dmask = dmask;
+}
 
 
 void ocp_nlp_constraints_bgh_memory_set_dzduxt_ptr(struct blasfeo_dmat *dzduxt, void *memory_)
@@ -1606,6 +1612,9 @@ void ocp_nlp_constraints_bgh_compute_fun(void *config_, void *dims_, void *model
     // fun[2*ni : 2*(ni+ns)] = - slack + slack_bounds
     blasfeo_daxpy(2*ns, -1.0, ux, nu+nx, &model->d, 2*nb+2*ng+2*nh, &memory->fun, 2*nb+2*ng+2*nh);
 
+    // fun = fun * mask
+    blasfeo_dvecmul(2*(nb+ng+nh+ns), memory->dmask, 0, &memory->fun, 0, &memory->fun, 0);
+
     return;
 }
 
@@ -1644,6 +1653,35 @@ void ocp_nlp_constraints_bgh_update_qp_vectors(void *config_, void *dims_, void 
     // fun[2*ni : 2*(ni+ns)] = - slack + slack_bounds
     blasfeo_daxpy(2*ns, -1.0, memory->ux, nu+nx, &model->d, 2*nb+2*ng+2*nh, &memory->fun, 2*nb+2*ng+2*nh);
 
+    // Set dmask for QP: 0 means unconstrained.
+    for (int i = 0; i < nb+ng+nh; i++)
+    {
+        if (BLASFEO_DVECEL(&model->d, i) <= -ACADOS_INFTY)
+        {
+            // printf("found upper infinity bound\n");
+            BLASFEO_DVECEL(memory->dmask, i) = 0;
+        }
+    }
+    for (int i = nb+ng+nh; i < 2*(nb+ng+nh); i++)
+    {
+        if (BLASFEO_DVECEL(&model->d, i) >= ACADOS_INFTY)
+        {
+            // printf("found upper infinity bound\n");
+            BLASFEO_DVECEL(memory->dmask, i) = 0;
+        }
+    }
+    for (int i = 2*(nb+ng+nh); i < 2*(nb+ng+nh+ns); i++)
+    {
+        if (BLASFEO_DVECEL(&model->d, i) <= -ACADOS_INFTY)
+        {
+            // printf("found lower infinity bound on slacks\n");
+            BLASFEO_DVECEL(memory->dmask, i) = 0;
+        }
+    }
+
+    // fun = fun * mask
+    blasfeo_dvecmul(2*(nb+ng+nh+ns), memory->dmask, 0, &memory->fun, 0, &memory->fun, 0);
+
     return;
 }
 
@@ -1674,6 +1712,7 @@ void ocp_nlp_constraints_bgh_config_initialize_default(void *config_)
     config->memory_set_DCt_ptr = &ocp_nlp_constraints_bgh_memory_set_DCt_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_constraints_bgh_memory_set_RSQrq_ptr;
     config->memory_set_z_alg_ptr = &ocp_nlp_constraints_bgh_memory_set_z_alg_ptr;
+    config->memory_set_dmask_ptr = &ocp_nlp_constraints_bgh_memory_set_dmask_ptr;
     config->memory_set_dzdux_tran_ptr = &ocp_nlp_constraints_bgh_memory_set_dzduxt_ptr;
     config->memory_set_idxb_ptr = &ocp_nlp_constraints_bgh_memory_set_idxb_ptr;
     config->memory_set_idxs_rev_ptr = &ocp_nlp_constraints_bgh_memory_set_idxs_rev_ptr;

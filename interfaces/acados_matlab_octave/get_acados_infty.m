@@ -29,35 +29,6 @@
 
 %
 
-addpath(pwd)
-
-%% check that environment variables are provided
-try
-    check_casadi_availibility();
-    require_env_variable('LD_LIBRARY_PATH');
-    require_env_variable('ACADOS_INSTALL_DIR');
-    if is_octave()
-        require_env_variable('OCTAVE_PATH');
-    else
-        require_env_variable('MATLABPATH');
-    end
-catch exception
-    exit_with_error(exception);
+function infty = get_acados_infty()
+    infty = 1e10;
 end
-
-
-
-%% ocp tests
-try
-    test_template_pendulum_ocp('auto');
-    test_template_pendulum_ocp('nonlinear_ls');
-    test_template_pendulum_ocp('ext_cost');
-    test_template_pendulum_exact_hess;
-    test_template_pendulum_gnsf;
-    test_template_ocp_linear_dae;
-    test_template_disc_dyn_ocp_linear;
-catch exception
-    exit_with_error(exception);
-end
-
-fprintf('\nrun_tests_templates: success!\n\n');

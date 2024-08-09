@@ -629,11 +629,11 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     int nge = dims->nge;
     int nphie = dims->nphie;
 
-    if (!strcmp(field, "lb")) // TODO(fuck_lint) remove !!!
+    if (!strcmp(field, "lb"))
     {
         blasfeo_pack_dvec(nb, value, 1, &model->d, 0);
     }
-    else if (!strcmp(field, "ub")) // TODO(fuck_lint) remove !!!
+    else if (!strcmp(field, "ub"))
     {
         blasfeo_pack_dvec(nb, value, 1, &model->d, nb+ng+nphi);
     }
@@ -689,7 +689,7 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     {
         model->nl_constr_phi_o_r_fun = value;
     }
-    else if (!strcmp(field, "lphi")) // TODO(fuck_lint) remove
+    else if (!strcmp(field, "lphi"))
     {
         blasfeo_pack_dvec(nphi, value, 1, &model->d, nb+ng);
     }
@@ -1030,6 +1030,12 @@ void ocp_nlp_constraints_bgp_memory_set_DCt_ptr(struct blasfeo_dmat *DCt, void *
     memory->DCt = DCt;
 }
 
+
+void ocp_nlp_constraints_bgp_memory_set_dmask_ptr(struct blasfeo_dvec *dmask, void *memory_)
+{
+    ocp_nlp_constraints_bgp_memory *memory = memory_;
+    memory->dmask = dmask;
+}
 
 
 void ocp_nlp_constraints_bgp_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, void *memory_)
@@ -1460,6 +1466,9 @@ void ocp_nlp_constraints_bgp_compute_fun(void *config_, void *dims_, void *model
     // fun[2*ni : 2*(ni+ns)] = - slack + slack_bounds
     blasfeo_daxpy(2*ns, -1.0, ux, nu+nx, &model->d, 2*nb+2*ng+2*nphi, &memory->fun, 2*nb+2*ng+2*nphi);
 
+    // fun = fun * mask
+    blasfeo_dvecmul(2*(nb+ng+nphi), memory->dmask, 0, &memory->fun, 0, &memory->fun, 0);
+
     return;
 
 }
@@ -1501,6 +1510,39 @@ void ocp_nlp_constraints_bgp_update_qp_vectors(void *config_, void *dims_, void 
     // fun[2*ni : 2*(ni+ns)] = - slack + slack_bounds
     blasfeo_daxpy(2*ns, -1.0, memory->ux, nu+nx, &model->d, 2*nb+2*ng+2*nphi, &memory->fun, 2*nb+2*ng+2*nphi);
 
+    // Set dmask for QP: 0 means unconstrained.
+    for (int i = 0; i < nb+ng+nphi; i++)
+    {
+        if (BLASFEO_DVECEL(&model->d, i) <= -ACADOS_INFTY)
+        {
+            // printf("found upper infinity bound\n");
+            BLASFEO_DVECEL(memory->dmask, i) = 0;
+        }
+    }
+    for (int i = nb+ng+nphi; i < 2*(nb+ng+nphi); i++)
+    {
+        if (BLASFEO_DVECEL(&model->d, i) >= ACADOS_INFTY)
+        {
+            // printf("found upper infinity bound\n");
+            BLASFEO_DVECEL(memory->dmask, i) = 0;
+        }
+    }
+    for (int i = 2*(nb+ng+nphi); i < 2*(nb+ng+nphi+ns); i++)
+    {
+        if (BLASFEO_DVECEL(&model->d, i) <= -ACADOS_INFTY)
+        {
+            // printf("found lower infinity bound on slacks\n");
+            BLASFEO_DVECEL(memory->dmask, i) = 0;
+        }
+    }
+
+    // fun = fun * mask
+    blasfeo_dvecmul(2*(nb+ng+nphi+ns), memory->dmask, 0, &memory->fun, 0, &memory->fun, 0);
+
+    // printf("BGH mask\n");
+    // blasfeo_print_tran_dvec(2*(nb+ng+nphi), memory->dmask, 0);
+    // blasfeo_print_exp_tran_dvec(2*(nb+ng+nphi), &model->d, 0);
+
     return;
 }
 
@@ -1532,6 +1574,7 @@ void ocp_nlp_constraints_bgp_config_initialize_default(void *config_)
     config->memory_set_DCt_ptr = &ocp_nlp_constraints_bgp_memory_set_DCt_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_constraints_bgp_memory_set_RSQrq_ptr;
     config->memory_set_z_alg_ptr = &ocp_nlp_constraints_bgp_memory_set_z_alg_ptr;
+    config->memory_set_dmask_ptr = &ocp_nlp_constraints_bgp_memory_set_dmask_ptr;
     config->memory_set_dzdux_tran_ptr = &ocp_nlp_constraints_bgp_memory_set_dzduxt_ptr;
     config->memory_set_idxb_ptr = &ocp_nlp_constraints_bgp_memory_set_idxb_ptr;
     config->memory_set_idxs_rev_ptr = &ocp_nlp_constraints_bgp_memory_set_idxs_rev_ptr;

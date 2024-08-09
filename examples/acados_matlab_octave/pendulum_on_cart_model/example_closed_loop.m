@@ -32,8 +32,6 @@
 %% test of native matlab interface
 clear all
 
-GENERATE_C_CODE = 0;
-
 model_name = 'ocp_pendulum';
 
 % check that env.sh has been run
@@ -223,11 +221,7 @@ ocp_opts.set('sim_method_num_steps', ocp_sim_method_num_steps);
 
 %% acados ocp
 % create ocp
-ocp = acados_ocp(ocp_model, ocp_opts);
-
-if GENERATE_C_CODE == 1
-    ocp.generate_c_code()
-end
+ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
 %% acados sim model
 sim_model = acados_sim_model();
@@ -260,7 +254,7 @@ sim_opts.set('sens_forw', sim_sens_forw);
 
 %% acados sim
 % create sim
-sim = acados_sim(sim_model, sim_opts);
+sim_solver = acados_sim(sim_model, sim_opts);
 
 
 %% closed loop simulation
@@ -285,29 +279,29 @@ tic;
 for ii=1:N_sim
 
 	% set x0
-	ocp.set('constr_x0', x_sim(:,ii));
+	ocp_solver.set('constr_x0', x_sim(:,ii));
 
 	% set trajectory initialization (if not, set internally using previous solution)
-	ocp.set('init_x', x_traj_init);
-	ocp.set('init_u', u_traj_init);
-	ocp.set('init_pi', pi_traj_init);
+	ocp_solver.set('init_x', x_traj_init);
+	ocp_solver.set('init_u', u_traj_init);
+	ocp_solver.set('init_pi', pi_traj_init);
 
-	% use ocp.set to modify numerical data for a certain stage
+	% use ocp_solver.set to modify numerical data for a certain stage
 	some_stages = 1:10:ocp_N-1;
 	for i = some_stages
-        if strcmp(ocp.ocp.cost.cost_type, 'LINEAR_LS')
-            ocp.set('cost_Vx', Vx, i);
+        if strcmp(ocp_solver.ocp.cost.cost_type, 'LINEAR_LS')
+            ocp_solver.set('cost_Vx', Vx, i);
         end
 	end
 
 	% solve OCP
-	ocp.solve();
+	ocp_solver.solve();
 
-	status = ocp.get('status');
-	sqp_iter = ocp.get('sqp_iter');
-	time_tot = ocp.get('time_tot');
-	time_lin = ocp.get('time_lin');
-	time_qp_sol = ocp.get('time_qp_sol');
+	status = ocp_solver.get('status');
+	sqp_iter = ocp_solver.get('sqp_iter');
+	time_tot = ocp_solver.get('time_tot');
+	time_lin = ocp_solver.get('time_lin');
+	time_qp_sol = ocp_solver.get('time_qp_sol');
 
 	fprintf('\nstatus = %d, sqp_iter = %d, time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n',...
 		status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
@@ -317,9 +311,9 @@ for ii=1:N_sim
 	end
 
 	% get solution for initialization of next NLP
-	x_traj = ocp.get('x');
-	u_traj = ocp.get('u');
-	pi_traj = ocp.get('pi');
+	x_traj = ocp_solver.get('x');
+	u_traj = ocp_solver.get('u');
+	pi_traj = ocp_solver.get('pi');
 
 	% shift trajectory for initialization
 	x_traj_init = [x_traj(:,2:end), x_traj(:,end)];
@@ -327,18 +321,18 @@ for ii=1:N_sim
 	pi_traj_init = [pi_traj(:,2:end), pi_traj(:,end)];
 
 	% get solution for sim
-	u_sim(:,ii) = ocp.get('u', 0);
+	u_sim(:,ii) = ocp_solver.get('u', 0);
 
 	% set initial state of sim
-	sim.set('x', x_sim(:,ii));
+	sim_solver.set('x', x_sim(:,ii));
 	% set input in sim
-	sim.set('u', u_sim(:,ii));
+	sim_solver.set('u', u_sim(:,ii));
 
 	% simulate state
-	sim.solve();
+	sim_solver.solve();
 
 	% get new state
-	x_sim(:,ii+1) = sim.get('xn');
+	x_sim(:,ii+1) = sim_solver.get('xn');
 
 end
 

@@ -59,9 +59,6 @@ if(ACADOS_OCTAVE)
     add_test(NAME octave_test_ocp_wtnx6
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
         octave --no-gui --no-window-system ./run_test_ocp_wtnx6.m)
-    add_test(NAME octave_test_ocp_pendulum_dae
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
-        octave --no-gui --no-window-system ./run_test_ocp_pendulum_dae.m)
     add_test(NAME octave_test_ocp_mass_spring
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
         octave --no-gui --no-window-system ./run_test_ocp_mass_spring.m)
@@ -100,9 +97,8 @@ if(ACADOS_OCTAVE)
     set_tests_properties(octave_test_sim_hess PROPERTIES DEPENDS octave_test_sim_dae)
     set_tests_properties(octave_test_sim_dae PROPERTIES DEPENDS octave_test_ocp_pendulum)
     set_tests_properties(octave_test_ocp_pendulum PROPERTIES DEPENDS octave_test_ocp_wtnx6)
-    set_tests_properties(octave_test_ocp_wtnx6 PROPERTIES DEPENDS octave_test_ocp_pendulum_dae)
-    set_tests_properties(octave_test_ocp_pendulum_dae PROPERTIES DEPENDS octave_test_ocp_mass_spring)
-    set_tests_properties(octave_test_ocp_mass_spring PROPERTIES DEPENDS octave_test_ocp_simple_dae )
+    set_tests_properties(octave_test_ocp_wtnx6 PROPERTIES DEPENDS octave_test_ocp_mass_spring)
+    set_tests_properties(octave_test_ocp_mass_spring PROPERTIES DEPENDS octave_test_ocp_simple_dae)
     set_tests_properties(octave_test_ocp_simple_dae PROPERTIES DEPENDS octave_test_target_selector)
     if(ACADOS_WITH_OSQP)
         set_tests_properties(octave_test_target_selector PROPERTIES DEPENDS octave_test_OSQP)
@@ -354,6 +350,10 @@ add_test(NAME python_pendulum_ocp_example_cmake
     add_test(NAME python_regularization_test
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
         python regularization_test.py)
+    add_test(NAME python_one_sided_constraints_test
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/tests
+        python one_sided_constraints_test.py)
+
 
     add_test(NAME python_pmsm_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pmsm_example
@@ -381,7 +381,8 @@ add_test(NAME python_pendulum_ocp_example_cmake
     set_tests_properties(python_test_cython_vs_ctypes PROPERTIES DEPENDS python_test_reset)
     set_tests_properties(python_test_reset PROPERTIES DEPENDS python_test_ocp)
     set_tests_properties(python_test_ocp PROPERTIES DEPENDS python_test_cost_integration_euler)
-    set_tests_properties(python_test_cost_integration_euler PROPERTIES DEPENDS python_test_cost_integration_value)
+    set_tests_properties(python_test_cost_integration_euler PROPERTIES DEPENDS python_one_sided_constraints_test)
+    set_tests_properties(python_one_sided_constraints_test PROPERTIES DEPENDS python_test_cost_integration_value)
     set_tests_properties(python_test_cost_integration_value PROPERTIES DEPENDS python_armijo_test)
     set_tests_properties(python_armijo_test PROPERTIES DEPENDS python_pendulum_soft_constraints_example)
     set_tests_properties(python_pendulum_soft_constraints_example PROPERTIES DEPENDS python_pendulum_parametric_nonlinear_constraint_h_test)

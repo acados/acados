@@ -74,6 +74,7 @@ typedef struct
     void (*memory_set_DCt_ptr)(struct blasfeo_dmat *DCt, void *memory);
     void (*memory_set_RSQrq_ptr)(struct blasfeo_dmat *RSQrq, void *memory);
     void (*memory_set_z_alg_ptr)(struct blasfeo_dvec *z_alg, void *memory);
+    void (*memory_set_dmask_ptr)(struct blasfeo_dvec *dmask, void *memory);
     void (*memory_set_dzdux_tran_ptr)(struct blasfeo_dmat *dzduxt, void *memory);
     void (*memory_set_idxb_ptr)(int *idxb, void *memory);
     void (*memory_set_idxs_rev_ptr)(int *idxs_rev, void *memory);

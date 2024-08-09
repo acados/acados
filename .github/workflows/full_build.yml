@@ -10,7 +10,7 @@ on:
       - '*'
 
 env:
-  BUILD_TYPE: Release
+  BUILD_TYPE: Debug
   ACADOS_PYTHON: ON
   ACADOS_OCTAVE: ON
   ACADOS_WITH_OSQP: ON
