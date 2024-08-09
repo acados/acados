@@ -120,10 +120,11 @@ for idx = 1:length(targets)
     if exist(code_gen_dir, 'dir')
         rmdir(code_gen_dir, 's')
     end
-    close all; clc;
+    close all;
+    % clc;
 end
 
-clc;
+% clc;
 fail = false;
 disp('Succesful tests: ')
 for idx = 1:length(targets)
