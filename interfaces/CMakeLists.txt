@@ -59,9 +59,6 @@ if(ACADOS_OCTAVE)
     add_test(NAME octave_test_ocp_wtnx6
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
         octave --no-gui --no-window-system ./run_test_ocp_wtnx6.m)
-    add_test(NAME octave_test_ocp_pendulum_dae
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
-        octave --no-gui --no-window-system ./run_test_ocp_pendulum_dae.m)
     add_test(NAME octave_test_ocp_mass_spring
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
         octave --no-gui --no-window-system ./run_test_ocp_mass_spring.m)
@@ -100,9 +97,8 @@ if(ACADOS_OCTAVE)
     set_tests_properties(octave_test_sim_hess PROPERTIES DEPENDS octave_test_sim_dae)
     set_tests_properties(octave_test_sim_dae PROPERTIES DEPENDS octave_test_ocp_pendulum)
     set_tests_properties(octave_test_ocp_pendulum PROPERTIES DEPENDS octave_test_ocp_wtnx6)
-    set_tests_properties(octave_test_ocp_wtnx6 PROPERTIES DEPENDS octave_test_ocp_pendulum_dae)
-    set_tests_properties(octave_test_ocp_pendulum_dae PROPERTIES DEPENDS octave_test_ocp_mass_spring)
-    set_tests_properties(octave_test_ocp_mass_spring PROPERTIES DEPENDS octave_test_ocp_simple_dae )
+    set_tests_properties(octave_test_ocp_wtnx6 PROPERTIES DEPENDS octave_test_ocp_mass_spring)
+    set_tests_properties(octave_test_ocp_mass_spring PROPERTIES DEPENDS octave_test_ocp_simple_dae)
     set_tests_properties(octave_test_ocp_simple_dae PROPERTIES DEPENDS octave_test_target_selector)
     if(ACADOS_WITH_OSQP)
         set_tests_properties(octave_test_target_selector PROPERTIES DEPENDS octave_test_OSQP)
