@@ -314,6 +314,10 @@ ocp.get(field, stage)
 % or for all stages
 qp_Q = ocp.get('qp_Q');
 
+%
+cond_H = ocp.get('qp_solver_cond_H');
+
+
 %% Plot trajectories
 figure; hold on;
 States = {'p', 'theta', 'v', 'dtheta'};
