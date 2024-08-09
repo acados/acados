@@ -184,6 +184,7 @@ try
 catch exception
     disp('make_sfun failed with the following exception:')
     disp(exception);
+    disp(exception.message );
     disp('Try adding -v to the mex command above to get more information.')
     keyboard
 end
@@ -372,6 +373,24 @@ sfun_input_names = [sfun_input_names; 'rti_phase [1]'];
 i_in = i_in + 1;
 {%- endif %}
 
+{%- if simulink_opts.customizable_inputs %}
+{#- customizable inputs #}
+{%- for input_name, input_spec in simulink_opts.customizable_inputs -%}
+  {%- if input_name is starting_with("sparse_parameter_") %}
+    {% set param_length = input_spec.parameter_indices | length %}
+    {% set port_name = input_name | replace(from="sparse_parameter_", to="") %}
+    {% set stage_idx_0 = input_spec.stage_idx_0 %}
+    {% set stage_idx_e = input_spec.stage_idx_e %}
+    % {{ port_name }}
+input_note = strcat(input_note, num2str(i_in), ') {{ input_name }}, to update parameter values at nodes {{ stage_idx_0 }} to {{ stage_idx_e }}, \n\twith {{ param_length }} parameter indices specified [{{ input_spec.parameter_indices | first }}, ..., {{ input_spec.parameter_indices | last }}]\n ');
+input_note = strcat(input_note, '\tfirst value indicates if update should be performed (0 means no update)\n');
+input_note = strcat(input_note, '\tafterwards: new numerical values of parameters to be updated at stages, size [1 + {{ (stage_idx_e - stage_idx_0 + 1) }} * {{ param_length }} = {{ 1 + (stage_idx_e - stage_idx_0 + 1) * param_length }}]\n');
+sfun_input_names = [sfun_input_names; 'sparse_param_{{ port_name }}'];
+i_in = i_in + 1;
+  {%- endif -%}
+{%- endfor %}
+{%- endif -%}
+
 fprintf(input_note)
 
 disp(' ')
@@ -472,6 +491,15 @@ i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') SQP iterations\n ');
 sfun_output_names = [sfun_output_names; 'sqp_iter'];
 {%- endif %}
+
+
+{%- if simulink_opts.outputs.parameter_traj == 1 %}
+i_out = i_out + 1;
+output_note = strcat(output_note, num2str(i_out), ') parameter trajectory\n ');
+sfun_output_names = [sfun_output_names; 'parameter_traj [{{ (dims.N + 1) * dims.np}}]'];
+{%- endif %}
+
+
 
 fprintf(output_note)
 

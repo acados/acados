@@ -25,7 +25,7 @@
 	url = https://github.com/acados/qpOASES.git
 [submodule "external/osqp"]
 	path = external/osqp
-	url = https://github.com/oxfordcontrol/osqp.git
+	url = https://github.com/osqp/osqp.git
 	branch = develop
 [submodule "interfaces/acados_template/tera_renderer"]
 	path = interfaces/acados_template/tera_renderer

@@ -178,6 +178,17 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- set n_inputs = n_inputs + 1 -%}
   {%- endif -%}
 
+{%- if simulink_opts.customizable_inputs %}
+  {#- customizable inputs #}
+  {%- for input_name, input_spec in simulink_opts.customizable_inputs -%}
+    {%- if input_name is starting_with("sparse_parameter") -%}
+      {%- set_global n_inputs = n_inputs + 1 -%}
+    {%- else %}
+      {{ throw(message = "only kind of supported customizable input are sparse_parameter, sparse_parameter_stagewise") }}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+
     // specify the number of input ports
     if ( !ssSetNumInputPorts(S, {{ n_inputs }}) )
         return;
@@ -357,12 +368,30 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetInputPortVectorDimension(S, {{ i_input }}, {{ dims.nx * (dims.N) }});
   {%- endif -%}
 
-
   {%- if simulink_opts.inputs.rti_phase -%}  {#- rti_phase #}
     {%- set i_input = i_input + 1 %}
     // rti_phase
     ssSetInputPortVectorDimension(S, {{ i_input }}, 1);
   {%- endif -%}
+
+
+{%- if simulink_opts.customizable_inputs %}
+  {#- customizable inputs #}
+  {%- for input_name, input_spec in simulink_opts.customizable_inputs -%}
+    {%- if input_name is starting_with("sparse_parameter") -%}
+      {% set param_length = input_spec.parameter_indices | length %}
+      {% set port_name = input_name | replace(from="sparse_parameter_", to="") %}
+      {% set stage_idx_0 = input_spec.stage_idx_0 %}
+      {% set stage_idx_e = input_spec.stage_idx_e %}
+      {%- set_global i_input = i_input + 1 %}
+    // {{ port_name }}
+    ssSetInputPortVectorDimension(S, {{ i_input }}, {{ 1 + (stage_idx_e - stage_idx_0 + 1) * param_length }});
+    {%- else %}
+      {{ throw(message = "only kind of supported customizable input are sparse_parameter.") }}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+
 
     /* specify dimension information for the OUTPUT ports */
     {%- set i_output = -1 %}{# note here i_output is 0-based #}
@@ -440,6 +469,10 @@ static void mdlInitializeSizes (SimStruct *S)
     {%- set i_output = i_output + 1 %}
     ssSetOutputPortVectorDimension(S, {{ i_output }}, 1 );
   {%- endif %}
+  {%- if simulink_opts.outputs.parameter_traj -%}  {#- parameter_traj #}
+    {%- set i_output = i_output + 1 %}
+    ssSetOutputPortVectorDimension(S, {{ i_output }}, {{ dims.np * (dims.N + 1) }});
+  {%- endif -%}
 
     // specify the direct feedthrough status
     // should be set to 1 for all inputs used in mdlOutputs
@@ -526,6 +559,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     {%- set buffer_size = buffer_sizes | sort | last %}
     real_t buffer[{{ buffer_size }}];
     double tmp_double;
+    int buffer_offset;
 
     /* go through inputs */
     {%- set i_input = -1 %}
@@ -847,6 +881,45 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "rti_phase", &rti_phase);
   {%- endif %}
 
+
+{%- if simulink_opts.customizable_inputs %}
+  {#- customizable inputs #}
+  {%- for input_name, input_spec in simulink_opts.customizable_inputs -%}
+    {%- if input_name is starting_with("sparse_parameter") %}
+    // length of parameter_indices {{ input_spec.parameter_indices | length }}
+    {%- set_global i_input = i_input + 1 %}
+    {% set param_length = input_spec.parameter_indices | length %}
+    {% set port_name = input_name | replace(from="sparse_parameter_", to="") %}
+    {% set stage_idx_0 = input_spec.stage_idx_0 %}
+    {% set stage_idx_e = input_spec.stage_idx_e %}
+    // {{ port_name }}
+
+        in_sign = ssGetInputPortRealSignalPtrs(S, {{ i_input }});
+
+        tmp_double = (double)(*in_sign[0]); // decides if update is done.
+        if (tmp_double)
+        {
+            int idx[{{ param_length }}];
+            {% for item in input_spec.parameter_indices %}
+            idx[{{ loop.index0 }}] = {{ item }};
+            {%- endfor %}
+
+            // update for stages
+            for (int ii = {{ stage_idx_0 }}; ii < {{ stage_idx_e }}+1; ii++)
+            {
+                buffer_offset = 1 + (ii - {{ stage_idx_0 }}) * {{ param_length }};
+                // copy new parameter values to buffer
+                for (int jj = 0; jj < {{ param_length }}; jj++)
+                {
+                    buffer[jj] = (double)(*in_sign[jj + buffer_offset]);
+                }
+                {{ model.name }}_acados_update_params_sparse(capsule, ii, idx, buffer, {{ param_length }});
+            }
+        }
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+
     /* call solver */
   {%- if custom_update_filename == "" and not simulink_opts.inputs.rti_phase %}
     int rti_phase = 0;
@@ -896,7 +969,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     /* set outputs */
     // assign pointers to output signals
-    real_t *out_u0, *out_utraj, *out_xtraj, *out_ztraj, *out_pi_all, *out_status, *out_sqp_iter, *out_KKT_res, *out_KKT_residuals, *out_x1, *out_cpu_time, *out_cpu_time_sim, *out_cpu_time_qp, *out_cpu_time_lin, *out_cost_value;
+    real_t *out_u0, *out_utraj, *out_xtraj, *out_ztraj, *out_pi_all, *out_status, *out_sqp_iter, *out_KKT_res, *out_KKT_residuals, *out_x1, *out_cpu_time, *out_cpu_time_sim, *out_cpu_time_qp, *out_cpu_time_lin, *out_cost_value, *out_parameter_traj;
     int tmp_int;
 
     {%- set i_output = -1 -%}{# note here i_output is 0-based #}
@@ -1010,6 +1083,14 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // get sqp iter
     ocp_nlp_get(nlp_config, capsule->nlp_solver, "sqp_iter", (void *) &tmp_int);
     *out_sqp_iter = (real_t) tmp_int;
+  {%- endif %}
+
+  {% if simulink_opts.outputs.parameter_traj == 1 %}
+    {%- set i_output = i_output + 1 %}
+    out_parameter_traj = ssGetOutputPortRealSignal(S, {{ i_output }});
+    for (int ii = 0; ii < N+1; ii++)
+        ocp_nlp_in_get(nlp_config, nlp_dims, nlp_in, ii,
+                        "p", (void *) (out_parameter_traj + ii * {{ dims.np }}));
   {%- endif %}
 
 }
