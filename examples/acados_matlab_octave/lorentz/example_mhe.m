@@ -139,38 +139,3 @@ for i=1:length(States)
     ylabel(States{i});
     xlabel('t [s]');
 end
-
-%% test templated solver
-disp('testing templated solver');
-estimator.generate_c_code;
-cd c_generated_code/
-command = strcat('t_ocp = ', estimator.model_struct.name , '_mex_solver');
-eval(command);
-
-% set measurements
-yref_0(1:ny) = y_sim(:, 1);
-yref_0(ny+nu+1:end) = x0;
-
-estimator.set('cost_y_ref', yref_0, 0);
-t_ocp_solver.set('cost_y_ref', yref_0, 0);
-
-for i=1:model.N-1
-    yref(1:ny) = y_sim(:, i+1);
-    estimator.set('cost_y_ref', yref, i);
-    t_ocp_solver.set('cost_y_ref', yref, i);
-end
-
-t_ocp_solver.solve()
-xt_traj = t_ocp_solver.get('x');
-
-estimator.solve()
-x_traj = estimator.get('x');
-
-max_diff = max(max(abs(xt_traj - x_traj)));
-disp(['difference ' num2str(max_diff)]);
-
-t_ocp_solver.print('stat')
-cost_val_t_ocp = t_ocp_solver.get_cost();
-clear t_ocp
-cd ..
-

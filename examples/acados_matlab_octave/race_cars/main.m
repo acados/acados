@@ -342,8 +342,3 @@ line([t(1), t(end)], [constraint.alat_max, constraint.alat_max], 'LineStyle', '-
 xlabel('t');
 ylabel('alat');
 xlim([t(1), t(end)]);
-
-
-%% go embedded
-% to generate templated C code
-% ocp_solver.generate_c_code;
