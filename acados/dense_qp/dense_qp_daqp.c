@@ -515,7 +515,7 @@ static void dense_qp_daqp_update_memory(dense_qp_in *qp_in, const dense_qp_daqp_
     // blasfeo_print_tran_dvec(2*(nb+ng), qp_in->d_mask, 0);
     for (int ii = 0; ii < nb; ii++)
     {
-        // TODO: @Daniel: what about SET_MUTABLE? if constraint is one sided? Can we just set one of the bounds to be immutable, such that this one can never be moved to the working set in DAQP?
+        // NOTE: DAQP always works with double sided constraints, so currently one can not only ignore the upper bound or the lower bound.
 
         // "ignore" bounds that are marked as unconstrained in qp_in via dmask
         if (BLASFEO_DVECEL(qp_in->d_mask, ii) == 0.0)
