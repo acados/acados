@@ -156,7 +156,3 @@ stairs(ts, [utraj'; utraj(end)])
 ylabel('F [N]')
 xlabel('t [s]')
 grid on
-
-%% go embedded
-% to generate templated C code
-% ocp.generate_c_code;

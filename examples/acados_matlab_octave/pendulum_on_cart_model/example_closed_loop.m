@@ -32,8 +32,6 @@
 %% test of native matlab interface
 clear all
 
-GENERATE_C_CODE = 0;
-
 model_name = 'ocp_pendulum';
 
 % check that env.sh has been run
@@ -232,10 +230,6 @@ ocp_opts.opts_struct
 %% acados ocp
 % create ocp
 ocp = acados_ocp(ocp_model, ocp_opts);
-
-if GENERATE_C_CODE == 1
-    ocp.generate_c_code()
-end
 
 %% acados sim model
 sim_model = acados_sim_model();

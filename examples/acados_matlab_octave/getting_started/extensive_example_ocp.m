@@ -355,36 +355,3 @@ end
 %     title( [ strrep(cost_type, '_',' '), ' , sim: ' strrep(sim_method, '_',' '), ...
 %        ';  ', strrep(qp_solver, '_', ' ')] )
 % end
-
-%% test templated solver
-% if ~ispc()
-%     % MEX wrapper around templated solver not supported for Windows yet
-%     % it can be used and tested via Simulink though.
-%     disp('testing templated solver');
-%     ocp.generate_c_code;
-%     cd c_generated_code/
-%     command = strcat('t_ocp = ', model_name, '_mex_solver');
-%     eval( command );
-%
-%     t_ocp.set('print_level', print_level)
-%
-%     % initial state
-%     t_ocp.set('constr_x0', x0);
-%
-%     % set trajectory initialization
-%     t_ocp.set('init_x', x_traj_init);
-%     t_ocp.set('init_u', u_traj_init);
-%     t_ocp.set('init_pi', zeros(nx, N))
-%
-%     t_ocp.solve()
-%     xt_traj = t_ocp.get('x');
-%     ut_traj = t_ocp.get('u');
-%
-%     error_X_mex_vs_mex_template = max(max(abs(xt_traj - xtraj)))
-%     error_U_mex_vs_mex_template = max(max(abs(ut_traj - utraj)))
-%
-%     t_ocp.print('stat')
-%     cost_val_t_ocp = t_ocp.get_cost();
-%     clear t_ocp
-%     cd ..
-% end
