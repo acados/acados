@@ -43,9 +43,10 @@ classdef AcadosOcpCost < handle
         Zu_0        % Hessian wrt upper slack
         zl_0        % gradient wrt lower slack
         zu_0        % gradient wrt upper slack
-        cost_ext_fun_type_0 % casadi or generic
-        cost_source_ext_cost_0 % C-source file of cost function
-        cost_function_ext_cost_0 % C-function name
+
+        ext_fun_type_0 % casadi or generic
+        source_ext_cost_0 % C-source file of cost function
+        function_ext_cost_0 % C-function name
 
         % Lagrange term, intermediate
         cost_type   % cost type
@@ -58,9 +59,9 @@ classdef AcadosOcpCost < handle
         Zu          % Hessian wrt upper slack
         zl          % gradient wrt lower slack
         zu          % gradient wrt upper slack
-        cost_ext_fun_type % casadi or generic
-        cost_source_ext_cost % C-source file of cost function
-        cost_function_ext_cost % C-function name
+        ext_fun_type % casadi or generic
+        source_ext_cost % C-source file of cost function
+        function_ext_cost % C-function name
 
         % Mayer term
         cost_type_e % cost type
@@ -71,9 +72,9 @@ classdef AcadosOcpCost < handle
         Zu_e        % Hessian wrt upper slack
         zl_e        % gradient wrt lower slack
         zu_e        % gradient wrt upper slack
-        cost_ext_fun_type_e % casadi or generic
-        cost_source_ext_cost_e % C-source file of cost function
-        cost_function_ext_cost_e % C-function name
+        ext_fun_type_e % casadi or generic
+        source_ext_cost_e % C-source file of cost function
+        function_ext_cost_e % C-function name
     end
     methods
         function obj = AcadosOcpCost()
@@ -88,9 +89,9 @@ classdef AcadosOcpCost < handle
             obj.Zu_0        = [];
             obj.zl_0        = [];
             obj.zu_0        = [];
-            obj.cost_ext_fun_type_0 = 'casadi';
-            obj.cost_source_ext_cost_0 = [];
-            obj.cost_function_ext_cost_0 = [];
+            obj.ext_fun_type_0 = 'casadi';
+            obj.source_ext_cost_0 = [];
+            obj.function_ext_cost_0 = [];
             % intermediate
             obj.cost_type   = 'AUTO';
             obj.W           = [];
@@ -102,9 +103,9 @@ classdef AcadosOcpCost < handle
             obj.Zu          = [];
             obj.zl          = [];
             obj.zu          = [];
-            obj.cost_ext_fun_type = 'casadi';
-            obj.cost_source_ext_cost = [];
-            obj.cost_function_ext_cost = [];
+            obj.ext_fun_type = 'casadi';
+            obj.source_ext_cost = [];
+            obj.function_ext_cost = [];
             % terminal
             obj.cost_type_e = 'AUTO';
             obj.W_e         = [];
@@ -114,9 +115,9 @@ classdef AcadosOcpCost < handle
             obj.Zu_e        = [];
             obj.zl_e        = [];
             obj.zu_e        = [];
-            obj.cost_ext_fun_type_e = 'casadi';
-            obj.cost_source_ext_cost_e = [];
-            obj.cost_function_ext_cost_e = [];
+            obj.ext_fun_type_e = 'casadi';
+            obj.source_ext_cost_e = [];
+            obj.function_ext_cost_e = [];
         end
 
         function s = struct(self)

@@ -600,13 +600,13 @@ classdef AcadosOcp < handle
                 elseif (strcmp(self.cost.cost_type, 'NONLINEAR_LS'))
                     self.model.cost_y_expr_0 = self.model.cost_y_expr;
                 elseif (strcmp(self.cost.cost_type, 'EXTERNAL'))
-                    self.cost.cost_ext_fun_type_0 = self.cost.cost_ext_fun_type;
-                    if strcmp(self.cost.cost_ext_fun_type_0, 'casadi')
+                    self.cost.ext_fun_type_0 = self.cost.ext_fun_type;
+                    if strcmp(self.cost.ext_fun_type_0, 'casadi')
                         self.model.cost_expr_ext_cost_0 = self.model.cost_expr_ext_cost;
                         self.model.cost_expr_ext_cost_custom_hess_0 = self.model.cost_expr_ext_cost_custom_hess;
                     else % generic
-                        self.cost.cost_source_ext_cost_0 = self.cost.cost_source_ext_cost;
-                        self.cost.cost_function_ext_cost_0 = self.cost.cost_function_ext_cost;
+                        self.cost.source_ext_cost_0 = self.cost.source_ext_cost;
+                        self.cost.function_ext_cost_0 = self.cost.function_ext_cost;
                     end
                 end
                 if (strcmp(self.cost.cost_type, 'LINEAR_LS')) || (strcmp(self.cost.cost_type, 'NONLINEAR_LS'))

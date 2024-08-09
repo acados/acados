@@ -160,7 +160,6 @@ function ocp = setup_AcadosOcp_from_legacy_ocp_description(model_struct, opts_st
         ocp.cost.cost_type_e = upper(model.cost_type_e);
     end
 
-    ocp.cost.cost_ext_fun_type = model.cost_ext_fun_type;
     ocp.constraints.constr_type = upper(model.constr_type);
     ocp.constraints.constr_type_0 = upper(model.constr_type_0);
     ocp.constraints.constr_type_e = upper(model.constr_type_e);
@@ -220,18 +219,18 @@ function ocp = setup_AcadosOcp_from_legacy_ocp_description(model_struct, opts_st
         'constr_lsh_e', 'lsh_e', ...
         'constr_ush_e', 'ush_e', ...
         'constr_Jsh_e', 'idxsh_e' ...
-    );
+        );
     fields = fieldnames(constraints_fields_map);
     num_fields = length(fields);
     for n=1:num_fields
         old_field = fields{n};
         if isfield(model, old_field)
-            new_field = constraints_fields_map.(old_field);
+        new_field = constraints_fields_map.(old_field);
 
             if strncmp(old_field, 'constr_Jb', 9)
                 ocp.constraints.(new_field) = J_to_idx(model.(old_field));
             elseif strncmp(old_field, 'constr_Js', 9)
-                    ocp.constraints.(new_field) = J_to_idx_slack(model.(old_field));
+                ocp.constraints.(new_field) = J_to_idx_slack(model.(old_field));
             else
                 ocp.constraints.(new_field) = model.(old_field);
             end
@@ -250,8 +249,13 @@ function ocp = setup_AcadosOcp_from_legacy_ocp_description(model_struct, opts_st
         'sym_t', 't', ...
         'cost_expr_ext_cost_0', 'cost_expr_ext_cost_0', ...
         'cost_expr_ext_cost', 'cost_expr_ext_cost', ...
-        'cost_expr_ext_cost_e', 'cost_expr_ext_cost_e' ...
-    );
+        'cost_expr_ext_cost_e', 'cost_expr_ext_cost_e', ...
+        'cost_expr_y_0', 'cost_y_expr_0', ...
+        'cost_expr_y', 'cost_y_expr', ...
+        'cost_expr_y_e', 'cost_y_expr_e', ...
+        'dyn_ext_fun_type', 'dyn_ext_fun_type' ...
+        );
+
     fields = fieldnames(model_fields_map);
     num_fields = length(fields);
     for n=1:num_fields
@@ -263,119 +267,50 @@ function ocp = setup_AcadosOcp_from_legacy_ocp_description(model_struct, opts_st
     end
 
     %% Cost
-    ocp.model.dyn_ext_fun_type = model_struct.dyn_ext_fun_type;
-    if strcmp(model.cost_ext_fun_type, 'generic')
-        ocp.cost.cost_source_ext_cost = model.cost_source_ext_cost;
-        ocp.cost.cost_function_ext_cost = model.cost_function_ext_cost;
-    end
-    ocp.cost.cost_ext_fun_type_0 = model.cost_ext_fun_type_0;
-    if strcmp(model.cost_ext_fun_type_0, 'generic')
-        ocp.cost.cost_source_ext_cost_0 = model.cost_source_ext_cost_0;
-        ocp.cost.cost_function_ext_cost_0 = model.cost_function_ext_cost_0;
-    end
-    ocp.cost.cost_ext_fun_type_e = model.cost_ext_fun_type_e;
-    if strcmp(model.cost_ext_fun_type_e, 'generic')
-        ocp.cost.cost_source_ext_cost_e = model.cost_source_ext_cost_e;
-        ocp.cost.cost_function_ext_cost_e = model.cost_function_ext_cost_e;
-    end
-    if strcmp(model.cost_type, 'linear_ls')
-        ocp.cost.Vu = model.cost_Vu;
-        ocp.cost.Vx = model.cost_Vx;
-        if isfield(model, 'cost_Vz')
-            ocp.cost.Vz = model.cost_Vz;
+    cost_fields_map = struct( ...
+        'cost_ext_fun_type_0', 'ext_fun_type_0', ...
+        'cost_ext_fun_type', 'ext_fun_type', ...
+        'cost_ext_fun_type_e', 'ext_fun_type_e', ...
+        'cost_source_ext_cost_0', 'source_ext_cost_0', ...
+        'cost_source_ext_cost', 'source_ext_cost', ...
+        'cost_source_ext_cost_e', 'source_ext_cost_e', ...
+        'cost_function_ext_cost_0', 'function_ext_cost_0', ...
+        'cost_function_ext_cost', 'function_ext_cost', ...
+        'cost_function_ext_cost_e', 'function_ext_cost_e', ...
+        'cost_W_0', 'W_0', ...
+        'cost_W', 'W', ...
+        'cost_W_e', 'W_e', ...
+        'cost_y_ref_0', 'yref_0', ...
+        'cost_y_ref', 'yref', ...
+        'cost_y_ref_e', 'yref_e', ...
+        'cost_Vx_0', 'Vx_0',
+        'cost_Vx', 'Vx',
+        'cost_Vx_e', 'Vx_e',
+        'cost_Vu_0', 'Vu_0',
+        'cost_Vu', 'Vu',
+        'cost_Vz_0', 'Vz_0',
+        'cost_Vz', 'Vz',
+        'cost_Zl', 'Zl', ...
+        'cost_Zu', 'Zu', ...
+        'cost_zl', 'zl', ...
+        'cost_zu', 'zu', ...
+        'cost_Zl_0', 'Zl_0', ...
+        'cost_Zu_0', 'Zu_0', ...
+        'cost_zl_0', 'zl_0', ...
+        'cost_zu_0', 'zu_0', ...
+        'cost_Zl_e', 'Zl_e', ...
+        'cost_Zu_e', 'Zu_e', ...
+        'cost_zl_e', 'zl_e', ...
+        'cost_zu_e', 'zu_e' ...
+        );
+    fields = fieldnames(cost_fields_map);
+    num_fields = length(fields);
+    for n=1:num_fields
+        old_field = fields{n};
+        if isfield(model, old_field)
+            new_field = cost_fields_map.(old_field);
+            ocp.cost.(new_field) = model.(old_field);
         end
-    end
-    if strcmp(model.cost_type_0, 'linear_ls')
-        ocp.cost.Vu_0 = model.cost_Vu_0;
-        ocp.cost.Vx_0 = model.cost_Vx_0;
-        if isfield(model, 'cost_Vz_0')
-            ocp.cost.Vz_0 = model.cost_Vz_0;
-        end
-    end
-
-    % terminal cost might be empty
-    if isfield(model, 'cost_Vx_e')
-        ocp.cost.Vx_e = model.cost_Vx_e;
-    end
-
-    if strcmp(model.cost_type, 'nonlinear_ls') || strcmp(model.cost_type, 'linear_ls')
-        ocp.cost.W = model.cost_W;
-        if isfield(model, 'cost_y_ref')
-            ocp.cost.yref = model.cost_y_ref;
-        end
-    end
-
-    if strcmp(model.cost_type_0, 'nonlinear_ls') || strcmp(model.cost_type_0, 'linear_ls')
-        ocp.cost.W_0 = model.cost_W_0;
-
-        if isfield(model, 'cost_y_ref_0')
-            ocp.cost.yref_0 = model.cost_y_ref_0;
-        end
-    end
-
-    if strcmp(model.cost_type_e, 'nonlinear_ls') || strcmp(model.cost_type_e, 'linear_ls')
-        if isfield(model, 'cost_W_e')
-            ocp.cost.W_e = model.cost_W_e;
-        end
-        if isfield(model, 'cost_y_ref_e')
-            ocp.cost.yref_e = model.cost_y_ref_e;
-        end
-    end
-
-    if strcmp(model.cost_type, 'nonlinear_ls')
-        if isfield(model, 'cost_expr_y')
-            ocp.model.cost_y_expr = model.cost_expr_y;
-        end
-    end
-    if strcmp(model.cost_type_0, 'nonlinear_ls')
-        if isfield(model, 'cost_expr_y_0')
-            ocp.model.cost_y_expr_0 = model.cost_expr_y_0;
-        end
-    end
-    if strcmp(model.cost_type_e, 'nonlinear_ls')
-        if isfield(model, 'cost_expr_y_e')
-            ocp.model.cost_y_expr_e = model.cost_expr_y_e;
-        end
-    end
-
-    if isfield(model, 'cost_Zl')
-        ocp.cost.Zl = diag(model.cost_Zl);
-    end
-    if isfield(model, 'cost_Zu')
-        ocp.cost.Zu = diag(model.cost_Zu);
-    end
-    if isfield(model, 'cost_zl')
-        ocp.cost.zl = model.cost_zl;
-    end
-    if isfield(model, 'cost_zu')
-        ocp.cost.zu = model.cost_zu;
-    end
-
-    if isfield(model, 'cost_Zl_0')
-        ocp.cost.Zl_0 = diag(model.cost_Zl_0);
-    end
-    if isfield(model, 'cost_Zu_0')
-        ocp.cost.Zu_0 = diag(model.cost_Zu_0);
-    end
-    if isfield(model, 'cost_zl_0')
-        ocp.cost.zl_0 = model.cost_zl_0;
-    end
-    if isfield(model, 'cost_zu_0')
-        ocp.cost.zu_0 = model.cost_zu_0;
-    end
-
-
-    if isfield(model, 'cost_Zl_e')
-        ocp.cost.Zl_e = diag(model.cost_Zl_e);
-    end
-    if isfield(model, 'cost_Zu_e')
-        ocp.cost.Zu_e = diag(model.cost_Zu_e);
-    end
-    if isfield(model, 'cost_zl_e')
-        ocp.cost.zl_e = model.cost_zl_e;
-    end
-    if isfield(model, 'cost_zu_e')
-        ocp.cost.zu_e = model.cost_zu_e;
     end
 
     %% dynamics
