@@ -170,7 +170,7 @@ ocp_opts.opts_struct
 
 %% acados ocp
 % create ocp
-ocp = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
 %% acados sim model
 sim_model = acados_sim_model();
@@ -207,7 +207,7 @@ sim_opts.set('sens_forw', sim_sens_forw);
 
 %% acados sim
 % create sim
-sim = acados_sim(sim_model, sim_opts);
+sim_solver = acados_sim(sim_model, sim_opts);
 
 %% closed loop simulation
 n_sim = 100;
@@ -223,30 +223,30 @@ tic;
 for ii=1:n_sim
 
 	% set x0
-	ocp.set('constr_x0', x_sim(:,ii));
+	ocp_solver.set('constr_x0', x_sim(:,ii));
 
 	% set trajectory initialization
-	ocp.set('init_x', x_traj_init);
-	ocp.set('init_u', u_traj_init);
+	ocp_solver.set('init_x', x_traj_init);
+	ocp_solver.set('init_u', u_traj_init);
 
 	% solve OCP
-	ocp.solve();
+	ocp_solver.solve();
 
 	% get solution
-	%x_traj = ocp.get('x');
-	%u_traj = ocp.get('u');
-	u_sim(:,ii) = ocp.get('u', 0);
+	%x_traj = ocp_solver.get('x');
+	%u_traj = ocp_solver.get('u');
+	u_sim(:,ii) = ocp_solver.get('u', 0);
 
 	% set initial state of sim
-	sim.set('x', x_sim(:,ii));
+	sim_solver.set('x', x_sim(:,ii));
 	% set input in sim
-	sim.set('u', u_sim(:,ii));
+	sim_solver.set('u', u_sim(:,ii));
 
 	% simulate state
-	sim.solve();
+	sim_solver.solve();
 
 	% get new state
-	x_sim(:,ii+1) = sim.get('xn');
+	x_sim(:,ii+1) = sim_solver.get('xn');
 end
 
 avg_time_solve = toc/n_sim
@@ -264,7 +264,7 @@ ylabel('u')
 xlabel('sample')
 
 
-status = ocp.get('status');
+status = ocp_solver.get('status');
 
 if status==0
 	fprintf('\nsuccess!\n\n');

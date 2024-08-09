@@ -231,7 +231,7 @@ ocp_opts.set('exact_hess_cost', 1);
 ocp_opts.set('exact_hess_constr', 1);
 
 %% create ocp solver
-ocp = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
 % state and input initial guess
 x_traj_init = zeros(nx, N+1);
@@ -246,48 +246,48 @@ time_lin = zeros(n_executions,1);
 time_reg = zeros(n_executions,1);
 time_qp_sol = zeros(n_executions,1);
 
-ocp.set('print_level', print_level)
+ocp_solver.set('print_level', print_level)
 
 %% call ocp solver in loop
 for i=1:n_executions
     
     % initial state
-    ocp.set('constr_x0', x0);
+    ocp_solver.set('constr_x0', x0);
 
     % set trajectory initialization
-    ocp.set('init_x', x_traj_init);
-    ocp.set('init_u', u_traj_init);
-    ocp.set('init_pi', zeros(nx, N)); % multipliers for dynamics equality constraints
+    ocp_solver.set('init_x', x_traj_init);
+    ocp_solver.set('init_u', u_traj_init);
+    ocp_solver.set('init_pi', zeros(nx, N)); % multipliers for dynamics equality constraints
 
     % solve
-    ocp.solve();
+    ocp_solver.solve();
     % get solution
-    utraj = ocp.get('u');
-    xtraj = ocp.get('x');
+    utraj = ocp_solver.get('u');
+    xtraj = ocp_solver.get('x');
 
     % evaluation
-    status = ocp.get('status');
-    sqp_iter = ocp.get('sqp_iter');
-    time_tot(i) = ocp.get('time_tot');
-    time_lin(i) = ocp.get('time_lin');
-    time_reg(i) = ocp.get('time_reg');
-    time_qp_sol(i) = ocp.get('time_qp_sol');
+    status = ocp_solver.get('status');
+    sqp_iter = ocp_solver.get('sqp_iter');
+    time_tot(i) = ocp_solver.get('time_tot');
+    time_lin(i) = ocp_solver.get('time_lin');
+    time_reg(i) = ocp_solver.get('time_reg');
+    time_qp_sol(i) = ocp_solver.get('time_qp_sol');
 
     if i == 1 || i == n_executions
-        ocp.print('stat')
+        ocp_solver.print('stat')
     end
 end
 
 % get slack values
 for i = 0:N-1
-    sl = ocp.get('sl', i);
-    su = ocp.get('su', i);
+    sl = ocp_solver.get('sl', i);
+    su = ocp_solver.get('su', i);
 end
-sl = ocp.get('sl', N);
-su = ocp.get('su', N);
+sl = ocp_solver.get('sl', N);
+su = ocp_solver.get('su', N);
 
 % get cost value
-cost_val_ocp = ocp.get_cost();
+cost_val_ocp = ocp_solver.get_cost();
 
 
 %% get QP matrices:
@@ -299,23 +299,23 @@ for stage = [0,N-1]
     for k = 1:length(fields)
         field = fields{k};
         disp(strcat(field, " at stage ", num2str(stage), " = "));
-        ocp.get(field, stage)
+        ocp_solver.get(field, stage)
     end
 end
 
 stage = N;
 field = 'qp_Q';
 disp(strcat(field, " at stage ", num2str(stage), " = "));
-ocp.get(field, stage)
+ocp_solver.get(field, stage)
 field = 'qp_R';
 disp(strcat(field, " at stage ", num2str(stage), " = "));
-ocp.get(field, stage)
+ocp_solver.get(field, stage)
 
 % or for all stages
-qp_Q = ocp.get('qp_Q');
+qp_Q = ocp_solver.get('qp_Q');
 
 %
-cond_H = ocp.get('qp_solver_cond_H');
+cond_H = ocp_solver.get('qp_solver_cond_H');
 
 
 %% Plot trajectories
@@ -354,37 +354,4 @@ end
 %     ylabel('time in [ms]')
 %     title( [ strrep(cost_type, '_',' '), ' , sim: ' strrep(sim_method, '_',' '), ...
 %        ';  ', strrep(qp_solver, '_', ' ')] )
-% end
-
-%% test templated solver
-% if ~ispc()
-%     % MEX wrapper around templated solver not supported for Windows yet
-%     % it can be used and tested via Simulink though.
-%     disp('testing templated solver');
-%     ocp.generate_c_code;
-%     cd c_generated_code/
-%     command = strcat('t_ocp = ', model_name, '_mex_solver');
-%     eval( command );
-%
-%     t_ocp.set('print_level', print_level)
-%
-%     % initial state
-%     t_ocp.set('constr_x0', x0);
-%
-%     % set trajectory initialization
-%     t_ocp.set('init_x', x_traj_init);
-%     t_ocp.set('init_u', u_traj_init);
-%     t_ocp.set('init_pi', zeros(nx, N))
-%
-%     t_ocp.solve()
-%     xt_traj = t_ocp.get('x');
-%     ut_traj = t_ocp.get('u');
-%
-%     error_X_mex_vs_mex_template = max(max(abs(xt_traj - xtraj)))
-%     error_U_mex_vs_mex_template = max(max(abs(ut_traj - utraj)))
-%
-%     t_ocp.print('stat')
-%     cost_val_t_ocp = t_ocp.get_cost();
-%     clear t_ocp
-%     cd ..
 % end

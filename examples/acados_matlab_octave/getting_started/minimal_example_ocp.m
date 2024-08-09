@@ -112,7 +112,7 @@ ocp_opts.set('globalization', 'merit_backtracking') % turns on globalization
 % ... see ocp_opts.opts_struct to see what other fields can be set
 
 %% create ocp solver
-ocp = acados_ocp(ocp_model, ocp_opts, simulink_opts);
+ocp_solver = acados_ocp(ocp_model, ocp_opts, simulink_opts);
 
 % solver initial guess
 x_traj_init = zeros(nx, N+1);
@@ -120,25 +120,25 @@ u_traj_init = zeros(nu, N);
 
 %% call ocp solver
 % update initial state
-ocp.set('constr_x0', x0);
+ocp_solver.set('constr_x0', x0);
 
 % set trajectory initialization
-ocp.set('init_x', x_traj_init); % states
-ocp.set('init_u', u_traj_init); % inputs
-ocp.set('init_pi', zeros(nx, N)); % multipliers for dynamics equality constraints
+ocp_solver.set('init_x', x_traj_init); % states
+ocp_solver.set('init_u', u_traj_init); % inputs
+ocp_solver.set('init_pi', zeros(nx, N)); % multipliers for dynamics equality constraints
 
 % change values for specific shooting node using:
-%   ocp.set('field', value, optional: stage_index)
-ocp.set('constr_lbx', x0, 0)
+%   ocp_solver.set('field', value, optional: stage_index)
+ocp_solver.set('constr_lbx', x0, 0)
 
 % solve
-ocp.solve();
+ocp_solver.solve();
 % get solution
-utraj = ocp.get('u');
-xtraj = ocp.get('x');
+utraj = ocp_solver.get('u');
+xtraj = ocp_solver.get('x');
 
-status = ocp.get('status'); % 0 - success
-ocp.print('stat')
+status = ocp_solver.get('status'); % 0 - success
+ocp_solver.print('stat')
 
 %% plots
 ts = linspace(0, T, N+1);
@@ -156,7 +156,3 @@ stairs(ts, [utraj'; utraj(end)])
 ylabel('F [N]')
 xlabel('t [s]')
 grid on
-
-%% go embedded
-% to generate templated C code
-% ocp.generate_c_code;

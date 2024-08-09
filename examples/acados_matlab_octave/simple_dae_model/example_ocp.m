@@ -197,27 +197,27 @@ ocp_opts.set('exact_hess_constr', 1);
 
 
 %% acados ocp
-ocp = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
-ocp.solve();
+ocp_solver.solve();
 
-stat = ocp.get('stat');
+stat = ocp_solver.get('stat');
 
-ocp.print('stat')
+ocp_solver.print('stat')
 
-status = ocp.get('status');
-sqp_iter = ocp.get('sqp_iter');
-sqp_time = ocp.get('time_tot');
+status = ocp_solver.get('status');
+sqp_iter = ocp_solver.get('sqp_iter');
+sqp_time = ocp_solver.get('time_tot');
 %if status ~= 0
 %    keyboard
 %end
 
 format short e
 % get solution for initialization of next NLP
-x_traj = ocp.get('x');
-u_traj = ocp.get('u');
-pi_traj = ocp.get('pi');
-z_traj = ocp.get('z');
+x_traj = ocp_solver.get('x');
+u_traj = ocp_solver.get('u');
+pi_traj = ocp_solver.get('pi');
+z_traj = ocp_solver.get('z');
 
 diff_x_z = x_traj(:,1:N) - z_traj
 

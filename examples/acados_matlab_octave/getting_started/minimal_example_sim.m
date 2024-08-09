@@ -88,7 +88,7 @@ end
 
 
 %% create integrator
-sim = acados_sim(sim_model, sim_opts);
+sim_solver = acados_sim(sim_model, sim_opts);
 
 
 %% simulate system in loop
@@ -98,26 +98,26 @@ x_sim(:,1) = x0;
 for ii=1:N_sim
 	
 	% set initial state
-	sim.set('x', x_sim(:,ii));
-	sim.set('u', u0);
+	sim_solver.set('x', x_sim(:,ii));
+	sim_solver.set('u', u0);
 
     % initialize implicit integrator
     if (strcmp(method, 'irk'))
-        sim.set('xdot', zeros(nx,1));
+        sim_solver.set('xdot', zeros(nx,1));
     elseif (strcmp(method, 'irk_gnsf'))
-        n_out = sim.model_struct.dim_gnsf_nout;
-        sim.set('phi_guess', zeros(n_out,1));
+        n_out = sim_solver.model_struct.dim_gnsf_nout;
+        sim_solver.set('phi_guess', zeros(n_out,1));
     end
 
 	% solve
-	sim.solve();
+	sim_solver.solve();
 
 	% get simulated state
-	x_sim(:,ii+1) = sim.get('xn');
+	x_sim(:,ii+1) = sim_solver.get('xn');
 end
 
 % forward sensitivities ( dxn_d[x0,u] )
-S_forw = sim.get('S_forw');
+S_forw = sim_solver.get('S_forw');
 
 %% plots
 % for ii=1:N_sim+1
@@ -130,5 +130,5 @@ plot(1:N_sim+1, x_sim);
 legend('p', 'theta', 'v', 'omega');
 
 %% dump gnsf
-% sim.model_struct.name = 'pendulum_ode';
-% dump_gnsf_functions(sim.model_struct)
+% sim_solver.model_struct.name = 'pendulum_ode';
+% dump_gnsf_functions(sim_solver.model_struct)

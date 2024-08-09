@@ -208,7 +208,7 @@ disp('ocp_opts.opts_struct: ');
 disp(ocp_opts.opts_struct);
 
 %% create ocp solver
-ocp = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
 %% Simulation
 Duration = 10;  % [s]
@@ -223,9 +223,9 @@ u_sim(:, 1) = zeros(nu, 1);
 cost_sim(1, 1) = 0;
 
 % set trajectory initialization (also can use plant: create acados integrator)
-ocp.set('init_x', x0 * ones(1,param_scheme_N+1));
-% ocp.set('init_x', zeros(nx,param_scheme_N+1));
-ocp.set('init_u', zeros(nu, param_scheme_N));
+ocp_solver.set('init_x', x0 * ones(1,param_scheme_N+1));
+% ocp_solver.set('init_x', zeros(nx,param_scheme_N+1));
+ocp_solver.set('init_u', zeros(nu, param_scheme_N));
 
 % time-varying reference trajectory
 x1ref_FUN = @(t) 0.4.*(-(0.5./(1+exp(t./0.1-0.8))) + (1./(1+exp(t./0.1-30))) - 0.4);
@@ -242,28 +242,28 @@ for i = 1:N_sim
     x1_ref = x1ref_FUN(t_ref);
     for j = 0:param_scheme_N-1
         y_ref(1) = x1_ref(j+1);
-        ocp.set('cost_y_ref', y_ref, j);
+        ocp_solver.set('cost_y_ref', y_ref, j);
     end
     y_ref_e(1) = x1_ref(param_scheme_N+1);
-    ocp.set('cost_y_ref_e', y_ref_e, param_scheme_N);
+    ocp_solver.set('cost_y_ref_e', y_ref_e, param_scheme_N);
 
     % solve ocp
-    ocp.solve();
-    status = ocp.get('status');      % 0 - success
+    ocp_solver.solve();
+    status = ocp_solver.get('status');      % 0 - success
     if status ~= 0
         error('acados returned status %d in closed loop iteration %d. Exiting.', status, i);
     end
 
     % get solution t0
-    x0 = ocp.get('x', 0);
-    u0 = ocp.get('u', 0);
+    x0 = ocp_solver.get('x', 0);
+    u0 = ocp_solver.get('u', 0);
     x_sim(:, i+1) = x0;
     u_sim(:, i+1) = u0;
-    cost_sim(1, i+1) = ocp.get_cost();
+    cost_sim(1, i+1) = ocp_solver.get_cost();
 
     % update initial state
-    x0 = ocp.get('x', 1);
-    ocp.set('constr_x0', x0);
+    x0 = ocp_solver.get('x', 1);
+    ocp_solver.set('constr_x0', x0);
 
 end
 tElapsed = toc

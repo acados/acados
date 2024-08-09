@@ -207,7 +207,7 @@ ocp_opts.set('sim_method_num_steps', ocp_sim_method_num_steps);
 
 %% acados ocp
 % create ocp
-ocp = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
 
 %% acados sim model
@@ -243,7 +243,7 @@ sim_opts.set('sens_forw', sim_sens_forw);
 
 %% acados sim
 % create sim
-sim = acados_sim(sim_model, sim_opts);
+sim_solver = acados_sim(sim_model, sim_opts);
 
 
 %% closed loop simulation
@@ -256,48 +256,48 @@ x_traj_init = repmat(model.x_ref, 1, ocp_N+1);
 u_traj_init = zeros(nu, ocp_N);
 pi_traj_init = zeros(nx, ocp_N);
 
-%ocp.set('init_x', x_traj_init);
-%ocp.set('init_u', u_traj_init);
-%ocp.set('init_pi', pi_traj_init);
+%ocp_solver.set('init_x', x_traj_init);
+%ocp_solver.set('init_u', u_traj_init);
+%ocp_solver.set('init_pi', pi_traj_init);
 
 tic;
 
 for ii=1:n_sim
 
 	% set x0
-	ocp.set('constr_x0', x_sim(:,ii));
+	ocp_solver.set('constr_x0', x_sim(:,ii));
 
 	% set trajectory initialization (if not, set internally using previous solution)
-	ocp.set('init_x', x_traj_init);
-	ocp.set('init_u', u_traj_init);
-	ocp.set('init_pi', pi_traj_init);
+	ocp_solver.set('init_x', x_traj_init);
+	ocp_solver.set('init_u', u_traj_init);
+	ocp_solver.set('init_pi', pi_traj_init);
 
 	% solve OCP
-	ocp.set('rti_phase', 1);
-	ocp.solve();
-	ocp.set('rti_phase', 2);
-	ocp.solve();
+	ocp_solver.set('rti_phase', 1);
+	ocp_solver.solve();
+	ocp_solver.set('rti_phase', 2);
+	ocp_solver.solve();
 
 	if 1
-		status = ocp.get('status');
-		sqp_iter = ocp.get('sqp_iter');
-		time_tot = ocp.get('time_tot');
-		time_lin = ocp.get('time_lin');
-		time_reg = ocp.get('time_reg');
-		time_qp_sol = ocp.get('time_qp_sol');
-		time_qp_solver_call = ocp.get('time_qp_solver_call');
-		qp_iter = ocp.get('qp_iter');
+		status = ocp_solver.get('status');
+		sqp_iter = ocp_solver.get('sqp_iter');
+		time_tot = ocp_solver.get('time_tot');
+		time_lin = ocp_solver.get('time_lin');
+		time_reg = ocp_solver.get('time_reg');
+		time_qp_sol = ocp_solver.get('time_qp_sol');
+		time_qp_solver_call = ocp_solver.get('time_qp_solver_call');
+		qp_iter = ocp_solver.get('qp_iter');
 
 		fprintf('\nstatus = %d, sqp_iter = %d, time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms] (time_qp_solver_call = %f [ms]), time_reg = %f [ms])\n', status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, time_qp_solver_call*1e3, time_reg*1e3);
 %		fprintf('%e %d\n', time_qp_solver_call, qp_iter);
 
-%		ocp.print('stat');
+%		ocp_solver.print('stat');
 	end
 
 	% get solution
-	x_traj = ocp.get('x');
-	u_traj = ocp.get('u');
-	pi_traj = ocp.get('pi');
+	x_traj = ocp_solver.get('x');
+	u_traj = ocp_solver.get('u');
+	pi_traj = ocp_solver.get('pi');
 
 	% shift trajectory for initialization
 	x_traj_init = [x_traj(:,2:end), x_traj(:,end)];
@@ -305,7 +305,7 @@ for ii=1:n_sim
 	pi_traj_init = [pi_traj(:,2:end), pi_traj(:,end)];
 
 	% get solution for sim
-	u_sim(:,ii) = ocp.get('u', 0);
+	u_sim(:,ii) = ocp_solver.get('u', 0);
 
 	% overwrite control to perturb the system
 %	if(ii<=5)
@@ -313,15 +313,15 @@ for ii=1:n_sim
 %	end
 
 	% set initial state of sim
-	sim.set('x', x_sim(:,ii));
+	sim_solver.set('x', x_sim(:,ii));
 	% set input in sim
-	sim.set('u', u_sim(:,ii));
+	sim_solver.set('u', u_sim(:,ii));
 
 	% simulate state
-	sim.solve();
+	sim_solver.solve();
 
 	% get new state
-	x_sim(:,ii+1) = sim.get('xn');
+	x_sim(:,ii+1) = sim_solver.get('xn');
 
 end
 
@@ -339,7 +339,7 @@ end
 
 
 
-status = ocp.get('status');
+status = ocp_solver.get('status');
 
 if status==0
 	fprintf('\nsuccess!\n\n');

@@ -35,7 +35,7 @@ clear all; clc;
 % check that env.sh has been run
 env_run = getenv('ENV_RUN');
 if (~strcmp(env_run, 'true'))
-	error('env.sh has not been sourced! Before executing this example, run: source env.sh');
+    error('env.sh has not been sourced! Before executing this example, run: source env.sh');
 end
 
 %% options
@@ -135,9 +135,9 @@ if constraint_h
     lh =    0;
     uh =  200;
     ocp_model.set('constr_lh_0', lh);
-	ocp_model.set('constr_uh_0', uh);
+    ocp_model.set('constr_uh_0', uh);
     ocp_model.set('constr_lh', lh);
-	ocp_model.set('constr_uh', uh);
+    ocp_model.set('constr_uh', uh);
 else
     nh = 0;
 end
@@ -145,57 +145,57 @@ end
 % symbolics
 ocp_model.set('sym_x', model.sym_x);
 if isfield(model, 'sym_u')
-	ocp_model.set('sym_u', model.sym_u);
+    ocp_model.set('sym_u', model.sym_u);
 end
 if isfield(model, 'sym_xdot')
-	ocp_model.set('sym_xdot', model.sym_xdot);
+    ocp_model.set('sym_xdot', model.sym_xdot);
 end
 if isfield(model, 'sym_z')
-	ocp_model.set('sym_z', model.sym_z);
+    ocp_model.set('sym_z', model.sym_z);
 end
 
 % cost
 ocp_model.set('cost_type', cost_type);
 ocp_model.set('cost_type_e', cost_type);
 if (strcmp(cost_type, 'linear_ls'))
-	ocp_model.set('cost_Vu', Vu);
-	ocp_model.set('cost_Vx', Vx);
-	ocp_model.set('cost_Vx_e', Vx_e);
-	ocp_model.set('cost_W', W);
-	ocp_model.set('cost_W_e', W_e);
-	ocp_model.set('cost_y_ref', yr);
-	ocp_model.set('cost_y_ref_e', yr_e);
+    ocp_model.set('cost_Vu', Vu);
+    ocp_model.set('cost_Vx', Vx);
+    ocp_model.set('cost_Vx_e', Vx_e);
+    ocp_model.set('cost_W', W);
+    ocp_model.set('cost_W_e', W_e);
+    ocp_model.set('cost_y_ref', yr);
+    ocp_model.set('cost_y_ref_e', yr_e);
     ocp_model.set('cost_Vz', zeros(ny,nz));
 elseif (strcmp(cost_type, 'ext_cost'))
-	ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
-	ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
+    ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
+    ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
 end
 
 % dynamics
 if (strcmp(ocp_sim_method, 'erk'))
-	ocp_model.set('dyn_type', 'explicit');
-	ocp_model.set('dyn_expr_f', model.expr_f_expl);
+    ocp_model.set('dyn_type', 'explicit');
+    ocp_model.set('dyn_expr_f', model.expr_f_expl);
 else % irk
-	ocp_model.set('dyn_type', 'implicit');
-	ocp_model.set('dyn_expr_f', model.expr_f_impl);
+    ocp_model.set('dyn_type', 'implicit');
+    ocp_model.set('dyn_expr_f', model.expr_f_impl);
 end
 % constraints
 ocp_model.set('constr_x0', x0);
 if (ng>0)
-	ocp_model.set('constr_C', C);
-	ocp_model.set('constr_D', D);
-	ocp_model.set('constr_lg', lg);
-	ocp_model.set('constr_ug', ug);
-	ocp_model.set('constr_C_e', C_e);
-	ocp_model.set('constr_lg_e', lg_e);
-	ocp_model.set('constr_ug_e', ug_e);
+    ocp_model.set('constr_C', C);
+    ocp_model.set('constr_D', D);
+    ocp_model.set('constr_lg', lg);
+    ocp_model.set('constr_ug', ug);
+    ocp_model.set('constr_C_e', C_e);
+    ocp_model.set('constr_lg_e', lg_e);
+    ocp_model.set('constr_ug_e', ug_e);
 else
-%	ocp_model.set('constr_Jbx', Jbx);
-%	ocp_model.set('constr_lbx', lbx);
-%	ocp_model.set('constr_ubx', ubx);
-	ocp_model.set('constr_Jbu', Jbu);
-	ocp_model.set('constr_lbu', lbu);
-	ocp_model.set('constr_ubu', ubu);
+%    ocp_model.set('constr_Jbx', Jbx);
+%    ocp_model.set('constr_lbx', lbx);
+%    ocp_model.set('constr_ubx', ubx);
+    ocp_model.set('constr_Jbu', Jbu);
+    ocp_model.set('constr_lbu', lbu);
+    ocp_model.set('constr_ubu', ubu);
 end
 
 ocp_model.model_struct
@@ -210,14 +210,14 @@ ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
 ocp_opts.set('regularize_method', regularize_method);
 if (strcmp(nlp_solver, 'sqp'))
-	ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
+    ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
 end
 ocp_opts.set('qp_solver', qp_solver);
 if (strcmp(qp_solver, 'partial_condensing_hpipm'))
-	ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
-	ocp_opts.set('qp_solver_cond_ric_alg', qp_solver_cond_ric_alg);
-	ocp_opts.set('qp_solver_ric_alg', qp_solver_ric_alg);
-	ocp_opts.set('qp_solver_warm_start', qp_solver_warm_start);
+    ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
+    ocp_opts.set('qp_solver_cond_ric_alg', qp_solver_cond_ric_alg);
+    ocp_opts.set('qp_solver_ric_alg', qp_solver_ric_alg);
+    ocp_opts.set('qp_solver_warm_start', qp_solver_warm_start);
 end
 ocp_opts.set('sim_method', ocp_sim_method);
 ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
@@ -228,7 +228,7 @@ ocp_opts.opts_struct
 
 
 %% acados ocp
-ocp = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
 ocp_model.set('name', model_name);
 
@@ -251,7 +251,7 @@ sim_model.set('dyn_type', 'implicit');
 sim_model.set('dyn_expr_f', model.expr_f_impl);
 sim_model.set('sym_xdot', model.sym_xdot);
 if isfield(model, 'sym_z')
-	sim_model.set('sym_z', model.sym_z);
+    sim_model.set('sym_z', model.sym_z);
 end
 
 %% acados sim opts
@@ -269,13 +269,13 @@ sim_opts.set('output_z', 'true');
 sim_opts.set('sens_hess', 'false');
 sim_opts.set('jac_reuse', sim_jac_reuse);
 if (strcmp(sim_method, 'irk_gnsf'))
-	sim_opts.set('gnsf_detect_struct', gnsf_detect_struct);
+    sim_opts.set('gnsf_detect_struct', gnsf_detect_struct);
 end
 
 
 %% acados sim
 % create integrator
-sim = acados_sim(sim_model, sim_opts);
+sim_solver = acados_sim(sim_model, sim_opts);
 
 %% closed loop simulation
 N_sim = 99;
@@ -302,69 +302,69 @@ sqp_time = zeros(N_sim,1);
 tic
 for ii=1:N_sim
 
-	% set initial state
-    ocp.set('constr_x0', x_sim(:,ii));
-	% set trajectory initialization (if not, set internally using previous solution)
-	ocp.set('init_x', x_traj_init);
-	ocp.set('init_u', u_traj_init);
-	ocp.set('init_pi', pi_traj_init);
+    % set initial state
+    ocp_solver.set('constr_x0', x_sim(:,ii));
+    % set trajectory initialization (if not, set internally using previous solution)
+    ocp_solver.set('init_x', x_traj_init);
+    ocp_solver.set('init_u', u_traj_init);
+    ocp_solver.set('init_pi', pi_traj_init);
     if ii == 1
-    	ocp.set('init_z', z_traj_init);
-    	ocp.set('init_xdot', xdot_traj_init);
+        ocp_solver.set('init_z', z_traj_init);
+        ocp_solver.set('init_xdot', xdot_traj_init);
     end
 
-	ocp.solve();
-    ocp.print('stat');
+    ocp_solver.solve();
+    ocp_solver.print('stat');
 
-    status = ocp.get('status');
-    sqp_iter(ii) = ocp.get('sqp_iter');
-    sqp_time(ii) = ocp.get('time_tot');
+    status = ocp_solver.get('status');
+    sqp_iter(ii) = ocp_solver.get('sqp_iter');
+    sqp_time(ii) = ocp_solver.get('time_tot');
     if status ~= 0
         keyboard
     end
 
-	% get solution for initialization of next NLP
-	x_traj = ocp.get('x');
-	u_traj = ocp.get('u');
-	pi_traj = ocp.get('pi');
-	z_traj = ocp.get('z');
+    % get solution for initialization of next NLP
+    x_traj = ocp_solver.get('x');
+    u_traj = ocp_solver.get('u');
+    pi_traj = ocp_solver.get('pi');
+    z_traj = ocp_solver.get('z');
 
-	% shift trajectory for initialization
-	x_traj_init = [x_traj(:,2:end), x_traj(:,end)];
-	u_traj_init = [u_traj(:,2:end), u_traj(:,end)];
-	pi_traj_init = [pi_traj(:,2:end), pi_traj(:,end)];
-	z_traj_init = [z_traj(:,2:end), z_traj(:,end)];
+    % shift trajectory for initialization
+    x_traj_init = [x_traj(:,2:end), x_traj(:,end)];
+    u_traj_init = [u_traj(:,2:end), u_traj(:,end)];
+    pi_traj_init = [pi_traj(:,2:end), pi_traj(:,end)];
+    z_traj_init = [z_traj(:,2:end), z_traj(:,end)];
 
-    u_sim(:,ii) = ocp.get('u', 0); % get control input
+    u_sim(:,ii) = ocp_solver.get('u', 0); % get control input
     % initialize implicit integrator
     if (strcmp(sim_method, 'irk'))
-        sim.set('xdot', xdot0);
-        sim.set('z', z0);
+        sim_solver.set('xdot', xdot0);
+        sim_solver.set('z', z0);
     elseif (strcmp(sim_method, 'irk_gnsf'))
         import casadi.*
-        x01_gnsf = x0(sim.model_struct.dyn_gnsf_idx_perm_x(1:sim.model_struct.dim_gnsf_nx1));
-        x01_dot_gnsf = xdot0(sim.model_struct.dyn_gnsf_idx_perm_x(1:sim.model_struct.dim_gnsf_nx1));
-        z0_gnsf = z0(sim.model_struct.dyn_gnsf_idx_perm_z( 1:sim.model_struct.dim_gnsf_nz1 ));
-        y_in = sim.model_struct.dyn_gnsf_L_x * x01_gnsf ...
-                + sim.model_struct.dyn_gnsf_L_xdot * x01_dot_gnsf ...
-                + sim.model_struct.dyn_gnsf_L_z * z0_gnsf;
-        u_hat = sim.model_struct.dyn_gnsf_L_u * u_sim(:,ii);
+        x01_gnsf = x0(sim_solver.model_struct.dyn_gnsf_idx_perm_x(1:sim_solver.model_struct.dim_gnsf_nx1));
+        x01_dot_gnsf = xdot0(sim_solver.model_struct.dyn_gnsf_idx_perm_x(1:sim_solver.model_struct.dim_gnsf_nx1));
+        z0_gnsf = z0(sim_solver.model_struct.dyn_gnsf_idx_perm_z( 1:sim_solver.model_struct.dim_gnsf_nz1 ));
+        y_in = sim_solver.model_struct.dyn_gnsf_L_x * x01_gnsf ...
+                + sim_solver.model_struct.dyn_gnsf_L_xdot * x01_dot_gnsf ...
+                + sim_solver.model_struct.dyn_gnsf_L_z * z0_gnsf;
+        u_hat = sim_solver.model_struct.dyn_gnsf_L_u * u_sim(:,ii);
         phi_fun = Function([model_name,'_gnsf_phi_fun'],...
-                        {sim.model_struct.sym_gnsf_y, sim.model_struct.sym_gnsf_uhat},...
-                            {sim.model_struct.dyn_gnsf_expr_phi(:)}); % sim.model_struct.sym_p
+                        {sim_solver.model_struct.sym_gnsf_y, sim_solver.model_struct.sym_gnsf_uhat},...
+                            {sim_solver.model_struct.dyn_gnsf_expr_phi(:)}); % sim_solver.model_struct.sym_p
 
         phi_guess = full( phi_fun( y_in, u_hat ) );
-        n_out = sim.model_struct.dim_gnsf_nout;
-        sim.set('phi_guess', zeros(n_out,1));
+        n_out = sim_solver.model_struct.dim_gnsf_nout;
+        sim_solver.set('phi_guess', zeros(n_out,1));
     end
 
-	sim.set('x', x_sim(:,ii)); 	% set initial state
-	sim.set('u', u_sim(:,ii)); 	% set input
-	sim.solve();	% simulate state
+    sim_solver.set('x', x_sim(:,ii));     % set initial state
+    sim_solver.set('u', u_sim(:,ii));     % set input
+    sim_solver.solve();    % simulate state
 
-	% get simulated state
-	x_sim(:,ii+1) = sim.get('xn');
-    z_sim(:,ii) = sim.get('zn');
+    % get simulated state
+    x_sim(:,ii+1) = sim_solver.get('xn');
+    z_sim(:,ii) = sim_solver.get('zn');
 
 end
 format short e
@@ -412,13 +412,15 @@ end
 xp = x_sim(1,:);
 yp = x_sim(2,:);
 check = abs(xp.^2 + yp.^2 - length_pendulum^2);
-tol_pendulum = 1e-10;
+tol_pendulum = 1e-4;
+
+
+disp(['checking for constant pendulum length, got ' num2str(check)])
 if any( max(abs(check)) > tol_pendulum )
-    disp(['note: check for constant pendulum length failed, violation >' ...
+    error(['note: check for constant pendulum length failed, violation >' ...
         num2str(tol_pendulum)]);
 end
 
-dist2target = norm( sim.get('xn') - xtarget )
 
 % eval constraint h
 ax_ = z_sim(1,:);

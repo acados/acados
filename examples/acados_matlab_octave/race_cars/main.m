@@ -208,7 +208,7 @@ ocp_opts.set('nlp_solver_tol_comp', 1e-4);
 % ... see ocp_opts.opts_struct to see what other fields can be set
 
 %% create ocp solver
-ocp = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
 %% Simulate
 dt = T / N;
@@ -223,14 +223,14 @@ s0 = model.x0(1);
 tcomp_sum = 0;
 tcomp_max = 0;
 
-ocp.set('constr_x0', model.x0);
-ocp.set('constr_lbx', model.x0, 0)
-ocp.set('constr_ubx', model.x0, 0)
+ocp_solver.set('constr_x0', model.x0);
+ocp_solver.set('constr_lbx', model.x0, 0)
+ocp_solver.set('constr_ubx', model.x0, 0)
 
 % set trajectory initialization
-ocp.set('init_x', model.x0' * ones(1,N+1));
-ocp.set('init_u', zeros(nu, N));
-ocp.set('init_pi', zeros(nx, N));
+ocp_solver.set('init_x', model.x0' * ones(1,N+1));
+ocp_solver.set('init_u', zeros(nu, N));
+ocp_solver.set('init_pi', zeros(nx, N));
 
 % simulate
 for i = 1:Nsim
@@ -239,17 +239,17 @@ for i = 1:Nsim
     for j = 0:(N-1)
         yref = [s0 + (sref - s0) * j / N, 0, 0, 0, 0, 0, 0, 0];
         % yref=[1,0,0,1,0,0,0,0]
-        ocp.set('cost_y_ref', yref, j);   
+        ocp_solver.set('cost_y_ref', yref, j);   
     end
     yref_N = [sref, 0, 0, 0, 0, 0];
     % yref_N=np.array([0,0,0,0,0,0])    
-    ocp.set('cost_y_ref_e', yref_N);
+    ocp_solver.set('cost_y_ref_e', yref_N);
 
     % solve ocp
     t = tic();
 
-    ocp.solve();
-    status = ocp.get('status'); % 0 - success
+    ocp_solver.solve();
+    status = ocp_solver.get('status'); % 0 - success
     if status ~= 0 && status ~= 2
         % borrowed from acados/utils/types.h
         %statuses = {
@@ -261,7 +261,7 @@ for i = 1:Nsim
         %    5: 'ACADOS_READY'
         error(sprintf('acados returned status %d in closed loop iteration %d. Exiting.', status, i));
     end
-    %ocp.print('stat')
+    %ocp_solver.print('stat')
 
     elapsed = toc(t);
 
@@ -272,8 +272,8 @@ for i = 1:Nsim
     end
 
     % get solution
-    x0 = ocp.get('x', 0);
-    u0 = ocp.get('u', 0);
+    x0 = ocp_solver.get('x', 0);
+    u0 = ocp_solver.get('u', 0);
     for j = 1:nx
         simX(i, j) = x0(j);
     end
@@ -282,11 +282,11 @@ for i = 1:Nsim
     end
 
     % update initial condition
-    x0 = ocp.get('x', 1);
+    x0 = ocp_solver.get('x', 1);
     % update initial state
-    ocp.set('constr_x0', x0);    
-    ocp.set('constr_lbx', x0, 0);
-    ocp.set('constr_ubx', x0, 0);
+    ocp_solver.set('constr_x0', x0);    
+    ocp_solver.set('constr_lbx', x0, 0);
+    ocp_solver.set('constr_ubx', x0, 0);
     s0 = x0(1);
 
     % check if one lap is done and break and remove entries beyond
@@ -342,8 +342,3 @@ line([t(1), t(end)], [constraint.alat_max, constraint.alat_max], 'LineStyle', '-
 xlabel('t');
 ylabel('alat');
 xlim([t(1), t(end)]);
-
-
-%% go embedded
-% to generate templated C code
-% ocp.generate_c_code;

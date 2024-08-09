@@ -207,34 +207,34 @@ for i = 1:3
 
 
     %% acados ocp
-    ocp = acados_ocp(ocp_model, ocp_opts);
+    ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
     % set trajectory initialization
     x_traj_init = [linspace(0, 0, N+1); linspace(pi, 0, N+1); linspace(0, 0, N+1); linspace(0, 0, N+1)];
     u_traj_init = zeros(nu, N);
 
-    ocp.set('init_x', x_traj_init);
-    ocp.set('init_u', u_traj_init);
+    ocp_solver.set('init_x', x_traj_init);
+    ocp_solver.set('init_u', u_traj_init);
 
-    ocp.solve();
+    ocp_solver.solve();
 
     % get solution
-    u = ocp.get('u');
-    x = ocp.get('x');
+    u = ocp_solver.get('u');
+    x = ocp_solver.get('x');
 
     %% evaluation
-    status = ocp.get('status');
-    sqp_iter = ocp.get('sqp_iter');
-    time_tot = ocp.get('time_tot');
-    time_lin = ocp.get('time_lin');
-    time_reg = ocp.get('time_reg');
-    time_qp_sol = ocp.get('time_qp_sol');
+    status = ocp_solver.get('status');
+    sqp_iter = ocp_solver.get('sqp_iter');
+    time_tot = ocp_solver.get('time_tot');
+    time_lin = ocp_solver.get('time_lin');
+    time_reg = ocp_solver.get('time_reg');
+    time_qp_sol = ocp_solver.get('time_qp_sol');
 
     fprintf(['\nstatus = %d, sqp_iter = %d, time_int = %f [ms]'...
         ' (time_lin = %f [ms], time_qp_sol = %f [ms], time_reg = %f [ms])\n'],...
         status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, time_reg*1e3 );
 
-    ocp.print('stat');
+    ocp_solver.print('stat');
     
     if i == 1
         % save reference
@@ -251,7 +251,7 @@ for i = 1:3
     omegas = xref(4,:);
     z_fromx = cos(thetas).*sin(thetas).*omegas.^2;
     if i > 1
-        z = ocp.get('z');
+        z = ocp_solver.get('z');
         err_z_zfromx(i) = norm( z - z_fromx(1:end-1) );
     end
     

@@ -131,11 +131,11 @@ ocp_opts.set('globalization', 'merit_backtracking') % turns on globalization
 % ... see ocp_opts.opts_struct to see what other fields can be set
 
 %% create ocp solver
-ocp = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
 % set parameter for all stages
 for i = 0:N
-    ocp.set('p', 1.);
+    ocp_solver.set('p', 1.);
 end
 
 %% plant: create acados integrator
@@ -157,10 +157,10 @@ sim_opts.set('method', plant_sim_method);
 sim_opts.set('num_stages', plant_sim_method_num_stages);
 sim_opts.set('num_steps', plant_sim_method_num_steps);
 
-sim = acados_sim(sim_model, sim_opts);
+sim_solver = acados_sim(sim_model, sim_opts);
 
 % set parameter
-sim.set('p', 1.05);
+sim_solver.set('p', 1.05);
 
 %% simulation
 N_sim = 150;
@@ -185,7 +185,7 @@ yref_e(3) = v_mean;
 for i=1:N_sim
     % update initial state
     x0 = x_sim(:,i);
-    ocp.set('constr_x0', x0);
+    ocp_solver.set('constr_x0', x0);
 
     % compute reference position on the nonuniform grid
     t = (i-1)*h;
@@ -193,30 +193,30 @@ for i=1:N_sim
 
     for k=1:N-1 % intermediate stages
         yref(1) = p_ref(k);
-        ocp.set('cost_y_ref', yref, k); % last argument is the stage
+        ocp_solver.set('cost_y_ref', yref, k); % last argument is the stage
     end
     yref_e(1) = p_ref(k+1); % terminal stage
-    ocp.set('cost_y_ref_e', yref_e, N);
+    ocp_solver.set('cost_y_ref_e', yref_e, N);
 
     % solve
-    ocp.solve();
+    ocp_solver.solve();
 
     % get solution
-    u0 = ocp.get('u', 0);
-    status = ocp.get('status'); % 0 - success
+    u0 = ocp_solver.get('u', 0);
+    status = ocp_solver.get('status'); % 0 - success
 
     % set initial state for the simulation
-    sim.set('x', x0);
-    sim.set('u', u0);
+    sim_solver.set('x', x0);
+    sim_solver.set('u', u0);
 
     % simulate one step
-    sim_status = sim.solve();
+    sim_status = sim_solver.solve();
     if sim_status ~= 0
         disp(['acados integrator returned error status ', num2str(sim_status)])
     end
 
     % get simulated state
-    x_sim(:,i+1) = sim.get('xn');
+    x_sim(:,i+1) = sim_solver.get('xn');
     u_sim(:,i) = u0;
 end
 
@@ -234,8 +234,8 @@ y_ref(3, :) = v_mean;
 for i=1:length(States)
     subplot(length(States), 1, i);
     grid on; hold on;
-    plot(ts, x_sim(i,:)); 
-    plot(ts, y_ref(i, :)); 
+    plot(ts, x_sim(i,:));
+    plot(ts, y_ref(i, :));
     ylabel(States{i});
     xlabel('t [s]')
     legend('closed-loop', 'reference')

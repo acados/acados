@@ -110,12 +110,12 @@ for integrator = {'irk_gnsf', 'irk'}
     
     %% acados sim
     % create integrator
-    sim = acados_sim(sim_model, sim_opts);
+    sim_solver = acados_sim(sim_model, sim_opts);
     N_sim = 100;
 
     % set initial state
-    sim.set('x', x0);
-    sim.set('u', u);
+    sim_solver.set('x', x0);
+    sim_solver.set('u', u);
 
     x_sim = zeros(nx, N_sim+1);
     x_sim(:,1) = x0;
@@ -124,32 +124,32 @@ for integrator = {'irk_gnsf', 'irk'}
     for ii=1:N_sim
         
         % set initial state
-        sim.set('x', x_sim(:,ii));
-        sim.set('u', u);
+        sim_solver.set('x', x_sim(:,ii));
+        sim_solver.set('u', u);
     
         % set adjoint seed
-        sim.set('seed_adj', ones(nx,1));
+        sim_solver.set('seed_adj', ones(nx,1));
     
         % initialize implicit integrator
         if (strcmp(method, 'irk'))
-            sim.set('xdot', zeros(nx,1));
-            sim.set('z', zeros(nz,1));
+            sim_solver.set('xdot', zeros(nx,1));
+            sim_solver.set('z', zeros(nz,1));
         elseif (strcmp(method, 'irk_gnsf'))
-            n_out = sim.model_struct.dim_gnsf_nout;
-            sim.set('phi_guess', zeros(n_out,1));
+            n_out = sim_solver.model_struct.dim_gnsf_nout;
+            sim_solver.set('phi_guess', zeros(n_out,1));
         end
     
         % solve
-        sim.solve();
+        sim_solver.solve();
     
         % get simulated state
-        x_sim(:,ii+1) = sim.get('xn');
+        x_sim(:,ii+1) = sim_solver.get('xn');
 
     end
-	S_forw = sim.get('S_forw');
-    S_adj = sim.get('S_adj')';
-    z = sim.get('zn')'; % approximate value of algebraic variables at start of simulation
-    S_alg = sim.get('S_algebraic'); % sensitivities of algebraic variables z
+	S_forw = sim_solver.get('S_forw');
+    S_adj = sim_solver.get('S_adj')';
+    z = sim_solver.get('zn')'; % approximate value of algebraic variables at start of simulation
+    S_alg = sim_solver.get('S_algebraic'); % sensitivities of algebraic variables z
 
     required_accuracy = 1e-13;
     if i_method == 1

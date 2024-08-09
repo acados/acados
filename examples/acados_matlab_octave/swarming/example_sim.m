@@ -100,11 +100,11 @@ end
 %% Acados simulation
 
 % Create sim
-sim = acados_sim(sim_model, sim_opts);
+sim_solver = acados_sim(sim_model, sim_opts);
 % (Re)set numerical part of model
-%sim.set('T', 0.5);
-%sim.C_sim
-%sim.C_sim_ext_fun
+%sim_solver.set('T', 0.5);
+%sim_solver.C_sim
+%sim_solver.C_sim_ext_fun
 
 x_history = zeros(nb_steps+1, nx);
 x_history(1,:) = x0';
@@ -112,22 +112,22 @@ x_history(1,:) = x0';
 tic
 for k = 1:nb_steps
 	% Set initial state
-	sim.set('x', x_history(k,:));
-	sim.set('u', u);
+	sim_solver.set('x', x_history(k,:));
+	sim_solver.set('u', u);
 
 	% Solve
-	sim.solve();
+	sim_solver.solve();
 
 	% Get simulated state
-	x_history(k+1,:) = sim.get('xn');
+	x_history(k+1,:) = sim_solver.get('xn');
 end
 simulation_time = toc;
 disp(strcat('Simulation time: ',num2str(simulation_time)));
 
-xn = sim.get('xn');
-S_forw = sim.get('S_forw');
-Sx = sim.get('Sx');
-Su = sim.get('Su');
+xn = sim_solver.get('xn');
+S_forw = sim_solver.get('S_forw');
+Sx = sim_solver.get('Sx');
+Su = sim_solver.get('Su');
 
 %% Plot variables
 

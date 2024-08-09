@@ -174,39 +174,39 @@ ocp_opts.set('sim_method', sim_method);
 
 %% acados ocp
 % create ocp
-ocp = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
 % initial state
-ocp.set('constr_x0', x0);
+ocp_solver.set('constr_x0', x0);
 
 % set trajectory initialization
 x_traj_init = zeros(nx, N+1);
 u_traj_init = zeros(nu, N);
-ocp.set('init_x', x_traj_init);
-ocp.set('init_u', u_traj_init);
+ocp_solver.set('init_x', x_traj_init);
+ocp_solver.set('init_u', u_traj_init);
 
 
 % solve
 tic;
-ocp.solve();
+ocp_solver.solve();
 time_ext = toc;
 
 % get solution
-utraj = ocp.get('u');
-xtraj = ocp.get('x');
+utraj = ocp_solver.get('u');
+xtraj = ocp_solver.get('x');
 
 % get info
-status = ocp.get('status');
-sqp_iter = ocp.get('sqp_iter');
-time_tot = ocp.get('time_tot');
-time_lin = ocp.get('time_lin');
-time_reg = ocp.get('time_reg');
-time_qp_sol = ocp.get('time_qp_sol');
+status = ocp_solver.get('status');
+sqp_iter = ocp_solver.get('sqp_iter');
+time_tot = ocp_solver.get('time_tot');
+time_lin = ocp_solver.get('time_lin');
+time_reg = ocp_solver.get('time_reg');
+time_qp_sol = ocp_solver.get('time_qp_sol');
 
 fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms], time_reg = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, time_reg*1e3);
 
 % print statistics
-ocp.print('stat')
+ocp_solver.print('stat')
 
 if status~=0
     error('ocp_nlp solver returned status nonzero');
@@ -227,52 +227,3 @@ end
 % plot(1:N, utraj);
 % ylabel('u')
 % xlabel('sample')
-
-%% test templated ocp solver
-disp('testing templated solver');
-ocp.generate_c_code;
-cd c_generated_code/
-
-t_ocp = lin_mass_mex_solver;
-
-% initial state
-t_ocp.set('constr_x0', x0);
-% t_ocp.set('print_level', print_level)
-
-% set trajectory initialization
-t_ocp.set('init_x', x_traj_init);
-t_ocp.set('init_u', u_traj_init);
-
-t_ocp.solve();
-xt_traj = t_ocp.get('x');
-ut_traj = t_ocp.get('u');
-status = t_ocp.get('status');
-
-if status~=0
-    error('test_template_pendulum_ocp: solution of templated MEX failed!');
-else
-    fprintf('\ntest_template_pendulum_ocp: templated MEX success!\n');
-end
-
-error_X_mex_vs_mex_template = max(max(abs(xt_traj - xtraj)))
-error_U_mex_vs_mex_template = max(max(abs(ut_traj - utraj)))
-
-t_ocp.print('stat')
-
-
-tol_check = 1e-6;
-
-if any([error_X_mex_vs_mex_template, error_U_mex_vs_mex_template] > tol_check)
-    error(['test_template_pendulum_exact_hess: solution of templated MEX and original MEX',...
-         ' differ too much. Should be < tol = ' num2str(tol_check)]);
-end
-
-cost_native_mex = ocp.get_cost()
-cost_template_mex = t_ocp.get_cost()
-
-if any(abs(cost_native_mex - cost_template_mex) > tol_check)
-    error(['test_template_pendulum_exact_hess: cost value of templated MEX and original MEX',...
-         ' differ too much. Should be < tol = ' num2str(tol_check)]);
-end
-
-cd ..

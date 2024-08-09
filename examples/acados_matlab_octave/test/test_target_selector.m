@@ -139,8 +139,8 @@ simulink_opts.outputs.sqp_iter = 0;
 simulink_opts.outputs.CPU_time = 0;
 simulink_opts.outputs.x1 = 0;
 
-%% create ocp solver
-ocp = acados_ocp(ocp_model, ocp_opts, simulink_opts);
+% create solver
+ocp_solver = acados_ocp(ocp_model, ocp_opts, simulink_opts);
 
 % initialize
 % 2 working initializations
@@ -148,17 +148,17 @@ eps = 1e-1;
 % x_traj_init = repmat(x_ipopt, 1, 2) + eps * ones(nx, N+1);
 x_traj_init = repmat(StatesAndInputs0, 1, 2);
 
-%% call ocp solver
 % set trajectory initialization
-ocp.set('init_x', x_traj_init);
-% ocp.set('init_pi', zeros(nx, N))
+ocp_solver.set('init_x', x_traj_init);
+% ocp_solver.set('init_pi', zeros(nx, N))
 
-ocp.solve();
-disp(['acados ocp solver returned status ', ocp.get('status')]); % 0 - success
-ocp.print('stat')
+% call ocp solver
+ocp_solver.solve();
+disp(['acados ocp solver returned status ', ocp_solver.get('status')]); % 0 - success
+ocp_solver.print('stat')
 
 % get solution
-x_acados = ocp.get('x', 0);
+x_acados = ocp_solver.get('x', 0);
 
 % [x_acados, x_ipopt]
 diff_acados_ipopt = norm(x_acados-x_ipopt)

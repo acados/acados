@@ -42,7 +42,7 @@ nu = 3;
 
 
 %% create ocp solver
-ocp = acados_ocp(ocp_model, ocp_opts, simulink_opts);
+ocp_solver = acados_ocp(ocp_model, ocp_opts, simulink_opts);
 
 % solver initial guess
 x_traj_init = rand(nx, N+1);
@@ -51,21 +51,21 @@ pi_init = rand(nx, N);
 
 %% call ocp solver
 % update initial state
-ocp.set('constr_x0', x0);
+ocp_solver.set('constr_x0', x0);
 
 % set trajectory initialization
-ocp.set('init_x', x_traj_init); % states
-ocp.set('init_u', u_traj_init); % inputs
-ocp.set('init_pi', pi_init); % multipliers for dynamics equality constraints
+ocp_solver.set('init_x', x_traj_init); % states
+ocp_solver.set('init_u', u_traj_init); % inputs
+ocp_solver.set('init_pi', pi_init); % multipliers for dynamics equality constraints
 
 % solve
-ocp.solve();
+ocp_solver.solve();
 % get solution
-utraj = ocp.get('u');
-xtraj = ocp.get('x');
+utraj = ocp_solver.get('u');
+xtraj = ocp_solver.get('x');
 
-status = ocp.get('status'); % 0 - success
-ocp.print('stat')
+status = ocp_solver.get('status'); % 0 - success
+ocp_solver.print('stat')
 
 %% simulink test
 cd c_generated_code

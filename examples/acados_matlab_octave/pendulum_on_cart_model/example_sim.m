@@ -105,11 +105,11 @@ end
 
 %% acados sim
 % create sim
-sim = acados_sim(sim_model, sim_opts);
+sim_solver = acados_sim(sim_model, sim_opts);
 % (re)set numerical part of model
-%sim.set('T', 0.5);
-%sim.C_sim
-%sim.C_sim_ext_fun
+%sim_solver.set('T', 0.5);
+%sim_solver.C_sim
+%sim_solver.C_sim_ext_fun
 
 
 N_sim = 100;
@@ -121,35 +121,35 @@ tic
 for ii=1:N_sim
 	
 	% set initial state
-	sim.set('x', x_sim(:,ii));
-	sim.set('u', u);
+	sim_solver.set('x', x_sim(:,ii));
+	sim_solver.set('u', u);
 
     % initialize implicit integrator
     if (strcmp(method, 'irk'))
-        sim.set('xdot', zeros(nx,1));
+        sim_solver.set('xdot', zeros(nx,1));
     elseif (strcmp(method, 'irk_gnsf'))
-        n_out = sim.model_struct.dim_gnsf_nout;
-        sim.set('phi_guess', zeros(n_out,1));
+        n_out = sim_solver.model_struct.dim_gnsf_nout;
+        sim_solver.set('phi_guess', zeros(n_out,1));
     end
 
 	% solve
-	sim.solve();
+	sim_solver.solve();
 
 
 	% get simulated state
-	x_sim(:,ii+1) = sim.get('xn');
+	x_sim(:,ii+1) = sim_solver.get('xn');
 
 end
 simulation_time = toc
 
 
 % xn
-xn = sim.get('xn');
+xn = sim_solver.get('xn');
 xn
 % S_forw
-S_forw = sim.get('S_forw')
-Sx = sim.get('Sx');
-Su = sim.get('Su');
+S_forw = sim_solver.get('S_forw')
+Sx = sim_solver.get('Sx');
+Su = sim_solver.get('Su');
 
 %x_sim
 
