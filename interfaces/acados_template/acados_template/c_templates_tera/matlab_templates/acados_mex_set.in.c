@@ -54,10 +54,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     char buffer [500]; // for error messages
 
     /* RHS */
-    int min_nrhs = 5;
+    int min_nrhs = 3;
 
     // C ocp
-    const mxArray *C_ocp = prhs[2];
+    const mxArray *C_ocp = prhs[0];
     // capsule
     ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "capsule" ) );
     {{ model.name }}_solver_capsule *capsule = ({{ model.name }}_solver_capsule *) ptr[0];
@@ -84,14 +84,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     ocp_nlp_solver *solver = (ocp_nlp_solver *) ptr[0];
 
     // field
-    char *field = mxArrayToString( prhs[3] );
+    char *field = mxArrayToString( prhs[1] );
     // value
-    double *value = mxGetPr( prhs[4] );
+    double *value = mxGetPr( prhs[2] );
 
     // for checks
-    int matlab_size = (int) mxGetNumberOfElements( prhs[4] );
-    int nrow = (int) mxGetM( prhs[4] );
-    int ncol = (int) mxGetN( prhs[4] );
+    int matlab_size = (int) mxGetNumberOfElements( prhs[2] );
+    int nrow = (int) mxGetM( prhs[2] );
+    int ncol = (int) mxGetN( prhs[2] );
 
     int N = dims->N;
     int nu = dims->nu[0];
@@ -106,7 +106,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (nrhs==min_nrhs+1)
     {
-        s0 = mxGetScalar( prhs[5] );
+        s0 = mxGetScalar( prhs[3] );
         if (s0 > N)
         {
             sprintf(buffer, "ocp_set: N < specified stage = %d\n", s0);
@@ -561,7 +561,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
         else if (nrhs==min_nrhs+1) // one stage
         {
-            int stage = mxGetScalar( prhs[5] );
+            int stage = mxGetScalar( prhs[3] );
             {{ model.name }}_acados_update_params(capsule, stage, value, matlab_size);
         }
     }
@@ -583,7 +583,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
         else if (nrhs==min_nrhs+1) // one stage
         {
-            int stage = mxGetScalar( prhs[5] );
+            int stage = mxGetScalar( prhs[3] );
                 {{ model.name }}_acados_update_params_sparse(capsule, stage, idx_tmp, value+nrow, nrow);
         }
 {% endif %}
