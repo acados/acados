@@ -210,7 +210,7 @@ ocp_opts.opts_struct
 %% Acados ocp
 
 % Create ocp
-ocp = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
 % Set trajectory initialization
 step_mat = repmat((0:1:nb_steps),3*N,1);
@@ -218,37 +218,37 @@ pos0_traj = repmat(pos0,1,nb_steps+1) + v_ref*dt*repmat(u_ref,N,nb_steps+1).*ste
 x_traj_init = [pos0_traj; ...
     v_ref*repmat(u_ref,N,nb_steps+1)];
 u_traj_init = zeros(nu, nb_steps);
-ocp.set('init_x', x_traj_init);
-ocp.set('init_u', u_traj_init);
+ocp_solver.set('init_x', x_traj_init);
+ocp_solver.set('init_u', u_traj_init);
 
 % Solve
 tic;
-ocp.solve();
+ocp_solver.solve();
 simulation_time = toc;
 disp(strcat('Simulation time: ',num2str(simulation_time)));
 
 %x0(1) = 1.5;
-%ocp.set('constr_x0', x0);
-%ocp.set('cost_y_ref', 1);
+%ocp_solver.set('constr_x0', x0);
+%ocp_solver.set('cost_y_ref', 1);
 % If not set, the trajectory is initialized with the previous solution
 
 % Get solution
-u = ocp.get('u');
-x = ocp.get('x');
+u = ocp_solver.get('u');
+x = ocp_solver.get('x');
 
 %% Statistics
 
-status = ocp.get('status');
-sqp_iter = ocp.get('sqp_iter');
-time_tot = ocp.get('time_tot');
-time_lin = ocp.get('time_lin');
-time_reg = ocp.get('time_reg');
-time_qp_sol = ocp.get('time_qp_sol');
+status = ocp_solver.get('status');
+sqp_iter = ocp_solver.get('sqp_iter');
+time_tot = ocp_solver.get('time_tot');
+time_lin = ocp_solver.get('time_lin');
+time_reg = ocp_solver.get('time_reg');
+time_qp_sol = ocp_solver.get('time_qp_sol');
 
 fprintf('\nstatus = %d, sqp_iter = %d,  time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms], time_reg = %f [ms])\n', status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, time_reg*1e3);
 % time_ext = %f [ms], time_ext*1e3,
 
-ocp.print('stat');
+ocp_solver.print('stat');
 
 %% Extract trajectories
 
@@ -287,7 +287,7 @@ ylabel('Control inputs [m/s^2]','fontsize',fontsize);
 
 if (strcmp(nlp_solver, 'sqp'))
 	figure;
-    stat = ocp.get('stat');
+    stat = ocp_solver.get('stat');
 	plot([0: sqp_iter], log10(stat(:,2)), 'r-x');
 	hold on
 	plot([0: sqp_iter], log10(stat(:,3)), 'b-x');

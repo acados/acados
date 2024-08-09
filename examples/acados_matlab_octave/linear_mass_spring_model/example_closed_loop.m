@@ -170,7 +170,7 @@ ocp_opts.opts_struct
 
 %% acados ocp
 % create ocp
-ocp = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
 %% acados sim model
 sim_model = acados_sim_model();
@@ -223,19 +223,19 @@ tic;
 for ii=1:n_sim
 
 	% set x0
-	ocp.set('constr_x0', x_sim(:,ii));
+	ocp_solver.set('constr_x0', x_sim(:,ii));
 
 	% set trajectory initialization
-	ocp.set('init_x', x_traj_init);
-	ocp.set('init_u', u_traj_init);
+	ocp_solver.set('init_x', x_traj_init);
+	ocp_solver.set('init_u', u_traj_init);
 
 	% solve OCP
-	ocp.solve();
+	ocp_solver.solve();
 
 	% get solution
-	%x_traj = ocp.get('x');
-	%u_traj = ocp.get('u');
-	u_sim(:,ii) = ocp.get('u', 0);
+	%x_traj = ocp_solver.get('x');
+	%u_traj = ocp_solver.get('u');
+	u_sim(:,ii) = ocp_solver.get('u', 0);
 
 	% set initial state of sim
 	sim.set('x', x_sim(:,ii));
@@ -264,7 +264,7 @@ ylabel('u')
 xlabel('sample')
 
 
-status = ocp.get('status');
+status = ocp_solver.get('status');
 
 if status==0
 	fprintf('\nsuccess!\n\n');

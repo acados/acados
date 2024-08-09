@@ -201,7 +201,7 @@ ocp_opts.opts_struct
 %% Acados ocp
 
 % Create ocp
-ocp = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
 %% Acados simulation model
 
@@ -278,36 +278,36 @@ tic;
 for k = 1:nb_steps_sim
 
 	% Set initial condition x0
-	ocp.set('constr_x0', x_history(:,k));
-%     ocp.set('constr_expr_h', model.expr_h);
-%     ocp.set('constr_lh', lh);
-%     ocp.set('constr_uh', uh);
+	ocp_solver.set('constr_x0', x_history(:,k));
+%     ocp_solver.set('constr_expr_h', model.expr_h);
+%     ocp_solver.set('constr_lh', lh);
+%     ocp_solver.set('constr_uh', uh);
 
 	% Set trajectory initialization (if not, set internally using previous solution)
-	ocp.set('init_x', x_traj_init);
-	ocp.set('init_u', u_traj_init);
+	ocp_solver.set('init_x', x_traj_init);
+	ocp_solver.set('init_u', u_traj_init);
 
 	% solve OCP
-	ocp.solve();
+	ocp_solver.solve();
 
-    status(k) = ocp.get('status');
-    sqp_iter(k) = ocp.get('sqp_iter');
-    time_tot(k) = ocp.get('time_tot');
-    time_lin(k) = ocp.get('time_lin');
-    time_qp_sol(k) = ocp.get('time_qp_sol');
+    status(k) = ocp_solver.get('status');
+    sqp_iter(k) = ocp_solver.get('sqp_iter');
+    time_tot(k) = ocp_solver.get('time_tot');
+    time_lin(k) = ocp_solver.get('time_lin');
+    time_qp_sol(k) = ocp_solver.get('time_qp_sol');
 
     fprintf('\nstatus = %d, sqp_iter = %d, time_tot = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n', status(k), sqp_iter(k), time_tot(k)*1e3, time_lin(k)*1e3, time_qp_sol(k)*1e3);
 
 	% Get solution for initialization of next NLP
-	x_traj = ocp.get('x');
-	u_traj = ocp.get('u');
+	x_traj = ocp_solver.get('x');
+	u_traj = ocp_solver.get('u');
     
 	% Shift trajectory for initialization
 	x_traj_init = [x_traj(:,2:end), x_traj(:,end)];
 	u_traj_init = [u_traj(:,2:end), u_traj(:,end)];
 
 	% Get solution for simulation
-	u_history(:,k) = ocp.get('u', 0);
+	u_history(:,k) = ocp_solver.get('u', 0);
 
 	% Set initial state of simulation
 	sim.set('x', x_history(:,k));

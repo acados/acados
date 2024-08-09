@@ -229,7 +229,7 @@ ocp_opts.set('sim_method_newton_iter', ocp_sim_method_newton_iter);
 
 
 %% acados ocp
-ocp = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
 
 %% acados sim model
@@ -295,7 +295,7 @@ pi_traj_init = zeros(nx, ocp_N);
 z_traj_init = 0*ones(nz, ocp_N);
 xdot_traj_init = 0*ones(nx, ocp_N);
 if strcmp(ocp_sim_method, 'irk_gnsf')
-    gnsf_init_traj = zeros(ocp.model_struct.dim_gnsf_nout, ocp_N);
+    gnsf_init_traj = zeros(ocp_solver.model_struct.dim_gnsf_nout, ocp_N);
 end
 
 sqp_iter = zeros(N_sim,1);
@@ -305,35 +305,35 @@ tic
 for ii=1:N_sim
 
 	% set initial state
-    ocp.set('constr_x0', x_sim(:,ii));
+    ocp_solver.set('constr_x0', x_sim(:,ii));
 	% set trajectory initialization (if not, set internally using previous solution)
-	ocp.set('init_x', x_traj_init);
-	ocp.set('init_u', u_traj_init);
-	ocp.set('init_pi', pi_traj_init);
+	ocp_solver.set('init_x', x_traj_init);
+	ocp_solver.set('init_u', u_traj_init);
+	ocp_solver.set('init_pi', pi_traj_init);
     if ii == 1
         if strcmp(ocp_sim_method, 'irk')
-        	ocp.set('init_z', z_traj_init);
-        	ocp.set('init_xdot', xdot_traj_init);
+        	ocp_solver.set('init_z', z_traj_init);
+        	ocp_solver.set('init_xdot', xdot_traj_init);
         elseif strcmp(ocp_sim_method, 'irk_gnsf')
-            ocp.set('init_gnsf_phi', gnsf_init_traj);
+            ocp_solver.set('init_gnsf_phi', gnsf_init_traj);
         end
     end
 
-	ocp.solve();
-%     ocp.print('stat')
+	ocp_solver.solve();
+%     ocp_solver.print('stat')
 
-    status = ocp.get('status');
-    sqp_iter(ii) = ocp.get('sqp_iter');
-    sqp_time(ii) = ocp.get('time_tot');
+    status = ocp_solver.get('status');
+    sqp_iter(ii) = ocp_solver.get('sqp_iter');
+    sqp_time(ii) = ocp_solver.get('time_tot');
     if status ~= 0
         error('ocp solver returned status nonzero');
     end
 
 	% get solution for initialization of next NLP
-	x_traj = ocp.get('x');
-	u_traj = ocp.get('u');
-	pi_traj = ocp.get('pi');
-	z_traj = ocp.get('z');
+	x_traj = ocp_solver.get('x');
+	u_traj = ocp_solver.get('u');
+	pi_traj = ocp_solver.get('pi');
+	z_traj = ocp_solver.get('z');
 
 	% shift trajectory for initialization
 	x_traj_init = [x_traj(:,2:end), x_traj(:,end)];
@@ -341,7 +341,7 @@ for ii=1:N_sim
 	pi_traj_init = [pi_traj(:,2:end), pi_traj(:,end)];
 	z_traj_init = [z_traj(:,2:end), z_traj(:,end)];
 
-    u_sim(:,ii) = ocp.get('u', 0); % get control input
+    u_sim(:,ii) = ocp_solver.get('u', 0); % get control input
     % initialize implicit integrator
     if (strcmp(sim_method, 'irk'))
         sim.set('xdot', xdot0);

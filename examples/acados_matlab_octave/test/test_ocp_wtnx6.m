@@ -298,9 +298,9 @@ ocp_opts.opts_struct;
 
 %% acados ocp
 % create ocp
-ocp = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = acados_ocp(ocp_model, ocp_opts);
 %ocp
-%ocp.C_ocp
+%ocp_solver.C_ocp
 
 %% acados sim model
 sim_model = acados_sim_model();
@@ -373,33 +373,33 @@ for ii=1:n_sim
     tic
 
     % set x0
-    ocp.set('constr_x0', x_sim(:,ii));
+    ocp_solver.set('constr_x0', x_sim(:,ii));
     % set parameter
     for jj=0:ocp_N-1
-        ocp.set('p', wind0_ref(:,ii+jj), jj);
+        ocp_solver.set('p', wind0_ref(:,ii+jj), jj);
     end
 
     % set reference (different at each stage)
     for jj=0:ocp_N-1
-        ocp.set('cost_y_ref', y_ref(:,ii+jj), jj);
+        ocp_solver.set('cost_y_ref', y_ref(:,ii+jj), jj);
     end
-    ocp.set('cost_y_ref_e', y_ref(1:ny_e,ii+ocp_N));
+    ocp_solver.set('cost_y_ref_e', y_ref(1:ny_e,ii+ocp_N));
 
     % set trajectory initialization (if not, set internally using previous solution)
-    ocp.set('init_x', x_traj_init);
-    ocp.set('init_u', u_traj_init);
-    ocp.set('init_pi', pi_traj_init);
+    ocp_solver.set('init_x', x_traj_init);
+    ocp_solver.set('init_u', u_traj_init);
+    ocp_solver.set('init_pi', pi_traj_init);
 
     % solve
-    ocp.solve();
+    ocp_solver.solve();
 
     % get solution
-    x = ocp.get('x');
-    u = ocp.get('u');
-    pi = ocp.get('pi');
+    x = ocp_solver.get('x');
+    u = ocp_solver.get('u');
+    pi = ocp_solver.get('pi');
 
     % store first input
-    u_sim(:,ii) = ocp.get('u', 0);
+    u_sim(:,ii) = ocp_solver.get('u', 0);
 
     % set initial state of sim
     sim.set('x', x_sim(:,ii));
@@ -426,17 +426,17 @@ for ii=1:n_sim
 
     electrical_power = 0.944*97/100*x(1,1)*x(6,1);
 
-    status = ocp.get('status');
-    sqp_iter = ocp.get('sqp_iter');
-    time_tot(ii) = ocp.get('time_tot');
-    time_lin(ii) = ocp.get('time_lin');
-    time_qp_sol(ii) = ocp.get('time_qp_sol');
-    sqp_stats = ocp.get('stat');
+    status = ocp_solver.get('status');
+    sqp_iter = ocp_solver.get('sqp_iter');
+    time_tot(ii) = ocp_solver.get('time_tot');
+    time_lin(ii) = ocp_solver.get('time_lin');
+    time_qp_sol(ii) = ocp_solver.get('time_qp_sol');
+    sqp_stats = ocp_solver.get('stat');
     qp_iter = sqp_stats(:,7);
 
     sqp_iter_sim(ii) = sqp_iter;
     if status ~= 0
-        ocp.print()
+        ocp_solver.print()
         error(['ocp_nlp solver returned status ', num2str(status), '!= 0 in simulation instance ', num2str(ii)]);
     end
 
@@ -444,26 +444,26 @@ for ii=1:n_sim
             status, sqp_iter, sum(qp_iter), time_ext(ii)*1e3, time_tot(ii)*1e3, time_lin(ii)*1e3, time_qp_sol(ii)*1e3, electrical_power);
 
     if 0
-        ocp.print('stat')
+        ocp_solver.print('stat')
     end
 
 end
 
 % test setter
-ocp.set('cost_z', ones(2,1), 1)
-ocp.set('cost_Z', ones(2,1), 1)
-ocp.set('cost_zl', ones(2,1), N-1)
+ocp_solver.set('cost_z', ones(2,1), 1)
+ocp_solver.set('cost_Z', ones(2,1), 1)
+ocp_solver.set('cost_zl', ones(2,1), N-1)
 
 % get slack values
 for i = 0:N-1
-    sl = ocp.get('sl', i);
-    su = ocp.get('su', i);
+    sl = ocp_solver.get('sl', i);
+    su = ocp_solver.get('su', i);
     % test setters
-    ocp.set('sl', sl, i);
-    ocp.set('su', su, i);
+    ocp_solver.set('sl', sl, i);
+    ocp_solver.set('su', su, i);
 end
-sl = ocp.get('sl', N);
-su = ocp.get('su', N);
+sl = ocp_solver.get('sl', N);
+su = ocp_solver.get('su', N);
 
 
 

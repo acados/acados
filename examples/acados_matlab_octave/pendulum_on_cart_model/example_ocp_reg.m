@@ -239,11 +239,11 @@ end
 
 %% acados ocp
 % create ocp
-ocp = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = acados_ocp(ocp_model, ocp_opts);
 % ocp
-% disp('ocp.C_ocp');
-% disp(ocp.C_ocp);
-%ocp.model_struct
+% disp('ocp_solver.C_ocp');
+% disp(ocp_solver.C_ocp);
+%ocp_solver.model_struct
 
 
 % set trajectory initialization
@@ -254,35 +254,35 @@ x_traj_init = [linspace(0, 0, N+1); linspace(pi, 0, N+1); linspace(0, 0, N+1); l
 u_traj_init = zeros(nu, N);
 
 % if not set, the trajectory is initialized with the previous solution
-ocp.set('init_x', x_traj_init);
-ocp.set('init_u', u_traj_init);
+ocp_solver.set('init_x', x_traj_init);
+ocp_solver.set('init_u', u_traj_init);
 
 % change number of sqp iterations
-%ocp.set('nlp_solver_max_iter', 20);
+%ocp_solver.set('nlp_solver_max_iter', 20);
 
 % solve
 tic;
 
 if 0
     % solve ocp
-    ocp.solve();
+    ocp_solver.solve();
 else
 
     % do one step at the time
-    ocp.set('nlp_solver_max_iter', 1);
+    ocp_solver.set('nlp_solver_max_iter', 1);
 
     for ii=1:nlp_solver_max_iter
 
         disp(['iteration number ', num2str(ii)])
 
         % solve the system using 1 SQP iteration
-        ocp.solve();
+        ocp_solver.solve();
 
         % print 1-iteration stat
-        ocp.print('stat');
+        ocp_solver.print('stat');
 
         % check stability of qp
-        qp_A = ocp.get('qp_A');
+        qp_A = ocp_solver.get('qp_A');
         qp_A_eig_max = 0;
         for jj=1:length(qp_A)
             tmp_A = qp_A{jj};
@@ -295,7 +295,7 @@ else
         fprintf('A eig max %e\n', qp_A_eig_max);
 
         % compute conditioning number and eigenvalues of hessian of (partial) cond qp
-        qp_cond_H = ocp.get('qp_solver_cond_H');
+        qp_cond_H = ocp_solver.get('qp_solver_cond_H');
         if iscell(qp_cond_H)
 
             for jj=1:length(qp_cond_H)
@@ -328,7 +328,7 @@ else
         end
 
 		% check residuals and terminate if tol is reached
-		residuals = ocp.get('residuals');
+		residuals = ocp_solver.get('residuals');
 		if residuals(1) < nlp_solver_tol_stat && residuals(2) < nlp_solver_tol_eq && residuals(3) < nlp_solver_tol_ineq && residuals(4) < nlp_solver_tol_comp
 			break
 		end
@@ -338,20 +338,20 @@ end
 time_ext = toc;
 
 % get solution
-u = ocp.get('u');
-x = ocp.get('x');
+u = ocp_solver.get('u');
+x = ocp_solver.get('x');
 
 %% evaluation
-status = ocp.get('status');
-sqp_iter = ocp.get('sqp_iter');
-time_tot = ocp.get('time_tot');
-time_lin = ocp.get('time_lin');
-time_reg = ocp.get('time_reg');
-time_qp_sol = ocp.get('time_qp_sol');
+status = ocp_solver.get('status');
+sqp_iter = ocp_solver.get('sqp_iter');
+time_tot = ocp_solver.get('time_tot');
+time_lin = ocp_solver.get('time_lin');
+time_reg = ocp_solver.get('time_reg');
+time_qp_sol = ocp_solver.get('time_qp_sol');
 
 fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms], time_reg = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, time_reg*1e3);
 
-ocp.print('stat');
+ocp_solver.print('stat');
 
 
 %% figures
@@ -374,7 +374,7 @@ legend('F');
 
 
 %% plot residual
-% stat = ocp.get('stat');
+% stat = ocp_solver.get('stat');
 % if (strcmp(nlp_solver, 'sqp'))
 %     figure;
 %     plot([0: size(stat,1)-1], log10(stat(:,2)), 'r-x');

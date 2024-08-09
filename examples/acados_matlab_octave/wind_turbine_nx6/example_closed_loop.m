@@ -297,7 +297,7 @@ ocp_opts.opts_struct
 
 %% acados ocp
 % create ocp
-ocp = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
 %% acados sim model
 sim_model = acados_sim_model();
@@ -367,35 +367,35 @@ for ii=1:n_sim
     tic
 
     % set x0
-    ocp.set('constr_x0', x_sim(:,ii));
+    ocp_solver.set('constr_x0', x_sim(:,ii));
     % set parameter
     for jj=0:ocp_N-1
-        ocp.set('p', wind0_ref(:,ii+jj), jj);
+        ocp_solver.set('p', wind0_ref(:,ii+jj), jj);
     end
 
     % set reference (different at each stage)
     for jj=0:ocp_N-1
-        ocp.set('cost_y_ref', y_ref(:,ii+jj), jj);
+        ocp_solver.set('cost_y_ref', y_ref(:,ii+jj), jj);
     end
-    ocp.set('cost_y_ref_e', y_ref(1:ny_e,ii+ocp_N));
+    ocp_solver.set('cost_y_ref_e', y_ref(1:ny_e,ii+ocp_N));
 
     % set trajectory initialization (if not, set internally using previous solution)
-    ocp.set('init_x', x_traj_init);
-    ocp.set('init_u', u_traj_init);
-    ocp.set('init_pi', pi_traj_init);
+    ocp_solver.set('init_x', x_traj_init);
+    ocp_solver.set('init_u', u_traj_init);
+    ocp_solver.set('init_pi', pi_traj_init);
 
     % solve
-    ocp.solve();
+    ocp_solver.solve();
 
     % get solution
-    x = ocp.get('x');
-    u = ocp.get('u');
-    pi = ocp.get('pi');
+    x = ocp_solver.get('x');
+    u = ocp_solver.get('u');
+    pi = ocp_solver.get('pi');
 
-%ocp.print('stat');
+%ocp_solver.print('stat');
 %return
     % store first input
-    u_sim(:,ii) = ocp.get('u', 0);
+    u_sim(:,ii) = ocp_solver.get('u', 0);
 
     % set initial state of sim
     sim.set('x', x_sim(:,ii));
@@ -440,11 +440,11 @@ for ii=1:n_sim
 
     electrical_power = 0.944*97/100*x(1,1)*x(6,1);
 
-    status = ocp.get('status');
-    sqp_iter = ocp.get('sqp_iter');
-    time_tot = ocp.get('time_tot');
-    time_lin = ocp.get('time_lin');
-    time_qp_sol = ocp.get('time_qp_sol');
+    status = ocp_solver.get('status');
+    sqp_iter = ocp_solver.get('sqp_iter');
+    time_tot = ocp_solver.get('time_tot');
+    time_lin = ocp_solver.get('time_lin');
+    time_qp_sol = ocp_solver.get('time_qp_sol');
 
     sqp_iter_sim(ii) = sqp_iter;
 
@@ -452,7 +452,7 @@ for ii=1:n_sim
              status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, electrical_power);
 
     if 0
-        ocp.print('stat')
+        ocp_solver.print('stat')
     end
 
 end

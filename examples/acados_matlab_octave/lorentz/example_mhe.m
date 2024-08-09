@@ -152,16 +152,16 @@ yref_0(1:ny) = y_sim(:, 1);
 yref_0(ny+nu+1:end) = x0;
 
 estimator.set('cost_y_ref', yref_0, 0);
-t_ocp.set('cost_y_ref', yref_0, 0);
+t_ocp_solver.set('cost_y_ref', yref_0, 0);
 
 for i=1:model.N-1
     yref(1:ny) = y_sim(:, i+1);
     estimator.set('cost_y_ref', yref, i);
-    t_ocp.set('cost_y_ref', yref, i);
+    t_ocp_solver.set('cost_y_ref', yref, i);
 end
 
-t_ocp.solve()
-xt_traj = t_ocp.get('x');
+t_ocp_solver.solve()
+xt_traj = t_ocp_solver.get('x');
 
 estimator.solve()
 x_traj = estimator.get('x');
@@ -169,8 +169,8 @@ x_traj = estimator.get('x');
 max_diff = max(max(abs(xt_traj - x_traj)));
 disp(['difference ' num2str(max_diff)]);
 
-t_ocp.print('stat')
-cost_val_t_ocp = t_ocp.get_cost();
+t_ocp_solver.print('stat')
+cost_val_t_ocp = t_ocp_solver.get_cost();
 clear t_ocp
 cd ..
 

@@ -131,11 +131,11 @@ ocp_opts.set('globalization', 'merit_backtracking') % turns on globalization
 % ... see ocp_opts.opts_struct to see what other fields can be set
 
 %% create ocp solver
-ocp = acados_ocp(ocp_model, ocp_opts);
+ocp_solver = acados_ocp(ocp_model, ocp_opts);
 
 % set parameter for all stages
 for i = 0:N
-    ocp.set('p', 1.);
+    ocp_solver.set('p', 1.);
 end
 
 %% plant: create acados integrator
@@ -185,7 +185,7 @@ yref_e(3) = v_mean;
 for i=1:N_sim
     % update initial state
     x0 = x_sim(:,i);
-    ocp.set('constr_x0', x0);
+    ocp_solver.set('constr_x0', x0);
 
     % compute reference position on the nonuniform grid
     t = (i-1)*h;
@@ -193,17 +193,17 @@ for i=1:N_sim
 
     for k=1:N-1 % intermediate stages
         yref(1) = p_ref(k);
-        ocp.set('cost_y_ref', yref, k); % last argument is the stage
+        ocp_solver.set('cost_y_ref', yref, k); % last argument is the stage
     end
     yref_e(1) = p_ref(k+1); % terminal stage
-    ocp.set('cost_y_ref_e', yref_e, N);
+    ocp_solver.set('cost_y_ref_e', yref_e, N);
 
     % solve
-    ocp.solve();
+    ocp_solver.solve();
 
     % get solution
-    u0 = ocp.get('u', 0);
-    status = ocp.get('status'); % 0 - success
+    u0 = ocp_solver.get('u', 0);
+    status = ocp_solver.get('status'); % 0 - success
 
     % set initial state for the simulation
     sim.set('x', x0);
@@ -234,8 +234,8 @@ y_ref(3, :) = v_mean;
 for i=1:length(States)
     subplot(length(States), 1, i);
     grid on; hold on;
-    plot(ts, x_sim(i,:)); 
-    plot(ts, y_ref(i, :)); 
+    plot(ts, x_sim(i,:));
+    plot(ts, y_ref(i, :));
     ylabel(States{i});
     xlabel('t [s]')
     legend('closed-loop', 'reference')
