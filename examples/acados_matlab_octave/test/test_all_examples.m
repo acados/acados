@@ -92,6 +92,9 @@ for idx = 1:length(targets)
     [dir, file, extension] = fileparts(targets{idx});
 
     testpath = getenv("TEST_DIR");
+    % clear variables that might contain CasADi objects to avoid SWIG
+    % warnings
+    clear ocp_solver ocp ocp_model model sim sim_model sim_solver params
     save(strcat(testpath, "/test_workspace.mat"))
     setenv("LD_RUN_PATH", strcat(testpath, "/", dir, "/c_generated_code"))
 
