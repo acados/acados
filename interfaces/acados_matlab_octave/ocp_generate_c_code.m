@@ -68,7 +68,7 @@ function ocp_generate_c_code(ocp)
 
     % cost
     cost_types = {cost.cost_type_0, cost.cost_type, cost.cost_type_e};
-    cost_ext_fun_types = {cost.ext_fun_type_0, cost.ext_fun_type, cost.ext_fun_type_e};
+    cost_ext_fun_types = {cost.cost_ext_fun_type_0, cost.cost_ext_fun_type, cost.cost_ext_fun_type_e};
     cost_dir = fullfile(pwd, 'c_generated_code', [ocp.name '_cost']);
 
     for i = 1:3

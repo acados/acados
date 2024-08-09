@@ -72,9 +72,9 @@ class AcadosOcpCost:
         self.__Zu_0 = None
         self.__zl_0 = None
         self.__zu_0 = None
-        self.__ext_fun_type_0 = 'casadi'
-        self.__source_ext_cost_0 = None # TODO add property, only required for generic
-        self.__function_ext_cost_0 = None # TODO add property, only required for generic
+        self.__cost_ext_fun_type_0 = 'casadi'
+        self.__cost_source_ext_cost_0 = None # TODO add property, only required for generic
+        self.__cost_function_ext_cost_0 = None # TODO add property, only required for generic
 
         # Lagrange term
         self.__cost_type   = 'LINEAR_LS'  # cost type
@@ -87,9 +87,11 @@ class AcadosOcpCost:
         self.__Zu          = np.array([])
         self.__zl          = np.array([])
         self.__zu          = np.array([])
-        self.__ext_fun_type = 'casadi'
-        self.__source_ext_cost = None # TODO add property, only required for generic
-        self.__function_ext_cost = None # TODO add property, only required for generic
+
+        # TODO: check how generic works in templates ?!
+        self.__cost_ext_fun_type = 'casadi'
+        self.__cost_source_ext_cost = None # TODO add property, only required for generic
+        self.__cost_function_ext_cost = None # TODO add property, only required for generic
 
         # Mayer term
         self.__cost_type_e = 'LINEAR_LS'
@@ -100,9 +102,9 @@ class AcadosOcpCost:
         self.__Zu_e        = np.array([])
         self.__zl_e        = np.array([])
         self.__zu_e        = np.array([])
-        self.__ext_fun_type_e = 'casadi'
-        self.__source_ext_cost_e = None # TODO add property, only required for generic
-        self.__function_ext_cost_e = None # TODO add property, only required for generic
+        self.__cost_ext_fun_type_e = 'casadi'
+        self.__cost_source_ext_cost_e = None # TODO add property, only required for generic
+        self.__cost_function_ext_cost_e = None # TODO add property, only required for generic
 
 
     # initial stage
