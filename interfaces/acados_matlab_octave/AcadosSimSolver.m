@@ -46,8 +46,6 @@ classdef AcadosSimSolver < handle
                 output_dir = fullfile(pwd, 'build');
             end
 
-            % TODO where to get these from?
-            gnsf_transcription_opts = struct();
 
             % check model consistency
             obj.sim = sim;
@@ -64,6 +62,8 @@ classdef AcadosSimSolver < handle
 
             % detect GNSF structure
             if strcmp(obj.sim.sim_options.integrator_type, 'GNSF')
+                % TODO: interface these options
+                gnsf_transcription_opts = struct();
                 if obj.sim.dims.gnsf_nx1 + obj.sim.dims.gnsf_nx2 ~= obj.sim.dims.nx
                     detect_gnsf_structure(obj.sim.model, obj.sim.dims, gnsf_transcription_opts);
                 else

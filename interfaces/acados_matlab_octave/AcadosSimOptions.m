@@ -27,45 +27,46 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 
-%
 
-classdef AcadosSim < handle
 
+classdef AcadosSimOptions < handle
     properties
-        % file structure
-        acados_include_path
-        acados_lib_path
-        shared_lib_ext
-        json_file
-        cython_include_dirs
-        code_export_directory
-        % struct / object
-        dims
-        model
-        sim_options
-        % plain data
-        parameter_values
-        problem_class
+        integrator_type
+        collocation_type
+        Tsim
+        sim_method_num_stages
+        sim_method_num_steps
+        sim_method_newton_iter
+        sim_method_newton_tol
+        sens_forw
+        sens_adj
+        sens_algebraic
+        sens_hess
+        output_z
+        sim_method_jac_reuse
+        ext_fun_compile_flags
+        num_threads_in_batch_solve
+        compile_interface
+
     end
-
     methods
-        function obj = AcadosSim()
-            % most fields are initialized as a placeholder
-            obj.acados_include_path = [];
-            obj.acados_lib_path = [];
-            obj.shared_lib_ext = [];
-            obj.json_file = [];
-            obj.cython_include_dirs = [];
-            obj.code_export_directory = [];
-
-            obj.dims = AcadosSimDims();
-            obj.model = AcadosModel();
-
-            % TODO move this to class AcadosSimOptions
-            obj.sim_options = AcadosSimOptions();
-
-            obj.parameter_values = [];
-            obj.problem_class = 'SIM';
+        function obj = AcadosSimOptions()
+            obj.integrator_type = 'ERK';
+            obj.collocation_type = 'GAUSS_LEGENDRE';
+            obj.Tsim = [];
+            obj.sim_method_num_stages = 4;
+            obj.sim_method_num_steps = 1;
+            obj.sim_method_newton_iter = 3;
+            obj.sim_method_newton_tol = 0.;
+            obj.sens_forw = true;
+            obj.sens_adj = false;
+            obj.sens_algebraic = false;
+            obj.sens_hess = false;
+            obj.output_z = true;
+            obj.sim_method_jac_reuse = 0;
+            obj.ext_fun_compile_flags = '-O2';
+            obj.num_threads_in_batch_solve = 1;
+            obj.compile_interface = []; % corresponds to automatic detection, possible values: true, false, []
         end
 
         function s = struct(self)
@@ -80,5 +81,4 @@ classdef AcadosSim < handle
             end
         end
     end
-
-end % class
+end
