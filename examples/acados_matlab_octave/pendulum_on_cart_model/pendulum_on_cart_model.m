@@ -81,7 +81,7 @@ cost_expr_ext_cost_e = 0.5 * sym_x'* W_x * sym_x;
 cost_expr_ext_cost = cost_expr_ext_cost_e + 0.5 * sym_u' * W_u * sym_u;
 cost_expr_ext_cost_0 = 0.5 * sym_u' * W_u * sym_u;
 
-% nonlinear least sqares
+% nonlinear least squares
 cost_expr_y_0 = sym_u;
 cost_W_0 = W_u;
 cost_expr_y = vertcat(sym_x, sym_u);
