@@ -41,6 +41,7 @@ classdef AcadosOcpConstraints < handle
         idxbx_0
         idxbxe_0
         has_x0
+        x0
 
         lbx     % lower bounds on x
         ubx     % upper bounds on x
@@ -148,6 +149,7 @@ classdef AcadosOcpConstraints < handle
             obj.idxbx_0 = [];
             obj.idxbxe_0 = [];
             obj.has_x0 = false;
+            obj.x0 = [];
 
             obj.lbx = [];
             obj.ubx = [];
