@@ -109,9 +109,6 @@ class AcadosOcpSolver:
         if acados_ocp.solver_options.qp_solver == 'PARTIAL_CONDENSING_QPDUNES':
             acados_ocp.remove_x0_elimination()
 
-        # set integrator time automatically
-        acados_ocp.solver_options.Tsim = acados_ocp.solver_options.time_steps[0]
-
         # generate code (external functions and templated code)
         acados_ocp.generate_external_functions()
         acados_ocp.dump_to_json(json_file)

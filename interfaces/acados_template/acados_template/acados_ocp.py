@@ -733,6 +733,9 @@ class AcadosOcp:
             raise Exception(f'Inconsistent discretization: {opts.tf}'\
                 f' = tf != sum(opts.time_steps) = {tf}.')
 
+        # set integrator time automatically
+        opts.Tsim = opts.time_steps[0]
+
         # num_steps
         if isinstance(opts.sim_method_num_steps, np.ndarray) and opts.sim_method_num_steps.size == 1:
             opts.sim_method_num_steps = opts.sim_method_num_steps.item()
