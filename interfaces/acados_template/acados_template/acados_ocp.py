@@ -306,9 +306,10 @@ class AcadosOcp:
                 "Note: There is also the option to use the external cost module with a numerical hessian approximation (see `ext_cost_num_hess`).\n"
                 "OR the option to provide a symbolic custom hessian approximation (see `cost_expr_ext_cost_custom_hess`).\n")
 
+        # cost integration
         supports_cost_integration = lambda type : type in ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']
         if opts.cost_discretization == 'INTEGRATOR' and \
-            any([not supports_cost_integration(cost) for cost in [cost.cost_type_0, cost.cost_type, cost.cost_type_e]]):
+            any([not supports_cost_integration(cost) for cost in [cost.cost_type_0, cost.cost_type]]):
             raise Exception('cost_discretization == INTEGRATOR only works with cost in ["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs.')
 
         ## constraints
