@@ -66,7 +66,7 @@ classdef AcadosOcp < handle
             if ismac()
                 obj.shared_lib_ext = '.dylib';
             end
-            % obj.code_export_directory;
+            obj.code_export_directory = 'c_generated_code';
         end
 
         function s = struct(self)
@@ -92,7 +92,17 @@ classdef AcadosOcp < handle
             constraints = self.constraints;
             opts = self.solver_options;
 
-            self.detect_cost_and_constraints()
+            self.detect_cost_and_constraints();
+            self.name = model.name;
+
+            % parameters
+            if isempty(self.parameter_values)
+                warning(['self.parameter_values are not set.', ...
+                            10 'Using zeros(np,1) by default.' 10 'You can update them later using set().']);
+                self.parameter_values = zeros(self.dims.np,1);
+            elseif length(self.parameter_values) ~= self.dims.np
+                error(['parameters_values has the wrong shape. Expected: ' num2str(self.dims.np)])
+            end
 
             %% cost
             % initial
@@ -498,6 +508,10 @@ classdef AcadosOcp < handle
 
             % shooting nodes -> time_steps
             N = self.dims.N;
+            if length(opts.tf) ~= 1 || opts.tf < 0
+                error('time horizon tf should be a nonnegative number');
+            end
+
             if ~isempty(opts.shooting_nodes)
                 if N + 1 ~= length(opts.shooting_nodes)
                     error('inconsistent dimension N regarding shooting nodes.');
@@ -507,7 +521,7 @@ classdef AcadosOcp < handle
                 end
                 sum_time_steps = sum(opts.time_steps);
                 if abs((sum_time_steps - opts.tf) / opts.tf) > 1e-14
-                    warning('shooting nodes are not consistent with time horizon T, rescaling automatically');
+                    warning('shooting nodes are not consistent with time horizon tf, rescaling automatically');
                     opts.time_steps = opts.time_steps * opts.tf / sum_time_steps;
                 end
             elseif ~isempty(opts.time_steps)
@@ -516,8 +530,8 @@ classdef AcadosOcp < handle
                 end
                 sum_time_steps = sum(opts.time_steps);
                 if abs((sum_time_steps - opts.tf) / opts.tf) > 1e-14
-                    error(['time steps are not consistent with time horizon T, ', ...
-                        'got T = ' num2str(opts.tf) '; sum(time_steps) = ' num2str(sum_time_steps) '.']);
+                    error(['time steps are not consistent with time horizon tf, ', ...
+                        'got tf = ' num2str(opts.tf) '; sum(time_steps) = ' num2str(sum_time_steps) '.']);
                 end
                 % just to have them available, e.g. for plotting;
                 opts.shooting_nodes = zeros(N+1, 1);
@@ -539,16 +553,10 @@ classdef AcadosOcp < handle
                 end
             end
 
-            % empty parameter vector
-            if isempty(self.parameter_values)
-                warning(['self.parameter_values are not set.', ...
-                         10 'Using zeros(np,1) by default.' 10 'You can update them later using set().']);
-                self.parameter_values = zeros(self.dims.np,1);
-            elseif length(self.parameter_values) ~= self.dims.np
-                error(['parameters_values has the wrong shape. Expected: ' num2str(self.dims.np)])
-            end
+            % set integrator time automatically
+            opts.Tsim = opts.time_steps(1);
 
-            % qp_dunes
+            % qpdunes
             if ~isempty(strfind(opts.qp_solver,'qpdunes'))
                 constraints.idxbxe_0 = [];
                 dims.nbxe_0 = 0;

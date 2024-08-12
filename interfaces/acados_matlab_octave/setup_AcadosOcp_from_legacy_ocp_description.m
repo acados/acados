@@ -46,16 +46,7 @@ function ocp = setup_AcadosOcp_from_legacy_ocp_description(model_old, opts_old, 
     ocp.dims.N = opts_struct.param_scheme_N;
     ocp.solver_options.tf = model.T;
 
-    ocp.code_export_directory = fullfile(pwd, 'c_generated_code');
-
-    if isfield(opts_struct, 'Tsim')
-        ocp.solver_options.Tsim = opts_struct.Tsim;
-    else
-        ocp.solver_options.Tsim = model.T / opts_struct.param_scheme_N; % for templated integrator
-    end
-
     ocp.model.name = model.name;
-    ocp.name = model.name;
 
     % modules
     ocp.solver_options.qp_solver = upper(opts_struct.qp_solver);
