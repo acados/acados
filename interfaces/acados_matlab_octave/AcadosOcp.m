@@ -97,8 +97,10 @@ classdef AcadosOcp < handle
 
             % parameters
             if isempty(self.parameter_values)
-                warning(['self.parameter_values are not set.', ...
+                if dims.np > 0
+                    warning(['self.parameter_values are not set.', ...
                             10 'Using zeros(np,1) by default.' 10 'You can update them later using set().']);
+                end
                 self.parameter_values = zeros(self.dims.np,1);
             elseif length(self.parameter_values) ~= self.dims.np
                 error(['parameters_values has the wrong shape. Expected: ' num2str(self.dims.np)])
@@ -587,28 +589,120 @@ classdef AcadosOcp < handle
             end
 
             %% options sanity checks
-            if length(self.solver_options.sim_method_num_steps) == 1
-                self.solver_options.sim_method_num_steps = self.solver_options.sim_method_num_steps * ones(1, N);
-            elseif length(self.solver_options.sim_method_num_steps) ~= N
+            if length(opts.sim_method_num_steps) == 1
+                opts.sim_method_num_steps = opts.sim_method_num_steps * ones(1, N);
+            elseif length(opts.sim_method_num_steps) ~= N
                 error('sim_method_num_steps must be a scalar or a vector of length N');
             end
-            if length(self.solver_options.sim_method_num_stages) == 1
-                self.solver_options.sim_method_num_stages = self.solver_options.sim_method_num_stages * ones(1, N);
-            elseif length(self.solver_options.sim_method_num_stages) ~= N
+            if length(opts.sim_method_num_stages) == 1
+                opts.sim_method_num_stages = opts.sim_method_num_stages * ones(1, N);
+            elseif length(opts.sim_method_num_stages) ~= N
                 error('sim_method_num_stages must be a scalar or a vector of length N');
             end
-            if length(self.solver_options.sim_method_jac_reuse) == 1
-                self.solver_options.sim_method_jac_reuse = self.solver_options.sim_method_jac_reuse * ones(1, N);
-            elseif length(self.solver_options.sim_method_jac_reuse) ~= N
+            if length(opts.sim_method_jac_reuse) == 1
+                opts.sim_method_jac_reuse = opts.sim_method_jac_reuse * ones(1, N);
+            elseif length(opts.sim_method_jac_reuse) ~= N
                 error('sim_method_jac_reuse must be a scalar or a vector of length N');
             end
 
-            if strcmp(self.solver_options.nlp_solver_type, "PARTIAL_CONDENSING_OSQP") || ...
-                strcmp(self.solver_options.nlp_solver_type, "PARTIAL_CONDENSING_HPMPC") || ...
-                strcmp(self.solver_options.nlp_solver_type, "PARTIAL_CONDENSING_QPDUNES") || ...
-                strcmp(self.solver_options.nlp_solver_type, "PARTIAL_CONDENSING_OOQP")
+            if strcmp(opts.nlp_solver_type, "PARTIAL_CONDENSING_HPMPC") || ...
+                strcmp(opts.nlp_solver_type, "PARTIAL_CONDENSING_QPDUNES") || ...
+                strcmp(opts.nlp_solver_type, "PARTIAL_CONDENSING_OOQP")
                 if self.dims.ns > 0 || self.dims.ns_e > 0
-                    error(['selected QP solver ', self.solver_options.nlp_solver_type, ' does not support soft constraints (yet).'])
+                    error(['selected QP solver ', opts.nlp_solver_type, ' does not support soft constraints (yet).'])
+                end
+            end
+
+            % fixed hessian
+            if opts.fixed_hess
+                if opts.hessian_approx == 'EXACT'
+                    error('fixed_hess and hessian_approx = EXACT are incompatible')
+                end
+                if ~(strcmp(cost.cost_type_0, "LINEAR_LS") && strcmp(cost.cost_type, "LINEAR_LS") && strcmp(cost.cost_type_e, "LINEAR_LS"))
+                    error('fixed_hess requires LINEAR_LS cost type')
+                end
+            end
+
+            % TODO: add checks for solution sensitivities when brining them to Matlab
+
+            % check if qp_solver_cond_N is set
+            if isempty(opts.qp_solver_cond_N)
+                opts.qp_solver_cond_N = N;
+            end
+
+            if ~isempty(opts.qp_solver_cond_block_size)
+                if sum(opts.qp_solver_cond_block_size) ~= N
+                    error(['sum(qp_solver_cond_block_size) =', num2str(sum(opts.qp_solver_cond_block_size)), ' != N = {dims.N}.']);
+                end
+                if length(opts.qp_solver_cond_block_size) ~= opts.qp_solver_cond_N+1
+                    error('qp_solver_cond_block_size should have length qp_solver_cond_N+1.');
+                end
+            end
+
+            if strcmp(opts.nlp_solver_type, "DDP")
+                if ~strcmp(opts.qp_solver, "PARTIAL_CONDENSING_HPIPM") || (opts.qp_solver_cond_N ~= dims.N)
+                    error('DDP solver only supported for PARTIAL_CONDENSING_HPIPM with qp_solver_cond_N == N.');
+                end
+                if any([dims.nbu, dims.nbx, dims.ng, dims.nh, dims.nphi])
+                    error('DDP only supports initial state constraints, got path constraints.')
+                end
+                if any([dims.ng_e, dims.nphi_e, dims.nh_e])
+                    error('DDP only supports initial state constraints, got terminal constraints.')
+                end
+            end
+
+            % Set default parameters for globalization
+            if isempty(opts.alpha_min)
+                if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
+                    opts.alpha_min = 1e-17;
+                else
+                    opts.alpha_min = 0.05;
+                end
+            end
+
+            if isempty(opts.alpha_reduction)
+                if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
+                    opts.alpha_reduction = 0.5;
+                else
+                    opts.alpha_reduction = 0.7;
+                end
+            end
+
+            if isempty(opts.eps_sufficient_descent)
+                if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
+                    opts.eps_sufficient_descent = 1e-6;
+                else
+                    opts.eps_sufficient_descent = 1e-4;
+                end
+            end
+
+            if isempty(opts.eval_residual_at_max_iter)
+                if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
+                    opts.eval_residual_at_max_iter = true;
+                else
+                    opts.eval_residual_at_max_iter = false;
+                end
+            end
+
+            if isempty(opts.full_step_dual)
+                if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
+                    opts.full_step_dual = 1;
+                else
+                    opts.full_step_dual = 0;
+                end
+            end
+
+            % sanity check for Funnel globalization and SQP
+            if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH') && ~strcmp(opts.nlp_solver_type, 'SQP')
+                error('FUNNEL_L1PEN_LINESEARCH only supports SQP.');
+            end
+
+            % termination
+            if isempty(opts.nlp_solver_tol_min_step_norm)
+                if strcmp(opts.globalization, 'FUNNEL_L1PEN_LINESEARCH')
+                    opts.nlp_solver_tol_min_step_norm = 1e-12;
+                else
+                    opts.nlp_solver_tol_min_step_norm = 0.0;
                 end
             end
         end
