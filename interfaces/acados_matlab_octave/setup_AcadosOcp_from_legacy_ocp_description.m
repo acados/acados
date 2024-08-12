@@ -310,6 +310,9 @@ function ocp = setup_AcadosOcp_from_legacy_ocp_description(model_struct, opts_st
         if isfield(model, old_field)
             new_field = cost_fields_map.(old_field);
             ocp.cost.(new_field) = model.(old_field);
+            if strncmp(new_field, 'Z', 1)
+                ocp.cost.(new_field) = diag(model.(old_field));
+            end
         end
     end
 
