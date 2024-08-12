@@ -39,7 +39,8 @@ function ocp = setup_AcadosOcp_from_legacy_ocp_description(model_old, opts_old, 
     end
 
     % create
-    ocp = AcadosOcp(simulink_opts);
+    ocp = AcadosOcp();
+    ocp.simulink_opts = simulink_opts;
 
     % general
     ocp.dims.N = opts_struct.param_scheme_N;

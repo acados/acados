@@ -48,7 +48,7 @@ classdef AcadosOcp < handle
         name
     end
     methods
-        function obj = AcadosOcp(simulink_opts)
+        function obj = AcadosOcp()
             obj.dims = AcadosOcpDims();
             obj.cost = AcadosOcpCost();
             obj.constraints = AcadosOcpConstraints();
@@ -58,7 +58,7 @@ classdef AcadosOcp < handle
             obj.acados_lib_path = [];
             obj.parameter_values = [];
             obj.problem_class = 'OCP';
-            obj.simulink_opts = simulink_opts;
+            obj.simulink_opts = [];
             obj.cython_include_dirs = [];
             obj.json_file = 'acados_ocp_nlp.json';
             obj.shared_lib_ext = '.so';
