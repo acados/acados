@@ -125,14 +125,6 @@ function render_acados_templates(acados_ocp_nlp_json_file)
     out_file = ['acados_sim_solver_', model_name, '.h'];
     render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
 
-    template_file = 'acados_sim_solver_sfun.in.c';
-    out_file = ['acados_sim_solver_sfunction_', model_name, '.c'];
-    render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
-
-    template_file = 'make_sfun_sim.in.m';
-    out_file = 'make_sfun_sim.m';
-    render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
-
     % headers and custom C-code files
     c_dir = pwd;
     chdir([model_name, '_model']);
@@ -176,15 +168,28 @@ function render_acados_templates(acados_ocp_nlp_json_file)
     out_file = 'CMakeLists.txt';
     render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
 
-    % S-function
-    template_file = 'acados_solver_sfun.in.c';
-    out_file = ['acados_solver_sfunction_' , model_name, '.c'];
-    render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
 
-    % MATLAB make script
-    template_file = 'make_sfun.in.m';
-    out_file = 'make_sfun.m';
-    render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
+    if isempty(acados_ocp.simulink_opts)
+        disp("not rendering simulink related templates, as simulink_opts are not specified.")
+    else
+        % S-function
+        template_file = 'acados_solver_sfun.in.c';
+        out_file = ['acados_solver_sfunction_' , model_name, '.c'];
+        render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
+
+        % MATLAB make script
+        template_file = 'make_sfun.in.m';
+        out_file = 'make_sfun.m';
+        render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
+
+        template_file = 'acados_sim_solver_sfun.in.c';
+        out_file = ['acados_sim_solver_sfunction_', model_name, '.c'];
+        render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
+
+        template_file = 'make_sfun_sim.in.m';
+        out_file = 'make_sfun_sim.m';
+        render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
+    end
 
     fprintf('Successfully rendered acados templates!\n');
     cd(main_dir)
