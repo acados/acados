@@ -202,6 +202,16 @@ classdef AcadosOcp < handle
                 dims.ny_e = ny_e;
             end
 
+            % cost integration
+            if strcmp(opts.cost_discretization, "INTEGRATOR")
+                if ~(strcmp(cost.cost_type, "NONLINEAR_LS") || strcmp(cost.cost_type, "CONVEX_OVER_NONLINEAR"))
+                    error('INTEGRATOR cost discretization requires CONVEX_OVER_NONLINEAR or NONLINEAR_LS cost type for path cost.')
+                end
+                if ~(strcmp(cost.cost_type_0, "NONLINEAR_LS") || strcmp(cost.cost_type_0, "CONVEX_OVER_NONLINEAR"))
+                    error('INTEGRATOR cost discretization requires CONVEX_OVER_NONLINEAR or NONLINEAR_LS cost type for initial cost.')
+                end
+            end
+
 
             %% constraints
             % initial
@@ -576,15 +586,21 @@ classdef AcadosOcp < handle
                 dims.nbxe_0 = 0;
             end
 
-            % options sanity checks
-            if length(self.solver_options.sim_method_num_steps) ~= N
+            %% options sanity checks
+            if length(self.solver_options.sim_method_num_steps) == 1
                 self.solver_options.sim_method_num_steps = self.solver_options.sim_method_num_steps * ones(1, N);
+            elseif length(self.solver_options.sim_method_num_steps) ~= N
+                error('sim_method_num_steps must be a scalar or a vector of length N');
             end
-            if length(self.solver_options.sim_method_num_stages) ~= N
+            if length(self.solver_options.sim_method_num_stages) == 1
                 self.solver_options.sim_method_num_stages = self.solver_options.sim_method_num_stages * ones(1, N);
+            elseif length(self.solver_options.sim_method_num_stages) ~= N
+                error('sim_method_num_stages must be a scalar or a vector of length N');
             end
-            if length(self.solver_options.sim_method_jac_reuse) ~= N
+            if length(self.solver_options.sim_method_jac_reuse) == 1
                 self.solver_options.sim_method_jac_reuse = self.solver_options.sim_method_jac_reuse * ones(1, N);
+            elseif length(self.solver_options.sim_method_jac_reuse) ~= N
+                error('sim_method_jac_reuse must be a scalar or a vector of length N');
             end
 
             if strcmp(self.solver_options.nlp_solver_type, "PARTIAL_CONDENSING_OSQP") || ...
