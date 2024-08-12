@@ -618,7 +618,7 @@ classdef AcadosOcp < handle
             constraint_types = {self.constraints.constr_type_0, self.constraints.constr_type, self.constraints.constr_type_e};
             for n=1:3
                 if strcmp(constraint_types{n}, 'AUTO')
-                    detect_constr(self.model, self.constraints, self.dims, stage_types{n});
+                    detect_constr(self.model, self.constraints, stage_types{n});
                 end
             end
         end

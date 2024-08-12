@@ -36,7 +36,7 @@
 % nsg;  // number of softened general linear constraints
 % nsh;  // number of softened nonlinear constraints
 
-function model = detect_constr(model, constraints, dims, stage_type)
+function model = detect_constr(model, constraints, stage_type)
 
     import casadi.*
 
@@ -152,7 +152,6 @@ function model = detect_constr(model, constraints, dims, stage_type)
         end
         % h
         constraints.constr_type_e = 'BGH';
-        dims.nh_e = length(lh);
         if ~isempty(lh)
             model.con_h_expr_e = constr_expr_h;
             constraints.lh_e = lh;
@@ -167,21 +166,18 @@ function model = detect_constr(model, constraints, dims, stage_type)
             constraints.C_e = C;
             constraints.lg_e = lg;
             constraints.ug_e = ug;
-            dims.ng_e = length(lg);
         end
         % bounds x
         if ~isempty(lbx)
             constraints.idxbx_e = J_to_idx(Jbx);
             constraints.lbx_e = lbx;
             constraints.ubx_e = ubx;
-            dims.nbx_e = length(lbx);
         end
 
     elseif strcmp(stage_type, 'initial')
         warning("At initial stage, only h constraints are detected.")
         constraints.constr_type = 'BGH';
         % h
-        dims.nh_0 = length(constr_lh_0);
         if ~isempty(lh)
             model.con_h_expr_0 = constr_expr_h;
             constraints.lh_0 = lh;
@@ -194,7 +190,6 @@ function model = detect_constr(model, constraints, dims, stage_type)
     else % path
         constraints.constr_type = 'BGH';
         % h
-        dims.nh = length(lh);
         if ~isempty(lh)
             model.con_h_expr = constr_expr_h;
             constraints.lh = lh;
@@ -205,7 +200,6 @@ function model = detect_constr(model, constraints, dims, stage_type)
             constraints.uh = [];
         end
         % g
-        dims.ng = length(lg);
         if ~isempty(lg)
             constraints.C = C;
             constraints.D = D;
@@ -217,17 +211,14 @@ function model = detect_constr(model, constraints, dims, stage_type)
             constraints.idxbx = J_to_idx(Jbx);
             constraints.lbx = lbx;
             constraints.ubx = ubx;
-            dims.nbx = length(lbx);
         end
         % bounds u
         if ~isempty(lbu)
             constraints.idxbu = J_to_idx(Jbu);
             constraints.lbu = lbu;
             constraints.ubu = ubu;
-            dims.nbu = length(lbu);
         end
         % g
-        dims.ng = length(lg);
         if ~isempty(lg)
             model.constr_C = C;
             model.constr_D = D;
