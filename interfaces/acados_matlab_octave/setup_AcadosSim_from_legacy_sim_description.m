@@ -161,23 +161,23 @@ function sim = setup_AcadosSim_from_legacy_sim_description(model_old, opts_old)
 
     % options
     if strcmp(upper(opts.method), 'IRK_GNSF')
-        sim.sim_options.integrator_type = 'GNSF';
+        sim.solver_options.integrator_type = 'GNSF';
     else
-        sim.sim_options.integrator_type = upper(opts.method);
+        sim.solver_options.integrator_type = upper(opts.method);
     end
-    sim.sim_options.collocation_type = upper(opts.collocation_type);
-    sim.sim_options.sim_method_num_stages = opts.num_stages;
-    sim.sim_options.sim_method_num_steps = opts.num_steps;
-    sim.sim_options.sim_method_newton_iter = opts.newton_iter;
-    sim.sim_options.sim_method_newton_tol = opts.newton_tol;
-    sim.sim_options.Tsim = model.T;
-    sim.sim_options.sens_forw = str2bool(opts.sens_forw);
-    sim.sim_options.sens_adj = str2bool(opts.sens_adj);
-    sim.sim_options.sens_algebraic = str2bool(opts.sens_algebraic);
-    sim.sim_options.sens_hess = str2bool(opts.sens_hess);
-    sim.sim_options.output_z = str2bool(opts.output_z);
-    sim.sim_options.sim_method_jac_reuse = str2bool(opts.jac_reuse);
-    sim.sim_options.ext_fun_compile_flags = opts.ext_fun_compile_flags;
+    sim.solver_options.collocation_type = upper(opts.collocation_type);
+    sim.solver_options.sim_method_num_stages = opts.num_stages;
+    sim.solver_options.sim_method_num_steps = opts.num_steps;
+    sim.solver_options.sim_method_newton_iter = opts.newton_iter;
+    sim.solver_options.sim_method_newton_tol = opts.newton_tol;
+    sim.solver_options.Tsim = model.T;
+    sim.solver_options.sens_forw = str2bool(opts.sens_forw);
+    sim.solver_options.sens_adj = str2bool(opts.sens_adj);
+    sim.solver_options.sens_algebraic = str2bool(opts.sens_algebraic);
+    sim.solver_options.sens_hess = str2bool(opts.sens_hess);
+    sim.solver_options.output_z = str2bool(opts.output_z);
+    sim.solver_options.sim_method_jac_reuse = str2bool(opts.jac_reuse);
+    sim.solver_options.ext_fun_compile_flags = opts.ext_fun_compile_flags;
 
 end
 

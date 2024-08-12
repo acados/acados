@@ -52,16 +52,16 @@ classdef AcadosSimSolver < handle
             obj.sim.model.make_consistent(obj.sim.dims);
 
             % sanity checks
-            if(strcmp(sim.sim_options.integrator_type, "ERK"))
-                if(sim.sim_options.sim_method_num_stages == 1 || sim.sim_options.sim_method_num_stages == 2 || ...
-                    sim.sim_options.sim_method_num_stages == 3 || sim.sim_options.sim_method_num_stages == 4)
+            if(strcmp(sim.solver_options.integrator_type, "ERK"))
+                if(sim.solver_options.sim_method_num_stages == 1 || sim.solver_options.sim_method_num_stages == 2 || ...
+                    sim.solver_options.sim_method_num_stages == 3 || sim.solver_options.sim_method_num_stages == 4)
                 else
-                    error(['ERK: sim_method_num_stages = ', num2str(sim.sim_options.sim_method_num_stages) ' not available. Only number of stages = {1,2,3,4} implemented!']);
+                    error(['ERK: sim_method_num_stages = ', num2str(sim.solver_options.sim_method_num_stages) ' not available. Only number of stages = {1,2,3,4} implemented!']);
                 end
             end
 
             % detect GNSF structure
-            if strcmp(obj.sim.sim_options.integrator_type, 'GNSF')
+            if strcmp(obj.sim.solver_options.integrator_type, 'GNSF')
                 % TODO: interface these options
                 gnsf_transcription_opts = struct();
                 if obj.sim.dims.gnsf_nx1 + obj.sim.dims.gnsf_nx2 ~= obj.sim.dims.nx
@@ -135,16 +135,16 @@ classdef AcadosSimSolver < handle
 
             %% compile mex without model dependency
             % check if mex interface exists already
-            if isempty(obj.sim.sim_options.compile_interface) % auto-detect
+            if isempty(obj.sim.solver_options.compile_interface) % auto-detect
                 if is_octave()
                     extension = '.mex';
                 else
                     extension = ['.' mexext];
                 end
-                obj.sim.sim_options.compile_interface = ~exist(fullfile(output_dir, ['/sim_create', extension]), 'file');
+                obj.sim.solver_options.compile_interface = ~exist(fullfile(output_dir, ['/sim_create', extension]), 'file');
             end
 
-            if obj.sim.sim_options.compile_interface
+            if obj.sim.solver_options.compile_interface
                 sim_compile_interface(output_dir);
             end
         end

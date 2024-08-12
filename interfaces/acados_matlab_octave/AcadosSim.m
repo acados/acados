@@ -42,7 +42,7 @@ classdef AcadosSim < handle
         % struct / object
         dims
         model
-        sim_options
+        solver_options
         % plain data
         parameter_values
         problem_class
@@ -62,7 +62,7 @@ classdef AcadosSim < handle
             obj.model = AcadosModel();
 
             % TODO move this to class AcadosSimOptions
-            obj.sim_options = AcadosSimOptions();
+            obj.solver_options = AcadosSimOptions();
 
             obj.parameter_values = [];
             obj.problem_class = 'SIM';

@@ -36,16 +36,16 @@ function sim_generate_c_code(sim)
     model_dir = fullfile(pwd, 'c_generated_code', [sim.model.name '_model']);
     check_dir_and_create(model_dir);
 
-    code_gen_opts = struct('generate_hess', sim.sim_options.sens_hess);
+    code_gen_opts = struct('generate_hess', sim.solver_options.sens_hess);
     %% generate C code for CasADi functions / copy external functions
     % dynamics
-    if (strcmp(sim.sim_options.integrator_type, 'ERK'))
+    if (strcmp(sim.solver_options.integrator_type, 'ERK'))
         generate_c_code_explicit_ode(sim.model, code_gen_opts, model_dir);
-    elseif (strcmp(sim.sim_options.integrator_type, 'IRK'))
+    elseif (strcmp(sim.solver_options.integrator_type, 'IRK'))
         generate_c_code_implicit_ode(sim.model, code_gen_opts, model_dir);
-    elseif (strcmp(sim.sim_options.integrator_type, 'GNSF'))
+    elseif (strcmp(sim.solver_options.integrator_type, 'GNSF'))
         generate_c_code_gnsf(sim.model, code_gen_opts, model_dir);
-    elseif (strcmp(sim.sim_options.integrator_type, 'DISCRETE'))
+    elseif (strcmp(sim.solver_options.integrator_type, 'DISCRETE'))
         generate_c_code_disc_dyn(sim.model, code_gen_opts, model_dir);
     end
     if strcmp(sim.model.dyn_ext_fun_type, 'generic')
@@ -90,15 +90,15 @@ function sim_generate_c_code(sim)
                 this_dims = [dims.(property_dim_names{1}), dims.(property_dim_names{2})];
             end
             try
-                sim.sim_options.(fields{i}) = reshape(sim.sim_options.(fields{i}), this_dims);
+                sim.solver_options.(fields{i}) = reshape(sim.solver_options.(fields{i}), this_dims);
             catch e
-                error(['error while reshaping sim_options' fields{i} ...
+                error(['error while reshaping solver_options' fields{i} ...
                     ' to dimension ' num2str(this_dims), ', got ',...
-                    num2str( size(sim.sim_options.(fields{i}) )) , 10,...
+                    num2str( size(sim.solver_options.(fields{i}) )) , 10,...
                     e.message ]);
             end
             if this_dims(1) == 1 && length(property_dim_names) ~= 1 % matrix with 1 row
-                sim.sim_options.(fields{i}) = {sim.sim_options.(fields{i})};
+                sim.solver_options.(fields{i}) = {sim.solver_options.(fields{i})};
             end
         end
     end
@@ -112,7 +112,7 @@ function sim_generate_c_code(sim)
         % -> consider making the sim properties structs directly.
         sim_json_struct = sim.struct();
         sim_json_struct.dims = sim.dims.struct();
-        sim_json_struct.solver_options = sim.sim_options;
+        sim_json_struct.solver_options = sim.solver_options.struct();
 
         % add compilation information to json
         libs = loadjson(fileread(fullfile(acados_folder, 'lib', 'link_libs.json')));
