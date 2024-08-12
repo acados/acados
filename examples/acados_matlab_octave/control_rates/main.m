@@ -272,8 +272,8 @@ xlabel('time [s]')
 
 figure; hold on; grid on;
 plot(t, u_sim)
-yline(lbu,'k--')
-yline(ubu,'k--')
+plot(t, lbu, 'k--')
+plot(t, ubu, 'k--')
 legend({'udot'})
 ylabel('control input rate')
 xlabel('time [s]')
