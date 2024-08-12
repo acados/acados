@@ -49,36 +49,7 @@ classdef AcadosSimSolver < handle
 
             % check model consistency
             obj.sim = sim;
-            obj.sim.model.make_consistent(obj.sim.dims);
-
-            % sanity checks
-            if(strcmp(sim.solver_options.integrator_type, "ERK"))
-                if(sim.solver_options.sim_method_num_stages == 1 || sim.solver_options.sim_method_num_stages == 2 || ...
-                    sim.solver_options.sim_method_num_stages == 3 || sim.solver_options.sim_method_num_stages == 4)
-                else
-                    error(['ERK: sim_method_num_stages = ', num2str(sim.solver_options.sim_method_num_stages) ' not available. Only number of stages = {1,2,3,4} implemented!']);
-                end
-            end
-
-            % detect GNSF structure
-            if strcmp(obj.sim.solver_options.integrator_type, 'GNSF')
-                % TODO: interface these options
-                gnsf_transcription_opts = struct();
-                if obj.sim.dims.gnsf_nx1 + obj.sim.dims.gnsf_nx2 ~= obj.sim.dims.nx
-                    detect_gnsf_structure(obj.sim.model, obj.sim.dims, gnsf_transcription_opts);
-                else
-                    warning('No GNSF model detected, assuming all required fields are set.')
-                end
-            end
-
-            % parameters
-            if obj.sim.dims.np > 0
-                if isempty(obj.sim.parameter_values)
-                    warning(['opts_struct.parameter_values are not set.', ...
-                                10 'Using zeros(np,1) by default.' 10 'You can update them later using set().']);
-                    obj.sim.parameter_values = zeros(obj.sim.dims.np,1);
-                end
-            end
+            sim.make_consistent();
 
             % create template sim
             sim_generate_c_code(obj.sim);

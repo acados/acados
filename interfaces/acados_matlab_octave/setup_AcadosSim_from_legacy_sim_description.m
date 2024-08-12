@@ -37,18 +37,6 @@ function sim = setup_AcadosSim_from_legacy_sim_description(model_old, opts_old)
     model = model_old.model_struct;
     opts = opts_old.opts_struct;
 
-    % file structures
-    acados_folder = getenv('ACADOS_INSTALL_DIR');
-    sim.acados_include_path = [acados_folder, '/include'];
-    sim.acados_lib_path = [acados_folder, '/lib'];
-    sim.shared_lib_ext = '.so';
-    if ismac()
-        sim.shared_lib_ext = '.dylib';
-    end
-    sim.json_file = 'acados_sim.json';
-    sim.cython_include_dirs = [];  % only useful for python interface
-    sim.code_export_directory = fullfile(pwd(), 'c_generated_code');
-
     % dimensions
     dims_fields_map = struct(...
         'dim_nx', 'nx', ...

@@ -68,6 +68,95 @@ classdef AcadosSim < handle
             obj.problem_class = 'SIM';
         end
 
+        function make_consistent(self)
+
+            % file structures
+            acados_folder = getenv('ACADOS_INSTALL_DIR');
+            self.acados_include_path = [acados_folder, '/include'];
+            self.acados_lib_path = [acados_folder, '/lib'];
+            self.shared_lib_ext = '.so';
+            if ismac()
+                self.shared_lib_ext = '.dylib';
+            end
+            if isempty(self.json_file)
+                self.json_file = 'acados_sim.json';
+            end
+
+            if isempty(self.code_export_directory)
+                self.code_export_directory = fullfile(pwd(), 'c_generated_code');
+            end
+
+            % model
+            self.model.make_consistent(self.dims);
+
+            % detect GNSF structure
+            if strcmp(self.solver_options.integrator_type, 'GNSF')
+                % TODO: interface these options
+                gnsf_transcription_opts = struct();
+                if self.dims.gnsf_nx1 + self.dims.gnsf_nx2 ~= self.dims.nx
+                    detect_gnsf_structure(self.model, self.dims, gnsf_transcription_opts);
+                else
+                    warning('No GNSF model detected, assuming all required fields are set.')
+                end
+            end
+
+            % parameters
+            if self.dims.np > 0
+                if isempty(self.parameter_values)
+                    warning(['opts_struct.parameter_values are not set.', ...
+                                10 'Using zeros(np,1) by default.' 10 'You can update them later using set().']);
+                    self.parameter_values = zeros(self.dims.np,1);
+                end
+            end
+
+            % solver options checks
+            opts = self.solver_options;
+            if ~strcmp(opts.integrator_type, 'ERK') && ~strcmp(opts.integrator_type, 'IRK') && ...
+               ~strcmp(opts.integrator_type, 'GNSF') && ~strcmp(opts.integrator_type, 'DISCRETE')
+                error(['integrator_type = ', opts.integrator_type, ' not available. Choose ERK, IRK, GNSF.']);
+            end
+
+            if length(opts.num_stages) ~= 1
+                error('num_stages should be a scalar.');
+            end
+            if length(opts.num_steps) ~= 1
+                error('num_steps should be a scalar.');
+            end
+            if length(opts.newton_iter) ~= 1
+                error('newton_iter should be a scalar.');
+            end
+            % check bool options
+            if ~islogical(opts.sens_forw)
+                error('sens_forw should be a boolean.');
+            end
+            if ~islogical(opts.sens_adj)
+                error('sens_adj should be a boolean.');
+            end
+            if ~islogical(opts.sens_algebraic)
+                error('sens_algebraic should be a boolean.');
+            end
+            if ~islogical(opts.sens_hess)
+                error('sens_hess should be a boolean.');
+            end
+            if ~islogical(opts.output_z)
+                error('output_z should be a boolean.');
+            end
+            if ~strcmp(opts.collocation_type, "GAUSS_LEGENDRE") && ~strcmp(opts.collocation_type, "GAUSS_RADAU_IIA")
+                error(['collocation_type = ', opts.collocation_type, ' not available. Choose GAUSS_LEGENDRE, GAUSS_RADAU_IIA.']);
+            end
+
+            if(strcmp(self.solver_options.integrator_type, "ERK"))
+                if(self.solver_options.sim_method_num_stages == 1 || self.solver_options.sim_method_num_stages == 2 || ...
+                    self.solver_options.sim_method_num_stages == 3 || self.solver_options.sim_method_num_stages == 4)
+                else
+                    error(['ERK: sim_method_num_stages = ', num2str(self.solver_options.sim_method_num_stages) ' not available. Only number of stages = {1,2,3,4} implemented!']);
+                end
+            end
+
+
+
+        end
+
         function s = struct(self)
             if exist('properties')
                 publicProperties = eval('properties(self)');
