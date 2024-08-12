@@ -73,6 +73,16 @@ function model = detect_constr(model, constraints, stage_type)
         error('Constraint detection: Wrong stage_type.')
     end
 
+    if isempty(expr_constr)
+        expr_constr = SX.sym('con_h_expr', 0, 0);
+    end
+
+    if !(isa(expr_constr, 'casadi.SX') || isa(expr_constr, 'casadi.SX'))
+        disp('expr_constr =')
+        disp(expr_constr)
+        error("Constraint type detection require definition of constraints as CasADi SX or MX.")
+    end
+
     % initialize
     constr_expr_h = SX.sym('con_h_expr', 0, 0);
     lh = [];
@@ -176,7 +186,7 @@ function model = detect_constr(model, constraints, stage_type)
 
     elseif strcmp(stage_type, 'initial')
         warning("At initial stage, only h constraints are detected.")
-        constraints.constr_type = 'BGH';
+        constraints.constr_type_0 = 'BGH';
         % h
         if ~isempty(lh)
             model.con_h_expr_0 = constr_expr_h;
