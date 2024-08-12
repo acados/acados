@@ -77,9 +77,9 @@ classdef AcadosOcpSolver < handle
         function generate_c_code(obj, simulink_opts)
             warning('acados_ocp will be deprecated in the future. Use AcadosOcpSolver instead. For more information on the major acados Matlab interface overhaul, see https://github.com/acados/acados/releases/tag/v0.4.0');
             if nargin < 2
-                warning("Code is generated with the default simulink options via the constructor of acados_ocp.")
+                warning("Code is generated in the constructor of AcadosOcpSolver.")
             else
-                error("If you want to provide simulink options, put it in the constructor of acados_ocp.")
+                error("If you want to provide simulink options, provide them in AcadosOcp.simulink_opts.")
             end
         end
 
