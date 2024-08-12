@@ -29,9 +29,14 @@
 
 %
 
-function ocp = setup_AcadosOcp_from_legacy_ocp_description(model_struct, opts_struct, simulink_opts)
+function ocp = setup_AcadosOcp_from_legacy_ocp_description(model_old, opts_old, simulink_opts)
 
-    model = model_struct;
+    model = model_old.model_struct;
+    opts_struct = opts_old.opts_struct;
+
+    if nargin < 3
+        simulink_opts = get_acados_simulink_opts();
+    end
 
     % create
     ocp = AcadosOcp(simulink_opts);
