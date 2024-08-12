@@ -821,7 +821,7 @@ class AcadosOcp:
                 raise Exception(f'DDP solver only supported for PARTIAL_CONDENSING_HPIPM with qp_solver_cond_N == N, got qp solver {opts.qp_solver} and qp_solver_cond_N {opts.qp_solver_cond_N}, N {dims.N}.')
             if any([dims.nbu, dims.nbx, dims.ng, dims.nh, dims.nphi]):
                 raise Exception('DDP only supports initial state constraints, got path constraints.')
-            if  any([dims.ng_e, dims.nphi_e, dims.nh_e]):
+            if any([dims.ng_e, dims.nphi_e, dims.nh_e]):
                 raise Exception('DDP only supports initial state constraints, got terminal constraints.')
 
         # Set default parameters for globalization
