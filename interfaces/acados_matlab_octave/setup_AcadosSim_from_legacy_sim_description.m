@@ -29,13 +29,13 @@
 
 %
 
-function sim = setup_sim(model_struct, opts_struct)
+function sim = setup_AcadosSim_from_legacy_sim_description(model_old, opts_old)
     % create
-    sim = acados_template_mex.AcadosSim();
+    sim = AcadosSim();
 
     % aliases of frontend obj
-    model = model_struct;
-    opts = opts_struct;
+    model = model_old.model_struct;
+    opts = opts_old.opts_struct;
 
     % file structures
     acados_folder = getenv('ACADOS_INSTALL_DIR');
