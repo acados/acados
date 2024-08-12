@@ -99,7 +99,7 @@ ny = nx+nu; % number of outputs in lagrange term
 cost_Vx = [eye(nx); zeros(nu,nx)]; % state-to-output matrix in lagrange term
 cost_Vu = [zeros(nx, nu); eye(nu)]; % input-to-output matrix in lagrange term
 cost_y_ref = zeros(ny, 1); % output reference in lagrange term
-    
+
 ny_e = nx; % number of outputs in terminal cost term
 cost_Vx_e = eye(ny_e, nx);
 cost_y_ref_e = zeros(ny_e, 1);
