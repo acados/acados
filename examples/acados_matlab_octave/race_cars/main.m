@@ -236,11 +236,11 @@ for i = 1:Nsim
     for j = 0:(N-1)
         yref = [s0 + (sref - s0) * j / N, 0, 0, 0, 0, 0, 0, 0];
         % yref=[1,0,0,1,0,0,0,0]
-        ocp.set('cost_y_ref', yref, j);   
+        ocp_solver.set('cost_y_ref', yref, j);
     end
     yref_N = [sref, 0, 0, 0, 0, 0];
-    % yref_N=np.array([0,0,0,0,0,0])    
-    ocp.set('cost_y_ref_e', yref_N);
+    % yref_N=np.array([0,0,0,0,0,0])
+    ocp_solver.set('cost_y_ref_e', yref_N);
 
     % solve ocp
     t = tic();
@@ -281,7 +281,7 @@ for i = 1:Nsim
     % update initial condition
     x0 = ocp_solver.get('x', 1);
     % update initial state
-    ocp_solver.set('constr_x0', x0);    
+    ocp_solver.set('constr_x0', x0);
     ocp_solver.set('constr_lbx', x0, 0);
     ocp_solver.set('constr_ubx', x0, 0);
     s0 = x0(1);
