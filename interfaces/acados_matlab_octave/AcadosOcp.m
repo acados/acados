@@ -136,7 +136,6 @@ classdef AcadosOcp < handle
                         self.cost.yref = zeros(ny,1);
                     end
                     if ny ~= size(cost.Vx, 1) || ny ~= size(cost.Vu, 1) || ny ~= size(cost.yref, 1)
-                        keyboard
                         error('inconsistent dimension ny, regarding W, Vx, Vu, yref.');
                     end
                 else
@@ -372,7 +371,6 @@ classdef AcadosOcp < handle
             end
 
             if ~strcmp(wrong_field, '')
-                keyboard
                 error(['Inconsistent size for field ', wrong_field, ' with dimension ', num2str(dim),...
                       '. Detected ns = ', num2str(ns), ' = nsbx + nsbu + nsg + nsh + nsphi.',...
                       ' With nsbx = ', num2str(nsbx), ', nsbu = ', num2str(nsbu), ' nsg = ', num2str(nsg),...
