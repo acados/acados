@@ -77,7 +77,7 @@ function model = detect_constr(model, constraints, stage_type)
         expr_constr = SX.sym('con_h_expr', 0, 0);
     end
 
-    if !(isa(expr_constr, 'casadi.SX') || isa(expr_constr, 'casadi.SX'))
+    if ~(isa(expr_constr, 'casadi.SX') || isa(expr_constr, 'casadi.SX'))
         disp('expr_constr =')
         disp(expr_constr)
         error("Constraint type detection require definition of constraints as CasADi SX or MX.")

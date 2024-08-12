@@ -206,7 +206,6 @@ classdef AcadosOcp < handle
             %% constraints
             % initial
             if ~isempty(constraints.x0)
-
                 if length(constraints.x0) ~= dims.nx
                     error('inconsistent constraint x0, regarding nx.');
                 end
