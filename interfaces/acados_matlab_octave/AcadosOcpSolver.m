@@ -50,17 +50,7 @@ classdef AcadosOcpSolver < handle
             obj.ocp = ocp;
             obj.ocp.make_consistent()
 
-            % detect GNSF structure
-            if strcmp(obj.ocp.solver_options.integrator_type, 'GNSF')
-                if obj.ocp.dims.gnsf_nx1 + obj.ocp.dims.gnsf_nx2 ~= obj.ocp.dims.nx
-                    % TODO: properly interface those.
-                    gnsf_transcription_opts = struct();
-                    detect_gnsf_structure(obj.ocp.model, obj.ocp.dims, gnsf_transcription_opts);
-                else
-                    warning('No GNSF model detected, assuming all required fields are set.')
-                end
-            end
-
+            % compile mex interface if needed
             obj.compile_mex_interface_if_needed(output_dir)
 
             % generate templated solver

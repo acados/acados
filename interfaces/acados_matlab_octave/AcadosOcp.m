@@ -93,6 +93,19 @@ classdef AcadosOcp < handle
             opts = self.solver_options;
 
             self.detect_cost_and_constraints();
+
+            % detect GNSF structure
+            if strcmp(opts.integrator_type, 'GNSF')
+                if dims.gnsf_nx1 + dims.gnsf_nx2 ~= dims.nx
+                    % TODO: properly interface those.
+                    gnsf_transcription_opts = struct();
+                    detect_gnsf_structure(model, dims, gnsf_transcription_opts);
+                else
+                    warning('No GNSF model detected, assuming all required fields are set.')
+                end
+            end
+
+            % OCP name
             self.name = model.name;
 
             % parameters
