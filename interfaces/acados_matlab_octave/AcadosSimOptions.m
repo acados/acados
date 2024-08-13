@@ -49,64 +49,21 @@ classdef AcadosSimOptions < handle
         compile_interface
     end
 
-    properties (Access = private)
-        sim_method_num_stages
-        sim_method_num_steps
-        sim_method_newton_iter
-        sim_method_newton_tol
-        sim_method_jac_reuse
-    end
     methods
-        %% get and set methods
-        % num_stages
-        function obj = set.num_stages(obj, val)
-            obj.sim_method_num_stages = val;
-        end
-        function val = get.num_stages(obj)
-            val = obj.sim_method_num_stages;
-        end
-        % num_steps
-        function obj = set.num_steps(obj, val)
-            obj.sim_method_num_steps = val;
-        end
-        function val = get.num_steps(obj)
-            val = obj.sim_method_num_steps;
-        end
-        % newton_iter
-        function obj = set.newton_iter(obj, val)
-            obj.sim_method_newton_iter = val;
-        end
-        function val = get.newton_iter(obj)
-            val = obj.sim_method_newton_iter;
-        end
-        % newton_tol
-        function obj = set.newton_tol(obj, val)
-            obj.sim_method_newton_tol = val;
-        end
-        function val = get.newton_tol(obj)
-            val = obj.sim_method_newton_tol;
-        end
-        % jac_reuse
-        function obj = set.jac_reuse(obj, val)
-            obj.sim_method_jac_reuse = val;
-        end
-        function val = get.jac_reuse(obj)
-            val = obj.sim_method_jac_reuse;
-        end
         function obj = AcadosSimOptions()
             obj.integrator_type = 'ERK';
             obj.collocation_type = 'GAUSS_LEGENDRE';
             obj.Tsim = [];
-            obj.sim_method_num_stages = 4;
-            obj.sim_method_num_steps = 1;
-            obj.sim_method_newton_iter = 3;
-            obj.sim_method_newton_tol = 0.;
+            obj.num_stages = 4;
+            obj.num_steps = 1;
+            obj.newton_iter = 3;
+            obj.newton_tol = 0.;
             obj.sens_forw = true;
             obj.sens_adj = false;
             obj.sens_algebraic = false;
             obj.sens_hess = false;
             obj.output_z = true;
-            obj.sim_method_jac_reuse = 0;
+            obj.jac_reuse = 0;
             obj.ext_fun_compile_flags = '-O2';
             obj.num_threads_in_batch_solve = 1;
             obj.compile_interface = []; % corresponds to automatic detection, possible values: true, false, []
@@ -120,7 +77,14 @@ classdef AcadosSimOptions < handle
             end
             s = struct();
             for fi = 1:numel(publicProperties)
-                s.(publicProperties{fi}) = self.(publicProperties{fi});
+                property_name = publicProperties{fi};
+                if strcmp(property_name, 'num_stages') || strcmp(property_name, 'num_steps') || strcmp(property_name, 'newton_iter') || ...
+                     strcmp(property_name, 'jac_reuse') || strcmp(property_name, 'newton_tol')
+                    out_name = strcat('sim_method_', property_name);
+                    s.(out_name) = self.(property_name);
+                else
+                    s.(property_name) = self.(property_name);
+                end
             end
         end
     end
