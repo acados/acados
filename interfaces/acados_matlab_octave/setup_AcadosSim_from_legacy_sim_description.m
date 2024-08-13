@@ -154,10 +154,10 @@ function sim = setup_AcadosSim_from_legacy_sim_description(model_old, opts_old)
         sim.solver_options.integrator_type = upper(opts.method);
     end
     sim.solver_options.collocation_type = upper(opts.collocation_type);
-    sim.solver_options.sim_method_num_stages = opts.num_stages;
-    sim.solver_options.sim_method_num_steps = opts.num_steps;
-    sim.solver_options.sim_method_newton_iter = opts.newton_iter;
-    sim.solver_options.sim_method_newton_tol = opts.newton_tol;
+    sim.solver_options.num_stages = opts.num_stages;
+    sim.solver_options.num_steps = opts.num_steps;
+    sim.solver_options.newton_iter = opts.newton_iter;
+    sim.solver_options.newton_tol = opts.newton_tol;
     sim.solver_options.Tsim = model.T;
     sim.solver_options.sens_forw = str2bool(opts.sens_forw);
     sim.solver_options.sens_adj = str2bool(opts.sens_adj);

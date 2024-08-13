@@ -34,22 +34,65 @@ classdef AcadosSimOptions < handle
         integrator_type
         collocation_type
         Tsim
-        sim_method_num_stages
-        sim_method_num_steps
-        sim_method_newton_iter
-        sim_method_newton_tol
+        num_stages
+        num_steps
+        newton_iter
+        newton_tol
+        jac_reuse
         sens_forw
         sens_adj
         sens_algebraic
         sens_hess
         output_z
-        sim_method_jac_reuse
         ext_fun_compile_flags
         num_threads_in_batch_solve
         compile_interface
+    end
 
+    properties (Access = private)
+        sim_method_num_stages
+        sim_method_num_steps
+        sim_method_newton_iter
+        sim_method_newton_tol
+        sim_method_jac_reuse
     end
     methods
+        %% get and set methods
+        % num_stages
+        function obj = set.num_stages(obj, val)
+            obj.sim_method_num_stages = val;
+        end
+        function val = get.num_stages(obj)
+            val = obj.sim_method_num_stages;
+        end
+        % num_steps
+        function obj = set.num_steps(obj, val)
+            obj.sim_method_num_steps = val;
+        end
+        function val = get.num_steps(obj)
+            val = obj.sim_method_num_steps;
+        end
+        % newton_iter
+        function obj = set.newton_iter(obj, val)
+            obj.sim_method_newton_iter = val;
+        end
+        function val = get.newton_iter(obj)
+            val = obj.sim_method_newton_iter;
+        end
+        % newton_tol
+        function obj = set.newton_tol(obj, val)
+            obj.sim_method_newton_tol = val;
+        end
+        function val = get.newton_tol(obj)
+            val = obj.sim_method_newton_tol;
+        end
+        % jac_reuse
+        function obj = set.jac_reuse(obj, val)
+            obj.sim_method_jac_reuse = val;
+        end
+        function val = get.jac_reuse(obj)
+            val = obj.sim_method_jac_reuse;
+        end
         function obj = AcadosSimOptions()
             obj.integrator_type = 'ERK';
             obj.collocation_type = 'GAUSS_LEGENDRE';

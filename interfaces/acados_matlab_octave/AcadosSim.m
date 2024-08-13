@@ -146,10 +146,10 @@ classdef AcadosSim < handle
             end
 
             if(strcmp(self.solver_options.integrator_type, "ERK"))
-                if(self.solver_options.sim_method_num_stages == 1 || self.solver_options.sim_method_num_stages == 2 || ...
-                    self.solver_options.sim_method_num_stages == 3 || self.solver_options.sim_method_num_stages == 4)
+                if(self.solver_options.num_stages == 1 || self.solver_options.num_stages == 2 || ...
+                    self.solver_options.num_stages == 3 || self.solver_options.num_stages == 4)
                 else
-                    error(['ERK: sim_method_num_stages = ', num2str(self.solver_options.sim_method_num_stages) ' not available. Only number of stages = {1,2,3,4} implemented!']);
+                    error(['ERK: num_stages = ', num2str(self.solver_options.num_stages) ' not available. Only number of stages = {1,2,3,4} implemented!']);
                 end
             end
 
