@@ -124,9 +124,12 @@ function ocp_generate_c_code(ocp)
     disable_last_warning();  % show warning for struct conversion only once
     for iprop = 1:length(props)
         this_prop = props{iprop};
+        % add logic here if you want to do something based on the property's value
+        if strcmp(this_prop, 'x0')
+            continue;
+        end
         % add logic here if you want to work with select properties
         this_prop_value = ocp.constraints.(this_prop);
-        % add logic here if you want to do something based on the property's value
         if all(size(this_prop_value) == [1 1])
             ocp.constraints.(this_prop) = num2cell(ocp.constraints.(this_prop));
         end

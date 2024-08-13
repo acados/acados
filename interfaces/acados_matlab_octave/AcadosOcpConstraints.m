@@ -149,7 +149,6 @@ classdef AcadosOcpConstraints < handle
             obj.idxbx_0 = [];
             obj.idxbxe_0 = [];
             obj.has_x0 = false;
-            obj.x0 = [];
 
             obj.lbx = [];
             obj.ubx = [];
@@ -231,6 +230,33 @@ classdef AcadosOcpConstraints < handle
 
         end
 
+        % x0
+        function obj = set.x0(obj, x0)
+            nx = length(x0);
+            obj.idxbx_0 = 0:nx-1;
+            obj.idxbxe_0 = 0:nx-1;
+            obj.lbx_0 = x0;
+            obj.ubx_0 = x0;
+            obj.has_x0 = true;
+        end
+        function val = get.x0(obj)
+            if obj.has_x0
+                val = obj.lbx_0;
+            else
+                disp("x0 is not set. You can set it or specify lbx_0, ubx_0, idxbx_0, idxbxe_0 to implement general bounds on x0.")
+                disp("")
+                disp("idxbx_0: ")
+                disp(obj.idxbx_0)
+                disp("lbx_0: ")
+                disp(obj.lbx_0)
+                disp("ubx_0: ")
+                disp(obj.ubx_0)
+                disp("idxbxe_0: ")
+                disp(obj.idxbxe_0)
+                val = [];
+            end
+        end
+
         function s = struct(self)
             if exist('properties')
                 publicProperties = eval('properties(self)');
@@ -239,9 +265,11 @@ classdef AcadosOcpConstraints < handle
             end
             s = struct();
             for fi = 1:numel(publicProperties)
-                s.(publicProperties{fi}) = self.(publicProperties{fi});
+                property_name = publicProperties{fi};
+                if ~strcmp(property_name, 'x0')
+                    s.(property_name) = self.(property_name);
+                end
             end
         end
     end
 end
-

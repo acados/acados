@@ -230,20 +230,6 @@ classdef AcadosOcp < handle
 
             %% constraints
             % initial
-            if ~isempty(constraints.x0)
-                if length(constraints.x0) ~= dims.nx
-                    error('inconsistent constraint x0, regarding nx.');
-                end
-                if isempty(constraints.idxbx_0) && isempty(constraints.lbx_0) && isempty(constraints.ubx_0) && isempty(constraints.idxbxe_0)
-                    constraints.idxbx_0 = 0:dims.nx-1;
-                    constraints.idxbxe_0 = 0:dims.nx-1;
-                    constraints.lbx_0 = constraints.x0;
-                    constraints.ubx_0 = constraints.x0;
-                    constraints.has_x0 = true;
-                else
-                    error('If constraint x0 is defined, bounds on x0 should not be defined, check properties lbx_0, ubx_0, idxbx_0, idxbxe_0.');
-                end
-            end
             if ~isempty(constraints.idxbx_0) && ~isempty(constraints.lbx_0) && ~isempty(constraints.ubx_0)
                 nbx_0 = length(constraints.lbx_0);
                 if nbx_0 ~= length(constraints.ubx_0) || nbx_0 ~= length(constraints.idxbx_0)
