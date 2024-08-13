@@ -87,11 +87,6 @@ function render_acados_sim_templates(acados_sim_json_file)
     out_file = ['acados_sim_set_', model_name, '.c'];
     render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
 
-    % % MEX solve
-    % template_file = 'acados_mex_solve.in.c';
-    % out_file = ['acados_mex_solve_', model_name, '.c'];
-    % render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
-
     % sim_solver
     template_file = 'acados_sim_solver.in.c';
     out_file = ['acados_sim_solver_', model_name, '.c'];
