@@ -142,7 +142,7 @@ jobs:
       working-directory: ${{runner.workspace}}/acados/build
       run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DACADOS_WITH_QPOASES=$ACADOS_WITH_QPOASES -DACADOS_WITH_DAQP=$ACADOS_WITH_DAQP -DACADOS_WITH_QPDUNES=$ACADOS_WITH_QPDUNES -DACADOS_WITH_OSQP=$ACADOS_WITH_OSQP -DACADOS_PYTHON=OFF -DACADOS_OCTAVE=OFF
 
-    - name: Configure MATLAB worskpace
+    - name: Configure MATLAB workspace
       shell: bash
       working-directory: ${{runner.workspace}}/acados/examples/acados_matlab_octave/test
       run: |
