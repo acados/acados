@@ -97,6 +97,8 @@ if(ACADOS_OCTAVE)
 
     # Force serial execution for tests in the same directory
     # Directory test
+    set_tests_properties(octave_new_ocp PROPERTIES DEPENDS octave_new_sim)
+
     set_tests_properties(octave_test_target_selector PROPERTIES DEPENDS octave_test_generic_ext_cost_disc_dyn)
     set_tests_properties(octave_test_generic_ext_cost_disc_dyn PROPERTIES DEPENDS octave_test_dim_check)
     set_tests_properties(octave_test_dim_check PROPERTIES DEPENDS octave_test_sim_forw)
