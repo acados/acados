@@ -85,6 +85,6 @@ S_forw = sim_solver.get('S_forw');
 figure;
 plot(1:N_sim+1, x_sim);
 legend('p', 'theta', 'v', 'omega');
-if is_octave()
-    waitforbuttonpress;
-end
+% if is_octave()
+%     waitforbuttonpress;
+% end
