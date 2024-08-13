@@ -39,6 +39,8 @@ targets = {
     '../generic_external_cost/external_cost_example_ocp.m';
     '../getting_started/extensive_example_ocp.m';
 %     '../getting_started/minimal_example_closed_loop.m';
+    '../getting_started/new_minimal_example_sim.m';
+    '../getting_started/new_minimal_example_ocp.m';
     '../getting_started/minimal_example_sim.m';
 %     '../getting_started/simulink_example.m';
 %     '../getting_started/simulink_example_advanced.m';
