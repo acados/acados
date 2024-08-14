@@ -79,12 +79,8 @@ function ocp_generate_c_code(ocp)
     json_layout_filename = fullfile(acados_folder, 'interfaces',...
                                    'acados_matlab_octave', ...
                                    'acados_template_mex', '+acados_template_mex','acados_ocp_layout.json');
-    % if is_octave()
     addpath(fullfile(acados_folder, 'external', 'jsonlab'))
     acados_layout = loadjson(fileread(json_layout_filename));
-    % else % Matlab
-    %     acados_layout = jsondecode(fileread(json_layout_filename));
-    % end
 
     %% reshape constraints
     constr_layout = acados_layout.constraints;
@@ -183,30 +179,25 @@ function ocp_generate_c_code(ocp)
                 e.message ]);
     end
     %% dump JSON file
-    % if is_octave()
-        % savejson does not work for classes!
-        % -> consider making the ocp properties structs directly.
-        ocp_json_struct = orderfields(ocp.struct());
-        ocp_json_struct.dims = orderfields(ocp_json_struct.dims.struct());
-        ocp_json_struct.cost = orderfields(ocp_json_struct.cost.struct());
-        ocp_json_struct.constraints = orderfields(ocp_json_struct.constraints.struct());
-        ocp_json_struct.solver_options = orderfields(ocp_json_struct.solver_options.struct());
+    ocp_json_struct = orderfields(ocp.struct());
+    ocp_json_struct.dims = orderfields(ocp_json_struct.dims.struct());
+    ocp_json_struct.cost = orderfields(ocp_json_struct.cost.struct());
+    ocp_json_struct.constraints = orderfields(ocp_json_struct.constraints.struct());
+    ocp_json_struct.solver_options = orderfields(ocp_json_struct.solver_options.struct());
 
-        % add compilation information to json
-        libs = loadjson(fileread(fullfile(acados_folder, 'lib', 'link_libs.json')));
-        ocp_json_struct.acados_link_libs = orderfields(libs);
-        if ismac
-            ocp_json_struct.os = 'mac';
-        elseif isunix
-            ocp_json_struct.os = 'unix';
-        else
-            ocp_json_struct.os = 'pc';
-        end
+    % add compilation information to json
+    libs = loadjson(fileread(fullfile(acados_folder, 'lib', 'link_libs.json')));
+    ocp_json_struct.acados_link_libs = orderfields(libs);
+    if ismac
+        ocp_json_struct.os = 'mac';
+    elseif isunix
+        ocp_json_struct.os = 'unix';
+    else
+        ocp_json_struct.os = 'pc';
+    end
 
-        json_string = savejson('',ocp_json_struct, 'ForceRootName', 0);
-    % else % Matlab
-    %     json_string = jsonencode(ocp);
-    % end
+    json_string = savejson('',ocp_json_struct, 'ForceRootName', 0);
+
     fid = fopen(ocp.json_file, 'w');
     if fid == -1, error('Cannot create JSON file'); end
     fwrite(fid, json_string, 'char');

@@ -71,12 +71,9 @@ function sim_generate_c_code(sim)
     json_layout_filename = fullfile(acados_folder, 'interfaces',...
                                    'acados_matlab_octave', ...
                                    'acados_template_mex', '+acados_template_mex','acados_sim_layout.json');
-    % if is_octave()
+
     addpath(fullfile(acados_folder, 'external', 'jsonlab'))
     acados_sim_layout = loadjson(fileread(json_layout_filename));
-    % else % Matlab
-    %     acados_sim_layout = jsondecode(fileread(json_layout_filename));
-    % end
 
     %% reshape opts
     opts_layout = acados_sim_layout.solver_options;
@@ -107,28 +104,23 @@ function sim_generate_c_code(sim)
     sim.parameter_values = reshape(num2cell(sim.parameter_values), [ 1, dims.np]);
 
     %% dump JSON file
-    % if is_octave()
-        % savejson does not work for classes!
-        % -> consider making the sim properties structs directly.
-        sim_json_struct = sim.struct();
-        sim_json_struct.dims = sim.dims.struct();
-        sim_json_struct.solver_options = sim.solver_options.struct();
+    sim_json_struct = sim.struct();
+    sim_json_struct.dims = sim.dims.struct();
+    sim_json_struct.solver_options = sim.solver_options.struct();
 
-        % add compilation information to json
-        libs = loadjson(fileread(fullfile(acados_folder, 'lib', 'link_libs.json')));
-        sim_json_struct.acados_link_libs = libs;
-        if ismac
-            sim_json_struct.os = 'mac';
-        elseif isunix
-            sim_json_struct.os = 'unix';
-        else
-            sim_json_struct.os = 'pc';
-        end
+    % add compilation information to json
+    libs = loadjson(fileread(fullfile(acados_folder, 'lib', 'link_libs.json')));
+    sim_json_struct.acados_link_libs = libs;
+    if ismac
+        sim_json_struct.os = 'mac';
+    elseif isunix
+        sim_json_struct.os = 'unix';
+    else
+        sim_json_struct.os = 'pc';
+    end
 
-        json_string = savejson('', sim_json_struct, 'ForceRootName', 0);
-    % else % Matlab
-    %     json_string = jsonencode(sim);
-    % end
+    json_string = savejson('', sim_json_struct, 'ForceRootName', 0);
+
     fid = fopen(sim.json_file, 'w');
     if fid == -1, error('Cannot create JSON file'); end
     fwrite(fid, json_string, 'char');
