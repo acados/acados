@@ -54,8 +54,7 @@ classdef AcadosOcp < handle
             obj.constraints = AcadosOcpConstraints();
             obj.solver_options = AcadosOcpOptions();
             obj.model = AcadosModel();
-            obj.acados_include_path = [];
-            obj.acados_lib_path = [];
+
             obj.parameter_values = [];
             obj.problem_class = 'OCP';
             obj.simulink_opts = [];
@@ -67,6 +66,11 @@ classdef AcadosOcp < handle
                 obj.shared_lib_ext = '.dylib';
             end
             obj.code_export_directory = 'c_generated_code';
+
+            % set include and lib path
+            acados_folder = getenv('ACADOS_INSTALL_DIR');
+            obj.acados_include_path = [acados_folder, '/include'];
+            obj.acados_lib_path = [acados_folder, '/lib'];
         end
 
         function s = struct(self)
