@@ -93,7 +93,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     memcpy(fieldnames[8],"capsule",sizeof("capsule"));
 
     // create output struct - C_ocp
-    plhs[0] = mxCreateStructMatrix(1, 1, 9, (const char **) fieldnames);
+    plhs[0] = mxCreateStructMatrix(1, 1, FIELDS_OCP, (const char **) fieldnames);
 
     // MEX: config, dims, opts, in, out, solver, sens_out, plan
     // plan

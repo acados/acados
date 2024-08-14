@@ -94,6 +94,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int ncol = (int) mxGetN( prhs[2] );
 
     int N = dims->N;
+    /* TODO: MOCP fix dims!!!!!!!!! */
     int nu = dims->nu[0];
     int nx = dims->nx[0];
 
@@ -551,11 +552,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "p"))
     {
-        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, {{ dims.np }})
         if (nrhs==min_nrhs) // all stages
         {
             for (int ii=0; ii<=N; ii++)
             {
+                acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "p");
+                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size)
                 {{ model.name }}_acados_update_params(capsule, ii, value, matlab_size);
             }
         }
@@ -570,6 +572,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {% if dims.np > 0 %}
         MEX_DIM_CHECK_MAT(fun_name, field, nrow, ncol, nrow, 2);
         // create int index vector
+        // TODO: MOCP get max np!
         int idx_tmp[{{ dims.np }}];
         for (int ip = 0; ip<nrow; ip++)
             idx_tmp[ip] = (int) value[ip];
