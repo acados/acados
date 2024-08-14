@@ -558,13 +558,15 @@ classdef AcadosOcp < handle
                     error(['time steps are not consistent with time horizon tf, ', ...
                         'got tf = ' num2str(opts.tf) '; sum(time_steps) = ' num2str(sum_time_steps) '.']);
                 end
-                % just to have them available, e.g. for plotting;
+            else
+                opts.time_steps = opts.tf/N * ones(N,1);
+            end
+            % add consistent shooting_nodes e.g. for plotting;
+            if isempty(opts.shooting_nodes)
                 opts.shooting_nodes = zeros(N+1, 1);
                 for i = 1:N
                     opts.shooting_nodes(i+1) = sum(opts.time_steps(1:i));
                 end
-            else
-                opts.time_steps = opts.tf/N * ones(N,1);
             end
             if any(opts.time_steps < 0)
                 error(['ocp discretization: time_steps between shooting nodes must all be > 0', ...
