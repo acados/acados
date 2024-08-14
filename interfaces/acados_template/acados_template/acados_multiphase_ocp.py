@@ -29,7 +29,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from typing import Union
+from typing import Union, List
 import numpy as np
 from copy import deepcopy
 
@@ -144,7 +144,7 @@ class AcadosMultiphaseOcp:
 
         self.phases_dims = [AcadosOcpDims() for _ in range(n_phases)]
 
-        self.dummy_ocp_list = []
+        self.dummy_ocp_list: List[AcadosOcp] = []
 
         # NOTE: this is the same for AcadosOcp
         self.solver_options = AcadosOcpOptions()
