@@ -32,7 +32,7 @@
 function ocp_generate_c_code(ocp)
     %% create folder
 
-    check_dir_and_create(fullfile(pwd,'c_generated_code'));
+    check_dir_and_create(fullfile(pwd,ocp.code_export_directory));
 
     %% generate C code for CasADi functions / copy external functions
     cost = ocp.cost;
@@ -48,7 +48,7 @@ function ocp_generate_c_code(ocp)
 
     % dynamics
     % model dir is always need, other dirs are  only created if necessary
-    model_dir = fullfile(pwd, 'c_generated_code', [ocp.name '_model']);
+    model_dir = fullfile(pwd, ocp.code_export_directory, [ocp.name '_model']);
     check_dir_and_create(model_dir);
 
     if (strcmp(solver_opts.integrator_type, 'ERK'))
@@ -69,7 +69,7 @@ function ocp_generate_c_code(ocp)
     % cost
     cost_types = {cost.cost_type_0, cost.cost_type, cost.cost_type_e};
     cost_ext_fun_types = {cost.cost_ext_fun_type_0, cost.cost_ext_fun_type, cost.cost_ext_fun_type_e};
-    cost_dir = fullfile(pwd, 'c_generated_code', [ocp.name '_cost']);
+    cost_dir = fullfile(pwd, ocp.code_export_directory, [ocp.name '_cost']);
 
     for i = 1:3
         if strcmp(cost_types{i}, 'NONLINEAR_LS')
@@ -94,7 +94,7 @@ function ocp_generate_c_code(ocp)
     % constraints
     constraints_types = {constraints.constr_type_0, constraints.constr_type, constraints.constr_type_e};
     constraints_dims = {dims.nh_0, dims.nh, dims.nh_e};
-    constraints_dir = fullfile(pwd, 'c_generated_code', [ocp.name '_constraints']);
+    constraints_dir = fullfile(pwd, ocp.code_export_directory, [ocp.name '_constraints']);
 
     for i = 1:3
         if strcmp(constraints_types{i}, 'BGH') && constraints_dims{i} > 0
