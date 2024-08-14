@@ -794,7 +794,7 @@ classdef AcadosOcp < handle
             matlab_template_dir = fullfile(acados_template_folder, 'c_templates_tera','matlab_templates', '*');
             json_fullfile = fullfile(pwd, self.json_file);
             main_dir = pwd;
-            chdir('c_generated_code');
+            chdir(self.code_export_directory);
 
             % main
             template_file = 'main.in.c';
