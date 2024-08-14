@@ -102,11 +102,6 @@ function ocp_generate_c_code(ocp)
         end
     end
 
-    % set include and lib path
-    acados_folder = getenv('ACADOS_INSTALL_DIR');
-    ocp.acados_include_path = [acados_folder, '/include'];
-    ocp.acados_lib_path = [acados_folder, '/lib'];
-
     %% remove CasADi objects from model
     model_without_expr = struct();
     model_without_expr.name = ocp.model.name;
