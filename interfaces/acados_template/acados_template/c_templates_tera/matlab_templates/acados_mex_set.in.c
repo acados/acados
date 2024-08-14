@@ -360,17 +360,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             ocp_nlp_cost_model_set(config, dims, in, ii, "zu", value);
         }
     }
-    // constraints TODO
-    // // NOTE(oj): how is it with Jbx, Jbu, idxb can they be changed?!
-    // else if (!strcmp(field, "constr_lbx"))
-    // {
-    //     // bounds at 0 are a special case.
-    //     if (s0==0)
-    //     {
-    //         sprintf(buffer, "%s cannot set %s for stage 0", fun_name, field);
-    //         mexErrMsgTxt(buffer);
-    //     }
-    // }
     // initializations
     else if (!strcmp(field, "init_x") || !strcmp(field, "x"))
     {
