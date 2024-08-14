@@ -279,7 +279,7 @@ function ocp_generate_c_code(ocp)
     fwrite(fid, json_string, 'char');
     fclose(fid);
     %% render templated code
-    acados_template_mex.render_acados_templates(ocp.json_file)
+    ocp.render_templates()
     acados_template_mex.compile_ocp_shared_lib(ocp.code_export_directory)
 end
 
