@@ -82,6 +82,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // mexPrintf("\nin ocp_get: field%s\n", field);
 
     int N = dims->N;
+    /* TODO: MOCP fix dims!!!!!!!!! */
     int nu = dims->nu[0];
     int nx = dims->nx[0];
     int nz = dims->nz[0];
