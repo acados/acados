@@ -43,7 +43,7 @@ function render_acados_sim_templates(acados_sim_json_file)
     end
 
     if ~exist( t_renderer_location, 'file' )
-        acados_template_mex.set_up_t_renderer( t_renderer_location )
+        set_up_t_renderer( t_renderer_location )
     end
 
     %% load json data

@@ -37,13 +37,13 @@ function render_acados_templates(acados_ocp_nlp_json_file)
 
     %% check if t_renderer is available -> download if not
     if ispc()
-        t_renderer_location = fullfile(acados_root_dir,'bin','t_renderer.exe');
+        t_renderer_location = fullfile(acados_root_dir, 'bin','t_renderer.exe');
     else
-        t_renderer_location = fullfile(acados_root_dir,'bin','t_renderer');
+        t_renderer_location = fullfile(acados_root_dir, 'bin','t_renderer');
     end
 
     if ~exist( t_renderer_location, 'file' )
-        acados_template_mex.set_up_t_renderer( t_renderer_location )
+        set_up_t_renderer( t_renderer_location )
     end
 
     %% load json data
