@@ -31,76 +31,9 @@
 
 function ocp_generate_c_code(ocp)
     %% create folder
-
     check_dir_and_create(fullfile(pwd,ocp.code_export_directory));
 
-    %% generate C code for CasADi functions / copy external functions
-    cost = ocp.cost;
-    solver_opts = ocp.solver_options;
-    constraints = ocp.constraints;
-    dims = ocp.dims;
-
-    % options for code generation
-    code_gen_opts = struct();
-    code_gen_opts.generate_hess = strcmp(solver_opts.hessian_approx, 'EXACT');
-    code_gen_opts.with_solution_sens_wrt_params = solver_opts.with_solution_sens_wrt_params;
-    code_gen_opts.with_value_sens_wrt_params = solver_opts.with_value_sens_wrt_params;
-
-    % dynamics
-    % model dir is always need, other dirs are  only created if necessary
-    model_dir = fullfile(pwd, ocp.code_export_directory, [ocp.name '_model']);
-    check_dir_and_create(model_dir);
-
-    if (strcmp(solver_opts.integrator_type, 'ERK'))
-        generate_c_code_explicit_ode(ocp.model, code_gen_opts, model_dir);
-    elseif (strcmp(solver_opts.integrator_type, 'IRK')) && strcmp(ocp.model.dyn_ext_fun_type, 'casadi')
-        generate_c_code_implicit_ode(ocp.model, code_gen_opts, model_dir);
-    elseif (strcmp(solver_opts.integrator_type, 'GNSF'))
-        generate_c_code_gnsf(ocp.model, code_gen_opts, model_dir);
-    elseif (strcmp(solver_opts.integrator_type, 'DISCRETE')) && strcmp(ocp.model.dyn_ext_fun_type, 'casadi')
-        generate_c_code_disc_dyn(ocp.model, code_gen_opts, model_dir);
-    end
-    if strcmp(ocp.model.dyn_ext_fun_type, 'generic')
-        copyfile( fullfile(pwd, ocp.model.dyn_generic_source), model_dir);
-    end
-
-    stage_types = {'initial', 'path', 'terminal'};
-
-    % cost
-    cost_types = {cost.cost_type_0, cost.cost_type, cost.cost_type_e};
-    cost_ext_fun_types = {cost.cost_ext_fun_type_0, cost.cost_ext_fun_type, cost.cost_ext_fun_type_e};
-    cost_dir = fullfile(pwd, ocp.code_export_directory, [ocp.name '_cost']);
-
-    for i = 1:3
-        if strcmp(cost_types{i}, 'NONLINEAR_LS')
-            generate_c_code_nonlinear_least_squares( ocp.model, cost_dir, stage_types{i} );
-
-        elseif strcmp(cost_types{i}, 'CONVEX_OVER_NONLINEAR')
-            % TODO
-            error("Convex-over-nonlinear cost is not implemented yet.")
-
-        elseif strcmp(cost_types{i}, 'EXTERNAL')
-            if strcmp(cost_ext_fun_types{i}, 'casadi')
-                generate_c_code_ext_cost(ocp.model, cost_dir, stage_types{i});
-            elseif strcmp(cost_ext_fun_types{i}, 'generic')
-                setup_generic_cost(cost, cost_dir, stage_types{i})
-            else
-                error('Unknown value for cost_ext_fun_types %s', cost_ext_fun_types{i});
-            end
-        end
-    end
-
-
-    % constraints
-    constraints_types = {constraints.constr_type_0, constraints.constr_type, constraints.constr_type_e};
-    constraints_dims = {dims.nh_0, dims.nh, dims.nh_e};
-    constraints_dir = fullfile(pwd, ocp.code_export_directory, [ocp.name '_constraints']);
-
-    for i = 1:3
-        if strcmp(constraints_types{i}, 'BGH') && constraints_dims{i} > 0
-            generate_c_code_nonlinear_constr( ocp.model, constraints_dir, stage_types{i} );
-        end
-    end
+    ocp.generate_external_functions();
 
     %% remove CasADi objects from model
     model_without_expr = struct();
