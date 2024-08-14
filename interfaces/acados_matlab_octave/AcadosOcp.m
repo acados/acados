@@ -848,11 +848,8 @@ classdef AcadosOcp < handle
             end
 
             %% load json data
-            % if is_octave()
             acados_ocp = loadjson(fileread(self.json_file));
-            % else % Matlab
-            %     acados_ocp = jsondecode(fileread(self.json_file));
-            % end
+
             % get model name from json file
             model_name = acados_ocp.model.name;
 
