@@ -53,8 +53,14 @@ classdef AcadosOcpSolver < handle
             % compile mex interface if needed
             obj.compile_mex_interface_if_needed(output_dir)
 
-            % generate templated solver
-            ocp_generate_c_code(obj.ocp);
+            % generate
+            check_dir_and_create(fullfile(pwd, ocp.code_export_directory));
+            ocp.generate_external_functions();
+            ocp.dump_to_json()
+            ocp.render_templates()
+
+            % build
+            acados_template_mex.compile_ocp_shared_lib(ocp.code_export_directory)
 
             % templated MEX
             return_dir = pwd();
