@@ -28,7 +28,7 @@
  * POSSIBILITY OF SUCH DAMAGE.;
  */
 
-#define S_FUNCTION_NAME acados_solver_sfunction_{{ model.name }}
+#define S_FUNCTION_NAME acados_solver_sfunction_{{ name }}
 #define S_FUNCTION_LEVEL 2
 
 #define MDL_START
@@ -39,8 +39,8 @@
 #include "acados_c/external_function_interface.h"
 
 // example specific
-#include "{{ model.name }}_model/{{ model.name }}_model.h"
-#include "acados_solver_{{ model.name }}.h"
+#include "{{ name }}_model/{{ name }}_model.h"
+#include "acados_solver_{{ name }}.h"
 
 
 {%- if not solver_options.custom_update_filename %}
@@ -514,8 +514,8 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 
 static void mdlStart(SimStruct *S)
 {
-    {{ model.name }}_solver_capsule *capsule = {{ model.name }}_acados_create_capsule();
-    {{ model.name }}_acados_create(capsule);
+    {{ name }}_solver_capsule *capsule = {{ name }}_acados_create_capsule();
+    {{ name }}_acados_create(capsule);
 
     ssSetUserData(S, (void*)capsule);
 }
@@ -523,11 +523,11 @@ static void mdlStart(SimStruct *S)
 
 static void mdlOutputs(SimStruct *S, int_T tid)
 {
-    {{ model.name }}_solver_capsule *capsule = ssGetUserData(S);
-    ocp_nlp_config *nlp_config = {{ model.name }}_acados_get_nlp_config(capsule);
-    ocp_nlp_dims *nlp_dims = {{ model.name }}_acados_get_nlp_dims(capsule);
-    ocp_nlp_in *nlp_in = {{ model.name }}_acados_get_nlp_in(capsule);
-    ocp_nlp_out *nlp_out = {{ model.name }}_acados_get_nlp_out(capsule);
+    {{ name }}_solver_capsule *capsule = ssGetUserData(S);
+    ocp_nlp_config *nlp_config = {{ name }}_acados_get_nlp_config(capsule);
+    ocp_nlp_dims *nlp_dims = {{ name }}_acados_get_nlp_dims(capsule);
+    ocp_nlp_in *nlp_in = {{ name }}_acados_get_nlp_in(capsule);
+    ocp_nlp_out *nlp_out = {{ name }}_acados_get_nlp_out(capsule);
 
     InputRealPtrsType in_sign;
 
@@ -592,7 +592,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     {
         for (int jj = 0; jj < {{ dims.np }}; jj++)
             buffer[jj] = (double)(*in_sign[ii*{{dims.np}}+jj]);
-        {{ model.name }}_acados_update_params(capsule, ii, buffer, {{ dims.np }});
+        {{ name }}_acados_update_params(capsule, ii, buffer, {{ dims.np }});
     }
   {%- endif %}
 
@@ -820,7 +820,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     double reset = (double)(*in_sign[0]);
     if (reset)
     {
-        {{ model.name }}_acados_reset(capsule, 1);
+        {{ name }}_acados_reset(capsule, 1);
     }
   {%- endif %}
 
@@ -913,7 +913,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
                 {
                     buffer[jj] = (double)(*in_sign[jj + buffer_offset]);
                 }
-                {{ model.name }}_acados_update_params_sparse(capsule, ii, idx, buffer, {{ param_length }});
+                {{ name }}_acados_update_params_sparse(capsule, ii, idx, buffer, {{ param_length }});
             }
         }
     {%- endif -%}
@@ -924,7 +924,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
   {%- if custom_update_filename == "" and not simulink_opts.inputs.rti_phase %}
     int rti_phase = 0;
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "rti_phase", &rti_phase);
-    int acados_status = {{ model.name }}_acados_solve(capsule);
+    int acados_status = {{ name }}_acados_solve(capsule);
     // get time
     ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_tot", (void *) buffer);
     tmp_double = buffer[0];
@@ -936,7 +936,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     rti_phase input only supported for custom_update_filename == ""!
     {% else %}
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "rti_phase", &rti_phase);
-    int acados_status = {{ model.name }}_acados_solve(capsule);
+    int acados_status = {{ name }}_acados_solve(capsule);
     // get time
     ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_tot", (void *) buffer);
     tmp_double = buffer[0];
@@ -945,7 +945,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // preparation
     int rti_phase = 1;
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "rti_phase", &rti_phase);
-    int acados_status = {{ model.name }}_acados_solve(capsule);
+    int acados_status = {{ name }}_acados_solve(capsule);
 
     // preparation time
     ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_tot", (void *) buffer);
@@ -954,12 +954,12 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // call custom update function
     int data_len = 0;
     double* c_data; // TODO: only works with empty..
-    acados_status = {{ model.name }}_acados_custom_update(capsule, c_data, data_len);
+    acados_status = {{ name }}_acados_custom_update(capsule, c_data, data_len);
 
     // feedback
     rti_phase = 2;
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "rti_phase", &rti_phase);
-    acados_status = {{ model.name }}_acados_solve(capsule);
+    acados_status = {{ name }}_acados_solve(capsule);
     // feedback time
     ocp_nlp_get(nlp_config, capsule->nlp_solver, "time_tot", (void *) buffer);
     tmp_double += buffer[0];
@@ -1097,10 +1097,10 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
 static void mdlTerminate(SimStruct *S)
 {
-    {{ model.name }}_solver_capsule *capsule = ssGetUserData(S);
+    {{ name }}_solver_capsule *capsule = ssGetUserData(S);
 
-    {{ model.name }}_acados_free(capsule);
-    {{ model.name }}_acados_free_capsule(capsule);
+    {{ name }}_acados_free(capsule);
+    {{ name }}_acados_free_capsule(capsule);
 }
 
 

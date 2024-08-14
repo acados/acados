@@ -37,7 +37,7 @@
 // acados
 #include "acados/utils/print.h"
 #include "acados_c/ocp_nlp_interface.h"
-#include "acados_solver_{{ model.name }}.h"
+#include "acados_solver_{{ name }}.h"
 
 // mex
 #include "mex.h"
@@ -60,7 +60,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     const mxArray *C_ocp = prhs[0];
     // capsule
     ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "capsule" ) );
-    {{ model.name }}_solver_capsule *capsule = ({{ model.name }}_solver_capsule *) ptr[0];
+    {{ name }}_solver_capsule *capsule = ({{ name }}_solver_capsule *) ptr[0];
     // plan
     ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "plan" ) );
     ocp_nlp_plan_t *plan = (ocp_nlp_plan_t *) ptr[0];
@@ -547,13 +547,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             {
                 acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "p");
                 MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size)
-                {{ model.name }}_acados_update_params(capsule, ii, value, matlab_size);
+                {{ name }}_acados_update_params(capsule, ii, value, matlab_size);
             }
         }
         else if (nrhs==min_nrhs+1) // one stage
         {
             int stage = mxGetScalar( prhs[3] );
-            {{ model.name }}_acados_update_params(capsule, stage, value, matlab_size);
+            {{ name }}_acados_update_params(capsule, stage, value, matlab_size);
         }
     }
     else if (!strcmp(field, "params_sparse"))
@@ -570,13 +570,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         {
             for (int ii=0; ii<=N; ii++)
             {
-                {{ model.name }}_acados_update_params_sparse(capsule, ii, idx_tmp, value+nrow, nrow);
+                {{ name }}_acados_update_params_sparse(capsule, ii, idx_tmp, value+nrow, nrow);
             }
         }
         else if (nrhs==min_nrhs+1) // one stage
         {
             int stage = mxGetScalar( prhs[3] );
-                {{ model.name }}_acados_update_params_sparse(capsule, stage, idx_tmp, value+nrow, nrow);
+                {{ name }}_acados_update_params_sparse(capsule, stage, idx_tmp, value+nrow, nrow);
         }
 {% endif %}
     }
