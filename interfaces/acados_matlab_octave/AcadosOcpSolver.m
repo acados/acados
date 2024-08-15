@@ -66,7 +66,7 @@ classdef AcadosOcpSolver < handle
             return_dir = pwd();
             cd(obj.ocp.code_export_directory)
 
-            mex_solver_name = sprintf('%s_mex_solver', obj.ocp.model.name);
+            mex_solver_name = sprintf('%s_mex_solver', obj.ocp.name);
             mex_solver = str2func(mex_solver_name);
             obj.t_ocp = mex_solver();
             addpath(pwd());
