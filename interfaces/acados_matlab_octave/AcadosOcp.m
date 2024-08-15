@@ -1018,38 +1018,6 @@ classdef AcadosOcp < handle
                 end
             end
 
-            %% reshape opts
-            opts = ocp.solver_options;
-            opts_layout = acados_layout.solver_options;
-            fields = fieldnames(opts_layout);
-            for i = 1:numel(fields)
-                if strcmp(opts_layout.(fields{i}){1}, 'ndarray')
-                    property_dim_names = opts_layout.(fields{i}){2};
-                    if length(property_dim_names) == 1 % vector
-                        this_dims = [1, ocp.dims.(property_dim_names{1})];
-                    else % matrix
-                        this_dims = [ocp.dims.(property_dim_names{1}), ocp.dims.(property_dim_names{2})];
-                    end
-                    try
-                        opts.(fields{i}) = reshape(opts.(fields{i}), this_dims);
-                    catch e
-                        error(['error while reshaping opts.' fields{i} ...
-                            ' to dimension ' num2str(this_dims), ', got ',...
-                            num2str( size(opts.(fields{i}) )) , 10,...
-                            e.message ]);
-                    end
-                    if this_dims(1) == 1 && length(property_dim_names) ~= 1 % matrix with 1 row
-                        opts.(fields{i}) = {opts.(fields{i})};
-                    end
-                end
-            end
-            opts.time_steps = reshape(num2cell(opts.time_steps), [1, ocp.dims.N]);
-            opts.sim_method_num_stages = reshape(num2cell(opts.sim_method_num_stages), [1, ocp.dims.N]);
-            opts.sim_method_num_steps = reshape(num2cell(opts.sim_method_num_steps), [1, ocp.dims.N]);
-            opts.sim_method_jac_reuse = reshape(num2cell(opts.sim_method_jac_reuse), [1, ocp.dims.N]);
-
-            ocp.solver_options = opts;
-
             % parameter values
             try
                 ocp.parameter_values = reshape(num2cell(ocp.parameter_values), [1, ocp.dims.np]);
@@ -1066,7 +1034,7 @@ classdef AcadosOcp < handle
             ocp_json_struct.dims = orderfields(ocp_json_struct.dims.struct());
             ocp_json_struct.cost = orderfields(ocp_json_struct.cost.struct());
             ocp_json_struct.constraints = orderfields(ocp_json_struct.constraints.struct());
-            ocp_json_struct.solver_options = orderfields(ocp_json_struct.solver_options.struct());
+            ocp_json_struct.solver_options = orderfields(ocp_json_struct.solver_options.convert_to_struct_for_json_dump(ocp.dims.N));
 
             % add compilation information to json
             libs = loadjson(fileread(fullfile(acados_folder, 'lib', 'link_libs.json')));
