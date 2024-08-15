@@ -288,23 +288,7 @@ classdef AcadosOcpConstraints < handle
                 end
             end
             matrix_properties = {'D', 'C', 'C_e'};
-
-            % generic stuff -> move to function?
-            for i = 1:length(vector_properties)
-                prop = vector_properties{i};
-                if ~isempty(out.(prop))
-                    out.(prop) = reshape(num2cell(out.(prop)), [1, length(out.(prop))]);
-                end
-            end
-            for i = 1:length(matrix_properties)
-                prop = matrix_properties{i};
-                if ~isempty(out.(prop))
-                    out.(prop) = num2cell(out.(prop));
-                    if size(out.(prop))(1) == 1
-                        out.(prop) = {out.(prop)};
-                    end
-                end
-            end
+            out = prepare_struct_for_json_dump(out, vector_properties, matrix_properties);
         end
     end
 end
