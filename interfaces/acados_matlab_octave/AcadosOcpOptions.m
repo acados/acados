@@ -34,6 +34,8 @@ classdef AcadosOcpOptions < handle
         hessian_approx         %  hessian approximation
         integrator_type        %  integrator type
         tf                     %  prediction horizon
+        N_horizon
+
         nlp_solver_type        %  NLP solver
         nlp_solver_step_length
         nlp_solver_tol_stat
@@ -112,6 +114,7 @@ classdef AcadosOcpOptions < handle
             obj.hessian_approx = 'GAUSS_NEWTON';
             obj.integrator_type = 'ERK';
             obj.tf = [];
+            obj.N_horizon = [];
             obj.nlp_solver_type = 'SQP_RTI';
             obj.nlp_solver_step_length = 1.0;
             obj.nlp_solver_tol_stat = 1e-6;

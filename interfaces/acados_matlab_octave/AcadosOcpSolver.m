@@ -114,8 +114,8 @@ classdef AcadosOcpSolver < handle
                     value = [R, S; S', Q];
                     return;
                 else
-                    value = cell(obj.ocp.dims.N, 1);
-                    for n=0:obj.ocp.dims.N
+                    value = cell(obj.ocp.solver_options.N_horizon, 1);
+                    for n=0:obj.ocp.solver_options.N_horizon
                         Q = obj.get('qp_Q', n);
                         R = obj.get('qp_R', n);
                         S = obj.get('qp_S', n);
@@ -172,12 +172,12 @@ classdef AcadosOcpSolver < handle
             % condition_number: condition number for each Hessian block.
 
             result = struct();
-            result.min_ev = zeros(obj.ocp.dims.N+1, 1);
-            result.max_ev = zeros(obj.ocp.dims.N+1, 1);
-            result.condition_number = zeros(obj.ocp.dims.N+1, 1);
+            result.min_ev = zeros(obj.ocp.solver_options.N_horizon+1, 1);
+            result.max_ev = zeros(obj.ocp.solver_options.N_horizon+1, 1);
+            result.condition_number = zeros(obj.ocp.solver_options.N_horizon+1, 1);
 
-            for n=0:obj.ocp.dims.N
-                if n < obj.ocp.dims.N
+            for n=0:obj.ocp.solver_options.N_horizon
+                if n < obj.ocp.solver_options.N_horizon
                     Q = obj.get('qp_Q', n);
                     R = obj.get('qp_R', n);
                     S = obj.get('qp_S', n);
@@ -197,12 +197,12 @@ classdef AcadosOcpSolver < handle
         function dump_last_qp_to_json(obj, filename)
             qp_data = struct();
 
-            lN = length(num2str(obj.ocp.dims.N+1));
+            lN = length(num2str(obj.ocp.solver_options.N_horizon+1));
             n_fields = length(obj.qp_gettable_fields);
             for n=1:n_fields
 
                 field = obj.qp_gettable_fields{n};
-                for i=0:obj.ocp.dims.N-1
+                for i=0:obj.ocp.solver_options.N_horizon-1
                     s_indx = sprintf(strcat('%0', num2str(lN), 'd'), i);
                     key = strcat(field, '_', s_indx);
                     val = obj.get(field, i);
@@ -210,9 +210,9 @@ classdef AcadosOcpSolver < handle
                 end
 
                 if strcmp(field, 'qp_Q') || strcmp(field, 'qp_q')
-                    s_indx = sprintf(strcat('%0', num2str(lN), 'd'), obj.ocp.dims.N);
+                    s_indx = sprintf(strcat('%0', num2str(lN), 'd'), obj.ocp.solver_options.N_horizon);
                     key = strcat(field, '_', s_indx);
-                    val = obj.get(field, obj.ocp.dims.N);
+                    val = obj.get(field, obj.ocp.solver_options.N_horizon);
                     qp_data = setfield(qp_data, key, val);
                 end
             end

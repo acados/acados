@@ -48,7 +48,7 @@ classdef {{ name }}_mex_solver < handle
             obj.C_ocp = acados_mex_create_{{ name }}();
             % to have path to destructor when changing directory
             addpath('.')
-            obj.N = {{ dims.N }};
+            obj.N = {{ solver_options.N_horizon }};
             obj.name = '{{ name }}';
             obj.code_gen_dir = pwd();
         end

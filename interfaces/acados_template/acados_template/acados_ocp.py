@@ -707,16 +707,26 @@ class AcadosOcp:
         dims.ns_e = ns_e
 
         # discretization
+        if opts.N_horizon is None and dims.N is None:
+            raise Exception('N_horizon not provided.')
+        elif opts.N_horizon is None and dims.N is not None:
+            opts.N_horizon = dims.N
+            print("field AcadosOcpDims.N has been migrated to AcadosOcpOptions.N_horizon. setting AcadosOcpOptions.N_horizon = N. For future comppatibility, please use AcadosOcpOptions.N_horizon directly.")
+        elif opts.N_horizon is not None and dims.N is not None and opts.N_horizon != dims.N:
+            raise Exception(f'Inconsistent dimension N, regarding N = {dims.N}, N_horizon = {opts.N_horizon}.')
+        else:
+            dims.N = opts.N_horizon
+
         if not isinstance(opts.tf, (float, int)):
             raise Exception(f'Time horizon tf should be float provided, got tf = {opts.tf}.')
 
         if is_empty(opts.time_steps) and is_empty(opts.shooting_nodes):
             # uniform discretization
-            opts.time_steps = opts.tf / dims.N * np.ones((dims.N,))
+            opts.time_steps = opts.tf / opts.N_horizon * np.ones((opts.N_horizon,))
             opts.shooting_nodes = np.concatenate((np.array([0.]), np.cumsum(opts.time_steps)))
 
         elif not is_empty(opts.shooting_nodes):
-            if np.shape(opts.shooting_nodes)[0] != dims.N+1:
+            if np.shape(opts.shooting_nodes)[0] != opts.N_horizon+1:
                 raise Exception('inconsistent dimension N, regarding shooting_nodes.')
 
             time_steps = opts.shooting_nodes[1:] - opts.shooting_nodes[0:-1]
@@ -750,10 +760,10 @@ class AcadosOcp:
             opts.sim_method_num_steps = opts.sim_method_num_steps.item()
 
         if isinstance(opts.sim_method_num_steps, (int, float)) and opts.sim_method_num_steps % 1 == 0:
-            opts.sim_method_num_steps = opts.sim_method_num_steps * np.ones((dims.N,), dtype=np.int64)
-        elif isinstance(opts.sim_method_num_steps, np.ndarray) and opts.sim_method_num_steps.size == dims.N \
+            opts.sim_method_num_steps = opts.sim_method_num_steps * np.ones((opts.N_horizon,), dtype=np.int64)
+        elif isinstance(opts.sim_method_num_steps, np.ndarray) and opts.sim_method_num_steps.size == opts.N_horizon \
             and np.all(np.equal(np.mod(opts.sim_method_num_steps, 1), 0)):
-            opts.sim_method_num_steps = np.reshape(opts.sim_method_num_steps, (dims.N,)).astype(np.int64)
+            opts.sim_method_num_steps = np.reshape(opts.sim_method_num_steps, (opts.N_horizon,)).astype(np.int64)
         else:
             raise Exception("Wrong value for sim_method_num_steps. Should be either int or array of ints of shape (N,).")
 
@@ -762,10 +772,10 @@ class AcadosOcp:
             opts.sim_method_num_stages = opts.sim_method_num_stages.item()
 
         if isinstance(opts.sim_method_num_stages, (int, float)) and opts.sim_method_num_stages % 1 == 0:
-            opts.sim_method_num_stages = opts.sim_method_num_stages * np.ones((dims.N,), dtype=np.int64)
-        elif isinstance(opts.sim_method_num_stages, np.ndarray) and opts.sim_method_num_stages.size == dims.N \
+            opts.sim_method_num_stages = opts.sim_method_num_stages * np.ones((opts.N_horizon,), dtype=np.int64)
+        elif isinstance(opts.sim_method_num_stages, np.ndarray) and opts.sim_method_num_stages.size == opts.N_horizon \
             and np.all(np.equal(np.mod(opts.sim_method_num_stages, 1), 0)):
-            opts.sim_method_num_stages = np.reshape(opts.sim_method_num_stages, (dims.N,)).astype(np.int64)
+            opts.sim_method_num_stages = np.reshape(opts.sim_method_num_stages, (opts.N_horizon,)).astype(np.int64)
         else:
             raise Exception("Wrong value for sim_method_num_stages. Should be either int or array of ints of shape (N,).")
 
@@ -774,10 +784,10 @@ class AcadosOcp:
             opts.sim_method_jac_reuse = opts.sim_method_jac_reuse.item()
 
         if isinstance(opts.sim_method_jac_reuse, (int, float)) and opts.sim_method_jac_reuse % 1 == 0:
-            opts.sim_method_jac_reuse = opts.sim_method_jac_reuse * np.ones((dims.N,), dtype=np.int64)
-        elif isinstance(opts.sim_method_jac_reuse, np.ndarray) and opts.sim_method_jac_reuse.size == dims.N \
+            opts.sim_method_jac_reuse = opts.sim_method_jac_reuse * np.ones((opts.N_horizon,), dtype=np.int64)
+        elif isinstance(opts.sim_method_jac_reuse, np.ndarray) and opts.sim_method_jac_reuse.size == opts.N_horizon \
             and np.all(np.equal(np.mod(opts.sim_method_jac_reuse, 1), 0)):
-            opts.sim_method_jac_reuse = np.reshape(opts.sim_method_jac_reuse, (dims.N,)).astype(np.int64)
+            opts.sim_method_jac_reuse = np.reshape(opts.sim_method_jac_reuse, (opts.N_horizon,)).astype(np.int64)
         else:
             raise Exception("Wrong value for sim_method_jac_reuse. Should be either int or array of ints of shape (N,).")
 
@@ -817,17 +827,17 @@ class AcadosOcp:
                     raise Exception(f'with_value_sens_wrt_params is only implemented if constraints depend not on parameters. Got parameter dependency for {horizon_type} constraint.')
 
         if opts.qp_solver_cond_N is None:
-            opts.qp_solver_cond_N = dims.N
+            opts.qp_solver_cond_N = opts.N_horizon
 
         if opts.qp_solver_cond_block_size is not None:
-            if sum(opts.qp_solver_cond_block_size) != dims.N:
-                raise Exception(f'sum(qp_solver_cond_block_size) = {sum(opts.qp_solver_cond_block_size)} != N = {dims.N}.')
+            if sum(opts.qp_solver_cond_block_size) != opts.N_horizon:
+                raise Exception(f'sum(qp_solver_cond_block_size) = {sum(opts.qp_solver_cond_block_size)} != N = {opts.N_horizon}.')
             if len(opts.qp_solver_cond_block_size) != opts.qp_solver_cond_N+1:
                 raise Exception(f'qp_solver_cond_block_size = {opts.qp_solver_cond_block_size} should have length qp_solver_cond_N+1 = {opts.qp_solver_cond_N+1}.')
 
         if opts.nlp_solver_type == "DDP":
-            if opts.qp_solver != "PARTIAL_CONDENSING_HPIPM" or opts.qp_solver_cond_N != dims.N:
-                raise Exception(f'DDP solver only supported for PARTIAL_CONDENSING_HPIPM with qp_solver_cond_N == N, got qp solver {opts.qp_solver} and qp_solver_cond_N {opts.qp_solver_cond_N}, N {dims.N}.')
+            if opts.qp_solver != "PARTIAL_CONDENSING_HPIPM" or opts.qp_solver_cond_N != opts.N_horizon:
+                raise Exception(f'DDP solver only supported for PARTIAL_CONDENSING_HPIPM with qp_solver_cond_N == N, got qp solver {opts.qp_solver} and qp_solver_cond_N {opts.qp_solver_cond_N}, N {opts.N_horizon}.')
             if any([dims.nbu, dims.nbx, dims.ng, dims.nh, dims.nphi]):
                 raise Exception('DDP only supports initial state constraints, got path constraints.')
             if any([dims.ng_e, dims.nphi_e, dims.nh_e]):

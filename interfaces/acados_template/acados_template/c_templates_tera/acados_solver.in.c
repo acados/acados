@@ -844,7 +844,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
     // set up time_steps
     {%- set all_equal = true -%}
     {%- set val = solver_options.time_steps[0] %}
-    {%- for j in range(start=1, end=dims.N) %}
+    {%- for j in range(start=1, end=solver_options.N_horizon) %}
         {%- if val != solver_options.time_steps[j] %}
             {%- set_global all_equal = false %}
             {%- break %}
@@ -866,7 +866,7 @@ void {{ model.name }}_acados_setup_nlp_in({{ model.name }}_solver_capsule* capsu
         }
     {%- else -%}{# time_steps are varying #}
         double* time_steps = malloc(N*sizeof(double));
-        {%- for j in range(end=dims.N) %}
+        {%- for j in range(end=solver_options.N_horizon) %}
         time_steps[{{ j }}] = {{ solver_options.time_steps[j] }};
         {%- endfor %}
         {{ model.name }}_acados_update_time_steps(capsule, N, time_steps);
@@ -2102,7 +2102,7 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     // set up sim_method_num_steps
     {%- set all_equal = true %}
     {%- set val = solver_options.sim_method_num_steps[0] %}
-    {%- for j in range(start=1, end=dims.N) %}
+    {%- for j in range(start=1, end=solver_options.N_horizon) %}
         {%- if val != solver_options.sim_method_num_steps[j] %}
             {%- set_global all_equal = false %}
             {%- break %}
@@ -2117,7 +2117,7 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     {%- else %}
     // sim_method_num_steps are different
     int* sim_method_num_steps = malloc(N*sizeof(int));
-    {%- for j in range(end=dims.N) %}
+    {%- for j in range(end=solver_options.N_horizon) %}
     sim_method_num_steps[{{ j }}] = {{ solver_options.sim_method_num_steps[j] }};
     {%- endfor %}
 
@@ -2129,7 +2129,7 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     // set up sim_method_num_stages
     {%- set all_equal = true %}
     {%- set val = solver_options.sim_method_num_stages[0] %}
-    {%- for j in range(start=1, end=dims.N) %}
+    {%- for j in range(start=1, end=solver_options.N_horizon) %}
         {%- if val != solver_options.sim_method_num_stages[j] %}
             {%- set_global all_equal = false %}
             {%- break %}
@@ -2143,7 +2143,7 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_stages", &sim_method_num_stages);
   {%- else %}
     int* sim_method_num_stages = malloc(N*sizeof(int));
-    {%- for j in range(end=dims.N) %}
+    {%- for j in range(end=solver_options.N_horizon) %}
     sim_method_num_stages[{{ j }}] = {{ solver_options.sim_method_num_stages[j] }};
     {%- endfor %}
 
@@ -2159,7 +2159,7 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
     // set up sim_method_jac_reuse
     {%- set all_equal = true %}
     {%- set val = solver_options.sim_method_jac_reuse[0] %}
-    {%- for j in range(start=1, end=dims.N) %}
+    {%- for j in range(start=1, end=solver_options.N_horizon) %}
         {%- if val != solver_options.sim_method_jac_reuse[j] %}
             {%- set_global all_equal = false %}
             {%- break %}
@@ -2171,7 +2171,7 @@ static void {{ model.name }}_acados_create_set_opts({{ model.name }}_solver_caps
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_jac_reuse", &tmp_bool);
   {%- else %}
     bool* sim_method_jac_reuse = malloc(N*sizeof(bool));
-    {%- for j in range(end=dims.N) %}
+    {%- for j in range(end=solver_options.N_horizon) %}
     sim_method_jac_reuse[{{ j }}] = (bool){{ solver_options.sim_method_jac_reuse[j] }};
     {%- endfor %}
 

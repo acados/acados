@@ -86,7 +86,6 @@ int {{ model.name }}_acados_sim_create({{ model.name }}_sim_solver_capsule * cap
     const int np = {{ model.name | upper }}_NP;
     bool tmp_bool;
 
-    {#// double Tsim = {{ solver_options.tf / dims.N }};#}
     double Tsim = {{ solver_options.Tsim }};
 
     {% if solver_options.integrator_type == "IRK" %}
