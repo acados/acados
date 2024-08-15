@@ -31,7 +31,10 @@ function out = prepare_struct_for_json_dump(out, vector_properties, matrix_prope
     for i = 1:length(vector_properties)
         prop = vector_properties{i};
         if ~isempty(out.(prop))
-            out.(prop) = reshape(num2cell(out.(prop)), [1, length(out.(prop))]);
+            if ~iscell(out.(prop))
+                out.(prop) = num2cell(out.(prop));
+            end
+            out.(prop) = reshape(out.(prop), [1, length(out.(prop))]);
         end
     end
     for i = 1:length(matrix_properties)
