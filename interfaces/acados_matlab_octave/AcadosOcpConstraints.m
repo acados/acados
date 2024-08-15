@@ -271,5 +271,40 @@ classdef AcadosOcpConstraints < handle
                 end
             end
         end
+
+        function out = convert_to_struct_for_json_dump(self)
+            out = self.struct();
+            if exist('properties')
+                publicProperties = eval('properties(self)');
+            else
+                publicProperties = fieldnames(self);
+            end
+            % vector properties start with l, u or idx
+            vector_properties = {};
+            for fi = 1:numel(publicProperties)
+                property_name = publicProperties{fi};
+                if strcmp(property_name(1), 'l') || strcmp(property_name(1), 'u') || ~isempty(strfind(property_name, 'idx'))
+                    vector_properties{end+1} = property_name;
+                end
+            end
+            matrix_properties = {'D', 'C', 'C_e'};
+
+            % generic stuff -> move to function?
+            for i = 1:length(vector_properties)
+                prop = vector_properties{i};
+                if ~isempty(out.(prop))
+                    out.(prop) = reshape(num2cell(out.(prop)), [1, length(out.(prop))]);
+                end
+            end
+            for i = 1:length(matrix_properties)
+                prop = matrix_properties{i};
+                if ~isempty(out.(prop))
+                    out.(prop) = num2cell(out.(prop));
+                    if size(out.(prop))(1) == 1
+                        out.(prop) = {out.(prop)};
+                    end
+                end
+            end
+        end
     end
 end

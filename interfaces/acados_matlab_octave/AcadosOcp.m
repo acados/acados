@@ -928,115 +928,20 @@ classdef AcadosOcp < handle
         end
 
         function dump_to_json(ocp)
-            %% post process numerical data (mostly cast scalars to 1-dimensional cells)
-            props = fieldnames(ocp.constraints);
-            disable_last_warning();  % show warning for struct conversion only once
-            for iprop = 1:length(props)
-                this_prop = props{iprop};
-                % add logic here if you want to do something based on the property's value
-                if strcmp(this_prop, 'x0')
-                    continue;
-                end
-                % add logic here if you want to work with select properties
-                this_prop_value = ocp.constraints.(this_prop);
-                if all(size(this_prop_value) == [1 1])
-                    ocp.constraints.(this_prop) = num2cell(ocp.constraints.(this_prop));
-                end
-            end
-
-            props = fieldnames(ocp.cost);
-            for iprop = 1:length(props)
-                this_prop = props{iprop};
-                % add logic here if you want to work with select properties
-                this_prop_value = ocp.cost.(this_prop);
-                % add logic here if you want to do something based on the property's value
-                if all(size(this_prop_value) == [1, 1])
-                    ocp.cost.(this_prop) = num2cell(ocp.cost.(this_prop));
-                end
-            end
-
-            %% load JSON layout
-            acados_folder = getenv('ACADOS_INSTALL_DIR');
-            json_layout_filename = fullfile(acados_folder, 'interfaces',...
-                                        'acados_matlab_octave', ...
-                                        'acados_template_mex', '+acados_template_mex','acados_ocp_layout.json');
-            addpath(fullfile(acados_folder, 'external', 'jsonlab'))
-            acados_layout = loadjson(fileread(json_layout_filename));
-
-            %% reshape constraints
-            constr_layout = acados_layout.constraints;
-            fields = fieldnames(constr_layout);
-            for i = 1:numel(fields)
-                if strcmp(constr_layout.(fields{i}){1}, 'ndarray')
-                    property_dim_names = constr_layout.(fields{i}){2};
-                    if length(property_dim_names) == 1 % vector
-                        this_dims = [1, ocp.dims.(property_dim_names{1})];
-                    else % matrix
-                        this_dims = [ocp.dims.(property_dim_names{1}), ocp.dims.(property_dim_names{2})];
-                    end
-                    try
-                        ocp.constraints.(fields{i}) = reshape(ocp.constraints.(fields{i}), this_dims);
-                    catch e
-                        keyboard
-                        error(['error while reshaping constraints.' fields{i} ...
-                            ' to dimension ' num2str(this_dims), ', got ',...
-                            num2str( size(ocp.constraints.(fields{i}) )) , 10,...
-                            e.message ]);
-                    end
-                    if this_dims(1) == 1 && length(property_dim_names) ~= 1 % matrix with 1 row
-                        ocp.constraints.(fields{i}) = {ocp.constraints.(fields{i})};
-                    end
-                end
-            end
-
-            %% reshape cost
-            cost_layout = acados_layout.cost;
-            fields = fieldnames(cost_layout);
-            for i = 1:numel(fields)
-                if strcmp(cost_layout.(fields{i}){1}, 'ndarray')
-                    property_dim_names = cost_layout.(fields{i}){2};
-                    if length(property_dim_names) == 1 % vector
-                        this_dims = [1, ocp.dims.(property_dim_names{1})];
-                    else % matrix
-                        this_dims = [ocp.dims.(property_dim_names{1}), ocp.dims.(property_dim_names{2})];
-                    end
-                    if ~isempty(ocp.cost.(fields{i}))
-                        try
-                            ocp.cost.(fields{i}) = reshape(ocp.cost.(fields{i}), this_dims);
-                        catch e
-                            error(['error while reshaping cost.' fields{i} ...
-                                ' to dimension ' num2str(this_dims), ', got ',...
-                                num2str( size(ocp.cost.(fields{i}) )) , 10,...
-                                e.message ]);
-                        end
-                        if this_dims(1) == 1 && length(property_dim_names) ~= 1 % matrix with 1 row
-                            ocp.cost.(fields{i}) = {ocp.cost.(fields{i})};
-                        end
-                    end
-                elseif strcmp(cost_layout.(fields{i}){1}, 'int')
-                    ocp.cost.(fields{i}) = ocp.cost.(fields{i}){1};
-                end
-            end
 
             % parameter values
-            try
-                ocp.parameter_values = reshape(num2cell(ocp.parameter_values), [1, ocp.dims.np]);
-            catch e
-                error(['error while reshaping parameter_values'  ...
-                        ' to dimension ' num2str([1, ocp.dims.np]) ', got ',...
-                        num2str(size(ocp.parameter_values)) , 10,...
-                        e.message ]);
-            end
+            ocp.parameter_values = reshape(num2cell(ocp.parameter_values), [1, ocp.dims.np]);
 
             %% dump JSON file
             ocp_json_struct = orderfields(ocp.struct());
             ocp_json_struct.model = orderfields(ocp.model.convert_to_struct_for_json_dump());
             ocp_json_struct.dims = orderfields(ocp_json_struct.dims.struct());
-            ocp_json_struct.cost = orderfields(ocp_json_struct.cost.struct());
-            ocp_json_struct.constraints = orderfields(ocp_json_struct.constraints.struct());
+            ocp_json_struct.cost = orderfields(ocp_json_struct.cost.convert_to_struct_for_json_dump());
+            ocp_json_struct.constraints = orderfields(ocp_json_struct.constraints.convert_to_struct_for_json_dump());
             ocp_json_struct.solver_options = orderfields(ocp_json_struct.solver_options.convert_to_struct_for_json_dump(ocp.dims.N));
 
             % add compilation information to json
+            acados_folder = getenv('ACADOS_INSTALL_DIR');
             libs = loadjson(fileread(fullfile(acados_folder, 'lib', 'link_libs.json')));
             ocp_json_struct.acados_link_libs = orderfields(libs);
             if ismac
