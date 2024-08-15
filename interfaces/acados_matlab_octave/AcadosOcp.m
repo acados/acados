@@ -928,18 +928,6 @@ classdef AcadosOcp < handle
         end
 
         function dump_to_json(ocp)
-            %% remove CasADi objects from model
-            model_without_expr = struct();
-            model_without_expr.name = ocp.model.name;
-            model_without_expr.dyn_ext_fun_type = ocp.model.dyn_ext_fun_type;
-            model_without_expr.dyn_generic_source = ocp.model.dyn_generic_source;
-            model_without_expr.dyn_disc_fun_jac_hess = ocp.model.dyn_disc_fun_jac_hess;
-            model_without_expr.dyn_disc_fun_jac = ocp.model.dyn_disc_fun_jac;
-            model_without_expr.dyn_disc_fun = ocp.model.dyn_disc_fun;
-            model_without_expr.gnsf_nontrivial_f_LO = ocp.model.gnsf_nontrivial_f_LO;
-            model_without_expr.gnsf_purely_linear = ocp.model.gnsf_purely_linear;
-            ocp.model = model_without_expr;
-
             %% post process numerical data (mostly cast scalars to 1-dimensional cells)
             props = fieldnames(ocp.constraints);
             disable_last_warning();  % show warning for struct conversion only once
@@ -1071,8 +1059,10 @@ classdef AcadosOcp < handle
                         num2str(size(ocp.parameter_values)) , 10,...
                         e.message ]);
             end
+
             %% dump JSON file
             ocp_json_struct = orderfields(ocp.struct());
+            ocp_json_struct.model = orderfields(ocp.model.convert_to_struct_for_json_dump());
             ocp_json_struct.dims = orderfields(ocp_json_struct.dims.struct());
             ocp_json_struct.cost = orderfields(ocp_json_struct.cost.struct());
             ocp_json_struct.constraints = orderfields(ocp_json_struct.constraints.struct());
