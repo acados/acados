@@ -854,141 +854,73 @@ classdef AcadosOcp < handle
             model_name = acados_ocp.model.name;
 
             %% render templates
-            template_dir = fullfile(acados_template_folder, 'c_templates_tera','*');
-            matlab_template_dir = fullfile(acados_template_folder, 'c_templates_tera','matlab_templates', '*');
+            template_dir = fullfile(acados_template_folder, 'c_templates_tera', '*');
+            matlab_template_dir = fullfile(acados_template_folder, 'c_templates_tera', 'matlab_templates', '*');
             json_fullfile = fullfile(pwd, self.json_file);
             main_dir = pwd;
             chdir(self.code_export_directory);
 
-            % main
-            template_file = 'main.in.c';
-            out_file = ['main_', model_name, '.c'];
-            render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-
-            % main_sim
-            template_file = 'main_sim.in.c';
-            out_file = ['main_sim_', model_name, '.c'];
-            render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-
-            % make_mex
-            template_file = 'make_mex.in.m';
-            out_file = ['make_mex_', model_name, '.m'];
-            render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
-
-            % MEX constructor
-            template_file = 'acados_mex_create.in.c';
-            out_file = ['acados_mex_create_', model_name, '.c'];
-            render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
-
-            % MEX destructor
-            template_file = 'acados_mex_free.in.c';
-            out_file = ['acados_mex_free_', model_name, '.c'];
-            render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
-
-            % MEX solve
-            template_file = 'acados_mex_solve.in.c';
-            out_file = ['acados_mex_solve_', model_name, '.c'];
-            render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
-
-            % MEX set
-            template_file = 'acados_mex_set.in.c';
-            out_file = ['acados_mex_set_', model_name, '.c'];
-            render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
-
-            % MEX reset
-            template_file = 'acados_mex_reset.in.c';
-            out_file = ['acados_mex_reset_', model_name, '.c'];
-            render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
-
-            % MEX class
-            template_file = 'mex_solver.in.m';
-            out_file = [ model_name, '_mex_solver.m'];
-            render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
-
-            % solver
-            template_file = 'acados_solver.in.h';
-            out_file = ['acados_solver_', model_name, '.h'];
-            render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-
-            template_file = 'acados_solver.in.c';
-            out_file = ['acados_solver_', model_name, '.c'];
-            render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-
-            % sim_solver
-            template_file = 'acados_sim_solver.in.c';
-            out_file = ['acados_sim_solver_', model_name, '.c'];
-            render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-
-            template_file = 'acados_sim_solver.in.h';
-            out_file = ['acados_sim_solver_', model_name, '.h'];
-            render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-
-            % headers and custom C-code files
-            c_dir = pwd;
-            chdir([model_name, '_model']);
-            template_file = 'model.in.h';
-            out_file = [model_name, '_model.h'];
-            render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-            cd(c_dir);
-
-            cost_dir = [model_name, '_cost'];
-            if ~(exist(cost_dir, 'dir'))
-                mkdir(cost_dir);
-            end
-            chdir(cost_dir);
-
-            template_file = 'cost.in.h';
-            out_file = [model_name, '_cost.h'];
-            render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-            cd(c_dir);
-
-            % constraints
-            constr_dir = [model_name, '_constraints'];
-            if ~(exist(constr_dir, 'dir'))
-                mkdir(constr_dir);
-            end
-            chdir(constr_dir)
-
-            template_file = 'constraints.in.h';
-            out_file = [model_name, '_constraints.h'];
-            render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-
-            cd(c_dir);
-
-            % Makefile
-            template_file = 'Makefile.in';
-            out_file = 'Makefile';
-            render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-
-            % CMake
-            template_file = 'CMakeLists.in.txt';
-            out_file = 'CMakeLists.txt';
-            render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-
-            if isempty(acados_ocp.simulink_opts)
-                disp("not rendering simulink related templates, as simulink_opts are not specified.")
-            else
-                % S-function
-                template_file = 'acados_solver_sfun.in.c';
-                out_file = ['acados_solver_sfunction_' , model_name, '.c'];
-                render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
-
-                % MATLAB make script
-                template_file = 'make_sfun.in.m';
-                out_file = 'make_sfun.m';
-                render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
-
-                template_file = 'acados_sim_solver_sfun.in.c';
-                out_file = ['acados_sim_solver_sfunction_', model_name, '.c'];
-                render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
-
-                template_file = 'make_sfun_sim.in.m';
-                out_file = 'make_sfun_sim.m';
-                render_file( json_fullfile, matlab_template_dir, template_file, out_file, t_renderer_location )
+            template_list = self.get_template_list();
+            for i = 1:length(template_list)
+                in_file = template_list{i}{1};
+                out_file = template_list{i}{2};
+                if length(template_list{i}) == 3
+                    out_dir = template_list{i}{3};
+                    if ~(exist(out_dir, 'dir'))
+                        mkdir(out_dir);
+                    end
+                    out_file = fullfile(out_dir, out_file);
+                end
+                render_file( in_file, out_file, json_fullfile, t_renderer_location )
             end
 
             fprintf('Successfully rendered acados templates!\n');
             cd(main_dir)
+        end
+
+
+        function template_list = get_template_list(self)
+            % returns a cell of cells in the form:
+            % (input_filename, output_filname)
+            % or
+            % (input_filename, output_filname, output_directory)
+            template_list = {};
+            template_list{end+1} = {'main.in.c', ['main_', self.model.name, '.c']};
+            template_list{end+1} = {'acados_solver.in.h', ['acados_solver_', self.model.name, '.h']};
+            template_list{end+1} = {'acados_solver.in.c', ['acados_solver_', self.model.name, '.c']};
+            template_list{end+1} = {'CMakeLists.in.txt', ['CMakeLists.txt']};
+            template_list{end+1} = {'Makefile.in', ['Makefile']};
+
+            % integrator
+            template_list{end+1} = {'acados_sim_solver.in.c', ['acados_sim_solver_', self.model.name, '.c']};
+            template_list{end+1} = {'acados_sim_solver.in.h', ['acados_sim_solver_', self.model.name, '.h']};
+            template_list{end+1} = {'main_sim.in.c', ['main_sim_', self.model.name, '.c']};
+
+            % MEX files
+            matlab_template_path = 'matlab_templates';
+            template_list{end+1} = {fullfile(matlab_template_path, 'mex_solver.in.m'), [self.model.name, '_mex_solver.m']};
+            template_list{end+1} = {fullfile(matlab_template_path, 'make_mex.in.m'), ['make_mex_', self.model.name, '.m']};
+            template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_create.in.c'), ['acados_mex_create_', self.model.name, '.c']};
+            template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_free.in.c'), ['acados_mex_free_', self.model.name, '.c']};
+            template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_solve.in.c'), ['acados_mex_solve_', self.model.name, '.c']};
+            template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_set.in.c'), ['acados_mex_set_', self.model.name, '.c']};
+            template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_reset.in.c'), ['acados_mex_reset_', self.model.name, '.c']};
+
+            % headers
+            template_list{end+1} = {'model.in.h', [self.model.name, '_model.h'], [self.model.name, '_model']};
+            template_list{end+1} = {'cost.in.h', [self.model.name, '_cost.h'], [self.model.name, '_cost']};
+            template_list{end+1} = {'constraints.in.h', [self.model.name, '_constraints.h'], [self.model.name, '_constraints']};
+
+            % Simulink
+            if ~isempty(self.simulink_opts)
+                template_list{end+1} = {fullfile(matlab_template_path, 'acados_solver_sfun.in.c'), ['acados_solver_sfunction_', self.model.name, '.c']};
+                template_list{end+1} = {fullfile(matlab_template_path, 'make_sfun.in.m'), ['make_sfun.m']};
+                template_list{end+1} = {fullfile(matlab_template_path, 'acados_sim_solver_sfun.in.c'), ['acados_sim_solver_sfunction_', self.model.name, '.c']};
+                template_list{end+1} = {fullfile(matlab_template_path, 'make_sfun_sim.in.m'), ['make_sfun_sim.m']};
+            else
+                disp("not rendering Simulink related templates, as simulink_opts are not specified.")
+            end
+
         end
 
         function dump_to_json(ocp)

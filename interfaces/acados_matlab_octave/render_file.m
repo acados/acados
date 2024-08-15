@@ -28,24 +28,31 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 
 
-function render_file( json_fullfile, template_dir, template_file, out_file, ...
-                      t_renderer_location )
+function render_file( in_file, out_file, json_fullfile, t_renderer_location )
+
+    acados_root_dir = getenv('ACADOS_INSTALL_DIR');
+    acados_template_folder = fullfile(acados_root_dir,...
+                          'interfaces', 'acados_template', 'acados_template', 'c_templates_tera');
+    [path, name, ext] = fileparts(in_file);
+
+    template_glob = fullfile(acados_template_folder, path, '**', '*');
+    in_file = [name, ext];
 
     os_cmd = [t_renderer_location, ' "',...
-        template_dir, '"', ' ', '"', template_file, '"', ' ', '"',...
+        template_glob, '"', ' ', '"', in_file, '"', ' ', '"',...
         json_fullfile, '"', ' ', '"', out_file, '"'];
 
     [ status, result ] = system(os_cmd);
     if status
         cd ..
         error('rendering %s failed.\n command: %s\n returned status %d, got result:\n%s\n\n',...
-            template_file, os_cmd, status, result);
+            in_file, os_cmd, status, result);
     end
     % NOTE: this should return status != 0, maybe fix in tera renderer?
     if ~isempty(strfind( result, 'Error' )) % contains not implemented in Octave
         cd ..
         error('rendering %s failed.\n command: %s\n returned status %d, got result: %s',...
-            template_file, os_cmd, status, result);
+            in_file, os_cmd, status, result);
     end
 end
 
