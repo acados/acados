@@ -832,21 +832,9 @@ classdef AcadosOcp < handle
         end
 
         function render_templates(self)
-            acados_root_dir = getenv('ACADOS_INSTALL_DIR');
-            acados_template_folder = fullfile(acados_root_dir,...
-                                  'interfaces', 'acados_template', 'acados_template');
-
             t_renderer_location = get_tera();
 
-            %% load json data
-            acados_ocp = loadjson(fileread(self.json_file));
-
-            % get model name from json file
-            model_name = acados_ocp.model.name;
-
             %% render templates
-            template_dir = fullfile(acados_template_folder, 'c_templates_tera', '*');
-            matlab_template_dir = fullfile(acados_template_folder, 'c_templates_tera', 'matlab_templates', '*');
             json_fullfile = fullfile(pwd, self.json_file);
             main_dir = pwd;
             chdir(self.code_export_directory);
