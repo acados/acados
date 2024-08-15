@@ -68,40 +68,10 @@ function sim_generate_c_code(sim)
 
     %% load JSON layout
     acados_folder = getenv('ACADOS_INSTALL_DIR');
-    json_layout_filename = fullfile(acados_folder, 'interfaces',...
-                                   'acados_matlab_octave', ...
-                                   'acados_template_mex', '+acados_template_mex','acados_sim_layout.json');
-
     addpath(fullfile(acados_folder, 'external', 'jsonlab'))
-    acados_sim_layout = loadjson(fileread(json_layout_filename));
-
-    %% reshape opts
-    opts_layout = acados_sim_layout.solver_options;
-    fields = fieldnames(opts_layout);
-    for i = 1:numel(fields)
-        if strcmp(opts_layout.(fields{i}){1}, 'ndarray')
-            property_dim_names = opts_layout.(fields{i}){2};
-            if length(property_dim_names) == 1 % vector
-                this_dims = [1, dims.(property_dim_names{1})];
-            else % matrix
-                this_dims = [dims.(property_dim_names{1}), dims.(property_dim_names{2})];
-            end
-            try
-                sim.solver_options.(fields{i}) = reshape(sim.solver_options.(fields{i}), this_dims);
-            catch e
-                error(['error while reshaping solver_options' fields{i} ...
-                    ' to dimension ' num2str(this_dims), ', got ',...
-                    num2str( size(sim.solver_options.(fields{i}) )) , 10,...
-                    e.message ]);
-            end
-            if this_dims(1) == 1 && length(property_dim_names) ~= 1 % matrix with 1 row
-                sim.solver_options.(fields{i}) = {sim.solver_options.(fields{i})};
-            end
-        end
-    end
 
     % parameter values
-    sim.parameter_values = reshape(num2cell(sim.parameter_values), [ 1, dims.np]);
+    sim.parameter_values = reshape(num2cell(sim.parameter_values), [1, dims.np]);
 
     %% dump JSON file
     sim_json_struct = sim.struct();
