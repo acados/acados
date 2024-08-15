@@ -316,11 +316,6 @@ qp_Q = ocp_solver.get('qp_Q');
 %
 cond_H = ocp_solver.get('qp_solver_cond_H');
 
-
-%
-cond_H = ocp_solver.get('qp_solver_cond_H');
-
-
 %% Plot trajectories
 figure; hold on;
 States = {'p', 'theta', 'v', 'dtheta'};
