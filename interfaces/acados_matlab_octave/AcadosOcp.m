@@ -864,35 +864,35 @@ classdef AcadosOcp < handle
             % or
             % (input_filename, output_filname, output_directory)
             template_list = {};
-            template_list{end+1} = {'main.in.c', ['main_', self.model.name, '.c']};
-            template_list{end+1} = {'acados_solver.in.h', ['acados_solver_', self.model.name, '.h']};
-            template_list{end+1} = {'acados_solver.in.c', ['acados_solver_', self.model.name, '.c']};
+            template_list{end+1} = {'main.in.c', ['main_', self.name, '.c']};
+            template_list{end+1} = {'acados_solver.in.h', ['acados_solver_', self.name, '.h']};
+            template_list{end+1} = {'acados_solver.in.c', ['acados_solver_', self.name, '.c']};
             template_list{end+1} = {'CMakeLists.in.txt', ['CMakeLists.txt']};
             template_list{end+1} = {'Makefile.in', ['Makefile']};
 
             % integrator
-            template_list{end+1} = {'acados_sim_solver.in.c', ['acados_sim_solver_', self.model.name, '.c']};
-            template_list{end+1} = {'acados_sim_solver.in.h', ['acados_sim_solver_', self.model.name, '.h']};
-            template_list{end+1} = {'main_sim.in.c', ['main_sim_', self.model.name, '.c']};
+            template_list{end+1} = {'acados_sim_solver.in.c', ['acados_sim_solver_', self.name, '.c']};
+            template_list{end+1} = {'acados_sim_solver.in.h', ['acados_sim_solver_', self.name, '.h']};
+            template_list{end+1} = {'main_sim.in.c', ['main_sim_', self.name, '.c']};
 
             % MEX files
             matlab_template_path = 'matlab_templates';
-            template_list{end+1} = {fullfile(matlab_template_path, 'mex_solver.in.m'), [self.model.name, '_mex_solver.m']};
-            template_list{end+1} = {fullfile(matlab_template_path, 'make_mex.in.m'), ['make_mex_', self.model.name, '.m']};
-            template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_create.in.c'), ['acados_mex_create_', self.model.name, '.c']};
-            template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_free.in.c'), ['acados_mex_free_', self.model.name, '.c']};
-            template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_solve.in.c'), ['acados_mex_solve_', self.model.name, '.c']};
-            template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_set.in.c'), ['acados_mex_set_', self.model.name, '.c']};
-            template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_reset.in.c'), ['acados_mex_reset_', self.model.name, '.c']};
+            template_list{end+1} = {fullfile(matlab_template_path, 'mex_solver.in.m'), [self.name, '_mex_solver.m']};
+            template_list{end+1} = {fullfile(matlab_template_path, 'make_mex.in.m'), ['make_mex_', self.name, '.m']};
+            template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_create.in.c'), ['acados_mex_create_', self.name, '.c']};
+            template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_free.in.c'), ['acados_mex_free_', self.name, '.c']};
+            template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_solve.in.c'), ['acados_mex_solve_', self.name, '.c']};
+            template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_set.in.c'), ['acados_mex_set_', self.name, '.c']};
+            template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_reset.in.c'), ['acados_mex_reset_', self.name, '.c']};
 
             % append headers
             template_list = [template_list, self.get_external_function_header_templates()];
 
             % Simulink
             if ~isempty(self.simulink_opts)
-                template_list{end+1} = {fullfile(matlab_template_path, 'acados_solver_sfun.in.c'), ['acados_solver_sfunction_', self.model.name, '.c']};
+                template_list{end+1} = {fullfile(matlab_template_path, 'acados_solver_sfun.in.c'), ['acados_solver_sfunction_', self.name, '.c']};
                 template_list{end+1} = {fullfile(matlab_template_path, 'make_sfun.in.m'), ['make_sfun.m']};
-                template_list{end+1} = {fullfile(matlab_template_path, 'acados_sim_solver_sfun.in.c'), ['acados_sim_solver_sfunction_', self.model.name, '.c']};
+                template_list{end+1} = {fullfile(matlab_template_path, 'acados_sim_solver_sfun.in.c'), ['acados_sim_solver_sfunction_', self.name, '.c']};
                 template_list{end+1} = {fullfile(matlab_template_path, 'make_sfun_sim.in.m'), ['make_sfun_sim.m']};
             else
                 disp("not rendering Simulink related templates, as simulink_opts are not specified.")
