@@ -55,3 +55,4 @@ It also provides a higher level interface to `acados`, which is based on the Mat
 
 - [Embedded Real-Time Nonlinear Model Predictive Control for the Thermal Torque Derating of an Electric Vehicle, Winkler et al, IFAC 2021](https://cdn.syscop.de/publications/Winkler2021.pdf)
 
+- [Nonlinear MPC for Quadrotors in Close-Proximity Flight with Neural Network Downwash Prediction](https://arxiv.org/abs/2304.07794)
