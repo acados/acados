@@ -135,22 +135,8 @@ classdef AcadosOcpCost < handle
         function out = convert_to_struct_for_json_dump(self)
             out = self.struct();
             vector_properties = {'yref_0', 'Zl_0', 'Zu_0', 'zl_0', 'zu_0', 'yref', 'Zl', 'Zu', 'zl', 'zu', 'yref_e', 'Zl_e', 'Zu_e', 'zl_e', 'zu_e'};
-            for i = 1:length(vector_properties)
-                prop = vector_properties{i};
-                if ~isempty(out.(prop))
-                    out.(prop) = reshape(num2cell(out.(prop)), [1, length(out.(prop))]);
-                end
-            end
             matrix_properties = {'W_0', 'Vx_0', 'Vu_0', 'Vz_0', 'W', 'Vx', 'Vu', 'Vz', 'W_e', 'Vx_e'};
-            for i = 1:length(matrix_properties)
-                prop = matrix_properties{i};
-                if ~isempty(out.(prop))
-                    out.(prop) = num2cell(out.(prop));
-                    if size(out.(prop))(1) == 1
-                        out.(prop) = {out.(prop)};
-                    end
-                end
-            end
+            out = prepare_struct_for_json_dump(out, vector_properties, matrix_properties);
         end
     end
 end
