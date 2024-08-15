@@ -121,7 +121,7 @@ classdef AcadosModel < handle
     end
     methods
         function obj = AcadosModel()
-            obj.name = [];
+            obj.name = 'acados_model';
             obj.x = [];
             obj.xdot = [];
             obj.u = [];
