@@ -906,10 +906,8 @@ classdef AcadosOcp < handle
             template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_set.in.c'), ['acados_mex_set_', self.model.name, '.c']};
             template_list{end+1} = {fullfile(matlab_template_path, 'acados_mex_reset.in.c'), ['acados_mex_reset_', self.model.name, '.c']};
 
-            % headers
-            template_list{end+1} = {'model.in.h', [self.model.name, '_model.h'], [self.model.name, '_model']};
-            template_list{end+1} = {'cost.in.h', [self.model.name, '_cost.h'], [self.model.name, '_cost']};
-            template_list{end+1} = {'constraints.in.h', [self.model.name, '_constraints.h'], [self.model.name, '_constraints']};
+            % append headers
+            template_list = [template_list, self.get_external_function_header_templates()];
 
             % Simulink
             if ~isempty(self.simulink_opts)
@@ -920,7 +918,13 @@ classdef AcadosOcp < handle
             else
                 disp("not rendering Simulink related templates, as simulink_opts are not specified.")
             end
+        end
 
+        function template_list = get_external_function_header_templates(self)
+            template_list = {};
+            template_list{end+1} = {'model.in.h', [self.model.name, '_model.h'], [self.model.name, '_model']};
+            template_list{end+1} = {'cost.in.h', [self.model.name, '_cost.h'], [self.model.name, '_cost']};
+            template_list{end+1} = {'constraints.in.h', [self.model.name, '_constraints.h'], [self.model.name, '_constraints']};
         end
 
         function dump_to_json(ocp)
