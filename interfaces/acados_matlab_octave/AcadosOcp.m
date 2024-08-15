@@ -775,7 +775,7 @@ classdef AcadosOcp < handle
             code_gen_opts.with_value_sens_wrt_params = solver_opts.with_value_sens_wrt_params;
 
             % dynamics
-            % model dir is always need, other dirs are  only created if necessary
+            % model dir is always needed, other dirs are  only created if necessary
             model_dir = fullfile(pwd, ocp.code_export_directory, [ocp.name '_model']);
             check_dir_and_create(model_dir);
 
