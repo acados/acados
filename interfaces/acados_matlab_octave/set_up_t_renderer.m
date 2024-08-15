@@ -1,4 +1,4 @@
-function set_up_t_renderer(t_renderer_location,varargin)
+function set_up_t_renderer(t_renderer_location, varargin)
 % set_up_t_renderer(t_renderer_location,[force])
 % If force is not provided it is default set to true
 
@@ -9,7 +9,7 @@ function set_up_t_renderer(t_renderer_location,varargin)
         case 2
             force=varargin{1};
         otherwise
-            error('function called with %d parameters, was expecting max 2',nargin);       
+            error('function called with %d parameters, was expecting max 2', nargin);
     end
 
 
