@@ -927,39 +927,37 @@ classdef AcadosOcp < handle
             template_list{end+1} = {'constraints.in.h', [self.model.name, '_constraints.h'], [self.model.name, '_constraints']};
         end
 
-        function dump_to_json(ocp)
+        function dump_to_json(self)
 
-            % parameter values
-            ocp.parameter_values = reshape(num2cell(ocp.parameter_values), [1, ocp.dims.np]);
-
-            %% dump JSON file
-            ocp_json_struct = orderfields(ocp.struct());
-            ocp_json_struct.model = orderfields(ocp.model.convert_to_struct_for_json_dump());
-            ocp_json_struct.dims = orderfields(ocp_json_struct.dims.struct());
-            ocp_json_struct.cost = orderfields(ocp_json_struct.cost.convert_to_struct_for_json_dump());
-            ocp_json_struct.constraints = orderfields(ocp_json_struct.constraints.convert_to_struct_for_json_dump());
-            ocp_json_struct.solver_options = orderfields(ocp_json_struct.solver_options.convert_to_struct_for_json_dump(ocp.dims.N));
+            out_struct = orderfields(self.struct());
 
             % add compilation information to json
             acados_folder = getenv('ACADOS_INSTALL_DIR');
             libs = loadjson(fileread(fullfile(acados_folder, 'lib', 'link_libs.json')));
-            ocp_json_struct.acados_link_libs = orderfields(libs);
+            out_struct.acados_link_libs = orderfields(libs);
             if ismac
-                ocp_json_struct.os = 'mac';
+                out_struct.os = 'mac';
             elseif isunix
-                ocp_json_struct.os = 'unix';
+                out_struct.os = 'unix';
             else
-                ocp_json_struct.os = 'pc';
+                out_struct.os = 'pc';
             end
 
-            json_string = savejson('', ocp_json_struct, 'ForceRootName', 0);
+            % prepare struct for json dump
+            out_struct.parameter_values = reshape(num2cell(self.parameter_values), [1, self.dims.np]);
+            out_struct.model = orderfields(self.model.convert_to_struct_for_json_dump());
+            out_struct.dims = orderfields(out_struct.dims.struct());
+            out_struct.cost = orderfields(out_struct.cost.convert_to_struct_for_json_dump());
+            out_struct.constraints = orderfields(out_struct.constraints.convert_to_struct_for_json_dump());
+            out_struct.solver_options = orderfields(out_struct.solver_options.convert_to_struct_for_json_dump(self.dims.N));
 
-            fid = fopen(ocp.json_file, 'w');
+            % actual json dump
+            json_string = savejson('', out_struct, 'ForceRootName', 0);
+            fid = fopen(self.json_file, 'w');
             if fid == -1, error('Cannot create JSON file'); end
             fwrite(fid, json_string, 'char');
             fclose(fid);
         end
-
-    end
+    end % methods
 end
 
