@@ -906,7 +906,10 @@ classdef AcadosOcp < handle
             template_list{end+1} = {'constraints.in.h', [self.model.name, '_constraints.h'], [self.model.name, '_constraints']};
         end
 
-        function dump_to_json(self)
+        function dump_to_json(self, json_file)
+            if nargin < 2
+                json_file = self.json_file;
+            end
 
             out_struct = orderfields(self.struct());
 
@@ -932,7 +935,7 @@ classdef AcadosOcp < handle
 
             % actual json dump
             json_string = savejson('', out_struct, 'ForceRootName', 0);
-            fid = fopen(self.json_file, 'w');
+            fid = fopen(json_file, 'w');
             if fid == -1, error('Cannot create JSON file'); end
             fwrite(fid, json_string, 'char');
             fclose(fid);
