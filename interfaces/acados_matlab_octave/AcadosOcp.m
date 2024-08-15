@@ -838,9 +838,9 @@ classdef AcadosOcp < handle
 
             %% check if t_renderer is available -> download if not
             if ispc()
-                t_renderer_location = fullfile(acados_root_dir, 'bin','t_renderer.exe');
+                t_renderer_location = fullfile(acados_root_dir, 'bin', 't_renderer.exe');
             else
-                t_renderer_location = fullfile(acados_root_dir, 'bin','t_renderer');
+                t_renderer_location = fullfile(acados_root_dir, 'bin', 't_renderer');
             end
 
             if ~exist( t_renderer_location, 'file' )
