@@ -32,198 +32,102 @@
 clear all; close all; clc;
 check_acados_requirements()
 
-%% Solver options
-% Shooting nodes
-param_scheme_N = 100;                    % horizon parameter (need T)
+% discretization
+h = 0.01;
+N_horizon = 100;
+T = N_horizon*h;
 
-% Integrator
-sim_method = 'erk';
-sim_method_num_stages = 4;
-sim_method_num_steps = 1;
-% sim_method_newton_iter = 3;            % for 'irk' 'irk_gnsf'
-gnsf_detect_struct = 'true';
+% initial state
+x0 = [0.1; 0; 0; 0];
 
-% NLP solver
-nlp_solver = 'sqp_rti';
-nlp_solver_max_iter = 100;
-nlp_solver_tol_stat = 10e-6;
-nlp_solver_tol_eq = 10e-6;
-nlp_solver_tol_ineq = 10e-6;
-nlp_solver_tol_comp = 10e-6;
-nlp_solver_ext_qp_res = 0;               % for debugging
-nlp_solver_step_length = 1.0;
-
-% QP solver
-qp_solver = 'partial_condensing_hpipm';
-qp_solver_iter_max = 50;
-qp_solver_cond_N = 5;                    % for partial_condensing
-qp_solver_cond_ric_alg = 1;
-qp_solver_ric_alg = 1;                   % for HPIPM
-qp_solver_warm_start = 1;
-% warm_start_first_qp = 1;
-
-% Globalization
-globalization = 'fixed_step';
-% alpha_min = 0.05;                      % for merit_backtracking
-% alpha_reduction = 0.7;
-
-% Hessian approximation
-nlp_solver_exact_hessian = 'false';      % 'gauss newton'
-regularize_method = 'no_regularize';
-levenberg_marquardt = 0.0;
-% exact_hess_dyn = 1;                    % for exact_hessian = 'true'
-% exact_hess_cost = 1;
-% exact_hess_constr = 1;
-
-% Other
-print_level = 0;
-
-%% OCP options
-% model_name = 'F8_crusader';
-
-% CasADi expressions
 model = F8_crusader_model();
 
-% time horizon length
-h = 0.01;
-T = param_scheme_N*h;
-
 % dimension
-nx = model.nx;
-nu = model.nu;
+nx = length(model.x);
+nu = length(model.u);
 ny = nx + nu;                  % number of outputs in lagrange term
 ny_e = nx;                     % number of outputs in mayer term
 nbx = nx;                      % number of state bounds
 nbu = nu;                      % number of input bounds
 
+% setup OCP
+ocp = AcadosOcp();
+ocp.model = model;
+
+
+% integrator
+ocp.solver_options.integrator_type = 'ERK';
+ocp.solver_options.sim_method_num_stages = 4;
+ocp.solver_options.sim_method_num_steps = 1;
+
+ocp.solver_options.tf = T;
+ocp.solver_options.N_horizon = N_horizon;
+
+% NLP solver
+ocp.solver_options.nlp_solver_type = 'SQP_RTI';
+
+% QP solver
+ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM';
+ocp.solver_options.qp_solver_iter_max = 50;
+ocp.solver_options.qp_solver_cond_N = 5; % number of shooting nodes after partial_condensing
+ocp.solver_options.hessian_approx = 'GAUSS_NEWTON';
+
 % cost
-cost_type = 'linear_ls';
-cost_type_e = 'linear_ls';
+ocp.cost.cost_type = 'LINEAR_LS';
+ocp.cost.cost_type_e = 'LINEAR_LS';
+
 Vx = zeros(ny,nx); Vx(1:nx,:) = eye(nx);        % state-to-output matrix in lagrange term
 Vu = zeros(ny,nu); Vu(nx+1:ny,:) = eye(nu);     % input-to-output matrix in lagrange term
 Vx_e = zeros(ny_e,nx); Vx_e(1:nx,:) = eye(nx);  % state-to-output matrix in mayer term
 W = diag([10, 0.1, 0, 1, 0.01]);                % cost weights in lagrange term
 W_e = W(1:ny_e,1:ny_e);                         % cost weights in mayer term
-y_ref = zeros(ny,1);                            % set intial references
-y_ref_e = zeros(ny_e,1);
+yref = zeros(ny,1);                             % references
+yref_e = zeros(ny_e,1);
 
-% constraint
-constr_type = 'bgh';
-dyn_type = 'explicit';
-x0 = [0.1; 0; 0; 0];
-Jbx = eye(nbx,nx);
-lbx = [-0.2; -1; -1; -0.3];
-ubx = [0.4; 1; 1; 0.5];
-Jbu = eye(nbu,nu);
-lbu = -0.3;
-ubu = 0.5;
+ocp.cost.Vx = Vx;
+ocp.cost.Vu = Vu;
+ocp.cost.Vx_e = Vx_e;
 
-%% acados ocp model
-ocp_model = acados_ocp_model();
-% ocp_model.set('name', model_name);
+ocp.cost.W = W;
+ocp.cost.W_e = W_e;
 
-% end time
-ocp_model.set('T', T);
+ocp.cost.yref = yref;
+ocp.cost.yref_e = yref_e;
 
-% symbolics
-ocp_model.set('sym_x', model.sym_x);
-ocp_model.set('sym_u', model.sym_u);
-ocp_model.set('sym_xdot', model.sym_xdot);
+% constraints
+ocp.constraints.x0 = x0;
 
-% cost
-ocp_model.set('cost_type', cost_type);
-ocp_model.set('cost_type_e', cost_type_e);
-ocp_model.set('cost_Vx', Vx);
-ocp_model.set('cost_Vu', Vu);
-ocp_model.set('cost_Vx_e', Vx_e);
-ocp_model.set('cost_W', W);
-ocp_model.set('cost_W_e', W_e);
-ocp_model.set('cost_y_ref', y_ref);
-ocp_model.set('cost_y_ref_e', y_ref_e);
+ocp.constraints.idxbu = (1:nu) - 1;
+ocp.constraints.lbu = -0.3;
+ocp.constraints.ubu = 0.5;
 
-% constraint
-ocp_model.set('dyn_type', dyn_type);
-ocp_model.set('dyn_expr_f', model.expr_f_expl);
-ocp_model.set('constr_x0', x0);                 % dynamic
-ocp_model.set('constr_type', constr_type);
-ocp_model.set('constr_Jbx', Jbx);
-ocp_model.set('constr_lbx', lbx);
-ocp_model.set('constr_ubx', ubx);
-ocp_model.set('constr_Jbu', Jbu);
-ocp_model.set('constr_lbu', lbu);
-ocp_model.set('constr_ubu', ubu);
+ocp.constraints.idxbx = (1:nx) - 1;
+ocp.constraints.lbx = [-0.2; -1; -1; -0.3];
+ocp.constraints.ubx = [0.4; 1; 1; 0.5];
 
-%% acados ocp opts
-ocp_opts = acados_ocp_opts();
-
-% Shooting nodes
-ocp_opts.set('param_scheme_N', param_scheme_N);
-
-% Integrator
-ocp_opts.set('sim_method', sim_method);
-ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
-ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
-% ocp_opts.set('sim_method_newton_iter', sim_method_newton_iter);
-ocp_opts.set('gnsf_detect_struct', gnsf_detect_struct);
-
-% NLP solver
-ocp_opts.set('nlp_solver', nlp_solver);
-ocp_opts.set('qp_solver_iter_max', qp_solver_iter_max);
-ocp_opts.set('nlp_solver_tol_stat', nlp_solver_tol_stat);
-ocp_opts.set('nlp_solver_tol_eq', nlp_solver_tol_eq);
-ocp_opts.set('nlp_solver_tol_ineq', nlp_solver_tol_ineq);
-ocp_opts.set('nlp_solver_tol_comp', nlp_solver_tol_comp);
-ocp_opts.set('nlp_solver_ext_qp_res', nlp_solver_ext_qp_res);
-ocp_opts.set('nlp_solver_step_length', nlp_solver_step_length);
-
-% QP solver
-ocp_opts.set('qp_solver', qp_solver);
-ocp_opts.set('qp_solver_iter_max', qp_solver_iter_max);
-ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
-ocp_opts.set('qp_solver_cond_ric_alg', qp_solver_cond_ric_alg);
-ocp_opts.set('qp_solver_ric_alg', qp_solver_ric_alg);
-ocp_opts.set('qp_solver_warm_start', qp_solver_warm_start);
-% ocp_opts.set('nlp_solver_warm_start_first_qp', warm_start_first_qp);
-
-% Globalization
-ocp_opts.set('globalization', globalization);
-% ocp_opts.set('alpha_min', alpha_min);
-% ocp_opts.set('alpha_reduction', alpha_reduction);
-
-% Hessian approximation
-ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
-ocp_opts.set('regularize_method', regularize_method);
-ocp_opts.set('levenberg_marquardt', levenberg_marquardt);
-% ocp_opts.set('exact_hess_dyn', exact_hess_dyn);
-% ocp_opts.set('exact_hess_cost', exact_hess_cost);
-% ocp_opts.set('exact_hess_constr', exact_hess_constr);
-
-% Other
-ocp_opts.set('print_level', print_level);
-
-%% create ocp solver
-ocp_solver = acados_ocp(ocp_model, ocp_opts);
+% create OCP solver
+ocp_solver = AcadosOcpSolver(ocp);
 
 %% Simulation
-Duration = 10;  % [s]
-N_sim = Duration/h;
+simulation_time = 10;  % [s]
+N_sim = simulation_time/h;
 
 % initialize data structs
 x_sim = zeros(nx, N_sim+1);
 u_sim = zeros(nu, N_sim+1);
 cost_sim = zeros(1, N_sim+1);
+
 x_sim(:, 1) = x0;
 u_sim(:, 1) = zeros(nu, 1);
 cost_sim(1, 1) = 0;
 
-% set trajectory initialization (also can use plant: create acados integrator)
-ocp_solver.set('init_x', x0 * ones(1,param_scheme_N+1));
-% ocp_solver.set('init_x', zeros(nx,param_scheme_N+1));
-ocp_solver.set('init_u', zeros(nu, param_scheme_N));
+% set trajectory initialization
+ocp_solver.set('init_x', x0 * ones(1,N_horizon+1));
+ocp_solver.set('init_u', zeros(nu, N_horizon));
 
 % time-varying reference trajectory
 x1ref_FUN = @(t) 0.4.*(-(0.5./(1+exp(t./0.1-0.8))) + (1./(1+exp(t./0.1-30))) - 0.4);
-t = 0:h:Duration;
+t = 0:h:simulation_time;
 x1ref = 0.4.*(-(0.5./(1+exp(t./0.1-0.8))) + (1./(1+exp(t./0.1-30))) - 0.4);
 
 % run mpc
@@ -232,14 +136,14 @@ tic;
 for i = 1:N_sim
 
     % update reference (full preview)
-    t_ref = (i-1:i+param_scheme_N).*h;
+    t_ref = (i-1:i+N_horizon).*h;
     x1_ref = x1ref_FUN(t_ref);
-    for j = 0:param_scheme_N-1
-        y_ref(1) = x1_ref(j+1);
-        ocp_solver.set('cost_y_ref', y_ref, j);
+    for j = 0:N_horizon-1
+        yref(1) = x1_ref(j+1);
+        ocp_solver.set('cost_y_ref', yref, j);
     end
-    y_ref_e(1) = x1_ref(param_scheme_N+1);
-    ocp_solver.set('cost_y_ref_e', y_ref_e, param_scheme_N);
+    yref_e(1) = x1_ref(N_horizon+1);
+    ocp_solver.set('cost_y_ref_e', yref_e, N_horizon);
 
     % solve ocp
     ocp_solver.solve();
@@ -248,7 +152,7 @@ for i = 1:N_sim
         error('acados returned status %d in closed loop iteration %d. Exiting.', status, i);
     end
 
-    % get solution t0
+    % get solution at initial shooting node
     x0 = ocp_solver.get('x', 0);
     u0 = ocp_solver.get('u', 0);
     x_sim(:, i+1) = x0;
@@ -256,6 +160,7 @@ for i = 1:N_sim
     cost_sim(1, i+1) = ocp_solver.get_cost();
 
     % update initial state
+    % TODO use an integrator here instead of the OCP state (we use SQP_RTI)
     x0 = ocp_solver.get('x', 1);
     ocp_solver.set('constr_x0', x0);
 
@@ -272,8 +177,8 @@ xlabel('time [s]')
 
 figure; hold on; grid on;
 plot(t, u_sim)
-plot(t, lbu, 'k--')
-plot(t, ubu, 'k--')
+plot(t, ocp.constraints.lbu, 'k--')
+plot(t, ocp.constraints.ubu, 'k--')
 legend({'udot'})
 ylabel('control input rate')
 xlabel('time [s]')
