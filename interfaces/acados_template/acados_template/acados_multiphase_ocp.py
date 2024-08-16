@@ -29,7 +29,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from typing import Union
+from typing import Union, List
 import numpy as np
 from copy import deepcopy
 
@@ -144,7 +144,7 @@ class AcadosMultiphaseOcp:
 
         self.phases_dims = [AcadosOcpDims() for _ in range(n_phases)]
 
-        self.dummy_ocp_list = []
+        self.dummy_ocp_list: List[AcadosOcp] = []
 
         # NOTE: this is the same for AcadosOcp
         self.solver_options = AcadosOcpOptions()
@@ -165,6 +165,8 @@ class AcadosMultiphaseOcp:
         self.cython_include_dirs = [np.get_include(), get_paths()['include']]
 
         self.__parameter_values = [np.array([]) for _ in range(n_phases)]
+
+        self.__json_file = 'mocp.json'
 
         self.code_export_directory = 'c_generated_code'
         """Path to where code will be exported. Default: `c_generated_code`."""
@@ -188,6 +190,14 @@ class AcadosMultiphaseOcp:
             raise Exception('parameter_values must be a list of length n_phases.')
         self.__parameter_values = parameter_values
 
+    @property
+    def json_file(self):
+        """Name of the json file where the problem description is stored."""
+        return self.__json_file
+
+    @json_file.setter
+    def json_file(self, json_file):
+        self.__json_file = json_file
 
     def set_phase(self, ocp: AcadosOcp, phase_idx: int) -> None:
         """
@@ -208,7 +218,7 @@ class AcadosMultiphaseOcp:
             print(f"WARNING: set_phase: Phase {phase_idx} contains non-default solver options: {non_default_opts}, which will be ignored.\n",
                    "Solver options need to be set via AcadosMultiphaseOcp.solver_options or mocp_opts instead.")
 
-        # set stage
+        # set phase
         self.model[phase_idx] = ocp.model
         self.cost[phase_idx] = ocp.cost
         self.constraints[phase_idx] = ocp.constraints
@@ -319,9 +329,9 @@ class AcadosMultiphaseOcp:
         return ocp_dict
 
 
-    def dump_to_json(self, json_file: str) -> None:
+    def dump_to_json(self) -> None:
         ocp_nlp_dict = self.to_dict()
-        with open(json_file, 'w') as f:
+        with open(self.json_file, 'w') as f:
             json.dump(ocp_nlp_dict, f, default=make_object_json_dumpable, indent=4, sort_keys=True)
         return
 
@@ -352,7 +362,7 @@ class AcadosMultiphaseOcp:
         return template_list
 
 
-    def render_templates(self, json_file: str, cmake_builder=None):
+    def render_templates(self, cmake_builder=None):
 
         # model templates
         for i, dummy_ocp in enumerate(self.dummy_ocp_list):
@@ -361,11 +371,11 @@ class AcadosMultiphaseOcp:
 
             template_list = dummy_ocp._get_external_function_header_templates()
             # dump dummy_ocp
-            tmp_json_file = 'tmp_ocp.json'
-            dummy_ocp.dump_to_json(json_file=tmp_json_file)
-            tmp_json_path = os.path.abspath(tmp_json_file)
+            dummy_ocp.json_file = 'tmp_ocp.json'
+            dummy_ocp.dump_to_json()
+            tmp_json_path = os.path.abspath(dummy_ocp.json_file)
 
-            # renter templates
+            # render templates
             for tup in template_list:
                 output_dir = self.code_export_directory if len(tup) <= 2 else tup[2]
                 render_template(tup[0], tup[1], output_dir, tmp_json_path)
@@ -373,7 +383,7 @@ class AcadosMultiphaseOcp:
         print("rendered model templates successfully")
 
         # check json file
-        json_path = os.path.abspath(json_file)
+        json_path = os.path.abspath(self.json_file)
         if not os.path.exists(json_path):
             raise Exception(f'Path "{json_path}" not found!')
 

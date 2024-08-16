@@ -216,7 +216,7 @@ def get_shared_lib_prefix():
     else:
         return 'lib'
 
-def get_tera():
+def get_tera() -> str:
     tera_path = get_tera_exec_path()
     acados_path = get_acados_path()
 
@@ -258,6 +258,7 @@ def get_tera():
     if not os.path.exists(tera_dir):
         print(f"Creating directory {tera_dir}")
         os.makedirs(tera_dir)
+
     # Download tera
     print(f"Dowloading {url}")
     with urllib.request.urlopen(url) as response, open(tera_path, 'wb') as out_file:
@@ -265,7 +266,7 @@ def get_tera():
     print("Successfully downloaded t_renderer.")
     # make executable
     os.chmod(tera_path, 0o755)
-    print("Successfully downloaded t_renderer.")
+    print("Successfully made t_renderer executable.")
     return tera_path
 
 

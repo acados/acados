@@ -109,13 +109,10 @@ class AcadosOcpSolver:
         if acados_ocp.solver_options.qp_solver == 'PARTIAL_CONDENSING_QPDUNES':
             acados_ocp.remove_x0_elimination()
 
-        # set integrator time automatically
-        acados_ocp.solver_options.Tsim = acados_ocp.solver_options.time_steps[0]
-
         # generate code (external functions and templated code)
         acados_ocp.generate_external_functions()
-        acados_ocp.dump_to_json(json_file)
-        acados_ocp.render_templates(json_file, cmake_builder=cmake_builder)
+        acados_ocp.dump_to_json()
+        acados_ocp.render_templates(cmake_builder=cmake_builder)
 
         # copy custom update function
         if acados_ocp.solver_options.custom_update_filename != "" and acados_ocp.solver_options.custom_update_copy:
@@ -186,22 +183,19 @@ class AcadosOcpSolver:
 
         self.solver_created = False
 
-        if isinstance(acados_ocp, AcadosOcp):
-            if json_file is None:
-                json_file = 'acados_ocp_nlp.json'
-        elif isinstance(acados_ocp, AcadosMultiphaseOcp):
-            if json_file is None:
-                json_file = 'mocp.json'
-        else:
+        if not (isinstance(acados_ocp, AcadosOcp) or isinstance(acados_ocp, AcadosMultiphaseOcp)):
             raise Exception('acados_ocp should be of type AcadosOcp or AcadosMultiphaseOcp.')
 
+        if json_file is not None:
+            acados_ocp.json_file = json_file
+
         if generate:
-            self.generate(acados_ocp, json_file=json_file, simulink_opts=simulink_opts, cmake_builder=cmake_builder)
+            self.generate(acados_ocp, json_file=acados_ocp.json_file, simulink_opts=simulink_opts, cmake_builder=cmake_builder)
         else:
             acados_ocp.make_consistent()
 
         # load json, store options in object
-        with open(json_file, 'r') as f:
+        with open(acados_ocp.json_file, 'r') as f:
             acados_ocp_json = json.load(f)
         if isinstance(acados_ocp, AcadosOcp):
             self.N = acados_ocp_json['dims']['N']

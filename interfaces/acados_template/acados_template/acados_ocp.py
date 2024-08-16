@@ -109,6 +109,7 @@ class AcadosOcp:
 
         self.__parameter_values = np.array([])
         self.__problem_class = 'OCP'
+        self.__json_file = "acados_ocp.json"
 
         self.code_export_directory = 'c_generated_code'
         """Path to where code will be exported. Default: `c_generated_code`."""
@@ -130,6 +131,14 @@ class AcadosOcp:
             raise Exception('Invalid parameter_values value. ' +
                             f'Expected numpy array, got {type(parameter_values)}.')
 
+    @property
+    def json_file(self):
+        """Name of the json file where the problem description is stored."""
+        return self.__json_file
+
+    @json_file.setter
+    def json_file(self, json_file):
+        self.__json_file = json_file
 
     def make_consistent(self) -> None:
         """
@@ -306,9 +315,10 @@ class AcadosOcp:
                 "Note: There is also the option to use the external cost module with a numerical hessian approximation (see `ext_cost_num_hess`).\n"
                 "OR the option to provide a symbolic custom hessian approximation (see `cost_expr_ext_cost_custom_hess`).\n")
 
+        # cost integration
         supports_cost_integration = lambda type : type in ['NONLINEAR_LS', 'CONVEX_OVER_NONLINEAR']
         if opts.cost_discretization == 'INTEGRATOR' and \
-            any([not supports_cost_integration(cost) for cost in [cost.cost_type_0, cost.cost_type, cost.cost_type_e]]):
+            any([not supports_cost_integration(cost) for cost in [cost.cost_type_0, cost.cost_type]]):
             raise Exception('cost_discretization == INTEGRATOR only works with cost in ["NONLINEAR_LS", "CONVEX_OVER_NONLINEAR"] costs.')
 
         ## constraints
@@ -732,6 +742,9 @@ class AcadosOcp:
             raise Exception(f'Inconsistent discretization: {opts.tf}'\
                 f' = tf != sum(opts.time_steps) = {tf}.')
 
+        # set integrator time automatically
+        opts.Tsim = opts.time_steps[0]
+
         # num_steps
         if isinstance(opts.sim_method_num_steps, np.ndarray) and opts.sim_method_num_steps.size == 1:
             opts.sim_method_num_steps = opts.sim_method_num_steps.item()
@@ -817,7 +830,7 @@ class AcadosOcp:
                 raise Exception(f'DDP solver only supported for PARTIAL_CONDENSING_HPIPM with qp_solver_cond_N == N, got qp solver {opts.qp_solver} and qp_solver_cond_N {opts.qp_solver_cond_N}, N {dims.N}.')
             if any([dims.nbu, dims.nbx, dims.ng, dims.nh, dims.nphi]):
                 raise Exception('DDP only supports initial state constraints, got path constraints.')
-            if  any([dims.ng_e, dims.nphi_e, dims.nh_e]):
+            if any([dims.ng_e, dims.nphi_e, dims.nh_e]):
                 raise Exception('DDP only supports initial state constraints, got terminal constraints.')
 
         # Set default parameters for globalization
@@ -933,10 +946,10 @@ class AcadosOcp:
         return template_list
 
 
-    def render_templates(self, json_file: str, cmake_builder=None):
+    def render_templates(self, cmake_builder=None):
 
         # check json file
-        json_path = os.path.abspath(json_file)
+        json_path = os.path.abspath(self.json_file)
         if not os.path.exists(json_path):
             raise Exception(f'Path "{json_path}" not found!')
 
@@ -955,8 +968,8 @@ class AcadosOcp:
         return
 
 
-    def dump_to_json(self, json_file: str) -> None:
-        with open(json_file, 'w') as f:
+    def dump_to_json(self) -> None:
+        with open(self.json_file, 'w') as f:
             json.dump(self.to_dict(), f, default=make_object_json_dumpable, indent=4, sort_keys=True)
         return
 
