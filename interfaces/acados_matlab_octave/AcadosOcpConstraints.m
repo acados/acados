@@ -140,9 +140,9 @@ classdef AcadosOcpConstraints < handle
     end
     methods
         function obj = AcadosOcpConstraints()
-            obj.constr_type_0 = 'AUTO';
-            obj.constr_type = 'AUTO';
-            obj.constr_type_e = 'AUTO';
+            obj.constr_type_0 = 'BGH';
+            obj.constr_type = 'BGH';
+            obj.constr_type_e = 'BGH';
 
             obj.lbx_0 = [];
             obj.ubx_0 = [];
