@@ -109,6 +109,9 @@ class AcadosOcpSolver:
         if acados_ocp.solver_options.qp_solver == 'PARTIAL_CONDENSING_QPDUNES':
             acados_ocp.remove_x0_elimination()
 
+        if acados_ocp.solver_options.qp_solver in ['FULL_CONDENSING_QPOASES', 'PARTIAL_CONDENSING_QPDUNES', 'PARTIAL_CONDENSING_OSQP']:
+            print(f"NOTE: The selected QP solver {acados_ocp.solver_options.qp_solver} does not support one-sided constraints yet.")
+
         # generate code (external functions and templated code)
         acados_ocp.generate_external_functions()
         acados_ocp.dump_to_json()
