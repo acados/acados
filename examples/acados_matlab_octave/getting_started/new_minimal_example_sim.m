@@ -65,9 +65,9 @@ for ii=1:N_sim
     sim_solver.set('u', u0);
 
     % initialize implicit integrator
-    if (strcmp(sim.solver_options.integrator_type, 'IRK'))
+    if strcmp(sim.solver_options.integrator_type, 'IRK')
         sim_solver.set('xdot', zeros(nx,1));
-    elseif (strcmp(sim.solver_options.integrator_type, 'GNSF'))
+    elseif strcmp(sim.solver_options.integrator_type, 'GNSF')
         n_out = sim_solver.sim.dims.gnsf_nout;
         sim_solver.set('phi_guess', zeros(n_out,1));
     end
@@ -82,9 +82,13 @@ end
 % forward sensitivities ( dxn_d[x0,u] )
 S_forw = sim_solver.get('S_forw');
 
-figure;
-plot(1:N_sim+1, x_sim);
-legend('p', 'theta', 'v', 'omega');
-% if is_octave()
-%     waitforbuttonpress;
-% end
+%% plot state trajectories
+ts = linspace(0, sim.solver_options.Tsim*(N_sim+1), N_sim+1);
+figure; hold on;
+States = {'p', 'theta', 'v', 'dtheta'};
+for i=1:length(States)
+    subplot(length(States), 1, i);
+    plot(ts, x_sim(i,:)); grid on;
+    ylabel(States{i});
+    xlabel('t [s]')
+end

@@ -113,7 +113,6 @@ ocp_solver.set('init_pi', zeros(nx, N)); % multipliers for dynamics equality con
 
 % change values for specific shooting node using:
 %   ocp_solver.set('field', value, optional: stage_index)
-ocp_solver.set('constr_lbx', x0, 0)
 
 % solve
 ocp_solver.solve();
